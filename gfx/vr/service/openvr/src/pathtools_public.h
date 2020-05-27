@@ -13,6 +13,9 @@ std::string Path_GetWorkingDirectory();
 /** Sets the path of the current working directory. Returns true if this was successful. */
 bool Path_SetWorkingDirectory( const std::string & sPath );
 
+/** Gets the path to a temporary directory. */
+std::string Path_GetTemporaryDirectory();
+
 /** returns the path (including filename) of the current shared lib or DLL */
 std::string Path_GetThisModulePath();
 
@@ -64,6 +67,10 @@ std::string Path_Join(
 * will be used. */
 std::string Path_Compact( const std::string & sRawPath, char slash = 0 );
 
+/** Returns true if these two paths are the same without respect for internal . or ..
+* sequences, slash type, or case (on case-insensitive platforms). */
+bool Path_IsSamePath( const std::string & sPath1, const std::string & sPath2 );
+
 //** Removed trailing slashes */
 std::string Path_RemoveTrailingSlash( const std::string & sRawPath, char slash = 0 );
 
@@ -80,6 +87,9 @@ bool Path_Exists( const std::string & sPath );
 std::string Path_FindParentDirectoryRecursively( const std::string &strStartDirectory, const std::string &strDirectoryName );
 std::string Path_FindParentSubDirectoryRecursively( const std::string &strStartDirectory, const std::string &strDirectoryName );
 
+/** Make a text file writable. */
+bool Path_MakeWritable( const std::string &strFilename );
+
 /** Path operations to read or write text/binary files */
 unsigned char * Path_ReadBinaryFile( const std::string &strFilename, int *pSize );
 uint32_t  Path_ReadBinaryFile( const std::string &strFilename, unsigned char *pBuffer, uint32_t unSize );
@@ -88,14 +98,18 @@ std::string Path_ReadTextFile( const std::string &strFilename );
 bool Path_WriteStringToTextFile( const std::string &strFilename, const char *pchData );
 bool Path_WriteStringToTextFileAtomic( const std::string &strFilename, const char *pchData );
 
+// Mozilla: see README.mozilla for more details
 /** Returns a file:// url for paths, or an http or https url if that's what was provided */
-std::string Path_FilePathToUrl( const std::string & sRelativePath, const std::string & sBasePath );
+// std::string Path_FilePathToUrl( const std::string & sRelativePath, const std::string & sBasePath );
 
 /** Strips off file:// off a URL and returns the path. For other kinds of URLs an empty string is returned */
 std::string Path_UrlToFilePath( const std::string & sFileUrl );
 
 /** Returns the root of the directory the system wants us to store user documents in */
 std::string GetUserDocumentsPath();
+
+/** deletes / unlinks a single file */
+bool Path_UnlinkFile( const std::string &strFilename );
 
 #ifndef MAX_UNICODE_PATH
 	#define MAX_UNICODE_PATH 32767
@@ -123,6 +137,10 @@ std::string GetUserDocumentsPath();
 #define PROGRAM_EXT ""
 #if defined( LINUX32 )
 #define PLATSUBDIR	"linux32"
+#elif defined( ANDROIDARM64 )
+#define PLATSUBDIR	"androidarm64" 
+#elif defined( LINUXARM64 )
+#define PLATSUBDIR	"linuxarm64" 
 #else
 #define PLATSUBDIR	"linux64"
 #endif

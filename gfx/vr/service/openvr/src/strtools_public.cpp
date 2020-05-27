@@ -4,7 +4,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sstream>
+// Mozilla: see README.mozilla for more details
+// #include <codecvt>
 #include <iostream>
+#include <functional>
+#include <locale>
+// #include <codecvt>
+
+#if defined( _WIN32 )
+#include <windows.h>
+#endif
 
 //-----------------------------------------------------------------------------
 // Purpose:
@@ -49,105 +58,103 @@ bool StringHasSuffixCaseSensitive( const std::string &sString, const std::string
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
+// Mozilla: see README.mozilla for more details
+//typedef std::codecvt_utf8< wchar_t > convert_type;
+
+// Mozilla: see README.mozilla for more details
+#if defined( _WIN32 )
 std::string UTF16to8(const wchar_t * in)
 {
-	std::string out;
-	unsigned int codepoint = 0;
-	for ( ; in && *in != 0; ++in )
+	int retLength = ::WideCharToMultiByte(CP_UTF8, 0, in, -1, nullptr, 0, nullptr, nullptr);
+	if (retLength == 0)
 	{
-		if (*in >= 0xd800 && *in <= 0xdbff)
-			codepoint = ((*in - 0xd800) << 10) + 0x10000;
-		else
-		{
-			if (*in >= 0xdc00 && *in <= 0xdfff)
-				codepoint |= *in - 0xdc00;
-			else
-				codepoint = *in;
-
-			if (codepoint <= 0x7f)
-				out.append(1, static_cast<char>(codepoint));
-			else if (codepoint <= 0x7ff)
-			{
-				out.append(1, static_cast<char>(0xc0 | ((codepoint >> 6) & 0x1f)));
-				out.append(1, static_cast<char>(0x80 | (codepoint & 0x3f)));
-			}
-			else if (codepoint <= 0xffff)
-			{
-				out.append(1, static_cast<char>(0xe0 | ((codepoint >> 12) & 0x0f)));
-				out.append(1, static_cast<char>(0x80 | ((codepoint >> 6) & 0x3f)));
-				out.append(1, static_cast<char>(0x80 | (codepoint & 0x3f)));
-			}
-			else
-			{
-				out.append(1, static_cast<char>(0xf0 | ((codepoint >> 18) & 0x07)));
-				out.append(1, static_cast<char>(0x80 | ((codepoint >> 12) & 0x3f)));
-				out.append(1, static_cast<char>(0x80 | ((codepoint >> 6) & 0x3f)));
-				out.append(1, static_cast<char>(0x80 | (codepoint & 0x3f)));
-			}
-			codepoint = 0;
-		}
+		return std::string();
 	}
-	return out;
+
+	char* retString = new char[retLength];
+	::WideCharToMultiByte(CP_UTF8, 0, in, -1, retString, retLength, nullptr, nullptr);
+
+	std::string retStringValue(retString);
+
+	delete[] retString;
+
+	return retStringValue;
+
+	// static std::wstring_convert< convert_type, wchar_t > s_converter;  // construction of this can be expensive (or even serialized) depending on locale
+
+	// try
+	// {
+	// 	return s_converter.to_bytes( in );
+	// }
+	// catch ( ... )
+	// {
+	// 	return std::string();
+	// }
 }
 
+std::string UTF16to8( const std::wstring & in ) { return UTF16to8( in.c_str() ); }
+
+// Mozilla: see README.mozilla for more details
 std::wstring UTF8to16(const char * in)
 {
-	std::wstring out;
-	unsigned int codepoint = 0;
-	int following = 0;
-	for ( ; in && *in != 0; ++in )
+	int retLength = ::MultiByteToWideChar(CP_UTF8, 0, in, -1, nullptr, 0);
+	if (retLength == 0)
 	{
-		unsigned char ch = *in;
-		if (ch <= 0x7f)
-		{
-			codepoint = ch;
-			following = 0;
-		}
-		else if (ch <= 0xbf)
-		{
-			if (following > 0)
-			{
-				codepoint = (codepoint << 6) | (ch & 0x3f);
-				--following;
-			}
-		}
-		else if (ch <= 0xdf)
-		{
-			codepoint = ch & 0x1f;
-			following = 1;
-		}
-		else if (ch <= 0xef)
-		{
-			codepoint = ch & 0x0f;
-			following = 2;
-		}
-		else
-		{
-			codepoint = ch & 0x07;
-			following = 3;
-		}
-		if (following == 0)
-		{
-			if (codepoint > 0xffff)
-			{
-				out.append(1, static_cast<wchar_t>(0xd800 + (codepoint >> 10)));
-				out.append(1, static_cast<wchar_t>(0xdc00 + (codepoint & 0x03ff)));
-			}
-			else
-				out.append(1, static_cast<wchar_t>(codepoint));
-			codepoint = 0;
-		}
+		return std::wstring();
 	}
-	return out;
+
+	wchar_t* retString = new wchar_t[retLength];
+	::MultiByteToWideChar(CP_UTF8, 0, in, -1, retString, retLength);
+
+	std::wstring retStringValue(retString);
+
+	delete[] retString;
+
+	return retStringValue;
+
+	//static std::wstring_convert< convert_type, wchar_t > s_converter;  // construction of this can be expensive (or even serialized) depending on locale
+
+	//try
+	//{
+	//	return s_converter.from_bytes( in );
+	//}
+	//catch ( ... )
+	//{
+	//	return std::wstring();
+	//}
 }
 
+std::wstring UTF8to16( const std::string & in ) { return UTF8to16( in.c_str() ); }
+#endif
 
+
+#if defined( _WIN32 )
+//-----------------------------------------------------------------------------
+// Purpose: Convert LPSTR in the default CodePage to UTF8
+//-----------------------------------------------------------------------------
+std::string DefaultACPtoUTF8( const char *pszStr )
+{
+	if ( GetACP() == CP_UTF8 )
+	{
+		return pszStr;
+	}
+	else
+	{
+		std::vector<wchar_t> vecBuf( strlen( pszStr ) + 1 ); // should be guaranteed to be enough
+		MultiByteToWideChar( CP_ACP, MB_PRECOMPOSED, pszStr, -1, vecBuf.data(), (int) vecBuf.size() );
+		return UTF16to8( vecBuf.data() );
+	}
+}
+#endif
+
+// --------------------------------------------------------------------
+// Purpose:
+// --------------------------------------------------------------------
 void strcpy_safe( char *pchBuffer, size_t unBufferSizeBytes, const char *pchSource )
 {
 	strncpy( pchBuffer, pchSource, unBufferSizeBytes - 1 );
 	pchBuffer[unBufferSizeBytes - 1] = '\0';
 }
-
 
 // --------------------------------------------------------------------
 // Purpose: converts a string to upper case
@@ -201,6 +208,7 @@ uint32_t ReturnStdString( const std::string & sValue, char *pchBuffer, uint32_t 
 
 
 /** Returns a std::string from a uint64_t */
+// Mozilla: see README.mozilla for more details
 // std::string Uint64ToString( uint64_t ulValue )
 // {
 // 	char buf[ 22 ];
@@ -245,11 +253,30 @@ int iHexCharToInt( char cValue )
 	return -1;
 }
 
+
+//-----------------------------------------------------------------------------
+// Purpose: These define the set of characters to filter for components (which
+//			need all the escaping we can muster) vs. paths (which don't want
+//			/ and : escaped so we don't break less compliant URL handling code.
+//-----------------------------------------------------------------------------
+static bool CharNeedsEscape_Component( const char c )
+{
+	return (!(c >= 'a' && c <= 'z') && !(c >= 'A' && c <= 'Z') && !(c >= '0' && c <= '9')
+		&& c != '-' && c != '_' && c != '.');
+}
+static bool CharNeedsEscape_FullPath( const char c )
+{
+	return (!(c >= 'a' && c <= 'z') && !(c >= 'A' && c <= 'Z') && !(c >= '0' && c <= '9')
+		&& c != '-' && c != '_' && c != '.' && c != '/' && c != ':' );
+}
+
+
 //-----------------------------------------------------------------------------
 // Purpose: Internal implementation of encode, works in the strict RFC manner, or
 //          with spaces turned to + like HTML form encoding.
 //-----------------------------------------------------------------------------
-void V_URLEncodeInternal( char *pchDest, int nDestLen, const char *pchSource, int nSourceLen, bool bUsePlusForSpace )
+void V_URLEncodeInternal( char *pchDest, int nDestLen, const char *pchSource, int nSourceLen, 
+	bool bUsePlusForSpace, std::function< bool(const char)> fnNeedsEscape )
 {
 	//AssertMsg( nDestLen > 3*nSourceLen, "Target buffer for V_URLEncode should be 3x source length, plus one for terminating null\n" );
 	
@@ -267,9 +294,7 @@ void V_URLEncodeInternal( char *pchDest, int nDestLen, const char *pchSource, in
 		// We allow only a-z, A-Z, 0-9, period, underscore, and hyphen to pass through unescaped.
 		// These are the characters allowed by both the original RFC 1738 and the latest RFC 3986.
 		// Current specs also allow '~', but that is forbidden under original RFC 1738.
-		if ( !( pchSource[i] >= 'a' && pchSource[i] <= 'z' ) && !( pchSource[i] >= 'A' && pchSource[i] <= 'Z' ) && !(pchSource[i] >= '0' && pchSource[i] <= '9' )
-			 && pchSource[i] != '-' && pchSource[i] != '_' && pchSource[i] != '.'	
-		)
+		if ( fnNeedsEscape( pchSource[i] ) )
 		{
 			if ( bUsePlusForSpace && pchSource[i] == ' ' )
 			{
@@ -397,9 +422,19 @@ size_t V_URLDecodeInternal( char *pchDecodeDest, int nDecodeDestLen, const char 
 //-----------------------------------------------------------------------------
 void V_URLEncode( char *pchDest, int nDestLen, const char *pchSource, int nSourceLen )
 {
-	return V_URLEncodeInternal( pchDest, nDestLen, pchSource, nSourceLen, true );
+	return V_URLEncodeInternal( pchDest, nDestLen, pchSource, nSourceLen, true, CharNeedsEscape_Component );
 }
 
+
+void V_URLEncodeNoPlusForSpace( char *pchDest, int nDestLen, const char *pchSource, int nSourceLen )
+{
+	return V_URLEncodeInternal( pchDest, nDestLen, pchSource, nSourceLen, false, CharNeedsEscape_Component );
+}
+
+void V_URLEncodeFullPath( char *pchDest, int nDestLen, const char *pchSource, int nSourceLen )
+{
+	return V_URLEncodeInternal( pchDest, nDestLen, pchSource, nSourceLen, false, CharNeedsEscape_FullPath );
+}
 
 //-----------------------------------------------------------------------------
 // Purpose: Decodes a string (or binary data) from URL encoding format, see rfc1738 section 2.2.  
@@ -412,6 +447,11 @@ void V_URLEncode( char *pchDest, int nDestLen, const char *pchSource, int nSourc
 size_t V_URLDecode( char *pchDecodeDest, int nDecodeDestLen, const char *pchEncodedSource, int nEncodedSourceLen )
 {
 	return V_URLDecodeInternal( pchDecodeDest, nDecodeDestLen, pchEncodedSource, nEncodedSourceLen, true );
+}
+
+size_t V_URLDecodeNoPlusForSpace( char *pchDecodeDest, int nDecodeDestLen, const char *pchEncodedSource, int nEncodedSourceLen )
+{
+	return V_URLDecodeInternal( pchDecodeDest, nDecodeDestLen, pchEncodedSource, nEncodedSourceLen, false );
 }
 
 //-----------------------------------------------------------------------------
@@ -447,3 +487,85 @@ std::vector<std::string> TokenizeString( const std::string & sString, char cToke
 	return vecStrings;
 }
 
+// Mozilla: see README.mozilla for more details
+//-----------------------------------------------------------------------------
+// Purpose: Repairs a should-be-UTF-8 string to a for-sure-is-UTF-8 string, plus return boolean if we subbed in '?' somewhere
+//-----------------------------------------------------------------------------
+// bool RepairUTF8( const char *pbegin, const char *pend, std::string & sOutputUtf8 )
+// {
+// 	typedef std::codecvt_utf8<char32_t> facet_type;
+// 	facet_type myfacet;
+
+// 	std::mbstate_t mystate = std::mbstate_t();
+
+// 	sOutputUtf8.clear();
+// 	sOutputUtf8.reserve( pend - pbegin );
+// 	bool bSqueakyClean = true;
+
+// 	const char *pmid = pbegin;
+// 	while ( pmid != pend )
+// 	{
+// 		bool bHasError = false;
+// 		bool bHasValidData = false;
+
+// 		char32_t out = 0xdeadbeef, *pout;
+// 		pbegin = pmid;
+// 		switch ( myfacet.in( mystate, pbegin, pend, pmid, &out, &out + 1, pout ) )
+// 		{
+// 		case facet_type::ok:
+// 			bHasValidData = true;
+// 			break;
+
+// 		case facet_type::noconv:
+// 			// unexpected! always converting type
+// 			bSqueakyClean = false;
+// 			break;
+
+// 		case facet_type::partial:
+// 			bHasError = pbegin == pmid;
+// 			if ( bHasError )
+// 			{
+// 				bSqueakyClean = false;
+// 			}
+// 			else
+// 			{
+// 				bHasValidData = true;
+// 			}
+// 			break;
+
+// 		case facet_type::error:
+// 			bHasError = true;
+// 			bSqueakyClean = false;
+// 			break;
+// 		}
+
+// 		if ( bHasValidData )
+// 		{
+// 			// could convert back, but no need
+// 			for ( const char *p = pbegin; p != pmid; ++p )
+// 			{
+// 				sOutputUtf8 += *p;
+// 			}
+// 		}
+
+// 		if ( bHasError )
+// 		{
+// 			sOutputUtf8 += '?';
+// 		}
+
+// 		if ( pmid == pbegin )
+// 		{
+// 			pmid++;
+// 		}
+// 	}
+
+// 	return bSqueakyClean;
+// }
+
+// //-----------------------------------------------------------------------------
+// // Purpose: Repairs a should-be-UTF-8 string to a for-sure-is-UTF-8 string, plus return boolean if we subbed in '?' somewhere
+// //-----------------------------------------------------------------------------
+// bool RepairUTF8( const std::string & sInputUtf8, std::string & sOutputUtf8 )
+// {
+// 	return RepairUTF8( sInputUtf8.data(), sInputUtf8.data() + sInputUtf8.size(), sOutputUtf8 );
+// }

@@ -11,6 +11,14 @@
 
 
 
+// version.h
+namespace vr
+{
+	static const uint32_t k_nSteamVRVersionMajor = 1;
+	static const uint32_t k_nSteamVRVersionMinor = 11;
+	static const uint32_t k_nSteamVRVersionBuild = 11;
+} // namespace vr
+
 // vrtypes.h
 #ifndef _INCLUDE_VRTYPES_H
 #define _INCLUDE_VRTYPES_H
@@ -198,8 +206,25 @@ enum ETrackedControllerRole
 	TrackedControllerRole_LeftHand = 1,					// Tracked device associated with the left hand
 	TrackedControllerRole_RightHand = 2,				// Tracked device associated with the right hand
 	TrackedControllerRole_OptOut = 3,					// Tracked device is opting out of left/right hand selection
-	TrackedControllerRole_Max = 4
+	TrackedControllerRole_Treadmill = 4,				// Tracked device is a treadmill or other locomotion device
+	TrackedControllerRole_Stylus = 5,					// Tracked device is a stylus
+	TrackedControllerRole_Max = 5
 };
+
+
+/** Returns true if the tracked controller role is allowed to be a hand */
+inline bool IsRoleAllowedAsHand( ETrackedControllerRole eRole )
+{
+	switch ( eRole )
+	{
+	case TrackedControllerRole_Invalid:
+	case TrackedControllerRole_LeftHand:
+	case TrackedControllerRole_RightHand:
+		return true;
+	default:
+		return false;
+	}
+}
 
 
 /** describes a single pose for a tracked object */
@@ -225,6 +250,14 @@ enum ETrackingUniverseOrigin
 	TrackingUniverseRawAndUncalibrated = 2,	// Poses are provided in the coordinate system defined by the driver.  It has Y up and is unified for devices of the same driver. You usually don't want this one.
 };
 
+enum EAdditionalRadioFeatures
+{
+	AdditionalRadioFeatures_None           = 0x00000000,
+	AdditionalRadioFeatures_HTCLinkBox     = 0x00000001,
+	AdditionalRadioFeatures_InternalDongle = 0x00000002,
+	AdditionalRadioFeatures_ExternalDongle = 0x00000004,
+};
+
 typedef uint64_t WebConsoleHandle_t;
 #define INVALID_WEB_CONSOLE_HANDLE	((vr::WebConsoleHandle_t)0)
 
@@ -244,11 +277,15 @@ static const PropertyTypeTag_t k_unInt32PropertyTag = 2;
 static const PropertyTypeTag_t k_unUint64PropertyTag = 3;
 static const PropertyTypeTag_t k_unBoolPropertyTag = 4;
 static const PropertyTypeTag_t k_unStringPropertyTag = 5;
+static const PropertyTypeTag_t k_unErrorPropertyTag = 6;
+static const PropertyTypeTag_t k_unDoublePropertyTag = 7;
 
 static const PropertyTypeTag_t k_unHmdMatrix34PropertyTag = 20;
 static const PropertyTypeTag_t k_unHmdMatrix44PropertyTag = 21;
 static const PropertyTypeTag_t k_unHmdVector3PropertyTag = 22;
 static const PropertyTypeTag_t k_unHmdVector4PropertyTag = 23;
+static const PropertyTypeTag_t k_unHmdVector2PropertyTag = 24;
+static const PropertyTypeTag_t k_unHmdQuadPropertyTag = 25;
 
 static const PropertyTypeTag_t k_unHiddenAreaPropertyTag = 30;
 static const PropertyTypeTag_t k_unPathHandleInfoTag = 31;
@@ -260,6 +297,7 @@ static const PropertyTypeTag_t k_unSkeletonPropertyTag = 36;
 
 static const PropertyTypeTag_t k_unSpatialAnchorPosePropertyTag = 40;
 static const PropertyTypeTag_t k_unJsonPropertyTag = 41;
+static const PropertyTypeTag_t k_unActiveActionSetPropertyTag = 42;
 
 static const PropertyTypeTag_t k_unOpenVRInternalReserved_Start = 1000;
 static const PropertyTypeTag_t k_unOpenVRInternalReserved_End = 10000;
@@ -314,6 +352,16 @@ enum ETrackedDeviceProperty
 	Prop_NumCameras_Int32						= 1039,
 	Prop_CameraFrameLayout_Int32				= 1040, // EVRTrackedCameraFrameLayout value
 	Prop_CameraStreamFormat_Int32				= 1041, // ECameraVideoStreamFormat value
+	Prop_AdditionalDeviceSettingsPath_String	= 1042, // driver-relative path to additional device and global configuration settings
+	Prop_Identifiable_Bool						= 1043, // Whether device supports being identified from vrmonitor (e.g. blink LED, vibrate haptics, etc)
+	Prop_BootloaderVersion_Uint64			    = 1044,
+	Prop_AdditionalSystemReportData_String		= 1045, // additional string to include in system reports about a tracked device
+	Prop_CompositeFirmwareVersion_String        = 1046, // additional FW components from a device that gets propagated into reports
+	Prop_Firmware_RemindUpdate_Bool             = 1047,
+	Prop_PeripheralApplicationVersion_Uint64	= 1048,
+	Prop_ManufacturerSerialNumber_String		= 1049,
+	Prop_ComputedSerialNumber_String			= 1050,
+	Prop_EstimatedDeviceFirstUseTime_Int32		= 1051,
 
 	// Properties that are unique to TrackedDeviceClass_HMD
 	Prop_ReportsTimeSinceVSync_Bool				= 2000,
@@ -368,7 +416,7 @@ enum ETrackedDeviceProperty
 	Prop_NamedIconPathControllerLeftDeviceOff_String	= 2051, // placeholder icon for "left" controller if not yet detected/loaded
 	Prop_NamedIconPathControllerRightDeviceOff_String	= 2052, // placeholder icon for "right" controller if not yet detected/loaded
 	Prop_NamedIconPathTrackingReferenceDeviceOff_String	= 2053, // placeholder icon for sensor/base if not yet detected/loaded
-	Prop_DoNotApplyPrediction_Bool				= 2054,
+	Prop_DoNotApplyPrediction_Bool				= 2054, // currently no effect. was used to disable HMD pose prediction on MR, which is now done by MR driver setting velocity=0
 	Prop_CameraToHeadTransforms_Matrix34_Array	= 2055,
 	Prop_DistortionMeshResolution_Int32			= 2056, // custom resolution of compositor calls to IVRSystem::ComputeDistortion
 	Prop_DriverIsDrawingControllers_Bool		= 2057,
@@ -384,6 +432,29 @@ enum ETrackedDeviceProperty
 	Prop_ImuFactoryAccelerometerScale_Vector3	= 2067,
 	// reserved 2068
 	Prop_ConfigurationIncludesLighthouse20Features_Bool = 2069,
+	Prop_AdditionalRadioFeatures_Uint64         = 2070,
+	Prop_CameraWhiteBalance_Vector4_Array		= 2071, // Prop_NumCameras_Int32-sized array of float[4] RGBG white balance calibration data (max size is vr::k_unMaxCameras)
+	Prop_CameraDistortionFunction_Int32_Array	= 2072, // Prop_NumCameras_Int32-sized array of vr::EVRDistortionFunctionType values (max size is vr::k_unMaxCameras)
+	Prop_CameraDistortionCoefficients_Float_Array = 2073, // Prop_NumCameras_Int32-sized array of double[vr::k_unMaxDistortionFunctionParameters] (max size is vr::k_unMaxCameras)
+	Prop_ExpectedControllerType_String			= 2074,
+	Prop_HmdTrackingStyle_Int32					= 2075, // one of EHmdTrackingStyle
+	Prop_DriverProvidedChaperoneVisibility_Bool = 2076,
+	Prop_HmdColumnCorrectionSettingPrefix_String = 2077,
+	Prop_CameraSupportsCompatibilityModes_Bool	= 2078,
+
+	Prop_DisplayAvailableFrameRates_Float_Array = 2080, // populated by compositor from actual EDID list when available from GPU driver
+	Prop_DisplaySupportsMultipleFramerates_Bool = 2081, // if this is true but Prop_DisplayAvailableFrameRates_Float_Array is empty, explain to user
+	Prop_DisplayColorMultLeft_Vector3			= 2082,
+	Prop_DisplayColorMultRight_Vector3			= 2083,
+	Prop_DisplaySupportsRuntimeFramerateChange_Bool = 2084,
+	Prop_DisplaySupportsAnalogGain_Bool 		= 2085,
+	Prop_DisplayMinAnalogGain_Float 			= 2086,
+	Prop_DisplayMaxAnalogGain_Float 			= 2087,
+
+	// Prop_DashboardLayoutPathName_String 		= 2090, // DELETED
+	Prop_DashboardScale_Float 					= 2091,
+	Prop_IpdUIRangeMinMeters_Float 				= 2100,
+	Prop_IpdUIRangeMaxMeters_Float 				= 2101,
 
 	// Driver requested mura correction properties
 	Prop_DriverRequestedMuraCorrectionMode_Int32		= 2200,
@@ -395,6 +466,10 @@ enum ETrackedDeviceProperty
 	Prop_DriverRequestedMuraFeather_OuterRight_Int32	= 2206,
 	Prop_DriverRequestedMuraFeather_OuterTop_Int32		= 2207,
 	Prop_DriverRequestedMuraFeather_OuterBottom_Int32	= 2208,
+
+	Prop_Audio_DefaultPlaybackDeviceId_String		= 2300,
+	Prop_Audio_DefaultRecordingDeviceId_String		= 2301,
+	Prop_Audio_DefaultPlaybackDeviceVolume_Float	= 2302,
 
 	// Properties that are unique to TrackedDeviceClass_Controller
 	Prop_AttachedDeviceId_String				= 3000,
@@ -414,6 +489,8 @@ enum ETrackedDeviceProperty
 	Prop_TrackingRangeMinimumMeters_Float		= 4004,
 	Prop_TrackingRangeMaximumMeters_Float		= 4005,
 	Prop_ModeLabel_String						= 4006,
+	Prop_CanWirelessIdentify_Bool               = 4007, // volatile, based on radio presence and fw discovery
+	Prop_Nonce_Int32                            = 4008,
 
 	// Properties that are used for user interface like icons names
 	Prop_IconPathName_String						= 5000, // DEPRECATED. Value not referenced. Now expected to be part of icon path properties.
@@ -425,11 +502,13 @@ enum ETrackedDeviceProperty
 	Prop_NamedIconPathDeviceNotReady_String			= 5006, // {driver}/icons/icon_filename - PNG for static icon, or GIF for animation, 50x32 for headsets and 32x32 for others
 	Prop_NamedIconPathDeviceStandby_String			= 5007, // {driver}/icons/icon_filename - PNG for static icon, or GIF for animation, 50x32 for headsets and 32x32 for others
 	Prop_NamedIconPathDeviceAlertLow_String			= 5008, // {driver}/icons/icon_filename - PNG for static icon, or GIF for animation, 50x32 for headsets and 32x32 for others
+	Prop_NamedIconPathDeviceStandbyAlert_String		= 5009, // {driver}/icons/icon_filename - PNG for static icon, or GIF for animation, 50x32 for headsets and 32x32 for others
 
 	// Properties that are used by helpers, but are opaque to applications
 	Prop_DisplayHiddenArea_Binary_Start				= 5100,
 	Prop_DisplayHiddenArea_Binary_End				= 5150,
 	Prop_ParentContainer							= 5151,
+	Prop_OverrideContainer_Uint64					= 5152,
 
 	// Properties that are unique to drivers
 	Prop_UserConfigPath_String					= 6000,
@@ -443,7 +522,7 @@ enum ETrackedDeviceProperty
 
 	// Properties that are set internally based on other information provided by drivers
 	Prop_ControllerType_String					= 7000,
-	Prop_LegacyInputProfile_String				= 7001,
+	//Prop_LegacyInputProfile_String				= 7001, // This is no longer used. See "legacy_binding" in the input profile instead.
 	Prop_ControllerHandSelectionPriority_Int32	= 7002, // Allows hand assignments to prefer some controllers over others. High numbers are selected over low numbers
 
 	// Vendors are free to expose private debug data in this reserved region
@@ -473,8 +552,19 @@ enum ETrackedPropertyError
 	TrackedProp_InvalidOperation			= 11,
 	TrackedProp_CannotWriteToWildcards		= 12,
 	TrackedProp_IPCReadFailure				= 13,
+	TrackedProp_OutOfMemory					= 14,
+	TrackedProp_InvalidContainer			= 15,
 };
 
+/** Used to drive certain text in the UI when talking about the tracking system for the HMD */
+enum EHmdTrackingStyle
+{
+	HmdTrackingStyle_Unknown				= 0,
+
+	HmdTrackingStyle_Lighthouse				= 1, // base stations and lasers
+	HmdTrackingStyle_OutsideInCameras		= 2, // Cameras and LED, Rift 1 style
+	HmdTrackingStyle_InsideOutCameras		= 3, // Cameras on HMD looking at the world
+};
 
 typedef uint64_t VRActionHandle_t;
 typedef uint64_t VRActionSetHandle_t;
@@ -540,6 +630,10 @@ enum EVRSubmitFlags
 	// Set to indicate that pTexture is a pointer to a VRTextureWithDepth_t.
 	// This flag can be combined with Submit_TextureWithPose to pass a VRTextureWithPoseAndDepth_t.
 	Submit_TextureWithDepth = 0x10,
+
+	// Set to indicate a discontinuity between this and the last frame.
+	// This will prevent motion smoothing from attempting to extrapolate using the pair.
+	Submit_FrameDiscontinuty = 0x20,
 };
 
 /** Data required for passing Vulkan textures to IVRCompositor::Submit.
@@ -604,37 +698,43 @@ enum EVREventType
 	VREvent_ButtonTouch					= 202, // data is controller
 	VREvent_ButtonUntouch				= 203, // data is controller
 
-	VREvent_DualAnalog_Press			= 250, // data is dualAnalog
-	VREvent_DualAnalog_Unpress			= 251, // data is dualAnalog
-	VREvent_DualAnalog_Touch			= 252, // data is dualAnalog
-	VREvent_DualAnalog_Untouch			= 253, // data is dualAnalog
-	VREvent_DualAnalog_Move				= 254, // data is dualAnalog
-	VREvent_DualAnalog_ModeSwitch1		= 255, // data is dualAnalog
-	VREvent_DualAnalog_ModeSwitch2		= 256, // data is dualAnalog
-	VREvent_DualAnalog_Cancel			= 257, // data is dualAnalog
+	// VREvent_DualAnalog_Press			= 250, // No longer sent
+	// VREvent_DualAnalog_Unpress		= 251, // No longer sent
+	// VREvent_DualAnalog_Touch			= 252, // No longer sent
+	// VREvent_DualAnalog_Untouch		= 253, // No longer sent
+	// VREvent_DualAnalog_Move			= 254, // No longer sent
+	// VREvent_DualAnalog_ModeSwitch1	= 255, // No longer sent
+	// VREvent_DualAnalog_ModeSwitch2	= 256, // No longer sent
+	VREvent_Modal_Cancel				= 257, // Sent to overlays with the 
 
 	VREvent_MouseMove					= 300, // data is mouse
 	VREvent_MouseButtonDown				= 301, // data is mouse
 	VREvent_MouseButtonUp				= 302, // data is mouse
 	VREvent_FocusEnter					= 303, // data is overlay
 	VREvent_FocusLeave					= 304, // data is overlay
-	VREvent_Scroll						= 305, // data is mouse
+	VREvent_ScrollDiscrete				= 305, // data is scroll
 	VREvent_TouchPadMove				= 306, // data is mouse
 	VREvent_OverlayFocusChanged			= 307, // data is overlay, global event
+	VREvent_ReloadOverlays				= 308, 
+	VREvent_ScrollSmooth				= 309, // data is scroll
+	VREvent_LockMousePosition			= 310,
+	VREvent_UnlockMousePosition			= 311,
 
 	VREvent_InputFocusCaptured			= 400, // data is process DEPRECATED
 	VREvent_InputFocusReleased			= 401, // data is process DEPRECATED
-	VREvent_SceneFocusLost				= 402, // data is process
-	VREvent_SceneFocusGained			= 403, // data is process
+	// VREvent_SceneFocusLost			= 402, // data is process
+	// VREvent_SceneFocusGained			= 403, // data is process
 	VREvent_SceneApplicationChanged		= 404, // data is process - The App actually drawing the scene changed (usually to or from the compositor)
 	VREvent_SceneFocusChanged			= 405, // data is process - New app got access to draw the scene
 	VREvent_InputFocusChanged			= 406, // data is process
-	VREvent_SceneApplicationSecondaryRenderingStarted = 407, // data is process
+	// VREvent_SceneApplicationSecondaryRenderingStarted = 407,
 	VREvent_SceneApplicationUsingWrongGraphicsAdapter = 408, // data is process
 	VREvent_ActionBindingReloaded		 = 409, // data is process - The App that action binds reloaded for
 
 	VREvent_HideRenderModels			= 410, // Sent to the scene application to request hiding render models temporarily
 	VREvent_ShowRenderModels			= 411, // Sent to the scene application to request restoring render model visibility
+
+	VREvent_SceneApplicationStateChanged = 412, // No data; but query VRApplications()->GetSceneApplicationState();
 
 	VREvent_ConsoleOpened               = 420,
 	VREvent_ConsoleClosed               = 421,
@@ -643,10 +743,10 @@ enum EVREventType
 	VREvent_OverlayHidden				= 501,
 	VREvent_DashboardActivated			= 502,
 	VREvent_DashboardDeactivated		= 503,
-	VREvent_DashboardThumbSelected		= 504, // Sent to the overlay manager - data is overlay
+	//VREvent_DashboardThumbSelected		= 504, // Sent to the overlay manager - data is overlay - No longer sent
 	VREvent_DashboardRequested			= 505, // Sent to the overlay manager - data is overlay
 	VREvent_ResetDashboard				= 506, // Send to the overlay manager
-	VREvent_RenderToast					= 507, // Send to the dashboard to render a toast - data is the notification ID
+	//VREvent_RenderToast					= 507, // Send to the dashboard to render a toast - data is the notification ID -- no longer sent
 	VREvent_ImageLoaded					= 508, // Sent to overlays when a SetOverlayRaw or SetOverlayFromFile call finishes loading
 	VREvent_ShowKeyboard				= 509, // Sent to keyboard renderer in the dashboard to invoke it
 	VREvent_HideKeyboard				= 510, // Sent to keyboard renderer in the dashboard to hide it
@@ -670,6 +770,8 @@ enum EVREventType
 	VREvent_PrimaryDashboardDeviceChanged	= 525,
 	VREvent_RoomViewShown					= 526, // Sent by compositor whenever room-view is enabled
 	VREvent_RoomViewHidden					= 527, // Sent by compositor whenever room-view is disabled
+	VREvent_ShowUI							= 528, // data is showUi
+	VREvent_ShowDevTools					= 529, // data is showDevTools
 
 	VREvent_Notification_Shown				= 600,
 	VREvent_Notification_Hidden				= 601,
@@ -678,35 +780,44 @@ enum EVREventType
 
 	VREvent_Quit							= 700, // data is process
 	VREvent_ProcessQuit						= 701, // data is process
-	VREvent_QuitAborted_UserPrompt			= 702, // data is process
+	//VREvent_QuitAborted_UserPrompt			= 702, // data is process
 	VREvent_QuitAcknowledged				= 703, // data is process
 	VREvent_DriverRequestedQuit				= 704, // The driver has requested that SteamVR shut down
+	VREvent_RestartRequested				= 705, // A driver or other component wants the user to restart SteamVR
 
-	VREvent_ChaperoneDataHasChanged			= 800,
+	VREvent_ChaperoneDataHasChanged			= 800, // this will never happen with the new chaperone system
 	VREvent_ChaperoneUniverseHasChanged		= 801,
-	VREvent_ChaperoneTempDataHasChanged		= 802,
+	VREvent_ChaperoneTempDataHasChanged		= 802, // this will never happen with the new chaperone system
 	VREvent_ChaperoneSettingsHaveChanged	= 803,
 	VREvent_SeatedZeroPoseReset				= 804,
+	VREvent_ChaperoneFlushCache				= 805, // Sent when the process needs to reload any cached data it retrieved from VRChaperone()
+	VREvent_ChaperoneRoomSetupStarting	    = 806, // Triggered by CVRChaperoneClient::RoomSetupStarting
+	VREvent_ChaperoneRoomSetupFinished	    = 807, // Triggered by CVRChaperoneClient::CommitWorkingCopy
 
 	VREvent_AudioSettingsHaveChanged		= 820,
 
-	VREvent_BackgroundSettingHasChanged		   = 850,
-	VREvent_CameraSettingsHaveChanged		   = 851,
-	VREvent_ReprojectionSettingHasChanged	   = 852,
-	VREvent_ModelSkinSettingsHaveChanged	   = 853,
-	VREvent_EnvironmentSettingsHaveChanged	   = 854,
-	VREvent_PowerSettingsHaveChanged		   = 855,
-	VREvent_EnableHomeAppSettingsHaveChanged   = 856,
-	VREvent_SteamVRSectionSettingChanged       = 857,
-	VREvent_LighthouseSectionSettingChanged    = 858,
-	VREvent_NullSectionSettingChanged          = 859,
-	VREvent_UserInterfaceSectionSettingChanged = 860,
-	VREvent_NotificationsSectionSettingChanged = 861,
-	VREvent_KeyboardSectionSettingChanged      = 862,
-	VREvent_PerfSectionSettingChanged          = 863,
-	VREvent_DashboardSectionSettingChanged     = 864,
-	VREvent_WebInterfaceSectionSettingChanged	= 865,
-	VREvent_TrackersSectionSettingChanged	= 866,
+	VREvent_BackgroundSettingHasChanged				= 850,
+	VREvent_CameraSettingsHaveChanged				= 851,
+	VREvent_ReprojectionSettingHasChanged			= 852,
+	VREvent_ModelSkinSettingsHaveChanged			= 853,
+	VREvent_EnvironmentSettingsHaveChanged			= 854,
+	VREvent_PowerSettingsHaveChanged				= 855,
+	VREvent_EnableHomeAppSettingsHaveChanged		= 856,
+	VREvent_SteamVRSectionSettingChanged			= 857,
+	VREvent_LighthouseSectionSettingChanged			= 858,
+	VREvent_NullSectionSettingChanged				= 859,
+	VREvent_UserInterfaceSectionSettingChanged		= 860,
+	VREvent_NotificationsSectionSettingChanged		= 861,
+	VREvent_KeyboardSectionSettingChanged			= 862,
+	VREvent_PerfSectionSettingChanged				= 863,
+	VREvent_DashboardSectionSettingChanged			= 864,
+	VREvent_WebInterfaceSectionSettingChanged		= 865,
+	VREvent_TrackersSectionSettingChanged			= 866,
+	VREvent_LastKnownSectionSettingChanged			= 867,
+	VREvent_DismissedWarningsSectionSettingChanged	= 868,
+	VREvent_GpuSpeedSectionSettingChanged			= 869,
+	VREvent_WindowsMRSectionSettingChanged			= 870,
+	VREvent_OtherSectionSettingChanged				= 871,
 
 	VREvent_StatusUpdate					= 900,
 
@@ -721,19 +832,27 @@ enum EVREventType
 	VREvent_KeyboardCharInput				= 1201,
 	VREvent_KeyboardDone					= 1202, // Sent when DONE button clicked on keyboard
 
-	VREvent_ApplicationTransitionStarted		= 1300,
-	VREvent_ApplicationTransitionAborted		= 1301,
-	VREvent_ApplicationTransitionNewAppStarted	= 1302,
+	//VREvent_ApplicationTransitionStarted		= 1300,
+	//VREvent_ApplicationTransitionAborted		= 1301,
+	//VREvent_ApplicationTransitionNewAppStarted	= 1302,
 	VREvent_ApplicationListUpdated				= 1303,
 	VREvent_ApplicationMimeTypeLoad				= 1304,
-	VREvent_ApplicationTransitionNewAppLaunchComplete = 1305,
+	// VREvent_ApplicationTransitionNewAppLaunchComplete = 1305,
 	VREvent_ProcessConnected					= 1306,
 	VREvent_ProcessDisconnected					= 1307,
 
-	VREvent_Compositor_MirrorWindowShown		= 1400,
-	VREvent_Compositor_MirrorWindowHidden		= 1401,
+	//VREvent_Compositor_MirrorWindowShown		= 1400, // DEPRECATED
+	//VREvent_Compositor_MirrorWindowHidden		= 1401, // DEPRECATED
 	VREvent_Compositor_ChaperoneBoundsShown		= 1410,
 	VREvent_Compositor_ChaperoneBoundsHidden	= 1411,
+	VREvent_Compositor_DisplayDisconnected		= 1412,
+	VREvent_Compositor_DisplayReconnected		= 1413,
+	VREvent_Compositor_HDCPError				= 1414, // data is hdcpError
+	VREvent_Compositor_ApplicationNotResponding	= 1415,
+	VREvent_Compositor_ApplicationResumed		= 1416,
+	VREvent_Compositor_OutOfVideoMemory			= 1417,
+	VREvent_Compositor_DisplayModeNotSupported	= 1418, // k_pch_SteamVR_PreferredRefreshRate
+	VREvent_Compositor_StageOverrideReady		= 1419,
 
 	VREvent_TrackedCamera_StartVideoStream  = 1500,
 	VREvent_TrackedCamera_StopVideoStream   = 1501,
@@ -753,12 +872,20 @@ enum EVREventType
 	VREvent_Input_BindingLoadSuccessful		= 1702, // data is inputBinding
 	VREvent_Input_ActionManifestReloaded	= 1703, // no data
 	VREvent_Input_ActionManifestLoadFailed	= 1704, // data is actionManifest
+	VREvent_Input_ProgressUpdate			= 1705, // data is progressUpdate
 	VREvent_Input_TrackerActivated			= 1706,
+	VREvent_Input_BindingsUpdated			= 1707,
+	VREvent_Input_BindingSubscriptionChanged = 1708,
 
 	VREvent_SpatialAnchors_PoseUpdated		= 1800,        // data is spatialAnchor. broadcast
 	VREvent_SpatialAnchors_DescriptorUpdated = 1801,       // data is spatialAnchor. broadcast
 	VREvent_SpatialAnchors_RequestPoseUpdate = 1802,       // data is spatialAnchor. sent to specific driver
 	VREvent_SpatialAnchors_RequestDescriptorUpdate = 1803, // data is spatialAnchor. sent to specific driver
+
+	VREvent_SystemReport_Started			= 1900, // user or system initiated generation of a system report. broadcast
+
+	VREvent_Monitor_ShowHeadsetView			= 2000, // data is process
+	VREvent_Monitor_HideHeadsetView			= 2001, // data is process
 
 	// Vendors are free to expose private events in this reserved region
 	VREvent_VendorSpecific_Reserved_Start	= 10000,
@@ -778,6 +905,7 @@ enum EDeviceActivityLevel
 	k_EDeviceActivityLevel_UserInteraction = 1,				// Activity (movement or prox sensor) is happening now	
 	k_EDeviceActivityLevel_UserInteraction_Timeout = 2,		// No activity for the last 0.5 seconds
 	k_EDeviceActivityLevel_Standby = 3,						// Idle for at least 5 seconds (configurable in Settings -> Power Management)
+	k_EDeviceActivityLevel_Idle_Timeout = 4,
 };
 
 
@@ -807,9 +935,9 @@ enum EVRButtonId
 
 	k_EButton_Dashboard_Back	= k_EButton_Grip,
 
-	k_EButton_Knuckles_A		= k_EButton_Grip,
-	k_EButton_Knuckles_B		= k_EButton_ApplicationMenu,
-	k_EButton_Knuckles_JoyStick	= k_EButton_Axis3,
+	k_EButton_IndexController_A		= k_EButton_Grip,
+	k_EButton_IndexController_B		= k_EButton_ApplicationMenu,
+	k_EButton_IndexController_JoyStick	= k_EButton_Axis3,
 
 	k_EButton_Max				= 64
 };
@@ -839,11 +967,12 @@ struct VREvent_Mouse_t
 	uint32_t button; // EVRMouseButton enum
 };
 
-/** used for simulated mouse wheel scroll in overlay space */
+/** used for simulated mouse wheel scroll */
 struct VREvent_Scroll_t
 {
-	float xdelta, ydelta; // movement in fraction of the pad traversed since last delta, 1.0 for a full swipe
-	uint32_t repeatCount;
+	float xdelta, ydelta;
+	uint32_t unused;
+	float viewportscale; // For scrolling on an overlay with laser mouse, this is the overlay's vertical size relative to the overlay height. Range: [0,1]
 };
 
 /** when in mouse input mode you can receive data from the touchpad, these events are only sent if the users finger
@@ -880,6 +1009,8 @@ struct VREvent_Process_t
 	uint32_t pid;
 	uint32_t oldPid;
 	bool bForced;
+	// If the associated event was triggered by a connection loss
+	bool bConnectionLost;
 };
 
 
@@ -922,6 +1053,8 @@ struct VREvent_Reserved_t
 	uint64_t reserved1;
 	uint64_t reserved2;
 	uint64_t reserved3;
+	uint64_t reserved4;
+	uint64_t reserved5;
 };
 
 struct VREvent_PerformanceTest_t
@@ -968,19 +1101,6 @@ struct VREvent_Property_t
 	ETrackedDeviceProperty prop;
 };
 
-enum EDualAnalogWhich
-{
-	k_EDualAnalog_Left = 0,
-	k_EDualAnalog_Right = 1,
-};
-
-struct VREvent_DualAnalog_t
-{
-	float x, y; // coordinates are -1..1 analog values
-	float transformedX, transformedY; // transformed by the center and radius numbers provided by the overlay
-	EDualAnalogWhich which;
-};
-
 struct VREvent_HapticVibration_t
 {
 	uint64_t containerHandle; // property container handle of the device with the haptic component
@@ -1016,6 +1136,52 @@ struct VREvent_SpatialAnchor_t
 	SpatialAnchorHandle_t unHandle;
 };
 
+struct VREvent_ProgressUpdate_t
+{
+	uint64_t ulApplicationPropertyContainer;
+	uint64_t pathDevice;
+	uint64_t pathInputSource;
+	uint64_t pathProgressAction;
+	uint64_t pathIcon;
+	float fProgress;
+};
+
+enum EShowUIType
+{
+	ShowUI_ControllerBinding = 0,
+	ShowUI_ManageTrackers = 1,
+	// ShowUI_QuickStart = 2, // Deprecated
+	ShowUI_Pairing = 3,
+	ShowUI_Settings = 4,
+	ShowUI_DebugCommands = 5,
+	ShowUI_FullControllerBinding = 6,
+	ShowUI_ManageDrivers = 7,
+};
+
+struct VREvent_ShowUI_t
+{
+	EShowUIType eType;
+};
+
+struct VREvent_ShowDevTools_t
+{
+	int32_t nBrowserIdentifier;
+};
+
+enum EHDCPError
+{
+	HDCPError_None = 0,
+	HDCPError_LinkLost = 1,
+	HDCPError_Tampered = 2,
+	HDCPError_DeviceRevoked = 3,
+	HDCPError_Unknown = 4
+};
+
+struct VREvent_HDCPError_t
+{
+	EHDCPError eCode;
+};
+
 typedef union
 {
 	VREvent_Reserved_t reserved;
@@ -1038,12 +1204,15 @@ typedef union
 	VREvent_EditingCameraSurface_t cameraSurface;
 	VREvent_MessageOverlay_t messageOverlay;
 	VREvent_Property_t property;
-	VREvent_DualAnalog_t dualAnalog;
 	VREvent_HapticVibration_t hapticVibration;
 	VREvent_WebConsole_t webConsole;
 	VREvent_InputBindingLoad_t inputBinding;
 	VREvent_InputActionManifestLoad_t actionManifest;
 	VREvent_SpatialAnchor_t spatialAnchor;
+	VREvent_ProgressUpdate_t progressUpdate;
+	VREvent_ShowUI_t showUi;
+	VREvent_ShowDevTools_t showDevTools;
+	VREvent_HDCPError_t hdcpError;
     /** NOTE!!! If you change this you MUST manually update openvr_interop.cs.py */
 } VREvent_Data_t;
 
@@ -1068,6 +1237,28 @@ struct VREvent_t
 #pragma pack( pop )
 #endif
 
+typedef uint32_t VRComponentProperties;
+
+enum EVRComponentProperty
+{
+	VRComponentProperty_IsStatic = (1 << 0),
+	VRComponentProperty_IsVisible = (1 << 1),
+	VRComponentProperty_IsTouched = (1 << 2),
+	VRComponentProperty_IsPressed = (1 << 3),
+	VRComponentProperty_IsScrolled = (1 << 4),
+	VRComponentProperty_IsHighlighted = (1 << 5),
+};
+
+
+/** Describes state information about a render-model component, including transforms and other dynamic properties */
+struct RenderModel_ComponentState_t
+{
+	HmdMatrix34_t mTrackingToComponentRenderModel;  // Transform required when drawing the component render model
+	HmdMatrix34_t mTrackingToComponentLocal;        // Transform available for attaching to a local component coordinate system (-Z out from surface )
+	VRComponentProperties uProperties;
+};
+
+
 enum EVRInputError
 {
 	VRInputError_None = 0,
@@ -1087,6 +1278,10 @@ enum EVRInputError
 	VRInputError_BufferTooSmall = 14,
 	VRInputError_MismatchedActionManifest = 15,
 	VRInputError_MissingSkeletonData = 16,
+	VRInputError_InvalidBoneIndex = 17,
+	VRInputError_InvalidPriority = 18,
+	VRInputError_PermissionDenied = 19,
+	VRInputError_InvalidRenderModel = 20,
 };
 
 enum EVRSpatialAnchorError
@@ -1203,17 +1398,6 @@ enum ECollisionBoundsStyle
 	COLLISION_BOUNDS_STYLE_COUNT
 };
 
-/** Allows the application to customize how the overlay appears in the compositor */
-struct Compositor_OverlaySettings
-{
-	uint32_t size; // sizeof(Compositor_OverlaySettings)
-	bool curved, antialias;
-	float scale, distance, alpha;
-	float uOffset, vOffset, uScale, vScale;
-	float gridDivs, gridWidth, gridScale;
-	HmdMatrix44_t transform;
-};
-
 /** used to refer to a single VR overlay */
 typedef uint64_t VROverlayHandle_t;
 
@@ -1262,7 +1446,8 @@ enum EVRApplicationType
 									// interfaces (like IVRSettings and IVRApplications) but not hardware.
 	VRApplication_VRMonitor = 5,	// Reserved for vrmonitor
 	VRApplication_SteamWatchdog = 6,// Reserved for Steam
-	VRApplication_Bootstrapper = 7, // Start up SteamVR
+	VRApplication_Bootstrapper = 7, // reserved for vrstartup
+	VRApplication_WebHelper = 8,	// reserved for vrwebhelper
 
 	VRApplication_Max
 };
@@ -1300,6 +1485,28 @@ enum EVRSkeletalMotionRange
 	VRSkeletalMotionRange_WithoutController = 1,
 };
 
+enum EVRSkeletalTrackingLevel
+{
+	// body part location can't be directly determined by the device. Any skeletal pose provided by
+	// the device is estimated by assuming the position required to active buttons, triggers, joysticks, 
+	// or other input sensors. 
+	// E.g. Vive Controller, Gamepad
+	VRSkeletalTracking_Estimated = 0,
+
+	// body part location can be measured directly but with fewer degrees of freedom than the actual body 
+	// part. Certain body part positions may be unmeasured by the device and estimated from other input data. 
+	// E.g. Index Controllers, gloves that only measure finger curl
+	VRSkeletalTracking_Partial = 1,
+
+	// Body part location can be measured directly throughout the entire range of motion of the body part. 
+	// E.g. Mocap suit for the full body, gloves that measure rotation of each finger segment
+	VRSkeletalTracking_Full = 2,
+
+	VRSkeletalTrackingLevel_Count,
+	VRSkeletalTrackingLevel_Max = VRSkeletalTrackingLevel_Count - 1
+};
+
+
 
 /** Holds the transform for a single bone */
 struct VRBoneTransform_t
@@ -1307,6 +1514,10 @@ struct VRBoneTransform_t
 	HmdVector4_t position;
 	HmdQuaternionf_t orientation;
 };
+
+/** Type used for referring to bones by their index */
+typedef int32_t BoneIndex_t;
+const BoneIndex_t k_unInvalidBoneIndex = -1;
 
 
 /** error codes returned by Vr_Init */
@@ -1360,6 +1571,10 @@ enum EVRInitError
 	VRInitError_Init_USBServiceBusy					= 140,
 	VRInitError_Init_VRWebHelperStartupFailed		= 141,
 	VRInitError_Init_TrackerManagerInitFailed		= 142,
+	VRInitError_Init_AlreadyRunning					= 143,
+	VRInitError_Init_FailedForVrMonitor				= 144,
+	VRInitError_Init_PropertyManagerInitFailed		= 145,
+	VRInitError_Init_WebServerFailed				= 146,
 
 	VRInitError_Driver_Failed						= 200,
 	VRInitError_Driver_Unknown						= 201,
@@ -1374,6 +1589,8 @@ enum EVRInitError
 	// VRInitError_Driver_HmdDisplayNotFoundAfterFix = 210, // not needed: here for historic reasons
 	VRInitError_Driver_HmdDriverIdOutOfBounds		= 211,
 	VRInitError_Driver_HmdDisplayMirrored			= 212,
+	VRInitError_Driver_HmdDisplayNotFoundLaptop		= 213,
+	// Never make error 259 because we return it from main and it would conflict with STILL_ACTIVE
 
 	VRInitError_IPC_ServerInitFailed				= 300,
 	VRInitError_IPC_ConnectFailed					= 301,
@@ -1384,14 +1601,101 @@ enum EVRInitError
 	VRInitError_IPC_CompositorConnectFailed			= 306,
 	VRInitError_IPC_CompositorInvalidConnectResponse = 307,
 	VRInitError_IPC_ConnectFailedAfterMultipleAttempts = 308,
+	VRInitError_IPC_ConnectFailedAfterTargetExited = 309,
+	VRInitError_IPC_NamespaceUnavailable			 = 310,
 
-	VRInitError_Compositor_Failed					= 400,
-	VRInitError_Compositor_D3D11HardwareRequired	= 401,
-	VRInitError_Compositor_FirmwareRequiresUpdate	= 402,
-	VRInitError_Compositor_OverlayInitFailed		= 403,
-	VRInitError_Compositor_ScreenshotsInitFailed	= 404,
-	VRInitError_Compositor_UnableToCreateDevice		= 405,
-
+	VRInitError_Compositor_Failed												= 400,
+	VRInitError_Compositor_D3D11HardwareRequired								= 401,
+	VRInitError_Compositor_FirmwareRequiresUpdate								= 402,
+	VRInitError_Compositor_OverlayInitFailed									= 403,
+	VRInitError_Compositor_ScreenshotsInitFailed								= 404,
+	VRInitError_Compositor_UnableToCreateDevice									= 405,
+	VRInitError_Compositor_SharedStateIsNull									= 406,
+	VRInitError_Compositor_NotificationManagerIsNull							= 407,
+	VRInitError_Compositor_ResourceManagerClientIsNull							= 408,
+	VRInitError_Compositor_MessageOverlaySharedStateInitFailure					= 409,
+	VRInitError_Compositor_PropertiesInterfaceIsNull							= 410,
+	VRInitError_Compositor_CreateFullscreenWindowFailed							= 411,
+	VRInitError_Compositor_SettingsInterfaceIsNull								= 412,
+	VRInitError_Compositor_FailedToShowWindow									= 413,
+	VRInitError_Compositor_DistortInterfaceIsNull								= 414,
+	VRInitError_Compositor_DisplayFrequencyFailure								= 415,
+	VRInitError_Compositor_RendererInitializationFailed							= 416,
+	VRInitError_Compositor_DXGIFactoryInterfaceIsNull							= 417,
+	VRInitError_Compositor_DXGIFactoryCreateFailed								= 418,
+	VRInitError_Compositor_DXGIFactoryQueryFailed								= 419,
+	VRInitError_Compositor_InvalidAdapterDesktop								= 420,
+	VRInitError_Compositor_InvalidHmdAttachment									= 421,
+	VRInitError_Compositor_InvalidOutputDesktop									= 422,
+	VRInitError_Compositor_InvalidDeviceProvided								= 423,
+	VRInitError_Compositor_D3D11RendererInitializationFailed					= 424,
+	VRInitError_Compositor_FailedToFindDisplayMode								= 425,
+	VRInitError_Compositor_FailedToCreateSwapChain								= 426,
+	VRInitError_Compositor_FailedToGetBackBuffer								= 427,
+	VRInitError_Compositor_FailedToCreateRenderTarget							= 428,
+	VRInitError_Compositor_FailedToCreateDXGI2SwapChain							= 429,
+	VRInitError_Compositor_FailedtoGetDXGI2BackBuffer							= 430,
+	VRInitError_Compositor_FailedToCreateDXGI2RenderTarget						= 431,
+	VRInitError_Compositor_FailedToGetDXGIDeviceInterface						= 432,
+	VRInitError_Compositor_SelectDisplayMode									= 433,
+	VRInitError_Compositor_FailedToCreateNvAPIRenderTargets						= 434,
+	VRInitError_Compositor_NvAPISetDisplayMode									= 435,
+	VRInitError_Compositor_FailedToCreateDirectModeDisplay						= 436,
+	VRInitError_Compositor_InvalidHmdPropertyContainer							= 437,
+	VRInitError_Compositor_UpdateDisplayFrequency								= 438,
+	VRInitError_Compositor_CreateRasterizerState								= 439,
+	VRInitError_Compositor_CreateWireframeRasterizerState						= 440,
+	VRInitError_Compositor_CreateSamplerState									= 441,
+	VRInitError_Compositor_CreateClampToBorderSamplerState						= 442,
+	VRInitError_Compositor_CreateAnisoSamplerState								= 443,
+	VRInitError_Compositor_CreateOverlaySamplerState							= 444,
+	VRInitError_Compositor_CreatePanoramaSamplerState							= 445,
+	VRInitError_Compositor_CreateFontSamplerState								= 446,
+	VRInitError_Compositor_CreateNoBlendState									= 447,
+	VRInitError_Compositor_CreateBlendState										= 448,
+	VRInitError_Compositor_CreateAlphaBlendState								= 449,
+	VRInitError_Compositor_CreateBlendStateMaskR								= 450,
+	VRInitError_Compositor_CreateBlendStateMaskG								= 451,
+	VRInitError_Compositor_CreateBlendStateMaskB								= 452,
+	VRInitError_Compositor_CreateDepthStencilState								= 453,
+	VRInitError_Compositor_CreateDepthStencilStateNoWrite						= 454,
+	VRInitError_Compositor_CreateDepthStencilStateNoDepth						= 455,
+	VRInitError_Compositor_CreateFlushTexture									= 456,
+	VRInitError_Compositor_CreateDistortionSurfaces								= 457,
+	VRInitError_Compositor_CreateConstantBuffer									= 458,
+	VRInitError_Compositor_CreateHmdPoseConstantBuffer							= 459,
+	VRInitError_Compositor_CreateHmdPoseStagingConstantBuffer					= 460,
+	VRInitError_Compositor_CreateSharedFrameInfoConstantBuffer					= 461,
+	VRInitError_Compositor_CreateOverlayConstantBuffer							= 462,
+	VRInitError_Compositor_CreateSceneTextureIndexConstantBuffer				= 463,
+	VRInitError_Compositor_CreateReadableSceneTextureIndexConstantBuffer		= 464,
+	VRInitError_Compositor_CreateLayerGraphicsTextureIndexConstantBuffer		= 465,
+	VRInitError_Compositor_CreateLayerComputeTextureIndexConstantBuffer			= 466,
+	VRInitError_Compositor_CreateLayerComputeSceneTextureIndexConstantBuffer	= 467,
+	VRInitError_Compositor_CreateComputeHmdPoseConstantBuffer					= 468,
+	VRInitError_Compositor_CreateGeomConstantBuffer								= 469,
+	VRInitError_Compositor_CreatePanelMaskConstantBuffer						= 470,
+	VRInitError_Compositor_CreatePixelSimUBO									= 471,
+	VRInitError_Compositor_CreateMSAARenderTextures								= 472,
+	VRInitError_Compositor_CreateResolveRenderTextures							= 473,
+	VRInitError_Compositor_CreateComputeResolveRenderTextures					= 474,
+	VRInitError_Compositor_CreateDriverDirectModeResolveTextures				= 475,
+	VRInitError_Compositor_OpenDriverDirectModeResolveTextures					= 476,
+	VRInitError_Compositor_CreateFallbackSyncTexture							= 477,
+	VRInitError_Compositor_ShareFallbackSyncTexture								= 478,
+	VRInitError_Compositor_CreateOverlayIndexBuffer								= 479,
+	VRInitError_Compositor_CreateOverlayVertexBuffer							= 480,
+	VRInitError_Compositor_CreateTextVertexBuffer								= 481,
+	VRInitError_Compositor_CreateTextIndexBuffer								= 482,
+	VRInitError_Compositor_CreateMirrorTextures									= 483,
+	VRInitError_Compositor_CreateLastFrameRenderTexture							= 484,
+	VRInitError_Compositor_CreateMirrorOverlay									= 485,
+	VRInitError_Compositor_FailedToCreateVirtualDisplayBackbuffer				= 486,
+	VRInitError_Compositor_DisplayModeNotSupported								= 487,
+	VRInitError_Compositor_CreateOverlayInvalidCall								= 488,
+	VRInitError_Compositor_CreateOverlayAlreadyInitialized						= 489,
+	VRInitError_Compositor_FailedToCreateMailbox								= 490,
+	
 	VRInitError_VendorSpecific_UnableToConnectToOculusRuntime		= 1000,
 	VRInitError_VendorSpecific_WindowsNotInDevMode					= 1001,
 
@@ -1408,8 +1712,12 @@ enum EVRInitError
 	VRInitError_VendorSpecific_HmdFound_UserDataAddressRange		= 1111,
 	VRInitError_VendorSpecific_HmdFound_UserDataError				= 1112,
 	VRInitError_VendorSpecific_HmdFound_ConfigFailedSanityCheck		= 1113,
+	VRInitError_VendorSpecific_OculusRuntimeBadInstall				= 1114,
 
 	VRInitError_Steam_SteamInstallationNotFound = 2000,
+
+	// Strictly a placeholder
+	VRInitError_LastError
 };
 
 enum EVRScreenshotType
@@ -1465,6 +1773,16 @@ enum EVRTrackedCameraFrameType
 	MAX_CAMERA_FRAME_TYPES
 };
 
+enum EVRDistortionFunctionType
+{
+	VRDistortionFunctionType_None,
+	VRDistortionFunctionType_FTheta,
+	VRDistortionFunctionType_Extended_FTheta,
+	MAX_DISTORTION_FUNCTION_TYPES,
+};
+
+static const uint32_t k_unMaxDistortionFunctionParameters = 8;
+
 typedef uint64_t TrackedCameraHandle_t;
 #define INVALID_TRACKED_CAMERA_HANDLE	((vr::TrackedCameraHandle_t)0)
 
@@ -1478,7 +1796,7 @@ struct CameraVideoStreamFrameHeader_t
 
 	uint32_t nFrameSequence;
 
-	TrackedDevicePose_t standingTrackedDevicePose;
+	TrackedDevicePose_t trackedDevicePose;
 	
 	uint64_t ulFrameExposureTime;						// mid-point of the exposure of the image in host system ticks
 };
@@ -1487,6 +1805,82 @@ struct CameraVideoStreamFrameHeader_t
 typedef uint32_t ScreenshotHandle_t;
 
 static const uint32_t k_unScreenshotHandleInvalid = 0;
+
+/** Compositor frame timing reprojection flags. */
+const uint32_t VRCompositor_ReprojectionReason_Cpu = 0x01;
+const uint32_t VRCompositor_ReprojectionReason_Gpu = 0x02;
+const uint32_t VRCompositor_ReprojectionAsync = 0x04;	// This flag indicates the async reprojection mode is active,
+															// but does not indicate if reprojection actually happened or not.
+															// Use the ReprojectionReason flags above to check if reprojection
+															// was actually applied (i.e. scene texture was reused).
+															// NumFramePresents > 1 also indicates the scene texture was reused,
+															// and also the number of times that it was presented in total.
+
+const uint32_t VRCompositor_ReprojectionMotion = 0x08;	// This flag indicates whether or not motion smoothing was triggered for this frame
+
+const uint32_t VRCompositor_PredictionMask = 0x30;	// The runtime may predict more than one frame (up to four) ahead if
+															// it detects the application is taking too long to render. These two
+															// bits will contain the count of additional frames (normally zero).
+															// Use the VR_COMPOSITOR_ADDITIONAL_PREDICTED_FRAMES macro to read from
+															// the latest frame timing entry.
+
+const uint32_t VRCompositor_ThrottleMask = 0xC0;	// Number of frames the compositor is throttling the application.
+															// Use the VR_COMPOSITOR_NUMBER_OF_THROTTLED_FRAMES macro to read from
+															// the latest frame timing entry.
+
+#define VR_COMPOSITOR_ADDITIONAL_PREDICTED_FRAMES( timing ) ( ( ( timing ).m_nReprojectionFlags & vr::VRCompositor_PredictionMask ) >> 4 )
+#define VR_COMPOSITOR_NUMBER_OF_THROTTLED_FRAMES( timing ) ( ( ( timing ).m_nReprojectionFlags & vr::VRCompositor_ThrottleMask ) >> 6 )
+
+/** Provides a single frame's timing information to the app */
+struct Compositor_FrameTiming
+{
+	uint32_t m_nSize; // Set to sizeof( Compositor_FrameTiming )
+	uint32_t m_nFrameIndex;
+	uint32_t m_nNumFramePresents; // number of times this frame was presented
+	uint32_t m_nNumMisPresented; // number of times this frame was presented on a vsync other than it was originally predicted to
+	uint32_t m_nNumDroppedFrames; // number of additional times previous frame was scanned out
+	uint32_t m_nReprojectionFlags;
+
+	/** Absolute time reference for comparing frames.  This aligns with the vsync that running start is relative to. */
+	double m_flSystemTimeInSeconds;
+
+	/** These times may include work from other processes due to OS scheduling.
+	* The fewer packets of work these are broken up into, the less likely this will happen.
+	* GPU work can be broken up by calling Flush.  This can sometimes be useful to get the GPU started
+	* processing that work earlier in the frame. */
+	float m_flPreSubmitGpuMs; // time spent rendering the scene (gpu work submitted between WaitGetPoses and second Submit)
+	float m_flPostSubmitGpuMs; // additional time spent rendering by application (e.g. companion window)
+	float m_flTotalRenderGpuMs; // time between work submitted immediately after present (ideally vsync) until the end of compositor submitted work
+	float m_flCompositorRenderGpuMs; // time spend performing distortion correction, rendering chaperone, overlays, etc.
+	float m_flCompositorRenderCpuMs; // time spent on cpu submitting the above work for this frame
+	float m_flCompositorIdleCpuMs; // time spent waiting for running start (application could have used this much more time)
+
+	/** Miscellaneous measured intervals. */
+	float m_flClientFrameIntervalMs; // time between calls to WaitGetPoses
+	float m_flPresentCallCpuMs; // time blocked on call to present (usually 0.0, but can go long)
+	float m_flWaitForPresentCpuMs; // time spent spin-waiting for frame index to change (not near-zero indicates wait object failure)
+	float m_flSubmitFrameMs; // time spent in IVRCompositor::Submit (not near-zero indicates driver issue)
+
+	/** The following are all relative to this frame's SystemTimeInSeconds */
+	float m_flWaitGetPosesCalledMs;
+	float m_flNewPosesReadyMs;
+	float m_flNewFrameReadyMs; // second call to IVRCompositor::Submit
+	float m_flCompositorUpdateStartMs;
+	float m_flCompositorUpdateEndMs;
+	float m_flCompositorRenderStartMs;
+
+	vr::TrackedDevicePose_t m_HmdPose; // pose used by app to render this frame
+
+	uint32_t m_nNumVSyncsReadyForUse;
+	uint32_t m_nNumVSyncsToFirstView;
+};
+
+/** Provides compositor benchmark results to the app */
+struct Compositor_BenchmarkResults
+{
+	float m_flMegaPixelsPerSecond; // Measurement of GPU MP/s performed by compositor benchmark
+	float m_flHmdRecommendedMegaPixelsPerSecond; // Recommended default MP/s given the HMD resolution, refresh, and panel mask.
+};
 
 /** Frame timing data provided by direct mode drivers. */
 struct DriverDirectMode_FrameTiming
@@ -1497,6 +1891,12 @@ struct DriverDirectMode_FrameTiming
 	uint32_t m_nNumDroppedFrames; // number of additional times previous frame was scanned out (i.e. compositor missed vsync)
 	uint32_t m_nReprojectionFlags;
 };
+
+/** These flags will be set on DriverDirectMode_FrameTiming::m_nReprojectionFlags when IVRDriverDirectModeComponent::GetFrameTiming is called for drivers to optionally respond to. */
+const uint32_t VRCompositor_ReprojectionMotion_Enabled = 0x100; // Motion Smoothing is enabled in the UI for the currently running application
+const uint32_t VRCompositor_ReprojectionMotion_ForcedOn = 0x200; // Motion Smoothing is forced on in the UI for the currently running application
+const uint32_t VRCompositor_ReprojectionMotion_AppThrottled = 0x400; // Application is requesting throttling via ForceInterleavedReprojectionOn
+
 
 enum EVSync
 {
@@ -1534,32 +1934,37 @@ struct ImuSample_t
 
 #define VR_INTERFACE
 
+// Mozilla: see README.mozilla for more details
 // figure out how to import from the VR API dll
 // #if defined(_WIN32)
 
-// #ifdef VR_API_EXPORT
-// #define VR_INTERFACE extern "C" __declspec( dllexport )
-// #else
-// #define VR_INTERFACE extern "C" __declspec( dllimport )
-// #endif
+//   #if !defined(OPENVR_BUILD_STATIC)
+//     #ifdef VR_API_EXPORT
+//       #define VR_INTERFACE extern "C" __declspec( dllexport )
+//     #else
+//       #define VR_INTERFACE extern "C" __declspec( dllimport )
+//     #endif
+//   #else
+//     #define VR_INTERFACE extern "C"
+//   #endif
 
 // #elif defined(__GNUC__) || defined(COMPILER_GCC) || defined(__APPLE__)
 
 // #ifdef VR_API_EXPORT
-// #define VR_INTERFACE extern "C" __attribute__((visibility("default")))
+//   #define VR_INTERFACE extern "C" __attribute__((visibility("default")))
 // #else
-// #define VR_INTERFACE extern "C" 
+//   #define VR_INTERFACE extern "C" 
 // #endif
 
 // #else
-// #error "Unsupported Platform."
+//   #error "Unsupported Platform."
 // #endif
 
 
 #if defined( _WIN32 )
-#define VR_CALLTYPE __cdecl
+  #define VR_CALLTYPE __cdecl
 #else
-#define VR_CALLTYPE 
+  #define VR_CALLTYPE 
 #endif
 
 } // namespace vr
@@ -1853,15 +2258,6 @@ public:
 	virtual bool ShouldApplicationReduceRenderingWork() = 0;
 
 	// ------------------------------------
-	// Debug Methods
-	// ------------------------------------
-
-	/** Sends a request to the driver for the specified device and returns the response. The maximum response size is 32k,
-	* but this method can be called with a smaller buffer. If the response exceeds the size of the buffer, it is truncated. 
-	* The size of the response including its terminating null is returned. */
-	virtual uint32_t DriverDebugRequest( vr::TrackedDeviceIndex_t unDeviceIndex, const char *pchRequest, VR_OUT_STRING() char *pchResponseBuffer, uint32_t unResponseBufferSize ) = 0;
-
-	// ------------------------------------
 	// Firmware methods
 	// ------------------------------------
 	
@@ -1880,14 +2276,29 @@ public:
 	* This extends the timeout until the process is killed. */
 	virtual void AcknowledgeQuit_Exiting() = 0;
 
-	/** Call this to tell the system that the user is being prompted to save data. This
-	* halts the timeout and dismisses the dashboard (if it was up). Applications should be sure to actually 
-	* prompt the user to save and then exit afterward, otherwise the user will be left in a confusing state. */
-	virtual void AcknowledgeQuit_UserPrompt() = 0;
+	// -------------------------------------
+	// App container sandbox methods
+	// -------------------------------------
+
+	/** Retrieves a null-terminated, semicolon-delimited list of UTF8 file paths that an application 
+	* must have read access to when running inside of an app container. Returns the number of bytes
+	* needed to hold the list. */
+	virtual uint32_t GetAppContainerFilePaths( VR_OUT_STRING() char *pchBuffer, uint32_t unBufferSize ) = 0;
+
+	// -------------------------------------
+	// System methods
+	// -------------------------------------
+
+	/** Returns the current version of the SteamVR runtime. The returned string will remain valid until VR_Shutdown is called.
+	*
+	* NOTE: Is it not appropriate to use this version to test for the presence of any SteamVR feature. Only use this version
+	* number for logging or showing to a user, and not to try to detect anything at runtime. When appropriate, feature-specific
+	* presence information is provided by other APIs. */
+	virtual const char *GetRuntimeVersion() = 0;
 
 };
 
-static const char * const IVRSystem_Version = "IVRSystem_019";
+static const char * const IVRSystem_Version = "IVRSystem_021";
 
 }
 
@@ -1949,19 +2360,18 @@ namespace vr
 		VRApplicationProperty_IsInstanced_Bool			= 62,
 		VRApplicationProperty_IsInternal_Bool			= 63,
 		VRApplicationProperty_WantsCompositorPauseInStandby_Bool = 64,
+		VRApplicationProperty_IsHidden_Bool				= 65,
 
 		VRApplicationProperty_LastLaunchTime_Uint64		= 70,
 	};
 
-	/** These are states the scene application startup process will go through. */
-	enum EVRApplicationTransitionState
+	enum EVRSceneApplicationState
 	{
-		VRApplicationTransition_None = 0,
-
-		VRApplicationTransition_OldAppQuitSent = 10,
-		VRApplicationTransition_WaitingForExternalLaunch = 11,
-		
-		VRApplicationTransition_NewAppLaunched = 20,
+		EVRSceneApplicationState_None						      = 0, // Scene Application is not running
+		EVRSceneApplicationState_Starting					      = 1, // Scene Application is starting
+		EVRSceneApplicationState_Quitting					      = 2, // Scene Application is quitting
+		EVRSceneApplicationState_Running						  = 3, // Scene Application is running, and submitting frames, a custom skybox, or a visible overlay
+		EVRSceneApplicationState_Waiting						  = 4, // Scene Application is running, but not drawing anything
 	};
 
 	struct AppOverrideKeys_t
@@ -2071,7 +2481,7 @@ namespace vr
 		virtual EVRApplicationError GetStartingApplication( VR_OUT_STRING() char *pchAppKeyBuffer, uint32_t unAppKeyBufferLen ) = 0;
 
 		/** Returns the application transition state */
-		virtual EVRApplicationTransitionState GetTransitionState() = 0;
+		virtual EVRSceneApplicationState GetSceneApplicationState() = 0;
 
 		/** Returns errors that would prevent the specified application from launching immediately. Calling this function will
 		* cause the current scene application to quit, so only call it when you are actually about to launch something else.
@@ -2085,10 +2495,7 @@ namespace vr
 		virtual EVRApplicationError PerformApplicationPrelaunchCheck( const char *pchAppKey ) = 0;
 
 		/** Returns a string for an application transition state */
-		virtual const char *GetApplicationsTransitionStateNameFromEnum( EVRApplicationTransitionState state ) = 0;
-
-		/** Returns true if the outgoing scene app has requested a save prompt before exiting */
-		virtual bool IsQuitUserPromptRequested() = 0;
+		virtual const char *GetSceneApplicationStateNameFromEnum( EVRSceneApplicationState state ) = 0;
 
 		/** Starts a subprocess within the calling application. This
 		* suppresses all application transition UI and automatically identifies the new executable 
@@ -2103,7 +2510,7 @@ namespace vr
 		virtual uint32_t GetCurrentSceneProcessId() = 0;
 	};
 
-	static const char * const IVRApplications_Version = "IVRApplications_006";
+	static const char * const IVRApplications_Version = "IVRApplications_007";
 
 } // namespace vr
 
@@ -2130,9 +2537,6 @@ namespace vr
 	public:
 		virtual const char *GetSettingsErrorNameFromEnum( EVRSettingsError eError ) = 0;
 
-		// Returns true if file sync occurred (force or settings dirty)
-		virtual bool Sync( bool bForce = false, EVRSettingsError *peError = nullptr ) = 0;
-
 		virtual void SetBool( const char *pchSection, const char *pchSettingsKey, bool bValue, EVRSettingsError *peError = nullptr ) = 0;
 		virtual void SetInt32( const char *pchSection, const char *pchSettingsKey, int32_t nValue, EVRSettingsError *peError = nullptr ) = 0;
 		virtual void SetFloat( const char *pchSection, const char *pchSettingsKey, float flValue, EVRSettingsError *peError = nullptr ) = 0;
@@ -2150,13 +2554,14 @@ namespace vr
 	};
 
 	//-----------------------------------------------------------------------------
-	static const char * const IVRSettings_Version = "IVRSettings_002";
+	static const char * const IVRSettings_Version = "IVRSettings_003";
 
 	class CVRSettingHelper
 	{
 		IVRSettings *m_pSettings;
 	public:
-		explicit CVRSettingHelper( IVRSettings *pSettings )
+	  // Mozilla: see README.mozilla for more details
+		explicit CVRSettingHelper( IVRSettings *pSettings ) 
 		{ 
 			m_pSettings = pSettings; 
 		}
@@ -2164,12 +2569,6 @@ namespace vr
 		const char *GetSettingsErrorNameFromEnum( EVRSettingsError eError ) 
 		{ 
 			return m_pSettings->GetSettingsErrorNameFromEnum( eError ); 
-		}
-
-		// Returns true if file sync occurred (force or settings dirty)
-		bool Sync( bool bForce = false, EVRSettingsError *peError = nullptr ) 
-		{ 
-			return m_pSettings->Sync( bForce, peError ); 
 		}
 
 		void SetBool( const char *pchSection, const char *pchSettingsKey, bool bValue, EVRSettingsError *peError = nullptr )
@@ -2253,25 +2652,28 @@ namespace vr
 	static const char * const k_pch_SteamVR_BackgroundDomeRadius_Float = "backgroundDomeRadius";
 	static const char * const k_pch_SteamVR_GridColor_String = "gridColor";
 	static const char * const k_pch_SteamVR_PlayAreaColor_String = "playAreaColor";
+	static const char * const k_pch_SteamVR_TrackingLossColor_String = "trackingLossColor";
 	static const char * const k_pch_SteamVR_ShowStage_Bool = "showStage";
 	static const char * const k_pch_SteamVR_ActivateMultipleDrivers_Bool = "activateMultipleDrivers";
-	static const char * const k_pch_SteamVR_DirectMode_Bool = "directMode";
-	static const char * const k_pch_SteamVR_DirectModeEdidVid_Int32 = "directModeEdidVid";
-	static const char * const k_pch_SteamVR_DirectModeEdidPid_Int32 = "directModeEdidPid";
 	static const char * const k_pch_SteamVR_UsingSpeakers_Bool = "usingSpeakers";
 	static const char * const k_pch_SteamVR_SpeakersForwardYawOffsetDegrees_Float = "speakersForwardYawOffsetDegrees";
-	static const char * const k_pch_SteamVR_BaseStationPowerManagement_Bool = "basestationPowerManagement";
+	static const char * const k_pch_SteamVR_BaseStationPowerManagement_Int32 = "basestationPowerManagement";
+	static const char * const k_pch_SteamVR_ShowBaseStationPowerManagementTip_Int32 = "ShowBaseStationPowerManagementTip";
 	static const char * const k_pch_SteamVR_NeverKillProcesses_Bool = "neverKillProcesses";
 	static const char * const k_pch_SteamVR_SupersampleScale_Float = "supersampleScale";
 	static const char * const k_pch_SteamVR_MaxRecommendedResolution_Int32 = "maxRecommendedResolution";
-	static const char * const k_pch_SteamVR_AllowAsyncReprojection_Bool = "allowAsyncReprojection";
-	static const char * const k_pch_SteamVR_AllowReprojection_Bool = "allowInterleavedReprojection";
-	static const char * const k_pch_SteamVR_ForceReprojection_Bool = "forceReprojection";
+	static const char * const k_pch_SteamVR_MotionSmoothing_Bool = "motionSmoothing";
+	static const char * const k_pch_SteamVR_MotionSmoothingOverride_Int32 = "motionSmoothingOverride";
+	static const char * const k_pch_SteamVR_DisableAsyncReprojection_Bool = "disableAsync";
 	static const char * const k_pch_SteamVR_ForceFadeOnBadTracking_Bool = "forceFadeOnBadTracking";
 	static const char * const k_pch_SteamVR_DefaultMirrorView_Int32 = "mirrorView";
-	static const char * const k_pch_SteamVR_ShowMirrorView_Bool = "showMirrorView";
+	static const char * const k_pch_SteamVR_ShowLegacyMirrorView_Bool = "showLegacyMirrorView";
+	static const char * const k_pch_SteamVR_MirrorViewVisibility_Bool = "showMirrorView";
+	static const char * const k_pch_SteamVR_MirrorViewDisplayMode_Int32 = "mirrorViewDisplayMode";
+	static const char * const k_pch_SteamVR_MirrorViewEye_Int32 = "mirrorViewEye";
 	static const char * const k_pch_SteamVR_MirrorViewGeometry_String = "mirrorViewGeometry";
 	static const char * const k_pch_SteamVR_MirrorViewGeometryMaximized_String = "mirrorViewGeometryMaximized";
+	static const char * const k_pch_SteamVR_PerfGraphVisibility_Bool = "showPerfGraph";
 	static const char * const k_pch_SteamVR_StartMonitorFromAppLaunch = "startMonitorFromAppLaunch";
 	static const char * const k_pch_SteamVR_StartCompositorFromAppLaunch_Bool = "startCompositorFromAppLaunch";
 	static const char * const k_pch_SteamVR_StartDashboardFromAppLaunch_Bool = "startDashboardFromAppLaunch";
@@ -2286,11 +2688,30 @@ namespace vr
 	static const char * const k_pch_SteamVR_AllowDisplayLockedMode_Bool = "allowDisplayLockedMode";
 	static const char * const k_pch_SteamVR_HaveStartedTutorialForNativeChaperoneDriver_Bool = "haveStartedTutorialForNativeChaperoneDriver";
 	static const char * const k_pch_SteamVR_ForceWindows32bitVRMonitor = "forceWindows32BitVRMonitor";
-	static const char * const k_pch_SteamVR_DebugInput = "debugInput";
-	static const char * const k_pch_SteamVR_LegacyInputRebinding = "legacyInputRebinding";
 	static const char * const k_pch_SteamVR_DebugInputBinding = "debugInputBinding";
-	static const char * const k_pch_SteamVR_InputBindingUIBlock = "inputBindingUI";
+	static const char * const k_pch_SteamVR_DoNotFadeToGrid = "doNotFadeToGrid";
 	static const char * const k_pch_SteamVR_RenderCameraMode = "renderCameraMode";
+	static const char * const k_pch_SteamVR_EnableSharedResourceJournaling = "enableSharedResourceJournaling";
+	static const char * const k_pch_SteamVR_EnableSafeMode = "enableSafeMode";
+	static const char * const k_pch_SteamVR_PreferredRefreshRate = "preferredRefreshRate";
+	static const char * const k_pch_SteamVR_LastVersionNotice = "lastVersionNotice";
+	static const char * const k_pch_SteamVR_LastVersionNoticeDate = "lastVersionNoticeDate";
+	static const char * const k_pch_SteamVR_HmdDisplayColorGainR_Float = "hmdDisplayColorGainR";
+	static const char * const k_pch_SteamVR_HmdDisplayColorGainG_Float = "hmdDisplayColorGainG";
+	static const char * const k_pch_SteamVR_HmdDisplayColorGainB_Float = "hmdDisplayColorGainB";
+	static const char * const k_pch_SteamVR_CustomIconStyle_String = "customIconStyle";
+	static const char * const k_pch_SteamVR_CustomOffIconStyle_String = "customOffIconStyle";
+	static const char * const k_pch_SteamVR_CustomIconForceUpdate_String = "customIconForceUpdate";
+	static const char * const k_pch_SteamVR_AllowGlobalActionSetPriority = "globalActionSetPriority";
+	static const char * const k_pch_SteamVR_OverlayRenderQuality = "overlayRenderQuality_2";
+
+	//-----------------------------------------------------------------------------
+	// direct mode keys
+	static const char * const k_pch_DirectMode_Section = "direct_mode";
+	static const char * const k_pch_DirectMode_Enable_Bool = "enable";
+	static const char * const k_pch_DirectMode_Count_Int32 = "count";
+	static const char * const k_pch_DirectMode_EdidVid_Int32 = "edidVid";
+	static const char * const k_pch_DirectMode_EdidPid_Int32 = "edidPid";
 
 	//-----------------------------------------------------------------------------
 	// lighthouse keys
@@ -2303,6 +2724,8 @@ namespace vr
 	static const char * const k_pch_Lighthouse_DBHistory_Bool = "dbhistory";
 	static const char * const k_pch_Lighthouse_EnableBluetooth_Bool = "enableBluetooth";
 	static const char * const k_pch_Lighthouse_PowerManagedBaseStations_String = "PowerManagedBaseStations";
+	static const char * const k_pch_Lighthouse_PowerManagedBaseStations2_String = "PowerManagedBaseStations2";
+	static const char * const k_pch_Lighthouse_InactivityTimeoutForBaseStations_Int32 = "InactivityTimeoutForBaseStations";
 	static const char * const k_pch_Lighthouse_EnableImuFallback_Bool = "enableImuFallback";
 
 	//-----------------------------------------------------------------------------
@@ -2318,6 +2741,10 @@ namespace vr
 	static const char * const k_pch_Null_RenderHeight_Int32 = "renderHeight";
 	static const char * const k_pch_Null_SecondsFromVsyncToPhotons_Float = "secondsFromVsyncToPhotons";
 	static const char * const k_pch_Null_DisplayFrequency_Float = "displayFrequency";
+
+	//-----------------------------------------------------------------------------
+	// Windows MR keys
+	static const char * const k_pch_WindowsMR_Section = "driver_holographic";
 
 	//-----------------------------------------------------------------------------
 	// user interface keys
@@ -2351,7 +2778,7 @@ namespace vr
 	static const char * const k_pch_Perf_AllowTimingStore_Bool = "allowTimingStore";
 	static const char * const k_pch_Perf_SaveTimingsOnExit_Bool = "saveTimingsOnExit";
 	static const char * const k_pch_Perf_TestData_Float = "perfTestData";
-	static const char * const k_pch_Perf_LinuxGPUProfiling_Bool = "linuxGPUProfiling";
+	static const char * const k_pch_Perf_GPUProfiling_Bool = "GPUProfiling";
 
 	//-----------------------------------------------------------------------------
 	// collision bounds keys
@@ -2361,10 +2788,12 @@ namespace vr
 	static const char * const k_pch_CollisionBounds_CenterMarkerOn_Bool = "CollisionBoundsCenterMarkerOn";
 	static const char * const k_pch_CollisionBounds_PlaySpaceOn_Bool = "CollisionBoundsPlaySpaceOn";
 	static const char * const k_pch_CollisionBounds_FadeDistance_Float = "CollisionBoundsFadeDistance";
+	static const char * const k_pch_CollisionBounds_WallHeight_Float = "CollisionBoundsWallHeight";
 	static const char * const k_pch_CollisionBounds_ColorGammaR_Int32 = "CollisionBoundsColorGammaR";
 	static const char * const k_pch_CollisionBounds_ColorGammaG_Int32 = "CollisionBoundsColorGammaG";
 	static const char * const k_pch_CollisionBounds_ColorGammaB_Int32 = "CollisionBoundsColorGammaB";
 	static const char * const k_pch_CollisionBounds_ColorGammaA_Int32 = "CollisionBoundsColorGammaA";
+	static const char * const k_pch_CollisionBounds_EnableDriverImport = "enableDriverBoundsImport";
 
 	//-----------------------------------------------------------------------------
 	// camera keys
@@ -2383,11 +2812,21 @@ namespace vr
 	//-----------------------------------------------------------------------------
 	// audio keys
 	static const char * const k_pch_audio_Section = "audio";
-	static const char * const k_pch_audio_OnPlaybackDevice_String = "onPlaybackDevice";
-	static const char * const k_pch_audio_OnRecordDevice_String = "onRecordDevice";
-	static const char * const k_pch_audio_OnPlaybackMirrorDevice_String = "onPlaybackMirrorDevice";
-	static const char * const k_pch_audio_OffPlaybackDevice_String = "offPlaybackDevice";
-	static const char * const k_pch_audio_OffRecordDevice_String = "offRecordDevice";
+	static const char * const k_pch_audio_SetOsDefaultPlaybackDevice_Bool = "setOsDefaultPlaybackDevice";
+	static const char * const k_pch_audio_EnablePlaybackDeviceOverride_Bool = "enablePlaybackDeviceOverride";
+	static const char * const k_pch_audio_PlaybackDeviceOverride_String = "playbackDeviceOverride";
+	static const char * const k_pch_audio_PlaybackDeviceOverrideName_String = "playbackDeviceOverrideName";
+	static const char * const k_pch_audio_SetOsDefaultRecordingDevice_Bool = "setOsDefaultRecordingDevice";
+	static const char * const k_pch_audio_EnableRecordingDeviceOverride_Bool = "enableRecordingDeviceOverride";
+	static const char * const k_pch_audio_RecordingDeviceOverride_String = "recordingDeviceOverride";
+	static const char * const k_pch_audio_RecordingDeviceOverrideName_String = "recordingDeviceOverrideName";
+	static const char * const k_pch_audio_EnablePlaybackMirror_Bool = "enablePlaybackMirror";
+	static const char * const k_pch_audio_PlaybackMirrorDevice_String = "playbackMirrorDevice";
+	static const char * const k_pch_audio_PlaybackMirrorDeviceName_String = "playbackMirrorDeviceName";
+	static const char * const k_pch_audio_OldPlaybackMirrorDevice_String = "onPlaybackMirrorDevice";
+	static const char * const k_pch_audio_ActiveMirrorDevice_String = "activePlaybackMirrorDevice";
+	static const char * const k_pch_audio_EnablePlaybackMirrorIndependentVolume_Bool = "enablePlaybackMirrorIndependentVolume";
+	static const char * const k_pch_audio_LastHmdPlaybackDeviceId_String = "lastHmdPlaybackDeviceId";
 	static const char * const k_pch_audio_VIVEHDMIGain = "viveHDMIGain";
 
 	//-----------------------------------------------------------------------------
@@ -2405,9 +2844,9 @@ namespace vr
 	static const char * const k_pch_Dashboard_Section = "dashboard";
 	static const char * const k_pch_Dashboard_EnableDashboard_Bool = "enableDashboard";
 	static const char * const k_pch_Dashboard_ArcadeMode_Bool = "arcadeMode";
-	static const char * const k_pch_Dashboard_EnableWebUI = "webUI";
-	static const char * const k_pch_Dashboard_EnableWebUIDevTools = "webUIDevTools";
-	static const char * const k_pch_Dashboard_EnableWebUIDashboardReplacement = "webUIDashboard";
+	static const char * const k_pch_Dashboard_Position = "position";
+	static const char * const k_pch_Dashboard_DesktopScale = "desktopScale";
+	static const char * const k_pch_Dashboard_DashboardScale = "dashboardScale";
 
 	//-----------------------------------------------------------------------------
 	// model skin keys
@@ -2416,12 +2855,12 @@ namespace vr
 	//-----------------------------------------------------------------------------
 	// driver keys - These could be checked in any driver_<name> section
 	static const char * const k_pch_Driver_Enable_Bool = "enable";
+	static const char * const k_pch_Driver_BlockedBySafemode_Bool = "blocked_by_safe_mode";
+	static const char * const k_pch_Driver_LoadPriority_Int32 = "loadPriority";
 
 	//-----------------------------------------------------------------------------
 	// web interface keys
 	static const char* const k_pch_WebInterface_Section = "WebInterface";
-	static const char* const k_pch_WebInterface_WebEnable_Bool = "WebEnable";
-	static const char* const k_pch_WebInterface_WebPort_String = "WebPort";
 
 	//-----------------------------------------------------------------------------
 	// vrwebhelper keys
@@ -2437,13 +2876,41 @@ namespace vr
 	//-----------------------------------------------------------------------------
 	// per-app keys - the section name for these is the app key itself. Some of these are prefixed by the controller type
 	static const char* const k_pch_App_BindingAutosaveURLSuffix_String = "AutosaveURL";
+	static const char* const k_pch_App_BindingLegacyAPISuffix_String = "_legacy";
+	static const char* const k_pch_App_BindingSteamVRInputAPISuffix_String = "_steamvrinput";
 	static const char* const k_pch_App_BindingCurrentURLSuffix_String = "CurrentURL";
+	static const char* const k_pch_App_BindingPreviousURLSuffix_String = "PreviousURL";
 	static const char* const k_pch_App_NeedToUpdateAutosaveSuffix_Bool = "NeedToUpdateAutosave";
-	static const char* const k_pch_App_ActionManifestURL_String = "ActionManifestURL";
+	static const char* const k_pch_App_DominantHand_Int32 = "DominantHand";
 
 	//-----------------------------------------------------------------------------
 	// configuration for trackers
 	static const char * const k_pch_Trackers_Section = "trackers";
+
+	//-----------------------------------------------------------------------------
+	// configuration for desktop UI windows
+	static const char * const k_pch_DesktopUI_Section = "DesktopUI";
+
+	//-----------------------------------------------------------------------------
+	// Last known keys for righting recovery
+	static const char * const k_pch_LastKnown_Section = "LastKnown";
+	static const char* const k_pch_LastKnown_HMDManufacturer_String = "HMDManufacturer";
+	static const char* const k_pch_LastKnown_HMDModel_String = "HMDModel";
+
+	//-----------------------------------------------------------------------------
+	// Dismissed warnings
+	static const char * const k_pch_DismissedWarnings_Section = "DismissedWarnings";
+
+	//-----------------------------------------------------------------------------
+	// Input Settings
+	static const char * const k_pch_Input_Section = "input";
+	static const char* const k_pch_Input_LeftThumbstickRotation_Float = "leftThumbstickRotation";
+	static const char* const k_pch_Input_RightThumbstickRotation_Float = "rightThumbstickRotation";
+	static const char* const k_pch_Input_ThumbstickDeadzone_Float = "thumbstickDeadzone";
+
+	//-----------------------------------------------------------------------------
+	// Log of GPU performance
+	static const char * const k_pch_GpuSpeed_Section = "GpuSpeed";
 
 } // namespace vr
 
@@ -2578,8 +3045,11 @@ public:
 	/** Sets the Play Area in the working copy. */
 	virtual void SetWorkingPlayAreaSize( float sizeX, float sizeZ ) = 0;
 
-	/** Sets the Collision Bounds in the working copy. */
+	/** Sets the Collision Bounds in the working copy. Note: ceiling height is ignored. */
 	virtual void SetWorkingCollisionBoundsInfo( VR_ARRAY_COUNT(unQuadsCount) HmdQuad_t *pQuadsBuffer, uint32_t unQuadsCount ) = 0;
+
+	/** Sets the Collision Bounds in the working copy. */
+	virtual void SetWorkingPerimeter( VR_ARRAY_COUNT( unPointCount ) HmdVector2_t *pPointBuffer, uint32_t unPointCount ) = 0;
 
 	/** Sets the preferred seated position in the working copy. */
 	virtual void SetWorkingSeatedZeroPoseToRawTrackingPose( const HmdMatrix34_t *pMatSeatedZeroPoseToRawTrackingPose ) = 0;
@@ -2593,17 +3063,22 @@ public:
 	/** Returns the preferred seated position. */
 	virtual bool GetLiveSeatedZeroPoseToRawTrackingPose( HmdMatrix34_t *pmatSeatedZeroPoseToRawTrackingPose ) = 0;
 
-	virtual void SetWorkingCollisionBoundsTagsInfo( VR_ARRAY_COUNT(unTagCount) uint8_t *pTagsBuffer, uint32_t unTagCount ) = 0;
-	virtual bool GetLiveCollisionBoundsTagsInfo( VR_OUT_ARRAY_COUNT(punTagCount) uint8_t *pTagsBuffer, uint32_t *punTagCount ) = 0;
-
-	virtual bool SetWorkingPhysicalBoundsInfo( VR_ARRAY_COUNT(unQuadsCount) HmdQuad_t *pQuadsBuffer, uint32_t unQuadsCount ) = 0;
-	virtual bool GetLivePhysicalBoundsInfo( VR_OUT_ARRAY_COUNT(punQuadsCount) HmdQuad_t *pQuadsBuffer, uint32_t* punQuadsCount ) = 0;
-
 	virtual bool ExportLiveToBuffer( VR_OUT_STRING() char *pBuffer, uint32_t *pnBufferLength ) = 0;
 	virtual bool ImportFromBufferToWorking( const char *pBuffer, uint32_t nImportFlags ) = 0;
+
+	/** Shows the chaperone data in the working set to preview in the compositor.*/
+	virtual void ShowWorkingSetPreview() = 0;
+
+	/** Hides the chaperone data in the working set to preview in the compositor (if it was visible).*/
+	virtual void HideWorkingSetPreview() = 0;
+
+	/** Fire an event that the tracking system can use to know room setup is about to begin. This lets the tracking
+	 * system make any last minute adjustments that should be incorporated into the new setup.  If the user is adjusting
+	 * live in HMD using a tweak tool, keep in mind that calling this might cause the user to see the room jump. */
+	virtual void RoomSetupStarting() = 0;
 };
 
-static const char * const IVRChaperoneSetup_Version = "IVRChaperoneSetup_005";
+static const char * const IVRChaperoneSetup_Version = "IVRChaperoneSetup_006";
 
 
 }
@@ -2629,6 +3104,7 @@ enum EVRCompositorError
 	VRCompositorError_IndexOutOfRange			= 107,
 	VRCompositorError_AlreadySubmitted			= 108,
 	VRCompositorError_InvalidBounds				= 109,
+	VRCompositorError_AlreadySet				= 110,
 };
 
 /** Timing mode passed to SetExplicitTimingMode(); see that function for documentation */
@@ -2637,72 +3113,6 @@ enum EVRCompositorTimingMode
 	VRCompositorTimingMode_Implicit											= 0,
 	VRCompositorTimingMode_Explicit_RuntimePerformsPostPresentHandoff		= 1,
 	VRCompositorTimingMode_Explicit_ApplicationPerformsPostPresentHandoff	= 2,
-};
-
-const uint32_t VRCompositor_ReprojectionReason_Cpu = 0x01;
-const uint32_t VRCompositor_ReprojectionReason_Gpu = 0x02;
-const uint32_t VRCompositor_ReprojectionAsync      = 0x04;	// This flag indicates the async reprojection mode is active,
-															// but does not indicate if reprojection actually happened or not.
-															// Use the ReprojectionReason flags above to check if reprojection
-															// was actually applied (i.e. scene texture was reused).
-															// NumFramePresents > 1 also indicates the scene texture was reused,
-															// and also the number of times that it was presented in total.
-
-const uint32_t VRCompositor_PredictionMask         = 0x30;	// The runtime may predict more than one frame (up to four) ahead if
-															// it detects the application is taking too long to render. These two
-															// bits will contain the count of additional frames (normally zero).
-															// Use the VR_COMPOSITOR_ADDITIONAL_PREDICTED_FRAMES macro to read from
-															// the latest frame timing entry.
-
-const uint32_t VRCompositor_ThrottleMask           = 0xC0;	// Number of frames the compositor is throttling the application.
-															// Use the VR_COMPOSITOR_NUMBER_OF_THROTTLED_FRAMES macro to read from
-															// the latest frame timing entry.
-
-#define VR_COMPOSITOR_ADDITIONAL_PREDICTED_FRAMES( timing ) ( ( ( timing ).m_nReprojectionFlags & vr::VRCompositor_PredictionMask ) >> 4 )
-#define VR_COMPOSITOR_NUMBER_OF_THROTTLED_FRAMES( timing ) ( ( ( timing ).m_nReprojectionFlags & vr::VRCompositor_ThrottleMask ) >> 6 )
-
-/** Provides a single frame's timing information to the app */
-struct Compositor_FrameTiming
-{
-	uint32_t m_nSize; // Set to sizeof( Compositor_FrameTiming )
-	uint32_t m_nFrameIndex;
-	uint32_t m_nNumFramePresents; // number of times this frame was presented
-	uint32_t m_nNumMisPresented; // number of times this frame was presented on a vsync other than it was originally predicted to
-	uint32_t m_nNumDroppedFrames; // number of additional times previous frame was scanned out
-	uint32_t m_nReprojectionFlags;
-
-	/** Absolute time reference for comparing frames.  This aligns with the vsync that running start is relative to. */
-	double m_flSystemTimeInSeconds;
-
-	/** These times may include work from other processes due to OS scheduling.
-	* The fewer packets of work these are broken up into, the less likely this will happen.
-	* GPU work can be broken up by calling Flush.  This can sometimes be useful to get the GPU started
-	* processing that work earlier in the frame. */
-	float m_flPreSubmitGpuMs; // time spent rendering the scene (gpu work submitted between WaitGetPoses and second Submit)
-	float m_flPostSubmitGpuMs; // additional time spent rendering by application (e.g. companion window)
-	float m_flTotalRenderGpuMs; // time between work submitted immediately after present (ideally vsync) until the end of compositor submitted work
-	float m_flCompositorRenderGpuMs; // time spend performing distortion correction, rendering chaperone, overlays, etc.
-	float m_flCompositorRenderCpuMs; // time spent on cpu submitting the above work for this frame
-	float m_flCompositorIdleCpuMs; // time spent waiting for running start (application could have used this much more time)
-
-	/** Miscellaneous measured intervals. */
-	float m_flClientFrameIntervalMs; // time between calls to WaitGetPoses
-	float m_flPresentCallCpuMs; // time blocked on call to present (usually 0.0, but can go long)
-	float m_flWaitForPresentCpuMs; // time spent spin-waiting for frame index to change (not near-zero indicates wait object failure)
-	float m_flSubmitFrameMs; // time spent in IVRCompositor::Submit (not near-zero indicates driver issue)
-
-	/** The following are all relative to this frame's SystemTimeInSeconds */
-	float m_flWaitGetPosesCalledMs;
-	float m_flNewPosesReadyMs;
-	float m_flNewFrameReadyMs; // second call to IVRCompositor::Submit
-	float m_flCompositorUpdateStartMs;
-	float m_flCompositorUpdateEndMs;
-	float m_flCompositorRenderStartMs;
-
-	vr::TrackedDevicePose_t m_HmdPose; // pose used by app to render this frame
-
-	uint32_t m_nNumVSyncsReadyForUse;
-	uint32_t m_nNumVSyncsToFirstView;
 };
 
 /** Cumulative stats for current application.  These are not cleared until a new app connects,
@@ -2735,6 +3145,52 @@ struct Compositor_CumulativeStats
 	uint32_t m_nNumReprojectedFramesTimedOut;
 };
 
+struct Compositor_StageRenderSettings
+{
+	/** Primary color is applied as a tint to (i.e. multiplied with) the model's texture */
+	HmdColor_t m_PrimaryColor;
+	HmdColor_t m_SecondaryColor;
+
+	/** Vignette radius is in meters and is used to fade to the specified secondary solid color over
+	* that 3D distance from the origin of the playspace. */
+	float m_flVignetteInnerRadius;
+	float m_flVignetteOuterRadius;
+
+	/** Fades to the secondary color based on view incidence.  This variable controls the linearity
+	* of the effect.  It is mutually exclusive with vignette.  Additionally, it treats the mesh as faceted. */
+	float m_flFresnelStrength;
+
+	/** Controls backface culling. */
+	bool m_bBackfaceCulling;
+
+	/** Converts the render model's texture to luma and applies to rgb equally.  This is useful to
+	* combat compression artifacts that can occur on desaturated source material. */
+	bool m_bGreyscale;
+
+	/** Renders mesh as a wireframe. */
+	bool m_bWireframe;
+};
+
+static inline Compositor_StageRenderSettings DefaultStageRenderSettings()
+{
+	Compositor_StageRenderSettings settings;
+	settings.m_PrimaryColor.r = 1.0f;
+	settings.m_PrimaryColor.g = 1.0f;
+	settings.m_PrimaryColor.b = 1.0f;
+	settings.m_PrimaryColor.a = 1.0f;
+	settings.m_SecondaryColor.r = 1.0f;
+	settings.m_SecondaryColor.g = 1.0f;
+	settings.m_SecondaryColor.b = 1.0f;
+	settings.m_SecondaryColor.a = 1.0f;
+	settings.m_flVignetteInnerRadius = 0.0f;
+	settings.m_flVignetteOuterRadius = 0.0f;
+	settings.m_flFresnelStrength = 0.0f;
+	settings.m_bBackfaceCulling = false;
+	settings.m_bGreyscale = false;
+	settings.m_bWireframe = false;
+	return settings;
+}
+
 #pragma pack( pop )
 
 /** Allows the application to interact with the compositor */
@@ -2755,8 +3211,8 @@ public:
 	*	- IsNotSceneApplication (make sure to call VR_Init with VRApplicaiton_Scene)
 	*	- DoNotHaveFocus (some other app has taken focus - this will throttle the call to 10hz to reduce the impact on that app)
 	*/
-	virtual EVRCompositorError WaitGetPoses( VR_ARRAY_COUNT(unRenderPoseArrayCount) TrackedDevicePose_t* pRenderPoseArray, uint32_t unRenderPoseArrayCount,
-		VR_ARRAY_COUNT(unGamePoseArrayCount) TrackedDevicePose_t* pGamePoseArray, uint32_t unGamePoseArrayCount ) = 0;
+	virtual EVRCompositorError WaitGetPoses( VR_ARRAY_COUNT( unRenderPoseArrayCount ) TrackedDevicePose_t* pRenderPoseArray, uint32_t unRenderPoseArrayCount,
+		VR_ARRAY_COUNT( unGamePoseArrayCount ) TrackedDevicePose_t* pGamePoseArray, uint32_t unGamePoseArrayCount ) = 0;
 
 	/** Get the last set of poses returned by WaitGetPoses. */
 	virtual EVRCompositorError GetLastPoses( VR_ARRAY_COUNT( unRenderPoseArrayCount ) TrackedDevicePose_t* pRenderPoseArray, uint32_t unRenderPoseArrayCount,
@@ -2801,7 +3257,7 @@ public:
 
 	/** Interface for copying a range of timing data.  Frames are returned in ascending order (oldest to newest) with the last being the most recent frame.
 	* Only the first entry's m_nSize needs to be set, as the rest will be inferred from that.  Returns total number of entries filled out. */
-	virtual uint32_t GetFrameTimings( Compositor_FrameTiming *pTiming, uint32_t nFrames ) = 0;
+	virtual uint32_t GetFrameTimings( VR_ARRAY_COUNT( nFrames ) Compositor_FrameTiming *pTiming, uint32_t nFrames ) = 0;
 
 	/** Returns the time in seconds left in the current (as identified by FrameTiming's frameIndex) frame.
 	* Due to "running start", this value may roll over to the next frame before ever reaching 0.0. */
@@ -2856,13 +3312,14 @@ public:
 	/** Returns true if the current process has the scene focus */
 	virtual bool CanRenderScene() = 0;
 
-	/** Creates a window on the primary monitor to display what is being shown in the headset. */
+	/** DEPRECATED: Opens the headset view (as either a window or docked widget depending on user's preferences) that displays what the user
+	* sees in the headset. */
 	virtual void ShowMirrorWindow() = 0;
 
-	/** Closes the mirror window. */
+	/** DEPRECATED: Closes the headset view, either as a window or docked widget. */
 	virtual void HideMirrorWindow() = 0;
 
-	/** Returns true if the mirror window is shown. */
+	/** DEPRECATED: Returns true if the headset view (either as a window or docked widget) is shown. */
 	virtual bool IsMirrorWindowVisible() = 0;
 
 	/** Writes back buffer and stereo left/right pair from the application to a 'screenshots' folder in the SteamVR runtime root. */
@@ -2928,12 +3385,100 @@ public:
 	* will perform a vkQueueSubmit on Vulkan so must not be done simultaneously with VkQueue operations on another thread.
 	* Returns VRCompositorError_RequestFailed if SetExplicitTimingMode is not enabled. */
 	virtual EVRCompositorError SubmitExplicitTimingData() = 0;
+
+	/** Indicates whether or not motion smoothing is enabled by the user settings.
+	* If you want to know if motion smoothing actually triggered due to a late frame, check Compositor_FrameTiming
+	* m_nReprojectionFlags & VRCompositor_ReprojectionMotion instead. */
+	virtual bool IsMotionSmoothingEnabled() = 0;
+
+	/** Indicates whether or not motion smoothing is supported by the current hardware. */
+	virtual bool IsMotionSmoothingSupported() = 0;
+
+	/** Indicates whether or not the current scene focus app is currently loading.  This is inferred from its use of FadeGrid to
+	* explicitly fade to the compositor to cover up the fact that it cannot render at a sustained full framerate during this time. */
+	virtual bool IsCurrentSceneFocusAppLoading() = 0;
+
+	/** Override the stage model used in the compositor to replace the grid.  RenderModelPath is a full path the an OBJ file to load.
+	* This file will be loaded asynchronously from disk and uploaded to the gpu by the runtime.  Once ready for rendering, the
+	* VREvent StageOverrideReady will be sent.  Use FadeToGrid to reveal.  Call ClearStageOverride to free the associated resources when finished. */
+	virtual EVRCompositorError SetStageOverride_Async( const char *pchRenderModelPath, const HmdMatrix34_t *pTransform = 0,
+		const Compositor_StageRenderSettings *pRenderSettings = 0, uint32_t nSizeOfRenderSettings = 0 ) = 0;
+
+	/** Resets the stage to its default user specified setting. */
+	virtual void ClearStageOverride() = 0;
+
+	/** Returns true if pBenchmarkResults is filled it.  Sets pBenchmarkResults with the result of the compositor benchmark.
+	* nSizeOfBenchmarkResults should be set to sizeof(Compositor_BenchmarkResults) */
+	virtual bool GetCompositorBenchmarkResults( Compositor_BenchmarkResults *pBenchmarkResults, uint32_t nSizeOfBenchmarkResults ) = 0;
+
+	/** Returns the frame id associated with the poses last returned by WaitGetPoses.  Deltas between IDs correspond to number of headset vsync intervals. */
+	virtual EVRCompositorError GetLastPosePredictionIDs( uint32_t *pRenderPosePredictionID, uint32_t *pGamePosePredictionID ) = 0;
+
+	/** Get the most up-to-date predicted (or recorded - up to 100ms old) set of poses for a given frame id. */
+	virtual EVRCompositorError GetPosesForFrame( uint32_t unPosePredictionID, VR_ARRAY_COUNT( unPoseArrayCount ) TrackedDevicePose_t* pPoseArray, uint32_t unPoseArrayCount ) = 0;
 };
 
-static const char * const IVRCompositor_Version = "IVRCompositor_022";
+static const char * const IVRCompositor_Version = "IVRCompositor_026";
 
 } // namespace vr
 
+
+
+// ivrheadsetview.h
+namespace vr
+{
+	enum HeadsetViewMode_t
+	{
+		HeadsetViewMode_Left = 0,
+		HeadsetViewMode_Right,
+		HeadsetViewMode_Both
+	};
+
+	class IVRHeadsetView
+	{
+	public:
+		/** Sets the resolution in pixels to render the headset view. These values are clamped to k_unHeadsetViewMaxWidth
+		* and k_unHeadsetViewMaxHeight respectively. For cropped views, the rendered output will be fit to aspect ratio
+		* defined by the the specified dimensions. For uncropped views, the caller should use GetHeadsetViewAspectRation
+		* to adjust the requested render size to avoid squashing or stretching, and then apply letterboxing to compensate
+		* when displaying the results. */
+		virtual void SetHeadsetViewSize( uint32_t nWidth, uint32_t nHeight ) = 0;
+
+		/** Gets the current resolution used to render the headset view. */
+		virtual void GetHeadsetViewSize( uint32_t *pnWidth, uint32_t *pnHeight ) = 0;
+
+		/** Set the mode used to render the headset view. */
+		virtual void SetHeadsetViewMode( HeadsetViewMode_t eHeadsetViewMode ) = 0;
+
+		/** Get the current mode used to render the headset view. */
+		virtual HeadsetViewMode_t GetHeadsetViewMode() = 0;
+
+		/** Set whether or not the headset view should be rendered cropped to hide the hidden area mesh or not. */
+		virtual void SetHeadsetViewCropped( bool bCropped ) = 0;
+
+		/** Get the current cropping status of the headset view. */
+		virtual bool GetHeadsetViewCropped() = 0;
+
+		/** Get the aspect ratio (width:height) of the uncropped headset view (accounting for the current set mode). */
+		virtual float GetHeadsetViewAspectRatio() = 0;
+
+		/** Set the range [0..1] that the headset view blends across the stereo overlapped area in cropped both mode. */
+		virtual void SetHeadsetViewBlendRange( float flStartPct, float flEndPct ) = 0;
+
+		/** Get the current range [0..1] that the headset view blends across the stereo overlapped area in cropped both mode. */
+		virtual void GetHeadsetViewBlendRange( float *pStartPct, float *pEndPct ) = 0;
+	};
+
+	static const uint32_t k_unHeadsetViewMaxWidth = 3840;
+	static const uint32_t k_unHeadsetViewMaxHeight = 2160;
+	static const char * const k_pchHeadsetViewOverlayKey = "system.HeadsetView";
+
+	static const char * const IVRHeadsetView_Version = "IVRHeadsetView_001";
+
+	/** Returns the current IVRHeadsetView pointer or NULL the interface could not be found. */
+	VR_INTERFACE vr::IVRHeadsetView *VR_CALLTYPE VRHeadsetView();
+
+} // namespace vr
 
 
 // ivrnotifications.h
@@ -2951,7 +3496,7 @@ struct NotificationBitmap_t
 		, m_nHeight( 0 )
 		, m_nBytesPerPixel( 0 )
 	{
-	};
+	}
 
 	void *m_pImageData;
 	int32_t m_nWidth;
@@ -3036,7 +3581,7 @@ namespace vr
 	static const uint32_t k_unVROverlayMaxNameLength = 128;
 
 	/** The maximum number of overlays that can exist in the system at one time. */
-	static const uint32_t k_unMaxOverlayCount = 64;
+	static const uint32_t k_unMaxOverlayCount = 128;
 
 	/** The maximum number of overlay intersection mask primitives per overlay */
 	static const uint32_t k_unMaxOverlayIntersectionMaskPrimitivesCount = 32;
@@ -3046,61 +3591,79 @@ namespace vr
 	{
 		VROverlayInputMethod_None		= 0, // No input events will be generated automatically for this overlay
 		VROverlayInputMethod_Mouse		= 1, // Tracked controllers will get mouse events automatically
-		VROverlayInputMethod_DualAnalog = 2, // Analog inputs from tracked controllers are turned into DualAnalog events
+		// VROverlayInputMethod_DualAnalog = 2, // No longer supported
 	};
 
 	/** Allows the caller to figure out which overlay transform getter to call. */
 	enum VROverlayTransformType
 	{
+		VROverlayTransform_Invalid					= -1,
 		VROverlayTransform_Absolute					= 0,
 		VROverlayTransform_TrackedDeviceRelative	= 1,
 		VROverlayTransform_SystemOverlay			= 2,
 		VROverlayTransform_TrackedComponent 		= 3,
+		VROverlayTransform_Cursor					= 4,
+		VROverlayTransform_DashboardTab				= 5,
+		VROverlayTransform_DashboardThumb			= 6,
+		VROverlayTransform_Mountable				= 7,
 	};
 
 	/** Overlay control settings */
 	enum VROverlayFlags
 	{
-		VROverlayFlags_None			= 0,
-
-		// The following only take effect when rendered using the high quality render path (see SetHighQualityOverlay).
-		VROverlayFlags_Curved		= 1,
-		VROverlayFlags_RGSS4X		= 2,
-
 		// Set this flag on a dashboard overlay to prevent a tab from showing up for that overlay
-		VROverlayFlags_NoDashboardTab = 3,
+		VROverlayFlags_NoDashboardTab = 1 << 3,
 
-		// Set this flag on a dashboard that is able to deal with gamepad focus events
-		VROverlayFlags_AcceptsGamepadEvents = 4,
+		// When this is set the overlay will receive VREvent_ScrollDiscrete events like a mouse wheel. 
+		// Requires mouse input mode.
+		VROverlayFlags_SendVRDiscreteScrollEvents = 1 << 6,
 
-		// Indicates that the overlay should dim/brighten to show gamepad focus
-		VROverlayFlags_ShowGamepadFocus = 5,
-
-		// When in VROverlayInputMethod_Mouse you can optionally enable sending VRScroll_t 
-		VROverlayFlags_SendVRScrollEvents = 6,
-		VROverlayFlags_SendVRTouchpadEvents = 7,
+		// Indicates that the overlay would like to receive
+		VROverlayFlags_SendVRTouchpadEvents = 1 << 7,
 
 		// If set this will render a vertical scroll wheel on the primary controller, 
 		//  only needed if not using VROverlayFlags_SendVRScrollEvents but you still want to represent a scroll wheel
-		VROverlayFlags_ShowTouchPadScrollWheel = 8,
+		VROverlayFlags_ShowTouchPadScrollWheel = 1 << 8,
 
 		// If this is set ownership and render access to the overlay are transferred 
 		// to the new scene process on a call to IVRApplications::LaunchInternalProcess
-		VROverlayFlags_TransferOwnershipToInternalProcess = 9,
+		VROverlayFlags_TransferOwnershipToInternalProcess = 1 << 9,
 
 		// If set, renders 50% of the texture in each eye, side by side
-		VROverlayFlags_SideBySide_Parallel = 10, // Texture is left/right
-		VROverlayFlags_SideBySide_Crossed = 11, // Texture is crossed and right/left
+		VROverlayFlags_SideBySide_Parallel = 1 << 10, // Texture is left/right
+		VROverlayFlags_SideBySide_Crossed = 1 << 11, // Texture is crossed and right/left
 
-		VROverlayFlags_Panorama = 12, // Texture is a panorama
-		VROverlayFlags_StereoPanorama = 13, // Texture is a stereo panorama
+		VROverlayFlags_Panorama = 1 << 12, // Texture is a panorama
+		VROverlayFlags_StereoPanorama = 1 << 13, // Texture is a stereo panorama
 
 		// If this is set on an overlay owned by the scene application that overlay
 		// will be sorted with the "Other" overlays on top of all other scene overlays
-		VROverlayFlags_SortWithNonSceneOverlays = 14,
+		VROverlayFlags_SortWithNonSceneOverlays = 1 << 14,
 
 		// If set, the overlay will be shown in the dashboard, otherwise it will be hidden.
-		VROverlayFlags_VisibleInDashboard = 15,
+		VROverlayFlags_VisibleInDashboard = 1 << 15,
+
+		// If this is set and the overlay's input method is not none, the system-wide laser mouse
+		// mode will be activated whenever this overlay is visible.
+		VROverlayFlags_MakeOverlaysInteractiveIfVisible = 1 << 16,
+
+		// If this is set the overlay will receive smooth VREvent_ScrollSmooth that emulate trackpad scrolling.
+		// Requires mouse input mode.
+		VROverlayFlags_SendVRSmoothScrollEvents = 1 << 17,
+
+		// If this is set, the overlay texture will be protected content, preventing unauthorized reads.
+		VROverlayFlags_ProtectedContent = 1 << 18,
+
+		// If this is set, the laser mouse splat will not be drawn over this overlay. The overlay will
+		// be responsible for drawing its own "cursor".
+		VROverlayFlags_HideLaserIntersection = 1 << 19,
+
+		// If this is set, clicking away from the overlay will cause it to receive a VREvent_Modal_Cancel event.
+		// This is ignored for dashboard overlays.
+		VROverlayFlags_WantsModalBehavior = 1 << 20,
+
+		// If this is set, alpha composition assumes the texture is pre-multiplied
+		VROverlayFlags_IsPremultiplied = 1 << 21,
 	};
 
 	enum VRMessageOverlayResponse
@@ -3144,17 +3707,6 @@ namespace vr
 		k_EGamepadTextInputLineModeMultipleLines = 1
 	};
 
-	/** Directions for changing focus between overlays with the gamepad */
-	enum EOverlayDirection
-	{
-		OverlayDirection_Up = 0,
-		OverlayDirection_Down = 1,
-		OverlayDirection_Left = 2,
-		OverlayDirection_Right = 3,
-		
-		OverlayDirection_Count = 4,
-	};
-
 	enum EVROverlayIntersectionMaskPrimitiveType
 	{
 		OverlayIntersectionPrimitiveType_Rectangle,
@@ -3189,6 +3741,13 @@ namespace vr
 		VROverlayIntersectionMaskPrimitive_Data_t m_Primitive;
 	};
 
+	enum EKeyboardFlags
+	{
+		KeyboardFlag_Minimal		= 1 << 0, // makes the keyboard send key events immediately instead of accumulating a buffer
+		KeyboardFlag_Modal			= 2 << 0, // makes the keyboard take all focus and dismiss when clicking off the panel
+	};
+
+
 	class IVROverlay
 	{
 	public:
@@ -3206,17 +3765,6 @@ namespace vr
 		/** Destroys the specified overlay. When an application calls VR_Shutdown all overlays created by that app are
 		* automatically destroyed. */
 		virtual EVROverlayError DestroyOverlay( VROverlayHandle_t ulOverlayHandle ) = 0;
-
-		/** Specify which overlay to use the high quality render path.  This overlay will be composited in during the distortion pass which
-		* results in it drawing on top of everything else, but also at a higher quality as it samples the source texture directly rather than
-		* rasterizing into each eye's render texture first.  Because if this, only one of these is supported at any given time.  It is most useful
-		* for overlays that are expected to take up most of the user's view (e.g. streaming video).
-		* This mode does not support mouse input to your overlay. */
-		virtual EVROverlayError SetHighQualityOverlay( VROverlayHandle_t ulOverlayHandle ) = 0;
-
-		/** Returns the overlay handle of the current overlay being rendered using the single high quality overlay render path.
-		* Otherwise it will return k_ulOverlayHandleInvalid. */
-		virtual vr::VROverlayHandle_t GetHighQualityOverlay() = 0;
 
 		/** Fills the provided buffer with the string key of the overlay. Returns the size of buffer required to store the key, including
 		* the terminating null character. k_unVROverlayMaxKeyLength will be enough bytes to fit the string. */
@@ -3253,6 +3801,9 @@ namespace vr
 
 		/** Sets flag setting for a given overlay */
 		virtual EVROverlayError GetOverlayFlag( VROverlayHandle_t ulOverlayHandle, VROverlayFlags eOverlayFlag, bool *pbEnabled ) = 0;
+
+		/** Gets all the flags for a given overlay */
+		virtual EVROverlayError GetOverlayFlags( VROverlayHandle_t ulOverlayHandle, uint32_t *pFlags ) = 0;
 
 		/** Sets the color tint of the overlay quad. Use 0.0 to 1.0 per channel. */
 		virtual EVROverlayError SetOverlayColor( VROverlayHandle_t ulOverlayHandle, float fRed, float fGreen, float fBlue ) = 0;
@@ -3292,13 +3843,12 @@ namespace vr
 		/** Returns the width of the overlay quad in meters. By default overlays are rendered on a quad that is 1 meter across */
 		virtual EVROverlayError GetOverlayWidthInMeters( VROverlayHandle_t ulOverlayHandle, float *pfWidthInMeters ) = 0;
 
-		/** For high-quality curved overlays only, sets the distance range in meters from the overlay used to automatically curve
-		* the surface around the viewer.  Min is distance is when the surface will be most curved.  Max is when least curved. */
-		virtual EVROverlayError SetOverlayAutoCurveDistanceRangeInMeters( VROverlayHandle_t ulOverlayHandle, float fMinDistanceInMeters, float fMaxDistanceInMeters ) = 0;
+		/** Use to draw overlay as a curved surface. Curvature is a percentage from (0..1] where 1 is a fully closed cylinder.
+		* For a specific radius, curvature can be computed as: overlay.width / (2 PI r). */
+		virtual EVROverlayError SetOverlayCurvature( VROverlayHandle_t ulOverlayHandle, float fCurvature ) = 0;
 
-		/** For high-quality curved overlays only, gets the distance range in meters from the overlay used to automatically curve
-		* the surface around the viewer.  Min is distance is when the surface will be most curved.  Max is when least curved. */
-		virtual EVROverlayError GetOverlayAutoCurveDistanceRangeInMeters( VROverlayHandle_t ulOverlayHandle, float *pfMinDistanceInMeters, float *pfMaxDistanceInMeters ) = 0;
+		/** Returns the curvature of the overlay as a percentage from (0..1] where 1 is a fully closed cylinder. */
+		virtual EVROverlayError GetOverlayCurvature( VROverlayHandle_t ulOverlayHandle, float *pfCurvature ) = 0;
 
 		/** Sets the colorspace the overlay texture's data is in.  Defaults to 'auto'.
 		* If the texture needs to be resolved, you should call SetOverlayTexture with the appropriate colorspace instead. */
@@ -3312,13 +3862,6 @@ namespace vr
 
 		/** Gets the part of the texture to use for the overlay. UV Min is the upper left corner and UV Max is the lower right corner. */
 		virtual EVROverlayError GetOverlayTextureBounds( VROverlayHandle_t ulOverlayHandle, VRTextureBounds_t *pOverlayTextureBounds ) = 0;
-
-		/** Gets render model to draw behind this overlay */
-		virtual uint32_t GetOverlayRenderModel( vr::VROverlayHandle_t ulOverlayHandle, VR_OUT_STRING() char *pchValue, uint32_t unBufferSize, HmdColor_t *pColor, vr::EVROverlayError *pError ) = 0;
-
-		/** Sets render model to draw behind this overlay and the vertex color to use, pass null for pColor to match the overlays vertex color. 
-			The model is scaled by the same amount as the overlay, with a default of 1m. */
-		virtual vr::EVROverlayError SetOverlayRenderModel( vr::VROverlayHandle_t ulOverlayHandle, const char *pchRenderModel, const HmdColor_t *pColor ) = 0;
 
 		/** Returns the transform type of this overlay. */
 		virtual EVROverlayError GetOverlayTransformType( VROverlayHandle_t ulOverlayHandle, VROverlayTransformType *peTransformType ) = 0;
@@ -3347,6 +3890,13 @@ namespace vr
 		
 		/** Sets the transform to relative to the transform of the specified overlay. This overlays visibility will also track the parents visibility */
 		virtual vr::EVROverlayError SetOverlayTransformOverlayRelative( VROverlayHandle_t ulOverlayHandle, VROverlayHandle_t ulOverlayHandleParent, const HmdMatrix34_t *pmatParentOverlayToOverlayTransform ) = 0;
+
+		/** Sets the hotspot for the specified overlay when that overlay is used as a cursor. These are in texture space with 0,0 in the upper left corner of
+		* the texture and 1,1 in the lower right corner of the texture. */
+		virtual EVROverlayError SetOverlayTransformCursor( VROverlayHandle_t ulCursorOverlayHandle, const HmdVector2_t *pvHotspot ) = 0;
+
+		/** Gets cursor hotspot/transform for the specified overlay */
+		virtual vr::EVROverlayError GetOverlayTransformCursor( VROverlayHandle_t ulOverlayHandle, HmdVector2_t *pvHotspot ) = 0;
 
 		/** Shows the VR overlay.  For dashboard overlays, only the Dashboard Manager is allowed to call this. */
 		virtual EVROverlayError ShowOverlay( VROverlayHandle_t ulOverlayHandle ) = 0;
@@ -3390,26 +3940,22 @@ namespace vr
 		* by the virtual mouse pointer */
 		virtual bool IsHoverTargetOverlay( VROverlayHandle_t ulOverlayHandle ) = 0;
 
-		/** Returns the current Gamepad focus overlay */
-		virtual vr::VROverlayHandle_t GetGamepadFocusOverlay() = 0;
+		/** Sets a list of primitives to be used for controller ray intersection
+		* typically the size of the underlying UI in pixels (not in world space). */
+		virtual EVROverlayError SetOverlayIntersectionMask( VROverlayHandle_t ulOverlayHandle, VROverlayIntersectionMaskPrimitive_t *pMaskPrimitives, uint32_t unNumMaskPrimitives, uint32_t unPrimitiveSize = sizeof( VROverlayIntersectionMaskPrimitive_t ) ) = 0;
 
-		/** Sets the current Gamepad focus overlay */
-		virtual EVROverlayError SetGamepadFocusOverlay( VROverlayHandle_t ulNewFocusOverlay ) = 0;
+		/** Triggers a haptic event on the laser mouse controller for the specified overlay */
+		virtual EVROverlayError TriggerLaserMouseHapticVibration( VROverlayHandle_t ulOverlayHandle, float fDurationSeconds, float fFrequency, float fAmplitude ) = 0;
 
-		/** Sets an overlay's neighbor. This will also set the neighbor of the "to" overlay
-		* to point back to the "from" overlay. If an overlay's neighbor is set to invalid both
-		* ends will be cleared */
-		virtual EVROverlayError SetOverlayNeighbor( EOverlayDirection eDirection, VROverlayHandle_t ulFrom, VROverlayHandle_t ulTo ) = 0;
+		/** Sets the cursor to use for the specified overlay. This will be drawn instead of the generic blob when the laser mouse is pointed at the specified overlay */
+		virtual EVROverlayError SetOverlayCursor( VROverlayHandle_t ulOverlayHandle, VROverlayHandle_t ulCursorHandle ) = 0;
 
-		/** Changes the Gamepad focus from one overlay to one of its neighbors. Returns VROverlayError_NoNeighbor if there is no
-		* neighbor in that direction */
-		virtual EVROverlayError MoveGamepadFocusToNeighbor( EOverlayDirection eDirection, VROverlayHandle_t ulFrom ) = 0;
+		/** Sets the override cursor position to use for this overlay in overlay mouse coordinates. This position will be used to draw the cursor
+		* instead of whatever the laser mouse cursor position is. */
+		virtual EVROverlayError SetOverlayCursorPositionOverride( VROverlayHandle_t ulOverlayHandle, const HmdVector2_t *pvCursor ) = 0;
 
-		/** Sets the analog input to Dual Analog coordinate scale for the specified overlay. */
-		virtual EVROverlayError SetOverlayDualAnalogTransform( VROverlayHandle_t ulOverlay, EDualAnalogWhich eWhich, const HmdVector2_t & vCenter, float fRadius ) = 0;
-
-		/** Gets the analog input to Dual Analog coordinate scale for the specified overlay. */
-		virtual EVROverlayError GetOverlayDualAnalogTransform( VROverlayHandle_t ulOverlay, EDualAnalogWhich eWhich, HmdVector2_t *pvCenter, float *pfRadius ) = 0;
+		/** Clears the override cursor position for this overlay */
+		virtual EVROverlayError ClearOverlayCursorPositionOverride( VROverlayHandle_t ulOverlayHandle ) = 0;
 
 		// ---------------------------------------------
 		// Overlay texture methods
@@ -3427,7 +3973,7 @@ namespace vr
 
 		/** Separate interface for providing the data as a stream of bytes, but there is an upper bound on data 
 		* that can be sent. This function can only be called by the overlay's renderer process. */
-		virtual EVROverlayError SetOverlayRaw( VROverlayHandle_t ulOverlayHandle, void *pvBuffer, uint32_t unWidth, uint32_t unHeight, uint32_t unDepth ) = 0;
+		virtual EVROverlayError SetOverlayRaw( VROverlayHandle_t ulOverlayHandle, void *pvBuffer, uint32_t unWidth, uint32_t unHeight, uint32_t unBytesPerPixel ) = 0;
 
 		/** Separate interface for providing the image through a filename: can be png or jpg, and should not be bigger than 1920x1080.
 		* This function can only be called by the overlay's renderer process */
@@ -3482,10 +4028,16 @@ namespace vr
 		// Keyboard methods
 		// ---------------------------------------------
 		
-		/** Show the virtual keyboard to accept input **/
-		virtual EVROverlayError ShowKeyboard( EGamepadTextInputMode eInputMode, EGamepadTextInputLineMode eLineInputMode, const char *pchDescription, uint32_t unCharMax, const char *pchExistingText, bool bUseMinimalMode, uint64_t uUserValue ) = 0;
+		/** Show the virtual keyboard to accept input. In most cases, you should pass KeyboardFlag_Modal to enable modal overlay 
+		* behavior on the keyboard itself. See EKeyboardFlags for more. */
+		virtual EVROverlayError ShowKeyboard( EGamepadTextInputMode eInputMode, EGamepadTextInputLineMode eLineInputMode, uint32_t unFlags, 
+			const char *pchDescription, uint32_t unCharMax, const char *pchExistingText, uint64_t uUserValue ) = 0;
 
-		virtual EVROverlayError ShowKeyboardForOverlay( VROverlayHandle_t ulOverlayHandle, EGamepadTextInputMode eInputMode, EGamepadTextInputLineMode eLineInputMode, const char *pchDescription, uint32_t unCharMax, const char *pchExistingText, bool bUseMinimalMode, uint64_t uUserValue ) = 0;
+		/** Show the virtual keyboard to accept input for an overlay. In most cases, you should pass KeyboardFlag_Modal to enable modal 
+		* overlay behavior on the keyboard itself. See EKeyboardFlags for more. */
+		virtual EVROverlayError ShowKeyboardForOverlay( VROverlayHandle_t ulOverlayHandle, EGamepadTextInputMode eInputMode,
+			EGamepadTextInputLineMode eLineInputMode, uint32_t unFlags, const char *pchDescription, uint32_t unCharMax, 
+			const char *pchExistingText, uint64_t uUserValue ) = 0;
 
 		/** Get the text that was entered into the text input **/
 		virtual uint32_t GetKeyboardText( VR_OUT_STRING() char *pchText, uint32_t cchText ) = 0;
@@ -3500,16 +4052,6 @@ namespace vr
 		virtual void SetKeyboardPositionForOverlay( VROverlayHandle_t ulOverlayHandle, HmdRect2_t avoidRect ) = 0;
 
 		// ---------------------------------------------
-		// Overlay input methods
-		// ---------------------------------------------
-
-		/** Sets a list of primitives to be used for controller ray intersection
-		* typically the size of the underlying UI in pixels (not in world space). */
-		virtual EVROverlayError SetOverlayIntersectionMask( VROverlayHandle_t ulOverlayHandle, VROverlayIntersectionMaskPrimitive_t *pMaskPrimitives, uint32_t unNumMaskPrimitives, uint32_t unPrimitiveSize = sizeof( VROverlayIntersectionMaskPrimitive_t ) ) = 0;
-
-		virtual EVROverlayError GetOverlayFlags( VROverlayHandle_t ulOverlayHandle, uint32_t *pFlags ) = 0;
-
-		// ---------------------------------------------
 		// Message box methods
 		// ---------------------------------------------
 
@@ -3520,9 +4062,86 @@ namespace vr
 		virtual void CloseMessageOverlay() = 0;
 	};
 
-	static const char * const IVROverlay_Version = "IVROverlay_018";
+	static const char * const IVROverlay_Version = "IVROverlay_024";
 
 } // namespace vr
+
+// ivroverlayview.h
+namespace vr
+{
+	struct VROverlayView_t
+	{
+		VROverlayHandle_t overlayHandle;
+		Texture_t texture;
+		VRTextureBounds_t textureBounds;
+	};
+
+	enum EDeviceType
+	{
+		DeviceType_Invalid           = -1, // Invalid handle
+		DeviceType_DirectX11         = 0, // Handle is an ID3D11Device
+		DeviceType_Vulkan            = 1, // Handle is a pointer to a VRVulkanDevice_t structure
+	};
+
+	struct VRVulkanDevice_t
+	{
+		VkInstance_T *m_pInstance;
+		VkDevice_T *m_pDevice;
+		VkPhysicalDevice_T *m_pPhysicalDevice;
+		VkQueue_T *m_pQueue;
+		uint32_t m_uQueueFamilyIndex;
+	};
+
+	struct VRNativeDevice_t
+	{
+		void *handle; // See EDeviceType definition above
+		EDeviceType eType;
+	};
+
+	class IVROverlayView
+	{
+	public:
+		/** Acquire an OverlayView_t from an overlay handle
+		*
+		* The overlay view can be used to sample the contents directly by a native API. The
+		* contents of the OverlayView_t will remain unchanged through the lifetime of the
+		* OverlayView_t.
+		*
+		* The caller acquires read privileges over the OverlayView_t, but should not
+		* write to it.
+		*
+		* AcquireOverlayView() may be called on the same ulOverlayHandle multiple times to
+		* refresh the image contents. In this case the caller is strongly encouraged to re-use
+		* the same pOverlayView for all re-acquisition calls.
+		*
+		* If the producer has not yet queued an image, AcquireOverlayView will return success,
+		* and the Texture_t will have the expected ETextureType. However, the Texture_t->handle
+		* will be nullptr. Once the producer generates the first overlay frame, Texture_t->handle
+		* will become a valid handle.
+		*/
+		virtual EVROverlayError AcquireOverlayView(VROverlayHandle_t ulOverlayHandle, VRNativeDevice_t *pNativeDevice, VROverlayView_t *pOverlayView, uint32_t unOverlayViewSize ) = 0;
+
+		/** Release an acquired OverlayView_t
+		*
+		* Denotes that pOverlayView will no longer require access to the resources it acquired in
+		* all previous calls to AcquireOverlayView().
+		*
+		* All OverlayView_t*'s provided to AcquireOverlayView() as pOverlayViews must be
+		* passed into ReleaseOverlayView() in order for the underlying GPU resources to be freed.
+		*/
+		virtual EVROverlayError ReleaseOverlayView(VROverlayView_t *pOverlayView) = 0;
+
+		/** Posts an overlay event */
+		virtual void PostOverlayEvent(VROverlayHandle_t ulOverlayHandle, const VREvent_t *pvrEvent) = 0;
+
+		/** Determines whether this process is permitted to view an overlay's content. */
+		virtual bool IsViewingPermitted( VROverlayHandle_t ulOverlayHandle ) = 0;
+
+	};
+
+	static const char * const IVROverlayView_Version = "IVROverlayView_003";
+
+}
 
 // ivrrendermodels.h
 namespace vr
@@ -3555,23 +4174,13 @@ enum EVRRenderModelError
 	VRRenderModelError_InvalidTexture = 400,
 };
 
-typedef uint32_t VRComponentProperties;
-
-enum EVRComponentProperty
+enum EVRRenderModelTextureFormat
 {
-	VRComponentProperty_IsStatic = (1 << 0),
-	VRComponentProperty_IsVisible = (1 << 1),
-	VRComponentProperty_IsTouched = (1 << 2),
-	VRComponentProperty_IsPressed = (1 << 3),
-	VRComponentProperty_IsScrolled = (1 << 4),
-};
-
-/** Describes state information about a render-model component, including transforms and other dynamic properties */
-struct RenderModel_ComponentState_t
-{
-	HmdMatrix34_t mTrackingToComponentRenderModel;  // Transform required when drawing the component render model
-	HmdMatrix34_t mTrackingToComponentLocal;        // Transform available for attaching to a local component coordinate system (-Z out from surface )
-	VRComponentProperties uProperties;
+	VRRenderModelTextureFormat_RGBA8_SRGB = 0, // RGBA with 8 bits per channel per pixel. Data size is width * height * 4ub
+	VRRenderModelTextureFormat_BC2,
+	VRRenderModelTextureFormat_BC4,
+	VRRenderModelTextureFormat_BC7,
+	VRRenderModelTextureFormat_BC7_SRGB
 };
 
 /** A single vertex in a render model */
@@ -3592,7 +4201,8 @@ struct RenderModel_Vertex_t
 struct RenderModel_TextureMap_t
 {
 	uint16_t unWidth, unHeight; // width and height of the texture map in pixels
-	const uint8_t *rubTextureMapData;	// Map texture data. All textures are RGBA with 8 bits per channel per pixel. Data size is width * height * 4ub
+	const uint8_t *rubTextureMapData;	// Map texture data.
+	EVRRenderModelTextureFormat format; // Refer to EVRRenderModelTextureFormat
 };
 #if defined(__linux__) || defined(__APPLE__) 
 #pragma pack( pop )
@@ -3778,9 +4388,9 @@ public:
 	/** Gets size of the image frame. */
 	virtual vr::EVRTrackedCameraError GetCameraFrameSize( vr::TrackedDeviceIndex_t nDeviceIndex, vr::EVRTrackedCameraFrameType eFrameType, uint32_t *pnWidth, uint32_t *pnHeight, uint32_t *pnFrameBufferSize ) = 0;
 
-	virtual vr::EVRTrackedCameraError GetCameraIntrinsics( vr::TrackedDeviceIndex_t nDeviceIndex, vr::EVRTrackedCameraFrameType eFrameType, vr::HmdVector2_t *pFocalLength, vr::HmdVector2_t *pCenter ) = 0;
+	virtual vr::EVRTrackedCameraError GetCameraIntrinsics( vr::TrackedDeviceIndex_t nDeviceIndex, uint32_t nCameraIndex, vr::EVRTrackedCameraFrameType eFrameType, vr::HmdVector2_t *pFocalLength, vr::HmdVector2_t *pCenter ) = 0;
 
-	virtual vr::EVRTrackedCameraError GetCameraProjection( vr::TrackedDeviceIndex_t nDeviceIndex, vr::EVRTrackedCameraFrameType eFrameType, float flZNear, float flZFar, vr::HmdMatrix44_t *pProjection ) = 0;
+	virtual vr::EVRTrackedCameraError GetCameraProjection( vr::TrackedDeviceIndex_t nDeviceIndex, uint32_t nCameraIndex, vr::EVRTrackedCameraFrameType eFrameType, float flZNear, float flZFar, vr::HmdMatrix44_t *pProjection ) = 0;
 
 	/** Acquiring streaming service permits video streaming for the caller. Releasing hints the system that video services do not need to be maintained for this client.
 	* If the camera has not already been activated, a one time spin up may incur some auto exposure as well as initial streaming frame delays.
@@ -3810,9 +4420,11 @@ public:
 	/** Access a shared GL texture for the specified tracked camera stream */
 	virtual vr::EVRTrackedCameraError GetVideoStreamTextureGL( vr::TrackedCameraHandle_t hTrackedCamera, vr::EVRTrackedCameraFrameType eFrameType, vr::glUInt_t *pglTextureId, vr::CameraVideoStreamFrameHeader_t *pFrameHeader, uint32_t nFrameHeaderSize ) = 0;
 	virtual vr::EVRTrackedCameraError ReleaseVideoStreamTextureGL( vr::TrackedCameraHandle_t hTrackedCamera, vr::glUInt_t glTextureId ) = 0;
+	virtual void SetCameraTrackingSpace( vr::ETrackingUniverseOrigin eUniverse ) = 0;
+	virtual vr::ETrackingUniverseOrigin GetCameraTrackingSpace( ) = 0;
 };
 
-static const char * const IVRTrackedCamera_Version = "IVRTrackedCamera_004";
+static const char * const IVRTrackedCamera_Version = "IVRTrackedCamera_006";
 
 } // namespace vr
 
@@ -3963,6 +4575,8 @@ public:
 	virtual uint32_t GetDriverName( vr::DriverId_t nDriver, VR_OUT_STRING() char *pchValue, uint32_t unBufferSize ) = 0;
 
 	virtual DriverHandle_t GetDriverHandle( const char *pchDriverName ) = 0;
+
+	virtual bool IsEnabled( vr::DriverId_t nDriver ) const = 0;
 };
 
 static const char * const IVRDriverManager_Version = "IVRDriverManager_001";
@@ -3974,76 +4588,59 @@ static const char * const IVRDriverManager_Version = "IVRDriverManager_001";
 // ivrinput.h
 namespace vr
 {
+	// Maximum number of characters in an action name, including the trailing null
+	static const uint32_t k_unMaxActionNameLength = 64; 
 
-	static const uint32_t k_unMaxActionNameLength = 64;
+	// Maximum number of characters in an action set name, including the trailing null
 	static const uint32_t k_unMaxActionSetNameLength = 64;
-	static const uint32_t k_unMaxActionOriginCount = 16;
 
-	struct InputAnalogActionData_t
-	{
-		// Whether or not this action is currently available to be bound in the active action set
-		bool bActive;
+	// Maximum number of origins for an action
+	static const uint32_t k_unMaxActionOriginCount = 16; 
 
-		// The origin that caused this action's current state
-		VRInputValueHandle_t activeOrigin;
-
-		// The current state of this action; will be delta updates for mouse actions
-		float x, y, z;
-
-		// Deltas since the previous call to UpdateActionState()
-		float deltaX, deltaY, deltaZ;
-	
-		// Time relative to now when this event happened. Will be negative to indicate a past time.
-		float fUpdateTime;
-	};
-
-	struct InputDigitalActionData_t
-	{
-		// Whether or not this action is currently available to be bound in the active action set
-		bool bActive;
-
-		// The origin that caused this action's current state
-		VRInputValueHandle_t activeOrigin;
-
-		// The current state of this action; will be true if currently pressed
-		bool bState;
-
-		// This is true if the state has changed since the last frame
-		bool bChanged;
-
-		// Time relative to now when this event happened. Will be negative to indicate a past time.
-		float fUpdateTime;
-	};
-
-	struct InputPoseActionData_t
-	{
-		// Whether or not this action is currently available to be bound in the active action set
-		bool bActive;
-
-		// The origin that caused this action's current state
-		VRInputValueHandle_t activeOrigin;
-
-		// The current state of this action
-		TrackedDevicePose_t pose;
-	};
-
-	struct InputSkeletalActionData_t
-	{
-		// Whether or not this action is currently available to be bound in the active action set
-		bool bActive;
-
-		// The origin that caused this action's current state
-		VRInputValueHandle_t activeOrigin;
-
-		// The number of bones in the skeletal data
-		uint32_t boneCount;
-	};
+	// Maximum number of characters in a bone name, including the trailing null
+	static const uint32_t k_unMaxBoneNameLength = 32; 
 
 	enum EVRSkeletalTransformSpace
 	{
-		VRSkeletalTransformSpace_Model = 0,
-		VRSkeletalTransformSpace_Parent = 1,
-		VRSkeletalTransformSpace_Additive = 2,
+		VRSkeletalTransformSpace_Model = 0, 
+		VRSkeletalTransformSpace_Parent = 1
+	};
+
+	enum EVRSkeletalReferencePose
+	{
+		VRSkeletalReferencePose_BindPose = 0,
+		VRSkeletalReferencePose_OpenHand,
+		VRSkeletalReferencePose_Fist,
+		VRSkeletalReferencePose_GripLimit
+	};
+
+	enum EVRFinger
+	{
+		VRFinger_Thumb = 0,
+		VRFinger_Index,
+		VRFinger_Middle,
+		VRFinger_Ring,
+		VRFinger_Pinky,
+		VRFinger_Count
+	};
+
+	enum EVRFingerSplay
+	{
+		VRFingerSplay_Thumb_Index = 0,
+		VRFingerSplay_Index_Middle,
+		VRFingerSplay_Middle_Ring,
+		VRFingerSplay_Ring_Pinky,
+		VRFingerSplay_Count
+	};
+
+	enum EVRSummaryType
+	{
+		// The skeletal summary data will match the animated bone transforms for the action.
+		VRSummaryType_FromAnimation = 0,	
+		
+		// The skeletal summary data will include unprocessed data directly from the device when available. 
+		// This data is generally less latent than the data that is computed from the animations.
+		VRSummaryType_FromDevice = 1,		
 	};
 
 	enum EVRInputFilterCancelType
@@ -4052,12 +4649,102 @@ namespace vr
 		VRInputFilterCancel_Momentum = 1,
 	};
 
+	enum EVRInputStringBits
+	{
+		VRInputString_Hand = 0x01,
+		VRInputString_ControllerType = 0x02,
+		VRInputString_InputSource = 0x04,
+
+		VRInputString_All = 0xFFFFFFFF
+	};
+
+	struct InputAnalogActionData_t
+	{
+		/** Whether or not this action is currently available to be bound in the active action set */
+		bool bActive;
+
+		/** The origin that caused this action's current state */
+		VRInputValueHandle_t activeOrigin;
+
+		/** The current state of this action; will be delta updates for mouse actions */
+		float x, y, z;
+
+		/** Deltas since the previous call to UpdateActionState() */
+		float deltaX, deltaY, deltaZ;
+	
+		/** Time relative to now when this event happened. Will be negative to indicate a past time. */
+		float fUpdateTime;
+	};
+
+	struct InputDigitalActionData_t
+	{
+		/** Whether or not this action is currently available to be bound in the active action set */
+		bool bActive;
+
+		/** The origin that caused this action's current state */
+		VRInputValueHandle_t activeOrigin;
+
+		/** The current state of this action; will be true if currently pressed */
+		bool bState;
+
+		/** This is true if the state has changed since the last frame */
+		bool bChanged;
+
+		/** Time relative to now when this event happened. Will be negative to indicate a past time. */
+		float fUpdateTime;
+	};
+
+	struct InputPoseActionData_t
+	{
+		/** Whether or not this action is currently available to be bound in the active action set */
+		bool bActive;
+
+		/** The origin that caused this action's current state */
+		VRInputValueHandle_t activeOrigin;
+
+		/** The current state of this action */
+		TrackedDevicePose_t pose;
+	};
+
+	struct InputSkeletalActionData_t
+	{
+		/** Whether or not this action is currently available to be bound in the active action set */
+		bool bActive;
+
+		/** The origin that caused this action's current state */
+		VRInputValueHandle_t activeOrigin;
+	};
+
 	struct InputOriginInfo_t
 	{
 		VRInputValueHandle_t devicePath;
 		TrackedDeviceIndex_t trackedDeviceIndex;
 		char rchRenderModelComponentName[128];
 	};
+
+	struct InputBindingInfo_t
+	{
+		char rchDevicePathName[128];
+		char rchInputPathName[128];
+		char rchModeName[128];
+		char rchSlotName[128];
+		char rchInputSourceType[ 32 ];
+	};
+
+	// * Experimental global action set priority *
+	// These constants are part of the experimental support in SteamVR for overlay
+	// apps selectively overriding input in the base scene application. This may be
+	// useful for overlay applications that need to use part or all of a controller
+	// without taking away all input to the game. This system must be enabled by the 
+	// "Experimental overlay input overrides" setting in the developer section of 
+	// SteamVR settings.
+	//
+	// To use this system, set the nPriority field of an action set to any number in
+	// this range. 
+	static const int32_t k_nActionSetOverlayGlobalPriorityMin	= 0x01000000;
+	static const int32_t k_nActionSetOverlayGlobalPriorityMax	= 0x01FFFFFF;
+
+	static const int32_t k_nActionSetPriorityReservedMin		= 0x02000000;
 
 	struct VRActiveActionSet_t
 	{
@@ -4078,8 +4765,29 @@ namespace vr
 
 		/** The priority of this action set relative to other action sets. Any inputs
 		* bound to a source (e.g. trackpad, joystick, trigger) will disable bindings in
-		* other active action sets with a smaller priority. */
+		* other active action sets with a smaller priority. 
+		*
+		* Overlay applications (i.e. ApplicationType_Overlay) may set their action set priority 
+		* to a value between k_nActionSetOverlayGlobalPriorityMin and k_nActionSetOverlayGlobalPriorityMax
+		* to cause any inputs bound to a source used by that action set to be disabled in scene applications.
+		*
+		* No action set priority may value may be larger than k_nActionSetPriorityReservedMin
+		*/
 		int32_t nPriority;
+	};
+
+	/** Contains summary information about the current skeletal pose */
+	struct VRSkeletalSummaryData_t
+	{
+		/** The amount that each finger is 'curled' inwards towards the palm.  In the case of the thumb,
+		* this represents how much the thumb is wrapped around the fist.  
+		* 0 means straight, 1 means fully curled */
+		float	flFingerCurl[ VRFinger_Count ];
+
+		/** The amount that each pair of adjacent fingers are separated.  
+		* 0 means the digits are touching, 1 means they are fully separated.
+		*/
+		float	flFingerSplay[ VRFingerSplay_Count ];
 	};
 
 
@@ -4102,7 +4810,9 @@ namespace vr
 		virtual EVRInputError GetActionHandle( const char *pchActionName, VRActionHandle_t *pHandle ) = 0;
 
 		/** Returns a handle for any path in the input system. E.g. /user/hand/right */
-		virtual EVRInputError GetInputSourceHandle( const char *pchInputSourcePath, VRInputValueHandle_t  *pHandle ) = 0;
+		virtual EVRInputError GetInputSourceHandle( const char *pchInputSourcePath, VRInputValueHandle_t *pHandle ) = 0;
+
+
 
 		// --------------- Reading action state ------------------- //
 
@@ -4118,24 +4828,57 @@ namespace vr
 		* action is something other than analog */
 		virtual EVRInputError GetAnalogActionData( VRActionHandle_t action, InputAnalogActionData_t *pActionData, uint32_t unActionDataSize, VRInputValueHandle_t ulRestrictToDevice ) = 0;
 
-		/** Reads the state of a pose action given its handle. */
-		virtual EVRInputError GetPoseActionData( VRActionHandle_t action, ETrackingUniverseOrigin eOrigin, float fPredictedSecondsFromNow, InputPoseActionData_t *pActionData, uint32_t unActionDataSize, VRInputValueHandle_t ulRestrictToDevice ) = 0;
+		/** Reads the state of a pose action given its handle for the number of seconds relative to now. This
+		* will generally be called with negative times from the fUpdateTime fields in other actions. */
+		virtual EVRInputError GetPoseActionDataRelativeToNow( VRActionHandle_t action, ETrackingUniverseOrigin eOrigin, float fPredictedSecondsFromNow, InputPoseActionData_t *pActionData, uint32_t unActionDataSize, VRInputValueHandle_t ulRestrictToDevice ) = 0;
+
+		/** Reads the state of a pose action given its handle. The returned values will match the values returned
+		* by the last call to IVRCompositor::WaitGetPoses(). */
+		virtual EVRInputError GetPoseActionDataForNextFrame( VRActionHandle_t action, ETrackingUniverseOrigin eOrigin, InputPoseActionData_t *pActionData, uint32_t unActionDataSize, VRInputValueHandle_t ulRestrictToDevice ) = 0;
 
 		/** Reads the state of a skeletal action given its handle. */
-		virtual EVRInputError GetSkeletalActionData( VRActionHandle_t action, InputSkeletalActionData_t *pActionData, uint32_t unActionDataSize, VRInputValueHandle_t ulRestrictToDevice ) = 0;
+		virtual EVRInputError GetSkeletalActionData( VRActionHandle_t action, InputSkeletalActionData_t *pActionData, uint32_t unActionDataSize ) = 0;
 
-		// --------------- Skeletal Bone Data ------------------- //
+		/** Returns the current dominant hand for the user for this application. This function will only return success for applications
+		* which include "supports_dominant_hand_setting": true in their action manifests. The dominant hand will only change after
+		* a call to UpdateActionState, and the action data returned after that point will use the new dominant hand. */
+		virtual EVRInputError GetDominantHand( ETrackedControllerRole *peDominantHand ) = 0;
+
+		/** Sets the dominant hand for the user for this application. */
+		virtual EVRInputError SetDominantHand( ETrackedControllerRole eDominantHand ) = 0;
+
+		// ---------------  Static Skeletal Data ------------------- //
+
+		/** Reads the number of bones in skeleton associated with the given action */
+		virtual EVRInputError GetBoneCount( VRActionHandle_t action, uint32_t* pBoneCount ) = 0;
+
+		/** Fills the given array with the index of each bone's parent in the skeleton associated with the given action */
+		virtual EVRInputError GetBoneHierarchy( VRActionHandle_t action, VR_ARRAY_COUNT( unIndexArayCount ) BoneIndex_t* pParentIndices, uint32_t unIndexArayCount ) = 0;
+
+		/** Fills the given buffer with the name of the bone at the given index in the skeleton associated with the given action */
+		virtual EVRInputError GetBoneName( VRActionHandle_t action, BoneIndex_t nBoneIndex, VR_OUT_STRING() char* pchBoneName, uint32_t unNameBufferSize ) = 0;
+
+		/** Fills the given buffer with the transforms for a specific static skeletal reference pose */
+		virtual EVRInputError GetSkeletalReferenceTransforms( VRActionHandle_t action, EVRSkeletalTransformSpace eTransformSpace, EVRSkeletalReferencePose eReferencePose, VR_ARRAY_COUNT( unTransformArrayCount ) VRBoneTransform_t *pTransformArray, uint32_t unTransformArrayCount ) = 0;
+
+		/** Reads the level of accuracy to which the controller is able to track the user to recreate a skeletal pose */
+		virtual EVRInputError GetSkeletalTrackingLevel( VRActionHandle_t action, EVRSkeletalTrackingLevel* pSkeletalTrackingLevel ) = 0;
+
+		// ---------------  Dynamic Skeletal Data ------------------- //
 
 		/** Reads the state of the skeletal bone data associated with this action and copies it into the given buffer. */
-		virtual EVRInputError GetSkeletalBoneData( VRActionHandle_t action, EVRSkeletalTransformSpace eTransformSpace, EVRSkeletalMotionRange eMotionRange, VR_ARRAY_COUNT( unTransformArrayCount ) VRBoneTransform_t *pTransformArray, uint32_t unTransformArrayCount, VRInputValueHandle_t ulRestrictToDevice ) = 0;
+		virtual EVRInputError GetSkeletalBoneData( VRActionHandle_t action, EVRSkeletalTransformSpace eTransformSpace, EVRSkeletalMotionRange eMotionRange, VR_ARRAY_COUNT( unTransformArrayCount ) VRBoneTransform_t *pTransformArray, uint32_t unTransformArrayCount ) = 0;
+
+		/** Reads summary information about the current pose of the skeleton associated with the given action.   */
+		virtual EVRInputError GetSkeletalSummaryData( VRActionHandle_t action, EVRSummaryType eSummaryType, VRSkeletalSummaryData_t * pSkeletalSummaryData ) = 0;
 
 		/** Reads the state of the skeletal bone data in a compressed form that is suitable for
 		* sending over the network. The required buffer size will never exceed ( sizeof(VR_BoneTransform_t)*boneCount + 2).
 		* Usually the size will be much smaller. */
-		virtual EVRInputError GetSkeletalBoneDataCompressed( VRActionHandle_t action, EVRSkeletalTransformSpace eTransformSpace, EVRSkeletalMotionRange eMotionRange, VR_OUT_BUFFER_COUNT( unCompressedSize ) void *pvCompressedData, uint32_t unCompressedSize, uint32_t *punRequiredCompressedSize, VRInputValueHandle_t ulRestrictToDevice ) = 0;
+		virtual EVRInputError GetSkeletalBoneDataCompressed( VRActionHandle_t action, EVRSkeletalMotionRange eMotionRange, VR_OUT_BUFFER_COUNT( unCompressedSize ) void *pvCompressedData, uint32_t unCompressedSize, uint32_t *punRequiredCompressedSize ) = 0;
 
 		/** Turns a compressed buffer from GetSkeletalBoneDataCompressed and turns it back into a bone transform array. */
-		virtual EVRInputError DecompressSkeletalBoneData( void *pvCompressedBuffer, uint32_t unCompressedBufferSize, EVRSkeletalTransformSpace *peTransformSpace, VR_ARRAY_COUNT( unTransformArrayCount ) VRBoneTransform_t *pTransformArray, uint32_t unTransformArrayCount ) = 0;
+		virtual EVRInputError DecompressSkeletalBoneData( const void *pvCompressedBuffer, uint32_t unCompressedBufferSize, EVRSkeletalTransformSpace eTransformSpace, VR_ARRAY_COUNT( unTransformArrayCount ) VRBoneTransform_t *pTransformArray, uint32_t unTransformArrayCount ) = 0;
 
 		// --------------- Haptics ------------------- //
 
@@ -4147,20 +4890,46 @@ namespace vr
 		/** Retrieve origin handles for an action */
 		virtual EVRInputError GetActionOrigins( VRActionSetHandle_t actionSetHandle, VRActionHandle_t digitalActionHandle, VR_ARRAY_COUNT( originOutCount ) VRInputValueHandle_t *originsOut, uint32_t originOutCount ) = 0;
 
-		/** Retrieves the name of the origin in the current language */
-		virtual EVRInputError GetOriginLocalizedName( VRInputValueHandle_t origin, VR_OUT_STRING() char *pchNameArray, uint32_t unNameArraySize ) = 0;
+		/** Retrieves the name of the origin in the current language. unStringSectionsToInclude is a bitfield of values in EVRInputStringBits that allows the 
+			application to specify which parts of the origin's information it wants a string for. */
+		virtual EVRInputError GetOriginLocalizedName( VRInputValueHandle_t origin, VR_OUT_STRING() char *pchNameArray, uint32_t unNameArraySize, int32_t unStringSectionsToInclude ) = 0;
 
 		/** Retrieves useful information for the origin of this action */
 		virtual EVRInputError GetOriginTrackedDeviceInfo( VRInputValueHandle_t origin, InputOriginInfo_t *pOriginInfo, uint32_t unOriginInfoSize ) = 0;
+
+		/** Retrieves useful information about the bindings for an action */
+		virtual EVRInputError GetActionBindingInfo( VRActionHandle_t action, InputBindingInfo_t *pOriginInfo, uint32_t unBindingInfoSize, uint32_t unBindingInfoCount, uint32_t *punReturnedBindingInfoCount ) = 0;
 
 		/** Shows the current binding for the action in-headset */
 		virtual EVRInputError ShowActionOrigins( VRActionSetHandle_t actionSetHandle, VRActionHandle_t ulActionHandle ) = 0;
 
 		/** Shows the current binding all the actions in the specified action sets */
 		virtual EVRInputError ShowBindingsForActionSet( VR_ARRAY_COUNT( unSetCount ) VRActiveActionSet_t *pSets, uint32_t unSizeOfVRSelectedActionSet_t, uint32_t unSetCount, VRInputValueHandle_t originToHighlight ) = 0;
+
+		/** Use this to query what action on the component returned by GetOriginTrackedDeviceInfo would trigger this binding. */
+		virtual EVRInputError GetComponentStateForBinding( const char *pchRenderModelName, const char *pchComponentName,
+			const InputBindingInfo_t *pOriginInfo, uint32_t unBindingInfoSize, uint32_t unBindingInfoCount,
+			vr::RenderModel_ComponentState_t *pComponentState ) = 0;
+
+
+		// --------------- Legacy Input ------------------- //
+		virtual bool IsUsingLegacyInput() = 0;
+
+
+		// --------------- Utilities ------------------- //
+
+		/** Opens the binding user interface. If no app key is provided it will use the key from the calling process.
+		* If no set is provided it will open to the root of the app binding page. */
+		virtual EVRInputError OpenBindingUI( const char* pchAppKey, VRActionSetHandle_t ulActionSetHandle, VRInputValueHandle_t ulDeviceHandle, bool bShowOnDesktop ) = 0;
+
+		/** Returns the variant set in the current bindings. If the binding doesn't include a variant setting, this function 
+		* will return an empty string */
+		virtual EVRInputError GetBindingVariant( vr::VRInputValueHandle_t ulDevicePath,
+			VR_OUT_STRING() char *pchVariantArray, uint32_t unVariantArraySize ) = 0;
+
 	};
 
-	static const char * const IVRInput_Version = "IVRInput_004";
+	static const char * const IVRInput_Version = "IVRInput_010";
 
 } // namespace vr
 
@@ -4209,9 +4978,12 @@ static const uint64_t k_ulInvalidIOBufferHandle = 0;
 		
 		/** retrieves the property container of an buffer. */
 		virtual vr::PropertyContainerHandle_t PropertyContainer( vr::IOBufferHandle_t ulBuffer ) = 0;
+
+		/** inexpensively checks for readers to allow writers to fast-fail potentially expensive copies and writes. */
+		virtual bool HasReaders( vr::IOBufferHandle_t ulBuffer ) = 0;
 	};
 
-	static const char *IVRIOBuffer_Version = "IVRIOBuffer_001";
+	static const char *IVRIOBuffer_Version = "IVRIOBuffer_002";
 }
 
 // ivrspatialanchors.h
@@ -4265,9 +5037,53 @@ namespace vr
 	static const char * const IVRSpatialAnchors_Version = "IVRSpatialAnchors_001";
 
 } // namespace vr
+
+// ivrdebug.h
+namespace vr
+{
+	enum EVRDebugError
+	{
+		VRDebugError_Success = 0,
+		VRDebugError_BadParameter
+	};
+
+	/** Handle for vr profiler events */
+	typedef uint64_t VrProfilerEventHandle_t;
+
+	class IVRDebug
+	{
+	public:
+
+		/** Create a vr profiler discrete event (point)
+		* The event will be associated with the message provided in pchMessage, and the current
+		* time will be used as the event timestamp. */
+		virtual EVRDebugError EmitVrProfilerEvent( const char *pchMessage ) = 0;
+
+		/** Create an vr profiler duration event (line)
+		* The current time will be used as the timestamp for the start of the line.
+		* On success, pHandleOut will contain a handle valid for terminating this event. */
+		virtual EVRDebugError BeginVrProfilerEvent( VrProfilerEventHandle_t *pHandleOut ) = 0;
+
+		/** Terminate a vr profiler event
+		* The event associated with hHandle will be considered completed when this method is called.
+		* The current time will be used assocaited to the termination time of the event, and
+		* pchMessage will be used as the event title. */
+		virtual EVRDebugError FinishVrProfilerEvent( VrProfilerEventHandle_t hHandle, const char *pchMessage ) = 0;
+
+		/** Sends a request to the driver for the specified device and returns the response. The maximum response size is 32k,
+		* but this method can be called with a smaller buffer. If the response exceeds the size of the buffer, it is truncated.
+		* The size of the response including its terminating null is returned. */
+		virtual uint32_t DriverDebugRequest( vr::TrackedDeviceIndex_t unDeviceIndex, const char *pchRequest, VR_OUT_STRING() char *pchResponseBuffer, uint32_t unResponseBufferSize ) = 0;
+
+	};
+
+	static const char * const IVRDebug_Version = "IVRDebug_001";
+
+} // namespace vr
 // End
 
 #endif // _OPENVR_API
+
 
 
 namespace vr
@@ -4299,8 +5115,8 @@ namespace vr
 	VR_INTERFACE bool VR_CALLTYPE VR_IsRuntimeInstalled();
 
 	/** Returns where the OpenVR runtime is installed. */
-	VR_INTERFACE const char *VR_CALLTYPE VR_RuntimePath();
-
+	VR_INTERFACE bool VR_GetRuntimePath( VR_OUT_STRING() char *pchPathBuffer, uint32_t unBufferSize, uint32_t *punRequiredBufferSize );
+	
 	/** Returns the name of the enum value for an EVRInitError. This function may be called outside of VR_Init()/VR_Shutdown(). */
 	VR_INTERFACE const char *VR_CALLTYPE VR_GetVRInitErrorAsSymbol( EVRInitError error );
 
@@ -4413,6 +5229,28 @@ namespace vr
 			return m_pVROverlay;
 		}
 
+		IVROverlayView *VROverlayView()
+		{
+			CheckClear();
+			if ( m_pVROverlayView == nullptr )
+			{
+				EVRInitError eError;
+				m_pVROverlayView = ( IVROverlayView * ) VR_GetGenericInterface( IVROverlayView_Version, &eError );
+			}
+			return m_pVROverlayView;
+		}
+
+		IVRHeadsetView *VRHeadsetView()
+		{
+			CheckClear();
+			if ( m_pVRHeadsetView == nullptr )
+			{
+				EVRInitError eError;
+				m_pVRHeadsetView = ( IVRHeadsetView * ) VR_GetGenericInterface( IVRHeadsetView_Version, &eError );
+			}
+			return m_pVRHeadsetView;
+		}
+
 		IVRResources *VRResources()
 		{
 			CheckClear();
@@ -4512,6 +5350,16 @@ namespace vr
 			return m_pVRInput;
 		}
 
+		IVRIOBuffer *VRIOBuffer()
+		{
+			if ( !m_pVRIOBuffer )
+			{
+				EVRInitError eError;
+				m_pVRIOBuffer = ( IVRIOBuffer * )VR_GetGenericInterface( IVRIOBuffer_Version, &eError );
+			}
+			return m_pVRIOBuffer;
+		}
+
 		IVRSpatialAnchors *VRSpatialAnchors()
 		{
 			CheckClear();
@@ -4523,14 +5371,26 @@ namespace vr
 			return m_pVRSpatialAnchors;
 		}
 
-		IVRIOBuffer *VRIOBuffer()
+		IVRDebug *VRDebug()
 		{
-			if ( !m_pVRIOBuffer )
+			CheckClear();
+			if ( !m_pVRDebug )
 			{
 				EVRInitError eError;
-				m_pVRIOBuffer = ( IVRIOBuffer * )VR_GetGenericInterface( IVRIOBuffer_Version, &eError );
+				m_pVRDebug = (IVRDebug *)VR_GetGenericInterface( IVRDebug_Version, &eError );
 			}
-			return m_pVRIOBuffer;
+			return m_pVRDebug;
+		}
+
+		IVRNotifications *VRNotifications()
+		{
+			CheckClear();
+			if ( !m_pVRNotifications )
+			{
+				EVRInitError eError;
+				m_pVRNotifications = ( IVRNotifications * )VR_GetGenericInterface( IVRNotifications_Version, &eError );
+			}
+			return m_pVRNotifications;
 		}
 		
 	private:
@@ -4538,7 +5398,9 @@ namespace vr
 		IVRChaperone		*m_pVRChaperone;
 		IVRChaperoneSetup	*m_pVRChaperoneSetup;
 		IVRCompositor		*m_pVRCompositor;
+		IVRHeadsetView		*m_pVRHeadsetView;
 		IVROverlay			*m_pVROverlay;
+		IVROverlayView		*m_pVROverlayView;
 		IVRResources		*m_pVRResources;
 		IVRRenderModels		*m_pVRRenderModels;
 		IVRExtendedDisplay	*m_pVRExtendedDisplay;
@@ -4550,6 +5412,8 @@ namespace vr
 		IVRInput			*m_pVRInput;
 		IVRIOBuffer			*m_pVRIOBuffer;
 		IVRSpatialAnchors   *m_pVRSpatialAnchors;
+		IVRDebug			*m_pVRDebug;
+		IVRNotifications	*m_pVRNotifications;
 	};
 
 	inline COpenVRContext &OpenVRInternal_ModuleContext()
@@ -4563,6 +5427,8 @@ namespace vr
 	inline IVRChaperoneSetup *VR_CALLTYPE VRChaperoneSetup() { return OpenVRInternal_ModuleContext().VRChaperoneSetup(); }
 	inline IVRCompositor *VR_CALLTYPE VRCompositor() { return OpenVRInternal_ModuleContext().VRCompositor(); }
 	inline IVROverlay *VR_CALLTYPE VROverlay() { return OpenVRInternal_ModuleContext().VROverlay(); }
+	inline IVROverlayView *VR_CALLTYPE VROverlayView() { return OpenVRInternal_ModuleContext().VROverlayView(); }
+	inline IVRHeadsetView *VR_CALLTYPE VRHeadsetView() { return OpenVRInternal_ModuleContext().VRHeadsetView(); }
 	inline IVRScreenshots *VR_CALLTYPE VRScreenshots() { return OpenVRInternal_ModuleContext().VRScreenshots(); }
 	inline IVRRenderModels *VR_CALLTYPE VRRenderModels() { return OpenVRInternal_ModuleContext().VRRenderModels(); }
 	inline IVRApplications *VR_CALLTYPE VRApplications() { return OpenVRInternal_ModuleContext().VRApplications(); }
@@ -4574,6 +5440,8 @@ namespace vr
 	inline IVRInput *VR_CALLTYPE VRInput() { return OpenVRInternal_ModuleContext().VRInput(); }
 	inline IVRIOBuffer *VR_CALLTYPE VRIOBuffer() { return OpenVRInternal_ModuleContext().VRIOBuffer(); }
 	inline IVRSpatialAnchors *VR_CALLTYPE VRSpatialAnchors() { return OpenVRInternal_ModuleContext().VRSpatialAnchors(); }
+	inline IVRNotifications *VR_CALLTYPE VRNotifications() { return OpenVRInternal_ModuleContext().VRNotifications(); }
+	inline IVRDebug *VR_CALLTYPE VRDebug() { return OpenVRInternal_ModuleContext().VRDebug(); }
 
 	inline void COpenVRContext::Clear()
 	{
@@ -4582,6 +5450,8 @@ namespace vr
 		m_pVRChaperoneSetup = nullptr;
 		m_pVRCompositor = nullptr;
 		m_pVROverlay = nullptr;
+		m_pVROverlayView = nullptr;
+		m_pVRHeadsetView = nullptr;
 		m_pVRRenderModels = nullptr;
 		m_pVRExtendedDisplay = nullptr;
 		m_pVRSettings = nullptr;
@@ -4593,6 +5463,8 @@ namespace vr
 		m_pVRInput = nullptr;
 		m_pVRIOBuffer = nullptr;
 		m_pVRSpatialAnchors = nullptr;
+		m_pVRNotifications = nullptr;
+		m_pVRDebug = nullptr;
 	}
 	
 	VR_INTERFACE uint32_t VR_CALLTYPE VR_InitInternal2( EVRInitError *peError, EVRApplicationType eApplicationType, const char *pStartupInfo );
