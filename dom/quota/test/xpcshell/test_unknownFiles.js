@@ -38,7 +38,7 @@ function* testSteps() {
     return file;
   }
 
-  let file, request;
+  let request;
 
   info("Initializing");
 
@@ -54,7 +54,7 @@ function* testSteps() {
   ]) {
     info("Creating unknown file");
 
-    file = createFile(unknownFile);
+    createFile(unknownFile);
 
     info("Initializing origin");
 
@@ -66,48 +66,8 @@ function* testSteps() {
     );
     yield undefined;
 
-    ok(
-      request.resultCode == NS_OK,
-      "Initialization succeeded even though there are unknown files or " +
-        "directories"
-    );
-    ok(request.result === true, "The origin directory was created");
-
-    info("Getting origin usage");
-
-    request = getOriginUsage(principal);
-    requestFinished(request).then(continueToNextStepSync);
-    yield undefined;
-
-    ok(request.result, "The request result is not null");
-    ok(request.result.usage === 0, "The usage was 0");
-    ok(request.result.fileUsage === 0, "The fileUsage was 0");
-
-    file.remove(/* recursive */ false);
-
-    info("Getting origin usage");
-
-    request = getOriginUsage(principal);
-    requestFinished(request).then(continueToNextStepSync);
-    yield undefined;
-
-    ok(request.result, "The request result is not null");
-    ok(request.result.usage === 0, "The usage was 0");
-    ok(request.result.fileUsage === 0, "The fileUsage was 0");
-
-    info("Initializing origin");
-
-    request = initStorageAndOrigin(
-      principal,
-      "default",
-      continueToNextStepSync
-    );
-    yield undefined;
-
     ok(request.resultCode == NS_OK, "Initialization succeeded");
-    ok(request.result === false, "The origin directory wasn't created");
-
-    file = createFile(unknownFile);
+    ok(request.result === true, "The origin directory was created");
 
     info("Getting origin usage");
 
