@@ -275,7 +275,6 @@ class Preferences {
     }
     if (pref.startsWith("suggest.")) {
       this._map.delete("defaultBehavior");
-      this._map.delete("emptySearchDefaultBehavior");
     }
   }
 
@@ -347,21 +346,6 @@ class Preferences {
           ].toUpperCase()}`;
           val |=
             this.get("suggest." + type) && Ci.mozIPlacesAutoComplete[behavior];
-        }
-        return val;
-      }
-      case "emptySearchDefaultBehavior": {
-        // Further restrictions to apply for "empty searches" (searching for
-        // "").  The empty behavior is typed history, if history is enabled.
-        // Otherwise, it is bookmarks, if they are enabled. If both history and
-        // bookmarks are disabled, it defaults to open pages.
-        let val = Ci.mozIPlacesAutoComplete.BEHAVIOR_RESTRICT;
-        if (this.get("suggest.history")) {
-          val |= Ci.mozIPlacesAutoComplete.BEHAVIOR_HISTORY;
-        } else if (this.get("suggest.bookmark")) {
-          val |= Ci.mozIPlacesAutoComplete.BEHAVIOR_BOOKMARK;
-        } else {
-          val |= Ci.mozIPlacesAutoComplete.BEHAVIOR_OPENPAGE;
         }
         return val;
       }

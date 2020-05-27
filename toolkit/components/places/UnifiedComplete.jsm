@@ -684,7 +684,7 @@ function Search(
   // Set the default behavior for this search.
   this._behavior = this._searchString
     ? UrlbarPrefs.get("defaultBehavior")
-    : UrlbarPrefs.get("emptySearchDefaultBehavior");
+    : this._emptySearchDefaultBehavior;
 
   if (queryContext) {
     this._enableActions = true;
@@ -2385,6 +2385,22 @@ Search.prototype = {
     return conditions.length
       ? defaultQuery("AND " + conditions.join(" AND "))
       : defaultQuery();
+  },
+
+  get _emptySearchDefaultBehavior() {
+    // Further restrictions to apply for "empty searches" (searching for
+    // "").  The empty behavior is typed history, if history is enabled.
+    // Otherwise, it is bookmarks, if they are enabled. If both history and
+    // bookmarks are disabled, it defaults to open pages.
+    let val = Ci.mozIPlacesAutoComplete.BEHAVIOR_RESTRICT;
+    if (UrlbarPrefs.get("suggest.history")) {
+      val |= Ci.mozIPlacesAutoComplete.BEHAVIOR_HISTORY;
+    } else if (UrlbarPrefs.get("suggest.bookmark")) {
+      val |= Ci.mozIPlacesAutoComplete.BEHAVIOR_BOOKMARK;
+    } else {
+      val |= Ci.mozIPlacesAutoComplete.BEHAVIOR_OPENPAGE;
+    }
+    return val;
   },
 
   /**
