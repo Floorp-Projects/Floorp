@@ -12,6 +12,7 @@
 #include <taskschd.h>
 
 #include "mozilla/RefPtr.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/WinHeaderOnlyUtils.h"
 
@@ -43,6 +44,12 @@ HRESULT RegisterTask(const wchar_t* uniqueToken,
   // Make sure we don't try to register a task that already exists.
   RemoveTask(uniqueToken);
 
+  // If we create a folder and then fail to create the task, we need to
+  // remember to delete the folder so that whatever set of permissions it ends
+  // up with doesn't interfere with trying to create the task again later, and
+  // so that we don't just leave an empty folder behind.
+  bool createdFolder = false;
+
   HRESULT hr = S_OK;
   RefPtr<ITaskService> scheduler;
   ENSURE(CoCreateInstance(CLSID_TaskScheduler, nullptr, CLSCTX_INPROC_SERVER,
@@ -61,12 +68,23 @@ HRESULT RegisterTask(const wchar_t* uniqueToken,
                                    getter_AddRefs(taskFolder)))) {
     hr = rootFolder->CreateFolder(vendorBStr.get(), VARIANT{},
                                   getter_AddRefs(taskFolder));
-    // The folder already existing isn't an error.
-    if (FAILED(hr) && hr != HRESULT_FROM_WIN32(ERROR_ALREADY_EXISTS)) {
+    if (SUCCEEDED(hr)) {
+      createdFolder = true;
+    } else if (hr != HRESULT_FROM_WIN32(ERROR_ALREADY_EXISTS)) {
+      // The folder already existing isn't an error, but anything else is.
       LOG_ERROR(hr);
       return hr;
     }
   }
+
+  auto cleanupFolder =
+      mozilla::MakeScopeExit([hr, createdFolder, &rootFolder, &vendorBStr] {
+        if (createdFolder && FAILED(hr)) {
+          // If this fails, we can't really handle that intelligently, so
+          // don't even bother to check the return code.
+          rootFolder->DeleteFolder(vendorBStr.get(), 0);
+        }
+      });
 
   RefPtr<ITaskDefinition> newTask;
   ENSURE(scheduler->NewTask(0, getter_AddRefs(newTask)));
