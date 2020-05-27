@@ -12,6 +12,7 @@ job-defaults:
         build_type: opt
         geckodriver: true
         shippable: true
+        rebuild-on-release: true
     run:
         script: build-geckodriver.sh
         toolchain-artifact: public/build/geckodriver.tar.gz
