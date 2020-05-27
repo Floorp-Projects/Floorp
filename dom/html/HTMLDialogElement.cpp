@@ -167,6 +167,31 @@ void HTMLDialogElement::FocusDialog() {
   }
 }
 
+void HTMLDialogElement::QueueCancelDialog() {
+  // queues an element task on the user interaction task source
+  OwnerDoc()
+      ->EventTargetFor(TaskCategory::UI)
+      ->Dispatch(NewRunnableMethod("HTMLDialogElement::RunCancelDialogSteps",
+                                   this,
+                                   &HTMLDialogElement::RunCancelDialogSteps));
+}
+
+void HTMLDialogElement::RunCancelDialogSteps() {
+  // 1) Let close be the result of firing an event named cancel at dialog, with
+  // the cancelable attribute initialized to true.
+  bool defaultAction = true;
+  nsContentUtils::DispatchTrustedEvent(
+      OwnerDoc(), this, NS_LITERAL_STRING("cancel"), CanBubble::eNo,
+      Cancelable::eYes, &defaultAction);
+
+  // 2) If close is true and dialog has an open attribute, then close the dialog
+  // with no return value.
+  if (defaultAction) {
+    Optional<nsAString> retValue;
+    Close(retValue);
+  }
+}
+
 JSObject* HTMLDialogElement::WrapNode(JSContext* aCx,
                                       JS::Handle<JSObject*> aGivenProto) {
   return HTMLDialogElement_Binding::Wrap(aCx, this, aGivenProto);

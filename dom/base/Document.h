@@ -1880,6 +1880,9 @@ class Document : public nsINode,
   // flag.
   bool SetFullscreenElement(Element* aElement);
 
+  // Cancel the dialog element if the document is blocked by the dialog
+  void TryCancelDialog();
+
   /**
    * Called when a frame in a child process has entered fullscreen or when a
    * fullscreen frame in a child process changes to another origin.
