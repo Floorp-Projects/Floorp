@@ -330,11 +330,6 @@ void IProtocol::ReplaceEventTargetForActor(IProtocol* aActor,
   mToplevel->ReplaceEventTargetForActor(aActor, aEventTarget);
 }
 
-void IProtocol::SetEventTargetForRoute(int32_t aRoute,
-                                       nsIEventTarget* aEventTarget) {
-  mToplevel->SetEventTargetForRoute(aRoute, aEventTarget);
-}
-
 nsIEventTarget* IProtocol::GetActorEventTarget() {
   // FIXME: It's a touch sketchy that we don't return a strong reference here.
   RefPtr<nsIEventTarget> target = GetActorEventTarget(this);
@@ -885,16 +880,6 @@ void IToplevelProtocol::ReplaceEventTargetForActor(
 
   MutexAutoLock lock(mEventTargetMutex);
   mEventTargetMap.ReplaceWithID(aEventTarget, id);
-}
-
-void IToplevelProtocol::SetEventTargetForRoute(int32_t aRoute,
-                                               nsIEventTarget* aEventTarget) {
-  MOZ_RELEASE_ASSERT(aRoute != Id());
-  MOZ_RELEASE_ASSERT(aRoute != kNullActorId && aRoute != kFreedActorId);
-
-  MutexAutoLock lock(mEventTargetMutex);
-  MOZ_ASSERT(!mEventTargetMap.Lookup(aRoute));
-  mEventTargetMap.AddWithID(aEventTarget, aRoute);
 }
 
 }  // namespace ipc
