@@ -657,13 +657,18 @@ class FunctionCompiler {
                rhs->type() == MIRType::Int32);
 
     if (op == wasm::SimdOp::I64x2ShrS) {
-      // x86/x64 specific: The masm interface for this shift requires the client
-      // to mask the shift count.
-      MConstant* mask = MConstant::New(alloc(), Int32Value(63));
-      curBlock_->add(mask);
-      MBitAnd* maskedShift = MBitAnd::New(alloc(), rhs, mask, MIRType::Int32);
-      curBlock_->add(maskedShift);
-      rhs = maskedShift;
+      if (!rhs->isConstant()) {
+        // x86/x64 specific? The masm interface for this shift requires the
+        // client to mask variable shift counts.  It's OK if later optimizations
+        // transform a variable count to a constant count here. (And then
+        // optimizations should also be able to fold the mask, though this is
+        // not crucial.)
+        MConstant* mask = MConstant::New(alloc(), Int32Value(63));
+        curBlock_->add(mask);
+        MBitAnd* maskedShift = MBitAnd::New(alloc(), rhs, mask, MIRType::Int32);
+        curBlock_->add(maskedShift);
+        rhs = maskedShift;
+      }
     }
 
     auto* ins = MWasmShiftSimd128::New(alloc(), lhs, rhs, op);

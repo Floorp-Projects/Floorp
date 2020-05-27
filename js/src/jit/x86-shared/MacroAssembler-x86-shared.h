@@ -659,12 +659,18 @@ class MacroAssemblerX86Shared : public Assembler {
   void packedLeftShiftByScalarInt8x16(FloatRegister in, Register count,
                                       Register temp, FloatRegister xtmp,
                                       FloatRegister dest);
+  void packedLeftShiftByScalarInt8x16(Imm32 count, FloatRegister src,
+                                      FloatRegister dest);
   void packedRightShiftByScalarInt8x16(FloatRegister in, Register count,
                                        Register temp, FloatRegister xtmp,
                                        FloatRegister dest);
+  void packedRightShiftByScalarInt8x16(Imm32 count, FloatRegister src,
+                                       FloatRegister temp, FloatRegister dest);
   void packedUnsignedRightShiftByScalarInt8x16(FloatRegister in, Register count,
                                                Register temp,
                                                FloatRegister xtmp,
+                                               FloatRegister dest);
+  void packedUnsignedRightShiftByScalarInt8x16(Imm32 count, FloatRegister src,
                                                FloatRegister dest);
 
   void packedLeftShiftByScalarInt16x8(FloatRegister in, Register count,
