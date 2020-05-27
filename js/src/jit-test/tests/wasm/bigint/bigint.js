@@ -266,13 +266,13 @@ function testGlobalImport() {
       (export "b" (global $b))
       (export "c" (global $c))
     )`,
-    { g: { a: 1n, b: 2n ** 63n, c: "123" } }
+    { g: { a: 1n, b: 2n ** 63n, c: -100n } }
   ).exports;
 
   testWithJit(() => {
     assertEq(exports.a.value, 1n);
     assertEq(exports.b.value, -(2n ** 63n));
-    assertEq(exports.c.value, 123n);
+    assertEq(exports.c.value, -100n);
   });
 }
 
@@ -336,8 +336,8 @@ function testGlobalBadImportLiteral() {
         )`,
         { g: { a: "foo" } }
       ),
-    SyntaxError,
-    "invalid BigInt syntax"
+    WebAssembly.LinkError,
+    "import object field 'a' is not a BigInt"
   );
 }
 
