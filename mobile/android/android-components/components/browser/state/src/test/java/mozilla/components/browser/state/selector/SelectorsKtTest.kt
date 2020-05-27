@@ -121,6 +121,24 @@ class SelectorsKtTest {
     }
 
     @Test
+    fun `getNormalOrPrivateTabs extension function`() {
+        val tab1 = createTab("https://www.firefox.com")
+        val tab2 = createTab("https://www.mozilla.org")
+        val privateTab1 = createTab("https://getpocket.com", private = true)
+        val privateTab2 = createTab("https://www.example.org", private = true)
+
+        val state = BrowserState(
+            tabs = listOf(tab1, privateTab1, tab2, privateTab2),
+            customTabs = listOf(createCustomTab("https://www.google.com")))
+
+        assertEquals(listOf(tab1, tab2), state.getNormalOrPrivateTabs(private = false))
+        assertEquals(listOf(privateTab1, privateTab2), state.getNormalOrPrivateTabs(private = true))
+
+        assertEquals(emptyList<TabSessionState>(), BrowserState().getNormalOrPrivateTabs(private = true))
+        assertEquals(emptyList<TabSessionState>(), BrowserState().getNormalOrPrivateTabs(private = false))
+    }
+
+    @Test
     fun `privateTabs and normalTabs extension properties`() {
         val tab1 = createTab("https://www.firefox.com")
         val tab2 = createTab("https://www.mozilla.org")

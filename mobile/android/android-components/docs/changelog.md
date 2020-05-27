@@ -4,9 +4,9 @@ title: Changelog
 permalink: /changelog/
 ---
 
-# 43.0.0-SNAPSHOT (In Development)
+# 44.0.0-SNAPSHOT (In Development)
 
-* [Commits](https://github.com/mozilla-mobile/android-components/compare/v43.0.0...master)
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v44.0.0...master)
 * [Milestone](https://github.com/mozilla-mobile/android-components/milestone/104?closed=1)
 * [Dependencies](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Dependencies.kt)
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
@@ -33,6 +33,9 @@ permalink: /changelog/
 * **feature-session**
   * Removes unused `ThumbnailsFeature` since this has been refactored into its own browser-thumbnails component in
     [#6827](https://github.com/mozilla-mobile/android-components/issues/6827).
+
+* **browser-state**
+  * Adds `BrowserState.getNormalOrPrivateTabs(private: Boolean)` to get `normalTabs` or `privateTabs` based on a boolean condition.
 
 # 43.0.0
 
