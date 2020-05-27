@@ -117,9 +117,6 @@ with Files('PrivateBrowsingUtils.jsm'):
 with Files('Promise*.jsm'):
     BUG_COMPONENT = ('Toolkit', 'Async Tooling')
 
-with Files('RemoteSecurityUI.jsm'):
-    BUG_COMPONENT = ('Firefox', 'Tabbed Browser')
-
 with Files('RemoteWebProgress.jsm'):
     BUG_COMPONENT = ('Core', 'DOM: Navigation')
 
@@ -212,7 +209,6 @@ EXTRA_JS_MODULES += [
     'PromiseUtils.jsm',
     'Region.jsm',
     'RemotePageAccessManager.jsm',
-    'RemoteSecurityUI.jsm',
     'RemoteWebProgress.jsm',
     'ResetProfile.jsm',
     'ResponsivenessMonitor.jsm',

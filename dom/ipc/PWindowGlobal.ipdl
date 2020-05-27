@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 include "mozilla/dom/DocShellMessageUtils.h";
+include "mozilla/ipc/TransportSecurityInfoUtils.h";
 
 include protocol PBrowser;
 include protocol PInProcess;
@@ -21,6 +22,7 @@ using nscolor from "nsColor.h";
 using refcounted class nsDocShellLoadState from "nsDocShellLoadState.h";
 using mozilla::dom::TabId from "mozilla/dom/ipc/IdType.h";
 using mozilla::layers::LayersId from "mozilla/layers/LayersTypes.h";
+using refcounted class nsITransportSecurityInfo from "nsITransportSecurityInfo.h";
 
 namespace mozilla {
 namespace dom {
@@ -110,6 +112,8 @@ parent:
 
   // Update the title of the document in this WindowGlobal.
   async UpdateDocumentTitle(nsString aTitle);
+
+  async UpdateDocumentSecurityInfo(nsITransportSecurityInfo aSecurityInfo);
 
   // Update the document's HTTPS-Only Mode flags in this WindowGlobal.
   async UpdateHttpsOnlyStatus(uint32_t aHttpsOnlyStatus);
