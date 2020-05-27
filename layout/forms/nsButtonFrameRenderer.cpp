@@ -248,7 +248,7 @@ bool nsDisplayButtonBorder::CreateWebRenderCommands(
     if (borderIsEmpty) {
       aBuilder.FinishGroup();
     } else {
-      aBuilder.CancelGroup();
+      aBuilder.CancelGroup(true);
     }
 
     return borderIsEmpty;

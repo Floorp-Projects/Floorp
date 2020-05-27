@@ -5018,7 +5018,7 @@ bool nsDisplayBorder::CreateWebRenderCommands(
       aDisplayListBuilder);
 
   if (drawResult == ImgDrawResult::NOT_SUPPORTED) {
-    aBuilder.CancelGroup();
+    aBuilder.CancelGroup(true);
     return false;
   }
 
@@ -8844,7 +8844,7 @@ bool nsDisplayText::CreateWebRenderCommands(
   if (result) {
     aBuilder.FinishGroup();
   } else {
-    aBuilder.CancelGroup();
+    aBuilder.CancelGroup(true);
   }
 
   return result;
