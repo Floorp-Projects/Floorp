@@ -230,6 +230,7 @@ body {
 .sidebar-contents {
   grid-row: 2 / -1;
   overflow: auto;
+  direction: ltr;
 }
 
 .webconsole-sidebar-toolbar .sidebar-close-button {
