@@ -59,8 +59,8 @@ async function updateTopSites(condition, searchShortcuts = false) {
   // Toggle the pref to clear the feed cache and force an update.
   await SpecialPowers.pushPrefEnv({
     set: [
-      ["browser.newtabpage.activity-stream.feeds.topsites", false],
-      ["browser.newtabpage.activity-stream.feeds.topsites", true],
+      ["browser.newtabpage.activity-stream.feeds.system.topsites", false],
+      ["browser.newtabpage.activity-stream.feeds.system.topsites", true],
       [
         "browser.newtabpage.activity-stream.improvesearch.topSiteSearchShortcuts",
         searchShortcuts,

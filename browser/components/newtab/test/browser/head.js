@@ -30,8 +30,14 @@ async function setDefaultTopSites() {
     "https://www.youtube.com/,https://www.facebook.com/,https://www.amazon.com/,https://www.reddit.com/,https://www.wikipedia.org/,https://twitter.com/",
   ]);
   // Toggle the feed off and on as a workaround to read the new prefs.
-  await pushPrefs(["browser.newtabpage.activity-stream.feeds.topsites", false]);
-  await pushPrefs(["browser.newtabpage.activity-stream.feeds.topsites", true]);
+  await pushPrefs([
+    "browser.newtabpage.activity-stream.feeds.system.topsites",
+    false,
+  ]);
+  await pushPrefs([
+    "browser.newtabpage.activity-stream.feeds.system.topsites",
+    true,
+  ]);
   await pushPrefs([
     "browser.newtabpage.activity-stream.improvesearch.topSiteSearchShortcuts",
     true,

@@ -110,7 +110,7 @@ describe("ActivityStream", () => {
       assert.instanceOf(feed, Fake);
     });
     it("should create a TopSites feed", () => {
-      const feed = as.feeds.get("feeds.topsites")();
+      const feed = as.feeds.get("feeds.system.topsites")();
       assert.instanceOf(feed, Fake);
     });
     it("should create a Telemetry feed", () => {

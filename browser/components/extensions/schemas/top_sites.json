@@ -114,7 +114,7 @@
                 "type": "boolean",
                 "default": false,
                 "optional": true,
-                "description": "Return the sites that exactly appear on the user's new-tab page. When true, all other options are ignored except limit and includeFavicon."
+                "description": "Return the sites that exactly appear on the user's new-tab page. When true, all other options are ignored except limit and includeFavicon. If the user disabled newtab Top Sites, the newtab parameter will be ignored."
               }
             },
             "default": {},
