@@ -158,7 +158,10 @@ void WindowGlobalChild::OnNewDocument(Document* aDocument) {
   MOZ_RELEASE_ASSERT(aDocument);
 
   // Send a series of messages to update document-specific state on
-  // WindowGlobalParent.
+  // WindowGlobalParent, when we change documents on an existing WindowGlobal.
+  // This data is also all sent when we construct a WindowGlobal, so anything
+  // added here should also be added to WindowGlobalActor::WindowInitializer.
+
   // FIXME: Perhaps these should be combined into a smaller number of messages?
   SetDocumentURI(aDocument->GetDocumentURI());
   SetDocumentPrincipal(aDocument->NodePrincipal());
