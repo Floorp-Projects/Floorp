@@ -44,6 +44,23 @@ interface mozIBridgedSyncEngine : nsISupports {
     // collection on the server, and upload our data as if on a first sync.
     readonly attribute long storageVersion;
 
+    // Whether this engine tolerates skipped records, where a "skipped" record
+    // is one that would cause the server's published limits to be exceeded
+    // (for example, a single record where the payload is larger than the
+    // server accepts.)
+    // If this returns true, we will just skip the record without even attempting
+    // to upload. If this is false, we'll abort the entire batch.
+    // If the engine allows this, it will need to detect this scenario by noticing
+    // the ID is not in the 'success' records reported to `setUploaded`.
+    // (Note that this is not to be confused with the fact server's can currently
+    // reject records as part of a POST - but we hope to remove this ability from
+    // the server API. Note also that this is not bullet-proof - if the count of
+    // records is high, it's possible that we will have committed a previous
+    // batch before we hit the relevant limits, so things might have been written.
+    // We hope to fix this by ensuring batch limits are such that this is
+    // impossible)
+    readonly attribute boolean allowSkippedRecord;
+
     // Wires up the Sync logging machinery to the bridged engine. This can be
     // `null`, in which case any logs from the engine will be discarded.
     attribute mozIServicesLogger logger;
