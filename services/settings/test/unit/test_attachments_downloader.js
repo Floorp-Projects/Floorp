@@ -485,13 +485,28 @@ add_task(async function test_download_from_dump() {
   });
   checkInfo(dump2, "dump_fallback");
 
+  // Fill the cache with the same data as the dump for the next part.
+  await client.db.saveAttachment(RECORD_OF_DUMP.id, {
+    record: RECORD_OF_DUMP,
+    blob: new Blob([dump1.buffer]),
+  });
+  // The dump should take precedence over the cache.
+  const dump3 = await client.attachments.download(RECORD_OF_DUMP, {
+    useCache: true,
+    fallbackToCache: true,
+    fallbackToDump: true,
+  });
+  checkInfo(dump3, "dump_match");
+
+  await client.attachments.deleteCached(RECORD_OF_DUMP.id);
+
   await Assert.rejects(
     client.attachments.download(null, {
       attachmentId: "filename-without-meta.txt",
       useCache: true,
       fallbackToDump: true,
     }),
-    /Could not download resource:\/\/rs-downloader-test\/settings\/dump-bucket\/dump-collection\/filename-without-meta\.txt/,
+    /DownloadError: Could not download filename-without-meta.txt/,
     "Cannot download dump that lacks a .meta.json file"
   );
 
@@ -501,7 +516,7 @@ add_task(async function test_download_from_dump() {
       useCache: true,
       fallbackToDump: true,
     }),
-    /Could not download resource:\/\/rs-downloader-test\/settings\/dump-bucket\/dump-collection\/filename-without-content\.txt/,
+    /Could not download resource:\/\/rs-downloader-test\/settings\/dump-bucket\/dump-collection\/filename-without-content\.txt(?!\.meta\.json)/,
     "Cannot download dump that is missing, despite the existing .meta.json"
   );
 

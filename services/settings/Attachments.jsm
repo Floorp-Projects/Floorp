@@ -31,6 +31,61 @@ class BadContentError extends Error {
   }
 }
 
+// Helper for the `download` method for commonly used methods, to help with
+// lazily accessing the record and attachment content.
+class LazyRecordAndBuffer {
+  constructor(getRecordAndLazyBuffer) {
+    this.getRecordAndLazyBuffer = getRecordAndLazyBuffer;
+  }
+
+  async _ensureRecordAndLazyBuffer() {
+    if (!this.recordAndLazyBufferPromise) {
+      this.recordAndLazyBufferPromise = this.getRecordAndLazyBuffer();
+    }
+    return this.recordAndLazyBufferPromise;
+  }
+
+  /**
+   * @returns {object} The attachment record, if found. null otherwise.
+   **/
+  async getRecord() {
+    try {
+      return (await this._ensureRecordAndLazyBuffer()).record;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /**
+   * @param {object} requestedRecord An attachment record
+   * @returns {boolean} Whether the requested record matches this record.
+   **/
+  async isMatchingRequestedRecord(requestedRecord) {
+    const record = await this.getRecord();
+    return (
+      record &&
+      record.attachment.size === requestedRecord.attachment.size &&
+      record.attachment.hash === requestedRecord.attachment.hash
+    );
+  }
+
+  /**
+   * Generate the return value for the "download" method.
+   *
+   * @throws {*} if the record or attachment content is unavailable.
+   * @returns {Object} An object with two properties:
+   *   buffer: ArrayBuffer with the file content.
+   *   record: Record associated with the bytes.
+   **/
+  async getResult() {
+    const { record, readBuffer } = await this._ensureRecordAndLazyBuffer();
+    if (!this.bufferPromise) {
+      this.bufferPromise = readBuffer();
+    }
+    return { record, buffer: await this.bufferPromise };
+  }
+}
+
 class Downloader {
   static get DownloadError() {
     return DownloadError;
@@ -108,54 +163,40 @@ class Downloader {
       throw new Error("download() was called without attachmentId or recordID");
     }
 
-    let buffer, cachedRecord;
-    if (useCache) {
-      try {
-        let cached = await this.cacheImpl.get(attachmentId);
-        if (cached) {
-          cachedRecord = cached.record;
-          buffer = await cached.blob.arrayBuffer();
+    const dumpInfo = new LazyRecordAndBuffer(() =>
+      this._readAttachmentDump(attachmentId)
+    );
+    const cacheInfo = new LazyRecordAndBuffer(() =>
+      this._readAttachmentCache(attachmentId)
+    );
+
+    // Check if an attachment dump has been packaged with the client.
+    // The dump is checked before the cache because dumps are expected to match
+    // the requested record, at least shortly after the release of the client.
+    if (fallbackToDump && record) {
+      if (await dumpInfo.isMatchingRequestedRecord(record)) {
+        try {
+          return { ...(await dumpInfo.getResult()), _source: "dump_match" };
+        } catch (e) {
+          // Failed to read dump: record found but attachment file is missing.
+          Cu.reportError(e);
         }
-      } catch (e) {
-        Cu.reportError(e);
       }
     }
 
-    if (buffer && record) {
-      const { size, hash } = cachedRecord.attachment;
-      if (
-        record.attachment.size === size &&
-        record.attachment.hash === hash &&
-        (await RemoteSettingsWorker.checkContentHash(buffer, size, hash))
-      ) {
-        // Best case: File already downloaded and still up to date.
-        return { buffer, record: cachedRecord, _source: "cache_match" };
+    // Check if the requested attachment has already been cached.
+    if (useCache && record) {
+      if (await cacheInfo.isMatchingRequestedRecord(record)) {
+        try {
+          return { ...(await cacheInfo.getResult()), _source: "cache_match" };
+        } catch (e) {
+          // Failed to read cache, e.g. IndexedDB unusable.
+          Cu.reportError(e);
+        }
       }
     }
 
     let errorIfAllFails;
-
-    // No cached attachment available. Check if an attachment is available in
-    // the dump that is packaged with the client.
-    let dumpInfo;
-    if (fallbackToDump && record) {
-      try {
-        dumpInfo = await this._readAttachmentDump(attachmentId);
-        // Check if there is a match. If there is no match, we will fall through
-        // to the next case (downloading from the network). We may still use the
-        // dump at the end of the function as the ultimate fallback.
-        if (record.attachment.hash === dumpInfo.record.attachment.hash) {
-          return {
-            buffer: await dumpInfo.readBuffer(),
-            record: dumpInfo.record,
-            _source: "dump_match",
-          };
-        }
-      } catch (e) {
-        fallbackToDump = false;
-        errorIfAllFails = e;
-      }
-    }
 
     // There is no local version that matches the requested record.
     // Try to download the attachment specified in record.
@@ -183,22 +224,20 @@ class Downloader {
     // back to local versions, even if their attachment hash do not match the
     // one from the requested record.
 
-    if (buffer && fallbackToCache) {
-      const { size, hash } = cachedRecord.attachment;
-      if (await RemoteSettingsWorker.checkContentHash(buffer, size, hash)) {
-        return { buffer, record: cachedRecord, _source: "cache_fallback" };
+    // Unable to find a valid attachment, fall back to the cached attachment.
+    if (fallbackToCache && (await cacheInfo.getRecord())) {
+      try {
+        return { ...(await cacheInfo.getResult()), _source: "cache_fallback" };
+      } catch (e) {
+        // Failed to read from cache, e.g. IndexedDB unusable.
+        Cu.reportError(e);
       }
     }
 
     // Unable to find a valid attachment, fall back to the packaged dump.
-    if (fallbackToDump) {
+    if (fallbackToDump && (await dumpInfo.getRecord())) {
       try {
-        dumpInfo = dumpInfo || (await this._readAttachmentDump(attachmentId));
-        return {
-          buffer: await dumpInfo.readBuffer(),
-          record: dumpInfo.record,
-          _source: "dump_fallback",
-        };
+        return { ...(await dumpInfo.getResult()), _source: "dump_fallback" };
       } catch (e) {
         errorIfAllFails = e;
       }
@@ -356,6 +395,25 @@ class Downloader {
       throw new Downloader.DownloadError(url, resp);
     }
     return resp.arrayBuffer();
+  }
+
+  async _readAttachmentCache(attachmentId) {
+    const cached = await this.cacheImpl.get(attachmentId);
+    if (!cached) {
+      throw new Downloader.DownloadError(attachmentId);
+    }
+    return {
+      record: cached.record,
+      async readBuffer() {
+        const buffer = await cached.blob.arrayBuffer();
+        const { size, hash } = cached.record.attachment;
+        if (await RemoteSettingsWorker.checkContentHash(buffer, size, hash)) {
+          return buffer;
+        }
+        // Really unexpected, could indicate corruption in IndexedDB.
+        throw new Downloader.BadContentError(attachmentId);
+      },
+    };
   }
 
   async _readAttachmentDump(attachmentId) {
