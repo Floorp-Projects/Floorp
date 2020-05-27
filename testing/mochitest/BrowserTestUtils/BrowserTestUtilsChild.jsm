@@ -264,7 +264,9 @@ class BrowserTestUtilsChild extends JSWindowActorChild {
       case "load": {
         this.sendAsyncMessage(aEvent.type, {
           internalURL: aEvent.target.documentURI,
-          visibleURL: aEvent.target.location.href,
+          visibleURL: aEvent.target.location
+            ? aEvent.target.location.href
+            : null,
         });
         break;
       }
