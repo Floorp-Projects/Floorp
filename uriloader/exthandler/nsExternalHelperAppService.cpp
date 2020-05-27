@@ -484,9 +484,6 @@ static const nsExtraMimeTypeEntry extraMimeEntries[] = {
 #ifdef MOZ_WIDGET_ANDROID
     {"application/vnd.android.package-archive", "apk", "Android Package"},
 #endif
-
-    // Note: if you add new image types, please also update the list in
-    // contentAreaUtils.js to match.
     {IMAGE_ART, "art", "ART Image"},
     {IMAGE_BMP, "bmp", "BMP Image"},
     {IMAGE_GIF, "gif", "GIF Image"},
@@ -499,7 +496,6 @@ static const nsExtraMimeTypeEntry extraMimeEntries[] = {
     {IMAGE_SVG_XML, "svg", "Scalable Vector Graphics"},
     {IMAGE_WEBP, "webp", "WebP Image"},
     {IMAGE_AVIF, "avif", "AV1 Image File"},
-
     {MESSAGE_RFC822, "eml", "RFC-822 data"},
     {TEXT_PLAIN, "txt,text", "Text File"},
     {APPLICATION_JSON, "json", "JavaScript Object Notation"},
@@ -2487,7 +2483,7 @@ NS_IMETHODIMP nsExternalHelperAppService::GetFromTypeAndExtension(
   // We promise to only send lower case mime types to the OS
   ToLowerCase(typeToUse);
 
-  // First, ask the OS for a mime info
+  // (1) Ask the OS for a mime info
   bool found;
   nsresult rv = GetMIMEInfoFromOS(typeToUse, aFileExt, &found, _retval);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -2498,7 +2494,7 @@ NS_IMETHODIMP nsExternalHelperAppService::GetFromTypeAndExtension(
   // If we got no mimeinfo, something went wrong. Probably lack of memory.
   if (!*_retval) return NS_ERROR_OUT_OF_MEMORY;
 
-  // Next, overwrite with generic description if the extension is PDF
+  // (1.5) Overwrite with generic description if the extension is PDF
   // since the file format is supported by Firefox and we don't want
   // other brands positioning themselves as the sole viewer for a system.
   if (aFileExt.LowerCaseEqualsASCII("pdf") ||
@@ -2520,20 +2516,6 @@ NS_IMETHODIMP nsExternalHelperAppService::GetFromTypeAndExtension(
     }
   }
 
-  // Check extras - not everything we support will be known by the OS store,
-  // unfortunately, and it may even miss some extensions that we know should
-  // be accepted. We only do this for non-octet-stream mimetypes, because
-  // our information for octet-stream would lead to us trying to open all such
-  // files as Binary file with exe, com or bin extension regardless of the
-  // real extension.
-  if (!typeToUse.Equals(APPLICATION_OCTET_STREAM,
-                        nsCaseInsensitiveCStringComparator())) {
-    rv = FillMIMEInfoForMimeTypeFromExtras(typeToUse, !found, *_retval);
-    LOG(("Searched extras (by type), rv 0x%08" PRIX32 "\n",
-         static_cast<uint32_t>(rv)));
-    found = found || NS_SUCCEEDED(rv);
-  }
-
   // (2) Now, let's see if we can find something in our datastore
   // This will not overwrite the OS information that interests us
   // (i.e. default application, default app. description)
@@ -2551,39 +2533,51 @@ NS_IMETHODIMP nsExternalHelperAppService::GetFromTypeAndExtension(
     }
 
     found = found || NS_SUCCEEDED(rv);
-  }
 
-  // If we still haven't found anything, try finding a match for
-  // an extension in extras and/or the handler service first:
-  if (!found && !aFileExt.IsEmpty()) {
-    rv = FillMIMEInfoForExtensionFromExtras(aFileExt, *_retval);
-    LOG(("Searched extras (by ext), rv 0x%08" PRIX32 "\n",
-         static_cast<uint32_t>(rv)));
-
-    if (handlerSvc) {
-      // Also gather data from the handler service for the extension
-      nsAutoCString overrideType;
-      rv = handlerSvc->GetTypeFromExtension(aFileExt, overrideType);
-      if (NS_SUCCEEDED(rv) && !overrideType.IsEmpty()) {
-        // We can't check handlerSvc->Exists() here, because we have a
-        // overideType. That's ok, it just results in some console noise.
-        // (If there's no handler for the override type, it throws)
-        rv = handlerSvc->FillHandlerInfo(*_retval, overrideType);
-        LOG(("Data source: Via ext: retval 0x%08" PRIx32 "\n",
-             static_cast<uint32_t>(rv)));
-        found = found || NS_SUCCEEDED(rv);
+    if (!found || NS_FAILED(rv)) {
+      // No type match, try extension match
+      if (!aFileExt.IsEmpty()) {
+        nsAutoCString overrideType;
+        rv = handlerSvc->GetTypeFromExtension(aFileExt, overrideType);
+        if (NS_SUCCEEDED(rv) && !overrideType.IsEmpty()) {
+          // We can't check handlerSvc->Exists() here, because we have a
+          // overideType. That's ok, it just results in some console noise.
+          // (If there's no handler for the override type, it throws)
+          rv = handlerSvc->FillHandlerInfo(*_retval, overrideType);
+          LOG(("Data source: Via ext: retval 0x%08" PRIx32 "\n",
+               static_cast<uint32_t>(rv)));
+          found = found || NS_SUCCEEDED(rv);
+        }
       }
     }
   }
 
-  // If we still don't have a match, at least set the file description
-  // to "ext File" if it's empty:
-  if (!found && !aFileExt.IsEmpty()) {
-    // XXXzpao This should probably be localized
-    nsAutoCString desc(aFileExt);
-    desc.AppendLiteral(" File");
-    (*_retval)->SetDescription(NS_ConvertASCIItoUTF16(desc));
-    LOG(("Falling back to 'File' file description\n"));
+  // (3) No match yet. Ask extras.
+  if (!found) {
+    rv = NS_ERROR_FAILURE;
+    // Getting info for application/octet-stream content-type from extras
+    // does not make a sense because this tends to open all octet-streams
+    // as Binary file with exe, com or bin extension regardless the real
+    // extension.
+    if (!typeToUse.Equals(APPLICATION_OCTET_STREAM,
+                          nsCaseInsensitiveCStringComparator()))
+      rv = FillMIMEInfoForMimeTypeFromExtras(typeToUse, *_retval);
+    LOG(("Searched extras (by type), rv 0x%08" PRIX32 "\n",
+         static_cast<uint32_t>(rv)));
+    // If that didn't work out, try file extension from extras
+    if (NS_FAILED(rv) && !aFileExt.IsEmpty()) {
+      rv = FillMIMEInfoForExtensionFromExtras(aFileExt, *_retval);
+      LOG(("Searched extras (by ext), rv 0x%08" PRIX32 "\n",
+           static_cast<uint32_t>(rv)));
+    }
+    // If that still didn't work, set the file description to "ext File"
+    if (NS_FAILED(rv) && !aFileExt.IsEmpty()) {
+      // XXXzpao This should probably be localized
+      nsAutoCString desc(aFileExt);
+      desc.AppendLiteral(" File");
+      (*_retval)->SetDescription(NS_ConvertASCIItoUTF16(desc));
+      LOG(("Falling back to 'File' file description\n"));
+    }
   }
 
   // Finally, check if we got a file extension and if yes, if it is an
@@ -2766,8 +2760,7 @@ NS_IMETHODIMP nsExternalHelperAppService::GetTypeFromFile(
 }
 
 nsresult nsExternalHelperAppService::FillMIMEInfoForMimeTypeFromExtras(
-    const nsACString& aContentType, bool aForceFillDesc,
-    nsIMIMEInfo* aMIMEInfo) {
+    const nsACString& aContentType, nsIMIMEInfo* aMIMEInfo) {
   NS_ENSURE_ARG(aMIMEInfo);
 
   NS_ENSURE_ARG(!aContentType.IsEmpty());
@@ -2775,26 +2768,14 @@ nsresult nsExternalHelperAppService::FillMIMEInfoForMimeTypeFromExtras(
   // Look for default entry with matching mime type.
   nsAutoCString MIMEType(aContentType);
   ToLowerCase(MIMEType);
-  for (auto entry : extraMimeEntries) {
-    if (MIMEType.Equals(entry.mMimeType)) {
+  int32_t numEntries = ArrayLength(extraMimeEntries);
+  for (int32_t index = 0; index < numEntries; index++) {
+    if (MIMEType.Equals(extraMimeEntries[index].mMimeType)) {
       // This is the one. Set attributes appropriately.
-      nsDependentCString extensions(entry.mFileExtensions);
-      nsACString::const_iterator start, end;
-      extensions.BeginReading(start);
-      extensions.EndReading(end);
-      while (start != end) {
-        nsACString::const_iterator cursor = start;
-        mozilla::Unused << FindCharInReadable(',', cursor, end);
-        aMIMEInfo->AppendExtension(Substring(start, cursor));
-        // If a comma was found, skip it for the next search.
-        start = cursor != end ? ++cursor : cursor;
-      }
-
-      nsAutoString desc;
-      aMIMEInfo->GetDescription(desc);
-      if (aForceFillDesc || desc.IsEmpty()) {
-        aMIMEInfo->SetDescription(NS_ConvertASCIItoUTF16(entry.mDescription));
-      }
+      aMIMEInfo->SetFileExtensions(
+          nsDependentCString(extraMimeEntries[index].mFileExtensions));
+      aMIMEInfo->SetDescription(
+          NS_ConvertASCIItoUTF16(extraMimeEntries[index].mDescription));
       return NS_OK;
     }
   }
@@ -2807,7 +2788,7 @@ nsresult nsExternalHelperAppService::FillMIMEInfoForExtensionFromExtras(
   nsAutoCString type;
   bool found = GetTypeFromExtras(aExtension, type);
   if (!found) return NS_ERROR_NOT_AVAILABLE;
-  return FillMIMEInfoForMimeTypeFromExtras(type, true, aMIMEInfo);
+  return FillMIMEInfoForMimeTypeFromExtras(type, aMIMEInfo);
 }
 
 bool nsExternalHelperAppService::GetTypeFromExtras(const nsACString& aExtension,
