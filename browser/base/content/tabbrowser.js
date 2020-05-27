@@ -33,7 +33,9 @@
       Services.obs.addObserver(this, "contextual-identity-updated");
 
       Services.els.addSystemEventListener(document, "keydown", this, false);
-      Services.els.addSystemEventListener(document, "keypress", this, false);
+      if (AppConstants.platform == "macosx") {
+        Services.els.addSystemEventListener(document, "keypress", this, false);
+      }
       window.addEventListener("sizemodechange", this);
       window.addEventListener("occlusionstatechange", this);
       window.addEventListener("framefocusrequested", this);
@@ -4958,63 +4960,7 @@
       }
     },
 
-    toggleCaretBrowsing() {
-      const kPrefShortcutEnabled =
-        "accessibility.browsewithcaret_shortcut.enabled";
-      const kPrefWarnOnEnable = "accessibility.warn_on_browsewithcaret";
-      const kPrefCaretBrowsingOn = "accessibility.browsewithcaret";
-
-      var isEnabled = Services.prefs.getBoolPref(kPrefShortcutEnabled);
-      if (!isEnabled) {
-        return;
-      }
-
-      // Toggle browse with caret mode
-      var browseWithCaretOn = Services.prefs.getBoolPref(
-        kPrefCaretBrowsingOn,
-        false
-      );
-      var warn = Services.prefs.getBoolPref(kPrefWarnOnEnable, true);
-      if (warn && !browseWithCaretOn) {
-        var checkValue = { value: false };
-        var promptService = Services.prompt;
-
-        var buttonPressed = promptService.confirmEx(
-          window,
-          gTabBrowserBundle.GetStringFromName(
-            "browsewithcaret.checkWindowTitle"
-          ),
-          gTabBrowserBundle.GetStringFromName("browsewithcaret.checkLabel"),
-          // Make "No" the default:
-          promptService.STD_YES_NO_BUTTONS | promptService.BUTTON_POS_1_DEFAULT,
-          null,
-          null,
-          null,
-          gTabBrowserBundle.GetStringFromName("browsewithcaret.checkMsg"),
-          checkValue
-        );
-        if (buttonPressed != 0) {
-          if (checkValue.value) {
-            try {
-              Services.prefs.setBoolPref(kPrefShortcutEnabled, false);
-            } catch (ex) {}
-          }
-          return;
-        }
-        if (checkValue.value) {
-          try {
-            Services.prefs.setBoolPref(kPrefWarnOnEnable, false);
-          } catch (ex) {}
-        }
-      }
-
-      // Toggle the pref
-      try {
-        Services.prefs.setBoolPref(kPrefCaretBrowsingOn, !browseWithCaretOn);
-      } catch (ex) {}
-    },
-
-    _handleKeyPressEvent(aEvent) {
+    _handleKeyPressEventMac(aEvent) {
       if (!aEvent.isTrusted) {
         // Don't let untrusted events mess with tabs.
         return;
@@ -5025,23 +4971,19 @@
         return;
       }
 
-      switch (ShortcutUtils.getSystemActionForEvent(aEvent, { rtl: RTL_UI })) {
-        case ShortcutUtils.TOGGLE_CARET_BROWSING:
-          this.toggleCaretBrowsing();
-          break;
-
-        case ShortcutUtils.NEXT_TAB:
-          if (AppConstants.platform == "macosx") {
+      if (AppConstants.platform == "macosx") {
+        switch (
+          ShortcutUtils.getSystemActionForEvent(aEvent, { rtl: RTL_UI })
+        ) {
+          case ShortcutUtils.NEXT_TAB:
             this.tabContainer.advanceSelectedTab(1, true);
             aEvent.preventDefault();
-          }
-          break;
-        case ShortcutUtils.PREVIOUS_TAB:
-          if (AppConstants.platform == "macosx") {
+            break;
+          case ShortcutUtils.PREVIOUS_TAB:
             this.tabContainer.advanceSelectedTab(-1, true);
             aEvent.preventDefault();
-          }
-          break;
+            break;
+        }
       }
     },
 
@@ -5155,7 +5097,7 @@
           this._handleKeyDownEvent(aEvent);
           break;
         case "keypress":
-          this._handleKeyPressEvent(aEvent);
+          this._handleKeyPressEventMac(aEvent);
           break;
         case "framefocusrequested": {
           let tab = this.getTabForBrowser(aEvent.target);
