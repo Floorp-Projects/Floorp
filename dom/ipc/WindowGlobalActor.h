@@ -14,6 +14,7 @@
 #include "nsIURI.h"
 #include "nsString.h"
 #include "mozilla/dom/JSActor.h"
+#include "mozilla/dom/WindowGlobalTypes.h"
 
 namespace mozilla {
 namespace dom {

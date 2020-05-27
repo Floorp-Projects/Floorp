@@ -47,6 +47,7 @@ include protocol PScriptCache;
 include protocol PSessionStorageObserver;
 include protocol PBenchmarkStorage;
 include DOMTypes;
+include WindowGlobalTypes;
 include IPCBlob;
 include IPCStream;
 include PTabContext;

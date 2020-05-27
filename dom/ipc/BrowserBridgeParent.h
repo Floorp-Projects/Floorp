@@ -10,6 +10,7 @@
 #include "mozilla/dom/PBrowserBridgeParent.h"
 #include "mozilla/Tuple.h"
 #include "mozilla/dom/ipc/IdType.h"
+#include "mozilla/dom/WindowGlobalTypes.h"
 
 namespace mozilla {
 
