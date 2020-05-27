@@ -9,6 +9,8 @@ import android.app.Application
 import android.content.Context
 import android.content.Context.MODE_PRIVATE
 import android.content.SharedPreferences
+import android.content.pm.ShortcutManager
+import android.os.Build
 import android.view.accessibility.AccessibilityManager
 import androidx.annotation.VisibleForTesting
 import androidx.annotation.VisibleForTesting.PRIVATE
@@ -454,10 +456,34 @@ class Settings private constructor(
         default = false
     )
 
-    var shouldShowFirstTimePwaFragment by booleanPreference(
-        appContext.getPreferenceKey(R.string.pref_key_show_first_time_pwa),
-        default = true
-    )
+    var shouldShowFirstTimePwaFragment: Boolean
+        get() {
+            val alreadyShownPwaOnboarding = preferences.getBoolean(
+                appContext.getPreferenceKey(R.string.pref_key_show_first_time_pwa), false)
+
+            // ShortcutManager::pinnedShortcuts is only available on Oreo+
+            if (!alreadyShownPwaOnboarding && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                val alreadyHavePWaInstalled =
+                    appContext.getSystemService(ShortcutManager::class.java)
+                        .pinnedShortcuts.size > 0
+
+                // Users don't need to be shown the PWA onboarding if they already have PWAs installed.
+                preferences.edit()
+                    .putBoolean(
+                        appContext.getPreferenceKey(R.string.pref_key_show_first_time_pwa),
+                        alreadyHavePWaInstalled)
+                    .apply()
+
+                return !alreadyHavePWaInstalled
+            }
+
+            return !alreadyShownPwaOnboarding
+        }
+        set(value) {
+            preferences.edit()
+                .putBoolean(appContext.getPreferenceKey(R.string.pref_key_show_first_time_pwa), value)
+                .apply()
+        }
 
     @VisibleForTesting(otherwise = PRIVATE)
     internal val trackingProtectionOnboardingCount by intPreference(
