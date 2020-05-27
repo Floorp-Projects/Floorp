@@ -158,7 +158,7 @@ class LegacyWorkersWatcher {
   }
 
   _getProcessTargets() {
-    return this.targetList.getAllTargets(TargetList.TYPES.PROCESS);
+    return this.targetList.getAllTargets([TargetList.TYPES.PROCESS]);
   }
 
   unlisten() {
