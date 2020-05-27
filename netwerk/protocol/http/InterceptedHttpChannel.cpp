@@ -1028,6 +1028,25 @@ InterceptedHttpChannel::OnStartRequest(nsIRequest* aRequest) {
     mPump->PeekStream(CallTypeSniffers, static_cast<nsIChannel*>(this));
   }
 
+  nsresult rv = ProcessCrossOriginEmbedderPolicyHeader();
+  if (NS_FAILED(rv)) {
+    mStatus = NS_ERROR_BLOCKED_BY_POLICY;
+    Cancel(mStatus);
+  }
+
+  rv = ProcessCrossOriginResourcePolicyHeader();
+  if (NS_FAILED(rv)) {
+    mStatus = NS_ERROR_DOM_CORP_FAILED;
+    Cancel(mStatus);
+  }
+
+  rv = ComputeCrossOriginOpenerPolicyMismatch();
+  if (rv == NS_ERROR_BLOCKED_BY_POLICY) {
+    mStatus = NS_ERROR_BLOCKED_BY_POLICY;
+    Cancel(mStatus);
+  }
+
+  mOnStartRequestCalled = true;
   if (mListener) {
     return mListener->OnStartRequest(this);
   }
