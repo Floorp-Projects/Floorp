@@ -29,6 +29,26 @@ async function testCommand(hud) {
     "Screenshot copied to clipboard."
   );
   ok(true, ":screenshot was executed as expected");
+
+  const helpMessage = await executeAndWaitForMessage(
+    hud,
+    `:screenshot --help`,
+    "Save an image of the page"
+  );
+  ok(helpMessage, ":screenshot --help was executed as expected");
+  is(
+    helpMessage.node.innerText.match(/--\w+/g).join("\n"),
+    [
+      "--clipboard",
+      "--delay",
+      "--dpr",
+      "--fullpage",
+      "--selector",
+      "--file",
+      "--filename",
+    ].join("\n"),
+    "Help message references the arguments of the screenshot command"
+  );
 }
 
 // if a user defines a screenshot, as is the case in the Test URI, the
