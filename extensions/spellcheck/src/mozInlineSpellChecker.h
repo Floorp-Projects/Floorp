@@ -277,8 +277,8 @@ class mozInlineSpellChecker final : public nsIInlineSpellChecker,
   void EndListeningToEditSubActions() { mIsListeningToEditSubActions = false; }
 
   void CheckCurrentWordsNoSuggest(mozilla::dom::Selection* aSpellCheckSelection,
-                                  const nsTArray<nsString>& aWords,
-                                  const nsTArray<NodeOffsetRange>& aRanges);
+                                  nsTArray<nsString>&& aWords,
+                                  nsTArray<NodeOffsetRange>&& aRanges);
 };
 
 #endif  // #ifndef mozilla_mozInlineSpellChecker_h
