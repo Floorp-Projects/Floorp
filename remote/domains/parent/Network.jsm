@@ -156,6 +156,25 @@ class Network extends Domain {
   }
 
   /**
+   * Returns all browser cookies.
+   *
+   * Depending on the backend support, will return detailed cookie information in the cookies field.
+   *
+   * @param {Object} options
+   *
+   * @return {Array<Cookie>}
+   *     Array of cookie objects.
+   */
+  async getAllCookies(options = {}) {
+    const cookies = [];
+    for (const cookie of Services.cookies.cookies) {
+      cookies.push(_buildCookie(cookie));
+    }
+
+    return { cookies };
+  }
+
+  /**
    * Returns all browser cookies for the current URL.
    *
    * @param {Object} options
@@ -192,29 +211,7 @@ class Network extends Domain {
           continue;
         }
 
-        const data = {
-          name: cookie.name,
-          value: cookie.value,
-          domain: cookie.host,
-          path: cookie.path,
-          expires: cookie.isSession ? -1 : cookie.expiry,
-          // The size is the combined length of both the cookie name and value
-          size: cookie.name.length + cookie.value.length,
-          httpOnly: cookie.isHttpOnly,
-          secure: cookie.isSecure,
-          session: cookie.isSession,
-        };
-
-        if (cookie.sameSite) {
-          const sameSiteMap = new Map([
-            [Ci.nsICookie.SAMESITE_LAX, "Lax"],
-            [Ci.nsICookie.SAMESITE_STRICT, "Strict"],
-          ]);
-
-          data.sameSite = sameSiteMap.get(cookie.sameSite);
-        }
-
-        cookies.push(data);
+        cookies.push(_buildCookie(cookie));
       }
     }
 
@@ -460,6 +457,40 @@ function getLoadContext(httpChannel) {
     }
   } catch (e) {}
   return loadContext;
+}
+
+/**
+ * Creates a CDP Network.Cookie from our internal cookie values
+ *
+ * @param {nsICookie} cookie
+ *
+ * @returns {Network.Cookie}
+ *      A CDP Cookie
+ */
+function _buildCookie(cookie) {
+  const data = {
+    name: cookie.name,
+    value: cookie.value,
+    domain: cookie.host,
+    path: cookie.path,
+    expires: cookie.isSession ? -1 : cookie.expiry,
+    // The size is the combined length of both the cookie name and value
+    size: cookie.name.length + cookie.value.length,
+    httpOnly: cookie.isHttpOnly,
+    secure: cookie.isSecure,
+    session: cookie.isSession,
+  };
+
+  if (cookie.sameSite) {
+    const sameSiteMap = new Map([
+      [Ci.nsICookie.SAMESITE_LAX, "Lax"],
+      [Ci.nsICookie.SAMESITE_STRICT, "Strict"],
+    ]);
+
+    data.sameSite = sameSiteMap.get(cookie.sameSite);
+  }
+
+  return data;
 }
 
 /**
