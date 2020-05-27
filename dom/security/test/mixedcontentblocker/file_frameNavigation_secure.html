@@ -26,7 +26,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=840388
   iframe_test1.setAttribute("id", "test1");
   iframe_test1.src = baseUrl + "?securePage_navigate_child";
   iframe_test1.onerror = function() {
-    parent.postMessage({"test": "securePage_navigate_child", "msg": "got an onerror event when loading or navigating testing iframe"}, "http://mochi.test:8888");
+    parent.postMessage({"test": "securePage_navigate_child", "msg": "navigating to insecure iframe blocked on secure page"}, "http://mochi.test:8888");
   };
   testContent.appendChild(iframe_test1);
 
