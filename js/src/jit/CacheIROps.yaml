@@ -665,12 +665,6 @@
   args:
     obj: ObjId
 
-- name: IsArrayResult
-  shared: false
-  transpile: true
-  args:
-    input: ValId
-
 - name: IsObjectResult
   shared: true
   transpile: true
