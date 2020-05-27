@@ -258,6 +258,10 @@ set_define('MOZ_DLL_PREFIX', depends(library_name_info.dll.prefix)(lambda s: '"%
 set_define('MOZ_DLL_SUFFIX', depends(library_name_info.dll.suffix)(lambda s: '"%s"' % s))
 set_config('WASM_OBJ_SUFFIX', 'wasm')
 
+# Make `profiling` available to this file even when js/moz.configure
+# doesn't end up included.
+profiling = dependable(False)
+
 include(include_project_configure)
 
 @depends('--help')
@@ -670,6 +674,31 @@ def pkg_skip_strip(install_strip, may_strip):
     return not install_strip or not may_strip
 
 set_config('PKG_SKIP_STRIP', True, when=pkg_skip_strip)
+
+
+@depends('--enable-strip', '--enable-install-strip', when=may_strip)
+def strip(strip, install_strip):
+    return strip or install_strip
+
+js_option(env='STRIP_FLAGS', nargs=1, when=strip, help='Flags for the strip command')
+
+@depends('STRIP_FLAGS', profiling, target, when=strip)
+def strip_flags(flags, profiling, target):
+    if flags:
+        return flags[0].split()
+    if profiling:
+        # Only strip debug info and symbols when profiling is enabled, keeping
+        # local symbols.
+        if target.kernel == 'Darwin':
+            return ['-S']
+        else:
+            return ['--strip-debug']
+    # Otherwise strip everything we can, which happens without flags on non-Darwin.
+    # On Darwin, it tries to strip things it can't, so we need to limit its scope.
+    elif target.kernel == 'Darwin':
+        return ['-x', '-S']
+
+set_config('STRIP_FLAGS', strip_flags)
 
 
 # Please do not add configure checks from here on.

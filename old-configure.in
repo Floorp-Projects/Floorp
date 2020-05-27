@@ -450,15 +450,6 @@ if test "$GNU_CXX"; then
     _DEFINES_CXXFLAGS="-DMOZILLA_CLIENT -include $_objdir/mozilla-config.h"
 fi
 
-# For profiling builds keep the symbol information
-if test "$MOZ_PROFILING" -a -z "$STRIP_FLAGS"; then
-    case "$OS_TARGET" in
-    Linux|DragonFly|FreeBSD|NetBSD|OpenBSD)
-        STRIP_FLAGS="--strip-debug"
-        ;;
-    esac
-fi
-
 dnl ========================================================
 dnl = Enable DMD
 dnl ========================================================
@@ -524,7 +515,6 @@ case "$target" in
     MOZ_OPTIMIZE_FLAGS="-O3"
     CXXFLAGS="$CXXFLAGS -stdlib=libc++"
     DSO_LDOPTS=''
-    STRIP_FLAGS="$STRIP_FLAGS -x -S"
     # The ExceptionHandling framework is needed for Objective-C exception
     # logging code in nsObjCExceptions.h. Currently we only use that in debug
     # builds.
@@ -2670,7 +2660,6 @@ AC_SUBST(MOZ_UPDATER)
 AC_SUBST(MOZ_ANDROID_APPLICATION_CLASS)
 AC_SUBST(MOZ_ANDROID_BROWSER_INTENT_CLASS)
 AC_SUBST(MOZ_EXCLUDE_HYPHENATION_DICTIONARIES)
-AC_SUBST(STRIP_FLAGS)
 AC_SUBST(INCREMENTAL_LINKER)
 
 AC_SUBST_LIST(MOZ_FIX_LINK_PATHS)
