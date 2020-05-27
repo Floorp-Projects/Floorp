@@ -476,6 +476,8 @@ export interface FeatureDescription {
   title: string,
   // This will give the user a hint that it's recommended on.
   recommended?: boolean,
+  // This will give the user a hint that it's an experimental feature.
+  experimental?: boolean,
   // This will give a reason if the feature is disabled.
   disabledReason?: string,
 }
