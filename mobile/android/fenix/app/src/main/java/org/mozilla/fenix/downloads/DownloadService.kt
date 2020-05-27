@@ -4,9 +4,11 @@
 
 package org.mozilla.fenix.downloads
 
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.feature.downloads.AbstractFetchDownloadService
 import org.mozilla.fenix.ext.components
 
 class DownloadService : AbstractFetchDownloadService() {
     override val httpClient by lazy { components.core.client }
+    override val store: BrowserStore by lazy { components.core.store }
 }

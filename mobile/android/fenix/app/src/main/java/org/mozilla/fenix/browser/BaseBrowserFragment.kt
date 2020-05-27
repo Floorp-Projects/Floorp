@@ -373,6 +373,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                 tabId = customTabSessionId,
                 downloadManager = FetchDownloadManager(
                     context.applicationContext,
+                    store,
                     DownloadService::class
                 ),
                 promptsStyling = DownloadsFeature.PromptsStyling(

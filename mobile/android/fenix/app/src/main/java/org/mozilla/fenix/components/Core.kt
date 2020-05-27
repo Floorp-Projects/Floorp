@@ -27,6 +27,7 @@ import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.mediaquery.PreferredColorScheme
 import mozilla.components.concept.fetch.Client
 import mozilla.components.feature.customtabs.store.CustomTabsServiceStore
+import mozilla.components.feature.downloads.DownloadMiddleware
 import mozilla.components.feature.media.RecordingDevicesNotificationFeature
 import mozilla.components.feature.media.middleware.MediaMiddleware
 import mozilla.components.feature.pwa.ManifestStorage
@@ -42,6 +43,7 @@ import org.mozilla.fenix.AppRequestInterceptor
 import org.mozilla.fenix.Config
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
+import org.mozilla.fenix.downloads.DownloadService
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.media.MediaService
@@ -103,6 +105,7 @@ class Core(private val context: Context) {
         BrowserStore(
             middleware = listOf(
                 MediaMiddleware(context, MediaService::class.java),
+                DownloadMiddleware(context, DownloadService::class.java),
                 ReaderViewMiddleware()
             )
         )
