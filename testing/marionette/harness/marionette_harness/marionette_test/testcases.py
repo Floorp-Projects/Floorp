@@ -14,17 +14,48 @@ import unittest
 import warnings
 import weakref
 
-from unittest.case import (
-    _ExpectedFailure,
-    _UnexpectedSuccess,
-    SkipTest,
-)
+from unittest.case import SkipTest
 
 from marionette_driver.errors import (
     TimeoutException,
     UnresponsiveInstanceException
 )
 from mozlog import get_default_logger
+
+
+# ExpectedFailure and UnexpectedSuccess are adapted from the Python 2
+# private classes _ExpectedFailure and _UnexpectedSuccess in
+# unittest/case.py which are no longer available in Python 3.
+class ExpectedFailure(Exception):
+    """
+    Raise this when a test is expected to fail.
+
+    This is an implementation detail.
+    """
+
+    def __init__(self, exc_info):
+        super(ExpectedFailure, self).__init__()
+        self.exc_info = exc_info
+
+
+class UnexpectedSuccess(Exception):
+    """
+    The test was supposed to fail, but it didn't!
+    """
+    pass
+
+
+try:
+    # Since these errors can be thrown during execution under Python 2
+    # we must support them until Marionette completes its transition
+    # from Python 2 to Python 3.
+    from unittest.case import (
+        _ExpectedFailure,
+        _UnexpectedSuccess,
+    )
+except ImportError:
+    _ExpectedFailure = ExpectedFailure
+    _UnexpectedSuccess = UnexpectedSuccess
 
 
 def _wraps_parameterized(func, func_suffix, args, kwargs):
