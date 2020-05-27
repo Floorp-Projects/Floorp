@@ -3279,11 +3279,6 @@ mozilla::ipc::IPCResult ContentChild::RecvRefreshScreens(
   return IPC_OK();
 }
 
-already_AddRefed<nsIEventTarget> ContentChild::GetEventTargetFor(
-    BrowserChild* aBrowserChild) {
-  return IToplevelProtocol::GetActorEventTarget(aBrowserChild);
-}
-
 mozilla::ipc::IPCResult ContentChild::RecvSetPluginList(
     const uint32_t& aPluginEpoch, nsTArray<plugins::PluginTag>&& aPluginTags,
     nsTArray<plugins::FakePluginTag>&& aFakePluginTags) {
