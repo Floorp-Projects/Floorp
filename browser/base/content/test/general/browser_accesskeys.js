@@ -9,19 +9,15 @@ add_task(async function() {
     "<input id='checkbox' type='checkbox' accesskey='z'>Checkbox" +
     "</p></body>";
   let tab1 = await BrowserTestUtils.openNewForegroundTab(gBrowser, gPageURL1);
-  tab1.linkedBrowser.messageManager.loadFrameScript(
-    "data:,(" + childHandleFocus.toString() + ")();",
-    false
-  );
 
   Services.focus.clearFocus(window);
 
   // Press an accesskey in the child document while the chrome is focused.
-  let focusedId = await performAccessKey("y");
+  let focusedId = await performAccessKey(tab1.linkedBrowser, "y");
   is(focusedId, "button", "button accesskey");
 
   // Press an accesskey in the child document while the content document is focused.
-  focusedId = await performAccessKey("z");
+  focusedId = await performAccessKey(tab1.linkedBrowser, "z");
   is(focusedId, "checkbox", "checkbox accesskey");
 
   // Add an element with an accesskey to the chrome and press its accesskey while the chrome is focused.
@@ -43,14 +39,10 @@ add_task(async function() {
     "<button id='tab2button' accesskey='y'>Button in Tab 2</button>" +
     "</body>";
   let tab2 = await BrowserTestUtils.openNewForegroundTab(gBrowser, gPageURL2);
-  tab2.linkedBrowser.messageManager.loadFrameScript(
-    "data:,(" + childHandleFocus.toString() + ")();",
-    false
-  );
 
   Services.focus.clearFocus(window);
 
-  focusedId = await performAccessKey("y");
+  focusedId = await performAccessKey(tab2.linkedBrowser, "y");
   is(focusedId, "tab2button", "button accesskey in tab2");
 
   // Press the accesskey for the chrome element while the content document is focused.
@@ -71,14 +63,10 @@ add_task(async function() {
     "document.body.addEventListener('keydown', (event)=>{ event.preventDefault(); });" +
     "</script></body>";
   let tab3 = await BrowserTestUtils.openNewForegroundTab(gBrowser, gPageURL3);
-  tab3.linkedBrowser.messageManager.loadFrameScript(
-    "data:,(" + childHandleFocus.toString() + ")();",
-    false
-  );
 
   Services.focus.clearFocus(window);
 
-  focusedId = await performAccessKey("y");
+  focusedId = await performAccessKey(tab3.linkedBrowser, "y");
   is(focusedId, "tab3button", "button accesskey in tab3 should be focused");
 
   newButton.onfocus = () => {
@@ -86,7 +74,7 @@ add_task(async function() {
   };
 
   // Press the accesskey for the chrome element while the content document is focused.
-  focusedId = await performAccessKey("z");
+  focusedId = await performAccessKey(tab3.linkedBrowser, "z");
   is(
     focusedId,
     "tab3body",
@@ -105,14 +93,10 @@ add_task(async function() {
     "document.body.addEventListener('keypress', (event)=>{ event.preventDefault(); });" +
     "</script></body>";
   let tab4 = await BrowserTestUtils.openNewForegroundTab(gBrowser, gPageURL4);
-  tab4.linkedBrowser.messageManager.loadFrameScript(
-    "data:,(" + childHandleFocus.toString() + ")();",
-    false
-  );
 
   Services.focus.clearFocus(window);
 
-  focusedId = await performAccessKey("y");
+  focusedId = await performAccessKey(tab4.linkedBrowser, "y");
   is(focusedId, "tab4button", "button accesskey in tab4 should be focused");
 
   newButton.onfocus = () => {
@@ -123,7 +107,7 @@ add_task(async function() {
   };
 
   // Press the accesskey for the chrome element while the content document is focused.
-  focusedId = await performAccessKey("z");
+  focusedId = await performAccessKey(tab4.linkedBrowser, "z");
   is(
     focusedId,
     "tab4body",
@@ -137,49 +121,77 @@ add_task(async function() {
   newButton.remove();
 });
 
-function childHandleFocus() {
-  var sent = false;
-  content.document.body.firstElementChild.addEventListener(
-    "focus",
-    function focused(event) {
-      sent = true;
-      let focusedElement = content.document.activeElement;
-      focusedElement.blur();
-      sendAsyncMessage("Test:FocusFromAccessKey", { focus: focusedElement.id });
-    },
-    true
-  );
-  content.document.body.addEventListener(
-    "keydown",
-    function keydown(event) {
-      sent = false;
-    },
-    true
-  );
-  content.document.body.addEventListener("keyup", function keyup(event) {
-    if (!sent) {
-      sent = true;
-      let focusedElement = content.document.activeElement;
-      sendAsyncMessage("Test:FocusFromAccessKey", { focus: focusedElement.id });
-    }
-  });
-}
-
-function performAccessKey(key) {
+function performAccessKey(browser, key) {
   return new Promise(resolve => {
-    let mm = gBrowser.selectedBrowser.messageManager;
-    mm.addMessageListener("Test:FocusFromAccessKey", function listenForFocus(
-      msg
-    ) {
-      mm.removeMessageListener("Test:FocusFromAccessKey", listenForFocus);
-      resolve(msg.data.focus);
-    });
+    let removeFocus, removeKeyDown, removeKeyUp;
+    function callback(eventName, result) {
+      removeFocus();
+      removeKeyUp();
+      removeKeyDown();
 
-    EventUtils.synthesizeKey(key, { altKey: true, shiftKey: true });
+      SpecialPowers.spawn(browser, [], () => {
+        let oldFocusedElement = content._oldFocusedElement;
+        delete content._oldFocusedElement;
+        return oldFocusedElement.id;
+      }).then(oldFocus => resolve(oldFocus));
+    }
+
+    removeFocus = BrowserTestUtils.addContentEventListener(
+      browser,
+      "focus",
+      callback,
+      { capture: true },
+      event => {
+        if (!(event.target instanceof HTMLElement)) {
+          return false; // ignore window and document focus events
+        }
+
+        event.target.ownerGlobal._sent = true;
+        let focusedElement = event.target.ownerGlobal.document.activeElement;
+        event.target.ownerGlobal._oldFocusedElement = focusedElement;
+        focusedElement.blur();
+        return true;
+      }
+    );
+
+    removeKeyDown = BrowserTestUtils.addContentEventListener(
+      browser,
+      "keydown",
+      () => {},
+      { capture: true },
+      event => {
+        event.target.ownerGlobal._sent = false;
+        return true;
+      }
+    );
+
+    removeKeyUp = BrowserTestUtils.addContentEventListener(
+      browser,
+      "keyup",
+      callback,
+      {},
+      event => {
+        if (!event.target.ownerGlobal._sent) {
+          event.target.ownerGlobal._sent = true;
+          let focusedElement = event.target.ownerGlobal.document.activeElement;
+          event.target.ownerGlobal._oldFocusedElement = focusedElement;
+          focusedElement.blur();
+          return true;
+        }
+
+        return false;
+      }
+    );
+
+    // Spawn an no-op content task to better ensure that the messages
+    // for adding the event listeners above get handled.
+    SpecialPowers.spawn(browser, [], () => {}).then(() => {
+      EventUtils.synthesizeKey(key, { altKey: true, shiftKey: true });
+    });
   });
 }
 
-// This version is used when a chrome elemnt is expected to be found for an accesskey.
+// This version is used when a chrome element is expected to be found for an accesskey.
 async function performAccessKeyForChrome(key, inChild) {
   let waitFocusChangePromise = BrowserTestUtils.waitForEvent(
     document,
