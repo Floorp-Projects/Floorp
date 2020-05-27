@@ -225,13 +225,6 @@ TEST_SUITES = {
         'task_regex': ['web-platform-tests-crashtest($|.*(-1|[^0-9])$)',
                        'test-verify-wpt'],
     },
-    'web-platform-tests-testharness': {
-        'aliases': ('wpt',),
-        'mach_command': 'web-platform-tests',
-        'kwargs': {'include': []},
-        'task_regex': ['web-platform-tests(?!-reftest|-wdspec)($|.*(-1|[^0-9])$)',
-                       'test-verify-wpt'],
-    },
     'web-platform-tests-reftest': {
         'aliases': ('wpt',),
         'mach_command': 'web-platform-tests',
@@ -320,7 +313,7 @@ _test_subsuites = {
     ('mochitest', 'webgl2-ext'): 'mochitest-webgl2-ext',
     ('mochitest', 'webgl2-deqp'): 'mochitest-webgl2-deqp',
     ('mochitest', 'webgpu'): 'mochitest-webgpu',
-    ('web-platform-tests', 'testharness'): 'web-platform-tests-testharness',
+    ('web-platform-tests', 'testharness'): 'web-platform-tests',
     ('web-platform-tests', 'crashtest'): 'web-platform-tests-crashtest',
     ('web-platform-tests', 'reftest'): 'web-platform-tests-reftest',
     ('web-platform-tests', 'wdspec'): 'web-platform-tests-wdspec',
