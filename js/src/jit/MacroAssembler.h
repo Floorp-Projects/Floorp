@@ -1567,6 +1567,8 @@ class MacroAssembler : public MacroAssemblerSpecific {
                                Label* label)
       DEFINED_ON(arm, arm64, mips32, mips64, x86_shared);
 
+  inline void branchTestSymbol(Condition cond, const Address& address,
+                               Label* label) PER_SHARED_ARCH;
   inline void branchTestSymbol(Condition cond, const BaseIndex& address,
                                Label* label) PER_SHARED_ARCH;
   inline void branchTestSymbol(Condition cond, const ValueOperand& value,

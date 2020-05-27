@@ -1728,6 +1728,11 @@ void MacroAssembler::branchTestSymbol(Condition cond, Register tag,
   branchTestSymbolImpl(cond, tag, label);
 }
 
+void MacroAssembler::branchTestSymbol(Condition cond, const Address& address,
+                                      Label* label) {
+  branchTestSymbolImpl(cond, address, label);
+}
+
 void MacroAssembler::branchTestSymbol(Condition cond, const BaseIndex& address,
                                       Label* label) {
   branchTestSymbolImpl(cond, address, label);
