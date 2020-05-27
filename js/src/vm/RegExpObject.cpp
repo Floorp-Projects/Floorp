@@ -1180,6 +1180,7 @@ bool RegExpShared::initializeNamedCaptures(JSContext* cx, HandleRegExpShared re,
   uint32_t arraySize = numNamedCaptures * sizeof(uint32_t);
   uint32_t* captureIndices = static_cast<uint32_t*>(js_malloc(arraySize));
   if (!captureIndices) {
+    js::ReportOutOfMemory(cx);
     return false;
   }
 
