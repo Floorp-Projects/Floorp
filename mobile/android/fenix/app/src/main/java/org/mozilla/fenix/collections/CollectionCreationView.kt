@@ -68,16 +68,6 @@ class CollectionCreationView(
         transition.duration = TRANSITION_DURATION
         transition.excludeTarget(back_button, true)
 
-        selectTabsConstraints.clone(collection_constraint_layout)
-        selectCollectionConstraints.clone(
-            view.context,
-            R.layout.component_collection_creation_select_collection
-        )
-        nameCollectionConstraints.clone(
-            view.context,
-            R.layout.component_collection_creation_name_collection
-        )
-
         view.bottom_bar_icon_button.apply {
             increaseTapArea(increaseButtonByDps)
         }
@@ -160,9 +150,8 @@ class CollectionCreationView(
         view.bottom_bar_icon_button.setOnClickListener {
             interactor.close()
         }
-
-        val constraint = selectTabsConstraints
-        constraint.applyTo(view.collection_constraint_layout)
+        selectTabsConstraints.clone(collection_constraint_layout)
+        selectTabsConstraints.applyTo(view.collection_constraint_layout)
 
         collectionCreationTabListAdapter.updateData(state.tabs, state.selectedTabs)
 
@@ -224,8 +213,11 @@ class CollectionCreationView(
             view.collection_constraint_layout,
             transition
         )
-        val constraint = selectCollectionConstraints
-        constraint.applyTo(view.collection_constraint_layout)
+        selectCollectionConstraints.clone(
+            view.context,
+            R.layout.component_collection_creation_select_collection
+        )
+        selectCollectionConstraints.applyTo(view.collection_constraint_layout)
         back_button.text =
             view.context.getString(R.string.create_collection_select_collection)
     }
@@ -243,8 +235,11 @@ class CollectionCreationView(
         }
 
         view.name_collection_edittext.showKeyboard()
-        val constraint = nameCollectionConstraints
-        constraint.applyTo(view.collection_constraint_layout)
+        nameCollectionConstraints.clone(
+            view.context,
+            R.layout.component_collection_creation_name_collection
+        )
+        nameCollectionConstraints.applyTo(view.collection_constraint_layout)
         name_collection_edittext.setText(
             view.context.getString(
                 R.string.create_collection_default_name,
@@ -272,8 +267,11 @@ class CollectionCreationView(
                 collectionCreationTabListAdapter.updateData(tabs, tabs.toSet(), true)
             }
         }
-        val constraint = nameCollectionConstraints
-        constraint.applyTo(view.collection_constraint_layout)
+        nameCollectionConstraints.clone(
+            view.context,
+            R.layout.component_collection_creation_name_collection
+        )
+        nameCollectionConstraints.applyTo(view.collection_constraint_layout)
         name_collection_edittext.setText(state.selectedTabCollection?.title)
         name_collection_edittext.setSelection(0, name_collection_edittext.text.length)
 
