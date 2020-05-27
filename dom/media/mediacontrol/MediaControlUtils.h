@@ -19,6 +19,8 @@ namespace dom {
 
 inline const char* ToMediaControlKeysEventStr(MediaControlKeysEvent aKeyEvent) {
   switch (aKeyEvent) {
+    case MediaControlKeysEvent::eFocus:
+      return "Focus";
     case MediaControlKeysEvent::ePause:
       return "Pause";
     case MediaControlKeysEvent::ePlay:
@@ -59,6 +61,8 @@ ConvertMediaControlKeysTestEventToMediaControlKeysEvent(
       return MediaControlKeysEvent::eSeekBackward;
     case MediaControlKeysTestEvent::Seekforward:
       return MediaControlKeysEvent::eSeekForward;
+    case MediaControlKeysTestEvent::Focus:
+      return MediaControlKeysEvent::eFocus;
     default:
       MOZ_ASSERT(aEvent == MediaControlKeysTestEvent::Stop);
       return MediaControlKeysEvent::eStop;
