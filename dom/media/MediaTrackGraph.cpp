@@ -3566,37 +3566,40 @@ void MediaTrackGraphImpl::ApplyAudioContextOperationImpl(
   }
 }
 
+class AudioContextOperationControlMessage : public ControlMessage {
+  using AudioContextOperationPromise =
+      MediaTrackGraph::AudioContextOperationPromise;
+
+ public:
+  AudioContextOperationControlMessage(
+      MediaTrack* aDestinationTrack, const nsTArray<MediaTrack*>& aTracks,
+      AudioContextOperation aOperation,
+      MozPromiseHolder<AudioContextOperationPromise>&& aHolder)
+      : ControlMessage(aDestinationTrack),
+        mTracks(aTracks.Clone()),
+        mAudioContextOperation(aOperation),
+        mHolder(std::move(aHolder)) {}
+  void Run() override {
+    mTrack->GraphImpl()->ApplyAudioContextOperationImpl(
+        mTrack, mTracks, mAudioContextOperation, std::move(mHolder));
+  }
+  void RunDuringShutdown() override {
+    MOZ_ASSERT(mAudioContextOperation == AudioContextOperation::Close,
+               "We should be reviving the graph?");
+    mHolder.Resolve(AudioContextState::Closed, __func__);
+  }
+
+ private:
+  // We don't need strong references here for the same reason ControlMessage
+  // doesn't.
+  nsTArray<MediaTrack*> mTracks;
+  AudioContextOperation mAudioContextOperation;
+  MozPromiseHolder<AudioContextOperationPromise> mHolder;
+};
+
 auto MediaTrackGraph::ApplyAudioContextOperation(
     MediaTrack* aDestinationTrack, const nsTArray<MediaTrack*>& aTracks,
     AudioContextOperation aOperation) -> RefPtr<AudioContextOperationPromise> {
-  class AudioContextOperationControlMessage : public ControlMessage {
-   public:
-    AudioContextOperationControlMessage(
-        MediaTrack* aDestinationTrack, const nsTArray<MediaTrack*>& aTracks,
-        AudioContextOperation aOperation,
-        MozPromiseHolder<AudioContextOperationPromise>&& aHolder)
-        : ControlMessage(aDestinationTrack),
-          mTracks(aTracks.Clone()),
-          mAudioContextOperation(aOperation),
-          mHolder(std::move(aHolder)) {}
-    void Run() override {
-      mTrack->GraphImpl()->ApplyAudioContextOperationImpl(
-          mTrack, mTracks, mAudioContextOperation, std::move(mHolder));
-    }
-    void RunDuringShutdown() override {
-      MOZ_ASSERT(mAudioContextOperation == AudioContextOperation::Close,
-                 "We should be reviving the graph?");
-      mHolder.Resolve(AudioContextState::Closed, __func__);
-    }
-
-   private:
-    // We don't need strong references here for the same reason ControlMessage
-    // doesn't.
-    nsTArray<MediaTrack*> mTracks;
-    AudioContextOperation mAudioContextOperation;
-    MozPromiseHolder<AudioContextOperationPromise> mHolder;
-  };
-
   MozPromiseHolder<AudioContextOperationPromise> holder;
   RefPtr<AudioContextOperationPromise> p = holder.Ensure(__func__);
   MediaTrackGraphImpl* graphImpl = static_cast<MediaTrackGraphImpl*>(this);
