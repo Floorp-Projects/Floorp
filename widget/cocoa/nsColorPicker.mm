@@ -37,6 +37,7 @@ static unsigned int HexStrToInt(NSString* str) {
 - (void)open:(NSColor*)aInitialColor title:(NSString*)aTitle;
 - (void)colorChanged:(NSColorPanel*)aPanel;
 - (void)windowWillClose:(NSNotification*)aNotification;
+- (void)close;
 @end
 
 @implementation NSColorPanelWrapper
@@ -58,28 +59,38 @@ static unsigned int HexStrToInt(NSString* str) {
 }
 
 - (void)colorChanged:(NSColorPanel*)aPanel {
+  if (!mColorPicker) {
+    return;
+  }
   mColorPicker->Update([mColorPanel color]);
 }
 
 - (void)windowWillClose:(NSNotification*)aNotification {
+  if (!mColorPicker) {
+    return;
+  }
   mColorPicker->Done();
 }
 
-- (void)dealloc {
+- (void)close {
   [mColorPanel setTarget:nil];
   [mColorPanel setAction:nil];
   [mColorPanel setDelegate:nil];
 
   mColorPanel = nil;
   mColorPicker = nullptr;
-
-  [super dealloc];
 }
 @end
 
 NS_IMPL_ISUPPORTS(nsColorPicker, nsIColorPicker)
 
-nsColorPicker::~nsColorPicker() {}
+nsColorPicker::~nsColorPicker() {
+  if (mColorPanelWrapper) {
+    [mColorPanelWrapper close];
+    [mColorPanelWrapper release];
+    mColorPanelWrapper = nullptr;
+  }
+}
 
 NS_IMETHODIMP
 nsColorPicker::Init(mozIDOMWindowProxy* aParent, const nsAString& aTitle,
@@ -136,6 +147,7 @@ void nsColorPicker::Update(NSColor* aColor) {
 }
 
 void nsColorPicker::Done() {
+  [mColorPanelWrapper close];
   [mColorPanelWrapper release];
   mColorPanelWrapper = nullptr;
   mCallback->Done(EmptyString());
