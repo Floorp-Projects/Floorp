@@ -1120,3 +1120,14 @@ function promiseOneEvent(eventTarget, eventType, filter) {
     });
   });
 }
+
+function visualViewportAsZoomedRect() {
+  let vv = window.visualViewport;
+  return {
+    x: vv.pageLeft,
+    y: vv.pageTop,
+    w: vv.width,
+    h: vv.height,
+    z: vv.scale,
+  };
+}

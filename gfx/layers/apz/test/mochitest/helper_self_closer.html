@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="apz_test_utils.js"></script>
+<script src="/tests/SimpleTest/paint_listener.js"></script>
+<script>
+waitUntilApzStable().then(() => {
+    dump("Bye!\n");
+    window.close();
+});
+</script>
+
+See ya! (This window will close itself)
