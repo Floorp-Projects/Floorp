@@ -102,7 +102,7 @@ class DefaultPresenterTest {
 
         presenter.start()
 
-        verify(controller).syncTabs()
+        verify(controller).syncAccount()
     }
 
     @Test
@@ -130,7 +130,7 @@ class DefaultPresenterTest {
 
         presenter.accountObserver.onAuthenticated(mock(), mock())
 
-        verify(controller).syncTabs()
+        verify(controller).refreshSyncedTabs()
     }
 
     @Test
@@ -158,7 +158,7 @@ class DefaultPresenterTest {
 
         presenter.eventObserver.onIdle()
 
-        verify(controller).syncTabs()
+        verify(controller).refreshSyncedTabs()
     }
 
     @Test

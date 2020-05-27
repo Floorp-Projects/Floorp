@@ -33,6 +33,7 @@ import kotlin.coroutines.CoroutineContext
  * @param presenter See [SyncedTabsPresenter].
  * @param interactor See [SyncedTabsInteractor].
  */
+@Suppress("LongParameterList")
 class SyncedTabsFeature(
     storage: SyncedTabsStorage,
     accountManager: FxaAccountManager,
@@ -40,7 +41,7 @@ class SyncedTabsFeature(
     lifecycleOwner: LifecycleOwner,
     coroutineContext: CoroutineContext = Dispatchers.IO,
     onTabClicked: (Tab) -> Unit,
-    controller: SyncedTabsController = DefaultController(
+    private val controller: SyncedTabsController = DefaultController(
         storage,
         accountManager,
         view,
@@ -53,9 +54,8 @@ class SyncedTabsFeature(
         lifecycleOwner
     ),
     private val interactor: SyncedTabsInteractor = DefaultInteractor(
-        accountManager,
+        controller,
         view,
-        coroutineContext,
         onTabClicked
     )
 ) : LifecycleAwareFeature {

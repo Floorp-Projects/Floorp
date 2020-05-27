@@ -60,7 +60,7 @@ class SyncedTabsStorage(
     }
 
     /**
-     * Get the list of synced tabs.
+     * See [SyncedTabsProvider.getSyncedTabs].
      */
     override suspend fun getSyncedTabs(): List<SyncedDeviceTabs> {
         val otherDevices = syncClients() ?: return emptyList()

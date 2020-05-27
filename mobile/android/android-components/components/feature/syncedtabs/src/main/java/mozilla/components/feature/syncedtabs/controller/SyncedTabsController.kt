@@ -21,5 +21,10 @@ interface SyncedTabsController {
      * Requests for remote tabs and notifies the [SyncedTabsView] when available with [SyncedTabsView.displaySyncedTabs]
      * otherwise notifies the appropriate error to [SyncedTabsView.onError].
      */
-    fun syncTabs()
+    fun refreshSyncedTabs()
+
+    /**
+     * Requests for the account on the [FxaAccountManager] to perform a sync.
+     */
+    fun syncAccount()
 }

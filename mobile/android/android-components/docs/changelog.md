@@ -56,6 +56,9 @@ permalink: /changelog/
     menu also contains an access entry for Add-ons Manager, for which `onAddonsManagerTapped` needs to be passed in the
     constructor.
 
+* **feature-syncedtabs**
+  * When the SyncedTabsFeature is started it syncs the devices and account first.
+
 # 42.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v41.0.0...42.0.0)

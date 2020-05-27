@@ -12,19 +12,23 @@ import mozilla.components.feature.syncedtabs.view.SyncedTabsView
 import mozilla.components.feature.syncedtabs.view.SyncedTabsView.ErrorType
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.service.fxa.manager.ext.withConstellation
+import mozilla.components.service.fxa.sync.SyncReason
 import kotlin.coroutines.CoroutineContext
 
 internal class DefaultController(
     override val provider: SyncedTabsProvider,
     override val accountManager: FxaAccountManager,
     override val view: SyncedTabsView,
-    private val coroutineContext: CoroutineContext
+    coroutineContext: CoroutineContext
 ) : SyncedTabsController {
 
-    override fun syncTabs() {
-        view.startLoading()
+    private val scope = CoroutineScope(coroutineContext)
 
-        val scope = CoroutineScope(coroutineContext)
+    /**
+     * See [SyncedTabsController.refreshSyncedTabs]
+     */
+    override fun refreshSyncedTabs() {
+        view.startLoading()
 
         scope.launch {
             accountManager.withConstellation {
@@ -43,6 +47,18 @@ internal class DefaultController(
             scope.launch(Dispatchers.Main) {
                 view.stopLoading()
             }
+        }
+    }
+
+    /**
+     * See [SyncedTabsController.syncAccount]
+     */
+    override fun syncAccount() {
+        scope.launch {
+            accountManager.withConstellation {
+                refreshDevicesAsync().await()
+            }
+            accountManager.syncNowAsync(SyncReason.User)
         }
     }
 }
