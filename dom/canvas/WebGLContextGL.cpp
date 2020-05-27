@@ -340,6 +340,9 @@ void WebGLContext::FramebufferAttach(const GLenum target,
   }
 
   auto safeToAttach = toAttach;
+  if (!toAttach.rb && !toAttach.tex) {
+    safeToAttach = {};
+  }
   if (!IsWebGL2() &&
       !IsExtensionEnabled(WebGLExtensionID::OES_fbo_render_mipmap)) {
     safeToAttach.mipLevel = 0;
