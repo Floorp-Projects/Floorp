@@ -1083,10 +1083,16 @@ class MediaTrackGraph {
    * will be resolved later than the promise of the method above.*/
   RefPtr<GraphStartedPromise> NotifyWhenDeviceStarted(MediaTrack* aTrack);
 
-  /* From the main thread, suspend, resume or close an AudioContext.
+  /* From the main thread, suspend, resume or close an AudioContext.  Calls
+   * are not counted.  Even Resume calls can be more frequent than Suspend
+   * calls.
+   *
    * aTracks are the tracks of all the AudioNodes of the AudioContext that
-   * need to be suspended or resumed. This can be empty if this is a second
-   * consecutive suspend call and all the nodes are already suspended.
+   * need to be suspended or resumed.  Suspend and Resume operations on these
+   * tracks are counted.  Resume operations must not outnumber Suspends and a
+   * track will not resume until the number of Resume operations matches the
+   * number of Suspends.  This array may be empty if, for example, this is a
+   * second consecutive suspend call and all the nodes are already suspended.
    *
    * This can possibly pause the graph thread, releasing system resources, if
    * all tracks have been suspended/closed.
