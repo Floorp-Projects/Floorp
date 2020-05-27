@@ -23,6 +23,9 @@
     <!-- Message that appears when the downloaded file could not be opened-->
     <string name="mozac_feature_downloads_could_not_open_file">پرونده باز نشد</string>
 
+    <!-- Message that appears when the downloaded file is a specific type that Android doesn't support opening-->
+    <string name="mozac_feature_downloads_open_not_supported">هیچ برنامه‌ای برای باز کردن فایل‌های %1$s یافت نشد</string>
+
     <!-- Button that pauses the download when pressed -->
     <string name="mozac_feature_downloads_button_pause">مکث</string>
     <!-- Button that resumes the download when pressed -->

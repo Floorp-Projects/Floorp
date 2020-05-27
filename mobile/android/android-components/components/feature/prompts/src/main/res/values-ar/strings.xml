@@ -6,6 +6,8 @@
     <string name="mozac_feature_prompts_cancel">ألغِ</string>
     <!-- When a page shows many dialogs, this checkbox will appear for letting the user choose to prevent showing more dialogs. -->
     <string name="mozac_feature_prompts_no_more_dialogs">امنع هذه الصفحة من إنشاء نوافذ حوار إضافية</string>
+    <!-- Text for a button that clears the selected input in the date/time picker. -->
+    <string name="mozac_feature_prompts_clear">امسح</string>
     <!-- Text for the title of an authentication dialog. -->
     <string name="mozac_feature_prompt_sign_in">لِج</string>
     <!-- Text for username field in an authentication dialog. -->
