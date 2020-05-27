@@ -160,9 +160,15 @@ function unsigned_saturate(z, bits) {
 
 function shl(count, width) {
     if (width == 64) {
+        count = BigInt(count);
         return (v) => {
-            // This is only right for small values
-            return BigInt(v << count);
+            v = BigInt(v);
+            if (v < 0)
+                v = (1n << 64n) + v;
+            let r = (v << count) & ((1n << 64n) - 1n);
+            if (r & (1n << 63n))
+                r = -((1n << 64n) - r);
+            return r;
         }
     } else {
         return (v) => {
@@ -174,20 +180,22 @@ function shl(count, width) {
 
 function shr(count, width) {
     return (v) => {
+        if (count == 0)
+            return v;
         if (width == 64) {
             if (v < 0) {
                 // This basically mirrors what the SIMD code does, so if there's
                 // a bug there then there's a bug here too.  Seems OK though.
                 let s = 0x1_0000_0000_0000_0000n + BigInt(v);
-                let t = s / BigInt(1 << count);
-                let u = BigInt((1 << count) - 1) * (2n ** BigInt(64-count));
+                let t = s / (1n << BigInt(count));
+                let u = ((1n << BigInt(count)) - 1n) * (2n ** BigInt(64-count));
                 let w = t + u;
                 return w - 0x1_0000_0000_0000_0000n;
             }
-            return BigInt(v) / BigInt(1 << count);
+            return BigInt(v) / (1n << BigInt(count));
         } else {
             let mask = (width == 32) ? -1 : ((1 << width) - 1);
-            return (sign_extend(v,8) >> count) & mask;
+            return (sign_extend(v, width) >> count) & mask;
         }
     }
 }
@@ -195,10 +203,12 @@ function shr(count, width) {
 function shru(count, width) {
     if (width == 64) {
         return (v) => {
+            if (count == 0)
+                return v;
             if (v < 0) {
                 v = 0x1_0000_0000_0000_0000n + BigInt(v);
             }
-            return BigInt(v) / BigInt(1 << count);
+            return BigInt(v) / (1n << BigInt(count));
         }
     } else {
         return (v) => {
@@ -816,6 +826,17 @@ for ( let dope of [1, 7, 32, 195 ] ) {
 // rhs is i32 (passed directly)
 // result is v128 in memory
 
+var constantI8Shifts = "";
+for ( let i=0 ; i < 10; i++ ) {
+    constantI8Shifts += `
+    (func (export "shl_i8x16_${i}")
+      (v128.store (i32.const 0) (i8x16.shl (v128.load (i32.const 16)) (i32.const ${i}))))
+    (func (export "shr_i8x16_${i}")
+      (v128.store (i32.const 0) (i8x16.shr_s (v128.load (i32.const 16)) (i32.const ${i}))))
+    (func (export "shr_u8x16_${i}")
+      (v128.store (i32.const 0) (i8x16.shr_u (v128.load (i32.const 16)) (i32.const ${i}))))`;
+}
+
 var ins = wasmEvalText(`
   (module
     (memory (export "mem") 1 1)
@@ -825,24 +846,81 @@ var ins = wasmEvalText(`
       (v128.store (i32.const 0) (i8x16.shr_s (v128.load (i32.const 16)) (local.get $count))))
     (func (export "shr_u8x16") (param $count i32)
       (v128.store (i32.const 0) (i8x16.shr_u (v128.load (i32.const 16)) (local.get $count))))
+    ${constantI8Shifts}
     (func (export "shl_i16x8") (param $count i32)
       (v128.store (i32.const 0) (i16x8.shl (v128.load (i32.const 16)) (local.get $count))))
+    (func (export "shl_i16x8_3")
+      (v128.store (i32.const 0) (i16x8.shl (v128.load (i32.const 16)) (i32.const 3))))
+    (func (export "shl_i16x8_15")
+      (v128.store (i32.const 0) (i16x8.shl (v128.load (i32.const 16)) (i32.const 15))))
+    (func (export "shl_i16x8_16")
+      (v128.store (i32.const 0) (i16x8.shl (v128.load (i32.const 16)) (i32.const 16))))
     (func (export "shr_i16x8") (param $count i32)
       (v128.store (i32.const 0) (i16x8.shr_s (v128.load (i32.const 16)) (local.get $count))))
+    (func (export "shr_i16x8_3")
+      (v128.store (i32.const 0) (i16x8.shr_s (v128.load (i32.const 16)) (i32.const 3))))
+    (func (export "shr_i16x8_15")
+      (v128.store (i32.const 0) (i16x8.shr_s (v128.load (i32.const 16)) (i32.const 15))))
+    (func (export "shr_i16x8_16")
+      (v128.store (i32.const 0) (i16x8.shr_s (v128.load (i32.const 16)) (i32.const 16))))
     (func (export "shr_u16x8") (param $count i32)
       (v128.store (i32.const 0) (i16x8.shr_u (v128.load (i32.const 16)) (local.get $count))))
+    (func (export "shr_u16x8_3")
+      (v128.store (i32.const 0) (i16x8.shr_u (v128.load (i32.const 16)) (i32.const 3))))
+    (func (export "shr_u16x8_15")
+      (v128.store (i32.const 0) (i16x8.shr_u (v128.load (i32.const 16)) (i32.const 15))))
+    (func (export "shr_u16x8_16")
+      (v128.store (i32.const 0) (i16x8.shr_u (v128.load (i32.const 16)) (i32.const 16))))
     (func (export "shl_i32x4") (param $count i32)
       (v128.store (i32.const 0) (i32x4.shl (v128.load (i32.const 16)) (local.get $count))))
-    (func (export "shl_i64x2") (param $count i32)
-      (v128.store (i32.const 0) (i64x2.shl (v128.load (i32.const 16)) (local.get $count))))
+    (func (export "shl_i32x4_12")
+      (v128.store (i32.const 0) (i32x4.shl (v128.load (i32.const 16)) (i32.const 12))))
+    (func (export "shl_i32x4_31")
+      (v128.store (i32.const 0) (i32x4.shl (v128.load (i32.const 16)) (i32.const 31))))
+    (func (export "shl_i32x4_32")
+      (v128.store (i32.const 0) (i32x4.shl (v128.load (i32.const 16)) (i32.const 32))))
     (func (export "shr_i32x4") (param $count i32)
       (v128.store (i32.const 0) (i32x4.shr_s (v128.load (i32.const 16)) (local.get $count))))
+    (func (export "shr_i32x4_12")
+      (v128.store (i32.const 0) (i32x4.shr_s (v128.load (i32.const 16)) (i32.const 12))))
+    (func (export "shr_i32x4_31")
+      (v128.store (i32.const 0) (i32x4.shr_s (v128.load (i32.const 16)) (i32.const 31))))
+    (func (export "shr_i32x4_32")
+      (v128.store (i32.const 0) (i32x4.shr_s (v128.load (i32.const 16)) (i32.const 32))))
     (func (export "shr_u32x4") (param $count i32)
       (v128.store (i32.const 0) (i32x4.shr_u (v128.load (i32.const 16)) (local.get $count))))
+    (func (export "shr_u32x4_12")
+      (v128.store (i32.const 0) (i32x4.shr_u (v128.load (i32.const 16)) (i32.const 12))))
+    (func (export "shr_u32x4_31")
+      (v128.store (i32.const 0) (i32x4.shr_u (v128.load (i32.const 16)) (i32.const 31))))
+    (func (export "shr_u32x4_32")
+      (v128.store (i32.const 0) (i32x4.shr_u (v128.load (i32.const 16)) (i32.const 32))))
+    (func (export "shl_i64x2") (param $count i32)
+      (v128.store (i32.const 0) (i64x2.shl (v128.load (i32.const 16)) (local.get $count))))
+    (func (export "shl_i64x2_27")
+      (v128.store (i32.const 0) (i64x2.shl (v128.load (i32.const 16)) (i32.const 27))))
+    (func (export "shl_i64x2_63")
+      (v128.store (i32.const 0) (i64x2.shl (v128.load (i32.const 16)) (i32.const 63))))
+    (func (export "shl_i64x2_64")
+      (v128.store (i32.const 0) (i64x2.shl (v128.load (i32.const 16)) (i32.const 64))))
     (func (export "shr_i64x2") (param $count i32)
       (v128.store (i32.const 0) (i64x2.shr_s (v128.load (i32.const 16)) (local.get $count))))
+    (func (export "shr_i64x2_27")
+      (v128.store (i32.const 0) (i64x2.shr_s (v128.load (i32.const 16)) (i32.const 27))))
+    (func (export "shr_i64x2_45")
+      (v128.store (i32.const 0) (i64x2.shr_s (v128.load (i32.const 16)) (i32.const 45))))
+    (func (export "shr_i64x2_63")
+      (v128.store (i32.const 0) (i64x2.shr_s (v128.load (i32.const 16)) (i32.const 63))))
+    (func (export "shr_i64x2_64")
+      (v128.store (i32.const 0) (i64x2.shr_s (v128.load (i32.const 16)) (i32.const 64))))
     (func (export "shr_u64x2") (param $count i32)
-      (v128.store (i32.const 0) (i64x2.shr_u (v128.load (i32.const 16)) (local.get $count)))))`);
+      (v128.store (i32.const 0) (i64x2.shr_u (v128.load (i32.const 16)) (local.get $count))))
+    (func (export "shr_u64x2_27")
+      (v128.store (i32.const 0) (i64x2.shr_u (v128.load (i32.const 16)) (i32.const 27))))
+    (func (export "shr_u64x2_63")
+      (v128.store (i32.const 0) (i64x2.shr_u (v128.load (i32.const 16)) (i32.const 63))))
+    (func (export "shr_u64x2_64")
+      (v128.store (i32.const 0) (i64x2.shr_u (v128.load (i32.const 16)) (i32.const 64)))))`);
 
 var mem8 = new Uint8Array(ins.exports.mem.buffer);
 var as = [1, 2, 4, 8, 16, 32, 64, 128, 129, 130, 132, 136, 144, 160, 192, 255];
@@ -853,59 +931,143 @@ for (let [meth,op] of [["shl_i8x16",shl], ["shr_i8x16",shr], ["shr_u8x16",shru]]
     for ( let i=0 ; i < 8 ; i++ ) {
         ins.exports[meth](i);
         assertSame(get(mem8, 0, 16), as.map(op(i, 8)))
+        ins.exports[meth + "_" + i]();
+        assertSame(get(mem8, 0, 16), as.map(op(i, 8)))
     }
 
     ins.exports[meth](1);
-    var a = get(mem8, 0, 16);
+    let a = get(mem8, 0, 16);
     ins.exports[meth](9);
-    var b = get(mem8, 0, 16);
+    let b = get(mem8, 0, 16);
     assertSame(a, b);
+
+    ins.exports[meth + "_1"]();
+    let c = get(mem8, 0, 16);
+    ins.exports[meth + "_9"]();
+    let d = get(mem8, 0, 16);
+    assertSame(c, d);
 }
 
 var mem16 = new Uint16Array(ins.exports.mem.buffer);
-var as = [1, 2, 3, 4, 5, 6, 7, 8];
-
+var as = [1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000];
 set(mem16, 8, as)
+
 ins.exports.shl_i16x8(2);
-assertSame(get(mem16, 0, 8), as.map(shl(2, 16)))
+var res = get(mem16, 0, 8);
+assertSame(res, as.map(shl(2, 16)))
 
-set(mem16, 8, as)
+ins.exports.shl_i16x8(18);      // Masked count
+assertSame(get(mem16, 0, 8), res);
+
+for ( let shift of [3, 15, 16] ) {
+    ins.exports["shl_i16x8_" + shift]();
+    assertSame(get(mem16, 0, 8), as.map(shl(shift & 15, 16)))
+}
+
 ins.exports.shr_i16x8(1);
-assertSame(get(mem16, 0, 8), as.map(shr(1, 16)))
+var res = get(mem16, 0, 8);
+assertSame(res, as.map(shr(1, 16)))
 
-set(mem16, 8, as)
+ins.exports.shr_i16x8(17);      // Masked count
+assertSame(get(mem16, 0, 8), res);
+
+for ( let shift of [3, 15, 16] ) {
+    ins.exports["shr_i16x8_" + shift]();
+    assertSame(get(mem16, 0, 8), as.map(shr(shift & 15, 16)))
+}
+
 ins.exports.shr_u16x8(1);
-assertSame(get(mem16, 0, 8), as.map(shru(1, 16)))
+var res = get(mem16, 0, 8);
+assertSame(res, as.map(shru(1, 16)))
+
+ins.exports.shr_u16x8(17);      // Masked count
+assertSame(get(mem16, 0, 8), res);
+
+for ( let shift of [3, 15, 16] ) {
+    ins.exports["shr_u16x8_" + shift]();
+    assertSame(get(mem16, 0, 8), as.map(shru(shift & 15, 16)))
+}
 
 var mem32 = new Uint32Array(ins.exports.mem.buffer);
-var as = [5, 6, 7, 8];
+var as = [5152, 6768, 7074, 800811];
 
 set(mem32, 4, as)
 ins.exports.shl_i32x4(2);
-assertSame(get(mem32, 0, 4), as.map(shl(2, 32)))
+var res = get(mem32, 0, 4);
+assertSame(res, as.map(shl(2, 32)))
 
-set(mem32, 4, as)
+ins.exports.shl_i32x4(34);      // Masked count
+assertSame(get(mem32, 0, 4), res);
+
+for ( let shift of [12, 31, 32] ) {
+    ins.exports["shl_i32x4_" + shift]();
+    assertSame(get(mem32, 0, 4), as.map(shl(shift & 31, 32)).map(x => x>>>0))
+}
+
 ins.exports.shr_i32x4(1);
-assertSame(get(mem32, 0, 4), as.map(shr(1, 32)))
+var res = get(mem32, 0, 4);
+assertSame(res, as.map(shr(1, 32)))
 
-set(mem32, 4, as)
+ins.exports.shr_i32x4(33);      // Masked count
+assertSame(get(mem32, 0, 4), res);
+
+for ( let shift of [12, 31, 32] ) {
+    ins.exports["shr_i32x4_" + shift]();
+    assertSame(get(mem32, 0, 4), as.map(shr(shift & 31, 32)))
+}
+
 ins.exports.shr_u32x4(1);
-assertSame(get(mem32, 0, 4), as.map(shru(1, 32)))
+var res = get(mem32, 0, 4);
+assertSame(res, as.map(shru(1, 32)))
+
+ins.exports.shr_u32x4(33);      // Masked count
+assertSame(get(mem32, 0, 4), res);
+
+for ( let shift of [12, 31, 32] ) {
+    ins.exports["shr_u32x4_" + shift]();
+    assertSame(get(mem32, 0, 4), as.map(shru(shift & 31, 32)))
+}
 
 var mem64 = new BigInt64Array(ins.exports.mem.buffer);
-var as = [5, -6];
+var as = [50515253, -616263];
 
 set(mem64, 2, as)
 ins.exports.shl_i64x2(2);
-assertSame(get(mem64, 0, 2), as.map(shl(2, 64)))
+var res = get(mem64, 0, 2);
+assertSame(res, as.map(shl(2, 64)))
 
-set(mem64, 2, as)
+ins.exports.shl_i64x2(66);      // Masked count
+assertSame(get(mem64, 0, 2), res);
+
+for ( let shift of [27, 63, 64] ) {
+    ins.exports["shl_i64x2_" + shift]();
+    assertSame(get(mem64, 0, 2), as.map(shl(shift & 63, 64)))
+}
+
 ins.exports.shr_u64x2(1);
-assertSame(get(mem64, 0, 2), as.map(shru(1, 64)))
+var res = get(mem64, 0, 2);
+assertSame(res, as.map(shru(1, 64)))
 
-set(mem64, 2, as)
+ins.exports.shr_u64x2(65);      // Masked count
+assertSame(get(mem64, 0, 2), res);
+
+for ( let shift of [27, 63, 64] ) {
+    ins.exports["shr_u64x2_" + shift]();
+    assertSame(get(mem64, 0, 2), as.map(shru(shift & 63, 64)))
+}
+
 ins.exports.shr_i64x2(2);
-assertSame(get(mem64, 0, 2), as.map(shr(2, 64)))
+var res = get(mem64, 0, 2);
+assertSame(res, as.map(shr(2, 64)))
+
+ins.exports.shr_i64x2(66);      // Masked count
+assertSame(get(mem64, 0, 2), res);
+
+// The ion code generator has multiple paths here, for < 32 and >= 32
+for ( let shift of [27, 45, 63, 64] ) {
+    ins.exports["shr_i64x2_" + shift]();
+    assertSame(get(mem64, 0, 2), as.map(shr(shift & 63, 64)))
+}
 
 // Narrow
 

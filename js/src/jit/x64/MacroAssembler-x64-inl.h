@@ -798,6 +798,11 @@ void MacroAssembler::rightShiftInt64x2(Register rhs, FloatRegister lhsDest) {
   vpinsrq(1, scratch, lhsDest, lhsDest);
 }
 
+void MacroAssembler::rightShiftInt64x2(Imm32 count, FloatRegister src,
+                                       FloatRegister dest) {
+  MacroAssemblerX64::rightShiftInt64x2(count, src, dest);
+}
+
 // Extract lane as scalar
 
 void MacroAssembler::extractLaneInt64x2(uint32_t lane, FloatRegister src,

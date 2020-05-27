@@ -1099,6 +1099,75 @@ void CodeGenerator::visitWasmVariableShiftSimd128(
 #endif
 }
 
+void CodeGenerator::visitWasmConstantShiftSimd128(
+    LWasmConstantShiftSimd128* ins) {
+#ifdef ENABLE_WASM_SIMD
+  FloatRegister src = ToFloatRegister(ins->src());
+  FloatRegister dest = ToFloatRegister(ins->output());
+  int32_t shift = ins->shift();
+
+  if (shift == 0) {
+    if (src != dest) {
+      masm.moveSimd128(src, dest);
+    }
+    return;
+  }
+
+  FloatRegister temp;
+  switch (ins->simdOp()) {
+    case wasm::SimdOp::I8x16ShrS:
+      temp = ToFloatRegister(ins->temp());
+      break;
+    default:
+      MOZ_ASSERT(ins->temp()->isBogusTemp());
+      break;
+  }
+
+  switch (ins->simdOp()) {
+    case wasm::SimdOp::I8x16Shl:
+      masm.leftShiftInt8x16(Imm32(shift), src, dest);
+      break;
+    case wasm::SimdOp::I8x16ShrS:
+      masm.rightShiftInt8x16(Imm32(shift), src, dest, temp);
+      break;
+    case wasm::SimdOp::I8x16ShrU:
+      masm.unsignedRightShiftInt8x16(Imm32(shift), src, dest);
+      break;
+    case wasm::SimdOp::I16x8Shl:
+      masm.leftShiftInt16x8(Imm32(shift), src, dest);
+      break;
+    case wasm::SimdOp::I16x8ShrS:
+      masm.rightShiftInt16x8(Imm32(shift), src, dest);
+      break;
+    case wasm::SimdOp::I16x8ShrU:
+      masm.unsignedRightShiftInt16x8(Imm32(shift), src, dest);
+      break;
+    case wasm::SimdOp::I32x4Shl:
+      masm.leftShiftInt32x4(Imm32(shift), src, dest);
+      break;
+    case wasm::SimdOp::I32x4ShrS:
+      masm.rightShiftInt32x4(Imm32(shift), src, dest);
+      break;
+    case wasm::SimdOp::I32x4ShrU:
+      masm.unsignedRightShiftInt32x4(Imm32(shift), src, dest);
+      break;
+    case wasm::SimdOp::I64x2Shl:
+      masm.leftShiftInt64x2(Imm32(shift), src, dest);
+      break;
+    case wasm::SimdOp::I64x2ShrS:
+      masm.rightShiftInt64x2(Imm32(shift), src, dest);
+      break;
+    case wasm::SimdOp::I64x2ShrU:
+      masm.unsignedRightShiftInt64x2(Imm32(shift), src, dest);
+      break;
+    default:
+      MOZ_CRASH("Shift SimdOp not implemented");
+  }
+#else
+  MOZ_CRASH("No SIMD");
+#endif
+}
+
 void CodeGenerator::visitWasmShuffleSimd128(LWasmShuffleSimd128* ins) {
 #ifdef ENABLE_WASM_SIMD
   FloatRegister lhsDest = ToFloatRegister(ins->lhsDest());
