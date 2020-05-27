@@ -47,11 +47,6 @@ class IDMap {
     }
   }
 
-  void ReplaceWithID(const T& data, int32_t id) {
-    MOZ_ASSERT(Contains(id), "Only replace an existing ID");
-    data_[id] = data;
-  }
-
   void Clear() { data_.clear(); }
 
   T Lookup(int32_t id) const {
