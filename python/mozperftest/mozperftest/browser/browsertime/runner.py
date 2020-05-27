@@ -45,6 +45,10 @@ def extract_browser_name(args):
     return res[0][-1]
 
 
+class NodeException(Exception):
+    pass
+
+
 class BrowsertimeRunner(NodeRunner):
     """Runs a browsertime test.
     """
@@ -331,7 +335,9 @@ class BrowsertimeRunner(NodeRunner):
         extra = self.extra_default_args(args=args)
         command = [str(self.browsertime_js)] + extra + args
         self.info("Running browsertime with this command %s" % " ".join(command))
-        self.node(command)
+        exit_code = self.node(command)
+        if exit_code != 0:
+            raise NodeException(exit_code)
 
         metadata.add_result(
             {
