@@ -711,8 +711,14 @@ nsresult nsOfflineManifestItem::AddNamespace(uint32_t namespaceType,
   return NS_OK;
 }
 
-static nsresult GetURIDirectory(nsIURI* uri, nsACString& directory) {
+static nsresult GetURIDirectory(nsIURI* uri, nsAutoCString& directory) {
   nsresult rv;
+
+  nsAutoCString path;
+  uri->GetFilePath(path);
+  if (path.Find("%2f") != kNotFound || path.Find("%2F") != kNotFound) {
+    return NS_ERROR_DOM_BAD_URI;
+  }
 
   nsCOMPtr<nsIURL> url(do_QueryInterface(uri, &rv));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -729,7 +735,9 @@ static nsresult CheckFileContainedInPath(nsIURI* file,
 
   nsAutoCString directory;
   rv = GetURIDirectory(file, directory);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   bool contains = StringBeginsWith(directory, masterDirectory);
   if (!contains) {
