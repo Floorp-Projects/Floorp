@@ -100,6 +100,7 @@ class ProviderTopSites extends UrlbarProvider {
     // can configure Top Sites but cannot configure the default empty search
     // results. See bug 1623666.
     if (
+      !UrlbarPrefs.get("suggest.topsites") ||
       !Services.prefs.getBoolPref(
         "browser.newtabpage.activity-stream.feeds.system.topsites",
         false

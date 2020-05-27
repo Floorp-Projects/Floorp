@@ -405,4 +405,21 @@ add_task(async function topSitesDisabled() {
   });
   await checkDoesNotOpenOnFocus();
   await SpecialPowers.popPrefEnv();
+
+  // Top Sites should also not be shown when Urlbar Top Sites are disabled.
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.suggest.topsites", false]],
+  });
+  await checkDoesNotOpenOnFocus();
+  await SpecialPowers.popPrefEnv();
+
+  // Top Sites should not be shown in private windows.
+  let privateWin = await BrowserTestUtils.openNewBrowserWindow({
+    private: true,
+  });
+  await checkDoesNotOpenOnFocus(privateWin);
+  await BrowserTestUtils.closeWindow(privateWin);
+
+  await PlacesUtils.bookmarks.eraseEverything();
+  await PlacesUtils.history.clear();
 });
