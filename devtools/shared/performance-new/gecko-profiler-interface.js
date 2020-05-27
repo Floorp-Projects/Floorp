@@ -235,7 +235,6 @@ class ActorReadyGeckoProfilerInterface {
 
   /**
    * Lists the supported features of the profiler for the current browser.
-   * This method was added in Firefox 72.
    * @returns {string[]}
    */
   getSupportedFeatures() {

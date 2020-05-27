@@ -11,7 +11,7 @@
  * @property {string[]} threads
  * @property {string} threadsString
  * @property {string[]} objdirs
- * @property {string[] | null} supportedFeatures
+ * @property {string[]} supportedFeatures
  */
 
 /**
