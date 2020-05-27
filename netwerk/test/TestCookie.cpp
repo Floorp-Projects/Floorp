@@ -18,6 +18,7 @@
 #include "nsServiceManagerUtils.h"
 #include "nsNetCID.h"
 #include "nsIPrefBranch.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/Unused.h"
 #include "mozilla/net/CookieJarSettings.h"
 #include "Cookie.h"
@@ -134,7 +135,18 @@ void GetACookieNoHttp(nsICookieService* aCookieService, const char* aSpec,
       BasePrincipal::CreateContentPrincipal(uri, OriginAttributes());
   MOZ_ASSERT(principal);
 
-  Unused << aCookieService->GetCookieStringForPrincipal(principal, aCookie);
+  nsCOMPtr<mozilla::dom::Document> document;
+  nsresult rv = NS_NewDOMDocument(getter_AddRefs(document),
+                                  EmptyString(),  // aNamespaceURI
+                                  EmptyString(),  // aQualifiedName
+                                  nullptr,        // aDoctype
+                                  uri, uri, principal,
+                                  false,    // aLoadedAsData
+                                  nullptr,  // aEventObject
+                                  DocumentFlavorHTML);
+  Unused << NS_WARN_IF(NS_FAILED(rv));
+
+  Unused << aCookieService->GetCookieStringFromDocument(document, aCookie);
 }
 
 // some #defines for comparison rules

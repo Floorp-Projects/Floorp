@@ -7,7 +7,6 @@
 
 interface nsIURI;
 interface nsIChannel;
-interface nsIPrincipal;
 webidl Document;
 
 /**
@@ -92,17 +91,17 @@ interface nsICookieService : nsISupports
   // Value = 3 is considered the same as 0
 
   /*
-   * Get the complete cookie string associated with the principal. This method
-   * is meant to be used for `document.cookie` only. Any security check about
-   * storage-access permission and cookie behavior must be done by the caller.
+   * Get the complete cookie string associated with the document's principal.
+   * This method is meant to be used for `document.cookie` only. Any security
+   * check about storage-access permission and cookie behavior must be done by
+   * the caller.
    *
-   * @param aPrincipal
-   *        The nsIPrincipal of the document for which cookies are being
-   *        queried.
+   * @param aDocument
+   *        The document.
    *
    * @return the resulting cookie string
    */
-  ACString getCookieStringForPrincipal(in nsIPrincipal aPrincipal);
+  ACString getCookieStringFromDocument(in Document aDocument);
 
   /*
    * Get the complete cookie string associated with the URI.
