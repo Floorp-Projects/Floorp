@@ -28,30 +28,6 @@ async function checkOpensOnFocus(win = window) {
   });
 }
 
-async function checkDoesNotOpenOnFocus(win = window) {
-  // The view should not open when the input is focused programmatically.
-  win.gURLBar.blur();
-  win.gURLBar.focus();
-  Assert.ok(!win.gURLBar.view.isOpen, "check urlbar panel is not open");
-  win.gURLBar.blur();
-
-  // Check the keyboard shortcut.
-  win.document.getElementById("Browser:OpenLocation").doCommand();
-  // Because the panel opening may not be immediate, we must wait a bit.
-  // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
-  await new Promise(resolve => setTimeout(resolve, 500));
-  Assert.ok(!win.gURLBar.view.isOpen, "check urlbar panel is not open");
-  win.gURLBar.blur();
-
-  // Focus with the mouse.
-  EventUtils.synthesizeMouseAtCenter(win.gURLBar.inputField, {});
-  // Because the panel opening may not be immediate, we must wait a bit.
-  // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
-  await new Promise(resolve => setTimeout(resolve, 500));
-  Assert.ok(!win.gURLBar.view.isOpen, "check urlbar panel is not open");
-  win.gURLBar.blur();
-}
-
 add_task(async function setUp() {
   await SpecialPowers.pushPrefEnv({
     set: [["browser.urlbar.openViewOnFocus", true]],
@@ -118,12 +94,4 @@ add_task(async function newtabAndHome() {
       }
     );
   }
-});
-
-add_task(async function privateWindow() {
-  let privateWin = await BrowserTestUtils.openNewBrowserWindow({
-    private: true,
-  });
-  await checkDoesNotOpenOnFocus(privateWin);
-  await BrowserTestUtils.closeWindow(privateWin);
 });
