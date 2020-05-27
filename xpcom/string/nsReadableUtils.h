@@ -463,16 +463,16 @@ void ToLowerCase(const nsACString& aSource, nsACString& aDest);
 
 bool FindInReadable(const nsAString& aPattern, nsAString::const_iterator&,
                     nsAString::const_iterator&,
-                    const nsStringComparator& = nsDefaultStringComparator());
+                    nsStringComparator = nsTDefaultStringComparator);
 bool FindInReadable(const nsACString& aPattern, nsACString::const_iterator&,
                     nsACString::const_iterator&,
-                    const nsCStringComparator& = nsDefaultCStringComparator());
+                    nsCStringComparator = nsTDefaultStringComparator);
 
 /* sometimes we don't care about where the string was, just that we
  * found it or not */
 inline bool FindInReadable(
     const nsAString& aPattern, const nsAString& aSource,
-    const nsStringComparator& aCompare = nsDefaultStringComparator()) {
+    nsStringComparator aCompare = nsTDefaultStringComparator) {
   nsAString::const_iterator start, end;
   aSource.BeginReading(start);
   aSource.EndReading(end);
@@ -481,7 +481,7 @@ inline bool FindInReadable(
 
 inline bool FindInReadable(
     const nsACString& aPattern, const nsACString& aSource,
-    const nsCStringComparator& aCompare = nsDefaultCStringComparator()) {
+    nsCStringComparator aCompare = nsTDefaultStringComparator) {
   nsACString::const_iterator start, end;
   aSource.BeginReading(start);
   aSource.EndReading(end);
@@ -500,10 +500,10 @@ bool CaseInsensitiveFindInReadable(const nsACString& aPattern,
  */
 bool RFindInReadable(const nsAString& aPattern, nsAString::const_iterator&,
                      nsAString::const_iterator&,
-                     const nsStringComparator& = nsDefaultStringComparator());
+                     nsStringComparator = nsTDefaultStringComparator);
 bool RFindInReadable(const nsACString& aPattern, nsACString::const_iterator&,
                      nsACString::const_iterator&,
-                     const nsCStringComparator& = nsDefaultCStringComparator());
+                     nsCStringComparator = nsTDefaultStringComparator);
 
 /**
  * Finds the leftmost occurrence of |aChar|, if any in the range
@@ -520,16 +520,16 @@ bool FindCharInReadable(char aChar, nsACString::const_iterator& aSearchStart,
 
 bool StringBeginsWith(const nsAString& aSource, const nsAString& aSubstring);
 bool StringBeginsWith(const nsAString& aSource, const nsAString& aSubstring,
-                      const nsStringComparator& aComparator);
+                      nsStringComparator);
 bool StringBeginsWith(const nsACString& aSource, const nsACString& aSubstring);
 bool StringBeginsWith(const nsACString& aSource, const nsACString& aSubstring,
-                      const nsCStringComparator& aComparator);
+                      nsCStringComparator);
 bool StringEndsWith(const nsAString& aSource, const nsAString& aSubstring);
 bool StringEndsWith(const nsAString& aSource, const nsAString& aSubstring,
-                    const nsStringComparator& aComparator);
+                    nsStringComparator);
 bool StringEndsWith(const nsACString& aSource, const nsACString& aSubstring);
 bool StringEndsWith(const nsACString& aSource, const nsACString& aSubstring,
-                    const nsCStringComparator& aComparator);
+                    nsCStringComparator);
 
 const nsString& EmptyString();
 const nsCString& EmptyCString();

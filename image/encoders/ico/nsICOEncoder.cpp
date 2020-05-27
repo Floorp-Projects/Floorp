@@ -273,13 +273,11 @@ nsresult nsICOEncoder::ParseOptions(const nsAString& aOptions,
     }
 
     // Parse the format portion of the string format=<png|bmp>;bpp=<bpp_value>
-    if (nameValuePair[0].Equals("format",
-                                nsCaseInsensitiveCStringComparator())) {
-      if (nameValuePair[1].Equals("png",
-                                  nsCaseInsensitiveCStringComparator())) {
+    if (nameValuePair[0].Equals("format", nsCaseInsensitiveCStringComparator)) {
+      if (nameValuePair[1].Equals("png", nsCaseInsensitiveCStringComparator)) {
         aUsePNGOut = true;
-      } else if (nameValuePair[1].Equals(
-                     "bmp", nsCaseInsensitiveCStringComparator())) {
+      } else if (nameValuePair[1].Equals("bmp",
+                                         nsCaseInsensitiveCStringComparator)) {
         aUsePNGOut = false;
       } else {
         return NS_ERROR_INVALID_ARG;
@@ -287,7 +285,7 @@ nsresult nsICOEncoder::ParseOptions(const nsAString& aOptions,
     }
 
     // Parse the bpp portion of the string format=<png|bmp>;bpp=<bpp_value>
-    if (nameValuePair[0].Equals("bpp", nsCaseInsensitiveCStringComparator())) {
+    if (nameValuePair[0].Equals("bpp", nsCaseInsensitiveCStringComparator)) {
       if (nameValuePair[1].EqualsLiteral("24")) {
         aBppOut = 24;
       } else if (nameValuePair[1].EqualsLiteral("32")) {

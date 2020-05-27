@@ -659,7 +659,7 @@ nsresult nsIDNService::decodeACE(const nsACString& in, nsACString& out,
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (flag == eStringPrepForDNS &&
-      !ace.Equals(in, nsCaseInsensitiveCStringComparator())) {
+      !ace.Equals(in, nsCaseInsensitiveCStringComparator)) {
     return NS_ERROR_MALFORMED_URI;
   }
 

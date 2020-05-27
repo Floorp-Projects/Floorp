@@ -1010,8 +1010,7 @@ bool UniCharsAndModifiers::UniCharsEqual(
 
 bool UniCharsAndModifiers::UniCharsCaseInsensitiveEqual(
     const UniCharsAndModifiers& aOther) const {
-  nsCaseInsensitiveStringComparator comp;
-  return mChars.Equals(aOther.mChars, comp);
+  return mChars.Equals(aOther.mChars, nsCaseInsensitiveStringComparator);
 }
 
 bool UniCharsAndModifiers::BeginsWith(

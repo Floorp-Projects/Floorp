@@ -784,7 +784,7 @@ void nsTextBoxFrame::UpdateAccessTitle() {
   if (!menuAccessKey || mAccessKey.IsEmpty()) return;
 
   if (!AlwaysAppendAccessKey() &&
-      FindInReadable(mAccessKey, mTitle, nsCaseInsensitiveStringComparator()))
+      FindInReadable(mAccessKey, mTitle, nsCaseInsensitiveStringComparator))
     return;
 
   nsAutoString accessKeyLabel;
@@ -858,11 +858,11 @@ void nsTextBoxFrame::UpdateAccessIndex() {
           // didn't find it - perform a case-insensitive search
           start = originalStart;
           found = FindInReadable(mAccessKey, start, end,
-                                 nsCaseInsensitiveStringComparator());
+                                 nsCaseInsensitiveStringComparator);
         }
       } else {
         found = RFindInReadable(mAccessKey, start, end,
-                                nsCaseInsensitiveStringComparator());
+                                nsCaseInsensitiveStringComparator);
       }
 
       if (found)

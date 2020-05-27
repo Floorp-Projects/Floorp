@@ -492,17 +492,17 @@ bool FindCharInReadable(char16_t aChar, nsScannerIterator& aStart,
 
 bool FindInReadable(const nsAString& aPattern, nsScannerIterator& aStart,
                     nsScannerIterator& aEnd,
-                    const nsStringComparator& = nsDefaultStringComparator());
+                    nsStringComparator = nsTDefaultStringComparator);
 
 bool RFindInReadable(const nsAString& aPattern, nsScannerIterator& aStart,
                      nsScannerIterator& aEnd,
-                     const nsStringComparator& = nsDefaultStringComparator());
+                     nsStringComparator = nsTDefaultStringComparator);
 
 inline bool CaseInsensitiveFindInReadable(const nsAString& aPattern,
                                           nsScannerIterator& aStart,
                                           nsScannerIterator& aEnd) {
   return FindInReadable(aPattern, aStart, aEnd,
-                        nsCaseInsensitiveStringComparator());
+                        nsCaseInsensitiveStringComparator);
 }
 
 #endif  // !defined(nsScannerString_h___)

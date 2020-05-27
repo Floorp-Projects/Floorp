@@ -59,40 +59,28 @@ void ToFoldedCase(const char16_t* aIn, char16_t* aOut, uint32_t aLen);
 uint32_t ToNaked(uint32_t aChar);
 void ToNaked(nsAString& aString);
 
-class nsCaseInsensitiveStringComparator : public nsStringComparator {
- public:
-  nsCaseInsensitiveStringComparator() = default;
+int32_t nsCaseInsensitiveStringComparator(const char16_t*, const char16_t*,
+                                          uint32_t, uint32_t);
 
-  virtual int32_t operator()(const char16_t*, const char16_t*, uint32_t,
-                             uint32_t) const override;
-};
-
-class nsCaseInsensitiveUTF8StringComparator : public nsCStringComparator {
- public:
-  virtual int32_t operator()(const char*, const char*, uint32_t,
-                             uint32_t) const override;
-};
+int32_t nsCaseInsensitiveUTF8StringComparator(const char*, const char*,
+                                              uint32_t, uint32_t);
 
 class nsCaseInsensitiveStringArrayComparator {
  public:
   template <class A, class B>
   bool Equals(const A& a, const B& b) const {
-    return a.Equals(b, nsCaseInsensitiveStringComparator());
+    return a.Equals(b, nsCaseInsensitiveStringComparator);
   }
 };
 
-class nsASCIICaseInsensitiveStringComparator : public nsStringComparator {
- public:
-  nsASCIICaseInsensitiveStringComparator() = default;
-  virtual int operator()(const char16_t*, const char16_t*, uint32_t,
-                         uint32_t) const override;
-};
+int32_t nsASCIICaseInsensitiveStringComparator(const char16_t*, const char16_t*,
+                                               uint32_t, uint32_t);
 
 inline bool CaseInsensitiveFindInReadable(
     const nsAString& aPattern, nsAString::const_iterator& aSearchStart,
     nsAString::const_iterator& aSearchEnd) {
   return FindInReadable(aPattern, aSearchStart, aSearchEnd,
-                        nsCaseInsensitiveStringComparator());
+                        nsCaseInsensitiveStringComparator);
 }
 
 inline bool CaseInsensitiveFindInReadable(const nsAString& aPattern,
@@ -100,7 +88,7 @@ inline bool CaseInsensitiveFindInReadable(const nsAString& aPattern,
   nsAString::const_iterator searchBegin, searchEnd;
   return FindInReadable(aPattern, aHay.BeginReading(searchBegin),
                         aHay.EndReading(searchEnd),
-                        nsCaseInsensitiveStringComparator());
+                        nsCaseInsensitiveStringComparator);
 }
 
 #endif  // MOZILLA_INTERNAL_API

@@ -546,19 +546,6 @@ bool TokenizerBase<TChar>::IsNumber(const TChar aInput) const {
   return aInput >= '0' && aInput <= '9';
 }
 
-namespace {
-
-template <typename TChar>
-class TCharComparator;
-template <>
-class TCharComparator<char> final
-    : public nsCaseInsensitiveUTF8StringComparator {};
-template <>
-class TCharComparator<char16_t> final
-    : public nsCaseInsensitiveStringComparator {};
-
-}  // namespace
-
 template <typename TChar>
 bool TokenizerBase<TChar>::IsCustom(
     const typename TAString::const_char_iterator& caret,
@@ -583,7 +570,13 @@ bool TokenizerBase<TChar>::IsCustom(
 
   TDependentSubstring inputFragment(caret, aCustomToken.mCustom.Length());
   if (aCustomToken.mCustomCaseInsensitivity == CASE_INSENSITIVE) {
-    return inputFragment.Equals(aCustomToken.mCustom, TCharComparator<TChar>());
+    if constexpr (std::is_same_v<TChar, char>) {
+      return inputFragment.Equals(aCustomToken.mCustom,
+                                  nsCaseInsensitiveUTF8StringComparator);
+    } else {
+      return inputFragment.Equals(aCustomToken.mCustom,
+                                  nsCaseInsensitiveStringComparator);
+    }
   }
   return inputFragment.Equals(aCustomToken.mCustom);
 }

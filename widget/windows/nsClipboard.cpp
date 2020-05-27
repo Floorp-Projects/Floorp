@@ -991,7 +991,7 @@ void nsClipboard ::ResolveShortcut(nsIFile* aFile, nsACString& outURL) {
 //
 bool nsClipboard ::IsInternetShortcut(const nsAString& inFileName) {
   return StringEndsWith(inFileName, NS_LITERAL_STRING(".url"),
-                        nsCaseInsensitiveStringComparator());
+                        nsCaseInsensitiveStringComparator);
 }  // IsInternetShortcut
 
 //-------------------------------------------------------------------------

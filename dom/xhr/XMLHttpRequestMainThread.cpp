@@ -1083,7 +1083,7 @@ bool XMLHttpRequestMainThread::IsSafeHeader(
 
     if (token.EqualsLiteral("*") && !mFlagACwithCredentials) {
       isSafe = true;
-    } else if (aHeader.Equals(token, nsCaseInsensitiveCStringComparator())) {
+    } else if (aHeader.Equals(token, nsCaseInsensitiveCStringComparator)) {
       isSafe = true;
     }
   }
@@ -2951,9 +2951,8 @@ nsresult XMLHttpRequestMainThread::SendInternal(const BodyExtractorBase* aBody,
         // Replace all case-insensitive matches of the charset in the
         // content-type with the correct case.
         RequestHeaders::CharsetIterator iter(uploadContentType);
-        const nsCaseInsensitiveCStringComparator cmp;
         while (iter.Next()) {
-          if (!iter.Equals(charset, cmp)) {
+          if (!iter.Equals(charset, nsCaseInsensitiveCStringComparator)) {
             iter.Replace(charset);
           }
         }
@@ -3967,9 +3966,8 @@ bool ArrayBufferBuilder::AreOverlappingRegions(const uint8_t* aStart1,
 }
 
 RequestHeaders::RequestHeader* RequestHeaders::Find(const nsACString& aName) {
-  const nsCaseInsensitiveCStringComparator ignoreCase;
   for (RequestHeaders::RequestHeader& header : mHeaders) {
-    if (header.mName.Equals(aName, ignoreCase)) {
+    if (header.mName.Equals(aName, nsCaseInsensitiveCStringComparator)) {
       return &header;
     }
   }

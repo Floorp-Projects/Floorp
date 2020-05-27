@@ -124,7 +124,7 @@ static bool IsInNoProxyList(const nsACString& aHost, int32_t aPort,
       nsDependentCSubstring hostStr(pos, colon);
       // By using StringEndsWith instead of an equality comparator, we can
       // include sub-domains
-      if (StringEndsWith(aHost, hostStr, nsCaseInsensitiveCStringComparator()))
+      if (StringEndsWith(aHost, hostStr, nsCaseInsensitiveCStringComparator))
         return true;
     }
 
@@ -279,11 +279,11 @@ static bool ConvertToIPV6Addr(const nsACString& aName, PRIPv6Addr* aAddr,
 
 static bool HostIgnoredByProxy(const nsACString& aIgnore,
                                const nsACString& aHost) {
-  if (aIgnore.Equals(aHost, nsCaseInsensitiveCStringComparator())) return true;
+  if (aIgnore.Equals(aHost, nsCaseInsensitiveCStringComparator)) return true;
 
   if (aIgnore.First() == '*' &&
       StringEndsWith(aHost, nsDependentCSubstring(aIgnore, 1),
-                     nsCaseInsensitiveCStringComparator()))
+                     nsCaseInsensitiveCStringComparator))
     return true;
 
   int32_t mask = 128;

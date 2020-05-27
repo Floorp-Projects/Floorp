@@ -303,7 +303,7 @@ static bool IsScriptEventHandler(ScriptKind kind, nsIContent* aScriptElement) {
   const nsAString& event_str =
       nsContentUtils::TrimWhitespace<nsCRT::IsAsciiSpace>(eventAttr, false);
   if (!StringBeginsWith(event_str, NS_LITERAL_STRING("onload"),
-                        nsCaseInsensitiveStringComparator())) {
+                        nsCaseInsensitiveStringComparator)) {
     // It ain't "onload.*".
 
     return true;

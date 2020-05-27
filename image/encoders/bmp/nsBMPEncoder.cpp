@@ -285,7 +285,7 @@ nsresult nsBMPEncoder::ParseOptions(const nsAString& aOptions,
     // Parse the bpp portion of the string name=value;version=<version_value>;
     // name=value
     if (nameValuePair[0].Equals("version",
-                                nsCaseInsensitiveCStringComparator())) {
+                                nsCaseInsensitiveCStringComparator)) {
       if (nameValuePair[1].EqualsLiteral("3")) {
         aVersionOut = VERSION_3;
       } else if (nameValuePair[1].EqualsLiteral("5")) {
@@ -296,7 +296,7 @@ nsresult nsBMPEncoder::ParseOptions(const nsAString& aOptions,
     }
 
     // Parse the bpp portion of the string name=value;bpp=<bpp_value>;name=value
-    if (nameValuePair[0].Equals("bpp", nsCaseInsensitiveCStringComparator())) {
+    if (nameValuePair[0].Equals("bpp", nsCaseInsensitiveCStringComparator)) {
       if (nameValuePair[1].EqualsLiteral("24")) {
         aBppOut = 24;
       } else if (nameValuePair[1].EqualsLiteral("32")) {

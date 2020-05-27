@@ -4,10 +4,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "nsString.h"
+
 template <typename T>
 int NS_FASTCALL Compare(const mozilla::detail::nsTStringRepr<T>& aLhs,
                         const mozilla::detail::nsTStringRepr<T>& aRhs,
-                        const nsTStringComparator<T>& comp) {
+                        const nsTStringComparator<T> comp) {
   typedef typename nsTSubstring<T>::size_type size_type;
   typedef typename nsTSubstring<T>::const_iterator const_iterator;
 
@@ -38,21 +40,23 @@ int NS_FASTCALL Compare(const mozilla::detail::nsTStringRepr<T>& aLhs,
   return result;
 }
 
-template int NS_FASTCALL
-Compare<char>(mozilla::detail::nsTStringRepr<char> const&,
-              mozilla::detail::nsTStringRepr<char> const&,
-              nsTStringComparator<char> const&);
+template int NS_FASTCALL Compare<char>(
+    mozilla::detail::nsTStringRepr<char> const&,
+    mozilla::detail::nsTStringRepr<char> const&, nsTStringComparator<char>);
 
 template int NS_FASTCALL
 Compare<char16_t>(mozilla::detail::nsTStringRepr<char16_t> const&,
                   mozilla::detail::nsTStringRepr<char16_t> const&,
-                  nsTStringComparator<char16_t> const&);
+                  nsTStringComparator<char16_t>);
 
 template <typename T>
-int nsTDefaultStringComparator<T>::operator()(const char_type* aLhs,
-                                              const char_type* aRhs,
-                                              uint32_t aLLength,
-                                              uint32_t aRLength) const {
+int nsTDefaultStringComparator(const T* aLhs, const T* aRhs, uint32_t aLLength,
+                               uint32_t aRLength) {
   return aLLength == aRLength ? nsCharTraits<T>::compare(aLhs, aRhs, aLLength)
                               : (aLLength > aRLength) ? 1 : -1;
 }
+
+template int nsTDefaultStringComparator(const char*, const char*, uint32_t,
+                                        uint32_t);
+template int nsTDefaultStringComparator(const char16_t*, const char16_t*,
+                                        uint32_t, uint32_t);

@@ -994,7 +994,7 @@ struct HasPrefixFn {
     }
     return StringBeginsWith(nsDependentString(aAttrValue, aAttrLen),
                             aSearchValue,
-                            nsASCIICaseInsensitiveStringComparator());
+                            nsASCIICaseInsensitiveStringComparator);
   }
 };
 
@@ -1011,7 +1011,7 @@ struct HasSuffixFn {
                      aSearchValue.Length() * sizeof(char16_t));
     }
     return StringEndsWith(nsDependentString(aAttrValue, aAttrLen), aSearchValue,
-                          nsASCIICaseInsensitiveStringComparator());
+                          nsASCIICaseInsensitiveStringComparator);
   }
 };
 
@@ -1028,7 +1028,7 @@ struct HasSubstringFn {
                          aSearchValue.EndReading()) != end;
     }
     return FindInReadable(aSearchValue, nsDependentString(aAttrValue, aAttrLen),
-                          nsASCIICaseInsensitiveStringComparator());
+                          nsASCIICaseInsensitiveStringComparator);
   }
 };
 

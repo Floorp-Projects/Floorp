@@ -88,7 +88,7 @@ bool nsMIMEInfoAndroid::GetMimeInfoForFileExt(const nsACString& aFileExt,
 
   // "*/*" means that the bridge didn't know.
   if (mimeType.Equals(nsDependentCString("*/*"),
-                      nsCaseInsensitiveCStringComparator()))
+                      nsCaseInsensitiveCStringComparator))
     return false;
 
   bool found = GetMimeInfoForMimeType(mimeType, aMimeInfo);
@@ -266,7 +266,7 @@ nsMIMEInfoAndroid::ExtensionExists(const nsACString& aExtension,
   // "*/*" means the bridge didn't find anything (i.e., extension doesn't
   // exist).
   *aRetVal = !mimeType.Equals(nsDependentCString("*/*"),
-                              nsCaseInsensitiveCStringComparator());
+                              nsCaseInsensitiveCStringComparator);
   return NS_OK;
 }
 

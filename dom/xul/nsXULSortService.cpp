@@ -185,7 +185,7 @@ static int32_t CompareValues(const nsAString& aLeft, const nsAString& aRight,
     return result;
   }
 
-  return ::Compare(aLeft, aRight, nsCaseInsensitiveStringComparator());
+  return ::Compare(aLeft, aRight, nsCaseInsensitiveStringComparator);
 }
 
 static int testSortCallback(const void* data1, const void* data2,

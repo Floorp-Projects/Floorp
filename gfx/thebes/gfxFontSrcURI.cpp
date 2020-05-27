@@ -73,8 +73,7 @@ bool gfxFontSrcURI::Equals(gfxFontSrcURI* aOther) {
       mSimpleURI->GetScheme(thisScheme);
 
       nsCString otherScheme;
-      if (!StringBeginsWith(aOther->mSpec, thisScheme,
-                            nsDefaultCStringComparator())) {
+      if (!StringBeginsWith(aOther->mSpec, thisScheme)) {
         return false;
       }
     }

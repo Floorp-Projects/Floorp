@@ -94,8 +94,8 @@ bool ChangeStyleTransaction::ValueIncludes(const nsAString& aValueList,
     *end = kNullCh;
 
     if (start < end) {
-      if (nsDependentString(value).Equals(
-              nsDependentString(start), nsCaseInsensitiveStringComparator())) {
+      if (nsDependentString(value).Equals(nsDependentString(start),
+                                          nsCaseInsensitiveStringComparator)) {
         result = true;
         break;
       }

@@ -564,7 +564,7 @@ nsresult txCoreFunctionCall::evaluate(txIEvalContext* aContext,
       NS_ENSURE_SUCCESS(rv, rv);
 
       bool result =
-          StringBeginsWith(lang, arg, txCaseInsensitiveStringComparator()) &&
+          StringBeginsWith(lang, arg, nsCaseInsensitiveStringComparator) &&
           (lang.Length() == arg.Length() || lang.CharAt(arg.Length()) == '-');
 
       aContext->recycler()->getBoolResult(result, aResult);

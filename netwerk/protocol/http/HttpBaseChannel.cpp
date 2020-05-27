@@ -1403,7 +1403,7 @@ nsresult HttpBaseChannel::nsContentEncodings::PrepareForNext(void) {
   // At this point mCurStart and mCurEnd bracket the encoding string
   // we want.  Check that it's not "identity"
   if (Substring(mCurStart, mCurEnd)
-          .Equals("identity", nsCaseInsensitiveCStringComparator())) {
+          .Equals("identity", nsCaseInsensitiveCStringComparator)) {
     mCurEnd = mCurStart;
     return PrepareForNext();
   }

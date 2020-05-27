@@ -40,13 +40,16 @@ class nsTDependentSubstring;
 template <typename T>
 class nsTPromiseFlatString;
 template <typename T>
-class nsTStringComparator;
-template <typename T>
-class nsTDefaultStringComparator;
-template <typename T>
 class nsTLiteralString;
 template <typename T>
 class nsTSubstringSplitter;
+
+template <typename T>
+using nsTStringComparator = int (*)(const T*, const T*, uint32_t, uint32_t);
+
+// The default string comparator (case-sensitive comparision)
+template <typename T>
+int nsTDefaultStringComparator(const T*, const T*, uint32_t, uint32_t);
 
 // We define this version without a size param instead of providing a
 // default value for N so that so there is a default typename that doesn't
@@ -66,7 +69,6 @@ using nsDependentString = nsTDependentString<char16_t>;
 using nsDependentSubstring = nsTDependentSubstring<char16_t>;
 using nsPromiseFlatString = nsTPromiseFlatString<char16_t>;
 using nsStringComparator = nsTStringComparator<char16_t>;
-using nsDefaultStringComparator = nsTDefaultStringComparator<char16_t>;
 using nsLiteralString = nsTLiteralString<char16_t>;
 using nsSubstringSplitter = nsTSubstringSplitter<char16_t>;
 
@@ -82,7 +84,6 @@ using nsDependentCString = nsTDependentString<char>;
 using nsDependentCSubstring = nsTDependentSubstring<char>;
 using nsPromiseFlatCString = nsTPromiseFlatString<char>;
 using nsCStringComparator = nsTStringComparator<char>;
-using nsDefaultCStringComparator = nsTDefaultStringComparator<char>;
 using nsLiteralCString = nsTLiteralString<char>;
 using nsCSubstringSplitter = nsTSubstringSplitter<char>;
 
