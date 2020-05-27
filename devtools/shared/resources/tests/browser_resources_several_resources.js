@@ -28,25 +28,25 @@ add_task(async function() {
     targetList,
   } = await initResourceWatcherAndTarget();
 
-  const { CONSOLE_MESSAGES, ROOT_NODE } = ResourceWatcher.TYPES;
+  const { CONSOLE_MESSAGE, ROOT_NODE } = ResourceWatcher.TYPES;
 
   // We are only interested in console messages as a resource, the ROOT_NODE one
   // is here to test the ResourceWatcher::unwatchResources API with several resources.
   let receivedMessages = 0;
   const onAvailable = ({ resourceType }) => {
-    if (resourceType === CONSOLE_MESSAGES) {
+    if (resourceType === CONSOLE_MESSAGE) {
       receivedMessages++;
     }
   };
 
-  info("Call watchResources([CONSOLE_MESSAGES, ROOT_NODE], ...)");
-  await resourceWatcher.watchResources([CONSOLE_MESSAGES, ROOT_NODE], {
+  info("Call watchResources([CONSOLE_MESSAGE, ROOT_NODE], ...)");
+  await resourceWatcher.watchResources([CONSOLE_MESSAGE, ROOT_NODE], {
     onAvailable,
   });
 
   info("Use console.log in the content page");
   logInTab(tab, "test");
-  info("Wait until onAvailable received 1 resource of type CONSOLE_MESSAGES");
+  info("Wait until onAvailable received 1 resource of type CONSOLE_MESSAGE");
   await waitUntil(() => receivedMessages === 1);
 
   // Check that the resource watcher captures resources from new targets.
@@ -56,7 +56,7 @@ add_task(async function() {
   );
   info("Use console.log in the example.com page");
   logInTab(comTab, "test-from-example-com");
-  info("Wait until onAvailable received 2 resources of type CONSOLE_MESSAGES");
+  info("Wait until onAvailable received 2 resources of type CONSOLE_MESSAGE");
   await waitUntil(() => receivedMessages === 2);
 
   info("Stop watching ROOT_NODE resources");
@@ -70,11 +70,11 @@ add_task(async function() {
   );
   info("Use console.log in the example.net page");
   logInTab(netTab, "test-from-example-net");
-  info("Wait until onAvailable received 3 resources of type CONSOLE_MESSAGES");
+  info("Wait until onAvailable received 3 resources of type CONSOLE_MESSAGE");
   await waitUntil(() => receivedMessages === 3);
 
-  info("Stop watching CONSOLE_MESSAGES resources");
-  await resourceWatcher.unwatchResources([CONSOLE_MESSAGES], { onAvailable });
+  info("Stop watching CONSOLE_MESSAGE resources");
+  await resourceWatcher.unwatchResources([CONSOLE_MESSAGE], { onAvailable });
   await logInTab(tab, "test-again");
 
   // We don't have a specific event to wait for here, so allow some time for
@@ -84,7 +84,7 @@ add_task(async function() {
   is(
     receivedMessages,
     3,
-    "The resource watcher should not watch CONSOLE_MESSAGES anymore"
+    "The resource watcher should not watch CONSOLE_MESSAGE anymore"
   );
 
   // Cleanup

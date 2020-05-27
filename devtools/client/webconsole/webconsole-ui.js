@@ -198,7 +198,7 @@ class WebConsoleUI {
     // TODO: Re-enable as part of Bug 1627167.
     // const resourceWatcher = this.hud.resourceWatcher;
     // resourceWatcher.unwatchResources(
-    //   [resourceWatcher.TYPES.CONSOLE_MESSAGES],
+    //   [resourceWatcher.TYPES.CONSOLE_MESSAGE],
     //   this._onResourceAvailable
     // );
 
@@ -334,9 +334,9 @@ class WebConsoleUI {
     const resourceWatcher = this.hud.resourceWatcher;
     await resourceWatcher.watchResources(
       [
-        resourceWatcher.TYPES.CONSOLE_MESSAGES,
-        resourceWatcher.TYPES.ERROR_MESSAGES,
-        resourceWatcher.TYPES.PLATFORM_MESSAGES,
+        resourceWatcher.TYPES.CONSOLE_MESSAGE,
+        resourceWatcher.TYPES.ERROR_MESSAGE,
+        resourceWatcher.TYPES.PLATFORM_MESSAGE,
       ],
       { onAvailable: this._onResourceAvailable }
     );
@@ -344,7 +344,7 @@ class WebConsoleUI {
 
   _onResourceAvailable({ resourceType, targetFront, resource }) {
     const resourceWatcher = this.hud.resourceWatcher;
-    if (resourceType == resourceWatcher.TYPES.CONSOLE_MESSAGES) {
+    if (resourceType == resourceWatcher.TYPES.CONSOLE_MESSAGE) {
       // resource is the packet sent from `ConsoleActor.getCachedMessages().messages`
       // or via ConsoleActor's `consoleAPICall` event.
       resource.type = "consoleAPICall";
@@ -352,7 +352,7 @@ class WebConsoleUI {
       return;
     }
 
-    if (resourceType == resourceWatcher.TYPES.ERROR_MESSAGES) {
+    if (resourceType == resourceWatcher.TYPES.ERROR_MESSAGE) {
       // resource is the packet sent from `ConsoleActor.getCachedMessages().messages`
       // or via ConsoleActor's `pageError` event.
       resource.type = "pageError";
@@ -360,7 +360,7 @@ class WebConsoleUI {
       return;
     }
 
-    if (resourceType == resourceWatcher.TYPES.PLATFORM_MESSAGES) {
+    if (resourceType == resourceWatcher.TYPES.PLATFORM_MESSAGE) {
       // resource is the packet sent from `ConsoleActor.getCachedMessages().messages`
       // or via ConsoleActor's `logMessage` event.
       resource.type = "logMessage";
