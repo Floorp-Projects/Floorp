@@ -617,9 +617,6 @@ class ContentChild final : public PContentChild,
   nsresult AsyncOpenAnonymousTemporaryFile(
       const AnonymousTemporaryFileCallback& aCallback);
 
-  already_AddRefed<nsIEventTarget> GetEventTargetFor(
-      BrowserChild* aBrowserChild);
-
   mozilla::ipc::IPCResult RecvSetPluginList(
       const uint32_t& aPluginEpoch, nsTArray<PluginTag>&& aPluginTags,
       nsTArray<FakePluginTag>&& aFakePluginTags);
