@@ -175,6 +175,10 @@ bool FFmpegVideoDecoder<LIBAV_VER>::CreateVAAPIDeviceContext() {
   if (!mVAAPIDeviceContext) {
     return false;
   }
+
+  auto releaseVAAPIcontext =
+      MakeScopeExit([&] { mLib->av_buffer_unref(&mVAAPIDeviceContext); });
+
   AVHWDeviceContext* hwctx = (AVHWDeviceContext*)mVAAPIDeviceContext->data;
   AVVAAPIDeviceContext* vactx = (AVVAAPIDeviceContext*)hwctx->hwctx;
 
@@ -195,12 +199,12 @@ bool FFmpegVideoDecoder<LIBAV_VER>::CreateVAAPIDeviceContext() {
   }
 
   vactx->display = mDisplay;
-
   if (mLib->av_hwdevice_ctx_init(mVAAPIDeviceContext) < 0) {
     return false;
   }
 
   mCodecContext->hw_device_ctx = mLib->av_buffer_ref(mVAAPIDeviceContext);
+  releaseVAAPIcontext.release();
   return true;
 }
 
