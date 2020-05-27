@@ -4831,6 +4831,19 @@ public class GeckoSession implements Parcelable {
             return null;
         }
 
+        /**
+         * Display a onbeforeunload prompt.
+         *
+         * See https://developer.mozilla.org/en-US/docs/Web/API/WindowEventHandlers/onbeforeunload
+         * See {@link BeforeUnloadPrompt}
+         *
+         * @param session GeckoSession that triggered the prompt
+         * @param prompt the {@link BeforeUnloadPrompt} that describes the
+         *               prompt.
+         * @return A {@link GeckoResult} resolving to {@link AllowOrDeny#ALLOW}
+         *         if the page is allowed to continue with the navigation or
+         *         {@link AllowOrDeny#DENY} otherwise.
+         */
         @UiThread
         default @Nullable GeckoResult<PromptResponse> onBeforeUnloadPrompt(
                 @NonNull final GeckoSession session,
