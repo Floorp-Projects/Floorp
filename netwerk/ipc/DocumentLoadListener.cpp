@@ -28,6 +28,7 @@
 #include "nsDocShellLoadState.h"
 #include "nsExternalHelperAppService.h"
 #include "nsHttpChannel.h"
+#include "nsIHttpChannelInternal.h"
 #include "nsIBrowser.h"
 #include "nsIE10SUtils.h"
 #include "nsIStreamConverterService.h"
@@ -1258,7 +1259,8 @@ bool DocumentLoadListener::MaybeTriggerProcessSwitch() {
       nsILoadInfo::OPENER_POLICY_UNSAFE_NONE;
   if (!browsingContext->IsTop()) {
     coop = browsingContext->Top()->GetOpenerPolicy();
-  } else if (RefPtr<nsHttpChannel> httpChannel = do_QueryObject(mChannel)) {
+  } else if (nsCOMPtr<nsIHttpChannelInternal> httpChannel =
+                 do_QueryInterface(mChannel)) {
     MOZ_ALWAYS_SUCCEEDS(httpChannel->GetCrossOriginOpenerPolicy(&coop));
   }
 
@@ -1779,10 +1781,12 @@ DocumentLoadListener::AsyncOnChannelRedirect(
   // Since we're redirecting away from aOldChannel, we should check if it
   // had a COOP mismatch, since we want the final result for this to
   // include the state of all channels we redirected through.
-  RefPtr<nsHttpChannel> httpChannel = do_QueryObject(aOldChannel);
+  nsCOMPtr<nsIHttpChannelInternal> httpChannel = do_QueryInterface(aOldChannel);
   if (httpChannel) {
-    mHasCrossOriginOpenerPolicyMismatch |=
-        httpChannel->HasCrossOriginOpenerPolicyMismatch();
+    bool isCOOPMismatch = false;
+    Unused << NS_WARN_IF(NS_FAILED(
+        httpChannel->HasCrossOriginOpenerPolicyMismatch(&isCOOPMismatch)));
+    mHasCrossOriginOpenerPolicyMismatch |= isCOOPMismatch;
   }
 
   // We don't need to confirm internal redirects or record any
@@ -1886,13 +1890,16 @@ bool DocumentLoadListener::HasCrossOriginOpenerPolicyMismatch() const {
     return true;
   }
 
-  RefPtr<nsHttpChannel> httpChannel = do_QueryObject(mChannel.get());
+  nsCOMPtr<nsIHttpChannelInternal> httpChannel = do_QueryInterface(mChannel);
   if (!httpChannel) {
-    // Not an nsHttpChannel assume it's okay to switch.
+    // Not an nsIHttpChannelInternal assume it's okay to switch.
     return false;
   }
 
-  return httpChannel->HasCrossOriginOpenerPolicyMismatch();
+  bool isCOOPMismatch = false;
+  Unused << NS_WARN_IF(NS_FAILED(
+      httpChannel->HasCrossOriginOpenerPolicyMismatch(&isCOOPMismatch)));
+  return isCOOPMismatch;
 }
 
 auto DocumentLoadListener::AttachStreamFilter(base::ProcessId aChildProcessId)

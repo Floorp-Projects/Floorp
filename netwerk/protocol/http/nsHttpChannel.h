@@ -483,12 +483,6 @@ class nsHttpChannel final : public HttpBaseChannel,
    */
   void ProcessSecurityReport(nsresult status);
 
-  // This method returns the cached result of running the Cross-Origin-Opener
-  // policy compare algorithm by calling ComputeCrossOriginOpenerPolicyMismatch
-  bool HasCrossOriginOpenerPolicyMismatch() {
-    return mHasCrossOriginOpenerPolicyMismatch;
-  }
-
   /**
    * A function to process a single security header (STS or PKP), assumes
    * some basic sanity checks have been applied to the channel. Called

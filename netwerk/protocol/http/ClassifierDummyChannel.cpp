@@ -657,6 +657,11 @@ ClassifierDummyChannel::GetCrossOriginOpenerPolicy(
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP ClassifierDummyChannel::HasCrossOriginOpenerPolicyMismatch(
+    bool* aIsMismatch) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 NS_IMETHODIMP ClassifierDummyChannel::SetMatchedInfo(
     const nsACString& aList, const nsACString& aProvider,
     const nsACString& aFullHash) {
