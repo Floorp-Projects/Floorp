@@ -23,7 +23,7 @@ treeherder:
         'Btime-live': 'Browsertime performance tests on Firefox'
         'Btime-live-fenix': 'Browsertime performance tests on Firefox'
         'Btime-live-ChR': 'Browsertime performance tests on Firefox'
-        'Btime-ChR': 'Raptor performance tests on Google Chrome Release'
+        'Btime-ChR': 'Browsertime performance tests on Google Chrome Release'
         'Btime-Cr': 'Browsertime performance tests on Google Chromium'
         'Btime-P': 'Browsertime power tests on Firefox'
         'Btime-P-1proc': 'Browsertime power tests on Firefox without e10s'
