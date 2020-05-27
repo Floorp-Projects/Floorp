@@ -1925,21 +1925,40 @@ size_t MediaTrack::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
 
 void MediaTrack::IncrementSuspendCount() {
   ++mSuspendedCount;
-  if (mSuspendedCount == 1) {
-    for (uint32_t i = 0; i < mConsumers.Length(); ++i) {
-      mConsumers[i]->Suspended();
-    }
+  if (mSuspendedCount != 1 || !mGraph) {
+    MOZ_ASSERT(mGraph || mConsumers.IsEmpty());
+    return;
   }
+  MOZ_ASSERT(mGraph->OnGraphThreadOrNotRunning());
+  for (uint32_t i = 0; i < mConsumers.Length(); ++i) {
+    mConsumers[i]->Suspended();
+  }
+  MOZ_ASSERT(mGraph->mTracks.Contains(this));
+  mGraph->mTracks.RemoveElement(this);
+  mGraph->mSuspendedTracks.AppendElement(this);
+  mGraph->SetTrackOrderDirty();
 }
 
 void MediaTrack::DecrementSuspendCount() {
-  NS_ASSERTION(mSuspendedCount > 0, "Suspend count underrun");
+  MOZ_ASSERT(mSuspendedCount > 0, "Suspend count underrun");
   --mSuspendedCount;
-  if (mSuspendedCount == 0) {
-    for (uint32_t i = 0; i < mConsumers.Length(); ++i) {
-      mConsumers[i]->Resumed();
-    }
+  if (mSuspendedCount != 0 || !mGraph) {
+    MOZ_ASSERT(mGraph || mConsumers.IsEmpty());
+    return;
   }
+  MOZ_ASSERT(mGraph->OnGraphThreadOrNotRunning());
+  for (uint32_t i = 0; i < mConsumers.Length(); ++i) {
+    mConsumers[i]->Resumed();
+  }
+  MOZ_ASSERT(mGraph->mSuspendedTracks.Contains(this));
+  mGraph->mSuspendedTracks.RemoveElement(this);
+  mGraph->mTracks.AppendElement(this);
+  mGraph->SetTrackOrderDirty();
+}
+
+void ProcessedMediaTrack::DecrementSuspendCount() {
+  mCycleMarker = NOT_VISITED;
+  MediaTrack::DecrementSuspendCount();
 }
 
 MediaTrackGraphImpl* MediaTrack::GraphImpl() { return mGraph; }
@@ -2098,7 +2117,7 @@ void MediaTrack::Suspend() {
   class Message : public ControlMessage {
    public:
     explicit Message(MediaTrack* aTrack) : ControlMessage(aTrack) {}
-    void Run() override { mTrack->GraphImpl()->IncrementSuspendCount(mTrack); }
+    void Run() override { mTrack->IncrementSuspendCount(); }
   };
 
   // This can happen if this method has been called asynchronously, and the
@@ -2113,7 +2132,7 @@ void MediaTrack::Resume() {
   class Message : public ControlMessage {
    public:
     explicit Message(MediaTrack* aTrack) : ControlMessage(aTrack) {}
-    void Run() override { mTrack->GraphImpl()->DecrementSuspendCount(mTrack); }
+    void Run() override { mTrack->DecrementSuspendCount(); }
   };
 
   // This can happen if this method has been called asynchronously, and the
@@ -3407,34 +3426,6 @@ void MediaTrackGraphImpl::NotifyWhenGraphStarted(
       std::move(aTrack), std::move(aHolder), aProcessingThread));
 }
 
-void MediaTrackGraphImpl::IncrementSuspendCount(MediaTrack* aTrack) {
-  MOZ_ASSERT(OnGraphThreadOrNotRunning());
-  bool wasSuspended = aTrack->IsSuspended();
-  aTrack->IncrementSuspendCount();
-  if (!wasSuspended && aTrack->IsSuspended()) {
-    MOZ_ASSERT(mTracks.Contains(aTrack));
-    mTracks.RemoveElement(aTrack);
-    mSuspendedTracks.AppendElement(aTrack);
-    SetTrackOrderDirty();
-  }
-}
-
-void MediaTrackGraphImpl::DecrementSuspendCount(MediaTrack* aTrack) {
-  MOZ_ASSERT(OnGraphThreadOrNotRunning());
-  bool wasSuspended = aTrack->IsSuspended();
-  aTrack->DecrementSuspendCount();
-  if (wasSuspended && !aTrack->IsSuspended()) {
-    MOZ_ASSERT(mSuspendedTracks.Contains(aTrack));
-    mSuspendedTracks.RemoveElement(aTrack);
-    mTracks.AppendElement(aTrack);
-    ProcessedMediaTrack* pt = aTrack->AsProcessedTrack();
-    if (pt) {
-      pt->mCycleMarker = NOT_VISITED;
-    }
-    SetTrackOrderDirty();
-  }
-}
-
 void MediaTrackGraphImpl::SuspendOrResumeTracks(
     AudioContextOperation aAudioContextOperation,
     const nsTArray<MediaTrack*>& aTrackSet) {
@@ -3443,9 +3434,9 @@ void MediaTrackGraphImpl::SuspendOrResumeTracks(
   // tracks from the set of tracks that are going to be processed.
   for (MediaTrack* track : aTrackSet) {
     if (aAudioContextOperation == AudioContextOperation::Resume) {
-      DecrementSuspendCount(track);
+      track->DecrementSuspendCount();
     } else {
-      IncrementSuspendCount(track);
+      track->IncrementSuspendCount();
     }
   }
   LOG(LogLevel::Debug, ("Moving tracks between suspended and running"
