@@ -184,8 +184,7 @@ nsresult CacheQuotaClient::InitOrigin(PersistenceType aPersistenceType,
                                       const nsACString& aGroup,
                                       const nsACString& aOrigin,
                                       const AtomicBool& aCanceled,
-                                      UsageInfo* aUsageInfo,
-                                      bool aForGetUsage) {
+                                      UsageInfo* aUsageInfo) {
   AssertIsOnIOThread();
 
   // The QuotaManager passes a nullptr UsageInfo if there is no quota being
