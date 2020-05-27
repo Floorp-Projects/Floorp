@@ -345,14 +345,10 @@ class Test_relativesrcdir(unittest.TestCase):
 
     def test_l10n_merge(self):
         jm = self.jm
-        jm.l10nbase = '/L10N_BASE'
-        jm.l10nmerge = '/L10N_MERGE'
+        jm.l10nbase = '/L10N_MERGE'
         jm.makeJar(self.fake_empty_file, '/NO_OUTPUT_REQUIRED')
         self.assertEquals(jm.localedirs,
                           [os.path.join('/L10N_MERGE', 'browser'),
-                           os.path.join('/L10N_BASE', 'browser'),
-                           os.path.join(os.path.abspath('/TOPSOURCEDIR'),
-                                        'browser/locales', 'en-US')
                            ])
 
     def test_override(self):
