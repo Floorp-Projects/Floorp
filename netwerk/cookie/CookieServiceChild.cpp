@@ -323,19 +323,21 @@ CookieServiceChild::Observe(nsISupports* aSubject, const char* aTopic,
 }
 
 NS_IMETHODIMP
-CookieServiceChild::GetCookieStringForPrincipal(nsIPrincipal* aPrincipal,
+CookieServiceChild::GetCookieStringFromDocument(Document* aDocument,
                                                 nsACString& aCookieString) {
-  NS_ENSURE_ARG(aPrincipal);
+  NS_ENSURE_ARG(aDocument);
 
   aCookieString.Truncate();
 
+  nsCOMPtr<nsIPrincipal> principal = aDocument->EffectiveStoragePrincipal();
+
   nsAutoCString baseDomain;
-  nsresult rv = CookieCommons::GetBaseDomain(aPrincipal, baseDomain);
+  nsresult rv = CookieCommons::GetBaseDomain(principal, baseDomain);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return NS_OK;
   }
 
-  CookieKey key(baseDomain, aPrincipal->OriginAttributesRef());
+  CookieKey key(baseDomain, principal->OriginAttributesRef());
   CookiesList* cookiesList = nullptr;
   mCookiesMap.Get(key, &cookiesList);
 
@@ -344,13 +346,13 @@ CookieServiceChild::GetCookieStringForPrincipal(nsIPrincipal* aPrincipal,
   }
 
   nsAutoCString hostFromURI;
-  aPrincipal->GetAsciiHost(hostFromURI);
+  principal->GetAsciiHost(hostFromURI);
 
   nsAutoCString pathFromURI;
-  aPrincipal->GetFilePath(pathFromURI);
+  principal->GetFilePath(pathFromURI);
 
   bool isPotentiallyTrustworthy =
-      aPrincipal->GetIsOriginPotentiallyTrustworthy();
+      principal->GetIsOriginPotentiallyTrustworthy();
   int64_t currentTimeInUsec = PR_Now();
   int64_t currentTime = currentTimeInUsec / PR_USEC_PER_SEC;
 

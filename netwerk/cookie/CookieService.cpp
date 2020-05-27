@@ -57,7 +57,6 @@ static StaticRefPtr<CookieService> gCookieService;
 constexpr auto CONSOLE_SAMESITE_CATEGORY = NS_LITERAL_CSTRING("cookieSameSite");
 constexpr auto CONSOLE_OVERSIZE_CATEGORY =
     NS_LITERAL_CSTRING("cookiesOversize");
-
 constexpr auto SAMESITE_MDN_URL = NS_LITERAL_STRING(
     "https://developer.mozilla.org/docs/Web/HTTP/Headers/Set-Cookie/SameSite");
 
@@ -271,9 +270,9 @@ CookieService::GetCookieBehavior(uint32_t* aCookieBehavior) {
 }
 
 NS_IMETHODIMP
-CookieService::GetCookieStringForPrincipal(nsIPrincipal* aPrincipal,
+CookieService::GetCookieStringFromDocument(Document* aDocument,
                                            nsACString& aCookie) {
-  NS_ENSURE_ARG(aPrincipal);
+  NS_ENSURE_ARG(aDocument);
 
   nsresult rv;
 
@@ -283,22 +282,24 @@ CookieService::GetCookieStringForPrincipal(nsIPrincipal* aPrincipal,
     return NS_OK;
   }
 
-  CookieStorage* storage = PickStorage(aPrincipal->OriginAttributesRef());
+  nsCOMPtr<nsIPrincipal> principal = aDocument->EffectiveStoragePrincipal();
+
+  CookieStorage* storage = PickStorage(principal->OriginAttributesRef());
 
   nsAutoCString baseDomain;
-  rv = CookieCommons::GetBaseDomain(aPrincipal, baseDomain);
+  rv = CookieCommons::GetBaseDomain(principal, baseDomain);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return NS_OK;
   }
 
   nsAutoCString hostFromURI;
-  rv = aPrincipal->GetAsciiHost(hostFromURI);
+  rv = principal->GetAsciiHost(hostFromURI);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return NS_OK;
   }
 
   nsAutoCString pathFromURI;
-  rv = aPrincipal->GetFilePath(pathFromURI);
+  rv = principal->GetFilePath(pathFromURI);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return NS_OK;
   }
@@ -306,15 +307,15 @@ CookieService::GetCookieStringForPrincipal(nsIPrincipal* aPrincipal,
   int64_t currentTimeInUsec = PR_Now();
   int64_t currentTime = currentTimeInUsec / PR_USEC_PER_SEC;
 
-  const nsTArray<RefPtr<Cookie>>* cookies = storage->GetCookiesFromHost(
-      baseDomain, aPrincipal->OriginAttributesRef());
+  const nsTArray<RefPtr<Cookie>>* cookies =
+      storage->GetCookiesFromHost(baseDomain, principal->OriginAttributesRef());
   if (!cookies) {
     return NS_OK;
   }
 
-  // check if aPrincipal is using an https secure protocol.
+  // check if the nsIPrincipal is using an https secure protocol.
   // if it isn't, then we can't send a secure cookie over the connection.
-  bool potentiallyTurstworthy = aPrincipal->GetIsOriginPotentiallyTrustworthy();
+  bool potentiallyTurstworthy = principal->GetIsOriginPotentiallyTrustworthy();
 
   bool stale = false;
   nsTArray<Cookie*> cookieList;
@@ -940,7 +941,7 @@ bool CookieService::CanSetCookie(
     bool aRequireHostMatch, CookieStatus aStatus, nsCString& aCookieHeader,
     bool aFromHttp, bool aIsForeignAndNotAddon, nsIConsoleReportCollector* aCRC,
     bool& aSetCookie) {
-  NS_ASSERTION(aHostURI, "null host!");
+  MOZ_ASSERT(aHostURI);
 
   aSetCookie = false;
 
