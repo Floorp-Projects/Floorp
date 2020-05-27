@@ -483,10 +483,6 @@ class nsHttpChannel final : public HttpBaseChannel,
    */
   void ProcessSecurityReport(nsresult status);
 
-  nsresult ProcessCrossOriginEmbedderPolicyHeader();
-  nsresult ProcessCrossOriginResourcePolicyHeader();
-
-  nsresult ComputeCrossOriginOpenerPolicyMismatch();
   // This method returns the cached result of running the Cross-Origin-Opener
   // policy compare algorithm by calling ComputeCrossOriginOpenerPolicyMismatch
   bool HasCrossOriginOpenerPolicyMismatch() {
@@ -741,10 +737,6 @@ class nsHttpChannel final : public HttpBaseChannel,
 
   // True only when we have computed the value of the top window origin.
   uint32_t mTopWindowOriginComputed : 1;
-
-  // True if this is a navigation to a page with a different cross origin
-  // opener policy ( see ComputeCrossOriginOpenerPolicyMismatch )
-  uint32_t mHasCrossOriginOpenerPolicyMismatch : 1;
 
   // True if the data has already been sent from the socket process to the
   // content process.
