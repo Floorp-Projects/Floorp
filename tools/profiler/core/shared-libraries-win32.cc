@@ -12,6 +12,7 @@
 #include "nsWindowsHelpers.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
+#include "mozilla/WindowsProcessMitigations.h"
 #include "mozilla/WindowsVersion.h"
 #include "nsNativeCharsetUtils.h"
 #include "nsPrintfCString.h"
@@ -182,6 +183,11 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf() {
     }
 #endif  // !defined(_M_ARM64)
 
+    // If EAF+ is enabled, parsing ntdll's PE header via GetPdbInfo() causes
+    // a crash.  We don't include PDB information in SharedLibrary.
+    bool canGetPdbInfo = (!mozilla::IsEafPlusEnabled() ||
+                          !moduleNameStr.LowerCaseEqualsLiteral("ntdll.dll"));
+
     nsCString breakpadId;
     // Load the module again to make sure that its handle will remain
     // valid as we attempt to read the PDB information from it.  We load the
@@ -205,7 +211,7 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf() {
     if (handleLock &&
         sizeof(vmemInfo) ==
             VirtualQuery(module.lpBaseOfDll, &vmemInfo, sizeof(vmemInfo)) &&
-        vmemInfo.State == MEM_COMMIT &&
+        vmemInfo.State == MEM_COMMIT && canGetPdbInfo &&
         GetPdbInfo((uintptr_t)module.lpBaseOfDll, pdbSig, pdbAge, &pdbName)) {
       MOZ_ASSERT(breakpadId.IsEmpty());
       breakpadId.AppendPrintf(
