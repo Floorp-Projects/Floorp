@@ -6548,29 +6548,6 @@ nsRegion nsDisplaySubDocument::GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
   return nsDisplayOwnLayer::GetOpaqueRegion(aBuilder, aSnap);
 }
 
-nsDisplayResolution::nsDisplayResolution(nsDisplayListBuilder* aBuilder,
-                                         nsIFrame* aFrame,
-                                         nsSubDocumentFrame* aSubDocFrame,
-                                         nsDisplayList* aList,
-                                         nsDisplayOwnLayerFlags aFlags)
-    : nsDisplaySubDocument(aBuilder, aFrame, aSubDocFrame, aList, aFlags) {
-  MOZ_COUNT_CTOR(nsDisplayResolution);
-}
-
-already_AddRefed<Layer> nsDisplayResolution::BuildLayer(
-    nsDisplayListBuilder* aBuilder, LayerManager* aManager,
-    const ContainerLayerParameters& aContainerParameters) {
-  float rootLayerResolution = 1.0f;
-  ContainerLayerParameters containerParameters(
-      rootLayerResolution, rootLayerResolution, nsIntPoint(),
-      aContainerParameters);
-
-  RefPtr<Layer> layer =
-      nsDisplaySubDocument::BuildLayer(aBuilder, aManager, containerParameters);
-
-  return layer.forget();
-}
-
 /* static */
 nsDisplayFixedPosition* nsDisplayFixedPosition::CreateForFixedBackground(
     nsDisplayListBuilder* aBuilder, nsIFrame* aFrame, nsIFrame* aSecondaryFrame,
