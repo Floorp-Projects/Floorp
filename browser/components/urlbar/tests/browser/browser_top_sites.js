@@ -55,51 +55,59 @@ add_task(async function init() {
 
 add_task(async function topSitesShown() {
   let sites = AboutNewTab.getTopSites();
-  Assert.equal(
-    sites.length,
-    6,
-    "The test suite browser should have 6 Top Sites."
-  );
-  await UrlbarTestUtils.promisePopupOpen(window, () => {
-    if (gURLBar.getAttribute("pageproxystate") == "invalid") {
-      gURLBar.handleRevert();
-    }
-    EventUtils.synthesizeMouseAtCenter(window.gURLBar.inputField, {});
-  });
-  Assert.ok(window.gURLBar.view.isOpen, "UrlbarView should be open.");
-  await UrlbarTestUtils.promiseSearchComplete(window);
-  Assert.equal(
-    UrlbarTestUtils.getResultCount(window),
-    sites.length,
-    "The number of results should be the same as the number of Top Sites (6)."
-  );
 
-  for (let i = 0; i < sites.length; i++) {
-    let site = sites[i];
-    let result = await UrlbarTestUtils.getDetailsOfResultAt(window, i);
-    if (site.searchTopSite) {
+  for (let prefVal of [true, false]) {
+    // This test should work regardless of whether Top Sites are enabled on
+    // about:newtab.
+    await SpecialPowers.pushPrefEnv({
+      set: [["browser.newtabpage.activity-stream.feeds.topsites", prefVal]],
+    });
+    // We don't expect this to change, but we run updateTopSites just in case
+    // feeds.topsites were to have an effect on the composition of Top Sites.
+    await updateTopSites(siteList => siteList.length == 6);
+
+    await UrlbarTestUtils.promisePopupOpen(window, () => {
+      if (gURLBar.getAttribute("pageproxystate") == "invalid") {
+        gURLBar.handleRevert();
+      }
+      EventUtils.synthesizeMouseAtCenter(window.gURLBar.inputField, {});
+    });
+    Assert.ok(window.gURLBar.view.isOpen, "UrlbarView should be open.");
+    await UrlbarTestUtils.promiseSearchComplete(window);
+    Assert.equal(
+      UrlbarTestUtils.getResultCount(window),
+      sites.length,
+      "The number of results should be the same as the number of Top Sites (6)."
+    );
+
+    for (let i = 0; i < sites.length; i++) {
+      let site = sites[i];
+      let result = await UrlbarTestUtils.getDetailsOfResultAt(window, i);
+      if (site.searchTopSite) {
+        Assert.equal(
+          result.searchParams.keyword,
+          site.label,
+          "The search Top Site should have an alias."
+        );
+        continue;
+      }
+
       Assert.equal(
-        result.searchParams.keyword,
-        site.label,
-        "The search Top Site should have an alias."
+        site.url,
+        result.url,
+        "The Top Site URL and the result URL shoud match."
       );
-      continue;
+      Assert.equal(
+        site.label || site.title || site.hostname,
+        result.title,
+        "The Top Site title and the result title shoud match."
+      );
     }
-
-    Assert.equal(
-      site.url,
-      result.url,
-      "The Top Site URL and the result URL shoud match."
-    );
-    Assert.equal(
-      site.label || site.title || site.hostname,
-      result.title,
-      "The Top Site title and the result title shoud match."
-    );
+    await UrlbarTestUtils.promisePopupClose(window, () => {
+      window.gURLBar.blur();
+    });
+    await SpecialPowers.popPrefEnv();
   }
-  await UrlbarTestUtils.promisePopupClose(window, () => {
-    window.gURLBar.blur();
-  });
 });
 
 add_task(async function selectSearchTopSite() {
@@ -369,7 +377,7 @@ add_task(async function topSitesBookmarksAndTabsDisabled() {
 add_task(async function topSitesDisabled() {
   // Disable top sites.
   await SpecialPowers.pushPrefEnv({
-    set: [["browser.newtabpage.activity-stream.feeds.topsites", false]],
+    set: [["browser.newtabpage.activity-stream.feeds.system.topsites", false]],
   });
 
   // Add some visits.

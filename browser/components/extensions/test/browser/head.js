@@ -70,10 +70,14 @@ function loadTestSubscript(filePath) {
   Services.scriptloader.loadSubScript(new URL(filePath, gTestPath).href, this);
 }
 
-// Don't try to create screenshots of sites we load during tests.
+// Leaving Top Sites enabled during these tests would create site screenshots
+// and update pinned Top Sites unnecessarily.
 Services.prefs
   .getDefaultBranch("browser.newtabpage.activity-stream.")
   .setBoolPref("feeds.topsites", false);
+Services.prefs
+  .getDefaultBranch("browser.newtabpage.activity-stream.")
+  .setBoolPref("feeds.system.topsites", false);
 
 {
   // Touch the recipeParentPromise lazy getter so we don't get

@@ -70,17 +70,12 @@ class ProviderTopSites extends UrlbarProvider {
    * @returns {boolean} Whether this provider should be invoked for the search.
    */
   isActive(queryContext) {
-    // If top sites on new tab are disabled, the pref below will be false, and
-    // activity stream's top sites will be unavailable (an empty array), so we
-    // make this provider inactive.  For empty search strings, we instead show
-    // the most frecent URLs in the user's history from the UnifiedComplete
-    // provider.
     return (
       UrlbarPrefs.get("openViewOnFocus") &&
       !queryContext.searchString &&
       Services.prefs.getBoolPref(
-        "browser.newtabpage.activity-stream.feeds.topsites",
-        false
+        "browser.newtabpage.activity-stream.feeds.system.topsites",
+        true
       )
     );
   }

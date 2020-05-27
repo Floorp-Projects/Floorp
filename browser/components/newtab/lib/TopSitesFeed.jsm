@@ -62,6 +62,7 @@ ChromeUtils.defineModuleGetter(
 );
 
 const DEFAULT_SITES_PREF = "default.sites";
+const SHOWN_ON_NEWTAB_PREF = "feeds.topsites";
 const DEFAULT_TOP_SITES = [];
 const FRECENCY_THRESHOLD = 100 + 1; // 1 visit (skip first-run/one-time pages)
 const MIN_FAVICON_SIZE = 96;
@@ -71,7 +72,7 @@ const PINNED_FAVICON_PROPS_TO_MIGRATE = [
   "faviconRef",
   "faviconSize",
 ];
-const SECTION_ID = "topsites";
+const SECTION_ID = "system.topsites";
 const ROWS_PREF = "topSitesRows";
 
 // Search experiment stuff
@@ -543,7 +544,11 @@ this.TopSitesFeed = class TopSitesFeed {
    * @param url where to fetch the image from
    */
   async _fetchScreenshot(link, url) {
-    if (link.screenshot) {
+    // We shouldn't bother caching screenshots if they won't be shown.
+    if (
+      link.screenshot ||
+      !this.store.getState().Prefs.values[SHOWN_ON_NEWTAB_PREF]
+    ) {
       return;
     }
     await Screenshots.maybeCacheScreenshot(
