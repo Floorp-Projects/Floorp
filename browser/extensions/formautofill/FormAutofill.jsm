@@ -11,11 +11,14 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
+XPCOMUtils.defineLazyModuleGetters(this, {
+  Region: "resource://gre/modules/Region.jsm",
+});
+
 const ADDRESSES_FIRST_TIME_USE_PREF = "extensions.formautofill.firstTimeUse";
 const AUTOFILL_CREDITCARDS_AVAILABLE_PREF =
   "extensions.formautofill.creditCards.available";
 const CREDITCARDS_USED_STATUS_PREF = "extensions.formautofill.creditCards.used";
-const DEFAULT_REGION_PREF = "browser.search.region";
 const ENABLED_AUTOFILL_ADDRESSES_PREF =
   "extensions.formautofill.addresses.enabled";
 const ENABLED_AUTOFILL_CREDITCARDS_PREF =
@@ -52,6 +55,9 @@ var FormAutofill = {
   ADDRESSES_FIRST_TIME_USE_PREF,
   CREDITCARDS_USED_STATUS_PREF,
 
+  get DEFAULT_REGION() {
+    return Region.home || "US";
+  },
   get isAutofillEnabled() {
     return (
       FormAutofill.isAutofillAddressesEnabled ||
@@ -81,12 +87,6 @@ var FormAutofill = {
   },
 };
 
-XPCOMUtils.defineLazyPreferenceGetter(
-  FormAutofill,
-  "DEFAULT_REGION",
-  DEFAULT_REGION_PREF,
-  "US"
-);
 XPCOMUtils.defineLazyPreferenceGetter(
   FormAutofill,
   "isAutofillAddressesEnabled",

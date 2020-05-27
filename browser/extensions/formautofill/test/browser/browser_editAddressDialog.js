@@ -4,6 +4,10 @@ const { FormAutofillUtils } = ChromeUtils.import(
   "resource://formautofill/FormAutofillUtils.jsm"
 );
 
+XPCOMUtils.defineLazyModuleGetters(this, {
+  Region: "resource://gre/modules/Region.jsm",
+});
+
 requestLongerTimeout(6);
 
 add_task(async function setup_supportedCountries() {
@@ -25,7 +29,7 @@ add_task(async function test_cancelEditAddressDialogWithESC() {
 });
 
 add_task(async function test_defaultCountry() {
-  await SpecialPowers.pushPrefEnv({ set: [[DEFAULT_REGION_PREF, "CA"]] });
+  Region._setRegion("CA", false);
   await testDialog(EDIT_ADDRESS_DIALOG_URL, win => {
     let doc = win.document;
     is(
@@ -35,7 +39,7 @@ add_task(async function test_defaultCountry() {
     );
     doc.querySelector("#cancel").click();
   });
-  await SpecialPowers.pushPrefEnv({ set: [[DEFAULT_REGION_PREF, "DE"]] });
+  Region._setRegion("DE", false);
   await testDialog(EDIT_ADDRESS_DIALOG_URL, win => {
     let doc = win.document;
     is(
@@ -46,13 +50,13 @@ add_task(async function test_defaultCountry() {
     doc.querySelector("#cancel").click();
   });
   // Test unsupported country
-  await SpecialPowers.pushPrefEnv({ set: [[DEFAULT_REGION_PREF, "XX"]] });
+  Region._setRegion("XX", false);
   await testDialog(EDIT_ADDRESS_DIALOG_URL, win => {
     let doc = win.document;
     is(doc.querySelector("#country").value, "", "Default country set to empty");
     doc.querySelector("#cancel").click();
   });
-  await SpecialPowers.pushPrefEnv({ set: [[DEFAULT_REGION_PREF, "US"]] });
+  Region._setRegion("US", false);
 });
 
 add_task(async function test_saveAddress() {
@@ -860,7 +864,7 @@ add_task(async function test_hiddenFieldRemovedWhenCountryChanged() {
 });
 
 add_task(async function test_countrySpecificFieldsGetRequiredness() {
-  await SpecialPowers.pushPrefEnv({ set: [[DEFAULT_REGION_PREF, "RO"]] });
+  Region._setRegion("RO", false);
   await testDialog(EDIT_ADDRESS_DIALOG_URL, async win => {
     let doc = win.document;
     is(
