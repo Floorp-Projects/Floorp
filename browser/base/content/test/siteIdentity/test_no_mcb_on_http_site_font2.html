@@ -11,23 +11,23 @@
 <script src="/tests/SimpleTest/SimpleTest.js"></script>
 
 <script type="text/javascript">
-  function checkLoadStates() {
-   var ui = SpecialPowers.wrap(window).docShell.securityUI;
+  async function checkLoadStates() {
+   let state = await SpecialPowers.getSecurityState(window);
 
-   var loadedMixedActive = ui &&
-     !!(ui.state & SpecialPowers.Ci.nsIWebProgressListener.STATE_LOADED_MIXED_ACTIVE_CONTENT);
+   var loadedMixedActive =
+     !!(state & SpecialPowers.Ci.nsIWebProgressListener.STATE_LOADED_MIXED_ACTIVE_CONTENT);
    is(loadedMixedActive, false, "OK: Should not load mixed active content!");
 
-   var blockedMixedActive = ui &&
-     !!(ui.state & SpecialPowers.Ci.nsIWebProgressListener.STATE_BLOCKED_MIXED_ACTIVE_CONTENT);
+   var blockedMixedActive =
+     !!(state & SpecialPowers.Ci.nsIWebProgressListener.STATE_BLOCKED_MIXED_ACTIVE_CONTENT);
    is(blockedMixedActive, false, "OK: Should not block mixed active content!");
 
-   var loadedMixedDisplay = ui &&
-     !!(ui.state & SpecialPowers.Ci.nsIWebProgressListener.STATE_LOADED_MIXED_DISPLAY_CONTENT);
+   var loadedMixedDisplay =
+     !!(state & SpecialPowers.Ci.nsIWebProgressListener.STATE_LOADED_MIXED_DISPLAY_CONTENT);
    is(loadedMixedDisplay, false, "OK: Should not load mixed display content!");
 
-   var blockedMixedDisplay = ui &&
-     !!(ui.state & SpecialPowers.Ci.nsIWebProgressListener.STATE_BLOCKED_MIXED_DISPLAY_CONTENT);
+   var blockedMixedDisplay =
+     !!(state & SpecialPowers.Ci.nsIWebProgressListener.STATE_BLOCKED_MIXED_DISPLAY_CONTENT);
    is(blockedMixedDisplay, false, "OK: Should not block mixed display content!");
 
    var newValue = "Verifying MCB does not trigger warning/error for an http page ";

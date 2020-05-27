@@ -55,19 +55,6 @@ add_task(async function allowLoopbackMixedContent() {
   const tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);
   const browser = gBrowser.getBrowserForTab(tab);
 
-  await SpecialPowers.spawn(browser, [], function() {
-    is(
-      docShell.hasMixedDisplayContentBlocked,
-      false,
-      "hasMixedDisplayContentBlocked not set"
-    );
-    is(
-      docShell.hasMixedActiveContentBlocked,
-      false,
-      "hasMixedActiveContentBlocked not set"
-    );
-  });
-
   // Check that loopback content served from the cache is not blocked.
   await SpecialPowers.spawn(browser, [LOOPBACK_PNG_URL], async function(
     loopbackPNGUrl
