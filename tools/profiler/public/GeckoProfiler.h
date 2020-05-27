@@ -309,19 +309,19 @@ bool IsThreadRegistered();
 //---------------------------------------------------------------------------
 
 static constexpr mozilla::PowerOfTwo32 PROFILER_DEFAULT_ENTRIES =
-#  if !defined(ARCH_ARMV6)
+#  if !defined(GP_PLAT_arm_android)
     mozilla::MakePowerOfTwo32<8 * 1024 * 1024>();  // 8M entries = 64MB
 #  else
-    mozilla::MakePowerOfTwo32<512 * 1024>();  // 512k entries = 4MB
+    mozilla::MakePowerOfTwo32<2 * 1024 * 1024>();  // 2M entries = 16MB
 #  endif
 
 // Startup profiling usually need to capture more data, especially on slow
 // systems.
 static constexpr mozilla::PowerOfTwo32 PROFILER_DEFAULT_STARTUP_ENTRIES =
-#  if !defined(ARCH_ARMV6)
+#  if !defined(GP_PLAT_arm_android)
     mozilla::MakePowerOfTwo32<64 * 1024 * 1024>();  // 64M entries = 512MB
 #  else
-    mozilla::MakePowerOfTwo32<512 * 1024>();  // 512k entries = 4MB
+    mozilla::MakePowerOfTwo32<8 * 1024 * 1024>();  // 8M entries = 64MB
 #  endif
 
 #  define PROFILER_DEFAULT_DURATION 20 /* seconds, for tests only */
