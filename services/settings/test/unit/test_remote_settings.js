@@ -72,15 +72,7 @@ function run_test() {
     handleResponse
   );
   server.registerPathHandler(
-    "/v1/buckets/main/collections/password-fields",
-    handleResponse
-  );
-  server.registerPathHandler(
     "/v1/buckets/main/collections/password-fields/changeset",
-    handleResponse
-  );
-  server.registerPathHandler(
-    "/v1/buckets/main/collections/language-dictionaries",
     handleResponse
   );
   server.registerPathHandler(
@@ -1125,24 +1117,6 @@ wNuvFqc=
         ],
       },
     },
-    "GET:/v1/buckets/main/collections/password-fields": {
-      sampleHeaders: [
-        "Access-Control-Allow-Origin: *",
-        "Access-Control-Expose-Headers: Retry-After, Content-Length, Alert, Backoff",
-        "Content-Type: application/json; charset=UTF-8",
-        "Server: waitress",
-        'Etag: "3000"',
-      ],
-      status: { status: 200, statusText: "OK" },
-      responseBody: {
-        data: {
-          signature: {
-            signature: "some-sig",
-            x5u: `http://localhost:${port}/fake-x5u`,
-          },
-        },
-      },
-    },
     "GET:/v1/buckets/main/collections/password-fields/changeset?_expected=1337": {
       sampleHeaders: [
         "Access-Control-Allow-Origin: *",
@@ -1154,7 +1128,10 @@ wNuvFqc=
       status: { status: 200, statusText: "OK" },
       responseBody: {
         metadata: {
-          signature: {},
+          signature: {
+            signature: "some-sig",
+            x5u: `http://localhost:${port}/fake-x5u`,
+          },
         },
         timestamp: 3000,
         changes: [
@@ -1166,26 +1143,6 @@ wNuvFqc=
           },
         ],
       },
-    },
-    "GET:/v1/buckets/main/collections/language-dictionaries": {
-      sampleHeaders: [
-        "Access-Control-Allow-Origin: *",
-        "Access-Control-Expose-Headers: Retry-After, Content-Length, Alert, Backoff",
-        "Content-Type: application/json; charset=UTF-8",
-        "Server: waitress",
-        'Etag: "1234"',
-      ],
-      status: { status: 200, statusText: "OK" },
-      responseBody: JSON.stringify({
-        data: {
-          id: "language-dictionaries",
-          last_modified: 1234,
-          signature: {
-            signature: "xyz",
-            x5u: `http://localhost:${port}/fake-x5u`,
-          },
-        },
-      }),
     },
     "GET:/v1/buckets/main/collections/language-dictionaries/changeset": {
       sampleHeaders: [
