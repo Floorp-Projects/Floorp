@@ -12,7 +12,9 @@
 
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
+#include "mozilla/WindowsVersion.h"
 
+#include <cctype>
 #include <string>
 
 #define CV_SIGNATURE 0x53445352  // 'SDSR'
@@ -163,11 +165,7 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf() {
   }
 
   for (unsigned int i = 0; i < modulesNum; i++) {
-    std::string pdbPathStr;
-    std::string pdbNameStr;
-    char* pdbName = NULL;
     char modulePath[MAX_PATH + 1];
-
     if (!GetModuleFileNameEx(hProcess, hMods[i], modulePath,
                              sizeof(modulePath) / sizeof(char))) {
       continue;
@@ -178,6 +176,48 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf() {
                               sizeof(MODULEINFO))) {
       continue;
     }
+
+    std::string modulePathStr(modulePath);
+    size_t pos = modulePathStr.find_last_of("\\/");
+    std::string moduleNameStr = (pos != std::string::npos)
+                                    ? modulePathStr.substr(pos + 1)
+                                    : modulePathStr;
+
+    // Hackaround for Bug 1607574.  Nvidia's shim driver nvd3d9wrap[x].dll
+    // detours LoadLibraryExW when it's loaded and the detour function causes
+    // AV when the code tries to access data pointing to an address within
+    // unloaded nvinit[x].dll.
+    // The crashing code is executed when a given parameter is "detoured.dll"
+    // and OS version is older than 6.2.  We hit that crash at the following
+    // call to LoadLibraryEx even if we specify LOAD_LIBRARY_AS_DATAFILE.
+    // We work around it by skipping LoadLibraryEx, and add a library info with
+    // a dummy breakpad id instead.
+#if !defined(_M_ARM64)
+#  if defined(_M_AMD64)
+    LPCSTR kNvidiaShimDriver = "nvd3d9wrapx.dll";
+    LPCSTR kNvidiaInitDriver = "nvinitx.dll";
+#  elif defined(_M_IX86)
+    LPCSTR kNvidiaShimDriver = "nvd3d9wrap.dll";
+    LPCSTR kNvidiaInitDriver = "nvinit.dll";
+#  endif
+    constexpr std::string_view detoured_dll = "detoured.dll";
+    if (std::equal(moduleNameStr.cbegin(), moduleNameStr.cend(),
+                   detoured_dll.cbegin(), detoured_dll.cend(),
+                   [](char aModuleChar, char aDetouredChar) {
+                     return std::tolower(aModuleChar) == aDetouredChar;
+                   }) &&
+        !mozilla::IsWin8OrLater() && ::GetModuleHandle(kNvidiaShimDriver) &&
+        !::GetModuleHandle(kNvidiaInitDriver)) {
+      const std::string pdbNameStr = "detoured.pdb";
+      SharedLibrary shlib((uintptr_t)module.lpBaseOfDll,
+                          (uintptr_t)module.lpBaseOfDll + module.SizeOfImage,
+                          0,  // DLLs are always mapped at offset 0 on Windows
+                          "000000000000000000000000000000000", moduleNameStr,
+                          modulePathStr, pdbNameStr, pdbNameStr, "", "");
+      sharedLibraryInfo.AddSharedLibrary(shlib);
+      continue;
+    }
+#endif  // !defined(_M_ARM64)
 
     std::string breakpadId;
     // Load the module again to make sure that its handle will remain
@@ -197,6 +237,9 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf() {
     MEMORY_BASIC_INFORMATION vmemInfo = {0};
     std::string pdbSig;
     uint32_t pdbAge;
+    std::string pdbPathStr;
+    std::string pdbNameStr;
+    char* pdbName = nullptr;
     if (handleLock &&
         sizeof(vmemInfo) ==
             VirtualQuery(module.lpBaseOfDll, &vmemInfo, sizeof(vmemInfo)) &&
@@ -211,12 +254,6 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf() {
       pdbNameStr =
           (pos != std::string::npos) ? pdbPathStr.substr(pos + 1) : pdbPathStr;
     }
-
-    std::string modulePathStr(modulePath);
-    size_t pos = modulePathStr.find_last_of("\\/");
-    std::string moduleNameStr = (pos != std::string::npos)
-                                    ? modulePathStr.substr(pos + 1)
-                                    : modulePathStr;
 
     SharedLibrary shlib((uintptr_t)module.lpBaseOfDll,
                         (uintptr_t)module.lpBaseOfDll + module.SizeOfImage,
