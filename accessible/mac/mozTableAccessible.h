@@ -29,13 +29,13 @@
 @interface mozTablePartAccessible : mozAccessible
 - (id)accessibilityAttributeValue:(NSString*)attribute;
 - (BOOL)isLayoutTablePart;
-- (NSString*)role;
+- (NSString*)moxRole;
 @end
 
 @interface mozTableAccessible : mozTablePartAccessible {
   NSMutableArray* mColContainers;
 }
-- (NSArray*)children;
+- (NSArray*)moxChildren;
 - (NSArray*)additionalAccessibilityAttributeNames;
 - (id)accessibilityAttributeValue:(NSString*)attribute;
 - (void)invalidateColumns;
