@@ -249,6 +249,8 @@
     <string name="preferences_show_search_shortcuts">Prikaži prečace za pretraživanje</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">Prikaži prijedloge za pretraživanje</string>
+    <!-- Preference title for switch preference to show voice search button -->
+    <string name="preferences_show_voice_search">Prikaži glasovno pretraživanje</string>
     <!-- Preference title for switch preference to show search suggestions also in private mode -->
     <string name="preferences_show_search_suggestions_in_private">Prikaži u privatnim sesijama</string>
     <!-- Preference title for switch preference to show a clipboard suggestion when searching -->
@@ -369,7 +371,7 @@
 
     <!-- Pairing Feature strings -->
     <!-- Instructions on how to access pairing -->
-    <string name="pair_instructions"><![CDATA[Posjeti <b>firefox.com/pair</b> u Firefoxu na računalu za dobivanje QR koda.]]></string>
+    <string name="pair_instructions_2"><![CDATA[Skenirajte QR kôd prikazan na <b>firefox.com/pair</b>]]></string>
     <!-- Button to open camera for pairing -->
     <string name="pair_open_camera">Otvori kameru</string>
     <!-- Button to cancel pairing -->
@@ -432,6 +434,8 @@
     <string name="tabs_header_private_tabs_title">Privatne kartice</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_tab">Dodaj karticu</string>
+    <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
+    <string name="remove_tab_from_collection">Ukloni karticu iz zbirke</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
     <string name="close_tab">Zatvori karticu</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab <title> button. First parameter is tab title  -->
@@ -811,15 +815,14 @@
     <string name="preference_accessibility_font_size_title">Veličina fonta</string>
 
     <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
-    <string name="preference_accessibility_auto_size">Automatska veličina fonta</string>
-
+    <string name="preference_accessibility_auto_size_2">Automatska veličina fonta</string>
     <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
     <string name="preference_accessibility_auto_size_summary">Veličina fonta odgovarat će Android postavkama. Za upravljanje veličinom fonta, deaktiviraj opciju.</string>
 
     <!-- Title for the Delete browsing data preference -->
     <string name="preferences_delete_browsing_data">Izbriši podatke pregledavanja</string>
     <!-- Title for the tabs item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_tabs_title">Otvorene kartice</string>
+    <string name="preferences_delete_browsing_data_tabs_title_2">Otvorene kartice</string>
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
     <string name="preferences_delete_browsing_data_tabs_subtitle">%d kartica(e)</string>
     <!-- Title for the data and history items in Delete browsing data -->
@@ -1220,7 +1223,7 @@
     <!-- The header for the password for a login -->
     <string name="preferences_passwords_saved_logins_password">Lozinka</string>
     <!-- Message displayed in security prompt to reenter a secret pin to access saved logins -->
-    <string name="preferences_passwords_saved_logins_enter_pin">Ponovo upiši svoj PIN</string>
+    <string name="preferences_passwords_saved_logins_enter_pin">Ponovo unesi svoj PIN</string>
     <!-- Message displayed in security prompt to access saved logins -->
     <string name="preferences_passwords_saved_logins_enter_pin_description">Otključaj za pregled tvojih spremljenih prijava</string>
     <!-- Message displayed when a connection is insecure and we detect the user is entering a password -->
@@ -1391,4 +1394,8 @@
     <string name="edit">Uređivanje</string>
     <!--  The error message in edit login view when password field is blank. -->
     <string name="saved_login_password_required">Potrebna je lozinka</string>
+    <!-- Voice search button content description  -->
+    <string name="voice_search_content_description">Glasovno pretraživanje</string>
+    <!-- Voice search prompt description displayed after the user presses the voice search button -->
+    <string name="voice_search_explainer">Govorite sada</string>
 </resources>

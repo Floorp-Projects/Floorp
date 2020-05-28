@@ -380,7 +380,7 @@
 
     <!-- Pairing Feature strings -->
     <!-- Instructions on how to access pairing -->
-    <string name="pair_instructions"><![CDATA[請使用您的電腦開啟 <b>firefox.com/pair</b> 取得 QR Code。]]></string>
+    <string name="pair_instructions_2"><![CDATA[掃描 <b>firefox.com/pair</b> 網站上的 QR Code]]></string>
     <!-- Button to open camera for pairing -->
     <string name="pair_open_camera">開啟攝影機</string>
     <!-- Button to cancel pairing -->
@@ -841,15 +841,14 @@
     <string name="preference_accessibility_font_size_title">字型大小</string>
 
     <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
-    <string name="preference_accessibility_auto_size">自動調整字型大小</string>
-
+    <string name="preference_accessibility_auto_size_2">自動調整字體大小</string>
     <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
     <string name="preference_accessibility_auto_size_summary">將依照 Android 系統文字大小設定顯示。請先停用設定才能在此調整。</string>
 
     <!-- Title for the Delete browsing data preference -->
     <string name="preferences_delete_browsing_data">刪除瀏覽資料</string>
     <!-- Title for the tabs item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_tabs_title">開啟分頁</string>
+    <string name="preferences_delete_browsing_data_tabs_title_2">開啟的分頁</string>
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
     <string name="preferences_delete_browsing_data_tabs_subtitle">%d 個分頁</string>
     <!-- Title for the data and history items in Delete browsing data -->

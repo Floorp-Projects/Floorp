@@ -383,7 +383,7 @@
 
     <!-- Pairing Feature strings -->
     <!-- Instructions on how to access pairing -->
-    <string name="pair_instructions"><![CDATA[Andá a <b>firefox.com/pair</b> en la versión de escritorio de Firefox para obtener el código QR.]]></string>
+    <string name="pair_instructions_2"><![CDATA[Escanear el código QR que se muestra en  <b>firefox.com/pair</b>]]></string>
     <!-- Button to open camera for pairing -->
     <string name="pair_open_camera">Abrir la cámara</string>
     <!-- Button to cancel pairing -->
@@ -829,7 +829,7 @@
     <string name="preference_accessibility_font_size_title">Tamaño de la fuente</string>
 
     <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
-    <string name="preference_accessibility_auto_size">Cambio automático del tamaño de la fuente </string>
+    <string name="preference_accessibility_auto_size_2">Cambio automático del tamaño de la fuente</string>
     <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
     <string name="preference_accessibility_auto_size_summary">El tamaño de fuente va a coincidir con la configuración de Android. Desactivá aquí para administrar el tamaño de la fuente.</string>
 
@@ -837,7 +837,7 @@
     <string name="preferences_delete_browsing_data">Eliminar datos de navegación</string>
 
     <!-- Title for the tabs item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_tabs_title">Abrir pestañas</string>
+    <string name="preferences_delete_browsing_data_tabs_title_2">Abrir pestañas</string>
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
     <string name="preferences_delete_browsing_data_tabs_subtitle">%d pestañas</string>
     <!-- Title for the data and history items in Delete browsing data -->

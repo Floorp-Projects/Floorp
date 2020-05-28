@@ -380,7 +380,7 @@
 
     <!-- Pairing Feature strings -->
     <!-- Instructions on how to access pairing -->
-    <string name="pair_instructions"><![CDATA[Посетите <b>firefox.com/pair</b> в Firefox на вашем компьютере, чтобы получить свой QR-код.]]></string>
+    <string name="pair_instructions_2"><![CDATA[Отсканируйте QR-код, показанный на <b>firefox.com/pair</b>]]></string>
     <!-- Button to open camera for pairing -->
     <string name="pair_open_camera">Открыть камеру</string>
     <!-- Button to cancel pairing -->
@@ -839,14 +839,14 @@
     <string name="preference_accessibility_font_size_title">Размер шрифта</string>
 
     <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
-    <string name="preference_accessibility_auto_size">Автоматический размер шрифта</string>
+    <string name="preference_accessibility_auto_size_2">Автоматический размер шрифта</string>
     <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
     <string name="preference_accessibility_auto_size_summary">Размер шрифта будет соответствовать настройкам Android. Отключите этот параметр, чтобы управлять размером шрифта здесь.</string>
 
     <!-- Title for the Delete browsing data preference -->
     <string name="preferences_delete_browsing_data">Удаление данных веб-сёрфинга</string>
     <!-- Title for the tabs item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_tabs_title">Открытые вкладки</string>
+    <string name="preferences_delete_browsing_data_tabs_title_2">Открытые вкладки</string>
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
     <string name="preferences_delete_browsing_data_tabs_subtitle">%d вкладки(ок)</string>
     <!-- Title for the data and history items in Delete browsing data -->

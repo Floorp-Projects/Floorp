@@ -54,7 +54,7 @@
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
-    <string name="browser_tabs_button">Iepen ljeplêden</string>
+    <string name="browser_tabs_button">Iepen ljepblêden</string>
     <!-- Content description (not visible, for screen readers etc.): Navigate backward (browsing history) -->
     <string name="browser_menu_back">Tebek</string>
     <!-- Content description (not visible, for screen readers etc.): Navigate forward (browsing history) -->
@@ -371,7 +371,7 @@
 
     <!-- Pairing Feature strings -->
     <!-- Instructions on how to access pairing -->
-    <string name="pair_instructions"><![CDATA[Gean nei <b>firefox.com/pair</b> yn Firefox op jo kompjûter om jo QR-koade te krijen.]]></string>
+    <string name="pair_instructions_2"><![CDATA[Scan de QR-koade op <b>firefox.com/pair</b>]]></string>
     <!-- Button to open camera for pairing -->
     <string name="pair_open_camera">Kamera iepenje</string>
     <!-- Button to cancel pairing -->
@@ -425,7 +425,7 @@
 
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
-    <string name="tab_header_label">Iepen ljeplêden</string>
+    <string name="tab_header_label">Iepen ljepblêden</string>
     <!-- Title for the list of tabs in the current private session -->
     <string name="tabs_header_private_title">Priveesesje</string>
     <!-- Title for the list of tabs in the current private session -->
@@ -807,14 +807,14 @@
     <string name="preference_accessibility_font_size_title">Lettergrutte</string>
 
     <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
-    <string name="preference_accessibility_auto_size">Automatyske lettergrutte</string>
+    <string name="preference_accessibility_auto_size_2">Automatyske lettergrutte</string>
     <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
     <string name="preference_accessibility_auto_size_summary">De lettergrutte wurdt ôfstimd op jo Android-ynstellingen. Skeakelje dit út om hjir de lettergrutte sels te behearen.</string>
 
     <!-- Title for the Delete browsing data preference -->
     <string name="preferences_delete_browsing_data">Navigaasjegegevens fuortsmite</string>
     <!-- Title for the tabs item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_tabs_title">Iepen ljeplêden</string>
+    <string name="preferences_delete_browsing_data_tabs_title_2">Iepen ljepblêden</string>
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
     <string name="preferences_delete_browsing_data_tabs_subtitle">%d ljepblêden</string>
     <!-- Title for the data and history items in Delete browsing data -->

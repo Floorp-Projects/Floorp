@@ -370,7 +370,7 @@
 
     <!-- Pairing Feature strings -->
     <!-- Instructions on how to access pairing -->
-    <string name="pair_instructions"><![CDATA[Ewch i <b>firefox.com/pair</b> yn Firefox ar eich cyfrifiadur i gael eich cod QR.]]></string>
+    <string name="pair_instructions_2"><![CDATA[Sganiwch y cod QR sydd yn <b> firefox.com/pair </b>]]></string>
     <!-- Button to open camera for pairing -->
     <string name="pair_open_camera">Agor Camera</string>
     <!-- Button to cancel pairing -->
@@ -807,14 +807,14 @@
     <string name="preference_accessibility_font_size_title">Maint Ffont</string>
 
     <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
-    <string name="preference_accessibility_auto_size">Newid Maint Ffont Awtomatig</string>
+    <string name="preference_accessibility_auto_size_2">Newid maint ffont awtomatig</string>
     <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
     <string name="preference_accessibility_auto_size_summary">Bydd maint y ffont yn cyd-fynd â’h gosodiadau Android. Analluogwch i reoli maint ffont yma.</string>
 
     <!-- Title for the Delete browsing data preference -->
     <string name="preferences_delete_browsing_data">Dileu data pori</string>
     <!-- Title for the tabs item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_tabs_title">Agor Tabiau</string>
+    <string name="preferences_delete_browsing_data_tabs_title_2">Agor tabiau</string>
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
     <string name="preferences_delete_browsing_data_tabs_subtitle">%d tab</string>
     <!-- Title for the data and history items in Delete browsing data -->

@@ -373,7 +373,7 @@
 
     <!-- Pairing Feature strings -->
     <!-- Instructions on how to access pairing -->
-    <string name="pair_instructions"><![CDATA[Keresse fel a <b>firefox.com/pair</b> oldalt a Firefoxban, hogy megkapja a QR-kódját.]]></string>
+    <string name="pair_instructions_2"><![CDATA[Olvassa le a <b>firefox.com/pair</b> webhelyen látható QR-kódot]]></string>
     <!-- Button to open camera for pairing -->
     <string name="pair_open_camera">Kamera megnyitása</string>
     <!-- Button to cancel pairing -->
@@ -815,14 +815,14 @@
     <string name="preference_accessibility_font_size_title">Betűméret</string>
 
     <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
-    <string name="preference_accessibility_auto_size">Automatikus betűméret</string>
+    <string name="preference_accessibility_auto_size_2">Automatikus betűméret</string>
     <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
     <string name="preference_accessibility_auto_size_summary">A betűméret megegyezik az Android-beállításokkal. Kapcsolja ki, hogy itt kezelje a betűméretet.</string>
 
     <!-- Title for the Delete browsing data preference -->
     <string name="preferences_delete_browsing_data">Böngészési adatok törlése</string>
     <!-- Title for the tabs item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_tabs_title">Nyitott lapok</string>
+    <string name="preferences_delete_browsing_data_tabs_title_2">Nyitott lapok</string>
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
     <string name="preferences_delete_browsing_data_tabs_subtitle">%d lap</string>
     <!-- Title for the data and history items in Delete browsing data -->

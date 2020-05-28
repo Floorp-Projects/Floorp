@@ -376,6 +376,9 @@
     <!-- Preference for removing FxA account -->
     <string name="preferences_sync_remove_account">Ta bort konto</string>
 
+    <!-- Pairing Feature strings -->
+    <!-- Instructions on how to access pairing -->
+    <string name="pair_instructions_2"><![CDATA[Skanna QR-koden som visas på <b>firefox.com/pair</b>]]></string>
     <!-- Button to open camera for pairing -->
     <string name="pair_open_camera">Öppen kamera</string>
     <!-- Button to cancel pairing -->
@@ -816,6 +819,8 @@
     <!-- Title for Accessibility Text Size Scaling Preference -->
     <string name="preference_accessibility_font_size_title">Teckenstorlek</string>
 
+    <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
+    <string name="preference_accessibility_auto_size_2">Automatisk storlek på teckensnitt</string>
     <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
     <string name="preference_accessibility_auto_size_summary">Teckensnittstorlek matchar dina Android-inställningar. Inaktivera att hantera teckenstorlek här.</string>
 

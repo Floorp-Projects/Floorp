@@ -384,7 +384,7 @@
 
     <!-- Pairing Feature strings -->
     <!-- Instructions on how to access pairing -->
-    <string name="pair_instructions"><![CDATA[在电脑上用 Firefox 访问 <b>firefox.com/pair</b>，获取二维码。]]></string>
+    <string name="pair_instructions_2"><![CDATA[到 <b>firefox.com/pair</b> 扫描二维码]]></string>
     <!-- Button to open camera for pairing -->
     <string name="pair_open_camera">打开相机</string>
     <!-- Button to cancel pairing -->
@@ -847,14 +847,14 @@
     <string name="preference_accessibility_font_size_title">字体大小</string>
 
     <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
-    <string name="preference_accessibility_auto_size">自动调整字体大小</string>
+    <string name="preference_accessibility_auto_size_2">自动调整字体大小</string>
     <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
     <string name="preference_accessibility_auto_size_summary">字体大小将跟随您的 Android 设置。禁用此项后则可以手动调整。</string>
 
     <!-- Title for the Delete browsing data preference -->
     <string name="preferences_delete_browsing_data">删除浏览数据</string>
     <!-- Title for the tabs item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_tabs_title">打开的标签页</string>
+    <string name="preferences_delete_browsing_data_tabs_title_2">打开的标签页</string>
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
     <string name="preferences_delete_browsing_data_tabs_subtitle">%d 个标签页</string>
     <!-- Title for the data and history items in Delete browsing data -->

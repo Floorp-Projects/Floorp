@@ -380,7 +380,7 @@
 
     <!-- Pairing Feature strings -->
     <!-- Instructions on how to access pairing -->
-    <string name="pair_instructions"><![CDATA[Visitez <b>firefox.com/pair</b> dans Firefox sur votre ordinateur pour obtenir votre code QR.]]></string>
+    <string name="pair_instructions_2"><![CDATA[Scannez le code QR affiché sur <b>firefox.com/pair</b>]]></string>
     <!-- Button to open camera for pairing -->
     <string name="pair_open_camera">Ouvrir l’appareil photo</string>
     <!-- Button to cancel pairing -->
@@ -841,15 +841,14 @@
     <string name="preference_accessibility_font_size_title">Taille de police</string>
 
     <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
-    <string name="preference_accessibility_auto_size">Adaptation automatique de la taille des polices</string>
-
+    <string name="preference_accessibility_auto_size_2">Dimensionnement automatique des polices</string>
     <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
     <string name="preference_accessibility_auto_size_summary">La taille de la police correspondra à vos paramètres Android. Désactivez cette option pour gérer la taille de la police.</string>
 
     <!-- Title for the Delete browsing data preference -->
     <string name="preferences_delete_browsing_data">Supprimer les données de navigation</string>
     <!-- Title for the tabs item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_tabs_title">Onglets ouverts</string>
+    <string name="preferences_delete_browsing_data_tabs_title_2">Onglets ouverts</string>
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
     <string name="preferences_delete_browsing_data_tabs_subtitle">%d onglets</string>
     <!-- Title for the data and history items in Delete browsing data -->
@@ -1418,4 +1417,6 @@ Cependant, il peut être moins stable. Téléchargez la version bêta de notre n
     <string name="saved_login_password_required">Mot de passe requis</string>
     <!-- Voice search button content description  -->
     <string name="voice_search_content_description">Recherche vocale</string>
-    </resources>
+    <!-- Voice search prompt description displayed after the user presses the voice search button -->
+    <string name="voice_search_explainer">Vous pouvez parler</string>
+</resources>
