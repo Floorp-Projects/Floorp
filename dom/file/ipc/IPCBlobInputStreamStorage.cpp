@@ -31,6 +31,10 @@ NS_INTERFACE_MAP_END
 NS_IMPL_ADDREF(IPCBlobInputStreamStorage)
 NS_IMPL_RELEASE(IPCBlobInputStreamStorage)
 
+IPCBlobInputStreamStorage::IPCBlobInputStreamStorage() = default;
+
+IPCBlobInputStreamStorage::~IPCBlobInputStreamStorage() = default;
+
 /* static */
 IPCBlobInputStreamStorage* IPCBlobInputStreamStorage::Get() { return gStorage; }
 
@@ -99,14 +103,9 @@ void IPCBlobInputStreamStorage::AddStream(nsIInputStream* aInputStream,
   mStorage.Put(aID, data);
 }
 
-nsCOMPtr<nsIInputStream> IPCBlobInputStreamStorage::ForgetStream(
-    const nsID& aID) {
-  UniquePtr<StreamData> entry;
-
+void IPCBlobInputStreamStorage::ForgetStream(const nsID& aID) {
   mozilla::StaticMutexAutoLock lock(gMutex);
-  mStorage.Remove(aID, &entry);
-
-  return std::move(entry->mInputStream);
+  mStorage.Remove(aID);
 }
 
 bool IPCBlobInputStreamStorage::HasStream(const nsID& aID) {

@@ -120,14 +120,8 @@ void FetchEventOpProxyChild::Initialize(
                  }
 
                  Unused << self->SendRespondWith(ipcArgs);
-
-                 if (ipcArgs.internalResponse().body()) {
-                   autoBodyStream->TakeValue();
-                 }
-
-                 if (ipcArgs.internalResponse().alternativeBody()) {
-                   autoAlternativeBodyStream->TakeValue();
-                 }
+                 autoBodyStream->TakeOptionalValue();
+                 autoAlternativeBodyStream->TakeOptionalValue();
                } else if (result.is<ResetInterceptionArgs>()) {
                  Unused << self->SendRespondWith(
                      result.extract<ResetInterceptionArgs>());
