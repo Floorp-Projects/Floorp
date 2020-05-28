@@ -191,9 +191,6 @@ class TestNavigate(BaseNavigationTestCase):
         with self.assertRaises(errors.TimeoutException):
             self.marionette.navigate(self.marionette.absolute_url("slow"))
 
-        # Even with the page not finished loading the browser is remote
-        self.assertTrue(self.is_remote_tab)
-
     def test_navigate_to_same_image_document_twice(self):
         self.marionette.navigate(self.fixtures.where_is("black.png"))
         self.assertIn("black.png", self.marionette.title)
