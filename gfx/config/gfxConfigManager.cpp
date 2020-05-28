@@ -178,7 +178,7 @@ bool gfxConfigManager::ConfigureWebRenderQualified() {
     }
 
     int32_t maxRefreshRate = mGfxInfo->GetMaxRefreshRate();
-    if (maxRefreshRate >= 60) {
+    if (maxRefreshRate > 60) {
       mFeatureWrQualified->Disable(FeatureStatus::Blocked,
                                    "Monitor refresh rate too high",
                                    NS_LITERAL_CSTRING("REFRESH_RATE_TOO_HIGH"));
