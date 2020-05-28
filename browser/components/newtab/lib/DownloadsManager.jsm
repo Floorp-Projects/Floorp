@@ -35,9 +35,7 @@ this.DownloadsManager = class DownloadsManager {
   }
 
   formatDownload(download) {
-    let { referrerInfo } = download.source;
-    let referrer = (referrerInfo && referrerInfo.originalReferrer) || null;
-    referrer = (referrer && referrer.spec) || null;
+    let referrer = download.source.referrerInfo?.originalReferrer?.spec || null;
     return {
       hostname: new URL(download.source.url).hostname,
       url: download.source.url,
