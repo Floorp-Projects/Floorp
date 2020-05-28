@@ -24,96 +24,33 @@ enum CheckboxValue {
 
 @implementation mozButtonAccessible
 
-- (NSArray*)accessibilityAttributeNames {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
-
-  static NSArray* attributes = nil;
-  if (!attributes) {
-    attributes = [[NSArray alloc]
-        initWithObjects:NSAccessibilityParentAttribute,  // required
-                        NSAccessibilityRoleAttribute,    // required
-                        NSAccessibilityRoleDescriptionAttribute,
-                        NSAccessibilityPositionAttribute,           // required
-                        NSAccessibilitySizeAttribute,               // required
-                        NSAccessibilityWindowAttribute,             // required
-                        NSAccessibilityPositionAttribute,           // required
-                        NSAccessibilityTopLevelUIElementAttribute,  // required
-                        NSAccessibilityHelpAttribute,
-                        NSAccessibilityEnabledAttribute,  // required
-                        NSAccessibilityFocusedAttribute,  // required
-                        NSAccessibilityTitleAttribute,    // required
-                        NSAccessibilityChildrenAttribute, NSAccessibilityDescriptionAttribute,
-                        NSAccessibilityRequiredAttribute, NSAccessibilityHasPopupAttribute,
-                        NSAccessibilityPopupValueAttribute,
-#if DEBUG
-                        @"AXMozDescription",
-#endif
-                        nil];
-  }
-  return attributes;
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+- (NSNumber*)moxHasPopup {
+  return @([self stateWithMask:states::HASPOPUP] != 0);
 }
 
-- (id)accessibilityAttributeValue:(NSString*)attribute {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
-
-  if ([attribute isEqualToString:NSAccessibilityHasPopupAttribute]) {
-    return [NSNumber numberWithBool:[self hasPopup]];
+- (NSString*)moxPopupValue {
+  if ([self stateWithMask:states::HASPOPUP] != 0) {
+    return utils::GetAccAttr(self, "haspopup");
   }
 
-  if ([attribute isEqualToString:NSAccessibilityPopupValueAttribute]) {
-    if ([self hasPopup]) {
-      return utils::GetAccAttr(self, "haspopup");
-    } else {
-      return nil;
-    }
-  }
-
-  return [super accessibilityAttributeValue:attribute];
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
-}
-
-- (BOOL)hasPopup {
-  return ([self stateWithMask:states::HASPOPUP] != 0);
+  return nil;
 }
 
 @end
 
 @implementation mozPopupButtonAccessible
+
 - (NSString*)moxTitle {
   // Popup buttons don't have titles.
   return @"";
 }
 
-- (NSArray*)accessibilityAttributeNames {
-  static NSMutableArray* supportedAttributes = nil;
-  if (!supportedAttributes) {
-    supportedAttributes = [[super accessibilityAttributeNames] mutableCopy];
-    // We need to remove AXHasPopup from a AXPopupButton for it to be reported
-    // as a popup button. Otherwise VO reports it as a button that has a popup
-    // which is not consistent with Safari.
-    [supportedAttributes removeObject:NSAccessibilityHasPopupAttribute];
-    [supportedAttributes addObject:NSAccessibilityValueAttribute];
+- (BOOL)moxBlockSelector:(SEL)selector {
+  if (selector == @selector(moxHasPopup)) {
+    return YES;
   }
 
-  return supportedAttributes;
-}
-
-- (id)accessibilityAttributeValue:(NSString*)attribute {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
-
-  if ([attribute isEqualToString:NSAccessibilityHasPopupAttribute]) {
-    // We need to null on AXHasPopup for it to be reported as a popup button.
-    // Otherwise VO reports it as a button that has a popup which is not
-    // consistent with Safari.
-    return nil;
-  }
-
-  return [super accessibilityAttributeValue:attribute];
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+  return [super moxBlockSelector:selector];
 }
 
 - (NSArray*)moxChildren {
@@ -182,20 +119,6 @@ enum CheckboxValue {
 
 @implementation mozPaneAccessible
 
-- (NSUInteger)accessibilityArrayAttributeCount:(NSString*)attribute {
-  if ([self isExpired]) {
-    return 0;
-  }
-
-  // By default this calls -[[mozAccessible children] count].
-  // Since we don't cache mChildren. This is faster.
-  if ([attribute isEqualToString:NSAccessibilityChildrenAttribute]) {
-    return mGeckoAccessible.ChildCount() ? 1 : 0;
-  }
-
-  return [super accessibilityArrayAttributeCount:attribute];
-}
-
 - (NSArray*)moxChildren {
   if (!mGeckoAccessible.AsAccessible()) return nil;
 
@@ -220,36 +143,24 @@ enum CheckboxValue {
 
 @implementation mozIncrementableAccessible
 
-- (NSArray*)accessibilityActionNames {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
-  NSArray* actions = [super accessibilityActionNames];
-
-  static NSArray* sliderAttrs = nil;
-  if (!sliderAttrs) {
-    NSMutableArray* tempArray = [NSMutableArray new];
-    [tempArray addObject:NSAccessibilityIncrementAction];
-    [tempArray addObject:NSAccessibilityDecrementAction];
-    sliderAttrs = [[NSArray alloc] initWithArray:tempArray];
-    [tempArray release];
-  }
-
-  return [actions arrayByAddingObjectsFromArray:sliderAttrs];
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+- (void)moxPerformIncrement {
+  [self changeValueBySteps:1];
 }
 
-- (void)accessibilityPerformAction:(NSString*)action {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+- (void)moxPerformDecrement {
+  [self changeValueBySteps:-1];
+}
 
-  if ([action isEqualToString:NSAccessibilityIncrementAction]) {
-    [self changeValueBySteps:1];
-  } else if ([action isEqualToString:NSAccessibilityDecrementAction]) {
-    [self changeValueBySteps:-1];
-  } else {
-    [super accessibilityPerformAction:action];
+- (void)handleAccessibleEvent:(uint32_t)eventType {
+  switch (eventType) {
+    case nsIAccessibleEvent::EVENT_TEXT_VALUE_CHANGE:
+    case nsIAccessibleEvent::EVENT_VALUE_CHANGE:
+      [self moxPostNotification:NSAccessibilityValueChangedNotification];
+      break;
+    default:
+      [super handleAccessibleEvent:eventType];
+      break;
   }
-
-  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 /*
@@ -282,18 +193,6 @@ enum CheckboxValue {
   }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
-}
-
-- (void)handleAccessibleEvent:(uint32_t)eventType {
-  switch (eventType) {
-    case nsIAccessibleEvent::EVENT_TEXT_VALUE_CHANGE:
-    case nsIAccessibleEvent::EVENT_VALUE_CHANGE:
-      [self moxPostNotification:NSAccessibilityValueChangedNotification];
-      break;
-    default:
-      [super handleAccessibleEvent:eventType];
-      break;
-  }
 }
 
 @end
