@@ -8619,15 +8619,16 @@ class QuotaClient final : public mozilla::dom::quota::Client {
   // InitOrigin() is the only consumer of this argument because it checks those
   // unfinished deletion and clean them up after that.
   nsresult GetDatabaseFilenames(
-      nsIFile* aDirectory, const AtomicBool& aCanceled, bool aForUpgrade,
+      nsIFile* aDirectory, const AtomicBool& aCanceled,
       nsTArray<nsString>& aSubdirsToProcess,
       nsTHashtable<nsStringHashKey>& aDatabaseFilename,
       nsTHashtable<nsStringHashKey>* aObsoleteFilenames = nullptr);
 
-  nsresult GetUsageForDirectoryInternal(nsIFile* aDirectory,
-                                        const AtomicBool& aCanceled,
-                                        UsageInfo* aUsageInfo,
-                                        bool aDatabaseFiles);
+  nsresult GetUsageForOriginInternal(PersistenceType aPersistenceType,
+                                     const nsACString& aGroup,
+                                     const nsACString& aOrigin,
+                                     const AtomicBool& aCanceled,
+                                     bool aInitializing, UsageInfo* aUsageInfo);
 
   // Runs on the PBackground thread. Checks to see if there's a queued
   // Maintenance to run.
@@ -17068,8 +17069,7 @@ nsresult QuotaClient::UpgradeStorageFrom1_0To2_0(nsIFile* aDirectory) {
   AutoTArray<nsString, 20> subdirsToProcess;
   nsTHashtable<nsStringHashKey> databaseFilenames(20);
   nsresult rv = GetDatabaseFilenames(aDirectory,
-                                     /* aCanceled */ dummy,
-                                     /* aForUpgrade */ true, subdirsToProcess,
+                                     /* aCanceled */ dummy, subdirsToProcess,
                                      databaseFilenames);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -17208,6 +17208,28 @@ nsresult QuotaClient::InitOrigin(PersistenceType aPersistenceType,
                                  UsageInfo* aUsageInfo) {
   AssertIsOnIOThread();
 
+  return GetUsageForOriginInternal(aPersistenceType, aGroup, aOrigin, aCanceled,
+                                   /* aInitializing*/ true, aUsageInfo);
+}
+
+nsresult QuotaClient::GetUsageForOrigin(PersistenceType aPersistenceType,
+                                        const nsACString& aGroup,
+                                        const nsACString& aOrigin,
+                                        const AtomicBool& aCanceled,
+                                        UsageInfo* aUsageInfo) {
+  AssertIsOnIOThread();
+  MOZ_ASSERT(aUsageInfo);
+
+  return GetUsageForOriginInternal(aPersistenceType, aGroup, aOrigin, aCanceled,
+                                   /* aInitializing*/ false, aUsageInfo);
+}
+
+nsresult QuotaClient::GetUsageForOriginInternal(
+    PersistenceType aPersistenceType, const nsACString& aGroup,
+    const nsACString& aOrigin, const AtomicBool& aCanceled,
+    const bool aInitializing, UsageInfo* aUsageInfo) {
+  AssertIsOnIOThread();
+
   nsCOMPtr<nsIFile> directory;
   nsresult rv =
       GetDirectory(aPersistenceType, aOrigin, getter_AddRefs(directory));
@@ -17223,52 +17245,53 @@ nsresult QuotaClient::InitOrigin(PersistenceType aPersistenceType,
   AutoTArray<nsString, 20> subdirsToProcess;
   nsTHashtable<nsStringHashKey> databaseFilenames(20);
   nsTHashtable<nsStringHashKey> obsoleteFilenames;
-  rv = GetDatabaseFilenames(directory, aCanceled,
-                            /* aForUpgrade */ false, subdirsToProcess,
+  rv = GetDatabaseFilenames(directory, aCanceled, subdirsToProcess,
                             databaseFilenames, &obsoleteFilenames);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     REPORT_TELEMETRY_INIT_ERR(kQuotaExternalError, IDB_GetDBFilenames);
     return rv;
   }
 
-  for (const nsString& subdirName : subdirsToProcess) {
-    // The directory must have the correct suffix.
-    nsDependentSubstring subdirNameBase;
-    if (NS_WARN_IF(!GetFilenameBase(subdirName, kFileManagerDirectoryNameSuffix,
-                                    subdirNameBase))) {
+  if (aInitializing) {
+    for (const nsString& subdirName : subdirsToProcess) {
+      // The directory must have the correct suffix.
+      nsDependentSubstring subdirNameBase;
+      if (NS_WARN_IF(!GetFilenameBase(
+              subdirName, kFileManagerDirectoryNameSuffix, subdirNameBase))) {
+        // If there is an unexpected directory in the idb directory, trying to
+        // delete at first instead of breaking the whole initialization.
+        if (NS_WARN_IF(NS_FAILED(DeleteFilesNoQuota(directory, subdirName)))) {
+          REPORT_TELEMETRY_INIT_ERR(kQuotaExternalError, IDB_GetBaseFilename);
+          return NS_ERROR_UNEXPECTED;
+        }
+
+        continue;
+      }
+
+      if (obsoleteFilenames.Contains(subdirNameBase)) {
+        rv = RemoveDatabaseFilesAndDirectory(*directory, subdirNameBase,
+                                             nullptr, aPersistenceType, aGroup,
+                                             aOrigin, EmptyString());
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          // If we somehow running into here, it probably means we are in a
+          // serious situation. e.g. Filesystem corruption.
+          // Will handle this in bug 1521541.
+          REPORT_TELEMETRY_INIT_ERR(kQuotaExternalError, IDB_RemoveDBFiles);
+          return NS_ERROR_UNEXPECTED;
+        }
+
+        databaseFilenames.RemoveEntry(subdirNameBase);
+        continue;
+      }
+
+      // The directory base must exist in databaseFilenames.
       // If there is an unexpected directory in the idb directory, trying to
       // delete at first instead of breaking the whole initialization.
-      if (NS_WARN_IF(NS_FAILED(DeleteFilesNoQuota(directory, subdirName)))) {
-        REPORT_TELEMETRY_INIT_ERR(kQuotaExternalError, IDB_GetBaseFilename);
+      if (NS_WARN_IF(!databaseFilenames.GetEntry(subdirNameBase)) &&
+          NS_WARN_IF((NS_FAILED(DeleteFilesNoQuota(directory, subdirName))))) {
+        REPORT_TELEMETRY_INIT_ERR(kQuotaExternalError, IDB_GetEntry);
         return NS_ERROR_UNEXPECTED;
       }
-
-      continue;
-    }
-
-    if (obsoleteFilenames.Contains(subdirNameBase)) {
-      rv = RemoveDatabaseFilesAndDirectory(*directory, subdirNameBase, nullptr,
-                                           aPersistenceType, aGroup, aOrigin,
-                                           EmptyString());
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        // If we somehow running into here, it probably means we are in a
-        // serious situation. e.g. Filesystem corruption.
-        // Will handle this in bug 1521541.
-        REPORT_TELEMETRY_INIT_ERR(kQuotaExternalError, IDB_RemoveDBFiles);
-        return NS_ERROR_UNEXPECTED;
-      }
-
-      databaseFilenames.RemoveEntry(subdirNameBase);
-      continue;
-    }
-
-    // The directory base must exist in databaseFilenames.
-    // If there is an unexpected directory in the idb directory, trying to
-    // delete at first instead of breaking the whole initialization.
-    if (NS_WARN_IF(!databaseFilenames.GetEntry(subdirNameBase)) &&
-        NS_WARN_IF((NS_FAILED(DeleteFilesNoQuota(directory, subdirName))))) {
-      REPORT_TELEMETRY_INIT_ERR(kQuotaExternalError, IDB_GetEntry);
-      return NS_ERROR_UNEXPECTED;
     }
   }
 
@@ -17321,11 +17344,13 @@ nsresult QuotaClient::InitOrigin(PersistenceType aPersistenceType,
       }
     }
 
-    rv = FileManager::InitDirectory(*fmDirectory, *databaseFile, aOrigin,
-                                    TelemetryIdForFile(databaseFile));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      REPORT_TELEMETRY_INIT_ERR(kQuotaInternalError, IDB_InitDirectory);
-      return rv;
+    if (aInitializing) {
+      rv = FileManager::InitDirectory(*fmDirectory, *databaseFile, aOrigin,
+                                      TelemetryIdForFile(databaseFile));
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        REPORT_TELEMETRY_INIT_ERR(kQuotaInternalError, IDB_InitDirectory);
+        return rv;
+      }
     }
 
     if (aUsageInfo) {
@@ -17359,29 +17384,6 @@ nsresult QuotaClient::InitOrigin(PersistenceType aPersistenceType,
 
       aUsageInfo->AppendToFileUsage(usage);
     }
-  }
-
-  return NS_OK;
-}
-
-nsresult QuotaClient::GetUsageForOrigin(PersistenceType aPersistenceType,
-                                        const nsACString& aGroup,
-                                        const nsACString& aOrigin,
-                                        const AtomicBool& aCanceled,
-                                        UsageInfo* aUsageInfo) {
-  AssertIsOnIOThread();
-  MOZ_ASSERT(aUsageInfo);
-
-  nsCOMPtr<nsIFile> directory;
-  nsresult rv =
-      GetDirectory(aPersistenceType, aOrigin, getter_AddRefs(directory));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = GetUsageForDirectoryInternal(directory, aCanceled, aUsageInfo, true);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
   }
 
   return NS_OK;
@@ -17646,7 +17648,7 @@ nsresult QuotaClient::GetDirectory(PersistenceType aPersistenceType,
 }
 
 nsresult QuotaClient::GetDatabaseFilenames(
-    nsIFile* aDirectory, const AtomicBool& aCanceled, bool aForUpgrade,
+    nsIFile* aDirectory, const AtomicBool& aCanceled,
     nsTArray<nsString>& aSubdirsToProcess,
     nsTHashtable<nsStringHashKey>& aDatabaseFilenames,
     nsTHashtable<nsStringHashKey>* aObsoleteFilenames) {
@@ -17714,129 +17716,11 @@ nsresult QuotaClient::GetDatabaseFilenames(
 
     nsDependentSubstring leafNameBase;
     if (!GetFilenameBase(leafName, kSQLiteSuffix, leafNameBase)) {
-      nsString path;
-      MOZ_ALWAYS_SUCCEEDS(file->GetPath(path));
-      MOZ_ASSERT(!path.IsEmpty());
-
-      const nsPrintfCString warning(
-          R"(An unexpected file exists in the storage )"
-          R"(area: "%s")",
-          NS_ConvertUTF16toUTF8(path).get());
-      NS_WARNING(warning.get());
-      if (!aForUpgrade) {
-        return NS_ERROR_UNEXPECTED;
-      }
+      UNKNOWN_FILE_WARNING(leafName);
       continue;
     }
 
     aDatabaseFilenames.PutEntry(leafNameBase);
-  }
-
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  return NS_OK;
-}
-
-nsresult QuotaClient::GetUsageForDirectoryInternal(nsIFile* aDirectory,
-                                                   const AtomicBool& aCanceled,
-                                                   UsageInfo* aUsageInfo,
-                                                   bool aDatabaseFiles) {
-  AssertIsOnIOThread();
-  MOZ_ASSERT(aDirectory);
-  MOZ_ASSERT(aUsageInfo);
-
-  nsCOMPtr<nsIDirectoryEnumerator> entries;
-  nsresult rv = aDirectory->GetDirectoryEntries(getter_AddRefs(entries));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  if (!entries) {
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsIFile> file;
-  while (NS_SUCCEEDED((rv = entries->GetNextFile(getter_AddRefs(file)))) &&
-         file && !aCanceled) {
-    nsString leafName;
-    rv = file->GetLeafName(leafName);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    // Ignore the markerfiles. Note: the unremoved files can still be calculated
-    // here as long as its size matches the size recorded in QuotaManager
-    // in-memory objects.
-    if (StringBeginsWith(leafName, kIdbDeletionMarkerFilePrefix)) {
-      continue;
-    }
-
-    if (QuotaManager::IsOSMetadata(leafName) ||
-        QuotaManager::IsDotFile(leafName)) {
-      continue;
-    }
-
-    // Journal files and sqlite-shm files don't count towards usage.
-    if (StringEndsWith(leafName, kSQLiteJournalSuffix) ||
-        StringEndsWith(leafName, kSQLiteSHMSuffix)) {
-      continue;
-    }
-
-    bool isDirectory;
-    rv = file->IsDirectory(&isDirectory);
-    if (rv == NS_ERROR_FILE_NOT_FOUND ||
-        rv == NS_ERROR_FILE_TARGET_DOES_NOT_EXIST) {
-      continue;
-    }
-
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    if (isDirectory) {
-      if (aDatabaseFiles) {
-        rv = GetUsageForDirectoryInternal(file, aCanceled, aUsageInfo, false);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
-      } else {
-        nsString leafName;
-        rv = file->GetLeafName(leafName);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
-
-        if (!leafName.Equals(kJournalDirectoryName)) {
-          NS_WARNING("Unknown directory found!");
-        }
-      }
-
-      continue;
-    }
-
-    if (!aDatabaseFiles) {
-      leafName.ToInteger64(&rv);
-      if (NS_FAILED(rv)) {
-        UNKNOWN_FILE_WARNING(leafName);
-        continue;
-      }
-    }
-
-    int64_t fileSize;
-    rv = file->GetFileSize(&fileSize);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    MOZ_ASSERT(fileSize >= 0);
-
-    if (aDatabaseFiles) {
-      aUsageInfo->AppendToDatabaseUsage(Some(uint64_t(fileSize)));
-    } else {
-      aUsageInfo->AppendToFileUsage(Some(uint64_t(fileSize)));
-    }
   }
 
   if (NS_WARN_IF(NS_FAILED(rv))) {
