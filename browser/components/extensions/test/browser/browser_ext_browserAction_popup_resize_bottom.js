@@ -4,10 +4,6 @@
 
 loadTestSubscript("head_browserAction.js");
 
-add_task(async function testSetup() {
-  Services.prefs.setBoolPref("toolkit.cosmeticAnimations.enabled", false);
-});
-
 // Test that we still make reasonable maximum size calculations when the window
 // is close enough to the bottom of the screen that the menu panel opens above,
 // rather than below, its button.
