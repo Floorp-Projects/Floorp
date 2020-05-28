@@ -112,20 +112,6 @@ using namespace mozilla::a11y;
   return NO;
 }
 
-- (NSArray*)additionalAccessibilityAttributeNames {
-  return @[];
-}
-
-- (NSArray*)accessibilityAttributeNames {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
-
-  NSArray* objectAttributes = [self additionalAccessibilityAttributeNames];
-
-  return [objectAttributes arrayByAddingObjectsFromArray:[super accessibilityAttributeNames]];
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
-}
-
 - (id)childAt:(uint32_t)i {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
