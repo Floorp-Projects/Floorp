@@ -186,7 +186,7 @@
 
 .network-monitor .tracking-protection {
   color: var(--theme-icon-dimmed-color);
-  margin-left: 47px;
+  max-width: 200px;
 }
 
 .network-monitor .tracking-protection .learn-more-link:not(:hover)::before {
