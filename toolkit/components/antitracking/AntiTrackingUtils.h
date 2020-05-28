@@ -58,7 +58,10 @@ class AntiTrackingUtils final {
                                      uint32_t aBlockedReason);
 
   // Returns true if the storage permission is granted for the given channel.
-  // And this is meant to be called in the parent process.
+  // And this is meant to be called in the parent process. This only reflects
+  // the fact that whether the channel has the storage permission. It doesn't
+  // take the window hierarchy into account. i.e. this will return true even
+  // for a nested iframe that has storage permission.
   static bool HasStoragePermissionInParent(nsIChannel* aChannel);
 
   // Returns the toplevel inner window id, returns 0 if this is a toplevel
