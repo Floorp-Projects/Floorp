@@ -39,6 +39,7 @@ class ScriptSource;
 namespace frontend {
 
 class ErrorReporter;
+class FunctionBox;
 
 // The format treats several distinct models as the same.
 //
@@ -1633,7 +1634,7 @@ class MOZ_STACK_CLASS BinASTTokenReaderContext : public BinASTTokenReaderBase {
   /**
    * Register lazy script for later modification.
    */
-  MOZ_MUST_USE JS::Result<Ok> registerLazyScript(BaseScript* lazy);
+  MOZ_MUST_USE JS::Result<Ok> registerLazyScript(FunctionBox* lazy);
 
   // --- Composite values.
   //
@@ -1772,7 +1773,7 @@ class MOZ_STACK_CLASS BinASTTokenReaderContext : public BinASTTokenReaderBase {
 
   // Lazy script created while reading the tree.
   // After reading tree, the start/end offset are set to correct value.
-  Rooted<GCVector<BaseScript*>> lazyScripts_;
+  Vector<FunctionBox*> lazyScripts_;
 
  public:
   BinASTTokenReaderContext(const BinASTTokenReaderContext&) = delete;

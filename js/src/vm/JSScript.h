@@ -1815,19 +1815,6 @@ class BaseScript : public gc::TenuredCell {
   MOZ_MUST_USE bool appendSourceDataForToString(JSContext* cx,
                                                 js::StringBuffer& buf);
 
-#if defined(JS_BUILD_BINAST)
-  void setStart(uint32_t offset, uint32_t line, uint32_t column) {
-    extent_.sourceStart = offset;
-    extent_.lineno = line;
-    extent_.column = column;
-  }
-
-  void setEnd(uint32_t end) {
-    extent_.sourceEnd = end;
-    extent_.toStringEnd = end;
-  }
-#endif
-
   void setToStringEnd(uint32_t toStringEnd) {
     MOZ_ASSERT(extent_.toStringStart <= toStringEnd);
     MOZ_ASSERT(extent_.toStringEnd >= extent_.sourceEnd);
