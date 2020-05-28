@@ -1549,10 +1549,10 @@ int wasapi_init(cubeb ** context, char const * context_name)
 
   LARGE_INTEGER frequency;
   if (QueryPerformanceFrequency(&frequency)) {
+    ctx->performance_counter_frequency = frequency.QuadPart;
+  } else {
     LOG("Failed getting performance counter frequency, latency reporting will be inacurate");
     ctx->performance_counter_frequency = 0;
-  } else {
-    ctx->performance_counter_frequency = frequency.QuadPart;
   }
 
   *context = ctx;
