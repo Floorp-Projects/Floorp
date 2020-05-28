@@ -1249,6 +1249,7 @@ nsresult nsHostResolver::TrrLookup(nsHostRecord* aRec, TRR* pushedTRR) {
   if (Mode() == MODE_TRROFF || StaticPrefs::network_dns_disabled()) {
     return NS_ERROR_UNKNOWN_HOST;
   }
+  LOG(("TrrLookup host:%s af:%" PRId16, aRec->host.get(), aRec->af));
 
   RefPtr<nsHostRecord> rec(aRec);
   mLock.AssertCurrentThreadOwns();
@@ -1493,6 +1494,8 @@ static nsIRequest::TRRMode EffectiveTRRMode(const nsCString& aHost,
 
 // Kick-off a name resolve operation, using native resolver and/or TRR
 nsresult nsHostResolver::NameLookup(nsHostRecord* rec) {
+  LOG(("NameLookup host:%s af:%" PRId16, rec->host.get(), rec->af));
+
   nsresult rv = NS_ERROR_UNKNOWN_HOST;
   if (rec->mResolving) {
     LOG(("NameLookup %s while already resolving\n", rec->host.get()));
@@ -1529,8 +1532,8 @@ nsresult nsHostResolver::NameLookup(nsHostRecord* rec) {
     return TrrLookup(rec);
   }
 
-  LOG(("NameLookup: %s effectiveTRRmode: %d", rec->host.get(),
-       rec->mEffectiveTRRMode));
+  LOG(("NameLookup: %s effectiveTRRmode: %d flags: %X", rec->host.get(),
+       rec->mEffectiveTRRMode, rec->flags));
 
   if (rec->mEffectiveTRRMode != nsIRequest::TRR_DISABLED_MODE &&
       !((rec->flags & RES_DISABLE_TRR))) {
