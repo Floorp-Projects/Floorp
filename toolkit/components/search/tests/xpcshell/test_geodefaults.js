@@ -68,7 +68,7 @@ add_task(async function should_recheck_if_interval_expired() {
     await forceExpiration();
 
     let date = Date.now();
-    await Promise.all([asyncReInit(), promiseAfterCache()]);
+    await Promise.all([asyncReInit(true), promiseAfterCache()]);
 
     // Check that the expiration timestamp has been updated.
     let metadata = await promiseGlobalMetadata();
