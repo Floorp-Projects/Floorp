@@ -429,12 +429,12 @@ class JSFunction : public js::NativeObject {
     return nullptr;
   }
 
-  // The default state of a JSFunction that is not ready for execution. This is
-  // generally the result of failure during bytecode compilation.
+  // The default state of a JSFunction that is not ready for execution. If
+  // observed outside initialization, this is the result of failure during
+  // bytecode compilation.
   //
-  // If u.scripted.s.script_ is non-null, the pointed JSScript is guaranteed to
-  // be complete (see the comment above JSScript::initFromFunctionBox callsite
-  // in JSScript::fullyInitFromEmitter).
+  // A BaseScript is fully initialized before u.script.s.script_ is initialized
+  // with a reference to it.
   bool isIncomplete() const { return isInterpreted() && !u.scripted.s.script_; }
 
   JSScript* nonLazyScript() const {
