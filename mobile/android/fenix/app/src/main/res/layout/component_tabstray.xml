@@ -83,6 +83,15 @@
         app:layout_constraintTop_toTopOf="@id/tab_layout"
         app:layout_constraintBottom_toBottomOf="@id/tab_layout" />
 
+    <View
+        android:id="@+id/divider"
+        android:layout_width="0dp"
+        android:layout_height="1dp"
+        android:background="?tabTrayItemDivider"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tab_layout" />
+
     <mozilla.components.concept.tabstray.TabsTray
         android:id="@+id/tabsTray"
         android:layout_width="0dp"
