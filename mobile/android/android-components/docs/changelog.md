@@ -24,6 +24,41 @@ permalink: /changelog/
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/v43.0.0/buildSrc/src/main/java/Config.kt)
 
 * **feature-downloads**
+  * ⚠️ **This is a breaking change**: DownloadManager and DownloadService are now using the browser store to keep track of queued downloads. Therefore, an instance of the store needs to be provided when constructing manager and service. There's also a new DownloadMiddleware which needs to be provided to the store.
+  ```kotlin
+   val store by lazy {
+        BrowserStore(middleware = listOf(
+            MediaMiddleware(applicationContext, MediaService::class.java),
+            DownloadMiddleware(applicationContext, DownloadService::class.java),
+            ...
+        ))
+    }
+  )
+
+  val feature = DownloadsFeature(
+      requireContext().applicationContext,
+      store = components.store,
+      useCases = components.downloadsUseCases,
+      fragmentManager = childFragmentManager,
+      onDownloadStopped = { download, id, status ->
+          Logger.debug("Download done. ID#$id $download with status $status")
+      },
+      downloadManager = FetchDownloadManager(
+          requireContext().applicationContext,
+          components.store, // Store needs to be provided now
+          DownloadService::class
+      ),
+      tabId = sessionId,
+      onNeedToRequestPermissions = { permissions ->
+          requestPermissions(permissions, REQUEST_CODE_DOWNLOAD_PERMISSIONS)
+      }
+  )
+
+  class DownloadService : AbstractFetchDownloadService() {
+    override val httpClient by lazy { components.core.client }
+    override val store: BrowserStore by lazy { components.core.store } // Store needs to be provided now
+  }
+  ```
   * Fixed issue [#6893](https://github.com/mozilla-mobile/android-components/issues/6893).
   * Add notification grouping to downloads Fenix issue [#4910](https://github.com/mozilla-mobile/android-components/issues/4910).
 

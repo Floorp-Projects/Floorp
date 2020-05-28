@@ -11,6 +11,7 @@ import android.app.DownloadManager.Request
 import android.content.Intent
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.state.state.content.DownloadState
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.grantPermission
 import mozilla.components.support.test.robolectric.testContext
@@ -24,11 +25,13 @@ import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyZeroInteractions
 import mozilla.components.feature.downloads.AbstractFetchDownloadService.Companion.EXTRA_DOWNLOAD_STATUS
 import mozilla.components.feature.downloads.AbstractFetchDownloadService.DownloadJobStatus
+import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import org.junit.Assert.assertEquals
 
 @RunWith(AndroidJUnit4::class)
 class AndroidDownloadManagerTest {
 
+    private lateinit var store: BrowserStore
     private lateinit var download: DownloadState
     private lateinit var downloadManager: AndroidDownloadManager
 
@@ -39,7 +42,8 @@ class AndroidDownloadManagerTest {
             "", "application/zip", 5242880,
             "Mozilla/5.0 (Linux; Android 7.1.1) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Focus/8.0 Chrome/69.0.3497.100 Mobile Safari/537.36"
         )
-        downloadManager = AndroidDownloadManager(testContext)
+        store = BrowserStore()
+        downloadManager = AndroidDownloadManager(testContext, store)
     }
 
     @Test(expected = SecurityException::class)
@@ -55,44 +59,39 @@ class AndroidDownloadManagerTest {
 
         grantPermissions()
 
+        assertTrue(store.state.queuedDownloads.isEmpty())
         val id = downloadManager.download(download)!!
+        store.waitUntilIdle()
+        assertEquals(download.copy(id = id), store.state.queuedDownloads[id])
 
         notifyDownloadCompleted(id)
-
         assertTrue(downloadCompleted)
     }
 
     @Test
     fun `calling tryAgain starts the download again`() {
-        var downloadCompleted = false
+        var downloadStopped = false
 
-        downloadManager.onDownloadStopped = { _, _, _ -> downloadCompleted = true }
-
+        downloadManager.onDownloadStopped = { _, _, _ -> downloadStopped = true }
         grantPermissions()
 
         val id = downloadManager.download(download)!!
+        store.waitUntilIdle()
+        notifyDownloadFailed(id)
+        assertTrue(downloadStopped)
 
-        notifyDownloadCompleted(id)
-
-        assertTrue(downloadCompleted)
-
-        downloadCompleted = false
-
+        downloadStopped = false
         downloadManager.tryAgain(id)
-
         notifyDownloadCompleted(id)
-        assertTrue(downloadCompleted)
+        assertTrue(downloadStopped)
     }
 
     @Test
     fun `trying to download a file with invalid protocol must NOT triggered a download`() {
-
         val invalidDownload = download.copy(url = "ftp://ipv4.download.thinkbroadband.com/5MB.zip")
-
         grantPermissions()
 
         val id = downloadManager.download(invalidDownload)
-
         assertNull(id)
     }
 
@@ -108,6 +107,7 @@ class AndroidDownloadManagerTest {
             downloadWithFileName,
             cookie = "yummy_cookie=choco"
         )!!
+        store.waitUntilIdle()
 
         downloadManager.onDownloadStopped = { _, _, status ->
             downloadStatus = status
@@ -118,6 +118,29 @@ class AndroidDownloadManagerTest {
 
         assertTrue(downloadCompleted)
         assertEquals(DownloadJobStatus.COMPLETED, downloadStatus)
+    }
+
+    @Test
+    fun `sendBroadcast with completed download removes queued download from store`() {
+        var downloadStatus: DownloadJobStatus? = null
+        val downloadWithFileName = download.copy(fileName = "5MB.zip")
+        grantPermissions()
+
+        downloadManager.onDownloadStopped = { _, _, status ->
+            downloadStatus = status
+        }
+
+        val id = downloadManager.download(
+            downloadWithFileName,
+            cookie = "yummy_cookie=choco"
+        )!!
+        store.waitUntilIdle()
+        assertEquals(downloadWithFileName.copy(id = id), store.state.queuedDownloads[id])
+
+        notifyDownloadCompleted(id)
+        store.waitUntilIdle()
+        assertEquals(DownloadJobStatus.COMPLETED, downloadStatus)
+        assertTrue(store.state.queuedDownloads.isEmpty())
     }
 
     @Test
@@ -137,6 +160,13 @@ class AndroidDownloadManagerTest {
         mockRequest.addRequestHeaderSafely("User-Agent", fireFox)
 
         verify(mockRequest).addRequestHeader(anyString(), anyString())
+    }
+
+    private fun notifyDownloadFailed(id: Long) {
+        val intent = Intent(ACTION_DOWNLOAD_COMPLETE)
+        intent.putExtra(android.app.DownloadManager.EXTRA_DOWNLOAD_ID, id)
+        intent.putExtra(EXTRA_DOWNLOAD_STATUS, DownloadJobStatus.FAILED)
+        testContext.sendBroadcast(intent)
     }
 
     private fun notifyDownloadCompleted(id: Long) {

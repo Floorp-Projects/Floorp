@@ -44,6 +44,7 @@ import mozilla.components.feature.app.links.AppLinksUseCases
 import mozilla.components.feature.contextmenu.ContextMenuUseCases
 import mozilla.components.feature.customtabs.CustomTabIntentProcessor
 import mozilla.components.feature.customtabs.store.CustomTabsServiceStore
+import mozilla.components.feature.downloads.DownloadMiddleware
 import mozilla.components.feature.downloads.DownloadsUseCases
 import mozilla.components.feature.intent.processing.TabIntentProcessor
 import mozilla.components.feature.media.RecordingDevicesNotificationFeature
@@ -62,6 +63,7 @@ import mozilla.components.feature.webnotifications.WebNotificationFeature
 import mozilla.components.lib.fetch.httpurlconnection.HttpURLConnectionClient
 import mozilla.components.lib.nearby.NearbyConnection
 import org.mozilla.samples.browser.addons.AddonsActivity
+import org.mozilla.samples.browser.downloads.DownloadService
 import org.mozilla.samples.browser.ext.components
 import org.mozilla.samples.browser.integration.FindInPageIntegration
 import org.mozilla.samples.browser.media.MediaService
@@ -112,6 +114,7 @@ open class DefaultComponents(private val applicationContext: Context) {
     val store by lazy {
         BrowserStore(middleware = listOf(
             MediaMiddleware(applicationContext, MediaService::class.java),
+            DownloadMiddleware(applicationContext, DownloadService::class.java),
             ReaderViewMiddleware()
         ))
     }

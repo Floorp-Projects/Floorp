@@ -117,6 +117,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler {
                 },
                 downloadManager = FetchDownloadManager(
                     requireContext().applicationContext,
+                    components.store,
                     DownloadService::class
                 ),
                 tabId = sessionId,

@@ -18,7 +18,9 @@ import androidx.annotation.RequiresPermission
 import androidx.core.content.getSystemService
 import androidx.core.net.toUri
 import androidx.core.util.set
+import mozilla.components.browser.state.action.DownloadAction
 import mozilla.components.browser.state.state.content.DownloadState
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.fetch.Headers.Names.COOKIE
 import mozilla.components.concept.fetch.Headers.Names.REFERRER
 import mozilla.components.concept.fetch.Headers.Names.USER_AGENT
@@ -36,19 +38,12 @@ typealias SystemRequest = android.app.DownloadManager.Request
  */
 class AndroidDownloadManager(
     private val applicationContext: Context,
+    private val store: BrowserStore,
     override var onDownloadStopped: onDownloadStopped = noop
 ) : BroadcastReceiver(), DownloadManager {
 
-    private val queuedDownloads = LongSparseArray<DownloadStateWithRequest>()
+    private val downloadRequests = LongSparseArray<SystemRequest>()
     private var isSubscribedReceiver = false
-
-    /**
-     * Holds both the state and the Android DownloadManager.Request for the queued download
-     */
-    data class DownloadStateWithRequest(
-        val state: DownloadState,
-        val request: SystemRequest
-    )
 
     override val permissions = arrayOf(INTERNET, WRITE_EXTERNAL_STORAGE)
 
@@ -60,7 +55,6 @@ class AndroidDownloadManager(
      */
     @RequiresPermission(allOf = [INTERNET, WRITE_EXTERNAL_STORAGE])
     override fun download(download: DownloadState, cookie: String): Long? {
-
         val androidDownloadManager: SystemDownloadManager = applicationContext.getSystemService()!!
 
         if (!download.isScheme(listOf("http", "https"))) {
@@ -73,22 +67,16 @@ class AndroidDownloadManager(
         validatePermissionGranted(applicationContext)
 
         val request = download.toAndroidRequest(cookie)
-
         val downloadID = androidDownloadManager.enqueue(request)
-
-        queuedDownloads[downloadID] = DownloadStateWithRequest(
-            state = download,
-            request = request
-        )
-
+        store.dispatch(DownloadAction.QueueDownloadAction(download.copy(id = downloadID)))
+        downloadRequests[downloadID] = request
         registerBroadcastReceiver()
-
         return downloadID
     }
 
     override fun tryAgain(downloadId: Long) {
         val androidDownloadManager: SystemDownloadManager = applicationContext.getSystemService()!!
-        androidDownloadManager.enqueue(queuedDownloads[downloadId].request)
+        androidDownloadManager.enqueue(downloadRequests[downloadId])
     }
 
     /**
@@ -98,7 +86,8 @@ class AndroidDownloadManager(
         if (isSubscribedReceiver) {
             applicationContext.unregisterReceiver(this)
             isSubscribedReceiver = false
-            queuedDownloads.clear()
+            store.dispatch(DownloadAction.RemoveAllQueuedDownloadsAction)
+            downloadRequests.clear()
         }
     }
 
@@ -111,17 +100,21 @@ class AndroidDownloadManager(
     }
 
     /**
-     * Invoked when a download is complete. Calls [onDownloadStopped] and unregisters the
-     * broadcast receiver if there are no more queued downloads.
+     * Invoked when a download is complete. Notifies [onDownloadStopped] and removes the queued
+     * download if it's complete.
      */
     override fun onReceive(context: Context, intent: Intent) {
         val downloadID = intent.getLongExtra(EXTRA_DOWNLOAD_ID, -1)
-        val download = queuedDownloads[downloadID]
+        val download = store.state.queuedDownloads[downloadID]
         val downloadStatus = intent.getSerializableExtra(AbstractFetchDownloadService.EXTRA_DOWNLOAD_STATUS)
             as AbstractFetchDownloadService.DownloadJobStatus
 
+        if (downloadStatus == AbstractFetchDownloadService.DownloadJobStatus.COMPLETED) {
+            store.dispatch(DownloadAction.RemoveQueuedDownloadAction(downloadID))
+        }
+
         if (download != null) {
-            onDownloadStopped(download.state, downloadID, downloadStatus)
+            onDownloadStopped(download, downloadID, downloadStatus)
         }
     }
 }

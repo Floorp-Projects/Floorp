@@ -15,15 +15,13 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.os.Build.VERSION.SDK_INT
 import android.os.Build.VERSION_CODES.P
-import android.util.LongSparseArray
-import androidx.core.util.set
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import mozilla.components.browser.state.action.DownloadAction
 import mozilla.components.browser.state.state.content.DownloadState
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.feature.downloads.AbstractFetchDownloadService
-import mozilla.components.feature.downloads.AbstractFetchDownloadService.Companion.EXTRA_DOWNLOAD
 import mozilla.components.feature.downloads.AbstractFetchDownloadService.Companion.EXTRA_DOWNLOAD_STATUS
 import mozilla.components.feature.downloads.ext.isScheme
-import mozilla.components.feature.downloads.ext.putDownloadExtra
 import kotlin.reflect.KClass
 
 /**
@@ -34,12 +32,12 @@ import kotlin.reflect.KClass
  */
 class FetchDownloadManager<T : AbstractFetchDownloadService>(
     private val applicationContext: Context,
+    private val store: BrowserStore,
     private val service: KClass<T>,
     private val broadcastManager: LocalBroadcastManager = LocalBroadcastManager.getInstance(applicationContext),
     override var onDownloadStopped: onDownloadStopped = noop
 ) : BroadcastReceiver(), DownloadManager {
 
-    private val queuedDownloads = LongSparseArray<DownloadState>()
     private var isSubscribedReceiver = false
 
     override val permissions = if (SDK_INT >= P) {
@@ -58,25 +56,21 @@ class FetchDownloadManager<T : AbstractFetchDownloadService>(
         if (!download.isScheme(listOf("http", "https", "data", "blob"))) {
             return null
         }
-
         validatePermissionGranted(applicationContext)
 
-        queuedDownloads[download.id] = download
-
-        val intent = Intent(applicationContext, service.java)
-        intent.putDownloadExtra(download)
-        applicationContext.startService(intent)
+        // The middleware will notify the service to start the download
+        // once this action is processed.
+        store.dispatch(DownloadAction.QueueDownloadAction(download))
 
         registerBroadcastReceiver()
-
         return download.id
     }
 
     override fun tryAgain(downloadId: Long) {
-        val download = queuedDownloads[downloadId] ?: return
+        val download = store.state.queuedDownloads[downloadId] ?: return
 
         val intent = Intent(applicationContext, service.java)
-        intent.putDownloadExtra(download)
+        intent.putExtra(EXTRA_DOWNLOAD_ID, download.id)
         applicationContext.startService(intent)
 
         registerBroadcastReceiver()
@@ -89,7 +83,7 @@ class FetchDownloadManager<T : AbstractFetchDownloadService>(
         if (isSubscribedReceiver) {
             broadcastManager.unregisterReceiver(this)
             isSubscribedReceiver = false
-            queuedDownloads.clear()
+            store.dispatch(DownloadAction.RemoveAllQueuedDownloadsAction)
         }
     }
 
@@ -102,15 +96,18 @@ class FetchDownloadManager<T : AbstractFetchDownloadService>(
     }
 
     /**
-     * Invoked when a download is complete. Calls [onDownloadStopped] and unregisters the
-     * broadcast receiver if there are no more queued downloads.
+     * Invoked when a download is complete. Notifies [onDownloadStopped] and removes the queued
+     * download if it's complete.
      */
     override fun onReceive(context: Context, intent: Intent) {
-        val download = intent.getParcelableExtra<DownloadState>(EXTRA_DOWNLOAD)
         val downloadID = intent.getLongExtra(EXTRA_DOWNLOAD_ID, -1)
+        val download = store.state.queuedDownloads[downloadID]
         val downloadStatus = intent.getSerializableExtra(EXTRA_DOWNLOAD_STATUS)
             as AbstractFetchDownloadService.DownloadJobStatus
 
+        if (downloadStatus == AbstractFetchDownloadService.DownloadJobStatus.COMPLETED) {
+            store.dispatch(DownloadAction.RemoveQueuedDownloadAction(downloadID))
+        }
         if (download != null) {
             onDownloadStopped(download, downloadID, downloadStatus)
         }
