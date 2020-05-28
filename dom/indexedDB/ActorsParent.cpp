@@ -568,16 +568,17 @@ nsresult ClampResultCode(nsresult aResultCode) {
   return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
 }
 
-void GetDatabaseFilename(const nsAString& aName,
-                         nsAutoString& aDatabaseFilename) {
-  MOZ_ASSERT(aDatabaseFilename.IsEmpty());
+void GetDatabaseFilenameBase(const nsAString& aDatabaseName,
+                             nsAutoString& aDatabaseFilenameBase) {
+  MOZ_ASSERT(aDatabaseFilenameBase.IsEmpty());
 
   // WARNING: do not change this hash function. See the comment in HashName()
   // for details.
-  aDatabaseFilename.AppendInt(HashName(aName));
+  aDatabaseFilenameBase.AppendInt(HashName(aDatabaseName));
 
   nsCString escapedName;
-  if (!NS_Escape(NS_ConvertUTF16toUTF8(aName), escapedName, url_XPAlphas)) {
+  if (!NS_Escape(NS_ConvertUTF16toUTF8(aDatabaseName), escapedName,
+                 url_XPAlphas)) {
     MOZ_CRASH("Can't escape database name!");
   }
 
@@ -593,7 +594,7 @@ void GetDatabaseFilename(const nsAString& aName,
     }
   }
 
-  aDatabaseFilename.AppendASCII(substring.get(), substring.Length());
+  aDatabaseFilenameBase.AppendASCII(substring.get(), substring.Length());
 }
 
 uint32_t CompressedByteCountForNumber(uint64_t aNumber) {
@@ -9492,32 +9493,34 @@ nsresult RemoveMarkerFile(nsIFile* aMarkerFile) {
 // succeeds when the file we ask it to delete does not actually exist. The
 // marker file is removed once deletion has successfully completed.
 nsresult RemoveDatabaseFilesAndDirectory(nsIFile& aBaseDirectory,
-                                         const nsAString& aFilenameBase,
+                                         const nsAString& aDatabaseFilenameBase,
                                          QuotaManager* aQuotaManager,
                                          const PersistenceType aPersistenceType,
                                          const nsACString& aGroup,
                                          const nsACString& aOrigin,
                                          const nsAString& aDatabaseName) {
   AssertIsOnIOThread();
-  MOZ_ASSERT(!aFilenameBase.IsEmpty());
+  MOZ_ASSERT(!aDatabaseFilenameBase.IsEmpty());
 
   AUTO_PROFILER_LABEL("RemoveDatabaseFilesAndDirectory", DOM);
 
   nsCOMPtr<nsIFile> markerFile;
-  nsresult rv = CreateMarkerFile(aBaseDirectory, aFilenameBase, &markerFile);
+  nsresult rv =
+      CreateMarkerFile(aBaseDirectory, aDatabaseFilenameBase, &markerFile);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   // The database file counts towards quota.
-  rv = DeleteFile(aBaseDirectory, aFilenameBase + kSQLiteSuffix, aQuotaManager,
-                  aPersistenceType, aGroup, aOrigin, Idempotency::Yes);
+  rv = DeleteFile(aBaseDirectory, aDatabaseFilenameBase + kSQLiteSuffix,
+                  aQuotaManager, aPersistenceType, aGroup, aOrigin,
+                  Idempotency::Yes);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   // .sqlite-journal files don't count towards quota.
-  rv = DeleteFile(aBaseDirectory, aFilenameBase + kSQLiteJournalSuffix,
+  rv = DeleteFile(aBaseDirectory, aDatabaseFilenameBase + kSQLiteJournalSuffix,
                   /* doesn't count */ nullptr, aPersistenceType, aGroup,
                   aOrigin, Idempotency::Yes);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -9525,7 +9528,7 @@ nsresult RemoveDatabaseFilesAndDirectory(nsIFile& aBaseDirectory,
   }
 
   // .sqlite-shm files don't count towards quota.
-  rv = DeleteFile(aBaseDirectory, aFilenameBase + kSQLiteSHMSuffix,
+  rv = DeleteFile(aBaseDirectory, aDatabaseFilenameBase + kSQLiteSHMSuffix,
                   /* doesn't count */ nullptr, aPersistenceType, aGroup,
                   aOrigin, Idempotency::Yes);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -9533,7 +9536,7 @@ nsresult RemoveDatabaseFilesAndDirectory(nsIFile& aBaseDirectory,
   }
 
   // .sqlite-wal files do count towards quota.
-  rv = DeleteFile(aBaseDirectory, aFilenameBase + kSQLiteWALSuffix,
+  rv = DeleteFile(aBaseDirectory, aDatabaseFilenameBase + kSQLiteWALSuffix,
                   aQuotaManager, aPersistenceType, aGroup, aOrigin,
                   Idempotency::Yes);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -9547,7 +9550,8 @@ nsresult RemoveDatabaseFilesAndDirectory(nsIFile& aBaseDirectory,
   }
 
   // The files directory counts towards quota.
-  rv = fmDirectory->Append(aFilenameBase + kFileManagerDirectoryNameSuffix);
+  rv = fmDirectory->Append(aDatabaseFilenameBase +
+                           kFileManagerDirectoryNameSuffix);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -21034,10 +21038,10 @@ nsresult FactoryOp::OpenDirectory() {
     return rv;
   }
 
-  nsAutoString filename;
-  GetDatabaseFilename(databaseName, filename);
+  nsAutoString databaseFilenameBase;
+  GetDatabaseFilenameBase(databaseName, databaseFilenameBase);
 
-  rv = dbFile->Append(filename + kSQLiteSuffix);
+  rv = dbFile->Append(databaseFilenameBase + kSQLiteSuffix);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -21305,8 +21309,8 @@ nsresult OpenDatabaseOp::DoDatabaseWork() {
   }
 #endif
 
-  nsAutoString filename;
-  GetDatabaseFilename(databaseName, filename);
+  nsAutoString databaseFilenameBase;
+  GetDatabaseFilenameBase(databaseName, databaseFilenameBase);
 
   nsCOMPtr<nsIFile> markerFile;
   rv = dbDirectory->Clone(getter_AddRefs(markerFile));
@@ -21314,7 +21318,7 @@ nsresult OpenDatabaseOp::DoDatabaseWork() {
     return rv;
   }
 
-  rv = markerFile->Append(kIdbDeletionMarkerFilePrefix + filename);
+  rv = markerFile->Append(kIdbDeletionMarkerFilePrefix + databaseFilenameBase);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -21329,8 +21333,9 @@ nsresult OpenDatabaseOp::DoDatabaseWork() {
     // previous operation.
     // Note: only update usage to the QuotaManager when mEnforcingQuota == true
     rv = RemoveDatabaseFilesAndDirectory(
-        *dbDirectory, filename, mEnforcingQuota ? quotaManager : nullptr,
-        persistenceType, mGroup, mOrigin, databaseName);
+        *dbDirectory, databaseFilenameBase,
+        mEnforcingQuota ? quotaManager : nullptr, persistenceType, mGroup,
+        mOrigin, databaseName);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -21342,7 +21347,7 @@ nsresult OpenDatabaseOp::DoDatabaseWork() {
     return rv;
   }
 
-  rv = dbFile->Append(filename + kSQLiteSuffix);
+  rv = dbFile->Append(databaseFilenameBase + kSQLiteSuffix);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -21365,7 +21370,8 @@ nsresult OpenDatabaseOp::DoDatabaseWork() {
     return rv;
   }
 
-  rv = fmDirectory->Append(filename + kFileManagerDirectoryNameSuffix);
+  rv = fmDirectory->Append(databaseFilenameBase +
+                           kFileManagerDirectoryNameSuffix);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -22601,10 +22607,10 @@ nsresult DeleteDatabaseOp::DoDatabaseWork() {
     return rv;
   }
 
-  nsAutoString filename;
-  GetDatabaseFilename(databaseName, filename);
+  nsAutoString databaseFilenameBase;
+  GetDatabaseFilenameBase(databaseName, databaseFilenameBase);
 
-  mDatabaseFilenameBase = filename;
+  mDatabaseFilenameBase = databaseFilenameBase;
 
   nsCOMPtr<nsIFile> dbFile;
   rv = directory->Clone(getter_AddRefs(dbFile));
@@ -22612,7 +22618,7 @@ nsresult DeleteDatabaseOp::DoDatabaseWork() {
     return rv;
   }
 
-  rv = dbFile->Append(filename + kSQLiteSuffix);
+  rv = dbFile->Append(databaseFilenameBase + kSQLiteSuffix);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
