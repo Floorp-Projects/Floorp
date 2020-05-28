@@ -19,7 +19,8 @@ A controller for making the appropriate request for remote tabs from [SyncedTabs
 
 | Name | Summary |
 |---|---|
-| [syncTabs](sync-tabs.md) | `abstract fun syncTabs(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Requests for remote tabs and notifies the [SyncedTabsView](../../mozilla.components.feature.syncedtabs.view/-synced-tabs-view/index.md) when available with [SyncedTabsView.displaySyncedTabs](../../mozilla.components.feature.syncedtabs.view/-synced-tabs-view/display-synced-tabs.md) otherwise notifies the appropriate error to [SyncedTabsView.onError](../../mozilla.components.feature.syncedtabs.view/-synced-tabs-view/on-error.md). |
+| [refreshSyncedTabs](refresh-synced-tabs.md) | `abstract fun refreshSyncedTabs(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Requests for remote tabs and notifies the [SyncedTabsView](../../mozilla.components.feature.syncedtabs.view/-synced-tabs-view/index.md) when available with [SyncedTabsView.displaySyncedTabs](../../mozilla.components.feature.syncedtabs.view/-synced-tabs-view/display-synced-tabs.md) otherwise notifies the appropriate error to [SyncedTabsView.onError](../../mozilla.components.feature.syncedtabs.view/-synced-tabs-view/on-error.md). |
+| [syncAccount](sync-account.md) | `abstract fun syncAccount(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Requests for the account on the [FxaAccountManager](../../mozilla.components.service.fxa.manager/-fxa-account-manager/index.md) to perform a sync. |
 
 ### Extension Functions
 

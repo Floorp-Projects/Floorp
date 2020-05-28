@@ -2,7 +2,7 @@
 
 # TimeSelection
 
-`class TimeSelection : `[`PromptRequest`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/prompt/PromptRequest.kt#L98)
+`class TimeSelection : `[`PromptRequest`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/prompt/PromptRequest.kt#L124)
 
 Value type that represents a request for a date prompt for picking a year, month, and day.
 

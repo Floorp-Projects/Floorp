@@ -2,7 +2,7 @@
 
 # FacingMode
 
-`enum class FacingMode` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/prompt/PromptRequest.kt#L149)
+`enum class FacingMode` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/prompt/PromptRequest.kt#L175)
 
 ### Enum Values
 

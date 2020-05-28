@@ -2,7 +2,7 @@
 
 # Dismissible
 
-`interface Dismissible` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/prompt/PromptRequest.kt#L266)
+`interface Dismissible` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/prompt/PromptRequest.kt#L292)
 
 ### Properties
 
@@ -18,6 +18,7 @@
 | [Authentication](../-authentication/index.md) | `data class Authentication : `[`PromptRequest`](../index.md)`, `[`Dismissible`](./index.md)<br>Value type that represents a request for an authentication prompt. For more related info take a look at &lt;a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Authentication&gt;MDN docs |
 | [Color](../-color/index.md) | `data class Color : `[`PromptRequest`](../index.md)`, `[`Dismissible`](./index.md)<br>Value type that represents a request for a selecting one or multiple files. |
 | [Confirm](../-confirm/index.md) | `data class Confirm : `[`PromptRequest`](../index.md)`, `[`Dismissible`](./index.md)<br>Value type that represents a request for showing a &lt;a href="https://developer.mozilla.org/en-US/docs/Web/API/Window/confirm&gt;confirm prompt. |
-| [LoginPrompt](../-login-prompt/index.md) | `data class LoginPrompt : `[`PromptRequest`](../index.md)`, `[`Dismissible`](./index.md)<br>Value type that represents a request for an login prompt. |
+| [SaveLoginPrompt](../-save-login-prompt/index.md) | `data class SaveLoginPrompt : `[`PromptRequest`](../index.md)`, `[`Dismissible`](./index.md)<br>Value type that represents a request for a save login prompt. |
+| [SelectLoginPrompt](../-select-login-prompt/index.md) | `data class SelectLoginPrompt : `[`PromptRequest`](../index.md)`, `[`Dismissible`](./index.md)<br>Value type that represents a request for a select login prompt. |
 | [Share](../-share/index.md) | `data class Share : `[`PromptRequest`](../index.md)`, `[`Dismissible`](./index.md)<br>Value type that represents a request to share data. https://w3c.github.io/web-share/ |
 | [TextPrompt](../-text-prompt/index.md) | `data class TextPrompt : `[`PromptRequest`](../index.md)`, `[`Dismissible`](./index.md)<br>Value type that represents a request for an alert prompt to enter a message. |

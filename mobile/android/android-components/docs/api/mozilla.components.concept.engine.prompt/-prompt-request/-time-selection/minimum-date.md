@@ -2,7 +2,7 @@
 
 # minimumDate
 
-`val minimumDate: `[`Date`](http://docs.oracle.com/javase/7/docs/api/java/util/Date.html)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/prompt/PromptRequest.kt#L101)
+`val minimumDate: `[`Date`](http://docs.oracle.com/javase/7/docs/api/java/util/Date.html)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/prompt/PromptRequest.kt#L127)
 
 date allow to be selected.
 

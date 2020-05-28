@@ -2,7 +2,7 @@
 
 # Popup
 
-`data class Popup : `[`PromptRequest`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/prompt/PromptRequest.kt#L215)
+`data class Popup : `[`PromptRequest`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/prompt/PromptRequest.kt#L241)
 
 Value type that represents a request for showing a pop-pup prompt.
 This occurs when content attempts to open a new window,
