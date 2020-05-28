@@ -284,7 +284,6 @@ FunctionBox* PerHandlerParser<ParseHandler>::newFunctionBox(
     return nullptr;
   }
 
-  // Note: The order we insert into traceListHead is important. See consumers.
   compilationInfo_.traceListHead = funbox;
   handler_.setFunctionBox(funNode, funbox);
 
@@ -329,7 +328,6 @@ FunctionBox* PerHandlerParser<ParseHandler>::newFunctionBox(
     return nullptr;
   }
 
-  // Note: The order we insert into traceListHead is important. See consumers.
   compilationInfo.traceListHead = funbox;
   handler_.setFunctionBox(funNode, funbox);
 
@@ -1844,41 +1842,20 @@ static bool CreateLazyScript(JSContext* cx, CompilationInfo& compilationInfo,
   return true;
 }
 
-static bool MaybePublishFunction(JSContext* cx,
+// Instantiate JSFunctions for each FunctionBox.
+static bool InstantiateFunctions(JSContext* cx,
                                  CompilationInfo& compilationInfo,
-                                 FunctionBox* funbox) {
-  if (funbox->hasFunction()) {
-    return true;
-  }
-
-  RootedFunction fun(cx, funbox->createFunction(cx));
-  if (!fun) {
-    return false;
-  }
-  funbox->initializeFunction(fun);
-
-  return true;
-}
-
-static bool PublishDeferredFunctions(JSContext* cx,
-                                     CompilationInfo& compilationInfo,
-                                     FunctionBox* listHead) {
-  // Use the trace list to visit funboxes. We must visit inner functions before
-  // their parents. The trace list inserts functions to the head of list as they
-  // are encountered. These leaves each list in a reverse-pre-order which is
-  // what we want.
-
-  mozilla::DebugOnly<size_t> prevIndex = size_t(-1);
-
+                                 FunctionBox* listHead) {
   for (FunctionBox* funbox = listHead; funbox; funbox = funbox->traceLink()) {
-    // During parse we check that child indices are greater than their parent.
-    // Now confirm we visit FunctionBox in descending index order.
-    MOZ_ASSERT(prevIndex > funbox->index());
-    prevIndex = funbox->index();
+    if (funbox->hasFunction()) {
+      continue;
+    }
 
-    if (!MaybePublishFunction(cx, compilationInfo, funbox)) {
+    RootedFunction fun(cx, funbox->createFunction(cx));
+    if (!fun) {
       return false;
     }
+    funbox->initializeFunction(fun);
   }
 
   return true;
@@ -2004,7 +1981,7 @@ static void LinkEnclosingLazyScript(FunctionBox* listHead) {
 }
 
 bool CompilationInfo::instantiateStencils() {
-  if (!PublishDeferredFunctions(cx, *this, traceListHead)) {
+  if (!InstantiateFunctions(cx, *this, traceListHead)) {
     return false;
   }
 
