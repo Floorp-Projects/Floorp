@@ -288,17 +288,8 @@
                 "description": "The height in pixels of the new window, including the frame. If not specified defaults to a natural height."
               },
               "focused": {
-                "choices": [
-                  {
-                    "type": "boolean",
-                    "enum": [true]
-                  },
-                  {
-                    "type": "boolean",
-                    "enum": [false],
-                    "deprecated": "Opening inactive windows is not supported."
-                  }
-                ],
+                "unsupported": true,
+                "type": "boolean",
                 "optional": true,
                 "description": "If true, opens an active window. If false, opens an inactive window."
               },
@@ -332,7 +323,8 @@
                 "optional": true,
                 "description": "A string to add to the beginning of the window title."
               }
-            }
+            },
+            "optional": true
           },
           {
             "type": "function",
