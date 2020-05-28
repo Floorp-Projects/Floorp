@@ -13,6 +13,7 @@ XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']
 
 TESTING_JS_MODULES += [
     'schemas/SpecialMessageActionSchemas.js',
+    'schemas/TriggerActionSchemas.js',
     'test/MSTestUtils.jsm',
 ]
 
