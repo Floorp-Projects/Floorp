@@ -94,9 +94,8 @@ class XRSession final : public DOMEventTargetHelper, public nsARefreshObserver {
   MOZ_CAN_RUN_SCRIPT
   void StartFrame();
   void ExitPresent();
-  RefPtr<XRViewerPose> PooledViewerPose(
-      const gfx::PointDouble3D& aPosition,
-      const gfx::QuaternionDouble& aOrientation, bool aEmulatedPosition);
+  RefPtr<XRViewerPose> PooledViewerPose(const gfx::Matrix4x4Double& aTransform,
+                                        bool aEmulatedPosition);
 
   // nsARefreshObserver
   MOZ_CAN_RUN_SCRIPT

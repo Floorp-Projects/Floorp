@@ -51,8 +51,6 @@ already_AddRefed<XRViewerPose> XRFrame::GetViewerPose(
   // TODO (Bug 1616393) - Check if poses must be limited:
   // https://immersive-web.github.io/webxr/#poses-must-be-limited
 
-  gfx::PointDouble3D viewerPosition;
-  gfx::QuaternionDouble viewerOrientation;
   bool emulatedPosition = aReferenceSpace.IsPositionEmulated();
 
   XRRenderState* renderState = mSession->GetActiveRenderState();
@@ -68,19 +66,16 @@ already_AddRefed<XRViewerPose> XRFrame::GetViewerPose(
         mSession->GetDisplayClient()->GetDisplayInfo();
     const gfx::VRHMDSensorState& sensorState = display->GetSensorState();
 
-    viewerPosition = gfx::PointDouble3D(sensorState.pose.position[0],
-                                        sensorState.pose.position[1],
-                                        sensorState.pose.position[2]);
-    viewerOrientation = gfx::QuaternionDouble(
+    gfx::PointDouble3D viewerPosition = gfx::PointDouble3D(
+        sensorState.pose.position[0], sensorState.pose.position[1],
+        sensorState.pose.position[2]);
+    gfx::QuaternionDouble viewerOrientation = gfx::QuaternionDouble(
         sensorState.pose.orientation[0], sensorState.pose.orientation[1],
         sensorState.pose.orientation[2], sensorState.pose.orientation[3]);
 
     // Quaternion was inverted for WebVR. We need to invert it here again.
     // TODO: Remove those extra inverts when WebVR support is disabled.
     viewerOrientation.Invert();
-
-    viewerPose = mSession->PooledViewerPose(viewerPosition, viewerOrientation,
-                                            emulatedPosition);
 
     gfx::Matrix4x4Double headTransform;
     headTransform.SetRotationFromQuaternion(viewerOrientation);
@@ -92,6 +87,8 @@ already_AddRefed<XRViewerPose> XRFrame::GetViewerPose(
     originTransform.PreTranslate(-aReferenceSpace.GetEffectiveOriginPosition());
 
     headTransform *= originTransform;
+
+    viewerPose = mSession->PooledViewerPose(headTransform, emulatedPosition);
 
     auto updateEye = [&](int32_t viewIndex, VRDisplayState::Eye eye) {
       auto offset = displayInfo.GetEyeTranslation(eye);
@@ -124,8 +121,8 @@ already_AddRefed<XRViewerPose> XRFrame::GetViewerPose(
     Matrix4x4 projection =
         ConstructInlineProjection((float)fov, aspect, depthNear, depthFar);
 
-    viewerPose = mSession->PooledViewerPose(viewerPosition, viewerOrientation,
-                                            emulatedPosition);
+    viewerPose =
+        mSession->PooledViewerPose(gfx::Matrix4x4Double(), emulatedPosition);
     viewerPose->GetEye(0)->Update(gfx::PointDouble3D(), gfx::QuaternionDouble(),
                                   projection);
   }

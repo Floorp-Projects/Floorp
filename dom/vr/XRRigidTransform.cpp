@@ -120,17 +120,32 @@ void XRRigidTransform::Update(const gfx::PointDouble3D& aPosition,
   mRawOrientation = aOrientation;
   mRawTransformMatrix.SetRotationFromQuaternion(mRawOrientation);
   mRawTransformMatrix.PostTranslate(mRawPosition);
+  UpdateInternal();
+}
 
+void XRRigidTransform::Update(const gfx::Matrix4x4Double& aTransform) {
+  mNeedsUpdate = true;
+  mRawTransformMatrix = aTransform;
+  gfx::PointDouble3D scale;
+  mRawTransformMatrix.Decompose(mRawPosition, mRawOrientation, scale);
+  // TODO: Investigate why we need to do this invert after getting orientation
+  // from the transform matrix. It looks like we have a bug at
+  // Matrix4x4Typed.SetFromRotationMatrix() (Bug 1635363).
+  mRawOrientation.Invert();
+  UpdateInternal();
+}
+
+void XRRigidTransform::UpdateInternal() {
   if (mPosition) {
-    mPosition->SetX(aPosition.x);
-    mPosition->SetY(aPosition.y);
-    mPosition->SetZ(aPosition.z);
+    mPosition->SetX(mRawPosition.x);
+    mPosition->SetY(mRawPosition.y);
+    mPosition->SetZ(mRawPosition.z);
   }
   if (mOrientation) {
-    mOrientation->SetX(aOrientation.x);
-    mOrientation->SetY(aOrientation.y);
-    mOrientation->SetZ(aOrientation.z);
-    mOrientation->SetW(aOrientation.w);
+    mOrientation->SetX(mRawOrientation.x);
+    mOrientation->SetY(mRawOrientation.y);
+    mOrientation->SetZ(mRawOrientation.z);
+    mOrientation->SetW(mRawOrientation.w);
   }
   if (mInverse) {
     gfx::QuaternionDouble q(mRawOrientation);
