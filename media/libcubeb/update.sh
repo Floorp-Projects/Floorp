@@ -84,3 +84,5 @@ else
   echo "Remember to update moz.yaml with the version details."
 fi
 
+echo "Applying a patch on top of $rev"
+patch -p3 < ./disable-assert.patch
