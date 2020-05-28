@@ -7,6 +7,7 @@
 #include "UrlClassifierFeatureCryptominingProtection.h"
 
 #include "mozilla/net/UrlClassifierCommon.h"
+#include "ChannelClassifierService.h"
 #include "mozilla/StaticPrefs_privacy.h"
 #include "nsContentUtils.h"
 #include "nsNetUtil.h"
@@ -156,6 +157,12 @@ UrlClassifierFeatureCryptominingProtection::ProcessChannel(
 
   nsAutoCString list;
   UrlClassifierCommon::TablesToString(aList, list);
+
+  if (ChannelClassifierService::OnBeforeBlockChannel(aChannel, mName, list) ==
+      ChannelBlockDecision::Unblocked) {
+    *aShouldContinue = true;
+    return NS_OK;
+  }
 
   UrlClassifierCommon::SetBlockedContent(aChannel, NS_ERROR_CRYPTOMINING_URI,
                                          list, EmptyCString(), EmptyCString());
