@@ -73,6 +73,17 @@ const ContentProcessTargetActor = ActorClassWithSpec(contentProcessTargetSpec, {
     this._workerList = null;
     this._workerTargetActorPool = null;
     this._onWorkerListChanged = this._onWorkerListChanged.bind(this);
+
+    // Try to destroy the Content Process Target when the content process shuts down.
+    // The parent process can't communicate during shutdown as the communication channel
+    // is already down (message manager or JS Window Actor API).
+    // So that we have to observe to some event fired from this process.
+    // While such cleanup doesn't sound ultimately necessary (the process will be completely destroyed)
+    // mochitests are asserting that there is no leaks during process shutdown.
+    // Do not override destroy as Protocol.js may override it when calling destroy,
+    // and we won't be able to call removeObserver correctly.
+    this.destroyObserver = this.destroy.bind(this);
+    Services.obs.addObserver(this.destroyObserver, "xpcom-shutdown");
   },
 
   get isRootActor() {
@@ -181,6 +192,9 @@ const ContentProcessTargetActor = ActorClassWithSpec(contentProcessTargetSpec, {
   },
 
   destroy: function() {
+    if (!this.actorID) {
+      return;
+    }
     Actor.prototype.destroy.call(this);
 
     // Tell the live lists we aren't watching any more.
@@ -198,6 +212,8 @@ const ContentProcessTargetActor = ActorClassWithSpec(contentProcessTargetSpec, {
       this._dbg.disable();
       this._dbg = null;
     }
+
+    Services.obs.removeObserver(this.destroyObserver, "xpcom-shutdown");
   },
 });
 
