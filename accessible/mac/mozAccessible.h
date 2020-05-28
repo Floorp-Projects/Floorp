@@ -206,12 +206,6 @@ inline mozAccessible* GetNativeFromGeckoAccessible(mozilla::a11y::AccessibleOrPr
 // override
 - (BOOL)isAccessibilityElement;
 
-// a mozAccessible needs to at least provide links to its parent and
-// children.
-// override
-- (NSArray*)accessibilityAttributeNames;
-- (NSArray*)additionalAccessibilityAttributeNames;
-
 // override
 - (NSString*)description;
 
