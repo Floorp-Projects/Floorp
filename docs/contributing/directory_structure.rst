@@ -11,7 +11,7 @@ the complete firefox source code of branch HEAD).
 In order to modify the source, you have to acquire it either by
 downloading a
 `snapshot <https://developer.mozilla.org/docs/Mozilla/Developer_guide/Source_Code/Downloading_Source_Archives>`__
-of the sources or by checking out the current sources from :ref:`Mercurial <How to contribute to Firefox>`.
+of the sources or by checking out the current sources from :ref:`Mercurial <Firefox Contributors' Quick Reference>`.
 
 This document describes the directory structure -- i.e., directories that
 are used by at least some of the

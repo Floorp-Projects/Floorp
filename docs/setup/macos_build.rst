@@ -27,8 +27,8 @@ You will need administrator permissions on your machine to install these
 prerequisites. (You can verify that you have these permissions in System
 Preferences -> Users & Groups.)
 
-See `1.1 Install Xcode and Xcode command line tools <#xcode>` and `1.2
-Get the local macOS SDK <#macOSSDK>` for more information on how to
+See `1.1 Install Xcode and Xcode command line tools <#xcode>`_ and `1.2
+Get the local macOS SDK <#macOSSDK>`_ for more information on how to
 install these prerequisites.
 
 .. rubric:: Getting the source
@@ -59,8 +59,8 @@ source code. If you prefer to work with git, use this command instead:
 
     python bootstrap.py --vcs=git
 
-If you don't have `Homebrew <https://brew.sh/>` or
-`Ports <https://www.macports.org/>` installed - software package
+If you don't have `Homebrew <https://brew.sh/>`_ or
+`Ports <https://www.macports.org/>`_ installed - software package
 managers that will let us install some programs we'll need - you'll be
 asked to pick one. Either will work, but most Mozilla developers use
 Homebrew.
@@ -88,8 +88,8 @@ before (``mozilla-unified``) and type:
 
 The ``./mach bootstrap`` step is a catch-all for any dependencies not
 covered in this documentation. If you are working on Firefox frontends
-or building Firefox without any changes, select `artifact
-builds <https://developer.mozilla.org/en-US/docs/Artifact_builds>` in
+or building Firefox without any changes, select :ref:`Artifact Builds
+<Understanding Artifact Builds>` in
 the first question in ``./mach bootstrap``.  Artifact builds will
 complete more quickly!  Artifact builds are unsuitable for those working
 on C++ code.
@@ -99,55 +99,12 @@ some time even on the fastest modern machines and as much as two hours
 or more on older hardware. Firefox is pretty big, because the Web is
 big.
 
-.. rubric:: Getting Connected
-   :name: Getting_Connected
-   :class: heading-tertiary
-
-That last step can take some time to finish. While it’s running, take a
-moment to sign in to\ `Bugzilla <https://bugzilla.mozilla.org/>`,
-Mozilla’s issue tracker. To comment on a bug or submit a patch you’ll
-need a Bugzilla account. You can either use your `GitHub
-account <https://github.com>`, or you can `sign up for a Bugzilla
-account here. <https://bugzilla.mozilla.org/createaccount.cgi>`
-
-As well as Bugzilla, much of Mozilla’s internal communication happens
-over Internet Relay Chat (IRC). You can learn how to `connect to Mozilla
-with IRC here <https://wiki.mozilla.org/IRC>`. If you’re just getting
-started or have questions about getting set up you can join us in the
-*"#introduction channel"*, where some of our community members hang out
-to try and help new contributors get rolling.
-
-.. rubric:: Join Mozillians.org!
-   :name: Join_Mozillians.org!
-   :class: heading-tertiary
-
-There’s one more thing you can do for yourself while you’re waiting:
-create an account for yourself on
-`Mozillians <https://mozillians.org/>`. Mozillians is the Mozilla
-community directory, where you can connect with people who share your
-interests, projects or countries. This step is optional, but we think it
-will be worth your while.
-
 .. rubric:: Now the Fun Starts
    :name: Now_the_Fun_Starts
    :class: heading-tertiary
 
 You have the code, you’ve compiled Firefox. Fire it up with
-``./mach run`` and you’re ready to start hacking. The next steps are up
-to you: join us on IRC in the *#introduction* channel, follow
-`StartMozilla on Twitter <https://twitter.com/StartMozilla>` and find
-a `bug to start working
-on <http://www.joshmatthews.net/bugsahoy/?simple=1>`.
-
-.. rubric:: Thank You
-   :name: Thank_You
-   :class: heading-tertiary
-
-Mozilla's strength is the community behind it; Firefox is the product of
-a global development team working to `keep the Web free, open and
-participatory <https://www.mozilla.org/about/manifesto/>`, and your
-contributions will make Firefox and the Web better for hundreds of
-millions of people around the world.
+``./mach run`` and you’re ready to start hacking.
 
 Build steps (details)
 ---------------------
@@ -168,14 +125,14 @@ You first need to install Xcode, for which you have two options but both
 require you to sign in with an Apple ID:
 
 -  From Apple Developer Download page - `direct
-   link <https://developer.apple.com/download/release/>`. Install the
+   link <https://developer.apple.com/download/release/>`_. Install the
    latest **release** (non-beta) version of Xcode, open ``Xcode.xip``,
    and then **before** **running the extracted Xcode.app, move it from
    the download folder to /Applications**. (Running it from another
    location may screw up various build paths, homebrew builds, etc. Fix
    by running ``sudo xcode-select -switch /Applications/Xcode.app`` )
 -  From the Mac App Store - `direct
-   link <https://apps.apple.com/us/app/xcode>`.
+   link <https://apps.apple.com/us/app/xcode>`_.
 
 Open /Applications/Xcode.app and let it do its initial first run and
 setup stuff.
@@ -195,7 +152,7 @@ other SDKs and that's why we recommend this specific version.
 
 To get the 10.11 SDK, first download Xcode 7.3.1 from the `More
 Downloads for Apple
-Developers <https://developer.apple.com/download/more/>` page. Once
+Developers <https://developer.apple.com/download/more/>`_ page. Once
 downloaded, mount the .dmg file. Then in the Terminal run the following:
 
 .. code-block:: shell
@@ -220,7 +177,7 @@ whatever package manager you prefer.
 2.1a Install dependencies via Homebrew
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-`Homebrew <http://brew.sh/>` is "the missing package manager for
+`Homebrew <http://brew.sh/>`_ is "the missing package manager for
 macOS." It provides a simple command-line interface to install packages,
 typically by compiling them from source.
 
@@ -254,7 +211,7 @@ MacPorts is a package manager for macOS. If you are running Homebrew,
 you can ignore this section.
 
 To install MacPorts, go to their `install
-page <http://www.macports.org/install.php>`, download the .dmg for
+page <http://www.macports.org/install.php>`_, download the .dmg for
 your platform, and install it. If you already have MacPorts installed,
 ensure it is up to date by running:
 
@@ -301,7 +258,7 @@ Mercurial to interact with these repositories. There are many ways to
 install Mercurial on macOS:
 
 #. Install `official builds from
-   Selenic <http://mercurial.selenic.com/>`
+   Selenic <http://mercurial.selenic.com/>`_
 #. Install via MacPorts:
 
 .. code-block:: shell
@@ -327,12 +284,12 @@ Once you have installed Mercurial, test it by running:
     hg version
 
 If this works, congratulations! You'll want to configure your Mercurial
-settings to match other developers. See `Getting Mozilla Source Code
-Using Mercurial <https://developer.mozilla.org/en-US/Developer_Guide/Source_Code/Mercurial>`.
+settings to match other developers. See :ref:`Getting Mozilla Source Code
+Using Mercurial <Mercurial Overview>`.
 
 If this fails with the error "``ValueError: unknown locale: UTF-8``",
 then see the
-`workarounds <http://www.selenic.com/mercurial/wiki/index.cgi/UnixInstall#head-1c10f216d5b9ccdcb2613ea37d407eb45f22a394>`
+`workarounds <http://www.selenic.com/mercurial/wiki/index.cgi/UnixInstall#head-1c10f216d5b9ccdcb2613ea37d407eb45f22a394>`_
 on the Mercurial wiki's Unix Install page.
 
 When trying to clone a repository you may get an HTTP 500 error
@@ -345,8 +302,8 @@ what worked, please.
 3. Obtain a copy of the Mozilla source code
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-You may want to read `Getting Mozilla Source Code Using
-Mercurial <https://developer.mozilla.org/en-US/Developer_Guide/Source_Code/Mercurial>` for the
+You may want to read :ref:`Getting Mozilla Source Code
+Using Mercurial <Mercurial Overview>` for the
 complete instructions.
 
 If you are interested in Firefox development only then run the following
@@ -362,14 +319,14 @@ couple hundred megabytes of data over the internet.
     cd mozilla-central
 
 (If you are building Firefox for Android, you should now return to the
-`Android build instructions <https://wiki.mozilla.org/Mobile/Fennec/Android#Mac_OS_X>`.)
+`Android build instructions <https://wiki.mozilla.org/Mobile/Fennec/Android#Mac_OS_X>`_.)
 
 4. Configure the build options
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In your checked out source tree create a new file, ``mozconfig``, which
 will contain your build options. For more on this file, see `Configuring
-Build Options <https://developer.mozilla.org/en/Configuring_Build_Options>`.
+Build Options <https://developer.mozilla.org/en/Configuring_Build_Options>`_.
 
 To get started quickly, create the file with the following contents:
 
@@ -388,13 +345,13 @@ To get started quickly, create the file with the following contents:
 Firefox no longer builds with gcc 4.8 or earlier, but the build system
 should automatically select clang if it is available in the PATH. If
 that is not the case, you need to set CC and CXX. For instance, if you
-installed Clang 3.7 via Homebrew, then you need to have this in your
+installed Clang 9 via Homebrew, then you need to have this in your
 ``mozconfig``:
 
 .. code:: eval
 
-    CC=clang-mp-3.7
-    CXX=clang++-mp-3.7
+    CC=clang-9
+    CXX=clang++-9
 
 If you installed Autoconf 2.13 with the Homebrew recipe linked above,
 you may need to add the following to your ``mozconfig``:
@@ -431,7 +388,7 @@ Hardware requirements
 ---------------------
 
 There are no specific hardware requirements, provided that the hardware
-accommodates all of the `software <#Software_Requirements>` required
+accommodates all of the `software <#Software_Requirements>`_ required
 to build Firefox. Firefox can take a long time to build, so more CPU,
 more RAM and lots of fast disks are always recommended.
 
@@ -450,13 +407,13 @@ Software requirements
 -  **Development Environment:** Xcode. You can obtain from the App
    Store.
 -  **Package Management:** Either
-   *`MacPorts <http://www.macports.org/>`* or Homebrew.
+   *`MacPorts <http://www.macports.org/>`_* or Homebrew.
 
 These options are specific to Mozilla builds for macOS. For a more
 general overview of build options and the ``mozconfig`` file, see
-`Configuring Build Options <https://developer.mozilla.org/en/Configuring_Build_Options>`. For
+`Configuring Build Options <https://developer.mozilla.org/en/Configuring_Build_Options>`_. For
 specific information on configuring to build a universal binary, see
-`Mac OS X Universal Binaries <https://developer.mozilla.org/en/Mac_OS_X_Universal_Binaries>`.
+`Mac OS X Universal Binaries <https://developer.mozilla.org/en/Mac_OS_X_Universal_Binaries>`_.
 
 -  **Compiler:** Firefox releases are no longer built with gcc-4.8 or
    earlier. A recent copy of clang is needed.
@@ -468,7 +425,7 @@ specific information on configuring to build a universal binary, see
          (Xcode 6.4 is based on pre-release of clang 3.6, that doesn't
          match to requirement.)
       -  Following the instructions in the `clang
-         website <http://clang.llvm.org/get_started.html>` for
+         website <http://clang.llvm.org/get_started.html>`_ for
          information on how to get it.
       -  Using some of the package managers (see above).
 
@@ -484,7 +441,7 @@ are intended to be added to your ``mozconfig`` file.
    Selecting an SDK with this option overrides the default headers and
    libraries in ``/usr/include``, ``/usr/lib``, and ``/System/Library``.
    Mac macOS SDKs are installed in ``/Developer/SDKs`` during the `Xcode
-   installation <#Software_Requirements>` by selecting the **Cross
+   installation <#Software_Requirements>`_ by selecting the **Cross
    Development** category in the installer’s **Customize** screen.
 
 .. code-block:: shell
@@ -492,7 +449,7 @@ are intended to be added to your ``mozconfig`` file.
        ac_add_options --with-macos-sdk=/path/to/SDK
 
    Official trunk builds use ``/Developer/SDKs/MacOSX10.11.sdk``. Check
-   ```build/macosx/universal/mozconfig.common`` <https://dxr.mozilla.org/mozilla-central/source/build/macosx/cross-mozconfig.common#23>`
+   ```build/macosx/universal/mozconfig.common`` <https://dxr.mozilla.org/mozilla-central/source/build/macosx/cross-mozconfig.common#23>`_
    for the SDK version used for official builds of any particular source
    release.
 

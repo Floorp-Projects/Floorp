@@ -20,7 +20,7 @@ yourself under your home directory:
    mkdir src && cd src
 
 Next `download the bootstrap.py
-script <https://hg.mozilla.org/mozilla-central/raw-file/default/python/mozboot/bin/bootstrap.py>`
+script <https://hg.mozilla.org/mozilla-central/raw-file/default/python/mozboot/bin/bootstrap.py>`_
 and save it in the ``src/`` directory created above.
 
 .. warning::
@@ -56,10 +56,9 @@ You’re ready; now we can tie it all together. In your terminal:
    cd mozilla-central
 
 If you are not working on the C/C++ files you can also opt for
-`Artifact
-Builds <https://developer.mozilla.org/en-US/docs/Artifact_builds>`
+:ref:`Artifact Builds <Understanding Artifact Builds>`
 which are much faster. To enable artifact build set up a
-`.mozconfig <https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Build_Instructions/Configuring_Build_Options>`
+`.mozconfig <https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Build_Instructions/Configuring_Build_Options>`_
 file with the following options:
 
 .. code-block:: shell
@@ -72,7 +71,7 @@ file with the following options:
    mk_add_options MOZ_OBJDIR=./objdir-frontend
 
 If you plan to walk through code with a debugger, set up a
-`.mozconfig <https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Build_Instructions/Configuring_Build_Options>`
+`.mozconfig <https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Build_Instructions/Configuring_Build_Options>`_
 file with the following options:
 
 .. code-block:: shell
@@ -83,7 +82,7 @@ file with the following options:
 
 Older clang versions (especially clang 6) `from LTS linux
 distributions sometimes miscompile
-Firefox <https://bugzilla.mozilla.org/show_bug.cgi?id=1594686>`,
+Firefox <https://bugzilla.mozilla.org/show_bug.cgi?id=1594686>`_,
 resulting in startup crashes when starting the resulting build.
 If this happens, you can force the use of the ``clang`` version
 that ``./mach bootstrap`` downloaded by adding the following to
@@ -118,15 +117,15 @@ You have the code, you’ve compiled Firefox. Fire it up with
 ``./mach run`` and you’re ready to start hacking. The next steps
 are up to you: join us on IRC in the ``#introduction`` channel,
 and find `a bug to start working
-on. <https://codetribute.mozilla.org/>`
+on. <https://codetribute.mozilla.org/>`_
 
 
 General considerations
 ----------------------
 
 #. 2GB RAM with an additional 2GB of available swap space is the bare minimum, and more RAM is always better - having 8GB or more will dramatically improve build time.
-#. A 64-bit x86 CPU and a 64-bit OS. As of early 2015 it is no longer possible to do a full build of Firefox from source on most 32-bit systems; a 64-bit OS is required. "`Artifact builds <https://developer.mozilla.org/en-US/docs/Artifact_builds>`" may be possible, but are not a supported configuration. On Linux you can determine this by typing "``uname -a``" in a terminal.
-#. A recent version of Clang is required to build Firefox. You can `learn more about the features we use and their compiler support here <https://developer.mozilla.org/en-US/docs/Using_CXX_in_Mozilla_code>`
+#. A 64-bit x86 CPU and a 64-bit OS. As of early 2015 it is no longer possible to do a full build of Firefox from source on most 32-bit systems; a 64-bit OS is required. ":ref:`Artifact Builds <Understanding Artifact Builds>`" may be possible, but are not a supported configuration. On Linux you can determine this by typing "``uname -a``" in a terminal.
+#. A recent version of Clang is required to build Firefox. You can `learn more about the features we use and their compiler support here <https://developer.mozilla.org/en-US/docs/Using_CXX_in_Mozilla_code>`_
 #. Most Linux distros now install a later version of autoconf, which the build system cannot use, reporting the error "``*** Couldn't find autoconf 2.13.  Stop.``" However a separate ``autoconf2.13`` package is usually available. To install `autoconf 2.13` in Debian based distros copy this line and paste it into a terminal window:
 
 .. code-block:: shell
@@ -193,13 +192,13 @@ case, you should upgrade your Linux distribution or use your browser to
 download the file. That ensures that you will get it from the right
 source.
 If you get an error from this process, consider `filing a
-bug <https://bugzilla.mozilla.org/enter_bug.cgi?product=Core&component=Build%20Config>`
+bug <https://bugzilla.mozilla.org/enter_bug.cgi?product=Core&component=Build%20Config>`_
 saying that the bootstrapper didn't work and `contact Mike
 Hoye <mailto:mhoye@mozilla.com>` directly for help. Please include the
 error message and some details about your operating system.
 
 If you have already checked out the source code via Mercurial or Git you
-can also use `mach <https://developer.mozilla.org/en-US/docs/Developer_Guide/mach>` with the
+can also use `mach <https://developer.mozilla.org/en-US/docs/Developer_Guide/mach>`_ with the
 bootstrap command:
 
 .. code-block:: shell
@@ -231,7 +230,7 @@ On Fedora-based distros:
    sudo dnf install wget
 
 or you can just `download
-bootstrap.py <https://hg.mozilla.org/mozilla-central/raw-file/default/python/mozboot/bin/bootstrap.py>`
+bootstrap.py <https://hg.mozilla.org/mozilla-central/raw-file/default/python/mozboot/bin/bootstrap.py>`_
 using your browser and then run it with this command:
 
 .. code-block:: shell
@@ -250,4 +249,4 @@ More info
 
 The above bootstrap script supports popular Linux distributions. If it
 doesn't work for you, see `Linux build
-prerequisites <https://developer.mozilla.org/docs/Mozilla/Developer_guide/Build_Instructions/Linux_Prerequisites>` for more.
+prerequisites <https://developer.mozilla.org/docs/Mozilla/Developer_guide/Build_Instructions/Linux_Prerequisites>`_ for more.

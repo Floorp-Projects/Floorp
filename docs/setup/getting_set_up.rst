@@ -13,7 +13,7 @@ The Mozilla community prides itself on being an open, accessible, and
 friendly community for new participants. If you have any difficulties
 getting involved or finding answers to your questions, please `come and
 ask your questions in our
-chatroom <https://chat.mozilla.org/#/room/#introduction:mozilla.org>`,
+chatroom <https://chat.mozilla.org/#/room/#introduction:mozilla.org>`_,
 where we can help you get started.
 
 We know even before you start contributing that getting set up to work
@@ -34,17 +34,17 @@ very diverse skills:
    you can contribute to the core layers of Firefox and many other Mozilla
    projects. 
 -  If you know **Rust**, you can also contribute to the Rust programming
-   language itself, and `Servo <https://servo.org/>`, the web browser engine
+   language itself, and `Servo <https://servo.org/>`_, the web browser engine
    designed for parallelism and safety.
 -  If you know **Java**, you can contribute to Firefox on Android,
    `Firefox Focus for
-   Android <https://github.com/mozilla-mobile/focus-android>` .
+   Android <https://github.com/mozilla-mobile/focus-android>`_ .
 -  If you know **Kotlin**, you can contribute to `Firefox
-   Preview <https://github.com/mozilla-mobile/fenix>` (code name:
+   Preview <https://github.com/mozilla-mobile/fenix>`_ (code name:
    "Fenix").
 -  If you know **Swift**, you can contribute to `Firefox for
-   iOS <https://github.com/mozilla-mobile/firefox-ios>` and `Firefox
-   Focus for iOS <https://github.com/mozilla-mobile/focus-ios>`
+   iOS <https://github.com/mozilla-mobile/firefox-ios>`_ and `Firefox
+   Focus for iOS <https://github.com/mozilla-mobile/focus-ios>`_
 -  If you know **Python**, you can contribute to our web services,
    including Firefox Sync and Firefox Accounts
 -  If you know **Make**, **shell**, **Perl**, or **Python**, you can
@@ -54,12 +54,12 @@ very diverse skills:
    programming. If getting involved in design, support, translation,
    testing, or other types of contributions sparks your interest please
    see the `Volunteer Opportunities
-   wiki <https://contribute.mozilla.org>`\ or the `Mozilla
-   community <https://mozilla.community/>` site.
+   wiki <https://contribute.mozilla.org>`_\ or the `Mozilla
+   community <https://mozilla.community/>`_ site.
 
 Perhaps you do not know programming yet, but you want to start learning?
 There are `plenty of
-resources <https://developer.mozilla.org/learn>` available on
+resources <https://developer.mozilla.org/learn>`_ available on
 the MDN Web Docs!
 
 Read on for information about how to set up your machine to build Firefox.
