@@ -26,4 +26,7 @@
 
     <!-- Text shown instead of crash list if no crashes have been submitted yet -->
     <string name="mozac_lib_crash_no_crashes">Nem volt még beküldve jelentés.</string>
+
+    <!-- Text link that will show an app chooser to share a crash report with a third-party app (e.g. gmail) -->
+    <string name="mozac_lib_crash_share">Megosztás</string>
 </resources>
