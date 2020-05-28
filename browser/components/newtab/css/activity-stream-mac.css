@@ -2552,14 +2552,41 @@ main {
     text-align: center; }
   .ds-navigation.ds-navigation-right-aligned {
     text-align: end; }
+  .ds-navigation.ds-navigation-variant-responsive {
+    font-size: 11px; }
+    .ds-navigation.ds-navigation-variant-responsive .ds-header {
+      font-size: 11px; }
+    .ds-navigation.ds-navigation-variant-responsive .ds-navigation-inline-explore-more,
+    .ds-navigation.ds-navigation-variant-responsive .ds-header,
+    .ds-navigation.ds-navigation-variant-responsive ul li,
+    .ds-navigation.ds-navigation-variant-responsive ul {
+      display: none; }
+    @media (min-width: 610px) {
+      .ds-navigation.ds-navigation-variant-responsive .ds-navigation-inline-explore-more,
+      .ds-navigation.ds-navigation-variant-responsive .ds-header,
+      .ds-navigation.ds-navigation-variant-responsive ul {
+        display: inline-block; }
+      .ds-navigation.ds-navigation-variant-responsive .ds-navigation-header-explore-more {
+        display: none; }
+      .ds-navigation.ds-navigation-variant-responsive ul li:nth-child(-n+3) {
+        display: inline-block; } }
+    @media (min-width: 866px) {
+      .ds-navigation.ds-navigation-variant-responsive ul li:nth-child(-n+6) {
+        display: inline-block; } }
+    @media (min-width: 1122px) {
+      .ds-navigation.ds-navigation-variant-responsive ul li {
+        display: inline-block; }
+      .ds-navigation.ds-navigation-variant-responsive .ds-navigation-inline-explore-more {
+        display: none; } }
   .ds-navigation ul {
+    display: inline;
     margin: 0;
     padding: 0; }
   .ds-navigation ul li {
     display: inline-block; }
     .ds-navigation ul li::after {
       content: '·';
-      padding: 8px;
+      padding: 6px;
       color: #737373; }
     .ds-navigation ul li:last-child::after {
       content: none; }
@@ -2568,7 +2595,8 @@ main {
     .ds-navigation ul li a:active {
       color: #003EAA; }
   .ds-navigation .ds-header {
-    margin-bottom: 8px; }
+    margin-bottom: 8px;
+    padding-inline-end: 8px; }
 
 .ds-section-title {
   text-align: center;
