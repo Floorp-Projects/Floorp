@@ -86,7 +86,7 @@ class RemoteCPPUnitTests(cppunittests.CPPUnitTests):
                     for root, dirs, paths in os.walk(local_arm_lib):
                         for path in paths:
                             if path.endswith(".so"):
-                                print("Pushing %s..".format(path), file=sys.stderr)
+                                print("Pushing {}..".format(path), file=sys.stderr)
                                 remote_file = posixpath.join(
                                     self.remote_bin_dir, path)
                                 local_file = os.path.join(root, path)
