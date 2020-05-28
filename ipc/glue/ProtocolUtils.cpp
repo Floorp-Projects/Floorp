@@ -715,7 +715,12 @@ Shmem::SharedMemory* IToplevelProtocol::LookupSharedMemory(Shmem::id_t aId) {
 }
 
 bool IToplevelProtocol::IsTrackingSharedMemory(Shmem::SharedMemory* segment) {
-  return mShmemMap.HasData(segment);
+  for (const auto& iter : mShmemMap) {
+    if (segment == iter.second) {
+      return true;
+    }
+  }
+  return false;
 }
 
 bool IToplevelProtocol::DestroySharedMemory(Shmem& shmem) {
@@ -741,9 +746,8 @@ bool IToplevelProtocol::DestroySharedMemory(Shmem& shmem) {
 }
 
 void IToplevelProtocol::DeallocShmems() {
-  for (IDMap<SharedMemory*>::const_iterator cit = mShmemMap.begin();
-       cit != mShmemMap.end(); ++cit) {
-    Shmem::Dealloc(Shmem::PrivateIPDLCaller(), cit->second);
+  for (const auto& cit : mShmemMap) {
+    Shmem::Dealloc(Shmem::PrivateIPDLCaller(), cit.second);
   }
   mShmemMap.Clear();
 }
