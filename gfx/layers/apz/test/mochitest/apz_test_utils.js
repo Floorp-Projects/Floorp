@@ -1083,3 +1083,40 @@ var ApzCleanup = {
     }
   },
 };
+
+/**
+ * Returns a promise that will resolve if `eventTarget` receives an event of the
+ * given type that passes the given filter. Only the first matching message is
+ * used. The filter must be a function (or null); it is called with the event
+ * object and the call must return true to resolve the promise.
+ */
+function promiseOneEvent(eventTarget, eventType, filter) {
+  return new Promise((resolve, reject) => {
+    eventTarget.addEventListener(eventType, function listener(e) {
+      let success = false;
+      if (filter == null) {
+        success = true;
+      } else if (typeof filter == "function") {
+        try {
+          success = filter(e);
+        } catch (ex) {
+          dump(
+            `ERROR: Filter passed to promiseOneEvent threw exception: ${ex}\n`
+          );
+          reject();
+          return;
+        }
+      } else {
+        dump(
+          "ERROR: Filter passed to promiseOneEvent was neither null nor a function\n"
+        );
+        reject();
+        return;
+      }
+      if (success) {
+        eventTarget.removeEventListener(eventType, listener);
+        resolve(e);
+      }
+    });
+  });
+}

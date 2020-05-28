@@ -48,7 +48,7 @@ async function setup_in_oopif() {
     return true;
   }
 
-  const iframePromise = promiseOneEvent("OOPIF:SetupDone", null);
+  const iframePromise = promiseOneEvent(window, "OOPIF:SetupDone", null);
 
   await FissionTestHelper.sendToOopif(testframe, `(${setup})()`);
   await iframePromise;
@@ -66,7 +66,7 @@ async function observe_styling_in_oopif(aFrameCount) {
     return true;
   }
 
-  const iframePromise = promiseOneEvent("OOPIF:StyleCount", null);
+  const iframePromise = promiseOneEvent(window, "OOPIF:StyleCount", null);
   await FissionTestHelper.sendToOopif(testframe, `(${observe_styling})(${aFrameCount})`);
 
   const styleCountData = await iframePromise;
