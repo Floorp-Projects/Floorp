@@ -1336,11 +1336,6 @@
   value: true
   mirror: always
 
-- name: devtools.browsertoolbox.fission
-  type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
-  mirror: always
-
 #---------------------------------------------------------------------------
 # Prefs starting with "docshell."
 #---------------------------------------------------------------------------
