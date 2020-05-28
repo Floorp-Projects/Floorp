@@ -9,7 +9,7 @@
  * directories in the storage/default directory and its subdirectories.
  */
 
-function* testSteps() {
+async function testSteps() {
   const exampleUrl = "http://example.com";
   const unknownRepoFile = {
     path: "storage/default/foo.bar",
@@ -40,12 +40,10 @@ function* testSteps() {
 
   let request;
 
-  info("Initializing");
+  info("Initializing storage");
 
-  request = init(continueToNextStepSync);
-  yield undefined;
-
-  ok(request.resultCode == NS_OK, "Initialization succeeded");
+  request = init();
+  await requestFinished(request);
 
   for (let unknownFile of [
     unknownRepoFile,
@@ -59,21 +57,15 @@ function* testSteps() {
     info("Initializing origin");
 
     const principal = getPrincipal(exampleUrl);
-    request = initStorageAndOrigin(
-      principal,
-      "default",
-      continueToNextStepSync
-    );
-    yield undefined;
+    request = initStorageAndOrigin(principal, "default");
+    await requestFinished(request);
 
-    ok(request.resultCode == NS_OK, "Initialization succeeded");
     ok(request.result === true, "The origin directory was created");
 
     info("Getting origin usage");
 
     request = getOriginUsage(principal);
-    requestFinished(request).then(continueToNextStepSync);
-    yield undefined;
+    await requestFinished(request);
 
     ok(request.result, "The request result is not null");
     ok(request.result.usage === 0, "The usage was 0");
@@ -81,18 +73,12 @@ function* testSteps() {
 
     info("Clearing origin");
 
-    request = clearOrigin(principal, "default", continueToNextStepSync);
-    yield undefined;
-
-    ok(request.resultCode == NS_OK, "Clearing succeeded");
+    request = clearOrigin(principal, "default");
+    await requestFinished(request);
   }
 
   info("Clearing");
 
-  request = clear(continueToNextStepSync);
-  yield undefined;
-
-  ok(request.resultCode == NS_OK, "Clearing succeeded");
-
-  finishTest();
+  request = clear();
+  await requestFinished(request);
 }
