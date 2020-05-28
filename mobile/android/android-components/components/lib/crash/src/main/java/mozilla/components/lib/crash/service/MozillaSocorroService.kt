@@ -126,14 +126,8 @@ class MozillaSocorroService(
     }
 
     override fun report(throwable: Throwable, breadcrumbs: ArrayList<Breadcrumb>): String? {
-        return sendReport(
-            throwable,
-            miniDumpFilePath = null,
-            extrasFilePath = null,
-            isNativeCodeCrash = false,
-            isFatalCrash = false,
-            breadcrumbs = breadcrumbs
-        )
+        /* Not sending caught exceptions to Socorro */
+        return null
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
