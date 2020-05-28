@@ -7,30 +7,103 @@
 #import "mozAccessible.h"
 
 @interface mozSelectableAccessible : mozAccessible
+
 - (NSArray*)selectableChildren;
-- (NSArray*)selectedChildren;
+
+// override
+- (void)moxSetSelectedChildren:(NSArray*)selectedChildren;
+
+// override
+- (NSArray*)moxSelectedChildren;
+
 @end
 
 @interface mozSelectableChildAccessible : mozAccessible
-@property(getter=isSelected) BOOL selected;
+
+// override
+- (NSNumber*)moxSelected;
+
+// override
+- (void)moxSetSelected:(NSNumber*)selected;
+
 @end
 
 @interface mozTabGroupAccessible : mozSelectableAccessible
+
+// override
+- (NSArray*)moxTabs;
+
+// override
+- (NSArray*)moxContents;
+
+// override
+- (id)moxValue;
+
 @end
 
 @interface mozTabAccessible : mozSelectableChildAccessible
+
+// override
+- (NSString*)moxRoleDescription;
+
+// override
+- (id)moxValue;
+
 @end
 
 @interface mozListboxAccessible : mozSelectableAccessible
+
+// override
+- (BOOL)ignoreChild:(mozAccessible*)child;
+
+// override
+- (BOOL)disableChild:(mozAccessible*)child;
+
+// override
+- (NSString*)moxOrientation;
+
 @end
 
 @interface mozOptionAccessible : mozSelectableChildAccessible
+
+// override
+- (NSString*)moxTitle;
+
+// override
+- (id)moxValue;
+
 @end
 
 @interface mozMenuAccessible : mozSelectableAccessible {
   BOOL mIsOpened;
 }
+
+// override
+- (NSString*)moxTitle;
+
+// override
+- (NSString*)moxLabel;
+
+// override
+- (void)moxPostNotification:(NSString*)notification;
+
+// override
+- (void)expire;
+
 @end
 
 @interface mozMenuItemAccessible : mozSelectableChildAccessible
+
+// override
+- (NSString*)moxLabel;
+
+// override
+- (NSString*)moxMenuItemMarkChar;
+
+// override
+- (NSNumber*)moxSelected;
+
+// override
+- (void)handleAccessibleEvent:(uint32_t)eventType;
+
 @end
