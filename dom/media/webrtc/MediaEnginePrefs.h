@@ -29,6 +29,7 @@ class MediaEnginePrefs {
         mUseAecMobile(false),
         mAgcOn(false),
         mHPFOn(false),
+        mExperimentalInputProcessing(false),
         mNoiseOn(false),
         mAec(0),
         mAgc(0),
@@ -47,6 +48,7 @@ class MediaEnginePrefs {
   bool mUseAecMobile;
   bool mAgcOn;
   bool mHPFOn;
+  bool mExperimentalInputProcessing;
   bool mNoiseOn;
   int32_t mAec;
   int32_t mAgc;
