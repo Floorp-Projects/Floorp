@@ -870,10 +870,7 @@ var E10SUtils = {
 
     let remoteType = Services.appinfo.remoteType;
 
-    // Inner frames should always load in the current process
-    // XXX(nika): Handle shouldLoadURI-triggered process switches for remote
-    // subframes! (bug 1548942)
-    if (aDocShell.sameTypeParent) {
+    if (aDocShell.browsingContext.parent) {
       return true;
     }
 
