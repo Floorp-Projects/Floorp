@@ -4809,14 +4809,14 @@ class _DSCard extends react__WEBPACK_IMPORTED_MODULE_4___default.a.PureComponent
     if (this.props.dispatch) {
       this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionCreators"].UserEvent({
         event: "CLICK",
-        source: this.props.type.toUpperCase(),
+        source: this.props.is_video ? "CARDGRID_VIDEO" : this.props.type.toUpperCase(),
         action_position: this.props.pos,
         value: {
           card_type: this.props.flightId ? "spoc" : "organic"
         }
       }));
       this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionCreators"].ImpressionStats({
-        source: this.props.type.toUpperCase(),
+        source: this.props.is_video ? "CARDGRID_VIDEO" : this.props.type.toUpperCase(),
         click: 0,
         tiles: [{
           id: this.props.id,
@@ -4937,7 +4937,7 @@ class _DSCard extends react__WEBPACK_IMPORTED_MODULE_4___default.a.PureComponent
         } : {})
       }],
       dispatch: this.props.dispatch,
-      source: this.props.type
+      source: this.props.is_video ? "CARDGRID_VIDEO" : this.props.type
     })), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(_DSLinkMenu_DSLinkMenu__WEBPACK_IMPORTED_MODULE_2__["DSLinkMenu"], {
       id: this.props.id,
       index: this.props.pos,
