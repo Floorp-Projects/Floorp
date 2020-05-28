@@ -388,14 +388,15 @@ JS::Result<Ok> BinASTParserPerTokenizer<Tok>::finishLazyFunction(
     FunctionBox* funbox, uint32_t nargs, size_t start, size_t end) {
   funbox->setArgCount(nargs);
 
-  using ImmutableFlags = ImmutableScriptFlagsEnum;
-  ImmutableScriptFlags immutableFlags = funbox->immutableFlags();
+  ScriptStencil& stencil = funbox->functionStencil().get();
 
-  // Compute the flags that frontend doesn't directly compute.
-  immutableFlags.setFlag(ImmutableFlags::HasMappedArgsObj,
-                         funbox->hasMappedArgsObj());
-  immutableFlags.setFlag(ImmutableFlags::IsLikelyConstructorWrapper,
-                         funbox->isLikelyConstructorWrapper());
+  // Compute the flags for the BaseScript.
+  using ImmutableFlags = ImmutableScriptFlagsEnum;
+  stencil.immutableFlags = funbox->immutableFlags();
+  stencil.immutableFlags.setFlag(ImmutableFlags::HasMappedArgsObj,
+                                 funbox->hasMappedArgsObj());
+  stencil.immutableFlags.setFlag(ImmutableFlags::IsLikelyConstructorWrapper,
+                                 funbox->isLikelyConstructorWrapper());
 
   funbox->extent = SourceExtent(start, end, start, end,
                                 /* lineno = */ 0, start);
