@@ -62,54 +62,11 @@ inline mozAccessible* GetNativeFromGeckoAccessible(mozilla::a11y::AccessibleOrPr
 // allows for gecko accessible access outside of the class
 - (mozilla::a11y::AccessibleOrProxy)geckoAccessible;
 
-// our accessible parent (AXParent)
-- (id<mozAccessible>)parent;
-
-// a lazy cache of our accessible children (AXChildren). updated
-- (NSArray*)children;
-
-// returns the size of this accessible.
-- (NSValue*)size;
-
-// returns the position, in cocoa coordinates.
-- (NSValue*)position;
-
-// can be overridden to report another role name.
-- (NSString*)role;
-
-// a subrole is a more specialized variant of the role. for example,
-// the role might be "textfield", while the subrole is "password textfield".
-- (NSString*)subrole;
-
-// Return the role description, as there are a few exceptions.
-- (NSString*)roleDescription;
-
-// returns the native window we're inside.
-- (NSWindow*)window;
-
-// the value of this element.
-- (id)value;
-
-// name that is associated with this accessible (for buttons, etc)
-- (NSString*)title;
-
-// the accessible description (help text) of this particular instance.
-- (NSString*)help;
-
-// returns the orientation (vertical, horizontal, or undefined)
-- (NSString*)orientation;
-
-- (BOOL)isEnabled;
+// override
+- (void)dealloc;
 
 // should a child be disabled
 - (BOOL)disableChild:(mozAccessible*)child;
-
-// information about focus.
-- (BOOL)isFocused;
-- (BOOL)canBeFocused;
-
-// returns NO if for some reason we were unable to focus the element.
-- (BOOL)focus;
 
 // Given a gecko accessibility event type, post the relevant
 // system accessibility notification.
@@ -141,34 +98,121 @@ inline mozAccessible* GetNativeFromGeckoAccessible(mozilla::a11y::AccessibleOrPr
 // container in the default children getter.
 - (BOOL)ignoreChild:(mozAccessible*)child;
 
+#pragma mark - mozAccessible protocol / widget
+
+// override
+- (BOOL)hasRepresentedView;
+
+// override
+- (id)representedView;
+
+// override
+- (BOOL)isRoot;
+
+#pragma mark - MOXAccessible protocol
+
+// override
+- (BOOL)moxBlockSelector:(SEL)selector;
+
+// override
+- (id)moxHitTest:(NSPoint)point;
+
+// override
+- (id)moxFocusedUIElement;
+
+// Attribute getters
+
+// override
+- (id<mozAccessible>)moxParent;
+
+// override
+- (NSArray*)moxChildren;
+
+// override
+- (NSValue*)moxSize;
+
+// override
+- (NSValue*)moxPosition;
+
+// override
+- (NSString*)moxRole;
+
+// override
+- (NSString*)moxSubrole;
+
+// override
+- (NSString*)moxRoleDescription;
+
+// override
+- (NSWindow*)moxWindow;
+
+// override
+- (id)moxValue;
+
+// override
+- (NSString*)moxTitle;
+
+// override
+- (NSString*)moxLabel;
+
+// override
+- (NSString*)moxHelp;
+
+// override
+- (NSNumber*)moxEnabled;
+
+// override
+- (NSNumber*)moxFocused;
+
+// override
+- (NSNumber*)moxSelected;
+
+// override
+- (NSString*)moxARIACurrent;
+
+// override
+- (id)moxTitleUIElement;
+
+// override
+- (NSString*)moxDOMIdentifier;
+
+// override
+- (NSNumber*)moxRequired;
+
+// override
+- (void)moxSetFocused:(NSNumber*)focused;
+
+// override
+- (void)moxPerformScrollToVisible;
+
+// override
+- (void)moxPerformShowMenu;
+
+// override
+- (void)moxPerformPress;
+
 #pragma mark -
 
 // makes ourselves "expired". after this point, we might be around if someone
 // has retained us (e.g., a third-party), but we really contain no information.
+// override
 - (void)expire;
+// override
 - (BOOL)isExpired;
-
-// ---- MOXAccessible methods ---- //
-
-// called to determine the deepest child element under the mouse
-- (id)moxHitTest:(NSPoint)point;
-
-// returns the deepest unignored focused accessible element
-- (id)moxFocusedUIElement;
 
 // ---- NSAccessibility methods ---- //
 
 // whether to include this element in the platform's tree
+// override
 - (BOOL)isAccessibilityElement;
 
 // a mozAccessible needs to at least provide links to its parent and
 // children.
+// override
 - (NSArray*)accessibilityAttributeNames;
+- (NSArray*)additionalAccessibilityAttributeNames;
 
-// value for the specified attribute
-- (id)accessibilityAttributeValue:(NSString*)attribute;
-
-- (BOOL)accessibilityIsAttributeSettable:(NSString*)attribute;
-- (void)accessibilitySetValue:(id)value forAttribute:(NSString*)attribute;
+// override
+- (NSString*)description;
 
 @end

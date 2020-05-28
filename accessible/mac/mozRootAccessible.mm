@@ -63,9 +63,9 @@ static id<mozAccessible, mozView> getNativeViewFromRootAccessible(Accessible* aA
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
   if ([attribute isEqualToString:NSAccessibilityMainAttribute])
-    return [NSNumber numberWithBool:[[self window] isMainWindow]];
+    return [NSNumber numberWithBool:[[self moxWindow] isMainWindow]];
   if ([attribute isEqualToString:NSAccessibilityMinimizedAttribute])
-    return [NSNumber numberWithBool:[[self window] isMiniaturized]];
+    return [NSNumber numberWithBool:[[self moxWindow] isMiniaturized]];
 
   return [super accessibilityAttributeValue:attribute];
 
@@ -73,7 +73,7 @@ static id<mozAccessible, mozView> getNativeViewFromRootAccessible(Accessible* aA
 }
 
 // return the AXParent that our parallell NSView tells us about.
-- (id)parent {
+- (id)moxParent {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
   if (!mParallelView) mParallelView = (id<mozView, mozAccessible>)[self representedView];
@@ -82,7 +82,7 @@ static id<mozAccessible, mozView> getNativeViewFromRootAccessible(Accessible* aA
     return [mParallelView accessibilityAttributeValue:NSAccessibilityParentAttribute];
 
   NSAssert(mParallelView, @"we're a root accessible w/o native view?");
-  return [super parent];
+  return [super moxParent];
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }

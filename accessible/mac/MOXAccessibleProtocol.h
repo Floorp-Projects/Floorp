@@ -85,7 +85,7 @@
 - (NSNumber* _Nullable)moxHasPopup;
 
 // AXARIACurrent
-- (NSString* _Nullable)moxAriaCurrent;
+- (NSString* _Nullable)moxARIACurrent;
 
 // AXSelected
 - (NSNumber* _Nullable)moxSelected;
@@ -94,7 +94,7 @@
 - (NSNumber* _Nullable)moxRequired;
 
 // AXDOMIdentifier
-- (NSString* _Nullable)moxDomIdentifier;
+- (NSString* _Nullable)moxDOMIdentifier;
 
 // AXURL
 - (NSURL* _Nullable)moxUrl;

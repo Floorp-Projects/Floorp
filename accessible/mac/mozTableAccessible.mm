@@ -151,8 +151,8 @@
   return false;
 }
 
-- (NSString*)role {
-  return [self isLayoutTablePart] ? NSAccessibilityGroupRole : [super role];
+- (NSString*)moxRole {
+  return [self isLayoutTablePart] ? NSAccessibilityGroupRole : [super moxRole];
 }
 @end
 
@@ -215,7 +215,7 @@
 
   if ([attribute isEqualToString:NSAccessibilityRowsAttribute]) {
     // Create a new array with the list of table rows.
-    return [[self children]
+    return [[self moxChildren]
         filteredArrayUsingPredicate:[NSPredicate predicateWithBlock:^BOOL(mozAccessible* child,
                                                                           NSDictionary* bindings) {
           return [child isKindOfClass:[mozTableRowAccessible class]];
@@ -237,10 +237,10 @@
   return [super accessibilityAttributeValue:attribute];
 }
 
-- (NSArray*)children {
+- (NSArray*)moxChildren {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
-  return [[super children] arrayByAddingObjectsFromArray:[self getColContainerList]];
+  return [[super moxChildren] arrayByAddingObjectsFromArray:[self getColContainerList]];
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
@@ -272,7 +272,7 @@
 @implementation mozTableRowAccessible
 - (void)handleAccessibleEvent:(uint32_t)eventType {
   if (eventType == nsIAccessibleEvent::EVENT_REORDER) {
-    id parent = [self parent];
+    id parent = [self moxParent];
     if ([parent isKindOfClass:[mozTableAccessible class]]) {
       [parent invalidateColumns];
     }
