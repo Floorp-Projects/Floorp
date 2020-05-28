@@ -54,7 +54,8 @@ const PREF_ENABLED = "discoverystream.enabled";
 const PREF_HARDCODED_BASIC_LAYOUT = "discoverystream.hardcoded-basic-layout";
 const PREF_SPOCS_ENDPOINT = "discoverystream.spocs-endpoint";
 const PREF_REGION_BASIC_LAYOUT = "discoverystream.region-basic-layout";
-const PREF_TOPSTORIES = "feeds.section.topstories";
+const PREF_USER_TOPSTORIES = "feeds.section.topstories";
+const PREF_SYSTEM_TOPSTORIES = "feeds.system.topstories";
 const PREF_SPOCS_CLEAR_ENDPOINT = "discoverystream.endpointSpocsClear";
 const PREF_SHOW_SPONSORED = "showSponsored";
 const PREF_SPOC_IMPRESSIONS = "discoverystream.spoc.impressions";
@@ -171,6 +172,14 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
     return (
       this.store.getState().Prefs.values[PREF_SHOW_SPONSORED] &&
       this.config.show_spocs
+    );
+  }
+
+  get showStories() {
+    // Combine user-set sponsored opt-out with Mozilla-set config
+    return (
+      this.store.getState().Prefs.values[PREF_SYSTEM_TOPSTORIES] &&
+      this.store.getState().Prefs.values[PREF_USER_TOPSTORIES]
     );
   }
 
@@ -1256,13 +1265,13 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
 
   async refreshContent(options = {}) {
     const { updateOpenTabs, isStartup } = options;
-    const storiesEnabled = this.store.getState().Prefs.values[PREF_TOPSTORIES];
+
     const dispatch = updateOpenTabs
       ? action => this.store.dispatch(ac.BroadcastToContent(action))
       : this.store.dispatch;
 
     await this.loadLayout(dispatch, isStartup);
-    if (storiesEnabled) {
+    if (this.showStories) {
       await Promise.all([
         this.loadSpocs(dispatch, isStartup).catch(error =>
           Cu.reportError(`Error trying to load spocs feeds: ${error}`)
@@ -1575,7 +1584,8 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
         // This is a config reset directly related to Discovery Stream pref.
         this.configReset();
         break;
-      case PREF_TOPSTORIES:
+      case PREF_USER_TOPSTORIES:
+      case PREF_SYSTEM_TOPSTORIES:
         if (!action.data.value) {
           // Ensure we delete any remote data potentially related to spocs.
           this.clearSpocs();
