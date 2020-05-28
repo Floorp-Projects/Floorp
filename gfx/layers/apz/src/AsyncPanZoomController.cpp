@@ -4503,6 +4503,9 @@ void AsyncPanZoomController::NotifyLayersUpdated(
       aLayerMetrics.GetDoSmoothScroll() &&
       (aLayerMetrics.GetScrollGeneration() != Metrics().GetScrollGeneration());
 
+  // If `isDefault` is true, this APZC is a "new" one (this is the first time
+  // it's getting a NotifyLayersUpdated call). In this case we want to apply the
+  // visual scroll offset from the main thread to our scroll offset.
   // The main thread may also ask us to scroll the visual viewport to a
   // particular location. This is different from a layout viewport offset update
   // in that the layout viewport offset is limited to the layout scroll range
@@ -4514,6 +4517,7 @@ void AsyncPanZoomController::NotifyLayersUpdated(
   // to scroll both the layout and visual viewports to distinct (but compatible)
   // locations (via e.g. both updates being eRestore).
   bool visualScrollOffsetUpdated =
+      isDefault ||
       aLayerMetrics.GetVisualScrollUpdateType() != FrameMetrics::eNone;
   if ((aLayerMetrics.GetScrollUpdateType() == FrameMetrics::eMainThread &&
        aLayerMetrics.GetVisualScrollUpdateType() !=
