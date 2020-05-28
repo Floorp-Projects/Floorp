@@ -5,14 +5,11 @@
 
 const {
   STUBS_UPDATE_ENV,
+  createResourceWatcherForTab,
   getCleanedPacket,
   getStubFile,
   writeStubsToFile,
 } = require("chrome://mochitests/content/browser/devtools/client/webconsole/test/browser/stub-generator-helpers");
-
-const {
-  ResourceWatcher,
-} = require("devtools/shared/resources/resource-watcher");
 
 const TEST_URI =
   "http://example.com/browser/devtools/client/webconsole/test/browser/stub-generators/test-css-message.html";
@@ -63,8 +60,9 @@ add_task(async function() {
 
 async function generateCssMessageStubs() {
   const stubs = new Map();
-  const toolbox = await openNewTabAndToolbox(TEST_URI, "webconsole");
-  const resourceWatcher = new ResourceWatcher(toolbox.targetList);
+
+  const tab = await addTab(TEST_URI);
+  const resourceWatcher = await createResourceWatcherForTab(tab);
 
   // The resource-watcher only supports a single call to watch/unwatch per
   // instance, so we attach a unique watch callback, which will forward the
