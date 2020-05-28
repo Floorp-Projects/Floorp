@@ -36,6 +36,7 @@ import org.mozilla.fenix.home.HomeFragmentAction
 import org.mozilla.fenix.home.HomeFragmentDirections
 import org.mozilla.fenix.home.HomeFragmentStore
 import org.mozilla.fenix.home.Tab
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.settings.SupportUtils
 import mozilla.components.feature.tab.collections.Tab as ComponentTab
 
@@ -187,7 +188,8 @@ class DefaultSessionControlController(
     private val openSettingsScreen: () -> Unit,
     private val openSearchScreen: () -> Unit,
     private val openWhatsNewLink: () -> Unit,
-    private val openPrivacyNotice: () -> Unit
+    private val openPrivacyNotice: () -> Unit,
+    private val showTabTray: () -> Unit
 ) : SessionControlController {
     private val metrics: MetricController
         get() = activity.components.analytics.metrics
@@ -248,7 +250,12 @@ class DefaultSessionControlController(
             }
         )
 
-        scrollToTheTop()
+        if (activity.settings().useNewTabTray) {
+            showTabTray()
+        } else {
+            scrollToTheTop()
+        }
+
         metrics.track(Event.CollectionAllTabsRestored)
     }
 

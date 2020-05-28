@@ -55,6 +55,7 @@ class DefaultSessionControlControllerTest {
     private val invokePendingDeleteJobs: () -> Unit = mockk(relaxed = true)
     private val registerCollectionStorageObserver: () -> Unit = mockk(relaxed = true)
     private val scrollToTheTop: () -> Unit = mockk(relaxed = true)
+    private val showTabTray: () -> Unit = mockk(relaxed = true)
     private val showDeleteCollectionPrompt: (tabCollection: TabCollection) -> Unit =
         mockk(relaxed = true)
     private val metrics: MetricController = mockk(relaxed = true)
@@ -100,7 +101,8 @@ class DefaultSessionControlControllerTest {
             openSettingsScreen = openSettingsScreen,
             openSearchScreen = openSearchScreen,
             openWhatsNewLink = openWhatsNewLink,
-            openPrivacyNotice = openPrivacyNotice
+            openPrivacyNotice = openPrivacyNotice,
+            showTabTray = showTabTray
         )
     }
 
