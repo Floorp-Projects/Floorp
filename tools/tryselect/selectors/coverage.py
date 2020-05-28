@@ -122,7 +122,7 @@ def download_coverage_mapping(base_revision):
     except (IOError, ValueError):
         print('Chunk mapping file not found.')
 
-    CHUNK_MAPPING_URL_TEMPLATE = 'https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/project.releng.services.project.production.code_coverage_bot.{}/artifacts/public/chunk_mapping.tar.xz'  # noqa
+    CHUNK_MAPPING_URL_TEMPLATE = 'https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/project.relman.code-coverage.production.cron.{}/artifacts/public/chunk_mapping.tar.xz'  # noqa
     JSON_PUSHES_URL_TEMPLATE = 'https://hg.mozilla.org/mozilla-central/json-pushes?version=2&tipsonly=1&startdate={}'  # noqa
 
     # Get pushes from at most one month ago.
@@ -364,7 +364,8 @@ def run(try_config={}, full=False, parameters=None, push=True, message='{msg}', 
 
     tasks_by_chunks = filter_tasks_by_chunks(all_tasks, test_chunks)
     tasks_by_path = filter_tasks_by_paths(all_tasks, test_files)
-    tasks = filter(is_opt_task, set(tasks_by_path + tasks_by_chunks))
+    tasks = filter(is_opt_task, set(tasks_by_path) | set(tasks_by_chunks))
+    tasks = list(tasks)
 
     if not tasks:
         print('ERROR Did not find any matching tasks after filtering.')
