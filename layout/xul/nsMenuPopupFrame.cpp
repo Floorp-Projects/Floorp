@@ -849,9 +849,7 @@ void nsMenuPopupFrame::InitializePopup(nsIContent* aAnchorContent,
 void nsMenuPopupFrame::InitializePopupAtScreen(nsIContent* aTriggerContent,
                                                int32_t aXPos, int32_t aYPos,
                                                bool aIsContextMenu) {
-  auto* widget = GetWidget();
-  bool recreateWidget = widget && widget->NeedsRecreateToReshow();
-  EnsureWidget(recreateWidget);
+  EnsureWidget();
 
   mPopupState = ePopupShowing;
   mAnchorContent = nullptr;
