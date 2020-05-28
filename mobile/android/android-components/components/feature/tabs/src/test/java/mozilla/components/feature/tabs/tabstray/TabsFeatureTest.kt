@@ -25,7 +25,7 @@ class TabsFeatureTest {
         val presenter: TabsTrayPresenter = mock()
         val interactor: TabsTrayInteractor = mock()
         val useCases = TabsUseCases(sessionManager)
-        val tabsFeature = spy(TabsFeature(mock(), store, useCases, mock(), mock()))
+        val tabsFeature = spy(TabsFeature(mock(), store, useCases, mock(), mock(), mock()))
 
         assertNotEquals(tabsFeature.interactor, interactor)
         assertNotEquals(tabsFeature.presenter, presenter)
@@ -44,7 +44,7 @@ class TabsFeatureTest {
         val presenter: TabsTrayPresenter = mock()
         val interactor: TabsTrayInteractor = mock()
         val useCases = TabsUseCases(sessionManager)
-        val tabsFeature = spy(TabsFeature(mock(), store, useCases, mock(), mock()))
+        val tabsFeature = spy(TabsFeature(mock(), store, useCases, mock(), mock(), mock()))
 
         tabsFeature.presenter = presenter
         tabsFeature.interactor = interactor
@@ -62,7 +62,7 @@ class TabsFeatureTest {
         val presenter: TabsTrayPresenter = mock()
         val interactor: TabsTrayInteractor = mock()
         val useCases = TabsUseCases(sessionManager)
-        val tabsFeature = spy(TabsFeature(mock(), store, useCases, mock(), mock()))
+        val tabsFeature = spy(TabsFeature(mock(), store, useCases, mock(), mock(), mock()))
 
         tabsFeature.presenter = presenter
         tabsFeature.interactor = interactor
@@ -80,7 +80,7 @@ class TabsFeatureTest {
         val presenter: TabsTrayPresenter = mock()
         val interactor: TabsTrayInteractor = mock()
         val useCases = TabsUseCases(sessionManager)
-        val tabsFeature = spy(TabsFeature(mock(), store, useCases, mock(), mock()))
+        val tabsFeature = spy(TabsFeature(mock(), store, useCases, mock(), mock(), mock()))
 
         tabsFeature.presenter = presenter
         tabsFeature.interactor = interactor
@@ -99,7 +99,7 @@ class TabsFeatureTest {
         val filter: (TabSessionState) -> Boolean = { false }
         val sessionManager = SessionManager(engine = mock())
         val useCases = TabsUseCases(sessionManager)
-        val tabsFeature = spy(TabsFeature(mock(), store, useCases, filter, mock()))
+        val tabsFeature = spy(TabsFeature(mock(), store, useCases, mock(), filter, mock()))
         val presenter: TabsTrayPresenter = mock()
         val interactor: TabsTrayInteractor = mock()
 

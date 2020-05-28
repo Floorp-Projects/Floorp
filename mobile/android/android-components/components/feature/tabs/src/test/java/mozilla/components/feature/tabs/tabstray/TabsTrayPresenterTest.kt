@@ -18,12 +18,15 @@ import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.MediaState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.browser.thumbnails.ThumbnailsUseCases
+import mozilla.components.browser.thumbnails.storage.ThumbnailStorage
 import mozilla.components.concept.tabstray.Tabs
 import mozilla.components.concept.tabstray.TabsTray
 import mozilla.components.feature.tabs.ext.toTabs
 import mozilla.components.support.test.any
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.mock
+import mozilla.components.support.test.robolectric.testContext
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -58,15 +61,16 @@ class TabsTrayPresenterTest {
         val store = BrowserStore(
             BrowserState(
                 tabs = listOf(
-                    createTab("https://www.mozilla.org", id = "a"),
-                    createTab("https://getpocket.com", id = "b")
+                    createTab("https://www.mozilla.org", id = "a", thumbnail = mock()),
+                    createTab("https://getpocket.com", id = "b", thumbnail = mock())
                 ),
                 selectedTabId = "a"
             )
         )
 
         val tabsTray: MockedTabsTray = spy(MockedTabsTray())
-        val presenter = TabsTrayPresenter(tabsTray, store, { true }, mock())
+        val thumbnailsUseCases = ThumbnailsUseCases(store, ThumbnailStorage(testContext))
+        val presenter = TabsTrayPresenter(tabsTray, store, thumbnailsUseCases, { true }, mock())
 
         verifyNoMoreInteractions(tabsTray)
 
@@ -89,15 +93,16 @@ class TabsTrayPresenterTest {
         val store = BrowserStore(
             BrowserState(
                 tabs = listOf(
-                    createTab("https://www.mozilla.org", id = "a"),
-                    createTab("https://getpocket.com", id = "b")
+                    createTab("https://www.mozilla.org", id = "a", thumbnail = mock()),
+                    createTab("https://getpocket.com", id = "b", thumbnail = mock())
                 ),
                 selectedTabId = "a"
             )
         )
 
         val tabsTray: MockedTabsTray = spy(MockedTabsTray())
-        val presenter = TabsTrayPresenter(tabsTray, store, { true }, mock())
+        val thumbnailsUseCases = ThumbnailsUseCases(store, ThumbnailStorage(testContext))
+        val presenter = TabsTrayPresenter(tabsTray, store, thumbnailsUseCases, { true }, mock())
 
         presenter.start()
 
@@ -107,7 +112,7 @@ class TabsTrayPresenterTest {
 
         store.dispatch(
             TabListAction.AddTabAction(
-                createTab("https://developer.mozilla.org/")
+                createTab("https://developer.mozilla.org/", thumbnail = mock())
             )
         ).joinBlocking()
 
@@ -123,15 +128,16 @@ class TabsTrayPresenterTest {
         val store = BrowserStore(
             BrowserState(
                 tabs = listOf(
-                    createTab("https://www.mozilla.org", id = "a"),
-                    createTab("https://getpocket.com", id = "b")
+                    createTab("https://www.mozilla.org", id = "a", thumbnail = mock()),
+                    createTab("https://getpocket.com", id = "b", thumbnail = mock())
                 ),
                 selectedTabId = "a"
             )
         )
 
         val tabsTray: MockedTabsTray = spy(MockedTabsTray())
-        val presenter = TabsTrayPresenter(tabsTray, store, { true }, mock())
+        val thumbnailsUseCases = ThumbnailsUseCases(store, ThumbnailStorage(testContext))
+        val presenter = TabsTrayPresenter(tabsTray, store, thumbnailsUseCases, { true }, mock())
 
         presenter.start()
 
@@ -159,15 +165,16 @@ class TabsTrayPresenterTest {
         val store = BrowserStore(
             BrowserState(
                 tabs = listOf(
-                    createTab("https://www.mozilla.org", id = "a"),
-                    createTab("https://getpocket.com", id = "b")
+                    createTab("https://www.mozilla.org", id = "a", thumbnail = mock()),
+                    createTab("https://getpocket.com", id = "b", thumbnail = mock())
                 ),
                 selectedTabId = "a"
             )
         )
 
         val tabsTray: MockedTabsTray = spy(MockedTabsTray())
-        val presenter = TabsTrayPresenter(tabsTray, store, { true }, mock())
+        val thumbnailsUseCases = ThumbnailsUseCases(store, ThumbnailStorage(testContext))
+        val presenter = TabsTrayPresenter(tabsTray, store, thumbnailsUseCases, { true }, mock())
 
         presenter.start()
 
@@ -190,18 +197,19 @@ class TabsTrayPresenterTest {
         val store = BrowserStore(
             BrowserState(
                 tabs = listOf(
-                    createTab("https://www.mozilla.org", id = "a"),
-                    createTab("https://getpocket.com", id = "b"),
-                    createTab("https://developer.mozilla.org", id = "c"),
-                    createTab("https://www.firefox.com", id = "d"),
-                    createTab("https://www.google.com", id = "e")
+                    createTab("https://www.mozilla.org", id = "a", thumbnail = mock()),
+                    createTab("https://getpocket.com", id = "b", thumbnail = mock()),
+                    createTab("https://developer.mozilla.org", id = "c", thumbnail = mock()),
+                    createTab("https://www.firefox.com", id = "d", thumbnail = mock()),
+                    createTab("https://www.google.com", id = "e", thumbnail = mock())
                 ),
                 selectedTabId = "a"
             )
         )
 
         val tabsTray: MockedTabsTray = spy(MockedTabsTray())
-        val presenter = TabsTrayPresenter(tabsTray, store, { true }, mock())
+        val thumbnailsUseCases = ThumbnailsUseCases(store, ThumbnailStorage(testContext))
+        val presenter = TabsTrayPresenter(tabsTray, store, thumbnailsUseCases, { true }, mock())
 
         presenter.start()
         testDispatcher.advanceUntilIdle()
@@ -224,26 +232,30 @@ class TabsTrayPresenterTest {
         val store = BrowserStore(
             BrowserState(
                 tabs = listOf(
-                        createTab("https://www.mozilla.org", id = "a"),
-                        createTab("https://getpocket.com", id = "b"),
-                        createTab("https://developer.mozilla.org", id = "c"),
-                        createTab("https://www.firefox.com", id = "d"),
-                        createTab("https://www.google.com", id = "e")
-                    ),
-                    selectedTabId = "a"
-                )
+                    createTab("https://www.mozilla.org", id = "a", thumbnail = mock()),
+                    createTab("https://getpocket.com", id = "b", thumbnail = mock()),
+                    createTab("https://developer.mozilla.org", id = "c", thumbnail = mock()),
+                    createTab("https://www.firefox.com", id = "d", thumbnail = mock()),
+                    createTab("https://www.google.com", id = "e", thumbnail = mock())
+                ),
+                selectedTabId = "a"
+            )
         )
 
         val tabsTray: MockedTabsTray = spy(MockedTabsTray())
-        val presenter = TabsTrayPresenter(tabsTray, store, { true }, mock())
+        val thumbnailsUseCases = ThumbnailsUseCases(store, ThumbnailStorage(testContext))
+        val presenter = TabsTrayPresenter(tabsTray, store, thumbnailsUseCases, { true }, mock())
 
         presenter.start()
         testDispatcher.advanceUntilIdle()
 
         store.dispatch(
-                MediaAction.UpdateMediaAggregateAction(
-                    store.state.media.aggregate.copy(activeTabId = "a", state = MediaState.State.PLAYING)
+            MediaAction.UpdateMediaAggregateAction(
+                store.state.media.aggregate.copy(
+                    activeTabId = "a",
+                    state = MediaState.State.PLAYING
                 )
+            )
         ).joinBlocking()
 
         testDispatcher.advanceUntilIdle()
@@ -256,11 +268,11 @@ class TabsTrayPresenterTest {
         val store = BrowserStore(
             BrowserState(
                 tabs = listOf(
-                    createTab("https://www.mozilla.org", id = "a"),
-                    createTab("https://getpocket.com", id = "b"),
-                    createTab("https://developer.mozilla.org", id = "c"),
-                    createTab("https://www.firefox.com", id = "d"),
-                    createTab("https://www.google.com", id = "e")
+                    createTab("https://www.mozilla.org", id = "a", thumbnail = mock()),
+                    createTab("https://getpocket.com", id = "b", thumbnail = mock()),
+                    createTab("https://developer.mozilla.org", id = "c", thumbnail = mock()),
+                    createTab("https://www.firefox.com", id = "d", thumbnail = mock()),
+                    createTab("https://www.google.com", id = "e", thumbnail = mock())
                 ),
                 selectedTabId = "a"
             )
@@ -269,7 +281,13 @@ class TabsTrayPresenterTest {
         var closed = false
 
         val tabsTray: MockedTabsTray = spy(MockedTabsTray())
-        val presenter = TabsTrayPresenter(tabsTray, store, tabsFilter = { true }, closeTabsTray = { closed = true })
+        val thumbnailsUseCases = ThumbnailsUseCases(store, ThumbnailStorage(testContext))
+        val presenter = TabsTrayPresenter(
+            tabsTray,
+            store,
+            thumbnailsUseCases,
+            tabsFilter = { true },
+            closeTabsTray = { closed = true })
 
         presenter.start()
         testDispatcher.advanceUntilIdle()
@@ -289,8 +307,8 @@ class TabsTrayPresenterTest {
         val store = BrowserStore(
             BrowserState(
                 tabs = listOf(
-                    createTab("https://www.mozilla.org", id = "a"),
-                    createTab("https://getpocket.com", id = "b")
+                    createTab("https://www.mozilla.org", id = "a", thumbnail = mock()),
+                    createTab("https://getpocket.com", id = "b", thumbnail = mock())
                 ),
                 selectedTabId = "a"
             )
@@ -299,7 +317,13 @@ class TabsTrayPresenterTest {
         var closed = false
 
         val tabsTray: MockedTabsTray = spy(MockedTabsTray())
-        val presenter = TabsTrayPresenter(tabsTray, store, tabsFilter = { true }, closeTabsTray = { closed = true })
+        val thumbnailsUseCases = ThumbnailsUseCases(store, ThumbnailStorage(testContext))
+        val presenter = TabsTrayPresenter(
+            tabsTray,
+            store,
+            thumbnailsUseCases,
+            tabsFilter = { true },
+            closeTabsTray = { closed = true })
 
         presenter.start()
         testDispatcher.advanceUntilIdle()
@@ -324,15 +348,16 @@ class TabsTrayPresenterTest {
         val store = BrowserStore(
             BrowserState(
                 tabs = listOf(
-                    createTab("https://www.mozilla.org", id = "a"),
-                    createTab("https://getpocket.com", id = "b")
+                    createTab("https://www.mozilla.org", id = "a", thumbnail = mock()),
+                    createTab("https://getpocket.com", id = "b", thumbnail = mock())
                 ),
                 selectedTabId = "a"
             )
         )
 
         val tabsTray: MockedTabsTray = spy(MockedTabsTray())
-        val presenter = TabsTrayPresenter(tabsTray, store, { true }, mock())
+        val thumbnailsUseCases = ThumbnailsUseCases(store, ThumbnailStorage(testContext))
+        val presenter = TabsTrayPresenter(tabsTray, store, thumbnailsUseCases, { true }, mock())
 
         presenter.start()
         testDispatcher.advanceUntilIdle()
@@ -354,15 +379,17 @@ class TabsTrayPresenterTest {
         val store = BrowserStore(
             BrowserState(
                 tabs = listOf(
-                    createTab("https://www.mozilla.org", id = "a"),
-                    createTab("https://getpocket.com", id = "b", private = true)
+                    createTab("https://www.mozilla.org", id = "a", thumbnail = mock()),
+                    createTab("https://getpocket.com", id = "b", private = true, thumbnail = mock())
                 ),
                 selectedTabId = "a"
             )
         )
 
         val tabsTray: MockedTabsTray = spy(MockedTabsTray())
-        val presenter = TabsTrayPresenter(tabsTray, store, { it.content.private }, mock())
+        val thumbnailsUseCases = ThumbnailsUseCases(store, ThumbnailStorage(testContext))
+        val presenter =
+            TabsTrayPresenter(tabsTray, store, thumbnailsUseCases, { it.content.private }, mock())
 
         presenter.start()
         testDispatcher.advanceUntilIdle()
@@ -381,7 +408,8 @@ class TabsTrayPresenterTest {
 
         var invoked = false
         val tabsTray: MockedTabsTray = spy(MockedTabsTray())
-        val presenter = TabsTrayPresenter(tabsTray, store, { it.content.private }, { invoked = true })
+        val presenter =
+            TabsTrayPresenter(tabsTray, store, mock(), { it.content.private }, { invoked = true })
 
         presenter.start()
         testDispatcher.advanceUntilIdle()
@@ -419,7 +447,8 @@ private class MockedTabsTray : TabsTray {
 
     override fun notifyAtLeastOneObserver(block: TabsTray.Observer.() -> Unit) {}
 
-    override fun <R> wrapConsumers(block: TabsTray.Observer.(R) -> Boolean): List<(R) -> Boolean> = emptyList()
+    override fun <R> wrapConsumers(block: TabsTray.Observer.(R) -> Boolean): List<(R) -> Boolean> =
+        emptyList()
 
     override fun isObserved(): Boolean = false
 
