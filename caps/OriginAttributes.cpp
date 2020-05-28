@@ -22,26 +22,58 @@ using dom::URLParams;
 
 void OriginAttributes::SetFirstPartyDomain(const bool aIsTopLevelDocument,
                                            nsIURI* aURI, bool aForced) {
+  nsresult rv;
+
+  if (!aURI) {
+    return;
+  }
+
   // If the prefs are off or this is not a top level load, bail out.
   if ((!IsFirstPartyEnabled() || !aIsTopLevelDocument) && !aForced) {
+    return;
+  }
+
+  nsAutoCString scheme;
+  rv = aURI->GetScheme(scheme);
+  NS_ENSURE_SUCCESS_VOID(rv);
+
+  if (scheme.EqualsLiteral("about")) {
+    mFirstPartyDomain.AssignLiteral(ABOUT_URI_FIRST_PARTY_DOMAIN);
+    return;
+  }
+
+  // Add-on principals should never get any first-party domain
+  // attributes in order to guarantee their storage integrity when switching
+  // FPI on and off.
+  if (scheme.EqualsLiteral("moz-extension")) {
+    return;
+  }
+
+  nsCOMPtr<nsIPrincipal> blobPrincipal;
+  if (dom::BlobURLProtocolHandler::GetBlobURLPrincipal(
+          aURI, getter_AddRefs(blobPrincipal))) {
+    MOZ_ASSERT(blobPrincipal);
+    mFirstPartyDomain = blobPrincipal->OriginAttributesRef().mFirstPartyDomain;
     return;
   }
 
   nsCOMPtr<nsIEffectiveTLDService> tldService =
       do_GetService(NS_EFFECTIVETLDSERVICE_CONTRACTID);
   MOZ_ASSERT(tldService);
-  if (!tldService) {
-    return;
-  }
+  NS_ENSURE_TRUE_VOID(tldService);
 
   nsAutoCString baseDomain;
-  nsresult rv = tldService->GetBaseDomain(aURI, 0, baseDomain);
+  rv = tldService->GetBaseDomain(aURI, 0, baseDomain);
   if (NS_SUCCEEDED(rv)) {
     mFirstPartyDomain = NS_ConvertUTF8toUTF16(baseDomain);
     return;
   }
 
-  if (rv == NS_ERROR_HOST_IS_IP_ADDRESS) {
+  // Saving before rv is overwritten.
+  bool isIpAddress = (rv == NS_ERROR_HOST_IS_IP_ADDRESS);
+  bool isInsufficientDomainLevels = (rv == NS_ERROR_INSUFFICIENT_DOMAIN_LEVELS);
+
+  if (isIpAddress) {
     // If the host is an IPv4/IPv6 address, we still accept it as a
     // valid firstPartyDomain.
     nsAutoCString ipAddr;
@@ -60,33 +92,6 @@ void OriginAttributes::SetFirstPartyDomain(const bool aIsTopLevelDocument,
       mFirstPartyDomain = NS_ConvertUTF8toUTF16(ipAddr);
     }
 
-    return;
-  }
-
-  // Saving isInsufficientDomainLevels before rv is overwritten.
-  bool isInsufficientDomainLevels = (rv == NS_ERROR_INSUFFICIENT_DOMAIN_LEVELS);
-  nsAutoCString scheme;
-  if (aURI) {
-    rv = aURI->GetScheme(scheme);
-    NS_ENSURE_SUCCESS_VOID(rv);
-    if (scheme.EqualsLiteral("about")) {
-      mFirstPartyDomain.AssignLiteral(ABOUT_URI_FIRST_PARTY_DOMAIN);
-      return;
-    }
-  }
-
-  // Add-on principals should never get any first-party domain
-  // attributes in order to guarantee their storage integrity when switching
-  // FPI on and off.
-  if (scheme.EqualsLiteral("moz-extension")) {
-    return;
-  }
-
-  nsCOMPtr<nsIPrincipal> blobPrincipal;
-  if (aURI && dom::BlobURLProtocolHandler::GetBlobURLPrincipal(
-                  aURI, getter_AddRefs(blobPrincipal))) {
-    MOZ_ASSERT(blobPrincipal);
-    mFirstPartyDomain = blobPrincipal->OriginAttributesRef().mFirstPartyDomain;
     return;
   }
 
