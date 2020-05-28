@@ -77,7 +77,7 @@ this.DynamicFPIHelper = {
                 is(
                   content.document.effectiveStoragePrincipal.originAttributes
                     .firstPartyDomain,
-                  "example.net",
+                  "(http,example.net)",
                   "We have first-party set on storagePrincipal"
                 );
               });

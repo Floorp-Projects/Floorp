@@ -53,7 +53,9 @@ already_AddRefed<NullPrincipal> NullPrincipal::CreateWithInheritedAttributes(
 already_AddRefed<NullPrincipal> NullPrincipal::CreateWithInheritedAttributes(
     const OriginAttributes& aOriginAttributes, bool aIsFirstParty) {
   RefPtr<NullPrincipal> nullPrin = new NullPrincipal();
-  nullPrin->Init(aOriginAttributes, aIsFirstParty);
+  nsresult rv = nullPrin->Init(aOriginAttributes, aIsFirstParty);
+  MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
+
   return nullPrin.forget();
 }
 
@@ -96,9 +98,20 @@ nsresult NullPrincipal::Init(const OriginAttributes& aOriginAttributes,
   return NS_OK;
 }
 
-void NullPrincipal::Init(const OriginAttributes& aOriginAttributes,
-                         bool aIsFirstParty) {
-  mURI = new NullPrincipalURI();
+nsresult NullPrincipal::Init(const OriginAttributes& aOriginAttributes,
+                             bool aIsFirstParty, nsIURI* aURI) {
+  if (aURI) {
+    nsAutoCString scheme;
+    nsresult rv = aURI->GetScheme(scheme);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    NS_ENSURE_TRUE(scheme.EqualsLiteral(NS_NULLPRINCIPAL_SCHEME),
+                   NS_ERROR_NOT_AVAILABLE);
+
+    mURI = aURI;
+  } else {
+    mURI = new NullPrincipalURI();
+  }
 
   nsAutoCString originNoSuffix;
   DebugOnly<nsresult> rv = mURI->GetSpec(originNoSuffix);
@@ -117,6 +130,8 @@ void NullPrincipal::Init(const OriginAttributes& aOriginAttributes,
   }
 
   FinishInit(originNoSuffix, attrs);
+
+  return NS_OK;
 }
 
 nsresult NullPrincipal::GetScriptLocation(nsACString& aStr) {
