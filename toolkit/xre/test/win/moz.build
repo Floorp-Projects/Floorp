@@ -11,6 +11,11 @@ GeckoCppUnitTests(
     linkage=None
 )
 
+# This needs to be installed alongside the above unit test.
+FINAL_TARGET_FILES += [
+    'TestXREMakeCommandLineWin.ini',
+]
+
 DEFINES['NS_NO_XPCOM'] = True
 
 LOCAL_INCLUDES += [
