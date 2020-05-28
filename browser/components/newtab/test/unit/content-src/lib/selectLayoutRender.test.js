@@ -931,6 +931,7 @@ describe("selectLayoutRender", () => {
       state: store.getState().DiscoveryStream,
       prefs: {
         "feeds.topsites": true,
+        "feeds.system.topstories": true,
         "feeds.section.topstories": true,
       },
     });
