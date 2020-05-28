@@ -119,9 +119,12 @@ class span_iterator {
                        (index_ >= 0 && index <= span_->Length()));
   }
 
+  // `other` is already correct by construction; we do not need to go through
+  // the release assert above.  Put differently, this constructor is effectively
+  // a copy constructor and therefore needs no assertions.
   friend class span_iterator<Span, true>;
   constexpr MOZ_IMPLICIT span_iterator(const span_iterator<Span, false>& other)
-      : span_iterator(other.span_, other.index_) {}
+      : span_(other.span_), index_(other.index_) {}
 
   constexpr span_iterator<Span, IsConst>& operator=(
       const span_iterator<Span, IsConst>&) = default;
