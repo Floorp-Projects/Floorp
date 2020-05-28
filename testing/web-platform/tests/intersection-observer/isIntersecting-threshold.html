@@ -33,7 +33,8 @@ function step2() {
 
   assert_equals(entries.length, 1);
   assert_equals(entries[0].intersectionRatio, 1);
-  assert_equals(entries[0].isIntersecting, true);
+  // See https://github.com/w3c/IntersectionObserver/issues/432
+  assert_equals(entries[0].isIntersecting, false);
   scroller.scrollTop = 50;
 }
 
