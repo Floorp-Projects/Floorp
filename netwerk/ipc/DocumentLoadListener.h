@@ -240,7 +240,7 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
   // This redirects the ParentChannelListener to forward any future
   // messages to the new channel, manually forwards any being held
   // by us, and resumes the underlying source channel.
-  void FinishReplacementChannelSetup(bool aSucceeded);
+  void FinishReplacementChannelSetup(nsresult aResult);
 
   // Called from `OnStartRequest` to make the decision about whether or not to
   // change process. This method will return `nullptr` if the current target
