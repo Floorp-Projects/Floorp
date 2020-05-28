@@ -61,15 +61,13 @@ contents_hash.update(b"\x00")
 
 untracked_files = []
 
-changes_lines = iter(ln.strip() for ln in changes.split(b"\n"))
+# -o is for getting other (i.e. untracked) files
+# --exclude-standard is to handle standard Git exclusions: .git/info/exclude, .gitignore in each directory,
+# and the user's global exclusion file.
+changes_others = run_cmd_checked(["git", "ls-files", "-o", "--exclude-standard"], capture_output=True).stdout
+changes_lines = iter(ln.strip() for ln in changes_others.split(b"\n"))
+
 try:
-    ln = next(changes_lines)
-    # Skip the tracked files.
-    while not ln.startswith(b"Untracked files:"):
-        ln = next(changes_lines)
-    # Skip instructional line about using `git add`.
-    ln = next(changes_lines)
-    # Now we're at the list of untracked files.
     ln = next(changes_lines)
     while ln:
         untracked_files.append(ln)
@@ -80,7 +78,7 @@ except StopIteration:
 untracked_files.extend(GITIGNORED_FILES_THAT_AFFECT_THE_BUILD)
 
 # So, we'll need to slurp the contents of such files for ourselves.
-
+# We could instead pipe output of `ls-files` into `git hash-object`, but that will probably break on non-*nix machines.
 for nm in untracked_files:
     with open(nm, "rb") as f:
         contents_hash.update(f.read())
