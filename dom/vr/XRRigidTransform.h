@@ -35,6 +35,7 @@ class XRRigidTransform final : public nsWrapperCache {
   gfx::PointDouble3D RawPosition() const;
   void Update(const gfx::PointDouble3D& aPosition,
               const gfx::QuaternionDouble& aOrientation);
+  void Update(const gfx::Matrix4x4Double& aTransform);
   // WebIDL Boilerplate
   nsISupports* GetParentObject() const { return mParent; }
   JSObject* WrapObject(JSContext* aCx,
@@ -48,6 +49,7 @@ class XRRigidTransform final : public nsWrapperCache {
   already_AddRefed<XRRigidTransform> Inverse();
 
  protected:
+  void UpdateInternal();
   virtual ~XRRigidTransform();
 
   nsCOMPtr<nsISupports> mParent;
