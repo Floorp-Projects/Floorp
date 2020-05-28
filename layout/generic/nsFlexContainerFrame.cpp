@@ -1206,6 +1206,40 @@ static mozilla::StyleAlignFlags SimplifyAlignOrJustifyContentForOneItem(
   return specified;
 }
 
+bool nsFlexContainerFrame::DrainSelfOverflowList() {
+  return DrainAndMergeSelfOverflowList();
+}
+
+void nsFlexContainerFrame::AppendFrames(ChildListID aListID,
+                                        nsFrameList& aFrameList) {
+  NoteNewChildren(aListID, aFrameList);
+  nsContainerFrame::AppendFrames(aListID, aFrameList);
+}
+
+void nsFlexContainerFrame::InsertFrames(
+    ChildListID aListID, nsIFrame* aPrevFrame,
+    const nsLineList::iterator* aPrevFrameLine, nsFrameList& aFrameList) {
+  NoteNewChildren(aListID, aFrameList);
+  nsContainerFrame::InsertFrames(aListID, aPrevFrame, aPrevFrameLine,
+                                 aFrameList);
+}
+
+void nsFlexContainerFrame::RemoveFrame(ChildListID aListID,
+                                       nsIFrame* aOldFrame) {
+#ifdef DEBUG
+  ChildListIDs supportedLists = {kAbsoluteList, kFixedList, kPrincipalList,
+                                 kNoReflowPrincipalList};
+  // We don't handle the kBackdropList frames in any way, but it only contains
+  // a placeholder for ::backdrop which is OK to not reflow (for now anyway).
+  supportedLists += kBackdropList;
+  MOZ_ASSERT(supportedLists.contains(aListID), "unexpected child list");
+
+  SetDidPushItemsBitIfNeeded(aListID, aOldFrame);
+#endif
+
+  nsContainerFrame::RemoveFrame(aListID, aOldFrame);
+}
+
 StyleAlignFlags nsFlexContainerFrame::CSSAlignmentForAbsPosChild(
     const ReflowInput& aChildRI, LogicalAxis aLogicalAxis) const {
   WritingMode wm = GetWritingMode();
