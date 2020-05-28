@@ -16,7 +16,6 @@ py2commands="
     browsertime
     check-spidermonkey
     clang-format
-    cppunittest
     cramtest
     devtools-css-db
     firefox-ui-functional
