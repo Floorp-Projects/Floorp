@@ -148,7 +148,6 @@ this.reftest = class extends ExtensionAPI {
     this.chromeHandle = null;
 
     if (Services.appinfo.OS == "Android") {
-      Services.wm.removeListener(WindowListener);
       OnRefTestUnload();
       Cu.unload("resource://reftest/reftest.jsm");
     }
