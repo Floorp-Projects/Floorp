@@ -44,7 +44,7 @@ class BrowserAction extends BrowserActionBase {
     const action = tab
       ? this.getContextData(tab)
       : this.helper.extractProperties(this.globals);
-    this.helper.sendRequestForResult(tabId, {
+    this.helper.sendRequest(tabId, {
       action,
       type: "GeckoView:BrowserAction:Update",
     });
