@@ -658,3 +658,19 @@ TEST_F(GfxConfigManager, WebRenderHighRefreshRateNotNightly) {
   EXPECT_TRUE(mFeatures.mGPUProcess.IsEnabled());
   EXPECT_TRUE(mFeatures.mD3D11HwAngle.IsEnabled());
 }
+
+TEST_F(GfxConfigManager, WebRenderAtRefreshRateThreshold) {
+  mIsNightly = false;
+  mMockGfxInfo->mMaxRefreshRate = 60;
+  ConfigureWebRender();
+
+  EXPECT_TRUE(mFeatures.mWrQualified.IsEnabled());
+  EXPECT_TRUE(mFeatures.mWr.IsEnabled());
+  EXPECT_TRUE(mFeatures.mWrCompositor.IsEnabled());
+  EXPECT_TRUE(mFeatures.mWrAngle.IsEnabled());
+  EXPECT_TRUE(mFeatures.mWrDComp.IsEnabled());
+  EXPECT_TRUE(mFeatures.mWrPartial.IsEnabled());
+  EXPECT_TRUE(mFeatures.mHwCompositing.IsEnabled());
+  EXPECT_TRUE(mFeatures.mGPUProcess.IsEnabled());
+  EXPECT_TRUE(mFeatures.mD3D11HwAngle.IsEnabled());
+}
