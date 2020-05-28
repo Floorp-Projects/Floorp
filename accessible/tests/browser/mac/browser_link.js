@@ -80,14 +80,6 @@ addAccessibleTask(
       "AXGroup",
       "bare <a> gets correct group role"
     );
-    ok(
-      !link3.attributeNames.includes("AXVisited"),
-      "Non-link should not have visited attribute"
-    );
-    ok(
-      !link3.attributeNames.includes("AXURL"),
-      "Non-link should not have URL attribute"
-    );
 
     let stateChanged = waitForEvent(EVENT_STATE_CHANGE, "link1");
     await SpecialPowers.spawn(browser, [], () => {
@@ -99,14 +91,6 @@ addAccessibleTask(
       "AXGroup",
       "<a> stripped from href gets group role"
     );
-    ok(
-      !link1.attributeNames.includes("AXVisited"),
-      "Non-link should not have visited attribute"
-    );
-    ok(
-      !link1.attributeNames.includes("AXURL"),
-      "Non-link should not have URL attribute"
-    );
 
     stateChanged = waitForEvent(EVENT_STATE_CHANGE, "link2");
     await SpecialPowers.spawn(browser, [], () => {
@@ -117,14 +101,6 @@ addAccessibleTask(
       link2.getAttributeValue("AXRole"),
       "AXGroup",
       "<a> stripped from onclick gets group role"
-    );
-    ok(
-      !link2.attributeNames.includes("AXVisited"),
-      "Non-link should not have visited attribute"
-    );
-    ok(
-      !link2.attributeNames.includes("AXURL"),
-      "Non-link should not have URL attribute"
     );
 
     stateChanged = waitForEvent(EVENT_STATE_CHANGE, "link3");
