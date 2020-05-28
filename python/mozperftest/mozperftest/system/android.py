@@ -2,8 +2,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import tempfile
+import sys
 from pathlib import Path
 
+import mozlog
 from mozdevice import ADBDevice, ADBError
 from mozperftest.layers import Layer
 from mozperftest.utils import download_file
@@ -35,6 +37,15 @@ class DeviceError(Exception):
     pass
 
 
+class ADBLoggedDevice(ADBDevice):
+    def __init__(self, *args, **kw):
+        self._provided_logger = kw.pop("logger")
+        super(ADBLoggedDevice, self).__init__(*args, **kw)
+
+    def _get_logger(self, logger_name):
+        return self._provided_logger
+
+
 class AndroidDevice(Layer):
     """Use an android device via ADB
     """
@@ -51,7 +62,25 @@ class AndroidDevice(Layer):
         "timeout": {
             "type": int,
             "default": 30,
-            "help": "timeout in seconds for adb operations",
+            "help": "Timeout in seconds for adb operations",
+        },
+        "clear-logcat": {
+            "action": "store_true",
+            "default": False,
+            "help": "Clear the logcat when starting",
+        },
+        "capture-adb": {
+            "type": str,
+            "default": "stdout",
+            "help": (
+                "Captures adb calls to the provided path. "
+                "To capture to stdout, use 'stdout'."
+            ),
+        },
+        "capture-logcat": {
+            "type": str,
+            "default": None,
+            "help": "Captures the logcat to the provided path.",
         },
         "intent": {"type": str, "default": None, "help": "Intent to use"},
         "activity": {"type": str, "default": None, "help": "Activity to use"},
@@ -69,22 +98,67 @@ class AndroidDevice(Layer):
     def __init__(self, env, mach_cmd):
         super(AndroidDevice, self).__init__(env, mach_cmd)
         self.android_activity = self.app_name = self.device = None
+        self.capture_file = None
 
     def setup(self):
-        pass
+        self.info("android.setup")
 
     def teardown(self):
-        pass
+        self.info("android.teardown")
+
+        if self.capture_file is not None:
+            self.capture_file.close()
+        if self.capture_logcat is not None and self.device is not None:
+            self.info("Dumping logcat into %r" % str(self.capture_logcat))
+            with self.capture_logcat.open("wb") as f:
+                for line in self.device.get_logcat():
+                    f.write(line.encode("utf8", errors="replace") + b"\n")
+
+    def _set_output_path(self, path):
+        if path in (None, "stdout"):
+            return path
+        # check if the path is absolute or relative to output
+        path = Path(path)
+        if not path.is_absolute():
+            return Path(self.get_arg("output"), path)
+        return path
 
     def __call__(self, metadata):
         self.app_name = self.get_arg("android-app-name")
         self.android_activity = self.get_arg("android-activity")
+        self.clear_logcat = self.get_arg("clear-logcat")
         self.metadata = metadata
+        self.verbose = self.get_arg("verbose")
+        self.capture_adb = self._set_output_path(self.get_arg("capture-adb"))
+        self.capture_logcat = self._set_output_path(self.get_arg("capture-logcat"))
+
+        # capture the logs produced by ADBDevice
+        logger_name = "mozperftest-adb"
+        logger = mozlog.structuredlog.StructuredLogger(logger_name)
+        if self.capture_adb == "stdout":
+            stream = sys.stdout
+            disable_colors = False
+        else:
+            stream = self.capture_file = self.capture_adb.open("w")
+            disable_colors = True
+
+        handler = mozlog.handlers.StreamHandler(
+            stream=stream,
+            formatter=mozlog.formatters.MachFormatter(
+                verbose=self.verbose, disable_colors=disable_colors
+            ),
+        )
+        logger.add_handler(handler)
         try:
-            self.device = ADBDevice(verbose=True, timeout=self.get_arg("timeout"))
+            self.device = ADBLoggedDevice(
+                verbose=self.verbose, timeout=self.get_arg("timeout"), logger=logger
+            )
         except (ADBError, AttributeError) as e:
             self.error("Could not connect to the phone. Is it connected?")
             raise DeviceError(str(e))
+
+        if self.clear_logcat:
+            self.device.clear_logcat()
 
         # install APKs
         for apk in self.get_arg("android-install-apk"):

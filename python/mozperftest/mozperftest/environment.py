@@ -37,7 +37,9 @@ class MachEnvironment:
     def frozen(self):
         self.freeze()
         try:
-            yield self
+            # used to trigger __enter__/__exit__
+            with self:
+                yield self
         finally:
             self.unfreeze()
 

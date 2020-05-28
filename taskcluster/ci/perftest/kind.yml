@@ -68,11 +68,14 @@ jobs:
             cron: true
         run:
             command: >-
+                mkdir -p $MOZ_FETCHES_DIR/../artifacts &&
                 cd $GECKO_PATH &&
                 python3 python/mozperftest/mozperftest/runner.py
                 --android
                 --android-app-name org.mozilla.fennec_aurora
                 --android-activity org.mozilla.fenix.IntentReceiverActivity
+                --android-clear-logcat
+                --android-capture-logcat logcat
                 --perfherder-metrics processLaunchToNavStart
                 --android-install-apk fenix_fennec_nightly_armeabi_v7a
                 --hooks testing/performance/hooks_applink.py
@@ -80,6 +83,7 @@ jobs:
                 --perfherder-app fenix
                 --browsertime-geckodriver ${MOZ_FETCHES_DIR}/geckodriver
                 --output $MOZ_FETCHES_DIR/../artifacts
+                --verbose
                 testing/performance/perftest_applink.js
 
     android-hw-p2-applink-fenix:
@@ -92,6 +96,7 @@ jobs:
             cron: true
         run:
             command: >-
+                mkdir -p $MOZ_FETCHES_DIR/../artifacts &&
                 cd $GECKO_PATH &&
                 python3 python/mozperftest/mozperftest/runner.py
                 --android
@@ -99,11 +104,14 @@ jobs:
                 --perfherder-metrics processLaunchToNavStart
                 --android-install-apk fenix_fennec_nightly_arm64_v8a
                 --android-activity org.mozilla.fenix.IntentReceiverActivity
+                --android-clear-logcat
+                --android-capture-logcat logcat
                 --hooks testing/performance/hooks_applink.py
                 --perfherder
                 --perfherder-app fenix
                 --browsertime-geckodriver ${MOZ_FETCHES_DIR}/geckodriver
                 --output $MOZ_FETCHES_DIR/../artifacts
+                --verbose
                 testing/performance/perftest_applink.js
 
     android-hw-g5-applink-gv:
@@ -116,11 +124,14 @@ jobs:
             cron: true
         run:
             command: >-
+                mkdir -p $MOZ_FETCHES_DIR/../artifacts &&
                 cd $GECKO_PATH &&
                 python3 python/mozperftest/mozperftest/runner.py
                 --android
                 --android-app-name org.mozilla.geckoview_example
                 --android-activity org.mozilla.geckoview_example.GeckoViewActivity
+                --android-clear-logcat
+                --android-capture-logcat logcat
                 --perfherder-metrics processLaunchToNavStart
                 --android-install-apk gve_nightly_api16
                 --hooks testing/performance/hooks_applink.py
@@ -128,6 +139,7 @@ jobs:
                 --perfherder-app geckoview
                 --browsertime-geckodriver ${MOZ_FETCHES_DIR}/geckodriver
                 --output $MOZ_FETCHES_DIR/../artifacts
+                --verbose
                 testing/performance/perftest_applink.js
 
     android-hw-p2-applink-gv:
@@ -140,9 +152,12 @@ jobs:
             cron: true
         run:
             command: >-
+                mkdir -p $MOZ_FETCHES_DIR/../artifacts &&
                 cd $GECKO_PATH &&
                 python3 python/mozperftest/mozperftest/runner.py
                 --android
+                --android-clear-logcat
+                --android-capture-logcat logcat
                 --android-app-name org.mozilla.geckoview_example
                 --android-activity org.mozilla.geckoview_example.GeckoViewActivity
                 --perfherder-metrics processLaunchToNavStart
@@ -152,4 +167,5 @@ jobs:
                 --perfherder-app geckoview
                 --browsertime-geckodriver ${MOZ_FETCHES_DIR}/geckodriver
                 --output $MOZ_FETCHES_DIR/../artifacts
+                --verbose
                 testing/performance/perftest_applink.js
