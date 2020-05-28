@@ -382,12 +382,10 @@ class RemoteSettingsClient extends EventEmitter {
       let metadata = await this.db.getMetadata();
       if (syncIfEmpty && ObjectUtils.isEmpty(metadata)) {
         // No sync occured yet, may have records from dump but no metadata.
-        console.debug(
-          `${this.identifier} Required metadata, fetching from server.`
-        );
-        metadata = await this.httpClient().getData();
-        await this.db.saveMetadata(metadata);
+        await this.sync({ loadDump: false });
+        metadata = await this.db.getMetadata();
       }
+      // Will throw MissingSignatureError if no metadata and `syncIfEmpty` is false.
       await this._validateCollectionSignature(
         localRecords,
         timestamp,
