@@ -14,6 +14,7 @@
     style="@style/BottomSheetModal"
     android:backgroundTint="@color/foundation_normal_theme"
     app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior">
+
     <View
         android:id="@+id/handle"
         android:layout_width="0dp"
@@ -24,6 +25,22 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintWidth_percent="0.1"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/tab_tray_empty_view"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:gravity="center_horizontal"
+        android:paddingTop="80dp"
+        android:text="@string/no_open_tabs_description"
+        android:textColor="?secondaryText"
+        android:textSize="16sp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@id/tabsTray" />
+
     <com.google.android.material.tabs.TabLayout
         android:id="@+id/tab_layout"
         android:layout_width="0dp"
@@ -52,6 +69,7 @@
             android:contentDescription="@string/tabs_header_private_tabs_title" />
 
     </com.google.android.material.tabs.TabLayout>
+
     <ImageButton
         android:id="@+id/tab_tray_overflow"
         android:layout_width="48dp"
@@ -64,6 +82,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@id/tab_layout"
         app:layout_constraintBottom_toBottomOf="@id/tab_layout" />
+
     <mozilla.components.concept.tabstray.TabsTray
         android:id="@+id/tabsTray"
         android:layout_width="0dp"
@@ -80,4 +99,5 @@
         mozac:tabsTraySelectedItemTextColor="@color/tab_tray_item_selected_background_normal_theme"
         mozac:tabsTrayItemUrlTextColor="@color/tab_tray_item_selected_background_normal_theme"
         mozac:tabsTraySelectedItemUrlTextColor="@color/tab_tray_item_url_normal_theme" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>
