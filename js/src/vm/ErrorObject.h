@@ -118,22 +118,6 @@ class ErrorObject : public NativeObject {
   static bool setStack_impl(JSContext* cx, const CallArgs& args);
 };
 
-class AggregateErrorObject : public ErrorObject {
-  friend class ErrorObject;
-
-  // [[AggregateErrors]] slot of AggregateErrorObjects.
-  static const uint32_t AGGREGATE_ERRORS_SLOT = ErrorObject::RESERVED_SLOTS;
-  static const uint32_t RESERVED_SLOTS = AGGREGATE_ERRORS_SLOT + 1;
-
- public:
-  ArrayObject* aggregateErrors() const;
-  void setAggregateErrors(ArrayObject* errors);
-
-  // Getter for the AggregateError.prototype.errors accessor.
-  static bool getErrors(JSContext* cx, unsigned argc, Value* vp);
-  static bool getErrors_impl(JSContext* cx, const CallArgs& args);
-};
-
 JSString* ErrorToSource(JSContext* cx, HandleObject obj);
 
 }  // namespace js
@@ -141,11 +125,6 @@ JSString* ErrorToSource(JSContext* cx, HandleObject obj);
 template <>
 inline bool JSObject::is<js::ErrorObject>() const {
   return js::ErrorObject::isErrorClass(getClass());
-}
-
-template <>
-inline bool JSObject::is<js::AggregateErrorObject>() const {
-  return hasClass(js::ErrorObject::classForType(JSEXN_AGGREGATEERR));
 }
 
 #endif  // vm_ErrorObject_h_
