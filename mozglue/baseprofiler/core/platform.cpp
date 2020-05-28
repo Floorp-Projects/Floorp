@@ -222,7 +222,7 @@ static uint32_t DefaultFeatures() {
          ProfilerFeature::StackWalk | ProfilerFeature::Threads;
 }
 
-// Extra default features when MOZ_PROFILER_STARTUP is set (even if not
+// Extra default features when MOZ_BASE_PROFILER_STARTUP is set (even if not
 // available).
 static uint32_t StartupExtraDefaultFeatures() {
   // Enable mainthreadio by default for startup profiles as startup is heavy on
@@ -1920,53 +1920,52 @@ static void PrintUsageThenExit(int aExitCode) {
       "\n"
       "  MOZ_BASE_PROFILER_HELP\n"
       "  If set to any value, prints this message.\n"
-      "  (Only BaseProfiler features are known here; Use MOZ_PROFILER_HELP\n"
-      "  for Gecko Profiler help, with more features).\n"
+      "  Use MOZ_PROFILER_HELP for Gecko Profiler help.\n"
       "\n"
       "  MOZ_BASE_PROFILER_{,DEBUG_,VERBOSE}LOGGING\n"
-      "  Enables BaseProfiler logging to stdout. The levels of logging\n"
-      "  available are MOZ_BASE_PROFILER_LOGGING' (least verbose),\n"
-      "  '..._DEBUG_LOGGING', '..._VERBOSE_LOGGING' (most verbose)\n"
+      "  Enables logging to stdout. The levels of logging available are\n"
+      "  'MOZ_BASE_PROFILER_LOGGING' (least verbose), '..._DEBUG_LOGGING',\n"
+      "  '..._VERBOSE_LOGGING' (most verbose)\n"
       "\n"
-      "  MOZ_PROFILER_STARTUP\n"
+      "  MOZ_BASE_PROFILER_STARTUP\n"
       "  If set to any value other than '' or '0'/'N'/'n', starts the\n"
       "  profiler immediately on start-up.\n"
       "  Useful if you want profile code that runs very early.\n"
       "\n"
-      "  MOZ_PROFILER_STARTUP_ENTRIES=<%u..%u>\n"
-      "  If MOZ_PROFILER_STARTUP is set, specifies the number of entries\n"
+      "  MOZ_BASE_PROFILER_STARTUP_ENTRIES=<%u..%u>\n"
+      "  If MOZ_BASE_PROFILER_STARTUP is set, specifies the number of entries\n"
       "  per process in the profiler's circular buffer when the profiler is\n"
       "  first started.\n"
       "  If unset, the platform default is used:\n"
-      "  %u entries per process, or %u when MOZ_PROFILER_STARTUP is set.\n"
+      "  %u entries per process, or %u when MOZ_BASE_PROFILER_STARTUP is set.\n"
       "  (%u bytes per entry -> %u or %u total bytes per process)\n"
       "\n"
-      "  MOZ_PROFILER_STARTUP_DURATION=<1..>\n"
-      "  If MOZ_PROFILER_STARTUP is set, specifies the maximum life time\n"
+      "  MOZ_BASE_PROFILER_STARTUP_DURATION=<1..>\n"
+      "  If MOZ_BASE_PROFILER_STARTUP is set, specifies the maximum life time\n"
       "  of entries in the the profiler's circular buffer when the profiler\n"
       "  is first started, in seconds.\n"
       "  If unset, the life time of the entries will only be restricted by\n"
-      "  MOZ_PROFILER_STARTUP_ENTRIES (or its default value), and no\n"
+      "  MOZ_BASE_PROFILER_STARTUP_ENTRIES (or its default value), and no\n"
       "  additional time duration restriction will be applied.\n"
       "\n"
-      "  MOZ_PROFILER_STARTUP_INTERVAL=<1..1000>\n"
-      "  If MOZ_PROFILER_STARTUP is set, specifies the sample interval,\n"
+      "  MOZ_BASE_PROFILER_STARTUP_INTERVAL=<1..1000>\n"
+      "  If MOZ_BASE_PROFILER_STARTUP is set, specifies the sample interval,\n"
       "  measured in milliseconds, when the profiler is first started.\n"
       "  If unset, the platform default is used.\n"
       "\n"
-      "  MOZ_PROFILER_STARTUP_FEATURES_BITFIELD=<Number>\n"
-      "  If MOZ_PROFILER_STARTUP is set, specifies the profiling\n"
+      "  MOZ_BASE_PROFILER_STARTUP_FEATURES_BITFIELD=<Number>\n"
+      "  If MOZ_BASE_PROFILER_STARTUP is set, specifies the profiling\n"
       "  features, as the integer value of the features bitfield.\n"
-      "  If unset, the value from MOZ_PROFILER_STARTUP_FEATURES is used.\n"
+      "  If unset, the value from MOZ_BASE_PROFILER_STARTUP_FEATURES is used.\n"
       "\n"
-      "  MOZ_PROFILER_STARTUP_FEATURES=<Features>\n"
-      "  If MOZ_PROFILER_STARTUP is set, specifies the profiling\n"
+      "  MOZ_BASE_PROFILER_STARTUP_FEATURES=<Features>\n"
+      "  If MOZ_BASE_PROFILER_STARTUP is set, specifies the profiling\n"
       "  features, as a comma-separated list of strings.\n"
-      "  Ignored if MOZ_PROFILER_STARTUP_FEATURES_BITFIELD is set.\n"
+      "  Ignored if MOZ_BASE_PROFILER_STARTUP_FEATURES_BITFIELD is set.\n"
       "  If unset, the platform default is used.\n"
       "\n"
       "    Features: (x=unavailable, D/d=default/unavailable,\n"
-      "               S/s=MOZ_PROFILER_STARTUP extra "
+      "               S/s=MOZ_BASE_PROFILER_STARTUP extra "
       "default/unavailable)\n",
       unsigned(ActivePS::scMinimumBufferEntries),
       unsigned(ActivePS::scMaximumBufferEntries),
@@ -1989,22 +1988,22 @@ static void PrintUsageThenExit(int aExitCode) {
   PrintToConsole(
       "    -        \"default\" (All above D+S defaults)\n"
       "\n"
-      "  MOZ_PROFILER_STARTUP_FILTERS=<Filters>\n"
-      "  If MOZ_PROFILER_STARTUP is set, specifies the thread filters, as "
+      "  MOZ_BASE_PROFILER_STARTUP_FILTERS=<Filters>\n"
+      "  If MOZ_BASE_PROFILER_STARTUP is set, specifies the thread filters, as "
       "a\n"
       "  comma-separated list of strings. A given thread will be sampled if\n"
       "  any of the filters is a case-insensitive substring of the thread\n"
       "  name. If unset, a default is used.\n"
       "\n"
-      "  MOZ_PROFILER_SHUTDOWN\n"
+      "  MOZ_BASE_PROFILER_SHUTDOWN\n"
       "  If set, the profiler saves a profile to the named file on shutdown.\n"
       "\n"
-      "  MOZ_PROFILER_SYMBOLICATE\n"
+      "  MOZ_BASE_PROFILER_SYMBOLICATE\n"
       "  If set, the profiler will pre-symbolicate profiles.\n"
       "  *Note* This will add a significant pause when gathering data, and\n"
       "  is intended mainly for local development.\n"
       "\n"
-      "  MOZ_PROFILER_LUL_TEST\n"
+      "  MOZ_BASE_PROFILER_LUL_TEST\n"
       "  If set to any value, runs LUL unit tests at startup.\n"
       "\n"
       "  This platform %s native unwinding.\n"
@@ -2372,8 +2371,7 @@ static uint32_t ParseFeature(const char* aFeature, bool aIsStartup) {
 #undef PARSE_FEATURE_BIT
 
   PrintToConsole("\nUnrecognized feature \"%s\".\n\n", aFeature);
-  // Since we may have an old feature we don't implement anymore, don't exit
-  PrintUsageThenExit(0);
+  PrintUsageThenExit(1);
   return 0;
 }
 
@@ -2505,7 +2503,7 @@ void profiler_init(void* aStackTop) {
     // startup, even if no profiling is actually to be done. So, instead, it is
     // created on demand at the first call to PlatformStart().
 
-    const char* startupEnv = getenv("MOZ_PROFILER_STARTUP");
+    const char* startupEnv = getenv("MOZ_BASE_PROFILER_STARTUP");
     if (!startupEnv || startupEnv[0] == '\0' ||
         ((startupEnv[0] == '0' || startupEnv[0] == 'N' ||
           startupEnv[0] == 'n') &&
@@ -2513,12 +2511,12 @@ void profiler_init(void* aStackTop) {
       return;
     }
 
-    LOG("- MOZ_PROFILER_STARTUP is set");
+    LOG("- MOZ_BASE_PROFILER_STARTUP is set");
 
     // Startup default capacity may be different.
     capacity = BASE_PROFILER_DEFAULT_STARTUP_ENTRIES;
 
-    const char* startupCapacity = getenv("MOZ_PROFILER_STARTUP_ENTRIES");
+    const char* startupCapacity = getenv("MOZ_BASE_PROFILER_STARTUP_ENTRIES");
     if (startupCapacity && startupCapacity[0] != '\0') {
       errno = 0;
       long capacityLong = strtol(startupCapacity, nullptr, 10);
@@ -2530,15 +2528,17 @@ void profiler_init(void* aStackTop) {
               static_cast<uint64_t>(INT32_MAX)) {
         capacity = PowerOfTwo32(ActivePS::ClampToAllowedEntries(
             static_cast<uint32_t>(capacityLong)));
-        LOG("- MOZ_PROFILER_STARTUP_ENTRIES = %u", unsigned(capacity.Value()));
+        LOG("- MOZ_BASE_PROFILER_STARTUP_ENTRIES = %u",
+            unsigned(capacity.Value()));
       } else {
-        PrintToConsole("- MOZ_PROFILER_STARTUP_ENTRIES not a valid integer: %s",
-                       startupCapacity);
+        PrintToConsole(
+            "- MOZ_BASE_PROFILER_STARTUP_ENTRIES not a valid integer: %s",
+            startupCapacity);
         PrintUsageThenExit(1);
       }
     }
 
-    const char* startupDuration = getenv("MOZ_PROFILER_STARTUP_DURATION");
+    const char* startupDuration = getenv("MOZ_BASE_PROFILER_STARTUP_DURATION");
     if (startupDuration && startupDuration[0] != '\0') {
       // The duration is a floating point number. Use StringToDouble rather than
       // strtod, so that "." is used as the decimal separator regardless of OS
@@ -2548,15 +2548,16 @@ void profiler_init(void* aStackTop) {
         if (*durationVal > 0.0) {
           duration = Some(*durationVal);
         }
-        LOG("- MOZ_PROFILER_STARTUP_DURATION = %f", *durationVal);
+        LOG("- MOZ_BASE_PROFILER_STARTUP_DURATION = %f", *durationVal);
       } else {
-        PrintToConsole("- MOZ_PROFILER_STARTUP_DURATION not a valid float: %s",
-                       startupDuration);
+        PrintToConsole(
+            "- MOZ_BASE_PROFILER_STARTUP_DURATION not a valid float: %s",
+            startupDuration);
         PrintUsageThenExit(1);
       }
     }
 
-    const char* startupInterval = getenv("MOZ_PROFILER_STARTUP_INTERVAL");
+    const char* startupInterval = getenv("MOZ_BASE_PROFILER_STARTUP_INTERVAL");
     if (startupInterval && startupInterval[0] != '\0') {
       // The interval is a floating point number. Use StringToDouble rather than
       // strtod, so that "." is used as the decimal separator regardless of OS
@@ -2564,10 +2565,11 @@ void profiler_init(void* aStackTop) {
       auto intervalValue = StringToDouble(MakeStringSpan(startupInterval));
       if (intervalValue && *intervalValue > 0.0 && *intervalValue <= 1000.0) {
         interval = *intervalValue;
-        LOG("- MOZ_PROFILER_STARTUP_INTERVAL = %f", interval);
+        LOG("- MOZ_BASE_PROFILER_STARTUP_INTERVAL = %f", interval);
       } else {
-        PrintToConsole("- MOZ_PROFILER_STARTUP_INTERVAL not a valid float: %s",
-                       startupInterval);
+        PrintToConsole(
+            "- MOZ_BASE_PROFILER_STARTUP_INTERVAL not a valid float: %s",
+            startupInterval);
         PrintUsageThenExit(1);
       }
     }
@@ -2575,20 +2577,22 @@ void profiler_init(void* aStackTop) {
     features |= StartupExtraDefaultFeatures() & AvailableFeatures();
 
     const char* startupFeaturesBitfield =
-        getenv("MOZ_PROFILER_STARTUP_FEATURES_BITFIELD");
+        getenv("MOZ_BASE_PROFILER_STARTUP_FEATURES_BITFIELD");
     if (startupFeaturesBitfield && startupFeaturesBitfield[0] != '\0') {
       errno = 0;
       features = strtol(startupFeaturesBitfield, nullptr, 10);
       if (errno == 0 && features != 0) {
-        LOG("- MOZ_PROFILER_STARTUP_FEATURES_BITFIELD = %d", features);
+        LOG("- MOZ_BASE_PROFILER_STARTUP_FEATURES_BITFIELD = %d", features);
       } else {
         PrintToConsole(
-            "- MOZ_PROFILER_STARTUP_FEATURES_BITFIELD not a valid integer: %s",
+            "- MOZ_BASE_PROFILER_STARTUP_FEATURES_BITFIELD not a valid "
+            "integer: %s",
             startupFeaturesBitfield);
         PrintUsageThenExit(1);
       }
     } else {
-      const char* startupFeatures = getenv("MOZ_PROFILER_STARTUP_FEATURES");
+      const char* startupFeatures =
+          getenv("MOZ_BASE_PROFILER_STARTUP_FEATURES");
       if (startupFeatures && startupFeatures[0] != '\0') {
         // Interpret startupFeatures as a list of feature strings, separated by
         // commas.
@@ -2598,14 +2602,14 @@ void profiler_init(void* aStackTop) {
         features = ParseFeaturesFromStringArray(featureStringArray.begin(),
                                                 featureStringArray.length(),
                                                 /* aIsStartup */ true);
-        LOG("- MOZ_PROFILER_STARTUP_FEATURES = %d", features);
+        LOG("- MOZ_BASE_PROFILER_STARTUP_FEATURES = %d", features);
       }
     }
 
-    const char* startupFilters = getenv("MOZ_PROFILER_STARTUP_FILTERS");
+    const char* startupFilters = getenv("MOZ_BASE_PROFILER_STARTUP_FILTERS");
     if (startupFilters && startupFilters[0] != '\0') {
       filters = SplitAtCommas(startupFilters, filterStorage);
-      LOG("- MOZ_PROFILER_STARTUP_FILTERS = %s", startupFilters);
+      LOG("- MOZ_BASE_PROFILER_STARTUP_FILTERS = %s", startupFilters);
     }
 
     locked_profiler_start(lock, capacity, interval, features, filters.begin(),
@@ -2643,7 +2647,7 @@ void profiler_shutdown() {
 
     // Save the profile on shutdown if requested.
     if (ActivePS::Exists(lock)) {
-      const char* filename = getenv("MOZ_PROFILER_SHUTDOWN");
+      const char* filename = getenv("MOZ_BASE_PROFILER_SHUTDOWN");
       if (filename) {
         locked_profiler_save_profile_to_file(lock, filename,
                                              /* aIsShuttingDown */ true);
@@ -2767,24 +2771,24 @@ void GetProfilerEnvVarsForChildProcess(
   PSAutoLock lock;
 
   if (!ActivePS::Exists(lock)) {
-    aSetEnv("MOZ_PROFILER_STARTUP", "");
+    aSetEnv("MOZ_BASE_PROFILER_STARTUP", "");
     return;
   }
 
-  aSetEnv("MOZ_PROFILER_STARTUP", "1");
+  aSetEnv("MOZ_BASE_PROFILER_STARTUP", "1");
   auto capacityString =
       Smprintf("%u", unsigned(ActivePS::Capacity(lock).Value()));
-  aSetEnv("MOZ_PROFILER_STARTUP_ENTRIES", capacityString.get());
+  aSetEnv("MOZ_BASE_PROFILER_STARTUP_ENTRIES", capacityString.get());
 
   // Use AppendFloat instead of Smprintf with %f because the decimal
   // separator used by %f is locale-dependent. But the string we produce needs
   // to be parseable by strtod, which only accepts the period character as a
   // decimal separator. AppendFloat always uses the period character.
   std::string intervalString = std::to_string(ActivePS::Interval(lock));
-  aSetEnv("MOZ_PROFILER_STARTUP_INTERVAL", intervalString.c_str());
+  aSetEnv("MOZ_BASE_PROFILER_STARTUP_INTERVAL", intervalString.c_str());
 
   auto featuresString = Smprintf("%d", ActivePS::Features(lock));
-  aSetEnv("MOZ_PROFILER_STARTUP_FEATURES_BITFIELD", featuresString.get());
+  aSetEnv("MOZ_BASE_PROFILER_STARTUP_FEATURES_BITFIELD", featuresString.get());
 
   std::string filtersString;
   const Vector<std::string>& filters = ActivePS::Filters(lock);
@@ -2794,7 +2798,7 @@ void GetProfilerEnvVarsForChildProcess(
       filtersString += ",";
     }
   }
-  aSetEnv("MOZ_PROFILER_STARTUP_FILTERS", filtersString.c_str());
+  aSetEnv("MOZ_BASE_PROFILER_STARTUP_FILTERS", filtersString.c_str());
 }
 
 void profiler_received_exit_profile(const std::string& aExitProfile) {
