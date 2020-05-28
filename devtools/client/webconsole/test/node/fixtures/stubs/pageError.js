@@ -106,7 +106,8 @@ rawPackets.set(`ReferenceError: asdf is not defined`, {
       "actorID": "server0.conn4.child2/obj25"
     },
     "hasException": true
-  }
+  },
+  "resourceType": "error-messages"
 });
 
 rawPackets.set(`SyntaxError: redeclaration of let a`, {
@@ -186,7 +187,8 @@ rawPackets.set(`SyntaxError: redeclaration of let a`, {
       "actorID": "server0.conn4.child2/obj26"
     },
     "hasException": true
-  }
+  },
+  "resourceType": "error-messages"
 });
 
 rawPackets.set(`TypeError longString message`, {
@@ -278,7 +280,8 @@ rawPackets.set(`TypeError longString message`, {
       "actorID": "server0.conn4.child2/obj29"
     },
     "hasException": true
-  }
+  },
+  "resourceType": "error-messages"
 });
 
 rawPackets.set(`throw string with URL`, {
@@ -334,7 +337,8 @@ rawPackets.set(`throw string with URL`, {
     "isPromiseRejection": false,
     "exception": "“https://evil.com/?aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa“ is evil and “https://not-so-evil.com/?aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa“ is not good either",
     "hasException": true
-  }
+  },
+  "resourceType": "error-messages"
 });
 
 rawPackets.set(`throw ""`, {
@@ -390,7 +394,8 @@ rawPackets.set(`throw ""`, {
     "isPromiseRejection": false,
     "exception": "",
     "hasException": true
-  }
+  },
+  "resourceType": "error-messages"
 });
 
 rawPackets.set(`throw "tomato"`, {
@@ -446,7 +451,8 @@ rawPackets.set(`throw "tomato"`, {
     "isPromiseRejection": false,
     "exception": "tomato",
     "hasException": true
-  }
+  },
+  "resourceType": "error-messages"
 });
 
 rawPackets.set(`throw false`, {
@@ -502,7 +508,8 @@ rawPackets.set(`throw false`, {
     "isPromiseRejection": false,
     "exception": false,
     "hasException": true
-  }
+  },
+  "resourceType": "error-messages"
 });
 
 rawPackets.set(`throw 0`, {
@@ -558,7 +565,8 @@ rawPackets.set(`throw 0`, {
     "isPromiseRejection": false,
     "exception": 0,
     "hasException": true
-  }
+  },
+  "resourceType": "error-messages"
 });
 
 rawPackets.set(`throw null`, {
@@ -616,7 +624,8 @@ rawPackets.set(`throw null`, {
       "type": "null"
     },
     "hasException": true
-  }
+  },
+  "resourceType": "error-messages"
 });
 
 rawPackets.set(`throw undefined`, {
@@ -674,7 +683,8 @@ rawPackets.set(`throw undefined`, {
       "type": "undefined"
     },
     "hasException": true
-  }
+  },
+  "resourceType": "error-messages"
 });
 
 rawPackets.set(`throw Symbol`, {
@@ -734,7 +744,8 @@ rawPackets.set(`throw Symbol`, {
       "name": "potato"
     },
     "hasException": true
-  }
+  },
+  "resourceType": "error-messages"
 });
 
 rawPackets.set(`throw Object`, {
@@ -816,7 +827,8 @@ rawPackets.set(`throw Object`, {
       "actorID": "server0.conn4.child2/obj40"
     },
     "hasException": true
-  }
+  },
+  "resourceType": "error-messages"
 });
 
 rawPackets.set(`throw Error Object`, {
@@ -892,7 +904,8 @@ rawPackets.set(`throw Error Object`, {
       "actorID": "server0.conn4.child2/obj42"
     },
     "hasException": true
-  }
+  },
+  "resourceType": "error-messages"
 });
 
 rawPackets.set(`throw Error Object with custom name`, {
@@ -968,7 +981,8 @@ rawPackets.set(`throw Error Object with custom name`, {
       "actorID": "server0.conn4.child2/obj44"
     },
     "hasException": true
-  }
+  },
+  "resourceType": "error-messages"
 });
 
 rawPackets.set(`Promise reject ""`, {
@@ -1024,7 +1038,8 @@ rawPackets.set(`Promise reject ""`, {
     "isPromiseRejection": true,
     "exception": "",
     "hasException": true
-  }
+  },
+  "resourceType": "error-messages"
 });
 
 rawPackets.set(`Promise reject "tomato"`, {
@@ -1080,7 +1095,8 @@ rawPackets.set(`Promise reject "tomato"`, {
     "isPromiseRejection": true,
     "exception": "tomato",
     "hasException": true
-  }
+  },
+  "resourceType": "error-messages"
 });
 
 rawPackets.set(`Promise reject false`, {
@@ -1136,7 +1152,8 @@ rawPackets.set(`Promise reject false`, {
     "isPromiseRejection": true,
     "exception": false,
     "hasException": true
-  }
+  },
+  "resourceType": "error-messages"
 });
 
 rawPackets.set(`Promise reject 0`, {
@@ -1192,7 +1209,8 @@ rawPackets.set(`Promise reject 0`, {
     "isPromiseRejection": true,
     "exception": 0,
     "hasException": true
-  }
+  },
+  "resourceType": "error-messages"
 });
 
 rawPackets.set(`Promise reject null`, {
@@ -1250,7 +1268,8 @@ rawPackets.set(`Promise reject null`, {
       "type": "null"
     },
     "hasException": true
-  }
+  },
+  "resourceType": "error-messages"
 });
 
 rawPackets.set(`Promise reject undefined`, {
@@ -1308,7 +1327,8 @@ rawPackets.set(`Promise reject undefined`, {
       "type": "undefined"
     },
     "hasException": true
-  }
+  },
+  "resourceType": "error-messages"
 });
 
 rawPackets.set(`Promise reject Symbol`, {
@@ -1368,7 +1388,8 @@ rawPackets.set(`Promise reject Symbol`, {
       "name": "potato"
     },
     "hasException": true
-  }
+  },
+  "resourceType": "error-messages"
 });
 
 rawPackets.set(`Promise reject Object`, {
@@ -1450,7 +1471,8 @@ rawPackets.set(`Promise reject Object`, {
       "actorID": "server0.conn4.child2/obj54"
     },
     "hasException": true
-  }
+  },
+  "resourceType": "error-messages"
 });
 
 rawPackets.set(`Promise reject Error Object`, {
@@ -1526,7 +1548,8 @@ rawPackets.set(`Promise reject Error Object`, {
       "actorID": "server0.conn4.child2/obj56"
     },
     "hasException": true
-  }
+  },
+  "resourceType": "error-messages"
 });
 
 rawPackets.set(`Promise reject Error Object with custom name`, {
@@ -1602,7 +1625,8 @@ rawPackets.set(`Promise reject Error Object with custom name`, {
       "actorID": "server0.conn4.child2/obj58"
     },
     "hasException": true
-  }
+  },
+  "resourceType": "error-messages"
 });
 
 
