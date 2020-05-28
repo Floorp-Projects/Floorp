@@ -35,10 +35,6 @@ this.experiments_urlbar = class extends ExtensionAPI {
           engagementTelemetry: this._getDefaultSettingsAPI(
             "browser.urlbar.eventTelemetry.enabled"
           ),
-
-          openViewOnFocus: this._getDefaultSettingsAPI(
-            "browser.urlbar.openViewOnFocus"
-          ),
         },
       },
     };
