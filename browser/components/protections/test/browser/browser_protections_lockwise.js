@@ -11,7 +11,7 @@ const ABOUT_LOGINS_URL = "about:logins";
 
 let mockMonitorData = {
   numBreaches: 2,
-  numBreachesResolved: 1,
+  numBreachesResolved: 0,
 };
 
 add_task(async function testNoLoginsLockwiseCardUI() {
