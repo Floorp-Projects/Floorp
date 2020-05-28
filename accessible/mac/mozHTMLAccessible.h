@@ -9,9 +9,27 @@
 
 @interface mozHeadingAccessible : mozAccessible
 
+// override
+- (NSString*)moxTitle;
+
+// override
+- (id)moxValue;
+
 @end
 
 @interface mozLinkAccessible : mozAccessible
+
+// override
+- (id)moxValue;
+
+// override
+- (NSString*)moxRole;
+
+// override
+- (NSURL*)moxURL;
+
+// override
+- (NSNumber*)moxVisited;
 
 @end
 
