@@ -29,7 +29,7 @@ import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.session.storage.SessionStorage
 import mozilla.components.browser.state.store.BrowserStore
-import mozilla.components.browser.storage.memory.InMemoryHistoryStorage
+import mozilla.components.browser.storage.sync.PlacesHistoryStorage
 import mozilla.components.concept.engine.DefaultSettings
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.fetch.Client
@@ -104,7 +104,7 @@ open class DefaultComponents(private val applicationContext: Context) {
     val icons by lazy { BrowserIcons(applicationContext, client) }
 
     // Storage
-    private val lazyHistoryStorage = lazy { InMemoryHistoryStorage() }
+    private val lazyHistoryStorage = lazy { PlacesHistoryStorage(applicationContext) }
     val historyStorage by lazy { lazyHistoryStorage.value }
 
     private val sessionStorage by lazy { SessionStorage(applicationContext, engine) }
