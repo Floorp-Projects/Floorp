@@ -30,20 +30,9 @@ export class FxCards extends React.PureComponent {
       return;
     }
 
-    let flowParams;
-    try {
-      const response = await fetch(this.props.metricsFlowUri, {
-        credentials: "omit",
-      });
-      if (response.status === 200) {
-        const { deviceId, flowId, flowBeginTime } = await response.json();
-        flowParams = { deviceId, flowId, flowBeginTime };
-      } else {
-        console.error("Non-200 response", response); // eslint-disable-line no-console
-      }
-    } catch (e) {
-      flowParams = null;
-    }
+    const flowParams = await AboutWelcomeUtils.fetchFlowParams(
+      this.props.metricsFlowUri
+    );
 
     this.setState({ flowParams });
   }

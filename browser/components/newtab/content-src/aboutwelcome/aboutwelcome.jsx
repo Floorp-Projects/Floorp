@@ -30,6 +30,10 @@ class AboutWelcome extends React.PureComponent {
     this.fetchFxAFlowUri();
     window.AWSendEventTelemetry({
       event: "IMPRESSION",
+      event_context: {
+        source: this.props.UTMTerm,
+        page: "about:welcome",
+      },
       message_id: this.props.messageId,
     });
     // Captures user has seen about:welcome by setting
@@ -63,6 +67,7 @@ class AboutWelcome extends React.PureComponent {
           screens={props.screens}
           metricsFlowUri={this.state.metricsFlowUri}
           message_id={props.messageId}
+          utm_term={props.UTMTerm}
         />
       );
     }
@@ -102,7 +107,6 @@ function ComputeMessageId(experimentId, branchId, settings) {
   }
 
   if (experimentId && branchId) {
-    messageId += `_${experimentId}_${branchId}`.toUpperCase();
     UTMTerm = `${experimentId}-${branchId}`.toLowerCase();
   }
   return {

@@ -101,8 +101,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var react_dom__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(2);
 /* harmony import */ var react_dom__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(react_dom__WEBPACK_IMPORTED_MODULE_1__);
 /* harmony import */ var _components_MultiStageAboutWelcome__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(3);
-/* harmony import */ var _components_HeroText__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(6);
-/* harmony import */ var _components_FxCards__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(7);
+/* harmony import */ var _components_HeroText__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(7);
+/* harmony import */ var _components_FxCards__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(8);
 /* harmony import */ var _components_MSLocalized__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(4);
 /* harmony import */ var _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(5);
 function _extends() { _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
@@ -138,6 +138,10 @@ class AboutWelcome extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureComp
     this.fetchFxAFlowUri();
     window.AWSendEventTelemetry({
       event: "IMPRESSION",
+      event_context: {
+        source: this.props.UTMTerm,
+        page: "about:welcome"
+      },
       message_id: this.props.messageId
     }); // Captures user has seen about:welcome by setting
     // firstrun.didSeeAboutWelcome pref to true and capturing welcome UI unique messageId
@@ -171,7 +175,8 @@ class AboutWelcome extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureComp
       return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_components_MultiStageAboutWelcome__WEBPACK_IMPORTED_MODULE_2__["MultiStageAboutWelcome"], {
         screens: props.screens,
         metricsFlowUri: this.state.metricsFlowUri,
-        message_id: props.messageId
+        message_id: props.messageId,
+        utm_term: props.UTMTerm
       });
     }
 
@@ -208,7 +213,6 @@ function ComputeMessageId(experimentId, branchId, settings) {
   }
 
   if (experimentId && branchId) {
-    messageId += `_${experimentId}_${branchId}`.toUpperCase();
     UTMTerm = `${experimentId}-${branchId}`.toLowerCase();
   }
 
@@ -266,9 +270,11 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _MSLocalized__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(4);
 /* harmony import */ var _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(5);
+/* harmony import */ var _asrouter_templates_FirstRun_addUtmParams__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(6);
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 
 
 
@@ -281,7 +287,18 @@ const MultiStageAboutWelcome = props => {
         _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_2__["AboutWelcomeUtils"].sendImpressionTelemetry(`${props.message_id}_${screen.id}`);
       }
     });
-  }, [index]); // Transition to next screen, opening about:home on last screen button CTA
+  }, [index]);
+  const [flowParams, setFlowParams] = Object(react__WEBPACK_IMPORTED_MODULE_0__["useState"])(null);
+  const {
+    metricsFlowUri
+  } = props;
+  Object(react__WEBPACK_IMPORTED_MODULE_0__["useEffect"])(() => {
+    (async () => {
+      if (metricsFlowUri) {
+        setFlowParams((await _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_2__["AboutWelcomeUtils"].fetchFlowParams(metricsFlowUri)));
+      }
+    })();
+  }, [metricsFlowUri]); // Transition to next screen, opening about:home on last screen button CTA
 
   const handleTransition = index < props.screens.length ? Object(react__WEBPACK_IMPORTED_MODULE_0__["useCallback"])(() => setScreenIndex(prevState => prevState + 1), []) : _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_2__["AboutWelcomeUtils"].handleUserAction({
     type: "OPEN_ABOUT_PAGE",
@@ -300,7 +317,10 @@ const MultiStageAboutWelcome = props => {
       order: screen.order,
       content: screen.content,
       navigate: handleTransition,
-      topSites: topSites
+      topSites: topSites,
+      messageId: `${props.message_id}_${screen.id}`,
+      UTMTerm: props.utm_term,
+      flowParams: flowParams
     }) : null;
   })));
 };
@@ -310,20 +330,54 @@ class WelcomeScreen extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureCom
     this.handleAction = this.handleAction.bind(this);
   }
 
+  handleOpenURL(action, flowParams, UTMTerm) {
+    let {
+      type,
+      data
+    } = action;
+    let url = new URL(data.args);
+    Object(_asrouter_templates_FirstRun_addUtmParams__WEBPACK_IMPORTED_MODULE_3__["addUtmParams"])(url, `aboutwelcome-${UTMTerm}-screen`);
+
+    if (action.addFlowParams && flowParams) {
+      url.searchParams.append("device_id", flowParams.deviceId);
+      url.searchParams.append("flow_id", flowParams.flowId);
+      url.searchParams.append("flow_begin_time", flowParams.flowBeginTime);
+    }
+
+    data = { ...data,
+      args: url.toString()
+    };
+    _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_2__["AboutWelcomeUtils"].handleUserAction({
+      type,
+      data
+    });
+  }
+
   handleAction(event) {
-    let targetContent = this.props.content[event.target.value];
+    let {
+      props
+    } = this;
+    let targetContent = props.content[event.target.value];
 
     if (!(targetContent && targetContent.action)) {
       return;
     }
 
-    if (targetContent.action.type) {
-      _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_2__["AboutWelcomeUtils"].handleUserAction(targetContent.action);
+    let {
+      action
+    } = targetContent;
+
+    if (action.type === "OPEN_URL") {
+      this.handleOpenURL(action, props.flowParams, props.UTMTerm);
+    } else if (action.type) {
+      _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_2__["AboutWelcomeUtils"].handleUserAction(action);
     }
 
-    if (targetContent.action.navigate) {
-      this.props.navigate();
+    if (action.navigate) {
+      props.navigate();
     }
+
+    _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_2__["AboutWelcomeUtils"].sendActionTelemetry(props.messageId, event.target.value);
   }
 
   renderSecondaryCTA(className) {
@@ -473,6 +527,47 @@ const AboutWelcomeUtils = {
     });
   },
 
+  sendActionTelemetry(messageId, elementId) {
+    const ping = {
+      event: "CLICK_BUTTON",
+      event_context: {
+        source: elementId,
+        page: "about:welcome"
+      },
+      message_id: messageId
+    };
+    window.AWSendEventTelemetry(ping);
+  },
+
+  async fetchFlowParams(metricsFlowUri) {
+    let flowParams;
+
+    try {
+      const response = await fetch(metricsFlowUri, {
+        credentials: "omit"
+      });
+
+      if (response.status === 200) {
+        const {
+          deviceId,
+          flowId,
+          flowBeginTime
+        } = await response.json();
+        flowParams = {
+          deviceId,
+          flowId,
+          flowBeginTime
+        };
+      } else {
+        console.error("Non-200 response", response); // eslint-disable-line no-console
+      }
+    } catch (e) {
+      flowParams = null;
+    }
+
+    return flowParams;
+  },
+
   sendEvent(type, detail) {
     document.dispatchEvent(new CustomEvent(`AWPage:${type}`, {
       bubbles: true,
@@ -575,6 +670,47 @@ const DEFAULT_WELCOME_CONTENT = {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "BASE_PARAMS", function() { return BASE_PARAMS; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "addUtmParams", function() { return addUtmParams; });
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/**
+ * BASE_PARAMS keys/values can be modified from outside this file
+ */
+const BASE_PARAMS = {
+  utm_source: "activity-stream",
+  utm_campaign: "firstrun",
+  utm_medium: "referral"
+};
+/**
+ * Takes in a url as a string or URL object and returns a URL object with the
+ * utm_* parameters added to it. If a URL object is passed in, the paraemeters
+ * are added to it (the return value can be ignored in that case as it's the
+ * same object).
+ */
+
+function addUtmParams(url, utmTerm) {
+  let returnUrl = url;
+
+  if (typeof returnUrl === "string") {
+    returnUrl = new URL(url);
+  }
+
+  Object.keys(BASE_PARAMS).forEach(key => {
+    returnUrl.searchParams.append(key, BASE_PARAMS[key]);
+  });
+  returnUrl.searchParams.append("utm_term", utmTerm);
+  return returnUrl;
+}
+
+/***/ }),
+/* 7 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "HeroText", function() { return HeroText; });
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
@@ -597,7 +733,7 @@ const HeroText = props => {
 };
 
 /***/ }),
-/* 7 */
+/* 8 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -605,7 +741,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "FxCards", function() { return FxCards; });
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _asrouter_templates_FirstRun_addUtmParams__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(8);
+/* harmony import */ var _asrouter_templates_FirstRun_addUtmParams__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(6);
 /* harmony import */ var _asrouter_templates_OnboardingMessage_OnboardingMessage__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(9);
 /* harmony import */ var _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(5);
 function _extends() { _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
@@ -640,31 +776,7 @@ class FxCards extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureComponent
       return;
     }
 
-    let flowParams;
-
-    try {
-      const response = await fetch(this.props.metricsFlowUri, {
-        credentials: "omit"
-      });
-
-      if (response.status === 200) {
-        const {
-          deviceId,
-          flowId,
-          flowBeginTime
-        } = await response.json();
-        flowParams = {
-          deviceId,
-          flowId,
-          flowBeginTime
-        };
-      } else {
-        console.error("Non-200 response", response); // eslint-disable-line no-console
-      }
-    } catch (e) {
-      flowParams = null;
-    }
-
+    const flowParams = await _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_3__["AboutWelcomeUtils"].fetchFlowParams(this.props.metricsFlowUri);
     this.setState({
       flowParams
     });
@@ -714,47 +826,6 @@ class FxCards extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureComponent
     }, card)))));
   }
 
-}
-
-/***/ }),
-/* 8 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "BASE_PARAMS", function() { return BASE_PARAMS; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "addUtmParams", function() { return addUtmParams; });
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-/**
- * BASE_PARAMS keys/values can be modified from outside this file
- */
-const BASE_PARAMS = {
-  utm_source: "activity-stream",
-  utm_campaign: "firstrun",
-  utm_medium: "referral"
-};
-/**
- * Takes in a url as a string or URL object and returns a URL object with the
- * utm_* parameters added to it. If a URL object is passed in, the paraemeters
- * are added to it (the return value can be ignored in that case as it's the
- * same object).
- */
-
-function addUtmParams(url, utmTerm) {
-  let returnUrl = url;
-
-  if (typeof returnUrl === "string") {
-    returnUrl = new URL(url);
-  }
-
-  Object.keys(BASE_PARAMS).forEach(key => {
-    returnUrl.searchParams.append(key, BASE_PARAMS[key]);
-  });
-  returnUrl.searchParams.append("utm_term", utmTerm);
-  return returnUrl;
 }
 
 /***/ }),

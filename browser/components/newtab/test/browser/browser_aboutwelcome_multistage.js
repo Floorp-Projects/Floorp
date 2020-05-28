@@ -4,7 +4,7 @@ const SEPARATE_ABOUT_WELCOME_PREF = "browser.aboutwelcome.enabled";
 const ABOUT_WELCOME_OVERRIDE_CONTENT_PREF =
   "browser.aboutwelcome.overrideContent";
 
-const TEST_MULTISTAGE_JSON = JSON.stringify({
+const TEST_MULTISTAGE_CONTENT = {
   id: "multi-stage-welcome",
   screens: [
     {
@@ -21,6 +21,12 @@ const TEST_MULTISTAGE_JSON = JSON.stringify({
         secondary_button: {
           label: "link top",
           position: "top",
+          action: {
+            type: "OPEN_URL",
+            data: {
+              args: "http://example.com/",
+            },
+          },
         },
       },
     },
@@ -55,8 +61,8 @@ const TEST_MULTISTAGE_JSON = JSON.stringify({
       },
     },
   ],
-});
-
+};
+const TEST_MULTISTAGE_JSON = JSON.stringify(TEST_MULTISTAGE_CONTENT);
 /**
  * Sets the aboutwelcome pref to enabled simplified welcome UI
  */
@@ -130,16 +136,16 @@ async function test_screen_content(
   );
 }
 
-async function onNavigate(browser, message) {
+async function onButtonClick(browser, elementId) {
   await ContentTask.spawn(
     browser,
-    { message },
-    async ({ message: messageText }) => {
+    { elementId },
+    async ({ elementId: buttonId }) => {
       await ContentTaskUtils.waitForCondition(
-        () => content.document.querySelector("button.primary"),
-        messageText
+        () => content.document.querySelector(buttonId),
+        buttonId
       );
-      let button = content.document.querySelector("button.primary");
+      let button = content.document.querySelector(buttonId);
       button.click();
     }
   );
@@ -166,7 +172,7 @@ add_task(async function test_Multistage_About_Welcome_branches() {
     ["main.AW_STEP2", "main.AW_STEP3"]
   );
 
-  await onNavigate(browser, "Step 1");
+  await onButtonClick(browser, "button.primary");
   await test_screen_content(
     browser,
     "multistage step 2",
@@ -175,7 +181,7 @@ add_task(async function test_Multistage_About_Welcome_branches() {
     // Unexpected selectors:
     ["main.AW_STEP1", "main.AW_STEP3", "div.secondary-cta.top"]
   );
-  await onNavigate(browser, "Step 2");
+  await onButtonClick(browser, "button.primary");
   await test_screen_content(
     browser,
     "multistage step 3",
@@ -189,7 +195,7 @@ add_task(async function test_Multistage_About_Welcome_branches() {
     // Unexpected selectors:
     ["main.AW_STEP1", "main.AW_STEP2"]
   );
-  await onNavigate(browser, "Step 3");
+  await onButtonClick(browser, "button.primary");
   await test_screen_content(
     browser,
     "home",
@@ -197,5 +203,96 @@ add_task(async function test_Multistage_About_Welcome_branches() {
     ["body.activity-stream"],
     // Unexpected selectors:
     ["div.multistageContainer"]
+  );
+});
+
+async function getAboutWelcomeParent(browser) {
+  let windowGlobalParent = browser.browsingContext.currentWindowGlobal;
+  return windowGlobalParent.getActor("AboutWelcome");
+}
+
+/**
+ * Test the multistage welcome UI primary button action
+ */
+add_task(async function test_AWMultistage_Primary_Action() {
+  let browser = await openAboutWelcome();
+  let aboutWelcomeActor = await getAboutWelcomeParent(browser);
+  const sandbox = sinon.createSandbox();
+  // Stub AboutWelcomeParent Content Message Handler
+  sandbox.stub(aboutWelcomeActor, "onContentMessage").resolves("");
+  registerCleanupFunction(() => {
+    sandbox.restore();
+  });
+
+  await onButtonClick(browser, "button.primary");
+  ok(aboutWelcomeActor.onContentMessage.callCount === 1, "Stub was called");
+  Assert.equal(
+    aboutWelcomeActor.onContentMessage.firstCall.args[0],
+    "AWPage:TELEMETRY_EVENT",
+    "send telemetry event"
+  );
+  Assert.equal(
+    aboutWelcomeActor.onContentMessage.firstCall.args[1].event,
+    "CLICK_BUTTON",
+    "click button event recorded in telemetry"
+  );
+  Assert.equal(
+    aboutWelcomeActor.onContentMessage.firstCall.args[1].event_context.source,
+    "primary_button",
+    "primary button click source recorded in telemetry"
+  );
+  Assert.equal(
+    aboutWelcomeActor.onContentMessage.firstCall.args[1].message_id,
+    `${TEST_MULTISTAGE_CONTENT.id}_${TEST_MULTISTAGE_CONTENT.screens[0].id}`.toUpperCase(),
+    "MessageId sent in click event telemetry"
+  );
+});
+
+add_task(async function test_AWMultistage_Secondary_Open_URL_Action() {
+  let browser = await openAboutWelcome();
+  let aboutWelcomeActor = await getAboutWelcomeParent(browser);
+  const sandbox = sinon.createSandbox();
+  // Stub AboutWelcomeParent Content Message Handler
+  sandbox.stub(aboutWelcomeActor, "onContentMessage").resolves("");
+  registerCleanupFunction(() => {
+    sandbox.restore();
+  });
+
+  await onButtonClick(browser, "button.secondary");
+  ok(
+    aboutWelcomeActor.onContentMessage.callCount === 2,
+    "Stub called twice to handle Open_URL and Telemetry"
+  );
+  Assert.equal(
+    aboutWelcomeActor.onContentMessage.firstCall.args[0],
+    "AWPage:SPECIAL_ACTION",
+    "First Call handles special action"
+  );
+  Assert.equal(
+    aboutWelcomeActor.onContentMessage.firstCall.args[1].type,
+    "OPEN_URL",
+    "Special action OPEN_URL event handled"
+  );
+  ok(
+    aboutWelcomeActor.onContentMessage.firstCall.args[1].data.args.includes(
+      "utm_term=aboutwelcome-default-screen"
+    ),
+    "UTMTerm set in opened URL"
+  );
+
+  Assert.equal(
+    aboutWelcomeActor.onContentMessage.secondCall.args[0],
+    "AWPage:TELEMETRY_EVENT",
+    "Second Call handles Telemetry event"
+  );
+  Assert.equal(
+    aboutWelcomeActor.onContentMessage.secondCall.args[1].event,
+    "CLICK_BUTTON",
+    "click button event recorded in Telemetry"
+  );
+  Assert.equal(
+    aboutWelcomeActor.onContentMessage.secondCall.args[1].event_context.source,
+    "secondary_button",
+    "secondary button click source recorded in Telemetry"
   );
 });
