@@ -17,6 +17,7 @@ pub type SecKeyAlgorithm = CFStringRef;
 extern "C" {
     // Available starting macOS 10.3
     pub fn SecCertificateGetTypeID() -> CFTypeID;
+    pub fn SecTrustCreateWithCertificates(certificates: SecCertificateRef, policies: SecPolicyRef, trust: *mut SecTrustRef) -> OSStatus;
     pub fn SecIdentityGetTypeID() -> CFTypeID;
     pub fn SecIdentityCopyCertificate(
         identityRef: SecIdentityRef,
@@ -27,11 +28,14 @@ extern "C" {
         privateKeyRef: *mut SecKeyRef,
     ) -> OSStatus;
     pub fn SecKeyGetTypeID() -> CFTypeID;
+    pub fn SecPolicyGetTypeID() -> CFTypeID;
+    pub fn SecTrustGetTypeID() -> CFTypeID;
 
     // Available starting macOS 10.6
     pub fn SecCertificateCopyData(certificate: SecCertificateRef) -> CFDataRef;
     pub fn SecCertificateCopySubjectSummary(certificate: SecCertificateRef) -> CFStringRef;
     pub fn SecItemCopyMatching(query: CFDictionaryRef, result: *mut CFTypeRef) -> OSStatus;
+    pub fn SecPolicyCreateSSL(server: bool, hostname: CFStringRef) -> SecPolicyRef;
     pub static kSecClass: CFStringRef;
     pub static kSecAttrKeyType: CFStringRef;
     pub static kSecAttrKeySizeInBits: CFStringRef;
@@ -40,6 +44,8 @@ extern "C" {
     pub static kSecReturnRef: CFStringRef;
 
     // Available starting macOS 10.7
+    pub fn SecTrustGetCertificateAtIndex(trust: SecTrustRef, ix: CFIndex) -> SecCertificateRef;
+    pub fn SecTrustGetCertificateCount(trust: SecTrustRef) -> CFIndex;
     pub static kSecClassIdentity: CFStringRef;
     pub static kSecAttrKeyTypeRSA: CFStringRef;
 }

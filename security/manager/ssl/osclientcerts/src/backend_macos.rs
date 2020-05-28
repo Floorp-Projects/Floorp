@@ -9,6 +9,7 @@ use libloading::{Library, Symbol};
 use pkcs11::types::*;
 use sha2::{Digest, Sha256};
 use std::collections::BTreeMap;
+use std::convert::TryInto;
 use std::os::raw::c_void;
 
 use core_foundation::array::*;
@@ -45,6 +46,18 @@ pub type SecKeyRef = *const __SecKey;
 declare_TCFType!(SecKey, SecKeyRef);
 impl_TCFType!(SecKey, SecKeyRef, SecKeyGetTypeID);
 
+#[repr(C)]
+pub struct __SecPolicy(c_void);
+pub type SecPolicyRef = *const __SecPolicy;
+declare_TCFType!(SecPolicy, SecPolicyRef);
+impl_TCFType!(SecPolicy, SecPolicyRef, SecPolicyGetTypeID);
+
+#[repr(C)]
+pub struct __SecTrust(c_void);
+pub type SecTrustRef = *const __SecTrust;
+declare_TCFType!(SecTrust, SecTrustRef);
+impl_TCFType!(SecTrust, SecTrustRef, SecTrustGetTypeID);
+
 type SecKeyCreateSignatureType =
     unsafe extern "C" fn(SecKeyRef, SecKeyAlgorithm, CFDataRef, *mut CFErrorRef) -> CFDataRef;
 type SecKeyCopyAttributesType = unsafe extern "C" fn(SecKeyRef) -> CFDictionaryRef;
@@ -55,6 +68,8 @@ type SecCertificateCopyNormalizedIssuerSequenceType =
 type SecCertificateCopyNormalizedSubjectSequenceType =
     unsafe extern "C" fn(SecCertificateRef) -> CFDataRef;
 type SecCertificateCopyKeyType = unsafe extern "C" fn(SecCertificateRef) -> SecKeyRef;
+type SecTrustEvaluateWithErrorType =
+    unsafe extern "C" fn(trust: SecTrustRef, error: *mut CFErrorRef) -> bool;
 
 #[derive(Ord, Eq, PartialOrd, PartialEq)]
 enum SecStringConstant {
@@ -83,6 +98,7 @@ pub struct SecurityFrameworkFunctions<'a> {
     sec_certificate_copy_normalized_subject_sequence:
         Symbol<'a, SecCertificateCopyNormalizedSubjectSequenceType>,
     sec_certificate_copy_key: Symbol<'a, SecCertificateCopyKeyType>,
+    sec_trust_evaluate_with_error: Symbol<'a, SecTrustEvaluateWithErrorType>,
     sec_string_constants: BTreeMap<SecStringConstant, String>,
 }
 
@@ -141,6 +157,9 @@ impl SecurityFramework {
                 let sec_certificate_copy_key = library
                     .get::<SecCertificateCopyKeyType>(b"SecCertificateCopyKey\0")
                     .map_err(|_| ())?;
+                let sec_trust_evaluate_with_error = library
+                    .get::<SecTrustEvaluateWithErrorType>(b"SecTrustEvaluateWithError\0")
+                    .map_err(|_| ())?;
                 let mut sec_string_constants = BTreeMap::new();
                 let strings_to_load = vec![
                     (
@@ -198,6 +217,7 @@ impl SecurityFramework {
                     sec_certificate_copy_normalized_issuer_sequence,
                     sec_certificate_copy_normalized_subject_sequence,
                     sec_certificate_copy_key,
+                    sec_trust_evaluate_with_error,
                     sec_string_constants,
                 })
             },
@@ -327,6 +347,19 @@ impl SecurityFramework {
         }
     }
 
+    /// SecTrustEvaluateWithError is available in macOS 10.14
+    fn sec_trust_evaluate_with_error(&self, trust: &SecTrust) -> Result<bool, ()> {
+        match &self.rental {
+            Some(rental) => rental.rent(|framework| unsafe {
+                Ok((framework.sec_trust_evaluate_with_error)(
+                    trust.as_concrete_TypeRef(),
+                    std::ptr::null_mut(),
+                ))
+            }),
+            None => Err(()),
+        }
+    }
+
     fn get_sec_string_constant(
         &self,
         sec_string_constant: SecStringConstant,
@@ -406,17 +439,21 @@ pub struct Cert {
 }
 
 impl Cert {
-    fn new(identity: &SecIdentity) -> Result<Cert, ()> {
+    fn new_from_identity(identity: &SecIdentity) -> Result<Cert, ()> {
         let certificate = sec_identity_copy_certificate(identity)?;
-        let label = sec_certificate_copy_subject_summary(&certificate)?;
-        let der = sec_certificate_copy_data(&certificate)?;
+        Cert::new_from_certificate(&certificate)
+    }
+
+    fn new_from_certificate(certificate: &SecCertificate) -> Result<Cert, ()> {
+        let label = sec_certificate_copy_subject_summary(certificate)?;
+        let der = sec_certificate_copy_data(certificate)?;
         let der = der.bytes().to_vec();
         let id = Sha256::digest(&der).to_vec();
         let issuer =
-            SECURITY_FRAMEWORK.sec_certificate_copy_normalized_issuer_sequence(&certificate)?;
+            SECURITY_FRAMEWORK.sec_certificate_copy_normalized_issuer_sequence(certificate)?;
         let serial_number = read_encoded_serial_number(&der)?;
         let subject =
-            SECURITY_FRAMEWORK.sec_certificate_copy_normalized_subject_sequence(&certificate)?;
+            SECURITY_FRAMEWORK.sec_certificate_copy_normalized_subject_sequence(certificate)?;
         Ok(Cert {
             class: serialize_uint(CKO_CERTIFICATE)?,
             token: serialize_uint(CK_TRUE)?,
@@ -807,17 +844,6 @@ pub const SUPPORTED_ATTRIBUTES: &[CK_ATTRIBUTE_TYPE] = &[
     CKA_EC_PARAMS,
 ];
 
-pub fn list_objects() -> Vec<Object> {
-    let mut objects = Vec::new();
-    if let Some(identities) = list_identities() {
-        for (cert, key) in identities {
-            objects.push(Object::Cert(cert));
-            objects.push(Object::Key(key));
-        }
-    }
-    objects
-}
-
 fn get_key_attribute<T: TCFType + Clone>(key: &SecKey, attr: CFStringRef) -> Result<T, ()> {
     let attributes: CFDictionary<CFString, T> = SECURITY_FRAMEWORK.sec_key_copy_attributes(&key)?;
     match attributes.find(attr as *const _) {
@@ -826,7 +852,57 @@ fn get_key_attribute<T: TCFType + Clone>(key: &SecKey, attr: CFStringRef) -> Res
     }
 }
 
-fn list_identities() -> Option<Vec<(Cert, Key)>> {
+// Given a SecIdentity, attempts to build as much of a path to a trust anchor as possible, gathers
+// the CA certificates from that path, and returns them. The purpose of this function is not to
+// validate the given certificate but to find CA certificates that gecko may need to do path
+// building when filtering client certificates according to the acceptable CA list sent by the
+// server during client authentication.
+fn get_issuers(identity: &SecIdentity) -> Result<Vec<SecCertificate>, ()> {
+    let certificate = sec_identity_copy_certificate(identity)?;
+    let policy = unsafe { SecPolicyCreateSSL(false, std::ptr::null()) };
+    if policy.is_null() {
+        error!("SecPolicyCreateSSL failed");
+        return Err(());
+    }
+    let policy = unsafe { SecPolicy::wrap_under_create_rule(policy) };
+    let mut trust = std::ptr::null();
+    // Each of SecTrustCreateWithCertificates' input arguments can be either single items or an
+    // array of items. Since we only want to specify one of each, we directly specify the arguments.
+    let status = unsafe {
+        SecTrustCreateWithCertificates(
+            certificate.as_concrete_TypeRef(),
+            policy.as_concrete_TypeRef(),
+            &mut trust,
+        )
+    };
+    if status != errSecSuccess {
+        error!("SecTrustCreateWithCertificates failed: {}", status);
+        return Err(());
+    }
+    if trust.is_null() {
+        error!("trust is null?");
+        return Err(());
+    }
+    let trust = unsafe { SecTrust::wrap_under_create_rule(trust) };
+    // We ignore the return value here because we don't care if the certificate is trusted or not -
+    // we're only doing this to build its issuer chain as much as possible.
+    let _ = SECURITY_FRAMEWORK.sec_trust_evaluate_with_error(&trust)?;
+    let certificate_count = unsafe { SecTrustGetCertificateCount(trust.as_concrete_TypeRef()) };
+    let mut certificates = Vec::with_capacity(certificate_count.try_into().map_err(|_| ())?);
+    for i in 1..certificate_count {
+        let certificate = unsafe { SecTrustGetCertificateAtIndex(trust.as_concrete_TypeRef(), i) };
+        if certificate.is_null() {
+            error!("SecTrustGetCertificateAtIndex returned null certificate?");
+            continue;
+        }
+        let certificate = unsafe { SecCertificate::wrap_under_get_rule(certificate) };
+        certificates.push(certificate);
+    }
+    Ok(certificates)
+}
+
+pub fn list_objects() -> Vec<Object> {
+    let mut objects = Vec::new();
     let identities = unsafe {
         let class_key = CFString::wrap_under_get_rule(kSecClass);
         let class_value = CFString::wrap_under_get_rule(kSecClassIdentity);
@@ -844,22 +920,31 @@ fn list_identities() -> Option<Vec<(Cert, Key)>> {
         let status = SecItemCopyMatching(dict.as_CFTypeRef() as CFDictionaryRef, &mut result);
         if status != errSecSuccess {
             error!("SecItemCopyMatching failed: {}", status);
-            return None;
+            return objects;
         }
         if result.is_null() {
             debug!("no client certs?");
-            return None;
+            return objects;
         }
         CFArray::<SecIdentityRef>::wrap_under_create_rule(result as CFArrayRef)
     };
-    let mut identities_out = Vec::with_capacity(identities.len() as usize);
     for identity in identities.get_all_values().iter() {
         let identity = unsafe { SecIdentity::wrap_under_get_rule(*identity as SecIdentityRef) };
-        let cert = Cert::new(&identity);
+        let cert = Cert::new_from_identity(&identity);
         let key = Key::new(&identity);
         if let (Ok(cert), Ok(key)) = (cert, key) {
-            identities_out.push((cert, key));
+            objects.push(Object::Cert(cert));
+            objects.push(Object::Key(key));
+        } else {
+            continue;
+        }
+        if let Ok(issuers) = get_issuers(&identity) {
+            for issuer in issuers {
+                if let Ok(cert) = Cert::new_from_certificate(&issuer) {
+                    objects.push(Object::Cert(cert));
+                }
+            }
         }
     }
-    Some(identities_out)
+    objects
 }
