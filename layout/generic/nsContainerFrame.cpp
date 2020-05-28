@@ -1668,7 +1668,8 @@ void nsContainerFrame::NormalizeChildLists() {
           f = next;
         }
         if (overflowContainers->IsEmpty()) {
-          RemoveProperty(OverflowContainersProperty());
+          (void)TakeProperty(OverflowContainersProperty());
+          overflowContainers->Delete(PresShell());
         }
         MergeSortedExcessOverflowContainers(moveToEOC);
       }
