@@ -20,6 +20,32 @@ namespace mozilla {
 
 using dom::URLParams;
 
+void MakeFirstPartyDomain(const nsACString& aScheme, const nsACString& aHost,
+                          int32_t aPort, nsAString& aFirstPartyDomain) {
+  if (!OriginAttributes::UseSiteForFirstPartyDomain()) {
+    aFirstPartyDomain.Assign(NS_ConvertUTF8toUTF16(aHost));
+    return;
+  }
+
+  nsAutoCString site;
+  site.AssignLiteral("(");
+  site.Append(aScheme);
+  site.Append(",");
+  site.Append(aHost);
+  if (aPort != -1) {
+    site.Append(",");
+    site.AppendInt(aPort);
+  }
+  site.AppendLiteral(")");
+
+  aFirstPartyDomain.Assign(NS_ConvertUTF8toUTF16(site));
+}
+
+void MakeFirstPartyDomain(const nsACString& aScheme, const nsACString& aHost,
+                          nsAString& aFirstPartyDomain) {
+  MakeFirstPartyDomain(aScheme, aHost, -1, aFirstPartyDomain);
+}
+
 void OriginAttributes::SetFirstPartyDomain(const bool aIsTopLevelDocument,
                                            nsIURI* aURI, bool aForced) {
   nsresult rv;
@@ -38,7 +64,9 @@ void OriginAttributes::SetFirstPartyDomain(const bool aIsTopLevelDocument,
   NS_ENSURE_SUCCESS_VOID(rv);
 
   if (scheme.EqualsLiteral("about")) {
-    mFirstPartyDomain.AssignLiteral(ABOUT_URI_FIRST_PARTY_DOMAIN);
+    MakeFirstPartyDomain(scheme,
+                         NS_LITERAL_CSTRING(ABOUT_URI_FIRST_PARTY_DOMAIN),
+                         mFirstPartyDomain);
     return;
   }
 
@@ -65,7 +93,7 @@ void OriginAttributes::SetFirstPartyDomain(const bool aIsTopLevelDocument,
   nsAutoCString baseDomain;
   rv = tldService->GetBaseDomain(aURI, 0, baseDomain);
   if (NS_SUCCEEDED(rv)) {
-    mFirstPartyDomain = NS_ConvertUTF8toUTF16(baseDomain);
+    MakeFirstPartyDomain(scheme, baseDomain, mFirstPartyDomain);
     return;
   }
 
@@ -73,25 +101,36 @@ void OriginAttributes::SetFirstPartyDomain(const bool aIsTopLevelDocument,
   bool isIpAddress = (rv == NS_ERROR_HOST_IS_IP_ADDRESS);
   bool isInsufficientDomainLevels = (rv == NS_ERROR_INSUFFICIENT_DOMAIN_LEVELS);
 
+  int32_t port;
+  rv = aURI->GetPort(&port);
+  NS_ENSURE_SUCCESS_VOID(rv);
+
+  nsAutoCString host;
+  rv = aURI->GetHost(host);
+  NS_ENSURE_SUCCESS_VOID(rv);
+
   if (isIpAddress) {
     // If the host is an IPv4/IPv6 address, we still accept it as a
     // valid firstPartyDomain.
     nsAutoCString ipAddr;
-    rv = aURI->GetHost(ipAddr);
-    NS_ENSURE_SUCCESS_VOID(rv);
 
-    if (net_IsValidIPv6Addr(ipAddr)) {
+    if (net_IsValidIPv6Addr(host)) {
       // According to RFC2732, the host of an IPv6 address should be an
       // IPv6reference. The GetHost() of nsIURI will only return the IPv6
       // address. So, we need to convert it back to IPv6reference here.
-      mFirstPartyDomain.Truncate();
-      mFirstPartyDomain.AssignLiteral("[");
-      mFirstPartyDomain.Append(NS_ConvertUTF8toUTF16(ipAddr));
-      mFirstPartyDomain.AppendLiteral("]");
+      ipAddr.AssignLiteral("[");
+      ipAddr.Append(host);
+      ipAddr.AppendLiteral("]");
     } else {
-      mFirstPartyDomain = NS_ConvertUTF8toUTF16(ipAddr);
+      ipAddr = host;
     }
 
+    MakeFirstPartyDomain(scheme, ipAddr, port, mFirstPartyDomain);
+    return;
+  }
+
+  if (OriginAttributes::UseSiteForFirstPartyDomain()) {
+    MakeFirstPartyDomain(scheme, host, port, mFirstPartyDomain);
     return;
   }
 
@@ -99,9 +138,9 @@ void OriginAttributes::SetFirstPartyDomain(const bool aIsTopLevelDocument,
     nsAutoCString publicSuffix;
     rv = tldService->GetPublicSuffix(aURI, publicSuffix);
     if (NS_SUCCEEDED(rv)) {
-      mFirstPartyDomain = NS_ConvertUTF8toUTF16(publicSuffix);
+      MakeFirstPartyDomain(scheme, publicSuffix, port, mFirstPartyDomain);
+      return;
     }
-    return;
   }
 }
 
