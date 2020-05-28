@@ -521,6 +521,34 @@ class PromptFeatureTest {
     }
 
     @Test
+    fun `Calling onConfirm on a BeforeUnload request will consume promptRequest`() {
+        val fragment: Fragment = mock()
+        whenever(fragment.getString(R.string.mozac_feature_prompt_before_unload_dialog_title)).thenReturn("")
+        whenever(fragment.getString(R.string.mozac_feature_prompt_before_unload_dialog_body)).thenReturn("")
+        whenever(fragment.getString(R.string.mozac_feature_prompts_before_unload_stay)).thenReturn("")
+        whenever(fragment.getString(R.string.mozac_feature_prompts_before_unload_leave)).thenReturn("")
+
+        val feature = PromptFeature(fragment = fragment, store = store, fragmentManager = fragmentManager) { }
+
+        var onLeaveWasCalled = false
+
+        val promptRequest = PromptRequest.BeforeUnload(
+            title = "title",
+            onLeave = { onLeaveWasCalled = true },
+            onStay = { }
+        )
+
+        feature.start()
+
+        store.dispatch(ContentAction.UpdatePromptRequestAction(tabId, promptRequest)).joinBlocking()
+
+        feature.onConfirm(tabId, "" to "")
+        store.waitUntilIdle()
+        assertNull(tab()?.content?.promptRequest)
+        assertTrue(onLeaveWasCalled)
+    }
+
+    @Test
     fun `Calling onCancel on a authentication request will consume promptRequest and call onDismiss`() {
         val feature = PromptFeature(activity = mock(), store = store, fragmentManager = fragmentManager) { }
         var onDismissWasCalled = false
@@ -617,6 +645,31 @@ class PromptFeatureTest {
         var onCancelWasCalled = false
 
         val promptRequest = PromptRequest.Popup("http://www.popuptest.com/", { }) {
+            onCancelWasCalled = true
+        }
+
+        feature.start()
+
+        store.dispatch(ContentAction.UpdatePromptRequestAction(tabId, promptRequest)).joinBlocking()
+
+        feature.onCancel(tabId)
+        store.waitUntilIdle()
+        assertNull(tab()?.content?.promptRequest)
+        assertTrue(onCancelWasCalled)
+    }
+
+    @Test
+    fun `Calling onCancel on a BeforeUnload request will consume promptRequest`() {
+        val fragment: Fragment = mock()
+        whenever(fragment.getString(R.string.mozac_feature_prompt_before_unload_dialog_title)).thenReturn("")
+        whenever(fragment.getString(R.string.mozac_feature_prompt_before_unload_dialog_body)).thenReturn("")
+        whenever(fragment.getString(R.string.mozac_feature_prompts_before_unload_stay)).thenReturn("")
+        whenever(fragment.getString(R.string.mozac_feature_prompts_before_unload_leave)).thenReturn("")
+
+        val feature = PromptFeature(fragment = fragment, store = store, fragmentManager = fragmentManager) { }
+        var onCancelWasCalled = false
+
+        val promptRequest = PromptRequest.BeforeUnload("http://www.test.com/", { }) {
             onCancelWasCalled = true
         }
 

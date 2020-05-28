@@ -806,6 +806,45 @@ class GeckoPromptDelegateTest {
     }
 
     @Test
+    fun `onBeforeUnloadPrompt must provide a BeforeUnload PromptRequest`() {
+        val mockSession = GeckoEngineSession(runtime)
+        var request: PromptRequest.BeforeUnload? = null
+        var onAllowWasCalled = false
+        var onDenyWasCalled = false
+
+        val promptDelegate = GeckoPromptDelegate(mockSession)
+
+        mockSession.register(object : EngineSession.Observer {
+            override fun onPromptRequest(promptRequest: PromptRequest) {
+                request = promptRequest as PromptRequest.BeforeUnload
+            }
+        })
+
+        var geckoPrompt = GeckoBeforeUnloadPrompt()
+        var geckoResult = promptDelegate.onBeforeUnloadPrompt(mock(), geckoPrompt)
+
+        geckoResult!!.accept {
+            onAllowWasCalled = geckoPrompt.getGeckoResult()["allow"] == true
+        }
+
+        with(request!!) {
+            assertEquals(title, "")
+
+            onLeave()
+            assertTrue(onAllowWasCalled)
+        }
+
+        geckoPrompt = GeckoBeforeUnloadPrompt()
+        geckoResult = promptDelegate.onBeforeUnloadPrompt(mock(), geckoPrompt)
+        geckoResult!!.accept {
+            onDenyWasCalled = geckoPrompt.getGeckoResult()["allow"] == false
+        }
+
+        request!!.onStay()
+        assertTrue(onDenyWasCalled)
+    }
+
+    @Test
     fun `onSharePrompt must provide a Share PromptRequest`() {
         val mockSession = GeckoEngineSession(runtime)
         var request: PromptRequest.Share? = null
@@ -957,6 +996,8 @@ class GeckoPromptDelegateTest {
     class GeckoPopupPrompt(
         targetUri: String = "targetUri"
     ) : GeckoSession.PromptDelegate.PopupPrompt(targetUri)
+
+    class GeckoBeforeUnloadPrompt : GeckoSession.PromptDelegate.BeforeUnloadPrompt()
 
     class GeckoSharePrompt(
         title: String? = "title",

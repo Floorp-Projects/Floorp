@@ -54,6 +54,20 @@ sealed class PromptRequest {
     ) : PromptRequest(), Dismissible
 
     /**
+     * BeforeUnloadPrompt represents the onbeforeunload prompt.
+     * This prompt is shown when a user is leaving a website and there is formation pending to be saved.
+     * For more information see https://developer.mozilla.org/en-US/docs/Web/API/WindowEventHandlers/onbeforeunload.
+     * @property title of the dialog.
+     * @property onLeave callback to notify that the user wants leave the site.
+     * @property onStay callback to notify that the user wants stay in the site.
+     */
+    data class BeforeUnload(
+        val title: String,
+        val onLeave: () -> Unit,
+        val onStay: () -> Unit
+    ) : PromptRequest()
+
+    /**
      * Value type that represents a request for a save login prompt.
      * @property hint a value that helps to determine the appropriate prompting behavior.
      * @property logins a list of logins that are associated with the current domain.
