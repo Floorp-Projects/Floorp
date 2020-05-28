@@ -322,40 +322,106 @@ class AboutLoginsParent extends JSWindowActorParent {
             "AboutLogins:MasterPasswordRequest: Message ID required for MasterPasswordRequest."
           );
         }
-        let messageText = { value: "NOT SUPPORTED" };
-        let captionText = { value: "" };
 
-        // This feature is only supported on Windows and macOS
-        // but we still call in to OSKeyStore on Linux to get
-        // the proper auth_details for Telemetry.
-        // See bug 1614874 for Linux support.
-        if (OS_AUTH_ENABLED && OSKeyStore.canReauth()) {
-          messageId += "-" + AppConstants.platform;
-          [messageText, captionText] = await AboutLoginsL10n.formatMessages([
-            {
-              id: messageId,
-            },
-            {
-              id: "about-logins-os-auth-dialog-caption",
-            },
-          ]);
-        }
+        let loggedIn = false;
+        let telemetryEvent;
 
-        let { isAuthorized, telemetryEvent } = await LoginHelper.requestReauth(
-          this.browsingContext.embedderElement,
-          OS_AUTH_ENABLED,
-          AboutLogins._authExpirationTime,
-          messageText.value,
-          captionText.value
-        );
-        if (isAuthorized) {
-          const AUTH_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
-          AboutLogins._authExpirationTime = Date.now() + AUTH_TIMEOUT_MS;
+        try {
+          // This does no harm if master password isn't set.
+          let tokendb = Cc[
+            "@mozilla.org/security/pk11tokendb;1"
+          ].createInstance(Ci.nsIPK11TokenDB);
+          let token = tokendb.getInternalKeyToken();
+
+          if (Date.now() < AboutLogins._authExpirationTime) {
+            loggedIn = true;
+            telemetryEvent = {
+              object: token.hasPassword ? "master_password" : "os_auth",
+              method: "reauthenticate",
+              value: "success_no_prompt",
+            };
+            return;
+          }
+
+          // Use the OS auth dialog if there is no master password
+          if (!token.hasPassword && !OS_AUTH_ENABLED) {
+            loggedIn = true;
+            telemetryEvent = {
+              object: "os_auth",
+              method: "reauthenticate",
+              value: "success_disabled",
+            };
+            return;
+          }
+          if (!token.hasPassword && OS_AUTH_ENABLED) {
+            let messageText = { value: "NOT SUPPORTED" };
+            let captionText = { value: "" };
+            // This feature is only supported on Windows and macOS
+            // but we still call in to OSKeyStore on Linux to get
+            // the proper auth_details for Telemetry.
+            // See bug 1614874 for Linux support.
+            if (OSKeyStore.canReauth()) {
+              messageId += "-" + AppConstants.platform;
+              [messageText, captionText] = await AboutLoginsL10n.formatMessages(
+                [
+                  {
+                    id: messageId,
+                  },
+                  {
+                    id: "about-logins-os-auth-dialog-caption",
+                  },
+                ]
+              );
+            }
+            let result = await OSKeyStore.ensureLoggedIn(
+              messageText.value,
+              captionText.value,
+              ownerGlobal,
+              false
+            );
+            loggedIn = result.authenticated;
+            telemetryEvent = {
+              object: "os_auth",
+              method: "reauthenticate",
+              value: result.auth_details,
+            };
+            return;
+          }
+          // Force a log-out of the Master Password.
+          token.checkPassword("");
+
+          // If a master password prompt is already open, just exit early and return false.
+          // The user can re-trigger it after responding to the already open dialog.
+          if (Services.logins.uiBusy) {
+            loggedIn = false;
+            return;
+          }
+
+          // So there's a master password. But since checkPassword didn't succeed, we're logged out (per nsIPK11Token.idl).
+          try {
+            // Relogin and ask for the master password.
+            token.login(true); // 'true' means always prompt for token password. User will be prompted until
+            // clicking 'Cancel' or entering the correct password.
+          } catch (e) {
+            // An exception will be thrown if the user cancels the login prompt dialog.
+            // User is also logged out of Software Security Device.
+          }
+          loggedIn = token.isLoggedIn();
+          telemetryEvent = {
+            object: "master_password",
+            method: "reauthenticate",
+            value: loggedIn ? "success" : "fail",
+          };
+        } finally {
+          if (loggedIn) {
+            const AUTH_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
+            AboutLogins._authExpirationTime = Date.now() + AUTH_TIMEOUT_MS;
+          }
+          this.sendAsyncMessage("AboutLogins:MasterPasswordResponse", {
+            result: loggedIn,
+            telemetryEvent,
+          });
         }
-        this.sendAsyncMessage("AboutLogins:MasterPasswordResponse", {
-          result: isAuthorized,
-          telemetryEvent,
-        });
         break;
       }
       case "AboutLogins:Subscribe": {
