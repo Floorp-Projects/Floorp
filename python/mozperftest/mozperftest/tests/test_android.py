@@ -3,7 +3,7 @@ import mozunit
 import pytest
 import mock
 
-from mozperftest.tests.support import get_running_env, requests_content
+from mozperftest.tests.support import get_running_env, requests_content, temp_file
 from mozperftest.environment import SYSTEM
 from mozperftest.system.android import DeviceError
 from mozperftest.utils import silence
@@ -21,11 +21,13 @@ class FakeDevice:
         return True
 
 
-@mock.patch("mozperftest.system.android.ADBDevice", new=FakeDevice)
+@mock.patch("mozperftest.system.android.ADBLoggedDevice", new=FakeDevice)
 def test_android():
     args = {
-        "android-install-apk": ["this"],
+        "android-install-apk": ["this.apk"],
         "android": True,
+        "android-timeout": 30,
+        "android-capture-adb": "stdout",
         "android-app-name": "org.mozilla.fenix",
     }
 
@@ -41,6 +43,7 @@ def test_android_failure():
         "android-install-apk": ["this"],
         "android": True,
         "android-app-name": "org.mozilla.fenix",
+        "android-capture-adb": "stdout",
     }
 
     mach_cmd, metadata, env = get_running_env(**args)
@@ -50,12 +53,13 @@ def test_android_failure():
 
 
 @mock.patch("mozperftest.utils.requests.get", new=requests_content())
-@mock.patch("mozperftest.system.android.ADBDevice")
+@mock.patch("mozperftest.system.android.ADBLoggedDevice")
 def test_android_apk_alias(device):
     args = {
         "android-install-apk": ["fenix_fennec_nightly_armeabi_v7a"],
         "android": True,
         "android-app-name": "org.mozilla.fenned_aurora",
+        "android-capture-adb": "stdout",
     }
 
     mach_cmd, metadata, env = get_running_env(**args)
@@ -67,13 +71,14 @@ def test_android_apk_alias(device):
 
 
 @mock.patch("mozperftest.utils.requests.get", new=requests_content())
-@mock.patch("mozperftest.system.android.ADBDevice")
+@mock.patch("mozperftest.system.android.ADBLoggedDevice")
 def test_android_timeout(device):
     args = {
         "android-install-apk": ["gve_nightly_api16"],
         "android": True,
         "android-timeout": 60,
         "android-app-name": "org.mozilla.geckoview_example",
+        "android-capture-adb": "stdout",
     }
 
     mach_cmd, metadata, env = get_running_env(**args)
@@ -82,6 +87,48 @@ def test_android_timeout(device):
         android(metadata)
     options = device.mock_calls[0][-1]
     assert options["timeout"] == 60
+
+
+@mock.patch("mozperftest.utils.requests.get", new=requests_content())
+def test_android_log_adb():
+    with temp_file() as log_adb:
+        args = {
+            "android-install-apk": ["gve_nightly_api16"],
+            "android": True,
+            "android-timeout": 60,
+            "android-app-name": "org.mozilla.geckoview_example",
+            "android-capture-adb": log_adb,
+        }
+
+        mach_cmd, metadata, env = get_running_env(**args)
+        system = env.layers[SYSTEM]
+        with system as android, silence(system), pytest.raises(DeviceError):
+            android(metadata)
+        with open(log_adb) as f:
+            assert "DEBUG ADBLoggedDevice" in f.read()
+
+
+@mock.patch("mozperftest.utils.requests.get", new=requests_content())
+@mock.patch("mozperftest.system.android.ADBLoggedDevice")
+def test_android_log_cat(device):
+    with temp_file() as log_cat:
+        args = {
+            "android-install-apk": ["gve_nightly_api16"],
+            "android": True,
+            "android-timeout": 60,
+            "android-app-name": "org.mozilla.geckoview_example",
+            "android-capture-logcat": log_cat,
+            "android-clear-logcat": True,
+            "android-capture-adb": "stdout",
+        }
+
+        mach_cmd, metadata, env = get_running_env(**args)
+        system = env.layers[SYSTEM]
+        with system as android, silence(system):
+            android(metadata)
+
+        device.get_logcat.assert_called()
+        device.clear_logcat.assert_called()
 
 
 if __name__ == "__main__":

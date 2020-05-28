@@ -106,12 +106,18 @@ class Layers(Layer):
             raise StopIteration
 
     def __enter__(self):
-        for layer in self.layers:
-            layer.setup()
+        self.setup()
         return self
 
     def __exit__(self, type, value, traceback):
         # XXX deal with errors here
+        self.teardown()
+
+    def setup(self):
+        for layer in self.layers:
+            layer.setup()
+
+    def teardown(self):
         for layer in self.layers:
             layer.teardown()
 
