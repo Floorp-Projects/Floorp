@@ -27,4 +27,30 @@
   // /hwaara
   id<mozView, mozAccessible> mParallelView;  // weak ref
 }
+
+// override
+- (id)initWithAccessible:(mozilla::a11y::AccessibleOrProxy)aAccOrProxy;
+
+#pragma mark - MOXAccessible
+
+// override
+- (NSNumber*)moxMain;
+
+// override
+- (NSNumber*)moxMinimized;
+
+// override
+- (id)moxParent;
+
+#pragma mark - mozAccessible/widget
+
+// override
+- (BOOL)hasRepresentedView;
+
+// override
+- (id)representedView;
+
+// override
+- (BOOL)isRoot;
+
 @end
