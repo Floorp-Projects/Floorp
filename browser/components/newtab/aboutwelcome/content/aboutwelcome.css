@@ -83,6 +83,7 @@ body {
   --grey-subtitle: #4A4A4F;
   --grey-subtitle-1: #80808F;
   --newtab-background-color: #EDEDF0;
+  --newtab-background-color-1: #F9F9FA;
   --newtab-text-primary-color: #0C0C0D;
   --newtab-text-conditional-color: #4A4A4F;
   --newtab-button-primary-color: #0060DF;
@@ -259,7 +260,7 @@ body {
   overflow-x: auto;
   width: 100vw;
   height: 100vh;
-  background-color: var(--newtab-card-background-color); }
+  background-color: var(--newtab-background-color-1); }
   .multistageContainer .screen {
     display: flex;
     flex-flow: column nowrap;
@@ -267,7 +268,9 @@ body {
   .multistageContainer .brand-logo {
     background: url("chrome://branding/content/about-logo.png") top center/112px no-repeat;
     padding: 112px 0 20px;
-    margin-top: 25px; }
+    margin-top: 60px; }
+    .multistageContainer .brand-logo.cta-top {
+      margin-top: 25px; }
   .multistageContainer .welcome-text {
     display: flex;
     flex-direction: column;
@@ -301,7 +304,7 @@ body {
     display: grid;
     grid-gap: 24px;
     grid-template-columns: repeat(5, auto);
-    margin: auto; }
+    margin: 0 auto; }
     @media (max-width: 610px) {
       .multistageContainer .tiles-section {
         grid-template-columns: repeat(3, auto); } }
@@ -319,7 +322,7 @@ body {
       font-size: 16px;
       margin-inline-start: 12px;
       margin: 26px 0 0;
-      padding: 12px 50px;
+      padding: 12px 20px;
       white-space: nowrap;
       background-color: var(--newtab-button-primary-color);
       color: var(--welcome-button-text-color);
