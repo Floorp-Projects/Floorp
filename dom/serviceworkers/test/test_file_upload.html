@@ -14,12 +14,6 @@
 <input id="input" type="file">
 <script class="testbody" type="text/javascript">
 
-function GetFormData(file) {
-  const formData = new FormData();
-  formData.append('file', file);
-  return formData;
-}
-
 async function onOpened(message) {
   let input = document.getElementById("input");
   SpecialPowers.wrap(input).mozSetFileArray([message.file]);
@@ -30,22 +24,13 @@ async function onOpened(message) {
   let serviceWorker = reg.installing || reg.waiting || reg.active;
   await waitForState(serviceWorker, 'activated');
 
-  let res = await fetch('server_file_upload.sjs?clone=0', {
+  let res = await fetch('server_file_upload.sjs', {
     method: 'POST',
     body: input.files[0],
   });
 
   let data = await res.clone().text();
-  ok(data.length > 0, "We have data for an uncloned request!");
-
-  res = await fetch('server_file_upload.sjs?clone=1', {
-    method: 'POST',
-    // Make sure the underlying stream is a file stream
-    body: GetFormData(input.files[0]),
-  });
-
-  data = await res.clone().text();
-  ok(data.length > 0, "We have data for a file-stream-backed cloned request!");
+  ok(data.length > 0, "We have data!");
 
   await reg.unregister();
   SimpleTest.finish();
