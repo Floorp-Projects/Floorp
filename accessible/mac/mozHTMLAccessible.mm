@@ -115,3 +115,11 @@
 }
 
 @end
+
+@implementation MOXSummaryAccessible
+
+- (NSNumber*)moxExpanded {
+  return @([self stateWithMask:states::EXPANDED] != 0);
+}
+
+@end
