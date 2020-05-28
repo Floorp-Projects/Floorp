@@ -25,7 +25,6 @@ extern crate cubeb_coreaudio;
 #[cfg(feature = "cubeb_pulse_rust")]
 extern crate cubeb_pulse;
 extern crate encoding_glue;
-extern crate env_logger;
 #[cfg(feature = "rust_fxa_client")]
 extern crate firefox_accounts_bridge;
 #[cfg(feature = "glean")]
@@ -33,7 +32,6 @@ extern crate fog;
 extern crate gkrust_utils;
 extern crate jsrust_shared;
 extern crate kvstore;
-extern crate log;
 extern crate mapped_hyph;
 extern crate mozurl;
 extern crate mp4parse_capi;
@@ -84,114 +82,10 @@ extern crate remote;
 
 extern crate gecko_logger;
 
-#[cfg(target_os = "android")]
-use log::Level;
-
-#[cfg(not(target_os = "android"))]
-use log::Log;
-use std::boxed::Box;
-use std::cmp;
-use std::env;
-use std::ffi::{CStr, CString};
+use std::ffi::CStr;
 use std::os::raw::c_char;
-#[cfg(target_os = "android")]
-use std::os::raw::c_int;
 
-#[cfg(not(target_os = "android"))]
-use gecko_logger::log_to_gecko;
-
-extern "C" {
-    fn gfx_critical_note(msg: *const c_char);
-    #[cfg(target_os = "android")]
-    fn __android_log_write(prio: c_int, tag: *const c_char, text: *const c_char) -> c_int;
-}
-
-struct GeckoLogger {
-    logger: env_logger::Logger,
-}
-
-impl GeckoLogger {
-    fn new() -> GeckoLogger {
-        let mut builder = env_logger::Builder::new();
-        let default_level = if cfg!(debug_assertions) {
-            "warn"
-        } else {
-            "error"
-        };
-        let logger = match env::var("RUST_LOG") {
-            Ok(v) => builder.parse_filters(&v).build(),
-            _ => builder.parse_filters(default_level).build(),
-        };
-
-        GeckoLogger { logger }
-    }
-
-    fn init() -> Result<(), log::SetLoggerError> {
-        let gecko_logger = Self::new();
-
-        // The max level may have already been set by gecko_logger. Don't
-        // set it to a lower level.
-        let level = cmp::max(log::max_level(), gecko_logger.logger.filter());
-        log::set_max_level(level);
-        log::set_boxed_logger(Box::new(gecko_logger))
-    }
-
-    fn should_log_to_gfx_critical_note(record: &log::Record) -> bool {
-        if record.level() == log::Level::Error && record.target().contains("webrender") {
-            true
-        } else {
-            false
-        }
-    }
-
-    fn maybe_log_to_gfx_critical_note(&self, record: &log::Record) {
-        if Self::should_log_to_gfx_critical_note(record) {
-            let msg = CString::new(format!("{}", record.args())).unwrap();
-            unsafe {
-                gfx_critical_note(msg.as_ptr());
-            }
-        }
-    }
-
-    #[cfg(not(target_os = "android"))]
-    fn log_out(&self, record: &log::Record) {
-        if !log_to_gecko(record) {
-            self.logger.log(record);
-        }
-    }
-
-    #[cfg(target_os = "android")]
-    fn log_out(&self, record: &log::Record) {
-        let msg = CString::new(format!("{}", record.args())).unwrap();
-        let tag = CString::new(record.module_path().unwrap()).unwrap();
-        let prio = match record.metadata().level() {
-            Level::Error => 6, /* ERROR */
-            Level::Warn => 5,  /* WARN */
-            Level::Info => 4,  /* INFO */
-            Level::Debug => 3, /* DEBUG */
-            Level::Trace => 2, /* VERBOSE */
-        };
-        // Output log directly to android log, since env_logger can output log
-        // only to stderr or stdout.
-        unsafe {
-            __android_log_write(prio, tag.as_ptr(), msg.as_ptr());
-        }
-    }
-}
-
-impl log::Log for GeckoLogger {
-    fn enabled(&self, metadata: &log::Metadata) -> bool {
-        self.logger.enabled(metadata)
-    }
-
-    fn log(&self, record: &log::Record) {
-        // Forward log to gfxCriticalNote, if the log should be in gfx crash log.
-        self.maybe_log_to_gfx_critical_note(record);
-        self.log_out(record);
-    }
-
-    fn flush(&self) {}
-}
+use gecko_logger::GeckoLogger;
 
 #[no_mangle]
 pub extern "C" fn GkRust_Init() {
