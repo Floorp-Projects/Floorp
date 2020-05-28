@@ -406,7 +406,7 @@ impl MDNSService {
         let mdns_addr = std::net::Ipv4Addr::new(224, 0, 0, 251);
         let port = 5353;
 
-        let socket = Socket::new(Domain::ipv4(), Type::dgram(), None).unwrap();
+        let socket = Socket::new(Domain::ipv4(), Type::dgram(), None)?;
         socket.set_reuse_address(true)?;
 
         #[cfg(not(target_os = "windows"))]
