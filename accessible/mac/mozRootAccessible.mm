@@ -37,39 +37,12 @@ static id<mozAccessible, mozView> getNativeViewFromRootAccessible(Accessible* aA
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
-- (NSArray*)accessibilityAttributeNames {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
-
-  // if we're expired, we don't support any attributes.
-  if ([self isExpired]) {
-    return @[];
-  }
-
-  // standard attributes that are shared and supported by root accessible (AXMain) elements.
-  static NSMutableArray* attributes = nil;
-
-  if (!attributes) {
-    attributes = [[super accessibilityAttributeNames] mutableCopy];
-    [attributes addObject:NSAccessibilityMainAttribute];
-    [attributes addObject:NSAccessibilityMinimizedAttribute];
-  }
-
-  return attributes;
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+- (NSNumber*)moxMain {
+  return @([[self moxWindow] isMainWindow]);
 }
 
-- (id)accessibilityAttributeValue:(NSString*)attribute {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
-
-  if ([attribute isEqualToString:NSAccessibilityMainAttribute])
-    return [NSNumber numberWithBool:[[self moxWindow] isMainWindow]];
-  if ([attribute isEqualToString:NSAccessibilityMinimizedAttribute])
-    return [NSNumber numberWithBool:[[self moxWindow] isMiniaturized]];
-
-  return [super accessibilityAttributeValue:attribute];
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+- (NSNumber*)moxMinimized {
+  return @([[self moxWindow] isMiniaturized]);
 }
 
 // return the AXParent that our parallell NSView tells us about.
