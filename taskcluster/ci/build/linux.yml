@@ -1469,6 +1469,9 @@ linux-gcp/debug:
             # the build step. Once bug 1614626 moves them to the xpcshell task,
             # this dependency can be removed.
             - linux64-fix-stacks
+    optimization:
+        push-interval-25:
+            - linux
 
 linux-gcp/opt:
     description: "Linux32 Opt - built on GCP"
@@ -1555,6 +1558,9 @@ linux64-gcp/debug:
             # the build step. Once bug 1614626 moves them to the xpcshell task,
             # this dependency can be removed.
             - linux64-fix-stacks
+    optimization:
+        push-interval-25:
+            - linux
 
 linux64-gcp/opt:
     description: "Linux64 Opt - built on GCP"
