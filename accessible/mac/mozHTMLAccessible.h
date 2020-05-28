@@ -14,3 +14,10 @@
 @interface mozLinkAccessible : mozAccessible
 
 @end
+
+@interface MOXSummaryAccessible : mozAccessible
+
+// override
+- (NSNumber*)moxExpanded;
+
+@end
