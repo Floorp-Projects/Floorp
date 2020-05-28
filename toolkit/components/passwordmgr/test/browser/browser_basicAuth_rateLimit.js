@@ -5,34 +5,14 @@
 // This tests that the basic auth dialog can not be used for DOS attacks
 // and that the protections are reset on user-initiated navigation/reload.
 
-const PROMPT_URL = "chrome://global/content/commonDialog.xhtml";
+let promptModalType = Services.prefs.getIntPref("prompts.modalType.httpAuth");
+
 function promiseAuthWindowShown() {
-  return new Promise(resolve => {
-    let listener = {
-      onOpenWindow(xulWin) {
-        let domwindow = xulWin.docShell.domWindow;
-        waitForFocus(() => {
-          is(
-            domwindow.document.location.href,
-            PROMPT_URL,
-            "Should have seen a prompt window"
-          );
-          is(
-            domwindow.args.promptType,
-            "promptUserAndPass",
-            "Should be an authenticate prompt"
-          );
-          domwindow.document.getElementById("commonDialog").cancelDialog();
-          Services.wm.removeListener(listener);
-          resolve();
-        }, domwindow);
-      },
-
-      onCloseWindow() {},
-    };
-
-    Services.wm.addListener(listener);
-  });
+  return PromptTestUtils.handleNextPrompt(
+    window,
+    { modalType: promptModalType, promptType: "promptUserAndPass" },
+    { buttonNumClick: 1 }
+  );
 }
 
 add_task(async function test() {
