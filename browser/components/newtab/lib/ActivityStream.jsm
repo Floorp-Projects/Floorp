@@ -173,7 +173,7 @@ const PREFS_CONFIG = new Map([
         JSON.stringify({
           api_key_pref: "extensions.pocket.oAuthConsumerKey",
           // Use the opposite value as what default value the feed would have used
-          hidden: !PREFS_CONFIG.get("feeds.section.topstories").getValue(args),
+          hidden: !PREFS_CONFIG.get("feeds.system.topstories").getValue(args),
           provider_icon: "pocket",
           provider_name: "Pocket",
           read_more_endpoint:
@@ -608,13 +608,20 @@ const FEEDS_DATA = [
     value: true,
   },
   {
-    name: "section.topstories",
+    name: "system.topstories",
     factory: () =>
       new TopStoriesFeed(PREFS_CONFIG.get("discoverystream.config")),
     title:
-      "Fetches content recommendations from a configurable content provider",
+      "System pref that fetches content recommendations from a configurable content provider",
     // Dynamically determine if Pocket should be shown for a geo / locale
     getValue: ({ geo, locale }) => {
+      const userPreffedStoriesBool = Services.prefs.getBoolPref(
+        "browser.newtabpage.activity-stream.feeds.section.topstories",
+        false
+      );
+      if (!userPreffedStoriesBool) {
+        return false;
+      }
       const preffedRegionsString =
         Services.prefs.getStringPref(REGION_STORIES_CONFIG) || "";
       const preffedRegions = preffedRegionsString.split(",").map(s => s.trim());

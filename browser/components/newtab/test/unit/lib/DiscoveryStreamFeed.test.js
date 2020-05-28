@@ -81,6 +81,7 @@ describe("DiscoveryStreamFeed", () => {
           [ENDPOINTS_PREF_NAME]: DUMMY_ENDPOINT,
           "discoverystream.enabled": true,
           "feeds.section.topstories": true,
+          "feeds.system.topstories": true,
         },
       },
     });
@@ -2478,6 +2479,7 @@ describe("DiscoveryStreamFeed", () => {
           Prefs: {
             values: {
               "feeds.section.topstories": true,
+              "feeds.system.topstories": true,
             },
           },
         };

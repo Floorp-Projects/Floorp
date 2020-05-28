@@ -121,18 +121,13 @@ describe("ActivityStream", () => {
       const feed = as.feeds.get("feeds.prefs")();
       assert.instanceOf(feed, Fake);
     });
-    it("should create a section feed for each section in PREFS_CONFIG", () => {
-      // If new sections are added, their feeds will have to be added to the
-      // list of injected feeds above for this test to pass
-      let feedCount = 0;
-      for (const pref of PREFS_CONFIG.keys()) {
-        if (pref.search(/^feeds\.section\.[^.]+$/) === 0) {
-          const feed = as.feeds.get(pref)();
-          assert.instanceOf(feed, Fake);
-          feedCount++;
-        }
-      }
-      assert.isAbove(feedCount, 0);
+    it("should create a HighlightsFeed feed", () => {
+      const feed = as.feeds.get("feeds.section.highlights")();
+      assert.instanceOf(feed, Fake);
+    });
+    it("should create a TopStoriesFeed feed", () => {
+      const feed = as.feeds.get("feeds.system.topstories")();
+      assert.instanceOf(feed, Fake);
     });
     it("should create a AboutPreferences feed", () => {
       const feed = as.feeds.get("feeds.aboutpreferences")();
@@ -310,6 +305,7 @@ describe("ActivityStream", () => {
   });
   describe("_updateDynamicPrefs topstories default value", () => {
     let getStringPrefStub;
+    let getBoolPrefStub;
     let appLocaleAsBCP47Stub;
     let prefHasUserValueStub;
     beforeEach(() => {
@@ -322,6 +318,11 @@ describe("ActivityStream", () => {
         global.Services.locale,
         "appLocaleAsBCP47"
       );
+
+      getBoolPrefStub = sandbox.stub(global.Services.prefs, "getBoolPref");
+      getBoolPrefStub
+        .withArgs("browser.newtabpage.activity-stream.feeds.section.topstories")
+        .returns(true);
 
       prefHasUserValueStub.returns(true);
       appLocaleAsBCP47Stub.get(() => "en-US");
@@ -341,25 +342,25 @@ describe("ActivityStream", () => {
 
       as._updateDynamicPrefs();
 
-      assert.isFalse(PREFS_CONFIG.get("feeds.section.topstories").value);
+      assert.isFalse(PREFS_CONFIG.get("feeds.system.topstories").value);
     });
     it("should be false with unexpected geo", () => {
       getStringPrefStub.withArgs("browser.search.region").returns("NOGEO");
 
       as._updateDynamicPrefs();
 
-      assert.isFalse(PREFS_CONFIG.get("feeds.section.topstories").value);
+      assert.isFalse(PREFS_CONFIG.get("feeds.system.topstories").value);
     });
     it("should be false with expected geo and unexpected locale", () => {
       appLocaleAsBCP47Stub.get(() => "no-LOCALE");
 
       as._updateDynamicPrefs();
 
-      assert.isFalse(PREFS_CONFIG.get("feeds.section.topstories").value);
+      assert.isFalse(PREFS_CONFIG.get("feeds.system.topstories").value);
     });
     it("should be true with expected geo and locale", () => {
       as._updateDynamicPrefs();
-      assert.isTrue(PREFS_CONFIG.get("feeds.section.topstories").value);
+      assert.isTrue(PREFS_CONFIG.get("feeds.system.topstories").value);
     });
     it("should be false after expected geo and locale then unexpected", () => {
       getStringPrefStub
@@ -372,7 +373,7 @@ describe("ActivityStream", () => {
       as._updateDynamicPrefs();
       as._updateDynamicPrefs();
 
-      assert.isFalse(PREFS_CONFIG.get("feeds.section.topstories").value);
+      assert.isFalse(PREFS_CONFIG.get("feeds.system.topstories").value);
     });
     it("should be true with updated pref change", () => {
       appLocaleAsBCP47Stub.get(() => "en-GB");
@@ -385,7 +386,7 @@ describe("ActivityStream", () => {
 
       as._updateDynamicPrefs();
 
-      assert.isTrue(PREFS_CONFIG.get("feeds.section.topstories").value);
+      assert.isTrue(PREFS_CONFIG.get("feeds.system.topstories").value);
     });
   });
   describe("_updateDynamicPrefs topstories delayed default value", () => {
@@ -409,10 +410,11 @@ describe("ActivityStream", () => {
       as._updateDynamicPrefs();
       clock.tick(1);
 
-      assert.isFalse(PREFS_CONFIG.get("feeds.section.topstories").value);
+      assert.isFalse(PREFS_CONFIG.get("feeds.system.topstories").value);
     });
     it("should set true with expected geo and locale", () => {
       sandbox.stub(global.Services.prefs, "getStringPref").returns("US");
+      sandbox.stub(global.Services.prefs, "getBoolPref").returns(true);
       sandbox
         .stub(global.Services.locale, "appLocaleAsBCP47")
         .get(() => "en-US");
@@ -420,10 +422,10 @@ describe("ActivityStream", () => {
       as._updateDynamicPrefs();
       clock.tick(1);
 
-      assert.isTrue(PREFS_CONFIG.get("feeds.section.topstories").value);
+      assert.isTrue(PREFS_CONFIG.get("feeds.system.topstories").value);
     });
     it("should not change default even with expected geo and locale", () => {
-      as._defaultPrefs.set("feeds.section.topstories", false);
+      as._defaultPrefs.set("feeds.system.topstories", false);
       sandbox.stub(global.Services.prefs, "getStringPref").returns("US");
       sandbox
         .stub(global.Services.locale, "appLocaleAsBCP47")
@@ -432,7 +434,7 @@ describe("ActivityStream", () => {
       as._updateDynamicPrefs();
       clock.tick(1);
 
-      assert.isFalse(PREFS_CONFIG.get("feeds.section.topstories").value);
+      assert.isFalse(PREFS_CONFIG.get("feeds.system.topstories").value);
     });
   });
   describe("telemetry reporting on init failure", () => {
