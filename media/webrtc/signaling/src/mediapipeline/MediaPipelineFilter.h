@@ -84,7 +84,7 @@ class MediaPipelineFilter {
   // Set by tests, sticky
   std::set<std::string> remote_rid_set_;
   Maybe<std::string> mRemoteMid;
-  Maybe<uint32_t> mRemoteMidBinding;
+  std::set<uint32_t> mRemoteMidBindings;
   // RID extension can be set by tests and is sticky, the rest of
   // the mapping is not.
   std::vector<webrtc::RtpExtension> mExtMap;
