@@ -416,9 +416,14 @@ fn clamp_blur_radius(blur_radius: f32, scale_factors: (f32, f32)) -> f32 {
     // TODO: the clamping should be done on a per-axis basis, but WR currently only supports
     // having a single value for both x and y blur.
     let largest_scale_factor = f32::max(scale_factors.0, scale_factors.1);
-    let adjusted_blur_radius = blur_radius * largest_scale_factor;
-    let clamped_blur_radius = f32::min(adjusted_blur_radius, MAX_BLUR_RADIUS);
-    clamped_blur_radius / largest_scale_factor
+    let scaled_blur_radius = blur_radius * largest_scale_factor;
+
+    if scaled_blur_radius > MAX_BLUR_RADIUS {
+        MAX_BLUR_RADIUS / largest_scale_factor
+    } else {
+        // Return the original blur radius to avoid any rounding errors
+        blur_radius
+    }
 }
 
 /// An index into the prims array in a TileDescriptor.
