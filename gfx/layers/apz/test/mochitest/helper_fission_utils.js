@@ -1,3 +1,6 @@
+// loadOOPIFrame expects apz_test_utils.js to be loaded as well, for promiseOneEvent.
+/* import-globals-from apz_test_utils.js */
+
 function fission_subtest_init() {
   // Silence SimpleTest warning about missing assertions by having it wait
   // indefinitely. We don't need to give it an explicit finish because the
@@ -10,43 +13,6 @@ function fission_subtest_init() {
   // own versions. This is implicitly enforced because if we call this function
   // before SimpleTest.js is imported, the above line will throw an exception.
   window.dispatchEvent(new Event("FissionTestHelper:Init"));
-}
-
-/**
- * Returns a promise that will resolve if the `window` receives an event of the
- * given type that passes the given filter. Only the first matching message is
- * used. The filter must be a function (or null); it is called with the event
- * object and the call must return true to resolve the promise.
- */
-function promiseOneEvent(eventType, filter) {
-  return new Promise((resolve, reject) => {
-    window.addEventListener(eventType, function listener(e) {
-      let success = false;
-      if (filter == null) {
-        success = true;
-      } else if (typeof filter == "function") {
-        try {
-          success = filter(e);
-        } catch (ex) {
-          dump(
-            `ERROR: Filter passed to promiseOneEvent threw exception: ${ex}\n`
-          );
-          reject();
-          return;
-        }
-      } else {
-        dump(
-          "ERROR: Filter passed to promiseOneEvent was neither null nor a function\n"
-        );
-        reject();
-        return;
-      }
-      if (success) {
-        window.removeEventListener(eventType, listener);
-        resolve(e);
-      }
-    });
-  });
 }
 
 /**
@@ -66,7 +32,7 @@ function loadOOPIFrame(iframeElementId, iframePage) {
 
     let url =
       "https://example.com/browser/gfx/layers/apz/test/mochitest/" + iframePage;
-    let loadPromise = promiseOneEvent("OOPIF:Load", function(e) {
+    let loadPromise = promiseOneEvent(window, "OOPIF:Load", function(e) {
       return typeof e.data.content == "string" && e.data.content == url;
     });
     let elem = document.getElementById(iframeElementId);
