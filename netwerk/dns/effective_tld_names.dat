@@ -7092,7 +7092,7 @@ org.zw
 
 // newGTLDs
 
-// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2020-05-06T16:23:34Z
+// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2020-05-27T16:35:17Z
 // This list is auto-generated, don't edit it manually.
 // aaa : 2015-02-26 American Automobile Association, Inc.
 aaa
@@ -8053,9 +8053,6 @@ esq
 
 // estate : 2013-08-27 Binky Moon, LLC
 estate
-
-// esurance : 2015-07-23 Esurance Insurance Company
-esurance
 
 // etisalat : 2015-09-03 Emirates Telecommunications Corporation (trading as Etisalat)
 etisalat
@@ -12109,6 +12106,15 @@ iserv.dev
 // Submitted by Yuji Minagawa <domains-admin@iodata.jp>
 iobb.net
 
+//Jelastic, Inc. : https://jelastic.com/
+// Submitetd by Ihor Kolodyuk <ik@jelastic.com>
+hidora.com
+demo.jelastic.com
+j.scaleforce.com.cy
+mircloud.host
+jls-sto1.elastx.net
+j.layershift.co.uk
+
 // Jino : https://www.jino.ru
 // Submitted by Sergey Ulyashin <ulyashin@jino.ru>
 myjino.ru
@@ -12723,6 +12729,10 @@ vaporcloud.io
 // Submitted by Kirill Pertsev <kika@rackmaze.com>
 rackmaze.com
 rackmaze.net
+
+// Rakuten Games, Inc : https://dev.viberplay.io
+// Submitted by Joshua Zhang <public-suffix@rgames.jp>
+g.vbrplsbx.io
 
 // Rancher Labs, Inc : https://rancher.com
 // Submitted by Vincent Fiduccia <domains@rancher.com>
