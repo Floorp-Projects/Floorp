@@ -8408,6 +8408,13 @@
   value: true
   mirror: always
 
+# Disallowed by default, ensure not disallowed content is loaded in the parent
+# process.
+- name: security.allow_unsafe_parent_loads
+  type: bool
+  value: false
+  mirror: always
+
 # Pref to block mixed scripts (fonts, plugin content, scripts, stylesheets,
 # iframes, websockets, XHR).
 - name: security.mixed_content.block_active_content
