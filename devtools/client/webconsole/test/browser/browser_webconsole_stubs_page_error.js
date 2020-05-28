@@ -5,12 +5,15 @@
 
 const {
   STUBS_UPDATE_ENV,
-  createResourceWatcherForTab,
   getCleanedPacket,
   getSerializedPacket,
   getStubFile,
   writeStubsToFile,
 } = require("chrome://mochitests/content/browser/devtools/client/webconsole/test/browser/stub-generator-helpers");
+
+const {
+  ResourceWatcher,
+} = require("devtools/shared/resources/resource-watcher");
 
 const TEST_URI =
   "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html";
@@ -63,9 +66,8 @@ add_task(async function() {
 
 async function generatePageErrorStubs() {
   const stubs = new Map();
-
-  const tab = await addTab(TEST_URI);
-  const resourceWatcher = await createResourceWatcherForTab(tab);
+  const toolbox = await openNewTabAndToolbox(TEST_URI, "webconsole");
+  const resourceWatcher = new ResourceWatcher(toolbox.targetList);
 
   // The resource-watcher only supports a single call to watch/unwatch per
   // instance, so we attach a unique watch callback, which will forward the
