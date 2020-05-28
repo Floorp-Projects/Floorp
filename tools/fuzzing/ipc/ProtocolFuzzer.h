@@ -32,7 +32,7 @@ class ProtocolFuzzerHelper {
 
   static void RemoveShmemFromProtocol(IToplevelProtocol* aProtocol,
                                       int32_t aId) {
-    aProtocol->mShmemMap.RemoveIfPresent(aId);
+    aProtocol->mShmemMap.Remove(aId);
   }
 };
 
