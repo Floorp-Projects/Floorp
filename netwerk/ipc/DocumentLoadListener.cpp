@@ -754,13 +754,8 @@ void DocumentLoadListener::RedirectToRealChannelFinished(nsresult aRv) {
       ("DocumentLoadListener RedirectToRealChannelFinished [this=%p, "
        "aRv=%" PRIx32 " ]",
        this, static_cast<uint32_t>(aRv)));
-  if (NS_FAILED(aRv)) {
-    FinishReplacementChannelSetup(false);
-    return;
-  }
-
-  if (!mRedirectChannelId) {
-    FinishReplacementChannelSetup(true);
+  if (NS_FAILED(aRv) || !mRedirectChannelId) {
+    FinishReplacementChannelSetup(aRv);
     return;
   }
 
@@ -773,7 +768,7 @@ void DocumentLoadListener::RedirectToRealChannelFinished(nsresult aRv) {
   redirectReg->GetParentChannel(mRedirectChannelId,
                                 getter_AddRefs(redirectParentChannel));
   if (!redirectParentChannel) {
-    FinishReplacementChannelSetup(false);
+    FinishReplacementChannelSetup(NS_ERROR_FAILURE);
     return;
   }
 
@@ -781,7 +776,7 @@ void DocumentLoadListener::RedirectToRealChannelFinished(nsresult aRv) {
       do_QueryInterface(redirectParentChannel);
   if (!redirectingParent) {
     // Continue verification procedure if redirecting to non-Http protocol
-    FinishReplacementChannelSetup(true);
+    FinishReplacementChannelSetup(NS_OK);
     return;
   }
 
@@ -792,23 +787,23 @@ void DocumentLoadListener::RedirectToRealChannelFinished(nsresult aRv) {
 
 NS_IMETHODIMP
 DocumentLoadListener::ReadyToVerify(nsresult aResultCode) {
-  FinishReplacementChannelSetup(NS_SUCCEEDED(aResultCode));
+  FinishReplacementChannelSetup(aResultCode);
   return NS_OK;
 }
 
-void DocumentLoadListener::FinishReplacementChannelSetup(bool aSucceeded) {
+void DocumentLoadListener::FinishReplacementChannelSetup(nsresult aResult) {
   LOG(
       ("DocumentLoadListener FinishReplacementChannelSetup [this=%p, "
-       "aSucceeded=%d]",
-       this, aSucceeded));
+       "aResult=%x]",
+       this, int(aResult)));
 
   if (mDoingProcessSwitch) {
     DisconnectChildListeners(NS_BINDING_ABORTED, NS_BINDING_ABORTED);
   }
 
   if (!mRedirectChannelId) {
-    if (!aSucceeded) {
-      mChannel->Cancel(NS_BINDING_ABORTED);
+    if (NS_FAILED(aResult)) {
+      mChannel->Cancel(aResult);
       mChannel->Resume();
       return;
     }
@@ -833,10 +828,10 @@ void DocumentLoadListener::FinishReplacementChannelSetup(bool aSucceeded) {
     MOZ_ASSERT(newChannel, "Already registered channel not found");
 
     if (NS_SUCCEEDED(rv)) {
-      newChannel->Cancel(NS_BINDING_ABORTED);
+      newChannel->Cancel(NS_ERROR_FAILURE);
     }
     if (!redirectChannel) {
-      aSucceeded = false;
+      aResult = NS_ERROR_FAILURE;
     }
   }
 
@@ -844,11 +839,11 @@ void DocumentLoadListener::FinishReplacementChannelSetup(bool aSucceeded) {
   // be kept in the registrar from this moment.
   registrar->DeregisterChannels(mRedirectChannelId);
   mRedirectChannelId = 0;
-  if (!aSucceeded) {
+  if (NS_FAILED(aResult)) {
     if (redirectChannel) {
       redirectChannel->Delete();
     }
-    mChannel->Cancel(NS_BINDING_ABORTED);
+    mChannel->Cancel(aResult);
     mChannel->Resume();
     if (auto* ctx = GetBrowsingContext()) {
       ctx->EndDocumentLoad(this);

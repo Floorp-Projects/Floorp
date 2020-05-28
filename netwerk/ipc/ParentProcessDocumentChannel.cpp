@@ -57,7 +57,7 @@ ParentProcessDocumentChannel::RedirectToRealChannel(
           "Attempt to load a non-authorised load in the parent process: ", 0);
       NS_ASSERTION(false, msg.get());
       return PDocumentChannelParent::RedirectToRealChannelPromise::
-          CreateAndResolve(NS_BINDING_ABORTED, __func__);
+          CreateAndResolve(NS_ERROR_CONTENT_BLOCKED, __func__);
     }
   }
   mStreamFilterEndpoints = std::move(aStreamFilterEndpoints);
@@ -86,7 +86,7 @@ ParentProcessDocumentChannel::OnRedirectVerifyCallback(nsresult aResult) {
   if (NS_FAILED(aResult)) {
     Cancel(aResult);
   } else if (mCanceled && NS_SUCCEEDED(aResult)) {
-    aResult = NS_BINDING_ABORTED;
+    aResult = NS_ERROR_ABORT;
   } else {
     const nsCOMPtr<nsIChannel> channel = mDocumentLoadListener->GetChannel();
     mLoadGroup->AddRequest(channel, nullptr);
