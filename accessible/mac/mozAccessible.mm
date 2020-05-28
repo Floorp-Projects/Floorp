@@ -37,24 +37,7 @@ using namespace mozilla::a11y;
 #define NSAccessibilityDOMIdentifierAttribute @"AXDOMIdentifier"
 #define NSAccessibilityHasPopupAttribute @"AXHasPopup"
 #define NSAccessibilityPopupValueAttribute @"AXPopupValue"
-#define NSAccessibilityMathRootRadicandAttribute @"AXMathRootRadicand"
-#define NSAccessibilityMathRootIndexAttribute @"AXMathRootIndex"
-#define NSAccessibilityMathFractionNumeratorAttribute @"AXMathFractionNumerator"
-#define NSAccessibilityMathFractionDenominatorAttribute @"AXMathFractionDenominator"
-#define NSAccessibilityMathBaseAttribute @"AXMathBase"
-#define NSAccessibilityMathSubscriptAttribute @"AXMathSubscript"
-#define NSAccessibilityMathSuperscriptAttribute @"AXMathSuperscript"
-#define NSAccessibilityMathUnderAttribute @"AXMathUnder"
-#define NSAccessibilityMathOverAttribute @"AXMathOver"
-#define NSAccessibilityMathLineThicknessAttribute @"AXMathLineThickness"
 #define NSAccessibilityScrollToVisibleAction @"AXScrollToVisible"
-
-// XXX WebKit also defines the following attributes.
-// See bugs 1176970 and 1176983.
-// - NSAccessibilityMathFencedOpenAttribute @"AXMathFencedOpen"
-// - NSAccessibilityMathFencedCloseAttribute @"AXMathFencedClose"
-// - NSAccessibilityMathPrescriptsAttribute @"AXMathPrescripts"
-// - NSAccessibilityMathPostscriptsAttribute @"AXMathPostscripts"
 
 #pragma mark -
 
@@ -125,40 +108,6 @@ using namespace mozilla::a11y;
     case roles::SUMMARY:
       [additional addObject:NSAccessibilityExpandedAttribute];
       break;
-    case roles::MATHML_ROOT:
-      [additional addObject:NSAccessibilityMathRootIndexAttribute];
-      [additional addObject:NSAccessibilityMathRootRadicandAttribute];
-      break;
-    case roles::MATHML_SQUARE_ROOT:
-      [additional addObject:NSAccessibilityMathRootRadicandAttribute];
-      break;
-    case roles::MATHML_FRACTION:
-      [additional addObject:NSAccessibilityMathFractionNumeratorAttribute];
-      [additional addObject:NSAccessibilityMathFractionDenominatorAttribute];
-      [additional addObject:NSAccessibilityMathLineThicknessAttribute];
-      break;
-    case roles::MATHML_SUB:
-    case roles::MATHML_SUP:
-    case roles::MATHML_SUB_SUP:
-      [additional addObject:NSAccessibilityMathBaseAttribute];
-      [additional addObject:NSAccessibilityMathSubscriptAttribute];
-      [additional addObject:NSAccessibilityMathSuperscriptAttribute];
-      break;
-    case roles::MATHML_UNDER:
-    case roles::MATHML_OVER:
-    case roles::MATHML_UNDER_OVER:
-      [additional addObject:NSAccessibilityMathBaseAttribute];
-      [additional addObject:NSAccessibilityMathUnderAttribute];
-      [additional addObject:NSAccessibilityMathOverAttribute];
-      break;
-    // XXX bug 1176983
-    // roles::MATHML_MULTISCRIPTS should also have the following attributes:
-    // - NSAccessibilityMathPrescriptsAttribute
-    // - NSAccessibilityMathPostscriptsAttribute
-    // XXX bug 1176970
-    // roles::MATHML_FENCED should also have the following attributes:
-    // - NSAccessibilityMathFencedOpenAttribute
-    // - NSAccessibilityMathFencedCloseAttribute
     default:
       break;
   }
@@ -361,94 +310,6 @@ static const uint64_t kCacheInitialized = ((uint64_t)0x1) << 63;
 
   if ([attribute isEqualToString:NSAccessibilityRequiredAttribute]) {
     return [NSNumber numberWithBool:[self stateWithMask:states::REQUIRED] != 0];
-  }
-
-  switch (mRole) {
-    case roles::MATHML_ROOT:
-      if ([attribute isEqualToString:NSAccessibilityMathRootRadicandAttribute])
-        return [self childAt:0];
-      if ([attribute isEqualToString:NSAccessibilityMathRootIndexAttribute])
-        return [self childAt:1];
-      break;
-    case roles::MATHML_SQUARE_ROOT:
-      if ([attribute isEqualToString:NSAccessibilityMathRootRadicandAttribute])
-        return [self childAt:0];
-      break;
-    case roles::MATHML_FRACTION:
-      if ([attribute isEqualToString:NSAccessibilityMathFractionNumeratorAttribute])
-        return [self childAt:0];
-      if ([attribute isEqualToString:NSAccessibilityMathFractionDenominatorAttribute])
-        return [self childAt:1];
-      if ([attribute isEqualToString:NSAccessibilityMathLineThicknessAttribute]) {
-        // WebKit sets line thickness to some logical value parsed in the
-        // renderer object of the <mfrac> element. It's not clear whether the
-        // exact value is relevant to assistive technologies. From a semantic
-        // point of view, the only important point is to distinguish between
-        // <mfrac> elements that have a fraction bar and those that do not.
-        // Per the MathML 3 spec, the latter happens iff the linethickness
-        // attribute is of the form [zero-float][optional-unit]. In that case we
-        // set line thickness to zero and in the other cases we set it to one.
-        if (NSString* thickness = utils::GetAccAttr(self, "thickness")) {
-          NSNumberFormatter* formatter = [[[NSNumberFormatter alloc] init] autorelease];
-          NSNumber* value = [formatter numberFromString:thickness];
-          return [NSNumber numberWithBool:[value boolValue]];
-        } else {
-          return [NSNumber numberWithInteger:0];
-        }
-      }
-      break;
-    case roles::MATHML_SUB:
-      if ([attribute isEqualToString:NSAccessibilityMathBaseAttribute]) return [self childAt:0];
-      if ([attribute isEqualToString:NSAccessibilityMathSubscriptAttribute])
-        return [self childAt:1];
-#ifdef DEBUG
-      if ([attribute isEqualToString:NSAccessibilityMathSuperscriptAttribute]) return nil;
-#endif
-      break;
-    case roles::MATHML_SUP:
-      if ([attribute isEqualToString:NSAccessibilityMathBaseAttribute]) return [self childAt:0];
-#ifdef DEBUG
-      if ([attribute isEqualToString:NSAccessibilityMathSubscriptAttribute]) return nil;
-#endif
-      if ([attribute isEqualToString:NSAccessibilityMathSuperscriptAttribute])
-        return [self childAt:1];
-      break;
-    case roles::MATHML_SUB_SUP:
-      if ([attribute isEqualToString:NSAccessibilityMathBaseAttribute]) return [self childAt:0];
-      if ([attribute isEqualToString:NSAccessibilityMathSubscriptAttribute])
-        return [self childAt:1];
-      if ([attribute isEqualToString:NSAccessibilityMathSuperscriptAttribute])
-        return [self childAt:2];
-      break;
-    case roles::MATHML_UNDER:
-      if ([attribute isEqualToString:NSAccessibilityMathBaseAttribute]) return [self childAt:0];
-      if ([attribute isEqualToString:NSAccessibilityMathUnderAttribute]) return [self childAt:1];
-#ifdef DEBUG
-      if ([attribute isEqualToString:NSAccessibilityMathOverAttribute]) return nil;
-#endif
-      break;
-    case roles::MATHML_OVER:
-      if ([attribute isEqualToString:NSAccessibilityMathBaseAttribute]) return [self childAt:0];
-#ifdef DEBUG
-      if ([attribute isEqualToString:NSAccessibilityMathUnderAttribute]) return nil;
-#endif
-      if ([attribute isEqualToString:NSAccessibilityMathOverAttribute]) return [self childAt:1];
-      break;
-    case roles::MATHML_UNDER_OVER:
-      if ([attribute isEqualToString:NSAccessibilityMathBaseAttribute]) return [self childAt:0];
-      if ([attribute isEqualToString:NSAccessibilityMathUnderAttribute]) return [self childAt:1];
-      if ([attribute isEqualToString:NSAccessibilityMathOverAttribute]) return [self childAt:2];
-      break;
-    // XXX bug 1176983
-    // roles::MATHML_MULTISCRIPTS should also have the following attributes:
-    // - NSAccessibilityMathPrescriptsAttribute
-    // - NSAccessibilityMathPostscriptsAttribute
-    // XXX bug 1176970
-    // roles::MATHML_FENCED should also have the following attributes:
-    // - NSAccessibilityMathFencedOpenAttribute
-    // - NSAccessibilityMathFencedCloseAttribute
-    default:
-      break;
   }
 
   return [super accessibilityAttributeValue:attribute];
