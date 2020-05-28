@@ -456,34 +456,25 @@ class Settings private constructor(
         default = false
     )
 
-    var shouldShowFirstTimePwaFragment: Boolean
+    val shouldShowFirstTimePwaFragment: Boolean
         get() {
-            val alreadyShownPwaOnboarding = preferences.getBoolean(
-                appContext.getPreferenceKey(R.string.pref_key_show_first_time_pwa), false)
-
             // ShortcutManager::pinnedShortcuts is only available on Oreo+
-            if (!alreadyShownPwaOnboarding && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            if (!userKnowsAboutPWAs && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 val alreadyHavePWaInstalled =
                     appContext.getSystemService(ShortcutManager::class.java)
                         .pinnedShortcuts.size > 0
 
-                // Users don't need to be shown the PWA onboarding if they already have PWAs installed.
-                preferences.edit()
-                    .putBoolean(
-                        appContext.getPreferenceKey(R.string.pref_key_show_first_time_pwa),
-                        alreadyHavePWaInstalled)
-                    .apply()
-
-                return !alreadyHavePWaInstalled
+                // Users know about PWAs onboarding if they already have PWAs installed.
+                userKnowsAboutPWAs = alreadyHavePWaInstalled
             }
+            // Show dialog only if user does not know abut PWAs
+            return !userKnowsAboutPWAs
+        }
 
-            return !alreadyShownPwaOnboarding
-        }
-        set(value) {
-            preferences.edit()
-                .putBoolean(appContext.getPreferenceKey(R.string.pref_key_show_first_time_pwa), value)
-                .apply()
-        }
+    var userKnowsAboutPWAs by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_user_knows_about_pwa),
+        default = false
+    )
 
     @VisibleForTesting(otherwise = PRIVATE)
     internal val trackingProtectionOnboardingCount by intPreference(

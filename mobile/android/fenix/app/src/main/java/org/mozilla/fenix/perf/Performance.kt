@@ -74,6 +74,6 @@ object Performance {
      * Disables the first time PWA popup.
      */
     private fun disableFirstTimePWAPopup(context: Context) {
-        Settings.getInstance(context).shouldShowFirstTimePwaFragment = false
+        Settings.getInstance(context).userKnowsAboutPWAs = true
     }
 }

@@ -27,7 +27,7 @@ class FirstTimePwaObserver(
             val directions = BrowserFragmentDirections.actionBrowserFragmentToFirstTimePwaFragment()
             navController.nav(R.id.browserFragment, directions)
 
-            settings.shouldShowFirstTimePwaFragment = false
+            settings.userKnowsAboutPWAs = true
         }
     }
 }
