@@ -144,7 +144,9 @@ export class _DSCard extends React.PureComponent {
       this.props.dispatch(
         ac.UserEvent({
           event: "CLICK",
-          source: this.props.type.toUpperCase(),
+          source: this.props.is_video
+            ? "CARDGRID_VIDEO"
+            : this.props.type.toUpperCase(),
           action_position: this.props.pos,
           value: { card_type: this.props.flightId ? "spoc" : "organic" },
         })
@@ -152,7 +154,9 @@ export class _DSCard extends React.PureComponent {
 
       this.props.dispatch(
         ac.ImpressionStats({
-          source: this.props.type.toUpperCase(),
+          source: this.props.is_video
+            ? "CARDGRID_VIDEO"
+            : this.props.type.toUpperCase(),
           click: 0,
           tiles: [
             {
@@ -286,7 +290,7 @@ export class _DSCard extends React.PureComponent {
               },
             ]}
             dispatch={this.props.dispatch}
-            source={this.props.type}
+            source={this.props.is_video ? "CARDGRID_VIDEO" : this.props.type}
           />
         </SafeAnchor>
         <DSLinkMenu
