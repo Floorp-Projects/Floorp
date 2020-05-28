@@ -43,9 +43,9 @@ import mozilla.components.support.ktx.android.content.isPermissionGranted
 import mozilla.components.support.ktx.android.view.hideKeyboard
 import mozilla.components.ui.autocomplete.InlineAutocompleteEditText
 import org.mozilla.fenix.BrowserDirection
+import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
-import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
@@ -66,6 +66,8 @@ class SearchFragment : Fragment(), UserInteractionHandler {
     private var permissionDidUpdate = false
     private lateinit var searchStore: SearchFragmentStore
     private lateinit var searchInteractor: SearchInteractor
+
+    private val speechIntent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
 
     private fun shouldShowSearchSuggestions(isPrivate: Boolean): Boolean =
         if (isPrivate) {
@@ -146,7 +148,10 @@ class SearchFragment : Fragment(), UserInteractionHandler {
             BrowserToolbar.Button(
                 ContextCompat.getDrawable(requireContext(), R.drawable.ic_microphone)!!,
                 requireContext().getString(R.string.voice_search_content_description),
-                visible = { requireContext().settings().shouldShowVoiceSearch && FeatureFlags.voiceSearch },
+                visible = {
+                    requireContext().settings().shouldShowVoiceSearch &&
+                        FeatureFlags.voiceSearch && speechIsAvailable()
+                },
                 listener = ::launchVoiceSearch
             )
         )
@@ -160,9 +165,19 @@ class SearchFragment : Fragment(), UserInteractionHandler {
         return view
     }
 
+    private fun speechIsAvailable(): Boolean {
+        return (speechIntent.resolveActivity(requireContext().packageManager) != null)
+    }
+
     private fun launchVoiceSearch() {
+        // Note if a user disables speech while the app is on the search fragment
+        // the voice button will still be available and *will* cause a crash if tapped,
+        // since the `visible` call is only checked on create. In order to avoid extra complexity
+        // around such a small edge case, we make the button have no functionality in this case.
+        if (!speechIsAvailable()) { return }
+
         requireComponents.analytics.metrics.track(Event.VoiceSearchTapped)
-        val speechIntent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+        speechIntent.apply {
             putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
             putExtra(RecognizerIntent.EXTRA_PROMPT, requireContext().getString(R.string.voice_search_explainer))
         }
