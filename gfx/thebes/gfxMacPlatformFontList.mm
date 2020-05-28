@@ -116,8 +116,7 @@ static NSFontManager* sFontManager;
 
 static void GetStringForNSString(const NSString* aSrc, nsAString& aDest) {
   aDest.SetLength([aSrc length]);
-  [aSrc getCharacters:reinterpret_cast<unichar*>(aDest.BeginWriting())
-                range:NSMakeRange(0, [aSrc length])];
+  [aSrc getCharacters:reinterpret_cast<unichar*>(aDest.BeginWriting())];
 }
 
 static NSString* GetNSStringForString(const nsAString& aSrc) {
