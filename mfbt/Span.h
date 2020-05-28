@@ -98,14 +98,14 @@ struct is_allowed_element_type_conversion
     : public std::integral_constant<
           bool, std::is_convertible_v<From (*)[], To (*)[]>> {};
 
-template <class Span, bool IsConst>
+template <class SpanT, bool IsConst>
 class span_iterator {
-  using element_type_ = typename Span::element_type;
+  using element_type_ = typename SpanT::element_type;
 
  public:
   using iterator_category = std::random_access_iterator_tag;
   using value_type = std::remove_const_t<element_type_>;
-  using difference_type = typename Span::index_type;
+  using difference_type = typename SpanT::index_type;
 
   using reference =
       std::conditional_t<IsConst, const element_type_, element_type_>&;
@@ -113,7 +113,7 @@ class span_iterator {
 
   constexpr span_iterator() : span_iterator(nullptr, 0) {}
 
-  constexpr span_iterator(const Span* span, typename Span::index_type index)
+  constexpr span_iterator(const SpanT* span, typename SpanT::index_type index)
       : span_(span), index_(index) {
     MOZ_RELEASE_ASSERT(span == nullptr ||
                        (index_ >= 0 && index <= span_->Length()));
@@ -122,12 +122,12 @@ class span_iterator {
   // `other` is already correct by construction; we do not need to go through
   // the release assert above.  Put differently, this constructor is effectively
   // a copy constructor and therefore needs no assertions.
-  friend class span_iterator<Span, true>;
-  constexpr MOZ_IMPLICIT span_iterator(const span_iterator<Span, false>& other)
+  friend class span_iterator<SpanT, true>;
+  constexpr MOZ_IMPLICIT span_iterator(const span_iterator<SpanT, false>& other)
       : span_(other.span_), index_(other.index_) {}
 
-  constexpr span_iterator<Span, IsConst>& operator=(
-      const span_iterator<Span, IsConst>&) = default;
+  constexpr span_iterator<SpanT, IsConst>& operator=(
+      const span_iterator<SpanT, IsConst>&) = default;
 
   constexpr reference operator*() const {
     MOZ_RELEASE_ASSERT(span_);
@@ -226,7 +226,7 @@ class span_iterator {
   }
 
  protected:
-  const Span* span_;
+  const SpanT* span_;
   size_t index_;
 };
 
