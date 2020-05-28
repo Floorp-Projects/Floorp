@@ -7,30 +7,6 @@
   margin-inline-start: 1px;
 }
 
-
-/* Hide the duration dropdown suffix label if it's empty.  Otherwise it
-   takes up a little space, causing the end of the dropdown to not be aligned
-   with the warning box. */
-#sanitizeDurationSuffixLabel[value=""] {
-  display: none;
-}
-
-
-/* Sanitize everything warning box */
-#sanitizeEverythingWarningBox {
-  background-color: Window;
-  border: 1px solid ThreeDDarkShadow;
-  border-radius: 5px;
-  padding: 16px;
-}
-
 #sanitizeEverythingWarningIcon {
   list-style-image: url("chrome://global/skin/icons/warning-large.png");
-  padding: 0;
-  margin: 0;
-}
-
-#sanitizeEverythingWarningDescBox {
-  padding: 0 16px;
-  margin: 0;
 }

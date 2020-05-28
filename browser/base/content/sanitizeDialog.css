@@ -8,3 +8,29 @@
 #sanitizeEverythingUndoWarning {
   white-space: pre-wrap;
 }
+
+/* Hide the duration dropdown suffix label if it's empty.  Otherwise it
+   takes up a little space, causing the end of the dropdown to not be aligned
+   with the warning box. */
+#sanitizeDurationSuffixLabel[value=""] {
+  display: none;
+}
+
+/* Sanitize everything warning box */
+#sanitizeEverythingWarningBox {
+  /* Fallback colors are used when the dialog is open outside of in-content prefs */
+  background-color: var(--in-content-box-background, Window);
+  border: 1px solid var(--in-content-box-border-color, ThreeDDarkShadow);
+  border-radius: 5px;
+  padding: 16px;
+}
+
+#sanitizeEverythingWarningIcon {
+  padding: 0;
+  margin: 0;
+}
+
+#sanitizeEverythingWarningDescBox {
+  padding: 0 16px;
+  margin: 0;
+}
