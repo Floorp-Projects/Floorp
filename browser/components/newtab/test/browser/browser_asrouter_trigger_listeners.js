@@ -33,7 +33,7 @@ add_task(async function check_matchPatternFailureCase() {
     "Should fail, bad pattern"
   );
 
-  articleTrigger.init(() => {}, [], ["*://*.example.com"]);
+  articleTrigger.init(() => {}, [], ["*://*.example.com/"]);
 
   is(
     articleTrigger._matchPatternSet.matches("http://www.example.com"),
@@ -490,4 +490,18 @@ add_task(async function check_contentBlockingMilestone_listener() {
       is(observerEvent, 1, "shouldn't receive obs. notification after uninit");
     }
   );
+});
+
+add_task(function test_pattern_match() {
+  const openURLListener = ASRouterTriggerListeners.get("openURL");
+  openURLListener.uninit();
+  openURLListener.init(() => {}, [], ["*://*/*.pdf"]);
+  let pattern = openURLListener._matchPatternSet;
+
+  Assert.ok(pattern.matches("https://example.com/foo.pdf"), "match 1");
+  Assert.ok(pattern.matches("https://example.com/bar/foo.pdf"), "match 2");
+  Assert.ok(pattern.matches("https://www.example.com/foo.pdf"), "match 3");
+  // Shouldn't match. Too generic.
+  Assert.ok(!pattern.matches("https://www.example.com/foo"), "match 4");
+  Assert.ok(!pattern.matches("https://www.example.com/pdf"), "match 5");
 });

@@ -15,7 +15,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 });
 
 const FEW_MINUTES = 15 * 60 * 1000; // 15 mins
-const MATCH_PATTERN_OPTIONS = { ignorePath: true };
 
 function isPrivateWindow(win) {
   return (
@@ -73,7 +72,7 @@ function checkURLMatch(aLocationURI, { hosts, matchPatternSet }, aRequest) {
   return false;
 }
 
-function createMatchPatternSet(patterns, flags = MATCH_PATTERN_OPTIONS) {
+function createMatchPatternSet(patterns, flags) {
   try {
     return new MatchPatternSet(new Set(patterns), flags);
   } catch (e) {
