@@ -3275,7 +3275,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             #include "prenv.h"
             #endif  // DEBUG
 
-            #include "base/id_map.h"
             #include "mozilla/Tainting.h"
             #include "mozilla/ipc/MessageChannel.h"
             #include "mozilla/ipc/ProtocolUtils.h"
