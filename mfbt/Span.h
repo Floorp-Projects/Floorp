@@ -98,9 +98,13 @@ struct is_allowed_element_type_conversion
     : public std::integral_constant<
           bool, std::is_convertible_v<From (*)[], To (*)[]>> {};
 
+struct SpanKnownBounds {};
+
 template <class SpanT, bool IsConst>
 class span_iterator {
   using element_type_ = typename SpanT::element_type;
+
+  template <class ElementType, size_t Extent> friend class ::mozilla::Span;
 
  public:
   using iterator_category = std::random_access_iterator_tag;
@@ -119,6 +123,16 @@ class span_iterator {
                        (index_ >= 0 && index <= span_->Length()));
   }
 
+ private:
+  // For whatever reason, the compiler doesn't like optimizing away the above
+  // MOZ_RELEASE_ASSERT when `span_iterator` is constructed for obviously-correct
+  // cases like `span.begin()` or `span.end()`.  We provide this private
+  // constructor for such cases.
+  constexpr span_iterator(const SpanT* span, typename SpanT::index_type index,
+			  SpanKnownBounds)
+      : span_(span), index_(index) {}
+
+ public:
   // `other` is already correct by construction; we do not need to go through
   // the release assert above.  Put differently, this constructor is effectively
   // a copy constructor and therefore needs no assertions.
@@ -678,11 +692,11 @@ class Span {
   constexpr pointer data() const { return storage_.data(); }
 
   // [Span.iter], Span iterator support
-  iterator begin() const { return {this, 0}; }
-  iterator end() const { return {this, Length()}; }
+  iterator begin() const { return {this, 0, span_details::SpanKnownBounds{}}; }
+  iterator end() const { return {this, Length(), span_details::SpanKnownBounds{}}; }
 
-  const_iterator cbegin() const { return {this, 0}; }
-  const_iterator cend() const { return {this, Length()}; }
+  const_iterator cbegin() const { return {this, 0, span_details::SpanKnownBounds{}}; }
+  const_iterator cend() const { return {this, Length(), span_details::SpanKnownBounds{}}; }
 
   reverse_iterator rbegin() const { return reverse_iterator{end()}; }
   reverse_iterator rend() const { return reverse_iterator{begin()}; }
