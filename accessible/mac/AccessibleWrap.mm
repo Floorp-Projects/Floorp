@@ -11,6 +11,7 @@
 #include "Role.h"
 #include "gfxPlatform.h"
 
+#import "MOXMathAccessibles.h"
 #import "mozAccessible.h"
 #import "mozActionElements.h"
 #import "mozHTMLAccessible.h"
@@ -226,6 +227,25 @@ Class a11y::GetTypeFromRole(roles::Role aRole) {
     case roles::MENUITEM: {
       return [mozMenuItemAccessible class];
     }
+
+    case roles::MATHML_ROOT:
+      return [MOXMathRootAccessible class];
+
+    case roles::MATHML_SQUARE_ROOT:
+      return [MOXMathSquareRootAccessible class];
+
+    case roles::MATHML_FRACTION:
+      return [MOXMathFractionAccessible class];
+
+    case roles::MATHML_SUB:
+    case roles::MATHML_SUP:
+    case roles::MATHML_SUB_SUP:
+      return [MOXMathSubSupAccessible class];
+
+    case roles::MATHML_UNDER:
+    case roles::MATHML_OVER:
+    case roles::MATHML_UNDER_OVER:
+      return [MOXMathUnderOverAccessible class];
 
     default:
       return [mozAccessible class];
