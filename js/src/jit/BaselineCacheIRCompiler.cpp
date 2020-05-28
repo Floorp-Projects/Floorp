@@ -1437,6 +1437,56 @@ bool BaselineCacheIRCompiler::emitArrayPush(ObjOperandId objId,
   return true;
 }
 
+bool BaselineCacheIRCompiler::emitIsArrayResult(ValOperandId inputId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoOutputRegister output(*this);
+  AutoScratchRegister scratch1(allocator, masm);
+  AutoScratchRegisterMaybeOutput scratch2(allocator, masm, output);
+
+  ValueOperand val = allocator.useValueRegister(masm, inputId);
+
+  allocator.discardStack(masm);
+
+  Label isNotArray;
+  // Primitives are never Arrays.
+  masm.branchTestObject(Assembler::NotEqual, val, &isNotArray);
+
+  masm.unboxObject(val, scratch1);
+
+  Label isArray;
+  masm.branchTestObjClass(Assembler::Equal, scratch1, &ArrayObject::class_,
+                          scratch2, scratch1, &isArray);
+
+  // isArray can also return true for Proxy wrapped Arrays.
+  masm.branchTestObjectIsProxy(false, scratch1, scratch2, &isNotArray);
+  Label done;
+  {
+    AutoStubFrame stubFrame(*this);
+    stubFrame.enter(masm, scratch2);
+
+    masm.Push(scratch1);
+
+    using Fn = bool (*)(JSContext*, HandleObject, bool*);
+    callVM<Fn, js::IsArrayFromJit>(masm);
+
+    stubFrame.leave(masm);
+
+    masm.tagValue(JSVAL_TYPE_BOOLEAN, ReturnReg, output.valueReg());
+    masm.jump(&done);
+  }
+
+  masm.bind(&isNotArray);
+  masm.moveValue(BooleanValue(false), output.valueReg());
+  masm.jump(&done);
+
+  masm.bind(&isArray);
+  masm.moveValue(BooleanValue(true), output.valueReg());
+
+  masm.bind(&done);
+  return true;
+}
+
 bool BaselineCacheIRCompiler::emitCallNativeSetter(ObjOperandId objId,
                                                    uint32_t setterOffset,
                                                    ValOperandId rhsId) {
