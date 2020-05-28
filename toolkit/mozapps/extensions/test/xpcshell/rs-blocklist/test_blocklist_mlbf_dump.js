@@ -82,13 +82,13 @@ add_task(async function verify_dump_first_run() {
   // - undefined could mean that the implementation of Attachments.jsm changed.
   Assert.equal(
     downloadResult._source,
-    "dump_match",
+    "dump_fallback",
     "MLBF attachment should match the RemoteSettings collection"
   );
 
   Assert.equal(
     await sha256(downloadResult.buffer),
-    inputRecord.attachment.hash,
+    downloadResult.record.attachment.hash,
     "The content of the attachment should actually matches the record"
   );
 });
