@@ -2856,32 +2856,242 @@ void MacroAssembler::speculationBarrier() { MOZ_CRASH(); }
 
 void MacroAssembler::floorFloat32ToInt32(FloatRegister src, Register dest,
                                          Label* fail) {
-  MOZ_CRASH("Port CodeGenerator::visitFloorF code");
+  ScratchFloat32Scope scratch(*this);
+
+  Label skipCheck, done;
+
+  // If Nan, 0 or -0 check for bailout
+  loadConstantFloat32(0.0f, scratch);
+  ma_bc1s(src, scratch, &skipCheck, Assembler::DoubleNotEqual, ShortJump);
+
+  // If binary value is not zero, it is NaN or -0, so we bail.
+  moveFromDoubleLo(src, SecondScratchReg);
+  branch32(Assembler::NotEqual, SecondScratchReg, Imm32(0), fail);
+
+  // Input was zero, so return zero.
+  move32(Imm32(0), dest);
+  ma_b(&done, ShortJump);
+
+  bind(&skipCheck);
+  as_floorws(scratch, src);
+  moveFromDoubleLo(scratch, dest);
+
+  branch32(Assembler::Equal, dest, Imm32(INT_MIN), fail);
+  branch32(Assembler::Equal, dest, Imm32(INT_MAX), fail);
+
+  bind(&done);
 }
 
 void MacroAssembler::floorDoubleToInt32(FloatRegister src, Register dest,
                                         Label* fail) {
-  MOZ_CRASH("Port CodeGenerator::visitFloor code");
+  ScratchDoubleScope scratch(*this);
+
+  Label skipCheck, done;
+
+  // If Nan, 0 or -0 check for bailout
+  loadConstantDouble(0.0, scratch);
+  ma_bc1d(src, scratch, &skipCheck, Assembler::DoubleNotEqual, ShortJump);
+
+  // If high part is not zero, it is NaN or -0, so we bail.
+  moveFromDoubleHi(src, SecondScratchReg);
+  branch32(Assembler::NotEqual, SecondScratchReg, Imm32(0), fail);
+
+  // Input was zero, so return zero.
+  move32(Imm32(0), dest);
+  ma_b(&done, ShortJump);
+
+  bind(&skipCheck);
+  as_floorwd(scratch, src);
+  moveFromDoubleLo(scratch, dest);
+
+  branch32(Assembler::Equal, dest, Imm32(INT_MIN), fail);
+  branch32(Assembler::Equal, dest, Imm32(INT_MAX), fail);
+
+  bind(&done);
 }
 
 void MacroAssembler::ceilFloat32ToInt32(FloatRegister src, Register dest,
                                         Label* fail) {
-  MOZ_CRASH("Port CodeGenerator::visitCeilF code");
+  ScratchFloat32Scope scratch(*this);
+
+  Label performCeil, done;
+
+  // If x < -1 or x > 0 then perform ceil.
+  loadConstantFloat32(0.0f, scratch);
+  branchFloat(Assembler::DoubleGreaterThan, src, scratch, &performCeil);
+  loadConstantFloat32(-1.0f, scratch);
+  branchFloat(Assembler::DoubleLessThanOrEqual, src, scratch, &performCeil);
+
+  // If binary value is not zero, the input was not 0, so we bail.
+  moveFromFloat32(src, SecondScratchReg);
+  branch32(Assembler::NotEqual, SecondScratchReg, Imm32(0), fail);
+
+  // Input was zero, so return zero.
+  move32(Imm32(0), dest);
+  ma_b(&done, ShortJump);
+
+  bind(&performCeil);
+  as_ceilws(scratch, src);
+  moveFromFloat32(scratch, dest);
+
+  branch32(Assembler::Equal, dest, Imm32(INT_MIN), fail);
+  branch32(Assembler::Equal, dest, Imm32(INT_MAX), fail);
+
+  bind(&done);
 }
 
 void MacroAssembler::ceilDoubleToInt32(FloatRegister src, Register dest,
                                        Label* fail) {
-  MOZ_CRASH("Port CodeGenerator::visitCeil code");
+  ScratchDoubleScope scratch(*this);
+
+  Label performCeil, done;
+
+  // If x < -1 or x > 0 then perform ceil.
+  loadConstantDouble(0, scratch);
+  branchDouble(Assembler::DoubleGreaterThan, src, scratch, &performCeil);
+  loadConstantDouble(-1, scratch);
+  branchDouble(Assembler::DoubleLessThanOrEqual, src, scratch, &performCeil);
+
+  // If high part is not zero, the input was not 0, so we bail.
+  moveFromDoubleHi(src, SecondScratchReg);
+  branch32(Assembler::NotEqual, SecondScratchReg, Imm32(0), fail);
+
+  // Input was zero, so return zero.
+  move32(Imm32(0), dest);
+  ma_b(&done, ShortJump);
+
+  bind(&performCeil);
+  as_ceilwd(scratch, src);
+  moveFromDoubleLo(scratch, dest);
+
+  branch32(Assembler::Equal, dest, Imm32(INT_MIN), fail);
+  branch32(Assembler::Equal, dest, Imm32(INT_MAX), fail);
+
+  bind(&done);
 }
 
 void MacroAssembler::roundFloat32ToInt32(FloatRegister src, Register dest,
                                          FloatRegister temp, Label* fail) {
-  MOZ_CRASH("Port CodeGenerator::visitRoundF code");
+  ScratchFloat32Scope scratch(*this);
+
+  Label negative, end, skipCheck;
+
+  // Load biggest number less than 0.5 in the temp register.
+  loadConstantFloat32(GetBiggestNumberLessThan(0.5f), temp);
+
+  // Branch to a slow path for negative inputs. Doesn't catch NaN or -0.
+  loadConstantFloat32(0.0f, scratch);
+  ma_bc1s(src, scratch, &negative, Assembler::DoubleLessThan, ShortJump);
+
+  // If Nan, 0 or -0 check for bailout
+  ma_bc1s(src, scratch, &skipCheck, Assembler::DoubleNotEqual, ShortJump);
+
+  // If binary value is not zero, it is NaN or -0, so we bail.
+  moveFromFloat32(src, SecondScratchReg);
+  branch32(Assembler::NotEqual, SecondScratchReg, Imm32(0), fail);
+
+  // Input was zero, so return zero.
+  move32(Imm32(0), dest);
+  ma_b(&end, ShortJump);
+
+  bind(&skipCheck);
+  as_adds(scratch, src, temp);
+  as_floorws(scratch, scratch);
+
+  moveFromFloat32(scratch, dest);
+
+  branchTest32(Assembler::Equal, dest, Imm32(INT_MIN), fail);
+  branchTest32(Assembler::Equal, dest, Imm32(INT_MAX), fail);
+
+  jump(&end);
+
+  // Input is negative, but isn't -0.
+  bind(&negative);
+
+  // Inputs in ]-0.5; 0] need to be added 0.5, other negative inputs need to
+  // be added the biggest double less than 0.5.
+  Label loadJoin;
+  loadConstantFloat32(-0.5f, scratch);
+  branchFloat(Assembler::DoubleLessThan, src, scratch, &loadJoin);
+  loadConstantFloat32(0.5f, temp);
+  bind(&loadJoin);
+
+  as_adds(temp, src, temp);
+
+  // If input + 0.5 >= 0, input is a negative number >= -0.5 and the
+  // result is -0.
+  branchFloat(Assembler::DoubleGreaterThanOrEqual, temp, scratch, fail);
+
+  // Truncate and round toward zero.
+  // This is off-by-one for everything but integer-valued inputs.
+  as_floorws(scratch, temp);
+  moveFromFloat32(scratch, dest);
+
+  branch32(Assembler::Equal, dest, Imm32(INT_MIN), fail);
+
+  bind(&end);
 }
 
 void MacroAssembler::roundDoubleToInt32(FloatRegister src, Register dest,
                                         FloatRegister temp, Label* fail) {
-  MOZ_CRASH("Port CodeGenerator::visitRound code");
+  ScratchDoubleScope scratch(*this);
+
+  Label negative, end, skipCheck;
+
+  // Load biggest number less than 0.5 in the temp register.
+  loadConstantDouble(GetBiggestNumberLessThan(0.5), temp);
+
+  // Branch to a slow path for negative inputs. Doesn't catch NaN or -0.
+  loadConstantDouble(0.0, scratch);
+  ma_bc1d(src, scratch, &negative, Assembler::DoubleLessThan, ShortJump);
+
+  // If Nan, 0 or -0 check for bailout
+  ma_bc1d(src, scratch, &skipCheck, Assembler::DoubleNotEqual, ShortJump);
+
+  // If high part is not zero, it is NaN or -0, so we bail.
+  moveFromDoubleHi(src, SecondScratchReg);
+  branch32(Assembler::NotEqual, SecondScratchReg, Imm32(0), fail);
+
+  // Input was zero, so return zero.
+  move32(Imm32(0), dest);
+  ma_b(&end, ShortJump);
+
+  bind(&skipCheck);
+  as_addd(scratch, src, temp);
+  as_floorwd(scratch, scratch);
+
+  moveFromDoubleLo(scratch, dest);
+
+  branch32(Assembler::Equal, dest, Imm32(INT_MIN), fail);
+  branch32(Assembler::Equal, dest, Imm32(INT_MAX), fail);
+
+  jump(&end);
+
+  // Input is negative, but isn't -0.
+  bind(&negative);
+
+  // Inputs in ]-0.5; 0] need to be added 0.5, other negative inputs need to
+  // be added the biggest double less than 0.5.
+  Label loadJoin;
+  loadConstantDouble(-0.5, scratch);
+  branchDouble(Assembler::DoubleLessThan, src, scratch, &loadJoin);
+  loadConstantDouble(0.5, temp);
+  bind(&loadJoin);
+
+  addDouble(src, temp);
+
+  // If input + 0.5 >= 0, input is a negative number >= -0.5 and the
+  // result is -0.
+  branchDouble(Assembler::DoubleGreaterThanOrEqual, temp, scratch, fail);
+
+  // Truncate and round toward zero.
+  // This is off-by-one for everything but integer-valued inputs.
+  as_floorwd(scratch, temp);
+  moveFromDoubleLo(scratch, dest);
+
+  branch32(Assembler::Equal, dest, Imm32(INT_MIN), fail);
+
+  bind(&end);
 }
 
 //}}} check_macroassembler_style
