@@ -166,7 +166,8 @@ nsCocoaWindow::nsCocoaWindow()
       mAlwaysOnTop(false),
       mAspectRatioLocked(false),
       mNumModalDescendents(0),
-      mWindowAnimationBehavior(NSWindowAnimationBehaviorDefault) {
+      mWindowAnimationBehavior(NSWindowAnimationBehaviorDefault),
+      mWasShown(false) {
   if ([NSWindow respondsToSelector:@selector(setAllowsAutomaticWindowTabbing:)]) {
     // Disable automatic tabbing on 10.12. We need to do this before we
     // orderFront any of our windows.
@@ -487,6 +488,16 @@ nsresult nsCocoaWindow::CreateNativeWindow(const NSRect& aRect, nsBorderStyle aB
     SetPopupWindowLevel();
     [mWindow setBackgroundColor:[NSColor clearColor]];
     [mWindow setOpaque:NO];
+
+    // When multiple spaces are in use and the browser is assigned to a
+    // particular space, override the "Assign To" space and display popups on
+    // the active space. Does not work with multiple displays. See
+    // NeedsRecreateToReshow() for multi-display with multi-space workaround.
+    if (!mAlwaysOnTop) {
+      NSWindowCollectionBehavior behavior = [mWindow collectionBehavior];
+      behavior |= NSWindowCollectionBehaviorMoveToActiveSpace;
+      [mWindow setCollectionBehavior:behavior];
+    }
   } else {
     // Make sure that regular windows are opaque from the start, so that
     // nsChildView::WidgetTypeSupportsAcceleration returns true for them.
@@ -754,6 +765,9 @@ void nsCocoaWindow::Show(bool bState) {
   if (bState && [mWindow isBeingShown]) return;
 
   [mWindow setBeingShown:bState];
+  if (bState && !mWasShown) {
+    mWasShown = true;
+  }
 
   nsIWidget* parentWidget = mParent;
   nsCOMPtr<nsPIWidgetCocoa> piParentWidget(do_QueryInterface(parentWidget));
@@ -955,6 +969,17 @@ void nsCocoaWindow::Show(bool bState) {
   [mWindow setBeingShown:NO];
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
+// Work around a problem where with multiple displays and multiple spaces
+// enabled, where the browser is assigned to a single display or space, popup
+// windows that are reshown after being hidden with [NSWindow orderOut] show on
+// the assigned space even when opened from another display. Apply the
+// workaround whenever more than one display is enabled.
+bool nsCocoaWindow::NeedsRecreateToReshow() {
+  // Limit the workaround to popup windows because only they need to override
+  // the "Assign To" setting. i.e., to display where the parent window is.
+  return (mWindowType == eWindowType_popup) && mWasShown && ([[NSScreen screens] count] > 1);
 }
 
 struct ShadowParams {
