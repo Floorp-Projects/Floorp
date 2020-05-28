@@ -4,11 +4,18 @@
 
 "use strict";
 
+const {
+  ResourceWatcher,
+} = require("devtools/shared/resources/resource-watcher");
+
 module.exports = async function({ targetList, targetFront, onAvailable }) {
   if (!targetFront.isTopLevel) {
     return;
   }
 
   const inspectorFront = await targetFront.getFront("inspector");
-  await inspectorFront.walker.watchRootNode(onAvailable);
+  await inspectorFront.walker.watchRootNode(node => {
+    node.resourceType = ResourceWatcher.TYPES.ROOT_NODE;
+    return onAvailable([node]);
+  });
 };
