@@ -28,6 +28,7 @@
 #include "mozilla/RemoteDecoderManagerChild.h"
 #include "mozilla/Unused.h"
 #include "mozilla/SchedulerGroup.h"
+#include "mozilla/StaticPrefs_devtools.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/TelemetryIPC.h"
@@ -455,6 +456,11 @@ static void TruncateString(nsAString& aString) {
 NS_IMETHODIMP
 ConsoleListener::Observe(nsIConsoleMessage* aMessage) {
   if (!mChild) {
+    return NS_OK;
+  }
+
+  if (StaticPrefs::devtools_browsertoolbox_fission()) {
+    // Messages are directly retrieved from the original thread.
     return NS_OK;
   }
 
