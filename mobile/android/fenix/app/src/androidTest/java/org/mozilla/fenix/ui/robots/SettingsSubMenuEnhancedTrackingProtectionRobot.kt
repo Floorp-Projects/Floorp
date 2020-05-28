@@ -124,7 +124,7 @@ private fun assertEnhancedTrackingProtectionOptions() {
     onView(withText(stdText))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
-    onView(withText("Strict (Default)"))
+    onView(withText("Strict"))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
     val strictText =
@@ -152,13 +152,13 @@ private fun assertEnhancedTrackingProtectionDefaults() {
 }
 
 private fun assertRadioButtonDefaults() {
-    onView(withText("Standard")
+    onView(withText("Strict")
     ).assertIsChecked(false)
 
     onView(
         allOf(
             withId(org.mozilla.fenix.R.id.radio_button),
-            hasSibling(withText("Strict (Default)"))
+            hasSibling(withText("Standard"))
         )
     ).assertIsChecked(true)
 

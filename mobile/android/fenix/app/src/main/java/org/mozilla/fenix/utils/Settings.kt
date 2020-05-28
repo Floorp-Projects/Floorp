@@ -30,6 +30,7 @@ import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.components.metrics.MozillaProductDetector
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.settings.PhoneFeature
 import org.mozilla.fenix.settings.deletebrowsingdata.DeleteBrowsingDataOnQuitType
@@ -332,13 +333,31 @@ class Settings private constructor(
 
     val useStrictTrackingProtection by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_tracking_protection_strict_default),
-        true
+        false
     )
 
     val useCustomTrackingProtection by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_tracking_protection_custom_option),
         false
     )
+
+    @VisibleForTesting(otherwise = PRIVATE)
+    fun setStrictETP() {
+        preferences.edit().putBoolean(
+            appContext.getPreferenceKey(R.string.pref_key_tracking_protection_strict_default),
+            true
+        ).apply()
+        preferences.edit().putBoolean(
+            appContext.getPreferenceKey(R.string.pref_key_tracking_protection_standard_option),
+            false
+        ).apply()
+        appContext?.components?.let {
+            val policy = it.core.trackingProtectionPolicyFactory
+                .createTrackingProtectionPolicy()
+            it.useCases.settingsUseCases.updateTrackingProtection.invoke(policy)
+            it.useCases.sessionUseCases.reload.invoke()
+        }
+    }
 
     val blockCookiesInCustomTrackingProtection by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_tracking_protection_custom_cookies),

@@ -334,7 +334,7 @@ class SettingsTest {
     fun shouldUseTrackingProtectionStrict() {
         // When
         // Then
-        assertTrue(settings.useStrictTrackingProtection)
+        assertFalse(settings.useStrictTrackingProtection)
     }
 
     @Test

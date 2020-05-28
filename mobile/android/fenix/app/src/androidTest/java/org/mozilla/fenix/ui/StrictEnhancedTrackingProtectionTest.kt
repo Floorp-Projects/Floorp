@@ -10,6 +10,7 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.HomeActivityTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper
@@ -32,7 +33,7 @@ import org.mozilla.fenix.ui.robots.settingsSubMenuEnhancedTrackingProtection
  *  - Verifying Enhanced Tracking Protection site exceptions
  */
 
-class EnhancedTrackingProtectionTest {
+class StrictEnhancedTrackingProtectionTest {
     private lateinit var mockWebServer: MockWebServer
 
     @get:Rule
@@ -44,6 +45,8 @@ class EnhancedTrackingProtectionTest {
             setDispatcher(AndroidAssetDispatcher())
             start()
         }
+
+        InstrumentationRegistry.getInstrumentation().context.settings().setStrictETP()
 
         // Reset on-boarding notification for each test
         TestHelper.setPreference(

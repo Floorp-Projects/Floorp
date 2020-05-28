@@ -937,6 +937,8 @@
     <string name="onboarding_tracking_protection_standard_button_description">Blocks fewer trackers but allows pages to load normally</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">Strict (recommended)</string>
+    <!-- text for tracking protection radio button option for strict level of blocking -->
+    <string name="onboarding_tracking_protection_strict_option">Strict</string>
     <!-- text for strict blocking option button description -->
     <string name="onboarding_tracking_protection_strict_button_description">Blocks more trackers for better protection and performance, but may cause some sites to not work properly</string>
     <!-- text for the toolbar position card header
