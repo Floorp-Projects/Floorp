@@ -549,6 +549,14 @@ TEST_F(MediaPipelineFilterTest, TestMidFilter) {
   EXPECT_TRUE(Filter(filter, 16, 110, mid));
   EXPECT_TRUE(Filter(filter, 16, 110));
   EXPECT_FALSE(Filter(filter, 17, 110));
+
+  // The mid filter maintains a set of SSRCs. Adding a new SSRC should work
+  // and still allow previous SSRCs to work. Unrecognized SSRCs should still be
+  // filtered out.
+  EXPECT_TRUE(Filter(filter, 18, 111, mid));
+  EXPECT_TRUE(Filter(filter, 18, 111));
+  EXPECT_TRUE(Filter(filter, 16, 110));
+  EXPECT_FALSE(Filter(filter, 17, 110));
 }
 
 TEST_F(MediaPipelineFilterTest, TestPayloadTypeFilter) {
