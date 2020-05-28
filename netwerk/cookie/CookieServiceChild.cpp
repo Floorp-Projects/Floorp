@@ -444,6 +444,17 @@ CookieServiceChild::SetCookieStringFromDocument(
     return NS_OK;
   }
 
+  nsPIDOMWindowInner* innerWindow = aDocument->GetInnerWindow();
+  if (NS_WARN_IF(!innerWindow)) {
+    return NS_OK;
+  }
+
+  if (nsContentUtils::IsThirdPartyWindowOrChannel(innerWindow, nullptr,
+                                                  nullptr) &&
+      !CookieCommons::ShouldIncludeCrossSiteCookieForDocument(cookie)) {
+    return NS_OK;
+  }
+
   CookieKey key(baseDomain, attrs);
   CookiesList* cookies = mCookiesMap.Get(key);
 
