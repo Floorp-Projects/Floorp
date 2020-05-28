@@ -7696,14 +7696,10 @@
 - name: network.process.enabled
   type: RelaxedAtomicBool
   mirror: always
-#ifdef ANDROID
-  value: false
+#if defined(ANDROID) || defined(MOZ_THUNDERBIRD)
+  value: false # see bug 1641427
 #else
-#ifdef NIGHTLY_BUILD
-  value: true
-#else
-  value: false
-#endif
+  value: @IS_NIGHTLY_BUILD@
 #endif
 
 # Whether we can send OnDataAvailable to content process directly.
