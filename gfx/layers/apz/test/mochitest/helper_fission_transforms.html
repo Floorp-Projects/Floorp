@@ -48,7 +48,7 @@ async function* test() {
   dump("OOPIF response: " + JSON.stringify(iframeResponse) + "\n");
   ok(iframeResponse, "code_for_oopif_to_run successfully installed");
 
-  iframePromise = promiseOneEvent("OOPIF:ClickData", null);
+  iframePromise = promiseOneEvent(window, "OOPIF:ClickData", null);
   synthesizeNativeClick(document.body, 400, 400, function() {
     dump("Finished synthesizing click, waiting for OOPIF message...\n");
   });
