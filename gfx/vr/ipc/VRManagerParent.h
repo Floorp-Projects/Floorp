@@ -82,8 +82,6 @@ class VRManagerParent final : public PVRManagerParent {
 
   static void RegisterVRManagerInCompositorThread(VRManagerParent* aVRManager);
 
-  static void ShutdownInternal();
-
   // This keeps us alive until ActorDestroy(), at which point we do a
   // deferred destruction of ourselves.
   RefPtr<VRManagerParent> mSelfRef;
