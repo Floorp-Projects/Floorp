@@ -1763,6 +1763,15 @@ bool PerHandlerParser<SyntaxParseHandler>::finishFunction(
   }
 
   FunctionBox* funbox = pc_->functionBox();
+  ScriptStencil& stencil = funbox->functionStencil().get();
+
+  // Compute the flags for the BaseScript.
+  using ImmutableFlags = ImmutableScriptFlagsEnum;
+  stencil.immutableFlags = funbox->immutableFlags();
+  stencil.immutableFlags.setFlag(ImmutableFlags::HasMappedArgsObj,
+                                 funbox->hasMappedArgsObj());
+  stencil.immutableFlags.setFlag(ImmutableFlags::IsLikelyConstructorWrapper,
+                                 funbox->isLikelyConstructorWrapper());
 
   // Elide nullptr sentinels from end of binding list. These are inserted for
   // each scope regardless of if any bindings are actually closed over.
@@ -1782,8 +1791,7 @@ bool PerHandlerParser<SyntaxParseHandler>::finishFunction(
     return false;
   }
 
-  ScriptThingsVector& gcthings = funbox->functionStencil().get().gcThings;
-
+  ScriptThingsVector& gcthings = stencil.gcThings;
   if (!gcthings.reserve(ngcthings.value())) {
     return false;
   }
@@ -1816,20 +1824,11 @@ static bool CreateLazyScript(JSContext* cx, CompilationInfo& compilationInfo,
                              HandleFunction function, FunctionBox* funbox) {
   MOZ_ASSERT(function);
 
-  using ImmutableFlags = ImmutableScriptFlagsEnum;
-  ImmutableScriptFlags immutableFlags = funbox->immutableFlags();
-
-  // Compute the flags that frontend doesn't directly compute.
-  immutableFlags.setFlag(ImmutableFlags::HasMappedArgsObj,
-                         funbox->hasMappedArgsObj());
-  immutableFlags.setFlag(ImmutableFlags::IsLikelyConstructorWrapper,
-                         funbox->isLikelyConstructorWrapper());
-
   const ScriptThingsVector& gcthings = stencil.get().gcThings;
   Rooted<BaseScript*> lazy(
-      cx, BaseScript::CreateRawLazy(cx, gcthings.length(), function,
-                                    compilationInfo.sourceObject,
-                                    funbox->extent, immutableFlags));
+      cx, BaseScript::CreateRawLazy(
+              cx, gcthings.length(), function, compilationInfo.sourceObject,
+              funbox->extent, stencil.get().immutableFlags));
   if (!lazy) {
     return false;
   }
