@@ -41,9 +41,6 @@ add_task(async function test_old_actor() {
 const TEST_ERRORS_ACTOR_URL =
   "chrome://mochitests/content/browser/devtools/server/tests/browser/test-errors-actor.js";
 add_task(async function test_protocoljs_actor() {
-  // Flip this pref to ensure consistent error reporting for `throwsException`.
-  await pushPref("javascript.options.property_error_message_fix", true);
-
   DevToolsServer.init();
   DevToolsServer.registerAllActors();
 
@@ -71,9 +68,10 @@ add_task(async function test_protocoljs_actor() {
     ).test(e.message);
   });
   await Assert.rejects(testErrorsFront.throwsException(), e => {
+    // Not asserting the specific error message here, as it changes depending
+    // on the channel.
     return new RegExp(
-      'Protocol error \\(TypeError\\): can\'t access property "b",' +
-        ` this.a is undefined from: ${testErrorsFront.actorID} ` +
+      `Protocol error \\(TypeError\\):.* from: ${testErrorsFront.actorID} ` +
         `\\(${TEST_ERRORS_ACTOR_URL}:\\d+:\\d+\\)`
     ).test(e.message);
   });
