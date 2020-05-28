@@ -66,7 +66,8 @@
                 android:layout_marginRight="@dimen/migration_margin_horizontal_large"
                 android:lineHeight="24sp"
                 android:text="@string/migration_description"
-                android:textAppearance="@style/Body16TextStyle"
+                android:textColor="@color/primary_text_light_theme"
+                android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
                 app:layout_constraintBottom_toTopOf="@+id/migration_status_list"
                 app:layout_constraintLeft_toLeftOf="parent"
                 app:layout_constraintRight_toRightOf="parent"
@@ -121,7 +122,7 @@
             android:background="@android:color/transparent"
             android:text="@string/migration_updating_app_button_text"
             android:textSize="@dimen/migration_button_text_size"
-            android:textAppearance="@style/NeutralButton"
+            android:textAppearance="@style/Widget.MaterialComponents.Button.TextButton"
             tools:text="Updating Firefox…" />
 
     </LinearLayout>

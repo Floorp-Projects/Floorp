@@ -94,7 +94,7 @@ class MigrationProgressActivity : AbstractMigrationProgressActivity() {
             text = getString(R.string.migration_update_app_button, getString(R.string.app_name))
             setTextColor(ContextCompat.getColor(context, R.color.white_color))
         }
-        migration_button.setBackgroundResource(R.drawable.button_background)
+        migration_button.setBackgroundResource(R.drawable.migration_button_background)
         migration_button_progress_bar.visibility = View.INVISIBLE
         // Keep the results list up-to-date.
         statusAdapter.submitList(results.toItemList())
