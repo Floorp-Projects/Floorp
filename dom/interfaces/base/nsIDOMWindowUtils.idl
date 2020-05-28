@@ -1347,6 +1347,13 @@ interface nsIDOMWindowUtils : nsISupports {
   readonly attribute unsigned long currentMaxAudioChannels;
 
   /**
+   * Returns the mean round trip latency in seconds for the default input and
+   * output device, and the stddev of this latency, as a two element array when
+   * the Promise succeeds.
+   */
+  Promise defaultDevicesRoundTripLatency();
+
+  /**
    * Returns the preferred sample rate of the current audio device.
    */
   readonly attribute unsigned long currentPreferredSampleRate;
