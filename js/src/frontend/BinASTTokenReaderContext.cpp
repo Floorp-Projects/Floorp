@@ -1117,7 +1117,7 @@ JS::Result<Ok> BinASTTokenReaderContext::readTreeFooter() {
   for (size_t i = 0; i < numLazy; i++) {
     BINJS_MOZ_TRY_DECL(len, readVarU32<Compression::No>());
     // Use sourceEnd as temporary space to store length of each script.
-    lazyScripts_[i]->setPositions(0, len, 0, len);
+    lazyScripts_[i]->setEnd(len);
   }
 
   for (size_t i = 0; i < numLazy; i++) {
@@ -1126,8 +1126,8 @@ JS::Result<Ok> BinASTTokenReaderContext::readTreeFooter() {
 
     current_ += len;
 
-    lazyScripts_[0]->setPositions(begin, begin + len, begin, begin + len);
-    lazyScripts_[0]->setColumn(begin);
+    lazyScripts_[i]->setStart(begin, 0, begin);
+    lazyScripts_[i]->setEnd(begin + len);
   }
 
   return Ok();
