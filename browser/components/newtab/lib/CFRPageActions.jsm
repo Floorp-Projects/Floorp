@@ -38,7 +38,6 @@ const SUMO_BASE_URL = Services.urlFormatter.formatURLPref(
 );
 const ADDONS_API_URL =
   "https://services.addons.mozilla.org/api/v3/addons/addon";
-const ANIMATIONS_ENABLED_PREF = "toolkit.cosmeticAnimations.enabled";
 
 const DELAY_BEFORE_EXPAND_MS = 1000;
 const CATEGORY_ICONS = {
@@ -476,7 +475,7 @@ class PageAction {
 
     animationContainer.toggleAttribute(
       "animate",
-      Services.prefs.getBoolPref(ANIMATIONS_ENABLED_PREF, true)
+      !this.window.matchMedia("(prefers-reduced-motion: reduce)").matches
     );
     animationContainer.removeAttribute("paused");
 
