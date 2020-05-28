@@ -157,6 +157,7 @@ CERT_TimeChoiceTemplate @DATA@
 CERT_VerifyCertificate
 CERT_VerifySignedDataWithPublicKeyInfo
 DER_AsciiToTime_Util
+DER_DecodeTimeChoice
 DER_DecodeTimeChoice_Util
 DER_Encode
 DER_EncodeTimeChoice_Util
