@@ -618,9 +618,7 @@ void DOMIntersectionObserver::Update(Document* aDocument,
     // length of observer.thresholds if intersectionRatio is greater than or
     // equal to the last entry in observer.thresholds.
     int32_t thresholdIndex = -1;
-
-    // If not intersecting, we can just shortcut, as we know that the thresholds
-    // are always between 0 and 1.
+    // FIXME(emilio): Why the isIntersecting check?
     if (isIntersecting) {
       thresholdIndex = mThresholds.IndexOfFirstElementGt(intersectionRatio);
       if (thresholdIndex == 0) {
@@ -630,22 +628,18 @@ void DOMIntersectionObserver::Update(Document* aDocument,
         // neither Chrome nor the WPT tests expect this behavior, so treat these
         // two cases as one.
         //
-        // See https://github.com/w3c/IntersectionObserver/issues/432 about
-        // this.
+        // FIXME(emilio): Looks like a good candidate for a spec issue.
         thresholdIndex = -1;
       }
     }
 
     // Steps 2.10 - 2.15.
     if (target->UpdateIntersectionObservation(this, thresholdIndex)) {
-      // See https://github.com/w3c/IntersectionObserver/issues/432 about
-      // why we use thresholdIndex > 0 rather than isIntersecting for the
-      // entry's isIntersecting value.
       QueueIntersectionObserverEntry(
           target, time,
           origin == BrowsingContextOrigin::Similar ? Some(rootBounds)
                                                    : Nothing(),
-          targetRect, intersectionRect, thresholdIndex > 0, intersectionRatio);
+          targetRect, intersectionRect, intersectionRatio);
     }
   }
 }
@@ -653,7 +647,7 @@ void DOMIntersectionObserver::Update(Document* aDocument,
 void DOMIntersectionObserver::QueueIntersectionObserverEntry(
     Element* aTarget, DOMHighResTimeStamp time, const Maybe<nsRect>& aRootRect,
     const nsRect& aTargetRect, const Maybe<nsRect>& aIntersectionRect,
-    bool aIsIntersecting, double aIntersectionRatio) {
+    double aIntersectionRatio) {
   RefPtr<DOMRect> rootBounds;
   if (aRootRect.isSome()) {
     rootBounds = new DOMRect(this);
@@ -667,7 +661,7 @@ void DOMIntersectionObserver::QueueIntersectionObserverEntry(
   }
   RefPtr<DOMIntersectionObserverEntry> entry = new DOMIntersectionObserverEntry(
       this, time, rootBounds.forget(), boundingClientRect.forget(),
-      intersectionRect.forget(), aIsIntersecting, aTarget,
+      intersectionRect.forget(), aIntersectionRect.isSome(), aTarget,
       aIntersectionRatio);
   mQueuedEntries.AppendElement(entry.forget());
 }
