@@ -317,7 +317,16 @@ class WidgetKeyboardEvent : public WidgetInputEvent {
     const bool isEnterOrSpaceKey =
         mKeyNameIndex == KEY_NAME_INDEX_Enter || mKeyCode == NS_VK_SPACE;
     return (PseudoCharCode() || isEnterOrSpaceKey) &&
-           !isCombiningWithOperationKeys;
+           (!isCombiningWithOperationKeys ||
+            // ctrl-c/ctrl-x/ctrl-v is quite common shortcut for clipboard
+            // operation.
+            // XXXedgar, we have to find a better way to handle browser keyboard
+            // shortcut for user activation, instead of just ignoring all
+            // combinations, see bug 1641171.
+            ((mKeyCode == dom::KeyboardEvent_Binding::DOM_VK_C ||
+              mKeyCode == dom::KeyboardEvent_Binding::DOM_VK_V ||
+              mKeyCode == dom::KeyboardEvent_Binding::DOM_VK_X) &&
+             IsAccel()));
   }
 
   /**
