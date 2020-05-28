@@ -41,9 +41,8 @@ void HTMLDialogElement::Close(
   if (aReturnValue.WasPassed()) {
     SetReturnValue(aReturnValue.Value());
   }
-  ErrorResult ignored;
-  SetOpen(false, ignored);
-  ignored.SuppressException();
+
+  SetOpen(false, IgnoreErrors());
 
   RemoveFromTopLayerIfNeeded();
 
@@ -56,10 +55,8 @@ void HTMLDialogElement::Show() {
   if (Open()) {
     return;
   }
-  ErrorResult ignored;
-  SetOpen(true, ignored);
+  SetOpen(true, IgnoreErrors());
   FocusDialog();
-  ignored.SuppressException();
 }
 
 bool HTMLDialogElement::IsInTopLayer() const {
