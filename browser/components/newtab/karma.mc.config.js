@@ -161,6 +161,8 @@ module.exports = function(config) {
                         replace: true,
                       },
                     ], // require("babel-plugin-jsm-to-commonjs")
+                    "@babel/plugin-proposal-nullish-coalescing-operator",
+                    "@babel/plugin-proposal-optional-chaining",
                   ],
                 },
               },
