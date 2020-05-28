@@ -19,6 +19,8 @@
     <string name="no_open_tabs_header_2">No open tabs</string>
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">Your open tabs will be shown here.</string>
+    <!-- No Private Tabs Message Description -->
+    <string name="no_private_tabs_description">Your private tabs will be shown here.</string>
 
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s is produced by Mozilla.</string>

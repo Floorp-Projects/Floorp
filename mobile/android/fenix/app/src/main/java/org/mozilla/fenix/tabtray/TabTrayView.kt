@@ -145,13 +145,24 @@ class TabTrayView(
     }
 
     fun updateState(state: BrowserState) {
-        val hasNoTabs = if (isPrivateModeSelected) {
-            state.privateTabs.isEmpty()
-        } else {
-            state.normalTabs.isEmpty()
+        view.let {
+            val hasNoTabs = if (isPrivateModeSelected) {
+                state.privateTabs.isEmpty()
+            } else {
+                state.normalTabs.isEmpty()
+            }
+
+            view.tab_tray_empty_view.isVisible = hasNoTabs
+            if (hasNoTabs) {
+                view.tab_tray_empty_view.text = if (isPrivateModeSelected) {
+                    view.context.getString(R.string.no_private_tabs_description)
+                } else {
+                    view.context?.getString(R.string.no_open_tabs_description)
+                }
+            }
+
+            view.tab_tray_overflow.isVisible = !hasNoTabs
         }
-        view?.tab_tray_empty_view?.isVisible = hasNoTabs
-        view?.tab_tray_overflow?.isVisible = !hasNoTabs
     }
 
     override fun onTabClosed(tab: Tab) {
