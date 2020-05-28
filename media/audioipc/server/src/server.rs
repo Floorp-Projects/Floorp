@@ -531,7 +531,7 @@ impl CubebServer {
             ServerMessage::StreamGetInputLatency(stm_tok) => try_stream!(self, stm_tok)
                 .stream
                 .input_latency()
-                .map(ClientMessage::StreamLatency)
+                .map(ClientMessage::StreamInputLatency)
                 .unwrap_or_else(error),
 
             ServerMessage::StreamSetVolume(stm_tok, volume) => try_stream!(self, stm_tok)
