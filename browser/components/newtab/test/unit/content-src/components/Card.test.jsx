@@ -167,7 +167,7 @@ describe("<Card>", () => {
       "has active class"
     );
   });
-  it("should send SHOW_DOWNLOAD_FILE if we clicked on a download", () => {
+  it("should send OPEN_DOWNLOAD_FILE if we clicked on a download", () => {
     const downloadLink = {
       type: "download",
       url: "download.mov",
@@ -181,7 +181,7 @@ describe("<Card>", () => {
 
     assert.equal(
       DEFAULT_PROPS.dispatch.firstCall.args[0].type,
-      at.SHOW_DOWNLOAD_FILE
+      at.OPEN_DOWNLOAD_FILE
     );
     assert.deepEqual(
       DEFAULT_PROPS.dispatch.firstCall.args[0].data,
