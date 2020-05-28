@@ -3635,6 +3635,19 @@ double MediaTrackGraph::AudioOutputLatency() {
 
 double MediaTrackGraphImpl::CachedAudioOutputLatency() {
   MOZ_ASSERT(NS_IsMainThread());
+#ifdef XP_LINUX
+  if (mAudioOutputLatency == 0.0) {
+    // periodic latency gathering is not enabled on Linux/Android, get a
+    // number like this for now.
+    MonitorAutoLock lock(mMonitor);
+    if (CurrentDriver()->AsAudioCallbackDriver()) {
+      mAudioOutputLatency = CurrentDriver()
+                                ->AsAudioCallbackDriver()
+                                ->AudioOutputLatency()
+                                .ToSeconds();
+    }
+  }
+#endif
   return mAudioOutputLatency;
 }
 
@@ -3644,6 +3657,7 @@ double MediaTrackGraphImpl::CachedAudioInputLatency() {
 }
 
 void MediaTrackGraphImpl::UpdateAudioLatencies() {
+#if defined(XP_WIN) || defined(XP_MACOSX)
   RefPtr<MediaTrackGraphImpl> self = this;
   NS_DispatchBackgroundTask(
       NS_NewRunnableFunction("UpdateLatency", [self{std::move(self)}]() {
@@ -3657,6 +3671,7 @@ void MediaTrackGraphImpl::UpdateAudioLatencies() {
           self->mAudioOutputLatency = driver->AudioOutputLatency().ToSeconds();
         }
       }));
+#endif
 }
 
 double MediaTrackGraphImpl::AudioOutputLatencyGraphThread() {
