@@ -92,8 +92,7 @@ async function testSteps() {
 
     database.close();
 
-    // TODO: Fix IndexedDB to ignore unknown files as well
-    // createUnknownFileIn(`${originRelativePath}/idb`);
+    createUnknownFileIn(`${originRelativePath}/idb`);
     createUnknownFileIn(
       `${originRelativePath}/idb/2320029346mByDIdnedxe.files`
     );

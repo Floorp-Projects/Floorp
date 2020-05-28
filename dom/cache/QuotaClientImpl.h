@@ -134,8 +134,7 @@ class CacheQuotaClient final : public quota::Client {
                                      const nsACString& aGroup,
                                      const nsACString& aOrigin,
                                      const AtomicBool& aCanceled,
-                                     UsageInfo* aUsageInfo,
-                                     const bool aInitializing);
+                                     bool aInitializing, UsageInfo* aUsageInfo);
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CacheQuotaClient, override)
 
