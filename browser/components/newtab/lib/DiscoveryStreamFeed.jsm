@@ -1894,6 +1894,7 @@ getHardcodedLayout = isBasicLayout => ({
           properties: {
             items: isBasicLayout ? 3 : 21,
           },
+          cta_variant: "link",
           header: {
             title: "",
           },
