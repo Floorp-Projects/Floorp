@@ -805,6 +805,7 @@ void DocumentLoadListener::FinishReplacementChannelSetup(nsresult aResult) {
     if (NS_FAILED(aResult)) {
       mChannel->Cancel(aResult);
       mChannel->Resume();
+      DisconnectChildListeners(aResult, aResult);
       return;
     }
     ApplyPendingFunctions(mChannel);
