@@ -2219,6 +2219,50 @@ nsDOMWindowUtils::GetCurrentPreferredSampleRate(uint32_t* aRate) {
 }
 
 NS_IMETHODIMP
+nsDOMWindowUtils::DefaultDevicesRoundTripLatency(Promise** aOutPromise) {
+  NS_ENSURE_ARG_POINTER(aOutPromise);
+  *aOutPromise = nullptr;
+
+  nsCOMPtr<nsPIDOMWindowOuter> outer = do_QueryReferent(mWindow);
+  NS_ENSURE_STATE(outer);
+  nsCOMPtr<nsPIDOMWindowInner> inner = outer->GetCurrentInnerWindow();
+  NS_ENSURE_STATE(inner);
+
+  ErrorResult err;
+  RefPtr<Promise> promise = Promise::Create(inner->AsGlobal(), err);
+  if (NS_WARN_IF(err.Failed())) {
+    return err.StealNSResult();
+  }
+
+  NS_ADDREF(promise.get());
+  void* p = reinterpret_cast<void*>(promise.get());
+  NS_DispatchBackgroundTask(
+      NS_NewRunnableFunction("DefaultDevicesRoundTripLatency", [p]() {
+        double mean, stddev;
+        bool success =
+            CubebUtils::EstimatedRoundTripLatencyDefaultDevices(&mean, &stddev);
+
+        NS_DispatchToMainThread(NS_NewRunnableFunction(
+            "DefaultDevicesRoundTripLatency", [p, success, mean, stddev]() {
+              Promise* promise = reinterpret_cast<Promise*>(p);
+              if (!success) {
+                promise->MaybeReject(NS_ERROR_FAILURE);
+                NS_RELEASE(promise);
+                return;
+              }
+              nsTArray<double> a;
+              a.AppendElement(mean);
+              a.AppendElement(stddev);
+              promise->MaybeResolve(a);
+              NS_RELEASE(promise);
+            }));
+      }));
+
+  promise.forget(aOutPromise);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDOMWindowUtils::AudioDevices(uint16_t aSide, nsIArray** aDevices) {
   NS_ENSURE_ARG_POINTER(aDevices);
   NS_ENSURE_ARG((aSide == AUDIO_INPUT) || (aSide == AUDIO_OUTPUT));
