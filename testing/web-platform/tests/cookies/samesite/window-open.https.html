@@ -15,16 +15,12 @@
           return new Promise((resolve, reject) => {
             var w = window.open(origin + "/cookies/resources/postToParent.py");
 
-            var msgHandler = e => {
+            var msgHandler = t.step_func(e => {
               window.removeEventListener("message", msgHandler);
               w.close();
-              try {
-                getSameSiteVerifier()(expectedStatus, value, e.data, DomSameSiteStatus.SAME_SITE);
-                resolve("Popup received the cookie.");
-              } catch (e) {
-                reject(e);
-              }
-            };
+              getSameSiteVerifier()(expectedStatus, value, e.data, DomSameSiteStatus.SAME_SITE);
+              resolve("Popup received the cookie.");
+            });
             window.addEventListener("message", msgHandler);
 
             if (!w)
