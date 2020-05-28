@@ -14,7 +14,7 @@
 
 @implementation mozHeadingAccessible
 
-- (NSString*)title {
+- (NSString*)moxTitle {
   nsAutoString title;
   if (Accessible* acc = mGeckoAccessible.AsAccessible()) {
     mozilla::ErrorResult rv;
@@ -28,7 +28,7 @@
   return nsCocoaUtils::ToNSString(title);
 }
 
-- (id)value {
+- (id)moxValue {
   GroupPos groupPos;
   if (Accessible* acc = mGeckoAccessible.AsAccessible()) {
     groupPos = acc->GroupPosition();
@@ -85,7 +85,7 @@
   return @"";
 }
 
-- (NSString*)value {
+- (NSString*)moxValue {
   return @"";
 }
 
@@ -103,7 +103,7 @@
   return [NSURL URLWithString:urlString];
 }
 
-- (NSString*)role {
+- (NSString*)moxRole {
   // If this is not LINKED, just expose this as a generic group accessible.
   // Chrome and Safari expose this as a childless AXStaticText, but
   // the HTML Accessibility API Mappings spec says this should be an AXGroup.
@@ -111,7 +111,7 @@
     return NSAccessibilityGroupRole;
   }
 
-  return [super role];
+  return [super moxRole];
 }
 
 @end

@@ -82,7 +82,7 @@ enum CheckboxValue {
 @end
 
 @implementation mozPopupButtonAccessible
-- (NSString*)title {
+- (NSString*)moxTitle {
   // Popup buttons don't have titles.
   return @"";
 }
@@ -116,13 +116,13 @@ enum CheckboxValue {
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
-- (NSArray*)children {
+- (NSArray*)moxChildren {
   if ([self stateWithMask:states::EXPANDED] == 0) {
     // If the popup button is collapsed don't return its children.
     return @[];
   }
 
-  return [super children];
+  return [super moxChildren];
 }
 
 - (void)stateChanged:(uint64_t)state isEnabled:(BOOL)enabled {
@@ -170,7 +170,7 @@ enum CheckboxValue {
   return kUnchecked;
 }
 
-- (id)value {
+- (id)moxValue {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
   return [NSNumber numberWithInt:[self isChecked]];
@@ -196,7 +196,7 @@ enum CheckboxValue {
   return [super accessibilityArrayAttributeCount:attribute];
 }
 
-- (NSArray*)children {
+- (NSArray*)moxChildren {
   if (!mGeckoAccessible.AsAccessible()) return nil;
 
   nsDeckFrame* deckFrame = do_QueryFrame(mGeckoAccessible.AsAccessible()->GetFrame());
