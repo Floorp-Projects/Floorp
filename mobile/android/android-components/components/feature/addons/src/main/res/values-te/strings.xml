@@ -1,9 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- The version on of add-on. -->
+    <string name="mozac_feature_addons_version">వెర్షన్</string>
+    <!-- The authors of an add-on. -->
+    <string name="mozac_feature_addons_authors">రచయితలు</string>
+    <!-- The last date that the add-on was updated. -->
+    <string name="mozac_feature_addons_last_updated">చివరి మార్పు</string>
+    <!-- The developer website (Homepage) of the add-on. -->
+    <string name="mozac_feature_addons_home_page">ముంగిలిపేజీ</string>
+    <!-- A link where users can find more information about add-ons permissions. -->
+    <string name="mozac_feature_addons_learn_more">అనుమతుల గురించి మరింత తెలుసుకోండి</string>
+    <!-- The rating of the add-on. -->
+    <string name="mozac_feature_addons_rating">రేటింగు</string>
     <!-- The settings of the add-on. -->
     <string name="mozac_feature_addons_settings">అమరికలు</string>
     <!-- Displays a page with all the details of an add-on. -->
     <string name="mozac_feature_addons_details">వివరాలు</string>
     <!-- Displays a page with all the permissions of an add-on. -->
     <string name="mozac_feature_addons_permissions">అనుమతులు</string>
+    <!-- This is button that remove (uninstall an add-on). -->
+    <string name="mozac_feature_addons_remove">తీసివేయి</string>
+    <!-- This is a button to add (install) an add-on . -->
+    <string name="mozac_feature_addons_permissions_dialog_add">చేర్చు</string>
+    <!-- This is a button to cancel the add-on installation . -->
+    <string name="mozac_feature_addons_permissions_dialog_cancel">రద్దుచేయి</string>
+    <!-- The label of the allow button, this will be shown to the user when an add-on needs new permissions, with the button the user will indicate that they want to accept the new permissions and update the add-on-->
+    <string name="mozac_feature_addons_updater_notification_allow_button">అనుమతించు</string>
+    <!-- The label of the deny button on a notification, this will be shown to the user when an add-on needs new permissions. Indicates the user denies the new permissions and prevents the add-on from be updated-->
+    <string name="mozac_feature_addons_updater_notification_deny_button">తిరస్కరించు</string>
+    <!-- Text link to a sumo page for learning more about unsupported add-ons. -->
+    <string name="mozac_feature_addons_unsupported_learn_more">ఇంకా తెలుసుకోండి</string>
     </resources>
