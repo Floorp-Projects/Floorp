@@ -102,17 +102,7 @@ using namespace mozilla::a11y;
 }
 
 - (NSArray*)additionalAccessibilityAttributeNames {
-  NSMutableArray* additional = [NSMutableArray array];
-  [additional addObject:NSAccessibilityDOMIdentifierAttribute];
-  switch (mRole) {
-    case roles::SUMMARY:
-      [additional addObject:NSAccessibilityExpandedAttribute];
-      break;
-    default:
-      break;
-  }
-
-  return additional;
+  return @[];
 }
 
 - (NSArray*)accessibilityAttributeNames {
@@ -233,9 +223,6 @@ static const uint64_t kCacheInitialized = ((uint64_t)0x1) << 63;
 #endif
 
   if ([attribute isEqualToString:NSAccessibilityChildrenAttribute]) return [self children];
-  if ([attribute isEqualToString:NSAccessibilityExpandedAttribute]) {
-    return [NSNumber numberWithBool:[self stateWithMask:states::EXPANDED] != 0];
-  }
   if ([attribute isEqualToString:NSAccessibilityParentAttribute]) return [self parent];
 
 #ifdef DEBUG_hakan
