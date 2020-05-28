@@ -261,14 +261,14 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                             }
 
                             viewLifecycleOwner.lifecycleScope.allowUndo(
-                                requireView(),
+                                tabTrayDialog.requireView(),
                                 snackbarMessage,
                                 getString(R.string.snackbar_deleted_undo),
                                 {
                                     sessionManager.restore(snapshot)
                                 },
                                 operation = { },
-                                anchorView = view.tabs_header
+                                elevation = SNACKBAR_ELEVATION
                             )
                         }
 
@@ -1072,5 +1072,6 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
         private const val REQUEST_CODE_DOWNLOAD_PERMISSIONS = 1
         private const val REQUEST_CODE_PROMPT_PERMISSIONS = 2
         private const val REQUEST_CODE_APP_PERMISSIONS = 3
+        private const val SNACKBAR_ELEVATION = 80f
     }
 }
