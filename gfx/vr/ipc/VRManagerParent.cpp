@@ -125,19 +125,19 @@ bool VRManagerParent::CreateForGPUProcess(
 
 /*static*/
 void VRManagerParent::Shutdown() {
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(
+      CompositorThread(),
+      "Shutdown() must gets called before the compositor thread is shutdown");
   ReleaseVRManagerParentSingleton();
   CompositorThread()->Dispatch(NS_NewRunnableFunction(
       "VRManagerParent::Shutdown",
-      []() -> void { VRManagerParent::ShutdownInternal(); }));
-}
-
-/*static*/
-void VRManagerParent::ShutdownInternal() {
-  VRManager* vm = VRManager::MaybeGet();
-  if (!vm) {
-    return;
-  }
-  vm->ShutdownVRManagerParents();
+      [vm = RefPtr<VRManager>(VRManager::MaybeGet())]() -> void {
+        if (!vm) {
+          return;
+        }
+        vm->ShutdownVRManagerParents();
+      }));
 }
 
 void VRManagerParent::ActorDestroy(ActorDestroyReason why) {}
