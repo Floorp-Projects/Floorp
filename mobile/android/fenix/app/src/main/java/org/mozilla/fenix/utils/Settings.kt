@@ -208,6 +208,18 @@ class Settings private constructor(
         ).apply()
     }
 
+    val isInSearchWidgetExperiment by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_is_in_search_widget_experiment),
+        default = false
+    )
+
+    fun setSearchWidgetExperiment(value: Boolean) {
+        preferences.edit().putBoolean(
+            appContext.getPreferenceKey(R.string.pref_key_is_in_search_widget_experiment),
+            value
+        ).apply()
+    }
+
     var defaultSearchEngineName by stringPreference(
         appContext.getPreferenceKey(R.string.pref_key_search_engine),
         default = ""

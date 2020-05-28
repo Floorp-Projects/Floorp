@@ -23,11 +23,7 @@ object SearchWidgetCreator {
     @TargetApi(Build.VERSION_CODES.O)
     fun createSearchWidget(context: Context): Boolean {
         val appWidgetManager: AppWidgetManager = context.getSystemService(AppWidgetManager::class.java)
-        if (!appWidgetManager.isRequestPinAppWidgetSupported) { return false }
-
         val myProvider = ComponentName(context, SearchWidgetProvider::class.java)
-        appWidgetManager.requestPinAppWidget(myProvider, null, null)
-
-        return true
+        return appWidgetManager.requestPinAppWidget(myProvider, null, null)
     }
 }

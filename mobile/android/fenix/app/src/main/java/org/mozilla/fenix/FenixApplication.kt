@@ -23,6 +23,7 @@ import mozilla.components.browser.session.Session
 import mozilla.components.concept.push.PushProcessor
 import mozilla.components.feature.addons.update.GlobalAddonDependencyProvider
 import mozilla.components.lib.crash.CrashReporter
+import mozilla.components.service.experiments.Experiments
 import mozilla.components.service.glean.Glean
 import mozilla.components.service.glean.config.Configuration
 import mozilla.components.service.glean.net.ConceptFetchHttpUploader
@@ -162,9 +163,30 @@ open class FenixApplication : LocaleAwareApplication() {
         //    runStorageMaintenance()
         // }
 
+        val taskQueue = components.performance.visualCompletenessQueue
         registerActivityLifecycleCallbacks(
-            PerformanceActivityLifecycleCallbacks(components.performance.visualCompletenessQueue)
+            PerformanceActivityLifecycleCallbacks(taskQueue)
         )
+
+        // Enable the service-experiments component to be initialized after visual completeness
+        // for performance wins.
+        if (settings().isExperimentationEnabled && Config.channel.isReleaseOrBeta) {
+            taskQueue.runIfReadyOrQueue {
+                Experiments.initialize(
+                    applicationContext = applicationContext,
+                    configuration = mozilla.components.service.experiments.Configuration(
+                        httpClient = components.core.client,
+                        kintoEndpoint = KINTO_ENDPOINT_PROD
+                    )
+                )
+            }
+        } else {
+            // We should make a better way to opt out for when we have more experiments
+            // See https://github.com/mozilla-mobile/fenix/issues/6278
+            ExperimentsManager.optOutSearchWidgetExperiment(this)
+        }
+
+        ExperimentsManager.initSearchWidgetExperiment(this)
 
         components.performance.visualCompletenessQueue.runIfReadyOrQueue {
             GlobalScope.launch(Dispatchers.IO) {
@@ -393,5 +415,9 @@ open class FenixApplication : LocaleAwareApplication() {
         // https://issuetracker.google.com/issues/143570309#comment3
         applicationContext.resources.configuration.uiMode = config.uiMode
         super.onConfigurationChanged(config)
+    }
+
+    companion object {
+        private const val KINTO_ENDPOINT_PROD = "https://firefox.settings.services.mozilla.com/v1"
     }
 }

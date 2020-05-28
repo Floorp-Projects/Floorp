@@ -115,6 +115,8 @@ object Deps {
     const val mozilla_feature_webcompat = "org.mozilla.components:feature-webcompat:${Versions.mozilla_android_components}"
     const val mozilla_feature_webnotifications = "org.mozilla.components:feature-webnotifications:${Versions.mozilla_android_components}"
 
+    const val mozilla_service_experiments =
+        "org.mozilla.components:service-experiments:${Versions.mozilla_android_components}"
     const val mozilla_service_sync_logins =
         "org.mozilla.components:service-sync-logins:${Versions.mozilla_android_components}"
     const val mozilla_service_firefox_accounts = "org.mozilla.components:service-firefox-accounts:${Versions.mozilla_android_components}"

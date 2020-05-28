@@ -177,5 +177,6 @@
     <string name="pref_key_search_widget_cfr_display_count" translatable="false">pref_key_search_widget_cfr_display_count</string>
     <string name="pref_key_search_widget_cfr_dismiss_count" translatable="false">pref_key_search_widget_cfr_dismiss_count</string>
     <string name="pref_key_search_widget_cfr_manually_dismissed" translatable="false">pref_key_search_widget_cfr_manually_dismissed</string>
+    <string name="pref_key_is_in_search_widget_experiment" translatable="false">pref_key_is_in_search_widget_experiment</string>
     <string name="pref_key_show_search_widget_cfr" translatable="false">pref_key_show_search_widget_cfr</string>
 </resources>

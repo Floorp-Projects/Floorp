@@ -17,7 +17,6 @@ import androidx.core.view.marginTop
 import kotlinx.android.synthetic.main.search_widget_cfr.view.*
 import kotlinx.android.synthetic.main.tracking_protection_onboarding_popup.view.drop_down_triangle
 import kotlinx.android.synthetic.main.tracking_protection_onboarding_popup.view.pop_up_triangle
-import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.SearchWidgetCreator
 import org.mozilla.fenix.components.metrics.Event
@@ -34,7 +33,8 @@ class SearchWidgetCFR(
 ) {
 
     fun displayIfNecessary() {
-        if (!context.settings().shouldDisplaySearchWidgetCFR() || !FeatureFlags.searchWidgetCFR) { return }
+        if (!context.settings().isInSearchWidgetExperiment ||
+            !context.settings().shouldDisplaySearchWidgetCFR()) { return }
         showSearchWidgetCFR()
     }
 
