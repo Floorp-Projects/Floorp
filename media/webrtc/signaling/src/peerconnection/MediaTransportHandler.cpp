@@ -1216,9 +1216,8 @@ RefPtr<TransportFlow> MediaTransportHandlerSTS::CreateTransportFlow(
   // Always permits negotiation of the confidential mode.
   // Only allow non-confidential (which is an allowed default),
   // if we aren't confidential.
-  std::set<std::string> alpn;
-  std::string alpnDefault = "";
-  alpn.insert("c-webrtc");
+  std::set<std::string> alpn = {"c-webrtc"};
+  std::string alpnDefault;
   if (!aPrivacyRequested) {
     alpnDefault = "webrtc";
     alpn.insert(alpnDefault);
