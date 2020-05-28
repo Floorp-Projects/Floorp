@@ -8,6 +8,7 @@
 #ifndef mozilla_ipc_ProtocolUtils_h
 #define mozilla_ipc_ProtocolUtils_h 1
 
+#include "base/id_map.h"
 #include "base/process.h"
 #include "base/process_util.h"
 #include "chrome/common/ipc_message_utils.h"
@@ -31,9 +32,6 @@
 #include "mozilla/Scoped.h"
 #include "mozilla/UniquePtr.h"
 #include "MainThreadUtils.h"
-
-#include "nsDataHashtable.h"
-#include "nsHashKeys.h"
 
 #if defined(ANDROID) && defined(DEBUG)
 #  include <android/log.h>
@@ -519,9 +517,6 @@ class IToplevelProtocol : public IProtocol {
   base::ProcessId OtherPidMaybeInvalid() const { return mOtherPid; }
 
   int32_t NextId();
-
-  template <class T>
-  using IDMap = nsDataHashtable<nsUint32HashKey, T>;
 
   base::ProcessId mOtherPid;
 
