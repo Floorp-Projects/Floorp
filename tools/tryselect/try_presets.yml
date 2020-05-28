@@ -131,3 +131,15 @@ webrender:
     query:
         - "!talos !raptor !shippable !asan '-qr"
         - "^webrender-"
+
+webrender-perf:
+    selector: fuzzy
+    description: >-
+        Runs the performance tests relevant to WebRender.
+    query:
+        - "'-qr !fis-e10s 'svgr"
+        - "'-qr !fis-e10s 'g1"
+        - "'-qr !fis-e10s 'g4"
+        - "'-qr !fis-e10s 'tp5"
+        - "'-qr !fis-e10s 'talos-webgl"
+        - "'-qr !fis-e10s 'motionmark-animometer"
