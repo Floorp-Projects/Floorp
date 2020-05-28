@@ -8,6 +8,7 @@ import io
 import os
 import posixpath
 import re
+import six
 import sys
 from subprocess import Popen, PIPE
 
@@ -379,7 +380,10 @@ def _parse_test_header(fullpath, testcase, xul_tester):
     This looks a bit weird.  The reason is that it needs to be efficient, since
     it has to be done on every test
     """
-    fp = io.open(fullpath, 'r', encoding='utf-8')
+    if six.PY3:
+        fp = open(fullpath, encoding='utf-8')
+    else:
+        fp = open(fullpath)
     try:
         buf = fp.read(512)
     finally:
