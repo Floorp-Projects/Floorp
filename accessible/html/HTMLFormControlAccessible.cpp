@@ -70,6 +70,12 @@ uint64_t HTMLRadioButtonAccessible::NativeState() const {
 
 void HTMLRadioButtonAccessible::GetPositionAndSizeInternal(int32_t* aPosInSet,
                                                            int32_t* aSetSize) {
+  Unused << ComputeGroupAttributes(aPosInSet, aSetSize);
+}
+
+Relation HTMLRadioButtonAccessible::ComputeGroupAttributes(
+    int32_t* aPosInSet, int32_t* aSetSize) const {
+  Relation rel = Relation();
   int32_t namespaceId = mContent->NodeInfo()->NamespaceID();
   nsAutoString tagName;
   mContent->NodeInfo()->GetName(tagName);
@@ -87,7 +93,7 @@ void HTMLRadioButtonAccessible::GetPositionAndSizeInternal(int32_t* aPosInSet,
     inputElms = NS_GetContentList(formElm, namespaceId, tagName);
   else
     inputElms = NS_GetContentList(mContent->OwnerDoc(), namespaceId, tagName);
-  NS_ENSURE_TRUE_VOID(inputElms);
+  NS_ENSURE_TRUE(inputElms, rel);
 
   uint32_t inputCount = inputElms->Length(false);
 
@@ -103,12 +109,23 @@ void HTMLRadioButtonAccessible::GetPositionAndSizeInternal(int32_t* aPosInSet,
                                            name, eCaseMatters) &&
         mDoc->HasAccessible(inputElm)) {
       count++;
+      rel.AppendTarget(mDoc->GetAccessible(inputElm));
       if (inputElm == mContent) indexOf = count;
     }
   }
 
   *aPosInSet = indexOf;
   *aSetSize = count;
+  return rel;
+}
+
+Relation HTMLRadioButtonAccessible::RelationByType(RelationType aType) const {
+  if (aType == RelationType::MEMBER_OF) {
+    int32_t unusedPos, unusedSetSize;
+    return ComputeGroupAttributes(&unusedPos, &unusedSetSize);
+  }
+
+  return Accessible::RelationByType(aType);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
