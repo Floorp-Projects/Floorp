@@ -221,6 +221,9 @@ open class HomeActivity : LocaleAwareAppCompatActivity() {
         }.asView()
         TabsTray::class.java.name -> {
             val layout = LinearLayoutManager(context)
+            layout.reverseLayout = true
+            layout.stackFromEnd = true
+
             val adapter = TabsAdapter { parentView, _ ->
                 TabTrayViewHolder(
                     LayoutInflater.from(this).inflate(
