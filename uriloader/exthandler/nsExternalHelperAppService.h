@@ -117,9 +117,11 @@ class nsExternalHelperAppService : public nsIExternalHelperAppService,
    * MIMEInfo. Otherwise, it will return an error and the MIMEInfo
    * will be untouched.
    * @param aContentType The type to search for.
+   * @param aOverwriteDescription  Whether to overwrite the description
    * @param aMIMEInfo    [inout] The mime info, if found
    */
   nsresult FillMIMEInfoForMimeTypeFromExtras(const nsACString& aContentType,
+                                             bool aOverwriteDescription,
                                              nsIMIMEInfo* aMIMEInfo);
   /**
    * Searches the "extra" array of MIMEInfo objects for an object
