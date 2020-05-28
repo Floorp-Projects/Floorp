@@ -2085,7 +2085,7 @@ LayoutDeviceIntRect nsWindow::GetClientBounds() {
 void nsWindow::UpdateClientOffsetFromFrameExtents() {
   AUTO_PROFILER_LABEL("nsWindow::UpdateClientOffsetFromFrameExtents", OTHER);
 
-  if (mCSDSupportLevel == CSD_SUPPORT_CLIENT) {
+  if (mCSDSupportLevel == CSD_SUPPORT_CLIENT && mDrawInTitlebar) {
     return;
   }
 
