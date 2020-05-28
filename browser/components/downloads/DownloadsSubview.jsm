@@ -10,36 +10,15 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "AppConstants",
-  "resource://gre/modules/AppConstants.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "Downloads",
-  "resource://gre/modules/Downloads.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "DownloadsCommon",
-  "resource:///modules/DownloadsCommon.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "DownloadsViewUI",
-  "resource:///modules/DownloadsViewUI.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "FileUtils",
-  "resource://gre/modules/FileUtils.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "PlacesUtils",
-  "resource://gre/modules/PlacesUtils.jsm"
-);
+XPCOMUtils.defineLazyModuleGetters(this, {
+  AppConstants: "resource://gre/modules/AppConstants.jsm",
+  BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
+  Downloads: "resource://gre/modules/Downloads.jsm",
+  DownloadsCommon: "resource:///modules/DownloadsCommon.jsm",
+  DownloadsViewUI: "resource:///modules/DownloadsViewUI.jsm",
+  FileUtils: "resource://gre/modules/FileUtils.jsm",
+  PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
+});
 
 let gPanelViewInstances = new WeakMap();
 const kRefreshBatchSize = 10;
@@ -392,7 +371,7 @@ class DownloadsSubview extends DownloadsViewUI.BaseView {
    * @param {DOMMouseEvent} event
    */
   static onClick(event) {
-    // Middle clicks fall through and are regarded as left clicks.
+    // Handle left & middle clicks with any key modifiers
     if (event.button > 1) {
       return;
     }
@@ -407,6 +386,7 @@ class DownloadsSubview extends DownloadsViewUI.BaseView {
     let item = button.closest(".subviewbutton.download");
 
     let command = "downloadsCmd_open";
+    let openWhere = "current";
     if (button.classList.contains("action-button")) {
       command = item.hasAttribute("canShow")
         ? "downloadsCmd_show"
@@ -419,9 +399,17 @@ class DownloadsSubview extends DownloadsViewUI.BaseView {
       }
       item = button.parentNode._anchorNode;
     }
-
+    if (
+      command == "downloadsCmd_open" &&
+      (event.shiftKey || event.ctrlKey || event.metaKey || event.button == 1)
+    ) {
+      // We adjust the command for supported modifiers to suggest where the download may
+      // be opened.
+      let topWindow = BrowserWindowTracker.getTopWindow();
+      openWhere = topWindow.whereToOpenLink(event, false, true);
+    }
     if (item && item._shell.isCommandEnabled(command)) {
-      item._shell[command]();
+      item._shell[command](openWhere);
     }
   }
 }
