@@ -45,7 +45,7 @@ class Analytics(
                 BuildConfig.SENTRY_TOKEN,
                 tags = mapOf("geckoview" to "$MOZ_APP_VERSION-$MOZ_APP_BUILDID"),
                 environment = BuildConfig.BUILD_TYPE,
-                sendEventForNativeCrashes = true,
+                sendEventForNativeCrashes = false, // Do not send native crashes to Sentry
                 sentryProjectUrl = getSentryProjectUrl()
             )
 
