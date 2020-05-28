@@ -1820,15 +1820,16 @@ bool PerHandlerParser<SyntaxParseHandler>::finishFunction(
 }
 
 static bool CreateLazyScript(JSContext* cx, CompilationInfo& compilationInfo,
-                             Handle<ScriptStencil> stencil,
-                             HandleFunction function, FunctionBox* funbox) {
-  MOZ_ASSERT(function);
+                             FunctionBox* funbox) {
+  RootedFunction function(cx, funbox->function());
 
-  const ScriptThingsVector& gcthings = stencil.get().gcThings;
+  ScriptStencil& stencil = funbox->functionStencil().get();
+  const ScriptThingsVector& gcthings = stencil.gcThings;
+
   Rooted<BaseScript*> lazy(
-      cx, BaseScript::CreateRawLazy(
-              cx, gcthings.length(), function, compilationInfo.sourceObject,
-              funbox->extent, stencil.get().immutableFlags));
+      cx, BaseScript::CreateRawLazy(cx, gcthings.length(), function,
+                                    compilationInfo.sourceObject,
+                                    funbox->extent, stencil.immutableFlags));
   if (!lazy) {
     return false;
   }
@@ -1836,14 +1837,6 @@ static bool CreateLazyScript(JSContext* cx, CompilationInfo& compilationInfo,
   if (!EmitScriptThingsVector(cx, compilationInfo, gcthings,
                               lazy->gcthingsForInit())) {
     return false;
-  }
-
-  // Connect inner functions to this lazy script now.
-  for (auto inner : lazy->gcthings()) {
-    if (!inner.is<JSObject>()) {
-      continue;
-    }
-    inner.as<JSObject>().as<JSFunction>().setEnclosingLazyScript(lazy);
   }
 
   function->initScript(lazy);
@@ -1864,12 +1857,7 @@ static bool MaybePublishFunction(JSContext* cx,
   }
   funbox->initializeFunction(fun);
 
-  if (funbox->emitBytecode || funbox->isAsmJSModule()) {
-    return true;
-  }
-
-  return CreateLazyScript(cx, compilationInfo, funbox->functionStencil(), fun,
-                          funbox);
+  return true;
 }
 
 static bool PublishDeferredFunctions(JSContext* cx,
@@ -1927,22 +1915,32 @@ static bool InstantiateScriptStencils(JSContext* cx,
                                       CompilationInfo& compilationInfo,
                                       FunctionBox* listHead) {
   for (FunctionBox* funbox = listHead; funbox; funbox = funbox->traceLink()) {
-    if (!funbox->emitBytecode) {
-      continue;
-    }
+    if (funbox->emitBytecode) {
+      // If the function was not referenced by enclosing script's bytecode, we
+      // do not generate a BaseScript for it. For example, `(function(){});`.
+      if (!funbox->wasEmitted) {
+        continue;
+      }
 
-    // If the function was not referenced by enclosing script's bytecode, we do
-    // not generate a BaseScript for it. For example, `(function(){});`.
-    if (!funbox->wasEmitted) {
-      continue;
-    }
+      RootedScript script(cx,
+                          JSScript::fromStencil(cx, compilationInfo,
+                                                funbox->functionStencil().get(),
+                                                funbox->extent));
+      if (!script) {
+        return false;
+      }
+    } else if (funbox->isAsmJSModule()) {
+      MOZ_ASSERT(funbox->function()->isAsmJSNative());
+    } else if (funbox->function()->isIncomplete()) {
+      // Lazy functions are generally only allocated in the initial parse. The
+      // exception to this is BinAST which does not allocate lazy functions
+      // inside lazy functions until delazification occurs.
+      MOZ_ASSERT(compilationInfo.lazy == nullptr ||
+                 compilationInfo.lazy->isBinAST());
 
-    RootedScript script(
-        cx,
-        JSScript::fromStencil(cx, compilationInfo,
-                              funbox->functionStencil().get(), funbox->extent));
-    if (!script) {
-      return false;
+      if (!CreateLazyScript(cx, compilationInfo, funbox)) {
+        return false;
+      }
     }
   }
 
@@ -1967,6 +1965,44 @@ static bool InstantiateTopLevel(JSContext* cx,
   return !!compilationInfo.script;
 }
 
+// When a function is first referenced by enclosing script's bytecode, we need
+// to update it with information determined by the BytecodeEmitter. This applies
+// to both initial and delazification parses. The functions being update may or
+// may not have bytecode at this point.
+static void UpdateEmittedInnerFunctions(FunctionBox* listHead) {
+  for (FunctionBox* funbox = listHead; funbox; funbox = funbox->traceLink()) {
+    if (!funbox->wasEmitted) {
+      continue;
+    }
+
+    funbox->finish();
+  }
+}
+
+// During initial parse we must link lazy-functions-inside-lazy-functions to
+// their enclosing script.
+static void LinkEnclosingLazyScript(FunctionBox* listHead) {
+  for (FunctionBox* funbox = listHead; funbox; funbox = funbox->traceLink()) {
+    if (!funbox->isInterpreted()) {
+      continue;
+    }
+
+    if (funbox->emitBytecode) {
+      continue;
+    }
+
+    BaseScript* script = funbox->function()->baseScript();
+    MOZ_ASSERT(!script->hasBytecode());
+
+    for (auto inner : script->gcthings()) {
+      if (!inner.is<JSObject>()) {
+        continue;
+      }
+      inner.as<JSObject>().as<JSFunction>().setEnclosingLazyScript(script);
+    }
+  }
+}
+
 bool CompilationInfo::instantiateStencils() {
   if (!PublishDeferredFunctions(cx, *this, traceListHead)) {
     return false;
@@ -1986,11 +2022,10 @@ bool CompilationInfo::instantiateStencils() {
 
   // Must be infallible from here forward.
 
-  for (FunctionBox* funbox = traceListHead; funbox;
-       funbox = funbox->traceLink()) {
-    if (funbox->wasEmitted) {
-      funbox->finish();
-    }
+  UpdateEmittedInnerFunctions(traceListHead);
+
+  if (lazy == nullptr) {
+    LinkEnclosingLazyScript(traceListHead);
   }
 
   return true;
