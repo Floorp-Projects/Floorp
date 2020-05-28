@@ -4,7 +4,7 @@
  */
 
 /**
- * This test is mainly to verify that initTemporaryStorage,
+ * This test is mainly to verify that init, initTemporaryStorage,
  * initStorageAndOrigin, getUsageForPrincipal and clearStoragesForPrincipal are
  * able to ignore unknown files and directories in the storage/default
  * directory and its subdirectories.
@@ -13,41 +13,71 @@ async function testSteps() {
   const principal = getPrincipal("http://example.com");
 
   async function testFunctionality(testFunction) {
-    info("Clearing");
+    const modes = [
+      {
+        initializedStorage: false,
+        initializedTemporaryStorage: false,
+      },
+      {
+        initializedStorage: true,
+        initializedTemporaryStorage: false,
+      },
+      {
+        initializedStorage: true,
+        initializedTemporaryStorage: true,
+      },
+    ];
 
-    let request = clear();
-    await requestFinished(request);
+    for (const mode of modes) {
+      info("Clearing");
 
-    info("Installing package");
+      let request = clear();
+      await requestFinished(request);
 
-    // The profile contains unknown files and unknown directories placed across
-    // the repositories, origin directories and client directories. The file
-    // make_unknownFiles.js was run locally, specifically it was temporarily
-    // enabled in xpcshell.ini and then executed:
-    // mach test --interactive dom/quota/test/xpcshell/make_unknownFiles.js
-    installPackage("unknownFiles_profile");
+      info("Installing package");
 
-    info("Initializing storage");
+      // The profile contains unknown files and unknown directories placed
+      // across the repositories, origin directories and client directories.
+      // The file make_unknownFiles.js was run locally, specifically it was
+      // temporarily enabled in xpcshell.ini and then executed:
+      // mach test --interactive dom/quota/test/xpcshell/make_unknownFiles.js
+      installPackage("unknownFiles_profile");
 
-    request = init();
-    await requestFinished(request);
+      if (mode.initializedStorage) {
+        info("Initializing storage");
 
-    await testFunction();
+        request = init();
+        await requestFinished(request);
+      }
 
-    info("Clearing");
+      if (mode.initializedTemporaryStorage) {
+        info("Initializing temporary storage");
 
-    request = clear();
-    await requestFinished(request);
+        request = initTemporaryStorage();
+        await requestFinished(request);
+      }
+
+      info("Verifying initialization status");
+
+      await verifyInitializationStatus(
+        mode.initializedStorage,
+        mode.initializedTemporaryStorage
+      );
+
+      await testFunction(
+        mode.initializedStorage,
+        mode.initializedTemporaryStorage
+      );
+
+      info("Clearing");
+
+      request = clear();
+      await requestFinished(request);
+    }
   }
 
-  info("Testing initTemporaryStorage functionality");
-
-  await testFunctionality(async function() {
-    info("Initializing temporary storage");
-
-    request = initTemporaryStorage();
-    await requestFinished(request);
-  });
+  // init and initTemporaryStorage functionality is tested in the
+  // testFunctionality function as part of the multi mode testing
 
   info("Testing initStorageAndOrigin functionality");
 
