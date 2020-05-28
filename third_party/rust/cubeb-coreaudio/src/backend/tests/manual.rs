@@ -1,6 +1,6 @@
 use super::utils::{
-    test_get_default_device, test_get_default_raw_stream, test_get_devices_in_scope,
-    test_ops_context_operation, test_ops_stream_operation, Scope, StreamType, TestDeviceSwitcher,
+    test_get_devices_in_scope, test_ops_context_operation, test_ops_stream_operation, Scope,
+    StreamType, TestDeviceSwitcher,
 };
 use super::*;
 use std::io;
@@ -114,106 +114,6 @@ fn test_switch_output_device() {
 
 #[ignore]
 #[test]
-fn test_add_then_remove_listeners() {
-    extern "C" fn callback(
-        id: AudioObjectID,
-        number_of_addresses: u32,
-        addresses: *const AudioObjectPropertyAddress,
-        data: *mut c_void,
-    ) -> OSStatus {
-        println!("device: {}, data @ {:p}", id, data);
-        let addrs = unsafe { std::slice::from_raw_parts(addresses, number_of_addresses as usize) };
-        for (i, addr) in addrs.iter().enumerate() {
-            let property_selector = PropertySelector::new(addr.mSelector);
-            println!(
-                "address {}\n\tselector {}({})\n\tscope {}\n\telement {}",
-                i, addr.mSelector, property_selector, addr.mScope, addr.mElement
-            );
-        }
-
-        NO_ERR
-    }
-
-    test_get_default_raw_stream(|stream| {
-        let mut listeners = Vec::new();
-
-        let default_output_listener = device_property_listener::new(
-            kAudioObjectSystemObject,
-            get_property_address(
-                Property::HardwareDefaultOutputDevice,
-                DeviceType::INPUT | DeviceType::OUTPUT,
-            ),
-            callback,
-        );
-        listeners.push(default_output_listener);
-
-        let default_input_listener = device_property_listener::new(
-            kAudioObjectSystemObject,
-            get_property_address(
-                Property::HardwareDefaultInputDevice,
-                DeviceType::INPUT | DeviceType::OUTPUT,
-            ),
-            callback,
-        );
-        listeners.push(default_input_listener);
-
-        if let Some(device) = test_get_default_device(Scope::Output) {
-            let output_source_listener = device_property_listener::new(
-                device,
-                get_property_address(Property::DeviceSource, DeviceType::OUTPUT),
-                callback,
-            );
-            listeners.push(output_source_listener);
-        }
-
-        if let Some(device) = test_get_default_device(Scope::Input) {
-            let input_source_listener = device_property_listener::new(
-                device,
-                get_property_address(Property::DeviceSource, DeviceType::INPUT),
-                callback,
-            );
-            listeners.push(input_source_listener);
-
-            let input_alive_listener = device_property_listener::new(
-                device,
-                get_property_address(
-                    Property::DeviceIsAlive,
-                    DeviceType::INPUT | DeviceType::OUTPUT,
-                ),
-                callback,
-            );
-            listeners.push(input_alive_listener);
-        }
-
-        if listeners.is_empty() {
-            println!("No listeners to test.");
-            return;
-        }
-
-        add_listeners(stream, &listeners);
-
-        println!("Unplug/Plug device or switch input/output device to see the event log.\nEnter anything to finish.");
-        let mut input = String::new();
-        let _ = std::io::stdin().read_line(&mut input);
-
-        remove_listeners(stream, &listeners);
-    });
-
-    fn add_listeners(stream: &AudioUnitStream, listeners: &Vec<device_property_listener>) {
-        for listener in listeners {
-            assert_eq!(stream.add_device_listener(listener), NO_ERR);
-        }
-    }
-
-    fn remove_listeners(stream: &AudioUnitStream, listeners: &Vec<device_property_listener>) {
-        for listener in listeners {
-            assert_eq!(stream.remove_device_listener(listener), NO_ERR);
-        }
-    }
-}
-
-#[ignore]
-#[test]
 fn test_device_collection_change() {
     const DUMMY_PTR: *mut c_void = 0xDEAD_BEEF as *mut c_void;
     let mut context = AudioUnitContext::new();
@@ -264,7 +164,8 @@ fn test_stream_tester() {
                  \t'c': create a stream\n\
                  \t'd': destroy a stream\n\
                  \t's': start the created stream\n\
-                 \t't': stop the created stream"
+                 \t't': stop the created stream\n\
+                 \t'r': register a device changed callback"
             );
 
             let mut command = String::new();
@@ -281,6 +182,7 @@ fn test_stream_tester() {
                 "d" => destroy_stream(&mut stream_ptr),
                 "s" => start_stream(stream_ptr),
                 "t" => stop_stream(stream_ptr),
+                "r" => register_device_change_callback(stream_ptr),
                 x => println!("Unknown command: {}", x),
             }
         }
@@ -308,6 +210,25 @@ fn test_stream_tester() {
             ffi::CUBEB_OK
         );
         println!("Stream {:p} stopped.", stream_ptr);
+    }
+
+    fn register_device_change_callback(stream_ptr: *mut ffi::cubeb_stream) {
+        extern "C" fn callback(user_ptr: *mut c_void) {
+            println!("user pointer @ {:p}", user_ptr);
+            assert!(user_ptr.is_null());
+        }
+
+        if stream_ptr.is_null() {
+            println!("No stream for registering the callback.");
+            return;
+        }
+        assert_eq!(
+            unsafe {
+                OPS.stream_register_device_changed_callback.unwrap()(stream_ptr, Some(callback))
+            },
+            ffi::CUBEB_OK
+        );
+        println!("Stream {:p} now has a device change callback.", stream_ptr);
     }
 
     fn destroy_stream(stream_ptr: &mut *mut ffi::cubeb_stream) {
