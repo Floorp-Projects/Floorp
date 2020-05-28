@@ -28,8 +28,8 @@ void MediaPipelineFilter::SetRemoteMediaStreamId(
   if (aMid != mRemoteMid) {
     DEBUG_LOG(("MediaPipelineFilter added new remote RTP MID: '%s'.",
                aMid.valueOr("").c_str()));
-    mRemoteMidBinding = Nothing();
     mRemoteMid = aMid;
+    mRemoteMidBindings.clear();
   }
 }
 
@@ -63,19 +63,19 @@ bool MediaPipelineFilter::Filter(const webrtc::RTPHeader& header) {
   const auto& mid = fromStreamId(header.extension.mid);
 
   // Check to see if a bound SSRC is moved to a new MID
-  if (mRemoteMidBinding == Some(header.ssrc) && mid && mRemoteMid != mid) {
-    mRemoteMidBinding = Nothing();
+  if (mRemoteMidBindings.count(header.ssrc) == 1 && mid && mRemoteMid != mid) {
+    mRemoteMidBindings.erase(header.ssrc);
   }
   // Bind an SSRC if a matching MID is found
   if (mid && mRemoteMid == mid) {
     DEBUG_LOG(("MediaPipelineFilter learned SSRC: %u for MID: '%s'",
                header.ssrc, mRemoteMid.value().c_str()));
-    mRemoteMidBinding = Some(header.ssrc);
+    mRemoteMidBindings.insert(header.ssrc);
   }
   // Check for matching MID
-  if (mRemoteMidBinding) {
+  if (!mRemoteMidBindings.empty()) {
     MOZ_ASSERT(mRemoteMid != Nothing());
-    if (mRemoteMidBinding == Some(header.ssrc)) {
+    if (mRemoteMidBindings.count(header.ssrc) == 1) {
       DEBUG_LOG(
           ("MediaPipelineFilter SSRC: %u matched for MID: '%s'."
            " passing packet",
@@ -83,9 +83,13 @@ bool MediaPipelineFilter::Filter(const webrtc::RTPHeader& header) {
       return true;
     }
     DEBUG_LOG(
-        ("MediaPipelineFilter SSRC: %u did not match bound SSRC %u for"
+        ("MediaPipelineFilter SSRC: %u did not match bound SSRC(s) for"
          " MID: '%s'. ignoring packet",
-         header.ssrc, mRemoteMidBinding.value(), mRemoteMid.value().c_str()));
+         header.ssrc, mRemoteMid.value().c_str()));
+    for (const uint32_t ssrc : mRemoteMidBindings) {
+      DEBUG_LOG(("MID %s is associated with SSRC: %u",
+                 mRemoteMid.value().c_str(), ssrc));
+    }
     return false;
   }
 
@@ -165,10 +169,10 @@ void MediaPipelineFilter::Update(const MediaPipelineFilter& filter_update) {
   }
   // We don't want to overwrite the learned binding unless we have changed MIDs
   // or the update contains a MID binding.
-  if (filter_update.mRemoteMidBinding ||
+  if (!filter_update.mRemoteMidBindings.empty() ||
       (filter_update.mRemoteMid && filter_update.mRemoteMid != mRemoteMid)) {
     mRemoteMid = filter_update.mRemoteMid;
-    mRemoteMidBinding = filter_update.mRemoteMidBinding;
+    mRemoteMidBindings = filter_update.mRemoteMidBindings;
   }
   payload_type_set_ = filter_update.payload_type_set_;
 
