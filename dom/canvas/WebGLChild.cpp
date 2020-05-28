@@ -28,8 +28,10 @@ mozilla::ipc::IPCResult WebGLChild::RecvOnContextLoss(
 }
 
 /* static */
-bool WebGLChild::ShouldSendSync(size_t aCmd, ...) {
-  return WebGLMethodDispatcher<>::SyncType(aCmd) == CommandSyncType::SYNC;
+IpdlQueueProtocol WebGLChild::GetIpdlQueueProtocol(size_t aCmd, ...) {
+  bool isSync =
+      WebGLMethodDispatcher<>::SyncType(aCmd) == CommandSyncType::SYNC;
+  return isSync ? IpdlQueueProtocol::kSync : IpdlQueueProtocol::kBufferedAsync;
 }
 
 }  // namespace dom
