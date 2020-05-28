@@ -1111,10 +1111,20 @@ bool ContentBlocking::ShouldAllowAccessFor(nsIChannel* aChannel, nsIURI* aURI,
   rv = loadInfo->GetTargetBrowsingContext(getter_AddRefs(targetBC));
   if (!targetBC || NS_WARN_IF(NS_FAILED(rv))) {
     LOG(("Failed to get the channel's target browsing context"));
+    return false;
   }
 
-  if (targetBC && thirdParty &&
-      Document::StorageAccessSandboxed(targetBC->GetSandboxFlags())) {
+  // We will only allow the storage access for the channel of the first-level
+  // iframe or top-level sub-resource in cookie behavior
+  // BEHAVIOR_REJECT_TRACKER.
+  if (behavior == nsICookieService::BEHAVIOR_REJECT_TRACKER &&
+      !targetBC->IsTopContent() &&
+      !AntiTrackingUtils::IsFirstLevelSubContext(targetBC)) {
+    *aRejectedReason = blockedReason;
+    return false;
+  }
+
+  if (Document::StorageAccessSandboxed(targetBC->GetSandboxFlags())) {
     LOG(("Our document is sandboxed"));
     return false;
   }
@@ -1140,7 +1150,7 @@ bool ContentBlocking::ShouldAllowAccessFor(nsIChannel* aChannel, nsIURI* aURI,
   bool isDocument = false;
   aChannel->GetIsDocument(&isDocument);
 
-  if (isDocument && targetBC) {
+  if (isDocument) {
     nsCOMPtr<nsPIDOMWindowInner> inner =
         AntiTrackingUtils::GetInnerWindow(targetBC);
     if (inner && inner->HasStorageAccessGranted()) {
