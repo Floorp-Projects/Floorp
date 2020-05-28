@@ -5000,6 +5000,31 @@ AttachDecision CallIRGenerator::tryAttachArrayJoin(HandleFunction callee) {
   return AttachDecision::Attach;
 }
 
+AttachDecision CallIRGenerator::tryAttachArrayIsArray(HandleFunction callee) {
+  // Need a single argument.
+  if (argc_ != 1) {
+    return AttachDecision::NoAction;
+  }
+
+  // Initialize the input operand.
+  Int32OperandId argcId(writer.setInputOperandId(0));
+
+  // Guard callee is the 'isArray' intrinsic native function.
+  emitNativeCalleeGuard(callee);
+
+  // Check if the argument is an Array and return result.
+  ValOperandId argId = writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
+  writer.isArrayResult(argId);
+
+  // This stub does not need to be monitored, because it always
+  // returns a boolean.
+  writer.returnFromIC();
+  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
+
+  trackAttached("ArrayIsArray");
+  return AttachDecision::Attach;
+}
+
 AttachDecision CallIRGenerator::tryAttachIsSuspendedGenerator(
     HandleFunction callee) {
   // The IsSuspendedGenerator intrinsic is only called in
@@ -5555,6 +5580,8 @@ AttachDecision CallIRGenerator::tryAttachInlinableNative(
       return tryAttachArrayPush(callee);
     case InlinableNative::ArrayJoin:
       return tryAttachArrayJoin(callee);
+    case InlinableNative::ArrayIsArray:
+      return tryAttachArrayIsArray(callee);
 
     // Intrinsics.
     case InlinableNative::IntrinsicIsSuspendedGenerator:

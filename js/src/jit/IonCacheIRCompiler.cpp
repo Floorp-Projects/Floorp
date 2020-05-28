@@ -2418,3 +2418,7 @@ bool IonCacheIRCompiler::emitGuardFunApply(Int32OperandId argcId,
                                            CallFlags flags) {
   MOZ_CRASH("Call ICs not used in ion");
 }
+
+bool IonCacheIRCompiler::emitIsArrayResult(ValOperandId inputId) {
+  MOZ_CRASH("Call ICs not used in ion");
+}
