@@ -55,6 +55,11 @@ void SetInCommunication(bool aInCommunication);
 // voice data, and not generic audio. This can influence audio processing and
 // device selection.
 bool RouteOutputAsVoice();
+// Returns, in seconds, the roundtrip latency Gecko thinks there is between the
+// default input and output devices. This is for diagnosing purposes, the
+// latency figures are best used directly from the cubeb streams themselves, as
+// the devices being used matter. This is blocking.
+bool EstimatedRoundTripLatencyDefaultDevices(double* aMean, double* aStdDev);
 
 #  ifdef MOZ_WIDGET_ANDROID
 uint32_t AndroidGetAudioOutputSampleRate();
