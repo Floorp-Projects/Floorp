@@ -19,6 +19,7 @@
 #include "nsNetCID.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/ipc/URIUtils.h"
+#include "mozilla/StaticPrefs_network.h"
 #include "mozilla/TextUtils.h"
 #include <algorithm>
 #include "nsContentUtils.h"
@@ -57,7 +58,6 @@ StaticRefPtr<nsIIDNService> nsStandardURL::gIDN;
 bool nsStandardURL::gInitialized = false;
 
 const char nsStandardURL::gHostLimitDigits[] = {'/', '\\', '?', '#', 0};
-bool nsStandardURL::gPunycodeHost = true;
 
 // Invalid host characters
 // Note that the array below will be initialized at compile time,
@@ -263,8 +263,6 @@ void nsStandardURL::InitGlobalObjects() {
 
   gInitialized = true;
 
-  Preferences::AddBoolVarCache(&gPunycodeHost,
-                               "network.standard-url.punycode-host", true);
   nsCOMPtr<nsIIDNService> serv(do_GetService(NS_IDNSERVICE_CONTRACTID));
   if (serv) {
     gIDN = serv;
@@ -1207,7 +1205,7 @@ nsStandardURL::GetSpec(nsACString& result) {
   MOZ_ASSERT(mSpec.Length() <= (uint32_t)net_GetURLMaxLength(),
              "The spec should never be this long, we missed a check.");
   nsresult rv = NS_OK;
-  if (gPunycodeHost) {
+  if (StaticPrefs::network_standard_url_punycode_host()) {
     result = mSpec;
   } else {  // XXX: This code path may be slow
     rv = GetDisplaySpec(result);
@@ -1240,7 +1238,8 @@ nsStandardURL::GetSpecIgnoringRef(nsACString& result) {
   result = Segment(noRef);
 
   MOZ_ASSERT(mCheckedIfHostA);
-  if (!gPunycodeHost && !mDisplayHost.IsEmpty()) {
+  if (!StaticPrefs::network_standard_url_punycode_host() &&
+      !mDisplayHost.IsEmpty()) {
     result.Replace(mHost.mPos, mHost.mLen, mDisplayHost);
   }
 
@@ -1326,7 +1325,8 @@ NS_IMETHODIMP
 nsStandardURL::GetPrePath(nsACString& result) {
   result = Prepath();
   MOZ_ASSERT(mCheckedIfHostA);
-  if (!gPunycodeHost && !mDisplayHost.IsEmpty()) {
+  if (!StaticPrefs::network_standard_url_punycode_host() &&
+      !mDisplayHost.IsEmpty()) {
     result.Replace(mHost.mPos, mHost.mLen, mDisplayHost);
   }
   return NS_OK;
@@ -1374,7 +1374,7 @@ nsStandardURL::GetPassword(nsACString& result) {
 NS_IMETHODIMP
 nsStandardURL::GetHostPort(nsACString& result) {
   nsresult rv;
-  if (gPunycodeHost) {
+  if (StaticPrefs::network_standard_url_punycode_host()) {
     rv = GetAsciiHostPort(result);
   } else {
     rv = GetDisplayHostPort(result);
@@ -1385,7 +1385,7 @@ nsStandardURL::GetHostPort(nsACString& result) {
 NS_IMETHODIMP
 nsStandardURL::GetHost(nsACString& result) {
   nsresult rv;
-  if (gPunycodeHost) {
+  if (StaticPrefs::network_standard_url_punycode_host()) {
     rv = GetAsciiHost(result);
   } else {
     rv = GetDisplayHost(result);

@@ -7783,6 +7783,14 @@
   value: 2048
   mirror: always
 
+# Whether nsIURI.host/.hostname/.spec should return a punycode string.
+# If set to false we will revert to previous behaviour and return a unicode
+# string.
+- name: network.standard-url.punycode-host
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 # Single TRR request timeout, in milliseconds
 - name: network.trr.request_timeout_ms
   type: RelaxedAtomicUint32

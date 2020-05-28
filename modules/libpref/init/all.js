@@ -1821,10 +1821,6 @@ pref("network.dns.skipTRR-when-parental-control-enabled", true);
 // The maximum allowed length for a URL - 1MB default
 pref("network.standard-url.max-length", 1048576);
 
-// Whether nsIURI.host/.hostname/.spec should return a punycode string
-// If set to false we will revert to previous behaviour and return a unicode string.
-pref("network.standard-url.punycode-host", true);
-
 // Idle timeout for ftp control connections - 5 minute default
 pref("network.ftp.idleConnectionTimeout", 300);
 
