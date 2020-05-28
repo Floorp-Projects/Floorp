@@ -6191,6 +6191,8 @@ nsresult nsDocShell::EndPageLoad(nsIWebProgress* aProgress,
                aStatus == NS_ERROR_NET_INADEQUATE_SECURITY ||
                aStatus == NS_ERROR_NET_HTTP2_SENT_GOAWAY ||
                aStatus == NS_ERROR_NET_HTTP3_PROTOCOL_ERROR ||
+               aStatus == NS_ERROR_CONTENT_BLOCKED_SHOW_ALT ||
+               aStatus == NS_ERROR_CONTENT_BLOCKED ||
                NS_ERROR_GET_MODULE(aStatus) == NS_ERROR_MODULE_SECURITY) {
       // Errors to be shown for any frame
       DisplayLoadError(aStatus, url, nullptr, aChannel);
