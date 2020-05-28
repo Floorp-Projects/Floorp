@@ -7,14 +7,13 @@
 #ifndef BASE_ID_MAP_H__
 #define BASE_ID_MAP_H__
 
-#include "base/basictypes.h"
-#include "base/hash_tables.h"
 #include "base/logging.h"
 
+#include "nsDataHashtable.h"
+#include "nsHashKeys.h"
+
 // This object maintains a list of IDs that can be quickly converted to
-// objects. It is implemented as a hash table, optimized for
-// relatively small data sets (in the common case, there will be exactly one
-// item in the list).
+// objects.
 //
 // Items can be inserted into the container with arbitrary ID, but the caller
 // must ensure they are unique. Inserting IDs and relying on automatically
@@ -22,38 +21,26 @@
 template <class T>
 class IDMap {
  private:
-  typedef base::hash_map<int32_t, T> HashTable;
-  typedef typename HashTable::iterator iterator;
+  using HashTable = nsDataHashtable<nsUint32HashKey, T>;
 
  public:
-  // support const iterators over the items
-  // Note, use iterator->first to get the ID, iterator->second to get the T*
-  typedef typename HashTable::const_iterator const_iterator;
-
   IDMap() {}
   IDMap(const IDMap& other) : data_(other.data_) {}
+
+  using const_iterator = typename HashTable::const_iterator;
 
   const_iterator begin() const { return data_.begin(); }
   const_iterator end() const { return data_.end(); }
 
-  bool Contains(int32_t id) { return data_.find(id) != data_.end(); }
+  bool Contains(int32_t id) { return data_.Contains(id); }
 
-  void Put(int32_t id, const T& data) { data_[id] = data; }
+  void Put(int32_t id, const T& data) { data_.Put(id, data); }
 
-  void Remove(int32_t id) {
-    iterator i = data_.find(id);
-    if (i != data_.end()) {
-      data_.erase(i);
-    }
-  }
+  void Remove(int32_t id) { data_.Remove(id); }
 
-  void Clear() { data_.clear(); }
+  void Clear() { data_.Clear(); }
 
-  T Get(int32_t id) const {
-    const_iterator i = data_.find(id);
-    if (i == data_.end()) return T();
-    return i->second;
-  }
+  T Get(int32_t id) const { return data_.Get(id); }
 
  protected:
   HashTable data_;
