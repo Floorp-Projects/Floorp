@@ -263,6 +263,8 @@ class MOZ_STACK_CLASS CallInfo {
     args_[i] = def;
   }
 
+  void removeArg(uint32_t i) { args_.erase(&args_[i]); }
+
   MDefinition* thisArg() const {
     MOZ_ASSERT(thisArg_);
     return thisArg_;

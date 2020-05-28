@@ -1186,13 +1186,32 @@ bool WarpCacheIRTranspiler::emitCallFunction(ObjOperandId calleeId,
              static_cast<int32_t>(callInfo_->argc()));
 #endif
 
-  // TODO: For non-normal calls the arguments need to be changed.
-  MOZ_ASSERT(flags.getArgFormat() == CallFlags::Standard);
-
   // The transpilation will add various guards to the callee.
   // We replace the callee referenced by the CallInfo, so that
   // the resulting MCall instruction depends on these guards.
   callInfo_->setCallee(callee);
+
+  MOZ_ASSERT(flags.getArgFormat() == CallFlags::Standard ||
+             flags.getArgFormat() == CallFlags::FunCall);
+
+  if (flags.getArgFormat() == CallFlags::FunCall) {
+    MOZ_ASSERT(!callInfo_->constructing());
+
+    // Note: setCallee above already changed the callee to the target
+    // function instead of the |call| function.
+
+    if (callInfo_->argc() == 0) {
+      // Special case for fun.call() with no arguments.
+      auto* undef = constant(UndefinedValue());
+      callInfo_->setThis(undef);
+    } else {
+      // The first argument for |call| is the new this value.
+      callInfo_->setThis(callInfo_->getArg(0));
+
+      // Shift down all other arguments by removing the first.
+      callInfo_->removeArg(0);
+    }
+  }
 
   // CacheIR emits the following for specialized calls:
   //     GuardSpecificFunction <callee> <func> ..
