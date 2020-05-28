@@ -252,7 +252,7 @@ def load_parameters_file(filename, strict=True, overrides=None, trust_domain=Non
         task-id=fdtgsD5DQUmAQZEaGMvQ4Q
         project=mozilla-central
     """
-    import urllib
+    import requests
     from taskgraph.util.taskcluster import get_artifact_url, find_task_id
     from taskgraph.util import yaml
 
@@ -285,7 +285,9 @@ def load_parameters_file(filename, strict=True, overrides=None, trust_domain=Non
         if task_id:
             filename = get_artifact_url(task_id, 'public/parameters.yml')
         logger.info("Loading parameters from {}".format(filename))
-        f = urllib.urlopen(filename)
+        resp = requests.get(filename, stream=True)
+        resp.raise_for_status()
+        f = resp.raw
 
     if filename.endswith('.yml'):
         kwargs = yaml.load_stream(f)
