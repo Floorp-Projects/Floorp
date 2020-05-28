@@ -90,21 +90,3 @@ function checkValue(name, value, expected) {
     checkObject(value, expected);
   }
 }
-
-/**
- * Triggers a script error in the content page.
- */
-async function triggerError(browser, expression) {
-  await ContentTask.spawn(browser, expression, function frameScript(expr) {
-    const document = content.document;
-    const container = document.createElement("script");
-    document.body.appendChild(container);
-    container.textContent = expr;
-    container.remove();
-  });
-  // Wait a bit between each messages, as uncaught promises errors are not emitted
-  // right away.
-
-  // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
-  await new Promise(res => setTimeout(res, 10));
-}
