@@ -17,6 +17,7 @@
 #include "nsCOMPtr.h"
 
 #include "mozilla/BasePrincipal.h"
+#include "gtest/MozGtestFriend.h"
 
 class nsIDocShell;
 class nsIURI;
@@ -106,11 +107,15 @@ class NullPrincipal final : public BasePrincipal {
   nsCOMPtr<nsIURI> mURI;
 
  private:
+  FRIEND_TEST(OriginAttributes, NullPrincipal);
+
   // If aIsFirstParty is true, this NullPrincipal will be initialized based on
   // the aOriginAttributes with FirstPartyDomain set to a unique value.
   // This value is generated from mURI.path, with ".mozilla" appended at the
-  // end.
-  void Init(const OriginAttributes& aOriginAttributes, bool aIsFirstParty);
+  // end. aURI is used for testing purpose to assign specific UUID rather than
+  // random generated one.
+  nsresult Init(const OriginAttributes& aOriginAttributes, bool aIsFirstParty,
+                nsIURI* aURI = nullptr);
 };
 
 }  // namespace mozilla

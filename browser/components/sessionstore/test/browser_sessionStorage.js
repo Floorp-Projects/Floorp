@@ -14,11 +14,12 @@ const HAS_FIRST_PARTY_DOMAIN = [
   Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN,
 ].includes(Services.prefs.getIntPref("network.cookie.cookieBehavior"));
 const OUTER_ORIGIN = "http://mochi.test:8888";
+const FIRST_PARTY_DOMAIN = escape("(http,mochi.test)");
 const INNER_ORIGIN = HAS_FIRST_PARTY_DOMAIN
-  ? "http://example.com^firstPartyDomain=mochi.test"
+  ? `http://example.com^firstPartyDomain=${FIRST_PARTY_DOMAIN}`
   : "http://example.com";
 const SECURE_INNER_ORIGIN = HAS_FIRST_PARTY_DOMAIN
-  ? "https://example.com^firstPartyDomain=mochi.test"
+  ? `https://example.com^firstPartyDomain=${FIRST_PARTY_DOMAIN}`
   : "https://example.com";
 
 const OUTER_VALUE = "outer-value-" + RAND;
