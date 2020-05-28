@@ -21,5 +21,12 @@ gfx::PointDouble3D XRNativeOriginViewer::GetPosition() {
                             sensorState.pose.position[2]);
 }
 
+gfx::QuaternionDouble XRNativeOriginViewer::GetOrientation() {
+  const gfx::VRHMDSensorState& sensorState = mDisplay->GetSensorState();
+  return gfx::QuaternionDouble(
+      sensorState.pose.orientation[0], sensorState.pose.orientation[1],
+      sensorState.pose.orientation[2], sensorState.pose.orientation[3]);
+}
+
 }  // namespace dom
 }  // namespace mozilla
