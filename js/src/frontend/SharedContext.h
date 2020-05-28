@@ -596,7 +596,8 @@ class FunctionBox : public SharedContext {
     // For all functions except class constructors, the buffer and
     // toString ending positions are the same. Class constructors override
     // the toString ending position with the end of the class definition.
-    extent.sourceEnd = extent.toStringEnd = end;
+    extent.sourceEnd = end;
+    extent.toStringEnd = end;
   }
 
   void setArgCount(uint16_t args) { nargs_ = args; }
