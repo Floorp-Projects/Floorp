@@ -7,6 +7,7 @@
 #include "UrlClassifierFeatureTrackingProtection.h"
 
 #include "mozilla/net/UrlClassifierCommon.h"
+#include "ChannelClassifierService.h"
 #include "nsContentUtils.h"
 #include "nsIHttpChannelInternal.h"
 #include "nsILoadContext.h"
@@ -153,6 +154,12 @@ UrlClassifierFeatureTrackingProtection::ProcessChannel(
 
   nsAutoCString list;
   UrlClassifierCommon::TablesToString(aList, list);
+
+  if (ChannelClassifierService::OnBeforeBlockChannel(aChannel, mName, list) ==
+      ChannelBlockDecision::Unblocked) {
+    *aShouldContinue = true;
+    return NS_OK;
+  }
 
   UrlClassifierCommon::SetBlockedContent(aChannel, NS_ERROR_TRACKING_URI, list,
                                          EmptyCString(), EmptyCString());

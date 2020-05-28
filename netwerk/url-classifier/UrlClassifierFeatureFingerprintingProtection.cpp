@@ -7,6 +7,7 @@
 #include "UrlClassifierFeatureFingerprintingProtection.h"
 
 #include "mozilla/net/UrlClassifierCommon.h"
+#include "ChannelClassifierService.h"
 #include "mozilla/StaticPrefs_privacy.h"
 #include "nsContentUtils.h"
 #include "nsNetUtil.h"
@@ -163,6 +164,11 @@ UrlClassifierFeatureFingerprintingProtection::ProcessChannel(
 
   nsAutoCString list;
   UrlClassifierCommon::TablesToString(aList, list);
+
+  if (ChannelClassifierService::OnBeforeBlockChannel(aChannel, mName, list) ==
+      ChannelBlockDecision::Unblocked) {
+    return NS_OK;
+  }
 
   UrlClassifierCommon::SetBlockedContent(aChannel, NS_ERROR_FINGERPRINTING_URI,
                                          list, EmptyCString(), EmptyCString());
