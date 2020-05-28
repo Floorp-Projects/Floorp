@@ -2089,6 +2089,13 @@ void HTMLMediaElement::SetSrcObject(DOMMediaStream& aValue) {
 }
 
 void HTMLMediaElement::SetSrcObject(DOMMediaStream* aValue) {
+  for (auto& outputStream : mOutputStreams) {
+    if (aValue == outputStream.mStream) {
+      ReportToConsole(nsIScriptError::warningFlag,
+                      "MediaElementStreamCaptureCycle");
+      return;
+    }
+  }
   mSrcAttrStream = aValue;
   UpdateAudioChannelPlayingState();
   DoLoad();
