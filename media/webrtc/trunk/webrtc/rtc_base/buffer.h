@@ -345,7 +345,9 @@ class BufferT {
                        : capacity;
 
     std::unique_ptr<T[]> new_data(new T[new_capacity]);
-    std::memcpy(new_data.get(), data_.get(), size_ * sizeof(T));
+    if (data_ != nullptr) {
+      std::memcpy(new_data.get(), data_.get(), size_ * sizeof(T));
+    }
     data_ = std::move(new_data);
     capacity_ = new_capacity;
     RTC_DCHECK(IsConsistent());
