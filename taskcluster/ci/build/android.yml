@@ -362,6 +362,9 @@ android-api-16-gcp/debug:
         toolchain:
             - linux64-clang
             - linux64-sccache
+    optimization:
+        push-interval-25:
+            - android
 
 
 android-x86-gcp/opt:
@@ -387,6 +390,9 @@ android-x86-gcp/opt:
         toolchain:
             - linux64-clang
             - linux64-sccache
+    optimization:
+        push-interval-25:
+            - android
 
 android-api-16-gcp/opt:
     description: "Android 4.0 api-16+ Opt - built on GCP"
@@ -411,6 +417,9 @@ android-api-16-gcp/opt:
         toolchain:
             - linux64-clang
             - linux64-sccache
+    optimization:
+        push-interval-25:
+            - android
 
 android-aarch64-gcp/opt:
     description: "Android 5.0 AArch64 Opt - built on GCP"
@@ -435,6 +444,9 @@ android-aarch64-gcp/opt:
         toolchain:
             - linux64-clang
             - linux64-sccache
+    optimization:
+        push-interval-25:
+            - android
 
 android-aarch64-gcp/debug:
     description: "Android 5.0 AArch64 Debug - built on GCP"
@@ -459,6 +471,9 @@ android-aarch64-gcp/debug:
         toolchain:
             - linux64-clang
             - linux64-sccache
+    optimization:
+        push-interval-25:
+            - android
 
 android-x86_64-gcp/opt:
     description: "Android 5.0 x86-64 Opt - built on GCP"
@@ -483,6 +498,9 @@ android-x86_64-gcp/opt:
         toolchain:
             - linux64-clang
             - linux64-sccache
+    optimization:
+        push-interval-25:
+            - android
 
 android-x86_64-gcp/debug:
     description: "Android 5.0 x86-64 Debug - built on GCP"
@@ -506,6 +524,9 @@ android-x86_64-gcp/debug:
     fetches:
         toolchain:
             - linux64-clang
+    optimization:
+        push-interval-25:
+            - android
 
 android-x86_64-asan-fuzzing/opt:
     description: "Android 5.0 x86-64 Fuzzing Opt ASAN"
