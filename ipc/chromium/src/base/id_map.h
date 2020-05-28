@@ -30,25 +30,14 @@ class IDMap {
   // Note, use iterator->first to get the ID, iterator->second to get the T*
   typedef typename HashTable::const_iterator const_iterator;
 
-  IDMap() : next_id_(1) {}
-  IDMap(const IDMap& other) : next_id_(other.next_id_), data_(other.data_) {}
+  IDMap() {}
+  IDMap(const IDMap& other) : data_(other.data_) {}
 
   const_iterator begin() const { return data_.begin(); }
   const_iterator end() const { return data_.end(); }
 
-  // Adds a view with an automatically generated unique ID. See AddWithID.
-  int32_t Add(const T& data) {
-    int32_t this_id = next_id_;
-    DCHECK(data_.find(this_id) == data_.end()) << "Inserting duplicate item";
-    data_[this_id] = data;
-    next_id_++;
-    return this_id;
-  }
-
   // Adds a new data member with the specified ID. The ID must not be in
-  // the list. The caller either must generate all unique IDs itself and use
-  // this function, or allow this object to generate IDs and call Add. These
-  // two methods may not be mixed, or duplicate IDs may be generated
+  // the list.
   void AddWithID(const T& data, int32_t id) {
     DCHECK(data_.find(id) == data_.end()) << "Inserting duplicate item";
     data_[id] = data;
@@ -75,8 +64,6 @@ class IDMap {
     data_[id] = data;
   }
 
-  bool IsEmpty() const { return data_.empty(); }
-
   void Clear() { data_.clear(); }
 
   bool HasData(const T& data) const {
@@ -92,12 +79,7 @@ class IDMap {
     return i->second;
   }
 
-  size_t size() const { return data_.size(); }
-
  protected:
-  // The next ID that we will return from Add()
-  int32_t next_id_;
-
   HashTable data_;
 };
 
