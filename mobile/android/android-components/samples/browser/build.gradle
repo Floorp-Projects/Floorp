@@ -99,6 +99,7 @@ dependencies {
     implementation project(':feature-findinpage')
     implementation project(':feature-sitepermissions')
     implementation project(':feature-webcompat')
+    implementation project(':feature-webcompat-reporter')
     implementation project(':feature-webnotifications')
     implementation project(':feature-addons')
 

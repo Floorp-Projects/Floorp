@@ -148,6 +148,10 @@ projects:
     path: components/feature/webcompat
     description: 'Feature that provides hotfixes for websites from Mozilla''s Web Compatibility team'
     publish: true
+  feature-webcompat-reporter:
+    path: components/feature/webcompat-reporter
+    description: 'Feature that enables users to report site issues to Mozilla''s Web Compatibility team.'
+    publish: true
   feature-addons:
     path: components/feature/addons
     description: 'A feature that provides for managing add-ons.'
