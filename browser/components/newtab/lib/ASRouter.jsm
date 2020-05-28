@@ -567,6 +567,7 @@ class _ASRouter {
     this.isUnblockedMessage = this.isUnblockedMessage.bind(this);
     this.renderWNMessages = this.renderWNMessages.bind(this);
     this.forceWNPanel = this.forceWNPanel.bind(this);
+    Services.telemetry.setEventRecordingEnabled(REACH_EVENT_CATEGORY, true);
   }
 
   async onPrefChange(prefName) {
