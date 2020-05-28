@@ -93,9 +93,12 @@ private fun BrowserState.toNotificationData(
                     AbstractMediaService.pauseIntent(context, cls),
                     0)
             ).build(),
-            contentIntent = PendingIntent.getActivity(context,
+            contentIntent = PendingIntent.getActivity(
+                context,
                 SharedIdsHelper.getIdForTag(context, AbstractMediaService.PENDING_INTENT_TAG),
-                intent?.apply { putExtra(AbstractMediaService.EXTRA_TAB_ID, mediaTab?.id) }, 0)
+                intent?.apply { putExtra(AbstractMediaService.EXTRA_TAB_ID, mediaTab?.id) },
+                PendingIntent.FLAG_UPDATE_CURRENT
+            )
         )
         MediaState.State.PAUSED -> NotificationData(
             title = mediaTab.getTitleOrUrl(context),
@@ -111,9 +114,12 @@ private fun BrowserState.toNotificationData(
                     AbstractMediaService.playIntent(context, cls),
                     0)
             ).build(),
-            contentIntent = PendingIntent.getActivity(context,
+            contentIntent = PendingIntent.getActivity(
+                context,
                 SharedIdsHelper.getIdForTag(context, AbstractMediaService.PENDING_INTENT_TAG),
-                intent?.apply { putExtra(AbstractMediaService.EXTRA_TAB_ID, mediaTab?.id) }, 0)
+                intent?.apply { putExtra(AbstractMediaService.EXTRA_TAB_ID, mediaTab?.id) },
+                PendingIntent.FLAG_UPDATE_CURRENT
+            )
         )
         // Dummy notification that is only used to satisfy the requirement to ALWAYS call
         // startForeground with a notification.
