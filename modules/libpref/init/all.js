@@ -1315,8 +1315,6 @@ pref("network.protocol-handler.expose-all", true);
 
 // Whether IOService.connectivity and NS_IsOffline depends on connectivity status
 pref("network.manage-offline-status", true);
-// If set to true, IOService.offline depends on IOService.connectivity
-pref("network.offline-mirrors-connectivity", false);
 
 // <http>
 pref("network.http.version", "1.1");      // default
@@ -4566,11 +4564,6 @@ pref("dom.maxHardwareConcurrency", 16);
 #if !defined(RELEASE_OR_BETA)
   pref("osfile.reset_worker_delay", 30000);
 #endif
-
-// If true, all toplevel data: URI navigations will be blocked.
-// Please note that manually entering a data: URI in the
-// URL-Bar will not be blocked when flipping this pref.
-pref("security.data_uri.block_toplevel_data_uri_navigations", true);
 
 pref("dom.storageManager.prompt.testing", false);
 pref("dom.storageManager.prompt.testing.allow", false);

@@ -7571,6 +7571,12 @@
   value: 2
   mirror: always
 
+# If set to true, IOService.offline depends on IOService.connectivity.
+- name: network.offline-mirrors-connectivity
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 # Enables the predictive service.
 - name: network.predictor.enabled
   type: bool
@@ -8398,6 +8404,14 @@
 # behavior of Firefox.
 - name: security.data_uri.unique_opaque_origin
   type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
+# If true, all toplevel data: URI navigations will be blocked.
+# Please note that manually entering a data: URI in the
+# URL-Bar will not be blocked when flipping this pref.
+- name: security.data_uri.block_toplevel_data_uri_navigations
+  type: bool
   value: true
   mirror: always
 
