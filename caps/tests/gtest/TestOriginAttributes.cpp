@@ -9,6 +9,11 @@
 using mozilla::OriginAttributes;
 using mozilla::Preferences;
 
+#define TEST_FPD(_spec, _expected) \
+  TestFPD(NS_LITERAL_STRING(_spec), NS_LITERAL_STRING(_expected))
+
+namespace mozilla {
+
 static void TestSuffix(const OriginAttributes& attrs) {
   nsAutoCString suffix;
   attrs.CreateSuffix(suffix);
@@ -20,12 +25,12 @@ static void TestSuffix(const OriginAttributes& attrs) {
   EXPECT_EQ(attrs, attrsFromSuffix);
 }
 
-static void TestFPD(const nsAString& spec, const nsAString& fpd) {
+static void TestFPD(const nsAString& spec, const nsAString& expected) {
   OriginAttributes attrs;
   nsCOMPtr<nsIURI> url;
   ASSERT_EQ(NS_NewURI(getter_AddRefs(url), spec), NS_OK);
   attrs.SetFirstPartyDomain(true, url);
-  EXPECT_TRUE(attrs.mFirstPartyDomain.Equals(fpd));
+  EXPECT_TRUE(attrs.mFirstPartyDomain.Equals(expected));
 
   TestSuffix(attrs);
 }
@@ -47,15 +52,15 @@ TEST(OriginAttributes, FirstPartyDomain_default)
   static const char prefKey[] = "privacy.firstparty.isolate";
   bool oldPref = Preferences::GetBool(prefKey);
   Preferences::SetBool(prefKey, true);
-  TestFPD(NS_LITERAL_STRING("http://www.example.com"),
-          NS_LITERAL_STRING("example.com"));
-  TestFPD(NS_LITERAL_STRING("http://s3.amazonaws.com"),
-          NS_LITERAL_STRING("s3.amazonaws.com"));
-  TestFPD(NS_LITERAL_STRING("http://com"), NS_LITERAL_STRING("com"));
-  TestFPD(NS_LITERAL_STRING("http://.com"), NS_LITERAL_STRING(""));
-  TestFPD(NS_LITERAL_STRING("http://..com"), NS_LITERAL_STRING(""));
-  TestFPD(NS_LITERAL_STRING("http://127.0.0.1"),
-          NS_LITERAL_STRING("127.0.0.1"));
-  TestFPD(NS_LITERAL_STRING("http://[::1]"), NS_LITERAL_STRING("[::1]"));
+  TEST_FPD("http://www.example.com", "example.com");
+  TEST_FPD("http://s3.amazonaws.com", "s3.amazonaws.com");
+  TEST_FPD("http://com", "com");
+  TEST_FPD("http://com:8080", "com");
+  TEST_FPD("http://.com", "");
+  TEST_FPD("http://..com", "");
+  TEST_FPD("http://127.0.0.1", "127.0.0.1");
+  TEST_FPD("http://[::1]", "[::1]");
   Preferences::SetBool(prefKey, oldPref);
 }
+
+}  // namespace mozilla
