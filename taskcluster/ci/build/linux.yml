@@ -545,7 +545,7 @@ linux/debug:
         mozconfig-variant: debug
         tooltool-downloads: public
         need-xvfb: true
-    run-on-projects: [release']
+    run-on-projects: ['release']
     fetches:
         toolchain:
             - linux64-binutils
