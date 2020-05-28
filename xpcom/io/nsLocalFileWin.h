@@ -63,7 +63,6 @@ class nsLocalFile final : public nsILocalFileWin {
 
   bool mDirty;  // cached information can only be used when this is false
   bool mResolveDirty;
-  bool mFollowSymlinks;  // should we follow symlinks when working on this file
 
   bool mUseDOSDevicePathSyntax;
 
@@ -91,7 +90,6 @@ class nsLocalFile final : public nsILocalFileWin {
 
   nsresult ResolveAndStat();
   nsresult Resolve();
-  nsresult ResolveShortcut();
 
   void EnsureShortPath();
 
