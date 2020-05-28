@@ -424,10 +424,11 @@ class WelcomeScreen extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureCom
     const {
       content
     } = this.props;
+    const hasSecondaryTopCTA = content.secondary_button && content.secondary_button.position === "top";
     return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("main", {
       className: `screen ${this.props.id}`
-    }, content.secondary_button && content.secondary_button.position === "top" ? this.renderSecondaryCTA("top") : null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
-      className: "brand-logo"
+    }, hasSecondaryTopCTA ? this.renderSecondaryCTA("top") : null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+      className: `brand-logo ${hasSecondaryTopCTA ? "cta-top" : ""}`
     }), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
       className: "welcome-text"
     }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__["Localized"], {
@@ -440,7 +441,7 @@ class WelcomeScreen extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureCom
       className: "primary",
       value: "primary_button",
       onClick: this.handleAction
-    }))), content.secondary_button && content.secondary_button.position !== "top" ? this.renderSecondaryCTA() : null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+    }))), !hasSecondaryTopCTA ? this.renderSecondaryCTA() : null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
       className: "steps"
     }, this.renderStepsIndicator()));
   }
