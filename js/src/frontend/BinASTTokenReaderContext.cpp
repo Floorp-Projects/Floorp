@@ -1122,7 +1122,7 @@ JS::Result<Ok> BinASTTokenReaderContext::readTreeFooter() {
 
   for (size_t i = 0; i < numLazy; i++) {
     uint32_t begin = offset();
-    uint32_t len = lazyScripts_[i]->sourceEnd();
+    uint32_t len = lazyScripts_[i]->extent.sourceEnd;
 
     current_ += len;
 
@@ -1463,7 +1463,7 @@ BinASTTokenReaderContext::readSkippableSubTree(const FieldContext&) {
   return SkippableSubTree(0, 0);
 }
 
-JS::Result<Ok> BinASTTokenReaderContext::registerLazyScript(BaseScript* lazy) {
+JS::Result<Ok> BinASTTokenReaderContext::registerLazyScript(FunctionBox* lazy) {
   BINJS_TRY(lazyScripts_.append(lazy));
   return Ok();
 }
