@@ -20,6 +20,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   LoginBreaches: "resource:///modules/LoginBreaches.jsm",
   LoginHelper: "resource://gre/modules/LoginHelper.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
+  Region: "resource://gre/modules/Region.jsm",
 });
 
 XPCOMUtils.defineLazyServiceGetter(
@@ -282,7 +283,7 @@ class AboutProtectionsParent extends JSWindowActorParent {
    * and does not yet have Proxy installed.
    */
   async shouldShowProxyCard() {
-    const region = Services.prefs.getCharPref("browser.search.region");
+    const region = Region.home || "";
     const languages = Services.prefs.getComplexValue(
       "intl.accept_languages",
       Ci.nsIPrefLocalizedString
