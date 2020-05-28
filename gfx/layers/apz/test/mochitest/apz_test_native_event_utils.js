@@ -701,3 +701,35 @@ function* dragVerticalScrollbar(
     );
   };
 }
+
+// Synthesizes a native touch sequence of events corresponding to a pinch-zoom-in
+// at the given focus point.
+function* pinchZoomInTouchSequence(focusX, focusY) {
+  // prettier-ignore
+  var zoom_in = [
+      [ { x: focusX - 25, y: focusY - 50 }, { x: focusX + 25, y: focusY + 50 } ],
+      [ { x: focusX - 30, y: focusY - 80 }, { x: focusX + 30, y: focusY + 80 } ],
+      [ { x: focusX - 35, y: focusY - 110 }, { x: focusX + 40, y: focusY + 110 } ],
+      [ { x: focusX - 40, y: focusY - 140 }, { x: focusX + 45, y: focusY + 140 } ],
+      [ { x: focusX - 45, y: focusY - 170 }, { x: focusX + 50, y: focusY + 170 } ],
+      [ { x: focusX - 50, y: focusY - 200 }, { x: focusX + 55, y: focusY + 200 } ],
+  ];
+
+  var touchIds = [0, 1];
+  yield* synthesizeNativeTouchSequences(document.body, zoom_in, null, touchIds);
+}
+
+// This generates a touch-based pinch zoom-in gesture that is expected
+// to succeed. It returns after APZ has completed the zoom and reaches the end
+// of the transform.
+function* pinchZoomInWithTouch(testDriver, focusX, focusY) {
+  // This listener will trigger the test to continue once APZ is done with
+  // processing the scroll.
+  SpecialPowers.Services.obs.addObserver(testDriver, "APZ:TransformEnd");
+  yield* pinchZoomInTouchSequence(focusX, focusY);
+  // Wait for the APZ:TransformEnd to be fired after touch events are processed.
+  yield true;
+  // We get here once the APZ:TransformEnd has fired, so we don't need that
+  // observer any more.
+  SpecialPowers.Services.obs.removeObserver(testDriver, "APZ:TransformEnd");
+}
