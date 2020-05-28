@@ -2,8 +2,8 @@ How To Contribute Code To Firefox
 =================================
 
 The whole process is a bit long, and it will take time to get things right.
-If at any point you are stuck, please don't hesitate to ask at `https://chat.mozilla.org <https://chat.mozilla.org>`
-in the `#introduction <https://chat.mozilla.org/#/room/#introduction:mozilla.org>` channel.
+If at any point you are stuck, please don't hesitate to ask at `https://chat.mozilla.org <https://chat.mozilla.org>`_
+in the `#introduction <https://chat.mozilla.org/#/room/#introduction:mozilla.org>`_ channel.
 
 We make changes to Firefox by writing patches, testing them and pushing them into "the tree", the
 term we use for all the code in Mozilla-Central. Let's get started.
@@ -28,29 +28,23 @@ With more than a million bugs filed in Bugzilla, it can be hard to know
 where to start, so we've created these bug categories to make getting
 involved a little easier:
 
--  `Codetribute <https://codetribute.mozilla.org/>` - our site for
+-  `Codetribute <https://codetribute.mozilla.org/>`_ - our site for
    finding bugs that are mentored, some are good first bugs, some are
    slightly harder. Your mentor will help guide you with the bug fix and
    through the submission and landing process.
--  `Good First
-   Bugs <https://bugzil.la/sw:%22%5Bgood%20first%20bug%5D%22&limit=0>`
+-  `Good First Bugs <https://mzl.la/2yBg3zB>`_
    - are the best way to take your first steps into the Mozilla
    ecosystem. They're all about small changes, sometimes as little as a
    few lines, but they're a great way to learn about setting up your
    development environment, navigating Bugzilla, and making
    contributions to the Mozilla codebase.
--  Follow `@StartMozilla on
-   Twitter <https://twitter.com/startmozilla>` - we link up Good First
-   Bugs for new contributors across Mozilla every day.
--  Visit `firefox-dev.tools <http://firefox-dev.tools>` - we list
+-  Visit `firefox-dev.tools <http://firefox-dev.tools>`_ - we list
    Firefox Developer Tools bugs for new contributors.
--  `Student Projects <https://bugzil.la/kw:student-project>` - are
+-  `Student Projects <https://bugzil.la/kw:student-project>`_ - are
    larger projects, such as might be suitable for a university student
    for credit. Of course, if you are not a student, feel free to fix one
    of these bugs. We maintain two lists: one for projects `based on the
-   existing codebase <https://bugzil.la/kw:student-project>`, and one
-   for `implementing new
-   applications. <https://github.com/Yoric/Mozilla-Student-Projects/issues>`
+   existing codebase <https://bugzil.la/kw:student-project>`_.
 
 Fix that one bug
 ~~~~~~~~~~~~~~~~
@@ -59,39 +53,31 @@ If there's one particular bug you'd like to fix about Firefox, Thunderbird, or
 your other favorite Mozilla application, this can be a great place to
 start. There are a number of ways to do this:
 
--  `Search bugzilla <https://bugzilla.mozilla.org/query.cgi>` for
+-  `Search bugzilla <https://bugzilla.mozilla.org/query.cgi>`_ for
    relevant keywords. See pages on
-   `Bugzilla <https://developer.mozilla.org/en-US/docs/Mozilla/Bugzilla>`\ and `Searching
-   Bugzilla <https://developer.mozilla.org/en-US/docs/Mozilla/QA/Searching_Bugzilla>`\ for further
+   `Bugzilla <https://developer.mozilla.org/docs/Mozilla/Bugzilla>`_ and `Searching
+   Bugzilla <https://developer.mozilla.org/docs/Mozilla/QA/Searching_Bugzilla>`_ for further
    help
 -  Learn the `bugzilla
-   component <https://bugzilla.mozilla.org/describecomponents.cgi>`,
+   component <https://bugzilla.mozilla.org/describecomponents.cgi>`_,
    with which your pet bug is implemented, using the components list.
    Browse this component on bugzilla for related bugs
--  Ask in our matrix channels :
-   `#introduction:mozilla.org <https://riot.im/app/#/room/#introduction:mozilla.org>`
-   or
-   `#developers:mozilla.org <https://chat.mozilla.org/#/room/#developers:mozilla.org>`
 
 Fixing your bug
 ---------------
 
 We leave this in your hands. Here are some further resources to help:
 
--  Ask for help in a comment on the bug, or in
-   `#introduction <https://chat.mibbit.com/?url=irc%3A%2F%2Firc.mozilla.org%2F%23introduction>`
-   or
-   `#developers <https://chat.mibbit.com/?url=irc%3A%2F%2Firc.mozilla.org%2F%23developers>`
 -  Check out
-   `https://developer.mozilla.org/en-US/docs/Developer\_Guide <https://developer.mozilla.org/en-US/docs/Developer_Guide>`
+   `https://developer.mozilla.org/docs/Developer_Guide <https://developer.mozilla.org/docs/Developer_Guide>`_
    and its parent document,
-   https://developer.mozilla.org/en-US/docs/Mozilla
+   https://developer.mozilla.org/docs/Mozilla
 -  Our `reviewer
-   checklist <https://developer.mozilla.org/en-US/docs/Developer_Guide/Reviewer_Checklist>` is very
+   checklist <https://developer.mozilla.org/docs/Developer_Guide/Reviewer_Checklist>`_ is very
    useful, if you have a patch near completion, and seek a favorable
    review
 -  Utilize our build tool
-   `Mach <https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/mach>`, its linting,
+   `Mach <https://developer.mozilla.org/docs/Mozilla/Developer_guide/mach>`_, its linting,
    static analysis, and other code checking features
 
 Getting your code reviewed
@@ -100,7 +86,7 @@ Getting your code reviewed
 Once you fix the bug, you can advance to having your code reviewed.
 
 Mozilla uses
-`Phabricator <https://moz-conduit.readthedocs.io/en/latest/phabricator-user.html>`
+`Phabricator <https://moz-conduit.readthedocs.io/en/latest/phabricator-user.html>`_
 for code review.
 
 Who is the right person to ask for a review?
@@ -116,7 +102,7 @@ Who is the right person to ask for a review?
 -  Are there related bugs on similar topics? The reviewer in those bugs
    might be another good choice
 -  We have an out of date `list of
-   modules <https://wiki.mozilla.org/Modules>`, which lists peers and
+   modules <https://wiki.mozilla.org/Modules>`_, which lists peers and
    owners for the module. Some of these will be good reviewers. In a
    worst case scenario, set the module owner as the reviewer, asking
    them in the comments to pick someone more suitable
@@ -133,11 +119,11 @@ time, naturally reach out to them: add a comment to the bug saying
 'review ping?', check the "Need more information from" box, and add the
 reviewer's name. If they don't respond within a day or two, you can ask
 for help on Matrix in the
-`#introduction:mozilla.org <https://riot.im/app/#/room/#introduction:mozilla.org>`
+`#introduction:mozilla.org <https://riot.im/app/#/room/#introduction:mozilla.org>`_
 or
-`#developers:mozilla.org <https://chat.mozilla.org/#/room/#developers:mozilla.org>`
+`#developers:mozilla.org <https://chat.mozilla.org/#/room/#developers:mozilla.org>`_
 channels, or contact `Mike
-Hoye <mailto:mhoye@mozilla.com?subject=Code%20Review%20Request%20&body=URL%3A%20%20%5Bplease%20paste%20a%20link%20to%20your%20patch%20here.%5D>`
+Hoye <mailto:mhoye@mozilla.com?subject=Code%20Review%20Request%20&body=URL%3A%20%20%5Bplease%20paste%20a%20link%20to%20your%20patch%20here.%5D>`_
 directly.
 
 Don't hesitate to contact your mentor as well if this isn't moving.
@@ -163,7 +149,7 @@ Getting code into Firefox
 Once your patch has been accepted, it is ready to go. Before it can be
 merged into the tree, your patch will need to complete a successful run
 through our `try
-server <https://wiki.mozilla.org/ReleaseEngineering/TryServer>`,
+server <https://wiki.mozilla.org/ReleaseEngineering/TryServer>`_,
 making sure there are no unexpected regressions. If you don't have try
 server access already, your mentor, or the person who reviewed your
 patch, will be able to help.
@@ -189,7 +175,7 @@ stronger for it. But don't stop now.
 
 Go back to step 3, as there is plenty more to do. Your mentor might
 suggest a new bug for you to work on, or `find one that interests
-you <http://www.whatcanidoformozilla.org/>`. Now that you've got your
+you <http://www.whatcanidoformozilla.org/>`_. Now that you've got your
 first bug fixed you should request level 1 access to the repository to
 push to the try server and get automated feedback about your changes on
 multiple platforms. After fixing a nontrivial number of bugs you should
@@ -205,10 +191,10 @@ soon, but until then you may find them interesting in their current
 form:
 
 -  `A guide to learning the Firefox 
-   codebase <http://www.joshmatthews.net/blog/2010/03/getting-involve-with-mozilla/>`
+   codebase <http://www.joshmatthews.net/blog/2010/03/getting-involve-with-mozilla/>`_
 -  `A beginner's guide to SpiderMonkey, Mozilla's Javascript
-   engine <https://wiki.mozilla.org/JavaScript:New_to_SpiderMonkey>`
+   engine <https://wiki.mozilla.org/JavaScript:New_to_SpiderMonkey>`_
 -  `Mozilla platform development
-   cheatsheet <https://web.archive.org/web/20160813112326/http://www.codefirefox.com:80/cheatsheet>`
+   cheatsheet <https://web.archive.org/web/20160813112326/http://www.codefirefox.com:80/cheatsheet>`_
    (archive.org)
 

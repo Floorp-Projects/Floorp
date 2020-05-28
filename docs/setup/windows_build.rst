@@ -27,6 +27,12 @@ simultaneously on your keyboard on any version of Windows.
 Next, we want to start on a solid foundation: make sure you’re up to
 date with Windows Update and then we’ll get moving.
 
+.. note::
+
+   Microsoft is providing some Windows images with Visual Studio and code
+   https://developer.microsoft.com/en-us/windows/downloads/virtual-machines/
+
+
 Visual Studio 2019
 ~~~~~~~~~~~~~~~~~~
 
@@ -34,9 +40,9 @@ Visual Studio 2019
 .. note:: 
 
    As of `bug
-   1483835 <https://bugzilla.mozilla.org/show_bug.cgi?id=1483835>`, local
+   1483835 <https://bugzilla.mozilla.org/show_bug.cgi?id=1483835>`_, local
    Windows builds `use clang-cl by
-   default <https://groups.google.com/d/topic/mozilla.dev.platform/MdbLAcvHC0Y/discussion>`
+   default <https://groups.google.com/d/topic/mozilla.dev.platform/MdbLAcvHC0Y/discussion>`_
    as compiler. Visual Studio is still necessary for build tools, headers,
    and SDK.
 
@@ -44,12 +50,12 @@ Visual Studio 2019
 
    Automation builds still use Visual Studio 2017, so there may be some
    divergence until we upgrade. `Bug
-   1581930 <https://bugzilla.mozilla.org/show_bug.cgi?id=1581930>` tracks
+   1581930 <https://bugzilla.mozilla.org/show_bug.cgi?id=1581930>`_ tracks
    various issues building with 2019. Please file your issue there and
    downgrade in the interim if you encounter build failures.
 
 `Download and install the Community
-edition <https://visualstudio.microsoft.com/downloads/>` of Visual
+edition <https://visualstudio.microsoft.com/downloads/>`_ of Visual
 Studio 2019. Professional and Enterprise are also supported if you have
 either of those editions.
 
@@ -81,7 +87,7 @@ MozillaBuild
 ^^^^^^^^^^^^
 
 Finally, download the `MozillaBuild
-Package <https://ftp.mozilla.org/pub/mozilla.org/mozilla/libraries/win32/MozillaBuildSetup-Latest.exe>`
+Package <https://ftp.mozilla.org/pub/mozilla.org/mozilla/libraries/win32/MozillaBuildSetup-Latest.exe>`_
 from Mozilla. Accept the default settings, in particular the default
 installation directory: ``c:\mozilla-build\``. On some versions of
 Windows an error dialog will give you the option to ‘reinstall with the
@@ -110,8 +116,8 @@ into it like so
     cd mozilla-source
 
 Next, you can get the Firefox source code with Mercurial. There is a
-wiki page on how to `get the source using
-Mercurial <https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Source_Code/Mercurial>`
+wiki page on how to :ref:`get the source using
+Mercurial <Mercurial Overview>`
 but, in summary, if your network connection is good enough to download
 1+ GB without interuption and you want the main development repository,
 then you can just use:
@@ -122,7 +128,7 @@ then you can just use:
 
 While you’re waiting for that process to finish, take a look at `our
 Mercurial
-documentation <http://mozilla-version-control-tools.readthedocs.org/en/latest/hgmozilla/index.html>`.
+documentation <http://mozilla-version-control-tools.readthedocs.org/en/latest/hgmozilla/index.html>`_.
 It explains how we use version control at Mozilla to manage our code and
 land changes to our source tree.
 
@@ -144,35 +150,17 @@ The ``./mach bootstrap`` step is a catch-all for any dependencies not
 covered in this documentation. Note that, bootstrap works **only with
 the Mercuial repo of the source**, not with source tar balls, nor the
 github mirror. If you are working on Firefox or Firefox for Android
-frontends or building Firefox without any changes, select `artifact
-builds <https://developer.mozilla.org/en-US/docs/Artifact_builds>` in
+frontends or building Firefox without any changes, select :ref:`Artifact Builds
+<Understanding Artifact Builds>` in
 the first question in ``./mach bootstrap``.  Artifact builds will
 complete more quickly!  Artifact builds are unsuitable for those working
-on C++ code.
+on C++ or Rust code.
 
 You’re on your way. Don’t be discouraged if this takes a while; it takes
 some time even on the fastest modern machines and as much as two hours
 or more on older hardware. Firefox is pretty big, because the Web is
 big.
 
-Getting connected
-~~~~~~~~~~~~~~~~~
-
-That last step can take some time. While it’s finishing you should take
-a moment to sign up for a Bugzilla account!
-
-`Bugzilla.mozilla.org <https://bugzilla.mozilla.org/>` is Mozilla’s
-issue tracker. To comment on a bug or submit a patch you’ll need a
-Bugzilla account; you can use your GitHub account if you have one, or
-`sign up for a Bugzilla account
-directly. <https://bugzilla.mozilla.org/createaccount.cgi>`
-
-As well as Bugzilla, much of Mozilla’s internal communication happens
-over Internet Relay Chat (IRC). You can learn how to `connect to Mozilla
-with IRC here <https://wiki.mozilla.org/IRC>`. If you’re just getting
-started or have questions about getting set up you can join us in the
-*"#introduction channel"*, where some of our community members hang out
-to try and help new contributors get rolling.
 
 You're ready
 ~~~~~~~~~~~~
@@ -192,19 +180,6 @@ If you saw an error here, look further down in this document for the
 our tests, so you need to create exceptions for the "mozilla-source" and
 "mozilla-build" directories. Don't turn your antivirus off! Just add the
 exceptions.
-
-Now the fun starts
-~~~~~~~~~~~~~~~~~~
-
-You have the code and you’ve compiled Firefox. Just fire it up with
-``./mach run`` and you’re ready to start hacking. The next steps are up
-to you: join us on IRC in the “\ *#introduction* *channel*\ ”, follow
-`StartMozilla on Twitter <https://twitter.com/StartMozilla>` and find
-`a bug to start working
-on <http://www.joshmatthews.net/bugsahoy/?simple=1>`.
-
-Thank you for joining us and helping us make Firefox and the open Web
-better for everyone.
 
 
 Details and troubleshooting
@@ -254,21 +229,21 @@ successfully. There are notes on these software requirements below.
 
 #. Make sure your system is up-to-date through Windows Update.
 #. Install `Visual Studio Community
-   2019 <https://www.visualstudio.com/downloads/>` (free).
+   2019 <https://www.visualstudio.com/downloads/>`_ (free).
    Alternatively, you can also use a paid version of Visual Studio. Some
    additional components may be required to build Firefox, as noted in
    the "Visual Studio 2019" section above. Earlier versions of Visual
    Studio are not supported; the Firefox codebase relies on C++ features
    that are not supported in earlier releases.
 #. Optionally, in addition to VS2019, you may want to install `Visual
-   C++ 2008 Express <http://go.microsoft.com/?linkid=7729279>` (free)
+   C++ 2008 Express <http://go.microsoft.com/?linkid=7729279>`_ (free)
    to compile some Python extensions used in the build system as Python
    2.7.x for Windows is built with that compiler by default. Note, if
    you want to use "mach resource-usage", "mach doctor", "mach
    android-emulator", or run talos tests locally, you should install it
    for building psutil.
 #. Download and install the
-   `MozillaBuild <https://ftp.mozilla.org/pub/mozilla.org/mozilla/libraries/win32/MozillaBuildSetup-Latest.exe>`
+   `MozillaBuild <https://ftp.mozilla.org/pub/mozilla.org/mozilla/libraries/win32/MozillaBuildSetup-Latest.exe>`_
    package, containing additional build tools. If you have Cygwin
    installed, read the note in the tips section. If you see a Windows
    error dialog giving you the option to re-install with the 'correct
@@ -320,18 +295,18 @@ MozillaBuild
 
 The MozillaBuild package contains other software prerequisites necessary
 for building Mozilla, including the MSYS build environment,
-`Mercurial <https://www.mercurial-scm.org/>`, autoconf-2.13, CVS,
+`Mercurial <https://www.mercurial-scm.org/>`_, autoconf-2.13, CVS,
 Python, YASM, NSIS, and UPX, as well as optional but useful tools such
 as wget and emacs.
 
 `Download the current MozillaBuild
-package. <https://ftp.mozilla.org/pub/mozilla.org/mozilla/libraries/win32/MozillaBuildSetup-Latest.exe>`
+package. <https://ftp.mozilla.org/pub/mozilla.org/mozilla/libraries/win32/MozillaBuildSetup-Latest.exe>`_
 
 By default, the package installs to ``c:\mozilla-build`` and it is
 recommended to use the default path. Don't use a path that contains
 spaces. The installer does not modify the Windows registry. Note that
 some binaries may require `Visual C++ Redistributable
-package <https://www.microsoft.com/downloads/en/details.aspx?FamilyID=a5c84275-3b97-4ab7-a40d-3802b2af5fc2&displaylang=en>` to
+package <https://www.microsoft.com/downloads/en/details.aspx?FamilyID=a5c84275-3b97-4ab7-a40d-3802b2af5fc2&displaylang=en>`_ to
 run.
 
 .. note::
@@ -418,13 +393,13 @@ Common problems, hints, and restrictions
 ----------------------------------------
 
 -  `Debugging Firefox on Windows
-   FAQ <https://developer.mozilla.org/en-US/docs/Mozilla/Debugging/Debugging_Mozilla_on_Windows_FAQ>`:
+   FAQ <https://developer.mozilla.org/docs/Mozilla/Debugging/Debugging_Mozilla_on_Windows_FAQ>`_:
    Tips on how to debug Mozilla on Windows.
 -  Your installed MozillaBuild may be too old. The build system may
    assume you have new features and bugfixes that are only present in
    newer versions of MozillaBuild. Instructions for how to update
    MozillaBuild `can be found
-   here <https://wiki.mozilla.org/MozillaBuild>`.
+   here <https://wiki.mozilla.org/MozillaBuild>`_.
 -  The build may fail if your machine is configured with the wrong
    architecture. If you want to build 64-bit Firefox, add the two lines
    below to your mozconfig file:
@@ -471,7 +446,7 @@ Common problems, hints, and restrictions
    best available make command.
 -  If you encounter a build failure like "ERROR: Cannot find
    makecab.exe", try applying the patch from `bug
-   1383578 <https://bugzilla.mozilla.org/show_bug.cgi?id=1383578>`,
+   1383578 <https://bugzilla.mozilla.org/show_bug.cgi?id=1383578>`_,
    i.e. change: ``SET PATH="%PATH%;!LLVMDIR!\bin"``  to
    ``SET "PATH=%PATH%;!LLVMDIR!\bin"``.
 -  If you encounter a build failure with
