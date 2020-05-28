@@ -8060,6 +8060,11 @@
   value: false
   mirror: always
 
+- name: privacy.firstparty.isolate.use_site
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 # Enforce tracking protection in all modes.
 - name: privacy.trackingprotection.enabled
   type: bool
@@ -8315,6 +8320,11 @@
 - name: privacy.dynamic_firstparty.limitForeign
   type: RelaxedAtomicBool
   value: false
+  mirror: always
+
+- name: privacy.dynamic_firstparty.use_site
+  type: RelaxedAtomicBool
+  value: true
   mirror: always
 
 - name: privacy.partition.network_state
