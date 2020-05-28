@@ -4,7 +4,7 @@
 
 "use strict";
 
-const { Ci } = require("chrome");
+const { Ci, Cu } = require("chrome");
 const defer = require("devtools/shared/defer");
 const protocol = require("devtools/shared/protocol");
 const { LongStringActor } = require("devtools/server/actors/string");
@@ -117,7 +117,11 @@ var MediaRuleActor = protocol.ActorClassWithSpec(mediaRuleSpec, {
 
   destroy: function() {
     if (this.mql) {
-      this.mql.removeListener(this._matchesChange);
+      // The content page may already be destroyed and mql be the dead wrapper.
+      if (!Cu.isDeadWrapper(this.mql)) {
+        this.mql.removeListener(this._matchesChange);
+      }
+      this.mql = null;
     }
 
     protocol.Actor.prototype.destroy.call(this);
