@@ -140,7 +140,6 @@ class span_iterator {
   }
 
   constexpr span_iterator& operator++() {
-    MOZ_RELEASE_ASSERT(span_ && index_ >= 0 && index_ < span_->Length());
     ++index_;
     return *this;
   }
@@ -152,7 +151,6 @@ class span_iterator {
   }
 
   constexpr span_iterator& operator--() {
-    MOZ_RELEASE_ASSERT(span_ && index_ > 0 && index_ <= span_->Length());
     --index_;
     return *this;
   }
