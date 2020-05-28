@@ -14,6 +14,28 @@ const CHROME_PREFIX = "chrome://mochitests/content/browser/";
 const STUBS_FOLDER = "devtools/client/webconsole/test/node/fixtures/stubs/";
 const STUBS_UPDATE_ENV = "WEBCONSOLE_STUBS_UPDATE";
 
+async function createResourceWatcherForTab(tab) {
+  // Avoid mocha to try to load these module and fail while doing it when running node tests
+  const {
+    ResourceWatcher,
+  } = require("devtools/shared/resources/resource-watcher");
+  const { TargetList } = require("devtools/shared/resources/target-list");
+  const { TargetFactory } = require("devtools/client/framework/target");
+
+  const target = await TargetFactory.forTab(tab);
+  const targetList = new TargetList(target.client.mainRoot, target);
+
+  await target.attach();
+  // Attach the thread actor in order to ensure having sources
+  // and have the `sourceId` attribute correctly set.
+  const threadFront = await target.attachThread({});
+  // Resume the thread, otherwise it stays pause and we prevent JS from running
+  await threadFront.resume();
+
+  await targetList.startListening();
+  return new ResourceWatcher(targetList);
+}
+
 // eslint-disable-next-line complexity
 function getCleanedPacket(key, packet) {
   const { stubPackets } = require(CHROME_PREFIX + STUBS_FOLDER + "index");
@@ -510,6 +532,7 @@ function parsePacketAndCreateFronts(packet) {
 
 module.exports = {
   STUBS_UPDATE_ENV,
+  createResourceWatcherForTab,
   getStubFile,
   getCleanedPacket,
   getSerializedPacket,
