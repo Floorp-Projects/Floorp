@@ -36,10 +36,10 @@ class IDMap {
   const_iterator begin() const { return data_.begin(); }
   const_iterator end() const { return data_.end(); }
 
-  // Adds a new data member with the specified ID. The ID must not be in
-  // the list.
+  bool Contains(int32_t id) { return data_.find(id) != data_.end(); }
+
   void AddWithID(const T& data, int32_t id) {
-    DCHECK(data_.find(id) == data_.end()) << "Inserting duplicate item";
+    MOZ_ASSERT(!Contains(id), "Don't insert with an existing ID");
     data_[id] = data;
   }
 
@@ -60,7 +60,7 @@ class IDMap {
   }
 
   void ReplaceWithID(const T& data, int32_t id) {
-    DCHECK(data_.find(id) != data_.end()) << "item doesn't exist";
+    MOZ_ASSERT(Contains(id), "Only replace an existing ID");
     data_[id] = data;
   }
 
