@@ -32,12 +32,9 @@ class ResourceWatcher {
     this._availableListeners = new EventEmitter();
     this._destroyedListeners = new EventEmitter();
 
+    // Cache for all resources by the order that the resource was taken.
+    this._cache = [];
     this._listenerCount = new Map();
-
-    // This set is only used to know which resources have been watched and then
-    // unwatched, since the ResourceWatcher doesn't support calling
-    // watch, unwatch and watch again.
-    this._previouslyListenedTypes = new Set();
   }
 
   get contentToolboxFissionPrefValue() {
@@ -69,7 +66,7 @@ class ResourceWatcher {
    *                                  existing resources.
    */
   async watchResources(resources, options) {
-    const { ignoreExistingResources = false } = options;
+    const { onAvailable, ignoreExistingResources = false } = options;
 
     // First ensuring enabling listening to targets.
     // This will call onTargetAvailable for all already existing targets,
@@ -79,15 +76,12 @@ class ResourceWatcher {
     await this._watchAllTargets();
 
     for (const resource of resources) {
-      if (ignoreExistingResources) {
-        // Register listeners after _startListening
-        // so that it avoids the listeners to get cached resources.
-        await this._startListening(resource);
-        this._registerListeners(resource, options);
-      } else {
-        this._registerListeners(resource, options);
-        await this._startListening(resource);
-      }
+      await this._startListening(resource);
+      this._registerListeners(resource, options);
+    }
+
+    if (!ignoreExistingResources) {
+      await this._forwardCachedResources(resources, onAvailable);
     }
   }
 
@@ -168,7 +162,13 @@ class ResourceWatcher {
    *        This Front inherits from TargetMixin and is typically
    *        composed of a BrowsingContextTargetFront or ContentProcessTargetFront.
    */
-  async _onTargetAvailable({ targetFront }) {
+  async _onTargetAvailable({ targetFront, isTargetSwitching }) {
+    if (isTargetSwitching) {
+      this._onWillNavigate(targetFront);
+    }
+
+    targetFront.on("will-navigate", () => this._onWillNavigate(targetFront));
+
     // For each resource type...
     for (const resourceType of Object.values(ResourceWatcher.TYPES)) {
       // ...which has at least one listener...
@@ -213,11 +213,16 @@ class ResourceWatcher {
       resource.targetFront = targetFront;
     }
 
+    // Remove after landing bug 1640641.
+    resource.resourceType = resourceType;
+
     this._availableListeners.emit(resourceType, {
       resourceType,
       targetFront,
       resource,
     });
+
+    this._cache.push(resource);
   }
 
   /**
@@ -227,11 +232,27 @@ class ResourceWatcher {
    * XXX: No usage of this yet. May be useful for the inspector? sources?
    */
   _onResourceDestroyed(targetFront, resourceType, resource) {
+    const index = this._cache.indexOf(resource);
+    if (index >= 0) {
+      this._cache.splice(index, 1);
+    }
+
     this._destroyedListeners.emit(resourceType, {
       resourceType,
       targetFront,
       resource,
     });
+  }
+
+  _onWillNavigate(targetFront) {
+    if (targetFront.isTopLevel) {
+      this._cache = [];
+      return;
+    }
+
+    this._cache = this._cache.filter(
+      cachedResource => cachedResource.targetFront !== targetFront
+    );
   }
 
   /**
@@ -244,41 +265,13 @@ class ResourceWatcher {
    *        to be listened.
    */
   async _startListening(resourceType) {
-    const isDocumentEvent =
-      resourceType === ResourceWatcher.TYPES.DOCUMENT_EVENT;
-
     let listeners = this._listenerCount.get(resourceType) || 0;
     listeners++;
-    if (listeners > 1) {
-      // If there are several calls to watch, only the first caller receives
-      // "existing" resources. Throw to avoid inconsistent behaviors
-      if (isDocumentEvent) {
-        // For DOCUMENT_EVENT, return without throwing because this is already
-        // used by several callsites in the netmonitor.
-        // This should be reviewed in Bug 1625909.
-        this._listenerCount.set(resourceType, listeners);
-        return;
-      }
-
-      throw new Error(
-        `The ResourceWatcher is already listening to "${resourceType}", ` +
-          "the client should call `watchResources` only once per resource type."
-      );
-    }
-
-    const wasListening = this._previouslyListenedTypes.has(resourceType);
-    if (wasListening && !isDocumentEvent) {
-      // We already called watch/unwatch for this resource.
-      // This can lead to the onAvailable callback being called twice because we
-      // don't perform any cleanup in _unwatchResourcesForTarget.
-      throw new Error(
-        `The ResourceWatcher previously watched "${resourceType}" ` +
-          "and doesn't support watching again on a previous resource."
-      );
-    }
-
     this._listenerCount.set(resourceType, listeners);
-    this._previouslyListenedTypes.add(resourceType);
+
+    if (listeners > 1) {
+      return;
+    }
 
     // If this is the first listener for this type of resource,
     // we should go through all the existing targets as onTargetAvailable
@@ -289,6 +282,18 @@ class ResourceWatcher {
       promises.push(this._watchResourcesForTarget(target, resourceType));
     }
     await Promise.all(promises);
+  }
+
+  async _forwardCachedResources(resourceTypes, onAvailable) {
+    for (const resource of this._cache) {
+      if (resourceTypes.includes(resource.resourceType)) {
+        await onAvailable({
+          resourceType: resource.resourceType,
+          targetFront: resource.targetFront,
+          resource,
+        });
+      }
+    }
   }
 
   /**
@@ -325,6 +330,11 @@ class ResourceWatcher {
     if (listeners > 0) {
       return;
     }
+
+    // Clear the cached resources of the type.
+    this._cache = this._cache.filter(
+      cachedResource => cachedResource.resourceType !== resourceType
+    );
 
     // If this was the last listener, we should stop watching these events from the actors
     // and the actors should stop watching things from the platform
