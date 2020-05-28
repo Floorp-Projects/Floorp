@@ -949,6 +949,13 @@ nsUnknownContentTypeDialog.prototype = {
         var app = this.helperAppChoice();
         this.mLauncher.MIMEInfo.preferredApplicationHandler = app;
       }
+    } else if (this.handleInternally) {
+      needUpdate =
+        this.mLauncher.MIMEInfo.preferredAction !=
+        this.nsIMIMEInfo.handleInternally;
+      if (needUpdate) {
+        this.mLauncher.MIMEInfo.preferredAction = this.nsIMIMEInfo.handleInternally;
+      }
     }
     // We will also need to update if the "always ask" flag has changed.
     needUpdate =

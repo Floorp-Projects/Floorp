@@ -4,6 +4,9 @@
 "use strict";
 
 ChromeUtils.import("resource://gre/modules/Downloads.jsm", this);
+const { DownloadIntegration } = ChromeUtils.import(
+  "resource://gre/modules/DownloadIntegration.jsm"
+);
 
 const TEST_PATH = getRootDirectory(gTestPath).replace(
   "chrome://mochitests/content",
@@ -40,7 +43,10 @@ async function waitForPdfJS(browser, url) {
 add_task(async function setup() {
   // Remove the security delay for the dialog during the test.
   await SpecialPowers.pushPrefEnv({
-    set: [["security.dialog_enable_delay", 0]],
+    set: [
+      ["security.dialog_enable_delay", 0],
+      ["browser.helperApps.showOpenOptionForPdfJS", true],
+    ],
   });
 });
 
@@ -51,17 +57,11 @@ add_task(async function setup() {
  * is clicked from pdf.js.
  */
 add_task(async function test_check_open_with_internal_handler() {
-  const { DownloadIntegration } = ChromeUtils.import(
-    "resource://gre/modules/DownloadIntegration.jsm"
-  );
   for (let file of [
     "file_pdf_application_pdf.pdf",
     "file_pdf_binary_octet_stream.pdf",
   ]) {
     info("Testing with " + file);
-    await SpecialPowers.pushPrefEnv({
-      set: [["browser.helperApps.showOpenOptionForPdfJS", true]],
-    });
     let publicList = await Downloads.getList(Downloads.PUBLIC);
     registerCleanupFunction(async () => {
       await publicList.removeFinished();
@@ -175,17 +175,11 @@ add_task(async function test_check_open_with_internal_handler() {
  * open the PDF into pdf.js
  */
 add_task(async function test_check_open_with_external_application() {
-  const { DownloadIntegration } = ChromeUtils.import(
-    "resource://gre/modules/DownloadIntegration.jsm"
-  );
   for (let file of [
     "file_pdf_application_pdf.pdf",
     "file_pdf_binary_octet_stream.pdf",
   ]) {
     info("Testing with " + file);
-    await SpecialPowers.pushPrefEnv({
-      set: [["browser.helperApps.showOpenOptionForPdfJS", true]],
-    });
     let publicList = await Downloads.getList(Downloads.PUBLIC);
     registerCleanupFunction(async () => {
       await publicList.removeFinished();
@@ -239,6 +233,164 @@ add_task(async function test_check_open_with_external_application() {
 });
 
 /**
+ * Test that choosing to open a PDF with an external application works and
+ * then downloading the same file again and choosing Open with Firefox opens
+ * the download in Firefox.
+ */
+add_task(async function test_check_open_with_external_then_internal() {
+  // This test only runs on Windows because appPicker.xhtml is only used on Windows.
+  if (AppConstants.platform != "win") {
+    return;
+  }
+
+  // This test covers a bug that only occurs when the mimeInfo is set to Always Ask
+  const mimeSvc = Cc["@mozilla.org/mime;1"].getService(Ci.nsIMIMEService);
+  const handlerSvc = Cc["@mozilla.org/uriloader/handler-service;1"].getService(
+    Ci.nsIHandlerService
+  );
+  const mimeInfo = mimeSvc.getFromTypeAndExtension("application/pdf", "pdf");
+  const exists = handlerSvc.exists(mimeInfo);
+  const { preferredAction, alwaysAskBeforeHandling } = mimeInfo;
+  mimeInfo.preferredAction = mimeInfo.alwaysAsk;
+  mimeInfo.alwaysAskBeforeHandling = true;
+  handlerSvc.store(mimeInfo);
+  registerCleanupFunction(() => {
+    // Restore old nsIMIMEInfo
+    if (exists) {
+      Object.assign(mimeInfo, { preferredAction, alwaysAskBeforeHandling });
+      handlerSvc.store(mimeInfo);
+    } else {
+      handlerSvc.remove(mimeInfo);
+    }
+  });
+
+  for (let [file, mimeType] of [
+    ["file_pdf_application_pdf.pdf", "application/pdf"],
+    ["file_pdf_binary_octet_stream.pdf", "binary/octet-stream"],
+    ["file_pdf_application_unknown.pdf", "application/unknown"],
+  ]) {
+    info("Testing with " + file);
+    let originalMimeInfo = mimeSvc.getFromTypeAndExtension(mimeType, "pdf");
+
+    let publicList = await Downloads.getList(Downloads.PUBLIC);
+    registerCleanupFunction(async () => {
+      await publicList.removeFinished();
+    });
+    let dialogWindowPromise = BrowserTestUtils.domWindowOpenedAndLoaded();
+    // Open a new tab to the PDF file which will trigger the Unknown Content Type dialog
+    // and choose to open the PDF with an external application.
+    let loadingTab = await BrowserTestUtils.openNewForegroundTab(
+      gBrowser,
+      TEST_PATH + file
+    );
+    let dialogWindow = await dialogWindowPromise;
+    is(
+      dialogWindow.location,
+      "chrome://mozapps/content/downloads/unknownContentType.xhtml",
+      "Should have seen the unknown content dialogWindow."
+    );
+
+    let oldLaunchFile = DownloadIntegration.launchFile;
+    let waitForLaunchFileCalled = new Promise(resolve => {
+      DownloadIntegration.launchFile = () => {
+        ok(true, "The file should be launched with an external application");
+        resolve();
+      };
+    });
+
+    let doc = dialogWindow.document;
+    await waitForAcceptButtonToGetEnabled(doc);
+    let dialog = doc.querySelector("#unknownContentType");
+    let openHandlerMenulist = doc.querySelector("#openHandler");
+    let originalDefaultHandler = openHandlerMenulist.label;
+    doc.querySelector("#open").click();
+    doc.querySelector("#openHandlerPopup").click();
+    let oldOpenDialog = dialogWindow.openDialog;
+    dialogWindow.openDialog = (location, unused2, unused3, params) => {
+      is(location, "chrome://global/content/appPicker.xhtml", "app picker");
+      let handlerApp = params.mimeInfo.possibleLocalHandlers.queryElementAt(
+        0,
+        Ci.nsILocalHandlerApp
+      );
+      ok(handlerApp.executable, "handlerApp should be executable");
+      ok(handlerApp.executable.isFile(), "handlerApp should be a file");
+      params.handlerApp = handlerApp;
+    };
+    doc.querySelector("#choose").click();
+    dialogWindow.openDialog = oldOpenDialog;
+    await TestUtils.waitForCondition(
+      () => originalDefaultHandler != openHandlerMenulist.label,
+      "waiting for openHandler to get updated"
+    );
+    let newDefaultHandler = openHandlerMenulist.label;
+    info(`was ${originalDefaultHandler}, now ${newDefaultHandler}`);
+    let button = dialog.getButton("accept");
+    button.disabled = false;
+    info("Accepting the dialog");
+    dialog.acceptDialog();
+    info("Waiting until DownloadIntegration.launchFile is called");
+    await waitForLaunchFileCalled;
+    BrowserTestUtils.removeTab(loadingTab);
+
+    // Now, open a new tab to the PDF file which will trigger the Unknown Content Type dialog
+    // and choose to open the PDF internally. The previously used external application should be shown as
+    // the external option.
+    dialogWindowPromise = BrowserTestUtils.domWindowOpenedAndLoaded();
+    loadingTab = await BrowserTestUtils.openNewForegroundTab(
+      gBrowser,
+      TEST_PATH + file
+    );
+    dialogWindow = await dialogWindowPromise;
+    is(
+      dialogWindow.location,
+      "chrome://mozapps/content/downloads/unknownContentType.xhtml",
+      "Should have seen the unknown content dialogWindow."
+    );
+
+    DownloadIntegration.launchFile = () => {
+      ok(false, "The file should not be launched with an external application");
+    };
+
+    doc = dialogWindow.document;
+    await waitForAcceptButtonToGetEnabled(doc);
+    openHandlerMenulist = doc.querySelector("#openHandler");
+    is(openHandlerMenulist.label, newDefaultHandler, "'new' handler");
+    dialog = doc.querySelector("#unknownContentType");
+    doc.querySelector("#handleInternally").click();
+    info("Accepting the dialog");
+    button = dialog.getButton("accept");
+    button.disabled = false;
+    let newTabPromise = BrowserTestUtils.waitForNewTab(gBrowser);
+    dialog.acceptDialog();
+
+    info("waiting for new tab to open");
+    let newTab = await newTabPromise;
+
+    await ContentTask.spawn(newTab.linkedBrowser, null, async () => {
+      await ContentTaskUtils.waitForCondition(
+        () => content.document.readyState == "complete"
+      );
+    });
+
+    is(
+      newTab.linkedBrowser.contentPrincipal.origin,
+      "resource://pdf.js",
+      "PDF should be opened with pdf.js"
+    );
+
+    BrowserTestUtils.removeTab(loadingTab);
+    BrowserTestUtils.removeTab(newTab);
+
+    // Now trigger the dialog again and select the system
+    // default option to reset the state for the next iteration of the test.
+    // Reset the state for the next iteration of the test.
+    handlerSvc.store(originalMimeInfo);
+    DownloadIntegration.launchFile = oldLaunchFile;
+    await publicList.removeFinished();
+  }
+});
+
+/**
  * Check that the "Open with internal handler" option is not presented
  * for non-PDF types.
  */
@@ -276,14 +428,13 @@ add_task(async function test_internal_handler_hidden_with_nonpdf_type() {
  * when the feature is disabled.
  */
 add_task(async function test_internal_handler_hidden_with_pref_disabled() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.helperApps.showOpenOptionForPdfJS", false]],
+  });
   for (let file of [
     "file_pdf_application_pdf.pdf",
     "file_pdf_binary_octet_stream.pdf",
   ]) {
-    await SpecialPowers.pushPrefEnv({
-      set: [["browser.helperApps.showOpenOptionForPdfJS", false]],
-    });
-
     let dialogWindowPromise = BrowserTestUtils.domWindowOpenedAndLoaded();
     let loadingTab = await BrowserTestUtils.openNewForegroundTab(
       gBrowser,
