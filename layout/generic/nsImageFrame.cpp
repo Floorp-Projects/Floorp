@@ -523,7 +523,7 @@ static AspectRatio ComputeAspectRatio(imgIContainer* aImage,
   }
 
   const StyleAspectRatio& ratio = style.StylePosition()->mAspectRatio;
-  if (aUseMappedRatio && !ratio.auto_) {
+  if (!ratio.auto_) {
     return ratio.ratio.AsRatio().ToLayoutRatio();
   }
   if (aImage) {
