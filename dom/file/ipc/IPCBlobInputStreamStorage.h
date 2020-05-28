@@ -32,9 +32,7 @@ class IPCBlobInputStreamStorage final : public nsIObserver {
   void AddStream(nsIInputStream* aInputStream, const nsID& aID, uint64_t aSize,
                  uint64_t aChildID);
 
-  // Removes and returns the stream corresponding to the nsID. May return a
-  // nullptr if there's no stream stored for the nsID.
-  nsCOMPtr<nsIInputStream> ForgetStream(const nsID& aID);
+  void ForgetStream(const nsID& aID);
 
   bool HasStream(const nsID& aID);
 
@@ -48,8 +46,8 @@ class IPCBlobInputStreamStorage final : public nsIObserver {
       const nsID& aID);
 
  private:
-  IPCBlobInputStreamStorage() = default;
-  ~IPCBlobInputStreamStorage() = default;
+  IPCBlobInputStreamStorage();
+  ~IPCBlobInputStreamStorage();
 
   struct StreamData {
     nsCOMPtr<nsIInputStream> mInputStream;
