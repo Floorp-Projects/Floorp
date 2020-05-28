@@ -867,7 +867,8 @@ void IToplevelProtocol::ReplaceEventTargetForActor(
   MOZ_RELEASE_ASSERT(id != kNullActorId && id != kFreedActorId);
 
   MutexAutoLock lock(mEventTargetMutex);
-  mEventTargetMap.ReplaceWithID(aEventTarget, id);
+  MOZ_ASSERT(mEventTargetMap.Contains(id), "Only replace an existing ID");
+  mEventTargetMap.Put(id, aEventTarget);
 }
 
 }  // namespace ipc
