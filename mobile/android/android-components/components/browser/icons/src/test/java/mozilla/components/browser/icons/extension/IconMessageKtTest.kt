@@ -42,4 +42,21 @@ class IconMessageKtTest {
         val restoredResources = json.toIconResources()
         assertEquals(resources, restoredResources)
     }
+
+    @Test
+    fun `Url must be sanitized`() {
+        val resources = listOf(
+            IconRequest.Resource(
+                url = "\nhttps://www.mozilla.org/icon64.png\n",
+                sizes = listOf(Size(64, 64)),
+                mimeType = "image/png",
+                type = IconRequest.Resource.Type.FAVICON
+            )
+        )
+
+        val json = resources.toJSON()
+
+        val restoredResource = json.toIconResources().first()
+        assertEquals("https://www.mozilla.org/icon64.png", restoredResource.url)
+    }
 }
