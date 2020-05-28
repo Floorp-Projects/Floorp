@@ -9,9 +9,6 @@ const l10n = require("devtools/client/webconsole/utils/l10n");
 const {
   getUrlDetails,
 } = require("devtools/client/netmonitor/src/utils/request-utils");
-const {
-  ResourceWatcher,
-} = require("devtools/shared/resources/resource-watcher");
 
 // URL Regex, common idioms:
 //
@@ -98,25 +95,25 @@ function prepareMessage(resource, idGenerator) {
  *                           by the Resource API.
  */
 function transformResource(resource) {
-  switch (resource.resourceType || resource.type) {
-    case ResourceWatcher.TYPES.CONSOLE_MESSAGES: {
+  switch (resource.type) {
+    case "consoleAPICall": {
       return transformConsoleAPICallResource(resource);
     }
 
-    case ResourceWatcher.TYPES.PLATFORM_MESSAGES: {
+    case "will-navigate": {
+      return transformNavigationMessagePacket(resource);
+    }
+
+    case "logMessage": {
       return transformPlatformMessageResource(resource);
     }
 
-    case ResourceWatcher.TYPES.ERROR_MESSAGES: {
+    case "pageError": {
       return transformPageErrorResource(resource);
     }
 
     case "networkEvent": {
       return transformNetworkEventResource(resource);
-    }
-
-    case "will-navigate": {
-      return transformNavigationMessagePacket(resource);
     }
 
     case "evaluationResult":

@@ -200,25 +200,24 @@ class ResourceWatcher {
    *
    * @param {Front} targetFront
    *        The Target Front from which this resource comes from.
-   * @param {Array<json/Front>} resources
-   *        Depending on the resource Type, it can be an Array composed of either JSON objects or Fronts,
+   * @param {String} resourceType
+   *        One string of ResourceWatcher.TYPES, which designes the types of resources
+   *        being reported
+   * @param {json/Front} resource
+   *        Depending on the resource Type, it can be a JSON object or a Front
    *        which describes the resource.
    */
-  _onResourceAvailable(targetFront, resources) {
-    for (const resource of resources) {
-      // Put the targetFront on the resource for easy retrieval.
-      if (!resource.targetFront) {
-        resource.targetFront = targetFront;
-      }
-      const { resourceType } = resource;
-
-      this._availableListeners.emit(resourceType, {
-        // XXX: We may want to read resource.resourceType instead of passing this resourceType argument?
-        resourceType,
-        targetFront,
-        resource,
-      });
+  _onResourceAvailable(targetFront, resourceType, resource) {
+    // Put the targetFront on the resource for easy retrieval.
+    if (!resource.targetFront) {
+      resource.targetFront = targetFront;
     }
+
+    this._availableListeners.emit(resourceType, {
+      resourceType,
+      targetFront,
+      resource,
+    });
   }
 
   /**
@@ -297,7 +296,11 @@ class ResourceWatcher {
    * type of resource from a given target.
    */
   _watchResourcesForTarget(targetFront, resourceType) {
-    const onAvailable = this._onResourceAvailable.bind(this, targetFront);
+    const onAvailable = this._onResourceAvailable.bind(
+      this,
+      targetFront,
+      resourceType
+    );
     return LegacyListeners[resourceType]({
       targetList: this.targetList,
       targetFront,
@@ -378,10 +381,7 @@ const LegacyListeners = {
     }
 
     const webConsoleFront = await targetFront.getFront("console");
-    webConsoleFront.on("documentEvent", event => {
-      event.resourceType = "document-events";
-      onAvailable([event]);
-    });
+    webConsoleFront.on("documentEvent", onAvailable);
     await webConsoleFront.startListeners(["DocumentEvents"]);
   },
   [ResourceWatcher.TYPES
