@@ -19,6 +19,7 @@ const SCREEN_SHARING_HEADER_ID = "sharing-warning-screen-panel-header";
 // The number of milliseconds we're willing to wait for the
 // warning panel before we decide that it's not coming.
 const WARNING_PANEL_TIMEOUT_MS = 1000;
+const CTRL_TAB_RUO_PREF = "browser.ctrlTab.recentlyUsedOrder";
 
 /**
  * Common helper function that pretendToShareWindow and pretendToShareScreen
@@ -448,5 +449,86 @@ add_task(async function testWindowVsScreenLabel() {
     !BrowserTestUtils.is_hidden(screenHeader),
     "Should be showing screen sharing header"
   );
+  await resetDisplaySharingState();
+});
+
+/**
+ * Tests that tab switching via the keyboard can also trigger the
+ * tab switch warnings.
+ */
+add_task(async function testKeyboardTabSwitching() {
+  let pressCtrlTab = async (expectPanel = false) => {
+    let promise;
+    if (expectPanel) {
+      promise = BrowserTestUtils.waitForEvent(ctrlTab.panel, "popupshown");
+    } else {
+      promise = BrowserTestUtils.waitForEvent(document, "keyup");
+    }
+    EventUtils.synthesizeKey("VK_TAB", {
+      ctrlKey: true,
+      shiftKey: false,
+    });
+    await promise;
+  };
+
+  let releaseCtrl = async () => {
+    let promise;
+    if (ctrlTab.isOpen) {
+      promise = BrowserTestUtils.waitForEvent(ctrlTab.panel, "popuphidden");
+    } else {
+      promise = BrowserTestUtils.waitForEvent(document, "keyup");
+    }
+    EventUtils.synthesizeKey("VK_CONTROL", { type: "keyup" });
+    return promise;
+  };
+
+  // Ensure that the (on by default) ctrl-tab switch panel is enabled.
+  await SpecialPowers.pushPrefEnv({
+    set: [[CTRL_TAB_RUO_PREF, true]],
+  });
+
+  pretendToShareWindow(window);
+  let originalTab = gBrowser.selectedTab;
+  await pressCtrlTab(true);
+
+  // The Ctrl-Tab MRU list should be:
+  // 0: Second tab (currently selected)
+  // 1: First tab
+  // 2: Last tab
+  //
+  // Having pressed Ctrl-Tab once, 1 (First tab) is selected in the
+  // panel. We want a tab that will warn, so let's hit Ctrl-Tab again
+  // to choose 2 (Last tab).
+  let targetTab = ctrlTab.tabList[2];
+  await pressCtrlTab();
+
+  let warningPromise = ensureWarning(targetTab);
+  await releaseCtrl();
+  await warningPromise;
+
+  // Hide the warning without allowing the tab switch.
+  let panel = document.getElementById(WARNING_PANEL_ID);
+  panel.hidePopup();
+
+  Assert.equal(
+    gBrowser.selectedTab,
+    originalTab,
+    "Should not have changed from the original tab."
+  );
+
+  // Now switch to the in-order tab switching keyboard shortcut mode.
+  await SpecialPowers.popPrefEnv();
+  await SpecialPowers.pushPrefEnv({
+    set: [[CTRL_TAB_RUO_PREF, false]],
+  });
+
+  // Hitting Ctrl-Tab should choose the _next_ tab over from
+  // the originalTab, which should be the third tab.
+  targetTab = gBrowser.tabs[2];
+
+  warningPromise = ensureWarning(targetTab);
+  await pressCtrlTab();
+  await warningPromise;
+
   await resetDisplaySharingState();
 });

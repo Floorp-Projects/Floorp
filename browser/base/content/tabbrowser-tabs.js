@@ -944,6 +944,15 @@
       return document.documentElement.getAttribute("customizing") == "true";
     }
 
+    // This overrides the TabsBase _selectNewTab method so that we can
+    // potentially interrupt keyboard tab switching when sharing the
+    // window or screen.
+    _selectNewTab(aNewTab, aFallbackDir, aWrap) {
+      if (!gSharedTabWarning.willShowSharedTabWarning(aNewTab)) {
+        super._selectNewTab(aNewTab, aFallbackDir, aWrap);
+      }
+    }
+
     _initializeArrowScrollbox() {
       let arrowScrollbox = this.arrowScrollbox;
       arrowScrollbox.shadowRoot.addEventListener(
