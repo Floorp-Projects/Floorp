@@ -46,10 +46,12 @@ class ParentBrowserMenuItemTest {
         parentMenuItem.bind(nestedMenu, view)
         val textView = view.findViewById<TextView>(R.id.text)
         val imageView = view.findViewById<AppCompatImageView>(R.id.image)
+        val overflowView = view.findViewById<AppCompatImageView>(R.id.overflowImage)
 
         assertEquals("label", textView.text)
         assertNotNull(imageView.drawable)
         assertNotNull(imageView.imageTintList)
+        assertNotNull(overflowView.imageTintList)
     }
 
     @Test

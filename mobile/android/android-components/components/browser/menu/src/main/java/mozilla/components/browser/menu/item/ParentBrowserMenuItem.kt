@@ -64,6 +64,10 @@ class ParentBrowserMenuItem(
             setImageResource(imageResource)
             setTintResource(iconTintColorResource)
         }
+        val overflowView = view.findViewById<AppCompatImageView>(R.id.overflowImage)
+        with(overflowView) {
+            setTintResource(iconTintColorResource)
+        }
     }
 
     private fun bindBackPress(menu: BrowserMenu, view: View) {
