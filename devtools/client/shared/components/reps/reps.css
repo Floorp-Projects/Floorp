@@ -163,7 +163,8 @@ html[dir="rtl"] .tree-node button.arrow:not(.expanded) {
   color: var(--object-color);
 }
 
-.objectBox-stackTrace.reps-custom-format {
+.objectBox-stackTrace.reps-custom-format,
+.objectBox-stackTrace.reps-custom-format > .objectBox-string {
   color: var(--error-color);
 }
 
