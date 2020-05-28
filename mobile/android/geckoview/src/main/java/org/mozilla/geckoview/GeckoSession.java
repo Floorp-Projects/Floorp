@@ -3386,7 +3386,7 @@ public class GeckoSession implements Parcelable {
 
             /**
              * Checks if the passed action is available
-             * @param action An {@link SelectionActionDelegateAction} to perform
+             * @param action An {@link SelectionActionDelegate} to perform
              * @return True if the action is available.
              */
             @AnyThread
@@ -3395,10 +3395,10 @@ public class GeckoSession implements Parcelable {
             }
 
             /**
-             * Execute an {@link SelectionActionDelegateAction} action.
+             * Execute an {@link SelectionActionDelegate} action.
              *
              * @throws IllegalStateException If the action was not available.
-             * @param action A {@link SelectionActionDelegateAction} action.
+             * @param action A {@link SelectionActionDelegate} action.
              */
             @AnyThread
             public void execute(@NonNull @SelectionActionDelegateAction final String action) {
@@ -4797,6 +4797,12 @@ public class GeckoSession implements Parcelable {
             /**
              * Confirm the request by responding with a selection.
              * See the PromptDelegate callbacks for specifics.
+             *
+             * @param selection The {@link Autocomplete.Option} used to confirm
+             *                  the request.
+             *
+             * @return A {@link PromptResponse} which can be used to complete
+             *         the {@link GeckoResult} associated with this prompt.
              */
             @UiThread
             public @NonNull PromptResponse confirm(
@@ -4808,6 +4814,9 @@ public class GeckoSession implements Parcelable {
             /**
              * Dismiss the request.
              * See the PromptDelegate callbacks for specifics.
+             *
+             * @return A {@link PromptResponse} which can be used to complete
+             *         the {@link GeckoResult} associated with this prompt.
              */
             @UiThread
             public @NonNull PromptResponse dismiss() {

@@ -214,7 +214,7 @@ public class ContentBlocking {
          * Set whether or not strict social tracking protection is enabled
          * (ie, whether to block content or just cookies). Will only block
          * if social tracking protection lists are supplied to
-         * {@link setAntiTracking}.
+         * {@link #setAntiTracking}.
          *
          * @param enabled A boolean indicating whether or not to enable strict
          *                social tracking protection.
@@ -350,7 +350,7 @@ public class ContentBlocking {
 
         /**
          * Block social trackers. Note: This is not the same as "Social Tracking Protection",
-         * which is controlled by {@link STP}.
+         * which is controlled by {@link #STP}.
          */
         public static final int SOCIAL = 1 << 3;
 
