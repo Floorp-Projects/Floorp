@@ -2867,7 +2867,7 @@ nsresult nsSSLIOLayerAddToSocket(int32_t family, const char* host, int32_t port,
 
   infoObject->SharedState().NoteSocketCreated();
 
-  if (StaticPrefs::network_ssl_tokens_cache_enabled()()) {
+  if (StaticPrefs::network_ssl_tokens_cache_enabled()) {
     rv = infoObject->SetResumptionTokenFromExternalCache();
     if (NS_FAILED(rv)) {
       return rv;

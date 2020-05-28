@@ -58,6 +58,7 @@
 #include "nsContentUtils.h"
 #include "nsExceptionHandler.h"
 #include "mozilla/StaticPrefs_network.h"
+#include "mozilla/StaticPrefs_security.h"
 #include "nsNSSComponent.h"
 #include "ssl.h"
 
@@ -75,7 +76,6 @@ using mozilla::dom::ServiceWorkerDescriptor;
 #define PORT_PREF_PREFIX "network.security.ports."
 #define PORT_PREF(x) PORT_PREF_PREFIX x
 #define MANAGE_OFFLINE_STATUS_PREF "network.manage-offline-status"
-#define OFFLINE_MIRRORS_CONNECTIVITY "network.offline-mirrors-connectivity"
 
 // Nb: these have been misnomers since bug 715770 removed the buffer cache.
 // "network.segment.count" and "network.segment.size" would be better names,
@@ -182,8 +182,6 @@ static const char kProfileDoChange[] = "profile-do-change";
 uint32_t nsIOService::gDefaultSegmentSize = 4096;
 uint32_t nsIOService::gDefaultSegmentCount = 24;
 
-bool nsIOService::sBlockToplevelDataUriNavigations = false;
-
 ////////////////////////////////////////////////////////////////////////////////
 
 nsIOService::nsIOService()
@@ -191,7 +189,6 @@ nsIOService::nsIOService()
       mOfflineForProfileChange(false),
       mManageLinkStatus(false),
       mConnectivity(true),
-      mOfflineMirrorsConnectivity(true),
       mSettingOffline(false),
       mSetOfflineValue(false),
       mSocketProcessLaunchComplete(false),
@@ -285,12 +282,6 @@ nsresult nsIOService::Init() {
     observerService->AddObserver(this, NS_WIDGET_WAKE_OBSERVER_TOPIC, true);
   } else
     NS_WARNING("failed to get observer service");
-
-  Preferences::AddBoolVarCache(
-      &sBlockToplevelDataUriNavigations,
-      "security.data_uri.block_toplevel_data_uri_navigations", false);
-  Preferences::AddBoolVarCache(&mOfflineMirrorsConnectivity,
-                               OFFLINE_MIRRORS_CONNECTIVITY, true);
 
   if (IsSocketProcessChild()) {
     Preferences::RegisterCallbacks(nsIOService::OnTLSPrefChange,
@@ -1158,7 +1149,7 @@ bool nsIOService::IsLinkUp() {
 
 NS_IMETHODIMP
 nsIOService::GetOffline(bool* offline) {
-  if (mOfflineMirrorsConnectivity) {
+  if (StaticPrefs::network_offline_mirrors_connectivity()) {
     *offline = mOffline || !mConnectivity;
   } else {
     *offline = mOffline;
@@ -1924,11 +1915,6 @@ NS_IMETHODIMP
 nsIOService::SpeculativeAnonymousConnect(nsIURI* aURI, nsIPrincipal* aPrincipal,
                                          nsIInterfaceRequestor* aCallbacks) {
   return SpeculativeConnectInternal(aURI, aPrincipal, aCallbacks, true);
-}
-
-/*static*/
-bool nsIOService::BlockToplevelDataUriNavigations() {
-  return sBlockToplevelDataUriNavigations;
 }
 
 NS_IMETHODIMP

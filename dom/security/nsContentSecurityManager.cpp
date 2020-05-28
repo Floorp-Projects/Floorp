@@ -58,7 +58,7 @@ bool nsContentSecurityManager::AllowTopLevelNavigationToDataURI(
   // we don't want to block those loads. Only exception, loads coming
   // from an external applicaton (e.g. Thunderbird) don't load
   // using a contentPrincipal, but we want to block those loads.
-  if (!mozilla::net::nsIOService::BlockToplevelDataUriNavigations()) {
+  if (!StaticPrefs::security_data_uri_block_toplevel_data_uri_navigations()) {
     return true;
   }
   nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
