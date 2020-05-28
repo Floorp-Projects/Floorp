@@ -340,9 +340,25 @@ const featureDescriptions = [
     title: "Disable interval-based stack sampling",
   },
   {
-    name: "Main Thread IO",
+    name: "Main Thread File IO",
     value: "mainthreadio",
-    title: "Record main thread I/O markers.",
+    title: "Record main thread File I/O markers.",
+  },
+  {
+    name: "Profiled Threads File IO",
+    value: "fileio",
+    title: "Record File I/O markers from only profiled threads.",
+  },
+  {
+    name: "All File IO",
+    value: "fileioall",
+    title:
+      "Record File I/O markers from all threads, even unregistered threads.",
+  },
+  {
+    name: "No File IO Stack Sampling",
+    value: "noiostacks",
+    title: "Do not sample stacks when recording File I/O markers.",
   },
   {
     name: "Sequential Styling",
