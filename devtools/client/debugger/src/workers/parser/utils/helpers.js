@@ -37,8 +37,18 @@ export function isYieldExpression(path: SimplePath) {
 }
 
 export function isObjectShorthand(parent: Node): boolean {
+  if (!t.isObjectProperty(parent)) {
+    return false;
+  }
+
+  if (parent.value && parent.value.left) {
+    return (
+      parent.value.type === "AssignmentPattern" &&
+      parent.value.left.type === "Identifier"
+    );
+  }
+
   return (
-    t.isObjectProperty(parent) &&
     parent.value &&
     parent.key.start == parent.value.start &&
     parent.key.loc.identifierName === parent.value.loc.identifierName
