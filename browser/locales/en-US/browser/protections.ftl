@@ -190,7 +190,7 @@ monitor-partial-breaches-percentage = { $percentageResolved }% complete
 monitor-partial-breaches-motivation-title-start = Great start!
 monitor-partial-breaches-motivation-title-middle = Keep it up!
 monitor-partial-breaches-motivation-title-end = Almost done! Keep it up.
-monitor-partial-breaches-motivation-desc = Resolve the rest of your breaches on { -monitor-brand-short-name }
+monitor-partial-breaches-motivation-description = Resolve the rest of your breaches on { -monitor-brand-short-name }.
 monitor-resolve-breaches-link = Resolve Breaches
   .title = Resolve breaches on { -monitor-brand-short-name }
 
