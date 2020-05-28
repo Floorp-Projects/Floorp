@@ -1806,6 +1806,27 @@ void nsContainerFrame::NormalizeChildLists() {
   }
 }
 
+void nsContainerFrame::NoteNewChildren(ChildListID aListID,
+                                       const nsFrameList& aFrameList) {
+#ifdef DEBUG
+  ChildListIDs supportedLists = {kAbsoluteList, kFixedList, kPrincipalList,
+                                 kNoReflowPrincipalList};
+  // We don't handle the kBackdropList frames in any way, but it only contains
+  // a placeholder for ::backdrop which is OK to not reflow (for now anyway).
+  supportedLists += kBackdropList;
+  MOZ_ASSERT(supportedLists.contains(aListID), "unexpected child list");
+#endif
+
+  mozilla::PresShell* presShell = PresShell();
+  for (auto pif = GetPrevInFlow(); pif; pif = pif->GetPrevInFlow()) {
+    if (aListID == kPrincipalList) {
+      pif->AddStateBits(NS_STATE_GRID_DID_PUSH_ITEMS);
+    }
+    presShell->FrameNeedsReflow(pif, IntrinsicDirty::TreeChange,
+                                NS_FRAME_IS_DIRTY);
+  }
+}
+
 bool nsContainerFrame::MoveOverflowToChildList() {
   bool result = false;
 
@@ -1955,6 +1976,22 @@ bool nsContainerFrame::DrainSelfOverflowList() {
   AutoFrameListPtr overflowFrames(PresContext(), StealOverflowFrames());
   if (overflowFrames) {
     mFrames.AppendFrames(nullptr, *overflowFrames);
+    return true;
+  }
+  return false;
+}
+
+bool nsContainerFrame::DrainAndMergeSelfOverflowList() {
+  // Unlike nsContainerFrame::DrainSelfOverflowList we need to merge these lists
+  // so that the resulting mFrames is in document content order.
+  // NOTE: nsContainerFrame::AppendFrames/InsertFrames calls this method and
+  // there are also direct calls from the fctor (FindAppendPrevSibling).
+  AutoFrameListPtr overflowFrames(PresContext(), StealOverflowFrames());
+  if (overflowFrames) {
+    MergeSortedFrameLists(mFrames, *overflowFrames, GetContent());
+    // We set a frame bit to push them again in Reflow() to avoid creating
+    // multiple grid items per grid container fragment for the same content.
+    AddStateBits(NS_STATE_GRID_HAS_CHILD_NIFS);
     return true;
   }
   return false;

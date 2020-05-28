@@ -667,6 +667,17 @@ class nsContainerFrame : public nsSplittableFrame {
   void NormalizeChildLists();
 
   /**
+   * Helper to implement AppendFrames / InsertFrames for flex / grid
+   * containers.
+   */
+  void NoteNewChildren(ChildListID aListID, const nsFrameList& aFrameList);
+
+  /**
+   * Helper to implement DrainSelfOverflowList() for flex / grid containers.
+   */
+  bool DrainAndMergeSelfOverflowList();
+
+  /**
    * Reparent floats whose placeholders are inline descendants of aFrame from
    * whatever block they're currently parented by to aOurBlock.
    * @param aReparentSiblings if this is true, we follow aFrame's
