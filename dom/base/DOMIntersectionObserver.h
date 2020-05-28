@@ -31,9 +31,9 @@ class DOMIntersectionObserverEntry final : public nsISupports,
                                double aIntersectionRatio)
       : mOwner(aOwner),
         mTime(aTime),
-        mRootBounds(std::move(aRootBounds)),
-        mBoundingClientRect(std::move(aBoundingClientRect)),
-        mIntersectionRect(std::move(aIntersectionRect)),
+        mRootBounds(aRootBounds),
+        mBoundingClientRect(aBoundingClientRect),
+        mIntersectionRect(aIntersectionRect),
         mIsIntersecting(aIsIntersecting),
         mTarget(aTarget),
         mIntersectionRatio(aIntersectionRatio) {}
@@ -138,7 +138,6 @@ class DOMIntersectionObserver final : public nsISupports,
                                       const Maybe<nsRect>& aRootRect,
                                       const nsRect& aTargetRect,
                                       const Maybe<nsRect>& aIntersectionRect,
-                                      bool aIsIntersecting,
                                       double aIntersectionRatio);
 
   nsCOMPtr<nsPIDOMWindowInner> mOwner;
