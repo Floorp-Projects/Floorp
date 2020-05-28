@@ -170,6 +170,8 @@ export class _DiscoveryStreamBase extends React.PureComponent {
           <Navigation
             links={component.properties.links}
             alignment={component.properties.alignment}
+            display_variant={component.properties.display_variant}
+            explore_topics={component.properties.explore_topics}
             header={component.header}
           />
         );

@@ -58,13 +58,6 @@ describe("<Topic>", () => {
 
   it("should render", () => {
     assert.ok(wrapper.exists());
-    assert.equal(wrapper.type(), "li");
-    assert.equal(
-      wrapper
-        .children()
-        .at(0)
-        .type(),
-      SafeAnchor
-    );
+    assert.equal(wrapper.type(), SafeAnchor);
   });
 });

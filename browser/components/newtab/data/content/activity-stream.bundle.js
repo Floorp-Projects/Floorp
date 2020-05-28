@@ -4346,6 +4346,8 @@ class _DiscoveryStreamBase extends react__WEBPACK_IMPORTED_MODULE_14___default.a
         return react__WEBPACK_IMPORTED_MODULE_14___default.a.createElement(content_src_components_DiscoveryStreamComponents_Navigation_Navigation__WEBPACK_IMPORTED_MODULE_13__["Navigation"], {
           links: component.properties.links,
           alignment: component.properties.alignment,
+          display_variant: component.properties.display_variant,
+          explore_topics: component.properties.explore_topics,
           header: component.header
         });
 
@@ -10567,13 +10569,37 @@ class Topic extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureComponent {
       url,
       name
     } = this.props;
-    return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("li", null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_SafeAnchor_SafeAnchor__WEBPACK_IMPORTED_MODULE_1__["SafeAnchor"], {
-      key: name,
+    return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_SafeAnchor_SafeAnchor__WEBPACK_IMPORTED_MODULE_1__["SafeAnchor"], {
+      className: this.props.className,
       url: url
-    }, name));
+    }, name);
   }
 
 }
+
+class ExploreTopics extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureComponent {
+  render() {
+    const {
+      explore_topics
+    } = this.props;
+
+    if (!explore_topics) {
+      return null;
+    }
+
+    return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(react__WEBPACK_IMPORTED_MODULE_0___default.a.Fragment, null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(Topic, {
+      className: "ds-navigation-inline-explore-more",
+      url: explore_topics.url,
+      name: explore_topics.name
+    }), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(Topic, {
+      className: "ds-navigation-header-explore-more",
+      url: explore_topics.url,
+      name: explore_topics.header
+    }));
+  }
+
+}
+
 class Navigation extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureComponent {
   render() {
     const {
@@ -10581,19 +10607,30 @@ class Navigation extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureCompon
     } = this.props || [];
     const {
       alignment
-    } = this.props || "centered";
+    } = this.props || "centered"; // Basic isn't currently used, but keeping it here to be very explicit.
+    // The other variant that's supported is "responsive".
+    // The responsive variant is intended for longer lists of topics, more than 6.
+    // It hides the last item on larger displays. The last item is meant for "see more topics"
+
+    const variant = this.props.display_variant || "basic";
     const header = this.props.header || {};
+    const {
+      explore_topics
+    } = this.props;
     return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
-      className: `ds-navigation ds-navigation-${alignment}`
+      className: `ds-navigation ds-navigation-${alignment} ds-navigation-variant-${variant}`
     }, header.title ? react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(content_src_components_FluentOrText_FluentOrText__WEBPACK_IMPORTED_MODULE_2__["FluentOrText"], {
       message: header.title
-    }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+    }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("span", {
       className: "ds-header"
-    })) : null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("ul", null, links && links.map(t => react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(Topic, {
-      key: t.name,
+    })) : null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("ul", null, links && links.map(t => react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("li", {
+      key: t.name
+    }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(Topic, {
       url: t.url,
       name: t.name
-    })))));
+    })))), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(ExploreTopics, {
+      explore_topics: explore_topics
+    }));
   }
 
 }
