@@ -1651,6 +1651,7 @@ dependencies = [
 name = "gecko_logger"
 version = "0.1.0"
 dependencies = [
+ "env_logger",
  "log",
 ]
 
@@ -1903,7 +1904,6 @@ dependencies = [
  "cubeb-pulse",
  "cubeb-sys",
  "encoding_glue",
- "env_logger",
  "firefox-accounts-bridge",
  "fluent",
  "fluent-ffi",

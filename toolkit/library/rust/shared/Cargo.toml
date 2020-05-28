@@ -32,7 +32,6 @@ rsdparsa_capi = { path = "../../../../media/webrtc/signaling/src/sdp/rsdparsa_ca
 xulstore = { path = "../../../components/xulstore", optional = true }
 # We have these to enforce common feature sets for said crates.
 log = {version = "0.4", features = ["release_max_level_info"]}
-env_logger = {version = "0.6", default-features = false} # disable `regex` to reduce code size
 cose-c = { version = "0.1.5" }
 jsrust_shared = { path = "../../../../js/src/rust/shared" }
 cascade_bloom_filter = { path = "../../../components/cascade_bloom_filter" }
