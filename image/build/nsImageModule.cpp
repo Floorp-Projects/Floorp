@@ -58,13 +58,8 @@ nsresult mozilla::image::EnsureModuleInitialized() {
   static ImageEnablementCookie kAVIFCookie = {
       mozilla::StaticPrefs::image_avif_enabled,
       NS_LITERAL_CSTRING("image/avif")};
-  static ImageEnablementCookie kWebPCookie = {
-      mozilla::StaticPrefs::image_webp_enabled,
-      NS_LITERAL_CSTRING("image/webp")};
   Preferences::RegisterCallbackAndCall(UpdateContentViewerRegistration,
                                        "image.avif.enabled", &kAVIFCookie);
-  Preferences::RegisterCallbackAndCall(UpdateContentViewerRegistration,
-                                       "image.webp.enabled", &kWebPCookie);
 
   mozilla::image::ShutdownTracker::Initialize();
   mozilla::image::ImageFactory::Initialize();
