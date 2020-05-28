@@ -76,7 +76,7 @@ dependencies {
     implementation project(':browser-thumbnails')
     implementation project(':browser-toolbar')
     implementation project(':browser-menu')
-    implementation project(':browser-storage-memory')
+    implementation project(':browser-storage-sync')
 
     implementation project(':lib-fetch-httpurlconnection')
     implementation project(':lib-nearby')
@@ -107,12 +107,13 @@ dependencies {
     // Add a dependency on service-glean to simplify the testing workflow
     // for engineers that want to test Gecko metrics exfiltrated via the Glean
     // SDK. See bug 1592935 for more context.
-    implementation project(":service-glean")
+    implementation project(':service-glean')
 
     implementation project(':support-utils')
     implementation project(':feature-downloads')
     implementation project(':support-ktx')
     implementation project(':support-webextensions')
+    implementation project(':support-rustlog')
 
     geckoNightlyImplementation project(':browser-engine-gecko-nightly')
     geckoBetaImplementation project(':browser-engine-gecko-beta')

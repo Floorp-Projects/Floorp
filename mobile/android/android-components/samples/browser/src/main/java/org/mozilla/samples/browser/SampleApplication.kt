@@ -5,6 +5,7 @@
 package org.mozilla.samples.browser
 
 import android.app.Application
+import mozilla.appservices.Megazord
 import mozilla.components.browser.session.Session
 import mozilla.components.concept.fetch.Client
 import mozilla.components.feature.addons.update.GlobalAddonDependencyProvider
@@ -19,6 +20,7 @@ import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.base.log.sink.AndroidLogSink
 import mozilla.components.support.ktx.android.content.isMainProcess
 import mozilla.components.support.ktx.android.content.runOnlyInMainProcess
+import mozilla.components.support.rustlog.RustLog
 import mozilla.components.support.webextensions.WebExtensionSupport
 
 class SampleApplication : Application() {
@@ -28,6 +30,9 @@ class SampleApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
+
+        Megazord.init()
+        RustLog.enable()
 
         Log.addSink(AndroidLogSink())
 
