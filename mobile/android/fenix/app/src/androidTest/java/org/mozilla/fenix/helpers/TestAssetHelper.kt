@@ -76,7 +76,7 @@ object TestAssetHelper {
     }
 
     fun getEnhancedTrackingProtectionAsset(server: MockWebServer): TestAsset {
-        val url = server.url("pages/etp.html").toString().toUri()!!
+        val url = server.url("pages/trackingPage.html").toString().toUri()!!
 
         return TestAsset(url, "", "")
     }
