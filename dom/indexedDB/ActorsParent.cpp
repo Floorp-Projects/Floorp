@@ -9175,10 +9175,10 @@ DeserializeStructuredCloneFiles(const FileManager& aFileManager,
   return result;
 }
 
-bool GetBaseFilename(const nsAString& aFilename, const nsAString& aSuffix,
-                     nsDependentSubstring& aBaseFilename) {
+bool GetFilenameBase(const nsAString& aFilename, const nsAString& aSuffix,
+                     nsDependentSubstring& aFilenameBase) {
   MOZ_ASSERT(!aFilename.IsEmpty());
-  MOZ_ASSERT(aBaseFilename.IsEmpty());
+  MOZ_ASSERT(aFilenameBase.IsEmpty());
 
   if (!StringEndsWith(aFilename, aSuffix) ||
       aFilename.Length() == aSuffix.Length()) {
@@ -9187,7 +9187,7 @@ bool GetBaseFilename(const nsAString& aFilename, const nsAString& aSuffix,
 
   MOZ_ASSERT(aFilename.Length() > aSuffix.Length());
 
-  aBaseFilename.Rebind(aFilename, 0, aFilename.Length() - aSuffix.Length());
+  aFilenameBase.Rebind(aFilename, 0, aFilename.Length() - aSuffix.Length());
   return true;
 }
 
@@ -17075,7 +17075,7 @@ nsresult QuotaClient::UpgradeStorageFrom1_0To2_0(nsIFile* aDirectory) {
     // If the directory has the correct suffix then it should exist in
     // databaseFilenames.
     nsDependentSubstring subdirNameBase;
-    if (GetBaseFilename(subdirName, kFileManagerDirectoryNameSuffix,
+    if (GetFilenameBase(subdirName, kFileManagerDirectoryNameSuffix,
                         subdirNameBase)) {
       Unused << NS_WARN_IF(!databaseFilenames.GetEntry(subdirNameBase));
 
@@ -17230,7 +17230,7 @@ nsresult QuotaClient::InitOrigin(PersistenceType aPersistenceType,
   for (const nsString& subdirName : subdirsToProcess) {
     // The directory must have the correct suffix.
     nsDependentSubstring subdirNameBase;
-    if (NS_WARN_IF(!GetBaseFilename(subdirName, kFileManagerDirectoryNameSuffix,
+    if (NS_WARN_IF(!GetFilenameBase(subdirName, kFileManagerDirectoryNameSuffix,
                                     subdirNameBase))) {
       // If there is an unexpected directory in the idb directory, trying to
       // delete at first instead of breaking the whole initialization.
@@ -17713,7 +17713,7 @@ nsresult QuotaClient::GetDatabaseFilenames(
     }
 
     nsDependentSubstring leafNameBase;
-    if (!GetBaseFilename(leafName, sqliteSuffix, leafNameBase)) {
+    if (!GetFilenameBase(leafName, sqliteSuffix, leafNameBase)) {
       nsString path;
       MOZ_ALWAYS_SUCCEEDS(file->GetPath(path));
       MOZ_ASSERT(!path.IsEmpty());
