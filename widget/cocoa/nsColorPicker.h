@@ -26,6 +26,11 @@ class nsColorPicker final : public nsIColorPicker {
 
   // For NSColorPanelWrapper.
   void Update(NSColor* aColor);
+  // Call this method if you are done with this input, but the color picker needs to
+  // stay open as it will be associated to another input
+  void DoneWithRetarget();
+  // Same as DoneWithRetarget + clean the static instance of sColorPanelWrapper,
+  // as it is not needed anymore for now
   void Done();
 
  private:
@@ -34,7 +39,7 @@ class nsColorPicker final : public nsIColorPicker {
   static NSColor* GetNSColorFromHexString(const nsAString& aColor);
   static void GetHexStringFromNSColor(NSColor* aColor, nsAString& aResult);
 
-  NSColorPanelWrapper* mColorPanelWrapper;
+  static NSColorPanelWrapper* sColorPanelWrapper;
 
   nsString mTitle;
   nsString mColor;

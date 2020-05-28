@@ -571,8 +571,7 @@ void nsCocoaUtils::GetStringForNSString(const NSString* aSrc, nsAString& aDist) 
   }
 
   aDist.SetLength([aSrc length]);
-  [aSrc getCharacters:reinterpret_cast<unichar*>(aDist.BeginWriting())
-                range:NSMakeRange(0, [aSrc length])];
+  [aSrc getCharacters:reinterpret_cast<unichar*>(aDist.BeginWriting())];
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
