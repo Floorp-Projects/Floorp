@@ -7,6 +7,7 @@
 #define nsDeviceContextSpecX_h_
 
 #include "nsIDeviceContextSpec.h"
+#include "nsIPrinterEnumerator.h"
 
 #include "nsCOMPtr.h"
 
@@ -43,6 +44,19 @@ class nsDeviceContextSpecX : public nsIDeviceContextSpec {
       mTempFile;  // file "print" output is generated to if printing via PDF
   bool mPrintViaSkPDF;
 #endif
+};
+
+//----------------------------------------------------------------------
+// nsPrinterErnumeratorX
+
+class nsPrinterEnumeratorX final : public nsIPrinterEnumerator {
+ public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIPRINTERENUMERATOR
+  nsPrinterEnumeratorX() = default;
+
+ private:
+  ~nsPrinterEnumeratorX() = default;
 };
 
 #endif  // nsDeviceContextSpecX_h_

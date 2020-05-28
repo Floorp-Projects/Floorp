@@ -62,15 +62,6 @@ function run()
   var printService = Cc["@mozilla.org/gfx/printsettings-service;1"]
                        .getService(Ci.nsIPrintSettingsService);
 
-  try {
-    Cc["@mozilla.org/gfx/printerenumerator;1"]
-      .getService(Ci.nsIPrinterEnumerator);
-  } catch(e) {
-    todo(false, "Test skipped on MacOSX, as the print preview code doesn't work there");
-    finish();
-    return;
-  }
-
   if (printService.defaultPrinterName != '') {
     printpreview();
     ok(gWbp.doingPrintPreview, "Should be doing print preview");
