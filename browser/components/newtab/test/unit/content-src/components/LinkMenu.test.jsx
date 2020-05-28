@@ -302,7 +302,6 @@ describe("<LinkMenu>", () => {
     assert.equal(option.action.data.index, index);
   });
   describe(".onClick", () => {
-    const FAKE_EVENT = {};
     const FAKE_INDEX = 3;
     const FAKE_SOURCE = "TOP_SITES";
     const FAKE_SITE = {
@@ -401,7 +400,7 @@ describe("<LinkMenu>", () => {
       .filter(o => o.type !== "separator")
       .forEach(option => {
         it(`should fire a ${option.action.type} action for ${option.id} with the expected data`, () => {
-          option.onClick(FAKE_EVENT);
+          option.onClick();
 
           if (option.impression && option.userEvent) {
             assert.calledThrice(dispatch);
@@ -440,7 +439,7 @@ describe("<LinkMenu>", () => {
         });
         it(`should fire a UserEvent action for ${option.id} if configured`, () => {
           if (option.userEvent) {
-            option.onClick(FAKE_EVENT);
+            option.onClick();
             const [action] = dispatch.secondCall.args;
             assert.isUserEventAction(action);
             assert.propertyVal(action.data, "source", FAKE_SOURCE);
@@ -450,7 +449,7 @@ describe("<LinkMenu>", () => {
         });
         it(`should send impression stats for ${option.id}`, () => {
           if (option.impression) {
-            option.onClick(FAKE_EVENT);
+            option.onClick();
             const [action] = dispatch.thirdCall.args;
             assert.deepEqual(action, option.impression);
           }
@@ -474,7 +473,7 @@ describe("<LinkMenu>", () => {
         .filter(o => o.type !== "separator")
         .forEach(option => {
           if (option.impression) {
-            option.onClick(FAKE_EVENT);
+            option.onClick();
             assert.calledTwice(dispatch);
             assert.notEqual(dispatch.firstCall.args[0], option.impression);
             assert.notEqual(dispatch.secondCall.args[0], option.impression);
@@ -501,7 +500,7 @@ describe("<LinkMenu>", () => {
         .props();
 
       const [pinSpocOption] = spocOptions;
-      pinSpocOption.onClick(FAKE_EVENT);
+      pinSpocOption.onClick();
 
       if (pinSpocOption.impression && pinSpocOption.userEvent) {
         assert.calledThrice(dispatch);

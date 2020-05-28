@@ -80,9 +80,9 @@ export class ContextMenuItem extends React.PureComponent {
     this.focusFirst = this.focusFirst.bind(this);
   }
 
-  onClick(event) {
+  onClick() {
     this.props.hideContext();
-    this.props.option.onClick(event);
+    this.props.option.onClick();
   }
 
   // Focus the first menu item if the menu was accessed via the keyboard.

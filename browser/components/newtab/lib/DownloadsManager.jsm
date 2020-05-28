@@ -172,14 +172,8 @@ this.DownloadsManager = class DownloadsManager {
         });
         break;
       case at.OPEN_DOWNLOAD_FILE:
-        const win = action._target.browser.ownerGlobal;
-        const openWhere = action.data.event
-          ? win.whereToOpenLink(action.data.event)
-          : "current";
         doDownloadAction(download => {
-          DownloadsCommon.openDownload(download, {
-            openWhere,
-          });
+          DownloadsCommon.openDownload(download);
         });
         break;
       case at.UNINIT:
