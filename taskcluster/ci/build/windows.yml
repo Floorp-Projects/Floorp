@@ -897,6 +897,9 @@ win64-asan/debug:
             # this dependency can be removed.
             - win32-fix-stacks
             - win64-winchecksec
+    optimization:
+        push-interval-10:
+            - windows
 
 win64-asan/opt:
     description: "Win64 Opt ASAN"

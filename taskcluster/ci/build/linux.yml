@@ -1124,6 +1124,9 @@ linux64-asan/debug:
             # the build step. Once bug 1614626 moves them to the xpcshell task,
             # this dependency can be removed.
             - linux64-fix-stacks
+    optimization:
+        push-interval-10:
+            - linux
 
 linux64-shippable/opt:
     description: "Linux64 Shippable"
