@@ -21,6 +21,7 @@ class XRNativeOriginViewer : public XRNativeOrigin {
   explicit XRNativeOriginViewer(gfx::VRDisplayClient* aDisplay);
 
   gfx::PointDouble3D GetPosition() override;
+  gfx::QuaternionDouble GetOrientation() override;
 
  private:
   ~XRNativeOriginViewer() = default;
