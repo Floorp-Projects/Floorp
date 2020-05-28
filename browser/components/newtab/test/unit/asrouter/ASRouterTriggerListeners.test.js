@@ -235,9 +235,11 @@ describe("ASRouterTriggerListeners", () => {
         frequentVisitsListener.init(_triggerHandler, hosts, ["pattern"]);
 
         assert.calledOnce(window.MatchPatternSet);
-        assert.calledWithExactly(window.MatchPatternSet, new Set(["pattern"]), {
-          ignorePath: true,
-        });
+        assert.calledWithExactly(
+          window.MatchPatternSet,
+          new Set(["pattern"]),
+          undefined
+        );
       });
       it("should allow to add multiple patterns and dedupe", () => {
         frequentVisitsListener.init(_triggerHandler, hosts, ["pattern"]);
@@ -247,7 +249,7 @@ describe("ASRouterTriggerListeners", () => {
         assert.calledWithExactly(
           window.MatchPatternSet,
           new Set(["pattern", "foo"]),
-          { ignorePath: true }
+          undefined
         );
       });
       it("should handle bad arguments to MatchPatternSet", () => {
