@@ -5,10 +5,10 @@
 import React, { useState, useCallback, useEffect } from "react";
 import { Localized } from "./MSLocalized";
 import { AboutWelcomeUtils } from "../../lib/aboutwelcome-utils";
+import { addUtmParams } from "../../asrouter/templates/FirstRun/addUtmParams";
 
 export const MultiStageAboutWelcome = props => {
   const [index, setScreenIndex] = useState(0);
-
   useEffect(() => {
     // Send impression ping when respective screen first renders
     props.screens.forEach(screen => {
@@ -19,6 +19,17 @@ export const MultiStageAboutWelcome = props => {
       }
     });
   }, [index]);
+
+  const [flowParams, setFlowParams] = useState(null);
+  const { metricsFlowUri } = props;
+  useEffect(() => {
+    (async () => {
+      if (metricsFlowUri) {
+        setFlowParams(await AboutWelcomeUtils.fetchFlowParams(metricsFlowUri));
+      }
+    })();
+  }, [metricsFlowUri]);
+
   // Transition to next screen, opening about:home on last screen button CTA
   const handleTransition =
     index < props.screens.length
@@ -49,6 +60,9 @@ export const MultiStageAboutWelcome = props => {
               content={screen.content}
               navigate={handleTransition}
               topSites={topSites}
+              messageId={`${props.message_id}_${screen.id}`}
+              UTMTerm={props.utm_term}
+              flowParams={flowParams}
             />
           ) : null;
         })}
@@ -63,17 +77,39 @@ export class WelcomeScreen extends React.PureComponent {
     this.handleAction = this.handleAction.bind(this);
   }
 
+  handleOpenURL(action, flowParams, UTMTerm) {
+    let { type, data } = action;
+    let url = new URL(data.args);
+    addUtmParams(url, `aboutwelcome-${UTMTerm}-screen`);
+
+    if (action.addFlowParams && flowParams) {
+      url.searchParams.append("device_id", flowParams.deviceId);
+      url.searchParams.append("flow_id", flowParams.flowId);
+      url.searchParams.append("flow_begin_time", flowParams.flowBeginTime);
+    }
+
+    data = { ...data, args: url.toString() };
+    AboutWelcomeUtils.handleUserAction({ type, data });
+  }
+
   handleAction(event) {
-    let targetContent = this.props.content[event.target.value];
+    let { props } = this;
+    let targetContent = props.content[event.target.value];
     if (!(targetContent && targetContent.action)) {
       return;
     }
-    if (targetContent.action.type) {
-      AboutWelcomeUtils.handleUserAction(targetContent.action);
+
+    let { action } = targetContent;
+    if (action.type === "OPEN_URL") {
+      this.handleOpenURL(action, props.flowParams, props.UTMTerm);
+    } else if (action.type) {
+      AboutWelcomeUtils.handleUserAction(action);
     }
-    if (targetContent.action.navigate) {
-      this.props.navigate();
+
+    if (action.navigate) {
+      props.navigate();
     }
+    AboutWelcomeUtils.sendActionTelemetry(props.messageId, event.target.value);
   }
 
   renderSecondaryCTA(className) {
