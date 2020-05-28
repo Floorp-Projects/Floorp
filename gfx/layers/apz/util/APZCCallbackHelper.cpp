@@ -167,6 +167,9 @@ static ScreenMargin ScrollFrame(nsIContent* aContent,
     if (sf->IsRootScrollFrameOfDocument()) {
       if (!APZCCallbackHelper::IsScrollInProgress(sf)) {
         if (RefPtr<PresShell> presShell = GetPresShell(aContent)) {
+          APZCCH_LOG("Setting VV offset to %s on presShell %p\n",
+                     Stringify(aRequest.GetScrollOffset()).c_str(),
+                     presShell.get());
           if (presShell->SetVisualViewportOffset(
                   CSSPoint::ToAppUnits(aRequest.GetScrollOffset()),
                   presShell->GetLayoutViewportOffset())) {
