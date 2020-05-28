@@ -3,6 +3,9 @@
 const { PermissionTestUtils } = ChromeUtils.import(
   "resource://testing-common/PermissionTestUtils.jsm"
 );
+const { PromptTestUtils } = ChromeUtils.import(
+  "resource://testing-common/PromptTestUtils.jsm"
+);
 
 const RELATIVE_DIR = "toolkit/mozapps/extensions/test/xpinstall/";
 
@@ -118,6 +121,9 @@ var Harness = {
       Services.obs.addObserver(this, "addon-install-failed");
       Services.obs.addObserver(this, "addon-install-complete");
 
+      // For browser_auth tests which trigger auth dialogs.
+      Services.obs.addObserver(this, "tabmodal-dialog-loaded");
+
       this._boundWin = Cu.getWeakReference(win); // need this so our addon manager listener knows which window to use.
       AddonManager.addInstallListener(this);
       AddonManager.addAddonListener(this);
@@ -142,6 +148,8 @@ var Harness = {
         Services.obs.removeObserver(self, "addon-install-blocked");
         Services.obs.removeObserver(self, "addon-install-failed");
         Services.obs.removeObserver(self, "addon-install-complete");
+
+        Services.obs.removeObserver(self, "tabmodal-dialog-loaded");
 
         AddonManager.removeInstallListener(self);
         AddonManager.removeAddonListener(self);
@@ -223,40 +231,46 @@ var Harness = {
     }
   },
 
+  // This affects all browser_auth tests
   // Window open handling
   windowReady(window) {
     if (window.document.location.href == PROMPT_URL) {
-      var promptType = window.args.promptType;
-      let dialog = window.document.getElementById("commonDialog");
-      switch (promptType) {
-        case "alert":
-        case "alertCheck":
-        case "confirmCheck":
-        case "confirm":
-        case "confirmEx":
-          dialog.acceptDialog();
-          break;
-        case "promptUserAndPass":
-          // This is a login dialog, hopefully an authentication prompt
-          // for the xpi.
-          if (this.authenticationCallback) {
-            var auth = this.authenticationCallback();
-            if (auth && auth.length == 2) {
-              window.document.getElementById("loginTextbox").value = auth[0];
-              window.document.getElementById("password1Textbox").value =
-                auth[1];
-              dialog.acceptDialog();
-            } else {
-              dialog.cancelDialog();
-            }
+      this.promptReady(window.Dialog, Services.prompt.MODAL_TYPE_WINDOW);
+    }
+  },
+
+  promptReady(dialog) {
+    let promptType = dialog.args.promptType;
+
+    switch (promptType) {
+      case "alert":
+      case "alertCheck":
+      case "confirmCheck":
+      case "confirm":
+      case "confirmEx":
+        PromptTestUtils.handlePrompt(dialog, { buttonNumClick: 0 });
+        break;
+      case "promptUserAndPass":
+        // This is a login dialog, hopefully an authentication prompt
+        // for the xpi.
+        if (this.authenticationCallback) {
+          var auth = this.authenticationCallback();
+          if (auth && auth.length == 2) {
+            PromptTestUtils.handlePrompt(dialog, {
+              loginInput: auth[0],
+              passwordInput: auth[1],
+              buttonNumClick: 0,
+            });
           } else {
-            dialog.cancelDialog();
+            PromptTestUtils.handlePrompt(dialog, { buttonNumClick: 1 });
           }
-          break;
-        default:
-          ok(false, "prompt type " + promptType + " not handled in test.");
-          break;
-      }
+        } else {
+          PromptTestUtils.handlePrompt(dialog, { buttonNumClick: 1 });
+        }
+        break;
+      default:
+        ok(false, "prompt type " + promptType + " not handled in test.");
+        break;
     }
   },
 
@@ -555,6 +569,11 @@ var Harness = {
             1
           );
         }, this);
+        break;
+      case "tabmodal-dialog-loaded":
+        let browser = subject.ownerGlobal.gBrowser.selectedBrowser;
+        let prompt = browser.tabModalPromptBox.getPrompt(subject);
+        this.promptReady(prompt.Dialog);
         break;
     }
   },

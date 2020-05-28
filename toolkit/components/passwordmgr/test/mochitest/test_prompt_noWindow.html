@@ -17,8 +17,11 @@
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-// Force parent to not look for tab-modal prompts, as they're not used for auth prompts.
-isTabModal = false;
+// Let parent check for tab modal prompts if they are enabled for auth
+// prompts. Used by prompt_common.js.
+isTabModal = SpecialPowers.Services.prefs.getBoolPref("prompts.tab_modal.enabled")
+  && SpecialPowers.Services.prefs.getIntPref("prompts.modalType.httpAuth")
+    !== SpecialPowers.Services.prompt.MODAL_TYPE_WINDOW;
 
 add_task(async function setup() {
   let loginAddedPromise = promiseStorageChanged(["addLogin"]);
