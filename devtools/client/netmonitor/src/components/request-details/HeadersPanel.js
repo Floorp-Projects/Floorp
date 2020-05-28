@@ -681,7 +681,7 @@ class HeadersPanel extends Component {
         div(
           {
             key: "tracking-protection",
-            className: "tabpanel-summary-value tracking-protection",
+            className: "tracking-protection",
           },
           L10N.getStr("netmonitor.trackingResource.tooltip"),
           trackingProtectionDocURL
