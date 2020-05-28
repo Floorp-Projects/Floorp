@@ -115,7 +115,7 @@ class span_iterator {
       std::conditional_t<IsConst, const element_type_, element_type_>&;
   using pointer = std::add_pointer_t<reference>;
 
-  constexpr span_iterator() : span_iterator(nullptr, 0) {}
+  constexpr span_iterator() : span_iterator(nullptr, 0, SpanKnownBounds{}) {}
 
   constexpr span_iterator(const SpanT* span, typename SpanT::index_type index)
       : span_(span), index_(index) {
