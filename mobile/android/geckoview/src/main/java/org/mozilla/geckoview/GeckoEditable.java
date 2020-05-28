@@ -1014,9 +1014,51 @@ import android.view.inputmethod.EditorInfo;
                 return;
             }
 
+            // Most IMEs handle arrow key, then set caret position. But GBoard
+            // doesn't handle it. GBoard will dispatch KeyEvent for arrow left/right
+            // even if having IME composition.
+            // Since Gecko doesn't dispatch keypress during IME composition due to
+            // DOM UI events spec, we have to emulate arrow key's behaviour.
+            boolean commitCompositionBeforeKeyEvent = action == KeyEvent.ACTION_DOWN;
+            if (isComposing(mText.getShadowText()) &&
+                action == KeyEvent.ACTION_DOWN && event.hasNoModifiers()) {
+                final int selStart = Selection.getSelectionStart(mText.getShadowText());
+                final int selEnd = Selection.getSelectionEnd(mText.getShadowText());
+                if (selStart == selEnd) {
+                    // If dispatching arrow left/right key into composition,
+                    // we update IME caret.
+                    switch (event.getKeyCode()) {
+                        case KeyEvent.KEYCODE_DPAD_LEFT:
+                            if (getComposingStart(mText.getShadowText()) < selStart) {
+                                Selection.setSelection(getEditable(), selStart - 1, selStart - 1);
+                                mNeedUpdateComposition = true;
+                                commitCompositionBeforeKeyEvent = false;
+                            } else if (selStart == 0) {
+                                // Keep current composition
+                                commitCompositionBeforeKeyEvent = false;
+                            }
+                            break;
+                        case KeyEvent.KEYCODE_DPAD_RIGHT:
+                            if (getComposingEnd(mText.getShadowText()) > selEnd) {
+                                Selection.setSelection(getEditable(), selStart + 1, selStart + 1);
+                                mNeedUpdateComposition = true;
+                                commitCompositionBeforeKeyEvent = false;
+                            } else if (selEnd == mText.getShadowText().length()) {
+                                // Keep current composition
+                                commitCompositionBeforeKeyEvent = false;
+                            }
+                            break;
+                    }
+                }
+            }
+
             // Focused; key event may go to chrome window or to content window.
             if (mNeedUpdateComposition) {
                 icMaybeSendComposition(mText.getShadowText(), SEND_COMPOSITION_NOTIFY_GECKO);
+            }
+
+            if (commitCompositionBeforeKeyEvent) {
+                mFocusedChild.onImeRequestCommit();
             }
             onKeyEvent(mFocusedChild, event, action, metaState,
                        /* isSynthesizedImeKey */ false);
@@ -2250,6 +2292,30 @@ import android.view.inputmethod.EditorInfo;
         }
 
         return false;
+    }
+
+    private static int getComposingStart(final Spanned text) {
+        int composingStart = Integer.MAX_VALUE;
+        final Object[] spans = text.getSpans(0, text.length(), Object.class);
+        for (final Object span : spans) {
+            if ((text.getSpanFlags(span) & Spanned.SPAN_COMPOSING) != 0) {
+                composingStart = Math.min(composingStart, text.getSpanStart(span));
+            }
+        }
+
+        return composingStart;
+    }
+
+    private static int getComposingEnd(final Spanned text) {
+        int composingEnd = -1;
+        final Object[] spans = text.getSpans(0, text.length(), Object.class);
+        for (final Object span : spans) {
+            if ((text.getSpanFlags(span) & Spanned.SPAN_COMPOSING) != 0) {
+                composingEnd = Math.max(composingEnd, text.getSpanEnd(span));
+            }
+        }
+
+        return composingEnd;
     }
 }
 
