@@ -124,6 +124,7 @@ restart-in-safe-mode-label = Restart with Add-ons Disabled…
 audio-backend = Audio Backend
 max-audio-channels = Max Channels
 sample-rate = Preferred Sample Rate
+roundtrip-latency = Roundtrip latency (standard deviation)
 media-title = Media
 media-output-devices-title = Output Devices
 media-input-devices-title = Input Devices
