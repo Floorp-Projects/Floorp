@@ -517,6 +517,7 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
 
   // Window APIs that are cross-origin-accessible (from the HTML spec).
   WindowProxyHolder Window();
+  BrowsingContext* GetBrowsingContext() { return this; };
   BrowsingContext* Self() { return this; }
   void Location(JSContext* aCx, JS::MutableHandle<JSObject*> aLocation,
                 ErrorResult& aError);
