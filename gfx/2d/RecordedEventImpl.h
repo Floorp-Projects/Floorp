@@ -3068,6 +3068,7 @@ RecordedSourceSurfaceCreation::RecordedSourceSurfaceCreation(S& aStream)
     gfxCriticalNote
         << "RecordedSourceSurfaceCreation failed to allocate data of size "
         << size;
+    aStream.SetIsBad();
   } else {
     aStream.read((char*)mData, size);
   }
@@ -3425,8 +3426,12 @@ void RecordedFontData::Record(S& aStream) const {
 
   WriteElement(aStream, mType);
   WriteElement(aStream, mFontDetails.fontDataKey);
-  WriteElement(aStream, mFontDetails.size);
-  aStream.write((const char*)mData, mFontDetails.size);
+  if (!mData) {
+    WriteElement(aStream, 0);
+  } else {
+    WriteElement(aStream, mFontDetails.size);
+    aStream.write((const char*)mData, mFontDetails.size);
+  }
 }
 
 inline void RecordedFontData::OutputSimpleEventInfo(
@@ -3466,7 +3471,7 @@ RecordedFontData::RecordedFontData(S& aStream)
   ReadElementConstrained(aStream, mType, FontType::DWRITE, FontType::UNKNOWN);
   ReadElement(aStream, mFontDetails.fontDataKey);
   ReadElement(aStream, mFontDetails.size);
-  if (!aStream.good()) {
+  if (!mFontDetails.size || !aStream.good()) {
     return;
   }
 
@@ -3475,6 +3480,7 @@ RecordedFontData::RecordedFontData(S& aStream)
     gfxCriticalNote
         << "RecordedFontData failed to allocate data for playback of size "
         << mFontDetails.size;
+    aStream.SetIsBad();
   } else {
     aStream.read((char*)mData, mFontDetails.size);
   }
