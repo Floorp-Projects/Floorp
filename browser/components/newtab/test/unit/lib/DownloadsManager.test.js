@@ -78,7 +78,6 @@ describe("Downloads Manager", () => {
       downloadsManager.onAction({
         type: at.OPEN_DOWNLOAD_FILE,
         data: { url: DOWNLOAD_URL, type: "download" },
-        _target: { browser: {} },
       });
       assert.calledOnce(global.DownloadsCommon.openDownload);
     });

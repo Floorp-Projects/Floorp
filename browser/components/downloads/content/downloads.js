@@ -820,19 +820,11 @@ var DownloadsView = {
         target = target.parentNode;
       }
       let download = DownloadsView.itemForElement(target).download;
-      let command = "downloadsCmd_open";
       if (download.hasBlockedData) {
-        command = "downloadsCmd_showBlockedInfo";
-      } else if (aEvent.shiftKey || aEvent.ctrlKey || aEvent.metaKey) {
-        // We adjust the command for supported modifiers to suggest where the download
-        // may be opened
-        let openWhere = target.ownerGlobal.whereToOpenLink(aEvent, false, true);
-        if (["tab", "window", "tabshifted"].includes(openWhere)) {
-          command += ":" + openWhere;
-        }
+        goDoCommand("downloadsCmd_showBlockedInfo");
+      } else {
+        goDoCommand("downloadsCmd_open");
       }
-      DownloadsCommon.log("onDownloadClick, resolved command: ", command);
-      goDoCommand(command);
     }
   },
 
@@ -1016,11 +1008,7 @@ class DownloadsViewItem extends DownloadsViewUI.DownloadElementShell {
 
   isCommandEnabled(aCommand) {
     switch (aCommand) {
-      case "downloadsCmd_open":
-      case "downloadsCmd_open:current":
-      case "downloadsCmd_open:tab":
-      case "downloadsCmd_open:tabshifted":
-      case "downloadsCmd_open:window": {
+      case "downloadsCmd_open": {
         if (!this.download.succeeded) {
           return false;
         }
@@ -1056,10 +1044,7 @@ class DownloadsViewItem extends DownloadsViewUI.DownloadElementShell {
 
   doCommand(aCommand) {
     if (this.isCommandEnabled(aCommand)) {
-      let [command, modifier] = aCommand.split(":");
-      // split off an optional command "modifier" into an argument,
-      // e.g. "downloadsCmd_open:window"
-      this[command](modifier);
+      this[aCommand]();
     }
   }
 
@@ -1080,8 +1065,8 @@ class DownloadsViewItem extends DownloadsViewUI.DownloadElementShell {
     this.unblockAndOpenDownload().catch(Cu.reportError);
   }
 
-  downloadsCmd_open(openWhere) {
-    super.downloadsCmd_open(openWhere);
+  downloadsCmd_open() {
+    super.downloadsCmd_open();
 
     // We explicitly close the panel here to give the user the feedback that
     // their click has been received, and we're handling the action.
@@ -1154,10 +1139,7 @@ var DownloadsViewController = {
     if (!DownloadsViewUI.isCommandName(aCommand)) {
       return false;
     }
-    // Strip off any :modifier suffix before checking if the command name is
-    // a method on our view
-    let [command] = aCommand.split(":");
-    if (!(command in this) && !(command in DownloadsViewItem.prototype)) {
+    if (!(aCommand in this) && !(aCommand in DownloadsViewItem.prototype)) {
       return false;
     }
     // The currently supported commands depend on whether the blocked subview is

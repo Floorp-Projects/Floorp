@@ -79,7 +79,7 @@ var DownloadUIHelper = {
     file,
     {
       chromeWindow: browserWin,
-      openWhere = "current",
+      openWhere = "tab",
       isPrivate,
       userContextId = 0,
       browsingContextId = 0,
