@@ -376,9 +376,6 @@ class nsGridContainerFrame final : public nsContainerFrame {
   nscoord IntrinsicISize(gfxContext* aRenderingContext,
                          IntrinsicISizeType aConstraint);
 
-  // Helper for AppendFrames / InsertFrames.
-  void NoteNewChildren(ChildListID aListID, const nsFrameList& aFrameList);
-
   bool GetBBaseline(BaselineSharingGroup aBaselineGroup,
                     nscoord* aResult) const {
     *aResult = mBaseline[mozilla::eLogicalAxisBlock][aBaselineGroup];
