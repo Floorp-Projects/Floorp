@@ -36,18 +36,7 @@ function* testPreventDefault(testDriver, aTouchStartToCancel) {
   // Ensure that APZ gets updated hit-test info
   yield waitForAllPaints(testDriver);
 
-  var zoom_in = [
-      [ { x: 125, y: 250 }, { x: 175, y: 350 } ],
-      [ { x: 120, y: 220 }, { x: 180, y: 380 } ],
-      [ { x: 115, y: 190 }, { x: 185, y: 410 } ],
-      [ { x: 110, y: 160 }, { x: 190, y: 440 } ],
-      [ { x: 105, y: 130 }, { x: 195, y: 470 } ],
-      [ { x: 100, y: 100 }, { x: 200, y: 500 } ],
-  ];
-
-  var touchIds = [0, 1];
-  yield* synthesizeNativeTouchSequences(document.body, zoom_in, null, touchIds);
-
+  yield* pinchZoomInTouchSequence(150, 300);
   yield; // wait for the touchend listener to fire
 
   // Flush state and get the resolution we're at now
