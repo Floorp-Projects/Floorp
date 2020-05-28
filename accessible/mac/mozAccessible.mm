@@ -32,10 +32,6 @@
 using namespace mozilla;
 using namespace mozilla::a11y;
 
-#define NSAccessibilityRequiredAttribute @"AXRequired"
-#define NSAccessibilityHasPopupAttribute @"AXHasPopup"
-#define NSAccessibilityPopupValueAttribute @"AXPopupValue"
-
 #pragma mark -
 
 @interface mozAccessible ()
