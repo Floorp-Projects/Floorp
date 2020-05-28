@@ -55,7 +55,7 @@ describe("ConsoleAPICall component:", () => {
 // Stub packet
 const logMessageStubPacket = {
   from: "server1.conn0.consoleActor2",
-  type: "logMessage",
+  resourceType: "platform-messages",
   message: "foobar test",
   timeStamp: 1519052480060,
 };
@@ -67,7 +67,7 @@ const fullTextLength = multilineFullText.length;
 const initialText = multilineFullText.substring(0, 10000);
 const logMessageLongStringStubPacket = {
   from: "server1.conn0.consoleActor2",
-  type: "logMessage",
+  resourceType: "platform-messages",
   message: {
     type: "longString",
     initial: initialText,
