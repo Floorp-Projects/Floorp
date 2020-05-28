@@ -42,6 +42,7 @@
 #include "pk11pub.h"
 #include "prerror.h"
 #include "secerr.h"
+#include "secder.h"
 
 #include "TrustOverrideUtils.h"
 #include "TrustOverride-AppleGoogleDigiCertData.inc"
@@ -1155,6 +1156,43 @@ static Result CheckForStartComOrWoSign(const UniqueCERTCertList& certChain) {
   return Success;
 }
 
+nsresult isDistrustedCertificateChain(const UniqueCERTCertList& certList,
+                                      bool& isDistrusted) {
+  // Set the default result to be distrusted.
+  isDistrusted = true;
+
+  // Allocate objects and retreive the root and end-entity certificates.
+  const CERTCertificate* certRoot = CERT_LIST_TAIL(certList)->cert;
+  const CERTCertificate* certLeaf = CERT_LIST_HEAD(certList)->cert;
+
+  // Check if the distrust field of the root is filled.
+  if (!certRoot->distrust) {
+    isDistrusted = false;
+    return NS_OK;
+  }
+
+  // Get validity for the current end-entity certificate
+  // and get the distrust field for the root certificate.
+  PRTime certRootDistrustAfter;
+  PRTime certLeafNotBefore;
+
+  SECStatus rv1 = DER_DecodeTimeChoice(
+      &certRootDistrustAfter, &certRoot->distrust->serverDistrustAfter);
+  SECStatus rv2 =
+      DER_DecodeTimeChoice(&certLeafNotBefore, &certLeaf->validity.notBefore);
+
+  if ((rv1 != SECSuccess) || (rv2 != SECSuccess)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // Compare the validity of the end-entity certificate with
+  // the distrust value of the root.
+  if (certLeafNotBefore <= certRootDistrustAfter) {
+    isDistrusted = false;
+  }
+  return NS_OK;
+}
+
 Result NSSCertDBTrustDomain::IsChainValid(const DERArray& certArray, Time time,
                                           const CertPolicyId& requiredPolicy) {
   MOZ_LOG(gCertVerifierLog, LogLevel::Debug,
@@ -1215,6 +1253,19 @@ Result NSSCertDBTrustDomain::IsChainValid(const DERArray& certArray, Time time,
     }
     if (!chainHasValidPins) {
       return Result::ERROR_KEY_PINNING_FAILURE;
+    }
+  }
+
+  // Check that the childs' certificate NotBefore date is anterior to
+  // the NotAfter value of the parent when the root is a builtin.
+  if (isBuiltInRoot) {
+    bool isDistrusted;
+    nsrv = isDistrustedCertificateChain(certList, isDistrusted);
+    if (NS_FAILED(nsrv)) {
+      return Result::FATAL_ERROR_LIBRARY_FAILURE;
+    }
+    if (isDistrusted) {
+      return Result::ERROR_UNTRUSTED_ISSUER;
     }
   }
 
