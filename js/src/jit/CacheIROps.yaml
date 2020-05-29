@@ -681,13 +681,13 @@
 
 - name: IsCallableResult
   shared: true
-  transpile: false
+  transpile: true
   args:
     input: ValId
 
 - name: IsConstructorResult
   shared: true
-  transpile: false
+  transpile: true
   args:
     obj: ObjId
 
