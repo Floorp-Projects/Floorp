@@ -232,9 +232,15 @@ _cairo_quartz_create_cgimage (cairo_format_t format,
 	    return NULL;
     }
 
+    // We don't use height * stride because we may have < stride bytes
+    // in the last row. CGDataProviderCreateWithData checks that the last
+    // byte is accessible with newer SDKs and it seems like PDF contexts
+    // will also read the entire buffer. Instead compute the minimum required
+    // bytes for the last row using cairo_format_stride_for_width.
+    size_t size = (height - 1) * stride + cairo_format_stride_for_width (format, width);
     dataProvider = CGDataProviderCreateWithData (releaseInfo,
 						 data,
-						 height * stride,
+						 size,
 						 releaseCallback);
 
     if (!dataProvider) {
