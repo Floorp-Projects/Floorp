@@ -1,6 +1,7 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
+# NOTE: New strings should use the about-logins- prefix.
 
 about-logins-page-title = Logins & Passwords
 
@@ -29,6 +30,7 @@ menu =
   .title = Open menu
 # This menuitem is only visible on Windows and macOS
 about-logins-menu-menuitem-import-from-another-browser = Import from Another Browser…
+about-logins-menu-menuitem-export-logins = Export Logins…
 menu-menuitem-preferences =
   { PLATFORM() ->
       [windows] Options
@@ -194,3 +196,20 @@ about-logins-error-message-duplicate-login-with-link = An entry for { $loginTitl
 
 # This is a generic error message.
 about-logins-error-message-default = An error occurred while trying to save this password.
+
+
+## Login Export Dialog
+
+# Title of the file picker dialog
+about-logins-export-file-picker-title = Export Logins File
+# The default file name shown in the file picker when exporting saved logins.
+# This must end in .csv
+about-logins-export-file-picker-default-filename = logins.csv
+about-logins-export-file-picker-export-button = Export
+# A description for the .csv file format that may be shown as the file type
+# filter by the operating system.
+about-logins-export-file-picker-csv-filter-title =
+  { PLATFORM() ->
+      [macos] CSV Document
+     *[other] CSV File
+  }

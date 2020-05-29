@@ -70,6 +70,10 @@
   background-image: url("chrome://browser/skin/import.svg");
 }
 
+.menuitem-export {
+  background-image: url("chrome://browser/skin/save.svg");
+}
+
 .menuitem-preferences {
   background-image: url("chrome://global/skin/icons/settings.svg");
 }

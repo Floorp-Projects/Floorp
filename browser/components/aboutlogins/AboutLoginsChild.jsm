@@ -191,6 +191,10 @@ class AboutLoginsChild extends JSWindowActorChild {
         });
         break;
       }
+      case "AboutLoginsExportPasswords": {
+        this.sendAsyncMessage("AboutLogins:ExportPasswords");
+        break;
+      }
     }
   }
 
