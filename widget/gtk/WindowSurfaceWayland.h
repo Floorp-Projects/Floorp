@@ -36,8 +36,6 @@ class WaylandShmPool {
                             int aImageDataSize);
 
  private:
-  int CreateTemporaryFile(int aSize);
-
   wl_shm_pool* mShmPool;
   int mShmPoolFd;
   int mAllocatedSize;
