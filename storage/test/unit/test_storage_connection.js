@@ -1012,7 +1012,7 @@ add_task(async function test_defaultTransactionType() {
 add_task(async function test_variableLimit() {
   info("Open connection");
   let db = Services.storage.openDatabase(getTestDB());
-  Assert.equal(db.variableLimit, 999, "Should return default limit");
+  Assert.equal(db.variableLimit, 32766, "Should return default limit");
   await asyncClose(db);
 });
 
