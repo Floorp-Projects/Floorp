@@ -60,7 +60,7 @@ class ConceptFetchHttpUploader(
      *         or faced an unrecoverable error), false if there was a recoverable
      *         error callers can deal with.
      */
-    override fun upload(url: String, data: String, headers: HeadersList): UploadResult {
+    override fun upload(url: String, data: ByteArray, headers: HeadersList): UploadResult {
         val request = buildRequest(url, data, headers)
 
         return try {
@@ -74,7 +74,7 @@ class ConceptFetchHttpUploader(
     @VisibleForTesting(otherwise = PRIVATE)
     internal fun buildRequest(
         url: String,
-        data: String,
+        data: ByteArray,
         headers: HeadersList
     ): Request {
         val conceptHeaders = MutableHeaders(headers.map { Header(it.first, it.second) })
@@ -89,7 +89,7 @@ class ConceptFetchHttpUploader(
             // offer a better API to do that, so we nuke all cookies going to our telemetry
             // endpoint.
             cookiePolicy = Request.CookiePolicy.OMIT,
-            body = Request.Body.fromString(data)
+            body = Request.Body(data.inputStream())
         )
     }
 
