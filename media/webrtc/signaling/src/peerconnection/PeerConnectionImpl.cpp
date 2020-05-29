@@ -2567,6 +2567,29 @@ RefPtr<dom::RTCStatsPromise> PeerConnectionImpl::GetSenderStats(
   });
 }
 
+static UniquePtr<dom::RTCStatsCollection> GetDataChannelStats_s(
+    const RefPtr<DataChannelConnection>& aDataConnection,
+    const DOMHighResTimeStamp aTimestamp) {
+  UniquePtr<dom::RTCStatsCollection> report(new dom::RTCStatsCollection);
+  if (aDataConnection) {
+    aDataConnection->AppendStatsToReport(report, aTimestamp);
+  }
+  return report;
+}
+
+RefPtr<dom::RTCStatsPromise> PeerConnectionImpl::GetDataChannelStats(
+    const RefPtr<DataChannelConnection>& aDataChannelConnection,
+    const DOMHighResTimeStamp aTimestamp) {
+  // Gather stats from DataChannels
+  return InvokeAsync(
+      GetMainThreadSerialEventTarget(), __func__,
+      [aDataChannelConnection, aTimestamp]() {
+        return dom::RTCStatsPromise::CreateAndResolve(
+            GetDataChannelStats_s(aDataChannelConnection, aTimestamp),
+            __func__);
+      });
+}
+
 void PeerConnectionImpl::RecordConduitTelemetry() {
   if (!mMedia) {
     return;
@@ -2663,6 +2686,8 @@ RefPtr<dom::RTCStatsReportPromise> PeerConnectionImpl::GetStats(
     } else {
       promises.AppendElement(mTransportHandler->GetIceStats("", now));
     }
+
+    promises.AppendElement(GetDataChannelStats(mDataConnection, now));
   }
 
   // This is what we're going to return; all the stuff in |promises| will be
@@ -2760,6 +2785,8 @@ RefPtr<dom::RTCStatsReportPromise> PeerConnectionImpl::GetStats(
                                   report->mRtpContributingSourceStats, idGen);
               AssignWithOpaqueIds(stats->mTrickledIceCandidateStats,
                                   report->mTrickledIceCandidateStats, idGen);
+              AssignWithOpaqueIds(stats->mDataChannelStats,
+                                  report->mDataChannelStats, idGen);
               if (!report->mRawLocalCandidates.AppendElements(
                       stats->mRawLocalCandidates, fallible) ||
                   !report->mRawRemoteCandidates.AppendElements(

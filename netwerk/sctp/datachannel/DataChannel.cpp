@@ -43,9 +43,12 @@
 #include "nsThreadUtils.h"
 #include "nsNetUtil.h"
 #include "nsNetCID.h"
+#include "mozilla/RandomNum.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/StaticMutex.h"
 #include "mozilla/Unused.h"
+#include "mozilla/dom/RTCDataChannelBinding.h"
+#include "mozilla/dom/RTCStatsReportBinding.h"
 #ifdef MOZ_PEERCONNECTION
 #  include "mtransport/runnable_utils.h"
 #  include "signaling/src/peerconnection/MediaTransportHandler.h"
@@ -647,6 +650,60 @@ void DataChannelConnection::SetMaxMessageSize(bool aMaxMessageSizeSet,
 }
 
 uint64_t DataChannelConnection::GetMaxMessageSize() { return mMaxMessageSize; }
+
+void DataChannelConnection::AppendStatsToReport(
+    const UniquePtr<dom::RTCStatsCollection>& aReport,
+    const DOMHighResTimeStamp aTimestamp) const {
+  ASSERT_WEBRTC(NS_IsMainThread());
+  nsString temp;
+  for (const RefPtr<DataChannel>& chan : mChannels.GetAll()) {
+    // If channel is empty, ignore
+    if (!chan) {
+      continue;
+    }
+    mozilla::dom::RTCDataChannelStats stats;
+    nsString id = NS_LITERAL_STRING("dc");
+    id.AppendInt(chan->GetStream());
+    stats.mId.Construct(id);
+    chan->GetLabel(temp);
+    stats.mTimestamp.Construct(aTimestamp);
+    stats.mType.Construct(mozilla::dom::RTCStatsType::Data_channel);
+    stats.mLabel.Construct(temp);
+    chan->GetProtocol(temp);
+    stats.mProtocol.Construct(temp);
+    stats.mDataChannelIdentifier.Construct(chan->GetStream());
+    {
+      using State = mozilla::dom::RTCDataChannelState;
+      State state;
+      switch (chan->GetReadyState()) {
+        case CONNECTING:
+          state = State::Connecting;
+          break;
+        case OPEN:
+          state = State::Open;
+          break;
+        case CLOSING:
+          state = State::Closing;
+          break;
+        case CLOSED:
+          state = State::Closed;
+          break;
+        default:
+          MOZ_ASSERT(false, "Unknown DataChannel state");
+          continue;
+      };
+      stats.mState.Construct(state);
+    }
+    auto counters = chan->GetTrafficCounters();
+    stats.mMessagesSent.Construct(counters.mMessagesSent);
+    stats.mBytesSent.Construct(counters.mBytesSent);
+    stats.mMessagesReceived.Construct(counters.mMessagesReceived);
+    stats.mBytesReceived.Construct(counters.mBytesReceived);
+    if (!aReport->mDataChannelStats.AppendElement(stats, fallible)) {
+      mozalloc_handle_oom(0);
+    }
+  }
+}
 
 #ifdef MOZ_PEERCONNECTION
 
@@ -1696,6 +1753,12 @@ void DataChannelConnection::HandleDataMessage(const void* data, size_t length,
       DC_ERROR(("Unknown data PPID %" PRIu32, ppid));
       return;
   }
+
+  channel->WithTrafficCounters(
+      [&data_length](DataChannel::TrafficCounters& counters) {
+        counters.mMessagesReceived++;
+        counters.mBytesReceived += data_length;
+      });
 
   // Notify onmessage
   DC_DEBUG(("%s: sending ON_DATA_%s%s for %p", __FUNCTION__,
@@ -2890,13 +2953,22 @@ int DataChannelConnection::SendDataMsgCommon(uint16_t stream,
   }
 
   auto& channel = *channelPtr;
-
+  int err = 0;
   if (isBinary) {
-    return SendDataMsg(channel, data, len, DATA_CHANNEL_PPID_BINARY_PARTIAL,
-                       DATA_CHANNEL_PPID_BINARY);
+    err = SendDataMsg(channel, data, len, DATA_CHANNEL_PPID_BINARY_PARTIAL,
+                      DATA_CHANNEL_PPID_BINARY);
+  } else {
+    err = SendDataMsg(channel, data, len, DATA_CHANNEL_PPID_DOMSTRING_PARTIAL,
+                      DATA_CHANNEL_PPID_DOMSTRING);
   }
-  return SendDataMsg(channel, data, len, DATA_CHANNEL_PPID_DOMSTRING_PARTIAL,
-                     DATA_CHANNEL_PPID_DOMSTRING);
+  if (!err) {
+    channel.WithTrafficCounters([&len](DataChannel::TrafficCounters& counters) {
+      counters.mMessagesSent++;
+      counters.mBytesSent += len;
+    });
+  }
+
+  return err;
 }
 
 void DataChannelConnection::Stop() {
@@ -3266,6 +3338,11 @@ void DataChannel::SendOrQueue(DataChannelOnMessageAvailable* aMessage) {
   mMainThreadEventTarget->Dispatch(runnable.forget());
 }
 
+DataChannel::TrafficCounters DataChannel::GetTrafficCounters() const {
+  MutexAutoLock lock(mStatsLock);
+  return mTrafficCounters;
+}
+
 bool DataChannel::EnsureValidStream(ErrorResult& aRv) {
   MOZ_ASSERT(mConnection);
   if (mConnection && mStream != INVALID_STREAM) {
@@ -3273,6 +3350,12 @@ bool DataChannel::EnsureValidStream(ErrorResult& aRv) {
   }
   aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
   return false;
+}
+
+void DataChannel::WithTrafficCounters(
+    const std::function<void(TrafficCounters&)>& aFn) {
+  MutexAutoLock lock(mStatsLock);
+  aFn(mTrafficCounters);
 }
 
 }  // namespace mozilla
