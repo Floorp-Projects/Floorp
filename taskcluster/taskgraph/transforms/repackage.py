@@ -305,6 +305,7 @@ def make_job_description(config, jobs):
             'dependencies': dependencies,
             'attributes': attributes,
             'run-on-projects': dep_job.attributes.get('run_on_projects'),
+            'optimization': dep_job.optimization,
             'treeherder': treeherder,
             'routes': job.get('routes', []),
             'extra': job.get('extra', {}),
