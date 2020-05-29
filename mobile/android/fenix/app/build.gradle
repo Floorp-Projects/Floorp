@@ -461,13 +461,14 @@ dependencies {
     implementation Deps.mozilla_browser_awesomebar
     implementation Deps.mozilla_feature_downloads
     implementation Deps.mozilla_browser_domains
-    implementation Deps.mozilla_browser_tabstray
     implementation Deps.mozilla_browser_icons
     implementation Deps.mozilla_browser_menu
     implementation Deps.mozilla_browser_search
     implementation Deps.mozilla_browser_session
     implementation Deps.mozilla_browser_state
     implementation Deps.mozilla_browser_storage_sync
+    implementation Deps.mozilla_browser_tabstray
+    implementation Deps.mozilla_browser_thumbnails
     implementation Deps.mozilla_browser_toolbar
 
     implementation Deps.mozilla_support_extensions

@@ -97,8 +97,10 @@ class TabTrayView(
             view.tabsTray,
             view.context.components.core.store,
             view.context.components.useCases.tabsUseCases,
+            view.context.components.useCases.thumbnailUseCases,
             { it.content.private == isPrivate },
-            { })
+            { }
+        )
 
         val tabs = if (isPrivate) {
             view.context.components.core.store.state.privateTabs

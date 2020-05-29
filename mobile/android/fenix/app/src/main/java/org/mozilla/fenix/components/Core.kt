@@ -22,6 +22,7 @@ import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.storage.sync.PlacesBookmarksStorage
 import mozilla.components.browser.storage.sync.PlacesHistoryStorage
+import mozilla.components.browser.thumbnails.storage.ThumbnailStorage
 import mozilla.components.concept.engine.DefaultSettings
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.mediaquery.PreferredColorScheme
@@ -215,6 +216,11 @@ class Core(private val context: Context) {
     val passwordsStorage by lazy { lazyPasswordsStorage.value }
 
     val tabCollectionStorage by lazy { TabCollectionStorage(context, sessionManager) }
+
+    /**
+     * A storage component for persisting thumbnail images of tabs.
+     */
+    val thumbnailStorage by lazy { ThumbnailStorage(context) }
 
     val topSiteStorage by lazy { TopSiteStorage(context) }
 

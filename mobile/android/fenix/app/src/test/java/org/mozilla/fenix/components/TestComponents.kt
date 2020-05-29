@@ -24,7 +24,8 @@ class TestComponents(private val context: Context) : Components(context) {
             core.store,
             core.engine.settings,
             search.searchEngineManager,
-            core.webAppShortcutManager
+            core.webAppShortcutManager,
+            core.thumbnailStorage
         )
     }
     override val intentProcessors by lazy {
