@@ -104,9 +104,6 @@ stage-all: \
   stage-jstests \
   test-packages-manifest \
   $(NULL)
-ifdef MOZ_WEBRTC
-stage-all: stage-steeplechase
-endif
 
 ifdef COMPILE_ENVIRONMENT
 stage-all: stage-cppunittests
@@ -252,12 +249,6 @@ ifdef MOZ_COPY_PDBS
 	cp -RL $(DIST)/bin/jsapi-tests.pdb $(PKG_STAGE)/cppunittest
 endif
 
-stage-steeplechase: make-stage-dir
-	$(NSINSTALL) -D $(PKG_STAGE)/steeplechase/
-	cp -RL $(DEPTH)/_tests/steeplechase $(PKG_STAGE)/steeplechase/tests
-	cp -RL $(DIST)/xpi-stage/specialpowers $(PKG_STAGE)/steeplechase
-	cp -RL $(topsrcdir)/testing/profiles/common/user.js $(PKG_STAGE)/steeplechase/prefs_general.js
-
 TEST_EXTENSIONS := \
     specialpowers@mozilla.org.xpi \
 	$(NULL)
@@ -292,7 +283,6 @@ check::
   stage-mochitest \
   stage-jstests \
   stage-android \
-  stage-steeplechase \
   test-packages-manifest \
   check \
   $(NULL)

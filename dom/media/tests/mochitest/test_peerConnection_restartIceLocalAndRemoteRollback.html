@@ -20,11 +20,6 @@
         async function PC_LOCAL_SETUP_ICE_HANDLER(test) {
           await test.pcLocal.endOfTrickleIce;
           test.pcLocal.setupIceCandidateHandler(test);
-          if (test.testOptions.steeplechase) {
-            test.pcLocal.endOfTrickleIce.then(() => {
-              send_message({"type": "end_of_trickle_ice"});
-            });
-          }
         },
 
         // causes a full, normal ice restart

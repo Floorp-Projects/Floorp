@@ -19,19 +19,9 @@
       [
         function PC_LOCAL_SETUP_ICE_HANDLER(test) {
           test.pcLocal.setupIceCandidateHandler(test);
-          if (test.testOptions.steeplechase) {
-            test.pcLocal.endOfTrickleIce.then(() => {
-              send_message({"type": "end_of_trickle_ice"});
-            });
-          }
         },
         function PC_REMOTE_SETUP_ICE_HANDLER(test) {
           test.pcRemote.setupIceCandidateHandler(test);
-          if (test.testOptions.steeplechase) {
-            test.pcRemote.endOfTrickleIce.then(() => {
-              send_message({"type": "end_of_trickle_ice"});
-            });
-          }
         },
 
         // causes a full, normal ice restart
