@@ -16,14 +16,6 @@ class PushSubscriptionFront extends FrontClassWithSpec(pushSubscriptionSpec) {
     return this._form.endpoint;
   }
 
-  get pushCount() {
-    return this._form.pushCount;
-  }
-
-  get lastPush() {
-    return this._form.lastPush;
-  }
-
   get quota() {
     return this._form.quota;
   }
