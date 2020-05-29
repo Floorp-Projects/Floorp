@@ -7,7 +7,7 @@
 #ifndef mozilla_temporaryaccessgrantobserver_h
 #define mozilla_temporaryaccessgrantobserver_h
 
-#include "mozilla/BasePrincipal.h"
+#include "mozilla/PrincipalHashKey.h"
 #include "nsCOMPtr.h"
 #include "nsHashKeys.h"
 #include "nsIObserver.h"
@@ -23,21 +23,20 @@ namespace mozilla {
 
 class PermissionManager;
 
-class TemporaryAccessGrantCacheKey : public PLDHashEntryHdr {
+class TemporaryAccessGrantCacheKey : public PrincipalHashKey {
  public:
   typedef std::pair<nsCOMPtr<nsIPrincipal>, nsCString> KeyType;
   typedef const KeyType* KeyTypePointer;
 
   explicit TemporaryAccessGrantCacheKey(KeyTypePointer aKey)
-      : mPrincipal(aKey->first), mType(aKey->second) {}
+      : PrincipalHashKey(aKey->first), mType(aKey->second) {}
   TemporaryAccessGrantCacheKey(TemporaryAccessGrantCacheKey&& aOther) = default;
 
   ~TemporaryAccessGrantCacheKey() = default;
 
   KeyType GetKey() const { return std::make_pair(mPrincipal, mType); }
   bool KeyEquals(KeyTypePointer aKey) const {
-    return !!mPrincipal == !!aKey->first && mType == aKey->second &&
-           (mPrincipal ? (mPrincipal->Equals(aKey->first)) : true);
+    return PrincipalHashKey::KeyEquals(aKey->first) && mType == aKey->second;
   }
 
   static KeyTypePointer KeyToPointer(KeyType& aKey) { return &aKey; }
@@ -46,15 +45,13 @@ class TemporaryAccessGrantCacheKey : public PLDHashEntryHdr {
       return 0;
     }
 
-    BasePrincipal* bp = BasePrincipal::Cast(aKey->first);
-    return HashGeneric(bp->GetOriginNoSuffixHash(), bp->GetOriginSuffixHash(),
+    return HashGeneric(PrincipalHashKey::HashKey(aKey->first),
                        HashString(aKey->second));
   }
 
   enum { ALLOW_MEMMOVE = true };
 
  private:
-  nsCOMPtr<nsIPrincipal> mPrincipal;
   nsCString mType;
 };
 
