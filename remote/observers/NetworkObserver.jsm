@@ -54,6 +54,7 @@ class NetworkObserver {
     ChannelEventSinkFactory.getService().registerCollector(this);
 
     this._redirectMap = new Map();
+    this._windowIdToFrameIdMap = new Map();
 
     // Request interception state.
     this._browserSuspendedChannels = new Map();
@@ -191,18 +192,15 @@ class NetworkObserver {
     } catch (ex) {
       return;
     }
+
     const httpChannel = channel.QueryInterface(Ci.nsIHttpChannel);
     const loadContext = getLoadContext(httpChannel);
-    if (
-      !loadContext ||
-      !this._browserSessionCount.has(loadContext.topFrameElement) ||
-      !loadContext.topFrameElement.currentURI
-    ) {
+    const browser = loadContext?.topFrameElement;
+    if (!loadContext || !this._browserSessionCount.has(browser)) {
       return;
     }
-    const extraHeaders = this._extraHTTPHeaders.get(
-      loadContext.topFrameElement
-    );
+
+    const extraHeaders = this._extraHTTPHeaders.get(browser);
     if (extraHeaders) {
       for (const header of extraHeaders) {
         httpChannel.setRequestHeader(
@@ -215,18 +213,18 @@ class NetworkObserver {
     const causeType = httpChannel.loadInfo
       ? httpChannel.loadInfo.externalContentPolicyType
       : Ci.nsIContentPolicy.TYPE_OTHER;
-    const suspendedChannels = this._browserSuspendedChannels.get(
-      loadContext.topFrameElement
-    );
+
+    const suspendedChannels = this._browserSuspendedChannels.get(browser);
     if (suspendedChannels) {
       httpChannel.suspend();
       suspendedChannels.set(requestId(httpChannel), httpChannel);
     }
+
     const oldChannel = this._redirectMap.get(httpChannel);
     this._redirectMap.delete(httpChannel);
 
     // Install response body hooks.
-    new ResponseBodyListener(this, loadContext.topFrameElement, httpChannel);
+    new ResponseBodyListener(this, browser, httpChannel);
 
     this.emit("request", httpChannel, {
       url: httpChannel.URI.spec,
@@ -239,11 +237,14 @@ class NetworkObserver {
       isNavigationRequest: httpChannel.isMainDocumentChannel,
       cause: causeType,
       causeString: causeTypeToString(causeType),
+      frameId: this.frameId(httpChannel, causeType),
       // clients expect loaderId == requestId for document navigation
-      loaderId:
-        causeType == Ci.nsIContentPolicy.TYPE_DOCUMENT
-          ? requestId(httpChannel)
-          : undefined,
+      loaderId: [
+        Ci.nsIContentPolicy.TYPE_DOCUMENT,
+        Ci.nsIContentPolicy.TYPE_SUBDOCUMENT,
+      ].includes(causeType)
+        ? requestId(httpChannel)
+        : undefined,
     });
   }
 
@@ -279,11 +280,14 @@ class NetworkObserver {
       statusText: httpChannel.responseStatusText,
       cause: causeType,
       causeString: causeTypeToString(causeType),
+      frameId: this.frameId(httpChannel, causeType),
       // clients expect loaderId == requestId for document navigation
-      loaderId:
-        causeType == Ci.nsIContentPolicy.TYPE_DOCUMENT
-          ? requestId(httpChannel)
-          : undefined,
+      loaderId: [
+        Ci.nsIContentPolicy.TYPE_DOCUMENT,
+        Ci.nsIContentPolicy.TYPE_SUBDOCUMENT,
+      ].includes(causeType)
+        ? requestId(httpChannel)
+        : undefined,
     });
   }
 
@@ -340,6 +344,36 @@ class NetworkObserver {
       this._browserResponseStorages.delete(browser);
       this.dispose();
     }
+  }
+
+  /**
+   * Returns the frameId of the current httpChannel.
+   *
+   * Only Document and Subdocument requests contain a reference
+   * to the browsing context, and as such the id, which is used
+   * as frameId. To be able to send a frameId for resource requests
+   * a map has to be kept up-to-date to retrieve that id from the
+   * window id. Hereby window ids are unique for all requests
+   * belonging to the same frame, but differ between frames.
+   */
+  frameId(httpChannel, causeType) {
+    const loadContext = getLoadContext(httpChannel);
+    const wrappedChannel = ChannelWrapper.get(httpChannel);
+
+    // Document requests indicate a fresh navigation cycle.
+    // As such cleanup all the old window id references.
+    if (causeType == Ci.nsIContentPolicy.TYPE_DOCUMENT) {
+      this._windowIdToFrameIdMap.clear();
+    }
+
+    let frameId = loadContext.id?.toString();
+    if (frameId) {
+      this._windowIdToFrameIdMap.set(wrappedChannel.windowId, frameId);
+    } else {
+      frameId = this._windowIdToFrameIdMap.get(wrappedChannel.windowId);
+    }
+
+    return frameId;
   }
 }
 

@@ -3,10 +3,11 @@
 
 "use strict";
 
-const PAGE_URL =
-  "http://example.com/browser/remote/test/browser/network/doc_networkEvents.html";
-const JS_URL =
-  "http://example.com/browser/remote/test/browser/network/file_networkEvents.js";
+const BASE_PATH = "http://example.com/browser/remote/test/browser/network";
+const FRAMESET_URL = `${BASE_PATH}/doc_frameset.html`;
+const FRAMESET_JS_URL = `${BASE_PATH}/file_framesetEvents.js`;
+const PAGE_URL = `${BASE_PATH}/doc_networkEvents.html`;
+const PAGE_JS_URL = `${BASE_PATH}/file_networkEvents.js`;
 
 add_task(async function noEventsWhenNetworkDomainDisabled({ client }) {
   const history = configureHistory(client, 0);
@@ -30,88 +31,191 @@ add_task(async function noEventsAfterNetworkDomainDisabled({ client }) {
 
 add_task(async function documentNavigationWithResource({ client }) {
   const { Page, Network } = client;
-  await Network.enable();
-  const history = configureHistory(client, 2);
 
-  const { frameId: frameIdNav } = await Page.navigate({ url: PAGE_URL });
+  await Network.enable();
+  await Page.enable();
+
+  const history = configureHistory(client, 4);
+
+  const frameAttached = Page.frameAttached();
+  const { frameId: frameIdNav } = await Page.navigate({ url: FRAMESET_URL });
+  const { frameId: frameIdSubframe } = await frameAttached;
   ok(frameIdNav, "Page.navigate returned a frameId");
 
   info("Wait for Network events");
   const events = await history.record();
-  is(events.length, 2, "Expected number of Network.responseReceived events");
+  is(events.length, 4, "Expected number of Network.responseReceived events");
 
+  // Check top-level document response
   const docResponse = events[0].payload;
-  is(docResponse.response.url, PAGE_URL, "Got the doc response");
-  is(
-    docResponse.response.mimeType,
-    "text/html",
-    "Doc response has expected mimeType"
-  );
-  is(docResponse.type, "Document", "The doc response has 'Document' type");
+  is(docResponse.type, "Document", "Document response has expected type");
+  is(docResponse.frameId, frameIdNav, "Got the expected frame id");
   is(
     docResponse.requestId,
     docResponse.loaderId,
-    "The doc request has requestId = loaderId"
+    "The response id is equal to the loader id"
   );
+  is(docResponse.response.url, FRAMESET_URL, "Got the Document response");
   is(
-    docResponse.frameId,
-    frameIdNav,
-    "Doc response returns same frameId as Page.navigate"
+    docResponse.response.mimeType,
+    "text/html",
+    "Document response has expected mimeType"
   );
-  ok(!!docResponse.response.headers.server, "Doc response has headers");
-  is(docResponse.response.status, 200, "Doc response status is 200");
-  is(docResponse.response.statusText, "OK", "Doc response status is OK");
+  ok(!!docResponse.response.headers.server, "Document response has headers");
+  is(docResponse.response.status, 200, "Document response has expected status");
+  is(
+    docResponse.response.statusText,
+    "OK",
+    "Document response has expected status text"
+  );
   if (docResponse.response.fromDiskCache === false) {
     is(
       docResponse.response.remoteIPAddress,
       "127.0.0.1",
-      "Doc response has an IP address"
+      "Document response has the expected IP address"
     );
     ok(
       typeof docResponse.response.remotePort == "number",
-      "Doc response has a remotePort"
+      "Document response has a remotePort"
     );
   }
   is(
     docResponse.response.protocol,
     "http/1.1",
-    "Doc response has expected protocol"
+    "Document response has expected protocol"
   );
 
-  const resourceResponse = events[1].payload;
-  is(resourceResponse.response.url, JS_URL, "Got the resource response");
+  // Check top-level script response
+  const scriptResponse = events[1].payload;
+  is(scriptResponse.type, "Script", "Script response has expected type");
+  is(scriptResponse.frameId, frameIdNav, "Got the expected frame id");
+  is(scriptResponse.response.url, FRAMESET_JS_URL, "Got the Script response");
   is(
-    resourceResponse.response.mimeType,
+    scriptResponse.response.mimeType,
     "application/x-javascript",
-    "Resource response has expected mimeType"
+    "Script response has expected mimeType"
+  );
+  ok(!!scriptResponse.response.headers.server, "Script response has headers");
+  is(
+    scriptResponse.response.status,
+    200,
+    "Script response has the expected status"
   );
   is(
-    resourceResponse.type,
-    "Script",
-    "The resource response has 'Script' type"
+    scriptResponse.response.statusText,
+    "OK",
+    "Script response has the expected status text"
   );
-  ok(!!resourceResponse.frameId, "Resource response has a frame id");
-  ok(
-    !!resourceResponse.response.headers.server,
-    "Resource response has headers"
-  );
-  is(resourceResponse.response.status, 200, "Resource response status is 200");
-  is(resourceResponse.response.statusText, "OK", "Response status is OK");
-  if (resourceResponse.response.fromDiskCache === false) {
+  if (scriptResponse.response.fromDiskCache === false) {
     is(
-      resourceResponse.response.remoteIPAddress,
+      scriptResponse.response.remoteIPAddress,
       docResponse.response.remoteIPAddress,
-      "Resource response has same IP address and doc response"
+      "Script response has same IP address as document response"
     );
     ok(
-      typeof resourceResponse.response.remotePort == "number",
-      "Resource response has a remotePort"
+      typeof scriptResponse.response.remotePort == "number",
+      "Script response has a remotePort"
     );
   }
   is(
-    resourceResponse.response.protocol,
+    scriptResponse.response.protocol,
     "http/1.1",
-    "Resource response has expected protocol"
+    "Script response has the expected protocol"
+  );
+
+  // Check subdocument response
+  const frameDocResponse = events[2].payload;
+  is(
+    frameDocResponse.type,
+    "Subdocument",
+    "Subdocument response has expected type"
+  );
+  is(frameDocResponse.frameId, frameIdSubframe, "Got the expected frame id");
+  is(
+    frameDocResponse.requestId,
+    frameDocResponse.loaderId,
+    "The response id is equal to the loader id"
+  );
+  is(
+    frameDocResponse.response.url,
+    PAGE_URL,
+    "Got the expected Document response"
+  );
+  is(
+    frameDocResponse.response.mimeType,
+    "text/html",
+    "Document response has expected mimeType"
+  );
+  ok(
+    !!frameDocResponse.response.headers.server,
+    "Subdocument response has headers"
+  );
+  is(
+    frameDocResponse.response.status,
+    200,
+    "Subdocument response has expected status"
+  );
+  is(
+    frameDocResponse.response.statusText,
+    "OK",
+    "Subdocument response has expected status text"
+  );
+  if (frameDocResponse.response.fromDiskCache === false) {
+    is(
+      frameDocResponse.response.remoteIPAddress,
+      "127.0.0.1",
+      "Subdocument response has the expected IP address"
+    );
+    ok(
+      typeof frameDocResponse.response.remotePort == "number",
+      "Subdocument response has a remotePort"
+    );
+  }
+  is(
+    frameDocResponse.response.protocol,
+    "http/1.1",
+    "Subdocument response has expected protocol"
+  );
+
+  // Check frame script response
+  const frameScriptResponse = events[3].payload;
+  is(frameScriptResponse.type, "Script", "Script response has expected type");
+  is(frameScriptResponse.frameId, frameIdSubframe, "Got the expected frame id");
+  is(frameScriptResponse.response.url, PAGE_JS_URL, "Got the Script response");
+  is(
+    frameScriptResponse.response.mimeType,
+    "application/x-javascript",
+    "Script response has expected mimeType"
+  );
+  ok(
+    !!frameScriptResponse.response.headers.server,
+    "Script response has headers"
+  );
+  is(
+    frameScriptResponse.response.status,
+    200,
+    "Script response has the expected status"
+  );
+  is(
+    frameScriptResponse.response.statusText,
+    "OK",
+    "Script response has the expected status text"
+  );
+  if (frameScriptResponse.response.fromDiskCache === false) {
+    is(
+      frameScriptResponse.response.remoteIPAddress,
+      docResponse.response.remoteIPAddress,
+      "Script response has same IP address as document response"
+    );
+    ok(
+      typeof frameScriptResponse.response.remotePort == "number",
+      "Script response has a remotePort"
+    );
+  }
+  is(
+    frameScriptResponse.response.protocol,
+    "http/1.1",
+    "Script response has the expected protocol"
   );
 });
 
@@ -125,7 +229,7 @@ function configureHistory(client, total) {
     event: Network.responseReceived,
     eventName: RESPONSE,
     messageFn: payload => {
-      return `Received ${RESPONSE} for ${payload.response?.url}`;
+      return `Received ${RESPONSE} for ${payload.response.url}`;
     },
   });
   return history;

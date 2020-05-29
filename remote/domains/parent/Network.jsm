@@ -378,7 +378,7 @@ class Network extends Domain {
 
   _onRequest(eventName, httpChannel, data) {
     const wrappedChannel = ChannelWrapper.get(httpChannel);
-    const topFrame = getLoadContext(httpChannel).topFrameElement;
+
     const request = {
       url: httpChannel.URI.spec,
       urlFragment: undefined,
@@ -401,16 +401,15 @@ class Network extends Domain {
       initiator: undefined,
       redirectResponse: undefined,
       type: LOAD_CAUSE_STRINGS[data.cause] || "unknown",
-      // Bug 1637363 - Add subframe support
-      frameId: topFrame.browsingContext?.id.toString(),
+      frameId: data.frameId,
       hasUserGesture: undefined,
     });
   }
 
   _onResponse(eventName, httpChannel, data) {
     const wrappedChannel = ChannelWrapper.get(httpChannel);
-    const topFrame = getLoadContext(httpChannel).topFrameElement;
     const headers = headersAsObject(data.headers);
+
     this.emit("Network.responseReceived", {
       requestId: data.requestId,
       loaderId: data.loaderId,
@@ -434,29 +433,9 @@ class Network extends Domain {
         // unknown, neutral, insecure, secure, info, insecure-broken
         securityState: "unknown",
       },
-      // Bug 1637363 - Add subframe support
-      frameId: topFrame.browsingContext?.id.toString(),
+      frameId: data.frameId,
     });
   }
-}
-
-function getLoadContext(httpChannel) {
-  let loadContext = null;
-  try {
-    if (httpChannel.notificationCallbacks) {
-      loadContext = httpChannel.notificationCallbacks.getInterface(
-        Ci.nsILoadContext
-      );
-    }
-  } catch (e) {}
-  try {
-    if (!loadContext && httpChannel.loadGroup) {
-      loadContext = httpChannel.loadGroup.notificationCallbacks.getInterface(
-        Ci.nsILoadContext
-      );
-    }
-  } catch (e) {}
-  return loadContext;
 }
 
 /**

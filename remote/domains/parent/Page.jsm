@@ -747,7 +747,7 @@ class Page extends Domain {
     }
     this.executeInChild("_updateLoaderId", {
       loaderId: data.loaderId,
-      frameId: this.session.browsingContext.id.toString(),
+      frameId: data.frameId,
     });
   }
 }

@@ -43,6 +43,29 @@ function assertCookie(cookie, expected = {}) {
   Assert.deepEqual(cookie, expectedCookie);
 }
 
+function assertEventOrder(first, second, options = {}) {
+  const { ignoreTimestamps = false } = options;
+
+  const firstDescription = getDescriptionForEvent(first);
+  const secondDescription = getDescriptionForEvent(second);
+
+  ok(
+    first.index < second.index,
+    `${firstDescription} received before ${secondDescription})`
+  );
+
+  if (!ignoreTimestamps) {
+    ok(
+      first.payload.timestamp <= second.payload.timestamp,
+      `Timestamp of ${firstDescription}) is earlier than ${secondDescription})`
+    );
+  }
+}
+
+function filterEventsByType(history, type) {
+  return history.filter(event => event.payload.type == type);
+}
+
 function getCookies() {
   return Services.cookies.cookies.map(cookie => {
     const data = {
@@ -69,4 +92,10 @@ function getCookies() {
 
     return data;
   });
+}
+
+function getDescriptionForEvent(event) {
+  const { eventName, payload } = event;
+
+  return `${eventName}(${payload.type || payload.name || payload.frameId})`;
 }

@@ -40,14 +40,16 @@ add_task(async function eventsWhenNavigatingWithNoFrames({ client }) {
   const { frameId } = await Page.navigate({ url: DOC });
   await assertEventOrder({ history });
 
-  const { executionContextId: destroyedId } = history.findEvent(DESTROYED);
+  const { executionContextId: destroyedId } = history.findEvent(
+    DESTROYED
+  ).payload;
   is(
     destroyedId,
     previousContext.id,
     "The destroyed event reports the previous context id"
   );
 
-  const { context: contextCreated } = history.findEvent(CREATED);
+  const { context: contextCreated } = history.findEvent(CREATED).payload;
   checkDefaultContext(contextCreated);
   isnot(
     contextCreated.id,
@@ -75,7 +77,9 @@ add_task(async function eventsWhenNavigatingFrameSet({ client }) {
     expectedEvents: [DESTROYED, CLEARED, CREATED, CREATED],
   });
 
-  const { executionContextId: destroyedId } = historyTo.findEvent(DESTROYED);
+  const { executionContextId: destroyedId } = historyTo.findEvent(
+    DESTROYED
+  ).payload;
   is(
     destroyedId,
     previousContext.id,
@@ -83,8 +87,8 @@ add_task(async function eventsWhenNavigatingFrameSet({ client }) {
   );
 
   const contexts = historyTo.findEvents(CREATED);
-  const createdTopContext = contexts[0].context;
-  const createdFrameContext = contexts[1].context;
+  const createdTopContext = contexts[0].payload.context;
+  const createdFrameContext = contexts[1].payload.context;
 
   checkDefaultContext(createdTopContext);
   isnot(
@@ -120,17 +124,17 @@ add_task(async function eventsWhenNavigatingFrameSet({ client }) {
 
   const destroyedContextIds = historyFrom.findEvents(DESTROYED);
   is(
-    destroyedContextIds[0].executionContextId,
+    destroyedContextIds[0].payload.executionContextId,
     createdTopContext.id,
     "The destroyed event reports the previous context id"
   );
   is(
-    destroyedContextIds[1].executionContextId,
+    destroyedContextIds[1].payload.executionContextId,
     createdFrameContext.id,
     "The destroyed event reports the previous frame's context id"
   );
 
-  const { context: contextCreated } = historyFrom.findEvent(CREATED);
+  const { context: contextCreated } = historyFrom.findEvent(CREATED).payload;
   checkDefaultContext(contextCreated);
   isnot(
     contextCreated.id,
@@ -159,14 +163,16 @@ add_task(async function eventsWhenNavigatingBackWithNoFrames({ client }) {
   gBrowser.selectedBrowser.goBack();
   await assertEventOrder({ history });
 
-  const { executionContextId: destroyedId } = history.findEvent(DESTROYED);
+  const { executionContextId: destroyedId } = history.findEvent(
+    DESTROYED
+  ).payload;
   is(
     destroyedId,
     createdContext.id,
     "The destroyed event reports the current context id"
   );
 
-  const { context } = history.findEvent(CREATED);
+  const { context } = history.findEvent(CREATED).payload;
   checkDefaultContext(context);
   is(
     context.origin,
@@ -214,14 +220,14 @@ add_task(async function eventsWhenReloadingPageWithNoFrames({ client }) {
 
   await assertEventOrder({ history });
 
-  const { executionContextId } = history.findEvent(DESTROYED);
+  const { executionContextId } = history.findEvent(DESTROYED).payload;
   is(
     executionContextId,
     previousContext.id,
     "The destroyed event reports the previous context id"
   );
 
-  const { context } = history.findEvent(CREATED);
+  const { context } = history.findEvent(CREATED).payload;
   checkDefaultContext(context);
   is(
     context.auxData.frameId,
@@ -248,14 +254,16 @@ add_task(async function eventsWhenNavigatingByLocationWithNoFrames({ client }) {
   });
   await assertEventOrder({ history });
 
-  const { executionContextId: destroyedId } = history.findEvent(DESTROYED);
+  const { executionContextId: destroyedId } = history.findEvent(
+    DESTROYED
+  ).payload;
   is(
     destroyedId,
     previousContext.id,
     "The destroyed event reports the previous context id"
   );
 
-  const { context: createdContext } = history.findEvent(CREATED);
+  const { context: createdContext } = history.findEvent(CREATED).payload;
   checkDefaultContext(createdContext);
   is(
     createdContext.auxData.frameId,
@@ -283,12 +291,12 @@ function recordContextEvents(Runtime, total) {
   history.addRecorder({
     event: Runtime.executionContextCreated,
     eventName: CREATED,
-    messageFn: payload => {
+    messageFn: ({ context }) => {
       return (
-        `Received ${CREATED} for id ${payload.context.id}` +
-        ` type: ${payload.context.auxData.type}` +
-        ` name: ${payload.context.name}` +
-        ` origin: ${payload.context.origin}`
+        `Received ${CREATED} for id ${context.id}` +
+        ` type: ${context.auxData.type}` +
+        ` name: ${context.name}` +
+        ` origin: ${context.origin}`
       );
     },
   });

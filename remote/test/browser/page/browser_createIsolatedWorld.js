@@ -157,7 +157,9 @@ add_task(async function contextCreatedAfterNavigation({ client }) {
     ],
   });
 
-  const contexts = history.findEvents(CREATED).map(event => event.context);
+  const contexts = history
+    .findEvents(CREATED)
+    .map(event => event.payload.context);
   const defaultContext = contexts[0];
   const isolatedContext = contexts[1];
   is(defaultContext.auxData.isDefault, true, "Default context is default");
@@ -196,11 +198,11 @@ add_task(async function contextDestroyedForNavigation({ client }) {
 
   const destroyed = history
     .findEvents(DESTROYED)
-    .map(event => event.executionContextId);
+    .map(event => event.payload.executionContextId);
   ok(destroyed.includes(isolatedContext.id), "Isolated context destroyed");
   ok(destroyed.includes(defaultContext.id), "Default context destroyed");
 
-  const { context: newContext } = history.findEvent(CREATED);
+  const { context: newContext } = history.findEvent(CREATED).payload;
   is(newContext.auxData.isDefault, true, "The new context is a default one");
   ok(!!newContext.id, "The new context has an id");
   ok(
@@ -254,7 +256,7 @@ add_task(async function contextsForFramesetNavigation({ client }) {
 
   const contextsCreated = historyTo
     .findEvents(CREATED)
-    .map(event => event.context);
+    .map(event => event.payload.context);
   const parentDefaultContextCreated = contextsCreated[0];
   const frameDefaultContextCreated = contextsCreated[1];
   const parentIsolatedContextCreated = contextsCreated[2];
@@ -295,7 +297,7 @@ add_task(async function contextsForFramesetNavigation({ client }) {
 
   const contextsDestroyed = historyFrom
     .findEvents(DESTROYED)
-    .map(event => event.executionContextId);
+    .map(event => event.payload.executionContextId);
   contextsCreated.forEach(context => {
     ok(
       contextsDestroyed.includes(context.id),
@@ -303,7 +305,7 @@ add_task(async function contextsForFramesetNavigation({ client }) {
     );
   });
 
-  const { context: newContext } = historyFrom.findEvent(CREATED);
+  const { context: newContext } = historyFrom.findEvent(CREATED).payload;
   is(newContext.auxData.isDefault, true, "The new context is a default one");
   ok(!!newContext.id, "The new context has an id");
   ok(
