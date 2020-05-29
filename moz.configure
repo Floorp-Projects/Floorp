@@ -261,6 +261,8 @@ set_config('WASM_OBJ_SUFFIX', 'wasm')
 # Make `profiling` available to this file even when js/moz.configure
 # doesn't end up included.
 profiling = dependable(False)
+# Same for js_standalone
+js_standalone = dependable(False)
 
 include(include_project_configure)
 
@@ -699,6 +701,25 @@ def strip_flags(flags, profiling, target):
         return ['-x', '-S']
 
 set_config('STRIP_FLAGS', strip_flags)
+
+
+@depends(js_standalone, target)
+def system_zlib_default(js_standalone, target):
+    return js_standalone and target.kernel != 'WINNT'
+
+js_option('--with-system-zlib', nargs='?', default=system_zlib_default,
+          help='{Use|Do not use} system libz')
+
+@depends('--with-system-zlib')
+def deprecated_system_zlib_path(value):
+    if len(value) == 1:
+        die('--with-system-zlib=PATH is not supported anymore. Please use '
+            '--with-system-zlib and set any necessary pkg-config environment variable.')
+
+pkg_check_modules('MOZ_ZLIB', 'zlib >= 1.2.3', when='--with-system-zlib')
+
+set_config('MOZ_SYSTEM_ZLIB', True, when='--with-system-zlib')
+add_old_configure_assignment('MOZ_SYSTEM_ZLIB', True, when='--with-system-zlib')
 
 
 # Please do not add configure checks from here on.

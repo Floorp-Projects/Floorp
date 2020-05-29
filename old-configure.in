@@ -1473,10 +1473,6 @@ if test -z "$MOZ_SYSTEM_NSS"; then
    esac
 fi
 
-dnl system ZLIB support
-dnl ========================================================
-MOZ_ZLIB_CHECK([1.2.3])
-
 if test -z "$SKIP_LIBRARY_CHECKS"; then
 
 dnl ========================================================

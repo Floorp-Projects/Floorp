@@ -258,7 +258,6 @@ def old_configure_options(*options):
     '--with-system-nspr',
     '--with-system-nss',
     '--with-system-png',
-    '--with-system-zlib',
     '--with-user-appdir',
     '--x-includes',
     '--x-libraries',

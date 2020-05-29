@@ -1132,16 +1132,6 @@ MOZ_ARG_HEADER(External Packages)
 
 MOZ_CONFIG_NSPR(js)
 
-dnl ========================================================
-dnl system zlib Support
-dnl ========================================================
-dnl Standalone js defaults to system zlib
-if test -n "$JS_STANDALONE"; then
-    ZLIB_DIR=yes
-fi
-
-MOZ_ZLIB_CHECK([1.2.3])
-
 if test -n "$ZLIB_IN_MOZGLUE"; then
     AC_DEFINE(ZLIB_IN_MOZGLUE)
 fi
