@@ -4,7 +4,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import sys
 import mozunit
-import mock
+from unittest import mock
 import pytest
 from pathlib import Path
 import shutil
