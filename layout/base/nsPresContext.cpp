@@ -252,6 +252,12 @@ nsPresContext::nsPresContext(dom::Document* aDocument, nsPresContextType aType)
   // maybe we could throttle and only collect stats on 1% of page-loads,
   // or something like that.
   mFontStats = MakeUnique<FontMatchingStats>();
+
+  if (StaticPrefs::layout_dynamic_toolbar_max_height() > 0) {
+    // The pref for dynamic toolbar max height is only used in reftests so it's
+    // fine to set here.
+    mDynamicToolbarMaxHeight = StaticPrefs::layout_dynamic_toolbar_max_height();
+  }
 }
 
 static const char* gExactCallbackPrefs[] = {
