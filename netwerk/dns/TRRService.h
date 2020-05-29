@@ -35,7 +35,7 @@ class TRRService : public TRRServiceBase,
   TRRService();
   nsresult Init();
   nsresult Start();
-  bool Enabled(nsIRequest::TRRMode aMode = nsIRequest::TRR_FIRST_MODE);
+  bool Enabled(nsIRequest::TRRMode aMode);
   bool IsConfirmed() { return mConfirmationState == CONFIRM_OK; }
 
   bool AllowRFC1918() { return mRfc1918; }
@@ -73,9 +73,6 @@ class TRRService : public TRRServiceBase,
   nsresult DispatchTRRRequest(TRR* aTrrRequest);
   already_AddRefed<nsIThread> TRRThread();
   bool IsOnTRRThread();
-
-  bool IsUsingAutoDetectedURL() { return mURISetByDetection; }
-  static const nsCString& AutoDetectedKey();
 
  private:
   virtual ~TRRService();
