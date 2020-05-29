@@ -307,15 +307,6 @@ class PageAction {
     });
   }
 
-  maybeLoadCustomElement(win) {
-    if (!win.customElements.get("remote-text")) {
-      Services.scriptloader.loadSubScript(
-        "resource://activity-stream/data/custom-elements/paragraph.js",
-        win
-      );
-    }
-  }
-
   /**
    * getStrings - Handles getting the localized strings vs message overrides.
    *              If string_id is not defined it assumes you passed in an override
@@ -517,8 +508,6 @@ class PageAction {
   }
 
   async _renderMilestonePopup(message, browser) {
-    this.maybeLoadCustomElement(this.window);
-
     let { content, id } = message;
     let { primary } = content.buttons;
 
@@ -543,18 +532,21 @@ class PageAction {
         reachedMilestone = milestone;
       }
     }
-    if (headerLabel.firstChild) {
-      headerLabel.firstChild.remove();
-    }
-    headerLabel.appendChild(
-      RemoteL10n.createElement(this.window.document, "span", {
-        content: message.content.heading_text,
-        attributes: {
+    if (typeof message.content.heading_text === "string") {
+      // This is a test environment.
+      panelTitle = message.content.heading_text;
+      headerLabel.value = panelTitle;
+    } else {
+      RemoteL10n.l10n.setAttributes(
+        headerLabel,
+        content.heading_text.string_id,
+        {
           blockedCount: reachedMilestone,
           date: monthName,
-        },
-      })
-    );
+        }
+      );
+      await RemoteL10n.l10n.translateElements([headerLabel]);
+    }
 
     // Use the message layout as a CSS selector to hide different parts of the
     // notification template markup
@@ -639,8 +631,6 @@ class PageAction {
 
   // eslint-disable-next-line max-statements
   async _renderPopup(message, browser) {
-    this.maybeLoadCustomElement(this.window);
-
     const { id, content, modelVersion } = message;
 
     const headerLabel = this.window.document.getElementById(
@@ -693,14 +683,7 @@ class PageAction {
         const author = this.window.document.getElementById(
           "cfr-notification-author"
         );
-        if (author.firstChild) {
-          author.firstChild.remove();
-        }
-        author.appendChild(
-          RemoteL10n.createElement(this.window.document, "span", {
-            content: content.text,
-          })
-        );
+        author.textContent = await this.getStrings(content.text);
         primaryActionCallback = () => {
           this._blockMessage(id);
           this.dispatchUserAction(primary.action);
@@ -765,13 +748,10 @@ class PageAction {
           for (let step of content.descriptionDetails.steps) {
             // This li is a generic xul element with custom styling
             const li = this.window.document.createXULElement("li");
-            li.appendChild(
-              RemoteL10n.createElement(this.window.document, "span", {
-                content: step,
-              })
-            );
+            RemoteL10n.l10n.setAttributes(li, step.string_id);
             stepsContainer.appendChild(li);
           }
+          await RemoteL10n.l10n.translateElements([...stepsContainer.children]);
         }
 
         await this._renderPinTabAnimation();
@@ -779,15 +759,8 @@ class PageAction {
       default:
         panelTitle = await this.getStrings(content.addon.title);
         await this._setAddonAuthorAndRating(this.window.document, content);
-        if (footerText.firstChild) {
-          footerText.firstChild.remove();
-        }
         // Main body content of the dropdown
-        footerText.appendChild(
-          RemoteL10n.createElement(this.window.document, "span", {
-            content: content.text,
-          })
-        );
+        footerText.textContent = await this.getStrings(content.text);
         options = { popupIconURL: content.addon.icon };
 
         footerLink.value = await this.getStrings({
@@ -1050,6 +1023,46 @@ const CFRPageActions = {
   },
 
   /**
+   * Show Milestone notification.
+   * @param browser                 The browser for the recommendation
+   * @param recommendation          The recommendation to show
+   * @param dispatchToASRouter      A function to dispatch resulting actions to
+   * @return                        Did adding the recommendation succeed?
+   */
+  async showMilestone(browser, message, dispatchToASRouter, options = {}) {
+    let win = null;
+    const { id, content, personalizedModelVersion } = message;
+
+    // If we are forcing via the Admin page, the browser comes in a different format
+    if (options.force) {
+      win = browser.browser.ownerGlobal;
+      RecommendationMap.set(browser.browser, {
+        id,
+        content,
+        retain: true,
+        modelVersion: personalizedModelVersion,
+      });
+    } else {
+      win = browser.ownerGlobal;
+      RecommendationMap.set(browser, {
+        id,
+        content,
+        retain: true,
+        modelVersion: personalizedModelVersion,
+      });
+    }
+
+    if (!PageActionMap.has(win)) {
+      PageActionMap.set(win, new PageAction(win, dispatchToASRouter));
+    }
+
+    await PageActionMap.get(win).showMilestonePopup();
+    PageActionMap.get(win).addImpression(message);
+
+    return true;
+  },
+
+  /**
    * Force a recommendation to be shown. Should only happen via the Admin page.
    * @param browser                 The browser for the recommendation
    * @param recommendation  The recommendation to show
@@ -1071,13 +1084,8 @@ const CFRPageActions = {
     }
 
     if (content.skip_address_bar_notifier) {
-      if (recommendation.template === "milestone_message") {
-        await PageActionMap.get(win).showMilestonePopup();
-        PageActionMap.get(win).addImpression(recommendation);
-      } else {
-        await PageActionMap.get(win).showPopup();
-        PageActionMap.get(win).addImpression(recommendation);
-      }
+      await PageActionMap.get(win).showPopup();
+      PageActionMap.get(win).addImpression(recommendation);
     } else {
       await PageActionMap.get(win).showAddressBarNotifier(recommendation, true);
     }
@@ -1121,16 +1129,9 @@ const CFRPageActions = {
     }
 
     if (content.skip_address_bar_notifier) {
-      if (recommendation.template === "milestone_message") {
-        await PageActionMap.get(win).showMilestonePopup();
-        PageActionMap.get(win).addImpression(recommendation);
-      } else {
-        // Tracking protection messages
-        await PageActionMap.get(win).showPopup();
-        PageActionMap.get(win).addImpression(recommendation);
-      }
+      await PageActionMap.get(win).showPopup();
+      PageActionMap.get(win).addImpression(recommendation);
     } else {
-      // Doorhanger messages
       await PageActionMap.get(win).showAddressBarNotifier(recommendation, true);
     }
     return true;

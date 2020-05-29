@@ -1348,7 +1348,6 @@ class _ASRouter {
         }
         break;
       case "cfr_doorhanger":
-      case "milestone_message":
         if (force) {
           CFRPageActions.forceRecommendation(target, message, this.dispatch);
         } else {
@@ -1382,6 +1381,9 @@ class _ASRouter {
         break;
       case "update_action":
         MomentsPageHub.executeAction(message);
+        break;
+      case "milestone_message":
+        CFRPageActions.showMilestone(target, message, this.dispatch, { force });
         break;
       default:
         try {
