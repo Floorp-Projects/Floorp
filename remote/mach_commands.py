@@ -161,6 +161,7 @@ def npm(*args, **kwargs):
                                       args=list(args),
                                       cwd=kwargs.get("cwd"),
                                       env=env,
+                                      universal_newlines=True,
                                       **proc_kwargs)
     if not kwargs.get("wait", True):
         return p
@@ -205,7 +206,6 @@ class MochaOutputHandler(object):
         return self.proc and self.proc.pid
 
     def __call__(self, line):
-        line = line.decode("utf-8", "replace")
         line_text = self.control_re.subn("", line)[0]
         m = self.test_name_re.match(line_text)
         if m:
