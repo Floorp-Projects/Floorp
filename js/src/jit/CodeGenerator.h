@@ -217,11 +217,6 @@ class CodeGenerator final : public CodeGeneratorSpecific {
                 Register resultreg);
   void emitInstanceOf(LInstruction* ins, JSObject* prototypeObject);
 
-  enum CallableOrConstructor { Callable, Constructor };
-  template <CallableOrConstructor mode>
-  void emitIsCallableOrConstructor(Register object, Register output,
-                                   Label* failure);
-
   void loadJSScriptForBlock(MBasicBlock* block, Register reg);
   void loadOutermostJSScript(Register reg);
 
