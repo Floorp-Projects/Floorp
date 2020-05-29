@@ -707,6 +707,10 @@ DownloadsViewUI.DownloadElementShell.prototype = {
       case "downloadsCmd_cancel":
         return this.download.hasPartialData || !this.download.stopped;
       case "downloadsCmd_open":
+      case "downloadsCmd_open:current":
+      case "downloadsCmd_open:tab":
+      case "downloadsCmd_open:tabshifted":
+      case "downloadsCmd_open:window":
         // This property is false if the download did not succeed.
         return this.download.target.exists;
       case "downloadsCmd_show":
@@ -729,8 +733,11 @@ DownloadsViewUI.DownloadElementShell.prototype = {
   },
 
   doCommand(aCommand) {
-    if (DownloadsViewUI.isCommandName(aCommand)) {
-      this[aCommand]();
+    // split off an optional command "modifier" into an argument,
+    // e.g. "downloadsCmd_open:window"
+    let [command, modifier] = aCommand.split(":");
+    if (DownloadsViewUI.isCommandName(command)) {
+      this[command](modifier);
     }
   },
 
@@ -748,8 +755,10 @@ DownloadsViewUI.DownloadElementShell.prototype = {
     this.download.confirmBlock().catch(Cu.reportError);
   },
 
-  downloadsCmd_open() {
-    DownloadsCommon.openDownload(this.download);
+  downloadsCmd_open(openWhere = "current") {
+    DownloadsCommon.openDownload(this.download, {
+      openWhere,
+    });
   },
 
   downloadsCmd_openReferrer() {
