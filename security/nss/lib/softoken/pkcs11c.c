@@ -4464,6 +4464,7 @@ NSC_GenerateKey(CK_SESSION_HANDLE hSession,
     CK_OBJECT_CLASS objclass = CKO_SECRET_KEY;
     CK_RV crv = CKR_OK;
     CK_BBOOL cktrue = CK_TRUE;
+    NSSPKCS5PBEParameter *pbe_param = NULL;
     int i;
     SFTKSlot *slot = sftk_SlotFromSessionHandle(hSession);
     unsigned char buf[MAX_KEY_LEN];
@@ -4472,7 +4473,6 @@ NSC_GenerateKey(CK_SESSION_HANDLE hSession,
            nsc_bulk,
            nsc_param,
            nsc_jpake } key_gen_type;
-    NSSPKCS5PBEParameter *pbe_param;
     SSL3RSAPreMasterSecret *rsa_pms;
     CK_VERSION *version;
     /* in very old versions of NSS, there were implementation errors with key
