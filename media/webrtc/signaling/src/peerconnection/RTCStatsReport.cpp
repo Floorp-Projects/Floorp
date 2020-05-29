@@ -84,6 +84,7 @@ void RTCStatsReport::Incorporate(RTCStatsCollection& aStats) {
   SetRTCStats(aStats.mRemoteOutboundRtpStreamStats);
   SetRTCStats(aStats.mRtpContributingSourceStats);
   SetRTCStats(aStats.mTrickledIceCandidateStats);
+  SetRTCStats(aStats.mDataChannelStats);
 }
 
 void RTCStatsReport::Set(const nsAString& aKey, JS::Handle<JSObject*> aValue,
