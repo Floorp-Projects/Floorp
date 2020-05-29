@@ -353,7 +353,7 @@ class WelcomeScreen extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureCom
     });
   }
 
-  handleAction(event) {
+  async handleAction(event) {
     let {
       props
     } = this;
@@ -361,8 +361,10 @@ class WelcomeScreen extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureCom
 
     if (!(targetContent && targetContent.action)) {
       return;
-    }
+    } // Send telemetry before waiting on actions
 
+
+    _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_2__["AboutWelcomeUtils"].sendActionTelemetry(props.messageId, event.target.value);
     let {
       action
     } = targetContent;
@@ -370,14 +372,17 @@ class WelcomeScreen extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureCom
     if (action.type === "OPEN_URL") {
       this.handleOpenURL(action, props.flowParams, props.UTMTerm);
     } else if (action.type) {
-      _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_2__["AboutWelcomeUtils"].handleUserAction(action);
+      _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_2__["AboutWelcomeUtils"].handleUserAction(action); // Wait until migration closes to complete the action
+
+      if (action.type === "SHOW_MIGRATION_WIZARD") {
+        await window.AWWaitForMigrationClose();
+        _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_2__["AboutWelcomeUtils"].sendActionTelemetry(props.messageId, "migrate_close");
+      }
     }
 
     if (action.navigate) {
       props.navigate();
     }
-
-    _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_2__["AboutWelcomeUtils"].sendActionTelemetry(props.messageId, event.target.value);
   }
 
   renderSecondaryCTA(className) {

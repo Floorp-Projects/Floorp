@@ -92,24 +92,31 @@ export class WelcomeScreen extends React.PureComponent {
     AboutWelcomeUtils.handleUserAction({ type, data });
   }
 
-  handleAction(event) {
+  async handleAction(event) {
     let { props } = this;
     let targetContent = props.content[event.target.value];
     if (!(targetContent && targetContent.action)) {
       return;
     }
 
+    // Send telemetry before waiting on actions
+    AboutWelcomeUtils.sendActionTelemetry(props.messageId, event.target.value);
+
     let { action } = targetContent;
     if (action.type === "OPEN_URL") {
       this.handleOpenURL(action, props.flowParams, props.UTMTerm);
     } else if (action.type) {
       AboutWelcomeUtils.handleUserAction(action);
+      // Wait until migration closes to complete the action
+      if (action.type === "SHOW_MIGRATION_WIZARD") {
+        await window.AWWaitForMigrationClose();
+        AboutWelcomeUtils.sendActionTelemetry(props.messageId, "migrate_close");
+      }
     }
 
     if (action.navigate) {
       props.navigate();
     }
-    AboutWelcomeUtils.sendActionTelemetry(props.messageId, event.target.value);
   }
 
   renderSecondaryCTA(className) {

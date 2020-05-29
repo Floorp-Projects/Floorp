@@ -109,6 +109,10 @@ class AboutWelcomeChild extends JSWindowActorChild {
     Cu.exportFunction(this.AWSendToParent.bind(this), window, {
       defineAs: "AWSendToParent",
     });
+
+    Cu.exportFunction(this.AWWaitForMigrationClose.bind(this), window, {
+      defineAs: "AWWaitForMigrationClose",
+    });
   }
 
   wrapPromise(promise) {
@@ -177,6 +181,10 @@ class AboutWelcomeChild extends JSWindowActorChild {
    */
   AWSendToParent(type, data) {
     this.sendAsyncMessage(`AWPage:${type}`, data);
+  }
+
+  AWWaitForMigrationClose() {
+    return this.wrapPromise(this.sendQuery("AWPage:WAIT_FOR_MIGRATION_CLOSE"));
   }
 
   /**
