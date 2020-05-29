@@ -166,6 +166,11 @@ abstract class Settings {
     open var fontSizeFactor: Float? by UnsupportedSetting()
 
     /**
+     * Setting to control login autofill.
+     */
+    open var loginAutofillEnabled: Boolean by UnsupportedSetting()
+
+    /**
      * Setting to force the ability to scale the content
      */
     open var forceUserScalableContent: Boolean by UnsupportedSetting()
@@ -202,7 +207,8 @@ data class DefaultSettings(
     override var suspendMediaWhenInactive: Boolean = false,
     override var fontInflationEnabled: Boolean? = null,
     override var fontSizeFactor: Float? = null,
-    override var forceUserScalableContent: Boolean = false
+    override var forceUserScalableContent: Boolean = false,
+    override var loginAutofillEnabled: Boolean = false
 ) : Settings()
 
 class UnsupportedSetting<T> {

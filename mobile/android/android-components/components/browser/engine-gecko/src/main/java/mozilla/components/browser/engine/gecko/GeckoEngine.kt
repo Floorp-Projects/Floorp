@@ -500,6 +500,8 @@ class GeckoEngine(
             get() = runtime.settings.javaScriptEnabled
             set(value) { runtime.settings.javaScriptEnabled = value }
 
+        override var loginAutofillEnabled: Boolean = false
+
         override var webFontsEnabled: Boolean
             get() = runtime.settings.webFontsEnabled
             set(value) { runtime.settings.webFontsEnabled = value }
@@ -631,6 +633,7 @@ class GeckoEngine(
             this.fontInflationEnabled = it.fontInflationEnabled
             this.fontSizeFactor = it.fontSizeFactor
             this.forceUserScalableContent = it.forceUserScalableContent
+            this.loginAutofillEnabled = it.loginAutofillEnabled
         }
     }
 
