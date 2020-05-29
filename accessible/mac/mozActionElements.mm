@@ -9,6 +9,7 @@
 #include "Accessible-inl.h"
 #include "DocAccessible.h"
 #include "XULTabAccessible.h"
+#include "HTMLFormControlAccessible.h"
 
 #include "nsDeckFrame.h"
 #include "nsObjCExceptions.h"
@@ -87,6 +88,38 @@ enum CheckboxValue {
   }
 
   return [super ignoreWithParent:parent];
+}
+
+@end
+
+@implementation mozRadioButtonAccessible
+
+- (id)accessibilityAttributeValue:(NSString*)attribute {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+  if ([self isExpired]) {
+    return nil;
+  }
+
+  if ([attribute isEqualToString:NSAccessibilityLinkedUIElementsAttribute]) {
+    if (HTMLRadioButtonAccessible* radioAcc =
+            (HTMLRadioButtonAccessible*)mGeckoAccessible.AsAccessible()) {
+      NSMutableArray* radioSiblings = [NSMutableArray new];
+      Relation rel = radioAcc->RelationByType(RelationType::MEMBER_OF);
+      Accessible* tempAcc;
+      while ((tempAcc = rel.Next())) {
+        [radioSiblings addObject:GetNativeFromGeckoAccessible(tempAcc)];
+      }
+      return radioSiblings;
+    } else {
+      ProxyAccessible* proxy = mGeckoAccessible.AsProxy();
+      nsTArray<ProxyAccessible*> accs = proxy->RelationByType(RelationType::MEMBER_OF);
+      return utils::ConvertToNSArray(accs);
+    }
+  }
+
+  return [super accessibilityAttributeValue:attribute];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
 @end
