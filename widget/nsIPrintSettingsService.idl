@@ -58,7 +58,7 @@ interface nsIPrintSettingsService : nsISupports
   /**
    * The name of the last printer used, or else the system default printer.
    */
-  readonly attribute AString defaultPrinterName;
+  readonly attribute AString lastUsedPrinterName;
 
   /**
    * Initializes certain settings from the native printer into the PrintSettings

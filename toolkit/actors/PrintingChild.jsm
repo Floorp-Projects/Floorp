@@ -86,7 +86,7 @@ class PrintingChild extends ActorChild {
           Services.wm.getOuterWindowWithId(data.windowID),
           data.simplifiedMode,
           data.changingBrowsers,
-          data.defaultPrinterName
+          data.lastUsedPrinterName
         );
         break;
       }
@@ -113,14 +113,14 @@ class PrintingChild extends ActorChild {
         this.print(
           Services.wm.getOuterWindowWithId(data.windowID),
           data.simplifiedMode,
-          data.defaultPrinterName
+          data.lastUsedPrinterName
         );
         break;
       }
     }
   }
 
-  getPrintSettings(defaultPrinterName) {
+  getPrintSettings(lastUsedPrinterName) {
     try {
       let PSSVC = Cc["@mozilla.org/gfx/printsettings-service;1"].getService(
         Ci.nsIPrintSettingsService
@@ -128,7 +128,7 @@ class PrintingChild extends ActorChild {
 
       let printSettings = PSSVC.globalPrintSettings;
       if (!printSettings.printerName) {
-        printSettings.printerName = defaultPrinterName;
+        printSettings.printerName = lastUsedPrinterName;
       }
       // First get any defaults from the printer
       PSSVC.initPrintSettingsFromPrinter(
@@ -319,11 +319,11 @@ class PrintingChild extends ActorChild {
     contentWindow,
     simplifiedMode,
     changingBrowsers,
-    defaultPrinterName
+    lastUsedPrinterName
   ) {
     const { docShell } = this;
     try {
-      let printSettings = this.getPrintSettings(defaultPrinterName);
+      let printSettings = this.getPrintSettings(lastUsedPrinterName);
 
       // If we happen to be on simplified mode, we need to set docURL in order
       // to generate header/footer content correctly, since simplified tab has
@@ -379,8 +379,8 @@ class PrintingChild extends ActorChild {
     this.docShell.initOrReusePrintPreviewViewer().exitPrintPreview();
   }
 
-  print(contentWindow, simplifiedMode, defaultPrinterName) {
-    let printSettings = this.getPrintSettings(defaultPrinterName);
+  print(contentWindow, simplifiedMode, lastUsedPrinterName) {
+    let printSettings = this.getPrintSettings(lastUsedPrinterName);
     // Set the title so that the print dialog can pick it up and
     // use it to generate the filename for save-to-PDF.
     printSettings.title = contentWindow.document.title;

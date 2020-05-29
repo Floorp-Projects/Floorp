@@ -228,7 +228,7 @@ function hfIdToValue(node) {
 
 function setPrinterDefaultsForSelectedPrinter() {
   if (gPrintSettings.printerName == "") {
-    gPrintSettings.printerName = gPrintService.defaultPrinterName;
+    gPrintSettings.printerName = gPrintService.lastUsedPrinterName;
   }
 
   // First get any defaults from the printer
