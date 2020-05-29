@@ -38,7 +38,7 @@ object Versions {
 
     const val junit = "5.5.2"
     const val mockito = "2.24.5"
-    const val mockk = "1.9.kotlin12"
+    const val mockk = "1.10.0"
 
     const val mockwebserver = "3.11.0"
     const val uiautomator = "2.2.0"
