@@ -44,8 +44,7 @@ job-defaults:
         toolchain:
             - linux64-custom-v8
     optimization:
-        push-interval-10:
-            - linux
+        push-interval-10: null
 
 bench-ares6:
     description: Ares6 JavaScript shell benchmark suite
