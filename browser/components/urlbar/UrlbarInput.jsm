@@ -59,7 +59,6 @@ class UrlbarInput {
     this.window = this.textbox.ownerGlobal;
     this.isPrivate = PrivateBrowsingUtils.isWindowPrivate(this.window);
     this.document = this.window.document;
-    this.window.addEventListener("unload", this);
 
     // Create the panel to contain results.
     this.textbox.appendChild(
