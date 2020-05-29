@@ -1129,7 +1129,7 @@ javascript.gc:
 
   minor_time:
     type: timing_distribution
-    time_unit: millisecond
+    time_unit: microsecond
     gecko_datapoint: GC_MINOR_US
     description: >
       The time taked by a minor (nursery) collection.
