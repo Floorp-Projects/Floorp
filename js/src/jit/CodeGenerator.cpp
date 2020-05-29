@@ -13422,55 +13422,6 @@ class OutOfLineIsCallable : public OutOfLineCodeBase<CodeGenerator> {
   Register output() const { return output_; }
 };
 
-template <CodeGenerator::CallableOrConstructor mode>
-void CodeGenerator::emitIsCallableOrConstructor(Register object,
-                                                Register output,
-                                                Label* failure) {
-  Label notFunction, hasCOps, done;
-  masm.loadObjClassUnsafe(object, output);
-
-  // An object is callable iff:
-  //   is<JSFunction>() || (getClass()->cOps && getClass()->cOps->call).
-  // An object is constructor iff:
-  //  ((is<JSFunction>() && as<JSFunction>().isConstructor) ||
-  //   (getClass()->cOps && getClass()->cOps->construct)).
-  masm.branchPtr(Assembler::NotEqual, output, ImmPtr(&JSFunction::class_),
-                 &notFunction);
-  if (mode == Callable) {
-    masm.move32(Imm32(1), output);
-  } else {
-    static_assert(mozilla::IsPowerOfTwo(uint32_t(FunctionFlags::CONSTRUCTOR)),
-                  "FunctionFlags::CONSTRUCTOR has only one bit set");
-
-    masm.load16ZeroExtend(Address(object, JSFunction::offsetOfFlags()), output);
-    masm.rshift32(
-        Imm32(mozilla::FloorLog2(uint32_t(FunctionFlags::CONSTRUCTOR))),
-        output);
-    masm.and32(Imm32(1), output);
-  }
-  masm.jump(&done);
-
-  masm.bind(&notFunction);
-
-  // Just skim proxies off. Their notion of isCallable()/isConstructor() is
-  // more complicated.
-  masm.branchTestClassIsProxy(true, output, failure);
-
-  masm.branchPtr(Assembler::NonZero, Address(output, offsetof(JSClass, cOps)),
-                 ImmPtr(nullptr), &hasCOps);
-  masm.move32(Imm32(0), output);
-  masm.jump(&done);
-
-  masm.bind(&hasCOps);
-  masm.loadPtr(Address(output, offsetof(JSClass, cOps)), output);
-  size_t opsOffset = mode == Callable ? offsetof(JSClassOps, call)
-                                      : offsetof(JSClassOps, construct);
-  masm.cmpPtrSet(Assembler::NonZero, Address(output, opsOffset),
-                 ImmPtr(nullptr), output);
-
-  masm.bind(&done);
-}
-
 void CodeGenerator::visitIsCallableO(LIsCallableO* ins) {
   Register object = ToRegister(ins->object());
   Register output = ToRegister(ins->output());
@@ -13478,7 +13429,7 @@ void CodeGenerator::visitIsCallableO(LIsCallableO* ins) {
   OutOfLineIsCallable* ool = new (alloc()) OutOfLineIsCallable(object, output);
   addOutOfLineCode(ool, ins->mir());
 
-  emitIsCallableOrConstructor<Callable>(object, output, ool->entry());
+  masm.isCallable(object, output, ool->entry());
 
   masm.bind(ool->rejoin());
 }
@@ -13495,7 +13446,7 @@ void CodeGenerator::visitIsCallableV(LIsCallableV* ins) {
   OutOfLineIsCallable* ool = new (alloc()) OutOfLineIsCallable(temp, output);
   addOutOfLineCode(ool, ins->mir());
 
-  emitIsCallableOrConstructor<Callable>(temp, output, ool->entry());
+  masm.isCallable(temp, output, ool->entry());
   masm.jump(ool->rejoin());
 
   masm.bind(&notObject);
@@ -13536,7 +13487,7 @@ void CodeGenerator::visitIsConstructor(LIsConstructor* ins) {
   OutOfLineIsConstructor* ool = new (alloc()) OutOfLineIsConstructor(ins);
   addOutOfLineCode(ool, ins->mir());
 
-  emitIsCallableOrConstructor<Constructor>(object, output, ool->entry());
+  masm.isConstructor(object, output, ool->entry());
 
   masm.bind(ool->rejoin());
 }
@@ -14246,7 +14197,7 @@ void CodeGenerator::visitCheckClassHeritage(LCheckClassHeritage* ins) {
   masm.branchTestObject(Assembler::NotEqual, heritage, ool->entry());
 
   Register object = masm.extractObject(heritage, temp);
-  emitIsCallableOrConstructor<Constructor>(object, temp, ool->entry());
+  masm.isConstructor(object, temp, ool->entry());
 
   masm.branchTest32(Assembler::Zero, temp, temp, ool->entry());
 
