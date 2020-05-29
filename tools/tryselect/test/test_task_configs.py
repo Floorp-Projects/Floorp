@@ -9,8 +9,10 @@ from argparse import ArgumentParser
 
 import mozunit
 import pytest
+import subprocess
+from textwrap import dedent
 
-from tryselect.task_config import all_task_configs
+from tryselect.task_config import all_task_configs, Pernosco
 
 
 # task configs have a list of tests of the form (input, expected)
@@ -33,6 +35,9 @@ TASK_CONFIG_TESTS = {
         (['dom/indexedDB', 'testing'],
          {'env': {'MOZHARNESS_TEST_PATHS': '{"xpcshell": ["dom/indexedDB", "testing"]}'}}),
         (['invalid/path'], SystemExit),
+    ],
+    'pernosco': [
+        ([], None),
     ],
     'rebuild': [
         ([], None),
@@ -87,6 +92,33 @@ def test_task_configs(config_patch_resolver, task_config, args, expected):
         if task_config == 'path':
             config_patch_resolver(**vars(args))
         assert cfg.try_config(**vars(args)) == expected
+
+
+@pytest.fixture
+def patch_pernosco_email_check(monkeypatch):
+
+    def inner(val):
+
+        def fake_check_output(*args, **kwargs):
+            return val
+
+        monkeypatch.setattr(subprocess, 'check_output', fake_check_output)
+
+    return inner
+
+
+def test_pernosco(patch_pernosco_email_check):
+    patch_pernosco_email_check(dedent("""
+        user foobar@mozilla.com
+        hostname hg.mozilla.com
+    """))
+
+    parser = ArgumentParser()
+
+    cfg = Pernosco()
+    cfg.add_arguments(parser)
+    args = parser.parse_args(['--pernosco'])
+    assert cfg.try_config(**vars(args)) == {"env": {"PERNOSCO": "1"}}
 
 
 if __name__ == '__main__':
