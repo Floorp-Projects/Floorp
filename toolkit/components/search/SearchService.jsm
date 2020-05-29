@@ -109,7 +109,6 @@ const MULTI_LOCALE_ENGINES = [
   "google",
   "marktplaats",
   "mercadolibre",
-  "twitter",
   "wikipedia",
   "wiktionary",
   "yandex",
