@@ -31,6 +31,7 @@ def test_group_translation(responses):
         status=200,
     )
 
+    assert len(push_schedules) == 0
     data = push_schedules(branch, rev)
     print(data)
     assert sorted(data["groups"]) == [
@@ -38,6 +39,12 @@ def test_group_translation(responses):
         "/_mozilla/IndexedDB",
         "dom/indexedDB",
     ]
+    assert len(push_schedules) == 1
+
+    # Value is memoized.
+    responses.reset()
+    push_schedules(branch, rev)
+    assert len(push_schedules) == 1
 
 
 if __name__ == '__main__':
