@@ -111,7 +111,7 @@ static AVPixelFormat ChooseVAAPIPixelFormat(AVCodecContext* aCodecContext,
   for (; *aFormats > -1; aFormats++) {
     switch (*aFormats) {
       case AV_PIX_FMT_VAAPI_VLD:
-        FFMPEG_LOG("Requesting pixel format VAAPI_VLD\n");
+        FFMPEG_LOG("Requesting pixel format VAAPI_VLD");
         return AV_PIX_FMT_VAAPI_VLD;
       default:
         break;
@@ -123,18 +123,27 @@ static AVPixelFormat ChooseVAAPIPixelFormat(AVCodecContext* aCodecContext,
 }
 
 VAAPIFrameHolder::VAAPIFrameHolder(FFmpegLibWrapper* aLib,
-                                   AVBufferRef* aVAAPIDeviceContext,
-                                   AVBufferRef* aAVHWFramesContext,
-                                   AVBufferRef* aHWFrame)
+                                   WaylandDMABufSurface* aSurface,
+                                   AVCodecContext* aAVCodecContext,
+                                   AVFrame* aAVFrame)
     : mLib(aLib),
-      mVAAPIDeviceContext(mLib->av_buffer_ref(aVAAPIDeviceContext)),
-      mAVHWFramesContext(mLib->av_buffer_ref(aAVHWFramesContext)),
-      mHWFrame(mLib->av_buffer_ref(aHWFrame)){};
+      mSurface(aSurface),
+      mAVHWFramesContext(mLib->av_buffer_ref(aAVCodecContext->hw_frames_ctx)),
+      mHWAVBuffer(mLib->av_buffer_ref(aAVFrame->buf[0])) {
+  FFMPEG_LOG("VAAPIFrameHolder is adding dmabuf surface UID = %d",
+             mSurface->GetUID());
+
+  // Create global refcount object to track mSurface usage over
+  // gects rendering engine. We can't release it until it's used
+  // by GL compositor / WebRender.
+  mSurface->GlobalRefCountCreate();
+}
 
 VAAPIFrameHolder::~VAAPIFrameHolder() {
-  mLib->av_buffer_unref(&mHWFrame);
+  FFMPEG_LOG("VAAPIFrameHolder is releasing dmabuf surface UID = %d",
+             mSurface->GetUID());
+  mLib->av_buffer_unref(&mHWAVBuffer);
   mLib->av_buffer_unref(&mAVHWFramesContext);
-  mLib->av_buffer_unref(&mVAAPIDeviceContext);
 }
 
 AVCodec* FFmpegVideoDecoder<LIBAV_VER>::FindVAAPICodec() {
@@ -422,6 +431,13 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::DoDecode(
       NS_WARNING("FFmpeg h264 decoder failed to allocate frame.");
       return MediaResult(NS_ERROR_OUT_OF_MEMORY, __func__);
     }
+
+#  ifdef MOZ_WAYLAND_USE_VAAPI
+    if (mVAAPIDeviceContext) {
+      ReleaseUnusedVAAPIFrames();
+    }
+#  endif
+
     res = mLib->avcodec_receive_frame(mCodecContext, mFrame);
     if (res == int(AVERROR_EOF)) {
       return NS_ERROR_DOM_MEDIA_END_OF_STREAM;
@@ -628,9 +644,20 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::CreateImage(
 }
 
 #ifdef MOZ_WAYLAND_USE_VAAPI
-static void VAAPIFrameReleaseCallback(VAAPIFrameHolder* aVAAPIFrameHolder) {
-  auto frameHolder = static_cast<VAAPIFrameHolder*>(aVAAPIFrameHolder);
-  delete frameHolder;
+void FFmpegVideoDecoder<LIBAV_VER>::ReleaseUnusedVAAPIFrames() {
+  std::list<UniquePtr<VAAPIFrameHolder>>::iterator holder =
+      mFrameHolders.begin();
+  while (holder != mFrameHolders.end()) {
+    if (!(*holder)->IsUsed()) {
+      holder = mFrameHolders.erase(holder);
+    } else {
+      holder++;
+    }
+  }
+}
+
+void FFmpegVideoDecoder<LIBAV_VER>::ReleaseAllVAAPIFrames() {
+  mFrameHolders.clear();
 }
 
 MediaResult FFmpegVideoDecoder<LIBAV_VER>::CreateImageVAAPI(
@@ -667,20 +694,20 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::CreateImageVAAPI(
         RESULT_DETAIL("Unable to allocate WaylandDMABufSurfaceNV12."));
   }
 
+#  ifdef MOZ_LOGGING
+  static int uid = 0;
+  surface->SetUID(++uid);
+  FFMPEG_LOG("Created dmabuf UID = %d HW surface %x", uid, surface_id);
+#  endif
+
   surface->SetYUVColorSpace(GetFrameColorSpace());
 
-  // mFrame->buf[0] is a reference to H264 VASurface for this mFrame.
-  // We need create WaylandDMABUFSurfaceImage on top of it,
-  // create EGLImage/Texture on top of it and render it by GL.
+  // Store reference to the decoded HW buffer, see VAAPIFrameHolder struct.
+  auto holder =
+      MakeUnique<VAAPIFrameHolder>(mLib, surface, mCodecContext, mFrame);
+  mFrameHolders.push_back(std::move(holder));
 
-  // FFmpeg tends to reuse the particual VASurface for another frame
-  // even when the mFrame is not released. To keep VASurface as is
-  // we explicitly reference it and keep until WaylandDMABUFSurfaceImage
-  // is live.
-  RefPtr<layers::Image> im = new layers::WaylandDMABUFSurfaceImage(
-      surface, VAAPIFrameReleaseCallback,
-      new VAAPIFrameHolder(mLib, mVAAPIDeviceContext,
-                           mCodecContext->hw_frames_ctx, mFrame->buf[0]));
+  RefPtr<layers::Image> im = new layers::WaylandDMABUFSurfaceImage(surface);
 
   RefPtr<VideoData> vp = VideoData::CreateFromImage(
       mInfo.mDisplay, aOffset, TimeUnit::FromMicroseconds(aPts),
@@ -732,6 +759,7 @@ AVCodecID FFmpegVideoDecoder<LIBAV_VER>::GetCodecId(
 void FFmpegVideoDecoder<LIBAV_VER>::ProcessShutdown() {
 #ifdef MOZ_WAYLAND_USE_VAAPI
   if (mVAAPIDeviceContext) {
+    ReleaseAllVAAPIFrames();
     mLib->av_buffer_unref(&mVAAPIDeviceContext);
   }
 #endif
