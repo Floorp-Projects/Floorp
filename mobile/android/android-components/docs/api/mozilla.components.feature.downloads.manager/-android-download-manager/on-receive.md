@@ -2,8 +2,8 @@
 
 # onReceive
 
-`fun onReceive(context: <ERROR CLASS>, intent: <ERROR CLASS>): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/downloads/src/main/java/mozilla/components/feature/downloads/manager/AndroidDownloadManager.kt#L117)
+`fun onReceive(context: <ERROR CLASS>, intent: <ERROR CLASS>): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/downloads/src/main/java/mozilla/components/feature/downloads/manager/AndroidDownloadManager.kt#L106)
 
-Invoked when a download is complete. Calls [onDownloadStopped](../on-download-stopped.md) and unregisters the
-broadcast receiver if there are no more queued downloads.
+Invoked when a download is complete. Notifies [onDownloadStopped](../on-download-stopped.md) and removes the queued
+download if it's complete.
 

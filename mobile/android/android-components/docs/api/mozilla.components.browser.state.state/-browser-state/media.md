@@ -2,7 +2,7 @@
 
 # media
 
-`val media: `[`MediaState`](../-media-state/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/BrowserState.kt#L25)
+`val media: `[`MediaState`](../-media-state/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/BrowserState.kt#L27)
 
 The state of all media elements and playback states for all tabs.
 

@@ -2,7 +2,7 @@
 
 # start
 
-`fun start(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/tabs/src/main/java/mozilla/components/feature/tabs/tabstray/TabsFeature.kt#L43)
+`fun start(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/tabs/src/main/java/mozilla/components/feature/tabs/tabstray/TabsFeature.kt#L47)
 
 Overrides [LifecycleAwareFeature.start](../../mozilla.components.support.base.feature/-lifecycle-aware-feature/start.md)
 
