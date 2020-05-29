@@ -153,6 +153,8 @@ class BrowserToolbarBottomBehaviorTest {
     fun `Behavior will apply translation to toolbar only for vertical scrolls`() {
         val behavior = spy(BrowserToolbarBottomBehavior(testContext, attrs = null))
         behavior.initGesturesDetector(behavior.createGestureDetector())
+        val child = spy(BrowserToolbar(testContext, null, 0))
+        behavior.browserToolbar = child
         val downEvent = TestUtils.getMotionEvent(ACTION_DOWN, 0f, 0f)
         val moveEvent = TestUtils.getMotionEvent(ACTION_MOVE, 0f, 100f, downEvent)
 
@@ -316,5 +318,29 @@ class BrowserToolbarBottomBehaviorTest {
         behavior.forceExpand(toolbar)
 
         verify(behavior).animateSnap(toolbar, SnapDirection.UP)
+    }
+
+    @Test
+    fun `Behavior will forceExpand when scrolling up and !shouldScroll`() {
+        val behavior = spy(BrowserToolbarBottomBehavior(testContext, attrs = null))
+        behavior.initGesturesDetector(behavior.createGestureDetector())
+        doReturn(false).`when`(behavior).shouldScroll
+        val toolbar: BrowserToolbar = spy(BrowserToolbar(testContext, null, 0))
+        behavior.browserToolbar = toolbar
+        val animator: ValueAnimator = mock()
+        behavior.snapAnimator = animator
+        doReturn(false).`when`(animator).isStarted
+
+        doReturn(100).`when`(toolbar).height
+        doReturn(100f).`when`(toolbar).translationY
+
+        val downEvent = TestUtils.getMotionEvent(ACTION_DOWN, 0f, 0f)
+        val moveEvent = TestUtils.getMotionEvent(ACTION_MOVE, 0f, 30f, downEvent)
+
+        behavior.onInterceptTouchEvent(mock(), mock(), downEvent)
+        behavior.onInterceptTouchEvent(mock(), mock(), moveEvent)
+
+        verify(behavior).tryToScrollVertically(-30f)
+        verify(behavior).forceExpand(toolbar)
     }
 }
