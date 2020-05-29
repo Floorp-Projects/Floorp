@@ -31,3 +31,4 @@ user_pref("privacy.trackingprotection.pbmode.enabled", false);
 user_pref("general.useragent.updates.enabled", false);
 user_pref("browser.webapps.checkForUpdates", 0);
 user_pref("javascript.options.experimental.weakrefs", true);
+user_pref("javascript.options.experimental.iterator_helpers", true);
