@@ -38,3 +38,4 @@ pref(layout.viewport_contains_no_contents_area,true) == dynamic-grow-width.html 
 == dynamic-grow-width-and-height.html overflow-region-ref.html
 == not-able-to-scrollTo.html about:blank
 == min-scale-aspect-ratio.html about:blank
+pref(layout.dynamic-toolbar-max-height,100) == device-height-with-dynamic-toolbar.html device-height-with-dynamic-toolbar-ref.html

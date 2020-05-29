@@ -3165,14 +3165,15 @@ template <typename SizeType>
 
   // |aSize| might be the size expanded to the minimum-scale size whereas the
   // size for viewport units is not scaled so that we need to expand the |aSize|
-  // height with the aspect ratio of the size for viewport units instead of just
-  // expanding to the size for viewport units.
-  float ratio = (float)sizeForViewportUnits.height / sizeForViewportUnits.width;
+  // height by multiplying by the ratio of the viewport units height to the
+  // visible area height.
+  float vhExpansionRatio = (float)sizeForViewportUnits.height /
+                           aPresContext->GetVisibleArea().height;
 
-  MOZ_ASSERT(aSize.height <=
-             NSCoordSaturatingNonnegativeMultiply(aSize.width, ratio));
-  return SizeType(aSize.width,
-                  NSCoordSaturatingNonnegativeMultiply(aSize.width, ratio));
+  MOZ_ASSERT(aSize.height <= NSCoordSaturatingNonnegativeMultiply(
+                                 aSize.height, vhExpansionRatio));
+  return SizeType(aSize.width, NSCoordSaturatingNonnegativeMultiply(
+                                   aSize.height, vhExpansionRatio));
 }
 
 template <typename T>
