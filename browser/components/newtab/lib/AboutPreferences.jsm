@@ -200,7 +200,11 @@ this.AboutPreferences = class AboutPreferences {
       if (descString) {
         const label = createAppend("label", detailVbox);
         label.classList.add("indent");
-        document.l10n.setAttributes(label, getString(descString));
+        document.l10n.setAttributes(
+          label,
+          getString(descString),
+          descString.values
+        );
 
         // Add a rows dropdown if we have a pref to control and a maximum
         if (rowsPref && maxRows) {
