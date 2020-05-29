@@ -11,6 +11,9 @@ const {
   SET_TERMINAL_EAGER_RESULT,
 } = require("devtools/client/webconsole/constants");
 const { getAllPrefs } = require("devtools/client/webconsole/selectors/prefs");
+const {
+  ResourceWatcher,
+} = require("devtools/shared/resources/resource-watcher");
 
 loader.lazyServiceGetter(
   this,
@@ -200,7 +203,7 @@ function handleHelperResult(response) {
             messagesActions.messagesAdd(
               screenshotMessages.map(message => ({
                 message,
-                type: "logMessage",
+                resourceType: ResourceWatcher.TYPES.PLATFORM_MESSAGE,
               }))
             )
           );
