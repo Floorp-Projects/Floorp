@@ -7482,6 +7482,39 @@
   value: 2 * 1024 * 1024
   mirror: always
 
+# If we should attempt to race the cache and network.
+- name: network.http.rcwn.enabled
+  type: bool
+  value: true
+  mirror: always
+
+- name: network.http.rcwn.cache_queue_normal_threshold
+  type: uint32_t
+  value: 8
+  mirror: always
+
+- name: network.http.rcwn.cache_queue_priority_threshold
+  type: uint32_t
+  value: 2
+  mirror: always
+
+# We might attempt to race the cache with the network only if a resource
+# is smaller than this size.
+- name: network.http.rcwn.small_resource_size_kb
+  type: uint32_t
+  value: 256
+  mirror: always
+
+- name: network.http.rcwn.min_wait_before_racing_ms
+  type: uint32_t
+  value: 0
+  mirror: always
+
+- name: network.http.rcwn.max_wait_before_racing_ms
+  type: uint32_t
+  value: 500
+  mirror: always
+
 # false=real referer, true=spoof referer (use target URI as referer).
 - name: network.http.referer.spoofSource
   type: bool
