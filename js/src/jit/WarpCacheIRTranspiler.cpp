@@ -387,8 +387,8 @@ bool WarpCacheIRTranspiler::emitGuardToTypedArrayIndex(
 }
 
 bool WarpCacheIRTranspiler::emitTruncateDoubleToUInt32(
-    ValOperandId valId, Int32OperandId resultId) {
-  MDefinition* input = getOperand(valId);
+    NumberOperandId inputId, Int32OperandId resultId) {
+  MDefinition* input = getOperand(inputId);
   auto* ins = MTruncateToInt32::New(alloc(), input);
   add(ins);
 
@@ -397,7 +397,11 @@ bool WarpCacheIRTranspiler::emitTruncateDoubleToUInt32(
 
 bool WarpCacheIRTranspiler::emitGuardToInt32ModUint32(ValOperandId valId,
                                                       Int32OperandId resultId) {
-  return emitTruncateDoubleToUInt32(valId, resultId);
+  MDefinition* input = getOperand(valId);
+  auto* ins = MTruncateToInt32::New(alloc(), input);
+  add(ins);
+
+  return defineOperand(resultId, ins);
 }
 
 bool WarpCacheIRTranspiler::emitLoadInt32Result(Int32OperandId valId) {
