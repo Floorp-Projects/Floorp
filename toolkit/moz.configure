@@ -50,6 +50,12 @@ def all_configure_options():
 
 set_config('MOZ_CONFIGURE_OPTIONS', all_configure_options)
 
+@depends(target)
+def fold_libs(target):
+    return target.os in ('WINNT', 'OSX', 'Android')
+
+set_config('MOZ_FOLD_LIBS', fold_libs)
+
 # Profiling
 # ==============================================================
 # Some of the options here imply an option from js/moz.configure,
