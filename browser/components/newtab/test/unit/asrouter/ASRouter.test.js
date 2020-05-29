@@ -183,6 +183,7 @@ describe("ASRouter", () => {
       ASRouterTriggerListeners,
       QueryCache,
       gURLBar: {},
+      multiStageAboutWelcome: null,
       AttributionCode: fakeAttributionCode,
       SnippetsTestMessageProvider,
       PanelTestProvider,
@@ -3997,6 +3998,32 @@ describe("ASRouter", () => {
         id: "unblock",
         value: true,
       });
+    });
+  });
+  describe("#hideExtendedTripletsOnMultiStageWelcome", () => {
+    it("should return false by default", async () => {
+      global.ExperimentAPI.getExperiment.returns(null);
+      let result = Router.hasMultiStageAboutWelcome();
+      assert.isFalse(result);
+    });
+    it("should return true if experiment has multistage template", async () => {
+      global.ExperimentAPI.getExperiment.returns({
+        branch: {
+          slug: "branch01",
+          value: { id: "id01", template: "multistage" },
+        },
+      });
+      let result = Router.hasMultiStageAboutWelcome();
+      assert.calledOnce(global.ExperimentAPI.getExperiment);
+      assert.calledWithExactly(global.ExperimentAPI.getExperiment, {
+        group: "aboutwelcome",
+      });
+      assert.isTrue(result);
+    });
+    it("should return false by default when fails to get ExperimentData", async () => {
+      global.ExperimentAPI.getExperiment.throws();
+      let result = Router.hasMultiStageAboutWelcome();
+      assert.isFalse(result);
     });
   });
   describe("#loadMessagesForProvider", () => {
