@@ -18,19 +18,9 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  ExtensionParent: "resource://gre/modules/ExtensionParent.jsm",
   ExtensionUtils: "resource://gre/modules/ExtensionUtils.jsm",
   WebRequestUpload: "resource://gre/modules/WebRequestUpload.jsm",
   SecurityInfo: "resource://gre/modules/SecurityInfo.jsm",
-});
-
-// WebRequest.jsm's only consumer is ext-webRequest.js, so we can depend on
-// the apiManager.global being initialized.
-XPCOMUtils.defineLazyGetter(this, "tabTracker", () => {
-  return ExtensionParent.apiManager.global.tabTracker;
-});
-XPCOMUtils.defineLazyGetter(this, "getCookieStoreIdForOriginAttributes", () => {
-  return ExtensionParent.apiManager.global.getCookieStoreIdForOriginAttributes;
 });
 
 function runLater(job) {
@@ -42,12 +32,11 @@ function parseFilter(filter) {
     filter = {};
   }
 
+  // FIXME: Support windowId filtering.
   return {
     urls: filter.urls || null,
     types: filter.types || null,
-    tabId: filter.tabId ?? null,
-    windowId: filter.windowId ?? null,
-    incognito: filter.incognito ?? null,
+    incognito: filter.incognito !== undefined ? filter.incognito : null,
   };
 }
 
@@ -236,7 +225,7 @@ const OPTIONAL_PROPERTIES = [
   "responseSize",
 ];
 
-function serializeRequestData(eventName, extension) {
+function serializeRequestData(eventName) {
   let data = {
     requestId: this.requestId,
     url: this.url,
@@ -245,18 +234,10 @@ function serializeRequestData(eventName, extension) {
     method: this.method,
     type: this.type,
     timeStamp: Date.now(),
-    tabId: this.tabId,
-    frameId: this.frameId,
+    frameId: this.windowId,
     parentFrameId: this.parentWindowId,
-    incognito: this.incognito,
     thirdParty: this.thirdParty,
   };
-
-  if (extension) {
-    if (extension.hasPermission("cookies")) {
-      data.cookieStoreId = this.cookieStoreId;
-    }
-  }
 
   if (MAYBE_CACHED_EVENTS.has(eventName)) {
     data.fromCache = !!this.fromCache;
@@ -722,21 +703,22 @@ HttpObserverManager = {
   },
 
   getRequestData(channel, extraData) {
-    let originAttributes = channel.loadInfo?.originAttributes;
+    let originAttributes =
+      channel.loadInfo && channel.loadInfo.originAttributes;
     let data = {
       requestId: String(channel.id),
       url: channel.finalURL,
       method: channel.method,
+      browser: channel.browserElement,
       type: channel.type,
       fromCache: channel.fromCache,
-      incognito: originAttributes?.privateBrowsingId > 0,
+      originAttributes,
       thirdParty: channel.thirdParty,
 
       originUrl: channel.originURL || undefined,
       documentUrl: channel.documentURL || undefined,
 
-      tabId: this.getBrowserData(channel).tabId,
-      frameId: channel.windowId,
+      windowId: channel.windowId,
       parentWindowId: channel.parentWindowId,
 
       frameAncestors: channel.frameAncestors || undefined,
@@ -750,12 +732,6 @@ HttpObserverManager = {
       responseSize: channel.responseSize,
       urlClassification: channel.urlClassification,
     };
-
-    if (originAttributes) {
-      data.cookieStoreId = getCookieStoreIdForOriginAttributes(
-        originAttributes
-      );
-    }
 
     return Object.assign(data, extraData);
   },
@@ -793,19 +769,6 @@ HttpObserverManager = {
     "onBeforeRedirect",
   ]),
 
-  getBrowserData(wrapper) {
-    let browserData = wrapper._browserData;
-    if (!browserData) {
-      if (wrapper.browserElement) {
-        browserData = tabTracker.getBrowserData(wrapper.browserElement);
-      } else {
-        browserData = { tabId: -1, windowId: -1 };
-      }
-      wrapper._browserData = browserData;
-    }
-    return browserData;
-  },
-
   runChannelListener(channel, kind, extraData = null) {
     let handlerResults = [];
     let requestHeaders;
@@ -820,15 +783,6 @@ HttpObserverManager = {
       let commonData = null;
       let requestBody;
       this.listeners[kind].forEach((opts, callback) => {
-        if (opts.filter.tabId !== null || opts.filter.windowId !== null) {
-          const { tabId, windowId } = this.getBrowserData(channel);
-          if (
-            (opts.filter.tabId !== null && tabId != opts.filter.tabId) ||
-            (opts.filter.windowId !== null && windowId != opts.filter.windowId)
-          ) {
-            return;
-          }
-        }
         if (!channel.matches(opts.filter, opts.policy, extraData)) {
           return;
         }
