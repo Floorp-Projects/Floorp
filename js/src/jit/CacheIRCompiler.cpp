@@ -3010,48 +3010,36 @@ bool CacheIRCompiler::emitBigIntDecResult(BigIntOperandId inputId) {
   return emitBigIntUnaryOperationShared<Fn, BigInt::dec>(inputId);
 }
 
-bool CacheIRCompiler::emitTruncateDoubleToUInt32(ValOperandId valId,
+bool CacheIRCompiler::emitTruncateDoubleToUInt32(NumberOperandId inputId,
                                                  Int32OperandId resultId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  ValueOperand val = allocator.useValueRegister(masm, valId);
   Register res = allocator.defineRegister(masm, resultId);
 
-  Label int32, done;
-  masm.branchTestInt32(Assembler::Equal, val, &int32);
+  AutoScratchFloatRegister floatReg(this);
 
-  {
-    Label doneTruncate, truncateABICall;
+  allocator.ensureDoubleRegister(masm, inputId, floatReg);
 
-    AutoScratchFloatRegister floatReg(this);
+  Label done, truncateABICall;
 
-    masm.unboxDouble(val, floatReg);
-    masm.branchTruncateDoubleMaybeModUint32(floatReg, res, &truncateABICall);
-    masm.jump(&doneTruncate);
-
-    masm.bind(&truncateABICall);
-    LiveRegisterSet save(GeneralRegisterSet::Volatile(),
-                         liveVolatileFloatRegs());
-    save.takeUnchecked(floatReg);
-    // Bug 1451976
-    save.takeUnchecked(floatReg.get().asSingle());
-    masm.PushRegsInMask(save);
-
-    masm.setupUnalignedABICall(res);
-    masm.passABIArg(floatReg, MoveOp::DOUBLE);
-    masm.callWithABI(BitwiseCast<void*, int32_t (*)(double)>(JS::ToInt32),
-                     MoveOp::GENERAL, CheckUnsafeCallWithABI::DontCheckOther);
-    masm.storeCallInt32Result(res);
-
-    LiveRegisterSet ignore;
-    ignore.add(res);
-    masm.PopRegsInMaskIgnore(save, ignore);
-
-    masm.bind(&doneTruncate);
-  }
+  masm.branchTruncateDoubleMaybeModUint32(floatReg, res, &truncateABICall);
   masm.jump(&done);
-  masm.bind(&int32);
 
-  masm.unboxInt32(val, res);
+  masm.bind(&truncateABICall);
+  LiveRegisterSet save(GeneralRegisterSet::Volatile(), liveVolatileFloatRegs());
+  save.takeUnchecked(floatReg);
+  // Bug 1451976
+  save.takeUnchecked(floatReg.get().asSingle());
+  masm.PushRegsInMask(save);
+
+  masm.setupUnalignedABICall(res);
+  masm.passABIArg(floatReg, MoveOp::DOUBLE);
+  masm.callWithABI(BitwiseCast<void*, int32_t (*)(double)>(JS::ToInt32),
+                   MoveOp::GENERAL, CheckUnsafeCallWithABI::DontCheckOther);
+  masm.storeCallInt32Result(res);
+
+  LiveRegisterSet ignore;
+  ignore.add(res);
+  masm.PopRegsInMaskIgnore(save, ignore);
 
   masm.bind(&done);
   return true;
