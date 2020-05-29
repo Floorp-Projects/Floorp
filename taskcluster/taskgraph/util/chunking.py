@@ -8,9 +8,10 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import os
 import json
-
+from abc import ABCMeta, abstractmethod
 from collections import defaultdict, OrderedDict
 
+import six
 from manifestparser import TestManifest
 from manifestparser.filters import chunk_by_runtime
 from mozbuild.util import memoize
@@ -70,82 +71,10 @@ def get_runtimes(platform, suite_name):
         return json.load(fh).get(suite_name)
 
 
-@memoize
-def get_tests(flavor, subsuite):
-    return list(resolver.resolve_tests(flavor=flavor, subsuite=subsuite))
-
-
 # This is a bit of a hack to avoid evaluating the entire list of WPT test
 # objects in multiple places. It can be removed when the TestResolver becomes
 # the source of truth for WPT groups.
 wpt_group_translation = defaultdict(set)
-
-
-def get_wpt_group(test):
-    """Get the group for a web-platform-test that matches those created by the
-    WPT harness.
-
-    Args:
-        test (dict): The test object to compute the group for.
-
-    Returns:
-        str: Label representing the group name.
-    """
-    depth = 3
-
-    path = os.path.dirname(test['name'])
-    # Remove path elements beyond depth of 3, because WPT harness uses
-    # --run-by-dir=3 by convention in Mozilla CI.
-    # Note, this means /_mozilla tests retain an effective depth of 2 due to
-    # the extra prefix element.
-    while path.count('/') >= depth + 1:
-        path = os.path.dirname(path)
-
-    return path
-
-
-@memoize
-def get_manifests(flavor, subsuite, mozinfo):
-    """Compute which manifests should run for the given flavor, subsuite and mozinfo.
-
-    This function returns skipped manifests separately so that more balanced
-    chunks can be achieved by only considering "active" manifests in the
-    chunking algorithm.
-
-    Args:
-        flavor (str): The suite to run. Values are defined by the 'build_flavor' key
-            in `moztest.resolve.TEST_SUITES`.
-        subsuite (str): The subsuite to run or 'undefined' to denote no subsuite.
-        mozinfo (frozenset): Set of data in the form of (<key>, <value>) used
-                             for filtering.
-
-    Returns:
-        A tuple of two manifest lists. The first is the set of active manifests (will
-        run at least one test. The second is a list of skipped manifests (all tests are
-        skipped).
-    """
-    mozinfo = dict(mozinfo)
-    # Compute all tests for the given suite/subsuite.
-    tests = get_tests(flavor, subsuite)
-
-    if flavor == "web-platform-tests":
-        manifests = set()
-        for t in tests:
-            group = get_wpt_group(t)
-            wpt_group_translation[t['manifest']].add(group)
-            manifests.add(t['manifest'])
-
-        return {"active": list(manifests), "skipped": []}
-
-    manifests = set(chunk_by_runtime.get_manifest(t) for t in tests)
-
-    # Compute  the active tests.
-    m = TestManifest()
-    m.tests = tests
-    tests = m.active_tests(disabled=False, exists=False, **mozinfo)
-    active = set(chunk_by_runtime.get_manifest(t) for t in tests)
-    skipped = manifests - active
-    return {"active": list(active), "skipped": list(skipped)}
 
 
 def chunk_manifests(flavor, subsuite, platform, chunks, manifests):
@@ -221,3 +150,89 @@ def chunk_manifests(flavor, subsuite, platform, chunks, manifests):
 
     # Return just the chunked test paths.
     return [c[0] for c in chunked_manifests]
+
+
+@six.add_metaclass(ABCMeta)
+class BaseManifestLoader(object):
+    @abstractmethod
+    def get_manifests(self, flavor, subsuite, mozinfo):
+        """Compute which manifests should run for the given flavor, subsuite and mozinfo.
+
+        This function returns skipped manifests separately so that more balanced
+        chunks can be achieved by only considering "active" manifests in the
+        chunking algorithm.
+
+        Args:
+            flavor (str): The suite to run. Values are defined by the 'build_flavor' key
+                in `moztest.resolve.TEST_SUITES`.
+            subsuite (str): The subsuite to run or 'undefined' to denote no subsuite.
+            mozinfo (frozenset): Set of data in the form of (<key>, <value>) used
+                                 for filtering.
+
+        Returns:
+            A tuple of two manifest lists. The first is the set of active manifests (will
+            run at least one test. The second is a list of skipped manifests (all tests are
+            skipped).
+        """
+        pass
+
+
+class DefaultLoader(BaseManifestLoader):
+    """Load manifests using metadata from the TestResolver."""
+
+    @classmethod
+    def get_wpt_group(cls, test):
+        """Get the group for a web-platform-test that matches those created by the
+        WPT harness.
+
+        Args:
+            test (dict): The test object to compute the group for.
+
+        Returns:
+            str: Label representing the group name.
+        """
+        depth = 3
+
+        path = os.path.dirname(test['name'])
+        # Remove path elements beyond depth of 3, because WPT harness uses
+        # --run-by-dir=3 by convention in Mozilla CI.
+        # Note, this means /_mozilla tests retain an effective depth of 2 due to
+        # the extra prefix element.
+        while path.count('/') >= depth + 1:
+            path = os.path.dirname(path)
+
+        return path
+
+    @memoize
+    def get_tests(self, flavor, subsuite):
+        return list(resolver.resolve_tests(flavor=flavor, subsuite=subsuite))
+
+    @memoize
+    def get_manifests(self, flavor, subsuite, mozinfo):
+        mozinfo = dict(mozinfo)
+        # Compute all tests for the given suite/subsuite.
+        tests = self.get_tests(flavor, subsuite)
+
+        if flavor == "web-platform-tests":
+            manifests = set()
+            for t in tests:
+                group = self.get_wpt_group(t)
+                wpt_group_translation[t['manifest']].add(group)
+                manifests.add(t['manifest'])
+
+            return {"active": list(manifests), "skipped": []}
+
+        manifests = set(chunk_by_runtime.get_manifest(t) for t in tests)
+
+        # Compute  the active tests.
+        m = TestManifest()
+        m.tests = tests
+        tests = m.active_tests(disabled=False, exists=False, **mozinfo)
+        active = set(chunk_by_runtime.get_manifest(t) for t in tests)
+        skipped = manifests - active
+        return {"active": list(active), "skipped": list(skipped)}
+
+
+manifest_loaders = {
+    'default': DefaultLoader(),
+}

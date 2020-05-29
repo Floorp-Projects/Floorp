@@ -310,6 +310,7 @@ def get_decision_parameters(graph_config, options):
     parameters['release_product'] = None
     parameters['required_signoffs'] = []
     parameters['signoff_urls'] = {}
+    parameters['test_manifest_loader'] = 'default'
     parameters['try_mode'] = None
     parameters['try_task_config'] = {}
     parameters['try_options'] = None

@@ -102,6 +102,12 @@ Try Configuration
     The contents of the ``try_task_config.json`` file, or ``{}`` if
     ``try_mode`` is not ``try_task_config``.
 
+Test Configuration
+------------------
+
+``test_manifest_loader``
+   The test manifest loader to use as defined in ``taskgraph.util.chunking.manifest_loaders``.
+
 Target Set
 ----------
 
