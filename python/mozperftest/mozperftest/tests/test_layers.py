@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import pytest
 import mozunit
-from mock import MagicMock
+from unittest.mock import MagicMock
 from mozperftest.layers import Layer, Layers
 from mozperftest.environment import MachEnvironment
 

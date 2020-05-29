@@ -88,15 +88,28 @@ class MachEnvironment:
 
     def run(self, metadata):
         has_exc_handler = self.has_hook("on_exception")
-        for layer in self.layers:
+
+        # run the system and browser layers
+        for layer in self.layers[:-1]:
+            with layer:
+                try:
+                    metadata = layer(metadata)
+                except Exception as e:
+                    if has_exc_handler:
+                        # if the hook returns True, we abort and return
+                        # without error. If it returns False, we continue
+                        # the loop. The hook can also raise an exception or
+                        # re-raise this exception.
+                        if not self.run_hook("on_exception", layer, e):
+                            return metadata
+                    else:
+                        raise
+        # then run the metrics layers
+        with self.layers[METRICS] as metrics:
             try:
-                metadata = layer(metadata)
+                metadata = metrics(metadata)
             except Exception as e:
                 if has_exc_handler:
-                    # if the hook returns True, we abort and return
-                    # without error. If it returns False, we continue
-                    # the loop. The hook can also raise an exception or
-                    # re-raise this exception.
                     if not self.run_hook("on_exception", layer, e):
                         return metadata
                 else:
