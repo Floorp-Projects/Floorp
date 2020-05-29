@@ -844,14 +844,6 @@ void ICFallbackStub::unlinkStub(Zone* zone, ICStub* prev, ICStub* stub) {
 #endif
 }
 
-void ICFallbackStub::unlinkStubsWithKind(JSContext* cx, ICStub::Kind kind) {
-  for (ICStubIterator iter = beginChain(); !iter.atEnd(); iter++) {
-    if (iter->kind() == kind) {
-      iter.unlink(cx);
-    }
-  }
-}
-
 void ICFallbackStub::discardStubs(JSContext* cx) {
   for (ICStubIterator iter = beginChain(); !iter.atEnd(); iter++) {
     iter.unlink(cx);
