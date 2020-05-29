@@ -675,12 +675,19 @@ AbortReasonOr<Ok> WarpOracle::maybeInlineIC(WarpOpSnapshotList& snapshots,
     return Ok();
   }
 
-  if (!stub->next()->isFallback()) {
+  // Don't optimize if there are other stubs with entered-count > 0. Counters
+  // are reset when a new stub is attached so this means the stub that was added
+  // most recently didn't handle all cases.
+  for (ICStub* next = stub->next(); next; next = next->next()) {
+    if (next->getEnteredCount() == 0) {
+      continue;
+    }
+
     [[maybe_unused]] unsigned line, column;
     LineNumberAndColumn(script, loc, &line, &column);
 
-    // More than one optimized stub.
-    JitSpew(JitSpew_WarpTranspiler, "multiple stubs for JSOp::%s @ %s:%u:%u",
+    JitSpew(JitSpew_WarpTranspiler,
+            "multiple active stubs for JSOp::%s @ %s:%u:%u",
             CodeName(loc.getOp()), script->filename(), line, column);
     return Ok();
   }
