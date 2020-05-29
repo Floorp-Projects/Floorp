@@ -35,6 +35,11 @@ a:hover {
   text-decoration: underline;
 }
 
+/* ensure multiple spaces are shown correctly. */
+td:first-child > a {
+  white-space: pre;
+}
+
 p {
   font-size: 110%;
 }
