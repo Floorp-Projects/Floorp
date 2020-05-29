@@ -1818,9 +1818,6 @@ pref("network.dns.resolver-thread-extra-idle-time-seconds", 60);
 // Whether to disable TRR when parental control is enabled.
 pref("network.dns.skipTRR-when-parental-control-enabled", true);
 
-// The maximum allowed length for a URL - 1MB default
-pref("network.standard-url.max-length", 1048576);
-
 // Idle timeout for ftp control connections - 5 minute default
 pref("network.ftp.idleConnectionTimeout", 300);
 
