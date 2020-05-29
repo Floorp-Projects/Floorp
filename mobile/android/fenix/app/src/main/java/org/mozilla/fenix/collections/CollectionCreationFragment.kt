@@ -62,7 +62,6 @@ class CollectionCreationFragment : DialogFragment() {
         collectionCreationStore = StoreProvider.get(this) {
             CollectionCreationStore(
                 CollectionCreationState(
-                    previousFragmentId = args.previousFragmentId,
                     tabs = tabs,
                     selectedTabs = selectedTabs,
                     saveCollectionStep = args.saveCollectionStep,

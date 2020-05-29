@@ -49,6 +49,12 @@
     <action android:id="@+id/action_global_accountSettingsFragment" app:destination="@id/accountSettingsFragment" />
     <action android:id="@+id/action_global_trackingProtectionPanelDialogFragment" app:destination="@id/trackingProtectionPanelDialogFragment" />
     <action android:id="@+id/action_global_quickSettingsSheetDialogFragment" app:destination="@id/quickSettingsSheetDialogFragment"/>
+    <action android:id="@+id/action_global_tabTrayDialogFragment" app:destination="@id/tabTrayDialogFragment"/>
+
+    <dialog
+        android:id="@+id/tabTrayDialogFragment"
+        android:name="org.mozilla.fenix.tabtray.TabTrayDialogFragment"
+        tools:layout="@layout/fragment_tab_tray_dialog"/>
 
     <fragment
         android:id="@+id/homeFragment"
@@ -59,9 +65,6 @@
             app:destination="@id/browserFragment"
             app:exitAnim="@anim/zoom_in_fade"
             app:popEnterAnim="@anim/zoom_out_fade" />
-        <action
-            android:id="@+id/action_homeFragment_to_createCollectionFragment"
-            app:destination="@id/collectionCreationFragment" />
     </fragment>
 
     <fragment
@@ -164,9 +167,6 @@
         <action
             android:id="@+id/action_browserFragment_to_tabsTrayFragment"
             app:destination="@+id/tabTrayFragment" />
-        <action
-            android:id="@+id/action_browserFragment_to_createCollectionFragment"
-            app:destination="@id/collectionCreationFragment" />
     </fragment>
 
     <fragment
@@ -592,10 +592,6 @@
             android:name="selectedTabCollectionId"
             android:defaultValue="-1L"
             app:argType="long" />
-        <argument
-            android:name="previousFragmentId"
-            app:argType="reference"
-            app:nullable="false" />
         <argument
             android:name="saveCollectionStep"
             app:argType="org.mozilla.fenix.collections.SaveCollectionStep"

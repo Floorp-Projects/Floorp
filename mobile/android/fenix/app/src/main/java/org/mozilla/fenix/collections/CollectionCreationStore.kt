@@ -35,7 +35,6 @@ enum class SaveCollectionStep {
 }
 
 data class CollectionCreationState(
-    val previousFragmentId: Int,
     val tabs: List<Tab> = emptyList(),
     val selectedTabs: Set<Tab> = emptySet(),
     val saveCollectionStep: SaveCollectionStep = SaveCollectionStep.SelectTabs,

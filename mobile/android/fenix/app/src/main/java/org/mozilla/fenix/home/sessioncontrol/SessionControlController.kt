@@ -412,9 +412,8 @@ class DefaultSessionControlController(
         registerCollectionStorageObserver()
 
         val tabIds = getListOfTabs().map { it.sessionId }.toTypedArray()
-        val directions = HomeFragmentDirections.actionHomeFragmentToCreateCollectionFragment(
+        val directions = HomeFragmentDirections.actionGlobalCollectionCreationFragment(
             tabIds = tabIds,
-            previousFragmentId = R.id.homeFragment,
             saveCollectionStep = step,
             selectedTabIds = selectedTabIds,
             selectedTabCollectionId = selectedTabCollectionId ?: -1
