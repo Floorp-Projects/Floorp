@@ -803,23 +803,12 @@ static void TryAttachStub(const char* name, JSContext* cx, BaselineFrame* frame,
 void ICFallbackStub::unlinkStub(Zone* zone, ICStub* prev, ICStub* stub) {
   MOZ_ASSERT(stub->next());
 
-  // If stub is the last optimized stub, update lastStubPtrAddr.
-  if (stub->next() == this) {
-    MOZ_ASSERT(lastStubPtrAddr_ == stub->addressOfNext());
-    if (prev) {
-      lastStubPtrAddr_ = prev->addressOfNext();
-    } else {
-      lastStubPtrAddr_ = icEntry()->addressOfFirstStub();
-    }
-    *lastStubPtrAddr_ = this;
+  if (prev) {
+    MOZ_ASSERT(prev->next() == stub);
+    prev->setNext(stub->next());
   } else {
-    if (prev) {
-      MOZ_ASSERT(prev->next() == stub);
-      prev->setNext(stub->next());
-    } else {
-      MOZ_ASSERT(icEntry()->firstStub() == stub);
-      icEntry()->setFirstStub(stub->next());
-    }
+    MOZ_ASSERT(icEntry()->firstStub() == stub);
+    icEntry()->setFirstStub(stub->next());
   }
 
   state_.trackUnlinkedStub();
