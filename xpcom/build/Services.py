@@ -1,4 +1,6 @@
-#!/usr/bin/env python
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import buildconfig
 
@@ -55,7 +57,18 @@ service('URIFixup', 'nsIURIFixup',
         "@mozilla.org/docshell/uri-fixup;1")
 service('Bits', 'nsIBits',
         "@mozilla.org/bits;1")
-# NB: this should also expose nsIXULAppInfo, as does Services.jsm.
+# If you want nsIXULAppInfo, as returned by Services.jsm, you need to call:
+#
+# nsCOMPtr<nsIXULRuntime> runtime = mozilla::services::GetAppInfoService();
+# nsCOMPtr<nsIXULAppInfo> appInfo = do_QueryInterface(runtime);
+#
+# for C++ or:
+#
+# let appInfo =
+#    get_AppInfoService().and_then(|p| p.query_interface::<nsIXULAppInfo>());
+#
+# for Rust.  Note that not all applications (e.g. xpcshell) implement
+# nsIXULAppInfo.
 service('AppInfoService', 'nsIXULRuntime',
         "@mozilla.org/xre/app-info;1")
 
