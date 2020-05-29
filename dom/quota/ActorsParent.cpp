@@ -1985,21 +1985,21 @@ StaticAutoPtr<NormalOriginOpArray> gNormalOriginOps;
 // Constants for temporary storage limit computing.
 static const uint32_t kDefaultChunkSizeKB = 10 * 1024;
 
-void RegisterNormalOriginOp(NormalOriginOperationBase* aNormalOriginOp) {
+void RegisterNormalOriginOp(NormalOriginOperationBase& aNormalOriginOp) {
   AssertIsOnBackgroundThread();
 
   if (!gNormalOriginOps) {
     gNormalOriginOps = new NormalOriginOpArray();
   }
 
-  gNormalOriginOps->AppendElement(aNormalOriginOp);
+  gNormalOriginOps->AppendElement(&aNormalOriginOp);
 }
 
-void UnregisterNormalOriginOp(NormalOriginOperationBase* aNormalOriginOp) {
+void UnregisterNormalOriginOp(NormalOriginOperationBase& aNormalOriginOp) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(gNormalOriginOps);
 
-  gNormalOriginOps->RemoveElement(aNormalOriginOp);
+  gNormalOriginOps->RemoveElement(&aNormalOriginOp);
 
   if (gNormalOriginOps->IsEmpty()) {
     gNormalOriginOps = nullptr;
@@ -4285,7 +4285,7 @@ void QuotaManager::UpdateOriginAccessTime(PersistenceType aPersistenceType,
     auto op = MakeRefPtr<SaveOriginAccessTimeOp>(aPersistenceType, aOrigin,
                                                  timestamp);
 
-    RegisterNormalOriginOp(op);
+    RegisterNormalOriginOp(*op);
 
     op->RunImmediately();
   }
@@ -8475,7 +8475,7 @@ void NormalOriginOperationBase::UnblockOpen() {
     mDirectoryLock = nullptr;
   }
 
-  UnregisterNormalOriginOp(this);
+  UnregisterNormalOriginOp(*this);
 
   AdvanceState();
 }
@@ -8811,7 +8811,7 @@ PQuotaUsageRequestParent* Quota::AllocPQuotaUsageRequestParent(
 
   MOZ_ASSERT(actor);
 
-  RegisterNormalOriginOp(actor);
+  RegisterNormalOriginOp(*actor);
 
   // Transfer ownership to IPDL.
   return actor.forget().take();
@@ -8917,7 +8917,7 @@ PQuotaRequestParent* Quota::AllocPQuotaRequestParent(
 
   MOZ_ASSERT(actor);
 
-  RegisterNormalOriginOp(actor);
+  RegisterNormalOriginOp(*actor);
 
   // Transfer ownership to IPDL.
   return actor.forget().take();
