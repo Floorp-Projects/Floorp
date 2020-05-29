@@ -13,29 +13,16 @@
 #include "mozilla/layers/TextureClient.h"
 
 namespace mozilla {
-class VAAPIFrameHolder;
-}
-
-namespace mozilla {
 namespace layers {
-
-typedef void (*AVFrameReleaseCallback)(VAAPIFrameHolder* aFrameHolder);
 
 class WaylandDMABUFSurfaceImage : public Image {
  public:
-  explicit WaylandDMABUFSurfaceImage(WaylandDMABufSurface* aSurface,
-                                     AVFrameReleaseCallback aReleaseCallback,
-                                     VAAPIFrameHolder* aFrameHolder)
-      : Image(nullptr, ImageFormat::WAYLAND_DMABUF),
-        mSurface(aSurface),
-        mReleaseCallback(aReleaseCallback),
-        mFrameHolder(aFrameHolder) {}
-
-  ~WaylandDMABUFSurfaceImage() {
-    if (mReleaseCallback) {
-      mReleaseCallback(mFrameHolder);
-    }
+  explicit WaylandDMABUFSurfaceImage(WaylandDMABufSurface* aSurface)
+      : Image(nullptr, ImageFormat::WAYLAND_DMABUF), mSurface(aSurface) {
+    mSurface->GlobalRefAdd();
   }
+
+  ~WaylandDMABUFSurfaceImage() { mSurface->GlobalRefRelease(); }
 
   WaylandDMABufSurface* GetSurface() { return mSurface; }
 
@@ -52,11 +39,6 @@ class WaylandDMABUFSurfaceImage : public Image {
  private:
   RefPtr<WaylandDMABufSurface> mSurface;
   RefPtr<TextureClient> mTextureClient;
-
-  // When WaylandDMABUFSurfaceImage is created on top of ffmpeg frame located at
-  // GPU memory we need to keep it until painting of the frame is finished.
-  AVFrameReleaseCallback mReleaseCallback;
-  VAAPIFrameHolder* mFrameHolder;
 };
 
 }  // namespace layers
