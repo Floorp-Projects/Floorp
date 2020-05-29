@@ -362,8 +362,8 @@ function assertDebugLine(dbg, line, column) {
   }
 
   ok(
-    lineInfo.wrapClass.includes("new-debug-line"),
-    "Line is highlighted as paused"
+    lineInfo?.wrapClass.includes("new-debug-line"),
+    `Line ${line} is not highlighted as paused`
   );
 
   const debugLine =

@@ -17,7 +17,7 @@ add_task(async function() {
   );
   const {
     selectors: { getBreakpointCount },
-    getState
+    getState,
   } = dbg;
 
   ok(true, "Original sources exist");
@@ -62,18 +62,19 @@ add_task(async function() {
   await dbg.actions.jumpToMappedSelectedLocation(getContext(dbg));
   await stepOver(dbg);
   assertPausedLocation(dbg);
-  assertDebugLine(dbg, 71);
+  assertDebugLine(dbg, 3);
 
   await dbg.actions.jumpToMappedSelectedLocation(getContext(dbg));
   await stepOut(dbg);
   assertPausedLocation(dbg);
+
   assertDebugLine(dbg, 16);
 });
 
 function assertBreakpointExists(dbg, source, line) {
   const {
     selectors: { getBreakpoint },
-    getState
+    getState,
   } = dbg;
 
   ok(
@@ -107,7 +108,7 @@ async function clickGutter(dbg, line) {
 async function waitForBreakpointCount(dbg, count) {
   const {
     selectors: { getBreakpointCount },
-    getState
+    getState,
   } = dbg;
   await waitForState(dbg, state => getBreakpointCount() == count);
 }
