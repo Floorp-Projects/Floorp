@@ -679,6 +679,12 @@
   args:
     input: ValId
 
+- name: IsCallableResult
+  shared: true
+  transpile: false
+  args:
+    input: ValId
+
 - name: MathAbsInt32Result
   shared: true
   transpile: true

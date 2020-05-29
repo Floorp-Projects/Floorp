@@ -3708,6 +3708,49 @@ bool CacheIRCompiler::emitIsObjectResult(ValOperandId inputId) {
   return true;
 }
 
+bool CacheIRCompiler::emitIsCallableResult(ValOperandId inputId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoOutputRegister output(*this);
+  AutoScratchRegister scratch1(allocator, masm);
+  AutoScratchRegisterMaybeOutput scratch2(allocator, masm, output);
+
+  ValueOperand val = allocator.useValueRegister(masm, inputId);
+
+  Label isObject, done;
+  masm.branchTestObject(Assembler::Equal, val, &isObject);
+  // Primitives are never callable.
+  masm.move32(Imm32(0), scratch2);
+  masm.jump(&done);
+
+  masm.bind(&isObject);
+  masm.unboxObject(val, scratch1);
+
+  Label isProxy;
+  masm.isCallable(scratch1, scratch2, &isProxy);
+  masm.jump(&done);
+
+  masm.bind(&isProxy);
+  {
+    LiveRegisterSet volatileRegs(GeneralRegisterSet::Volatile(),
+                                 liveVolatileFloatRegs());
+    masm.PushRegsInMask(volatileRegs);
+
+    masm.setupUnalignedABICall(scratch2);
+    masm.passABIArg(scratch1);
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, ObjectIsCallable));
+    masm.storeCallBoolResult(scratch2);
+
+    LiveRegisterSet ignore;
+    ignore.add(scratch2);
+    masm.PopRegsInMaskIgnore(volatileRegs, ignore);
+  }
+
+  masm.bind(&done);
+  EmitStoreResult(masm, scratch2, JSVAL_TYPE_BOOLEAN, output);
+  return true;
+}
+
 bool CacheIRCompiler::emitMathAbsInt32Result(Int32OperandId inputId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
 
