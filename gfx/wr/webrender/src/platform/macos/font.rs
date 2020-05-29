@@ -2,9 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{ColorU, FontKey, FontRenderMode, GlyphDimensions};
+use api::{ColorU, FontKey, FontRenderMode, FontSize, GlyphDimensions};
 use api::{FontInstanceFlags, FontVariation, NativeFontHandle};
-use api::units::Au;
 use core_foundation::array::{CFArray, CFArrayRef};
 use core_foundation::base::TCFType;
 use core_foundation::dictionary::CFDictionary;
@@ -34,7 +33,7 @@ const INITIAL_CG_CONTEXT_SIDE_LENGTH: u32 = 32;
 
 pub struct FontContext {
     cg_fonts: FastHashMap<FontKey, CGFont>,
-    ct_fonts: FastHashMap<(FontKey, Au, Vec<FontVariation>), CTFont>,
+    ct_fonts: FastHashMap<(FontKey, FontSize, Vec<FontVariation>), CTFont>,
     #[allow(dead_code)]
     graphics_context: GraphicsContext,
     #[allow(dead_code)]
@@ -322,20 +321,21 @@ impl FontContext {
 
     pub fn delete_font_instance(&mut self, instance: &FontInstance) {
         // Remove the CoreText font corresponding to this instance.
-        self.ct_fonts.remove(&(instance.font_key, instance.size, instance.variations.clone()));
+        let size = FontSize::from_f64_px(instance.get_transformed_size());
+        self.ct_fonts.remove(&(instance.font_key, size, instance.variations.clone()));
     }
 
     fn get_ct_font(
         &mut self,
         font_key: FontKey,
-        size: Au,
+        size: f64,
         variations: &[FontVariation],
     ) -> Option<CTFont> {
-        match self.ct_fonts.entry((font_key, size, variations.to_vec())) {
+        match self.ct_fonts.entry((font_key, FontSize::from_f64_px(size), variations.to_vec())) {
             Entry::Occupied(entry) => Some((*entry.get()).clone()),
             Entry::Vacant(entry) => {
                 let cg_font = self.cg_fonts.get(&font_key)?;
-                let ct_font = new_ct_font_with_variations(cg_font, size.to_f64_px(), variations);
+                let ct_font = new_ct_font_with_variations(cg_font, size, variations);
                 entry.insert(ct_font.clone());
                 Some(ct_font)
             }
@@ -346,7 +346,7 @@ impl FontContext {
         let character = ch as u16;
         let mut glyph = 0;
 
-        self.get_ct_font(font_key, Au::from_px(16), &[])
+        self.get_ct_font(font_key, 16.0, &[])
             .and_then(|ref ct_font| {
                 unsafe {
                     let result = ct_font.get_glyphs_for_characters(&character, &mut glyph, 1);
@@ -366,7 +366,7 @@ impl FontContext {
         key: &GlyphKey,
     ) -> Option<GlyphDimensions> {
         let (x_scale, y_scale) = font.transform.compute_scale().unwrap_or((1.0, 1.0));
-        let size = font.size.scale_by(y_scale as f32);
+        let size = font.size.to_f64_px() * y_scale;
         self.get_ct_font(font.font_key, size, &font.variations)
             .and_then(|ref ct_font| {
                 let glyph = key.index() as CGGlyph;
@@ -387,7 +387,7 @@ impl FontContext {
                 }
                 let (mut tx, mut ty) = (0.0, 0.0);
                 if font.synthetic_italics.is_enabled() {
-                    let (shape_, (tx_, ty_)) = font.synthesize_italics(shape, size.to_f64_px());
+                    let (shape_, (tx_, ty_)) = font.synthesize_italics(shape, size);
                     shape = shape_;
                     tx = tx_;
                     ty = ty_;
@@ -502,7 +502,7 @@ impl FontContext {
 
     pub fn rasterize_glyph(&mut self, font: &FontInstance, key: &GlyphKey) -> GlyphRasterResult {
         let (x_scale, y_scale) = font.transform.compute_scale().unwrap_or((1.0, 1.0));
-        let size = font.size.scale_by(y_scale as f32);
+        let size = font.size.to_f64_px() * y_scale;
         let ct_font = self.get_ct_font(font.font_key, size, &font.variations).ok_or(GlyphRasterError::LoadFailed)?;
         let glyph_type = if is_bitmap_font(&ct_font) {
             GlyphType::Bitmap
@@ -527,7 +527,7 @@ impl FontContext {
         }
         let (mut tx, mut ty) = (0.0, 0.0);
         if font.synthetic_italics.is_enabled() {
-            let (shape_, (tx_, ty_)) = font.synthesize_italics(shape, size.to_f64_px());
+            let (shape_, (tx_, ty_)) = font.synthesize_italics(shape, size);
             shape = shape_;
             tx = tx_;
             ty = ty_;

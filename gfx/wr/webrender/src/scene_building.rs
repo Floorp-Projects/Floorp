@@ -5,7 +5,7 @@
 use api::{AlphaType, BorderDetails, BorderDisplayItem, BuiltDisplayListIter, PrimitiveFlags};
 use api::{ClipId, ColorF, CommonItemProperties, ComplexClipRegion, ComponentTransferFuncType, RasterSpace};
 use api::{DisplayItem, DisplayItemRef, ExtendMode, ExternalScrollId, FilterData, SharedFontInstanceMap};
-use api::{FilterOp, FilterPrimitive, FontInstanceKey, GlyphInstance, GlyphOptions, GradientStop};
+use api::{FilterOp, FilterPrimitive, FontInstanceKey, FontSize, GlyphInstance, GlyphOptions, GradientStop};
 use api::{IframeDisplayItem, ImageKey, ImageRendering, ItemRange, ColorDepth, QualitySettings};
 use api::{LineOrientation, LineStyle, NinePatchBorderSource, PipelineId, MixBlendMode, StackingContextFlags};
 use api::{PropertyBinding, ReferenceFrame, ReferenceFrameKind, ScrollFrameDisplayItem, ScrollSensitivity};
@@ -3037,7 +3037,7 @@ impl<'a> SceneBuilder<'a> {
             };
 
             // Trivial early out checks
-            if font_instance.size.0 <= 0 {
+            if font_instance.size <= FontSize::zero() {
                 return;
             }
 

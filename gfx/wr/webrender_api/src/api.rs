@@ -522,7 +522,7 @@ impl Transaction {
         &mut self,
         key: font::FontInstanceKey,
         font_key: font::FontKey,
-        glyph_size: Au,
+        glyph_size: f32,
         options: Option<font::FontInstanceOptions>,
         platform_options: Option<font::FontInstancePlatformOptions>,
         variations: Vec<font::FontVariation>,
@@ -769,7 +769,7 @@ pub struct AddFontInstance {
     /// The font resource's key.
     pub font_key: font::FontKey,
     /// Glyph size in app units.
-    pub glyph_size: Au,
+    pub glyph_size: f32,
     ///
     pub options: Option<font::FontInstanceOptions>,
     ///

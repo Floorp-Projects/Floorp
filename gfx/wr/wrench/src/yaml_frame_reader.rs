@@ -336,7 +336,7 @@ pub struct YamlFrameReader {
     image_map: HashMap<(PathBuf, Option<i64>), (ImageKey, LayoutSize)>,
 
     fonts: HashMap<FontDescriptor, FontKey>,
-    font_instances: HashMap<(FontKey, Au, FontInstanceFlags, Option<ColorU>, SyntheticItalics), FontInstanceKey>,
+    font_instances: HashMap<(FontKey, FontSize, FontInstanceFlags, Option<ColorU>, SyntheticItalics), FontInstanceKey>,
     font_render_mode: Option<FontRenderMode>,
     allow_mipmaps: bool,
 
@@ -823,7 +823,7 @@ impl YamlFrameReader {
     fn get_or_create_font_instance(
         &mut self,
         font_key: FontKey,
-        size: Au,
+        size: f32,
         bg_color: Option<ColorU>,
         flags: FontInstanceFlags,
         synthetic_italics: SyntheticItalics,
@@ -832,7 +832,7 @@ impl YamlFrameReader {
         let font_render_mode = self.font_render_mode;
 
         *self.font_instances
-            .entry((font_key, size, flags, bg_color, synthetic_italics))
+            .entry((font_key, size.into(), flags, bg_color, synthetic_italics))
             .or_insert_with(|| {
                 wrench.add_font_instance(
                     font_key,
@@ -1497,7 +1497,7 @@ impl YamlFrameReader {
         item: &Yaml,
         info: &mut CommonItemProperties,
     ) {
-        let size = item["size"].as_pt_to_au().unwrap_or(Au::from_f32_px(16.0));
+        let size = item["size"].as_pt_to_f32().unwrap_or(16.0);
         let color = item["color"].as_colorf().unwrap_or(ColorF::BLACK);
         let bg_color = item["bg-color"].as_colorf().map(|c| c.into());
         let synthetic_italics = if let Some(angle) = item["synthetic-italics"].as_f32() {
