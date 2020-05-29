@@ -51,7 +51,6 @@ private fun normalModeAdapterItems(
     tip?.let { items.add(AdapterItem.TipItem(it)) }
 
     if (topSites.isNotEmpty()) {
-        items.add(AdapterItem.TopSiteHeader)
         items.add(AdapterItem.TopSiteList(topSites))
     }
 

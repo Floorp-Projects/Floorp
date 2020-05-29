@@ -7,4 +7,6 @@
     android:id="@+id/top_sites_list"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
+    android:paddingStart="12dp"
+    android:paddingEnd="12dp"
     tools:listitem="@layout/top_site_item" />

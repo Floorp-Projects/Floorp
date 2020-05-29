@@ -2,33 +2,11 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<androidx.constraintlayout.widget.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/collections_header"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:layout_marginBottom="8dp">
-
-    <View
-        android:id="@+id/divider_line"
-        android:layout_width="fill_parent"
-        android:layout_height="1dp"
-        android:layout_marginStart="23dp"
-        android:layout_marginEnd="23dp"
-        android:background="?neutralFaded"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <TextView
-        android:id="@+id/collections_header_text"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="4.5dp"
-        android:layout_marginTop="20dp"
-        android:text="@string/collections_header"
-        android:textAppearance="@style/HeaderTextStyle"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/divider_line" />
-</androidx.constraintlayout.widget.ConstraintLayout>
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/collections_header_text"
+    android:layout_width="wrap_content"
+    android:layout_height="48dp"
+    android:layout_marginStart="4.5dp"
+    android:gravity="center_vertical"
+    android:text="@string/collections_header"
+    android:textAppearance="@style/HeaderTextStyle" />
