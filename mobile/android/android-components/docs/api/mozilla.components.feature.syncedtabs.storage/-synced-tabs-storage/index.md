@@ -17,7 +17,7 @@ with [RemoteTabsStorage](../../mozilla.components.browser.storage.sync/-remote-t
 
 | Name | Summary |
 |---|---|
-| [getSyncedTabs](get-synced-tabs.md) | `suspend fun getSyncedTabs(): `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`SyncedDeviceTabs`](../../mozilla.components.browser.storage.sync/-synced-device-tabs/index.md)`>`<br>Get the list of synced tabs. |
+| [getSyncedTabs](get-synced-tabs.md) | `suspend fun getSyncedTabs(): `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`SyncedDeviceTabs`](../../mozilla.components.browser.storage.sync/-synced-device-tabs/index.md)`>`<br>See [SyncedTabsProvider.getSyncedTabs](../-synced-tabs-provider/get-synced-tabs.md). |
 | [start](start.md) | `fun start(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Start listening to browser store changes. |
 | [stop](stop.md) | `fun stop(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Stop listening to browser store changes. |
 

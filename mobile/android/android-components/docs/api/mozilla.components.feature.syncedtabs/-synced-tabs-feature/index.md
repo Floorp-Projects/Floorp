@@ -2,7 +2,7 @@
 
 # SyncedTabsFeature
 
-`class SyncedTabsFeature : `[`LifecycleAwareFeature`](../../mozilla.components.support.base.feature/-lifecycle-aware-feature/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/syncedtabs/src/main/java/mozilla/components/feature/syncedtabs/SyncedTabsFeature.kt#L36)
+`class SyncedTabsFeature : `[`LifecycleAwareFeature`](../../mozilla.components.support.base.feature/-lifecycle-aware-feature/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/syncedtabs/src/main/java/mozilla/components/feature/syncedtabs/SyncedTabsFeature.kt#L37)
 
 Feature implementation that will keep a [SyncedTabsView](../../mozilla.components.feature.syncedtabs.view/-synced-tabs-view/index.md) notified with other synced device tabs for
 the Firefox Sync account.
@@ -42,9 +42,8 @@ the Firefox Sync account.
         view,
         lifecycleOwner
     ), interactor: `[`SyncedTabsInteractor`](../../mozilla.components.feature.syncedtabs.interactor/-synced-tabs-interactor/index.md)` = DefaultInteractor(
-        accountManager,
+        controller,
         view,
-        coroutineContext,
         onTabClicked
     ))`<br>Feature implementation that will keep a [SyncedTabsView](../../mozilla.components.feature.syncedtabs.view/-synced-tabs-view/index.md) notified with other synced device tabs for the Firefox Sync account. |
 

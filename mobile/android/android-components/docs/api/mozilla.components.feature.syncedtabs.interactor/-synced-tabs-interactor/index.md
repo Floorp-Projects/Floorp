@@ -10,7 +10,7 @@ An interactor that handles events from [SyncedTabsView.Listener](../../mozilla.c
 
 | Name | Summary |
 |---|---|
-| [accountManager](account-manager.md) | `abstract val accountManager: `[`FxaAccountManager`](../../mozilla.components.service.fxa.manager/-fxa-account-manager/index.md) |
+| [controller](controller.md) | `abstract val controller: `[`SyncedTabsController`](../../mozilla.components.feature.syncedtabs.controller/-synced-tabs-controller/index.md) |
 | [tabClicked](tab-clicked.md) | `abstract val tabClicked: (`[`Tab`](../../mozilla.components.browser.storage.sync/-tab/index.md)`) -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 | [view](view.md) | `abstract val view: `[`SyncedTabsView`](../../mozilla.components.feature.syncedtabs.view/-synced-tabs-view/index.md) |
 

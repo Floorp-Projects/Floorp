@@ -2,7 +2,7 @@
 
 # type
 
-`val type: `[`Type`](-type/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/prompt/PromptRequest.kt#L103)
+`val type: `[`Type`](-type/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/prompt/PromptRequest.kt#L129)
 
 indicate which [Type](-type/index.md) of selection de user wants.
 

@@ -13,9 +13,8 @@
         view,
         lifecycleOwner
     ), interactor: `[`SyncedTabsInteractor`](../../mozilla.components.feature.syncedtabs.interactor/-synced-tabs-interactor/index.md)` = DefaultInteractor(
-        accountManager,
+        controller,
         view,
-        coroutineContext,
         onTabClicked
     ))`
 

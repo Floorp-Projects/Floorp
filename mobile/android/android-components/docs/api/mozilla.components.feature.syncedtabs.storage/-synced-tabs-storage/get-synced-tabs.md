@@ -6,5 +6,5 @@
 
 Overrides [SyncedTabsProvider.getSyncedTabs](../-synced-tabs-provider/get-synced-tabs.md)
 
-Get the list of synced tabs.
+See [SyncedTabsProvider.getSyncedTabs](../-synced-tabs-provider/get-synced-tabs.md).
 
