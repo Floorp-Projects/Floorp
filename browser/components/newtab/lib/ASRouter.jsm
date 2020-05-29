@@ -966,17 +966,6 @@ class _ASRouter {
       (await this._storage.get("groupBlockList")) || []
     ).concat(providerBlockList);
 
-    // Merge any existing provider impressions into the corresponding group
-    // Don't keep providerImpressions in state anymore
-    const providerImpressions =
-      (await this._storage.get("providerImpressions")) || {};
-    for (const provider of Object.keys(providerImpressions)) {
-      groupImpressions[provider] = [
-        ...(groupImpressions[provider] || []),
-        ...providerImpressions[provider],
-      ];
-    }
-
     const previousSessionEnd =
       (await this._storage.get("previousSessionEnd")) || 0;
     await this.setState({
@@ -1525,11 +1514,6 @@ class _ASRouter {
         state.groups,
         "groupImpressions"
       );
-      this._cleanupImpressionsForItems(
-        state,
-        state.providers,
-        "providerImpressions"
-      );
       return { messageImpressions, groupImpressions };
     });
   }
@@ -1722,11 +1706,8 @@ class _ASRouter {
 
     await this.setState(state => {
       const providerBlockList = [...state.providerBlockList, ...idsToBlock];
-      // When a provider is blocked, its impressions should be cleared as well
-      const providerImpressions = { ...state.providerImpressions };
-      idsToBlock.forEach(id => delete providerImpressions[id]);
       this._storage.set("providerBlockList", providerBlockList);
-      return { providerBlockList, providerImpressions };
+      return { providerBlockList };
     });
   }
 
