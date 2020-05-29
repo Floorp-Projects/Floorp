@@ -2991,8 +2991,9 @@ void ScrollFrameHelper::ScrollToImpl(nsPoint aPt, const nsRect& aRange,
   PresShell::AutoAssertNoFlush noFlush(*mOuter->PresShell());
 
   {  // scope the AutoScrollbarRepaintSuppression
-    AutoScrollbarRepaintSuppression repaintSuppression(this, !schedulePaint);
     AutoWeakFrame weakFrame(mOuter);
+    AutoScrollbarRepaintSuppression repaintSuppression(this, weakFrame,
+                                                       !schedulePaint);
     UpdateScrollbarPosition();
     if (!weakFrame.IsAlive()) {
       return;
