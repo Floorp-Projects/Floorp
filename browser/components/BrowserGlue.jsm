@@ -2099,6 +2099,38 @@ BrowserGlue.prototype = {
     _checkHTTPSOnlyPref();
   },
 
+  _monitorPioneerPref() {
+    const PREF_PIONEER_ID = "toolkit.telemetry.pioneerId";
+
+    const _checkPioneerPref = async () => {
+      for (let win of Services.wm.getEnumerator("navigator:browser")) {
+        win.document.getElementById(
+          "pioneer-button"
+        ).hidden = !Services.prefs.getStringPref(PREF_PIONEER_ID, null);
+      }
+    };
+
+    const windowListener = {
+      onOpenWindow(xulWindow) {
+        const win = xulWindow.docShell.domWindow;
+        win.addEventListener("load", () => {
+          const pioneerButton = win.document.getElementById("pioneer-button");
+          if (pioneerButton) {
+            pioneerButton.hidden = !Services.prefs.getStringPref(
+              PREF_PIONEER_ID,
+              null
+            );
+          }
+        });
+      },
+      onCloseWindow() {},
+    };
+
+    Services.prefs.addObserver(PREF_PIONEER_ID, _checkPioneerPref);
+    Services.wm.addListener(windowListener);
+    _checkPioneerPref();
+  },
+
   _showNewInstallModal() {
     // Allow other observers of the same topic to run while we open the dialog.
     Services.tm.dispatchToMainThread(() => {
@@ -2187,6 +2219,7 @@ BrowserGlue.prototype = {
     this._monitorScreenshotsPref();
     this._monitorWebcompatReporterPref();
     this._monitorHTTPSOnlyPref();
+    this._monitorPioneerPref();
 
     let pService = Cc["@mozilla.org/toolkit/profile-service;1"].getService(
       Ci.nsIToolkitProfileService

@@ -27,11 +27,11 @@ input[type="checkbox"].toggle-button {
   background: var(--in-content-button-background);
   box-sizing: border-box;
 }
-input[type="checkbox"].toggle-button:hover {
+input[type="checkbox"].toggle-button:enabled:hover {
   background: var(--in-content-button-background-hover);
   border-color: var(--border-color);
 }
-input[type="checkbox"].toggle-button:active {
+input[type="checkbox"].toggle-button:enabled:active {
   background: var(--in-content-button-background-active);
   border-color: var(--border-color);
 }
