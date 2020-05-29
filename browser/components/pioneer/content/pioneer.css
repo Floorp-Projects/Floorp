@@ -1,0 +1,85 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+body {
+  margin: 70px auto;
+  max-width: 664px;
+}
+
+@media (max-width: 830px) {
+  body {
+    margin-inline-start: 16px;
+  }
+}
+
+details > summary {
+  user-select: none;
+  padding: 2px 6px;
+  width: 18em;
+  cursor: pointer;
+  outline: none;
+}
+
+#report-title {
+  font-size: 1.46em;
+  font-weight: 300;
+  line-height: 1.3em;
+}
+
+#available-studies {
+  font-weight: 600;
+}
+
+#enrollment-button {
+  float: right;
+}
+
+.card {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.card-icon {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+}
+
+.card-body {
+  flex-grow: 1;
+  margin-inline-start: 16px;
+}
+
+.card-name {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.card-creator {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 400;
+}
+
+.card-actions {
+  align-self: center;
+  flex-shrink: 0;
+}
+
+.join-button {
+  max-width: 200px;
+  margin: 0;
+  margin-inline-end: 16px;
+}
+
+.card-description {
+  font-size: 14px;
+  font-weight: normal;
+}
+
+*[hidden] {
+  display: none !important;
+}
