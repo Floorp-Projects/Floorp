@@ -198,16 +198,6 @@ add_task(async function test_api() {
         name: "test.sendMessage",
         data: { args: ["ready"] },
       },
-      {
-        type: "api_call",
-        name: "tabs.hide",
-        data: { args: ["__TAB_ID"] },
-      },
-      {
-        type: "api_event",
-        name: "test.onMessage",
-        data: { args: ["hideTab", "__TAB_ID"] },
-      },
       // Test parent api_event calls.
       {
         type: "api_call",
@@ -262,6 +252,17 @@ add_task(async function test_api() {
         type: "api_call",
         name: "test.sendMessage",
         data: { args: ["content_script"], tabId: 1 },
+      },
+      // Child api call
+      {
+        type: "api_call",
+        name: "tabs.hide",
+        data: { args: ["__TAB_ID"] },
+      },
+      {
+        type: "api_event",
+        name: "test.onMessage",
+        data: { args: ["hideTab", "__TAB_ID"] },
       },
     ];
     browser.test.assertTrue(browser.activityLog, "activityLog is privileged");
@@ -352,13 +353,14 @@ add_task(async function test_api() {
   await extension.awaitMessage("ready");
   logger.sendMessage("opentab");
   let id = await logger.awaitMessage("tabid");
-  extension.sendMessage("hideTab", id);
 
   await Promise.all([
     extension.awaitMessage("content_script"),
     extension.awaitMessage("registered_script"),
-    logger.awaitFinish("activity"),
   ]);
+
+  extension.sendMessage("hideTab", id);
+  await logger.awaitFinish("activity");
 
   // Stop watching because we get extra calls on extension shutdown
   // such as listener removal.
