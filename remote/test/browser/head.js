@@ -551,7 +551,7 @@ class RecordEvents {
    * @param {number=} timeout
    *     Timeout in milliseconds. Defaults to 1000.
    *
-   * @return {Array<{ eventName, payload }>} Recorded events
+   * @return {Array<{ eventName, payload, index }>} Recorded events
    */
   async record(timeout = TIMEOUT_EVENTS) {
     await Promise.race([Promise.all(this.promises), timeoutPromise(timeout)]);
@@ -562,16 +562,28 @@ class RecordEvents {
   }
 
   /**
+   * Filter events based on predicate
+   *
+   * @param {Function} predicate
+   *
+   * @return {Array<{ eventName, payload, index }>}
+   *     The list of events matching the filter.
+   */
+  filter(predicate) {
+    return this.events.filter(predicate);
+  }
+
+  /**
    * Find first occurrence of the given event.
    *
    * @param {string} eventName
    *
-   * @return {object} The event payload, if any.
+   * @return {{ eventName, payload, index }} The event, if any.
    */
   findEvent(eventName) {
     const event = this.events.find(el => el.eventName == eventName);
     if (event) {
-      return event.payload;
+      return event;
     }
     return {};
   }
@@ -581,13 +593,11 @@ class RecordEvents {
    *
    * @param {string} eventName
    *
-   * @return {Array<object>}
-   *     The events payload, if any.
+   * @return {Array<{ eventName, payload, index }>}
+   *     The events, if any.
    */
   findEvents(eventName) {
-    return this.events
-      .filter(event => event.eventName == eventName)
-      .map(event => event.payload);
+    return this.events.filter(event => event.eventName == eventName);
   }
 
   /**
