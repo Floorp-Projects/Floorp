@@ -44,6 +44,11 @@
 
 @end
 
+// Accessible for a radio button
+@interface mozRadioButtonAccessible : mozCheckboxAccessible
+- (id)accessibilityAttributeValue:(NSString*)attribute;
+@end
+
 /**
  * Accessible for a PANE
  */

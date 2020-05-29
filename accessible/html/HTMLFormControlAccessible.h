@@ -9,6 +9,7 @@
 #include "FormControlAccessible.h"
 #include "HyperTextAccessibleWrap.h"
 #include "nsAccUtils.h"
+#include "Relation.h"
 
 namespace mozilla {
 class TextEditor;
@@ -30,6 +31,10 @@ class HTMLRadioButtonAccessible : public RadioButtonAccessible {
   virtual uint64_t NativeState() const override;
   virtual void GetPositionAndSizeInternal(int32_t* aPosInSet,
                                           int32_t* aSetSize) override;
+  virtual Relation RelationByType(RelationType aType) const override;
+
+ private:
+  Relation ComputeGroupAttributes(int32_t* aPosInSet, int32_t* aSetSize) const;
 };
 
 /**
