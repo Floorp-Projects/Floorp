@@ -50,11 +50,6 @@ object FeatureFlags {
     val tabTray = Config.channel.isNightlyOrDebug
 
     /**
-     * Enables new voice search feature
-     */
-    val voiceSearch = Config.channel.isNightlyOrDebug
-
-    /**
      * Allows search widget CFR to be displayed.
      * This is a placeholder for the experimentation framework determining cohorts.
      */

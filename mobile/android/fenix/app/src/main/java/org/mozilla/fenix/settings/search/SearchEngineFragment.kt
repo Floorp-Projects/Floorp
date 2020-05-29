@@ -10,7 +10,6 @@ import androidx.preference.CheckBoxPreference
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SwitchPreference
-import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.ext.settings
@@ -63,7 +62,6 @@ class SearchEngineFragment : PreferenceFragmentCompat() {
 
         val showVoiceSearchPreference =
             findPreference<SwitchPreference>(getPreferenceKey(R.string.pref_key_show_voice_search))?.apply {
-                isVisible = FeatureFlags.voiceSearch
                 isChecked = context.settings().shouldShowVoiceSearch
             }
 

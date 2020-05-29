@@ -43,7 +43,6 @@ import mozilla.components.support.ktx.android.content.isPermissionGranted
 import mozilla.components.support.ktx.android.view.hideKeyboard
 import mozilla.components.ui.autocomplete.InlineAutocompleteEditText
 import org.mozilla.fenix.BrowserDirection
-import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.StoreProvider
@@ -148,10 +147,7 @@ class SearchFragment : Fragment(), UserInteractionHandler {
             BrowserToolbar.Button(
                 ContextCompat.getDrawable(requireContext(), R.drawable.ic_microphone)!!,
                 requireContext().getString(R.string.voice_search_content_description),
-                visible = {
-                    requireContext().settings().shouldShowVoiceSearch &&
-                        FeatureFlags.voiceSearch && speechIsAvailable()
-                },
+                visible = { requireContext().settings().shouldShowVoiceSearch && speechIsAvailable() },
                 listener = ::launchVoiceSearch
             )
         )
