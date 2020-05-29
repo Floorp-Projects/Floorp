@@ -49,9 +49,14 @@ class WaylandDMABufSurface {
     SURFACE_NV12,
   };
 
+  // Import surface from SurfaceDescriptor. This is usually
+  // used to copy surface from another process over IPC.
+  // When a global reference counter was created for the surface
+  // (see bellow) it's automatically referenced.
   static already_AddRefed<WaylandDMABufSurface> CreateDMABufSurface(
       const mozilla::layers::SurfaceDescriptor& aDesc);
 
+  // Export surface to another process via. SurfaceDescriptor.
   virtual bool Serialize(
       mozilla::layers::SurfaceDescriptor& aOutDescriptor) = 0;
 
@@ -82,6 +87,35 @@ class WaylandDMABufSurface {
   void FenceWait();
   void FenceDelete();
 
+  // Set and get a global surface UID. The UID is shared across process
+  // and it's used to track surface lifetime in various parts of rendering
+  // engine.
+  void SetUID(uint32_t aUID) { mUID = aUID; };
+  uint32_t GetUID() const { return mUID; };
+
+  // Creates a global reference counter objects attached to the surface.
+  // It's created as unreferenced, i.e. IsGlobalRefSet() returns false
+  // right after GlobalRefCountCreate() call.
+  //
+  // The counter is shared by all surface instances across processes
+  // so it tracks global surface usage.
+  //
+  // The counter is automatically referenced when a new surface instance is
+  // created with SurfaceDescriptor (usually copied to another process over IPC)
+  // and it's unreferenced when surface is deleted.
+  //
+  // So without any additional GlobalRefAdd()/GlobalRefRelease() calls
+  // the IsGlobalRefSet() returns true if any other process use the surface.
+  void GlobalRefCountCreate();
+
+  // If global reference counter was created by GlobalRefCountCreate()
+  // returns true when there's an active surface reference.
+  bool IsGlobalRefSet() const;
+
+  // Add/Remove additional reference to the surface global reference counter.
+  void GlobalRefAdd();
+  void GlobalRefRelease();
+
   WaylandDMABufSurface(SurfaceType aSurfaceType);
 
  protected:
@@ -89,7 +123,10 @@ class WaylandDMABufSurface {
   virtual void ReleaseSurface() = 0;
   bool FenceCreate(int aFd);
 
-  virtual ~WaylandDMABufSurface() { FenceDelete(); };
+  void GlobalRefCountImport(int aFd);
+  void GlobalRefCountDelete();
+
+  virtual ~WaylandDMABufSurface();
 
   SurfaceType mSurfaceType;
   uint64_t mBufferModifier;
@@ -102,6 +139,9 @@ class WaylandDMABufSurface {
 
   EGLSyncKHR mSync;
   RefPtr<mozilla::gl::GLContext> mGL;
+
+  int mGlobalRefCountFd;
+  uint32_t mUID;
 };
 
 class WaylandDMABufSurfaceRGBA : public WaylandDMABufSurface {

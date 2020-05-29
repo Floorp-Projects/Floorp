@@ -17,6 +17,9 @@
 #include <unistd.h>
 #include <sys/time.h>
 #include <dlfcn.h>
+#include <sys/mman.h>
+#include <sys/eventfd.h>
+#include <poll.h>
 
 #include "mozilla/widget/gbm.h"
 #include "mozilla/widget/va_drmcommon.h"
@@ -57,6 +60,61 @@ using namespace mozilla::layers;
 #  define VA_FOURCC_NV12 0x3231564E
 #endif
 
+bool WaylandDMABufSurface::IsGlobalRefSet() const {
+  if (!mGlobalRefCountFd) {
+    return false;
+  }
+  struct pollfd pfd;
+  pfd.fd = mGlobalRefCountFd;
+  pfd.events = POLLIN;
+  return poll(&pfd, 1, 0) == 1;
+}
+
+void WaylandDMABufSurface::GlobalRefRelease() {
+  MOZ_ASSERT(mGlobalRefCountFd);
+  uint64_t counter;
+  if (read(mGlobalRefCountFd, &counter, sizeof(counter)) != sizeof(counter)) {
+    // EAGAIN means the refcount is already zero. It happens when we release
+    // last reference to the surface.
+    if (errno != EAGAIN) {
+      NS_WARNING("Failed to unref dmabuf global ref count!");
+    }
+  }
+}
+
+void WaylandDMABufSurface::GlobalRefAdd() {
+  MOZ_ASSERT(mGlobalRefCountFd);
+  uint64_t counter = 1;
+  if (write(mGlobalRefCountFd, &counter, sizeof(counter)) != sizeof(counter)) {
+    NS_WARNING("Failed to ref dmabuf global ref count!");
+  }
+}
+
+void WaylandDMABufSurface::GlobalRefCountCreate() {
+  MOZ_ASSERT(!mGlobalRefCountFd);
+  mGlobalRefCountFd = eventfd(0, EFD_CLOEXEC | EFD_NONBLOCK | EFD_SEMAPHORE);
+  if (mGlobalRefCountFd < 0) {
+    NS_WARNING("Failed to create dmabuf global ref count!");
+    mGlobalRefCountFd = 0;
+    return;
+  }
+}
+
+void WaylandDMABufSurface::GlobalRefCountImport(int aFd) {
+  MOZ_ASSERT(!mGlobalRefCountFd);
+  mGlobalRefCountFd = aFd;
+  GlobalRefAdd();
+}
+
+void WaylandDMABufSurface::GlobalRefCountDelete() {
+  MOZ_ASSERT(mGlobalRefCountFd);
+  if (mGlobalRefCountFd) {
+    GlobalRefRelease();
+    close(mGlobalRefCountFd);
+    mGlobalRefCountFd = 0;
+  }
+}
+
 WaylandDMABufSurface::WaylandDMABufSurface(SurfaceType aSurfaceType)
     : mSurfaceType(aSurfaceType),
       mBufferModifier(DRM_FORMAT_MOD_INVALID),
@@ -64,10 +122,17 @@ WaylandDMABufSurface::WaylandDMABufSurface(SurfaceType aSurfaceType)
       mDrmFormats(),
       mStrides(),
       mOffsets(),
-      mSync(0) {
+      mSync(0),
+      mGlobalRefCountFd(0),
+      mUID(0) {
   for (auto& slot : mDmabufFds) {
     slot = -1;
   }
+}
+
+WaylandDMABufSurface::~WaylandDMABufSurface() {
+  FenceDelete();
+  GlobalRefCountDelete();
 }
 
 already_AddRefed<WaylandDMABufSurface>
@@ -316,6 +381,7 @@ void WaylandDMABufSurfaceRGBA::ImportSurfaceDescriptor(
   mBufferPlaneCount = desc.fds().Length();
   mGbmBufferFlags = desc.flags();
   MOZ_RELEASE_ASSERT(mBufferPlaneCount <= DMABUF_BUFFER_PLANES);
+  mUID = desc.uid();
 
   for (int i = 0; i < mBufferPlaneCount; i++) {
     mDmabufFds[i] = desc.fds()[i].ClonePlatformHandle().release();
@@ -328,6 +394,10 @@ void WaylandDMABufSurfaceRGBA::ImportSurfaceDescriptor(
     if (!FenceCreate(fd)) {
       close(fd);
     }
+  }
+
+  if (desc.refCount().Length() > 0) {
+    GlobalRefCountImport(desc.refCount()[0].ClonePlatformHandle().release());
   }
 }
 
@@ -346,6 +416,7 @@ bool WaylandDMABufSurfaceRGBA::Serialize(
   AutoTArray<uint32_t, DMABUF_BUFFER_PLANES> offsets;
   AutoTArray<uintptr_t, DMABUF_BUFFER_PLANES> images;
   AutoTArray<ipc::FileDescriptor, 1> fenceFDs;
+  AutoTArray<ipc::FileDescriptor, 1> refCountFDs;
 
   width.AppendElement(mWidth);
   height.AppendElement(mHeight);
@@ -362,9 +433,14 @@ bool WaylandDMABufSurfaceRGBA::Serialize(
         egl->fDupNativeFenceFDANDROID(egl->Display(), mSync)));
   }
 
-  aOutDescriptor = SurfaceDescriptorDMABuf(
-      mSurfaceType, mBufferModifier, mGbmBufferFlags, fds, width, height,
-      format, strides, offsets, GetYUVColorSpace(), fenceFDs);
+  if (mGlobalRefCountFd) {
+    refCountFDs.AppendElement(ipc::FileDescriptor(mGlobalRefCountFd));
+  }
+
+  aOutDescriptor =
+      SurfaceDescriptorDMABuf(mSurfaceType, mBufferModifier, mGbmBufferFlags,
+                              fds, width, height, format, strides, offsets,
+                              GetYUVColorSpace(), fenceFDs, mUID, refCountFDs);
 
   return true;
 }
@@ -693,6 +769,7 @@ void WaylandDMABufSurfaceNV12::ImportSurfaceDescriptor(
   mBufferPlaneCount = aDesc.fds().Length();
   mBufferModifier = aDesc.modifier();
   mColorSpace = aDesc.yUVColorSpace();
+  mUID = aDesc.uid();
 
   MOZ_RELEASE_ASSERT(mBufferPlaneCount <= DMABUF_BUFFER_PLANES);
   for (int i = 0; i < mBufferPlaneCount; i++) {
@@ -710,6 +787,10 @@ void WaylandDMABufSurfaceNV12::ImportSurfaceDescriptor(
       close(fd);
     }
   }
+
+  if (aDesc.refCount().Length() > 0) {
+    GlobalRefCountImport(aDesc.refCount()[0].ClonePlatformHandle().release());
+  }
 }
 
 bool WaylandDMABufSurfaceNV12::Serialize(
@@ -721,6 +802,7 @@ bool WaylandDMABufSurfaceNV12::Serialize(
   AutoTArray<uint32_t, DMABUF_BUFFER_PLANES> strides;
   AutoTArray<uint32_t, DMABUF_BUFFER_PLANES> offsets;
   AutoTArray<ipc::FileDescriptor, 1> fenceFDs;
+  AutoTArray<ipc::FileDescriptor, 1> refCountFDs;
 
   for (int i = 0; i < mBufferPlaneCount; i++) {
     width.AppendElement(mWidth[i]);
@@ -737,9 +819,13 @@ bool WaylandDMABufSurfaceNV12::Serialize(
         egl->fDupNativeFenceFDANDROID(egl->Display(), mSync)));
   }
 
+  if (mGlobalRefCountFd) {
+    refCountFDs.AppendElement(ipc::FileDescriptor(mGlobalRefCountFd));
+  }
+
   aOutDescriptor = SurfaceDescriptorDMABuf(
       mSurfaceType, mBufferModifier, 0, fds, width, height, format, strides,
-      offsets, GetYUVColorSpace(), fenceFDs);
+      offsets, GetYUVColorSpace(), fenceFDs, mUID, refCountFDs);
   return true;
 }
 
