@@ -117,6 +117,17 @@ set_define('MOZ_DEBUG', moz_debug)
 add_old_configure_assignment('MOZ_DEBUG',
                              depends('--enable-debug')(lambda x: bool(x)))
 
+js_option('--with-debug-label', nargs='+',
+          help='Debug DEBUG_<value> for each comma-separated value given')
+
+@depends(moz_debug, '--with-debug-label')
+def debug_defines(debug, labels):
+    if debug:
+        return ['DEBUG'] + ['DEBUG_%s' % label for label in labels]
+    return ['NDEBUG', 'TRIMMED']
+
+set_config('MOZ_DEBUG_DEFINES', debug_defines)
+
 js_option('--enable-rust-debug',
           default=depends(when='--enable-debug')(lambda: True),
           help='{Build|Do not build} Rust code with debug assertions turned '
