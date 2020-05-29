@@ -4,6 +4,10 @@ var { WebRequest } = ChromeUtils.import(
   "resource://gre/modules/WebRequest.jsm"
 );
 
+var { ExtensionParent } = ChromeUtils.import(
+  "resource://gre/modules/ExtensionParent.jsm"
+);
+
 const server = createHttpServer({ hosts: ["example.com"] });
 server.registerDirectory("/data/", do_get_file("data"));
 
@@ -42,6 +46,12 @@ const expected_urls = [
   BASE + "/file_style_redirect.css",
 ];
 
+function resetExpectations() {
+  requested.length = 0;
+  sendHeaders.length = 0;
+  completed.length = 0;
+}
+
 function removeDupes(list) {
   let j = 0;
   for (let i = 1; i < list.length; i++) {
@@ -66,6 +76,10 @@ function compareLists(list1, list2, kind) {
 add_task(async function setup() {
   // Disable rcwn to make cache behavior deterministic.
   Services.prefs.setBoolPref("network.http.rcwn.enabled", false);
+
+  // When WebRequest.jsm is used directly instead of through ext-webRequest.js,
+  // ExtensionParent.apiManager is not automatically initialized. Do it here.
+  await ExtensionParent.apiManager.lazyInit();
 });
 
 add_task(async function filter_urls() {
@@ -90,6 +104,7 @@ add_task(async function filter_urls() {
 });
 
 add_task(async function filter_types() {
+  resetExpectations();
   let filter = { types: ["stylesheet"] };
 
   WebRequest.onBeforeRequest.addListener(onBeforeRequest, filter, ["blocking"]);
@@ -104,6 +119,54 @@ add_task(async function filter_types() {
   compareLists(requested, expected_urls, "requested");
   compareLists(sendHeaders, expected_urls, "sendHeaders");
   compareLists(completed, expected_urls, "completed");
+
+  WebRequest.onBeforeRequest.removeListener(onBeforeRequest);
+  WebRequest.onBeforeSendHeaders.removeListener(onBeforeSendHeaders);
+  WebRequest.onResponseStarted.removeListener(onResponseStarted);
+});
+
+add_task(async function filter_windowId() {
+  resetExpectations();
+  // Check that adding windowId will exclude non-matching requests.
+  // test_ext_webrequest_filter.html provides coverage for matching requests.
+  let filter = { urls: new MatchPatternSet(["*://*/*_style_*"]), windowId: 0 };
+
+  WebRequest.onBeforeRequest.addListener(onBeforeRequest, filter, ["blocking"]);
+  WebRequest.onBeforeSendHeaders.addListener(onBeforeSendHeaders, filter, [
+    "blocking",
+  ]);
+  WebRequest.onResponseStarted.addListener(onResponseStarted, filter);
+
+  let contentPage = await ExtensionTestUtils.loadContentPage(URL);
+  await contentPage.close();
+
+  compareLists(requested, [], "requested");
+  compareLists(sendHeaders, [], "sendHeaders");
+  compareLists(completed, [], "completed");
+
+  WebRequest.onBeforeRequest.removeListener(onBeforeRequest);
+  WebRequest.onBeforeSendHeaders.removeListener(onBeforeSendHeaders);
+  WebRequest.onResponseStarted.removeListener(onResponseStarted);
+});
+
+add_task(async function filter_tabId() {
+  resetExpectations();
+  // Check that adding tabId will exclude non-matching requests.
+  // test_ext_webrequest_filter.html provides coverage for matching requests.
+  let filter = { urls: new MatchPatternSet(["*://*/*_style_*"]), tabId: 0 };
+
+  WebRequest.onBeforeRequest.addListener(onBeforeRequest, filter, ["blocking"]);
+  WebRequest.onBeforeSendHeaders.addListener(onBeforeSendHeaders, filter, [
+    "blocking",
+  ]);
+  WebRequest.onResponseStarted.addListener(onResponseStarted, filter);
+
+  let contentPage = await ExtensionTestUtils.loadContentPage(URL);
+  await contentPage.close();
+
+  compareLists(requested, [], "requested");
+  compareLists(sendHeaders, [], "sendHeaders");
+  compareLists(completed, [], "completed");
 
   WebRequest.onBeforeRequest.removeListener(onBeforeRequest);
   WebRequest.onBeforeSendHeaders.removeListener(onBeforeSendHeaders);

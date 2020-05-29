@@ -6,9 +6,18 @@ var { WebRequest } = ChromeUtils.import(
 var { PromiseUtils } = ChromeUtils.import(
   "resource://gre/modules/PromiseUtils.jsm"
 );
+var { ExtensionParent } = ChromeUtils.import(
+  "resource://gre/modules/ExtensionParent.jsm"
+);
 
 const server = createHttpServer({ hosts: ["example.com"] });
 server.registerDirectory("/data/", do_get_file("data"));
+
+add_task(async function setup() {
+  // When WebRequest.jsm is used directly instead of through ext-webRequest.js,
+  // ExtensionParent.apiManager is not automatically initialized. Do it here.
+  await ExtensionParent.apiManager.lazyInit();
+});
 
 add_task(async function test_ancestors_exist() {
   let deferred = PromiseUtils.defer();
