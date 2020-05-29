@@ -206,42 +206,25 @@ nsWaylandDisplay* WindowBackBuffer::GetWaylandDisplay() {
   return mWindowSurfaceWayland->GetWaylandDisplay();
 }
 
-int WaylandShmPool::CreateTemporaryFile(int aSize) {
-  const char* tmppath = getenv("XDG_RUNTIME_DIR");
-  MOZ_RELEASE_ASSERT(tmppath, "Missing XDG_RUNTIME_DIR env variable.");
-
-  nsPrintfCString tmpname("%s/mozilla-shared-XXXXXX", tmppath);
-
-  char* filename;
-  int fd = -1;
-  int ret = 0;
-
-  if (tmpname.GetMutableData(&filename)) {
-    fd = mkstemp(filename);
-    if (fd >= 0) {
-      int flags = fcntl(fd, F_GETFD);
-      if (flags >= 0) {
-        fcntl(fd, F_SETFD, flags | FD_CLOEXEC);
-      }
-    }
-  }
-
+static int WaylandAllocateShmMemory(int aSize) {
+  static int counter = 0;
+  nsPrintfCString shmName("/wayland.mozilla.ipc.%d", counter++);
+  int fd = shm_open(shmName.get(), O_CREAT | O_RDWR | O_EXCL, 0600);
   if (fd >= 0) {
-    unlink(tmpname.get());
+    shm_unlink(shmName.get());
   } else {
-    printf_stderr("Unable to create mapping file %s\n", filename);
+    printf_stderr("Unable to SHM memory segment\n");
     MOZ_CRASH();
   }
 
+  int ret = 0;
 #ifdef HAVE_POSIX_FALLOCATE
   do {
     ret = posix_fallocate(fd, 0, aSize);
   } while (ret == EINTR);
   if (ret != 0) {
     close(fd);
-    MOZ_CRASH_UNSAFE_PRINTF(
-        "posix_fallocate() fails on %s size %d error code %d\n", filename,
-        aSize, ret);
+    MOZ_CRASH("posix_fallocate() fails to allocate shm memory");
   }
 #else
   do {
@@ -249,8 +232,7 @@ int WaylandShmPool::CreateTemporaryFile(int aSize) {
   } while (ret < 0 && errno == EINTR);
   if (ret < 0) {
     close(fd);
-    MOZ_CRASH_UNSAFE_PRINTF("ftruncate() fails on %s size %d error code %d\n",
-                            filename, aSize, ret);
+    MOZ_CRASH("ftruncate() fails to allocate shm memory");
   }
 #endif
 
@@ -259,7 +241,7 @@ int WaylandShmPool::CreateTemporaryFile(int aSize) {
 
 WaylandShmPool::WaylandShmPool(nsWaylandDisplay* aWaylandDisplay, int aSize)
     : mAllocatedSize(aSize) {
-  mShmPoolFd = CreateTemporaryFile(mAllocatedSize);
+  mShmPoolFd = WaylandAllocateShmMemory(mAllocatedSize);
   mImageData = mmap(nullptr, mAllocatedSize, PROT_READ | PROT_WRITE, MAP_SHARED,
                     mShmPoolFd, 0);
   MOZ_RELEASE_ASSERT(mImageData != MAP_FAILED,

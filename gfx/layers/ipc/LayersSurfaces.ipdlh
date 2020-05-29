@@ -71,6 +71,8 @@ struct SurfaceDescriptorDMABuf {
   uint32_t[] offsets;
   YUVColorSpace yUVColorSpace;
   FileDescriptor[] fence;
+  uint32_t uid;
+  FileDescriptor[] refCount;
 };
 
 struct SurfaceTextureDescriptor {
