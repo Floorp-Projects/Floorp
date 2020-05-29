@@ -24,6 +24,8 @@ A [BrowserMenu](../-browser-menu/index.md) capable of displaying browser and pag
 |---|---|
 | [dismiss](../-browser-menu/dismiss.md) | `fun dismiss(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 | [invalidate](../-browser-menu/invalidate.md) | `fun invalidate(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
+| [onViewAttachedToWindow](../-browser-menu/on-view-attached-to-window.md) | `open fun onViewAttachedToWindow(v: <ERROR CLASS>?): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
+| [onViewDetachedFromWindow](../-browser-menu/on-view-detached-from-window.md) | `open fun onViewDetachedFromWindow(v: <ERROR CLASS>?): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 
 ### Extension Functions
 

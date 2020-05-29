@@ -2,7 +2,7 @@
 
 # onDownloadStopped
 
-`var onDownloadStopped: `[`onDownloadStopped`](../on-download-stopped.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/downloads/src/main/java/mozilla/components/feature/downloads/manager/FetchDownloadManager.kt#L39)
+`var onDownloadStopped: `[`onDownloadStopped`](../on-download-stopped.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/downloads/src/main/java/mozilla/components/feature/downloads/manager/FetchDownloadManager.kt#L38)
 
 Overrides [DownloadManager.onDownloadStopped](../-download-manager/on-download-stopped.md)
 

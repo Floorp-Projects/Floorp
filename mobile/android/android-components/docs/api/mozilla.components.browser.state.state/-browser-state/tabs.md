@@ -2,7 +2,7 @@
 
 # tabs
 
-`val tabs: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`TabSessionState`](../-tab-session-state/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/BrowserState.kt#L21)
+`val tabs: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`TabSessionState`](../-tab-session-state/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/BrowserState.kt#L23)
 
 the list of open tabs, defaults to an empty list.
 

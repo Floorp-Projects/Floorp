@@ -138,6 +138,7 @@ mozilla.components.browser.storage.sync
 mozilla.components.browser.tabstray
 mozilla.components.browser.tabstray.thumbnail
 mozilla.components.browser.thumbnails
+mozilla.components.browser.thumbnails.storage
 mozilla.components.browser.thumbnails.utils
 mozilla.components.browser.toolbar
 mozilla.components.browser.toolbar.behavior
@@ -188,7 +189,6 @@ mozilla.components.feature.customtabs.feature
 mozilla.components.feature.customtabs.store
 mozilla.components.feature.customtabs.verify
 mozilla.components.feature.downloads
-mozilla.components.feature.downloads.ext
 mozilla.components.feature.downloads.facts
 mozilla.components.feature.downloads.manager
 mozilla.components.feature.findinpage
