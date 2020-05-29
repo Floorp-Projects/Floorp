@@ -1354,15 +1354,6 @@ AC_SUBST(MOZ_APP_DISPLAYNAME)
 
 AC_SUBST(MOZ_PKG_SPECIAL)
 
-dnl ========================================================
-dnl ECMAScript Internationalization API Support (uses ICU)
-dnl ========================================================
-
-dnl top-level configure may override this with --without-intl-api
-_INTL_API=yes
-
-MOZ_CONFIG_ICU()
-
 dnl Echo the CFLAGS to remove extra whitespace.
 CFLAGS=`echo \
 	$_COMPILATION_CFLAGS \

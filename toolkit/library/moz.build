@@ -148,11 +148,6 @@ USE_LIBS += [
     'zlib',
 ]
 
-if CONFIG['USE_ICU']:
-    USE_LIBS += [
-        'icu',
-    ]
-
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk':
     USE_LIBS += [
         'mozgtk_stub',
