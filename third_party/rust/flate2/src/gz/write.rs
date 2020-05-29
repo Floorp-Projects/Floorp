@@ -9,9 +9,9 @@ use tokio_io::{AsyncRead, AsyncWrite};
 
 use super::bufread::{corrupt, read_gz_header};
 use super::{GzBuilder, GzHeader};
-use crc::{Crc, CrcWriter};
-use zio;
-use {Compress, Compression, Decompress, Status};
+use crate::crc::{Crc, CrcWriter};
+use crate::zio;
+use crate::{Compress, Compression, Decompress, Status};
 
 /// A gzip streaming encoder
 ///
@@ -476,5 +476,4 @@ mod tests {
         let return_string = String::from_utf8(writer).expect("String parsing error");
         assert_eq!(return_string, STR);
     }
-
 }

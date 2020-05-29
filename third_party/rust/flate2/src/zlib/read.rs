@@ -7,7 +7,7 @@ use futures::Poll;
 use tokio_io::{AsyncRead, AsyncWrite};
 
 use super::bufread;
-use bufreader::BufReader;
+use crate::bufreader::BufReader;
 
 /// A ZLIB encoder, or compressor.
 ///
@@ -42,7 +42,7 @@ pub struct ZlibEncoder<R> {
 impl<R: Read> ZlibEncoder<R> {
     /// Creates a new encoder which will read uncompressed data from the given
     /// stream and emit the compressed stream.
-    pub fn new(r: R, level: ::Compression) -> ZlibEncoder<R> {
+    pub fn new(r: R, level: crate::Compression) -> ZlibEncoder<R> {
         ZlibEncoder {
             inner: bufread::ZlibEncoder::new(BufReader::new(r), level),
         }
