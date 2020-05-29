@@ -126,7 +126,15 @@ observe(null, "nsPref:changed", PREF_SHOW_REMOTE_TABS);
 
 // This public object is a static singleton.
 var PlacesRemoteTabsAutocompleteProvider = {
-  // a promise that resolves with an array of matching remote tabs.
+  /**
+   * Fetches Remote Tab results and returns them as matches.
+   * @param {string} searchString
+   *   The search string entered by the user. If left blank, the first
+   *   `maxMatches` results will be returned.
+   * @param {number} maxMatches
+   *   The maximum number of remote tabs we want returned.
+   * @returns {array} matches
+   */
   async getMatches(searchString, maxMatches) {
     // If Sync isn't configured we bail early.
     if (
@@ -145,7 +153,11 @@ var PlacesRemoteTabsAutocompleteProvider = {
     let matches = [];
     let tabsData = await ensureItems();
     for (let { tab, client } of tabsData) {
-      if (re.test(tab.url) || (tab.title && re.test(tab.title))) {
+      if (
+        !searchString ||
+        re.test(tab.url) ||
+        (tab.title && re.test(tab.title))
+      ) {
         matches.push({
           url: tab.url,
           title: tab.title,
