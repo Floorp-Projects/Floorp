@@ -19,7 +19,7 @@ def add_command(config, tasks):
             task["worker"]["env"] = {}
 
         final_verify_configs = []
-        for upstream in task.get("dependencies", {}).keys():
+        for upstream in sorted(task.get("dependencies", {}).keys()):
             if 'update-verify-config' in upstream:
                 final_verify_configs.append(
                     "<{}/public/build/update-verify.cfg>".format(upstream),

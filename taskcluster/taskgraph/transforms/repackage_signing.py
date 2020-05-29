@@ -92,7 +92,7 @@ def make_repackage_signing_description(config, jobs):
         scopes = [signing_cert_scope]
 
         upstream_artifacts = []
-        for artifact in dep_job.release_artifacts:
+        for artifact in sorted(dep_job.release_artifacts):
             basename = os.path.basename(artifact)
             if basename in SIGNING_FORMATS:
                 upstream_artifacts.append({

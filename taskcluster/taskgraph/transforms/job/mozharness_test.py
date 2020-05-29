@@ -161,7 +161,7 @@ def mozharness_test_on_docker(config, job, taskdesc):
         'test_packages_url': test_packages_url(taskdesc),
     }
     env['EXTRA_MOZHARNESS_CONFIG'] = {
-        'task-reference': six.ensure_text(json.dumps(extra_config))
+        'task-reference': six.ensure_text(json.dumps(extra_config, sort_keys=True))
     }
 
     command = [
@@ -171,7 +171,7 @@ def mozharness_test_on_docker(config, job, taskdesc):
 
     if test.get('test-manifests'):
         env['MOZHARNESS_TEST_PATHS'] = six.ensure_text(
-            json.dumps({test['suite']: test['test-manifests']}))
+            json.dumps({test['suite']: test['test-manifests']}, sort_keys=True))
 
     # TODO: remove the need for run['chunked']
     elif mozharness.get('chunked') or test['chunks'] > 1:
@@ -303,7 +303,7 @@ def mozharness_test_on_generic_worker(config, job, taskdesc):
         'test_packages_url': test_packages_url(taskdesc),
     }
     env['EXTRA_MOZHARNESS_CONFIG'] = {
-        'task-reference': six.ensure_text(json.dumps(extra_config))
+        'task-reference': six.ensure_text(json.dumps(extra_config, sort_keys=True))
     }
 
     if is_windows:
@@ -350,7 +350,7 @@ def mozharness_test_on_generic_worker(config, job, taskdesc):
 
     if test.get('test-manifests'):
         env['MOZHARNESS_TEST_PATHS'] = six.ensure_text(
-            json.dumps({test['suite']: test['test-manifests']}))
+            json.dumps({test['suite']: test['test-manifests']}, sort_keys=True))
 
     # TODO: remove the need for run['chunked']
     elif mozharness.get('chunked') or test['chunks'] > 1:
@@ -456,7 +456,7 @@ def mozharness_test_on_script_engine_autophone(config, job, taskdesc):
         'test_packages_url': test_packages_url(taskdesc),
     }
     env['EXTRA_MOZHARNESS_CONFIG'] = {
-        'task-reference': six.ensure_text(json.dumps(extra_config))
+        'task-reference': six.ensure_text(json.dumps(extra_config, sort_keys=True))
     }
 
     script = 'test-linux.sh'
@@ -471,7 +471,7 @@ def mozharness_test_on_script_engine_autophone(config, job, taskdesc):
 
     if test.get('test-manifests'):
         env['MOZHARNESS_TEST_PATHS'] = six.ensure_text(
-            json.dumps({test['suite']: test['test-manifests']}))
+            json.dumps({test['suite']: test['test-manifests']}, sort_keys=True))
 
     # TODO: remove the need for run['chunked']
     elif mozharness.get('chunked') or test['chunks'] > 1:
