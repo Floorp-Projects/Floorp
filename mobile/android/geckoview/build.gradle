@@ -252,6 +252,7 @@ android.libraryVariants.all { variant ->
     // and amended from numerous Stackoverflow posts.
     def name = variant.name
     def javadoc = task "javadoc${name.capitalize()}"(type: Javadoc) {
+        failOnError = false
         description = "Generate Javadoc for build variant $name"
         destinationDir = new File(destinationDir, variant.baseName)
         doFirst {
