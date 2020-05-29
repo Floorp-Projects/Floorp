@@ -1744,7 +1744,8 @@ bool CacheIRCompiler::emitGuardToUint8Clamped(ValOperandId inputId,
   return true;
 }
 
-bool CacheIRCompiler::emitGuardType(ValOperandId inputId, ValueType type) {
+bool CacheIRCompiler::emitGuardNonDoubleType(ValOperandId inputId,
+                                             ValueType type) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
 
   if (allocator.knownType(inputId) == JSValueType(type)) {
@@ -1771,9 +1772,6 @@ bool CacheIRCompiler::emitGuardType(ValOperandId inputId, ValueType type) {
     case ValueType::Int32:
       masm.branchTestInt32(Assembler::NotEqual, input, failure->label());
       break;
-    case ValueType::Double:
-      masm.branchTestDouble(Assembler::NotEqual, input, failure->label());
-      break;
     case ValueType::Boolean:
       masm.branchTestBoolean(Assembler::NotEqual, input, failure->label());
       break;
@@ -1783,6 +1781,7 @@ bool CacheIRCompiler::emitGuardType(ValOperandId inputId, ValueType type) {
     case ValueType::Null:
       masm.branchTestNull(Assembler::NotEqual, input, failure->label());
       break;
+    case ValueType::Double:
     case ValueType::Magic:
     case ValueType::PrivateGCThing:
     case ValueType::Object:
