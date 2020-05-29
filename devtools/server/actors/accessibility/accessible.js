@@ -54,6 +54,12 @@ loader.lazyRequireGetter(
   "devtools/shared/layout/utils",
   true
 );
+loader.lazyRequireGetter(
+  this,
+  "ContentDOMReference",
+  "resource://gre/modules/ContentDOMReference.jsm",
+  true
+);
 
 const RELATIONS_TO_IGNORE = new Set([
   Ci.nsIAccessibleRelation.RELATION_CONTAINING_APPLICATION,
@@ -137,7 +143,7 @@ function getSnapshot(acc, a11yService) {
   }
 
   const { nodeType, nodeCssSelector } = getNodeDescription(acc.DOMNode);
-  return {
+  const snapshot = {
     name: acc.name,
     role: a11yService.getStringRole(acc.role),
     actions,
@@ -152,6 +158,16 @@ function getSnapshot(acc, a11yService) {
     children,
     attributes,
   };
+  const remoteFrame =
+    acc.role === Ci.nsIAccessibleRole.ROLE_INTERNAL_FRAME &&
+    isRemoteFrame(acc.DOMNode);
+  if (remoteFrame) {
+    snapshot.remoteFrame = remoteFrame;
+    snapshot.childCount = 1;
+    snapshot.contentDOMReference = ContentDOMReference.get(acc.DOMNode);
+  }
+
+  return snapshot;
 }
 
 /**

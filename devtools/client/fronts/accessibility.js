@@ -196,6 +196,75 @@ class AccessibleFront extends FrontClassWithSpec(accessibleSpec) {
 
     return accessibilityFront.accessibleWalkerFront.children();
   }
+
+  /**
+   * Helper function that helps with building a complete snapshot of
+   * accessibility tree starting at the level of current accessible front. It
+   * accumulates subtrees from possible out of process frames that are children
+   * of the current accessible front.
+   * @param  {JSON} snapshot
+   *         Snapshot of the current accessible front or one of its in process
+   *         children when recursing.
+   *
+   * @return {JSON}
+   *         Complete snapshot of current accessible front.
+   */
+  async _accumulateSnapshot(snapshot) {
+    const { childCount, remoteFrame } = snapshot;
+    // No children, we are done.
+    if (childCount === 0) {
+      return snapshot;
+    }
+
+    // If current accessible is not a remote frame, continue accumulating inside
+    // its children.
+    if (!remoteFrame) {
+      const childSnapshots = [];
+      for (const childSnapshot of snapshot.children) {
+        childSnapshots.push(this._accumulateSnapshot(childSnapshot));
+      }
+      await Promise.all(childSnapshots);
+      return snapshot;
+    }
+
+    // When we have a remote frame, we need to obtain an accessible front for a
+    // remote frame document and retrieve its snapshot.
+    const inspectorFront = await this.targetFront.getFront("inspector");
+    const frameNodeFront = await inspectorFront.getNodeActorFromContentDomReference(
+      snapshot.contentDOMReference
+    );
+    // Remove contentDOMReference and remoteFrame properties.
+    delete snapshot.contentDOMReference;
+    delete snapshot.remoteFrame;
+    if (!frameNodeFront) {
+      return snapshot;
+    }
+
+    // Remote frame lives in the same process as the current accessible
+    // front we can retrieve the accessible front directly.
+    const frameAccessibleFront = await this.parentFront.getAccessibleFor(
+      frameNodeFront
+    );
+    if (!frameAccessibleFront) {
+      return snapshot;
+    }
+
+    const [docAccessibleFront] = await frameAccessibleFront.children();
+    const childSnapshot = await docAccessibleFront.snapshot();
+    snapshot.children.push(childSnapshot);
+
+    return snapshot;
+  }
+
+  /**
+   * Retrieves a complete JSON snapshot for an accessible subtree of a given
+   * accessible front (inclduing OOP frames).
+   */
+  async snapshot() {
+    const snapshot = await super.snapshot();
+    await this._accumulateSnapshot(snapshot);
+    return snapshot;
+  }
 }
 
 class AccessibleWalkerFront extends FrontClassWithSpec(accessibleWalkerSpec) {
