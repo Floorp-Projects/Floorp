@@ -248,8 +248,8 @@
 
     <!-- Ideally we should consolidate this with NeutralButton in the future -->
     <style name="NeutralOnboardingButton" parent="NeutralButton">
+        <item name="android:background">@drawable/onboarding_padded_background</item>
         <item name="backgroundTint">?neutralFaded</item>
-        <item name="android:layout_height">36dp</item>
         <item name="android:textColor">?primaryText</item>
     </style>
 

@@ -4,7 +4,8 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <Button xmlns:android="http://schemas.android.com/apk/res/android"
     style="@style/PositiveButton"
-    android:layout_height="36dp"
     android:id="@+id/finish_button"
-    android:layout_marginBottom="16dp"
+    android:background="@drawable/onboarding_padded_background"
+    android:backgroundTint="?accent"
+    android:layout_marginBottom="10dp"
     android:text="@string/onboarding_finish" />

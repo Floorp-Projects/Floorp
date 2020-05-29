@@ -38,7 +38,7 @@
         style="@style/NeutralOnboardingButton"
         android:id="@+id/read_button"
         android:text="@string/onboarding_privacy_notice_read_button"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="10dp"
         app:layout_constraintTop_toBottomOf="@id/description_text"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"

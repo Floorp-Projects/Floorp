@@ -5,7 +5,7 @@
 package org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding
 
 import android.view.View
-import android.widget.Switch
+import androidx.appcompat.widget.SwitchCompat
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.onboarding_tracking_protection.view.*
 import org.mozilla.fenix.R
@@ -17,7 +17,7 @@ class OnboardingTrackingProtectionViewHolder(view: View) : RecyclerView.ViewHold
 
     private var standardTrackingProtection: OnboardingRadioButton
     private var strictTrackingProtection: OnboardingRadioButton
-    private var trackingProtectionToggle: Switch
+    private var trackingProtectionToggle: SwitchCompat
 
     init {
         view.header_text.setOnboardingIcon(R.drawable.ic_onboarding_tracking_protection)

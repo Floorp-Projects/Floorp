@@ -23,10 +23,12 @@
         app:layout_constraintTop_toTopOf="parent"
         tools:drawableStart="@drawable/ic_onboarding_tracking_protection" />
 
-    <Switch
+    <androidx.appcompat.widget.SwitchCompat
         android:id="@+id/tracking_protection_toggle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:minWidth="48dp"
+        android:minHeight="48dp"
         app:layout_constraintBottom_toBottomOf="@id/header_text"
         app:layout_constraintEnd_toEndOf="parent"
         android:theme="@style/Checkable.Colored"
