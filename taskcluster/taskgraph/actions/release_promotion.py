@@ -257,7 +257,7 @@ def release_promotion_action(parameters, graph_config, input, task_group_id, tas
                 "target.".format(release_promotion_flavor)
             )
         balrog_prefix = product.title()
-        os.environ['PARTIAL_UPDATES'] = json.dumps(partial_updates)
+        os.environ['PARTIAL_UPDATES'] = json.dumps(partial_updates, sort_keys=True)
         release_history = populate_release_history(
             balrog_prefix, parameters['project'],
             partial_updates=partial_updates
