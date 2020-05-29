@@ -44,6 +44,7 @@ class TrackingProtectionOverlay(
 
     @Suppress("MagicNumber", "InflateParams")
     private fun showTrackingProtectionOnboarding() {
+        if (!getToolbar().hasWindowFocus()) return
         val trackingOnboardingDialog = Dialog(context)
         val layout = LayoutInflater.from(context)
             .inflate(R.layout.tracking_protection_onboarding_popup, null)
