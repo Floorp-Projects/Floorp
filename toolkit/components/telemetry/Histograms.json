@@ -3122,6 +3122,17 @@
     "releaseChannelCollection": "opt-out",
     "alert_emails": ["necko@mozilla.com", "ddamjanovic@mozilla.com"]
   },
+  "HTTP_CHANNEL_ONSTART_SUCCESS_TRR" : {
+    "record_in_processes": ["main"],
+    "products": ["firefox", "fennec", "geckoview"],
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "keyed": true,
+    "description": "Successfully started HTTP channels when TRR is enabled; Keyed by TRR auto-detected",
+    "bug_numbers": [1640867],
+    "releaseChannelCollection": "opt-out",
+    "alert_emails": ["necko@mozilla.com", "vgosu@mozilla.com"]
+  },
   "HTTP_CONNECTION_ENTRY_CACHE_HIT_1" : {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec", "geckoview"],
