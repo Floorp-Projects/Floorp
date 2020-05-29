@@ -79,6 +79,7 @@
         <item name="tabTrayItemDivider">@color/tab_tray_item_divider_normal_theme</item>
         <item name="tabTrayItemMediaBackground">@color/tab_tray_item_media_background_normal_theme</item>
         <item name="tabTrayHeadingIcon">@color/tab_tray_heading_icon_normal_theme</item>
+        <item name="tabTrayHeadingIconInactive">@color/tab_tray_heading_icon_inactive_normal_theme</item>
 
         <!-- Drawables -->
         <item name="fenixLogo">@drawable/ic_logo_wordmark_normal</item>
@@ -203,6 +204,7 @@
         <item name="tabTrayItemDivider">@color/tab_tray_item_divider_private_theme</item>
         <item name="tabTrayItemMediaBackground">@color/tab_tray_item_media_background_private_theme</item>
         <item name="tabTrayHeadingIcon">@color/tab_tray_heading_icon_dark_theme</item>
+        <item name="tabTrayHeadingIconInactive">@color/tab_tray_heading_icon_inactive_dark_theme</item>
 
         <!-- Drawables -->
         <item name="fenixLogo">@drawable/ic_logo_wordmark_private</item>
