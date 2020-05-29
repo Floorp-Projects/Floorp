@@ -156,15 +156,22 @@ class TrySelect(MachCommandBase):
 
     def handle_try_config(self, **kwargs):
         from tryselect.util.dicttools import merge
+
+        to_validate = []
         kwargs.setdefault('try_config', {})
         for cls in six.itervalues(self.parser.task_configs):
             try_config = cls.try_config(**kwargs)
             if try_config is not None:
+                to_validate.append(cls)
                 kwargs['try_config'] = merge(kwargs['try_config'], try_config)
 
             for name in cls.dests:
                 del kwargs[name]
 
+        # Validate task_configs after they have all been parsed to avoid
+        # depending on the order they were processed.
+        for cls in to_validate:
+            cls.validate(**kwargs)
         return kwargs
 
     def run(self, **kwargs):
