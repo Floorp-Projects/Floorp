@@ -12,26 +12,23 @@
 
 #ifdef XP_WIN
 #  include <windows.h>
+#  include "nsPrintfCString.h"
 #endif
 
 #ifdef ANDROID
 #  include <android/log.h>
 #endif
 
-static void DebugDump(const char* fmt, ...) {
-  char buffer[2048];
-  va_list ap;
-  va_start(ap, fmt);
-  VsprintfLiteral(buffer, fmt, ap);
-  va_end(ap);
+static void DebugDump(const char* str) {
 #ifdef XP_WIN
   if (IsDebuggerPresent()) {
-    OutputDebugStringA(buffer);
+    nsPrintfCString output("%s\n", str);
+    OutputDebugStringA(output.get());
   }
 #elif defined(ANDROID)
-  __android_log_write(ANDROID_LOG_DEBUG, "Gecko", buffer);
+  __android_log_print(ANDROID_LOG_DEBUG, "Gecko", "%s\n", str);
 #endif
-  printf("%s", buffer);
+  printf("%s\n", str);
 }
 
 bool xpc_DumpJSStack(bool showArgs, bool showLocals, bool showThisProps) {
@@ -40,7 +37,7 @@ bool xpc_DumpJSStack(bool showArgs, bool showLocals, bool showThisProps) {
     printf("there is no JSContext on the stack!\n");
   } else if (JS::UniqueChars buf =
                  xpc_PrintJSStack(cx, showArgs, showLocals, showThisProps)) {
-    DebugDump("%s\n", buf.get());
+    DebugDump(buf.get());
   }
   return true;
 }
@@ -52,7 +49,7 @@ JS::UniqueChars xpc_PrintJSStack(JSContext* cx, bool showArgs, bool showLocals,
   JS::UniqueChars buf =
       JS::FormatStackDump(cx, showArgs, showLocals, showThisProps);
   if (!buf) {
-    DebugDump("%s", "Failed to format JavaScript stack for dump\n");
+    DebugDump("Failed to format JavaScript stack for dump");
   }
 
   state.restore();
