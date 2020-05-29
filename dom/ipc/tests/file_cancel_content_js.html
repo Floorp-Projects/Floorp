@@ -6,11 +6,13 @@
   <body>
   Try to go to another page.
   <script>
-    setTimeout(function() {
-      const start = Date.now();
-      while (Date.now() - start < 5000);
-      window.dispatchEvent(new CustomEvent("LongLoopEnded"));
-    }, 500);
+    addEventListener("StartLongLoop", function() {
+      setTimeout(() => {
+        const start = Date.now();
+        while (Date.now() - start < 7500);
+        window.dispatchEvent(new CustomEvent("LongLoopEnded"));
+      });
+    });
   </script>
   </body>
 </html>
