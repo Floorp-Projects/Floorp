@@ -489,7 +489,7 @@
   shared: true
   transpile: true
   args:
-    val: ValId
+    input: NumberId
     result: Int32Id
 
 - name: MegamorphicLoadSlotResult
