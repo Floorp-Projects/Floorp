@@ -25,6 +25,6 @@ add_task(async function test() {
   await stepIn(dbg);
   await stepIn(dbg);
 
-  assertDebugLine(dbg, 42271);
+  assertDebugLine(dbg, 7679);
   assertPausedLocation(dbg);
 });
