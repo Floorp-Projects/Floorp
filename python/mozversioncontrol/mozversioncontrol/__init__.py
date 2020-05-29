@@ -322,9 +322,17 @@ class HgRepository(Repository):
         return self._client.rawcommand(args).decode('utf-8')
 
     def get_commit_time(self):
-        return int(self._run(
+        newest_public_revision_time = self._run(
             'log', '--rev', 'heads(ancestors(.) and not draft())',
-            '--template', '{word(0, date|hgdate)}', '--limit', '1').strip())
+            '--template', '{word(0, date|hgdate)}', '--limit', '1').strip()
+
+        if not newest_public_revision_time:
+            raise RuntimeError('Unable to find a non-draft commit in this hg '
+                               'repository. If you created this repository from a '
+                               'bundle, have you done a "hg pull" from hg.mozilla.org '
+                               'since?')
+
+        return int(newest_public_revision_time)
 
     def sparse_checkout_present(self):
         # We assume a sparse checkout is enabled if the .hg/sparse file
