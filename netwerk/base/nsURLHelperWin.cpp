@@ -10,7 +10,10 @@
 #include "nsEscape.h"
 #include "nsIFile.h"
 #include <windows.h>
+#include "mozilla/StaticPrefs_network.h"
 #include "mozilla/Utf8.h"
+
+using namespace mozilla;
 
 nsresult net_GetURLSpecFromActualFile(nsIFile* aFile, nsACString& result) {
   nsresult rv;
@@ -49,7 +52,7 @@ nsresult net_GetURLSpecFromActualFile(nsIFile* aFile, nsACString& result) {
 nsresult net_GetFileFromURLSpec(const nsACString& aURL, nsIFile** result) {
   nsresult rv;
 
-  if (aURL.Length() > (uint32_t)net_GetURLMaxLength()) {
+  if (aURL.Length() > StaticPrefs::network_standard_url_max_length()) {
     return NS_ERROR_MALFORMED_URI;
   }
 
@@ -92,7 +95,7 @@ nsresult net_GetFileFromURLSpec(const nsACString& aURL, nsIFile** result) {
   // remove leading '\'
   if (path.CharAt(0) == '\\') path.Cut(0, 1);
 
-  if (mozilla::IsUtf8(path))
+  if (IsUtf8(path))
     rv = localFile->InitWithPath(NS_ConvertUTF8toUTF16(path));
   // XXX In rare cases, a valid UTF-8 string can be valid as a native
   // encoding (e.g. 0xC5 0x83 is valid both as UTF-8 and Windows-125x).
