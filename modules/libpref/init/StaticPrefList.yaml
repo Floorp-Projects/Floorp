@@ -1904,20 +1904,13 @@
   value: false
   mirror: always
 
-# Process launch delay (in milliseconds).
+# Process launch delay (im milliseconds).
 - name: dom.ipc.processPrelaunch.delayMs
   type: uint32_t
 # This number is fairly arbitrary ... the intention is to put off
 # launching another app process until the last one has finished
 # loading its content, to reduce CPU/memory/IO contention.
   value: 1000
-  mirror: always
-
-# Process preallocation cache
-# Only used in fission; in e10s we use 1 always
-- name: dom.ipc.processPrelaunch.fission.number
-  type: uint32_t
-  value: 3
   mirror: always
 
 - name: dom.ipc.processPriorityManager.enabled
