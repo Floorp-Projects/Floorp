@@ -49,6 +49,26 @@ function logStart(name) {
   console.log(`TEST START | ${name}`);
 }
 
+function checkBundle() {
+  logStart("checkBundle");
+
+  const bundle = path.join("data", "content", "activity-stream.bundle.js");
+  let errors = [];
+
+  let before = readFileSync(bundle, "utf8");
+
+  execOut("npm", ["run", "bundle"]);
+
+  let after = readFileSync(bundle, "utf8");
+
+  if (before !== after) {
+    errors.push("Bundle out of date");
+  }
+
+  logErrors("checkBundle", errors);
+  return errors.length === 0;
+}
+
 function karma() {
   logStart("karma");
 
@@ -138,15 +158,11 @@ function sasslint() {
   return errors.length === 0 && !exitCode;
 }
 
-const karmaPassed = karma();
-const sasslintPassed = sasslint();
-
-const success = karmaPassed && sasslintPassed;
-
-console.log({
-  karmaPassed,
-  sasslintPassed,
-});
+const tests = {};
+const success = [checkBundle, karma, sasslint].every(
+  t => (tests[t.name] = t())
+);
+console.log(tests);
 
 process.exitCode = success ? 0 : 1;
 console.log("CODE", process.exitCode);
