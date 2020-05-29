@@ -760,7 +760,6 @@ static WebIDLProcType ProcTypeToWebIDL(mozilla::ProcType aType) {
 #ifdef MOZ_ENABLE_FORKSERVER
     PROCTYPE_TO_WEBIDL_CASE(ForkServer, ForkServer);
 #endif
-    PROCTYPE_TO_WEBIDL_CASE(Preallocated, Preallocated);
     PROCTYPE_TO_WEBIDL_CASE(Unknown, Unknown);
   }
 
@@ -862,9 +861,6 @@ already_AddRefed<Promise> ChromeUtils::RequestProcInfo(GlobalObject& aGlobal,
                       } else if (remoteType.EqualsLiteral(
                                      LARGE_ALLOCATION_REMOTE_TYPE)) {
                         type = mozilla::ProcType::WebLargeAllocation;
-                      } else if (remoteType.EqualsLiteral(
-                                     PREALLOC_REMOTE_TYPE)) {
-                        type = mozilla::ProcType::Preallocated;
                       } else {
                         MOZ_CRASH("Unknown remoteType");
                       }

@@ -18,8 +18,7 @@ class GeckoChildProcessHost;
 }
 
 // Process types. When updating this enum, please make sure to update
-// WebIDLProcType, ChromeUtils::RequestProcInfo and ProcTypeToWebIDL to
-// mirror the changes.
+// WebIDLProcType and ProcTypeToWebIDL to mirror the changes.
 enum class ProcType {
   // These must match the ones in ContentParent.h, and E10SUtils.jsm
   Web,
@@ -43,7 +42,6 @@ enum class ProcType {
 #ifdef MOZ_ENABLE_FORKSERVER
   ForkServer,
 #endif
-  Preallocated,
   // Unknown type of process
   Unknown,
   Max = Unknown,
