@@ -66,7 +66,7 @@ class Transformer(object):
                 return json.load(f)
             return f.readlines()
 
-    def process(self, name):
+    def process(self, name, **kwargs):
         """Process all the known data into a merged, and standardized data format.
 
         :param str name: Name of the merged data.
@@ -89,7 +89,7 @@ class Transformer(object):
 
             # Transform data
             try:
-                data = self._custom_transformer.transform(data)
+                data = self._custom_transformer.transform(data, **kwargs)
                 if not isinstance(data, list):
                     data = [data]
                 for entry in data:
