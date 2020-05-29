@@ -22,7 +22,6 @@ import androidx.navigation.fragment.findNavController
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.fragment_browser.*
 import kotlinx.android.synthetic.main.fragment_browser.view.*
-import kotlinx.android.synthetic.main.tab_header.view.*
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.Job
@@ -85,8 +84,8 @@ import org.mozilla.fenix.components.toolbar.BrowserToolbarViewInteractor
 import org.mozilla.fenix.components.toolbar.DefaultBrowserToolbarController
 import org.mozilla.fenix.components.toolbar.SwipeRefreshScrollingViewBehavior
 import org.mozilla.fenix.components.toolbar.ToolbarIntegration
-import org.mozilla.fenix.downloads.DynamicDownloadDialog
 import org.mozilla.fenix.downloads.DownloadService
+import org.mozilla.fenix.downloads.DynamicDownloadDialog
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.enterToImmersiveMode
 import org.mozilla.fenix.ext.hideToolbar
@@ -200,8 +199,8 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                 navController = findNavController(),
                 readerModeController = DefaultReaderModeController(
                     readerViewFeature,
-                    (activity as HomeActivity).browsingModeManager.mode.isPrivate,
-                    view.readerViewControlsBar
+                    view.readerViewControlsBar,
+                    isPrivate = (activity as HomeActivity).browsingModeManager.mode.isPrivate
                 ),
                 sessionManager = requireComponents.core.sessionManager,
                 findInPageLauncher = { findInPageIntegration.withFeature { it.launch() } },

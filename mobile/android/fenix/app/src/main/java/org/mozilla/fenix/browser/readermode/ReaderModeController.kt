@@ -23,8 +23,8 @@ interface ReaderModeController {
 
 class DefaultReaderModeController(
     private val readerViewFeature: ViewBoundFeatureWrapper<ReaderViewFeature>,
-    private val isPrivate: Boolean,
-    private val readerViewControlsBar: View
+    private val readerViewControlsBar: View,
+    private val isPrivate: Boolean = false
 ) : ReaderModeController {
     override fun hideReaderView() {
         readerViewFeature.withFeature { it.hideReaderView() }
@@ -35,12 +35,11 @@ class DefaultReaderModeController(
     }
 
     override fun showControls() {
-        readerViewFeature.withFeature { it.showControls() }.also {
-            if (isPrivate) {
-                // We need to update styles for private mode programmatically for now:
-                // https://github.com/mozilla-mobile/android-components/issues/3400
-                themeReaderViewControlsForPrivateMode(readerViewControlsBar)
-            }
+        readerViewFeature.withFeature { it.showControls() }
+        if (isPrivate) {
+            // We need to update styles for private mode programmatically for now:
+            // https://github.com/mozilla-mobile/android-components/issues/3400
+            themeReaderViewControlsForPrivateMode(readerViewControlsBar)
         }
     }
 
