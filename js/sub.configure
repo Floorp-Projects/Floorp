@@ -49,9 +49,6 @@ def js_subconfigure(host, target, build_env, js_configure_args, mozconfig,
 
     options = [host, target] +  js_configure_args
 
-    if not substs.get('JS_HAS_INTL_API'):
-        options.append('--without-intl-api')
-
     options.append('--prefix=%s/dist' % build_env.topobjdir)
 
     if substs.get('ZLIB_IN_MOZGLUE'):

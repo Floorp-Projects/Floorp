@@ -2819,18 +2819,6 @@ dnl win32 options
 AC_SUBST(WIN32_REDIST_DIR)
 AC_SUBST(WIN_UCRT_REDIST_DIR)
 
-dnl ========================================================
-dnl ICU Support
-dnl ========================================================
-
-_INTL_API=yes
-
-if test "$MOZ_WIDGET_TOOLKIT" = "cocoa"; then
-    USE_ICU=1
-fi
-
-MOZ_CONFIG_ICU()
-
 dnl Echo the CFLAGS to remove extra whitespace.
 CFLAGS=`echo \
     $_COMPILATION_CFLAGS \
