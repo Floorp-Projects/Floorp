@@ -28,6 +28,7 @@ import mozrunner
 import numbers
 import platform
 import re
+import shlex
 import shutil
 import signal
 import socket
@@ -2222,7 +2223,7 @@ toolbar#nav-bar {
         if valgrindPath:
             interactive = False
             valgrindArgs_split = ([] if valgrindArgs is None
-                                  else valgrindArgs.split(","))
+                                  else shlex.split(valgrindArgs))
 
             valgrindSuppFiles_final = []
             if valgrindSuppFiles is not None:
