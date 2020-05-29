@@ -68,7 +68,7 @@ function create_cookie(origin, name, value, extras) {
 function set_prefixed_cookie_via_dom_test(options) {
   promise_test(t => {
     var name = options.prefix + "prefixtestcookie";
-    erase_cookie_from_js(name, options.paras);
+    erase_cookie_from_js(name, options.params);
     t.add_cleanup(() => erase_cookie_from_js(name, options.params));
     var value = "" + Math.random();
     document.cookie = name + "=" + value + ";" + options.params;
