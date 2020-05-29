@@ -30,7 +30,6 @@ py2commands="
     mozharness
     pastebin
     prettier-format
-    puppeteer-test
     python
     python-test
     raptor
