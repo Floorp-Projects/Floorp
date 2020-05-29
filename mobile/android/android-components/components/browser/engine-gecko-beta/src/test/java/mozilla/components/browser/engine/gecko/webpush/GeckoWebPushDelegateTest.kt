@@ -72,9 +72,8 @@ class GeckoWebPushDelegateTest {
 
         val nullResult = geckoDelegate.onGetSubscription("test")
 
-        nullResult?.exceptionally { throwable: Throwable ->
-            assertTrue(throwable.localizedMessage == "Retrieving subscription failed.")
-            GeckoResult.fromValue(null)
+        nullResult?.accept { sub ->
+            assertNull(sub)
         }
     }
 
@@ -108,9 +107,8 @@ class GeckoWebPushDelegateTest {
         subscription = null
 
         val nullResult = geckoDelegate.onSubscribe("test", null)
-        nullResult?.exceptionally { throwable: Throwable ->
-            assertTrue(throwable.localizedMessage == "Creating subscription failed.")
-            GeckoResult.fromValue(null)
+        nullResult?.accept { sub ->
+            assertNull(sub)
         }
     }
 

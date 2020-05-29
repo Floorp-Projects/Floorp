@@ -27,6 +27,9 @@ permalink: /changelog/
 * **feature-push**
   * Adds the `getSubscription` call to check if a subscription exists.
 
+* **browser-engine-gecko-***
+  * Fixes GeckoWebPushDelegate to gracefully return when a subscription is not available.
+
 # 43.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v42.0.0...v43.0.0)
