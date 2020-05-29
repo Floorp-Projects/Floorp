@@ -564,10 +564,16 @@ class GlobalObject : public NativeObject {
   static JSObject* createObject(JSContext* cx, Handle<GlobalObject*> global,
                                 unsigned slot, ObjectInitOp init);
 
+  static JSObject* createIteratorPrototype(JSContext* cx,
+                                           Handle<GlobalObject*> global);
+
  public:
   static JSObject* getOrCreateIteratorPrototype(JSContext* cx,
                                                 Handle<GlobalObject*> global) {
-    return getOrCreateObject(cx, global, ITERATOR_PROTO, initIteratorProto);
+    if (global->getReservedSlot(ITERATOR_PROTO).isObject()) {
+      return &global->getReservedSlot(ITERATOR_PROTO).toObject();
+    }
+    return createIteratorPrototype(cx, global);
   }
 
   static NativeObject* getOrCreateArrayIteratorPrototype(
