@@ -128,7 +128,7 @@ add_task(async function test_api() {
         type: "api_call",
         name: "test.assertEq",
         data: {
-          args: [null, null, "activityLog requires permission"],
+          args: [undefined, undefined, "activityLog requires permission"],
         },
       },
       // Test child addListener calls.
@@ -198,16 +198,6 @@ add_task(async function test_api() {
         name: "test.sendMessage",
         data: { args: ["ready"] },
       },
-      {
-        type: "api_call",
-        name: "tabs.hide",
-        data: { args: ["__TAB_ID"] },
-      },
-      {
-        type: "api_event",
-        name: "test.onMessage",
-        data: { args: ["hideTab", "__TAB_ID"] },
-      },
       // Test parent api_event calls.
       {
         type: "api_call",
@@ -263,8 +253,44 @@ add_task(async function test_api() {
         name: "test.sendMessage",
         data: { args: ["content_script"], tabId: 1 },
       },
+      // Child api call
+      {
+        type: "api_call",
+        name: "tabs.hide",
+        data: { args: ["__TAB_ID"] },
+      },
+      {
+        type: "api_event",
+        name: "test.onMessage",
+        data: { args: ["hideTab", "__TAB_ID"] },
+      },
     ];
     browser.test.assertTrue(browser.activityLog, "activityLog is privileged");
+
+    // Slightly less than a normal deep equal, we want to know that the values
+    // in our expected data are the same in the actual data, but we don't care
+    // if actual data has additional data or if data is in the same order in objects.
+    // This allows us to ignore keys that may be variable, or that are set in
+    // the api with an undefined value.
+    function deepEquivalent(a, b) {
+      if (a === b) {
+        return true;
+      }
+      if (
+        typeof a != "object" ||
+        typeof b != "object" ||
+        a === null ||
+        b === null
+      ) {
+        return false;
+      }
+      for (let k in a) {
+        if (!deepEquivalent(a[k], b[k])) {
+          return false;
+        }
+      }
+      return true;
+    }
 
     let tab;
     let handler = async details => {
@@ -273,7 +299,6 @@ add_task(async function test_api() {
       if (!test) {
         browser.test.notifyFail(`no test for ${details.name}`);
       }
-      delete details.timeStamp;
 
       // On multiple runs, tabId will be different.  Set the current
       // tabId where we need it.
@@ -286,18 +311,6 @@ add_task(async function test_api() {
         );
       }
 
-      // hack for webRequest test
-      if (details.name === "webRequest.onBeforeRequest") {
-        // Remove items that may be variable, the important
-        // aspect is that we generally get the activity
-        // logging we expect.
-        delete details.data.args[0].requestId;
-        delete details.data.args[0].tabId;
-        delete details.data.args[0].originUrl;
-        delete details.data.args[0].timeStamp;
-        delete details.data.args[0].proxyInfo;
-      }
-
       browser.test.assertEq(test.type, details.type, "type matches");
       if (test.type == "content_script") {
         browser.test.assertTrue(
@@ -307,10 +320,12 @@ add_task(async function test_api() {
       } else {
         browser.test.assertEq(test.name, details.name, "name matches");
       }
-      browser.test.assertEq(
-        JSON.stringify(test.data),
-        JSON.stringify(details.data),
-        "message matches"
+
+      browser.test.assertTrue(
+        deepEquivalent(test.data, details.data),
+        `expected ${JSON.stringify(
+          test.data
+        )} included in actual ${JSON.stringify(details.data)}`
       );
       if (!expecting.length) {
         await browser.tabs.remove(tab.id);
@@ -352,13 +367,14 @@ add_task(async function test_api() {
   await extension.awaitMessage("ready");
   logger.sendMessage("opentab");
   let id = await logger.awaitMessage("tabid");
-  extension.sendMessage("hideTab", id);
 
   await Promise.all([
     extension.awaitMessage("content_script"),
     extension.awaitMessage("registered_script"),
-    logger.awaitFinish("activity"),
   ]);
+
+  extension.sendMessage("hideTab", id);
+  await logger.awaitFinish("activity");
 
   // Stop watching because we get extra calls on extension shutdown
   // such as listener removal.
