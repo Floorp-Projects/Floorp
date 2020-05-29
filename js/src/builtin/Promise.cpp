@@ -3872,20 +3872,14 @@ static void ThrowAggregateError(JSContext* cx,
     return;
   }
 
-  // |error| isn't guaranteed to be an ErrorObject in case of OOM.
+  // |error| isn't guaranteed to be an AggregateErrorObject in case of OOM.
   RootedSavedFrame stack(cx);
-  if (error.isObject() && error.toObject().is<ErrorObject>()) {
-    Rooted<ErrorObject*> errorObj(cx, &error.toObject().as<ErrorObject>());
-    MOZ_ASSERT(errorObj->type() == JSEXN_AGGREGATEERR);
-
-    RootedValue errorsVal(cx, JS::ObjectValue(*errors.unwrappedArray()));
-    if (!NativeDefineDataProperty(cx, errorObj, cx->names().errors, errorsVal,
-                                  0)) {
-      return;
-    }
+  if (error.isObject() && error.toObject().is<AggregateErrorObject>()) {
+    auto* aggregateError = &error.toObject().as<AggregateErrorObject>();
+    aggregateError->setAggregateErrors(errors.unwrappedArray());
 
     // Adopt the existing saved frames when present.
-    if (JSObject* errorStack = errorObj->stack()) {
+    if (JSObject* errorStack = aggregateError->stack()) {
       stack = &errorStack->as<SavedFrame>();
     }
   }
