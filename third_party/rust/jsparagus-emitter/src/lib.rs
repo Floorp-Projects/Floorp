@@ -74,7 +74,7 @@ mod tests {
         )
         .expect("Should work!");
 
-        let bytecode = &result.scripts[0].bytecode;
+        let bytecode = &result.script.bytecode;
 
         println!("{}", dis(&bytecode));
         bytecode.to_vec()

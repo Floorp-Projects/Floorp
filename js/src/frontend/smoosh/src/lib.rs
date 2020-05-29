@@ -251,15 +251,7 @@ pub struct SmooshResult {
     num_type_sets: u32,
 
     /// `See BaseScript::ImmutableFlags`.
-    strict: bool,
-    bindings_accessed_dynamically: bool,
-    has_call_site_obj: bool,
-    is_for_eval: bool,
-    is_module: bool,
-    is_function: bool,
-    has_non_syntactic_scope: bool,
-    needs_function_environment_objects: bool,
-    has_module_goal: bool,
+    immutable_flags: u32,
 
     all_atoms: *mut c_void,
     all_atoms_len: usize,
@@ -295,15 +287,7 @@ impl SmooshResult {
             body_scope_index: 0,
             num_ic_entries: 0,
             num_type_sets: 0,
-            strict: false,
-            bindings_accessed_dynamically: false,
-            has_call_site_obj: false,
-            is_for_eval: false,
-            is_module: false,
-            is_function: false,
-            has_non_syntactic_scope: false,
-            needs_function_environment_objects: false,
-            has_module_goal: false,
+            immutable_flags: 0,
 
             all_atoms: std::ptr::null_mut(),
             all_atoms_len: 0,
@@ -342,36 +326,45 @@ pub unsafe extern "C" fn smoosh_run(
     let text = str::from_utf8(slice::from_raw_parts(text, text_len)).expect("Invalid UTF8");
     let allocator = Box::new(bumpalo::Bump::new());
     match smoosh(&allocator, text, options) {
-        Ok(mut result) => {
-            // The first item is for top-level script.
-            // TODO: Once jsparagus supports functions, handle them stored in
-            // trailing items.
-            let script = result.scripts.remove(0);
-
-            let bytecode = CVec::from(script.bytecode);
-            let gcthings = CVec::from(script.gcthings.into_iter().map(|x| x.into()).collect());
+        Ok(result) => {
+            let bytecode = CVec::from(result.script.bytecode);
+            let gcthings = CVec::from(
+                result
+                    .script
+                    .base
+                    .gcthings
+                    .into_iter()
+                    .map(|x| x.into())
+                    .collect(),
+            );
             let scopes = CVec::from(result.scopes.into_iter().map(|x| x.into()).collect());
-            let scope_notes =
-                CVec::from(script.scope_notes.into_iter().map(|x| x.into()).collect());
-            let regexps = CVec::from(script.regexps.into_iter().map(|x| x.into()).collect());
+            let scope_notes = CVec::from(
+                result
+                    .script
+                    .scope_notes
+                    .into_iter()
+                    .map(|x| x.into())
+                    .collect(),
+            );
+            let regexps = CVec::from(
+                result
+                    .script
+                    .regexps
+                    .into_iter()
+                    .map(|x| x.into())
+                    .collect(),
+            );
 
-            let lineno = script.lineno;
-            let column = script.column;
-            let main_offset = script.main_offset;
-            let max_fixed_slots = script.max_fixed_slots.into();
-            let maximum_stack_depth = script.maximum_stack_depth;
-            let body_scope_index = script.body_scope_index;
-            let num_ic_entries = script.num_ic_entries;
-            let num_type_sets = script.num_type_sets;
-            let strict = script.strict;
-            let bindings_accessed_dynamically = script.bindings_accessed_dynamically;
-            let has_call_site_obj = script.has_call_site_obj;
-            let is_for_eval = script.is_for_eval;
-            let is_module = script.is_module;
-            let is_function = script.is_function;
-            let has_non_syntactic_scope = script.has_non_syntactic_scope;
-            let needs_function_environment_objects = script.needs_function_environment_objects;
-            let has_module_goal = script.has_module_goal;
+            let lineno = result.script.lineno;
+            let column = result.script.column;
+            let main_offset = result.script.main_offset;
+            let max_fixed_slots = result.script.max_fixed_slots.into();
+            let maximum_stack_depth = result.script.maximum_stack_depth;
+            let body_scope_index = result.script.body_scope_index;
+            let num_ic_entries = result.script.num_ic_entries;
+            let num_type_sets = result.script.num_type_sets;
+
+            let immutable_flags = result.script.base.immutable_flags.into();
 
             let all_atoms_len = result.atoms.len();
             let all_atoms = Box::new(result.atoms);
@@ -402,15 +395,7 @@ pub unsafe extern "C" fn smoosh_run(
                 body_scope_index,
                 num_ic_entries,
                 num_type_sets,
-                strict,
-                bindings_accessed_dynamically,
-                has_call_site_obj,
-                is_for_eval,
-                is_module,
-                is_function,
-                has_non_syntactic_scope,
-                needs_function_environment_objects,
-                has_module_goal,
+                immutable_flags,
 
                 all_atoms: opaque_all_atoms,
                 all_atoms_len,

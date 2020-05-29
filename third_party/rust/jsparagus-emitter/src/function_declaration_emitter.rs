@@ -1,7 +1,7 @@
 use crate::ast_emitter::AstEmitter;
 use crate::emitter::EmitError;
 use ast::source_atom_set::SourceAtomSetIndex;
-use stencil::function::{FunctionCreationData, FunctionFlags};
+use stencil::function::{FunctionFlags, FunctionStencil};
 use stencil::gcthings::GCThingIndex;
 
 /// Create a dummy function with empty script, to implement
@@ -12,7 +12,7 @@ pub struct DummyFunctionScriptEmitter {
 
 impl DummyFunctionScriptEmitter {
     pub fn emit(self, emitter: &mut AstEmitter) -> Result<GCThingIndex, EmitError> {
-        let script_index = emitter.with_inner(|_emitter| {
+        let script = emitter.with_inner(|_emitter| {
             Err(EmitError::NotImplemented("TODO: FunctionDeclaration"))
 
             // The following implementing is just a dummy to pass the
@@ -36,13 +36,12 @@ impl DummyFunctionScriptEmitter {
              */
         })?;
 
-        let fun_data = FunctionCreationData::non_lazy(
-            Some(self.name),
-            script_index,
-            FunctionFlags::interpreted_normal(),
-        );
+        let fun =
+            FunctionStencil::non_lazy(Some(self.name), script, FunctionFlags::interpreted_normal());
 
-        Ok(emitter.emit.get_function_gcthing_index(fun_data))
+        let index = emitter.compilation_info.functions.push(fun);
+
+        Ok(emitter.emit.get_function_gcthing_index(index))
     }
 }
 
