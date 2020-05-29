@@ -552,16 +552,7 @@ impl FontContext {
         match format {
             FT_Glyph_Format::FT_GLYPH_FORMAT_BITMAP => {
                 let bitmap_size = unsafe { (*(*(*slot).face).size).metrics.y_ppem };
-                // When in screen-space (transform_glyphs == true), we only want
-                // to scale to the specificly requested font size to avoid applying
-                // scaling from the transform twice in the shader. The shader will
-                // apply the transform later separately.
-                // When in local-space (transform_glyphs == false), the transform
-                // passes along zooming/scaling information, rather than the actual
-                // font transform. The target size must factor in this scaling in
-                // that case to behave as if it was the actual font size.
-                let scale_size = if font.transform_glyphs { req_size } else { req_size * y_scale };
-                Some((slot, scale_size as f32 / bitmap_size as f32))
+                Some((slot, req_size as f32 / bitmap_size as f32))
             }
             FT_Glyph_Format::FT_GLYPH_FORMAT_OUTLINE => Some((slot, 1.0)),
             _ => {

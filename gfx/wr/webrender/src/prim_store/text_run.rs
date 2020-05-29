@@ -242,9 +242,8 @@ impl TextRunPrimitive {
         // a raster root back to something sane, thus scale the device size accordingly.
         // to the shader it looks like a change in DPI which it already supports.
         let dps = surface.device_pixel_scale.0 * root_scaling_factor;
-        let glyph_raster_scale = dps * raster_scale;
         let font_size = specified_font.size.to_f32_px();
-        let device_font_size = font_size * glyph_raster_scale;
+        let mut device_font_size = font_size * dps * raster_scale;
 
         // Check there is a valid transform that doesn't exceed the font size limit.
         // Ensure the font is supposed to be rasterized in screen-space.
@@ -263,24 +262,27 @@ impl TextRunPrimitive {
             // Get the font transform matrix (skew / scale) from the complete transform.
             // Fold in the device pixel scale.
             self.raster_space = RasterSpace::Screen;
-            FontTransform::from(transform).pre_scale(dps, dps)
-        } else if oversized {
-            // Font sizes larger than the limit need to be scaled, thus can't use subpixels.
-            // In this case we adjust the font size and raster space to ensure
-            // we rasterize at the limit, to minimize the amount of scaling.
-            let raster_scale = FONT_SIZE_LIMIT / (font_size * dps);
-            let glyph_raster_scale = raster_scale * dps;
-
-            // Record the raster space the text needs to be snapped in. The original raster
-            // scale would have been too big.
-            self.raster_space = RasterSpace::Local(raster_scale);
-            FontTransform::new(glyph_raster_scale, 0.0, 0.0, glyph_raster_scale)
+            FontTransform::from(transform)
         } else {
-            // Record the raster space the text needs to be snapped in. We may have changed
-            // from RasterSpace::Screen due to a transform with perspective or without a 2d
-            // inverse, or it may have been RasterSpace::Local all along.
-            self.raster_space = RasterSpace::Local(raster_scale);
-            FontTransform::new(glyph_raster_scale, 0.0, 0.0, glyph_raster_scale)
+            if oversized {
+                // Font sizes larger than the limit need to be scaled, thus can't use subpixels.
+                // In this case we adjust the font size and raster space to ensure
+                // we rasterize at the limit, to minimize the amount of scaling.
+                let limited_raster_scale = FONT_SIZE_LIMIT / (font_size * dps);
+                device_font_size = FONT_SIZE_LIMIT;
+
+                // Record the raster space the text needs to be snapped in. The original raster
+                // scale would have been too big.
+                self.raster_space = RasterSpace::Local(limited_raster_scale);
+            } else {
+                // Record the raster space the text needs to be snapped in. We may have changed
+                // from RasterSpace::Screen due to a transform with perspective or without a 2d
+                // inverse, or it may have been RasterSpace::Local all along.
+                self.raster_space = RasterSpace::Local(raster_scale);
+            }
+
+            // Rasterize the glyph without any transform
+            FontTransform::identity()
         };
 
         // TODO(aosmond): Snapping really ought to happen during scene building
@@ -311,7 +313,7 @@ impl TextRunPrimitive {
         // this method needs to know to rebuild the glyphs.
         let cache_dirty =
             self.used_font.transform != font_transform ||
-            self.used_font.size != specified_font.size ||
+            self.used_font.size != device_font_size.into() ||
             self.used_font.transform_glyphs != transform_glyphs ||
             self.used_font.texture_padding != texture_padding;
 
@@ -320,7 +322,7 @@ impl TextRunPrimitive {
             transform: font_transform,
             transform_glyphs,
             texture_padding,
-            size: specified_font.size,
+            size: device_font_size.into(),
             ..specified_font.clone()
         };
 
@@ -393,10 +395,16 @@ impl TextRunPrimitive {
         if self.glyph_keys_range.is_empty() || cache_dirty {
             let subpx_dir = self.used_font.get_subpx_dir();
 
+            let dps = surface.device_pixel_scale.0 * root_scaling_factor;
+            let transform = match self.raster_space {
+                RasterSpace::Local(scale) => FontTransform::new(scale * dps, 0.0, 0.0, scale * dps),
+                RasterSpace::Screen => self.used_font.transform.scale(dps),
+            };
+
             self.glyph_keys_range = scratch.glyph_keys.extend(
                 glyphs.iter().map(|src| {
                     let src_point = src.point + prim_offset;
-                    let device_offset = self.used_font.transform.transform(&src_point);
+                    let device_offset = transform.transform(&src_point);
                     GlyphKey::new(src.index, device_offset, subpx_dir)
                 }));
         }
