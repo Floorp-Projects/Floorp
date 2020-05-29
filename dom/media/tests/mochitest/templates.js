@@ -199,19 +199,6 @@ var checkAllTrackStats = pc => {
 // Commands run once at the beginning of each test, even when performing a
 // renegotiation test.
 var commandsPeerConnectionInitial = [
-  function PC_SETUP_SIGNALING_CLIENT(test) {
-    if (test.testOptions.steeplechase) {
-      test.setupSignalingClient();
-      test.registerSignalingCallback("ice_candidate", function(message) {
-        var pc = test.pcRemote ? test.pcRemote : test.pcLocal;
-        pc.storeOrAddIceCandidate(message.ice_candidate);
-      });
-      test.registerSignalingCallback("end_of_trickle_ice", function(message) {
-        test.signalingMessagesFinished();
-      });
-    }
-  },
-
   function PC_LOCAL_SETUP_ICE_LOGGER(test) {
     test.pcLocal.logIceConnectionState();
   },
@@ -316,20 +303,6 @@ var commandsPeerConnectionOfferAnswer = [
     });
   },
 
-  function PC_LOCAL_STEEPLECHASE_SIGNAL_OFFER(test) {
-    if (test.testOptions.steeplechase) {
-      send_message({
-        type: "offer",
-        offer: test.originalOffer,
-        offer_constraints: test.pcLocal.constraints,
-        offer_options: test.pcLocal.offerOptions,
-      });
-      test._local_offer = test.originalOffer;
-      test._offer_constraints = test.pcLocal.constraints;
-      test._offer_options = test.pcLocal.offerOptions;
-    }
-  },
-
   function PC_LOCAL_SET_LOCAL_DESCRIPTION(test) {
     return test
       .setLocalDescription(test.pcLocal, test.originalOffer, HAVE_LOCAL_OFFER)
@@ -343,18 +316,10 @@ var commandsPeerConnectionOfferAnswer = [
   },
 
   function PC_REMOTE_GET_OFFER(test) {
-    if (!test.testOptions.steeplechase) {
-      test._local_offer = test.originalOffer;
-      test._offer_constraints = test.pcLocal.constraints;
-      test._offer_options = test.pcLocal.offerOptions;
-      return Promise.resolve();
-    }
-    return test.getSignalingMessage("offer").then(message => {
-      ok("offer" in message, "Got an offer message");
-      test._local_offer = new RTCSessionDescription(message.offer);
-      test._offer_constraints = message.offer_constraints;
-      test._offer_options = message.offer_options;
-    });
+    test._local_offer = test.originalOffer;
+    test._offer_constraints = test.pcLocal.constraints;
+    test._offer_options = test.pcLocal.offerOptions;
+    return Promise.resolve();
   },
 
   function PC_REMOTE_SET_REMOTE_DESCRIPTION(test) {
@@ -404,15 +369,6 @@ var commandsPeerConnectionOfferAnswer = [
         HAVE_REMOTE_OFFER,
         "Remote createAnswer does not change signaling state"
       );
-      if (test.testOptions.steeplechase) {
-        send_message({
-          type: "answer",
-          answer: test.originalAnswer,
-          answer_constraints: test.pcRemote.constraints,
-        });
-        test._remote_answer = test.pcRemote._last_answer;
-        test._answer_constraints = test.pcRemote.constraints;
-      }
     });
   },
 
@@ -429,17 +385,9 @@ var commandsPeerConnectionOfferAnswer = [
   },
 
   function PC_LOCAL_GET_ANSWER(test) {
-    if (!test.testOptions.steeplechase) {
-      test._remote_answer = test.originalAnswer;
-      test._answer_constraints = test.pcRemote.constraints;
-      return Promise.resolve();
-    }
-
-    return test.getSignalingMessage("answer").then(message => {
-      ok("answer" in message, "Got an answer message");
-      test._remote_answer = new RTCSessionDescription(message.answer);
-      test._answer_constraints = message.answer_constraints;
-    });
+    test._remote_answer = test.originalAnswer;
+    test._answer_constraints = test.pcRemote.constraints;
+    return Promise.resolve();
   },
 
   function PC_LOCAL_SET_REMOTE_DESCRIPTION(test) {
@@ -519,13 +467,13 @@ var commandsPeerConnectionOfferAnswer = [
 
   function PC_LOCAL_CHECK_STATS(test) {
     return test.pcLocal.getStats().then(stats => {
-      test.pcLocal.checkStats(stats, test.testOptions.steeplechase);
+      test.pcLocal.checkStats(stats);
     });
   },
 
   function PC_REMOTE_CHECK_STATS(test) {
     return test.pcRemote.getStats().then(stats => {
-      test.pcRemote.checkStats(stats, test.testOptions.steeplechase);
+      test.pcRemote.checkStats(stats);
     });
   },
 

@@ -293,7 +293,6 @@ _test_flavors = {
     'puppeteer': 'puppeteer',
     'python': 'python',
     'reftest': 'reftest',
-    'steeplechase': '',
     'telemetry-tests-client': 'telemetry-tests-client',
     'web-platform-tests': 'web-platform-tests',
     'xpcshell': 'xpcshell',

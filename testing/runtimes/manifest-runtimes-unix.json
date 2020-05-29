@@ -463,7 +463,6 @@
     "dom/media/test/mochitest.ini": 1490.54, 
     "dom/media/tests/mochitest/identity/mochitest.ini": 24.86, 
     "dom/media/tests/mochitest/mochitest.ini": 722.95, 
-    "dom/media/tests/mochitest/steeplechase.ini": 3.68, 
     "dom/media/webaudio/test/blink/mochitest.ini": 3.9, 
     "dom/media/webaudio/test/mochitest.ini": 258.87, 
     "dom/media/webspeech/recognition/test/mochitest.ini": 48.74, 
