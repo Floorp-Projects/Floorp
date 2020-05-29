@@ -26,7 +26,7 @@ DIRS += [
     '/mozglue',
 ]
 
-if CONFIG['USE_ICU']:
+if CONFIG['JS_HAS_INTL_API']:
     DIRS += [
         '/config/external/icu',
     ]

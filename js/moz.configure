@@ -720,3 +720,64 @@ js_option('--with-jitreport-granularity', default='3', choices=('0', '1', '2', '
 
 set_define('JS_DEFAULT_JITREPORT_GRANULARITY',
            depends_if('--with-jitreport-granularity')(lambda value: value[0]))
+
+
+# ECMAScript Internationalization API Support (uses ICU)
+# ======================================================
+js_option('--with-system-icu', help='Use system ICU')
+
+system_icu = pkg_check_modules('MOZ_ICU', 'icu-i18n >= 67.1', when='--with-system-icu')
+
+set_config('MOZ_SYSTEM_ICU', True, when=system_icu)
+set_define('MOZ_SYSTEM_ICU', True, when=system_icu)
+
+js_option('--without-intl-api', help='Disable ECMAScript Internationalization API')
+
+@depends('--with-intl-api', building_js)
+def check_intl_api(enabled, building_js):
+    if not enabled and not building_js:
+        die('--without-intl-api is not supported')
+
+set_config('JS_HAS_INTL_API', True, when='--with-intl-api')
+set_define('JS_HAS_INTL_API', True, when='--with-intl-api')
+
+@depends(check_build_environment, when='--with-intl-api')
+@imports(_from='__builtin__', _import='open')
+@imports(_from='__builtin__', _import='ValueError')
+def icu_version(build_env):
+    path = os.path.join(build_env.topsrcdir, 'intl', 'icu', 'source', 'common',
+                        'unicode', 'uvernum.h')
+    with open(path, encoding='utf-8') as fh:
+        for line in fh:
+            if line.startswith('#define'):
+                define = line.split(None, 3)
+                if len(define) == 3 and define[1] == 'U_ICU_VERSION_MAJOR_NUM':
+                    try:
+                        return str(int(define[2]))
+                    except ValueError:
+                        pass
+    die('Cannot determine ICU version number from uvernum.h header file')
+
+set_config('MOZ_ICU_VERSION', icu_version)
+
+@depends(icu_version, target, when='--with-intl-api')
+def icu_data_file(version, target):
+    # target.endianness is always 'big' or 'little'
+    return 'icudt%s%s.dat' % (version, target.endianness[0])
+
+set_config('ICU_DATA_FILE', icu_data_file)
+
+# Source files that use ICU should have control over which parts of the ICU
+# namespace they want to use.
+set_define('U_USING_ICU_NAMESPACE', '0', when='--with-intl-api')
+
+# We build ICU as a static library.
+set_define('U_STATIC_IMPLEMENTATION', True, when=depends(system_icu)(lambda x: not x))
+
+@depends(yasm, gnu_as, target, compile_environment)
+def can_build_data_file(yasm, gnu_as, target, compile_environment):
+    if not compile_environment or (target.kernel == 'WINNT' and target.cpu == 'aarch64'):
+        return
+    if not yasm and not gnu_as:
+        die('Building ICU requires either yasm or a GNU assembler. If you do not have '
+            'either of those available for this platform you must use --without-intl-api')
