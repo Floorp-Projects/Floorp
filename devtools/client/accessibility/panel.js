@@ -194,27 +194,41 @@ AccessibilityPanel.prototype = {
     }
     // Alright reset the flag we are about to refresh the panel.
     this.shouldRefresh = false;
+    const {
+      supports,
+      getAccessibilityTreeRoot,
+      startListeningForAccessibilityEvents,
+      stopListeningForAccessibilityEvents,
+      audit,
+      simulate,
+      enableAccessibility,
+      disableAccessibility,
+      resetAccessiblity,
+      startListeningForLifecycleEvents,
+      stopListeningForLifecycleEvents,
+      startListeningForParentLifecycleEvents,
+      stopListeningForParentLifecycleEvents,
+      highlightAccessible,
+      unhighlightAccessible,
+    } = this.accessibilityProxy;
     this.postContentMessage("initialize", {
-      supports: this.accessibilityProxy.supports,
       fluentBundles: this.fluentBundles,
       toolbox: this._toolbox,
-      getAccessibilityTreeRoot: this.accessibilityProxy
-        .getAccessibilityTreeRoot,
-      startListeningForAccessibilityEvents: this.accessibilityProxy
-        .startListeningForAccessibilityEvents,
-      stopListeningForAccessibilityEvents: this.accessibilityProxy
-        .stopListeningForAccessibilityEvents,
-      audit: this.accessibilityProxy.audit,
-      simulate: this.accessibilityProxy.simulate,
-      enableAccessibility: this.accessibilityProxy.enableAccessibility,
-      disableAccessibility: this.accessibilityProxy.disableAccessibility,
-      resetAccessiblity: this.accessibilityProxy.resetAccessiblity,
-      startListeningForLifecycleEvents: this.accessibilityProxy
-        .startListeningForLifecycleEvents,
-      stopListeningForLifecycleEvents: this.accessibilityProxy
-        .stopListeningForLifecycleEvents,
-      highlightAccessible: this.accessibilityProxy.highlightAccessible,
-      unhighlightAccessible: this.accessibilityProxy.unhighlightAccessible,
+      supports,
+      getAccessibilityTreeRoot,
+      startListeningForAccessibilityEvents,
+      stopListeningForAccessibilityEvents,
+      audit,
+      simulate,
+      enableAccessibility,
+      disableAccessibility,
+      resetAccessiblity,
+      startListeningForLifecycleEvents,
+      stopListeningForLifecycleEvents,
+      startListeningForParentLifecycleEvents,
+      stopListeningForParentLifecycleEvents,
+      highlightAccessible,
+      unhighlightAccessible,
     });
   },
 

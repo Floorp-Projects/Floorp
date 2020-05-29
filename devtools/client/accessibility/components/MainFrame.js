@@ -74,6 +74,8 @@ class MainFrame extends Component {
       resetAccessiblity: PropTypes.func.isRequired,
       startListeningForLifecycleEvents: PropTypes.func.isRequired,
       stopListeningForLifecycleEvents: PropTypes.func.isRequired,
+      startListeningForParentLifecycleEvents: PropTypes.func.isRequired,
+      stopListeningForParentLifecycleEvents: PropTypes.func.isRequired,
       highlightAccessible: PropTypes.func.isRequired,
       unhighlightAccessible: PropTypes.func.isRequired,
     };
@@ -92,6 +94,8 @@ class MainFrame extends Component {
     this.props.startListeningForLifecycleEvents({
       init: this.resetAccessibility,
       shutdown: this.resetAccessibility,
+    });
+    this.props.startListeningForParentLifecycleEvents({
       "can-be-enabled-change": this.onCanBeEnabledChange,
       "can-be-disabled-change": this.onCanBeDisabledChange,
     });
@@ -111,6 +115,8 @@ class MainFrame extends Component {
     this.props.stopListeningForLifecycleEvents({
       init: this.resetAccessibility,
       shutdown: this.resetAccessibility,
+    });
+    this.props.stopListeningForParentLifecycleEvents({
       "can-be-enabled-change": this.onCanBeEnabledChange,
       "can-be-disabled-change": this.onCanBeDisabledChange,
     });

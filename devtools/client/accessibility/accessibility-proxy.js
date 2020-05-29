@@ -11,11 +11,6 @@ const {
 } = require("devtools/shared/constants");
 const { FILTERS } = require("devtools/client/accessibility/constants");
 
-const PARENT_ACCESSIBILITY_EVENTS = [
-  "can-be-disabled-change",
-  "can-be-enabled-change",
-];
-
 /**
  * Component responsible for tracking all Accessibility fronts in parent and
  * content processes.
@@ -39,10 +34,16 @@ class AccessibilityProxy {
     this.startListeningForLifecycleEvents = this.startListeningForLifecycleEvents.bind(
       this
     );
+    this.startListeningForParentLifecycleEvents = this.startListeningForParentLifecycleEvents.bind(
+      this
+    );
     this.stopListeningForAccessibilityEvents = this.stopListeningForAccessibilityEvents.bind(
       this
     );
     this.stopListeningForLifecycleEvents = this.stopListeningForLifecycleEvents.bind(
+      this
+    );
+    this.stopListeningForParentLifecycleEvents = this.stopListeningForParentLifecycleEvents.bind(
       this
     );
     this.highlightAccessible = this.highlightAccessible.bind(this);
@@ -189,19 +190,25 @@ class AccessibilityProxy {
 
   startListeningForLifecycleEvents(eventMap) {
     for (const [type, listeners] of Object.entries(eventMap)) {
-      const accessibilityFront = PARENT_ACCESSIBILITY_EVENTS.includes(type)
-        ? this.parentAccessibilityFront
-        : this.accessibilityFront;
-      this._on(accessibilityFront, type, listeners);
+      this._on(this.accessibilityFront, type, listeners);
     }
   }
 
   stopListeningForLifecycleEvents(eventMap) {
     for (const [type, listeners] of Object.entries(eventMap)) {
-      const accessibilityFront = PARENT_ACCESSIBILITY_EVENTS.includes(type)
-        ? this.parentAccessibilityFront
-        : this.accessibilityFront;
-      this._off(accessibilityFront, type, listeners);
+      this._off(this.accessibilityFront, type, listeners);
+    }
+  }
+
+  startListeningForParentLifecycleEvents(eventMap) {
+    for (const [type, listener] of Object.entries(eventMap)) {
+      this.parentAccessibilityFront.on(type, listener);
+    }
+  }
+
+  stopListeningForParentLifecycleEvents(eventMap) {
+    for (const [type, listener] of Object.entries(eventMap)) {
+      this.parentAccessibilityFront.off(type, listener);
     }
   }
 
@@ -253,9 +260,13 @@ class AccessibilityProxy {
   async initializeProxyForPanel(targetFront) {
     await this._updateTarget(targetFront);
 
-    this.parentAccessibilityFront = await this._currentTarget.client.mainRoot.getFront(
-      "parentaccessibility"
-    );
+    // No need to retrieve parent accessibility front since root front does not
+    // change.
+    if (!this.parentAccessibilityFront) {
+      this.parentAccessibilityFront = await this._currentTarget.client.mainRoot.getFront(
+        "parentaccessibility"
+      );
+    }
 
     this.accessibleWalkerFront = this.accessibilityFront.accessibleWalkerFront;
     this.simulatorFront = this.accessibilityFront.simulatorFront;
@@ -265,11 +276,8 @@ class AccessibilityProxy {
 
     // Move front listeners to new front.
     for (const [type, listeners] of this.accessibilityEventsMap.entries()) {
-      const accessibilityFront = PARENT_ACCESSIBILITY_EVENTS.includes(type)
-        ? this.parentAccessibilityFront
-        : this.accessibilityFront;
       for (const listener of listeners) {
-        accessibilityFront.on(type, listener);
+        this.accessibilityFront.on(type, listener);
       }
     }
 
