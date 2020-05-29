@@ -458,7 +458,8 @@ macosx64-gcp/debug:
             - linux64-lucetc
             - wasi-sysroot
     optimization:
-        push-interval-25: null
+        push-interval-25:
+            - macosx
 
 macosx64-gcp/opt:
     description: "MacOS X x64 Cross-compile - built on GCP"
