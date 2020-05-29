@@ -263,35 +263,38 @@ add_task(async function test_AWMultistage_Secondary_Open_URL_Action() {
     aboutWelcomeActor.onContentMessage.callCount === 2,
     "Stub called twice to handle Open_URL and Telemetry"
   );
+
+  const actionCall = aboutWelcomeActor.onContentMessage.secondCall;
+  const eventCall = aboutWelcomeActor.onContentMessage.firstCall;
   Assert.equal(
-    aboutWelcomeActor.onContentMessage.firstCall.args[0],
+    actionCall.args[0],
     "AWPage:SPECIAL_ACTION",
-    "First Call handles special action"
+    "Got call to handle special action"
   );
   Assert.equal(
-    aboutWelcomeActor.onContentMessage.firstCall.args[1].type,
+    actionCall.args[1].type,
     "OPEN_URL",
     "Special action OPEN_URL event handled"
   );
   ok(
-    aboutWelcomeActor.onContentMessage.firstCall.args[1].data.args.includes(
+    actionCall.args[1].data.args.includes(
       "utm_term=aboutwelcome-default-screen"
     ),
     "UTMTerm set in opened URL"
   );
 
   Assert.equal(
-    aboutWelcomeActor.onContentMessage.secondCall.args[0],
+    eventCall.args[0],
     "AWPage:TELEMETRY_EVENT",
-    "Second Call handles Telemetry event"
+    "Got call to handle Telemetry event"
   );
   Assert.equal(
-    aboutWelcomeActor.onContentMessage.secondCall.args[1].event,
+    eventCall.args[1].event,
     "CLICK_BUTTON",
     "click button event recorded in Telemetry"
   );
   Assert.equal(
-    aboutWelcomeActor.onContentMessage.secondCall.args[1].event_context.source,
+    eventCall.args[1].event_context.source,
     "secondary_button",
     "secondary button click source recorded in Telemetry"
   );
