@@ -80,17 +80,3 @@ TEST(AssembleCommandLineWin, assembleCmdLine)
     EXPECT_STREQ(assembled.get(), testCase.mExpected);
   }
 }
-
-TEST(AssembleCommandLineWin, assembleSingleArgument)
-{
-  for (const auto& testCase : testCases) {
-    if (testCase.mArgs[1]) {
-      // Skip a case having more than one argument.
-      continue;
-    }
-
-    auto assembled =
-        assembleSingleArgument(NS_ConvertUTF8toUTF16(testCase.mArgs[0]));
-    EXPECT_STREQ(assembled.get(), testCase.mExpected);
-  }
-}
