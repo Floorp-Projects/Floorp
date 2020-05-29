@@ -1,16 +1,13 @@
 # flate2
 
-[![Build Status](https://dev.azure.com/alexcrichton/flate2-rs/_apis/build/status/alexcrichton.flate2-rs?branchName=master)](https://dev.azure.com/alexcrichton/flate2-rs/_build/latest?definitionId=1&branchName=master)
 [![Crates.io](https://img.shields.io/crates/v/flate2.svg?maxAge=2592000)](https://crates.io/crates/flate2)
 [![Documentation](https://docs.rs/flate2/badge.svg)](https://docs.rs/flate2)
 
-A streaming compression/decompression library for Rust. The underlying
-implementation by default uses [`miniz`](https://github.com/richgel999/miniz) but
-can optionally be configured to use the system zlib, if available.
+A streaming compression/decompression library DEFALTE-based streams in Rust.
 
-There is also an experimental rust backend that uses the
-[`miniz_oxide`](https://crates.io/crates/miniz_oxide) crate. This avoids the need
-to build C code, but hasn't gone through as much testing as the other backends.
+This crate by default implemented as a wrapper around the `miniz_oxide` crate, a
+port of `miniz.c` to Rust. This crate can also optionally use the zlib library
+or `miniz.c` itself.
 
 Supported formats:
 
@@ -24,25 +21,23 @@ Supported formats:
 flate2 = "1.0"
 ```
 
-Using zlib instead of miniz:
+Using zlib instead of the Rust backend:
 
 ```toml
 [dependencies]
 flate2 = { version = "1.0", features = ["zlib"], default-features = false }
 ```
 
-Using the rust back-end:
+Using `miniz.c`:
 
 ```toml
 [dependencies]
-flate2 = { version = "1.0", features = ["rust_backend"], default-features = false }
+flate2 = { version = "1.0", features = ["miniz-sys"], default-features = false }
 ```
 
 ## Compression
 
 ```rust
-extern crate flate2;
-
 use std::io::prelude::*;
 use flate2::Compression;
 use flate2::write::ZlibEncoder;
@@ -58,8 +53,6 @@ fn main() {
 ## Decompression
 
 ```rust,no_run
-extern crate flate2;
-
 use std::io::prelude::*;
 use flate2::read::GzDecoder;
 

@@ -9,13 +9,13 @@ mod tests {
     use rand::{thread_rng, Rng};
 
     use super::{read, write};
-    use Compression;
+    use crate::Compression;
 
     #[test]
     fn roundtrip() {
         let mut real = Vec::new();
         let mut w = write::DeflateEncoder::new(Vec::new(), Compression::default());
-        let v = ::random_bytes().take(1024).collect::<Vec<_>>();
+        let v = crate::random_bytes().take(1024).collect::<Vec<_>>();
         for _ in 0..200 {
             let to_write = &v[..thread_rng().gen_range(0, v.len())];
             real.extend(to_write.iter().map(|x| *x));
@@ -44,7 +44,7 @@ mod tests {
     fn total_in() {
         let mut real = Vec::new();
         let mut w = write::DeflateEncoder::new(Vec::new(), Compression::default());
-        let v = ::random_bytes().take(1024).collect::<Vec<_>>();
+        let v = crate::random_bytes().take(1024).collect::<Vec<_>>();
         for _ in 0..200 {
             let to_write = &v[..thread_rng().gen_range(0, v.len())];
             real.extend(to_write.iter().map(|x| *x));
@@ -67,7 +67,7 @@ mod tests {
 
     #[test]
     fn roundtrip2() {
-        let v = ::random_bytes().take(1024 * 1024).collect::<Vec<_>>();
+        let v = crate::random_bytes().take(1024 * 1024).collect::<Vec<_>>();
         let mut r =
             read::DeflateDecoder::new(read::DeflateEncoder::new(&v[..], Compression::default()));
         let mut ret = Vec::new();
@@ -77,7 +77,7 @@ mod tests {
 
     #[test]
     fn roundtrip3() {
-        let v = ::random_bytes().take(1024 * 1024).collect::<Vec<_>>();
+        let v = crate::random_bytes().take(1024 * 1024).collect::<Vec<_>>();
         let mut w = write::DeflateEncoder::new(
             write::DeflateDecoder::new(Vec::new()),
             Compression::default(),
@@ -89,7 +89,7 @@ mod tests {
 
     #[test]
     fn reset_writer() {
-        let v = ::random_bytes().take(1024 * 1024).collect::<Vec<_>>();
+        let v = crate::random_bytes().take(1024 * 1024).collect::<Vec<_>>();
         let mut w = write::DeflateEncoder::new(Vec::new(), Compression::default());
         w.write_all(&v).unwrap();
         let a = w.reset(Vec::new()).unwrap();
@@ -104,7 +104,7 @@ mod tests {
 
     #[test]
     fn reset_reader() {
-        let v = ::random_bytes().take(1024 * 1024).collect::<Vec<_>>();
+        let v = crate::random_bytes().take(1024 * 1024).collect::<Vec<_>>();
         let (mut a, mut b, mut c) = (Vec::new(), Vec::new(), Vec::new());
         let mut r = read::DeflateEncoder::new(&v[..], Compression::default());
         r.read_to_end(&mut a).unwrap();
@@ -118,7 +118,7 @@ mod tests {
 
     #[test]
     fn reset_decoder() {
-        let v = ::random_bytes().take(1024 * 1024).collect::<Vec<_>>();
+        let v = crate::random_bytes().take(1024 * 1024).collect::<Vec<_>>();
         let mut w = write::DeflateEncoder::new(Vec::new(), Compression::default());
         w.write_all(&v).unwrap();
         let data = w.finish().unwrap();
