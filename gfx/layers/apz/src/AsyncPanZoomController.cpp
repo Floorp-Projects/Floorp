@@ -1009,7 +1009,14 @@ bool AsyncPanZoomController::ArePointerEventsConsumable(
 nsEventStatus AsyncPanZoomController::HandleDragEvent(
     const MouseInput& aEvent, const AsyncDragMetrics& aDragMetrics,
     CSSCoord aInitialThumbPos) {
-  if (!StaticPrefs::apz_drag_enabled()) {
+  // RDM is a special case where touch events will be synthesized in response
+  // to mouse events, and APZ will receive both even though RDM prevent-defaults
+  // the mouse events. This is because mouse events don't opt into APZ waiting
+  // to check if the event has been prevent-defaulted and are still processed
+  // as a result. To handle this, have APZ ignore mouse events when RDM is
+  // active.
+  if (!StaticPrefs::apz_drag_enabled() ||
+      mScrollMetadata.GetIsRDMTouchSimulationActive()) {
     return nsEventStatus_eIgnore;
   }
 
