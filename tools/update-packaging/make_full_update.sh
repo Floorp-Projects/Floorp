@@ -28,8 +28,14 @@ if [ $1 = -h ]; then
   notice ""
   notice "Options:"
   notice "  -h  show this help text"
+  notice "  -q  be less verbose"
   notice ""
   exit 1
+fi
+
+if [ $1 = -q ]; then
+  QUIET=1
+  shift
 fi
 
 # -----------------------------------------------------------------------------
