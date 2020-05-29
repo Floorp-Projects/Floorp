@@ -103,7 +103,7 @@ var OSKeyStore = {
   async _reauthInTests() {
     // Skip this reauth because there is no way to mock the
     // native dialog in the testing environment, for now.
-    log.debug("_ensureReauth: _testReauth: ", this._testReauth);
+    log.debug("_reauthInTests: _testReauth: ", this._testReauth);
     switch (this._testReauth) {
       case "pass":
         Services.obs.notifyObservers(
@@ -201,9 +201,6 @@ var OSKeyStore = {
       ) {
         unlockPromise = this._reauthInTests();
       } else if (this.canReauth()) {
-        // The OS auth dialog is not supported on macOS < 10.12
-        // (Darwin 16) due to various issues (bug 1622304 and bug 1622303).
-
         // On Windows, this promise rejects when the user cancels login dialog, see bug 1502121.
         // On macOS this resolves to false, so we would need to check it.
         unlockPromise = osReauthenticator
