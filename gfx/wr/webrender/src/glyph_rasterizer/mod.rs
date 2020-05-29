@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{FontInstanceFlags, BaseFontInstance};
+use api::{FontInstanceFlags, FontSize, BaseFontInstance};
 use api::{FontKey, FontRenderMode, FontTemplate};
 use api::{ColorU, GlyphIndex, GlyphDimensions, SyntheticItalics};
 use api::units::*;
@@ -428,12 +428,9 @@ pub struct FontInstance {
     // useful when one anticipates the glyph will need to be scaled
     // when rendered.
     pub texture_padding: bool,
-    // The font size is in *device* pixels, not logical pixels.
-    // It is stored as an Au since we need sub-pixel sizes, but
-    // can't store as a f32 due to use of this type as a hash key.
-    // TODO(gw): Perhaps consider having LogicalAu and DeviceAu
-    //           or something similar to that.
-    pub size: Au,
+    // The font size is in *device/raster* pixels, not logical pixels.
+    // It is stored as an f32 since we need sub-pixel sizes.
+    pub size: FontSize,
 }
 
 impl Hash for FontInstance {
@@ -560,6 +557,12 @@ impl FontInstance {
 
     pub fn synthesize_italics(&self, transform: FontTransform, size: f64) -> (FontTransform, (f64, f64)) {
         transform.synthesize_italics(self.synthetic_italics, size, self.flags.contains(FontInstanceFlags::VERTICAL))
+    }
+
+    #[allow(dead_code)]
+    pub fn get_transformed_size(&self) -> f64 {
+        let (_, y_scale) = self.transform.compute_scale().unwrap_or((1.0, 1.0));
+        self.size.to_f64_px() * y_scale
     }
 }
 
@@ -1068,9 +1071,9 @@ mod test_glyph_rasterizer {
         use crate::render_task_cache::RenderTaskCache;
         use crate::render_task_graph::{RenderTaskGraph, RenderTaskGraphCounters};
         use crate::profiler::TextureCacheProfileCounters;
-        use api::{FontKey, FontInstanceKey, FontTemplate, FontRenderMode,
+        use api::{FontKey, FontInstanceKey, FontSize, FontTemplate, FontRenderMode,
                   IdNamespace, ColorU};
-        use api::units::{Au, DevicePoint};
+        use api::units::DevicePoint;
         use crate::render_backend::FrameId;
         use std::sync::Arc;
         use crate::glyph_rasterizer::{FORMAT, FontInstance, BaseFontInstance, GlyphKey, GlyphRasterizer};
@@ -1098,7 +1101,7 @@ mod test_glyph_rasterizer {
         let font = FontInstance::from_base(Arc::new(BaseFontInstance {
             instance_key: FontInstanceKey(IdNamespace(0), 0),
             font_key,
-            size: Au::from_px(32),
+            size: FontSize::from_f32_px(32.0),
             bg_color: ColorU::new(0, 0, 0, 0),
             render_mode: FontRenderMode::Subpixel,
             flags: Default::default(),

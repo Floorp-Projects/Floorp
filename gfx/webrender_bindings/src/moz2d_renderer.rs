@@ -851,7 +851,7 @@ impl Moz2dBlobImageHandler {
                         AddBlobFont(
                             font.font_instance_key,
                             instance.font_key,
-                            instance.size.to_f32_px(),
+                            instance.size,
                             instance.options.as_ref(),
                             instance.platform_options.as_ref(),
                             instance.variations.as_ptr(),

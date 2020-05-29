@@ -353,7 +353,7 @@ impl Wrench {
         font_key: FontKey,
         instance_key: FontInstanceKey,
         text: &str,
-        size: Au,
+        size: f32,
         origin: LayoutPoint,
         flags: FontInstanceFlags,
     ) -> (Vec<u32>, Vec<LayoutPoint>, LayoutRect) {
@@ -399,7 +399,7 @@ impl Wrench {
                     // Extract the advances from the metrics. The get_glyph_dimensions API
                     // has a limitation that it can't currently get dimensions for non-renderable
                     // glyphs (e.g. spaces), so just use a rough estimate in that case.
-                    let space_advance = size.to_f32_px() / 3.0;
+                    let space_advance = size / 3.0;
                     cursor += direction * space_advance;
                 }
             }
@@ -543,7 +543,7 @@ impl Wrench {
 
     pub fn add_font_instance(&mut self,
         font_key: FontKey,
-        size: Au,
+        size: f32,
         flags: FontInstanceFlags,
         render_mode: Option<FontRenderMode>,
         bg_color: Option<ColorU>,
