@@ -344,7 +344,7 @@
     <!-- Preference switch for usage and technical data collection -->
     <string name="preference_usage_data">Dane techniczne i o użytkowaniu</string>
     <!-- Preference description for usage and technical data collection -->
-    <string name="preferences_usage_data_description">Udostępnia Mozilli dane o wydajności, użytkowaniu, modyfikacjach przeglądarki oraz o sprzęcie, na którym działa, ułatwiając nam ulepszanie programu %1$s</string>
+    <string name="preferences_usage_data_description">Udostępnia Mozilli dane o wydajności, użytkowaniu, modyfikacjach przeglądarki oraz o sprzęcie, na którym działa, ułatwiając nam ulepszanie programu %1$s.</string>
     <!-- Preference switch for marketing data collection -->
     <string name="preferences_marketing_data">Dane marketingowe</string>
     <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
@@ -374,7 +374,7 @@
 
     <!-- Pairing Feature strings -->
     <!-- Instructions on how to access pairing -->
-    <string name="pair_instructions"><![CDATA[Wejdź na stronę <b>firefox.com/pair</b> w Firefoksie na komputerze, aby uzyskać kod QR.]]></string>
+    <string name="pair_instructions_2"><![CDATA[Zeskanuj kod QR wyświetlony na stronie <b>firefox.com/pair</b>]]></string>
     <!-- Button to open camera for pairing -->
     <string name="pair_open_camera">Otwórz kamerę</string>
     <!-- Button to cancel pairing -->
@@ -814,14 +814,14 @@
     <string name="preference_accessibility_font_size_title">Rozmiar czcionki</string>
 
     <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
-    <string name="preference_accessibility_auto_size">Automatyczny</string>
+    <string name="preference_accessibility_auto_size_2">Automatyczny rozmiar czcionki</string>
     <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
     <string name="preference_accessibility_auto_size_summary">Czcionka będzie miała rozmiar według ustawień Androida. Wyłączenie umożliwi zarządzanie rozmiarem w tym miejscu.</string>
 
     <!-- Title for the Delete browsing data preference -->
     <string name="preferences_delete_browsing_data">Usuń dane przeglądania</string>
     <!-- Title for the tabs item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_tabs_title">Otwarte karty</string>
+    <string name="preferences_delete_browsing_data_tabs_title_2">Otwarte karty</string>
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
     <string name="preferences_delete_browsing_data_tabs_subtitle">Karty: %d</string>
     <!-- Title for the data and history items in Delete browsing data -->

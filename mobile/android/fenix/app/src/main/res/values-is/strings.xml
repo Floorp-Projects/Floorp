@@ -251,6 +251,8 @@
     <string name="preferences_show_search_shortcuts">Sýna flýtivísanir fyrir leit</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">Sýna leitartillögur</string>
+    <!-- Preference title for switch preference to show voice search button -->
+    <string name="preferences_show_voice_search">Sýna raddleit</string>
     <!-- Preference title for switch preference to show search suggestions also in private mode -->
     <string name="preferences_show_search_suggestions_in_private">Sýna í huliðsvöfrun</string>
     <!-- Preference title for switch preference to show a clipboard suggestion when searching -->
@@ -369,7 +371,7 @@
 
     <!-- Pairing Feature strings -->
     <!-- Instructions on how to access pairing -->
-    <string name="pair_instructions"><![CDATA[Farðu á <b>firefox.com/pair</b> í Firefox á tölvunni þinni til að nálgast QR kóðann.]]></string>
+    <string name="pair_instructions_2"><![CDATA[Skannaðu QR kóðann sem sýndur er á <b>firefox.com/pair</b>]]></string>
     <!-- Button to open camera for pairing -->
     <string name="pair_open_camera">Opna myndavél</string>
     <!-- Button to cancel pairing -->
@@ -431,6 +433,8 @@
     <string name="tabs_header_private_tabs_title">Huliðsflipar</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_tab">Bæta við flipa</string>
+    <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
+    <string name="remove_tab_from_collection">Fjarlæga flipann úr safni</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
     <string name="close_tab">Loka flipa</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab <title> button. First parameter is tab title  -->
@@ -804,14 +808,14 @@
     <string name="preference_accessibility_font_size_title">Leturstærð</string>
 
     <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
-    <string name="preference_accessibility_auto_size">Sjálfvirk leturstærð</string>
+    <string name="preference_accessibility_auto_size_2">Sjálfvirk leturstærð</string>
     <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
     <string name="preference_accessibility_auto_size_summary">Leturstærð mun verða í takt við Android stillingar þínar. Það þarf að afvirkja svo hægt sé að stjórna leturstærð hér.</string>
 
     <!-- Title for the Delete browsing data preference -->
     <string name="preferences_delete_browsing_data">Eyða vafragögnum</string>
     <!-- Title for the tabs item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_tabs_title">Opna flipa</string>
+    <string name="preferences_delete_browsing_data_tabs_title_2">Opnir flipar</string>
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
     <string name="preferences_delete_browsing_data_tabs_subtitle">%d flipar</string>
     <!-- Title for the data and history items in Delete browsing data -->
@@ -1380,4 +1384,8 @@
     <string name="edit">Breyta</string>
     <!--  The error message in edit login view when password field is blank. -->
     <string name="saved_login_password_required">Lykilorðs krafist</string>
+    <!-- Voice search button content description  -->
+    <string name="voice_search_content_description">Raddleit</string>
+    <!-- Voice search prompt description displayed after the user presses the voice search button -->
+    <string name="voice_search_explainer">Talaðu núna</string>
 </resources>

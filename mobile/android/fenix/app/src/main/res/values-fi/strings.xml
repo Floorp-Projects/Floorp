@@ -255,6 +255,8 @@
     <string name="preferences_show_search_shortcuts">Näytä hakuoikopolut</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">Näytä hakuehdotukset</string>
+    <!-- Preference title for switch preference to show voice search button -->
+    <string name="preferences_show_voice_search">Näytä äänihaku</string>
     <!-- Preference title for switch preference to show search suggestions also in private mode -->
     <string name="preferences_show_search_suggestions_in_private">Näytä yksityisissä istunnoissa</string>
     <!-- Preference title for switch preference to show a clipboard suggestion when searching -->
@@ -376,7 +378,7 @@
 
     <!-- Pairing Feature strings -->
     <!-- Instructions on how to access pairing -->
-    <string name="pair_instructions"><![CDATA[Käy osoitteessa <b>firefox.com/pair</b> tietokoneesi Firefox-selaimella saadaksesi QR-koodin.]]></string>
+    <string name="pair_instructions_2"><![CDATA[Skannaa sivulla <b>firefox.com/pair</b> näkyvä QR-koodi]]></string>
     <!-- Button to open camera for pairing -->
     <string name="pair_open_camera">Avaa kamera</string>
     <!-- Button to cancel pairing -->
@@ -437,6 +439,8 @@
     <string name="tabs_header_private_tabs_title">Yksityiset välilehdet</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_tab">Lisää välilehti</string>
+    <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
+    <string name="remove_tab_from_collection">Poista välilehti kokoelmasta</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
     <string name="close_tab">Sulje välilehti</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab <title> button. First parameter is tab title  -->
@@ -816,14 +820,14 @@
     <string name="preference_accessibility_font_size_title">Fontin koko</string>
 
     <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
-    <string name="preference_accessibility_auto_size">Automaattinen fonttikoko</string>
+    <string name="preference_accessibility_auto_size_2">Automaattinen fonttikoko</string>
     <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
     <string name="preference_accessibility_auto_size_summary">Fonttikoko vastaa Androidin asetuksia. Poista valinta käytöstä hallitaksesi fontin kokoa täällä.</string>
 
     <!-- Title for the Delete browsing data preference -->
     <string name="preferences_delete_browsing_data">Poista selaustiedot</string>
     <!-- Title for the tabs item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_tabs_title">Avoimet välilehdet</string>
+    <string name="preferences_delete_browsing_data_tabs_title_2">Avoimet välilehdet</string>
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
     <string name="preferences_delete_browsing_data_tabs_subtitle">%d välilehteä</string>
     <!-- Title for the data and history items in Delete browsing data -->
@@ -1392,4 +1396,8 @@
     <string name="edit">Muokkaa</string>
     <!--  The error message in edit login view when password field is blank. -->
     <string name="saved_login_password_required">Salasana vaaditaan</string>
+    <!-- Voice search button content description  -->
+    <string name="voice_search_content_description">Äänihaku</string>
+    <!-- Voice search prompt description displayed after the user presses the voice search button -->
+    <string name="voice_search_explainer">Puhu nyt</string>
 </resources>

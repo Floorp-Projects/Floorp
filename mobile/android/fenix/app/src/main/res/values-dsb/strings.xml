@@ -370,7 +370,7 @@
 
     <!-- Pairing Feature strings -->
     <!-- Instructions on how to access pairing -->
-    <string name="pair_instructions"><![CDATA[Woglědajśo se k <b>firefox.com/pair</b> w Firefox na swójom licadle, aby swój QR-kod dostał.]]></string>
+    <string name="pair_instructions_2"><![CDATA[Skannujśo QR-kod, kótaryž se na <b>firefox.com/pair</b> pokazujo]]></string>
     <!-- Button to open camera for pairing -->
     <string name="pair_open_camera">Kameru wócyniś</string>
     <!-- Button to cancel pairing -->
@@ -808,14 +808,14 @@
     <string name="preference_accessibility_font_size_title">Pismowa wjelikosć</string>
 
     <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
-    <string name="preference_accessibility_auto_size">Awtomatiske pśiměrjenje pismoweje wjelikosći</string>
+    <string name="preference_accessibility_auto_size_2">Awtomatiske pśiměrjenje pismoweje wjelikosći</string>
     <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
-    <string name="preference_accessibility_auto_size_summary">Wjelikosć pisma buźo wašym nastajenjam Android wótpowědowaś. Znjemóžniśo how zastojanje wjelkosći pisma.</string>
+    <string name="preference_accessibility_auto_size_summary">Wjelikosć pisma buźo wašym nastajenjam Android wótpowědowaś. Znjemóžniśo how zastojanje wjelikosći pisma.</string>
 
     <!-- Title for the Delete browsing data preference -->
     <string name="preferences_delete_browsing_data">Pśeglědowańske daty wulašowaś</string>
     <!-- Title for the tabs item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_tabs_title">Wócynjone rejtariki</string>
+    <string name="preferences_delete_browsing_data_tabs_title_2">Wócynjone rejtarki</string>
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
     <string name="preferences_delete_browsing_data_tabs_subtitle">Rejtariki: %d</string>
     <!-- Title for the data and history items in Delete browsing data -->

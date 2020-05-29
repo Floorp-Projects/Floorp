@@ -257,6 +257,8 @@
     <string name="preferences_show_search_shortcuts">Tampilkan pintasan pencarian</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">Tampilkan saran pencarian</string>
+    <!-- Preference title for switch preference to show voice search button -->
+    <string name="preferences_show_voice_search">Tampilkan pencarian suara</string>
     <!-- Preference title for switch preference to show search suggestions also in private mode -->
     <string name="preferences_show_search_suggestions_in_private">Tampilkan dalam sesi privat</string>
     <!-- Preference title for switch preference to show a clipboard suggestion when searching -->
@@ -380,7 +382,7 @@
 
     <!-- Pairing Feature strings -->
     <!-- Instructions on how to access pairing -->
-    <string name="pair_instructions"><![CDATA[Kunjungi <b>firefox.com/pair</b> dari Firefox di komputer Anda untuk mendapatkan kode QR Anda.]]></string>
+    <string name="pair_instructions_2"><![CDATA[Pindai kode QR yang ditunjukkan di <b>firefox.com/pair</b>]]></string>
     <!-- Button to open camera for pairing -->
     <string name="pair_open_camera">Buka Kamera</string>
     <!-- Button to cancel pairing -->
@@ -442,6 +444,8 @@
     <string name="tabs_header_private_tabs_title">Tab privat</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_tab">Tambah tab</string>
+    <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
+    <string name="remove_tab_from_collection">Hapus tab dari koleksi</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
     <string name="close_tab">Tutup tab</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab <title> button. First parameter is tab title  -->
@@ -821,15 +825,14 @@
     <string name="preference_accessibility_font_size_title">Ukuran Fon</string>
 
     <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
-    <string name="preference_accessibility_auto_size">Ukuran Fon Otomatis</string>
-
+    <string name="preference_accessibility_auto_size_2">Ukuran fon otomatis</string>
     <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
     <string name="preference_accessibility_auto_size_summary">Ukuran font akan sesuai dengan pengaturan Android Anda. Nonaktifkan untuk mengelola ukuran font di sini.</string>
 
     <!-- Title for the Delete browsing data preference -->
     <string name="preferences_delete_browsing_data">Hapus data penjelajahan</string>
     <!-- Title for the tabs item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_tabs_title">Buka tab</string>
+    <string name="preferences_delete_browsing_data_tabs_title_2">Tab terbuka</string>
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
     <string name="preferences_delete_browsing_data_tabs_subtitle">%d tab</string>
     <!-- Title for the data and history items in Delete browsing data -->
@@ -1137,6 +1140,8 @@
 
     <!-- About page link text to open support link -->
     <string name="about_support">Dukungan</string>
+    <!-- About page link text to list of past crashes (like about:crashes on desktop) -->
+    <string name="about_crashes">Mogok</string>
     <!-- About page link text to open privacy notice link -->
     <string name="about_privacy_notice">Kebijakan privasi</string>
     <!-- About page link text to open know your rights link -->
@@ -1370,8 +1375,30 @@
     <string name="certificate_info_verified_by">Diverifikasi oleh: %1$s</string>
     <!-- Login overflow menu delete button -->
     <string name="login_menu_delete_button">Hapus</string>
+    <!-- Login overflow menu edit button -->
+    <string name="login_menu_edit_button">Ubah</string>
     <!-- Message in delete confirmation dialog for logins -->
     <string name="login_deletion_confirmation">Yakin ingin menghapus info masuk ini?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Hapus</string>
+    <!--  The saved login options menu description. -->
+    <string name="login_options_menu">Opsi log masuk</string>
+    <!--  The editable text field for a login's web address. -->
+    <string name="saved_login_hostname_description">Bidang teks yang dapat diubah untuk alamat web log masuk</string>
+    <!--  The editable text field for a login's username. -->
+    <string name="saved_login_username_description">Bidang teks yang dapat diubah untuk nama pengguna log masuk</string>
+    <!--  The editable text field for a login's password. -->
+    <string name="saved_login_password_description">Bidang teks yang dapat diubah untuk kata sandi log masuk</string>
+    <!--  The button description to save changes to an edited login. -->
+    <string name="save_changes_to_login">Simpan perubahan untuk masuk</string>
+    <!--  The button description to discard changes to an edited login. -->
+    <string name="discard_changes">Batalkan perubahan</string>
+    <!--  The page title for editing a saved login. -->
+    <string name="edit">Ubah</string>
+    <!--  The error message in edit login view when password field is blank. -->
+    <string name="saved_login_password_required">Kata sandi diperlukan</string>
+    <!-- Voice search button content description  -->
+    <string name="voice_search_content_description">Pencarian suara</string>
+    <!-- Voice search prompt description displayed after the user presses the voice search button -->
+    <string name="voice_search_explainer">Bicara sekarang</string>
 </resources>
