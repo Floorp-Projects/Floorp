@@ -176,9 +176,9 @@ def get_index_url(index_path, use_proxy=False, multiple=False):
     return index_tmpl.format('s' if multiple else '', index_path)
 
 
-def find_task_id(index_path, use_proxy=False):
+def find_task_id(index_path):
     try:
-        response = _do_request(get_index_url(index_path, use_proxy))
+        response = _do_request(get_index_url(index_path))
     except requests.exceptions.HTTPError as e:
         if e.response.status_code == 404:
             raise KeyError("index path {} not found".format(index_path))
