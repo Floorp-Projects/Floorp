@@ -36,6 +36,5 @@ def add_task_info(config, jobs):
         if dep_th['symbol'] != "N":
             job['treeherder']['symbol'] = "Ugs{}".format(dep_th['symbol'])
         job['run-on-projects'] = dep_task.attributes.get('run_on_projects')
-        job['optimization'] = dep_task.task.get('optimization')
 
         yield job
