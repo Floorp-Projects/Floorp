@@ -4,6 +4,10 @@
 
 "use strict";
 
+const {
+  ResourceWatcher,
+} = require("devtools/shared/resources/resource-watcher");
+
 module.exports = async function({
   targetList,
   targetFront,
@@ -33,20 +37,25 @@ module.exports = async function({
 
   // Fetch already existing messages
   // /!\ The actor implementation requires to call startListeners(ConsoleAPI) first /!\
-  const { messages } = await webConsoleFront.getCachedMessages(["ConsoleAPI"]);
+  let { messages } = await webConsoleFront.getCachedMessages(["ConsoleAPI"]);
 
-  for (let message of messages) {
+  messages = messages.map(message => {
     // Handling cached messages for servers older than Firefox 78.
+    // Wrap the message into a `message` attribute, to match `consoleAPICall` behavior
     if (message._type) {
-      // Wrap the message into a `message` attribute, to match `consoleAPICall` behavior
-      message = {
+      return {
         message,
-        type: "consoleAPICall",
+        resourceType: ResourceWatcher.TYPES.CONSOLE_MESSAGE,
       };
     }
-    onAvailable(message);
-  }
+    message.resourceType = ResourceWatcher.TYPES.CONSOLE_MESSAGE;
+    return message;
+  });
+  onAvailable(messages);
 
   // Forward new message events
-  webConsoleFront.on("consoleAPICall", onAvailable);
+  webConsoleFront.on("consoleAPICall", message => {
+    message.resourceType = ResourceWatcher.TYPES.CONSOLE_MESSAGE;
+    onAvailable([message]);
+  });
 };

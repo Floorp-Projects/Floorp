@@ -4,6 +4,10 @@
 
 "use strict";
 
+const {
+  ResourceWatcher,
+} = require("devtools/shared/resources/resource-watcher");
+
 module.exports = async function({ targetList, targetFront, onAvailable }) {
   // Only allow the top level target and processes.
   // Frames can be ignored as logMessage are never sent to them anyway.
@@ -27,28 +31,29 @@ module.exports = async function({ targetList, targetFront, onAvailable }) {
   // /!\ The actor implementation requires to call startListeners("PageError") first /!\
   // On older server (< v77), cached messages have to be retrieved at the same time as
   // PageError messages.
-  const { messages } = await webConsoleFront.getCachedMessages([
+  let { messages } = await webConsoleFront.getCachedMessages([
     webConsoleFront.traits.newCacheStructure ? "LogMessage" : "PageError",
   ]);
 
-  for (const message of messages) {
-    // On older server (< v77), we're also getting pageError cached messages, so we need
-    // to ignore those.
-    if (
-      !webConsoleFront.traits.newCacheStructure &&
-      message._type !== "LogMessage"
-    ) {
-      continue;
-    }
+  // On older server (< v77), we're also getting pageError cached messages, so we need
+  // to ignore those.
+  messages = messages.filter(message => {
+    return (
+      webConsoleFront.traits.newCacheStructure || message._type === "LogMessage"
+    );
+  });
 
+  for (const message of messages) {
     // Handling cached messages for servers older than Firefox 78.
     if (message._type) {
-      message.type = "logMessage";
       delete message._type;
     }
-
-    onAvailable(message);
+    message.resourceType = ResourceWatcher.TYPES.PLATFORM_MESSAGE;
   }
+  onAvailable(messages);
 
-  webConsoleFront.on("logMessage", onAvailable);
+  webConsoleFront.on("logMessage", message => {
+    message.resourceType = ResourceWatcher.TYPES.PLATFORM_MESSAGE;
+    onAvailable([message]);
+  });
 };
