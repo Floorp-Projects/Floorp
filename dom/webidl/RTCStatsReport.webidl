@@ -14,6 +14,7 @@ enum RTCStatsType {
   "remote-inbound-rtp",
   "remote-outbound-rtp",
   "csrc",
+  "data-channel",
   "session",
   "track",
   "transport",
@@ -91,6 +92,19 @@ dictionary RTCRTPContributingSourceStats : RTCStats {
   DOMString     inboundRtpStreamId;
 };
 
+dictionary RTCDataChannelStats : RTCStats {
+  DOMString           label;
+  DOMString           protocol;
+  long                dataChannelIdentifier;
+  // RTCTransportId is not yet implemented - Bug 1225723
+  // DOMString transportId;
+  RTCDataChannelState state;
+  unsigned long       messagesSent;
+  unsigned long long  bytesSent;
+  unsigned long       messagesReceived;
+  unsigned long long  bytesReceived;
+};
+
 enum RTCStatsIceCandidatePairState {
   "frozen",
   "waiting",
@@ -155,6 +169,7 @@ dictionary RTCStatsCollection {
   sequence<RTCIceCandidateStats>            trickledIceCandidateStats = [];
   sequence<DOMString>                       rawLocalCandidates = [];
   sequence<DOMString>                       rawRemoteCandidates = [];
+  sequence<RTCDataChannelStats>             dataChannelStats = [];
 };
 
 // A collection of RTCStats dictionaries, plus some other info. Used by
