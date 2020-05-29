@@ -17,6 +17,7 @@ py2commands="
     check-spidermonkey
     clang-format
     cramtest
+    crashtest
     devtools-css-db
     firefox-ui-functional
     geckodriver
