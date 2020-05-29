@@ -101,11 +101,9 @@ class AndroidDevice(Layer):
         self.capture_file = None
 
     def setup(self):
-        self.info("android.setup")
+        pass
 
     def teardown(self):
-        self.info("android.teardown")
-
         if self.capture_file is not None:
             self.capture_file.close()
         if self.capture_logcat is not None and self.device is not None:

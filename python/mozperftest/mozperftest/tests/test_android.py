@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import mozunit
 import pytest
-import mock
+from unittest import mock
 
 from mozperftest.tests.support import get_running_env, requests_content, temp_file
 from mozperftest.environment import SYSTEM
@@ -124,11 +124,15 @@ def test_android_log_cat(device):
 
         mach_cmd, metadata, env = get_running_env(**args)
         system = env.layers[SYSTEM]
-        with system as android, silence(system):
-            android(metadata)
+        andro = system.layers[0]
 
-        device.get_logcat.assert_called()
-        device.clear_logcat.assert_called()
+        with system as layer, silence(system):
+            andro.device = device
+            andro.device.get_logcat = mock.Mock(result_value=[])
+            layer(metadata)
+
+        andro.device.get_logcat.assert_called()
+        andro.device.clear_logcat.assert_called()
 
 
 if __name__ == "__main__":

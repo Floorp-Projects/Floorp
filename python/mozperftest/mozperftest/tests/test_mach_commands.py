@@ -4,7 +4,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import mozunit
 import os
-import mock
+from unittest import mock
 import tempfile
 import shutil
 from contextlib import contextmanager
@@ -63,7 +63,7 @@ def test_command(mocked_func):
 @mock.patch("mozperftest.MachEnvironment", new=_TestMachEnvironment)
 @mock.patch("mozperftest.mach_commands.MachCommandBase._activate_virtualenv")
 @mock.patch("tryselect.push.push_to_try")
-def test_push_command(*mocked):
+def test_push_command(push_to_try, venv):
     with _get_command() as test, silence(test):
         test.run_perftest(
             tests=[EXAMPLE_TESTS_DIR],
@@ -71,7 +71,7 @@ def test_push_command(*mocked):
             push_to_try=True,
             try_platform="g5",
         )
-        mocked[1].assert_called()
+        push_to_try.assert_called()
         # XXX add assertions
 
 

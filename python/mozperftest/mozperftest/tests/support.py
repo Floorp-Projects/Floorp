@@ -1,5 +1,5 @@
 import tempfile
-from mock import MagicMock
+from unittest.mock import MagicMock
 import contextlib
 import shutil
 import os
