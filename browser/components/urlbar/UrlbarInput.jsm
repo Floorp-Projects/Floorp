@@ -671,7 +671,7 @@ class UrlbarInput {
           let flags =
             Ci.nsIURIFixup.FIXUP_FLAG_FIX_SCHEME_TYPOS |
             Ci.nsIURIFixup.FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP;
-          if (PrivateBrowsingUtils.isWindowPrivate(this.window)) {
+          if (this.isPrivate) {
             flags |= Ci.nsIURIFixup.FIXUP_FLAG_PRIVATE_CONTEXT;
           }
           // Don't interrupt the load action in case of errors.
@@ -2138,10 +2138,12 @@ class UrlbarInput {
       this.setPageProxyState("invalid", true);
     }
 
-    if (!this.view.isOpen) {
+    let canShowTopSites =
+      !this.isPrivate && UrlbarPrefs.get("suggest.topsites");
+    if (!this.view.isOpen || (!value && !canShowTopSites)) {
       this.view.clear();
-    } else if (!value && !UrlbarPrefs.get("suggest.topsites")) {
-      this.view.clear();
+    }
+    if (!value && !canShowTopSites) {
       this.view.close();
       return;
     }
