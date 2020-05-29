@@ -138,15 +138,17 @@ export class _Card extends React.PureComponent {
 
   onLinkClick(event) {
     event.preventDefault();
+    const { altKey, button, ctrlKey, metaKey, shiftKey } = event;
     if (this.props.link.type === "download") {
       this.props.dispatch(
         ac.OnlyToMain({
-          type: at.SHOW_DOWNLOAD_FILE,
-          data: this.props.link,
+          type: at.OPEN_DOWNLOAD_FILE,
+          data: Object.assign(this.props.link, {
+            event: { button, ctrlKey, metaKey, shiftKey },
+          }),
         })
       );
     } else {
-      const { altKey, button, ctrlKey, metaKey, shiftKey } = event;
       this.props.dispatch(
         ac.OnlyToMain({
           type: at.OPEN_LINK,
@@ -274,7 +276,7 @@ export class _Card extends React.PureComponent {
               {link.type === "download" && (
                 <div
                   className="card-host-name alternate"
-                  data-l10n-id="newtab-menu-show-file"
+                  data-l10n-id="newtab-menu-open-file"
                 />
               )}
               {link.hostname && (
