@@ -414,66 +414,51 @@ void AddrHostRecord::ResolveComplete() {
       uint32_t millis = static_cast<uint32_t>(mNativeDuration.ToMilliseconds());
       Telemetry::Accumulate(Telemetry::DNS_NATIVE_LOOKUP_TIME, millis);
     }
-    AccumulateCategoricalKeyed(
-        TRRService::AutoDetectedKey(),
-        mNativeSuccess ? Telemetry::LABELS_DNS_LOOKUP_DISPOSITION2::osOK
-                       : Telemetry::LABELS_DNS_LOOKUP_DISPOSITION2::osFail);
+    AccumulateCategorical(
+        mNativeSuccess ? Telemetry::LABELS_DNS_LOOKUP_DISPOSITION::osOK
+                       : Telemetry::LABELS_DNS_LOOKUP_DISPOSITION::osFail);
   }
 
   if (mTRRUsed) {
     if (mTRRSuccess) {
       uint32_t millis = static_cast<uint32_t>(mTrrDuration.ToMilliseconds());
-      Telemetry::Accumulate(Telemetry::DNS_TRR_LOOKUP_TIME2,
-                            TRRService::AutoDetectedKey(), millis);
+      Telemetry::Accumulate(Telemetry::DNS_TRR_LOOKUP_TIME, millis);
     }
-    AccumulateCategoricalKeyed(
-        TRRService::AutoDetectedKey(),
-        mTRRSuccess ? Telemetry::LABELS_DNS_LOOKUP_DISPOSITION2::trrOK
-                    : Telemetry::LABELS_DNS_LOOKUP_DISPOSITION2::trrFail);
+    AccumulateCategorical(
+        mTRRSuccess ? Telemetry::LABELS_DNS_LOOKUP_DISPOSITION::trrOK
+                    : Telemetry::LABELS_DNS_LOOKUP_DISPOSITION::trrFail);
 
     if (mTrrAUsed == OK) {
-      AccumulateCategoricalKeyed(
-          TRRService::AutoDetectedKey(),
-          Telemetry::LABELS_DNS_LOOKUP_DISPOSITION2::trrAOK);
+      AccumulateCategorical(Telemetry::LABELS_DNS_LOOKUP_DISPOSITION::trrAOK);
     } else if (mTrrAUsed == FAILED) {
-      AccumulateCategoricalKeyed(
-          TRRService::AutoDetectedKey(),
-          Telemetry::LABELS_DNS_LOOKUP_DISPOSITION2::trrAFail);
+      AccumulateCategorical(Telemetry::LABELS_DNS_LOOKUP_DISPOSITION::trrAFail);
     }
 
     if (mTrrAAAAUsed == OK) {
-      AccumulateCategoricalKeyed(
-          TRRService::AutoDetectedKey(),
-          Telemetry::LABELS_DNS_LOOKUP_DISPOSITION2::trrAAAAOK);
+      AccumulateCategorical(
+          Telemetry::LABELS_DNS_LOOKUP_DISPOSITION::trrAAAAOK);
     } else if (mTrrAAAAUsed == FAILED) {
-      AccumulateCategoricalKeyed(
-          TRRService::AutoDetectedKey(),
-          Telemetry::LABELS_DNS_LOOKUP_DISPOSITION2::trrAAAAFail);
+      AccumulateCategorical(
+          Telemetry::LABELS_DNS_LOOKUP_DISPOSITION::trrAAAAFail);
     }
   }
 
   if (mEffectiveTRRMode == nsIRequest::TRR_FIRST_MODE) {
     if (flags & nsIDNSService::RESOLVE_DISABLE_TRR) {
       // TRR is disabled on request, which is a next-level back-off method.
-      Telemetry::Accumulate(Telemetry::DNS_TRR_DISABLED2,
-                            TRRService::AutoDetectedKey(), mNativeSuccess);
+      Telemetry::Accumulate(Telemetry::DNS_TRR_DISABLED, mNativeSuccess);
     } else {
       if (mTRRSuccess) {
-        AccumulateCategoricalKeyed(TRRService::AutoDetectedKey(),
-                                   Telemetry::LABELS_DNS_TRR_FIRST3::TRR);
+        AccumulateCategorical(Telemetry::LABELS_DNS_TRR_FIRST2::TRR);
       } else if (mNativeSuccess) {
         if (mTRRUsed) {
-          AccumulateCategoricalKeyed(
-              TRRService::AutoDetectedKey(),
-              Telemetry::LABELS_DNS_TRR_FIRST3::NativeAfterTRR);
+          AccumulateCategorical(
+              Telemetry::LABELS_DNS_TRR_FIRST2::NativeAfterTRR);
         } else {
-          AccumulateCategoricalKeyed(TRRService::AutoDetectedKey(),
-                                     Telemetry::LABELS_DNS_TRR_FIRST3::Native);
+          AccumulateCategorical(Telemetry::LABELS_DNS_TRR_FIRST2::Native);
         }
       } else {
-        AccumulateCategoricalKeyed(
-            TRRService::AutoDetectedKey(),
-            Telemetry::LABELS_DNS_TRR_FIRST3::BothFailed);
+        AccumulateCategorical(Telemetry::LABELS_DNS_TRR_FIRST2::BothFailed);
       }
     }
   }
