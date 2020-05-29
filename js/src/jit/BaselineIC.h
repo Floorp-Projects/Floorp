@@ -661,26 +661,17 @@ class ICFallbackStub : public ICStub {
   // becomes a concern.
   uint32_t enteredCount_;
 
-  // A pointer to the location stub pointer that needs to be
-  // changed to add a new "last" stub immediately before the fallback
-  // stub.  This'll start out pointing to the icEntry's "firstStub_"
-  // field, and as new stubs are added, it'll point to the current
-  // last stub's "next_" field.
-  ICStub** lastStubPtrAddr_;
-
   ICFallbackStub(Kind kind, TrampolinePtr stubCode)
       : ICStub(kind, ICStub::Fallback, stubCode.value),
         icEntry_(nullptr),
         state_(),
-        enteredCount_(0),
-        lastStubPtrAddr_(nullptr) {}
+        enteredCount_(0) {}
 
   ICFallbackStub(Kind kind, Trait trait, TrampolinePtr stubCode)
       : ICStub(kind, trait, stubCode.value),
         icEntry_(nullptr),
         state_(),
-        enteredCount_(0),
-        lastStubPtrAddr_(nullptr) {
+        enteredCount_(0) {
     MOZ_ASSERT(trait == ICStub::Fallback || trait == ICStub::MonitoredFallback);
   }
 
@@ -691,24 +682,19 @@ class ICFallbackStub : public ICStub {
 
   ICState& state() { return state_; }
 
-  // The icEntry and lastStubPtrAddr_ fields can't be initialized when the stub
-  // is created since the stub is created at compile time, and we won't know the
-  // IC entry address until after compile when the JitScript is created.  This
-  // method allows these fields to be fixed up at that point.
+  // The icEntry_ field can't be initialized when the stub is created since we
+  // won't know the ICEntry address until we add the stub to JitScript. This
+  // method allows this field to be fixed up at that point.
   void fixupICEntry(ICEntry* icEntry) {
     MOZ_ASSERT(icEntry_ == nullptr);
-    MOZ_ASSERT(lastStubPtrAddr_ == nullptr);
     icEntry_ = icEntry;
-    lastStubPtrAddr_ = icEntry_->addressOfFirstStub();
   }
 
   // Add a new stub to the IC chain terminated by this fallback stub.
   void addNewStub(ICStub* stub) {
-    MOZ_ASSERT(*lastStubPtrAddr_ == this);
     MOZ_ASSERT(stub->next() == nullptr);
-    stub->setNext(this);
-    *lastStubPtrAddr_ = stub;
-    lastStubPtrAddr_ = stub->addressOfNext();
+    stub->setNext(icEntry_->firstStub());
+    icEntry_->setFirstStub(stub);
     state_.trackAttached();
   }
 
