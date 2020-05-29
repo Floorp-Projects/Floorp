@@ -167,7 +167,7 @@ impl<W: Write> CrcWriter<W> {
 
 impl<W: Write> Write for CrcWriter<W> {
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
-        let amt = try!(self.inner.write(buf));
+        let amt = self.inner.write(buf)?;
         self.crc.update(&buf[..amt]);
         Ok(amt)
     }

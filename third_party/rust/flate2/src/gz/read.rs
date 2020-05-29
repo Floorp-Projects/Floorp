@@ -8,8 +8,8 @@ use tokio_io::{AsyncRead, AsyncWrite};
 
 use super::bufread;
 use super::{GzBuilder, GzHeader};
-use bufreader::BufReader;
-use Compression;
+use crate::bufreader::BufReader;
+use crate::Compression;
 
 /// A gzip streaming encoder
 ///

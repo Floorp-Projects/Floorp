@@ -3,8 +3,8 @@ use std::fmt;
 use std::io;
 use std::slice;
 
-use ffi::{self, Backend, Deflate, DeflateBackend, Inflate, InflateBackend};
-use Compression;
+use crate::ffi::{self, Backend, Deflate, DeflateBackend, Inflate, InflateBackend};
+use crate::Compression;
 
 /// Raw in-memory compression stream for blocks of data.
 ///
@@ -510,11 +510,11 @@ impl fmt::Display for CompressError {
 mod tests {
     use std::io::Write;
 
-    use write;
-    use {Compression, Decompress, FlushDecompress};
+    use crate::write;
+    use crate::{Compression, Decompress, FlushDecompress};
 
     #[cfg(feature = "zlib")]
-    use {Compress, FlushCompress};
+    use crate::{Compress, FlushCompress};
 
     #[test]
     fn issue51() {

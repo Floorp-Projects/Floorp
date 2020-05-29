@@ -15,6 +15,11 @@ use crate::Glean;
 
 use chrono::{DateTime, FixedOffset, TimeZone};
 
+/// A datetime type.
+///
+/// Used to feed data to the `DatetimeMetric`.
+pub type Datetime = DateTime<FixedOffset>;
+
 /// A datetime metric.
 ///
 /// Used to record an absolute date and time, such as the time the user first ran
@@ -101,7 +106,7 @@ impl DatetimeMetric {
     /// * `glean` - the Glean instance this metric belongs to.
     /// * `value` - Some date/time value, with offset, to set the metric to.
     ///             If none, the current local time is used.
-    pub fn set(&self, glean: &Glean, value: Option<DateTime<FixedOffset>>) {
+    pub fn set(&self, glean: &Glean, value: Option<Datetime>) {
         if !self.should_record(glean) {
             return;
         }
@@ -121,11 +126,7 @@ impl DatetimeMetric {
     /// ## Return value
     ///
     /// Returns the stored value or `None` if nothing stored.
-    pub(crate) fn get_value(
-        &self,
-        glean: &Glean,
-        storage_name: &str,
-    ) -> Option<DateTime<FixedOffset>> {
+    pub(crate) fn get_value(&self, glean: &Glean, storage_name: &str) -> Option<Datetime> {
         match StorageManager.snapshot_metric(
             glean.storage(),
             storage_name,

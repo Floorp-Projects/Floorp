@@ -2,8 +2,8 @@ use std::ffi::CString;
 use std::io::prelude::*;
 use std::time;
 
-use bufreader::BufReader;
-use Compression;
+use crate::bufreader::BufReader;
+use crate::Compression;
 
 pub static FHCRC: u8 = 1 << 1;
 pub static FEXTRA: u8 = 1 << 2;
@@ -257,8 +257,8 @@ mod tests {
     use std::io::prelude::*;
 
     use super::{read, write, GzBuilder};
+    use crate::Compression;
     use rand::{thread_rng, Rng};
-    use Compression;
 
     #[test]
     fn roundtrip() {
@@ -285,7 +285,7 @@ mod tests {
     fn roundtrip_big() {
         let mut real = Vec::new();
         let mut w = write::GzEncoder::new(Vec::new(), Compression::default());
-        let v = ::random_bytes().take(1024).collect::<Vec<_>>();
+        let v = crate::random_bytes().take(1024).collect::<Vec<_>>();
         for _ in 0..200 {
             let to_write = &v[..thread_rng().gen_range(0, v.len())];
             real.extend(to_write.iter().map(|x| *x));
@@ -300,7 +300,7 @@ mod tests {
 
     #[test]
     fn roundtrip_big2() {
-        let v = ::random_bytes().take(1024 * 1024).collect::<Vec<_>>();
+        let v = crate::random_bytes().take(1024 * 1024).collect::<Vec<_>>();
         let mut r = read::GzDecoder::new(read::GzEncoder::new(&v[..], Compression::default()));
         let mut res = Vec::new();
         r.read_to_end(&mut res).unwrap();

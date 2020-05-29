@@ -30,6 +30,7 @@ mod uuid;
 
 pub use crate::event_database::RecordedEvent;
 use crate::histogram::{Functional, Histogram, PrecomputedExponential, PrecomputedLinear};
+pub use crate::metrics::datetime::Datetime;
 use crate::util::get_iso_time_string;
 use crate::CommonMetricData;
 use crate::Glean;

@@ -79,7 +79,7 @@ impl Error {
         }
     }
 
-    /// Indicates an error that no global Glean object is initialized
+    /// Indicates an error that no requested global object is initialized
     pub fn not_initialized() -> Error {
         Error {
             kind: ErrorKind::NotInitialized,
@@ -102,7 +102,7 @@ impl Display for Error {
             MemoryUnit(m) => write!(f, "MemoryUnit conversion from {} failed", m),
             HistogramType(h) => write!(f, "HistogramType conversion from {} failed", h),
             OsString(s) => write!(f, "OsString conversion from {:?} failed", s),
-            Utf8Error => write!(f, "Invalid  UTF-8 byte sequence in string"),
+            Utf8Error => write!(f, "Invalid UTF-8 byte sequence in string"),
             NotInitialized => write!(f, "Global Glean object missing"),
             __NonExhaustive => write!(f, "Unknown error"),
         }

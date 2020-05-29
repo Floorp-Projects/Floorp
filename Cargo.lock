@@ -1376,13 +1376,13 @@ dependencies = [
 
 [[package]]
 name = "flate2"
-version = "1.0.11"
+version = "1.0.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2adaffba6388640136149e18ed080b77a78611c1e1d6de75aedcdf78df5d4682"
+checksum = "ad3c5233c9a940c8719031b423d7e6c16af66e031cb0420b0896f5245bf181d3"
 dependencies = [
+ "cfg-if",
  "crc32fast",
  "libc",
- "miniz-sys",
  "miniz_oxide",
 ]
 
@@ -1987,13 +1987,14 @@ dependencies = [
 
 [[package]]
 name = "glean-core"
-version = "30.0.0"
+version = "31.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7fa358765c47adf5c9aa458cd553c7f4a41e631ff0d65ec6bbc826b35b243deb"
+checksum = "c12c2c9a3ce2980b27fe93bf9e45707aeea090e3d7ec609fba60d7bfc7858954"
 dependencies = [
  "bincode",
  "chrono",
  "ffi-support",
+ "flate2",
  "log",
  "once_cell",
  "regex",
@@ -2858,16 +2859,6 @@ checksum = "2684d4c2e97d99848d30b324b00c8fcc7e5c897b7cbb5819b09e7c90e8baf212"
 dependencies = [
  "mime",
  "unicase",
-]
-
-[[package]]
-name = "miniz-sys"
-version = "0.1.12"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1e9e3ae51cea1576ceba0dde3d484d30e6e5b86dee0b2d412fe3a16a15c98202"
-dependencies = [
- "cc",
- "libc",
 ]
 
 [[package]]
