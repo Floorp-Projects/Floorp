@@ -2061,10 +2061,6 @@ VARIABLES = {
         These are commonly named crashtests.list.
         """),
 
-    'WEBRTC_SIGNALLING_TEST_MANIFESTS': (ManifestparserManifestList, list,
-                                         """List of manifest files defining WebRTC signalling tests.
-        """),
-
     'XPCSHELL_TESTS_MANIFESTS': (ManifestparserManifestList, list,
                                  """List of manifest files defining xpcshell tests.
         """),

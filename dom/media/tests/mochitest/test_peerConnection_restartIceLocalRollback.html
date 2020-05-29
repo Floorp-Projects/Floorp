@@ -25,11 +25,6 @@
         // (does not result in sending an offer)
         function PC_LOCAL_SETUP_ICE_HANDLER(test) {
           test.pcLocal.setupIceCandidateHandler(test, () => {});
-          if (test.testOptions.steeplechase) {
-            test.pcLocal.endOfTrickleIce.then(() => {
-              send_message({"type": "end_of_trickle_ice"});
-            });
-          }
         },
         function PC_LOCAL_CREATE_AND_SET_OFFER(test) {
           return test.createOffer(test.pcLocal).then(offer => {
