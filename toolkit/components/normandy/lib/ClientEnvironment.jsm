@@ -36,11 +36,6 @@ ChromeUtils.defineModuleGetter(
   "AddonRollouts",
   "resource://normandy/lib/AddonRollouts.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  this,
-  "NormandyUtils",
-  "resource://normandy/lib/NormandyUtils.jsm"
-);
 
 var EXPORTED_SYMBOLS = ["ClientEnvironment"];
 
@@ -82,12 +77,7 @@ class ClientEnvironment extends ClientEnvironmentBase {
   }
 
   static get userId() {
-    let id = Services.prefs.getCharPref("app.normandy.user_id", "");
-    if (!id) {
-      id = NormandyUtils.generateUuid();
-      Services.prefs.setCharPref("app.normandy.user_id", id);
-    }
-    return id;
+    return ClientEnvironment.randomizationId;
   }
 
   static get country() {
