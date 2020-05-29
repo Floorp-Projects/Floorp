@@ -294,7 +294,8 @@ class BrowserTestUtilsChild extends JSWindowActorChild {
         // Account for nodes found in iframes.
         let cur = target;
         do {
-          let frame = cur.ownerGlobal.frameElement;
+          // eslint-disable-next-line mozilla/use-ownerGlobal
+          let frame = cur.ownerDocument.defaultView.frameElement;
           let rect = frame.getBoundingClientRect();
 
           left += rect.left;

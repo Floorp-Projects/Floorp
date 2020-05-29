@@ -102,6 +102,7 @@ let JSWINDOWACTORS = {
         AboutLoginsSyncEnable: { wantUntrusted: true },
         AboutLoginsSyncOptions: { wantUntrusted: true },
         AboutLoginsUpdateLogin: { wantUntrusted: true },
+        AboutLoginsExportPasswords: { wantUntrusted: true },
       },
     },
     matches: ["about:logins", "about:logins?*"],

@@ -16,6 +16,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   E10SUtils: "resource://gre/modules/E10SUtils.jsm",
   LoginBreaches: "resource:///modules/LoginBreaches.jsm",
   LoginHelper: "resource://gre/modules/LoginHelper.jsm",
+  LoginExport: "resource://gre/modules/LoginExport.jsm",
   MigrationUtils: "resource:///modules/MigrationUtils.jsm",
   OSKeyStore: "resource://gre/modules/OSKeyStore.jsm",
   Services: "resource://gre/modules/Services.jsm",
@@ -527,6 +528,44 @@ class AboutLoginsParent extends JSWindowActorParent {
         } catch (error) {
           this.handleLoginStorageErrors(modifiedLogin, error, message);
         }
+        break;
+      }
+      case "AboutLogins:ExportPasswords": {
+        let fp = Cc["@mozilla.org/filepicker;1"].createInstance(
+          Ci.nsIFilePicker
+        );
+        let fpCallback = function fpCallback_done(aResult) {
+          if (aResult != Ci.nsIFilePicker.returnCancel) {
+            LoginExport.exportAsCSV(fp.file.path);
+          }
+        };
+        let [
+          title,
+          defaultFilename,
+          okButtonLabel,
+          csvFilterTitle,
+        ] = await AboutLoginsL10n.formatValues([
+          {
+            id: "about-logins-export-file-picker-title",
+          },
+          {
+            id: "about-logins-export-file-picker-default-filename",
+          },
+          {
+            id: "about-logins-export-file-picker-export-button",
+          },
+          {
+            id: "about-logins-export-file-picker-csv-filter-title",
+          },
+        ]);
+
+        fp.init(ownerGlobal, title, Ci.nsIFilePicker.modeSave);
+        fp.appendFilter(csvFilterTitle, "*.csv");
+        fp.appendFilters(Ci.nsIFilePicker.filterAll);
+        fp.defaultString = defaultFilename;
+        fp.defaultExtension = "csv";
+        fp.okButtonLabel = okButtonLabel;
+        fp.open(fpCallback);
         break;
       }
     }
