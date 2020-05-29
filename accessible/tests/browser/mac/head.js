@@ -4,7 +4,7 @@
 
 "use strict";
 
-/* exported getNativeInterface, waitForMacEvent */
+/* exported getNativeInterface, waitForMacEvent, NSRange */
 
 // Load the shared-head file first.
 /* import-globals-from ../shared-head.js */
@@ -39,4 +39,11 @@ function waitForMacEvent(notificationType, filter) {
     };
     Services.obs.addObserver(eventObserver, "accessible-mac-event");
   });
+}
+
+function NSRange(location, length) {
+  return {
+    valueType: "NSRange",
+    value: [location, length],
+  };
 }
