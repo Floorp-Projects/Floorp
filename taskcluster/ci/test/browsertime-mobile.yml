@@ -65,7 +65,8 @@ job-defaults:
         extra-options:
             - --browsertime
     optimization:
-        push-interval-25: null
+        push-interval-25:
+            - android
 
 browsertime-tp6m:
     description: "Raptor (browsertime) tp6 page-load tests on android"
