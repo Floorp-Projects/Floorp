@@ -12,6 +12,7 @@ from mozperftest.tests.support import (
     temp_dir,
     EXAMPLE_TEST,
     BT_DATA,
+    HERE,
 )
 from mozperftest.environment import METRICS
 from mozperftest.utils import silence
@@ -61,6 +62,56 @@ def test_perfherder():
     # Check if only firstPaint metrics were obtained
     for subtest in output["suites"][0]["subtests"]:
         assert "firstPaint" in subtest["name"]
+
+
+def test_perfherder_logcat():
+    options = {
+        "perfherder": True,
+        "perfherder-prefix": "",
+        "perfherder-metrics": ["TimeToDisplayed"],
+    }
+
+    metrics, metadata, env = setup_env(options)
+    metadata.clear_results()
+
+    def processor(groups):
+        """Parses the time from a displayed time string into milliseconds."""
+        return (float(groups[0]) * 1000) + float(groups[1])
+
+    re_w_group = r".*Displayed.*org\.mozilla\.fennec_aurora.*\+([\d]+)s([\d]+)ms.*"
+    metadata.add_result(
+        {
+            "results": str(HERE / "data" / "home_activity.txt"),
+            "transformer": "LogCatTimeTransformer",
+            "transformer-options": {
+                "first-timestamp": re_w_group,
+                "processor": processor,
+                "transform-subtest-name": "TimeToDisplayed",
+            },
+            "name": "LogCat",
+        }
+    )
+
+    with temp_file() as output:
+        env.set_arg("output", output)
+        with metrics as m:  # , silence():
+            m(metadata)
+        output_file = metadata.get_output()
+        with open(output_file) as f:
+            output = json.loads(f.read())
+
+    # Check some metadata
+    assert output["application"]["name"] == "firefox"
+    assert output["framework"]["name"] == "browsertime"
+
+    # Check some numbers in our data
+    assert len(output["suites"]) == 1
+    assert len(output["suites"][0]["subtests"]) == 1
+    assert output["suites"][0]["value"] > 0
+
+    # Check if only the TimeToDisplayd metric was obtained
+    for subtest in output["suites"][0]["subtests"]:
+        assert "TimeToDisplayed" in subtest["name"]
 
 
 def test_perfherder_validation_failure():

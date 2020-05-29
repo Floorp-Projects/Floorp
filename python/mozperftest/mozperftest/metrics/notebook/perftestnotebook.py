@@ -116,7 +116,7 @@ class PerftestNotebook(object):
 
         return filepath
 
-    def process(self, no_iodide=True):
+    def process(self, no_iodide=True, **kwargs):
         """Process the file groups and return the results of the requested analyses.
 
         :return: All the results in a dictionary. The field names are the Analyzer
@@ -130,7 +130,7 @@ class PerftestNotebook(object):
                 for subtest, files in files.items():
                     self.transformer.files = files
 
-                    trfm_data = self.transformer.process(name)
+                    trfm_data = self.transformer.process(name, **kwargs)
 
                     if isinstance(trfm_data, list):
                         for e in trfm_data:
@@ -151,7 +151,7 @@ class PerftestNotebook(object):
             else:
                 # Transform the data
                 self.transformer.files = files
-                trfm_data = self.transformer.process(name)
+                trfm_data = self.transformer.process(name, **kwargs)
 
                 if isinstance(trfm_data, list):
                     fmt_data.extend(trfm_data)
@@ -164,7 +164,6 @@ class PerftestNotebook(object):
         output_data_filepath = self.parse_output()
 
         print("Writing results to %s" % output_data_filepath)
-
         with open(output_data_filepath, "w") as f:
             json.dump(self.fmt_data, f, indent=4, sort_keys=True)
 

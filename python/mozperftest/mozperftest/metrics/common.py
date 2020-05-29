@@ -57,8 +57,8 @@ class MetricsStorage(object):
         can be a mapping containing the results, in that case
         we just use it direcly, but keep it in a list.
 
-        :param results list/dict/str: Path, or list of paths to the data (
-            or the data itself in a dict) of the data to be processed.
+        :param results list/dict/str: Path, or list of paths to the data
+            (or the data itself in a dict) of the data to be processed.
         """
         # Parse the results into files (for now) and the settings
         self.results = defaultdict(lambda: defaultdict(list))
@@ -96,6 +96,9 @@ class MetricsStorage(object):
                     f"{[currtrfm, res['transformer']]}"
                 )
 
+            # Get the transform options if available
+            self.results[name]["options"] = res.get("transformer-options", {})
+
         if not self.results:
             self.return_code = 1
             raise MetricsMissingResultsError("Could not find any results to process.")
@@ -125,7 +128,6 @@ class MetricsStorage(object):
             prefix = data_type
             if self.prefix:
                 prefix = "{}-{}".format(self.prefix, data_type)
-
             config = {
                 "output": self.output_path,
                 "prefix": prefix,
@@ -133,8 +135,10 @@ class MetricsStorage(object):
                 "file_groups": {data_type: data_info["files"]},
             }
 
-            ptnb = PerftestNotebook(config["file_groups"], config, transformer)
-            r = ptnb.process()
+            ptnb = PerftestNotebook(
+                config["file_groups"], config, data_info["transformer"]
+            )
+            r = ptnb.process(no_iodide=True, **data_info["options"])
             self.stddata[data_type] = r["data"]
 
         return self.stddata
