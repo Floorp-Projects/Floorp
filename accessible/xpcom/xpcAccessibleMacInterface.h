@@ -54,6 +54,13 @@ class xpcAccessibleMacInterface : public nsIAccessibleMacInterface {
   // If the conversion fails, aResult is set to an error and nil is returned.
   id JsValueToNSObject(JS::HandleValue aValue, JSContext* aCx,
                        nsresult* aResult);
+
+  // Convert a js value to an NSValue NSObject. This is called
+  // by JsValueToNSObject when encountering a JS object with
+  // a "value" and "valueType" property.
+  id JsValueToNSValue(JS::HandleObject aObject, JSContext* aCx,
+                      nsresult* aResult);
+
   id mNativeObject;
 
  private:
