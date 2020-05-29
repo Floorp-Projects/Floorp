@@ -79,7 +79,7 @@ class BrowserRobot {
     */
     fun verifyPageContent(expectedText: String) {
         val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
-        mDevice.waitNotNull(Until.findObject(text(expectedText)), waitingTime)
+        mDevice.waitNotNull(Until.findObject(By.textContains(expectedText)), waitingTime)
     }
 
     fun verifyTabCounter(expectedText: String) {
