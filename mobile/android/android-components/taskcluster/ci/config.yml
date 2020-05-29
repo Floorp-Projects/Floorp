@@ -13,6 +13,7 @@ treeherder:
         # These ones are too long to fit in 25 chars
         browser-engine-gecko-nigh: browser-engine-gecko-nightly
         lib-fetch-httpurlconnect: lib-fetch-httpurlconnection
+        feature-webcompat-report: feature-webcompat-reporter
 
 task-priority: highest
 

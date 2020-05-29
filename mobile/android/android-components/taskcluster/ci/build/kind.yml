@@ -114,3 +114,13 @@ overriden-jobs:
     release-lib-fetch-httpurlconnection:
         treeherder:
             symbol: 'lib-fetch-httpurlconnect(BR)'
+
+    feature-webcompat-reporter:
+        treeherder:
+            symbol: 'feature-webcompat-report(B)'
+    nightly-feature-webcompat-reporter:
+        treeherder:
+            symbol: 'feature-webcompat-report(BN)'
+    release-feature-webcompat-reporter:
+        treeherder:
+            symbol: 'feature-webcompat-report(BR)'

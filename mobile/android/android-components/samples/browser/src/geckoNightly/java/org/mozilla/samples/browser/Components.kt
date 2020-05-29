@@ -9,6 +9,7 @@ import mozilla.components.browser.engine.gecko.fetch.GeckoViewFetchClient
 import mozilla.components.browser.engine.gecko.glean.GeckoAdapter
 import mozilla.components.concept.engine.Engine
 import mozilla.components.feature.webcompat.WebCompatFeature
+import mozilla.components.feature.webcompat.reporter.WebCompatReporterFeature
 import mozilla.components.support.base.log.Log
 import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoRuntimeSettings
@@ -33,6 +34,7 @@ class Components(private val applicationContext: Context) : DefaultComponents(ap
                 ext, throwable -> Log.log(Log.Priority.ERROR, "SampleBrowser", throwable, "Failed to install $ext")
             }
             WebCompatFeature.install(it)
+            WebCompatReporterFeature.install(it)
         }
     }
 

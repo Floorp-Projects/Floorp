@@ -1,0 +1,54 @@
+{
+  "manifest_version": 2,
+  "name": "WebCompat Reporter",
+  "description": "Report site compatibility issues on webcompat.com",
+  "author": "Thomas Wisniewski <twisniewski@mozilla.com>",
+  "version": "1.3.0",
+  "homepage_url": "https://github.com/mozilla/webcompat-reporter",
+  "applications": {
+    "gecko": {
+      "id": "webcompat-reporter@mozilla.org"
+    }
+  },
+  "experiment_apis": {
+    "aboutConfigPrefs": {
+      "schema": "experimentalAPIs/aboutConfigPrefs.json",
+      "parent": {
+        "scopes": ["addon_parent"],
+        "script": "experimentalAPIs/aboutConfigPrefs.js",
+        "paths": [["aboutConfigPrefs"]]
+      }
+    },
+    "browserInfo": {
+      "schema": "experimentalAPIs/browserInfo.json",
+      "parent": {
+        "scopes": ["addon_parent"],
+        "script": "experimentalAPIs/browserInfo.js",
+        "paths": [["browserInfo"]]
+      }
+    }
+  },
+  "icons": {
+    "16": "icons/lightbulb.svg",
+    "32": "icons/lightbulb.svg",
+    "48": "icons/lightbulb.svg",
+    "96": "icons/lightbulb.svg",
+    "128": "icons/lightbulb.svg"
+  },
+  "permissions": [
+    "tabs",
+    "<all_urls>"
+  ],
+  "background": {
+    "scripts": [
+      "background.js"
+    ]
+  },
+  "page_action": {
+    "browser_style": true,
+    "default_icon": "icons/lightbulb.svg",
+    "default_title": "Report Site Issue…",
+    "pinned": false,
+    "show_matches": ["http://*/*", "https://*/*"]
+  }
+}

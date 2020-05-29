@@ -9,6 +9,7 @@ import mozilla.components.browser.engine.gecko.glean.GeckoAdapter
 import mozilla.components.browser.engine.gecko.fetch.GeckoViewFetchClient
 import mozilla.components.concept.engine.Engine
 import mozilla.components.feature.webcompat.WebCompatFeature
+import mozilla.components.feature.webcompat.reporter.WebCompatReporterFeature
 import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoRuntimeSettings
 
@@ -26,6 +27,7 @@ class Components(private val applicationContext: Context) : DefaultComponents(ap
     override val engine: Engine by lazy {
         GeckoEngine(applicationContext, engineSettings, runtime).also {
             WebCompatFeature.install(it)
+            WebCompatReporterFeature.install(it)
         }
     }
 
