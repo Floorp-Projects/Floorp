@@ -30,6 +30,10 @@ permalink: /changelog/
 * **browser-engine-gecko-***
   * Fixes GeckoWebPushDelegate to gracefully return when a subscription is not available.
 
+* **feature-session**
+  * Removes unused `ThumbnailsFeature` since this has been refactored into its own browser-thumbnails component in
+    [#6827](https://github.com/mozilla-mobile/android-components/issues/6827).
+
 # 43.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v42.0.0...v43.0.0)
