@@ -708,3 +708,15 @@ def bundled_editline(readline, editline):
 set_config('JS_BUNDLED_EDITLINE', bundled_editline)
 
 set_define('EDITLINE', True, when=editline)
+
+
+# JIT observers
+# =============
+
+js_option('--with-jitreport-granularity', default='3', choices=('0', '1', '2', '3'),
+          help='Default granularity at which to report JIT code to external tools '
+               '(0 - no info, 1 - code ranges for while functions only, '
+               '2 - per-line information, 3 - per-op information)')
+
+set_define('JS_DEFAULT_JITREPORT_GRANULARITY',
+           depends_if('--with-jitreport-granularity')(lambda value: value[0]))
