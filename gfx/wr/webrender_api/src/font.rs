@@ -367,6 +367,10 @@ bitflags! {
         const SUBPIXEL_POSITION = 1 << 7;
         const VERTICAL          = 1 << 8;
 
+        // Internal flags
+        const TRANSFORM_GLYPHS  = 1 << 12;
+        const TEXTURE_PADDING   = 1 << 13;
+
         // Windows flags
         const FORCE_GDI         = 1 << 16;
         const FORCE_SYMMETRIC   = 1 << 17;

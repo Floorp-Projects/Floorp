@@ -562,7 +562,7 @@ impl FontContext {
         let mut bgra_pixels = self.convert_to_bgra(&pixels, width as usize, height as usize,
                                                    texture_type, font.render_mode, bitmaps,
                                                    font.flags.contains(FontInstanceFlags::SUBPIXEL_BGR),
-                                                   font.texture_padding);
+                                                   font.use_texture_padding());
 
         let FontInstancePlatformOptions { gamma, contrast, cleartype_level, .. } =
             font.platform_options.unwrap_or_default();
@@ -589,7 +589,7 @@ impl FontContext {
             font.get_glyph_format()
         };
 
-        let padding = if font.texture_padding { 1 } else { 0 };
+        let padding = if font.use_texture_padding() { 1 } else { 0 };
         Ok(RasterizedGlyph {
             left: (bounds.left - padding) as f32,
             top: (-bounds.top + padding) as f32,

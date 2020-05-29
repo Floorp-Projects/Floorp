@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{ColorF, GlyphInstance, RasterSpace, Shadow};
+use api::{ColorF, FontInstanceFlags, GlyphInstance, RasterSpace, Shadow};
 use api::units::{LayoutToWorldTransform, LayoutVector2D, PictureRect};
 use crate::scene_building::{CreateShadow, IsVisible};
 use crate::frame_builder::FrameBuildingState;
@@ -248,6 +248,8 @@ impl TextRunPrimitive {
         // Check there is a valid transform that doesn't exceed the font size limit.
         // Ensure the font is supposed to be rasterized in screen-space.
         // Only support transforms that can be coerced to simple 2D transforms.
+        // Add texture padding to the rasterized glyph buffer when one anticipates
+        // the glyph will need to be scaled when rendered.
         let (use_subpixel_aa, transform_glyphs, texture_padding, oversized) = if raster_space != RasterSpace::Screen ||
             transform.has_perspective_component() || !transform.has_2d_inverse()
         {
@@ -309,20 +311,26 @@ impl TextRunPrimitive {
             snap_to_device.snap_vector(&self.reference_frame_relative_offset)
         };
 
+        let mut flags = specified_font.flags;
+        if transform_glyphs {
+            flags |= FontInstanceFlags::TRANSFORM_GLYPHS;
+        }
+        if texture_padding {
+            flags |= FontInstanceFlags::TEXTURE_PADDING;
+        }
+
         // If the transform or device size is different, then the caller of
         // this method needs to know to rebuild the glyphs.
         let cache_dirty =
             self.used_font.transform != font_transform ||
             self.used_font.size != device_font_size.into() ||
-            self.used_font.transform_glyphs != transform_glyphs ||
-            self.used_font.texture_padding != texture_padding;
+            self.used_font.flags != flags;
 
         // Construct used font instance from the specified font instance
         self.used_font = FontInstance {
             transform: font_transform,
-            transform_glyphs,
-            texture_padding,
             size: device_font_size.into(),
+            flags,
             ..specified_font.clone()
         };
 
