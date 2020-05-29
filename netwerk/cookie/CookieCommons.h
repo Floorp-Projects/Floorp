@@ -10,7 +10,6 @@
 #include <functional>
 #include "prtime.h"
 #include "nsString.h"
-#include "nsICookie.h"
 
 class nsIChannel;
 class nsICookieJarSettings;
@@ -106,8 +105,6 @@ class CookieCommons final {
 
   static already_AddRefed<nsICookieJarSettings> GetCookieJarSettings(
       nsIChannel* aChannel);
-
-  static bool ShouldIncludeCrossSiteCookieForDocument(Cookie* aCookie);
 };
 
 }  // namespace net
