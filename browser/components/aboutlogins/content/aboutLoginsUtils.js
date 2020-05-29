@@ -5,9 +5,9 @@
 /**
  * Dispatches a custom event to the AboutLoginsChild.jsm script which
  * will record the event.
- * @params {object} event.method The telemety event method
- * @params {object} event.object The telemety event object
- * @params {object} event.value [optional] The telemety event value
+ * @param {object} event.method The telemety event method
+ * @param {object} event.object The telemety event object
+ * @param {object} event.value [optional] The telemety event value
  */
 export function recordTelemetryEvent(event) {
   document.dispatchEvent(
