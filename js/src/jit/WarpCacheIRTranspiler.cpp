@@ -1128,6 +1128,26 @@ bool WarpCacheIRTranspiler::emitIsObjectResult(ValOperandId inputId) {
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitIsCallableResult(ValOperandId inputId) {
+  MDefinition* value = getOperand(inputId);
+
+  auto* isCallable = MIsCallable::New(alloc(), value);
+  add(isCallable);
+
+  pushResult(isCallable);
+  return true;
+}
+
+bool WarpCacheIRTranspiler::emitIsConstructorResult(ObjOperandId objId) {
+  MDefinition* obj = getOperand(objId);
+
+  auto* isConstructor = MIsConstructor::New(alloc(), obj);
+  add(isConstructor);
+
+  pushResult(isConstructor);
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitLoadArgumentSlot(ValOperandId resultId,
                                                  uint32_t slotIndex) {
   // Reverse of GetIndexOfArgument specialized to !hasArgumentArray.
