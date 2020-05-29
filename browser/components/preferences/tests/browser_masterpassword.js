@@ -1,4 +1,5 @@
 ChromeUtils.import("resource://testing-common/OSKeyStoreTestUtils.jsm", this);
+ChromeUtils.import("resource://gre/modules/OSKeyStore.jsm", this);
 
 add_task(async function() {
   let prefs = await openPreferencesViaOpenPreferencesAPI("panePrivacy", {
@@ -36,7 +37,7 @@ add_task(async function() {
   ok(button.disabled, "master password button should be disabled by default");
 
   let masterPasswordNextState = false;
-  if (OSKeyStoreTestUtils.canTestOSKeyStoreLogin()) {
+  if (OSKeyStoreTestUtils.canTestOSKeyStoreLogin() && OSKeyStore.canReauth()) {
     let osAuthDialogShown = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(false);
     checkbox.click();
     info("waiting for os auth dialog to appear and get canceled");
@@ -58,7 +59,7 @@ add_task(async function() {
   }
 
   masterPasswordNextState = true;
-  if (OSKeyStoreTestUtils.canTestOSKeyStoreLogin()) {
+  if (OSKeyStoreTestUtils.canTestOSKeyStoreLogin() && OSKeyStore.canReauth()) {
     let osAuthDialogShown = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(true);
     checkbox.click();
     info("waiting for os auth dialog to appear");
