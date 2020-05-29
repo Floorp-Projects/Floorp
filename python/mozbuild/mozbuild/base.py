@@ -948,6 +948,10 @@ class MachCommandBase(MozbuildObject):
                 self.log(logging.WARNING, 'mach', {'error': str(e)},
                          'Log will not be kept for this command: {error}.')
 
+    def _sub_mach(self, argv):
+        return subprocess.call([
+            sys.executable, os.path.join(self.topsrcdir, 'mach')] + argv)
+
 
 class MachCommandConditions(object):
     """A series of commonly used condition functions which can be applied to

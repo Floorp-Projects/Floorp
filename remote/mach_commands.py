@@ -64,6 +64,8 @@ class RemoteCommands(MachCommandBase):
              description="Remote protocol related operations.")
     def remote(self):
         """The remote subcommands all relate to the remote protocol."""
+        self._sub_mach(['help', 'remote'])
+        return 1
 
     @SubCommand("remote", "vendor-puppeteer",
                 "Pull in latest changes of the Puppeteer client.")
