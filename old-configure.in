@@ -1399,15 +1399,6 @@ dnl =
 dnl ========================================================
 MOZ_ARG_HEADER(External Packages)
 
-case "$OS_TARGET" in
-WINNT|Darwin|Android)
-  MOZ_FOLD_LIBS=1
-  ;;
-*)
-  MOZ_FOLD_LIBS=
-  ;;
-esac
-
 MOZ_CONFIG_NSPR()
 
 dnl ========================================================
@@ -2953,8 +2944,6 @@ AC_SUBST(WIN32_GUI_EXE_LDFLAGS)
 AC_SUBST(MOZ_DEVTOOLS)
 
 AC_SUBST(MOZ_PACKAGE_JSSHELL)
-AC_SUBST(MOZ_FOLD_LIBS)
-AC_SUBST_LIST(MOZ_FOLD_LIBS_FLAGS)
 
 AC_SUBST(DMG_TOOL)
 
