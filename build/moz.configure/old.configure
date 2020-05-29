@@ -243,7 +243,6 @@ def old_configure_options(*options):
     '--with-branding',
     '--with-distribution-id',
     '--with-intl-api',
-    '--with-jitreport-granularity',
     '--with-macbundlename-prefix',
     '--with-nss-exec-prefix',
     '--with-nss-prefix',
