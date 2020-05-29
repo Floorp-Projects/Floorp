@@ -146,13 +146,6 @@ namespace net {
 
 namespace {
 
-static bool sRCWNEnabled = false;
-static uint32_t sRCWNQueueSizeNormal = 50;
-static uint32_t sRCWNQueueSizePriority = 10;
-static uint32_t sRCWNSmallResourceSizeKB = 256;
-static uint32_t sRCWNMinWaitMs = 0;
-static uint32_t sRCWNMaxWaitMs = 500;
-
 // True if the local cache should be bypassed when processing a request.
 #define BYPASS_LOCAL_CACHE(loadFlags, isPreferCacheLoadOverBypass) \
   (loadFlags & (nsIRequest::LOAD_BYPASS_CACHE |                    \
@@ -4153,7 +4146,8 @@ nsresult nsHttpChannel::OpenCacheEntryInternal(
   mCacheQueueSizeWhenOpen =
       CacheStorageService::CacheQueueSize(mCacheOpenWithPriority);
 
-  if (sRCWNEnabled && maybeRCWN && !mApplicationCacheForWrite) {
+  if (StaticPrefs::network_http_rcwn_enabled() && maybeRCWN &&
+      !mApplicationCacheForWrite) {
     bool hasAltData = false;
     uint32_t sizeInKb = 0;
     rv = cacheStorage->GetCacheIndexEntryAttrs(
@@ -4163,7 +4157,7 @@ nsresult nsHttpChannel::OpenCacheEntryInternal(
     // this entry in the cache index, and it has appropriate attributes
     // (doesn't have alt-data, and has a small size)
     if (NS_SUCCEEDED(rv) && !hasAltData &&
-        sizeInKb < sRCWNSmallResourceSizeKB) {
+        sizeInKb < StaticPrefs::network_http_rcwn_small_resource_size_kb()) {
       MaybeRaceCacheWithNetwork();
     }
   }
@@ -4171,7 +4165,7 @@ nsresult nsHttpChannel::OpenCacheEntryInternal(
   if (!mCacheOpenDelay) {
     MOZ_ASSERT(NS_IsMainThread(), "Should be called on the main thread");
     if (mNetworkTriggered) {
-      mRaceCacheWithNetwork = sRCWNEnabled;
+      mRaceCacheWithNetwork = StaticPrefs::network_http_rcwn_enabled();
     }
     rv = cacheStorage->AsyncOpenURI(mCacheEntryURI, mCacheIdExtension,
                                     cacheEntryOpenFlags, this);
@@ -4774,9 +4768,12 @@ nsresult nsHttpChannel::OnNormalCacheEntryAvailable(nsICacheEntry* aEntry,
       uint32_t duration = (TimeStamp::Now() - mAsyncOpenTime).ToMicroseconds();
       bool isSlow = false;
       if ((mCacheOpenWithPriority &&
-           mCacheQueueSizeWhenOpen >= sRCWNQueueSizePriority) ||
+           mCacheQueueSizeWhenOpen >=
+               StaticPrefs::
+                   network_http_rcwn_cache_queue_priority_threshold()) ||
           (!mCacheOpenWithPriority &&
-           mCacheQueueSizeWhenOpen >= sRCWNQueueSizeNormal)) {
+           mCacheQueueSizeWhenOpen >=
+               StaticPrefs::network_http_rcwn_cache_queue_normal_threshold())) {
         isSlow = true;
       }
       CacheFileUtils::CachePerfStats::AddValue(
@@ -6526,24 +6523,6 @@ nsHttpChannel::AsyncOpen(nsIStreamListener* aListener) {
     LOG(("  after HTTP shutdown..."));
     ReleaseListeners();
     return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  static bool sRCWNInited = false;
-  if (!sRCWNInited) {
-    sRCWNInited = true;
-    Preferences::AddBoolVarCache(&sRCWNEnabled, "network.http.rcwn.enabled");
-    Preferences::AddUintVarCache(
-        &sRCWNQueueSizeNormal,
-        "network.http.rcwn.cache_queue_normal_threshold");
-    Preferences::AddUintVarCache(
-        &sRCWNQueueSizePriority,
-        "network.http.rcwn.cache_queue_priority_threshold");
-    Preferences::AddUintVarCache(&sRCWNSmallResourceSizeKB,
-                                 "network.http.rcwn.small_resource_size_kb");
-    Preferences::AddUintVarCache(&sRCWNMinWaitMs,
-                                 "network.http.rcwn.min_wait_before_racing_ms");
-    Preferences::AddUintVarCache(&sRCWNMaxWaitMs,
-                                 "network.http.rcwn.max_wait_before_racing_ms");
   }
 
   rv = NS_CheckPortSafety(mURI);
@@ -9627,7 +9606,7 @@ void nsHttpChannel::SetDoNotTrack() {
 }
 
 void nsHttpChannel::ReportRcwnStats(bool isFromNet) {
-  if (!sRCWNEnabled) {
+  if (!StaticPrefs::network_http_rcwn_enabled()) {
     return;
   }
 
@@ -9927,7 +9906,7 @@ nsresult nsHttpChannel::TriggerNetwork() {
   if (mCacheOpenFunc) {
     mRaceCacheWithNetwork = true;
   } else if (AwaitingCacheCallbacks()) {
-    mRaceCacheWithNetwork = sRCWNEnabled;
+    mRaceCacheWithNetwork = StaticPrefs::network_http_rcwn_enabled();
   }
 
   LOG(("  triggering network\n"));
@@ -9980,9 +9959,12 @@ nsresult nsHttpChannel::MaybeRaceCacheWithNetwork() {
     mRaceDelay /= 1000;
   }
 
-  mRaceDelay = clamped<uint32_t>(mRaceDelay, sRCWNMinWaitMs, sRCWNMaxWaitMs);
+  mRaceDelay = clamped<uint32_t>(
+      mRaceDelay, StaticPrefs::network_http_rcwn_min_wait_before_racing_ms(),
+      StaticPrefs::network_http_rcwn_max_wait_before_racing_ms());
 
-  MOZ_ASSERT(sRCWNEnabled, "The pref must be turned on.");
+  MOZ_ASSERT(StaticPrefs::network_http_rcwn_enabled(),
+             "The pref must be turned on.");
   LOG(("nsHttpChannel::MaybeRaceCacheWithNetwork [this=%p, delay=%u]\n", this,
        mRaceDelay));
 
