@@ -156,12 +156,8 @@ repackage-zip-%: unpack
 
 
 LANGPACK_DEFINES = \
-  $(firstword \
-    $(wildcard $(call EXPAND_LOCALE_SRCDIR,toolkit/locales)/defines.inc) \
-    $(MOZILLA_DIR)/toolkit/locales/en-US/defines.inc) \
-  $(firstword \
-    $(wildcard $(LOCALE_SRCDIR)/defines.inc) \
-    $(srcdir)/en-US/defines.inc) \
+  $(call EXPAND_LOCALE_SRCDIR,toolkit/locales)/defines.inc \
+  $(LOCALE_SRCDIR)/defines.inc \
 $(NULL)
 
 # Dealing with app sub dirs: If DIST_SUBDIRS is defined it contains a
