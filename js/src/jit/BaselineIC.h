@@ -649,29 +649,23 @@ class ICFallbackStub : public ICStub {
   // Fallback stubs need these fields to easily add new stubs to
   // the linked list of stubs for an IC.
 
-  // The IC entry for this linked list of stubs.
-  ICEntry* icEntry_;
+  // The IC entry in JitScript for this linked list of stubs.
+  ICEntry* icEntry_ = nullptr;
 
   // The state of this IC
-  ICState state_;
+  ICState state_{};
 
   // Counts the number of times the stub was entered
   //
   // See Bug 1494473 comment 6 for a mechanism to handle overflow if overflow
   // becomes a concern.
-  uint32_t enteredCount_;
+  uint32_t enteredCount_ = 0;
 
   ICFallbackStub(Kind kind, TrampolinePtr stubCode)
-      : ICStub(kind, ICStub::Fallback, stubCode.value),
-        icEntry_(nullptr),
-        state_(),
-        enteredCount_(0) {}
+      : ICStub(kind, ICStub::Fallback, stubCode.value) {}
 
   ICFallbackStub(Kind kind, Trait trait, TrampolinePtr stubCode)
-      : ICStub(kind, trait, stubCode.value),
-        icEntry_(nullptr),
-        state_(),
-        enteredCount_(0) {
+      : ICStub(kind, trait, stubCode.value) {
     MOZ_ASSERT(trait == ICStub::Fallback || trait == ICStub::MonitoredFallback);
   }
 
@@ -704,29 +698,9 @@ class ICFallbackStub : public ICStub {
 
   ICStubIterator beginChain() { return ICStubIterator(this); }
 
-  bool hasStub(ICStub::Kind kind) const {
-    for (ICStubConstIterator iter = beginChainConst(); !iter.atEnd(); iter++) {
-      if (iter->kind() == kind) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  unsigned numStubsWithKind(ICStub::Kind kind) const {
-    unsigned count = 0;
-    for (ICStubConstIterator iter = beginChainConst(); !iter.atEnd(); iter++) {
-      if (iter->kind() == kind) {
-        count++;
-      }
-    }
-    return count;
-  }
-
   void discardStubs(JSContext* cx);
 
   void unlinkStub(Zone* zone, ICStub* prev, ICStub* stub);
-  void unlinkStubsWithKind(JSContext* cx, ICStub::Kind kind);
 
   // Return the number of times this stub has successfully provided a value to
   // the caller.
