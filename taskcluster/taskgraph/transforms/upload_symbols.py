@@ -75,6 +75,7 @@ def fill_template(config, tasks):
             # For shippable builds, we want to run these tasks if the build is run.
             # XXX Better to run this on promote phase instead?
             task['run-on-projects'] = dep.attributes.get('run_on_projects')
+            task['optimization'] = dep.optimization
         else:
             # For other builds, these can be requested to upload to the try symbol sever.
             task['run-on-projects'] = ['try']
