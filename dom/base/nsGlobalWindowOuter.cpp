@@ -141,6 +141,7 @@
 #include "nsPIWindowWatcher.h"
 #include "nsIContentViewer.h"
 #include "nsIScriptError.h"
+#include "nsISHistory.h"
 #include "nsIControllers.h"
 #include "nsGlobalWindowCommands.h"
 #include "nsQueryObject.h"
@@ -6081,7 +6082,8 @@ void nsGlobalWindowOuter::CloseOuter(bool aTrustedCaller) {
     NS_ENSURE_SUCCESS_VOID(rv);
 
     if (!StringBeginsWith(url, NS_LITERAL_STRING("about:neterror")) &&
-        !HadOriginalOpener() && !aTrustedCaller) {
+        !HadOriginalOpener() && !aTrustedCaller &&
+        !IsOnlyTopLevelDocumentInSHistory()) {
       bool allowClose =
           mAllowScriptsToClose ||
           Preferences::GetBool("dom.allow_scripts_to_close_windows", true);
@@ -6121,6 +6123,21 @@ void nsGlobalWindowOuter::CloseOuter(bool aTrustedCaller) {
   }
 
   FinalClose();
+}
+
+bool nsGlobalWindowOuter::IsOnlyTopLevelDocumentInSHistory() {
+  NS_ENSURE_TRUE(mDocShell && mBrowsingContext, false);
+  MOZ_ASSERT(mBrowsingContext->IsTop());
+
+  nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mDocShell));
+  NS_ENSURE_TRUE(webNav, false);
+
+  RefPtr<ChildSHistory> csh = webNav->GetSessionHistory();
+  if (csh && csh->LegacySHistory()) {
+    return csh->LegacySHistory()->IsEmptyOrHasEntriesForSingleTopLevelPage();
+  }
+
+  return false;
 }
 
 nsresult nsGlobalWindowOuter::Close() {

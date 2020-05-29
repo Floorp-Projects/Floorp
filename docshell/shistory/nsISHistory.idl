@@ -272,4 +272,6 @@ interface nsISHistory: nsISupports
 
   [noscript] void AddChildSHEntryHelper(in nsISHEntry aCloneRef, in nsISHEntry aNewEntry,
                                         in BrowsingContext aBC, in bool aCloneChildren);
+
+  [noscript, notxpcom] boolean isEmptyOrHasEntriesForSingleTopLevelPage();
 };
