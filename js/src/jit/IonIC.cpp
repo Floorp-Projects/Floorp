@@ -737,15 +737,10 @@ void IonIC::attachStub(IonICStub* newStub, JitCode* code) {
   MOZ_ASSERT(code);
 
   if (firstStub_) {
-    IonICStub* last = firstStub_;
-    while (IonICStub* next = last->next()) {
-      last = next;
-    }
-    last->setNext(newStub, code);
-  } else {
-    firstStub_ = newStub;
-    codeRaw_ = code->raw();
+    newStub->setNext(firstStub_, codeRaw_);
   }
+  firstStub_ = newStub;
+  codeRaw_ = code->raw();
 
   state_.trackAttached();
 }

@@ -38,11 +38,11 @@ class IonICStub {
 
   uint8_t* stubDataStart();
 
-  void setNext(IonICStub* next, JitCode* nextCode) {
+  void setNext(IonICStub* next, uint8_t* nextCodeRaw) {
     MOZ_ASSERT(!next_);
-    MOZ_ASSERT(next && nextCode);
+    MOZ_ASSERT(next && nextCodeRaw);
     next_ = next;
-    nextCodeRaw_ = nextCode->raw();
+    nextCodeRaw_ = nextCodeRaw;
   }
 
   // Null out pointers when we unlink stubs, to ensure we never use
