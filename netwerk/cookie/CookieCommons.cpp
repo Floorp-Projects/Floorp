@@ -446,5 +446,15 @@ already_AddRefed<nsICookieJarSettings> CookieCommons::GetCookieJarSettings(
   return cookieJarSettings.forget();
 }
 
+// static
+bool CookieCommons::ShouldIncludeCrossSiteCookieForDocument(Cookie* aCookie) {
+  MOZ_ASSERT(aCookie);
+
+  int32_t sameSiteAttr = 0;
+  aCookie->GetSameSite(&sameSiteAttr);
+
+  return sameSiteAttr == nsICookie::SAMESITE_NONE;
+}
+
 }  // namespace net
 }  // namespace mozilla
