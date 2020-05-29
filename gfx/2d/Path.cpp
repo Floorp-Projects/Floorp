@@ -276,11 +276,18 @@ static inline void FindInflectionApproximationRange(
   if (cp21.x == 0. && cp21.y == 0.) {
     // In this case s3 becomes lim[n->0] (cp41.x * n) / n - (cp41.y * n) / n =
     // cp41.x - cp41.y.
+    double s3 = cp41.x - cp41.y;
 
     // Use the absolute value so that Min and Max will correspond with the
     // minimum and maximum of the range.
-    *aMin = aT - CubicRoot(std::abs(aTolerance / (cp41.x - cp41.y)));
-    *aMax = aT + CubicRoot(std::abs(aTolerance / (cp41.x - cp41.y)));
+    if (s3 == 0) {
+      *aMin = -1.0;
+      *aMax = 2.0;
+    } else {
+      double r = CubicRoot(std::abs(aTolerance / s3));
+      *aMin = aT - r;
+      *aMax = aT + r;
+    }
     return;
   }
 
