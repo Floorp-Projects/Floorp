@@ -32,6 +32,10 @@ PurgeTrackerService.prototype = {
   classID: Components.ID("{90d1fd17-2018-4e16-b73c-a04a26fa6dd4}"),
   QueryInterface: ChromeUtils.generateQI([Ci.nsIPurgeTrackerService]),
 
+  // Purging is batched for cookies to avoid clearing too much data
+  // at once. This flag tells us whether this is the first daily iteration.
+  _firstIteration: true,
+
   // We can only know asynchronously if a host is matched by the tracking
   // protection list, so we cache the result for faster future lookups.
   _trackingState: new Map(),
@@ -108,6 +112,44 @@ PurgeTrackerService.prototype = {
     );
   },
 
+  submitTelemetry() {
+    let { numPurged, notPurged, durationIntervals } = this._telemetryData;
+    let now = Date.now();
+    let lastPurge = Number(
+      Services.prefs.getStringPref("privacy.purge_trackers.last_purge", now)
+    );
+
+    let intervalHistogram = Services.telemetry.getHistogramById(
+      "COOKIE_PURGING_INTERVAL_HOURS"
+    );
+    let hoursBetween = Math.floor((now - lastPurge) / 1000 / 60 / 60);
+    intervalHistogram.add(hoursBetween);
+
+    Services.prefs.setIntPref(
+      "privacy.purge_trackers.last_purge",
+      now.toString()
+    );
+
+    let purgedHistogram = Services.telemetry.getHistogramById(
+      "COOKIE_PURGING_ORIGINS_PURGED"
+    );
+    purgedHistogram.add(numPurged);
+
+    let notPurgedHistogram = Services.telemetry.getHistogramById(
+      "COOKIE_PURGING_TRACKERS_WITH_USER_INTERACTION"
+    );
+    notPurgedHistogram.add(notPurged);
+
+    let duration = durationIntervals
+      .map(([start, end]) => end - start)
+      .reduce((acc, cur) => acc + cur, 0);
+
+    let durationHistogram = Services.telemetry.getHistogramById(
+      "COOKIE_PURGING_DURATION_MS"
+    );
+    durationHistogram.add(duration);
+  },
+
   /**
    * This loops through all cookies saved in the database and checks if they are a tracking cookie, if it is it checks
    * that they have an interaction permission which is still valid. If the Permission is not valid we delete all data
@@ -139,6 +181,19 @@ PurgeTrackerService.prototype = {
       "privacy.purge_trackers.max_purge_count",
       100
     );
+
+    if (this._firstIteration) {
+      this._telemetryData = {
+        durationIntervals: [],
+        numPurged: 0,
+        notPurged: 0,
+      };
+    }
+
+    // Record how long this iteration took for telemetry.
+    // This is a tuple of start and end time, the second
+    // part will be added at the end of this function.
+    let duration = [Cu.now()];
 
     /**
      * We record the creationTime of the last cookie we looked at and
@@ -187,14 +242,18 @@ PurgeTrackerService.prototype = {
       saved_date = cookie.creationTime;
     }
 
-    let startDate = Date.now() - THREE_DAYS_MS;
-    let storagePrincipals = gStorageActivityService.getActiveOrigins(
-      startDate * 1000,
-      Date.now() * 1000
-    );
+    // We only consider recently active storage and don't batch it,
+    // so only do this in the first iteration.
+    if (this._firstIteration) {
+      let startDate = Date.now() - THREE_DAYS_MS;
+      let storagePrincipals = gStorageActivityService.getActiveOrigins(
+        startDate * 1000,
+        Date.now() * 1000
+      );
 
-    for (let principal of storagePrincipals.enumerate()) {
-      maybeClearPrincipals.set(principal.origin, principal);
+      for (let principal of storagePrincipals.enumerate()) {
+        maybeClearPrincipals.set(principal.origin, principal);
+      }
     }
 
     let feature = gClassifier.getFeatureByName("tracking-annotation");
@@ -204,10 +263,17 @@ PurgeTrackerService.prototype = {
       return;
     }
 
-    let baseDomainsWithInteraction = new Set();
+    let baseDomainsWithInteraction = new Map();
     for (let perm of Services.perms.getAllWithTypePrefix("storageAccessAPI")) {
-      baseDomainsWithInteraction.add(perm.principal.baseDomain);
+      baseDomainsWithInteraction.set(
+        perm.principal.baseDomain,
+        perm.expireTime
+      );
     }
+
+    let permissionAgeHistogram = Services.telemetry.getHistogramById(
+      "COOKIE_PURGING_TRACKERS_USER_INTERACTION_REMAINING_DAYS"
+    );
 
     for (let principal of maybeClearPrincipals.values()) {
       // Either the interaction permission was never granted or it expired.
@@ -237,7 +303,27 @@ PurgeTrackerService.prototype = {
               resolve
             );
           });
+          this._telemetryData.numPurged++;
           LOG(`Data deleted from: `, principal.origin);
+        }
+      } else if (Services.telemetry.canRecordPrereleaseData) {
+        // We want to avoid doing the extra classification work unless we're
+        // actually recording the data, which is currently only in pre-release.
+        // If this probe is ever extended to release, that condition needs
+        // to be removed (we also have tests that should ensure this).
+        let isTracker = await this.isTracker(principal, feature);
+        if (isTracker) {
+          let expireTimeMs = baseDomainsWithInteraction.get(
+            principal.baseDomain
+          );
+
+          // Collect how much longer the user interaction will be valid for, in hours.
+          let timeRemaining = Math.floor(
+            (expireTimeMs - Date.now()) / 1000 / 60 / 60 / 24
+          );
+          permissionAgeHistogram.add(timeRemaining);
+
+          this._telemetryData.notPurged++;
         }
       }
     }
@@ -247,14 +333,20 @@ PurgeTrackerService.prototype = {
       saved_date
     );
 
+    duration.push(Cu.now());
+    this._telemetryData.durationIntervals.push(duration);
+
     // We've reached the end, no need to repeat again until next idle-daily.
     if (!cookies.length || cookies.length < 100) {
       LOG("All cookie purging finished, resetting list until tomorrow.");
       this.resetPurgeList();
+      this.submitTelemetry();
+      this._firstIteration = true;
       return;
     }
 
     LOG("Batch finished, queueing next batch.");
+    this._firstIteration = false;
     Services.tm.idleDispatchToMainThread(() => {
       this.purgeTrackingCookieJars();
     });
