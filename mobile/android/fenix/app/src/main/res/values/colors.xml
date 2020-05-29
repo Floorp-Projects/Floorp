@@ -8,6 +8,7 @@
     <color name="dark_grey_10">#52525E</color>
     <color name="dark_grey_50">#32313C</color>
     <color name="dark_grey_80">#1C1B22</color>
+    <color name="ink_20">#312A65</color>
     <color name="ink_50">#291D4F</color>
     <color name="ink_80">#20123A</color>
     <color name="ink_90">#1D1133</color>
@@ -15,6 +16,7 @@
     <color name="light_grey_10">#F9F9FB</color>
     <color name="light_grey_30">#E0E0E6</color>
     <color name="light_grey_60">#AFAFBB</color>
+    <color name="violet_50">#9059FF</color>
     <color name="violet_50_32a">#529059FF</color>
     <color name="violet_70_12a">#1F592ACB</color>
 
@@ -68,6 +70,7 @@
     <color name="tab_tray_item_divider_light_theme">@color/light_grey_30</color>
     <color name="tab_tray_item_media_stroke">#ffffff</color>
     <color name="tab_tray_item_media_background_light_theme">#312A65</color>
+    <color name="tab_tray_heading_icon_light_theme">@color/ink_20</color>
 
     <!-- Dark theme color palette -->
     <color name="primary_text_dark_theme">#FBFBFE</color>
@@ -118,6 +121,7 @@
     <color name="tab_tray_toolbar_background_dark_theme">@color/dark_grey_50</color>
     <color name="tab_tray_item_divider_dark_theme">@color/dark_grey_10</color>
     <color name="tab_tray_item_media_background_dark_theme">#9059FF</color>
+    <color name="tab_tray_heading_icon_dark_theme">@color/violet_50</color>
 
     <!-- Private theme color palette -->
     <color name="primary_text_private_theme">#FBFBFE</color>
@@ -167,6 +171,7 @@
     <color name="tab_tray_toolbar_background_private_theme">@color/ink_50</color>
     <color name="tab_tray_item_divider_private_theme">@color/dark_grey_10</color>
     <color name="tab_tray_item_media_background_private_theme">#9059FF</color>
+    <color name="tab_tray_heading_icon_private_theme">@color/violet_50</color>
 
     <!-- Normal theme colors for light mode -->
     <color name="primary_text_normal_theme">@color/primary_text_light_theme</color>
@@ -215,6 +220,7 @@
     <color name="tab_tray_toolbar_background_normal_theme">@color/tab_tray_toolbar_background_light_theme</color>
     <color name="tab_tray_item_divider_normal_theme">@color/tab_tray_item_divider_light_theme</color>
     <color name="tab_tray_item_media_background_normal_theme">@color/tab_tray_item_media_background_light_theme</color>
+    <color name="tab_tray_heading_icon_normal_theme">@color/tab_tray_heading_icon_light_theme</color>
 
     <!-- Bookmark buttons -->
     <color name="bookmark_favicon_background">#DFDFE3</color>
