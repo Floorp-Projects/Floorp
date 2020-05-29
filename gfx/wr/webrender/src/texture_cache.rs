@@ -1109,6 +1109,7 @@ impl TextureCache {
         // Iterate over the entries in reverse order, evicting the ones older than
         // the frame age threshold. Reverse order avoids iterator invalidation when
         // removing entries.
+        let mut count = 0;
         for i in (0..self.doc_data.handles.select(kind).len()).rev() {
             let evict = {
                 let entry = self.entries.get(&self.doc_data.handles.select(kind)[i]);
@@ -1137,7 +1138,11 @@ impl TextureCache {
                 let entry = self.entries.free(handle);
                 entry.evict();
                 self.free(&entry);
+                count = count + 1;
             }
+        }
+        if count != 0 {
+            tracy_plot!("texture cache evictions", count as f64);
         }
     }
 
