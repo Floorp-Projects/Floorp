@@ -33,7 +33,10 @@ const BUILT_IN_SECTIONS = {
         id: "home-prefs-recommended-by-header",
         values: { provider: options.provider_name },
       },
-      descString: { id: "home-prefs-recommended-by-description" },
+      descString: {
+        id: "home-prefs-recommended-by-description-update",
+        values: { provider: options.provider_name },
+      },
       nestedPrefs: options.show_spocs
         ? [
             {
