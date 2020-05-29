@@ -87,6 +87,8 @@ using IpdlQueueBuffers = nsTArray<IpdlQueueBuffer>;
 // TODO: Base this on something.
 static constexpr size_t kMaxIpdlQueueArgSize = 256 * 1024;
 
+static constexpr uint32_t kAsyncFlushWaitMs = 4;  // 4ms
+
 template <typename Derived>
 class AsyncProducerActor {
  public:
@@ -109,6 +111,10 @@ class AsyncProducerActor {
         }
       }
       buffers.AppendElement(std::move(aData));
+
+      if (!mResponseBuffers) {
+        PostFlushAsyncCache(kAsyncFlushWaitMs);
+      }
       return true;
     }
 
@@ -133,6 +139,37 @@ class AsyncProducerActor {
     mAsyncBuffers.Clear();
     return true;
   }
+
+  bool PostFlushAsyncCache(uint32_t aEstWaitTimeMs) {
+    if (mPostedFlushRunnable) {
+      // Already scheduled a flush for later.
+      return true;
+    }
+
+    if (!MessageLoop::current()) {
+      NS_WARNING("No message loop for IpdlQueue flush task");
+      return false;
+    }
+
+    Derived* self = static_cast<Derived*>(this);
+    // IpdlProducer/IpdlConsumer guarantees the actor supports WeakPtr.
+    auto weak = WeakPtr<Derived>(self);
+    auto flushRunnable = NS_NewRunnableFunction("FlushAsyncCache", [weak] {
+      auto strong = RefPtr<Derived>(weak);
+      if (!strong) {
+        return;
+      }
+      strong->FlushAsyncCache();
+      strong->ClearFlushRunnable();
+    });
+
+    MessageLoop::current()->PostDelayedTask(std::move(flushRunnable),
+                                            aEstWaitTimeMs);
+    mPostedFlushRunnable = true;
+    return true;
+  }
+
+  void ClearFlushRunnable() { mPostedFlushRunnable = false; }
 
   template <typename... Args>
   IpdlQueueProtocol GetIpdlQueueProtocol(const Args&...) {
@@ -160,6 +197,8 @@ class AsyncProducerActor {
   // For kBufferedAsync transmissions that occur outside of a response to a
   // kSync message.
   IpdlQueueBuffers mAsyncBuffers;
+
+  bool mPostedFlushRunnable = false;
 };
 
 template <typename Derived>
