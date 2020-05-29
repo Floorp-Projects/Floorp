@@ -30,7 +30,7 @@ import mozilla.components.support.ktx.android.view.onNextGlobalLayout
  */
 open class BrowserMenu internal constructor(
     internal val adapter: BrowserMenuAdapter
-) {
+) : View.OnAttachStateChangeListener {
     protected var currentPopup: PopupWindow? = null
     private var menuList: RecyclerView? = null
     internal var currAnchor: View? = null
@@ -86,6 +86,7 @@ open class BrowserMenu internal constructor(
             }
 
             displayPopup(view, anchor, orientation).also {
+                anchor.addOnAttachStateChangeListener(this@BrowserMenu)
                 currAnchor = anchor
             }
         }.also {
@@ -148,6 +149,15 @@ open class BrowserMenu internal constructor(
     enum class Orientation {
         UP,
         DOWN
+    }
+
+    override fun onViewDetachedFromWindow(v: View?) {
+        currentPopup?.dismiss()
+        currAnchor?.removeOnAttachStateChangeListener(this)
+    }
+
+    override fun onViewAttachedToWindow(v: View?) {
+        // no-op
     }
 }
 
