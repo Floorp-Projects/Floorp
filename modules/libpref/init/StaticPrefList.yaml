@@ -7765,6 +7765,18 @@
   value: false
   mirror: always
 
+# Whether to cache SSL resumption tokens in necko.
+- name: network.ssl_tokens_cache_enabled
+  type: RelaxedAtomicBool
+  value: @IS_NIGHTLY_BUILD@
+  mirror: always
+
+# Capacity of the above cache, in kilobytes.
+- name: network.ssl_tokens_cache_capacity
+  type: RelaxedAtomicUint32
+  value: 2048
+  mirror: always
+
 # Single TRR request timeout, in milliseconds
 - name: network.trr.request_timeout_ms
   type: RelaxedAtomicUint32
