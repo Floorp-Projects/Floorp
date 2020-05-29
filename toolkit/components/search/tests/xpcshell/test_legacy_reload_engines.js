@@ -31,8 +31,8 @@ add_task(async function test_regular_init() {
         "engines-reloaded"
       );
       Region._setRegion("FR", true);
-      await enginesReloaded;
       await promiseAfterCache();
+      await enginesReloaded;
 
       Assert.equal(
         kTestEngineName,
