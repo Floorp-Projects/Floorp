@@ -14,18 +14,23 @@
       var value = "" + Math.random();
       return resetSameSiteCookies(origin, value)
         .then(_ => {
-          return new Promise(resolve => {
+          return new Promise((resolve, reject) => {
             var iframe = document.createElement("iframe");
+            iframe.onerror = _ => reject("IFrame could not be loaded.");
 
-            var msgHandler = t.step_func(e => {
+            var msgHandler = e => {
               if (e.source == iframe.contentWindow) {
                 // Cleanup, then verify cookie state:
                 document.body.removeChild(iframe);
                 window.removeEventListener("message", msgHandler);
-                getSameSiteVerifier()(expectedStatus, value, e.data, expectedDomStatus);
-                resolve();
+                try {
+                  getSameSiteVerifier()(expectedStatus, value, e.data, expectedDomStatus);
+                  resolve();
+                } catch(e) {
+                  reject(e);
+                }
               }
-            });
+            };
             window.addEventListener("message", msgHandler);
 
             iframe.src = target + "/cookies/resources/postToParent.py";

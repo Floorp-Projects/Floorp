@@ -9,7 +9,7 @@
 <script>
   function create_test(target, expectedDomStatus, title) {
     promise_test(async t => {
-      let cookieValue = await new Promise(resolve => {
+      let cookieValue = await new Promise((resolve, reject) => {
         var iframe = document.createElement("iframe");
 
         window.onmessage = t.step_func(e => {
@@ -23,7 +23,7 @@
         document.body.appendChild(iframe);
       });
 
-      await new Promise(resolve => {
+      await new Promise((resolve, reject) => {
         var iframe = document.createElement("iframe");
 
         window.onmessage = t.step_func(e => {
