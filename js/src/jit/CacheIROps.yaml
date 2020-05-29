@@ -685,6 +685,12 @@
   args:
     input: ValId
 
+- name: IsConstructorResult
+  shared: true
+  transpile: false
+  args:
+    obj: ObjId
+
 - name: MathAbsInt32Result
   shared: true
   transpile: true
