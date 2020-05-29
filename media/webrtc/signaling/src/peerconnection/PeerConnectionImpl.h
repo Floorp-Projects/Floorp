@@ -450,6 +450,9 @@ class PeerConnectionImpl final
       const RefPtr<MediaPipelineReceive>& aPipeline);
   RefPtr<dom::RTCStatsPromise> GetSenderStats(
       const RefPtr<MediaPipelineTransmit>& aPipeline);
+  RefPtr<dom::RTCStatsPromise> GetDataChannelStats(
+      const RefPtr<DataChannelConnection>& aDataChannelConnection,
+      const DOMHighResTimeStamp aTimestamp);
   nsresult CalculateFingerprint(const std::string& algorithm,
                                 std::vector<uint8_t>* fingerprint) const;
   nsresult ConfigureJsepSessionCodecs();
