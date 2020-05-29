@@ -83,19 +83,6 @@ class Pivot final {
   Accessible* mRoot;
 };
 
-/**
- * This rule matches accessibles on a given role.
- */
-class PivotRoleRule final : public PivotRule {
- public:
-  explicit PivotRoleRule(role aRole);
-
-  virtual uint16_t Match(Accessible* aAccessible) override;
-
- private:
-  role mRole;
-};
-
 }  // namespace a11y
 }  // namespace mozilla
 
