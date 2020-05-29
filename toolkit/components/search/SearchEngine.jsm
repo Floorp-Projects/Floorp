@@ -508,7 +508,6 @@ const ENGINE_ALIASES = new Map([
   ["google", ["@google"]],
   ["amazondotcom", ["@amazon"]],
   ["amazon", ["@amazon"]],
-  ["twitter", ["@twitter"]],
   ["wikipedia", ["@wikipedia"]],
   ["ebay", ["@ebay"]],
   ["bing", ["@bing"]],
