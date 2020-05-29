@@ -21,6 +21,7 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Ignore
 import org.junit.Test
+import org.mockito.ArgumentMatchers
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.anyString
 import org.mockito.Mockito.never
@@ -138,6 +139,23 @@ class RustPushConnectionTest {
         }
 
         verify(api).unsubscribeAll()
+    }
+
+    @Test
+    fun `containsSubscription returns true if a subscription exists`() {
+        val connection = createConnection()
+        val api: PushAPI = mock()
+        connection.api = api
+
+        `when`(api.dispatchInfoForChid(ArgumentMatchers.anyString()))
+            .thenReturn(mock())
+            .thenReturn(null)
+
+        runBlocking {
+            assertTrue(connection.containsSubscription("validSubscription"))
+
+            assertFalse(connection.containsSubscription("invalidSubscription"))
+        }
     }
 
     @Test(expected = IllegalStateException::class)

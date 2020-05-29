@@ -231,6 +231,32 @@ class AutoPushFeature(
     }
 
     /**
+     * Checks if a subscription for the [scope] already exists.
+     *
+     * @param scope The subscription identifier which usually represents the website's URI.
+     * @param appServerKey An optional key provided by the application server.
+     * @param block The callback invoked when a subscription for the [scope] is found, otherwise null. Note: this will
+     * not execute on the calls thread.
+     */
+    fun getSubscription(
+        scope: String,
+        appServerKey: String? = null,
+        block: (AutoPushSubscription?) -> Unit
+    ) {
+        connection.ifInitialized {
+            coroutineScope.launchAndTry {
+                if (containsSubscription(scope)) {
+                    // If we have a subscription, calling subscribe will give us the existing subscription.
+                    // We do this because we do not have API symmetry across the different layers in this stack.
+                    subscribe(scope, appServerKey, {}, block)
+                } else {
+                    block(null)
+                }
+            }
+        }
+    }
+
+    /**
      * Deletes the registration token locally so that it forces the service to get a new one the
      * next time hits it's messaging server.
      */
