@@ -8370,7 +8370,7 @@
 # Anti-tracking user-interaction expiration.
 - name: privacy.userInteraction.expiration
   type: uint32_t
-  value: 2592000   # 30 days (in seconds)
+  value: 3888000   # 45 days (in seconds)
   mirror: always
 
 # Anti-tracking user-interaction document interval.
