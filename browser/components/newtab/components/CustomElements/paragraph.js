@@ -21,14 +21,9 @@
       const attributes = {};
       for (let name of this.getAttributeNames()) {
         if (name.startsWith("fluent-variable-")) {
-          let value = this.getAttribute(name);
-          // Attribute value is a string, in some cases that is not useful
-          // for example instantiating a Date object will fail. We try to
-          // convert all possible integers back.
-          if (value.match(/^\d+/)) {
-            value = parseInt(value, 10);
-          }
-          attributes[name.replace(/^fluent-variable-/, "")] = value;
+          attributes[name.replace(/^fluent-variable-/, "")] = this.getAttribute(
+            name
+          );
         }
       }
 
