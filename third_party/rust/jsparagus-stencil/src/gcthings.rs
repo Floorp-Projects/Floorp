@@ -1,4 +1,4 @@
-use crate::function::FunctionCreationDataIndex;
+use crate::function::FunctionStencilIndex;
 use crate::regexp::RegExpIndex;
 use crate::scope::ScopeIndex;
 use ast::source_atom_set::SourceAtomSetIndex;
@@ -8,7 +8,7 @@ use ast::source_atom_set::SourceAtomSetIndex;
 #[derive(Debug)]
 pub enum GCThing {
     Atom(SourceAtomSetIndex),
-    Function(FunctionCreationDataIndex),
+    Function(FunctionStencilIndex),
     RegExp(RegExpIndex),
     Scope(ScopeIndex),
 }
@@ -50,7 +50,7 @@ impl GCThingList {
         GCThingIndex::new(index)
     }
 
-    pub fn push_function(&mut self, fun_index: FunctionCreationDataIndex) -> GCThingIndex {
+    pub fn push_function(&mut self, fun_index: FunctionStencilIndex) -> GCThingIndex {
         let index = self.things.len();
         self.things.push(GCThing::Function(fun_index));
         GCThingIndex::new(index)

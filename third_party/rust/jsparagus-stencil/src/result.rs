@@ -1,7 +1,9 @@
+use crate::function::FunctionStencil;
 use crate::scope::ScopeData;
 use crate::script::ScriptStencil;
 
 /// The result of emitter.
+#[derive(Debug)]
 pub struct EmitResult<'alloc> {
     pub atoms: Vec<&'alloc str>,
     pub slices: Vec<&'alloc str>,
@@ -10,7 +12,8 @@ pub struct EmitResult<'alloc> {
     /// Emitted scripts.
     /// The first item corresponds to the global script, and the remaining
     /// items correspond to inner functions.
-    pub scripts: Vec<ScriptStencil>,
+    pub script: ScriptStencil,
+    pub functions: Vec<FunctionStencil>,
 }
 
 impl<'alloc> EmitResult<'alloc> {
@@ -18,13 +21,15 @@ impl<'alloc> EmitResult<'alloc> {
         atoms: Vec<&'alloc str>,
         slices: Vec<&'alloc str>,
         scopes: Vec<ScopeData>,
-        scripts: Vec<ScriptStencil>,
+        script: ScriptStencil,
+        functions: Vec<FunctionStencil>,
     ) -> Self {
         Self {
             atoms,
             slices,
             scopes,
-            scripts,
+            script,
+            functions,
         }
     }
 }
