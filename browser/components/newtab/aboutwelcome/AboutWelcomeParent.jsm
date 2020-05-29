@@ -142,6 +142,19 @@ class AboutWelcomeParent extends JSWindowActorParent {
         this.AboutWelcomeObserver.terminateReason =
           AWTerminate.ADDRESS_BAR_NAVIGATED;
         break;
+      case "AWPage:WAIT_FOR_MIGRATION_CLOSE":
+        return new Promise(resolve =>
+          Services.ww.registerNotification(function observer(subject, topic) {
+            if (
+              topic === "domwindowclosed" &&
+              subject.document.documentURI ===
+                "chrome://browser/content/migration/migration.xhtml"
+            ) {
+              Services.ww.unregisterNotification(observer);
+              resolve();
+            }
+          })
+        );
       default:
         log.debug(`Unexpected event ${type} was not handled.`);
     }
