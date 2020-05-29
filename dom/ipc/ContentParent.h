@@ -54,16 +54,15 @@
 // Process names as reported by about:memory are defined in
 // ContentChild:RecvRemoteType.  Add your value there too or it will be called
 // "Web Content".
-#define PREALLOC_REMOTE_TYPE "prealloc"
 #define DEFAULT_REMOTE_TYPE "web"
+#define FISSION_WEB_REMOTE_TYPE "webIsolated"
 #define FILE_REMOTE_TYPE "file"
 #define EXTENSION_REMOTE_TYPE "extension"
 #define PRIVILEGEDABOUT_REMOTE_TYPE "privilegedabout"
 #define PRIVILEGEDMOZILLA_REMOTE_TYPE "privilegedmozilla"
-
-// These must start with the DEFAULT_REMOTE_TYPE above.
-#define FISSION_WEB_REMOTE_TYPE "webIsolated"
 #define WITH_COOP_COEP_REMOTE_TYPE_PREFIX "webCOOP+COEP="
+
+// This must start with the DEFAULT_REMOTE_TYPE above.
 #define LARGE_ALLOCATION_REMOTE_TYPE "webLargeAllocation"
 
 class nsConsoleService;
@@ -161,8 +160,6 @@ class ContentParent final
       mozilla::MozPromise<RefPtr<ContentParent>, LaunchError, false>;
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_CONTENTPARENT_IID)
-
-  static LogModule* GetLog();
 
   /**
    * Create a subprocess suitable for use later as a content process.
@@ -790,11 +787,6 @@ class ContentParent final
   void RemoveFromList();
 
   /**
-   * Return if the process has an active worker or JSPlugin
-   */
-  bool HasActiveWorkerOrJSPlugin();
-
-  /**
    * Decide whether the process should be kept alive even when it would normally
    * be shut down, for example when all its tabs are closed.
    */
@@ -1350,8 +1342,6 @@ class ContentParent final
   TimeStamp mLaunchYieldTS;   // used to calculate async launch main thread time
   TimeStamp mActivateTS;
   ContentParent* mOpener;
-
-  bool mIsAPreallocBlocker;  // We called AddBlocker for this ContentParent
 
   nsString mRemoteType;
 
