@@ -72,39 +72,16 @@ class SmooshScriptStencil : public ScriptStencil {
                          UniquePtr<ImmutableScriptData> immutableData) {
     using ImmutableFlags = js::ImmutableScriptFlagsEnum;
 
-    // A global script is a top-level context.
-    bool isTopLevelContext = true;
     const JS::ReadOnlyCompileOptions& options = compilationInfo_.options;
 
-    // The "input" flags are derived from options.
-    immutableFlags.setFlag(ImmutableFlags::IsForEval, result_.is_for_eval);
-    immutableFlags.setFlag(ImmutableFlags::IsModule, result_.is_module);
-    immutableFlags.setFlag(ImmutableFlags::IsFunction, false);
+    immutableFlags = result_.immutable_flags;
+
+    // FIXME: The following flags should be set in jsparagus.
     immutableFlags.setFlag(ImmutableFlags::SelfHosted, options.selfHostingMode);
     immutableFlags.setFlag(ImmutableFlags::ForceStrict,
                            options.forceStrictMode());
-    immutableFlags.setFlag(ImmutableFlags::HasNonSyntacticScope,
-                           result_.has_non_syntactic_scope);
-    if (isTopLevelContext) {
-      immutableFlags.setFlag(ImmutableFlags::NoScriptRval,
-                             options.noScriptRval);
-      immutableFlags.setFlag(ImmutableFlags::TreatAsRunOnce, options.isRunOnce);
-    }
-
-    // The parser-generated flags.
-    immutableFlags.setFlag(ImmutableFlags::Strict, result_.strict);
-    immutableFlags.setFlag(ImmutableFlags::HasModuleGoal,
-                           result_.has_module_goal);
-    immutableFlags.setFlag(ImmutableFlags::HasInnerFunctions, false);
-    immutableFlags.setFlag(ImmutableFlags::HasDirectEval, false);
-    immutableFlags.setFlag(ImmutableFlags::BindingsAccessedDynamically,
-                           result_.bindings_accessed_dynamically);
-    immutableFlags.setFlag(ImmutableFlags::HasCallSiteObj,
-                           result_.has_call_site_obj);
-
-    // TODO: The parser-generated flags for functions.
-    immutableFlags.setFlag(ImmutableFlags::NeedsFunctionEnvironmentObjects,
-                           result_.needs_function_environment_objects);
+    immutableFlags.setFlag(ImmutableFlags::NoScriptRval, options.noScriptRval);
+    immutableFlags.setFlag(ImmutableFlags::TreatAsRunOnce, options.isRunOnce);
 
     immutableScriptData = std::move(immutableData);
 
@@ -432,11 +409,13 @@ JSScript* Smoosh::compileGlobalScript(CompilationInfo& compilationInfo,
     return nullptr;
   }
 
+  bool isFunction = false;
+
   int funLength = 0;  // Smoosh support for functions isn't complete yet.
   auto immutableScriptData = ImmutableScriptData::new_(
       cx, smoosh.main_offset, nfixed, uint32_t(nslots64),
       smoosh.body_scope_index, smoosh.num_ic_entries, smoosh.num_type_sets,
-      smoosh.is_function, funLength,
+      isFunction, funLength,
       mozilla::MakeSpan(smoosh.bytecode.data, smoosh.bytecode.len),
       mozilla::Span<const SrcNote>(), mozilla::Span<const uint32_t>(),
       scopeNotes, mozilla::Span<const TryNote>());

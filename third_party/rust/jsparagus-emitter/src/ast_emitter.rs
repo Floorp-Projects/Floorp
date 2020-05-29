@@ -22,7 +22,7 @@ use std::collections::HashSet;
 use stencil::opcode::Opcode;
 use stencil::regexp::RegExpItem;
 use stencil::result::EmitResult;
-use stencil::script::{ScriptStencilIndex, ScriptStencilList};
+use stencil::script::ScriptStencil;
 
 use crate::control_structures::{
     BreakEmitter, CForEmitter, ContinueEmitter, ControlStructureStack, DoWhileEmitter,
@@ -35,23 +35,21 @@ pub fn emit_program<'alloc>(
     options: &EmitOptions,
     mut compilation_info: CompilationInfo<'alloc>,
 ) -> Result<EmitResult<'alloc>, EmitError> {
-    let mut scripts = ScriptStencilList::new();
-    let emitter = AstEmitter::new(options, &mut compilation_info, &mut scripts);
+    let emitter = AstEmitter::new(options, &mut compilation_info);
 
-    match ast {
-        Program::Script(script) => {
-            emitter.emit_script(script)?;
-        }
+    let script = match ast {
+        Program::Script(script) => emitter.emit_script(script)?,
         _ => {
             return Err(EmitError::NotImplemented("TODO: modules"));
         }
-    }
+    };
 
     Ok(EmitResult::new(
         compilation_info.atoms.into(),
         compilation_info.slices.into(),
         compilation_info.scope_data_map.into(),
-        scripts.into(),
+        script,
+        compilation_info.functions.into(),
     ))
 }
 
@@ -60,7 +58,6 @@ pub struct AstEmitter<'alloc, 'opt> {
     pub scope_stack: EmitterScopeStack,
     pub options: &'opt EmitOptions,
     pub compilation_info: &'opt mut CompilationInfo<'alloc>,
-    pub scripts: &'opt mut ScriptStencilList,
     pub control_stack: ControlStructureStack,
 
     /// Holds the offset of top-level function declarations, to check if the
@@ -72,49 +69,33 @@ impl<'alloc, 'opt> AstEmitter<'alloc, 'opt> {
     fn new(
         options: &'opt EmitOptions,
         compilation_info: &'opt mut CompilationInfo<'alloc>,
-        scripts: &'opt mut ScriptStencilList,
     ) -> Self {
         Self {
             emit: InstructionWriter::new(),
             scope_stack: EmitterScopeStack::new(),
             options,
             compilation_info,
-            scripts,
             control_stack: ControlStructureStack::new(),
             top_level_function_offsets: HashSet::new(),
         }
     }
 
-    pub fn with_inner<ScriptFn>(
-        &mut self,
-        callback: ScriptFn,
-    ) -> Result<ScriptStencilIndex, EmitError>
+    pub fn with_inner<ScriptFn>(&mut self, callback: ScriptFn) -> Result<ScriptStencil, EmitError>
     where
         ScriptFn: Fn(&mut AstEmitter) -> Result<(), EmitError>,
     {
-        let script_index = self.scripts.allocate();
+        let mut inner_emitter = AstEmitter::new(self.options, self.compilation_info);
 
-        let inner_script = {
-            let mut inner_emitter =
-                AstEmitter::new(self.options, self.compilation_info, self.scripts);
+        callback(&mut inner_emitter)?;
 
-            callback(&mut inner_emitter)?;
-
-            inner_emitter.emit.into()
-        };
-
-        self.scripts.populate(script_index, inner_script);
-
-        Ok(script_index)
+        Ok(inner_emitter.emit.into())
     }
 
     pub fn lookup_name(&mut self, name: SourceAtomSetIndex) -> NameLocation {
         self.scope_stack.lookup_name(name)
     }
 
-    fn emit_script(mut self, ast: &Script) -> Result<ScriptStencilIndex, EmitError> {
-        let script_index = self.scripts.allocate();
-
+    fn emit_script(mut self, ast: &Script) -> Result<ScriptStencil, EmitError> {
         let scope_data_map = &self.compilation_info.scope_data_map;
         let function_map = &self.compilation_info.function_map;
 
@@ -139,9 +120,7 @@ impl<'alloc, 'opt> AstEmitter<'alloc, 'opt> {
         }
         .emit(&mut self)?;
 
-        self.scripts.populate(script_index, self.emit.into());
-
-        Ok(script_index)
+        Ok(self.emit.into())
     }
 
     fn emit_top_level_function_declaration(&mut self, fun: &Function) -> Result<(), EmitError> {

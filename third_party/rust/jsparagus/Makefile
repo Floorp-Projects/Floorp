@@ -95,8 +95,8 @@ static-check:
 jsdemo: $(PY_OUT)
 	$(PYTHON) -m js_parser.try_it
 
-update-opcodes-m-u:
-	$(PYTHON) update_opcodes.py \
+update-stencil:
+	$(PYTHON) update_stencil.py \
 		../mozilla-unified ./
 
 .PHONY: all check static-check dyn-check jsdemo rust update-opcodes-m-u
