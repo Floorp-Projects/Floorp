@@ -1428,7 +1428,7 @@
   shared: true
   transpile: false
   args:
-    input: ValId
+    input: NumberId
 
 - name: LoadStringTruthyResult
   shared: true

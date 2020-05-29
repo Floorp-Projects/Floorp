@@ -6746,7 +6746,7 @@ AttachDecision ToBoolIRGenerator::tryAttachStub() {
   AutoAssertNoPendingException aanpe(cx_);
 
   TRY_ATTACH(tryAttachInt32());
-  TRY_ATTACH(tryAttachDouble());
+  TRY_ATTACH(tryAttachNumber());
   TRY_ATTACH(tryAttachString());
   TRY_ATTACH(tryAttachNullOrUndefined());
   TRY_ATTACH(tryAttachObject());
@@ -6770,16 +6770,16 @@ AttachDecision ToBoolIRGenerator::tryAttachInt32() {
   return AttachDecision::Attach;
 }
 
-AttachDecision ToBoolIRGenerator::tryAttachDouble() {
-  if (!val_.isDouble()) {
+AttachDecision ToBoolIRGenerator::tryAttachNumber() {
+  if (!val_.isNumber()) {
     return AttachDecision::NoAction;
   }
 
   ValOperandId valId(writer.setInputOperandId(0));
-  writer.guardType(valId, ValueType::Double);
-  writer.loadDoubleTruthyResult(valId);
+  NumberOperandId numId = writer.guardIsNumber(valId);
+  writer.loadDoubleTruthyResult(numId);
   writer.returnFromIC();
-  trackAttached("ToBoolDouble");
+  trackAttached("ToBoolNumber");
   return AttachDecision::Attach;
 }
 
