@@ -1015,7 +1015,7 @@ nsPrintDialogServiceGTK::ShowPageSetup(nsPIDOMWindowOuter* aParent,
     nsString printName;
     aNSSettings->GetPrinterName(printName);
     if (printName.IsVoid()) {
-      psService->GetDefaultPrinterName(printName);
+      psService->GetLastUsedPrinterName(printName);
       aNSSettings->SetPrinterName(printName);
     }
     psService->InitPrintSettingsFromPrefs(aNSSettings, true,

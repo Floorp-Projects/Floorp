@@ -5215,20 +5215,20 @@ void nsGlobalWindowOuter::PrintOuter(ErrorResult& aError) {
       nsAutoString printerName;
       printSettings->GetPrinterName(printerName);
 
-      bool shouldGetDefaultPrinterName = printerName.IsEmpty();
+      bool shouldGetLastUsedPrinterName = printerName.IsEmpty();
 #  ifdef MOZ_X11
       // In Linux, GTK backend does not support per printer settings.
-      // Calling GetDefaultPrinterName causes a sandbox violation (see Bug
+      // Calling GetLastUsedPrinterName causes a sandbox violation (see Bug
       // 1329216). The printer name is not needed anywhere else on Linux
       // before it gets to the parent. In the parent, we will then query the
-      // default printer name if no name is set. Unless we are in the parent,
+      // last-used printer name if no name is set. Unless we are in the parent,
       // we will skip this part.
       if (!XRE_IsParentProcess()) {
-        shouldGetDefaultPrinterName = false;
+        shouldGetLastUsedPrinterName = false;
       }
 #  endif
-      if (shouldGetDefaultPrinterName) {
-        printSettingsService->GetDefaultPrinterName(printerName);
+      if (shouldGetLastUsedPrinterName) {
+        printSettingsService->GetLastUsedPrinterName(printerName);
         printSettings->SetPrinterName(printerName);
       }
       printSettingsService->InitPrintSettingsFromPrinter(printerName,

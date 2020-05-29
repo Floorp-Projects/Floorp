@@ -883,7 +883,7 @@ nsresult nsPrintSettingsService::_CreatePrintSettings(
   NS_ADDREF(*_retval = printSettings);  // ref count
 
   nsString printerName;
-  nsresult rv = GetDefaultPrinterName(printerName);
+  nsresult rv = GetLastUsedPrinterName(printerName);
   NS_ENSURE_SUCCESS(rv, rv);
   (*_retval)->SetPrinterName(printerName);
 
@@ -913,7 +913,8 @@ nsPrintSettingsService::GetNewPrintSettings(
 }
 
 NS_IMETHODIMP
-nsPrintSettingsService::GetDefaultPrinterName(nsAString& aDefaultPrinterName) {
+nsPrintSettingsService::GetLastUsedPrinterName(
+    nsAString& aLastUsedPrinterName) {
   nsresult rv;
   nsCOMPtr<nsIPrinterEnumerator> prtEnum =
       do_GetService(NS_PRINTER_ENUMERATOR_CONTRACTID, &rv);
@@ -938,7 +939,7 @@ nsPrintSettingsService::GetDefaultPrinterName(nsAString& aDefaultPrinterName) {
         }
       }
       if (isValid) {
-        aDefaultPrinterName = lastPrinterName;
+        aLastUsedPrinterName = lastPrinterName;
         return NS_OK;
       }
     }
@@ -946,7 +947,7 @@ nsPrintSettingsService::GetDefaultPrinterName(nsAString& aDefaultPrinterName) {
 
   // There is no last printer preference, or it doesn't name a valid printer.
   // Return the default from the printer enumeration.
-  return prtEnum->GetDefaultPrinterName(aDefaultPrinterName);
+  return prtEnum->GetDefaultPrinterName(aLastUsedPrinterName);
 }
 
 NS_IMETHODIMP
