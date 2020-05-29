@@ -32,7 +32,7 @@ class IntentReceiverActivity : Activity() {
             // The intent property is nullable, but the rest of the code below
             // assumes it is not. If it's null, then we make a new one and open
             // the HomeActivity.
-            val intent = intent?.let { Intent(intent) } ?: Intent()
+            val intent = intent?.let { Intent(it) } ?: Intent()
             intent.stripUnwantedFlags()
             processIntent(intent)
         }

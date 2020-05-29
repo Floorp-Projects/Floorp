@@ -10,14 +10,16 @@ import io.mockk.Called
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import mozilla.components.browser.search.SearchEngine
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.widget.VoiceSearchActivity.Companion.SPEECH_PROCESSING
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
+import org.mozilla.fenix.widget.VoiceSearchActivity.Companion.SPEECH_PROCESSING
 
 @RunWith(FenixRobolectricTestRunner::class)
 class SpeechProcessingIntentProcessorTest {
@@ -26,6 +28,13 @@ class SpeechProcessingIntentProcessorTest {
     private val navController: NavController = mockk(relaxed = true)
     private val out: Intent = mockk(relaxed = true)
     private val metrics: MetricController = mockk(relaxed = true)
+
+    @Before
+    fun setup() {
+        val searchEngine = mockk<SearchEngine>(relaxed = true)
+        every { activity.components.search.searchEngineManager.defaultSearchEngine } returns searchEngine
+        every { activity.components.search.provider.getDefaultEngine(activity) } returns searchEngine
+    }
 
     @Test
     fun `do not process blank intents`() {
@@ -58,7 +67,6 @@ class SpeechProcessingIntentProcessorTest {
             putExtra(HomeActivity.OPEN_TO_BROWSER_AND_LOAD, true)
         }
         val processor = SpeechProcessingIntentProcessor(activity, metrics)
-        every { activity.components.search.provider.getDefaultEngine(activity) } returns mockk(relaxed = true)
 
         processor.process(intent, navController, out)
 
@@ -81,7 +89,6 @@ class SpeechProcessingIntentProcessorTest {
             putExtra(SPEECH_PROCESSING, "hello world")
         }
         val processor = SpeechProcessingIntentProcessor(activity, metrics)
-        every { activity.components.search.provider.getDefaultEngine(activity) } returns mockk(relaxed = true)
 
         processor.process(intent, mockk(), mockk(relaxed = true))
 

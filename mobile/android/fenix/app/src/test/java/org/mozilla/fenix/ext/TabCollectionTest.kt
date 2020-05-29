@@ -5,14 +5,14 @@
 package org.mozilla.fenix.ext
 
 import androidx.core.content.ContextCompat
+import io.mockk.every
+import io.mockk.mockk
 import mozilla.components.feature.tab.collections.TabCollection
-import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito.`when`
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 
@@ -33,8 +33,8 @@ class TabCollectionTest {
     }
 
     private fun mockTabCollection(id: Long): TabCollection {
-        val collection: TabCollection = mock()
-        `when`(collection.id).thenReturn(id)
+        val collection: TabCollection = mockk()
+        every { collection.id } returns id
         return collection
     }
 }

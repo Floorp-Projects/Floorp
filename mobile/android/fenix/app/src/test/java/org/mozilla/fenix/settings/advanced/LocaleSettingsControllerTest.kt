@@ -14,7 +14,6 @@ import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import io.mockk.verify
 import mozilla.components.support.locale.LocaleManager
-import mozilla.components.support.test.mock
 import org.junit.Before
 import org.junit.Test
 import java.util.Locale
@@ -61,7 +60,7 @@ class LocaleSettingsControllerTest {
     @Test
     fun `set a new locale from the list`() {
         val selectedLocale = Locale("en", "UK")
-        val otherLocale: Locale = mock()
+        val otherLocale: Locale = mockk()
         every { localeSettingsStore.state } returns LocaleSettingsState(
             mockk(),
             mockk(),

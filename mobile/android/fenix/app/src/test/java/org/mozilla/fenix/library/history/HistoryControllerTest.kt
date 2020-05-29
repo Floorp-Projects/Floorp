@@ -20,6 +20,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
@@ -182,8 +183,8 @@ class HistoryControllerTest {
         }
 
         assertEquals(
-            directions.captured::class.simpleName,
-            "ActionGlobalShareFragment"
+            directions.captured.actionId,
+            R.id.action_global_shareFragment
         )
         assertEquals(1, (directions.captured.arguments["data"] as Array<ShareData>).size)
         assertEquals(historyItem.title, (directions.captured.arguments["data"] as Array<ShareData>)[0].title)

@@ -4,12 +4,12 @@
 
 package org.mozilla.fenix.customtabs
 
+import io.mockk.mockk
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.CustomTabConfig
 import mozilla.components.browser.state.state.ExternalAppType
 import mozilla.components.browser.state.state.createCustomTab
 import mozilla.components.browser.state.store.BrowserStore
-import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -50,7 +50,7 @@ class PoweredByNotificationTest {
 
     @Test
     fun `unregister receiver on pause`() {
-        val feature = PoweredByNotification(testContext, mock(), "session-id")
+        val feature = PoweredByNotification(testContext, mockk(), "session-id")
         feature.onPause()
     }
 }

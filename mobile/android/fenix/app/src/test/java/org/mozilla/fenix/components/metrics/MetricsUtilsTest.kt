@@ -10,24 +10,24 @@ import io.mockk.mockk
 import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import io.mockk.slot
+import io.mockk.unmockkStatic
 import kotlinx.coroutines.runBlocking
-import org.junit.Assert
 import org.junit.Assert.assertEquals
-import org.junit.Ignore
+import org.junit.Assert.assertNull
 import org.junit.Test
-import org.mockito.ArgumentMatchers
 import java.io.IOException
 
 class MetricsUtilsTest {
 
     private val context: Context = mockk(relaxed = true)
 
-    @Ignore("This test has side-effects that cause it to fail other unrelated tests.")
     @Test
     fun `getAdvertisingID() returns null if the API throws`() {
+        mockkStatic("com.google.android.gms.ads.identifier.AdvertisingIdClient")
+
         val exceptions = listOf(
             GooglePlayServicesNotAvailableException(1),
-            GooglePlayServicesRepairableException(0, ArgumentMatchers.anyString(), ArgumentMatchers.any()),
+            GooglePlayServicesRepairableException(0, "", mockk()),
             IllegalStateException(),
             IOException()
         )
@@ -37,8 +37,10 @@ class MetricsUtilsTest {
                 AdvertisingIdClient.getAdvertisingIdInfo(any())
             } throws it
 
-            Assert.assertNull(MetricsUtils.getAdvertisingID(context))
+            assertNull(MetricsUtils.getAdvertisingID(context))
         }
+
+        unmockkStatic("com.google.android.gms.ads.identifier.AdvertisingIdClient")
     }
 
     @Test
@@ -46,7 +48,7 @@ class MetricsUtilsTest {
         mockkStatic(AdvertisingIdClient::class)
         every { AdvertisingIdClient.getAdvertisingIdInfo(any()) } returns null
 
-        Assert.assertNull(MetricsUtils.getAdvertisingID(context))
+        assertNull(MetricsUtils.getAdvertisingID(context))
     }
 
     @Test

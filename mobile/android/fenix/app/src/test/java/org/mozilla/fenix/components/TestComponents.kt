@@ -6,8 +6,6 @@ package org.mozilla.fenix.components
 
 import android.content.Context
 import io.mockk.mockk
-import mozilla.components.support.test.mock
-import org.mockito.Mockito.`when`
 import org.mozilla.fenix.utils.ClipboardHandler
 
 class TestComponents(private val context: Context) : Components(context) {
@@ -28,17 +26,7 @@ class TestComponents(private val context: Context) : Components(context) {
             core.thumbnailStorage
         )
     }
-    override val intentProcessors by lazy {
-        val processors: IntentProcessors = mock()
-        `when`(processors.externalAppIntentProcessors).thenReturn(emptyList())
-        `when`(processors.privateIntentProcessor).thenReturn(mock())
-        `when`(processors.intentProcessor).thenReturn(mock())
-        `when`(processors.customTabIntentProcessor).thenReturn(mock())
-        `when`(processors.privateCustomTabIntentProcessor).thenReturn(mock())
-        `when`(processors.migrationIntentProcessor).thenReturn(mock())
-        `when`(processors.fennecPageShortcutIntentProcessor).thenReturn(mock())
-        processors
-    }
+    override val intentProcessors by lazy { mockk<IntentProcessors>(relaxed = true) }
     override val analytics by lazy { Analytics(context) }
 
     override val clipboardHandler by lazy { ClipboardHandler(context) }

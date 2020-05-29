@@ -1,7 +1,8 @@
 package org.mozilla.fenix.components.searchengine
 
 import android.content.Context
-import android.graphics.Bitmap
+import io.mockk.every
+import io.mockk.mockk
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -15,8 +16,6 @@ import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito.`when`
-import org.mockito.Mockito.mock
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 
 @ExperimentalCoroutinesApi
@@ -115,11 +114,10 @@ class FakeFenixSearchEngineProvider(context: Context) : FenixSearchEngineProvide
         id: String,
         n: String = id
     ): SearchEngine {
-        // Uses Mockito because of a strange Mockk error. Feel free to rewrite
-        return mock(SearchEngine::class.java).apply {
-            `when`(identifier).thenReturn(id)
-            `when`(name).thenReturn(n)
-            `when`(icon).thenReturn(mock(Bitmap::class.java))
-        }
+        val engine = mockk<SearchEngine>()
+        every { engine.identifier } returns id
+        every { engine.name } returns n
+        every { engine.icon } returns mockk()
+        return engine
     }
 }

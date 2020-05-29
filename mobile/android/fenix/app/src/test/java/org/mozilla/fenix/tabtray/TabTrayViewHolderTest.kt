@@ -6,14 +6,16 @@ package org.mozilla.fenix.tabtray
 
 import android.view.LayoutInflater
 import androidx.test.core.app.ApplicationProvider
+import io.mockk.Runs
+import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
+import io.mockk.spyk
 import mozilla.components.browser.toolbar.MAX_URI_LENGTH
 import mozilla.components.concept.tabstray.Tab
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito.doNothing
-import org.mockito.Mockito.spy
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 
@@ -25,8 +27,8 @@ class TabTrayViewHolderTest {
         val view = LayoutInflater.from(ApplicationProvider.getApplicationContext()).inflate(
             R.layout.tab_tray_item, null, false)
 
-        val tabViewHolder = spy(TabTrayViewHolder(view) { null })
-        doNothing().`when`(tabViewHolder).updateBackgroundColor(false)
+        val tabViewHolder = spyk(TabTrayViewHolder(view) { null })
+        every { tabViewHolder.updateBackgroundColor(false) } just Runs
 
         val extremelyLongUrl = "m".repeat(MAX_URI_LENGTH + 1)
         val tab = Tab(

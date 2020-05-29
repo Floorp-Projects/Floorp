@@ -18,7 +18,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.Dispatchers.IO
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import mozilla.components.concept.sync.DeviceCapability
 import mozilla.components.feature.share.RecentAppsStorage
@@ -38,6 +38,8 @@ class ShareViewModel(application: Application) : AndroidViewModel(application) {
     private val fxaAccountManager = application.components.backgroundServices.accountManager
     @VisibleForTesting
     internal var recentAppsStorage = RecentAppsStorage(application.applicationContext)
+    @VisibleForTesting
+    internal var ioDispatcher = Dispatchers.IO
 
     private val devicesListLiveData = MutableLiveData<List<SyncShareOption>>(emptyList())
     private val appsListLiveData = MutableLiveData<List<AppShareOption>>(emptyList())
@@ -49,7 +51,7 @@ class ShareViewModel(application: Application) : AndroidViewModel(application) {
         override fun onAvailable(network: Network?) = reloadDevices(network)
 
         private fun reloadDevices(network: Network?) {
-            viewModelScope.launch(IO) {
+            viewModelScope.launch(ioDispatcher) {
                 fxaAccountManager.authenticatedAccount()
                     ?.deviceConstellation()
                     ?.refreshDevicesAsync()
@@ -83,7 +85,7 @@ class ShareViewModel(application: Application) : AndroidViewModel(application) {
         connectivityManager?.registerNetworkCallback(networkRequest, networkCallback)
 
         // Start preparing the data as soon as we have a valid Context
-        viewModelScope.launch(IO) {
+        viewModelScope.launch(ioDispatcher) {
             val shareIntent = Intent(Intent.ACTION_SEND).apply {
                 type = "text/plain"
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK
@@ -98,7 +100,7 @@ class ShareViewModel(application: Application) : AndroidViewModel(application) {
             appsListLiveData.postValue(apps)
         }
 
-        viewModelScope.launch(IO) {
+        viewModelScope.launch(ioDispatcher) {
             val devices = buildDeviceList(fxaAccountManager)
             devicesListLiveData.postValue(devices)
         }

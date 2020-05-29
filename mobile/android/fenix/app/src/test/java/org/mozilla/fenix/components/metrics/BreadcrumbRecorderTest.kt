@@ -6,17 +6,17 @@ package org.mozilla.fenix.components.metrics
 
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination
+import io.mockk.mockk
+import io.mockk.spyk
+import io.mockk.verify
 import mozilla.components.lib.crash.Crash
 import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.lib.crash.service.CrashReporterService
 import mozilla.components.support.base.crash.Breadcrumb
-import mozilla.components.support.test.any
-import mozilla.components.support.test.mock
 import org.junit.Test
-import org.mockito.Mockito.spy
-import org.mockito.Mockito.verify
 
 internal class BreadcrumbRecorderTest {
+
     @Test
     fun `ensure crash reporter recordCrashBreadcrumb is called`() {
         val service = object : CrashReporterService {
@@ -28,9 +28,9 @@ internal class BreadcrumbRecorderTest {
             override fun report(crash: Crash.UncaughtExceptionCrash): String? = ""
         }
 
-        val reporter = spy(
+        val reporter = spyk(
             CrashReporter(
-                context = mock(),
+                context = mockk(),
                 services = listOf(service),
                 shouldPrompt = CrashReporter.Prompt.NEVER
             )
@@ -40,13 +40,13 @@ internal class BreadcrumbRecorderTest {
             return "test"
         }
 
-        val navController: NavController = mock()
-        val navDestination: NavDestination = mock()
+        val navController: NavController = mockk()
+        val navDestination: NavDestination = mockk()
 
         val breadCrumbRecorder =
             BreadcrumbsRecorder(reporter, navController, ::getBreadcrumbMessage)
         breadCrumbRecorder.onDestinationChanged(navController, navDestination, null)
 
-        verify(reporter).recordCrashBreadcrumb(any())
+        verify { reporter.recordCrashBreadcrumb(any()) }
     }
 }

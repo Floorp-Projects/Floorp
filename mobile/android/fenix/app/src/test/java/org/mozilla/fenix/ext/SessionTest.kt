@@ -4,12 +4,13 @@
 
 package org.mozilla.fenix.ext
 
+import io.mockk.mockk
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.ReaderState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
-import mozilla.components.support.test.mock
+import mozilla.components.lib.publicsuffixlist.PublicSuffixList
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -36,8 +37,9 @@ class SessionTest {
         val tabs = listOf(tabWithoutReaderState, tabWithInactiveReaderState, tabWithActiveReaderState)
         val store = BrowserStore(BrowserState(tabs))
 
-        assertEquals(sessionWithoutReaderState.url, sessionWithoutReaderState.toTab(store, mock()).url)
-        assertEquals(sessionWithInactiveReaderState.url, sessionWithInactiveReaderState.toTab(store, mock()).url)
-        assertEquals("https://blog.mozilla.org/123", sessionWithActiveReaderState.toTab(store, mock()).url)
+        val suffixList = mockk<PublicSuffixList>(relaxed = true)
+        assertEquals(sessionWithoutReaderState.url, sessionWithoutReaderState.toTab(store, suffixList).url)
+        assertEquals(sessionWithInactiveReaderState.url, sessionWithInactiveReaderState.toTab(store, suffixList).url)
+        assertEquals("https://blog.mozilla.org/123", sessionWithActiveReaderState.toTab(store, suffixList).url)
     }
 }
