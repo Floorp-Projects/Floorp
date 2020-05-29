@@ -1026,6 +1026,7 @@ TEST(TestCookie, SameSiteLax)
 TEST(TestCookie, OnionSite)
 {
   Preferences::SetBool("dom.securecontext.whitelist_onions", true);
+  Preferences::SetBool("network.cookie.sameSite.laxByDefault", false);
 
   nsresult rv;
   nsCString cookie;
