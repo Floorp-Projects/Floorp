@@ -38,8 +38,8 @@ import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.components.metrics.Event
-import org.mozilla.fenix.ext.checkAndUpdateScreenshotPermission
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.redirectToReAuth
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.settings.SupportUtils
@@ -134,10 +134,7 @@ class SavedLoginsFragment : Fragment() {
         (activity as HomeActivity).getSupportActionBarAndInflateIfNecessary().setDisplayShowTitleEnabled(true)
         sortingStrategyPopupMenu.dismiss()
 
-        if (findNavController().currentDestination?.id != R.id.loginDetailFragment) {
-            activity?.let { it.checkAndUpdateScreenshotPermission(it.settings()) }
-            findNavController().popBackStack(R.id.savedLoginsAuthFragment, false)
-        }
+        redirectToReAuth(listOf(R.id.loginDetailFragment), findNavController().currentDestination?.id)
         super.onPause()
     }
 

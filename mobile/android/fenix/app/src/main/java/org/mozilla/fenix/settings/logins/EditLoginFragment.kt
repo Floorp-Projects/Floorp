@@ -42,6 +42,7 @@ import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.redirectToReAuth
 import org.mozilla.fenix.ext.settings
 
 /**
@@ -112,6 +113,14 @@ class EditLoginFragment : Fragment(R.layout.fragment_edit_login) {
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         inflater.inflate(R.menu.login_save, menu)
+    }
+
+    override fun onPause() {
+        redirectToReAuth(
+            listOf(R.id.loginDetailFragment),
+            findNavController().currentDestination?.id
+        )
+        super.onPause()
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean = when (item.itemId) {

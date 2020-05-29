@@ -38,6 +38,7 @@ import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.redirectToReAuth
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.ext.urlToTrimmedHost
@@ -53,6 +54,8 @@ class LoginDetailFragment : Fragment(R.layout.fragment_login_detail) {
     private var login: SavedLogin? = null
     private lateinit var savedLoginsStore: LoginsFragmentStore
     private lateinit var loginDetailView: LoginDetailView
+    private lateinit var menu: Menu
+    private var deleteDialog: AlertDialog? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -96,6 +99,21 @@ class LoginDetailFragment : Fragment(R.layout.fragment_login_detail) {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setHasOptionsMenu(true)
+    }
+
+    /**
+     * As described in #10727, the User should re-auth if the fragment is paused and the user is not
+     * navigating to SavedLoginsFragment or EditLoginFragment
+     *
+     */
+    override fun onPause() {
+        deleteDialog?.isShowing.run { deleteDialog?.dismiss() }
+        menu.close()
+        redirectToReAuth(
+            listOf(R.id.editLoginFragment, R.id.savedLoginsFragment),
+            findNavController().currentDestination?.id
+        )
+        super.onPause()
     }
 
     private fun setUpPasswordReveal() {
@@ -156,6 +174,7 @@ class LoginDetailFragment : Fragment(R.layout.fragment_login_detail) {
         } else {
             inflater.inflate(R.menu.login_delete, menu)
         }
+        this.menu = menu
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean = when (item.itemId) {
@@ -179,7 +198,7 @@ class LoginDetailFragment : Fragment(R.layout.fragment_login_detail) {
 
     private fun displayDeleteLoginDialog() {
         activity?.let { activity ->
-            AlertDialog.Builder(activity).apply {
+            deleteDialog = AlertDialog.Builder(activity).apply {
                 setMessage(R.string.login_deletion_confirmation)
                 setNegativeButton(android.R.string.cancel) { dialog: DialogInterface, _ ->
                     dialog.cancel()
