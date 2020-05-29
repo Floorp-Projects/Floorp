@@ -5009,7 +5009,7 @@ AttachDecision CallIRGenerator::tryAttachArrayIsArray(HandleFunction callee) {
   // Initialize the input operand.
   Int32OperandId argcId(writer.setInputOperandId(0));
 
-  // Guard callee is the 'isArray' intrinsic native function.
+  // Guard callee is the 'isArray' native function.
   emitNativeCalleeGuard(callee);
 
   // Check if the argument is an Array and return result.
@@ -5167,6 +5167,31 @@ AttachDecision CallIRGenerator::tryAttachIsObject(HandleFunction callee) {
   cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
 
   trackAttached("IsObject");
+  return AttachDecision::Attach;
+}
+
+AttachDecision CallIRGenerator::tryAttachIsCallable(HandleFunction callee) {
+  // Need a single argument.
+  if (argc_ != 1) {
+    return AttachDecision::NoAction;
+  }
+
+  // Initialize the input operand.
+  Int32OperandId argcId(writer.setInputOperandId(0));
+
+  // Guard callee is the 'IsCallable' intrinsic native function.
+  emitNativeCalleeGuard(callee);
+
+  // Check if the argument is callable and return result.
+  ValOperandId argId = writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
+  writer.isCallableResult(argId);
+
+  // This stub does not need to be monitored, because it always
+  // returns a boolean.
+  writer.returnFromIC();
+  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
+
+  trackAttached("IsCallable");
   return AttachDecision::Attach;
 }
 
@@ -5608,6 +5633,8 @@ AttachDecision CallIRGenerator::tryAttachInlinableNative(
       return tryAttachToInteger(callee);
     case InlinableNative::IntrinsicIsObject:
       return tryAttachIsObject(callee);
+    case InlinableNative::IntrinsicIsCallable:
+      return tryAttachIsCallable(callee);
 
     // String natives.
     case InlinableNative::StringCharCodeAt:
