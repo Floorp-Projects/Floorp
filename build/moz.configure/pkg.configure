@@ -35,7 +35,7 @@ def pkg_config_version(pkg_config):
 
 @template
 def pkg_check_modules(var, package_desc, when=always,
-                      allow_missing=False):
+                      allow_missing=False, config=True):
     if isinstance(package_desc, (tuple, list)):
         package_desc = ' '.join(package_desc)
     package_desc = dependable(package_desc)
@@ -93,7 +93,8 @@ def pkg_check_modules(var, package_desc, when=always,
     def pkg_info(cflags, libs):
         return namespace(cflags=cflags, libs=libs)
 
-    set_config('%s_CFLAGS' % var, pkg_cflags)
-    set_config('%s_LIBS' % var, pkg_libs)
+    if config:
+        set_config('%s_CFLAGS' % var, pkg_cflags)
+        set_config('%s_LIBS' % var, pkg_libs)
 
     return pkg_info
