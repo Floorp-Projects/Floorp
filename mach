@@ -26,6 +26,8 @@ py2commands="
     hazards
     jsapi-tests
     jsshell-bench
+    jstestbrowser
+    jstests
     mochitest
     mozharness
     pastebin
