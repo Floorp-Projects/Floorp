@@ -25,7 +25,6 @@ from mozbuild.base import (
     BinaryNotFoundException,
 )
 from mozbuild.base import MachCommandConditions as Conditions
-from raptor.power import enable_charging, disable_charging
 
 HERE = os.path.dirname(os.path.realpath(__file__))
 
@@ -222,6 +221,10 @@ class MachRaptor(MachCommandBase):
              description='Run Raptor performance tests.',
              parser=create_parser)
     def run_raptor(self, **kwargs):
+        # Defers this import so that a transitive dependency doesn't
+        # stop |mach bootstrap| from running
+        from raptor.power import enable_charging, disable_charging
+
         build_obj = self
 
         is_android = Conditions.is_android(build_obj) or \
