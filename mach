@@ -34,6 +34,7 @@ py2commands="
     python-test
     raptor
     raptor-test
+    reftest
     release
     rusttests
     static-analysis
