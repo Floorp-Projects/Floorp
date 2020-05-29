@@ -89,7 +89,7 @@ def handle_keyed_by(config, jobs):
         if 'extra-config' in job['run']:
             env = job['worker'].setdefault('env', {})
             env['EXTRA_MOZHARNESS_CONFIG'] = six.ensure_text(
-                json.dumps(job['run']['extra-config']))
+                json.dumps(job['run']['extra-config'], sort_keys=True))
             del job["run"]["extra-config"]
 
         yield job

@@ -295,8 +295,10 @@ def use_fetches(config, jobs):
 
         env = worker.setdefault('env', {})
         env['MOZ_FETCHES'] = {
-            'task-reference': six.ensure_text(json.dumps(job_fetches,
-                                                         sort_keys=True))
+            'task-reference': six.ensure_text(
+                json.dumps(sorted(job_fetches,
+                                  key=lambda x: sorted(x.items())),
+                           sort_keys=True))
         }
         # The path is normalized to an absolute path in run-task
         env.setdefault('MOZ_FETCHES_DIR', 'fetches')

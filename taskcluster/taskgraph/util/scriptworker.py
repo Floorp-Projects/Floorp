@@ -439,6 +439,7 @@ def generate_beetmover_upstream_artifacts(
             "locale": locale,
         })
 
+    upstream_artifacts.sort(key=lambda u: u['paths'])
     return upstream_artifacts
 
 
@@ -485,7 +486,7 @@ def generate_beetmover_artifact_map(config, job, **kwargs):
 
     resolve_keyed_by(map_config, 's3_bucket_paths', job['label'], platform=platform)
 
-    for locale, dep in itertools.product(locales, dependencies):
+    for locale, dep in sorted(itertools.product(locales, dependencies)):
         paths = dict()
         for filename in map_config['mapping']:
             # Relevancy checks
@@ -721,4 +722,5 @@ def generate_beetmover_partials_artifact_map(config, job, partials_info, **kwarg
             'paths': paths,
         })
 
+    artifacts.sort(key=lambda a: sorted(a['paths'].items()))
     return artifacts
