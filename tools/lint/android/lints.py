@@ -45,7 +45,7 @@ def gradle(log, topsrcdir=None, topobjdir=None, tasks=[], extra_args=[], verbose
     with gradle_lock(topobjdir, max_wait_seconds=GRADLE_LOCK_MAX_WAIT_SECONDS), \
             open(os.devnull, 'wb') as devnull:
         cmd_args = [sys.executable, os.path.join(topsrcdir, 'mach'),
-                    'gradle', '--verbose', '--'] + \
+                    'gradle', '--verbose', '--console=plain', '--'] + \
             tasks + \
             extra_args
 
@@ -54,7 +54,7 @@ def gradle(log, topsrcdir=None, topobjdir=None, tasks=[], extra_args=[], verbose
 
         # Gradle and mozprocess do not get along well, so we use subprocess
         # directly.
-        proc = subprocess.Popen(cmd_args, cwd=topsrcdir, stdout=devnull, stderr=devnull)
+        proc = subprocess.Popen(cmd_args, cwd=topsrcdir)
         status = None
         # Leave it to the subprocess to handle Ctrl+C. If it terminates as a result
         # of Ctrl+C, proc.wait() will return a status code, and, we get out of the
