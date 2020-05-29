@@ -110,22 +110,30 @@ def remove_tasks(target_task_graph, params, optimizations, do_not_optimize):
     removed = set()
     reverse_links_dict = target_task_graph.graph.reverse_links_dict()
 
+    message = "optimize: {label} {verb} because of {reason}"
     for label in target_task_graph.graph.visit_preorder():
+        verb = "kept"
+
         # if we're not allowed to optimize, that's easy..
         if label in do_not_optimize:
+            logger.debug(message.format(label=label, verb=verb, reason="do not optimize"))
             continue
 
         # if there are remaining tasks depending on this one, do not remove..
         if any(l not in removed for l in reverse_links_dict[label]):
+            logger.debug(message.format(label=label, verb=verb, reason="dependent tasks"))
             continue
 
         # call the optimization strategy
         task = target_task_graph.tasks[label]
         opt_by, opt, arg = optimizations(label)
         if opt.should_remove_task(task, params, arg):
+            verb = "removed"
             removed.add(label)
             opt_counts[opt_by] += 1
-            continue
+
+        reason = "'{}' strategy".format(opt_by)
+        logger.debug(message.format(label=label, verb=verb, reason=reason))
 
     _log_optimization('removed', opt_counts)
     return removed
