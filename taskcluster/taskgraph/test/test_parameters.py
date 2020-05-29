@@ -49,6 +49,7 @@ class TestParameters(unittest.TestCase):
         'required_signoffs': [],
         'signoff_urls': {},
         'target_tasks_method': 'target_tasks_method',
+        'test_manifest_loader': 'default',
         'tasks_for': 'tasks_for',
         'try_mode': 'try_mode',
         'try_options': None,
