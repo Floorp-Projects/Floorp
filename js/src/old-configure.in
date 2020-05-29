@@ -43,11 +43,6 @@ _SUBDIR_HOST_CXXFLAGS="$HOST_CXXFLAGS"
 _SUBDIR_HOST_LDFLAGS="$HOST_LDFLAGS"
 _SUBDIR_CONFIG_ARGS="$ac_configure_args"
 
-dnl Set the version number of the libs included with mozilla
-dnl ========================================================
-NSPR_VERSION=4
-NSPR_MINVER=4.9.2
-
 dnl Set the minimum version of toolkit libs used by mozilla
 dnl ========================================================
 W32API_VERSION=3.14
@@ -1130,8 +1125,6 @@ dnl =
 dnl ========================================================
 MOZ_ARG_HEADER(External Packages)
 
-MOZ_CONFIG_NSPR(js)
-
 if test -n "$ZLIB_IN_MOZGLUE"; then
     AC_DEFINE(ZLIB_IN_MOZGLUE)
 fi
@@ -1414,8 +1407,6 @@ HOST_CXXFLAGS=`echo \
     $_WARNINGS_HOST_CXXFLAGS \
     $_COMPILATION_HOST_CXXFLAGS \
     $HOST_CXXFLAGS`
-
-AC_SUBST(MOZ_SYSTEM_NSPR)
 
 OS_CFLAGS="$CFLAGS"
 OS_CXXFLAGS="$CXXFLAGS"

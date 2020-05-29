@@ -47,21 +47,10 @@ def js_subconfigure(host, target, build_env, js_configure_args, mozconfig,
     assignments = dict(old_configure_assignments)
     environ = dict(os.environ)
 
-    options = [host, target] + [
-        o for o in js_configure_args
-        # --with-system-nspr will have been converted into the relevant $NSPR_CFLAGS
-        # and $NSPR_LIBS.
-        if not o.startswith('--with-system-nspr')
-    ]
+    options = [host, target] +  js_configure_args
 
     if not substs.get('JS_HAS_INTL_API'):
         options.append('--without-intl-api')
-
-    if substs.get('NSPR_CFLAGS') or substs.get('NSPR_LIBS'):
-        options.append(
-            '--with-nspr-cflags=%s' % ' '.join(substs.get('NSPR_CFLAGS', [])))
-        options.append(
-            '--with-nspr-libs=%s' % ' '.join(substs.get('NSPR_LIBS', [])))
 
     options.append('--prefix=%s/dist' % build_env.topobjdir)
 

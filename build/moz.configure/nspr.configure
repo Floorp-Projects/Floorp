@@ -1,0 +1,100 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Top-level configure defaults to building NSPR from source. Standalone JS
+# doesn't.
+js_option('--enable-nspr-build', when=building_js,
+          help='{Build|Do not build} NSPR from source tree')
+
+@depends('--enable-nspr-build', when=building_js)
+def enable_nspr_build(enable):
+    if enable:
+        return enable
+
+js_option('--with-system-nspr', help='Use system NSPR')
+
+@depends(enable_nspr_build, '--with-system-nspr')
+def build_nspr(nspr_build, system_nspr):
+    if nspr_build is not None and nspr_build.origin != 'default':
+        if nspr_build and system_nspr:
+            die('Cannot use both --enable-nspr-build and --with-system-nspr')
+        if not nspr_build and not system_nspr:
+            die('Cannot use --disable-nspr-build without --with-system-nspr')
+    return not system_nspr
+
+set_config('MOZ_BUILD_NSPR', True, when=build_nspr)
+set_config('MOZ_SYSTEM_NSPR', True, when='--with-system-nspr')
+
+@depends(build_nspr, '--with-system-nspr', building_js)
+def js_without_nspr(build_nspr, system_nspr, building_js):
+    if building_js:
+        return not build_nspr and not system_nspr
+
+set_config('JS_WITHOUT_NSPR', True, when=js_without_nspr)
+set_define('JS_WITHOUT_NSPR', True, when=js_without_nspr)
+
+@depends(building_js)
+def nspr_minver(building_js):
+    if building_js:
+        return 'nspr >= 4.10'
+    return 'nspr >= 4.25'
+
+nspr_pkg = pkg_check_modules('NSPR', nspr_minver, when='--with-system-nspr')
+
+@depends_if(nspr_pkg)
+def nspr_pkg(nspr_pkg):
+    def extract(prefix, list):
+        for item in list:
+            if item.startswith(prefix):
+                return item[len(prefix):]
+        return ''
+
+    include_dir = extract('-I', nspr_pkg.cflags)
+    lib_dir = extract('-L', nspr_pkg.libs)
+    return namespace(
+        cflags=nspr_pkg.cflags,
+        include_dir=include_dir,
+        libs=nspr_pkg.libs,
+        lib_dir=lib_dir,
+    )
+
+@depends(nspr_minver, when='--with-system-nspr')
+def pkgconf_requires_private(nspr_minver):
+    return 'Requires.private: %s' % nspr_minver
+
+set_config('PKGCONF_REQUIRES_PRIVATE', pkgconf_requires_private)
+
+# pkg_check_modules takes care of NSPR_CFLAGS and NSPR_LIBS when using --with-system-nspr.
+@depends(check_build_environment, c_compiler, fold_libs, when=build_nspr)
+def nspr_config(build_env, c_compiler, fold_libs):
+    libs = ['nspr4', 'plc4', 'plds4']
+    if c_compiler.type == 'clang-cl':
+        lib_dir = os.path.join(build_env.dist, 'lib')
+        libs = [os.path.join(lib_dir, '%s.lib' % lib) for lib in libs]
+    else:
+        lib_dir = os.path.join(build_env.dist, 'lib' if fold_libs else 'bin')
+        libs = ['-L%s' % lib_dir] + ['-l%s' % lib for lib in libs]
+
+    include_dir = os.path.join(build_env.dist, 'include', 'nspr')
+    return namespace(
+        cflags=['-I%s' % include_dir],
+        include_dir=include_dir,
+        libs=libs,
+        lib_dir=lib_dir,
+    )
+
+set_config('NSPR_CFLAGS', nspr_config.cflags, when=nspr_config)
+set_config('NSPR_LIBS', nspr_config.libs, when=nspr_config)
+
+set_config('NSPR_INCLUDE_DIR', nspr_config.include_dir, when=nspr_config)
+set_config('NSPR_LIB_DIR', nspr_config.lib_dir, when=nspr_config)
+set_config('NSPR_INCLUDE_DIR', nspr_pkg.include_dir, when=nspr_pkg)
+set_config('NSPR_LIB_DIR', nspr_pkg.lib_dir, when=nspr_pkg)
+
+add_old_configure_assignment('NSPR_CFLAGS', nspr_config.cflags, when=nspr_config)
+add_old_configure_assignment('NSPR_LIBS', nspr_config.libs, when=nspr_config)
+add_old_configure_assignment('NSPR_CFLAGS', nspr_pkg.cflags, when=nspr_pkg)
+add_old_configure_assignment('NSPR_LIBS', nspr_pkg.libs, when=nspr_pkg)

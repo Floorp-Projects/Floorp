@@ -263,6 +263,8 @@ set_config('WASM_OBJ_SUFFIX', 'wasm')
 profiling = dependable(False)
 # Same for js_standalone
 js_standalone = dependable(False)
+# Same for fold_libs
+fold_libs = dependable(False)
 
 include(include_project_configure)
 
