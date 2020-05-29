@@ -117,3 +117,86 @@ looks like this:
     # Use a separate objdir for optimized builds to allow easy
     # switching between optimized and debug builds while developing.
     mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/obj-opt-@CONFIG_GUESS@
+
+Cross-Compiling
+~~~~~~~~~~~~~~~
+
+It is possible to cross-compile a SpiderMonkey shell binary for another
+architecture. For example, one can develop and compile on an x86 host while
+building a ``js`` binary for AArch64 (ARM64).
+
+Unlike the rest of this document, this section will use the old-style
+``configure`` script.
+
+To do this, first you must install the appropriate cross-compiler and system
+libraries for the desired target. This is system- and distribution-specific.
+Look for a package such as (using AArch64 as an example)
+``aarch64-linux-gnu-gcc``. This document will assume that you have the
+appropriate compiler and libraries; you can test this by compiling a C or C++
+hello-world program.
+
+You will also need the appropriate Rust compiler target support installed. For
+example:
+
+.. code:: eval
+
+   $ rustup target add aarch64-unknown-linux-gnu
+
+Once you have these prerequisites installed, you simply need to set a few
+environment variables and configure the build appropriately:
+
+.. code:: eval
+
+    $ cd js/src/
+    $ export CC=aarch64-linux-gnu-gcc  # adjust for target as appropriate.
+    $ export CXX=aarch64-linux-gnu-g++
+    $ export AR=aarch64-linux-gnu-ar
+    $ export BINDGEN_CFLAGS="--sysroot /usr/aarch64-linux-gnu/sys-root"
+    $ mkdir BUILD_AARCH64.OBJ
+    $ cd BUILD_AARCH64.OBJ/
+    $ ../configure --target=aarch64-unknown-linux-gnu
+    $ make
+
+This will produce a binary that is appropriate for the target architecture.
+Note that you will not be able to run this binary natively on your host system;
+to do so, keep reading to set up Qemu-based user-space emulation.
+
+Cross-Architecture Testing using Qemu
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+It is sometimes desirable to test a cross-compiled binary directly. Unlike the
+target-ISA emulators that SpiderMonkey also supports, testing a cross-compiled
+binary ensures that the actual binary, running as it would on the target
+system, works appropriately. As far as the JS shell is concerned, it is running
+on the target ISA.
+
+This is possible using the Qemu emulator. Qemu supports a mode called
+"user-space emulation", where an individual process executes a binary that
+targets a non-native ISA, and system calls are translated as appropriate to the
+host system. This allows transparent execution of cross-compiled binaries.
+
+To set this up, you will need Qemu (check your system package manager) and
+shared libraries for the target system. You will likely have the necessary
+shared libraries already if you cross-compiled as described above.
+
+Then, write a small wrapper script that invokes the JS shell under Qemu. For
+example:
+
+.. code:: eval
+
+    #!/bin/sh
+
+    # This is the binary compiled in the previous section.
+    CROSS_BIN=`dirname $0`/BUILD_AARCH64.OBJ/dist/bin/js
+
+    # Adjust the library path as needed; this is prefixed to paths such as
+    # `/lib64/libc.so.64`, and so should contain `lib` (and perhaps `lib64`)
+    # subdirectories.
+    exec qemu-aarch64 -L /usr/aarch64-linux-gnu/sys-root/ $CROSS_BIN "$@"
+
+You can then invoke this wrapper as if it were a normal JS shell, and use it
+with ``jit_test.py`` to run tests:
+
+.. code:: eval
+
+    $ jit-test/jit_test.py ./js-cross-wrapper
