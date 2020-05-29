@@ -436,10 +436,10 @@ static void BuildNestedPrintObjects(Document* aDocument,
 
 /**
  * On platforms that support it, sets the printer name stored in the
- * nsIPrintSettings to the default printer if a printer name is not already
+ * nsIPrintSettings to the last-used printer if a printer name is not already
  * set.
  * XXXjwatt: Why is this necessary? Can't the code that reads the printer
- * name later "just" use the default printer if a name isn't specified? Then
+ * name later "just" use the last-used printer if a name isn't specified? Then
  * we wouldn't have this inconsistency between platforms and processes.
  */
 static nsresult EnsureSettingsHasPrinterNameSet(
@@ -449,7 +449,7 @@ static nsresult EnsureSettingsHasPrinterNameSet(
   return NS_OK;
 #else
 #  if defined(MOZ_X11)
-  // On Linux, default printer name should be requested on the parent side.
+  // On Linux, last-used printer name should be requested on the parent side.
   // Unless we are in the parent, we ignore this function
   if (!XRE_IsParentProcess()) {
     return NS_OK;
@@ -464,12 +464,13 @@ static nsresult EnsureSettingsHasPrinterNameSet(
     return NS_OK;
   }
 
-  // aPrintSettings doesn't have a printer set. Try to fetch the default.
+  // aPrintSettings doesn't have a printer set.
+  // Try to fetch the name of the last-used printer.
   nsCOMPtr<nsIPrintSettingsService> printSettingsService =
       do_GetService(sPrintSettingsServiceContractID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = printSettingsService->GetDefaultPrinterName(printerName);
+  rv = printSettingsService->GetLastUsedPrinterName(printerName);
   if (NS_SUCCEEDED(rv) && !printerName.IsEmpty()) {
     rv = aPrintSettings->SetPrinterName(printerName);
   }

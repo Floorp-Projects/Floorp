@@ -96,13 +96,13 @@ var PrintUtils = {
     return true;
   },
 
-  _getDefaultPrinterName() {
+  _getLastUsedPrinterName() {
     try {
       let PSSVC = Cc["@mozilla.org/gfx/printsettings-service;1"].getService(
         Ci.nsIPrintSettingsService
       );
 
-      return PSSVC.defaultPrinterName;
+      return PSSVC.lastUsedPrinterName;
     } catch (e) {
       Cu.reportError(e);
     }
@@ -133,7 +133,7 @@ var PrintUtils = {
     topBrowser.messageManager.sendAsyncMessage("Printing:Print", {
       windowID,
       simplifiedMode: this._shouldSimplify,
-      defaultPrinterName: this._getDefaultPrinterName(),
+      lastUsedPrinterName: this._getLastUsedPrinterName(),
     });
 
     if (printPreviewIsOpen) {
@@ -393,7 +393,7 @@ var PrintUtils = {
 
   _setPrinterDefaultsForSelectedPrinter(aPSSVC, aPrintSettings) {
     if (!aPrintSettings.printerName) {
-      aPrintSettings.printerName = aPSSVC.defaultPrinterName;
+      aPrintSettings.printerName = aPSSVC.lastUsedPrinterName;
     }
 
     // First get any defaults from the printer
@@ -487,14 +487,14 @@ var PrintUtils = {
     }
     this._currentPPBrowser = ppBrowser;
     let mm = ppBrowser.messageManager;
-    let defaultPrinterName = this._getDefaultPrinterName();
+    let lastUsedPrinterName = this._getLastUsedPrinterName();
 
     let sendEnterPreviewMessage = function(browser, simplified) {
       mm.sendAsyncMessage("Printing:Preview:Enter", {
         windowID: browser.outerWindowID,
         simplifiedMode: simplified,
         changingBrowsers: changingPrintPreviewBrowsers,
-        defaultPrinterName,
+        lastUsedPrinterName,
       });
     };
 

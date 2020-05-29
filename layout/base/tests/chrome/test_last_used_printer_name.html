@@ -8,13 +8,13 @@
 
 SimpleTest.waitForExplicitFinish();
 
-function getDefaultPrinterName() {
+function getLastUsedPrinterName() {
   try {
       let PSSVC = Cc["@mozilla.org/gfx/printsettings-service;1"].getService(
         Ci.nsIPrintSettingsService
       );
 
-      return PSSVC.defaultPrinterName;
+      return PSSVC.lastUsedPrinterName;
     } catch (e) {
       Cu.reportError(e);
     }
@@ -23,7 +23,7 @@ function getDefaultPrinterName() {
 }
 
 function run() {
-  isnot(getDefaultPrinterName(), null);
+  isnot(getLastUsedPrinterName(), null);
   SimpleTest.finish();
 }
 

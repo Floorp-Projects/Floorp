@@ -62,7 +62,7 @@ function run1()
   var printService = Cc["@mozilla.org/gfx/printsettings-service;1"]
                        .getService(Ci.nsIPrintSettingsService);
 
-  if (printService.defaultPrinterName != '') {
+  if (printService.lastUsedPrinterName != '') {
     printpreview();
     ok(gWbp.doingPrintPreview, "Should be doing print preview");
     exitprintpreview();
