@@ -36,6 +36,8 @@ extern "C" fn unimpl_zone_begin(_: *const SourceLocation, _: i32) -> ZoneContext
 extern "C" fn unimpl_zone_end(_: ZoneContext) {}
 extern "C" fn unimpl_zone_text(_: ZoneContext, _: *const u8, _: usize) {}
 
+extern "C" fn unimpl_plot(_: *const u8, _: f64) {}
+
 // Function pointers to the tracy API functions (if loaded), or the no-op functions above.
 pub static mut MARK_FRAME: extern "C" fn(name: *const u8) = unimpl_mark_frame;
 pub static mut MARK_FRAME_START: extern "C" fn(name: *const u8) = unimpl_mark_frame_start;
@@ -43,6 +45,7 @@ pub static mut MARK_FRAME_END: extern "C" fn(name: *const u8) = unimpl_mark_fram
 pub static mut EMIT_ZONE_BEGIN: extern "C" fn(srcloc: *const SourceLocation, active: i32) -> ZoneContext = unimpl_zone_begin;
 pub static mut EMIT_ZONE_END: extern "C" fn(ctx: ZoneContext) = unimpl_zone_end;
 pub static mut EMIT_ZONE_TEXT: extern "C" fn(ctx: ZoneContext, txt: *const u8, size: usize) = unimpl_zone_text;
+pub static mut EMIT_PLOT: extern "C" fn(name: *const u8, val: f64) = unimpl_plot;
 
 // Load the tracy library, and get function pointers. This is unsafe since:
 // - It must not be called while other threads are calling the functions.
@@ -57,6 +60,7 @@ pub unsafe fn load(path: &str) -> bool {
             EMIT_ZONE_BEGIN = lib.sym("___tracy_emit_zone_begin\0").unwrap();
             EMIT_ZONE_END = lib.sym("___tracy_emit_zone_end\0").unwrap();
             EMIT_ZONE_TEXT = lib.sym("___tracy_emit_zone_text\0").unwrap();
+            EMIT_PLOT = lib.sym("___tracy_emit_plot\0").unwrap();
 
             true
         }
@@ -133,6 +137,15 @@ macro_rules! tracy_end_frame {
     ($name:expr) => {
         unsafe {
             $crate::profiler::MARK_FRAME_END(concat!($name, "\0").as_ptr())
+        }
+    }
+}
+
+#[macro_export]
+macro_rules! tracy_plot {
+    ($name:expr, $value:expr) => {
+        unsafe {
+            $crate::profiler::EMIT_PLOT(concat!($name, "\0").as_ptr(), $value)
         }
     }
 }
