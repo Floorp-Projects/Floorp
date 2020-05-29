@@ -24,7 +24,7 @@ class TabsFeature(
     tabsTray: TabsTray,
     private val store: BrowserStore,
     tabsUseCases: TabsUseCases,
-    thumbnailsUseCases: ThumbnailsUseCases,
+    thumbnailsUseCases: ThumbnailsUseCases? = null,
     private val defaultTabsFilter: (TabSessionState) -> Boolean = { true },
     closeTabsTray: () -> Unit
 ) : LifecycleAwareFeature {

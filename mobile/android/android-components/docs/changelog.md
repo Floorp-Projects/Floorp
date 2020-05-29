@@ -16,8 +16,8 @@ permalink: /changelog/
   * Added support for [onbeforeunload prompt](https://developer.mozilla.org/en-US/docs/Web/API/WindowEventHandlers/onbeforeunload)
 
 * **feature-tabs**
-  * ⚠️ **This is a breaking change**: Added a dependency on `ThumbnailsUseCases` to `TabsFeature` and `TabsTrayPresenter`
-    for loading a tab's thumbnail.
+  * Added an optional `ThumbnailsUseCases` to `TabsFeature` and `TabsTrayPresenter` for loading a
+    tab's thumbnail.
 
 * **browser-thumbnails**
   * Adds `LoadThumbnailUseCase` in `ThumbnailsUseCases` for loading the thumbnail of a tab.

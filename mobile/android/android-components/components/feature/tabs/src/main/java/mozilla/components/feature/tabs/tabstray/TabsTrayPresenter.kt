@@ -28,7 +28,7 @@ import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 class TabsTrayPresenter(
     private val tabsTray: TabsTray,
     private val store: BrowserStore,
-    private val thumbnailsUseCases: ThumbnailsUseCases,
+    private val thumbnailsUseCases: ThumbnailsUseCases? = null,
     internal var tabsFilter: (TabSessionState) -> Boolean,
     private val closeTabsTray: () -> Unit
 ) {
@@ -46,10 +46,14 @@ class TabsTrayPresenter(
     private suspend fun collect(flow: Flow<BrowserState>) {
         flow.map { it.toTabs(tabsFilter) }
             .map { tabs ->
-                // Load the tab thumbnail from the memory or disk caches.
-                tabs.copy(list = tabs.list.map { tab ->
-                    tab.copy(thumbnail = thumbnailsUseCases.loadThumbnail(tab.id))
-                })
+                if (thumbnailsUseCases != null) {
+                    // Load the tab thumbnail from the memory or disk caches.
+                    tabs.copy(list = tabs.list.map { tab ->
+                        tab.copy(thumbnail = thumbnailsUseCases.loadThumbnail(tab.id))
+                    })
+                } else {
+                    tabs
+                }
             }
             .ifChanged()
             .collect { tabs ->
