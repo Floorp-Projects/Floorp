@@ -248,6 +248,7 @@ add_task(async function test_localtab_matches_override() {
       makeSwitchToTabMatch("http://foo.com/", { title: "An Example" }),
     ],
   });
+  await removeOpenPages(uri, 1);
 });
 
 add_task(async function test_remotetab_matches_override() {
@@ -346,7 +347,7 @@ add_task(async function test_maxResults() {
   // onto _extraRemoteTabRows and then added later in execute().  The former
   // does not check maxResults, but the latter does, and in this test, we want
   // to verify that PlacesRemoteTabsAutocompleteProvider.getMatches returns at
-  // most maxResults tabs.
+  // most ceil(maxResults / 2) tabs.
   configureEngine({
     guid_mobile: {
       id: "mobile",
@@ -360,8 +361,9 @@ add_task(async function test_maxResults() {
     },
   });
 
-  // Set maxResults to 5 in our search.  6 results total should be returned: the
-  // heuristic followed by maxResults remote tabs.
+  // Set maxResults to 5 in our search.  5 results total should be returned: the
+  // heuristic followed by ceil(maxResults / 2) remote tabs, then two more
+  // remote tabs to round out the number of results to 5.
   await check_autocomplete({
     search: "rem",
     searchParam: "enable-actions max-results:5",
@@ -380,9 +382,64 @@ add_task(async function test_maxResults() {
       makeRemoteTabMatch("http://foo.remote.com/3", "My Phone", {
         title: "A title",
       }),
+    ],
+  });
+});
+
+add_task(async function test_restrictionCharacter() {
+  await PlacesUtils.history.clear();
+
+  let url = "http://foo.remote.com/";
+
+  configureEngine({
+    guid_mobile: {
+      id: "mobile",
+      tabs: Array(10)
+        .fill(0)
+        .map((e, i) => ({
+          urlHistory: [`${url}${i}`],
+          title: "A title",
+          lastUsed: Date.now() - i,
+        })),
+    },
+  });
+
+  // Also add an open page.
+  let uri = Services.io.newURI(`${url}openpage/`);
+  await PlacesTestUtils.addVisits([{ uri, title: "An Example" }]);
+  await addOpenPages(uri, 1);
+
+  // Set maxResults to 8 in our search.  8 results should be returned: the
+  // heuristic followed by (maxResults / 2) remote tabs, then the open tab, then
+  // 2 more remote tab results to get to 8 total.
+  await check_autocomplete({
+    search: UrlbarTokenizer.RESTRICT.OPENPAGE,
+    searchParam: "enable-actions max-results:8",
+    checkSorting: true,
+    matches: [
+      makeSearchMatch(UrlbarTokenizer.RESTRICT.OPENPAGE, { heuristic: true }),
+      makeRemoteTabMatch("http://foo.remote.com/0", "My Phone", {
+        title: "A title",
+      }),
+      makeRemoteTabMatch("http://foo.remote.com/1", "My Phone", {
+        title: "A title",
+      }),
+      makeRemoteTabMatch("http://foo.remote.com/2", "My Phone", {
+        title: "A title",
+      }),
+      makeRemoteTabMatch("http://foo.remote.com/3", "My Phone", {
+        title: "A title",
+      }),
+      makeSwitchToTabMatch("http://foo.remote.com/openpage/", {
+        title: "An Example",
+      }),
       makeRemoteTabMatch("http://foo.remote.com/4", "My Phone", {
+        title: "A title",
+      }),
+      makeRemoteTabMatch("http://foo.remote.com/5", "My Phone", {
         title: "A title",
       }),
     ],
   });
+  await removeOpenPages(uri, 1);
 });
