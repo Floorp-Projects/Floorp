@@ -4,16 +4,12 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-import json
-import logging
 import time
 
 import requests
 from mozbuild.util import memoize
 
 from taskgraph.util.taskcluster import requests_retry_session
-
-logger = logging.getLogger(__name__)
 
 BUGBUG_BASE_URL = "https://bugbug.herokuapp.com"
 RETRY_TIMEOUT = 8 * 60  # seconds
@@ -67,9 +63,6 @@ def push_schedules(branch, rev):
         i += 1
 
     data = r.json()
-    logger.debug("Bugbug scheduler service returns:\n{}".format(
-                 json.dumps(data, indent=2)))
-
     if r.status_code == 202:
         raise BugbugTimeoutException("Timed out waiting for result from '{}'".format(url))
 

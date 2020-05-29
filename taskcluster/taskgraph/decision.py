@@ -25,6 +25,7 @@ from .parameters import Parameters, get_version, get_app_version
 from .taskgraph import TaskGraph
 from taskgraph.util.python_path import find_object
 from .try_option_syntax import parse_message
+from .util.bugbug import push_schedules
 from .util.chunking import resolver
 from .util.hg import get_hg_revision_branch, get_hg_commit_message
 from .util.partials import populate_release_history
@@ -242,6 +243,10 @@ def taskgraph_decision(options, parameters=None):
     # and the map of labels to taskids
     write_artifact('task-graph.json', tgg.morphed_task_graph.to_json())
     write_artifact('label-to-taskid.json', tgg.label_to_taskid)
+
+    # write bugbug scheduling information if it was invoked
+    if len(push_schedules) > 0:
+        write_artifact("bugbug-push-schedules.json", push_schedules.popitem()[1])
 
     # actually create the graph
     create_tasks(tgg.graph_config, tgg.morphed_task_graph, tgg.label_to_taskid, tgg.parameters)
