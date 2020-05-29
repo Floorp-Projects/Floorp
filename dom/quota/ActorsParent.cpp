@@ -1380,11 +1380,9 @@ class QuotaUsageRequestBase : public NormalOriginOperationBase,
                                   OriginScope::FromNull(),
                                   /* aExclusive */ false) {}
 
-  // ToDo: Use Result for this function.
-  nsresult GetUsageForOrigin(QuotaManager& aQuotaManager,
-                             PersistenceType aPersistenceType,
-                             const nsACString& aGroup,
-                             const nsACString& aOrigin, UsageInfo* aUsageInfo);
+  mozilla::Result<UsageInfo, nsresult> GetUsageForOrigin(
+      QuotaManager& aQuotaManager, PersistenceType aPersistenceType,
+      const nsACString& aGroup, const nsACString& aOrigin);
 
   // Subclasses use this override to set the IPDL response value.
   virtual void GetResponse(UsageRequestResponse& aResponse) = 0;
@@ -9037,21 +9035,25 @@ void QuotaUsageRequestBase::Init(Quota& aQuota) {
   mNeedsStorageInit = true;
 }
 
-nsresult QuotaUsageRequestBase::GetUsageForOrigin(
+Result<UsageInfo, nsresult> QuotaUsageRequestBase::GetUsageForOrigin(
     QuotaManager& aQuotaManager, PersistenceType aPersistenceType,
-    const nsACString& aGroup, const nsACString& aOrigin,
-    UsageInfo* aUsageInfo) {
+    const nsACString& aGroup, const nsACString& aOrigin) {
   AssertIsOnIOThread();
-  MOZ_ASSERT(aUsageInfo);
 
   nsCOMPtr<nsIFile> directory;
   nsresult rv = aQuotaManager.GetDirectoryForOrigin(aPersistenceType, aOrigin,
                                                     getter_AddRefs(directory));
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return Err(rv);
+  }
 
   bool exists;
   rv = directory->Exists(&exists);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return Err(rv);
+  }
+
+  UsageInfo usageInfo;
 
   // If the directory exists then enumerate all the files inside, adding up
   // the sizes to get the final usage statistic.
@@ -9066,7 +9068,9 @@ nsresult QuotaUsageRequestBase::GetUsageForOrigin(
 
     nsCOMPtr<nsIDirectoryEnumerator> entries;
     rv = directory->GetDirectoryEntries(getter_AddRefs(entries));
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return Err(rv);
+    }
 
     nsCOMPtr<nsIFile> file;
     while (NS_SUCCEEDED((rv = entries->GetNextFile(getter_AddRefs(file)))) &&
@@ -9074,13 +9078,13 @@ nsresult QuotaUsageRequestBase::GetUsageForOrigin(
       bool isDirectory;
       rv = file->IsDirectory(&isDirectory);
       if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
+        return Err(rv);
       }
 
       nsString leafName;
       rv = file->GetLeafName(leafName);
       if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
+        return Err(rv);
       }
 
       if (!isDirectory) {
@@ -9096,7 +9100,7 @@ nsresult QuotaUsageRequestBase::GetUsageForOrigin(
           if (!initialized) {
             rv = file->Remove(/* recursive */ false);
             if (NS_WARN_IF(NS_FAILED(rv))) {
-              return rv;
+              return Err(rv);
             }
           }
 
@@ -9127,16 +9131,18 @@ nsresult QuotaUsageRequestBase::GetUsageForOrigin(
 
       if (initialized) {
         rv = client->GetUsageForOrigin(aPersistenceType, aGroup, aOrigin,
-                                       mCanceled, aUsageInfo);
+                                       mCanceled, &usageInfo);
       } else {
         rv = client->InitOrigin(aPersistenceType, aGroup, aOrigin, mCanceled,
-                                aUsageInfo);
+                                &usageInfo);
       }
-      NS_ENSURE_SUCCESS(rv, rv);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return Err(rv);
+      }
     }
   }
 
-  return NS_OK;
+  return usageInfo;
 }
 
 void QuotaUsageRequestBase::SendResults() {
@@ -9315,15 +9321,15 @@ nsresult GetUsageOp::ProcessOrigin(QuotaManager& aQuotaManager,
     return rv;
   }
 
-  UsageInfo usageInfo;
-  rv = GetUsageForOrigin(aQuotaManager, aPersistenceType, group, origin,
-                         &usageInfo);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  auto usageInfoOrErr =
+      GetUsageForOrigin(aQuotaManager, aPersistenceType, group, origin);
+  if (NS_WARN_IF(usageInfoOrErr.isErr())) {
+    return usageInfoOrErr.unwrapErr();
   }
 
   ProcessOriginInternal(&aQuotaManager, aPersistenceType, origin, timestamp,
-                        persisted, usageInfo.TotalUsage().valueOr(0));
+                        persisted,
+                        usageInfoOrErr.unwrap().TotalUsage().valueOr(0));
 
   return NS_OK;
 }
@@ -9401,13 +9407,11 @@ nsresult GetOriginUsageOp::DoDirectoryWork(QuotaManager& aQuotaManager) {
 
   AUTO_PROFILER_LABEL("GetOriginUsageOp::DoDirectoryWork", OTHER);
 
-  nsresult rv;
-
   if (mFromMemory) {
     // Ensure temporary storage is initialized. If temporary storage hasn't been
     // initialized yet, the method will initialize it by traversing the
     // repositories for temporary and default storage (including our origin).
-    rv = aQuotaManager.EnsureTemporaryStorageIsInitialized();
+    nsresult rv = aQuotaManager.EnsureTemporaryStorageIsInitialized();
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -9423,11 +9427,13 @@ nsresult GetOriginUsageOp::DoDirectoryWork(QuotaManager& aQuotaManager) {
 
   // Add all the persistent/temporary/default storage files we care about.
   for (const PersistenceType type : kAllPersistenceTypes) {
-    rv = GetUsageForOrigin(aQuotaManager, type, mGroup,
-                           mOriginScope.GetOrigin(), &usageInfo);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+    auto usageInfoOrErr = GetUsageForOrigin(aQuotaManager, type, mGroup,
+                                            mOriginScope.GetOrigin());
+    if (NS_WARN_IF(usageInfoOrErr.isErr())) {
+      return usageInfoOrErr.unwrapErr();
     }
+
+    usageInfo.Append(usageInfoOrErr.unwrap());
   }
 
   mUsage = usageInfo.TotalUsage().valueOr(0);
