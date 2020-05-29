@@ -663,19 +663,11 @@ void JitScript::setIonScriptImpl(JSFreeOp* fop, JSScript* script,
 
 #ifdef JS_STRUCTURED_SPEW
 static bool GetStubEnteredCount(ICStub* stub, uint32_t* count) {
-  switch (stub->kind()) {
-    case ICStub::CacheIR_Regular:
-      *count = stub->toCacheIR_Regular()->enteredCount();
-      return true;
-    case ICStub::CacheIR_Updated:
-      *count = stub->toCacheIR_Updated()->enteredCount();
-      return true;
-    case ICStub::CacheIR_Monitored:
-      *count = stub->toCacheIR_Monitored()->enteredCount();
-      return true;
-    default:
-      return false;
+  if (ICStub::IsCacheIRKind(stub->kind())) {
+    *count = stub->getEnteredCount();
+    return true;
   }
+  return false;
 }
 
 static bool HasEnteredCounters(ICEntry& entry) {
