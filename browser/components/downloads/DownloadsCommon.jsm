@@ -431,20 +431,21 @@ var DownloadsCommon = {
    *
    * @param downloadProperties
    *        A Download object or the initial properties of a serialized download
+   * @param options.openWhere
+   *        Optional string indicating how to handle opening a download target file URI.
+   *        One of "current", "window", "tab", "tabshifted".
    * @return {Promise}
    * @resolves When the instruction to launch the file has been
    *           successfully given to the operating system or handled internally
    * @rejects  JavaScript exception if there was an error trying to launch
    *           the file.
    */
-  async openDownload(download) {
-    // TODO: accept an event and construct an options object here with any key modifiers
-
+  async openDownload(download, options) {
     // some download objects got serialized and need reconstituting
     if (typeof download.launch !== "function") {
       download = await Downloads.createDownload(download);
     }
-    return download.launch().catch(ex => Cu.reportError(ex));
+    return download.launch(options).catch(ex => Cu.reportError(ex));
   },
 
   /**

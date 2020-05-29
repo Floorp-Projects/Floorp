@@ -127,10 +127,26 @@ HistoryDownloadElementShell.prototype = {
     );
   },
 
-  // Handles return keypress on the element (the keypress listener is
-  // set in the DownloadsPlacesView object).
-  doDefaultCommand() {
+  // Handles double-click and return keypress on the element (the keypress
+  // listener is set in the DownloadsPlacesView object).
+  doDefaultCommand(event) {
     let command = this.currentDefaultCommandName;
+    if (
+      command == "downloadsCmd_open" &&
+      event &&
+      (event.shiftKey || event.ctrlKey || event.metaKey || event.button == 1)
+    ) {
+      // We adjust the command for supported modifiers to suggest where the download may
+      // be opened.
+      let browserWin = BrowserWindowTracker.getTopWindow();
+      let openWhere = browserWin
+        ? browserWin.whereToOpenLink(event, false, true)
+        : "window";
+      if (["window", "tabshifted", "tab"].includes(openWhere)) {
+        command += ":" + openWhere;
+      }
+    }
+
     if (command && this.isCommandEnabled(command)) {
       this.doCommand(command);
     }
@@ -714,7 +730,7 @@ DownloadsPlacesView.prototype = {
       if (selectedElements.length == 1) {
         let element = selectedElements[0];
         if (element._shell) {
-          element._shell.doDefaultCommand();
+          element._shell.doDefaultCommand(aEvent);
         }
       }
     } else if (aEvent.charCode == " ".charCodeAt(0)) {
@@ -739,7 +755,7 @@ DownloadsPlacesView.prototype = {
 
     let element = selectedElements[0];
     if (element._shell) {
-      element._shell.doDefaultCommand();
+      element._shell.doDefaultCommand(aEvent);
     }
   },
 
