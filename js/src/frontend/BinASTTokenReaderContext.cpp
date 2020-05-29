@@ -2166,7 +2166,7 @@ JS::Result<Ok> SingleLookupHuffmanTable::initComplete(
   // We can end up with empty tables, if this `SingleLookupHuffmanTable`
   // is used to store suffixes in a `MultiLookupHuffmanTable` and
   // the corresponding prefix is never used.
-  if (values_.size() == 0) {
+  if (values_.empty()) {
     MOZ_ASSERT(largestBitLength_ == 0);
     return Ok();
   }
@@ -2224,7 +2224,7 @@ JS::Result<Ok> SingleLookupHuffmanTable::addSymbol(size_t index, uint32_t bits,
 }
 
 HuffmanLookupResult SingleLookupHuffmanTable::lookup(HuffmanLookup key) const {
-  if (values_.size() == 0) {
+  if (values_.empty()) {
     // If the table is empty, any lookup fails.
     return HuffmanLookupResult::notFound();
   }
