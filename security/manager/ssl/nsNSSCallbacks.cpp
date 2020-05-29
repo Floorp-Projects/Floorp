@@ -1392,7 +1392,7 @@ void HandshakeCallback(PRFileDesc* fd, void* client_data) {
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
             ("HandshakeCallback KEEPING existing cert\n"));
   } else {
-    if (mozilla::net::SSLTokensCache::IsEnabled()) {
+    if (StaticPrefs::network_ssl_tokens_cache_enabled()) {
       RebuildCertificateInfoFromSSLTokenCache(infoObject);
       infoObject->NoteSessionResumptionTime(true);
     } else {
