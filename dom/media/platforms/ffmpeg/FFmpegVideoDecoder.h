@@ -10,21 +10,45 @@
 #include "FFmpegLibWrapper.h"
 #include "FFmpegDataDecoder.h"
 #include "SimpleMap.h"
+#ifdef MOZ_WAYLAND_USE_VAAPI
+#  include "mozilla/widget/WaylandDMABufSurface.h"
+#  include <list>
+#endif
 
 namespace mozilla {
 
 #ifdef MOZ_WAYLAND_USE_VAAPI
-class VAAPIFrameHolder {
+// When VA-API decoding is running, ffmpeg allocates AVHWFramesContext - a pool
+// of "hardware" frames. Every "hardware" frame (VASurface) is backed
+// by actual piece of GPU memory which holds the decoded image data.
+//
+// The VASurface is wrapped by WaylandDMABufSurface and transferred to
+// rendering queue by WaylandDMABUFSurfaceImage, where TextureClient is
+// created and VASurface is used as a texture there.
+//
+// As there's a limited number of VASurfaces, ffmpeg reuses them to decode
+// next frames ASAP even if they are still attached to WaylandDMABufSurface
+// and used as a texture in our rendering engine.
+//
+// Unfortunately there isn't any obvious way how to mark particular VASurface
+// as used. The best we can do is to hold a reference to particular AVBuffer
+// from decoded AVFrame and AVHWFramesContext which owns the AVBuffer.
+
+class VAAPIFrameHolder final {
  public:
-  VAAPIFrameHolder(FFmpegLibWrapper* aLib, AVBufferRef* aVAAPIDeviceContext,
-                   AVBufferRef* aAVHWFramesContext, AVBufferRef* aHWFrame);
+  VAAPIFrameHolder(FFmpegLibWrapper* aLib, WaylandDMABufSurface* aSurface,
+                   AVCodecContext* aAVCodecContext, AVFrame* aAVFrame);
   ~VAAPIFrameHolder();
 
+  // Check if WaylandDMABufSurface is used by any gecko rendering process
+  // (WebRender or GL compositor) or by WaylandDMABUFSurfaceImage/VideoData.
+  bool IsUsed() const { return mSurface->IsGlobalRefSet(); }
+
  private:
-  FFmpegLibWrapper* mLib;
-  AVBufferRef* mVAAPIDeviceContext;
+  const FFmpegLibWrapper* mLib;
+  const RefPtr<WaylandDMABufSurface> mSurface;
   AVBufferRef* mAVHWFramesContext;
-  AVBufferRef* mHWFrame;
+  AVBufferRef* mHWAVBuffer;
 };
 #endif
 
@@ -97,6 +121,8 @@ class FFmpegVideoDecoder<LIBAV_VER>
 
   MediaResult CreateImageVAAPI(int64_t aOffset, int64_t aPts, int64_t aDuration,
                                MediaDataDecoder::DecodedData& aResults);
+  void ReleaseUnusedVAAPIFrames();
+  void ReleaseAllVAAPIFrames();
 #endif
 
   /**
@@ -112,6 +138,7 @@ class FFmpegVideoDecoder<LIBAV_VER>
   AVBufferRef* mVAAPIDeviceContext;
   const bool mDisableHardwareDecoding;
   VADisplay mDisplay;
+  std::list<UniquePtr<VAAPIFrameHolder>> mFrameHolders;
 #endif
   RefPtr<KnowsCompositor> mImageAllocator;
   RefPtr<ImageContainer> mImageContainer;
