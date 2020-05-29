@@ -48,6 +48,11 @@ interface PushConnection : Closeable {
     suspend fun unsubscribeAll(): Boolean
 
     /**
+     * Returns `true` if the specified [scope] has a subscription.
+     */
+    suspend fun containsSubscription(scope: PushScope): Boolean
+
+    /**
      * Updates the registration token to the native Push API if it changes.
      *
      * @return the invocation result if it was successful.
@@ -152,6 +157,14 @@ internal class RustPushConnection(
         check(pushApi != null) { "Rust API is not initiated; updateToken hasn't been called yet." }
 
         return pushApi.unsubscribeAll()
+    }
+
+    @GuardedBy("this")
+    override suspend fun containsSubscription(scope: PushScope): Boolean = synchronized(this) {
+        val pushApi = api
+        check(pushApi != null) { "Rust API is not initiated; updateToken hasn't been called yet." }
+
+        return pushApi.dispatchInfoForChid(scope.toChannelId()) != null
     }
 
     @GuardedBy("this")

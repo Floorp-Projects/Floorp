@@ -22,11 +22,7 @@ internal class GeckoWebPushDelegate(private val delegate: WebPushDelegate) : Gec
         val result: GeckoResult<GeckoWebPushSubscription> = GeckoResult()
 
         delegate.onGetSubscription(scope) { subscription ->
-            if (subscription != null) {
-                result.complete(subscription.toGeckoSubscription())
-            } else {
-                result.completeExceptionally(WebPushException("Retrieving subscription failed."))
-            }
+            result.complete(subscription?.toGeckoSubscription())
         }
 
         return result
@@ -39,11 +35,7 @@ internal class GeckoWebPushDelegate(private val delegate: WebPushDelegate) : Gec
         val result: GeckoResult<GeckoWebPushSubscription> = GeckoResult()
 
         delegate.onSubscribe(scope, appServerKey) { subscription ->
-            if (subscription != null) {
-                result.complete(subscription.toGeckoSubscription())
-            } else {
-                result.completeExceptionally(WebPushException("Creating subscription failed."))
-            }
+            result.complete(subscription?.toGeckoSubscription())
         }
 
         return result
