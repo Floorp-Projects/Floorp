@@ -209,7 +209,11 @@ enum class DeviceVendor : uint8_t {
   ATI,
   Microsoft,
   Parallels,
+  VMWare,
+  VirtualBox,
   Qualcomm,
+  MicrosoftBasic,
+  MicrosoftHyperV,
 
   Max
 };
