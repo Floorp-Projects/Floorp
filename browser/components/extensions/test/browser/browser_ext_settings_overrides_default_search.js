@@ -174,7 +174,7 @@ add_task(async function test_extension_setting_multiple_default_engine() {
     manifest: {
       chrome_settings_overrides: {
         search_provider: {
-          name: "Twitter",
+          name: "Bing",
           search_url: "https://example.com/?q={searchTerms}",
           is_default: true,
         },
@@ -197,8 +197,8 @@ add_task(async function test_extension_setting_multiple_default_engine() {
 
   is(
     (await Services.search.getDefault()).name,
-    "Twitter",
-    "Default engine is Twitter"
+    "Bing",
+    "Default engine is Bing"
   );
 
   await ext2.unload();
@@ -239,7 +239,7 @@ add_task(
       manifest: {
         chrome_settings_overrides: {
           search_provider: {
-            name: "Twitter",
+            name: "Bing",
             search_url: "https://example.com/?q={searchTerms}",
             is_default: true,
           },
@@ -262,16 +262,16 @@ add_task(
 
     is(
       (await Services.search.getDefault()).name,
-      "Twitter",
-      "Default engine is Twitter"
+      "Bing",
+      "Default engine is Bing"
     );
 
     await ext1.unload();
 
     is(
       (await Services.search.getDefault()).name,
-      "Twitter",
-      "Default engine is Twitter"
+      "Bing",
+      "Default engine is Bing"
     );
 
     await ext2.unload();
@@ -309,15 +309,15 @@ add_task(async function test_user_changing_default_engine() {
     "Default engine is DuckDuckGo"
   );
 
-  let engine = Services.search.getEngineByName("Twitter");
+  let engine = Services.search.getEngineByName("Bing");
   await Services.search.setDefault(engine);
 
   await ext1.unload();
 
   is(
     (await Services.search.getDefault()).name,
-    "Twitter",
-    "Default engine is Twitter"
+    "Bing",
+    "Default engine is Bing"
   );
   restoreDefaultEngine();
 });
@@ -352,13 +352,13 @@ add_task(async function test_user_change_with_disabling() {
     "Default engine is DuckDuckGo"
   );
 
-  let engine = Services.search.getEngineByName("Twitter");
+  let engine = Services.search.getEngineByName("Bing");
   await Services.search.setDefault(engine);
 
   is(
     (await Services.search.getDefault()).name,
-    "Twitter",
-    "Default engine is Twitter"
+    "Bing",
+    "Default engine is Bing"
   );
 
   let disabledPromise = awaitEvent("shutdown", EXTENSION1_ID);
@@ -368,8 +368,8 @@ add_task(async function test_user_change_with_disabling() {
 
   is(
     (await Services.search.getDefault()).name,
-    "Twitter",
-    "Default engine is Twitter"
+    "Bing",
+    "Default engine is Bing"
   );
 
   let processedPromise = awaitEvent("searchEngineProcessed", EXTENSION1_ID);
@@ -378,8 +378,8 @@ add_task(async function test_user_change_with_disabling() {
 
   is(
     (await Services.search.getDefault()).name,
-    "Twitter",
-    "Default engine is Twitter"
+    "Bing",
+    "Default engine is Bing"
   );
   await ext1.unload();
   await restoreDefaultEngine();
@@ -416,7 +416,7 @@ add_task(async function test_two_addons_with_first_disabled_before_second() {
       },
       chrome_settings_overrides: {
         search_provider: {
-          name: "Twitter",
+          name: "Bing",
           search_url: "https://example.com/?q={searchTerms}",
           is_default: true,
         },
@@ -450,8 +450,8 @@ add_task(async function test_two_addons_with_first_disabled_before_second() {
 
   is(
     (await Services.search.getDefault()).name,
-    "Twitter",
-    "Default engine is Twitter"
+    "Bing",
+    "Default engine is Bing"
   );
 
   let enabledPromise = awaitEvent("ready", EXTENSION1_ID);
@@ -460,8 +460,8 @@ add_task(async function test_two_addons_with_first_disabled_before_second() {
 
   is(
     (await Services.search.getDefault()).name,
-    "Twitter",
-    "Default engine is Twitter"
+    "Bing",
+    "Default engine is Bing"
   );
   await ext2.unload();
 
@@ -510,7 +510,7 @@ add_task(async function test_two_addons_with_first_disabled() {
       },
       chrome_settings_overrides: {
         search_provider: {
-          name: "Twitter",
+          name: "Bing",
           search_url: "https://example.com/?q={searchTerms}",
           is_default: true,
         },
@@ -533,8 +533,8 @@ add_task(async function test_two_addons_with_first_disabled() {
 
   is(
     (await Services.search.getDefault()).name,
-    "Twitter",
-    "Default engine is Twitter"
+    "Bing",
+    "Default engine is Bing"
   );
 
   let disabledPromise = awaitEvent("shutdown", EXTENSION1_ID);
@@ -544,8 +544,8 @@ add_task(async function test_two_addons_with_first_disabled() {
 
   is(
     (await Services.search.getDefault()).name,
-    "Twitter",
-    "Default engine is Twitter"
+    "Bing",
+    "Default engine is Bing"
   );
 
   let enabledPromise = awaitEvent("ready", EXTENSION1_ID);
@@ -554,8 +554,8 @@ add_task(async function test_two_addons_with_first_disabled() {
 
   is(
     (await Services.search.getDefault()).name,
-    "Twitter",
-    "Default engine is Twitter"
+    "Bing",
+    "Default engine is Bing"
   );
   await ext2.unload();
 
@@ -604,7 +604,7 @@ add_task(async function test_two_addons_with_second_disabled() {
       },
       chrome_settings_overrides: {
         search_provider: {
-          name: "Twitter",
+          name: "Bing",
           search_url: "https://example.com/?q={searchTerms}",
           is_default: true,
         },
@@ -627,8 +627,8 @@ add_task(async function test_two_addons_with_second_disabled() {
 
   is(
     (await Services.search.getDefault()).name,
-    "Twitter",
-    "Default engine is Twitter"
+    "Bing",
+    "Default engine is Bing"
   );
 
   let disabledPromise = awaitEvent("shutdown", EXTENSION2_ID);
@@ -648,8 +648,8 @@ add_task(async function test_two_addons_with_second_disabled() {
 
   is(
     (await Services.search.getDefault()).name,
-    "Twitter",
-    "Default engine is Twitter"
+    "Bing",
+    "Default engine is Bing"
   );
   await ext2.unload();
 
