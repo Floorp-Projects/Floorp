@@ -10,6 +10,7 @@ import androidx.annotation.VisibleForTesting
 import mozilla.components.browser.engine.gecko.integration.LocaleSettingUpdater
 import mozilla.components.browser.engine.gecko.mediaquery.from
 import mozilla.components.browser.engine.gecko.mediaquery.toGeckoValue
+import mozilla.components.browser.engine.gecko.profiler.Profiler
 import mozilla.components.browser.engine.gecko.webextension.GeckoWebExtension
 import mozilla.components.browser.engine.gecko.webnotifications.GeckoWebNotificationDelegate
 import mozilla.components.browser.engine.gecko.webpush.GeckoWebPushDelegate
@@ -495,6 +496,11 @@ class GeckoEngine(
             GeckoResult<Void>()
         })
     }
+
+    /**
+     * See [Engine.profiler].
+     */
+    override val profiler: Profiler? = Profiler(runtime)
 
     override fun name(): String = "Gecko"
 

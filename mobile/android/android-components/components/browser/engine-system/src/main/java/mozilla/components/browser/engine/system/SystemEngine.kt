@@ -17,6 +17,7 @@ import mozilla.components.concept.engine.EngineSessionState
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.concept.engine.Settings
 import mozilla.components.concept.engine.history.HistoryTrackingDelegate
+import mozilla.components.concept.engine.profiler.Profiler
 import mozilla.components.concept.engine.utils.EngineVersion
 import org.json.JSONObject
 import java.lang.IllegalStateException
@@ -60,6 +61,11 @@ class SystemEngine(
      * Note: This implementation is a no-op.
      */
     override fun speculativeConnect(url: String) = Unit
+
+    /**
+     * See [Engine.profiler].
+     */
+    override val profiler: Profiler? = null
 
     /**
      * See [Engine.name]

@@ -20,6 +20,7 @@ import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSessionState
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.concept.engine.Settings
+import mozilla.components.concept.engine.profiler.Profiler
 import mozilla.components.concept.engine.utils.EngineVersion
 import mozilla.components.feature.tab.collections.db.TabCollectionDatabase
 import mozilla.components.feature.tab.collections.db.TabEntity
@@ -364,6 +365,9 @@ class FakeEngine : Engine {
 
     override fun speculativeConnect(url: String) =
         throw UnsupportedOperationException()
+
+    override val profiler: Profiler?
+        get() = throw NotImplementedError("Not needed for test")
 
     override val settings: Settings = DefaultSettings()
 }

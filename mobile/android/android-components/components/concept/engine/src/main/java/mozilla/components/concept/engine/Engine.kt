@@ -9,6 +9,7 @@ import android.util.AttributeSet
 import androidx.annotation.MainThread
 import mozilla.components.concept.engine.content.blocking.TrackerLog
 import mozilla.components.concept.engine.content.blocking.TrackingProtectionExceptionStorage
+import mozilla.components.concept.engine.profiler.Profiler
 import mozilla.components.concept.engine.utils.EngineVersion
 import mozilla.components.concept.engine.webextension.WebExtensionRuntime
 import mozilla.components.concept.engine.webnotifications.WebNotificationDelegate
@@ -176,6 +177,12 @@ interface Engine : WebExtensionRuntime, DataCleanable {
      */
     val trackingProtectionExceptionStore: TrackingProtectionExceptionStorage
         get() = throw UnsupportedOperationException("TrackingProtectionExceptionStorage not supported by this engine.")
+
+    /**
+     * Provides access to Firefox Profiler features.
+     * See [Profiler] for more information.
+     */
+    val profiler: Profiler?
 
     /**
      * Provides access to the settings of this engine.
