@@ -26,6 +26,11 @@ macro_rules! tracy_end_frame {
     ($name:expr) => {}
 }
 
+#[macro_export]
+macro_rules! tracy_plot {
+    ($name:expr, $value:expr) => {}
+}
+
 pub unsafe fn load(_: &str) -> bool {
     println!("Can't load the tracy profiler unless enable_profiler feature is enabled!");
     false
