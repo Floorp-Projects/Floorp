@@ -1559,7 +1559,7 @@ static void CheckDOMProxyExpandoDoesNotShadow(CacheIRWriter& writer,
 
   if (expandoVal.isUndefined()) {
     // Guard there's no expando object.
-    writer.guardType(expandoId, ValueType::Undefined);
+    writer.guardNonDoubleType(expandoId, ValueType::Undefined);
   } else if (expandoVal.isObject()) {
     // Guard the proxy either has no expando object or, if it has one, that
     // the shape matches the current expando object.
@@ -1963,7 +1963,7 @@ AttachDecision GetPropIRGenerator::tryAttachPrimitive(ValOperandId valId,
       if (val_.isNumber()) {
         writer.guardIsNumber(valId);
       } else {
-        writer.guardType(valId, val_.type());
+        writer.guardNonDoubleType(valId, val_.type());
       }
       maybeEmitIdGuard(id);
 
@@ -1981,7 +1981,7 @@ AttachDecision GetPropIRGenerator::tryAttachPrimitive(ValOperandId valId,
       if (val_.isNumber()) {
         writer.guardIsNumber(valId);
       } else {
-        writer.guardType(valId, val_.type());
+        writer.guardNonDoubleType(valId, val_.type());
       }
       maybeEmitIdGuard(id);
 
@@ -3575,7 +3575,7 @@ AttachDecision SetPropIRGenerator::tryAttachTypedObjectProperty(
       writer.guardIsObjectOrNull(rhsId);
       break;
     case ReferenceType::TYPE_STRING:
-      writer.guardType(rhsId, ValueType::String);
+      writer.guardNonDoubleType(rhsId, ValueType::String);
       break;
     case ReferenceType::TYPE_WASM_ANYREF:
       MOZ_CRASH();
@@ -4729,7 +4729,7 @@ AttachDecision TypeOfIRGenerator::tryAttachPrimitive(ValOperandId valId) {
   if (val_.isNumber()) {
     writer.guardIsNumber(valId);
   } else {
-    writer.guardType(valId, val_.type());
+    writer.guardNonDoubleType(valId, val_.type());
   }
 
   writer.loadConstantStringResult(
@@ -6763,7 +6763,7 @@ AttachDecision ToBoolIRGenerator::tryAttachInt32() {
   }
 
   ValOperandId valId(writer.setInputOperandId(0));
-  writer.guardType(valId, ValueType::Int32);
+  writer.guardNonDoubleType(valId, ValueType::Int32);
   writer.loadInt32TruthyResult(valId);
   writer.returnFromIC();
   trackAttached("ToBoolInt32");
@@ -6789,7 +6789,7 @@ AttachDecision ToBoolIRGenerator::tryAttachSymbol() {
   }
 
   ValOperandId valId(writer.setInputOperandId(0));
-  writer.guardType(valId, ValueType::Symbol);
+  writer.guardNonDoubleType(valId, ValueType::Symbol);
   writer.loadBooleanResult(true);
   writer.returnFromIC();
   trackAttached("ToBoolSymbol");

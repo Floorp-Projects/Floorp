@@ -247,20 +247,20 @@ bool WarpCacheIRTranspiler::emitGuardSpecificFunction(
   return true;
 }
 
-bool WarpCacheIRTranspiler::emitGuardType(ValOperandId inputId,
-                                          ValueType type) {
+bool WarpCacheIRTranspiler::emitGuardNonDoubleType(ValOperandId inputId,
+                                                   ValueType type) {
   switch (type) {
     case ValueType::String:
     case ValueType::Symbol:
     case ValueType::BigInt:
     case ValueType::Int32:
-    case ValueType::Double:
     case ValueType::Boolean:
       return emitGuardTo(inputId, MIRTypeFromValueType(JSValueType(type)));
     case ValueType::Undefined:
       return emitGuardIsUndefined(inputId);
     case ValueType::Null:
       return emitGuardIsNull(inputId);
+    case ValueType::Double:
     case ValueType::Magic:
     case ValueType::PrivateGCThing:
     case ValueType::Object:

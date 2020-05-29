@@ -150,7 +150,9 @@
     input: ValId
     result: Int32Id
 
-- name: GuardType
+# Note: this doesn't accept doubles to avoid ambiguity about whether it includes
+# int32 values. Use GuardIsNumber instead.
+- name: GuardNonDoubleType
   shared: true
   transpile: true
   args:

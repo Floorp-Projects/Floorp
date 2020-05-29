@@ -239,7 +239,7 @@ static void SkipBinaryGuards(CacheIRReader& reader) {
   while (true) {
     // Two skip opcodes
     if (reader.matchOp(CacheOp::GuardToInt32) ||
-        reader.matchOp(CacheOp::GuardType) ||
+        reader.matchOp(CacheOp::GuardNonDoubleType) ||
         reader.matchOp(CacheOp::TruncateDoubleToUInt32) ||
         reader.matchOp(CacheOp::GuardToBoolean) ||
         reader.matchOp(CacheOp::GuardAndGetNumberFromString) ||
@@ -1510,7 +1510,7 @@ static MIRType GetCacheIRExpectedInputType(ICCacheIR_Monitored* stub) {
   if (reader.matchOp(CacheOp::GuardIsNumber, ValOperandId(0))) {
     return MIRType::Double;
   }
-  if (reader.matchOp(CacheOp::GuardType, ValOperandId(0))) {
+  if (reader.matchOp(CacheOp::GuardNonDoubleType, ValOperandId(0))) {
     ValueType type = reader.valueType();
     return MIRTypeFromValueType(JSValueType(type));
   }
