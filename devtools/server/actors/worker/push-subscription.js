@@ -19,11 +19,15 @@ const PushSubscriptionActor = protocol.ActorClassWithSpec(
 
     form() {
       const subscription = this._subscription;
+
+      // Note: subscription.pushCount & subscription.lastPush are no longer
+      // returned here because the corresponding getters throw on GeckoView.
+      // Since they were not used in DevTools they were removed from the
+      // actor in Bug 1637687. If they are reintroduced, make sure to provide
+      // meaningful fallback values when debugging a GeckoView runtime.
       return {
         actor: this.actorID,
         endpoint: subscription.endpoint,
-        pushCount: subscription.pushCount,
-        lastPush: subscription.lastPush,
         quota: subscription.quota,
       };
     },
