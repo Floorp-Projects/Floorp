@@ -15,37 +15,32 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/CORSMode.h"
 #include "mozilla/dom/LinkStyle.h"
-#include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/StyleSheet.h"
-#include "mozilla/StyleSheetInlines.h"
 #include "mozilla/UniquePtr.h"
 #include "nsCompatibility.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsDataHashtable.h"
-#include "nsIPrincipal.h"
-#include "nsRefPtrHashtable.h"
 #include "nsStringFwd.h"
 #include "nsTArray.h"
 #include "nsTObserverArray.h"
-#include "nsURIHashKey.h"
 
 class nsICSSLoaderObserver;
 class nsIConsoleReportCollector;
 class nsIContent;
+class nsIPrincipal;
 
 namespace mozilla {
+
+class StyleSheet;
+
 namespace dom {
 class DocGroup;
 class Element;
 }  // namespace dom
-}  // namespace mozilla
-
-namespace mozilla {
 
 namespace css {
 
 class SheetLoadData;
+class SheetCache;
 class ImportRule;
 
 /*********************
