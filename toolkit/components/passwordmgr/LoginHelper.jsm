@@ -20,6 +20,11 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
+ChromeUtils.defineModuleGetter(
+  this,
+  "OSKeyStore",
+  "resource://gre/modules/OSKeyStore.jsm"
+);
 
 /**
  * Contains functions shared by different Login Manager components.
@@ -1145,6 +1150,112 @@ this.LoginHelper = {
     );
     let token = tokenDB.getInternalKeyToken();
     return token.hasPassword;
+  },
+
+  /**
+   * Shows the Master Password prompt if enabled, or the
+   * OS auth dialog otherwise.
+   * @param {Element} browser
+   *        The <browser> that the prompt should be shown on
+   * @param OSReauthEnabled Boolean indicating if OS reauth should be tried
+   * @param expirationTime Optional timestamp indicating next required re-authentication
+   * @param messageText Formatted and localized string to be displayed when the OS auth dialog is used.
+   * @param captionText Formatted and localized string to be displayed when the OS auth dialog is used.
+   */
+  async requestReauth(
+    browser,
+    OSReauthEnabled,
+    expirationTime,
+    messageText,
+    captionText
+  ) {
+    let isAuthorized = false;
+    let telemetryEvent;
+
+    // This does no harm if master password isn't set.
+    let tokendb = Cc["@mozilla.org/security/pk11tokendb;1"].createInstance(
+      Ci.nsIPK11TokenDB
+    );
+    let token = tokendb.getInternalKeyToken();
+
+    // Do we have a recent authorization?
+    if (expirationTime && Date.now() < expirationTime) {
+      isAuthorized = true;
+      telemetryEvent = {
+        object: token.hasPassword ? "master_password" : "os_auth",
+        method: "reauthenticate",
+        value: "success_no_prompt",
+      };
+      return {
+        isAuthorized,
+        telemetryEvent,
+      };
+    }
+
+    // Default to true if there is no master password and OS reauth is not available
+    if (!token.hasPassword && !OSReauthEnabled) {
+      isAuthorized = true;
+      telemetryEvent = {
+        object: "os_auth",
+        method: "reauthenticate",
+        value: "success_disabled",
+      };
+      return {
+        isAuthorized,
+        telemetryEvent,
+      };
+    }
+    // Use the OS auth dialog if there is no master password
+    if (!token.hasPassword && OSReauthEnabled) {
+      let result = await OSKeyStore.ensureLoggedIn(
+        messageText,
+        captionText,
+        browser.ownerGlobal,
+        false
+      );
+      isAuthorized = result.authenticated;
+      telemetryEvent = {
+        object: "os_auth",
+        method: "reauthenticate",
+        value: result.auth_details,
+      };
+      return {
+        isAuthorized,
+        telemetryEvent,
+      };
+    }
+    // We'll attempt to re-auth via Master Password, force a log-out
+    token.checkPassword("");
+
+    // If a master password prompt is already open, just exit early and return false.
+    // The user can re-trigger it after responding to the already open dialog.
+    if (Services.logins.uiBusy) {
+      isAuthorized = false;
+      return {
+        isAuthorized,
+        telemetryEvent,
+      };
+    }
+
+    // So there's a master password. But since checkPassword didn't succeed, we're logged out (per nsIPK11Token.idl).
+    try {
+      // Relogin and ask for the master password.
+      token.login(true); // 'true' means always prompt for token password. User will be prompted until
+      // clicking 'Cancel' or entering the correct password.
+    } catch (e) {
+      // An exception will be thrown if the user cancels the login prompt dialog.
+      // User is also logged out of Software Security Device.
+    }
+    isAuthorized = token.isLoggedIn();
+    telemetryEvent = {
+      object: "master_password",
+      method: "reauthenticate",
+      value: isAuthorized ? "success" : "fail",
+    };
+    return {
+      isAuthorized,
+      telemetryEvent,
+    };
   },
 
   /**
