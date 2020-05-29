@@ -156,6 +156,8 @@ impl GlyphRasterizer {
             job
         }
 
+        tracy_plot!("glyphs requested", glyphs.len() as f64);
+
         // if the number of glyphs is small, do it inline to avoid the threading overhead;
         // send the result into glyph_tx so downstream code can't tell the difference.
         if !self.enable_multithreading || glyphs.len() < 8 {
