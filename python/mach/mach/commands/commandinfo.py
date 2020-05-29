@@ -21,10 +21,8 @@ class BuiltinCommands(object):
 
     @property
     def command_keys(self):
-        # NOTE 'REMOVED' is a function in testing/mochitest/mach_commands.py
         return (k for k, v in self.context.commands.command_handlers.items()
-                if not v.conditions
-                or getattr(v.conditions[0], '__name__', None) != 'REMOVED')
+                if not v.conditions)
 
     @Command('mach-commands', category='misc',
              description='List all mach commands.')
