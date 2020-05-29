@@ -59,15 +59,9 @@ internal class WebPushEngineDelegate(
     override fun onGetSubscription(scope: String, onSubscription: (WebPushSubscription?) -> Unit) {
         // We don't have the appServerKey unless an app is creating a new subscription so we
         // allow the key to be null since it won't be overridden from a previous subscription.
-        pushFeature.subscribe(
-            scope = scope,
-            onSubscribeError = {
-                logger.error("Error on push onGetSubscription.")
-                onSubscription(null)
-            },
-            onSubscribe = { subscription ->
-                onSubscription(subscription.toEnginePushSubscription())
-            })
+        pushFeature.getSubscription(scope) {
+            onSubscription(it?.toEnginePushSubscription())
+        }
     }
 
     override fun onSubscribe(
