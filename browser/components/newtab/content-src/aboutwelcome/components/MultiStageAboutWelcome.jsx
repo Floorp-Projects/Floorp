@@ -161,12 +161,12 @@ export class WelcomeScreen extends React.PureComponent {
 
   render() {
     const { content } = this.props;
+    const hasSecondaryTopCTA =
+      content.secondary_button && content.secondary_button.position === "top";
     return (
       <main className={`screen ${this.props.id}`}>
-        {content.secondary_button && content.secondary_button.position === "top"
-          ? this.renderSecondaryCTA("top")
-          : null}
-        <div className="brand-logo" />
+        {hasSecondaryTopCTA ? this.renderSecondaryCTA("top") : null}
+        <div className={`brand-logo ${hasSecondaryTopCTA ? "cta-top" : ""}`} />
         <div className="welcome-text">
           <Localized text={content.title}>
             <h1 />
