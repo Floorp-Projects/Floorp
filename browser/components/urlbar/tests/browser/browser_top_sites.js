@@ -418,6 +418,21 @@ add_task(async function topSitesDisabled() {
     private: true,
   });
   await checkDoesNotOpenOnFocus(privateWin);
+
+  // Top sites should also not be shown in a private window if the search string
+  // gets cleared.
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window: privateWin,
+    waitForFocus,
+    value: "example",
+  });
+  privateWin.gURLBar.select();
+  EventUtils.synthesizeKey("KEY_Backspace", {}, privateWin);
+  // Because the panel opening may not be immediate, we must wait a bit.
+  // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+  await new Promise(resolve => setTimeout(resolve, 500));
+  Assert.ok(!privateWin.gURLBar.view.isOpen, "check urlbar panel is not open");
+
   await BrowserTestUtils.closeWindow(privateWin);
 
   await PlacesUtils.bookmarks.eraseEverything();
