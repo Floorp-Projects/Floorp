@@ -210,6 +210,9 @@ bool GlobalObject::skipDeselectedConstructor(JSContext* cx, JSProtoKey key) {
     case JSProto_FinalizationRegistry:
       return !cx->realm()->creationOptions().getWeakRefsEnabled();
 
+    case JSProto_Iterator:
+      return !cx->realm()->creationOptions().getIteratorHelpersEnabled();
+
     case JSProto_AggregateError:
 #ifndef NIGHTLY_BUILD
       return true;
@@ -1094,4 +1097,19 @@ bool GlobalObject::ensureModulePrototypesCreated(JSContext* cx,
          getOrCreateImportEntryPrototype(cx, global) &&
          getOrCreateExportEntryPrototype(cx, global) &&
          getOrCreateRequestedModulePrototype(cx, global);
+}
+
+/* static */
+JSObject* GlobalObject::createIteratorPrototype(JSContext* cx,
+                                                Handle<GlobalObject*> global) {
+  if (!cx->realm()->creationOptions().getIteratorHelpersEnabled()) {
+    return getOrCreateObject(cx, global, ITERATOR_PROTO, initIteratorProto);
+  }
+
+  if (!ensureConstructor(cx, global, JSProto_Iterator)) {
+    return nullptr;
+  }
+  JSObject* proto = &global->getPrototype(JSProto_Iterator).toObject();
+  global->setReservedSlot(ITERATOR_PROTO, ObjectValue(*proto));
+  return proto;
 }
