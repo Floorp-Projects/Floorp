@@ -108,7 +108,8 @@ class CargoProvider(MachCommandBase):
     @Command('cargo', category='build',
              description='Invoke cargo in useful ways.')
     def cargo(self):
-        pass
+        self._sub_mach(['help', 'cargo'])
+        return 1
 
     @SubCommand('cargo', 'check',
                 description='Run `cargo check` on a given crate.  Defaults to gkrust.')
@@ -1323,8 +1324,8 @@ class Vendor(MachCommandBase):
     @Command('vendor', category='misc',
              description='Vendor third-party dependencies into the source repository.')
     def vendor(self):
-        self.parser.print_usage()
-        sys.exit(1)
+        self._sub_mach(['help', 'vendor'])
+        return 1
 
     @SubCommand('vendor', 'rust',
                 description='Vendor rust crates from crates.io into third_party/rust')
