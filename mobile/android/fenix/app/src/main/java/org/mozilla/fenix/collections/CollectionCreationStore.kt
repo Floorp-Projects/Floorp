@@ -24,7 +24,7 @@ class CollectionCreationStore(
  *
  * TODO refactor [CollectionCreationState] into a sealed class with four implementations, each
  * replacing a [SaveCollectionStep] value. These will not need null / emptyCollection default
- * values. Handle changes bebtween these state changes internally, here and in the controller,
+ * values. Handle changes between these state changes internally, here and in the controller,
  * instead of exposing [StepChanged], which currently acts as a setter.
  */
 enum class SaveCollectionStep {

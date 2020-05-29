@@ -11,28 +11,14 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
-import androidx.appcompat.content.res.AppCompatResources
 import androidx.constraintlayout.widget.ConstraintSet
-import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.transition.AutoTransition
 import androidx.transition.Transition
 import androidx.transition.TransitionManager
 import kotlinx.android.extensions.LayoutContainer
-import kotlinx.android.synthetic.main.component_collection_creation.back_button
-import kotlinx.android.synthetic.main.component_collection_creation.collection_constraint_layout
-import kotlinx.android.synthetic.main.component_collection_creation.name_collection_edittext
-import kotlinx.android.synthetic.main.component_collection_creation.save_button
-import kotlinx.android.synthetic.main.component_collection_creation.select_all_button
-import kotlinx.android.synthetic.main.component_collection_creation.view.bottom_bar_icon_button
-import kotlinx.android.synthetic.main.component_collection_creation.view.bottom_bar_text
-import kotlinx.android.synthetic.main.component_collection_creation.view.bottom_button_bar_layout
-import kotlinx.android.synthetic.main.component_collection_creation.view.collection_constraint_layout
-import kotlinx.android.synthetic.main.component_collection_creation.view.collections_list
-import kotlinx.android.synthetic.main.component_collection_creation.view.name_collection_edittext
-import kotlinx.android.synthetic.main.component_collection_creation.view.select_all_button
-import kotlinx.android.synthetic.main.component_collection_creation.view.tab_list
+import kotlinx.android.synthetic.main.component_collection_creation.*
 import mozilla.components.browser.state.state.MediaState
 import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.support.ktx.android.view.hideKeyboard
@@ -43,14 +29,21 @@ import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.toShortUrl
 import org.mozilla.fenix.home.Tab
 
-@SuppressWarnings("LargeClass")
 class CollectionCreationView(
-    override val containerView: ViewGroup,
+    container: ViewGroup,
     private val interactor: CollectionCreationInteractor
 ) : LayoutContainer {
-    val view: View = LayoutInflater.from(containerView.context)
-        .inflate(R.layout.component_collection_creation, containerView, true)
 
+    override val containerView: View = LayoutInflater.from(container.context)
+        .inflate(R.layout.component_collection_creation, container, true)
+
+    private val bottomBarView = CollectionCreationBottomBarView(
+        interactor = interactor,
+        layout = bottom_button_bar_layout,
+        iconButton = bottom_bar_icon_button,
+        textView = bottom_bar_text,
+        saveButton = save_button
+    )
     private val collectionCreationTabListAdapter = CollectionCreationTabListAdapter(interactor)
     private val collectionSaveListAdapter = SaveCollectionListAdapter(interactor)
     private val selectTabsConstraints = ConstraintSet()
@@ -67,8 +60,8 @@ class CollectionCreationView(
         transition.duration = TRANSITION_DURATION
         transition.excludeTarget(back_button, true)
 
-        view.name_collection_edittext.filters += InputFilter.LengthFilter(COLLECTION_NAME_MAX_LENGTH)
-        view.name_collection_edittext.setOnEditorActionListener { view, actionId, _ ->
+        name_collection_edittext.filters += InputFilter.LengthFilter(COLLECTION_NAME_MAX_LENGTH)
+        name_collection_edittext.setOnEditorActionListener { view, actionId, _ ->
             val text = view.text.toString()
             if (actionId == EditorInfo.IME_ACTION_DONE && text.isNotBlank()) {
                 when (step) {
@@ -82,13 +75,13 @@ class CollectionCreationView(
             false
         }
 
-        view.tab_list.run {
+        tab_list.run {
             adapter = collectionCreationTabListAdapter
             itemAnimator = null
             layoutManager = LinearLayoutManager(containerView.context, RecyclerView.VERTICAL, true)
         }
 
-        view.collections_list.run {
+        collections_list.run {
             adapter = collectionSaveListAdapter
             layoutManager = LinearLayoutManager(containerView.context, RecyclerView.VERTICAL, true)
         }
@@ -98,6 +91,7 @@ class CollectionCreationView(
 
         cacheState(state)
 
+        bottomBarView.update(step, state)
         when (step) {
             SaveCollectionStep.SelectTabs -> updateForSelectTabs(state)
             SaveCollectionStep.SelectCollection -> updateForSelectCollection()
@@ -114,148 +108,90 @@ class CollectionCreationView(
         selectedCollection = state.selectedTabCollection
     }
 
-    @SuppressWarnings("ComplexMethod")
     private fun updateForSelectTabs(state: CollectionCreationState) {
-        view.context.components.analytics.metrics.track(Event.CollectionTabSelectOpened)
+        containerView.context.components.analytics.metrics.track(Event.CollectionTabSelectOpened)
 
-        view.tab_list.isClickable = true
+        tab_list.isClickable = true
 
-        back_button.setOnClickListener {
-            interactor.onBackPressed(SaveCollectionStep.SelectTabs)
-        }
-        val allSelected = state.selectedTabs.size == state.tabs.size
-        select_all_button.text =
-            if (allSelected) view.context.getString(R.string.create_collection_deselect_all)
-            else view.context.getString(R.string.create_collection_select_all)
-
-        view.select_all_button.setOnClickListener {
-            if (allSelected) interactor.deselectAllTapped()
-            else interactor.selectAllTapped()
-        }
-
-        view.bottom_button_bar_layout.setOnClickListener(null)
-        view.bottom_button_bar_layout.isClickable = false
-
-        val drawable = AppCompatResources.getDrawable(view.context, R.drawable.ic_close)
-        drawable?.setTint(ContextCompat.getColor(view.context, R.color.photonWhite))
-        view.bottom_bar_icon_button.setImageDrawable(drawable)
-        view.bottom_bar_icon_button.contentDescription =
-            view.context.getString(R.string.create_collection_close)
-        view.bottom_bar_icon_button.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_YES
-        view.bottom_bar_icon_button.setOnClickListener {
-            interactor.close()
-        }
-        selectTabsConstraints.clone(collection_constraint_layout)
-        selectTabsConstraints.applyTo(view.collection_constraint_layout)
-
-        collectionCreationTabListAdapter.updateData(state.tabs, state.selectedTabs)
-
-        back_button.text = view.context.getString(R.string.create_collection_select_tabs)
-
-        val selectTabsText = if (state.selectedTabs.isEmpty()) {
-            view.context.getString(R.string.create_collection_save_to_collection_empty)
-        } else {
-            view.context.getString(
-                if (state.selectedTabs.size == 1)
-                    R.string.create_collection_save_to_collection_tab_selected else
-                    R.string.create_collection_save_to_collection_tabs_selected,
-                state.selectedTabs.size
-            )
-        }
-
-        view.bottom_bar_text.text = selectTabsText
-
-        save_button.setOnClickListener { _ ->
-            if (selectedCollection != null) {
-                interactor.selectCollection(
-                    collection = selectedCollection!!,
-                    tabs = state.selectedTabs.toList()
-                )
-            } else {
-                interactor.saveTabsToCollection(tabs = selectedTabs.toList())
+        back_button.apply {
+            text = context.getString(R.string.create_collection_select_tabs)
+            setOnClickListener {
+                interactor.onBackPressed(SaveCollectionStep.SelectTabs)
             }
         }
 
-        save_button.visibility = if (state.selectedTabs.isEmpty()) {
-            View.GONE
-        } else {
-            View.VISIBLE
+        select_all_button.apply {
+            val allSelected = state.selectedTabs.size == state.tabs.size
+            text =
+                if (allSelected) context.getString(R.string.create_collection_deselect_all)
+                else context.getString(R.string.create_collection_select_all)
+            setOnClickListener {
+                if (allSelected) interactor.deselectAllTapped()
+                else interactor.selectAllTapped()
+            }
         }
+
+        selectTabsConstraints.clone(collection_constraint_layout)
+        selectTabsConstraints.applyTo(collection_constraint_layout)
+
+        collectionCreationTabListAdapter.updateData(state.tabs, state.selectedTabs)
     }
 
     private fun updateForSelectCollection() {
-        view.tab_list.isClickable = false
-
-        save_button.visibility = View.GONE
-
-        view.bottom_bar_text.text =
-            view.context.getString(R.string.create_collection_add_new_collection)
-
-        val drawable = AppCompatResources.getDrawable(view.context, R.drawable.ic_new)
-        drawable?.setTint(ContextCompat.getColor(view.context, R.color.photonWhite))
-        view.bottom_bar_icon_button.setImageDrawable(drawable)
-        view.bottom_bar_icon_button.contentDescription = null
-        view.bottom_bar_icon_button.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
-        view.bottom_button_bar_layout.isClickable = true
-        view.bottom_button_bar_layout.setOnClickListener {
-            interactor.addNewCollection()
-        }
+        tab_list.isClickable = false
 
         back_button.setOnClickListener {
             interactor.onBackPressed(SaveCollectionStep.SelectCollection)
         }
-        TransitionManager.beginDelayedTransition(
-            view.collection_constraint_layout,
-            transition
-        )
+        TransitionManager.beginDelayedTransition(collection_constraint_layout, transition)
         selectCollectionConstraints.clone(
-            view.context,
+            containerView.context,
             R.layout.component_collection_creation_select_collection
         )
-        selectCollectionConstraints.applyTo(view.collection_constraint_layout)
-        back_button.text =
-            view.context.getString(R.string.create_collection_select_collection)
+        selectCollectionConstraints.applyTo(collection_constraint_layout)
     }
 
     private fun updateForNameCollection(state: CollectionCreationState) {
-        view.tab_list.isClickable = false
+        tab_list.isClickable = false
 
         collectionCreationTabListAdapter.updateData(state.selectedTabs.toList(), state.selectedTabs, true)
-        back_button.setOnClickListener {
-            name_collection_edittext.hideKeyboard()
-            val handler = Handler()
-            handler.postDelayed({
-                interactor.onBackPressed(SaveCollectionStep.NameCollection)
-            }, TRANSITION_DURATION)
+        back_button.apply {
+            text = context.getString(R.string.create_collection_name_collection)
+            setOnClickListener {
+                name_collection_edittext.hideKeyboard()
+                val handler = Handler()
+                handler.postDelayed({
+                    interactor.onBackPressed(SaveCollectionStep.NameCollection)
+                }, TRANSITION_DURATION)
+            }
         }
 
-        view.name_collection_edittext.showKeyboard()
+        name_collection_edittext.showKeyboard()
         nameCollectionConstraints.clone(
-            view.context,
+            containerView.context,
             R.layout.component_collection_creation_name_collection
         )
-        nameCollectionConstraints.applyTo(view.collection_constraint_layout)
+        nameCollectionConstraints.applyTo(collection_constraint_layout)
         name_collection_edittext.setText(
-            view.context.getString(
+            containerView.context.getString(
                 R.string.create_collection_default_name,
                 state.defaultCollectionNumber
             )
         )
         name_collection_edittext.setSelection(0, name_collection_edittext.text.length)
-        back_button.text =
-            view.context.getString(R.string.create_collection_name_collection)
     }
 
     private fun updateForRenameCollection(state: CollectionCreationState) {
-        view.tab_list.isClickable = false
+        tab_list.isClickable = false
 
         state.selectedTabCollection?.let { tabCollection ->
+            val publicSuffixList = containerView.context.components.publicSuffixList
             tabCollection.tabs.map { tab ->
                 Tab(
-                    tab.id.toString(),
-                    tab.url,
-                    tab.url.toShortUrl(view.context.components.publicSuffixList),
-                    tab.title,
+                    sessionId = tab.id.toString(),
+                    url = tab.url,
+                    hostname = tab.url.toShortUrl(publicSuffixList),
+                    title = tab.title,
                     mediaState = MediaState.State.NONE
                 )
             }.let { tabs ->
@@ -263,27 +199,28 @@ class CollectionCreationView(
             }
         }
         nameCollectionConstraints.clone(
-            view.context,
+            containerView.context,
             R.layout.component_collection_creation_name_collection
         )
-        nameCollectionConstraints.applyTo(view.collection_constraint_layout)
+        nameCollectionConstraints.applyTo(collection_constraint_layout)
         name_collection_edittext.setText(state.selectedTabCollection?.title)
         name_collection_edittext.setSelection(0, name_collection_edittext.text.length)
 
-        back_button.text =
-            view.context.getString(R.string.collection_rename)
-        back_button.setOnClickListener {
-            name_collection_edittext.hideKeyboard()
-            val handler = Handler()
-            handler.postDelayed({
-                interactor.onBackPressed(SaveCollectionStep.RenameCollection)
-            }, TRANSITION_DURATION)
+        back_button.apply {
+            text = context.getString(R.string.collection_rename)
+            setOnClickListener {
+                name_collection_edittext.hideKeyboard()
+                val handler = Handler()
+                handler.postDelayed({
+                    interactor.onBackPressed(SaveCollectionStep.RenameCollection)
+                }, TRANSITION_DURATION)
+            }
         }
         transition.addListener(object : Transition.TransitionListener {
             override fun onTransitionStart(transition: Transition) { /* noop */ }
 
             override fun onTransitionEnd(transition: Transition) {
-                view.name_collection_edittext.showKeyboard()
+                name_collection_edittext.showKeyboard()
                 transition.removeListener(this)
             }
 
@@ -291,15 +228,12 @@ class CollectionCreationView(
             override fun onTransitionPause(transition: Transition) { /* noop */ }
             override fun onTransitionResume(transition: Transition) { /* noop */ }
         })
-        TransitionManager.beginDelayedTransition(
-            view.collection_constraint_layout,
-            transition
-        )
+        TransitionManager.beginDelayedTransition(collection_constraint_layout, transition)
     }
 
     fun onResumed() {
         if (step == SaveCollectionStep.NameCollection || step == SaveCollectionStep.RenameCollection) {
-            view.name_collection_edittext.showKeyboard()
+            name_collection_edittext.showKeyboard()
         }
     }
 
