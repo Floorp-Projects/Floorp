@@ -351,6 +351,14 @@ CookieServiceChild::GetCookieStringFromDocument(Document* aDocument,
   nsAutoCString pathFromURI;
   principal->GetFilePath(pathFromURI);
 
+  nsPIDOMWindowInner* innerWindow = aDocument->GetInnerWindow();
+  if (NS_WARN_IF(!innerWindow)) {
+    return NS_OK;
+  }
+
+  bool thirdParty = nsContentUtils::IsThirdPartyWindowOrChannel(
+      innerWindow, nullptr, nullptr);
+
   bool isPotentiallyTrustworthy =
       principal->GetIsOriginPotentiallyTrustworthy();
   int64_t currentTimeInUsec = PR_Now();
@@ -366,6 +374,11 @@ CookieServiceChild::GetCookieStringFromDocument(Document* aDocument,
 
     // We don't show HttpOnly cookies in content processes.
     if (cookie->IsHttpOnly()) {
+      continue;
+    }
+
+    if (thirdParty &&
+        !CookieCommons::ShouldIncludeCrossSiteCookieForDocument(cookie)) {
       continue;
     }
 
