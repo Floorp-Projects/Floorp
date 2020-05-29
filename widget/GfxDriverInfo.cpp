@@ -871,7 +871,11 @@ const nsAString& GfxDriverInfo::GetDeviceVendor(DeviceVendor id) {
     DECLARE_VENDOR_ID(ATI, "0x1002");
     // AMD has 0x1022 but continues to release GPU hardware under ATI.
     DECLARE_VENDOR_ID(Microsoft, "0x1414");
+    DECLARE_VENDOR_ID(MicrosoftBasic, "0x00ba");
+    DECLARE_VENDOR_ID(MicrosoftHyperV, "0x000b");
     DECLARE_VENDOR_ID(Parallels, "0x1ab8");
+    DECLARE_VENDOR_ID(VMWare, "0x15ad");
+    DECLARE_VENDOR_ID(VirtualBox, "0x80ee");
     // Choose an arbitrary Qualcomm PCI VENdor ID for now.
     // TODO: This should be "QCOM" when Windows device ID parsing is reworked.
     DECLARE_VENDOR_ID(Qualcomm, "0x5143");
