@@ -632,6 +632,10 @@ class ICStub {
   static bool NonCacheIRStubMakesGCCalls(Kind kind);
   bool makesGCCalls() const;
 
+  // Returns the number of times this stub has been entered. Must only be called
+  // on stubs that have an enteredCount_ field (CacheIR or fallback stubs).
+  uint32_t getEnteredCount() const;
+
   // Optimized stubs get purged on GC.  But some stubs can be active on the
   // stack during GC - specifically the ones that can make calls.  To ensure
   // that these do not get purged, all stubs that can make calls are allocated

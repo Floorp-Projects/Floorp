@@ -599,6 +599,19 @@ bool ICStub::makesGCCalls() const {
   }
 }
 
+uint32_t ICStub::getEnteredCount() const {
+  switch (kind()) {
+    case CacheIR_Regular:
+      return toCacheIR_Regular()->enteredCount();
+    case CacheIR_Updated:
+      return toCacheIR_Updated()->enteredCount();
+    case CacheIR_Monitored:
+      return toCacheIR_Monitored()->enteredCount();
+    default:
+      return toFallbackStub()->enteredCount();
+  }
+}
+
 void ICStub::updateCode(JitCode* code) {
   // Write barrier on the old code.
   JitCode::writeBarrierPre(jitCode());
