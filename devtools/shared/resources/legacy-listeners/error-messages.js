@@ -4,6 +4,10 @@
 
 "use strict";
 
+const {
+  ResourceWatcher,
+} = require("devtools/shared/resources/resource-watcher");
+
 module.exports = async function({
   targetList,
   targetFront,
@@ -36,32 +40,36 @@ module.exports = async function({
 
   // Fetch already existing messages
   // /!\ The actor implementation requires to call startListeners("PageError") first /!\
-  const { messages } = await webConsoleFront.getCachedMessages(["PageError"]);
+  let { messages } = await webConsoleFront.getCachedMessages(["PageError"]);
 
-  for (let message of messages) {
-    // On older server (< v77), we're also getting LogMessage cached messages, so we need
-    // to ignore those.
-    if (
-      !webConsoleFront.traits.newCacheStructure &&
-      message._type &&
-      message._type !== "PageError"
-    ) {
-      continue;
-    }
+  // On older server (< v77), we're also getting LogMessage cached messages, so we need
+  // to ignore those.
+  messages = messages.filter(message => {
+    return (
+      webConsoleFront.traits.newCacheStructure ||
+      !message._type ||
+      message._type == "PageError"
+    );
+  });
 
+  messages = messages.map(message => {
     // Handling cached messages for servers older than Firefox 78.
+    // Wrap the message into a `pageError` attribute, to match `pageError` behavior
     if (message._type) {
-      // Wrap the message into a `pageError` attribute, to match `pageError` behavior
-      message = {
+      return {
         pageError: message,
-        type: "pageError",
+        resourceType: ResourceWatcher.TYPES.ERROR_MESSAGE,
       };
     }
+    message.resourceType = ResourceWatcher.TYPES.ERROR_MESSAGE;
+    return message;
+  });
+  // Cached messages don't have the same shape as live messages,
+  // so we need to transform them.
+  onAvailable(messages);
 
-    // Cached messages don't have the same shape as live messages,
-    // so we need to transform them.
-    onAvailable(message);
-  }
-
-  webConsoleFront.on("pageError", onAvailable);
+  webConsoleFront.on("pageError", message => {
+    message.resourceType = ResourceWatcher.TYPES.ERROR_MESSAGE;
+    onAvailable([message]);
+  });
 };
