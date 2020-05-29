@@ -7,8 +7,10 @@
 
 #include "ipc/IPCMessageUtils.h"
 #include "mozilla/dom/BindingDeclarations.h"
+#include "mozilla/dom/RTCDataChannelBinding.h"
 #include "mozilla/dom/RTCStatsReportBinding.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/media/webrtc/WebrtcIPCTraits.h"
 
 typedef mozilla::dom::RTCStatsReportInternal StatsReport;
 typedef nsTArray<mozilla::UniquePtr<StatsReport>> RTCReports;
@@ -98,6 +100,7 @@ struct ParamTraits<mozilla::dom::RTCStatsCollection> {
     WriteParam(aMsg, aParam.mRemoteInboundRtpStreamStats);
     WriteParam(aMsg, aParam.mRemoteOutboundRtpStreamStats);
     WriteParam(aMsg, aParam.mRtpContributingSourceStats);
+    WriteParam(aMsg, aParam.mDataChannelStats);
     WriteParam(aMsg, aParam.mTrickledIceCandidateStats);
     WriteParam(aMsg, aParam.mRawLocalCandidates);
     WriteParam(aMsg, aParam.mRawRemoteCandidates);
@@ -112,6 +115,7 @@ struct ParamTraits<mozilla::dom::RTCStatsCollection> {
         !ReadParam(aMsg, aIter, &(aResult->mRemoteInboundRtpStreamStats)) ||
         !ReadParam(aMsg, aIter, &(aResult->mRemoteOutboundRtpStreamStats)) ||
         !ReadParam(aMsg, aIter, &(aResult->mRtpContributingSourceStats)) ||
+        !ReadParam(aMsg, aIter, &(aResult->mDataChannelStats)) ||
         !ReadParam(aMsg, aIter, &(aResult->mTrickledIceCandidateStats)) ||
         !ReadParam(aMsg, aIter, &(aResult->mRawLocalCandidates)) ||
         !ReadParam(aMsg, aIter, &(aResult->mRawRemoteCandidates))) {
@@ -445,6 +449,17 @@ struct ParamTraits<mozilla::dom::RTCRTPContributingSourceStats> {
   }
 };
 
+DEFINE_IPC_SERIALIZER_WITH_FIELDS(mozilla::dom::RTCDataChannelStats, mId,
+                                  mTimestamp, mType, mLabel, mProtocol,
+                                  mDataChannelIdentifier, mState, mMessagesSent,
+                                  mBytesSent, mMessagesReceived, mBytesReceived)
+
+template <>
+struct ParamTraits<mozilla::dom::RTCDataChannelState>
+    : public ContiguousEnumSerializer<
+          mozilla::dom::RTCDataChannelState,
+          mozilla::dom::RTCDataChannelState::Connecting,
+          mozilla::dom::RTCDataChannelState::EndGuard_> {};
 }  // namespace IPC
 
 #endif  // _WEBRTC_GLOBAL_H_
