@@ -314,8 +314,16 @@ function requestWorkers() {
           continue;
         }
 
-        const subscription = await registrationFront.getPushSubscription();
-        serviceWorker.subscription = subscription;
+        try {
+          const subscription = await registrationFront.getPushSubscription();
+          serviceWorker.subscription = subscription;
+        } catch (e) {
+          // See Bug 1637687. On GeckoView, some PushSubscription methods are
+          // not implemented. PushSubscriptionActor was patched in FF78 to avoid
+          // throwing, but old servers might still throw.
+          // Backward-compatibility: remove when FF78 hits release.
+          console.error("Failed to retrieve service worker subscription", e);
+        }
       }
 
       dispatch({
