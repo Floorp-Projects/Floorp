@@ -1,0 +1,134 @@
+<!DOCTYPE HTML>
+
+<html>
+<head>
+<meta charset="utf-8">
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+<script>
+"use strict";
+
+// Check that the windowId and tabId filter work as expected in the webRequest
+// and proxy API:
+// - A non-matching windowId / tabId listener won't trigger events.
+// - A matching tabId from a tab triggers the event.
+// - A matching windowId from a tab triggers the event.
+//   (unlike test_ext_webrequest_filter.html, this also works on Android)
+// - Requests from background pages can be matched with windowId and tabId -1.
+add_task(async function test_filter_tabId_and_windowId() {
+  async function tabScript() {
+    let pendingExpectations = new Set();
+    // Helper to detect completion of expected requests.
+    function watchExpected(filter, desc) {
+      desc += ` - ${JSON.stringify(filter)}`;
+      const DESC_PROXY = `${desc} (proxy)`;
+      const DESC_WEBREQUEST = `${desc} (webRequest)`;
+      pendingExpectations.add(DESC_PROXY);
+      pendingExpectations.add(DESC_WEBREQUEST);
+      browser.proxy.onRequest.addListener(() => {
+        pendingExpectations.delete(DESC_PROXY);
+      }, filter);
+      browser.webRequest.onBeforeRequest.addListener(
+        () => {
+          pendingExpectations.delete(DESC_WEBREQUEST);
+        },
+        filter,
+        ["blocking"]
+      );
+    }
+
+    // Helper to detect unexpected requests.
+    function watchUnexpected(filter, desc) {
+      desc += ` - ${JSON.stringify(filter)}`;
+      browser.proxy.onRequest.addListener(() => {
+        browser.test.fail(`${desc} - unexpected proxy event`);
+      }, filter);
+      browser.webRequest.onBeforeRequest.addListener(() => {
+        browser.test.fail(`${desc} - unexpected webRequest event`);
+      }, filter);
+    }
+
+    function registerExpectations(url, windowId, tabId) {
+      const urls = [url];
+      watchUnexpected({ urls, windowId: 0 }, "non-matching windowId");
+      watchUnexpected({ urls, tabId: 0 }, "non-matching tabId");
+
+      watchExpected({ urls, windowId }, "windowId matches");
+      watchExpected({ urls, tabId }, "tabId matches");
+    }
+
+    try {
+      let { windowId, tabId } = await browser.runtime.sendMessage("getIds");
+      browser.test.log(`Dummy tab has: tabId=${tabId} windowId=${windowId}`);
+      registerExpectations("http://example.com/?tab", windowId, tabId);
+      registerExpectations("http://example.com/?bg", -1, -1);
+
+      // Call an API method implemented in the parent process to ensure that
+      // the listeners have been registered (workaround for bug 1300234).
+      // There is a .catch() at the end because the call is rejected on Android.
+      await browser.proxy.settings.get({}).catch(() => {});
+
+      browser.test.log("Triggering request from background page.");
+      await browser.runtime.sendMessage("triggerBackgroundRequest");
+
+      browser.test.log("Triggering request from tab.");
+      await fetch("http://example.com/?tab");
+
+      browser.test.assertEq(0, pendingExpectations.size, "got all events");
+      for (let description of pendingExpectations) {
+        browser.test.fail(`Event not observed: ${description}`);
+      }
+    } catch (e) {
+      browser.test.fail(`Unexpected test failure: ${e} :: ${e.stack}`);
+    }
+    browser.test.sendMessage("testCompleted");
+  }
+
+  function background() {
+    browser.runtime.onMessage.addListener(async (msg, sender) => {
+      if (msg === "getIds") {
+        return { windowId: sender.tab.windowId, tabId: sender.tab.id };
+      }
+      if (msg === "triggerBackgroundRequest") {
+        await fetch("http://example.com/?bg");
+      }
+    });
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: [
+        "proxy",
+        "webRequest",
+        "webRequestBlocking",
+        "http://example.com/*",
+      ],
+      web_accessible_resources: ["tab.html"],
+    },
+    background,
+    files: {
+      "tab.html": `<!DOCTYPE html><script src="tab.js"><\/script>`,
+      "tab.js": tabScript,
+    },
+  });
+  await extension.startup();
+
+  // bug 1641735: tabs.create / tabs.remove does not work in GeckoView unless
+  // `useAddonManager: "permanent"` is used, so use window.open() instead.
+  //
+  // Note that somehow window.open() unexpectedly runs null when extensions
+  // run in-process, i.e. extensions.webextensions.remote=false. Fortunately,
+  // extension tabs are automatically closed as part of extension.unload()
+  // below (provided that extension APIs are used in the tab - bug 1399655).
+  window.open(`moz-extension://${extension.uuid}/tab.html`);
+
+  await extension.awaitMessage("testCompleted");
+  await extension.unload();
+});
+</script>
+</head>
+<body>
+</body>
+</html>
