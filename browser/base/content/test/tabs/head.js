@@ -488,3 +488,23 @@ function test_url_for_process_types({
     "Check URL with query and ref in extension process."
   );
 }
+
+/*
+ * Get a file URL for the local file name.
+ */
+function fileURL(filename) {
+  let ifile = getChromeDir(getResolvedURI(gTestPath));
+  ifile.append(filename);
+  return Services.io.newFileURI(ifile).spec;
+}
+
+/*
+ * Get a http URL for the local file name.
+ */
+function httpURL(filename, host = "https://example.com/") {
+  let root = getRootDirectory(gTestPath).replace(
+    "chrome://mochitests/content/",
+    host
+  );
+  return root + filename;
+}
