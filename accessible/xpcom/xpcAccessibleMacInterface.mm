@@ -440,6 +440,10 @@ nsresult xpcAccessibleMacInterface::NSObjectToJsValue(id aObj, JSContext* aCx,
     return NSObjectToJsValue(
         @[ [NSNumber numberWithDouble:size.width], [NSNumber numberWithDouble:size.height] ], aCx,
         aResult);
+  } else if ([aObj isKindOfClass:[NSValue class]] &&
+             strcmp([(NSValue*)aObj objCType], @encode(NSRange)) == 0) {
+    NSRange range = [(NSValue*)aObj rangeValue];
+    return NSObjectToJsValue(@[ @(range.location), @(range.length) ], aCx, aResult);
   } else if ([aObj respondsToSelector:@selector(isAccessibilityElement)]) {
     // We expect all of our accessibility objects to implement isAccessibilityElement
     // at the very least. If it is implemented we will assume its an accessibility object.
@@ -478,6 +482,7 @@ id xpcAccessibleMacInterface::JsValueToNSObject(JS::HandleValue aValue, JSContex
     return [NSNumber numberWithBool:aValue.toBoolean()];
   } else if (aValue.isObject()) {
     JS::Rooted<JSObject*> obj(aCx, aValue.toObjectOrNull());
+
     bool isArray;
     JS::IsArrayObject(aCx, obj, &isArray);
     if (isArray) {
@@ -493,20 +498,84 @@ id xpcAccessibleMacInterface::JsValueToNSObject(JS::HandleValue aValue, JSContex
         NS_ENSURE_SUCCESS(*aResult, nil);
       }
       return array;
-    } else {
-      // This may be another nsIAccessibleMacInterface instance.
-      // If so, return the wrapped NSObject.
-      nsCOMPtr<nsIXPConnect> xpc = nsIXPConnect::XPConnect();
-
-      nsCOMPtr<nsIXPConnectWrappedNative> wrappedObj;
-      nsresult rv = xpc->GetWrappedNativeOfJSObject(aCx, obj, getter_AddRefs(wrappedObj));
-      NS_ENSURE_SUCCESS(rv, nil);
-      nsCOMPtr<nsIAccessibleMacInterface> macIface = do_QueryInterface(wrappedObj->Native());
-      return macIface->GetNativeMacAccessible();
     }
+
+    bool hasValueType;
+    bool hasValue;
+    JS_HasOwnProperty(aCx, obj, "valueType", &hasValueType);
+    JS_HasOwnProperty(aCx, obj, "value", &hasValue);
+    if (hasValueType && hasValue) {
+      // A js object representin an NSValue looks like this:
+      // { valueType: "NSRange", value: [1, 3] }
+      return JsValueToNSValue(obj, aCx, aResult);
+    }
+
+    // This may be another nsIAccessibleMacInterface instance.
+    // If so, return the wrapped NSObject.
+    nsCOMPtr<nsIXPConnect> xpc = nsIXPConnect::XPConnect();
+
+    nsCOMPtr<nsIXPConnectWrappedNative> wrappedObj;
+    nsresult rv = xpc->GetWrappedNativeOfJSObject(aCx, obj, getter_AddRefs(wrappedObj));
+    NS_ENSURE_SUCCESS(rv, nil);
+    nsCOMPtr<nsIAccessibleMacInterface> macIface = do_QueryInterface(wrappedObj->Native());
+    return macIface->GetNativeMacAccessible();
   }
 
   *aResult = NS_ERROR_FAILURE;
+  return nil;
+}
+
+id xpcAccessibleMacInterface::JsValueToNSValue(JS::HandleObject aObject, JSContext* aCx,
+                                               nsresult* aResult) {
+  *aResult = NS_ERROR_FAILURE;
+  JS::RootedValue valueTypeValue(aCx);
+  if (!JS_GetProperty(aCx, aObject, "valueType", &valueTypeValue)) {
+    NS_WARNING("Could not get valueType");
+    return nil;
+  }
+
+  JS::RootedValue valueValue(aCx);
+  if (!JS_GetProperty(aCx, aObject, "value", &valueValue)) {
+    NS_WARNING("Could not get value");
+    return nil;
+  }
+
+  nsAutoJSString valueType;
+  if (!valueTypeValue.isString() || !valueType.init(aCx, valueTypeValue)) {
+    NS_WARNING("valueType is not a string");
+    return nil;
+  }
+
+  bool isArray;
+  JS::IsArrayObject(aCx, valueValue, &isArray);
+  if (!isArray) {
+    NS_WARNING("value is not an array");
+    return nil;
+  }
+
+  JS::Rooted<JSObject*> value(aCx, valueValue.toObjectOrNull());
+
+  if (valueType.EqualsLiteral("NSRange")) {
+    uint32_t len;
+    JS::GetArrayLength(aCx, value, &len);
+    if (len != 2) {
+      NS_WARNING("Expected a 2 member array");
+      return nil;
+    }
+
+    JS::RootedValue locationValue(aCx);
+    JS_GetElement(aCx, value, 0, &locationValue);
+    JS::RootedValue lengthValue(aCx);
+    JS_GetElement(aCx, value, 1, &lengthValue);
+    if (!locationValue.isInt32() || !lengthValue.isInt32()) {
+      NS_WARNING("Expected an array of integers");
+      return nil;
+    }
+
+    *aResult = NS_OK;
+    return [NSValue valueWithRange:NSMakeRange(locationValue.toInt32(), lengthValue.toInt32())];
+  }
+
   return nil;
 }
 
