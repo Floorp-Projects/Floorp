@@ -1696,3 +1696,22 @@ nsSHistory::CreateEntry(nsISHEntry** aEntry) {
   entry.forget(aEntry);
   return NS_OK;
 }
+
+NS_IMETHODIMP_(bool)
+nsSHistory::IsEmptyOrHasEntriesForSingleTopLevelPage() {
+  if (mEntries.IsEmpty()) {
+    return true;
+  }
+
+  nsISHEntry* entry = mEntries[0];
+  size_t length = mEntries.Length();
+  for (size_t i = 1; i < length; ++i) {
+    bool sharesDocument = false;
+    mEntries[i]->SharesDocumentWith(entry, &sharesDocument);
+    if (!sharesDocument) {
+      return false;
+    }
+  }
+
+  return true;
+}
