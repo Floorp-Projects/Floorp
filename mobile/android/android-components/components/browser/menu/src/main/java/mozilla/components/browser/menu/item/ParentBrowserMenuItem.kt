@@ -66,6 +66,7 @@ class ParentBrowserMenuItem(
         }
         val overflowView = view.findViewById<AppCompatImageView>(R.id.overflowImage)
         with(overflowView) {
+            visibility = View.VISIBLE
             setTintResource(iconTintColorResource)
         }
     }
