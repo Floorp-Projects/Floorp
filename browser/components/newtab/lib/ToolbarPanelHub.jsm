@@ -13,6 +13,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Preferences: "resource://gre/modules/Preferences.jsm",
   SpecialMessageActions:
     "resource://messaging-system/lib/SpecialMessageActions.jsm",
+  RemoteL10n: "resource://activity-stream/lib/RemoteL10n.jsm",
 });
 XPCOMUtils.defineLazyServiceGetter(
   this,
@@ -267,13 +268,13 @@ class _ToolbarPanelHub {
 
   _createMessageElements(win, doc, message, previousDate) {
     const { content } = message;
-    const messageEl = this._createElement(doc, "div");
+    const messageEl = RemoteL10n.createElement(doc, "div");
     messageEl.classList.add("whatsNew-message");
 
     // Only render date if it is different from the one rendered before.
     if (content.published_date !== previousDate) {
       messageEl.appendChild(
-        this._createElement(doc, "p", {
+        RemoteL10n.createElement(doc, "p", {
           classList: "whatsNew-message-date",
           content: new Date(content.published_date).toLocaleDateString(
             "default",
@@ -287,14 +288,14 @@ class _ToolbarPanelHub {
       );
     }
 
-    const wrapperEl = this._createElement(doc, "button");
+    const wrapperEl = RemoteL10n.createElement(doc, "button");
     wrapperEl.doCommand = () => this._dispatchUserAction(win, message);
     wrapperEl.classList.add("whatsNew-message-body");
     messageEl.appendChild(wrapperEl);
 
     if (content.icon_url) {
       wrapperEl.classList.add("has-icon");
-      const iconEl = this._createElement(doc, "img");
+      const iconEl = RemoteL10n.createElement(doc, "img");
       iconEl.src = content.icon_url;
       iconEl.classList.add("whatsNew-message-icon");
       if (content.icon_alt && content.icon_alt.string_id) {
@@ -308,7 +309,7 @@ class _ToolbarPanelHub {
     wrapperEl.appendChild(this._createMessageContent(win, doc, content));
 
     if (content.link_text) {
-      const anchorEl = this._createElement(doc, "a", {
+      const anchorEl = RemoteL10n.createElement(doc, "a", {
         classList: "text-link",
         content: content.link_text,
       });
@@ -329,35 +330,39 @@ class _ToolbarPanelHub {
     const wrapperEl = new win.DocumentFragment();
 
     wrapperEl.appendChild(
-      this._createElement(doc, "h2", {
+      RemoteL10n.createElement(doc, "h2", {
         classList: "whatsNew-message-title",
         content: content.title,
+        attributes: this.state.contentArguments,
       })
     );
 
     switch (content.layout) {
       case "tracking-protections":
         wrapperEl.appendChild(
-          this._createElement(doc, "h4", {
+          RemoteL10n.createElement(doc, "h4", {
             classList: "whatsNew-message-subtitle",
             content: content.subtitle,
+            attributes: this.state.contentArguments,
           })
         );
         wrapperEl.appendChild(
-          this._createElement(doc, "h2", {
+          RemoteL10n.createElement(doc, "h2", {
             classList: "whatsNew-message-title-large",
             content: this.state.contentArguments[
               content.layout_title_content_variable
             ],
+            attributes: this.state.contentArguments,
           })
         );
         break;
     }
 
     wrapperEl.appendChild(
-      this._createElement(doc, "p", {
+      RemoteL10n.createElement(doc, "p", {
         content: content.body,
         classList: "whatsNew-message-content",
+        attributes: this.state.contentArguments,
       })
     );
 
@@ -367,28 +372,28 @@ class _ToolbarPanelHub {
   _createHeroElement(win, doc, message) {
     this.maybeLoadCustomElement(win);
 
-    const messageEl = this._createElement(doc, "div");
+    const messageEl = RemoteL10n.createElement(doc, "div");
     messageEl.setAttribute("id", "protections-popup-message");
     messageEl.classList.add("whatsNew-hero-message");
-    const wrapperEl = this._createElement(doc, "div");
+    const wrapperEl = RemoteL10n.createElement(doc, "div");
     wrapperEl.classList.add("whatsNew-message-body");
     messageEl.appendChild(wrapperEl);
 
     wrapperEl.appendChild(
-      this._createElement(doc, "h2", {
+      RemoteL10n.createElement(doc, "h2", {
         classList: "whatsNew-message-title",
         content: message.content.title,
       })
     );
     wrapperEl.appendChild(
-      this._createElement(doc, "p", {
+      RemoteL10n.createElement(doc, "p", {
         classList: "protections-popup-content",
         content: message.content.body,
       })
     );
 
     if (message.content.link_text) {
-      let linkEl = this._createElement(doc, "a", {
+      let linkEl = RemoteL10n.createElement(doc, "a", {
         classList: "text-link",
         content: message.content.link_text,
       });
@@ -400,21 +405,6 @@ class _ToolbarPanelHub {
     }
 
     return messageEl;
-  }
-
-  _createElement(doc, elem, options = {}) {
-    let node;
-    if (options.content && options.content.string_id) {
-      node = doc.createElement("remote-text");
-    } else {
-      node = doc.createElementNS("http://www.w3.org/1999/xhtml", elem);
-    }
-    if (options.classList) {
-      node.classList.add(options.classList);
-    }
-    this._setString(node, options.content);
-
-    return node;
   }
 
   async _contentArguments() {
@@ -456,21 +446,6 @@ class _ToolbarPanelHub {
       // the variable.
       searchEngineName: defaultEngine ? defaultEngine.name : "undefined",
     };
-  }
-
-  // If `string_id` is present it means we are relying on fluent for translations.
-  // Otherwise, we have a vanilla string.
-  _setString(el, stringObj) {
-    if (stringObj && stringObj.string_id) {
-      for (let [fluentId, value] of Object.entries(
-        this.state.contentArguments || {}
-      )) {
-        el.setAttribute(`fluent-variable-${fluentId}`, value);
-      }
-      el.setAttribute("fluent-remote-id", stringObj.string_id);
-    } else {
-      el.textContent = stringObj;
-    }
   }
 
   async _showAppmenuButton(win) {
