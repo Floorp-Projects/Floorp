@@ -85,6 +85,10 @@
                     "title": "Transformer to use on the data",
                     "type": "string"
                 },
+                "transformer-options": {
+                    "type": "object",
+                    "title": "Options used in the transformer"
+                },
                 "extraOptions": {
                     "type": "array",
                     "title": "Extra options used in the running suite",

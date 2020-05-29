@@ -29,3 +29,15 @@ class NotebookInvalidTransformError(Exception):
     """Raised when an invalid custom transformer is set."""
 
     pass
+
+
+class NotebookTransformOptionsError(Exception):
+    """Raised when an invalid option is given to a transformer."""
+
+    pass
+
+
+class NotebookTransformError(Exception):
+    """Raised on generic errors within the transformers."""
+
+    pass

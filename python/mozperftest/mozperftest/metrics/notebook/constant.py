@@ -5,7 +5,7 @@ import os
 from pathlib import Path
 from types import MappingProxyType
 
-from .transforms import single_json
+from .transforms import single_json, logcattime
 
 
 class Constant(object):
@@ -23,7 +23,8 @@ class Constant(object):
         self.__here = Path(os.path.dirname(os.path.abspath(__file__)))
         # XXX This needs to be more dynamic
         self.__predefined_transformers = {
-            "SingleJsonRetriever": single_json.SingleJsonRetriever
+            "SingleJsonRetriever": single_json.SingleJsonRetriever,
+            "LogCatTimeTransformer": logcattime.LogCatTimeTransformer,
         }
 
     @property
