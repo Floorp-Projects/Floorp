@@ -4475,16 +4475,15 @@ bool CacheIRCompiler::emitLoadStringTruthyResult(StringOperandId strId) {
   return true;
 }
 
-bool CacheIRCompiler::emitLoadDoubleTruthyResult(ValOperandId inputId) {
+bool CacheIRCompiler::emitLoadDoubleTruthyResult(NumberOperandId inputId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoOutputRegister output(*this);
-  ValueOperand val = allocator.useValueRegister(masm, inputId);
 
   AutoScratchFloatRegister floatReg(this);
 
-  Label ifFalse, done;
+  allocator.ensureDoubleRegister(masm, inputId, floatReg);
 
-  masm.unboxDouble(val, floatReg);
+  Label ifFalse, done;
 
   masm.branchTestDoubleTruthy(false, floatReg, &ifFalse);
   masm.moveValue(BooleanValue(true), output.valueReg());

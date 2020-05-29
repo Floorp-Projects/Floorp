@@ -1604,7 +1604,7 @@ class MOZ_RAII ToBoolIRGenerator : public IRGenerator {
   HandleValue val_;
 
   AttachDecision tryAttachInt32();
-  AttachDecision tryAttachDouble();
+  AttachDecision tryAttachNumber();
   AttachDecision tryAttachString();
   AttachDecision tryAttachSymbol();
   AttachDecision tryAttachNullOrUndefined();
