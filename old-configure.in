@@ -46,7 +46,6 @@ _SUBDIR_CONFIG_ARGS="$ac_configure_args"
 dnl Set the version number of the libs included with mozilla
 dnl ========================================================
 MOZPNG=10635
-NSS_VERSION=3
 
 dnl Set the minimum version of toolkit libs used by mozilla
 dnl ========================================================
@@ -1434,31 +1433,6 @@ LDFLAGS=$_SAVE_LDFLAGS
 LIBS=$_SAVE_LIBS
 
 AC_SUBST(MOZ_SYSTEM_LIBEVENT)
-
-dnl ========================================================
-dnl = If NSS was not detected in the system,
-dnl = use the one in the source tree (mozilla/security/nss)
-dnl ========================================================
-
-MOZ_ARG_WITH_BOOL(system-nss,
-[  --with-system-nss       Use system installed NSS],
-    _USE_SYSTEM_NSS=1 )
-
-if test -n "$_USE_SYSTEM_NSS"; then
-    AM_PATH_NSS(3.53, [MOZ_SYSTEM_NSS=1], [AC_MSG_ERROR([you don't have NSS installed or your version is too old])])
-fi
-
-NSS_CFLAGS="$NSS_CFLAGS -I${DIST}/include/nss"
-if test -z "$MOZ_SYSTEM_NSS"; then
-   case "${OS_ARCH}" in
-        # Only few platforms have been tested with GYP
-        WINNT|Darwin|Linux|DragonFly|FreeBSD|NetBSD|OpenBSD|SunOS)
-            ;;
-        *)
-            AC_MSG_ERROR([building in-tree NSS is not supported on this platform. Use --with-system-nss])
-            ;;
-   esac
-fi
 
 if test -z "$SKIP_LIBRARY_CHECKS"; then
 
@@ -2851,8 +2825,6 @@ AC_SUBST(MOZ_SYSTEM_PNG)
 
 AC_SUBST_LIST(MOZ_PNG_CFLAGS)
 AC_SUBST_LIST(MOZ_PNG_LIBS)
-
-AC_SUBST(MOZ_SYSTEM_NSS)
 
 HOST_CMFLAGS="-x objective-c -fobjc-exceptions"
 HOST_CMMFLAGS="-x objective-c++ -fobjc-exceptions"
