@@ -708,15 +708,3 @@ skip script test262/intl402/NumberFormat/prototype/format/signDisplay-currency-z
 skip script test262/intl402/NumberFormat/prototype/format/signDisplay-currency-ja-JP.js
 skip script test262/intl402/NumberFormat/prototype/format/signDisplay-currency-ko-KR.js
 skip script test262/intl402/NumberFormat/prototype/format/signDisplay-currency-en-US.js
-
-# Need to be updated after details of AggregateError change in
-# <https://github.com/tc39/proposal-promise-any/pull/64>.
-skip script test262/built-ins/NativeErrors/AggregateError/prototype/errors/invoked-as-accessor.js
-skip script test262/built-ins/NativeErrors/AggregateError/prototype/errors/invoked-as-func.js
-skip script test262/built-ins/NativeErrors/AggregateError/prototype/errors/length.js
-skip script test262/built-ins/NativeErrors/AggregateError/prototype/errors/name.js
-skip script test262/built-ins/NativeErrors/AggregateError/prototype/errors/prop-desc.js
-skip script test262/built-ins/NativeErrors/AggregateError/prototype/errors/return-from-iterable-errors.js
-skip script test262/built-ins/NativeErrors/AggregateError/prototype/errors/return-new-array-from-list.js
-skip script test262/built-ins/NativeErrors/AggregateError/prototype/errors/this-has-no-typedarrayname-internal.js
-skip script test262/built-ins/NativeErrors/AggregateError/prototype/errors/this-is-not-object.js
