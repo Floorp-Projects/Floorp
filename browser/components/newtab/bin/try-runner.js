@@ -53,7 +53,11 @@ function checkBundles() {
   logStart("checkBundles");
 
   const ASbundle = path.join("data", "content", "activity-stream.bundle.js");
-  const AWbundle = path.join("aboutwelcome", "content", "aboutwelcome.bundle.js");
+  const AWbundle = path.join(
+    "aboutwelcome",
+    "content",
+    "aboutwelcome.bundle.js"
+  );
   let errors = [];
 
   let ASbefore = readFileSync(ASbundle, "utf8");
