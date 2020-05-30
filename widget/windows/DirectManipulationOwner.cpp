@@ -355,6 +355,10 @@ DirectManipulationOwner::~DirectManipulationOwner() { Destroy(); }
 #if !defined(__MINGW32__) && !defined(__MINGW64__)
 
 void DManipEventHandler::SendPinch(Phase aPhase, float aScale) {
+  if (!mWindow) {
+    return;
+  }
+
   PinchGestureInput::PinchGestureType pinchGestureType =
       PinchGestureInput::PINCHGESTURE_SCALE;
   switch (aPhase) {
@@ -383,7 +387,7 @@ void DManipEventHandler::SendPinch(Phase aPhase, float aScale) {
 
   POINT cursor_pos;
   ::GetCursorPos(&cursor_pos);
-  HWND wnd = static_cast<HWND>(mWindow ? mWindow->GetNativeData(NS_NATIVE_WINDOW) : nullptr);
+  HWND wnd = static_cast<HWND>(mWindow->GetNativeData(NS_NATIVE_WINDOW));
   ::ScreenToClient(wnd, &cursor_pos);
   ScreenPoint position = {(float)cursor_pos.x, (float)cursor_pos.y};
 
@@ -397,13 +401,15 @@ void DManipEventHandler::SendPinch(Phase aPhase, float aScale) {
       100.0 * ((aPhase != Phase::eMiddle) ? 1.f : mLastScale),
       mods};
 
-  if (mWindow) {
-    mWindow->SendAnAPZEvent(event);
-  }
+  mWindow->SendAnAPZEvent(event);
 }
 
 void DManipEventHandler::SendPan(Phase aPhase, float x, float y,
                                  bool aIsInertia) {
+  if (!mWindow) {
+    return;
+  }
+
   PanGestureInput::PanGestureType panGestureType =
       PanGestureInput::PANGESTURE_PAN;
   if (aIsInertia) {
@@ -443,16 +449,14 @@ void DManipEventHandler::SendPan(Phase aPhase, float x, float y,
 
   POINT cursor_pos;
   ::GetCursorPos(&cursor_pos);
-  HWND wnd = static_cast<HWND>(mWindow ? mWindow->GetNativeData(NS_NATIVE_WINDOW) : nullptr);
+  HWND wnd = static_cast<HWND>(mWindow->GetNativeData(NS_NATIVE_WINDOW));
   ::ScreenToClient(wnd, &cursor_pos);
   ScreenPoint position = {(float)cursor_pos.x, (float)cursor_pos.y};
 
   PanGestureInput event{panGestureType, eventIntervalTime, eventTimeStamp,
                         position,       ScreenPoint(x, y), mods};
 
-  if (mWindow) {
-    mWindow->SendAnAPZEvent(event);
-  }
+  mWindow->SendAnAPZEvent(event);
 }
 
 #endif  // !defined(__MINGW32__) && !defined(__MINGW64__)
