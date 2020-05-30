@@ -19,6 +19,9 @@
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">Iccaren-ik yeldin ad ttwaseknen dagi.</string>
 
+    <!-- No Private Tabs Message Description -->
+    <string name="no_private_tabs_description">Accaren-ik n tbaḍnit ad d-ttwaseknen dagi.</string>
+
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s d afares n Mozilla.</string>
 
@@ -34,13 +37,21 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">Kkes tɣimit</string>
 
-    <!-- Private mode shortcut "contextual feature recommender" (CFR) -->
+    <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
     <string name="cfr_message">Rnu anegzum akken ad teldiḍ iccaren usligen seg ugdil agejdan.</string>
     <!-- Text for the positive button -->
     <string name="cfr_pos_button_text">Rnu anegzum</string>
     <!-- Text for the negative button -->
     <string name="cfr_neg_button_text">Ala, tanemmirt</string>
+
+    <!-- Search widget "contextual feature recommendation" (CFR) -->
+    <!-- Text for the main message. 'Firefox' intentionally hardcoded here.-->
+    <string name="search_widget_cfr_message">Kcem ɣer Firefox s lemɣawla. Rnu awiǧit ɣer ugdil-inek agejdan.</string>
+    <!-- Text for the positive button -->
+    <string name="search_widget_cfr_pos_button_text">Rnu awiǧit</string>
+    <!-- Text for the negative button -->
+    <string name="search_widget_cfr_neg_button_text">Mačči tura</string>
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->

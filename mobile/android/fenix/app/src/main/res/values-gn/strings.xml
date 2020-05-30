@@ -35,7 +35,7 @@
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">Emboguete tembiapo</string>
 
-    <!-- Private mode shortcut "contextual feature recommender" (CFR) -->
+    <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
     <string name="cfr_message">Embojuaju jeike pya’eha embojuruja hag̃ua tendayke ñemi ne mba’erechaha ñepyrũgua guive.</string>
 
@@ -43,6 +43,12 @@
     <string name="cfr_pos_button_text">Embojuaju jeike pya’eha</string>
     <!-- Text for the negative button -->
     <string name="cfr_neg_button_text">Nahániri, aguyje</string>
+
+    <!-- Text for the positive button -->
+    <string name="search_widget_cfr_pos_button_text">Embojuaju widget</string>
+
+    <!-- Text for the negative button -->
+    <string name="search_widget_cfr_neg_button_text">Ani ko’ág̃a</string>
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
@@ -372,9 +378,6 @@
     <!-- Preference for removing FxA account -->
     <string name="preferences_sync_remove_account">Emboguete mba’ete</string>
 
-    <!-- Pairing Feature strings -->
-    <!-- Instructions on how to access pairing -->
-    <string name="pair_instructions"><![CDATA[Eike <b>firefox.com/pair</b> mohendaha pegua Firefox mba’évape ereko hag̃ua QR ayvu.]]></string>
     <!-- Button to open camera for pairing -->
     <string name="pair_open_camera">Embojuruja Ta’ãngamýi</string>
     <!-- Button to cancel pairing -->
@@ -824,15 +827,14 @@
     <string name="preference_accessibility_font_size_title">Taireñoiha tuichakue</string>
 
     <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
-    <string name="preference_accessibility_auto_size">Tai tuichakue ijeheguíva</string>
-
+    <string name="preference_accessibility_auto_size_2">Tai tuichakue ijeheguíva</string>
     <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
     <string name="preference_accessibility_auto_size_summary">Pe tai tuichakue ojojoguáta Android pegua ndive. Embogue jeporavorã emboheko hag̃ua ápe.</string>
 
     <!-- Title for the Delete browsing data preference -->
     <string name="preferences_delete_browsing_data">Emboguete kundahára mba’ekuaarã</string>
     <!-- Title for the tabs item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_tabs_title">Embojuruja tendayke</string>
+    <string name="preferences_delete_browsing_data_tabs_title_2">Embojuruja tendayke</string>
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
     <string name="preferences_delete_browsing_data_tabs_subtitle">%d tendayke</string>
     <!-- Title for the data and history items in Delete browsing data -->

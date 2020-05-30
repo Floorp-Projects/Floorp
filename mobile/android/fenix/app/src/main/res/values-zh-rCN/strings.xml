@@ -22,6 +22,9 @@
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">您打开的标签页将显示于此。</string>
 
+    <!-- No Private Tabs Message Description -->
+    <string name="no_private_tabs_description">您的隐私标签页将显示于此。</string>
+
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s —— Mozilla 荣誉出品</string>
 
@@ -35,7 +38,7 @@
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">删除浏览会话</string>
 
-    <!-- Private mode shortcut "contextual feature recommender" (CFR) -->
+    <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
     <string name="cfr_message">添加快捷方式，即可由主屏幕直接打开隐私标签页。</string>
     <!-- Text for the positive button -->
@@ -43,6 +46,14 @@
 
     <!-- Text for the negative button -->
     <string name="cfr_neg_button_text">不了，谢谢</string>
+
+    <!-- Search widget "contextual feature recommendation" (CFR) -->
+    <!-- Text for the main message. 'Firefox' intentionally hardcoded here.-->
+    <string name="search_widget_cfr_message">添加小工具到主屏幕，让您更快开启 Firefox。</string>
+    <!-- Text for the positive button -->
+    <string name="search_widget_cfr_pos_button_text">添加小工具</string>
+    <!-- Text for the negative button -->
+    <string name="search_widget_cfr_neg_button_text">暂时不要</string>
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->

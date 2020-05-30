@@ -18,6 +18,9 @@
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">Тут з’являтимуться ваші відкриті вкладки.</string>
 
+    <!-- No Private Tabs Message Description -->
+    <string name="no_private_tabs_description">Тут будуть ваші приватні вкладки.</string>
+
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s розроблено Mozilla.</string>
 
@@ -34,13 +37,21 @@
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">Видалити сеанс</string>
 
-    <!-- Private mode shortcut "contextual feature recommender" (CFR) -->
+    <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
     <string name="cfr_message">Додайте ярлик для відкриття приватних вкладок з головного екрану.</string>
     <!-- Text for the positive button -->
     <string name="cfr_pos_button_text">Додати ярлик</string>
     <!-- Text for the negative button -->
     <string name="cfr_neg_button_text">Ні, дякую</string>
+
+    <!-- Search widget "contextual feature recommendation" (CFR) -->
+    <!-- Text for the main message. 'Firefox' intentionally hardcoded here.-->
+    <string name="search_widget_cfr_message">Відкривайте Firefox швидше. Додайте віджет на головний екран.</string>
+    <!-- Text for the positive button -->
+    <string name="search_widget_cfr_pos_button_text">Додати віджет</string>
+    <!-- Text for the negative button -->
+    <string name="search_widget_cfr_neg_button_text">Не зараз</string>
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->

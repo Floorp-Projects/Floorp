@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- App name for private browsing mode, only the "Private" portion should be localized. -->
-    <string name="app_name_private_2">Privat Firefox Preview</string>
-    <!-- App name for private browsing mode, only the "Private" portion should be localized. -->
-    <string name="app_name_private_3">Firefox Preview (privat)</string>
+    <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="app_name_private_5">Privat %s</string>
+    <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="app_name_private_4">%s (Privat)</string>
     <!-- Home Fragment -->
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
     <string name="content_description_menu">Flere indstillinger</string>
@@ -18,24 +18,33 @@
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">Dine åbne faneblade vil blive vist her.</string>
 
+    <!-- No Private Tabs Message Description -->
+    <string name="no_private_tabs_description">Dine private faneblade vil blive vist her.</string>
+
+    <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
+    <string name="about_content">%1$s er lavet af Mozilla.</string>
+
     <!-- Private Browsing -->
     <!-- Title for private session option -->
     <string name="private_browsing_title">Du befinder dig i en privat session</string>
     <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="private_browsing_placeholder_description">%1$s rydder din søge- og browserhistorik, når du afslutter programmet, eller når du lukker alle private faneblade. Det gør det nemmere at holde din færden på nettet for dig selv, hvis andre 
-        bruger den samme computer. Websteder og din internetudbyder kan dog stadig finde ud af, hvad du foretager dig.</string>
+    <string name="private_browsing_placeholder_description_2">¶
+ · %1$s rydder din søge- og browserhistorik fra private faneblade, når du lukker dem, eller når du afslutter programmet. Det gør det nemmere at holde din færden på nettet for dig selv, hvis andre bruger den samme computer. Websteder og din internetudbyder kan dog stadig finde ud af, hvad du foretager dig.</string>
     <string name="private_browsing_common_myths">Almindelige myter om privat browsing</string>
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">Slet session</string>
 
-    <!-- Private mode shortcut "contextual feature recommender" (CFR) -->
+    <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
     <string name="cfr_message">Tilføj en genvej til at åbne private faneblade fra din startskærm.</string>
     <!-- Text for the positive button -->
     <string name="cfr_pos_button_text">Tilføj genvej</string>
     <!-- Text for the negative button -->
     <string name="cfr_neg_button_text">Nej tak</string>
+
+    <!-- Text for the negative button -->
+    <string name="search_widget_cfr_neg_button_text">Ikke nu</string>
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
@@ -200,6 +209,8 @@
     <string name="preferences_private_browsing_options">Privat browsing</string>
     <!-- Preference for opening links in a private tab-->
     <string name="preferences_open_links_in_a_private_tab">Åbn links i et privat faneblad</string>
+    <!-- Preference for allowing screenshots to be taken while in a private tab-->
+    <string name="preferences_allow_screenshots_in_private_mode">Tillad skærmbilleder i privat browsing</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Tilføj genvej til privat browsing</string>
     <!-- Preference for accessibility -->
@@ -242,6 +253,8 @@
     <string name="preferences_show_search_shortcuts">Vis søge-genveje</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">Vis søgeforslag</string>
+    <!-- Preference title for switch preference to show voice search button -->
+    <string name="preferences_show_voice_search">Vis stemme-søgning</string>
     <!-- Preference title for switch preference to show search suggestions also in private mode -->
     <string name="preferences_show_search_suggestions_in_private">Vis i private sessioner</string>
     <!-- Preference title for switch preference to show a clipboard suggestion when searching -->
@@ -284,10 +297,11 @@
     <string name="sync_last_synced_summary">Sidst synkroniseret: %s</string>
     <!-- Label summary showing never synced -->
     <string name="sync_never_synced_summary">Sidst synkroniseret: aldrig</string>
+
     <!-- Text for displaying the default device name.
         The first parameter is the application name, the second is the device manufacturer name
         and the third is the device model. -->
-    <string name="default_device_name">%s på %s %s</string>
+    <string name="default_device_name_2">%1$s på %2$s %3$s</string>
 
     <!-- Send Tab -->
     <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
@@ -357,7 +371,7 @@
 
     <!-- Pairing Feature strings -->
     <!-- Instructions on how to access pairing -->
-    <string name="pair_instructions"><![CDATA[Besøg <b>firefox.com/pair</b> med Firefox på din computer for at få din QR-kode.]]></string>
+    <string name="pair_instructions_2"><![CDATA[Skan OR-koden vist på <b>firefox.com/pair</b>]]></string>
     <!-- Button to open camera for pairing -->
     <string name="pair_open_camera">Åbn kamera</string>
     <!-- Button to cancel pairing -->
@@ -403,8 +417,6 @@
 
     <!-- Menu Item Label for Search in Library -->
     <string name="library_search">Søg</string>
-    <!-- Library Page Title -->
-    <string name="library_title">Arkiv</string>
     <!-- Settings Page Title -->
     <string name="settings_title">Indstillinger</string>
     <!-- Content description (not visible, for screen readers etc.): "Menu icon for items on a history item" -->
@@ -421,6 +433,8 @@
     <string name="tabs_header_private_tabs_title">Private faneblade</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_tab">Tilføj faneblad</string>
+    <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
+    <string name="remove_tab_from_collection">Fjern faneblad fra samling</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
     <string name="close_tab">Luk faneblad</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab <title> button. First parameter is tab title  -->
@@ -456,11 +470,18 @@
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">Fjern</string>
 
+    <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
+    <string name="pwa_site_controls_title_private">%1$s (Privat tilstand)</string>
+
     <!-- History -->
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">Slet historik</string>
     <!-- Text for the dialog to confirm clearing all history -->
     <string name="history_delete_all_dialog">Er du sikker på, at du vil slette din historik?</string>
+    <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
+    <string name="history_delete_multiple_items_snackbar">Historikken er ryddet</string>
+    <!-- Text for the snackbar to confirm that a single browsing history item has been deleted. The first parameter is the shortened URL of the deleted history item. -->
+    <string name="history_delete_single_item_snackbar">%1$s slettet</string>
     <!-- Text for positive action to delete history in deleting history dialog -->
     <string name="history_clear_dialog">Ryd</string>
     <!-- History overflow menu copy button -->
@@ -515,6 +536,10 @@
     <string name="bookmark_edit">Rediger bogmærke</string>
     <!-- Screen title for selecting a bookmarks folder -->
     <string name="bookmark_select_folder">Vælg mappe</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
+    <string name="bookmark_delete_folder_confirmation_dialog">Er du sikker på, at du vil slette denne mappe?</string>
+    <!-- Snackbar title shown after a folder has been deleted. This first parameter is the name of the deleted folder -->
+    <string name="bookmark_delete_folder_snackbar">%1$s slettet</string>
     <!-- Screen title for adding a bookmarks folder -->
     <string name="bookmark_add_folder">Tilføj mappe</string>
     <!-- deprecated: Snackbar title shown after a bookmark has been created. -->
@@ -568,7 +593,7 @@
      The first parameter is the host part of the URL of the bookmark deleted, if any -->
     <string name="bookmark_deletion_snackbar_message">%1$s blev slettet</string>
     <!-- Bookmark snackbar message on deleting multiple bookmarks -->
-    <string name="bookmark_deletion_multiple_snackbar_message">Sletter valgte bogmærker</string>
+    <string name="bookmark_deletion_multiple_snackbar_message_2">Bogmærker slettet</string>
     <!-- Bookmark undo button for deletion snackbar action -->
     <string name="bookmark_undo_deletion">FORTRYD</string>
 
@@ -780,14 +805,14 @@
     <string name="preference_accessibility_font_size_title">Skriftstørrelse</string>
 
     <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
-    <string name="preference_accessibility_auto_size">Automatisk skriftstørrelse</string>
+    <string name="preference_accessibility_auto_size_2">Automatisk skriftstørrelse</string>
     <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
     <string name="preference_accessibility_auto_size_summary">Skriftstørrelsen vil være den samme som i dine Android-indstillinger. Deaktiver for selv at indstille skriftstørrelse her.</string>
 
     <!-- Title for the Delete browsing data preference -->
     <string name="preferences_delete_browsing_data">Slet browser-data</string>
     <!-- Title for the tabs item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_tabs_title">Åbn faneblade</string>
+    <string name="preferences_delete_browsing_data_tabs_title_2">Åbne faneblade</string>
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
     <string name="preferences_delete_browsing_data_tabs_subtitle">%d faneblade</string>
     <!-- Title for the data and history items in Delete browsing data -->
@@ -836,6 +861,28 @@
     <string name="preferences_delete_browsing_data_snackbar">Browserdata slettet</string>
     <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
     <string name="deleting_browsing_data_in_progress">Sletter browserdata…</string>
+
+    <!-- Tips -->
+    <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_header">Firefox Preview er nu Firefox Nightly</string>
+    <!-- text for firefox preview moving tip button. "Mozilla Firefox Browser" is intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_button">Hent Mozilla Firefox Browser</string>
+
+    <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_header_preview_installed">Firefox Nightly er flyttet</string>
+    <!-- text for firefox preview moving tip description -->
+    <string name="tip_firefox_preview_moved_description_preview_installed">Denne app modtager ikke længere sikkerhedsopdateringer. Stop med at bruge appen og skift til den nye Nightly.
+        \n\nOpret en Firefox-konto for at overføre dine bogmærker, logins og historik til en anden app.</string>
+    <!-- text for firefox preview moving tip button  -->
+    <string name="tip_firefox_preview_moved_button_preview_installed">Skift til den nye Nightly</string>
+
+    <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_header_preview_not_installed">Firefox Nightly er flyttet</string>
+    <!-- text for firefox preview moving tip description -->
+    <string name="tip_firefox_preview_moved_description_preview_not_installed">Denne app modtager ikke længere sikkerhedsopdateringer. Hent den nye Nightly og stop med at bruge denne app.
+        \n\nOpret en Firefox-konto for at overføre dine bogmærker, logins og historik til en anden app.</string>
+    <!-- text for firefox preview moving tip button  -->
+    <string name="tip_firefox_preview_moved_button_preview_not_installed">Hent den nye Nightly</string>
 
     <!-- Onboarding -->
     <!-- Text for onboarding welcome message
@@ -950,6 +997,8 @@
     <string name="sign_in_with_email">Brug mail i stedet</string>
     <!-- Text shown in confirmation dialog to sign out of account -->
     <string name="sign_out_confirmation_message">Firefox vil ikke længere synkronisere med din konto, men sletter ikke dine browserdata på denne enhed.</string>
+    <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="sign_out_confirmation_message_2">%s vil ikke længere synkronisere med din konto, men sletter ikke dine data på denne enhed.</string>
     <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
     <string name="sign_out_disconnect">Afbryd forbindelse</string>
     <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->
@@ -1065,6 +1114,8 @@
 
     <!-- About page link text to open support link -->
     <string name="about_support">Hjælp</string>
+    <!-- About page link text to list of past crashes (like about:crashes on desktop) -->
+    <string name="about_crashes">Nedbrud</string>
     <!-- About page link text to open privacy notice link -->
     <string name="about_privacy_notice">Privatlivspolitik</string>
     <!-- About page link text to open know your rights link -->
@@ -1199,6 +1250,11 @@
     <!-- Summary for Accessibility Force Enable Zoom Preference -->
     <string name="preference_accessibility_force_enable_zoom_summary">Aktiver for at tillade knibning og zoom, selv på websteder, der forhindrer denne gestus.</string>
 
+    <!-- Saved logins sorting strategy menu item -by name- (if selected, it will sort saved logins alphabetically) -->
+    <string name="saved_logins_sort_strategy_alphabetically">Navn (A-Å)</string>
+    <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
+    <string name="saved_logins_sort_strategy_last_used">Senest brugt</string>
+
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Tilføj søgetjeneste</string>
     <!-- Title of the Edit search engine screen -->
@@ -1290,8 +1346,22 @@
     <string name="certificate_info_verified_by">Bekræftet af: %1$s</string>
     <!-- Login overflow menu delete button -->
     <string name="login_menu_delete_button">Slet</string>
+    <!-- Login overflow menu edit button -->
+    <string name="login_menu_edit_button">Rediger</string>
     <!-- Message in delete confirmation dialog for logins -->
     <string name="login_deletion_confirmation">Er du sikker på, at du vil slette dette login?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Slet</string>
+    <!--  The button description to save changes to an edited login. -->
+    <string name="save_changes_to_login">Gem ændringer til login.</string>
+    <!--  The button description to discard changes to an edited login. -->
+    <string name="discard_changes">Fortryd ændringer</string>
+    <!--  The page title for editing a saved login. -->
+    <string name="edit">Rediger</string>
+    <!--  The error message in edit login view when password field is blank. -->
+    <string name="saved_login_password_required">Adgangskode påkrævet</string>
+    <!-- Voice search button content description  -->
+    <string name="voice_search_content_description">Stemme-søgning</string>
+    <!-- Voice search prompt description displayed after the user presses the voice search button -->
+    <string name="voice_search_explainer">Tal nu</string>
 </resources>

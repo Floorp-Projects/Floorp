@@ -19,6 +19,9 @@
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">E vostre unghjette aperte seranu affissate quì.</string>
 
+    <!-- No Private Tabs Message Description -->
+    <string name="no_private_tabs_description">E vostre unghjette private seranu affissate quì.</string>
+
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s hè sviluppatu da Mozilla.</string>
 
@@ -36,13 +39,16 @@
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">Squassà a sessione</string>
 
-    <!-- Private mode shortcut "contextual feature recommender" (CFR) -->
+    <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
     <string name="cfr_message">Aghjunghjite un accurtatoghju per apre unghjette private da u vostru screnu d’accolta.</string>
     <!-- Text for the positive button -->
     <string name="cfr_pos_button_text">Aghjunghje un accurtatoghjiu</string>
     <!-- Text for the negative button -->
     <string name="cfr_neg_button_text">Innò, vi ringraziu</string>
+
+    <!-- Text for the negative button -->
+    <string name="search_widget_cfr_neg_button_text">Micca subitu</string>
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
@@ -253,6 +259,8 @@
     <string name="preferences_show_search_shortcuts">Affissà l’accurtatoghji di ricerca</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">Affissà e suggestioni di ricerca</string>
+    <!-- Preference title for switch preference to show voice search button -->
+    <string name="preferences_show_voice_search">Affissà a ricerca vucale</string>
     <!-- Preference title for switch preference to show search suggestions also in private mode -->
     <string name="preferences_show_search_suggestions_in_private">Affissà durante e sessioni di navigazione privata</string>
     <!-- Preference title for switch preference to show a clipboard suggestion when searching -->
@@ -372,7 +380,7 @@
 
     <!-- Pairing Feature strings -->
     <!-- Instructions on how to access pairing -->
-    <string name="pair_instructions"><![CDATA[Visitate <b>firefox.com/pair</b> in Firefox nant’à u vostru urdinatore per ottene u vostru codice QR.]]></string>
+    <string name="pair_instructions_2"><![CDATA[Analizate u codice QR affissatu nant’à <b>firefox.com/pair</b>]]></string>
     <!-- Button to open camera for pairing -->
     <string name="pair_open_camera">Apre l’appareghju-fotò</string>
     <!-- Button to cancel pairing -->
@@ -434,6 +442,8 @@
     <string name="tabs_header_private_tabs_title">Unghjette private</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_tab">Aghjunghje un’unghjetta</string>
+    <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
+    <string name="remove_tab_from_collection">Caccià l’unghjetta da a cullezzione</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
     <string name="close_tab">Chjode l’unghjetta</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab <title> button. First parameter is tab title  -->
@@ -471,7 +481,7 @@
     <string name="remove_top_site">Caccià</string>
 
     <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
-    <string name="pwa_site_controls_title_private">%1$s (Modu privatu)</string>
+    <string name="pwa_site_controls_title_private">%1$s (navigazione privata)</string>
 
     <!-- History -->
     <!-- Text for the button to clear all history -->
@@ -809,14 +819,14 @@
     <string name="preference_accessibility_font_size_title">Dimensione di grafia</string>
 
     <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
-    <string name="preference_accessibility_auto_size">Adattazione autumatica di a dimensione di grafia</string>
+    <string name="preference_accessibility_auto_size_2">Dimensione autumatica di e grafie</string>
     <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
     <string name="preference_accessibility_auto_size_summary">A dimensione di a grafia currispunderà à e vostre preferenze d’Android. Disattivate st’ozzione per amministrà a dimensione di a grafia.</string>
 
     <!-- Title for the Delete browsing data preference -->
     <string name="preferences_delete_browsing_data">Squassà i dati di navigazione</string>
     <!-- Title for the tabs item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_tabs_title">Unghjette aperte</string>
+    <string name="preferences_delete_browsing_data_tabs_title_2">Unghjette aperte</string>
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
     <string name="preferences_delete_browsing_data_tabs_subtitle">%d unghjette</string>
     <!-- Title for the data and history items in Delete browsing data -->
@@ -881,7 +891,7 @@
 
     <!-- text for firefox preview moving tip description -->
     <string name="tip_firefox_preview_moved_description_preview_installed">¶
- · St’appiecazione ùn riciverà più di mudificazione di sicurità. Fermate d’impiegalla è cambiate per u novu Nightly.¶
+ · St’appiecazione ùn riciverà più mudificazione di sicurità. Fermate d’impiegalla è cambiate per u novu Nightly.¶
  · \n\nPer trasferà e vostre indette, identificazioni di cunnessione, è crunulogia ver di un’altra appiecazione, create un contu Firefox.</string>
     <!-- text for firefox preview moving tip button  -->
     <string name="tip_firefox_preview_moved_button_preview_installed">Cambià ver di u novu Nightly</string>
@@ -890,7 +900,7 @@
     <string name="tip_firefox_preview_moved_header_preview_not_installed">Firefox Nightly hà cambiatu</string>
     <!-- text for firefox preview moving tip description -->
     <string name="tip_firefox_preview_moved_description_preview_not_installed">¶
- · St’appiecazione ùn riciverà più di mudificazione di sicurità. Ottene u novu Nightly è fermà d’impiegà st’appiecazione.¶
+ · St’appiecazione ùn riciverà più mudificazione di sicurità. Ottene u novu Nightly è fermà d’impiegà st’appiecazione.¶
  · \n\nPer trasferà e vostre indette, identificazioni di cunnessione, è crunulogia ver di un’altra appiecazione, create un contu Firefox.</string>
     <!-- text for firefox preview moving tip button  -->
     <string name="tip_firefox_preview_moved_button_preview_not_installed">Ottene u novu Nightly</string>
@@ -1271,7 +1281,7 @@
     <string name="saved_logins_sort_strategy_last_used">Ultimu impiegu</string>
 
     <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
-    <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Listinu di classificazione d’identificazioni di cunnessione</string>
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Listinu di classificazione di l’identificazioni</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Aghjunghje un mutore di ricerca</string>
@@ -1372,8 +1382,24 @@
     <string name="login_deletion_confirmation">Site sicuru di vulè squassà st’identificazione di cunnessione ?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Squassà</string>
+    <!--  The saved login options menu description. -->
+    <string name="login_options_menu">Ozzioni di l’identificazione</string>
+    <!--  The editable text field for a login's web address. -->
+    <string name="saved_login_hostname_description">U campu di testu mudifichevule per l’indirizzu web di l’identificazione.</string>
+    <!--  The editable text field for a login's username. -->
+    <string name="saved_login_username_description">U campu di testu mudifichevule per u nome d’utilizatore di l’identificazione.</string>
+    <!--  The editable text field for a login's password. -->
+    <string name="saved_login_password_description">U campu di testu mudifichevule per a parolla d’entrata di l’identificazione.</string>
+    <!--  The button description to save changes to an edited login. -->
+    <string name="save_changes_to_login">Arregistrà i cambiamenti di l’identificazione.</string>
+    <!--  The button description to discard changes to an edited login. -->
+    <string name="discard_changes">Disfà i cambiamenti</string>
     <!--  The page title for editing a saved login. -->
     <string name="edit">Mudificà</string>
     <!--  The error message in edit login view when password field is blank. -->
     <string name="saved_login_password_required">Parolla d’entrata richiesta</string>
-    </resources>
+    <!-- Voice search button content description  -->
+    <string name="voice_search_content_description">Ricerca vucale</string>
+    <!-- Voice search prompt description displayed after the user presses the voice search button -->
+    <string name="voice_search_explainer">Parlate avà</string>
+</resources>

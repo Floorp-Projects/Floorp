@@ -19,6 +19,9 @@
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">Ваши отворени језичци биће приказани овде.</string>
 
+    <!-- No Private Tabs Message Description -->
+    <string name="no_private_tabs_description">Ваши приватни језичци биће приказани овде.</string>
+
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s производи Mozilla.</string>
 
@@ -32,13 +35,21 @@
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">Обриши сесију</string>
 
-    <!-- Private mode shortcut "contextual feature recommender" (CFR) -->
+    <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
     <string name="cfr_message">Додајте пречицу за отварање приватних језичака са вашег почетног екрана.</string>
     <!-- Text for the positive button -->
     <string name="cfr_pos_button_text">Додај пречицу</string>
     <!-- Text for the negative button -->
     <string name="cfr_neg_button_text">Не, хвала</string>
+
+    <!-- Search widget "contextual feature recommendation" (CFR) -->
+    <!-- Text for the main message. 'Firefox' intentionally hardcoded here.-->
+    <string name="search_widget_cfr_message">Дођите брже до Firefox-а. Додајте виџет на ваш почетни екран.</string>
+    <!-- Text for the positive button -->
+    <string name="search_widget_cfr_pos_button_text">Додајте виџет</string>
+    <!-- Text for the negative button -->
+    <string name="search_widget_cfr_neg_button_text">Не сада</string>
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
@@ -370,7 +381,7 @@
 
     <!-- Pairing Feature strings -->
     <!-- Instructions on how to access pairing -->
-    <string name="pair_instructions"><![CDATA[Посетите <b>firefox.com/pair</b> у Firefox-у на вашем рачунару за добијање QR кода.]]></string>
+    <string name="pair_instructions_2"><![CDATA[Скенирајте QR код приказан на <b>firefox.com/pair</b>]]></string>
     <!-- Button to open camera for pairing -->
     <string name="pair_open_camera">Отвори камеру</string>
     <!-- Button to cancel pairing -->
@@ -807,14 +818,14 @@
     <string name="preference_accessibility_font_size_title">Величина фонта</string>
 
     <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
-    <string name="preference_accessibility_auto_size">Самостална величина фонта</string>
+    <string name="preference_accessibility_auto_size_2">Аутоматско одређивање величине фонта</string>
     <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
     <string name="preference_accessibility_auto_size_summary">Величина фонта пратиће ваша Андроид подешавања. Онемогућите ово да бисте овде подесили величину фонта.</string>
 
     <!-- Title for the Delete browsing data preference -->
     <string name="preferences_delete_browsing_data">Обриши податке прегледања</string>
     <!-- Title for the tabs item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_tabs_title">Отворени језичци</string>
+    <string name="preferences_delete_browsing_data_tabs_title_2">Отворени језичци</string>
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
     <string name="preferences_delete_browsing_data_tabs_subtitle">%d језичака</string>
     <!-- Title for the data and history items in Delete browsing data -->

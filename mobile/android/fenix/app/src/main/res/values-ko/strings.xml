@@ -21,6 +21,9 @@
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">열린 탭이 여기에 표시됩니다.</string>
 
+    <!-- No Private Tabs Message Description -->
+    <string name="no_private_tabs_description">사생활 보호 탭이 여기에 표시됩니다.</string>
+
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s는 Mozilla에서 제작했습니다.</string>
 
@@ -38,13 +41,21 @@
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">세션 삭제</string>
 
-    <!-- Private mode shortcut "contextual feature recommender" (CFR) -->
+    <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
     <string name="cfr_message">홈 화면에서 사생활 보호 탭을 열기 위한 바로가기 추가.</string>
     <!-- Text for the positive button -->
     <string name="cfr_pos_button_text">바로가기 추가</string>
     <!-- Text for the negative button -->
     <string name="cfr_neg_button_text">아니오</string>
+
+    <!-- Search widget "contextual feature recommendation" (CFR) -->
+    <!-- Text for the main message. 'Firefox' intentionally hardcoded here.-->
+    <string name="search_widget_cfr_message">Firefox를 더 빨리 사용하세요. 홈 화면에 위젯을 추가하세요.</string>
+    <!-- Text for the positive button -->
+    <string name="search_widget_cfr_pos_button_text">위젯 추가</string>
+    <!-- Text for the negative button -->
+    <string name="search_widget_cfr_neg_button_text">나중에</string>
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->

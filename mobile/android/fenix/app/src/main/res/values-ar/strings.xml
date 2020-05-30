@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="app_name_private_5">متصفّح %s خاص</string>
+    <!-- Home Fragment -->
+    <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
+    <string name="content_description_menu">خيارات أكثر</string>
     <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
     <string name="content_description_private_browsing_button">فعّل التصفّح الخاص</string>
     <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
@@ -15,6 +20,9 @@
     <!-- Private Browsing -->
     <!-- Title for private session option -->
     <string name="private_browsing_title">أنت في جلسة خاصة</string>
+    <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="private_browsing_placeholder_description_2">يمسح %1$s تأريخ البحث والتصفح لديك عندما تُغلق الألسنة بوضع التصفح الخاص أو تُنهي التطبيق. على الرغم من أن هذا لا يجعلك مجهول الهوية إلى المواقع أو مقدّم خدمة الإنترنت لديك، إلا أنه يسهّل عليك إخفاء ما تفعله في الشبكة على أي شخص آخر يستخدم هذا الجهاز.</string>
     <string name="private_browsing_common_myths">الخرافات الشائعة بخصوص التصفح الخاص</string>
 
     <!-- Delete session button to erase your history in a private session -->
@@ -72,6 +80,8 @@
     <string name="browser_menu_private_tab">لسان خاص</string>
     <!-- Browser menu button that creates a new tab -->
     <string name="browser_menu_new_tab">لسان جديد</string>
+    <!-- Browser menu button that saves the current tab to a collection -->
+    <string name="browser_menu_save_to_collection_2">احفظ في التجميعة</string>
     <!-- Browser menu button that opens a dialog to report issues with the current site -->
     <string name="browser_menu_report_issue">أبلِغ عن مشكلة بالموقع</string>
     <!-- Browser menu button that open a share menu to share the current site -->
@@ -94,6 +104,9 @@
     <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
     <string name="browser_menu_read_appearance">المظهر</string>
 
+    <!-- Locale Settings Fragment -->
+    <!-- Content description for tick mark on selected language -->
+    <string name="a11y_selected_locale_content_description">اللغة المحددة</string>
     <!-- Content description for search icon -->
     <string name="a11y_search_icon_content_description">ابحث</string>
 
@@ -122,6 +135,8 @@
     <string name="search_suggestions_onboarding_do_not_allow_button">لا تسمح</string>
     <!-- Search suggestion onboarding hint title text -->
     <string name="search_suggestions_onboarding_title">أتسمح بعرض اقتراحات البحث في الجلسات الخاصة؟</string>
+    <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="search_suggestions_onboarding_text">سيُشارك %s كل ما تكتب في شريط العنوان مع محرك البحث المبدئي.</string>
     <!-- Search suggestion onboarding hint Learn more link text -->
     <string name="search_suggestions_onboarding_learn_more_link">اطّلع على المزيد</string>
 
@@ -153,6 +168,8 @@
     <string name="preferences_help">مساعدة</string>
     <!-- Preference link to rating Fenix on the Play Store -->
     <string name="preferences_rate">قيّمه في متجر غوغل</string>
+    <!-- Preference for giving feedback about Fenix -->
+    <string name="preferences_feedback">أعطِنا رأيك</string>
     <!-- Preference linking to about page for Fenix
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="preferences_about">عن %1$s</string>
@@ -178,8 +195,16 @@
     <string name="preferences_open_links_in_a_private_tab">افتح الروابط في ألسنة خاصة</string>
     <!-- Preference for allowing screenshots to be taken while in a private tab-->
     <string name="preferences_allow_screenshots_in_private_mode">اسمح بلقطات الشاشة في التصفّح الخاص</string>
+    <!-- Preference for adding private browsing shortcut -->
+    <string name="preferences_add_private_browsing_shortcut">أضِف اختصارًا للتصفح الخاص</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">الإتاحة</string>
+    <!-- Preference to override the Firefox Account server -->
+    <string name="preferences_override_fxa_server">خادوم حسابات Firefox مخصص</string>
+    <!-- Preference to override the Sync token server -->
+    <string name="preferences_override_sync_tokenserver">خادوم مزامنة مخصص</string>
+    <!-- Toast shown after updating the FxA/Sync server override preferences -->
+    <string name="toast_override_fxa_sync_server_done">تعدّل خادوم حسابات Firefox/Sync. يُنهي التطبيق لإجراء التغييرات…</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">الحساب</string>
     <!-- Preference shown on banner to sign into account -->
@@ -216,6 +241,10 @@
     <string name="preferences_show_search_suggestions_in_private">اعرض في الجلسات الخاصة</string>
     <!-- Preference title for switch preference to show a clipboard suggestion when searching -->
     <string name="preferences_show_clipboard_suggestions">اعرض اقتراحات الحافظة</string>
+    <!-- Preference title for switch preference to suggest browsing history when searching -->
+    <string name="preferences_search_browsing_history">البحث في تأريخ التصفح</string>
+    <!-- Preference title for switch preference to suggest bookmarks when searching -->
+    <string name="preferences_search_bookmarks">البحث في العلامات</string>
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">إعدادات الحساب</string>
     <!-- Preference for open links in third party apps -->
@@ -278,19 +307,23 @@
     <!-- Preference switch for Telemetry -->
     <string name="preferences_telemetry">تليمتري</string>
 
+    <!-- Summary for experiments preferences -->
+    <string name="preference_experiments_summary">يسمح بأن تثبّت Mozilla بيانات المزايا التجريبية وتجمعها</string>
     <!-- Preference switch for crash reporter -->
     <string name="preferences_crash_reporter">مُبلّغ الانهيار</string>
     <!-- Preference switch for Mozilla location service -->
     <string name="preferences_mozilla_location_service">خدمة التموضع من Mozilla</string>
 
+    <!-- Turn On Sync Preferences -->
+    <!-- Header of the Turn on Sync preference view -->
+    <string name="preferences_sync">فعّل «تزامُن»</string>
+    <!-- Preference for pairing -->
+    <string name="preferences_sync_pair">امسح رمز الاقتران رقميًا في Firefox على سطح المكتب</string>
     <!-- Preference for account login -->
     <string name="preferences_sync_sign_in">لِج</string>
     <!-- Preference for removing FxA account -->
     <string name="preferences_sync_remove_account">أزِل الحساب</string>
 
-    <!-- Pairing Feature strings -->
-    <!-- Instructions on how to access pairing -->
-    <string name="pair_instructions"><![CDATA[زُر <b>firefox.com/pair</b> من Firefox على حاسوبك لتستعمل رمز QR.]]></string>
     <!-- Button to open camera for pairing -->
     <string name="pair_open_camera">افتح الكمرة</string>
     <!-- Button to cancel pairing -->
@@ -457,5 +490,22 @@
 
     <!-- Label that indicates that all video and audio autoplay is allowed -->
     <string name="preference_option_autoplay_allowed2">اسمح بالصوت والڤِديو</string>
+
+    <!-- Preference for managing the settings for logins and passwords in Fenix -->
+    <string name="preferences_passwords_logins_and_passwords">جلسات الولوج وكلمات السر</string>
+    <!-- Preference for managing the saving of logins and passwords in Fenix -->
+    <string name="preferences_passwords_save_logins">احفظ جلسات الولوج وكلمات السر</string>
+    <!-- Preference option for asking to save passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_ask_to_save">اسألني قبل الحفظ</string>
+    <!-- Preference option for never saving passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_never_save">لا تحفظ أبدًا</string>
+    <!-- Preference for autofilling saved logins in Fenix -->
+    <string name="preferences_passwords_autofill">الملء التلقائي</string>
+    <!-- Preference for syncing saved logins in Fenix -->
+    <string name="preferences_passwords_sync_logins">زامِن جلسات الولوج</string>
+    <!-- Syncing saved logins in Fenix needs reconnect to sync -->
+    <string name="preferences_passwords_sync_logins_reconnect">أعِد الاتصال</string>
+    <!-- Syncing saved logins in Fenix needs login -->
+    <string name="preferences_passwords_sync_logins_sign_in">لِج إلى «المزامنة»</string>
 
     </resources>

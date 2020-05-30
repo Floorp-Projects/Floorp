@@ -3,6 +3,8 @@
 
     <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="app_name_private_5">Ichinan %s</string>
+    <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="app_name_private_4">%s (Ichinan)</string>
     <!-- Home Fragment -->
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
     <string name="content_description_menu">Ch\'aqa\' chik taq cha\'oj</string>
@@ -19,13 +21,15 @@
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">Wawe\' xkeq\'alajin pe ri jaqäl taq ruwi\'.</string>
 
+    <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
+    <string name="about_content">%1$s b\'anon ruma Mozilla.</string>
+
     <!-- Private Browsing -->
     <!-- Title for private session option -->
     <string name="private_browsing_title">At k\'o pa jun ichinan molojri\'ïl</string>
     <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="private_browsing_placeholder_description">%1$s nuyüj ri akanoxik chuqa\' runatab\'al awokem pa k\'amaya\'l toq yatel pa ri okisab\'äl o ye\'atzïj ri taq ruwi\' chuqa\' ichinan taq wi\'. Estape\' re re\' man yatrewaj ta pan ajk\'amaya\'l o chuwäch ri niya\'on ak\'amaya\'l
-        yatruto\' richin nichinäx ronojel ri nab\'än pan k\'amab\'ey chuwäch jun chik winäq nrokisaj ri awokisab\'al.</string>
+    <string name="private_browsing_placeholder_description_2">%1$s nuyüj ri akanoxik chuqa\' runatab\'al awokem pa k\'amaya\'l toq yatel pa ri chokoy o ri  ichinan taq wi\'. Estape\' re re\' man yatrewaj ta pan ajk\'amaya\'l o chuwäch ri niya\'on ak\'amaya\'l, yatruto\' richin nichinäx ronojel ri nab\'än pan k\'amab\'ey chuwäch jun chik winäq nrokisaj ri awokisab\'al.</string>
     <string name="private_browsing_common_myths">Ch\'ob\'on taq tzij chi rij ri ichinan okem pa k\'amaya\'l</string>
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">Tiyuj molojri\ïl</string>
@@ -45,6 +49,9 @@
     <!-- Shortcut action to open new private tab -->
     <string name="home_screen_shortcut_open_new_private_tab_2">K’ak’a’ ichinan ruwi’</string>
 
+    <!-- Heading for the Top Sites block -->
+    <string name="home_screen_top_sites_heading">Jeb\'ël taq ruxaq</string>
+
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
     <string name="browser_tabs_button">Kejaq taq Ruwi\'</string>
@@ -61,6 +68,8 @@
     <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
     <string name="browser_menu_edit_bookmark">Tinuk\' yaketal</string>
 
+    <!-- Browser menu button that opens the addon manager -->
+    <string name="browser_menu_add_ons">Taq tz\'aqat</string>
     <!-- Text displayed when there are no add-ons to be shown -->
     <string name="no_add_ons">Majun tz\'aqat wakami</string>
     <!-- Browser menu button that sends a user to help articles -->
@@ -70,6 +79,8 @@
 
     <!-- Browser menu button that opens the settings menu -->
     <string name="browser_menu_settings">Nuk’ulem</string>
+    <!-- Browser menu button that opens a user's library -->
+    <string name="browser_menu_library">Wujb\'äl</string>
     <!-- Browser menu toggle that requests a desktop site -->
     <string name="browser_menu_desktop_site">Ruxaq ch\'atal</string>
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
@@ -82,6 +93,8 @@
     <string name="browser_menu_private_tab">Ichinan ruwi\'</string>
     <!-- Browser menu button that creates a new tab -->
     <string name="browser_menu_new_tab">K’ak’a’ ruwi’</string>
+    <!-- Browser menu button that saves the current tab to a collection -->
+    <string name="browser_menu_save_to_collection_2">Tiyak pa mol</string>
     <!-- Browser menu button that opens a dialog to report issues with the current site -->
     <string name="browser_menu_report_issue">Tiya\' rutzijol ruk\'ayewal ri ruxaq</string>
     <!-- Browser menu button that open a share menu to share the current site -->
@@ -345,9 +358,6 @@
     <!-- Preference for removing FxA account -->
     <string name="preferences_sync_remove_account">Tiyuj Rub\'i\' Taqoya\'l</string>
 
-    <!-- Pairing Feature strings -->
-    <!-- Instructions on how to access pairing -->
-    <string name="pair_instructions"><![CDATA[Tatz\'eta\' <b>firefox.com/pair</b> pa Firefox pa ri asamajib\'al richin nak\'ül ri QR b\'itz\'ib\'.]]></string>
     <!-- Button to open camera for pairing -->
     <string name="pair_open_camera">Tijaq Elesäy wachib\'äl</string>
     <!-- Button to cancel pairing -->
@@ -395,8 +405,6 @@
     <string name="library_reading_list">Rucholajem sik\'inem</string>
     <!-- Menu Item Label for Search in Library -->
     <string name="library_search">Tikanöx</string>
-    <!-- Library Page Title -->
-    <string name="library_title">Wujb\'äl</string>
     <!-- Settings Page Title -->
     <string name="settings_title">Taq nuk\'ulem</string>
     <!-- Content description (not visible, for screen readers etc.): "Menu icon for items on a history item" -->
@@ -453,8 +461,18 @@
     <string name="history_delete_all">Tiyuj natab\'äl</string>
     <!-- Text for the dialog to confirm clearing all history -->
     <string name="history_delete_all_dialog">¿La kan nawajo\' nayüj el rupam ri natab\'äl?</string>
+    <!-- Text for the snackbar to confirm that a single browsing history item has been deleted. The first parameter is the shortened URL of the deleted history item. -->
+    <string name="history_delete_single_item_snackbar">Xyuj %1$s</string>
     <!-- Text for positive action to delete history in deleting history dialog -->
     <string name="history_clear_dialog">Tijosq\'ïx</string>
+    <!-- History overflow menu copy button -->
+    <string name="history_menu_copy_button">Tiwachib\'ëx</string>
+    <!-- History overflow menu share button -->
+    <string name="history_menu_share_button">Tikomonïx</string>
+    <!-- History overflow menu open in new tab button -->
+    <string name="history_menu_open_in_new_tab_button">Tijaq pa k\'ak\'a\' ruwi\'</string>
+    <!-- History overflow menu open in private tab button -->
+    <string name="history_menu_open_in_private_tab_button">Tijaq pan ichinan ruwi\'</string>
     <!-- Text for the button to delete a single history item -->
     <string name="history_delete_item">Tiyuj</string>
 
@@ -504,6 +522,10 @@
     <!-- Screen title for selecting a bookmarks folder -->
     <string name="bookmark_select_folder">Ticha\' molyakb\'äl</string>
 
+    <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
+    <string name="bookmark_delete_folder_confirmation_dialog">¿La kan nawajo\' chi nayüj re molyakb\'äl re\'?</string>
+    <!-- Snackbar title shown after a folder has been deleted. This first parameter is the name of the deleted folder -->
+    <string name="bookmark_delete_folder_snackbar">Xyuj %1$s</string>
     <!-- Screen title for adding a bookmarks folder -->
     <string name="bookmark_add_folder">Titz\'aqatisäx Yakwuj</string>
     <!-- deprecated: Snackbar title shown after a bookmark has been created. -->
@@ -557,8 +579,6 @@
     <!-- Bookmark snackbar message on deletion
      The first parameter is the host part of the URL of the bookmark deleted, if any -->
     <string name="bookmark_deletion_snackbar_message">Xyuj %1$s</string>
-    <!-- Bookmark snackbar message on deleting multiple bookmarks -->
-    <string name="bookmark_deletion_multiple_snackbar_message">Keyuj cha\'on taq yaketal</string>
     <!-- Bookmark undo button for deletion snackbar action -->
     <string name="bookmark_undo_deletion">TITZOLÏX</string>
 
@@ -608,6 +628,8 @@
     <string name="tracking_protection_off">Tichup</string>
     <!-- Label that indicates that all video and audio autoplay is allowed -->
     <string name="preference_option_autoplay_allowed2">Tiya\' q\'ij k\'oxom chuqa\' silowäch</string>
+    <!-- Label that indicates that all video and audio autoplay is blocked -->
+    <string name="preference_option_autoplay_blocked3">Tiq\'at k\'oxom chuqa\' silowäch</string>
     <!-- Summary of delete browsing data on quit preference if it is set to on -->
     <string name="delete_browsing_data_quit_on">Titzij</string>
     <!-- Summary of delete browsing data on quit preference if it is set to off -->
@@ -769,16 +791,15 @@
     <string name="preference_accessibility_font_size_title">Runimilem Tz\'ib\'</string>
 
     <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
-    <string name="preference_accessibility_auto_size">Ruyonil Tijal Rupalem Tz\'ib\'</string>
-
+    <string name="preference_accessibility_auto_size_2">Ruyonil tijal rupalem tz\'ib\'</string>
     <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
     <string name="preference_accessibility_auto_size_summary">Ri rupalem tz\'ib\' xtuk\'äm ri\' rik\'in ri runuk\'ulem Android. Tichup richin ninuk\'samajïx rupalem tz\'ib\' wawe\'.</string>
 
     <!-- Title for the Delete browsing data preference -->
     <string name="preferences_delete_browsing_data">Keyuj taq rutzij okem pa k\'amaya\'l</string>
-    <!-- Title for the tabs item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_tabs_title">Kejaq taq Ruwi\'</string>
 
+    <!-- Title for the tabs item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_tabs_title_2">Kejaq taq ruwi\'</string>
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
     <string name="preferences_delete_browsing_data_tabs_subtitle">%d taq ruwi\'</string>
     <!-- Title for the data and history items in Delete browsing data -->
@@ -905,6 +926,9 @@
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Tasik\'ij ri rutzijol qichinanem</string>
 
+    <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
+    <string name="onboarding_close">Titz\'apïx</string>
+
     <!-- text for the button to finish onboarding -->
     <string name="onboarding_finish">Titikirisäx okem pa k\'amaya\'l</string>
 
@@ -942,7 +966,9 @@
     <!-- Text shown for settings option for sign with email -->
     <string name="sign_in_with_email">Tawokisaj ri taqoya\'l</string>
     <!-- Text shown in confirmation dialog to sign out of account -->
-    <string name="sign_out_confirmation_message">Man xtuxïm ta chik ri rub\'i\' ataqoya\'l ri Firefox, man xkeyuj ta ri taq rutzij awokem pa re oyonib\'äl re\'.</string>
+    <string name="sign_out_confirmation_message">Firefox man xtuxïm ta chik ri rub\'i\' ataqoya\'l, man xkeyuj ta ri taq rutzij awokem pa re oyonib\'äl re\'.</string>
+    <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="sign_out_confirmation_message_2">%s Man xtuxïm ta chik ri rub\'i\' ataqoya\'l, man xkeyuj ta ri taq rutzij awokem pa re oyonib\'äl re\'.</string>
     <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
     <string name="sign_out_disconnect">Tichup</string>
     <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->
@@ -1047,6 +1073,9 @@
     <string name="etp_panel_off">CHUPÜL ri chajinïk pa re ruxaq re\'</string>
     <!-- Header for exceptions list for which sites enhanced tracking protection is always off -->
     <string name="enhanced_tracking_protection_exceptions">Chupül ri Utzilan Chajinïk chuwäch Ojqanem pa re ajk\'amaya\'l taq ruxaq re\'</string>
+    <!-- Content description (not visible, for screen readers etc.): Navigate
+    back from ETP details (Ex: Tracking content) -->
+    <string name="etp_back_button_content_description">Katok pa k\'amaya\'l chi rij</string>
     <!-- About page Your rights link text -->
     <string name="about_your_rights">Taq Ach\'ojib\'al</string>
 
@@ -1060,6 +1089,8 @@
 
     <!-- About page link text to open support link -->
     <string name="about_support">Tob\'äl</string>
+    <!-- About page link text to list of past crashes (like about:crashes on desktop) -->
+    <string name="about_crashes">Taq sachoj</string>
     <!-- About page link text to open privacy notice link -->
     <string name="about_privacy_notice">Ichinan na\'oj</string>
     <!-- About page link text to open know your rights link -->
@@ -1282,8 +1313,16 @@ Achi\'el: \nhttps://www.google.com/search?q=%s</string>
     <string name="certificate_info_verified_by">Jikib\'an Ruma: %1$s</string>
     <!-- Login overflow menu delete button -->
     <string name="login_menu_delete_button">Tiyuj</string>
+    <!-- Login overflow menu edit button -->
+    <string name="login_menu_edit_button">Tinuk\'</string>
     <!-- Message in delete confirmation dialog for logins -->
     <string name="login_deletion_confirmation">¿La kan nawajo\' chi niyuj el re tikirib\'äl molojri\'ïl re\'?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Tiyuj</string>
+    <!--  The page title for editing a saved login. -->
+    <string name="edit">Tinuk\'</string>
+    <!--  The error message in edit login view when password field is blank. -->
+    <string name="saved_login_password_required">Najowäx ewan tzij</string>
+    <!-- Voice search prompt description displayed after the user presses the voice search button -->
+    <string name="voice_search_explainer">Kach\'o wakami</string>
 </resources>

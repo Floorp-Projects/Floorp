@@ -21,6 +21,9 @@
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">Offene Tabs werden hier angezeigt.</string>
 
+    <!-- No Private Tabs Message Description -->
+    <string name="no_private_tabs_description">Ihre privaten Tabs werden hier angezeigt.</string>
+
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s wird von Mozilla hergestellt.</string>
 
@@ -37,13 +40,21 @@
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">Sitzung löschen</string>
 
-    <!-- Private mode shortcut "contextual feature recommender" (CFR) -->
+    <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
     <string name="cfr_message">Fügen Sie eine Verknüpfung hinzu, um private Tabs vom Startbildschirm aus zu öffnen.</string>
     <!-- Text for the positive button -->
     <string name="cfr_pos_button_text">Verknüpfung hinzufügen</string>
     <!-- Text for the negative button -->
     <string name="cfr_neg_button_text">Nein, danke</string>
+
+    <!-- Search widget "contextual feature recommendation" (CFR) -->
+    <!-- Text for the main message. 'Firefox' intentionally hardcoded here.-->
+    <string name="search_widget_cfr_message">Firefox noch schneller öffnen. Erstellen Sie eine Verknüpfung für Ihren Startbildschirm.</string>
+    <!-- Text for the positive button -->
+    <string name="search_widget_cfr_pos_button_text">Verknüpfung hinzufügen</string>
+    <!-- Text for the negative button -->
+    <string name="search_widget_cfr_neg_button_text">Jetzt nicht</string>
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
