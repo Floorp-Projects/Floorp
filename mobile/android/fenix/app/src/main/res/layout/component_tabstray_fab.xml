@@ -12,6 +12,6 @@
     android:layout_gravity="bottom|end"
     android:layout_margin="16dp"
     android:contentDescription="@string/add_tab"
-    app:backgroundTint="?accent"
+    app:backgroundTint="@color/accent_normal_theme"
     app:srcCompat="@drawable/ic_new"
     app:tint="@color/photonWhite" />
