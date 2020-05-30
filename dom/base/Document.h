@@ -2021,6 +2021,8 @@ class Document : public nsINode,
   void NotifyLoading(bool aNewParentIsLoading, const ReadyState& aCurrentState,
                      ReadyState aNewState);
 
+  void NotifyAbortedLoad();
+
   // notify that a content node changed state.  This must happen under
   // a scriptblocker but NOT within a begin/end update.
   void ContentStateChanged(nsIContent* aContent, EventStates aStateMask);
@@ -4585,6 +4587,13 @@ class Document : public nsINode,
 
   // While we're handling an execCommand call, set to true.
   bool mIsRunningExecCommand : 1;
+
+  // True if we should change the readystate to complete after we fire
+  // DOMContentLoaded. This happens when we abort a load and
+  // nsDocumentViewer::EndLoad runs while we still have things blocking
+  // DOMContentLoaded. We wait for those to complete, and then update the
+  // readystate when they finish.
+  bool mSetCompleteAfterDOMContentLoaded : 1;
 
   uint8_t mPendingFullscreenRequests;
 
