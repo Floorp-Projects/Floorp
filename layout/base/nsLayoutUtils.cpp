@@ -9041,16 +9041,6 @@ ScrollMetadata nsLayoutUtils::ComputeScrollMetadata(
   FrameMetrics& metrics = metadata.GetMetrics();
   metrics.SetLayoutViewport(CSSRect::FromAppUnits(aViewport));
 
-  nsIDocShell* docShell = presContext->GetDocShell();
-  BrowsingContext* bc = docShell ? docShell->GetBrowsingContext() : nullptr;
-  bool isTouchEventsEnabled =
-      docShell && docShell->GetTouchEventsOverride() ==
-                      nsIDocShell::TOUCHEVENTS_OVERRIDE_ENABLED;
-
-  if (bc && bc->InRDMPane() && isTouchEventsEnabled) {
-    metadata.SetIsRDMTouchSimulationActive(true);
-  }
-
   ViewID scrollId = ScrollableLayerGuid::NULL_SCROLL_ID;
   if (aContent) {
     if (void* paintRequestTime =
