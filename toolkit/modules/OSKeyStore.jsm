@@ -216,8 +216,13 @@ var OSKeyStore = {
               authenticated: true,
               auth_details: "success",
             };
-            if (reauthResult.length == 2 && reauthResult[1]) {
+            if (reauthResult.length > 1 && reauthResult[1]) {
               result.auth_details += "_no_password";
+            }
+            if (reauthResult.length > 3) {
+              if (reauthResult[2]) {
+                result.auth_details += "_auto_admin_logon";
+              }
             }
             return result;
           });
