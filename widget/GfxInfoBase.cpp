@@ -1645,10 +1645,8 @@ bool GfxInfoBase::InitFeatureObject(JSContext* aCx,
   nsCString status;
   auto value = aFeatureState.GetValue();
   if (value == FeatureStatus::Blacklisted ||
-      value == FeatureStatus::Unavailable ||
-      value == FeatureStatus::Blocked) {
-    status.AppendPrintf("%s:%s",
-                        FeatureStatusToString(value),
+      value == FeatureStatus::Unavailable || value == FeatureStatus::Blocked) {
+    status.AppendPrintf("%s:%s", FeatureStatusToString(value),
                         aFeatureState.GetFailureId().get());
   } else {
     status.Append(FeatureStatusToString(value));

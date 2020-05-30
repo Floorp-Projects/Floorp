@@ -104,7 +104,8 @@ template <class SpanT, bool IsConst>
 class span_iterator {
   using element_type_ = typename SpanT::element_type;
 
-  template <class ElementType, size_t Extent> friend class ::mozilla::Span;
+  template <class ElementType, size_t Extent>
+  friend class ::mozilla::Span;
 
  public:
   using iterator_category = std::random_access_iterator_tag;
@@ -125,11 +126,11 @@ class span_iterator {
 
  private:
   // For whatever reason, the compiler doesn't like optimizing away the above
-  // MOZ_RELEASE_ASSERT when `span_iterator` is constructed for obviously-correct
-  // cases like `span.begin()` or `span.end()`.  We provide this private
-  // constructor for such cases.
+  // MOZ_RELEASE_ASSERT when `span_iterator` is constructed for
+  // obviously-correct cases like `span.begin()` or `span.end()`.  We provide
+  // this private constructor for such cases.
   constexpr span_iterator(const SpanT* span, typename SpanT::index_type index,
-			  SpanKnownBounds)
+                          SpanKnownBounds)
       : span_(span), index_(index) {}
 
  public:
@@ -693,10 +694,16 @@ class Span {
 
   // [Span.iter], Span iterator support
   iterator begin() const { return {this, 0, span_details::SpanKnownBounds{}}; }
-  iterator end() const { return {this, Length(), span_details::SpanKnownBounds{}}; }
+  iterator end() const {
+    return {this, Length(), span_details::SpanKnownBounds{}};
+  }
 
-  const_iterator cbegin() const { return {this, 0, span_details::SpanKnownBounds{}}; }
-  const_iterator cend() const { return {this, Length(), span_details::SpanKnownBounds{}}; }
+  const_iterator cbegin() const {
+    return {this, 0, span_details::SpanKnownBounds{}};
+  }
+  const_iterator cend() const {
+    return {this, Length(), span_details::SpanKnownBounds{}};
+  }
 
   reverse_iterator rbegin() const { return reverse_iterator{end()}; }
   reverse_iterator rend() const { return reverse_iterator{begin()}; }
