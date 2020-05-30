@@ -6,32 +6,46 @@ package org.mozilla.fenix.onboarding
 
 import android.content.Context
 import android.content.SharedPreferences
-import androidx.core.content.edit
+import androidx.annotation.VisibleForTesting
+import mozilla.components.support.ktx.android.content.PreferencesHolder
+import mozilla.components.support.ktx.android.content.intPreference
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
 
-class FenixOnboarding(context: Context) {
+class FenixOnboarding(context: Context) : PreferencesHolder {
+
     private val metrics = context.components.analytics.metrics
-    private val onboardingPrefs = context.getSharedPreferences(
+    override val preferences: SharedPreferences = context.getSharedPreferences(
         PREF_NAME_ONBOARDING_KEY,
         Context.MODE_PRIVATE
     )
 
-    private var SharedPreferences.onboardedVersion: Int
-        get() = getInt(LAST_VERSION_ONBOARDING_KEY, 0)
-        set(version) { edit { putInt(LAST_VERSION_ONBOARDING_KEY, version) } }
+    private var onboardedVersion by intPreference(LAST_VERSION_ONBOARDING_KEY, default = 0)
 
     fun finish() {
-        onboardingPrefs.onboardedVersion = CURRENT_ONBOARDING_VERSION
+        onboardedVersion = CURRENT_ONBOARDING_VERSION
         metrics.track(Event.DismissedOnboarding)
     }
 
-    fun userHasBeenOnboarded() = onboardingPrefs.onboardedVersion == CURRENT_ONBOARDING_VERSION
+    fun userHasBeenOnboarded() = onboardedVersion == CURRENT_ONBOARDING_VERSION
 
     companion object {
-        private const val CURRENT_ONBOARDING_VERSION = 1
+        /**
+         * The current onboarding version. When incremented,
+         * users who were previously onboarded will be show the onboarding again.
+         */
+        @VisibleForTesting
+        internal const val CURRENT_ONBOARDING_VERSION = 1
 
+        /**
+         * Name of the shared preferences file.
+         */
         private const val PREF_NAME_ONBOARDING_KEY = "fenix.onboarding"
-        private const val LAST_VERSION_ONBOARDING_KEY = "fenix.onboarding.last_version"
+
+        /**
+         * Key for [onboardedVersion].
+         */
+        @VisibleForTesting
+        internal const val LAST_VERSION_ONBOARDING_KEY = "fenix.onboarding.last_version"
     }
 }
