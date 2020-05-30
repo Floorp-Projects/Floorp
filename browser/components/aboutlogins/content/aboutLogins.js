@@ -123,6 +123,23 @@ window.addEventListener("AboutLoginsChromeToContent", event => {
   }
 });
 
+window.addEventListener("AboutLoginsExportPasswordsDialog", async event => {
+  let dialog = document.querySelector("confirmation-dialog");
+  let options = {
+    title: "about-logins-confirm-export-dialog-title",
+    message: "about-logins-confirm-export-dialog-message",
+    confirmButtonLabel: "about-logins-confirm-export-dialog-confirm-button",
+  };
+  try {
+    await dialog.show(options);
+    document.dispatchEvent(
+      new CustomEvent("AboutLoginsExportPasswords", { bubbles: true })
+    );
+  } catch (ex) {
+    // The user cancelled the dialog.
+  }
+});
+
 // Begin code that executes on page load.
 
 let searchParamsChanged = false;
