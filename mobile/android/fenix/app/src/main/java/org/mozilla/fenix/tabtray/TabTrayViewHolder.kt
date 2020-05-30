@@ -33,7 +33,10 @@ import org.mozilla.fenix.ext.toTab
 /**
  * A RecyclerView ViewHolder implementation for "tab" items.
  */
-class TabTrayViewHolder(itemView: View) : TabViewHolder(itemView) {
+class TabTrayViewHolder(
+    itemView: View,
+    val getSelectedTabId: () -> String? = { itemView.context.components.core.store.state.selectedTabId }
+) : TabViewHolder(itemView) {
     private val iconView: ImageView? = itemView.findViewById(R.id.mozac_browser_tabstray_icon)
     private val titleView: TextView = itemView.findViewById(R.id.mozac_browser_tabstray_title)
     private val closeView: AppCompatImageButton = itemView.findViewById(R.id.mozac_browser_tabstray_close)
@@ -50,7 +53,7 @@ class TabTrayViewHolder(itemView: View) : TabViewHolder(itemView) {
     override fun bind(tab: Tab, isSelected: Boolean, observable: Observable<TabsTray.Observer>) {
         // This is a hack to workaround a bug in a-c.
         // https://github.com/mozilla-mobile/android-components/issues/7186
-        val isSelected2 = tab.id == itemView.context.components.core.store.state.selectedTabId
+        val isSelected2 = tab.id == getSelectedTabId()
         this.tab = tab
 
         // Basic text

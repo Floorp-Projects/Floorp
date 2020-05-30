@@ -25,7 +25,7 @@ class TabTrayViewHolderTest {
         val view = LayoutInflater.from(ApplicationProvider.getApplicationContext()).inflate(
             R.layout.tab_tray_item, null, false)
 
-        val tabViewHolder = spy(TabTrayViewHolder(view))
+        val tabViewHolder = spy(TabTrayViewHolder(view) { null })
         doNothing().`when`(tabViewHolder).updateBackgroundColor(false)
 
         val extremelyLongUrl = "m".repeat(MAX_URI_LENGTH + 1)
