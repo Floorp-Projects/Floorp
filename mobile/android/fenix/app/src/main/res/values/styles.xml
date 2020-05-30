@@ -538,7 +538,8 @@
 <!--        <item name="android:windowAnimationStyle">@style/Animation.Design.BottomSheetDialog</item>-->
         <item name="android:windowIsFloating">false</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
-        <item name="android:windowTranslucentNavigation">true</item>
+        <item name="android:windowTranslucentNavigation">false</item>
+        <item name="android:navigationBarColor">@color/foundation_normal_theme</item>
     </style>
 
     <!-- Stuff to make the bottom sheet with round top borders -->

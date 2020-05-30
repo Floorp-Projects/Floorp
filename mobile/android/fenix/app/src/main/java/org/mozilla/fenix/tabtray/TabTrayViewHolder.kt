@@ -29,7 +29,6 @@ import org.mozilla.fenix.ext.removeAndDisable
 import org.mozilla.fenix.ext.removeTouchDelegate
 import org.mozilla.fenix.ext.showAndEnable
 import org.mozilla.fenix.ext.toTab
-import org.mozilla.fenix.theme.ThemeManager
 
 /**
  * A RecyclerView ViewHolder implementation for "tab" items.
