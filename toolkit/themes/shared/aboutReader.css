@@ -7,17 +7,15 @@
 :root {
   --body-padding: 64px;
   --popup-border: rgba(0, 0, 0, 0.12);
+  --opaque-popup-border: #e0e0e0;
   --popup-shadow: rgba(49, 49, 49, 0.3);
-  --radio-button-border: rgb(177, 177, 179);
   --grey-90-a10: rgba(12, 12, 13, 0.1);
   --grey-90-a20: rgba(12, 12, 13, 0.2);
   --grey-90-a30: rgba(12, 12, 13, 0.3);
   --grey-90-a80: rgba(12, 12, 13, 0.8);
-  --grey-10: #f9f9fa;
-  --grey-20: #ededf0;
   --grey-30: #d7d7db;
-  --grey-50: #737373;
   --blue-40: #45a1ff;
+  --blue-40-a30: rgba(69, 161, 255, 0.3);
   --blue-60: #0060df;
   --active-color: #0B83FF;
   --font-size: 12;
@@ -35,11 +33,12 @@ body {
   --main-foreground: #333;
   --toolbar-border: var(--grey-90-a20);
   --toolbar-box-shadow: var(--grey-90-a10);
-  --popup-button-hover: #e0e0e1;
+  --popup-button-hover: hsla(0,0%,70%,.4);
+  --popup-button-active: hsla(240,5%,5%,.15);
   --popup-bgcolor: white;
   --popup-button: #edecf0;
-  --selected-button: #d1e1ff;
-  --selected-border: #a0beff;
+  --selected-fonttype-background: var(--blue-40-a30);
+  --selected-border: var(--blue-40);
   --popup-line: var(--grey-30);
   --font-value-border: var(--grey-30);
   --font-color: #000000;
@@ -61,12 +60,11 @@ body.dark {
   --toolbar-box-shadow: black;
   --toolbar-button-hover: var(--grey-90-a30);
   --toolbar-button-active: var(--grey-90-a80);
-  --popup-button-hover: var(--grey-50);
+  --popup-button-active: hsla(0,0%,70%,.6);
   --popup-bgcolor: #4c4a50;
   --popup-button:  #5c5c61;
-  --selected-button: var(--blue-40);
-  --selected-border: var(--blue-60);
   --popup-line: #5c5c61;
+  --opaque-popup-border: #434146;
   --font-value-border: #656468;
   --font-color: #fff;
   --icon-fill: #fff;
@@ -155,14 +153,6 @@ body.dark blockquote {
 .sepia-button {
   color: #5b4636;
   background-color: #f4ecd8;
-}
-
-.sans-serif-button {
-  font-family: Helvetica, Arial, sans-serif;
-}
-
-.serif-button {
-  font-family: Georgia, "Times New Roman", serif;
 }
 
 /* Loading/error message */
@@ -408,10 +398,7 @@ button:disabled {
   border: 1px solid var(--popup-border);
   box-shadow: 0 4px 6px 0 var(--popup-shadow);
   border-bottom-width: 0;
-}
-
-.dropdown-popup > hr {
-  display: none;
+  top: 0;
 }
 
 .open > .dropdown-popup {
@@ -427,7 +414,7 @@ button:disabled {
   display: block;
   -moz-context-properties:  fill, stroke;
   fill: var(--popup-bgcolor);
-  stroke: var(--popup-border);
+  stroke: var(--opaque-popup-border);
   pointer-events: none;
 }
 
@@ -435,168 +422,153 @@ button:disabled {
   transform: scaleX(-1);
 }
 
-/* Align the style dropdown (narrate does its own) */
-.style-dropdown .dropdown-popup {
-  top: -57px;
-}
-
+/* Align the style dropdown arrow (narrate does its own) */
 .style-dropdown .dropdown-arrow {
-  top: 64px;
+  top: 7px;
 }
 
 /*======= Font style popup =======*/
 
-.font-type-buttons,
-.font-size-buttons,
-.color-scheme-buttons,
-.content-width-buttons,
-.line-height-buttons {
+.radio-button {
+  /* We visually hide these, but we keep them around so they can be focused
+   * and changed by interacting with them via the label, or the keyboard, or
+   * assistive technology.
+   */
+  opacity: 0;
+  pointer-events: none;
+  position: absolute;
+}
+
+.radiorow,
+.buttonrow {
   display: flex;
-  flex-direction: row;
-  justify-content: space-evenly;
 }
 
 .content-width-value,
 .font-size-value,
 .line-height-value {
-  background-color: var(--popup-button);
-  border-radius: 10px;
-  display: inline-block;
-  width: 50px;
-  border: 1px solid var(--font-value-border);
-  text-align: center;
+  box-sizing: border-box;
+  width: 36px;
+  height: 15px;
+  line-height: 15px;
+  display: flex;
+  justify-content: center;
+  align-content: center;
   margin: auto;
-}
-
-.font-type-buttons > button,
-.font-size-buttons > button,
-.color-scheme-buttons > button,
-.content-width-buttons > button,
-.line-height-buttons > button {
-  text-align: center;
-  border: 0;
-}
-
-.font-type-buttons > button,
-.font-size-buttons > button,
-.content-width-buttons > button,
-.line-height-buttons > button {
-  width: 50%;
-  background-color: transparent;
-}
-
-.color-scheme-buttons > button {
-  font-size: 10px;
-  margin: 10px;
-  height: 34px;
-  border-radius: 4px;
-  width: 70px;
-  display: inline;
-  border: 1px solid var(--popup-border);
-  padding-block: 0 12px;
-  padding-inline: 0 21px;
-}
-
-.color-scheme-buttons .radio-button {
-  margin-block-end: -1px;
-  display: inline-block;
-}
-
-.font-type-buttons > button {
-  height: 70px;
-  margin: 10px;
+  border-radius: 10px;
+  border: 1px solid var(--font-value-border);
   background-color: var(--popup-button);
-  border-radius: 2px;
-  border: 1px solid var(--popup-line);
 }
 
-.font-type-buttons,
-.font-size-buttons,
-.content-width-buttons,
-.line-height-buttons {
-  border-bottom:  1px solid var(--popup-line);
-}
-
-.font-size-buttons > button,
-.content-width-buttons > button,
-.line-height-buttons > button {
+.buttonrow > button {
+  border: 0;
   height: 60px;
   width: 90px;
-}
-
-.font-type-buttons > button.selected:active:hover,
-.font-type-buttons > button.selected:hover,
-.font-type-buttons > button.selected {
-  background-color: var(--selected-button);
-  border: 1px solid var(--selected-border);
-}
-
-.color-scheme-buttons > button.selected,
-.font-type-buttons > button:-moz-focusring,
-.color-scheme-buttons > button:-moz-focusring {
-  border-color: var(--selected-border);
-}
-
-/* Make the serif button content the same size as the sans-serif button content. */
-.font-type-buttons > button > .description {
-  font-size: 12px;
-  text-align: start;
-  display: inline-block;
-  min-width: 60%;
-}
-
-.description {
-  line-height: 1.5em;
-  vertical-align: middle;
-}
-
-.font-type-buttons > .sans-serif-button > .name {
-  background-image: url("chrome://global/skin/reader/RM-Sans-Serif.svg");
-}
-
-.font-type-buttons > .serif-button > .name{
-  background-image: url("chrome://global/skin/reader/RM-Serif.svg");
-}
-
-.font-type-buttons > .sans-serif-button > .name,
-.font-type-buttons > .serif-button > .name {
-  display: inline-block;
-  height: 39px;
-  width: 60px;
-  background-size: contain;
+  background-color: transparent;
   background-repeat: no-repeat;
+  background-position: center;
 }
 
-.font-size-buttons > button:enabled:hover,
-.font-size-buttons > button:enabled:-moz-focusring,
-.font-type-buttons > button:enabled:hover,
-.content-width-buttons > button:enabled:hover,
-.content-width-buttons > button:enabled:-moz-focusring,
-.line-height-buttons > button:enabled:hover,
-.line-height-buttons > button:enabled:-moz-focusring {
+.buttonrow > button:enabled:hover,
+.buttonrow > button:enabled:-moz-focusring {
   background-color: var(--popup-button-hover);
 }
 
-.font-size-buttons > button:enabled:active,
-.font-size-buttons > button.selected,
-.content-width-buttons > button:enabled:active,
-.content-width-buttons > button.selected,
-.line-height-buttons > button:enabled:active,
-.line-height-buttons > button.selected {
-  background-color: #dadada;
+.buttonrow > button:enabled:active {
+  background-color: var(--popup-button-active);
 }
 
-.minus-button,
-.plus-button,
-.content-width-minus-button,
-.content-width-plus-button,
-.line-height-minus-button,
-.line-height-plus-button {
-  background-color: transparent;
-  border: 0;
-  background-size: 18px 18px;
+.radiorow:not(:last-child),
+.buttonrow:not(:last-child) {
+  border-bottom: 1px solid var(--popup-line);
+}
+
+.radiorow > label {
+  position: relative;
+  box-sizing: border-box;
+  border-radius: 2px;
+  border: 2px solid var(--popup-border);
+}
+
+.radiorow > label[checked] {
+  border-color: var(--selected-border);
+}
+
+/* For the hover style, we draw a line under the item by means of a
+ * pseudo-element. Because these items are variable height, and
+ * because their contents are variable height, position it absolutely,
+ * and give it a width of 100% (the content width) + 4px for the 2 * 2px
+ * border width.
+ */
+.radiorow > input[type=radio]:-moz-focusring + label::after,
+.radiorow > label:hover::after {
+  content: "";
+  display: block;
+  border-bottom: 2px solid var(--blue-40);
+  width: calc(100% + 4px);
+  position: absolute;
+  /* to skip the 2 * 2px border + 2px spacing. */
+  bottom: -6px;
+  /* Match the start of the 2px border of the element: */
+  inset-inline-start: -2px;
+}
+
+.color-scheme-buttons > label {
+  height: 34px;
+  width: 70px;
+  font-size: 12px;
+  /* Center the labels horizontally as well as vertically */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  /* We want 10px between items, but there's no margin collapsing in flexbox. */
+  margin: 10px 5px;
+}
+
+.color-scheme-buttons > input:first-child + label {
+  margin-inline-start: 10px;
+}
+
+.color-scheme-buttons > label:last-child {
+  margin-inline-end: 10px;
+}
+
+.font-type-buttons > label {
+  height: 64px;
+  width: 105px;
+  /* Slightly more space between these items. */
+  margin: 10px;
+  /* Center the Sans-serif / Serif labels */
+  text-align: center;
+  background-size: 63px 39px;
   background-repeat: no-repeat;
-  background-position: center;
+  background-position: center 18px;
+  background-color: var(--popup-button);
+  fill: currentColor;
+  -moz-context-properties: fill;
+  /* This mostly matches baselines, but because of differences in font
+   * baselines between serif and sans-serif, this isn't always enough. */
+  line-height: 1;
+  padding-top: 2px;
+}
+
+.font-type-buttons > label[checked] {
+  background-color: var(--selected-fonttype-background);
+}
+
+.sans-serif-button {
+  font-family: Helvetica, Arial, sans-serif;
+  background-image: url("chrome://global/skin/reader/RM-Sans-Serif.svg");
+}
+
+/* Tweak padding to match the baseline on mac */
+:root[platform=macosx] .sans-serif-button {
+  padding-top: 3px;
+}
+
+.serif-button {
+  font-family: Georgia, "Times New Roman", serif;
+  background-image: url("chrome://global/skin/reader/RM-Serif.svg");
 }
 
 /*======= Toolbar icons =======*/
@@ -610,33 +582,13 @@ button:disabled {
   background-image: url("chrome://global/skin/reader/RM-Type-Controls-24x24.svg");
 }
 
-.radio-button {
-  -moz-appearance: none;
-  -moz-outline-radius: 100%;
-  border-radius: 50%;
-  width: 10px;
-  height: 10px;
-  outline: 1px solid var(--radio-button-border);
-  background-color: #ffffff;
-  margin: 0;
-  margin-inline-end: 5px;
-  vertical-align: middle;
-}
-
-.radio-button:checked {
-  background-color: var(--blue-40);;
-  border: 2px solid #ffffff;
-}
-
-.font-type-buttons .radio-button {
-  margin-inline-start: -2px;
-}
-
 .minus-button {
+  background-size: 18px 18px;
   background-image: url("chrome://global/skin/reader/RM-Minus-24x24.svg");
 }
 
 .plus-button {
+  background-size: 18px 18px;
   background-image: url("chrome://global/skin/reader/RM-Plus-24x24.svg");
 }
 
