@@ -1,7 +1,7 @@
 // META: quic=true
 // META: script=/common/get-host-info.sub.js
 
-const PORT = 8983;
+const PORT = '{{ports[quic-transport][0]}}';
 const {ORIGINAL_HOST: HOST, ORIGIN} = get_host_info();
 const BASE = `quic-transport://${HOST}:${PORT}`;
 
