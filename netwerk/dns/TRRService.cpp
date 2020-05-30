@@ -102,6 +102,17 @@ bool TRRService::CheckCaptivePortalIsPassed() {
   return result;
 }
 
+NS_NAMED_LITERAL_CSTRING(kTRRIsAutoDetectedKey, "(auto-detected)");
+NS_NAMED_LITERAL_CSTRING(kTRRNotAutoDetectedKey, "(default)");
+// static
+const nsCString& TRRService::AutoDetectedKey() {
+  if (gTRRService && gTRRService->IsUsingAutoDetectedURL()) {
+    return kTRRIsAutoDetectedKey.AsString();
+  }
+
+  return kTRRNotAutoDetectedKey.AsString();
+}
+
 nsresult TRRService::Init() {
   MOZ_ASSERT(NS_IsMainThread(), "wrong thread");
   if (mInitialized) {
@@ -895,11 +906,13 @@ void TRRService::TRRIsOkay(enum TrrOkay aReason) {
                     XRE_IsSocketProcess(),
                 NS_IsMainThread());
 
-  Telemetry::AccumulateCategorical(
-      aReason == OKAY_NORMAL ? Telemetry::LABELS_DNS_TRR_SUCCESS::Fine
-                             : (aReason == OKAY_TIMEOUT
-                                    ? Telemetry::LABELS_DNS_TRR_SUCCESS::Timeout
-                                    : Telemetry::LABELS_DNS_TRR_SUCCESS::Bad));
+  Telemetry::AccumulateCategoricalKeyed(
+      AutoDetectedKey(),
+      aReason == OKAY_NORMAL
+          ? Telemetry::LABELS_DNS_TRR_SUCCESS2::Fine
+          : (aReason == OKAY_TIMEOUT
+                 ? Telemetry::LABELS_DNS_TRR_SUCCESS2::Timeout
+                 : Telemetry::LABELS_DNS_TRR_SUCCESS2::Bad));
   if (aReason == OKAY_NORMAL) {
     mTRRFailures = 0;
   } else if ((mMode == MODE_TRRFIRST) && (mConfirmationState == CONFIRM_OK)) {
@@ -960,7 +973,8 @@ AHostResolver::LookupStatus TRRService::CompleteLookup(
         // don't accumulate trronly data here since trronly failures are
         // handled above by trying again, so counting the successes here would
         // skew the numbers
-        Telemetry::Accumulate(Telemetry::DNS_TRR_NS_VERFIFIED,
+        Telemetry::Accumulate(Telemetry::DNS_TRR_NS_VERFIFIED2,
+                              TRRService::AutoDetectedKey(),
                               (mConfirmationState == CONFIRM_OK));
       }
       mRetryConfirmInterval = 1000;
