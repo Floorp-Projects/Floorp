@@ -254,14 +254,16 @@ nsresult TRR::SendHTTPRequest() {
         gTRRService->IsTRRBlacklisted(mHost, mOriginSuffix, mPB, true)) {
       if (mType == TRRTYPE_A) {
         // count only blacklist for A records to avoid double counts
-        Telemetry::Accumulate(Telemetry::DNS_TRR_BLACKLISTED, true);
+        Telemetry::Accumulate(Telemetry::DNS_TRR_BLACKLISTED2,
+                              TRRService::AutoDetectedKey(), true);
       }
       // not really an error but no TRR is issued
       return NS_ERROR_UNKNOWN_HOST;
     }
 
     if (UseDefaultServer() && (mType == TRRTYPE_A)) {
-      Telemetry::Accumulate(Telemetry::DNS_TRR_BLACKLISTED, false);
+      Telemetry::Accumulate(Telemetry::DNS_TRR_BLACKLISTED2,
+                            TRRService::AutoDetectedKey(), false);
     }
   }
 
