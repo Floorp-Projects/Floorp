@@ -60,6 +60,21 @@ add_task(async function test_open_export() {
         {},
         browser
       );
+
+      info("Clicking confirm button");
+      await BrowserTestUtils.synthesizeMouseAtCenter(
+        () => {
+          let confirmExportDialog = window.document.querySelector(
+            "confirmation-dialog"
+          );
+          return confirmExportDialog.shadowRoot.querySelector(
+            ".confirm-button"
+          );
+        },
+        {},
+        browser
+      );
+
       info("waiting for Export file picker to get opened");
       await filePicker;
       ok(true, "Export file picker opened");

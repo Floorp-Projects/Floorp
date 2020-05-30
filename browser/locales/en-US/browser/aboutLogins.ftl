@@ -163,6 +163,10 @@ about-logins-confirm-remove-dialog-title = Remove this login?
 confirm-delete-dialog-message = This action cannot be undone.
 about-logins-confirm-remove-dialog-confirm-button = Remove
 
+about-logins-confirm-export-dialog-title = Export logins and passwords
+about-logins-confirm-export-dialog-message = Your passwords will be saved as readable text (e.g., BadP@ssw0rd) so anyone who can open the exported file can view them.
+about-logins-confirm-export-dialog-confirm-button = Export…
+
 confirm-discard-changes-dialog-title = Discard unsaved changes?
 confirm-discard-changes-dialog-message = All unsaved changes will be lost.
 confirm-discard-changes-dialog-confirm-button = Discard
