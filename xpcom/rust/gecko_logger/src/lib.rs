@@ -6,9 +6,9 @@
 
 extern crate env_logger;
 extern crate log;
-use log::{Level, LevelFilter};
 #[cfg(not(target_os = "android"))]
 use log::Log;
+use log::{Level, LevelFilter};
 use std::boxed::Box;
 use std::cmp;
 use std::collections::HashMap;
