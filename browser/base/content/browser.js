@@ -8039,19 +8039,27 @@ function AddKeywordForSearchField() {
  */
 function undoCloseTab(aIndex) {
   // wallpaper patch to prevent an unnecessary blank tab (bug 343895)
-  var blankTabToRemove = null;
+  let blankTabToRemove = null;
   if (gBrowser.tabs.length == 1 && gBrowser.selectedTab.isEmpty) {
     blankTabToRemove = gBrowser.selectedTab;
   }
 
-  var tab = null;
-  if (SessionStore.getClosedTabCount(window) > (aIndex || 0)) {
-    tab = SessionStore.undoCloseTab(window, aIndex || 0);
+  let tab = null;
+  // aIndex is undefined if the function is called without a specific tab to restore.
+  let tabsToRemove =
+    aIndex !== undefined
+      ? [aIndex]
+      : new Array(SessionStore.getLastClosedTabCount(window)).fill(0);
+  for (let index of tabsToRemove) {
+    if (SessionStore.getClosedTabCount(window) > index) {
+      tab = SessionStore.undoCloseTab(window, index);
 
-    if (blankTabToRemove) {
-      gBrowser.removeTab(blankTabToRemove);
+      if (blankTabToRemove) {
+        gBrowser.removeTab(blankTabToRemove);
+      }
     }
   }
+  SessionStore.setLastClosedTabCount(window, 1);
 
   return tab;
 }
