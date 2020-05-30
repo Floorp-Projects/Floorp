@@ -223,6 +223,9 @@ var OSKeyStore = {
               if (reauthResult[2]) {
                 result.auth_details += "_auto_admin_logon";
               }
+              if (!reauthResult[3]) {
+                result.auth_details += "_require_signon_disabled";
+              }
             }
             return result;
           });
