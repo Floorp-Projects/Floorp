@@ -21,6 +21,18 @@ CREATE TEMP TABLE IF NOT EXISTS storage_sync_staging (
 
 DELETE FROM temp.storage_sync_staging;
 
+-- We record the changes we are making via sync in this table, so that at the
+-- end of the sync extensions can find out via notifications what changes
+-- were applied.
+CREATE TEMP TABLE IF NOT EXISTS storage_sync_applied (
+    ext_id TEXT NOT NULL UNIQUE,
+
+    /* A StorageChanges value serialized as JSON. */
+    changes TEXT NOT NULL
+);
+
+DELETE FROM temp.storage_sync_applied;
+
 -- We store metadata about items we are uploading in this temp table. After
 -- we get told the upload was successful we use this to update the local
 -- tables.

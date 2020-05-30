@@ -11,7 +11,7 @@ log_query_plans = []
 
 [dependencies]
 log = "0.4"
-lazy_static = "1.4.0"
+lazy_static = "1.4"
 interrupt-support = { path = "../interrupt" }
 ffi-support = "0.4"
 

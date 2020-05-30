@@ -448,7 +448,6 @@ mod sync {
     }
 
     #[test]
-    #[cfg_attr(miri, ignore)] // leaks memory
     fn static_lazy() {
         static XS: Lazy<Vec<i32>> = Lazy::new(|| {
             let mut xs = Vec::new();
@@ -467,7 +466,6 @@ mod sync {
     }
 
     #[test]
-    #[cfg_attr(miri, ignore)] // leaks memory
     fn static_lazy_via_fn() {
         fn xs() -> &'static Vec<i32> {
             static XS: OnceCell<Vec<i32>> = OnceCell::new();

@@ -5,6 +5,7 @@
 use crate::api::{self, StorageChanges};
 use crate::db::StorageDb;
 use crate::error::*;
+use crate::migration::migrate;
 use crate::sync;
 use std::path::Path;
 use std::result;
@@ -115,6 +116,26 @@ impl Store {
     /// `StorageDb::close` for more details on when this can fail.
     pub fn close(self) -> result::Result<(), (Store, Error)> {
         self.db.close().map_err(|(db, err)| (Store { db }, err))
+    }
+
+    /// Gets the changes which the current sync applied. Should be used
+    /// immediately after the bridged engine is told to apply incoming changes,
+    /// and can be used to notify observers of the StorageArea of the changes
+    /// that were applied.
+    /// The result is a Vec of already JSON stringified changes.
+    pub fn get_synced_changes(&self) -> Result<Vec<sync::SyncedExtensionChange>> {
+        sync::get_synced_changes(&self.db)
+    }
+
+    /// Migrates data from a database in the format of the "old" kinto
+    /// implementation. Returns the count of webextensions for whom data was
+    /// migrated.
+    /// Note that `filename` isn't normalized or canonicalized.
+    pub fn migrate(&self, filename: impl AsRef<Path>) -> Result<usize> {
+        let tx = self.db.unchecked_transaction()?;
+        let result = migrate(&tx, filename.as_ref())?;
+        tx.commit()?;
+        Ok(result)
     }
 }
 

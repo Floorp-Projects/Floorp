@@ -55,6 +55,7 @@ pub struct RemoteConfig {
 }
 
 pub(crate) const CONTENT_URL_RELEASE: &str = "https://accounts.firefox.com";
+pub(crate) const CONTENT_URL_CHINA: &str = "https://accounts.firefox.com.cn";
 
 impl Config {
     pub fn release(client_id: &str, redirect_uri: &str) -> Self {
@@ -70,7 +71,7 @@ impl Config {
     }
 
     pub fn china(client_id: &str, redirect_uri: &str) -> Self {
-        Self::new("https://accounts.firefox.com.cn", client_id, redirect_uri)
+        Self::new(CONTENT_URL_CHINA, client_id, redirect_uri)
     }
 
     pub fn localdev(client_id: &str, redirect_uri: &str) -> Self {
