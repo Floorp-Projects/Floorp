@@ -3883,9 +3883,8 @@ pref("toolkit.zoomManager.zoomValues", ".3,.5,.67,.8,.9,1,1.1,1.2,1.33,1.5,1.7,2
 // Image-related prefs
 //
 
-// By default the Accept header sent for images loaded over HTTP(S) is derived
-// by ImageAcceptHeader() in nsHttpHandler.cpp. If set, this pref overrides it.
-pref("image.http.accept", "");
+// The default Accept header sent for images loaded over HTTP(S)
+pref("image.http.accept", "image/webp,*/*");
 
 //
 // Image memory management prefs
