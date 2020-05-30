@@ -74,6 +74,9 @@ class TRRService : public TRRServiceBase,
   already_AddRefed<nsIThread> TRRThread();
   bool IsOnTRRThread();
 
+  bool IsUsingAutoDetectedURL() { return mURISetByDetection; }
+  static const nsCString& AutoDetectedKey();
+
  private:
   virtual ~TRRService();
 
