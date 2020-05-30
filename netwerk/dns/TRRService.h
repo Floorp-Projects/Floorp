@@ -35,7 +35,7 @@ class TRRService : public TRRServiceBase,
   TRRService();
   nsresult Init();
   nsresult Start();
-  bool Enabled(nsIRequest::TRRMode aMode);
+  bool Enabled(nsIRequest::TRRMode aMode = nsIRequest::TRR_FIRST_MODE);
   bool IsConfirmed() { return mConfirmationState == CONFIRM_OK; }
 
   bool AllowRFC1918() { return mRfc1918; }
