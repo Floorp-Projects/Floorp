@@ -176,6 +176,7 @@ MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(RenderImageFlags)
 
 enum class ResolutionChangeOrigin : uint8_t {
   Apz,
+  Test,
   MainThreadRestore,
   MainThreadAdjustment,
 };

@@ -110,8 +110,9 @@ void MobileViewportManager::ResolutionUpdated(
     return;
   }
 
-  if (!mPainted &&
-      aOrigin == mozilla::ResolutionChangeOrigin::MainThreadRestore) {
+  if ((!mPainted &&
+       aOrigin == mozilla::ResolutionChangeOrigin::MainThreadRestore) ||
+      aOrigin == mozilla::ResolutionChangeOrigin::Test) {
     // Save the value, so our default zoom calculation
     // can take it into account later on.
     SetRestoreResolution(mContext->GetResolution());

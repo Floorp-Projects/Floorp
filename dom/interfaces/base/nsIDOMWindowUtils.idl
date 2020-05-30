@@ -211,7 +211,8 @@ interface nsIDOMWindowUtils : nsISupports {
                          out uint32_t aHorizontalScrollbarHeight);
 
   /**
-   * Get/set the resolution at which rescalable web content is drawn.
+   * Get/set the resolution at which rescalable web content is drawn for
+   * testing purposes.
    *
    * Setting a new resolution does *not* trigger reflow.  This API is
    * entirely separate from textZoom and fullZoom; a resolution scale
@@ -225,10 +226,13 @@ interface nsIDOMWindowUtils : nsISupports {
    * so that it is displayed at a correspondingly larger or smaller size,
    * without the need for the caller to set an additional transform.
    *
-   * This can be used to implement a non-reflowing scale-zoom, e.g.
-   * for pinch-zoom on mobile platforms.
+   * The purpose of this API is to allow tests to simulate many of the effects
+   * a non-reflowing scale-zoom, e.g. for pinch-zoom on mobile platforms, and
+   * should be only used for testing purposes.
    *
    * The caller of this method must have chrome privileges.
+   *
+   * This is intended to be used by test code only!
    */
   void setResolutionAndScaleTo(in float aResolution);
 
