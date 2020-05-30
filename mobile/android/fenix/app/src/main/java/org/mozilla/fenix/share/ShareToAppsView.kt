@@ -45,6 +45,7 @@ class ShareToAppsView(
 
     fun setRecentShareTargets(recentTargets: List<AppShareOption>) {
         if (recentTargets.isEmpty()) {
+            recentAppsContainer.visibility = View.GONE
             return
         }
         progressBar.visibility = View.GONE
