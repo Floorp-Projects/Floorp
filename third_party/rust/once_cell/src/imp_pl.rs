@@ -1,6 +1,8 @@
 use std::{
     cell::UnsafeCell,
+    mem::{self, MaybeUninit},
     panic::{RefUnwindSafe, UnwindSafe},
+    ptr,
     sync::atomic::{AtomicBool, Ordering},
 };
 
@@ -9,7 +11,7 @@ use parking_lot::{lock_api::RawMutex as _RawMutex, RawMutex};
 pub(crate) struct OnceCell<T> {
     mutex: Mutex,
     is_initialized: AtomicBool,
-    pub(crate) value: UnsafeCell<Option<T>>,
+    value: UnsafeCell<MaybeUninit<T>>,
 }
 
 // Why do we need `T: Send`?
@@ -28,7 +30,7 @@ impl<T> OnceCell<T> {
         OnceCell {
             mutex: Mutex::new(),
             is_initialized: AtomicBool::new(false),
-            value: UnsafeCell::new(None),
+            value: UnsafeCell::new(MaybeUninit::uninit()),
         }
     }
 
@@ -56,12 +58,75 @@ impl<T> OnceCell<T> {
             // - finally, if it returns Ok, we store the value and store the flag with
             //   `Release`, which synchronizes with `Acquire`s.
             let value = f()?;
-            let slot: &mut Option<T> = unsafe { &mut *self.value.get() };
-            debug_assert!(slot.is_none());
-            *slot = Some(value);
+            // Safe b/c we have a unique access and no panic may happen
+            // until the cell is marked as initialized.
+            unsafe { self.as_mut_ptr().write(value) };
             self.is_initialized.store(true, Ordering::Release);
         }
         Ok(())
+    }
+
+    /// Get the reference to the underlying value, without checking if the cell
+    /// is initialized.
+    ///
+    /// # Safety
+    ///
+    /// Caller must ensure that the cell is in initialized state, and that
+    /// the contents are acquired by (synchronized to) this thread.
+    pub(crate) unsafe fn get_unchecked(&self) -> &T {
+        debug_assert!(self.is_initialized());
+        &*self.as_ptr()
+    }
+
+    /// Gets the mutable reference to the underlying value.
+    /// Returns `None` if the cell is empty.
+    pub(crate) fn get_mut(&mut self) -> Option<&mut T> {
+        if self.is_initialized() {
+            // Safe b/c we have a unique access and value is initialized.
+            Some(unsafe { &mut *self.as_mut_ptr() })
+        } else {
+            None
+        }
+    }
+
+    /// Consumes this `OnceCell`, returning the wrapped value.
+    /// Returns `None` if the cell was empty.
+    pub(crate) fn into_inner(self) -> Option<T> {
+        if !self.is_initialized() {
+            return None;
+        }
+
+        // Safe b/c we have a unique access and value is initialized.
+        let value: T = unsafe { ptr::read(self.as_ptr()) };
+
+        // It's OK to `mem::forget` without dropping, because both `self.mutex`
+        // and `self.is_initialized` are not heap-allocated.
+        mem::forget(self);
+
+        Some(value)
+    }
+
+    fn as_ptr(&self) -> *const T {
+        unsafe {
+            let slot: &MaybeUninit<T> = &*self.value.get();
+            slot.as_ptr()
+        }
+    }
+
+    fn as_mut_ptr(&self) -> *mut T {
+        unsafe {
+            let slot: &mut MaybeUninit<T> = &mut *self.value.get();
+            slot.as_mut_ptr()
+        }
+    }
+}
+
+impl<T> Drop for OnceCell<T> {
+    fn drop(&mut self) {
+        if self.is_initialized() {
+            // Safe b/c we have a unique access and value is initialized.
+            unsafe { ptr::drop_in_place(self.as_mut_ptr()) };
+        }
     }
 }
 
@@ -92,9 +157,8 @@ impl Drop for MutexGuard<'_> {
 }
 
 #[test]
-#[cfg(target_pointer_width = "64")]
 fn test_size() {
     use std::mem::size_of;
 
-    assert_eq!(size_of::<OnceCell<u32>>(), 3 * size_of::<u32>());
+    assert_eq!(size_of::<OnceCell<bool>>(), 2 * size_of::<bool>() + size_of::<u8>());
 }

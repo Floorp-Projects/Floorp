@@ -11,6 +11,7 @@ use sql_support::ConnExt;
 use sync15_traits::Payload;
 use sync_guid::Guid as SyncGuid;
 
+use crate::api::{StorageChanges, StorageValueChange};
 use crate::error::*;
 
 use super::{merge, remove_matching_keys, JsonMap, Record};
@@ -23,6 +24,20 @@ pub enum DataState {
     Deleted,
     /// Data exists, as stored in the map.
     Exists(JsonMap),
+}
+
+// A little helper to create a StorageChanges object when we are creating
+// a new value with multiple keys that doesn't exist locally.
+fn changes_for_new_incoming(new: &JsonMap) -> StorageChanges {
+    let mut result = StorageChanges::with_capacity(new.len());
+    for (key, val) in new.iter() {
+        result.push(StorageValueChange {
+            key: key.clone(),
+            old_value: None,
+            new_value: Some(val.clone()),
+        });
+    }
+    result
 }
 
 // This module deals exclusively with the Map inside a JsonValue::Object().
@@ -172,14 +187,21 @@ pub fn get_incoming(conn: &Connection) -> Result<Vec<(IncomingItem, IncomingStat
 
 /// This is the set of actions we know how to take *locally* for incoming
 /// records. Which one depends on the IncomingState.
+/// Every state which updates also records the set of changes we should notify
 #[derive(Debug, PartialEq)]
 pub enum IncomingAction {
     /// We should locally delete the data for this record
-    DeleteLocally,
+    DeleteLocally { changes: StorageChanges },
     /// We will take the remote.
-    TakeRemote { data: JsonMap },
+    TakeRemote {
+        data: JsonMap,
+        changes: StorageChanges,
+    },
     /// We merged this data - this is what we came up with.
-    Merge { data: JsonMap },
+    Merge {
+        data: JsonMap,
+        changes: StorageChanges,
+    },
     /// Entry exists locally and it's the same as the incoming record.
     Same,
 }
@@ -213,6 +235,7 @@ pub fn plan_incoming(s: IncomingState) -> IncomingAction {
                 (DataState::Exists(incoming_data), DataState::Deleted, _) => {
                     // Incoming data, removed locally. Server wins.
                     IncomingAction::TakeRemote {
+                        changes: changes_for_new_incoming(&incoming_data),
                         data: incoming_data,
                     }
                 }
@@ -220,13 +243,16 @@ pub fn plan_incoming(s: IncomingState) -> IncomingAction {
                     // Deleted remotely.
                     // Treat this as a delete of every key that we
                     // know was present at the time.
-                    let result = remove_matching_keys(local_data, &mirror);
+                    let (result, changes) = remove_matching_keys(local_data, &mirror);
                     if result.is_empty() {
                         // If there were no more keys left, we can
                         // delete our version too.
-                        IncomingAction::DeleteLocally
+                        IncomingAction::DeleteLocally { changes }
                     } else {
-                        IncomingAction::Merge { data: result }
+                        IncomingAction::Merge {
+                            data: result,
+                            changes,
+                        }
                     }
                 }
                 (DataState::Deleted, DataState::Exists(local_data), DataState::Deleted) => {
@@ -236,12 +262,15 @@ pub fn plan_incoming(s: IncomingState) -> IncomingAction {
                     // Treat this as a delete of every key that we
                     // knew was present. Unfortunately, we don't know
                     // any keys that were present, so we delete no keys.
-                    IncomingAction::Merge { data: local_data }
+                    IncomingAction::Merge {
+                        data: local_data,
+                        changes: StorageChanges::new(),
+                    }
                 }
                 (DataState::Deleted, DataState::Deleted, _) => {
                     // We agree with the remote (regardless of what we
                     // have mirrored).
-                    IncomingAction::DeleteLocally
+                    IncomingAction::Same
                 }
             }
         }
@@ -261,11 +290,15 @@ pub fn plan_incoming(s: IncomingState) -> IncomingAction {
                     // We would normally remove keys that we knew were
                     // present on the server, but we don't know what
                     // was on the server, so we don't remove anything.
-                    IncomingAction::Merge { data: local_data }
+                    IncomingAction::Merge {
+                        data: local_data,
+                        changes: StorageChanges::new(),
+                    }
                 }
                 (DataState::Exists(incoming_data), DataState::Deleted) => {
                     // No data locally, but some is incoming - take it.
                     IncomingAction::TakeRemote {
+                        changes: changes_for_new_incoming(&incoming_data),
                         data: incoming_data,
                     }
                 }
@@ -280,7 +313,10 @@ pub fn plan_incoming(s: IncomingState) -> IncomingAction {
             // This means a local deletion is being replaced by, or just re-doing
             // the incoming record.
             match incoming {
-                DataState::Exists(data) => IncomingAction::TakeRemote { data },
+                DataState::Exists(data) => IncomingAction::TakeRemote {
+                    changes: changes_for_new_incoming(&data),
+                    data,
+                },
                 DataState::Deleted => IncomingAction::Same,
             }
         }
@@ -288,11 +324,28 @@ pub fn plan_incoming(s: IncomingState) -> IncomingAction {
             // Only the staging record exists - this means it's the first time
             // we've ever seen it. No conflict possible, just take the remote.
             match incoming {
-                DataState::Exists(data) => IncomingAction::TakeRemote { data },
-                DataState::Deleted => IncomingAction::DeleteLocally,
+                DataState::Exists(data) => IncomingAction::TakeRemote {
+                    changes: changes_for_new_incoming(&data),
+                    data,
+                },
+                DataState::Deleted => IncomingAction::DeleteLocally {
+                    changes: StorageChanges::new(),
+                },
             }
         }
     }
+}
+
+fn insert_changes(tx: &Transaction<'_>, ext_id: &str, changes: &StorageChanges) -> Result<()> {
+    tx.execute_named_cached(
+        "INSERT INTO temp.storage_sync_applied (ext_id, changes)
+            VALUES (:ext_id, :changes)",
+        &[
+            (":ext_id", &ext_id),
+            (":changes", &serde_json::to_string(&changes)?),
+        ],
+    )?;
+    Ok(())
 }
 
 // Apply the actions necessary to fully process the incoming items.
@@ -306,15 +359,16 @@ pub fn apply_actions(
 
         log::trace!("action for '{}': {:?}", item.ext_id, action);
         match action {
-            IncomingAction::DeleteLocally => {
+            IncomingAction::DeleteLocally { changes } => {
                 // Can just nuke it entirely.
                 tx.execute_named_cached(
                     "DELETE FROM storage_sync_data WHERE ext_id = :ext_id",
                     &[(":ext_id", &item.ext_id)],
                 )?;
+                insert_changes(tx, &item.ext_id, &changes)?;
             }
             // We want to update the local record with 'data' and after this update the item no longer is considered dirty.
-            IncomingAction::TakeRemote { data } => {
+            IncomingAction::TakeRemote { data, changes } => {
                 tx.execute_named_cached(
                     "INSERT OR REPLACE INTO storage_sync_data(ext_id, data, sync_change_counter)
                         VALUES (:ext_id, :data, 0)",
@@ -323,11 +377,12 @@ pub fn apply_actions(
                         (":data", &serde_json::Value::Object(data)),
                     ],
                 )?;
+                insert_changes(tx, &item.ext_id, &changes)?;
             }
 
             // We merged this data, so need to update locally but still consider
             // it dirty because the merged data must be uploaded.
-            IncomingAction::Merge { data } => {
+            IncomingAction::Merge { data, changes } => {
                 tx.execute_named_cached(
                     "UPDATE storage_sync_data SET data = :data, sync_change_counter = sync_change_counter + 1 WHERE ext_id = :ext_id",
                     &[
@@ -335,6 +390,7 @@ pub fn apply_actions(
                         (":data", &serde_json::Value::Object(data)),
                     ]
                 )?;
+                insert_changes(tx, &item.ext_id, &changes)?;
             }
 
             // Both local and remote ended up the same - only need to nuke the
@@ -344,6 +400,7 @@ pub fn apply_actions(
                     "UPDATE storage_sync_data SET sync_change_counter = 0 WHERE ext_id = :ext_id",
                     &[(":ext_id", &item.ext_id)],
                 )?;
+                // no changes to write
             }
         }
     }
@@ -376,10 +433,51 @@ mod tests {
         result
     }
 
-    // Can't find a way to import this from crate::sync::tests...
+    // Can't find a way to import these from crate::sync::tests...
     macro_rules! map {
         ($($map:tt)+) => {
             json!($($map)+).as_object().unwrap().clone()
+        };
+    }
+    macro_rules! change {
+        ($key:literal, None, None) => {
+            StorageValueChange {
+                key: $key.to_string(),
+                old_value: None,
+                new_value: None,
+            };
+        };
+        ($key:literal, $old:tt, None) => {
+            StorageValueChange {
+                key: $key.to_string(),
+                old_value: Some(json!($old)),
+                new_value: None,
+            };
+        };
+        ($key:literal, None, $new:tt) => {
+            StorageValueChange {
+                key: $key.to_string(),
+                old_value: None,
+                new_value: Some(json!($new)),
+            };
+        };
+        ($key:literal, $old:tt, $new:tt) => {
+            StorageValueChange {
+                key: $key.to_string(),
+                old_value: Some(json!($old)),
+                new_value: Some(json!($new)),
+            };
+        };
+    }
+    macro_rules! changes {
+        ( $( $change:expr ),* ) => {
+            {
+                let mut changes = StorageChanges::new();
+                $(
+                    changes.push($change);
+                )*
+                changes
+            }
         };
     }
 
@@ -554,6 +652,31 @@ mod tests {
         .expect("query should work")
     }
 
+    fn get_applied_item_changes(conn: &Connection) -> Option<StorageChanges> {
+        // no custom deserialize for storagechanges and we only need it for
+        // tests, so do it manually.
+        conn.try_query_row::<_, Error, _>(
+            "SELECT changes FROM temp.storage_sync_applied WHERE ext_id = 'ext_id'",
+            &[],
+            |row| Ok(serde_json::from_str(&row.get::<_, String>("changes")?)?),
+            true,
+        )
+        .expect("query should work")
+        .map(|val: serde_json::Value| {
+            let ob = val.as_object().expect("should be an object of items");
+            let mut result = StorageChanges::with_capacity(ob.len());
+            for (key, val) in ob.into_iter() {
+                let details = val.as_object().expect("elts should be objects");
+                result.push(StorageValueChange {
+                    key: key.to_string(),
+                    old_value: details.get("oldValue").cloned(),
+                    new_value: details.get("newValue").cloned(),
+                });
+            }
+            result
+        })
+    }
+
     fn do_apply_action(tx: &Transaction<'_>, action: IncomingAction) {
         let item = IncomingItem {
             guid: SyncGuid::new("guid"),
@@ -573,10 +696,17 @@ mod tests {
             api::get(&tx, "ext_id", json!(null))?,
             json!({"foo": "local"})
         );
-        do_apply_action(&tx, IncomingAction::DeleteLocally);
+        let changes = changes![change!("foo", "local", None)];
+        do_apply_action(
+            &tx,
+            IncomingAction::DeleteLocally {
+                changes: changes.clone(),
+            },
+        );
         assert_eq!(api::get(&tx, "ext_id", json!(null))?, json!({}));
         // and there should not be a local record at all.
         assert!(get_local_item(&tx).is_none());
+        assert_eq!(get_applied_item_changes(&tx), Some(changes));
         tx.rollback()?;
 
         // TakeRemote - replace local data with remote and marked as not dirty.
@@ -594,10 +724,12 @@ mod tests {
                 sync_change_counter: 1
             })
         );
+        let changes = changes![change!("foo", "local", "remote")];
         do_apply_action(
             &tx,
             IncomingAction::TakeRemote {
                 data: map!({"foo": "remote"}),
+                changes: changes.clone(),
             },
         );
         // data should exist locally with the remote data and not be dirty.
@@ -608,6 +740,7 @@ mod tests {
                 sync_change_counter: 0
             })
         );
+        assert_eq!(get_applied_item_changes(&tx), Some(changes));
         tx.rollback()?;
 
         // Merge - like ::TakeRemote, but data remains dirty.
@@ -625,10 +758,12 @@ mod tests {
                 sync_change_counter: 1
             })
         );
+        let changes = changes![change!("foo", "local", "remote")];
         do_apply_action(
             &tx,
             IncomingAction::Merge {
                 data: map!({"foo": "remote"}),
+                changes: changes.clone(),
             },
         );
         assert_eq!(
@@ -638,6 +773,7 @@ mod tests {
                 sync_change_counter: 2
             })
         );
+        assert_eq!(get_applied_item_changes(&tx), Some(changes));
         tx.rollback()?;
 
         // Same - data stays the same but is marked not dirty.
@@ -663,6 +799,7 @@ mod tests {
                 sync_change_counter: 0
             })
         );
+        assert_eq!(get_applied_item_changes(&tx), None);
         tx.rollback()?;
 
         Ok(())

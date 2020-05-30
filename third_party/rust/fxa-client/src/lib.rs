@@ -162,6 +162,10 @@ impl FirefoxAccount {
         if self.state.config.content_url()? == Url::parse(config::CONTENT_URL_RELEASE)? {
             return Ok(Url::parse("https://firefox.com/pair")?);
         }
+        // Similarly special case for the China server.
+        if self.state.config.content_url()? == Url::parse(config::CONTENT_URL_CHINA)? {
+            return Ok(Url::parse("https://firefox.com.cn/pair")?);
+        }
         Ok(self.state.config.pair_url()?)
     }
 
@@ -571,6 +575,13 @@ mod tests {
         assert_eq!(
             fxa.get_pairing_authority_url().unwrap().as_str(),
             "https://firefox.com/pair"
+        );
+
+        let config = Config::china("12345678", "https://foo.bar");
+        let fxa = FirefoxAccount::with_config(config);
+        assert_eq!(
+            fxa.get_pairing_authority_url().unwrap().as_str(),
+            "https://firefox.com.cn/pair"
         )
     }
 }
