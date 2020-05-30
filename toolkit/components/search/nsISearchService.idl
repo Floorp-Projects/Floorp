@@ -500,11 +500,8 @@ interface nsISearchService : nsISupports
    *
    *  @param extension
    *        The extension to load from.
-   *  @returns An object with two booleans:
-   *        - canChangeToAppProvided: indicates if the WebExtension engine may
-   *            set the named engine as default e.g. it is application provided.
-   *        - canInstallEngine: indicates if the WebExtension engine may be
-   *            installed, e.g. it is not an app-provided engine.
+   *  @returns A boolean that indicates if the WebExtension engine may set the
+   *           named engine as default (because it is application provided).
    */
   Promise maybeSetAndOverrideDefault(in jsval extension);
 
