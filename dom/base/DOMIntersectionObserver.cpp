@@ -667,8 +667,7 @@ void DOMIntersectionObserver::QueueIntersectionObserverEntry(
   }
   RefPtr<DOMIntersectionObserverEntry> entry = new DOMIntersectionObserverEntry(
       this, time, rootBounds.forget(), boundingClientRect.forget(),
-      intersectionRect.forget(), aIsIntersecting, aTarget,
-      aIntersectionRatio);
+      intersectionRect.forget(), aIsIntersecting, aTarget, aIntersectionRatio);
   mQueuedEntries.AppendElement(entry.forget());
 }
 

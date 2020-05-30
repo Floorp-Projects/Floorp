@@ -1949,8 +1949,7 @@ MediaManager::MediaManager(UniquePtr<base::Thread> aMediaThread)
       mPrefs.mHPFOn ? "on" : "off",
       mPrefs.mExperimentalInputProcessing ? "on" : "off",
       mPrefs.mNoiseOn ? "on" : "off", mPrefs.mAec, mPrefs.mAgc, mPrefs.mNoise,
-      mPrefs.mRoutingMode,
-      mPrefs.mExtendedFilter ? "on" : "off",
+      mPrefs.mRoutingMode, mPrefs.mExtendedFilter ? "on" : "off",
       mPrefs.mDelayAgnostic ? "on" : "off", mPrefs.mChannels);
 }
 
