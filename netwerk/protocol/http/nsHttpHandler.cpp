@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* vim:set ts=4 sw=2 sts=2 et cin: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -67,7 +67,6 @@
 #include "mozilla/DynamicFpiRedirectHeuristic.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/LazyIdleThread.h"
-#include "mozilla/StaticPrefs_image.h"
 #include "mozilla/SyncRunnable.h"
 
 #include "mozilla/dom/ContentParent.h"
@@ -122,6 +121,7 @@
 
 #define ACCEPT_HEADER_NAVIGATION \
   "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8"
+#define ACCEPT_HEADER_IMAGE "image/webp,*/*"
 #define ACCEPT_HEADER_STYLE "text/css,*/*;q=0.1"
 #define ACCEPT_HEADER_ALL "*/*"
 
@@ -187,25 +187,6 @@ already_AddRefed<nsHttpHandler> nsHttpHandler::GetInstance() {
   return httpHandler.forget();
 }
 
-/// Derive the HTTP Accept header for image requests based on the enabled prefs
-/// for non-universal image types. This may be overridden in its entirety by
-/// the image.http.accept pref.
-static nsCString ImageAcceptHeader() {
-  nsCString mimeTypes;
-
-  if (mozilla::StaticPrefs::image_avif_enabled()) {
-    mimeTypes.Append("image/avif,");
-  }
-
-  if (mozilla::StaticPrefs::image_webp_enabled()) {
-    mimeTypes.Append("image/webp,");
-  }
-
-  mimeTypes.Append("*/*");
-
-  return mimeTypes;
-}
-
 nsHttpHandler::nsHttpHandler()
     : mHttpVersion(HttpVersion::v1_1),
       mProxyHttpVersion(HttpVersion::v1_1),
@@ -245,7 +226,7 @@ nsHttpHandler::nsHttpHandler()
       mPhishyUserPassLength(1),
       mQoSBits(0x00),
       mEnforceAssocReq(false),
-      mImageAcceptHeader(ImageAcceptHeader()),
+      mImageAcceptHeader(ACCEPT_HEADER_IMAGE),
       mLastUniqueID(NowInSeconds()),
       mSessionStartTime(0),
       mLegacyAppName("Mozilla"),
@@ -444,8 +425,6 @@ static const char* gCallbackPrefs[] = {
     TCP_FAST_OPEN_STALLS_IDLE,
     TCP_FAST_OPEN_STALLS_TIMEOUT,
     "image.http.accept",
-    "image.avif.enabled",
-    "image.webp.enabled",
     nullptr,
 };
 
@@ -1952,22 +1931,10 @@ void nsHttpHandler::PrefsChanged(const char* pref) {
     }
   }
 
-  if (PREF_CHANGED("image.http.accept") || PREF_CHANGED("image.avif.enabled") ||
-      PREF_CHANGED("image.webp.enabled")) {
-    nsAutoCString userSetImageAcceptHeader;
-
-    if (Preferences::HasUserValue("image.http.accept")) {
-      rv = Preferences::GetCString("image.http.accept",
-                                   userSetImageAcceptHeader);
-      if (NS_FAILED(rv)) {
-        userSetImageAcceptHeader.Truncate();
-      }
-    }
-
-    if (userSetImageAcceptHeader.IsEmpty()) {
-      mImageAcceptHeader.Assign(ImageAcceptHeader());
-    } else {
-      mImageAcceptHeader.Assign(userSetImageAcceptHeader);
+  if (PREF_CHANGED("image.http.accept")) {
+    rv = Preferences::GetCString("image.http.accept", mImageAcceptHeader);
+    if (NS_FAILED(rv)) {
+      mImageAcceptHeader.Assign(ACCEPT_HEADER_IMAGE);
     }
   }
 
