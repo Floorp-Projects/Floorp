@@ -145,15 +145,15 @@ class TabTrayViewHolder(itemView: View) : TabViewHolder(itemView) {
 
     @VisibleForTesting
     internal fun updateBackgroundColor(isSelected: Boolean) {
-        val itemBackground = if (isSelected) {
-            R.attr.tabTrayItemSelectedBackground
+        val color = if (isSelected) {
+            R.color.tab_tray_item_selected_background_normal_theme
         } else {
-            R.attr.tabTrayItemBackground
+            R.color.tab_tray_item_background_normal_theme
         }
         itemView.setBackgroundColor(
             ContextCompat.getColor(
                 itemView.context,
-                ThemeManager.resolveAttribute(itemBackground, itemView.context)
+                color
             )
         )
     }

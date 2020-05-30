@@ -6,7 +6,7 @@
 
     <shape>
         <size android:height="1dp"/>
-        <solid android:color="?tabTrayItemDivider" />
+        <solid android:color="@color/tab_tray_item_divider_normal_theme" />
     </shape>
 
 </inset>
