@@ -185,12 +185,18 @@
                    onpopupshowing="gSync.populateSendTabToDevicesMenu(event.target, TabContextMenu.contextTab.linkedBrowser.currentURI.spec, TabContextMenu.contextTab.linkedBrowser.contentTitle, TabContextMenu.contextTab.multiselected);"/>
       </menu>
       <menuseparator/>
-      <menuitem id="context_closeTabsToTheEnd" data-lazy-l10n-id="close-tabs-to-the-end"
-                oncommand="gBrowser.removeTabsToTheEndFrom(TabContextMenu.contextTab, {animate: true});"/>
-      <menuitem id="context_closeOtherTabs" data-lazy-l10n-id="close-other-tabs"
-                oncommand="gBrowser.removeAllTabsBut(TabContextMenu.contextTab);"/>
+      <menu id="context_closeTabOptions"
+            data-lazy-l10n-id="tab-context-close-multiple-tabs">
+        <menupopup id="closeTabOptions">
+          <menuitem id="context_closeTabsToTheEnd" data-lazy-l10n-id="close-tabs-to-the-end"
+                    oncommand="gBrowser.removeTabsToTheEndFrom(TabContextMenu.contextTab, {animate: true});"/>
+          <menuitem id="context_closeOtherTabs" data-lazy-l10n-id="close-other-tabs"
+                    oncommand="gBrowser.removeAllTabsBut(TabContextMenu.contextTab);"/>
+        </menupopup>
+      </menu>
       <menuitem id="context_undoCloseTab"
-                data-lazy-l10n-id="undo-close-tab"
+                data-lazy-l10n-id="tab-context-undo-close-tabs"
+                data-l10n-args='{"tabCount": 1}'
                 observes="History:UndoCloseTab"/>
       <menuitem id="context_closeTab" data-lazy-l10n-id="close-tab"
                 oncommand="gBrowser.removeTab(TabContextMenu.contextTab, { animate: true });"/>

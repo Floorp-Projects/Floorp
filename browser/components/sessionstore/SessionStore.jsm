@@ -328,6 +328,13 @@ var SessionStore = {
     );
   },
 
+  getLastClosedTabCount(aWindow) {
+    return SessionStoreInternal.getLastClosedTabCount(aWindow);
+  },
+  setLastClosedTabCount(aWindow, aNumber) {
+    return SessionStoreInternal.setLastClosedTabCount(aWindow, aNumber);
+  },
+
   getClosedTabCount: function ss_getClosedTabCount(aWindow) {
     return SessionStoreInternal.getClosedTabCount(aWindow);
   },
@@ -723,6 +730,7 @@ var SessionStoreInternal = {
 
     this._initPrefs();
     this._initialized = true;
+    this._closedTabCache = new WeakMap();
 
     Telemetry.getHistogramById("FX_SESSION_RESTORE_PRIVACY_LEVEL").add(
       Services.prefs.getIntPref("browser.sessionstore.privacy_level")
@@ -3173,6 +3181,28 @@ var SessionStoreInternal = {
     });
 
     return newTab;
+  },
+
+  getLastClosedTabCount(aWindow) {
+    if ("__SSi" in aWindow) {
+      // Blank tabs cannot be undo-closed, so the number returned by
+      // the ClosedTabCache can be greater than the return value of
+      // getClosedTabCount. We won't restore blank tabs, so we return
+      // the minimum of these two values.
+      return Math.min(
+        this._closedTabCache.get(aWindow) || 1,
+        this.getClosedTabCount(aWindow)
+      );
+    }
+
+    throw (Components.returnCode = Cr.NS_ERROR_INVALID_ARG);
+  },
+  setLastClosedTabCount(aWindow, aNumber) {
+    if ("__SSi" in aWindow) {
+      return this._closedTabCache.set(aWindow, aNumber);
+    }
+
+    throw (Components.returnCode = Cr.NS_ERROR_INVALID_ARG);
   },
 
   getClosedTabCount: function ssi_getClosedTabCount(aWindow) {
