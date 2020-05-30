@@ -11,22 +11,35 @@
  */
 #include "nsISupports.idl"
 
+/**
+ * mozILocalization is an internal API used by Localization class for formatting of translation
+ * units.
+ *
+ * There are three main formatting methods:
+ *    - formatMessages - formats a list of messages based on the requested keys.
+ *    - formatValues   - formats a list of values of messages based on the requested keys.
+ *    - formatValue    - formats a single value based on the requested id and args.
+ *
+ * Each method has a `Sync` variant that can be used if the instance is in the `sync` state.
+ * This mode is enabled via passing `true` to `aIsSync` either in `activate` or `onChange` method.
+ *
+ * When this value is set to `false`, those methods will throw.
+ */
+
 [scriptable, uuid(7d468600-551f-4fe0-98c9-92a53b63ec8d)]
 interface mozILocalization : nsISupports
 {
-  void activate(in Array<AString> aResourceIds, in bool aSync, in bool aEager, in jsval aGenerateBundles, in jsval aGenerateBundlesSync);
+  void activate(in Array<AString> aResourceIds, in bool aIsSync, in bool aEager, in jsval aGenerateBundles, in jsval aGenerateBundlesSync);
 
-  void setIsSync(in boolean isSync);
+  Promise formatMessages(in Array<AString> aResourceIds, in Array<jsval> aKeys);
+  Promise formatValues(in Array<AString> aResourceIds, in Array<jsval> aKeys);
+  Promise formatValue(in Array<AString> aResourceIds, in AUTF8String aId, [optional] in jsval aArgs);
 
-  Promise formatMessages(in Array<jsval> aKeys);
-  Promise formatValues(in Array<jsval> aKeys);
-  Promise formatValue(in AUTF8String aId, [optional] in jsval aArgs);
+  AUTF8String formatValueSync(in Array<AString> aResourceIds, in AUTF8String aId, [optional] in jsval aArgs);
+  Array<AUTF8String> formatValuesSync(in Array<AString> aResourceIds, in Array<jsval> aKeys);
+  Array<jsval> formatMessagesSync(in Array<AString> aResourceIds, in Array<jsval> aKeys);
 
-  AUTF8String formatValueSync(in AUTF8String aId, [optional] in jsval aArgs);
-  Array<AUTF8String> formatValuesSync(in Array<jsval> aKeys);
-  Array<jsval> formatMessagesSync(in Array<jsval> aKeys);
-
-  void onChange(in Array<AString> aResourceIds, in bool aIsSync);
+  void onChange(in Array<AString> aResourceIds, in bool aIsSync, in jsval aGenerateBundles, in jsval aGenerateBundlesSync);
 };
 
 [scriptable, uuid(96632d26-1422-12e9-b1ce-9bb586acd241)]
