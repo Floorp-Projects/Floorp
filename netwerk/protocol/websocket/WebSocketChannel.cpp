@@ -942,12 +942,19 @@ class OutboundMessage {
 
   WsMsgType GetMsgType() const { return mMsgType; }
   int32_t Length() {
-    pString& ref = mMsg.as<pString>();
-    return ref.mValue.Length();
+    if (mMsg.is<pString>()) {
+      return mMsg.as<pString>().mValue.Length();
+    }
+
+    return mMsg.as<StreamWithLength>().mLength;
   }
   int32_t OrigLength() {
-    pString& ref = mMsg.as<pString>();
-    return mDeflated ? ref.mOrigValue.Length() : ref.mValue.Length();
+    if (mMsg.is<pString>()) {
+      pString& ref = mMsg.as<pString>();
+      return mDeflated ? ref.mOrigValue.Length() : ref.mValue.Length();
+    }
+
+    return mMsg.as<StreamWithLength>().mLength;
   }
 
   uint8_t* BeginWriting() {
