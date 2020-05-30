@@ -49,23 +49,30 @@ function logStart(name) {
   console.log(`TEST START | ${name}`);
 }
 
-function checkBundle() {
-  logStart("checkBundle");
+function checkBundles() {
+  logStart("checkBundles");
 
-  const bundle = path.join("data", "content", "activity-stream.bundle.js");
+  const ASbundle = path.join("data", "content", "activity-stream.bundle.js");
+  const AWbundle = path.join("aboutwelcome", "content", "aboutwelcome.bundle.js");
   let errors = [];
 
-  let before = readFileSync(bundle, "utf8");
+  let ASbefore = readFileSync(ASbundle, "utf8");
+  let AWbefore = readFileSync(AWbundle, "utf8");
 
   execOut("npm", ["run", "bundle"]);
 
-  let after = readFileSync(bundle, "utf8");
+  let ASafter = readFileSync(ASbundle, "utf8");
+  let AWafter = readFileSync(AWbundle, "utf8");
 
-  if (before !== after) {
-    errors.push("Bundle out of date");
+  if (ASbefore !== ASafter) {
+    errors.push("Activity Stream bundle out of date");
   }
 
-  logErrors("checkBundle", errors);
+  if (AWbefore !== AWafter) {
+    errors.push("About:welcome bundle out of date");
+  }
+
+  logErrors("checkBundles", errors);
   return errors.length === 0;
 }
 
@@ -159,7 +166,7 @@ function sasslint() {
 }
 
 const tests = {};
-const success = [checkBundle, karma, sasslint].every(
+const success = [checkBundles, karma, sasslint].every(
   t => (tests[t.name] = t())
 );
 console.log(tests);
