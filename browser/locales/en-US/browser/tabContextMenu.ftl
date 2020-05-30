@@ -53,15 +53,8 @@ move-to-end =
 move-to-new-window =
     .label = Move to New Window
     .accesskey = W
-tab-context-close-multiple-tabs =
-    .label = Close Multiple Tabs
-    .accesskey = M
-tab-context-undo-close-tabs =
-    .label =
-        { $tabCount ->
-            [1] Undo Close Tab
-           *[other] Undo Close Tabs
-        }
+undo-close-tab =
+    .label = Undo Close Tab
     .accesskey = U
 close-tab =
     .label = Close Tab
