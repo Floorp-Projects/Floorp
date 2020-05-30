@@ -8,6 +8,7 @@
 mod api;
 mod db;
 pub mod error;
+mod migration;
 mod schema;
 pub mod store;
 mod sync;

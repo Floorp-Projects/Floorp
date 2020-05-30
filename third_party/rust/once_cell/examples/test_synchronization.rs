@@ -1,11 +1,11 @@
-/// Test if the OnceCell properly synchronizes.
-/// Needs to be run in release mode.
-///
-/// We create a `Vec` with `N_ROUNDS` of `OnceCell`s. All threads will walk the `Vec`, and race to
-/// be the first one to initialize a cell.
-/// Every thread adds the results of the cells it sees to an accumulator, which is compared at the
-/// end.
-/// All threads should end up with the same result.
+//! Test if the OnceCell properly synchronizes.
+//! Needs to be run in release mode.
+//!
+//! We create a `Vec` with `N_ROUNDS` of `OnceCell`s. All threads will walk the `Vec`, and race to
+//! be the first one to initialize a cell.
+//! Every thread adds the results of the cells it sees to an accumulator, which is compared at the
+//! end.
+//! All threads should end up with the same result.
 
 use once_cell::sync::OnceCell;
 
