@@ -129,6 +129,7 @@
 #include "mozilla/net/SocketProcessParent.h"
 #include "js/Conversions.h"
 #include "mozilla/dom/SecFetch.h"
+#include "mozilla/net/TRRService.h"
 
 #ifdef MOZ_TASK_TRACER
 #  include "GeckoTaskTracer.h"
@@ -7464,6 +7465,11 @@ nsHttpChannel::OnStartRequest(nsIRequest* request) {
 
   Telemetry::Accumulate(Telemetry::HTTP_CHANNEL_ONSTART_SUCCESS,
                         NS_SUCCEEDED(mStatus));
+
+  if (gTRRService && gTRRService->IsConfirmed()) {
+    Telemetry::Accumulate(Telemetry::HTTP_CHANNEL_ONSTART_SUCCESS_TRR,
+                          TRRService::AutoDetectedKey(), NS_SUCCEEDED(mStatus));
+  }
 
   if (mRaceCacheWithNetwork) {
     LOG(
