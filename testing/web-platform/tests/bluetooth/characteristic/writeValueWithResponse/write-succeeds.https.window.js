@@ -12,36 +12,36 @@ bluetooth_test(async () => {
 
   let lastValue, lastWriteType;
   ({lastValue, lastWriteType} =
-       await fake_characteristic.getLastWrittenValue());
+      await fake_characteristic.getLastWrittenValue());
   assert_equals(lastValue, null);
   assert_equals(lastWriteType, 'none');
 
   await fake_characteristic.setNextWriteResponse(GATT_SUCCESS);
 
   const typed_array = Uint8Array.of(1, 2);
-  await characteristic.writeValue(typed_array);
+  await characteristic.writeValueWithResponse(typed_array);
   ({lastValue, lastWriteType} =
-       await fake_characteristic.getLastWrittenValue());
+    await fake_characteristic.getLastWrittenValue());
   assert_array_equals(lastValue, [1, 2]);
-  assert_equals(lastWriteType, 'default-deprecated');
+  assert_equals(lastWriteType, 'with-response');
 
   await fake_characteristic.setNextWriteResponse(GATT_SUCCESS);
 
   const array_buffer = Uint8Array.of(3, 4).buffer;
-  await characteristic.writeValue(array_buffer);
+  await characteristic.writeValueWithResponse(array_buffer);
   ({lastValue, lastWriteType} =
-       await fake_characteristic.getLastWrittenValue());
+    await fake_characteristic.getLastWrittenValue());
   assert_array_equals(lastValue, [3, 4]);
-  assert_equals(lastWriteType, 'default-deprecated');
+  assert_equals(lastWriteType, 'with-response');
 
   await fake_characteristic.setNextWriteResponse(GATT_SUCCESS);
 
   const data_view = new DataView(new ArrayBuffer(2));
   data_view.setUint8(0, 5);
   data_view.setUint8(1, 6);
-  await characteristic.writeValue(data_view);
+  await characteristic.writeValueWithResponse(data_view);
   ({lastValue, lastWriteType} =
-       await fake_characteristic.getLastWrittenValue());
+    await fake_characteristic.getLastWrittenValue());
   assert_array_equals(lastValue, [5, 6]);
-  assert_equals(lastWriteType, 'default-deprecated');
+  assert_equals(lastWriteType, 'with-response');
 }, test_desc);
