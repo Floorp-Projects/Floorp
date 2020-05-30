@@ -29,21 +29,19 @@
 [scriptable, uuid(7d468600-551f-4fe0-98c9-92a53b63ec8d)]
 interface mozILocalization : nsISupports
 {
-  void activate(in Array<AString> aResourceIds, in bool aIsSync, in bool aEager, in jsval aGenerateBundles, in jsval aGenerateBundlesSync);
+  jsval generateBundles(in Array<AString> aResourceIds, in bool aIsSync, in bool eager, in jsval aGenerateBundles, in jsval aGenerateBundlesSync);
 
-  Promise formatMessages(in Array<AString> aResourceIds, in Array<jsval> aKeys);
-  Promise formatValues(in Array<AString> aResourceIds, in Array<jsval> aKeys);
-  Promise formatValue(in Array<AString> aResourceIds, in AUTF8String aId, [optional] in jsval aArgs);
+  Promise formatMessages(in Array<AString> aResourceIds, in jsval aBundles, in Array<jsval> aKeys);
+  Promise formatValues(in Array<AString> aResourceIds, in jsval aBundles, in Array<jsval> aKeys);
+  Promise formatValue(in Array<AString> aResourceIds, in jsval aBundles, in AUTF8String aId, [optional] in jsval aArgs);
 
-  AUTF8String formatValueSync(in Array<AString> aResourceIds, in AUTF8String aId, [optional] in jsval aArgs);
-  Array<AUTF8String> formatValuesSync(in Array<AString> aResourceIds, in Array<jsval> aKeys);
-  Array<jsval> formatMessagesSync(in Array<AString> aResourceIds, in Array<jsval> aKeys);
-
-  void onChange(in Array<AString> aResourceIds, in bool aIsSync, in jsval aGenerateBundles, in jsval aGenerateBundlesSync);
+  AUTF8String formatValueSync(in Array<AString> aResourceIds, in jsval aBundles, in AUTF8String aId, [optional] in jsval aArgs);
+  Array<AUTF8String> formatValuesSync(in Array<AString> aResourceIds, in jsval aBundles, in Array<jsval> aKeys);
+  Array<jsval> formatMessagesSync(in Array<AString> aResourceIds, in jsval aBundles, in Array<jsval> aKeys);
 };
 
 [scriptable, uuid(96632d26-1422-12e9-b1ce-9bb586acd241)]
 interface mozILocalizationJSM : nsISupports
 {
-  mozILocalization getLocalization();
+  readonly attribute mozILocalization Localization;
 };
