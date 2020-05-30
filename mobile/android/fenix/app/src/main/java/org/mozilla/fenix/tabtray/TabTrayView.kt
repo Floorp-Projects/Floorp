@@ -5,9 +5,12 @@
 package org.mozilla.fenix.tabtray
 
 import android.content.Context
+import android.graphics.drawable.ColorDrawable
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.cardview.widget.CardView
+import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.tabs.TabLayout
@@ -143,6 +146,12 @@ class TabTrayView(
             tabTrayItemMenu.menuBuilder
                 .build(view.context)
                 .show(anchor = it)
+                .also { pu ->
+                    (pu.contentView as? CardView)?.setCardBackgroundColor(ContextCompat.getColor(
+                        view.context,
+                        R.color.foundation_normal_theme
+                    ))
+                }
         }
 
         fabView.new_tab_button.setOnClickListener {
