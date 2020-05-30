@@ -49,6 +49,9 @@ class TabTrayViewHolder(itemView: View) : TabViewHolder(itemView) {
      * Displays the data of the given session and notifies the given observable about events.
      */
     override fun bind(tab: Tab, isSelected: Boolean, observable: Observable<TabsTray.Observer>) {
+        // This is a hack to workaround a bug in a-c.
+        // https://github.com/mozilla-mobile/android-components/issues/7186
+        val isSelected2 = tab.id == itemView.context.components.core.store.state.selectedTabId
         this.tab = tab
 
         // Basic text
@@ -57,7 +60,7 @@ class TabTrayViewHolder(itemView: View) : TabViewHolder(itemView) {
         updateCloseButtonDescription(tab.title)
 
         // Drawables and theme
-        updateBackgroundColor(isSelected)
+        updateBackgroundColor(isSelected2)
         thumbnailView.setImageBitmap(tab.thumbnail)
         iconView?.setImageBitmap(tab.icon)
 

@@ -45,6 +45,7 @@
         android:id="@+id/tab_layout"
         android:layout_width="0dp"
         android:layout_height="80dp"
+        android:background="@color/foundation_normal_theme"
         app:tabIndicatorColor="@color/accent_normal_theme"
         app:tabIconTint="@color/tab_icon"
         app:tabRippleColor="@android:color/transparent"
