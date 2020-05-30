@@ -25,6 +25,8 @@ class DOMLocalization : public intl::Localization {
 
   explicit DOMLocalization(nsIGlobalObject* aGlobal);
 
+  void Destroy();
+
   static already_AddRefed<DOMLocalization> Constructor(
       const GlobalObject& aGlobal, const Sequence<nsString>& aResourceIds,
       const bool aSync, const BundleGenerator& aBundleGenerator,
