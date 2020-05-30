@@ -885,6 +885,7 @@ struct ScrollMetadata {
         mIsAutoDirRootContentRTL(false),
         mForceDisableApz(false),
         mResolutionUpdated(false),
+        mIsRDMTouchSimulationActive(false),
         mOverscrollBehavior() {}
 
   bool operator==(const ScrollMetadata& aOther) const {
@@ -900,6 +901,7 @@ struct ScrollMetadata {
            mIsAutoDirRootContentRTL == aOther.mIsAutoDirRootContentRTL &&
            mForceDisableApz == aOther.mForceDisableApz &&
            mResolutionUpdated == aOther.mResolutionUpdated &&
+           mIsRDMTouchSimulationActive == aOther.mIsRDMTouchSimulationActive &&
            mDisregardedDirection == aOther.mDisregardedDirection &&
            mOverscrollBehavior == aOther.mOverscrollBehavior;
   }
@@ -979,6 +981,13 @@ struct ScrollMetadata {
   void SetResolutionUpdated(bool aUpdated) { mResolutionUpdated = aUpdated; }
   bool IsResolutionUpdated() const { return mResolutionUpdated; }
 
+  void SetIsRDMTouchSimulationActive(bool aValue) {
+    mIsRDMTouchSimulationActive = aValue;
+  }
+  bool GetIsRDMTouchSimulationActive() const {
+    return mIsRDMTouchSimulationActive;
+  }
+
   // For more details about the concept of a disregarded direction, refer to the
   // code which defines mDisregardedDirection.
   Maybe<ScrollDirection> GetDisregardedDirection() const {
@@ -1054,6 +1063,12 @@ struct ScrollMetadata {
   // originated by the main thread. Plays a similar role for the resolution as
   // FrameMetrics::mScrollUpdateType) does for the scroll offset.
   bool mResolutionUpdated : 1;
+
+  // Whether or not RDM and touch simulation are active for this document.
+  // It's important to note that if RDM is active then this field will be
+  // true for the content document but NOT the chrome document containing
+  // the browser UI and RDM controls.
+  bool mIsRDMTouchSimulationActive : 1;
 
   // The disregarded direction means the direction which is disregarded anyway,
   // even if the scroll frame overflows in that direction and the direction is
