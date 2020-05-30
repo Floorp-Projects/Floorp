@@ -667,25 +667,12 @@ class UrlbarInput {
           // we use to make decisions. Because we are directly asking for a
           // search here, bypassing the docShell, we need invoke the same check
           // ourselves. See also URIFixupChild.jsm and keyword-uri-fixup.
-          let flags =
-            Ci.nsIURIFixup.FIXUP_FLAG_FIX_SCHEME_TYPOS |
-            Ci.nsIURIFixup.FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP;
-          if (this.isPrivate) {
-            flags |= Ci.nsIURIFixup.FIXUP_FLAG_PRIVATE_CONTEXT;
-          }
           // Don't interrupt the load action in case of errors.
-          try {
-            let fixupInfo = Services.uriFixup.getFixupURIInfo(
-              originalUntrimmedValue.trim(),
-              flags
-            );
+          let fixupInfo = this._getURIFixupInfo(originalUntrimmedValue.trim());
+          if (fixupInfo) {
             this.window.gKeywordURIFixup.check(
               this.window.gBrowser.selectedBrowser,
               fixupInfo
-            );
-          } catch (ex) {
-            Cu.reportError(
-              `An error occured while trying to fixup "${originalUntrimmedValue.trim()}": ${ex}`
             );
           }
         }
@@ -848,7 +835,23 @@ class UrlbarInput {
         let { value, selectionStart, selectionEnd } = result.autofill;
         this._autofillValue(value, selectionStart, selectionEnd);
       } else {
-        this.value = this._getValueFromResult(result);
+        // If the url is trimmed but it's invalid (for example it has a non
+        // whitelisted single word host, or an unknown domain suffix), trimming
+        // it would end up executing a search instead of visiting it.
+        let allowTrim = true;
+        if (
+          result.type == UrlbarUtils.RESULT_TYPE.URL &&
+          UrlbarPrefs.get("trimURLs") &&
+          result.payload.url.startsWith(BrowserUtils.trimURLProtocol)
+        ) {
+          let fixupInfo = this._getURIFixupInfo(
+            BrowserUtils.trimURL(result.payload.url)
+          );
+          if (fixupInfo?.keywordAsSent) {
+            allowTrim = false;
+          }
+        }
+        this._setValue(this._getValueFromResult(result), allowTrim);
       }
     }
     this._resultForCurrentValue = result;
@@ -1209,6 +1212,23 @@ class UrlbarInput {
   }
 
   // Private methods below.
+
+  _getURIFixupInfo(searchString) {
+    let flags =
+      Ci.nsIURIFixup.FIXUP_FLAG_FIX_SCHEME_TYPOS |
+      Ci.nsIURIFixup.FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP;
+    if (this.isPrivate) {
+      flags |= Ci.nsIURIFixup.FIXUP_FLAG_PRIVATE_CONTEXT;
+    }
+    try {
+      return Services.uriFixup.getFixupURIInfo(searchString, flags);
+    } catch (ex) {
+      Cu.reportError(
+        `An error occured while trying to fixup "${searchString}": ${ex}`
+      );
+    }
+    return null;
+  }
 
   _afterTabSelectAndFocusChange() {
     // We must have seen both events to proceed safely.
@@ -1579,9 +1599,7 @@ class UrlbarInput {
   }
 
   /**
-   * Shortens the given value, usually by removing http:// and trailing slashes,
-   * such that calling nsIURIFixup::createFixupURI with the result will produce
-   * the same URI.
+   * Shortens the given value, usually by removing http:// and trailing slashes.
    *
    * @param {string} val
    *   The string to be trimmed if it appears to be URI
@@ -1999,20 +2017,15 @@ class UrlbarInput {
     // invalid parts, like the origin, then editing and confirming the trimmed
     // value would execute a search instead of visiting the typed url.
     if (this.value != this._untrimmedValue) {
-      // It doesn't really matter which search engine is used here, thus it's ok
-      // to ignore whether we are in a private context. The keyword lookup will
-      // also distinguish between whitelisted and not whitelisted hosts.
       let untrim = false;
-      try {
-        let fixedSpec = Services.uriFixup.createFixupURI(
-          this.value,
-          Services.uriFixup.FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP |
-            Services.uriFixup.FIXUP_FLAG_FIX_SCHEME_TYPOS
-        ).displaySpec;
-        let expectedSpec = Services.io.newURI(this._untrimmedValue).displaySpec;
-        untrim = fixedSpec != expectedSpec;
-      } catch (ex) {
-        untrim = true;
+      let fixedURI = this._getURIFixupInfo(this.value)?.preferredURI;
+      if (fixedURI) {
+        try {
+          let expectedURI = Services.io.newURI(this._untrimmedValue);
+          untrim = fixedURI.displaySpec != expectedURI.displaySpec;
+        } catch (ex) {
+          untrim = true;
+        }
       }
       if (untrim) {
         this.inputField.value = this._focusUntrimmedValue = this._untrimmedValue;

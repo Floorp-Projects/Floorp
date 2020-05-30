@@ -815,10 +815,15 @@ var BrowserUtils = {
    * @param {string} aURL The URL to trim.
    * @returns {string} The trimmed string.
    */
+  get trimURLProtocol() {
+    return "http://";
+  },
   trimURL(aURL) {
     let url = this.removeSingleTrailingSlashFromURL(aURL);
     // Remove "http://" prefix.
-    return url.startsWith("http://") ? url.substring(7) : url;
+    return url.startsWith(this.trimURLProtocol)
+      ? url.substring(this.trimURLProtocol.length)
+      : url;
   },
 
   recordSiteOriginTelemetry(aWindows, aIsGeckoView) {

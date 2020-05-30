@@ -1169,7 +1169,7 @@ class UrlbarView {
     this._selectedElement = item;
 
     if (updateInput) {
-      this.input.setValueFromResult(item && item.result);
+      this.input.setValueFromResult(item?.result);
     }
   }
 
