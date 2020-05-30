@@ -2179,6 +2179,10 @@ addons:
     type: event
     description: |
       A user interacted with an installed add-on in the toolbar menu
+    extra_keys:
+      addon_id:
+        description: |
+          The id of the add-on that was interacted with in the toolbar menu
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/6174
     data_reviews:
@@ -2209,6 +2213,32 @@ addons:
       - https://github.com/mozilla-mobile/fenix/issues/6174
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/8318
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-09-01"
+  installed_addons:
+    type: string_list
+    description: |
+      A list of all installed add-ons on the device.
+    send_in_pings:
+      - metrics
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/8920
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/11080
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-09-01"
+  enabled_addons:
+    type: string_list
+    description: |
+      A list of all enabled add-ons on the device.
+    send_in_pings:
+      - metrics
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/8920
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/11080
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-09-01"

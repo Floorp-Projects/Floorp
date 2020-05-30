@@ -166,7 +166,6 @@ sealed class Event {
     object PocketTopSiteRemoved : Event()
     object FennecToFenixMigrated : Event()
     object AddonsOpenInSettings : Event()
-    object AddonsOpenInToolbarMenu : Event()
     object VoiceSearchTapped : Event()
     object SearchWidgetCFRDisplayed : Event()
     object SearchWidgetCFRCanceled : Event()
@@ -207,6 +206,11 @@ sealed class Event {
             // If the event is not in the allow list, we don't want to track it
             require(booleanPreferenceTelemetryAllowList.contains(preferenceKey))
         }
+    }
+
+    data class AddonsOpenInToolbarMenu(val addonId: String) : Event() {
+        override val extras: Map<Addons.openAddonInToolbarMenuKeys, String>?
+            get() = hashMapOf(Addons.openAddonInToolbarMenuKeys.addonId to addonId)
     }
 
     data class TipDisplayed(val identifier: String) : Event() {
@@ -442,7 +446,9 @@ private fun Fact.toEvent(): Event? = when (Pair(component, item)) {
     Component.BROWSER_TOOLBAR to ToolbarFacts.Items.MENU -> {
         metadata?.get("customTab")?.let { Event.CustomTabsMenuOpened }
     }
-    Component.BROWSER_MENU to BrowserMenuFacts.Items.WEB_EXTENSION_MENU_ITEM -> Event.AddonsOpenInToolbarMenu
+    Component.BROWSER_MENU to BrowserMenuFacts.Items.WEB_EXTENSION_MENU_ITEM -> {
+        metadata?.get("id")?.let { Event.AddonsOpenInToolbarMenu(it.toString()) }
+    }
     Component.FEATURE_CUSTOMTABS to CustomTabsFacts.Items.CLOSE -> Event.CustomTabsClosed
     Component.FEATURE_CUSTOMTABS to CustomTabsFacts.Items.ACTION_BUTTON -> Event.CustomTabsActionTapped
 
@@ -475,12 +481,14 @@ private fun Fact.toEvent(): Event? = when (Pair(component, item)) {
     Component.SUPPORT_WEBEXTENSIONS to WebExtensionFacts.Items.WEB_EXTENSIONS_INITIALIZED -> {
         metadata?.get("installed")?.let { installedAddons ->
             if (installedAddons is List<*>) {
+                Addons.installedAddons.set(installedAddons.map { it.toString() })
                 Addons.hasInstalledAddons.set(installedAddons.size > 0)
             }
         }
 
         metadata?.get("enabled")?.let { enabledAddons ->
             if (enabledAddons is List<*>) {
+                Addons.enabledAddons.set(enabledAddons.map { it.toString() })
                 Addons.hasEnabledAddons.set(enabledAddons.size > 0)
             }
         }

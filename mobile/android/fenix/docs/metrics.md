@@ -53,7 +53,7 @@ The following metrics are added to the ping:
 | about_page.privacy_notice_tapped |[event](https://mozilla.github.io/glean/book/user/metrics/event.html) |A user tapped on "Privacy notice" item from About page  |[1](https://github.com/mozilla-mobile/fenix/pull/8047)||2020-09-01 |
 | about_page.rights_tapped |[event](https://mozilla.github.io/glean/book/user/metrics/event.html) |A user tapped on "Know your rights" item from About page  |[1](https://github.com/mozilla-mobile/fenix/pull/8047)||2020-09-01 |
 | about_page.support_tapped |[event](https://mozilla.github.io/glean/book/user/metrics/event.html) |A user tapped on "Support" item from About page  |[1](https://github.com/mozilla-mobile/fenix/pull/8047)||2020-09-01 |
-| addons.open_addon_in_toolbar_menu |[event](https://mozilla.github.io/glean/book/user/metrics/event.html) |A user interacted with an installed add-on in the toolbar menu  |[1](https://github.com/mozilla-mobile/fenix/pull/8318)||2020-09-01 |
+| addons.open_addon_in_toolbar_menu |[event](https://mozilla.github.io/glean/book/user/metrics/event.html) |A user interacted with an installed add-on in the toolbar menu  |[1](https://github.com/mozilla-mobile/fenix/pull/8318)|<ul><li>addon_id: The id of the add-on that was interacted with in the toolbar menu </li></ul>|2020-09-01 |
 | addons.open_addons_in_settings |[event](https://mozilla.github.io/glean/book/user/metrics/event.html) |A user accessed "Add-ons" from the Settings  |[1](https://github.com/mozilla-mobile/fenix/pull/8318)||2020-09-01 |
 | app_theme.dark_theme_selected |[event](https://mozilla.github.io/glean/book/user/metrics/event.html) |A user selected Dark Theme  |[1](https://github.com/mozilla-mobile/fenix/pull/7968)|<ul><li>source: The source from where dark theme was selected. The source can be 'SETTINGS' or 'ONBOARDING' </li></ul>|2020-09-01 |
 | bookmarks_management.copied |[event](https://mozilla.github.io/glean/book/user/metrics/event.html) |A user copied a bookmark.  |[1](https://github.com/mozilla-mobile/fenix/pull/1708)||2020-09-01 |
@@ -222,8 +222,10 @@ The following metrics are added to the ping:
 
 | Name | Type | Description | Data reviews | Extras | Expiration |
 | --- | --- | --- | --- | --- | --- |
+| addons.enabled_addons |[string_list](https://mozilla.github.io/glean/book/user/metrics/string_list.html) |A list of all enabled add-ons on the device.  |[1](https://github.com/mozilla-mobile/fenix/pull/11080)||2020-09-01 |
 | addons.has_enabled_addons |[boolean](https://mozilla.github.io/glean/book/user/metrics/boolean.html) |Whether or not the user has enabled add-ons on the device.  |[1](https://github.com/mozilla-mobile/fenix/pull/8318)||2020-09-01 |
 | addons.has_installed_addons |[boolean](https://mozilla.github.io/glean/book/user/metrics/boolean.html) |Whether or not the user has installed add-ons on the device.  |[1](https://github.com/mozilla-mobile/fenix/pull/8318)||2020-09-01 |
+| addons.installed_addons |[string_list](https://mozilla.github.io/glean/book/user/metrics/string_list.html) |A list of all installed add-ons on the device.  |[1](https://github.com/mozilla-mobile/fenix/pull/11080)||2020-09-01 |
 | browser.search.ad_clicks |[labeled_counter](https://mozilla.github.io/glean/book/user/metrics/labeled_counters.html) |Records clicks of adverts on SERP pages. The key format is ‘<provider-name>’.  |[1](https://github.com/mozilla-mobile/fenix/pull/10112)||2020-09-01 |
 | browser.search.in_content |[labeled_counter](https://mozilla.github.io/glean/book/user/metrics/labeled_counters.html) |Records the type of interaction a user has on SERP pages.  |[1](https://github.com/mozilla-mobile/fenix/pull/10167)||2020-09-01 |
 | browser.search.with_ads |[labeled_counter](https://mozilla.github.io/glean/book/user/metrics/labeled_counters.html) |Records counts of SERP pages with adverts displayed. The key format is ‘<provider-name>’.  |[1](https://github.com/mozilla-mobile/fenix/pull/10112)||2020-09-01 |
