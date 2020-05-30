@@ -64,6 +64,10 @@ function webNavigation() {
     return docShell.QueryInterface(Ci.nsIWebNavigation);
 }
 
+function webProgress() {
+    return docShell.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIWebProgress);
+}
+
 function windowUtilsForWindow(w) {
     return w.windowUtils;
 }
@@ -101,6 +105,27 @@ function PaintWaitFinishedListener(event)
     }
 }
 
+var progressListener = {
+  onStateChange(webprogress, request, flags, status) {
+    let uri;
+    try {
+      request.QueryInterface(Ci.nsIChannel);
+      uri = request.originalURI.spec;
+    } catch (ex) {
+      return;
+    }
+    const WPL = Ci.nsIWebProgressListener;
+    const endFlags = WPL.STATE_STOP | WPL.STATE_IS_WINDOW | WPL.STATE_IS_NETWORK;
+    if ((flags & endFlags) == endFlags) {
+      OnDocumentLoad(uri);
+    }
+  },
+  QueryInterface: ChromeUtils.generateQI([
+    Ci.nsIWebProgressListener,
+    Ci.nsISupportsWeakReference,
+  ]),
+};
+
 function OnInitialLoad()
 {
     removeEventListener("load", OnInitialLoad, true);
@@ -117,7 +142,7 @@ function OnInitialLoad()
     var initInfo = SendContentReady();
     gBrowserIsRemote = initInfo.remote;
 
-    addEventListener("load", OnDocumentLoad, true);
+    webProgress().addProgressListener(progressListener, Ci.nsIWebProgress.NOTIFY_STATE_WINDOW);
 
     addEventListener("MozPaintWait", PaintWaitListener, true);
     addEventListener("MozPaintWaitFinished", PaintWaitFinishedListener, true);
@@ -1029,15 +1054,10 @@ function WaitForTestEnd(contentRootElement, inPrintMode, spellCheckedElements, f
     });
 }
 
-function OnDocumentLoad(event)
+function OnDocumentLoad(uri)
 {
-    var currentDoc = content.document;
-    if (event.target != currentDoc)
-        // Ignore load events for subframes.
-        return;
-
     if (gClearingForAssertionCheck) {
-        if (currentDoc.location.href == BLANK_URL_FOR_CLEARING) {
+        if (uri == BLANK_URL_FOR_CLEARING) {
             DoAssertionCheck();
             return;
         }
@@ -1046,17 +1066,17 @@ function OnDocumentLoad(event)
         // attempt of loading blank page fails. In this case we should retry
         // loading the blank page.
         LogInfo("Retry loading a blank page");
-        LoadURI(BLANK_URL_FOR_CLEARING);
+        setTimeout(LoadURI, 0, BLANK_URL_FOR_CLEARING);
         return;
     }
 
-    if (currentDoc.location.href != gCurrentURL) {
+    if (uri != gCurrentURL) {
         LogInfo("OnDocumentLoad fired for previous document");
         // Ignore load events for previous documents.
         return;
     }
-
-    let ourURL = currentDoc.location.href;
+    
+    var currentDoc = content && content.document;
 
     // Collect all editable, spell-checked elements.  It may be the case that
     // not all the elements that match this selector will be spell checked: for
@@ -1069,7 +1089,7 @@ function OnDocumentLoad(event)
         'textarea:not([spellcheck="false"]),' +
         'input[spellcheck]:-moz-any([spellcheck=""],[spellcheck="true"]),' +
         '*[contenteditable]:-moz-any([contenteditable=""],[contenteditable="true"])';
-    var spellCheckedElements = currentDoc.querySelectorAll(querySelector);
+    var spellCheckedElements = currentDoc ? currentDoc.querySelectorAll(querySelector) : [];
 
     var contentRootElement = currentDoc ? currentDoc.documentElement : null;
     currentDoc = null;
@@ -1109,7 +1129,7 @@ function OnDocumentLoad(event)
         // we should wait, since this might trigger dispatching of
         // MozPaintWait events and make shouldWaitForExplicitPaintWaiters() true
         // below.
-        let painted = await SendInitCanvasWithSnapshot(ourURL);
+        let painted = await SendInitCanvasWithSnapshot(uri);
 
         gExplicitPendingPaintsCompleteHook = null;
 
@@ -1125,11 +1145,11 @@ function OnDocumentLoad(event)
             !painted) {
             LogInfo("AfterOnLoadScripts belatedly entering WaitForTestEnd");
             // Go into reftest-wait mode belatedly.
-            WaitForTestEnd(contentRootElement, inPrintMode, [], ourURL);
+            WaitForTestEnd(contentRootElement, inPrintMode, [], uri);
         } else {
             CheckLayerAssertions(contentRootElement);
             CheckForProcessCrashExpectation(contentRootElement);
-            RecordResult(ourURL);
+            RecordResult(uri);
         }
     }
 
@@ -1140,7 +1160,7 @@ function OnDocumentLoad(event)
         // unsuppressed, after the onload event has finished dispatching.
         gFailureReason = "timed out waiting for test to complete (trying to get into WaitForTestEnd)";
         LogInfo("OnDocumentLoad triggering WaitForTestEnd");
-        setTimeout(function () { WaitForTestEnd(contentRootElement, inPrintMode, spellCheckedElements, ourURL); }, 0);
+        setTimeout(function () { WaitForTestEnd(contentRootElement, inPrintMode, spellCheckedElements, uri); }, 0);
     } else {
         if (doPrintMode(contentRootElement)) {
             LogInfo("OnDocumentLoad setting up print mode");
