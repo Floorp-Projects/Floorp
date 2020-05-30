@@ -63,7 +63,9 @@ JSObject* DOMLocalization::WrapObject(JSContext* aCx,
   return DOMLocalization_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-DOMLocalization::~DOMLocalization() { DisconnectMutations(); }
+void DOMLocalization::Destroy() { DisconnectMutations(); }
+
+DOMLocalization::~DOMLocalization() { Destroy(); }
 
 /**
  * DOMLocalization API
