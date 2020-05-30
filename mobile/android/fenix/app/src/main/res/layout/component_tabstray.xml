@@ -85,7 +85,7 @@
         android:id="@+id/divider"
         android:layout_width="0dp"
         android:layout_height="1dp"
-        android:background="?tabTrayItemDivider"
+        android:background="@color/tab_tray_item_divider_normal_theme"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/tab_layout" />
@@ -99,7 +99,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/tab_layout"
+        app:layout_constraintTop_toBottomOf="@+id/divider"
         mozac:tabsTrayItemBackgroundColor="@color/foundation_normal_theme"
         mozac:tabsTrayItemTextColor="@color/tab_tray_item_text_normal_theme"
         mozac:tabsTraySelectedItemBackgroundColor="@color/tab_tray_item_selected_background_normal_theme"
