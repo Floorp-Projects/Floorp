@@ -717,15 +717,8 @@ SearchService.prototype = {
     let searchProvider =
       extension.manifest.chrome_settings_overrides.search_provider;
     let engine = this._engines.get(searchProvider.name);
-    if (!engine || !engine.isAppProvided || engine.hidden) {
-      // If the engine is not application provided, then we shouldn't simply
-      // set default to it.
-      // If the engine is application provided, but hidden, then we don't
-      // switch to it, nor do we try to install it.
-      return {
-        canChangeToAppProvided: false,
-        canInstallEngine: !engine?.hidden,
-      };
+    if (!engine || !engine.isAppProvided) {
+      return false;
     }
     let params = this.getEngineParams(
       extension,
@@ -743,10 +736,7 @@ SearchService.prototype = {
     ) {
       // Don't allow an extension to set the default if it is already the default.
       if (this.defaultEngine.name == searchProvider.name) {
-        return {
-          canChangeToAppProvided: false,
-          canInstallEngine: false,
-        };
+        return false;
       }
       if (
         !(await this._defaultOverrideAllowlist.canOverride(
@@ -760,10 +750,7 @@ SearchService.prototype = {
         );
         // We don't allow overriding the engine in this case, but we can allow
         // the extension to change the default engine.
-        return {
-          canChangeToAppProvided: true,
-          canInstallEngine: false,
-        };
+        return true;
       }
       // We're ok to override.
       engine.overrideWithExtension(params);
@@ -771,10 +758,7 @@ SearchService.prototype = {
         "Allowing default engine to be set to app-provided and overridden.",
         extension.id
       );
-      return {
-        canChangeToAppProvided: true,
-        canInstallEngine: false,
-      };
+      return true;
     }
 
     if (
@@ -789,16 +773,10 @@ SearchService.prototype = {
         "Re-enabling overriding of core extension by",
         extension.id
       );
-      return {
-        canChangeToAppProvided: true,
-        canInstallEngine: false,
-      };
+      return true;
     }
 
-    return {
-      canChangeToAppProvided: false,
-      canInstallEngine: false,
-    };
+    return false;
   },
 
   /**

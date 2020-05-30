@@ -63,48 +63,6 @@ add_task(async function test_extension_setting_default_engine() {
   );
 });
 
-/* This tests what happens when the engine you're setting it to is hidden. */
-add_task(async function test_extension_setting_default_engine_hidden() {
-  let engine = Services.search.getEngineByName("DuckDuckGo");
-  engine.hidden = true;
-
-  let ext1 = ExtensionTestUtils.loadExtension({
-    manifest: {
-      chrome_settings_overrides: {
-        search_provider: {
-          name: "DuckDuckGo",
-          search_url: "https://example.com/?q={searchTerms}",
-          is_default: true,
-        },
-      },
-    },
-    useAddonManager: "temporary",
-  });
-
-  await ext1.startup();
-  await AddonTestUtils.waitForSearchProviderStartup(ext1);
-
-  is(
-    (await Services.search.getDefault()).name,
-    defaultEngineName,
-    "Default engine should have remained as the default"
-  );
-  is(
-    ExtensionSettingsStore.getSetting("default_search", "defaultSearch"),
-    null,
-    "The extension should not have been recorded as having set the default search"
-  );
-
-  await ext1.unload();
-
-  is(
-    (await Services.search.getDefault()).name,
-    defaultEngineName,
-    `Default engine is ${defaultEngineName}`
-  );
-  engine.hidden = false;
-});
-
 // Test the popup displayed when trying to add a non-built-in default
 // search engine.
 add_task(async function test_extension_setting_default_engine_external() {
