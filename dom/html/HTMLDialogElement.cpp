@@ -86,7 +86,8 @@ void HTMLDialogElement::ShowModal(ErrorResult& aError) {
   }
 
   if (Open()) {
-    aError.ThrowInvalidStateError("Dialog element already has an 'open' attribute");
+    aError.ThrowInvalidStateError(
+        "Dialog element already has an 'open' attribute");
     return;
   }
 

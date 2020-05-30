@@ -95,8 +95,7 @@ nsresult net_GetFileFromURLSpec(const nsACString& aURL, nsIFile** result) {
   // remove leading '\'
   if (path.CharAt(0) == '\\') path.Cut(0, 1);
 
-  if (IsUtf8(path))
-    rv = localFile->InitWithPath(NS_ConvertUTF8toUTF16(path));
+  if (IsUtf8(path)) rv = localFile->InitWithPath(NS_ConvertUTF8toUTF16(path));
   // XXX In rare cases, a valid UTF-8 string can be valid as a native
   // encoding (e.g. 0xC5 0x83 is valid both as UTF-8 and Windows-125x).
   // However, the chance is very low that a meaningful word in a legacy
