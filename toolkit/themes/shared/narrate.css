@@ -4,7 +4,9 @@
 
 /* Avoid adding ID selector rules in this style sheet, since they could
  * inadvertently match elements in the article content. */
-
+:root {
+  --blue-60: #0060df;
+}
 .narrating {
   position: relative;
   z-index: 1;

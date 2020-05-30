@@ -10,6 +10,9 @@ const { ReaderMode } = ChromeUtils.import(
   "resource://gre/modules/ReaderMode.jsm"
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
 
 ChromeUtils.defineModuleGetter(
   this,
@@ -60,6 +63,7 @@ var AboutReader = function(actor, articlePromise) {
   if (isAppLocaleRTL) {
     doc.dir = "rtl";
   }
+  doc.documentElement.setAttribute("platform", AppConstants.platform);
 
   this._actor = actor;
 
@@ -139,6 +143,7 @@ var AboutReader = function(actor, articlePromise) {
   let colorSchemeOptions = colorSchemeValues.map(value => {
     return {
       name: gStrings.GetStringFromName("aboutReader.colorScheme." + value),
+      groupName: "color-scheme",
       value,
       itemClass: value + "-button",
     };
@@ -156,19 +161,19 @@ var AboutReader = function(actor, articlePromise) {
   let styleButton = this._doc.querySelector(".style-button");
   this._setButtonTip(styleButton, "aboutReader.toolbar.typeControls");
 
-  let fontTypeSample = gStrings.GetStringFromName("aboutReader.fontTypeSample");
+  // See bug 1637089.
+  // let fontTypeSample = gStrings.GetStringFromName("aboutReader.fontTypeSample");
+
   let fontTypeOptions = [
     {
-      name: fontTypeSample,
-      description: gStrings.GetStringFromName(
-        "aboutReader.fontType.sans-serif"
-      ),
+      name: gStrings.GetStringFromName("aboutReader.fontType.sans-serif"),
+      groupName: "font-type",
       value: "sans-serif",
       itemClass: "sans-serif-button",
     },
     {
-      name: fontTypeSample,
-      description: gStrings.GetStringFromName("aboutReader.fontType.serif"),
+      name: gStrings.GetStringFromName("aboutReader.fontType.serif"),
+      groupName: "font-type",
       value: "serif",
       itemClass: "serif-button",
     },
@@ -978,63 +983,38 @@ AboutReader.prototype = {
     let doc = this._doc;
     let segmentedButton = doc.getElementsByClassName(id)[0];
 
-    for (let i = 0; i < options.length; i++) {
-      let option = options[i];
-
-      let item = doc.createElement("button");
-
+    for (let option of options) {
       let radioButton = doc.createElement("input");
+      radioButton.id = "radio-item" + option.itemClass;
       radioButton.type = "radio";
       radioButton.classList.add("radio-button");
-      radioButton.id = "radio-item-" + option.itemClass;
-      item.appendChild(radioButton);
+      radioButton.name = option.groupName;
+      segmentedButton.appendChild(radioButton);
 
-      if (option.itemClass !== undefined) {
-        item.classList.add(option.itemClass);
-      }
-
-      if (option.description !== undefined) {
-        let description = doc.createElement("label");
-        description.textContent = option.description;
-        description.classList.add("description");
-        description.htmlFor = "radio-item-" + option.itemClass;
-        item.appendChild(description);
-
-        let span = doc.createElement("span");
-        span.classList.add("name");
-        item.appendChild(span);
-      } else {
-        let name = doc.createElement("label");
-        name.textContent = option.name;
-        name.classList.add("description");
-        name.htmlFor = "radio-item-" + option.itemClass;
-        item.appendChild(name);
-      }
+      let item = doc.createElement("label");
+      item.textContent = option.name;
+      item.htmlFor = radioButton.id;
+      item.classList.add(option.itemClass);
 
       segmentedButton.appendChild(item);
 
-      item.addEventListener(
-        "click",
+      radioButton.addEventListener(
+        "input",
         function(aEvent) {
           if (!aEvent.isTrusted) {
             return;
           }
 
-          aEvent.stopPropagation();
-
           // Just pass the ID of the button as an extra and hope the ID doesn't change
           // unless the context changes
           UITelemetry.addEvent("action.1", "button", null, id);
 
-          let items = segmentedButton.children;
-          for (let j = items.length - 1; j >= 0; j--) {
-            items[j].classList.remove("selected");
-            let itemRadioButton = items[j].firstElementChild;
-            itemRadioButton.checked = false;
+          let labels = segmentedButton.children;
+          for (let label of labels) {
+            label.removeAttribute("checked");
           }
 
-          item.classList.add("selected");
-          radioButton.checked = true;
+          aEvent.target.nextElementSibling.setAttribute("checked", "true");
           callback(option.value);
         },
         true
@@ -1042,7 +1022,7 @@ AboutReader.prototype = {
 
       if (option.value === initialValue) {
         radioButton.checked = true;
-        item.classList.add("selected");
+        item.setAttribute("checked", "true");
       }
     }
   },
