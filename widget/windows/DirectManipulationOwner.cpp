@@ -383,6 +383,8 @@ void DManipEventHandler::SendPinch(Phase aPhase, float aScale) {
 
   POINT cursor_pos;
   ::GetCursorPos(&cursor_pos);
+  HWND wnd = static_cast<HWND>(mWindow ? mWindow->GetNativeData(NS_NATIVE_WINDOW) : nullptr);
+  ::ScreenToClient(wnd, &cursor_pos);
   ScreenPoint position = {(float)cursor_pos.x, (float)cursor_pos.y};
 
   PinchGestureInput event{
@@ -441,6 +443,8 @@ void DManipEventHandler::SendPan(Phase aPhase, float x, float y,
 
   POINT cursor_pos;
   ::GetCursorPos(&cursor_pos);
+  HWND wnd = static_cast<HWND>(mWindow ? mWindow->GetNativeData(NS_NATIVE_WINDOW) : nullptr);
+  ::ScreenToClient(wnd, &cursor_pos);
   ScreenPoint position = {(float)cursor_pos.x, (float)cursor_pos.y};
 
   PanGestureInput event{panGestureType, eventIntervalTime, eventTimeStamp,
