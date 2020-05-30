@@ -1345,11 +1345,7 @@ mozilla::ipc::IPCResult ContentChild::RecvRequestMemoryReport(
     const bool& aMinimizeMemoryUsage,
     const Maybe<mozilla::ipc::FileDescriptor>& aDMDFile) {
   nsCString process;
-  if (aAnonymize) {
-    GetProcessName(process);
-  } else {
-    process = NS_ConvertUTF16toUTF8(GetRemoteType());
-  }
+  GetProcessName(process);
   AppendProcessId(process);
 
   MemoryReportRequestClient::Start(
