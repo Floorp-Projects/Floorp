@@ -24,7 +24,7 @@ SimpleTest.waitForExplicitFinish();
 async function snapshotFirst()
 {
   var iframeelem = document.getElementById('test-iframe');
-  first = await snapshotWindow(iframeelem, false);
+  first = await SpecialPowers.wrap(snapshotWindow(iframeelem, false));
 
   iframeelem.onload = snapshotSecond;
   iframeelem.src = "http://example.com/tests/image/test/mochitest/bug671906-iframe.html";
@@ -33,7 +33,7 @@ async function snapshotFirst()
 async function snapshotSecond()
 {
   var iframeelem = document.getElementById('test-iframe');
-  second = await snapshotWindow(iframeelem, false);
+  second = await SpecialPowers.wrap(snapshotWindow(iframeelem, false));
 
   // We must have loaded the image again, because the principals for the
   // loading document are different.
@@ -47,7 +47,7 @@ async function snapshotSecond()
 async function snapshotThird()
 {
   var iframeelem = document.getElementById('test-iframe');
-  third = await snapshotWindow(iframeelem, false);
+  third = await SpecialPowers.wrap(snapshotWindow(iframeelem, false));
 
   // We must have loaded the image again, because the principals for the
   // loading document are different.

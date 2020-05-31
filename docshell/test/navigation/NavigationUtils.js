@@ -146,6 +146,7 @@ async function waitForFinishedFrames(numFrames) {
     await delay(500);
 
     for (let win of SpecialPowers.getGroupTopLevelWindows(window)) {
+      win = SpecialPowers.unwrap(win);
       await searchForFinishedFrames(win);
     }
   }
@@ -158,6 +159,7 @@ async function waitForFinishedFrames(numFrames) {
 async function getFramesByName(name) {
   let results = [];
   for (let win of SpecialPowers.getGroupTopLevelWindows(window)) {
+    win = SpecialPowers.unwrap(win);
     if (
       (await SpecialPowers.spawn(win, [], () => this.content.name)) === name
     ) {
@@ -170,6 +172,7 @@ async function getFramesByName(name) {
 
 async function cleanupWindows() {
   for (let win of SpecialPowers.getGroupTopLevelWindows(window)) {
+    win = SpecialPowers.unwrap(win);
     if (win.closed) {
       continue;
     }

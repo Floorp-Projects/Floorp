@@ -46,7 +46,7 @@ function tryChromeLoad() {
 }
 
 function tryComponentsClasses() {
-    return SpecialPowers.Components.classes["@mozilla.org/dummy;1"];
+    return SpecialPowers.unwrap(SpecialPowers.Cc)["@mozilla.org/dummy;1"];
 }
 
 

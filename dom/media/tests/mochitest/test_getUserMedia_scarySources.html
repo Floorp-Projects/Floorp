@@ -13,7 +13,7 @@ const { Services } = SpecialPowers.Cu.import('resource://gre/modules/Services.js
 
 let observe = topic => new Promise(r => Services.obs.addObserver(function o(...args) {
   Services.obs.removeObserver(o, topic);
-  r(args);
+  r(args.map(x => SpecialPowers.wrap(x)));
 }, topic));
 
 let getDevices = async constraints => {
@@ -22,9 +22,12 @@ let getDevices = async constraints => {
     observe("getUserMedia:request")
   ]);
   let window = Services.wm.getOuterWindowWithId(windowID);
-  let devices = await new Promise((resolve, reject) =>
+  let devices = await new Promise((resolve, reject) => {
+      resolve = SpecialPowers.wrapCallback(resolve);
+      reject = SpecialPowers.wrapCallback(reject);
       window.navigator.mozGetUserMediaDevices({}, resolve, reject,
-                                              innerWindowID, callID));
+                                              innerWindowID, callID);
+  });
   return devices.map(SpecialPowers.wrapCallback(d => d.QueryInterface(Ci.nsIMediaDevice)));
 };
 
@@ -34,7 +37,7 @@ runTest(async () => {
                   ["media.navigator.permission.force", true]);
   let devices = await getDevices({video: { mediaSource: "window" }});
   ok(devices.length, "Found one or more windows.");
-  devices = devices.filter(d => d.scary);
+  devices = Array.prototype.filter.call(devices, d => d.scary);
   ok(devices.length, "Found one or more scary windows (our own counts).");
   devices.filter(d => d.name.includes("MochiTest"));
   ok(devices.length,
@@ -43,7 +46,7 @@ runTest(async () => {
   devices = await getDevices({video: { mediaSource: "screen" }});
   let numScreens = devices.length;
   ok(numScreens, "Found one or more screens.");
-  devices = devices.filter(d => d.scary);
+  devices = Array.prototype.filter.call(devices, d => d.scary);
   is(devices.length, numScreens, "All screens are scary.");
 });
 

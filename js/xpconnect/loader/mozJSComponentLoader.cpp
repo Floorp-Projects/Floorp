@@ -618,14 +618,6 @@ bool mozJSComponentLoader::ReuseGlobal(nsIURI* aURI) {
     return false;
   }
 
-  // Some SpecialPowers jsms call Cu.forcePermissiveCOWs(),
-  // which sets a per-compartment flag that disables certain
-  // security wrappers, so don't use the shared global for them
-  // to avoid breaking tests.
-  if (FindInReadable(NS_LITERAL_CSTRING("resource://specialpowers/"), spec)) {
-    return false;
-  }
-
   return true;
 }
 

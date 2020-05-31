@@ -130,7 +130,7 @@ async function submitFormAndGetResults(
         );
         // we don't get an input event if the new value == the old
         field.value = "###";
-        WrapPrivileged.wrap(field).setUserInput(value);
+        WrapPrivileged.wrap(field, this).setUserInput(value);
         await gotInput;
       } catch (ex) {
         throw new Error(
