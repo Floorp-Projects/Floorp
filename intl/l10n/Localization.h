@@ -32,13 +32,9 @@ class Localization : public nsIObserver,
                                                          nsIObserver)
   NS_DECL_NSIOBSERVER
 
-  static already_AddRefed<Localization> Create(
-      nsIGlobalObject* aGlobal, const bool aSync,
-      const BundleGenerator& aBundleGenerator);
-
-  void Activate(const bool aEager);
-
-  void Destroy();
+  explicit Localization(nsIGlobalObject* aGlobal);
+  void Activate(const bool aSync, const bool aEager,
+                const BundleGenerator& aBundleGenerator);
 
   static already_AddRefed<Localization> Constructor(
       const GlobalObject& aGlobal, const Sequence<nsString>& aResourceIds,
@@ -86,10 +82,6 @@ class Localization : public nsIObserver,
                           ErrorResult& aRv);
 
  protected:
-  Localization(nsIGlobalObject* aGlobal, const bool aSync,
-               const BundleGenerator& aBundleGenerator);
-  virtual bool Init();
-
   virtual ~Localization();
   void RegisterObservers();
   virtual void OnChange();
@@ -100,13 +92,7 @@ class Localization : public nsIObserver,
 
   nsCOMPtr<nsIGlobalObject> mGlobal;
   nsCOMPtr<mozILocalization> mLocalization;
-
   bool mIsSync;
-  nsTArray<nsString> mResourceIds;
-
-  JS::Heap<JS::Value> mBundles;
-  JS::Heap<JS::Value> mGenerateBundles;
-  JS::Heap<JS::Value> mGenerateBundlesSync;
 };
 
 }  // namespace intl
