@@ -25,12 +25,19 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Localization)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mGlobal)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
   NS_IMPL_CYCLE_COLLECTION_UNLINK_WEAK_REFERENCE
+  tmp->Destroy();
+  mozilla::DropJSObjects(tmp);
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Localization)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mLocalization)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mGlobal)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(Localization)
+
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(Localization)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
+  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mGenerateBundles)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mGenerateBundlesSync)
+NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(Localization)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(Localization)
@@ -55,26 +62,26 @@ Localization::Localization(nsIGlobalObject* aGlobal)
 void Localization::Activate(const bool aSync, const bool aEager,
                             const BundleGenerator& aBundleGenerator) {
   AutoJSContext cx;
-  JS::Rooted<JS::Value> generateBundlesJS(cx);
-  JS::Rooted<JS::Value> generateBundlesSyncJS(cx);
 
   if (aBundleGenerator.mGenerateBundles.WasPassed()) {
     GenerateBundles& generateBundles =
         aBundleGenerator.mGenerateBundles.Value();
-    generateBundlesJS.set(JS::ObjectValue(*generateBundles.CallbackOrNull()));
+    mGenerateBundles.setObject(*generateBundles.CallbackOrNull());
   }
   if (aBundleGenerator.mGenerateBundlesSync.WasPassed()) {
     GenerateBundlesSync& generateBundlesSync =
         aBundleGenerator.mGenerateBundlesSync.Value();
-    generateBundlesSyncJS.set(
-        JS::ObjectValue(*generateBundlesSync.CallbackOrNull()));
+    mGenerateBundlesSync.setObject(*generateBundlesSync.CallbackOrNull());
   }
   mIsSync = aSync;
 
-  mLocalization->Activate(mResourceIds, aSync, aEager, generateBundlesJS,
+  JS::Rooted<JS::Value> generateBundlesJS(cx, mGenerateBundles);
+  JS::Rooted<JS::Value> generateBundlesSyncJS(cx, mGenerateBundlesSync);
+  mLocalization->Activate(mResourceIds, mIsSync, aEager, generateBundlesJS,
                           generateBundlesSyncJS);
 
   RegisterObservers();
+  mozilla::HoldJSObjects(this);
 }
 
 already_AddRefed<Localization> Localization::Constructor(
@@ -112,6 +119,14 @@ Localization::~Localization() {
   }
 
   Preferences::RemoveObservers(this, kObservedPrefs);
+
+  Destroy();
+  mozilla::DropJSObjects(this);
+}
+
+void Localization::Destroy() {
+  mGenerateBundles.setUndefined();
+  mGenerateBundlesSync.setUndefined();
 }
 
 /* Protected */
@@ -145,7 +160,11 @@ Localization::Observe(nsISupports* aSubject, const char* aTopic,
 
 void Localization::OnChange() {
   if (mLocalization) {
-    mLocalization->OnChange(mResourceIds, mIsSync);
+    AutoJSContext cx;
+    JS::Rooted<JS::Value> generateBundlesJS(cx, mGenerateBundles);
+    JS::Rooted<JS::Value> generateBundlesSyncJS(cx, mGenerateBundlesSync);
+    mLocalization->OnChange(mResourceIds, mIsSync, generateBundlesJS,
+                            generateBundlesSyncJS);
   }
 }
 
@@ -213,7 +232,8 @@ already_AddRefed<Promise> Localization::FormatValue(
   }
 
   RefPtr<Promise> promise;
-  nsresult rv = mLocalization->FormatValue(aId, args, getter_AddRefs(promise));
+  nsresult rv = mLocalization->FormatValue(mResourceIds, aId, args,
+                                           getter_AddRefs(promise));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     aRv.Throw(rv);
     return nullptr;
@@ -237,7 +257,8 @@ already_AddRefed<Promise> Localization::FormatValues(
   }
 
   RefPtr<Promise> promise;
-  aRv = mLocalization->FormatValues(jsKeys, getter_AddRefs(promise));
+  aRv = mLocalization->FormatValues(mResourceIds, jsKeys,
+                                    getter_AddRefs(promise));
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
@@ -259,7 +280,8 @@ already_AddRefed<Promise> Localization::FormatMessages(
   }
 
   RefPtr<Promise> promise;
-  aRv = mLocalization->FormatMessages(jsKeys, getter_AddRefs(promise));
+  aRv = mLocalization->FormatMessages(mResourceIds, jsKeys,
+                                      getter_AddRefs(promise));
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
@@ -286,7 +308,7 @@ void Localization::FormatValueSync(JSContext* aCx, const nsACString& aId,
     args = JS::UndefinedValue();
   }
 
-  aRv = mLocalization->FormatValueSync(aId, args, aRetVal);
+  aRv = mLocalization->FormatValueSync(mResourceIds, aId, args, aRetVal);
 }
 
 void Localization::FormatValuesSync(JSContext* aCx,
@@ -309,7 +331,7 @@ void Localization::FormatValuesSync(JSContext* aCx,
     jsKeys.AppendElement(jsKey);
   }
 
-  aRv = mLocalization->FormatValuesSync(jsKeys, aRetVal);
+  aRv = mLocalization->FormatValuesSync(mResourceIds, jsKeys, aRetVal);
 }
 
 void Localization::FormatMessagesSync(JSContext* aCx,
@@ -335,7 +357,7 @@ void Localization::FormatMessagesSync(JSContext* aCx,
   nsTArray<JS::Value> messages;
 
   SequenceRooter<JS::Value> messagesRooter(aCx, &messages);
-  aRv = mLocalization->FormatMessagesSync(jsKeys, messages);
+  aRv = mLocalization->FormatMessagesSync(mResourceIds, jsKeys, messages);
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
