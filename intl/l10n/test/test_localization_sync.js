@@ -176,13 +176,13 @@ add_task(function test_calling_sync_methods_in_async_mode_fails() {
 
   Assert.throws(() => {
     l10n.formatValuesSync([{ id: "key1" }, { id: "key2" }]);
-  }, /Can't use sync formatWithFallback when state is async./);
+  }, /Can't use formatValuesSync when state is async./);
 
   Assert.throws(() => {
     l10n.formatValueSync("key1");
-  }, /Can't use sync formatWithFallback when state is async./);
+  }, /Can't use formatValueSync when state is async./);
 
   Assert.throws(() => {
     l10n.formatMessagesSync([{ id: "key1"}]);
-  }, /Can't use sync formatWithFallback when state is async./);
+  }, /Can't use formatMessagesSync when state is async./);
 });

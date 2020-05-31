@@ -219,7 +219,6 @@ class Localization {
     this.resourceIds = [];
     this.generateBundles = undefined;
     this.generateBundlesSync = undefined;
-    this.isSync = undefined;
     this.bundles = undefined;
   }
 
@@ -228,29 +227,24 @@ class Localization {
    *
    * @param {Array<String>}    resourceIds - List of resource ids used by this
    *                                         localization.
-   * @param {bool}                    sync - Whether the instance should be
+   * @param {bool}                  isSync - Whether the instance should be
    *                                         synchronous.
    * @param {bool}                   eager - Whether the initial bundles should be
    *                                         fetched eagerly.
    * @param {Function}     generateBundles - Custom FluentBundle asynchronous generator.
    * @param {Function} generateBundlesSync - Custom FluentBundle generator.
    */
-  activate(resourceIds, sync, eager, generateBundles = defaultGenerateBundles, generateBundlesSync = defaultGenerateBundlesSync) {
+  activate(resourceIds, isSync, eager, generateBundles = defaultGenerateBundles, generateBundlesSync = defaultGenerateBundlesSync) {
     if (this.bundles) {
       throw new Error("Attempt to initialize an already initialized instance.");
     }
     this.generateBundles = generateBundles;
     this.generateBundlesSync = generateBundlesSync;
-    this.isSync = sync;
-    this.regenerateBundles(resourceIds, eager);
+    this.regenerateBundles(resourceIds, isSync, eager);
   }
 
-  setIsSync(isSync) {
-    this.isSync = isSync;
-  }
-
-  cached(iterable) {
-    if (this.isSync) {
+  cached(iterable, isSync) {
+    if (isSync) {
       return CachedSyncIterable.from(iterable);
     } else {
       return CachedAsyncIterable.from(iterable);
@@ -309,9 +303,6 @@ class Localization {
    * @private
    */
   formatWithFallbackSync(keys, method) {
-    if (!this.isSync) {
-      throw new Error("Can't use sync formatWithFallback when state is async.");
-    }
     if (!this.bundles) {
       throw new Error("Attempt to format on an uninitialized instance.");
     }
@@ -464,9 +455,9 @@ class Localization {
    * @param {Array<String>}    resourceIds - List of resource ids used by this
    *                                         localization.
    */
-  onChange(resourceIds) {
+  onChange(resourceIds, isSync) {
     if (this.bundles) {
-      this.regenerateBundles(resourceIds, false);
+      this.regenerateBundles(resourceIds, isSync, false);
     }
   }
 
@@ -478,11 +469,11 @@ class Localization {
    *                                         localization.
    * @param {bool} eager - whether the I/O for new context should begin eagerly
    */
-  regenerateBundles(resourceIds, eager = false) {
+  regenerateBundles(resourceIds, isSync, eager = false) {
     // Store for error reporting from `formatWithFallback`.
     this.resourceIds = resourceIds;
-    let generateMessages = this.isSync ? this.generateBundlesSync : this.generateBundles;
-    this.bundles = this.cached(generateMessages(this.resourceIds));
+    let generateMessages = isSync ? this.generateBundlesSync : this.generateBundles;
+    this.bundles = this.cached(generateMessages(this.resourceIds), isSync);
     if (eager) {
       // If the first app locale is the same as last fallback
       // it means that we have all resources in this locale, and
