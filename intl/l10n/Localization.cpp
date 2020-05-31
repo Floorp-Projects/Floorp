@@ -145,7 +145,7 @@ Localization::Observe(nsISupports* aSubject, const char* aTopic,
 
 void Localization::OnChange() {
   if (mLocalization) {
-    mLocalization->OnChange(mResourceIds);
+    mLocalization->OnChange(mResourceIds, mIsSync);
   }
 }
 
@@ -221,10 +221,7 @@ already_AddRefed<Promise> Localization::FormatValue(
   return MaybeWrapPromise(promise);
 }
 
-void Localization::SetIsSync(const bool aIsSync) {
-  mIsSync = aIsSync;
-  mLocalization->SetIsSync(aIsSync);
-}
+void Localization::SetIsSync(const bool aIsSync) { mIsSync = aIsSync; }
 
 already_AddRefed<Promise> Localization::FormatValues(
     JSContext* aCx, const Sequence<L10nKey>& aKeys, ErrorResult& aRv) {
@@ -273,6 +270,11 @@ already_AddRefed<Promise> Localization::FormatMessages(
 void Localization::FormatValueSync(JSContext* aCx, const nsACString& aId,
                                    const Optional<L10nArgs>& aArgs,
                                    nsACString& aRetVal, ErrorResult& aRv) {
+  if (!mIsSync) {
+    aRv.ThrowInvalidStateError(
+        "Can't use formatValueSync when state is async.");
+    return;
+  }
   JS::Rooted<JS::Value> args(aCx);
 
   if (aArgs.WasPassed()) {
@@ -291,6 +293,11 @@ void Localization::FormatValuesSync(JSContext* aCx,
                                     const Sequence<L10nKey>& aKeys,
                                     nsTArray<nsCString>& aRetVal,
                                     ErrorResult& aRv) {
+  if (!mIsSync) {
+    aRv.ThrowInvalidStateError(
+        "Can't use formatValuesSync when state is async.");
+    return;
+  }
   nsTArray<JS::Value> jsKeys;
   SequenceRooter<JS::Value> rooter(aCx, &jsKeys);
   for (auto& key : aKeys) {
@@ -309,6 +316,11 @@ void Localization::FormatMessagesSync(JSContext* aCx,
                                       const Sequence<L10nKey>& aKeys,
                                       nsTArray<Nullable<L10nMessage>>& aRetVal,
                                       ErrorResult& aRv) {
+  if (!mIsSync) {
+    aRv.ThrowInvalidStateError(
+        "Can't use formatMessagesSync when state is async.");
+    return;
+  }
   nsTArray<JS::Value> jsKeys;
   SequenceRooter<JS::Value> rooter(aCx, &jsKeys);
   for (auto& key : aKeys) {
