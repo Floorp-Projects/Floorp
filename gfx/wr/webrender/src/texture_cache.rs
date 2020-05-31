@@ -38,10 +38,6 @@ const PICTURE_TILE_FORMAT: ImageFormat = ImageFormat::RGBA8;
 const TEXTURE_REGION_PIXELS: usize =
     (TEXTURE_REGION_DIMENSIONS as usize) * (TEXTURE_REGION_DIMENSIONS as usize);
 
-// The minimum number of bytes that we must be able to reclaim in order
-// to justify clearing the entire shared cache in order to shrink it.
-const RECLAIM_THRESHOLD_BYTES: usize = 16 * 512 * 512 * 4;
-
 /// Items in the texture cache can either be standalone textures,
 /// or a sub-rect inside the shared cache.
 #[derive(Debug)]
@@ -282,22 +278,6 @@ impl SharedTextures {
                 1,
             ),
         }
-    }
-
-    /// Returns the cumulative number of GPU bytes consumed by all the shared textures.
-    fn size_in_bytes(&self) -> usize {
-        self.array_alpha8_linear.size_in_bytes() +
-        self.array_alpha16_linear.size_in_bytes() +
-        self.array_color8_linear.size_in_bytes() +
-        self.array_color8_nearest.size_in_bytes()
-    }
-
-    /// Returns the cumulative number of GPU bytes consumed by empty regions.
-    fn reclaimable_region_bytes(&self) -> usize {
-        self.array_alpha8_linear.reclaimable_region_bytes() +
-        self.array_alpha16_linear.reclaimable_region_bytes() +
-        self.array_color8_linear.reclaimable_region_bytes() +
-        self.array_color8_nearest.reclaimable_region_bytes()
     }
 
     /// Clears each texture in the set, with the given set of pending updates.
@@ -668,10 +648,6 @@ pub struct TextureCache {
     /// The current `FrameStamp`. Used for cache eviction policies.
     now: FrameStamp,
 
-    /// The time at which we first reached the byte threshold for reclaiming
-    /// cache memory. `None if we haven't reached the threshold.
-    reached_reclaim_threshold: Option<SystemTime>,
-
     /// Maintains the list of all current items in the texture cache.
     entries: FreeList<CacheEntry, CacheEntryMarker>,
 
@@ -747,7 +723,6 @@ impl TextureCache {
                 &mut next_texture_id,
                 &mut pending_updates,
             ),
-            reached_reclaim_threshold: None,
             entries: FreeList::new(),
             max_texture_size,
             max_texture_layers,
@@ -847,8 +822,7 @@ impl TextureCache {
                                  mem::replace(&mut self.doc_data, PerDocumentData::new()));
     }
 
-    pub fn prepare_for_frames(&mut self, time: SystemTime) {
-        self.maybe_reclaim_shared_memory(time);
+    pub fn prepare_for_frames(&mut self, _: SystemTime) {
     }
 
     pub fn bookkeep_after_frames(&mut self) {
@@ -865,58 +839,6 @@ impl TextureCache {
         profile_scope!("begin_frame");
         self.now = stamp;
         self.set_doc_data();
-        self.maybe_do_periodic_gc();
-    }
-
-    fn maybe_reclaim_shared_memory(&mut self, time: SystemTime) {
-        // If we've had a sufficient number of unused layers for a sufficiently
-        // long time, just blow the whole cache away to shrink it.
-        //
-        // We could do this more intelligently with a resize+blit, but that would
-        // add complexity for a rare case.
-        //
-        // This function must be called before the first begin_frame() for a group
-        // of documents, otherwise documents could end up ignoring the
-        // self.require_frame_build flag which is set if we end up calling
-        // clear_shared.
-        debug_assert!(!self.now.is_valid());
-        if self.shared_textures.reclaimable_region_bytes() >= RECLAIM_THRESHOLD_BYTES {
-            self.reached_reclaim_threshold.get_or_insert(time);
-        } else {
-            self.reached_reclaim_threshold = None;
-        }
-        if let Some(t) = self.reached_reclaim_threshold {
-            let dur = time.duration_since(t).unwrap_or_default();
-            if dur >= Duration::from_secs(5) {
-                self.clear_shared();
-                self.reached_reclaim_threshold = None;
-            }
-        }
-    }
-
-    /// Called at the beginning of each frame to periodically GC by expiring
-    /// old shared entries. If necessary, the shared memory opened up as a
-    /// result of expiring these entries will be reclaimed before the next
-    /// group of document frames.
-    fn maybe_do_periodic_gc(&mut self) {
-        debug_assert!(self.now.is_valid());
-
-        // Normally the shared cache only gets GCed when we fail to allocate.
-        // However, we also perform a periodic, conservative GC to ensure that
-        // we recover unused memory in bounded time, rather than having it
-        // depend on allocation patterns of subsequent content.
-        let time_since_last_gc = self.now.time()
-            .duration_since(self.doc_data.last_shared_cache_expiration.time())
-            .unwrap_or_default();
-        let do_periodic_gc = time_since_last_gc >= Duration::from_secs(5) &&
-            self.shared_textures.size_in_bytes() >= RECLAIM_THRESHOLD_BYTES * 2;
-        if do_periodic_gc {
-            let threshold = EvictionThresholdBuilder::new(self.now)
-                .max_frames(1)
-                .max_time_s(10)
-                .build();
-            self.maybe_expire_old_shared_entries(threshold);
-        }
     }
 
     pub fn end_frame(&mut self, texture_cache_profile: &mut TextureCacheProfileCounters) {
@@ -1745,13 +1667,6 @@ impl TextureArray {
         let bpp = self.formats.internal.bytes_per_pixel() as usize;
         let num_regions: usize = self.units.iter().map(|u| u.regions.len()).sum();
         num_regions * TEXTURE_REGION_PIXELS * bpp
-    }
-
-    /// Returns the number of GPU bytes consumed by empty regions.
-    fn reclaimable_region_bytes(&self) -> usize {
-        let bpp = self.formats.internal.bytes_per_pixel() as usize;
-        let empty_regions: usize = self.units.iter().map(|u| u.empty_regions).sum();
-        empty_regions * TEXTURE_REGION_PIXELS * bpp
     }
 
     fn clear(&mut self, updates: &mut TextureUpdateList) {
