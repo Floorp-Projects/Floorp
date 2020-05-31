@@ -2,7 +2,7 @@
 
 # AutoPushSubscriptionChanged
 
-`data class AutoPushSubscriptionChanged` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/push/src/main/java/mozilla/components/feature/push/AutoPushFeature.kt#L371)
+`data class AutoPushSubscriptionChanged` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/push/src/main/java/mozilla/components/feature/push/AutoPushFeature.kt#L397)
 
 The subscription from AutoPush that has changed on the remote push servers.
 

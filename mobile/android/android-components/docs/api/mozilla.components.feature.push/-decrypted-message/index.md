@@ -2,7 +2,7 @@
 
 # DecryptedMessage
 
-`data class DecryptedMessage` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/push/src/main/java/mozilla/components/feature/push/Connection.kt#L287)
+`data class DecryptedMessage` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/push/src/main/java/mozilla/components/feature/push/Connection.kt#L300)
 
 Represents a decrypted push message for notifying observers of the [scope](scope.md).
 

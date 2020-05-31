@@ -2,7 +2,7 @@
 
 # verifyConnection
 
-`abstract suspend fun verifyConnection(): `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`AutoPushSubscriptionChanged`](../-auto-push-subscription-changed/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/push/src/main/java/mozilla/components/feature/push/Connection.kt#L65)
+`abstract suspend fun verifyConnection(): `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`AutoPushSubscriptionChanged`](../-auto-push-subscription-changed/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/push/src/main/java/mozilla/components/feature/push/Connection.kt#L70)
 
 Checks validity of current push subscriptions.
 
