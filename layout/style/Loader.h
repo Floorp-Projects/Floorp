@@ -338,10 +338,10 @@ class Loader final {
   };
 
   std::tuple<RefPtr<StyleSheet>, SheetState> CreateSheet(
-      const SheetInfo& aInfo, nsIPrincipal* aLoaderPrincipal,
+      const SheetInfo& aInfo, nsIPrincipal* aTriggeringPrincipal,
       css::SheetParsingMode aParsingMode, bool aSyncLoad,
       IsPreload aIsPreload) {
-    return CreateSheet(aInfo.mURI, aInfo.mContent, aLoaderPrincipal,
+    return CreateSheet(aInfo.mURI, aInfo.mContent, aTriggeringPrincipal,
                        aParsingMode, aInfo.mCORSMode, aInfo.mReferrerInfo,
                        aInfo.mIntegrity, aSyncLoad, aIsPreload);
   }
@@ -350,9 +350,10 @@ class Loader final {
   // must be non-null then.  The loader principal must never be null
   // if aURI is not null.
   std::tuple<RefPtr<StyleSheet>, SheetState> CreateSheet(
-      nsIURI* aURI, nsIContent* aLinkingContent, nsIPrincipal* aLoaderPrincipal,
-      css::SheetParsingMode, CORSMode, nsIReferrerInfo* aLoadingReferrerInfo,
-      const nsAString& aIntegrity, bool aSyncLoad, IsPreload aIsPreload);
+      nsIURI* aURI, nsIContent* aLinkingContent,
+      nsIPrincipal* aTriggeringPrincipal, css::SheetParsingMode, CORSMode,
+      nsIReferrerInfo* aLoadingReferrerInfo, const nsAString& aIntegrity,
+      bool aSyncLoad, IsPreload aIsPreload);
 
   // Pass in either a media string or the MediaList from the CSSParser.  Don't
   // pass both.

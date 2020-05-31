@@ -6,7 +6,7 @@
 #define PreloadHashKey_h__
 
 #include "mozilla/CORSMode.h"
-#include "mozilla/css/SheetLoadData.h"
+#include "mozilla/css/SheetParsingMode.h"
 #include "mozilla/dom/ReferrerPolicyBinding.h"
 #include "mozilla/dom/ScriptKind.h"
 #include "nsURIHashKey.h"
@@ -15,6 +15,10 @@ class nsIPrincipal;
 class nsIReferrerInfo;
 
 namespace mozilla {
+
+namespace css {
+class SheetLoadData;
+}
 
 /**
  * This key is used for coalescing and lookup of preloading or regular
@@ -54,7 +58,7 @@ class PreloadHashKey : public nsURIHashKey {
                                       nsIReferrerInfo* aReferrerInfo,
                                       CORSMode aCORSMode,
                                       css::SheetParsingMode aParsingMode);
-  static PreloadHashKey CreateAsStyle(css::SheetLoadData& aSheetLoadData);
+  static PreloadHashKey CreateAsStyle(css::SheetLoadData&);
 
   // Construct key for "image"
   static PreloadHashKey CreateAsImage(

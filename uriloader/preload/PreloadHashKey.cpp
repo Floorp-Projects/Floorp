@@ -5,6 +5,7 @@
 #include "PreloadHashKey.h"
 
 #include "mozilla/dom/Element.h"  // StringToCORSMode
+#include "mozilla/css/SheetLoadData.h"
 #include "nsIPrincipal.h"
 #include "nsIReferrerInfo.h"
 
@@ -117,7 +118,7 @@ PreloadHashKey PreloadHashKey::CreateAsStyle(
 // static
 PreloadHashKey PreloadHashKey::CreateAsStyle(
     css::SheetLoadData& aSheetLoadData) {
-  return CreateAsStyle(aSheetLoadData.mURI, aSheetLoadData.mLoaderPrincipal,
+  return CreateAsStyle(aSheetLoadData.mURI, aSheetLoadData.mTriggeringPrincipal,
                        aSheetLoadData.ReferrerInfo(),
                        aSheetLoadData.mSheet->GetCORSMode(),
                        aSheetLoadData.mSheet->ParsingMode());
