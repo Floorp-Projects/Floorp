@@ -280,8 +280,6 @@ nsIThread* nsUrlClassifierDBService::gDbBackgroundThread = nullptr;
 // thread.
 static Atomic<bool> gShuttingDownThread(false);
 
-static uint32_t sGethashNoise = GETHASH_NOISE_DEFAULT;
-
 NS_IMPL_ISUPPORTS(nsUrlClassifierDBServiceWorker, nsIUrlClassifierDBService)
 
 nsUrlClassifierDBServiceWorker::nsUrlClassifierDBServiceWorker()
@@ -1636,7 +1634,7 @@ nsresult nsUrlClassifierDBService::Init() {
       return NS_ERROR_NOT_AVAILABLE;
   }
 
-  sGethashNoise =
+  uint32_t hashNoise =
       Preferences::GetUint(GETHASH_NOISE_PREF, GETHASH_NOISE_DEFAULT);
   ReadDisallowCompletionsTablesFromPrefs();
 
@@ -1667,7 +1665,7 @@ nsresult nsUrlClassifierDBService::Init() {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  rv = mWorker->Init(sGethashNoise, cacheDir, this);
+  rv = mWorker->Init(hashNoise, cacheDir, this);
   if (NS_FAILED(rv)) {
     mWorker = nullptr;
     return rv;
@@ -1689,8 +1687,6 @@ nsresult nsUrlClassifierDBService::Init() {
   observerService->AddObserver(this, "quit-application", false);
   observerService->AddObserver(this, "profile-before-change", false);
 
-  Preferences::AddUintVarCache(&sGethashNoise, GETHASH_NOISE_PREF,
-                               GETHASH_NOISE_DEFAULT);
   Preferences::AddStrongObserver(this, DISALLOW_COMPLETION_TABLE_PREF);
 
   return NS_OK;
