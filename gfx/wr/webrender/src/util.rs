@@ -248,15 +248,29 @@ impl ScaleOffset {
 
     pub fn map_vector<F, T>(&self, vector: &Vector2D<f32, F>) -> Vector2D<f32, T> {
         Vector2D::new(
-            vector.x * self.scale.x + self.offset.x,
-            vector.y * self.scale.y + self.offset.y,
+            vector.x * self.scale.x,
+            vector.y * self.scale.y,
         )
     }
 
     pub fn unmap_vector<F, T>(&self, vector: &Vector2D<f32, F>) -> Vector2D<f32, T> {
         Vector2D::new(
-            (vector.x - self.offset.x) / self.scale.x,
-            (vector.y - self.offset.y) / self.scale.y,
+            vector.x / self.scale.x,
+            vector.y / self.scale.y,
+        )
+    }
+
+    pub fn map_point<F, T>(&self, point: &Point2D<f32, F>) -> Point2D<f32, T> {
+        Point2D::new(
+            point.x * self.scale.x + self.offset.x,
+            point.y * self.scale.y + self.offset.y,
+        )
+    }
+
+    pub fn unmap_point<F, T>(&self, point: &Point2D<f32, F>) -> Point2D<f32, T> {
+        Point2D::new(
+            (point.x - self.offset.x) / self.scale.x,
+            (point.y - self.offset.y) / self.scale.y,
         )
     }
 
