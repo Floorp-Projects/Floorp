@@ -29,6 +29,7 @@ const tests = [
     },
     expected: {
       switchToDefaultAllowed: false,
+      canInstallEngine: true,
       overridesEngine: false,
     },
   },
@@ -43,6 +44,7 @@ const tests = [
     },
     expected: {
       switchToDefaultAllowed: true,
+      canInstallEngine: false,
       overridesEngine: false,
     },
   },
@@ -57,6 +59,7 @@ const tests = [
     },
     expected: {
       switchToDefaultAllowed: true,
+      canInstallEngine: false,
       overridesEngine: false,
     },
   },
@@ -76,6 +79,7 @@ const tests = [
     ],
     expected: {
       switchToDefaultAllowed: true,
+      canInstallEngine: false,
       overridesEngine: true,
       searchUrl: kSearchEngineURL,
     },
@@ -96,6 +100,7 @@ const tests = [
     ],
     expected: {
       switchToDefaultAllowed: true,
+      canInstallEngine: false,
       overridesEngine: true,
       searchUrl: kSearchEngineURL,
     },
@@ -116,6 +121,7 @@ const tests = [
     ],
     expected: {
       switchToDefaultAllowed: true,
+      canInstallEngine: false,
       overridesEngine: false,
     },
   },
@@ -137,6 +143,7 @@ const tests = [
     ],
     expected: {
       switchToDefaultAllowed: true,
+      canInstallEngine: false,
       overridesEngine: true,
       searchUrl: `${kBaseURL}?q={searchTerms}&enc=UTF-8`,
     },
@@ -159,6 +166,7 @@ const tests = [
     ],
     expected: {
       switchToDefaultAllowed: true,
+      canInstallEngine: false,
       overridesEngine: false,
     },
   },
@@ -180,6 +188,7 @@ const tests = [
     ],
     expected: {
       switchToDefaultAllowed: true,
+      canInstallEngine: false,
       overridesEngine: true,
       searchUrl: `${kBaseURL}`,
       postData: "q={searchTerms}&enc=UTF-8",
@@ -203,6 +212,7 @@ const tests = [
     ],
     expected: {
       switchToDefaultAllowed: true,
+      canInstallEngine: false,
       overridesEngine: false,
     },
   },
@@ -224,6 +234,7 @@ const tests = [
     ],
     expected: {
       switchToDefaultAllowed: true,
+      canInstallEngine: false,
       overridesEngine: true,
       searchUrl: `${kBaseURL}`,
       searchForm: "https://example.com/form",
@@ -247,6 +258,7 @@ const tests = [
     ],
     expected: {
       switchToDefaultAllowed: true,
+      canInstallEngine: false,
       overridesEngine: false,
     },
   },
@@ -300,10 +312,16 @@ for (const test of tests) {
       ]);
     }
 
+    let result = await Services.search.maybeSetAndOverrideDefault(extension);
     Assert.equal(
-      await Services.search.maybeSetAndOverrideDefault(extension),
+      result.canChangeToAppProvided,
       test.expected.switchToDefaultAllowed,
       "Should have returned the correct value for allowing switch to default or not."
+    );
+    Assert.equal(
+      result.canInstallEngine,
+      test.expected.canInstallEngine,
+      "Should have returned the correct value for allowing to install the engine or not."
     );
 
     let engine = await Services.search.getEngineByName(kOverriddenEngineName);
