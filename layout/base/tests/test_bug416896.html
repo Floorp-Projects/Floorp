@@ -38,15 +38,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=416896
  
  for (var i = 0; i < inspectedRules.length; ++i)
  {
-   var rule = SpecialPowers.unwrap(inspectedRules[i]);
+   var rule = inspectedRules[i];
    var sheet = rule.parentStyleSheet;
-   if (sheet == inlineSheet) {
+   if (SpecialPowers.unwrap(sheet) == inlineSheet) {
      is(sheet.href, null, "It's an inline sheet");
      is(seenInline, false, "Only one inline rule matches");
      seenInline = true;
    } else {
      isnot(sheet.href, null, "Shouldn't have null href here " + i);
-     if (sheet == linkedSheet) {
+     if (SpecialPowers.unwrap(sheet) == linkedSheet) {
        is(seenLinked, false, "Only one linked rule matches");
        seenLinked = true;
      }

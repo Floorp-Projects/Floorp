@@ -521,9 +521,12 @@ function observeStylingInTargetWindow(aWindow, aFrameCount, aOnFrame) {
     return waitForAnimationFrames(aFrameCount, aOnFrame, aWindow).then(() => {
       const markers = docShell.popProfileTimelineMarkers();
       docShell.recordProfileTimelineMarkers = false;
-      const stylingMarkers = markers.filter((marker, index) => {
-        return marker.name == "Styles" && marker.isAnimationOnly;
-      });
+      const stylingMarkers = Array.prototype.filter.call(
+        markers,
+        (marker, index) => {
+          return marker.name == "Styles" && marker.isAnimationOnly;
+        }
+      );
       resolve(stylingMarkers);
     });
   });

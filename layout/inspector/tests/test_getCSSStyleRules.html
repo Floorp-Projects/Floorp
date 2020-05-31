@@ -24,7 +24,7 @@ SimpleTest.waitForExplicitFinish();
 function* getStyleRules(elem) {
   let rules = InspectorUtils.getCSSStyleRules(elem);
   for (let i = 0; i < rules.length; i++) {
-    yield SpecialPowers.unwrap(rules[i]);
+    yield rules[i];
   }
 }
 
