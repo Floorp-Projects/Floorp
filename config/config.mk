@@ -142,6 +142,8 @@ PGO_LDFLAGS += $(PROFILE_USE_LDFLAGS)
 endif # MOZ_PROFILE_USE
 endif # NO_PROFILE_GUIDED_OPTIMIZE
 
+# Overloaded by comm builds to refer to $(commtopsrcdir), so that
+# `mail` resolves in en-US builds and in repacks.
 LOCALE_TOPDIR ?= $(topsrcdir)
 MAKE_JARS_FLAGS = \
 	-t $(LOCALE_TOPDIR) \
