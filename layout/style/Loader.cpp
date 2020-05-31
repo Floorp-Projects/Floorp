@@ -254,7 +254,7 @@ class SheetLoadDataHashKey : public nsURIHashKey {
 
 SheetLoadDataHashKey::SheetLoadDataHashKey(css::SheetLoadData& aLoadData)
     : nsURIHashKey(aLoadData.mURI),
-      mPrincipal(aLoadData.mLoaderPrincipal),
+      mPrincipal(aLoadData.mTriggeringPrincipal),
       mReferrerInfo(aLoadData.ReferrerInfo()),
       mCORSMode(aLoadData.mSheet->GetCORSMode()),
       mParsingMode(aLoadData.mSheet->ParsingMode()),
@@ -278,7 +278,7 @@ SheetLoadData::SheetLoadData(Loader* aLoader, const nsAString& aTitle,
                              nsINode* aOwningNode, IsAlternate aIsAlternate,
                              MediaMatched aMediaMatches, IsPreload aIsPreload,
                              nsICSSLoaderObserver* aObserver,
-                             nsIPrincipal* aLoaderPrincipal,
+                             nsIPrincipal* aTriggeringPrincipal,
                              nsIReferrerInfo* aReferrerInfo,
                              nsINode* aRequestingNode)
     : mLoader(aLoader),
@@ -305,7 +305,7 @@ SheetLoadData::SheetLoadData(Loader* aLoader, const nsAString& aTitle,
       mIsPreload(aIsPreload),
       mOwningNode(aOwningNode),
       mObserver(aObserver),
-      mLoaderPrincipal(aLoaderPrincipal),
+      mTriggeringPrincipal(aTriggeringPrincipal),
       mReferrerInfo(aReferrerInfo),
       mRequestingNode(aRequestingNode),
       mPreloadEncoding(nullptr) {
@@ -317,7 +317,7 @@ SheetLoadData::SheetLoadData(Loader* aLoader, const nsAString& aTitle,
 SheetLoadData::SheetLoadData(Loader* aLoader, nsIURI* aURI, StyleSheet* aSheet,
                              SheetLoadData* aParentData,
                              nsICSSLoaderObserver* aObserver,
-                             nsIPrincipal* aLoaderPrincipal,
+                             nsIPrincipal* aTriggeringPrincipal,
                              nsIReferrerInfo* aReferrerInfo,
                              nsINode* aRequestingNode)
     : mLoader(aLoader),
@@ -344,7 +344,7 @@ SheetLoadData::SheetLoadData(Loader* aLoader, nsIURI* aURI, StyleSheet* aSheet,
       mIsPreload(IsPreload::No),
       mOwningNode(nullptr),
       mObserver(aObserver),
-      mLoaderPrincipal(aLoaderPrincipal),
+      mTriggeringPrincipal(aTriggeringPrincipal),
       mReferrerInfo(aReferrerInfo),
       mRequestingNode(aRequestingNode),
       mPreloadEncoding(nullptr) {
@@ -361,7 +361,7 @@ SheetLoadData::SheetLoadData(
     Loader* aLoader, nsIURI* aURI, StyleSheet* aSheet, bool aSyncLoad,
     UseSystemPrincipal aUseSystemPrincipal, IsPreload aIsPreload,
     const Encoding* aPreloadEncoding, nsICSSLoaderObserver* aObserver,
-    nsIPrincipal* aLoaderPrincipal, nsIReferrerInfo* aReferrerInfo,
+    nsIPrincipal* aTriggeringPrincipal, nsIReferrerInfo* aReferrerInfo,
     nsINode* aRequestingNode)
     : mLoader(aLoader),
       mEncoding(nullptr),
@@ -386,7 +386,7 @@ SheetLoadData::SheetLoadData(
       mIsPreload(aIsPreload),
       mOwningNode(nullptr),
       mObserver(aObserver),
-      mLoaderPrincipal(aLoaderPrincipal),
+      mTriggeringPrincipal(aTriggeringPrincipal),
       mReferrerInfo(aReferrerInfo),
       mRequestingNode(aRequestingNode),
       mPreloadEncoding(aPreloadEncoding) {
@@ -539,10 +539,10 @@ static void AssertIncompleteSheetMatches(const SheetLoadData& aData,
                                          const SheetLoadDataHashKey& aKey) {
 #ifdef DEBUG
   bool debugEqual;
-  MOZ_ASSERT((!aKey.GetPrincipal() && !aData.mLoaderPrincipal) ||
-                 (aKey.GetPrincipal() && aData.mLoaderPrincipal &&
+  MOZ_ASSERT((!aKey.GetPrincipal() && !aData.mTriggeringPrincipal) ||
+                 (aKey.GetPrincipal() && aData.mTriggeringPrincipal &&
                   NS_SUCCEEDED(aKey.GetPrincipal()->Equals(
-                      aData.mLoaderPrincipal, &debugEqual)) &&
+                      aData.mTriggeringPrincipal, &debugEqual)) &&
                   debugEqual),
              "Principals should be the same");
 #endif
@@ -954,9 +954,9 @@ nsresult SheetLoadData::VerifySheetReadyToParse(nsresult aStatus,
 
   mSheet->SetPrincipal(principal);
 
-  if (mLoaderPrincipal && mSheet->GetCORSMode() == CORS_NONE) {
+  if (mTriggeringPrincipal && mSheet->GetCORSMode() == CORS_NONE) {
     bool subsumed;
-    result = mLoaderPrincipal->Subsumes(principal, &subsumed);
+    result = mTriggeringPrincipal->Subsumes(principal, &subsumed);
     if (NS_FAILED(result) || !subsumed) {
       mIsCrossOriginNoCORS = true;
     }
@@ -997,9 +997,9 @@ nsresult SheetLoadData::VerifySheetReadyToParse(nsresult aStatus,
     uint32_t errorFlag;
     bool sameOrigin = true;
 
-    if (mLoaderPrincipal) {
+    if (mTriggeringPrincipal) {
       bool subsumed;
-      result = mLoaderPrincipal->Subsumes(principal, &subsumed);
+      result = mTriggeringPrincipal->Subsumes(principal, &subsumed);
       if (NS_FAILED(result) || !subsumed) {
         sameOrigin = false;
       }
@@ -1147,10 +1147,10 @@ nsresult Loader::CheckContentPolicy(nsIPrincipal* aLoadingPrincipal,
  * the result of CreateSheet().
  */
 std::tuple<RefPtr<StyleSheet>, Loader::SheetState> Loader::CreateSheet(
-    nsIURI* aURI, nsIContent* aLinkingContent, nsIPrincipal* aLoaderPrincipal,
-    css::SheetParsingMode aParsingMode, CORSMode aCORSMode,
-    nsIReferrerInfo* aLoadingReferrerInfo, const nsAString& aIntegrity,
-    bool aSyncLoad, IsPreload aIsPreload) {
+    nsIURI* aURI, nsIContent* aLinkingContent,
+    nsIPrincipal* aTriggeringPrincipal, css::SheetParsingMode aParsingMode,
+    CORSMode aCORSMode, nsIReferrerInfo* aLoadingReferrerInfo,
+    const nsAString& aIntegrity, bool aSyncLoad, IsPreload aIsPreload) {
   MOZ_ASSERT(aURI, "This path is not taken for inline stylesheets");
   LOG(("css::Loader::CreateSheet(%s)", aURI->GetSpecOrDefault().get()));
 
@@ -1170,7 +1170,7 @@ std::tuple<RefPtr<StyleSheet>, Loader::SheetState> Loader::CreateSheet(
     SRICheck::IntegrityMetadata(aIntegrity, sourceUri, mReporter, &sriMetadata);
   }
 
-  SheetLoadDataHashKey key(aURI, aLoaderPrincipal, aLoadingReferrerInfo,
+  SheetLoadDataHashKey key(aURI, aTriggeringPrincipal, aLoadingReferrerInfo,
                            aCORSMode, aParsingMode, sriMetadata, aIsPreload);
   auto cacheResult = mSheets->Lookup(key, aSyncLoad);
   if (const auto& [styleSheet, sheetState] = cacheResult; styleSheet) {
@@ -1400,10 +1400,10 @@ nsresult Loader::LoadSheet(SheetLoadData& aLoadData, SheetState aSheetState) {
     // This is because of a case where the node is the document being styled and
     // the principal is the stylesheet (perhaps from a different origin) that is
     // applying the styles.
-    if (aLoadData.mRequestingNode && aLoadData.mLoaderPrincipal) {
+    if (aLoadData.mRequestingNode && aLoadData.mTriggeringPrincipal) {
       rv = NS_NewChannelWithTriggeringPrincipal(
           getter_AddRefs(channel), aLoadData.mURI, aLoadData.mRequestingNode,
-          aLoadData.mLoaderPrincipal, securityFlags, contentPolicyType);
+          aLoadData.mTriggeringPrincipal, securityFlags, contentPolicyType);
     } else {
       // either we are loading something inside a document, in which case
       // we should always have a requestingNode, or we are loading something
@@ -1543,10 +1543,10 @@ nsresult Loader::LoadSheet(SheetLoadData& aLoadData, SheetState aSheetState) {
   // and a principal. This is because of a case where the node is the document
   // being styled and the principal is the stylesheet (perhaps from a different
   // origin)  that is applying the styles.
-  if (aLoadData.mRequestingNode && aLoadData.mLoaderPrincipal) {
+  if (aLoadData.mRequestingNode && aLoadData.mTriggeringPrincipal) {
     rv = NS_NewChannelWithTriggeringPrincipal(
         getter_AddRefs(channel), aLoadData.mURI, aLoadData.mRequestingNode,
-        aLoadData.mLoaderPrincipal, securityFlags, contentPolicyType,
+        aLoadData.mTriggeringPrincipal, securityFlags, contentPolicyType,
         /* PerformanceStorage */ nullptr, loadGroup);
   } else {
     // either we are loading something inside a document, in which case

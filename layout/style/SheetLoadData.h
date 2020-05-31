@@ -50,20 +50,21 @@ class SheetLoadData final : public nsIRunnable, public nsIThreadObserver {
                 StyleSheet* aSheet, bool aSyncLoad, nsINode* aOwningNode,
                 IsAlternate aIsAlternate, MediaMatched aMediaMatched,
                 IsPreload aIsPreload, nsICSSLoaderObserver* aObserver,
-                nsIPrincipal* aLoaderPrincipal, nsIReferrerInfo* aReferrerInfo,
-                nsINode* aRequestingNode);
+                nsIPrincipal* aTriggeringPrincipal,
+                nsIReferrerInfo* aReferrerInfo, nsINode* aRequestingNode);
 
   // Data for loading a sheet linked from an @import rule
   SheetLoadData(Loader* aLoader, nsIURI* aURI, StyleSheet* aSheet,
                 SheetLoadData* aParentData, nsICSSLoaderObserver* aObserver,
-                nsIPrincipal* aLoaderPrincipal, nsIReferrerInfo* aReferrerInfo,
-                nsINode* aRequestingNode);
+                nsIPrincipal* aTriggeringPrincipal,
+                nsIReferrerInfo* aReferrerInfo, nsINode* aRequestingNode);
 
   // Data for loading a non-document sheet
   SheetLoadData(Loader* aLoader, nsIURI* aURI, StyleSheet* aSheet,
                 bool aSyncLoad, UseSystemPrincipal, IsPreload,
                 const Encoding* aPreloadEncoding,
-                nsICSSLoaderObserver* aObserver, nsIPrincipal* aLoaderPrincipal,
+                nsICSSLoaderObserver* aObserver,
+                nsIPrincipal* aTriggeringPrincipal,
                 nsIReferrerInfo* aReferrerInfo, nsINode* aRequestingNode);
 
   nsIReferrerInfo* ReferrerInfo() { return mReferrerInfo; }
@@ -193,7 +194,7 @@ class SheetLoadData final : public nsIRunnable, public nsIThreadObserver {
   const nsCOMPtr<nsICSSLoaderObserver> mObserver;
 
   // The principal that identifies who started loading us.
-  const nsCOMPtr<nsIPrincipal> mLoaderPrincipal;
+  const nsCOMPtr<nsIPrincipal> mTriggeringPrincipal;
 
   // Referrer info of the load.
   const nsCOMPtr<nsIReferrerInfo> mReferrerInfo;

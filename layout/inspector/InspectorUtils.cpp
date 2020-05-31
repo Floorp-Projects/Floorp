@@ -27,6 +27,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/CSSStyleRule.h"
 #include "mozilla/dom/InspectorUtilsBinding.h"
+#include "mozilla/dom/LinkStyle.h"
 #include "mozilla/dom/ToJSValue.h"
 #include "nsCSSProps.h"
 #include "nsCSSValue.h"
