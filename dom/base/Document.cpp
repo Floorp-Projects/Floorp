@@ -10524,6 +10524,10 @@ void Document::Destroy() {
 
   // To break cycles.
   mPreloadService.ClearAllPreloads();
+
+  if (mDocumentL10n) {
+    mDocumentL10n->Destroy();
+  }
 }
 
 void Document::RemovedFromDocShell() {
