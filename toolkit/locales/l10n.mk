@@ -155,8 +155,17 @@ repackage-zip-%: unpack
 	@$(MAKE) repackage-zip AB_CD=$* ZIP_IN='$(ZIP_IN)'
 
 
+# Finding toolkit's defines.inc is hard for comm-central.
+# It needs to resolve mail's defines.inc relative to comm
+# for en-US, and toolkit's defines.inc relative to topsrcdir.
+# That's MOZILLA_DIR in their case, so fall back to that.
+# This is just needed for en-US, for repacks, all paths resolve
+# relative to the top-level REAL_LOCALE_MERGEDIR.
 LANGPACK_DEFINES = \
-  $(call EXPAND_LOCALE_SRCDIR,toolkit/locales)/defines.inc \
+	$(firstword \
+	  $(wildcard $(call EXPAND_LOCALE_SRCDIR,toolkit/locales)/defines.inc) \
+	  $(MOZILLA_DIR)/toolkit/locales/en-US/defines.inc \
+	) \
   $(LOCALE_SRCDIR)/defines.inc \
 $(NULL)
 
