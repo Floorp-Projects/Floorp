@@ -45,7 +45,8 @@ interface TabTrayInteractor {
 class TabTrayView(
     private val container: ViewGroup,
     private val interactor: TabTrayInteractor,
-    private val isPrivate: Boolean
+    private val isPrivate: Boolean,
+    private val startingInLandscape: Boolean
 ) : LayoutContainer, TabsTray.Observer, TabLayout.OnTabSelectedListener {
     val fabView = LayoutInflater.from(container.context)
         .inflate(R.layout.component_tabstray_fab, container, true)
@@ -113,8 +114,8 @@ class TabTrayView(
         val selectedBrowserTabIndex = tabs
             .indexOfFirst { it.id == view.context.components.core.store.state.selectedTabId }
 
-        if (tabs.size > EXPAND_AT_SIZE) {
-            behavior.state = BottomSheetBehavior.STATE_EXPANDED
+        if (tabs.size > EXPAND_AT_SIZE || startingInLandscape) {
+            expand()
         }
 
         (view.tabsTray as? BrowserTabsTray)?.also { tray ->
@@ -159,6 +160,10 @@ class TabTrayView(
 
         tabsTray.register(this)
         tabsFeature.start()
+    }
+
+    fun expand() {
+        behavior.state = BottomSheetBehavior.STATE_EXPANDED
     }
 
     override fun onTabSelected(tab: Tab) {

@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.tabtray
 
+import android.content.res.Configuration
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -44,12 +45,21 @@ class TabTrayDialogFragment : AppCompatDialogFragment(), TabTrayInteractor {
         savedInstanceState: Bundle?
     ): View? = inflater.inflate(R.layout.fragment_tab_tray_dialog, container, false)
 
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+
+        if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            tabTrayView.expand()
+        }
+    }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         tabTrayView = TabTrayView(
             view.tabLayout,
             this,
-            (activity as HomeActivity).browsingModeManager.mode.isPrivate
+            (activity as HomeActivity).browsingModeManager.mode.isPrivate,
+            requireContext().resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
         )
 
         tabLayout.setOnClickListener {
