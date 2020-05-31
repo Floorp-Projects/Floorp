@@ -52,7 +52,7 @@ use std::{cmp, fmt, hash, ops, u32, usize, mem};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use crate::storage;
 use crate::texture_cache::TEXTURE_REGION_DIMENSIONS;
-use crate::util::{MatrixHelpers, MaxRect, Recycler, ScaleOffset, RectHelpers, VectorHelpers};
+use crate::util::{MatrixHelpers, MaxRect, Recycler, ScaleOffset, RectHelpers, PointHelpers};
 use crate::util::{clamp_to_scale_factor, pack_as_float, project_rect, raster_rect_to_device_pixels};
 use crate::internal_types::{LayoutPrimitiveInfo, Filter};
 use smallvec::SmallVec;
@@ -189,14 +189,14 @@ impl SpaceSnapper {
         }
     }
 
-    pub fn snap_vector<F>(&self, vector: &Vector2D<f32, F>) -> Vector2D<f32, F> where F: fmt::Debug {
+    pub fn snap_point<F>(&self, point: &Point2D<f32, F>) -> Point2D<f32, F> where F: fmt::Debug {
         debug_assert!(self.current_target_spatial_node_index != SpatialNodeIndex::INVALID);
         match self.snapping_transform {
             Some(ref scale_offset) => {
-                let snapped_device_vector : DeviceVector2D = scale_offset.map_vector(&vector).snap();
-                scale_offset.unmap_vector(&snapped_device_vector)
+                let snapped_device_vector : DevicePoint = scale_offset.map_point(point).snap();
+                scale_offset.unmap_point(&snapped_device_vector)
             }
-            None => *vector,
+            None => *point,
         }
     }
 

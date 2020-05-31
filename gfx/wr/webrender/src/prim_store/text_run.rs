@@ -308,7 +308,7 @@ impl TextRunPrimitive {
                 surface.device_pixel_scale,
                 spatial_tree,
             );
-            snap_to_device.snap_vector(&self.reference_frame_relative_offset)
+            snap_to_device.snap_point(&self.reference_frame_relative_offset.to_point()).to_vector()
         };
 
         let mut flags = specified_font.flags;
