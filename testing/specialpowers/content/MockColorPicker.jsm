@@ -4,13 +4,17 @@
 
 var EXPORTED_SYMBOLS = ["MockColorPicker"];
 
+ChromeUtils.defineModuleGetter(
+  this,
+  "WrapPrivileged",
+  "resource://specialpowers/WrapPrivileged.jsm"
+);
+
 const Cm = Components.manager;
 
 const CONTRACT_ID = "@mozilla.org/colorpicker;1";
 
-// Allow stuff from this scope to be accessed from non-privileged scopes. This
-// would crash if used outside of automation.
-Cu.forcePermissiveCOWs();
+Cu.crashIfNotInAutomation();
 
 var registrar = Cm.QueryInterface(Ci.nsIComponentRegistrar);
 var oldClassID = "";
@@ -71,6 +75,8 @@ var MockColorPicker = {
 
 function MockColorPickerInstance(window) {
   this.window = window;
+  this.showCallback = null;
+  this.showCallbackWrapped = null;
 }
 MockColorPickerInstance.prototype = {
   QueryInterface: ChromeUtils.generateQI([Ci.nsIColorPicker]),
@@ -88,11 +94,22 @@ MockColorPickerInstance.prototype = {
       let result = "";
       try {
         if (typeof MockColorPicker.showCallback == "function") {
+          if (MockColorPicker.showCallback != this.showCallback) {
+            this.showCallback = MockColorPicker.showCallback;
+            if (Cu.isXrayWrapper(this.window)) {
+              this.showCallbackWrapped = WrapPrivileged.wrapCallback(
+                MockColorPicker.showCallback,
+                this.window
+              );
+            } else {
+              this.showCallbackWrapped = this.showCallback;
+            }
+          }
           var updateCb = function(color) {
             result = color;
             aColorPickerShownCallback.update(color);
           };
-          let returnColor = MockColorPicker.showCallback(this, updateCb);
+          let returnColor = this.showCallbackWrapped(this, updateCb);
           if (typeof returnColor === "string") {
             result = returnColor;
           }

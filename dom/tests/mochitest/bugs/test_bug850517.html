@@ -20,8 +20,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=850517
     sb.win = window;
     sb.childA = ifrA.contentWindow;
     sb.childB = ifrB.contentWindow;
-    SpecialPowers.setWrapped(sb, 'is', SpecialPowers.wrap(is));
-    SpecialPowers.setWrapped(sb, 'ok', SpecialPowers.wrap(ok));
+    SpecialPowers.setWrapped(sb, 'is', SpecialPowers.wrapFor(is, sb));
+    SpecialPowers.setWrapped(sb, 'ok', SpecialPowers.wrapFor(ok, sb));
     is(window.theoneandonly.frameElement, ifrA, "Named child resolution works");
     SpecialPowers.Cu.evalInSandbox('is(win.theoneandonly, childA, "Named child resolution works via Xray");', sb);
     ifrA.removeAttribute('name');

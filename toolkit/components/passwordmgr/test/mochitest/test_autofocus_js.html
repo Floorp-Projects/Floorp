@@ -118,8 +118,7 @@ add_task(async function test_not_reopened_after_selecting() {
   listenForUnexpectedPopupShown();
 
   await SpecialPowers.spawn(getIframeBrowsingContext(window), [], function() {
-    let formFillController = SpecialPowers.Cc["@mozilla.org/satchel/form-fill-controller;1"].
-                             getService(SpecialPowers.Ci.nsIFormFillController);
+    let formFillController = SpecialPowers.getFormFillController();
     let usernameField = this.content.document.getElementById("form-basic-username");
     formFillController.markAsLoginManagerField(usernameField);
   });

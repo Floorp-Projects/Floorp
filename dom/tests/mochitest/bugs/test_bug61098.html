@@ -64,7 +64,7 @@ function registerMockPromptService()
     {
       this._toggleModalState();
       promptState = {method: "alert",
-                     parent: this.domWindow,
+                     parent: SpecialPowers.unwrap(this.domWindow),
                      title: aDialogTitle,
                      msg: aText
       };
@@ -74,7 +74,7 @@ function registerMockPromptService()
     {
       this._toggleModalState();
       promptState = {method: "alertCheck",
-                     parent: this.domWindow,
+                     parent: SpecialPowers.unwrap(this.domWindow),
                      title: aDialogTitle,
                      msg: aText,
                      checkMsg: aCheckMsg,
@@ -88,7 +88,7 @@ function registerMockPromptService()
     {
       this._toggleModalState();
       promptState = {method: "confirm",
-                     parent: this.domWindow,
+                     parent: SpecialPowers.unwrap(this.domWindow),
                      title: aDialogTitle,
                      msg: aText
       };
@@ -100,7 +100,7 @@ function registerMockPromptService()
     {
       this._toggleModalState();
       promptState = {method: "confirmCheck",
-                     parent: this.domWindow,
+                     parent: SpecialPowers.unwrap(this.domWindow),
                      title: aDialogTitle,
                      msg: aText,
                      checkMsg: aCheckMsg,
@@ -118,7 +118,7 @@ function registerMockPromptService()
     {
       this._toggleModalState();
       promptState = {method: "confirmCheck",
-                     parent: this.domWindow,
+                     parent: SpecialPowers.unwrap(this.domWindow),
                      title: aDialogTitle,
                      msg: aText,
                      checkMsg: aCheckMsg,
@@ -136,7 +136,7 @@ function registerMockPromptService()
     {
       this._toggleModalState();
       promptState = {method: "prompt",
-                     parent: this.domWindow,
+                     parent: SpecialPowers.unwrap(this.domWindow),
                      title: aDialogTitle,
                      msg: aText,
                      checkMsg: aCheckMsg,
@@ -168,7 +168,7 @@ function registerMockPromptService()
 
     getPrompt(aDOMWindow, aIID)
     {
-        return new MockPrompt(aDOMWindow);
+        return SpecialPowers.wrapCallbackObject(new MockPrompt(aDOMWindow));
     },
 
     alert(aParent, aDialogTitle, aText)
