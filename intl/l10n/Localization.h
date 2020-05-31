@@ -97,6 +97,8 @@ class Localization : public nsIObserver,
 
   bool mIsSync;
   nsTArray<nsString> mResourceIds;
+
+  JS::Heap<JS::Value> mBundles;
   JS::Heap<JS::Value> mGenerateBundles;
   JS::Heap<JS::Value> mGenerateBundlesSync;
 };
