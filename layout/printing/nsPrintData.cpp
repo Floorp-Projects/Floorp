@@ -28,7 +28,6 @@ static mozilla::LazyLogModule gPrintingLog("printing");
 nsPrintData::nsPrintData(ePrintDataType aType)
     : mType(aType),
       mPrintDocList(0),
-      mIsIFrameSelected(false),
       mIsParentAFrameSet(false),
       mOnStartSent(false),
       mIsAborted(false),
