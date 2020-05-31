@@ -498,7 +498,7 @@ bool DOMLocalization::ApplyTranslations(
 
 void DOMLocalization::OnChange() {
   Localization::OnChange();
-  if (mLocalization) {
+  if (mLocalization && !mResourceIds.IsEmpty()) {
     ErrorResult rv;
     RefPtr<Promise> promise = TranslateRoots(rv);
   }
