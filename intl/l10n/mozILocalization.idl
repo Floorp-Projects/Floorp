@@ -14,15 +14,9 @@
 [scriptable, uuid(7d468600-551f-4fe0-98c9-92a53b63ec8d)]
 interface mozILocalization : nsISupports
 {
-  void activate(in bool aSync, in bool aEager, in jsval aGenerateBundles, in jsval aGenerateBundlesSync);
+  void activate(in Array<AString> aResourceIds, in bool aSync, in bool aEager, in jsval aGenerateBundles, in jsval aGenerateBundlesSync);
 
   void setIsSync(in boolean isSync);
-
-  unsigned long addResourceId(in AString resourceId);
-  unsigned long removeResourceId(in AString resourceId);
-
-  unsigned long addResourceIds(in Array<AString> resourceIds);
-  unsigned long removeResourceIds(in Array<AString> resourceIds);
 
   Promise formatMessages(in Array<jsval> aKeys);
   Promise formatValues(in Array<jsval> aKeys);
@@ -32,7 +26,7 @@ interface mozILocalization : nsISupports
   Array<AUTF8String> formatValuesSync(in Array<jsval> aKeys);
   Array<jsval> formatMessagesSync(in Array<jsval> aKeys);
 
-  void onChange();
+  void onChange(in Array<AString> aResourceIds);
 };
 
 [scriptable, uuid(96632d26-1422-12e9-b1ce-9bb586acd241)]

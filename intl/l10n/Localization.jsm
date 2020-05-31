@@ -226,6 +226,8 @@ class Localization {
   /**
    * Activate the instance of the `Localization` class.
    *
+   * @param {Array<String>}    resourceIds - List of resource ids used by this
+   *                                         localization.
    * @param {bool}                    sync - Whether the instance should be
    *                                         synchronous.
    * @param {bool}                   eager - Whether the initial bundles should be
@@ -233,14 +235,14 @@ class Localization {
    * @param {Function}     generateBundles - Custom FluentBundle asynchronous generator.
    * @param {Function} generateBundlesSync - Custom FluentBundle generator.
    */
-  activate(sync, eager, generateBundles = defaultGenerateBundles, generateBundlesSync = defaultGenerateBundlesSync) {
+  activate(resourceIds, sync, eager, generateBundles = defaultGenerateBundles, generateBundlesSync = defaultGenerateBundlesSync) {
     if (this.bundles) {
       throw new Error("Attempt to initialize an already initialized instance.");
     }
     this.generateBundles = generateBundles;
     this.generateBundlesSync = generateBundlesSync;
     this.isSync = sync;
-    this.regenerateBundles(eager);
+    this.regenerateBundles(resourceIds, eager);
   }
 
   setIsSync(isSync) {
@@ -253,42 +255,6 @@ class Localization {
     } else {
       return CachedAsyncIterable.from(iterable);
     }
-  }
-
-  /**
-   * @param {String} resourceId - Resource IDs
-   */
-  addResourceId(resourceId) {
-    this.resourceIds.push(resourceId);
-    this.onChange();
-    return this.resourceIds.length;
-  }
-
-  /**
-   * @param {String} resourceId - Resource IDs
-   */
-  removeResourceId(resourceId) {
-    this.resourceIds = this.resourceIds.filter(r => r !== resourceId);
-    this.onChange();
-    return this.resourceIds.length;
-  }
-
-  /**
-   * @param {Array<String>} resourceIds - List of resource IDs
-   */
-  addResourceIds(resourceIds) {
-    this.resourceIds.push(...resourceIds);
-    this.onChange();
-    return this.resourceIds.length;
-  }
-
-  /**
-   * @param {Array<String>} resourceIds - List of resource IDs
-   */
-  removeResourceIds(resourceIds) {
-    this.resourceIds = this.resourceIds.filter(r => !resourceIds.includes(r));
-    this.onChange();
-    return this.resourceIds.length;
   }
 
   /**
@@ -494,9 +460,13 @@ class Localization {
     return val;
   }
 
-  onChange() {
+  /**
+   * @param {Array<String>}    resourceIds - List of resource ids used by this
+   *                                         localization.
+   */
+  onChange(resourceIds) {
     if (this.bundles) {
-      this.regenerateBundles(false);
+      this.regenerateBundles(resourceIds, false);
     }
   }
 
@@ -504,9 +474,13 @@ class Localization {
    * This method should be called when there's a reason to believe
    * that language negotiation or available resources changed.
    *
+   * @param {Array<String>}    resourceIds - List of resource ids used by this
+   *                                         localization.
    * @param {bool} eager - whether the I/O for new context should begin eagerly
    */
-  regenerateBundles(eager = false) {
+  regenerateBundles(resourceIds, eager = false) {
+    // Store for error reporting from `formatWithFallback`.
+    this.resourceIds = resourceIds;
     let generateMessages = this.isSync ? this.generateBundlesSync : this.generateBundles;
     this.bundles = this.cached(generateMessages(this.resourceIds));
     if (eager) {

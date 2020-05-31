@@ -71,7 +71,7 @@ void Localization::Activate(const bool aSync, const bool aEager,
   }
   mIsSync = aSync;
 
-  mLocalization->Activate(aSync, aEager, generateBundlesJS,
+  mLocalization->Activate(mResourceIds, aSync, aEager, generateBundlesJS,
                           generateBundlesSyncJS);
 
   RegisterObservers();
@@ -145,26 +145,23 @@ Localization::Observe(nsISupports* aSubject, const char* aTopic,
 
 void Localization::OnChange() {
   if (mLocalization) {
-    mLocalization->OnChange();
+    mLocalization->OnChange(mResourceIds);
   }
 }
 
 uint32_t Localization::AddResourceId(const nsAString& aResourceId) {
-  uint32_t ret = 0;
-  mLocalization->AddResourceId(aResourceId, &ret);
-  return ret;
+  if (!mResourceIds.Contains(aResourceId)) {
+    mResourceIds.AppendElement(aResourceId);
+    Localization::OnChange();
+  }
+  return mResourceIds.Length();
 }
 
 uint32_t Localization::RemoveResourceId(const nsAString& aResourceId) {
-  // We need to guard against a scenario where the
-  // mLocalization has been unlinked, but the elements
-  // are only now removed from DOM.
-  if (!mLocalization) {
-    return 0;
+  if (mResourceIds.RemoveElement(aResourceId)) {
+    Localization::OnChange();
   }
-  uint32_t ret = 0;
-  mLocalization->RemoveResourceId(aResourceId, &ret);
-  return ret;
+  return mResourceIds.Length();
 }
 
 /**
@@ -172,22 +169,33 @@ uint32_t Localization::RemoveResourceId(const nsAString& aResourceId) {
  */
 
 uint32_t Localization::AddResourceIds(const nsTArray<nsString>& aResourceIds) {
-  uint32_t ret = 0;
-  mLocalization->AddResourceIds(aResourceIds, &ret);
-  return ret;
+  bool added = false;
+
+  for (const auto& resId : aResourceIds) {
+    if (!mResourceIds.Contains(resId)) {
+      mResourceIds.AppendElement(resId);
+      added = true;
+    }
+  }
+  if (added) {
+    Localization::OnChange();
+  }
+  return mResourceIds.Length();
 }
 
 uint32_t Localization::RemoveResourceIds(
     const nsTArray<nsString>& aResourceIds) {
-  // We need to guard against a scenario where the
-  // mLocalization has been unlinked, but the elements
-  // are only now removed from DOM.
-  if (!mLocalization) {
-    return 0;
+  bool removed = false;
+
+  for (const auto& resId : aResourceIds) {
+    if (mResourceIds.RemoveElement(resId)) {
+      removed = true;
+    }
   }
-  uint32_t ret = 0;
-  mLocalization->RemoveResourceIds(aResourceIds, &ret);
-  return ret;
+  if (removed) {
+    Localization::OnChange();
+  }
+  return mResourceIds.Length();
 }
 
 already_AddRefed<Promise> Localization::FormatValue(
