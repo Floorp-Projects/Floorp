@@ -157,8 +157,10 @@ static char* DeserializeString(char* aChars, nsCString& aStr) {
   return p;
 }
 
-// Keep this in sync with PrefValue in prefs_parser/src/lib.rs.
+// Keep this in sync with PrefValue in parser/src/lib.rs.
 union PrefValue {
+  // PrefValues within Pref objects own their chars. PrefValues passed around
+  // as arguments don't own their chars.
   const char* mStringVal;
   int32_t mIntVal;
   bool mBoolVal;
@@ -422,14 +424,21 @@ struct PrefsSizes {
 
 static StaticRefPtr<SharedPrefMap> gSharedMap;
 
-static ArenaAllocator<4096, 1> gPrefNameArena;
+// Arena for Pref names. Inside a function so we can assert it's only accessed
+// on the main thread.
+static inline ArenaAllocator<4096, 1>& PrefNameArena() {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  static ArenaAllocator<4096, 1> sPrefNameArena;
+  return sPrefNameArena;
+}
 
 class PrefWrapper;
 
 class Pref {
  public:
   explicit Pref(const char* aName)
-      : mName(ArenaStrdup(aName, gPrefNameArena)),
+      : mName(ArenaStrdup(aName, PrefNameArena())),
         mType(static_cast<uint32_t>(PrefType::None)),
         mIsSticky(false),
         mIsLocked(false),
@@ -441,7 +450,7 @@ class Pref {
 
   ~Pref() {
     // There's no need to free mName because it's allocated in memory owned by
-    // gPrefNameArena.
+    // sPrefNameArena.
 
     mDefaultValue.Clear(Type());
     mUserValue.Clear(Type());
@@ -849,7 +858,7 @@ class Pref {
   }
 
   void AddSizeOfIncludingThis(MallocSizeOf aMallocSizeOf, PrefsSizes& aSizes) {
-    // Note: mName is allocated in gPrefNameArena, measured elsewhere.
+    // Note: mName is allocated in sPrefNameArena, measured elsewhere.
     aSizes.mPrefValues += aMallocSizeOf(this);
     if (IsTypeString()) {
       if (mHasDefaultValue) {
@@ -862,7 +871,7 @@ class Pref {
   }
 
  private:
-  const char* mName;  // allocated in gPrefNameArena
+  const char* mName;  // allocated in sPrefNameArena
 
   uint32_t mType : 2;
   uint32_t mIsSticky : 1;
@@ -1717,18 +1726,18 @@ static nsDataHashtable<nsCStringHashKey, TelemetryLoadData>* gTelemetryLoadData;
 
 extern "C" {
 
-// Keep this in sync with PrefFn in prefs_parser/src/lib.rs.
+// Keep this in sync with PrefFn in parser/src/lib.rs.
 typedef void (*PrefsParserPrefFn)(const char* aPrefName, PrefType aType,
                                   PrefValueKind aKind, PrefValue aValue,
                                   bool aIsSticky, bool aIsLocked);
 
-// Keep this in sync with ErrorFn in prefs_parser/src/lib.rs.
+// Keep this in sync with ErrorFn in parser/src/lib.rs.
 //
 // `aMsg` is just a borrow of the string, and must be copied if it is used
 // outside the lifetime of the prefs_parser_parse() call.
 typedef void (*PrefsParserErrorFn)(const char* aMsg);
 
-// Keep this in sync with prefs_parser_parse() in prefs_parser/src/lib.rs.
+// Keep this in sync with prefs_parser_parse() in parser/src/lib.rs.
 bool prefs_parser_parse(const char* aPath, PrefValueKind aKind,
                         const char* aBuf, size_t aLen,
                         PrefsParserPrefFn aPrefFn, PrefsParserErrorFn aErrorFn);
@@ -3150,7 +3159,7 @@ PreferenceServiceReporter::CollectReports(
     }
   }
 
-  sizes.mPrefNameArena += gPrefNameArena.SizeOfExcludingThis(mallocSizeOf);
+  sizes.mPrefNameArena += PrefNameArena().SizeOfExcludingThis(mallocSizeOf);
 
   for (CallbackNode* node = gFirstCallback; node; node = node->Next()) {
     node->AddSizeOfIncludingThis(mallocSizeOf, sizes);
@@ -3547,7 +3556,7 @@ Preferences::~Preferences() {
 
   gSharedMap = nullptr;
 
-  gPrefNameArena.Clear();
+  PrefNameArena().Clear();
 }
 
 NS_IMPL_ISUPPORTS(Preferences, nsIPrefService, nsIObserver, nsIPrefBranch,
@@ -3633,7 +3642,7 @@ FileDescriptor Preferences::EnsureSnapshot(size_t* aSize) {
     gHashTable->clearAndCompact();
     Unused << gHashTable->reserve(kHashTableInitialLengthContent);
 
-    gPrefNameArena.Clear();
+    PrefNameArena().Clear();
   }
 
   *aSize = gSharedMap->MapSize();
@@ -3752,7 +3761,7 @@ Preferences::ResetPrefs() {
   gHashTable->clearAndCompact();
   Unused << gHashTable->reserve(kHashTableInitialLengthParent);
 
-  gPrefNameArena.Clear();
+  PrefNameArena().Clear();
 
   return InitInitialObjects(/* isStartup */ false);
 }
