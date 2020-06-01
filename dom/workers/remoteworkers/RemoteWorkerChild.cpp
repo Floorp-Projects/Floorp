@@ -345,6 +345,9 @@ nsresult RemoteWorkerChild::ExecWorkerOnMainThread(RemoteWorkerData&& aData) {
   info.mPartitionedPrincipal = partitionedPrincipalOrErr.unwrap();
   info.mLoadingPrincipal = loadingPrincipalOrErr.unwrap();
   info.mStorageAccess = aData.storageAccess();
+  info.mUseRegularPrincipal = aData.useRegularPrincipal();
+  info.mHasStorageAccessPermissionGranted =
+      aData.hasStorageAccessPermissionGranted();
   info.mOriginAttributes =
       BasePrincipal::Cast(principal)->OriginAttributesRef();
   info.mCookieJarSettings = net::CookieJarSettings::Create();

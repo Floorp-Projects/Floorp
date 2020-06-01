@@ -720,13 +720,14 @@ void ContentBlocking::UpdateAllowAccessOnCurrentProcess(
         nsCOMPtr<nsPIDOMWindowInner> inner =
             AntiTrackingUtils::GetInnerWindow(aContext);
         if (inner) {
-          inner->SaveStorageAccessGranted();
+          inner->SaveStorageAccessPermissionGranted();
         }
 
         nsCOMPtr<nsPIDOMWindowOuter> outer =
             nsPIDOMWindowOuter::GetFromCurrentInner(inner);
         if (outer) {
-          nsGlobalWindowOuter::Cast(outer)->SetHasStorageAccess(true);
+          nsGlobalWindowOuter::Cast(outer)->SetStorageAccessPermissionGranted(
+              true);
         }
       }
     }
@@ -932,13 +933,13 @@ bool ContentBlocking::ShouldAllowAccessFor(nsPIDOMWindowInner* aWindow,
   // Document::HasStoragePermission first checks if storage access granted is
   // cached in the inner window, if no, it then checks the storage permission
   // flag in the channel's loadinfo
-  bool allowed = document->HasStoragePermission();
+  bool allowed = document->HasStorageAccessPermissionGranted();
 
   if (!allowed) {
     *aRejectedReason = blockedReason;
   } else {
     if (MOZ_LOG_TEST(gAntiTrackingLog, mozilla::LogLevel::Debug) &&
-        aWindow->HasStorageAccessGranted()) {
+        aWindow->HasStorageAccessPermissionGranted()) {
       LOG(("Permission stored in the window. All good."));
     }
   }
@@ -1145,15 +1146,15 @@ bool ContentBlocking::ShouldAllowAccessFor(nsIChannel* aChannel, nsIURI* aURI,
     return false;
   }
 
-  // HasStorageAccessGranted only applies to channels that load documents,
-  // for sub-resources loads, just returns the result from loadInfo.
+  // HasStorageAccessPermissionGranted only applies to channels that load
+  // documents, for sub-resources loads, just returns the result from loadInfo.
   bool isDocument = false;
   aChannel->GetIsDocument(&isDocument);
 
   if (isDocument) {
     nsCOMPtr<nsPIDOMWindowInner> inner =
         AntiTrackingUtils::GetInnerWindow(targetBC);
-    if (inner && inner->HasStorageAccessGranted()) {
+    if (inner && inner->HasStorageAccessPermissionGranted()) {
       LOG(("Permission stored in the window. All good."));
       return true;
     }
