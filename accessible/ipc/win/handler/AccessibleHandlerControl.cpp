@@ -118,7 +118,18 @@ IMPL_IUNKNOWN1(AccessibleHandlerControl, IHandlerControl)
 HRESULT
 AccessibleHandlerControl::Invalidate() {
   ++mCacheGen;
-  mAccessibleCache.clear();
+  // We can't just call mAccessibleCache.clear() because doing so would release
+  // remote objects, making remote COM calls. Since this is an STA, an incoming
+  // COM call might be handled which might marshal an AccessibleHandler,
+  // which in turn might add itself to mAccessibleCache. Since we'd be in the
+  // middle of mutating mAccessibleCache, that might cause a crash. Instead,
+  // swap mAccessibleCache into a temporary map first, which will empty
+  // mAccessibleCache without releasing remote objects. Once mAccessibleCache
+  // is empty, it's safe to let the temporary map be destroyed when it goes
+  // out of scope. Remote calls will be made, but nothing will re-enter
+  // the temporary map while it's being destroyed.
+  AccessibleCache oldCache;
+  mAccessibleCache.swap(oldCache);
   return S_OK;
 }
 
