@@ -237,6 +237,7 @@ mozilla.components.feature.tabs.toolbar
 mozilla.components.feature.toolbar
 mozilla.components.feature.top.sites
 mozilla.components.feature.webcompat
+mozilla.components.feature.webcompat.reporter
 mozilla.components.feature.webnotifications
 mozilla.components.lib.crash
 mozilla.components.lib.crash.handler
