@@ -206,26 +206,26 @@ var OSKeyStore = {
         unlockPromise = osReauthenticator
           .asyncReauthenticateUser(reauth, dialogCaption, parentWindow)
           .then(reauthResult => {
-            let auth_details_extra = {};
-            if (reauthResult.length > 3) {
-              auth_details_extra.auto_admin = "" + !!reauthResult[2];
-              auth_details_extra.require_signon = "" + !!reauthResult[3];
-            }
             if (!reauthResult[0]) {
               throw new Components.Exception(
                 "User canceled OS reauth entry",
-                Cr.NS_ERROR_FAILURE,
-                null,
-                auth_details_extra
+                Cr.NS_ERROR_FAILURE
               );
             }
             let result = {
               authenticated: true,
               auth_details: "success",
-              auth_details_extra,
             };
             if (reauthResult.length > 1 && reauthResult[1]) {
               result.auth_details += "_no_password";
+            }
+            if (reauthResult.length > 3) {
+              if (reauthResult[2]) {
+                result.auth_details += "_auto_admin_logon";
+              }
+              if (!reauthResult[3]) {
+                result.auth_details += "_require_signon_disabled";
+              }
             }
             return result;
           });
@@ -274,12 +274,7 @@ var OSKeyStore = {
         this._pendingUnlockPromise = null;
         this._isLocked = true;
 
-        return {
-          authenticated: false,
-          auth_details: "fail",
-          auth_details_extra: err.data.QueryInterface(Ci.nsISupports)
-            .wrappedJSObject,
-        };
+        return { authenticated: false, auth_details: "fail" };
       }
     );
 
