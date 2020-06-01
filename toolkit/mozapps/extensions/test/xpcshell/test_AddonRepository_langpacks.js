@@ -120,7 +120,8 @@ add_task(async function test_cookies() {
     false,
     expiration,
     {},
-    Ci.nsICookie.SAMESITE_NONE
+    Ci.nsICookie.SAMESITE_NONE,
+    Ci.nsICookie.SCHEME_HTTP
   );
 
   await AddonRepository.getAvailableLangpacks();
