@@ -36,7 +36,6 @@
 #include "nsPluginTags.h"
 #include "nsFrameMessageManager.h"
 #include "nsHashKeys.h"
-#include "nsIAsyncShutdown.h"
 #include "nsIContentParent.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIObserver.h"
@@ -133,7 +132,6 @@ class ContentParent final
       public nsIObserver,
       public nsIDOMGeoPositionCallback,
       public nsIDOMGeoPositionErrorCallback,
-      public nsIAsyncShutdownBlocker,
       public nsIInterfaceRequestor,
       public gfx::gfxVarReceiver,
       public mozilla::LinkedListElement<ContentParent>,
@@ -342,7 +340,6 @@ class ContentParent final
   NS_DECL_NSIOBSERVER
   NS_DECL_NSIDOMGEOPOSITIONCALLBACK
   NS_DECL_NSIDOMGEOPOSITIONERRORCALLBACK
-  NS_DECL_NSIASYNCSHUTDOWNBLOCKER
   NS_DECL_NSIINTERFACEREQUESTOR
 
   /**
@@ -706,9 +703,6 @@ class ContentParent final
   static nsDataHashtable<nsUint32HashKey, ContentParent*>*
       sJSPluginContentParents;
   static StaticAutoPtr<LinkedList<ContentParent>> sContentParents;
-
-  void AddShutdownBlockers();
-  void RemoveShutdownBlockers();
 
 #if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
   // Cached Mac sandbox params used when launching content processes.
