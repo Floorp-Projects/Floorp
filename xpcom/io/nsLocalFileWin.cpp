@@ -57,6 +57,7 @@
 #include "nsIWidget.h"
 #include "mozilla/ShellHeaderOnlyUtils.h"
 #include "mozilla/WidgetUtils.h"
+#include "WinUtils.h"
 
 using namespace mozilla;
 using mozilla::FilePreferences::kDevicePathSpecifier;
@@ -462,7 +463,9 @@ static nsresult GetFileInfo(const nsString& aName, PRFileInfo64* aInfo) {
     return ConvertWinError(GetLastError());
   }
 
-  if (fileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+  if (fileData.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) {
+    aInfo->type = PR_FILE_OTHER;
+  } else if (fileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
     aInfo->type = PR_FILE_DIRECTORY;
   } else {
     aInfo->type = PR_FILE_FILE;
@@ -750,6 +753,15 @@ nsLocalFile::nsLocalFile(const nsLocalFile& aOther)
       mUseDOSDevicePathSyntax(aOther.mUseDOSDevicePathSyntax),
       mWorkingPath(aOther.mWorkingPath) {}
 
+nsresult nsLocalFile::ResolveSymlink() {
+  std::wstring workingPath(mWorkingPath.Data());
+  if (!widget::WinUtils::ResolveJunctionPointsAndSymLinks(workingPath)) {
+    return NS_ERROR_FAILURE;
+  }
+  mResolvedPath.Assign(workingPath.c_str(), workingPath.length());
+  return NS_OK;
+}
+
 // Resolve any shortcuts and stat the resolved path. After a successful return
 // the path is guaranteed valid and the members of mFileInfo64 can be used.
 nsresult nsLocalFile::ResolveAndStat() {
@@ -780,9 +792,28 @@ nsresult nsLocalFile::ResolveAndStat() {
     return rv;
   }
 
-  // TODO: Implement symlink support
+  if (mFileInfo64.type != PR_FILE_OTHER) {
+    mResolveDirty = false;
+    mDirty = false;
+    return NS_OK;
+  }
+
+  // OTHER from GetFileInfo currently means a symlink
+  rv = ResolveSymlink();
+  // Even if it fails we need to have the resolved path equal to working path
+  // for those functions that always use the resolved path.
+  if (NS_FAILED(rv)) {
+    mResolvedPath.Assign(mWorkingPath);
+    return rv;
+  }
 
   mResolveDirty = false;
+  // get the details of the resolved path
+  rv = GetFileInfo(mResolvedPath, &mFileInfo64);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
   mDirty = false;
   return NS_OK;
 }
