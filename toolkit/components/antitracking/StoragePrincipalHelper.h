@@ -59,23 +59,27 @@
  * From a Document:
  * - Regular Principal: nsINode::NodePrincipal
  * - Storage Access Principal: Document::EffectiveStoragePrincipal
- * - Partitioned Principal: Document::IntrinsicStoragePrincipal
+ * - Partitioned Principal: Document::PartitionedPrincipal
  *
  * From a Global object:
  * - Regular Principal: nsIScriptObjectPrincipal::GetPrincipal
  * - Storage Access Principal:
  *     nsIScriptObjectPrincipal::GetEffectiveStoragePrincipal
- * - Partitioned Principal: nsIScriptObjectPrincipal::IntrinsicStoragePrincipal
+ * - Partitioned Principal: nsIScriptObjectPrincipal::PartitionedPrincipal
  *
  * From a Worker:
- * - Regular Principal: WorkerPrivate::GetPrincipal
- * - Storage Access Principal: WorkerPrivate::GetEffectiveStoragePrincipal
+ * - Regular Principal: WorkerPrivate::GetPrincipal (main-thread)
+ * - Regular Principal: WorkerPrivate::GetPrincipalInfo (worker thread)
+ * - Storage Access Principal: WorkerPrivate::GetEffectiveStoragePrincipalInfo
+ *                  (worker-thread)
  *
  * For a nsIChannel, the final principals must be calculated and they can be
  * obtained by calling:
  * - Regular Principal: nsIScriptSecurityManager::getChannelResultPrincipal
  * - Storage Access Principal:
  *     nsIScriptSecurityManager::getChannelResultStoragePrincipal
+ * - Partitioned and regular Principal:
+ *     nsIScriptSecurityManager::getChannelResultPrincipals
  *
  * Each use of nsIPrincipal is unique and it should be reviewed by anti-tracking
  * peers. But we can group the use of nsIPrincipal in these categories:
@@ -214,6 +218,7 @@ class OriginAttributes;
 class StoragePrincipalHelper final {
  public:
   static nsresult Create(nsIChannel* aChannel, nsIPrincipal* aPrincipal,
+                         bool aForceIsolation,
                          nsIPrincipal** aStoragePrincipal);
 
   static nsresult PrepareEffectiveStoragePrincipalOriginAttributes(
@@ -229,7 +234,7 @@ class StoragePrincipalHelper final {
 
     // This is a dynamic principal based on the current state of the origin. If
     // the origin has the storage permission granted, effective storagePrincipal
-    // will be the regular principal, otherwise, the intrinsic storagePrincipal
+    // will be the regular principal, otherwise, the partitioned Principal
     // will be used.
     eStorageAccessPrincipal,
 

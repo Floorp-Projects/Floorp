@@ -390,6 +390,13 @@ partial interface Document {
   [ChromeOnly]
   readonly attribute Principal effectiveStoragePrincipal;
 
+  // You should probably not be using this principal getter since it performs
+  // no checks to ensure that the partitioned principal should really be used
+  // here.  It is only designed to be used in very specific circumstances, such
+  // as when inheriting the document/storage principal.
+  [ChromeOnly]
+  readonly attribute Principal partitionedPrincipal;
+
   // The principal to use for the content blocking allow list
   [ChromeOnly]
   readonly attribute Principal? contentBlockingAllowListPrincipal;

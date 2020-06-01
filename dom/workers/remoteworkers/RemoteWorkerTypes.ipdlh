@@ -49,7 +49,7 @@ struct RemoteWorkerData
 
   PrincipalInfo loadingPrincipalInfo;
   PrincipalInfo principalInfo;
-  PrincipalInfo storagePrincipalInfo;
+  PrincipalInfo partitionedPrincipalInfo;
 
   nsCString domain;
 
