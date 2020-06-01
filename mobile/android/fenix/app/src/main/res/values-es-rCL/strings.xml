@@ -18,6 +18,9 @@
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">Tus pestañas abiertas se mostrarán aquí.</string>
 
+    <!-- No Private Tabs Message Description -->
+    <string name="no_private_tabs_description">Tus pestañas privadas se mostrarán aquí.</string>
+
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s es producido por Mozilla.</string>
 
@@ -33,13 +36,21 @@
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">Eliminar sesión</string>
 
-    <!-- Private mode shortcut "contextual feature recommender" (CFR) -->
+    <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
     <string name="cfr_message">Añade un acceso directo para abrir pestañas privadas desde tu pantalla de inicio.</string>
     <!-- Text for the positive button -->
     <string name="cfr_pos_button_text">Añadir acceso directo</string>
     <!-- Text for the negative button -->
     <string name="cfr_neg_button_text">No, gracias</string>
+
+    <!-- Search widget "contextual feature recommendation" (CFR) -->
+    <!-- Text for the main message. 'Firefox' intentionally hardcoded here.-->
+    <string name="search_widget_cfr_message">Llega a Firefox más rápido. Agrega un widget a tu pantalla de inicio.</string>
+    <!-- Text for the positive button -->
+    <string name="search_widget_cfr_pos_button_text">Añadir widget</string>
+    <!-- Text for the negative button -->
+    <string name="search_widget_cfr_neg_button_text">Ahora no</string>
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
@@ -278,7 +289,7 @@
     <!-- Preference for syncing bookmarks -->
     <string name="preferences_sync_bookmarks">Marcadores</string>
     <!-- Preference for syncing logins -->
-    <string name="preferences_sync_logins">Conexiones</string>
+    <string name="preferences_sync_logins">Credenciales</string>
     <!-- Preference for signing out -->
     <string name="preferences_sign_out">Salir</string>
     <!-- Preference displays and allows changing current FxA device name -->
@@ -876,7 +887,7 @@
     <string name="tip_firefox_preview_moved_header_preview_installed">Firefox Nightly se mudó</string>
     <!-- text for firefox preview moving tip description -->
     <string name="tip_firefox_preview_moved_description_preview_installed">Esta aplicación ya no recibirá actualizaciones de seguridad. Deja de usarla y cambia al nuevo Nightly.
-        \ n \ nPara transferir tus marcadores, conexiones e historial a otra aplicación, crea una cuenta de Firefox.</string>
+        \ n \ nPara transferir tus marcadores, credenciales e historial a otra aplicación, crea una cuenta de Firefox.</string>
     <!-- text for firefox preview moving tip button  -->
     <string name="tip_firefox_preview_moved_button_preview_installed">Cambiá al nuevo Nightly</string>
 
@@ -884,7 +895,7 @@
     <string name="tip_firefox_preview_moved_header_preview_not_installed">Firefox Nightly se mudó</string>
     <!-- text for firefox preview moving tip description -->
     <string name="tip_firefox_preview_moved_description_preview_not_installed">Esta aplicación ya no recibirá actualizaciones de seguridad. Obtén el nuevo Nightly y deja de usar esta aplicación.
-        \ n \ nPara transferir tus marcadores, conexiones e historial a otra aplicación, crea una cuenta de Firefox.</string>
+        \ n \ nPara transferir tus marcadores, credenciales e historial a otra aplicación, crea una cuenta de Firefox.</string>
     <!-- text for firefox preview moving tip button  -->
     <string name="tip_firefox_preview_moved_button_preview_not_installed">Obtén el nuevo Nightly</string>
 
@@ -1168,9 +1179,9 @@
     <string name="add_to_homescreen_description">Puedes añadir fácilmente este sitio web a tu pantalla de inicio de tu teléfono para tener acceso instantáneo y navegar rápidamente, consiguiendo una experiencia similar a la de una aplicación real.</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
-    <string name="preferences_passwords_logins_and_passwords">Conexiones y contraseñas</string>
+    <string name="preferences_passwords_logins_and_passwords">Credenciales y contraseñas</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
-    <string name="preferences_passwords_save_logins">Guardar conexiones y contraseñas</string>
+    <string name="preferences_passwords_save_logins">Guardar credenciales y contraseñas</string>
     <!-- Preference option for asking to save passwords in Fenix -->
     <string name="preferences_passwords_save_logins_ask_to_save">Preguntar si guardar</string>
     <!-- Preference option for never saving passwords in Fenix -->
@@ -1178,7 +1189,7 @@
     <!-- Preference for autofilling saved logins in Fenix -->
     <string name="preferences_passwords_autofill">Autollenado</string>
     <!-- Preference for syncing saved logins in Fenix -->
-    <string name="preferences_passwords_sync_logins">Sincronizar conexiones</string>
+    <string name="preferences_passwords_sync_logins">Sincronizar credenciales</string>
     <!-- Syncing saved logins in Fenix is on -->
     <string name="preferences_passwords_sync_logins_on">Sí</string>
     <!-- Syncing saved logins in Fenix is off -->
@@ -1188,20 +1199,20 @@
     <!-- Syncing saved logins in Fenix needs login -->
     <string name="preferences_passwords_sync_logins_sign_in">Conectarse para sincronizar</string>
     <!-- Preference to access list of saved logins -->
-    <string name="preferences_passwords_saved_logins">Conexiones guardadas</string>
+    <string name="preferences_passwords_saved_logins">Credenciales guardadas</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
-    <string name="preferences_passwords_saved_logins_description_empty_text">Las conexiones que guardas o sincronizas con %s serán mostradas aquí.</string>
+    <string name="preferences_passwords_saved_logins_description_empty_text">Las credenciales que guardas o sincronizas con %s serán mostradas aquí.</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">Aprender más acerca de Sync.</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">Excepciones</string>
 
     <!-- Empty description of list of login exceptions that we never save logins for -->
-    <string name="preferences_passwords_exceptions_description_empty">Las conexiones y contraseñas que no son guardadas serán mostradas aquí.</string>
+    <string name="preferences_passwords_exceptions_description_empty">Las credenciales y contraseñas que no son guardadas serán mostradas aquí.</string>
     <!-- Description of list of login exceptions that we never save logins for -->
-    <string name="preferences_passwords_exceptions_description">Las conexiones y contraseñas no serán guardadas para estos sitios.</string>
+    <string name="preferences_passwords_exceptions_description">Las credenciales y contraseñas no serán guardadas para estos sitios.</string>
     <!-- Hint for search box in logins list -->
-    <string name="preferences_passwords_saved_logins_search">Buscar conexiones</string>
+    <string name="preferences_passwords_saved_logins_search">Buscar credenciales</string>
     <!-- Option to sort logins list A-Z, alphabetically -->
     <string name="preferences_passwords_saved_logins_alphabetically">Alfabéticamente</string>
     <!-- Option to sort logins list by most recently used -->
@@ -1215,13 +1226,13 @@
     <!-- Message displayed in security prompt to reenter a secret pin to access saved logins -->
     <string name="preferences_passwords_saved_logins_enter_pin">Reingresa tu PIN</string>
     <!-- Message displayed in security prompt to access saved logins -->
-    <string name="preferences_passwords_saved_logins_enter_pin_description">Desbloquea para ver tus conexiones guardadas</string>
+    <string name="preferences_passwords_saved_logins_enter_pin_description">Desbloquea para ver tus credenciales guardadas</string>
     <!-- Message displayed when a connection is insecure and we detect the user is entering a password -->
-    <string name="logins_insecure_connection_warning">Esta conexión no es segura. Las conexiones ingresadas aquí pueden verse comprometidas.</string>
+    <string name="logins_insecure_connection_warning">Esta conexión no es segura. Las credenciales ingresadas aquí pueden verse comprometidas.</string>
     <!-- Learn more link that will link to a page with more information displayed when a connection is insecure and we detect the user is entering a password -->
     <string name="logins_insecure_connection_warning_learn_more">Aprender más</string>
     <!-- Prompt message displayed when Fenix detects a user has entered a password and user decides if Fenix should save it. The first parameter is the name of the application (For example: Fenix)  -->
-    <string name="logins_doorhanger_save">¿Quieres que %s guarde esta conexión?</string>
+    <string name="logins_doorhanger_save">¿Quieres que %s guarde esta credencial?</string>
     <!-- Positive confirmation that Fenix should save the new or updated login -->
     <string name="logins_doorhanger_save_confirmation">Guardar</string>
     <!-- Negative confirmation that Fenix should not save the new or updated login -->
@@ -1243,11 +1254,11 @@
     <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
     <string name="saved_login_hide_password">Ocultar contraseña</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
-    <string name="logins_biometric_prompt_message">Desbloquea para ver tus conexiones guardadas</string>
+    <string name="logins_biometric_prompt_message">Desbloquea para ver tus credenciales guardadas</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_title">Asegura tus conexiones y contraseñas</string>
+    <string name="logins_warning_dialog_title">Asegura tus credenciales y contraseñas</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_message">Configura un patrón de bloqueo de dispositivo, PIN o contraseña para proteger tus conexiones y contraseñas guardas, y así no sean accedidas si alguien más tiene tu dispositivo.</string>
+    <string name="logins_warning_dialog_message">Configura un patrón de bloqueo de dispositivo, PIN o contraseña para proteger tus credenciales y contraseñas guardadas, y así no sean accedidas si alguien más tiene tu dispositivo.</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">Más tarde</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
@@ -1265,7 +1276,7 @@
     <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
     <string name="saved_logins_sort_strategy_last_used">Último uso</string>
     <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
-    <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Menú para ordenar conexiones</string>
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Menú para ordenar credenciales</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Añadir motor de búsqueda</string>
@@ -1365,15 +1376,15 @@
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Eliminar</string>
     <!--  The saved login options menu description. -->
-    <string name="login_options_menu">Opciones de conexiones</string>
+    <string name="login_options_menu">Opciones de credenciales</string>
     <!--  The editable text field for a login's web address. -->
-    <string name="saved_login_hostname_description">El campo de texto editable para la dirección web de la conexión.</string>
+    <string name="saved_login_hostname_description">El campo de texto editable para la dirección web de la credencial.</string>
     <!--  The editable text field for a login's username. -->
-    <string name="saved_login_username_description">El campo de texto editable para el nombre de usuario de la conexión.</string>
+    <string name="saved_login_username_description">El campo de texto editable para el nombre de usuario de la credencial.</string>
     <!--  The editable text field for a login's password. -->
-    <string name="saved_login_password_description">El campo de texto editable para la contraseña de la conexión.</string>
+    <string name="saved_login_password_description">El campo de texto editable para la contraseña de la credencial.</string>
     <!--  The button description to save changes to an edited login. -->
-    <string name="save_changes_to_login">Guardar cambios a la conexión.</string>
+    <string name="save_changes_to_login">Guardar cambios a la credencial.</string>
     <!--  The button description to discard changes to an edited login. -->
     <string name="discard_changes">Descartar cambios</string>
     <!--  The page title for editing a saved login. -->

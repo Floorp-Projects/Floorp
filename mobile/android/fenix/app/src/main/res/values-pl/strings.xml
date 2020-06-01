@@ -1374,7 +1374,7 @@
     <string name="browser_menu_add_to_top_sites">Dodaj do popularnych stron</string>
     <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
      the certificate authority that verified the ticket-->
-    <string name="certificate_info_verified_by">Zweryfikowana przez: %1$s </string>
+    <string name="certificate_info_verified_by">Zweryfikowane przez: %1$s</string>
     <!-- Login overflow menu delete button -->
     <string name="login_menu_delete_button">Usuń</string>
     <!-- Login overflow menu edit button -->

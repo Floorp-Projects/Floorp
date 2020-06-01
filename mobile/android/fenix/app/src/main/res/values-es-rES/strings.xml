@@ -21,6 +21,9 @@
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">Tus pestañas abiertas aparecerán aquí.</string>
 
+    <!-- No Private Tabs Message Description -->
+    <string name="no_private_tabs_description">Tus pestañas privadas se mostrarán aquí.</string>
+
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s es producido por Mozilla.</string>
 
@@ -35,13 +38,21 @@
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">Eliminar sesión</string>
 
-    <!-- Private mode shortcut "contextual feature recommender" (CFR) -->
+    <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
     <string name="cfr_message">Añadir un acceso directo para abrir pestañas privadas desde la pantalla de inicio.</string>
     <!-- Text for the positive button -->
     <string name="cfr_pos_button_text">Agregar acceso directo</string>
     <!-- Text for the negative button -->
     <string name="cfr_neg_button_text">No, gracias</string>
+
+    <!-- Search widget "contextual feature recommendation" (CFR) -->
+    <!-- Text for the main message. 'Firefox' intentionally hardcoded here.-->
+    <string name="search_widget_cfr_message">Accede a Firefox más rápido. Añade un widget a tu pantalla de inicio.</string>
+    <!-- Text for the positive button -->
+    <string name="search_widget_cfr_pos_button_text">Añadir widget</string>
+    <!-- Text for the negative button -->
+    <string name="search_widget_cfr_neg_button_text">Ahora no</string>
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
@@ -381,7 +392,7 @@
 
     <!-- Pairing Feature strings -->
     <!-- Instructions on how to access pairing -->
-    <string name="pair_instructions"><![CDATA[Visita <b>firefox.com/pair</b> en la versión de escritorio de Firefox para obtener el código QR.]]></string>
+    <string name="pair_instructions_2"><![CDATA[Escaneae el código QR mostrado en <b>firefox.com/pair</b>]]></string>
     <!-- Button to open camera for pairing -->
     <string name="pair_open_camera">Abrir cámara</string>
     <!-- Button to cancel pairing -->
@@ -840,14 +851,14 @@
     <string name="preference_accessibility_font_size_title">Tamaño de la fuente</string>
 
     <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
-    <string name="preference_accessibility_auto_size">Tamaño de fuente automático</string>
+    <string name="preference_accessibility_auto_size_2">Tamaño de fuente automático</string>
     <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
     <string name="preference_accessibility_auto_size_summary">El tamaño de la fuente será el mismo que el de Android. Desactiva esta opción para configurarlo aquí.</string>
 
     <!-- Title for the Delete browsing data preference -->
     <string name="preferences_delete_browsing_data">Eliminar datos del navegador</string>
     <!-- Title for the tabs item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_tabs_title">Pestañas abiertas</string>
+    <string name="preferences_delete_browsing_data_tabs_title_2">Pestañas abiertas</string>
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
     <string name="preferences_delete_browsing_data_tabs_subtitle">%d pestañas</string>
     <!-- Title for the data and history items in Delete browsing data -->

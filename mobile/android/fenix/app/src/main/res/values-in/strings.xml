@@ -20,6 +20,9 @@
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">Tab terbuka Anda akan ditampilkan di sini.</string>
 
+    <!-- No Private Tabs Message Description -->
+    <string name="no_private_tabs_description">Tab privat Anda akan muncul di sini.</string>
+
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s diproduksi oleh Mozilla.</string>
 
@@ -35,13 +38,21 @@
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">Hapus sesi</string>
 
-    <!-- Private mode shortcut "contextual feature recommender" (CFR) -->
+    <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
     <string name="cfr_message">Tambahkan pintasan untuk membuka tab privat dari layar Beranda Anda.</string>
     <!-- Text for the positive button -->
     <string name="cfr_pos_button_text">Tambahkan pintasan</string>
     <!-- Text for the negative button -->
     <string name="cfr_neg_button_text">Tidak, terima kasih</string>
+
+    <!-- Search widget "contextual feature recommendation" (CFR) -->
+    <!-- Text for the main message. 'Firefox' intentionally hardcoded here.-->
+    <string name="search_widget_cfr_message">Dapatkan akses cepat ke Firefox. Tambahkan widget ke layar Beranda Anda.</string>
+    <!-- Text for the positive button -->
+    <string name="search_widget_cfr_pos_button_text">Tambahkan widget</string>
+    <!-- Text for the negative button -->
+    <string name="search_widget_cfr_neg_button_text">Jangan sekarang</string>
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->

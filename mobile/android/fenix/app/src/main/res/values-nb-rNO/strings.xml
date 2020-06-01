@@ -1109,11 +1109,11 @@
     <!-- Category of trackers (social media trackers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_social_media_trackers_title">Sporing via sosiale medier</string>
     <!-- Description of social media trackers that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_social_media_trackers_description">Begrenser sosiale nettverk sine mulighet til å spore din aktivitet rundt på nettet.</string>
+    <string name="etp_social_media_trackers_description">Begrenser evnen sosiale nettverk har til å spore din surfe-aktiviteten din rundt på nettet.</string>
     <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_title">Sporingsinfokapsler på tvers av nettsteder</string>
     <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_cookies_description">Blokkerer informasjonskapsler som annonsenettverk og analyseselskaper bruker for å sammenstille din aktivitet på nettet på tvers av nettsteder.</string>
+    <string name="etp_cookies_description">Blokkerer informasjonskapsler som annonsenettverk og analyseselskap bruker for å sammenstille aktivitet en din på nettet på tvers av nettsteder.</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_title">Kryptominere</string>
     <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->

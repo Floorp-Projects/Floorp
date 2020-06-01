@@ -18,6 +18,9 @@
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">زبانه های باز شما در اینجا نشان داده می شود.</string>
 
+    <!-- No Private Tabs Message Description -->
+    <string name="no_private_tabs_description">زبانه های خصوصی شما در اینجا نشان داده می شود.</string>
+
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s توسط موزیلا تولید شده است.</string>
 
@@ -31,13 +34,16 @@
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">حذف جلسه</string>
 
-    <!-- Private mode shortcut "contextual feature recommender" (CFR) -->
+    <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
     <string name="cfr_message">برای باز کردن زبانه های خصوصی از صفحه اصلی ، میانبر اضافه کنید.</string>
     <!-- Text for the positive button -->
     <string name="cfr_pos_button_text">میانبر را اضافه کنید</string>
     <!-- Text for the negative button -->
     <string name="cfr_neg_button_text">نه، ممنون!</string>
+
+    <!-- Text for the negative button -->
+    <string name="search_widget_cfr_neg_button_text">اکنون نه</string>
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->

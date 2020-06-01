@@ -19,6 +19,9 @@
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">Các thẻ đang mở của bạn sẽ được hiển thị ở đây.</string>
 
+    <!-- No Private Tabs Message Description -->
+    <string name="no_private_tabs_description">Các thẻ riêng tư của bạn sẽ được hiển thị ở đây.</string>
+
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s được sản xuất bởi Mozilla.</string>
 
@@ -34,13 +37,21 @@
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">Xóa phiên</string>
 
-    <!-- Private mode shortcut "contextual feature recommender" (CFR) -->
+    <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
     <string name="cfr_message">Thêm lối tắt để mở các thẻ riêng tư từ màn hình chính của bạn.</string>
     <!-- Text for the positive button -->
     <string name="cfr_pos_button_text">Thêm lối tắt</string>
     <!-- Text for the negative button -->
     <string name="cfr_neg_button_text">Không, cảm ơn</string>
+
+    <!-- Search widget "contextual feature recommendation" (CFR) -->
+    <!-- Text for the main message. 'Firefox' intentionally hardcoded here.-->
+    <string name="search_widget_cfr_message">Truy cập Firefox nhanh hơn. Thêm widget vào màn hình chính của bạn.</string>
+    <!-- Text for the positive button -->
+    <string name="search_widget_cfr_pos_button_text">Thêm widget</string>
+    <!-- Text for the negative button -->
+    <string name="search_widget_cfr_neg_button_text">Không phải bây giờ</string>
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->

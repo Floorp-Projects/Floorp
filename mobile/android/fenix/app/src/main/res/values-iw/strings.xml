@@ -18,6 +18,9 @@
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">הלשוניות הפתוחות שלך יופיעו כאן.</string>
 
+    <!-- No Private Tabs Message Description -->
+    <string name="no_private_tabs_description">הלשוניות הפרטיות שלך יופיעו כאן.</string>
+
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">‏%1$s נוצר על־ידי Mozilla.</string>
 
@@ -26,7 +29,7 @@
     <string name="private_browsing_title">הפעלה זו היא הפעלה פרטית</string>
     <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="private_browsing_placeholder_description_2">%1$s מנקה את היסטוריית החיפוש והגלישה שלך מלשוניות פרטיות בעת סגירתן או שהיישומון נסגר. פעולה זו אמנם לא הופכת אותך לאלמוני כלפי אתרים או ספק האינטרנט שלך, אבל כן מקלה עליך בשמירה על הפעולות המקוונות שלך מפני כל מי שמשתמש במכשיר זה.</string>
+    <string name="private_browsing_placeholder_description_2">%1$s מנקה את היסטוריית החיפוש והגלישה שלך מלשוניות פרטיות בעת סגירתן או כשהיישומון נסגר. פעולה זו אמנם לא הופכת אותך לאלמוני כלפי אתרים או ספק האינטרנט שלך, אבל כן מקלה עליך בשמירה על הפעולות המקוונות שלך מפני כל מי שמשתמש במכשיר זה.</string>
     <string name="private_browsing_common_myths">
        מיתוסים נפוצים על גלישה פרטית
     </string>
@@ -34,7 +37,7 @@
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">מחיקת הפעלה</string>
 
-    <!-- Private mode shortcut "contextual feature recommender" (CFR) -->
+    <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
     <string name="cfr_message">ניתן להוסיף קיצור דרך לפתיחת לשוניות פרטיות ממסך הבית.</string>
     <!-- Text for the positive button -->
@@ -645,9 +648,9 @@
     <!-- Subtext that explains 'autoplay on Wi-Fi only' option -->
     <string name="preference_option_autoplay_allowed_wifi_subtext">שמע ווידאו יופעלו על גבי Wi-Fi</string>
     <!-- Label that indicates that video autoplay is allowed, but audio autoplay is blocked -->
-    <string name="preference_option_autoplay_block_audio2">חסימת שמע בלבד</string>
+    <string name="preference_option_autoplay_block_audio2">לחסום שמע בלבד</string>
     <!-- Label that indicates that all video and audio autoplay is blocked -->
-    <string name="preference_option_autoplay_blocked3">חסימת שמע ווידאו</string>
+    <string name="preference_option_autoplay_blocked3">לחסום שמע ווידאו</string>
     <!-- Summary of delete browsing data on quit preference if it is set to on -->
     <string name="delete_browsing_data_quit_on">פעיל</string>
     <!-- Summary of delete browsing data on quit preference if it is set to off -->
@@ -1090,7 +1093,7 @@
     <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_fingerprinters_title">רכיבי זהות דיגיטלית</string>
     <!-- Description of fingerprinters that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_fingerprinters_description">עוצר איסוף של נתונים שיכולים להיקשר בך בנוגע למכשיר שלך שעלולים לשמש למעקב.</string>
+    <string name="etp_fingerprinters_description">עוצר איסוף של נתונים המאפשרים זיהוי ייחודי של המכשיר שלך שעלולים לשמש לצרכי מעקב.</string>
     <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_title">תוכן מעקב</string>
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->

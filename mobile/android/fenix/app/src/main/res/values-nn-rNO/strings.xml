@@ -829,6 +829,9 @@
     <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
     <string name="preference_accessibility_auto_size_2">Automatisk skriftstorleik</string>
 
+    <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
+    <string name="preference_accessibility_auto_size_summary">Skriftstorleik vil samsvare med Android-innstillingane dine. Slå av for å handtere skriftstorleik her.</string>
+
     <!-- Title for the Delete browsing data preference -->
     <string name="preferences_delete_browsing_data">Slett nettlesardata</string>
     <!-- Title for the tabs item in Delete browsing data -->
@@ -882,14 +885,28 @@
     <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
     <string name="deleting_browsing_data_in_progress">Slettar nettlesardata…</string>
 
+    <!-- Tips -->
+    <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_header">Firefox Preview er no Firefox Nightly</string>
+    <!-- text for firefox preview moving tip description -->
+    <string name="tip_firefox_preview_moved_description">Firefox Nightly vert oppdatert kvar natt og har eksperimentelle nye funksjonar.
+        Lkevel kan hann vere mindre stabil. Last ned betaversjonen vår for ei meir stabil oppleving.</string>
     <!-- text for firefox preview moving tip button. "Mozilla Firefox Browser" is intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_button">Få nettlesaren Mozilla Firefox</string>
 
+    <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_header_preview_installed">Firefox Nightly har flytta</string>
+    <!-- text for firefox preview moving tip description -->
+    <string name="tip_firefox_preview_moved_description_preview_installed">Denne appen vil ikkje lenger ta imot tryggingsoppdateringar. Slutt å bruke denne appen og byt til den nye Nightly.
+        \n\nFor å overføre bokmerka, innloggingane og historikken til ein annen app, lagar du deg ein Firefox-konto.</string>
     <!-- text for firefox preview moving tip button  -->
     <string name="tip_firefox_preview_moved_button_preview_installed">Byt til den nye Nightly</string>
 
     <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_header_preview_not_installed">Firefox Nightly har flytta</string>
+    <!-- text for firefox preview moving tip description -->
+    <string name="tip_firefox_preview_moved_description_preview_not_installed">Denne appen vil ikkje lenger ta imot tryggingsoppdateringar. Få den nye Nightly og slutt å bruke denne appen.
+        \n\nFor å overføre bokmerka, innloggingeane og historikken til ein annen app, lagar du deg ein Firefox-konto.</string>
     <!-- text for firefox preview moving tip button  -->
     <string name="tip_firefox_preview_moved_button_preview_not_installed">Last ned den nye Nightly</string>
 
@@ -933,25 +950,38 @@
 
     <!-- text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header">Vern deg sjølv</string>
+    <!-- text for the tracking protection card description
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_tracking_protection_description1">%s hjelper med å hindre nettstadar fra å spore deg på nettet.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button">Standard</string>
     <!-- text for standard blocking option button description -->
     <string name="onboarding_tracking_protection_standard_button_description">Blokkerer færre sporingsmetodar, men gjer det muleg for sider å lesast inn normalt</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">Streng (tilrådd)</string>
+    <!-- text for strict blocking option button description -->
+    <string name="onboarding_tracking_protection_strict_button_description">Blokkerer fleire sporingsmekanismar for betre vern og yting, men kan føre til at nokre nettstadar ikkje fungerer optimalt</string>
     <!-- text for the toolbar position card header
         In English this is an idiom for "choose a side as in an argument or fight"
         but it is ok to make this more literally about "choosing a position in a physical space -->
     <string name="onboarding_toolbar_position_header">Vel side</string>
+    <!-- text for the toolbar position card description -->
+    <string name="onboarding_toolbar_position_description">Bruk verktøylinja nedst til å surfe med ei hand, eller flytt henne til toppen.</string>
     <!-- text for the private browsing onboarding card header -->
     <string name="onboarding_private_browsing_header">Surf privat</string>
     <!-- text for the private browsing onboarding card description
     The first parameter is an icon that represents private browsing -->
     <string name="onboarding_private_browsing_description1">Opne ei privat fane ein gong: Trykk på %s-ikonet.</string>
+    <!-- text for the private browsing onboarding card description, explaining how to always using private browsing -->
+    <string name="onboarding_private_browsing_always_description">Opne private faner kvar gong: Oppdater innstillingane dine for privat nettlesing.</string>
     <!-- text for the private browsing onbording card button, that launches settings -->
     <string name="onboarding_private_browsing_button">Opne innstillingar</string>
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">Ditt personvern</string>
+    <!-- text for the privacy notice onboarding card description
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_privacy_notice_description">Vi har utvikla %s for å gi deg kontroll over det du deler
+        på nettet og kva du deler med oss.</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Les personvernmerknaden vår</string>
 
@@ -964,6 +994,8 @@
     <!-- Onboarding theme -->
     <!-- text for the theme picker onboarding card header -->
     <string name="onboarding_theme_picker_header">Vel tema</string>
+    <!-- text for the theme picker onboarding card description -->
+    <string name="onboarding_theme_picker_description1">Spar litt batteri og synet ditt ved å aktivere mørkt tema.</string>
     <!-- Automatic theme setting (will follow device setting) -->
     <string name="onboarding_theme_automatic_title">Automatisk</string>
     <!-- Summary of automatic theme setting (will follow device setting) -->
@@ -983,12 +1015,18 @@
     <string name="sync_sent_tab_error_snackbar_action">PRØV IGJEN</string>
     <!-- Title of QR Pairing Fragment -->
     <string name="sync_scan_code">Skann QR-kode</string>
+    <!-- Instructions on how to access pairing -->
+    <string name="sign_in_instructions"><![CDATA[Opne Firefox på datamaskinea di og gå til <b>https://firefox.com/pair</b>]]></string>
     <!-- Text shown for sign in pairing when ready -->
     <string name="sign_in_ready_for_scan">Klar for å skanne</string>
     <!-- Text shown for settings option for sign with pairing -->
     <string name="sign_in_with_camera">Logg inn med kameraet ditt</string>
     <!-- Text shown for settings option for sign with email -->
     <string name="sign_in_with_email">Bruk e-post i staden</string>
+    <!-- Text shown in confirmation dialog to sign out of account -->
+    <string name="sign_out_confirmation_message">Firefox vil stoppe synkroniseringa med kontoen din, men vil ikkje slette nettleserdataa dine på denne eininga.</string>
+    <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="sign_out_confirmation_message_2">%s vil stoppe synkroniseringa med kontoen din, men vil ikkje slette nettleserdataa dine på denne eiinga.</string>
     <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
     <string name="sign_out_disconnect">Kople frå</string>
     <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->
@@ -1004,23 +1042,49 @@
     <string name="preference_enhanced_tracking_protection">Utvida sporingsvern</string>
     <!-- Title for the description of enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_title">Bruk nettet utan å bli overvaka</string>
+    <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="preference_enhanced_tracking_protection_explanation">Behald dine data for deg sjølv. %s beskyttear deg mot mange av dei vanlegaste sporingsteknologiar som følgjer det du gjer på nettet.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Les meir</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_option">Standard</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard">Standard (tilrådd)</string>
+    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_description">Balansert for vern og yting.</string>
+    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_description_2">Sider vil normalt laste inn, men blokkerer færre sporfølgjarar .</string>
+    <!--  Accessibility text for the Standard protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_standard_info_button">Kva er blokkert av standard sporingsvern</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Streng</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings, default setting -->
     <string name="preference_enhanced_tracking_protection_strict_default">Streng (standard)</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_default_description">Sterkare sporingsvern og raskare yting, men nokre nettstadar fungerer kanskje ikkje slik dei skal.</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_strict_recommended">Streng (tilrådd)</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_description">Sterkare vern, men kan føre til at nokre nettstadar eller innhald ikkje vil fungere.</string>
+    <!--  Accessibility text for the Strict protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_strict_info_button">Kva er blokkert av strengt sporingsvern?</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom">Tilpassa</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_description">Vel kva for sporfølgjarar og skript som skal blokkerast</string>
+    <!--  Accessibility text for the Strict protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_custom_info_button">Kva er blokkert av tilpassa sporingsvern</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
     <!-- Preference for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies">Infokapslar</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_1">Sporing på tvers av nettstadar og sporing via sosiale medium</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_2">Infokapslar frå ubesøkte nettstadar</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_3">Alle tredjeparts-infokapslar (kan lage feil på nettstadar)</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_4">Alle infokapslar (vil føre til feil på nettstadar)</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content">Sporingsinnhald</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
@@ -1038,12 +1102,26 @@
     <string name="enhanced_tracking_protection_allowed">Tillatne</string>
     <!-- Category of trackers (social media trackers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_social_media_trackers_title">Sporing via sosiale medium</string>
+    <!-- Description of social media trackers that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_social_media_trackers_description">Avgrenser evna sosiale nettverk har til å spore surfe-aktiviteten din rundt om på nettet.</string>
+    <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_title">Sporingsinfokapslar på tvers av nettstadar</string>
+    <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_description">Blokkerer informasjonskapslar som annonsenettverk og analyseselskap brukar for å samanstille aktiviteten din på nettet på tvers av nettstadar.</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_title">Kryptominarar</string>
+    <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cryptominers_description">Hindrar vondsinna skript i å få tilgang til eininga di for å utvinne digitale valutaer.</string>
     <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_fingerprinters_title">Fingerprinters</string>
+    <!-- Description of fingerprinters that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_fingerprinters_description">Stoppar innsamling av unikt identifiserbare data om eininga di som kan brukast til å spore deg rundt om på nettet.</string>
     <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_title">Sporingsinnhald</string>
+    <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_tracking_content_description">Stoppar innlasting av eksterne annonsar, videoar og anna innhald, då dei kan innehalde sporingskode. Kan påverke visse nettstadfunksjonar.</string>
+    <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="etp_onboarding_message_2">%s blokkerer sporfølgjarar på denne nettstaden når skjoldet er lilla. Trykk på ikonet for å sjå kva som er blokkert.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">Vern er slått PÅ for denne nettstaden</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
@@ -1109,6 +1187,9 @@
     <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
     <string name="add_to_homescreen_text_placeholder">Namn på snarveg</string>
 
+    <!-- Describes the add to homescreen functionality -->
+    <string name="add_to_homescreen_description">Du kan enkelt leggje til denne nettstaden på startskjermen til telefonen for å få direkte tilgang, og surfe raskare med ei app-liknande oppleving.</string>
+
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">Innloggingar og passord</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
@@ -1131,10 +1212,16 @@
     <string name="preferences_passwords_sync_logins_sign_in">Logg inn på Sync</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins">Lagra innloggingar</string>
+    <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
+    <string name="preferences_passwords_saved_logins_description_empty_text">Innloggingane du lagrar eller synkroniserer til %s vil visast her.</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">Les meir om Sync.</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">Unntak</string>
+    <!-- Empty description of list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions_description_empty">Innloggingar og passord som ikkje er lagra vil visast her.</string>
+    <!-- Description of list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions_description">Innloggingar og passord vil ikkje bli lagra for desse nettstadane.</string>
     <!-- Hint for search box in logins list -->
     <string name="preferences_passwords_saved_logins_search">Søk innloggingar</string>
     <!-- Option to sort logins list A-Z, alphabetically -->
@@ -1149,6 +1236,10 @@
     <string name="preferences_passwords_saved_logins_password">Passord</string>
     <!-- Message displayed in security prompt to reenter a secret pin to access saved logins -->
     <string name="preferences_passwords_saved_logins_enter_pin">Skriv inn PIN-kode på nytt</string>
+    <!-- Message displayed in security prompt to access saved logins -->
+    <string name="preferences_passwords_saved_logins_enter_pin_description">Lås opp for å sjå dei lagra innloggingane dine</string>
+    <!-- Message displayed when a connection is insecure and we detect the user is entering a password -->
+    <string name="logins_insecure_connection_warning">Dette sambandet er ikkje trygt. Innloggingar skrivne inn her kan bli kompromitterte</string>
     <!-- Learn more link that will link to a page with more information displayed when a connection is insecure and we detect the user is entering a password -->
     <string name="logins_insecure_connection_warning_learn_more">Les meir</string>
     <!-- Prompt message displayed when Fenix detects a user has entered a password and user decides if Fenix should save it. The first parameter is the name of the application (For example: Fenix)  -->
@@ -1176,6 +1267,10 @@
     <string name="saved_login_hide_password">Gøym passord</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
     <string name="logins_biometric_prompt_message">Lås opp for å sjå dei lagra innloggingane dine</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_title">Gjer innloggingane og passorda dine trygge</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_message">Lag ein PIN-kode, eit passord eller eit låsemønster for å hindre at andre får tilgang dei lagra innloggingane og passorda dine, dersom dei har tilgang til eininga di.</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">Seinare</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
@@ -1183,6 +1278,10 @@
     <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their logins -->
     <string name="logins_biometric_prompt_message_pin">Lås opp eininga di</string>
 
+    <!-- Title for Accessibility Force Enable Zoom Preference -->
+    <string name="preference_accessibility_force_enable_zoom">Zoom på alle nettstadar</string>
+    <!-- Summary for Accessibility Force Enable Zoom Preference -->
+    <string name="preference_accessibility_force_enable_zoom_summary">Aktiver for å tillate klyping og zooming, sjølv på nettstadar som hindrar denne gesten.</string>
     <!-- Saved logins sorting strategy menu item -by name- (if selected, it will sort saved logins alphabetically) -->
     <string name="saved_logins_sort_strategy_alphabetically">Namn (A-Å)</string>
     <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
@@ -1209,17 +1308,27 @@
     <string name="search_add_custom_engine_name_hint">Namn</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">Søkjestreng å bruke</string>
+    <!-- Description text for the Search String TextField. The %s is part of the string -->
+    <string name="search_add_custom_engine_search_string_example">Byt ut spørjinga med «%s». Eksempel:\nhttps://www.google.com/search?q=%s</string>
     <!-- Text for the button to learn more about adding a custom search engine -->
     <string name="search_add_custom_engine_learn_more_label">Les meir</string>
 
+    <!-- Accessibility description for the form in which details about the custom search engine are entered -->
+    <string name="search_add_custom_engine_form_description">Detaljar om tilpassa søkjeteneste</string>
     <!-- Accessibility description for the 'Learn more' link -->
     <string name="search_add_custom_engine_learn_more_description">Lenke til les meir</string>
 
     <!-- Text shown when a user leaves the name field empty -->
     <string name="search_add_custom_engine_error_empty_name">Skriv inn namn på søkjemotor</string>
 
+    <!-- Text shown when a user tries to add a search engine that already exists -->
+    <string name="search_add_custom_engine_error_existing_name">Søkjemotor med namnet «%» finst allereie.</string>
     <!-- Text shown when a user leaves the search string field empty -->
     <string name="search_add_custom_engine_error_empty_search_string">Skriv inn ein søkjestreng</string>
+    <!-- Text shown when a user leaves out the required template string -->
+    <string name="search_add_custom_engine_error_missing_template">Kontroller at søkjestrengen passar med eksempelformatet</string>
+    <!-- Text shown when we aren't able to validate the custom search query. The first parameter is the url of the custom search engine -->
+    <string name="search_add_custom_engine_error_cannot_reach">Feil ved tilkopling til «%s»</string>
     <!-- Text shown when a user creates a new search engine -->
     <string name="search_add_custom_engine_success_message">%s vart oppretta</string>
     <!-- Text shown when a user successfully edits a custom search engine -->
@@ -1246,6 +1355,8 @@
 
     <!-- First step for the allowing a permission -->
     <string name="phone_feature_blocked_step_settings">1. Gå til Android-innstillingar</string>
+    <!-- Second step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_permissions"><![CDATA[2. Trykk på <b>Løyve</b>]]></string>
     <!-- Third step for the allowing a permission (Fore example: Camera) -->
     <string name="phone_feature_blocked_step_feature"><![CDATA[3. Slå <b>%1$s</b> PÅ]]></string>
 

@@ -43,6 +43,11 @@
     <!-- Text for the negative button -->
     <string name="cfr_neg_button_text">Nej tak</string>
 
+    <!-- Search widget "contextual feature recommendation" (CFR) -->
+    <!-- Text for the main message. 'Firefox' intentionally hardcoded here.-->
+    <string name="search_widget_cfr_message">Åbn Firefox hurtigere. Tilføj en widget til din startskærm.</string>
+    <!-- Text for the positive button -->
+    <string name="search_widget_cfr_pos_button_text">Tilføj widget</string>
     <!-- Text for the negative button -->
     <string name="search_widget_cfr_neg_button_text">Ikke nu</string>
 
@@ -865,6 +870,9 @@
     <!-- Tips -->
     <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_header">Firefox Preview er nu Firefox Nightly</string>
+    <!-- text for firefox preview moving tip description -->
+    <string name="tip_firefox_preview_moved_description">Firefox Nightly bliver opdateret hver nat og har nye, eksperimentelle funktioner.
+        Nightly kan dog være ustabil nogle gange. Hent vores beta-version, hvis du vil have en mere stabil browser.</string>
     <!-- text for firefox preview moving tip button. "Mozilla Firefox Browser" is intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_button">Hent Mozilla Firefox Browser</string>
 
@@ -1255,6 +1263,9 @@
     <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
     <string name="saved_logins_sort_strategy_last_used">Senest brugt</string>
 
+    <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Sortér menuen logins</string>
+
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Tilføj søgetjeneste</string>
     <!-- Title of the Edit search engine screen -->
@@ -1352,6 +1363,14 @@
     <string name="login_deletion_confirmation">Er du sikker på, at du vil slette dette login?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Slet</string>
+    <!--  The saved login options menu description. -->
+    <string name="login_options_menu">Login-indstillinger</string>
+    <!--  The editable text field for a login's web address. -->
+    <string name="saved_login_hostname_description">Det redigerbare tekstfelt for login’ets webadresse.</string>
+    <!--  The editable text field for a login's username. -->
+    <string name="saved_login_username_description">Det redigerbare tekstfelt for login’ets brugernavn.</string>
+    <!--  The editable text field for a login's password. -->
+    <string name="saved_login_password_description">Det redigerbare tekstfelt for login’ets adgangskode.</string>
     <!--  The button description to save changes to an edited login. -->
     <string name="save_changes_to_login">Gem ændringer til login.</string>
     <!--  The button description to discard changes to an edited login. -->

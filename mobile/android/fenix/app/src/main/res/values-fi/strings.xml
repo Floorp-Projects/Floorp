@@ -20,6 +20,9 @@
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">Avoimet välilehdet näytetään tässä.</string>
 
+    <!-- No Private Tabs Message Description -->
+    <string name="no_private_tabs_description">Yksityiset välilehdet näkyvät tässä.</string>
+
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s on Mozillan tekemä.</string>
 
@@ -35,13 +38,21 @@
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">Poista istunto</string>
 
-    <!-- Private mode shortcut "contextual feature recommender" (CFR) -->
+    <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
     <string name="cfr_message">Lisää pikakuvake avataksesi yksityisiä välilehtiä aloitusnäytöltä.</string>
     <!-- Text for the positive button -->
     <string name="cfr_pos_button_text">Lisää pikakuvake</string>
     <!-- Text for the negative button -->
     <string name="cfr_neg_button_text">Ei kiitos</string>
+
+    <!-- Search widget "contextual feature recommendation" (CFR) -->
+    <!-- Text for the main message. 'Firefox' intentionally hardcoded here.-->
+    <string name="search_widget_cfr_message">Avaa Firefox aiempaa nopeammin. Lisää widget aloitusnäyttöön.</string>
+    <!-- Text for the positive button -->
+    <string name="search_widget_cfr_pos_button_text">Lisää widget</string>
+    <!-- Text for the negative button -->
+    <string name="search_widget_cfr_neg_button_text">Ei nyt</string>
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->

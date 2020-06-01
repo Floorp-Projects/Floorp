@@ -19,6 +19,9 @@
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">Ovdje će se prikazati tvoje otvorene kartice.</string>
 
+    <!-- No Private Tabs Message Description -->
+    <string name="no_private_tabs_description">Ovdje će se prikazati tvoje privatne kartice.</string>
+
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s proizvodi Mozilla.</string>
 
@@ -32,13 +35,21 @@
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">Izbriši sesiju</string>
 
-    <!-- Private mode shortcut "contextual feature recommender" (CFR) -->
+    <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
     <string name="cfr_message">Dodaj prečac za otvaranje privatnih kartica s početnog ekrana.</string>
     <!-- Text for the positive button -->
     <string name="cfr_pos_button_text">Dodaj prečac</string>
     <!-- Text for the negative button -->
     <string name="cfr_neg_button_text">Ne, hvala</string>
+
+    <!-- Search widget "contextual feature recommendation" (CFR) -->
+    <!-- Text for the main message. 'Firefox' intentionally hardcoded here.-->
+    <string name="search_widget_cfr_message">Dođi brže do Firefoxa. Dodaj programčić na početnu stranicu.</string>
+    <!-- Text for the positive button -->
+    <string name="search_widget_cfr_pos_button_text">Dodaj programčić</string>
+    <!-- Text for the negative button -->
+    <string name="search_widget_cfr_neg_button_text">Ne sada</string>
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->

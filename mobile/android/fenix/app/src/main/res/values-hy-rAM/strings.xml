@@ -19,6 +19,9 @@
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">Ձեր բաց ներդիրները կցուցադրվեն այստեղ:</string>
 
+    <!-- No Private Tabs Message Description -->
+    <string name="no_private_tabs_description">Ձեր գաղտնի ներդիրները կցուցադրվեն այստեղ:</string>
+
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s-ն արտադրվում է Mozilla-ի կողմից:</string>
 
@@ -33,13 +36,21 @@
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">Ջնջել աշխատաշրջանը</string>
 
-    <!-- Private mode shortcut "contextual feature recommender" (CFR) -->
+    <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
     <string name="cfr_message">Ավելացնել դյուրանցում՝ Տնային էկրանից գաղտնի ներդիրները բացելու համար:</string>
     <!-- Text for the positive button -->
     <string name="cfr_pos_button_text">Ավելացնել դյուրանցում</string>
     <!-- Text for the negative button -->
     <string name="cfr_neg_button_text">Ոչ, շնորհակալ եմ</string>
+
+    <!-- Search widget "contextual feature recommendation" (CFR) -->
+    <!-- Text for the main message. 'Firefox' intentionally hardcoded here.-->
+    <string name="search_widget_cfr_message">Ավելի արագ անցեք Firefox-ին: Ավելացրեք վիջեթը ձեր Տնային էկրանին:</string>
+    <!-- Text for the positive button -->
+    <string name="search_widget_cfr_pos_button_text">Ավելացնել վիջեթը</string>
+    <!-- Text for the negative button -->
+    <string name="search_widget_cfr_neg_button_text">Ոչ հիմա</string>
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
@@ -371,7 +382,7 @@
 
     <!-- Pairing Feature strings -->
     <!-- Instructions on how to access pairing -->
-    <string name="pair_instructions"><![CDATA[Այցելեք <b>firefox.com/pair</b> ձեր համակարգչի Firefox-ով՝ ձեր QR կոդը ստանալու համար:]]></string>
+    <string name="pair_instructions_2"><![CDATA[Սկանացրեք <b>firefox.com/pair</b>-ում ցուցադրված QR կոդը]]></string>
     <!-- Button to open camera for pairing -->
     <string name="pair_open_camera">Բացել տեսախցիկը</string>
     <!-- Button to cancel pairing -->
@@ -810,14 +821,14 @@
     <string name="preference_accessibility_font_size_title">Տառատեսակի չափ</string>
 
     <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
-    <string name="preference_accessibility_auto_size">Տառատեսակի ինքնաշխատ չափում</string>
+    <string name="preference_accessibility_auto_size_2">Տառատեսակի ինքնաշխատ չափում</string>
     <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
     <string name="preference_accessibility_auto_size_summary">Տառատեսակի չափը կհամապատասխանի ձեր Android-ի կարգավորումներին: Անջատեք՝ տառատեսակի չափը այստեղ կառավարելու համար:</string>
 
     <!-- Title for the Delete browsing data preference -->
     <string name="preferences_delete_browsing_data">Ջնջել դիտարկման տվյալները</string>
     <!-- Title for the tabs item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_tabs_title">Բաց ներդիրներ</string>
+    <string name="preferences_delete_browsing_data_tabs_title_2">Բաց ներդիրներ</string>
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
     <string name="preferences_delete_browsing_data_tabs_subtitle">%d ներդիրներ</string>
     <!-- Title for the data and history items in Delete browsing data -->
