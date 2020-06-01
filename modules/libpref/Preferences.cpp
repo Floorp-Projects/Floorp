@@ -608,19 +608,14 @@ class Pref {
       return true;
     }
 
-    const char* stringVal;
-    if (mHasDefaultValue) {
-      stringVal = mDefaultValue.mStringVal;
-      if (strlen(stringVal) > MAX_ADVISABLE_PREF_LENGTH) {
-        return false;
-      }
+    if (mHasDefaultValue &&
+        strlen(mDefaultValue.mStringVal) > MAX_ADVISABLE_PREF_LENGTH) {
+      return false;
     }
 
-    if (mHasUserValue) {
-      stringVal = mUserValue.mStringVal;
-      if (strlen(stringVal) > MAX_ADVISABLE_PREF_LENGTH) {
-        return false;
-      }
+    if (mHasUserValue &&
+        strlen(mUserValue.mStringVal) > MAX_ADVISABLE_PREF_LENGTH) {
+      return false;
     }
 
     return true;
