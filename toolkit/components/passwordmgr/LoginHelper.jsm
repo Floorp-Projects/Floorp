@@ -1218,7 +1218,6 @@ this.LoginHelper = {
         object: "os_auth",
         method: "reauthenticate",
         value: result.auth_details,
-        extra: result.auth_details_extra,
       };
       return {
         isAuthorized,
