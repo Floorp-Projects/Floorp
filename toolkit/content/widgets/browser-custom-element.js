@@ -265,7 +265,7 @@
 
       this._contentPrincipal = null;
 
-      this._contentStoragePrincipal = null;
+      this._contentPartitionedPrincipal = null;
 
       this._csp = null;
 
@@ -704,10 +704,10 @@
         : this.contentDocument.nodePrincipal;
     }
 
-    get contentStoragePrincipal() {
+    get contentPartitionedPrincipal() {
       return this.isRemoteBrowser
-        ? this._contentStoragePrincipal
-        : this.contentDocument.effectiveStoragePrincipal;
+        ? this._contentPartitionedPrincipal
+        : this.contentDocument.partitionedPrincipal;
     }
 
     get contentBlockingAllowListPrincipal() {
@@ -1279,7 +1279,7 @@
       aDocumentURI,
       aTitle,
       aContentPrincipal,
-      aContentStoragePrincipal,
+      aContentPartitionedPrincipal,
       aCSP,
       aReferrerInfo,
       aIsSynthetic,
@@ -1302,7 +1302,7 @@
         this._remoteWebNavigation._currentURI = aLocation;
         this._documentURI = aDocumentURI;
         this._contentPrincipal = aContentPrincipal;
-        this._contentStoragePrincipal = aContentStoragePrincipal;
+        this._contentPartitionedPrincipal = aContentPartitionedPrincipal;
         this._csp = aCSP;
         this._referrerInfo = aReferrerInfo;
         this._isSyntheticDocument = aIsSynthetic;
@@ -1333,7 +1333,7 @@
       }
     }
 
-    createAboutBlankContentViewer(aPrincipal, aStoragePrincipal) {
+    createAboutBlankContentViewer(aPrincipal, aPartitionedPrincipal) {
       if (this.isRemoteBrowser) {
         // Ensure that the content process has the permissions which are
         // needed to create a document with the given principal.
@@ -1359,7 +1359,7 @@
         // solution.
         this.messageManager.sendAsyncMessage(
           "BrowserElement:CreateAboutBlank",
-          { principal: aPrincipal, storagePrincipal: aStoragePrincipal }
+          { principal: aPrincipal, partitionedPrincipal: aPartitionedPrincipal }
         );
         return;
       }
@@ -1367,11 +1367,14 @@
         aPrincipal,
         this.contentPrincipal
       );
-      let storagePrincipal = BrowserUtils.principalWithMatchingOA(
-        aStoragePrincipal,
-        this.contentStoragePrincipal
+      let partitionedPrincipal = BrowserUtils.principalWithMatchingOA(
+        aPartitionedPrincipal,
+        this.contentPartitionedPrincipal
       );
-      this.docShell.createAboutBlankContentViewer(principal, storagePrincipal);
+      this.docShell.createAboutBlankContentViewer(
+        principal,
+        partitionedPrincipal
+      );
     }
 
     stopScroll() {
@@ -1699,7 +1702,7 @@
             "_mayEnableCharacterEncodingMenu",
             "_charsetAutodetected",
             "_contentPrincipal",
-            "_contentStoragePrincipal",
+            "_contentPartitionedPrincipal",
             "_isSyntheticDocument",
             "_innerWindowID",
           ]

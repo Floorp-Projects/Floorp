@@ -545,11 +545,12 @@ interface nsIDocShell : nsIDocShellTreeItem
   /**
    * Create a new about:blank document and content viewer.
    * @param aPrincipal the principal to use for the new document.
-   * @param aStoragePrincipal the storage principal to use for the new document.
+   * @param aPartitionedPrincipal the partitioned principal to use for the new
+   *        document.
    * @param aCsp the CSP to use for the new document.
    */
   void createAboutBlankContentViewer(in nsIPrincipal aPrincipal,
-                                     in nsIPrincipal aStoragePrincipal,
+                                     in nsIPrincipal aPartitionedPrincipal,
                                      [optional] in nsIContentSecurityPolicy aCSP);
 
   /**

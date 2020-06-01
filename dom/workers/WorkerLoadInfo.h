@@ -52,7 +52,7 @@ struct WorkerLoadInfoData {
   // If we load a data: URL, mPrincipal will be a null principal.
   nsCOMPtr<nsIPrincipal> mLoadingPrincipal;
   nsCOMPtr<nsIPrincipal> mPrincipal;
-  nsCOMPtr<nsIPrincipal> mStoragePrincipal;
+  nsCOMPtr<nsIPrincipal> mPartitionedPrincipal;
 
   // Taken from the parent context.
   nsCOMPtr<nsICookieJarSettings> mCookieJarSettings;
@@ -102,7 +102,7 @@ struct WorkerLoadInfoData {
   RefPtr<InterfaceRequestor> mInterfaceRequestor;
 
   UniquePtr<mozilla::ipc::PrincipalInfo> mPrincipalInfo;
-  UniquePtr<mozilla::ipc::PrincipalInfo> mStoragePrincipalInfo;
+  UniquePtr<mozilla::ipc::PrincipalInfo> mPartitionedPrincipalInfo;
   nsCString mDomain;
   nsString mOriginNoSuffix;  // Derived from mPrincipal; can be used on worker
                              // thread.
@@ -157,13 +157,13 @@ struct WorkerLoadInfo : WorkerLoadInfoData {
   WorkerLoadInfo& operator=(WorkerLoadInfo&& aOther) = default;
 
   nsresult SetPrincipalsAndCSPOnMainThread(nsIPrincipal* aPrincipal,
-                                           nsIPrincipal* aStoragePrincipal,
+                                           nsIPrincipal* aPartitionedPrincipal,
                                            nsILoadGroup* aLoadGroup,
                                            nsIContentSecurityPolicy* aCSP);
 
   nsresult GetPrincipalsAndLoadGroupFromChannel(
       nsIChannel* aChannel, nsIPrincipal** aPrincipalOut,
-      nsIPrincipal** aStoragePrincipalOut, nsILoadGroup** aLoadGroupOut);
+      nsIPrincipal** aPartitionedPrincipalOut, nsILoadGroup** aLoadGroupOut);
 
   nsresult SetPrincipalsAndCSPFromChannel(nsIChannel* aChannel);
 

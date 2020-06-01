@@ -29,7 +29,7 @@ class nsIScriptObjectPrincipal : public nsISupports {
 
   virtual nsIPrincipal* GetEffectiveStoragePrincipal() = 0;
 
-  virtual nsIPrincipal* IntrinsicStoragePrincipal() = 0;
+  virtual nsIPrincipal* PartitionedPrincipal() = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIScriptObjectPrincipal,

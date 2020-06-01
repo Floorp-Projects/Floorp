@@ -164,7 +164,7 @@ interface nsISHEntry : nsISupports
      * Get the storage principal, if any, that is used when the inherit flag is
      * set.
      */
-    [infallible] attribute nsIPrincipal storagePrincipalToInherit;
+    [infallible] attribute nsIPrincipal partitionedPrincipalToInherit;
 
     /**
      * Get the csp, if any, that was used for this document load. That
@@ -298,7 +298,7 @@ interface nsISHEntry : nsISupports
                            in ACString contentType,
                            in nsIPrincipal triggeringPrincipal,
                            in nsIPrincipal principalToInherit,
-                           in nsIPrincipal storagePrincipalToInherit,
+                           in nsIPrincipal partitionedPrincipalToInherit,
                            in nsIContentSecurityPolicy aCsp,
                            in nsIDRef docshellID,
                            in boolean dynamicCreation,
