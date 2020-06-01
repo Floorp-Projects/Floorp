@@ -255,6 +255,15 @@ android.libraryVariants.all { variant ->
         failOnError = false
         description = "Generate Javadoc for build variant $name"
         destinationDir = new File(destinationDir, variant.baseName)
+
+        // The javadoc task will not re-run if the previous run is still up-to-date,
+        // this is a problem for the javadoc lint, which needs to read the output of the task
+        // to determine if there are warnings or errors. To force that we pass a -Pandroid-lint
+        // parameter to all lints that can be used here to force running the task every time.
+        outputs.upToDateWhen {
+            !project.hasProperty('android-lint')
+        }
+
         doFirst {
             classpath = files(variant.javaCompileProvider.get().classpath.files)
         }
