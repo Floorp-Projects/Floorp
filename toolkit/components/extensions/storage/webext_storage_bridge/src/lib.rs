@@ -40,7 +40,7 @@ mod punt;
 mod store;
 
 use nserror::{nsresult, NS_OK};
-use xpcom::{interfaces::mozIExtensionStorageArea, RefPtr};
+use xpcom::{interfaces::mozIConfigurableExtensionStorageArea, RefPtr};
 
 use crate::area::StorageSyncArea;
 
@@ -53,11 +53,12 @@ use crate::area::StorageSyncArea;
 /// This function is unsafe because it dereferences `result`.
 #[no_mangle]
 pub unsafe extern "C" fn NS_NewExtensionStorageSyncArea(
-    result: *mut *const mozIExtensionStorageArea,
+    result: *mut *const mozIConfigurableExtensionStorageArea,
 ) -> nsresult {
     match StorageSyncArea::new() {
         Ok(bridge) => {
-            RefPtr::new(bridge.coerce::<mozIExtensionStorageArea>()).forget(&mut *result);
+            RefPtr::new(bridge.coerce::<mozIConfigurableExtensionStorageArea>())
+                .forget(&mut *result);
             NS_OK
         }
         Err(err) => err.into(),
