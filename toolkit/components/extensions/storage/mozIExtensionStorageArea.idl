@@ -69,7 +69,10 @@ interface mozIConfigurableExtensionStorageArea : mozIExtensionStorageArea {
     // `configure` multiple times will throw. `configure` must also be called
     // before any of the `mozIExtensionStorageArea` methods, or they'll fail
     // with errors.
-    void configure(in nsIFile databaseFile);
+    // The second param is the path to the kinto database file from which we
+    // should migrate. This should always be specified even when there's a
+    // chance the file doesn't exist.
+    void configure(in nsIFile databaseFile, in nsIFile kintoFile);
 
     // Tears down the storage area, closing the backing database connection.
     // This is called automatically when Firefox shuts down. Once a storage area
