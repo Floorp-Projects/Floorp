@@ -10,16 +10,13 @@ const { XPCOMUtils } = ChromeUtils.import(
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  clearTimeout: "resource://gre/modules/Timer.jsm",
   LocationHelper: "resource://gre/modules/LocationHelper.jsm",
-  setTimeout: "resource://gre/modules/Timer.jsm",
 });
 
-XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
+XPCOMUtils.defineLazyGlobalGetters(this, ["XMLHttpRequest"]);
 
 // GeolocationPositionError has no interface object, so we can't use that here.
 const POSITION_UNAVAILABLE = 2;
-const TELEMETRY_KEY = "REGION_LOCATION_SERVICES_DIFFERENCE";
 
 XPCOMUtils.defineLazyPreferenceGetter(
   this,
@@ -277,13 +274,6 @@ function NetworkGeolocationProvider() {
     true
   );
 
-  XPCOMUtils.defineLazyPreferenceGetter(
-    this,
-    "_wifiCompareURL",
-    "geo.provider.network.compare.url",
-    null
-  );
-
   this.wifiService = null;
   this.timer = null;
   this.started = false;
@@ -428,7 +418,7 @@ NetworkGeolocationProvider.prototype = {
    *                          ]
    *                          </code>
    */
-  async sendLocationRequest(wifiData) {
+  sendLocationRequest(wifiData) {
     let data = { cellTowers: undefined, wifiAccessPoints: undefined };
     if (wifiData && wifiData.length >= 2) {
       data.wifiAccessPoints = wifiData;
@@ -453,16 +443,47 @@ NetworkGeolocationProvider.prototype = {
     let url = Services.urlFormatter.formatURLPref("geo.provider.network.url");
     LOG("Sending request");
 
-    let result;
+    let xhr = new XMLHttpRequest();
+    this.onStatus(false, "xhr-start");
     try {
-      result = await this.makeRequest(url, wifiData);
+      xhr.open("POST", url, true);
+      xhr.channel.loadFlags = Ci.nsIChannel.LOAD_ANONYMOUS;
+    } catch (e) {
+      this.onStatus(true, "xhr-error");
+      return;
+    }
+    xhr.setRequestHeader("Content-Type", "application/json; charset=UTF-8");
+    xhr.responseType = "json";
+    xhr.mozBackgroundRequest = true;
+    // Allow deprecated HTTP request from SystemPrincipal
+    xhr.channel.loadInfo.allowDeprecatedSystemRequests = true;
+    xhr.timeout = Services.prefs.getIntPref("geo.provider.network.timeout");
+    xhr.ontimeout = () => {
+      LOG("Location request XHR timed out.");
+      this.onStatus(true, "xhr-timeout");
+    };
+    xhr.onerror = () => {
+      this.onStatus(true, "xhr-error");
+    };
+    xhr.onload = () => {
       LOG(
-        `geo provider reported: ${result.location.lng}:${result.location.lat}`
+        "server returned status: " +
+          xhr.status +
+          " --> " +
+          JSON.stringify(xhr.response)
       );
+      if (
+        (xhr.channel instanceof Ci.nsIHttpChannel && xhr.status != 200) ||
+        !xhr.response
+      ) {
+        this.onStatus(true, !xhr.response ? "xhr-empty" : "xhr-error");
+        return;
+      }
+
       let newLocation = new NetworkGeoPositionObject(
-        result.location.lat,
-        result.location.lng,
-        result.accuracy
+        xhr.response.location.lat,
+        xhr.response.location.lng,
+        xhr.response.accuracy
       );
 
       if (this.listener) {
@@ -474,56 +495,11 @@ NetworkGeolocationProvider.prototype = {
         data.cellTowers,
         data.wifiAccessPoints
       );
-    } catch (err) {
-      LOG("Location request hit error: " + err.name);
-      Cu.reportError(err);
-      if (err.name == "AbortError") {
-        this.onStatus(true, "xhr-timeout");
-      } else {
-        this.onStatus(true, "xhr-error");
-      }
-    }
-
-    if (!this._wifiCompareURL) {
-      return;
-    }
-
-    let compareUrl = Services.urlFormatter.formatURL(this._wifiCompareURL);
-    let compare = await this.makeRequest(compareUrl, wifiData);
-    let distance = LocationHelper.distance(result.location, compare.location);
-    LOG(
-      `compare reported reported: ${compare.location.lng}:${compare.location.lat}`
-    );
-    LOG(`distance between results: ${distance}`);
-    if (!isNaN(distance)) {
-      Services.telemetry.getHistogramById(TELEMETRY_KEY).add(distance);
-    }
-  },
-
-  async makeRequest(url, wifiData) {
-    this.onStatus(false, "xhr-start");
-
-    let fetchController = new AbortController();
-    let fetchOpts = {
-      method: "POST",
-      headers: { "Content-Type": "application/json; charset=UTF-8" },
-      credentials: "omit",
-      signal: fetchController.signal,
     };
 
-    if (wifiData) {
-      fetchOpts.body = JSON.stringify({ wifiAccessPoints: wifiData });
-    }
-
-    let timeoutId = setTimeout(
-      () => fetchController.abort(),
-      Services.prefs.getIntPref("geo.provider.network.timeout")
-    );
-
-    let req = await fetch(url, fetchOpts);
-    clearTimeout(timeoutId);
-    let result = req.json();
-    return result;
+    var requestData = JSON.stringify(data);
+    LOG("sending " + requestData);
+    xhr.send(requestData);
   },
 };
 
