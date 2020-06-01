@@ -41,7 +41,7 @@ pub(crate) fn check_for_uploads() {
         loop {
             if let Some(mutex) = UPLOADER.get() {
                 let uploader = &mut *mutex.lock().unwrap();
-                if let Upload(request) = crate::with_glean(|glean| glean.get_upload_task()) {
+                if let Upload(request) = crate::with_glean(|glean| glean.get_upload_task(false)) {
                     let response = (*uploader)(&request);
                     crate::with_glean(|glean| {
                         glean.process_ping_upload_response(&request.document_id, response)
