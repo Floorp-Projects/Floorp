@@ -2692,7 +2692,7 @@ mozilla::ipc::IPCResult BrowserParent::RecvOnLocationChange(
         aLocationChangeData->charsetAutodetected(),
         aLocationChangeData->documentURI(), aLocationChangeData->title(),
         aLocationChangeData->contentPrincipal(),
-        aLocationChangeData->contentStoragePrincipal(),
+        aLocationChangeData->contentPartitionedPrincipal(),
         aLocationChangeData->csp(), aLocationChangeData->referrerInfo(),
         aLocationChangeData->isSyntheticDocument(),
         aWebProgressData->innerDOMWindowID(),

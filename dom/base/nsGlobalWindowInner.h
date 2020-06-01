@@ -266,7 +266,7 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
 
   virtual nsIPrincipal* GetEffectiveStoragePrincipal() override;
 
-  virtual nsIPrincipal* IntrinsicStoragePrincipal() override;
+  virtual nsIPrincipal* PartitionedPrincipal() override;
 
   // nsIDOMWindow
   NS_DECL_NSIDOMWINDOW
@@ -1339,7 +1339,7 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
   // FreeInnerObjects has been called.
   nsCOMPtr<nsIPrincipal> mDocumentPrincipal;
   nsCOMPtr<nsIPrincipal> mDocumentStoragePrincipal;
-  nsCOMPtr<nsIPrincipal> mDocumentIntrinsicStoragePrincipal;
+  nsCOMPtr<nsIPrincipal> mDocumentPartitionedPrincipal;
   nsCOMPtr<nsIContentSecurityPolicy> mDocumentCsp;
 
   RefPtr<mozilla::dom::DebuggerNotificationManager>

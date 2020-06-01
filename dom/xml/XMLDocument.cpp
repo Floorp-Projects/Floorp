@@ -216,14 +216,14 @@ void XMLDocument::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup) {
 
 void XMLDocument::ResetToURI(nsIURI* aURI, nsILoadGroup* aLoadGroup,
                              nsIPrincipal* aPrincipal,
-                             nsIPrincipal* aStoragePrincipal) {
+                             nsIPrincipal* aPartitionedPrincipal) {
   if (mChannelIsPending) {
     StopDocumentLoad();
     mChannel->Cancel(NS_BINDING_ABORTED);
     mChannelIsPending = false;
   }
 
-  Document::ResetToURI(aURI, aLoadGroup, aPrincipal, aStoragePrincipal);
+  Document::ResetToURI(aURI, aLoadGroup, aPrincipal, aPartitionedPrincipal);
 }
 
 void XMLDocument::SetSuppressParserErrorElement(bool aSuppress) {
