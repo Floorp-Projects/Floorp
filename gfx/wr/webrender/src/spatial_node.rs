@@ -319,10 +319,6 @@ impl SpatialNode {
 
                 if info.invertible {
                     // Resolve the transform against any property bindings.
-                    let source_transform_is_animated = match info.source_transform {
-                        PropertyBinding::Value(..) => false,
-                        PropertyBinding::Binding(..) => true,
-                    };
                     let source_transform = LayoutFastTransform::from(
                         scene_properties.resolve_layout_transform(&info.source_transform)
                     );
@@ -372,10 +368,12 @@ impl SpatialNode {
                         // incompatible coordinate system.
                         match ScaleOffset::from_transform(&relative_transform) {
                             Some(ref scale_offset) => {
-                                // We want to snap the source transform's offset if it is animated
-                                // (including zoom/scroll transforms)
+                                // We generally do not want to snap animated transforms as it causes jitter.
+                                // However, we do want to snap the visual viewport offset when scrolling.
+                                // Therefore only snap the transform for Zoom reference frames. This may still
+                                // cause jitter when zooming, unfortunately.
                                 let mut maybe_snapped = scale_offset.clone();
-                                if source_transform_is_animated {
+                                if info.kind == ReferenceFrameKind::Zoom {
                                     maybe_snapped.offset = snap_offset(
                                         scale_offset.offset,
                                         state.coordinate_system_relative_scale_offset.scale,
