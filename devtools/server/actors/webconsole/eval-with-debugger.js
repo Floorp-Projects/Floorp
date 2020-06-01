@@ -119,6 +119,12 @@ function isObject(value) {
  *         function.
  */
 exports.evalWithDebugger = function(string, options = {}, webConsole) {
+  if (isCommand(string.trim()) && options.eager) {
+    return {
+      result: null,
+    };
+  }
+
   const evalString = getEvalInput(string);
   const { frame, dbg } = getFrameDbg(options, webConsole);
 
