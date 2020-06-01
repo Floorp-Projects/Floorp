@@ -456,5 +456,65 @@ bool CookieCommons::ShouldIncludeCrossSiteCookieForDocument(Cookie* aCookie) {
   return sameSiteAttr == nsICookie::SAMESITE_NONE;
 }
 
+// static
+bool CookieCommons::MaybeCompareScheme(Cookie* aCookie,
+                                       nsICookie::schemeType aSchemeType) {
+  if (!StaticPrefs::network_cookie_sameSite_schemeful()) {
+    return true;
+  }
+
+  // This is an old cookie without a scheme yet. Let's consider it valid.
+  if (aCookie->SchemeMap() == nsICookie::SCHEME_UNSET) {
+    return true;
+  }
+
+  return !!(aCookie->SchemeMap() & aSchemeType);
+}
+
+// static
+nsICookie::schemeType CookieCommons::URIToSchemeType(nsIURI* aURI) {
+  MOZ_ASSERT(aURI);
+
+  nsAutoCString scheme;
+  nsresult rv = aURI->GetScheme(scheme);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return nsICookie::SCHEME_UNSET;
+  }
+
+  return SchemeToSchemeType(scheme);
+}
+
+// static
+nsICookie::schemeType CookieCommons::PrincipalToSchemeType(
+    nsIPrincipal* aPrincipal) {
+  MOZ_ASSERT(aPrincipal);
+
+  nsAutoCString scheme;
+  nsresult rv = aPrincipal->GetScheme(scheme);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return nsICookie::SCHEME_UNSET;
+  }
+
+  return SchemeToSchemeType(scheme);
+}
+
+// static
+nsICookie::schemeType CookieCommons::SchemeToSchemeType(
+    const nsACString& aScheme) {
+  if (aScheme.Equals("https")) {
+    return nsICookie::SCHEME_HTTPS;
+  }
+
+  if (aScheme.Equals("http")) {
+    return nsICookie::SCHEME_HTTP;
+  }
+
+  if (aScheme.Equals("file")) {
+    return nsICookie::SCHEME_FILE;
+  }
+
+  MOZ_CRASH("Unsupported scheme type");
+}
+
 }  // namespace net
 }  // namespace mozilla

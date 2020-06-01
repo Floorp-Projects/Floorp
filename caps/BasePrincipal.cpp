@@ -856,6 +856,19 @@ NS_IMETHODIMP BasePrincipal::GetIsIpAddress(bool* aIsIpAddress) {
 }
 
 NS_IMETHODIMP
+BasePrincipal::GetScheme(nsACString& aScheme) {
+  aScheme.Truncate();
+
+  nsCOMPtr<nsIURI> prinURI;
+  nsresult rv = GetURI(getter_AddRefs(prinURI));
+  if (NS_FAILED(rv) || !prinURI) {
+    return NS_OK;
+  }
+
+  return prinURI->GetScheme(aScheme);
+}
+
+NS_IMETHODIMP
 BasePrincipal::SchemeIs(const char* aScheme, bool* aResult) {
   *aResult = false;
   nsCOMPtr<nsIURI> prinURI;
