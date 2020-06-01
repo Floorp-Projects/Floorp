@@ -121,7 +121,7 @@ function openBrowserWindowIntl() {
     }
   }
 
-  gBrowserContext.browserWnd = window.docShell.rootTreeItem.domWindow.openDialog(
+  gBrowserContext.browserWnd = window.browsingContext.topChromeWindow.openDialog(
     AppConstants.BROWSER_CHROME_URL,
     "_blank",
     params,

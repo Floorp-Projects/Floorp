@@ -13,7 +13,7 @@
 <script>
 SimpleTest.waitForExplicitFinish();
 
-newwindow = docShell.rootTreeItem.domWindow.openDialog("sizemode_attribute.xhtml", "_blank","chrome,resizable=yes", window);
+newwindow = window.browsingContext.topChromeWindow.openDialog("sizemode_attribute.xhtml", "_blank","chrome,resizable=yes", window);
 
 function done() {
   newwindow.close();

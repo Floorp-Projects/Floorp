@@ -13,7 +13,7 @@
     setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
     SimpleTest.waitForExplicitFinish();
 
-    var w = docShell.rootTreeItem.domWindow.openDialog(
+    var w = window.browsingContext.topChromeWindow.openDialog(
         'chrome_context_menus_win.xhtml', '_blank', 'chrome,resizable=yes,width=600,height=600', window);
 
     function done()

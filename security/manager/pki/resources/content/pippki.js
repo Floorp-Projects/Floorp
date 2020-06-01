@@ -49,7 +49,7 @@ async function viewCertHelper(parent, cert, openingOption = "tab") {
     }
   } else {
     Services.ww.openWindow(
-      parent && parent.docShell.rootTreeItem.domWindow,
+      parent && parent.browsingContext.topChromeWindow,
       "chrome://pippki/content/certViewer.xhtml",
       "_blank",
       "centerscreen,chrome",

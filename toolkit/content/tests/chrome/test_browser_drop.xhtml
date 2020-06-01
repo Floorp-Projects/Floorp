@@ -12,7 +12,7 @@
 SimpleTest.waitForExplicitFinish();
 function runTest() {
   add_task(async function() {
-    let win = docShell.rootTreeItem.domWindow.openDialog("window_browser_drop.xhtml", "_blank", "chrome,width=200,height=200", window);
+    let win = window.browsingContext.topChromeWindow.openDialog("window_browser_drop.xhtml", "_blank", "chrome,width=200,height=200", window);
     await SimpleTest.promiseFocus(win);
     for (let browserType of ["content", "remote-content"]) {
       await win.dropLinksOnBrowser(win.document.getElementById(browserType + "child"), browserType);

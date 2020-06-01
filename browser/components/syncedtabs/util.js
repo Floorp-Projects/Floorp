@@ -8,5 +8,5 @@ var EXPORTED_SYMBOLS = ["getChromeWindow"];
 
 // Get the chrome (ie, browser) window hosting this content.
 function getChromeWindow(window) {
-  return window.docShell.rootTreeItem.domWindow.wrappedJSObject;
+  return window.browsingContext.topChromeWindow;
 }

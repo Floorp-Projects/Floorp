@@ -26,7 +26,7 @@
 <script>
 SimpleTest.waitForExplicitFinish();
 
-newwindow = docShell.rootTreeItem.domWindow.openDialog("window_activation.xhtml", "_blank","chrome,width=300,height=200", window);
+newwindow = window.browsingContext.topChromeWindow.openDialog("window_activation.xhtml", "_blank","chrome,width=300,height=200", window);
 
 function complete()
 {
