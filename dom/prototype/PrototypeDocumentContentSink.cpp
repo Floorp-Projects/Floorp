@@ -608,7 +608,7 @@ nsresult PrototypeDocumentContentSink::DoneWalking() {
     mDocument->SetReadyStateInternal(Document::READYSTATE_INTERACTIVE);
     mDocument->NotifyPossibleTitleChange(false);
 
-    nsContentUtils::DispatchTrustedEvent(
+    nsContentUtils::DispatchEventOnlyToChrome(
         mDocument, ToSupports(mDocument),
         NS_LITERAL_STRING("MozBeforeInitialXULLayout"), CanBubble::eYes,
         Cancelable::eNo);
