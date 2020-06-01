@@ -1005,17 +1005,13 @@ bool WebrtcVideoConduit::SetRemoteSSRCLocked(uint32_t ssrc, uint32_t rtxSsrc) {
   MOZ_ASSERT(NS_IsMainThread());
   mMutex.AssertCurrentThreadOwns();
 
-  uint32_t current_ssrc;
-  if (!GetRemoteSSRCLocked(&current_ssrc)) {
-    return false;
-  }
-
-  if (current_ssrc == ssrc && mRecvStreamConfig.rtp.rtx_ssrc == rtxSsrc) {
+  if (mRecvStreamConfig.rtp.remote_ssrc == ssrc &&
+      mRecvStreamConfig.rtp.rtx_ssrc == rtxSsrc) {
     return true;
   }
 
   bool wasReceiving = mEngineReceiving;
-  if (StopReceivingLocked() != kMediaConduitNoError) {
+  if (NS_WARN_IF(StopReceivingLocked() != kMediaConduitNoError)) {
     return false;
   }
 
@@ -1057,18 +1053,14 @@ bool WebrtcVideoConduit::UnsetRemoteSSRC(uint32_t ssrc) {
   MOZ_ASSERT(NS_IsMainThread());
   MutexAutoLock lock(mMutex);
 
-  unsigned int our_ssrc;
-  if (!GetRemoteSSRCLocked(&our_ssrc)) {
-    // This only fails when we aren't sending, which isn't really an error here
-    return true;
-  }
-
-  if (our_ssrc != ssrc && mRecvStreamConfig.rtp.rtx_ssrc != ssrc) {
+  if (mRecvStreamConfig.rtp.remote_ssrc != ssrc &&
+      mRecvStreamConfig.rtp.rtx_ssrc != ssrc) {
     return true;
   }
 
   mRecvStreamConfig.rtp.rtx_ssrc = 0;
 
+  uint32_t our_ssrc = 0;
   do {
     our_ssrc = GenerateRandomSSRC();
     if (our_ssrc == 0) {
