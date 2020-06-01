@@ -61,6 +61,10 @@ impl Ping {
     ///
     /// Returns true if a ping was assembled and queued, false otherwise.
     pub fn submit(&self, reason: Option<&str>) -> bool {
-        crate::with_glean(|glean| self.0.submit(glean, reason).unwrap_or(false))
+        let res = crate::with_glean(|glean| self.0.submit(glean, reason).unwrap_or(false));
+        if res {
+            crate::ping_upload::check_for_uploads();
+        }
+        res
     }
 }

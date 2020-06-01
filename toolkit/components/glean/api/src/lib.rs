@@ -16,6 +16,7 @@ pub extern crate once_cell;
 pub extern crate uuid;
 
 pub mod metrics;
+pub mod ping_upload;
 
 /// Run a closure with a mutable reference to the locked global Glean object.
 fn with_glean<F, R>(f: F) -> R
