@@ -80,6 +80,7 @@
 "allow-same-origin"
 "allow-scripts"
 "allow-top-navigation"
+"allow-top-navigation-by-user-activation"
 
 # URI components
 "https:"
