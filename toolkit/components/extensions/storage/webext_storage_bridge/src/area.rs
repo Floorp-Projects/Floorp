@@ -6,7 +6,9 @@ use std::{
     cell::{Ref, RefCell},
     convert::TryInto,
     ffi::OsString,
-    mem, str,
+    mem,
+    path::PathBuf,
+    str,
     sync::Arc,
 };
 
@@ -27,6 +29,29 @@ use xpcom::{
 use crate::error::{Error, Result};
 use crate::punt::{Punt, PuntTask, TeardownTask};
 use crate::store::{LazyStore, LazyStoreConfig};
+
+fn path_from_nsifile(file: &nsIFile) -> Result<PathBuf> {
+    let mut raw_path = nsString::new();
+    // `nsIFile::GetPath` gives us a UTF-16-encoded version of its
+    // native path, which we must turn back into a platform-native
+    // string. We can't use `nsIFile::nativePath()` here because
+    // it's marked as `nostdcall`, which Rust doesn't support.
+    unsafe { file.GetPath(&mut *raw_path) }.to_result()?;
+    let native_path = {
+        // On Windows, we can create a native string directly from the
+        // encoded path.
+        #[cfg(windows)]
+        {
+            use std::os::windows::prelude::*;
+            OsString::from_wide(&*raw_path)
+        }
+        // On other platforms, we must first decode the raw path from
+        // UTF-16, and then create our native string.
+        #[cfg(not(windows))]
+        OsString::from(String::from_utf16(&*raw_path)?)
+    };
+    Ok(native_path.into())
+}
 
 /// An XPCOM component class for the Rust extension storage API. This class
 /// implements the interfaces needed for syncing and storage.
@@ -87,32 +112,15 @@ impl StorageSyncArea {
 
     xpcom_method!(
         configure => Configure(
-            database_file: *const nsIFile
+            database_file: *const nsIFile,
+            kinto_file: *const nsIFile
         )
     );
     /// Sets up the storage area.
-    fn configure(&self, database_file: &nsIFile) -> Result<()> {
-        let mut raw_path = nsString::new();
-        // `nsIFile::GetPath` gives us a UTF-16-encoded version of its
-        // native path, which we must turn back into a platform-native
-        // string. We can't use `nsIFile::nativePath()` here because
-        // it's marked as `nostdcall`, which Rust doesn't support.
-        unsafe { database_file.GetPath(&mut *raw_path) }.to_result()?;
-        let native_path = {
-            // On Windows, we can create a native string directly from the
-            // encoded path.
-            #[cfg(windows)]
-            {
-                use std::os::windows::prelude::*;
-                OsString::from_wide(&*raw_path)
-            }
-            // On other platforms, we must first decode the raw path from
-            // UTF-16, and then create our native string.
-            #[cfg(not(windows))]
-            OsString::from(String::from_utf16(&*raw_path)?)
-        };
+    fn configure(&self, database_file: &nsIFile, kinto_file: &nsIFile) -> Result<()> {
         self.store()?.configure(LazyStoreConfig {
-            path: native_path.into(),
+            path: path_from_nsifile(database_file)?,
+            kinto_path: path_from_nsifile(kinto_file)?,
         })?;
         Ok(())
     }
