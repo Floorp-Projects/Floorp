@@ -269,6 +269,7 @@ class Network extends Domain {
     // Retrieve host. Check domain first because it has precedence.
     let hostname = cookie.domain || "";
     let cookieURL;
+    let schemeType = Ci.nsICookie.SCHEME_UNSET;
     if (hostname.length == 0) {
       try {
         cookieURL = new URL(cookie.url);
@@ -282,6 +283,9 @@ class Network extends Domain {
 
       if (cookieURL.protocol == "https:") {
         cookie.secure = true;
+        schemeType = Ci.nsICookie.SCHEME_HTTPS;
+      } else {
+        schemeType = Ci.nsICookie.SCHEME_HTTP;
       }
 
       hostname = cookieURL.hostname;
@@ -315,7 +319,8 @@ class Network extends Domain {
         isSession,
         cookie.expires,
         {} /* originAttributes */,
-        sameSiteMap.get(cookie.sameSite)
+        sameSiteMap.get(cookie.sameSite),
+        schemeType
       );
     } catch (e) {
       success = false;
