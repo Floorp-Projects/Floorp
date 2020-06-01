@@ -113,7 +113,8 @@ addMessageListener("init", ({ domain }) => {
     true,
     Math.pow(2, 62),
     {},
-    Ci.nsICookie.SAMESITE_NONE
+    Ci.nsICookie.SAMESITE_NONE,
+    Ci.nsICookie.SCHEME_HTTPS
   );
   is(
     cs.countCookiesFromHost(domain),
