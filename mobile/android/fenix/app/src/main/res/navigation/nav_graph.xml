@@ -696,10 +696,11 @@
     </dialog>
     <fragment
         android:id="@+id/trackingProtectionBlockingFragment"
-        android:name="org.mozilla.fenix.trackingprotection.TrackingProtectionBlockingFragment">
+        android:name="org.mozilla.fenix.trackingprotection.TrackingProtectionBlockingFragment"
+        tools:layout="@layout/fragment_tracking_protection_blocking">
         <argument
             android:name="protectionMode"
-            app:argType="string" />
+            app:argType="org.mozilla.fenix.trackingprotection.TrackingProtectionMode" />
     </fragment>
     <fragment
         android:id="@+id/deleteBrowsingDataOnQuitFragment"

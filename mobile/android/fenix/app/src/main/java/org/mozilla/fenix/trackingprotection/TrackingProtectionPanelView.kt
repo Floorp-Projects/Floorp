@@ -77,11 +77,18 @@ class TrackingProtectionPanelView(
 
     private var shouldFocusAccessibilityView: Boolean = true
 
-    fun update(state: TrackingProtectionState) {
-        if (state.mode != mode) {
-            mode = state.mode
+    init {
+        protection_settings.setOnClickListener {
+            interactor.selectTrackingProtectionSettings()
         }
+        details_back.setOnClickListener {
+            interactor.onBackPressed()
+        }
+        setCategoryClickListeners()
+    }
 
+    fun update(state: TrackingProtectionState) {
+        mode = state.mode
         bucketedTrackers.updateIfNeeded(state.listTrackers)
 
         when (val mode = state.mode) {
@@ -103,14 +110,29 @@ class TrackingProtectionPanelView(
         not_blocking_header.isGone = bucketedTrackers.loadedIsEmpty()
         bindUrl(state.url)
         bindTrackingProtectionInfo(state.isTrackingProtectionEnabled)
-        protection_settings.setOnClickListener {
-            interactor.selectTrackingProtectionSettings()
-        }
 
         blocking_header.isGone = bucketedTrackers.blockedIsEmpty()
         updateCategoryVisibility()
-        setCategoryClickListeners()
         focusAccessibilityLastUsedCategory(state.lastAccessedCategory)
+    }
+
+    private fun setUIForDetailsMode(
+        category: TrackingProtectionCategory,
+        categoryBlocked: Boolean
+    ) {
+        normal_mode.visibility = View.GONE
+        details_mode.visibility = View.VISIBLE
+        category_title.setText(category.title)
+        blocking_text_list.text = bucketedTrackers.get(category, categoryBlocked).joinToString("\n")
+        category_description.setText(category.description)
+        details_blocking_header.setText(if (categoryBlocked) {
+            R.string.enhanced_tracking_protection_blocked
+        } else {
+            R.string.enhanced_tracking_protection_allowed
+        })
+
+        details_back.requestFocus()
+        details_back.sendAccessibilityEvent(AccessibilityEvent.TYPE_VIEW_FOCUSED)
     }
 
     /**
@@ -180,32 +202,6 @@ class TrackingProtectionPanelView(
         interactor.openDetails(category, categoryBlocked = !isLoaded(v))
     }
 
-    private fun setUIForDetailsMode(
-        category: TrackingProtectionCategory,
-        categoryBlocked: Boolean
-    ) {
-        val context = view.context
-
-        normal_mode.visibility = View.GONE
-        details_mode.visibility = View.VISIBLE
-        category_title.text = context.getString(category.title)
-        blocking_text_list.text = bucketedTrackers.get(category, categoryBlocked).joinToString("\n")
-        category_description.text = context.getString(category.description)
-        details_blocking_header.text = context.getString(
-            if (categoryBlocked) {
-                R.string.enhanced_tracking_protection_blocked
-            } else {
-                R.string.enhanced_tracking_protection_allowed
-            }
-        )
-        details_back.setOnClickListener {
-            interactor.onBackPressed()
-        }
-
-        details_back.requestFocus()
-        details_back.sendAccessibilityEvent(AccessibilityEvent.TYPE_VIEW_FOCUSED)
-    }
-
     private fun bindUrl(url: String) {
         this.url.text = url.toUri().hostWithoutCommonPrefixes
     }
@@ -239,9 +235,9 @@ class TrackingProtectionPanelView(
         ViewCompat.setAccessibilityDelegate(view2, object : AccessibilityDelegateCompat() {
             override fun onInitializeAccessibilityNodeInfo(
                 host: View?,
-                info: AccessibilityNodeInfoCompat?
+                info: AccessibilityNodeInfoCompat
             ) {
-                info?.setTraversalAfter(view1)
+                info.setTraversalAfter(view1)
                 super.onInitializeAccessibilityNodeInfo(host, info)
             }
         })

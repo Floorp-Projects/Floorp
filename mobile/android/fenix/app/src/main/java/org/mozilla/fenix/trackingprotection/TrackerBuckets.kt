@@ -53,7 +53,7 @@ class TrackerBuckets {
     /**
      * Gets the tracker URLs for a given category.
      */
-    operator fun get(key: TrackingProtectionCategory, blocked: Boolean) =
+    fun get(key: TrackingProtectionCategory, blocked: Boolean) =
         if (blocked) buckets.blockedBucketMap[key].orEmpty() else buckets.loadedBucketMap[key].orEmpty()
 
     companion object {

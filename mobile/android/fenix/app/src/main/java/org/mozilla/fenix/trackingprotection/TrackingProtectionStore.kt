@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.trackingprotection
 
+import androidx.annotation.StringRes
 import mozilla.components.browser.session.Session
 import mozilla.components.concept.engine.content.blocking.TrackerLog
 import mozilla.components.lib.state.Action
@@ -73,7 +74,10 @@ data class TrackingProtectionState(
 /**
  * The 5 categories of Tracking Protection to display
  */
-enum class TrackingProtectionCategory(val title: Int, val description: Int) {
+enum class TrackingProtectionCategory(
+    @StringRes val title: Int,
+    @StringRes val description: Int
+) {
     SOCIAL_MEDIA_TRACKERS(
         R.string.etp_social_media_trackers_title,
         R.string.etp_social_media_trackers_description

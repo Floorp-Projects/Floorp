@@ -188,7 +188,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="20dp"
-            android:tint="?attr/primaryText"
+            app:tint="?attr/primaryText"
             android:contentDescription="@string/etp_back_button_content_description"
             app:layout_constraintBottom_toBottomOf="@+id/category_description"
             app:layout_constraintStart_toStartOf="parent"

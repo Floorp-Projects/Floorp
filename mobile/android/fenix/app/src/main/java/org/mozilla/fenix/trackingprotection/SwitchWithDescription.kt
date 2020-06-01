@@ -29,10 +29,7 @@ class SwitchWithDescription @JvmOverloads constructor(
                 R.drawable.ic_tracking_protection
             )
             switch_widget.putCompoundDrawablesRelativeWithIntrinsicBounds(
-                start = AppCompatResources.getDrawable(
-                    context,
-                    id
-                )
+                start = AppCompatResources.getDrawable(context, id)
             )
             trackingProtectionCategoryTitle.text = resources.getString(
                 getResourceId(
