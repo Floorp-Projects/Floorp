@@ -38,17 +38,17 @@ from .logging import LoggingManager
 from .registrar import Registrar
 from .util import setenv
 
-SUGGEST_MACH_BUSTED = r'''
+SUGGEST_MACH_BUSTED_TEMPLATE = r'''
 You can invoke |./mach busted| to check if this issue is already on file. If it
-isn't, please use |./mach busted file| to report it. If |./mach busted| is
+isn't, please use |./mach busted file %s| to report it. If |./mach busted| is
 misbehaving, you can also inspect the dependencies of bug 1543241.
 '''.lstrip()
 
-MACH_ERROR = r'''
+MACH_ERROR_TEMPLATE = r'''
 The error occurred in mach itself. This is likely a bug in mach itself or a
 fundamental problem with a loaded module.
 
-'''.lstrip() + SUGGEST_MACH_BUSTED
+'''.lstrip() + SUGGEST_MACH_BUSTED_TEMPLATE
 
 ERROR_FOOTER = r'''
 If filing a bug, please include the full output of mach, including this error
@@ -57,17 +57,17 @@ message.
 The details of the failure are as follows:
 '''.lstrip()
 
-COMMAND_ERROR = r'''
+COMMAND_ERROR_TEMPLATE = r'''
 The error occurred in the implementation of the invoked mach command.
 
 This should never occur and is likely a bug in the implementation of that
 command.
-'''.lstrip() + SUGGEST_MACH_BUSTED
+'''.lstrip() + SUGGEST_MACH_BUSTED_TEMPLATE
 
-MODULE_ERROR = r'''
+MODULE_ERROR_TEMPLATE = r'''
 The error occurred in code that was called by the mach command. This is either
 a bug in the called code itself or in the way that mach is calling it.
-'''.lstrip() + SUGGEST_MACH_BUSTED
+'''.lstrip() + SUGGEST_MACH_BUSTED_TEMPLATE
 
 NO_COMMAND_ERROR = r'''
 It looks like you tried to run mach without a command.
@@ -369,7 +369,7 @@ To see more help for a specific command, run:
             # bug in mach (or a loaded command module being silly) and thus
             # should be reported differently.
             self._print_error_header(argv, sys.stdout)
-            print(MACH_ERROR)
+            print(MACH_ERROR_TEMPLATE % 'general')
 
             exc_type, exc_value, exc_tb = sys.exc_info()
             stack = traceback.extract_tb(exc_tb)
@@ -491,7 +491,7 @@ To see more help for a specific command, run:
             # argument on the method. We handle that here until the module
             # loader grows the ability to validate better.
             if not len(stack):
-                print(COMMAND_ERROR)
+                print(COMMAND_ERROR_TEMPLATE % handler.name)
                 self._print_exception(sys.stdout, exc_type, exc_value,
                                       traceback.extract_tb(exc_tb))
                 return 1
@@ -516,9 +516,9 @@ To see more help for a specific command, run:
             self._print_error_header(argv, sys.stdout)
 
             if len(other_frames):
-                print(MODULE_ERROR)
+                print(MODULE_ERROR_TEMPLATE % handler.name)
             else:
-                print(COMMAND_ERROR)
+                print(COMMAND_ERROR_TEMPLATE % handler.name)
 
             self._print_exception(sys.stdout, exc_type, exc_value, stack)
 
