@@ -64,9 +64,8 @@ function StorageSyncService() {
     return StorageSyncService._singleton;
   }
 
-  let file = FileUtils.getFile("ProfD", ["storage-sync-v2.sqlite"]);
-  let kintoFile = FileUtils.getFile("ProfD", ["storage-sync.sqlite"]);
-  this._storageArea = new StorageSyncArea(file, kintoFile);
+  let file = FileUtils.getFile("ProfD", ["storage-sync2.sqlite"]);
+  this._storageArea = new StorageSyncArea(file);
 
   // Register a blocker to close the storage connection on shutdown.
   this._shutdownBound = () => this._shutdown();
