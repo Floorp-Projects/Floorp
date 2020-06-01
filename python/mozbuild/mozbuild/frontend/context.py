@@ -1423,6 +1423,12 @@ VARIABLES = {
         list,
         """Generic generated files.
 
+        Unless you have a reason not to, use the GeneratedFile template rather
+        than referencing GENERATED_FILES directly. The GeneratedFile template
+        has all the same arguments as the attributes listed below (``script``,
+        ``inputs``, ``flags``, ``force``), plus an additional ``entry_point``
+        argument to specify a particular function to run in the given script.
+
         This variable contains a list of files for the build system to
         generate at export time. The generation method may be declared
         with optional ``script``, ``inputs``, ``flags``, and ``force``

@@ -47,12 +47,10 @@ blocklist_header_types = ['A11y', 'Launcher', 'Legacy', 'Test']
 blocklist_file_leaf_tpl = 'WindowsDllBlocklist{0}Defs.h'
 blocklist_files = tuple([blocklist_file_leaf_tpl.format(type)
                          for type in blocklist_header_types])
-GENERATED_FILES += [
-    blocklist_files
-]
-blocklist_defs = GENERATED_FILES[blocklist_files]
-blocklist_defs.script = 'gen_dll_blocklist_defs.py:gen_blocklists'
-blocklist_defs.inputs = ['WindowsDllBlocklistDefs.in']
+
+GeneratedFile(*blocklist_files, script='gen_dll_blocklist_defs.py',
+              entry_point='gen_blocklists',
+              inputs=['WindowsDllBlocklistDefs.in'])
 EXPORTS.mozilla += ['!' + hdr for hdr in blocklist_files]
 
 FINAL_LIBRARY = 'mozglue'
