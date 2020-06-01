@@ -121,11 +121,8 @@ UNIFIED_SOURCES += [
 
 gen_all_tuple = tuple(gen_h + gen_cpp + gen_rs)
 
-GENERATED_FILES += [gen_all_tuple]
-
-static_pref_list = GENERATED_FILES[gen_all_tuple]
-static_pref_list.script = 'init/generate_static_pref_list.py:emit_code'
-static_pref_list.inputs = ['init/StaticPrefList.yaml']
+GeneratedFile(*gen_all_tuple, script='init/generate_static_pref_list.py',
+              entry_point='emit_code', inputs=['init/StaticPrefList.yaml'])
 
 PYTHON_UNITTEST_MANIFESTS += [
     'test/python.ini',

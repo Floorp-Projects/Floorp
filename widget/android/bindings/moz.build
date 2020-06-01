@@ -37,9 +37,9 @@ t = tuple(['sdk_bindings'] +
           ['%s.cpp' % stem for stem in generated] +
           ['%s.h' % stem for stem in generated])
 
-GENERATED_FILES += [t]
-GENERATED_FILES[t].script = '/mobile/android/gradle.py:generate_sdk_bindings'
-GENERATED_FILES[t].inputs += ['%s-classes.txt' % stem for stem in generated]
+GeneratedFile(*t, script='/mobile/android/gradle.py',
+              entry_point='generate_sdk_bindings',
+              inputs=['%s-classes.txt' % stem for stem in generated])
 
 FINAL_LIBRARY = 'xul'
 
