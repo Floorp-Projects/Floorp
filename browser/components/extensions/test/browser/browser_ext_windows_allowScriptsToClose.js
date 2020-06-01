@@ -53,8 +53,9 @@ add_task(async function test_allowScriptsToClose() {
 
   extension.sendMessage("create+execute", { url: example });
   win = await BrowserTestUtils.waitForNewWindow();
-  await BrowserTestUtils.windowClosed(win);
-  info("script allowed to close the window");
+  await extension.awaitMessage("close-failed");
+  info("script prevented from closing the window");
+  win.close();
 
   extension.sendMessage("create+execute", {
     url: example,
