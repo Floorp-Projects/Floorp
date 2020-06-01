@@ -2959,6 +2959,18 @@ void Document::SetCompatibilityMode(nsCompatibility aMode) {
 static void WarnIfSandboxIneffective(nsIDocShell* aDocShell,
                                      uint32_t aSandboxFlags,
                                      nsIChannel* aChannel) {
+  // If the document permits allow-top-navigation and
+  // allow-top-navigation-by-user-activation this will permit all top
+  // navigation.
+  if (aSandboxFlags != SANDBOXED_NONE &&
+      !(aSandboxFlags & SANDBOXED_TOPLEVEL_NAVIGATION) &&
+      !(aSandboxFlags & SANDBOXED_TOPLEVEL_NAVIGATION_USER_ACTIVATION)) {
+    nsCOMPtr<nsIURI> iframeUri;
+    nsContentUtils::ReportToConsole(
+        nsIScriptError::warningFlag, NS_LITERAL_CSTRING("Iframe Sandbox"),
+        aDocShell->GetDocument(), nsContentUtils::eSECURITY_PROPERTIES,
+        "BothAllowTopNavigationAndUserActivationPresent");
+  }
   // If the document is sandboxed (via the HTML5 iframe sandbox
   // attribute) and both the allow-scripts and allow-same-origin
   // keywords are supplied, the sandboxed document can call into its
