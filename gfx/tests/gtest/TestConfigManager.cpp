@@ -250,9 +250,7 @@ class GfxConfigManager : public ::testing::Test, public gfxConfigManager {
     mWrDCompWinEnabled = true;
     mWrCompositorDCompRequired = true;
     mHwStretchingSupport = true;
-    mDwmCompositionEnabled = true;
     mIsWin10OrLater = true;
-    mIsWindows = true;
     mIsNightly = true;
   }
 
@@ -641,54 +639,6 @@ TEST_F(GfxConfigManager, WebRenderIntelBatteryNoHwStretchingNotNightly) {
   EXPECT_FALSE(mFeatures.mWrAngle.IsEnabled());
   EXPECT_FALSE(mFeatures.mWrDComp.IsEnabled());
   EXPECT_FALSE(mFeatures.mWrPartial.IsEnabled());
-  EXPECT_TRUE(mFeatures.mHwCompositing.IsEnabled());
-  EXPECT_TRUE(mFeatures.mGPUProcess.IsEnabled());
-  EXPECT_TRUE(mFeatures.mD3D11HwAngle.IsEnabled());
-}
-
-TEST_F(GfxConfigManager, WebRenderNoDWMSupportWin10) {
-  mDwmCompositionEnabled = false;
-  ConfigureWebRender();
-
-  EXPECT_TRUE(mFeatures.mWrQualified.IsEnabled());
-  EXPECT_TRUE(mFeatures.mWr.IsEnabled());
-  EXPECT_TRUE(mFeatures.mWrCompositor.IsEnabled());
-  EXPECT_TRUE(mFeatures.mWrAngle.IsEnabled());
-  EXPECT_TRUE(mFeatures.mWrDComp.IsEnabled());
-  EXPECT_TRUE(mFeatures.mWrPartial.IsEnabled());
-  EXPECT_TRUE(mFeatures.mHwCompositing.IsEnabled());
-  EXPECT_TRUE(mFeatures.mGPUProcess.IsEnabled());
-  EXPECT_TRUE(mFeatures.mD3D11HwAngle.IsEnabled());
-}
-
-TEST_F(GfxConfigManager, WebRenderNoDWMSupportWin7) {
-  mDwmCompositionEnabled = false;
-  mIsWin10OrLater = false;
-  ConfigureWebRender();
-
-  EXPECT_TRUE(mFeatures.mWrQualified.IsEnabled());
-  EXPECT_FALSE(mFeatures.mWr.IsEnabled());
-  EXPECT_FALSE(mFeatures.mWrCompositor.IsEnabled());
-  EXPECT_FALSE(mFeatures.mWrAngle.IsEnabled());
-  EXPECT_FALSE(mFeatures.mWrDComp.IsEnabled());
-  EXPECT_FALSE(mFeatures.mWrPartial.IsEnabled());
-  EXPECT_TRUE(mFeatures.mHwCompositing.IsEnabled());
-  EXPECT_TRUE(mFeatures.mGPUProcess.IsEnabled());
-  EXPECT_TRUE(mFeatures.mD3D11HwAngle.IsEnabled());
-}
-
-TEST_F(GfxConfigManager, WebRenderNoDWMSupportNotWindows) {
-  mDwmCompositionEnabled = false;
-  mIsWindows = false;
-  mIsWin10OrLater = false;
-  ConfigureWebRender();
-
-  EXPECT_TRUE(mFeatures.mWrQualified.IsEnabled());
-  EXPECT_TRUE(mFeatures.mWr.IsEnabled());
-  EXPECT_FALSE(mFeatures.mWrCompositor.IsEnabled());
-  EXPECT_TRUE(mFeatures.mWrAngle.IsEnabled());
-  EXPECT_FALSE(mFeatures.mWrDComp.IsEnabled());
-  EXPECT_TRUE(mFeatures.mWrPartial.IsEnabled());
   EXPECT_TRUE(mFeatures.mHwCompositing.IsEnabled());
   EXPECT_TRUE(mFeatures.mGPUProcess.IsEnabled());
   EXPECT_TRUE(mFeatures.mD3D11HwAngle.IsEnabled());
