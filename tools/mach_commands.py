@@ -17,7 +17,7 @@ from mozbuild.base import MachCommandBase, MozbuildObject
 
 
 @CommandProvider
-class BustedProvider(object):
+class BustedProvider(MachCommandBase):
     @Command('busted', category='misc',
              description='Query known bugs in our tooling, and file new ones.')
     def busted_default(self):
@@ -40,10 +40,47 @@ class BustedProvider(object):
     @SubCommand('busted',
                 'file',
                 description='File a bug for busted tooling.')
-    def busted_file(self):
+    @CommandArgument(
+        'against', help=(
+            'The specific mach command that is busted (i.e. if you encountered '
+            'an error with `mach build`, run `mach busted file build`). If '
+            'the issue is not connected to any particular mach command, you '
+            'can also run `mach busted file general`.'))
+    def busted_file(self, against):
         import webbrowser
+
+        if (against != 'general' and
+            against not in self._mach_context.commands.command_handlers):
+            print('%s is not a valid value for `against`. `against` must be '
+                  'the name of a `mach` command, or else the string '
+                  '"general".' % against)
+            return 1
+
+        if against == 'general':
+            product = 'Firefox Build System'
+            component = 'General'
+        else:
+            import inspect
+            import mozpack.path as mozpath
+
+            # Look up the file implementing that command, then cross-refernce
+            # moz.build files to get the product/component.
+            handler = self._mach_context.commands.command_handlers[against]
+            method = getattr(handler.cls, handler.method)
+            sourcefile = mozpath.relpath(inspect.getsourcefile(method),
+                                         self.topsrcdir)
+            reader = self.mozbuild_reader(config_mode='empty')
+            try:
+                res = reader.files_info(
+                    [sourcefile])[sourcefile]['BUG_COMPONENT']
+                product, component = res.product, res.component
+            except TypeError:
+                # The file might not have a bug set.
+                product = 'Firefox Build System'
+                component = 'General'
+
         uri = ('https://bugzilla.mozilla.org/enter_bug.cgi?'
-               'product=Firefox%20Build%20System&component=General&blocked=1543241')
+               'product=%s&component=%s&blocked=1543241' % (product, component))
         webbrowser.open_new_tab(uri)
 
 
