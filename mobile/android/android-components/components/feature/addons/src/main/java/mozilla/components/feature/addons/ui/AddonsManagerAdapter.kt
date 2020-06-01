@@ -61,7 +61,6 @@ class AddonsManagerAdapter(
     private val style: Style? = null
 ) : ListAdapter<Any, CustomViewHolder>(DifferCallback) {
     private val scope = CoroutineScope(Dispatchers.IO)
-    private val unsupportedAddons = mutableSetOf<Addon>()
     private val logger = Logger("AddonsManagerAdapter")
     /**
      * Represents all the add-ons that will be distributed in multiple headers like
@@ -167,6 +166,7 @@ class AddonsManagerAdapter(
         holder: UnsupportedSectionViewHolder,
         section: NotYetSupportedSection
     ) {
+        val unsupportedAddons = addonsMap.values.filter { it.inUnsupportedSection() }
         val context = holder.itemView.context
         holder.titleView.setText(section.title)
         holder.descriptionView.text =
@@ -180,7 +180,7 @@ class AddonsManagerAdapter(
             }
 
         holder.itemView.setOnClickListener {
-            addonsManagerDelegate.onNotYetSupportedSectionClicked(unsupportedAddons.toList())
+            addonsManagerDelegate.onNotYetSupportedSectionClicked(unsupportedAddons)
         }
     }
 
@@ -279,6 +279,7 @@ class AddonsManagerAdapter(
         val installedAddons = ArrayList<Addon>()
         val recommendedAddons = ArrayList<Addon>()
         val disabledAddons = ArrayList<Addon>()
+        val unsupportedAddons = ArrayList<Addon>()
 
         addons.forEach { addon ->
             when {
