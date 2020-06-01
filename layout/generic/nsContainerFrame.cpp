@@ -1561,18 +1561,6 @@ void nsContainerFrame::DeleteNextInFlowChild(nsIFrame* aNextInFlow,
   MOZ_ASSERT(!prevInFlow->GetNextInFlow(), "non null next-in-flow");
 }
 
-/**
- * Set the frames on the overflow list
- */
-void nsContainerFrame::SetOverflowFrames(const nsFrameList& aOverflowFrames) {
-  MOZ_ASSERT(aOverflowFrames.NotEmpty(), "Shouldn't be called");
-
-  nsPresContext* pc = PresContext();
-  nsFrameList* newList = new (pc->PresShell()) nsFrameList(aOverflowFrames);
-
-  SetProperty(OverflowProperty(), newList);
-}
-
 nsFrameList* nsContainerFrame::GetPropTableFrames(
     FrameListPropertyDescriptor aProperty) const {
   return GetProperty(aProperty);
