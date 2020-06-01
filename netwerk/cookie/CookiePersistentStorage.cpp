@@ -27,7 +27,7 @@
 // This is a hack to hide HttpOnly cookies from older browsers
 #define HTTP_ONLY_PREFIX "#HttpOnly_"
 
-constexpr auto COOKIES_SCHEMA_VERSION = 11;
+constexpr auto COOKIES_SCHEMA_VERSION = 12;
 
 // parameter indexes; see |Read|
 constexpr auto IDX_NAME = 0;
@@ -42,6 +42,7 @@ constexpr auto IDX_HTTPONLY = 8;
 constexpr auto IDX_ORIGIN_ATTRIBUTES = 9;
 constexpr auto IDX_SAME_SITE = 10;
 constexpr auto IDX_RAW_SAME_SITE = 11;
+constexpr auto IDX_SCHEME_MAP = 12;
 
 #define COOKIES_FILE "cookies.sqlite"
 
@@ -110,6 +111,10 @@ void BindCookieParameters(mozIStorageBindingParamsArray* aParamsArray,
 
   rv = params->BindInt32ByName(NS_LITERAL_CSTRING("rawSameSite"),
                                aCookie->RawSameSite());
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
+
+  rv = params->BindInt32ByName(NS_LITERAL_CSTRING("schemeMap"),
+                               aCookie->SchemeMap());
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 
   // Bind the params to the array.
@@ -1384,6 +1389,17 @@ CookiePersistentStorage::OpenDBResult CookiePersistentStorage::TryInitDB(
 
         COOKIE_LOGSTRING(LogLevel::Debug,
                          ("Upgraded database to schema version 11"));
+      }
+        [[fallthrough]];
+
+      case 11: {
+        // Add the schemeMap column to the table.
+        rv = mSyncConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+            "ALTER TABLE moz_cookies ADD schemeMap INTEGER DEFAULT 0;"));
+        NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
+
+        COOKIE_LOGSTRING(LogLevel::Debug,
+                         ("Upgraded database to schema version 12"));
 
         // No more upgrades. Update the schema version.
         rv = mSyncConn->SetSchemaVersion(COOKIES_SCHEMA_VERSION);
@@ -1430,7 +1446,8 @@ CookiePersistentStorage::OpenDBResult CookiePersistentStorage::TryInitDB(
                                                            "isSecure, "
                                                            "isHttpOnly, "
                                                            "sameSite, "
-                                                           "rawSameSite "
+                                                           "rawSameSite, "
+                                                           "schemeMap "
                                                            "FROM moz_cookies"),
                                         getter_AddRefs(stmt));
         if (NS_SUCCEEDED(rv)) {
@@ -1604,7 +1621,8 @@ CookiePersistentStorage::OpenDBResult CookiePersistentStorage::Read() {
                                                     "isHttpOnly, "
                                                     "originAttributes, "
                                                     "sameSite, "
-                                                    "rawSameSite "
+                                                    "rawSameSite, "
+                                                    "schemeMap "
                                                     "FROM moz_cookies"),
                                  getter_AddRefs(stmt));
 
@@ -1684,11 +1702,13 @@ UniquePtr<CookieStruct> CookiePersistentStorage::GetCookieFromRow(
   bool isHttpOnly = 0 != aRow->AsInt32(IDX_HTTPONLY);
   int32_t sameSite = aRow->AsInt32(IDX_SAME_SITE);
   int32_t rawSameSite = aRow->AsInt32(IDX_RAW_SAME_SITE);
+  int32_t schemeMap = aRow->AsInt32(IDX_SCHEME_MAP);
 
   // Create a new constCookie and assign the data.
   return MakeUnique<CookieStruct>(
       name, value, host, path, expiry, lastAccessed, creationTime, isHttpOnly,
-      false, isSecure, sameSite, rawSameSite, nsICookie::SCHEME_UNSET);
+      false, isSecure, sameSite, rawSameSite,
+      static_cast<nsICookie::schemeType>(schemeMap));
 }
 
 void CookiePersistentStorage::EnsureReadComplete() {
@@ -1824,7 +1844,8 @@ nsresult CookiePersistentStorage::InitDBConnInternal() {
                          "isSecure, "
                          "isHttpOnly, "
                          "sameSite, "
-                         "rawSameSite "
+                         "rawSameSite, "
+                         "schemeMap "
                          ") VALUES ("
                          ":originAttributes, "
                          ":name, "
@@ -1837,7 +1858,8 @@ nsresult CookiePersistentStorage::InitDBConnInternal() {
                          ":isSecure, "
                          ":isHttpOnly, "
                          ":sameSite, "
-                         ":rawSameSite "
+                         ":rawSameSite, "
+                         ":schemeMap "
                          ")"),
       getter_AddRefs(mStmtInsert));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1881,6 +1903,7 @@ nsresult CookiePersistentStorage::CreateTableWorker(const char* aName) {
       "inBrowserElement INTEGER DEFAULT 0, "
       "sameSite INTEGER DEFAULT 0, "
       "rawSameSite INTEGER DEFAULT 0, "
+      "schemeMap INTEGER DEFAULT 0, "
       "CONSTRAINT moz_uniqueid UNIQUE (name, host, path, originAttributes)"
       ")");
   return mSyncConn->ExecuteSimpleSQL(command);
