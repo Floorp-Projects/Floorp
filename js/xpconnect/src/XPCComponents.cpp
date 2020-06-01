@@ -2009,18 +2009,6 @@ nsXPCComponents_Utils::SetWantXrays(HandleValue vscope, JSContext* cx) {
 }
 
 NS_IMETHODIMP
-nsXPCComponents_Utils::ForcePermissiveCOWs(JSContext* cx) {
-  xpc::CrashIfNotInAutomation();
-  RootedObject global(cx, GetScriptedCallerGlobal(cx));
-  MOZ_ASSERT(global);
-  MOZ_DIAGNOSTIC_ASSERT(
-      !mozJSComponentLoader::Get()->IsLoaderGlobal(global),
-      "Don't call Cu.forcePermissiveCOWs() in a JSM that shares its global");
-  RealmPrivate::Get(global)->forcePermissiveCOWs = true;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsXPCComponents_Utils::Dispatch(HandleValue runnableArg, HandleValue scope,
                                 JSContext* cx) {
   RootedValue runnable(cx, runnableArg);
