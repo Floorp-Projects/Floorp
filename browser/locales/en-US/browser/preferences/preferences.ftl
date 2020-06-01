@@ -1053,9 +1053,9 @@ sitedata-settings =
     .label = Manage Data…
     .accesskey = M
 
-sitedata-cookies-permissions =
-    .label = Manage Permissions…
-    .accesskey = P
+sitedata-cookies-exceptions =
+    .label = Manage Exceptions…
+    .accesskey = x
 
 ## Privacy Section - Address Bar
 
