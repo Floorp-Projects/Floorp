@@ -160,8 +160,11 @@ or prevening some classes of errors (memory, threading, etc).
    Diffoscope, Mike Hommey, Make sure the build remains reproducible
    Linting, "| Sylvestre Ledru
    | Andrew Halberstadt", "| Identify :ref:`code quality` earlier
-   | Also contains some Bugzilla and :ref:`Documentation jobs <Managing Documentation>`
+   | Also contains some Bugzilla
    | Run on all branches (except the Bugzilla task)"
+   Documentation, "| Sylvestre Ledru
+   | Andrew Halberstadt", "| :ref:`Documentation jobs <Managing Documentation>`
+   | integration repository plus mozilla-central"
 
 
 
