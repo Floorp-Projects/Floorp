@@ -481,6 +481,7 @@ void CookieStorage::AddCookie(const nsACString& aBaseDomain,
           oldCookie->IsSession() == aCookie->IsSession() &&
           oldCookie->IsHttpOnly() == aCookie->IsHttpOnly() &&
           oldCookie->SameSite() == aCookie->SameSite() &&
+          oldCookie->SchemeMap() == aCookie->SchemeMap() &&
           // We don't want to perform this optimization if the cookie is
           // considered stale, since in this case we would need to update the
           // database.
@@ -490,6 +491,10 @@ void CookieStorage::AddCookie(const nsACString& aBaseDomain,
         UpdateCookieOldestTime(oldCookie);
         return;
       }
+
+      // Merge the scheme map in case the old cookie and the new cookie are
+      // used with different schemes.
+      MergeCookieSchemeMap(oldCookie, aCookie);
 
       // Remove the old cookie.
       RemoveCookieFromList(exactIter);
@@ -587,6 +592,11 @@ void CookieStorage::UpdateCookieOldestTime(Cookie* aCookie) {
   if (aCookie->LastAccessed() < mCookieOldestTime) {
     mCookieOldestTime = aCookie->LastAccessed();
   }
+}
+
+void CookieStorage::MergeCookieSchemeMap(Cookie* aOldCookie,
+                                         Cookie* aNewCookie) {
+  aNewCookie->SetSchemeMap(aOldCookie->SchemeMap() | aNewCookie->SchemeMap());
 }
 
 void CookieStorage::AddCookieToList(const nsACString& aBaseDomain,
