@@ -20,6 +20,7 @@ UNIFIED_SOURCES += [
     'TestAudioBuffers.cpp',
     'TestAudioCallbackDriver.cpp',
     'TestAudioCompactor.cpp',
+    'TestAudioDriftCorrection.cpp',
     'TestAudioMixer.cpp',
     'TestAudioPacketizer.cpp',
     'TestAudioRingBuffer.cpp',
