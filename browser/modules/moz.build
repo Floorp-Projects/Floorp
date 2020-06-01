@@ -79,6 +79,9 @@ with Files("PermissionUI.jsm"):
 with Files("ProcessHangMonitor.jsm"):
     BUG_COMPONENT = ("Core", "DOM: Content Processes")
 
+with Files("ReaderParent.jsm"):
+    BUG_COMPONENT = ("Toolkit", "Reader Mode")
+
 with Files("Sanitizer.jsm"):
     BUG_COMPONENT = ("Firefox", "Preferences")
 
@@ -142,6 +145,7 @@ EXTRA_JS_MODULES += [
     'PermissionUI.jsm',
     'PingCentre.jsm',
     'ProcessHangMonitor.jsm',
+    'ReaderParent.jsm',
     'Sanitizer.jsm',
     'SelectionChangedMenulist.jsm',
     'SiteDataManager.jsm',

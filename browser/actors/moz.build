@@ -10,9 +10,6 @@ with Files("**"):
 with Files("ContentSearch*.jsm"):
     BUG_COMPONENT = ("Firefox", "Search")
 
-with Files("AboutReaderParent.jsm"):
-    BUG_COMPONENT = ("Toolkit", "Reader Mode")
-
 with Files("LightweightThemeChild.jsm"):
     BUG_COMPONENT = ("WebExtensions", "Themes")
 
@@ -39,7 +36,6 @@ FINAL_TARGET_FILES.actors += [
     'AboutProtectionsChild.jsm',
     'AboutProtectionsParent.jsm',
     'AboutReaderChild.jsm',
-    'AboutReaderParent.jsm',
     'AboutTabCrashedChild.jsm',
     'AboutTabCrashedParent.jsm',
     'BlockedSiteChild.jsm',

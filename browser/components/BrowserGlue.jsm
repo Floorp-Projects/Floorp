@@ -181,21 +181,6 @@ let JSWINDOWACTORS = {
     matches: ["about:protections"],
   },
 
-  AboutReader: {
-    parent: {
-      moduleURI: "resource:///actors/AboutReaderParent.jsm",
-    },
-    child: {
-      moduleURI: "resource:///actors/AboutReaderChild.jsm",
-      events: {
-        DOMContentLoaded: {},
-        pageshow: { mozSystemGroup: true },
-        pagehide: { mozSystemGroup: true },
-      },
-    },
-    messageManagerGroups: ["browsers"],
-  },
-
   AboutTabCrashed: {
     parent: {
       moduleURI: "resource:///actors/AboutTabCrashedParent.jsm",
@@ -552,6 +537,20 @@ let JSWINDOWACTORS = {
 };
 
 let LEGACY_ACTORS = {
+  AboutReader: {
+    child: {
+      module: "resource:///actors/AboutReaderChild.jsm",
+      group: "browsers",
+      events: {
+        AboutReaderContentLoaded: { wantUntrusted: true },
+        DOMContentLoaded: {},
+        pageshow: { mozSystemGroup: true },
+        pagehide: { mozSystemGroup: true },
+      },
+      messages: ["Reader:ToggleReaderMode", "Reader:PushState"],
+    },
+  },
+
   URIFixup: {
     child: {
       module: "resource:///actors/URIFixupChild.jsm",
@@ -717,6 +716,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AboutLoginsParent: "resource:///modules/AboutLoginsParent.jsm",
   AsyncPrefs: "resource://gre/modules/AsyncPrefs.jsm",
   PluginManager: "resource:///actors/PluginParent.jsm",
+  ReaderParent: "resource:///modules/ReaderParent.jsm",
 });
 
 /**
