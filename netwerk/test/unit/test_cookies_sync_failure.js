@@ -28,7 +28,7 @@ let now;
 let futureExpiry;
 let cookie;
 
-var COOKIE_DATABASE_SCHEMA_CURRENT = 11;
+var COOKIE_DATABASE_SCHEMA_CURRENT = 12;
 
 var test_generator = do_run_test();
 
