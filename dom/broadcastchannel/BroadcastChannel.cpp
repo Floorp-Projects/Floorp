@@ -42,87 +42,6 @@ using namespace ipc;
 
 namespace {
 
-nsIPrincipal* GetStoragePrincipalFromThreadSafeWorkerRef(
-    ThreadSafeWorkerRef* aWorkerRef) {
-  nsIPrincipal* storagePrincipal =
-      aWorkerRef->Private()->GetEffectiveStoragePrincipal();
-  if (storagePrincipal) {
-    return storagePrincipal;
-  }
-
-  // Walk up to our containing page
-  WorkerPrivate* wp = aWorkerRef->Private();
-  while (wp->GetParent()) {
-    wp = wp->GetParent();
-  }
-
-  return wp->GetEffectiveStoragePrincipal();
-}
-
-class InitializeRunnable final : public WorkerMainThreadRunnable {
- public:
-  InitializeRunnable(ThreadSafeWorkerRef* aWorkerRef, nsACString& aOrigin,
-                     nsACString& aOriginNoSuffix,
-                     PrincipalInfo& aStoragePrincipalInfo, ErrorResult& aRv)
-      : WorkerMainThreadRunnable(
-            aWorkerRef->Private(),
-            NS_LITERAL_CSTRING("BroadcastChannel :: Initialize")),
-        mWorkerRef(aWorkerRef),
-        mOrigin(aOrigin),
-        mOriginNoSuffix(aOriginNoSuffix),
-        mStoragePrincipalInfo(aStoragePrincipalInfo),
-        mRv(aRv) {
-    MOZ_ASSERT(mWorkerRef);
-  }
-
-  bool MainThreadRun() override {
-    MOZ_ASSERT(NS_IsMainThread());
-
-    nsIPrincipal* storagePrincipal =
-        GetStoragePrincipalFromThreadSafeWorkerRef(mWorkerRef);
-    if (!storagePrincipal) {
-      mRv.Throw(NS_ERROR_FAILURE);
-      return true;
-    }
-
-    mRv = PrincipalToPrincipalInfo(storagePrincipal, &mStoragePrincipalInfo);
-    if (NS_WARN_IF(mRv.Failed())) {
-      return true;
-    }
-
-    mRv = storagePrincipal->GetOrigin(mOrigin);
-    if (NS_WARN_IF(mRv.Failed())) {
-      return true;
-    }
-
-    mRv = storagePrincipal->GetOriginNoSuffix(mOriginNoSuffix);
-    if (NS_WARN_IF(mRv.Failed())) {
-      return true;
-    }
-
-    // Walk up to our containing page
-    WorkerPrivate* wp = mWorkerRef->Private();
-    while (wp->GetParent()) {
-      wp = wp->GetParent();
-    }
-
-    // Window doesn't exist for some kind of workers (eg: SharedWorkers)
-    nsPIDOMWindowInner* window = wp->GetWindow();
-    if (!window) {
-      return true;
-    }
-
-    return true;
-  }
-
- private:
-  RefPtr<ThreadSafeWorkerRef> mWorkerRef;
-  nsACString& mOrigin;
-  nsACString& mOriginNoSuffix;
-  PrincipalInfo& mStoragePrincipalInfo;
-  ErrorResult& mRv;
-};
-
 class CloseRunnable final : public nsIRunnable, public nsICancelableRunnable {
  public:
   NS_DECL_ISUPPORTS
@@ -243,7 +162,7 @@ already_AddRefed<BroadcastChannel> BroadcastChannel::Constructor(
       new BroadcastChannel(global, aChannel, portUUID);
 
   nsAutoCString origin;
-  nsAutoCString originNoSuffix;
+  nsAutoString originNoSuffix;
   PrincipalInfo storagePrincipalInfo;
 
   StorageAccess storageAccess;
@@ -280,10 +199,12 @@ already_AddRefed<BroadcastChannel> BroadcastChannel::Constructor(
       return nullptr;
     }
 
-    aRv = storagePrincipal->GetOriginNoSuffix(originNoSuffix);
+    nsAutoCString originNoSuffix8;
+    aRv = storagePrincipal->GetOriginNoSuffix(originNoSuffix8);
     if (NS_WARN_IF(aRv.Failed())) {
       return nullptr;
     }
+    CopyUTF8toUTF16(originNoSuffix8, originNoSuffix);
 
     aRv = PrincipalToPrincipalInfo(storagePrincipal, &storagePrincipalInfo);
     if (NS_WARN_IF(aRv.Failed())) {
@@ -311,16 +232,14 @@ already_AddRefed<BroadcastChannel> BroadcastChannel::Constructor(
       return nullptr;
     }
 
-    RefPtr<ThreadSafeWorkerRef> tsr = new ThreadSafeWorkerRef(workerRef);
-
-    RefPtr<InitializeRunnable> runnable = new InitializeRunnable(
-        tsr, origin, originNoSuffix, storagePrincipalInfo, aRv);
-    runnable->Dispatch(Canceling, aRv);
-    if (aRv.Failed()) {
-      return nullptr;
-    }
-
     storageAccess = workerPrivate->StorageAccess();
+    storagePrincipalInfo = workerPrivate->GetEffectiveStoragePrincipalInfo();
+
+    // TODO This is broken, it will be fixed in the following patches.
+    origin = workerPrivate->PartitionedOrigin();
+
+    originNoSuffix = workerPrivate->GetLocationInfo().mOrigin;
+
     bc->mWorkerRef = workerRef;
 
     cjs = workerPrivate->CookieJarSettings();
@@ -350,7 +269,7 @@ already_AddRefed<BroadcastChannel> BroadcastChannel::Constructor(
   MOZ_ASSERT(bc->mActor);
 
   bc->mActor->SetParent(bc);
-  CopyUTF8toUTF16(originNoSuffix, bc->mOriginNoSuffix);
+  bc->mOriginNoSuffix = originNoSuffix;
 
   return bc.forget();
 }
