@@ -23,14 +23,15 @@ class nsIPrincipal;
 namespace mozilla {
 
 class ContentBlockingLog final {
-  typedef ContentBlockingNotifier::StorageAccessGrantedReason
-      StorageAccessGrantedReason;
+  typedef ContentBlockingNotifier::StorageAccessPermissionGrantedReason
+      StorageAccessPermissionGrantedReason;
 
   struct LogEntry {
     uint32_t mType;
     uint32_t mRepeatCount;
     bool mBlocked;
-    Maybe<ContentBlockingNotifier::StorageAccessGrantedReason> mReason;
+    Maybe<ContentBlockingNotifier::StorageAccessPermissionGrantedReason>
+        mReason;
     nsTArray<nsCString> mTrackingFullHashes;
   };
 
@@ -91,12 +92,16 @@ class ContentBlockingLog final {
   // ContentBlockingLog from content processes.
   Maybe<uint32_t> RecordLogParent(
       const nsACString& aOrigin, uint32_t aType, bool aBlocked,
-      const Maybe<ContentBlockingNotifier::StorageAccessGrantedReason>& aReason,
+      const Maybe<
+          ContentBlockingNotifier::StorageAccessPermissionGrantedReason>&
+          aReason,
       const nsTArray<nsCString>& aTrackingFullHashes);
 
   void RecordLog(
       const nsACString& aOrigin, uint32_t aType, bool aBlocked,
-      const Maybe<ContentBlockingNotifier::StorageAccessGrantedReason>& aReason,
+      const Maybe<
+          ContentBlockingNotifier::StorageAccessPermissionGrantedReason>&
+          aReason,
       const nsTArray<nsCString>& aTrackingFullHashes) {
     RecordLogInternal(aOrigin, aType, aBlocked, aReason, aTrackingFullHashes);
   }
@@ -245,7 +250,8 @@ class ContentBlockingLog final {
  private:
   void RecordLogInternal(
       const nsACString& aOrigin, uint32_t aType, bool aBlocked,
-      const Maybe<ContentBlockingNotifier::StorageAccessGrantedReason>&
+      const Maybe<
+          ContentBlockingNotifier::StorageAccessPermissionGrantedReason>&
           aReason = Nothing(),
       const nsTArray<nsCString>& aTrackingFullHashes = nsTArray<nsCString>()) {
     DebugOnly<bool> isCookiesBlockedTracker =
