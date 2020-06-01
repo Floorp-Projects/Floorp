@@ -78,6 +78,7 @@ pref_groups = [
     'threads',
     'toolkit',
     'ui',
+    'urlclassifier',
     'view_source',
     'webgl',
     'widget',

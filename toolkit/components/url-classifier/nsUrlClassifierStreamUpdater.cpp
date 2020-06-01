@@ -24,6 +24,7 @@
 #include "nsIInterfaceRequestor.h"
 #include "mozilla/LoadContext.h"
 #include "mozilla/Telemetry.h"
+#include "mozilla/StaticPrefs_urlclassifier.h"
 #include "nsContentUtils.h"
 #include "nsIURLFormatter.h"
 #include "Classifier.h"
@@ -32,15 +33,9 @@
 using namespace mozilla::safebrowsing;
 using namespace mozilla;
 
-#define DEFAULT_RESPONSE_TIMEOUT_MS 15 * 1000
-#define DEFAULT_TIMEOUT_MS 60 * 1000
-static_assert(DEFAULT_TIMEOUT_MS > DEFAULT_RESPONSE_TIMEOUT_MS,
-              "General timeout must be greater than reponse timeout");
+#define MIN_TIMEOUT_MS (60 * 1000)
 
 static const char* gQuitApplicationMessage = "quit-application";
-
-static uint32_t sResponseTimeoutMs = DEFAULT_RESPONSE_TIMEOUT_MS;
-static uint32_t sTimeoutMs = DEFAULT_TIMEOUT_MS;
 
 // Limit the list file size to 32mb
 const uint32_t MAX_FILE_SIZE = (32 * 1024 * 1024);
@@ -200,33 +195,26 @@ nsresult nsUrlClassifierStreamUpdater::FetchUpdate(
   mTelemetryClockStart = PR_IntervalNow();
   mStreamTable = aStreamTable;
 
-  static bool preferencesInitialized = false;
-
-  if (!preferencesInitialized) {
-    mozilla::Preferences::AddUintVarCache(
-        &sTimeoutMs, "urlclassifier.update.timeout_ms", DEFAULT_TIMEOUT_MS);
-    mozilla::Preferences::AddUintVarCache(
-        &sResponseTimeoutMs, "urlclassifier.update.response_timeout_ms",
-        DEFAULT_RESPONSE_TIMEOUT_MS);
-    preferencesInitialized = true;
-  }
-
-  if (sResponseTimeoutMs > sTimeoutMs) {
+  if (StaticPrefs::urlclassifier_update_response_timeout_ms() >
+      StaticPrefs::urlclassifier_update_timeout_ms()) {
     NS_WARNING(
         "Safe Browsing response timeout is greater than the general "
         "timeout. Disabling these update timeouts.");
     return NS_OK;
   }
   MOZ_TRY_VAR(mResponseTimeoutTimer,
-              NS_NewTimerWithCallback(this, sResponseTimeoutMs,
-                                      nsITimer::TYPE_ONE_SHOT));
+              NS_NewTimerWithCallback(
+                  this, StaticPrefs::urlclassifier_update_response_timeout_ms(),
+                  nsITimer::TYPE_ONE_SHOT));
 
-  MOZ_TRY_VAR(mTimeoutTimer, NS_NewTimerWithCallback(this, sTimeoutMs,
-                                                     nsITimer::TYPE_ONE_SHOT));
+  MOZ_TRY_VAR(mTimeoutTimer,
+              NS_NewTimerWithCallback(
+                  this, StaticPrefs::urlclassifier_update_timeout_ms(),
+                  nsITimer::TYPE_ONE_SHOT));
 
-  if (sTimeoutMs < DEFAULT_TIMEOUT_MS) {
+  if (StaticPrefs::urlclassifier_update_timeout_ms() < MIN_TIMEOUT_MS) {
     LOG(("Download update timeout %d ms (< %d ms) would be too small",
-         sTimeoutMs, DEFAULT_TIMEOUT_MS));
+         StaticPrefs::urlclassifier_update_timeout_ms(), MIN_TIMEOUT_MS));
   }
 
   return NS_OK;

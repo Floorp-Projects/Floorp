@@ -8915,6 +8915,22 @@
   mirror: always
 
 #---------------------------------------------------------------------------
+# Prefs starting with "urlclassifier."
+#---------------------------------------------------------------------------
+
+# Update server response timeout for Safe Browsing.
+- name: urlclassifier.update.response_timeout_ms
+  type: uint32_t
+  value: 30000
+  mirror: always
+
+# Download update timeout for Safe Browsing.
+- name: urlclassifier.update.timeout_ms
+  type: uint32_t
+  value: 90000
+  mirror: always
+
+#---------------------------------------------------------------------------
 # Prefs starting with "view_source."
 #---------------------------------------------------------------------------
 
