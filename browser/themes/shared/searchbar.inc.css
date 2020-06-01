@@ -53,7 +53,7 @@
   border-top: none;
 }
 
-.search-panel-one-offs,
+.search-panel-one-offs:not([hidden]),
 .search-panel-one-offs-container {
   display: flex;
   flex-direction: row;
