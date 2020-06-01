@@ -529,6 +529,7 @@ dependencies = [
  "base64 0.10.1",
  "byteorder",
  "crossbeam-utils 0.6.5",
+ "cstr",
  "log",
  "memmap",
  "moz_task",
