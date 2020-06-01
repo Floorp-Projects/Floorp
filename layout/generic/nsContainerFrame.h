@@ -552,7 +552,7 @@ class nsContainerFrame : public nsSplittableFrame {
    * recommended way to use this function it to assign its return value
    * into an AutoFrameListPtr.
    */
-  nsFrameList* StealOverflowFrames() {
+  [[nodiscard]] nsFrameList* StealOverflowFrames() {
     nsFrameList* list = TakeProperty(OverflowProperty());
     NS_ASSERTION(!list || !list->IsEmpty(), "Unexpected empty overflow list");
     return list;
@@ -742,9 +742,12 @@ class nsContainerFrame : public nsSplittableFrame {
 
   /**
    * Remove and return the PresContext-stored nsFrameList named aPropID for
-   * this frame. May return null.
+   * this frame. May return null. The caller is responsible for deleting
+   * nsFrameList and either passing ownership of the frames to someone else or
+   * destroying the frames.
    */
-  nsFrameList* RemovePropTableFrames(FrameListPropertyDescriptor aProperty);
+  [[nodiscard]] nsFrameList* RemovePropTableFrames(
+      FrameListPropertyDescriptor aProperty);
 
   /**
    * Set the PresContext-stored nsFrameList named aPropID for this frame
