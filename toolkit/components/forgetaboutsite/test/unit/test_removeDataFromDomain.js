@@ -60,8 +60,7 @@ function add_cookie(aDomain) {
     false,
     COOKIE_EXPIRY,
     {},
-    Ci.nsICookie.SAMESITE_NONE,
-    Ci.nsICookie.SCHEME_HTTPS
+    Ci.nsICookie.SAMESITE_NONE
   );
   check_cookie_exists(aDomain, true);
 }

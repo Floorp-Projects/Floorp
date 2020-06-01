@@ -436,7 +436,6 @@ struct CookieStruct
   bool      isSecure;
   int32_t   sameSite;
   int32_t   rawSameSite;
-  uint8_t   schemeMap;
 };
 
 struct DocumentChannelCreationArgs {
