@@ -24,7 +24,7 @@
                                            this) ];
 
       this.invoke = function openWnd_invoke() {
-        this.dialog = window.browsingContext.topChromeWindow
+        this.dialog = window.docShell.rootTreeItem.domWindow
                             .openDialog("about:mozilla",
                                         "AboutMozilla",
                                         "chrome,width=600,height=600");

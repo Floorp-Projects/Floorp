@@ -512,7 +512,7 @@ var SiteDataManager = {
         allowed: false,
       };
       let features = "centerscreen,chrome,modal,resizable=no";
-      win.browsingContext.topChromeWindow.openDialog(
+      win.docShell.rootTreeItem.domWindow.openDialog(
         "chrome://browser/content/preferences/dialogs/siteDataRemoveSelected.xhtml",
         "",
         features,

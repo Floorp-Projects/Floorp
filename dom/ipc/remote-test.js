@@ -14,9 +14,7 @@ cpm.addMessageListener("cpm-async", function(m) {
   cpm.sendAsyncMessage("ppm-async");
 });
 
-var dshell = content.docShell.sameTypeRootTreeItem.QueryInterface(
-  Ci.nsIDocShell
-);
+var dshell = content.docShell.rootTreeItem.QueryInterface(Ci.nsIDocShell);
 
 addEventListener(
   "click",

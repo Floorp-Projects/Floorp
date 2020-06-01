@@ -14,7 +14,7 @@
 
 <script class="testbody" type="text/javascript">
 
-var mainWindow = window.browsingContext.topChromeWindow;
+var mainWindow = window.docShell.rootTreeItem.domWindow;
 
 const tests = [
   // DNT turned on and TP turned off, DNT signal sent in both private browsing

@@ -992,7 +992,7 @@ function shortenString(aString, aMaxLength) {
  * Return main chrome window (crosses chrome boundary)
  */
 function getMainChromeWindow(aWindow) {
-  return aWindow.browsingContext.topChromeWindow;
+  return aWindow.docShell.rootTreeItem.domWindow;
 }
 
 /** Sets the test plugin(s) initially expected enabled state.

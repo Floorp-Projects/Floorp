@@ -46,7 +46,8 @@ SimpleTest.waitForFocus(async function() {
   /* eslint-env mozilla/frame-script */
   script = SpecialPowers.loadChromeScript(function() {
     var chromeWin = actorParent.rootFrameLoader
-                    .ownerElement.ownerGlobal.browsingContext.topChromeWindow;
+                    .ownerElement.ownerGlobal.docShell
+                    .rootTreeItem.domWindow;
     var contextMenu = chromeWin.document.getElementById("contentAreaContextMenu");
     contextMenu.addEventListener("popupshown",
                                  () => sendAsyncMessage("popupshown"));

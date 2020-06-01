@@ -276,7 +276,7 @@ function onListKeyDown(aEvent) {
 // Helper functions
 
 function getBrowserWindow() {
-  return window.browsingContext.topChromeWindow;
+  return window.docShell.rootTreeItem.domWindow;
 }
 
 function toggleRowChecked(aIx) {
