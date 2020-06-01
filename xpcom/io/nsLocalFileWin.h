@@ -90,6 +90,7 @@ class nsLocalFile final : public nsILocalFileWin {
 
   nsresult ResolveAndStat();
   nsresult Resolve();
+  nsresult ResolveSymlink();
 
   void EnsureShortPath();
 
