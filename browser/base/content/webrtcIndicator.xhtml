@@ -12,7 +12,6 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       id="webrtcIndicator"
-      role="alert"
       windowtype="Browser:WebRTCGlobalIndicator"
 #ifdef XP_MACOSX
       inwindowmenu="false"
@@ -28,7 +27,7 @@
     <script src="chrome://browser/content/webrtcIndicator.js"></script>
   </head>
 
-  <body>
+  <body role="alert">
     <div id="display-share" class="row-item">
       <image id="display-share-icon" />
 
