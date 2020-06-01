@@ -264,7 +264,7 @@ TEST(MultiplexInputStream, Seek_END)
   ASSERT_TRUE(NS_SUCCEEDED(rv));
   rv = stream->Available(&length);
   ASSERT_TRUE(NS_SUCCEEDED(rv));
-  ASSERT_EQ((int64_t)0, length);
+  ASSERT_EQ((uint64_t)0, length);
   rv = seekStream->Tell(&tell);
   ASSERT_TRUE(NS_SUCCEEDED(rv));
   ASSERT_EQ(tell, buf1.Length() + buf2.Length() + buf3.Length());
@@ -274,7 +274,7 @@ TEST(MultiplexInputStream, Seek_END)
   ASSERT_TRUE(NS_SUCCEEDED(rv));
   rv = stream->Available(&length);
   ASSERT_TRUE(NS_SUCCEEDED(rv));
-  ASSERT_EQ(1, length);
+  ASSERT_EQ((uint64_t)1, length);
   rv = seekStream->Tell(&tell);
   ASSERT_TRUE(NS_SUCCEEDED(rv));
   ASSERT_EQ(tell, buf1.Length() + buf2.Length() + buf3.Length() - 1);
