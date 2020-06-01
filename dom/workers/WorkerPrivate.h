@@ -1,4 +1,3 @@
-
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
@@ -705,7 +704,13 @@ class WorkerPrivate : public RelativeTimeline {
     return mLoadInfo.mLoadingPrincipal;
   }
 
-  const nsAString& Origin() const { return mLoadInfo.mOrigin; }
+  const nsAString& OriginNoSuffix() const { return mLoadInfo.mOriginNoSuffix; }
+
+  const nsACString& Origin() const { return mLoadInfo.mOrigin; }
+
+  const nsACString& PartitionedOrigin() const {
+    return mLoadInfo.mPartitionedOrigin;
+  }
 
   nsILoadGroup* GetLoadGroup() const {
     AssertIsOnMainThread();
@@ -784,11 +789,16 @@ class WorkerPrivate : public RelativeTimeline {
 
   mozilla::StorageAccess StorageAccess() const {
     AssertIsOnWorkerThread();
-    if (mLoadInfo.mFirstPartyStorageAccessGranted) {
+    if (IsFirstPartyStorageAccessGranted()) {
       return mozilla::StorageAccess::eAllow;
     }
 
     return mLoadInfo.mStorageAccess;
+  }
+
+  bool IsFirstPartyStorageAccessGranted() const {
+    AssertIsOnWorkerThread();
+    return mLoadInfo.mFirstPartyStorageAccessGranted;
   }
 
   nsICookieJarSettings* CookieJarSettings() const {
