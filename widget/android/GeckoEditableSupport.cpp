@@ -1138,11 +1138,63 @@ void GeckoEditableSupport::OnImeRequestCursorUpdates(int aRequestMode) {
   mIMEMonitorCursor = (aRequestMode == EditableClient::START_MONITOR);
 }
 
+class MOZ_STACK_CLASS AutoSelectionRestore final {
+ public:
+  explicit AutoSelectionRestore(nsIWidget* widget,
+                                TextEventDispatcher* dispatcher)
+      : mWidget(widget), mDispatcher(dispatcher) {
+    MOZ_ASSERT(widget);
+    if (!dispatcher || !dispatcher->IsComposing()) {
+      mOffset = UINT32_MAX;
+      mLength = UINT32_MAX;
+      return;
+    }
+    WidgetQueryContentEvent selection(true, eQuerySelectedText, widget);
+    nsEventStatus status = nsEventStatus_eIgnore;
+    widget->DispatchEvent(&selection, status);
+    if (!selection.mSucceeded) {
+      mOffset = UINT32_MAX;
+      mLength = UINT32_MAX;
+      return;
+    }
+
+    mOffset = selection.mReply.mOffset;
+    mLength = selection.mReply.mString.Length();
+  }
+
+  ~AutoSelectionRestore() {
+    if (mWidget->Destroyed() || mOffset == UINT32_MAX) {
+      return;
+    }
+
+    WidgetSelectionEvent selection(true, eSetSelection, mWidget);
+    selection.mOffset = mOffset;
+    selection.mLength = mLength;
+    selection.mExpandToClusterBoundary = false;
+    selection.mReason = nsISelectionListener::IME_REASON;
+    nsEventStatus status = nsEventStatus_eIgnore;
+    mWidget->DispatchEvent(&selection, status);
+  }
+
+ private:
+  nsCOMPtr<nsIWidget> mWidget;
+  RefPtr<TextEventDispatcher> mDispatcher;
+  uint32_t mOffset;
+  uint32_t mLength;
+};
+
 void GeckoEditableSupport::OnImeRequestCommit() {
   if (mIMEMaskEventsCount > 0) {
     // Not focused.
     return;
   }
+
+  nsCOMPtr<nsIWidget> widget = GetWidget();
+  if (NS_WARN_IF(!widget)) {
+    return;
+  }
+
+  AutoSelectionRestore restore(widget, mDispatcher);
 
   RemoveComposition(COMMIT_IME_COMPOSITION);
 }
