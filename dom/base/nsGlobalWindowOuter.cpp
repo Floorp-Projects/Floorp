@@ -1323,7 +1323,7 @@ nsGlobalWindowOuter::nsGlobalWindowOuter(uint64_t aWindowID)
       mIsChrome(false),
       mAllowScriptsToClose(false),
       mTopLevelOuterContentWindow(false),
-      mHasStorageAccess(false),
+      mStorageAccessPermissionGranted(false),
 #ifdef DEBUG
       mSerial(0),
       mSetOpenerWindowCalled(false),
@@ -2463,42 +2463,49 @@ nsresult nsGlobalWindowOuter::SetNewDocument(Document* aDocument,
   ReportLargeAllocStatus();
   mLargeAllocStatus = LargeAllocStatus::NONE;
 
-  bool isThirdPartyTrackingResourceWindow =
-      nsContentUtils::IsThirdPartyTrackingResourceWindow(newInnerWindow);
+  mStorageAccessPermissionGranted =
+      CheckStorageAccessPermission(aDocument, newInnerWindow);
 
-  mHasStorageAccess = false;
+  return NS_OK;
+}
+
+bool nsGlobalWindowOuter::CheckStorageAccessPermission(
+    Document* aDocument, nsGlobalWindowInner* aInnerWindow) {
+  if (!aInnerWindow) {
+    return false;
+  }
+
   nsIURI* uri = aDocument->GetDocumentURI();
-  if (newInnerWindow &&
-      aDocument->CookieJarSettings()->GetRejectThirdPartyContexts() &&
-      nsContentUtils::IsThirdPartyWindowOrChannel(newInnerWindow, nullptr,
-                                                  uri)) {
-    uint32_t cookieBehavior =
-        aDocument->CookieJarSettings()->GetCookieBehavior();
-    // Grant storage access by default if the first-party storage access
-    // permission has been granted already.
-    // Don't notify in this case, since we would be notifying the user
-    // needlessly.
-    bool checkStorageAccess = false;
-    if (net::CookieJarSettings::IsRejectThirdPartyWithExceptions(
-            cookieBehavior)) {
-      checkStorageAccess = true;
-    } else {
-      MOZ_ASSERT(
-          cookieBehavior == nsICookieService::BEHAVIOR_REJECT_TRACKER ||
-          cookieBehavior ==
-              nsICookieService::BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN);
-      if (isThirdPartyTrackingResourceWindow) {
-        checkStorageAccess = true;
-      }
-    }
+  if (!aDocument->CookieJarSettings()->GetRejectThirdPartyContexts() ||
+      !nsContentUtils::IsThirdPartyWindowOrChannel(aInnerWindow, nullptr,
+                                                   uri)) {
+    return false;
+  }
 
-    if (checkStorageAccess) {
-      mHasStorageAccess =
-          ContentBlocking::ShouldAllowAccessFor(newInnerWindow, uri, nullptr);
+  uint32_t cookieBehavior = aDocument->CookieJarSettings()->GetCookieBehavior();
+
+  // Grant storage access by default if the first-party storage access
+  // permission has been granted already.  Don't notify in this case, since we
+  // would be notifying the user needlessly.
+  bool checkStorageAccess = false;
+  if (net::CookieJarSettings::IsRejectThirdPartyWithExceptions(
+          cookieBehavior)) {
+    checkStorageAccess = true;
+  } else {
+    MOZ_ASSERT(
+        cookieBehavior == nsICookieService::BEHAVIOR_REJECT_TRACKER ||
+        cookieBehavior ==
+            nsICookieService::BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN);
+    if (nsContentUtils::IsThirdPartyTrackingResourceWindow(aInnerWindow)) {
+      checkStorageAccess = true;
     }
   }
 
-  return NS_OK;
+  if (checkStorageAccess) {
+    return ContentBlocking::ShouldAllowAccessFor(aInnerWindow, uri, nullptr);
+  }
+
+  return false;
 }
 
 /* static */

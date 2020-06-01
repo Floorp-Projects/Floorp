@@ -488,13 +488,13 @@ mozilla::ipc::IPCResult WindowGlobalChild::RecvGetSecurityInfo(
 mozilla::ipc::IPCResult WindowGlobalChild::RecvSaveStorageAccessGranted() {
   nsCOMPtr<nsPIDOMWindowInner> inner = GetWindowGlobal();
   if (inner) {
-    inner->SaveStorageAccessGranted();
+    inner->SaveStorageAccessPermissionGranted();
   }
 
   nsCOMPtr<nsPIDOMWindowOuter> outer =
       nsPIDOMWindowOuter::GetFromCurrentInner(inner);
   if (outer) {
-    nsGlobalWindowOuter::Cast(outer)->SetHasStorageAccess(true);
+    nsGlobalWindowOuter::Cast(outer)->SetStorageAccessPermissionGranted(true);
   }
 
   return IPC_OK();
