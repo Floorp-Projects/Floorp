@@ -323,7 +323,6 @@ class nsGridContainerFrame final : public nsContainerFrame {
   typedef mozilla::ReverseCSSOrderAwareFrameIterator
       ReverseCSSOrderAwareFrameIterator;
   typedef mozilla::WritingMode WritingMode;
-  typedef mozilla::layout::AutoFrameListPtr AutoFrameListPtr;
   typedef nsLayoutUtils::IntrinsicISizeType IntrinsicISizeType;
   struct Grid;
   struct GridArea;

@@ -494,7 +494,6 @@ void nsFrameList::VerifyList() const {
 #endif
 
 namespace mozilla {
-namespace layout {
 
 AutoFrameListPtr::~AutoFrameListPtr() {
   if (mFrameList) {
@@ -502,5 +501,4 @@ AutoFrameListPtr::~AutoFrameListPtr() {
   }
 }
 
-}  // namespace layout
 }  // namespace mozilla
