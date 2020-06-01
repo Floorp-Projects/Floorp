@@ -148,6 +148,10 @@ NS_IMETHODIMP Cookie::GetSameSite(int32_t* aSameSite) {
   }
   return NS_OK;
 }
+NS_IMETHODIMP Cookie::GetSchemeMap(nsICookie::schemeType* aSchemeMap) {
+  *aSchemeMap = static_cast<nsICookie::schemeType>(SchemeMap());
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 Cookie::GetOriginAttributes(JSContext* aCx, JS::MutableHandle<JS::Value> aVal) {

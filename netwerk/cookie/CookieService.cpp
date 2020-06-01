@@ -732,7 +732,7 @@ CookieService::AddNative(const nsACString& aHost, const nsACString& aPath,
                           nsCString(aPath), aExpiry, currentTimeInUsec,
                           Cookie::GenerateUniqueCreationTime(currentTimeInUsec),
                           aIsHttpOnly, aIsSession, aIsSecure, aSameSite,
-                          aSameSite);
+                          aSameSite, nsICookie::SCHEME_UNSET);
 
   RefPtr<Cookie> cookie = Cookie::Create(cookieData, key.mOriginAttributes);
   MOZ_ASSERT(cookie);
