@@ -173,42 +173,6 @@ add_task(async function open_empty() {
   textbox.value = "";
 });
 
-add_task(async function open_empty_hiddenOneOffs() {
-  // Disable all the engines but the current one and check the oneoffs.
-  let defaultEngine = await Services.search.getDefault();
-  let engines = (await Services.search.getVisibleEngines()).filter(
-    e => e.name != defaultEngine.name
-  );
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.search.hiddenOneOffs", engines.map(e => e.name).join(",")]],
-  });
-
-  let promise = promiseEvent(searchPopup, "popupshown");
-  info("Clicking icon");
-  EventUtils.synthesizeMouseAtCenter(searchIcon, {});
-  await promise;
-
-  let oneOffButtons = searchPopup.querySelector(".search-panel-one-offs");
-  Assert.equal(
-    oneOffButtons.getAttribute("hidden"),
-    "true",
-    "The one-offs buttons should have the hidden attribute."
-  );
-  Assert.equal(
-    getComputedStyle(oneOffButtons).display,
-    "none",
-    "The one-off buttons should be hidden."
-  );
-
-  promise = promiseEvent(searchPopup, "popuphidden");
-
-  info("Hiding popup");
-  await synthesizeNativeMouseClick(searchIcon);
-  await promise;
-
-  await SpecialPowers.popPrefEnv();
-});
-
 // With no text in the search box left clicking it should not open the popup.
 add_no_popup_task(function click_doesnt_open_popup() {
   gURLBar.focus();
