@@ -22,8 +22,8 @@ function promisify(func, ...params) {
         Ci.mozIBridgedSyncEngineCallback,
         Ci.mozIBridgedSyncEngineApplyCallback,
       ]),
-      onChanged(json) {
-        changes.push(JSON.parse(json));
+      onChanged(extId, json) {
+        changes.push({ extId, changes: JSON.parse(json) });
       },
       handleSuccess(value) {
         resolve({
@@ -58,11 +58,14 @@ add_task(async function test_storage_sync_service() {
       changes,
       [
         {
-          hi: {
-            newValue: "hello! 💖",
-          },
-          bye: {
-            newValue: "adiós",
+          extId: "ext-1",
+          changes: {
+            hi: {
+              newValue: "hello! 💖",
+            },
+            bye: {
+              newValue: "adiós",
+            },
           },
         },
       ],
@@ -158,11 +161,33 @@ add_task(async function test_storage_sync_bridged_engine() {
   info("Merge");
   // Three levels of JSON wrapping: each outgoing envelope, the cleartext in
   // each envelope, and the extension storage data in each cleartext.
-  // TODO: Should we reduce to 2? Extension storage data could be a map...
   let { value: outgoingEnvelopesAsJSON } = await promisify(area.apply);
   let outgoingEnvelopes = outgoingEnvelopesAsJSON.map(json => JSON.parse(json));
   let parsedCleartexts = outgoingEnvelopes.map(e => JSON.parse(e.cleartext));
   let parsedData = parsedCleartexts.map(c => JSON.parse(c.data));
+
+  let { changes } = await promisify(
+    area.QueryInterface(Ci.mozISyncedExtensionStorageArea)
+      .fetchPendingSyncChanges
+  );
+  deepEqual(
+    changes,
+    [
+      {
+        extId: "ext-2",
+        changes: {
+          c: { newValue: 1234 },
+        },
+      },
+      {
+        extId: "ext-3",
+        changes: {
+          d: { newValue: "new! ✨" },
+        },
+      },
+    ],
+    "Should return pending synced changes for observers"
+  );
 
   // ext-1 doesn't exist remotely yet, so the Rust sync layer will generate
   // a GUID for it. We don't know what it is, so we find it by the extension
