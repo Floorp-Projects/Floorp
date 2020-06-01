@@ -11,7 +11,7 @@
 #include "mozilla/media/webrtc/WebrtcGlobal.h"
 #include "mozilla/dom/CandidateInfo.h"
 #include "mozilla/MacroForEach.h"
-#include "mtransport/transportlayerdtls.h"
+#include "mtransport/dtlsidentity.h"
 #include <vector>
 
 namespace mozilla {
