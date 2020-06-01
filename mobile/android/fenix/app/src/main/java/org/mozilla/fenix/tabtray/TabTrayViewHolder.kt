@@ -72,6 +72,7 @@ class TabTrayViewHolder(
             thumbnailView.visibility = View.VISIBLE
             iconView?.visibility = View.INVISIBLE
         } else {
+            thumbnailView.setImageBitmap(null)
             iconView?.setImageBitmap(tab.icon)
             thumbnailView.visibility = View.INVISIBLE
             iconView?.visibility = View.VISIBLE
