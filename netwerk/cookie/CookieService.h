@@ -145,12 +145,6 @@ class CookieService final : public nsICookieService,
   nsresult RemoveCookiesFromExactHost(const nsACString& aHost,
                                       const OriginAttributesPattern& aPattern);
 
-  static void LogMessageToConsole(nsIConsoleReportCollector* aCRC, nsIURI* aURI,
-                                  uint32_t aErrorFlags,
-                                  const nsACString& aCategory,
-                                  const nsACString& aMsg,
-                                  const nsTArray<nsString>& aParams);
-
   // cached members.
   nsCOMPtr<mozIThirdPartyUtil> mThirdPartyUtil;
   nsCOMPtr<nsIEffectiveTLDService> mTLDService;
