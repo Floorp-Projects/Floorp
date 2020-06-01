@@ -243,8 +243,8 @@ add_task(async function test_message_on_autofill_with_document_interaction() {
   let promiseSubmitMessage = getSubmitMessage();
   await navigateWithoutUserInteraction();
 
-  let messageData = await promiseSubmitMessage;
-  ok(messageData.autoFilledLoginGuid, "Message was sent with autoFilledLoginGuid");
+  let { data } = await promiseSubmitMessage;
+  ok(data.autoFilledLoginGuid, "Message was sent with autoFilledLoginGuid");
   info("Message was sent as expected after document user interaction");
 
   chromeScript.destroy();
@@ -264,9 +264,9 @@ add_task(async function test_message_on_autofill_with_user_interaction() {
   let promiseSubmitMessage = getSubmitMessage();
   await navigateWithoutUserInteraction();
 
-  let messageData = await promiseSubmitMessage;
-  ok(messageData.autoFilledLoginGuid, "Message was sent with autoFilledLoginGuid");
-  is(messageData.usernameField.value, "newuser", "Message was sent with correct usernameField.value");
+  let { data } = await promiseSubmitMessage;
+  ok(data.autoFilledLoginGuid, "Message was sent with autoFilledLoginGuid");
+  is(data.usernameField.value, "newuser", "Message was sent with correct usernameField.value");
   info("Message was sent as expected after user form interaction");
 
   chromeScript.destroy();

@@ -225,23 +225,30 @@ class LoginManagerParent extends JSWindowActorParent {
 
   receiveMessage(msg) {
     let data = msg.data;
+    if (data.origin || data.formOrigin) {
+      throw new Error(
+        "The child process should not send an origin to the parent process. See bug 1513003"
+      );
+    }
+    let origin = this.manager.documentPrincipal?.originNoSuffix;
+    if (!origin) {
+      throw new Error("An origin is required");
+    }
     switch (msg.name) {
       case "PasswordManager:findLogins": {
-        // TODO Verify the target's principals against the formOrigin?
         return this.sendLoginDataToChild(
-          data.formOrigin,
+          origin,
           data.actionOrigin,
           data.options
         );
       }
 
       case "PasswordManager:onFormSubmit": {
-        // TODO Verify msg.target's principals against the formOrigin?
         let browser = this.getRootBrowser();
-        let submitPromise = this.onFormSubmit(browser, data);
+        let submitPromise = this.onFormSubmit(browser, origin, data);
         if (gListenerForTests) {
           submitPromise.then(() => {
-            gListenerForTests("FormSubmit", data);
+            gListenerForTests("FormSubmit", { origin, data });
           });
         }
         break;
@@ -254,12 +261,12 @@ class LoginManagerParent extends JSWindowActorParent {
           gListenerForTests("PasswordEditedOrGenerated", {});
         }
         let browser = this.getRootBrowser();
-        this._onPasswordEditedOrGenerated(browser, data);
+        this._onPasswordEditedOrGenerated(browser, origin, data);
         break;
       }
 
       case "PasswordManager:autoCompleteLogins": {
-        return this.doAutocompleteSearch(data);
+        return this.doAutocompleteSearch(origin, data);
       }
 
       case "PasswordManager:removeLogin": {
@@ -273,7 +280,7 @@ class LoginManagerParent extends JSWindowActorParent {
         let window = this.getRootBrowser().ownerGlobal;
         MigrationUtils.showMigrationWizard(window, [
           MigrationUtils.MIGRATION_ENTRYPOINT_PASSWORDS,
-          msg.data,
+          data,
         ]);
         break;
       }
@@ -281,8 +288,8 @@ class LoginManagerParent extends JSWindowActorParent {
       case "PasswordManager:OpenPreferences": {
         let window = this.getRootBrowser().ownerGlobal;
         LoginHelper.openPasswordManager(window, {
-          filterString: msg.data.hostname,
-          entryPoint: msg.data.entryPoint,
+          filterString: data.hostname,
+          entryPoint: data.entryPoint,
         });
         break;
       }
@@ -442,16 +449,18 @@ class LoginManagerParent extends JSWindowActorParent {
     };
   }
 
-  async doAutocompleteSearch({
+  async doAutocompleteSearch(
     formOrigin,
-    actionOrigin,
-    searchString,
-    previousResult,
-    forcePasswordGeneration,
-    hasBeenTypePassword,
-    isSecure,
-    isProbablyANewPasswordField,
-  }) {
+    {
+      actionOrigin,
+      searchString,
+      previousResult,
+      forcePasswordGeneration,
+      hasBeenTypePassword,
+      isSecure,
+      isProbablyANewPasswordField,
+    }
+  ) {
     // Note: previousResult is a regular object, not an
     // nsIAutoCompleteResult.
 
@@ -660,8 +669,8 @@ class LoginManagerParent extends JSWindowActorParent {
 
   async onFormSubmit(
     browser,
+    formOrigin,
     {
-      origin,
       browsingContextId,
       formActionOrigin,
       autoFilledLoginGuid,
@@ -685,8 +694,12 @@ class LoginManagerParent extends JSWindowActorParent {
       return;
     }
 
-    if (!Services.logins.getLoginSavingEnabled(origin)) {
-      log("(form submission ignored -- saving is disabled for:", origin, ")");
+    if (!Services.logins.getLoginSavingEnabled(formOrigin)) {
+      log(
+        "(form submission ignored -- saving is disabled for:",
+        formOrigin,
+        ")"
+      );
       return;
     }
 
@@ -696,7 +709,7 @@ class LoginManagerParent extends JSWindowActorParent {
     log("onFormSubmit, got framePrincipalOrigin: ", framePrincipalOrigin);
 
     let formLogin = new LoginInfo(
-      origin,
+      formOrigin,
       formActionOrigin,
       null,
       usernameField ? usernameField.value : "",
@@ -710,7 +723,7 @@ class LoginManagerParent extends JSWindowActorParent {
     if (autoFilledLoginGuid) {
       let loginsForGuid = await Services.logins.searchLoginsAsync({
         guid: autoFilledLoginGuid,
-        origin,
+        origin: formOrigin,
       });
       if (
         loginsForGuid.length == 1 &&
@@ -728,7 +741,7 @@ class LoginManagerParent extends JSWindowActorParent {
     let canMatchExistingLogin = true;
     // Below here we have one login per hostPort + action + username with the
     // matching scheme being preferred.
-    let logins = await LoginManagerParent.searchAndDedupeLogins(origin, {
+    let logins = await LoginManagerParent.searchAndDedupeLogins(formOrigin, {
       formActionOrigin,
     });
 
@@ -870,7 +883,7 @@ class LoginManagerParent extends JSWindowActorParent {
    *   - The user edits a username (when a matching password field has already been filled)
    *
    * @param {Element} browser
-   * @param {string} options.origin
+   * @param {string} formOrigin
    * @param {string} options.formActionOrigin
    * @param {string?} options.autoFilledLoginGuid
    * @param {Object} options.newPasswordField
@@ -880,8 +893,8 @@ class LoginManagerParent extends JSWindowActorParent {
    */
   async _onPasswordEditedOrGenerated(
     browser,
+    formOrigin,
     {
-      origin,
       formActionOrigin,
       autoFilledLoginGuid,
       newPasswordField,
@@ -900,11 +913,11 @@ class LoginManagerParent extends JSWindowActorParent {
       return;
     }
 
-    if (!Services.logins.getLoginSavingEnabled(origin)) {
+    if (!Services.logins.getLoginSavingEnabled(formOrigin)) {
       // No UI should be shown to offer generation in this case but a user may
       // disable saving for the site after already filling one and they may then
       // edit it.
-      log("_onPasswordEditedOrGenerated: saving is disabled for:", origin);
+      log("_onPasswordEditedOrGenerated: saving is disabled for:", formOrigin);
       return;
     }
 
@@ -930,20 +943,8 @@ class LoginManagerParent extends JSWindowActorParent {
       framePrincipalOrigin
     );
 
-    let {
-      originNoSuffix,
-    } = browsingContext.currentWindowGlobal.documentPrincipal;
-    let formOrigin = LoginHelper.getLoginOrigin(originNoSuffix);
-    if (formOrigin !== origin) {
-      log(
-        "_onPasswordEditedOrGenerated: Invalid form origin:",
-        browsingContext.currentWindowGlobal.documentPrincipal
-      );
-      return;
-    }
-
     let formLogin = new LoginInfo(
-      origin,
+      formOrigin,
       formActionOrigin,
       null,
       usernameField ? usernameField.value : "",
@@ -960,7 +961,7 @@ class LoginManagerParent extends JSWindowActorParent {
     if (autoFilledLoginGuid) {
       let [matchedLogin] = await Services.logins.searchLoginsAsync({
         guid: autoFilledLoginGuid,
-        origin,
+        origin: formOrigin,
       });
       if (
         matchedLogin &&
@@ -980,7 +981,7 @@ class LoginManagerParent extends JSWindowActorParent {
 
     // Below here we have one login per hostPort + action + username with the
     // matching scheme being preferred.
-    let logins = await LoginManagerParent.searchAndDedupeLogins(origin, {
+    let logins = await LoginManagerParent.searchAndDedupeLogins(formOrigin, {
       formActionOrigin,
     });
     // only used in the generated pw case where we auto-save

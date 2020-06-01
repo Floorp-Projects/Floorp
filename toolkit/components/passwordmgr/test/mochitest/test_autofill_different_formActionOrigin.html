@@ -58,7 +58,7 @@ add_task(async function test_formActionOrigin_wildcard_should_autofill() {
 
 add_task(async function test_formActionOrigin_different_shouldnt_autofill() {
   await prepareLoginsAndProcessForm("https://example.com" + MISSING_ACTION_PATH, [
-    new nsLoginInfo("https://example.com", "https://another.domain", null,
+    new nsLoginInfo("https://example.com", "https://example.org", null,
                     "name2", "pass2", "uname", "pword"),
   ]);
 

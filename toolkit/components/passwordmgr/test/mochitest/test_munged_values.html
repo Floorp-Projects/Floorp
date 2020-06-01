@@ -161,13 +161,13 @@ add_task(async function test_new_logins() {
       this.content.document.getElementById("submitBtn").click();
     });
 
-    let submittedResult = await processedPromise;
-    info("Got submittedResult: " + JSON.stringify(submittedResult));
+    let { data } = await processedPromise;
+    info("Got submitted result: " + JSON.stringify(data));
 
     if (tc.expected === null) {
-      is(submittedResult.usernameField, tc.expected, "Check usernameField");
+      is(data.usernameField, tc.expected, "Check usernameField");
     } else {
-      is(submittedResult.usernameField.value, tc.expected, "Check usernameField");
+      is(data.usernameField.value, tc.expected, "Check usernameField");
     }
   }
 });
@@ -271,10 +271,10 @@ add_task(async function test_no_autofill_munged_username_matching_password() {
     this.content.document.getElementById("submitBtn").click();
   });
 
-  let submittedResult = await processedPromise;
-  info("Got submittedResult: " + JSON.stringify(submittedResult));
+  let { data } = await processedPromise;
+  info("Got submitted result: " + JSON.stringify(data));
 
-  is(submittedResult.usernameField, null, "Check usernameField");
+  is(data.usernameField, null, "Check usernameField");
 
   let updatedLogins = await LoginManager.getAllLogins();
   let updatedLogin = Array.prototype.find.call(updatedLogins, l => l.guid == guid);
@@ -320,10 +320,10 @@ add_task(async function test_autofill_munged_username_matching_password() {
     this.content.document.getElementById("submitBtn").click();
   });
 
-  let submittedResult = await processedPromise;
-  info("Got submittedResult: " + JSON.stringify(submittedResult));
+  let { data } = await processedPromise;
+  info("Got submitted result: " + JSON.stringify(data));
 
-  is(submittedResult.usernameField, null, "Check usernameField");
+  is(data.usernameField, null, "Check usernameField");
 
   let updatedLogins = await LoginManager.getAllLogins();
   let updatedLogin = Array.prototype.find.call(updatedLogins, l => l.guid == guid);
