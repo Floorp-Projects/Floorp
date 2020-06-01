@@ -7,10 +7,10 @@ package mozilla.components.service.digitalassetlinks
 /**
  * Lists all statements made by a given source.
  */
-interface StatementLister {
+interface StatementListFetcher {
 
     /**
      * Retrieves a list of all statements from a given [source].
      */
-    fun listDigitalAssetLinkStatements(source: AssetDescriptor.Web): List<Statement>
+    fun listStatements(source: AssetDescriptor.Web): Sequence<Statement>
 }

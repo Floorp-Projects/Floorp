@@ -10,7 +10,6 @@ import androidx.annotation.VisibleForTesting
 import androidx.browser.customtabs.CustomTabsService.RELATION_HANDLE_ALL_URLS
 import androidx.browser.customtabs.CustomTabsService.RELATION_USE_AS_ORIGIN
 import androidx.browser.customtabs.CustomTabsService.Relation
-import kotlinx.coroutines.CompletionHandler
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.withContext
 import mozilla.components.concept.fetch.Client
@@ -28,6 +27,7 @@ import mozilla.components.service.digitalassetlinks.api.DigitalAssetLinksApi
  * It caches any origin that has been verified during the current application
  * lifecycle and reuses that without making any new network requests.
  */
+@Suppress("LongParameterList")
 class OriginVerifier(
     private val packageName: String,
     @Relation private val relation: Int,
@@ -39,7 +39,7 @@ class OriginVerifier(
 
     @VisibleForTesting
     internal val androidAsset by lazy {
-        AndroidAssetFinder.getAndroidAppAsset(packageName, packageManager).firstOrNull()
+        AndroidAssetFinder().getAndroidAppAsset(packageName, packageManager).firstOrNull()
     }
 
     /**
@@ -62,7 +62,7 @@ class OriginVerifier(
             else -> return false
         }
 
-        val originVerified = relationChecker.checkDigitalAssetLinkRelationship(
+        val originVerified = relationChecker.checkRelationship(
             source = AssetDescriptor.Web(site = origin.toString()),
             target = androidAsset ?: return false,
             relation = relationship

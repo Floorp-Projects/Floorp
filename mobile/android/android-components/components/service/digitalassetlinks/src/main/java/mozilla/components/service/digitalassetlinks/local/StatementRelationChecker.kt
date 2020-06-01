@@ -8,14 +8,17 @@ import mozilla.components.service.digitalassetlinks.AssetDescriptor
 import mozilla.components.service.digitalassetlinks.Relation
 import mozilla.components.service.digitalassetlinks.RelationChecker
 import mozilla.components.service.digitalassetlinks.Statement
-import mozilla.components.service.digitalassetlinks.StatementLister
+import mozilla.components.service.digitalassetlinks.StatementListFetcher
 
+/**
+ * Checks if a matching relationship is present in a remote statement list.
+ */
 class StatementRelationChecker(
-    private val lister: StatementLister
+    private val listFetcher: StatementListFetcher
 ) : RelationChecker {
 
-    override fun checkDigitalAssetLinkRelationship(source: AssetDescriptor.Web, relation: Relation, target: AssetDescriptor): Boolean {
-        val statements = lister.listDigitalAssetLinkStatements(source)
+    override fun checkRelationship(source: AssetDescriptor.Web, relation: Relation, target: AssetDescriptor): Boolean {
+        val statements = listFetcher.listStatements(source)
         return checkLink(statements, relation, target)
     }
 
@@ -24,9 +27,9 @@ class StatementRelationChecker(
         /**
          * Check if any of the given [Statement]s are linked to the given [target].
          */
-        fun checkLink(statements: List<Statement>, relation: Relation, target: AssetDescriptor) =
+        fun checkLink(statements: Sequence<Statement>, relation: Relation, target: AssetDescriptor) =
             statements.any { statement ->
-                relation in statement.relation && statement.target == target
+                statement.relation == relation && statement.target == target
             }
     }
 }

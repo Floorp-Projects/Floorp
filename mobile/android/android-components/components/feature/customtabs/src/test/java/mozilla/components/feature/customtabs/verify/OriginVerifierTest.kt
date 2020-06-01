@@ -17,8 +17,6 @@ import mozilla.components.service.digitalassetlinks.AssetDescriptor
 import mozilla.components.service.digitalassetlinks.Relation
 import mozilla.components.service.digitalassetlinks.RelationChecker
 import mozilla.components.support.test.any
-import mozilla.components.support.test.mock
-import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -27,7 +25,6 @@ import org.junit.runner.RunWith
 import org.mockito.Mock
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.spy
-import org.mockito.Mockito.verify
 import org.mockito.MockitoAnnotations.initMocks
 
 @RunWith(AndroidJUnit4::class)
@@ -66,7 +63,7 @@ class OriginVerifierTest {
     @Test
     fun verifyOrigin() = runBlocking {
         val verifier = buildVerifier(RELATION_USE_AS_ORIGIN)
-        doReturn(true).`when`(checker).checkDigitalAssetLinkRelationship(
+        doReturn(true).`when`(checker).checkRelationship(
             AssetDescriptor.Web("https://www.example.com"),
             Relation.USE_AS_ORIGIN,
             androidAsset

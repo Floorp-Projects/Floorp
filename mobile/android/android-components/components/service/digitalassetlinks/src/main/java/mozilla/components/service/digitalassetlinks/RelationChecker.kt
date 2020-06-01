@@ -13,7 +13,7 @@ interface RelationChecker {
      * Performs a check to ensure a directional relationships exists between the specified
      * [source] and [target] assets. The relationship must match the [relation] type given.
      */
-    fun checkDigitalAssetLinkRelationship(
+    fun checkRelationship(
         source: AssetDescriptor.Web,
         relation: Relation,
         target: AssetDescriptor

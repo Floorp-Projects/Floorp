@@ -272,8 +272,8 @@ projects:
     path: components/service/fretboard
     description: 'An Android framework for segmenting users in order to run A/B tests and rollout features gradually.'
     publish: true
-  service-digital-asset-links:
-    path: components/service/digital-asset-links
+  service-digitalassetlinks:
+    path: components/service/digitalassetlinks
     description: 'A library for communicating with the Digital Asset Links API.'
     publish: true
   service-experiments:

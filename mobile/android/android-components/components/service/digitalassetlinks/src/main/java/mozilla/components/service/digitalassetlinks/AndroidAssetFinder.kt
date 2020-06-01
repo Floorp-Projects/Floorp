@@ -18,8 +18,10 @@ import java.security.cert.CertificateException
 import java.security.cert.CertificateFactory
 import java.security.cert.X509Certificate
 
-object AndroidAssetFinder {
-    private val HEX_CHAR_LOOKUP = "0123456789ABCDEF".toCharArray()
+/**
+ * Get the SHA256 certificate for an installed Android app.
+ */
+class AndroidAssetFinder {
 
     /**
      * Converts the Android App with the given package name into an asset descriptor
@@ -104,14 +106,20 @@ object AndroidAssetFinder {
     @Suppress("MagicNumber")
     @VisibleForTesting
     internal fun byteArrayToHexString(bytes: ByteArray): String {
-        val hexString = StringBuilder(bytes.size * 3 - 1)
+        val hexString = StringBuilder(bytes.size * HEX_STRING_SIZE - 1)
         var v: Int
         for (j in bytes.indices) {
             v = bytes[j].toInt() and 0xFF
-            hexString.append(HEX_CHAR_LOOKUP[v.ushr(4)])
+            hexString.append(HEX_CHAR_LOOKUP[v.ushr(HALF_BYTE)])
             hexString.append(HEX_CHAR_LOOKUP[v and 0x0F])
             if (j < bytes.lastIndex) hexString.append(':')
         }
         return hexString.toString()
+    }
+
+    companion object {
+        private const val HALF_BYTE = 4
+        private const val HEX_STRING_SIZE = "0F:".length
+        private val HEX_CHAR_LOOKUP = "0123456789ABCDEF".toCharArray()
     }
 }

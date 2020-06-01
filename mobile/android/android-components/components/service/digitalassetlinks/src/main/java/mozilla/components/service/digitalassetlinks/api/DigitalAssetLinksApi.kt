@@ -12,11 +12,12 @@ import mozilla.components.concept.fetch.Request
 import mozilla.components.service.digitalassetlinks.AssetDescriptor
 import mozilla.components.service.digitalassetlinks.Relation
 import mozilla.components.service.digitalassetlinks.RelationChecker
-import mozilla.components.service.digitalassetlinks.StatementLister
-import mozilla.components.service.digitalassetlinks.ext.TIMEOUT
+import mozilla.components.service.digitalassetlinks.Statement
+import mozilla.components.service.digitalassetlinks.StatementListFetcher
+import mozilla.components.service.digitalassetlinks.TIMEOUT
 import mozilla.components.service.digitalassetlinks.ext.parseJsonBody
 import mozilla.components.service.digitalassetlinks.ext.safeFetch
-import mozilla.components.service.digitalassetlinks.Statement
+import mozilla.components.support.ktx.kotlin.sanitizeURL
 import org.json.JSONObject
 
 /**
@@ -27,9 +28,9 @@ import org.json.JSONObject
 class DigitalAssetLinksApi(
     private val httpClient: Client,
     private val apiKey: String?
-) : RelationChecker, StatementLister {
+) : RelationChecker, StatementListFetcher {
 
-    override fun checkDigitalAssetLinkRelationship(
+    override fun checkRelationship(
         source: AssetDescriptor.Web,
         relation: Relation,
         target: AssetDescriptor
@@ -42,13 +43,13 @@ class DigitalAssetLinksApi(
         return parsed?.linked == true
     }
 
-    override fun listDigitalAssetLinkStatements(source: AssetDescriptor.Web): List<Statement> {
+    override fun listStatements(source: AssetDescriptor.Web): Sequence<Statement> {
         val request = buildListApiRequest(source)
         val response = httpClient.safeFetch(request)
         val parsed = response?.parseJsonBody { body ->
             parseListStatementsJson(JSONObject(body))
         }
-        return parsed?.statements.orEmpty()
+        return parsed?.statements.orEmpty().asSequence()
     }
 
     private fun apiUrlBuilder(path: String) = BASE_URL.toUri().buildUpon()
@@ -76,7 +77,7 @@ class DigitalAssetLinksApi(
         uriBuilder.appendAssetAsQuery(target, "target")
 
         return Request(
-            url = uriBuilder.build().toString(),
+            url = uriBuilder.build().toString().sanitizeURL(),
             method = Request.Method.GET,
             connectTimeout = TIMEOUT,
             readTimeout = TIMEOUT
@@ -89,7 +90,7 @@ class DigitalAssetLinksApi(
         uriBuilder.appendAssetAsQuery(source, "source")
 
         return Request(
-            url = uriBuilder.build().toString(),
+            url = uriBuilder.build().toString().sanitizeURL(),
             method = Request.Method.GET,
             connectTimeout = TIMEOUT,
             readTimeout = TIMEOUT
