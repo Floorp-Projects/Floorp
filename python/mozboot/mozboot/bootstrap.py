@@ -39,6 +39,7 @@ from mozboot.osx import OSXBootstrapper
 from mozboot.openbsd import OpenBSDBootstrapper
 from mozboot.archlinux import ArchlinuxBootstrapper
 from mozboot.solus import SolusBootstrapper
+from mozboot.void import VoidBootstrapper
 from mozboot.windows import WindowsBootstrapper
 from mozboot.mozillabuild import MozillaBuildBootstrapper
 from mozboot.util import (
@@ -279,6 +280,8 @@ class Bootstrapper(object):
                 cls = SolusBootstrapper
             elif dist_id in ('arch') or os.path.exists('/etc/arch-release'):
                 cls = ArchlinuxBootstrapper
+            elif dist_id in ('void'):
+                cls = VoidBootstrapper
             elif os.path.exists('/etc/SUSE-brand'):
                 cls = OpenSUSEBootstrapper
             else:
