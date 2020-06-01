@@ -69,6 +69,13 @@ Document* XULFrameElement::GetContentDocument() {
   return nullptr;
 }
 
+uint64_t XULFrameElement::BrowserId() { return mBrowserId; }
+
+// Should only be called during initialization or frameloader swaps.
+void XULFrameElement::SetBrowserId(uint64_t aBrowserId) {
+  mBrowserId = aBrowserId;
+}
+
 void XULFrameElement::LoadSrc() {
   if (!IsInUncomposedDoc() || !OwnerDoc()->GetRootElement()) {
     return;
