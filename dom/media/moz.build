@@ -110,6 +110,7 @@ EXPORTS += [
     'AudioConfig.h',
     'AudioConverter.h',
     'AudioDeviceInfo.h',
+    'AudioDriftCorrection.h',
     'AudioMixer.h',
     'AudioPacketizer.h',
     'AudioRingBuffer.h',
