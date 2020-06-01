@@ -4290,10 +4290,6 @@ pref("urlclassifier.gethashnoise", 4);
 
 // Gethash timeout for Safe Browsing
 pref("urlclassifier.gethash.timeout_ms", 5000);
-// Update server response timeout for Safe Browsing
-pref("urlclassifier.update.response_timeout_ms", 30000);
-// Download update timeout for Safe Browsing
-pref("urlclassifier.update.timeout_ms", 90000);
 
 // Name of the about: page to display Safe Browsing warnings (bug 399233)
 pref("urlclassifier.alternate_error_page", "blocked");
