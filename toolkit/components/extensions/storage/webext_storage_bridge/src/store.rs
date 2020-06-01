@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use std::{
+    fs::remove_file,
     mem,
     path::PathBuf,
     sync::{Mutex, MutexGuard},
@@ -19,6 +20,11 @@ use crate::error::{Error, Result};
 pub struct LazyStoreConfig {
     /// The path to the database file for this storage area.
     pub path: PathBuf,
+    /// The path to the old kinto database. If it exists, we should attempt to
+    /// migrate from this database as soon as we open our DB. It's not Option<>
+    /// because the caller will not have checked whether it exists or not, so
+    /// will assume it might.
+    pub kinto_path: PathBuf,
 }
 
 /// A lazy store is automatically initialized on a background thread with its
@@ -68,7 +74,7 @@ impl LazyStore {
             .store
             .get_or_try_init(|| match self.config.get() {
                 Some(config) => {
-                    let store = Store::new(&config.path)?;
+                    let store = init_store(config)?;
                     let handle = store.interrupt_handle();
                     Ok(InterruptStore {
                         inner: Mutex::new(store),
@@ -187,5 +193,53 @@ impl BridgedEngine for LazyStore {
 
     fn wipe(&self) -> Result<()> {
         Ok(self.get()?.bridged_engine().wipe()?)
+    }
+}
+
+// Initialize the store, performing a migration if necessary.
+// The requirements for migration are, roughly:
+// * If kinto_path doesn't exist, we don't try to migrate.
+// * If our DB path exists, we assume we've already migrated and don't try again
+// * If the migration fails, we close our store and delete the DB, then return
+//   a special error code which tells our caller about the failure. It's then
+//   expected to fallback to the "old" kinto store and we'll try next time.
+// Note that the migrate() method on the store is written such that is should
+// ignore all "read" errors from the source, but propagate "write" errors on our
+// DB - the intention is that things like corrupted source databases never fail,
+// but disk-space failures on our database does.
+fn init_store(config: &LazyStoreConfig) -> Result<Store> {
+    let should_migrate = config.kinto_path.exists() && !config.path.exists();
+    let store = Store::new(&config.path)?;
+    if should_migrate {
+        match store.migrate(&config.kinto_path) {
+            Ok(num) => {
+                // need logging, but for now let's print to stdout.
+                println!("extension-storage: migrated {} records", num);
+                Ok(store)
+            }
+            Err(e) => {
+                println!("extension-storage: migration failure: {}", e);
+                if let Err((store, e)) = store.close() {
+                    // welp, this probably isn't going to end well...
+                    println!(
+                        "extension-storage: failed to close the store after migration failure: {}",
+                        e
+                    );
+                    // I don't think we should hit this in this case - I guess we
+                    // could sleep and retry if we thought we were.
+                    mem::drop(store);
+                }
+                if let Err(e) = remove_file(&config.path) {
+                    // this is bad - if it happens regularly it will defeat
+                    // out entire migration strategy - we'll assume it
+                    // worked.
+                    // So it's desirable to make noise if this happens.
+                    println!("Failed to remove file after failed migration: {}", e);
+                }
+                Err(Error::MigrationFailed(e))
+            }
+        }
+    } else {
+        Ok(store)
     }
 }
