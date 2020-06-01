@@ -81,7 +81,6 @@ void SharedPrefMapBuilder::Add(const char* aKey, const Flags& aFlags,
       aFlags.mHasUserValue,
       aFlags.mIsSticky,
       aFlags.mIsLocked,
-      aFlags.mDefaultChanged,
       aFlags.mIsSkippedByIteration,
   });
 }
@@ -104,7 +103,6 @@ void SharedPrefMapBuilder::Add(const char* aKey, const Flags& aFlags,
       aFlags.mHasUserValue,
       aFlags.mIsSticky,
       aFlags.mIsLocked,
-      aFlags.mDefaultChanged,
       aFlags.mIsSkippedByIteration,
   });
 }
@@ -130,7 +128,6 @@ void SharedPrefMapBuilder::Add(const char* aKey, const Flags& aFlags,
       aFlags.mHasUserValue,
       aFlags.mIsSticky,
       aFlags.mIsLocked,
-      aFlags.mDefaultChanged,
       aFlags.mIsSkippedByIteration,
   });
 }
@@ -200,7 +197,6 @@ Result<Ok, nsresult> SharedPrefMapBuilder::Finalize(loader::AutoMemMap& aMap) {
         entry->mHasUserValue,
         entry->mIsSticky,
         entry->mIsLocked,
-        entry->mDefaultChanged,
         entry->mIsSkippedByIteration,
     };
     entryPtr++;
