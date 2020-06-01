@@ -10,7 +10,6 @@
 #include <mozilla/Sprintf.h>
 #include <mozilla/Atomics.h>
 #include "audio_thread_priority.h"
-#include "nsDebug.h"
 
 namespace mozilla {
 
