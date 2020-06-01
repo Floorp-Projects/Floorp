@@ -1226,14 +1226,9 @@ void nsFlexContainerFrame::InsertFrames(
 
 void nsFlexContainerFrame::RemoveFrame(ChildListID aListID,
                                        nsIFrame* aOldFrame) {
-#ifdef DEBUG
-  ChildListIDs supportedLists = {kAbsoluteList, kFixedList, kPrincipalList,
-                                 kNoReflowPrincipalList};
-  // We don't handle the kBackdropList frames in any way, but it only contains
-  // a placeholder for ::backdrop which is OK to not reflow (for now anyway).
-  supportedLists += kBackdropList;
-  MOZ_ASSERT(supportedLists.contains(aListID), "unexpected child list");
+  MOZ_ASSERT(aListID == kPrincipalList, "unexpected child list");
 
+#ifdef DEBUG
   SetDidPushItemsBitIfNeeded(aListID, aOldFrame);
 #endif
 
