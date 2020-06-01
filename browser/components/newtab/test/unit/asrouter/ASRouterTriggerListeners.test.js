@@ -102,8 +102,8 @@ describe("ASRouterTriggerListeners", () => {
             matches: url => patterns.has(url),
           }))
         );
-        sandbox.stub(global.AboutReaderParent, "addMessageListener");
-        sandbox.stub(global.AboutReaderParent, "removeMessageListener");
+        sandbox.stub(global.Services.mm, "addMessageListener");
+        sandbox.stub(global.Services.mm, "removeMessageListener");
       });
       afterEach(() => {
         openArticleURLListener.uninit();
@@ -111,9 +111,9 @@ describe("ASRouterTriggerListeners", () => {
       it("setup an event listener on init", () => {
         openArticleURLListener.init(sandbox.stub(), hosts, hosts);
 
-        assert.calledOnce(global.AboutReaderParent.addMessageListener);
+        assert.calledOnce(global.Services.mm.addMessageListener);
         assert.calledWithExactly(
-          global.AboutReaderParent.addMessageListener,
+          global.Services.mm.addMessageListener,
           openArticleURLListener.readerModeEvent,
           sinon.match.object
         );
@@ -126,7 +126,7 @@ describe("ASRouterTriggerListeners", () => {
         const [
           ,
           { receiveMessage },
-        ] = global.AboutReaderParent.addMessageListener.firstCall.args;
+        ] = global.Services.mm.addMessageListener.firstCall.args;
         receiveMessage({ data: { isArticle: true }, target });
 
         assert.calledOnce(stub);
@@ -143,7 +143,7 @@ describe("ASRouterTriggerListeners", () => {
         const [
           ,
           { receiveMessage },
-        ] = global.AboutReaderParent.addMessageListener.firstCall.args;
+        ] = global.Services.mm.addMessageListener.firstCall.args;
         receiveMessage({ data: { isArticle: true }, target });
 
         assert.calledOnce(stub);
@@ -156,7 +156,7 @@ describe("ASRouterTriggerListeners", () => {
         openArticleURLListener.init(sandbox.stub(), hosts, hosts);
         openArticleURLListener.uninit();
 
-        assert.calledOnce(global.AboutReaderParent.removeMessageListener);
+        assert.calledOnce(global.Services.mm.removeMessageListener);
       });
     });
   });
