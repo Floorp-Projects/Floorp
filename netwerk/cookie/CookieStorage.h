@@ -178,6 +178,8 @@ class CookieStorage : public nsIObserver, public nsSupportsWeakReference {
 
   void UpdateCookieOldestTime(Cookie* aCookie);
 
+  void MergeCookieSchemeMap(Cookie* aOldCookie, Cookie* aNewCookie);
+
   static already_AddRefed<nsIArray> CreatePurgeList(nsICookie* aCookie);
 
   virtual already_AddRefed<nsIArray> PurgeCookies(int64_t aCurrentTimeInUsec,
