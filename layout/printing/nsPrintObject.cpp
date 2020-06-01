@@ -34,7 +34,6 @@ nsPrintObject::nsPrintObject()
       mFrameType(eFrame),
       mParent(nullptr),
       mHasBeenPrinted(false),
-      mDontPrint(true),
       mPrintAsIs(false),
       mInvisible(false),
       mDidCreateDocShell(false),
@@ -247,8 +246,7 @@ void nsPrintObject::SetPrintAsIs(bool aAsIs) {
 }
 
 void nsPrintObject::EnablePrinting(bool aEnable) {
-  // Set whether to print flag
-  mDontPrint = !aEnable;
+  mPrintingIsEnabled = aEnable;
 
   for (const UniquePtr<nsPrintObject>& kid : mKids) {
     kid->EnablePrinting(aEnable);
