@@ -1078,12 +1078,6 @@ bool WebrtcVideoConduit::UnsetRemoteSSRC(uint32_t ssrc) {
 bool WebrtcVideoConduit::GetRemoteSSRC(unsigned int* ssrc) {
   MutexAutoLock lock(mMutex);
 
-  return GetRemoteSSRCLocked(ssrc);
-}
-
-bool WebrtcVideoConduit::GetRemoteSSRCLocked(unsigned int* ssrc) {
-  mMutex.AssertCurrentThreadOwns();
-
   if (NS_IsMainThread()) {
     if (!mRecvStream) {
       return false;

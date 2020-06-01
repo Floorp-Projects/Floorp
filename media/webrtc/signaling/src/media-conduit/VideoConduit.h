@@ -257,7 +257,6 @@ class WebrtcVideoConduit
 
   void SetSyncGroup(const std::string& group) override;
 
-  bool GetRemoteSSRCLocked(uint32_t* ssrc);
   bool SetRemoteSSRCLocked(uint32_t ssrc, uint32_t rtxSsrc);
 
   bool GetSendPacketTypeStats(
