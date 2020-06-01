@@ -1477,7 +1477,11 @@ nsresult ScriptLoader::StartLoad(ScriptLoadRequest* aRequest) {
   // Set the initiator type
   nsCOMPtr<nsITimedChannel> timedChannel(do_QueryInterface(httpChannel));
   if (timedChannel) {
-    timedChannel->SetInitiatorType(NS_LITERAL_STRING("script"));
+    if (aRequest->IsLinkPreloadScript()) {
+      timedChannel->SetInitiatorType(NS_LITERAL_STRING("link"));
+    } else {
+      timedChannel->SetInitiatorType(NS_LITERAL_STRING("script"));
+    }
   }
 
   UniquePtr<mozilla::dom::SRICheckDataVerifier> sriDataVerifier;
