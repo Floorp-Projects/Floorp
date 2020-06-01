@@ -485,7 +485,8 @@ mozilla::ipc::IPCResult WindowGlobalChild::RecvGetSecurityInfo(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult WindowGlobalChild::RecvSaveStorageAccessGranted() {
+mozilla::ipc::IPCResult
+WindowGlobalChild::RecvSaveStorageAccessPermissionGranted() {
   nsCOMPtr<nsPIDOMWindowInner> inner = GetWindowGlobal();
   if (inner) {
     inner->SaveStorageAccessPermissionGranted();

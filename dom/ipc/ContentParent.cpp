@@ -5912,20 +5912,21 @@ mozilla::ipc::IPCResult ContentParent::RecvAddCertException(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult ContentParent::RecvAutomaticStorageAccessCanBeGranted(
+mozilla::ipc::IPCResult
+ContentParent::RecvAutomaticStorageAccessPermissionCanBeGranted(
     const Principal& aPrincipal,
-    AutomaticStorageAccessCanBeGrantedResolver&& aResolver) {
-  aResolver(Document::AutomaticStorageAccessCanBeGranted(aPrincipal));
+    AutomaticStorageAccessPermissionCanBeGrantedResolver&& aResolver) {
+  aResolver(Document::AutomaticStorageAccessPermissionCanBeGranted(aPrincipal));
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult
-ContentParent::RecvFirstPartyStorageAccessGrantedForOrigin(
+ContentParent::RecvStorageAccessPermissionGrantedForOrigin(
     uint64_t aTopLevelWindowId,
     const MaybeDiscarded<BrowsingContext>& aParentContext,
     const Principal& aTrackingPrincipal, const nsCString& aTrackingOrigin,
     const int& aAllowMode,
-    FirstPartyStorageAccessGrantedForOriginResolver&& aResolver) {
+    StorageAccessPermissionGrantedForOriginResolver&& aResolver) {
   if (aParentContext.IsNullOrDiscarded()) {
     return IPC_OK();
   }
@@ -5949,7 +5950,8 @@ mozilla::ipc::IPCResult ContentParent::RecvCompleteAllowAccessFor(
     const MaybeDiscarded<BrowsingContext>& aParentContext,
     uint64_t aTopLevelWindowId, const Principal& aTrackingPrincipal,
     const nsCString& aTrackingOrigin, uint32_t aCookieBehavior,
-    const ContentBlockingNotifier::StorageAccessGrantedReason& aReason,
+    const ContentBlockingNotifier::StorageAccessPermissionGrantedReason&
+        aReason,
     CompleteAllowAccessForResolver&& aResolver) {
   if (aParentContext.IsNullOrDiscarded()) {
     return IPC_OK();
@@ -5958,18 +5960,17 @@ mozilla::ipc::IPCResult ContentParent::RecvCompleteAllowAccessFor(
   ContentBlocking::CompleteAllowAccessFor(
       aParentContext.get_canonical(), aTopLevelWindowId, aTrackingPrincipal,
       aTrackingOrigin, aCookieBehavior, aReason, nullptr)
-      ->Then(
-          GetCurrentThreadSerialEventTarget(), __func__,
-          [aResolver = std::move(aResolver)](
-              ContentBlocking::StorageAccessGrantPromise::ResolveOrRejectValue&&
-                  aValue) {
-            Maybe<StorageAccessPromptChoices> choice;
-            if (aValue.IsResolve()) {
-              choice.emplace(static_cast<StorageAccessPromptChoices>(
-                  aValue.ResolveValue()));
-            }
-            aResolver(choice);
-          });
+      ->Then(GetCurrentThreadSerialEventTarget(), __func__,
+             [aResolver = std::move(aResolver)](
+                 ContentBlocking::StorageAccessPermissionGrantPromise::
+                     ResolveOrRejectValue&& aValue) {
+               Maybe<StorageAccessPromptChoices> choice;
+               if (aValue.IsResolve()) {
+                 choice.emplace(static_cast<StorageAccessPromptChoices>(
+                     aValue.ResolveValue()));
+               }
+               aResolver(choice);
+             });
   return IPC_OK();
 }
 

@@ -18,7 +18,7 @@ enum class ThirdPartyAnalysis {
   IsForeign,
   IsThirdPartyTrackingResource,
   IsThirdPartySocialTrackingResource,
-  IsFirstPartyStorageAccessGranted,
+  IsStorageAccessPermissionGranted,
 };
 
 using ThirdPartyAnalysisResult = mozilla::EnumSet<ThirdPartyAnalysis>;
