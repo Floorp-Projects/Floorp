@@ -38,9 +38,10 @@ XPCOMUtils.defineLazyGetter(this, "storageSvc", () =>
 
 // The interfaces which define the callbacks used by the bridge. There's a
 // callback for success, failure, and to record data changes.
-function ExtensionStorageApiCallback(resolve, reject, changeCallback) {
+function ExtensionStorageApiCallback(resolve, reject, extId, changeCallback) {
   this.resolve = resolve;
   this.reject = reject;
+  this.extId = extId;
   this.changeCallback = changeCallback;
 }
 
@@ -69,10 +70,10 @@ ExtensionStorageApiCallback.prototype = {
     this.reject(new ExtensionUtils.ExtensionError(sanitized));
   },
 
-  onChanged(extId, json) {
+  onChanged(json) {
     if (this.changeCallback && json) {
       try {
-        this.changeCallback(extId, JSON.parse(json));
+        this.changeCallback(this.extId, JSON.parse(json));
       } catch (ex) {
         Cu.reportError(ex);
       }
@@ -90,7 +91,8 @@ class ExtensionStorageSync {
   // * Ensures the API is allowed to be used.
   // * Works out what "extension id" to use.
   // * Turns the callback API into a promise API.
-  async _promisify(fn, ...args) {
+  async _promisify(fn, extension, ...args) {
+    let extId = extension.id;
     if (prefPermitsStorageSync !== true) {
       throw new ExtensionUtils.ExtensionError(
         `Please set ${STORAGE_SYNC_ENABLED_PREF} to true in about:config`
@@ -100,30 +102,27 @@ class ExtensionStorageSync {
       let callback = new ExtensionStorageApiCallback(
         resolve,
         reject,
+        extId,
         (extId, changes) => this.notifyListeners(extId, changes)
       );
-      fn(...args, callback);
+      fn(extId, ...args, callback);
     });
   }
 
   set(extension, items, context) {
-    let extId = extension.id;
-    return this._promisify(storageSvc.set, extId, JSON.stringify(items));
+    return this._promisify(storageSvc.set, extension, JSON.stringify(items));
   }
 
   remove(extension, keys, context) {
-    let extId = extension.id;
-    return this._promisify(storageSvc.remove, extId, JSON.stringify(keys));
+    return this._promisify(storageSvc.remove, extension, JSON.stringify(keys));
   }
 
   clear(extension, context) {
-    let extId = extension.id;
-    return this._promisify(storageSvc.clear, extId);
+    return this._promisify(storageSvc.clear, extension);
   }
 
   get(extension, spec, context) {
-    let extId = extension.id;
-    return this._promisify(storageSvc.get, extId, JSON.stringify(spec));
+    return this._promisify(storageSvc.get, extension, JSON.stringify(spec));
   }
 
   getBytesInUse(extension, keys, context) {

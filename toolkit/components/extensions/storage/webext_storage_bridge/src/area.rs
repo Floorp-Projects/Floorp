@@ -35,9 +35,7 @@ use crate::store::{LazyStore, LazyStoreConfig};
 /// threads. In Rust terms, it's `Send`, but not `Sync`.
 #[derive(xpcom)]
 #[xpimplements(
-    mozIExtensionStorageArea,
     mozIConfigurableExtensionStorageArea,
-    mozISyncedExtensionStorageArea,
     mozIInterruptible,
     mozIBridgedSyncEngine
 )]
@@ -268,16 +266,6 @@ fn teardown(
         DispatchOptions::new().may_block(true),
     )?;
     Ok(())
-}
-
-/// `mozISyncedExtensionStorageArea` implementation.
-impl StorageSyncArea {
-    xpcom_method!(
-        fetch_pending_sync_changes => FetchPendingSyncChanges(callback: *const mozIExtensionStorageCallback)
-    );
-    fn fetch_pending_sync_changes(&self, callback: &mozIExtensionStorageCallback) -> Result<()> {
-        self.dispatch(Punt::FetchPendingSyncChanges, callback)
-    }
 }
 
 /// `mozIInterruptible` implementation.
