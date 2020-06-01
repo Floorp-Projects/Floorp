@@ -11,7 +11,7 @@ add_task(async function setup() {
   Services.logins.addLogin(login);
   login = LoginTestUtils.testData.formLogin({
     origin: "http://example.org",
-    formActionOrigin: "http://another.domain",
+    formActionOrigin: "http://example.com",
     username: "username",
     password: "password",
   });

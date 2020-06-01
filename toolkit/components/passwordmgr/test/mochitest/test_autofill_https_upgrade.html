@@ -65,7 +65,7 @@ add_task(async function test_simpleNoDupesNoAction() {
 
 add_task(async function test_simpleNoDupesUpgradeOriginAndAction() {
   await prepareLoginsAndProcessForm("https://example.com" + CROSS_ORIGIN_SECURE_PATH, [
-    new nsLoginInfo("http://example.com", "http://another.domain", null,
+    new nsLoginInfo("http://example.com", "http://example.org", null,
                     "name2", "pass2", "uname", "pword"),
   ]);
 
@@ -75,7 +75,7 @@ add_task(async function test_simpleNoDupesUpgradeOriginAndAction() {
 
 add_task(async function test_simpleNoDupesUpgradeOriginOnly() {
   await prepareLoginsAndProcessForm("https://example.com" + CROSS_ORIGIN_SECURE_PATH, [
-    new nsLoginInfo("http://example.com", "https://another.domain", null,
+    new nsLoginInfo("http://example.com", "https://example.org", null,
                     "name2", "pass2", "uname", "pword"),
   ]);
 
@@ -85,7 +85,7 @@ add_task(async function test_simpleNoDupesUpgradeOriginOnly() {
 
 add_task(async function test_simpleNoDupesUpgradeActionOnly() {
   await prepareLoginsAndProcessForm("https://example.com" + CROSS_ORIGIN_SECURE_PATH, [
-    new nsLoginInfo("https://example.com", "http://another.domain", null,
+    new nsLoginInfo("https://example.com", "http://example.org", null,
                     "name2", "pass2", "uname", "pword"),
   ]);
 

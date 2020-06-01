@@ -621,7 +621,6 @@ LoginAutoComplete.prototype = {
       previousResult,
       inputElement: aElement,
       form,
-      formOrigin,
       hasBeenTypePassword,
     });
     completeSearch(acLookupPromise).catch(log.error.bind(log));
@@ -636,7 +635,6 @@ LoginAutoComplete.prototype = {
     previousResult,
     inputElement,
     form,
-    formOrigin,
     hasBeenTypePassword,
   }) {
     let actionOrigin = LoginHelper.getFormActionOrigin(form);
@@ -659,7 +657,6 @@ LoginAutoComplete.prototype = {
     }
 
     let messageData = {
-      formOrigin,
       actionOrigin,
       searchString,
       previousResult,

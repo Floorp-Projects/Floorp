@@ -95,8 +95,8 @@ add_task(async function test_mpAutocompleteUIBusy() {
   let windowGlobal =
     gBrowser.selectedBrowser.browsingContext.currentWindowGlobal;
   let loginManagerParent = windowGlobal.getActor("LoginManager");
-  let arg1 = {
-    formOrigin: "https://www.example.com",
+  let origin = "https://www.example.com";
+  let data = {
     actionOrigin: "",
     searchString: "",
     previousResult: null,
@@ -111,7 +111,7 @@ add_task(async function test_mpAutocompleteUIBusy() {
   }
   Services.obs.addObserver(dialogObserver, "common-dialog-loaded");
 
-  let results = await loginManagerParent.doAutocompleteSearch(arg1);
+  let results = await loginManagerParent.doAutocompleteSearch(origin, data);
   is(results.logins.length, 0, "No results since uiBusy is true");
   await close(win);
 

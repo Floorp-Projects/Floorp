@@ -91,7 +91,7 @@ add_task(async function test_login_with_different_subdomain_shouldnt_autofill_di
 
 add_task(async function test_login_with_different_subdomain_shouldnt_autofill_different_domain_formActionOrigin() {
   await prepareLoginsAndProcessForm("https://example.com" + MISSING_ACTION_PATH, [
-    new nsLoginInfo("https://foobar.example.com", "https://another.domain", null,
+    new nsLoginInfo("https://foobar.example.com", "https://example.org", null,
                     "name2", "pass2", "uname", "pword"),
   ]);
 

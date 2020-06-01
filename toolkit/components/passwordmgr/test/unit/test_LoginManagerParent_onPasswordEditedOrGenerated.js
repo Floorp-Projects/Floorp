@@ -224,14 +224,17 @@ add_task(async function test_onPasswordEditedOrGenerated_generatedPassword() {
     "Should have no saved logins at the start of the test"
   );
 
-  await LMP._onPasswordEditedOrGenerated(rootBrowser, {
-    browsingContextId: 99,
-    origin: "https://www.example.com",
-    formActionOrigin: "https://www.mozilla.org",
-    newPasswordField: { value: generatedPassword },
-    usernameField: { value: "someusername" },
-    triggeredByFillingGenerated: true,
-  });
+  await LMP._onPasswordEditedOrGenerated(
+    rootBrowser,
+    "https://www.example.com",
+    {
+      browsingContextId: 99,
+      formActionOrigin: "https://www.mozilla.org",
+      newPasswordField: { value: generatedPassword },
+      usernameField: { value: "someusername" },
+      triggeredByFillingGenerated: true,
+    }
+  );
 
   let [login] = await storageChangedPromised;
   let expected = new LoginInfo(
@@ -263,14 +266,17 @@ add_task(async function test_onPasswordEditedOrGenerated_generatedPassword() {
     "passwordmgr-storage-changed",
     (_, data) => data == "modifyLogin"
   );
-  await LMP._onPasswordEditedOrGenerated(rootBrowser, {
-    browsingContextId: 99,
-    origin: "https://www.example.com",
-    formActionOrigin: "https://www.mozilla.org",
-    newPasswordField: { value: newPassword },
-    usernameField: { value: "someusername" },
-    triggeredByFillingGenerated: true,
-  });
+  await LMP._onPasswordEditedOrGenerated(
+    rootBrowser,
+    "https://www.example.com",
+    {
+      browsingContextId: 99,
+      formActionOrigin: "https://www.mozilla.org",
+      newPasswordField: { value: newPassword },
+      usernameField: { value: "someusername" },
+      triggeredByFillingGenerated: true,
+    }
+  );
   let generatedPW = LoginManagerParent.getGeneratedPasswordsByPrincipalOrigin().get(
     "https://www.example.com^userContextId=6"
   );
@@ -295,14 +301,17 @@ add_task(async function test_onPasswordEditedOrGenerated_generatedPassword() {
     "passwordmgr-storage-changed",
     (_, data) => data == "modifyLogin"
   );
-  await LMP._onPasswordEditedOrGenerated(rootBrowser, {
-    browsingContextId: 99,
-    origin: "https://www.example.com",
-    formActionOrigin: "https://www.mozilla.org",
-    newPasswordField: { value: newerPassword },
-    usernameField: { value: "someusername" },
-    triggeredByFillingGenerated: true,
-  });
+  await LMP._onPasswordEditedOrGenerated(
+    rootBrowser,
+    "https://www.example.com",
+    {
+      browsingContextId: 99,
+      formActionOrigin: "https://www.mozilla.org",
+      newPasswordField: { value: newerPassword },
+      usernameField: { value: "someusername" },
+      triggeredByFillingGenerated: true,
+    }
+  );
   generatedPW = LoginManagerParent.getGeneratedPasswordsByPrincipalOrigin().get(
     "https://www.example.com^userContextId=6"
   );
@@ -345,14 +354,17 @@ add_task(
       "Should have no saved logins at the start of the test"
     );
 
-    await LMP._onPasswordEditedOrGenerated(rootBrowser, {
-      browsingContextId: 99,
-      origin: "https://www.example.com",
-      formActionOrigin: "https://www.mozilla.org",
-      newPasswordField: { value: generatedPassword },
-      usernameField: { value: "someusername" },
-      triggeredByFillingGenerated: true,
-    });
+    await LMP._onPasswordEditedOrGenerated(
+      rootBrowser,
+      "https://www.example.com",
+      {
+        browsingContextId: 99,
+        formActionOrigin: "https://www.mozilla.org",
+        newPasswordField: { value: generatedPassword },
+        usernameField: { value: "someusername" },
+        triggeredByFillingGenerated: true,
+      }
+    );
 
     let [login] = await storageChangedPromised;
     let expected = new LoginInfo(
@@ -380,14 +392,17 @@ add_task(
 
     info("Edit the password to be empty");
     const newPassword = "";
-    await LMP._onPasswordEditedOrGenerated(rootBrowser, {
-      browsingContextId: 99,
-      origin: "https://www.example.com",
-      formActionOrigin: "https://www.mozilla.org",
-      newPasswordField: { value: newPassword },
-      usernameField: { value: "someusername" },
-      triggeredByFillingGenerated: true,
-    });
+    await LMP._onPasswordEditedOrGenerated(
+      rootBrowser,
+      "https://www.example.com",
+      {
+        browsingContextId: 99,
+        formActionOrigin: "https://www.mozilla.org",
+        newPasswordField: { value: newPassword },
+        usernameField: { value: "someusername" },
+        triggeredByFillingGenerated: true,
+      }
+    );
     let generatedPW = LoginManagerParent.getGeneratedPasswordsByPrincipalOrigin().get(
       "https://www.example.com^userContextId=6"
     );
@@ -439,14 +454,17 @@ add_task(async function test_addUsernameBeforeAutoSaveEdit() {
     "Should have no saved logins at the start of the test"
   );
 
-  await LMP._onPasswordEditedOrGenerated(rootBrowser, {
-    browsingContextId: 99,
-    origin: "https://www.example.com",
-    formActionOrigin: "https://www.mozilla.org",
-    newPasswordField: { value: generatedPassword },
-    usernameField: { value: "someusername" },
-    triggeredByFillingGenerated: true,
-  });
+  await LMP._onPasswordEditedOrGenerated(
+    rootBrowser,
+    "https://www.example.com",
+    {
+      browsingContextId: 99,
+      formActionOrigin: "https://www.mozilla.org",
+      newPasswordField: { value: generatedPassword },
+      usernameField: { value: "someusername" },
+      triggeredByFillingGenerated: true,
+    }
+  );
 
   let [login] = await storageChangedPromised;
   let expected = new LoginInfo(
@@ -491,14 +509,17 @@ add_task(async function test_addUsernameBeforeAutoSaveEdit() {
     (_, data) => data == "modifyLogin"
   );
   // will update the doorhanger with changed password
-  await LMP._onPasswordEditedOrGenerated(rootBrowser, {
-    browsingContextId: 99,
-    origin: "https://www.example.com",
-    formActionOrigin: "https://www.mozilla.org",
-    newPasswordField: { value: newPassword },
-    usernameField: { value: "someusername" },
-    triggeredByFillingGenerated: true,
-  });
+  await LMP._onPasswordEditedOrGenerated(
+    rootBrowser,
+    "https://www.example.com",
+    {
+      browsingContextId: 99,
+      formActionOrigin: "https://www.mozilla.org",
+      newPasswordField: { value: newPassword },
+      usernameField: { value: "someusername" },
+      triggeredByFillingGenerated: true,
+    }
+  );
   let generatedPW = LoginManagerParent.getGeneratedPasswordsByPrincipalOrigin().get(
     "https://www.example.com^userContextId=6"
   );
@@ -545,14 +566,17 @@ add_task(async function test_addUsernameBeforeAutoSaveEdit() {
     (_, data) => data == "modifyLogin"
   );
   info("Calling _onPasswordEditedOrGenerated again");
-  await LMP._onPasswordEditedOrGenerated(rootBrowser, {
-    browsingContextId: 99,
-    origin: "https://www.example.com",
-    formActionOrigin: "https://www.mozilla.org",
-    newPasswordField: { value: newerPassword },
-    usernameField: { value: "someusername" },
-    triggeredByFillingGenerated: true,
-  });
+  await LMP._onPasswordEditedOrGenerated(
+    rootBrowser,
+    "https://www.example.com",
+    {
+      browsingContextId: 99,
+      formActionOrigin: "https://www.mozilla.org",
+      newPasswordField: { value: newerPassword },
+      usernameField: { value: "someusername" },
+      triggeredByFillingGenerated: true,
+    }
+  );
   generatedPW = LoginManagerParent.getGeneratedPasswordsByPrincipalOrigin().get(
     "https://www.example.com^userContextId=6"
   );
@@ -634,15 +658,18 @@ add_task(async function test_editUsernameOfFilledSavedLogin() {
   // first prompt to save a new login
   let newUsername = "differentuser";
   let newPassword = login0Props.password + "🔥";
-  await LMP._onPasswordEditedOrGenerated(rootBrowser, {
-    browsingContextId: 99,
-    origin: "https://www.example.com",
-    formActionOrigin: "https://www.mozilla.org",
-    autoFilledLoginGuid: savedLogin.guid,
-    newPasswordField: { value: newPassword },
-    usernameField: { value: newUsername },
-    triggeredByFillingGenerated: false,
-  });
+  await LMP._onPasswordEditedOrGenerated(
+    rootBrowser,
+    "https://www.example.com",
+    {
+      browsingContextId: 99,
+      formActionOrigin: "https://www.mozilla.org",
+      autoFilledLoginGuid: savedLogin.guid,
+      newPasswordField: { value: newPassword },
+      usernameField: { value: newUsername },
+      triggeredByFillingGenerated: false,
+    }
+  );
 
   let expected = new LoginInfo(
     login0Props.origin,
@@ -674,15 +701,18 @@ add_task(async function test_editUsernameOfFilledSavedLogin() {
   resetPrompterHistory();
 
   // then prompt with matching username/password
-  await LMP._onPasswordEditedOrGenerated(rootBrowser, {
-    browsingContextId: 99,
-    origin: "https://www.example.com",
-    formActionOrigin: "https://www.mozilla.org",
-    autoFilledLoginGuid: savedLogin.guid,
-    newPasswordField: { value: login0Props.password },
-    usernameField: { value: login0Props.username },
-    triggeredByFillingGenerated: false,
-  });
+  await LMP._onPasswordEditedOrGenerated(
+    rootBrowser,
+    "https://www.example.com",
+    {
+      browsingContextId: 99,
+      formActionOrigin: "https://www.mozilla.org",
+      autoFilledLoginGuid: savedLogin.guid,
+      newPasswordField: { value: login0Props.password },
+      usernameField: { value: login0Props.username },
+      triggeredByFillingGenerated: false,
+    }
+  );
 
   expected = new LoginInfo(
     login0Props.origin,
@@ -733,13 +763,16 @@ add_task(
 
     info("Disable login saving for the site");
     Services.logins.setLoginSavingEnabled("https://www.example.com", false);
-    await LMP._onPasswordEditedOrGenerated(rootBrowser, {
-      browsingContextId: 99,
-      origin: "https://www.example.com",
-      formActionOrigin: "https://www.mozilla.org",
-      newPasswordField: { value: generatedPassword },
-      triggeredByFillingGenerated: true,
-    });
+    await LMP._onPasswordEditedOrGenerated(
+      rootBrowser,
+      "https://www.example.com",
+      {
+        browsingContextId: 99,
+        formActionOrigin: "https://www.mozilla.org",
+        newPasswordField: { value: generatedPassword },
+        triggeredByFillingGenerated: true,
+      }
+    );
     equal(
       Services.logins.getAllLogins().length,
       0,
@@ -777,13 +810,16 @@ add_task(
     let { restorePrompter, fakePromptToChangePassword } = stubPrompter();
     let rootBrowser = LMP.getRootBrowser();
 
-    await LMP._onPasswordEditedOrGenerated(rootBrowser, {
-      browsingContextId: 99,
-      origin: "https://www.example.com",
-      formActionOrigin: "https://www.mozilla.org",
-      newPasswordField: { value: password1 },
-      triggeredByFillingGenerated: true,
-    });
+    await LMP._onPasswordEditedOrGenerated(
+      rootBrowser,
+      "https://www.example.com",
+      {
+        browsingContextId: 99,
+        formActionOrigin: "https://www.mozilla.org",
+        newPasswordField: { value: password1 },
+        triggeredByFillingGenerated: true,
+      }
+    );
     equal(
       Services.logins.getAllLogins().length,
       1,
@@ -807,14 +843,17 @@ add_task(
 
     info("Edit the password");
     const newPassword = password1 + "🔥";
-    await LMP._onPasswordEditedOrGenerated(rootBrowser, {
-      browsingContextId: 99,
-      origin: "https://www.example.com",
-      formActionOrigin: "https://www.mozilla.org",
-      newPasswordField: { value: newPassword },
-      usernameField: { value: "someusername" },
-      triggeredByFillingGenerated: true,
-    });
+    await LMP._onPasswordEditedOrGenerated(
+      rootBrowser,
+      "https://www.example.com",
+      {
+        browsingContextId: 99,
+        formActionOrigin: "https://www.mozilla.org",
+        newPasswordField: { value: newPassword },
+        usernameField: { value: "someusername" },
+        triggeredByFillingGenerated: true,
+      }
+    );
     let generatedPW = LoginManagerParent.getGeneratedPasswordsByPrincipalOrigin().get(
       "https://www.example.com^userContextId=6"
     );
@@ -865,14 +904,17 @@ add_task(
     } = stubPrompter();
     let rootBrowser = LMP.getRootBrowser();
 
-    await LMP._onPasswordEditedOrGenerated(rootBrowser, {
-      browsingContextId: 99,
-      origin: "https://www.example.com",
-      formActionOrigin: "https://www.mozilla.org",
-      newPasswordField: { value: password1 },
-      usernameField: { value: "non-empty-username" },
-      triggeredByFillingGenerated: true,
-    });
+    await LMP._onPasswordEditedOrGenerated(
+      rootBrowser,
+      "https://www.example.com",
+      {
+        browsingContextId: 99,
+        formActionOrigin: "https://www.mozilla.org",
+        newPasswordField: { value: password1 },
+        usernameField: { value: "non-empty-username" },
+        triggeredByFillingGenerated: true,
+      }
+    );
     equal(
       Services.logins.getAllLogins().length,
       1,
@@ -900,14 +942,17 @@ add_task(
 
     info("Edit the password");
     const newPassword = password1 + "🔥";
-    await LMP._onPasswordEditedOrGenerated(rootBrowser, {
-      browsingContextId: 99,
-      origin: "https://www.example.com",
-      formActionOrigin: "https://www.mozilla.org",
-      newPasswordField: { value: newPassword },
-      usernameField: { value: "non-empty-username" },
-      triggeredByFillingGenerated: true,
-    });
+    await LMP._onPasswordEditedOrGenerated(
+      rootBrowser,
+      "https://www.example.com",
+      {
+        browsingContextId: 99,
+        formActionOrigin: "https://www.mozilla.org",
+        newPasswordField: { value: newPassword },
+        usernameField: { value: "non-empty-username" },
+        triggeredByFillingGenerated: true,
+      }
+    );
     ok(
       fakePromptToChangePassword.notCalled,
       "Checking promptToChangePassword wasn't called"
@@ -967,13 +1012,16 @@ add_task(
     let { restorePrompter, fakePromptToChangePassword } = stubPrompter();
     let rootBrowser = LMP.getRootBrowser();
 
-    await LMP._onPasswordEditedOrGenerated(rootBrowser, {
-      browsingContextId: 99,
-      origin: "https://www.example.com",
-      formActionOrigin: "https://www.elsewhere.com",
-      newPasswordField: { value: password1 },
-      triggeredByFillingGenerated: true,
-    });
+    await LMP._onPasswordEditedOrGenerated(
+      rootBrowser,
+      "https://www.example.com",
+      {
+        browsingContextId: 99,
+        formActionOrigin: "https://www.elsewhere.com",
+        newPasswordField: { value: password1 },
+        triggeredByFillingGenerated: true,
+      }
+    );
 
     let savedLogins = Services.logins.getAllLogins();
     equal(
@@ -1028,13 +1076,16 @@ add_task(
     let { restorePrompter, fakePromptToChangePassword } = stubPrompter();
     let rootBrowser = LMP.getRootBrowser();
 
-    await LMP._onPasswordEditedOrGenerated(rootBrowser, {
-      browsingContextId: 99,
-      origin: "https://www.example.com",
-      formActionOrigin: "https://www.mozilla.org",
-      newPasswordField: { value: password1 },
-      triggeredByFillingGenerated: true,
-    });
+    await LMP._onPasswordEditedOrGenerated(
+      rootBrowser,
+      "https://www.example.com",
+      {
+        browsingContextId: 99,
+        formActionOrigin: "https://www.mozilla.org",
+        newPasswordField: { value: password1 },
+        triggeredByFillingGenerated: true,
+      }
+    );
 
     let savedLogins = Services.logins.getAllLogins();
     equal(

@@ -182,7 +182,7 @@ const TESTCASES = [
   },
 ];
 
-function filterFormSubmissions(data) {
+function filterFormSubmissions({ origin, data }) {
   return data.newPasswordField.value != "ignore-form-submission";
 }
 
@@ -211,25 +211,25 @@ async function testFormlesSubmitNavigation(tc, testDoc, scriptName) {
   frameDoc.defaultView.eval(SCRIPTS[scriptName]);
 
   info("Waiting for formSubmissionProcsssed message");
-  let submittedResult = await submitProcessed;
+  let { origin, data } = await submitProcessed;
   info("Got for formSubmissionProcsssed message");
 
   // Check data sent via PasswordManager:onFormSubmit
-  is(submittedResult.origin, tc.origin, "Check origin");
-  is(submittedResult.formActionOrigin, tc.formActionOrigin, "Check formActionOrigin");
+  is(origin, tc.origin, "Check origin");
+  is(data.formActionOrigin, tc.formActionOrigin, "Check formActionOrigin");
 
   if (tc.usernameFieldValue === null) {
-    is(submittedResult.usernameField, tc.usernameFieldValue, "Check usernameField");
+    is(data.usernameField, tc.usernameFieldValue, "Check usernameField");
   } else {
-    is(submittedResult.usernameField.value, tc.usernameFieldValue, "Check usernameField");
+    is(data.usernameField.value, tc.usernameFieldValue, "Check usernameField");
   }
 
-  is(submittedResult.newPasswordField.value, tc.newPasswordFieldValue, "Check newPasswordFieldValue");
+  is(data.newPasswordField.value, tc.newPasswordFieldValue, "Check newPasswordFieldValue");
 
   if (tc.oldPasswordFieldValue === null) {
-    is(submittedResult.oldPasswordField, tc.oldPasswordFieldValue, "Check oldPasswordFieldValue");
+    is(data.oldPasswordField, tc.oldPasswordFieldValue, "Check oldPasswordFieldValue");
   } else {
-    is(submittedResult.oldPasswordField.value, tc.oldPasswordFieldValue, "Check oldPasswordFieldValue");
+    is(data.oldPasswordField.value, tc.oldPasswordFieldValue, "Check oldPasswordFieldValue");
   }
 };
 
