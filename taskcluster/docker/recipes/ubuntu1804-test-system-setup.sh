@@ -7,9 +7,6 @@ test "$(whoami)" == 'root'
 mkdir -p /setup
 cd /setup
 
-# Enable i386 packages
-dpkg --add-architecture i386
-
 # To speed up docker image build times as well as number of network/disk I/O
 # build a list of packages to be installed nad call it in one go.
 apt_packages=()
@@ -21,6 +18,7 @@ apt_packages+=('ca-certificates')
 apt_packages+=('ccache')
 apt_packages+=('compiz')
 apt_packages+=('curl')
+apt_packages+=('fontconfig')
 apt_packages+=('fonts-kacst')
 apt_packages+=('fonts-kacst-one')
 apt_packages+=('fonts-liberation')
@@ -41,6 +39,7 @@ apt_packages+=('gstreamer1.0-pulseaudio')
 apt_packages+=('language-pack-en-base')
 apt_packages+=('libc6-dbg')
 apt_packages+=('libasound2-dev')
+apt_packages+=('libavcodec-extra57')
 apt_packages+=('libcanberra-gtk3-module')
 apt_packages+=('libcanberra-pulse')
 apt_packages+=('libcurl4-openssl-dev')
@@ -55,12 +54,14 @@ apt_packages+=('libgstreamer1.0-dev')
 apt_packages+=('libgtk2.0-dev')
 apt_packages+=('libgtk-3-0')
 apt_packages+=('libiw-dev')
+apt_packages+=('libx11-xcb1')
 apt_packages+=('libxcb1')
 apt_packages+=('libxcb-render0')
 apt_packages+=('libxcb-shm0')
 apt_packages+=('libxcb-glx0')
 apt_packages+=('libxcb-shape0')
 apt_packages+=('libnotify-dev')
+apt_packages+=('libpulse0')
 apt_packages+=('libpulse-dev')
 apt_packages+=('libxt-dev')
 apt_packages+=('libxxf86vm1')
@@ -89,17 +90,6 @@ apt_packages+=('xvfb')
 apt_packages+=('yasm')
 apt_packages+=('zip')
 
-# Make sure we have libraries for 32-bit tests
-apt_packages+=('fontconfig:i386')
-apt_packages+=('libxt6:i386')
-apt_packages+=('libpulse0:i386')
-apt_packages+=('libxtst6:i386')
-apt_packages+=('libsecret-1-0:i386')
-apt_packages+=('libavcodec-extra57:i386')
-apt_packages+=('libgtk2.0-0:i386')
-apt_packages+=('libgtk-3-0:i386')
-apt_packages+=('libdbus-glib-1-2:i386')
-
 # xvinfo for test-linux.sh to monitor Xvfb startup
 apt_packages+=('x11-utils')
 
@@ -118,7 +108,27 @@ apt-get update
 # This allows ubuntu-desktop to be installed without human interaction.
 # Also force the cleanup after installation of packages to reduce image size.
 export DEBIAN_FRONTEND=noninteractive
-apt-get install -y -f "${apt_packages[@]}" && rm -rf /var/lib/apt/lists/*
+apt-get install -y -f "${apt_packages[@]}"
+
+# Enable i386 packages
+dpkg --add-architecture i386
+apt-get update
+
+# Make sure we have libraries for 32-bit tests
+apt_packages=()
+apt_packages+=('libavcodec-extra57:i386')
+apt_packages+=('libdbus-glib-1-2:i386')
+apt_packages+=('libpulse0:i386')
+apt_packages+=('libxt6:i386')
+apt_packages+=('libxtst6:i386')
+apt_packages+=('libsecret-1-0:i386')
+apt_packages+=('libgtk2.0-0:i386')
+apt_packages+=('libgtk-3-0:i386')
+apt_packages+=('libx11-xcb1:i386')
+apt_packages+=('libxcb1:i386')
+
+apt-get install -y -f "${apt_packages[@]}"
+rm -rf /var/lib/apt/lists/*
 
 # Install tooltool, mercurial and node now that dependencies are in place.
 . /setup/common.sh
