@@ -572,14 +572,13 @@ inline bool operator!=(const nsFrameList::Iterator& aIter1,
 }
 
 namespace mozilla {
-namespace layout {
 
 /**
  * Simple "auto_ptr" for nsFrameLists allocated from the shell arena.
  * The frame list given to the constructor will be deallocated (if non-null)
  * in the destructor.  The frame list must then be empty.
  */
-class AutoFrameListPtr {
+class MOZ_RAII AutoFrameListPtr final {
  public:
   AutoFrameListPtr(nsPresContext* aPresContext, nsFrameList* aFrameList)
       : mPresContext(aPresContext), mFrameList(aFrameList) {}
@@ -592,15 +591,14 @@ class AutoFrameListPtr {
   nsFrameList* mFrameList;
 };
 
-namespace detail {
+namespace layout::detail {
 union AlignedFrameListBytes {
   void* ptr;
   char bytes[sizeof(nsFrameList)];
 };
 extern const AlignedFrameListBytes gEmptyFrameListBytes;
-}  // namespace detail
+}  // namespace layout::detail
 
-}  // namespace layout
 }  // namespace mozilla
 
 /* static */ inline const nsFrameList& nsFrameList::EmptyList() {
