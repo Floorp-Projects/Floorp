@@ -2706,14 +2706,6 @@ class RealmPrivate {
   // The scriptability of this realm.
   Scriptability scriptability;
 
-  // This is only ever set during mochitest runs when enablePrivilege is called.
-  // It allows the SpecialPowers scope to waive the normal chrome security
-  // wrappers and expose properties directly to content. This lets us avoid a
-  // bunch of overhead and complexity in our SpecialPowers automation glue.
-  //
-  // Using it in production is inherently unsafe.
-  bool forcePermissiveCOWs = false;
-
   // Whether we've emitted a warning about a property that was filtered out
   // by a security wrapper. See XrayWrapper.cpp.
   bool wrapperDenialWarnings[WrapperDenialTypeCount];
