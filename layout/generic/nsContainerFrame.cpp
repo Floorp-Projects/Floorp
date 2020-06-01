@@ -1741,7 +1741,18 @@ bool nsContainerFrame::PushIncompleteChildren(
     MergeSortedOverflow(incompleteList);
   }
   if (!overflowIncompleteList.IsEmpty()) {
-    MergeSortedExcessOverflowContainers(overflowIncompleteList);
+    // If our next-in-flow already has overflow containers list, merge the
+    // overflowIncompleteList into that list. Otherwise, merge it into our
+    // excess overflow containers list, to be drained by our next-in-flow.
+    auto* nif = static_cast<nsContainerFrame*>(GetNextInFlow());
+    nsFrameList* oc =
+        nif ? nif->GetPropTableFrames(OverflowContainersProperty()) : nullptr;
+    if (oc) {
+      ReparentFrames(overflowIncompleteList, this, nif);
+      MergeSortedFrameLists(*oc, overflowIncompleteList, GetContent());
+    } else {
+      MergeSortedExcessOverflowContainers(overflowIncompleteList);
+    }
   }
   return true;
 }
