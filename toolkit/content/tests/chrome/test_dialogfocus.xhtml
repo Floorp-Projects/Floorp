@@ -59,7 +59,7 @@ function runTest()
 
   var expectedFocus = expected[step - 1];
   let filename = expectedFocus == "root" ? "dialog_dialogfocus2.xhtml" : "dialog_dialogfocus.xhtml";
-  var win = docShell.rootTreeItem.domWindow.openDialog(filename, "_new", "chrome,dialog", step);
+  var win = window.browsingContext.topChromeWindow.openDialog(filename, "_new", "chrome,dialog", step);
 
   function checkDialogFocus(event)
   {

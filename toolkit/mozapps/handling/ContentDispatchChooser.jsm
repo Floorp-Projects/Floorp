@@ -19,7 +19,7 @@ nsContentDispatchChooser.prototype = {
   // nsIContentDispatchChooser
 
   ask: function ask(aHandler, aBrowsingContext, aURI, aReason) {
-    let window = aBrowsingContext?.top?.embedderElement?.ownerGlobal || null;
+    let window = aBrowsingContext?.topChromeWindow || null;
 
     var bundle = Services.strings.createBundle(STRINGBUNDLE_URL);
 

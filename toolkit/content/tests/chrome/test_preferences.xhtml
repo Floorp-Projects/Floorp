@@ -444,11 +444,11 @@
     {
       // test with instantApply
       InitTestPrefs(true);
-      window.docShell.rootTreeItem.domWindow.openDialog("window_preferences.xhtml", "", "modal", RunInstantPrefTest, false);
+      window.browsingContext.topChromeWindow.openDialog("window_preferences.xhtml", "", "modal", RunInstantPrefTest, false);
 
       // - test deferred reset in child window
       InitTestPrefs(true);
-      window.docShell.rootTreeItem.domWindow.openDialog("window_preferences2.xhtml", "", "modal", RunResetPrefTest, false);
+      window.browsingContext.topChromeWindow.openDialog("window_preferences2.xhtml", "", "modal", RunResetPrefTest, false);
       expected = kPrefValueSet1;
       found    = ReadPrefsFromSystem();
       ok(found.int          === expected.int,          "instant reset deferred int"    );
@@ -464,11 +464,11 @@
       // test without instantApply
       // - general tests, similar to instant apply
       InitTestPrefs(false);
-      window.docShell.rootTreeItem.domWindow.openDialog("window_preferences.xhtml", "", "modal", RunNonInstantPrefTestGeneral, false);
+      window.browsingContext.topChromeWindow.openDialog("window_preferences.xhtml", "", "modal", RunNonInstantPrefTestGeneral, false);
 
       // - test Cancel
       InitTestPrefs(false);
-      window.docShell.rootTreeItem.domWindow.openDialog("window_preferences.xhtml", "", "modal", RunNonInstantPrefTestClose, false);
+      window.browsingContext.topChromeWindow.openDialog("window_preferences.xhtml", "", "modal", RunNonInstantPrefTestClose, false);
       var expected = kPrefValueSet1;
       var found    = ReadPrefsFromSystem();
       ok(found.int          === expected.int,          "non-instant cancel system int"    );
@@ -480,7 +480,7 @@
       
       // - test Accept
       InitTestPrefs(false);
-      window.docShell.rootTreeItem.domWindow.openDialog("window_preferences.xhtml", "", "modal", RunNonInstantPrefTestClose, true);
+      window.browsingContext.topChromeWindow.openDialog("window_preferences.xhtml", "", "modal", RunNonInstantPrefTestClose, true);
       expected = kPrefValueSet2;
       found    = ReadPrefsFromSystem();
       ok(found.int          === expected.int,          "non-instant accept system int"    );
@@ -492,7 +492,7 @@
 
       // - test deferred reset in child window
       InitTestPrefs(false);
-      window.docShell.rootTreeItem.domWindow.openDialog("window_preferences2.xhtml", "", "modal", RunResetPrefTest, true);
+      window.browsingContext.topChromeWindow.openDialog("window_preferences2.xhtml", "", "modal", RunResetPrefTest, true);
       expected = CreateEmptyPrefValueSet();
       found    = ReadPrefsFromSystem();
       ok(found.int          === expected.int,          "non-instant reset deferred int"    );
@@ -505,7 +505,7 @@
 
     function RunTestCommandRedirect()
     {
-      window.docShell.rootTreeItem.domWindow.openDialog("window_preferences_commandretarget.xhtml", "", "modal", RunCheckCommandRedirect, true);
+      window.browsingContext.topChromeWindow.openDialog("window_preferences_commandretarget.xhtml", "", "modal", RunCheckCommandRedirect, true);
     }
 
     function RunTestDisabled()
@@ -514,7 +514,7 @@
       const defaultBranch = kPref.getDefaultBranch("");
       defaultBranch.setBoolPref("tests.locked_preference_bool", true);
       defaultBranch.lockPref("tests.locked_preference_bool");
-      window.docShell.rootTreeItem.domWindow.openDialog("window_preferences_disabled.xhtml", "", "modal", RunCheckDisabled, true);
+      window.browsingContext.topChromeWindow.openDialog("window_preferences_disabled.xhtml", "", "modal", RunCheckDisabled, true);
     }
 
     function RunTest()

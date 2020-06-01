@@ -1281,7 +1281,7 @@ class SpecialPowersChild extends JSWindowActorChild {
   // XXX: these APIs really ought to be removed, they're not e10s-safe.
   // (also they're pretty Firefox-specific)
   _getTopChromeWindow(window) {
-    return window.docShell.rootTreeItem.domWindow;
+    return window.browsingContext.topChromeWindow;
   }
   _getAutoCompletePopup(window) {
     return this._getTopChromeWindow(window).document.getElementById(

@@ -14,7 +14,7 @@
   <script type="text/javascript">
   SimpleTest.waitForExplicitFinish();
 
-  let w = docShell.rootTreeItem.domWindow.openDialog('browser_disableglobalhistory.xhtml', '_blank', 'chrome,resizable=yes,width=400,height=600', window);
+  let w = window.browsingContext.topChromeWindow.openDialog('browser_disableglobalhistory.xhtml', '_blank', 'chrome,resizable=yes,width=400,height=600', window);
 
   function done() {
     w.close();

@@ -16,7 +16,7 @@
   var upper = 60 + screen.availTop;
 
   function runTest() {
-    win = window.docShell.rootTreeItem.domWindow
+    win = window.browsingContext.topChromeWindow
                 .openDialog("window_screenPosSize.xhtml",
                             "_blank",
                             "chrome,dialog=no,all,screenX=" + left + ",screenY=" + upper + ",outerHeight=200,outerWidth=200");
@@ -31,7 +31,7 @@
   }
   function runTest2() {
     win.close();
-    win = window.docShell.rootTreeItem.domWindow
+    win = window.browsingContext.topChromeWindow
                 .openDialog("window_screenPosSize.xhtml",
                             "_blank",
                             "chrome,dialog=no,all");

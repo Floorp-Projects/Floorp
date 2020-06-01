@@ -208,7 +208,7 @@ function CreateProfile(profile) {
 
 function createProfileWizard() {
   // This should be rewritten in HTML eventually.
-  window.docShell.rootTreeItem.domWindow.openDialog(
+  window.browsingContext.topChromeWindow.openDialog(
     "chrome://mozapps/content/profile/createProfileWizard.xhtml",
     "",
     "centerscreen,chrome,modal,titlebar",

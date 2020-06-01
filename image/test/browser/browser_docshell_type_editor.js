@@ -33,10 +33,9 @@ add_task(async function() {
     },
     async function(browser) {
       await SpecialPowers.spawn(browser, [], async function() {
-        let rootDocShell = docShell
-          .QueryInterface(Ci.nsIDocShellTreeItem)
-          .rootTreeItem.QueryInterface(Ci.nsIInterfaceRequestor)
-          .getInterface(Ci.nsIDocShell);
+        let rootDocShell = docShell.sameTypeRootTreeItem.QueryInterface(
+          Ci.nsIDocShell
+        );
         let defaultAppType = rootDocShell.appType;
 
         rootDocShell.appType = Ci.nsIDocShell.APP_TYPE_EDITOR;
@@ -88,10 +87,9 @@ add_task(async function() {
     },
     async function(browser) {
       await SpecialPowers.spawn(browser, [], async function() {
-        let rootDocShell = docShell
-          .QueryInterface(Ci.nsIDocShellTreeItem)
-          .rootTreeItem.QueryInterface(Ci.nsIInterfaceRequestor)
-          .getInterface(Ci.nsIDocShell);
+        let rootDocShell = docShell.sameTypeRootTreeItem.QueryInterface(
+          Ci.nsIDocShell
+        );
         let defaultAppType = rootDocShell.appType;
 
         rootDocShell.appType = Ci.nsIDocShell.APP_TYPE_UNKNOWN;
