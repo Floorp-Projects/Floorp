@@ -2727,7 +2727,7 @@ GeckoDriver.prototype.addCookie = async function(cmd) {
 
   let newCookie = cookie.fromJSON(cmd.parameters.cookie);
 
-  cookie.add(newCookie, { restrictToHost: hostname });
+  cookie.add(newCookie, { restrictToHost: hostname, protocol });
 };
 
 /**

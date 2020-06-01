@@ -932,6 +932,7 @@ var cookieHelpers = {
           isSession: nsiCookie.isSession,
           expires: nsiCookie.expires,
           originAttributes: nsiCookie.originAttributes,
+          schemeMap: nsiCookie.schemeMap,
         };
         break;
       }
@@ -995,7 +996,8 @@ var cookieHelpers = {
       cookie.isSession,
       cookie.isSession ? MAX_COOKIE_EXPIRY : cookie.expires,
       cookie.originAttributes,
-      cookie.sameSite
+      cookie.sameSite,
+      cookie.schemeMap
     );
   },
 

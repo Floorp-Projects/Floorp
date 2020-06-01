@@ -16,7 +16,8 @@ function run_test() {
       false,
       time,
       {},
-      Ci.nsICookie.SAMESITE_NONE
+      Ci.nsICookie.SAMESITE_NONE,
+      Ci.nsICookie.SCHEME_HTTPS
     );
     const now = Math.floor(new Date().getTime() / 1000);
 
