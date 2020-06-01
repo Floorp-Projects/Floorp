@@ -42,7 +42,7 @@ parent:
                           bool isForeign,
                           bool isThirdPartyTrackingResource,
                           bool isThirdPartySocialTrackingResource,
-                          bool firstPartyStorageAccessPermissionGranted,
+                          bool firstPartyStorageAccessGranted,
                           uint32_t rejectedReason,
                           bool isSafeTopLevelNav,
                           bool isSameSiteForeign,

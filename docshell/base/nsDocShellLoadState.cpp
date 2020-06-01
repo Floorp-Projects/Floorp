@@ -127,7 +127,7 @@ nsDocShellLoadState::nsDocShellLoadState(
   mBaseURI = aLoadState.BaseURI();
   mTriggeringPrincipal = aLoadState.TriggeringPrincipal();
   mPrincipalToInherit = aLoadState.PrincipalToInherit();
-  mPartitionedPrincipalToInherit = aLoadState.PartitionedPrincipalToInherit();
+  mStoragePrincipalToInherit = aLoadState.StoragePrincipalToInherit();
   mCsp = aLoadState.Csp();
   mOriginalURIString = aLoadState.OriginalURIString();
   mCancelContentJSEpoch = aLoadState.CancelContentJSEpoch();
@@ -150,7 +150,7 @@ nsDocShellLoadState::nsDocShellLoadState(const nsDocShellLoadState& aOther)
       mInheritPrincipal(aOther.mInheritPrincipal),
       mPrincipalIsExplicit(aOther.mPrincipalIsExplicit),
       mPrincipalToInherit(aOther.mPrincipalToInherit),
-      mPartitionedPrincipalToInherit(aOther.mPartitionedPrincipalToInherit),
+      mStoragePrincipalToInherit(aOther.mStoragePrincipalToInherit),
       mForceAllowDataURI(aOther.mForceAllowDataURI),
       mOriginalFrameSrc(aOther.mOriginalFrameSrc),
       mIsFormSubmission(aOther.mIsFormSubmission),
@@ -432,13 +432,13 @@ void nsDocShellLoadState::SetPrincipalToInherit(
   mPrincipalToInherit = aPrincipalToInherit;
 }
 
-nsIPrincipal* nsDocShellLoadState::PartitionedPrincipalToInherit() const {
-  return mPartitionedPrincipalToInherit;
+nsIPrincipal* nsDocShellLoadState::StoragePrincipalToInherit() const {
+  return mStoragePrincipalToInherit;
 }
 
-void nsDocShellLoadState::SetPartitionedPrincipalToInherit(
-    nsIPrincipal* aPartitionedPrincipalToInherit) {
-  mPartitionedPrincipalToInherit = aPartitionedPrincipalToInherit;
+void nsDocShellLoadState::SetStoragePrincipalToInherit(
+    nsIPrincipal* aStoragePrincipalToInherit) {
+  mStoragePrincipalToInherit = aStoragePrincipalToInherit;
 }
 
 void nsDocShellLoadState::SetCsp(nsIContentSecurityPolicy* aCsp) {
@@ -885,7 +885,7 @@ DocShellLoadStateInit nsDocShellLoadState::Serialize() {
   loadState.BaseURI() = mBaseURI;
   loadState.TriggeringPrincipal() = mTriggeringPrincipal;
   loadState.PrincipalToInherit() = mPrincipalToInherit;
-  loadState.PartitionedPrincipalToInherit() = mPartitionedPrincipalToInherit;
+  loadState.StoragePrincipalToInherit() = mStoragePrincipalToInherit;
   loadState.Csp() = mCsp;
   loadState.OriginalURIString() = mOriginalURIString;
   loadState.CancelContentJSEpoch() = mCancelContentJSEpoch;

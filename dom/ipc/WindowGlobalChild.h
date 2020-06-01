@@ -144,7 +144,7 @@ class WindowGlobalChild final : public WindowGlobalActor,
   mozilla::ipc::IPCResult RecvGetSecurityInfo(
       GetSecurityInfoResolver&& aResolve);
 
-  mozilla::ipc::IPCResult RecvSaveStorageAccessPermissionGranted();
+  mozilla::ipc::IPCResult RecvSaveStorageAccessGranted();
 
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 

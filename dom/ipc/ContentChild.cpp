@@ -3508,8 +3508,7 @@ mozilla::ipc::IPCResult ContentChild::RecvSessionStorageData(
 mozilla::ipc::IPCResult ContentChild::RecvOnAllowAccessFor(
     const MaybeDiscarded<BrowsingContext>& aContext,
     const nsCString& aTrackingOrigin, uint32_t aCookieBehavior,
-    const ContentBlockingNotifier::StorageAccessPermissionGrantedReason&
-        aReason) {
+    const ContentBlockingNotifier::StorageAccessGrantedReason& aReason) {
   MOZ_ASSERT(!aContext.IsNull(), "Browsing context cannot be null");
 
   ContentBlocking::OnAllowAccessFor(aContext.GetMaybeDiscarded(),

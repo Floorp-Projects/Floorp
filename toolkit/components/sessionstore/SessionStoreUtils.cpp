@@ -1097,13 +1097,13 @@ static void ReadAllEntriesFromStorage(nsPIDOMWindowOuter* aWindow,
     return;
   }
 
-  nsCOMPtr<nsIPrincipal> partitionedPrincipal = doc->PartitionedPrincipal();
-  if (!partitionedPrincipal) {
+  nsCOMPtr<nsIPrincipal> storagePrincipal = doc->IntrinsicStoragePrincipal();
+  if (!storagePrincipal) {
     return;
   }
 
   nsAutoCString origin;
-  nsresult rv = partitionedPrincipal->GetOrigin(origin);
+  nsresult rv = storagePrincipal->GetOrigin(origin);
   if (NS_FAILED(rv) || aOrigins.Contains(origin)) {
     // Don't read a host twice.
     return;
@@ -1117,8 +1117,7 @@ static void ReadAllEntriesFromStorage(nsPIDOMWindowOuter* aWindow,
   }
   RefPtr<Storage> storage;
   storageManager->GetStorage(aWindow->GetCurrentInnerWindow(), principal,
-                             partitionedPrincipal, false,
-                             getter_AddRefs(storage));
+                             storagePrincipal, false, getter_AddRefs(storage));
   if (!storage) {
     return;
   }
@@ -1219,7 +1218,7 @@ void SessionStoreUtils::RestoreSessionStorage(
       return;
     }
 
-    nsCOMPtr<nsIPrincipal> partitionedPrincipal =
+    nsCOMPtr<nsIPrincipal> storagePrincipal =
         BasePrincipal::CreateContentPrincipal(
             NS_ConvertUTF16toUTF8(entry.mKey));
 
@@ -1235,7 +1234,7 @@ void SessionStoreUtils::RestoreSessionStorage(
     // followup bug to bug 600307.
     // Null window because the current window doesn't match the principal yet
     // and loads about:blank.
-    storageManager->CreateStorage(nullptr, principal, partitionedPrincipal,
+    storageManager->CreateStorage(nullptr, principal, storagePrincipal,
                                   EmptyString(), false,
                                   getter_AddRefs(storage));
     if (!storage) {

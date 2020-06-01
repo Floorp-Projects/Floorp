@@ -655,8 +655,7 @@ class ContentChild final : public PContentChild,
   mozilla::ipc::IPCResult RecvOnAllowAccessFor(
       const MaybeDiscarded<BrowsingContext>& aContext,
       const nsCString& aTrackingOrigin, uint32_t aCookieBehavior,
-      const ContentBlockingNotifier::StorageAccessPermissionGrantedReason&
-          aReason);
+      const ContentBlockingNotifier::StorageAccessGrantedReason& aReason);
 
   mozilla::ipc::IPCResult RecvOnContentBlockingDecision(
       const MaybeDiscarded<BrowsingContext>& aContext,

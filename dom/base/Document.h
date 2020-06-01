@@ -578,11 +578,13 @@ class Document : public nsINode,
     return EffectiveStoragePrincipal();
   }
 
-  // You should probably not be using this function, since it performs no checks
-  // to ensure that the partitioned principal should really be used here.  It is
-  // only designed to be used in very specific circumstances, such as when
-  // inheriting the document/storage principal.
-  nsIPrincipal* PartitionedPrincipal() final { return mPartitionedPrincipal; }
+  // You should probably not be using this function, since it performs no
+  // checks to ensure that the intrinsic storage principal should really be
+  // used here.  It is only designed to be used in very specific circumstances,
+  // such as when inheriting the document/storage principal.
+  nsIPrincipal* IntrinsicStoragePrincipal() final {
+    return mIntrinsicStoragePrincipal;
+  }
 
   void ClearActiveStoragePrincipal() { mActiveStoragePrincipal = nullptr; }
 
@@ -853,8 +855,7 @@ class Document : public nsINode,
    * Set the principals responsible for this document.  Chances are, you do not
    * want to be using this.
    */
-  void SetPrincipals(nsIPrincipal* aPrincipal,
-                     nsIPrincipal* aPartitionedPrincipal);
+  void SetPrincipals(nsIPrincipal* aPrincipal, nsIPrincipal* aStoragePrincipal);
 
   /**
    * Get the list of ancestor principals for a document.  This is the same as
@@ -1236,8 +1237,6 @@ class Document : public nsINode,
   already_AddRefed<Promise> HasStorageAccess(ErrorResult& aRv);
   already_AddRefed<Promise> RequestStorageAccess(ErrorResult& aRv);
 
-  bool UseRegularPrincipal() const;
-
   /**
    * Gets the event target to dispatch key events to if there is no focused
    * content in the document.
@@ -1390,8 +1389,8 @@ class Document : public nsINode,
   // Returns the cookie jar settings for this and sub contexts.
   nsICookieJarSettings* CookieJarSettings();
 
-  // Returns whether this document has the storage access permission.
-  bool HasStorageAccessPermissionGranted();
+  // Returns whether this document has the storage permission.
+  bool HasStoragePermission();
 
   // Increments the document generation.
   inline void Changed() { ++mGeneration; }
@@ -2088,13 +2087,13 @@ class Document : public nsINode,
   virtual void Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup);
 
   /**
-   * Reset this document to aURI, aLoadGroup, aPrincipal and
-   * aPartitionedPrincipal.  aURI must not be null.  If aPrincipal is null, a
-   * content principal based on aURI will be used.
+   * Reset this document to aURI, aLoadGroup, aPrincipal and aStoragePrincipal.
+   * aURI must not be null.  If aPrincipal is null, a content principal based
+   * on aURI will be used.
    */
   virtual void ResetToURI(nsIURI* aURI, nsILoadGroup* aLoadGroup,
                           nsIPrincipal* aPrincipal,
-                          nsIPrincipal* aPartitionedPrincipal);
+                          nsIPrincipal* aStoragePrincipal);
 
   /**
    * Set the container (docshell) for this document. Virtual so that
@@ -3877,8 +3876,7 @@ class Document : public nsINode,
 
   static bool HasRecentlyStartedForegroundLoads();
 
-  static bool AutomaticStorageAccessPermissionCanBeGranted(
-      nsIPrincipal* aPrincipal);
+  static bool AutomaticStorageAccessCanBeGranted(nsIPrincipal* aPrincipal);
 
   already_AddRefed<Promise> AddCertException(bool aIsTemporary);
 
@@ -4172,10 +4170,9 @@ class Document : public nsINode,
 
   void MaybeResolveReadyForIdle();
 
-  typedef MozPromise<bool, bool, true>
-      AutomaticStorageAccessPermissionGrantPromise;
-  MOZ_MUST_USE RefPtr<AutomaticStorageAccessPermissionGrantPromise>
-  AutomaticStorageAccessPermissionCanBeGranted();
+  typedef MozPromise<bool, bool, true> AutomaticStorageAccessGrantPromise;
+  MOZ_MUST_USE RefPtr<AutomaticStorageAccessGrantPromise>
+  AutomaticStorageAccessCanBeGranted();
 
   static void AddToplevelLoadingDocument(Document* aDoc);
   static void RemoveToplevelLoadingDocument(Document* aDoc);
@@ -5039,9 +5036,8 @@ class Document : public nsINode,
   int32_t mCachedTabSizeGeneration;
   nsTabSizes mCachedTabSizes;
 
-  // This is equal to document's principal but with an isolation key. See
-  // StoragePrincipalHelper.h to know more.
-  nsCOMPtr<nsIPrincipal> mPartitionedPrincipal;
+  // The principal to use for the storage area of this document.
+  nsCOMPtr<nsIPrincipal> mIntrinsicStoragePrincipal;
 
   // The cached storage principal for this document.
   // This is mutable so that we can keep EffectiveStoragePrincipal() const

@@ -311,8 +311,8 @@ class BrowserParent final : public PBrowserParent,
       const uint32_t& aEvent, const RequestData& aRequestData,
       const bool aBlocked, const nsACString& aTrackingOrigin,
       nsTArray<nsCString>&& aTrackingFullHashes,
-      const Maybe<mozilla::ContentBlockingNotifier::
-                      StorageAccessPermissionGrantedReason>& aReason);
+      const Maybe<mozilla::ContentBlockingNotifier::StorageAccessGrantedReason>&
+          aReason);
 
   mozilla::ipc::IPCResult RecvReportBlockedEmbedderNodeByClassifier();
 
