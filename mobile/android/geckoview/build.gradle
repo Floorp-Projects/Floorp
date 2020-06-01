@@ -261,9 +261,15 @@ android.libraryVariants.all { variant ->
 
         def results = []
         def listener = {
+            if (!it.toLowerCase().contains("warning") && !it.toLowerCase().contains("error")) {
+              // Likely not an error or a warning
+              return
+            }
             // Like '/abs/path/to/topsrcdir/mobile/android/geckoview/src/main/java/org/mozilla/geckoview/ContentBlocking.java:480: warning: no @return'
-            def matches = (it =~ /(.+):(\d+): (warning|error): (.*)/)
+            def matches = (it =~ /(.+):(\d+):.*(warning|error)(.*)/)
             if (!matches) {
+                // could not parse, let's add it anyway since it's a warning or error
+                results << [path: "parsing-failed", lineno: 0, level: "error", message: it]
                 return
             }
             def (_, file, line, level, message) = matches[0]
