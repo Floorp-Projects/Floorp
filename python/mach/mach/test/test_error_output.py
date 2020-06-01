@@ -6,8 +6,8 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 
 from mach.main import (
-    COMMAND_ERROR,
-    MODULE_ERROR
+    COMMAND_ERROR_TEMPLATE,
+    MODULE_ERROR_TEMPLATE
 )
 from mach.test.common import TestBase
 
@@ -25,7 +25,7 @@ class TestErrorOutput(TestBase):
 
         self.assertEqual(result, 1)
 
-        self.assertIn(COMMAND_ERROR, stdout)
+        self.assertIn(COMMAND_ERROR_TEMPLATE % 'throw', stdout)
 
     def test_invoked_error(self):
         result, stdout, stderr = self._run_mach(['throw_deep', '--message',
@@ -33,7 +33,7 @@ class TestErrorOutput(TestBase):
 
         self.assertEqual(result, 1)
 
-        self.assertIn(MODULE_ERROR, stdout)
+        self.assertIn(MODULE_ERROR_TEMPLATE % 'throw_deep', stdout)
 
 
 if __name__ == '__main__':
