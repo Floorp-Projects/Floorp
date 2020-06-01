@@ -2700,7 +2700,8 @@ void AppWindow::UIResolutionChanged() {
   nsCOMPtr<nsPIDOMWindowOuter> ourWindow =
       mDocShell ? mDocShell->GetWindow() : nullptr;
   if (ourWindow) {
-    ourWindow->DispatchCustomEvent(NS_LITERAL_STRING("resolutionchange"));
+    ourWindow->DispatchCustomEvent(NS_LITERAL_STRING("resolutionchange"),
+                                   ChromeOnlyDispatch::eYes);
   }
 }
 
@@ -2725,7 +2726,8 @@ void AppWindow::OcclusionStateChanged(bool aIsFullyOccluded) {
       mDocShell ? mDocShell->GetWindow() : nullptr;
   if (ourWindow) {
     // And always fire a user-defined occlusionstatechange event on the window
-    ourWindow->DispatchCustomEvent(NS_LITERAL_STRING("occlusionstatechange"));
+    ourWindow->DispatchCustomEvent(NS_LITERAL_STRING("occlusionstatechange"),
+                                   ChromeOnlyDispatch::eYes);
   }
 }
 

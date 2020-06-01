@@ -4302,9 +4302,10 @@ void nsContentUtils::RequestFrameFocus(Element& aFrameElement, bool aCanRaise,
 
 nsresult nsContentUtils::DispatchEventOnlyToChrome(
     Document* aDoc, nsISupports* aTarget, const nsAString& aEventName,
-    CanBubble aCanBubble, Cancelable aCancelable, bool* aDefaultAction) {
+    CanBubble aCanBubble, Cancelable aCancelable, Composed aComposed,
+    bool* aDefaultAction) {
   return DispatchEvent(aDoc, aTarget, aEventName, aCanBubble, aCancelable,
-                       Composed::eDefault, Trusted::eYes, aDefaultAction,
+                       aComposed, Trusted::eYes, aDefaultAction,
                        ChromeOnlyDispatch::eYes);
 }
 

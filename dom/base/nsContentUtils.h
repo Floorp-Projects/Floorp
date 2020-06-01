@@ -1598,14 +1598,22 @@ class nsContentUtils {
    * @param aEventName     The name of the event.
    * @param aCanBubble     Whether the event can bubble.
    * @param aCancelable    Is the event cancelable.
+   * @param aComposed      Is the event composed.
    * @param aDefaultAction Set to true if default action should be taken,
    *                       see EventTarget::DispatchEvent.
    */
-  static nsresult DispatchEventOnlyToChrome(Document* aDoc,
-                                            nsISupports* aTarget,
-                                            const nsAString& aEventName,
-                                            CanBubble, Cancelable,
-                                            bool* aDefaultAction = nullptr);
+  static nsresult DispatchEventOnlyToChrome(
+      Document* aDoc, nsISupports* aTarget, const nsAString& aEventName,
+      CanBubble, Cancelable, Composed aComposed = Composed::eDefault,
+      bool* aDefaultAction = nullptr);
+
+  static nsresult DispatchEventOnlyToChrome(
+      Document* aDoc, nsISupports* aTarget, const nsAString& aEventName,
+      CanBubble aCanBubble, Cancelable aCancelable, bool* aDefaultAction) {
+    return DispatchEventOnlyToChrome(aDoc, aTarget, aEventName, aCanBubble,
+                                     aCancelable, Composed::eDefault,
+                                     aDefaultAction);
+  }
 
   /**
    * Determines if an event attribute name (such as onclick) is valid for

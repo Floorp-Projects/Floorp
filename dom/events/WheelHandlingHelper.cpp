@@ -300,7 +300,7 @@ void WheelTransaction::OnFailToScrollTarget() {
 
   if (StaticPrefs::test_mousescroll()) {
     // This event is used for automated tests, see bug 442774.
-    nsContentUtils::DispatchTrustedEvent(
+    nsContentUtils::DispatchEventOnlyToChrome(
         sTargetFrame->GetContent()->OwnerDoc(), sTargetFrame->GetContent(),
         NS_LITERAL_STRING("MozMouseScrollFailed"), CanBubble::eYes,
         Cancelable::eYes);
@@ -327,7 +327,7 @@ void WheelTransaction::OnTimeout(nsITimer* aTimer, void* aClosure) {
 
   if (StaticPrefs::test_mousescroll()) {
     // This event is used for automated tests, see bug 442774.
-    nsContentUtils::DispatchTrustedEvent(
+    nsContentUtils::DispatchEventOnlyToChrome(
         frame->GetContent()->OwnerDoc(), frame->GetContent(),
         NS_LITERAL_STRING("MozMouseScrollTransactionTimeout"), CanBubble::eYes,
         Cancelable::eYes);
