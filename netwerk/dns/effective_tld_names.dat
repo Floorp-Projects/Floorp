@@ -7092,7 +7092,7 @@ org.zw
 
 // newGTLDs
 
-// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2020-05-27T16:35:17Z
+// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2020-05-28T16:36:11Z
 // This list is auto-generated, don't edit it manually.
 // aaa : 2015-02-26 American Automobile Association, Inc.
 aaa
@@ -9670,9 +9670,6 @@ science
 
 // scjohnson : 2015-07-23 Johnson Shareholdings, Inc.
 scjohnson
-
-// scor : 2014-10-31 SCOR SE
-scor
 
 // scot : 2014-01-23 Dot Scot Registry Limited
 scot
