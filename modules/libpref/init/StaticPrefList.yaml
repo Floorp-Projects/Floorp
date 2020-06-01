@@ -7620,7 +7620,7 @@
 # Whether certain http header values should be censored out in logs.
 # Specifically filters out "authorization" and "proxy-authorization".
 - name: network.http.sanitize-headers-in-logs
-  type: bool
+  type: RelaxedAtomicBool
   value: true
   mirror: always
 
