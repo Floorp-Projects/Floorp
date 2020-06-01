@@ -22,6 +22,7 @@ import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.storage.sync.PlacesBookmarksStorage
 import mozilla.components.browser.storage.sync.PlacesHistoryStorage
+import mozilla.components.browser.thumbnails.ThumbnailsMiddleware
 import mozilla.components.browser.thumbnails.storage.ThumbnailStorage
 import mozilla.components.concept.engine.DefaultSettings
 import mozilla.components.concept.engine.Engine
@@ -107,7 +108,8 @@ class Core(private val context: Context) {
             middleware = listOf(
                 MediaMiddleware(context, MediaService::class.java),
                 DownloadMiddleware(context, DownloadService::class.java),
-                ReaderViewMiddleware()
+                ReaderViewMiddleware(),
+                ThumbnailsMiddleware(thumbnailStorage)
             )
         )
     }

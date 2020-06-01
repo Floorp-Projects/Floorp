@@ -35,6 +35,7 @@ import mozilla.components.browser.session.runWithSessionIdOrSelected
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.browser.thumbnails.BrowserThumbnails
 import mozilla.components.concept.engine.prompt.ShareData
 import mozilla.components.feature.accounts.FxaCapability
 import mozilla.components.feature.accounts.FxaWebChannelFeature
@@ -126,6 +127,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
     private val appLinksFeature = ViewBoundFeatureWrapper<AppLinksFeature>()
     private val promptsFeature = ViewBoundFeatureWrapper<PromptFeature>()
     private val findInPageIntegration = ViewBoundFeatureWrapper<FindInPageIntegration>()
+    private val thumbnailsFeature = ViewBoundFeatureWrapper<BrowserThumbnails>()
     private val toolbarIntegration = ViewBoundFeatureWrapper<ToolbarIntegration>()
     private val sitePermissionsFeature = ViewBoundFeatureWrapper<SitePermissionsFeature>()
     private val fullScreenFeature = ViewBoundFeatureWrapper<FullScreenFeature>()
@@ -228,6 +230,12 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                 interactor = browserInteractor,
                 customTabSession = customTabSessionId?.let { sessionManager.findSessionById(it) },
                 lifecycleOwner = viewLifecycleOwner
+            )
+
+            thumbnailsFeature.set(
+                feature = BrowserThumbnails(context, view.engineView, store),
+                owner = this,
+                view = view
             )
 
             toolbarIntegration.set(
