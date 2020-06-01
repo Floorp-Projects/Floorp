@@ -24,9 +24,7 @@ for addon in addons:
         indir = 'addons/%s' % addon
         path = '%s.%s' % (indir, file_type)
 
-        GENERATED_FILES += [path]
-        GENERATED_FILES[path].script = '../create_xpi.py'
-        GENERATED_FILES[path].inputs = [indir]
+        GeneratedFile(path, script='../create_xpi.py', inputs=[indir])
 
         output_dir += ['!%s' % path]
 

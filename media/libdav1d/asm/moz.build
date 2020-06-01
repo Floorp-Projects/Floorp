@@ -115,33 +115,21 @@ if CONFIG['CPU_ARCH'] in ('x86', 'x86_64'):
         'mc_init_tmpl.c',
     ]
 
-    GENERATED_FILES += [
-        '16bd_%s' % p for p in bitdepth_basenames
-    ]
-
-    SOURCES += [
-        '!16bd_%s' % p for p in bitdepth_basenames
-    ]
 
     for f in bitdepth_basenames:
-        a = GENERATED_FILES['16bd_%s' % f]
-        a.script = '../generate_source.py:add_define'
-        a.inputs = [relative_path + f]
-        a.flags = ['BITDEPTH', '16']
+        SOURCES += [
+            '!16bd_%s' % f
+        ]
+        GeneratedFile('16bd_%s' % f, script='../generate_source.py',
+                      entry_point='add_define', inputs=[relative_path + f],
+                      flags=['BITDEPTH', '16'])
+        SOURCES += [
+            '!8bd_%s' % f
+        ]
+        GeneratedFile('8bd_%s' % f, script='../generate_source.py',
+                      entry_point='add_define', inputs=[relative_path + f],
+                      flags=['BITDEPTH', '8'])
 
-    GENERATED_FILES += [
-        '8bd_%s' % p for p in bitdepth_basenames
-    ]
-
-    SOURCES += [
-        '!8bd_%s' % p for p in bitdepth_basenames
-    ]
-
-    for f in bitdepth_basenames:
-        a = GENERATED_FILES['8bd_%s' % f]
-        a.script = '../generate_source.py:add_define'
-        a.inputs = [relative_path + f]
-        a.flags = ['BITDEPTH', '8']
 elif CONFIG['CPU_ARCH'] == 'arm' or CONFIG['CPU_ARCH'] == 'aarch64':
     SOURCES += [
         '../../../third_party/dav1d/src/arm/cpu.c',
@@ -162,33 +150,19 @@ elif CONFIG['CPU_ARCH'] == 'arm' or CONFIG['CPU_ARCH'] == 'aarch64':
         'mc_init_tmpl.c',
     ]
 
-    GENERATED_FILES += [
-        '16bd_%s' % p for p in bitdepth_basenames
-    ]
-
-    SOURCES += [
-        '!16bd_%s' % p for p in bitdepth_basenames
-    ]
-
     for f in bitdepth_basenames:
-        a = GENERATED_FILES['16bd_%s' % f]
-        a.script = '../generate_source.py:add_define'
-        a.inputs = [relative_path + f]
-        a.flags = ['BITDEPTH', '16']
-
-    GENERATED_FILES += [
-        '8bd_%s' % p for p in bitdepth_basenames
-    ]
-
-    SOURCES += [
-        '!8bd_%s' % p for p in bitdepth_basenames
-    ]
-
-    for f in bitdepth_basenames:
-        a = GENERATED_FILES['8bd_%s' % f]
-        a.script = '../generate_source.py:add_define'
-        a.inputs = [relative_path + f]
-        a.flags = ['BITDEPTH', '8']
+        SOURCES += [
+            '!16bd_%s' % f
+        ]
+        GeneratedFile('16bd_%s' % f, script='../generate_source.py',
+                      entry_point='add_define', inputs=[relative_path + f],
+                      flags=['BITDEPTH', '16'])
+        SOURCES += [
+            '!8bd_%s' % f
+        ]
+        GeneratedFile('8bd_%s' % f, script='../generate_source.py',
+                      entry_point='add_define', inputs=[relative_path + f],
+                      flags=['BITDEPTH', '8'])
 
     # BITDEPTH .S files
     if CONFIG['CPU_ARCH'] == 'aarch64':
