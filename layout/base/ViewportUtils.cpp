@@ -123,11 +123,22 @@ LayoutDevicePoint ViewportUtils::DocumentRelativeLayoutToVisual(
   return visualToLayout.Inverse().TransformPoint(aPoint);
 }
 
-LayoutDevicePoint ViewportUtils::ToScreenRelativeVisual(
-    const LayoutDevicePoint& aPt, nsPresContext* aCtx) {
+LayoutDeviceRect ViewportUtils::DocumentRelativeLayoutToVisual(
+    const LayoutDeviceRect& aRect, PresShell* aShell) {
+  ScrollableLayerGuid::ViewID targetScrollId =
+      nsLayoutUtils::ScrollIdForRootScrollFrame(aShell->GetPresContext());
+  auto visualToLayout =
+      ViewportUtils::GetVisualToLayoutTransform<LayoutDevicePixel>(
+          targetScrollId);
+  return visualToLayout.Inverse().TransformBounds(aRect);
+}
+
+template <class LDPointOrRect>
+LDPointOrRect ConvertToScreenRelativeVisual(const LDPointOrRect& aInput,
+                                            nsPresContext* aCtx) {
   MOZ_ASSERT(aCtx);
 
-  LayoutDevicePoint layoutToVisual(aPt);
+  LDPointOrRect layoutToVisual(aInput);
   nsIFrame* prevRootFrame = nullptr;
   nsPresContext* prevCtx = nullptr;
 
@@ -159,6 +170,16 @@ LayoutDevicePoint ViewportUtils::ToScreenRelativeVisual(
           prevRootFrame->GetScreenRectInAppUnits(),
           prevCtx->AppUnitsPerDevPixel());
   return layoutToVisual + rootScreenRect.TopLeft();
+}
+
+LayoutDevicePoint ViewportUtils::ToScreenRelativeVisual(
+    const LayoutDevicePoint& aPt, nsPresContext* aCtx) {
+  return ConvertToScreenRelativeVisual(aPt, aCtx);
+}
+
+LayoutDeviceRect ViewportUtils::ToScreenRelativeVisual(
+    const LayoutDeviceRect& aRect, nsPresContext* aCtx) {
+  return ConvertToScreenRelativeVisual(aRect, aCtx);
 }
 
 // Definitions of the two explicit instantiations forward declared in the header
