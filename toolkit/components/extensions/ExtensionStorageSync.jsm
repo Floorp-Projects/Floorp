@@ -36,6 +36,17 @@ XPCOMUtils.defineLazyGetter(this, "storageSvc", () =>
     .getInterface(Ci.mozIExtensionStorageArea)
 );
 
+// We might end up falling back to kinto...
+XPCOMUtils.defineLazyGetter(
+  this,
+  "extensionStorageSyncKinto",
+  () =>
+    ChromeUtils.import(
+      "resource://gre/modules/ExtensionStorageSyncKinto.jsm",
+      {}
+    ).extensionStorageSync
+);
+
 // The interfaces which define the callbacks used by the bridge. There's a
 // callback for success, failure, and to record data changes.
 function ExtensionStorageApiCallback(resolve, reject, extId, changeCallback) {
@@ -59,15 +70,7 @@ ExtensionStorageApiCallback.prototype = {
     let e = new Error(message);
     e.code = code;
     Cu.reportError(e);
-    // The only "public" exception here is for quota failure - all others are
-    // sanitized.
-    let sanitized =
-      code == NS_ERROR_DOM_QUOTA_EXCEEDED_ERR
-        ? // The same message as the local IDB implementation
-          `QuotaExceededError: storage.sync API call exceeded its quota limitations.`
-        : // The standard, generic extension error.
-          "An unexpected error occurred";
-    this.reject(new ExtensionUtils.ExtensionError(sanitized));
+    this.reject(e);
   },
 
   onChanged(json) {
@@ -85,52 +88,79 @@ ExtensionStorageApiCallback.prototype = {
 class ExtensionStorageSync {
   constructor() {
     this.listeners = new Map();
+    // We are optimistic :) If we ever see the special nsresult which indicates
+    // migration failure, it will become false. In practice, this will only ever
+    // happen on the first operation.
+    this.migrationOk = true;
   }
 
   // The main entry-point to our bridge. It performs some important roles:
   // * Ensures the API is allowed to be used.
   // * Works out what "extension id" to use.
   // * Turns the callback API into a promise API.
-  async _promisify(fn, extension, ...args) {
+  async _promisify(fnName, extension, context, ...args) {
     let extId = extension.id;
     if (prefPermitsStorageSync !== true) {
       throw new ExtensionUtils.ExtensionError(
         `Please set ${STORAGE_SYNC_ENABLED_PREF} to true in about:config`
       );
     }
-    return new Promise((resolve, reject) => {
-      let callback = new ExtensionStorageApiCallback(
-        resolve,
-        reject,
-        extId,
-        (extId, changes) => this.notifyListeners(extId, changes)
-      );
-      fn(extId, ...args, callback);
-    });
+
+    if (this.migrationOk) {
+      // We can call ours.
+      try {
+        return await new Promise((resolve, reject) => {
+          let callback = new ExtensionStorageApiCallback(
+            resolve,
+            reject,
+            extId,
+            (extId, changes) => this.notifyListeners(extId, changes)
+          );
+          let sargs = args.map(JSON.stringify);
+          storageSvc[fnName](extId, ...sargs, callback);
+        });
+      } catch (ex) {
+        if (ex.code != Cr.NS_ERROR_CANNOT_CONVERT_DATA) {
+          // Some non-migration related error we want to sanitize and propagate.
+          // The only "public" exception here is for quota failure - all others
+          // are sanitized.
+          let sanitized =
+            ex.code == NS_ERROR_DOM_QUOTA_EXCEEDED_ERR
+              ? // The same message as the local IDB implementation
+                `QuotaExceededError: storage.sync API call exceeded its quota limitations.`
+              : // The standard, generic extension error.
+                "An unexpected error occurred";
+          throw new ExtensionUtils.ExtensionError(sanitized);
+        }
+        // This means "migrate failed" so we must fall back to kinto.
+        Cu.reportError(
+          "migration of extension-storage failed - will fall back to kinto"
+        );
+        this.migrationOk = false;
+      }
+    }
+    // We've detected failure to migrate, so we want to use kinto.
+    return extensionStorageSyncKinto[fnName](extension, ...args, context);
   }
 
   set(extension, items, context) {
-    return this._promisify(storageSvc.set, extension, JSON.stringify(items));
+    return this._promisify("set", extension, context, items);
   }
 
   remove(extension, keys, context) {
-    return this._promisify(storageSvc.remove, extension, JSON.stringify(keys));
+    return this._promisify("remove", extension, context, keys);
   }
 
   clear(extension, context) {
-    return this._promisify(storageSvc.clear, extension);
+    return this._promisify("clear", extension, context);
   }
 
   get(extension, spec, context) {
-    return this._promisify(storageSvc.get, extension, JSON.stringify(spec));
+    return this._promisify("get", extension, context, spec);
   }
 
   getBytesInUse(extension, keys, context) {
-    return this._promisify(
-      storageSvc.getBytesInUse,
-      extension,
-      JSON.stringify(keys)
-    );
+    return this._promisify("getBytesInUse", extension, context, keys);
   }
 
   addOnChangedListener(extension, listener, context) {
