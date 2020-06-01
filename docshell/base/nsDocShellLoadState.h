@@ -85,10 +85,9 @@ class nsDocShellLoadState final {
 
   void SetPrincipalToInherit(nsIPrincipal* aPrincipalToInherit);
 
-  nsIPrincipal* PartitionedPrincipalToInherit() const;
+  nsIPrincipal* StoragePrincipalToInherit() const;
 
-  void SetPartitionedPrincipalToInherit(
-      nsIPrincipal* aPartitionedPrincipalToInherit);
+  void SetStoragePrincipalToInherit(nsIPrincipal* aStoragePrincipalToInherit);
 
   bool LoadReplace() const;
 
@@ -333,7 +332,7 @@ class nsDocShellLoadState final {
 
   nsCOMPtr<nsIPrincipal> mPrincipalToInherit;
 
-  nsCOMPtr<nsIPrincipal> mPartitionedPrincipalToInherit;
+  nsCOMPtr<nsIPrincipal> mStoragePrincipalToInherit;
 
   // If this attribute is true, then a top-level navigation
   // to a data URI will be allowed.

@@ -52,7 +52,7 @@ struct WorkerLoadInfoData {
   // If we load a data: URL, mPrincipal will be a null principal.
   nsCOMPtr<nsIPrincipal> mLoadingPrincipal;
   nsCOMPtr<nsIPrincipal> mPrincipal;
-  nsCOMPtr<nsIPrincipal> mPartitionedPrincipal;
+  nsCOMPtr<nsIPrincipal> mStoragePrincipal;
 
   // Taken from the parent context.
   nsCOMPtr<nsICookieJarSettings> mCookieJarSettings;
@@ -102,13 +102,9 @@ struct WorkerLoadInfoData {
   RefPtr<InterfaceRequestor> mInterfaceRequestor;
 
   UniquePtr<mozilla::ipc::PrincipalInfo> mPrincipalInfo;
-  UniquePtr<mozilla::ipc::PrincipalInfo> mPartitionedPrincipalInfo;
+  UniquePtr<mozilla::ipc::PrincipalInfo> mStoragePrincipalInfo;
   nsCString mDomain;
-  nsString mOriginNoSuffix;  // Derived from mPrincipal; can be used on worker
-                             // thread.
-  nsCString mOrigin;  // Derived from mPrincipal; can be used on worker thread.
-  nsCString mPartitionedOrigin;  // Derived from mPartitionedPrincipal; can be
-                                 // used on worker thread.
+  nsString mOrigin;  // Derived from mPrincipal; can be used on worker thread.
 
   nsString mServiceWorkerCacheName;
   Maybe<ServiceWorkerDescriptor> mServiceWorkerDescriptor;
@@ -133,8 +129,7 @@ struct WorkerLoadInfoData {
   bool mPrincipalIsAddonOrExpandedAddon;
   bool mWatchedByDevTools;
   StorageAccess mStorageAccess;
-  bool mUseRegularPrincipal;
-  bool mHasStorageAccessPermissionGranted;
+  bool mFirstPartyStorageAccessGranted;
   bool mServiceWorkersTestingInWindow;
   OriginAttributes mOriginAttributes;
 
@@ -158,13 +153,13 @@ struct WorkerLoadInfo : WorkerLoadInfoData {
   WorkerLoadInfo& operator=(WorkerLoadInfo&& aOther) = default;
 
   nsresult SetPrincipalsAndCSPOnMainThread(nsIPrincipal* aPrincipal,
-                                           nsIPrincipal* aPartitionedPrincipal,
+                                           nsIPrincipal* aStoragePrincipal,
                                            nsILoadGroup* aLoadGroup,
                                            nsIContentSecurityPolicy* aCSP);
 
   nsresult GetPrincipalsAndLoadGroupFromChannel(
       nsIChannel* aChannel, nsIPrincipal** aPrincipalOut,
-      nsIPrincipal** aPartitionedPrincipalOut, nsILoadGroup** aLoadGroupOut);
+      nsIPrincipal** aStoragePrincipalOut, nsILoadGroup** aLoadGroupOut);
 
   nsresult SetPrincipalsAndCSPFromChannel(nsIChannel* aChannel);
 

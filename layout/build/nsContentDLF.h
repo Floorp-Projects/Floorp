@@ -46,7 +46,7 @@ class nsContentDLF final : public nsIDocumentLoaderFactory {
    */
   static already_AddRefed<mozilla::dom::Document> CreateBlankDocument(
       nsILoadGroup* aLoadGroup, nsIPrincipal* aPrincipal,
-      nsIPrincipal* aPartitionedPrincipal, nsDocShell* aContainer);
+      nsIPrincipal* aStoragePrincipal, nsDocShell* aContainer);
 
  private:
   static nsresult EnsureUAStyleSheet();

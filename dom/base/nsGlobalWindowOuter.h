@@ -244,7 +244,7 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
 
   virtual nsIPrincipal* GetEffectiveStoragePrincipal() override;
 
-  virtual nsIPrincipal* PartitionedPrincipal() override;
+  virtual nsIPrincipal* IntrinsicStoragePrincipal() override;
 
   // nsIDOMWindow
   NS_DECL_NSIDOMWINDOW
@@ -673,8 +673,8 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
   }
 
   void ParentWindowChanged() {
-    // Reset our storage access permission flag when we get reparented.
-    mStorageAccessPermissionGranted = false;
+    // Reset our storage access flag when we get reparented.
+    mHasStorageAccess = false;
   }
 
  public:
@@ -869,11 +869,9 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
 
   bool IsInModalState();
 
-  bool IsStorageAccessPermissionGranted() const {
-    return mStorageAccessPermissionGranted;
-  }
-  void SetStorageAccessPermissionGranted(bool aStorageAccessPermissionGranted) {
-    mStorageAccessPermissionGranted = aStorageAccessPermissionGranted;
+  bool HasStorageAccess() const { return mHasStorageAccess; }
+  void SetHasStorageAccess(bool aHasStorageAccess) {
+    mHasStorageAccess = aHasStorageAccess;
   }
 
   // Convenience functions for the many methods that need to scale
@@ -1038,9 +1036,6 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
 
   void MaybeAllowStorageForOpenedWindow(nsIURI* aURI);
 
-  bool CheckStorageAccessPermission(Document* aDocument,
-                                    nsGlobalWindowInner* aInnerWindow);
-
  public:
   // Dispatch a runnable related to the global.
   virtual nsresult Dispatch(mozilla::TaskCategory aCategory,
@@ -1084,7 +1079,7 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
   bool mTopLevelOuterContentWindow : 1;
 
   // whether storage access has been granted to this frame.
-  bool mStorageAccessPermissionGranted : 1;
+  bool mHasStorageAccess : 1;
 
   nsCOMPtr<nsIScriptContext> mContext;
   nsCOMPtr<nsIControllers> mControllers;
@@ -1099,7 +1094,7 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
 
   nsCOMPtr<nsIPrincipal> mDocumentPrincipal;
   nsCOMPtr<nsIPrincipal> mDocumentStoragePrincipal;
-  nsCOMPtr<nsIPrincipal> mDocumentPartitionedPrincipal;
+  nsCOMPtr<nsIPrincipal> mDocumentIntrinsicStoragePrincipal;
 
 #ifdef DEBUG
   uint32_t mSerial;
