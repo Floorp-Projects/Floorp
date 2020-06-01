@@ -122,7 +122,7 @@ function init_all() {
         // Ignore right clicks.
         return;
       }
-      let mainWindow = window.browsingContext.topChromeWindow;
+      let mainWindow = window.docShell.rootTreeItem.domWindow;
       mainWindow.BrowserOpenAddonsMgr();
       AMTelemetry.recordLinkEvent({
         object: "aboutPreferences",

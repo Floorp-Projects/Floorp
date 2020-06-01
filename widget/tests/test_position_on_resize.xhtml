@@ -15,7 +15,7 @@
   let win, x, y;
 
   function startTest() {
-    win = window.browsingContext.topChromeWindow.openDialog(
+    win = docShell.rootTreeItem.domWindow.openDialog(
         "about:blank",
         null,
         "chrome,dialog=no,outerHeight=170,outerWidth=200");

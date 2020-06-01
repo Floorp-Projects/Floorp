@@ -1521,7 +1521,7 @@ function setupEventListeners() {
     button = $("show-update-history-button");
     if (button) {
       button.addEventListener("click", function(event) {
-        window.browsingContext.topChromeWindow.openDialog(
+        window.docShell.rootTreeItem.domWindow.openDialog(
           "chrome://mozapps/content/update/history.xhtml",
           "Update:History",
           "centerscreen,resizable=no,titlebar,modal"
