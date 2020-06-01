@@ -57,7 +57,9 @@ var gSanitizePromptDialog = {
         .translateFragment(warningDesc)
         .then(() => {
           // And then ensure we've run layout.
-          let rootWin = window.browsingContext.topChromeWindow;
+          let rootWin = window.docShell.rootTreeItem.QueryInterface(
+            Ci.nsIDocShell
+          ).domWindow;
           return rootWin.promiseDocumentFlushed(() => {});
         });
     } else {
