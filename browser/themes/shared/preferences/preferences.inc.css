@@ -794,6 +794,11 @@ dialog > .sync-engines-list + hbox {
   list-style-image: url("chrome://browser/skin/preferences/formfill.svg");
 }
 
+.sync-engine-creditcards .checkbox-icon,
+.sync-engine-creditcards.sync-engine-image {
+  list-style-image: url("chrome://formautofill/content/icon-credit-card-generic.svg");
+}
+
 .fxaMobilePromo {
   margin-top: 2px !important;
 }

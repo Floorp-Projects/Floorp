@@ -157,8 +157,10 @@ static char* DeserializeString(char* aChars, nsCString& aStr) {
   return p;
 }
 
-// Keep this in sync with PrefValue in prefs_parser/src/lib.rs.
+// Keep this in sync with PrefValue in parser/src/lib.rs.
 union PrefValue {
+  // PrefValues within Pref objects own their chars. PrefValues passed around
+  // as arguments don't own their chars.
   const char* mStringVal;
   int32_t mIntVal;
   bool mBoolVal;
@@ -422,18 +424,24 @@ struct PrefsSizes {
 
 static StaticRefPtr<SharedPrefMap> gSharedMap;
 
-static ArenaAllocator<4096, 1> gPrefNameArena;
+// Arena for Pref names. Inside a function so we can assert it's only accessed
+// on the main thread.
+static inline ArenaAllocator<4096, 1>& PrefNameArena() {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  static ArenaAllocator<4096, 1> sPrefNameArena;
+  return sPrefNameArena;
+}
 
 class PrefWrapper;
 
 class Pref {
  public:
   explicit Pref(const char* aName)
-      : mName(ArenaStrdup(aName, gPrefNameArena)),
+      : mName(ArenaStrdup(aName, PrefNameArena())),
         mType(static_cast<uint32_t>(PrefType::None)),
         mIsSticky(false),
         mIsLocked(false),
-        mDefaultChanged(false),
         mHasDefaultValue(false),
         mHasUserValue(false),
         mIsSkippedByIteration(false),
@@ -442,7 +450,7 @@ class Pref {
 
   ~Pref() {
     // There's no need to free mName because it's allocated in memory owned by
-    // gPrefNameArena.
+    // sPrefNameArena.
 
     mDefaultValue.Clear(Type());
     mUserValue.Clear(Type());
@@ -469,8 +477,6 @@ class Pref {
   bool IsSkippedByIteration() const { return mIsSkippedByIteration; }
   void SetIsSkippedByIteration(bool aValue) { mIsSkippedByIteration = aValue; }
 
-  bool DefaultChanged() const { return mDefaultChanged; }
-
   bool IsSticky() const { return mIsSticky; }
 
   bool HasDefaultValue() const { return mHasDefaultValue; }
@@ -480,7 +486,7 @@ class Pref {
   void AddToMap(SharedPrefMapBuilder& aMap) {
     aMap.Add(Name(),
              {HasDefaultValue(), HasUserValue(), IsSticky(), IsLocked(),
-              DefaultChanged(), IsSkippedByIteration()},
+              IsSkippedByIteration()},
              HasDefaultValue() ? mDefaultValue.Get<T>() : T(),
              HasUserValue() ? mUserValue.Get<T>() : T());
   }
@@ -611,19 +617,14 @@ class Pref {
       return true;
     }
 
-    const char* stringVal;
-    if (mHasDefaultValue) {
-      stringVal = mDefaultValue.mStringVal;
-      if (strlen(stringVal) > MAX_ADVISABLE_PREF_LENGTH) {
-        return false;
-      }
+    if (mHasDefaultValue &&
+        strlen(mDefaultValue.mStringVal) > MAX_ADVISABLE_PREF_LENGTH) {
+      return false;
     }
 
-    if (mHasUserValue) {
-      stringVal = mUserValue.mStringVal;
-      if (strlen(stringVal) > MAX_ADVISABLE_PREF_LENGTH) {
-        return false;
-      }
+    if (mHasUserValue &&
+        strlen(mUserValue.mStringVal) > MAX_ADVISABLE_PREF_LENGTH) {
+      return false;
     }
 
     return true;
@@ -658,9 +659,6 @@ class Pref {
       }
       if (!ValueMatches(PrefValueKind::Default, aType, aValue)) {
         mDefaultValue.Replace(mHasDefaultValue, Type(), aType, aValue);
-        if (mHasDefaultValue) {
-          mDefaultChanged = true;
-        }
         mHasDefaultValue = true;
         if (aIsSticky) {
           mIsSticky = true;
@@ -860,7 +858,7 @@ class Pref {
   }
 
   void AddSizeOfIncludingThis(MallocSizeOf aMallocSizeOf, PrefsSizes& aSizes) {
-    // Note: mName is allocated in gPrefNameArena, measured elsewhere.
+    // Note: mName is allocated in sPrefNameArena, measured elsewhere.
     aSizes.mPrefValues += aMallocSizeOf(this);
     if (IsTypeString()) {
       if (mHasDefaultValue) {
@@ -873,12 +871,11 @@ class Pref {
   }
 
  private:
-  const char* mName;  // allocated in gPrefNameArena
+  const char* mName;  // allocated in sPrefNameArena
 
   uint32_t mType : 2;
   uint32_t mIsSticky : 1;
   uint32_t mIsLocked : 1;
-  uint32_t mDefaultChanged : 1;
   uint32_t mHasDefaultValue : 1;
   uint32_t mHasUserValue : 1;
   uint32_t mIsSkippedByIteration : 1;
@@ -929,7 +926,6 @@ class MOZ_STACK_CLASS PrefWrapper : public PrefWrapperBase {
     return match(Matcher());                                            \
   }
 
-  FORWARD(bool, DefaultChanged)
   FORWARD(bool, IsLocked)
   FORWARD(bool, IsSticky)
   FORWARD(bool, HasDefaultValue)
@@ -1194,7 +1190,14 @@ class CallbackNode {
 
 using PrefsHashTable = HashSet<UniquePtr<Pref>, PrefHasher>;
 
-static PrefsHashTable* gHashTable = nullptr;
+// The main prefs hash table. Inside a function so we can assert it's only
+// accessed on the main thread. (That assertion can be avoided but only do so
+// with great care!)
+static inline PrefsHashTable*& HashTable(bool aOffMainThread = false) {
+  MOZ_ASSERT(NS_IsMainThread() || ServoStyleSet::IsInServoTraversal());
+  static PrefsHashTable* sHashTable = nullptr;
+  return sHashTable;
+}
 
 #ifdef DEBUG
 // This defines the type used to store our `once` mirrors checker. We can't use
@@ -1247,7 +1250,7 @@ static bool gCallbacksInProgress = false;
 static bool gShouldCleanupDeadNodes = false;
 
 class PrefsHashIter {
-  using Iterator = decltype(gHashTable->modIter());
+  using Iterator = decltype(HashTable()->modIter());
   using ElemType = Pref*;
 
   Iterator mIter;
@@ -1301,7 +1304,7 @@ class PrefsHashIter {
 };
 
 class PrefsIter {
-  using Iterator = decltype(gHashTable->iter());
+  using Iterator = decltype(HashTable()->iter());
   using ElemType = PrefWrapper;
 
   using HashElem = PrefsHashIter::Elem;
@@ -1473,9 +1476,9 @@ constexpr size_t kHashTableInitialLengthContent = 64;
 static PrefSaveData pref_savePrefs() {
   MOZ_ASSERT(NS_IsMainThread());
 
-  PrefSaveData savedPrefs(gHashTable->count());
+  PrefSaveData savedPrefs(HashTable()->count());
 
-  for (auto& pref : PrefsIter(gHashTable, gSharedMap)) {
+  for (auto& pref : PrefsIter(HashTable(), gSharedMap)) {
     nsAutoCString prefValueStr;
     if (!pref->UserValueToStringForSaving(prefValueStr)) {
       continue;
@@ -1508,9 +1511,9 @@ static Pref* pref_HashTableLookup(const char* aPrefName) {
 
   // We use readonlyThreadsafeLookup() because we often have concurrent lookups
   // from multiple Stylo threads. This is safe because those threads cannot
-  // modify gHashTable, and the main thread is blocked while Stylo threads are
+  // modify sHashTable, and the main thread is blocked while Stylo threads are
   // doing these lookups.
-  auto p = gHashTable->readonlyThreadsafeLookup(aPrefName);
+  auto p = HashTable()->readonlyThreadsafeLookup(aPrefName);
   return p ? p->get() : nullptr;
 }
 
@@ -1565,7 +1568,7 @@ static Result<Pref*, nsresult> pref_LookupForModify(
   }
 
   Pref* pref = new Pref(aPrefName);
-  if (!gHashTable->putNew(aPrefName, pref)) {
+  if (!HashTable()->putNew(aPrefName, pref)) {
     delete pref;
     return Err(NS_ERROR_OUT_OF_MEMORY);
   }
@@ -1579,7 +1582,7 @@ static nsresult pref_SetPref(const char* aPrefName, PrefType aType,
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (!gHashTable) {
+  if (!HashTable()) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
@@ -1596,11 +1599,11 @@ static nsresult pref_SetPref(const char* aPrefName, PrefType aType,
   }
 
   if (!pref) {
-    auto p = gHashTable->lookupForAdd(aPrefName);
+    auto p = HashTable()->lookupForAdd(aPrefName);
     if (!p) {
       pref = new Pref(aPrefName);
       pref->SetType(aType);
-      if (!gHashTable->add(p, pref)) {
+      if (!HashTable()->add(p, pref)) {
         delete pref;
         return NS_ERROR_OUT_OF_MEMORY;
       }
@@ -1730,18 +1733,18 @@ static nsDataHashtable<nsCStringHashKey, TelemetryLoadData>* gTelemetryLoadData;
 
 extern "C" {
 
-// Keep this in sync with PrefFn in prefs_parser/src/lib.rs.
+// Keep this in sync with PrefFn in parser/src/lib.rs.
 typedef void (*PrefsParserPrefFn)(const char* aPrefName, PrefType aType,
                                   PrefValueKind aKind, PrefValue aValue,
                                   bool aIsSticky, bool aIsLocked);
 
-// Keep this in sync with ErrorFn in prefs_parser/src/lib.rs.
+// Keep this in sync with ErrorFn in parser/src/lib.rs.
 //
 // `aMsg` is just a borrow of the string, and must be copied if it is used
 // outside the lifetime of the prefs_parser_parse() call.
 typedef void (*PrefsParserErrorFn)(const char* aMsg);
 
-// Keep this in sync with prefs_parser_parse() in prefs_parser/src/lib.rs.
+// Keep this in sync with prefs_parser_parse() in parser/src/lib.rs.
 bool prefs_parser_parse(const char* aPath, PrefValueKind aKind,
                         const char* aBuf, size_t aLen,
                         PrefsParserPrefFn aPrefFn, PrefsParserErrorFn aErrorFn);
@@ -2594,7 +2597,7 @@ nsPrefBranch::DeleteBranch(const char* aStartingAt) {
 
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (!gHashTable) {
+  if (!HashTable()) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
@@ -2610,7 +2613,7 @@ nsPrefBranch::DeleteBranch(const char* aStartingAt) {
   const nsACString& branchNameNoDot =
       Substring(branchName, 0, branchName.Length() - 1);
 
-  for (auto iter = gHashTable->modIter(); !iter.done(); iter.next()) {
+  for (auto iter = HashTable()->modIter(); !iter.done(); iter.next()) {
     // The first disjunct matches branches: e.g. a branch name "foo.bar."
     // matches a name "foo.bar.baz" (but it won't match "foo.barrel.baz").
     // The second disjunct matches leaf nodes: e.g. a branch name "foo.bar."
@@ -2640,7 +2643,7 @@ nsPrefBranch::GetChildList(const char* aStartingAt,
 
   const PrefName& parent = GetPrefName(aStartingAt);
   size_t parentLen = parent.Length();
-  for (auto& pref : PrefsIter(gHashTable, gSharedMap)) {
+  for (auto& pref : PrefsIter(HashTable(), gSharedMap)) {
     if (strncmp(pref->Name(), parent.get(), parentLen) == 0) {
       prefArray.AppendElement(pref->NameString());
     }
@@ -2915,7 +2918,7 @@ static NS_DEFINE_CID(kZipReaderCID, NS_ZIPREADER_CID);
 void Preferences::HandleDirty() {
   MOZ_ASSERT(XRE_IsParentProcess());
 
-  if (!gHashTable || !sPreferences) {
+  if (!HashTable() || !sPreferences) {
     return;
   }
 
@@ -3156,14 +3159,14 @@ PreferenceServiceReporter::CollectReports(
 
   Preferences::AddSizeOfIncludingThis(mallocSizeOf, sizes);
 
-  if (gHashTable) {
-    sizes.mHashTable += gHashTable->shallowSizeOfIncludingThis(mallocSizeOf);
-    for (auto iter = gHashTable->iter(); !iter.done(); iter.next()) {
+  if (HashTable()) {
+    sizes.mHashTable += HashTable()->shallowSizeOfIncludingThis(mallocSizeOf);
+    for (auto iter = HashTable()->iter(); !iter.done(); iter.next()) {
       iter.get()->AddSizeOfIncludingThis(mallocSizeOf, sizes);
     }
   }
 
-  sizes.mPrefNameArena += gPrefNameArena.SizeOfExcludingThis(mallocSizeOf);
+  sizes.mPrefNameArena += PrefNameArena().SizeOfExcludingThis(mallocSizeOf);
 
   for (CallbackNode* node = gFirstCallback; node; node = node->Next()) {
     node->AddSizeOfIncludingThis(mallocSizeOf, sizes);
@@ -3413,8 +3416,8 @@ already_AddRefed<Preferences> Preferences::GetInstanceForService() {
 
   sPreferences = new Preferences();
 
-  MOZ_ASSERT(!gHashTable);
-  gHashTable = new PrefsHashTable(XRE_IsParentProcess()
+  MOZ_ASSERT(!HashTable());
+  HashTable() = new PrefsHashTable(XRE_IsParentProcess()
                                       ? kHashTableInitialLengthParent
                                       : kHashTableInitialLengthContent);
 
@@ -3543,8 +3546,8 @@ Preferences::~Preferences() {
   }
   gLastPriorityNode = gFirstCallback = nullptr;
 
-  delete gHashTable;
-  gHashTable = nullptr;
+  delete HashTable();
+  HashTable() = nullptr;
 
   delete gTelemetryLoadData;
   gTelemetryLoadData = nullptr;
@@ -3560,7 +3563,7 @@ Preferences::~Preferences() {
 
   gSharedMap = nullptr;
 
-  gPrefNameArena.Clear();
+  PrefNameArena().Clear();
 }
 
 NS_IMPL_ISUPPORTS(Preferences, nsIPrefService, nsIObserver, nsIPrefBranch,
@@ -3572,7 +3575,7 @@ void Preferences::SerializePreferences(nsCString& aStr) {
 
   aStr.Truncate();
 
-  for (auto iter = gHashTable->iter(); !iter.done(); iter.next()) {
+  for (auto iter = HashTable()->iter(); !iter.done(); iter.next()) {
     Pref* pref = iter.get().get();
     if (!pref->IsTypeNone() && pref->HasAdvisablySizedValues()) {
       pref->SerializeAndAppend(aStr);
@@ -3624,7 +3627,7 @@ FileDescriptor Preferences::EnsureSnapshot(size_t* aSize) {
   if (!gSharedMap) {
     SharedPrefMapBuilder builder;
 
-    for (auto iter = gHashTable->iter(); !iter.done(); iter.next()) {
+    for (auto iter = HashTable()->iter(); !iter.done(); iter.next()) {
       iter.get()->AddToMap(builder);
     }
 
@@ -3643,10 +3646,10 @@ FileDescriptor Preferences::EnsureSnapshot(size_t* aSize) {
     // we can initialize the hashtable with the expected number of per-session
     // changed preferences, rather than the expected total number of
     // preferences.
-    gHashTable->clearAndCompact();
-    Unused << gHashTable->reserve(kHashTableInitialLengthContent);
+    HashTable()->clearAndCompact();
+    Unused << HashTable()->reserve(kHashTableInitialLengthContent);
 
-    gPrefNameArena.Clear();
+    PrefNameArena().Clear();
   }
 
   *aSize = gSharedMap->MapSize();
@@ -3762,10 +3765,10 @@ Preferences::ResetPrefs() {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  gHashTable->clearAndCompact();
-  Unused << gHashTable->reserve(kHashTableInitialLengthParent);
+  HashTable()->clearAndCompact();
+  Unused << HashTable()->reserve(kHashTableInitialLengthParent);
 
-  gPrefNameArena.Clear();
+  PrefNameArena().Clear();
 
   return InitInitialObjects(/* isStartup */ false);
 }
@@ -3777,7 +3780,7 @@ Preferences::ResetUserPrefs() {
   MOZ_ASSERT(NS_IsMainThread());
 
   Vector<const char*> prefNames;
-  for (auto iter = gHashTable->modIter(); !iter.done(); iter.next()) {
+  for (auto iter = HashTable()->modIter(); !iter.done(); iter.next()) {
     Pref* pref = iter.get().get();
 
     if (pref->HasUserValue()) {
@@ -3848,10 +3851,10 @@ void Preferences::SetPreference(const dom::Pref& aDomPref) {
   const char* prefName = aDomPref.name().get();
 
   Pref* pref;
-  auto p = gHashTable->lookupForAdd(prefName);
+  auto p = HashTable()->lookupForAdd(prefName);
   if (!p) {
     pref = new Pref(prefName);
-    if (!gHashTable->add(p, pref)) {
+    if (!HashTable()->add(p, pref)) {
       delete pref;
       return;
     }
@@ -3878,7 +3881,7 @@ void Preferences::SetPreference(const dom::Pref& aDomPref) {
     if (gSharedMap->Has(pref->Name())) {
       pref->SetType(PrefType::None);
     } else {
-      gHashTable->remove(prefName);
+      HashTable()->remove(prefName);
     }
     pref = nullptr;
   }
@@ -4112,7 +4115,7 @@ nsresult Preferences::SavePrefFileInternal(nsIFile* aFile,
 nsresult Preferences::WritePrefFile(nsIFile* aFile, SaveMethod aSaveMethod) {
   MOZ_ASSERT(XRE_IsParentProcess());
 
-  if (!gHashTable) {
+  if (!HashTable()) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
@@ -4880,7 +4883,7 @@ nsresult Preferences::ClearUser(const char* aPrefName) {
 
     if (!pref->HasDefaultValue()) {
       if (!gSharedMap || !gSharedMap->Has(pref->Name())) {
-        gHashTable->remove(aPrefName);
+        HashTable()->remove(aPrefName);
       } else {
         pref->SetType(PrefType::None);
       }
@@ -4907,7 +4910,7 @@ bool Preferences::HasUserValue(const char* aPrefName) {
 int32_t Preferences::GetType(const char* aPrefName) {
   NS_ENSURE_TRUE(InitStaticMembers(), nsIPrefBranch::PREF_INVALID);
 
-  if (!gHashTable) {
+  if (!HashTable()) {
     return PREF_INVALID;
   }
 

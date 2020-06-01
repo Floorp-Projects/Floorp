@@ -330,8 +330,7 @@ class Loader final {
                               const nsAString& aNonce, IsPreload);
 
   enum class SheetState : uint8_t {
-    Unknown = 0,
-    NeedsParser,
+    NeedsParser = 0,
     Pending,
     Loading,
     Complete

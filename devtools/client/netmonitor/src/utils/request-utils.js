@@ -133,7 +133,7 @@ function formDataURI(mimeType, encoding, text) {
  */
 function writeHeaderText(headers, preHeaderText) {
   let result = "";
-  if (preHeaderText != "") {
+  if (preHeaderText) {
     result += preHeaderText + "\r\n";
   }
   result += headers.map(({ name, value }) => name + ": " + value).join("\r\n");

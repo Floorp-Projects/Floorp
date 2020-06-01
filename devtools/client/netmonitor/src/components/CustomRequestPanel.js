@@ -206,7 +206,7 @@ class CustomRequestPanel extends Component {
     if (requestHeaders) {
       headers = requestHeaders.customHeadersValue
         ? requestHeaders.customHeadersValue
-        : writeHeaderText(requestHeaders.headers);
+        : writeHeaderText(requestHeaders.headers).trim();
     }
     const queryArray = url ? parseQueryString(getUrlQuery(url)) : [];
     let params = customQueryValue;

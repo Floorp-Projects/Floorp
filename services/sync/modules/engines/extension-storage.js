@@ -15,13 +15,20 @@ const { XPCOMUtils } = ChromeUtils.import(
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   BridgedEngine: "resource://services-sync/bridged_engine.js",
-  extensionStorageSync: "resource://gre/modules/ExtensionStorageSyncKinto.jsm",
+  extensionStorageSync: "resource://gre/modules/ExtensionStorageSync.jsm",
   Svc: "resource://services-sync/util.js",
   SyncEngine: "resource://services-sync/engines.js",
   Tracker: "resource://services-sync/engines.js",
   SCORE_INCREMENT_MEDIUM: "resource://services-sync/constants.js",
   MULTI_DEVICE_THRESHOLD: "resource://services-sync/constants.js",
 });
+
+XPCOMUtils.defineLazyModuleGetter(
+  this,
+  "extensionStorageSyncKinto",
+  "resource://gre/modules/ExtensionStorageSyncKinto.jsm",
+  "extensionStorageSync"
+);
 
 XPCOMUtils.defineLazyServiceGetter(
   this,
@@ -73,6 +80,48 @@ ExtensionStorageEngineBridge.prototype = {
   // we don't support repair at all!
   _skipPercentageChance: 100,
 
+  _notifyPendingChanges() {
+    return new Promise(resolve => {
+      this._bridge
+        .QueryInterface(Ci.mozISyncedExtensionStorageArea)
+        .fetchPendingSyncChanges({
+          QueryInterface: ChromeUtils.generateQI([
+            Ci.mozIExtensionStorageListener,
+            Ci.mozIExtensionStorageCallback,
+          ]),
+          onChanged: (extId, json) => {
+            try {
+              extensionStorageSync.notifyListeners(extId, JSON.parse(json));
+            } catch (ex) {
+              this._log.warn(
+                `Error notifying change listeners for ${extId}`,
+                ex
+              );
+            }
+          },
+          handleSuccess: resolve,
+          handleError: (code, message) => {
+            this._log.warn(
+              "Error fetching pending synced changes",
+              message,
+              code
+            );
+          },
+        });
+    });
+  },
+
+  async _processIncoming() {
+    await super._processIncoming();
+    try {
+      await this._notifyPendingChanges();
+    } catch (ex) {
+      // Failing to notify `storage.onChanged` observers is bad, but shouldn't
+      // interrupt syncing.
+      this._log.warn("Error notifying about synced changes", ex);
+    }
+  },
+
   get enabled() {
     return getEngineEnabled();
   },
@@ -117,7 +166,7 @@ ExtensionStorageEngineKinto.prototype = {
   allowSkippedRecord: false,
 
   async _sync() {
-    return extensionStorageSync.syncAll();
+    return extensionStorageSyncKinto.syncAll();
   },
 
   get enabled() {
@@ -131,7 +180,7 @@ ExtensionStorageEngineKinto.prototype = {
   },
 
   _wipeClient() {
-    return extensionStorageSync.clearAll();
+    return extensionStorageSyncKinto.clearAll();
   },
 
   shouldSkipSync(syncReason) {
