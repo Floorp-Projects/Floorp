@@ -111,7 +111,7 @@
         helper = new VideoStreamHelper();
         emitter = new VideoFrameEmitter(helper.green, helper.red, 705, 528);
         test.pcRemote.attachLocalStream(emitter.stream());
-        emitter.start();
+        // Don't start the emitter yet. Only do that when we're able to set rid filters.
       }
     ]);
 
@@ -158,6 +158,7 @@
         // allowing one of the simulcast streams through.
         addRIDExtension(test.pcLocal, extmap_id[1]);
         selectRecvRID(test.pcLocal, "foo");
+        emitter.start();
       },
       function SETUP_RESIZE_LISTENERS(test) {
         for(const elem of [...test.pcRemote.localMediaElements,
