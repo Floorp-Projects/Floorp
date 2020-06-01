@@ -26,7 +26,7 @@ add_task(async () => {
   // completed. We may not be able to open one later once asynchronous writing
   // begins.
   Assert.ok(do_get_cookie_file(profile).exists());
-  let db = new CookieDatabaseConnection(do_get_cookie_file(profile), 11);
+  let db = new CookieDatabaseConnection(do_get_cookie_file(profile), 12);
 
   let uri = NetUtil.newURI("http://foo.com/");
   let channel = NetUtil.newChannel({
