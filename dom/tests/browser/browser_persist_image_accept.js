@@ -43,6 +43,18 @@ function createTemporarySaveDirectory() {
   return saveDir;
 }
 
+function expectedImageAcceptHeader() {
+  if (Services.prefs.prefHasUserValue("image.http.accept")) {
+    return Services.prefs.getCharPref("image.http.accept");
+  }
+
+  return (
+    (Services.prefs.getBoolPref("image.avif.enabled") ? "image/avif," : "") +
+    (Services.prefs.getBoolPref("image.webp.enabled") ? "image/webp," : "") +
+    "*/*"
+  );
+}
+
 add_task(async function test_image_download() {
   await BrowserTestUtils.withNewTab(TEST_PATH + "dummy.html", async browser => {
     // Add the image, and wait for it to load.
@@ -99,7 +111,7 @@ add_task(async function test_image_download() {
         channel.QueryInterface(Ci.nsIHttpChannel);
         is(
           channel.getRequestHeader("Accept"),
-          Services.prefs.getCharPref("image.http.accept"),
+          expectedImageAcceptHeader(),
           "Header should be image header"
         );
         return true;
