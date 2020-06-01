@@ -7,11 +7,9 @@ package mozilla.components.support.utils
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.support.utils.URLStringUtils.isSearchTerm
 import mozilla.components.support.utils.URLStringUtils.isURLLike
-import mozilla.components.support.utils.URLStringUtils.isURLLikeStrict
 import mozilla.components.support.utils.URLStringUtils.toNormalizedURL
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -31,45 +29,6 @@ class URLStringUtilsTest {
         assertEquals(expectedUrl, toNormalizedURL("http://mozilla.org"))
         assertEquals(expectedUrl, toNormalizedURL("  http://mozilla.org  "))
         assertEquals(expectedUrl, toNormalizedURL("mozilla.org"))
-    }
-
-    @Suppress("DEPRECATION") // this test will be removed with the deprecated method
-    @Test
-    fun isURLLikeStrict() {
-        assertTrue(isURLLikeStrict("mozilla.org"))
-        assertTrue(isURLLikeStrict(" mozilla.org "))
-        assertTrue(isURLLikeStrict("http://mozilla.org"))
-        assertTrue(isURLLikeStrict("https://mozilla.org"))
-        assertTrue(isURLLikeStrict("file://somefile.txt"))
-        assertFalse(isURLLikeStrict("file://somefile.txt", true))
-
-        assertTrue(isURLLikeStrict("http://mozilla"))
-        assertTrue(isURLLikeStrict("http://192.168.255.255"))
-        assertTrue(isURLLikeStrict("192.167.255.255"))
-        assertTrue(isURLLikeStrict("about:crashcontent"))
-        assertTrue(isURLLikeStrict(" about:crashcontent "))
-        assertTrue(isURLLikeStrict("sample:about "))
-        assertTrue(isURLLikeStrict("https://mozilla-mobile.com"))
-
-        assertTrue(isURLLikeStrict("link.info"))
-        assertFalse(isURLLikeStrict("link.unknown"))
-
-        assertFalse(isURLLikeStrict("mozilla"))
-        assertFalse(isURLLikeStrict("mozilla android"))
-        assertFalse(isURLLikeStrict(" mozilla android "))
-        assertFalse(isURLLikeStrict("Tweet:"))
-        assertFalse(isURLLikeStrict("inurl:mozilla.org advanced search"))
-        assertFalse(isURLLikeStrict("what is about:crashes"))
-
-        val extraText = "Check out @asa’s Tweet: https://twitter.com/asa/status/123456789?s=09"
-        val url = extraText.split(" ").find { isURLLikeStrict(it) }
-        assertNotEquals("Tweet:", url)
-
-        assertFalse(isURLLikeStrict("3.14"))
-        assertFalse(isURLLikeStrict("3.14.2019"))
-
-        assertFalse(isURLLikeStrict("file://somefile.txt", true))
-        assertFalse(isURLLikeStrict("about:config", true))
     }
 
     @Test
