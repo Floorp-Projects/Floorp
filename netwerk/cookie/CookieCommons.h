@@ -109,6 +109,10 @@ class CookieCommons final {
 
   static bool ShouldIncludeCrossSiteCookieForDocument(Cookie* aCookie);
 
+  static bool MaybeCompareSchemeWithLogging(nsIConsoleReportCollector* aCRC,
+                                            nsIURI* aHostURI, Cookie* aCookie,
+                                            nsICookie::schemeType aSchemeType);
+
   static bool MaybeCompareScheme(Cookie* aCookie,
                                  nsICookie::schemeType aSchemeType);
 
