@@ -78,6 +78,9 @@ pub fn initialize(cfg: Configuration, client_info: ClientInfo) -> Result<()> {
             // Now make this the global object available to others.
             setup_glean(glean)?;
 
+            // Register the uploader so we can upload pings.
+            register_uploader();
+
             Ok(AppState { client_info })
         })
         .map(|_| ())
@@ -129,4 +132,17 @@ pub fn set_upload_enabled(enabled: bool) -> bool {
 
         enabled
     })
+}
+
+fn register_uploader() {
+    let result = glean::ping_upload::register_uploader(Box::new(|ping_request| {
+        log::warn!("{:?}", ping_request);
+        glean::ping_upload::UploadResult::UnrecoverableFailure
+    }));
+    if result.is_err() {
+        log::warn!(
+            "Couldn't register uploader because one's already in there. {:?}",
+            result
+        );
+    }
 }
