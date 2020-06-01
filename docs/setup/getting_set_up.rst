@@ -54,7 +54,7 @@ very diverse skills:
    programming. If getting involved in design, support, translation,
    testing, or other types of contributions sparks your interest please
    see the `Volunteer Opportunities
-   wiki <https://contribute.mozilla.org>`_\ or the `Mozilla
+   wiki <https://contribute.mozilla.org>`_ or the `Mozilla
    community <https://mozilla.community/>`_ site.
 
 Perhaps you do not know programming yet, but you want to start learning?
