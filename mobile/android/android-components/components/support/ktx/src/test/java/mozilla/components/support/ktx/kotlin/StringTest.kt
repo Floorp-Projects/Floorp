@@ -43,35 +43,6 @@ class StringTest {
         assertNotEquals("Tweet:", url)
     }
 
-    @Suppress("DEPRECATION") // the method under test is being removed so this test will be too.
-    @Test
-    fun isUrlStrict() {
-        assertTrue("mozilla.org".isUrlStrict())
-        assertTrue(" mozilla.org ".isUrlStrict())
-        assertTrue("http://mozilla.org".isUrlStrict())
-        assertTrue("https://mozilla.org".isUrlStrict())
-        assertTrue("file://somefile.txt".isUrlStrict())
-        assertTrue("http://mozilla".isUrlStrict())
-        assertTrue("http://192.168.255.255".isUrlStrict())
-        assertTrue("about:crashcontent".isUrlStrict())
-        assertTrue(" about:crashcontent ".isUrlStrict())
-        assertTrue("sample:about ".isUrlStrict())
-
-        assertFalse("sample.notatld".isUrlStrict())
-        assertTrue("sample.rocks".isUrlStrict())
-
-        assertFalse("mozilla".isUrlStrict())
-        assertFalse("mozilla android".isUrlStrict())
-        assertFalse(" mozilla android ".isUrlStrict())
-        assertFalse("Tweet:".isUrlStrict())
-        assertFalse("inurl:mozilla.org advanced search".isUrlStrict())
-        assertFalse("what is about:crashes".isUrlStrict())
-
-        val extraText = "Check out @asa’s Tweet: https://twitter.com/asa/status/123456789?s=09"
-        val url = extraText.split(" ").find { it.isUrlStrict() }
-        assertNotEquals("Tweet:", url)
-    }
-
     @Test
     fun toNormalizedUrl() {
         val expectedUrl = "http://mozilla.org"

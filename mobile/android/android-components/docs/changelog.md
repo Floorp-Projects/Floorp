@@ -37,6 +37,12 @@ permalink: /changelog/
 * **browser-state**
   * Adds `BrowserState.getNormalOrPrivateTabs(private: Boolean)` to get `normalTabs` or `privateTabs` based on a boolean condition.
 
+* **support-utils**
+  * `URLStringUtils.isURLLikeStrict`, deprecated in 40.0.0, was now removed due to performance issues. Use the less strict and much faster `isURLLike` instead or customize based on `:lib-publicsuffixlist`.
+
+* **support-ktx**
+  * `String.isUrlStrict`, deprecated in 40.0.0, was now removed due to performance issues. Use the less strict `isURL` instead or customize based on `:lib-publicsuffixlist`.
+
 # 43.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v42.0.0...v43.0.0)
