@@ -199,6 +199,7 @@ void InitPrefs(nsIPrefBranch* aPrefBranch) {
   Preferences::SetBool("network.cookie.sameSite.laxByDefault", false);
   Preferences::SetBool("network.cookieJarSettings.unblocked_for_testing", true);
   Preferences::SetBool("dom.securecontext.whitelist_onions", false);
+  Preferences::SetBool("network.cookie.sameSite.schemeful", false);
 }
 
 TEST(TestCookie, TestCookieMain)
@@ -725,6 +726,7 @@ TEST(TestCookie, TestCookieMain)
   GetACookieNoHttp(cookieService, "https://www.security.test/", cookie);
   EXPECT_TRUE(CheckResult(cookie.get(), MUST_EQUAL,
                           "test_modify_cookie=non-security-cookie"));
+
   // Test the non-security cookie can set when domain or path not same to secure
   // cookie of same name.
   SetACookie(cookieService, "https://www.security.test/", "test=security3");
@@ -734,6 +736,11 @@ TEST(TestCookie, TestCookieMain)
              "test=non-security2; domain=security.test");
   GetACookieNoHttp(cookieService, "http://www.security.test/", cookie);
   EXPECT_TRUE(CheckResult(cookie.get(), MUST_CONTAIN, "test=non-security2"));
+
+  Preferences::SetBool("network.cookie.sameSite.schemeful", true);
+  GetACookieNoHttp(cookieService, "http://www.security.test/", cookie);
+  EXPECT_FALSE(CheckResult(cookie.get(), MUST_CONTAIN, "test=security3"));
+  Preferences::SetBool("network.cookie.sameSite.schemeful", false);
 
   // *** nsICookieManager interface tests
   nsCOMPtr<nsICookieManager> cookieMgr =

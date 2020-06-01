@@ -108,6 +108,15 @@ class CookieCommons final {
       nsIChannel* aChannel);
 
   static bool ShouldIncludeCrossSiteCookieForDocument(Cookie* aCookie);
+
+  static bool MaybeCompareScheme(Cookie* aCookie,
+                                 nsICookie::schemeType aSchemeType);
+
+  static nsICookie::schemeType URIToSchemeType(nsIURI* aURI);
+
+  static nsICookie::schemeType PrincipalToSchemeType(nsIPrincipal* aPrincipal);
+
+  static nsICookie::schemeType SchemeToSchemeType(const nsACString& aScheme);
 };
 
 }  // namespace net
