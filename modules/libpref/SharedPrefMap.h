@@ -307,9 +307,6 @@ class SharedPrefMap {
     uint8_t mIsSticky : 1;
     // True if the preference is locked, as defined by the preference service.
     uint8_t mIsLocked : 1;
-    // True if the preference's default value has changed since it was first
-    // set.
-    uint8_t mDefaultChanged : 1;
     // True if the preference should be skipped while iterating over the
     // SharedPrefMap. This is used to internally store Once StaticPrefs.
     // This property is not visible to users the way sticky and locked are.
@@ -339,7 +336,6 @@ class SharedPrefMap {
       return PrefType(mEntry->mType);
     }
 
-    bool DefaultChanged() const { return mEntry->mDefaultChanged; }
     bool HasDefaultValue() const { return mEntry->mHasDefaultValue; }
     bool HasUserValue() const { return mEntry->mHasUserValue; }
     bool IsLocked() const { return mEntry->mIsLocked; }
@@ -573,7 +569,6 @@ class MOZ_RAII SharedPrefMapBuilder {
     uint8_t mHasUserValue : 1;
     uint8_t mIsSticky : 1;
     uint8_t mIsLocked : 1;
-    uint8_t mDefaultChanged : 1;
     uint8_t mIsSkippedByIteration : 1;
   };
 
@@ -813,7 +808,6 @@ class MOZ_RAII SharedPrefMapBuilder {
     uint8_t mHasUserValue : 1;
     uint8_t mIsSticky : 1;
     uint8_t mIsLocked : 1;
-    uint8_t mDefaultChanged : 1;
     uint8_t mIsSkippedByIteration : 1;
   };
 

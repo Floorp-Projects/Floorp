@@ -433,7 +433,6 @@ class Pref {
         mType(static_cast<uint32_t>(PrefType::None)),
         mIsSticky(false),
         mIsLocked(false),
-        mDefaultChanged(false),
         mHasDefaultValue(false),
         mHasUserValue(false),
         mIsSkippedByIteration(false),
@@ -469,8 +468,6 @@ class Pref {
   bool IsSkippedByIteration() const { return mIsSkippedByIteration; }
   void SetIsSkippedByIteration(bool aValue) { mIsSkippedByIteration = aValue; }
 
-  bool DefaultChanged() const { return mDefaultChanged; }
-
   bool IsSticky() const { return mIsSticky; }
 
   bool HasDefaultValue() const { return mHasDefaultValue; }
@@ -480,7 +477,7 @@ class Pref {
   void AddToMap(SharedPrefMapBuilder& aMap) {
     aMap.Add(Name(),
              {HasDefaultValue(), HasUserValue(), IsSticky(), IsLocked(),
-              DefaultChanged(), IsSkippedByIteration()},
+              IsSkippedByIteration()},
              HasDefaultValue() ? mDefaultValue.Get<T>() : T(),
              HasUserValue() ? mUserValue.Get<T>() : T());
   }
@@ -658,9 +655,6 @@ class Pref {
       }
       if (!ValueMatches(PrefValueKind::Default, aType, aValue)) {
         mDefaultValue.Replace(mHasDefaultValue, Type(), aType, aValue);
-        if (mHasDefaultValue) {
-          mDefaultChanged = true;
-        }
         mHasDefaultValue = true;
         if (aIsSticky) {
           mIsSticky = true;
@@ -878,7 +872,6 @@ class Pref {
   uint32_t mType : 2;
   uint32_t mIsSticky : 1;
   uint32_t mIsLocked : 1;
-  uint32_t mDefaultChanged : 1;
   uint32_t mHasDefaultValue : 1;
   uint32_t mHasUserValue : 1;
   uint32_t mIsSkippedByIteration : 1;
@@ -929,7 +922,6 @@ class MOZ_STACK_CLASS PrefWrapper : public PrefWrapperBase {
     return match(Matcher());                                            \
   }
 
-  FORWARD(bool, DefaultChanged)
   FORWARD(bool, IsLocked)
   FORWARD(bool, IsSticky)
   FORWARD(bool, HasDefaultValue)
