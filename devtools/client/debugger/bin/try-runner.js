@@ -143,7 +143,7 @@ console.log({
 if (!success) {
   console.log(
     "[debugger-node-test-runner] You can find documentation about the " +
-      "debugger node tests at https://docs.firefox-dev.tools/tests/node-tests.html"
+      "debugger node tests at https://firefox-source-docs.mozilla.org/devtools/tests/node-tests.html"
   );
 }
 

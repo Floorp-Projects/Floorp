@@ -183,5 +183,5 @@ module.exports = [
   },
   // ⚠  Adding new individual tests slows down DAMP execution ⚠
   // ⚠  Consider contributing to custom.${tool} rather than adding isolated tests ⚠
-  // ⚠  See http://docs.firefox-dev.tools/tests/writing-perf-tests.html ⚠
+  // ⚠  See https://firefox-source-docs.mozilla.org/devtools/tests/writing-perf-tests.html ⚠
 ];

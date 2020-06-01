@@ -12,7 +12,7 @@ It complements the existing Firefox Developer Tools `Remote Debugging
 Protocol`_ (RDP) by implementing a subset of the `Chrome DevTools
 Protocol`_ (CDP).
 
-.. _Remote Debugging Protocol: https://docs.firefox-dev.tools/backend/protocol.html
+.. _Remote Debugging Protocol: https://firefox-source-docs.mozilla.org/devtools/backend/protocol.html
 .. _Chrome DevTools Protocol: https://chromedevtools.github.io/devtools-protocol/
 
 .. toctree::

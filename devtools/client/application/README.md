@@ -147,7 +147,7 @@ We are sharing some constants / enum-like constants across the source. They are 
 
 ## Tests
 
-You should read DevTools' general [guidelines for automated tests](https://docs.firefox-dev.tools/tests/).
+You should read DevTools' general [guidelines for automated tests](https://firefox-source-docs.mozilla.org/devtools/tests/README.html).
 
 ### Mochitests (e2e / integration)
 
