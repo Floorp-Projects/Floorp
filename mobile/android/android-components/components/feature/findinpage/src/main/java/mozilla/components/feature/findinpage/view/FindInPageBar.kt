@@ -15,6 +15,7 @@ import android.widget.TextView
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.widget.AppCompatImageButton
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.view.inputmethod.EditorInfoCompat
 import mozilla.components.browser.state.state.content.FindResultState
 import mozilla.components.feature.findinpage.R
 import mozilla.components.support.ktx.android.view.hideKeyboard
@@ -32,7 +33,8 @@ class FindInPageBar @JvmOverloads constructor(
     defStyleAttr: Int = 0
 ) : ConstraintLayout(context, attrs, defStyleAttr), FindInPageView {
     private val styling: FindInPageBarStyling = createStyling(context, attrs, defStyleAttr)
-    private val queryEditText: EditText
+    @VisibleForTesting
+    internal val queryEditText: EditText
 
     @VisibleForTesting
     internal val resultsCountTextView: TextView
@@ -46,6 +48,22 @@ class FindInPageBar @JvmOverloads constructor(
         context.getString(R.string.mozac_feature_findindpage_accessibility_result)
 
     override var listener: FindInPageView.Listener? = null
+
+    /**
+     * Sets/gets private mode.
+     *
+     * In private mode the IME should not update any personalized data such as typing history and personalized language
+     * model based on what the user typed.
+     */
+    override var private: Boolean
+        get() = (queryEditText.imeOptions and EditorInfoCompat.IME_FLAG_NO_PERSONALIZED_LEARNING) != 0
+        set(value) {
+            queryEditText.imeOptions = if (value) {
+                queryEditText.imeOptions or EditorInfoCompat.IME_FLAG_NO_PERSONALIZED_LEARNING
+            } else {
+                queryEditText.imeOptions and (EditorInfoCompat.IME_FLAG_NO_PERSONALIZED_LEARNING.inv())
+            }
+        }
 
     init {
         inflate(getContext(), R.layout.mozac_feature_findinpage_view, this)

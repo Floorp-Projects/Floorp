@@ -17,6 +17,14 @@ interface FindInPageView {
     var listener: Listener?
 
     /**
+     * Sets/gets private mode.
+     *
+     * In private mode the IME should not update any personalized data such as typing history and personalized language
+     * model based on what the user typed.
+     */
+    var private: Boolean
+
+    /**
      * Displays the given [FindResultState] state in the view.
      */
     fun displayResult(result: FindResultState)
