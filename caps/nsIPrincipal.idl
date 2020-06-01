@@ -287,12 +287,7 @@ interface nsIPrincipal : nsISerializable
     /* Returns the Spec of the Principals URI with
     * user/pass/ref/query stripped for privacy and spoof prevention
     */
-    readonly attribute ACString exposableSpec;
-
-    /**
-     * Return the scheme of the principals URI
-     */
-    readonly attribute ACString scheme;
+     readonly attribute ACString exposableSpec;
 
     /**
     * Checks if the Principal's URI Scheme matches with the parameter
