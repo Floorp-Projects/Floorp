@@ -14,7 +14,7 @@ If you have Mercurial 4.1 (released March 2017) or later, download the zstd bund
 Setting up the repository
 -------------------------
 
-Once you have downloaded the repository bundle, follow the steps below to recreate the repository locally based upon that bundle. Be sure to replace "`mozilla-central`" with the project you're working with as appropriate.
+Once you have downloaded the repository bundle, follow the steps below to recreate the repository locally based upon that bundle. Be sure to replace "``mozilla-central``" with the project you're working with as appropriate.
 
 1. Initialize a new repository (in a directory called ``mozilla-central`` here):
 
@@ -36,7 +36,7 @@ On Linux/Mac click on the properties of the file and you can find the path. In c
 
 Get comfortable. Grab a coffee (or your favorite tasty beverage). Maybe a nap. This unbundling process is going to take quite a lot of time.
 
-3. Add the following lines to the repository's config file (`.hg/hgrc`) so that Mercurial will automatically know where to pull changes from future updates. You can open the template config file in your editor by running `hg config --edit` or `EDITOR=<editor-of-your-choice> hg config --edit`
+3. Add the following lines to the repository's config file (``.hg/hgrc``) so that Mercurial will automatically know where to pull changes from future updates. You can open the template config file in your editor by running ``hg config --edit`` or ``EDITOR=<editor-of-your-choice> hg config --edit``
 
 .. code-block:: shell
 
