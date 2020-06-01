@@ -72,7 +72,7 @@ const PINNED_FAVICON_PROPS_TO_MIGRATE = [
   "faviconRef",
   "faviconSize",
 ];
-const SECTION_ID = "system.topsites";
+const SECTION_ID = "topsites";
 const ROWS_PREF = "topSitesRows";
 
 // Search experiment stuff

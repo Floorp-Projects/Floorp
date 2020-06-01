@@ -716,7 +716,7 @@ describe("Top Sites Feed", () => {
 
       feed.onAction({
         type: at.UPDATE_SECTION_PREFS,
-        data: { id: "system.topsites" },
+        data: { id: "topsites" },
       });
 
       assert.calledOnce(feed.updateSectionPrefs);
