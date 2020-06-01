@@ -11,8 +11,7 @@
 extern "C" {
 
 // Implemented in Rust, in the `webext_storage_bridge` crate.
-nsresult NS_NewExtensionStorageSyncArea(
-    mozIConfigurableExtensionStorageArea** aResult);
+nsresult NS_NewExtensionStorageSyncArea(mozIExtensionStorageArea** aResult);
 
 }  // extern "C"
 
@@ -25,8 +24,8 @@ namespace storage {
 // `already_AddRefed<T>`, but Rust doesn't have such a type. So we call the
 // Rust constructor using a `nsCOMPtr` (which is compatible with Rust's
 // `xpcom::RefPtr`) out param, and return that.
-already_AddRefed<mozIConfigurableExtensionStorageArea> NewSyncArea() {
-  nsCOMPtr<mozIConfigurableExtensionStorageArea> storage;
+already_AddRefed<mozIExtensionStorageArea> NewSyncArea() {
+  nsCOMPtr<mozIExtensionStorageArea> storage;
   nsresult rv = NS_NewExtensionStorageSyncArea(getter_AddRefs(storage));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return nullptr;

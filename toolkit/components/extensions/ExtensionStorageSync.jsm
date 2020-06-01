@@ -49,10 +49,9 @@ XPCOMUtils.defineLazyGetter(
 
 // The interfaces which define the callbacks used by the bridge. There's a
 // callback for success, failure, and to record data changes.
-function ExtensionStorageApiCallback(resolve, reject, extId, changeCallback) {
+function ExtensionStorageApiCallback(resolve, reject, changeCallback) {
   this.resolve = resolve;
   this.reject = reject;
-  this.extId = extId;
   this.changeCallback = changeCallback;
 }
 
@@ -73,10 +72,10 @@ ExtensionStorageApiCallback.prototype = {
     this.reject(e);
   },
 
-  onChanged(json) {
+  onChanged(extId, json) {
     if (this.changeCallback && json) {
       try {
-        this.changeCallback(this.extId, JSON.parse(json));
+        this.changeCallback(extId, JSON.parse(json));
       } catch (ex) {
         Cu.reportError(ex);
       }
@@ -113,7 +112,6 @@ class ExtensionStorageSync {
           let callback = new ExtensionStorageApiCallback(
             resolve,
             reject,
-            extId,
             (extId, changes) => this.notifyListeners(extId, changes)
           );
           let sargs = args.map(JSON.stringify);
