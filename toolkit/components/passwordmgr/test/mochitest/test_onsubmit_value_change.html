@@ -60,9 +60,9 @@ Login Manager test: input value change right after onsubmit event
     let button = document.getElementById("submitBtn");
     button.click();
 
-    let submittedResult = await processedPromise;
-    is(submittedResult.usernameField.value, "testuser", "Should have registered \"testuser\" for username");
-    is(submittedResult.newPasswordField.value, "testpass", "Should have registered \"testpass\" for username");
+    let { data } = await processedPromise;
+    is(data.usernameField.value, "testuser", "Should have registered \"testuser\" for username");
+    is(data.newPasswordField.value, "testpass", "Should have registered \"testpass\" for username");
   });
 </script>
 </body>

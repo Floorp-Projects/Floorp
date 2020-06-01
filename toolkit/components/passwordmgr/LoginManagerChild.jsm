@@ -618,15 +618,9 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
    * @param {boolean} options.showMasterPassword - whether to show a master password prompt
    */
   _getLoginDataFromParent(form, options) {
-    let doc = form.ownerDocument;
-
-    let formOrigin = LoginHelper.getLoginOrigin(doc.documentURI);
-    if (!formOrigin) {
-      throw new Error("_getLoginDataFromParent: A form origin is required");
-    }
     let actionOrigin = LoginHelper.getFormActionOrigin(form);
 
-    let messageData = { formOrigin, actionOrigin, options };
+    let messageData = { actionOrigin, options };
 
     let resultPromise = this.sendQuery(
       "PasswordManager:findLogins",
@@ -1652,7 +1646,6 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
       let browsingContextId = win.windowGlobalChild.browsingContext.id;
 
       detail = {
-        origin,
         browsingContextId,
         formActionOrigin,
         autoFilledLoginGuid: autoFilledLogin && autoFilledLogin.guid,

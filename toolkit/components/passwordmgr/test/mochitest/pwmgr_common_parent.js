@@ -218,9 +218,9 @@ addMessageListener("setMasterPassword", ({ enable }) => {
   }
 });
 
-LoginManagerParent.setListenerForTests((msg, data) => {
+LoginManagerParent.setListenerForTests((msg, { origin, data }) => {
   if (msg == "FormSubmit") {
-    sendAsyncMessage("formSubmissionProcessed", data);
+    sendAsyncMessage("formSubmissionProcessed", { origin, data });
   }
 });
 
