@@ -1038,6 +1038,8 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
 
   void MaybeAllowStorageForOpenedWindow(nsIURI* aURI);
 
+  bool IsOnlyTopLevelDocumentInSHistory();
+
  public:
   // Dispatch a runnable related to the global.
   virtual nsresult Dispatch(mozilla::TaskCategory aCategory,
