@@ -52,15 +52,17 @@ class ViewportUtils {
   static nsPoint LayoutToVisual(const nsPoint& aPt, PresShell* aContext);
 
   /*
-   * This function converts the point from layout to visual space
+   * These functions convert the point/rect from layout to visual space
    * by applying the inverse of GetLayoutToVisualTransform() of the root
    * scrollframe of provided presShell.
    */
   static LayoutDevicePoint DocumentRelativeLayoutToVisual(
       const LayoutDevicePoint& aPoint, PresShell* aShell);
+  static LayoutDeviceRect DocumentRelativeLayoutToVisual(
+      const LayoutDeviceRect& aRect, PresShell* aShell);
 
   /*
-   * This converts aPt, which is the layout space of aCtx, into a
+   * These convert aPt/aRect, which is the layout space of aCtx, into a
    * screen-relative visual-space quantity. Formally, we can think of the input
    * as being in RelativeTo{aCtx->PresShell()->GetRootFrame(),
    * ViewportType::Layout} space. And then the function iterates up the chain of
@@ -74,6 +76,8 @@ class ViewportUtils {
    */
   static LayoutDevicePoint ToScreenRelativeVisual(const LayoutDevicePoint& aPt,
                                                   nsPresContext* aCtx);
+  static LayoutDeviceRect ToScreenRelativeVisual(const LayoutDeviceRect& aRect,
+                                                 nsPresContext* aCtx);
 
   /**
    * Returns non-null if |aFrame| is inside the async zoom container but its
