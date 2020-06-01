@@ -216,6 +216,44 @@ add_task(async function click_opens_popup() {
   textbox.value = "";
 });
 
+add_task(async function open_empty_hiddenOneOffs() {
+  // Disable all the engines but the current one and check the oneoffs.
+  let defaultEngine = await Services.search.getDefault();
+  let engines = (await Services.search.getVisibleEngines()).filter(
+    e => e.name != defaultEngine.name
+  );
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.search.hiddenOneOffs", engines.map(e => e.name).join(",")]],
+  });
+
+  let oneOffButtons = searchPopup.searchOneOffsContainer.querySelector(
+    ".search-panel-one-offs"
+  );
+  textbox.value = "foo";
+  let promise = promiseEvent(searchPopup, "popupshown");
+  EventUtils.synthesizeMouseAtCenter(textbox, {});
+  await promise;
+
+  Assert.ok(
+    oneOffButtons.getAttribute("hidden"),
+    "The one-offs buttons should have the hidden attribute."
+  );
+  Assert.equal(
+    getComputedStyle(oneOffButtons).display,
+    "none",
+    "The one-off buttons should be hidden."
+  );
+
+  promise = promiseEvent(searchPopup, "popuphidden");
+
+  info("Hiding popup");
+  await synthesizeNativeMouseClick(searchIcon);
+  await promise;
+
+  await SpecialPowers.popPrefEnv();
+  textbox.value = "";
+});
+
 // Right clicking in a non-empty search box when unfocused should open the edit context menu.
 add_no_popup_task(async function right_click_doesnt_open_popup() {
   gURLBar.focus();
