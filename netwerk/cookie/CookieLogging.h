@@ -9,6 +9,7 @@
 #include "mozilla/Logging.h"
 #include "nsString.h"
 
+class nsIConsoleReportCollector;
 class nsIURI;
 
 namespace mozilla {
@@ -50,6 +51,12 @@ class CookieLogging final {
   static void LogCookie(Cookie* aCookie);
 
   static void LogEvicted(Cookie* aCookie, const char* aDetails);
+
+  static void LogMessageToConsole(nsIConsoleReportCollector* aCRC, nsIURI* aURI,
+                                  uint32_t aErrorFlags,
+                                  const nsACString& aCategory,
+                                  const nsACString& aMsg,
+                                  const nsTArray<nsString>& aParams);
 };
 
 }  // namespace net
