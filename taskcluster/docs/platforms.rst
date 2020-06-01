@@ -18,14 +18,12 @@ Build Platforms
 
    Linux, ,
    Linux DevEdition, ,
-   Linux Nightly, , 
    Linux shippable, ,
    Linux x64, ,
    Linux x64 addon, ,
    Linux x64 DevEdition, , 
    Linux x64 WebRender Shippable, ,
    Linux x64 WebRender, ,
-   Linux x64 Nightly, , 
    Linux x64 shippable, , "| What we ship to our users.
    | Builds with PGO"
    Linux x64 NoOpt, , "| Developer build - Disable optimizations, enable debug options
@@ -37,21 +35,20 @@ Build Platforms
    OS X Cross Compiled shippable, , What we ship to our users
    OS X Cross Compiled NoOpt, , "| Developer build - Disable optimizations, enable debug options
    | Only runs on m-c"
-   OS X Cross Compiled addon, , 
+   OS X Cross Compiled addon, ,
    OS X Cross Compiled DevEdition, ,
    OS X 10.14, ,
    OS X 10.14 WebRender, ,
    OS X 10.14 Shippable, , 
    OS X 10.14 WebRender Shippable, ,
    OS X 10.14 DevEdition, , 
-   OS X 10.14 Nightly, ,
    Windows 2012, ,
    Windows 2012 shippable, , What we ship to our users
    Windows 2012 addon, , 
    Windows 2012 NoOpt, , "| Developer build - Disable optimizations, enable debug options
    | Only runs on m-c"
    Windows 2012 DevEdition, , 
-   Windows 2012 x64, , 
+   Windows 2012 x64, ,
    Windows 2012 x64 shippable, , 
    Windows 2012 AArch64, , 
    Windows 2012 AArch64 Shippable, , 
@@ -73,7 +70,7 @@ Build Platforms
    Android 4.2 x86, , 
    Android 4.2 x86 Beta, , 
    Android 4.2 x86 Release, , 
-   Android 4.3 API16+, , 
+   Android 4.3 API16+, ,
    Android 4.3 API16+ Beta, , 
    Android 4.3 API16+ Release, ,
    Android 5.0 AArch64, ,
@@ -92,10 +89,8 @@ Build Platforms
    Android 7.0 MotoG5, , 
    Android 8.0 Pixel2, , 
    Android 8.0 Pixel2 WebRender, , 
-   Android 8.0 Pixel2 Nightly, ,
-   Android 8.0 Pixel2 AArch64, , 
-   Android 8.0 Pixel2 AArch64 WebRender, , 
-   Android 8.0 Pixel2 AArch64 Nightly, ,
+   Android 8.0 Pixel2 AArch64, ,
+   Android 8.0 Pixel2 AArch64 WebRender, ,
    Android, ,
 
 Testing configurations
@@ -116,13 +111,11 @@ We have some platforms used to run the tests to make sure they run correctly on 
    Linux 18.04 x64 Stylo-Seq, ,
    Windows 7, ,
    Windows 7 DevEdition, ,
-   Windows 7 VM Nightly, ,
    Windows 7 Shippable, ,
    Windows 7 MinGW, Tom Ritter, "| the Tor project uses MinGW; make sure we test that for them
    | Only runs on autoland, m-c and m-esr"
    Windows 10 x64, ,
    Windows 10 x64 DevEdition, ,
-   Windows 10 x64 Nightly, ,
    Windows 10 x64 Shippable, ,
    Windows 10 x64 WebRender Shippable, ,
    Windows 10 x64 WebRender, ,
