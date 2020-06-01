@@ -45,8 +45,7 @@ const zoomOnMeta =
   Services.prefs.getIntPref("mousewheel.with_meta.action", 1) == 3;
 const isAppLocaleRTL = Services.locale.isAppLocaleRTL;
 
-var AboutReader = function(actor, articlePromise) {
-  let win = actor.contentWindow;
+var AboutReader = function(mm, win, articlePromise) {
   let url = this._getOriginalUrl(win);
   if (!(url.startsWith("http://") || url.startsWith("https://"))) {
     let errorMsg =
@@ -65,7 +64,14 @@ var AboutReader = function(actor, articlePromise) {
   }
   doc.documentElement.setAttribute("platform", AppConstants.platform);
 
-  this._actor = actor;
+  this._mm = mm;
+  this._mm.addMessageListener("Reader:CloseDropdown", this);
+  this._mm.addMessageListener("Reader:AddButton", this);
+  this._mm.addMessageListener("Reader:RemoveButton", this);
+  this._mm.addMessageListener("Reader:GetStoredArticleData", this);
+  this._mm.addMessageListener("Reader:ZoomIn", this);
+  this._mm.addMessageListener("Reader:ZoomOut", this);
+  this._mm.addMessageListener("Reader:ResetZoom", this);
 
   this._docRef = Cu.getWeakReference(doc);
   this._winRef = Cu.getWeakReference(win);
@@ -135,7 +141,7 @@ var AboutReader = function(actor, articlePromise) {
   );
 
   // we're ready for any external setup, send a signal for that.
-  this._actor.sendAsyncMessage("Reader:OnSetup");
+  this._mm.sendAsyncMessage("Reader:OnSetup");
 
   let colorSchemeValues = JSON.parse(
     Services.prefs.getCharPref("reader.color_scheme.values")
@@ -195,7 +201,7 @@ var AboutReader = function(actor, articlePromise) {
   this._setupLineHeightButtons();
 
   if (win.speechSynthesis && Services.prefs.getBoolPref("narrate.enabled")) {
-    new NarrateControls(win, this._languagePromise);
+    new NarrateControls(mm, win, this._languagePromise);
   }
 
   this._loadArticle();
@@ -296,8 +302,26 @@ AboutReader.prototype = {
     ));
   },
 
+  // Provides unique view Id.
+  get viewId() {
+    let _viewId = Cc["@mozilla.org/uuid-generator;1"]
+      .getService(Ci.nsIUUIDGenerator)
+      .generateUUID()
+      .toString();
+    Object.defineProperty(this, "viewId", { value: _viewId });
+
+    return _viewId;
+  },
+
   receiveMessage(message) {
     switch (message.name) {
+      // Triggered by Android user pressing BACK while the banner font-dropdown is open.
+      case "Reader:CloseDropdown": {
+        // Just close it.
+        this._closeDropdowns();
+        break;
+      }
+
       case "Reader:AddButton": {
         if (
           message.data.id &&
@@ -319,7 +343,7 @@ AboutReader.prototype = {
           let tb = this._toolbarElement;
           tb.appendChild(btn);
           this._setupButton(message.data.id, button => {
-            this._actor.sendAsyncMessage(
+            this._mm.sendAsyncMessage(
               "Reader:Clicked-" + button.dataset.buttonid,
               { article: this._article }
             );
@@ -334,6 +358,12 @@ AboutReader.prototype = {
             btn.remove();
           }
         }
+        break;
+      }
+      case "Reader:GetStoredArticleData": {
+        this._mm.sendAsyncMessage("Reader:StoredArticleData", {
+          article: this._article,
+        });
         break;
       }
       case "Reader:ZoomIn": {
@@ -421,20 +451,37 @@ AboutReader.prototype = {
       case "pagehide":
         this._closeDropdowns();
 
-        this._actor.readerModeHidden();
-        this.clearActor();
         this._intersectionObs.unobserve(this._doc.querySelector(".top-anchor"));
         delete this._intersectionObs;
+        this._mm.removeMessageListener("Reader:CloseDropdown", this);
+        this._mm.removeMessageListener("Reader:AddButton", this);
+        this._mm.removeMessageListener("Reader:RemoveButton", this);
+        this._mm.removeMessageListener("Reader:GetStoredArticleData", this);
+        this._mm.removeMessageListener("Reader:ZoomIn", this);
+        this._mm.removeMessageListener("Reader:ZoomOut", this);
+        this._mm.removeMessageListener("Reader:ResetZoom", this);
+        this._windowUnloaded = true;
         break;
     }
   },
 
-  clearActor() {
-    this._actor = null;
+  observe(subject, topic, data) {
+    if (
+      subject.QueryInterface(Ci.nsISupportsPRUint64).data != this._innerWindowId
+    ) {
+      return;
+    }
+
+    Services.obs.removeObserver(this, "inner-window-destroyed");
+
+    this._mm.removeMessageListener("Reader:CloseDropdown", this);
+    this._mm.removeMessageListener("Reader:AddButton", this);
+    this._mm.removeMessageListener("Reader:RemoveButton", this);
+    this._windowUnloaded = true;
   },
 
   _onReaderClose() {
-    ReaderMode.leaveReaderMode(this._actor.docShell, this._win);
+    ReaderMode.leaveReaderMode(this._mm.docShell, this._win);
   },
 
   async _resetFontSize() {
@@ -739,7 +786,7 @@ AboutReader.prototype = {
       article = await this._articlePromise;
     } else {
       try {
-        article = await ReaderMode.downloadAndParseDocument(url);
+        article = await this._getArticle(url);
       } catch (e) {
         if (e && e.newURL) {
           let readerURL = "about:reader?url=" + encodeURIComponent(e.newURL);
@@ -749,7 +796,7 @@ AboutReader.prototype = {
       }
     }
 
-    if (!this._actor) {
+    if (this._windowUnloaded) {
       return;
     }
 
@@ -764,15 +811,38 @@ AboutReader.prototype = {
     this._showContent(article);
   },
 
-  async _requestFavicon() {
-    let iconDetails = await this._actor.sendQuery("Reader:FaviconRequest", {
+  _getArticle(url) {
+    if (this.PLATFORM_HAS_CACHE) {
+      return new Promise((resolve, reject) => {
+        let listener = message => {
+          this._mm.removeMessageListener("Reader:ArticleData", listener);
+          if (message.data.newURL) {
+            reject({ newURL: message.data.newURL });
+            return;
+          }
+          resolve(message.data.article);
+        };
+        this._mm.addMessageListener("Reader:ArticleData", listener);
+        this._mm.sendAsyncMessage("Reader:ArticleGet", { url });
+      });
+    }
+    return ReaderMode.downloadAndParseDocument(url);
+  },
+
+  _requestFavicon() {
+    let handleFaviconReturn = message => {
+      this._mm.removeMessageListener(
+        "Reader:FaviconReturn",
+        handleFaviconReturn
+      );
+      this._loadFavicon(message.data.url, message.data.faviconUrl);
+    };
+
+    this._mm.addMessageListener("Reader:FaviconReturn", handleFaviconReturn);
+    this._mm.sendAsyncMessage("Reader:FaviconRequest", {
       url: this._article.url,
       preferredWidth: 16 * this._win.devicePixelRatio,
     });
-
-    if (iconDetails) {
-      this._loadFavicon(iconDetails.url, iconDetails.faviconUrl);
-    }
   },
 
   _loadFavicon(url, faviconUrl) {
@@ -957,7 +1027,7 @@ AboutReader.prototype = {
       // No need to show progress if the article has been loaded,
       // if the window has been unloaded, or if there was an error
       // trying to load the article.
-      if (this._article || !this._actor || this._error) {
+      if (this._article || this._windowUnloaded || this._error) {
         return;
       }
 
