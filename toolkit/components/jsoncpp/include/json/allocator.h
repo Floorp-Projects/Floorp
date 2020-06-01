@@ -3,8 +3,8 @@
 // recognized in your jurisdiction.
 // See file LICENSE for detail or copy at http://jsoncpp.sourceforge.net/LICENSE
 
-#ifndef CPPTL_JSON_ALLOCATOR_H_INCLUDED
-#define CPPTL_JSON_ALLOCATOR_H_INCLUDED
+#ifndef JSON_ALLOCATOR_H_INCLUDED
+#define JSON_ALLOCATOR_H_INCLUDED
 
 #include <cstring>
 #include <memory>
@@ -67,7 +67,7 @@ public:
   }
 
   // Boilerplate
-  SecureAllocator() = default;
+  SecureAllocator() {}
   template <typename U> SecureAllocator(const SecureAllocator<U>&) {}
   template <typename U> struct rebind { using other = SecureAllocator<U>; };
 };
@@ -86,4 +86,4 @@ bool operator!=(const SecureAllocator<T>&, const SecureAllocator<U>&) {
 
 #pragma pack(pop)
 
-#endif // CPPTL_JSON_ALLOCATOR_H_INCLUDED
+#endif // JSON_ALLOCATOR_H_INCLUDED
