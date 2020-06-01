@@ -161,6 +161,7 @@
 | [mozilla.components.feature.toolbar](mozilla.components.feature.toolbar/index.md) |  |
 | [mozilla.components.feature.top.sites](mozilla.components.feature.top.sites/index.md) |  |
 | [mozilla.components.feature.webcompat](mozilla.components.feature.webcompat/index.md) |  |
+| [mozilla.components.feature.webcompat.reporter](mozilla.components.feature.webcompat.reporter/index.md) |  |
 | [mozilla.components.feature.webnotifications](mozilla.components.feature.webnotifications/index.md) |  |
 | [mozilla.components.lib.crash](mozilla.components.lib.crash/index.md) |  |
 | [mozilla.components.lib.crash.handler](mozilla.components.lib.crash.handler/index.md) |  |

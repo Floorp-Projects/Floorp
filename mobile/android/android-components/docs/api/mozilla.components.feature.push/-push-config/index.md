@@ -2,7 +2,7 @@
 
 # PushConfig
 
-`data class PushConfig` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/push/src/main/java/mozilla/components/feature/push/AutoPushFeature.kt#L384)
+`data class PushConfig` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/push/src/main/java/mozilla/components/feature/push/AutoPushFeature.kt#L410)
 
 Configuration object for initializing the Push Manager with an AutoPush server.
 
