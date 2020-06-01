@@ -171,6 +171,10 @@ class ChannelEventQueue final {
   // dispatched in a new event on the current thread.
   void Resume();
 
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+  bool IsEmpty() const { return mEventQueue.IsEmpty(); }
+#endif
+
  private:
   // Private destructor, to discourage deletion outside of Release():
   ~ChannelEventQueue() = default;
