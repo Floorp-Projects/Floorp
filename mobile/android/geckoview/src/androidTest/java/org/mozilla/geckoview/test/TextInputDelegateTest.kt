@@ -791,4 +791,24 @@ class TextInputDelegateTest : BaseSessionTest() {
 
         assertText("commit abc", ic, "abc")
     }
+
+    // Bug 1593683 - Cursor is jumping when using the arrow keys in input field on GBoard
+    @WithDisplay(width = 512, height = 512) // Child process updates require having a display.
+    @Test fun inputConnection_bug1593683() {
+        setupContent("")
+
+        val ic = mainSession.textInput.onCreateInputConnection(EditorInfo())!!
+
+        setComposingText(ic, "foo", 1)
+        assertTextAndSelectionAt("Can set the composing text", ic, "foo", 3)
+        // Arrow key should keep composition then move caret
+        pressKey(ic, KeyEvent.KEYCODE_DPAD_LEFT)
+        pressKey(ic, KeyEvent.KEYCODE_DPAD_LEFT)
+        pressKey(ic, KeyEvent.KEYCODE_DPAD_LEFT)
+        assertSelection("IME caret is moved to top", ic, 0, 0, /* checkGecko */ false)
+
+        setComposingText(ic, "bar", 1)
+        finishComposingText(ic)
+        assertText("commit abc", ic, "bar")
+    }
 }
