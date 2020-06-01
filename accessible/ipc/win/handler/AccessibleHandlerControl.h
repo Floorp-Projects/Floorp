@@ -85,7 +85,8 @@ class AccessibleHandlerControl final : public IHandlerControl {
   UniquePtr<mscom::RegisteredProxy> mIA2Proxy;
   UniquePtr<mscom::RegisteredProxy> mHandlerProxy;
   // We can't use Gecko APIs in this dll, hence the use of std::unordered_map.
-  std::unordered_map<long, RefPtr<AccessibleHandler>> mAccessibleCache;
+  typedef std::unordered_map<long, RefPtr<AccessibleHandler>> AccessibleCache;
+  AccessibleCache mAccessibleCache;
 };
 
 extern mscom::SingletonFactory<AccessibleHandlerControl> gControlFactory;
