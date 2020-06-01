@@ -164,6 +164,7 @@ gfxTextRun::gfxTextRun(const gfxTextRunFactory::Parameters* aParams,
       mFontGroup(aFontGroup),
       mFlags2(aFlags2),
       mReleasedFontGroup(false),
+      mReleasedFontGroupSkippedDrawing(false),
       mHasGlyphRunArray(false),
       mShapingState(eShapingState_Normal) {
   NS_ASSERTION(mAppUnitsPerDevUnit > 0, "Invalid app unit scale");
@@ -186,9 +187,8 @@ gfxTextRun::gfxTextRun(const gfxTextRunFactory::Parameters* aParams,
   AccountStorageForTextRun(this, 1);
 #endif
 
-  mSkipDrawing =
-      mFontGroup->ShouldSkipDrawing() &&
-      !(aFlags2 & nsTextFrameUtils::Flags::DontSkipDrawingForPendingUserFonts);
+  mDontSkipDrawing =
+      !!(aFlags2 & nsTextFrameUtils::Flags::DontSkipDrawingForPendingUserFonts);
 }
 
 gfxTextRun::~gfxTextRun() {
@@ -223,6 +223,19 @@ gfxTextRun::~gfxTextRun() {
 
 void gfxTextRun::ReleaseFontGroup() {
   NS_ASSERTION(!mReleasedFontGroup, "doubly released!");
+
+  // After dropping our reference to the font group, we'll no longer be able
+  // to get up-to-date results for ShouldSkipDrawing().  Store the current
+  // value in mReleasedFontGroupSkippedDrawing.
+  //
+  // (It doesn't actually matter that we can't get up-to-date results for
+  // ShouldSkipDrawing(), since the only text runs that we call
+  // ReleaseFontGroup() for are ellipsis text runs, and we ask the font
+  // group for a new ellipsis text run each time we want to draw one,
+  // and ensure that the cached one is cleared in ClearCachedData() when
+  // font loading status changes.)
+  mReleasedFontGroupSkippedDrawing = mFontGroup->ShouldSkipDrawing();
+
   NS_RELEASE(mFontGroup);
   mReleasedFontGroup = true;
 }
@@ -552,7 +565,9 @@ void gfxTextRun::Draw(const Range aRange, const gfx::Point aPt,
   NS_ASSERTION(aParams.drawMode == DrawMode::GLYPH_PATH || !aParams.callbacks,
                "callback must not be specified unless using GLYPH_PATH");
 
-  bool skipDrawing = mSkipDrawing;
+  bool skipDrawing =
+      !mDontSkipDrawing && (mFontGroup ? mFontGroup->ShouldSkipDrawing()
+                                       : mReleasedFontGroupSkippedDrawing);
   if (aParams.drawMode & DrawMode::GLYPH_FILL) {
     DeviceColor currentColor;
     if (aParams.context->GetDeviceColor(currentColor) && currentColor.a == 0 &&
@@ -1439,8 +1454,8 @@ void gfxTextRun::CopyGlyphDataFrom(gfxTextRun* aSource, Range aRange,
   NS_ASSERTION(aDest + aRange.Length() <= GetLength(),
                "Destination substring out of range");
 
-  if (aSource->mSkipDrawing) {
-    mSkipDrawing = true;
+  if (aSource->mDontSkipDrawing) {
+    mDontSkipDrawing = true;
   }
 
   // Copy base glyph data, and DetailedGlyph data where present

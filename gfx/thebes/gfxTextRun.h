@@ -877,11 +877,13 @@ class gfxTextRun : public gfxShapedText {
   nsTextFrameUtils::Flags
       mFlags2;  // additional flags (see also gfxShapedText::mFlags)
 
-  bool mSkipDrawing;  // true if the font group we used had a user font
-                      // download that's in progress, so we should hide text
-                      // until the download completes (or timeout fires)
+  bool mDontSkipDrawing;  // true if the text run must not skip drawing, even if
+                          // waiting for a user font download, e.g. because we
+                          // are using it to draw canvas text
   bool mReleasedFontGroup;  // we already called NS_RELEASE on
                             // mFontGroup, so don't do it again
+  bool mReleasedFontGroupSkippedDrawing;  // whether our old mFontGroup value
+                                          // was set to skip drawing
   bool mHasGlyphRunArray;   // whether we're using an array or
                             // just storing a single glyphrun
 
