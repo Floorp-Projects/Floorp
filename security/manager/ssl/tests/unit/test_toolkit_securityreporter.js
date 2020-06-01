@@ -109,8 +109,7 @@ function run_test() {
     false,
     Date.now() + 24000 * 60 * 60,
     {},
-    Ci.nsICookie.SAMESITE_NONE,
-    Ci.nsICookie.SCHEME_HTTP
+    Ci.nsICookie.SAMESITE_NONE
   );
 
   registerCleanupFunction(() => {
