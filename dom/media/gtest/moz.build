@@ -33,6 +33,7 @@ UNIFIED_SOURCES += [
     'TestDataMutex.cpp',
     'TestDecoderBenchmark.cpp',
     'TestDriftCompensation.cpp',
+    'TestDynamicResampler.cpp',
     'TestGMPUtils.cpp',
     'TestGroupId.cpp',
     'TestIntervalSet.cpp',
