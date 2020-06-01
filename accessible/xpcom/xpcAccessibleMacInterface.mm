@@ -15,207 +15,6 @@
 
 using namespace mozilla::a11y;
 
-// A mapping of "AX" attributes to getters and setters expected by NSAccessibilityProtocol
-// The values in gAttributeToPropertyMap were generated using the folling snippet in the browser
-// toolbox:
-//
-// let r = /when clients request NSAccessibility(\w+)Attribute.*\n@property(?: \(getter =
-// (\w+))?.*\W(\w+)\sAPI_AVA/g
-// fetch('https://raw.githubusercontent.com/phracker/MacOSX-SDKs/master/MacOSX10.15.sdk' +
-//   '/System/Library/Frameworks/AppKit.framework/Versions/C/Headers/NSAccessibilityProtocols.h')
-//   .then((response) => response.text()).then((data) => {
-//     let pairs =
-//       [...data.matchAll(r)].map(e => ['AX' + e[1], e[2] ? e[2] : e[3], "set" +
-//       e[3].substr(0,1).toLocaleUpperCase() + e[3].substr(1) + ":"]);
-//     let output = "static NSDictionary* gAttributeToPropertyMap = @{\n";
-//     for (let [attr, getter, setter] of pairs) {
-//       output += `  @"${attr}" : @[@"${getter}", @"${setter}"],\n`;
-//     }
-//     output += "};";
-//   console.log(output);
-//   });
-
-static NSDictionary* gAttributeToPropertyMap = @{
-  @"AXSize" : @[ @"accessibilityFrame", @"setAccessibilityFrame:" ],
-  @"AXFocused" : @[ @"isAccessibilityFocused", @"setAccessibilityFocused:" ],
-  @"AXTopLevelUIElement" :
-      @[ @"accessibilityTopLevelUIElement", @"setAccessibilityTopLevelUIElement:" ],
-  @"AXURL" : @[ @"accessibilityURL", @"setAccessibilityURL:" ],
-  @"AXValue" : @[ @"accessibilityValue", @"setAccessibilityValue:" ],
-  @"AXValueDescription" :
-      @[ @"accessibilityValueDescription", @"setAccessibilityValueDescription:" ],
-  @"AXVisibleChildren" : @[ @"accessibilityVisibleChildren", @"setAccessibilityVisibleChildren:" ],
-  @"AXSubrole" : @[ @"accessibilitySubrole", @"setAccessibilitySubrole:" ],
-  @"AXTitle" : @[ @"accessibilityTitle", @"setAccessibilityTitle:" ],
-  @"AXTitleUIElement" : @[ @"accessibilityTitleUIElement", @"setAccessibilityTitleUIElement:" ],
-  @"AXNextContents" : @[ @"accessibilityNextContents", @"setAccessibilityNextContents:" ],
-  @"AXOrientation" : @[ @"accessibilityOrientation", @"setAccessibilityOrientation:" ],
-  @"AXOverflowButton" : @[ @"accessibilityOverflowButton", @"setAccessibilityOverflowButton:" ],
-  @"AXParent" : @[ @"accessibilityParent", @"setAccessibilityParent:" ],
-  @"AXPlaceholderValue" :
-      @[ @"accessibilityPlaceholderValue", @"setAccessibilityPlaceholderValue:" ],
-  @"AXPreviousContents" :
-      @[ @"accessibilityPreviousContents", @"setAccessibilityPreviousContents:" ],
-  @"AXRole" : @[ @"accessibilityRole", @"setAccessibilityRole:" ],
-  @"AXRoleDescription" : @[ @"accessibilityRoleDescription", @"setAccessibilityRoleDescription:" ],
-  @"AXSearchButton" : @[ @"accessibilitySearchButton", @"setAccessibilitySearchButton:" ],
-  @"AXSearchMenu" : @[ @"accessibilitySearchMenu", @"setAccessibilitySearchMenu:" ],
-  @"AXSelected" : @[ @"isAccessibilitySelected", @"setAccessibilitySelected:" ],
-  @"AXSelectedChildren" :
-      @[ @"accessibilitySelectedChildren", @"setAccessibilitySelectedChildren:" ],
-  @"AXServesAsTitleForUIElements" : @[
-    @"accessibilityServesAsTitleForUIElements", @"setAccessibilityServesAsTitleForUIElements:"
-  ],
-  @"AXShownMenu" : @[ @"accessibilityShownMenu", @"setAccessibilityShownMenu:" ],
-  @"AXMinValue" : @[ @"accessibilityMinValue", @"setAccessibilityMinValue:" ],
-  @"AXMaxValue" : @[ @"accessibilityMaxValue", @"setAccessibilityMaxValue:" ],
-  @"AXLinkedUIElements" :
-      @[ @"accessibilityLinkedUIElements", @"setAccessibilityLinkedUIElements:" ],
-  @"AXWindow" : @[ @"accessibilityWindow", @"setAccessibilityWindow:" ],
-  @"AXIdentifier" : @[ @"accessibilityIdentifier", @"setAccessibilityIdentifier:" ],
-  @"AXHelp" : @[ @"accessibilityHelp", @"setAccessibilityHelp:" ],
-  @"AXFilename" : @[ @"accessibilityFilename", @"setAccessibilityFilename:" ],
-  @"AXExpanded" : @[ @"isAccessibilityExpanded", @"setAccessibilityExpanded:" ],
-  @"AXEdited" : @[ @"isAccessibilityEdited", @"setAccessibilityEdited:" ],
-  @"AXEnabled" : @[ @"isAccessibilityEnabled", @"setAccessibilityEnabled:" ],
-  @"AXChildren" : @[ @"accessibilityChildren", @"setAccessibilityChildren:" ],
-  @"AXClearButton" : @[ @"accessibilityClearButton", @"setAccessibilityClearButton:" ],
-  @"AXCancelButton" : @[ @"accessibilityCancelButton", @"setAccessibilityCancelButton:" ],
-  @"AXContainsProtectedContent" :
-      @[ @"isAccessibilityProtectedContent", @"setAccessibilityProtectedContent:" ],
-  @"AXContents" : @[ @"accessibilityContents", @"setAccessibilityContents:" ],
-  @"AXDescription" : @[ @"accessibilityLabel", @"setAccessibilityLabel:" ],
-  @"AXAlternateUIVisible" :
-      @[ @"isAccessibilityAlternateUIVisible", @"setAccessibilityAlternateUIVisible:" ],
-  @"AXSharedFocusElements" :
-      @[ @"accessibilitySharedFocusElements", @"setAccessibilitySharedFocusElements:" ],
-  @"AXRequired" : @[ @"accessibilityRequired", @"setAccessibilityRequired:" ],
-  @"AXFocusedUIElement" : @[
-    @"accessibilityApplicationFocusedUIElement", @"setAccessibilityApplicationFocusedUIElement:"
-  ],
-  @"AXMainWindow" : @[ @"accessibilityMainWindow", @"setAccessibilityMainWindow:" ],
-  @"AXHidden" : @[ @"isAccessibilityHidden", @"setAccessibilityHidden:" ],
-  @"AXFrontmost" : @[ @"isAccessibilityFrontmost", @"setAccessibilityFrontmost:" ],
-  @"AXFocusedWindow" : @[ @"accessibilityFocusedWindow", @"setAccessibilityFocusedWindow:" ],
-  @"AXWindows" : @[ @"accessibilityWindows", @"setAccessibilityWindows:" ],
-  @"AXExtrasMenuBar" : @[ @"accessibilityExtrasMenuBar", @"setAccessibilityExtrasMenuBar:" ],
-  @"AXMenuBar" : @[ @"accessibilityMenuBar", @"setAccessibilityMenuBar:" ],
-  @"AXColumnTitles" : @[ @"accessibilityColumnTitles", @"setAccessibilityColumnTitles:" ],
-  @"AXOrderedByRow" : @[ @"isAccessibilityOrderedByRow", @"setAccessibilityOrderedByRow:" ],
-  @"AXHorizontalUnits" : @[ @"accessibilityHorizontalUnits", @"setAccessibilityHorizontalUnits:" ],
-  @"AXVerticalUnits" : @[ @"accessibilityVerticalUnits", @"setAccessibilityVerticalUnits:" ],
-  @"AXHorizontalUnitDescription" :
-      @[ @"accessibilityHorizontalUnitDescription", @"setAccessibilityHorizontalUnitDescription:" ],
-  @"AXVerticalUnitDescription" :
-      @[ @"accessibilityVerticalUnitDescription", @"setAccessibilityVerticalUnitDescription:" ],
-  @"AXHandles" : @[ @"accessibilityHandles", @"setAccessibilityHandles:" ],
-  @"AXWarningValue" : @[ @"accessibilityWarningValue", @"setAccessibilityWarningValue:" ],
-  @"AXCriticalValue" : @[ @"accessibilityCriticalValue", @"setAccessibilityCriticalValue:" ],
-  @"AXDisclosing" : @[ @"isAccessibilityDisclosed", @"setAccessibilityDisclosed:" ],
-  @"AXDisclosedByRow" : @[ @"accessibilityDisclosedByRow", @"setAccessibilityDisclosedByRow:" ],
-  @"AXDisclosedRows" : @[ @"accessibilityDisclosedRows", @"setAccessibilityDisclosedRows:" ],
-  @"AXDisclosureLevel" : @[ @"accessibilityDisclosureLevel", @"setAccessibilityDisclosureLevel:" ],
-  @"AXMarkerUIElements" :
-      @[ @"accessibilityMarkerUIElements", @"setAccessibilityMarkerUIElements:" ],
-  @"AXMarkerValues" : @[ @"accessibilityMarkerValues", @"setAccessibilityMarkerValues:" ],
-  @"AXMarkerGroupUIElement" :
-      @[ @"accessibilityMarkerGroupUIElement", @"setAccessibilityMarkerGroupUIElement:" ],
-  @"AXUnits" : @[ @"accessibilityUnits", @"setAccessibilityUnits:" ],
-  @"AXUnitDescription" : @[ @"accessibilityUnitDescription", @"setAccessibilityUnitDescription:" ],
-  @"AXMarkerType" : @[ @"accessibilityRulerMarkerType", @"setAccessibilityRulerMarkerType:" ],
-  @"AXMarkerTypeDescription" :
-      @[ @"accessibilityMarkerTypeDescription", @"setAccessibilityMarkerTypeDescription:" ],
-  @"AXHorizontalScrollBar" :
-      @[ @"accessibilityHorizontalScrollBar", @"setAccessibilityHorizontalScrollBar:" ],
-  @"AXVerticalScrollBar" :
-      @[ @"accessibilityVerticalScrollBar", @"setAccessibilityVerticalScrollBar:" ],
-  @"AXAllowedValues" : @[ @"accessibilityAllowedValues", @"setAccessibilityAllowedValues:" ],
-  @"AXLabelUIElements" : @[ @"accessibilityLabelUIElements", @"setAccessibilityLabelUIElements:" ],
-  @"AXLabelValue" : @[ @"accessibilityLabelValue", @"setAccessibilityLabelValue:" ],
-  @"AXSplitters" : @[ @"accessibilitySplitters", @"setAccessibilitySplitters:" ],
-  @"AXDecrementButton" : @[ @"accessibilityDecrementButton", @"setAccessibilityDecrementButton:" ],
-  @"AXIncrementButton" : @[ @"accessibilityIncrementButton", @"setAccessibilityIncrementButton:" ],
-  @"AXTabs" : @[ @"accessibilityTabs", @"setAccessibilityTabs:" ],
-  @"AXHeader" : @[ @"accessibilityHeader", @"setAccessibilityHeader:" ],
-  @"AXColumnCount" : @[ @"accessibilityColumnCount", @"setAccessibilityColumnCount:" ],
-  @"AXRowCount" : @[ @"accessibilityRowCount", @"setAccessibilityRowCount:" ],
-  @"AXIndex" : @[ @"accessibilityIndex", @"setAccessibilityIndex:" ],
-  @"AXColumns" : @[ @"accessibilityColumns", @"setAccessibilityColumns:" ],
-  @"AXRows" : @[ @"accessibilityRows", @"setAccessibilityRows:" ],
-  @"AXVisibleRows" : @[ @"accessibilityVisibleRows", @"setAccessibilityVisibleRows:" ],
-  @"AXSelectedRows" : @[ @"accessibilitySelectedRows", @"setAccessibilitySelectedRows:" ],
-  @"AXVisibleColumns" : @[ @"accessibilityVisibleColumns", @"setAccessibilityVisibleColumns:" ],
-  @"AXSelectedColumns" : @[ @"accessibilitySelectedColumns", @"setAccessibilitySelectedColumns:" ],
-  @"AXSortDirection" : @[ @"accessibilitySortDirection", @"setAccessibilitySortDirection:" ],
-  @"AXRowHeaderUIElements" :
-      @[ @"accessibilityRowHeaderUIElements", @"setAccessibilityRowHeaderUIElements:" ],
-  @"AXSelectedCells" : @[ @"accessibilitySelectedCells", @"setAccessibilitySelectedCells:" ],
-  @"AXVisibleCells" : @[ @"accessibilityVisibleCells", @"setAccessibilityVisibleCells:" ],
-  @"AXColumnHeaderUIElements" :
-      @[ @"accessibilityColumnHeaderUIElements", @"setAccessibilityColumnHeaderUIElements:" ],
-  @"AXRowIndexRange" : @[ @"accessibilityRowIndexRange", @"setAccessibilityRowIndexRange:" ],
-  @"AXColumnIndexRange" :
-      @[ @"accessibilityColumnIndexRange", @"setAccessibilityColumnIndexRange:" ],
-  @"AXInsertionPointLineNumber" :
-      @[ @"accessibilityInsertionPointLineNumber", @"setAccessibilityInsertionPointLineNumber:" ],
-  @"AXSharedCharacterRange" :
-      @[ @"accessibilitySharedCharacterRange", @"setAccessibilitySharedCharacterRange:" ],
-  @"AXSharedTextUIElements" :
-      @[ @"accessibilitySharedTextUIElements", @"setAccessibilitySharedTextUIElements:" ],
-  @"AXVisibleCharacterRange" :
-      @[ @"accessibilityVisibleCharacterRange", @"setAccessibilityVisibleCharacterRange:" ],
-  @"AXNumberOfCharacters" :
-      @[ @"accessibilityNumberOfCharacters", @"setAccessibilityNumberOfCharacters:" ],
-  @"AXSelectedText" : @[ @"accessibilitySelectedText", @"setAccessibilitySelectedText:" ],
-  @"AXSelectedTextRange" :
-      @[ @"accessibilitySelectedTextRange", @"setAccessibilitySelectedTextRange:" ],
-  @"AXSelectedTextRanges" :
-      @[ @"accessibilitySelectedTextRanges", @"setAccessibilitySelectedTextRanges:" ],
-  @"AXToolbarButton" : @[ @"accessibilityToolbarButton", @"setAccessibilityToolbarButton:" ],
-  @"AXModal" : @[ @"isAccessibilityModal", @"setAccessibilityModal:" ],
-  @"AXProxy" : @[ @"accessibilityProxy", @"setAccessibilityProxy:" ],
-  @"AXMain" : @[ @"isAccessibilityMain", @"setAccessibilityMain:" ],
-  @"AXFullScreenButton" :
-      @[ @"accessibilityFullScreenButton", @"setAccessibilityFullScreenButton:" ],
-  @"AXGrowArea" : @[ @"accessibilityGrowArea", @"setAccessibilityGrowArea:" ],
-  @"AXDocument" : @[ @"accessibilityDocument", @"setAccessibilityDocument:" ],
-  @"AXDefaultButton" : @[ @"accessibilityDefaultButton", @"setAccessibilityDefaultButton:" ],
-  @"AXCloseButton" : @[ @"accessibilityCloseButton", @"setAccessibilityCloseButton:" ],
-  @"AXZoomButton" : @[ @"accessibilityZoomButton", @"setAccessibilityZoomButton:" ],
-  @"AXMinimizeButton" : @[ @"accessibilityMinimizeButton", @"setAccessibilityMinimizeButton:" ],
-  @"AXMinimized" : @[ @"isAccessibilityMinimized", @"setAccessibilityMinimized:" ],
-};
-
-// The values in gActionToMethodMap were generated using the folling snippet in the browser
-// toolbox:
-//
-// let r = /when clients perform NSAccessibility(\w+)Action.*\n-.*\W(\w+)\sAPI_AVA/g
-// fetch('https://raw.githubusercontent.com/phracker/MacOSX-SDKs/master/MacOSX10.15.sdk' +
-//   '/System/Library/Frameworks/AppKit.framework/Versions/C/Headers/NSAccessibilityProtocols.h')
-//   .then((response) => response.text()).then((data) => {
-//     let pairs =
-//       [...data.matchAll(r)].map(e => ['AX' + e[1], e[2]]);
-//     console.log("static NSDictionary* gActionToMethodMap = @{")
-//     for (let [attr, selector] of pairs) {
-//       console.log(`  @"${attr}" : @"${selector}",`);
-//     }
-//     console.log("};");
-//   });
-
-static NSDictionary* gActionToMethodMap = @{
-  @"AXCancel" : @"accessibilityPerformCancel",
-  @"AXConfirm" : @"accessibilityPerformConfirm",
-  @"AXDecrement" : @"accessibilityPerformDecrement",
-  @"AXDelete" : @"accessibilityPerformDelete",
-  @"AXIncrement" : @"accessibilityPerformIncrement",
-  @"AXPick" : @"accessibilityPerformPick",
-  @"AXPress" : @"accessibilityPerformPress",
-  @"AXRaise" : @"accessibilityPerformRaise",
-  @"AXShowAlternateUI" : @"accessibilityPerformShowAlternateUI",
-  @"AXShowDefaultUI" : @"accessibilityPerformShowDefaultUI",
-  @"AXShowMenu" : @"accessibilityPerformShowMenu",
-};
-
 NS_IMPL_ISUPPORTS(xpcAccessibleMacInterface, nsIAccessibleMacInterface)
 
 xpcAccessibleMacInterface::xpcAccessibleMacInterface(AccessibleOrProxy aObj) {
@@ -237,16 +36,7 @@ xpcAccessibleMacInterface::GetAttributeNames(nsTArray<nsString>& aAttributeNames
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  NSMutableSet* attributeNames =
-      [NSMutableSet setWithArray:[mNativeObject accessibilityAttributeNames]];
-
-  for (NSString* key in gAttributeToPropertyMap) {
-    if (SupportsSelector(NSSelectorFromString(gAttributeToPropertyMap[key][0]))) {
-      [attributeNames addObject:key];
-    }
-  }
-
-  for (NSString* name in attributeNames) {
+  for (NSString* name in [mNativeObject accessibilityAttributeNames]) {
     nsAutoString attribName;
     nsCocoaUtils::GetStringForNSString(name, attribName);
     aAttributeNames.AppendElement(attribName);
@@ -265,17 +55,7 @@ xpcAccessibleMacInterface::GetActionNames(nsTArray<nsString>& aActionNames) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  NSMutableSet* actionNames = [NSMutableSet setWithArray:[mNativeObject accessibilityActionNames]];
-
-  for (NSString* key in gActionToMethodMap) {
-    if (SupportsSelector(NSSelectorFromString(gActionToMethodMap[key]))) {
-      [actionNames addObject:key];
-    }
-  }
-
-  // Bug 1625316: Support accessibilityCustomActions too.
-
-  for (NSString* name in actionNames) {
+  for (NSString* name in [mNativeObject accessibilityActionNames]) {
     nsAutoString actionName;
     nsCocoaUtils::GetStringForNSString(name, actionName);
     aActionNames.AppendElement(actionName);
@@ -295,14 +75,6 @@ xpcAccessibleMacInterface::PerformAction(const nsAString& aActionName) {
   }
 
   NSString* actionName = nsCocoaUtils::ToNSString(aActionName);
-  if (NSString* selectorString = gActionToMethodMap[actionName]) {
-    SEL selector = NSSelectorFromString(selectorString);
-    if (SupportsSelector(selector)) {
-      [mNativeObject performSelector:selector];
-      return NS_OK;
-    }
-  }
-
   [mNativeObject accessibilityPerformAction:actionName];
 
   return NS_OK;
@@ -320,13 +92,6 @@ xpcAccessibleMacInterface::GetAttributeValue(const nsAString& aAttributeName, JS
   }
 
   NSString* attribName = nsCocoaUtils::ToNSString(aAttributeName);
-  if (NSArray* selectors = gAttributeToPropertyMap[attribName]) {
-    SEL selector = NSSelectorFromString(selectors[0]);
-    if (SupportsSelector(selector)) {
-      return NSObjectToJsValue([mNativeObject performSelector:selector], aCx, aResult);
-    }
-  }
-
   return NSObjectToJsValue([mNativeObject accessibilityAttributeValue:attribName], aCx, aResult);
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT
@@ -337,14 +102,6 @@ xpcAccessibleMacInterface::IsAttributeSettable(const nsAString& aAttributeName, 
   NS_ENSURE_ARG_POINTER(aIsSettable);
 
   NSString* attribName = nsCocoaUtils::ToNSString(aAttributeName);
-  if (NSArray* selectors = gAttributeToPropertyMap[attribName]) {
-    SEL selector = NSSelectorFromString(selectors[1]);
-    if (SupportsSelector(selector)) {
-      *aIsSettable = true;
-      return NS_OK;
-    }
-  }
-
   if ([mNativeObject respondsToSelector:@selector(accessibilityIsAttributeSettable:)]) {
     *aIsSettable = [mNativeObject accessibilityIsAttributeSettable:attribName];
     return NS_OK;
@@ -361,34 +118,6 @@ xpcAccessibleMacInterface::SetAttributeValue(const nsAString& aAttributeName,
   NS_ENSURE_SUCCESS(rv, rv);
 
   NSString* attribName = nsCocoaUtils::ToNSString(aAttributeName);
-  if (NSArray* selectors = gAttributeToPropertyMap[attribName]) {
-    SEL selector = NSSelectorFromString(selectors[1]);
-    if (SupportsSelector(selector)) {
-      if ([obj isKindOfClass:[NSValue class]]) {
-        // If this is a simple data type the setter function doesn't
-        // take an NSObject, but takes a primitive instead. We need to
-        // do this NSInvocation dance to call it.
-        NSMethodSignature* sig = [mNativeObject methodSignatureForSelector:selector];
-        NSInvocation* inv = [NSInvocation invocationWithMethodSignature:sig];
-        [inv setSelector:selector];
-        [inv setTarget:mNativeObject];
-        if (strcmp([(NSValue*)obj objCType], @encode(BOOL)) == 0) {
-          BOOL arg = [obj boolValue];
-          [inv setArgument:&arg atIndex:2];
-        } else if (strcmp([(NSValue*)obj objCType], @encode(int)) == 0) {
-          int arg = [obj intValue];
-          [inv setArgument:&arg atIndex:2];
-        } else {
-          return NS_ERROR_FAILURE;
-        }
-        [inv invoke];
-      } else {
-        [mNativeObject performSelector:selector withObject:obj];
-      }
-      return NS_OK;
-    }
-  }
-
   if ([mNativeObject respondsToSelector:@selector(accessibilitySetValue:forAttribute:)]) {
     // The NSObject has an attribute setter, call that.
     [mNativeObject accessibilitySetValue:obj forAttribute:attribName];
