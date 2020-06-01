@@ -205,8 +205,7 @@ add_task(async function() {
     false,
     Date.now() + 1000 * 60 * 60,
     {},
-    Ci.nsICookie.SAMESITE_NONE,
-    Ci.nsICookie.SCHEME_HTTPS
+    Ci.nsICookie.SAMESITE_NONE
   );
   Services.cookies.add(
     uri.host,
@@ -218,8 +217,7 @@ add_task(async function() {
     false,
     Date.now() + 1000 * 60 * 60,
     {},
-    Ci.nsICookie.SAMESITE_NONE,
-    Ci.nsICookie.SCHEME_HTTPS
+    Ci.nsICookie.SAMESITE_NONE
   );
   Services.cookies.add(
     uri2.host,
@@ -231,8 +229,7 @@ add_task(async function() {
     false,
     Date.now() + 1000 * 60 * 60,
     {},
-    Ci.nsICookie.SAMESITE_NONE,
-    Ci.nsICookie.SCHEME_HTTPS
+    Ci.nsICookie.SAMESITE_NONE
   );
 
   // Ensure that private browsing cookies are ignored.
@@ -246,8 +243,7 @@ add_task(async function() {
     false,
     Date.now() + 1000 * 60 * 60,
     { privateBrowsingId: 1 },
-    Ci.nsICookie.SAMESITE_NONE,
-    Ci.nsICookie.SCHEME_HTTPS
+    Ci.nsICookie.SAMESITE_NONE
   );
 
   // Get the exact creation date from the cookies (to avoid intermittents

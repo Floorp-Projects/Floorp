@@ -25,8 +25,7 @@ add_task(async () => {
     true,
     expiry,
     {},
-    Ci.nsICookie.SAMESITE_NONE,
-    Ci.nsICookie.SCHEME_HTTPS
+    Ci.nsICookie.SAMESITE_NONE
   );
   Assert.equal(cm.countCookiesFromHost("baz.com"), 1);
   Assert.equal(cm.countCookiesFromHost("BAZ.com"), 1);
@@ -58,8 +57,7 @@ add_task(async () => {
     true,
     expiry,
     {},
-    Ci.nsICookie.SAMESITE_NONE,
-    Ci.nsICookie.SCHEME_HTTPS
+    Ci.nsICookie.SAMESITE_NONE
   );
   Assert.equal(cm.countCookiesFromHost("baz.com"), 0);
   Assert.equal(cm.countCookiesFromHost("BAZ.com"), 0);
@@ -83,8 +81,7 @@ add_task(async () => {
     true,
     expiry,
     {},
-    Ci.nsICookie.SAMESITE_NONE,
-    Ci.nsICookie.SCHEME_HTTPS
+    Ci.nsICookie.SAMESITE_NONE
   );
   Assert.equal(cm.countCookiesFromHost("192.168.0.1"), 1);
   Assert.equal(cm.countCookiesFromHost("192.168.0.1."), 0);
@@ -105,8 +102,7 @@ add_task(async () => {
     true,
     expiry,
     {},
-    Ci.nsICookie.SAMESITE_NONE,
-    Ci.nsICookie.SCHEME_HTTPS
+    Ci.nsICookie.SAMESITE_NONE
   );
   Assert.equal(cm.countCookiesFromHost("localhost"), 1);
   Assert.equal(cm.countCookiesFromHost("localhost."), 0);
@@ -127,8 +123,7 @@ add_task(async () => {
     true,
     expiry,
     {},
-    Ci.nsICookie.SAMESITE_NONE,
-    Ci.nsICookie.SCHEME_HTTPS
+    Ci.nsICookie.SAMESITE_NONE
   );
   Assert.equal(cm.countCookiesFromHost("co.uk"), 1);
   Assert.equal(cm.countCookiesFromHost("co.uk."), 0);
@@ -202,8 +197,7 @@ add_task(async () => {
     true,
     expiry,
     {},
-    Ci.nsICookie.SAMESITE_NONE,
-    Ci.nsICookie.SCHEME_HTTPS
+    Ci.nsICookie.SAMESITE_NONE
   );
   Assert.equal(getCookieCount(), 1);
   do_check_throws(function() {
@@ -217,8 +211,7 @@ add_task(async () => {
       true,
       expiry,
       {},
-      Ci.nsICookie.SAMESITE_NONE,
-      Ci.nsICookie.SCHEME_HTTPS
+      Ci.nsICookie.SAMESITE_NONE
     );
   }, Cr.NS_ERROR_ILLEGAL_VALUE);
   Assert.equal(getCookieCount(), 1);

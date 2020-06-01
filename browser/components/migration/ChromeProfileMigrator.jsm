@@ -406,16 +406,6 @@ async function GetCookiesResource(aProfileFolder) {
           host_key = host_key.substr(1);
         }
 
-        let schemeType = Ci.nsICookie.SCHEME_UNSET;
-        switch (row.getResultByName("source_scheme")) {
-          case 1:
-            schemeType = Ci.nsICookie.SCHEME_HTTP;
-            break;
-          case 2:
-            schemeType = Ci.nsICookie.SCHEME_HTTPS;
-            break;
-        }
-
         try {
           let expiresUtc =
             ChromeMigrationUtils.chromeTimeToDate(
@@ -426,7 +416,6 @@ async function GetCookiesResource(aProfileFolder) {
           if (!expiresUtc) {
             continue;
           }
-
           Services.cookies.add(
             host_key,
             row.getResultByName("path"),
@@ -437,8 +426,7 @@ async function GetCookiesResource(aProfileFolder) {
             false,
             parseInt(expiresUtc),
             {},
-            Ci.nsICookie.SAMESITE_NONE,
-            schemeType
+            Ci.nsICookie.SAMESITE_NONE
           );
         } catch (e) {
           Cu.reportError(e);
