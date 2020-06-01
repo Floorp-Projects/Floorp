@@ -6,8 +6,9 @@ use std::{error, fmt, result, str::Utf8Error, string::FromUtf16Error};
 
 use golden_gate::Error as GoldenGateError;
 use nserror::{
-    nsresult, NS_ERROR_ALREADY_INITIALIZED, NS_ERROR_DOM_QUOTA_EXCEEDED_ERR, NS_ERROR_FAILURE,
-    NS_ERROR_INVALID_ARG, NS_ERROR_NOT_IMPLEMENTED, NS_ERROR_NOT_INITIALIZED, NS_ERROR_UNEXPECTED,
+    nsresult, NS_ERROR_ALREADY_INITIALIZED, NS_ERROR_CANNOT_CONVERT_DATA,
+    NS_ERROR_DOM_QUOTA_EXCEEDED_ERR, NS_ERROR_FAILURE, NS_ERROR_INVALID_ARG,
+    NS_ERROR_NOT_IMPLEMENTED, NS_ERROR_NOT_INITIALIZED, NS_ERROR_UNEXPECTED,
 };
 use serde_json::error::Error as JsonError;
 use webext_storage::error::Error as WebextStorageError;
@@ -23,6 +24,7 @@ pub type Result<T> = result::Result<T, Error>;
 pub enum Error {
     Nsresult(nsresult),
     WebextStorage(WebextStorageError),
+    MigrationFailed(WebextStorageError),
     GoldenGate(GoldenGateError),
     MalformedString(Box<dyn error::Error + Send + Sync + 'static>),
     AlreadyConfigured,
@@ -86,6 +88,7 @@ impl From<Error> for nsresult {
                 WebextStorageErrorKind::QuotaError(_) => NS_ERROR_DOM_QUOTA_EXCEEDED_ERR,
                 _ => NS_ERROR_FAILURE,
             },
+            Error::MigrationFailed(_) => NS_ERROR_CANNOT_CONVERT_DATA,
             Error::GoldenGate(error) => error.into(),
             Error::MalformedString(_) => NS_ERROR_INVALID_ARG,
             Error::AlreadyConfigured => NS_ERROR_ALREADY_INITIALIZED,
@@ -103,6 +106,7 @@ impl fmt::Display for Error {
         match self {
             Error::Nsresult(result) => write!(f, "Operation failed with {}", result),
             Error::WebextStorage(error) => error.fmt(f),
+            Error::MigrationFailed(error) => write!(f, "Migration failed with {}", error),
             Error::GoldenGate(error) => error.fmt(f),
             Error::MalformedString(error) => error.fmt(f),
             Error::AlreadyConfigured => write!(f, "The storage area is already configured"),
