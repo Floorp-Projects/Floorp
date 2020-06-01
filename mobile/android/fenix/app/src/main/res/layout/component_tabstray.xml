@@ -48,6 +48,7 @@
         app:tabIndicatorColor="@color/accent_normal_theme"
         app:tabIconTint="@color/tab_icon"
         app:tabRippleColor="@android:color/transparent"
+        app:tabGravity="fill"
         app:layout_constraintWidth_percent="0.5"
         app:layout_constraintTop_toBottomOf="@+id/handle"
         app:layout_constraintStart_toStartOf="parent">
