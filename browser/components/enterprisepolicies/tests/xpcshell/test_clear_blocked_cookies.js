@@ -17,8 +17,7 @@ add_task(async function setup() {
     false,
     expiry,
     {},
-    Ci.nsICookie.SAMESITE_NONE,
-    Ci.nsICookie.SCHEME_HTTPS
+    Ci.nsICookie.SAMESITE_NONE
   );
   Services.cookies.add(
     HOSTNAME_DOMAIN,
@@ -30,8 +29,7 @@ add_task(async function setup() {
     false,
     expiry,
     {},
-    Ci.nsICookie.SAMESITE_NONE,
-    Ci.nsICookie.SCHEME_HTTP
+    Ci.nsICookie.SAMESITE_NONE
   );
   Services.cookies.add(
     ORIGIN_DOMAIN,
@@ -43,8 +41,7 @@ add_task(async function setup() {
     false,
     expiry,
     {},
-    Ci.nsICookie.SAMESITE_NONE,
-    Ci.nsICookie.SCHEME_HTTPS
+    Ci.nsICookie.SAMESITE_NONE
   );
   Services.cookies.add(
     ORIGIN_DOMAIN,
@@ -56,8 +53,7 @@ add_task(async function setup() {
     false,
     expiry,
     {},
-    Ci.nsICookie.SAMESITE_NONE,
-    Ci.nsICookie.SCHEME_HTTP
+    Ci.nsICookie.SAMESITE_NONE
   );
   Services.cookies.add(
     "example.net",
@@ -69,8 +65,7 @@ add_task(async function setup() {
     false,
     expiry,
     {},
-    Ci.nsICookie.SAMESITE_NONE,
-    Ci.nsICookie.SCHEME_HTTPS
+    Ci.nsICookie.SAMESITE_NONE
   );
   await setupPolicyEngineWithJson({
     policies: {

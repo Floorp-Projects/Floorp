@@ -131,10 +131,7 @@ async function testCookies(options) {
         false,
         options.expiry,
         {},
-        Ci.nsICookie.SAMESITE_NONE,
-        options.url.startsWith("https")
-          ? Ci.nsICookie.SCHEME_HTTPS
-          : Ci.nsICookie.SCHEME_HTTP
+        Ci.nsICookie.SAMESITE_NONE
       );
       // This will be modified by the background script.
       Services.cookies.add(
@@ -147,10 +144,7 @@ async function testCookies(options) {
         false,
         options.expiry,
         {},
-        Ci.nsICookie.SAMESITE_NONE,
-        options.url.startsWith("https")
-          ? Ci.nsICookie.SCHEME_HTTPS
-          : Ci.nsICookie.SCHEME_HTTP
+        Ci.nsICookie.SAMESITE_NONE
       );
       // This will be deleted by the background script.
       Services.cookies.add(
@@ -163,10 +157,7 @@ async function testCookies(options) {
         false,
         options.expiry,
         {},
-        Ci.nsICookie.SAMESITE_NONE,
-        options.url.startsWith("https")
-          ? Ci.nsICookie.SCHEME_HTTPS
-          : Ci.nsICookie.SCHEME_HTTP
+        Ci.nsICookie.SAMESITE_NONE
       );
       sendAsyncMessage("done");
     });
@@ -194,10 +185,7 @@ async function testCookies(options) {
         false,
         options.expiry,
         {},
-        Ci.nsICookie.SAMESITE_NONE,
-        options.url.startsWith("https")
-          ? Ci.nsICookie.SCHEME_HTTPS
-          : Ci.nsICookie.SCHEME_HTTP
+        Ci.nsICookie.SAMESITE_NONE
       );
       Services.cookies.add(
         domain,
@@ -209,10 +197,7 @@ async function testCookies(options) {
         false,
         options.expiry,
         {},
-        Ci.nsICookie.SAMESITE_NONE,
-        options.url.startsWith("https")
-          ? Ci.nsICookie.SCHEME_HTTPS
-          : Ci.nsICookie.SCHEME_HTTP
+        Ci.nsICookie.SAMESITE_NONE
       );
       Services.cookies.remove(domain, "x", "/", {});
       sendAsyncMessage("done");

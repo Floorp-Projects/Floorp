@@ -7505,11 +7505,6 @@
   value: @IS_NIGHTLY_BUILD@
   mirror: always
 
-- name: network.cookie.sameSite.schemeful
-  type: bool
-  value: @IS_NIGHTLY_BUILD@
-  mirror: always
-
 - name: network.cookie.thirdparty.sessionOnly
   type: bool
   value: false

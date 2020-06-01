@@ -83,8 +83,7 @@ add_task(async () => {
       false,
       0,
       {},
-      Ci.nsICookie.SAMESITE_NONE,
-      Ci.nsICookie.SCHEME_HTTPS
+      Ci.nsICookie.SAMESITE_NONE
     );
   }, Cr.NS_ERROR_NOT_AVAILABLE);
 
