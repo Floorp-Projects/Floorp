@@ -167,8 +167,7 @@ class WindowGlobalParent final : public WindowContext,
       uint32_t aEvent, nsIRequest* aRequest, bool aBlocked,
       const nsACString& aTrackingOrigin,
       const nsTArray<nsCString>& aTrackingFullHashes,
-      const Maybe<
-          ContentBlockingNotifier::StorageAccessPermissionGrantedReason>&
+      const Maybe<ContentBlockingNotifier::StorageAccessGrantedReason>&
           aReason = Nothing());
 
   ContentBlockingLog* GetContentBlockingLog() { return &mContentBlockingLog; }

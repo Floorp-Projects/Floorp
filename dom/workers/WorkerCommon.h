@@ -44,7 +44,7 @@ void SuspendWorkersForWindow(nsPIDOMWindowInner* aWindow);
 
 void ResumeWorkersForWindow(nsPIDOMWindowInner* aWindow);
 
-void PropagateStorageAccessPermissionGrantedToWorkers(
+void PropagateFirstPartyStorageAccessGrantedToWorkers(
     nsPIDOMWindowInner* aWindow);
 
 // All of these are implemented in WorkerScope.cpp

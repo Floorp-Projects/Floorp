@@ -51,7 +51,7 @@ void RunConsoleReportingRunnable(already_AddRefed<nsIRunnable>&& aRunnable) {
 void ReportUnblockingToConsole(
     uint64_t aWindowID, nsIPrincipal* aPrincipal,
     const nsAString& aTrackingOrigin,
-    ContentBlockingNotifier::StorageAccessPermissionGrantedReason aReason) {
+    ContentBlockingNotifier::StorageAccessGrantedReason aReason) {
   MOZ_ASSERT(aWindowID);
   MOZ_ASSERT(aPrincipal);
 
@@ -291,8 +291,7 @@ void NotifyBlockingDecision(nsIChannel* aTrackingChannel,
 void NotifyEventInChild(
     nsIChannel* aTrackingChannel, bool aBlocked, uint32_t aRejectedReason,
     const nsACString& aTrackingOrigin,
-    const Maybe<ContentBlockingNotifier::StorageAccessPermissionGrantedReason>&
-        aReason) {
+    const Maybe<ContentBlockingNotifier::StorageAccessGrantedReason>& aReason) {
   MOZ_ASSERT(XRE_IsContentProcess());
 
   // We don't need to find the top-level window here because the
@@ -331,8 +330,7 @@ void NotifyEventInChild(
 void NotifyEventInParent(
     nsIChannel* aTrackingChannel, bool aBlocked, uint32_t aRejectedReason,
     const nsACString& aTrackingOrigin,
-    const Maybe<ContentBlockingNotifier::StorageAccessPermissionGrantedReason>&
-        aReason) {
+    const Maybe<ContentBlockingNotifier::StorageAccessGrantedReason>& aReason) {
   MOZ_ASSERT(XRE_IsParentProcess());
 
   nsCOMPtr<nsILoadInfo> loadInfo = aTrackingChannel->LoadInfo();
@@ -366,7 +364,7 @@ void NotifyEventInParent(
 /* static */
 void ContentBlockingNotifier::ReportUnblockingToConsole(
     BrowsingContext* aBrowsingContext, const nsAString& aTrackingOrigin,
-    ContentBlockingNotifier::StorageAccessPermissionGrantedReason aReason) {
+    ContentBlockingNotifier::StorageAccessGrantedReason aReason) {
   MOZ_ASSERT(aBrowsingContext);
 
   uint64_t windowID = aBrowsingContext->GetCurrentInnerWindowId();
@@ -499,7 +497,7 @@ void ContentBlockingNotifier::OnEvent(nsIChannel* aTrackingChannel,
 void ContentBlockingNotifier::OnEvent(
     nsIChannel* aTrackingChannel, bool aBlocked, uint32_t aRejectedReason,
     const nsACString& aTrackingOrigin,
-    const Maybe<StorageAccessPermissionGrantedReason>& aReason) {
+    const Maybe<StorageAccessGrantedReason>& aReason) {
   if (XRE_IsParentProcess()) {
     NotifyEventInParent(aTrackingChannel, aBlocked, aRejectedReason,
                         aTrackingOrigin, aReason);
