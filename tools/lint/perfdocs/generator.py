@@ -103,6 +103,7 @@ class Generator(object):
                                 test_name, tests[test_name]
                             )
                     )
+                documentation.append('')
 
             # Insert documentation into `.rst` file
             framework_rst = re.sub(
