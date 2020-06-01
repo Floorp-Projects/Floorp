@@ -16,6 +16,9 @@ SANDBOX_KEYWORD("allow-scripts", allowscripts,
                 SANDBOXED_SCRIPTS | SANDBOXED_AUTOMATIC_FEATURES)
 SANDBOX_KEYWORD("allow-top-navigation", allowtopnavigation,
                 SANDBOXED_TOPLEVEL_NAVIGATION)
+SANDBOX_KEYWORD("allow-top-navigation-by-user-activation",
+                allowtopnavigationbyuseractivation,
+                SANDBOXED_TOPLEVEL_NAVIGATION_USER_ACTIVATION)
 SANDBOX_KEYWORD("allow-pointer-lock", allowpointerlock, SANDBOXED_POINTER_LOCK)
 SANDBOX_KEYWORD("allow-orientation-lock", alloworientationlock,
                 SANDBOXED_ORIENTATION_LOCK)

@@ -971,6 +971,13 @@ bool BrowsingContext::IsSandboxedFrom(BrowsingContext* aTarget) {
     return false;
   }
 
+  // If SANDBOXED_TOPLEVEL_NAVIGATION_USER_ACTIVATION flag is not on, we are not
+  // sandboxed from our top if we have user interaction.
+  if (!(sandboxFlags & SANDBOXED_TOPLEVEL_NAVIGATION_USER_ACTIVATION) &&
+      HasValidTransientUserGestureActivation() && aTarget == Top()) {
+    return false;
+  }
+
   // Otherwise, we are sandboxed from aTarget.
   return true;
 }
