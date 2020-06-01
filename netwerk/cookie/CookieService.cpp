@@ -910,6 +910,8 @@ void CookieService::GetCookiesForURI(
       !nsContentUtils::IsURIInPrefList(
           aHostURI, "network.cookie.sameSite.laxByDefault.disabledHosts");
 
+  nsCOMPtr<nsIConsoleReportCollector> crc = do_QueryInterface(aChannel);
+
   // iterate the cookies!
   for (Cookie* cookie : *cookies) {
     // check the host, since the base domain lookup is conservative.
@@ -923,7 +925,8 @@ void CookieService::GetCookiesForURI(
     }
 
     // The scheme doesn't match.
-    if (!CookieCommons::MaybeCompareScheme(cookie, schemeType)) {
+    if (!CookieCommons::MaybeCompareSchemeWithLogging(crc, aHostURI, cookie,
+                                                      schemeType)) {
       continue;
     }
 
@@ -1042,9 +1045,9 @@ bool CookieService::CanSetCookie(
     size.AppendInt(kMaxBytesPerCookie);
     params.AppendElement(size);
 
-    LogMessageToConsole(aCRC, aHostURI, nsIScriptError::warningFlag,
-                        CONSOLE_OVERSIZE_CATEGORY,
-                        NS_LITERAL_CSTRING("CookieOversize"), params);
+    CookieLogging::LogMessageToConsole(
+        aCRC, aHostURI, nsIScriptError::warningFlag, CONSOLE_OVERSIZE_CATEGORY,
+        NS_LITERAL_CSTRING("CookieOversize"), params);
     return newCookie;
   }
 
@@ -1366,7 +1369,7 @@ bool CookieService::ParseAttributes(nsIConsoleReportCollector* aCRC,
         aCookieData.rawSameSite() = nsICookie::SAMESITE_NONE;
         sameSiteSet = true;
       } else {
-        LogMessageToConsole(
+        CookieLogging::LogMessageToConsole(
             aCRC, aHostURI, nsIScriptError::infoFlag, CONSOLE_SAMESITE_CATEGORY,
             NS_LITERAL_CSTRING("CookieSameSiteValueInvalid"),
             AutoTArray<nsString, 1>{NS_ConvertUTF8toUTF16(aCookieData.name())});
@@ -1386,7 +1389,7 @@ bool CookieService::ParseAttributes(nsIConsoleReportCollector* aCRC,
       aCookieData.sameSite() == nsICookie::SAMESITE_NONE) {
     if (laxByDefault &&
         StaticPrefs::network_cookie_sameSite_noneRequiresSecure()) {
-      LogMessageToConsole(
+      CookieLogging::LogMessageToConsole(
           aCRC, aHostURI, nsIScriptError::infoFlag, CONSOLE_SAMESITE_CATEGORY,
           NS_LITERAL_CSTRING("CookieRejectedNonRequiresSecure"),
           AutoTArray<nsString, 1>{NS_ConvertUTF8toUTF16(aCookieData.name())});
@@ -1394,7 +1397,7 @@ bool CookieService::ParseAttributes(nsIConsoleReportCollector* aCRC,
     }
 
     // if sameSite=lax by default is disabled, we want to warn the user.
-    LogMessageToConsole(
+    CookieLogging::LogMessageToConsole(
         aCRC, aHostURI, nsIScriptError::warningFlag, CONSOLE_SAMESITE_CATEGORY,
         NS_LITERAL_CSTRING("CookieRejectedNonRequiresSecureForBeta"),
         AutoTArray<nsString, 2>{NS_ConvertUTF8toUTF16(aCookieData.name()),
@@ -1404,12 +1407,12 @@ bool CookieService::ParseAttributes(nsIConsoleReportCollector* aCRC,
   if (aCookieData.rawSameSite() == nsICookie::SAMESITE_NONE &&
       aCookieData.sameSite() == nsICookie::SAMESITE_LAX) {
     if (laxByDefault) {
-      LogMessageToConsole(
+      CookieLogging::LogMessageToConsole(
           aCRC, aHostURI, nsIScriptError::infoFlag, CONSOLE_SAMESITE_CATEGORY,
           NS_LITERAL_CSTRING("CookieLaxForced"),
           AutoTArray<nsString, 1>{NS_ConvertUTF8toUTF16(aCookieData.name())});
     } else {
-      LogMessageToConsole(
+      CookieLogging::LogMessageToConsole(
           aCRC, aHostURI, nsIScriptError::warningFlag,
           CONSOLE_SAMESITE_CATEGORY,
           NS_LITERAL_CSTRING("CookieLaxForcedForBeta"),
@@ -1423,29 +1426,6 @@ bool CookieService::ParseAttributes(nsIConsoleReportCollector* aCRC,
 
   MOZ_ASSERT(Cookie::ValidateRawSame(aCookieData));
   return newCookie;
-}
-
-// static
-void CookieService::LogMessageToConsole(nsIConsoleReportCollector* aCRC,
-                                        nsIURI* aURI, uint32_t aErrorFlags,
-                                        const nsACString& aCategory,
-                                        const nsACString& aMsg,
-                                        const nsTArray<nsString>& aParams) {
-  MOZ_ASSERT(aURI);
-
-  if (!aCRC) {
-    return;
-  }
-
-  nsAutoCString uri;
-  nsresult rv = aURI->GetSpec(uri);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return;
-  }
-
-  aCRC->AddConsoleReport(aErrorFlags, aCategory,
-                         nsContentUtils::eNECKO_PROPERTIES, uri, 0, 0, aMsg,
-                         aParams);
 }
 
 /******************************************************************************
@@ -1738,9 +1718,9 @@ bool CookieService::CheckPath(CookieStruct& aCookieData,
     size.AppendInt(kMaxBytesPerPath);
     params.AppendElement(size);
 
-    LogMessageToConsole(aCRC, aHostURI, nsIScriptError::warningFlag,
-                        CONSOLE_OVERSIZE_CATEGORY,
-                        NS_LITERAL_CSTRING("CookiePathOversize"), params);
+    CookieLogging::LogMessageToConsole(
+        aCRC, aHostURI, nsIScriptError::warningFlag, CONSOLE_OVERSIZE_CATEGORY,
+        NS_LITERAL_CSTRING("CookiePathOversize"), params);
     return false;
   }
 
