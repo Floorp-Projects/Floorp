@@ -242,7 +242,7 @@ class WorkerPrivate : public RelativeTimeline {
 
   bool ThawInternal();
 
-  void PropagateFirstPartyStorageAccessGrantedInternal();
+  void PropagateStorageAccessPermissionGrantedInternal();
 
   void TraverseTimeouts(nsCycleCollectionTraversalCallback& aCallback);
 
@@ -703,11 +703,7 @@ class WorkerPrivate : public RelativeTimeline {
 
   const nsACString& Origin() const { return mLoadInfo.mOrigin; }
 
-  const nsACString& StoragePrincipalOrigin() const;
-
-  const nsACString& PartitionedOrigin() const {
-    return mLoadInfo.mPartitionedOrigin;
-  }
+  const nsACString& EffectiveStoragePrincipalOrigin() const;
 
   nsILoadGroup* GetLoadGroup() const {
     AssertIsOnMainThread();
@@ -784,16 +780,21 @@ class WorkerPrivate : public RelativeTimeline {
 
   mozilla::StorageAccess StorageAccess() const {
     AssertIsOnWorkerThread();
-    if (IsFirstPartyStorageAccessGranted()) {
+    if (mLoadInfo.mHasStorageAccessPermissionGranted) {
       return mozilla::StorageAccess::eAllow;
     }
 
     return mLoadInfo.mStorageAccess;
   }
 
-  bool IsFirstPartyStorageAccessGranted() const {
+  bool UseRegularPrincipal() const {
     AssertIsOnWorkerThread();
-    return mLoadInfo.mFirstPartyStorageAccessGranted;
+    return mLoadInfo.mUseRegularPrincipal;
+  }
+
+  bool HasStorageAccessPermissionGranted() const {
+    AssertIsOnWorkerThread();
+    return mLoadInfo.mHasStorageAccessPermissionGranted;
   }
 
   nsICookieJarSettings* CookieJarSettings() const {
@@ -840,7 +841,7 @@ class WorkerPrivate : public RelativeTimeline {
 
   bool Thaw(nsPIDOMWindowInner* aWindow);
 
-  void PropagateFirstPartyStorageAccessGranted();
+  void PropagateStorageAccessPermissionGranted();
 
   void EnableDebugger();
 
