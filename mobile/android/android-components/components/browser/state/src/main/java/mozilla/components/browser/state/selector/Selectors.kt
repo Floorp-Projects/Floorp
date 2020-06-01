@@ -89,13 +89,22 @@ fun BrowserState.findTabByUrl(url: String): TabSessionState? {
 }
 
 /**
+ * Gets a list of normal or private tabs depending on the requested type.
+ * @param private If true, all private tabs will be returned.
+ * If false, all normal tabs will be returned.
+ */
+fun BrowserState.getNormalOrPrivateTabs(private: Boolean): List<TabSessionState> {
+    return tabs.filter { it.content.private == private }
+}
+
+/**
  * List of private tabs.
  */
 val BrowserState.privateTabs: List<TabSessionState>
-    get() = tabs.filter { it.content.private }
+    get() = getNormalOrPrivateTabs(private = true)
 
 /**
  * List of normal (non-private) tabs.
  */
 val BrowserState.normalTabs: List<TabSessionState>
-    get() = tabs.filter { !it.content.private }
+    get() = getNormalOrPrivateTabs(private = false)
