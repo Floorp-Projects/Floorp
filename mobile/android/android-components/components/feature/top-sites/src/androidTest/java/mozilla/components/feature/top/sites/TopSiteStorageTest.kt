@@ -144,7 +144,7 @@ class TopSiteStorageTest {
             execSQL(
                 "INSERT INTO " +
                     "top_sites " +
-                    "(title, url, isDefault, created_at) " +
+                    "(title, url, is_default, created_at) " +
                     "VALUES " +
                     "('Firefox','firefox.com',1,5)," +
                     "('Monitor','https://monitor.firefox.com/',0,5)"
@@ -154,29 +154,29 @@ class TopSiteStorageTest {
         dbVersion2.query("SELECT * FROM top_sites").use { cursor ->
             assertEquals(5, cursor.columnCount)
 
-            // Check isDefault for Mozilla
+            // Check is_default for Mozilla
             cursor.moveToFirst()
-            assertEquals(0, cursor.getInt(cursor.getColumnIndexOrThrow("isDefault")))
+            assertEquals(0, cursor.getInt(cursor.getColumnIndexOrThrow("is_default")))
 
-            // Check isDefault for Top Articles
+            // Check is_default for Top Articles
             cursor.moveToNext()
-            assertEquals(1, cursor.getInt(cursor.getColumnIndexOrThrow("isDefault")))
+            assertEquals(1, cursor.getInt(cursor.getColumnIndexOrThrow("is_default")))
 
-            // Check isDefault for Wikipedia
+            // Check is_default for Wikipedia
             cursor.moveToNext()
-            assertEquals(1, cursor.getInt(cursor.getColumnIndexOrThrow("isDefault")))
+            assertEquals(1, cursor.getInt(cursor.getColumnIndexOrThrow("is_default")))
 
-            // Check isDefault for YouTube
+            // Check is_default for YouTube
             cursor.moveToNext()
-            assertEquals(1, cursor.getInt(cursor.getColumnIndexOrThrow("isDefault")))
+            assertEquals(1, cursor.getInt(cursor.getColumnIndexOrThrow("is_default")))
 
-            // Check isDefault for Firefox
+            // Check is_default for Firefox
             cursor.moveToNext()
-            assertEquals(1, cursor.getInt(cursor.getColumnIndexOrThrow("isDefault")))
+            assertEquals(1, cursor.getInt(cursor.getColumnIndexOrThrow("is_default")))
 
-            // Check isDefault for Monitor
+            // Check is_default for Monitor
             cursor.moveToNext()
-            assertEquals(0, cursor.getInt(cursor.getColumnIndexOrThrow("isDefault")))
+            assertEquals(0, cursor.getInt(cursor.getColumnIndexOrThrow("is_default")))
         }
     }
 
