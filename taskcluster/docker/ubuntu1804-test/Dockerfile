@@ -72,7 +72,6 @@ ENV DISPLAY :0
 
 # Add utilities and configuration
 COPY    dot-files/config        /builds/worker/.config
-COPY    dot-files/pulse         /builds/worker/.pulse
 
 # Disable apport (app crash reporter) to avoid stealing focus from test runs
 ADD apport /etc/default/apport
