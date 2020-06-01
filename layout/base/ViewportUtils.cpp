@@ -113,6 +113,54 @@ nsPoint ViewportUtils::LayoutToVisual(const nsPoint& aPt, PresShell* aContext) {
   return CSSPoint::ToAppUnits(transformed);
 }
 
+LayoutDevicePoint ViewportUtils::DocumentRelativeLayoutToVisual(
+    const LayoutDevicePoint& aPoint, PresShell* aShell) {
+  ScrollableLayerGuid::ViewID targetScrollId =
+      nsLayoutUtils::ScrollIdForRootScrollFrame(aShell->GetPresContext());
+  auto visualToLayout =
+      ViewportUtils::GetVisualToLayoutTransform<LayoutDevicePixel>(
+          targetScrollId);
+  return visualToLayout.Inverse().TransformPoint(aPoint);
+}
+
+LayoutDevicePoint ViewportUtils::ToScreenRelativeVisual(
+    const LayoutDevicePoint& aPt, nsPresContext* aCtx) {
+  MOZ_ASSERT(aCtx);
+
+  LayoutDevicePoint layoutToVisual(aPt);
+  nsIFrame* prevRootFrame = nullptr;
+  nsPresContext* prevCtx = nullptr;
+
+  // Walk up to the rootmost prescontext, transforming as we go.
+  for (nsPresContext* ctx = aCtx; ctx; ctx = ctx->GetParentPresContext()) {
+    PresShell* shell = ctx->PresShell();
+    nsIFrame* rootFrame = shell->GetRootFrame();
+    if (prevRootFrame) {
+      // Convert layoutToVisual from being relative to `prevRootFrame`
+      // to being relative to `rootFrame` (layout space).
+      nscoord apd = prevCtx->AppUnitsPerDevPixel();
+      nsPoint offset = prevRootFrame->GetOffsetToCrossDoc(rootFrame, apd);
+      layoutToVisual += LayoutDevicePoint::FromAppUnits(offset, apd);
+    }
+    if (shell->GetResolution() != 1.0) {
+      // Found the APZ zoom root, so do the layout -> visual conversion.
+      layoutToVisual =
+          ViewportUtils::DocumentRelativeLayoutToVisual(layoutToVisual, shell);
+    }
+
+    prevRootFrame = rootFrame;
+    prevCtx = ctx;
+  }
+
+  // Then we do the conversion from the rootmost presContext's root frame (in
+  // visual space) to screen space.
+  LayoutDeviceIntRect rootScreenRect =
+      LayoutDeviceIntRect::FromAppUnitsToNearest(
+          prevRootFrame->GetScreenRectInAppUnits(),
+          prevCtx->AppUnitsPerDevPixel());
+  return layoutToVisual + rootScreenRect.TopLeft();
+}
+
 // Definitions of the two explicit instantiations forward declared in the header
 // file. This causes code for these instantiations to be emitted into the object
 // file for ViewportUtils.cpp.

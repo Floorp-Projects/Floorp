@@ -4845,13 +4845,11 @@ already_AddRefed<SourceSurface> PresShell::PaintRangePaintInfo(
   if (!pc || aArea.width == 0 || aArea.height == 0) return nullptr;
 
   // use the rectangle to create the surface
-  nsIntRect pixelArea = aArea.ToOutsidePixels(pc->AppUnitsPerDevPixel());
+  LayoutDeviceIntRect pixelArea = LayoutDeviceIntRect::FromAppUnitsToOutside(
+      aArea, pc->AppUnitsPerDevPixel());
 
   // if the image should not be resized, scale must be 1
   float scale = 1.0;
-  nsIntRect rootScreenRect =
-      GetRootFrame()->GetScreenRectInAppUnits().ToNearestPixels(
-          pc->AppUnitsPerDevPixel());
 
   nsRect maxSize;
   pc->DeviceContext()->GetClientRect(maxSize);
@@ -4903,6 +4901,7 @@ already_AddRefed<SourceSurface> PresShell::PaintRangePaintInfo(
     for (const UniquePtr<RangePaintInfo>& rangeInfo : aItems) {
       resolutionScale = std::max(resolutionScale, rangeInfo->mResolution);
     }
+    float unclampedResolution = resolutionScale;
     // Clamp the resolution scale so that `pixelArea` when scaled by `scale` and
     // `resolutionScale` isn't bigger than `maxSize`. This prevents creating
     // giant/unbounded images.
@@ -4917,13 +4916,33 @@ already_AddRefed<SourceSurface> PresShell::PaintRangePaintInfo(
     MOZ_ASSERT(resolutionScale >= 1.0);
     resolutionScale = std::max(1.0f, resolutionScale);
 
-    // adjust the screen position based on the rescaled size
-    nscoord left = rootScreenRect.x + pixelArea.x;
-    nscoord top = rootScreenRect.y + pixelArea.y;
-    aScreenRect->x = NSToIntFloor(aPoint.x - float(aPoint.x - left) * scale);
-    aScreenRect->y = NSToIntFloor(aPoint.y - float(aPoint.y - top) * scale);
-
     scale *= resolutionScale;
+
+    // Now we need adjust the output screen position of the surface based on the
+    // scaling factor and any APZ zoom that may be in effect. The goal is here
+    // to set `aScreenRect`'s top-left corner (in screen-relative LD pixels)
+    // such that the scaling effect on the surface appears anchored  at `aPoint`
+    // ("anchor" here is like "transform-origin"). When this code is e.g. used
+    // to generate a drag image for dragging operations, `aPoint` refers to the
+    // position of the mouse cursor (also in screen-relative LD pixels), and the
+    // user-visible effect of doing this is that the point at which the user
+    // clicked to start the drag remains under the mouse during the drag.
+
+    // In order to do this we first compute the top-left corner of the
+    // pixelArea is screen-relative LD pixels.
+    LayoutDevicePoint visualPoint = ViewportUtils::ToScreenRelativeVisual(
+        LayoutDevicePoint(pixelArea.TopLeft()), pc);
+    // And then adjust the output screen position based on that, which we can do
+    // since everything here is screen-relative LD pixels. Note that the scale
+    // factor we use here is the effective "transform" scale applied to the
+    // content we're painting, relative to the scale at which it would normally
+    // get painted at as part of page rendering (`unclampedResolution`).
+    float scaleRelativeToNormalContent = scale / unclampedResolution;
+    aScreenRect->x = NSToIntFloor(aPoint.x - float(aPoint.x - visualPoint.x) *
+                                                 scaleRelativeToNormalContent);
+    aScreenRect->y = NSToIntFloor(aPoint.y - float(aPoint.y - visualPoint.y) *
+                                                 scaleRelativeToNormalContent);
+
     pixelArea.width = NSToIntFloor(float(pixelArea.width) * scale);
     pixelArea.height = NSToIntFloor(float(pixelArea.height) * scale);
     if (!pixelArea.width || !pixelArea.height) {
@@ -4931,8 +4950,9 @@ already_AddRefed<SourceSurface> PresShell::PaintRangePaintInfo(
     }
   } else {
     // move aScreenRect to the position of the surface in screen coordinates
-    aScreenRect->MoveTo(rootScreenRect.x + pixelArea.x,
-                        rootScreenRect.y + pixelArea.y);
+    LayoutDevicePoint visualPoint = ViewportUtils::ToScreenRelativeVisual(
+        LayoutDevicePoint(pixelArea.TopLeft()), pc);
+    aScreenRect->MoveTo(RoundedToInt(visualPoint));
   }
   aScreenRect->width = pixelArea.width;
   aScreenRect->height = pixelArea.height;
