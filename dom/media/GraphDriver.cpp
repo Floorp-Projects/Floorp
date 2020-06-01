@@ -4,6 +4,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "GraphDriver.h"
+
+#include "AudioNodeEngine.h"
 #include "mozilla/dom/AudioContext.h"
 #include "mozilla/dom/AudioDeviceInfo.h"
 #include "mozilla/dom/BaseAudioContextBinding.h"
@@ -13,6 +16,7 @@
 #include "mozilla/Unused.h"
 #include "mozilla/MathAlgorithms.h"
 #include "CubebDeviceEnumerator.h"
+#include "MediaTrackGraphImpl.h"
 #include "Tracing.h"
 
 #ifdef MOZ_WEBRTC
@@ -1195,7 +1199,7 @@ void AudioCallbackDriver::CompleteAudioContextOperations(
          s.mOperation == dom::AudioContextOperation::Resume) ||
         (aOperation == AsyncCubebOperation::SHUTDOWN &&
          s.mOperation != dom::AudioContextOperation::Resume)) {
-      AudioContextState state;
+      dom::AudioContextState state;
       switch (s.mOperation) {
         case dom::AudioContextOperation::Resume:
           state = dom::AudioContextState::Running;
