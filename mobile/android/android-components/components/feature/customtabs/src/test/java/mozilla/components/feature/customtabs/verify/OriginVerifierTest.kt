@@ -12,11 +12,13 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
 import mozilla.components.concept.fetch.Client
-import mozilla.components.concept.fetch.Request
 import mozilla.components.concept.fetch.Response
+import mozilla.components.service.digitalassetlinks.AssetDescriptor
+import mozilla.components.service.digitalassetlinks.Relation
+import mozilla.components.service.digitalassetlinks.RelationChecker
 import mozilla.components.support.test.any
+import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
-import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -27,69 +29,61 @@ import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 import org.mockito.MockitoAnnotations.initMocks
-import java.util.concurrent.TimeUnit
 
 @RunWith(AndroidJUnit4::class)
 @ExperimentalCoroutinesApi
 class OriginVerifierTest {
 
     private val apiKey = "XXXXXXXXX"
+    private val androidAsset = AssetDescriptor.Android(
+        packageName = "com.app.name",
+        sha256CertFingerprint = "AA:BB:CC:10:20:30:01:02"
+    )
     @Mock private lateinit var client: Client
     @Mock private lateinit var packageManager: PackageManager
     @Mock private lateinit var response: Response
     @Mock private lateinit var body: Response.Body
-    private lateinit var handleAllUrlsVerifier: OriginVerifier
-    private lateinit var useAsOriginVerifier: OriginVerifier
+    @Mock private lateinit var checker: RelationChecker
 
     @Suppress("Deprecation")
     @Before
     fun setup() {
         initMocks(this)
-        handleAllUrlsVerifier =
-            spy(OriginVerifier(testContext.packageName, RELATION_HANDLE_ALL_URLS, packageManager, client, apiKey))
-        useAsOriginVerifier =
-            spy(OriginVerifier(testContext.packageName, RELATION_USE_AS_ORIGIN, packageManager, client, apiKey))
 
         doReturn(response).`when`(client).fetch(any())
         doReturn(body).`when`(response).body
         doReturn(200).`when`(response).status
-        doReturn("AA:BB:CC:10:20:30:01:02").`when`(handleAllUrlsVerifier).signatureFingerprint
-        doReturn("AA:BB:CC:10:20:30:01:02").`when`(useAsOriginVerifier).signatureFingerprint
         doReturn("{\"linked\":true}").`when`(body).string()
     }
 
     @Test
-    fun getCertificateSHA256FingerprintForPackage() {
-        assertEquals(
-            "AA:BB:CC:10:20:30:01:02",
-            OriginVerifier.byteArrayToHexString(byteArrayOf(0xaa.toByte(), 0xbb.toByte(), 0xcc.toByte(), 0x10, 0x20, 0x30, 0x01, 0x02))
-        )
-    }
-
-    @Test
     fun `only HTTPS allowed`() = runBlocking {
-        assertFalse(handleAllUrlsVerifier.verifyOrigin("LOL".toUri()))
-        assertFalse(handleAllUrlsVerifier.verifyOrigin("http://www.android.com".toUri()))
+        val verifier = buildVerifier(RELATION_HANDLE_ALL_URLS)
+        assertFalse(verifier.verifyOrigin("LOL".toUri()))
+        assertFalse(verifier.verifyOrigin("http://www.android.com".toUri()))
     }
 
     @Test
     fun verifyOrigin() = runBlocking {
-        assertTrue(useAsOriginVerifier.verifyOrigin("https://www.example.com".toUri()))
-
-        verify(client).fetch(
-            Request(
-                DigitalAssetLinksHandler.getUrlForCheckingRelationship(
-                    "https://www.example.com",
-                    testContext.packageName,
-                    "AA:BB:CC:10:20:30:01:02",
-                    "delegate_permission/common.use_as_origin",
-                    apiKey
-                ),
-                connectTimeout = 3L to TimeUnit.SECONDS,
-                readTimeout = 3L to TimeUnit.SECONDS
-            )
+        val verifier = buildVerifier(RELATION_USE_AS_ORIGIN)
+        doReturn(true).`when`(checker).checkDigitalAssetLinkRelationship(
+            AssetDescriptor.Web("https://www.example.com"),
+            Relation.USE_AS_ORIGIN,
+            androidAsset
         )
+        assertTrue(verifier.verifyOrigin("https://www.example.com".toUri()))
+    }
 
-        Unit
+    private fun buildVerifier(relation: Int): OriginVerifier {
+        val verifier = spy(OriginVerifier(
+            "com.app.name",
+            relation,
+            packageManager,
+            client,
+            apiKey,
+            checker
+        ))
+        doReturn(androidAsset).`when`(verifier).androidAsset
+        return verifier
     }
 }

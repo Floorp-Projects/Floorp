@@ -35,6 +35,7 @@ dependencies {
     implementation project(':concept-fetch')
     implementation project(':feature-session')
     implementation project(':feature-intent')
+    implementation project(':service-digital-asset-links')
     implementation project(':support-base')
     implementation project(':support-ktx')
     implementation project(':support-utils')
