@@ -86,8 +86,7 @@ class CrashReporter(
     fun install(applicationContext: Context): CrashReporter {
         instance = this
 
-        val defaultHandler = Thread.getDefaultUncaughtExceptionHandler()
-        val handler = ExceptionHandler(applicationContext, this, defaultHandler)
+        val handler = ExceptionHandler(applicationContext, this)
         Thread.setDefaultUncaughtExceptionHandler(handler)
 
         return this
