@@ -28,7 +28,7 @@ function testOnWindow(aIsPrivate, aCallback) {
 }
 
 function setupWindow() {
-  mainWindow = window.docShell.rootTreeItem.domWindow;
+  mainWindow = window.browsingContext.topChromeWindow;
   runTest();
 }
 

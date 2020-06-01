@@ -17,7 +17,7 @@
 
 <script class="testbody" type="text/javascript">
 
-var mainWindow = window.docShell.rootTreeItem.domWindow;
+var mainWindow = window.window.browsingContext.topChromeWindow;
 var contentPage1 = "http://www.example.com/chrome/toolkit/components/url-classifier/tests/mochitest/bug_1580416.html";
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");

@@ -21,7 +21,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=617528
     var browser;
 
     function start() {
-      _window = docShell.rootTreeItem.domWindow.open("window_bug617528.xhtml", "_new", "chrome");
+      _window = window.browsingContext.topChromeWindow.open("window_bug617528.xhtml", "_new", "chrome");
       _window.addEventListener("load", onLoad, false);
     }
 

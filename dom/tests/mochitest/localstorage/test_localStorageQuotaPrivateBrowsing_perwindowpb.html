@@ -175,7 +175,7 @@ function whenDelayedStartupFinished(aCallback) {
 }
 
 function testOnWindow(aIsPrivate, callback) {
-  var mainWindow = window.docShell.rootTreeItem.domWindow;
+  var mainWindow = window.browsingContext.topChromeWindow;
 
   mainWindow.openWebLinkIn(CONTENT_PAGE, "window", {
                                   private: aIsPrivate });

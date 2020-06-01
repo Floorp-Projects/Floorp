@@ -426,7 +426,7 @@ function editCerts() {
   getSelectedCerts();
 
   for (let cert of selected_certs) {
-    window.docShell.rootTreeItem.domWindow.openDialog(
+    window.browsingContext.topChromeWindow.openDialog(
       "chrome://pippki/content/editcacert.xhtml",
       "",
       "chrome,centerscreen,modal",
@@ -554,7 +554,7 @@ function deleteCerts() {
   let retVals = {
     deleteConfirmed: false,
   };
-  window.docShell.rootTreeItem.domWindow.openDialog(
+  window.browsingContext.topChromeWindow.openDialog(
     "chrome://pippki/content/deletecert.xhtml",
     "",
     "chrome,centerscreen,modal",
@@ -627,7 +627,7 @@ async function addEmailCert() {
 }
 
 function addException() {
-  window.docShell.rootTreeItem.domWindow.openDialog(
+  window.browsingContext.topChromeWindow.openDialog(
     "chrome://pippki/content/exceptionDialog.xhtml",
     "",
     "chrome,centerscreen,modal"

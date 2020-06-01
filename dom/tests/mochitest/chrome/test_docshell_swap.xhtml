@@ -17,8 +17,8 @@
   SimpleTest.waitForExplicitFinish();
 
   // Create two identical windows, each with a <browser> element.
-  let win1 = docShell.rootTreeItem.domWindow.openDialog("window_docshell_swap.xhtml", "_blank","chrome,width=300,height=200");
-  let win2 = docShell.rootTreeItem.domWindow.openDialog("window_docshell_swap.xhtml", "_blank","chrome,width=300,height=200");
+  let win1 = window.browsingContext.topChromeWindow.openDialog("window_docshell_swap.xhtml", "_blank","chrome,width=300,height=200");
+  let win2 = window.browsingContext.topChromeWindow.openDialog("window_docshell_swap.xhtml", "_blank","chrome,width=300,height=200");
 
   let loadCount = 0;
   function loadHandler() {

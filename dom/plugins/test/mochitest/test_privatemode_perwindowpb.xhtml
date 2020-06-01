@@ -54,7 +54,7 @@ async function runTestsCallback() {
   is(state2, false, "Browser returned incorrect private mode state.");
 
   // open a window with private mode and get the references of the elements.
-  var mainWindow = window.docShell.rootTreeItem.domWindow;
+  var mainWindow = window.browsingContext.topChromeWindow;
   var contentPage = getRootDirectory(window.location.href) + "privatemode_perwindowpb.xhtml";
 
   function testOnWindow(aIsPrivate, aCallback) {

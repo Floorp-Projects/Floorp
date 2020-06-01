@@ -86,7 +86,7 @@ function nextTest()
     SimpleTest.waitForFocus(function () { nextPopupTest(document.getElementById("panel")) } );
   }
   else {
-    tests[gTestId].window = docShell.rootTreeItem.domWindow.open(tests[gTestId].src, "_blank", "chrome,resizable=yes");
+    tests[gTestId].window = window.browsingContext.topChromeWindow.open(tests[gTestId].src, "_blank", "chrome,resizable=yes");
     SimpleTest.waitForFocus(windowOpened, tests[gTestId].window);
   }
 }
@@ -169,7 +169,7 @@ function nextPopupTest(panel)
   if (++gTestId >= popupTests.length) {
     // Next, check a panel that has a titlebar to ensure that it is accounted for
     // properly in the size.
-    var titledPanelWindow = docShell.rootTreeItem.domWindow.open("titledpanelwindow.xhtml", "_blank", "chrome,resizable=yes");
+    var titledPanelWindow = window.browsingContext.topChromeWindow.open("titledpanelwindow.xhtml", "_blank", "chrome,resizable=yes");
     SimpleTest.waitForFocus(titledPanelWindowOpened, titledPanelWindow);
   }
   else {

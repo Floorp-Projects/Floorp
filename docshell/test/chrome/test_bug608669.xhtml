@@ -28,7 +28,7 @@ function nextTest() {
   gen.next();
 }
 
-let chromeWindow = docShell.rootTreeItem.domWindow;
+let chromeWindow = window.browsingContext.topChromeWindow;
 
 function* doTest() {
   var notificationCount = 0;

@@ -272,7 +272,7 @@ function checkSelection(node, testid)
 
 function getTopWindow(win)
 {
-  return win.docShell.rootTreeItem.domWindow;
+  return win.browsingContext.topChromeWindow;
 }
 
 function mouseWillTriggerFocus(element)

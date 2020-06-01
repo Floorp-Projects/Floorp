@@ -11,7 +11,7 @@
     SimpleTest.waitForExplicitFinish();
 
     async function run_test(path) {
-      let win = window.docShell.rootTreeItem.domWindow
+      let win = window.browsingContext.topChromeWindow
                       .openDialog(path, "_blank", "width=500,height=500", window);
       await SimpleTest.promiseFocus(win);
       await win.startTest();

@@ -96,7 +96,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1123480
     // disabled and enabled
     const {PrivateBrowsingUtils} = ChromeUtils.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
     for (let private of [false, true]) {
-      var win = docShell.rootTreeItem.domWindow.open("about:blank", "_blank", "chrome, width=500, height=200" + (private ? ", private" : ""));
+      var win = window.browsingContext.topChromeWindow.open("about:blank", "_blank", "chrome, width=500, height=200" + (private ? ", private" : ""));
       ok(win, private ? "should open private window" : "should open non-private window");
       is(PrivateBrowsingUtils.isContentWindowPrivate(win), private, "used correct window context");
 

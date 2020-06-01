@@ -18,7 +18,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1124898
 
     SimpleTest.expectAssertions(0, 1); // Dumb unrelated widget assertion - see bug 1126023.
 
-    var w = docShell.rootTreeItem.domWindow.open("about:blank", "w", "chrome");
+    var w = window.browsingContext.topChromeWindow.open("about:blank", "w", "chrome");
     is(w.eval('typeof getAttention'), 'function', 'getAttention exists on regular chrome window');
     is(w.eval('typeof messageManager'), 'object', 'messageManager exists on regular chrome window');
     var contentURL = "http://example.org/tests/js/xpconnect/tests/mochitest/file_empty.html";

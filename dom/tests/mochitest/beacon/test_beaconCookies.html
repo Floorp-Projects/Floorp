@@ -36,7 +36,7 @@ function whenDelayedStartupFinished(aWindow, aCallback) {
 }
 
 function testOnWindow(options, callback) {
-  var mainWindow = window.docShell.rootTreeItem.domWindow;
+  var mainWindow = window.browsingContext.topChromeWindow;
 
   var win = mainWindow.OpenBrowserWindow(options);
   windowsToClose.push(win);

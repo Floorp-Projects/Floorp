@@ -29,8 +29,8 @@
 
     // Need to open as a toplevel chrome window so that
     // DRAWWINDOW_USE_WIDGET_LAYERS is honored.
-    sourceWindow = docShell.rootTreeItem.domWindow.open("file_drawWindow_source.html", "",
-                                                        `chrome,width=${WINDOW_INNER_WIDTH},height=${WINDOW_INNER_HEIGHT}`);
+    sourceWindow = window.browsingContext.topChromeWindow.open("file_drawWindow_source.html", "",
+                                                               `chrome,width=${WINDOW_INNER_WIDTH},height=${WINDOW_INNER_HEIGHT}`);
     SimpleTest.waitForFocus(runTests, sourceWindow);
   }
 

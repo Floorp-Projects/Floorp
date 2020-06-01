@@ -40,7 +40,7 @@ function runTests()
   }
 
   otherWindow =
-    docShell.rootTreeItem.domWindow.open(
+    window.browsingContext.topChromeWindow.open(
         "./file_input_events_on_deactive_window.html", "_blank",
         "chrome,width=100,height=100");
   ok(otherWindow, "failed to open other window");
