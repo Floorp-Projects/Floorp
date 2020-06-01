@@ -6,12 +6,15 @@ package mozilla.components.feature.findinpage.view
 
 import android.widget.EditText
 import androidx.appcompat.widget.AppCompatImageButton
+import androidx.core.view.inputmethod.EditorInfoCompat
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.state.state.content.FindResultState
 import mozilla.components.feature.findinpage.R
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.spy
@@ -111,5 +114,28 @@ class FindInPageBarTest {
         assertEquals(textCorrectValue, view.resultsCountTextView.text)
         assertEquals(contentDesCorrectValue, view.resultsCountTextView.contentDescription)
         verify(view).announceForAccessibility(contentDesCorrectValue)
+    }
+
+    @Test
+    fun `private flag sets IME_FLAG_NO_PERSONALIZED_LEARNING on find in page bar`() {
+        val findInPageBar = spy(FindInPageBar(testContext))
+        val edit = findInPageBar.queryEditText
+
+        // By default "private mode" is off.
+        assertEquals(0, edit.imeOptions and
+                EditorInfoCompat.IME_FLAG_NO_PERSONALIZED_LEARNING)
+        assertEquals(false, findInPageBar.private)
+
+        // Turning on private mode sets flag
+        findInPageBar.private = true
+        assertNotEquals(0, edit.imeOptions and
+                EditorInfoCompat.IME_FLAG_NO_PERSONALIZED_LEARNING)
+        assertTrue(findInPageBar.private)
+
+        // Turning private mode off again - should remove flag
+        findInPageBar.private = false
+        assertEquals(0, edit.imeOptions and
+                EditorInfoCompat.IME_FLAG_NO_PERSONALIZED_LEARNING)
+        assertEquals(false, findInPageBar.private)
     }
 }

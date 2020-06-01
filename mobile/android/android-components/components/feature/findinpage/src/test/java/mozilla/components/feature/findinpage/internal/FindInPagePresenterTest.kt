@@ -25,9 +25,11 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
+import org.mockito.Mockito
 import org.mockito.Mockito.never
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
+import org.mockito.Mockito.`when`
 
 class FindInPagePresenterTest {
 
@@ -97,7 +99,8 @@ class FindInPagePresenterTest {
         val view: FindInPageView = mock()
 
         val presenter = FindInPagePresenter(mock(), view)
-        val session: SessionState = mock()
+        val session = Mockito.mock(SessionState::class.java, Mockito.RETURNS_DEEP_STUBS)
+        `when`(session.content.private).thenReturn(false)
         presenter.bind(session)
 
         assertEquals(presenter.session, session)
@@ -109,7 +112,8 @@ class FindInPagePresenterTest {
         val view: FindInPageView = mock()
 
         val presenter = FindInPagePresenter(mock(), view)
-        val session: SessionState = mock()
+        val session = Mockito.mock(SessionState::class.java, Mockito.RETURNS_DEEP_STUBS)
+        `when`(session.content.private).thenReturn(false)
         presenter.bind(session)
         presenter.unbind()
 

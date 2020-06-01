@@ -47,6 +47,7 @@ internal class FindInPagePresenter(
 
     fun bind(session: SessionState) {
         this.session = session
+        view.private = session.content.private
         view.focus()
     }
 
