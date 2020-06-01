@@ -271,7 +271,7 @@ break the build process**
    directories (the ``mozilla-source`` and ``mozilla-build``
    directories) in Windows Defender or your antivirus software and if
    you're missing files, revert your source tree with the
-   "``hg update -C" ``\ command. Once this is done your next
+   "``hg update -C" `` command. Once this is done your next
    ``./mach build`` should complete successfully.
 
 **Installing Visual Studio in a different language than the system can
@@ -330,7 +330,7 @@ Opening a MozillaBuild command prompt
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 After the prerequisites are installed, launch
-the \ **``start-shell.bat``** batch file using the Windows command
+the ``start-shell.bat`` batch file using the Windows command
 prompt in the directory to which you installed MozillaBuild
 (``c:\mozilla-build`` by default). This will launch an MSYS/BASH command
 prompt properly configured to build Firefox. All further commands should
@@ -376,13 +376,13 @@ Command prompt tips and caveats
    the window to paste your selection.
 -  If you have Cygwin installed, make sure that the MozillaBuild
    directories come before any Cygwin directories in the search path
-   enhanced by \ ``start-shell-msvc2015.bat`` (use ``echo $PATH`` to see
+   enhanced by ``start-shell-msvc2015.bat`` (use ``echo $PATH`` to see
    your search path).
 -  In the MSYS / BASH shell started by ``start-shell-msvc2015.bat``,
    UNIX-style forward slashes (/) are used as path separators instead of
    the Windows-style backward slashes (\\).  So if you want to change to
    the directory ``c:\mydir``, in the MSYS shell to improve clarity, you
-   would use ``cd /c/mydir ``\ though both ``c:\mydir`` and ``c:/mydir``
+   would use ``cd /c/mydir ``though both ``c:\mydir`` and ``c:/mydir``
    are supported.
 -  The MSYS root directory is located in ``/c/mozilla-build/msys`` if
    you used the default installation directory. It's a good idea not to
@@ -438,7 +438,7 @@ Common problems, hints, and restrictions
    exclusion settings.
 -  Errors like "second C linkage of overloaded function
    '\_interlockedbittestandset' not allowed", are encountered when
-   intrin.h and windows.h are included together. Use a\ *#define* to
+   intrin.h and windows.h are included together. Use a *#define* to
    redefine one instance of the function's name.
 -  Parallel builds (``-jN``) do not work with GNU makes on Windows. You
    should use the ``mozmake`` command included with current versions of
