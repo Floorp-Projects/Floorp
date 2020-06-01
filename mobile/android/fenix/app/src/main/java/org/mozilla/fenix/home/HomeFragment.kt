@@ -569,6 +569,8 @@ class HomeFragment : Fragment() {
         requireContext().settings().useNewTabTray.also {
             view?.add_tab_button?.isVisible = !it
             view?.tab_button?.isVisible = it
+            // Scrolls to the top of the screen
+            view?.homeAppBar?.setExpanded(true, false)
         }
     }
 
