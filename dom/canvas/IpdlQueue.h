@@ -44,26 +44,6 @@ class IpdlQueue;
 template <typename Derived>
 class SyncConsumerActor;
 
-enum IpdlQueueProtocol {
-  /**
-   * Sends the message immediately.  Does not wait for a response.
-   */
-  kAsync,
-  /**
-   * Sends the message immediately or caches it for a later batch
-   * send.  Messages may be sent at any point in the future but
-   * will always be processed in order.  kSync messages always force
-   * a flush of the cache but other mechanisms (e.g. periodic tasks)
-   * can do this as well.
-   */
-  kBufferedAsync,
-  /**
-   * Sends the message immediately.  Waits for any response message,
-   * which can immediately be read upon completion of the send.
-   */
-  kSync
-};
-
 constexpr uint64_t kIllegalQueueId = 0;
 inline uint64_t NewIpdlQueueId() {
   static std::atomic<uint64_t> sNextIpdlQueueId = 1;
@@ -87,93 +67,34 @@ using IpdlQueueBuffers = nsTArray<IpdlQueueBuffer>;
 // TODO: Base this on something.
 static constexpr size_t kMaxIpdlQueueArgSize = 256 * 1024;
 
-static constexpr uint32_t kAsyncFlushWaitMs = 4;  // 4ms
-
 template <typename Derived>
 class AsyncProducerActor {
  public:
-  virtual bool TransmitIpdlQueueData(IpdlQueueProtocol aProtocol,
-                                     IpdlQueueBuffer&& aData) {
-    MOZ_ASSERT((aProtocol == IpdlQueueProtocol::kAsync) ||
-               (aProtocol == IpdlQueueProtocol::kBufferedAsync));
-
-    if (mResponseBuffers || (aProtocol == IpdlQueueProtocol::kBufferedAsync)) {
-      // Always use response buffer if set.
-      auto& buffers = mResponseBuffers ? *mResponseBuffers : mAsyncBuffers;
-
+  virtual bool TransmitIpdlQueueData(bool aSendSync, IpdlQueueBuffer&& aData) {
+    MOZ_ASSERT(aSendSync == false);
+    if (mResponseBuffers) {
       // We are in the middle of a sync transaction.  Store the data so
       // that we can return it with the response.
       const uint64_t id = aData.id;
-      for (auto& elt : buffers) {
+      for (auto& elt : *mResponseBuffers) {
         if (elt.id == id) {
           elt.data.AppendElements(aData.data);
           return true;
         }
       }
-      buffers.AppendElement(std::move(aData));
-
-      if (!mResponseBuffers) {
-        PostFlushAsyncCache(kAsyncFlushWaitMs);
-      }
+      mResponseBuffers->AppendElement(std::move(aData));
       return true;
     }
 
-    // We are not inside of a transaction.  Send normally, but first send any
-    // cached messages.
-    FlushAsyncCache();
-
+    // We are not inside of a transaction.  Send normally.
     Derived* self = static_cast<Derived*>(this);
-    return self->SendTransmitIpdlQueueData(std::move(aData));
+    return self->SendTransmitIpdlQueueData(
+        std::forward<const IpdlQueueBuffer>(aData));
   }
-
-  // This can be called at any time to flush all queued async messages.
-  bool FlushAsyncCache() {
-    Derived* self = static_cast<Derived*>(this);
-    for (auto& elt : mAsyncBuffers) {
-      if (!elt.data.IsEmpty()) {
-        if (!self->SendTransmitIpdlQueueData(std::move(elt))) {
-          return false;
-        }
-      }
-    }
-    mAsyncBuffers.Clear();
-    return true;
-  }
-
-  bool PostFlushAsyncCache(uint32_t aEstWaitTimeMs) {
-    if (mPostedFlushRunnable) {
-      // Already scheduled a flush for later.
-      return true;
-    }
-
-    if (!MessageLoop::current()) {
-      NS_WARNING("No message loop for IpdlQueue flush task");
-      return false;
-    }
-
-    Derived* self = static_cast<Derived*>(this);
-    // IpdlProducer/IpdlConsumer guarantees the actor supports WeakPtr.
-    auto weak = WeakPtr<Derived>(self);
-    auto flushRunnable = NS_NewRunnableFunction("FlushAsyncCache", [weak] {
-      auto strong = RefPtr<Derived>(weak);
-      if (!strong) {
-        return;
-      }
-      strong->FlushAsyncCache();
-      strong->ClearFlushRunnable();
-    });
-
-    MessageLoop::current()->PostDelayedTask(std::move(flushRunnable),
-                                            aEstWaitTimeMs);
-    mPostedFlushRunnable = true;
-    return true;
-  }
-
-  void ClearFlushRunnable() { mPostedFlushRunnable = false; }
 
   template <typename... Args>
-  IpdlQueueProtocol GetIpdlQueueProtocol(const Args&...) {
-    return IpdlQueueProtocol::kAsync;
+  bool ShouldSendSync(const Args&...) {
+    return false;
   }
 
  protected:
@@ -182,9 +103,6 @@ class AsyncProducerActor {
   void SetResponseBuffers(IpdlQueueBuffers* aResponse) {
     MOZ_ASSERT(!mResponseBuffers);
     mResponseBuffers = aResponse;
-
-    // Response should include any cached async transmissions.
-    *mResponseBuffers = std::move(mAsyncBuffers);
   }
 
   void ClearResponseBuffers() {
@@ -192,24 +110,17 @@ class AsyncProducerActor {
     mResponseBuffers = nullptr;
   }
 
-  // Stores response when inside of a kSync transaction.
   IpdlQueueBuffers* mResponseBuffers = nullptr;
-  // For kBufferedAsync transmissions that occur outside of a response to a
-  // kSync message.
-  IpdlQueueBuffers mAsyncBuffers;
-
-  bool mPostedFlushRunnable = false;
 };
 
 template <typename Derived>
 class SyncProducerActor : public AsyncProducerActor<Derived> {
  public:
-  bool TransmitIpdlQueueData(IpdlQueueProtocol aProtocol,
-                             IpdlQueueBuffer&& aData) override {
+  bool TransmitIpdlQueueData(bool aSendSync, IpdlQueueBuffer&& aData) override {
     Derived* self = static_cast<Derived*>(this);
-    if (mResponseBuffers || (aProtocol != IpdlQueueProtocol::kSync)) {
+    if (mResponseBuffers || !aSendSync) {
       return AsyncProducerActor<Derived>::TransmitIpdlQueueData(
-          aProtocol, std::forward<IpdlQueueBuffer>(aData));
+          aSendSync, std::forward<IpdlQueueBuffer>(aData));
     }
 
     IpdlQueueBuffers responses;
@@ -288,20 +199,6 @@ class SyncConsumerActor : public AsyncConsumerActor<Derived> {
     actor->SetResponseBuffers(aResponse);
     auto clearResponseBuffer =
         MakeScopeExit([&] { actor->ClearResponseBuffers(); });
-
-    // Response now includes any cached async transmissions.  It is
-    // illegal to have a response queue also used for other purposes
-    // so the cache for that queue must be empty.
-    auto ResponseBufferIsEmpty = [&] {
-      for (auto& elt : *aResponse) {
-        if (elt.id == id) {
-          return elt.data.IsEmpty();
-        }
-      }
-      return true;
-    };
-    MOZ_ASSERT(ResponseBufferIsEmpty());
-
     return actor->RunQueue(id) ? IPC_OK() : IPC_FAIL_NO_REASON(actor);
   }
 };
@@ -336,13 +233,13 @@ class IpdlProducer final : public SupportsWeakPtr<IpdlProducer<_Actor>> {
     MOZ_ASSERT(mSerializedData.IsEmpty());
     auto self = *this;
     auto clearData = MakeScopeExit([&] { self.mSerializedData.Clear(); });
-    const IpdlQueueProtocol protocol = mActor->GetIpdlQueueProtocol(aArgs...);
+    const bool toSendSync = mActor->ShouldSendSync(aArgs...);
     QueueStatus status = SerializeAllArgs(std::forward<Args>(aArgs)...);
     if (status != QueueStatus::kSuccess) {
       return status;
     }
     return mActor->TransmitIpdlQueueData(
-               protocol, IpdlQueueBuffer(mId, std::move(mSerializedData)))
+               toSendSync, IpdlQueueBuffer(mId, std::move(mSerializedData)))
                ? QueueStatus::kSuccess
                : QueueStatus::kFatalError;
   }

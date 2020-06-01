@@ -31,7 +31,7 @@ class WebGLChild final : public PWebGLChild,
   explicit WebGLChild(ClientWebGLContext&);
 
   // For SyncProducerActor:
-  static IpdlQueueProtocol GetIpdlQueueProtocol(size_t aCmd, ...);
+  static bool ShouldSendSync(size_t aCmd, ...);
 
  private:
   friend PWebGLChild;
