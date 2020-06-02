@@ -191,7 +191,7 @@
 # Guard on an arbitrary JSClass.
 - name: GuardAnyClass
   shared: false
-  transpile: true
+  transpile: false
   args:
     obj: ObjId
     clasp: RawPointerField
