@@ -5487,7 +5487,7 @@ AttachDecision CallIRGenerator::tryAttachFunCall(HandleFunction callee) {
       writer.guardFunctionHasJitEntry(thisObjId, /*isConstructing =*/false);
       writer.callScriptedFunction(thisObjId, argcId, targetFlags);
     } else {
-      writer.guardFunctionIsNative(thisObjId);
+      writer.guardFunctionHasNoJitEntry(thisObjId);
       writer.callAnyNativeFunction(thisObjId, argcId, targetFlags);
     }
   }
@@ -5563,7 +5563,7 @@ AttachDecision CallIRGenerator::tryAttachFunApply(HandleFunction calleeFunc) {
     writer.callScriptedFunction(thisObjId, argcId, targetFlags);
   } else {
     // Guard that function is native.
-    writer.guardFunctionIsNative(thisObjId);
+    writer.guardFunctionHasNoJitEntry(thisObjId);
     writer.callAnyNativeFunction(thisObjId, argcId, targetFlags);
   }
 
@@ -5976,7 +5976,7 @@ AttachDecision CallIRGenerator::tryAttachCallNative(HandleFunction calleeFunc) {
   } else {
     // Guard that object is a native function
     writer.guardClass(calleeObjId, GuardClassKind::JSFunction);
-    writer.guardFunctionIsNative(calleeObjId);
+    writer.guardFunctionHasNoJitEntry(calleeObjId);
 
     if (isConstructing) {
       // If callee is not a constructor, we have to throw.
