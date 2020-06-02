@@ -4,10 +4,11 @@
 from mozperftest.layers import Layers
 from mozperftest.metrics.perfherder import Perfherder
 from mozperftest.metrics.consoleoutput import ConsoleOutput
+from mozperftest.metrics.notebookupload import Notebook
 
 
 def get_layers():
-    return Perfherder, ConsoleOutput
+    return Perfherder, ConsoleOutput, Notebook
 
 
 def pick_metrics(env, flavor, mach_cmd):

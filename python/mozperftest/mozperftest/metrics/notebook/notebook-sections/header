@@ -1,0 +1,12 @@
+%% md
+# Welcome to PerftestNotebook
+
+press the :fast_forward: button on your top left corner to run whole notebook
+
+%% fetch
+
+text: data_string = http://127.0.0.1:5000/data
+
+%% js
+
+var data_object = JSON.parse(data_string);

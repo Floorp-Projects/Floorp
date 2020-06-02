@@ -9,7 +9,7 @@ from mozperftest.metrics.exceptions import (
     MetricsMissingResultsError,
 )
 from mozperftest.metrics.utils import validate_intermediate_results
-from mozperftest.metrics.notebook import PerftestNotebook
+from mozperftest.metrics.notebook import PerftestETL
 
 
 class MetricsStorage(object):
@@ -135,10 +135,10 @@ class MetricsStorage(object):
                 "file_groups": {data_type: data_info["files"]},
             }
 
-            ptnb = PerftestNotebook(
+            ptnb = PerftestETL(
                 config["file_groups"], config, data_info["transformer"]
             )
-            r = ptnb.process(no_iodide=True, **data_info["options"])
+            r = ptnb.process(**data_info["options"])
             self.stddata[data_type] = r["data"]
 
         return self.stddata
