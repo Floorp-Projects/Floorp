@@ -22,7 +22,8 @@ add_task(async () => {
     true,
     expiry,
     {},
-    Ci.nsICookie.SAMESITE_NONE
+    Ci.nsICookie.SAMESITE_NONE,
+    Ci.nsICookie.SCHEME_HTTP
   );
   Assert.equal(cm.countCookiesFromHost("e.com"), 1);
 

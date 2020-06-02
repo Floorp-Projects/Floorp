@@ -689,7 +689,8 @@ CookieService::Add(const nsACString& aHost, const nsACString& aPath,
                    const nsACString& aName, const nsACString& aValue,
                    bool aIsSecure, bool aIsHttpOnly, bool aIsSession,
                    int64_t aExpiry, JS::HandleValue aOriginAttributes,
-                   int32_t aSameSite, JSContext* aCx) {
+                   int32_t aSameSite, nsICookie::schemeType aSchemeMap,
+                   JSContext* aCx) {
   OriginAttributes attrs;
 
   if (!aOriginAttributes.isObject() || !attrs.Init(aCx, aOriginAttributes)) {
@@ -697,7 +698,7 @@ CookieService::Add(const nsACString& aHost, const nsACString& aPath,
   }
 
   return AddNative(aHost, aPath, aName, aValue, aIsSecure, aIsHttpOnly,
-                   aIsSession, aExpiry, &attrs, aSameSite);
+                   aIsSession, aExpiry, &attrs, aSameSite, aSchemeMap);
 }
 
 NS_IMETHODIMP_(nsresult)
@@ -705,7 +706,7 @@ CookieService::AddNative(const nsACString& aHost, const nsACString& aPath,
                          const nsACString& aName, const nsACString& aValue,
                          bool aIsSecure, bool aIsHttpOnly, bool aIsSession,
                          int64_t aExpiry, OriginAttributes* aOriginAttributes,
-                         int32_t aSameSite) {
+                         int32_t aSameSite, nsICookie::schemeType aSchemeMap) {
   if (NS_WARN_IF(!aOriginAttributes)) {
     return NS_ERROR_FAILURE;
   }
@@ -732,7 +733,7 @@ CookieService::AddNative(const nsACString& aHost, const nsACString& aPath,
                           nsCString(aPath), aExpiry, currentTimeInUsec,
                           Cookie::GenerateUniqueCreationTime(currentTimeInUsec),
                           aIsHttpOnly, aIsSession, aIsSecure, aSameSite,
-                          aSameSite, nsICookie::SCHEME_UNSET);
+                          aSameSite, aSchemeMap);
 
   RefPtr<Cookie> cookie = Cookie::Create(cookieData, key.mOriginAttributes);
   MOZ_ASSERT(cookie);
