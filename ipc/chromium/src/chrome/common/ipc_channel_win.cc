@@ -103,7 +103,7 @@ void Channel::ChannelImpl::Init(Mode mode, Listener* listener) {
 }
 
 void Channel::ChannelImpl::OutputQueuePush(mozilla::UniquePtr<Message> msg) {
-  output_queue_.push(msg.release());
+  output_queue_.push(std::move(msg));
   output_queue_length_++;
 }
 
@@ -135,9 +135,7 @@ void Channel::ChannelImpl::Close() {
   }
 
   while (!output_queue_.empty()) {
-    Message* m = output_queue_.front();
     OutputQueuePop();
-    delete m;
   }
 
 #ifdef DEBUG
@@ -471,7 +469,7 @@ bool Channel::ChannelImpl::ProcessOutgoingMessages(
     }
     // Message was sent.
     DCHECK(!output_queue_.empty());
-    Message* m = output_queue_.front();
+    Message* m = output_queue_.front().get();
 
     MOZ_RELEASE_ASSERT(partial_write_iter_.isSome());
     Pickle::BufferList::IterImpl& iter = partial_write_iter_.ref();
@@ -479,7 +477,8 @@ bool Channel::ChannelImpl::ProcessOutgoingMessages(
     if (iter.Done()) {
       partial_write_iter_.reset();
       OutputQueuePop();
-      delete m;
+      // m has been destroyed, so clear the dangling reference.
+      m = nullptr;
     }
   }
 
@@ -488,7 +487,7 @@ bool Channel::ChannelImpl::ProcessOutgoingMessages(
   if (INVALID_HANDLE_VALUE == pipe_) return false;
 
   // Write to pipe...
-  Message* m = output_queue_.front();
+  Message* m = output_queue_.front().get();
 
   if (partial_write_iter_.isNothing()) {
     Pickle::BufferList::IterImpl iter(m->Buffers());
