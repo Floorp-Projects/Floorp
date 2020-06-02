@@ -15,7 +15,11 @@ import six
 from manifestparser import TestManifest
 from manifestparser.filters import chunk_by_runtime
 from mozbuild.util import memoize
-from moztest.resolve import TestResolver, TestManifestLoader, get_suite_definition
+from moztest.resolve import (
+    TEST_SUITES,
+    TestResolver,
+    TestManifestLoader,
+)
 
 from taskgraph import GECKO
 
@@ -77,7 +81,7 @@ def get_runtimes(platform, suite_name):
 wpt_group_translation = defaultdict(set)
 
 
-def chunk_manifests(flavor, subsuite, platform, chunks, manifests):
+def chunk_manifests(suite, platform, chunks, manifests):
     """Run the chunking algorithm.
 
     Args:
@@ -89,13 +93,9 @@ def chunk_manifests(flavor, subsuite, platform, chunks, manifests):
         A list of length `chunks` where each item contains a list of manifests
         that run in that chunk.
     """
-    # Obtain the suite definition given the flavor and subsuite which often
-    # do not perfectly map onto the actual suite name in taskgraph.
-    # This value will be used to retrive runtime information for that suite.
-    suite_name, _ = get_suite_definition(flavor, subsuite)
-    runtimes = get_runtimes(platform, suite_name)
+    runtimes = get_runtimes(platform, suite)
 
-    if flavor != "web-platform-tests":
+    if "web-platform-tests" not in suite:
         return [
             c[1] for c in chunk_by_runtime(
                 None,
@@ -204,16 +204,20 @@ class DefaultLoader(BaseManifestLoader):
         return path
 
     @memoize
-    def get_tests(self, flavor, subsuite):
-        return list(resolver.resolve_tests(flavor=flavor, subsuite=subsuite))
+    def get_tests(self, suite):
+        suite_definition = TEST_SUITES[suite]
+        return list(resolver.resolve_tests(
+            flavor=suite_definition['build_flavor'],
+            subsuite=suite_definition.get('kwargs', {}).get('subsuite', 'undefined'),
+        ))
 
     @memoize
-    def get_manifests(self, flavor, subsuite, mozinfo):
+    def get_manifests(self, suite, mozinfo):
         mozinfo = dict(mozinfo)
         # Compute all tests for the given suite/subsuite.
-        tests = self.get_tests(flavor, subsuite)
+        tests = self.get_tests(suite)
 
-        if flavor == "web-platform-tests":
+        if "web-platform-tests" in suite:
             manifests = set()
             for t in tests:
                 group = self.get_wpt_group(t)

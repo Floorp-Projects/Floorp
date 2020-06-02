@@ -24,7 +24,6 @@ import logging
 from six import string_types, text_type
 
 from mozbuild.schedules import INCLUSIVE_COMPONENTS
-from moztest.resolve import TEST_SUITES
 from voluptuous import (
     Any,
     Optional,
@@ -1402,13 +1401,11 @@ def set_test_manifests(config, tasks):
             yield task
             continue
 
-        suite_definition = TEST_SUITES[task['suite']]
         mozinfo = guess_mozinfo_from_task(task)
 
         loader = manifest_loaders[config.params['test_manifest_loader']]
         task['test-manifests'] = loader.get_manifests(
-            suite_definition['build_flavor'],
-            suite_definition.get('kwargs', {}).get('subsuite', 'undefined'),
+            task['suite'],
             frozenset(mozinfo.items()),
         )
 
@@ -1434,7 +1431,7 @@ def resolve_dynamic_chunks(config, tasks):
                 "{} must define 'test-manifests' to use dynamic chunking!".format(
                     task['test-name']))
 
-        runtimes = {m: r for m, r in get_runtimes(task['test-platform']).items()
+        runtimes = {m: r for m, r in get_runtimes(task['test-platform'], task['suite']).items()
                     if m in task['test-manifests']['active']}
 
         times = list(runtimes.values())
@@ -1462,11 +1459,9 @@ def split_chunks(config, tasks):
         # the algorithm more than once.
         chunked_manifests = None
         if 'test-manifests' in task:
-            suite_definition = TEST_SUITES[task['suite']]
             manifests = task['test-manifests']
             chunked_manifests = chunk_manifests(
-                suite_definition['build_flavor'],
-                suite_definition.get('kwargs', {}).get('subsuite', 'undefined'),
+                task['suite'],
                 task['test-platform'],
                 task['chunks'],
                 manifests['active'],
