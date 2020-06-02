@@ -235,8 +235,7 @@ DOMHighResTimeStamp PerformanceTimingData::FetchStartHighRes(
   MOZ_ASSERT(aPerformance);
 
   if (!mFetchStart) {
-    if (!StaticPrefs::dom_enable_performance() || !IsInitialized() ||
-        nsContentUtils::ShouldResistFingerprinting()) {
+    if (!StaticPrefs::dom_enable_performance() || !IsInitialized()) {
       return mZeroTime;
     }
     MOZ_ASSERT(!mAsyncOpen.IsNull(),
@@ -310,7 +309,7 @@ DOMHighResTimeStamp PerformanceTimingData::AsyncOpenHighRes(
   MOZ_ASSERT(aPerformance);
 
   if (!StaticPrefs::dom_enable_performance() || !IsInitialized() ||
-      nsContentUtils::ShouldResistFingerprinting() || mAsyncOpen.IsNull()) {
+      mAsyncOpen.IsNull()) {
     return mZeroTime;
   }
   DOMHighResTimeStamp rawValue =
@@ -325,7 +324,7 @@ DOMHighResTimeStamp PerformanceTimingData::WorkerStartHighRes(
   MOZ_ASSERT(aPerformance);
 
   if (!StaticPrefs::dom_enable_performance() || !IsInitialized() ||
-      nsContentUtils::ShouldResistFingerprinting() || mWorkerStart.IsNull()) {
+      mWorkerStart.IsNull()) {
     return mZeroTime;
   }
   DOMHighResTimeStamp rawValue =
@@ -349,8 +348,7 @@ DOMHighResTimeStamp PerformanceTimingData::RedirectStartHighRes(
     Performance* aPerformance) {
   MOZ_ASSERT(aPerformance);
 
-  if (!StaticPrefs::dom_enable_performance() || !IsInitialized() ||
-      nsContentUtils::ShouldResistFingerprinting()) {
+  if (!StaticPrefs::dom_enable_performance() || !IsInitialized()) {
     return mZeroTime;
   }
   return TimeStampToReducedDOMHighResOrFetchStart(aPerformance, mRedirectStart);
@@ -384,8 +382,7 @@ DOMHighResTimeStamp PerformanceTimingData::RedirectEndHighRes(
     Performance* aPerformance) {
   MOZ_ASSERT(aPerformance);
 
-  if (!StaticPrefs::dom_enable_performance() || !IsInitialized() ||
-      nsContentUtils::ShouldResistFingerprinting()) {
+  if (!StaticPrefs::dom_enable_performance() || !IsInitialized()) {
     return mZeroTime;
   }
   return TimeStampToReducedDOMHighResOrFetchStart(aPerformance, mRedirectEnd);
@@ -408,9 +405,12 @@ DOMHighResTimeStamp PerformanceTimingData::DomainLookupStartHighRes(
     Performance* aPerformance) {
   MOZ_ASSERT(aPerformance);
 
-  if (!StaticPrefs::dom_enable_performance() || !IsInitialized() ||
-      nsContentUtils::ShouldResistFingerprinting()) {
+  if (!StaticPrefs::dom_enable_performance() || !IsInitialized()) {
     return mZeroTime;
+  }
+  // Bug 1637985 - DomainLookup information may be useful for fingerprinting.
+  if (nsContentUtils::ShouldResistFingerprinting()) {
+    return FetchStartHighRes(aPerformance);
   }
   return TimeStampToReducedDOMHighResOrFetchStart(aPerformance,
                                                   mDomainLookupStart);
@@ -425,9 +425,12 @@ DOMHighResTimeStamp PerformanceTimingData::DomainLookupEndHighRes(
     Performance* aPerformance) {
   MOZ_ASSERT(aPerformance);
 
-  if (!StaticPrefs::dom_enable_performance() || !IsInitialized() ||
-      nsContentUtils::ShouldResistFingerprinting()) {
+  if (!StaticPrefs::dom_enable_performance() || !IsInitialized()) {
     return mZeroTime;
+  }
+  // Bug 1637985 - DomainLookup information may be useful for fingerprinting.
+  if (nsContentUtils::ShouldResistFingerprinting()) {
+    return FetchStartHighRes(aPerformance);
   }
   // Bug 1155008 - nsHttpTransaction is racy. Return DomainLookupStart when null
   if (mDomainLookupEnd.IsNull()) {
@@ -449,8 +452,7 @@ DOMHighResTimeStamp PerformanceTimingData::ConnectStartHighRes(
     Performance* aPerformance) {
   MOZ_ASSERT(aPerformance);
 
-  if (!StaticPrefs::dom_enable_performance() || !IsInitialized() ||
-      nsContentUtils::ShouldResistFingerprinting()) {
+  if (!StaticPrefs::dom_enable_performance() || !IsInitialized()) {
     return mZeroTime;
   }
   if (mConnectStart.IsNull()) {
@@ -471,8 +473,7 @@ DOMHighResTimeStamp PerformanceTimingData::SecureConnectionStartHighRes(
     Performance* aPerformance) {
   MOZ_ASSERT(aPerformance);
 
-  if (!StaticPrefs::dom_enable_performance() || !IsInitialized() ||
-      nsContentUtils::ShouldResistFingerprinting()) {
+  if (!StaticPrefs::dom_enable_performance() || !IsInitialized()) {
     return mZeroTime;
   }
   if (!mSecureConnection) {
@@ -498,8 +499,7 @@ DOMHighResTimeStamp PerformanceTimingData::ConnectEndHighRes(
     Performance* aPerformance) {
   MOZ_ASSERT(aPerformance);
 
-  if (!StaticPrefs::dom_enable_performance() || !IsInitialized() ||
-      nsContentUtils::ShouldResistFingerprinting()) {
+  if (!StaticPrefs::dom_enable_performance() || !IsInitialized()) {
     return mZeroTime;
   }
   // Bug 1155008 - nsHttpTransaction is racy. Return ConnectStart when null
@@ -521,8 +521,7 @@ DOMHighResTimeStamp PerformanceTimingData::RequestStartHighRes(
     Performance* aPerformance) {
   MOZ_ASSERT(aPerformance);
 
-  if (!StaticPrefs::dom_enable_performance() || !IsInitialized() ||
-      nsContentUtils::ShouldResistFingerprinting()) {
+  if (!StaticPrefs::dom_enable_performance() || !IsInitialized()) {
     return mZeroTime;
   }
 
@@ -541,8 +540,7 @@ DOMHighResTimeStamp PerformanceTimingData::ResponseStartHighRes(
     Performance* aPerformance) {
   MOZ_ASSERT(aPerformance);
 
-  if (!StaticPrefs::dom_enable_performance() || !IsInitialized() ||
-      nsContentUtils::ShouldResistFingerprinting()) {
+  if (!StaticPrefs::dom_enable_performance() || !IsInitialized()) {
     return mZeroTime;
   }
   if (mResponseStart.IsNull() ||
@@ -565,8 +563,7 @@ DOMHighResTimeStamp PerformanceTimingData::ResponseEndHighRes(
     Performance* aPerformance) {
   MOZ_ASSERT(aPerformance);
 
-  if (!StaticPrefs::dom_enable_performance() || !IsInitialized() ||
-      nsContentUtils::ShouldResistFingerprinting()) {
+  if (!StaticPrefs::dom_enable_performance() || !IsInitialized()) {
     return mZeroTime;
   }
   if (mResponseEnd.IsNull() ||
@@ -610,7 +607,7 @@ bool PerformanceTiming::IsTopLevelContentDocument() const {
 
 nsTArray<nsCOMPtr<nsIServerTiming>> PerformanceTimingData::GetServerTiming() {
   if (!StaticPrefs::dom_enable_performance() || !IsInitialized() ||
-      !TimingAllowed() || nsContentUtils::ShouldResistFingerprinting()) {
+      !TimingAllowed()) {
     return nsTArray<nsCOMPtr<nsIServerTiming>>();
   }
 
