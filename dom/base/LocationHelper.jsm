@@ -32,4 +32,27 @@ class LocationHelper {
       .sort(sort)
       .map(encode);
   }
+
+  /**
+   * Calculate the distance between 2 points using the Haversine formula.
+   * https://en.wikipedia.org/wiki/Haversine_formula
+   */
+  static distance(p1, p2) {
+    let rad = x => (x * Math.PI) / 180;
+    // Radius of the earth.
+    let R = 6371e3;
+    let lat = rad(p2.lat - p1.lat);
+    let lng = rad(p2.lng - p1.lng);
+
+    let a =
+      Math.sin(lat / 2) * Math.sin(lat / 2) +
+      Math.cos(rad(p1.lat)) *
+        Math.cos(rad(p2.lat)) *
+        Math.sin(lng / 2) *
+        Math.sin(lng / 2);
+
+    let c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+    return R * c;
+  }
 }
