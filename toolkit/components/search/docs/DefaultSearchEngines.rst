@@ -54,8 +54,12 @@ from that add-on.
 The ``overriddenBy`` annotation may be removed when:
 
 * The associated authorised add-on is removed, disabled or can no longer be found.
-* The add-on is no longer authorised or sets an unauthorised url.
 * The user changes their default to another engine.
+
+If the ``overriddenBy`` annotation is present, but the add-on is not authorised,
+then the annotation will be maintained in case the add-on is later re-authorised.
+For example, a url is updated, but the update is performed before the allow list
+is updated.
 
 .. _configuration schema: SearchConfigurationSchema.html
 .. _remote settings: /services/common/services/RemoteSettings.html
