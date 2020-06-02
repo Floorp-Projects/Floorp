@@ -56,6 +56,10 @@ extern "C" const char* __tsan_default_suppressions() {
          // not fully suppressed through `called_from_lib`.
          "race:g_main_context_dispatch\n"
 
+         // This is likely a false positive involving a mutex from GTK.
+         // See also bug 1642653 - permanent.
+         "mutex:GetMaiAtkType\n"
+
          // TSan internals
          "race:__tsan::ProcessPendingSignals\n"
          "race:__tsan::CallUserSignalHandler\n"
