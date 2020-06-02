@@ -460,27 +460,6 @@
         this._maybeSelectAll();
       });
 
-      this.addEventListener("command", event => {
-        const target = event.originalTarget;
-        if (target.engine) {
-          this.currentEngine = target.engine;
-        } else if (target.classList.contains("addengine-item")) {
-          // Select the installed engine if the installation succeeds.
-          Services.search
-            .addEngine(
-              target.getAttribute("uri"),
-              target.getAttribute("src"),
-              false
-            )
-            .then(engine => (this.currentEngine = engine));
-        } else {
-          return;
-        }
-
-        this.focus();
-        this.select();
-      });
-
       this.addEventListener(
         "DOMMouseScroll",
         event => {
