@@ -16354,8 +16354,9 @@ void Document::RemoveToplevelLoadingDocument(Document* aDoc) {
   }
 }
 
-StylePrefersColorScheme Document::PrefersColorScheme() const {
-  if (nsContentUtils::ShouldResistFingerprinting(this)) {
+StylePrefersColorScheme Document::PrefersColorScheme(
+    Document::IgnoreRFP aIgnoreRFP /* = IgnoreRFP::No */) const {
+  if (aIgnoreRFP == IgnoreRFP::No && nsContentUtils::ShouldResistFingerprinting(this)) {
     return StylePrefersColorScheme::Light;
   }
 
