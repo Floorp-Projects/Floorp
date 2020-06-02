@@ -1202,7 +1202,6 @@ impl Tile {
         &mut self,
         info: &PrimitiveDependencyInfo,
     ) {
-        profile_scope!("add_prim_dependency");
         // If this tile isn't currently visible, we don't want to update the dependencies
         // for this tile, as an optimization, since it won't be drawn anyway.
         if !self.is_visible {
