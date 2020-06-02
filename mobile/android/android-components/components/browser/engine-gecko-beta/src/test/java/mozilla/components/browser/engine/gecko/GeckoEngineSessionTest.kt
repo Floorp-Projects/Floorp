@@ -569,6 +569,37 @@ class GeckoEngineSessionTest {
     }
 
     @Test
+    fun `onLoadRequest will reset initial load flag on process switch to ignore about blank loads`() {
+        val geckoResult = GeckoResult<Boolean?>()
+        val mockedContentBlockingController = mock<ContentBlockingController>()
+        whenever(runtime.contentBlockingController).thenReturn(mockedContentBlockingController)
+        whenever(mockedContentBlockingController.checkException(any())).thenReturn(geckoResult)
+
+        val session = GeckoEngineSession(runtime, geckoSessionProvider = geckoSessionProvider)
+        captureDelegates()
+        assertTrue(session.initialLoad)
+
+        navigationDelegate.value.onLocationChange(mock(), "https://mozilla.org")
+        assertFalse(session.initialLoad)
+
+        navigationDelegate.value.onLoadRequest(mock(), mockLoadRequest("moz-extension://1234-test"))
+        assertTrue(session.initialLoad)
+
+        var observedUrl = ""
+        session.register(object : EngineSession.Observer {
+            override fun onLocationChange(url: String) { observedUrl = url }
+        })
+        navigationDelegate.value.onLocationChange(mock(), "about:blank")
+        assertEquals("", observedUrl)
+
+        navigationDelegate.value.onLocationChange(mock(), "https://www.mozilla.org")
+        assertEquals("https://www.mozilla.org", observedUrl)
+
+        navigationDelegate.value.onLocationChange(mock(), "about:blank")
+        assertEquals("about:blank", observedUrl)
+    }
+
+    @Test
     fun `do not keep track of current url via onPageStart events`() {
         val engineSession = GeckoEngineSession(mock(),
                 geckoSessionProvider = geckoSessionProvider)
@@ -1992,6 +2023,55 @@ class GeckoEngineSessionTest {
         assertEquals("result", observedUrl)
 
         navigationDelegate.value.onLoadRequest(
+            mock(), mockLoadRequest("sample:about", triggeredByRedirect = false))
+
+        assertNotNull(observedIntent)
+        assertEquals("result", observedUrl)
+    }
+
+    @Test
+    fun `onSubframeLoadRequest will notify onLaunchIntent observers if request was intercepted with app intent`() {
+        val engineSession = GeckoEngineSession(mock(),
+            geckoSessionProvider = geckoSessionProvider)
+
+        captureDelegates()
+
+        var observedUrl: String? = null
+        var observedIntent: Intent? = null
+
+        engineSession.settings.requestInterceptor = object : RequestInterceptor {
+            override fun interceptsAppInitiatedRequests() = true
+
+            override fun onLoadRequest(
+                engineSession: EngineSession,
+                uri: String,
+                hasUserGesture: Boolean,
+                isSameDomain: Boolean
+            ): RequestInterceptor.InterceptionResponse? {
+                return when (uri) {
+                    "sample:about" -> RequestInterceptor.InterceptionResponse.AppIntent(mock(), "result")
+                    else -> null
+                }
+            }
+        }
+
+        engineSession.register(object : EngineSession.Observer {
+            override fun onLaunchIntentRequest(
+                url: String,
+                appIntent: Intent?
+            ) {
+                observedUrl = url
+                observedIntent = appIntent
+            }
+        })
+
+        navigationDelegate.value.onSubframeLoadRequest(
+            mock(), mockLoadRequest("sample:about", triggeredByRedirect = true))
+
+        assertNotNull(observedIntent)
+        assertEquals("result", observedUrl)
+
+        navigationDelegate.value.onSubframeLoadRequest(
             mock(), mockLoadRequest("sample:about", triggeredByRedirect = false))
 
         assertNotNull(observedIntent)
