@@ -939,13 +939,13 @@ class nsFrameSelection final {
 
    private:
     [[nodiscard]] nsresult HandleDragSelecting(
-        mozilla::TableSelectionMode aTarget, nsIContent* childContent,
+        mozilla::TableSelectionMode aTarget, nsIContent* aChildContent,
         const mozilla::WidgetMouseEvent* aMouseEvent,
         mozilla::dom::Selection& aNormalSelection);
 
     [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult HandleMouseUpOrDown(
         mozilla::TableSelectionMode aTarget, bool aDragState,
-        nsIContent* childContent, nsINode* aParentContent,
+        nsIContent* aChildContent, nsINode* aParentContent,
         int32_t aContentOffset, const mozilla::WidgetMouseEvent* aMouseEvent,
         mozilla::dom::Selection& aNormalSelection);
   };
