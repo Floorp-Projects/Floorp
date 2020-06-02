@@ -115,7 +115,7 @@ class RuntimeService final : public nsIObserver {
 
   void ResumeWorkersForWindow(nsPIDOMWindowInner* aWindow);
 
-  void PropagateFirstPartyStorageAccessGranted(nsPIDOMWindowInner* aWindow);
+  void PropagateStorageAccessPermissionGranted(nsPIDOMWindowInner* aWindow);
 
   const NavigatorProperties& GetNavigatorProperties() const {
     return mNavigatorProperties;

@@ -556,9 +556,9 @@ class nsPIDOMWindowInner : public mozIDOMWindow {
   virtual nsISerialEventTarget* EventTargetFor(
       mozilla::TaskCategory aCategory) const = 0;
 
-  void SaveStorageAccessGranted();
+  void SaveStorageAccessPermissionGranted();
 
-  bool HasStorageAccessGranted();
+  bool HasStorageAccessPermissionGranted();
 
   nsIPrincipal* GetDocumentContentBlockingAllowListPrincipal() const;
 
@@ -656,7 +656,7 @@ class nsPIDOMWindowInner : public mozIDOMWindow {
   // current window. These are also set as permissions, but it could happen
   // that we need to access them synchronously in this context, and for
   // this, we need a copy here.
-  bool mStorageAccessGranted;
+  bool mStorageAccessPermissionGranted;
 
   // The WindowGlobalChild actor for this window.
   //
