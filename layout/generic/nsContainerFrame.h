@@ -288,15 +288,15 @@ class nsContainerFrame : public nsSplittableFrame {
 
   // ==========================================================================
   /* Overflow containers are continuation frames that hold overflow. They
-   * are created when the frame runs out of computed height, but still has
-   * too much content to fit in the availableHeight. The parent creates a
+   * are created when the frame runs out of computed block-size, but still has
+   * too much content to fit in the AvailableBSize. The parent creates a
    * continuation as usual, but marks it as NS_FRAME_IS_OVERFLOW_CONTAINER
    * and adds it to its next-in-flow's overflow container list, either by
    * adding it directly or by putting it in its own excess overflow containers
    * list (to be drained by the next-in-flow when it calls
    * ReflowOverflowContainerChildren). The parent continues reflow as if
-   * the frame was complete once it ran out of computed height, but returns a
-   * reflow status with either IsIncomplete() or IsOverflowIncomplete() equal
+   * the frame was complete once it ran out of computed block-size, but returns
+   * a reflow status with either IsIncomplete() or IsOverflowIncomplete() equal
    * to true to request a next-in-flow. The parent's next-in-flow is then
    * responsible for calling ReflowOverflowContainerChildren to (drain and)
    * reflow these overflow continuations. Overflow containers do not affect
@@ -310,13 +310,13 @@ class nsContainerFrame : public nsSplittableFrame {
    *   - new continuations may need to be spliced into the middle of the list
    *     or deleted continuations slipped out
    *     e.g. A, B, C are all fixed-size containers on one page, all have
-   *      overflow beyond availableHeight, and content is dynamically added
+   *      overflow beyond AvailableBSize, and content is dynamically added
    *      and removed from B
    * As a result, it is not possible to simply prepend the new continuations
-   * to the old list as with the overflowProperty mechanism. To avoid
+   * to the old list as with the OverflowProperty mechanism. To avoid
    * complicated list splicing, the code assumes only one overflow containers
-   * list exists for a given frame: either its own overflowContainersProperty
-   * or its prev-in-flow's excessOverflowContainersProperty, not both.
+   * list exists for a given frame: either its own OverflowContainersProperty
+   * or its prev-in-flow's ExcessOverflowContainersProperty, not both.
    *
    * The nsOverflowContinuationTracker helper class should be used for tracking
    * overflow containers and adding them to the appropriate list.
