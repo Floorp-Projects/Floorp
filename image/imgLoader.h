@@ -486,8 +486,6 @@ class imgCacheValidator : public nsIStreamListener,
   void AddProxy(imgRequestProxy* aProxy);
   void RemoveProxy(imgRequestProxy* aProxy);
 
-  void PrioritizeAsPreload();
-
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSITHREADRETARGETABLESTREAMLISTENER
   NS_DECL_NSISTREAMLISTENER
