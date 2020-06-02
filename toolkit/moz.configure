@@ -1982,9 +1982,9 @@ set_define('MOZ_NEW_NOTIFICATION_STORE', True, when=new_notification_store)
 # Glean SDK Integration Crate
 # ==============================================================
 
-@depends(milestone)
-def glean(milestone):
-    if milestone.is_nightly:
+@depends(milestone, target)
+def glean(milestone, target):
+    if milestone.is_nightly and target.os != 'Android':
         return True
 
 set_config('MOZ_GLEAN', True, when=glean)
