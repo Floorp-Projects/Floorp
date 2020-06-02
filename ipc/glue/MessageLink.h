@@ -44,7 +44,6 @@ class MessageLink {
 
   // n.b.: These methods all require that the channel monitor is
   // held when they are invoked.
-  virtual void EchoMessage(Message* msg) = 0;
   virtual void SendMessage(Message* msg) = 0;
   virtual void SendClose() = 0;
 
@@ -59,7 +58,6 @@ class ProcessLink : public MessageLink, public Transport::Listener {
   void OnCloseChannel();
   void OnChannelOpened();
   void OnTakeConnectedChannel();
-  void OnEchoMessage(Message* msg);
 
   void AssertIOThread() const {
     MOZ_ASSERT(mIOLoop == MessageLoop::current(), "not on I/O thread!");
@@ -86,7 +84,6 @@ class ProcessLink : public MessageLink, public Transport::Listener {
   virtual void OnChannelConnected(int32_t peer_pid) override;
   virtual void OnChannelError() override;
 
-  virtual void EchoMessage(Message* msg) override;
   virtual void SendMessage(Message* msg) override;
   virtual void SendClose() override;
 
@@ -107,7 +104,6 @@ class ThreadLink : public MessageLink {
   ThreadLink(MessageChannel* aChan, MessageChannel* aTargetChan);
   virtual ~ThreadLink();
 
-  virtual void EchoMessage(Message* msg) override;
   virtual void SendMessage(Message* msg) override;
   virtual void SendClose() override;
 

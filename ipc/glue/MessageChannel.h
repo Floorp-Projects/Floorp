@@ -242,10 +242,6 @@ class MessageChannel : HasResultCodes, MessageLoop::DestructionObserver {
   bool SendBuildIDsMatchMessage(const char* aParentBuildI);
   bool DoBuildIDsMatch() { return mBuildIDsConfirmedMatch; }
 
-  // Asynchronously deliver a message back to this side of the
-  // channel
-  bool Echo(Message* aMsg);
-
   // Synchronously send |msg| (i.e., wait for |reply|)
   bool Send(Message* aMsg, Message* aReply);
 
