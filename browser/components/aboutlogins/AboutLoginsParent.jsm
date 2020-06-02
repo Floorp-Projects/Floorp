@@ -471,6 +471,11 @@ class AboutLoginsParent extends JSWindowActorParent {
         let fpCallback = function fpCallback_done(aResult) {
           if (aResult != Ci.nsIFilePicker.returnCancel) {
             LoginExport.exportAsCSV(fp.file.path);
+            Services.telemetry.recordEvent(
+              "pwmgr",
+              "mgmt_menu_item_used",
+              "export_complete"
+            );
           }
         };
         let [

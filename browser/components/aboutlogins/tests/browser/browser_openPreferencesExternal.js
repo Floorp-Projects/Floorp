@@ -46,25 +46,21 @@ add_task(async function test_open_feedback() {
     await BrowserTestUtils.synthesizeMouseAtCenter("menu-button", {}, browser);
     await SpecialPowers.spawn(browser, [], async () => {
       return ContentTaskUtils.waitForCondition(() => {
-        let menuButton = Cu.waiveXrays(
-          content.document.querySelector("menu-button")
-        );
+        let menuButton = content.document.querySelector("menu-button");
         return !menuButton.shadowRoot.querySelector(".menu").hidden;
       }, "waiting for menu to open");
     });
 
     // Not using synthesizeMouseAtCenter here because the element we want clicked on
-    // is in the shadow DOM. BrowserTestUtils.synthesizeMouseAtCenter/AsyncUtilsContent
-    // thinks that the shadow DOM element is in another document and throws an exception
-    // when trying to call element.ownerGlobal on the targeted shadow DOM node. This is
-    // on file as bug 1557489. As a workaround, this manually calculates the position to click.
+    // is in the shadow DOM and therefore requires using a function 1st argument
+    // to BrowserTestUtils.synthesizeMouseAtCenter but we need to pass an
+    // arbitrary selector. See bug 1557489 for more info. As a workaround, this
+    // manually calculates the position to click.
     let { x, y } = await SpecialPowers.spawn(
       browser,
       [selector],
       async menuItemSelector => {
-        let menuButton = Cu.waiveXrays(
-          content.document.querySelector("menu-button")
-        );
+        let menuButton = content.document.querySelector("menu-button");
         let prefsItem = menuButton.shadowRoot.querySelector(menuItemSelector);
         return prefsItem.getBoundingClientRect();
       }
