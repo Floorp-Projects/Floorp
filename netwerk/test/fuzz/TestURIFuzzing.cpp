@@ -63,13 +63,13 @@ static int FuzzingRunURIParser(const uint8_t* data, size_t size) {
   nsAutoCString spec = get_string(&buf, &size);
 
   nsresult rv = NS_MutateURI(NS_STANDARDURLMUTATOR_CONTRACTID)
-    .SetSpec(spec)
-    .Finalize(uri);
+                    .SetSpec(spec)
+                    .Finalize(uri);
 
   if (NS_FAILED(rv)) {
     return 0;
   }
-  
+
   uint8_t iters = get_numeric<uint8_t>(&buf, &size);
   for (int i = 0; i < iters; i++) {
     if (get_numeric<uint8_t>(&buf, &size) % 25 != 0) {
@@ -122,7 +122,7 @@ static int FuzzingRunURIParser(const uint8_t* data, size_t size) {
           break;
         }
       }
-      
+
       nsresult rv = mutator.Finalize(uri);
       if (NS_FAILED(rv)) {
         return 0;
