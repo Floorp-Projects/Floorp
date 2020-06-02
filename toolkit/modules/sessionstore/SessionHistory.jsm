@@ -270,9 +270,9 @@ var SessionHistoryInternal = {
       );
     }
 
-    if (shEntry.storagePrincipalToInherit) {
-      entry.storagePrincipalToInherit_base64 = E10SUtils.serializePrincipal(
-        shEntry.storagePrincipalToInherit
+    if (shEntry.partitionedPrincipalToInherit) {
+      entry.partitionedPrincipalToInherit_base64 = E10SUtils.serializePrincipal(
+        shEntry.partitionedPrincipalToInherit
       );
     }
 
@@ -551,11 +551,11 @@ var SessionHistoryInternal = {
         return Services.scriptSecurityManager.createNullPrincipal({});
       }
     );
-    // As both storagePrincipal and principalToInherit are both not required to load
+    // As both partitionedPrincipal and principalToInherit are both not required to load
     // it's ok to keep these undefined when we don't have a previously defined principal.
-    if (entry.storagePrincipalToInherit_base64) {
-      shEntry.storagePrincipalToInherit = E10SUtils.deserializePrincipal(
-        entry.storagePrincipalToInherit_base64
+    if (entry.partitionedPrincipalToInherit_base64) {
+      shEntry.partitionedPrincipalToInherit = E10SUtils.deserializePrincipal(
+        entry.partitionedPrincipalToInherit_base64
       );
     }
     if (entry.principalToInherit_base64) {

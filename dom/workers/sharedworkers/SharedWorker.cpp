@@ -121,9 +121,9 @@ already_AddRefed<SharedWorker> SharedWorker::Constructor(
     return nullptr;
   }
 
-  // Here, the StoragePrincipal is always equal to the SharedWorker's principal
-  // because the channel is not opened yet, and, because of this, it's not
-  // classified. We need to force the correct originAttributes.
+  // Here, the PartitionedPrincipal is always equal to the SharedWorker's
+  // principal because the channel is not opened yet, and, because of this, it's
+  // not classified. We need to force the correct originAttributes.
   if (ShouldPartitionStorage(storageAllowed)) {
     nsCOMPtr<nsIScriptObjectPrincipal> sop = do_QueryInterface(window);
     if (!sop) {
@@ -137,27 +137,27 @@ already_AddRefed<SharedWorker> SharedWorker::Constructor(
       return nullptr;
     }
 
-    nsIPrincipal* windowStoragePrincipal = sop->GetEffectiveStoragePrincipal();
-    if (!windowStoragePrincipal) {
+    nsIPrincipal* windowPartitionedPrincipal = sop->PartitionedPrincipal();
+    if (!windowPartitionedPrincipal) {
       aRv.Throw(NS_ERROR_UNEXPECTED);
       return nullptr;
     }
 
-    if (!windowPrincipal->Equals(windowStoragePrincipal)) {
-      loadInfo.mStoragePrincipal =
+    if (!windowPrincipal->Equals(windowPartitionedPrincipal)) {
+      loadInfo.mPartitionedPrincipal =
           BasePrincipal::Cast(loadInfo.mPrincipal)
               ->CloneForcingOriginAttributes(
-                  BasePrincipal::Cast(windowStoragePrincipal)
+                  BasePrincipal::Cast(windowPartitionedPrincipal)
                       ->OriginAttributesRef());
     }
   }
 
-  PrincipalInfo storagePrincipalInfo;
-  if (loadInfo.mPrincipal->Equals(loadInfo.mStoragePrincipal)) {
-    storagePrincipalInfo = principalInfo;
+  PrincipalInfo partitionedPrincipalInfo;
+  if (loadInfo.mPrincipal->Equals(loadInfo.mPartitionedPrincipal)) {
+    partitionedPrincipalInfo = principalInfo;
   } else {
-    aRv = PrincipalToPrincipalInfo(loadInfo.mStoragePrincipal,
-                                   &storagePrincipalInfo);
+    aRv = PrincipalToPrincipalInfo(loadInfo.mPartitionedPrincipal,
+                                   &partitionedPrincipalInfo);
     if (NS_WARN_IF(aRv.Failed())) {
       return nullptr;
     }
@@ -195,7 +195,7 @@ already_AddRefed<SharedWorker> SharedWorker::Constructor(
 
   RemoteWorkerData remoteWorkerData(
       nsString(aScriptURL), baseURL, resolvedScriptURL, name,
-      loadingPrincipalInfo, principalInfo, storagePrincipalInfo,
+      loadingPrincipalInfo, principalInfo, partitionedPrincipalInfo,
       loadInfo.mDomain, isSecureContext, ipcClientInfo, loadInfo.mReferrerInfo,
       storageAllowed, void_t() /* OptionalServiceWorkerData */, agentClusterId);
 

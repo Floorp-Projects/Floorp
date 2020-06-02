@@ -72,7 +72,7 @@ class SHEntrySharedParentState {
   nsID mDocShellID;
   nsCOMPtr<nsIPrincipal> mTriggeringPrincipal;
   nsCOMPtr<nsIPrincipal> mPrincipalToInherit;
-  nsCOMPtr<nsIPrincipal> mStoragePrincipalToInherit;
+  nsCOMPtr<nsIPrincipal> mPartitionedPrincipalToInherit;
   nsCOMPtr<nsIContentSecurityPolicy> mCsp;
   // Child side updates layout history state when page is being unloaded or
   // moved to bfcache.

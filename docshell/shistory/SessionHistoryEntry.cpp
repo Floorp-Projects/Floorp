@@ -47,8 +47,8 @@ SessionHistoryEntry::SessionHistoryEntry(nsISHistory* aSessionHistory,
       mID(++gEntryID) {
   mSharedInfo->mTriggeringPrincipal = aLoadState->TriggeringPrincipal();
   mSharedInfo->mPrincipalToInherit = aLoadState->PrincipalToInherit();
-  mSharedInfo->mStoragePrincipalToInherit =
-      aLoadState->StoragePrincipalToInherit();
+  mSharedInfo->mPartitionedPrincipalToInherit =
+      aLoadState->PartitionedPrincipalToInherit();
   mSharedInfo->mCsp = aLoadState->Csp();
   // FIXME Set remaining shared fields!
 }
@@ -348,18 +348,18 @@ SessionHistoryEntry::SetPrincipalToInherit(nsIPrincipal* aPrincipalToInherit) {
 }
 
 NS_IMETHODIMP
-SessionHistoryEntry::GetStoragePrincipalToInherit(
-    nsIPrincipal** aStoragePrincipalToInherit) {
-  nsCOMPtr<nsIPrincipal> storagePrincipalToInherit =
-      mSharedInfo->mStoragePrincipalToInherit;
-  storagePrincipalToInherit.forget(aStoragePrincipalToInherit);
+SessionHistoryEntry::GetPartitionedPrincipalToInherit(
+    nsIPrincipal** aPartitionedPrincipalToInherit) {
+  nsCOMPtr<nsIPrincipal> partitionedPrincipalToInherit =
+      mSharedInfo->mPartitionedPrincipalToInherit;
+  partitionedPrincipalToInherit.forget(aPartitionedPrincipalToInherit);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-SessionHistoryEntry::SetStoragePrincipalToInherit(
-    nsIPrincipal* aStoragePrincipalToInherit) {
-  mSharedInfo->mStoragePrincipalToInherit = aStoragePrincipalToInherit;
+SessionHistoryEntry::SetPartitionedPrincipalToInherit(
+    nsIPrincipal* aPartitionedPrincipalToInherit) {
+  mSharedInfo->mPartitionedPrincipalToInherit = aPartitionedPrincipalToInherit;
   return NS_OK;
 }
 
@@ -553,11 +553,11 @@ SessionHistoryEntry::Create(
     nsIURI* aURI, const nsAString& aTitle, nsIInputStream* aInputStream,
     uint32_t aCacheKey, const nsACString& aContentType,
     nsIPrincipal* aTriggeringPrincipal, nsIPrincipal* aPrincipalToInherit,
-    nsIPrincipal* aStoragePrincipalToInherit, nsIContentSecurityPolicy* aCsp,
-    const nsID& aDocshellID, bool aDynamicCreation, nsIURI* aOriginalURI,
-    nsIURI* aResultPrincipalURI, bool aLoadReplace,
-    nsIReferrerInfo* aReferrerInfo, const nsAString& aSrcdoc, bool aSrcdocEntry,
-    nsIURI* aBaseURI, bool aSaveLayoutState, bool aExpired) {
+    nsIPrincipal* aPartitionedPrincipalToInherit,
+    nsIContentSecurityPolicy* aCsp, const nsID& aDocshellID,
+    bool aDynamicCreation, nsIURI* aOriginalURI, nsIURI* aResultPrincipalURI,
+    bool aLoadReplace, nsIReferrerInfo* aReferrerInfo, const nsAString& aSrcdoc,
+    bool aSrcdocEntry, nsIURI* aBaseURI, bool aSaveLayoutState, bool aExpired) {
   MOZ_CRASH("Might need to implement this");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -690,8 +690,8 @@ SessionHistoryEntry::CreateLoadInfo(nsDocShellLoadState** aLoadState) {
   loadState->SetTypeHint(mSharedInfo->mContentType);
   loadState->SetTriggeringPrincipal(mSharedInfo->mTriggeringPrincipal);
   loadState->SetPrincipalToInherit(mSharedInfo->mPrincipalToInherit);
-  loadState->SetStoragePrincipalToInherit(
-      mSharedInfo->mStoragePrincipalToInherit);
+  loadState->SetPartitionedPrincipalToInherit(
+      mSharedInfo->mPartitionedPrincipalToInherit);
   loadState->SetCsp(mSharedInfo->mCsp);
 
   // Do not inherit principal from document (security-critical!);
