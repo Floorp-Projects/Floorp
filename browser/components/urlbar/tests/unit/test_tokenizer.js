@@ -46,10 +46,20 @@ add_task(async function test_tokenizer() {
       desc: "boundary restriction char at end",
       searchString: `test${UrlbarTokenizer.RESTRICT.BOOKMARK}`,
       expectedTokens: [
+        {
+          value: `test${UrlbarTokenizer.RESTRICT.BOOKMARK}`,
+          type: UrlbarTokenizer.TYPE.TEXT,
+        },
+      ],
+    },
+    {
+      desc: "boundary search restriction char at end",
+      searchString: `test${UrlbarTokenizer.RESTRICT.SEARCH}`,
+      expectedTokens: [
         { value: "test", type: UrlbarTokenizer.TYPE.TEXT },
         {
-          value: UrlbarTokenizer.RESTRICT.BOOKMARK,
-          type: UrlbarTokenizer.TYPE.RESTRICT_BOOKMARK,
+          value: UrlbarTokenizer.RESTRICT.SEARCH,
+          type: UrlbarTokenizer.TYPE.RESTRICT_SEARCH,
         },
       ],
     },
