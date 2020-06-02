@@ -15,6 +15,7 @@
   background-color: inherit;
   min-width: 0;
   justify-content: space-between;
+  align-items: center;
 }
 
 .datetime-input-edit-wrapper {
@@ -46,11 +47,11 @@
 }
 
 .datetime-reset-button {
+  color: inherit;
   fill: currentColor;
   opacity: .5;
   background-color: transparent;
   border: none;
-  align-self: center;
   flex: none;
   padding-inline: 2px;
 }
