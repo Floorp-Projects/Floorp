@@ -131,23 +131,23 @@ already_AddRefed<Promise> XRSystem::RequestSession(
   bool immersive = (aMode == XRSessionMode::Immersive_vr ||
                     aMode == XRSessionMode::Immersive_ar);
 
-  if (immersive || aOptions.mRequiredFeatures.WasPassed() ||
-      aOptions.mOptionalFeatures.WasPassed()) {
-    if (!UserActivation::IsHandlingUserInput() &&
-        aCallerType != CallerType::System &&
-        StaticPrefs::dom_vr_require_gesture()) {
-      // A user gesture is required.
-      promise->MaybeRejectWithSecurityError("A user gesture is required.");
-      return promise.forget();
-    }
-  }
-
   // The document must be a responsible document, active and focused.
   nsCOMPtr<Document> responsibleDocument = GetDocumentIfCurrent();
   if (!responsibleDocument) {
     // The document is not trustworthy
     promise->MaybeRejectWithSecurityError("This document is not responsible.");
     return promise.forget();
+  }
+
+  if (immersive || aOptions.mRequiredFeatures.WasPassed() ||
+      aOptions.mOptionalFeatures.WasPassed()) {
+    if (!responsibleDocument->HasValidTransientUserGestureActivation() &&
+        aCallerType != CallerType::System &&
+        StaticPrefs::dom_vr_require_gesture()) {
+      // A user gesture is required.
+      promise->MaybeRejectWithSecurityError("A user gesture is required.");
+      return promise.forget();
+    }
   }
 
   nsTArray<XRReferenceSpaceType> requiredReferenceSpaceTypes;
