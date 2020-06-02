@@ -73,7 +73,7 @@ class DownloadTest {
     }
 
     @Test
-    // Re-enable to test possible solution in AC 6817.
+    @Ignore("Temp disable flaky test - see: https://github.com/mozilla-mobile/fenix/issues/10798")
     fun testDownloadPrompt() {
         homeScreen { }.dismissOnboarding()
 
