@@ -135,8 +135,8 @@ void CookieServiceChild::TrackCookieLoad(nsIChannel* aChannel) {
   StoragePrincipalHelper::PrepareEffectiveStoragePrincipalOriginAttributes(
       aChannel, attrs);
 
-  bool isSafeTopLevelNav = NS_IsSafeTopLevelNav(aChannel);
-  bool isSameSiteForeign = NS_IsSameSiteForeign(aChannel, uri);
+  bool isSafeTopLevelNav = CookieCommons::IsSafeTopLevelNav(aChannel);
+  bool isSameSiteForeign = CookieCommons::IsSameSiteForeign(aChannel, uri);
   SendPrepareCookieList(
       uri, result.contains(ThirdPartyAnalysis::IsForeign),
       result.contains(ThirdPartyAnalysis::IsThirdPartyTrackingResource),
