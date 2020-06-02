@@ -11,6 +11,7 @@
 
 #include <queue>
 #include "chrome/common/ipc_message.h"
+#include "mozilla/UniquePtr.h"
 
 namespace IPC {
 
@@ -102,7 +103,7 @@ class Channel {
   //
   // If you Send() a message on a Close()'d channel, we delete the message
   // immediately.
-  bool Send(Message* message);
+  bool Send(mozilla::UniquePtr<Message> message);
 
   // Unsound_IsClosed() and Unsound_NumQueuedMessages() are safe to call from
   // any thread, but the value returned may be out of date, because we don't

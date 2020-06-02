@@ -17,6 +17,7 @@
 #include "nsISupportsImpl.h"
 
 #include "mozilla/Maybe.h"
+#include "mozilla/UniquePtr.h"
 
 namespace IPC {
 
@@ -39,7 +40,7 @@ class Channel::ChannelImpl : public MessageLoopForIO::IOHandler {
     listener_ = listener;
     return old;
   }
-  bool Send(Message* message);
+  bool Send(mozilla::UniquePtr<Message> message);
 
   // See the comment in ipc_channel.h for info on Unsound_IsClosed() and
   // Unsound_NumQueuedMessages().
@@ -49,7 +50,7 @@ class Channel::ChannelImpl : public MessageLoopForIO::IOHandler {
  private:
   void Init(Mode mode, Listener* listener);
 
-  void OutputQueuePush(Message* msg);
+  void OutputQueuePush(mozilla::UniquePtr<Message> msg);
   void OutputQueuePop();
 
   const std::wstring PipeName(const std::wstring& channel_id,

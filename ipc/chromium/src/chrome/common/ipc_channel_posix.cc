@@ -313,7 +313,7 @@ bool Channel::ChannelImpl::EnqueueHelloMessage() {
     return false;
   }
 
-  OutputQueuePush(msg.release());
+  OutputQueuePush(std::move(msg));
   return true;
 }
 
@@ -547,11 +547,11 @@ bool Channel::ChannelImpl::ProcessIncomingMessages() {
 #if defined(OS_MACOSX)
         // Send a message to the other side, indicating that we are now
         // responsible for closing the descriptor.
-        Message* fdAck =
-            new Message(MSG_ROUTING_NONE, RECEIVED_FDS_MESSAGE_TYPE);
+        auto fdAck = mozilla::MakeUnique<Message>(MSG_ROUTING_NONE,
+                                                  RECEIVED_FDS_MESSAGE_TYPE);
         DCHECK(m.fd_cookie() != 0);
         fdAck->set_fd_cookie(m.fd_cookie());
-        OutputQueuePush(fdAck);
+        OutputQueuePush(std::move(fdAck));
 #endif
 
         m.file_descriptor_set()->SetDescriptors(&fds[fds_i],
@@ -777,16 +777,16 @@ bool Channel::ChannelImpl::ProcessOutgoingMessages() {
   return true;
 }
 
-bool Channel::ChannelImpl::Send(Message* message) {
+bool Channel::ChannelImpl::Send(mozilla::UniquePtr<Message> message) {
 #ifdef IPC_MESSAGE_DEBUG_EXTRA
-  DLOG(INFO) << "sending message @" << message << " on channel @" << this
+  DLOG(INFO) << "sending message @" << message.get() << " on channel @" << this
              << " with type " << message->type() << " (" << output_queue_.size()
              << " in queue)";
 #endif
 
 #ifdef FUZZING
   message = mozilla::ipc::Faulty::instance().MutateIPCMessage(
-      "Channel::ChannelImpl::Send", message);
+      "Channel::ChannelImpl::Send", std::move(message));
 #endif
 
   // If the channel has been closed, ProcessOutgoingMessages() is never going
@@ -799,11 +799,10 @@ bool Channel::ChannelImpl::Send(Message* message) {
               "Can't send message %s, because this channel is closed.\n",
               message->name());
     }
-    delete message;
     return false;
   }
 
-  OutputQueuePush(message);
+  OutputQueuePush(std::move(message));
   if (!waiting_connect_) {
     if (!is_blocked_on_write_) {
       if (!ProcessOutgoingMessages()) return false;
@@ -855,10 +854,10 @@ void Channel::ChannelImpl::CloseDescriptors(uint32_t pending_fd_id) {
 }
 #endif
 
-void Channel::ChannelImpl::OutputQueuePush(Message* msg) {
+void Channel::ChannelImpl::OutputQueuePush(mozilla::UniquePtr<Message> msg) {
   MOZ_DIAGNOSTIC_ASSERT(!closed_);
   msg->AssertAsLargeAsHeader();
-  output_queue_.push(msg);
+  output_queue_.push(msg.release());
   output_queue_length_++;
 }
 
@@ -956,7 +955,9 @@ Channel::Listener* Channel::set_listener(Listener* listener) {
   return channel_impl_->set_listener(listener);
 }
 
-bool Channel::Send(Message* message) { return channel_impl_->Send(message); }
+bool Channel::Send(mozilla::UniquePtr<Message> message) {
+  return channel_impl_->Send(std::move(message));
+}
 
 void Channel::GetClientFileDescriptorMapping(int* src_fd, int* dest_fd) const {
   return channel_impl_->GetClientFileDescriptorMapping(src_fd, dest_fd);
