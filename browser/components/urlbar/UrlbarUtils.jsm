@@ -709,9 +709,6 @@ UrlbarUtils.RESULT_PAYLOAD_SCHEMA = {
       isPinned: {
         type: "boolean",
       },
-      overriddenSearchTopSite: {
-        type: "boolean",
-      },
       tags: {
         type: "array",
         items: {
