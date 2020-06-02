@@ -812,7 +812,8 @@ PRStatus _MD_WindowsGetSysInfo(PRSysInfo cmd, char *name, PRUint32 namelen)
 {
     OSVERSIONINFO osvi;
 
-    PR_ASSERT((cmd == PR_SI_SYSNAME) || (cmd == PR_SI_RELEASE));
+    PR_ASSERT((cmd == PR_SI_SYSNAME) || (cmd == PR_SI_RELEASE) ||
+              (cmd == PR_SI_RELEASE_BUILD));
 
     ZeroMemory(&osvi, sizeof(OSVERSIONINFO));
     osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
@@ -827,9 +828,13 @@ PRStatus _MD_WindowsGetSysInfo(PRSysInfo cmd, char *name, PRUint32 namelen)
             if (PR_SI_SYSNAME == cmd) {
                 (void)PR_snprintf(name, namelen, "Windows_NT");
             }
-            else if (PR_SI_RELEASE == cmd)
+            else if (PR_SI_RELEASE == cmd) {
                 (void)PR_snprintf(name, namelen, "%d.%d",osvi.dwMajorVersion,
                                   osvi.dwMinorVersion);
+            }
+            else if (PR_SI_RELEASE_BUILD == cmd) {
+                (void)PR_snprintf(name, namelen, "%d", osvi.dwBuildNumber);
+            }
             break;
         case VER_PLATFORM_WIN32_WINDOWS:
             if (PR_SI_SYSNAME == cmd) {
@@ -843,6 +848,8 @@ PRStatus _MD_WindowsGetSysInfo(PRSysInfo cmd, char *name, PRUint32 namelen)
             } else if (PR_SI_RELEASE == cmd) {
                 (void)PR_snprintf(name, namelen, "%d.%d",osvi.dwMajorVersion,
                                   osvi.dwMinorVersion);
+            } else if (PR_SI_RELEASE_BUILD == cmd) {
+                (void)PR_snprintf(name, namelen, "%d", osvi.dwBuildNumber);
             }
             break;
 #ifdef VER_PLATFORM_WIN32_CE
@@ -850,9 +857,15 @@ PRStatus _MD_WindowsGetSysInfo(PRSysInfo cmd, char *name, PRUint32 namelen)
             if (PR_SI_SYSNAME == cmd) {
                 (void)PR_snprintf(name, namelen, "Windows_CE");
             }
-            else if (PR_SI_RELEASE == cmd)
+            else if (PR_SI_RELEASE == cmd) {
                 (void)PR_snprintf(name, namelen, "%d.%d",osvi.dwMajorVersion,
                                   osvi.dwMinorVersion);
+            }
+            else if (PR_SI_RELEASE_BUILD == cmd) {
+              if (namelen) {
+                *name = 0;
+              }
+            }
             break;
 #endif
         default:
@@ -861,6 +874,11 @@ PRStatus _MD_WindowsGetSysInfo(PRSysInfo cmd, char *name, PRUint32 namelen)
             }
             else if (PR_SI_RELEASE == cmd) {
                 (void)PR_snprintf(name, namelen, "%d.%d",0,0);
+            }
+            else if (PR_SI_RELEASE_BUILD == cmd) {
+              if (namelen) {
+                *name = 0;
+              }
             }
             break;
     }

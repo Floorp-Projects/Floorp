@@ -152,6 +152,19 @@ PR_IMPLEMENT(PRStatus) PR_GetSystemInfo(PRSysInfo cmd, char *buf, PRUint32 bufle
 #endif /* OS2 */
             break;
 
+        case PR_SI_RELEASE_BUILD:
+          /* Return the version of the operating system */
+#if defined(XP_UNIX) || defined(WIN32)
+            if (PR_FAILURE == _PR_MD_GETSYSINFO(cmd, buf, (PRUintn)buflen)) {
+              return PR_FAILURE;
+            }
+#else
+            if (buflen) {
+                *buf = 0;
+            }
+#endif /* XP_UNIX || WIN32 */
+            break;
+
         case PR_SI_ARCHITECTURE:
             /* Return the architecture of the machine (ie. x86, mips, alpha, ...)*/
             (void)PR_snprintf(buf, buflen, _PR_SI_ARCHITECTURE);

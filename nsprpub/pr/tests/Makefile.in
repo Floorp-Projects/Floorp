@@ -211,6 +211,7 @@ ifdef NS_USE_GCC
 else
   EXTRA_LIBS += ws2_32.lib
   LDOPTS = -NOLOGO -DEBUG -DEBUGTYPE:CV -INCREMENTAL:NO
+  CFLAGS += -Fd$(@:.$(OBJ_SUFFIX)=.pdb)
   ifdef PROFILE
     LDOPTS += -PROFILE -MAP
   endif # profile

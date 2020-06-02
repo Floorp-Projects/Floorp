@@ -17,7 +17,7 @@ f_conf = "configure"
 f_conf_in = "configure.in"
 
 def check_call_noisy(cmd, *args, **kwargs):
-    print "Executing command:", cmd
+    print("Executing command:", cmd)
     check_call(cmd, *args, **kwargs)
 
 o = OptionParser(usage="client.py [options] remove_beta | set_beta | print_library_versions | set_version_to_minor_release | set_version_to_patch_release | create_nspr_release_archive")
@@ -30,7 +30,7 @@ except IndexError:
     sys.exit(2)
 
 def exit_with_failure(what):
-    print "failure: ", what
+    print("failure: ", what)
     sys.exit(2)
 
 def check_files_exist():
@@ -45,31 +45,31 @@ def sed_inplace(sed_expression, filename):
 def toggle_beta_status(is_beta):
     check_files_exist()
     if (is_beta):
-        print "adding Beta status to version numbers"
+        print("adding Beta status to version numbers")
         sed_inplace('s/^\(#define *PR_VERSION *\"[0-9.]\+\)\" *$/\\1 Beta\"/', prinit_h)
         sed_inplace('s/^\(#define *PR_BETA *\)PR_FALSE *$/\\1PR_TRUE/', prinit_h)
 
     else:
-        print "removing Beta status from version numbers"
+        print("removing Beta status from version numbers")
         sed_inplace('s/^\(#define *PR_VERSION *\"[0-9.]\+\) *Beta\" *$/\\1\"/', prinit_h)
         sed_inplace('s/^\(#define *PR_BETA *\)PR_TRUE *$/\\1PR_FALSE/', prinit_h)
-    print "please run 'hg stat' and 'hg diff' to verify the files have been verified correctly"
+    print("please run 'hg stat' and 'hg diff' to verify the files have been verified correctly")
 
 def print_beta_versions():
     check_call_noisy(["egrep", "#define *PR_VERSION|#define *PR_BETA", prinit_h])
 
 def remove_beta_status():
-    print "--- removing beta flags. Existing versions were:"
+    print("--- removing beta flags. Existing versions were:")
     print_beta_versions()
     toggle_beta_status(False)
-    print "--- finished modifications, new versions are:"
+    print("--- finished modifications, new versions are:")
     print_beta_versions()
 
 def set_beta_status():
-    print "--- adding beta flags. Existing versions were:"
+    print("--- adding beta flags. Existing versions were:")
     print_beta_versions()
     toggle_beta_status(True)
-    print "--- finished modifications, new versions are:"
+    print("--- finished modifications, new versions are:")
     print_beta_versions()
 
 def print_library_versions():
@@ -103,17 +103,17 @@ def set_all_lib_versions(version, major, minor, patch):
     set_major_versions(major)
     set_minor_versions(minor)
     set_patch_versions(patch)
-    print
-    print "==========================="
-    print "======== ATTENTION ========"
-    print
-    print "You *MUST* manually edit file pr/tests/vercheck.c"
-    print
-    print "Edit two arrays, named compatible_version and incompatible_version"
-    print "according to the new version you're adding."
-    print
-    print "======== ATTENTION ========"
-    print "==========================="
+    print()
+    print("===========================")
+    print("======== ATTENTION ========")
+    print()
+    print("You *MUST* manually edit file pr/tests/vercheck.c")
+    print()
+    print("Edit two arrays, named compatible_version and incompatible_version")
+    print("according to the new version you're adding.")
+    print()
+    print("======== ATTENTION ========")
+    print("===========================")
 
 def set_version_to_minor_release():
     ensure_arguments_after_action(2, "major_version  minor_version")
@@ -144,12 +144,12 @@ def create_nspr_release_archive():
     check_call_noisy(["mkdir", "-p", nspr_stagedir])
     check_call_noisy(["hg", "archive", "-r", nsprreltag, "--prefix=nspr-" + nsprrel + "/nspr",
                       "../stage/v" + nsprrel + "/src/" + nspr_tar, "-X", ".hgtags"])
-    print "changing to directory " + nspr_stagedir
+    print("changing to directory " + nspr_stagedir)
     os.chdir(nspr_stagedir)
 
     check_call("sha1sum " + nspr_tar + " > SHA1SUMS", shell=True)
     check_call("sha256sum " + nspr_tar + " > SHA256SUMS", shell=True)
-    print "created directory " + nspr_stagedir + " with files:"
+    print("created directory " + nspr_stagedir + " with files:")
     check_call_noisy(["ls", "-l"])
 
 if action in ('remove_beta'):
