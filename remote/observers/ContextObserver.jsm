@@ -145,19 +145,14 @@ class ContextObserver {
   }
 
   onDocShellCreated(docShell) {
-    const parent = docShell.browsingContext.parent;
-
-    // TODO: Use a unique identifier for frames (bug 1605359)
-    this.emit("frame-attached", {
-      frameId: docShell.browsingContext.id.toString(),
-      parentFrameId: parent ? parent.id.toString() : null,
+    this.emit("docshell-created", {
+      id: docShell.browsingContext.id,
     });
   }
 
   onDocShellDestroyed(docShell) {
-    // TODO: Use a unique identifier for frames (bug 1605359)
-    this.emit("frame-detached", {
-      frameId: docShell.browsingContext.id.toString(),
+    this.emit("docshell-destroyed", {
+      id: docShell.browsingContext.id,
     });
   }
 }
