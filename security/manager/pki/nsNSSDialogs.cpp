@@ -12,6 +12,7 @@
 
 #include "mozIDOMWindow.h"
 #include "nsArray.h"
+#include "nsComponentManagerUtils.h"
 #include "nsEmbedCID.h"
 #include "nsHashPropertyBag.h"
 #include "nsIDialogParamBlock.h"

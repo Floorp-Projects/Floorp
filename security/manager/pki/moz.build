@@ -6,14 +6,7 @@
 
 DIRS += ['resources']
 
-XPIDL_SOURCES += [
-    'nsIASN1Tree.idl',
-]
-
-XPIDL_MODULE = 'pippki'
-
 UNIFIED_SOURCES += [
-    'nsASN1Tree.cpp',
     'nsNSSDialogHelper.cpp',
     'nsNSSDialogs.cpp',
 ]
