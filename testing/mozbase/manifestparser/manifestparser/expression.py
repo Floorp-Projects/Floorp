@@ -271,7 +271,7 @@ class ExpressionParser(object):
         if self.strict:
             return self.valuemapping[ident]
         else:
-            return self.valuemapping.get(ident, None)
+            return self.valuemapping.get(ident, "")
 
     def advance(self, expected):
         """
