@@ -498,8 +498,8 @@ template <class EntryType>
 void nsTHashtable<EntryType>::s_CopyEntry(PLDHashTable* aTable,
                                           const PLDHashEntryHdr* aFrom,
                                           PLDHashEntryHdr* aTo) {
-  EntryType* fromEntry =
-      const_cast<EntryType*>(static_cast<const EntryType*>(aFrom));
+  auto* fromEntry = const_cast<std::remove_const_t<EntryType>*>(
+      static_cast<const EntryType*>(aFrom));
 
   new (mozilla::KnownNotNull, aTo) EntryType(std::move(*fromEntry));
 
