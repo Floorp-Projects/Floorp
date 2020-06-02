@@ -532,7 +532,7 @@ class MessageChannel : HasResultCodes, MessageLoop::DestructionObserver {
 
   // Helper for sending a message via the link. This should only be used for
   // non-special messages that might have to be postponed.
-  void SendMessageToLink(Message* aMsg);
+  void SendMessageToLink(UniquePtr<Message> aMsg);
 
   bool WasTransactionCanceled(int transaction);
   bool ShouldDeferMessage(const Message& aMsg);

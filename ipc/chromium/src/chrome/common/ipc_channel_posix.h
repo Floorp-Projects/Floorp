@@ -21,6 +21,7 @@
 #include "chrome/common/file_descriptor_set_posix.h"
 
 #include "mozilla/Maybe.h"
+#include "mozilla/UniquePtr.h"
 
 namespace IPC {
 
@@ -39,7 +40,7 @@ class Channel::ChannelImpl : public MessageLoopForIO::Watcher {
     listener_ = listener;
     return old;
   }
-  bool Send(Message* message);
+  bool Send(mozilla::UniquePtr<Message> message);
   void GetClientFileDescriptorMapping(int* src_fd, int* dest_fd) const;
 
   void ResetFileDescriptor(int fd);
@@ -68,7 +69,7 @@ class Channel::ChannelImpl : public MessageLoopForIO::Watcher {
   void CloseDescriptors(uint32_t pending_fd_id);
 #endif
 
-  void OutputQueuePush(Message* msg);
+  void OutputQueuePush(mozilla::UniquePtr<Message> msg);
   void OutputQueuePop();
 
   Mode mode_;

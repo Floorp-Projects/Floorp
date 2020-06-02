@@ -13,6 +13,7 @@
 #include "base/string16.h"
 #include "nsDebug.h"
 #include "nsTArray.h"
+#include "mozilla/UniquePtr.h"
 
 #ifdef IsLoggingEnabled
 // This is defined in the Windows SDK urlmon.h
@@ -84,8 +85,8 @@ class Faulty {
   void DumpMessage(const char* aChannel, IPC::Message* aMsg,
                    std::string aAppendix = nullptr);
   bool IsMessageNameBlacklisted(const char* aMessageName);
-  IPC::Message* MutateIPCMessage(
-      const char* aChannel, IPC::Message* aMsg,
+  UniquePtr<IPC::Message> MutateIPCMessage(
+      const char* aChannel, UniquePtr<IPC::Message> aMsg,
       unsigned int aProbability = DefaultProbability());
 
   void LogMessage(const char* aChannel, IPC::Message* aMsg);
