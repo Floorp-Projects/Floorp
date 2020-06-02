@@ -14,6 +14,21 @@ add_task(async function test_OPEN_ABOUT_PAGE() {
   });
 
   const tab = await tabPromise;
-  ok(tab, "should open about page with entrypoint in a new tab");
+  ok(tab, "should open about page with entrypoint in a new tab by default");
   BrowserTestUtils.removeTab(tab);
+});
+
+add_task(async function test_OPEN_ABOUT_PAGE_NEW_WINDOW() {
+  const newWindowPromise = BrowserTestUtils.waitForNewWindow(
+    gBrowser,
+    "about:robots?foo=bar"
+  );
+  await SMATestUtils.executeAndValidateAction({
+    type: "OPEN_ABOUT_PAGE",
+    data: { args: "robots", entrypoint: "foo=bar", where: "window" },
+  });
+
+  const win = await newWindowPromise;
+  ok(win, "should open about page in a new window");
+  BrowserTestUtils.closeWindow(win);
 });
