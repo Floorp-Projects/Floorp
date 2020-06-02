@@ -157,5 +157,28 @@ void CookieLogging::LogEvicted(Cookie* aCookie, const char* details) {
   MOZ_LOG(gCookieLog, LogLevel::Debug, ("\n"));
 }
 
+// static
+void CookieLogging::LogMessageToConsole(nsIConsoleReportCollector* aCRC,
+                                        nsIURI* aURI, uint32_t aErrorFlags,
+                                        const nsACString& aCategory,
+                                        const nsACString& aMsg,
+                                        const nsTArray<nsString>& aParams) {
+  MOZ_ASSERT(aURI);
+
+  if (!aCRC) {
+    return;
+  }
+
+  nsAutoCString uri;
+  nsresult rv = aURI->GetSpec(uri);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
+  aCRC->AddConsoleReport(aErrorFlags, aCategory,
+                         nsContentUtils::eNECKO_PROPERTIES, uri, 0, 0, aMsg,
+                         aParams);
+}
+
 }  // namespace net
 }  // namespace mozilla
