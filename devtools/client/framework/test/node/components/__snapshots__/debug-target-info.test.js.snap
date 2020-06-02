@@ -119,7 +119,7 @@ exports[`DebugTargetInfo component Target icon renders the expected snapshot for
     className="debug-target-url"
   >
     <span
-      className="devtools-ellipsis-text"
+      className="debug-target-url-readonly devtools-ellipsis-text"
     >
       http://some.target/url
     </span>
@@ -246,7 +246,7 @@ exports[`DebugTargetInfo component Target icon renders the expected snapshot for
     className="debug-target-url"
   >
     <span
-      className="devtools-ellipsis-text"
+      className="debug-target-url-readonly devtools-ellipsis-text"
     >
       http://some.target/url
     </span>
@@ -302,7 +302,7 @@ exports[`DebugTargetInfo component Target icon renders the expected snapshot for
     className="debug-target-url"
   >
     <span
-      className="devtools-ellipsis-text"
+      className="debug-target-url-readonly devtools-ellipsis-text"
     >
       http://some.target/url
     </span>
