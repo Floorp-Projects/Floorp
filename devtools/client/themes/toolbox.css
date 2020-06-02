@@ -49,6 +49,16 @@
   fill: var(--theme-toolbar-color);
 }
 
+/*
+ * XXX: This was added to match the padding 8px used by the reload button.
+ * This padding makes the debug target component taller and also creates
+ * spacing with the debug-target-title separator.
+ * See Bug 1641920 for improving the CSS of the DebugTargetInfo component.
+ */
+.debug-target-info .debug-target-url-readonly {
+  padding: 8px;
+}
+
 .debug-target-info .reload-button {
   padding: 8px;
   grid-column-gap: 0;
