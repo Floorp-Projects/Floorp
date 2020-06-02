@@ -227,13 +227,14 @@ class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidM
 
         mozinfo.find_and_update_from_json(dirs['abs_test_install_dir'])
 
+        raw_log_file, error_summary_file = self.get_indexed_logs(dirs['abs_blob_upload_dir'],
+                                                                 'wpt')
+
         cmd += ["--log-raw=-",
-                "--log-raw=%s" % os.path.join(dirs["abs_blob_upload_dir"],
-                                              "wpt_raw.log"),
+                "--log-raw=%s" % raw_log_file,
                 "--log-wptreport=%s" % os.path.join(dirs["abs_blob_upload_dir"],
                                                     "wptreport.json"),
-                "--log-errorsummary=%s" % os.path.join(dirs["abs_blob_upload_dir"],
-                                                       "wpt_errorsummary.log"),
+                "--log-errorsummary=%s" % error_summary_file,
                 "--binary=%s" % self.binary_path,
                 "--symbols-path=%s" % self.symbols_path,
                 "--stackwalk-binary=%s" % self.query_minidump_stackwalk(),
