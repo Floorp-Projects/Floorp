@@ -26,6 +26,7 @@
 #include "mozilla/dom/GetUserMediaRequestBinding.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/UserActivation.h"
+#include "mozilla/dom/WindowContext.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/media/MediaChild.h"
 #include "mozilla/media/MediaTaskUtils.h"
@@ -2264,30 +2265,18 @@ nsresult MediaManager::GenerateUUID(nsAString& aResult) {
 }
 
 static bool IsFullyActive(nsPIDOMWindowInner* aWindow) {
-  while (true) {
-    if (!aWindow || nsGlobalWindowInner::Cast(aWindow)->IsDying()) {
-      return false;
-    }
-    Document* document = aWindow->GetExtantDoc();
-    if (!document) {
-      return false;
-    }
-    if (!document->IsCurrentActiveDocument()) {
-      return false;
-    }
-    nsPIDOMWindowOuter* context = aWindow->GetOuterWindow();
-    if (!context) {
-      return false;
-    }
-    if (context->IsTopLevelWindow()) {
-      return true;
-    }
-    nsCOMPtr<Element> frameElement = context->GetFrameElement();
-    if (!frameElement) {
-      return false;
-    }
-    aWindow = frameElement->OwnerDoc()->GetInnerWindow();
+  dom::WindowContext* currentContext;
+  if (!aWindow || !(currentContext = aWindow->GetWindowContext())) {
+    return false;
   }
+  for (; currentContext;
+       currentContext = currentContext->GetParentWindowContext()) {
+    if (currentContext->IsDiscarded() || currentContext->IsCached()) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
 enum class GetUserMediaSecurityState {
