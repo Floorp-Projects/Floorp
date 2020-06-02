@@ -47,14 +47,14 @@
             app:iconSpaceReserved="false" />
         <SwitchPreference
             android:defaultValue="true"
-            android:key="@string/pref_key_show_search_suggestions"
-            android:title="@string/preferences_show_search_suggestions"
+            android:key="@string/pref_key_show_voice_search"
+            android:title="@string/preferences_show_voice_search"
             app:iconSpaceReserved="false"
             app:allowDividerAbove="false"/>
         <SwitchPreference
             android:defaultValue="true"
-            android:key="@string/pref_key_show_voice_search"
-            android:title="@string/preferences_show_voice_search"
+            android:key="@string/pref_key_show_search_suggestions"
+            android:title="@string/preferences_show_search_suggestions"
             app:iconSpaceReserved="false"
             app:allowDividerAbove="false"/>
         <CheckBoxPreference
