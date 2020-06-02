@@ -289,7 +289,7 @@ class IProtocol : public HasResultCodes {
                    RejectCallback&& aReject) {
     UniquePtr<IPC::Message> msg(aMsg);
     if (CanSend()) {
-      GetIPCChannel()->Send(msg.release(), this, std::move(aResolve),
+      GetIPCChannel()->Send(std::move(msg), this, std::move(aResolve),
                             std::move(aReject));
     } else {
       NS_WARNING("IPC message discarded: actor cannot send");
