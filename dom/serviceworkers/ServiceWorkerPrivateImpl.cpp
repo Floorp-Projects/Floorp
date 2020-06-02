@@ -160,31 +160,37 @@ nsresult ServiceWorkerPrivateImpl::Initialize() {
                             nsIChannel::LOAD_BYPASS_SERVICE_WORKER);
   serviceWorkerData.id() = std::move(id);
 
-  mRemoteWorkerData.originalScriptURL() =
-      NS_ConvertUTF8toUTF16(mOuter->mInfo->ScriptSpec());
-  mRemoteWorkerData.baseScriptURL() = baseScriptURL;
-  mRemoteWorkerData.resolvedScriptURL() = baseScriptURL;
-  mRemoteWorkerData.name() = VoidString();
+  nsAutoCString domain;
+  rv = uri->GetHost(domain);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
-  mRemoteWorkerData.loadingPrincipalInfo() = principalInfo;
-  mRemoteWorkerData.principalInfo() = principalInfo;
-  // partitionedPrincipalInfo for ServiceWorkers is equal to principalInfo
-  // because, at the moment, ServiceWorkers are not exposed in partitioned
-  // contexts.
-  mRemoteWorkerData.partitionedPrincipalInfo() = principalInfo;
+  mRemoteWorkerData = RemoteWorkerData(
+      NS_ConvertUTF8toUTF16(mOuter->mInfo->ScriptSpec()), baseScriptURL,
+      baseScriptURL, /* name */ VoidString(),
+      /* loading principal */ principalInfo, principalInfo,
 
-  // ServiceWorkers run as first-party, no storage-access permission needed.
-  mRemoteWorkerData.useRegularPrincipal() = true;
-  mRemoteWorkerData.hasStorageAccessPermissionGranted() = false;
+      // partitionedPrincipalInfo for ServiceWorkers is equal to principalInfo
+      // because, at the moment, ServiceWorkers are not exposed in partitioned
+      // contexts.
+      principalInfo,
+      /* useRegularPrincipal */ true,
 
-  rv = uri->GetHost(mRemoteWorkerData.domain());
-  NS_ENSURE_SUCCESS(rv, rv);
-  mRemoteWorkerData.isSecureContext() = true;
+      // ServiceWorkers run as first-party, no storage-access permission needed.
+      /* hasStorageAccessPermissionGranted */ false,
+
+      domain,
+      /* isSecureContext */ true,
+      /* clientInfo*/ Nothing(),
+
+      // The RemoteWorkerData CTOR doesn't allow to set the referrerInfo via
+      // already_AddRefed<>. Let's set it to null.
+      /* referrerInfo */ nullptr,
+
+      storageAccess, std::move(serviceWorkerData), regInfo->AgentClusterId());
+
   mRemoteWorkerData.referrerInfo() = MakeAndAddRef<ReferrerInfo>();
-  mRemoteWorkerData.storageAccess() = storageAccess;
-  mRemoteWorkerData.serviceWorkerData() = std::move(serviceWorkerData);
-
-  mRemoteWorkerData.agentClusterId() = regInfo->AgentClusterId();
 
   // This fills in the rest of mRemoteWorkerData.serviceWorkerData().
   RefreshRemoteWorkerData(regInfo);
