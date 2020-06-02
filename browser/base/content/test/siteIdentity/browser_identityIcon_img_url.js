@@ -80,8 +80,7 @@ const TEST_CASES = [
   {
     type: "view-source HTTPS",
     testURL: "view-source:https://example.com/",
-    // TODO this will get a secure treatment with bug 1496844.
-    img_url: `url("chrome://global/skin/icons/identity-icon.svg")`,
+    img_url: `url("chrome://browser/skin/connection-secure.svg")`,
   },
 ];
 

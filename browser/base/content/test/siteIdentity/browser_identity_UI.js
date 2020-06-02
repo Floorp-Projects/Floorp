@@ -14,7 +14,8 @@ var tests = [
   {
     name: "view-source",
     location: "view-source:http://example.com/",
-    hostForDisplay: null,
+    newURI: "http://example.com/",
+    hostForDisplay: "example.com",
   },
   {
     name: "normal HTTPS",
@@ -39,7 +40,8 @@ var tests = [
   {
     name: "view-source HTTPS",
     location: "view-source:https://example.com/",
-    hostForDisplay: null,
+    newURI: "https://example.com/",
+    hostForDisplay: "example.com",
   },
   {
     name: "IP address",
@@ -116,7 +118,7 @@ async function runTest(i, forward) {
   // Sanity check other values, and the value of gIdentityHandler.getHostForDisplay()
   is(
     gIdentityHandler._uri.spec,
-    currentTest.location,
+    currentTest.newURI || currentTest.location,
     "location matches for test " + testDesc
   );
   // getHostForDisplay can't be called for all modes
