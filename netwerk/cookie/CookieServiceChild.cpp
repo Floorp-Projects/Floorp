@@ -331,6 +331,9 @@ CookieServiceChild::GetCookieStringFromDocument(Document* aDocument,
 
   nsCOMPtr<nsIPrincipal> principal = aDocument->EffectiveStoragePrincipal();
 
+  nsICookie::schemeType schemeType =
+      CookieCommons::PrincipalToSchemeType(principal);
+
   nsAutoCString baseDomain;
   nsresult rv = CookieCommons::GetBaseDomain(principal, baseDomain);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -385,6 +388,10 @@ CookieServiceChild::GetCookieStringFromDocument(Document* aDocument,
 
     // if the cookie is secure and the host scheme isn't, we can't send it
     if (cookie->IsSecure() && !isPotentiallyTrustworthy) {
+      continue;
+    }
+
+    if (!CookieCommons::MaybeCompareScheme(cookie, schemeType)) {
       continue;
     }
 
