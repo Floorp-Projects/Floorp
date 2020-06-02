@@ -15,7 +15,7 @@ import sys
 import tempfile
 import zipfile
 from collections import namedtuple
-from six import string_types, text_type
+from six import string_types, text_type, ensure_str
 from six.moves.urllib.request import urlopen
 
 import mozfile
@@ -307,6 +307,8 @@ class CrashInfo(object):
             )
             (out, err) = p.communicate()
             retcode = p.returncode
+            out = ensure_str(out)
+            err = ensure_str(err)
 
             if len(out) > 3:
                 # minidump_stackwalk is chatty,
