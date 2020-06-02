@@ -1490,7 +1490,8 @@ WrappedFunction::WrappedFunction(JSFunction* fun, uint16_t nargs,
     MOZ_ASSERT(fun->isNative() == isNative());
     MOZ_ASSERT(fun->isBuiltinNative() == isBuiltinNative());
     MOZ_ASSERT(fun->isNativeWithJitEntry() == isNativeWithJitEntry());
-    // isNativeWithCppEntry is derived.
+    MOZ_ASSERT(fun->isNativeWithoutJitEntry() == isNativeWithoutJitEntry());
+    MOZ_ASSERT(fun->hasJitEntry() == hasJitEntry());
     MOZ_ASSERT(fun->isInterpreted() == isInterpreted());
     MOZ_ASSERT(fun->isConstructor() == isConstructor());
     MOZ_ASSERT(fun->isClassConstructor() == isClassConstructor());

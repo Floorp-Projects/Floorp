@@ -167,7 +167,12 @@ class JSFunction : public js::NativeObject {
   bool isWasm() const { return flags_.isWasm(); }
   bool isWasmWithJitEntry() const { return flags_.isWasmWithJitEntry(); }
   bool isNativeWithJitEntry() const { return flags_.isNativeWithJitEntry(); }
+  bool isNativeWithoutJitEntry() const {
+    return flags_.isNativeWithoutJitEntry();
+  }
   bool isBuiltinNative() const { return flags_.isBuiltinNative(); }
+
+  bool hasJitEntry() const { return flags_.hasJitEntry(); }
 
   /* Possible attributes of an interpreted function: */
   bool isBoundFunction() const { return flags_.isBoundFunction(); }
@@ -220,10 +225,6 @@ class JSFunction : public js::NativeObject {
     }
 
     return baseScript()->hasJitScript();
-  }
-  bool hasJitEntry() const {
-    return hasBaseScript() || hasSelfHostedLazyScript() ||
-           isNativeWithJitEntry();
   }
 
   /* Compound attributes: */

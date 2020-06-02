@@ -2647,9 +2647,10 @@ class WrappedFunction : public TempObject {
   bool isNative() const { return flags_.isNative(); }
   bool isBuiltinNative() const { return flags_.isBuiltinNative(); }
   bool isNativeWithJitEntry() const { return flags_.isNativeWithJitEntry(); }
-  bool isNativeWithCppEntry() const {
-    return isNative() && !isNativeWithJitEntry();
+  bool isNativeWithoutJitEntry() const {
+    return flags_.isNativeWithoutJitEntry();
   }
+  bool hasJitEntry() const { return flags_.hasJitEntry(); }
   bool isInterpreted() const { return flags_.isInterpreted(); }
   bool isConstructor() const { return flags_.isConstructor(); }
   bool isClassConstructor() const { return flags_.isClassConstructor(); }
