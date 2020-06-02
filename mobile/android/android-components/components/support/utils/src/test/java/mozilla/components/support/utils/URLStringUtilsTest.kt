@@ -73,6 +73,9 @@ class URLStringUtilsTest {
         assertFalse(isURLLike("http://www-.com"))
         assertFalse(isURLLike("www.c-c-  "))
         assertFalse(isURLLike("3-3 "))
+
+        // Examples from issues
+        assertTrue(isURLLike("https://abc--cba.com/")) // #7096
     }
 
     @Test
@@ -119,6 +122,9 @@ class URLStringUtilsTest {
         assertTrue(isSearchTerm("http://www-.com"))
         assertTrue(isSearchTerm("www.c-c-  "))
         assertTrue(isSearchTerm("3-3 "))
+
+        // Examples from issues
+        assertFalse(isSearchTerm("https://abc--cba.com/")) // #7096
     }
 
     @Test
