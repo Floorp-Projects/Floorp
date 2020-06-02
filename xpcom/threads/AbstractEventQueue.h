@@ -17,12 +17,15 @@ class nsIRunnable;
 namespace mozilla {
 
 enum class EventQueuePriority {
-  High,
-  Input,
-  MediumHigh,
-  Normal,
-  DeferredTimers,
   Idle,
+  DeferredTimers,
+  InputLow,
+  // Used to ensure high priority tasks don't starve ~normal priority tasks
+  HighLow,
+  Normal,
+  MediumHigh,
+  InputHigh,
+  High,
 
   Count
 };
