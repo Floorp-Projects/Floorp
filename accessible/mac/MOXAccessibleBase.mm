@@ -228,13 +228,43 @@ using namespace mozilla::a11y;
 
 - (NSArray*)accessibilityParameterizedAttributeNames {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
-  return @[];
+
+  if ([self isExpired]) {
+    return nil;
+  }
+
+  NSMutableArray* attributeNames = [[NSMutableArray alloc] init];
+
+  NSDictionary* attributes = mac::ParameterizedAttributeGetters();
+  for (NSString* attribute in attributes) {
+    SEL selector = NSSelectorFromString(attributes[attribute]);
+    if ([self isSelectorSupported:selector]) {
+      [attributeNames addObject:attribute];
+    }
+  }
+
+  return attributeNames;
+
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
 - (id)accessibilityAttributeValue:(NSString*)attribute forParameter:(id)parameter {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+
+  if ([self isExpired]) {
+    return nil;
+  }
+
+  NSDictionary* getters = mac::ParameterizedAttributeGetters();
+  if (getters[attribute]) {
+    SEL selector = NSSelectorFromString(getters[attribute]);
+    if ([self isSelectorSupported:selector]) {
+      return [self performSelector:selector withObject:parameter];
+    }
+  }
+
   return nil;
+
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
