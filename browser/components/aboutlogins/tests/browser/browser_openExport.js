@@ -8,11 +8,26 @@
  * Test the export logins file picker appears.
  */
 
+let { TelemetryTestUtils } = ChromeUtils.import(
+  "resource://testing-common/TelemetryTestUtils.jsm"
+);
+
 let { MockFilePicker } = SpecialPowers;
 
 add_task(async function setup() {
+  await TestUtils.waitForCondition(() => {
+    Services.telemetry.clearEvents();
+    let events = Services.telemetry.snapshotEvents(
+      Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
+      true
+    ).content;
+    return !events || !events.length;
+  }, "Waiting for content telemetry events to get cleared");
+
   MockFilePicker.init(window);
-  MockFilePicker.returnValue = MockFilePicker.returnCancel;
+  MockFilePicker.useAnyFile();
+  MockFilePicker.returnValue = MockFilePicker.returnOK;
+
   registerCleanupFunction(() => {
     MockFilePicker.cleanup();
   });
@@ -37,6 +52,7 @@ add_task(async function test_open_export() {
         {},
         browser
       );
+
       await SpecialPowers.spawn(browser, [], async () => {
         let menuButton = content.document.querySelector("menu-button");
         return ContentTaskUtils.waitForCondition(function waitForMenu() {
@@ -54,14 +70,22 @@ add_task(async function test_open_export() {
         return exportButton;
       }
 
-      let filePicker = waitForFilePicker();
       await BrowserTestUtils.synthesizeMouseAtCenter(
         getExportMenuItem,
         {},
         browser
       );
 
+      // First event is for opening about:logins
+      await LoginTestUtils.telemetry.waitForEventCount(2);
+      TelemetryTestUtils.assertEvents(
+        [["pwmgr", "mgmt_menu_item_used", "export"]],
+        { category: "pwmgr", method: "mgmt_menu_item_used" },
+        { process: "content" }
+      );
+
       info("Clicking confirm button");
+      let filePicker = waitForFilePicker();
       await BrowserTestUtils.synthesizeMouseAtCenter(
         () => {
           let confirmExportDialog = window.document.querySelector(
@@ -78,6 +102,14 @@ add_task(async function test_open_export() {
       info("waiting for Export file picker to get opened");
       await filePicker;
       ok(true, "Export file picker opened");
+
+      info("Waiting for the export to complete");
+      await LoginTestUtils.telemetry.waitForEventCount(1, "parent");
+      TelemetryTestUtils.assertEvents(
+        [["pwmgr", "mgmt_menu_item_used", "export_complete"]],
+        { category: "pwmgr", method: "mgmt_menu_item_used" },
+        { process: "parent" }
+      );
     }
   );
 });

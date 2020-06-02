@@ -1,7 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-ChromeUtils.import("resource://testing-common/TelemetryTestUtils.jsm", this);
 ChromeUtils.import("resource://testing-common/LoginTestUtils.jsm", this);
 
 EXPECTED_BREACH = {

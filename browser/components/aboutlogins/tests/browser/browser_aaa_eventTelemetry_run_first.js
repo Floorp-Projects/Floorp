@@ -34,6 +34,16 @@ add_task(async function setup() {
   TEST_LOGIN1 = await addLogin(TEST_LOGIN1);
   VULNERABLE_TEST_LOGIN2 = await addLogin(VULNERABLE_TEST_LOGIN2);
   TEST_LOGIN3 = await addLogin(TEST_LOGIN3);
+
+  await TestUtils.waitForCondition(() => {
+    Services.telemetry.clearEvents();
+    let events = Services.telemetry.snapshotEvents(
+      Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
+      true
+    ).content;
+    return !events || !events.length;
+  }, "Waiting for telemetry events to get cleared");
+
   await BrowserTestUtils.openNewForegroundTab({
     gBrowser,
     url: "about:logins",
@@ -45,15 +55,6 @@ add_task(async function setup() {
 });
 
 add_task(async function test_telemetry_events() {
-  await TestUtils.waitForCondition(() => {
-    Services.telemetry.clearEvents();
-    let events = Services.telemetry.snapshotEvents(
-      Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
-      true
-    ).content;
-    return !events || !events.length;
-  }, "Waiting for telemetry events to get cleared");
-
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
     let loginList = content.document.querySelector("login-list");
     let loginListItem = loginList.shadowRoot.querySelector(

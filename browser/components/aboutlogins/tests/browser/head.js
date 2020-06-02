@@ -81,7 +81,7 @@ async function addLogin(login) {
 
 let EXPECTED_BREACH = null;
 let EXPECTED_ERROR_MESSAGE = null;
-add_task(async function setup() {
+add_task(async function setup_head() {
   const db = await RemoteSettings(LoginBreaches.REMOTE_SETTINGS_COLLECTION).db;
   if (EXPECTED_BREACH) {
     await db.create(EXPECTED_BREACH, {
@@ -147,6 +147,7 @@ add_task(async function setup() {
   registerCleanupFunction(async () => {
     EXPECTED_ERROR_MESSAGE = null;
     await db.clear();
+    Services.telemetry.clearEvents();
     SpecialPowers.postConsoleSentinel();
   });
 });

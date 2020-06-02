@@ -744,6 +744,23 @@ pwmgr:
     expiry_version: never
     extra_keys:
       filled: Whether the browser filled the login details for the user vs. typing saved values.
+  mgmt_menu_item_used:
+    description: >
+      Record interactions with the about:logins menu.
+    objects: [
+      "import_from_browser",
+      "import_from_csv",
+      "export",
+      "export_complete",
+      "preferences",
+    ]
+    bug_numbers: [1641396, 1641777, 1641393]
+    expiry_version: never
+    notification_emails: ["loines@mozilla.com", "passwords-dev@mozilla.org"]
+    release_channel_collection: opt-out
+    products:
+      - "firefox"
+    record_in_processes: [content, main]
 
 fxa:
   connect:
