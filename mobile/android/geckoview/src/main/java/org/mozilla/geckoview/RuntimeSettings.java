@@ -37,6 +37,7 @@ public abstract class RuntimeSettings implements Parcelable {
     public abstract static class Builder<Settings extends RuntimeSettings> {
         private final Settings mSettings;
 
+        @SuppressWarnings("checkstyle:javadocmethod")
         public Builder() {
             mSettings = newSettings(null);
         }
@@ -262,6 +263,7 @@ public abstract class RuntimeSettings implements Parcelable {
 
     @AnyThread
     // AIDL code may call readFromParcel even though it's not part of Parcelable.
+    @SuppressWarnings("checkstyle:javadocmethod")
     public void readFromParcel(final @NonNull Parcel source) {
         for (final Pref<?> pref : mPrefs) {
             // We know this is safe.

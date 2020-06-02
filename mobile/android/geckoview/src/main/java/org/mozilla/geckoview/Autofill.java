@@ -83,6 +83,7 @@ public class Autofill {
         public static final int NODE_BLURRED = 7;
 
         @AnyThread
+        @SuppressWarnings("checkstyle:javadocmethod")
         public static @Nullable String toString(
                 final @AutofillNotify int notification) {
             final String[] map = new String[] {
@@ -137,6 +138,7 @@ public class Autofill {
         public static final int USERNAME = 3;
 
         @AnyThread
+        @SuppressWarnings("checkstyle:javadocmethod")
         public static @Nullable String toString(final @AutofillHint int hint) {
             final int idx = hint + 1;
             final String[] map = new String[] {
@@ -181,6 +183,7 @@ public class Autofill {
         public static final int PHONE = 2;
 
         @AnyThread
+        @SuppressWarnings("checkstyle:javadocmethod")
         public static @Nullable String toString(
                 final @AutofillInputType int type) {
             final int idx = type + 1;
@@ -220,6 +223,7 @@ public class Autofill {
         }
 
         @AnyThread
+        @SuppressWarnings("checkstyle:javadocmethod")
         public @NonNull Rect getDefaultDimensions() {
             return Support.getDummyAutofillRect(mGeckoSession, false, null);
         }
@@ -295,6 +299,7 @@ public class Autofill {
 
         @TargetApi(23)
         @UiThread
+        @SuppressWarnings("checkstyle:javadocmethod")
         public void fillViewStructure(
                 @NonNull final View view,
                 @NonNull final ViewStructure structure,
@@ -444,6 +449,7 @@ public class Autofill {
         }
 
         @AnyThread
+        @SuppressWarnings("checkstyle:javadocmethod")
         public @Nullable String getAttribute(@NonNull final String key) {
             return mAttributes.get(key);
         }
@@ -636,6 +642,7 @@ public class Autofill {
 
         @TargetApi(23)
         @UiThread
+        @SuppressWarnings("checkstyle:javadocmethod")
         public void fillViewStructure(
                 @NonNull final View view,
                 @NonNull final ViewStructure structure,
