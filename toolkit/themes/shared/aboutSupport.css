@@ -72,7 +72,6 @@ td.integer {
   width: 30%;
 }
 
-#action-box,
 #reset-box,
 #safe-mode-box {
   display: none;

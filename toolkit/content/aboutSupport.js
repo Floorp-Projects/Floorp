@@ -1464,11 +1464,9 @@ function openProfileDirectory() {
 function populateActionBox() {
   if (ResetProfile.resetSupported()) {
     $("reset-box").style.display = "block";
-    $("action-box").style.display = "block";
   }
   if (!Services.appinfo.inSafeMode && AppConstants.platform !== "android") {
     $("safe-mode-box").style.display = "block";
-    $("action-box").style.display = "block";
 
     if (Services.policies && !Services.policies.isAllowed("safeMode")) {
       $("restart-in-safe-mode-button").setAttribute("disabled", "true");
@@ -1499,6 +1497,42 @@ function setupEventListeners() {
   if (button) {
     button.addEventListener("click", function(event) {
       ResetProfile.openConfirmationDialog(window);
+    });
+  }
+  button = $("clear-startup-cache-button");
+  if (button) {
+    button.addEventListener("click", async function(event) {
+      const [
+        promptTitle,
+        promptBody,
+        restartButtonLabel,
+      ] = await document.l10n.formatValues([
+        { id: "startup-cache-dialog-title" },
+        { id: "startup-cache-dialog-body" },
+        { id: "restart-button-label" },
+      ]);
+      const buttonFlags =
+        Services.prompt.BUTTON_POS_0 * Services.prompt.BUTTON_TITLE_IS_STRING +
+        Services.prompt.BUTTON_POS_1 * Services.prompt.BUTTON_TITLE_CANCEL +
+        Services.prompt.BUTTON_POS_0_DEFAULT;
+      const result = Services.prompt.confirmEx(
+        window,
+        promptTitle,
+        promptBody,
+        buttonFlags,
+        restartButtonLabel,
+        null,
+        null,
+        null,
+        {}
+      );
+      if (result !== 0) {
+        return;
+      }
+      Services.appinfo.invalidateCachesOnRestart();
+      Services.startup.quit(
+        Ci.nsIAppStartup.eRestart | Ci.nsIAppStartup.eAttemptQuit
+      );
     });
   }
   button = $("restart-in-safe-mode-button");
