@@ -976,6 +976,16 @@ bool CookieService::CanSetCookie(
   // init expiryTime such that session cookies won't prematurely expire
   aCookieData.expiry() = INT64_MAX;
 
+  if (aHostURI->SchemeIs("https")) {
+    aCookieData.schemeMap() = nsICookie::SCHEME_HTTPS;
+  } else if (aHostURI->SchemeIs("http")) {
+    aCookieData.schemeMap() = nsICookie::SCHEME_HTTP;
+  } else if (aHostURI->SchemeIs("file")) {
+    aCookieData.schemeMap() = nsICookie::SCHEME_FILE;
+  } else {
+    MOZ_CRASH("Unsupported scheme type");
+  }
+
   // aCookieHeader is an in/out param to point to the next cookie, if
   // there is one. Save the present value for logging purposes
   nsCString savedCookieHeader(aCookieHeader);
