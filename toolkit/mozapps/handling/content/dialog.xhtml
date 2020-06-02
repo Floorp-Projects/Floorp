@@ -12,9 +12,13 @@
         style="min-width: &window.emWidth;; min-height: &window.emHeight;;"
         persist="width height screenX screenY"
         aria-describedby="description-text"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml">
 <dialog id="handling"
         buttons="cancel,extra1">
+  <linkset>
+    <html:link rel="localization" href="toolkit/global/handlerDialog.ftl"/>
+  </linkset>
 
   <script src="chrome://mozapps/content/handling/dialog.js" type="application/javascript"/>
 
@@ -22,6 +26,10 @@
     <stringbundle id="base-strings"
                   src="chrome://mozapps/locale/handling/handling.properties"/>
   </stringbundleset>
+
+  <hbox hidden="true">
+    <description id="originating-host"></description>
+  </hbox>
 
   <hbox>
     <image id="description-image"/>
