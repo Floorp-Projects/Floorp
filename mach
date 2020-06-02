@@ -42,7 +42,6 @@ py2commands="
     rusttests
     static-analysis
     talos-test
-    taskcluster-build-image
     taskcluster-load-image
     taskgraph
     telemetry-tests-client
