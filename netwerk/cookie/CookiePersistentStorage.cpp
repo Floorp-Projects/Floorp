@@ -1686,9 +1686,9 @@ UniquePtr<CookieStruct> CookiePersistentStorage::GetCookieFromRow(
   int32_t rawSameSite = aRow->AsInt32(IDX_RAW_SAME_SITE);
 
   // Create a new constCookie and assign the data.
-  return MakeUnique<CookieStruct>(name, value, host, path, expiry, lastAccessed,
-                                  creationTime, isHttpOnly, false, isSecure,
-                                  sameSite, rawSameSite);
+  return MakeUnique<CookieStruct>(
+      name, value, host, path, expiry, lastAccessed, creationTime, isHttpOnly,
+      false, isSecure, sameSite, rawSameSite, nsICookie::SCHEME_UNSET);
 }
 
 void CookiePersistentStorage::EnsureReadComplete() {

@@ -119,4 +119,21 @@ interface nsICookie : nsISupports {
      * - SAMESITE_STRICT - the SameSite attribute is present and strict
      */
     readonly attribute int32_t sameSite;
+
+    /**
+     * The list of possible schemes of cookies. It's a bitmap because a cookie
+     * can be set on HTTP and HTTPS. At the moment, we treat it as the same
+     * cookie.
+     */
+    cenum schemeType : 8 {
+      SCHEME_UNSET = 0x00,
+      SCHEME_HTTP = 0x01,
+      SCHEME_HTTPS = 0x02,
+      SCHEME_FILE = 0x04,
+    };
+
+    /**
+     * Bitmap of schemes.
+     */
+    readonly attribute nsICookie_schemeType schemeMap;
 };
