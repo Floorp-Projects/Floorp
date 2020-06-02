@@ -941,26 +941,6 @@ bool MessageChannel::OpenOnSameThread(MessageChannel* aTargetChan,
   return true;
 }
 
-bool MessageChannel::Echo(Message* aMsg) {
-  UniquePtr<Message> msg(aMsg);
-  AssertWorkerThread();
-  mMonitor->AssertNotCurrentThreadOwns();
-  if (MSG_ROUTING_NONE == msg->routing_id()) {
-    ReportMessageRouteError("MessageChannel::Echo");
-    return false;
-  }
-
-  MonitorAutoLock lock(*mMonitor);
-
-  if (!Connected()) {
-    ReportConnectionError("MessageChannel", msg.get());
-    return false;
-  }
-
-  mLink->EchoMessage(msg.release());
-  return true;
-}
-
 bool MessageChannel::Send(Message* aMsg) {
   if (aMsg->size() >= kMinTelemetryMessageSize) {
     Telemetry::Accumulate(Telemetry::IPC_MESSAGE_SIZE2, aMsg->size());
