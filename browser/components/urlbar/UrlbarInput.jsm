@@ -18,6 +18,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   ReaderMode: "resource://gre/modules/ReaderMode.jsm",
   Services: "resource://gre/modules/Services.jsm",
+  TopSiteAttribution: "resource:///modules/TopSiteAttribution.jsm",
   UrlbarController: "resource:///modules/UrlbarController.jsm",
   UrlbarEventBufferer: "resource:///modules/UrlbarEventBufferer.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
@@ -556,6 +557,12 @@ class UrlbarInput {
     }
 
     this.controller.recordSelectedResult(event, result);
+    if (result.payload.overriddenSearchTopSite) {
+      TopSiteAttribution.makeRequest({
+        searchProvider: result.payload.title,
+        siteURL: result.payload.title,
+      });
+    }
 
     if (isCanonized) {
       this.controller.engagementEvent.record(event, {
