@@ -53,7 +53,7 @@ class CollectionCreationBottomBarViewTest {
 
     @Test
     fun testIconButtonUpdateForSelectTabs() {
-        bottomBarView.update(SaveCollectionStep.SelectTabs, CollectionCreationState(0))
+        bottomBarView.update(SaveCollectionStep.SelectTabs, CollectionCreationState())
 
         verify { layout.setOnClickListener(null) }
         verify { layout.isClickable = false }
@@ -67,7 +67,7 @@ class CollectionCreationBottomBarViewTest {
 
     @Test
     fun testIconButtonUpdateForSelectCollection() {
-        bottomBarView.update(SaveCollectionStep.SelectCollection, CollectionCreationState(0))
+        bottomBarView.update(SaveCollectionStep.SelectCollection, CollectionCreationState())
 
         verify { layout wasNot Called }
 
@@ -83,7 +83,6 @@ class CollectionCreationBottomBarViewTest {
         bottomBarView.update(
             SaveCollectionStep.SelectTabs,
             CollectionCreationState(
-                0,
                 selectedTabs = emptySet()
             )
         )
@@ -92,7 +91,6 @@ class CollectionCreationBottomBarViewTest {
         bottomBarView.update(
             SaveCollectionStep.SelectTabs,
             CollectionCreationState(
-                0,
                 selectedTabs = setOf(mockk())
             )
         )
@@ -101,7 +99,6 @@ class CollectionCreationBottomBarViewTest {
         bottomBarView.update(
             SaveCollectionStep.SelectTabs,
             CollectionCreationState(
-                0,
                 selectedTabs = setOf(mockk(), mockk())
             )
         )
@@ -110,7 +107,7 @@ class CollectionCreationBottomBarViewTest {
 
     @Test
     fun testTextViewUpdateForSelectCollection() {
-        bottomBarView.update(SaveCollectionStep.SelectCollection, CollectionCreationState(0))
+        bottomBarView.update(SaveCollectionStep.SelectCollection, CollectionCreationState())
 
         assertEquals("Add new collection", textView.text)
     }
@@ -123,7 +120,6 @@ class CollectionCreationBottomBarViewTest {
         bottomBarView.update(
             SaveCollectionStep.SelectTabs,
             CollectionCreationState(
-                0,
                 selectedTabCollection = null,
                 selectedTabs = emptySet()
             )
@@ -133,7 +129,6 @@ class CollectionCreationBottomBarViewTest {
         bottomBarView.update(
             SaveCollectionStep.SelectTabs,
             CollectionCreationState(
-                0,
                 selectedTabCollection = collection,
                 selectedTabs = emptySet()
             )
@@ -143,7 +138,6 @@ class CollectionCreationBottomBarViewTest {
         bottomBarView.update(
             SaveCollectionStep.SelectTabs,
             CollectionCreationState(
-                0,
                 selectedTabCollection = null,
                 selectedTabs = tabs
             )
@@ -155,7 +149,6 @@ class CollectionCreationBottomBarViewTest {
         bottomBarView.update(
             SaveCollectionStep.SelectTabs,
             CollectionCreationState(
-                0,
                 selectedTabCollection = collection,
                 selectedTabs = tabs
             )
@@ -167,7 +160,7 @@ class CollectionCreationBottomBarViewTest {
 
     @Test
     fun testSaveButtonUpdateForSelectCollection() {
-        bottomBarView.update(SaveCollectionStep.SelectCollection, CollectionCreationState(0))
+        bottomBarView.update(SaveCollectionStep.SelectCollection, CollectionCreationState())
 
         assertFalse(saveButton.isVisible)
     }
