@@ -122,7 +122,7 @@
             android:background="@android:color/transparent"
             android:text="@string/migration_updating_app_button_text"
             android:textSize="@dimen/migration_button_text_size"
-            android:textAppearance="@style/Widget.MaterialComponents.Button.TextButton"
+            android:textAppearance="@style/NeutralButton"
             tools:text="Updating Firefox…" />
 
     </LinearLayout>
