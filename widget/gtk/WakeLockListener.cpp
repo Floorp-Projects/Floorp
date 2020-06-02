@@ -253,10 +253,13 @@ bool WakeLockTopic::InhibitWaylandIdle() {
 
   UninhibitWaylandIdle();
 
-  mWaylandInhibitor = zwp_idle_inhibit_manager_v1_create_inhibitor(
-      waylandDisplay->GetIdleInhibitManager(),
-      focusedWindow->GetWaylandSurface());
-
+  MozContainer* container = focusedWindow->GetMozContainer();
+  wl_surface* waylandSurface = moz_container_wayland_surface_lock(container);
+  if (!waylandSurface) {
+    mWaylandInhibitor = zwp_idle_inhibit_manager_v1_create_inhibitor(
+        waylandDisplay->GetIdleInhibitManager(), waylandSurface);
+    moz_container_wayland_surface_unlock(container);
+  }
   return true;
 }
 
