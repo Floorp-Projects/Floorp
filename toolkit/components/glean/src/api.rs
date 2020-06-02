@@ -20,11 +20,8 @@
 // FIXME: Remove when code gets actually used eventually (by initializing Glean).
 #![allow(dead_code)]
 
-use glean::ping_upload::{self, UploadResult};
 use glean_core::{global_glean, setup_glean, Configuration, Glean, Result};
 use once_cell::sync::OnceCell;
-use url::Url;
-use viaduct::Request;
 
 use crate::client_info::ClientInfo;
 use crate::core_metrics::InternalMetrics;
@@ -81,9 +78,6 @@ pub fn initialize(cfg: Configuration, client_info: ClientInfo) -> Result<()> {
             // Now make this the global object available to others.
             setup_glean(glean)?;
 
-            // Register the uploader so we can upload pings.
-            register_uploader();
-
             Ok(AppState { client_info })
         })
         .map(|_| ())
@@ -135,43 +129,4 @@ pub fn set_upload_enabled(enabled: bool) -> bool {
 
         enabled
     })
-}
-
-fn register_uploader() {
-    let result = ping_upload::register_uploader(Box::new(|ping_request| {
-        log::trace!(
-            "FOG Ping Uploader uploading ping {}",
-            ping_request.document_id
-        );
-        let result: std::result::Result<UploadResult, viaduct::Error> = (move || {
-            const SERVER: &str = "https://incoming.telemetry.mozilla.org";
-            let url = Url::parse(SERVER)?.join(&ping_request.path)?;
-            let mut req = Request::post(url).body(ping_request.body.clone());
-            for (&header_key, header_value) in ping_request.headers.iter() {
-                req = req.header(header_key, header_value)?;
-            }
-
-            log::trace!(
-                "FOG Ping Uploader sending ping {}",
-                ping_request.document_id
-            );
-            let res = req.send()?;
-            Ok(UploadResult::HttpStatus(res.status.into()))
-        })();
-        log::trace!(
-            "FOG Ping Uploader completed uploading ping {} (Result {:?})",
-            ping_request.document_id,
-            result
-        );
-        match result {
-            Ok(result) => result,
-            _ => UploadResult::UnrecoverableFailure,
-        }
-    }));
-    if result.is_err() {
-        log::warn!(
-            "Couldn't register uploader because one's already in there. {:?}",
-            result
-        );
-    }
 }
