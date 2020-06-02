@@ -288,6 +288,25 @@ assert.callable = function(obj, msg = "") {
 };
 
 /**
+ * Asserts that <var>obj</var> is an unsigned short number.
+ *
+ * @param {?} obj
+ *     Value to test.
+ * @param {string=} msg
+ *     Custom error message.
+ *
+ * @return {number}
+ *     <var>obj</var> is returned unaltered.
+ *
+ * @throws {InvalidArgumentError}
+ *     If <var>obj</var> is not an unsigned short.
+ */
+assert.unsignedShort = function(obj, msg = "") {
+  msg = msg || pprint`Expected ${obj} to be >= 0 and < 65536`;
+  return assert.that(n => n >= 0 && n < 65536, msg)(obj);
+};
+
+/**
  * Asserts that <var>obj</var> is an integer.
  *
  * @param {?} obj
