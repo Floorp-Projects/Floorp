@@ -120,8 +120,8 @@
  * to use the “new” effective StoragePrincipal. The list of the notifications
  is:
  *
- * - Add some code in nsGlobalWindowInner::StorageAccessGranted().
- * - WorkerScope::FirstPartyStorageAccessGranted for Workers.
+ * - Add some code in nsGlobalWindowInner::StorageAccessPermissionGranted().
+ * - WorkerScope::StorageAccessPermissionGranted for Workers.
  * - observe the permission changes (not recommended)
  *
  * Scope of Storage Access

@@ -15,15 +15,17 @@
 namespace IPC {
 
 // For allowing passing the enum
-// ContentBlockingNotifier::StorageAccessGrantedReason over IPC.
+// ContentBlockingNotifier::StorageAccessPermissionGrantedReason over IPC.
 template <>
-struct ParamTraits<mozilla::ContentBlockingNotifier::StorageAccessGrantedReason>
+struct ParamTraits<
+    mozilla::ContentBlockingNotifier::StorageAccessPermissionGrantedReason>
     : public ContiguousEnumSerializerInclusive<
-          mozilla::ContentBlockingNotifier::StorageAccessGrantedReason,
-          mozilla::ContentBlockingNotifier::StorageAccessGrantedReason::
-              eStorageAccessAPI,
-          mozilla::ContentBlockingNotifier::StorageAccessGrantedReason::
-              eOpener> {};
+          mozilla::ContentBlockingNotifier::
+              StorageAccessPermissionGrantedReason,
+          mozilla::ContentBlockingNotifier::
+              StorageAccessPermissionGrantedReason::eStorageAccessAPI,
+          mozilla::ContentBlockingNotifier::
+              StorageAccessPermissionGrantedReason::eOpener> {};
 
 // ContentBlockingNotifier::BlockingDecision over IPC.
 template <>
