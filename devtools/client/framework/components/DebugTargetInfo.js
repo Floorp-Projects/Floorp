@@ -245,7 +245,10 @@ class DebugTargetInfo extends PureComponent {
       },
       isURLEditable
         ? this.renderTargetInput(url)
-        : dom.span({ className: "devtools-ellipsis-text" }, url)
+        : dom.span(
+            { className: "debug-target-url-readonly devtools-ellipsis-text" },
+            url
+          )
     );
   }
 
