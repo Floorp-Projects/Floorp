@@ -348,11 +348,15 @@ android.libraryVariants.all { variant ->
 
     task("checkstyle${name.capitalize()}", type: Checkstyle) {
         classpath = variant.javaCompileProvider.get().classpath
-        configFile file("checkstyle.xml")
         // TODO: cleanup and include all sources
         source = ['src/main/java/']
         include '**/*.java'
     }
+}
+
+checkstyle {
+    configDir = file(".")
+    configFile = file("checkstyle.xml")
 }
 
 android.libraryVariants.all { variant ->

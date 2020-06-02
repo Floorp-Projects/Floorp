@@ -734,6 +734,7 @@ public class SessionAccessibility {
         private static native void toggleNativeAccessibility(boolean enable);
     }
 
+    @SuppressWarnings("checkstyle:javadocmethod")
     public boolean onMotionEvent(final @NonNull MotionEvent event) {
         ThreadUtils.assertOnUiThread();
 

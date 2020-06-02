@@ -80,6 +80,7 @@ public class WebPushSubscription implements Parcelable {
     @NonNull
     public final byte[] authSecret;
 
+    @SuppressWarnings("checkstyle:javadocmethod")
     public WebPushSubscription(final @NonNull String scope,
                                final @NonNull String endpoint,
                                final @Nullable byte[] appServerKey,

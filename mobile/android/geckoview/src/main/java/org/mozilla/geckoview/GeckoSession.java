@@ -1222,10 +1222,12 @@ public class GeckoSession implements Parcelable {
     protected @Nullable Window mWindow;
     private GeckoSessionSettings mSettings;
 
+    @SuppressWarnings("checkstyle:javadocmethod")
     public GeckoSession() {
         this(null);
     }
 
+    @SuppressWarnings("checkstyle:javadocmethod")
     public GeckoSession(final @Nullable GeckoSessionSettings settings) {
         mSettings = new GeckoSessionSettings(settings, this);
         mListener.registerListeners();
@@ -1303,6 +1305,7 @@ public class GeckoSession implements Parcelable {
 
     // AIDL code may call readFromParcel even though it's not part of Parcelable.
     @AnyThread
+    @SuppressWarnings("checkstyle:javadocmethod")
     public void readFromParcel(final @NonNull Parcel source) {
         final IBinder binder = source.readStrongBinder();
         final IInterface ifce = (binder != null) ?
@@ -2173,6 +2176,7 @@ public class GeckoSession implements Parcelable {
             mState = new GeckoBundle(state);
         }
 
+        @SuppressWarnings("checkstyle:javadocmethod")
         public SessionState(final @NonNull SessionState state) {
             mState = new GeckoBundle(state.mState);
         }
@@ -2259,6 +2263,7 @@ public class GeckoSession implements Parcelable {
         }
 
         // AIDL code may call readFromParcel even though it's not part of Parcelable.
+        @SuppressWarnings("checkstyle:javadocmethod")
         public void readFromParcel(final @NonNull Parcel source) {
             if (source.readString() == null) {
                 Log.w(LOGTAG, "Can't reproduce session state from Parcel");
@@ -2421,6 +2426,7 @@ public class GeckoSession implements Parcelable {
     }
 
     @AnyThread
+    @SuppressWarnings("checkstyle:javadocmethod")
     public @NonNull GeckoSessionSettings getSettings() {
         return mSettings;
     }
@@ -2509,6 +2515,7 @@ public class GeckoSession implements Parcelable {
     }
 
     @UiThread
+    @SuppressWarnings("checkstyle:javadocmethod")
     public @Nullable ScrollDelegate getScrollDelegate() {
         ThreadUtils.assertOnUiThread();
         return mScrollHandler.getDelegate();
@@ -6097,6 +6104,7 @@ public class GeckoSession implements Parcelable {
         }
 
         @UiThread
+        @SuppressWarnings("checkstyle:javadocmethod")
         default void onHistoryStateChange(@NonNull GeckoSession session, @NonNull HistoryList historyList) {}
     }
 

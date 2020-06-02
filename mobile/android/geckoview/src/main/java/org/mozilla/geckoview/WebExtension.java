@@ -1378,6 +1378,9 @@ public class WebExtension {
                     ? source.badgeBackgroundColor : defaultValue.badgeBackgroundColor;
         }
 
+        /**
+         * Notifies the extension that the user has clicked on this Action.
+         */
         @UiThread
         public void click() {
             if (mPopupUri != null && !mPopupUri.isEmpty()) {

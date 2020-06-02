@@ -214,6 +214,7 @@ public class GeckoResult<T> {
     }
 
     public static final class UncaughtException extends RuntimeException {
+        @SuppressWarnings("checkstyle:javadocmethod")
         public UncaughtException(final Throwable cause) {
             super(cause);
         }
