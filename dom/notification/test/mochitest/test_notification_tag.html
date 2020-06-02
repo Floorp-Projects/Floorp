@@ -20,7 +20,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=782211
 </pre>
 <script type="text/javascript">
   /* eslint-disable mozilla/use-chromeutils-generateqi */
-  const MOCK_CID = SpecialPowers.wrap(SpecialPowers.Components).ID("{dbe37e64-d9a3-402c-8d8a-0826c619f7ad}");
+  const MOCK_CID = SpecialPowers.wrap(SpecialPowers.Components).ID(
+    "{dbe37e64-d9a3-402c-8d8a-0826c619f7ad}"
+  );
   const ALERTS_SERVICE_CONTRACT_ID = "@mozilla.org/alerts-service;1";
 
   var mockAlertsService = {
@@ -31,15 +33,26 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=782211
       }
     },
 
-    showAlertNotification(imageUrl, title, text, textClickable,
-                          cookie, alertListener, name, dir,
-                          lang, data) {
+    showAlertNotification(
+      imageUrl,
+      title,
+      text,
+      textClickable,
+      cookie,
+      alertListener,
+      name,
+      dir,
+      lang,
+      data
+    ) {
       this.showAlert({ name });
     },
 
     QueryInterface(aIID) {
-      if (SpecialPowers.wrap(aIID).equals(SpecialPowers.Ci.nsISupports) ||
-          SpecialPowers.wrap(aIID).equals(SpecialPowers.Ci.nsIAlertsService)) {
+      if (
+        SpecialPowers.wrap(aIID).equals(SpecialPowers.Ci.nsISupports) ||
+        SpecialPowers.wrap(aIID).equals(SpecialPowers.Ci.nsIAlertsService)
+      ) {
         return this;
       }
       throw SpecialPowers.Components.results.NS_ERROR_NO_INTERFACE;
@@ -69,14 +82,26 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=782211
       }
     }
 
-    is(test1notifications.length, 2, "2 notifications should be created by test1.example.org:80 origin.");
-    is(test1notifications[0], test1notifications[1], "notification names should be identical.");
-    is(test2notifications.length, 1, "1 notification should be created by test2.example.org:80 origin.");
+    is(
+      test1notifications.length,
+      2,
+      "2 notifications should be created by test1.example.org:80 origin."
+    );
+    is(
+      test1notifications[0],
+      test1notifications[1],
+      "notification names should be identical."
+    );
+    is(
+      test2notifications.length,
+      1,
+      "1 notification should be created by test2.example.org:80 origin."
+    );
 
     // Register original alerts service.
-    SpecialPowers.wrap(SpecialPowers.Components).
-      manager.QueryInterface(SpecialPowers.Ci.nsIComponentRegistrar).
-      unregisterFactory(MOCK_CID, mockAlertsService);
+    SpecialPowers.wrap(SpecialPowers.Components)
+      .manager.QueryInterface(SpecialPowers.Ci.nsIComponentRegistrar)
+      .unregisterFactory(MOCK_CID, mockAlertsService);
 
     SimpleTest.finish();
   }
@@ -85,23 +110,37 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=782211
     SimpleTest.waitForExplicitFinish();
 
     function showNotifications() {
-      SpecialPowers.wrap(SpecialPowers.Components).
-        manager.QueryInterface(SpecialPowers.Ci.nsIComponentRegistrar).
-        registerFactory(MOCK_CID, "alerts service", ALERTS_SERVICE_CONTRACT_ID, mockAlertsService);
+      SpecialPowers.wrap(SpecialPowers.Components)
+        .manager.QueryInterface(SpecialPowers.Ci.nsIComponentRegistrar)
+        .registerFactory(
+          MOCK_CID,
+          "alerts service",
+          ALERTS_SERVICE_CONTRACT_ID,
+          mockAlertsService
+        );
 
       // Load two frames with the same origin that create notification with the same tag.
       // Both pages should generate notifications with the same name, and thus the second
       // notification should replace the first.
-      frames.sameDomain.location.href = "http://test1.example.org:80/tests/dom/notification/test/mochitest/create_notification.html";
-      frames.anotherSameDomain.location.href = "http://test1.example.org:80/tests/dom/notification/test/mochitest/create_notification.html";
+      frames.sameDomain.location.href =
+        "http://test1.example.org:80/tests/dom/notification/test/mochitest/create_notification.html";
+      frames.anotherSameDomain.location.href =
+        "http://test1.example.org:80/tests/dom/notification/test/mochitest/create_notification.html";
       // Load a frame with a different origin that creates a notification with the same tag.
       // The notification name should be different and thus no notifications should be replaced.
-      frames.crossDomain.location.href = "http://test2.example.org:80/tests/dom/notification/test/mochitest/create_notification.html";
+      frames.crossDomain.location.href =
+        "http://test2.example.org:80/tests/dom/notification/test/mochitest/create_notification.html";
     }
 
-    SpecialPowers.pushPrefEnv({"set": [["notification.prompt.testing", true],
-                                       ["notification.prompt.testing.allow", true]]},
-                              showNotifications);
+    SpecialPowers.pushPrefEnv(
+      {
+        set: [
+          ["notification.prompt.testing", true],
+          ["notification.prompt.testing.allow", true],
+        ],
+      },
+      showNotifications
+    );
   } else {
     ok(true, "Notifications are not enabled on the platform.");
   }
