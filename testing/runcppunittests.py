@@ -264,10 +264,16 @@ def extract_unittests_from_args(args, environ, manifest_path):
             for test in active_tests
         ])
 
-    # skip non-existing tests
-    tests = [test for test in tests if os.path.isfile(test[0])]
+    # skip and warn for any tests in the manifest that are not found
+    final_tests = []
+    log = mozlog.get_default_logger()
+    for test in tests:
+        if os.path.isfile(test[0]):
+            final_tests.append(test)
+        else:
+            log.warning("test file not found: %s - skipped" % test[0])
 
-    return tests
+    return final_tests
 
 
 def update_mozinfo():
