@@ -14,7 +14,7 @@ describe("CFRPageActions", () => {
   let containerElem;
   let elements;
   let announceStub;
-  let remoteL10n;
+  let fakeRemoteL10n;
 
   const elementIDs = [
     "urlbar",
@@ -57,9 +57,10 @@ describe("CFRPageActions", () => {
     };
     dispatchStub = sandbox.stub();
 
-    remoteL10n = {
+    fakeRemoteL10n = {
       l10n: {},
       reloadL10n: sandbox.stub(),
+      createElement: sandbox.stub().returns(document.createElement("div")),
     };
 
     const gURLBar = document.createElement("div");
@@ -67,7 +68,7 @@ describe("CFRPageActions", () => {
 
     globals = new GlobalOverrider();
     globals.set({
-      RemoteL10n: remoteL10n,
+      RemoteL10n: fakeRemoteL10n,
       promiseDocumentFlushed: sandbox
         .stub()
         .callsFake(fn => Promise.resolve(fn())),
@@ -540,7 +541,6 @@ describe("CFRPageActions", () => {
         const headerLabel = elements["cfr-notification-header-label"];
         const headerLink = elements["cfr-notification-header-link"];
         const headerImage = elements["cfr-notification-header-image"];
-        const footerText = elements["cfr-notification-footer-text"];
         const footerLink = elements["cfr-notification-footer-learn-more-link"];
         assert.equal(
           headerLabel.value,
@@ -555,7 +555,12 @@ describe("CFRPageActions", () => {
           headerImage.getAttribute("tooltiptext"),
           fakeRecommendation.content.info_icon.label
         );
-        assert.equal(footerText.textContent, fakeRecommendation.content.text);
+        const htmlFooterEl = fakeRemoteL10n.createElement.args.find(
+          /* eslint-disable-next-line max-nested-callbacks */
+          ([doc, el, args]) =>
+            args && args.content === fakeRecommendation.content.text
+        );
+        assert.ok(htmlFooterEl);
         assert.equal(footerLink.value, "Learn more");
         assert.equal(
           footerLink.getAttribute("href"),
@@ -774,18 +779,23 @@ describe("CFRPageActions", () => {
         fakeRecommendation.content.layout = "message_and_animation";
         await pageAction._cfrUrlbarButtonClick();
 
-        assert.calledOnce(translateElementsStub);
+        assert.ok(
+          fakeRemoteL10n.createElement.args.find(
+            /* eslint-disable-next-line max-nested-callbacks */
+            ([doc, el, args]) => el === "span" && args && args.content
+          )
+        );
       });
       it("should set the data-l10n-id on the list element", async () => {
         fakeRecommendation.content.layout = "message_and_animation";
         await pageAction._cfrUrlbarButtonClick();
 
-        assert.calledOnce(setAttributesStub);
-        assert.calledWith(
-          setAttributesStub,
-          sinon.match.any,
-          fakeRecommendation.content.descriptionDetails.steps[0].string_id
-        );
+        for (let step of fakeRecommendation.content.descriptionDetails.steps) {
+          fakeRemoteL10n.createElement.args.find(
+            /* eslint-disable-next-line max-nested-callbacks */
+            ([doc, el, args]) => el === "span" && args && args.content === step
+          );
+        }
       });
       it("should set the correct data-notification-category", async () => {
         fakeRecommendation.content.layout = "message_and_animation";

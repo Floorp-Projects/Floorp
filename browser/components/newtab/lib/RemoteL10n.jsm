@@ -27,6 +27,34 @@ class _RemoteL10n {
     this._l10n = null;
   }
 
+  createElement(doc, elem, options = {}) {
+    let node;
+    if (options.content && options.content.string_id) {
+      node = doc.createElement("remote-text");
+    } else {
+      node = doc.createElementNS("http://www.w3.org/1999/xhtml", elem);
+    }
+    if (options.classList) {
+      node.classList.add(options.classList);
+    }
+    this.setString(node, options);
+
+    return node;
+  }
+
+  // If `string_id` is present it means we are relying on fluent for translations.
+  // Otherwise, we have a vanilla string.
+  setString(el, { content, attributes = {} }) {
+    if (content && content.string_id) {
+      for (let [fluentId, value] of Object.entries(attributes)) {
+        el.setAttribute(`fluent-variable-${fluentId}`, value);
+      }
+      el.setAttribute("fluent-remote-id", content.string_id);
+    } else {
+      el.textContent = content;
+    }
+  }
+
   /**
    * Creates a new DOMLocalization instance with the Fluent file from Remote Settings.
    *

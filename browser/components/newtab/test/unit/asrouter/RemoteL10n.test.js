@@ -87,4 +87,66 @@ describe("RemoteL10n", () => {
       assert.isEmpty(args[2]);
     });
   });
+  describe("#createElement", () => {
+    let doc;
+    let instance;
+    let setStringStub;
+    let elem;
+    beforeEach(() => {
+      elem = document.createElement("div");
+      doc = {
+        createElement: sandbox.stub().returns(elem),
+        createElementNS: sandbox.stub().returns(elem),
+      };
+      instance = new _RemoteL10n();
+      setStringStub = sandbox.stub(instance, "setString");
+    });
+    it("should call createElement if string_id is defined", () => {
+      instance.createElement(doc, "span", { content: { string_id: "foo" } });
+
+      assert.calledOnce(doc.createElement);
+    });
+    it("should call createElementNS if string_id is not present", () => {
+      instance.createElement(doc, "span", { content: "foo" });
+
+      assert.calledOnce(doc.createElementNS);
+    });
+    it("should set classList", () => {
+      instance.createElement(doc, "span", { classList: "foo" });
+
+      assert.isTrue(elem.classList.contains("foo"));
+    });
+    it("should call setString", () => {
+      const options = { classList: "foo" };
+      instance.createElement(doc, "span", options);
+
+      assert.calledOnce(setStringStub);
+      assert.calledWithExactly(setStringStub, elem, options);
+    });
+  });
+  describe("#setString", () => {
+    let instance;
+    beforeEach(() => {
+      instance = new _RemoteL10n();
+    });
+    it("should set fluent variables and id", () => {
+      let el = { setAttribute: sandbox.stub() };
+      instance.setString(el, {
+        content: { string_id: "foo" },
+        attributes: { bar: "bar", baz: "baz" },
+      });
+
+      assert.calledThrice(el.setAttribute);
+      assert.calledWithExactly(el.setAttribute, "fluent-variable-bar", "bar");
+      assert.calledWithExactly(el.setAttribute, "fluent-variable-baz", "baz");
+      assert.calledWithExactly(el.setAttribute, "fluent-remote-id", "foo");
+    });
+    it("should set content if no string_id", () => {
+      let el = { setAttribute: sandbox.stub() };
+      instance.setString(el, { content: "foo" });
+
+      assert.notCalled(el.setAttribute);
+      assert.equal(el.textContent, "foo");
+    });
+  });
 });
