@@ -556,6 +556,7 @@ public class ContentBlocking {
         private final @CBCookieBehavior int mCookieBehaviorCat;
         private final boolean mIsBlocking;
 
+        @SuppressWarnings("checkstyle:javadocmethod")
         public BlockEvent(@NonNull final String uri,
                           final @CBAntiTracking int atCat,
                           final @CBSafeBrowsing int sbCat,
@@ -629,6 +630,7 @@ public class ContentBlocking {
         }
 
         @UiThread
+        @SuppressWarnings("checkstyle:javadocmethod")
         public boolean isBlocking() {
             return mIsBlocking;
         }

@@ -96,10 +96,12 @@ public class BasicSelectionActionDelegate implements ActionMode.Callback,
         }
     }
 
+    @SuppressWarnings("checkstyle:javadocmethod")
     public BasicSelectionActionDelegate(final @NonNull Activity activity) {
         this(activity, Build.VERSION.SDK_INT >= 23);
     }
 
+    @SuppressWarnings("checkstyle:javadocmethod")
     public BasicSelectionActionDelegate(final @NonNull Activity activity,
                                         final boolean useFloatingToolbar) {
         mActivity = activity;
@@ -374,6 +376,7 @@ public class BasicSelectionActionDelegate implements ActionMode.Callback,
         mActionMode = null;
     }
 
+    @SuppressWarnings("checkstyle:javadocmethod")
     public void onGetContentRect(final @Nullable ActionMode mode, final @Nullable View view,
                                  final @NonNull Rect outRect) {
         ThreadUtils.assertOnUiThread();

@@ -240,6 +240,7 @@ public class Autocomplete {
             }
 
             @AnyThread
+            @SuppressWarnings("checkstyle:javadocmethod")
             public Builder() {
                 mBundle = new GeckoBundle(6);
             }
@@ -412,6 +413,7 @@ public class Autocomplete {
         public final @NonNull T value;
         public final int hint;
 
+        @SuppressWarnings("checkstyle:javadocmethod")
         public Option(final @NonNull T value, final int hint) {
             this.value = value;
             this.hint = hint;
@@ -427,6 +429,7 @@ public class Autocomplete {
      */
     public abstract static class SaveOption<T> extends Option<T> {
 
+        @SuppressWarnings("checkstyle:javadocmethod")
         public SaveOption(final @NonNull T value, final int hint) {
             super(value, hint);
         }
@@ -437,6 +440,7 @@ public class Autocomplete {
      * Extended by {@link Autocomplete.LoginSelectOption}.
      */
     public abstract static class SelectOption<T> extends Option<T> {
+        @SuppressWarnings("checkstyle:javadocmethod")
         public SelectOption(
                 final @NonNull T value,
                 final int hint) {

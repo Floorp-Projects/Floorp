@@ -343,6 +343,7 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
             return this;
         }
 
+        @SuppressWarnings("checkstyle:javadocmethod")
         public @NonNull Builder contentBlocking(
                 final @NonNull ContentBlocking.Settings cb) {
             getSettings().mContentBlocking = cb;
@@ -457,6 +458,7 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
 
     /* package */ ContentBlocking.Settings mContentBlocking;
 
+    @SuppressWarnings("checkstyle:javadocmethod")
     public @NonNull ContentBlocking.Settings getContentBlocking() {
         return mContentBlocking;
     }
@@ -709,6 +711,7 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
         return null;
     }
 
+    @SuppressWarnings("checkstyle:javadocmethod")
     public @Nullable Class<? extends Service> getCrashHandler() {
         return mCrashHandler;
     }
@@ -1056,6 +1059,7 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
         return this;
     }
 
+    @SuppressWarnings("checkstyle:javadocmethod")
     public @Nullable RuntimeTelemetry.Delegate getTelemetryDelegate() {
         return mTelemetryProxy.getDelegate();
     }
@@ -1145,6 +1149,7 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
     }
 
     // AIDL code may call readFromParcel even though it's not part of Parcelable.
+    @SuppressWarnings("checkstyle:javadocmethod")
     public void readFromParcel(final @NonNull Parcel source) {
         super.readFromParcel(source);
 

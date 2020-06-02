@@ -20,6 +20,11 @@
         <property name="message" value="Trailing whitespace"/>
     </module>
 
+    <module name="SuppressionFilter">
+      <property name="file" value="${config_loc}/checkstyle-suppressions.xml"/>
+      <property name="optional" value="false"/>
+    </module>
+
     <module name="TreeWalker">
         <module name="FinalParameters"/>
         <module name="ParameterName"/>
@@ -30,6 +35,11 @@
         <module name="OneStatementPerLine"/>
         <module name="AvoidStarImport"/>
         <module name="UnusedImports"/>
+        <module name="SuppressWarningsHolder"/>
+        <module name="JavadocMethod">
+          <property name="id" value="checkstyle:javadocmethod"/>
+          <property name="scope" value="public"/>
+        </module>
 
         <module name="MemberName">
             <!-- Private members must use mHungarianNotation -->
@@ -64,4 +74,5 @@
         <module name="OneTopLevelClass"/>
     </module>
 
+    <module name="SuppressWarningsFilter"/>
 </module>
