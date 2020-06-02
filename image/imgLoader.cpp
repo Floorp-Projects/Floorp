@@ -2181,7 +2181,9 @@ nsresult imgLoader::LoadImage(
   if (aLoadFlags & nsIRequest::LOAD_BACKGROUND) {
     // Propagate background loading...
     requestFlags |= nsIRequest::LOAD_BACKGROUND;
-  } else if (aLinkPreload) {
+  }
+
+  if (aLinkPreload) {
     // Set background loading if it is <link rel=preload>
     requestFlags |= nsIRequest::LOAD_BACKGROUND;
   }
@@ -2330,7 +2332,7 @@ nsresult imgLoader::LoadImage(
 
     nsCOMPtr<nsIClassOfService> cos(do_QueryInterface(newChannel));
     if (cos) {
-      if (aUseUrgentStartForChannel) {
+      if (aUseUrgentStartForChannel && !aLinkPreload) {
         cos->AddClassFlags(nsIClassOfService::UrgentStart);
       }
 
@@ -2897,11 +2899,6 @@ void imgCacheValidator::AddProxy(imgRequestProxy* aProxy) {
 
 void imgCacheValidator::RemoveProxy(imgRequestProxy* aProxy) {
   mProxies.RemoveElement(aProxy);
-}
-
-void imgCacheValidator::PrioritizeAsPreload() {
-  MOZ_ASSERT(mNewRequest);
-  mNewRequest->PrioritizeAsPreload();
 }
 
 void imgCacheValidator::UpdateProxies(bool aCancelRequest, bool aSyncNotify) {
