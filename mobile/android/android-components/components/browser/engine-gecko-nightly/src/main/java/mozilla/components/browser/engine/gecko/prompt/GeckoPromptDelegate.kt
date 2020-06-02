@@ -112,10 +112,11 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
             geckoResult.complete(prompt.dismiss())
         }
 
+        // Currently no-op will be addressed in https://github.com/mozilla-mobile/android-components/issues/7134
         geckoEngineSession.notifyObservers {
             onPromptRequest(
                 PromptRequest.SelectLoginPrompt(
-                    logins = prompt.options.map { it.value.toLogin() },
+                    logins = listOf(),
                     onConfirm = onConfirmSave,
                     onDismiss = onDismiss
                 )
