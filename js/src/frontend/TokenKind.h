@@ -311,8 +311,8 @@ inline MOZ_MUST_USE bool TokenKindIsReservedWord(TokenKind tt) {
 }
 
 inline MOZ_MUST_USE bool TokenKindIsPossibleIdentifier(TokenKind tt) {
-  return tt == TokenKind::Name || tt == TokenKind::PrivateName ||
-         TokenKindIsContextualKeyword(tt) || TokenKindIsStrictReservedWord(tt);
+  return tt == TokenKind::Name || TokenKindIsContextualKeyword(tt) ||
+         TokenKindIsStrictReservedWord(tt);
 }
 
 inline MOZ_MUST_USE bool TokenKindIsPossibleIdentifierName(TokenKind tt) {

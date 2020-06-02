@@ -64,10 +64,6 @@ using JS::ReadOnlyCompileOptions;
 using JS::RegExpFlag;
 using JS::RegExpFlags;
 
-// There's some very preliminary support for private fields in this file. It's
-// disabled in all builds, for now.
-//#define JS_PRIVATE_FIELDS 1
-
 struct ReservedWordInfo {
   const char* chars;  // C string with reserved word text
   js::frontend::TokenKind tokentype;
@@ -135,28 +131,20 @@ static const ReservedWordInfo* FindReservedWord(
   if (str->hasLatin1Chars()) {
     const JS::Latin1Char* chars = str->latin1Chars(nogc);
     size_t length = str->length();
-#ifdef JS_PRIVATE_FIELDS
     if (length > 0 && chars[0] == '#') {
       *visibility = js::frontend::NameVisibility::Private;
       return nullptr;
     }
-#else
-    MOZ_ASSERT_IF(length > 0, chars[0] != '#');
-#endif
     *visibility = js::frontend::NameVisibility::Public;
     return FindReservedWord(chars, length);
   }
 
   const char16_t* chars = str->twoByteChars(nogc);
   size_t length = str->length();
-#ifdef JS_PRIVATE_FIELDS
   if (length > 0 && chars[0] == '#') {
     *visibility = js::frontend::NameVisibility::Private;
     return nullptr;
   }
-#else
-  MOZ_ASSERT_IF(length > 0, chars[0] != '#');
-#endif
   *visibility = js::frontend::NameVisibility::Public;
   return FindReservedWord(chars, length);
 }
@@ -246,13 +234,10 @@ bool IsIdentifierNameOrPrivateName(const Latin1Char* chars, size_t length) {
     return false;
   }
 
-  if (char16_t(*chars) == '#') {
-#ifdef JS_PRIVATE_FIELDS
+  // Skip over any private name marker.
+  if (*chars == '#') {
     ++chars;
     --length;
-#else
-    return false;
-#endif
   }
 
   return IsIdentifier(chars, length);
@@ -292,16 +277,15 @@ bool IsIdentifierNameOrPrivateName(const char16_t* chars, size_t length) {
   uint32_t codePoint;
 
   codePoint = GetSingleCodePoint(&p, end);
+
+  // Skip over any private name marker.
   if (codePoint == '#') {
-#ifdef JS_PRIVATE_FIELDS
+    // The identifier part of a private name mustn't be empty.
     if (length == 1) {
       return false;
     }
 
     codePoint = GetSingleCodePoint(&p, end);
-#else
-    return false;
-#endif
   }
 
   if (!unicode::IsIdentifierStart(codePoint)) {
@@ -2157,11 +2141,7 @@ bool TokenStreamSpecific<Unit, AnyCharsAccess>::putIdentInCharBuffer(
 
     uint32_t codePoint;
     if (MOZ_LIKELY(isAsciiCodePoint(unit))) {
-      if (unicode::IsIdentifierPart(char16_t(unit))
-#ifdef JS_PRIVATE_FIELDS
-          || char16_t(unit) == '#'
-#endif
-      ) {
+      if (unicode::IsIdentifierPart(char16_t(unit)) || unit == '#') {
         if (!this->charBuffer.append(unit)) {
           return false;
         }
@@ -2275,8 +2255,8 @@ MOZ_MUST_USE bool TokenStreamSpecific<Unit, AnyCharsAccess>::identifierName(
 
   noteBadToken.release();
   if (visibility == NameVisibility::Private) {
-    errorAt(start.offset(), JSMSG_PRIVATE_FIELDS_NOT_SUPPORTED);
-    return false;
+    newPrivateNameToken(atom->asPropertyName(), start, modifier, out);
+    return true;
   }
   newNameToken(atom->asPropertyName(), start, modifier, out);
   return true;
@@ -3068,20 +3048,20 @@ MOZ_MUST_USE bool TokenStreamSpecific<Unit, AnyCharsAccess>::getTokenInternal(
         break;
 
       case '#': {
-#ifdef JS_PRIVATE_FIELDS
-        TokenStart start(this->sourceUnits, -1);
-        const Unit* identStart = this->sourceUnits.addressOfNextCodeUnit() - 1;
-        IdentifierEscapes sawEscape;
-        if (!matchIdentifierStart(&sawEscape)) {
-          return badToken();
+        if (options().privateClassFields) {
+          TokenStart start(this->sourceUnits, -1);
+          const Unit* identStart =
+              this->sourceUnits.addressOfNextCodeUnit() - 1;
+          IdentifierEscapes sawEscape;
+          if (!matchIdentifierStart(&sawEscape)) {
+            return badToken();
+          }
+          return identifierName(start, identStart, sawEscape, modifier,
+                                NameVisibility::Private, ttp);
         }
-        return identifierName(start, identStart, sawEscape, modifier,
-                              NameVisibility::Private, ttp);
-#else
         ungetCodeUnit(unit);
         error(JSMSG_PRIVATE_FIELDS_NOT_SUPPORTED);
         return badToken();
-#endif
       }
 
       case '=':
