@@ -19,11 +19,8 @@
 <script class="testbody" type="text/javascript">
 var iframe = document.getElementById("iframe");
 
-// Let parent check for tab modal prompts if they are enabled for auth
-// prompts. Used by prompt_common.js.
-isTabModal = SpecialPowers.Services.prefs.getBoolPref("prompts.tab_modal.enabled")
-  && SpecialPowers.Services.prefs.getIntPref("prompts.modalType.httpAuth")
-    !== SpecialPowers.Services.prompt.MODAL_TYPE_WINDOW;
+// Force parent to not look for tab-modal prompts, as they're not used for auth prompts.
+isTabModal = false;
 
 const AUTHENTICATE_PATH = new URL("authenticate.sjs", window.location.href).pathname;
 

@@ -85,10 +85,6 @@
       parentCu.import("resource://gre/modules/Timer.jsm");
       parentCu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-      let tabPromptEnabled =
-        Services.prefs.getIntPref("prompts.modalType.httpAuth")
-          !== Services.prompt.MODAL_TYPE_WINDOW;
-
       let channel = NetUtil.newChannel({
         uri: "http://example.com",
         loadUsingSystemPrincipal: true,
@@ -123,19 +119,12 @@
         sendAsyncMessage("prepareForNextTestDone");
       });
 
-      let dialogObserverTopic = tabPromptEnabled
-        ? "tabmodal-dialog-loaded" : "common-dialog-loaded";
+      let dialogObserverTopic = "common-dialog-loaded";
 
       function dialogObserver(subj, topic, data) {
-        if(tabPromptEnabled) {
-          let prompt = subj.ownerGlobal.gBrowser.selectedBrowser
-            .tabModalPromptBox.getPrompt(subj);
-          prompt.Dialog.ui.button0.click(); // Accept button
-        } else {
-          subj.Dialog.ui.prompt.document
+        subj.Dialog.ui.prompt.document
           .getElementById("commonDialog")
           .acceptDialog();
-        }
         sendAsyncMessage("promptAccepted");
       }
 

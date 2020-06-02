@@ -33,12 +33,6 @@ var iframe1Loaded = onloadPromiseFor("iframe_diff_origin");
 var iframe2Loaded = onloadPromiseFor("iframe_same_origin");
 var iframe_prompt = document.getElementById("iframe_prompt");
 
-add_task(function setup() {
-  isTabModal = SpecialPowers.Services.prefs.getBoolPref("prompts.tab_modal.enabled")
-    && SpecialPowers.Services.prefs.getIntPref("prompts.modalType.httpAuth")
-      !== SpecialPowers.Services.prompt.MODAL_TYPE_WINDOW;
-})
-
 add_task(async function runTest() {
   // This test depends on tab modal prompts being enabled.
   if (!isTabModal) {
@@ -105,9 +99,12 @@ add_task(async function runTest() {
 });
 
 add_task(async function runTestAuth() {
-  // Following tests check prompt message for a cross-origin and not
+  // Following tests chack prompt message for a cross-origin and not
   // cross-origin subresources load
 
+  // Force parent to not look for tab-modal prompts, as they're not
+  // used for auth prompts.
+  isTabModal = false;
   let state, action;
 
   state = {
@@ -145,6 +142,8 @@ add_task(async function runTestAuth() {
 
   // Cross-origin subresourse test.
 
+  // Force parent to not look for tab-modal prompts, as they're not used for auth prompts.
+  isTabModal = false;
   state = {
     msg: "http://example.com is requesting your username and password. " +
          "WARNING: Your password will not be sent to the website you are currently visiting!",
