@@ -133,17 +133,24 @@ nsresult WorkerLoadInfo::SetPrincipalsAndCSPOnMainThread(
   nsresult rv = PrincipalToPrincipalInfo(aPrincipal, mPrincipalInfo.get());
   NS_ENSURE_SUCCESS(rv, rv);
 
+  rv = nsContentUtils::GetUTFOrigin(aPrincipal, mOriginNoSuffix);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aPrincipal->GetOrigin(mOrigin);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   if (aPrincipal->Equals(aStoragePrincipal)) {
     *mStoragePrincipalInfo = *mPrincipalInfo;
+    mPartitionedOrigin = mOrigin;
   } else {
     mStoragePrincipalInfo = MakeUnique<PrincipalInfo>();
     rv = PrincipalToPrincipalInfo(aStoragePrincipal,
                                   mStoragePrincipalInfo.get());
     NS_ENSURE_SUCCESS(rv, rv);
-  }
 
-  rv = nsContentUtils::GetUTFOrigin(aPrincipal, mOrigin);
-  NS_ENSURE_SUCCESS(rv, rv);
+    rv = aStoragePrincipal->GetOrigin(mPartitionedOrigin);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   return NS_OK;
 }
