@@ -8,6 +8,14 @@ const TEST_PATH =
   "http://example.com/browser/devtools/client/webconsole/" + "test/browser/";
 const TEST_URI = TEST_PATH + TEST_FILE;
 
+registerCleanupFunction(async function() {
+  await new Promise(resolve => {
+    Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value =>
+      resolve()
+    );
+  });
+});
+
 add_task(async function task() {
   await pushPref("devtools.webconsole.filter.net", false);
   await pushPref("devtools.webconsole.filter.netxhr", true);

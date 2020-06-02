@@ -17,9 +17,16 @@ const XHR_PREF = "devtools.webconsole.filter.netxhr";
 
 Services.prefs.setBoolPref(NET_PREF, true);
 Services.prefs.setBoolPref(XHR_PREF, true);
-registerCleanupFunction(() => {
+
+registerCleanupFunction(async () => {
   Services.prefs.clearUserPref(NET_PREF);
   Services.prefs.clearUserPref(XHR_PREF);
+
+  await new Promise(resolve => {
+    Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value =>
+      resolve()
+    );
+  });
 });
 
 add_task(async function task() {
