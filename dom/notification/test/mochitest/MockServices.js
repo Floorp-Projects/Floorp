@@ -117,6 +117,13 @@ var MockServices = (function() {
   // MockServices API
   return {
     register() {
+      this.originalAlertsCID = registrar.contractIDToCID(
+        ALERTS_SERVICE_CONTRACT_ID
+      );
+      this.originalSystemAlertsCID = registrar.contractIDToCID(
+        SYSTEM_ALERTS_SERVICE_CONTRACT_ID
+      );
+
       registrar.registerFactory(
         MOCK_ALERTS_CID,
         "alerts service",
@@ -135,6 +142,23 @@ var MockServices = (function() {
     unregister() {
       registrar.unregisterFactory(MOCK_ALERTS_CID, mockAlertsService);
       registrar.unregisterFactory(MOCK_SYSTEM_ALERTS_CID, mockAlertsService);
+
+      // Passing `null` for the factory re-maps the contract ID to the
+      // entry for its original CID.
+
+      registrar.registerFactory(
+        this.originalAlertsCID,
+        "alerts service",
+        ALERTS_SERVICE_CONTRACT_ID,
+        null
+      );
+
+      registrar.registerFactory(
+        this.originalSystemAlertsCID,
+        "system alerts service",
+        SYSTEM_ALERTS_SERVICE_CONTRACT_ID,
+        null
+      );
     },
 
     activeAlertNotifications,
