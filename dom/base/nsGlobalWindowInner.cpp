@@ -1099,7 +1099,7 @@ void nsGlobalWindowInner::FreeInnerObjects() {
     // Remember the document's principal, URI, and CSP.
     mDocumentPrincipal = mDoc->NodePrincipal();
     mDocumentStoragePrincipal = mDoc->EffectiveStoragePrincipal();
-    mDocumentIntrinsicStoragePrincipal = mDoc->IntrinsicStoragePrincipal();
+    mDocumentPartitionedPrincipal = mDoc->PartitionedPrincipal();
     mDocumentURI = mDoc->GetDocumentURI();
     mDocBaseURI = mDoc->GetDocBaseURI();
     mDocContentBlockingAllowListPrincipal =
@@ -1327,7 +1327,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsGlobalWindowInner)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mIndexedDB)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocumentPrincipal)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocumentStoragePrincipal)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocumentIntrinsicStoragePrincipal)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocumentPartitionedPrincipal)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocumentCsp)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mBrowserChild)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDoc)
@@ -1434,7 +1434,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindowInner)
   }
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocumentPrincipal)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocumentStoragePrincipal)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocumentIntrinsicStoragePrincipal)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocumentPartitionedPrincipal)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocumentCsp)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mBrowserChild)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDoc)
@@ -2102,24 +2102,24 @@ nsIPrincipal* nsGlobalWindowInner::GetEffectiveStoragePrincipal() {
   return nullptr;
 }
 
-nsIPrincipal* nsGlobalWindowInner::IntrinsicStoragePrincipal() {
+nsIPrincipal* nsGlobalWindowInner::PartitionedPrincipal() {
   if (mDoc) {
     // If we have a document, get the principal from the document
-    return mDoc->EffectiveStoragePrincipal();
+    return mDoc->PartitionedPrincipal();
   }
 
-  if (mDocumentIntrinsicStoragePrincipal) {
-    return mDocumentIntrinsicStoragePrincipal;
+  if (mDocumentPartitionedPrincipal) {
+    return mDocumentPartitionedPrincipal;
   }
 
-  // If we don't have a storage principal and we don't have a document we ask
-  // the parent window for the storage principal.
+  // If we don't have a partitioned principal and we don't have a document we
+  // ask the parent window for the partitioned principal.
 
   nsCOMPtr<nsIScriptObjectPrincipal> objPrincipal =
       do_QueryInterface(GetInProcessParentInternal());
 
   if (objPrincipal) {
-    return objPrincipal->IntrinsicStoragePrincipal();
+    return objPrincipal->PartitionedPrincipal();
   }
 
   return nullptr;
@@ -4346,10 +4346,10 @@ already_AddRefed<nsICSSDeclaration> nsGlobalWindowInner::GetComputedStyleHelper(
 
 Storage* nsGlobalWindowInner::GetSessionStorage(ErrorResult& aError) {
   nsIPrincipal* principal = GetPrincipal();
-  nsIPrincipal* storagePrincipal = IntrinsicStoragePrincipal();
+  nsIPrincipal* partitionedPrincipal = PartitionedPrincipal();
   BrowsingContext* browsingContext = GetBrowsingContext();
 
-  if (!principal || !storagePrincipal || !browsingContext ||
+  if (!principal || !partitionedPrincipal || !browsingContext ||
       !Storage::StoragePrefIsEnabled()) {
     return nullptr;
   }
@@ -4360,7 +4360,7 @@ Storage* nsGlobalWindowInner::GetSessionStorage(ErrorResult& aError) {
              mSessionStorage.get()));
     bool canAccess =
         principal->Subsumes(mSessionStorage->Principal()) &&
-        storagePrincipal->Subsumes(mSessionStorage->StoragePrincipal());
+        partitionedPrincipal->Subsumes(mSessionStorage->StoragePrincipal());
     if (!canAccess) {
       mSessionStorage = nullptr;
     }
@@ -4438,9 +4438,9 @@ Storage* nsGlobalWindowInner::GetSessionStorage(ErrorResult& aError) {
     }
 
     RefPtr<Storage> storage;
-    aError = storageManager->CreateStorage(this, principal, storagePrincipal,
-                                           documentURI, IsPrivateBrowsing(),
-                                           getter_AddRefs(storage));
+    aError = storageManager->CreateStorage(
+        this, principal, partitionedPrincipal, documentURI, IsPrivateBrowsing(),
+        getter_AddRefs(storage));
     if (aError.Failed()) {
       return nullptr;
     }
@@ -5023,11 +5023,6 @@ void nsGlobalWindowInner::ObserveStorageNotification(
     return;
   }
 
-  nsIPrincipal* storagePrincipal = GetEffectiveStoragePrincipal();
-  if (!storagePrincipal) {
-    return;
-  }
-
   bool fireMozStorageChanged = false;
   nsAutoString eventType;
   eventType.AssignLiteral("storage");
@@ -5040,7 +5035,7 @@ void nsGlobalWindowInner::ObserveStorageNotification(
 
     if (const RefPtr<SessionStorageManager> storageManager =
             GetBrowsingContext()->GetSessionStorageManager()) {
-      nsresult rv = storageManager->CheckStorage(storagePrincipal,
+      nsresult rv = storageManager->CheckStorage(PartitionedPrincipal(),
                                                  changingStorage, &check);
       if (NS_FAILED(rv)) {
         return;
@@ -5066,6 +5061,11 @@ void nsGlobalWindowInner::ObserveStorageNotification(
 
   else {
     MOZ_ASSERT(!NS_strcmp(aStorageType, u"localStorage"));
+
+    nsIPrincipal* storagePrincipal = GetEffectiveStoragePrincipal();
+    if (!storagePrincipal) {
+      return;
+    }
 
     MOZ_DIAGNOSTIC_ASSERT(StorageUtils::PrincipalsEqual(aEvent->GetPrincipal(),
                                                         storagePrincipal));

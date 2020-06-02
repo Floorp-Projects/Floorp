@@ -35,9 +35,7 @@ class BackstagePass : public nsIGlobalObject,
     return mPrincipal;
   }
 
-  virtual nsIPrincipal* IntrinsicStoragePrincipal() override {
-    return mPrincipal;
-  }
+  virtual nsIPrincipal* PartitionedPrincipal() override { return mPrincipal; }
 
   JSObject* GetGlobalJSObject() override;
   JSObject* GetGlobalJSObjectPreserveColor() const override;

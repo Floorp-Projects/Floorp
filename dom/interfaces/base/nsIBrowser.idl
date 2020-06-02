@@ -77,7 +77,7 @@ interface nsIBrowser : nsISupports
   readonly attribute nsIWebProgress remoteWebProgressManager;
 
   readonly attribute nsIPrincipal contentPrincipal;
-  readonly attribute nsIPrincipal contentStoragePrincipal;
+  readonly attribute nsIPrincipal contentPartitionedPrincipal;
   readonly attribute nsIPrincipal contentBlockingAllowListPrincipal;
   readonly attribute nsIContentSecurityPolicy csp;
   readonly attribute nsIReferrerInfo referrerInfo;
@@ -133,8 +133,8 @@ interface nsIBrowser : nsISupports
    * @param aDocumentURI the URI of the new document
    * @param aTitle the title of the new doucment
    * @param aContentPrincipal the security principal of the new document
-   * @param aContentStoragePrincipal the security principal for the new
-   *                                 document's storage
+   * @param aContentPartitionedPrincipal the security principal for the new
+   *                                     document's storage
    * @param aCSP the content security policy of the new document
    * @param aReferrerInfo the referrer info of the new document
    * @param aIsSynthetic whether or not the document is synthetic
@@ -151,7 +151,7 @@ interface nsIBrowser : nsISupports
                                in nsIURI aDocumentURI,
                                in AString aTitle,
                                in nsIPrincipal aContentPrincipal,
-                               in nsIPrincipal aContentStoragePrincipal,
+                               in nsIPrincipal aContentPartitionedPrincipal,
                                in nsIContentSecurityPolicy aCSP,
                                in nsIReferrerInfo aReferrerInfo,
                                in boolean aIsSynthetic,

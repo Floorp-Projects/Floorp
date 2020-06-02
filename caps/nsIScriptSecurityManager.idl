@@ -231,14 +231,15 @@ interface nsIScriptSecurityManager : nsISupports
     nsIPrincipal getChannelResultStoragePrincipal(in nsIChannel aChannel);
 
     /**
-     * This method does getChannelResultPrincipal() +
-     * getChannelResultStoragePrincipal().
-     * This method is mainly done for Document::Reset(). There are no other
-     * reasons to use this method.
+     * This method returns 2 principals from a nsIChannel:
+     * - aPrincipal is the regular principal.
+     * - aPartitionedPrincipal is aPrincipal plus an isolation key in its
+     *   originAttributes.
+     * See more in StoragePrincipalHelper.h
      */
     void getChannelResultPrincipals(in nsIChannel aChannel,
                                     out nsIPrincipal aPrincipal,
-                                    out nsIPrincipal aStoragePrincipal);
+                                    out nsIPrincipal aPartitionedPrincipal);
 
     /**
      * Temporary API until bug 1220687 is fixed.
