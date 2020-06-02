@@ -27,7 +27,7 @@ inline already_AddRefed<nsThread> CreateMainThread(
   MainThreadQueueT* prioritized = queue.get();
 
   RefPtr<SynchronizedQueueT> synchronizedQueue =
-      new SynchronizedQueueT(std::move(queue));
+      new SynchronizedQueueT(std::move(queue), true);
 
   prioritized->SetMutexRef(synchronizedQueue->MutexRef());
 
