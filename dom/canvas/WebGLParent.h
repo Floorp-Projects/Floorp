@@ -24,7 +24,8 @@ namespace dom {
 class WebGLParent : public PWebGLParent,
                     public AsyncProducerActor<WebGLParent>,
                     public SyncConsumerActor<WebGLParent>,
-                    public SupportsWeakPtr<WebGLParent> {
+                    public SupportsWeakPtr<WebGLParent>,
+                    public mozilla::webgl::PcqActor {
   friend PWebGLParent;
 
  public:
