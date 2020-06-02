@@ -284,6 +284,9 @@ CookieService::GetCookieStringFromDocument(Document* aDocument,
 
   nsCOMPtr<nsIPrincipal> principal = aDocument->EffectiveStoragePrincipal();
 
+  nsICookie::schemeType schemeType =
+      CookieCommons::PrincipalToSchemeType(principal);
+
   CookieStorage* storage = PickStorage(principal->OriginAttributesRef());
 
   nsAutoCString baseDomain;
@@ -349,6 +352,10 @@ CookieService::GetCookieStringFromDocument(Document* aDocument,
 
     // if the cookie is secure and the host scheme isn't, we can't send it
     if (cookie->IsSecure() && !potentiallyTurstworthy) {
+      continue;
+    }
+
+    if (!CookieCommons::MaybeCompareScheme(cookie, schemeType)) {
       continue;
     }
 
@@ -849,6 +856,8 @@ void CookieService::GetCookiesForURI(
                                             baseDomainFromURI);
   NS_ENSURE_SUCCESS_VOID(rv);
 
+  nsICookie::schemeType schemeType = CookieCommons::URIToSchemeType(aHostURI);
+
   // check default prefs
   uint32_t rejectedReason = aRejectedReason;
   uint32_t priorCookieCount = storage->CountCookiesFromHost(
@@ -910,6 +919,11 @@ void CookieService::GetCookiesForURI(
 
     // if the cookie is secure and the host scheme isn't, we can't send it
     if (cookie->IsSecure() && !potentiallyTurstworthy) {
+      continue;
+    }
+
+    // The scheme doesn't match.
+    if (!CookieCommons::MaybeCompareScheme(cookie, schemeType)) {
       continue;
     }
 
@@ -977,15 +991,7 @@ bool CookieService::CanSetCookie(
   // init expiryTime such that session cookies won't prematurely expire
   aCookieData.expiry() = INT64_MAX;
 
-  if (aHostURI->SchemeIs("https")) {
-    aCookieData.schemeMap() = nsICookie::SCHEME_HTTPS;
-  } else if (aHostURI->SchemeIs("http")) {
-    aCookieData.schemeMap() = nsICookie::SCHEME_HTTP;
-  } else if (aHostURI->SchemeIs("file")) {
-    aCookieData.schemeMap() = nsICookie::SCHEME_FILE;
-  } else {
-    MOZ_CRASH("Unsupported scheme type");
-  }
+  aCookieData.schemeMap() = CookieCommons::URIToSchemeType(aHostURI);
 
   // aCookieHeader is an in/out param to point to the next cookie, if
   // there is one. Save the present value for logging purposes
