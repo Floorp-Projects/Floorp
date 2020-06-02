@@ -2652,7 +2652,11 @@ void DocAccessible::ARIAActiveDescendantIDMaybeMoved(dom::Element* aElm) {
 void DocAccessible::SetRoleMapEntryForDoc(dom::Element* aElement) {
   const nsRoleMapEntry* entry = aria::GetRoleMap(aElement);
   if (!entry || entry->role == roles::APPLICATION ||
-      entry->role == roles::DIALOG) {
+      entry->role == roles::DIALOG ||
+      // Role alert isn't valid on the body element according to the ARIA spec,
+      // but it's useful for our UI; e.g. the WebRTC sharing indicator.
+      (entry->role == roles::ALERT &&
+       !nsCoreUtils::IsContentDocument(mDocumentNode))) {
     SetRoleMapEntry(entry);
     return;
   }
