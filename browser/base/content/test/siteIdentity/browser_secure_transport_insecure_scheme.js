@@ -26,7 +26,7 @@ add_task(async function() {
     });
     await BrowserTestUtils.browserLoaded(browser);
     let identityMode = window.document.getElementById("identity-box").className;
-    is(identityMode, "unknownIdentity", "identity should be 'unknown'");
+    is(identityMode, "localResource", "identity should be 'localResource'");
   });
 });
 
