@@ -144,7 +144,8 @@ async function run_test_1() {
     cookie.isSession,
     cookie.expiry,
     {},
-    Ci.nsICookie.SAMESITE_NONE
+    Ci.nsICookie.SAMESITE_NONE,
+    Ci.nsICookie.SCHEME_HTTPS
   );
 
   // Check that the cookie service accepted the new cookie.
