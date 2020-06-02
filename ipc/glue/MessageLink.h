@@ -44,7 +44,7 @@ class MessageLink {
 
   // n.b.: These methods all require that the channel monitor is
   // held when they are invoked.
-  virtual void SendMessage(Message* msg) = 0;
+  virtual void SendMessage(mozilla::UniquePtr<Message> msg) = 0;
   virtual void SendClose() = 0;
 
   virtual bool Unsound_IsClosed() const = 0;
@@ -84,7 +84,7 @@ class ProcessLink : public MessageLink, public Transport::Listener {
   virtual void OnChannelConnected(int32_t peer_pid) override;
   virtual void OnChannelError() override;
 
-  virtual void SendMessage(Message* msg) override;
+  virtual void SendMessage(mozilla::UniquePtr<Message> msg) override;
   virtual void SendClose() override;
 
   virtual bool Unsound_IsClosed() const override;
@@ -104,7 +104,7 @@ class ThreadLink : public MessageLink {
   ThreadLink(MessageChannel* aChan, MessageChannel* aTargetChan);
   virtual ~ThreadLink();
 
-  virtual void SendMessage(Message* msg) override;
+  virtual void SendMessage(mozilla::UniquePtr<Message> msg) override;
   virtual void SendClose() override;
 
   virtual bool Unsound_IsClosed() const override;

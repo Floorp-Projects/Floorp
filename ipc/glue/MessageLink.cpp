@@ -132,7 +132,7 @@ void ProcessLink::Open(UniquePtr<Transport> aTransport, MessageLoop* aIOLoop,
   }
 }
 
-void ProcessLink::SendMessage(Message* msg) {
+void ProcessLink::SendMessage(UniquePtr<Message> msg) {
   if (msg->size() > IPC::Channel::kMaximumMessageSize) {
     CrashReporter::AnnotateCrashReport(
         CrashReporter::Annotation::IPCMessageName,
@@ -150,8 +150,9 @@ void ProcessLink::SendMessage(Message* msg) {
 
   msg->AssertAsLargeAsHeader();
 
-  mIOLoop->PostTask(NewNonOwningRunnableMethod<Message*>(
-      "IPC::Channel::Send", mTransport.get(), &Transport::Send, msg));
+  mIOLoop->PostTask(NewNonOwningRunnableMethod<UniquePtr<Message>&&>(
+      "IPC::Channel::Send", mTransport.get(), &Transport::Send,
+      std::move(msg)));
 }
 
 void ProcessLink::SendClose() {
@@ -193,14 +194,13 @@ ThreadLink::~ThreadLink() {
   mTargetChan = nullptr;
 }
 
-void ThreadLink::SendMessage(Message* msg) {
+void ThreadLink::SendMessage(UniquePtr<Message> msg) {
   if (!mChan->mIsPostponingSends) {
     mChan->AssertWorkerThread();
   }
   mChan->mMonitor->AssertCurrentThreadOwns();
 
   if (mTargetChan) mTargetChan->OnMessageReceivedFromLink(std::move(*msg));
-  delete msg;
 }
 
 void ThreadLink::SendClose() {

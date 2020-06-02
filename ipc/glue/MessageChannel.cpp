@@ -984,17 +984,16 @@ bool MessageChannel::Send(Message* aMsg) {
   }
 
   AddProfilerMarker(msg.get(), MessageDirection::eSending);
-  SendMessageToLink(msg.release());
+  SendMessageToLink(std::move(msg));
   return true;
 }
 
-void MessageChannel::SendMessageToLink(Message* aMsg) {
+void MessageChannel::SendMessageToLink(UniquePtr<Message> aMsg) {
   if (mIsPostponingSends) {
-    UniquePtr<Message> msg(aMsg);
-    mPostponedSends.push_back(std::move(msg));
+    mPostponedSends.push_back(std::move(aMsg));
     return;
   }
-  mLink->SendMessage(aMsg);
+  mLink->SendMessage(std::move(aMsg));
 }
 
 void MessageChannel::BeginPostponingSends() {
@@ -1015,7 +1014,7 @@ void MessageChannel::StopPostponingSends() {
   MOZ_ASSERT(mIsPostponingSends);
 
   for (UniquePtr<Message>& iter : mPostponedSends) {
-    mLink->SendMessage(iter.release());
+    mLink->SendMessage(std::move(iter));
   }
 
   // We unset this after SendMessage so we can make correct thread
@@ -1091,7 +1090,7 @@ bool MessageChannel::SendBuildIDsMatchMessage(const char* aParentBuildID) {
     ReportConnectionError("MessageChannel", msg.get());
     return false;
   }
-  mLink->SendMessage(msg.release());
+  mLink->SendMessage(std::move(msg));
   return true;
 }
 
@@ -1459,10 +1458,10 @@ bool MessageChannel::Send(Message* aMsg, Message* aReply) {
     MOZ_RELEASE_ASSERT(DispatchingSyncMessage() || DispatchingAsyncMessage());
     MOZ_RELEASE_ASSERT(!mIsPostponingSends);
     IPC_LOG("Cancel from Send");
-    CancelMessage* cancel =
-        new CancelMessage(CurrentNestedInsideSyncTransaction());
+    auto cancel =
+        MakeUnique<CancelMessage>(CurrentNestedInsideSyncTransaction());
     CancelTransaction(CurrentNestedInsideSyncTransaction());
-    mLink->SendMessage(cancel);
+    mLink->SendMessage(std::move(cancel));
   }
 
   IPC_ASSERT(msg->is_sync(), "can only Send() sync messages here");
@@ -1512,7 +1511,7 @@ bool MessageChannel::Send(Message* aMsg, Message* aReply) {
   const char* msgName = msg->name();
 
   AddProfilerMarker(msg.get(), MessageDirection::eSending);
-  SendMessageToLink(msg.release());
+  SendMessageToLink(std::move(msg));
 
   while (true) {
     MOZ_RELEASE_ASSERT(!transact.IsCanceled());
@@ -1654,7 +1653,7 @@ bool MessageChannel::Call(Message* aMsg, Message* aReply) {
 
   AddProfilerMarker(msg.get(), MessageDirection::eSending);
 
-  mLink->SendMessage(msg.release());
+  mLink->SendMessage(std::move(msg));
 
   while (true) {
     // if a handler invoked by *Dispatch*() spun a nested event
@@ -2110,7 +2109,7 @@ void MessageChannel::DispatchMessage(Message&& aMsg) {
             aMsg.transaction_id());
     AddProfilerMarker(reply.get(), MessageDirection::eSending);
 
-    mLink->SendMessage(reply.release());
+    mLink->SendMessage(std::move(reply));
   }
 }
 
@@ -2210,7 +2209,7 @@ void MessageChannel::DispatchInterruptMessage(ActorLifecycleProxy* aProxy,
   MonitorAutoLock lock(*mMonitor);
   if (ChannelConnected == mChannelState) {
     AddProfilerMarker(reply.get(), MessageDirection::eSending);
-    mLink->SendMessage(reply.release());
+    mLink->SendMessage(std::move(reply));
   }
 }
 
@@ -2678,8 +2677,7 @@ void MessageChannel::NotifyImpendingShutdown() {
   MonitorAutoLock lock(*mMonitor);
   if (Connected()) {
     MOZ_DIAGNOSTIC_ASSERT(mIsCrossProcess);
-    // SendMessage takes ownership of the message.
-    mLink->SendMessage(msg.release());
+    mLink->SendMessage(std::move(msg));
   }
 }
 
@@ -2728,7 +2726,7 @@ void MessageChannel::Close() {
     // already received a Goodbye from the other side (and our state is
     // ChannelClosing), there's no reason to send one.
     if (ChannelConnected == mChannelState) {
-      mLink->SendMessage(new GoodbyeMessage());
+      mLink->SendMessage(MakeUnique<GoodbyeMessage>());
     }
     SynchronouslyClose();
   }
@@ -2948,10 +2946,10 @@ void MessageChannel::CancelCurrentTransaction() {
     IPC_LOG("Cancel requested: current xid=%d",
             CurrentNestedInsideSyncTransaction());
     MOZ_RELEASE_ASSERT(DispatchingSyncMessage());
-    CancelMessage* cancel =
-        new CancelMessage(CurrentNestedInsideSyncTransaction());
+    auto cancel =
+        MakeUnique<CancelMessage>(CurrentNestedInsideSyncTransaction());
     CancelTransaction(CurrentNestedInsideSyncTransaction());
-    mLink->SendMessage(cancel);
+    mLink->SendMessage(std::move(cancel));
   }
 }
 
