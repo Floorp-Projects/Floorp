@@ -3868,7 +3868,8 @@ class Document : public nsINode,
   nsIPermissionDelegateHandler* PermDelegateHandler();
 
   // CSS prefers-color-scheme media feature for this document.
-  StylePrefersColorScheme PrefersColorScheme() const;
+  enum class IgnoreRFP { No, Yes };
+  StylePrefersColorScheme PrefersColorScheme(IgnoreRFP aIgnoreRFP = IgnoreRFP::No) const;
 
   // Returns true if we use overlay scrollbars on the system wide or on the
   // given document.
