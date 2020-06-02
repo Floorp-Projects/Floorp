@@ -32,6 +32,7 @@ const prefs = {
   DOH_DONE_FIRST_RUN_PREF: "doh-rollout.doneFirstRun",
   DOH_BALROG_MIGRATION_PREF: "doh-rollout.balrog-migration-done",
   DOH_DEBUG_PREF: "doh-rollout.debug",
+  DOH_TRR_SELECT_ENABLED_PREF: "doh-rollout.trr-selection.enabled",
   DOH_TRR_SELECT_DRY_RUN_RESULT_PREF:
     "doh-rollout.trr-selection.dry-run-result",
   MOCK_HEURISTICS_PREF: "doh-rollout.heuristics.mockValues",
@@ -72,6 +73,10 @@ async function setup() {
   // so that we can test the doorhanger. browser_doorhanger_newProfile.js
   // overrides this.
   Preferences.set(prefs.PROFILE_CREATION_THRESHOLD_PREF, "99999999999999");
+
+  // Enable trr selection for tests. This is off by default so it can be
+  // controlled via Normandy.
+  Preferences.set(prefs.DOH_TRR_SELECT_ENABLED_PREF, true);
 
   registerCleanupFunction(async () => {
     Services.telemetry.canRecordExtended = oldCanRecord;
