@@ -7,6 +7,7 @@ package mozilla.components.browser.engine.gecko
 import android.content.Intent
 import android.os.Handler
 import android.os.Message
+import android.view.WindowManager
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runBlockingTest
@@ -53,6 +54,7 @@ import org.mockito.ArgumentMatchers.anyInt
 import org.mockito.ArgumentMatchers.anyList
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito.never
+import org.mockito.Mockito.reset
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyZeroInteractions
@@ -567,7 +569,7 @@ class GeckoEngineSessionTest {
     }
 
     @Test
-    fun `keeps track of current url via onPageStart events`() {
+    fun `do not keep track of current url via onPageStart events`() {
         val engineSession = GeckoEngineSession(mock(),
                 geckoSessionProvider = geckoSessionProvider)
 
@@ -575,20 +577,43 @@ class GeckoEngineSessionTest {
 
         assertNull(engineSession.currentUrl)
         progressDelegate.value.onPageStart(geckoSession, "https://www.mozilla.org")
-        assertEquals("https://www.mozilla.org", engineSession.currentUrl)
+        assertNull(engineSession.currentUrl)
 
         progressDelegate.value.onPageStart(geckoSession, "https://www.firefox.com")
+        assertNull(engineSession.currentUrl)
+    }
+
+    @Test
+    fun `keeps track of current url via onLocationChange events`() {
+        val mockedContentBlockingController = mock<ContentBlockingController>()
+        val engineSession = GeckoEngineSession(runtime, geckoSessionProvider = geckoSessionProvider)
+        var geckoResult = GeckoResult<Boolean?>()
+        whenever(runtime.contentBlockingController).thenReturn(mockedContentBlockingController)
+        whenever(mockedContentBlockingController.checkException(any())).thenReturn(geckoResult)
+
+        captureDelegates()
+        geckoResult.complete(true)
+
+        assertNull(engineSession.currentUrl)
+        navigationDelegate.value.onLocationChange(geckoSession, "https://www.mozilla.org")
+        assertEquals("https://www.mozilla.org", engineSession.currentUrl)
+
+        navigationDelegate.value.onLocationChange(geckoSession, "https://www.firefox.com")
         assertEquals("https://www.firefox.com", engineSession.currentUrl)
     }
 
     @Test
     fun `notifies configured history delegate of title changes`() = runBlockingTest {
-        val engineSession = GeckoEngineSession(mock(),
-                geckoSessionProvider = geckoSessionProvider,
+        val mockedContentBlockingController = mock<ContentBlockingController>()
+        val engineSession = GeckoEngineSession(runtime, geckoSessionProvider = geckoSessionProvider,
             context = coroutineContext)
         val historyTrackingDelegate: HistoryTrackingDelegate = mock()
+        var geckoResult = GeckoResult<Boolean?>()
+        whenever(runtime.contentBlockingController).thenReturn(mockedContentBlockingController)
+        whenever(mockedContentBlockingController.checkException(any())).thenReturn(geckoResult)
 
         captureDelegates()
+        geckoResult.complete(true)
 
         // Nothing breaks if history delegate isn't configured.
         contentDelegate.value.onTitleChange(geckoSession, "Hello World!")
@@ -599,7 +624,7 @@ class GeckoEngineSessionTest {
         verify(historyTrackingDelegate, never()).onTitleChanged(anyString(), anyString())
 
         // This sets the currentUrl.
-        progressDelegate.value.onPageStart(geckoSession, "https://www.mozilla.com")
+        navigationDelegate.value.onLocationChange(geckoSession, "https://www.mozilla.com")
 
         contentDelegate.value.onTitleChange(geckoSession, "Hello World!")
         verify(historyTrackingDelegate).onTitleChanged(eq("https://www.mozilla.com"), eq("Hello World!"))
@@ -1762,6 +1787,33 @@ class GeckoEngineSessionTest {
 
         engineSession.exitFullScreenMode()
         verify(geckoSession).exitFullScreen()
+    }
+
+    @Test
+    fun viewportFitChangeTranslateValuesCorrectly() {
+        val engineSession = GeckoEngineSession(mock(),
+            geckoSessionProvider = geckoSessionProvider)
+        val observer: EngineSession.Observer = mock()
+
+        // Verify the call to the observer.
+        engineSession.register(observer)
+        captureDelegates()
+
+        contentDelegate.value.onMetaViewportFitChange(geckoSession, "test")
+        verify(observer).onMetaViewportFitChanged(WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_DEFAULT)
+        reset(observer)
+
+        contentDelegate.value.onMetaViewportFitChange(geckoSession, "auto")
+        verify(observer).onMetaViewportFitChanged(WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_DEFAULT)
+        reset(observer)
+
+        contentDelegate.value.onMetaViewportFitChange(geckoSession, "cover")
+        verify(observer).onMetaViewportFitChanged(WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES)
+        reset(observer)
+
+        contentDelegate.value.onMetaViewportFitChange(geckoSession, "contain")
+        verify(observer).onMetaViewportFitChanged(WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_NEVER)
+        reset(observer)
     }
 
     @Test

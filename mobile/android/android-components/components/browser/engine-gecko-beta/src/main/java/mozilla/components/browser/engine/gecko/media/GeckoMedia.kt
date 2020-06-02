@@ -32,8 +32,8 @@ internal class GeckoMedia(
     }
     internal set
 
-    override var fullscreen by Delegates.observable(false) {
-            _, old, new -> notifyObservers(old, new) { onFullscreenChanged(this@GeckoMedia, new) }
+    override var fullscreen: Boolean by Delegates.observable(false) {
+        _, old, new -> notifyObservers(old, new) { onFullscreenChanged(this@GeckoMedia, new) }
     }
     internal set
 

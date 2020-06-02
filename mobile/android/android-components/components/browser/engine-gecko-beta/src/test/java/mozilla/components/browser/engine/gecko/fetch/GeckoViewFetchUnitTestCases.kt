@@ -7,6 +7,7 @@ package mozilla.components.browser.engine.gecko.fetch
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.concept.fetch.Client
 import mozilla.components.concept.fetch.Request
+import mozilla.components.concept.fetch.Response
 import mozilla.components.support.test.any
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
@@ -285,6 +286,13 @@ class GeckoViewFetchUnitTestCases : FetchTestCases() {
         geckoWebExecutor = executor
 
         createNewClient().fetch(Request(""))
+    }
+
+    @Test
+    fun toResponseMustReturn200ForBlobUrls() {
+        val builder = WebResponse.Builder("blob:https://mdn.mozillademos.org/d518464c-5075-9046-aef2-9c313214ed53").statusCode(0).build()
+
+        assertEquals(Response.SUCCESS, builder.toResponse(isBlobUri = true).status)
     }
 
     private fun mockRequest(headerMap: Map<String, String>? = null, body: String? = null, method: String = "GET") {

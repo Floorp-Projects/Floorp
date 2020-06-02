@@ -40,6 +40,7 @@ import org.mozilla.geckoview.WebExtension
 import org.mozilla.geckoview.WebExtensionController
 
 @RunWith(AndroidJUnit4::class)
+@Suppress("Deprecation") // https://github.com/mozilla-mobile/android-components/issues/6356
 class GeckoWebExtensionTest {
 
     @Test
