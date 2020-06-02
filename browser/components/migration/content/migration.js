@@ -338,11 +338,11 @@ var MigrationWizard = {
     for (var i = 0; i < 16; ++i) {
       var itemID = (items >> i) & 0x1 ? Math.pow(2, i) : 0;
       if (itemID > 0) {
-        var checkbox = document.createXULElement("checkbox");
+        let checkbox = document.createXULElement("checkbox");
         checkbox.id = itemID;
-        checkbox.setAttribute(
-          "label",
-          MigrationUtils.getLocalizedString(itemID + "_" + this._source)
+        document.l10n.setAttributes(
+          checkbox,
+          "browser-data-" + this._source.toLowerCase() + "-" + itemID
         );
         dataSources.appendChild(checkbox);
         if (!this._itemsFlags || this._itemsFlags & itemID) {
@@ -437,9 +437,9 @@ var MigrationWizard = {
         var label = document.createXULElement("label");
         label.id = itemID + "_migrated";
         try {
-          label.setAttribute(
-            "value",
-            MigrationUtils.getLocalizedString(itemID + "_" + this._source)
+          document.l10n.setAttributes(
+            label,
+            "browser-data-" + this._source.toLowerCase() + "-" + itemID
           );
           items.appendChild(label);
         } catch (e) {

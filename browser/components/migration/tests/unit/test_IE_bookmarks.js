@@ -7,10 +7,11 @@ add_task(async function() {
 
   // Wait for the imported bookmarks.  Check that "From Internet Explorer"
   // folders are created in the menu and on the toolbar.
-  let source = MigrationUtils.getLocalizedString("sourceNameIE");
-  let label = MigrationUtils.getLocalizedString("importedBookmarksFolder", [
-    source,
-  ]);
+  let source = await MigrationUtils.getLocalizedString("source-name-ie");
+  let label = await MigrationUtils.getLocalizedString(
+    "imported-bookmarks-source",
+    { source }
+  );
 
   let expectedParents = [
     PlacesUtils.bookmarksMenuFolderId,

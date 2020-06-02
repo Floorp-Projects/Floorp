@@ -104,7 +104,7 @@ ChromeProfileMigrator.prototype.getResources = async function Chrome_getResource
     if (await OS.File.exists(profileFolder)) {
       let localePropertySuffix = MigrationUtils._getLocalePropertyForBrowser(
         this.getBrowserKey()
-      ).replace(/^sourceName/, "");
+      ).replace(/^source-name-/, "");
       let possibleResourcePromises = [
         GetBookmarksResource(profileFolder, localePropertySuffix),
         GetHistoryResource(profileFolder),
