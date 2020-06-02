@@ -84,6 +84,9 @@ class Symbol : public js::gc::TenuredCell {
     return code_ == SymbolCode::toStringTag || code_ == SymbolCode::toPrimitive;
   }
 
+  // Symbol created for the #PrivateName syntax.
+  bool isPrivateName() const { return code_ == SymbolCode::PrivateNameSymbol; }
+
   static const JS::TraceKind TraceKind = JS::TraceKind::Symbol;
   const js::gc::CellHeader& cellHeader() const { return headerAndDescription_; }
 
