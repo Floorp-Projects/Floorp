@@ -143,6 +143,9 @@ js/src/jsapi-tests/binast/
 js/src/tests/
 js/src/Y.js
 
+# Fuzzing code for testing only, targeting the JS shell
+js/src/fuzz-tests/
+
 # Uses `#filter substitution`
 mobile/android/app/mobile.js
 mobile/android/app/geckoview-prefs.js
