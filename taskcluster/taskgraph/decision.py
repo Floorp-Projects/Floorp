@@ -225,7 +225,10 @@ def taskgraph_decision(options, parameters=None):
     write_artifact('parameters.yml', dict(**tgg.parameters))
 
     # write out the public/actions.json file
-    write_artifact('actions.json', render_actions_json(tgg.parameters, tgg.graph_config))
+    write_artifact(
+        'actions.json',
+        render_actions_json(tgg.parameters, tgg.graph_config, decision_task_id),
+    )
 
     # write out the full graph for reference
     full_task_json = tgg.full_task_graph.to_json()
