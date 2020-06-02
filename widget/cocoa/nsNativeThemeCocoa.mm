@@ -1331,19 +1331,14 @@ void nsNativeThemeCocoa::DrawDisclosureButton(CGContextRef cgContext, const HIRe
 
 void nsNativeThemeCocoa::DrawFocusOutline(CGContextRef cgContext, const HIRect& inBoxRect) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
-  HIThemeFrameDrawInfo fdi;
-  fdi.version = 0;
-  fdi.kind = kHIThemeFrameTextFieldSquare;
-  fdi.state = kThemeStateActive;
-  fdi.isFocused = TRUE;
-
-#if DRAW_IN_FRAME_DEBUG
-  CGContextSetRGBFillColor(cgContext, 0.0, 0.0, 0.5, 0.25);
-  CGContextFillRect(cgContext, inBoxRect);
-#endif
-
-  HIThemeDrawFrame(&inBoxRect, &fdi, cgContext, HITHEME_ORIENTATION);
+  NSGraphicsContext* savedContext = [NSGraphicsContext currentContext];
+  [NSGraphicsContext setCurrentContext:[NSGraphicsContext graphicsContextWithGraphicsPort:cgContext
+                                                                                  flipped:YES]];
+  CGContextSaveGState(cgContext);
+  NSSetFocusRingStyle(NSFocusRingOnly);
+  NSRectFill(NSRectFromCGRect(inBoxRect));
+  CGContextRestoreGState(cgContext);
+  [NSGraphicsContext setCurrentContext:savedContext];
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
