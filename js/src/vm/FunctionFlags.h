@@ -186,20 +186,15 @@ class FunctionFlags {
     MOZ_ASSERT_IF(hasFlags(WASM_JIT_ENTRY), isWasm());
     return hasFlags(WASM_JIT_ENTRY);
   }
-  bool isNativeWithJitEntry() const {
-    MOZ_ASSERT_IF(isWasmWithJitEntry(), isNative());
-    return isWasmWithJitEntry();
-  }
   bool isNativeWithoutJitEntry() const {
-    return isNative() && !isNativeWithJitEntry();
+    MOZ_ASSERT_IF(!hasJitEntry(), isNative());
+    return !hasJitEntry();
   }
   bool isBuiltinNative() const {
     return isNative() && !isAsmJSNative() && !isWasm();
   }
-
   bool hasJitEntry() const {
-    return hasBaseScript() || hasSelfHostedLazyScript() ||
-           isNativeWithJitEntry();
+    return hasBaseScript() || hasSelfHostedLazyScript() || isWasmWithJitEntry();
   }
 
   /* Possible attributes of an interpreted function: */
