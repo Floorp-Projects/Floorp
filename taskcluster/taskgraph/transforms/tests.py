@@ -37,7 +37,7 @@ from taskgraph.util.attributes import match_run_on_projects, keymatch
 from taskgraph.util.keyed_by import evaluate_keyed_by
 from taskgraph.util.schema import resolve_keyed_by, OptimizationSchema
 from taskgraph.util.templates import merge
-from taskgraph.util.treeherder import split_symbol, join_symbol, add_suffix
+from taskgraph.util.treeherder import split_symbol, join_symbol
 from taskgraph.util.platforms import platform_family
 from taskgraph.util.schema import (
     optionally_keyed_by,
@@ -1494,10 +1494,11 @@ def split_chunks(config, tasks):
                             this_chunk, task['test-name'], task['test-platform']))
                 chunked['test-manifests'] = manifests
 
-            if task['chunks'] > 1:
+            group, symbol = split_symbol(chunked['treeherder-symbol'])
+            if task['chunks'] > 1 or not symbol:
                 # add the chunk number to the TH symbol
-                chunked['treeherder-symbol'] = add_suffix(
-                    chunked['treeherder-symbol'], this_chunk)
+                symbol += str(this_chunk)
+                chunked['treeherder-symbol'] = join_symbol(group, symbol)
 
             yield chunked
 
