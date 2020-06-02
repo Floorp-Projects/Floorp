@@ -41,9 +41,6 @@ EX_CONFIG = 78
 EX_SOFTWARE = 70
 EX_USAGE = 64
 
-DEFAULT_REPO = "https://github.com/andreastt/puppeteer.git"
-DEFAULT_COMMITISH = "firefox"
-
 
 def setup():
     # add node and npm from mozbuild to front of system path
@@ -71,14 +68,12 @@ class RemoteCommands(MachCommandBase):
                 "Pull in latest changes of the Puppeteer client.")
     @CommandArgument("--repository",
                      metavar="REPO",
-                     default=DEFAULT_REPO,
-                     help="The (possibly remote) repository to clone from. "
-                          "Defaults to {}.".format(DEFAULT_REPO))
+                     required=True,
+                     help="The (possibly remote) repository to clone from.")
     @CommandArgument("--commitish",
                      metavar="COMMITISH",
-                     default=DEFAULT_COMMITISH,
-                     help="The commit or tag object name to check out. "
-                          "Defaults to \"{}\".".format(DEFAULT_COMMITISH))
+                     required=True,
+                     help="The commit or tag object name to check out.")
     def vendor_puppeteer(self, repository, commitish):
         puppeteerdir = os.path.join(self.remotedir, "test", "puppeteer")
 
@@ -97,6 +92,10 @@ class RemoteCommands(MachCommandBase):
             os.remove(os.path.join(puppeteerdir, ".gitignore"))
         except OSError:
             pass
+
+        experimental_dir = os.path.join(puppeteerdir, "experimental")
+        if os.path.isdir(experimental_dir):
+            shutil.rmtree(experimental_dir)
 
         import yaml
         annotation = {
