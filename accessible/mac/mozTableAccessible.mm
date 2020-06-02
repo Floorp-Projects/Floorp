@@ -38,7 +38,7 @@
 
   if (Accessible* acc = [mParent geckoAccessible].AsAccessible()) {
     TableAccessible* table = acc->AsTable();
-    NSAssert(table, @"Got null table when fetching column children!");
+    MOZ_ASSERT(table, "Got null table when fetching column children!");
     uint32_t numRows = table->RowCount();
 
     for (uint32_t j = 0; j < numRows; j++) {
