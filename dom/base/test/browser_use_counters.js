@@ -81,6 +81,38 @@ add_task(async function() {
     "CSS_PROPERTY_WebkitPaddingStart"
   );
 
+  // Check for -moz-appearance related use counters.
+  const appearanceCounters = [
+    ["APPEARANCE_WIDGET_BUTTON", 0],
+    ["APPEARANCE_NONWIDGET_BUTTON", 0],
+    ["APPEARANCE_WIDGET_TEXTFIELD", 0],
+    ["APPEARANCE_NONWIDGET_TEXTFIELD", 0],
+    ["APPEARANCE_WIDGET_RADIO", 0],
+    ["APPEARANCE_NONWIDGET_RADIO", 0],
+    ["APPEARANCE_WIDGET_CHECKBOX", 1],
+    ["APPEARANCE_NONWIDGET_CHECKBOX", 0],
+    ["APPEARANCE_WIDGET_MENULISTBUTTON", 0],
+    ["APPEARANCE_NONWIDGET_MENULISTBUTTON", 1],
+    ["APPEARANCE_WIDGET_METER", 0],
+    ["APPEARANCE_NONWIDGET_METER", 0],
+    ["APPEARANCE_WIDGET_TEXTAREA", 0],
+    ["APPEARANCE_NONWIDGET_TEXTAREA", 0],
+    ["APPEARANCE_WIDGET_RANGE", 0],
+    ["APPEARANCE_NONWIDGET_RANGE", 0],
+    ["APPEARANCE_OVERRIDDEN_RANGE", 1],
+    ["APPEARANCE_WIDGET_NUMBERINPUT", 0],
+    ["APPEARANCE_NONWIDGET_NUMBERINPUT", 0],
+    ["APPEARANCE_OVERRIDDEN_NUMBERINPUT", 0],
+  ];
+  for (let [name, value] of appearanceCounters) {
+    await check_use_counter_iframe(
+      "file_use_counter_appearance.html",
+      name,
+      /* check_documents = */ true,
+      value
+    );
+  }
+
   // Check that even loads from the imglib cache update use counters.  The
   // images should still be there, because we just loaded them in the last
   // set of tests.  But we won't get updated counts for the document
@@ -183,9 +215,12 @@ function grabHistogramsFromContent(use_counter_middlefix, page_before = null) {
 var check_use_counter_iframe = async function(
   file,
   use_counter_middlefix,
-  check_documents = true
+  check_documents = true,
+  value = 1
 ) {
-  info("checking " + file + " with histogram " + use_counter_middlefix);
+  info(
+    `checking ${file} with histogram ${use_counter_middlefix} and expected value ${value}`
+  );
 
   let newTab = BrowserTestUtils.addTab(gBrowser, "about:blank");
   gBrowser.selectedTab = newTab;
@@ -240,17 +275,17 @@ var check_use_counter_iframe = async function(
 
   is(
     histogram_page_after,
-    histogram_page_before + 1,
+    histogram_page_before + value,
     "page counts for " + use_counter_middlefix + " after are correct"
   );
   ok(
-    histogram_toplevel_docs_after >= histogram_toplevel_docs_before + 1,
+    histogram_toplevel_docs_after >= histogram_toplevel_docs_before + value,
     "top level document counts are correct"
   );
   if (check_documents) {
     is(
       histogram_document_after,
-      histogram_document_before + 1,
+      histogram_document_before + value,
       "document counts for " + use_counter_middlefix + " after are correct"
     );
   }
