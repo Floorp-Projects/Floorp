@@ -756,7 +756,7 @@ struct RoleDescrComparator {
 
   if (docAcc) nativeWindow = static_cast<NSWindow*>(docAcc->GetNativeWindow());
 
-  NSAssert1(nativeWindow, @"Could not get native window for %@", self);
+  MOZ_ASSERT(nativeWindow, "Couldn't get native window");
   return nativeWindow;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
