@@ -77,8 +77,7 @@ function* do_run_test() {
     false,
     shortExpiry,
     {},
-    Ci.nsICookie.SAMESITE_NONE,
-    Ci.nsICookie.SCHEME_HTTPS
+    Ci.nsICookie.SAMESITE_NONE
   );
   do_timeout(2100, continue_test);
   yield;
@@ -94,8 +93,7 @@ function* do_run_test() {
     false,
     futureExpiry,
     {},
-    Ci.nsICookie.SAMESITE_NONE,
-    Ci.nsICookie.SCHEME_HTTPS
+    Ci.nsICookie.SAMESITE_NONE
   );
   Assert.equal(countCookies("captchart.com", "captchart.com"), 50);
 
@@ -122,8 +120,7 @@ function setCookies(aHost, aNumber, aExpiry) {
       false,
       aExpiry,
       {},
-      Ci.nsICookie.SAMESITE_NONE,
-      Ci.nsICookie.SCHEME_HTTPS
+      Ci.nsICookie.SAMESITE_NONE
     );
   }
 }

@@ -36,12 +36,7 @@ function setupTest(uri, domain, cookies, loads, headers) {
 
   var prefSet = new Promise(resolve => {
     SpecialPowers.pushPrefEnv(
-      {
-        set: [
-          ["network.cookie.cookieBehavior", 1],
-          ["network.cookie.sameSite.schemeful", false],
-        ],
-      },
+      { set: [["network.cookie.cookieBehavior", 1]] },
       resolve
     );
   });

@@ -100,12 +100,6 @@ add_task(async function() {
     info("Running test #" + i);
     await runTest(test, hud);
   }
-
-  await new Promise(resolve => {
-    Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value =>
-      resolve()
-    );
-  });
 });
 
 async function runTest(test, hud) {
