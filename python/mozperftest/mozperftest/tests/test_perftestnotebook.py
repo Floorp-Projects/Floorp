@@ -1,89 +1,79 @@
-import json
+#!/usr/bin/env python
+from pathlib import Path
+import pytest
+import mock
 import mozunit
-import pathlib
-from mozperftest.metrics.notebook.analyzer import NotebookAnalyzer
 from mozperftest.metrics.notebook.constant import Constant
-from mozperftest.metrics.notebook.transformer import Transformer
-from mozperftest.metrics.notebook.transforms.single_json import SingleJsonRetriever
 
 
-def test_init(ptnbs):
-    for ptnb in ptnbs.values():
-        assert isinstance(ptnb.fmt_data, dict)
-        assert isinstance(ptnb.file_groups, dict)
-        assert isinstance(ptnb.config, dict)
-        assert isinstance(ptnb.sort_files, bool)
-        assert isinstance(ptnb.const, Constant)
-        assert isinstance(ptnb.analyzer, NotebookAnalyzer)
-        assert isinstance(ptnb.transformer, Transformer)
+def test_init(ptnb, standarized_data):
+    assert isinstance(ptnb.data, dict)
+    assert isinstance(ptnb.const, Constant)
 
 
-def test_parse_file_grouping(ptnbs):
-    def _check_files_created(ptnb, expected_files):
-        actual_files = set(ptnb.parse_file_grouping(expected_files))
-        expected_files = set(expected_files)
-
-        # Check all parsed files are regular files.
-        assert all([pathlib.Path(file).is_file for file in actual_files])
-        # Check parse_file_grouping function returns correct result.
-        assert actual_files - expected_files == set()
-
-    # If file_grouping is a list of files.
-    ptnb = ptnbs["ptnb_list"]
-    expected_files = ptnb.file_groups["group_1"]
-    _check_files_created(ptnb, expected_files)
-
-    # If file_grouping is a directory string.
-    ptnb = ptnbs["ptnb_str"]
-    expected_path = ptnb.file_groups["group_1"]
-    expected_files = [
-        f.resolve().as_posix() for f in pathlib.Path(expected_path).iterdir()
-    ]
-    _check_files_created(ptnb, expected_files)
+def test_get_notebook_section(ptnb):
+    func = "scatterplot"
+    with (ptnb.const.here / "notebook-sections" / func).open() as f:
+        assert ptnb.get_notebook_section(func) == f.read()
 
 
-def test_process(ptnbs, files):
-    # Temporary resource files.
-    files, _, output = files
-    file_1 = files["file_1"]
-    file_2 = files["file_2"]
+def test_get_notebook_section_unknown_analysis(ptnb):
+    func = "unknown"
+    with mock.patch(
+        "mozperftest.metrics.notebook.perftestnotebook.logger"
+    ) as logger:
+        assert ptnb.get_notebook_section(func) == ""
+        logger.assert_has_calls(mock.call.warning(
+                'Could not find the notebook-section called unknown'
+            ))
 
-    # Create expected output.
-    expected_output = [
-        {
-            "data": [
-                {"value": 101, "xaxis": 1, "file": file_1},
-                {"value": 102, "xaxis": 1, "file": file_1},
-                {"value": 103, "xaxis": 1, "file": file_1},
-                {"value": 201, "xaxis": 2, "file": file_2},
-                {"value": 202, "xaxis": 2, "file": file_2},
-                {"value": 203, "xaxis": 2, "file": file_2},
-            ],
-            "name": "group_1",
-            "subtest": "browserScripts.timings.firstPaint",
-        }
-    ]
 
-    ptnb = ptnbs["ptnb_str"]
+@pytest.mark.parametrize("analysis", [["scatterplot"], None])
+def test_post_to_iodide(ptnb, standarized_data, analysis):
 
-    # Set a custom transformer.
-    ptnb.transformer = Transformer([], SingleJsonRetriever())
+    opener = mock.mock_open()
 
-    # Create expected result.
-    expected_result = {
-        "data": expected_output,
-        "file-output": output,
-    }
+    def mocked_open(self, *args, **kwargs):
+        return opener(self, *args, **kwargs)
 
-    # Check return value.
-    actual_result = ptnb.process()
-    assert actual_result == expected_result
+    with mock.patch.object(Path, "open", mocked_open), mock.patch(
+        "mozperftest.metrics.notebook.perftestnotebook.webbrowser.open_new_tab"
+    ) as browser, mock.patch(
+        "mozperftest.metrics.notebook.perftestnotebook.HTTPServer"
+    ) as server:
+        ptnb.post_to_iodide(analysis=analysis)
 
-    # Check output file.
-    with pathlib.Path(output).open() as f:
-        actual_output = json.load(f)
+        list_of_calls = opener.mock_calls
 
-    assert expected_output == actual_output
+        header_path = ptnb.const.here / "notebook-sections" / "header"
+        assert mock.call(header_path) in list_of_calls
+        index1 = list_of_calls.index(mock.call(header_path))
+        assert list_of_calls[index1 + 2] == mock.call().read()
+
+        template_upload_file_path = ptnb.const.here / "template_upload_file.html"
+        assert mock.call(template_upload_file_path) in list_of_calls
+        index2 = list_of_calls.index(mock.call(template_upload_file_path))
+        assert list_of_calls[index2 + 2] == mock.call().read()
+
+        upload_file_path = ptnb.const.here / "upload_file.html"
+        assert mock.call(upload_file_path, "w") in list_of_calls
+        index3 = list_of_calls.index(mock.call(upload_file_path, "w"))
+        assert list_of_calls[index3 + 2] == mock.call().write("")
+
+        assert index1 < index2 < index3
+
+        if analysis:
+            section_path = ptnb.const.here / "notebook-sections" / analysis[0]
+            assert mock.call(section_path) in list_of_calls
+            index4 = list_of_calls.index(mock.call(section_path))
+            assert index1 < index4 < index2
+        else:
+            assert list_of_calls.count(mock.call().__enter__()) == 3
+
+        browser.assert_called_with(str(upload_file_path))
+        server.assert_has_calls(
+            [mock.call().serve_forever(), mock.call().server_close()]
+        )
 
 
 if __name__ == "__main__":

@@ -2,6 +2,7 @@ import json
 import pathlib
 import pytest
 from mozperftest.tests.support import temp_dir
+from mozperftest.metrics.notebook.perftestetl import PerftestETL
 from mozperftest.metrics.notebook.perftestnotebook import PerftestNotebook
 
 
@@ -32,6 +33,22 @@ def data():
     }
 
     yield {"data_1": data_1, "data_2": data_2, "data_3": data_3}
+
+
+@pytest.fixture(scope="session", autouse=True)
+def standarized_data():
+    return {
+        "browsertime": [
+            {
+                "data": [
+                    {"value": 1, "xaxis": 1, "file": "file_1"},
+                    {"value": 2, "xaxis": 2, "file": "file_2"},
+                ],
+                "name": "name",
+                "subtest": "subtest",
+            }
+        ]
+    }
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -70,13 +87,18 @@ def files(data):
 
 
 @pytest.fixture(scope="session", autouse=True)
-def ptnbs(files):
+def ptetls(files):
     resources, dirs, output = files
     config = {"output": output}
     file_group_list = {"group_1": list(resources.values())}
     file_group_str = {"group_1": dirs["resources"].resolve().as_posix()}
 
     yield {
-        "ptnb_list": PerftestNotebook(file_group_list, config, sort_files=True),
-        "ptnb_str": PerftestNotebook(file_group_str, config, sort_files=True),
+        "ptetl_list": PerftestETL(file_group_list, config, sort_files=True),
+        "ptetl_str": PerftestETL(file_group_str, config, sort_files=True),
     }
+
+
+@pytest.fixture(scope="session", autouse=True)
+def ptnb(standarized_data):
+    return PerftestNotebook(standarized_data)
