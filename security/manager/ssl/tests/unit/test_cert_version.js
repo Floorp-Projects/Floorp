@@ -64,19 +64,6 @@ function checkIntermediate(cert, expectedResult) {
   );
 }
 
-// Test that the code that decodes certificates to display them in the
-// certificate manager correctly handles the version field.
-function checkCertVersion(cert, expectedVersionString) {
-  let asn1 = cert.ASN1Structure.QueryInterface(Ci.nsIASN1Sequence);
-  let tbsCertificate = asn1.ASN1Objects.queryElementAt(0, Ci.nsIASN1Sequence);
-  let version = tbsCertificate.ASN1Objects.queryElementAt(0, Ci.nsIASN1Object);
-  equal(
-    version.displayValue,
-    expectedVersionString,
-    "Actual and expected version strings should match"
-  );
-}
-
 add_task(async function() {
   loadCertWithTrust("ca", "CTu,,");
 
@@ -314,9 +301,4 @@ add_task(async function() {
   await checkEndEntity(certFromFile("ss-v2-BC-cA"), SEC_ERROR_UNKNOWN_ISSUER);
   await checkEndEntity(certFromFile("ss-v3-BC-cA"), SEC_ERROR_UNKNOWN_ISSUER);
   await checkEndEntity(certFromFile("ss-v4-BC-cA"), SEC_ERROR_UNKNOWN_ISSUER);
-
-  checkCertVersion(certFromFile("ss-v1-noBC"), "Version 1");
-  checkCertVersion(certFromFile("int-v2-BC-cA_ca"), "Version 2");
-  checkCertVersion(certFromFile("ee-v3-BC-not-cA_ca"), "Version 3");
-  checkCertVersion(certFromFile("int-v4-BC-not-cA_ca"), "Version 4");
 });
