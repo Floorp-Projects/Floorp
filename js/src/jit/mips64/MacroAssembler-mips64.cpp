@@ -2019,12 +2019,12 @@ void MacroAssembler::branchValueIsNurseryCellImpl(Condition cond,
                                                   const T& value, Register temp,
                                                   Label* label) {
   MOZ_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
-  // temp may be InvalidReg, use scratch2 instead.
-  SecondScratchRegisterScope scratch2(*this);
-
   Label done;
   branchTestGCThing(Assembler::NotEqual, value,
                     cond == Assembler::Equal ? &done : label);
+
+  // temp may be InvalidReg, use scratch2 instead.
+  SecondScratchRegisterScope scratch2(*this);
 
   unboxGCThingForGCBarrier(value, scratch2);
   orPtr(Imm32(gc::ChunkMask), scratch2);
