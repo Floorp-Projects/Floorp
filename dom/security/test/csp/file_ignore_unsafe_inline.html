@@ -6,18 +6,18 @@
 <body>
 <div id="testdiv">a</div>
 
-<!-- first script whitelisted by 'unsafe-inline' -->
+<!-- first script allowlisted by 'unsafe-inline' -->
 <script type="application/javascript">
 document.getElementById('testdiv').innerHTML += 'b';
 </script>
 
-<!-- second script whitelisted by hash -->
+<!-- second script allowlisted by hash -->
 <!-- sha256-uJXAPKP5NZxnVMZMUkDofh6a9P3UMRc1CRTevVPS/rI= -->
 <script type="application/javascript">
 document.getElementById('testdiv').innerHTML += 'c';
 </script>
 
-<!-- thrid script whitelisted by nonce -->
+<!-- thrid script allowlisted by nonce -->
 <script type="application/javascript" nonce="FooNonce">
 document.getElementById('testdiv').innerHTML += 'd';
 </script>

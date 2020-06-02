@@ -27,21 +27,21 @@ var checkExplicitFinish = function () {
 
 // add event listeners for CSP-permitted EventSrc callbacks
 addEventListener('allowedEventSrcCallbackOK', function (e) {
-  ok(true, "OK: CSP allows EventSource for whitelisted domain!");
+  ok(true, "OK: CSP allows EventSource for allowlisted domain!");
   checkExplicitFinish();
 }, false);
 addEventListener('allowedEventSrcCallbackFailed', function (e) {
-  ok(false, "Error: CSP blocks EventSource for whitelisted domain!");
+  ok(false, "Error: CSP blocks EventSource for allowlisted domain!");
   checkExplicitFinish();
 }, false);
 
 // add event listeners for CSP-blocked EventSrc callbacks
 addEventListener('blockedEventSrcCallbackOK', function (e) {
-  ok(false, "Error: CSP allows EventSource to not whitelisted domain!");
+  ok(false, "Error: CSP allows EventSource to not allowlisted domain!");
   checkExplicitFinish();
 }, false);
 addEventListener('blockedEventSrcCallbackFailed', function (e) {
-  ok(true, "OK: CSP blocks EventSource for not whitelisted domain!");
+  ok(true, "OK: CSP blocks EventSource for not allowlisted domain!");
   checkExplicitFinish();
 }, false);
 

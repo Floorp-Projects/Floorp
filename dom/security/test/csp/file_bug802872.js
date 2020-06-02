@@ -25,7 +25,7 @@ function createAllowedEvent() {
 
 function createBlockedEvent() {
   /*
-   * creates a new EventSource using 'http://example.com'. This domain is not whitelisted by the
+   * creates a new EventSource using 'http://example.com'. This domain is not allowlisted by the
    * CSP of this page, therefore the CSP blocks this request.
    */
   var src_event = new EventSource(

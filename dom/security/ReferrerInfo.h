@@ -154,7 +154,7 @@ class ReferrerInfo : public nsIReferrerInfo {
 
   /**
    * Check whether the given referrer's scheme is allowed to be computed and
-   * sent. The whitelist schemes are: http, https, ftp.
+   * sent. The allowlist schemes are: http, https, ftp.
    */
   static bool IsReferrerSchemeAllowed(nsIURI* aReferrer);
 

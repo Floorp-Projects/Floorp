@@ -1,6 +1,6 @@
 /**
  * Custom *.sjs specifically for the needs of
- * Bug 921493 - CSP: test whitelisting of scheme-relative sources
+ * Bug 921493 - CSP: test allowlisting of scheme-relative sources
  */
 
 function handleRequest(request, response)

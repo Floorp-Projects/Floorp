@@ -559,7 +559,7 @@ class nsBlockAllMixedContentDirective : public nsCSPDirective {
 /*
  * Upgrading insecure requests includes the following actors:
  * (1) CSP:
- *     The CSP implementation whitelists the http-request
+ *     The CSP implementation allowlists the http-request
  *     in case the policy is executed in enforcement mode.
  *     The CSP implementation however does not allow http
  *     requests to succeed if executed in report-only mode.
@@ -567,7 +567,7 @@ class nsBlockAllMixedContentDirective : public nsCSPDirective {
  *     error back to the page.
  *
  * (2) MixedContent:
- *     The evalution of MixedContent whitelists all http
+ *     The evalution of MixedContent allowlists all http
  *     requests with the promise that the http requests
  *     gets upgraded to https before any data is fetched
  *     from the network.
@@ -667,7 +667,7 @@ class nsCSPPolicy {
   bool visitDirectiveSrcs(CSPDirective aDir, nsCSPSrcVisitor* aVisitor) const;
 
   bool allowsNavigateTo(nsIURI* aURI, bool aWasRedirected,
-                        bool aEnforceWhitelist) const;
+                        bool aEnforceAllowlist) const;
 
  private:
   nsUpgradeInsecureDirective* mUpgradeInsecDir;

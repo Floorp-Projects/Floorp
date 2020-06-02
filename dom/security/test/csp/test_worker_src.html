@@ -21,7 +21,7 @@ SimpleTest.requestLongerTimeout(3);
  * and make sure that worker-src governs these three kinds of workers correctly.
  * In addition, we make sure that child-src as well as script-src is discarded
  * in case worker-src is specified. Ideally we would use "script-src 'none'" but
- * we have to whitelist the actual script that spawns the workers, hence the nonce.
+ * we have to allowlist the actual script that spawns the workers, hence the nonce.
  */
 
 let ALLOWED_HOST = "https://example.com/tests/dom/security/test/csp/";

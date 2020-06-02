@@ -1200,7 +1200,7 @@ nsresult ReferrerInfo::ComputeReferrer(nsIHttpChannel* aChannel) {
     return NS_OK;
   }
 
-  // Enforce Referrer whitelist, only http, https, ftp scheme are allowed
+  // Enforce Referrer allowlist, only http, https, ftp scheme are allowed
   if (!IsReferrerSchemeAllowed(mOriginalReferrer)) {
     return NS_OK;
   }
