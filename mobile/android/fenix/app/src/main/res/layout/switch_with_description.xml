@@ -45,9 +45,10 @@
         app:layout_constraintVertical_chainStyle="packed"
         tools:text="@tools:sample/lorem" />
 
-    <Switch
+    <androidx.appcompat.widget.SwitchCompat
         android:id="@+id/switch_widget"
         style="@style/QuickSettingsText.Icon"
+        android:minHeight="@dimen/tracking_protection_item_height"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:textOff="@string/etp_panel_off"
