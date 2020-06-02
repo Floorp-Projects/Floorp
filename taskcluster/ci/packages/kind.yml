@@ -24,16 +24,16 @@ job-defaults:
         snapshot: 20200422T205110Z
 
 jobs:
-    deb8-python3.5:
-        description: "Python 3.5 backport for Debian jessie"
+    deb8-python3.6:
+        description: "Python 3.6 backport for Debian jessie"
         treeherder:
-            symbol: Deb8(python3.5)
+            symbol: Deb8(python3.6)
         run:
             using: debian-package
             dsc:
-                url: http://snapshot.debian.org/archive/debian/20170119T211826Z/pool/main/p/python3.5/python3.5_3.5.3-1.dsc
-                sha256: 5259cbb15bb93f7bdfbe9ce03a972ea47f81c86057d5939ef9ce578414b2f1de
-            patch: python3.5-jessie.diff
+                url: http://snapshot.debian.org/archive/debian/20171205T222638Z/pool/main/p/python3.6/python3.6_3.6.3-2.dsc
+                sha256: d791dd2671127394ce5383e345b2fed9ab2481be65b6c420fa53b2ee18c240ca
+            patch: python3.6-jessie.diff
             pre-build-command: debian/rules control-file
 
     deb8-python3-defaults:
@@ -43,10 +43,11 @@ jobs:
         run:
             using: debian-package
             dsc:
-                url: http://snapshot.debian.org/archive/debian/20170120T212942Z/pool/main/p/python3-defaults/python3-defaults_3.5.3-1.dsc
-                sha256: 2bec1dd8a5836d5a19fbbd48d7c49aec40642669036297a34bbfd8b0b2d61439
+                # The last version that doesn't also require python 3.7 or a separate python3-distutils package.
+                url: http://snapshot.debian.org/archive/debian/20171026T221955Z/pool/main/p/python3-defaults/python3-defaults_3.6.3-2.dsc
+                sha256: df91831a9a307f5e7f3fabdda52f21eeffd2f683cbeca5a581c37c1c0912549d
             packages:
-                - deb8-python3.5
+                - deb8-python3.6
             pre-build-command: debian/rules control-file
 
     deb8-python-setuptools:
@@ -187,7 +188,7 @@ jobs:
                 url: http://snapshot.debian.org/archive/debian/20170125T211752Z/pool/main/d/dh-python/dh-python_2.20170125.dsc
                 sha256: ef4f2951cea36ae4aac29126a1017505f98b595432fb5bdac0f21b4b4d72c1b4
             packages:
-                - deb8-python3.5
+                - deb8-python3.6
                 - deb8-python3-defaults
 
     deb8-xz-utils:
@@ -235,7 +236,7 @@ jobs:
             patch: python-zstandard-jessie.diff
             packages:
                 - deb8-dh-python
-                - deb8-python3.5
+                - deb8-python3.6
                 - deb8-python3-defaults
 
     deb9-python-zstandard:
