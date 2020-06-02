@@ -32,7 +32,6 @@ py2commands="
     jstests
     mochitest
     mozharness
-    pastebin
     prettier-format
     python
     python-test
