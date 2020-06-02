@@ -28,10 +28,14 @@ class ContentParent;
  * We don't expect this pref to flip between true and false in production, but
  * flipping the pref is important for tests.
  */
+class PreallocatedProcessManagerImpl;
+
 class PreallocatedProcessManager final {
   typedef mozilla::dom::ContentParent ContentParent;
 
  public:
+  static PreallocatedProcessManagerImpl* GetPPMImpl();
+
   /**
    * Before first paint we don't want to allocate any processes in the
    * background. To avoid that, the PreallocatedProcessManager won't start up
