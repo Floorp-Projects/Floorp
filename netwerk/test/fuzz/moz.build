@@ -8,6 +8,7 @@ UNIFIED_SOURCES += [
     'FuzzingStreamListener.cpp',
     'TestFtpFuzzing.cpp',
     'TestHttpFuzzing.cpp',
+    'TestURIFuzzing.cpp',
     'TestWebsocketFuzzing.cpp',
 ]
 
