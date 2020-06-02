@@ -11,6 +11,7 @@ mod codec;
 mod datagram;
 mod incrdecoder;
 pub mod log;
+pub mod qlog;
 pub mod timer;
 
 pub use self::codec::{Decoder, Encoder};
@@ -33,6 +34,15 @@ macro_rules! matches {
 
 #[must_use]
 pub fn hex(buf: &[u8]) -> String {
+    let mut ret = String::with_capacity(buf.len() * 2);
+    for b in buf {
+        ret.push_str(&format!("{:02x}", b));
+    }
+    ret
+}
+
+#[must_use]
+pub fn hex_with_len(buf: &[u8]) -> String {
     let mut ret = String::with_capacity(10 + buf.len() * 3);
     ret.push_str(&format!("[{}]: ", buf.len()));
     for b in buf {
@@ -48,4 +58,27 @@ pub const fn const_max(a: usize, b: usize) -> usize {
 #[must_use]
 pub const fn const_min(a: usize, b: usize) -> usize {
     [a, b][(a >= b) as usize]
+}
+
+#[derive(Debug, PartialEq, Copy, Clone)]
+/// Client or Server.
+pub enum Role {
+    Client,
+    Server,
+}
+
+impl Role {
+    #[must_use]
+    pub fn remote(self) -> Self {
+        match self {
+            Self::Client => Self::Server,
+            Self::Server => Self::Client,
+        }
+    }
+}
+
+impl ::std::fmt::Display for Role {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+        write!(f, "{:?}", self)
+    }
 }

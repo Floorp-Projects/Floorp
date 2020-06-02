@@ -9,9 +9,9 @@ use crate::{Error, Res};
 use neqo_common::{qdebug, qinfo};
 use neqo_transport::Connection;
 
-// The remote control stream is responsible only for reading frames. The frames are handled by Http3Connection
+/// The remote control stream is responsible only for reading frames. The frames are handled by `Http3Connection`.
 #[derive(Debug)]
-pub struct ControlStreamRemote {
+pub(crate) struct ControlStreamRemote {
     stream_id: Option<u64>,
     frame_reader: HFrameReader,
     fin: bool,
@@ -32,16 +32,18 @@ impl ControlStreamRemote {
         }
     }
 
+    /// A remote control stream has been received. Inform `ControlStreamRemote`.
     pub fn add_remote_stream(&mut self, stream_id: u64) -> Res<()> {
         qinfo!([self], "A new control stream {}.", stream_id);
         if self.stream_id.is_some() {
             qdebug!([self], "A control stream already exists");
-            return Err(Error::HttpStreamCreationError);
+            return Err(Error::HttpStreamCreation);
         }
         self.stream_id = Some(stream_id);
         Ok(())
     }
 
+    /// Check if a stream is the control stream and read received data.
     pub fn receive_if_this_stream(&mut self, conn: &mut Connection, stream_id: u64) -> Res<bool> {
         if let Some(id) = self.stream_id {
             if id == stream_id {
@@ -63,5 +65,10 @@ impl ControlStreamRemote {
 
     pub fn get_frame(&mut self) -> Res<HFrame> {
         self.frame_reader.get_frame()
+    }
+
+    #[must_use]
+    pub fn stream_id(&self) -> Option<u64> {
+        self.stream_id
     }
 }

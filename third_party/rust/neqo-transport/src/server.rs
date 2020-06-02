@@ -7,7 +7,8 @@
 // This file implements a server that can handle multiple connections.
 
 use neqo_common::{
-    hex, matches, qerror, qinfo, qtrace, qwarn, timer::Timer, Datagram, Decoder, Encoder,
+    self as common, hex, matches, qdebug, qerror, qinfo, qlog::NeqoQlog, qtrace, qwarn,
+    timer::Timer, Datagram, Decoder, Encoder, Role,
 };
 use neqo_crypto::{
     constants::{TLS_AES_128_GCM_SHA256, TLS_VERSION_1_3},
@@ -23,9 +24,11 @@ use crate::Res;
 use std::cell::RefCell;
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::convert::TryFrom;
+use std::fs::OpenOptions;
 use std::mem;
 use std::net::{IpAddr, SocketAddr};
 use std::ops::{Deref, DerefMut};
+use std::path::PathBuf;
 use std::rc::Rc;
 use std::time::{Duration, Instant};
 
@@ -48,6 +51,7 @@ type ConnectionTableRef = Rc<RefCell<HashMap<ConnectionId, StateRef>>>;
 #[derive(Debug)]
 pub struct ServerConnectionState {
     c: Connection,
+    active_attempt: Option<AttemptKey>,
     last_timer: Instant,
 }
 
@@ -177,6 +181,16 @@ impl RetryToken {
     }
 }
 
+/// A `AttemptKey` is used to disambiguate connection attempts.
+/// Multiple connection attempts with the same key won't produce multiple connections.
+#[derive(Clone, Debug, Hash, PartialEq, Eq)]
+struct AttemptKey {
+    // Using the remote address is sufficient for disambiguation,
+    // until we support multiple local socket addresses.
+    remote_address: SocketAddr,
+    odcid: ConnectionId,
+}
+
 pub struct Server {
     /// The names of certificates.
     certs: Vec<String>,
@@ -185,6 +199,10 @@ pub struct Server {
     anti_replay: AntiReplay,
     /// A connection ID manager.
     cid_manager: CidMgr,
+    /// Active connection attempts, keyed by `AttemptKey`.  Initial packets with
+    /// the same key are routed to the connection that was first accepted.
+    /// This is cleared out when the connection is closed or established.
+    active_attempts: HashMap<AttemptKey, StateRef>,
     /// All connections, keyed by ConnectionId.
     connections: ConnectionTableRef,
     /// The connections that have new events.
@@ -196,6 +214,8 @@ pub struct Server {
     /// Whether a Retry packet will be sent in response to new
     /// Initial packets.
     retry: RetryToken,
+    /// Directory to create qlog traces in
+    qlog_dir: Option<PathBuf>,
 }
 
 impl Server {
@@ -218,12 +238,19 @@ impl Server {
             protocols: protocols.iter().map(|x| String::from(x.as_ref())).collect(),
             anti_replay,
             cid_manager,
+            active_attempts: HashMap::default(),
             connections: Rc::default(),
             active: HashSet::default(),
             waiting: VecDeque::default(),
             timers: Timer::new(now, TIMER_GRANULARITY, TIMER_CAPACITY),
             retry: RetryToken::new(now)?,
+            qlog_dir: None,
         })
+    }
+
+    /// Set or clear directory to create logs of connection events in QLOG format.
+    pub fn set_qlog_dir(&mut self, dir: Option<PathBuf>) {
+        self.qlog_dir = dir;
     }
 
     pub fn set_retry_required(&mut self, require_retry: bool) {
@@ -265,7 +292,16 @@ impl Server {
             qtrace!([self], "Connection active: {:?}", c);
             self.active.insert(ActiveConnectionRef { c: c.clone() });
         }
+
+        if *c.borrow().state() > State::Handshaking {
+            // Remove any active connection attempt now that this is no longer handshaking.
+            if let Some(k) = c.borrow_mut().active_attempt.take() {
+                self.active_attempts.remove(&k);
+            }
+        }
+
         if matches!(c.borrow().state(), State::Closed(_)) {
+            c.borrow_mut().set_qlog(None);
             self.connections
                 .borrow_mut()
                 .retain(|_, v| !Rc::ptr_eq(v, &c));
@@ -275,7 +311,7 @@ impl Server {
 
     fn connection(&self, cid: &ConnectionIdRef) -> Option<StateRef> {
         if let Some(c) = self.connections.borrow().get(&cid[..]) {
-            Some(c.clone())
+            Some(Rc::clone(&c))
         } else {
             None
         }
@@ -289,10 +325,13 @@ impl Server {
         dgram: Datagram,
         now: Instant,
     ) -> Option<Datagram> {
+        qdebug!([self], "Handle initial packet");
         match self.retry.validate(&token, dgram.source(), now) {
             RetryTokenResult::Invalid => None,
-            RetryTokenResult::Pass => self.accept_connection(None, dgram, now),
-            RetryTokenResult::Valid(dcid) => self.accept_connection(Some(dcid), dgram, now),
+            RetryTokenResult::Pass => self.connection_attempt(dcid, None, dgram, now),
+            RetryTokenResult::Valid(orig_dcid) => {
+                self.connection_attempt(dcid, Some(orig_dcid), dgram, now)
+            }
             RetryTokenResult::Validate => {
                 qinfo!([self], "Send retry for {:?}", dcid);
 
@@ -316,13 +355,88 @@ impl Server {
         }
     }
 
-    fn accept_connection(
+    fn connection_attempt(
         &mut self,
-        odcid: Option<ConnectionId>,
+        dcid: ConnectionId,
+        orig_dcid: Option<ConnectionId>,
         dgram: Datagram,
         now: Instant,
     ) -> Option<Datagram> {
-        qinfo!([self], "Accept connection");
+        let attempt_key = AttemptKey {
+            remote_address: dgram.source(),
+            odcid: orig_dcid.as_ref().unwrap_or(&dcid).clone(),
+        };
+        if let Some(c) = self.active_attempts.get(&attempt_key) {
+            qdebug!(
+                [self],
+                "Handle Initial for existing connection attempt {:?}",
+                attempt_key
+            );
+            let c = Rc::clone(c);
+            self.process_connection(c, Some(dgram), now)
+        } else {
+            self.accept_connection(attempt_key, orig_dcid, dgram, now)
+        }
+    }
+
+    fn create_qlog_trace(&self, attempt_key: &AttemptKey) -> Option<NeqoQlog> {
+        if let Some(qlog_dir) = &self.qlog_dir {
+            let mut qlog_path = qlog_dir.to_path_buf();
+
+            // TODO(mt) - the original DCID is not really unique, which means that attackers
+            // can cause us to overwrite our own logs.  That's not ideal.
+            qlog_path.push(format!("{}.qlog", attempt_key.odcid));
+
+            match OpenOptions::new()
+                .write(true)
+                .create(true)
+                .truncate(true)
+                .open(&qlog_path)
+            {
+                Ok(f) => {
+                    qinfo!("Qlog output to {}", qlog_path.display());
+
+                    let streamer = ::qlog::QlogStreamer::new(
+                        qlog::QLOG_VERSION.to_string(),
+                        Some("Neqo server qlog".to_string()),
+                        Some("Neqo server qlog".to_string()),
+                        None,
+                        std::time::Instant::now(),
+                        common::qlog::new_trace(Role::Server),
+                        Box::new(f),
+                    );
+                    let n_qlog = NeqoQlog::new(streamer, qlog_path);
+                    match n_qlog {
+                        Ok(nql) => Some(nql),
+                        Err(e) => {
+                            // Keep going but w/o qlogging
+                            qerror!("NeqoQlog error: {}", e);
+                            None
+                        }
+                    }
+                }
+                Err(e) => {
+                    qerror!(
+                        "Could not open file {} for qlog output: {}",
+                        qlog_path.display(),
+                        e
+                    );
+                    None
+                }
+            }
+        } else {
+            None
+        }
+    }
+
+    fn accept_connection(
+        &mut self,
+        attempt_key: AttemptKey,
+        orig_dcid: Option<ConnectionId>,
+        dgram: Datagram,
+        now: Instant,
+    ) -> Option<Datagram> {
+        qinfo!([self], "Accept connection {:?}", attempt_key);
         // The internal connection ID manager that we use is not used directly.
         // Instead, wrap it so that we can save connection IDs.
         let cid_mgr = Rc::new(RefCell::new(ServerConnectionIdManager {
@@ -330,18 +444,27 @@ impl Server {
             cid_manager: self.cid_manager.clone(),
             connections: self.connections.clone(),
         }));
+
         let sconn = Connection::new_server(
             &self.certs,
             &self.protocols,
             &self.anti_replay,
             cid_mgr.clone(),
         );
+
         if let Ok(mut c) = sconn {
-            if let Some(odcid) = odcid {
+            if let Some(odcid) = orig_dcid {
                 c.original_connection_id(&odcid);
             }
-            let c = Rc::new(RefCell::new(ServerConnectionState { c, last_timer: now }));
+            c.set_qlog(self.create_qlog_trace(&attempt_key));
+            let c = Rc::new(RefCell::new(ServerConnectionState {
+                c,
+                last_timer: now,
+                active_attempt: Some(attempt_key.clone()),
+            }));
             cid_mgr.borrow_mut().c = Some(c.clone());
+            let previous_attempt = self.active_attempts.insert(attempt_key, c.clone());
+            debug_assert!(previous_attempt.is_none());
             self.process_connection(c, Some(dgram), now)
         } else {
             qwarn!([self], "Unable to create connection");
@@ -378,16 +501,23 @@ impl Server {
             qtrace!([self], "Bogus packet: too short");
             return None;
         }
-        if packet.packet_type() == PacketType::OtherVersion {
-            let vn = PacketBuilder::version_negotiation(packet.scid(), packet.dcid());
-            return Some(Datagram::new(dgram.destination(), dgram.source(), vn));
+        match packet.packet_type() {
+            PacketType::Initial => {
+                // Copy values from `packet` because they are currently still borrowing from `dgram`.
+                let dcid = ConnectionId::from(packet.dcid());
+                let scid = ConnectionId::from(packet.scid());
+                let token = packet.token().to_vec();
+                self.handle_initial(dcid, scid, token, dgram, now)
+            }
+            PacketType::OtherVersion => {
+                let vn = PacketBuilder::version_negotiation(packet.scid(), packet.dcid());
+                Some(Datagram::new(dgram.destination(), dgram.source(), vn))
+            }
+            _ => {
+                qtrace!([self], "Not an initial packet");
+                None
+            }
         }
-
-        // Copy values from `packet` because they are currently still borrowing from `dgram`.
-        let dcid = ConnectionId::from(packet.dcid());
-        let scid = ConnectionId::from(packet.scid());
-        let token = packet.token().to_vec();
-        self.handle_initial(dcid, scid, token, dgram, now)
     }
 
     /// Iterate through the pending connections looking for any that might want
@@ -467,7 +597,7 @@ impl ActiveConnectionRef {
     }
 
     pub fn connection(&self) -> StateRef {
-        self.c.clone()
+        Rc::clone(&self.c)
     }
 }
 

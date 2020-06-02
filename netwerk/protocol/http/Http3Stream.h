@@ -53,6 +53,8 @@ class Http3Stream final : public nsAHttpSegmentReader,
   bool RecvdReset() const { return mState == RECEIVED_RESET; }
   void SetRecvdReset() { mState = RECEIVED_RESET; }
 
+  void SetResponseHeaders(nsTArray<uint8_t>& aResponseHeaders, bool fin);
+
  private:
   ~Http3Stream() = default;
 

@@ -25,7 +25,7 @@ experimental_api!(SSL_CreateAntiReplayContext(
     bits: c_uint,
     ctx: *mut *mut SSLAntiReplayContext,
 ));
-experimental_api!(SSL_ReleaseAntiReplayContext(ctx: *mut SSLAntiReplayContext,));
+experimental_api!(SSL_ReleaseAntiReplayContext(ctx: *mut SSLAntiReplayContext));
 experimental_api!(SSL_SetAntiReplayContext(
     fd: *mut PRFileDesc,
     ctx: *mut SSLAntiReplayContext,

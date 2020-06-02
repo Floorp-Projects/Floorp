@@ -92,11 +92,14 @@ impl TransportParameter {
             | INITIAL_MAX_STREAM_DATA_BIDI_LOCAL
             | INITIAL_MAX_STREAM_DATA_BIDI_REMOTE
             | INITIAL_MAX_STREAM_DATA_UNI
-            | INITIAL_MAX_STREAMS_BIDI
-            | INITIAL_MAX_STREAMS_UNI
             | MAX_ACK_DELAY => match d.decode_varint() {
                 Some(v) => Self::Integer(v),
                 None => return Err(Error::TransportParameterError),
+            },
+
+            INITIAL_MAX_STREAMS_BIDI | INITIAL_MAX_STREAMS_UNI => match d.decode_varint() {
+                Some(v) if v <= (1 << 60) => Self::Integer(v),
+                _ => return Err(Error::StreamLimitError),
             },
 
             MAX_PACKET_SIZE => match d.decode_varint() {
@@ -230,6 +233,18 @@ impl TransportParameters {
                 self.set(tp, TransportParameter::Empty);
             }
             _ => panic!("Transport parameter not known or not type empty"),
+        }
+    }
+
+    pub fn get_empty(&self, tipe: TransportParameterId) -> Option<TransportParameter> {
+        let default = match tipe {
+            DISABLE_MIGRATION => None,
+            _ => panic!("Transport parameter not known or not an Empty"),
+        };
+        match self.params.get(&tipe) {
+            None => default,
+            Some(TransportParameter::Empty) => Some(TransportParameter::Empty),
+            _ => panic!("Internal error"),
         }
     }
 

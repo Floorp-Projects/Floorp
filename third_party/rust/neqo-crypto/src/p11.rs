@@ -11,7 +11,7 @@
 
 use crate::err::{secstatus_to_res, Error, Res};
 
-use neqo_common::hex;
+use neqo_common::hex_with_len;
 
 use std::convert::TryInto;
 use std::ops::{Deref, DerefMut};
@@ -94,7 +94,7 @@ impl Clone for SymKey {
 impl std::fmt::Debug for SymKey {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         if let Ok(b) = self.as_bytes() {
-            write!(f, "SymKey {}", hex(b))
+            write!(f, "SymKey {}", hex_with_len(b))
         } else {
             write!(f, "Opaque SymKey")
         }

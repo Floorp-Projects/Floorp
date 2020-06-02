@@ -8,7 +8,7 @@ use std::convert::TryFrom;
 use std::fmt::Debug;
 use std::ops::{Deref, DerefMut};
 
-use crate::hex;
+use crate::hex_with_len;
 
 /// Decoder is a view into a byte array that has a read offset.  Use it for parsing.
 pub struct Decoder<'a> {
@@ -165,7 +165,7 @@ impl<'a> Deref for Decoder<'a> {
 
 impl<'a> Debug for Decoder<'a> {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        f.write_str(&hex(self))
+        f.write_str(&hex_with_len(self))
     }
 }
 
@@ -348,7 +348,7 @@ impl Encoder {
 
 impl Debug for Encoder {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        f.write_str(&hex(self))
+        f.write_str(&hex_with_len(self))
     }
 }
 
@@ -391,7 +391,7 @@ impl DerefMut for Encoder {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::{Decoder, Encoder};
 
     #[test]
     fn decode() {
