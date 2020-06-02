@@ -14,29 +14,10 @@ function getIdentityMode(aWindow = window) {
   return aWindow.document.getElementById("identity-box").className;
 }
 
-function openIdentityPopup() {
-  let mainView = document.getElementById("identity-popup-mainView");
-  let viewShown = BrowserTestUtils.waitForEvent(mainView, "ViewShown");
-  gIdentityHandler._identityBox.click();
-  return viewShown;
-}
-
-function closeIdentityPopup() {
-  let promise = BrowserTestUtils.waitForEvent(
-    gIdentityHandler._identityPopup,
-    "popuphidden"
-  );
-  gIdentityHandler._identityPopup.hidePopup();
-  return promise;
-}
-
-async function checkConnectionState(state) {
-  await openIdentityPopup();
-  is(getConnectionState(), state, "connectionState should be " + state);
-  await closeIdentityPopup();
-}
-
 function getConnectionState() {
+  // Prevents items that are being lazy loaded causing issues
+  document.getElementById("identity-box").click();
+  gIdentityHandler.refreshIdentityPopup();
   return document.getElementById("identity-popup").getAttribute("connection");
 }
 
@@ -61,7 +42,11 @@ add_task(async function() {
       "unknownIdentity weakCipher",
       "Identity should be unknownIdentity"
     );
-    checkConnectionState("not-secure");
+    is(
+      getConnectionState(),
+      "not-secure",
+      "connectionState should be not-secure"
+    );
 
     await BrowserTestUtils.loadURI(browser, HTTPS_TLS1_1);
     await BrowserTestUtils.browserLoaded(browser);
@@ -71,14 +56,18 @@ add_task(async function() {
       "unknownIdentity weakCipher",
       "Identity should be unknownIdentity"
     );
-    checkConnectionState("not-secure");
+    is(
+      getConnectionState(),
+      "not-secure",
+      "connectionState should be not-secure"
+    );
 
     // Transition to secure
     await BrowserTestUtils.loadURI(browser, HTTPS_TLS1_2);
     await BrowserTestUtils.browserLoaded(browser);
     isSecurityState(browser, "secure");
     is(getIdentityMode(), "verifiedDomain", "Identity should be verified");
-    checkConnectionState("secure");
+    is(getConnectionState(), "secure", "connectionState should be secure");
 
     // Transition back to broken
     await BrowserTestUtils.loadURI(browser, HTTPS_TLS1_1);
@@ -89,13 +78,17 @@ add_task(async function() {
       "unknownIdentity weakCipher",
       "Identity should be unknownIdentity"
     );
-    checkConnectionState("not-secure");
+    is(
+      getConnectionState(),
+      "not-secure",
+      "connectionState should be not-secure"
+    );
 
     // TLS1.3 for completeness
     await BrowserTestUtils.loadURI(browser, HTTPS_TLS1_3);
     await BrowserTestUtils.browserLoaded(browser);
     isSecurityState(browser, "secure");
     is(getIdentityMode(), "verifiedDomain", "Identity should be verified");
-    checkConnectionState("secure");
+    is(getConnectionState(), "secure", "connectionState should be secure");
   });
 });
