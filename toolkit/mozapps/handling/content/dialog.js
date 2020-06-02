@@ -25,6 +25,8 @@
  * window.arguments[8]:
  *   This is the nsIURI that we are being brought up for in the first place.
  * window.arguments[9]:
+ *   This is the nsIPrincipal that has triggered the dialog; may be null.
+ * window.arguments[10]:
  *   The browsingContext from which the request originates; may be null.
  */
 
@@ -90,7 +92,7 @@ var dialog = {
   initialize: function initialize() {
     this._handlerInfo = window.arguments[7].QueryInterface(Ci.nsIHandlerInfo);
     this._URI = window.arguments[8].QueryInterface(Ci.nsIURI);
-    this._browsingContext = window.arguments[9];
+    this._browsingContext = window.arguments[10];
     let usePrivateBrowsing = false;
     if (this._browsingContext) {
       usePrivateBrowsing = this._browsingContext.usePrivateBrowsing;
