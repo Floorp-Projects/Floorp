@@ -1363,8 +1363,8 @@ class MacroAssembler : public MacroAssemblerSpecific {
 
   inline void branchIfFunctionHasNoJitEntry(Register fun, bool isConstructing,
                                             Label* label);
-  inline void branchIfInterpreted(Register fun, bool isConstructing,
-                                  Label* label);
+  inline void branchIfFunctionHasJitEntry(Register fun, bool isConstructing,
+                                          Label* label);
 
   inline void branchIfScriptHasJitScript(Register script, Label* label);
   inline void branchIfScriptHasNoJitScript(Register script, Label* label);
