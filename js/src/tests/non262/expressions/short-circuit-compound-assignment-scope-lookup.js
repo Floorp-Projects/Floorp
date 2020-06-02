@@ -1,5 +1,3 @@
-// |reftest| skip-if(release_or_beta)
-
 // Test scope lookups are executed in the correct order.
 
 function createScope() {

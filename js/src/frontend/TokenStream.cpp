@@ -3104,11 +3104,7 @@ MOZ_MUST_USE bool TokenStreamSpecific<Unit, AnyCharsAccess>::getTokenInternal(
 
       case '|':
         if (matchCodeUnit('|')) {
-#ifdef NIGHTLY_BUILD
           simpleKind = matchCodeUnit('=') ? TokenKind::OrAssign : TokenKind::Or;
-#else
-          simpleKind = TokenKind::Or;
-#endif
 #ifdef ENABLE_PIPELINE_OPERATOR
         } else if (matchCodeUnit('>')) {
           simpleKind = TokenKind::Pipeline;
@@ -3126,12 +3122,8 @@ MOZ_MUST_USE bool TokenStreamSpecific<Unit, AnyCharsAccess>::getTokenInternal(
 
       case '&':
         if (matchCodeUnit('&')) {
-#ifdef NIGHTLY_BUILD
           simpleKind =
               matchCodeUnit('=') ? TokenKind::AndAssign : TokenKind::And;
-#else
-          simpleKind = TokenKind::And;
-#endif
         } else {
           simpleKind =
               matchCodeUnit('=') ? TokenKind::BitAndAssign : TokenKind::BitAnd;
@@ -3153,12 +3145,8 @@ MOZ_MUST_USE bool TokenStreamSpecific<Unit, AnyCharsAccess>::getTokenInternal(
             simpleKind = TokenKind::OptionalChain;
           }
         } else if (matchCodeUnit('?')) {
-#ifdef NIGHTLY_BUILD
           simpleKind = matchCodeUnit('=') ? TokenKind::CoalesceAssign
                                           : TokenKind::Coalesce;
-#else
-          simpleKind = TokenKind::Coalesce;
-#endif
         } else {
           simpleKind = TokenKind::Hook;
         }

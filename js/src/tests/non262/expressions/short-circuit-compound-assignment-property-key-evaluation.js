@@ -1,5 +1,3 @@
-// |reftest| skip-if(release_or_beta)
-
 // Test that property keys are only evaluated once.
 
 class PropertyKey {
