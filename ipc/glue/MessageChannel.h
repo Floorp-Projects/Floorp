@@ -243,10 +243,10 @@ class MessageChannel : HasResultCodes, MessageLoop::DestructionObserver {
   bool DoBuildIDsMatch() { return mBuildIDsConfirmedMatch; }
 
   // Synchronously send |msg| (i.e., wait for |reply|)
-  bool Send(Message* aMsg, Message* aReply);
+  bool Send(UniquePtr<Message> aMsg, Message* aReply);
 
   // Make an Interrupt call to the other side of the channel
-  bool Call(Message* aMsg, Message* aReply);
+  bool Call(UniquePtr<Message> aMsg, Message* aReply);
 
   // Wait until a message is received
   bool WaitForIncomingMessage();
