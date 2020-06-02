@@ -3481,7 +3481,8 @@ PRStatus _MD_getsysinfo(PRSysInfo cmd, char *name, PRUint32 namelen)
 {
     struct utsname info;
 
-    PR_ASSERT((cmd == PR_SI_SYSNAME) || (cmd == PR_SI_RELEASE));
+    PR_ASSERT((cmd == PR_SI_SYSNAME) || (cmd == PR_SI_RELEASE) ||
+              (cmd == PR_SI_RELEASE_BUILD));
 
     if (uname(&info) == -1) {
         _PR_MD_MAP_DEFAULT_ERROR(errno);
@@ -3492,6 +3493,9 @@ PRStatus _MD_getsysinfo(PRSysInfo cmd, char *name, PRUint32 namelen)
     }
     else if (PR_SI_RELEASE == cmd) {
         (void)PR_snprintf(name, namelen, info.release);
+    }
+    else if (PR_SI_RELEASE_BUILD == cmd) {
+        (void)PR_snprintf(name, namelen, info.version);
     }
     else {
         return PR_FAILURE;
