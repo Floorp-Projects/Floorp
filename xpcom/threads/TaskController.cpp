@@ -257,7 +257,7 @@ bool TaskController::HasMainThreadPendingTasks() {
     // We can cheaply count how many tasks are suspended.
     uint64_t totalSuspended = 0;
     for (TaskManager* manager : mTaskManagers) {
-      bool modifierChanged =
+      DebugOnly<bool> modifierChanged =
           manager
               ->UpdateCachesForCurrentIterationAndReportPriorityModifierChanged(
                   lock, TaskManager::IterationType::NOT_EVENT_LOOP_TURN);

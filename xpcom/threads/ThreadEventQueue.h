@@ -31,7 +31,8 @@ class ThreadEventTarget;
 template <class InnerQueueT>
 class ThreadEventQueue final : public SynchronizedEventQueue {
  public:
-  explicit ThreadEventQueue(UniquePtr<InnerQueueT> aQueue);
+  explicit ThreadEventQueue(UniquePtr<InnerQueueT> aQueue,
+                            bool aIsMainThread = false);
 
   bool PutEvent(already_AddRefed<nsIRunnable>&& aEvent,
                 EventQueuePriority aPriority) final;
