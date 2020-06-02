@@ -81,5 +81,11 @@ addAccessibleTask(
     });
 
     Assert.deepEqual(domSelection, [1, 8], "correct DOM selection");
+
+    is(
+      input.getParameterizedAttributeValue("AXStringForRange", NSRange(3, 5)),
+      "er Fu",
+      "AXStringForRange works"
+    );
   }
 );
