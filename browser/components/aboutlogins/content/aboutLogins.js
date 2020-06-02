@@ -124,6 +124,10 @@ window.addEventListener("AboutLoginsChromeToContent", event => {
 });
 
 window.addEventListener("AboutLoginsExportPasswordsDialog", async event => {
+  recordTelemetryEvent({
+    object: "export",
+    method: "mgmt_menu_item_used",
+  });
   let dialog = document.querySelector("confirmation-dialog");
   let options = {
     title: "about-logins-confirm-export-dialog-title",
