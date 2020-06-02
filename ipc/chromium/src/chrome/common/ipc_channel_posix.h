@@ -99,7 +99,7 @@ class Channel::ChannelImpl : public MessageLoopForIO::Watcher {
   Listener* listener_;
 
   // Messages to be sent are queued here.
-  std::queue<Message*> output_queue_;
+  std::queue<mozilla::UniquePtr<Message>> output_queue_;
 
   // We read from the pipe into this buffer
   char input_buf_[Channel::kReadBufferSize];

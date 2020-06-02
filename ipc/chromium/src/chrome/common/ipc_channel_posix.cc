@@ -610,7 +610,7 @@ bool Channel::ChannelImpl::ProcessOutgoingMessages() {
 #ifdef FUZZING
     mozilla::ipc::Faulty::instance().MaybeCollectAndClosePipe(pipe_);
 #endif
-    Message* msg = output_queue_.front();
+    Message* msg = output_queue_.front().get();
 
     struct msghdr msgh = {0};
 
@@ -771,7 +771,8 @@ bool Channel::ChannelImpl::ProcessOutgoingMessages() {
                  << " with type " << msg->type();
 #endif
       OutputQueuePop();
-      delete msg;
+      // msg has been destroyed, so clear the dangling reference.
+      msg = nullptr;
     }
   }
   return true;
@@ -857,14 +858,16 @@ void Channel::ChannelImpl::CloseDescriptors(uint32_t pending_fd_id) {
 void Channel::ChannelImpl::OutputQueuePush(mozilla::UniquePtr<Message> msg) {
   MOZ_DIAGNOSTIC_ASSERT(!closed_);
   msg->AssertAsLargeAsHeader();
-  output_queue_.push(msg.release());
+  output_queue_.push(std::move(msg));
   output_queue_length_++;
 }
 
 void Channel::ChannelImpl::OutputQueuePop() {
+  // Clear any reference to the front of output_queue_ before we destroy it.
+  partial_write_iter_.reset();
+
   output_queue_.pop();
   output_queue_length_--;
-  partial_write_iter_.reset();
 }
 
 // Called by libevent when we can write to the pipe without blocking.
@@ -901,9 +904,7 @@ void Channel::ChannelImpl::Close() {
   }
 
   while (!output_queue_.empty()) {
-    Message* m = output_queue_.front();
     OutputQueuePop();
-    delete m;
   }
 
   // Close any outstanding, received file descriptors

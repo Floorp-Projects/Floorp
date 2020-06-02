@@ -84,7 +84,7 @@ class Channel::ChannelImpl : public MessageLoopForIO::IOHandler {
   Listener* listener_;
 
   // Messages to be sent are queued here.
-  std::queue<Message*> output_queue_;
+  std::queue<mozilla::UniquePtr<Message>> output_queue_;
 
   // If sending a message blocks then we use this iterator to keep track of
   // where in the message we are. It gets reset when the message is finished
