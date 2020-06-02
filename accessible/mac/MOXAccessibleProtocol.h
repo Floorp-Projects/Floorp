@@ -221,4 +221,33 @@
 // AXDecrement
 - (void)moxPerformDecrement;
 
+#pragma mark - ParameterizedAttributeGetters
+
+// AXLineForIndex
+- (NSNumber* _Nullable)moxLineForIndex:(NSNumber* _Nonnull)index;
+
+// AXRangeForLine
+- (NSValue* _Nullable)moxRangeForLine:(NSNumber* _Nonnull)line;
+
+// AXStringForRange
+- (NSString* _Nullable)moxStringForRange:(NSValue* _Nonnull)range;
+
+// AXRangeForPosition
+- (NSValue* _Nullable)moxRangeForPosition:(NSValue* _Nonnull)position;
+
+// AXRangeForIndex
+- (NSValue* _Nullable)moxRangeForIndex:(NSNumber* _Nonnull)index;
+
+// AXBoundsForRange
+- (NSValue* _Nullable)moxBoundsForRange:(NSValue* _Nonnull)range;
+
+// AXRTFForRange
+- (NSData* _Nullable)moxRTFForRange:(NSValue* _Nonnull)range;
+
+// AXStyleRangeForIndex
+- (NSValue* _Nullable)moxStyleRangeForIndex:(NSNumber* _Nonnull)index;
+
+// AttributedStringForRange
+- (NSAttributedString* _Nullable)moxAttributedStringForRange:(NSValue* _Nonnull)range;
+
 @end
