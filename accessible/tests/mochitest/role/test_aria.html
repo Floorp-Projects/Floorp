@@ -22,7 +22,7 @@
       testRole(docAcc, role);
     }
 
-    function doTest() {
+    async function doTest() {
       // ARIA role map.
       testRole("aria_alert", ROLE_ALERT);
       testRole("aria_alertdialog", ROLE_DIALOG);
@@ -190,10 +190,23 @@
       // Test initial ARIA roles on the body element.
       testBodyRole("iframe_aria_application", ROLE_APPLICATION);
       testBodyRole("iframe_aria_dialog", ROLE_DIALOG);
+      // role="alert" is valid on the body of chrome documents.
+      let win = Services.ww.openWindow(
+        null,
+        "chrome://mochitests/content/a11y/accessible/tests/mochitest/role/chrome_body_role_alert.xhtml",
+        "_blank",
+        "chrome",
+        []
+      );
+      await SimpleTest.promiseFocus(win);
+      testRole(win.document, ROLE_ALERT);
+      win.close();
       // Other roles aren't valid on body elements.
       testBodyRole("iframe_aria_document", ROLE_DOCUMENT);
       testBodyRole("iframe_aria_button", ROLE_DOCUMENT);
-      testBodyRole("iframe_aria_button", ROLE_DOCUMENT);
+      testBodyRole("iframe_aria_main", ROLE_DOCUMENT);
+      // role="alert" is not valid on the body of content documents.
+      testBodyRole("iframe_aria_alert", ROLE_DOCUMENT);
 
       SimpleTest.finish();
     }
@@ -420,5 +433,7 @@
     src="data:text/html,<body role='button'>"></iframe>
   <iframe id="iframe_aria_main"
     src="data:text/html,<body role='main'>"></iframe>
+  <iframe id="iframe_aria_alert"
+    src="data:text/html,<body role='alert'>"></iframe>
 </body>
 </html>
