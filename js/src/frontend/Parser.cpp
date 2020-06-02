@@ -9712,7 +9712,7 @@ bool GeneralParser<ParseHandler, Unit>::checkLabelOrIdentifierReference(
     return false;
   }
 
-  if (tt == TokenKind::Name) {
+  if (tt == TokenKind::Name || tt == TokenKind::PrivateName) {
     return true;
   }
   if (TokenKindIsContextualKeyword(tt)) {
