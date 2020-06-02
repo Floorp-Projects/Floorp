@@ -48,6 +48,25 @@ xpcAccessibleMacInterface::GetAttributeNames(nsTArray<nsString>& aAttributeNames
 }
 
 NS_IMETHODIMP
+xpcAccessibleMacInterface::GetParameterizedAttributeNames(nsTArray<nsString>& aAttributeNames) {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT
+
+  if (!mNativeObject || [mNativeObject isExpired]) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  for (NSString* name in [mNativeObject accessibilityParameterizedAttributeNames]) {
+    nsAutoString attribName;
+    nsCocoaUtils::GetStringForNSString(name, attribName);
+    aAttributeNames.AppendElement(attribName);
+  }
+
+  return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT
+}
+
+NS_IMETHODIMP
 xpcAccessibleMacInterface::GetActionNames(nsTArray<nsString>& aActionNames) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT
 
@@ -125,6 +144,22 @@ xpcAccessibleMacInterface::SetAttributeValue(const nsAString& aAttributeName,
   }
 
   return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+xpcAccessibleMacInterface::GetParameterizedAttributeValue(const nsAString& aAttributeName,
+                                                          JS::HandleValue aParameter,
+                                                          JSContext* aCx,
+                                                          JS::MutableHandleValue aResult) {
+  nsresult rv = NS_OK;
+  id paramObj = JsValueToNSObject(aParameter, aCx, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  NSString* attribName = nsCocoaUtils::ToNSString(aAttributeName);
+  return NSObjectToJsValue(
+      [mNativeObject accessibilityAttributeValue:attribName forParameter:paramObj], aCx, aResult);
+
+  return NS_OK;
 }
 
 bool xpcAccessibleMacInterface::SupportsSelector(SEL aSelector) {
