@@ -65,7 +65,7 @@ class WorkerThread::Observer final : public nsIThreadObserver {
   NS_DECL_NSITHREADOBSERVER
 };
 
-WorkerThread::WorkerThread()
+WorkerThread::WorkerThread(ConstructorKey)
     : nsThread(MakeNotNull<ThreadEventQueue<mozilla::EventQueue>*>(
                    MakeUnique<mozilla::EventQueue>()),
                nsThread::NOT_MAIN_THREAD, kWorkerStackSize),
@@ -87,17 +87,18 @@ WorkerThread::~WorkerThread() {
 }
 
 // static
-already_AddRefed<WorkerThread> WorkerThread::Create(
+SafeRefPtr<WorkerThread> WorkerThread::Create(
     const WorkerThreadFriendKey& /* aKey */) {
-  RefPtr<WorkerThread> thread = new WorkerThread();
+  SafeRefPtr<WorkerThread> thread =
+      MakeSafeRefPtr<WorkerThread>(ConstructorKey());
   if (NS_FAILED(thread->Init(NS_LITERAL_CSTRING("DOM Worker")))) {
     NS_WARNING("Failed to create new thread!");
     return nullptr;
   }
   thread->mAbstractThread = AbstractThread::CreateXPCOMThreadWrapper(
-      thread, false /* aRequireTailDispatch */);
+      thread.unsafeGetRawPtr(), false /* aRequireTailDispatch */);
 
-  return thread.forget();
+  return thread;
 }
 
 void WorkerThread::SetWorker(const WorkerThreadFriendKey& /* aKey */,
