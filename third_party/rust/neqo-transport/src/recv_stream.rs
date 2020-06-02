@@ -10,7 +10,7 @@
 use std::cell::RefCell;
 use std::cmp::{max, min};
 use std::collections::BTreeMap;
-use std::convert::TryInto;
+use std::convert::TryFrom;
 use std::mem;
 use std::ops::Bound::{Included, Unbounded};
 use std::rc::Rc;
@@ -219,9 +219,9 @@ impl RxStreamOrderer {
     }
 
     /// Copy received data (if any) into the buffer. Returns bytes copied.
-    fn read(&mut self, buf: &mut [u8]) -> Res<u64> {
+    fn read(&mut self, buf: &mut [u8]) -> usize {
         qtrace!("Reading {} bytes, {} available", buf.len(), self.buffered());
-        let mut buf_remaining = buf.len() as usize;
+        let mut buf_remaining = buf.len();
         let mut copied = 0;
 
         for (&range_start, range_data) in &mut self.data_ranges {
@@ -230,7 +230,8 @@ impl RxStreamOrderer {
 
                 // Convert to offset into data vec and move past bytes we
                 // already have
-                let copy_offset = (max(range_start, self.retired) - range_start).try_into()?;
+                let copy_offset =
+                    usize::try_from(max(range_start, self.retired) - range_start).unwrap();
                 let copy_bytes = min(range_data.len() - copy_offset, buf_remaining);
                 let copy_slc = &mut range_data[copy_offset..copy_offset + copy_bytes];
                 buf[copied..copied + copy_bytes].copy_from_slice(copy_slc);
@@ -253,11 +254,11 @@ impl RxStreamOrderer {
             self.data_ranges.remove(&key);
         }
 
-        Ok(copied as u64)
+        copied
     }
 
     /// Extend the given Vector with any available data.
-    pub fn read_to_end(&mut self, buf: &mut Vec<u8>) -> Res<u64> {
+    pub fn read_to_end(&mut self, buf: &mut Vec<u8>) -> usize {
         let orig_len = buf.len();
         buf.resize(orig_len + self.bytes_ready(), 0);
         self.read(&mut buf[orig_len..])
@@ -501,12 +502,12 @@ impl RecvStream {
             .map_or(false, RxStreamOrderer::data_ready)
     }
 
-    pub fn read(&mut self, buf: &mut [u8]) -> Res<(u64, bool)> {
+    pub fn read(&mut self, buf: &mut [u8]) -> Res<(usize, bool)> {
         let res = match &mut self.state {
             RecvStreamState::Recv { recv_buf, .. }
-            | RecvStreamState::SizeKnown { recv_buf, .. } => Ok((recv_buf.read(buf)?, false)),
+            | RecvStreamState::SizeKnown { recv_buf, .. } => Ok((recv_buf.read(buf), false)),
             RecvStreamState::DataRecvd { recv_buf } => {
-                let bytes_read = recv_buf.read(buf)?;
+                let bytes_read = recv_buf.read(buf);
                 let fin_read = recv_buf.buffered() == 0;
                 if fin_read {
                     self.set_state(RecvStreamState::DataRead)
@@ -703,7 +704,10 @@ mod tests {
         s.inbound_stream_frame(false, 0, frame1).unwrap();
         s.maybe_send_flowc_update();
         assert_eq!(s.flow_mgr.borrow().peek(), None);
-        assert_eq!(s.read(&mut buf).unwrap(), (RX_STREAM_DATA_WINDOW, false));
+        assert_eq!(
+            s.read(&mut buf).unwrap(),
+            (RX_STREAM_DATA_WINDOW as usize, false)
+        );
         assert_eq!(s.data_ready(), false);
         s.maybe_send_flowc_update();
 
@@ -750,7 +754,7 @@ mod tests {
         assert_eq!(rx_ord.buffered(), 6);
         assert_eq!(rx_ord.retired(), 0);
         // read some so there's an offset into the first frame
-        rx_ord.read(&mut buf[..2]).unwrap();
+        rx_ord.read(&mut buf[..2]);
         assert_eq!(rx_ord.bytes_ready(), 4);
         assert_eq!(rx_ord.buffered(), 4);
         assert_eq!(rx_ord.retired(), 2);

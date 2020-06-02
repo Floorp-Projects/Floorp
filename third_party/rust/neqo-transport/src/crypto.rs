@@ -11,16 +11,15 @@ use std::ops::{Index, IndexMut, Range};
 use std::rc::Rc;
 use std::time::Instant;
 
-use neqo_common::{hex, matches, qdebug, qerror, qinfo, qtrace};
+use neqo_common::{hex, matches, qdebug, qerror, qinfo, qtrace, Role};
 use neqo_crypto::aead::Aead;
 use neqo_crypto::hp::HpKey;
 use neqo_crypto::{
-    hkdf, Agent, AntiReplay, Cipher, Epoch, RecordList, SymKey, TLS_AES_128_GCM_SHA256,
-    TLS_AES_256_GCM_SHA384, TLS_EPOCH_APPLICATION_DATA, TLS_EPOCH_HANDSHAKE, TLS_EPOCH_INITIAL,
-    TLS_EPOCH_ZERO_RTT, TLS_VERSION_1_3,
+    hkdf, Agent, AntiReplay, Cipher, Epoch, HandshakeState, Record, RecordList, SymKey,
+    TLS_AES_128_GCM_SHA256, TLS_AES_256_GCM_SHA384, TLS_CT_HANDSHAKE, TLS_EPOCH_APPLICATION_DATA,
+    TLS_EPOCH_HANDSHAKE, TLS_EPOCH_INITIAL, TLS_EPOCH_ZERO_RTT, TLS_VERSION_1_3,
 };
 
-use crate::connection::Role;
 use crate::frame::Frame;
 use crate::packet::PacketNumber;
 use crate::recovery::RecoveryToken;
@@ -49,7 +48,7 @@ impl Crypto {
         agent.set_version_range(TLS_VERSION_1_3, TLS_VERSION_1_3)?;
         agent.enable_ciphers(&[TLS_AES_128_GCM_SHA256, TLS_AES_256_GCM_SHA384])?;
         agent.set_alpn(protocols)?;
-        agent.disable_end_of_early_data();
+        agent.disable_end_of_early_data()?;
         match &mut agent {
             Agent::Client(c) => c.enable_0rtt()?,
             Agent::Server(s) => s.enable_0rtt(
@@ -64,6 +63,42 @@ impl Crypto {
             streams: Default::default(),
             states: Default::default(),
         })
+    }
+
+    pub fn handshake(
+        &mut self,
+        now: Instant,
+        space: PNSpace,
+        data: Option<&[u8]>,
+    ) -> Res<&HandshakeState> {
+        let input = data.map(|d| {
+            qtrace!("Handshake record received {:0x?} ", d);
+            let epoch = match space {
+                PNSpace::Initial => TLS_EPOCH_INITIAL,
+                PNSpace::Handshake => TLS_EPOCH_HANDSHAKE,
+                // Our epoch progresses forward, but the TLS epoch is fixed to 3.
+                PNSpace::ApplicationData => TLS_EPOCH_APPLICATION_DATA,
+            };
+            Record {
+                ct: TLS_CT_HANDSHAKE,
+                epoch,
+                data: d.to_vec(),
+            }
+        });
+
+        match self.tls.handshake_raw(now, input) {
+            Ok(output) => {
+                self.buffer_records(output)?;
+                Ok(self.tls.state())
+            }
+            Err(e) => {
+                qinfo!("Handshake failed");
+                Err(match self.tls.alert() {
+                    Some(a) => Error::CryptoAlert(*a),
+                    _ => Error::CryptoError(e),
+                })
+            }
+        }
     }
 
     /// Enable 0-RTT and return `true` if it is enabled successfully.
@@ -155,12 +190,15 @@ impl Crypto {
     }
 
     /// Buffer crypto records for sending.
-    pub fn buffer_records(&mut self, records: RecordList) {
+    pub fn buffer_records(&mut self, records: RecordList) -> Res<()> {
         for r in records {
-            assert_eq!(r.ct, 22);
+            if r.ct != TLS_CT_HANDSHAKE {
+                return Err(Error::ProtocolViolation);
+            }
             qtrace!([self], "Adding CRYPTO data {:?}", r);
             self.streams.send(PNSpace::from(r.epoch), &r.data);
         }
+        Ok(())
     }
 
     pub fn acked(&mut self, token: CryptoRecoveryToken) {
@@ -872,7 +910,7 @@ impl CryptoStreams {
         self.get(space).map_or(false, |cs| cs.rx.data_ready())
     }
 
-    pub fn read_to_end(&mut self, space: PNSpace, buf: &mut Vec<u8>) -> Res<u64> {
+    pub fn read_to_end(&mut self, space: PNSpace, buf: &mut Vec<u8>) -> usize {
         self.get_mut(space).unwrap().rx.read_to_end(buf)
     }
 

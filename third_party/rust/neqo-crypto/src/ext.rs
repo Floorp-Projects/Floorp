@@ -5,7 +5,9 @@
 // except according to those terms.
 
 use crate::agentio::as_c_void;
-use crate::constants::*;
+use crate::constants::{
+    Extension, HandshakeMessage, TLS_HS_CLIENT_HELLO, TLS_HS_ENCRYPTED_EXTENSIONS,
+};
 use crate::err::Res;
 use crate::ssl::{
     PRBool, PRFileDesc, SECFailure, SECStatus, SECSuccess, SSLAlertDescription,

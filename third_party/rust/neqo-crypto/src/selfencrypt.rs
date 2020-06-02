@@ -5,7 +5,7 @@
 // except according to those terms.
 
 use crate::aead::Aead;
-use crate::constants::*;
+use crate::constants::{Cipher, Version};
 use crate::err::{Error, Res};
 use crate::hkdf;
 use crate::p11::{random, SymKey};
