@@ -196,8 +196,10 @@ already_AddRefed<SharedWorker> SharedWorker::Constructor(
   RemoteWorkerData remoteWorkerData(
       nsString(aScriptURL), baseURL, resolvedScriptURL, name,
       loadingPrincipalInfo, principalInfo, partitionedPrincipalInfo,
-      loadInfo.mDomain, isSecureContext, ipcClientInfo, loadInfo.mReferrerInfo,
-      storageAllowed, void_t() /* OptionalServiceWorkerData */, agentClusterId);
+      loadInfo.mUseRegularPrincipal,
+      loadInfo.mHasStorageAccessPermissionGranted, loadInfo.mDomain,
+      isSecureContext, ipcClientInfo, loadInfo.mReferrerInfo, storageAllowed,
+      void_t() /* OptionalServiceWorkerData */, agentClusterId);
 
   PSharedWorkerChild* pActor = actorChild->SendPSharedWorkerConstructor(
       remoteWorkerData, loadInfo.mWindowID, portIdentifier.release());

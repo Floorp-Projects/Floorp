@@ -93,7 +93,8 @@ WorkerLoadInfoData::WorkerLoadInfoData()
       mPrincipalIsAddonOrExpandedAddon(false),
       mWatchedByDevTools(false),
       mStorageAccess(StorageAccess::eDeny),
-      mFirstPartyStorageAccessGranted(false),
+      mUseRegularPrincipal(false),
+      mHasStorageAccessPermissionGranted(false),
       mServiceWorkersTestingInWindow(false),
       mSecureContext(eNotSet) {}
 

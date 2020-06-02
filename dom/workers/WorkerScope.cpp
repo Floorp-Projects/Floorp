@@ -616,7 +616,7 @@ WorkerGlobalScope::GetOrCreateServiceWorkerRegistration(
   return ref;
 }
 
-void WorkerGlobalScope::FirstPartyStorageAccessGranted() {
+void WorkerGlobalScope::StorageAccessPermissionGranted() {
   // Reset the IndexedDB factory.
   mIndexedDB = nullptr;
 
