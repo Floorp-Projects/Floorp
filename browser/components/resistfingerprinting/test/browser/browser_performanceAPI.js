@@ -137,13 +137,25 @@ add_task(async function runRPTests() {
         content.performance.timeOrigin
     );
 
-    // Check that whether the performance timing API is correctly spoofed.
+    // Check that the performance timing API is correctly spoofed. In
+    // particular, check if domainLookupStart and domainLookupEnd return
+    // fetchStart, and if everything else is clamped to the expected precision.
     for (let time of timerlist) {
-      is(
-        content.performance.timing[time],
-        0,
-        `For resistFingerprinting, the timing(${time}) is not correctly spoofed.`
-      );
+      if (time == "domainLookupStart" || time == "domainLookupEnd") {
+        is(
+          content.performance.timing[time],
+          content.performance.timing.fetchStart,
+          `For resistFingerprinting, the timing(${time}) is not correctly spoofed.`
+        );
+      } else {
+        ok(
+          isRounded(content.performance.timing[time], expectedPrecision),
+          `For resistFingerprinting with expected precision ` +
+            expectedPrecision +
+            `, the timing(${time}) is not correctly rounded: ` +
+            content.performance.timing[time]
+        );
+      }
     }
 
     // Try to add some entries.
@@ -169,6 +181,7 @@ add_task(async function runRPTests() {
     );
   };
 
+  await setupTest(true, true, 200, runTests);
   await setupTest(true, true, 100, runTests);
   await setupTest(true, false, 13, runTests);
   await setupTest(true, false, 0.13, runTests);
