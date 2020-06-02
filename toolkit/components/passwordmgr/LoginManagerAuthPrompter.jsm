@@ -752,9 +752,8 @@ LoginManagerAuthPrompter.prototype = {
           this._browser
         );
       }
-      ok = Services.prompt.promptAuthBC(
-        this._browser.browsingContext,
-        LoginManagerAuthPrompter.promptAuthModalType,
+      ok = Services.prompt.promptAuth(
+        this._chromeWindow,
         aChannel,
         aLevel,
         aAuthInfo,
@@ -1292,13 +1291,6 @@ XPCOMUtils.defineLazyGetter(LoginManagerAuthPrompter.prototype, "log", () => {
   let logger = LoginHelper.createLogger("LoginManagerAuthPrompter");
   return logger.log.bind(logger);
 });
-
-XPCOMUtils.defineLazyPreferenceGetter(
-  LoginManagerAuthPrompter,
-  "promptAuthModalType",
-  "prompts.modalType.httpAuth",
-  Services.prompt.MODAL_TYPE_WINDOW
-);
 
 const EXPORTED_SYMBOLS = [
   "LoginManagerAuthPromptFactory",

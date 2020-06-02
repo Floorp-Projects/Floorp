@@ -16,11 +16,9 @@
       const EXAMPLE_ORG = "http://example.org/tests/toolkit/components/passwordmgr/test/mochitest/";
       let mozproxyOrigin;
 
-      // Let parent check for tab modal prompts if they are enabled for auth
-      // prompts. Used by prompt_common.js.
-      isTabModal = SpecialPowers.Services.prefs.getBoolPref("prompts.tab_modal.enabled")
-        && SpecialPowers.Services.prefs.getIntPref("prompts.modalType.httpAuth")
-          !== SpecialPowers.Services.prompt.MODAL_TYPE_WINDOW;
+      // Force parent to not look for tab-modal prompts, as they're not used for auth prompts.
+      // Used by prompt_common.js.
+      isTabModal = false;
 
       // These are magically defined on the window due to the iframe IDs
       /* global iframe1, iframe2a, iframe2b */
