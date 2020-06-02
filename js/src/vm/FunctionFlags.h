@@ -190,8 +190,16 @@ class FunctionFlags {
     MOZ_ASSERT_IF(isWasmWithJitEntry(), isNative());
     return isWasmWithJitEntry();
   }
+  bool isNativeWithoutJitEntry() const {
+    return isNative() && !isNativeWithJitEntry();
+  }
   bool isBuiltinNative() const {
     return isNative() && !isAsmJSNative() && !isWasm();
+  }
+
+  bool hasJitEntry() const {
+    return hasBaseScript() || hasSelfHostedLazyScript() ||
+           isNativeWithJitEntry();
   }
 
   /* Possible attributes of an interpreted function: */
