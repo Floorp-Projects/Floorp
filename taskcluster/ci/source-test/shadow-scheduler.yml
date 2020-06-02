@@ -12,10 +12,11 @@ job-defaults:
             - type: file
               name: public/shadow-scheduler/optimized_tasks.list
               path: /builds/worker/optimized_tasks.list
+        env:
+            DECISION_TASK_ID: {task-reference: <decision>}
     treeherder:
         kind: other
         tier: 3
-    require-decision-task-id: true
     run-on-projects: ['autoland']
     run:
         using: mach
