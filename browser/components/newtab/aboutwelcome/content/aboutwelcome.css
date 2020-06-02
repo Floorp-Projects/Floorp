@@ -87,6 +87,7 @@ body {
   --newtab-text-primary-color: #0C0C0D;
   --newtab-text-conditional-color: #4A4A4F;
   --newtab-button-primary-color: #0060DF;
+  --newtab-button-secondary-color: #0060DF;
   --newtab-card-background-color: #FFF;
   --newtab-card-shadow: 0 1px 4px 0 rgba(12, 12, 13, 0.1);
   --welcome-header-text-color: #2B2156;
@@ -108,12 +109,16 @@ body {
   background-color: var(--newtab-background-color); }
   body[lwt-newtab-brighttext] {
     --newtab-background-color: #2A2A2E;
+    --newtab-background-color-1: #1D1133;
     --newtab-text-primary-color: #F9F9FA;
     --newtab-text-conditional-color: #F9F9FA;
+    --grey-subtitle-1: #FFF;
     --newtab-button-primary-color: #0060DF;
+    --newtab-button-secondary-color: #FFF;
     --newtab-card-background-color: #38383D;
     --newtab-card-shadow: 0 1px 8px 0 rgba(12, 12, 13, 0.2);
     --welcome-header-text-color: rgba(255, 255, 255, 0.6);
+    --welcome-header-text-color-1: #7542E5;
     --welcome-card-button-background-color: rgba(12, 12, 13, 0.3);
     --welcome-card-button-background-hover-color: rgba(12, 12, 13, 0.5);
     --welcome-card-button-background-active-color: rgba(12, 12, 13, 0.7);
@@ -340,7 +345,7 @@ body {
       display: block;
       padding: 0;
       width: auto;
-      color: var(--newtab-button-primary-color);
+      color: var(--newtab-button-secondary-color);
       margin-top: 14px; }
       .multistageContainer button.secondary:hover, .multistageContainer button.secondary:focus, .multistageContainer button.secondary:active {
         background-color: initial; }
@@ -369,7 +374,8 @@ body {
     .multistageContainer .steps .indicator {
       width: 60px;
       height: 4px;
-      margin-inline-end: 8px;
+      margin-inline-end: 4px;
+      margin-inline-start: 4px;
       background: var(--grey-subtitle-1);
       border-radius: 5px;
       opacity: 0.25; }
