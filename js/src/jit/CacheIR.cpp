@@ -1162,7 +1162,7 @@ AttachDecision GetPropIRGenerator::tryAttachWindowProxy(HandleObject obj,
       // Make sure the native getter is okay with the IC passing the Window
       // instead of the WindowProxy as |this| value.
       JSFunction* callee = &shape->getterObject()->as<JSFunction>();
-      MOZ_ASSERT(callee->isNative());
+      MOZ_ASSERT(callee->isNativeWithoutJitEntry());
       if (!callee->hasJitInfo() ||
           callee->jitInfo()->needsOuterizedThisObject()) {
         return AttachDecision::NoAction;
@@ -1358,7 +1358,7 @@ AttachDecision GetPropIRGenerator::tryAttachXrayCrossCompartmentWrapper(
 
   RootedObject getter(cx_, desc.getterObject());
   if (!getter || !getter->is<JSFunction>() ||
-      !getter->as<JSFunction>().isNative()) {
+      !getter->as<JSFunction>().isNativeWithoutJitEntry()) {
     return AttachDecision::NoAction;
   }
 
@@ -5436,7 +5436,7 @@ AttachDecision CallIRGenerator::tryAttachMathFunction(HandleFunction callee,
 }
 
 AttachDecision CallIRGenerator::tryAttachFunCall(HandleFunction callee) {
-  MOZ_ASSERT(callee->isNative());
+  MOZ_ASSERT(callee->isNativeWithoutJitEntry());
   if (callee->native() != fun_call) {
     return AttachDecision::NoAction;
   }
@@ -5446,8 +5446,8 @@ AttachDecision CallIRGenerator::tryAttachFunCall(HandleFunction callee) {
   }
   RootedFunction target(cx_, &thisval_.toObject().as<JSFunction>());
 
-  bool isScripted = target->isInterpreted() || target->isNativeWithJitEntry();
-  MOZ_ASSERT_IF(!isScripted, target->isNative());
+  bool isScripted = target->hasJitEntry();
+  MOZ_ASSERT_IF(!isScripted, target->isNativeWithoutJitEntry());
 
   if (target->isClassConstructor()) {
     return AttachDecision::NoAction;
@@ -5505,7 +5505,7 @@ AttachDecision CallIRGenerator::tryAttachFunCall(HandleFunction callee) {
 }
 
 AttachDecision CallIRGenerator::tryAttachFunApply(HandleFunction calleeFunc) {
-  MOZ_ASSERT(calleeFunc->isNative());
+  MOZ_ASSERT(calleeFunc->isNativeWithoutJitEntry());
   if (calleeFunc->native() != fun_apply) {
     return AttachDecision::NoAction;
   }
@@ -5519,8 +5519,8 @@ AttachDecision CallIRGenerator::tryAttachFunApply(HandleFunction calleeFunc) {
   }
   RootedFunction target(cx_, &thisval_.toObject().as<JSFunction>());
 
-  bool isScripted = target->isInterpreted() || target->isNativeWithJitEntry();
-  MOZ_ASSERT_IF(!isScripted, target->isNative());
+  bool isScripted = target->hasJitEntry();
+  MOZ_ASSERT_IF(!isScripted, target->isNativeWithoutJitEntry());
 
   if (target->isClassConstructor()) {
     return AttachDecision::NoAction;
@@ -5582,7 +5582,7 @@ AttachDecision CallIRGenerator::tryAttachFunApply(HandleFunction calleeFunc) {
 AttachDecision CallIRGenerator::tryAttachInlinableNative(
     HandleFunction callee) {
   MOZ_ASSERT(mode_ == ICState::Mode::Specialized);
-  MOZ_ASSERT(callee->isNative());
+  MOZ_ASSERT(callee->isNativeWithoutJitEntry());
 
   // Special case functions are only optimized for normal calls.
   if (op_ != JSOp::Call && op_ != JSOp::CallIgnoresRv) {
@@ -5937,7 +5937,7 @@ bool CallIRGenerator::getTemplateObjectForNative(HandleFunction calleeFunc,
 }
 
 AttachDecision CallIRGenerator::tryAttachCallNative(HandleFunction calleeFunc) {
-  MOZ_ASSERT(calleeFunc->isNative());
+  MOZ_ASSERT(calleeFunc->isNativeWithoutJitEntry());
 
   bool isSpecialized = mode_ == ICState::Mode::Specialized;
 
@@ -6081,22 +6081,20 @@ AttachDecision CallIRGenerator::tryAttachStub() {
   RootedFunction calleeFunc(cx_, &calleeObj->as<JSFunction>());
 
   // Check for scripted optimizations.
-  if (calleeFunc->isInterpreted() || calleeFunc->isNativeWithJitEntry()) {
+  if (calleeFunc->hasJitEntry()) {
     return tryAttachCallScripted(calleeFunc);
   }
 
   // Check for native-function optimizations.
-  if (calleeFunc->isNative()) {
-    if (op_ == JSOp::FunCall) {
-      return tryAttachFunCall(calleeFunc);
-    }
-    if (op_ == JSOp::FunApply) {
-      return tryAttachFunApply(calleeFunc);
-    }
-    return tryAttachCallNative(calleeFunc);
-  }
+  MOZ_ASSERT(calleeFunc->isNativeWithoutJitEntry());
 
-  return AttachDecision::NoAction;
+  if (op_ == JSOp::FunCall) {
+    return tryAttachFunCall(calleeFunc);
+  }
+  if (op_ == JSOp::FunApply) {
+    return tryAttachFunApply(calleeFunc);
+  }
+  return tryAttachCallNative(calleeFunc);
 }
 
 AttachDecision CallIRGenerator::tryAttachDeferredStub(HandleValue result) {
@@ -7716,7 +7714,7 @@ bool js::jit::CallAnyNative(JSContext* cx, unsigned argc, Value* vp) {
 
   MOZ_ASSERT(calleeObj->is<JSFunction>());
   RootedFunction calleeFunc(cx, &calleeObj->as<JSFunction>());
-  MOZ_ASSERT(calleeFunc->isNative());
+  MOZ_ASSERT(calleeFunc->isNativeWithoutJitEntry());
 
   JSNative native = calleeFunc->native();
   return native(cx, args.length(), args.base());

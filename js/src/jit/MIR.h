@@ -2644,19 +2644,16 @@ class WrappedFunction : public TempObject {
 
   size_t nargs() const { return nargs_; }
 
-  bool isNative() const { return flags_.isNative(); }
-  bool isNativeWithJitEntry() const { return flags_.isNativeWithJitEntry(); }
   bool isNativeWithoutJitEntry() const {
     return flags_.isNativeWithoutJitEntry();
   }
   bool hasJitEntry() const { return flags_.hasJitEntry(); }
-  bool isInterpreted() const { return flags_.isInterpreted(); }
   bool isConstructor() const { return flags_.isConstructor(); }
   bool isClassConstructor() const { return flags_.isClassConstructor(); }
 
   // These fields never change, they can be accessed off-main thread.
   JSNative native() const {
-    MOZ_ASSERT(isNative());
+    MOZ_ASSERT(isNativeWithoutJitEntry());
     return fun_->nativeUnchecked();
   }
   bool hasJitInfo() const {

@@ -115,6 +115,8 @@ class MOZ_RAII WarpCacheIRTranspiler : public WarpBuilderShared {
   MOZ_MUST_USE bool emitLoadArgumentSlot(ValOperandId resultId,
                                          uint32_t slotIndex);
 
+  // Calls are either Native (native function without a JitEntry) or Scripted
+  // (scripted function or native function with a JitEntry).
   enum class CallKind { Native, Scripted };
 
   MOZ_MUST_USE bool emitCallFunction(ObjOperandId calleeId,
@@ -1250,10 +1252,9 @@ bool WarpCacheIRTranspiler::emitCallFunction(ObjOperandId calleeId,
     wrappedTarget =
         new (alloc()) WrappedFunction(target, guard->nargs(), guard->flags());
 
-    MOZ_ASSERT_IF(kind == CallKind::Native, wrappedTarget->isNative());
-    MOZ_ASSERT_IF(kind == CallKind::Scripted,
-                  wrappedTarget->isInterpreted() ||
-                      wrappedTarget->isNativeWithJitEntry());
+    MOZ_ASSERT_IF(kind == CallKind::Native,
+                  wrappedTarget->isNativeWithoutJitEntry());
+    MOZ_ASSERT_IF(kind == CallKind::Scripted, wrappedTarget->hasJitEntry());
   }
 
   bool needsThisCheck = false;
