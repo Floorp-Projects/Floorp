@@ -381,11 +381,9 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin,
             abs_app_dir = self.query_abs_app_dir()
             abs_res_dir = self.query_abs_res_dir()
 
-            raw_log_file = os.path.join(dirs['abs_blob_upload_dir'],
-                                        '%s_raw.log' % suite)
+            raw_log_file, error_summary_file = self.get_indexed_logs(
+                dirs['abs_blob_upload_dir'], suite)
 
-            error_summary_file = os.path.join(dirs['abs_blob_upload_dir'],
-                                              '%s_errorsummary.log' % suite)
             str_format_values = {
                 'binary_path': self.binary_path,
                 'symbols_path': self._query_symbols_url(),
@@ -817,8 +815,6 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin,
                 if executed_too_many_tests and not self.per_test_coverage:
                     return False
 
-                abs_base_cmd = self._query_abs_base_cmd(suite_category, suite)
-                cmd = abs_base_cmd[:]
                 replace_dict = {
                     'abs_app_dir': abs_app_dir,
 
@@ -845,13 +841,6 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin,
 
                 flavor = self._query_try_flavor(suite_category, suite)
                 try_options, try_tests = self.try_args(flavor)
-
-                cmd.extend(self.query_options(options_list,
-                                              try_options,
-                                              str_format_values=replace_dict))
-                cmd.extend(self.query_tests_args(tests_list,
-                                                 try_tests,
-                                                 str_format_values=replace_dict))
 
                 suite_name = suite_category + '-' + suite
                 tbpl_status, log_level = None, None
@@ -917,6 +906,15 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin,
                             executed_too_many_tests = True
 
                         executed_tests = executed_tests + 1
+
+                    abs_base_cmd = self._query_abs_base_cmd(suite_category, suite)
+                    cmd = abs_base_cmd[:]
+                    cmd.extend(self.query_options(options_list,
+                                                  try_options,
+                                                  str_format_values=replace_dict))
+                    cmd.extend(self.query_tests_args(tests_list,
+                                                     try_tests,
+                                                     str_format_values=replace_dict))
 
                     final_cmd = copy.copy(cmd)
                     final_cmd.extend(per_test_args)
