@@ -412,8 +412,8 @@ CookieService::GetCookieStringFromHttp(nsIURI* aHostURI, nsIChannel* aChannel,
   StoragePrincipalHelper::GetOriginAttributes(
       aChannel, attrs, StoragePrincipalHelper::eStorageAccessPrincipal);
 
-  bool isSafeTopLevelNav = NS_IsSafeTopLevelNav(aChannel);
-  bool isSameSiteForeign = NS_IsSameSiteForeign(aChannel, aHostURI);
+  bool isSafeTopLevelNav = CookieCommons::IsSafeTopLevelNav(aChannel);
+  bool isSameSiteForeign = CookieCommons::IsSameSiteForeign(aChannel, aHostURI);
 
   AutoTArray<Cookie*, 8> foundCookieList;
   GetCookiesForURI(
