@@ -948,6 +948,8 @@ class nsFrameSelection final {
         nsIContent* aChildContent, nsINode* aParentContent,
         int32_t aContentOffset, const mozilla::WidgetMouseEvent* aMouseEvent,
         mozilla::dom::Selection& aNormalSelection);
+
+    class MOZ_STACK_CLASS RowAndColumnRelation;
   };
 
   TableSelection mTableSelection;

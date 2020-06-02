@@ -2278,12 +2278,46 @@ nsresult nsFrameSelection::TableSelection::HandleSelection(
                              aContentOffset, aMouseEvent, aNormalSelection);
 }
 
+class nsFrameSelection::TableSelection::RowAndColumnRelation {
+ public:
+  static Result<RowAndColumnRelation, nsresult> Create(
+      const nsIContent* aFirst, const nsIContent* aSecond) {
+    RowAndColumnRelation result;
+
+    nsresult errorResult =
+        GetCellIndexes(aFirst, result.mFirst.mRow, result.mFirst.mColumn);
+    if (NS_FAILED(errorResult)) {
+      return Err(errorResult);
+    }
+
+    errorResult =
+        GetCellIndexes(aSecond, result.mSecond.mRow, result.mSecond.mColumn);
+    if (NS_FAILED(errorResult)) {
+      return Err(errorResult);
+    }
+
+    return result;
+  }
+
+  bool IsSameColumn() const { return mFirst.mColumn == mSecond.mColumn; }
+
+  bool IsSameRow() const { return mFirst.mRow == mSecond.mRow; }
+
+ private:
+  RowAndColumnRelation() = default;
+
+  struct RowAndColumn {
+    int32_t mRow = 0;
+    int32_t mColumn = 0;
+  };
+
+  RowAndColumn mFirst;
+  RowAndColumn mSecond;
+};
+
 nsresult nsFrameSelection::TableSelection::HandleDragSelecting(
     TableSelectionMode aTarget, nsIContent* aChildContent,
     const WidgetMouseEvent* aMouseEvent, Selection& aNormalSelection) {
-  nsresult result = NS_OK;
-
-  int32_t startRowIndex, startColIndex, curRowIndex, curColIndex;
   // We are drag-selecting
   if (aTarget != TableSelectionMode::Table) {
     // If dragging in the same cell as last event, do nothing
@@ -2307,27 +2341,17 @@ nsresult nsFrameSelection::TableSelection::HandleDragSelecting(
       if (mMode == TableSelectionMode::Row ||
           mMode == TableSelectionMode::Column) {
         if (mEndSelectedCell) {
-          // Also check if cell is in same row/col
-          result =
-              GetCellIndexes(mEndSelectedCell, startRowIndex, startColIndex);
-          if (NS_FAILED(result)) {
-            return result;
-          }
-          result = GetCellIndexes(aChildContent, curRowIndex, curColIndex);
-          if (NS_FAILED(result)) {
-            return result;
+          Result<RowAndColumnRelation, nsresult> rowAndColumnRelation =
+              RowAndColumnRelation::Create(mEndSelectedCell, aChildContent);
+
+          if (rowAndColumnRelation.isErr()) {
+            return rowAndColumnRelation.unwrapErr();
           }
 
-#ifdef DEBUG_TABLE_SELECTION
-          printf(
-              " curRowIndex = %d, startRowIndex = %d, curColIndex = %d, "
-              "startColIndex = %d\n",
-              curRowIndex, startRowIndex, curColIndex, startColIndex);
-#endif
           if ((mMode == TableSelectionMode::Row &&
-               startRowIndex == curRowIndex) ||
+               rowAndColumnRelation.inspect().IsSameRow()) ||
               (mMode == TableSelectionMode::Column &&
-               startColIndex == curColIndex)) {
+               rowAndColumnRelation.inspect().IsSameColumn())) {
             return NS_OK;
           }
         }
@@ -2347,22 +2371,19 @@ nsresult nsFrameSelection::TableSelection::HandleDragSelecting(
         // If next cell dragged into is in same row, select entire row,
         //   if next cell is in same column, select entire column
         if (mStartSelectedCell && aMouseEvent->IsShift()) {
-          result =
-              GetCellIndexes(mStartSelectedCell, startRowIndex, startColIndex);
-          if (NS_FAILED(result)) {
-            return result;
-          }
-          result = GetCellIndexes(aChildContent, curRowIndex, curColIndex);
-          if (NS_FAILED(result)) {
-            return result;
+          Result<RowAndColumnRelation, nsresult> rowAndColumnRelation =
+              RowAndColumnRelation::Create(mStartSelectedCell, aChildContent);
+          if (rowAndColumnRelation.isErr()) {
+            return rowAndColumnRelation.unwrapErr();
           }
 
-          if (startRowIndex == curRowIndex || startColIndex == curColIndex) {
+          if (rowAndColumnRelation.inspect().IsSameRow() ||
+              rowAndColumnRelation.inspect().IsSameColumn()) {
             // Force new selection block
             mStartSelectedCell = nullptr;
             aNormalSelection.RemoveAllRanges(IgnoreErrors());
 
-            if (startRowIndex == curRowIndex) {
+            if (rowAndColumnRelation.inspect().IsSameRow()) {
               mMode = TableSelectionMode::Row;
             } else {
               mMode = TableSelectionMode::Column;
