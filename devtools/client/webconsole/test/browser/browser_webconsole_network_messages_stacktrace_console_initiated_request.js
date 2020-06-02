@@ -10,6 +10,14 @@ const TEST_URI = TEST_PATH + TEST_FILE;
 
 pushPref("devtools.webconsole.filter.netxhr", true);
 
+registerCleanupFunction(async function() {
+  await new Promise(resolve => {
+    Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value =>
+      resolve()
+    );
+  });
+});
+
 add_task(async function task() {
   const hud = await openNewTabAndConsole(TEST_URI);
 

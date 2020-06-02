@@ -15,8 +15,14 @@ const TEST_PATH =
 
 const NET_PREF = "devtools.webconsole.filter.net";
 Services.prefs.setBoolPref(NET_PREF, true);
-registerCleanupFunction(() => {
+registerCleanupFunction(async () => {
   Services.prefs.clearUserPref(NET_PREF);
+
+  await new Promise(resolve => {
+    Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value =>
+      resolve()
+    );
+  });
 });
 
 add_task(async function() {

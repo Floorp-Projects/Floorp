@@ -31,8 +31,14 @@ const { UrlClassifierTestUtils } = ChromeUtils.import(
   "resource://testing-common/UrlClassifierTestUtils.jsm"
 );
 
-registerCleanupFunction(function() {
+registerCleanupFunction(async function() {
   UrlClassifierTestUtils.cleanupTestTrackers();
+
+  await new Promise(resolve => {
+    Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value =>
+      resolve()
+    );
+  });
 });
 
 pushPref("devtools.webconsole.groupWarningMessages", false);

@@ -8,6 +8,14 @@ const TEST_PATH =
   "https://example.com/browser/devtools/client/webconsole/test/browser/";
 const TEST_URI = TEST_PATH + TEST_FILE;
 
+registerCleanupFunction(async function() {
+  await new Promise(resolve => {
+    Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value =>
+      resolve()
+    );
+  });
+});
+
 add_task(async function task() {
   await pushPref("devtools.webconsole.filter.netxhr", true);
   const hud = await openNewTabAndConsole(TEST_URI);

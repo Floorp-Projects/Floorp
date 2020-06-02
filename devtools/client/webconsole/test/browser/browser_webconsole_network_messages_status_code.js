@@ -17,6 +17,14 @@ const LEARN_MORE_URI =
 pushPref(NET_PREF, true);
 pushPref(XHR_PREF, true);
 
+registerCleanupFunction(async function() {
+  await new Promise(resolve => {
+    Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value =>
+      resolve()
+    );
+  });
+});
+
 add_task(async function task() {
   const hud = await openNewTabAndConsole(TEST_URI);
 
@@ -79,6 +87,12 @@ add_task(async function task() {
       ok(true, "Console menu is opened");
     }
   }
+
+  await new Promise(resolve => {
+    Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value =>
+      resolve()
+    );
+  });
 });
 
 function getMouseEvents() {
