@@ -2692,7 +2692,7 @@ mozilla::ipc::IPCResult BrowserParent::RecvOnLocationChange(
         aLocationChangeData->charsetAutodetected(),
         aLocationChangeData->documentURI(), aLocationChangeData->title(),
         aLocationChangeData->contentPrincipal(),
-        aLocationChangeData->contentPartitionedPrincipal(),
+        aLocationChangeData->contentStoragePrincipal(),
         aLocationChangeData->csp(), aLocationChangeData->referrerInfo(),
         aLocationChangeData->isSyntheticDocument(),
         aWebProgressData->innerDOMWindowID(),
@@ -2757,8 +2757,7 @@ mozilla::ipc::IPCResult BrowserParent::RecvNotifyContentBlockingEvent(
     const uint32_t& aEvent, const RequestData& aRequestData,
     const bool aBlocked, const nsACString& aTrackingOrigin,
     nsTArray<nsCString>&& aTrackingFullHashes,
-    const Maybe<
-        mozilla::ContentBlockingNotifier::StorageAccessPermissionGrantedReason>&
+    const Maybe<mozilla::ContentBlockingNotifier::StorageAccessGrantedReason>&
         aReason) {
   MOZ_ASSERT(aRequestData.elapsedLoadTimeMS().isNothing());
 

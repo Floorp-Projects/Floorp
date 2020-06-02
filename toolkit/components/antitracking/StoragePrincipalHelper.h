@@ -59,27 +59,23 @@
  * From a Document:
  * - Regular Principal: nsINode::NodePrincipal
  * - Storage Access Principal: Document::EffectiveStoragePrincipal
- * - Partitioned Principal: Document::PartitionedPrincipal
+ * - Partitioned Principal: Document::IntrinsicStoragePrincipal
  *
  * From a Global object:
  * - Regular Principal: nsIScriptObjectPrincipal::GetPrincipal
  * - Storage Access Principal:
  *     nsIScriptObjectPrincipal::GetEffectiveStoragePrincipal
- * - Partitioned Principal: nsIScriptObjectPrincipal::PartitionedPrincipal
+ * - Partitioned Principal: nsIScriptObjectPrincipal::IntrinsicStoragePrincipal
  *
  * From a Worker:
- * - Regular Principal: WorkerPrivate::GetPrincipal (main-thread)
- * - Regular Principal: WorkerPrivate::GetPrincipalInfo (worker thread)
- * - Storage Access Principal: WorkerPrivate::GetEffectiveStoragePrincipalInfo
- *                  (worker-thread)
+ * - Regular Principal: WorkerPrivate::GetPrincipal
+ * - Storage Access Principal: WorkerPrivate::GetEffectiveStoragePrincipal
  *
  * For a nsIChannel, the final principals must be calculated and they can be
  * obtained by calling:
  * - Regular Principal: nsIScriptSecurityManager::getChannelResultPrincipal
  * - Storage Access Principal:
  *     nsIScriptSecurityManager::getChannelResultStoragePrincipal
- * - Partitioned and regular Principal:
- *     nsIScriptSecurityManager::getChannelResultPrincipals
  *
  * Each use of nsIPrincipal is unique and it should be reviewed by anti-tracking
  * peers. But we can group the use of nsIPrincipal in these categories:
@@ -120,8 +116,8 @@
  * to use the “new” effective StoragePrincipal. The list of the notifications
  is:
  *
- * - Add some code in nsGlobalWindowInner::StorageAccessPermissionGranted().
- * - WorkerScope::StorageAccessPermissionGranted for Workers.
+ * - Add some code in nsGlobalWindowInner::StorageAccessGranted().
+ * - WorkerScope::FirstPartyStorageAccessGranted for Workers.
  * - observe the permission changes (not recommended)
  *
  * Scope of Storage Access
@@ -218,7 +214,6 @@ class OriginAttributes;
 class StoragePrincipalHelper final {
  public:
   static nsresult Create(nsIChannel* aChannel, nsIPrincipal* aPrincipal,
-                         bool aForceIsolation,
                          nsIPrincipal** aStoragePrincipal);
 
   static nsresult PrepareEffectiveStoragePrincipalOriginAttributes(
@@ -234,7 +229,7 @@ class StoragePrincipalHelper final {
 
     // This is a dynamic principal based on the current state of the origin. If
     // the origin has the storage permission granted, effective storagePrincipal
-    // will be the regular principal, otherwise, the partitioned Principal
+    // will be the regular principal, otherwise, the intrinsic storagePrincipal
     // will be used.
     eStorageAccessPrincipal,
 
