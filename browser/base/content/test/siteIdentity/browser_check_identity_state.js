@@ -223,6 +223,23 @@ add_task(async function test_secure_enabled() {
   await secureTest(false);
 });
 
+async function viewSourceTest() {
+  let sourceTab = await loadNewTab("view-source:https://example.com/" + DUMMY);
+
+  gBrowser.selectedTab = sourceTab;
+  is(
+    getIdentityMode(),
+    "verifiedDomain",
+    "Identity should be verified while viewing source"
+  );
+
+  gBrowser.removeTab(sourceTab);
+}
+
+add_task(async function test_viewSource() {
+  await viewSourceTest();
+});
+
 async function insecureTest(secureCheck) {
   let oldTab = await loadNewTab("about:robots");
   await SpecialPowers.pushPrefEnv({ set: [[INSECURE_ICON_PREF, secureCheck]] });
