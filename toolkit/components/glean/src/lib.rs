@@ -21,11 +21,15 @@
 // compiled.
 pub extern crate glean;
 
+#[macro_use]
+extern crate cstr;
+
 use std::ffi::CStr;
 use std::os::raw::c_char;
 
 use nserror::{nsresult, NS_OK};
 use nsstring::nsACString;
+use xpcom::interfaces::mozIViaduct;
 
 use client_info::ClientInfo;
 use glean_core::Configuration;
@@ -78,6 +82,19 @@ pub unsafe extern "C" fn fog_init(
     };
 
     log::debug!("Configuration: {:#?}", configuration);
+
+    // Ensure Viaduct is initialized for networking unconditionally so we don't
+    // need to check again if upload is later enabled.
+    if let Some(viaduct) =
+        xpcom::create_instance::<mozIViaduct>(cstr!("@mozilla.org/toolkit/viaduct;1"))
+    {
+        let result = viaduct.EnsureInitialized();
+        if result.failed() {
+            log::error!("Failed to ensure viaduct was initialized due to {}. Ping upload may not be available.", result.error_name());
+        }
+    } else {
+        log::error!("Failed to create Viaduct via XPCOM. Ping upload may not be available.");
+    }
 
     if configuration.data_path.len() > 0 {
         if let Err(e) = api::initialize(configuration, client_info) {
