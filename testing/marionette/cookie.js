@@ -94,6 +94,8 @@ cookie.fromJSON = function(json) {
  *     Cookie to add.
  * @param {string=} restrictToHost
  *     Perform test that ``newCookie``'s domain matches this.
+ * @param {string=} protocol
+ *     The protocol of the caller. It can be `ftp:`, `http:` or `https:`.
  *
  * @throws {TypeError}
  *     If ``name``, ``value``, or ``domain`` are not present and
@@ -104,7 +106,10 @@ cookie.fromJSON = function(json) {
  * @throws {UnableToSetCookieError}
  *     If an error occurred while trying to save the cookie.
  */
-cookie.add = function(newCookie, { restrictToHost = null } = {}) {
+cookie.add = function(
+  newCookie,
+  { restrictToHost = null, protocol = null } = {}
+) {
   assert.string(newCookie.name, "Cookie name must be string");
   assert.string(newCookie.value, "Cookie value must be string");
 
@@ -168,6 +173,19 @@ cookie.add = function(newCookie, { restrictToHost = null } = {}) {
     }
   }
 
+  let schemeType = Ci.nsICookie.SCHEME_UNSET;
+  switch (protocol) {
+    case "http:":
+      schemeType = Ci.nsICookie.SCHEME_HTTP;
+      break;
+    case "https:":
+      schemeType = Ci.nsICookie.SCHEME_HTTPS;
+      break;
+    default:
+      // ftp: or any other protocol is supported by the cookie service.
+      break;
+  }
+
   // remove port from domain, if present.
   // unfortunately this catches IPv6 addresses by mistake
   // TODO: Bug 814416
@@ -184,7 +202,8 @@ cookie.add = function(newCookie, { restrictToHost = null } = {}) {
       newCookie.session,
       newCookie.expiry,
       {} /* origin attributes */,
-      Ci.nsICookie.SAMESITE_NONE
+      Ci.nsICookie.SAMESITE_NONE,
+      schemeType
     );
   } catch (e) {
     throw new UnableToSetCookieError(e);

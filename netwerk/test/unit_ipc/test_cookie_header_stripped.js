@@ -82,7 +82,8 @@ function run_test() {
       false,
       expiry,
       {},
-      Ci.nsICookie.SAMESITE_NONE
+      Ci.nsICookie.SAMESITE_NONE,
+      Ci.nsICookie.SCHEME_HTTPS
     );
     do_send_remote_message("set-cookie-done");
   });
