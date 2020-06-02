@@ -10,6 +10,7 @@ ChromeUtils.import("resource://gre/modules/Services.jsm", this);
 ChromeUtils.import("resource:///modules/TRRPerformance.jsm", this);
 
 const kDryRunResultPref = "doh-rollout.trr-selection.dry-run-result";
+const kEnabledPref = "doh-rollout.trr-selection.enabled";
 
 const TRRSELECT_TELEMETRY_CATEGORY = "security.doh.trrPerformance";
 
@@ -22,6 +23,10 @@ this.trrselect = class trrselect extends ExtensionAPI {
         trrselect: {
           async dryRun() {
             if (Services.prefs.prefHasUserValue(kDryRunResultPref)) {
+              return;
+            }
+
+            if (!Services.prefs.getBoolPref(kEnabledPref, false)) {
               return;
             }
 
