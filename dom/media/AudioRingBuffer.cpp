@@ -103,7 +103,7 @@ class RingBuffer final {
     int part2 = toReadThat - part1;
 
     Span<T> part1Buffer = aBuffer.mStorage.Subspan(aBuffer.mReadIndex, part1);
-    int ret = Write(part1Buffer);
+    DebugOnly<int> ret = Write(part1Buffer);
     MOZ_ASSERT(ret == part1);
     if (part2) {
       Span<T> part2Buffer = aBuffer.mStorage.To(part2);
