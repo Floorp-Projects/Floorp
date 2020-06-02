@@ -73,7 +73,7 @@ def get_releases(branch):
     response = requests.get(
         "https://shipitapi-public.services.mozilla.com/releases",
         params={"product": "firefox", "branch": branch, "status": "shipped"},
-        headers={"Accept": ["application/json"]},
+        headers={"Accept": "application/json"},
     )
     response.raise_for_status()
     return response.json()
