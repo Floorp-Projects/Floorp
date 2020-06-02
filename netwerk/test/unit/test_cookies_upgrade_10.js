@@ -49,7 +49,7 @@ add_task(async function() {
     Services.obs.notifyObservers(null, "profile-before-change");
 
     // check for upgraded schema.
-    Assert.equal(11, getDBVersion(destFile));
+    Assert.equal(12, getDBVersion(destFile));
 
     // Check that the index was deleted
     Assert.ok(!indexExists(destFile, "moz_basedomain"));
