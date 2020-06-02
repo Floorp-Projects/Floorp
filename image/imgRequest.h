@@ -201,8 +201,6 @@ class imgRequest final : public nsIStreamListener,
 
   bool ImageAvailable() const;
 
-  void PrioritizeAsPreload();
-
   bool IsDeniedCrossSiteCORSRequest() const {
     return mIsDeniedCrossSiteCORSRequest;
   }

@@ -130,7 +130,8 @@ class imgRequestProxy : public mozilla::PreloaderBase,
   imgRequest* GetOwner() const;
 
   // PreloaderBase
-  virtual void PrioritizeAsPreload() override;
+  // We are using the default image loader prioritization for preloads.
+  virtual void PrioritizeAsPreload() override {}
 
  protected:
   friend class mozilla::image::ProgressTracker;

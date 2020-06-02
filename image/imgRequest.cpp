@@ -997,13 +997,6 @@ void imgRequest::FinishPreparingForNewPart(const NewPartResult& aResult) {
 
 bool imgRequest::ImageAvailable() const { return mImageAvailable; }
 
-void imgRequest::PrioritizeAsPreload() {
-  if (nsCOMPtr<nsIClassOfService> cos = do_QueryInterface(mChannel)) {
-    cos->AddClassFlags(nsIClassOfService::Unblocked);
-  }
-  AdjustPriorityInternal(nsISupportsPriority::PRIORITY_HIGHEST);
-}
-
 NS_IMETHODIMP
 imgRequest::OnDataAvailable(nsIRequest* aRequest, nsIInputStream* aInStr,
                             uint64_t aOffset, uint32_t aCount) {
