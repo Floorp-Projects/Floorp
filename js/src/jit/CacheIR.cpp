@@ -427,16 +427,13 @@ static NativeGetPropCacheability IsCacheableGetPropCall(JSObject* obj,
     }
   }
 
-  if (getter.isBuiltinNative()) {
-    return CanAttachNativeGetter;
-  }
-
   // Scripted functions and natives with JIT entry can use the scripted path.
   if (getter.hasJitEntry()) {
     return CanAttachScriptedGetter;
   }
 
-  return CanAttachNone;
+  MOZ_ASSERT(getter.isNativeWithoutJitEntry());
+  return CanAttachNativeGetter;
 }
 
 static bool CheckHasNoSuchOwnProperty(JSContext* cx, JSObject* obj, jsid id) {
@@ -923,7 +920,7 @@ static void EmitCallGetterResultNoGuards(JSContext* cx, CacheIRWriter& writer,
   switch (IsCacheableGetPropCall(obj, holder, shape)) {
     case CanAttachNativeGetter: {
       JSFunction* target = &shape->getterValue().toObject().as<JSFunction>();
-      MOZ_ASSERT(target->isBuiltinNative());
+      MOZ_ASSERT(target->isNativeWithoutJitEntry());
       writer.callNativeGetterResult(receiverId, target);
       writer.typeMonitorResult();
       break;
@@ -989,7 +986,7 @@ static void EmitCallGetterByValueResult(JSContext* cx, CacheIRWriter& writer,
   switch (IsCacheableGetPropCall(obj, holder, shape)) {
     case CanAttachNativeGetter: {
       JSFunction* target = &shape->getterValue().toObject().as<JSFunction>();
-      MOZ_ASSERT(target->isBuiltinNative());
+      MOZ_ASSERT(target->isNativeWithoutJitEntry());
       writer.callNativeGetterByValueResult(receiverId, target);
       writer.typeMonitorResult();
       break;
@@ -3597,7 +3594,7 @@ static bool IsCacheableSetPropCallNative(JSObject* obj, JSObject* holder,
   }
 
   JSFunction& setter = shape->setterObject()->as<JSFunction>();
-  if (!setter.isBuiltinNative()) {
+  if (!setter.isNativeWithoutJitEntry()) {
     return false;
   }
 
@@ -3669,7 +3666,7 @@ static void EmitCallSetterNoGuards(JSContext* cx, CacheIRWriter& writer,
                                    ValOperandId rhsId) {
   if (IsCacheableSetPropCallNative(obj, holder, shape)) {
     JSFunction* target = &shape->setterValue().toObject().as<JSFunction>();
-    MOZ_ASSERT(target->isBuiltinNative());
+    MOZ_ASSERT(target->isNativeWithoutJitEntry());
     writer.callNativeSetter(objId, target, rhsId);
     writer.returnFromIC();
     return;
@@ -4792,7 +4789,7 @@ CallIRGenerator::CallIRGenerator(JSContext* cx, HandleScript script,
       cacheIRStubKind_(BaselineCacheIRStubKind::Regular) {}
 
 void CallIRGenerator::emitNativeCalleeGuard(HandleFunction callee) {
-  MOZ_ASSERT(callee->isBuiltinNative());
+  MOZ_ASSERT(callee->isNativeWithoutJitEntry());
   ValOperandId calleeValId =
       writer.loadArgumentFixedSlot(ArgumentKind::Callee, argc_);
   ObjOperandId calleeObjId = writer.guardToObject(calleeValId);

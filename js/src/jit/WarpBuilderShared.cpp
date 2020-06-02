@@ -56,7 +56,7 @@ MCall* WarpBuilderShared::makeCall(CallInfo& callInfo, bool needsThisCheck,
 
   // Collect number of missing arguments provided that the target is
   // scripted. Native functions are passed an explicit 'argc' parameter.
-  if (target && !target->isBuiltinNative()) {
+  if (target && target->hasJitEntry()) {
     targetArgs = std::max<uint32_t>(target->nargs(), callInfo.argc());
   }
 
@@ -80,8 +80,7 @@ MCall* WarpBuilderShared::makeCall(CallInfo& callInfo, bool needsThisCheck,
 
   // Explicitly pad any missing arguments with |undefined|.
   // This permits skipping the argumentsRectifier.
-  MOZ_ASSERT_IF(target && targetArgs > callInfo.argc(),
-                !target->isBuiltinNative());
+  MOZ_ASSERT_IF(target && targetArgs > callInfo.argc(), target->hasJitEntry());
   for (uint32_t i = targetArgs; i > callInfo.argc(); i--) {
     MConstant* undef = constant(UndefinedValue());
     if (!alloc().ensureBallast()) {

@@ -6199,7 +6199,7 @@ AbortReasonOr<MCall*> IonBuilder::makeCallHelper(
 
   // Collect number of missing arguments provided that the target is
   // scripted. Native functions are passed an explicit 'argc' parameter.
-  if (target && !target->isBuiltinNative()) {
+  if (target && target->hasJitEntry()) {
     targetArgs = std::max<uint32_t>(target->nargs(), callInfo.argc());
   }
 
@@ -6223,8 +6223,7 @@ AbortReasonOr<MCall*> IonBuilder::makeCallHelper(
 
   // Explicitly pad any missing arguments with |undefined|.
   // This permits skipping the argumentsRectifier.
-  MOZ_ASSERT_IF(target && targetArgs > callInfo.argc(),
-                !target->isBuiltinNative());
+  MOZ_ASSERT_IF(target && targetArgs > callInfo.argc(), target->hasJitEntry());
   for (int i = targetArgs; i > (int)callInfo.argc(); i--) {
     MConstant* undef = constant(UndefinedValue());
     if (!alloc().ensureBallast()) {
