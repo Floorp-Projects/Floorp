@@ -1,5 +1,3 @@
-// |reftest| skip-if(release_or_beta)
-
 // NamedEvaluation applies to short-circuit assignment.
 
 {
