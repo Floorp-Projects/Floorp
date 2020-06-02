@@ -84,9 +84,6 @@ class MOZ_RAII WarpCacheIRTranspiler : public WarpBuilderShared {
   Shape* shapeStubField(uint32_t offset) {
     return reinterpret_cast<Shape*>(readStubWord(offset));
   }
-  const JSClass* classStubField(uint32_t offset) {
-    return reinterpret_cast<const JSClass*>(readStubWord(offset));
-  }
   JSString* stringStubField(uint32_t offset) {
     return reinterpret_cast<JSString*>(readStubWord(offset));
   }
@@ -182,18 +179,6 @@ bool WarpCacheIRTranspiler::emitGuardClass(ObjOperandId objId,
     default:
       MOZ_CRASH("not yet supported");
   }
-
-  auto* ins = MGuardToClass::New(alloc(), def, classp);
-  add(ins);
-
-  setOperand(objId, ins);
-  return true;
-}
-
-bool WarpCacheIRTranspiler::emitGuardAnyClass(ObjOperandId objId,
-                                              uint32_t claspOffset) {
-  MDefinition* def = getOperand(objId);
-  const JSClass* classp = classStubField(claspOffset);
 
   auto* ins = MGuardToClass::New(alloc(), def, classp);
   add(ins);

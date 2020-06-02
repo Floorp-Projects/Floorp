@@ -45,7 +45,6 @@ UNIFIED_SOURCES += [
     'EffectiveAddressAnalysis.cpp',
     'ExecutableAllocator.cpp',
     'FoldLinearArithConstants.cpp',
-    'InlinableNatives.cpp',
     'InstructionReordering.cpp',
     'Ion.cpp',
     'IonAnalysis.cpp',
