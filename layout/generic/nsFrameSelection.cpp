@@ -2196,7 +2196,8 @@ static bool IsCell(nsIContent* aContent) {
 }
 
 // static
-nsITableCellLayout* nsFrameSelection::GetCellLayout(nsIContent* aCellContent) {
+nsITableCellLayout* nsFrameSelection::GetCellLayout(
+    const nsIContent* aCellContent) {
   nsITableCellLayout* cellLayoutObject =
       do_QueryFrame(aCellContent->GetPrimaryFrame());
   return cellLayoutObject;
@@ -2981,7 +2982,8 @@ nsRange* nsFrameSelection::TableSelection::GetNextCellRange(
 }
 
 // static
-nsresult nsFrameSelection::GetCellIndexes(nsIContent* aCell, int32_t& aRowIndex,
+nsresult nsFrameSelection::GetCellIndexes(const nsIContent* aCell,
+                                          int32_t& aRowIndex,
                                           int32_t& aColIndex) {
   if (!aCell) return NS_ERROR_NULL_POINTER;
 
