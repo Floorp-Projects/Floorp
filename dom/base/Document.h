@@ -1236,6 +1236,8 @@ class Document : public nsINode,
   already_AddRefed<Promise> HasStorageAccess(ErrorResult& aRv);
   already_AddRefed<Promise> RequestStorageAccess(ErrorResult& aRv);
 
+  bool UseRegularPrincipal() const;
+
   /**
    * Gets the event target to dispatch key events to if there is no focused
    * content in the document.
@@ -1388,8 +1390,8 @@ class Document : public nsINode,
   // Returns the cookie jar settings for this and sub contexts.
   nsICookieJarSettings* CookieJarSettings();
 
-  // Returns whether this document has the storage permission.
-  bool HasStoragePermission();
+  // Returns whether this document has the storage access permission.
+  bool HasStorageAccessPermissionGranted();
 
   // Increments the document generation.
   inline void Changed() { ++mGeneration; }

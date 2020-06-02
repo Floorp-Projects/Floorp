@@ -1953,7 +1953,7 @@ void RuntimeService::ResumeWorkersForWindow(nsPIDOMWindowInner* aWindow) {
   }
 }
 
-void RuntimeService::PropagateFirstPartyStorageAccessGranted(
+void RuntimeService::PropagateStorageAccessPermissionGranted(
     nsPIDOMWindowInner* aWindow) {
   AssertIsOnMainThread();
   MOZ_ASSERT(aWindow);
@@ -1965,7 +1965,7 @@ void RuntimeService::PropagateFirstPartyStorageAccessGranted(
   GetWorkersForWindow(aWindow, workers);
 
   for (uint32_t index = 0; index < workers.Length(); index++) {
-    workers[index]->PropagateFirstPartyStorageAccessGranted();
+    workers[index]->PropagateStorageAccessPermissionGranted();
   }
 }
 
@@ -2370,7 +2370,7 @@ void ResumeWorkersForWindow(nsPIDOMWindowInner* aWindow) {
   }
 }
 
-void PropagateFirstPartyStorageAccessGrantedToWorkers(
+void PropagateStorageAccessPermissionGrantedToWorkers(
     nsPIDOMWindowInner* aWindow) {
   AssertIsOnMainThread();
   MOZ_ASSERT_IF(aWindow->GetExtantDoc(), aWindow->GetExtantDoc()
@@ -2379,7 +2379,7 @@ void PropagateFirstPartyStorageAccessGrantedToWorkers(
 
   RuntimeService* runtime = RuntimeService::GetService();
   if (runtime) {
-    runtime->PropagateFirstPartyStorageAccessGranted(aWindow);
+    runtime->PropagateStorageAccessPermissionGranted(aWindow);
   }
 }
 
