@@ -22,10 +22,11 @@ add_task(async function() {
 
   // Wait for the imported bookmarks.  Check that "From 360 Secure Browser"
   // folders are created on the toolbar.
-  let source = MigrationUtils.getLocalizedString("sourceName360se");
-  let label = MigrationUtils.getLocalizedString("importedBookmarksFolder", [
-    source,
-  ]);
+  let source = await MigrationUtils.getLocalizedString("source-name-360se");
+  let label = await MigrationUtils.getLocalizedString(
+    "imported-bookmarks-source",
+    { source }
+  );
 
   let expectedParents = [PlacesUtils.toolbarFolderId];
   let itemCount = 0;
