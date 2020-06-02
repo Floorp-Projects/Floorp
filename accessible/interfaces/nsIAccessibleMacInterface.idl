@@ -15,10 +15,16 @@
 interface nsIAccessibleMacInterface : nsISupports
 {
   /**
-   * List of available attribute names for tthe object.
+   * List of available attribute names for the object.
    * Emulates `AXUIElementCopyAttributeNames`.
    */
   readonly attribute Array<AString> attributeNames;
+
+  /**
+   * List of available parameterized attribute names for the object.
+   * Emulates `AXUIElementCopyParameterizedAttributeNames`.
+   */
+  readonly attribute Array<AString> parameterizedAttributeNames;
 
   /**
    * List of available action names for tthe object.
@@ -32,6 +38,13 @@ interface nsIAccessibleMacInterface : nsISupports
    */
   [implicit_jscontext]
   jsval getAttributeValue(in AString attributeName);
+
+  /**
+   * Returns the value of an attribute given a name and a parameter.
+   * Emulates `AXUIElementCopyParameterizedAttributeValue`.
+   **/
+  [implicit_jscontext]
+  jsval getParameterizedAttributeValue(in AString attributeName, in jsval parameter);
 
   /**
    * Requests that the accessibility object perform the specified action.
