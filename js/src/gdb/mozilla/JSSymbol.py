@@ -12,6 +12,7 @@ from mozilla.CellHeader import get_header_ptr
 mozilla.prettyprinters.clear_module_printers(__name__)
 
 # JS::SymbolCode enumerators
+PrivateNameSymbol = 0xfffffffd
 InSymbolRegistry = 0xfffffffe
 UniqueSymbol = 0xffffffff
 
@@ -30,6 +31,8 @@ class JSSymbolPtr(mozilla.prettyprinters.Pointer):
             return "Symbol.for({})".format(desc)
         elif code == UniqueSymbol:
             return "Symbol({})".format(desc)
+        elif code == PrivateNameSymbol:
+            return "#{}".format(desc)
         else:
             # Well-known symbol. Strip off the quotes added by the JSString *
             # pretty-printer.
