@@ -941,7 +941,7 @@ bool MessageChannel::OpenOnSameThread(MessageChannel* aTargetChan,
   return true;
 }
 
-bool MessageChannel::Send(Message* aMsg) {
+bool MessageChannel::Send(UniquePtr<Message> aMsg) {
   if (aMsg->size() >= kMinTelemetryMessageSize) {
     Telemetry::Accumulate(Telemetry::IPC_MESSAGE_SIZE2, aMsg->size());
   }
@@ -963,28 +963,27 @@ bool MessageChannel::Send(Message* aMsg) {
   MOZ_RELEASE_ASSERT(!aMsg->is_sync());
   MOZ_RELEASE_ASSERT(aMsg->nested_level() != IPC::Message::NESTED_INSIDE_SYNC);
 
-  CxxStackFrame frame(*this, OUT_MESSAGE, aMsg);
+  CxxStackFrame frame(*this, OUT_MESSAGE, aMsg.get());
 
-  UniquePtr<Message> msg(aMsg);
   AssertWorkerThread();
   mMonitor->AssertNotCurrentThreadOwns();
-  if (MSG_ROUTING_NONE == msg->routing_id()) {
+  if (MSG_ROUTING_NONE == aMsg->routing_id()) {
     ReportMessageRouteError("MessageChannel::Send");
     return false;
   }
 
-  if (msg->seqno() == 0) {
-    msg->set_seqno(NextSeqno());
+  if (aMsg->seqno() == 0) {
+    aMsg->set_seqno(NextSeqno());
   }
 
   MonitorAutoLock lock(*mMonitor);
   if (!Connected()) {
-    ReportConnectionError("MessageChannel", msg.get());
+    ReportConnectionError("MessageChannel", aMsg.get());
     return false;
   }
 
-  AddProfilerMarker(msg.get(), MessageDirection::eSending);
-  SendMessageToLink(std::move(msg));
+  AddProfilerMarker(aMsg.get(), MessageDirection::eSending);
+  SendMessageToLink(std::move(aMsg));
   return true;
 }
 
