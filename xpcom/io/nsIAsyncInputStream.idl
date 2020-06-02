@@ -52,8 +52,9 @@ interface nsIAsyncInputStream : nsIInputStream
      *
      * This method may be called at any time (even if read has not been called).
      * In other words, this method may be called when the stream already has
-     * data to read.  It may also be called when the stream is closed.  If the
-     * stream is already readable or closed when AsyncWait is called, then the
+     * data to read.  It may also be called when the stream is closed and will NOT
+     * result in an error return, e.g., NS_BASE_STREAM_CLOSED.  If the stream is
+     * already readable or closed when AsyncWait is called, then the
      * OnInputStreamReady event will be dispatched immediately.  Otherwise, the
      * event will be dispatched when the stream becomes readable or closed.
      *
