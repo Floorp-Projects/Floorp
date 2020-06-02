@@ -410,7 +410,7 @@
     fun: ObjId
     constructing: BoolImm
 
-- name: GuardFunctionIsNative
+- name: GuardFunctionHasNoJitEntry
   shared: true
   transpile: false
   args:

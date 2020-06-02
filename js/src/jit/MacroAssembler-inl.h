@@ -372,8 +372,9 @@ void MacroAssembler::branchIfFunctionHasNoJitEntry(Register fun,
   branchTestFunctionFlags(fun, flags, Assembler::Zero, label);
 }
 
-void MacroAssembler::branchIfInterpreted(Register fun, bool isConstructing,
-                                         Label* label) {
+void MacroAssembler::branchIfFunctionHasJitEntry(Register fun,
+                                                 bool isConstructing,
+                                                 Label* label) {
   int32_t flags = FunctionFlags::BASESCRIPT | FunctionFlags::SELFHOSTLAZY;
   if (!isConstructing) {
     flags |= FunctionFlags::WASM_JIT_ENTRY;
