@@ -16,6 +16,23 @@ function inChildProcess() {
   return Services.appinfo.processType != Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
 }
 
+const { CookieXPCShellUtils } = ChromeUtils.import(
+  "resource://testing-common/CookieXPCShellUtils.jsm"
+);
+
+let cookieXPCShellUtilsInitialized = false;
+function maybeInitializeCookieXPCShellUtils() {
+  if (!cookieXPCShellUtilsInitialized) {
+    cookieXPCShellUtilsInitialized = true;
+    CookieXPCShellUtils.init(this);
+
+    CookieXPCShellUtils.createServer({ hosts: ["example.org"] });
+  }
+}
+
+// Don't pick up default permissions from profile.
+Services.prefs.setCharPref("permissions.manager.defaultsUrl", "");
+
 add_task(async _ => {
   do_get_profile();
 
@@ -80,6 +97,8 @@ add_task(async _ => {
   add_task(async () => {
     do_get_profile();
 
+    maybeInitializeCookieXPCShellUtils();
+
     // Allow all cookies if the pref service is available in this process.
     if (!inChildProcess()) {
       Services.prefs.setBoolPref(
@@ -97,7 +116,7 @@ add_task(async _ => {
 
     info("Let's set a cookie from HTTP example.org");
 
-    let uri = NetUtil.newURI("http://example.org/");
+    let uri = NetUtil.newURI("https://example.org/");
     let principal = Services.scriptSecurityManager.createContentPrincipal(
       uri,
       {}
@@ -114,7 +133,7 @@ add_task(async _ => {
     let cookies = Services.cookies.getCookieStringFromHttp(uri, channel);
     Assert.equal(cookies, "a=b", "Cookies match");
 
-    uri = NetUtil.newURI("https://example.org/");
+    uri = NetUtil.newURI("http://example.org/");
     principal = Services.scriptSecurityManager.createContentPrincipal(uri, {});
     channel = NetUtil.newChannel({
       uri,
@@ -130,7 +149,7 @@ add_task(async _ => {
       Assert.equal(cookies, "a=b", "Cookie even for different scheme!");
     }
 
-    cookies = Services.cookies.getCookieStringForPrincipal(principal);
+    cookies = await CookieXPCShellUtils.getCookieStringFromDocument(uri.spec);
     if (schemefulComparison) {
       Assert.equal(cookies, "", "No cookie for different scheme!");
     } else {
@@ -190,4 +209,79 @@ add_task(async _ => {
   });
 
   Services.cookies.removeAll();
+});
+
+[
+  {
+    prefValue: true,
+    consoleMessage: `Cookie “a” has been treated as cross-site against “http://example.org/” because the scheme does not match.`,
+  },
+  {
+    prefValue: false,
+    consoleMessage: `Cookie “a” will be soon treated as cross-site cookie against “http://example.org/” because the scheme does not match.`,
+  },
+].forEach(test => {
+  add_task(async () => {
+    do_get_profile();
+
+    maybeInitializeCookieXPCShellUtils();
+
+    // Allow all cookies if the pref service is available in this process.
+    if (!inChildProcess()) {
+      Services.prefs.setBoolPref(
+        "network.cookie.sameSite.schemeful",
+        test.prefValue
+      );
+      Services.prefs.setIntPref("network.cookie.cookieBehavior", 0);
+      Services.prefs.setBoolPref(
+        "network.cookieJarSettings.unblocked_for_testing",
+        true
+      );
+    }
+
+    let cs = Cc["@mozilla.org/cookieService;1"].getService(Ci.nsICookieService);
+
+    info("Let's set a cookie from HTTPS example.org");
+
+    let uri = NetUtil.newURI("https://example.org/");
+    let principal = Services.scriptSecurityManager.createContentPrincipal(
+      uri,
+      {}
+    );
+    let channel = NetUtil.newChannel({
+      uri,
+      loadingPrincipal: principal,
+      securityFlags: Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
+      contentPolicyType: Ci.nsIContentPolicy.TYPE_OTHER,
+    });
+
+    cs.setCookieStringFromHttp(uri, "a=b; sameSite=lax", channel);
+
+    // Create a console listener.
+    let consolePromise = new Promise(resolve => {
+      let listener = {
+        observe(message) {
+          // Ignore unexpected messages.
+          if (!(message instanceof Ci.nsIConsoleMessage)) {
+            return;
+          }
+
+          if (message.message.includes(test.consoleMessage)) {
+            Services.console.unregisterListener(listener);
+            resolve();
+          }
+        },
+      };
+
+      Services.console.registerListener(listener);
+    });
+
+    const contentPage = await CookieXPCShellUtils.loadContentPage(
+      "http://example.org/"
+    );
+    await contentPage.close();
+
+    await consolePromise;
+    Services.cookies.removeAll();
+  });
 });
