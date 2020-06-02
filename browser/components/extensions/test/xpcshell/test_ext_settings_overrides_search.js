@@ -294,3 +294,45 @@ add_task(async function test_extension_no_query_params() {
   engine = Services.search.getEngineByName("MozSearch");
   ok(!engine, "Engine should not exist");
 });
+
+add_task(async function test_extension_not_allow_http() {
+  let normalized = await ExtensionTestUtils.normalizeManifest({
+    chrome_settings_overrides: {
+      search_provider: {
+        name: "MozSearch",
+        keyword: "MozSearch",
+        search_url: "http://example.com/{searchTerms}",
+        suggest_url: "http://example.com/suggest/{searchTerms}",
+      },
+    },
+  });
+
+  ok(
+    normalized.error.includes("Error processing chrome_settings_overrides"),
+    `The manifest error ${JSON.stringify(normalized.error)} `
+  );
+});
+
+add_task(async function test_extension_allow_http_for_localhost() {
+  let ext1 = ExtensionTestUtils.loadExtension({
+    manifest: {
+      chrome_settings_overrides: {
+        search_provider: {
+          name: "MozSearch",
+          keyword: "MozSearch",
+          search_url: "http://localhost/{searchTerms}",
+          suggest_url: "http://localhost/suggest/{searchTerms}",
+        },
+      },
+    },
+    useAddonManager: "temporary",
+  });
+
+  await ext1.startup();
+  await AddonTestUtils.waitForSearchProviderStartup(ext1);
+
+  let engine = Services.search.getEngineByName("MozSearch");
+  ok(engine, "Engine should exist.");
+
+  await ext1.unload();
+});
