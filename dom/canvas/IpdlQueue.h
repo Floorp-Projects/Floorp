@@ -359,6 +359,11 @@ class IpdlProducer final : public SupportsWeakPtr<IpdlProducer<_Actor>> {
     return TryInsert(std::forward<Args>(aArgs)...);
   }
 
+  QueueStatus AllocShmem(mozilla::ipc::Shmem* aShmem, size_t aBufferSize,
+                         const void* aBuffer = nullptr) {
+    MOZ_CRASH("TODO:");
+  }
+
  protected:
   template <typename T1, typename T2>
   friend class IpdlQueue;
@@ -469,6 +474,10 @@ class IpdlConsumer final : public SupportsWeakPtr<IpdlConsumer<_Actor>> {
   template <typename... Args>
   QueueStatus TryWaitRemove(const Maybe<TimeDuration>&, Args&... aArgs) {
     return TryRemove(aArgs...);
+  }
+
+  mozilla::ipc::Shmem::SharedMemory* LookupSharedMemory(uint32_t aId) {
+    MOZ_CRASH("TODO:");
   }
 
  protected:
