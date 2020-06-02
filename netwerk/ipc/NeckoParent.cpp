@@ -675,10 +675,6 @@ mozilla::ipc::IPCResult NeckoParent::RecvPredPredict(
 mozilla::ipc::IPCResult NeckoParent::RecvPredLearn(
     nsIURI* aTargetURI, nsIURI* aSourceURI, const uint32_t& aReason,
     const OriginAttributes& aOriginAttributes) {
-  if (!aTargetURI) {
-    return IPC_FAIL(this, "aTargetURI is null");
-  }
-
   // Get the current predictor
   nsresult rv = NS_OK;
   nsCOMPtr<nsINetworkPredictor> predictor =
