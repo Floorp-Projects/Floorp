@@ -384,9 +384,6 @@ add_task(async function checkCautionClass() {
 
 add_task(async function checkViewCertificate() {
   info("Loading a cert error and checking that the certificate can be shown.");
-  SpecialPowers.pushPrefEnv({
-    set: [["security.aboutcertificate.enabled", true]],
-  });
   for (let useFrame of [true, false]) {
     if (useFrame) {
       // Bug #1573502

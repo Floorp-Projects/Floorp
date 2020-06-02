@@ -26,42 +26,6 @@ certmgr-people = You have certificates on file that identify these people
 certmgr-servers = You have certificates on file that identify these servers
 certmgr-ca = You have certificates on file that identify these certificate authorities
 
-certmgr-detail-general-tab-title =
-    .label = General
-    .accesskey = G
-
-certmgr-detail-pretty-print-tab-title =
-    .label = Details
-    .accesskey = D
-
-certmgr-pending-label =
-    .value = Currently verifying certificate…
-
-certmgr-subject-label = Issued To
-
-certmgr-issuer-label = Issued By
-
-certmgr-period-of-validity = Period of Validity
-
-certmgr-fingerprints = Fingerprints
-
-certmgr-cert-detail =
-    .title = Certificate Detail
-    .buttonlabelaccept = Close
-    .buttonaccesskeyaccept = C
-
-certmgr-cert-detail-commonname = Common Name (CN)
-
-certmgr-cert-detail-org = Organization (O)
-
-certmgr-cert-detail-orgunit = Organizational Unit (OU)
-
-certmgr-cert-detail-serial-number = Serial Number
-
-certmgr-cert-detail-sha-256-fingerprint = SHA-256 Fingerprint
-
-certmgr-cert-detail-sha-1-fingerprint = SHA1 Fingerprint
-
 certmgr-edit-ca-cert =
     .title = Edit CA certificate trust settings
     .style = width: 48em;
@@ -93,12 +57,8 @@ certmgr-override-lifetime =
 certmgr-token-name =
     .label = Security Device
 
-certmgr-begins-on = Begins On
-
 certmgr-begins-label =
     .label = Begins On
-
-certmgr-expires-on = Expires On
 
 certmgr-expires-label =
     .label = Expires On
@@ -140,18 +100,6 @@ certmgr-backup-all =
 certmgr-restore =
     .label = Import…
     .accesskey = m
-
-certmgr-details =
-    .value = Certificate Fields
-    .accesskey = F
-
-certmgr-fields =
-    .value = Field Value
-    .accesskey = V
-
-certmgr-hierarchy =
-    .value = Certificate Hierarchy
-    .accesskey = H
 
 certmgr-add-exception =
     .label = Add Exception…
@@ -235,47 +183,6 @@ delete-email-cert-impact = If you delete a person’s e-mail certificate, you wi
 #   $serialNumber : the serial number of the cert in AA:BB:CC hex format.
 cert-with-serial =
     .value = Certificate with serial number: { $serialNumber }
-
-## Cert Viewer
-
-# Title used for the Certificate Viewer.
-#
-# Variables:
-#   $certificate : a string representative of the certificate being viewed.
-cert-viewer-title =
-    .title = Certificate Viewer: “{ $certName }”
-
-not-present =
-    .value = <Not Part Of Certificate>
-
-# Cert verification
-cert-verified = This certificate has been verified for the following uses:
-
-# Add usage
-verify-ssl-client =
-    .value = SSL Client Certificate
-
-verify-ssl-server =
-    .value = SSL Server Certificate
-
-verify-ssl-ca =
-    .value = SSL Certificate Authority
-
-verify-email-signer =
-    .value = Email Signer Certificate
-
-verify-email-recip =
-    .value = Email Recipient Certificate
-
-# Cert verification
-cert-not-verified-cert-revoked = Could not verify this certificate because it has been revoked.
-cert-not-verified-cert-expired = Could not verify this certificate because it has expired.
-cert-not-verified-cert-not-trusted = Could not verify this certificate because it is not trusted.
-cert-not-verified-issuer-not-trusted = Could not verify this certificate because the issuer is not trusted.
-cert-not-verified-issuer-unknown = Could not verify this certificate because the issuer is unknown.
-cert-not-verified-ca-invalid = Could not verify this certificate because the CA certificate is invalid.
-cert-not-verified_algorithm-disabled = Could not verify this certificate because it was signed using a signature algorithm that was disabled because that algorithm is not secure.
-cert-not-verified-unknown = Could not verify this certificate for unknown reasons.
 
 ## Add Security Exception dialog
 add-exception-branded-warning = You are about to override how { -brand-short-name } identifies this site.

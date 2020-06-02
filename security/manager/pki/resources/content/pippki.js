@@ -30,31 +30,19 @@ async function viewCertHelper(parent, cert, openingOption = "tab") {
     return;
   }
 
-  if (Services.prefs.getBoolPref("security.aboutcertificate.enabled")) {
-    let win = Services.wm.getMostRecentBrowserWindow();
-    let results = await asyncDetermineUsages(cert);
-    let chain = getBestChain(results);
-    if (!chain) {
-      chain = [cert];
-    }
-    let certs = chain.map(elem =>
-      encodeURIComponent(elem.getBase64DERString())
-    );
-    let certsStringURL = certs.map(elem => `cert=${elem}`);
-    certsStringURL = certsStringURL.join("&");
-    let url = `about:certificate?${certsStringURL}`;
-    let opened = win.switchToTabHavingURI(url, false, {});
-    if (!opened) {
-      win.openTrustedLinkIn(url, openingOption);
-    }
-  } else {
-    Services.ww.openWindow(
-      parent && parent.docShell.rootTreeItem.domWindow,
-      "chrome://pippki/content/certViewer.xhtml",
-      "_blank",
-      "centerscreen,chrome",
-      cert
-    );
+  let win = Services.wm.getMostRecentBrowserWindow();
+  let results = await asyncDetermineUsages(cert);
+  let chain = getBestChain(results);
+  if (!chain) {
+    chain = [cert];
+  }
+  let certs = chain.map(elem => encodeURIComponent(elem.getBase64DERString()));
+  let certsStringURL = certs.map(elem => `cert=${elem}`);
+  certsStringURL = certsStringURL.join("&");
+  let url = `about:certificate?${certsStringURL}`;
+  let opened = win.switchToTabHavingURI(url, false, {});
+  if (!opened) {
+    win.openTrustedLinkIn(url, openingOption);
   }
 }
 
@@ -223,9 +211,8 @@ const certificateUsages = {
 };
 
 /**
- * Returns a promise that will resolve with a results array (see
- * `displayUsages` in certViewer.js) consisting of what usages the given
- * certificate successfully verified for.
+ * Returns a promise that will resolve with a results array consisting of what
+ * usages the given certificate successfully verified for.
  *
  * @param {nsIX509Cert} cert
  *        The certificate to determine valid usages for.
@@ -263,11 +250,11 @@ function asyncDetermineUsages(cert) {
 }
 
 /**
- * Given a results array (see `displayUsages` in certViewer.js), returns the
- * "best" verified certificate chain. Since the primary use case is for TLS
- * server certificates in Firefox, such a verified chain will be returned if
- * present. Otherwise, the priority is: TLS client certificate, email signer,
- * email recipient, CA. Returns null if no usage verified successfully.
+ * Given a results array, returns the "best" verified certificate chain. Since
+ * the primary use case is for TLS server certificates in Firefox, such a
+ * verified chain will be returned if present. Otherwise, the priority is: TLS
+ * client certificate, email signer, email recipient, CA. Returns null if no
+ * usage verified successfully.
  *
  * @param {Array} results
  *        An array of results from `asyncDetermineUsages`. See `displayUsages`.
@@ -294,9 +281,8 @@ function getBestChain(results) {
 }
 
 /**
- * Given a results array (see `displayUsages` in certViewer.js), returns the
- * chain corresponding to the desired usage, if verifying for that usage
- * succeeded. Returns null otherwise.
+ * Given a results array, returns the chain corresponding to the desired usage,
+ * if verifying for that usage succeeded. Returns null otherwise.
  *
  * @param {Array} results
  *        An array of results from `asyncDetermineUsages`. See `displayUsages`.

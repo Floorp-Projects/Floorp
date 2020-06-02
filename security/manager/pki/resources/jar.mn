@@ -6,8 +6,6 @@ pippki.jar:
 % content pippki %content/pippki/
     content/pippki/certManager.js            (content/certManager.js)
     content/pippki/certManager.xhtml           (content/certManager.xhtml)
-    content/pippki/certViewer.js             (content/certViewer.js)
-    content/pippki/certViewer.xhtml            (content/certViewer.xhtml)
     content/pippki/changepassword.js         (content/changepassword.js)
     content/pippki/changepassword.xhtml        (content/changepassword.xhtml)
     content/pippki/clientauthask.js          (content/clientauthask.js)

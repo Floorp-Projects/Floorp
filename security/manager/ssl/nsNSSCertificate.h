@@ -12,7 +12,6 @@
 #include "ScopedNSSTypes.h"
 #include "certt.h"
 #include "nsCOMPtr.h"
-#include "nsIASN1Object.h"
 #include "nsIClassInfo.h"
 #include "nsISerializable.h"
 #include "nsIX509Cert.h"
@@ -26,7 +25,6 @@ class DERArray;
 }  // namespace mozilla
 
 class nsINSSComponent;
-class nsIASN1Sequence;
 
 class nsNSSCertificate final : public nsIX509Cert,
                                public nsISerializable,
@@ -76,8 +74,6 @@ class nsNSSCertificate final : public nsIX509Cert,
   bool mPermDelete;
   uint32_t mCertType;
   std::vector<nsString> mSubjectAltNames;
-  nsresult CreateASN1Struct(nsIASN1Object** aRetVal);
-  nsresult CreateTBSCertificateASN1Struct(nsIASN1Sequence** retSequence);
   nsresult GetSortableDate(PRTime aTime, nsAString& _aSortableDate);
   bool InitFromDER(char* certDER, int derLen);  // return false on failure
 

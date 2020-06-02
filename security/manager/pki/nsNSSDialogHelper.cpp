@@ -9,6 +9,7 @@
 #include "mozilla/dom/ScriptSettings.h"
 #include "nsCOMPtr.h"
 #include "nsIWindowWatcher.h"
+#include "nsServiceManagerUtils.h"
 
 static const char kOpenDialogParam[] = "centerscreen,chrome,modal,titlebar";
 static const char kOpenWindowParam[] = "centerscreen,chrome,titlebar";

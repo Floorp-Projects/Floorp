@@ -294,27 +294,14 @@ class NetErrorParent extends JSWindowActorParent {
             let securityInfo = this.getSecurityInfo(
               message.data.securityInfoAsString
             );
-            let cert = securityInfo.serverCert;
-            if (
-              Services.prefs.getBoolPref("security.aboutcertificate.enabled")
-            ) {
-              let certChain = securityInfo.failedCertChain;
-              let certs = certChain.map(elem =>
-                encodeURIComponent(elem.getBase64DERString())
-              );
-              let certsStringURL = certs.map(elem => `cert=${elem}`);
-              certsStringURL = certsStringURL.join("&");
-              let url = `about:certificate?${certsStringURL}`;
-              window.switchToTabHavingURI(url, true, {});
-            } else {
-              Services.ww.openWindow(
-                window,
-                "chrome://pippki/content/certViewer.xhtml",
-                "_blank",
-                "centerscreen,chrome",
-                cert
-              );
-            }
+            let certChain = securityInfo.failedCertChain;
+            let certs = certChain.map(elem =>
+              encodeURIComponent(elem.getBase64DERString())
+            );
+            let certsStringURL = certs.map(elem => `cert=${elem}`);
+            certsStringURL = certsStringURL.join("&");
+            let url = `about:certificate?${certsStringURL}`;
+            window.switchToTabHavingURI(url, true, {});
             break;
           }
         }

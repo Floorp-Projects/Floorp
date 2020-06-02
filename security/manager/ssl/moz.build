@@ -13,9 +13,6 @@ if (CONFIG['OS_ARCH'] == 'WINNT' and CONFIG['CPU_ARCH'] != 'aarch64') or CONFIG[
 TEST_DIRS += [ 'tests' ]
 
 XPIDL_SOURCES += [
-    'nsIASN1Object.idl',
-    'nsIASN1PrintableItem.idl',
-    'nsIASN1Sequence.idl',
     'nsICertificateDialogs.idl',
     'nsICertOverrideService.idl',
     'nsIClientAuthDialogs.idl',
@@ -114,7 +111,6 @@ UNIFIED_SOURCES += [
     'nsClientAuthRemember.cpp',
     'nsCryptoHash.cpp',
     'nsKeyModule.cpp',
-    'nsNSSASN1Object.cpp',
     'nsNSSCallbacks.cpp',
     'nsNSSCertHelper.cpp',
     'nsNSSCertificate.cpp',

@@ -3,8 +3,6 @@
 
 "use strict";
 
-const PREF = "security.aboutcertificate.enabled";
-
 function checkCertTabs() {
   let certificatePages = 0;
   for (let tab of gBrowser.tabs) {
@@ -20,10 +18,6 @@ add_task(async function testBadCert() {
   info("Testing bad cert");
 
   let tab = await openErrorPage();
-
-  SpecialPowers.pushPrefEnv({
-    set: [[PREF, true]],
-  });
 
   let loaded = BrowserTestUtils.waitForNewTab(gBrowser, null, true);
   for (let i = 0; i < 2; i++) {
@@ -59,10 +53,6 @@ add_task(async function testGoodCert() {
   info("Testing page info");
   let url = "https://example.com/";
 
-  SpecialPowers.pushPrefEnv({
-    set: [[PREF, true]],
-  });
-
   info(`Loading ${url}`);
   await BrowserTestUtils.withNewTab({ gBrowser, url }, async function() {
     info("Opening pageinfo");
@@ -97,10 +87,6 @@ add_task(async function testGoodCert() {
 add_task(async function testPreferencesCert() {
   info("Testing preferences cert");
   let url = "about:preferences#privacy";
-
-  SpecialPowers.pushPrefEnv({
-    set: [[PREF, true]],
-  });
 
   info(`Loading ${url}`);
   await BrowserTestUtils.withNewTab({ gBrowser, url }, async function(browser) {
