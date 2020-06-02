@@ -431,8 +431,9 @@ class MockCubeb {
   nsTArray<cubeb_device_info> mInputDevices;
   nsTArray<cubeb_device_info> mOutputDevices;
 
-  // The latest cubeb stream.
-  MockCubebStream* mCurrentMockStream = nullptr;
+  // The latest cubeb stream. The init of a stream happens in a helper thread
+  // inside Gecko so a synchronization method is needed.
+  std::atomic<MockCubebStream*> mCurrentMockStream{nullptr};
 };
 
 void cubeb_mock_destroy(cubeb* context) {
