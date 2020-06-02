@@ -46,7 +46,6 @@ use std::os::raw::c_void;
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
-use std::time::SystemTime;
 use std::u32;
 use crate::texture_cache::{TextureCache, TextureCacheHandle, Eviction};
 
@@ -1108,18 +1107,6 @@ impl ResourceCache {
                 visible_rect: image_template.visible_rect,
             }
         })
-    }
-
-    pub fn prepare_for_frames(&mut self, time: SystemTime) {
-        self.texture_cache.prepare_for_frames(time);
-    }
-
-    pub fn bookkeep_after_frames(&mut self) {
-        self.texture_cache.bookkeep_after_frames();
-    }
-
-    pub fn requires_frame_build(&self) -> bool {
-        self.texture_cache.requires_frame_build()
     }
 
     pub fn begin_frame(&mut self, stamp: FrameStamp) {

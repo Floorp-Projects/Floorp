@@ -1317,17 +1317,15 @@ impl RenderBackend {
     }
 
     fn prepare_for_frames(&mut self) {
-        self.resource_cache.prepare_for_frames(SystemTime::now());
         self.gpu_cache.prepare_for_frames();
     }
 
     fn bookkeep_after_frames(&mut self) {
-        self.resource_cache.bookkeep_after_frames();
         self.gpu_cache.bookkeep_after_frames();
     }
 
     fn requires_frame_build(&mut self) -> bool {
-        self.resource_cache.requires_frame_build() || self.gpu_cache.requires_frame_build()
+        self.gpu_cache.requires_frame_build()
     }
 
     fn prepare_transactions(
