@@ -369,6 +369,10 @@
   background-image: url(chrome://branding/content/icon48.png);
 }
 
+#identity-popup[connection=file] .identity-popup-security-connection {
+  background-image: url(chrome://global/skin/icons/document.svg);
+}
+
 #identity-popup[connection^=secure] .identity-popup-security-connection {
   background-image: url(chrome://browser/skin/connection-secure.svg);
   -moz-context-properties: fill;
