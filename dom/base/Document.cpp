@@ -15868,11 +15868,11 @@ already_AddRefed<mozilla::dom::Promise> Document::RequestStorageAccess(
               Telemetry::LABELS_STORAGE_ACCESS_API_UI::Request);
         }
 
-        self->AutomaticStorageAccessCanBeGranted()->Then(
+        self->AutomaticStorageAccessPermissionCanBeGranted()->Then(
             GetCurrentThreadSerialEventTarget(), __func__,
-            [p, pr, sapr, inner](
-                const AutomaticStorageAccessGrantPromise::ResolveOrRejectValue&
-                    aValue) -> void {
+            [p, pr, sapr,
+             inner](const AutomaticStorageAccessPermissionGrantPromise::
+                        ResolveOrRejectValue& aValue) -> void {
               // Make a copy because we can't modified copy-captured lambda
               // variables.
               PromptResult pr2 = pr;
@@ -15948,8 +15948,8 @@ already_AddRefed<mozilla::dom::Promise> Document::RequestStorageAccess(
   return promise.forget();
 }
 
-RefPtr<Document::AutomaticStorageAccessGrantPromise>
-Document::AutomaticStorageAccessCanBeGranted() {
+RefPtr<Document::AutomaticStorageAccessPermissionGrantPromise>
+Document::AutomaticStorageAccessPermissionCanBeGranted() {
   if (XRE_IsContentProcess()) {
     // In the content process, we need to ask the parent process to compute
     // this.  The reason is that nsIPermissionManager::GetAllWithTypePrefix()
@@ -15958,32 +15958,35 @@ Document::AutomaticStorageAccessCanBeGranted() {
     MOZ_ASSERT(cc);
 
     return cc
-        ->SendAutomaticStorageAccessCanBeGranted(
+        ->SendAutomaticStorageAccessPermissionCanBeGranted(
             IPC::Principal(NodePrincipal()))
-        ->Then(
-            GetCurrentThreadSerialEventTarget(), __func__,
-            [](const ContentChild::AutomaticStorageAccessCanBeGrantedPromise::
-                   ResolveOrRejectValue& aValue) {
-              if (aValue.IsResolve()) {
-                return AutomaticStorageAccessGrantPromise::CreateAndResolve(
-                    aValue.ResolveValue(), __func__);
-              }
+        ->Then(GetCurrentThreadSerialEventTarget(), __func__,
+               [](const ContentChild::
+                      AutomaticStorageAccessPermissionCanBeGrantedPromise::
+                          ResolveOrRejectValue& aValue) {
+                 if (aValue.IsResolve()) {
+                   return AutomaticStorageAccessPermissionGrantPromise::
+                       CreateAndResolve(aValue.ResolveValue(), __func__);
+                 }
 
-              return AutomaticStorageAccessGrantPromise::CreateAndReject(
-                  false, __func__);
-            });
+                 return AutomaticStorageAccessPermissionGrantPromise::
+                     CreateAndReject(false, __func__);
+               });
   }
 
   if (XRE_IsParentProcess()) {
     // In the parent process, we can directly compute this.
-    return AutomaticStorageAccessGrantPromise::CreateAndResolve(
-        AutomaticStorageAccessCanBeGranted(NodePrincipal()), __func__);
+    return AutomaticStorageAccessPermissionGrantPromise::CreateAndResolve(
+        AutomaticStorageAccessPermissionCanBeGranted(NodePrincipal()),
+        __func__);
   }
 
-  return AutomaticStorageAccessGrantPromise::CreateAndReject(false, __func__);
+  return AutomaticStorageAccessPermissionGrantPromise::CreateAndReject(
+      false, __func__);
 }
 
-bool Document::AutomaticStorageAccessCanBeGranted(nsIPrincipal* aPrincipal) {
+bool Document::AutomaticStorageAccessPermissionCanBeGranted(
+    nsIPrincipal* aPrincipal) {
   nsAutoCString prefix;
   AntiTrackingUtils::CreateStoragePermissionKey(aPrincipal, prefix);
 

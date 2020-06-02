@@ -105,7 +105,8 @@ static void ReportOriginSingleHash(OriginMetricID aId,
 
 Maybe<uint32_t> ContentBlockingLog::RecordLogParent(
     const nsACString& aOrigin, uint32_t aType, bool aBlocked,
-    const Maybe<ContentBlockingNotifier::StorageAccessGrantedReason>& aReason,
+    const Maybe<ContentBlockingNotifier::StorageAccessPermissionGrantedReason>&
+        aReason,
     const nsTArray<nsCString>& aTrackingFullHashes) {
   MOZ_ASSERT(XRE_IsParentProcess());
 
@@ -242,21 +243,22 @@ void ContentBlockingLog::ReportOrigins() {
       }
 
       const bool isBlocked = logEntry.mBlocked;
-      Maybe<StorageAccessGrantedReason> reason = logEntry.mReason;
+      Maybe<StorageAccessPermissionGrantedReason> reason = logEntry.mReason;
 
       metricId = testMode ? OriginMetricID::ContentBlocking_Blocked_TestOnly
                           : OriginMetricID::ContentBlocking_Blocked;
       if (!isBlocked) {
         MOZ_ASSERT(reason.isSome());
         switch (reason.value()) {
-          case StorageAccessGrantedReason::eStorageAccessAPI:
+          case StorageAccessPermissionGrantedReason::eStorageAccessAPI:
             metricId =
                 testMode
                     ? OriginMetricID::
                           ContentBlocking_StorageAccessAPIExempt_TestOnly
                     : OriginMetricID::ContentBlocking_StorageAccessAPIExempt;
             break;
-          case StorageAccessGrantedReason::eOpenerAfterUserInteraction:
+          case StorageAccessPermissionGrantedReason::
+              eOpenerAfterUserInteraction:
             metricId =
                 testMode
                     ? OriginMetricID::
@@ -264,13 +266,14 @@ void ContentBlockingLog::ReportOrigins() {
                     : OriginMetricID::
                           ContentBlocking_OpenerAfterUserInteractionExempt;
             break;
-          case StorageAccessGrantedReason::eOpener:
+          case StorageAccessPermissionGrantedReason::eOpener:
             metricId =
                 testMode ? OriginMetricID::ContentBlocking_OpenerExempt_TestOnly
                          : OriginMetricID::ContentBlocking_OpenerExempt;
             break;
           default:
-            MOZ_ASSERT_UNREACHABLE("Unknown StorageAccessGrantedReason");
+            MOZ_ASSERT_UNREACHABLE(
+                "Unknown StorageAccessPermissionGrantedReason");
         }
       }
 

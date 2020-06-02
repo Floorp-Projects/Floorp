@@ -119,7 +119,7 @@ using mozilla::dom::MaybeMediaMetadataBase from "mozilla/dom/MediaSessionIPCUtil
 using mozilla::dom::MediaSessionPlaybackState from "mozilla/dom/MediaSessionBinding.h";
 using refcounted class nsDocShellLoadState from "nsDocShellLoadState.h";
 using mozilla::dom::ServiceWorkerShutdownState::Progress from "mozilla/dom/ServiceWorkerShutdownState.h";
-using mozilla::ContentBlockingNotifier::StorageAccessGrantedReason from "mozilla/ContentBlockingNotifier.h";
+using mozilla::ContentBlockingNotifier::StorageAccessPermissionGrantedReason from "mozilla/ContentBlockingNotifier.h";
 using mozilla::ContentBlockingNotifier::BlockingDecision from "mozilla/ContentBlockingNotifier.h";
 using mozilla::ContentBlocking::StorageAccessPromptChoices from "mozilla/ContentBlocking.h";
 using JSActorMessageKind from "mozilla/dom/JSActor.h";
@@ -878,7 +878,7 @@ child:
     async OnAllowAccessFor(MaybeDiscardedBrowsingContext aParentContext,
                            nsCString aTrackingOrigin,
                            uint32_t aCookieBehavior,
-                           StorageAccessGrantedReason aReason);
+                           StorageAccessPermissionGrantedReason aReason);
 
     async OnContentBlockingDecision(MaybeDiscardedBrowsingContext aContext,
                                     BlockingDecision aReason,
@@ -1492,14 +1492,14 @@ parent:
      * Determines whether storage access can be granted automatically by the
      * storage access API without showing a user prompt.
      */
-    async AutomaticStorageAccessCanBeGranted(Principal aPrincipal)
+    async AutomaticStorageAccessPermissionCanBeGranted(Principal aPrincipal)
           returns (bool success);
 
     /*
      * A 3rd party tracking origin (aTrackingOrigin) has received the permission
      * granted to have access to aGrantedOrigin when loaded by aParentWindowId.
      */
-    async FirstPartyStorageAccessGrantedForOrigin(uint64_t aTopLevelWindowId,
+    async StorageAccessPermissionGrantedForOrigin(uint64_t aTopLevelWindowId,
                                                   MaybeDiscardedBrowsingContext aParentContext,
                                                   Principal aTrackingPrincipal,
                                                   nsCString aTrackingOrigin,
@@ -1511,7 +1511,7 @@ parent:
                                  Principal aTrackingPrincipal,
                                  nsCString aTrackingOrigin,
                                  uint32_t aCookieBehavior,
-                                 StorageAccessGrantedReason aReason)
+                                 StorageAccessPermissionGrantedReason aReason)
           returns (StorageAccessPromptChoices? choice);
 
     async StoreUserInteractionAsPermission(Principal aPrincipal);
