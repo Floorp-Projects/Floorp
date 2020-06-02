@@ -241,9 +241,9 @@ def fill_template(config, tasks):
 
         if parent:
             deps = taskdesc.setdefault('dependencies', {})
-            deps[parent] = 'build-docker-image-{}'.format(parent)
+            deps['parent'] = 'build-docker-image-{}'.format(parent)
             worker['env']['DOCKER_IMAGE_PARENT_TASK'] = {
-                'task-reference': '<{}>'.format(parent),
+                'task-reference': '<parent>',
             }
         if 'index' in task:
             taskdesc['index'] = task['index']
