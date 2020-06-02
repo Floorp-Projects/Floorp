@@ -2368,6 +2368,10 @@ pref("devtools.whatsnew.enabled", true);
 // Should be removed in https://bugzilla.mozilla.org/show_bug.cgi?id=1596037
 pref("devtools.whatsnew.feature-enabled", true);
 
+// Part of the Overflow Debugging project
+// Here's the meta bug: https://bugzilla.mozilla.org/show_bug.cgi?id=1529280
+pref("devtools.overflow.debugging.enabled", false);
+
 // FirstStartup service time-out in ms
 pref("first-startup.timeout", 30000);
 
