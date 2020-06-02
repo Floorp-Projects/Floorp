@@ -86,7 +86,7 @@ const SEARCH_FILTERS = [
   "duckduckgo",
 ];
 const AMAZON_SEARCH_TILE_OVERRIDE_PREF =
-  "browser.newtabpage.searchTileOverride.amazon.url";
+  "browser.newtabpage.amazonSearchTileOverride.url";
 
 function getShortURLForCurrentSearch() {
   const url = shortURL({ url: Services.search.defaultEngine.searchForm });
@@ -406,7 +406,7 @@ this.TopSitesFeed = class TopSitesFeed {
     // Insert the original pinned sites into the deduped frecent and defaults
     const withPinned = insertPinned(checkedAdult, pinned).slice(0, numItems);
 
-    const amazonSearchTileOverrideURL = Services.prefs.getStringPref(
+    const amazonSearchTileOverrideURL = Services.prefs.getCharPref(
       AMAZON_SEARCH_TILE_OVERRIDE_PREF,
       ""
     );
@@ -434,7 +434,6 @@ this.TopSitesFeed = class TopSitesFeed {
             delete link.searchTopSite;
             delete link.label;
             link.url = amazonSearchTileOverrideURL;
-            link.overriddenSearchTopSite = true;
           }
         }
       }
