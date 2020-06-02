@@ -107,8 +107,8 @@ class ShareControllerTest {
         assertEquals(appPackageName, shareIntent.captured.component!!.packageName)
         assertEquals(appClassName, shareIntent.captured.component!!.className)
 
+        verify { recentAppStorage.updateRecentApp(appShareOption.activityName) }
         verifyOrder {
-            recentAppStorage.updateRecentApp(appShareOption.activityName)
             activityContext.startActivity(shareIntent.captured)
             dismiss(ShareController.Result.SUCCESS)
         }
