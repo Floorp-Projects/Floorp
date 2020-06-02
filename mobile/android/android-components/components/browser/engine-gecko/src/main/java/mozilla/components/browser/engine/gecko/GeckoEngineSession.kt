@@ -5,6 +5,8 @@
 package mozilla.components.browser.engine.gecko
 
 import android.annotation.SuppressLint
+import android.os.Build
+import android.view.WindowManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -342,6 +344,8 @@ class GeckoEngineSession(
             if (initialLoad && url == ABOUT_BLANK) {
                 return
             }
+
+            currentUrl = url
             initialLoad = false
             isIgnoredForTrackingProtection { ignored ->
                 notifyObservers {
@@ -465,8 +469,6 @@ class GeckoEngineSession(
         }
 
         override fun onPageStart(session: GeckoSession, url: String) {
-            currentUrl = url
-
             notifyObservers {
                 onProgress(PROGRESS_START)
                 onLoadingStateChange(true)
@@ -675,6 +677,18 @@ class GeckoEngineSession(
             val parsed = WebAppManifestParser().parse(manifest)
             if (parsed is WebAppManifestParser.Result.Success) {
                 notifyObservers { onWebAppManifestLoaded(parsed.manifest) }
+            }
+        }
+
+        override fun onMetaViewportFitChange(session: GeckoSession, viewportFit: String) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                val layoutInDisplayCutoutMode = when (viewportFit) {
+                    "cover" -> WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+                    "contain" -> WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_NEVER
+                    else -> WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_DEFAULT
+                }
+
+                notifyObservers { onMetaViewportFitChanged(layoutInDisplayCutoutMode) }
             }
         }
     }

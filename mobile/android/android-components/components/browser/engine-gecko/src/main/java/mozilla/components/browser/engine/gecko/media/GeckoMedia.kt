@@ -28,17 +28,17 @@ internal class GeckoMedia(
     override val controller: Controller = GeckoMediaController(mediaElement)
 
     override var metadata: Metadata by Delegates.observable(Metadata()) {
-            _, old, new -> notifyObservers(old, new) { onMetadataChanged(this@GeckoMedia, new) }
+        _, old, new -> notifyObservers(old, new) { onMetadataChanged(this@GeckoMedia, new) }
     }
     internal set
 
-    override var fullscreen: Boolean by Delegates.observable(false) { _, old, new ->
-        notifyObservers(old, new) { onFullscreenChanged(this@GeckoMedia, new) }
+    override var fullscreen by Delegates.observable(false) {
+            _, old, new -> notifyObservers(old, new) { onFullscreenChanged(this@GeckoMedia, new) }
     }
     internal set
 
     override var volume: Volume by Delegates.observable(Volume()) {
-            _, old, new -> notifyObservers(old, new) { onVolumeChanged(this@GeckoMedia, new) }
+        _, old, new -> notifyObservers(old, new) { onVolumeChanged(this@GeckoMedia, new) }
     }
     internal set
 
