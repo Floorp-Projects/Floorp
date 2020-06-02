@@ -49,12 +49,7 @@ class ADBProcess(object):
             content = ""
         else:
             self.stdout_file.seek(0, os.SEEK_SET)
-            content = self.stdout_file.read().rstrip()
-            # File read() returns str on Python 2 while Python 3 returns bytes.
-            # If we are running under Python3, convert content to str to match
-            # the expectations of the existing code.
-            if six.PY3:
-                content = content.decode("utf-8")
+            content = six.ensure_str(self.stdout_file.read().rstrip())
         return content
 
     def __str__(self):
@@ -1051,11 +1046,9 @@ class ADBDevice(ADBCommand):
         offset = 1
         while length - offset >= 0:
             file_obj.seek(-offset, os.SEEK_END)
-            char = file_obj.read(1)
+            char = six.ensure_str(file_obj.read(1))
             if not char:
                 break
-            if six.PY3:
-                char = char.decode("utf-8")
             if char != '\r' and char != '\n':
                 line = char + line
             elif line:
@@ -1078,8 +1071,7 @@ class ADBDevice(ADBCommand):
             # appropriate match.
             file_obj.seek(0, os.SEEK_SET)
             for line in file_obj:
-                if six.PY3:
-                    line = line.decode("utf-8")
+                line = six.ensure_str(line)
                 match = re_returncode.search(line)
                 if match:
                     exitcode = int(match.group(1))
@@ -2541,12 +2533,12 @@ class ADBDevice(ADBCommand):
                 # instead read only the requested portion of the local file
                 if offset is not None and length is not None:
                     tf2.seek(offset)
-                    return tf2.read(length)
+                    return six.ensure_str(tf2.read(length))
                 elif offset is not None:
                     tf2.seek(offset)
-                    return tf2.read()
+                    return six.ensure_str(tf2.read())
                 else:
-                    return tf2.read()
+                    return six.ensure_str(tf2.read())
 
     def rm(self, path, recursive=False, force=False, timeout=None, root=False):
         """Delete files or directories on the device.
@@ -2636,7 +2628,7 @@ class ADBDevice(ADBCommand):
                 elif adb_process.exitcode:
                     raise ADBProcessError(adb_process)
                 # first line is the headers
-                header = adb_process.stdout_file.readline()
+                header = six.ensure_str(adb_process.stdout_file.readline())
                 pid_i = -1
                 user_i = -1
                 els = header.split()
@@ -2655,7 +2647,7 @@ class ADBDevice(ADBCommand):
                     raise ADBError('get_process_list: Unknown format: %s: %s' % (
                         header, adb_process))
             ret = []
-            line = adb_process.stdout_file.readline()
+            line = six.ensure_str(adb_process.stdout_file.readline())
             while line:
                 els = line.split()
                 try:
@@ -2670,7 +2662,7 @@ class ADBDevice(ADBCommand):
                         header, line, els, pid_i, user_i, traceback.format_exc()))
                     raise ADBError('get_process_list: %s: %s els %s pid_i %s user_i %s: %s' % (
                         header, line, els, pid_i, user_i, adb_process))
-                line = adb_process.stdout_file.readline()
+                line = six.ensure_str(adb_process.stdout_file.readline())
             self._logger.debug('get_process_list: %s' % ret)
             return ret
         finally:
