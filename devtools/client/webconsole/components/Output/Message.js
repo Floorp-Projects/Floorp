@@ -78,7 +78,7 @@ class Message extends Component {
         onViewSourceInStyleEditor: PropTypes.func,
         openContextMenu: PropTypes.func.isRequired,
         openLink: PropTypes.func.isRequired,
-        sourceMapService: PropTypes.any,
+        sourceMapURLService: PropTypes.any,
       }),
       notes: PropTypes.arrayOf(
         PropTypes.shape({
@@ -299,7 +299,7 @@ class Message extends Component {
             serviceContainer.onViewSource,
           onViewSource: serviceContainer.onViewSource,
           onReady: this.props.maybeScrollToBottom,
-          sourceMapService: serviceContainer.sourceMapService,
+          sourceMapURLService: serviceContainer.sourceMapURLService,
         })
       );
     }
@@ -333,8 +333,8 @@ class Message extends Component {
                       serviceContainer.onViewSource
                     : undefined,
                   showEmptyPathAsHost: true,
-                  sourceMapService: serviceContainer
-                    ? serviceContainer.sourceMapService
+                  sourceMapURLService: serviceContainer
+                    ? serviceContainer.sourceMapURLService
                     : undefined,
                 })
               : null
@@ -373,8 +373,8 @@ class Message extends Component {
             frame,
             onClick: onFrameClick,
             showEmptyPathAsHost: true,
-            sourceMapService: serviceContainer
-              ? serviceContainer.sourceMapService
+            sourceMapURLService: serviceContainer
+              ? serviceContainer.sourceMapURLService
               : undefined,
             messageSource: source,
           })

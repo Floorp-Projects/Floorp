@@ -49,7 +49,7 @@ class App extends Component {
       // Callback for opening split console.
       openSplitConsole: PropTypes.func,
       // Service to enable the source map feature.
-      sourceMapService: PropTypes.object,
+      sourceMapURLService: PropTypes.object,
       // True if the stats panel is opened.
       statisticsOpen: PropTypes.bool.isRequired,
       // Document which settings menu will be injected to
@@ -65,7 +65,7 @@ class App extends Component {
       connector,
       openLink,
       openSplitConsole,
-      sourceMapService,
+      sourceMapURLService,
       statisticsOpen,
       toolboxDoc,
     } = this.props;
@@ -82,7 +82,7 @@ class App extends Component {
               actions,
               connector,
               openSplitConsole,
-              sourceMapService,
+              sourceMapURLService,
               openLink,
               toolboxDoc,
             })
