@@ -245,7 +245,7 @@ class WorkerFinishedRunnable final : public WorkerControlRunnable {
 
     mFinishedWorker->DisableDebugger();
 
-    runtime->UnregisterWorker(mFinishedWorker);
+    runtime->UnregisterWorker(*mFinishedWorker);
 
     mFinishedWorker->ClearSelfAndParentEventTargetRef();
     return true;
@@ -276,7 +276,7 @@ class TopLevelWorkerFinishedRunnable final : public Runnable {
 
     mFinishedWorker->DisableDebugger();
 
-    runtime->UnregisterWorker(mFinishedWorker);
+    runtime->UnregisterWorker(*mFinishedWorker);
 
     if (!mFinishedWorker->ProxyReleaseMainThreadObjects()) {
       NS_WARNING("Failed to dispatch, going to leak!");
@@ -1631,7 +1631,7 @@ bool WorkerPrivate::Notify(WorkerStatus aStatus) {
   return runnable->Dispatch();
 }
 
-bool WorkerPrivate::Freeze(nsPIDOMWindowInner* aWindow) {
+bool WorkerPrivate::Freeze(const nsPIDOMWindowInner* aWindow) {
   AssertIsOnParentThread();
 
   mParentFrozen = true;
@@ -1669,7 +1669,7 @@ bool WorkerPrivate::Freeze(nsPIDOMWindowInner* aWindow) {
   return true;
 }
 
-bool WorkerPrivate::Thaw(nsPIDOMWindowInner* aWindow) {
+bool WorkerPrivate::Thaw(const nsPIDOMWindowInner* aWindow) {
   AssertIsOnParentThread();
   MOZ_ASSERT(mParentFrozen);
 
@@ -2416,7 +2416,7 @@ already_AddRefed<WorkerPrivate> WorkerPrivate::Constructor(
 
   worker->mDefaultLocale = std::move(defaultLocale);
 
-  if (!runtimeService->RegisterWorker(worker)) {
+  if (!runtimeService->RegisterWorker(*worker)) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
     return nullptr;
   }
