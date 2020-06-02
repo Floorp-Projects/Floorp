@@ -1,182 +1,76 @@
-#!/usr/bin/env python3
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import json
-import os
-import pathlib
-from collections import OrderedDict
+import webbrowser
+from http.server import BaseHTTPRequestHandler, HTTPServer
 
-from .transformer import Transformer, SimplePerfherderTransformer
-from .analyzer import NotebookAnalyzer
 from .constant import Constant
-from .logger import NotebookLogger
-
-logger = NotebookLogger()
+from .logger import logger
 
 
 class PerftestNotebook(object):
-    """
-    Controller class for the Perftest-Notebook.
-    """
+    """Controller class for PerftestNotebook."""
 
-    def __init__(self, file_groups, config, custom_transform=None, sort_files=False):
-        """Initializes PerftestNotebook.
+    def __init__(self, data):
+        """Initialize the PerftestNotebook.
 
-        :param dict file_groups: A dict of file groupings. The value
-            of each of the dict entries is the name of the data that
-            will be produced.
-        :param str custom_transform: The class name of a custom transformer.
+        :param dict data: Standardized data, post-transformation.
         """
-        self.fmt_data = {}
-        self.file_groups = file_groups
-        self.config = config
-        self.sort_files = sort_files
+        self.data = data
         self.const = Constant()
 
-        # Gather the available transformers
-        tfms_dict = self.const.predefined_transformers
+    def get_notebook_section(self, func):
+        """Fetch notebook content based on analysis name.
 
-        # XXX NOTEBOOK_PLUGIN functionality is broken at the moment.
-        # This code block will raise an exception if it detects it in
-        # the environment.
-        plugin_path = os.getenv("NOTEBOOK_PLUGIN")
-        if plugin_path:
-            raise Exception("NOTEBOOK_PLUGIN is currently broken.")
-
-        # Initialize the requested transformer
-        if custom_transform:
-            tfm_cls = tfms_dict.get(custom_transform)
-            if tfm_cls:
-                self.transformer = Transformer(files=[], custom_transformer=tfm_cls())
-                logger.info(f"Found {custom_transform} transformer")
-            else:
-                raise Exception(f"Could not get a {custom_transform} transformer.")
-        else:
-            self.transformer = Transformer(
-                files=[], custom_transformer=SimplePerfherderTransformer()
-            )
-
-        self.analyzer = NotebookAnalyzer(data=None)
-
-    def parse_file_grouping(self, file_grouping):
-        """Handles differences in the file_grouping definitions.
-
-        It can either be a path to a folder containing the files, a list of files,
-        or it can contain settings from an artifact_downloader instance.
-
-        :param file_grouping: A file grouping entry.
-        :return: A list of files to process.
+        :param str func: analysis or notebook section name
         """
-        files = []
-        if isinstance(file_grouping, list):
-            # A list of files was provided
-            files = file_grouping
-        elif isinstance(file_grouping, dict):
-            # A dictionary of settings from an artifact_downloader instance
-            # was provided here
-            raise Exception(
-                "Artifact downloader tooling is disabled for the time being."
-            )
-        elif isinstance(file_grouping, str):
-            # Assume a path to files was given
-            filepath = file_grouping
-            newf = [f.resolve().as_posix() for f in pathlib.Path(filepath).rglob("*")]
-            files = newf
-        else:
-            raise Exception(
-                "Unknown file grouping type provided here: %s" % file_grouping
-            )
+        template_path = self.const.here / "notebook-sections" / func
+        if not template_path.exists():
+            logger.warning(f"Could not find the notebook-section called {func}")
+            return ""
+        with template_path.open() as f:
+            return f.read()
 
-        if self.sort_files:
-            if isinstance(files, list):
-                files.sort()
-            else:
-                for _, file_list in files.items():
-                    file_list.sort()
-                files = OrderedDict(sorted(files.items(), key=lambda entry: entry[0]))
+    def post_to_iodide(self, analysis=None, start_local_server=True):
+        """Build notebook and post it to iodide.
 
-        if not files:
-            raise Exception(
-                "Could not find any files in this configuration: %s" % file_grouping
-            )
-
-        return files
-
-    def parse_output(self):
-        # XXX Fix up this function, it should only return a directory for output
-        # not a directory or a file. Or remove it completely, it's not very useful.
-        prefix = "" if "prefix" not in self.config else self.config["prefix"]
-        filepath = f"{prefix}std-output.json"
-
-        if "output" in self.config:
-            filepath = self.config["output"]
-        if os.path.isdir(filepath):
-            filepath = os.path.join(filepath, f"{prefix}std-output.json")
-
-        return filepath
-
-    def process(self, no_iodide=True, **kwargs):
-        """Process the file groups and return the results of the requested analyses.
-
-        :return: All the results in a dictionary. The field names are the Analyzer
-            funtions that were called.
+        :param list analysis: notebook section names, analysis to perform in iodide
         """
-        fmt_data = []
+        data = self.data
+        notebook_sections = ""
 
-        for name, files in self.file_groups.items():
-            files = self.parse_file_grouping(files)
-            if isinstance(files, dict):
-                for subtest, files in files.items():
-                    self.transformer.files = files
+        template_header_path = self.const.here / "notebook-sections" / "header"
+        with template_header_path.open() as f:
+            notebook_sections += f.read()
 
-                    trfm_data = self.transformer.process(name, **kwargs)
+        if analysis:
+            for func in analysis:
+                notebook_sections += self.get_notebook_section(func)
 
-                    if isinstance(trfm_data, list):
-                        for e in trfm_data:
-                            if "subtest" not in e:
-                                e["subtest"] = subtest
-                            else:
-                                e["subtest"] = "%s-%s" % (subtest, e["subtest"])
-                        fmt_data.extend(trfm_data)
-                    else:
-                        if "subtest" not in trfm_data:
-                            trfm_data["subtest"] = subtest
-                        else:
-                            trfm_data["subtest"] = "%s-%s" % (
-                                subtest,
-                                trfm_data["subtest"],
-                            )
-                        fmt_data.append(trfm_data)
-            else:
-                # Transform the data
-                self.transformer.files = files
-                trfm_data = self.transformer.process(name, **kwargs)
+        template_upload_file_path = self.const.here / "template_upload_file.html"
+        with template_upload_file_path.open() as f:
+            html = f.read().replace("replace_me", repr(notebook_sections))
 
-                if isinstance(trfm_data, list):
-                    fmt_data.extend(trfm_data)
-                else:
-                    fmt_data.append(trfm_data)
+        upload_file_path = self.const.here / "upload_file.html"
+        with upload_file_path.open("w") as f:
+            f.write(html)
 
-        self.fmt_data = fmt_data
+        # set up local server. Iodide will fetch data from localhost:5000/data
+        class DataRequestHandler(BaseHTTPRequestHandler):
+            def do_GET(self):
+                if self.path == "/data":
+                    self.send_response(200)
+                    self.send_header("Content-type", "application/json")
+                    self.send_header("Access-Control-Allow-Origin", "*")
+                    self.end_headers()
+                    self.wfile.write(bytes(json.dumps(data).encode("utf-8")))
 
-        # Write formatted data output to filepath
-        output_data_filepath = self.parse_output()
-
-        print("Writing results to %s" % output_data_filepath)
-        with open(output_data_filepath, "w") as f:
-            json.dump(self.fmt_data, f, indent=4, sort_keys=True)
-
-        # Gather config["analysis"] corresponding notebook sections
-        if "analysis" in self.config:
-            raise NotImplementedError(
-                "Analysis aspect of the notebook is disabled for the time being"
-            )
-
-        # Post to Iodide server
-        if not no_iodide:
-            raise NotImplementedError(
-                "Opening report through Iodide is not available in production at the moment"
-            )
-
-        return {"data": self.fmt_data, "file-output": output_data_filepath}
+        PORT_NUMBER = 5000
+        server = HTTPServer(("", PORT_NUMBER), DataRequestHandler)
+        if start_local_server:
+            webbrowser.open_new_tab(str(upload_file_path))
+            try:
+                server.serve_forever()
+            finally:
+                server.server_close()
