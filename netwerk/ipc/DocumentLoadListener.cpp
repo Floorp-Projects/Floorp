@@ -1158,12 +1158,14 @@ void DocumentLoadListener::SerializeRedirectData(
   }
 }
 
-bool DocumentLoadListener::MaybeTriggerProcessSwitch() {
+bool DocumentLoadListener::MaybeTriggerProcessSwitch(
+    bool* aWillSwitchToRemote) {
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_DIAGNOSTIC_ASSERT(!mDoingProcessSwitch,
                         "Already in the middle of switching?");
   MOZ_DIAGNOSTIC_ASSERT(mChannel);
   MOZ_DIAGNOSTIC_ASSERT(mParentChannelListener);
+  MOZ_DIAGNOSTIC_ASSERT(aWillSwitchToRemote);
 
   LOG(("DocumentLoadListener MaybeTriggerProcessSwitch [this=%p]", this));
 
@@ -1325,6 +1327,8 @@ bool DocumentLoadListener::MaybeTriggerProcessSwitch() {
     LOG(("Process Switch Abort: non-remote target process"));
     return false;
   }
+
+  *aWillSwitchToRemote = !remoteType.IsEmpty();
 
   LOG(("Process Switch: Changing Remoteness from '%s' to '%s'",
        NS_ConvertUTF16toUTF8(currentRemoteType).get(),
@@ -1619,6 +1623,23 @@ DocumentLoadListener::OnStartRequest(nsIRequest* aRequest) {
   }
   mInitiatedRedirectToRealChannel = true;
 
+  // Determine if a new process needs to be spawned. If it does, this will
+  // trigger a cross process switch, and we should hold off on redirecting to
+  // the real channel.
+  bool willBeRemote = false;
+  if (status == NS_BINDING_ABORTED ||
+      !MaybeTriggerProcessSwitch(&willBeRemote)) {
+    TriggerRedirectToRealChannel();
+
+    // If we're not switching, then check if we're currently remote.
+    if (GetBrowsingContext() && GetBrowsingContext()->GetContentParent()) {
+      willBeRemote = true;
+    }
+  }
+
+  // If we're going to be delivering this channel to a remote content
+  // process, then we want to install any required content conversions
+  // in the content process.
   // The caller of this OnStartRequest will install a conversion
   // helper after we return if we haven't disabled conversion. Normally
   // HttpChannelParent::OnStartRequest would disable conversion, but we're
@@ -1629,17 +1650,10 @@ DocumentLoadListener::OnStartRequest(nsIRequest* aRequest) {
   // was.
   if (httpChannel) {
     Unused << httpChannel->GetApplyConversion(&mOldApplyConversion);
-    httpChannel->SetApplyConversion(false);
+    if (willBeRemote) {
+      httpChannel->SetApplyConversion(false);
+    }
   }
-
-  // Determine if a new process needs to be spawned. If it does, this will
-  // trigger a cross process switch, and we should hold off on redirecting to
-  // the real channel.
-  if (status != NS_BINDING_ABORTED && MaybeTriggerProcessSwitch()) {
-    return NS_OK;
-  }
-
-  TriggerRedirectToRealChannel();
 
   return NS_OK;
 }
