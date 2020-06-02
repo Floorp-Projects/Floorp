@@ -2,7 +2,7 @@
 
 # Listener
 
-`interface Listener` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/findinpage/src/main/java/mozilla/components/feature/findinpage/view/FindInPageView.kt#L39)
+`interface Listener` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/findinpage/src/main/java/mozilla/components/feature/findinpage/view/FindInPageView.kt#L47)
 
 ### Functions
 

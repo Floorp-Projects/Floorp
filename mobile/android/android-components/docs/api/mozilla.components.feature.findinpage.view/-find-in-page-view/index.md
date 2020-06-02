@@ -17,6 +17,7 @@ An interface for views that can display "find in page" results and related UI co
 | Name | Summary |
 |---|---|
 | [listener](listener.md) | `abstract var listener: `[`Listener`](-listener/index.md)`?`<br>Listener to be invoked after the user performs certain actions (e.g. "find next result"). |
+| [private](private.md) | `abstract var private: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Sets/gets private mode. |
 
 ### Functions
 

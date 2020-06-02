@@ -57,7 +57,6 @@ $dokka.location:mozilla.components.support.ktx.kotlin$isGeoLocation(kotlin.Strin
 $dokka.location:mozilla.components.support.ktx.kotlin$isPhone(kotlin.String)mozilla.components.support.ktx.kotlin/kotlin.-string/is-phone.md
 $dokka.location:mozilla.components.support.ktx.kotlin$isSameOriginAs(kotlin.String, kotlin.String)mozilla.components.support.ktx.kotlin/kotlin.-string/is-same-origin-as.md
 $dokka.location:mozilla.components.support.ktx.kotlin$isUrl(kotlin.String)mozilla.components.support.ktx.kotlin/kotlin.-string/is-url.md
-$dokka.location:mozilla.components.support.ktx.kotlin$isUrlStrict(kotlin.String)mozilla.components.support.ktx.kotlin/kotlin.-string/is-url-strict.md
 $dokka.location:mozilla.components.support.ktx.kotlin$pkcs7unpad(kotlin.ByteArray)mozilla.components.support.ktx.kotlin/kotlin.-byte-array/pkcs7unpad.md
 $dokka.location:mozilla.components.support.ktx.kotlin$sha1(kotlin.String)mozilla.components.support.ktx.kotlin/kotlin.-string/sha1.md
 $dokka.location:mozilla.components.support.ktx.kotlin$toBitmap(kotlin.ByteArray, )mozilla.components.support.ktx.kotlin/kotlin.-byte-array/to-bitmap.md

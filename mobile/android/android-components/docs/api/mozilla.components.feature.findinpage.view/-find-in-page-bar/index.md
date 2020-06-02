@@ -2,7 +2,7 @@
 
 # FindInPageBar
 
-`class FindInPageBar : ConstraintLayout, `[`FindInPageView`](../-find-in-page-view/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/findinpage/src/main/java/mozilla/components/feature/findinpage/view/FindInPageBar.kt#L29)
+`class FindInPageBar : ConstraintLayout, `[`FindInPageView`](../-find-in-page-view/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/findinpage/src/main/java/mozilla/components/feature/findinpage/view/FindInPageBar.kt#L30)
 
 A customizable "Find in page" bar implementing [FindInPageView](../-find-in-page-view/index.md).
 
@@ -17,6 +17,7 @@ A customizable "Find in page" bar implementing [FindInPageView](../-find-in-page
 | Name | Summary |
 |---|---|
 | [listener](listener.md) | `var listener: `[`Listener`](../-find-in-page-view/-listener/index.md)`?`<br>Listener to be invoked after the user performs certain actions (e.g. "find next result"). |
+| [private](private.md) | `var private: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Sets/gets private mode. |
 
 ### Functions
 
