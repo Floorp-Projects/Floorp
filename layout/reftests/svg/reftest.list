@@ -41,7 +41,7 @@ fails-if(Android&&webrender&&device) == blend-color-dodge.svg blend-color-dodge-
 # == blend-color.svg blend-color-ref.svg
 random-if(Android&&webrender) == blend-darken.svg blend-darken-ref.svg
 random-if(Android&&webrender) == blend-difference.svg blend-difference-ref.svg
-fuzzy-if(skiaContent,0-1,0-1600) fuzzy-if(geckoview&&webrender,0-4,0-254) == blend-exclusion.svg blend-exclusion-ref.svg
+fuzzy-if(skiaContent,0-1,0-1600) fuzzy-if(geckoview&&webrender,0-5,0-254) == blend-exclusion.svg blend-exclusion-ref.svg
 # == blend-hard-light.svg blend-hard-light-ref.svg
 # == blend-hue.svg blend-hue-ref.svg
 == blend-layer-blend.svg blend-layer-blend-ref.svg
