@@ -58,7 +58,7 @@ jobs:
             - deb8-gdb
             - deb8-git
             - deb8-mercurial
-            - deb8-python3.5
+            - deb8-python3.6
             - deb8-python3-defaults
             - deb8-python-zstandard
             - deb8-xz-utils
