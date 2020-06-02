@@ -1487,11 +1487,8 @@ WrappedFunction::WrappedFunction(JSFunction* fun, uint16_t nargs,
   if (!CanUseExtraThreads()) {
     MOZ_ASSERT(fun->nargs() == nargs);
 
-    MOZ_ASSERT(fun->isNative() == isNative());
-    MOZ_ASSERT(fun->isNativeWithJitEntry() == isNativeWithJitEntry());
     MOZ_ASSERT(fun->isNativeWithoutJitEntry() == isNativeWithoutJitEntry());
     MOZ_ASSERT(fun->hasJitEntry() == hasJitEntry());
-    MOZ_ASSERT(fun->isInterpreted() == isInterpreted());
     MOZ_ASSERT(fun->isConstructor() == isConstructor());
     MOZ_ASSERT(fun->isClassConstructor() == isClassConstructor());
   }
@@ -1624,8 +1621,7 @@ bool MCallDOMNative::congruentTo(const MDefinition* ins) const {
 }
 
 const JSJitInfo* MCallDOMNative::getJitInfo() const {
-  MOZ_ASSERT(getSingleTarget() && getSingleTarget()->isNative() &&
-             getSingleTarget()->hasJitInfo());
+  MOZ_ASSERT(getSingleTarget()->hasJitInfo());
   return getSingleTarget()->jitInfo();
 }
 

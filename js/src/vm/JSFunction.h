@@ -166,7 +166,6 @@ class JSFunction : public js::NativeObject {
 
   bool isWasm() const { return flags_.isWasm(); }
   bool isWasmWithJitEntry() const { return flags_.isWasmWithJitEntry(); }
-  bool isNativeWithJitEntry() const { return flags_.isNativeWithJitEntry(); }
   bool isNativeWithoutJitEntry() const {
     return flags_.isNativeWithoutJitEntry();
   }
