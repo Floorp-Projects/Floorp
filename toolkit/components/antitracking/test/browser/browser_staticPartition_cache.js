@@ -161,6 +161,7 @@ add_task(async function() {
       "link.css",
       "script.js",
       "img.png",
+      "favicon.png",
       "object.png",
       "embed.png",
       "xhr.html",
