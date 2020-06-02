@@ -4458,9 +4458,7 @@ bool BytecodeEmitter::emitShortCircuitAssignment(AssignmentNode* node) {
     return false;
   }
 
-  // TODO: Open spec issue about setting inferred function names.
-  // <https://github.com/tc39/proposal-logical-assignment/issues/23>
-  if (!emitTree(rhs)) {
+  if (!emitAssignmentRhs(rhs, name)) {
     //              [stack] ... RHS
     return false;
   }
