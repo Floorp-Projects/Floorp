@@ -15,7 +15,10 @@ const Message = createFactory(
   require("devtools/client/webconsole/components/Output/Message")
 );
 const actions = require("devtools/client/webconsole/actions/index");
-const { l10n } = require("devtools/client/webconsole/utils/messages");
+const {
+  isMessageNetworkError,
+  l10n,
+} = require("devtools/client/webconsole/utils/messages");
 
 loader.lazyRequireGetter(
   this,
@@ -80,6 +83,10 @@ function NetworkEventMessage({
   const { httpVersion, status, statusText } = response;
 
   const topLevelClasses = ["cm-s-mozilla"];
+  if (isMessageNetworkError(message)) {
+    topLevelClasses.push("error");
+  }
+
   let statusCode, statusInfo;
 
   if (

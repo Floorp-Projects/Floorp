@@ -759,6 +759,14 @@ function getNaturalOrder(messageA, messageB) {
   return messageA.timeStamp < messageB.timeStamp ? aFirst : bFirst;
 }
 
+function isMessageNetworkError(message) {
+  return (
+    message.source === MESSAGE_SOURCE.NETWORK &&
+    message?.response?.status &&
+    message.response.status.toString().match(/^[4,5]\d\d$/)
+  );
+}
+
 module.exports = {
   createWarningGroupMessage,
   getArrayTypeNames,
@@ -769,6 +777,7 @@ module.exports = {
   getWarningGroupType,
   isContentBlockingMessage,
   isGroupType,
+  isMessageNetworkError,
   isPacketPrivate,
   isWarningGroup,
   l10n,

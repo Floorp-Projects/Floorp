@@ -90,7 +90,7 @@ describe("Filtering", () => {
       store.dispatch(actions.filterToggle(FILTERS.ERROR));
 
       const messages = getVisibleMessages(store.getState());
-      expect(messages.length).toEqual(numUnfilterableMessages + 4);
+      expect(messages.length).toEqual(numUnfilterableMessages + 5);
     });
 
     it("filters css messages", () => {
@@ -324,6 +324,8 @@ function prepareBaseStore() {
     "console.error('error message');",
     "console.table(['red', 'green', 'blue']);",
     "console.assert(false, {message: 'foobar'})",
+    // This is a 404 request, it's displayed as an error
+    "GET request",
   ]);
 
   // Console Command - never filtered

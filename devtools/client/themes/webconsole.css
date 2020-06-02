@@ -732,6 +732,12 @@ a.learn-more-link.webconsole-learn-more-link {
   font-size: 16px;
 }
 
+/* For 4XX and 5XX requests, display the text in the "error" color */
+.webconsole-app .message.network.error .message-flex-body .message-body .url,
+.webconsole-app .message.network.error .message-flex-body .message-body .status {
+  color: currentColor;
+}
+
 .network.message .network-info {
   display: none;
   margin-block: 6px 2px;

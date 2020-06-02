@@ -14,6 +14,19 @@ add_task(async function() {
 
   const filterState = await getFilterState(hud);
 
+  // Triggers network requests
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
+    const url = "./sjs_slow-response-test-server.sjs";
+    // Set a smaller delay for the 300 to ensure we get it before the "error" responses.
+    content.fetch(`${url}?status=300&delay=100`);
+    content.fetch(`${url}?status=404&delay=500`);
+    content.fetch(`${url}?status=500&delay=500`);
+  });
+
+  // Wait for the messages
+  await waitFor(() => findMessage(hud, "status=404", ".network.error"));
+  await waitFor(() => findMessage(hud, "status=500", ".network.error"));
+
   // Check defaults.
 
   for (const category of ["error", "warn", "log", "info", "debug"]) {
@@ -27,8 +40,9 @@ add_task(async function() {
 
   // Check that messages are shown as expected. This depends on cached messages being
   // shown.
-  ok(
-    findMessages(hud, "").length == 5,
+  is(
+    findMessages(hud, "").length,
+    7,
     "Messages of all levels shown when filters are on."
   );
 
@@ -60,9 +74,10 @@ async function testFilterPersistence() {
     !filterIsEnabled(filterBar.querySelector("[data-category='error']")),
     "Filter button setting is persisted"
   );
-  ok(
-    findMessages(hud, "").length == 4,
-    "testFilterPersistence: Messages of all levels shown when filters are on."
+  is(
+    findMessages(hud, "").length,
+    4,
+    "testFilterPersistence: Messages of all levels but error shown."
   );
 
   await resetFilters(hud);

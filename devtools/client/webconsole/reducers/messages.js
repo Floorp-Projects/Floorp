@@ -5,6 +5,7 @@
 
 const {
   isGroupType,
+  isMessageNetworkError,
   l10n,
 } = require("devtools/client/webconsole/utils/messages");
 
@@ -557,13 +558,26 @@ function messages(
       };
 
     case constants.NETWORK_MESSAGE_UPDATE:
-      return {
+      const updatedState = {
         ...state,
         networkMessagesUpdateById: {
           ...networkMessagesUpdateById,
           [action.message.id]: action.message,
         },
       };
+
+      // If the request status code is a 4XX or 5XX, then we may have to display the
+      // message (as an error).
+      if (isMessageNetworkError(action.message)) {
+        return setVisibleMessages({
+          messagesState: updatedState,
+          filtersState,
+          prefsState,
+          uiState,
+        });
+      }
+
+      return updatedState;
 
     case UPDATE_REQUEST:
     case constants.NETWORK_UPDATE_REQUEST: {
@@ -1200,7 +1214,8 @@ function passNetworkFilter(message, filters) {
   return (
     message.source !== MESSAGE_SOURCE.NETWORK ||
     message.isXHR === true ||
-    filters[FILTERS.NET] === true
+    filters[FILTERS.NET] === true ||
+    (filters[FILTERS.ERROR] && isMessageNetworkError(message))
   );
 }
 
@@ -1218,7 +1233,8 @@ function passXhrFilter(message, filters) {
   return (
     message.source !== MESSAGE_SOURCE.NETWORK ||
     message.isXHR === false ||
-    filters[FILTERS.NETXHR] === true
+    filters[FILTERS.NETXHR] === true ||
+    (filters[FILTERS.ERROR] && isMessageNetworkError(message))
   );
 }
 
@@ -1235,7 +1251,8 @@ function passLevelFilters(message, filters) {
   return (
     (message.source !== MESSAGE_SOURCE.CONSOLE_API &&
       message.source !== MESSAGE_SOURCE.JAVASCRIPT) ||
-    filters[message.level] === true
+    filters[message.level] === true ||
+    (filters[FILTERS.ERROR] && isMessageNetworkError(message))
   );
 }
 
