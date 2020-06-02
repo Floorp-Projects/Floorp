@@ -661,17 +661,22 @@ pwmgr:
         "success_disabled" is used when the feature is disabled.
         "success_unsupported_platform" should be set when the user attempts to authenticate on an unsupported platform.
         "success_no_password" should be used when the user doesn't have an OS password set.
-        "success_auto_admin_logon" should be used when the user has enabled the "AutoAdminLogon" registry key
         "fail" should be used when the user cancels the authentication prompt or an unexpected exception is encountered. The user may or may not have provided an incorrect password before cancelling.
     objects: [
       "master_password",
       "os_auth",
     ]
     methods: ["reauthenticate"]
+    extra_keys:
+      auto_admin: >
+        If the AutoAdminLogon Windows feature is enabled. This feature disables password prompt when logging in to Windows.
+      require_signon: >
+        If the Power Settings on Windows are configured to not prompt for password upon resuming from sleep.
     bug_numbers:
       - 1628029
       - 1623745
       - 1636729
+      - 1642267
     expiry_version: never
     notification_emails: ["loines@mozilla.com", "passwords-dev@mozilla.org", "jaws@mozilla.com"]
     release_channel_collection: opt-out
