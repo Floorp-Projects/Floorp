@@ -908,15 +908,7 @@ ElementEditor.prototype = {
   },
 
   onCustomBadgeClick: async function() {
-    let { url, line, column } = this.node.customElementLocation;
-    const originalLocation = await this.markup.toolbox.sourceMapURLService.originalPositionFor(
-      url,
-      line,
-      column
-    );
-    if (originalLocation) {
-      ({ sourceUrl: url, line, column } = originalLocation);
-    }
+    const { url, line, column } = this.node.customElementLocation;
 
     this.markup.toolbox.viewSourceInDebugger(
       url,
