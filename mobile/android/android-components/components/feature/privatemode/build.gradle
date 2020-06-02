@@ -23,8 +23,8 @@ android {
 }
 
 dependencies {
-    implementation project(':browser-session')
     implementation project(':browser-state')
+    implementation project(':support-base')
     implementation project(':support-ktx')
 
     implementation Dependencies.androidx_core_ktx
