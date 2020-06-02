@@ -46,7 +46,7 @@ class SandboxPrivate : public nsIGlobalObject,
 
   nsIPrincipal* GetEffectiveStoragePrincipal() override { return mPrincipal; }
 
-  nsIPrincipal* PartitionedPrincipal() override { return mPrincipal; }
+  nsIPrincipal* IntrinsicStoragePrincipal() override { return mPrincipal; }
 
   JSObject* GetGlobalJSObject() override { return GetWrapper(); }
   JSObject* GetGlobalJSObjectPreserveColor() const override {

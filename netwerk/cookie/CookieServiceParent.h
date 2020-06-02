@@ -53,7 +53,7 @@ class CookieServiceParent : public PCookieServiceParent {
       nsIURI* aHost, const bool& aIsForeign,
       const bool& aIsThirdPartyTrackingResource,
       const bool& aIsThirdPartySocialTrackingResource,
-      const bool& aStorageAccessPermissionGranted,
+      const bool& aFirstPartyStorageAccessGranted,
       const uint32_t& aRejectedReason, const bool& aIsSafeTopLevelNav,
       const bool& aIsSameSiteForeign, const OriginAttributes& aAttrs);
 

@@ -69,7 +69,7 @@ ServiceWorkerPrivateImpl::RAIIActorPtrHolder::~RAIIActorPtrHolder() {
 }
 
 RemoteWorkerControllerChild*
-ServiceWorkerPrivateImpl::RAIIActorPtrHolder::operator->() const {
+    ServiceWorkerPrivateImpl::RAIIActorPtrHolder::operator->() const {
   AssertIsOnMainThread();
 
   return get();
@@ -160,37 +160,26 @@ nsresult ServiceWorkerPrivateImpl::Initialize() {
                             nsIChannel::LOAD_BYPASS_SERVICE_WORKER);
   serviceWorkerData.id() = std::move(id);
 
-  nsAutoCString domain;
-  rv = uri->GetHost(domain);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  mRemoteWorkerData.originalScriptURL() =
+      NS_ConvertUTF8toUTF16(mOuter->mInfo->ScriptSpec());
+  mRemoteWorkerData.baseScriptURL() = baseScriptURL;
+  mRemoteWorkerData.resolvedScriptURL() = baseScriptURL;
+  mRemoteWorkerData.name() = VoidString();
 
-  mRemoteWorkerData = RemoteWorkerData(
-      NS_ConvertUTF8toUTF16(mOuter->mInfo->ScriptSpec()), baseScriptURL,
-      baseScriptURL, /* name */ VoidString(),
-      /* loading principal */ principalInfo, principalInfo,
+  mRemoteWorkerData.loadingPrincipalInfo() = principalInfo;
+  mRemoteWorkerData.principalInfo() = principalInfo;
+  // storagePrincipalInfo for ServiceWorkers is equal to principalInfo because,
+  // at the moment, ServiceWorkers are not exposed in partitioned contexts.
+  mRemoteWorkerData.storagePrincipalInfo() = principalInfo;
 
-      // partitionedPrincipalInfo for ServiceWorkers is equal to principalInfo
-      // because, at the moment, ServiceWorkers are not exposed in partitioned
-      // contexts.
-      principalInfo,
-      /* useRegularPrincipal */ true,
-
-      // ServiceWorkers run as first-party, no storage-access permission needed.
-      /* hasStorageAccessPermissionGranted */ false,
-
-      domain,
-      /* isSecureContext */ true,
-      /* clientInfo*/ Nothing(),
-
-      // The RemoteWorkerData CTOR doesn't allow to set the referrerInfo via
-      // already_AddRefed<>. Let's set it to null.
-      /* referrerInfo */ nullptr,
-
-      storageAccess, std::move(serviceWorkerData), regInfo->AgentClusterId());
-
+  rv = uri->GetHost(mRemoteWorkerData.domain());
+  NS_ENSURE_SUCCESS(rv, rv);
+  mRemoteWorkerData.isSecureContext() = true;
   mRemoteWorkerData.referrerInfo() = MakeAndAddRef<ReferrerInfo>();
+  mRemoteWorkerData.storageAccess() = storageAccess;
+  mRemoteWorkerData.serviceWorkerData() = std::move(serviceWorkerData);
+
+  mRemoteWorkerData.agentClusterId() = regInfo->AgentClusterId();
 
   // This fills in the rest of mRemoteWorkerData.serviceWorkerData().
   RefreshRemoteWorkerData(regInfo);
