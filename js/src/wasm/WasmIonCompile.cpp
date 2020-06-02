@@ -730,6 +730,10 @@ class FunctionCompiler {
   // (v128, v128, v128) -> v128 effect-free operations
   MDefinition* bitselectSimd128(MDefinition* v1, MDefinition* v2,
                                 MDefinition* control) {
+    if (inDeadCode()) {
+      return nullptr;
+    }
+
     MOZ_ASSERT(v1->type() == MIRType::Simd128);
     MOZ_ASSERT(v2->type() == MIRType::Simd128);
     MOZ_ASSERT(control->type() == MIRType::Simd128);
@@ -740,6 +744,10 @@ class FunctionCompiler {
 
   // (v128, v128, imm_v128) -> v128 effect-free operations
   MDefinition* shuffleSimd128(MDefinition* v1, MDefinition* v2, V128 control) {
+    if (inDeadCode()) {
+      return nullptr;
+    }
+
     MOZ_ASSERT(v1->type() == MIRType::Simd128);
     MOZ_ASSERT(v2->type() == MIRType::Simd128);
     auto* ins = MWasmShuffleSimd128::New(
@@ -752,6 +760,10 @@ class FunctionCompiler {
   MDefinition* loadSplatSimd128(Scalar::Type viewType,
                                 const LinearMemoryAddress<MDefinition*>& addr,
                                 wasm::SimdOp splatOp) {
+    if (inDeadCode()) {
+      return nullptr;
+    }
+
     // Expand load-and-splat as integer load followed by splat.
     MemoryAccessDesc access(viewType, addr.align, addr.offset,
                             bytecodeIfNotAsmJS());
@@ -766,6 +778,10 @@ class FunctionCompiler {
 
   MDefinition* loadExtendSimd128(const LinearMemoryAddress<MDefinition*>& addr,
                                  wasm::SimdOp op) {
+    if (inDeadCode()) {
+      return nullptr;
+    }
+
     MemoryAccessDesc access(Scalar::Int64, addr.align, addr.offset,
                             bytecodeIfNotAsmJS());
     // Expand load-and-extend as integer load followed by widen.
