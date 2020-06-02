@@ -509,6 +509,225 @@ metrics:
       - fenix-core@mozilla.com
     expires: "2020-09-01"
 
+preferences:
+  show_search_suggestions:
+    type: string_list
+    description: >
+      Whether or not the user has search suggestions enabled
+      default: true
+    send_in_pings:
+      - metrics
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/11118
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/11211
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-09-01"
+  remote_debugging:
+    type: string_list
+    description: >
+      Whether or not the user has remote debugging enabled
+      default: false
+    send_in_pings:
+      - metrics
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/11118
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/11211
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-09-01"
+  telemetry:
+    type: string_list
+    description: >
+      Whether or not the user has telemetry enabled. Note we should
+      never receive a "false" value for this since telemetry would
+      not send in that case.
+      default: true
+    send_in_pings:
+      - metrics
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/11118
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/11211
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-09-01"
+  tracking_protection:
+    type: string_list
+    description: >
+      What type of enhanced tracking protection the user has enabled.
+      "standard," "strict," "custom," or "" (if disabled)
+      default: "standard"
+    send_in_pings:
+      - metrics
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/11118
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/11211
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-09-01"
+  search_bookmarks:
+    type: string_list
+    description: >
+      Whether or not the user has enabled bookmark search suggestions
+      default: true
+    send_in_pings:
+      - metrics
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/11118
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/11211
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-09-01"
+  search_browsing_history:
+    type: string_list
+    description: >
+      Whether or not the user has enabled browsing history suggestions.
+      default: true
+    send_in_pings:
+      - metrics
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/11118
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/11211
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-09-01"
+  show_clipboard_suggestions:
+    type: string_list
+    description: >
+      Whether or not the user has enabled clipboard search suggestions.
+      default: true
+    send_in_pings:
+      - metrics
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/11118
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/11211
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-09-01"
+  show_search_shortcuts:
+    type: string_list
+    description: >
+      Whether or not the user has enabled search shortcuts.
+      default: true
+    send_in_pings:
+      - metrics
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/11118
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/11211
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-09-01"
+  open_links_in_a_private_tab:
+    type: string_list
+    description: >
+      Whether or not the user has enabled open links in a private tab.
+      default: false
+    send_in_pings:
+      - metrics
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/11118
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/11211
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-09-01"
+  sync:
+    type: string_list
+    description: >
+      Whether or not the user is signed into FxA
+      default: false
+    send_in_pings:
+      - metrics
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/11118
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/11211
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-09-01"
+  sync_items:
+    type: string_list
+    description: >
+      The list of items the user has chosen to sync with FxA.
+      default: "" if the user is signed out. Otherwise defaults to
+      whatever is set in their FxA account. New accounts set:
+      [bookmarks, history, passwords, tabs]
+    send_in_pings:
+      - metrics
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/11118
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/11211
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-09-01"
+  show_voice_search:
+    type: string_list
+    description: >
+      Whether or not the user has enabled the voice search button.
+      default: true
+    send_in_pings:
+      - metrics
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/11118
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/11211
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-09-01"
+  search_suggestions_private:
+    type: string_list
+    description: >
+      Whether or not the user has enabled showing search suggestions
+      in private mode.
+      default: false (we prompt the user, asking them to make a selection)
+    send_in_pings:
+      - metrics
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/11118
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/11211
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-09-01"
+  toolbar_position:
+    type: string_list
+    description: >
+      The position of the toolbar
+      default: bottom (defaults to top if the user has accessibility services)
+    send_in_pings:
+      - metrics
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/11118
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/11211
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-09-01"
+  accessibility_services:
+    type: string_list
+    description: >
+      Whether or not the user has touch exploration or switch services enabled.
+      These are built into the Android OS, not Fenix prefs.
+      default: ""
+    send_in_pings:
+      - metrics
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/11118
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/11211
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-09-01"
+
 search.default_engine:
   code:
     type: string

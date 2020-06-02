@@ -331,6 +331,11 @@ class Settings private constructor(
         default = false
     )
 
+    val useStandardTrackingProtection by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_tracking_protection_standard_option),
+        true
+    )
+
     val useStrictTrackingProtection by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_tracking_protection_strict_default),
         false
@@ -435,7 +440,7 @@ class Settings private constructor(
      * Check each active accessibility service to see if it can perform gestures, if any can,
      * then it is *likely* a switch service is enabled. We are assuming this to be the case based on #7486
      */
-    private val switchServiceIsEnabled: Boolean
+    val switchServiceIsEnabled: Boolean
         get() {
             val accessibilityManager =
                 appContext.getSystemService(Context.ACCESSIBILITY_SERVICE) as? AccessibilityManager
@@ -451,7 +456,7 @@ class Settings private constructor(
             return false
         }
 
-    private val touchExplorationIsEnabled: Boolean
+    val touchExplorationIsEnabled: Boolean
         get() {
             val accessibilityManager =
                 appContext.getSystemService(Context.ACCESSIBILITY_SERVICE) as? AccessibilityManager

@@ -5,6 +5,7 @@
 package org.mozilla.fenix.components.metrics
 
 import android.content.Context
+import mozilla.components.service.fxa.manager.SyncEnginesStorage
 import mozilla.components.service.glean.Glean
 import mozilla.components.service.glean.private.NoExtraKeys
 import mozilla.components.support.base.log.logger.Logger
@@ -28,6 +29,7 @@ import org.mozilla.fenix.GleanMetrics.MediaState
 import org.mozilla.fenix.GleanMetrics.Metrics
 import org.mozilla.fenix.GleanMetrics.Pings
 import org.mozilla.fenix.GleanMetrics.Pocket
+import org.mozilla.fenix.GleanMetrics.Preferences
 import org.mozilla.fenix.GleanMetrics.PrivateBrowsingMode
 import org.mozilla.fenix.GleanMetrics.PrivateBrowsingShortcut
 import org.mozilla.fenix.GleanMetrics.QrScanner
@@ -588,6 +590,56 @@ class GleanMetricsService(private val context: Context) : MetricsService {
     }
 
     internal fun setStartupMetrics() {
+
+        // We purposefully make all of our preferences the string_list format to make data analysis
+        // simpler. While it makes things like booleans a bit more complicated, it means all our
+        // preferences can be analyzed with the same dashboard and compared.
+        Preferences.apply {
+            showSearchSuggestions.set(context.settings().shouldShowSearchSuggestions.toStringList())
+            remoteDebugging.set(context.settings().isRemoteDebuggingEnabled.toStringList())
+            telemetry.set(context.settings().isTelemetryEnabled.toStringList())
+            searchBookmarks.set(context.settings().shouldShowBookmarkSuggestions.toStringList())
+            showClipboardSuggestions.set(context.settings().shouldShowClipboardSuggestions.toStringList())
+            showSearchShortcuts.set(context.settings().shouldShowSearchShortcuts.toStringList())
+            openLinksInAPrivateTab.set(context.settings().openLinksInAPrivateTab.toStringList())
+            searchSuggestionsPrivate.set(context.settings().shouldShowSearchSuggestionsInPrivate.toStringList())
+
+            val isLoggedIn =
+                context.components.backgroundServices.accountManager.accountProfile() != null
+            sync.set(isLoggedIn.toStringList())
+
+            val syncedItems = SyncEnginesStorage(context).getStatus().entries.filter {
+                it.value
+            }.map { it.key.nativeName }
+
+            syncItems.set(syncedItems)
+
+            val etpSelection =
+                if (!context.settings().shouldUseTrackingProtection) {
+                    ""
+                } else if (context.settings().useStandardTrackingProtection) {
+                    "standard"
+                } else if (context.settings().useStrictTrackingProtection) {
+                    "strict"
+                } else if (context.settings().useCustomTrackingProtection) {
+                    "custom"
+                } else {
+                    ""
+                }
+
+            trackingProtection.set(listOf(etpSelection))
+
+            val accessibilitySelection = mutableListOf<String>()
+
+            if (context.settings().switchServiceIsEnabled) { accessibilitySelection.add("switch") }
+
+            if (context.settings().touchExplorationIsEnabled) {
+                accessibilitySelection.add("touch exploration")
+            }
+
+            accessibilityServices.set(accessibilitySelection.toList())
+        }
+
         Metrics.apply {
             defaultBrowser.set(BrowsersCache.all(context).isDefaultBrowser)
             MozillaProductDetector.getMozillaBrowserDefault(context)?.also {
@@ -644,4 +696,9 @@ class GleanMetricsService(private val context: Context) : MetricsService {
     override fun shouldTrack(event: Event): Boolean {
         return event.wrapper != null
     }
+}
+
+// Helper function for making our booleans fit into the string list formatting
+fun Boolean.toStringList(): List<String> {
+    return listOf(this.toString())
 }
