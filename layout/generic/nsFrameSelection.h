@@ -746,7 +746,7 @@ class nsFrameSelection final {
   nsresult ClearNormalSelection();
 
   // Table selection support.
-  static nsITableCellLayout* GetCellLayout(nsIContent* aCellContent);
+  static nsITableCellLayout* GetCellLayout(const nsIContent* aCellContent);
 
  private:
   ~nsFrameSelection();
@@ -872,7 +872,7 @@ class nsFrameSelection final {
   MOZ_CAN_RUN_SCRIPT
   nsresult NotifySelectionListeners(mozilla::SelectionType aSelectionType);
 
-  static nsresult GetCellIndexes(nsIContent* aCell, int32_t& aRowIndex,
+  static nsresult GetCellIndexes(const nsIContent* aCell, int32_t& aRowIndex,
                                  int32_t& aColIndex);
 
   static nsIContent* GetFirstCellNodeInRange(const nsRange* aRange);
