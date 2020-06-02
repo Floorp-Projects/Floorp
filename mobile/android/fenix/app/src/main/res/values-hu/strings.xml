@@ -19,6 +19,9 @@
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">A nyitott lapok itt fognak megjelenni.</string>
 
+    <!-- No Private Tabs Message Description -->
+    <string name="no_private_tabs_description">A privát lapjai itt fognak megjelenni.</string>
+
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">A %1$s a Mozilla terméke.</string>
 
@@ -34,13 +37,21 @@
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">Munkamenet törlése</string>
 
-    <!-- Private mode shortcut "contextual feature recommender" (CFR) -->
+    <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
     <string name="cfr_message">Parancsikon hozzáadása, amely privát lapokat nyit meg a Kezdőképernyőről.</string>
     <!-- Text for the positive button -->
     <string name="cfr_pos_button_text">Parancsikon hozzáadása</string>
     <!-- Text for the negative button -->
     <string name="cfr_neg_button_text">Köszönöm, nem</string>
+
+    <!-- Search widget "contextual feature recommendation" (CFR) -->
+    <!-- Text for the main message. 'Firefox' intentionally hardcoded here.-->
+    <string name="search_widget_cfr_message">Gyorsabb hozzáférés a Firefoxhoz. Adjon egy ikont a Kezdőképernyőhöz.</string>
+    <!-- Text for the positive button -->
+    <string name="search_widget_cfr_pos_button_text">Ikon hozzáadása</string>
+    <!-- Text for the negative button -->
+    <string name="search_widget_cfr_neg_button_text">Most nem</string>
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
