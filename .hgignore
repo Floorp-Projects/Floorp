@@ -105,6 +105,8 @@ _OPT\.OBJ/
 ^remote/test/puppeteer/package-lock.json
 ^remote/test/puppeteer/node_modules/
 ^remote/test/puppeteer/.local-chromium/
+^remote/test/puppeteer/.local-firefox/
+^remote/test/puppeteer/experimental
 
 # git checkout of libstagefright
 ^media/libstagefright/android$
