@@ -1216,6 +1216,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
                                            //         mDisplay
   mozilla::StyleContain mContain;
   mozilla::StyleAppearance mAppearance;
+  mozilla::StyleAppearance mDefaultAppearance;
   mozilla::StylePositionProperty mPosition;
 
   mozilla::StyleFloat mFloat;
