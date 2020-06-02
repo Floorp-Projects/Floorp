@@ -1059,7 +1059,7 @@ void nsGlobalWindowInner::FreeInnerObjects() {
   }
 
   // Kill all of the workers for this window.
-  CancelWorkersForWindow(this);
+  CancelWorkersForWindow(*this);
 
   nsTObserverArray<RefPtr<mozilla::dom::SharedWorker>>::ForwardIterator iter(
       mSharedWorkers);
@@ -5188,7 +5188,7 @@ void nsGlobalWindowInner::Suspend() {
   DisableGamepadUpdates();
   DisableVRUpdates();
 
-  SuspendWorkersForWindow(this);
+  SuspendWorkersForWindow(*this);
 
   nsTObserverArray<RefPtr<mozilla::dom::SharedWorker>>::ForwardIterator iter(
       mSharedWorkers);
@@ -5258,7 +5258,7 @@ void nsGlobalWindowInner::Resume() {
   // Resume all of the workers for this window.  We must do this
   // after timeouts since workers may have queued events that can trigger
   // a setTimeout().
-  ResumeWorkersForWindow(this);
+  ResumeWorkersForWindow(*this);
 
   nsTObserverArray<RefPtr<mozilla::dom::SharedWorker>>::ForwardIterator iter(
       mSharedWorkers);
@@ -5293,7 +5293,7 @@ void nsGlobalWindowInner::FreezeInternal() {
     return;
   }
 
-  FreezeWorkersForWindow(this);
+  FreezeWorkersForWindow(*this);
 
   nsTObserverArray<RefPtr<mozilla::dom::SharedWorker>>::ForwardIterator iter(
       mSharedWorkers);
@@ -5334,7 +5334,7 @@ void nsGlobalWindowInner::ThawInternal() {
   }
   mTimeoutManager->Thaw();
 
-  ThawWorkersForWindow(this);
+  ThawWorkersForWindow(*this);
 
   nsTObserverArray<RefPtr<mozilla::dom::SharedWorker>>::ForwardIterator iter(
       mSharedWorkers);
@@ -7184,7 +7184,7 @@ void nsGlobalWindowInner::ForgetSharedWorker(SharedWorker* aSharedWorker) {
 }
 
 void nsGlobalWindowInner::StorageAccessGranted() {
-  PropagateFirstPartyStorageAccessGrantedToWorkers(this);
+  PropagateFirstPartyStorageAccessGrantedToWorkers(*this);
 
   // If we have a partitioned localStorage, it's time to replace it with a real
   // one in order to receive notifications.

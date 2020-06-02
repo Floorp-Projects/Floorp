@@ -13,6 +13,7 @@
 
 #include "js/ContextOptions.h"
 #include "mozilla/dom/BindingDeclarations.h"
+#include "mozilla/dom/SafeRefPtr.h"
 #include "mozilla/dom/workerinternals/JSSettings.h"
 #include "mozilla/Mutex.h"
 #include "nsClassHashtable.h"
@@ -53,7 +54,7 @@ class RuntimeService final : public nsIObserver {
   };
 
   struct IdleThreadInfo {
-    RefPtr<WorkerThread> mThread;
+    SafeRefPtr<WorkerThread> mThread;
     mozilla::TimeStamp mExpirationTime;
   };
 
@@ -66,7 +67,8 @@ class RuntimeService final : public nsIObserver {
   nsTArray<IdleThreadInfo> mIdleThreadArray;
 
   // *Not* protected by mMutex.
-  nsClassHashtable<nsPtrHashKey<nsPIDOMWindowInner>, nsTArray<WorkerPrivate*> >
+  nsClassHashtable<nsPtrHashKey<const nsPIDOMWindowInner>,
+                   nsTArray<WorkerPrivate*> >
       mWindowMap;
 
   // Only used on the main thread.
@@ -101,27 +103,28 @@ class RuntimeService final : public nsIObserver {
 
   static RuntimeService* GetService();
 
-  bool RegisterWorker(WorkerPrivate* aWorkerPrivate);
+  bool RegisterWorker(WorkerPrivate& aWorkerPrivate);
 
-  void UnregisterWorker(WorkerPrivate* aWorkerPrivate);
+  void UnregisterWorker(WorkerPrivate& aWorkerPrivate);
 
-  void CancelWorkersForWindow(nsPIDOMWindowInner* aWindow);
+  void CancelWorkersForWindow(const nsPIDOMWindowInner& aWindow);
 
-  void FreezeWorkersForWindow(nsPIDOMWindowInner* aWindow);
+  void FreezeWorkersForWindow(const nsPIDOMWindowInner& aWindow);
 
-  void ThawWorkersForWindow(nsPIDOMWindowInner* aWindow);
+  void ThawWorkersForWindow(const nsPIDOMWindowInner& aWindow);
 
-  void SuspendWorkersForWindow(nsPIDOMWindowInner* aWindow);
+  void SuspendWorkersForWindow(const nsPIDOMWindowInner& aWindow);
 
-  void ResumeWorkersForWindow(nsPIDOMWindowInner* aWindow);
+  void ResumeWorkersForWindow(const nsPIDOMWindowInner& aWindow);
 
-  void PropagateFirstPartyStorageAccessGranted(nsPIDOMWindowInner* aWindow);
+  void PropagateFirstPartyStorageAccessGranted(
+      const nsPIDOMWindowInner& aWindow);
 
   const NavigatorProperties& GetNavigatorProperties() const {
     return mNavigatorProperties;
   }
 
-  void NoteIdleThread(WorkerThread* aThread);
+  void NoteIdleThread(SafeRefPtr<WorkerThread> aThread);
 
   static void GetDefaultJSSettings(workerinternals::JSSettings& aSettings) {
     AssertIsOnMainThread();
@@ -189,10 +192,10 @@ class RuntimeService final : public nsIObserver {
 
   void AddAllTopLevelWorkersToArray(nsTArray<WorkerPrivate*>& aWorkers);
 
-  void GetWorkersForWindow(nsPIDOMWindowInner* aWindow,
-                           nsTArray<WorkerPrivate*>& aWorkers);
+  nsTArray<WorkerPrivate*> GetWorkersForWindow(
+      const nsPIDOMWindowInner& aWindow) const;
 
-  bool ScheduleWorker(WorkerPrivate* aWorkerPrivate);
+  bool ScheduleWorker(WorkerPrivate& aWorkerPrivate);
 
   static void ShutdownIdleThreads(nsITimer* aTimer, void* aClosure);
 };
