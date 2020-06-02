@@ -449,6 +449,11 @@ class PcqProducer : public detail::PcqBase {
     return TryInsert(PcqTypedArg<Args>(aArgs)...);
   }
 
+  QueueStatus AllocShmem(mozilla::ipc::Shmem* aShmem, size_t aBufferSize,
+                         const void* aBuffer = nullptr) {
+    MOZ_CRASH("TODO:");
+  }
+
  protected:
   friend ProducerConsumerQueue;
   friend ProducerView<PcqProducer>;
@@ -659,6 +664,10 @@ class PcqConsumer : public detail::PcqBase {
     }
 
     return status;
+  }
+
+  mozilla::ipc::Shmem::SharedMemory* LookupSharedMemory(uint32_t aId) {
+    MOZ_CRASH("TODO:");
   }
 
  protected:
