@@ -19,8 +19,7 @@ add_task(async function test_all_cookies() {
     false /* session */,
     expiry,
     {},
-    Ci.nsICookie.SAMESITE_NONE,
-    Ci.nsICookie.SCHEME_HTTPS
+    Ci.nsICookie.SAMESITE_NONE
   );
   Assert.equal(Services.cookies.countCookiesFromHost("example.net"), 1);
 
@@ -49,8 +48,7 @@ add_task(async function test_range_cookies() {
     false /* session */,
     expiry,
     {},
-    Ci.nsICookie.SAMESITE_NONE,
-    Ci.nsICookie.SCHEME_HTTPS
+    Ci.nsICookie.SAMESITE_NONE
   );
   Assert.equal(Services.cookies.countCookiesFromHost("example.net"), 1);
 
@@ -101,8 +99,7 @@ add_task(async function test_principal_cookies() {
     false /* session */,
     expiry,
     {},
-    Ci.nsICookie.SAMESITE_NONE,
-    Ci.nsICookie.SCHEME_HTTPS
+    Ci.nsICookie.SAMESITE_NONE
   );
   Assert.equal(Services.cookies.countCookiesFromHost("example.net"), 1);
 
@@ -155,8 +152,7 @@ add_task(async function test_localfile_cookies() {
     false /* session */,
     expiry,
     {},
-    Ci.nsICookie.SAMESITE_NONE,
-    Ci.nsICookie.SCHEME_HTTP
+    Ci.nsICookie.SAMESITE_NONE
   );
 
   Assert.notEqual(Services.cookies.countCookiesFromHost(""), 0);
