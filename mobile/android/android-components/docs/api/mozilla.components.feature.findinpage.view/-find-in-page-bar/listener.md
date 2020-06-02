@@ -2,7 +2,7 @@
 
 # listener
 
-`var listener: `[`Listener`](../-find-in-page-view/-listener/index.md)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/findinpage/src/main/java/mozilla/components/feature/findinpage/view/FindInPageBar.kt#L48)
+`var listener: `[`Listener`](../-find-in-page-view/-listener/index.md)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/findinpage/src/main/java/mozilla/components/feature/findinpage/view/FindInPageBar.kt#L50)
 
 Overrides [FindInPageView.listener](../-find-in-page-view/listener.md)
 
