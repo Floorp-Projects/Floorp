@@ -26,7 +26,6 @@ namespace js {
 namespace jit {
 
 enum class BaselineCacheIRStubKind;
-enum class InlinableNative : uint16_t;
 
 // [SMDOC] CacheIR
 //
@@ -1529,8 +1528,6 @@ class MOZ_RAII CallIRGenerator : public IRGenerator {
   AttachDecision tryAttachIsObject(HandleFunction callee);
   AttachDecision tryAttachIsCallable(HandleFunction callee);
   AttachDecision tryAttachIsConstructor(HandleFunction callee);
-  AttachDecision tryAttachGuardToClass(HandleFunction callee,
-                                       InlinableNative native);
   AttachDecision tryAttachStringChar(HandleFunction callee, StringChar kind);
   AttachDecision tryAttachStringCharCodeAt(HandleFunction callee);
   AttachDecision tryAttachStringCharAt(HandleFunction callee);

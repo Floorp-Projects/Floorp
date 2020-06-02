@@ -842,7 +842,7 @@ class MOZ_STACK_CLASS IonBuilder {
                                 const JSClass* clasp2 = nullptr,
                                 const JSClass* clasp3 = nullptr,
                                 const JSClass* clasp4 = nullptr);
-  InliningResult inlineGuardToClass(CallInfo& callInfo, InlinableNative native);
+  InliningResult inlineGuardToClass(CallInfo& callInfo, const JSClass* clasp);
   InliningResult inlineIsConstructing(CallInfo& callInfo);
   InliningResult inlineSubstringKernel(CallInfo& callInfo);
   InliningResult inlineObjectHasPrototype(CallInfo& callInfo);

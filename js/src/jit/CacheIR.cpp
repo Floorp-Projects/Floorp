@@ -5177,43 +5177,6 @@ AttachDecision CallIRGenerator::tryAttachIsConstructor(HandleFunction callee) {
   return AttachDecision::Attach;
 }
 
-AttachDecision CallIRGenerator::tryAttachGuardToClass(HandleFunction callee,
-                                                      InlinableNative native) {
-  // Need a single object argument.
-  if (argc_ != 1 || !args_[0].isObject()) {
-    return AttachDecision::NoAction;
-  }
-
-  // Class must match.
-  const JSClass* clasp = InlinableNativeGuardToClass(native);
-  if (args_[0].toObject().getClass() != clasp) {
-    return AttachDecision::NoAction;
-  }
-
-  // Initialize the input operand.
-  Int32OperandId argcId(writer.setInputOperandId(0));
-
-  // Guard callee is the 'GuardToXXX' native function.
-  emitNativeCalleeGuard(callee);
-
-  // Guard that the argument is an object.
-  ValOperandId argId = writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
-  ObjOperandId objId = writer.guardToObject(argId);
-
-  // Guard that the object has the correct class.
-  writer.guardAnyClass(objId, clasp);
-
-  // Return the object.
-  writer.loadObjectResult(objId);
-
-  // Monitor the returned object.
-  writer.typeMonitorResult();
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Monitored;
-
-  trackAttached("GuardToClass");
-  return AttachDecision::Attach;
-}
-
 AttachDecision CallIRGenerator::tryAttachStringChar(HandleFunction callee,
                                                     StringChar kind) {
   // Need one argument.
@@ -5632,7 +5595,7 @@ AttachDecision CallIRGenerator::tryAttachInlinableNative(
   }
 
   // Check for special-cased native functions.
-  switch (InlinableNative native = callee->jitInfo()->inlinableNative) {
+  switch (callee->jitInfo()->inlinableNative) {
     // Array natives.
     case InlinableNative::ArrayPush:
       return tryAttachArrayPush(callee);
@@ -5640,16 +5603,6 @@ AttachDecision CallIRGenerator::tryAttachInlinableNative(
       return tryAttachArrayJoin(callee);
     case InlinableNative::ArrayIsArray:
       return tryAttachArrayIsArray(callee);
-
-    // Intl natives.
-    case InlinableNative::IntlGuardToCollator:
-    case InlinableNative::IntlGuardToDateTimeFormat:
-    case InlinableNative::IntlGuardToDisplayNames:
-    case InlinableNative::IntlGuardToListFormat:
-    case InlinableNative::IntlGuardToNumberFormat:
-    case InlinableNative::IntlGuardToPluralRules:
-    case InlinableNative::IntlGuardToRelativeTimeFormat:
-      return tryAttachGuardToClass(callee, native);
 
     // Intrinsics.
     case InlinableNative::IntrinsicIsSuspendedGenerator:
@@ -5666,12 +5619,6 @@ AttachDecision CallIRGenerator::tryAttachInlinableNative(
       return tryAttachIsCallable(callee);
     case InlinableNative::IntrinsicIsConstructor:
       return tryAttachIsConstructor(callee);
-    case InlinableNative::IntrinsicGuardToArrayIterator:
-    case InlinableNative::IntrinsicGuardToMapIterator:
-    case InlinableNative::IntrinsicGuardToSetIterator:
-    case InlinableNative::IntrinsicGuardToStringIterator:
-    case InlinableNative::IntrinsicGuardToRegExpStringIterator:
-      return tryAttachGuardToClass(callee, native);
 
     // String natives.
     case InlinableNative::StringCharCodeAt:
@@ -5728,22 +5675,6 @@ AttachDecision CallIRGenerator::tryAttachInlinableNative(
       return tryAttachMathFunction(callee, UnaryMathFunction::ATanH);
     case InlinableNative::MathCbrt:
       return tryAttachMathFunction(callee, UnaryMathFunction::Cbrt);
-
-    // Map intrinsics.
-    case InlinableNative::IntrinsicGuardToMapObject:
-      return tryAttachGuardToClass(callee, native);
-
-    // Set intrinsics.
-    case InlinableNative::IntrinsicGuardToSetObject:
-      return tryAttachGuardToClass(callee, native);
-
-    // ArrayBuffer intrinsics.
-    case InlinableNative::IntrinsicGuardToArrayBuffer:
-      return tryAttachGuardToClass(callee, native);
-
-    // SharedArrayBuffer intrinsics.
-    case InlinableNative::IntrinsicGuardToSharedArrayBuffer:
-      return tryAttachGuardToClass(callee, native);
 
     default:
       return AttachDecision::NoAction;
