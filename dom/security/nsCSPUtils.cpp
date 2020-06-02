@@ -698,7 +698,7 @@ bool nsCSPHostSrc::permits(nsIURI* aUri, const nsAString& aNonce,
     // designating a globally unique identifier (such as blob:, data:, or
     // filesystem:) At the moment firefox does not support filesystem; but for
     // future compatibility we support it in CSP according to the spec,
-    // see: 4.2.2 Matching Source Expressions Note, that whitelisting any of
+    // see: 4.2.2 Matching Source Expressions Note, that allowlisting any of
     // these schemes would call nsCSPSchemeSrc::permits().
     if (aUri->SchemeIs("blob") || aUri->SchemeIs("data") ||
         aUri->SchemeIs("filesystem")) {
@@ -767,8 +767,8 @@ bool nsCSPHostSrc::permits(nsIURI* aUri, const nsAString& aNonce,
         return false;
       }
     }
-    // otherwise mPath whitelists a specific file, and we have to
-    // check if the loading resource matches that whitelisted file.
+    // otherwise mPath refers to a specific file, and we have to
+    // check if the loading resource matches the file.
     else {
       if (!mPath.Equals(decodedUriPath)) {
         return false;
@@ -1494,20 +1494,20 @@ bool nsCSPPolicy::hasDirective(CSPDirective aDir) const {
 }
 
 bool nsCSPPolicy::allowsNavigateTo(nsIURI* aURI, bool aWasRedirected,
-                                   bool aEnforceWhitelist) const {
+                                   bool aEnforceAllowlist) const {
   bool allowsNavigateTo = true;
 
   for (unsigned long i = 0; i < mDirectives.Length(); i++) {
     if (mDirectives[i]->equals(
             nsIContentSecurityPolicy::NAVIGATE_TO_DIRECTIVE)) {
-      // Early return if we can skip the whitelist AND 'unsafe-allow-redirects'
+      // Early return if we can skip the allowlist AND 'unsafe-allow-redirects'
       // is present.
-      if (!aEnforceWhitelist &&
+      if (!aEnforceAllowlist &&
           mDirectives[i]->allows(CSP_UNSAFE_ALLOW_REDIRECTS, EmptyString(),
                                  false)) {
         return true;
       }
-      // Otherwise, check against the whitelist.
+      // Otherwise, check against the allowlist.
       if (!mDirectives[i]->permits(aURI, EmptyString(), aWasRedirected, false,
                                    false, false)) {
         allowsNavigateTo = false;

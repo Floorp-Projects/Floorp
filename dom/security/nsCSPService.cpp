@@ -57,7 +57,7 @@ bool subjectToCSP(nsIURI* aURI, nsContentPolicyType aContentType) {
     return true;
   }
 
-  // Finally we have to whitelist "about:" which does not fall into
+  // Finally we have to allowlist "about:" which does not fall into
   // the category underneath and also "javascript:" which is not
   // subject to CSP content loading rules.
   if (aURI->SchemeIs("about") || aURI->SchemeIs("javascript")) {
@@ -65,7 +65,7 @@ bool subjectToCSP(nsIURI* aURI, nsContentPolicyType aContentType) {
   }
 
   // Please note that it should be possible for websites to
-  // whitelist their own protocol handlers with respect to CSP,
+  // allowlist their own protocol handlers with respect to CSP,
   // hence we use protocol flags to accomplish that, but we also
   // want resource:, chrome: and moz-icon to be subject to CSP
   // (which also use URI_IS_LOCAL_RESOURCE).
@@ -130,7 +130,7 @@ bool subjectToCSP(nsIURI* aURI, nsContentPolicyType aContentType) {
   // or type is *not* subject to CSP.
   // Please note, the correct way to opt-out of CSP using a custom
   // protocolHandler is to set one of the nsIProtocolHandler flags
-  // that are whitelistet in subjectToCSP()
+  // that are allowlistet in subjectToCSP()
   if (!StaticPrefs::security_csp_enable() ||
       !subjectToCSP(aContentLocation, contentType)) {
     return NS_OK;
@@ -297,7 +297,7 @@ nsresult CSPService::ConsultCSPForRedirect(nsIURI* aOriginalURI,
     bool allowsNavigateTo = false;
     nsresult rv = cspToInherit->GetAllowsNavigateTo(
         aNewURI, aLoadInfo->GetIsFormSubmission(), true, /* aWasRedirected */
-        false,                                           /* aEnforceWhitelist */
+        false,                                           /* aEnforceAllowlist */
         &allowsNavigateTo);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -311,7 +311,7 @@ nsresult CSPService::ConsultCSPForRedirect(nsIURI* aOriginalURI,
   // is *not* subject to CSP.
   // Please note, the correct way to opt-out of CSP using a custom
   // protocolHandler is to set one of the nsIProtocolHandler flags
-  // that are whitelistet in subjectToCSP()
+  // that are allowlistet in subjectToCSP()
   nsContentPolicyType policyType = aLoadInfo->InternalContentPolicyType();
   if (!StaticPrefs::security_csp_enable() ||
       !subjectToCSP(aNewURI, policyType)) {

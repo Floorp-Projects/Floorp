@@ -25,21 +25,21 @@ var counter = -1;
 
 const tests = [
   { // test 1
-    description: "loads script as sub2.ält.example.org, but whitelist in CSP as sub2.xn--lt-uia.example.org",
+    description: "loads script as sub2.ält.example.org, but allowlist in CSP as sub2.xn--lt-uia.example.org",
     action: "script-unicode-csp-punycode",
     csp: "script-src http://sub2.xn--lt-uia.example.org;",
     expected: "script-allowed",
 
   },
   { // test 2
-    description: "loads script as sub2.xn--lt-uia.example.org, and whitelist in CSP as sub2.xn--lt-uia.example.org",
+    description: "loads script as sub2.xn--lt-uia.example.org, and allowlist in CSP as sub2.xn--lt-uia.example.org",
     action: "script-punycode-csp-punycode",
     csp: "script-src http://sub2.xn--lt-uia.example.org;",
     expected: "script-allowed",
 
   },
     { // test 3
-    description: "loads script as sub2.xn--lt-uia.example.org, and whitelist in CSP as sub2.xn--lt-uia.example.org",
+    description: "loads script as sub2.xn--lt-uia.example.org, and allowlist in CSP as sub2.xn--lt-uia.example.org",
     action: "script-punycode-csp-punycode",
     csp: "script-src *.xn--lt-uia.example.org;",
     expected: "script-allowed",

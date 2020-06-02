@@ -36,7 +36,7 @@ var tests = [
     policy: "script-src 'strict-dynamic' 'nonce-bar' http: http://example.com"
   },
   {
-    desc: "strict-dynamic, whitelist and invalid nonce should be blocked",
+    desc: "strict-dynamic, allowlist and invalid nonce should be blocked",
     result: "blocked",
     file: "file_strict_dynamic_script_extern.html",
     policy: "script-src 'strict-dynamic' 'nonce-bar' 'unsafe-inline' http: http://example.com"
