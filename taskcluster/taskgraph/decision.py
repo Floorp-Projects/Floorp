@@ -129,6 +129,10 @@ try_task_config_schema = Schema({
     Optional('env'): {text_type: text_type},
     Optional('gecko-profile'): bool,
     Optional(
+        "perftest-options",
+        description="Options passed from `mach perftest` to try."
+    ): object,
+    Optional(
         "optimize-strategies",
         description="Alternative optimization strategies to use instead of the default. "
                     "A module path pointing to a dict to be use as the `strategy_override` "

@@ -23,9 +23,10 @@ The --push-to-try flow is:
 - run_test() grabs the parameters artifact and converts them into args for
   perftest
 """
-import sys
+import json
 import os
 import shutil
+import sys
 
 
 HERE = os.path.dirname(__file__)
@@ -77,38 +78,20 @@ def _setup_path():
         sys.path.insert(0, path)
 
 
-def _get_params():
-    """Fetches the parameters.yml artifact and returns its content.
-    """
-    # XXX - this already exists in taskcluster code
-    # in a more robust way, but for now let's not depend on it.
-    import requests
-    import yaml
-
-    root = os.environ.get(
-        "TASKCLUSTER_ROOT_URL", "https://firefox-ci-tc.services.mozilla.com"
-    )
-    # set by require-decision-task-id
-    tid = os.environ["DECISION_TASK_ID"]
-    url = root + "/api/queue/v1/task/%s/artifacts/public/parameters.yml" % tid
-    response = requests.get(url)
-    return yaml.load(response.text)
-
-
 def run_tests(mach_cmd, **kwargs):
     """This tests runner can be used directly via main or via Mach.
 
-    When the --on-try option is used, the test runner looks for the
-    `parameters.yml` artifact that contains all options passed by
-    the used via a ./mach perftest --push-to-try call.
+    When the --on-try option is used, the test runner looks at the
+    `PERFTEST_OPTIONS` environment variable that contains all options passed by
+    the user via a ./mach perftest --push-to-try call.
     """
     _setup_path()
     on_try = kwargs.pop("on_try", False)
 
     # trying to get the arguments from the task params
     if on_try:
-        params = _get_params()
-        kwargs.update(params["try_options"]["perftest"])
+        try_options = json.loads(os.environ['PERFTEST_OPTIONS'])
+        kwargs.update(try_options)
 
     from mozperftest.utils import build_test_list, install_package
     from mozperftest import MachEnvironment, Metadata
