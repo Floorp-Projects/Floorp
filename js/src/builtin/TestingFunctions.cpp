@@ -6171,6 +6171,26 @@ static bool ClearKeptObjects(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+static bool NewPrivateName(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  if (!args.requireAtLeast(cx, "newPrivateName", 1)) {
+    return false;
+  }
+
+  RootedString desc(cx, ToString(cx, args[0]));
+  if (!desc) {
+    return false;
+  }
+
+  auto* sym = JS::Symbol::new_(cx, JS::SymbolCode::PrivateNameSymbol, desc);
+  if (!sym) {
+    return false;
+  }
+
+  args.rval().setSymbol(sym);
+  return true;
+}
+
 static bool PCCountProfiling_Start(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -7109,6 +7129,10 @@ gc::ZealModeHelpText),
 "observed WeakRef targets that are kept alive until the next synchronous\n"
 "sequence of ECMAScript execution completes. This is used for testing\n"
 "WeakRefs.\n"),
+
+  JS_FN_HELP("newPrivateName", NewPrivateName, 1, 0,
+"newPrivateName(desc)",
+"Create a new PrivateName symbol."),
 
     JS_FS_HELP_END
 };
