@@ -10,7 +10,6 @@
 #include "mozilla/dom/RTCDataChannelBinding.h"
 #include "mozilla/dom/RTCStatsReportBinding.h"
 #include "mozilla/UniquePtr.h"
-#include "mozilla/media/webrtc/WebrtcIPCTraits.h"
 
 typedef mozilla::dom::RTCStatsReportInternal StatsReport;
 typedef nsTArray<mozilla::UniquePtr<StatsReport>> RTCReports;
