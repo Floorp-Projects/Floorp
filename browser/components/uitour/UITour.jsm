@@ -529,14 +529,11 @@ var UITour = {
           })
           .then(uri => {
             const url = new URL(uri);
-            // Call our helper to validate extraURLCampaignParams and populate URLSearchParams
-            if (
-              !this._populateCampaignParams(url, data.extraURLCampaignParams)
-            ) {
+            // Call our helper to validate extraURLParams and populate URLSearchParams
+            if (!this._populateURLParams(url, data.extraURLParams)) {
               log.warn("showFirefoxAccounts: invalid campaign args specified");
               return;
             }
-
             // We want to replace the current tab.
             browser.loadURI(url.href, {
               triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal(
@@ -550,8 +547,8 @@ var UITour = {
       case "showConnectAnotherDevice": {
         FxAccounts.config.promiseConnectDeviceURI("uitour").then(uri => {
           const url = new URL(uri);
-          // Call our helper to validate extraURLCampaignParams and populate URLSearchParams
-          if (!this._populateCampaignParams(url, data.extraURLCampaignParams)) {
+          // Call our helper to validate extraURLParams and populate URLSearchParams
+          if (!this._populateURLParams(url, data.extraURLParams)) {
             log.warn(
               "showConnectAnotherDevice: invalid campaign args specified"
             );
@@ -779,52 +776,72 @@ var UITour = {
   },
 
   // Given a string that is a JSONified represenation of an object with
-  // additional utm_* URL params that should be appended, validate and append
-  // them to the passed URL object. Returns true if the params
-  // were validated and appended, and false if the request should be ignored.
-  _populateCampaignParams(url, extraURLCampaignParams) {
+  // additional "flow_id", "flow_begin_time", "device_id", utm_* URL params
+  // that should be appended, validate and append them to the passed URL object.
+  // Returns true if the params were validated and appended, and false if the
+  // request should be ignored.
+  _populateURLParams(url, extraURLParams) {
+    const FLOW_ID_LENGTH = 64;
+    const FLOW_BEGIN_TIME_LENGTH = 13;
+
     // We are extra paranoid about what params we allow to be appended.
-    if (typeof extraURLCampaignParams == "undefined") {
+    if (typeof extraURLParams == "undefined") {
       // no params, so it's all good.
       return true;
     }
-    if (typeof extraURLCampaignParams != "string") {
-      log.warn(
-        "_populateCampaignParams: extraURLCampaignParams is not a string"
-      );
+    if (typeof extraURLParams != "string") {
+      log.warn("_populateURLParams: extraURLParams is not a string");
       return false;
     }
-    let campaignParams;
+    let urlParams;
     try {
-      if (extraURLCampaignParams) {
-        campaignParams = JSON.parse(extraURLCampaignParams);
-        if (typeof campaignParams != "object") {
+      if (extraURLParams) {
+        urlParams = JSON.parse(extraURLParams);
+        if (typeof urlParams != "object") {
           log.warn(
-            "_populateCampaignParams: extraURLCampaignParams is not a stringified object"
+            "_populateURLParams: extraURLParams is not a stringified object"
           );
           return false;
         }
       }
     } catch (ex) {
-      log.warn(
-        "_populateCampaignParams: extraURLCampaignParams is not a JSON object"
-      );
+      log.warn("_populateURLParams: extraURLParams is not a JSON object");
       return false;
     }
-    if (campaignParams) {
+    if (urlParams) {
+      // Expected to JSON parse the following for FxA flow parameters:
+      //
+      // {String} flow_id - Flow Id, such as '5445b28b8b7ba6cf71e345f8fff4bc59b2a514f78f3e2cc99b696449427fd445'
+      // {Number} flow_begin_time - Flow begin timestamp, such as 1590780440325
+      // {String} device_id - Device Id, such as '7e450f3337d3479b8582ea1c9bb5ba6c'
+      if (
+        (urlParams.flow_begin_time &&
+          urlParams.flow_begin_time.toString().length !==
+            FLOW_BEGIN_TIME_LENGTH) ||
+        (urlParams.flow_id && urlParams.flow_id.length !== FLOW_ID_LENGTH)
+      ) {
+        log.warn(
+          "_populateURLParams: flow parameters are not properly structured"
+        );
+        return false;
+      }
+
       // The regex that the name of each param must match - there's no
       // character restriction on the value - they will be escaped as necessary.
       let reSimpleString = /^[-_a-zA-Z0-9]*$/;
-      for (let name in campaignParams) {
-        let value = campaignParams[name];
+      for (let name in urlParams) {
+        let value = urlParams[name];
+        const validName =
+          name.startsWith("utm_") ||
+          name === "flow_begin_time" ||
+          name === "flow_id" ||
+          name === "device_id";
         if (
           typeof name != "string" ||
-          typeof value != "string" ||
-          !name.startsWith("utm_") ||
-          !value.length ||
+          !validName ||
           !reSimpleString.test(name)
         ) {
-          log.warn("_populateCampaignParams: invalid campaign param specified");
+          log.warn("_populateURLParams: invalid campaign param specified");
           return false;
         }
         url.searchParams.append(name, value);
@@ -832,7 +849,6 @@ var UITour = {
     }
     return true;
   },
-
   /**
    * Tear down a tour from a tab e.g. upon switching/closing tabs.
    */
