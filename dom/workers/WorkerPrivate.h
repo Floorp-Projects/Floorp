@@ -1,3 +1,4 @@
+
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
@@ -242,7 +243,7 @@ class WorkerPrivate : public RelativeTimeline {
 
   bool ThawInternal();
 
-  void PropagateStorageAccessPermissionGrantedInternal();
+  void PropagateFirstPartyStorageAccessGrantedInternal();
 
   void TraverseTimeouts(nsCycleCollectionTraversalCallback& aCallback);
 
@@ -694,16 +695,17 @@ class WorkerPrivate : public RelativeTimeline {
     return mLoadInfo.mPrincipal;
   }
 
+  nsIPrincipal* GetEffectiveStoragePrincipal() const {
+    AssertIsOnMainThread();
+    return mLoadInfo.mStoragePrincipal;
+  }
+
   nsIPrincipal* GetLoadingPrincipal() const {
     AssertIsOnMainThread();
     return mLoadInfo.mLoadingPrincipal;
   }
 
-  const nsAString& OriginNoSuffix() const { return mLoadInfo.mOriginNoSuffix; }
-
-  const nsACString& Origin() const { return mLoadInfo.mOrigin; }
-
-  const nsACString& EffectiveStoragePrincipalOrigin() const;
+  const nsAString& Origin() const { return mLoadInfo.mOrigin; }
 
   nsILoadGroup* GetLoadGroup() const {
     AssertIsOnMainThread();
@@ -719,7 +721,9 @@ class WorkerPrivate : public RelativeTimeline {
     return *mLoadInfo.mPrincipalInfo;
   }
 
-  const mozilla::ipc::PrincipalInfo& GetEffectiveStoragePrincipalInfo() const;
+  const mozilla::ipc::PrincipalInfo& GetEffectiveStoragePrincipalInfo() const {
+    return *mLoadInfo.mStoragePrincipalInfo;
+  }
 
   already_AddRefed<nsIChannel> ForgetWorkerChannel() {
     AssertIsOnMainThread();
@@ -780,21 +784,11 @@ class WorkerPrivate : public RelativeTimeline {
 
   mozilla::StorageAccess StorageAccess() const {
     AssertIsOnWorkerThread();
-    if (mLoadInfo.mHasStorageAccessPermissionGranted) {
+    if (mLoadInfo.mFirstPartyStorageAccessGranted) {
       return mozilla::StorageAccess::eAllow;
     }
 
     return mLoadInfo.mStorageAccess;
-  }
-
-  bool UseRegularPrincipal() const {
-    AssertIsOnWorkerThread();
-    return mLoadInfo.mUseRegularPrincipal;
-  }
-
-  bool HasStorageAccessPermissionGranted() const {
-    AssertIsOnWorkerThread();
-    return mLoadInfo.mHasStorageAccessPermissionGranted;
   }
 
   nsICookieJarSettings* CookieJarSettings() const {
@@ -841,7 +835,7 @@ class WorkerPrivate : public RelativeTimeline {
 
   bool Thaw(nsPIDOMWindowInner* aWindow);
 
-  void PropagateStorageAccessPermissionGranted();
+  void PropagateFirstPartyStorageAccessGranted();
 
   void EnableDebugger();
 
@@ -859,7 +853,7 @@ class WorkerPrivate : public RelativeTimeline {
   void CycleCollect(bool aDummy);
 
   nsresult SetPrincipalsAndCSPOnMainThread(nsIPrincipal* aPrincipal,
-                                           nsIPrincipal* aPartitionedPrincipal,
+                                           nsIPrincipal* aStoragePrincipal,
                                            nsILoadGroup* aLoadGroup,
                                            nsIContentSecurityPolicy* aCsp);
 

@@ -702,8 +702,7 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
       uint32_t aEvent, nsIChannel* aChannel, bool aBlocked,
       const nsACString& aTrackingOrigin,
       const nsTArray<nsCString>& aTrackingFullHashes,
-      const Maybe<
-          ContentBlockingNotifier::StorageAccessPermissionGrantedReason>&
+      const Maybe<ContentBlockingNotifier::StorageAccessGrantedReason>&
           aReason);
 
  protected:

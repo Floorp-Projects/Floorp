@@ -89,11 +89,10 @@ class ContentBlocking final {
   typedef MozPromise<int, bool, true> StorageAccessFinalCheckPromise;
   typedef std::function<RefPtr<StorageAccessFinalCheckPromise>()>
       PerformFinalChecks;
-  typedef MozPromise<int, bool, true> StorageAccessPermissionGrantPromise;
-  static MOZ_MUST_USE RefPtr<StorageAccessPermissionGrantPromise>
-  AllowAccessFor(
+  typedef MozPromise<int, bool, true> StorageAccessGrantPromise;
+  static MOZ_MUST_USE RefPtr<StorageAccessGrantPromise> AllowAccessFor(
       nsIPrincipal* aPrincipal, dom::BrowsingContext* aParentContext,
-      ContentBlockingNotifier::StorageAccessPermissionGrantedReason aReason,
+      ContentBlockingNotifier::StorageAccessGrantedReason aReason,
       const PerformFinalChecks& aPerformFinalChecks = nullptr);
 
   // This function handles tasks that have to be done in the process
@@ -101,7 +100,7 @@ class ContentBlocking final {
   static void OnAllowAccessFor(
       dom::BrowsingContext* aParentContext, const nsCString& aTrackingOrigin,
       uint32_t aCookieBehavior,
-      ContentBlockingNotifier::StorageAccessPermissionGrantedReason aReason);
+      ContentBlockingNotifier::StorageAccessGrantedReason aReason);
 
   // For IPC only.
   typedef MozPromise<nsresult, bool, true> ParentAccessGrantPromise;
@@ -122,12 +121,11 @@ class ContentBlocking final {
   friend class dom::ContentParent;
   // This should be running either in the parent process or in the child
   // processes with an in-process browsing context.
-  static MOZ_MUST_USE RefPtr<StorageAccessPermissionGrantPromise>
-  CompleteAllowAccessFor(
+  static MOZ_MUST_USE RefPtr<StorageAccessGrantPromise> CompleteAllowAccessFor(
       dom::BrowsingContext* aParentContext, uint64_t aTopLevelWindowId,
       nsIPrincipal* aTrackingPrincipal, const nsCString& aTrackingOrigin,
       uint32_t aCookieBehavior,
-      ContentBlockingNotifier::StorageAccessPermissionGrantedReason aReason,
+      ContentBlockingNotifier::StorageAccessGrantedReason aReason,
       const PerformFinalChecks& aPerformFinalChecks = nullptr);
 
   static void UpdateAllowAccessOnCurrentProcess(

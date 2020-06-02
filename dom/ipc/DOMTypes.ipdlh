@@ -241,7 +241,7 @@ struct DocShellLoadStateInit
   bool InheritPrincipal;
   bool PrincipalIsExplicit;
   nsIPrincipal PrincipalToInherit;
-  nsIPrincipal PartitionedPrincipalToInherit;
+  nsIPrincipal StoragePrincipalToInherit;
   bool ForceAllowDataURI;
   bool OriginalFrameSrc;
   bool IsFormSubmission;

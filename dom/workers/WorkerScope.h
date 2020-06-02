@@ -281,7 +281,7 @@ class WorkerGlobalScope : public WorkerGlobalScopeBase,
 
   void ConsumeWindowInteraction();
 
-  void StorageAccessPermissionGranted();
+  void FirstPartyStorageAccessGranted();
 
  protected:
   ~WorkerGlobalScope() = default;

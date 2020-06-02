@@ -51,7 +51,7 @@ void SHEntrySharedParentState::CopyFrom(SHEntrySharedParentState* aEntry) {
   mDocShellID = aEntry->mDocShellID;
   mTriggeringPrincipal = aEntry->mTriggeringPrincipal;
   mPrincipalToInherit = aEntry->mPrincipalToInherit;
-  mPartitionedPrincipalToInherit = aEntry->mPartitionedPrincipalToInherit;
+  mStoragePrincipalToInherit = aEntry->mStoragePrincipalToInherit;
   mCsp = aEntry->mCsp;
   mSaveLayoutState = aEntry->mSaveLayoutState;
   mContentType.Assign(aEntry->mContentType);
