@@ -2180,12 +2180,8 @@ pref("devtools.dom.enabled", false);
 
 // Enable the Accessibility panel.
 pref("devtools.accessibility.enabled", true);
-// Enable accessibility panel auto initialization on early beta and dev edition.
-#if defined(EARLY_BETA_OR_EARLIER) || defined(MOZ_DEV_EDITION)
-  pref("devtools.accessibility.auto-init.enabled", true);
-#else
-  pref("devtools.accessibility.auto-init.enabled", false);
-#endif
+// Enable accessibility panel auto initialization.
+pref("devtools.accessibility.auto-init.enabled", true);
 
 // Web console filters
 pref("devtools.webconsole.filter.error", true);
