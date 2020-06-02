@@ -87,12 +87,12 @@ bool nsContentSecurityManager::AllowTopLevelNavigationToDataURI(
   rv = nsDataHandler::ParseURI(spec, contentType, nullptr, base64, nullptr);
   NS_ENSURE_SUCCESS(rv, true);
 
-  // Whitelist data: images as long as they are not SVGs
+  // Allow data: images as long as they are not SVGs
   if (StringBeginsWith(contentType, NS_LITERAL_CSTRING("image/")) &&
       !contentType.EqualsLiteral("image/svg+xml")) {
     return true;
   }
-  // Whitelist all plain text types as well as data: PDFs.
+  // Allow all plain text types as well as data: PDFs.
   if (nsContentUtils::IsPlainTextType(contentType) ||
       contentType.EqualsLiteral("application/pdf")) {
     return true;

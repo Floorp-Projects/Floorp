@@ -35,11 +35,11 @@
     <script nonce="correctstylenonce" src="http://example.org/tests/dom/security/test/csp/file_CSP.sjs?testid=external_script_correct_style_nonce_bad&type=text/javascript"></script>
     <script src="http://example.org/tests/dom/security/test/csp/file_CSP.sjs?testid=external_script_no_nonce_bad&type=text/javascript"></script>
 
-    <!-- This external script has the correct nonce and comes from a whitelisted URI. It should be allowed. -->
+    <!-- This external script has the correct nonce and comes from a allowlisted URI. It should be allowed. -->
     <script nonce="correctscriptnonce" src="file_CSP.sjs?testid=external_script_correct_nonce_correct_uri_good&type=text/javascript"></script>
-    <!-- This external script has an incorrect nonce, but comes from a whitelisted URI. It should be allowed. -->
+    <!-- This external script has an incorrect nonce, but comes from a allowlisted URI. It should be allowed. -->
     <script nonce="incorrectscriptnonce" src="file_CSP.sjs?testid=external_script_incorrect_nonce_correct_uri_good&type=text/javascript"></script>
-    <!-- This external script has no nonce and comes from a whitelisted URI. It should be allowed. -->
+    <!-- This external script has no nonce and comes from a allowlisted URI. It should be allowed. -->
     <script src="file_CSP.sjs?testid=external_script_no_nonce_correct_uri_good&type=text/javascript"></script>
 
     <!-- inline styles -->

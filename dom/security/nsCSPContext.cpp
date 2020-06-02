@@ -139,9 +139,9 @@ nsCSPContext::ShouldLoad(nsContentPolicyType aContentType,
   // This ShouldLoad function is called from nsCSPService::ShouldLoad,
   // which already checked a number of things, including:
   // * aContentLocation is not null; we can consume this without further checks
-  // * scheme is not a whitelisted scheme (about: chrome:, etc).
+  // * scheme is not a allowlisted scheme (about: chrome:, etc).
   // * CSP is enabled
-  // * Content Type is not whitelisted (CSP Reports, TYPE_DOCUMENT, etc).
+  // * Content Type is not allowlisted (CSP Reports, TYPE_DOCUMENT, etc).
   // * Fast Path for Apps
 
   // Default decision, CSP can revise it if there's a policy to enforce
@@ -593,11 +593,11 @@ nsCSPContext::GetAllowsInline(nsContentPolicyType aContentType,
 
 NS_IMETHODIMP
 nsCSPContext::GetAllowsNavigateTo(nsIURI* aURI, bool aIsFormSubmission,
-                                  bool aWasRedirected, bool aEnforceWhitelist,
+                                  bool aWasRedirected, bool aEnforceAllowlist,
                                   bool* outAllowsNavigateTo) {
   /*
    * The matrix below shows the different values of (aWasRedirect,
-   * aEnforceWhitelist) for the three different checks we do.
+   * aEnforceAllowlist) for the three different checks we do.
    *
    *  Navigation    | Start Loading  | Initiate Redirect | Document
    *                | (nsDocShell)   | (nsCSPService)    |
@@ -625,7 +625,7 @@ nsCSPContext::GetAllowsNavigateTo(nsIURI* aURI, bool aIsFormSubmission,
   bool atLeastOneBlock = false;
   for (unsigned long i = 0; i < mPolicies.Length(); i++) {
     if (!mPolicies[i]->allowsNavigateTo(aURI, aWasRedirected,
-                                        aEnforceWhitelist)) {
+                                        aEnforceAllowlist)) {
       if (!mPolicies[i]->getReportOnlyFlag()) {
         atLeastOneBlock = true;
       }

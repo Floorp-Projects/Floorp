@@ -33,7 +33,7 @@ var tests = [
   {
     // the script in file_path_matching.html
     // <script src="http://test1.example.com/tests/dom/security/..">
-    // is not within the whitelisted path by the csp-policy
+    // is not within the allowlisted path by the csp-policy
     // hence the script is 'blocked' by CSP.
     expected: "blocked",
     uri: "tests/dom/security/test/csp/file_path_matching.html"
