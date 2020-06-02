@@ -1422,6 +1422,7 @@ impl Device {
         // So we must use glTexStorage instead. See bug 1591436.
         let is_emulator = renderer_name.starts_with("Android Emulator");
         let avoid_tex_image = is_emulator;
+        let gl_version = gl.get_string(gl::VERSION);
 
         let supports_texture_storage = allow_texture_storage_support &&
             match gl.get_type() {
@@ -1431,7 +1432,12 @@ impl Device {
                 gl::GlType::Gles => supports_extension(&extensions, "GL_EXT_texture_storage"),
             };
         let supports_texture_swizzle = allow_texture_swizzling &&
-            (gl.get_type() == gl::GlType::Gles || supports_extension(&extensions, "GL_ARB_texture_swizzle"));
+            match gl.get_type() {
+                // see https://www.g-truc.net/post-0734.html
+                gl::GlType::Gl => gl_version.as_str() >= "3.3" ||
+                    supports_extension(&extensions, "GL_ARB_texture_swizzle"),
+                gl::GlType::Gles => true,
+            };
 
         let (color_formats, bgra_formats, bgra8_sampling_swizzle, texture_storage_usage) = match gl.get_type() {
             // There is `glTexStorage`, use it and expect RGBA on the input.
