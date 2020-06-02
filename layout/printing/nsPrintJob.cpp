@@ -2073,9 +2073,11 @@ bool nsPrintJob::PrintDocContent(const UniquePtr<nsPrintObject>& aPO,
     return true;
   }
 
-  // If |aPO->mPrintAsIs| and |aPO->mHasBeenPrinted| are true,
+  // If |aPO->mHasBeenPrinted| is true,
   // the kids frames are already processed in |PrintPage|.
-  if (!aPO->mInvisible && !(aPO->mPrintAsIs && aPO->mHasBeenPrinted)) {
+  // XXX This should be removed. Since bug 1552785 it has no longer been
+  // possible for us to have to print multiple subdocuments consecutively.
+  if (!aPO->mHasBeenPrinted && !aPO->mInvisible) {
     for (const UniquePtr<nsPrintObject>& po : aPO->mKids) {
       bool printed = PrintDocContent(po, aStatus);
       if (printed || NS_FAILED(aStatus)) {
@@ -2576,22 +2578,6 @@ nsresult nsPrintJob::EnablePOsForPrinting() {
   if (printRangeType == nsIPrintSettings::kRangeAllPages ||
       printRangeType == nsIPrintSettings::kRangeSpecifiedPageRange) {
     printData->mPrintObject->EnablePrinting(true);
-
-    if (printData->mIsParentAFrameSet) {
-      printData->mPrintObject->SetPrintAsIs(true);
-      return NS_OK;
-    }
-
-    // Set the children so they are PrinAsIs
-    // In this case, the children are probably IFrames
-    if (printData->mPrintObject->mKids.Length() > 0) {
-      for (const UniquePtr<nsPrintObject>& po :
-           printData->mPrintObject->mKids) {
-        NS_ASSERTION(po, "nsPrintObject can't be null!");
-        po->SetPrintAsIs(true);
-      }
-    }
-    PR_PL(("PrintRange:         %s \n", gPrintRangeStr[printRangeType]));
     return NS_OK;
   }
 
@@ -2621,9 +2607,6 @@ nsresult nsPrintJob::EnablePOsForPrinting() {
   if (!po) {
     return NS_OK;
   }
-
-  // Makes sure all of its children are be printed "AsIs"
-  po->SetPrintAsIs(true);
 
   // Now, only enable this POs (the selected PO) and all of its children
   po->EnablePrinting(true);
