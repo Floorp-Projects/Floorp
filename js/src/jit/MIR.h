@@ -2645,7 +2645,6 @@ class WrappedFunction : public TempObject {
   size_t nargs() const { return nargs_; }
 
   bool isNative() const { return flags_.isNative(); }
-  bool isBuiltinNative() const { return flags_.isBuiltinNative(); }
   bool isNativeWithJitEntry() const { return flags_.isNativeWithJitEntry(); }
   bool isNativeWithoutJitEntry() const {
     return flags_.isNativeWithoutJitEntry();
