@@ -136,27 +136,29 @@ class SplitBox extends Component {
    * orientation we either remember the width or height of
    * the splitter box.
    */
-  onMove({ movementX, movementY }) {
+  onMove({ clientX, movementY }) {
     const node = ReactDOM.findDOMNode(this);
     const doc = node.ownerDocument;
 
     if (this.props.endPanelControl) {
       // For the end panel we need to increase the width/height when the
       // movement is towards the left/top.
-      movementX = -movementX;
+      clientX = node.clientWidth - clientX;
       movementY = -movementY;
     }
 
     if (this.state.vert) {
       const isRtl = doc.dir === "rtl";
+
       if (isRtl) {
         // In RTL we need to reverse the movement again -- but only for vertical
         // splitters
-        movementX = -movementX;
+        const fullWidth = node.clientWidth + node.offsetLeft;
+        clientX = fullWidth - clientX;
       }
 
       this.setState((state, props) => ({
-        width: state.width + movementX,
+        width: clientX,
       }));
     } else {
       this.setState((state, props) => ({
