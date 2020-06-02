@@ -41,9 +41,8 @@
 }
 
 .compatibility-issue-item {
-  padding-inline-start: calc(var(--compatibility-base-unit) * 2);
+  padding: calc(var(--compatibility-base-unit) * 2);
   padding-inline-end: calc(var(--compatibility-base-unit) * 4);
-  padding-block: calc(var(--compatibility-base-unit) * 2);
 }
 
 .compatibility-issue-item:not(:last-child) {
@@ -82,6 +81,7 @@
 .compatibility-issue-item__description--experimental::before,
 .compatibility-issue-item__description--unsupported::before {
   background-image: url(chrome://devtools/skin/images/info.svg);
+  fill: currentColor;
 }
 
 .compatibility-issue-item__description--deprecated::before {
@@ -221,8 +221,7 @@
   padding-block: var(--compatibility-base-unit);
   padding-inline: calc(var(--compatibility-base-unit) * 4);
   background-color: var(--theme-toolbar-background);
-  border-top: 1px solid var(--theme-splitter-color);
-  border-bottom: 1px solid var(--theme-splitter-color);
+  border-block: 1px solid var(--theme-splitter-color);
 }
 
 .compatibility-settings__target-browsers-list {
