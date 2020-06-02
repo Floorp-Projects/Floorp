@@ -374,7 +374,6 @@ class nsWindow final : public nsBaseWidget {
 #endif
 #ifdef MOZ_WAYLAND
   wl_display* GetWaylandDisplay();
-  wl_surface* GetWaylandSurface();
   bool WaylandSurfaceNeedsClear();
   virtual void CreateCompositorVsyncDispatcher() override;
 #endif

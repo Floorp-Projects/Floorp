@@ -429,15 +429,26 @@ static struct wl_surface* moz_container_wayland_get_surface_locked(
   return wl_container->surface;
 }
 
-struct wl_surface* moz_container_wayland_get_surface(MozContainer* container) {
+struct wl_surface* moz_container_wayland_surface_lock(MozContainer* container) {
   GdkDisplay* display = gtk_widget_get_display(GTK_WIDGET(container));
   nsWaylandDisplay* waylandDisplay = WaylandDisplayGet(display);
 
   LOGWAYLAND(("%s [%p] surface %p\n", __FUNCTION__, (void*)container,
               (void*)container->wl_container.surface));
 
-  MutexAutoLock lock(*container->wl_container.container_lock);
-  return moz_container_wayland_get_surface_locked(container, waylandDisplay);
+  container->wl_container.container_lock->Lock();
+  struct wl_surface* surface =
+      moz_container_wayland_get_surface_locked(container, waylandDisplay);
+  if (surface == nullptr) {
+    container->wl_container.container_lock->Unlock();
+  }
+  return surface;
+}
+
+void moz_container_wayland_surface_unlock(MozContainer* container) {
+  LOGWAYLAND(("%s [%p] surface %p\n", __FUNCTION__, (void*)container,
+              (void*)container->wl_container.surface));
+  container->wl_container.container_lock->Unlock();
 }
 
 struct wl_egl_window* moz_container_wayland_get_egl_window(

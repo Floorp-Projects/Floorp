@@ -7918,17 +7918,6 @@ void nsWindow::GetCompositorWidgetInitData(
 }
 
 #ifdef MOZ_WAYLAND
-wl_surface* nsWindow::GetWaylandSurface() {
-  if (mContainer) {
-    return moz_container_wayland_get_surface(MOZ_CONTAINER(mContainer));
-  }
-
-  NS_WARNING(
-      "nsWindow::GetWaylandSurfaces(): We don't have any mContainer for "
-      "drawing!");
-  return nullptr;
-}
-
 bool nsWindow::WaylandSurfaceNeedsClear() {
   if (mContainer) {
     return moz_container_wayland_surface_needs_clear(MOZ_CONTAINER(mContainer));
