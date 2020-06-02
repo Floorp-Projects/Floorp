@@ -3473,6 +3473,7 @@ void JS::TransitiveCompileOptions::copyPODTransitiveOptions(
   hasIntroductionInfo = rhs.hasIntroductionInfo;
   hideScriptFromDebugger = rhs.hideScriptFromDebugger;
   nonSyntacticScope = rhs.nonSyntacticScope;
+  privateClassFields = rhs.privateClassFields;
 };
 
 void JS::ReadOnlyCompileOptions::copyPODNonTransitiveOptions(
@@ -3564,6 +3565,8 @@ JS::CompileOptions::CompileOptions(JSContext* cx)
   }
   throwOnAsmJSValidationFailureOption =
       cx->options().throwOnAsmJSValidationFailure();
+  privateClassFields =
+      cx->realm()->creationOptions().getPrivateClassFieldsEnabled();
 
   sourcePragmas_ = cx->options().sourcePragmas();
 
