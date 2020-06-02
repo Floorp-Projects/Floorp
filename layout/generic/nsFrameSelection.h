@@ -936,6 +936,18 @@ class nsFrameSelection final {
     mozilla::TableSelectionMode mMode = mozilla::TableSelectionMode::None;
     int32_t mSelectedCellIndex = 0;
     bool mDragSelectingCells = false;
+
+   private:
+    [[nodiscard]] nsresult HandleDragSelecting(
+        mozilla::TableSelectionMode aTarget, nsIContent* childContent,
+        const mozilla::WidgetMouseEvent* aMouseEvent,
+        mozilla::dom::Selection& aNormalSelection);
+
+    [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult HandleMouseUpOrDown(
+        mozilla::TableSelectionMode aTarget, bool aDragState,
+        nsIContent* childContent, nsINode* aParentContent,
+        int32_t aContentOffset, const mozilla::WidgetMouseEvent* aMouseEvent,
+        mozilla::dom::Selection& aNormalSelection);
   };
 
   TableSelection mTableSelection;
