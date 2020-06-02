@@ -62,13 +62,21 @@ async function setupPage(htmlPageName, blockedPage) {
 
   is(strictCookie.sameSite, 2, "The cookie is a same site strict cookie");
 
-  // Opening the page containing the iframe
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, iFramePage);
+  // Opening the page that contains the iframe
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
   let browser = tab.linkedBrowser;
+  let browserLoaded = BrowserTestUtils.browserLoaded(
+    browser,
+    true,
+    blockedPage,
+    true
+  );
 
-  await SpecialPowers.spawn(browser, [blockedPage], async function(
-    cspBlockedPage
-  ) {
+  BrowserTestUtils.loadURI(browser, iFramePage);
+  await browserLoaded;
+  info("The error page has loaded!");
+
+  await SpecialPowers.spawn(browser, [], async function() {
     let iframe = content.document.getElementById("theIframe");
 
     await ContentTaskUtils.waitForCondition(() =>
@@ -78,7 +86,7 @@ async function setupPage(htmlPageName, blockedPage) {
 
   let iframe = browser.browsingContext.children[0];
 
-  let loaded = BrowserTestUtils.waitForNewTab(gBrowser, null, true);
+  let newTabLoaded = BrowserTestUtils.waitForNewTab(gBrowser, null, true);
 
   // In the iframe, we see the correct error page and click on the button
   // to open the blocked page in a new window/tab
@@ -100,8 +108,11 @@ async function setupPage(htmlPageName, blockedPage) {
     // We click on the button
     await EventUtils.synthesizeMouseAtCenter(button, {}, content);
   });
+  info("Button was clicked!");
+
   // We wait for the new tab to load
-  await loaded;
+  await newTabLoaded;
+  info("The new tab has loaded!");
 
   let iframePageTab = tab;
   return {
