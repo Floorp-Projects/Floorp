@@ -8,7 +8,9 @@
 
 use std::ops::AddAssign;
 
-use crate::connection::{Role, LOCAL_STREAM_LIMIT_BIDI, LOCAL_STREAM_LIMIT_UNI};
+use neqo_common::Role;
+
+use crate::connection::{LOCAL_STREAM_LIMIT_BIDI, LOCAL_STREAM_LIMIT_UNI};
 use crate::frame::StreamType;
 
 pub struct StreamIndexes {

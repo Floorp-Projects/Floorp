@@ -5,37 +5,57 @@
 // except according to those terms.
 
 use crate::connection::Http3State;
+use crate::recv_message::RecvMessageEvents;
+use crate::send_message::SendMessageEvents;
 use crate::Header;
 use neqo_common::matches;
-use neqo_transport::AppError;
 
 use std::cell::RefCell;
 use std::collections::VecDeque;
 use std::rc::Rc;
 
 #[derive(Debug, PartialOrd, Ord, PartialEq, Eq, Clone)]
-pub enum Http3ServerConnEvent {
+pub(crate) enum Http3ServerConnEvent {
     /// Headers are ready.
     Headers {
         stream_id: u64,
-        headers: Vec<Header>,
+        headers: Option<Vec<Header>>,
         fin: bool,
     },
     /// Request data is ready.
-    Data {
-        stream_id: u64,
-        data: Vec<u8>,
-        fin: bool,
-    },
-    /// Peer reset the stream.
-    Reset { stream_id: u64, error: AppError },
+    DataReadable { stream_id: u64 },
+    //TODO: This is never used. Do we need it?
+    // Peer reset the stream.
+    //Reset { stream_id: u64, error: AppError },
     /// Connection state change.
     StateChange(Http3State),
 }
 
 #[derive(Debug, Default, Clone)]
-pub struct Http3ServerConnEvents {
+pub(crate) struct Http3ServerConnEvents {
     events: Rc<RefCell<VecDeque<Http3ServerConnEvent>>>,
+}
+
+impl RecvMessageEvents for Http3ServerConnEvents {
+    /// Add a new `HeaderReady` event.
+    fn header_ready(&self, stream_id: u64, headers: Option<Vec<Header>>, fin: bool) {
+        self.insert(Http3ServerConnEvent::Headers {
+            stream_id,
+            headers,
+            fin,
+        });
+    }
+
+    /// Add a new `DataReadable` event
+    fn data_readable(&self, stream_id: u64) {
+        self.insert(Http3ServerConnEvent::DataReadable { stream_id });
+    }
+}
+
+impl SendMessageEvents for Http3ServerConnEvents {
+    fn data_writable(&self, _stream_id: u64) {
+        // Curently not used on the server side.
+    }
 }
 
 impl Http3ServerConnEvents {
@@ -50,36 +70,12 @@ impl Http3ServerConnEvents {
         self.events.borrow_mut().retain(|evt| !f(evt))
     }
 
-    pub fn events(&self) -> impl Iterator<Item = Http3ServerConnEvent> {
-        self.events.replace(VecDeque::new()).into_iter()
-    }
-
     pub fn has_events(&self) -> bool {
         !self.events.borrow().is_empty()
     }
 
     pub fn next_event(&self) -> Option<Http3ServerConnEvent> {
         self.events.borrow_mut().pop_front()
-    }
-
-    pub fn headers(&self, stream_id: u64, headers: Vec<Header>, fin: bool) {
-        self.insert(Http3ServerConnEvent::Headers {
-            stream_id,
-            headers,
-            fin,
-        });
-    }
-
-    pub fn data(&self, stream_id: u64, data: Vec<u8>, fin: bool) {
-        self.insert(Http3ServerConnEvent::Data {
-            stream_id,
-            data,
-            fin,
-        });
-    }
-
-    pub fn reset(&self, stream_id: u64, error: AppError) {
-        self.insert(Http3ServerConnEvent::Reset { stream_id, error });
     }
 
     pub fn connection_state_change(&self, state: Http3State) {
@@ -89,7 +85,7 @@ impl Http3ServerConnEvents {
     pub fn remove_events_for_stream_id(&self, stream_id: u64) {
         self.remove(|evt| {
             matches!(evt,
-                Http3ServerConnEvent::Reset { stream_id: x, .. } if *x == stream_id)
+                Http3ServerConnEvent::Headers { stream_id: x, .. } | Http3ServerConnEvent::DataReadable { stream_id: x, .. } if *x == stream_id)
         });
     }
 }

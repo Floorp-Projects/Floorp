@@ -9,6 +9,7 @@
 use neqo_common::{qdebug, qerror, qinfo, qtrace, Datagram};
 use neqo_crypto::{init_db, AntiReplay};
 use neqo_http3::{Error, Http3Server, Http3ServerEvent};
+use neqo_qpack::QpackSettings;
 use neqo_transport::{FixedConnectionIdManager, Output};
 use std::env;
 
@@ -48,7 +49,9 @@ fn process_events(server: &mut Http3Server) {
                     ),
                 ];
 
-                let path_hdr = headers.iter().find(|(k, _)| k == ":path");
+                let path_hdr = headers
+                    .as_ref()
+                    .and_then(|h| h.iter().find(|(k, _)| k == ":path"));
                 match path_hdr {
                     Some((_, path)) if !path.is_empty() => {
                         qtrace!("Serve request {}", path);
@@ -61,15 +64,15 @@ fn process_events(server: &mut Http3Server) {
                                 .stream_reset(Error::HttpVersionFallback.code())
                                 .unwrap();
                         } else if path == "/EarlyResponse" {
-                            request
-                                .stream_reset(Error::HttpEarlyResponse.code())
-                                .unwrap();
+                            request.stream_reset(Error::HttpNoError.code()).unwrap();
                         } else if path == "/RequestRejected" {
                             request
                                 .stream_reset(Error::HttpRequestRejected.code())
                                 .unwrap();
                         } else if path == "/.well-known/http-opportunistic" {
-                            let host_hdr = headers.iter().find(|(k, _)| k == ":authority");
+                            let host_hdr = headers
+                                .as_ref()
+                                .and_then(|h| h.iter().find(|(k, _)| k == ":authority"));
                             match host_hdr {
                                 Some((_, host)) if !host.is_empty() => {
                                     let mut content = b"[\"http://".to_vec();
@@ -92,11 +95,13 @@ fn process_events(server: &mut Http3Server) {
                                                     content.len().to_string(),
                                                 ),
                                             ],
-                                            content,
+                                            &content,
                                         )
                                         .unwrap();
                                 }
-                                _ => request.set_response(&default_headers, default_ret).unwrap(),
+                                _ => request
+                                    .set_response(&default_headers, &default_ret)
+                                    .unwrap(),
                             }
                         } else {
                             match path.trim_matches(|p| p == '/').parse::<usize>() {
@@ -110,17 +115,19 @@ fn process_events(server: &mut Http3Server) {
                                             ),
                                             (String::from("content-length"), v.to_string()),
                                         ],
-                                        vec![b'a'; v],
+                                        &vec![b'a'; v],
                                     )
                                     .unwrap(),
-                                Err(_) => {
-                                    request.set_response(&default_headers, default_ret).unwrap()
-                                }
+                                Err(_) => request
+                                    .set_response(&default_headers, &default_ret)
+                                    .unwrap(),
                             }
                         }
                     }
                     _ => {
-                        request.set_response(&default_headers, default_ret).unwrap();
+                        request
+                            .set_response(&default_headers, &default_ret)
+                            .unwrap();
                     }
                 }
             }
@@ -229,6 +236,13 @@ fn main() -> Result<(), io::Error> {
     )?;
 
     let mut svr_timeout = None;
+
+    let qpack_settings = QpackSettings {
+        max_table_size_encoder: MAX_TABLE_SIZE,
+        max_table_size_decoder: MAX_TABLE_SIZE,
+        max_blocked_streams: MAX_BLOCKED_STREAMS,
+    };
+
     let mut server = Http3Server::new(
         Instant::now(),
         &[" HTTP2 Test Cert"],
@@ -236,8 +250,7 @@ fn main() -> Result<(), io::Error> {
         AntiReplay::new(Instant::now(), Duration::from_secs(10), 7, 14)
             .expect("unable to setup anti-replay"),
         Rc::new(RefCell::new(FixedConnectionIdManager::new(5))),
-        MAX_TABLE_SIZE,
-        MAX_BLOCKED_STREAMS,
+        qpack_settings,
     )
     .expect("We cannot make a server!");
 

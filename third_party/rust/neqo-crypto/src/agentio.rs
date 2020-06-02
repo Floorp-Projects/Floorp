@@ -4,12 +4,12 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use crate::constants::*;
+use crate::constants::{ContentType, Epoch};
 use crate::err::{nspr, Error, PR_SetError, Res};
 use crate::prio;
 use crate::ssl;
 
-use neqo_common::{hex, qtrace};
+use neqo_common::{hex, hex_with_len, qtrace};
 use std::cmp::min;
 use std::convert::{TryFrom, TryInto};
 use std::fmt;
@@ -35,7 +35,7 @@ pub fn as_c_void<T: Unpin>(pin: &mut Pin<Box<T>>) -> *mut c_void {
 #[derive(Default, Debug)]
 struct RecordLength {
     epoch: Epoch,
-    ct: ssl::SSLContentType::Type,
+    ct: ContentType,
     len: usize,
 }
 
@@ -43,13 +43,13 @@ struct RecordLength {
 #[derive(Default)]
 pub struct Record {
     pub epoch: Epoch,
-    pub ct: ssl::SSLContentType::Type,
+    pub ct: ContentType,
     pub data: Vec<u8>,
 }
 
 impl Record {
     #[must_use]
-    pub fn new(epoch: Epoch, ct: ssl::SSLContentType::Type, data: &[u8]) -> Self {
+    pub fn new(epoch: Epoch, ct: ContentType, data: &[u8]) -> Self {
         Self {
             epoch,
             ct,
@@ -64,7 +64,7 @@ impl Record {
             ssl::SSL_RecordLayerData(
                 fd,
                 self.epoch,
-                self.ct,
+                ssl::SSLContentType::Type::from(self.ct),
                 self.data.as_ptr(),
                 c_uint::try_from(self.data.len())?,
             )
@@ -79,7 +79,7 @@ impl fmt::Debug for Record {
             "Record {:?}:{:?} {}",
             self.epoch,
             self.ct,
-            hex(&self.data[..])
+            hex_with_len(&self.data[..])
         )
     }
 }
@@ -90,7 +90,7 @@ pub struct RecordList {
 }
 
 impl RecordList {
-    fn append(&mut self, epoch: Epoch, ct: ssl::SSLContentType::Type, data: &[u8]) {
+    fn append(&mut self, epoch: Epoch, ct: ContentType, data: &[u8]) {
         self.records.push(Record::new(epoch, ct, data));
     }
 
@@ -112,7 +112,7 @@ impl RecordList {
         let records = a.as_mut().unwrap();
 
         let slice = std::slice::from_raw_parts(data, len as usize);
-        records.append(epoch, ct, slice);
+        records.append(epoch, ContentType::try_from(ct).unwrap(), slice);
         ssl::SECSuccess
     }
 

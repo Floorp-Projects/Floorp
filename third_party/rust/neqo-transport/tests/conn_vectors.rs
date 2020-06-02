@@ -10,7 +10,7 @@
 
 use neqo_common::{Datagram, Encoder};
 use neqo_transport::State;
-use test_fixture::*;
+use test_fixture::{default_server, loopback, now};
 
 const INITIAL_PACKET: &str = "c0ff00001b088394c8f03e5157080000\
                               449e3b343aa8535064a4268a0d9d7b1c\
@@ -94,7 +94,7 @@ fn process_client_initial() {
 
     let pkt: Vec<u8> = Encoder::from_hex(INITIAL_PACKET).into();
     let dgram = Datagram::new(loopback(), loopback(), pkt);
-    assert_eq!(*server.state(), State::WaitInitial);
+    assert_eq!(*server.state(), State::Init);
     let out = server.process(Some(dgram), now());
     assert_eq!(*server.state(), State::Handshaking);
     assert!(out.dgram().is_some());

@@ -88,6 +88,16 @@ remap_enum! {
 }
 
 remap_enum! {
+    ContentType: u8 => ssl::SSLContentType {
+        TLS_CT_CHANGE_CIPHER_SPEC = ssl_ct_change_cipher_spec,
+        TLS_CT_ALERT = ssl_ct_alert,
+        TLS_CT_HANDSHAKE = ssl_ct_handshake,
+        TLS_CT_APPLICATION_DATA = ssl_ct_application_data,
+        TLS_CT_ACK = ssl_ct_ack,
+    }
+}
+
+remap_enum! {
     Extension: u16 => ssl::SSLExtensionType {
         TLS_EXT_SERVER_NAME = ssl_server_name_xtn,
         TLS_EXT_CERT_STATUS = ssl_cert_status_xtn,

@@ -4,11 +4,13 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+#![allow(clippy::module_name_repetitions)]
+
 use neqo_common::{qdebug, Decoder, IncrementalDecoder, IncrementalDecoderResult};
 use neqo_transport::Connection;
 
 #[derive(Debug)]
-pub struct NewStreamTypeReader {
+pub(crate) struct NewStreamTypeReader {
     reader: IncrementalDecoder,
     fin: bool,
 }

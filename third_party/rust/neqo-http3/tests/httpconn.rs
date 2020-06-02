@@ -24,12 +24,12 @@ fn process_server_events(server: &mut Http3Server) {
         {
             assert_eq!(
                 headers,
-                vec![
+                Some(vec![
                     (String::from(":method"), String::from("GET")),
                     (String::from(":scheme"), String::from("https")),
                     (String::from(":authority"), String::from("something.com")),
                     (String::from(":path"), String::from("/"))
-                ]
+                ])
             );
             assert_eq!(fin, true);
             request
@@ -38,7 +38,7 @@ fn process_server_events(server: &mut Http3Server) {
                         (String::from(":status"), String::from("200")),
                         (String::from("content-length"), String::from("3")),
                     ],
-                    RESPONSE_DATA.to_vec(),
+                    RESPONSE_DATA,
                 )
                 .unwrap();
             request_found = true;
@@ -52,18 +52,15 @@ fn process_client_events(conn: &mut Http3Client) {
     let mut response_data_found = false;
     while let Some(event) = conn.next_event() {
         match event {
-            Http3ClientEvent::HeaderReady { stream_id } => {
-                let h = conn.read_response_headers(stream_id);
+            Http3ClientEvent::HeaderReady { headers, fin, .. } => {
                 assert_eq!(
-                    h,
-                    Ok((
-                        vec![
-                            (String::from(":status"), String::from("200")),
-                            (String::from("content-length"), String::from("3")),
-                        ],
-                        false
-                    ))
+                    headers,
+                    Some(vec![
+                        (String::from(":status"), String::from("200")),
+                        (String::from("content-length"), String::from("3")),
+                    ])
                 );
+                assert_eq!(fin, false);
                 response_header_found = true;
             }
             Http3ClientEvent::DataReadable { stream_id } => {

@@ -39,11 +39,7 @@ class NeqoHttp3Conn final {
     neqo_http3conn_process_input(this, aPacket, aLen);
   }
 
-  void ProcessHttp3() { neqo_http3conn_process_http3(this); }
-
   uint64_t ProcessOutput() { return neqo_http3conn_process_output(this); }
-
-  void ProcessTimer() { neqo_http3conn_process_timer(this); }
 
   bool HasDataToSend() { return neqo_http3conn_has_data_to_send(this); }
 
@@ -52,7 +48,10 @@ class NeqoHttp3Conn final {
     return neqo_http3conn_get_data_to_send(this, &aData);
   }
 
-  Http3Event GetEvent() { return neqo_http3conn_event(this); }
+  nsresult GetEvent(Http3Event* aEvent, nsTArray<uint8_t>& aHeaderData,
+                    bool* aFin) {
+    return neqo_http3conn_event(this, aEvent, &aHeaderData, aFin);
+  }
 
   nsresult Fetch(const nsACString& aMethod, const nsACString& aScheme,
                  const nsACString& aHost, const nsACString& aPath,
@@ -70,12 +69,6 @@ class NeqoHttp3Conn final {
   // This closes only the sending side of a stream.
   nsresult CloseStream(uint64_t aStreamId) {
     return neqo_http3conn_close_stream(this, aStreamId);
-  }
-
-  nsresult ReadResponseHeaders(uint64_t aStreamId, nsTArray<uint8_t>& aHeaders,
-                               bool* fin) {
-    return neqo_http3conn_read_response_headers(this, aStreamId, &aHeaders,
-                                                fin);
   }
 
   nsresult ReadResponseData(uint64_t aStreamId, uint8_t* aBuf, uint32_t aLen,

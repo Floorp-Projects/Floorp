@@ -224,7 +224,7 @@ impl Default for IncrementalDecoder {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::{Decoder, IncrementalDecoder, IncrementalDecoderResult};
     use crate::codec::Encoder;
 
     #[test]

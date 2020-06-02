@@ -235,7 +235,7 @@ impl<T> Timer<T> {
 
 #[cfg(test)]
 mod test {
-    use super::*;
+    use super::{Duration, Instant, Timer};
     use lazy_static::lazy_static;
 
     lazy_static! {

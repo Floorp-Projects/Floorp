@@ -2,7 +2,7 @@
 #![warn(clippy::pedantic)]
 
 use neqo_crypto::aead::Aead;
-use neqo_crypto::constants::*;
+use neqo_crypto::constants::{Cipher, TLS_AES_128_GCM_SHA256, TLS_VERSION_1_3};
 use neqo_crypto::hkdf;
 use test_fixture::fixture_init;
 

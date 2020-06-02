@@ -238,6 +238,14 @@ nsresult Http3Stream::OnReadSegment(const char* buf, uint32_t count,
   return NS_OK;
 }
 
+void Http3Stream::SetResponseHeaders(nsTArray<uint8_t>& aResponseHeaders,
+                                     bool aFin) {
+  MOZ_ASSERT(mFlatResponseHeaders.IsEmpty(),
+             "Cannot set response headers more than once");
+  mFlatResponseHeaders.SwapElements(aResponseHeaders);
+  mFin = aFin;
+}
+
 nsresult Http3Stream::OnWriteSegment(char* buf, uint32_t count,
                                      uint32_t* countWritten) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
@@ -250,15 +258,8 @@ nsresult Http3Stream::OnWriteSegment(char* buf, uint32_t count,
     case EARLY_RESPONSE:
       break;
     case READING_HEADERS: {
-      if (mFlatResponseHeaders.IsEmpty()) {
-        nsresult rv = mSession->ReadResponseHeaders(
-            mStreamId, mFlatResponseHeaders, &mFin);
-        if (NS_FAILED(rv) && (rv != NS_BASE_STREAM_WOULD_BLOCK)) {
-          return rv;
-        }
-        LOG(("Http3Stream::OnWriteSegment [this=%p, read %u bytes of headers",
-             this, (uint32_t)mFlatResponseHeaders.Length()));
-      }
+      // SetResponseHeaders should have been previously called.
+      MOZ_ASSERT(!mFlatResponseHeaders.IsEmpty(), "Headers empty!");
       *countWritten = (mFlatResponseHeaders.Length() > count)
                           ? count
                           : mFlatResponseHeaders.Length();

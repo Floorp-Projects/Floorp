@@ -1,7 +1,10 @@
 #![allow(dead_code)]
 
 use neqo_common::qinfo;
-use neqo_crypto::*;
+use neqo_crypto::{
+    AntiReplay, AuthenticationStatus, Client, HandshakeState, RecordList, Res, SecretAgent, Server,
+    ZeroRttCheckResult, ZeroRttChecker,
+};
 use std::mem;
 use std::time::Instant;
 use test_fixture::{anti_replay, fixture_init, now};

@@ -32,7 +32,7 @@ impl<T> OnceResult<T> {
 
 #[cfg(test)]
 mod test {
-    use super::*;
+    use super::OnceResult;
 
     static mut STATIC_ONCE_RESULT: OnceResult<u64> = OnceResult::new();
 

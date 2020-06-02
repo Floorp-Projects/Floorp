@@ -204,7 +204,10 @@ impl Default for TimeHolder {
 
 #[cfg(test)]
 mod test {
-    use super::*;
+    use super::{get_base, init, Interval, PRTime, Time};
+    use crate::err::Res;
+    use std::convert::{TryFrom, TryInto};
+    use std::time::{Duration, Instant};
 
     #[test]
     fn convert_stable() {

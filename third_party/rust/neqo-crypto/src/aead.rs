@@ -4,7 +4,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use crate::constants::*;
+use crate::constants::{Cipher, Version};
 use crate::err::{Error, Res};
 use crate::p11::{PK11SymKey, SymKey};
 use crate::ssl;

@@ -15,7 +15,7 @@ const SETTINGS_QPACK_MAX_TABLE_CAPACITY: SettingsType = 0x1;
 const SETTINGS_QPACK_BLOCKED_STREAMS: SettingsType = 0x7;
 
 #[derive(Clone, PartialEq, Debug, Copy)]
-pub enum HSettingType {
+pub(crate) enum HSettingType {
     MaxHeaderListSize,
     MaxTableCapacity,
     BlockedStreams,
@@ -24,13 +24,12 @@ pub enum HSettingType {
 fn hsetting_default(setting_type: HSettingType) -> u64 {
     match setting_type {
         HSettingType::MaxHeaderListSize => 1 << 62,
-        HSettingType::MaxTableCapacity => 0,
-        HSettingType::BlockedStreams => 0,
+        HSettingType::MaxTableCapacity | HSettingType::BlockedStreams => 0,
     }
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct HSetting {
+pub(crate) struct HSetting {
     pub setting_type: HSettingType,
     pub value: u64,
 }
@@ -45,7 +44,7 @@ impl HSetting {
 }
 
 #[derive(Clone, Debug, Default, PartialEq)]
-pub struct HSettings {
+pub(crate) struct HSettings {
     settings: Vec<HSetting>,
 }
 
@@ -65,7 +64,7 @@ impl HSettings {
 
     pub fn encode_frame_contents(&self, enc: &mut Encoder) {
         enc.encode_vvec_with(|enc_inner| {
-            for iter in self.settings.iter() {
+            for iter in &self.settings {
                 match iter.setting_type {
                     HSettingType::MaxHeaderListSize => {
                         enc_inner.encode_varint(SETTINGS_MAX_HEADER_LIST_SIZE as u64);

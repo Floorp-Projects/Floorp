@@ -4,10 +4,37 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use env_logger::Builder;
 use std::io::Write;
 use std::sync::Once;
 use std::time::Instant;
+
+#[macro_export]
+macro_rules! do_log {
+    (target: $target:expr, $lvl:expr, $($arg:tt)+) => ({
+        let lvl = $lvl;
+        if lvl <= ::log::max_level() {
+            ::log::__private_api_log(
+                ::log::__log_format_args!($($arg)+),
+                lvl,
+                &($target, ::log::__log_module_path!(), ::log::__log_file!(), ::log::__log_line!()),
+            );
+        }
+    });
+    ($lvl:expr, $($arg:tt)+) => ($crate::do_log!(target: ::log::__log_module_path!(), $lvl, $($arg)+))
+}
+
+#[macro_export]
+macro_rules! log_subject {
+    ($lvl:expr, $subject:expr) => {{
+        if $lvl <= ::log::max_level() {
+            format!("{}", $subject)
+        } else {
+            String::new()
+        }
+    }};
+}
+
+use env_logger::Builder;
 
 static INIT_ONCE: Once = Once::new();
 
@@ -30,42 +57,42 @@ pub fn init() {
             )
         });
         if let Err(e) = builder.try_init() {
-            ::log::log!(::log::Level::Info, "Logging initialization error {:?}", e);
+            do_log!(::log::Level::Info, "Logging initialization error {:?}", e);
         } else {
-            ::log::log!(::log::Level::Info, "Logging initialized");
+            do_log!(::log::Level::Info, "Logging initialized");
         }
     });
 }
 
 #[macro_export]
-macro_rules! qlog {
+macro_rules! log_invoke {
     ($lvl:expr, $ctx:expr, $($arg:tt)*) => ( {
         ::neqo_common::log::init();
-        ::log::log!($lvl, "[{}] {}", $ctx, format!($($arg)*));
+        ::neqo_common::do_log!($lvl, "[{}] {}", $ctx, format!($($arg)*));
     } )
 }
 #[macro_export]
 macro_rules! qerror {
-    ([$ctx:expr], $($arg:tt)*) => (::neqo_common::qlog!(::log::Level::Error, $ctx, $($arg)*););
-    ($($arg:tt)*) => ( { ::neqo_common::log::init(); ::log::log!(::log::Level::Error, $($arg)*); } );
+    ([$ctx:expr], $($arg:tt)*) => (::neqo_common::log_invoke!(::log::Level::Error, $ctx, $($arg)*););
+    ($($arg:tt)*) => ( { ::neqo_common::log::init(); ::neqo_common::do_log!(::log::Level::Error, $($arg)*); } );
 }
 #[macro_export]
 macro_rules! qwarn {
-    ([$ctx:expr], $($arg:tt)*) => (::neqo_common::qlog!(::log::Level::Warn, $ctx, $($arg)*););
-    ($($arg:tt)*) => ( { ::neqo_common::log::init(); ::log::log!(::log::Level::Warn, $($arg)*); } );
+    ([$ctx:expr], $($arg:tt)*) => (::neqo_common::log_invoke!(::log::Level::Warn, $ctx, $($arg)*););
+    ($($arg:tt)*) => ( { ::neqo_common::log::init(); ::neqo_common::do_log!(::log::Level::Warn, $($arg)*); } );
 }
 #[macro_export]
 macro_rules! qinfo {
-    ([$ctx:expr], $($arg:tt)*) => (::neqo_common::qlog!(::log::Level::Info, $ctx, $($arg)*););
-    ($($arg:tt)*) => ( { ::neqo_common::log::init(); ::log::log!(::log::Level::Info, $($arg)*); } );
+    ([$ctx:expr], $($arg:tt)*) => (::neqo_common::log_invoke!(::log::Level::Info, $ctx, $($arg)*););
+    ($($arg:tt)*) => ( { ::neqo_common::log::init(); ::neqo_common::do_log!(::log::Level::Info, $($arg)*); } );
 }
 #[macro_export]
 macro_rules! qdebug {
-    ([$ctx:expr], $($arg:tt)*) => (::neqo_common::qlog!(::log::Level::Debug, $ctx, $($arg)*););
-    ($($arg:tt)*) => ( { ::neqo_common::log::init(); ::log::log!(::log::Level::Debug, $($arg)*); } );
+    ([$ctx:expr], $($arg:tt)*) => (::neqo_common::log_invoke!(::log::Level::Debug, $ctx, $($arg)*););
+    ($($arg:tt)*) => ( { ::neqo_common::log::init(); ::neqo_common::do_log!(::log::Level::Debug, $($arg)*); } );
 }
 #[macro_export]
 macro_rules! qtrace {
-    ([$ctx:expr], $($arg:tt)*) => (::neqo_common::qlog!(::log::Level::Trace, $ctx, $($arg)*););
-    ($($arg:tt)*) => ( { ::neqo_common::log::init(); ::log::log!(::log::Level::Trace, $($arg)*); } );
+    ([$ctx:expr], $($arg:tt)*) => (::neqo_common::log_invoke!(::log::Level::Trace, $ctx, $($arg)*););
+    ($($arg:tt)*) => ( { ::neqo_common::log::init(); ::neqo_common::do_log!(::log::Level::Trace, $($arg)*); } );
 }

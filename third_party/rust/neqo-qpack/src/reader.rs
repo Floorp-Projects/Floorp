@@ -4,7 +4,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use crate::huffman::Huffman;
+use crate::huffman::decode_huffman;
 use crate::prefix::Prefix;
 use crate::{Error, Res};
 use neqo_common::{qdebug, qerror};
@@ -37,7 +37,7 @@ impl<'a> ReadByte for ReceiverConnWrapper<'a> {
         let mut b = [0];
         match self.conn.stream_recv(self.stream_id, &mut b)? {
             (_, true) => Err(Error::ClosedCriticalStream),
-            (0, false) => Err(Error::NoMoreData),
+            (0, false) => Err(Error::NeedMoreData),
             _ => Ok(b[0]),
         }
     }
@@ -105,10 +105,7 @@ impl<'a> ReceiverBufferWrapper<'a> {
 
         let first_byte = self.read_byte()?;
         let mut reader = IntReader::new(first_byte, prefix_len);
-        match reader.read(self) {
-            Ok(Some(val)) => Ok(val),
-            _ => Err(Error::DecompressionFailed),
-        }
+        reader.read(self)
     }
 
     /// Do not use `LiteralReader` here to avoid copying data.
@@ -130,11 +127,10 @@ impl<'a> ReceiverBufferWrapper<'a> {
         let mut int_reader = IntReader::new(first_byte, prefix_len + 1);
         let length: usize = int_reader
             .read(self)?
-            .ok_or(Error::DecompressionFailed)?
             .try_into()
             .or(Err(Error::DecompressionFailed))?;
         if use_huffman {
-            Ok(to_string(&Huffman::default().decode(self.slice(length)?)?)?)
+            Ok(to_string(&decode_huffman(self.slice(length)?)?)?)
         } else {
             Ok(to_string(self.slice(length)?)?)
         }
@@ -189,34 +185,17 @@ impl IntReader {
         unreachable!();
     }
 
-    /// This function reads more bytes until the varint is decoded or until stream/buffer does not
+    /// This function reads bytes until the varint is decoded or until stream/buffer does not
     /// have any more date.
     /// # Errors
     /// Possible errors are:
-    ///  1) `IntegerOverflow`
-    ///  2) Any `ReadByte`'s error
-    /// It returns Some(value) if reading the varint is done or None if it needs more data.
-    pub fn read<R: ReadByte>(&mut self, s: &mut R) -> Res<Option<u64>> {
-        // If it is not finished yet read more data.
-        // A varint may take only one byte, In that case already the first by has set state to done.
-        if !self.done {
-            self.read_more(s)?;
-        }
-
-        if self.done {
-            return Ok(Some(self.value));
-        }
-        Ok(None)
-    }
-
-    fn read_more<R: ReadByte>(&mut self, s: &mut R) -> Res<()> {
+    ///  1) `NeedMoreData` if the reader needs more data,
+    ///  2) `IntegerOverflow`,
+    ///  3) Any `ReadByte`'s error
+    pub fn read<R: ReadByte>(&mut self, s: &mut R) -> Res<u64> {
         let mut b: u8;
         while !self.done {
-            b = match s.read_byte() {
-                Ok(b) => b,
-                Err(Error::NoMoreData) => return Ok(()),
-                Err(e) => return Err(e),
-            };
+            b = s.read_byte()?;
 
             if (self.cnt == 63) && (b > 1 || (b == 1 && ((self.value >> 63) == 1))) {
                 qerror!("Error decoding prefixed encoded int - IntegerOverflow");
@@ -231,7 +210,7 @@ impl IntReader {
                 self.done = true;
             }
         }
-        Ok(())
+        Ok(self.value)
     }
 }
 
@@ -282,45 +261,40 @@ impl LiteralReader {
     /// have any more date ready.
     /// # Errors
     /// Possible errors are:
-    ///  1) `IntegerOverflow`
-    ///  2) Any `ReadByte`'s error
-    /// It returns Some(value) if reading the literal is done or None if it needs more data.
-    pub fn read<T: ReadByte + Reader>(&mut self, s: &mut T) -> Res<Option<Vec<u8>>> {
+    ///  1) `NeedMoreData` if the reader needs more data,
+    ///  2) `IntegerOverflow`
+    ///  3) Any `ReadByte`'s error
+    /// It returns value if reading the literal is done or None if it needs more data.
+    pub fn read<T: ReadByte + Reader>(&mut self, s: &mut T) -> Res<Vec<u8>> {
         loop {
             qdebug!("state = {:?}", self.state);
             match &mut self.state {
                 LiteralReaderState::ReadHuffman => {
-                    let b = match s.read_byte() {
-                        Ok(b) => b,
-                        Err(Error::NoMoreData) => return Ok(None),
-                        Err(e) => return Err(e),
-                    };
+                    let b = s.read_byte()?;
 
                     self.use_huffman = (b & 0x80) != 0;
                     self.state = LiteralReaderState::ReadLength {
                         reader: IntReader::new(b, 1),
                     };
                 }
-                LiteralReaderState::ReadLength { reader } => match reader.read(s)? {
-                    Some(v) => {
-                        self.literal
-                            .resize(v.try_into().or(Err(Error::Decoding))?, 0x0);
-                        self.state = LiteralReaderState::ReadLiteral { offset: 0 };
-                    }
-                    None => break Ok(None),
-                },
+                LiteralReaderState::ReadLength { reader } => {
+                    let v = reader.read(s)?;
+                    self.literal
+                        .resize(v.try_into().or(Err(Error::Decoding))?, 0x0);
+                    self.state = LiteralReaderState::ReadLiteral { offset: 0 };
+                }
                 LiteralReaderState::ReadLiteral { offset } => {
                     let amount = s.read(&mut self.literal[*offset..])?;
                     *offset += amount;
                     if *offset == self.literal.len() {
                         self.state = LiteralReaderState::Done;
                         if self.use_huffman {
-                            break Ok(Some(Huffman::default().decode(&self.literal)?));
+                            break Ok(decode_huffman(&self.literal)?);
                         } else {
-                            break Ok(Some(mem::replace(&mut self.literal, Vec::new())));
+                            break Ok(mem::replace(&mut self.literal, Vec::new()));
                         }
                     } else {
-                        break Ok(None);
+                        break Err(Error::NeedMoreData);
                     }
                 }
                 LiteralReaderState::Done => {
@@ -334,11 +308,11 @@ impl LiteralReader {
 /// This is a helper function used only by `ReceiverBufferWrapper`, therefore it returns
 /// `DecompressionFailed` if any error happens.
 /// # Errors
-/// If an parsing error occurred, the function returns `DecompressionFailed`.
+/// If an parsing error occurred, the function returns `ToStringFailed`.
 pub fn to_string(v: &[u8]) -> Res<String> {
     match str::from_utf8(v) {
         Ok(s) => Ok(s.to_string()),
-        Err(_) => Err(Error::DecompressionFailed),
+        Err(_) => Err(Error::ToStringFailed),
     }
 }
 
@@ -362,7 +336,7 @@ pub(crate) mod test_receiver {
 
     impl ReadByte for TestReceiver {
         fn read_byte(&mut self) -> Res<u8> {
-            self.buf.pop_back().ok_or(Error::NoMoreData)
+            self.buf.pop_back().ok_or(Error::NeedMoreData)
         }
     }
 
@@ -374,7 +348,7 @@ pub(crate) mod test_receiver {
                 buf.len()
             };
             for item in buf.iter_mut().take(len) {
-                *item = self.buf.pop_back().ok_or(Error::NoMoreData)?;
+                *item = self.buf.pop_back().ok_or(Error::NeedMoreData)?;
             }
             Ok(len)
         }
@@ -414,7 +388,7 @@ mod tests {
             let mut reader = IntReader::new(buf[0], *prefix_len);
             let mut test_receiver: TestReceiver = TestReceiver::default();
             test_receiver.write(&buf[1..]);
-            assert_eq!(reader.read(&mut test_receiver), Ok(Some(*value)));
+            assert_eq!(reader.read(&mut test_receiver), Ok(*value));
         }
     }
 
@@ -426,7 +400,7 @@ mod tests {
             test_receiver.write(&buf[1..]);
             // add some more data
             test_receiver.write(&[0x0, 0x0, 0x0]);
-            assert_eq!(reader.read(&mut test_receiver), Ok(Some(*value)));
+            assert_eq!(reader.read(&mut test_receiver), Ok(*value));
         }
     }
 
@@ -436,28 +410,28 @@ mod tests {
         let mut reader = IntReader::new(buf[0], *prefix_len);
         let mut test_receiver: TestReceiver = TestReceiver::default();
 
-        // data has not been received yet, reading IntReader will return Ok(None).
-        assert_eq!(reader.read(&mut test_receiver), Ok(None));
+        // data has not been received yet, reading IntReader will return Err(Error::NeedMoreData).
+        assert_eq!(reader.read(&mut test_receiver), Err(Error::NeedMoreData));
 
         // Write one byte.
         test_receiver.write(&buf[1..2]);
-        // data has not been received yet, reading IntReader will return Ok(None).
-        assert_eq!(reader.read(&mut test_receiver), Ok(None));
+        // data has not been received yet, reading IntReader will return Err(Error::NeedMoreData).
+        assert_eq!(reader.read(&mut test_receiver), Err(Error::NeedMoreData));
 
         // Write one byte.
         test_receiver.write(&buf[2..]);
         // Now prefixed int is complete.
-        assert_eq!(reader.read(&mut test_receiver), Ok(Some(*value)));
+        assert_eq!(reader.read(&mut test_receiver), Ok(*value));
     }
 
-    type TestSetup = (&'static [u8], u8, Res<Option<u64>>);
+    type TestSetup = (&'static [u8], u8, Res<u64>);
     const TEST_CASES_BIG_NUMBERS: [TestSetup; 3] = [
         (
             &[
                 0xFF, 0x80, 0xFE, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x01,
             ],
             0,
-            Ok(Some(0xFFFF_FFFF_FFFF_FFFF)),
+            Ok(0xFFFF_FFFF_FFFF_FFFF),
         ),
         (
             &[
@@ -558,7 +532,7 @@ mod tests {
             let mut test_receiver: TestReceiver = TestReceiver::default();
             test_receiver.write(&buf[1..]);
             assert_eq!(
-                to_string(&reader.read(&mut test_receiver).unwrap().unwrap()).unwrap(),
+                to_string(&reader.read(&mut test_receiver).unwrap()).unwrap(),
                 *value
             );
         }
@@ -569,7 +543,7 @@ mod tests {
         for (buf, prefix_len, value) in &TEST_CASES_NUMBERS {
             let mut buffer = ReceiverBufferWrapper::new(buf);
             let mut reader = IntReader::new(buffer.read_byte().unwrap(), *prefix_len);
-            assert_eq!(reader.read(&mut buffer), Ok(Some(*value)));
+            assert_eq!(reader.read(&mut buffer), Ok(*value));
         }
     }
 
