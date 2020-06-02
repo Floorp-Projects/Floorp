@@ -75,6 +75,7 @@ enum class SymbolCode : uint32_t {
   WellKnownAPILimit =
       0x80000000,  // matches JS::shadow::Symbol::WellKnownAPILimit for inline
                    // use
+  PrivateNameSymbol = 0xfffffffd,  // created by the #PrivateName syntax.
   InSymbolRegistry =
       0xfffffffe,            // created by Symbol.for() or JS::GetSymbolFor()
   UniqueSymbol = 0xffffffff  // created by Symbol() or JS::NewSymbol()

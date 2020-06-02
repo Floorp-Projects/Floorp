@@ -59,26 +59,34 @@ static JSString* StringToSource(JSContext* cx, JSString* str) {
 static JSString* SymbolToSource(JSContext* cx, Symbol* symbol) {
   RootedString desc(cx, symbol->description());
   SymbolCode code = symbol->code();
-  if (code != SymbolCode::InSymbolRegistry &&
-      code != SymbolCode::UniqueSymbol) {
+  if (symbol->isWellKnownSymbol()) {
     // Well-known symbol.
-    MOZ_ASSERT(uint32_t(code) < JS::WellKnownSymbolLimit);
     return desc;
   }
 
   JSStringBuilder buf(cx);
-  if (code == SymbolCode::InSymbolRegistry ? !buf.append("Symbol.for(")
-                                           : !buf.append("Symbol(")) {
-    return nullptr;
-  }
-  if (desc) {
-    UniqueChars quoted = QuoteString(cx, desc, '"');
-    if (!quoted || !buf.append(quoted.get(), strlen(quoted.get()))) {
+  if (code == SymbolCode::PrivateNameSymbol) {
+    MOZ_ASSERT(desc);
+    if (!buf.append('#') || !buf.append(desc)) {
       return nullptr;
     }
-  }
-  if (!buf.append(')')) {
-    return nullptr;
+  } else {
+    MOZ_ASSERT(code == SymbolCode::InSymbolRegistry ||
+               code == SymbolCode::UniqueSymbol);
+
+    if (code == SymbolCode::InSymbolRegistry ? !buf.append("Symbol.for(")
+                                             : !buf.append("Symbol(")) {
+      return nullptr;
+    }
+    if (desc) {
+      UniqueChars quoted = QuoteString(cx, desc, '"');
+      if (!quoted || !buf.append(quoted.get(), strlen(quoted.get()))) {
+        return nullptr;
+      }
+    }
+    if (!buf.append(')')) {
+      return nullptr;
+    }
   }
   return buf.finishString();
 }
