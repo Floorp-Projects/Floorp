@@ -32,7 +32,7 @@ class SmartTrace extends Component {
       onViewSource: PropTypes.func.isRequired,
       onViewSourceInDebugger: PropTypes.func.isRequired,
       // Service to enable the source map feature.
-      sourceMapService: PropTypes.object,
+      sourceMapURLService: PropTypes.object,
       initialRenderDelay: PropTypes.number,
       onSourceMapResultDebounceDelay: PropTypes.number,
       // Function that will be called when the SmartTrace is ready, i.e. once it was
@@ -55,7 +55,7 @@ class SmartTrace extends Component {
       // If a sourcemap service is passed, we want to introduce a small delay in rendering
       // so we can have the results from the sourcemap service, or render if they're not
       // available yet.
-      ready: !props.sourceMapService,
+      ready: !props.sourceMapURLService,
       frozen: false,
     };
   }
@@ -65,8 +65,8 @@ class SmartTrace extends Component {
   }
 
   componentWillMount() {
-    if (this.props.sourceMapService) {
-      this.sourceMapServiceUnsubscriptions = [];
+    if (this.props.sourceMapURLService) {
+      this.sourceMapURLServiceUnsubscriptions = [];
       const subscriptions = this.props.stacktrace.map(
         (frame, index) =>
           new Promise(resolve => {
@@ -82,13 +82,13 @@ class SmartTrace extends Component {
               );
               resolve();
             };
-            const unsubscribe = this.props.sourceMapService.subscribe(
+            const unsubscribe = this.props.sourceMapURLService.subscribe(
               source,
               lineNumber,
               columnNumber,
               subscribeCallback
             );
-            this.sourceMapServiceUnsubscriptions.push(unsubscribe);
+            this.sourceMapURLServiceUnsubscriptions.push(unsubscribe);
           })
       );
 
@@ -145,8 +145,8 @@ class SmartTrace extends Component {
       clearTimeout(this.initialRenderDelayTimeoutId);
     }
 
-    if (this.sourceMapServiceUnsubscriptions) {
-      this.sourceMapServiceUnsubscriptions.forEach(unsubscribe => {
+    if (this.sourceMapURLServiceUnsubscriptions) {
+      this.sourceMapURLServiceUnsubscriptions.forEach(unsubscribe => {
         if (typeof unsubscribe === "function") {
           unsubscribe();
         }

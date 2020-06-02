@@ -300,7 +300,7 @@ window.onload = async function () {
     };
     const mockSourceMapService = {
       subscribe: function (url, line, column, callback) {
-	// Resolve immediately.
+        // Resolve immediately.
         callback(true, resolvedLocation.sourceUrl, resolvedLocation.line);
       },
       unsubscribe: function (url, line, column, callback) {
@@ -308,10 +308,10 @@ window.onload = async function () {
     };
     await checkFrameComponent({
       frame: {
-	line: 97,
-	source: "https://bugzilla.mozilla.org/bundle.js",
+        line: 97,
+        source: "https://bugzilla.mozilla.org/bundle.js",
       },
-      sourceMapService: mockSourceMapService,
+      sourceMapURLService: mockSourceMapService,
     }, {
       file: "original.js",
       line: resolvedLocation.line,

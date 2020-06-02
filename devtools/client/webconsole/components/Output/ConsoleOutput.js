@@ -50,7 +50,7 @@ class ConsoleOutput extends Component {
       serviceContainer: PropTypes.shape({
         attachRefToWebConsoleUI: PropTypes.func.isRequired,
         openContextMenu: PropTypes.func.isRequired,
-        sourceMapService: PropTypes.object,
+        sourceMapURLService: PropTypes.object,
       }),
       dispatch: PropTypes.func.isRequired,
       timestampsVisible: PropTypes.bool,

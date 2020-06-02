@@ -418,7 +418,7 @@ describe("Function - Jump to definition", () => {
 
     const renderedComponent = renderRep(object, {
       onViewSourceInDebugger,
-      sourceMapService: { originalPositionFor },
+      sourceMapURLService: { originalPositionFor },
     });
 
     const node = renderedComponent.find(".jump-definition");

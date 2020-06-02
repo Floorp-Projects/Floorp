@@ -63,7 +63,7 @@ EventTooltip.prototype = {
     this.container = doc.createElementNS(XHTML_NS, "div");
     this.container.className = "devtools-tooltip-events-container";
 
-    const sourceMapService = this._toolbox.sourceMapURLService;
+    const sourceMapURLService = this._toolbox.sourceMapURLService;
 
     const Bubbling = L10N.getStr("eventsTooltip.Bubbling");
     const Capturing = L10N.getStr("eventsTooltip.Capturing");
@@ -124,7 +124,7 @@ EventTooltip.prototype = {
             }
           };
 
-          sourceMapService.subscribe(
+          sourceMapURLService.subscribe(
             location.url,
             location.line,
             location.column,
@@ -359,9 +359,9 @@ EventTooltip.prototype = {
       node.removeEventListener("click", this._debugClicked);
     }
 
-    const sourceMapService = this._toolbox.sourceMapURLService;
+    const sourceMapURLService = this._toolbox.sourceMapURLService;
     for (const subscription of this._subscriptions) {
-      sourceMapService.unsubscribe(
+      sourceMapURLService.unsubscribe(
         subscription.url,
         subscription.line,
         subscription.column,

@@ -30,7 +30,7 @@ class StackTracePanel extends Component {
     return {
       connector: PropTypes.object.isRequired,
       request: PropTypes.object.isRequired,
-      sourceMapService: PropTypes.object,
+      sourceMapURLService: PropTypes.object,
       openLink: PropTypes.func,
     };
   }
@@ -58,7 +58,7 @@ class StackTracePanel extends Component {
   }
 
   render() {
-    const { connector, openLink, request, sourceMapService } = this.props;
+    const { connector, openLink, request, sourceMapURLService } = this.props;
 
     const { stacktrace } = request;
 
@@ -69,7 +69,7 @@ class StackTracePanel extends Component {
         onViewSourceInDebugger: ({ url, line, column }) => {
           return connector.viewSourceInDebugger(url, line, column);
         },
-        sourceMapService,
+        sourceMapURLService,
         openLink,
       })
     );

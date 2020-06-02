@@ -39,7 +39,7 @@ window.onload = async function () {
       },
       subscribe: function (url, line, column, callback) {
         this._callback = callback;
-	// Resolve immediately.
+        // Resolve immediately.
         this._update();
       },
       unsubscribe: function (url, line, column, callback) {
@@ -49,10 +49,10 @@ window.onload = async function () {
     const props = {
       onClick: () => {},
       frame: {
-	line: 97,
-	source: "https://bugzilla.mozilla.org/bundle.js",
+        line: 97,
+        source: "https://bugzilla.mozilla.org/bundle.js",
       },
-      sourceMapService: mockSourceMapService,
+      sourceMapURLService: mockSourceMapService,
     };
 
     const PREF = "devtools.source-map.client-service.enabled";
