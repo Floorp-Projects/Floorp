@@ -11,7 +11,8 @@
 namespace mozilla {
 namespace dom {
 
-WebGLChild::WebGLChild(ClientWebGLContext& context) : mContext(context) {}
+WebGLChild::WebGLChild(ClientWebGLContext& context)
+    : PcqActor(this), mContext(context) {}
 
 WebGLChild::~WebGLChild() { (void)Send__delete__(this); }
 

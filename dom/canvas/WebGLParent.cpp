@@ -42,7 +42,7 @@ mozilla::ipc::IPCResult WebGLParent::RecvInitialize(
   return IPC_OK();
 }
 
-WebGLParent::WebGLParent() = default;
+WebGLParent::WebGLParent() : PcqActor(this) {}
 WebGLParent::~WebGLParent() = default;
 
 bool WebGLParent::BeginCommandQueueDrain() {
