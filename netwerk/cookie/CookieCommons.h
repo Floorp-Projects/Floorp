@@ -121,6 +121,15 @@ class CookieCommons final {
   static nsICookie::schemeType PrincipalToSchemeType(nsIPrincipal* aPrincipal);
 
   static nsICookie::schemeType SchemeToSchemeType(const nsACString& aScheme);
+
+  // Returns true if the channel is a safe top-level navigation or if it's a
+  // download request
+  static bool IsSafeTopLevelNav(nsIChannel* aChannel);
+
+  // Returns true if the channel is a foreign with respect to the host-uri.
+  // For loads of TYPE_DOCUMENT, this function returns true if it's a cross
+  // origin navigation.
+  static bool IsSameSiteForeign(nsIChannel* aChannel, nsIURI* aHostURI);
 };
 
 }  // namespace net
