@@ -1052,7 +1052,8 @@ void WindowSurfaceWayland::CommitWaylandBuffer() {
   MOZ_ASSERT(!mWaylandBuffer->IsAttached(),
              "We can't draw to attached wayland buffer!");
 
-  wl_surface* waylandSurface = mWindow->GetWaylandSurface();
+  MozContainer* container = mWindow->GetMozContainer();
+  wl_surface* waylandSurface = moz_container_wayland_surface_lock(container);
   if (!waylandSurface) {
     LOGWAYLAND(("    [%p] mWindow->GetWaylandSurface() failed, delay commit.\n",
                 (void*)this));
@@ -1077,6 +1078,10 @@ void WindowSurfaceWayland::CommitWaylandBuffer() {
     }
     return;
   }
+
+  auto unlockContainer =
+      MakeScopeExit([&] { moz_container_wayland_surface_unlock(container); });
+
   wl_proxy_set_queue((struct wl_proxy*)waylandSurface,
                      mWaylandDisplay->GetEventQueue());
 
