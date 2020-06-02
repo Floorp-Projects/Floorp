@@ -393,7 +393,6 @@ enum NativeGetPropCacheability {
   CanAttachReadSlot,
   CanAttachNativeGetter,
   CanAttachScriptedGetter,
-  CanAttachTemporarilyUnoptimizable
 };
 
 static NativeGetPropCacheability IsCacheableGetPropCall(JSObject* obj,
@@ -432,12 +431,9 @@ static NativeGetPropCacheability IsCacheableGetPropCall(JSObject* obj,
     return CanAttachNativeGetter;
   }
 
-  if (getter.hasBytecode() || getter.isNativeWithJitEntry()) {
+  // Scripted functions and natives with JIT entry can use the scripted path.
+  if (getter.hasJitEntry()) {
     return CanAttachScriptedGetter;
-  }
-
-  if (getter.isInterpreted()) {
-    return CanAttachTemporarilyUnoptimizable;
   }
 
   return CanAttachNone;
@@ -1049,8 +1045,6 @@ AttachDecision GetPropIRGenerator::tryAttachNative(HandleObject obj,
   switch (type) {
     case CanAttachNone:
       return AttachDecision::NoAction;
-    case CanAttachTemporarilyUnoptimizable:
-      return AttachDecision::TemporarilyUnoptimizable;
     case CanAttachReadSlot:
       if (mode_ == ICState::Mode::Megamorphic) {
         attachMegamorphicNativeSlot(objId, id, holder == nullptr);
@@ -1195,7 +1189,6 @@ AttachDecision GetPropIRGenerator::tryAttachWindowProxy(HandleObject obj,
     }
 
     case CanAttachScriptedGetter:
-    case CanAttachTemporarilyUnoptimizable:
       MOZ_ASSERT_UNREACHABLE("Not possible for window proxies");
   }
 
@@ -1246,9 +1239,6 @@ AttachDecision GetPropIRGenerator::tryAttachCrossCompartmentWrapper(
 
     NativeGetPropCacheability canCache = CanAttachNativeGetProp(
         cx_, unwrapped, id, &holder, &shape, pc_, resultFlags_);
-    if (canCache == CanAttachTemporarilyUnoptimizable) {
-      return AttachDecision::TemporarilyUnoptimizable;
-    }
     if (canCache != CanAttachReadSlot) {
       return AttachDecision::NoAction;
     }
@@ -1490,9 +1480,6 @@ AttachDecision GetPropIRGenerator::tryAttachDOMProxyExpando(HandleObject obj,
   if (canCache == CanAttachNone) {
     return AttachDecision::NoAction;
   }
-  if (canCache == CanAttachTemporarilyUnoptimizable) {
-    return AttachDecision::TemporarilyUnoptimizable;
-  }
   if (!holder) {
     return AttachDecision::NoAction;
   }
@@ -1587,9 +1574,6 @@ AttachDecision GetPropIRGenerator::tryAttachDOMProxyUnshadowed(
       cx_, checkObj, id, &holder, &shape, pc_, resultFlags_);
   if (canCache == CanAttachNone) {
     return AttachDecision::NoAction;
-  }
-  if (canCache == CanAttachTemporarilyUnoptimizable) {
-    return AttachDecision::TemporarilyUnoptimizable;
   }
 
   maybeEmitIdGuard(id);
@@ -1950,8 +1934,6 @@ AttachDecision GetPropIRGenerator::tryAttachPrimitive(ValOperandId valId,
   switch (type) {
     case CanAttachNone:
       return AttachDecision::NoAction;
-    case CanAttachTemporarilyUnoptimizable:
-      return AttachDecision::TemporarilyUnoptimizable;
     case CanAttachReadSlot: {
       if (holder) {
         // Instantiate this property, for use during Ion compilation.
@@ -3630,9 +3612,8 @@ static bool IsCacheableSetPropCallNative(JSObject* obj, JSObject* holder,
   return !IsWindow(obj);
 }
 
-static bool IsCacheableSetPropCallScripted(
-    JSObject* obj, JSObject* holder, Shape* shape,
-    bool* isTemporarilyUnoptimizable = nullptr) {
+static bool IsCacheableSetPropCallScripted(JSObject* obj, JSObject* holder,
+                                           Shape* shape) {
   if (!shape || !IsCacheableProtoChain(obj, holder)) {
     return false;
   }
@@ -3650,33 +3631,17 @@ static bool IsCacheableSetPropCallScripted(
   }
 
   JSFunction& setter = shape->setterObject()->as<JSFunction>();
-  if (setter.isBuiltinNative()) {
-    return false;
-  }
-
-  // Natives with jit entry can use the scripted path.
-  if (setter.isNativeWithJitEntry()) {
-    return true;
-  }
-
-  if (!setter.hasBytecode()) {
-    if (isTemporarilyUnoptimizable) {
-      *isTemporarilyUnoptimizable = true;
-    }
-    return false;
-  }
-
   if (setter.isClassConstructor()) {
     return false;
   }
 
-  return true;
+  // Scripted functions and natives with JIT entry can use the scripted path.
+  return setter.hasJitEntry();
 }
 
 static bool CanAttachSetter(JSContext* cx, jsbytecode* pc, HandleObject obj,
                             HandleId id, MutableHandleObject holder,
-                            MutableHandleShape propShape,
-                            bool* isTemporarilyUnoptimizable) {
+                            MutableHandleShape propShape) {
   // Don't attach a setter stub for ops like JSOp::InitElem.
   MOZ_ASSERT(IsPropertySetOp(JSOp(*pc)));
 
@@ -3690,8 +3655,7 @@ static bool CanAttachSetter(JSContext* cx, jsbytecode* pc, HandleObject obj,
   }
 
   propShape.set(prop.maybeShape());
-  if (!IsCacheableSetPropCallScripted(obj, holder, propShape,
-                                      isTemporarilyUnoptimizable) &&
+  if (!IsCacheableSetPropCallScripted(obj, holder, propShape) &&
       !IsCacheableSetPropCallNative(obj, holder, propShape)) {
     return false;
   }
@@ -3726,11 +3690,8 @@ AttachDecision SetPropIRGenerator::tryAttachSetter(HandleObject obj,
                                                    ValOperandId rhsId) {
   RootedObject holder(cx_);
   RootedShape propShape(cx_);
-  bool isTemporarilyUnoptimizable = false;
-  if (!CanAttachSetter(cx_, pc_, obj, id, &holder, &propShape,
-                       &isTemporarilyUnoptimizable)) {
-    return isTemporarilyUnoptimizable ? AttachDecision::TemporarilyUnoptimizable
-                                      : AttachDecision::NoAction;
+  if (!CanAttachSetter(cx_, pc_, obj, id, &holder, &propShape)) {
+    return AttachDecision::NoAction;
   }
 
   maybeEmitIdGuard(id);
@@ -4176,11 +4137,8 @@ AttachDecision SetPropIRGenerator::tryAttachDOMProxyUnshadowed(
 
   RootedObject holder(cx_);
   RootedShape propShape(cx_);
-  bool isTemporarilyUnoptimizable = false;
-  if (!CanAttachSetter(cx_, pc_, proto, id, &holder, &propShape,
-                       &isTemporarilyUnoptimizable)) {
-    return isTemporarilyUnoptimizable ? AttachDecision::TemporarilyUnoptimizable
-                                      : AttachDecision::NoAction;
+  if (!CanAttachSetter(cx_, pc_, proto, id, &holder, &propShape)) {
+    return AttachDecision::NoAction;
   }
 
   maybeEmitIdGuard(id);
@@ -4241,8 +4199,7 @@ AttachDecision SetPropIRGenerator::tryAttachDOMProxyExpando(
   }
 
   RootedObject holder(cx_);
-  if (CanAttachSetter(cx_, pc_, expandoObj, id, &holder, &propShape,
-                      &isTemporarilyUnoptimizable)) {
+  if (CanAttachSetter(cx_, pc_, expandoObj, id, &holder, &propShape)) {
     // Note that we don't actually use the expandoObjId here after the
     // shape guard. The DOM proxy (objId) is passed to the setter as
     // |this|.
@@ -5793,6 +5750,8 @@ bool CallIRGenerator::getTemplateObjectForScripted(HandleFunction calleeFunc,
 
 AttachDecision CallIRGenerator::tryAttachCallScripted(
     HandleFunction calleeFunc) {
+  MOZ_ASSERT(calleeFunc->hasJitEntry());
+
   // Never attach optimized scripted call stubs for JSOp::FunApply.
   // MagicArguments may escape the frame through them.
   if (op_ == JSOp::FunApply) {
@@ -5814,12 +5773,6 @@ AttachDecision CallIRGenerator::tryAttachCallScripted(
   // Likewise, if the callee is a class constructor, we have to throw.
   if (!isConstructing && calleeFunc->isClassConstructor()) {
     return AttachDecision::NoAction;
-  }
-
-  if (!calleeFunc->hasJitEntry()) {
-    // Don't treat this as an unoptimizable case, as we'll add a
-    // stub when the callee is delazified.
-    return AttachDecision::TemporarilyUnoptimizable;
   }
 
   if (isConstructing && !calleeFunc->hasJitScript()) {
