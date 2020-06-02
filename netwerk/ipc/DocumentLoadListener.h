@@ -245,7 +245,9 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
   // Called from `OnStartRequest` to make the decision about whether or not to
   // change process. This method will return `nullptr` if the current target
   // process is appropriate.
-  bool MaybeTriggerProcessSwitch();
+  // aWillSwitchToRemote is set to true if we initiate a process switch,
+  // and that the new remote type will be something other than NOT_REMOTE
+  bool MaybeTriggerProcessSwitch(bool* aWillSwitchToRemote);
 
   // A helper for TriggerRedirectToRealChannel that abstracts over
   // the same-process and cross-process switch cases and returns
