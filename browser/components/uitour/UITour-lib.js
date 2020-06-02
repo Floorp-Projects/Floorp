@@ -580,15 +580,17 @@ if (typeof Mozilla == "undefined") {
   /**
    * Request the browser open the Firefox Accounts page.
    *
-   * @param {Object} extraURLCampaignParams - An object containing additional
+   * @param {Object} extraURLParams - An object containing additional
    * parameters for the URL opened by the browser for reasons of promotional
    * campaign tracking. Each attribute of the object must have a name that
-   * is a string, begins with `utm_` and contains only only alphanumeric
-   * characters, dashes or underscores. The values may be any string and will
-   * automatically be encoded.
+   * is a string, is "flow_id", "flow_begin_time", "device_id" or begins
+   * with `utm_` and contains only only alphanumeric characters, dashes or
+   * underscores. The values may be any string and will automatically be encoded.
+   * For Flow metrics, see details at https://mozilla.github.io/ecosystem-platform/docs/fxa-engineering/fxa-metrics#content-server
    * @param {String} email - A string containing the default email account
    * for the URL opened by the browser.
-   * @since 31, 47 for `extraURLCampaignParams`
+   * @since 31, 47 for `extraURLParams`
+   * @since 79 for "flow_id", "flow_begin_time", "device_id" fields.
    * @example
    * // Will open https://accounts.firefox.com/signup?entrypoint=uitour
    * Mozilla.UITour.showFirefoxAccounts();
@@ -603,10 +605,18 @@ if (typeof Mozilla == "undefined") {
    * // Will open:
    * // https://accounts.firefox.com/?action=email&email=foo%40bar.com&entrypoint=uitour
    * Mozilla.UITour.showFirefoxAccounts(null, "foo@bar.com");
+   * @example
+   * // Will open:
+   * // https://accounts.firefox.com/?action=email&email=foo%40bar.com&entrypoint=uitour&flow_id=c5b5ad7c4a94462afe4b9a7fbcca263dbd6c8409fb4539449c50c4a52544b2ed&flow_begin_time=1590680755812
+   * Mozilla.UITour.showFirefoxAccounts({
+   *   flow_id: 'c5b5ad7c4a94462afe4b9a7fbcca263dbd6c8409fb4539449c50c4a52544b2ed',
+   *   flow_begin_time: 1590680755812,
+   *   device_id: '7e450f3337d3479b8582ea1c9bb5ba6c'
+   * }, "foo@bar.com");
    */
-  Mozilla.UITour.showFirefoxAccounts = function(extraURLCampaignParams, email) {
+  Mozilla.UITour.showFirefoxAccounts = function(extraURLParams, email) {
     _sendEvent("showFirefoxAccounts", {
-      extraURLCampaignParams: JSON.stringify(extraURLCampaignParams),
+      extraURLParams: JSON.stringify(extraURLParams),
       email,
     });
   };
@@ -614,12 +624,13 @@ if (typeof Mozilla == "undefined") {
   /**
    * Request the browser open the "Connect Another Device" Firefox Accounts page.
    *
-   * @param {Object} extraURLCampaignParams - An object containing additional
+   * @param {Object} extraURLParams - An object containing additional
    * parameters for the URL opened by the browser for reasons of promotional
    * campaign tracking. Each attribute of the object must have a name that
-   * is a string, begins with `utm_` and contains only only alphanumeric
-   * characters, dashes or underscores. The values may be any string and will
-   * automatically be encoded.
+   * is a string, is "flow_id", "flow_begin_time", "device_id" or begins
+   * with `utm_` and contains only only alphanumeric characters, dashes or
+   * underscores. The values may be any string and will automatically be encoded.
+   * For Flow metrics, see details at https://mozilla.github.io/ecosystem-platform/docs/fxa-engineering/fxa-metrics#content-server
    * @since 59
    * @example
    * // Will open https://accounts.firefox.com/connect_another_device?entrypoint=uitour
@@ -632,9 +643,9 @@ if (typeof Mozilla == "undefined") {
    *   'utm_bar': 'baz'
    * });
    */
-  Mozilla.UITour.showConnectAnotherDevice = function(extraURLCampaignParams) {
+  Mozilla.UITour.showConnectAnotherDevice = function(extraURLParams) {
     _sendEvent("showConnectAnotherDevice", {
-      extraURLCampaignParams: JSON.stringify(extraURLCampaignParams),
+      extraURLParams: JSON.stringify(extraURLParams),
     });
   };
 
