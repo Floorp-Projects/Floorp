@@ -72,7 +72,7 @@ class TabboxPanel extends Component {
       openLink: PropTypes.func,
       request: PropTypes.object,
       selectTab: PropTypes.func.isRequired,
-      sourceMapService: PropTypes.object,
+      sourceMapURLService: PropTypes.object,
       hideToggleButton: PropTypes.bool,
       toggleNetworkDetails: PropTypes.func,
       openNetworkDetails: PropTypes.func.isRequired,
@@ -106,7 +106,7 @@ class TabboxPanel extends Component {
       openLink,
       request,
       selectTab,
-      sourceMapService,
+      sourceMapURLService,
       toggleNetworkDetails,
       showMessagesTab,
       targetSearchResult,
@@ -228,7 +228,7 @@ class TabboxPanel extends Component {
             title: STACK_TRACE_TITLE,
             className: "panel-with-code",
           },
-          StackTracePanel({ connector, openLink, request, sourceMapService })
+          StackTracePanel({ connector, openLink, request, sourceMapURLService })
         ),
       request.securityState &&
         request.securityState !== "insecure" &&

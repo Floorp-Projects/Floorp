@@ -50,7 +50,7 @@ class Frame extends Component {
       // Option to display a full source instead of just the filename.
       showFullSourceUrl: PropTypes.bool,
       // Service to enable the source map feature for console.
-      sourceMapService: PropTypes.object,
+      sourceMapURLService: PropTypes.object,
       // The source of the message
       messageSource: PropTypes.string,
     };
@@ -73,9 +73,9 @@ class Frame extends Component {
   }
 
   componentWillMount() {
-    if (this.props.sourceMapService) {
+    if (this.props.sourceMapURLService) {
       const { source, line, column } = this.props.frame;
-      this.unsubscribeSourceMapService = this.props.sourceMapService.subscribe(
+      this.unsubscribeSourceMapService = this.props.sourceMapURLService.subscribe(
         source,
         line,
         column,

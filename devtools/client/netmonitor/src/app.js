@@ -63,13 +63,13 @@ NetMonitorApp.prototype = {
 
     const { actions, connector, store } = this.api;
 
-    const sourceMapService = toolbox.sourceMapURLService;
+    const sourceMapURLService = toolbox.sourceMapURLService;
     const app = App({
       actions,
       connector,
       openLink,
       openSplitConsole,
-      sourceMapService,
+      sourceMapURLService,
       toolboxDoc: toolbox.doc,
     });
 

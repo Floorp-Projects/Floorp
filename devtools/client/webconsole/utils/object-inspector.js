@@ -87,7 +87,7 @@ function getObjectInspector(
     onViewSourceInDebugger: serviceContainer.onViewSourceInDebugger,
     recordTelemetryEvent: serviceContainer.recordTelemetryEvent,
     openLink: serviceContainer.openLink,
-    sourceMapService: serviceContainer.sourceMapService,
+    sourceMapURLService: serviceContainer.sourceMapURLService,
     customFormat: override.customFormat !== false,
     urlCropLimit: 120,
     renderStacktrace: stacktrace =>
@@ -100,8 +100,8 @@ function getObjectInspector(
           : null,
         onViewSource: serviceContainer.onViewSource,
         onReady: override.maybeScrollToBottom,
-        sourceMapService: serviceContainer
-          ? serviceContainer.sourceMapService
+        sourceMapURLService: serviceContainer
+          ? serviceContainer.sourceMapURLService
           : null,
       }),
   };

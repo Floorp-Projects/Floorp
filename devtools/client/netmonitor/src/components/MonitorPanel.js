@@ -74,7 +74,7 @@ class MonitorPanel extends Component {
       onNetworkDetailsResized: PropTypes.func.isRequired,
       request: PropTypes.object,
       selectedRequestVisible: PropTypes.bool.isRequired,
-      sourceMapService: PropTypes.object,
+      sourceMapURLService: PropTypes.object,
       openLink: PropTypes.func,
       updateRequest: PropTypes.func.isRequired,
       networkActionOpen: PropTypes.bool.isRequired,
@@ -205,7 +205,7 @@ class MonitorPanel extends Component {
       networkDetailsOpen,
       openLink,
       openSplitConsole,
-      sourceMapService,
+      sourceMapURLService,
       toolboxDoc,
     } = this.props;
 
@@ -240,7 +240,7 @@ class MonitorPanel extends Component {
             ref: "endPanel",
             connector,
             openLink,
-            sourceMapService,
+            sourceMapURLService,
           }),
         endPanelCollapsed: !networkDetailsOpen,
         endPanelControl: true,

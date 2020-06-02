@@ -47,7 +47,7 @@ window.onload = function() {
         onReadyCount++;
       },
       // A mock source map service.
-      sourceMapService: {
+      sourceMapURLService: {
 	      subscribe: function (url, line, column, callback) {
 	        const newLine = Number(line.toString().repeat(2));
 	        // Resolve immediately.
@@ -113,14 +113,14 @@ window.onload = function() {
         onReadyCount++;
       },
       // A mock source map service.
-      sourceMapService: {
-	      subscribe: function (url, line, column, callback) {
-	        // Resolve after a while.
+      sourceMapURLService: {
+        subscribe: function (url, line, column, callback) {
+          // Resolve after a while.
           setTimeout(() => {
-	          const newLine = Number(line.toString().repeat(2));
-	          callback(true, "http://myfile.com/react.js", newLine, column);
+            const newLine = Number(line.toString().repeat(2));
+            callback(true, "http://myfile.com/react.js", newLine, column);
           }, sourcemapTimeout)
-	      },
+        },
         unsubscribe: function (url, line, column, callback) {},
       },
     };
@@ -207,8 +207,8 @@ window.onload = function() {
         onReadyCount++;
       },
       // A mock source map service.
-      sourceMapService: {
-	      subscribe: function (url, line, column, callback) {
+      sourceMapURLService: {
+        subscribe: function (url, line, column, callback) {
           // Don't call the callback for the second frame to simulate a flaky sourcemap
           // service request.
           if (line === 2) {
@@ -217,7 +217,7 @@ window.onload = function() {
 
           const newLine = Number(line.toString().repeat(2));
           callback(true, `http://myfile.com/file-${line}.js`, newLine, column);
-	      },
+        },
         unsubscribe: function (url, line, column, callback) {},
       },
     };

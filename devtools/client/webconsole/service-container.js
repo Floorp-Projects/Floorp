@@ -53,7 +53,7 @@ function setupServiceContainer({
     const { highlight, unhighlight } = toolbox.getHighlighter();
 
     Object.assign(serviceContainer, {
-      sourceMapService: toolbox.sourceMapURLService,
+      sourceMapURLService: toolbox.sourceMapURLService,
       highlightDomElement: highlight,
       unHighlightDomElement: unhighlight,
       onViewSourceInDebugger: frame => hud.onViewSourceInDebugger(frame),
