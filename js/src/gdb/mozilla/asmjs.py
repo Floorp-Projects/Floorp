@@ -25,14 +25,14 @@ def on_stop(event):
             sigaction_buffers[process] = buf
 
         # See if WasmFaultHandler is installed as the SIGSEGV signal action.
-        sigaction_fn = gdb.parse_and_eval('__sigaction')
+        sigaction_fn = gdb.parse_and_eval('(void(*)(int,void*,void*))__sigaction').dereference()
         sigaction_fn(SIGSEGV, 0, buf)
-        WasmFaultHandler = gdb.parse_and_eval("WasmFaultHandler")
-        if buf['__sigaction_handler']['sa_handler'] == WasmFaultHandler:
+        WasmTrapHandler = gdb.parse_and_eval("WasmTrapHandler")
+        if buf['__sigaction_handler']['sa_handler'] == WasmTrapHandler:
             # Advise the user that magic is happening.
-            print("js/src/gdb/mozilla/asmjs.py: Allowing WasmFaultHandler to run.")
+            print("js/src/gdb/mozilla/asmjs.py: Allowing WasmTrapHandler to run.")
 
-            # If WasmFaultHandler doesn't handle this segfault, it will unhook
+            # If WasmTrapHandler doesn't handle this segfault, it will unhook
             # itself and re-raise.
             gdb.execute("continue")
 
