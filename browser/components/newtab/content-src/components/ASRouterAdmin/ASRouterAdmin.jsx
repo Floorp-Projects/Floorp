@@ -1620,22 +1620,26 @@ export class ASRouterAdminInner extends React.PureComponent {
                   <td>Enabled</td>
                   <td>Impressions count</td>
                   <td>Custom frequency</td>
+                  <td>User preferences</td>
                 </tr>
               </thead>
               {this.state.groups &&
-                this.state.groups.map(({ id, enabled, frequency }, index) => (
-                  <Row key={id}>
-                    <td>
-                      <TogglePrefCheckbox
-                        checked={enabled}
-                        pref={id}
-                        onChange={this.toggleGroups}
-                      />
-                    </td>
-                    <td>{this._getGroupImpressionsCount(id, frequency)}</td>
-                    <td>{JSON.stringify(frequency, null, 2)}</td>
-                  </Row>
-                ))}
+                this.state.groups.map(
+                  ({ id, enabled, frequency, userPreferences = [] }, index) => (
+                    <Row key={id}>
+                      <td>
+                        <TogglePrefCheckbox
+                          checked={enabled}
+                          pref={id}
+                          onChange={this.toggleGroups}
+                        />
+                      </td>
+                      <td>{this._getGroupImpressionsCount(id, frequency)}</td>
+                      <td>{JSON.stringify(frequency, null, 2)}</td>
+                      <td>{userPreferences.join(", ")}</td>
+                    </Row>
+                  )
+                )}
             </table>
           </React.Fragment>
         );
