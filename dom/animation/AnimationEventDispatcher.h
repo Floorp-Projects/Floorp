@@ -16,8 +16,8 @@
 #include "mozilla/dom/AnimationPlaybackEvent.h"
 #include "nsCSSProps.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsPresContext.h"
 
-class nsPresContext;
 class nsRefreshDriver;
 
 namespace mozilla {
