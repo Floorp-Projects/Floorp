@@ -123,7 +123,7 @@ async function run_test_1() {
 
   // Open a database connection now, before we load the profile and begin
   // asynchronous write operations.
-  let db = new CookieDatabaseConnection(do_get_cookie_file(profile), 12);
+  let db = new CookieDatabaseConnection(do_get_cookie_file(profile), 11);
   Assert.equal(do_count_cookies_in_db(db.db), 1);
 
   // Load the profile, and wait for async read completion...
@@ -144,8 +144,7 @@ async function run_test_1() {
     cookie.isSession,
     cookie.expiry,
     {},
-    Ci.nsICookie.SAMESITE_NONE,
-    Ci.nsICookie.SCHEME_HTTPS
+    Ci.nsICookie.SAMESITE_NONE
   );
 
   // Check that the cookie service accepted the new cookie.
@@ -482,7 +481,7 @@ async function run_test_5() {
 
   // Open a database connection, and write a row that will trigger a constraint
   // violation.
-  let db = new CookieDatabaseConnection(do_get_cookie_file(profile), 12);
+  let db = new CookieDatabaseConnection(do_get_cookie_file(profile), 11);
   db.insertCookie(cookie);
   Assert.equal(do_count_cookies_in_db(db.db, "bar.com"), 1);
   Assert.equal(do_count_cookies_in_db(db.db), 1);

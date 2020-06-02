@@ -152,8 +152,7 @@ class TestFirefoxRefresh(MarionetteTestCase):
           // Expire in 15 minutes:
           let expireTime = Math.floor(Date.now() / 1000) + 15 * 60;
           Services.cookies.add(arguments[0], arguments[1], arguments[2], arguments[3],
-                               true, false, false, expireTime, {},
-                               Ci.nsICookie.SAMESITE_NONE, Ci.nsICookie.SCHEME_UNSET);
+                               true, false, false, expireTime, {}, Ci.nsICookie.SAMESITE_NONE);
         """, script_args=(self._cookieHost, self._cookiePath, self._cookieName, self._cookieValue))
 
     def createSession(self):

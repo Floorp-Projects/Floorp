@@ -84,7 +84,6 @@ class Cookie final : public nsICookie {
   }
   inline int32_t SameSite() const { return mData.sameSite(); }
   inline int32_t RawSameSite() const { return mData.rawSameSite(); }
-  inline uint8_t SchemeMap() const { return mData.schemeMap(); }
 
   // setters
   inline void SetExpiry(int64_t aExpiry) { mData.expiry() = aExpiry; }
@@ -96,9 +95,6 @@ class Cookie final : public nsICookie {
   // Set the creation time manually, overriding the monotonicity checks in
   // Create(). Use with caution!
   inline void SetCreationTime(int64_t aTime) { mData.creationTime() = aTime; }
-  inline void SetSchemeMap(uint8_t aSchemeMap) {
-    mData.schemeMap() = aSchemeMap;
-  }
 
   bool IsStale() const;
 
