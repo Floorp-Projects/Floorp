@@ -2028,10 +2028,10 @@ void WorkerPrivate::SetBaseURI(nsIURI* aBaseURI) {
 }
 
 nsresult WorkerPrivate::SetPrincipalsAndCSPOnMainThread(
-    nsIPrincipal* aPrincipal, nsIPrincipal* aStoragePrincipal,
+    nsIPrincipal* aPrincipal, nsIPrincipal* aPartitionedPrincipal,
     nsILoadGroup* aLoadGroup, nsIContentSecurityPolicy* aCsp) {
   return mLoadInfo.SetPrincipalsAndCSPOnMainThread(
-      aPrincipal, aStoragePrincipal, aLoadGroup, aCsp);
+      aPrincipal, aPartitionedPrincipal, aLoadGroup, aCsp);
 }
 
 nsresult WorkerPrivate::SetPrincipalsAndCSPFromChannel(nsIChannel* aChannel) {
@@ -5331,6 +5331,23 @@ void WorkerPrivate::EnsureOwnerEmbedderPolicy() {
     mOwnerEmbedderPolicy.emplace(
         GetWindow()->GetWindowContext()->GetEmbedderPolicy());
   }
+}
+
+const mozilla::ipc::PrincipalInfo&
+WorkerPrivate::GetEffectiveStoragePrincipalInfo() const {
+  AssertIsOnWorkerThread();
+
+  if (mLoadInfo.mFirstPartyStorageAccessGranted) {
+    return *mLoadInfo.mPrincipalInfo;
+  }
+
+  // TODO: this is wrong and it will be fixed by the next patch.
+  return *mLoadInfo.mPartitionedPrincipalInfo;
+}
+
+const nsACString& WorkerPrivate::StoragePrincipalOrigin() const {
+  // TODO: this is wrong and it will be fixed by the next patch.
+  return mLoadInfo.mPartitionedOrigin;
 }
 
 NS_IMPL_ADDREF(WorkerPrivate::EventTarget)

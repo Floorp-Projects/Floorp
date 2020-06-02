@@ -69,7 +69,7 @@ ServiceWorkerPrivateImpl::RAIIActorPtrHolder::~RAIIActorPtrHolder() {
 }
 
 RemoteWorkerControllerChild*
-    ServiceWorkerPrivateImpl::RAIIActorPtrHolder::operator->() const {
+ServiceWorkerPrivateImpl::RAIIActorPtrHolder::operator->() const {
   AssertIsOnMainThread();
 
   return get();
@@ -168,9 +168,10 @@ nsresult ServiceWorkerPrivateImpl::Initialize() {
 
   mRemoteWorkerData.loadingPrincipalInfo() = principalInfo;
   mRemoteWorkerData.principalInfo() = principalInfo;
-  // storagePrincipalInfo for ServiceWorkers is equal to principalInfo because,
-  // at the moment, ServiceWorkers are not exposed in partitioned contexts.
-  mRemoteWorkerData.storagePrincipalInfo() = principalInfo;
+  // partitionedPrincipalInfo for ServiceWorkers is equal to principalInfo
+  // because, at the moment, ServiceWorkers are not exposed in partitioned
+  // contexts.
+  mRemoteWorkerData.partitionedPrincipalInfo() = principalInfo;
 
   rv = uri->GetHost(mRemoteWorkerData.domain());
   NS_ENSURE_SUCCESS(rv, rv);

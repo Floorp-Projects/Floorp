@@ -64,8 +64,8 @@ class ImageCacheKey final {
   static void* GetSpecialCaseDocumentToken(dom::Document* aDocument);
 
   // For anti-tracking we need to use an isolation key. It can be the suffix of
-  // the IntrinsicStoragePrincipal (see StoragePrincipalHelper.h) or the
-  // top-level document's base domain. This is handled by this method.
+  // the PatitionedPrincipal (see StoragePrincipalHelper.h) or the top-level
+  // document's base domain. This is handled by this method.
   static nsCString GetIsolationKey(dom::Document* aDocument, nsIURI* aURI);
 
   void EnsureHash() const;

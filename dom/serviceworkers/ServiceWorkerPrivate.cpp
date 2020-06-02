@@ -1705,9 +1705,9 @@ nsresult ServiceWorkerPrivate::SpawnWorkerIfNeeded(WakeUpReason aWhy,
 
   info.mPrincipal = mInfo->Principal();
   info.mLoadingPrincipal = info.mPrincipal;
-  // StoragePrincipal for ServiceWorkers is equal to mPrincipal because, at the
-  // moment, ServiceWorkers are not exposed in partitioned contexts.
-  info.mStoragePrincipal = info.mPrincipal;
+  // PartitionedPrincipal for ServiceWorkers is equal to mPrincipal because, at
+  // the moment, ServiceWorkers are not exposed in partitioned contexts.
+  info.mPartitionedPrincipal = info.mPrincipal;
 
   info.mCookieJarSettings = mozilla::net::CookieJarSettings::Create();
   MOZ_ASSERT(info.mCookieJarSettings);
@@ -1735,7 +1735,7 @@ nsresult ServiceWorkerPrivate::SpawnWorkerIfNeeded(WakeUpReason aWhy,
   WorkerPrivate::OverrideLoadInfoLoadGroup(info, info.mPrincipal);
 
   rv = info.SetPrincipalsAndCSPOnMainThread(
-      info.mPrincipal, info.mStoragePrincipal, info.mLoadGroup, nullptr);
+      info.mPrincipal, info.mPartitionedPrincipal, info.mLoadGroup, nullptr);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }

@@ -35,16 +35,16 @@ addMessageListener("BrowserElement:CreateAboutBlank", message => {
   if (!content.document || content.document.documentURI != "about:blank") {
     throw new Error("Can't create a content viewer unless on about:blank");
   }
-  let { principal, storagePrincipal } = message.data;
+  let { principal, partitionedPrincipal } = message.data;
   principal = BrowserUtils.principalWithMatchingOA(
     principal,
     content.document.nodePrincipal
   );
-  storagePrincipal = BrowserUtils.principalWithMatchingOA(
-    storagePrincipal,
-    content.document.effectiveStoragePrincipal
+  partitionedPrincipal = BrowserUtils.principalWithMatchingOA(
+    partitionedPrincipal,
+    content.document.partitionedPrincipal
   );
-  docShell.createAboutBlankContentViewer(principal, storagePrincipal);
+  docShell.createAboutBlankContentViewer(principal, partitionedPrincipal);
 });
 
 // We may not get any responses to Browser:Init if the browser element
