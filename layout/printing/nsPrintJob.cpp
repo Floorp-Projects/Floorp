@@ -294,105 +294,6 @@ static nsresult GetSeqFrameAndCountPagesInternal(
 }
 
 /**
- * This method is key to the entire print mechanism.
- *
- * This "maps" or figures out which sub-doc represents a
- * given Frame or IFrame in its parent sub-doc.
- *
- * So the Mcontent pointer in the child sub-doc points to the
- * content in the its parent document, that caused it to be printed.
- * This is used later to (after reflow) to find the absolute location
- * of the sub-doc on its parent's page frame so it can be
- * printed in the correct location.
- *
- * This method recursvely "walks" the content for a document finding
- * all the Frames and IFrames, then sets the "mFrameType" data member
- * which tells us what type of PO we have
- */
-static void MapContentForPO(const UniquePtr<nsPrintObject>& aPO,
-                            nsIContent* aContent) {
-  MOZ_ASSERT(aPO && aContent, "Null argument");
-
-  Document* doc = aContent->GetComposedDoc();
-
-  NS_ASSERTION(doc, "Content without a document from a document tree?");
-
-  Document* subDoc = doc->GetSubDocumentFor(aContent);
-
-  if (subDoc) {
-    nsCOMPtr<nsIDocShell> docShell(subDoc->GetDocShell());
-
-    if (docShell) {
-      nsPrintObject* po = nullptr;
-      for (const UniquePtr<nsPrintObject>& kid : aPO->mKids) {
-        if (kid->mDocument == subDoc) {
-          po = kid.get();
-          break;
-        }
-      }
-
-      // XXX If a subdocument has no onscreen presentation, there will be no PO
-      //     This is even if there should be a print presentation
-      if (po) {
-        // "frame" elements not in a frameset context should be treated
-        // as iframes
-        if (aContent->IsHTMLElement(nsGkAtoms::frame) &&
-            po->mParent->mFrameType == eFrameSet) {
-          po->mFrameType = eFrame;
-        } else {
-          // Assume something iframe-like, i.e. iframe, object, or embed
-          po->mFrameType = eIFrame;
-          po->SetPrintAsIs(true);
-          NS_ASSERTION(po->mParent, "The root must be a parent");
-          po->mParent->mPrintAsIs = true;
-        }
-      }
-    }
-  }
-
-  // walk children content
-  for (nsIContent* child = aContent->GetFirstChild(); child;
-       child = child->GetNextSibling()) {
-    MapContentForPO(aPO, child);
-  }
-}
-
-/**
- * The walks the PO tree and for each document it walks the content
- * tree looking for any content that are sub-shells
- *
- * It then sets the mContent pointer in the "found" PO object back to the
- * the document that contained it.
- */
-static void MapContentToWebShells(const UniquePtr<nsPrintObject>& aRootPO,
-                                  const UniquePtr<nsPrintObject>& aPO) {
-  NS_ASSERTION(aRootPO, "Pointer is null!");
-  NS_ASSERTION(aPO, "Pointer is null!");
-
-  // Recursively walk the content from the root item
-  // XXX Would be faster to enumerate the subdocuments, although right now
-  //     Document doesn't expose quite what would be needed.
-  nsCOMPtr<nsIContentViewer> viewer;
-  aPO->mDocShell->GetContentViewer(getter_AddRefs(viewer));
-  if (!viewer) return;
-
-  nsCOMPtr<Document> doc = viewer->GetDocument();
-  if (!doc) return;
-
-  Element* rootElement = doc->GetRootElement();
-  if (rootElement) {
-    MapContentForPO(aPO, rootElement);
-  } else {
-    NS_WARNING("Null root content on (sub)document.");
-  }
-
-  // Continue recursively walking the chilren of this PO
-  for (const UniquePtr<nsPrintObject>& kid : aPO->mKids) {
-    MapContentToWebShells(aRootPO, kid);
-  }
-}
-
-/**
  * The outparam aDocList returns a (depth first) flat list of all the
  * nsPrintObjects created.
  */
@@ -756,9 +657,6 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
   // to get the currently focused windows it will be nullptr
   printData->mCurrentFocusWin = FindFocusedDOMWindow();
 
-  // Check to see if there is a "regular" selection
-  bool isSelection = IsThereARangeSelection(printData->mCurrentFocusWin);
-
   // Get the docshell for this documentviewer
   nsCOMPtr<nsIDocShell> docShell(do_QueryReferent(mDocShell, &rv));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -797,14 +695,10 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
       !printData->mPrintObject->mDocument->GetRootElement())
     return NS_ERROR_GFX_PRINTER_STARTDOC;
 
-  // Create the linkage from the sub-docs back to the content element
-  // in the parent document
-  MapContentToWebShells(printData->mPrintObject, printData->mPrintObject);
-
+  // Now determine how to set up the Frame print UI
+  bool isSelection = IsThereARangeSelection(printData->mCurrentFocusWin);
   bool isIFrameSelected = IsThereAnIFrameSelected(
       docShell, printData->mCurrentFocusWin, printData->mIsParentAFrameSet);
-
-  // Now determine how to set up the Frame print UI
   printData->mPrintSettings->SetPrintOptions(
       nsIPrintSettings::kEnableSelectionRB, isSelection || isIFrameSelected);
 
