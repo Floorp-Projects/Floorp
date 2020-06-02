@@ -605,8 +605,8 @@ GeckoDriver.prototype.registerPromise = function() {
 
   return new Promise(resolve => {
     let cb = ({ json, target }) => {
-      let { outerWindowID } = json;
-      this.registerBrowser(outerWindowID, target);
+      let { frameId } = json;
+      this.registerBrowser(frameId, target);
 
       if (this.curBrowser.frameRegsPending > 0) {
         this.curBrowser.frameRegsPending--;
@@ -617,7 +617,7 @@ GeckoDriver.prototype.registerPromise = function() {
         resolve();
       }
 
-      return { outerWindowID };
+      return { frameId };
     };
     this.mm.addMessageListener(li, cb);
   });
@@ -628,7 +628,7 @@ GeckoDriver.prototype.listeningPromise = function() {
 
   return new Promise(resolve => {
     let cb = msg => {
-      if (msg.json.outerWindowID === this.curBrowser.curFrameId) {
+      if (msg.json.frameId === this.curBrowser.curFrameId) {
         this.mm.removeMessageListener(li, cb);
         resolve();
       }
@@ -3572,12 +3572,12 @@ GeckoDriver.prototype.receiveMessage = function(message) {
       break;
 
     case "Marionette:Register":
-      let { outerWindowID } = message.json;
-      this.registerBrowser(outerWindowID, message.target);
-      return { outerWindowID };
+      let { frameId } = message.json;
+      this.registerBrowser(frameId, message.target);
+      return { frameId };
 
     case "Marionette:ListenersAttached":
-      if (message.json.outerWindowID === this.curBrowser.curFrameId) {
+      if (message.json.frameId === this.curBrowser.curFrameId) {
         this.curBrowser.flushPendingCommands();
       }
       break;
