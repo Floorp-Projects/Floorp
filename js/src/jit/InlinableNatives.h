@@ -195,6 +195,8 @@ enum class InlinableNative : uint16_t {
 INLINABLE_NATIVE_LIST(ADD_NATIVE)
 #undef ADD_NATIVE
 
+const JSClass* InlinableNativeGuardToClass(InlinableNative native);
+
 }  // namespace jit
 }  // namespace js
 
