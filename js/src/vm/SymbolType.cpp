@@ -103,6 +103,11 @@ void Symbol::dump(js::GenericPrinter& out) {
     if (code_ == SymbolCode::UniqueSymbol) {
       out.printf("@%p", (void*)this);
     }
+  } else if (code_ == SymbolCode::PrivateNameSymbol) {
+    MOZ_ASSERT(description());
+    out.putChar('#');
+    description()->dumpCharsNoNewline(out);
+    out.printf("@%p", (void*)this);
   } else {
     out.printf("<Invalid Symbol code=%u>", unsigned(code_));
   }
