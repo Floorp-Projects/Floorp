@@ -474,6 +474,9 @@ bool nsAccUtils::IsARIALive(const Accessible* aAccessible) {
   // This should be the same as the container-live attribute, but we don't need
   // the other container-* attributes, so we can't use the same function.
   nsIContent* ancestor = aAccessible->GetContent();
+  if (!ancestor) {
+    return false;
+  }
   dom::Document* doc = ancestor->GetComposedDoc();
   if (!doc) {
     return false;
