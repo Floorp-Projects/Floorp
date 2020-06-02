@@ -150,10 +150,12 @@
     <!-- Tabs Tray -->
     <dimen name="tab_tray_divider_margin_start">124dp</dimen>
     <dimen name="tab_tray_divider_margin_end">0dp</dimen>
+    <dimen name="tab_tray_top_offset">40dp</dimen>
 
     <!-- Saved Logins Fragment -->
     <dimen name="saved_logins_sort_menu_dropdown_chevron_icon_margin_start">10dp</dimen>
     <dimen name="saved_logins_sort_menu_dropdown_chevron_icon_size">12dp</dimen>
     <dimen name="saved_logins_detail_menu_vertical_padding">5dp</dimen>
+
 
 </resources>

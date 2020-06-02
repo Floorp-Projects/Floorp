@@ -558,7 +558,11 @@
 
     <style name="BottomSheetModal" parent="Widget.Design.BottomSheet.Modal">
         <item name="shapeAppearance">@style/BottomSheetShapeAppearance</item>
-        <item name="behavior_halfExpandedRatio">0.6</item>
-        <item name="behavior_fitToContents">true</item>
+        <item name="behavior_fitToContents">false</item>
+    </style>
+
+    <style name="TabTrayFab" parent="Widget.MaterialComponents.ExtendedFloatingActionButton">
+        <item name="elevation">90dp</item>
+        <item name="android:stateListAnimator">@null</item>
     </style>
 </resources>

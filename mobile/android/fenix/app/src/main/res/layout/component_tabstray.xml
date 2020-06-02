@@ -10,7 +10,6 @@
     android:id="@+id/tab_wrapper"
     android:layout_height="match_parent"
     android:layout_width="match_parent"
-    android:layout_marginTop="40dp"
     style="@style/BottomSheetModal"
     android:backgroundTint="@color/foundation_normal_theme"
     app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior">

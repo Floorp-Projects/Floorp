@@ -11,6 +11,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatDialogFragment
 import androidx.core.view.updatePadding
+import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import kotlinx.android.synthetic.main.component_tabstray.view.*
@@ -18,6 +19,9 @@ import kotlinx.android.synthetic.main.fragment_tab_tray_dialog.*
 import kotlinx.android.synthetic.main.fragment_tab_tray_dialog.view.*
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.state.selector.normalTabs
+import mozilla.components.browser.state.selector.privateTabs
+import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.concept.engine.prompt.ShareData
 import mozilla.components.concept.tabstray.Tab
 import mozilla.components.lib.state.ext.consumeFrom
@@ -80,7 +84,10 @@ class TabTrayDialogFragment : AppCompatDialogFragment(), TabTrayInteractor {
             insets
         }
 
-        consumeFrom(requireComponents.core.store) { tabTrayView.updateState(it) }
+        consumeFrom(requireComponents.core.store) {
+            tabTrayView.updateState(it)
+            navigateHomeIfNeeded(it)
+        }
     }
 
     override fun onTabClosed(tab: Tab) {
@@ -185,8 +192,7 @@ class TabTrayDialogFragment : AppCompatDialogFragment(), TabTrayInteractor {
             sessionManager.remove(it)
         }
 
-        val isPrivate = (activity as HomeActivity).browsingModeManager.mode.isPrivate
-        val snackbarMessage = if (isPrivate) {
+        val snackbarMessage = if (tabTrayView.isPrivateModeSelected) {
             getString(R.string.snackbar_private_tabs_closed)
         } else {
             getString(R.string.snackbar_tabs_closed)
@@ -202,8 +208,6 @@ class TabTrayDialogFragment : AppCompatDialogFragment(), TabTrayInteractor {
             operation = { },
             elevation = ELEVATION
         )
-
-        findNavController().popBackStack(R.id.homeFragment, false)
     }
 
     private fun getListOfSessions(private: Boolean): List<Session> {
@@ -211,7 +215,28 @@ class TabTrayDialogFragment : AppCompatDialogFragment(), TabTrayInteractor {
             .toList()
     }
 
+    private fun navigateHomeIfNeeded(state: BrowserState) {
+        val shouldPop = if (tabTrayView.isPrivateModeSelected) {
+            state.privateTabs.isEmpty()
+        } else {
+            state.normalTabs.isEmpty()
+        }
+
+        if (shouldPop) {
+            findNavController().popBackStack(R.id.homeFragment, false)
+        }
+    }
+
     companion object {
         private const val ELEVATION = 80f
+        private const val FRAGMENT_TAG = "tabTrayDialogFragment"
+
+        fun show(fragmentManager: FragmentManager) {
+            // We want to make sure we don't accidentally show the dialog twice if
+            // a user somehow manages to trigger `show()` twice before we present the dialog.
+            if (fragmentManager.findFragmentByTag(FRAGMENT_TAG) == null) {
+                TabTrayDialogFragment().showNow(fragmentManager, FRAGMENT_TAG)
+            }
+        }
     }
 }
