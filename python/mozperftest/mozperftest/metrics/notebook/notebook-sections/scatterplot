@@ -1,0 +1,15 @@
+%% py 
+from js import data_object
+import matplotlib.pyplot as plt
+
+plt.figure()
+
+for element in data_object:
+    data_array = element["data"]
+    x = [x["xaxis"] for x in data_array]
+    y = [x["value"] for x in data_array]
+    label = element["name"]+"\n"+element["subtest"]
+    plt.scatter(x,y,label=label)
+
+plt.legend()
+plt.show()

@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<html>
+    <body>
+        Redirecting to Iodide...
+        <script>
+            function post(path, params, method='post') {
+                const form = document.createElement('form');
+                form.method = method;
+                form.action = path;
+                form.id = 'uploadform';
+
+                for (const key in params) {
+                    if (params.hasOwnProperty(key)) {
+                        const textarea = document.createElement('textarea');
+                        textarea.name = key;
+                        textarea.value = params[key];
+                        textarea.style.display = "none";
+                        form.appendChild(textarea);
+                    }
+                }
+
+
+                document.body.appendChild(form);
+                form.submit();
+            }
+
+            // TODO Need to escape all `'`,
+            // Otherwsie, this will result in javascript failures.
+            var template = replace_me
+
+            // Create a form object, and send it
+            // after release, change back to https://alpha.iodide.io/from-template/
+            post("https://alpha.iodide.io/from-template/", {"iomd": template})
+        </script>
+    </body>
+</html>
