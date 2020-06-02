@@ -34,7 +34,6 @@ nsPrintObject::nsPrintObject()
       mFrameType(eFrame),
       mParent(nullptr),
       mHasBeenPrinted(false),
-      mPrintAsIs(false),
       mInvisible(false),
       mDidCreateDocShell(false),
       mShrinkRatio(1.0),
@@ -229,8 +228,6 @@ nsresult nsPrintObject::InitAsNestedObject(nsIDocShell* aDocShell,
   } else {
     // Assume something iframe-like, i.e. iframe, object, or embed
     mFrameType = eIFrame;
-    mParent->mPrintAsIs = true;
-    SetPrintAsIs(true);
   }
 
   return NS_OK;
@@ -248,13 +245,6 @@ void nsPrintObject::DestroyPresentation() {
   }
   mPresContext = nullptr;
   mViewManager = nullptr;
-}
-
-void nsPrintObject::SetPrintAsIs(bool aAsIs) {
-  mPrintAsIs = aAsIs;
-  for (const UniquePtr<nsPrintObject>& kid : mKids) {
-    kid->SetPrintAsIs(aAsIs);
-  }
 }
 
 void nsPrintObject::EnablePrinting(bool aEnable) {

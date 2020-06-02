@@ -43,12 +43,6 @@ class nsPrintObject {
   void DestroyPresentation();
 
   /**
-   * Recursively sets the PO items to be printed "As Is"
-   * from the given item down into the treei
-   */
-  void SetPrintAsIs(bool aAsIs);
-
-  /**
    * Recursively sets all the PO items to be printed
    * from the given item down into the tree
    */
@@ -70,7 +64,6 @@ class nsPrintObject {
   nsTArray<mozilla::UniquePtr<nsPrintObject>> mKids;
   nsPrintObject* mParent;  // This is a non-owning pointer.
   bool mHasBeenPrinted;
-  bool mPrintAsIs;
   bool mInvisible;  // Indicates PO is set to not visible by CSS
   bool mDidCreateDocShell;
   float mShrinkRatio;
