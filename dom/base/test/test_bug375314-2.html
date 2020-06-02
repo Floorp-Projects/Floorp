@@ -1,21 +1,26 @@
-﻿<!DOCTYPE HTML>
+<!DOCTYPE HTML>
 <html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=375314
+-->
 <head>
-  <meta charset="utf-8">
-  <title>Bug 1255240 - Test content policy types within content policies for targeted links in iframes</title>
-  <!-- Including SimpleTest.js so we can use waitForExplicitFinish !-->
-  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <title>Test for Bug 375314</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>        
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
-<iframe style="width:100%;" id="testframe"></iframe>
-
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=375314">Mozilla Bug 375314</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
 <script class="testbody" type="text/javascript">
 
-/* Description of the test:
- * Let's load a link into a targeted iframe and make sure the content policy
- * type used for content policy checks is of TYPE_SUBDOCUMENT.
- */
+/** Test for Bug 375314 **/
+
+var lastContentType = -1;
+const testURL = window.location.href + "/this/is/the/test/url";
 
 function createChromeScript() {
   var categoryManager = Cc["@mozilla.org/categorymanager;1"].getService(
@@ -24,8 +29,6 @@ function createChromeScript() {
 
   const POLICYNAME = "@mozilla.org/testpolicy;1";
   const POLICYID = Components.ID("{6cc95ef3-40e1-4d59-87f0-86f100373227}");
-  const EXPECTED_URL = 
-        "http://mochi.test:8888/tests/dom/security/test/general/file_contentpolicytype_targeted_link_iframe.sjs?innerframe";
 
   var policy = {
     // nsISupports implementation
@@ -41,14 +44,8 @@ function createChromeScript() {
 
     // nsIContentPolicy implementation
     shouldLoad(contentLocation, loadInfo, mimeTypeGuess) {
-      if (contentLocation.asciiSpec === EXPECTED_URL) {
+      if (contentLocation.asciiSpec === "http://mochi.test:8888/tests/dom/base/test/test_bug375314-2.html/this/is/the/test/url") {
         sendAsyncMessage("loadBlocked", { policyType: loadInfo.externalContentPolicyType});
-        categoryManager.deleteCategoryEntry(
-          "content-policy",
-          POLICYNAME,
-          false
-        );
-        componentManager.unregisterFactory(POLICYID, policy);
         return Ci.nsIContentPolicy.REJECT_REQUEST;
       }
       return Ci.nsIContentPolicy.ACCEPT;
@@ -78,6 +75,15 @@ function createChromeScript() {
     true
   );
 
+  addMessageListener("shutdown", _ => {
+    categoryManager.deleteCategoryEntry(
+      "content-policy",
+      POLICYNAME,
+      false
+    );
+    componentManager.unregisterFactory(POLICYID, policy);
+  });
+
   // Adding a new category dispatches an event to update
   // caches, so we need to also dispatch an event to make
   // sure we don't start the load until after that happens.
@@ -86,21 +92,48 @@ function createChromeScript() {
   });
 }
 
+// Request creating functions
+
+function requestDocument() {
+  // GeckoView shows an error page for CSP errors, which breaks this test, so just skip in that case.
+  try {
+    if (!SpecialPowers.Cc["@mozilla.org/android/bridge;1"].getService(SpecialPowers.Ci.nsIAndroidBridge).isFennec) {
+      return false;
+    }
+  } catch (e){}
+
+  top.location.href = testURL;
+  return true;
+}
+
+function requestSubdocument() {
+  var content = $("content");
+
+  var frame = document.createElement("iframe");
+  frame.setAttribute("src", testURL);
+  content.appendChild(frame);
+}
+
 add_task(async function() {
   let chromeScript = SpecialPowers.loadChromeScript(createChromeScript);
   await chromeScript.promiseOneMessage("setupComplete");
 
-  var testframe = document.getElementById("testframe");
-  testframe.src =
-      "file_contentpolicytype_targeted_link_iframe.sjs?testframe";
+  if (requestDocument()) {
+    let result = await chromeScript.promiseOneMessage("loadBlocked");
+    is(result.policyType, SpecialPowers.Ci.nsIContentPolicy.TYPE_DOCUMENT, "Content policies triggered for TYPE_DOCUMENT");
+  }
 
-  let result = await chromeScript.promiseOneMessage("loadBlocked");
+  requestSubdocument();
+  result = await chromeScript.promiseOneMessage("loadBlocked");
+  
+  is(result.policyType, SpecialPowers.Ci.nsIContentPolicy.TYPE_SUBDOCUMENT, "Content policies triggered for TYPE_SUBDOCUMENT");
 
-  is(result.policyType, SpecialPowers.Ci.nsIContentPolicy.TYPE_SUBDOCUMENT,
-     "content policy type should TYPESUBDOCUMENT");
-
+  chromeScript.sendAsyncMessage("shutdown");
   chromeScript.destroy();
 });
+
 </script>
+</pre>
 </body>
 </html>
+
