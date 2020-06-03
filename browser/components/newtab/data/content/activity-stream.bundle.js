@@ -1987,17 +1987,18 @@ class ASRouterAdminInner extends react__WEBPACK_IMPORTED_MODULE_4___default.a.Pu
       case "groups":
         return react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(react__WEBPACK_IMPORTED_MODULE_4___default.a.Fragment, null, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("h2", null, "Message Groups"), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("table", null, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("thead", null, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("tr", {
           className: "message-item"
-        }, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("td", null, "Enabled"), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("td", null, "Impressions count"), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("td", null, "Custom frequency"))), this.state.groups && this.state.groups.map(({
+        }, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("td", null, "Enabled"), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("td", null, "Impressions count"), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("td", null, "Custom frequency"), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("td", null, "User preferences"))), this.state.groups && this.state.groups.map(({
           id,
           enabled,
-          frequency
+          frequency,
+          userPreferences = []
         }, index) => react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(Row, {
           key: id
         }, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("td", null, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(TogglePrefCheckbox, {
           checked: enabled,
           pref: id,
           onChange: this.toggleGroups
-        })), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("td", null, this._getGroupImpressionsCount(id, frequency)), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("td", null, JSON.stringify(frequency, null, 2))))));
+        })), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("td", null, this._getGroupImpressionsCount(id, frequency)), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("td", null, JSON.stringify(frequency, null, 2)), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("td", null, userPreferences.join(", "))))));
 
       case "ds":
         return react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(react__WEBPACK_IMPORTED_MODULE_4___default.a.Fragment, null, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("h2", null, "Discovery Stream"), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(DiscoveryStreamAdmin, {
