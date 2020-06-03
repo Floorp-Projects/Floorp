@@ -56,24 +56,30 @@ class SVGTests : public nsISupports {
   int32_t GetBestLanguagePreferenceRank(const nsAString& aAcceptLangs) const;
 
   /**
-   * Special value to pass to PassesConditionalProcessingTests to ignore
-   * systemLanguage attributes
+   * Check whether the conditional processing attributes other than
+   * systemLanguage "return true" if they apply to and are specified
+   * on the given element. Returns true if this element should be
+   * rendered, false if it should not.
    */
-  static const nsString* const kIgnoreSystemLanguage;
+  bool PassesConditionalProcessingTestsIgnoringSystemLanguage() const;
 
   /**
-   * Check whether the conditional processing attributes requiredFeatures,
-   * requiredExtensions and systemLanguage all "return true" if they apply to
+   * Check whether the conditional processing attributes requiredExtensions
+   * and systemLanguage both "return true" if they apply to
+   * and are specified on the given element. Returns true if this element
+   * should be rendered, false if it should not.
+   */
+  bool PassesConditionalProcessingTests() const;
+
+  /**
+   * Check whether the conditional processing attributes requiredExtensions
+   * and systemLanguage both "return true" if they apply to
    * and are specified on the given element. Returns true if this element
    * should be rendered, false if it should not.
    *
-   * @param aAcceptLangs Optional parameter to pass in the value of the
-   *   intl.accept_languages preference if the caller has it cached.
-   *   Alternatively, pass in kIgnoreSystemLanguage to skip the systemLanguage
-   *   check if the caller is giving that special treatment.
+   * @param aAcceptLangs The value of the intl.accept_languages preference
    */
-  bool PassesConditionalProcessingTests(
-      const nsString* aAcceptLangs = nullptr) const;
+  bool PassesConditionalProcessingTests(const nsAString& aAcceptLangs) const;
 
   /**
    * Returns true if the attribute is one of the conditional processing
