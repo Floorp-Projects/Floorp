@@ -19,7 +19,8 @@ namespace layers {
 // stopped moving. Some input devices do not send move events in the
 // case where a pointer has stopped.  We need to detect this case so that we can
 // accurately predict the velocity after the pointer starts moving again.
-static const int kAssumePointerMoveStoppedTimeMs = 40;
+static const TimeDuration kAssumePointerMoveStoppedTime =
+    TimeDuration::FromMilliseconds(40);
 
 // The degree of the approximation.
 static const uint8_t kDegree = 2;
@@ -31,36 +32,36 @@ static const uint8_t kPolyDegree = kDegree + 1;
 // Maximum size of position history.
 static const uint8_t kHistorySize = 20;
 
-AndroidVelocityTracker::AndroidVelocityTracker() : mLastEventTime(0) {}
+AndroidVelocityTracker::AndroidVelocityTracker() {}
 
 void AndroidVelocityTracker::StartTracking(ParentLayerCoord aPos,
-                                           uint32_t aTimestampMs) {
+                                           TimeStamp aTimestamp) {
   Clear();
-  mHistory.AppendElement(std::make_pair(aTimestampMs, aPos));
-  mLastEventTime = aTimestampMs;
+  mHistory.AppendElement(std::make_pair(aTimestamp, aPos));
+  mLastEventTime = aTimestamp;
 }
 
 Maybe<float> AndroidVelocityTracker::AddPosition(ParentLayerCoord aPos,
-                                                 uint32_t aTimestampMs) {
-  if ((aTimestampMs - mLastEventTime) >= kAssumePointerMoveStoppedTimeMs) {
+                                                 TimeStamp aTimestamp) {
+  if ((aTimestamp - mLastEventTime) >= kAssumePointerMoveStoppedTime) {
     Clear();
   }
 
-  if (aTimestampMs == mLastEventTime) {
-    // If we get a sample with the same timestamp as the previous one,
+  if ((aTimestamp - mLastEventTime).ToMilliseconds() < 1.0) {
+    // If we get a sample within a millisecond of the previous one,
     // just update its position. Two samples in the history with the
     // same timestamp can lead to things like infinite velocities.
     if (mHistory.Length() > 0) {
       mHistory[mHistory.Length() - 1].second = aPos;
     }
   } else {
-    mHistory.AppendElement(std::make_pair(aTimestampMs, aPos));
+    mHistory.AppendElement(std::make_pair(aTimestamp, aPos));
     if (mHistory.Length() > kHistorySize) {
       mHistory.RemoveElementAt(0);
     }
   }
 
-  mLastEventTime = aTimestampMs;
+  mLastEventTime = aTimestamp;
 
   if (mHistory.Length() < 2) {
     return Nothing();
@@ -68,7 +69,8 @@ Maybe<float> AndroidVelocityTracker::AddPosition(ParentLayerCoord aPos,
 
   auto start = mHistory[mHistory.Length() - 2];
   auto end = mHistory[mHistory.Length() - 1];
-  return Some((end.second - start.second) / (end.first - start.first));
+  return Some((end.second - start.second) /
+              (end.first - start.first).ToMilliseconds());
 }
 
 static float VectorDot(const float* a, const float* b, uint32_t m) {
@@ -213,7 +215,7 @@ static bool SolveLeastSquares(const float* x, const float* y, const float* w,
   return true;
 }
 
-Maybe<float> AndroidVelocityTracker::ComputeVelocity(uint32_t aTimestampMs) {
+Maybe<float> AndroidVelocityTracker::ComputeVelocity(TimeStamp aTimestamp) {
   if (mHistory.IsEmpty()) {
     return Nothing{};
   }
@@ -230,18 +232,20 @@ Maybe<float> AndroidVelocityTracker::ComputeVelocity(uint32_t aTimestampMs) {
   float time[kHistorySize];
   uint32_t m = 0;
   int index = mHistory.Length() - 1;
-  const uint32_t horizon = StaticPrefs::apz_velocity_relevance_time_ms();
+  const TimeDuration horizon = TimeDuration::FromMilliseconds(
+      StaticPrefs::apz_velocity_relevance_time_ms());
   const auto& newest_movement = mHistory[index];
 
   do {
     const auto& movement = mHistory[index];
-    uint32_t age = newest_movement.first - movement.first;
+    TimeDuration age = newest_movement.first - movement.first;
     if (age > horizon) break;
 
     ParentLayerCoord position = movement.second;
     pos[m] = position;
     w[m] = 1.0f;
-    time[m] = -static_cast<float>(age) / 1000.0f;  // in seconds
+    time[m] =
+        -static_cast<float>(age.ToMilliseconds()) / 1000.0f;  // in seconds
     index--;
     m++;
   } while (index >= 0);
