@@ -574,6 +574,13 @@ hb_script_get_horizontal_direction (hb_script_t script)
     case HB_SCRIPT_OLD_SOGDIAN:
     case HB_SCRIPT_SOGDIAN:
 
+    /* Unicode-12.0 additions */
+    case HB_SCRIPT_ELYMAIC:
+
+    /* Unicode-13.0 additions */
+    case HB_SCRIPT_CHORASMIAN:
+    case HB_SCRIPT_YEZIDI:
+
       return HB_DIRECTION_RTL;
 
 

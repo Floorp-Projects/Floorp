@@ -121,7 +121,6 @@ hb_ot_layout_get_glyphs_in_class (hb_face_t                  *face,
 				  hb_ot_layout_glyph_class_t  klass,
 				  hb_set_t                   *glyphs /* OUT */);
 
-
 /* Not that useful.  Provides list of attach points for a glyph that a
  * client may want to cache */
 HB_EXTERN unsigned int

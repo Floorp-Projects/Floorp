@@ -116,6 +116,8 @@ struct lcar
 {
   static constexpr hb_tag_t tableTag = HB_AAT_TAG_lcar;
 
+  bool has_data () const { return version.major; }
+
   unsigned int get_lig_carets (hb_font_t      *font,
 			       hb_direction_t  direction,
 			       hb_codepoint_t  glyph,
@@ -123,6 +125,13 @@ struct lcar
 			       unsigned int   *caret_count /* IN/OUT */,
 			       hb_position_t  *caret_array /* OUT */) const
   {
+    if (!has_data ())
+    {
+      if (caret_count)
+        *caret_count = 0;
+      return 0;
+    }
+
     switch (format)
     {
     case 0: return u.format0.get_lig_carets (font, direction, glyph, start_offset,

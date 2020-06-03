@@ -381,6 +381,10 @@ hb_ot_shape_complex_categorize (const hb_ot_shape_planner_t *planner)
     /* Unicode-12.0 additions */
     case HB_SCRIPT_NANDINAGARI:
 
+    /* Unicode-13.0 additions */
+    case HB_SCRIPT_CHORASMIAN:
+    case HB_SCRIPT_DIVES_AKURU:
+
       /* If the designer designed the font for the 'DFLT' script,
        * (or we ended up arbitrarily pick 'latn'), use the default shaper.
        * Otherwise, use the specific shaper.

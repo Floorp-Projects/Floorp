@@ -16,6 +16,12 @@ back to BCP 47 tags. Ambiguous OpenType tags (those that correspond to
 multiple BCP 47 tags) are listed here, except when the alphabetically
 first BCP 47 tag happens to be the chosen disambiguated tag. In that
 case, the fallback behavior will choose the right tag anyway.
+
+usage: ./gen-tag-table.py languagetags language-subtag-registry
+
+Input files:
+* https://docs.microsoft.com/en-us/typography/opentype/spec/languagetags
+* https://www.iana.org/assignments/language-subtag-registry/language-subtag-registry
 """
 
 import collections
@@ -23,19 +29,13 @@ from html.parser import HTMLParser
 def write (s):
 	sys.stdout.flush ()
 	sys.stdout.buffer.write (s.encode ('utf-8'))
-import io
 import itertools
 import re
 import sys
 import unicodedata
 
 if len (sys.argv) != 3:
-	print ('''usage: ./gen-tag-table.py languagetags language-subtag-registry
-
-Input files, as of Unicode 12:
-* https://docs.microsoft.com/en-us/typography/opentype/spec/languagetags
-* https://www.iana.org/assignments/language-subtag-registry/language-subtag-registry''', file=sys.stderr)
-	sys.exit (1)
+	sys.exit (__doc__)
 
 from html import unescape
 def html_unescape (parser, entity):
@@ -392,7 +392,7 @@ class OpenTypeRegistryParser (HTMLParser):
 		Args:
 			filename (str): The file name of the registry.
 		"""
-		with io.open (filename, encoding='utf-8') as f:
+		with open (filename, encoding='utf-8') as f:
 			self.feed (f.read ())
 		expect (self.header)
 		for tag, iso_codes in self.to_bcp_47.items ():
@@ -534,7 +534,7 @@ class BCP47Parser (object):
 		Args:
 			filename (str): The file name of the registry.
 		"""
-		with io.open (filename, encoding='utf-8') as f:
+		with open (filename, encoding='utf-8') as f:
 			subtag_type = None
 			subtag = None
 			deprecated = False
@@ -807,6 +807,7 @@ disambiguation = {
 	'HAL': 'cfm',
 	'HND': 'hnd',
 	'KIS': 'kqs',
+	'KUI': 'uki',
 	'LRC': 'bqi',
 	'NDB': 'nd',
 	'NIS': 'njz',
