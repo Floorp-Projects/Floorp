@@ -19,6 +19,7 @@
 #include "pk11pub.h"
 
 #include "nsNetCID.h"
+#include "nsIIDNService.h"
 #include "nsILoadContext.h"
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
@@ -321,6 +322,10 @@ PeerConnectionImpl::PeerConnectionImpl(const GlobalObject* aGlobal)
     }
     mWindow->AddPeerConnection();
     mActiveOnWindow = true;
+
+    mRtxIsAllowed =
+        !HostnameInPref("media.peerconnection.video.use_rtx.blocklist",
+                        mWindow->GetDocumentURI());
   }
   CSFLogInfo(LOGTAG, "%s: PeerConnectionImpl constructor for %s", __FUNCTION__,
              mHandle.c_str());
@@ -468,6 +473,7 @@ nsresult PeerConnectionImpl::Initialize(PeerConnectionObserver& aObserver,
 
   mJsepSession =
       MakeUnique<JsepSessionImpl>(mName, MakeUnique<PCUuidGenerator>());
+  mJsepSession->SetRtxIsAllowed(mRtxIsAllowed);
 
   res = mJsepSession->Init();
   if (NS_FAILED(res)) {
@@ -1025,6 +1031,8 @@ already_AddRefed<TransceiverImpl> PeerConnectionImpl::CreateTransceiverImpl(
     CSFLogError(LOGTAG, "%s: failed", __FUNCTION__);
     return nullptr;
   }
+
+  jsepTransceiver->SetRtxIsAllowed(mRtxIsAllowed);
 
   // Do this last, since it is not possible to roll back.
   nsresult rv = AddRtpTransceiverToJsepSession(jsepTransceiver);
@@ -1696,6 +1704,73 @@ void PeerConnectionImpl::DumpPacket_m(size_t level, dom::mozPacketDumpType type,
 
   JSErrorResult jrv;
   mPCObserver->OnPacket(level, type, sending, arrayBuffer, jrv);
+}
+
+bool PeerConnectionImpl::HostnameInPref(const char* aPref, nsIURI* aDocURI) {
+  auto HostInDomain = [](const nsCString& aHost, const nsCString& aPattern) {
+    int32_t patternOffset = 0;
+    int32_t hostOffset = 0;
+
+    // Act on '*.' wildcard in the left-most position in a domain pattern.
+    if (StringBeginsWith(aPattern, nsCString("*."))) {
+      patternOffset = 2;
+
+      // Ignore the lowest level sub-domain for the hostname.
+      hostOffset = aHost.FindChar('.') + 1;
+
+      if (hostOffset <= 1) {
+        // Reject a match between a wildcard and a TLD or '.foo' form.
+        return false;
+      }
+    }
+
+    nsDependentCString hostRoot(aHost, hostOffset);
+    return hostRoot.EqualsIgnoreCase(aPattern.BeginReading() + patternOffset);
+  };
+
+  if (!aDocURI) {
+    return false;
+  }
+
+  nsCString hostName;
+  aDocURI->GetAsciiHost(hostName);  // normalize UTF8 to ASCII equivalent
+  nsCString domainList;
+  nsresult nr = Preferences::GetCString(aPref, domainList);
+
+  if (NS_FAILED(nr)) {
+    return false;
+  }
+
+  domainList.StripWhitespace();
+
+  if (domainList.IsEmpty() || hostName.IsEmpty()) {
+    return false;
+  }
+
+  // Get UTF8 to ASCII domain name normalization service
+  nsresult rv;
+  nsCOMPtr<nsIIDNService> idnService =
+      do_GetService("@mozilla.org/network/idn-service;1", &rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return false;
+  }
+
+  // Test each domain name in the comma separated list
+  // after converting from UTF8 to ASCII. Each domain
+  // must match exactly or have a single leading '*.' wildcard.
+  for (const nsACString& each : domainList.Split(',')) {
+    nsCString domainName;
+    rv = idnService->ConvertUTF8toACE(each, domainName);
+    if (NS_SUCCEEDED(rv)) {
+      if (HostInDomain(hostName, domainName)) {
+        return true;
+      }
+    } else {
+      NS_WARNING("Failed to convert UTF-8 host to ASCII");
+    }
+  }
+
+  return false;
 }
 
 nsresult PeerConnectionImpl::EnablePacketDump(unsigned long level,
