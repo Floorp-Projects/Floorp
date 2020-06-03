@@ -34,13 +34,14 @@ function toComponentData(tabs) {
         )}`
       : "chrome://devtools/skin/images/globe.svg";
     const name = tab.title || tab.url;
-    const url = tab.url;
+    const { url, isZombieTab } = tab;
     return {
       name,
       icon,
       id,
       type,
       details: {
+        isZombieTab,
         url,
       },
     };

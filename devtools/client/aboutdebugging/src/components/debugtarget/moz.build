@@ -17,6 +17,7 @@ DevToolsModules(
     'ServiceWorkerAction.css',
     'ServiceWorkerAction.js',
     'ServiceWorkerAdditionalActions.js',
+    'TabAction.js',
     'TabDetail.js',
     'TemporaryExtensionAdditionalActions.js',
     'TemporaryExtensionDetail.js',
