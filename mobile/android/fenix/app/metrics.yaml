@@ -11,7 +11,7 @@ events:
   app_opened:
     type: event
     description: |
-      A user opened the app
+      A user opened the app (from cold start, to the homescreen or browser)
     extra_keys:
       source:
         description: |
@@ -19,6 +19,7 @@ events:
           `custom_tab` or `link`
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/968
+      - https://github.com/mozilla-mobile/fenix/issues/10616
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/1067#issuecomment-474598673
     notification_emails:
