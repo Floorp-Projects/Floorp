@@ -190,6 +190,24 @@
 // AXMathOver
 - (id _Nullable)moxMathOver;
 
+// AXInvalid
+- (NSString* _Nullable)moxInvalid;
+
+// AXSelectedText
+- (NSString* _Nullable)moxSelectedText;
+
+// AXSelectedTextRange
+- (NSValue* _Nullable)moxSelectedTextRange;
+
+// AXNumberOfCharacters
+- (NSNumber* _Nullable)moxNumberOfCharacters;
+
+// AXVisibleCharacterRange
+- (NSValue* _Nullable)moxVisibleCharacterRange;
+
+// AXInsertionPointLineNumber
+- (NSNumber* _Nullable)moxInsertionPointLineNumber;
+
 #pragma mark - AttributeSetters
 
 // AXValue
@@ -203,6 +221,15 @@
 
 // AXSelectedChildren
 - (void)moxSetSelectedChildren:(NSArray* _Nullable)selectedChildren;
+
+// AXSelectedText
+- (void)moxSetSelectedText:(NSString* _Nullable)selectedText;
+
+// AXSelectedTextRange
+- (void)moxSetSelectedTextRange:(NSValue* _Nullable)selectedTextRange;
+
+// AXVisibleCharacterRange
+- (void)moxSetVisibleCharacterRange:(NSValue* _Nullable)visibleCharacterRange;
 
 #pragma mark - Actions
 
