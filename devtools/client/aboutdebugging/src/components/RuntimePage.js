@@ -48,6 +48,9 @@ const ServiceWorkersWarning = createFactory(
 const ProcessDetail = createFactory(
   require("devtools/client/aboutdebugging/src/components/debugtarget/ProcessDetail")
 );
+const TabAction = createFactory(
+  require("devtools/client/aboutdebugging/src/components/debugtarget/TabAction")
+);
 const TabDetail = createFactory(
   require("devtools/client/aboutdebugging/src/components/debugtarget/TabDetail")
 );
@@ -216,7 +219,7 @@ class RuntimePage extends PureComponent {
         this.getIconByType(DEBUG_TARGETS.TAB),
         tabs,
         null,
-        InspectAction,
+        TabAction,
         null,
         TabDetail,
         DEBUG_TARGET_PANE.TAB,
