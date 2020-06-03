@@ -6,6 +6,7 @@
   --compatibility-base-unit: 4px;
   --compatibility-cause-color: var(--theme-text-color-alt);
   --compatibility-issue-icon-size: calc(var(--compatibility-base-unit) * 3);
+  --compatibility-issue-item-height: calc(var(--compatibility-base-unit) * 4);
   --compatibility-browser-icon-size: calc(var(--compatibility-base-unit) * 4);
 }
 
@@ -40,56 +41,70 @@
   padding: 0;
 }
 
+/*
+ * Layout of the issue item
+ *  +--------+-------------------+
+ *  | [icon] | issue description |
+ *  +--------+-------------------+
+ *  |        | occurrences       |
+ *  +--------+-------------------+
+ */
 .compatibility-issue-item {
+  display: grid;
+  gap: var(--compatibility-base-unit);
   padding: calc(var(--compatibility-base-unit) * 2);
-  padding-inline-end: calc(var(--compatibility-base-unit) * 4);
+  grid-template-areas: "icon description"
+                       ".    node-pane";
+  grid-template-columns: auto 1fr;
 }
 
 .compatibility-issue-item:not(:last-child) {
   border-block-end: 1px solid var(--theme-splitter-color);
 }
 
-/*
- * Layout of the issue description
- *  +------+--------------+-----------------+---------------------------+
- *  | icon | issue factor | (issue causes)? | unsupported browser icons |
- *  +------+--------------+-----------------+---------------------------+
- */
-.compatibility-issue-item__description {
-  display: grid;
-  grid-template-columns: var(--compatibility-issue-icon-size) max-content 1fr max-content;
-  align-items: center;
-}
-
-.compatibility-issue-item__description > *:nth-child(-n+2) {
-  /*
-   * The reason why we don't use `gap` in `.compatibility-issue-item` is
-   * because there are cases that the `issue causes` element is null,
-   * then the layout will be broken a bit.
-   */
-  margin-inline-start: var(--compatibility-base-unit);
-}
-
-.compatibility-issue-item__description::before {
+.compatibility-issue-item::before {
+  grid-area: icon;
   content: "";
-  width: var(--compatibility-issue-icon-size);
-  height: var(--compatibility-issue-icon-size);
+  display: block;
+  width: var(--compatibility-issue-item-height);
+  height: var(--compatibility-issue-item-height);
   background-size: var(--compatibility-issue-icon-size);
+  background-position: center;
+  background-repeat: no-repeat;
   -moz-context-properties: fill;
+  /* In order to fit to the position */
+  position: relative;
+  top: -1px;
 }
 
-.compatibility-issue-item__description--experimental::before,
-.compatibility-issue-item__description--unsupported::before {
+.compatibility-issue-item--experimental::before,
+.compatibility-issue-item--unsupported::before {
   background-image: url(chrome://devtools/skin/images/info.svg);
   fill: currentColor;
 }
 
-.compatibility-issue-item__description--deprecated::before {
+.compatibility-issue-item--deprecated::before {
   background-image: url(chrome://devtools/skin/images/alert-small.svg);
   fill: var(--theme-icon-warning-color);
 }
 
+/*
+ * Layout of the issue description
+ *  +--------------+----------------+---------------------------+
+ *  | issue factor | (issue causes) | unsupported browser icons |
+ *  +--------------+----------------+---------------------------+
+ */
+.compatibility-issue-item__description {
+  grid-area: description;
+  display: flex;
+  column-gap: var(--compatibility-base-unit);
+  row-gap: calc(var(--compatibility-base-unit) / 2);
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+
 .compatibility-issue-item__causes {
+  flex: auto;
   color: var(--compatibility-cause-color);
 }
 
@@ -99,12 +114,10 @@
 }
 
 .compatibility-unsupported-browser-list {
-  display: flex;
-  align-items: center;
-  justify-content: end;
   list-style: none;
   padding: 0;
-  gap: var(--compatibility-base-unit);
+  column-gap: var(--compatibility-base-unit);
+  display: flex;
 }
 
 .compatibility-browser-icon {
@@ -138,13 +151,13 @@
 }
 
 .compatibility-node-pane {
-  padding-inline-start: calc(var(--compatibility-base-unit) * 4);
+  grid-area: node-pane;
 }
 
 .compatibility-node-pane__summary {
   color: var(--theme-comment);
   cursor: pointer;
-  padding-block-start: var(--compatibility-base-unit);
+  padding-block-end: var(--compatibility-base-unit);
 }
 
 .compatibility-node-list {
@@ -153,8 +166,8 @@
   padding-inline-start: calc(var(--compatibility-base-unit) * 2);
 }
 
-.compatibility-node-item {
-  padding-block-start: var(--compatibility-base-unit);
+.compatibility-node-item:not(:last-child) {
+  padding-block-end: var(--compatibility-base-unit);
 }
 
 .compatibility-footer {
