@@ -88,6 +88,7 @@ $(addprefix install-,$(INSTALL_MANIFESTS)): install-%: $(addprefix $(TOPOBJDIR)/
 	@# support for defines tracking in process_install_manifest.
 	@touch install_$(subst /,_,$*)
 	$(PYTHON3) -m mozbuild.action.process_install_manifest \
+		$(if $(filter copy,$(NSDISTMODE)),--no-symlinks) \
 		--track install_$(subst /,_,$*).track \
 		$(TOPOBJDIR)/$* \
 		-DAB_CD=en-US \
