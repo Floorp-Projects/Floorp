@@ -1585,7 +1585,7 @@ fails-if(!webrender) == 1580534.html 1580534-ref.html
 == 602200-4.html 602200-4-ref.html
 == 603423-1.html 603423-1-ref.html
 == 604737.html 604737-ref.html
-fuzzy-if(webrender&&cocoaWidget,0-7,0-610) fuzzy-if(geckoview&&webrender&&emulator,0-11,0-632) == 605138-1.html 605138-1-ref.html
+fuzzy-if(webrender&&cocoaWidget,0-7,0-610) fuzzy-if(webrender&&gtkWidget,0-11,0-608) fuzzy-if(webrender&&winWidget,0-5,0-587) fuzzy-if(geckoview&&webrender&&emulator,0-11,0-632) == 605138-1.html 605138-1-ref.html
 == 605157-1.xhtml 605157-1-ref.xhtml
 == 607267-1.html 607267-1-ref.html
 == 608636-1.html 608636-1-ref.html
