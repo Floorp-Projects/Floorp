@@ -813,12 +813,6 @@ class AsyncPanZoomController {
   void EndTouch(TimeStamp aTimestamp);
 
   /**
-   * Register the forceful end of a touch or pan gesture, such as when a
-   * touch-cancel event is received.
-   */
-  void CancelGesture();
-
-  /**
    * Utility function to send updated FrameMetrics to Gecko so that it can paint
    * the displayport area. Calls into GeckoContentController to do the actual
    * work. This call will use the current metrics. If this function is called
