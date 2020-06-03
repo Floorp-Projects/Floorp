@@ -915,23 +915,39 @@ var snapshotFormatters = {
       }
     }
 
+    function roundtripAudioLatency() {
+      insertBasicInfo("roundtrip-latency", "...");
+      window.windowUtils
+        .defaultDevicesRoundTripLatency()
+        .then(latency => {
+          var latencyString = `${(latency[0] * 1000).toFixed(2)}ms (${(
+            latency[1] * 1000
+          ).toFixed(2)})`;
+          data.defaultDevicesRoundTripLatency = latencyString;
+          document.querySelector(
+            'th[data-l10n-id="roundtrip-latency"]'
+          ).nextSibling.textContent = latencyString;
+        })
+        .catch(e => {});
+    }
+
     // Basic information
     insertBasicInfo("audio-backend", data.currentAudioBackend);
     insertBasicInfo("max-audio-channels", data.currentMaxAudioChannels);
     insertBasicInfo("sample-rate", data.currentPreferredSampleRate);
-    insertBasicInfo("roundtrip-latency", "...");
-    window.windowUtils
-      .defaultDevicesRoundTripLatency()
-      .then(latency => {
-        var latencyString = `${(latency[0] * 1000).toFixed(2)}ms (${(
-          latency[1] * 1000
-        ).toFixed(2)})`;
-        data.defaultDevicesRoundTripLatency = latencyString;
-        document.querySelector(
-          'th[data-l10n-id="roundtrip-latency"]'
-        ).nextSibling.textContent = latencyString;
-      })
-      .catch(e => {});
+
+    if (AppConstants.platform == "macosx") {
+      var micStatus = {};
+      let permission = Cc["@mozilla.org/ospermissionrequest;1"].getService(
+        Ci.nsIOSPermissionRequest
+      );
+      permission.getAudioCapturePermissionState(micStatus);
+      if (micStatus.value == permission.PERMISSION_STATE_AUTHORIZED) {
+        roundtripAudioLatency();
+      }
+    } else {
+      roundtripAudioLatency();
+    }
 
     // Output devices information
     insertDeviceInfo("output", data.audioOutputDevices);
