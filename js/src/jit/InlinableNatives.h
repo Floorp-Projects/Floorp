@@ -7,6 +7,10 @@
 #ifndef jit_InlinableNatives_h
 #define jit_InlinableNatives_h
 
+#include <stdint.h> // For uint16_t
+
+#include "jspubtd.h" // For JSClass
+
 #define INLINABLE_NATIVE_LIST(_)                   \
   _(Array)                                         \
   _(ArrayIsArray)                                  \
@@ -195,6 +199,8 @@ enum class InlinableNative : uint16_t {
 #define ADD_NATIVE(native) extern const JSJitInfo JitInfo_##native;
 INLINABLE_NATIVE_LIST(ADD_NATIVE)
 #undef ADD_NATIVE
+
+const JSClass* InlinableNativeGuardToClass(InlinableNative native);
 
 }  // namespace jit
 }  // namespace js
