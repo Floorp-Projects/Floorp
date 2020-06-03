@@ -85,8 +85,8 @@ END_TEST(testAtomicFence)
 // Memory for testing atomics.  This must be aligned to the natural alignment of
 // the type we're testing; for now, use 8-byte alignment for all.
 
-MOZ_ALIGNED_DECL(static uint8_t atomicMem[8], 8);
-MOZ_ALIGNED_DECL(static uint8_t atomicMem2[8], 8);
+MOZ_ALIGNED_DECL(8, static uint8_t atomicMem[8]);
+MOZ_ALIGNED_DECL(8, static uint8_t atomicMem2[8]);
 
 // T is the primitive type we're testing, and A and B are references to constant
 // bindings holding values of that type.
