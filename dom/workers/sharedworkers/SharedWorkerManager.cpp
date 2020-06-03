@@ -22,12 +22,12 @@ namespace dom {
 already_AddRefed<SharedWorkerManagerHolder> SharedWorkerManager::Create(
     SharedWorkerService* aService, nsIEventTarget* aPBackgroundEventTarget,
     const RemoteWorkerData& aData, nsIPrincipal* aLoadingPrincipal,
-    const OriginAttributes& aStoragePrincipalAttrs) {
+    const OriginAttributes& aPartitionedPrincipalAttrs) {
   MOZ_ASSERT(NS_IsMainThread());
 
   RefPtr<SharedWorkerManager> manager =
       new SharedWorkerManager(aPBackgroundEventTarget, aData, aLoadingPrincipal,
-                              aStoragePrincipalAttrs);
+                              aPartitionedPrincipalAttrs);
 
   RefPtr<SharedWorkerManagerHolder> holder =
       new SharedWorkerManagerHolder(manager, aService);
@@ -37,11 +37,11 @@ already_AddRefed<SharedWorkerManagerHolder> SharedWorkerManager::Create(
 SharedWorkerManager::SharedWorkerManager(
     nsIEventTarget* aPBackgroundEventTarget, const RemoteWorkerData& aData,
     nsIPrincipal* aLoadingPrincipal,
-    const OriginAttributes& aStoragePrincipalAttrs)
+    const OriginAttributes& aPartitionedPrincipalAttrs)
     : mPBackgroundEventTarget(aPBackgroundEventTarget),
       mLoadingPrincipal(aLoadingPrincipal),
       mDomain(aData.domain()),
-      mStoragePrincipalAttrs(aStoragePrincipalAttrs),
+      mPartitionedPrincipalAttrs(aPartitionedPrincipalAttrs),
       mResolvedScriptURL(DeserializeURI(aData.resolvedScriptURL())),
       mName(aData.name()),
       mIsSecureContext(aData.isSecureContext()),
@@ -83,7 +83,7 @@ already_AddRefed<SharedWorkerManagerHolder>
 SharedWorkerManager::MatchOnMainThread(
     SharedWorkerService* aService, const nsACString& aDomain,
     nsIURI* aScriptURL, const nsAString& aName, nsIPrincipal* aLoadingPrincipal,
-    const OriginAttributes& aStoragePrincipalAttrs) {
+    const OriginAttributes& aPartitionedPrincipalAttrs) {
   MOZ_ASSERT(NS_IsMainThread());
 
   bool urlEquals;
@@ -96,7 +96,7 @@ SharedWorkerManager::MatchOnMainThread(
                // SharedWorker's loading principal and vice versa.
                mLoadingPrincipal->Subsumes(aLoadingPrincipal) &&
                aLoadingPrincipal->Subsumes(mLoadingPrincipal) &&
-               mStoragePrincipalAttrs == aStoragePrincipalAttrs;
+               mPartitionedPrincipalAttrs == aPartitionedPrincipalAttrs;
   if (!match) {
     return nullptr;
   }

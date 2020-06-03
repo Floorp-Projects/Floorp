@@ -602,7 +602,7 @@ class nsDocShell final : public nsDocLoader,
   // passed in, the about:blank principal will end up being used.
   // aCSP, if any, will be used for the new about:blank load.
   nsresult CreateAboutBlankContentViewer(
-      nsIPrincipal* aPrincipal, nsIPrincipal* aStoragePrincipal,
+      nsIPrincipal* aPrincipal, nsIPrincipal* aPartitionedPrincipal,
       nsIContentSecurityPolicy* aCSP, nsIURI* aBaseURI,
       bool aTryToSaveOldPresentation = true, bool aCheckPermitUnload = true,
       mozilla::dom::WindowGlobalChild* aActor = nullptr);
@@ -642,7 +642,7 @@ class nsDocShell final : public nsDocLoader,
   nsresult AddToSessionHistory(nsIURI* aURI, nsIChannel* aChannel,
                                nsIPrincipal* aTriggeringPrincipal,
                                nsIPrincipal* aPrincipalToInherit,
-                               nsIPrincipal* aStoragePrincipalToInherit,
+                               nsIPrincipal* aPartitionedPrincipalToInherit,
                                nsIContentSecurityPolicy* aCsp,
                                bool aCloneChildren, nsISHEntry** aNewEntry);
 
@@ -717,9 +717,10 @@ class nsDocShell final : public nsDocLoader,
   bool OnNewURI(nsIURI* aURI, nsIChannel* aChannel,
                 nsIPrincipal* aTriggeringPrincipal,
                 nsIPrincipal* aPrincipalToInherit,
-                nsIPrincipal* aStoragePrincipalToInehrit, uint32_t aLoadType,
-                nsIContentSecurityPolicy* aCsp, bool aFireOnLocationChange,
-                bool aAddToGlobalHistory, bool aCloneSHChildren);
+                nsIPrincipal* aPartitionedPrincipalToInehrit,
+                uint32_t aLoadType, nsIContentSecurityPolicy* aCsp,
+                bool aFireOnLocationChange, bool aAddToGlobalHistory,
+                bool aCloneSHChildren);
 
   // Helper method that is called when a new document (including any
   // sub-documents - ie. frames) has been completely loaded.
@@ -757,10 +758,11 @@ class nsDocShell final : public nsDocLoader,
   // If that fails too, we force creation of a content viewer and use the
   // resulting principal. If aConsiderCurrentDocument is false, we just look
   // at the parent.
-  // If aConsiderStoragePrincipal is true, we consider the storage principal
-  // instead of the node principal.
-  nsIPrincipal* GetInheritedPrincipal(bool aConsiderCurrentDocument,
-                                      bool aConsiderStoragePrincipal = false);
+  // If aConsiderPartitionedPrincipal is true, we consider the partitioned
+  // principal instead of the node principal.
+  nsIPrincipal* GetInheritedPrincipal(
+      bool aConsiderCurrentDocument,
+      bool aConsiderPartitionedPrincipal = false);
 
   /**
    * Helper function that caches a URI and a transition for saving later.

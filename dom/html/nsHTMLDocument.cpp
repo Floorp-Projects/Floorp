@@ -162,10 +162,10 @@ void nsHTMLDocument::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup) {
 
 void nsHTMLDocument::ResetToURI(nsIURI* aURI, nsILoadGroup* aLoadGroup,
                                 nsIPrincipal* aPrincipal,
-                                nsIPrincipal* aStoragePrincipal) {
+                                nsIPrincipal* aPartitionedPrincipal) {
   mLoadFlags = nsIRequest::LOAD_NORMAL;
 
-  Document::ResetToURI(aURI, aLoadGroup, aPrincipal, aStoragePrincipal);
+  Document::ResetToURI(aURI, aLoadGroup, aPrincipal, aPartitionedPrincipal);
 
   mImages = nullptr;
   mApplets = nullptr;
