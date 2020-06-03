@@ -253,27 +253,17 @@ nsresult TextEditor::OnDrop(DragEvent* aDropEvent) {
   // Check if dropping into a selected range.  If so and the source comes from
   // same document, jump through some hoops to determine if mouse is over
   // selection (bail) and whether user wants to copy selection or delete it.
-  if (!SelectionRefPtr()->IsCollapsed() && sourceNode &&
-      sourceNode->IsEditable() && srcdoc == document) {
-    uint32_t rangeCount = SelectionRefPtr()->RangeCount();
-    for (uint32_t j = 0; j < rangeCount; j++) {
-      const nsRange* range = SelectionRefPtr()->GetRangeAt(j);
-      if (NS_WARN_IF(!range)) {
-        // don't bail yet, iterate through them all
-        continue;
-      }
-      IgnoredErrorResult ignoredError;
-      if (range->IsPointInRange(*droppedAt.GetContainer(), droppedAt.Offset(),
-                                ignoredError) &&
-          !ignoredError.Failed()) {
-        // If source document and destination document is same and dropping
-        // into one of selected ranges, we don't need to do nothing.
-        // XXX If the source comes from outside of this editor, this check
-        //     means that we don't allow to drop the item in the selected
-        //     range.  However, the selection is hidden until the <input> or
-        //     <textarea> gets focus, therefore, this looks odd.
-        return NS_OK;
-      }
+  if (sourceNode && sourceNode->IsEditable() && srcdoc == document) {
+    bool isPointInSelection = EditorUtils::IsPointInSelection(
+        *SelectionRefPtr(), *droppedAt.GetContainer(), droppedAt.Offset());
+    if (isPointInSelection) {
+      // If source document and destination document is same and dropping
+      // into one of selected ranges, we don't need to do nothing.
+      // XXX If the source comes from outside of this editor, this check
+      //     means that we don't allow to drop the item in the selected
+      //     range.  However, the selection is hidden until the <input> or
+      //     <textarea> gets focus, therefore, this looks odd.
+      return NS_OK;
     }
   }
 
