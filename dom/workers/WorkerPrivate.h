@@ -694,11 +694,6 @@ class WorkerPrivate : public RelativeTimeline {
     return mLoadInfo.mPrincipal;
   }
 
-  nsIPrincipal* GetEffectiveStoragePrincipal() const {
-    AssertIsOnMainThread();
-    return mLoadInfo.mStoragePrincipal;
-  }
-
   nsIPrincipal* GetLoadingPrincipal() const {
     AssertIsOnMainThread();
     return mLoadInfo.mLoadingPrincipal;
@@ -707,6 +702,8 @@ class WorkerPrivate : public RelativeTimeline {
   const nsAString& OriginNoSuffix() const { return mLoadInfo.mOriginNoSuffix; }
 
   const nsACString& Origin() const { return mLoadInfo.mOrigin; }
+
+  const nsACString& StoragePrincipalOrigin() const;
 
   const nsACString& PartitionedOrigin() const {
     return mLoadInfo.mPartitionedOrigin;
@@ -726,9 +723,7 @@ class WorkerPrivate : public RelativeTimeline {
     return *mLoadInfo.mPrincipalInfo;
   }
 
-  const mozilla::ipc::PrincipalInfo& GetEffectiveStoragePrincipalInfo() const {
-    return *mLoadInfo.mStoragePrincipalInfo;
-  }
+  const mozilla::ipc::PrincipalInfo& GetEffectiveStoragePrincipalInfo() const;
 
   already_AddRefed<nsIChannel> ForgetWorkerChannel() {
     AssertIsOnMainThread();
@@ -863,7 +858,7 @@ class WorkerPrivate : public RelativeTimeline {
   void CycleCollect(bool aDummy);
 
   nsresult SetPrincipalsAndCSPOnMainThread(nsIPrincipal* aPrincipal,
-                                           nsIPrincipal* aStoragePrincipal,
+                                           nsIPrincipal* aPartitionedPrincipal,
                                            nsILoadGroup* aLoadGroup,
                                            nsIContentSecurityPolicy* aCsp);
 
