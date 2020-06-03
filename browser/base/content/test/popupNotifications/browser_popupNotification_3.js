@@ -299,34 +299,32 @@ var tests = [
       };
       showNotification(this.notifyObj);
     },
-    onShown(popup) {
-      let self = this;
-      let progressListener = {
-        onLocationChange: function onLocationChange() {
-          gBrowser.removeProgressListener(progressListener);
+    async onShown(popup) {
+      info("Adding observer and performing navigation");
 
-          executeSoon(() => {
-            let notification = PopupNotifications.getNotification(
-              self.notifyObj.id,
-              self.notifyObj.browser
-            );
-            ok(
-              notification != null,
-              "Notification remained when subframe navigated"
-            );
-            self.notifyObj.options.eventCallback = undefined;
+      await Promise.all([
+        BrowserUtils.promiseObserved("window-global-created", wgp =>
+          wgp.documentURI.spec.startsWith("http://example.org/")
+        ),
+        SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+          content.document
+            .getElementById("iframe")
+            .setAttribute("src", "http://example.org/");
+        }),
+      ]);
 
-            notification.remove();
-          });
-        },
-      };
+      executeSoon(() => {
+        let notification = PopupNotifications.getNotification(
+          this.notifyObj.id,
+          this.notifyObj.browser
+        );
+        ok(
+          notification != null,
+          "Notification remained when subframe navigated"
+        );
+        this.notifyObj.options.eventCallback = undefined;
 
-      info("Adding progress listener and performing navigation");
-      gBrowser.addProgressListener(progressListener);
-      SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
-        content.document
-          .getElementById("iframe")
-          .setAttribute("src", "http://example.org/");
+        notification.remove();
       });
     },
     onHidden() {},
