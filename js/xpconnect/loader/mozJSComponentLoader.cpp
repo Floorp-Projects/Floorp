@@ -598,29 +598,6 @@ void mozJSComponentLoader::CreateLoaderGlobal(JSContext* aCx,
   aGlobal.set(global);
 }
 
-bool mozJSComponentLoader::ReuseGlobal(nsIURI* aURI) {
-  if (!mShareLoaderGlobal) {
-    return false;
-  }
-
-  nsCString spec;
-  NS_ENSURE_SUCCESS(aURI->GetSpec(spec), false);
-
-  // The loader calls Object.freeze on global properties, which
-  // causes problems if the global is shared with other code.
-  if (spec.EqualsASCII("resource://gre/modules/commonjs/toolkit/loader.js")) {
-    return false;
-  }
-
-  // Various tests call addDebuggerToGlobal on the result of
-  // importing this JSM, which would be annoying to fix.
-  if (spec.EqualsASCII("resource://gre/modules/jsdebugger.jsm")) {
-    return false;
-  }
-
-  return true;
-}
-
 JSObject* mozJSComponentLoader::GetSharedGlobal(JSContext* aCx) {
   if (!mLoaderGlobal) {
     JS::RootedObject globalObj(aCx);
@@ -647,7 +624,7 @@ JSObject* mozJSComponentLoader::PrepareObjectForLocation(
   nsAutoCString nativePath;
   NS_ENSURE_SUCCESS(aURI->GetSpec(nativePath), nullptr);
 
-  bool reuseGlobal = ReuseGlobal(aURI);
+  bool reuseGlobal = mShareLoaderGlobal;
 
   *aReuseGlobal = reuseGlobal;
 
