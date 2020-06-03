@@ -2229,7 +2229,6 @@ nsStyleDisplay::nsStyleDisplay(const Document& aDocument)
       mOriginalDisplay(StyleDisplay::Inline),
       mContain(StyleContain::NONE),
       mAppearance(StyleAppearance::None),
-      mDefaultAppearance(StyleAppearance::None),
       mPosition(StylePositionProperty::Static),
       mFloat(StyleFloat::None),
       mBreakType(StyleClear::None),
@@ -2299,7 +2298,6 @@ nsStyleDisplay::nsStyleDisplay(const nsStyleDisplay& aSource)
       mOriginalDisplay(aSource.mOriginalDisplay),
       mContain(aSource.mContain),
       mAppearance(aSource.mAppearance),
-      mDefaultAppearance(aSource.mDefaultAppearance),
       mPosition(aSource.mPosition),
       mFloat(aSource.mFloat),
       mBreakType(aSource.mBreakType),
@@ -2470,10 +2468,6 @@ nsChangeHint nsStyleDisplay::CalcDifference(
 
   if (mScrollSnapAlign != aNewData.mScrollSnapAlign) {
     // FIXME: Bug 1530253 Support re-snapping when scroll-snap-align changes.
-    hint |= nsChangeHint_NeutralChange;
-  }
-
-  if (mDefaultAppearance != aNewData.mDefaultAppearance) {
     hint |= nsChangeHint_NeutralChange;
   }
 
