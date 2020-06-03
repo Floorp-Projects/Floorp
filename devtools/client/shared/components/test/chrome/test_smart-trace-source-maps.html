@@ -51,7 +51,11 @@ window.onload = function() {
 	      subscribe: function (url, line, column, callback) {
 	        const newLine = Number(line.toString().repeat(2));
 	        // Resolve immediately.
-	        callback(true, "https://bugzilla.mozilla.org/original.js", newLine, column);
+          callback({
+            url: "https://bugzilla.mozilla.org/original.js",
+            line: newLine,
+            column,
+          });
           return () => {};
 	      },
       },
@@ -118,7 +122,11 @@ window.onload = function() {
           // Resolve after a while.
           setTimeout(() => {
             const newLine = Number(line.toString().repeat(2));
-            callback(true, "http://myfile.com/react.js", newLine, column);
+            callback({
+              url: "http://myfile.com/react.js",
+              line: newLine,
+              column,
+            });
           }, sourcemapTimeout)
 
           return () => {};
@@ -217,7 +225,11 @@ window.onload = function() {
           }
 
           const newLine = Number(line.toString().repeat(2));
-          callback(true, `http://myfile.com/file-${line}.js`, newLine, column);
+          callback({
+            url: `http://myfile.com/file-${line}.js`,
+            line: newLine,
+            column,
+          });
           return () => {};
         },
       },

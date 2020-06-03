@@ -301,7 +301,11 @@ window.onload = async function () {
     const mockSourceMapService = {
       subscribe: function (url, line, column, callback) {
         // Resolve immediately.
-        callback(true, resolvedLocation.sourceUrl, resolvedLocation.line);
+        callback({
+          url: resolvedLocation.sourceUrl,
+          line: resolvedLocation.line,
+          column: undefined,
+        });
         return () => {};
       },
     };

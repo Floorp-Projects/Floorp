@@ -90,15 +90,15 @@ class Frame extends Component {
     }
   }
 
-  _locationChanged(isSourceMapped, url, line, column) {
+  _locationChanged(originalLocation) {
     const newState = {
-      isSourceMapped,
+      isSourceMapped: !!originalLocation,
     };
-    if (isSourceMapped) {
+    if (originalLocation) {
       newState.frame = {
-        source: url,
-        line,
-        column,
+        source: originalLocation.url,
+        line: originalLocation.line,
+        column: originalLocation.column,
         functionDisplayName: this.props.frame.functionDisplayName,
       };
     }

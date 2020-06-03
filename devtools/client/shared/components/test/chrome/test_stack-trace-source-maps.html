@@ -47,12 +47,11 @@ window.onload = function () {
         subscribe: function (url, line, column, callback) {
           const newLine = line === 99 ? 1 : 7;
           // Resolve immediately.
-          callback(
-            true,
-            "https://bugzilla.mozilla.org/original.js",
-            newLine,
-            column
-          );
+          callback({
+            url: "https://bugzilla.mozilla.org/original.js",
+            line: newLine,
+            column,
+          });
 
           return () => {}
         },
