@@ -247,7 +247,7 @@ class DefaultToolbarMenu(
 
     private val syncedTabs = BrowserMenuImageText(
         label = context.getString(R.string.synced_tabs),
-        imageResource = R.drawable.ic_tab_collection,
+        imageResource = R.drawable.ic_synced_tabs,
         iconTintColorResource = primaryTextColor()
     ) {
         onItemTapped.invoke(ToolbarMenu.Item.SyncedTabs)

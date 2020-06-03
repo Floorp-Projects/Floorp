@@ -99,7 +99,7 @@ class HomeMenu(
 
         val bookmarksItem = BrowserMenuImageText(
             context.getString(R.string.library_bookmarks),
-            R.drawable.ic_bookmark_outline,
+            R.drawable.ic_bookmark_filled,
             primaryTextColor
         ) {
             onItemTapped.invoke(Item.Bookmarks)
@@ -131,7 +131,7 @@ class HomeMenu(
 
         val syncedTabsItem = BrowserMenuImageText(
             context.getString(R.string.library_synced_tabs),
-            R.drawable.ic_tab_collection,
+            R.drawable.ic_synced_tabs,
             primaryTextColor
         ) {
             onItemTapped.invoke(Item.SyncedTabs)
