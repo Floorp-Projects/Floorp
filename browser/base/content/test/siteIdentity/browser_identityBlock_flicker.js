@@ -14,7 +14,7 @@ add_task(async function test() {
 
   is(
     identityBox.className,
-    "unknownIdentity",
+    "localResource",
     "identity box has the correct class"
   );
 
