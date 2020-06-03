@@ -709,6 +709,13 @@ skip script test262/intl402/NumberFormat/prototype/format/signDisplay-currency-j
 skip script test262/intl402/NumberFormat/prototype/format/signDisplay-currency-ko-KR.js
 skip script test262/intl402/NumberFormat/prototype/format/signDisplay-currency-en-US.js
 
+# Not yet updated for <https://github.com/tc39/ecma262/pull/1912>.
+skip script test262/built-ins/Promise/any/invoke-resolve-get-error-close.js
+skip script test262/built-ins/Promise/all/invoke-resolve-get-error-close.js
+skip script test262/built-ins/Promise/race/invoke-resolve-get-error-close.js
+skip script test262/built-ins/Promise/allSettled/invoke-resolve-get-error-close.js
+
+
 ##############################################
 # Enable Iterator Helpers tests in the shell #
 ##############################################
