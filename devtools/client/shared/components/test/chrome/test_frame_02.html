@@ -41,8 +41,8 @@ window.onload = async function () {
         this._callback = callback;
         // Resolve immediately.
         this._update();
-      },
-      unsubscribe: function (url, line, column, callback) {
+
+        return () => {};
       },
     };
 

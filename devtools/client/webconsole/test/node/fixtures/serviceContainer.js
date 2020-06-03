@@ -15,7 +15,9 @@ module.exports = {
   openNetworkPanel: () => {},
   resendNetworkRequest: () => {},
   sourceMapURLService: {
-    subscribe: () => {},
+    subscribe: () => {
+      return () => {};
+    },
     originalPositionFor: () => {
       return new Promise(resolve => {
         resolve();
