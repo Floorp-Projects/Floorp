@@ -74,6 +74,12 @@ module.exports = function(config) {
               functions: 100,
               branches: 83,
             },
+            "lib/PlacesFeed.jsm": {
+              statements: 98,
+              lines: 98,
+              functions: 100,
+              branches: 84,
+            },
             "lib/UTEventReporting.jsm": {
               statements: 100,
               lines: 100,
@@ -81,8 +87,8 @@ module.exports = function(config) {
               branches: 75,
             },
             "lib/TopSitesFeed.jsm": {
-              statements: 98,
-              lines: 98,
+              statements: 97,
+              lines: 97,
               functions: 100,
               branches: 84,
             },
