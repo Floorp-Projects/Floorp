@@ -55,6 +55,7 @@ const TabDescriptorActor = ActorClassWithSpec(tabDescriptorSpec, {
         this._browser && this._browser.browsingContext
           ? this._browser.browsingContext.id
           : null,
+      isZombieTab: this._isZombieTab(),
       outerWindowID: this._getOuterWindowId(),
       selected: this.selected,
       title: this._getTitle(),
