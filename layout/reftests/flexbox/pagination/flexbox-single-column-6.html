@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<html>
+  <meta charset="utf-8">
+  <title>CSS Flexbox Test: Fragmentation of a fixed height single-line column flex container and a fixed height flex item that has overflows</title>
+  <link rel="author" title="Ting-Yu Lin" href="mailto:tlin@mozilla.com">
+  <link rel="author" title="Mozilla" href="http://www.mozilla.org/">
+  <link rel="help" href="https://drafts.csswg.org/css-flexbox-1/#pagination">
+  <link rel="match" href="flexbox-single-column-6-ref.html">
+  <meta name="assert" content="This test verifies fragmentation of a fixed height flex item that has overflows in a fixed height single-line column flex container.">
+
+  <style>
+  .multicol {
+    height: 50px;
+    width: 190px;
+    column-width: 40px;
+    column-fill: auto;
+    column-gap: 10px;
+    border: 5px solid orange;
+    margin-bottom: 5px; /* Just to separate each sub-testcase visually. */
+  }
+  .flexContainer {
+    display: flex;
+    flex-wrap: nowrap;
+    flex-direction: column;
+    background: gray;
+    /* border-width is 0 by default; some sub-testcases will increase it. */
+    border: 0 solid lightgray;
+    /* Height is deliberately made shorter than its flex items. */
+    height: 40px;
+  }
+  .border-padding {
+    border-width: 10px 0;
+    padding: 5px 0;
+  }
+
+  article {
+    width: 30px;
+    /* Height is deliberately made shorter than its <div> child. */
+    height: 70px;
+    background: cyan;
+  }
+  article > div {
+    width: 20px;
+    height: 140px;
+    background: magenta;
+  }
+  </style>
+
+  <body>
+    <!-- Basic one without any margin/border/padding. -->
+    <div class="multicol">
+      <div class="flexContainer">
+        <article><div></div></article>
+      </div>
+    </div>
+
+    <!-- Test a container with margin-top. -->
+    <div class="multicol">
+      <div class="flexContainer" style="margin-top: 25px">
+        <article><div></div></article>
+      </div>
+    </div>
+
+    <!-- Test a container not at the top of the column/page. -->
+    <div class="multicol">
+      <div style="height: 25px"></div>
+      <div class="flexContainer">
+        <article><div></div></article>
+      </div>
+    </div>
+
+    <!-- Test a container with border and padding. -->
+    <div class="multicol">
+      <div class="flexContainer border-padding">
+        <article><div></div></article>
+      </div>
+    </div>
+  </body>
+</html>
