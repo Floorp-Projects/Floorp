@@ -74,6 +74,32 @@ class VoiceSearchActivityTest {
     }
 
     @Test
+    fun `process null intent`() {
+        val controller = Robolectric.buildActivity(VoiceSearchActivity::class.java, null)
+        val activity = controller.get()
+
+        controller.create()
+
+        assertTrue(activity.isFinishing)
+    }
+
+    @Test
+    fun `save previous intent to instance state`() {
+        val previousIntent = Intent().apply {
+            putExtra(SPEECH_PROCESSING, true)
+        }
+        val savedInstanceState = Bundle().apply {
+            putParcelable(PREVIOUS_INTENT, previousIntent)
+        }
+        val outState = Bundle()
+
+        controller.create(savedInstanceState)
+        controller.saveInstanceState(outState)
+
+        assertEquals(previousIntent, outState.getParcelable(PREVIOUS_INTENT) as Intent)
+    }
+
+    @Test
     fun `process intent with speech processing in previous intent set to true`() {
         val savedInstanceState = Bundle()
         val previousIntent = Intent().apply {
@@ -106,5 +132,19 @@ class VoiceSearchActivityTest {
         assertEquals(ComponentName(activity, IntentReceiverActivity::class.java), browserIntent.component)
         assertEquals("hello world", browserIntent.getStringExtra(SPEECH_PROCESSING))
         assertTrue(browserIntent.getBooleanExtra(OPEN_TO_BROWSER_AND_LOAD, false))
+    }
+
+    @Test
+    fun `handle invalid result code`() {
+        controller.create()
+
+        val resultIntent = Intent()
+        shadow.receiveResult(
+            shadow.peekNextStartedActivityForResult().intent,
+            Activity.RESULT_CANCELED,
+            resultIntent
+        )
+
+        assertTrue(activity.isFinishing)
     }
 }
