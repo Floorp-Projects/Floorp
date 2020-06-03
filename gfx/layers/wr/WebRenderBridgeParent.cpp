@@ -449,7 +449,6 @@ struct WROTSAlloc {
 
 static bool ReadRawFont(const OpAddRawFont& aOp, wr::ShmSegmentsReader& aReader,
                         wr::TransactionBuilder& aUpdates) {
-#ifdef NIGHTLY_BUILD
   wr::Vec<uint8_t> sourceBytes;
   Maybe<Range<uint8_t>> ptr =
       aReader.GetReadPointerOrCopy(aOp.bytes(), sourceBytes);
@@ -474,12 +473,6 @@ static bool ReadRawFont(const OpAddRawFont& aOp, wr::ShmSegmentsReader& aReader,
     return false;
   }
   wr::Vec<uint8_t> bytes = output.forget();
-#else
-  wr::Vec<uint8_t> bytes;
-  if (!aReader.Read(aOp.bytes(), bytes)) {
-    return false;
-  }
-#endif
 
   aUpdates.AddRawFont(aOp.key(), bytes, aOp.fontIndex());
   return true;
