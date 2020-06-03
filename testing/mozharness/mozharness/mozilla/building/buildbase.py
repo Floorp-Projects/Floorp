@@ -982,7 +982,7 @@ items from that key's value."
             self.info('%s does not exist; not loading build resources' % p)
             return None
 
-        with open(p, 'rb') as fh:
+        with open(p, 'r') as fh:
             resources = json.load(fh)
 
         if 'duration' not in resources:
@@ -1016,7 +1016,7 @@ items from that key's value."
                 stats_file)
             return
 
-        with open(stats_file, 'rb') as fh:
+        with open(stats_file, 'r') as fh:
             stats = json.load(fh)
 
         def get_stat(key):
