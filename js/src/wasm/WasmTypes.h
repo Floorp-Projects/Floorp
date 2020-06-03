@@ -2874,7 +2874,7 @@ struct TlsData {
   // The globalArea must be the last field.  Globals for the module start here
   // and are inline in this structure.  16-byte alignment is required for SIMD
   // data.
-  MOZ_ALIGNED_DECL(char globalArea, 16);
+  MOZ_ALIGNED_DECL(16, char globalArea);
 };
 
 static const size_t TlsDataAlign = 16;  // = Simd128DataSize
