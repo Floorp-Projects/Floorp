@@ -1671,7 +1671,8 @@ class PresShell final : public nsStubDocumentObserver,
     PresShell::SetCapturingContent(nullptr, CaptureFlags::None);
   }
 
-  // Called at the end of nsLayoutUtils::PaintFrame().
+  // Called at the end of nsLayoutUtils::PaintFrame() if we were painting to
+  // the widget.
   // This is used to clear any pending visual scroll updates that have been
   // acknowledged, to make sure they don't stick around for the next paint.
   void EndPaint();
