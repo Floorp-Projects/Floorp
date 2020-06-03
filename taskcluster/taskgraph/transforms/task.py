@@ -41,7 +41,7 @@ from taskgraph.util.scriptworker import (
 )
 from taskgraph.util.signed_artifacts import get_signed_artifacts
 from taskgraph.util.workertypes import worker_type_implementation
-from voluptuous import Any, Required, Optional, Extra, Match
+from voluptuous import Any, Required, Optional, Extra, Match, All, NotIn
 from taskgraph import GECKO, MAX_DEPENDENCIES
 from ..util import docker as dockerutil
 from ..util.workertypes import get_worker_type
@@ -82,7 +82,12 @@ task_description_schema = Schema({
     # dependencies of this task, keyed by name; these are passed through
     # verbatim and subject to the interpretation of the Task's get_dependencies
     # method.
-    Optional('dependencies'): {text_type: object},
+    Optional('dependencies'): {
+        All(
+            text_type,
+            NotIn(["self", "decision"], "Can't use 'self` or 'decision' as depdency names."),
+        ): object,
+    },
 
     # Soft dependencies of this task, as a list of tasks labels
     Optional('soft-dependencies'): [text_type],
