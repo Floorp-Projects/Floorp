@@ -1620,18 +1620,17 @@ mozilla::ipc::IPCResult ContentChild::RecvSetProcessSandbox(
   bool sandboxEnabled = true;
 #  if defined(XP_LINUX)
   // On Linux, we have to support systems that can't use any sandboxing.
-  if (!SandboxInfo::Get().CanSandboxContent()) {
-    sandboxEnabled = false;
-  } else {
-    // Pre-start audio before sandboxing; see bug 1443612.
-    if (StaticPrefs::media_cubeb_sandbox()) {
-      if (atp_set_real_time_limit(0, 48000)) {
-        NS_WARNING("could not set real-time limit at process startup");
-      }
-      InstallSoftRealTimeLimitHandler();
-    } else {
-      Unused << CubebUtils::GetCubebContext();
+  sandboxEnabled = SandboxInfo::Get().CanSandboxContent();
+
+  if (StaticPrefs::media_cubeb_sandbox()) {
+    // This needs to happen regardless of whether sandboxing is enabled.
+    if (atp_set_real_time_limit(0, 48000)) {
+      NS_WARNING("could not set real-time limit at process startup");
     }
+    InstallSoftRealTimeLimitHandler();
+  } else if (sandboxEnabled) {
+    // Pre-start audio before sandboxing; see bug 1443612.
+    Unused << CubebUtils::GetCubebContext();
   }
 
   if (sandboxEnabled) {
