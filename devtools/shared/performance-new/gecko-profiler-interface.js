@@ -150,6 +150,10 @@ class ActorReadyGeckoProfilerInterface {
       return null;
     }
 
+    // Pause profiler before we collect the profile, so that we don't capture
+    // more samples while the parent process or android threads wait for subprocess profiles.
+    Services.profiler.PauseSampling();
+
     let profile;
     try {
       // Attempt to pull out the data.
