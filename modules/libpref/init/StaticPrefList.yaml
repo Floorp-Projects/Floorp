@@ -4722,7 +4722,13 @@
 #ifdef NIGHTLY_BUILD
   # Experimental support for weak references in JavaScript (WeakRef and
   # FinalizationRegistry).
-- name: javascript.options.experimental.weakrefs
+- name: javascript.options.experimental.weakrefs.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
+  # Whether to expose the FinalizationRegistry.prototype.cleanupSome method.
+- name: javascript.options.experimental.weakrefs.expose_cleanupSome
   type: RelaxedAtomicBool
   value: false
   mirror: always

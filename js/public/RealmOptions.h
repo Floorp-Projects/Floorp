@@ -51,6 +51,16 @@ enum class CompartmentSpecifier {
 };
 
 /**
+ * Specification for whether weak refs should be enabled and if so whether the
+ * FinalizationRegistry.cleanupSome method should be present.
+ */
+enum class WeakRefSpecifier {
+  Disabled,
+  EnabledWithCleanupSome,
+  EnabledWithoutCleanupSome
+};
+
+/**
  * RealmCreationOptions specifies options relevant to creating a new realm, that
  * are either immutable characteristics of that realm or that are discarded
  * after the realm has been created.
@@ -208,9 +218,9 @@ class JS_PUBLIC_API RealmCreationOptions {
     return *this;
   }
 
-  bool getWeakRefsEnabled() const { return weakRefs_; }
-  RealmCreationOptions& setWeakRefsEnabled(bool flag) {
-    weakRefs_ = flag;
+  WeakRefSpecifier getWeakRefsEnabled() const { return weakRefs_; }
+  RealmCreationOptions& setWeakRefsEnabled(WeakRefSpecifier spec) {
+    weakRefs_ = spec;
     return *this;
   }
 
@@ -264,6 +274,7 @@ class JS_PUBLIC_API RealmCreationOptions {
     Zone* zone_;
   };
   uint64_t profilerRealmID_ = 0;
+  WeakRefSpecifier weakRefs_ = WeakRefSpecifier::Disabled;
   bool invisibleToDebugger_ = false;
   bool mergeable_ = false;
   bool preserveJitCode_ = false;
@@ -276,7 +287,6 @@ class JS_PUBLIC_API RealmCreationOptions {
   bool byobStreamReaders_ = false;
   bool writableStreams_ = false;
   bool readableStreamPipeTo_ = false;
-  bool weakRefs_ = false;
   bool toSource_ = false;
   bool propertyErrorMessageFix_ = false;
   bool iteratorHelpers_ = false;

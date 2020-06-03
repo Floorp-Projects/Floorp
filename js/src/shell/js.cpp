@@ -3891,7 +3891,9 @@ static void SetStandardRealmOptions(JS::RealmOptions& options) {
       .setBYOBStreamReadersEnabled(enableBYOBStreamReaders)
       .setWritableStreamsEnabled(enableWritableStreams)
       .setReadableStreamPipeToEnabled(enableReadableStreamPipeTo)
-      .setWeakRefsEnabled(enableWeakRefs)
+      .setWeakRefsEnabled(enableWeakRefs
+                              ? JS::WeakRefSpecifier::EnabledWithCleanupSome
+                              : JS::WeakRefSpecifier::Disabled)
       .setToSourceEnabled(enableToSource)
       .setPropertyErrorMessageFixEnabled(enablePropertyErrorMessageFix)
       .setIteratorHelpersEnabled(enableIteratorHelpers)
