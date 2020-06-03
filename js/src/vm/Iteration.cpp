@@ -1505,7 +1505,8 @@ bool js::SuppressDeletedElement(JSContext* cx, HandleObject obj,
   return SuppressDeletedPropertyHelper(cx, obj, str);
 }
 
-static const JSFunctionSpec iterator_static_methods[] = {JS_FS_END};
+static const JSFunctionSpec iterator_static_methods[] = {
+    JS_SELF_HOSTED_FN("from", "IteratorFrom", 1, 0), JS_FS_END};
 
 static const JSFunctionSpec iterator_proto_methods[] = {
     JS_SELF_HOSTED_SYM_FN(iterator, "IteratorIdentity", 0, 0), JS_FS_END};
@@ -1670,3 +1671,54 @@ const JSClass IteratorObject::protoClass_ = {
     JS_NULL_CLASS_OPS,
     &IteratorObjectClassSpec,
 };
+
+// Set up WrapForValidIteratorObject class and its prototype.
+static const JSFunctionSpec wrap_for_valid_iterator_methods[] = {
+    JS_SELF_HOSTED_FN("next", "WrapForValidIteratorNext", 1, 0),
+    JS_SELF_HOSTED_FN("return", "WrapForValidIteratorReturn", 1, 0),
+    JS_SELF_HOSTED_FN("throw", "WrapForValidIteratorThrow", 1, 0),
+    JS_FS_END,
+};
+
+static const JSClass WrapForValidIteratorPrototypeClass = {
+    "Wrap For Valid Iterator", 0};
+
+const JSClass WrapForValidIteratorObject::class_ = {
+    "Wrap For Valid Iterator",
+    JSCLASS_HAS_RESERVED_SLOTS(WrapForValidIteratorObject::SlotCount),
+};
+
+/* static */
+bool GlobalObject::initWrapForValidIteratorProto(JSContext* cx,
+                                                 Handle<GlobalObject*> global) {
+  if (global->getReservedSlot(WRAP_FOR_VALID_ITERATOR_PROTO).isObject()) {
+    return true;
+  }
+
+  RootedObject iteratorProto(
+      cx, GlobalObject::getOrCreateIteratorPrototype(cx, global));
+  if (!iteratorProto) {
+    return false;
+  }
+
+  const JSClass* cls = &WrapForValidIteratorPrototypeClass;
+  RootedObject proto(
+      cx, GlobalObject::createBlankPrototypeInheriting(cx, cls, iteratorProto));
+  if (!proto || !DefinePropertiesAndFunctions(
+                    cx, proto, nullptr, wrap_for_valid_iterator_methods)) {
+    return false;
+  }
+
+  global->setReservedSlot(WRAP_FOR_VALID_ITERATOR_PROTO, ObjectValue(*proto));
+  return true;
+}
+
+WrapForValidIteratorObject* js::NewWrapForValidIterator(JSContext* cx) {
+  RootedObject proto(cx, GlobalObject::getOrCreateWrapForValidIteratorPrototype(
+                             cx, cx->global()));
+  if (!proto) {
+    return nullptr;
+  }
+
+  return NewObjectWithGivenProto<WrapForValidIteratorObject>(cx, proto);
+}

@@ -152,6 +152,7 @@
   _(IntrinsicGuardToSetIterator)                   \
   _(IntrinsicGuardToStringIterator)                \
   _(IntrinsicGuardToRegExpStringIterator)          \
+  _(IntrinsicGuardToWrapForValidIterator)          \
                                                    \
   _(IntrinsicGuardToMapObject)                     \
   _(IntrinsicGetNextMapEntryForIterator)           \

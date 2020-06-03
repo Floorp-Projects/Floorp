@@ -14,6 +14,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/MemoryReporting.h"
 
+#include "builtin/SelfHostingDefines.h"
 #include "gc/Barrier.h"
 #include "vm/ReceiverGuard.h"
 #include "vm/Stack.h"
@@ -441,6 +442,23 @@ class IteratorObject : public NativeObject {
   static const JSClass class_;
   static const JSClass protoClass_;
 };
+
+/*
+ * Wrapper for iterators created via Iterator.from.
+ * Iterator Helpers proposal 2.1.3.3.1.1.
+ */
+class WrapForValidIteratorObject : public NativeObject {
+ public:
+  static const JSClass class_;
+
+  enum { IteratedSlot, SlotCount };
+
+  static_assert(
+      IteratedSlot == ITERATED_SLOT,
+      "IteratedSlot must match self-hosting define for iterated object slot.");
+};
+
+WrapForValidIteratorObject* NewWrapForValidIterator(JSContext* cx);
 
 } /* namespace js */
 
