@@ -6,7 +6,6 @@
 
 import typeof SourceMaps from "devtools-source-map";
 import type {
-  ThreadList,
   Thread,
   Context,
   ThreadId,
@@ -85,9 +84,9 @@ type UpdateTabAction = {|
 type NavigateAction =
   | {|
       +type: "CONNECT",
-      +mainThread: Thread,
       +traits: Object,
       +isWebExtension: boolean,
+      +mainThreadActorID: ThreadId,
     |}
   | {| +type: "NAVIGATE", +mainThread: Thread |};
 
@@ -145,16 +144,16 @@ export type QuickOpenAction =
   | {| +type: "OPEN_QUICK_OPEN", +query?: string |}
   | {| +type: "CLOSE_QUICK_OPEN" |};
 
-export type DebuggeeAction =
+export type ThreadsAction =
   | {|
-      +type: "INSERT_THREADS",
+      +type: "INSERT_THREAD",
       +cx: Context,
-      +threads: ThreadList,
+      +newThread: Thread,
     |}
   | {|
-      +type: "REMOVE_THREADS",
+      +type: "REMOVE_THREAD",
       +cx: Context,
-      +threads: Array<ThreadId>,
+      +oldThread: Thread,
     |}
   | {|
       +type: "UPDATE_SERVICE_WORKER_STATUS",
@@ -234,6 +233,6 @@ export type Action =
   | QuickOpenAction
   | FileTextSearchAction
   | ProjectTextSearchAction
-  | DebuggeeAction
+  | ThreadsAction
   | SourceTreeAction
   | EventListenerAction;

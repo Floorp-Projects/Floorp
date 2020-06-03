@@ -32,18 +32,6 @@ const threadFront = {
 };
 
 describe("navigation", () => {
-  it("connect sets the debuggeeUrl", async () => {
-    const { dispatch, getState } = createStore({
-      fetchThreads: async () => [],
-      getMainThread: () => "FakeThread",
-      evaluateExpressions: () => {},
-    });
-    await dispatch(
-      actions.connect("http://test.com/foo", "actor", false, false)
-    );
-    expect(selectors.getDebuggeeUrl(getState())).toEqual("http://test.com/foo");
-  });
-
   it("navigation closes project-search", async () => {
     const { dispatch, getState, cx } = createStore(threadFront);
     const mockQuery = "foo";

@@ -7,7 +7,6 @@
 import { clearDocuments } from "../utils/editor";
 import sourceQueue from "../utils/source-queue";
 
-import { updateThreads } from "./threads";
 import { evaluateExpressions } from "./expressions";
 
 import { clearWasmStates } from "../utils/wasm";
@@ -53,17 +52,11 @@ export function connect(
   isWebExtension: boolean
 ) {
   return async function({ dispatch, getState }: ThunkArgs) {
-    await dispatch(updateThreads());
     await dispatch(
       ({
         type: "CONNECT",
-        mainThread: {
-          url,
-          actor,
-          type: "mainThread",
-          name: L10N.getStr("mainThread"),
-        },
         traits,
+        mainThreadActorID: actor,
         isWebExtension,
       }: Action)
     );
@@ -79,7 +72,6 @@ export function connect(
  */
 export function navigated() {
   return async function({ dispatch, panel }: ThunkArgs) {
-    await dispatch(updateThreads());
     panel.emit("reloaded");
   };
 }

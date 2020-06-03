@@ -8,7 +8,6 @@ import { setupCommands, clientCommands } from "./firefox/commands";
 import {
   removeEventsTopTarget,
   setupEvents,
-  setupEventsTopTarget,
   clientEvents,
 } from "./firefox/events";
 import { features, prefs } from "../utils/prefs";
@@ -24,6 +23,15 @@ export async function onConnect(
 
   setupCommands({ devToolsClient, targetList });
   setupEvents({ actions, devToolsClient });
+  const { targetFront } = targetList;
+  if (targetFront.isBrowsingContext || targetFront.isParentProcess) {
+    targetList.listenForWorkers = true;
+    if (targetFront.localTab && features.windowlessServiceWorkers) {
+      targetList.listenForServiceWorkers = true;
+    }
+    await targetList.startListening();
+  }
+
   await targetList.watchTargets(
     targetList.ALL_TYPES,
     onTargetAvailable,
@@ -36,6 +44,7 @@ async function onTargetAvailable({
   isTargetSwitching,
 }): Promise<void> {
   if (!targetFront.isTopLevel) {
+    await actions.addTarget(targetFront);
     return;
   }
 
@@ -55,7 +64,6 @@ async function onTargetAvailable({
     return;
   }
 
-  setupEventsTopTarget(targetFront);
   targetFront.on("will-navigate", actions.willNavigate);
   targetFront.on("navigate", actions.navigated);
 
@@ -85,9 +93,8 @@ async function onTargetAvailable({
     targetFront.isWebExtension
   );
 
-  await actions.addTarget(targetFront);
-
   await clientCommands.checkIfAlreadyPaused();
+  await actions.addTarget(targetFront);
 }
 
 function onTargetDestroyed({ targetFront }): void {

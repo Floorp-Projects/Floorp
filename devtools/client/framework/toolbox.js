@@ -775,9 +775,11 @@ Toolbox.prototype = {
     // already tracked by the content process targets. At least in the context
     // of the Browser Toolbox.
     // We would have to revisit that for the content toolboxes.
+    // Worker targets are attached to by the debugger so that the debugger
+    // has a chance to register breakpoints with the server.
     if (
       targetFront.isTopLevel ||
-      targetFront.targetType != TargetList.TYPES.FRAME
+      targetFront.targetType == TargetList.TYPES.PROCESS
     ) {
       const threadFront = await this._attachAndResumeThread(targetFront);
       this._startThreadFrontListeners(threadFront);
@@ -3043,6 +3045,7 @@ Toolbox.prototype = {
     if (!panel) {
       return;
     }
+
     await panel.once("reloaded");
     const delay = this.win.performance.now() - start;
 

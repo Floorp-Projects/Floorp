@@ -6,16 +6,13 @@
 // set in it.
 add_task(async function() {
   info("Subtest #1");
-
   await pushPref("devtools.debugger.features.windowless-service-workers", true);
   await pushPref("devtools.debugger.workers-visible", true);
   await pushPref("dom.serviceWorkers.enabled", true);
   await pushPref("dom.serviceWorkers.testing.enabled", true);
-
   let dbg = await initDebugger("doc-service-workers.html");
 
   invokeInTab("registerWorker");
-
   await waitForSource(dbg, "service-worker.sjs");
   const workerSource = findSource(dbg, "service-worker.sjs");
 
@@ -25,7 +22,6 @@ add_task(async function() {
 
   await waitForPaused(dbg);
   assertPausedAtSourceAndLine(dbg, workerSource.id, 13);
-
   // Leave the breakpoint and worker in place for the next subtest.
   await resume(dbg);
   await waitForRequestsToSettle(dbg);
@@ -36,7 +32,10 @@ add_task(async function() {
 add_task(async function() {
   info("Subtest #2");
 
-  const toolbox = await openNewTabAndToolbox(EXAMPLE_URL + "doc-service-workers.html", "jsdebugger");
+  const toolbox = await openNewTabAndToolbox(
+    EXAMPLE_URL + "doc-service-workers.html",
+    "jsdebugger"
+  );
   const dbg = createDebuggerContext(toolbox);
 
   await checkWorkerThreads(dbg, 1);
@@ -65,7 +64,10 @@ add_task(async function() {
 add_task(async function() {
   info("Subtest #3");
 
-  const toolbox = await openNewTabAndToolbox(EXAMPLE_URL + "doc-service-workers.html", "jsdebugger");
+  const toolbox = await openNewTabAndToolbox(
+    EXAMPLE_URL + "doc-service-workers.html",
+    "jsdebugger"
+  );
   const dbg = createDebuggerContext(toolbox);
 
   invokeInTab("registerWorker");
@@ -83,7 +85,9 @@ add_task(async function() {
   await checkWorkerThreads(dbg, 2);
 
   const sources = await waitUntilPredicate(() => {
-    const list = dbg.selectors.getSourceList().filter(s => s.url.includes("service-worker.sjs"));
+    const list = dbg.selectors
+      .getSourceList()
+      .filter(s => s.url.includes("service-worker.sjs"));
     return list.length == 2 ? list : null;
   });
   ok(true, "Found two different sources for service worker");
@@ -96,8 +100,11 @@ add_task(async function() {
   await waitForLoadedSource(dbg, sources[1]);
   const content1 = findSourceContent(dbg, sources[1]);
 
-  ok(content0.value.includes("newServiceWorker") != content1.value.includes("newServiceWorker"),
-     "Got two different sources for service worker");
+  ok(
+    content0.value.includes("newServiceWorker") !=
+      content1.value.includes("newServiceWorker"),
+    "Got two different sources for service worker"
+  );
 
   // Add a breakpoint for the next subtest.
   await addBreakpoint(dbg, "service-worker.sjs", 2);
@@ -118,7 +125,10 @@ add_task(async function() {
 add_task(async function() {
   info("Subtest #4");
 
-  const toolbox = await openNewTabAndToolbox(EXAMPLE_URL + "doc-service-workers.html", "jsdebugger");
+  const toolbox = await openNewTabAndToolbox(
+    EXAMPLE_URL + "doc-service-workers.html",
+    "jsdebugger"
+  );
   const dbg = createDebuggerContext(toolbox);
 
   invokeInTab("registerWorker");
@@ -158,6 +168,8 @@ async function checkWorkerThreads(dbg, count) {
 }
 
 async function checkWorkerStatus(dbg, status) {
+  // TODO: Re-Add support for showing service worker status (Bug 1641099)
+  return;
   await waitUntil(() => {
     const threads = dbg.selectors.getThreads();
     return threads.some(t => t.serviceWorkerStatus == status);

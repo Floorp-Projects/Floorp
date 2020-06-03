@@ -15,6 +15,7 @@ add_task(async function() {
 
   await openDebugger();
   const toolbox = hud.toolbox;
+  await waitFor(() => toolbox.store.getState().targets.targets.length == 2);
   const dbg = createDebuggerContext(toolbox);
 
   execute(hud, "pauseInWorker(42)");

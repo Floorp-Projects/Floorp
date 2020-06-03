@@ -8,7 +8,6 @@ import {
   isEvaluatingExpression,
   getSelectedFrame,
   getThreadContext,
-  getIsPaused,
 } from "../../selectors";
 
 import { mapFrames, fetchFrames } from ".";
@@ -32,11 +31,6 @@ import type { ThunkArgs } from "../types";
 export function paused(pauseInfo: Pause) {
   return async function({ dispatch, getState, client, sourceMaps }: ThunkArgs) {
     const { thread, frame, why } = pauseInfo;
-
-    // prevents redundant pauses, which is possible when we call checkIfAlreadyPaused. This can likely go away in the next set of patches , which exclusively use targetList
-    if (getIsPaused(getState(), thread)) {
-      return;
-    }
 
     dispatch({ type: "PAUSED", thread, why, frame });
 
