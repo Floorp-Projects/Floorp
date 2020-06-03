@@ -66,6 +66,7 @@ class nsMIMEInfoBase : public nsIMIMEInfo {
       bool* aAlwaysAskBeforeHandling) override;
   NS_IMETHOD SetAlwaysAskBeforeHandling(bool aAlwaysAskBeforeHandling) override;
   NS_IMETHOD GetPossibleLocalHandlers(nsIArray** _retval) override;
+  NS_IMETHOD IsPdf(bool* isPdf);
 
   enum HandlerClass { eMIMEInfo, eProtocolInfo };
 
@@ -129,6 +130,8 @@ class nsMIMEInfoBase : public nsIMIMEInfo {
    */
   static nsresult LaunchWithIProcess(nsIFile* aApp, const nsCString& aArg);
   static nsresult LaunchWithIProcess(nsIFile* aApp, const nsString& aArg);
+  static nsresult LaunchWithIProcess(nsIFile* aApp, const int aArgc,
+                                     const char16_t** aArgv);
 
   /**
    * Given a file: nsIURI, return the associated nsIFile
