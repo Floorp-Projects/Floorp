@@ -6,9 +6,9 @@ job-defaults:
     when:
         files-changed:
             - "remote/**"
-    platform: linux64/opt
+    platform: linux1804-64/opt
     require-build:
-        linux64/opt: build-linux64/opt
+        linux1804-64/opt: build-linux64/opt
     fetches:
         build:
             - target.tar.bz2
@@ -19,7 +19,7 @@ job-defaults:
         tier: 2
     worker-type: t-linux-xlarge-source
     worker:
-        docker-image: {in-tree: desktop1604-test}
+        docker-image: {in-tree: ubuntu1804-test}
         max-run-time: 1800
         artifacts:
             - type: file
