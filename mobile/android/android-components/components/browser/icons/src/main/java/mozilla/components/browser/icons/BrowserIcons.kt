@@ -137,9 +137,8 @@ class BrowserIcons(
      */
     fun install(engine: Engine, store: BrowserStore) {
         engine.installWebExtension(
-            id = "mozacBrowserIcons",
+            id = "icons@mozac.org",
             url = "resource://android/assets/extensions/browser-icons/",
-            allowContentMessaging = true,
             onSuccess = { extension ->
                 Logger.debug("Installed browser-icons extension")
 

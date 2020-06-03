@@ -157,8 +157,16 @@ class StringTest {
     }
 
     @Test
+
     fun sanitizeURL() {
         val expectedUrl = "http://mozilla.org"
         assertEquals(expectedUrl, "\nhttp://mozilla.org\n".sanitizeURL())
+    }
+
+    fun isResourceUrl() {
+        assertTrue("resource://1232-abcd".isResourceUrl())
+        assertFalse("mozilla.org".isResourceUrl())
+        assertFalse("https://mozilla.org".isResourceUrl())
+        assertFalse("http://mozilla.org".isResourceUrl())
     }
 }

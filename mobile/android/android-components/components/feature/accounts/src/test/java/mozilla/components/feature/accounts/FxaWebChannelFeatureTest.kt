@@ -67,8 +67,6 @@ class FxaWebChannelFeatureTest {
         verify(engine, times(1)).installWebExtension(
             eq(FxaWebChannelFeature.WEB_CHANNEL_EXTENSION_ID),
             eq(FxaWebChannelFeature.WEB_CHANNEL_EXTENSION_URL),
-            eq(true),
-            eq(false),
             onSuccess.capture(),
             onError.capture()
         )
@@ -80,8 +78,6 @@ class FxaWebChannelFeatureTest {
         verify(engine, times(1)).installWebExtension(
             eq(FxaWebChannelFeature.WEB_CHANNEL_EXTENSION_ID),
             eq(FxaWebChannelFeature.WEB_CHANNEL_EXTENSION_URL),
-            eq(true),
-            eq(false),
             any(),
             any()
         )
@@ -120,7 +116,7 @@ class FxaWebChannelFeatureTest {
 
         verify(ext).registerContentMessageHandler(
             eq(engineSession),
-            eq(FxaWebChannelFeature.WEB_CHANNEL_EXTENSION_ID),
+            eq(FxaWebChannelFeature.WEB_CHANNEL_MESSAGING_ID),
             messageHandler.capture()
         )
         messageHandler.value.onPortConnected(port)
@@ -153,7 +149,7 @@ class FxaWebChannelFeatureTest {
 
         verify(ext).registerContentMessageHandler(
             eq(engineSession),
-            eq(FxaWebChannelFeature.WEB_CHANNEL_EXTENSION_ID),
+            eq(FxaWebChannelFeature.WEB_CHANNEL_MESSAGING_ID),
             messageHandler.capture()
         )
         messageHandler.value.onPortConnected(port)
@@ -185,7 +181,7 @@ class FxaWebChannelFeatureTest {
 
         verify(ext).registerContentMessageHandler(
             eq(engineSession),
-            eq(FxaWebChannelFeature.WEB_CHANNEL_EXTENSION_ID),
+            eq(FxaWebChannelFeature.WEB_CHANNEL_MESSAGING_ID),
             messageHandler.capture()
         )
         messageHandler.value.onPortConnected(port)
@@ -223,7 +219,7 @@ class FxaWebChannelFeatureTest {
 
         verify(ext).registerContentMessageHandler(
             eq(engineSession),
-            eq(FxaWebChannelFeature.WEB_CHANNEL_EXTENSION_ID),
+            eq(FxaWebChannelFeature.WEB_CHANNEL_MESSAGING_ID),
             messageHandler.capture()
         )
         messageHandler.value.onPortConnected(port)
@@ -274,7 +270,7 @@ class FxaWebChannelFeatureTest {
 
         verify(ext).registerContentMessageHandler(
             eq(engineSession),
-            eq(FxaWebChannelFeature.WEB_CHANNEL_EXTENSION_ID),
+            eq(FxaWebChannelFeature.WEB_CHANNEL_MESSAGING_ID),
             messageHandler.capture()
         )
         messageHandler.value.onPortConnected(port)
@@ -328,7 +324,7 @@ class FxaWebChannelFeatureTest {
 
         verify(ext).registerContentMessageHandler(
             eq(engineSession),
-            eq(FxaWebChannelFeature.WEB_CHANNEL_EXTENSION_ID),
+            eq(FxaWebChannelFeature.WEB_CHANNEL_MESSAGING_ID),
             messageHandler.capture()
         )
         messageHandler.value.onPortConnected(port)
@@ -378,7 +374,7 @@ class FxaWebChannelFeatureTest {
         webchannelFeature.start()
         verify(ext).registerContentMessageHandler(
             eq(engineSession),
-            eq(FxaWebChannelFeature.WEB_CHANNEL_EXTENSION_ID),
+            eq(FxaWebChannelFeature.WEB_CHANNEL_MESSAGING_ID),
             messageHandler.capture()
         )
         messageHandler.value.onPortConnected(port)
@@ -422,7 +418,7 @@ class FxaWebChannelFeatureTest {
 
         verify(ext).registerContentMessageHandler(
             eq(engineSession),
-            eq(FxaWebChannelFeature.WEB_CHANNEL_EXTENSION_ID),
+            eq(FxaWebChannelFeature.WEB_CHANNEL_MESSAGING_ID),
             messageHandler.capture()
         )
         messageHandler.value.onPortConnected(port)
@@ -465,7 +461,7 @@ class FxaWebChannelFeatureTest {
 
         verify(ext).registerContentMessageHandler(
             eq(engineSession),
-            eq(FxaWebChannelFeature.WEB_CHANNEL_EXTENSION_ID),
+            eq(FxaWebChannelFeature.WEB_CHANNEL_MESSAGING_ID),
             messageHandler.capture()
         )
         messageHandler.value.onPortConnected(port)
@@ -504,7 +500,7 @@ class FxaWebChannelFeatureTest {
 
         verify(ext).registerContentMessageHandler(
             eq(engineSession),
-            eq(FxaWebChannelFeature.WEB_CHANNEL_EXTENSION_ID),
+            eq(FxaWebChannelFeature.WEB_CHANNEL_MESSAGING_ID),
             messageHandler.capture()
         )
         messageHandler.value.onPortConnected(port)
@@ -536,7 +532,7 @@ class FxaWebChannelFeatureTest {
 
         verify(ext).registerContentMessageHandler(
             eq(engineSession),
-            eq(FxaWebChannelFeature.WEB_CHANNEL_EXTENSION_ID),
+            eq(FxaWebChannelFeature.WEB_CHANNEL_MESSAGING_ID),
             messageHandler.capture()
         )
         messageHandler.value.onPortConnected(port)
@@ -570,7 +566,7 @@ class FxaWebChannelFeatureTest {
 
         verify(ext).registerContentMessageHandler(
             eq(engineSession),
-            eq(FxaWebChannelFeature.WEB_CHANNEL_EXTENSION_ID),
+            eq(FxaWebChannelFeature.WEB_CHANNEL_MESSAGING_ID),
             messageHandler.capture()
         )
         messageHandler.value.onPortConnected(port)

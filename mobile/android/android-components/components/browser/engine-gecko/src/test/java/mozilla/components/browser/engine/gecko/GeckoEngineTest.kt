@@ -521,37 +521,6 @@ class GeckoEngineTest {
 
     @Test
     @Suppress("Deprecation") // https://github.com/mozilla-mobile/android-components/issues/6356
-    fun `install built-in web extension successfully but do not allow content messaging`() {
-        val runtime = mock<GeckoRuntime>()
-        val engine = GeckoEngine(context, runtime = runtime)
-        var onSuccessCalled = false
-        var onErrorCalled = false
-        val result = GeckoResult<Void>()
-
-        whenever(runtime.registerWebExtension(any())).thenReturn(result)
-        val extensionController: WebExtensionController = mock()
-        whenever(runtime.webExtensionController).thenReturn(extensionController)
-
-        engine.installWebExtension(
-            "test-webext",
-            "resource://android/assets/extensions/test",
-            allowContentMessaging = false,
-            onSuccess = { onSuccessCalled = true },
-            onError = { _, _ -> onErrorCalled = true }
-        )
-        result.complete(null)
-
-        val extCaptor = argumentCaptor<GeckoWebExtension>()
-        verify(runtime).registerWebExtension(extCaptor.capture())
-        assertEquals("test-webext", extCaptor.value.id)
-        assertEquals("resource://android/assets/extensions/test", extCaptor.value.location)
-        assertEquals(GeckoWebExtension.Flags.NONE, extCaptor.value.flags)
-        assertTrue(onSuccessCalled)
-        assertFalse(onErrorCalled)
-    }
-
-    @Test
-    @Suppress("Deprecation") // https://github.com/mozilla-mobile/android-components/issues/6356
     fun `install external web extension successfully`() {
         val runtime = mock<GeckoRuntime>()
         val extId = "test-webext"

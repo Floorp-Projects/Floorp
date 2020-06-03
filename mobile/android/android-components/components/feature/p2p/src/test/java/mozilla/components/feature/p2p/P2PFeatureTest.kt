@@ -140,8 +140,6 @@ class P2PFeatureTest {
         Mockito.verify(engine, Mockito.times(1)).installWebExtension(
             eq(P2PFeature.P2P_EXTENSION_ID),
             eq(P2PFeature.P2P_EXTENSION_URL),
-            eq(true),
-            eq(false),
             onSuccess.capture(),
             onError.capture()
         )
@@ -152,8 +150,6 @@ class P2PFeatureTest {
         Mockito.verify(engine, Mockito.times(1)).installWebExtension(
             eq(P2PFeature.P2P_EXTENSION_ID),
             eq(P2PFeature.P2P_EXTENSION_URL),
-            eq(true),
-            eq(false),
             onSuccess.capture(),
             onError.capture()
         )

@@ -21,7 +21,6 @@ object WebCompatReporterFeature {
      */
     fun install(runtime: WebExtensionRuntime) {
         runtime.installWebExtension(WEBCOMPAT_REPORTER_EXTENSION_ID, WEBCOMPAT_REPORTER_EXTENSION_URL,
-            supportActions = true,
             onSuccess = {
                 logger.debug("Installed WebCompat Reporter webextension: ${it.id}")
             },

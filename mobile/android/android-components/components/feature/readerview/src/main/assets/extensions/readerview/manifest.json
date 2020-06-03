@@ -1,5 +1,10 @@
 {
   "manifest_version": 2,
+  "applications": {
+    "gecko": {
+      "id": "readerview@mozac.org"
+    }
+  },
   "name": "Mozilla Android Components - ReaderView",
   "version": "1.0",
   "content_scripts": [
@@ -13,8 +18,10 @@
     "scripts": ["readerview-background.js"]
   },
   "permissions": [
+    "mozillaAddons",
     "geckoViewAddons",
     "nativeMessaging",
+    "nativeMessagingFromContent",
     "tabs",
     "<all_urls>"
   ]

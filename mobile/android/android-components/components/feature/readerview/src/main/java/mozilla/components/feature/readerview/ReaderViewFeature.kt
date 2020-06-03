@@ -59,7 +59,11 @@ class ReaderViewFeature(
 
     @VisibleForTesting
     // This is an internal var to make it mutable for unit testing purposes only
-    internal var extensionController = WebExtensionController(READER_VIEW_EXTENSION_ID, READER_VIEW_EXTENSION_URL)
+    internal var extensionController = WebExtensionController(
+        READER_VIEW_EXTENSION_ID,
+        READER_VIEW_EXTENSION_URL,
+        READER_VIEW_MESSAGING_ID
+    )
 
     @VisibleForTesting
     internal val config = ReaderViewConfig(context) { message ->
@@ -197,9 +201,7 @@ class ReaderViewFeature(
             // In case the extension was installed while an extension page was
             // displayed (if on startup we opened directly into a
             // restored reader view page), we have to reload the extension page,
-            // as we may have missed to connect the port. This will be fixed by:
-            // https://github.com/mozilla-mobile/android-components/issues/6356
-            // (Then we don't have to install our built-in extension on startup)
+            // as we may have missed to connect the port.
             val selectedTab = store.state.selectedTab
             if (selectedTab?.readerState?.active == true) {
                 selectedTab.engineState.engineSession?.reload()
@@ -241,7 +243,8 @@ class ReaderViewFeature(
 
     @VisibleForTesting
     companion object {
-        internal const val READER_VIEW_EXTENSION_ID = "mozacReaderview"
+        internal const val READER_VIEW_EXTENSION_ID = "readerview@mozac.org"
+        internal const val READER_VIEW_MESSAGING_ID = "mozacReaderview"
         internal const val READER_VIEW_EXTENSION_URL = "resource://android/assets/extensions/readerview/"
 
         // Constants for building messages sent to the web extension:

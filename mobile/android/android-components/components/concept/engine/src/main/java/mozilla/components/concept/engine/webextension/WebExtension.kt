@@ -159,7 +159,7 @@ abstract class WebExtension(
      * Checks whether or not this extension is built-in (packaged with the
      * APK file) or coming from an external source.
      */
-    fun isBuiltIn(): Boolean = Uri.parse(url).scheme == "resource"
+    open fun isBuiltIn(): Boolean = Uri.parse(url).scheme == "resource"
 
     /**
      * Checks whether or not this extension is enabled.

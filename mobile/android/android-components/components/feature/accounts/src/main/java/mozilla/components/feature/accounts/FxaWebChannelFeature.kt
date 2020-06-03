@@ -69,7 +69,11 @@ class FxaWebChannelFeature(
 
     @VisibleForTesting
     // This is an internal var to make it mutable for unit testing purposes only
-    internal var extensionController = WebExtensionController(WEB_CHANNEL_EXTENSION_ID, WEB_CHANNEL_EXTENSION_URL)
+    internal var extensionController = WebExtensionController(
+        WEB_CHANNEL_EXTENSION_ID,
+        WEB_CHANNEL_EXTENSION_URL,
+        WEB_CHANNEL_MESSAGING_ID
+    )
 
     override fun start() {
         extensionController.install(runtime)
@@ -165,7 +169,8 @@ class FxaWebChannelFeature(
     companion object {
         private val logger = Logger("mozac-fxawebchannel")
 
-        internal const val WEB_CHANNEL_EXTENSION_ID = "mozacWebchannel"
+        internal const val WEB_CHANNEL_EXTENSION_ID = "fxa@mozac.org"
+        internal const val WEB_CHANNEL_MESSAGING_ID = "mozacWebchannel"
         internal const val WEB_CHANNEL_EXTENSION_URL = "resource://android/assets/extensions/fxawebchannel/"
 
         // Constants for incoming messages from the WebExtension.

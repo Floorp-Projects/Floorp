@@ -15,6 +15,7 @@ import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.feature.readerview.ReaderViewFeature.Companion.READER_VIEW_EXTENSION_ID
 import mozilla.components.feature.readerview.ReaderViewFeature.Companion.READER_VIEW_EXTENSION_URL
+import mozilla.components.feature.readerview.ReaderViewFeature.Companion.READER_VIEW_MESSAGING_ID
 import mozilla.components.lib.state.Middleware
 import mozilla.components.lib.state.MiddlewareStore
 import mozilla.components.support.webextensions.WebExtensionController
@@ -27,7 +28,11 @@ import mozilla.components.support.webextensions.WebExtensionController
 class ReaderViewMiddleware : Middleware<BrowserState, BrowserAction> {
 
     @VisibleForTesting
-    internal var extensionController = WebExtensionController(READER_VIEW_EXTENSION_ID, READER_VIEW_EXTENSION_URL)
+    internal var extensionController = WebExtensionController(
+        READER_VIEW_EXTENSION_ID,
+        READER_VIEW_EXTENSION_URL,
+        READER_VIEW_MESSAGING_ID
+    )
 
     override fun invoke(
         store: MiddlewareStore<BrowserState, BrowserAction>,
