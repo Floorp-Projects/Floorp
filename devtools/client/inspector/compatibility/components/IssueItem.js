@@ -102,31 +102,11 @@ class IssueItem extends PureComponent {
   }
 
   _renderDescription() {
-    const {
-      deprecated,
-      experimental,
-      property,
-      unsupportedBrowsers,
-      url,
-    } = this.props;
-
-    const classes = ["compatibility-issue-item__description"];
-
-    if (deprecated) {
-      classes.push("compatibility-issue-item__description--deprecated");
-    }
-
-    if (experimental) {
-      classes.push("compatibility-issue-item__description--experimental");
-    }
-
-    if (unsupportedBrowsers.length) {
-      classes.push("compatibility-issue-item__description--unsupported");
-    }
+    const { property, url } = this.props;
 
     return dom.div(
       {
-        className: classes.join(" "),
+        className: "compatibility-issue-item__description",
       },
       dom.a(
         {
@@ -172,11 +152,30 @@ class IssueItem extends PureComponent {
   }
 
   render() {
-    const { property } = this.props;
+    const {
+      deprecated,
+      experimental,
+      property,
+      unsupportedBrowsers,
+    } = this.props;
+
+    const classes = ["compatibility-issue-item"];
+
+    if (deprecated) {
+      classes.push("compatibility-issue-item--deprecated");
+    }
+
+    if (experimental) {
+      classes.push("compatibility-issue-item--experimental");
+    }
+
+    if (unsupportedBrowsers.length) {
+      classes.push("compatibility-issue-item--unsupported");
+    }
 
     return dom.li(
       {
-        className: "compatibility-issue-item",
+        className: classes.join(" "),
         key: property,
         ...this._getTestDataAttributes(),
       },
