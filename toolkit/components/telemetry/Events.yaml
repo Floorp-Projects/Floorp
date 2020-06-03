@@ -663,7 +663,7 @@ pwmgr:
     release_channel_collection: opt-out
     products:
       - "firefox"
-    record_in_processes: [content]
+    record_in_processes: [main, content]
   mgmt_interaction:
     description: >
       These events record interactions on the about:logins page.
