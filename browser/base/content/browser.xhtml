@@ -237,18 +237,20 @@
            noautofocus="true"
            hidden="true" />
 
-    <!-- for date/time picker. consumeoutsideclicks is set to never, so that
-         clicks on the anchored input box are never consumed. -->
-    <panel id="DateTimePickerPanel"
-           type="arrow"
-           hidden="true"
-           orient="vertical"
-           noautofocus="true"
-           norolluponanchor="true"
-           consumeoutsideclicks="never"
-           level="parent"
-           tabspecific="true">
-    </panel>
+    <html:template id="dateTimePickerTemplate">
+      <!-- for date/time picker. consumeoutsideclicks is set to never, so that
+           clicks on the anchored input box are never consumed. -->
+      <panel id="DateTimePickerPanel"
+             type="arrow"
+             hidden="true"
+             orient="vertical"
+             noautofocus="true"
+             norolluponanchor="true"
+             consumeoutsideclicks="never"
+             level="parent"
+             tabspecific="true">
+      </panel>
+    </html:template>
 
     <!-- for select dropdowns. The menupopup is what shows the list of options,
          and the popuponly menulist makes things like the menuactive attributes
@@ -264,10 +266,12 @@
         />
     </menulist>
 
-    <!-- for invalid form error message -->
-    <panel id="invalid-form-popup" type="arrow" orient="vertical" noautofocus="true" hidden="true" level="parent">
-      <description/>
-    </panel>
+    <html:template id="invalidFormTemplate">
+      <!-- for invalid form error message -->
+      <panel id="invalid-form-popup" type="arrow" orient="vertical" noautofocus="true" level="parent">
+        <description/>
+      </panel>
+    </html:template>
 
     <html:template id="editBookmarkPanelTemplate">
       <panel id="editBookmarkPanel"

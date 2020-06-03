@@ -35,7 +35,9 @@ function promiseTabLoadEvent(tab, url) {
   return loaded;
 }
 
-var gInvalidFormPopup = document.getElementById("invalid-form-popup");
+var gInvalidFormPopup = gBrowser.selectedBrowser.browsingContext.currentWindowGlobal
+  .getActor("FormValidation")
+  ._getAndMaybeCreatePanel(document);
 ok(
   gInvalidFormPopup,
   "The browser should have a popup to show when a form is invalid"

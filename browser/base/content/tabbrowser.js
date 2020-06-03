@@ -107,7 +107,7 @@
 
     arrowKeysShouldWrap: AppConstants == "macosx",
 
-    _autoScrollPopup: null,
+    _dateTimePicker: null,
 
     _previewMode: false,
 
@@ -415,12 +415,6 @@
       // so we have to update it:
       browser.docShellIsActive = this.shouldActivateDocShell(browser);
 
-      let autoScrollPopup = browser._createAutoScrollPopup();
-      autoScrollPopup.id = "autoscroller";
-      document.getElementById("mainPopupSet").appendChild(autoScrollPopup);
-      browser.setAttribute("autoscrollpopup", autoScrollPopup.id);
-      this._autoScrollPopup = autoScrollPopup;
-
       // Hook the browser up with a progress listener.
       let tabListener = new TabProgressListener(tab, browser, true, false);
       let filter = Cc[
@@ -707,6 +701,16 @@
         this.selectedTab = currentTab;
         this._previewMode = false;
       }
+    },
+
+    _getAndMaybeCreateDateTimePickerPanel() {
+      if (!this._dateTimePicker) {
+        let wrapper = document.getElementById("dateTimePickerTemplate");
+        wrapper.replaceWith(wrapper.content);
+        this._dateTimePicker = document.getElementById("DateTimePickerPanel");
+      }
+
+      return this._dateTimePicker;
     },
 
     syncThrobberAnimations(aTab) {
@@ -2053,7 +2057,6 @@
 
       const defaultBrowserAttributes = {
         contextmenu: "contentAreaContextMenu",
-        datetimepicker: "DateTimePickerPanel",
         message: "true",
         messagemanagergroup: "browsers",
         selectmenulist: "ContentSelectDropdown",
@@ -2075,9 +2078,6 @@
 
       if (!isPreloadBrowser) {
         b.setAttribute("autocompletepopup", "PopupAutoComplete");
-      }
-      if (this._autoScrollPopup) {
-        b.setAttribute("autoscrollpopup", this._autoScrollPopup.id);
       }
 
       /*

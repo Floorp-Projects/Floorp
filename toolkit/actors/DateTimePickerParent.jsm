@@ -106,11 +106,17 @@ class DateTimePickerParent extends JSWindowActorParent {
       return;
     }
 
-    if (!aBrowser.dateTimePicker) {
+    let panel;
+    if (tabbrowser) {
+      panel = tabbrowser._getAndMaybeCreateDateTimePickerPanel();
+    } else {
+      panel = aBrowser.dateTimePicker;
+    }
+    if (!panel) {
       debug("aBrowser.dateTimePicker not found, exiting now.");
       return;
     }
-    this._picker = new DateTimePickerPanel(aBrowser.dateTimePicker);
+    this._picker = new DateTimePickerPanel(panel);
     // The arrow panel needs an anchor to work. The popupAnchor (this._anchor)
     // is a transparent div that the arrow can point to.
     this._picker.openPicker(type, this._anchor, detail);
