@@ -64,9 +64,9 @@
   },
   "engines": {
     "firefox": ">=45.0 <=*",
-    "//": "when changing node versions, also edit .travis.yml and .nvmrc",
-    "node": "10.19.*",
-    "npm": "6.13.4"
+    "//": "when changing node versions, also edit .nvmrc",
+    "node": "10.21.*",
+    "npm": "6.14.4"
   },
   "homepage": "https://github.com/mozilla/activity-stream",
   "keywords": [
