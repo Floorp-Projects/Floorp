@@ -36,6 +36,7 @@ categories:
         - tools/fuzzing
         - tools/sanitizer
         - testing/perfdocs
+        - testing/perftest
         - tools/code-coverage
     l10n_doc:
         - intl

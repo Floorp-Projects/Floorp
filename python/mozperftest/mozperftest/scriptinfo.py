@@ -20,12 +20,12 @@ _INFO = """\
 %(description)s
 
 Owner: %(owner)s
-Test Name: %(test_name)s
+Test Name: %(name)s
 Usage:
 %(usage)s
 
 Description:
-%(long_description)s
+%(longDescription)s
 """
 
 
