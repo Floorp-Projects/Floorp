@@ -908,6 +908,12 @@ class EditorUtils final {
         return false;
     }
   }
+
+  /**
+   * Returns true if aSelection includes the point in aParentContent.
+   */
+  static bool IsPointInSelection(const Selection& aSelection,
+                                 nsINode& aParentNode, int32_t aOffset);
 };
 
 }  // namespace mozilla
