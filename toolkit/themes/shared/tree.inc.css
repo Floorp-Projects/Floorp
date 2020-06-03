@@ -117,8 +117,13 @@ treecolpicker {
   -moz-appearance: treeheadercell;
   -moz-box-align: center;
   -moz-box-pack: center;
-  color: -moz-DialogText;
+  color: -moz-ColHeaderText;
   padding: 0 4px;
+}
+
+treecol:hover,
+treecolpicker:hover {
+  color: -moz-ColHeaderHoverText;
 }
 
 .treecol-image {
