@@ -48,7 +48,7 @@ export type TabsState = {
   tabs: TabList,
 };
 
-function initialTabState(): TabsState {
+export function initialTabState(): TabsState {
   return { tabs: [] };
 }
 

@@ -95,7 +95,7 @@ export type PauseState = {
   previewLocation: ?SourceLocation,
 };
 
-function createPauseState(thread: ThreadId = "UnknownThread") {
+export function initialPauseState(thread: ThreadId = "UnknownThread") {
   return {
     cx: {
       navigateCounter: 0,
@@ -147,7 +147,7 @@ function getThreadPauseState(state: PauseState, thread: ThreadId) {
 }
 
 function update(
-  state: PauseState = createPauseState(),
+  state: PauseState = initialPauseState(),
   action: Action
 ): PauseState {
   // Actions need to specify any thread they are operating on. These helpers
@@ -285,7 +285,7 @@ function update(
 
     case "CONNECT":
       return {
-        ...createPauseState(action.mainThread.actor),
+        ...initialPauseState(action.mainThread.actor),
       };
 
     case "PAUSE_ON_EXCEPTIONS": {

@@ -2533,7 +2533,7 @@ module.exports = {
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-function initialState(overrides) {
+function initialOIState(overrides) {
   return {
     expandedPaths: new Set(),
     loadedProperties: new Map(),
@@ -2543,7 +2543,7 @@ function initialState(overrides) {
   };
 }
 
-function reducer(state = initialState(), action = {}) {
+function reducer(state = initialOIState(), action = {}) {
   const {
     type,
     data
@@ -2616,7 +2616,7 @@ function reducer(state = initialState(), action = {}) {
 
 
   if (type === "RESUME" || type == "NAVIGATE") {
-    return initialState({
+    return initialOIState({
       watchpoints: state.watchpoints
     });
   }
@@ -2673,7 +2673,9 @@ const selectors = {
 Object.defineProperty(module.exports, "__esModule", {
   value: true
 });
-module.exports = selectors;
+module.exports = { ...selectors,
+  initialOIState
+};
 module.exports.default = reducer;
 
 /***/ }),

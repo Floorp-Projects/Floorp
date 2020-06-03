@@ -26,7 +26,7 @@ export type ExpressionState = {
   currentAutocompleteInput: string | null,
 };
 
-export const createExpressionState = () => ({
+export const initialExpressionState = () => ({
   expressions: restoreExpressions(),
   expressionError: false,
   autocompleteMatches: {},
@@ -34,7 +34,7 @@ export const createExpressionState = () => ({
 });
 
 function update(
-  state: ExpressionState = createExpressionState(),
+  state: ExpressionState = initialExpressionState(),
   action: Action
 ): ExpressionState {
   switch (action.type) {
