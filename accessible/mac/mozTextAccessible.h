@@ -6,10 +6,87 @@
 
 #import "HyperTextAccessible.h"
 
-@interface mozTextAccessible : mozAccessible {
-}
+@interface mozTextAccessible : mozAccessible
+
+// override
+- (NSString*)moxTitle;
+
+// override
+- (id)moxValue;
+
+// override
+- (id)moxRequired;
+
+// override
+- (NSNumber*)moxInvalid;
+
+// override
+- (NSNumber*)moxInsertionPointLineNumber;
+
+// override
+- (NSString*)moxSubrole;
+
+// override
+- (NSNumber*)moxNumberOfCharacters;
+
+// override
+- (NSString*)moxSelectedText;
+
+// override
+- (NSValue*)moxSelectedTextRange;
+
+// override
+- (NSValue*)moxVisibleCharacterRange;
+
+// override
+- (BOOL)moxBlockSelector:(SEL)selector;
+
+// override
+- (void)moxSetValue:(id)value;
+
+// override
+- (void)moxSetSelectedText:(NSString*)text;
+
+// override
+- (void)moxSetSelectedTextRange:(NSValue*)range;
+
+// override
+- (void)moxSetVisibleCharacterRange:(NSValue*)range;
+
+// override
+- (NSString*)moxStringForRange:(NSValue*)range;
+
+// override
+- (NSAttributedString*)moxAttributedStringForRange:(NSValue*)range;
+
+// override
+- (NSValue*)moxRangeForLine:(NSNumber*)line;
+
+// override
+- (NSNumber*)moxLineForIndex:(NSNumber*)index;
+
+// override
+- (NSValue*)moxBoundsForRange:(NSValue*)range;
+
+#pragma mark - mozAccessible
+
+// override
+- (void)handleAccessibleEvent:(uint32_t)eventType;
+
 @end
 
-@interface mozTextLeafAccessible : mozAccessible {
-}
+@interface mozTextLeafAccessible : mozAccessible
+
+// override
+- (BOOL)moxBlockSelector:(SEL)selector;
+
+// override
+- (NSString*)moxValue;
+
+// override
+- (NSString*)moxTitle;
+
+// override
+- (NSString*)moxLabel;
+
 @end
