@@ -56,6 +56,7 @@ object CrashReporterWrapper {
                 0)
 
         crashReporter = CrashReporter(
+                context = context,
                 services = listOf(
                     SentryService(
                         context,
