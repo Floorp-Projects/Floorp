@@ -655,6 +655,15 @@ inline bool IsConstructor(const Value& v) {
   return v.isObject() && v.toObject().isConstructor();
 }
 
+static inline bool MaybePreserveDOMWrapper(JSContext* cx, HandleObject obj) {
+  if (!obj->getClass()->isDOMClass()) {
+    return true;
+  }
+
+  MOZ_ASSERT(cx->runtime()->preserveWrapperCallback);
+  return cx->runtime()->preserveWrapperCallback(cx, obj);
+}
+
 } /* namespace js */
 
 MOZ_ALWAYS_INLINE bool JSObject::isCallable() const {

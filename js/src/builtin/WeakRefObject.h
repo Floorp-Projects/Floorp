@@ -29,6 +29,8 @@ class WeakRefObject : public NativeObject {
   static void trace(JSTracer* trc, JSObject* obj);
   static void finalize(JSFreeOp* op, JSObject* obj);
 
+  static bool preserveDOMWrapper(JSContext* cx, HandleObject obj);
+
   static bool deref(JSContext* cx, unsigned argc, Value* vp);
 };
 
