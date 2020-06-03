@@ -288,7 +288,7 @@ Object.defineProperty(GeckoDriver.prototype, "chromeWindowHandles", {
     let hs = [];
 
     for (let win of this.windows) {
-      hs.push(getWindowId(win));
+      hs.push(getOuterWindowId(win));
     }
 
     return hs;
@@ -474,16 +474,16 @@ GeckoDriver.prototype.addFrameCloseListener = function(action) {
  * @return {string}
  *     Returns the unique server-assigned ID of the window.
  */
-GeckoDriver.prototype.addBrowser = function(win) {
-  let context = new browser.Context(win, this);
-  let winId = getWindowId(win);
+GeckoDriver.prototype.addBrowser = function(window) {
+  let bc = new browser.Context(window, this);
+  let winId = getOuterWindowId(window);
 
-  this.browsers[winId] = context;
+  this.browsers[winId] = bc;
   this.curBrowser = this.browsers[winId];
   if (!this.wins.has(winId)) {
     // add this to seenItems so we can guarantee
     // the user will get winId as this window's id
-    this.wins.set(winId, win);
+    this.wins.set(winId, window);
   }
 };
 
@@ -579,6 +579,8 @@ GeckoDriver.prototype.getVisibleText = function(el, lines) {
  * their type they are either accepted or ignored.
  */
 GeckoDriver.prototype.registerBrowser = function(id, be) {
+  let listenerWindow = Services.wm.getOuterWindowWithId(id);
+
   // We want to ignore frames that are XUL browsers that aren't in the "main"
   // tabbrowser, but accept things on Fennec (which doesn't have a
   // xul:tabbrowser), and accept HTML iframes (because tests depend on it),
@@ -594,9 +596,7 @@ GeckoDriver.prototype.registerBrowser = function(id, be) {
     this.curBrowser.register(id, be);
   }
 
-  const context = BrowsingContext.get(id);
-  this.wins.set(id, context.currentWindowGlobal);
-
+  this.wins.set(id, listenerWindow);
   return id;
 };
 
@@ -605,8 +605,8 @@ GeckoDriver.prototype.registerPromise = function() {
 
   return new Promise(resolve => {
     let cb = ({ json, target }) => {
-      let { frameId } = json;
-      this.registerBrowser(frameId, target);
+      let { outerWindowID } = json;
+      this.registerBrowser(outerWindowID, target);
 
       if (this.curBrowser.frameRegsPending > 0) {
         this.curBrowser.frameRegsPending--;
@@ -617,7 +617,7 @@ GeckoDriver.prototype.registerPromise = function() {
         resolve();
       }
 
-      return { frameId };
+      return { outerWindowID };
     };
     this.mm.addMessageListener(li, cb);
   });
@@ -628,7 +628,7 @@ GeckoDriver.prototype.listeningPromise = function() {
 
   return new Promise(resolve => {
     let cb = msg => {
-      if (msg.json.frameId === this.curBrowser.curFrameId) {
+      if (msg.json.outerWindowID === this.curBrowser.curFrameId) {
         this.mm.removeMessageListener(li, cb);
         resolve();
       }
@@ -1390,7 +1390,7 @@ GeckoDriver.prototype.getIdForBrowser = function(browser) {
     return this._browserIds.get(permKey);
   }
 
-  let winId = browser.browsingContext.id;
+  let winId = browser.outerWindowID;
   if (winId) {
     this._browserIds.set(permKey, winId);
     return winId;
@@ -1618,13 +1618,13 @@ GeckoDriver.prototype.switchToWindow = async function(cmd) {
  *     associated metadata.
  */
 GeckoDriver.prototype.findWindow = function(winIterable, filter) {
-  for (const win of winIterable) {
-    const bc = win.docShell.browsingContext;
-    const tabBrowser = browser.getTabBrowser(win);
+  for (let win of winIterable) {
+    let outerId = getOuterWindowId(win);
+    let tabBrowser = browser.getTabBrowser(win);
 
     // In case the wanted window is a chrome window, we are done.
-    if (filter(win, bc.id)) {
-      return { win, id: bc.id, hasTabBrowser: !!tabBrowser };
+    if (filter(win, outerId)) {
+      return { win, outerId, hasTabBrowser: !!tabBrowser };
 
       // Otherwise check if the chrome window has a tab browser, and that it
       // contains a tab with the wanted window handle.
@@ -1636,7 +1636,7 @@ GeckoDriver.prototype.findWindow = function(winIterable, filter) {
         if (filter(win, contentWindowId)) {
           return {
             win,
-            id: bc.id,
+            outerId,
             hasTabBrowser: true,
             tabIndex: i,
           };
@@ -1665,7 +1665,7 @@ GeckoDriver.prototype.setWindowHandle = async function(
   winProperties,
   focus = true
 ) {
-  if (!(winProperties.id in this.browsers)) {
+  if (!(winProperties.outerId in this.browsers)) {
     // Initialise Marionette if the current chrome window has not been seen
     // before. Also register the initial tab, if one exists.
     let registerBrowsers, browserListening;
@@ -1683,7 +1683,7 @@ GeckoDriver.prototype.setWindowHandle = async function(
     }
   } else {
     // Otherwise switch to the known chrome window
-    this.curBrowser = this.browsers[winProperties.id];
+    this.curBrowser = this.browsers[winProperties.outerId];
     this.mainFrame = this.curBrowser.window;
     this.curFrame = null;
 
@@ -1757,10 +1757,6 @@ GeckoDriver.prototype.switchToFrame = async function(cmd) {
   await this._handleUserPrompts();
 
   let { id, focus } = cmd.parameters;
-
-  if (typeof id == "number") {
-    assert.unsignedShort(id, `Expected id to be unsigned short, got ${id}`);
-  }
 
   // TODO(ato): element can be either string (deprecated) or a web
   // element JSON Object.  Can be removed with Firefox 60.
@@ -3572,12 +3568,12 @@ GeckoDriver.prototype.receiveMessage = function(message) {
       break;
 
     case "Marionette:Register":
-      let { frameId } = message.json;
-      this.registerBrowser(frameId, message.target);
-      return { frameId };
+      let { outerWindowID } = message.json;
+      this.registerBrowser(outerWindowID, message.target);
+      return { outerWindowID };
 
     case "Marionette:ListenersAttached":
-      if (message.json.frameId === this.curBrowser.curFrameId) {
+      if (message.json.outerWindowID === this.curBrowser.curFrameId) {
         this.curBrowser.flushPendingCommands();
       }
       break;
@@ -3899,8 +3895,8 @@ GeckoDriver.prototype.commands = {
   "WebDriver:TakeScreenshot": GeckoDriver.prototype.takeScreenshot,
 };
 
-function getWindowId(win) {
-  return win.docShell.browsingContext.id;
+function getOuterWindowId(win) {
+  return win.windowUtils.outerWindowID;
 }
 
 async function exitFullscreen(win) {
