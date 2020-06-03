@@ -20,6 +20,8 @@ compile_commands\.json
 
 # Emacs directory variable files.
 \.dir-locals\.el
+# Emacs project sentinel files.
+\.projectile
 
 # User files that may appear at the root
 ^\.mozconfig
