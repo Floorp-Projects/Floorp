@@ -1442,7 +1442,10 @@ def resolve_dynamic_chunks(config, tasks):
         runtimes = {m: r for m, r in get_runtimes(task['test-platform'], task['suite']).items()
                     if m in task['test-manifests']['active']}
 
-        times = list(runtimes.values())
+        # Truncate runtimes that are above the desired chunk duration. They
+        # will be assigned to a chunk on their own and the excess duration
+        # shouldn't cause additional chunks to be needed.
+        times = [min(DYNAMIC_CHUNK_DURATION, r) for r in runtimes.values()]
         avg = round(sum(times) / len(times), 2) if times else 0
         total = sum(times)
 
@@ -1451,7 +1454,11 @@ def resolve_dynamic_chunks(config, tasks):
         missing = [m for m in task['test-manifests']['active'] if m not in runtimes]
         total += avg * len(missing)
 
-        task['chunks'] = int(round(total / DYNAMIC_CHUNK_DURATION)) or 1
+        chunks = int(round(total / DYNAMIC_CHUNK_DURATION))
+
+        # Make sure we never exceed the number of manifests, nor have a chunk
+        # length of 0.
+        task['chunks'] = min(chunks, len(task['test-manifests']['active'])) or 1
         yield task
 
 
