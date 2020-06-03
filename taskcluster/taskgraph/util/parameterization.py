@@ -35,7 +35,7 @@ def resolve_timestamps(now, task_def):
     })
 
 
-def resolve_task_references(label, task_def, task_id, decision_task_id, dependencies):
+def resolve_task_references(label, task_def, dependencies):
     """Resolve all instances of
       {'task-reference': '..<..>..'}
     and
@@ -47,10 +47,6 @@ def resolve_task_references(label, task_def, task_id, decision_task_id, dependen
     def task_reference(val):
         def repl(match):
             key = match.group(1)
-            if key == 'self':
-                return task_id
-            elif key == 'decision':
-                return decision_task_id
             try:
                 return dependencies[key]
             except KeyError:
@@ -65,19 +61,10 @@ def resolve_task_references(label, task_def, task_id, decision_task_id, dependen
         def repl(match):
             dependency, artifact_name = match.group(1, 2)
 
-            if dependency == 'self':
-                raise KeyError(
-                    "task '{}' can't reference artifacts of self".format(label)
-                )
-            elif dependency == 'decision':
-                task_id = decision_task_id
-            else:
-                try:
-                    task_id = dependencies[dependency]
-                except KeyError:
-                    raise KeyError(
-                        "task '{}' has no dependency named '{}'".format(label, dependency)
-                    )
+            try:
+                task_id = dependencies[dependency]
+            except KeyError:
+                raise KeyError("task '{}' has no dependency named '{}'".format(label, dependency))
 
             assert artifact_name.startswith('public/'), \
                 "artifact-reference only supports public artifacts, not `{}`".format(artifact_name)

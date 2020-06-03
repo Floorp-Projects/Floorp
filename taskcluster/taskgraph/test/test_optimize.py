@@ -240,8 +240,7 @@ class TestOptimize(unittest.TestCase):
         optimize.slugid = ('tid{}'.format(i) for i in range(1, 10)).next
         try:
             got_subgraph = optimize.get_subgraph(graph, removed_tasks,
-                                                 replaced_tasks, label_to_taskid,
-                                                 "DECISION-TASK")
+                                                 replaced_tasks, label_to_taskid)
         finally:
             optimize.slugid = slugid
         self.assertEqual(got_subgraph.graph, exp_subgraph.graph)
