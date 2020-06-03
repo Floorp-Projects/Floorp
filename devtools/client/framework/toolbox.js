@@ -4024,6 +4024,7 @@ Toolbox.prototype = {
         sourceURL = sourceMappedLoc.sourceUrl;
         sourceLine = sourceMappedLoc.line;
         sourceColumn = sourceMappedLoc.column;
+        sourceId = null;
       }
     } catch (err) {
       console.error(
