@@ -73,6 +73,7 @@ add_task(async function testContentBlockingMainCategory() {
     [STP_PREF, false],
     [NCB_PREF, Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER],
     [ISOLATE_UI_PREF, true],
+    [FPI_PREF, false],
   ];
 
   for (let pref of prefs) {
