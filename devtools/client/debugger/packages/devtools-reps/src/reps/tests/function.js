@@ -402,37 +402,6 @@ describe("Function - Jump to definition", () => {
     const node = renderedComponent.find(".jump-definition");
     expect(node.exists()).toBeFalsy();
   });
-
-  it("applies source mapping to the object's location", async () => {
-    let onViewSourceInDebugger;
-    const onViewSourceCalled = new Promise(resolve => {
-      onViewSourceInDebugger = jest.fn(resolve);
-    });
-
-    const object = stubs.get("getRandom");
-    const { url, line, column } = object.location;
-    const sourceId = "test source id";
-    const originalPositionFor = jest.fn(() =>
-      Promise.resolve({ sourceUrl: url, line, column, sourceId })
-    );
-
-    const renderedComponent = renderRep(object, {
-      onViewSourceInDebugger,
-      sourceMapURLService: { originalPositionFor },
-    });
-
-    const node = renderedComponent.find(".jump-definition");
-    node.simulate("click", {
-      type: "click",
-      stopPropagation: () => {},
-    });
-    await onViewSourceCalled;
-
-    expect(originalPositionFor.mock.calls).toHaveLength(1);
-    expect(originalPositionFor.mock.calls[0]).toEqual([url, line, column]);
-    expect(onViewSourceInDebugger.mock.calls).toHaveLength(1);
-    expect(onViewSourceInDebugger.mock.calls[0][0]).toEqual(object.location);
-  });
 });
 
 describe("Function - Simplify name", () => {
