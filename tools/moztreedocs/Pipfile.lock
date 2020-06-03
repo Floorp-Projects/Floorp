@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "d7cdaa0c3cbe76bd75e3f3a799cce181cf737d15715e27c1cf7472aeab083661"
+            "sha256": "739cdb3dbbd50135d1c56f15c125cbe1d4731ff0edb16b75a490e5ddbf076fab"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -92,10 +92,10 @@
         },
         "fluent.syntax": {
             "hashes": [
-                "sha256:ac3db2f77d62b032fdf1f17ef5c390b7801a9e9fb58d41eca3825c0d47b88d79",
-                "sha256:e26be470aeebe4badd84f7bb0b648414e0f2ef95d26e5336d634af99e402ea61"
+                "sha256:202890bce8be17afd225374a29a9dae7e09edab54aca0dcb47495ba9a5ea72e9",
+                "sha256:e2df446e102824472768c04d24348247f7d8b08813cd29f3c39815796cb8821e"
             ],
-            "version": "==0.17.0"
+            "version": "==0.18.0"
         },
         "idna": {
             "hashes": [
@@ -173,10 +173,10 @@
         },
         "packaging": {
             "hashes": [
-                "sha256:3c292b474fda1671ec57d46d739d072bfd495a4f51ad01a055121d81e952b7a3",
-                "sha256:82f77b9bee21c1bafbf35a84905d604d5d1223801d639cf3ed140bd651c08752"
+                "sha256:4357f74f47b9c12db93624a82154e9b120fa8293699949152b22065d556079f8",
+                "sha256:998416ba6962ae7fbd6596850b80e17859a5753ba17c32284f67bfff33784181"
             ],
-            "version": "==20.3"
+            "version": "==20.4"
         },
         "parsimonious": {
             "hashes": [
@@ -286,10 +286,10 @@
         },
         "six": {
             "hashes": [
-                "sha256:236bdbdce46e6e6a3d61a337c0f8b763ca1e8717c03b369e87a7ec7ce1319c0a",
-                "sha256:8f3cd2e254d8f793e7f3d6d9df77b92252b52637291d0f0da013c76ea2724b6c"
+                "sha256:30639c035cdb23534cd4aa2dd52c3bf48f06e5f4a941509c8bafd8ce11080259",
+                "sha256:8b74bedcbbbaca38ff6d7491d76f2b06b3592611af620f8426e82dddb04a5ced"
             ],
-            "version": "==1.14.0"
+            "version": "==1.15.0"
         },
         "snowballstemmer": {
             "hashes": [
@@ -305,6 +305,14 @@
             ],
             "index": "pypi",
             "version": "==2.2.2"
+        },
+        "sphinx-copybutton": {
+            "hashes": [
+                "sha256:7eff55f0d1f8aee42f9538b5659efe326d58fea04c11c986886bbdc0a233232d",
+                "sha256:cf3bb6dc4b82217fe1a765d733aa478949ae8574670aa2c5e7c94de81326ad50"
+            ],
+            "index": "pypi",
+            "version": "==0.2.11"
         },
         "sphinx-js": {
             "hashes": [
@@ -392,7 +400,6 @@
                 "sha256:3018294ebefce6572a474f0604c2021e33b3fd8006ecd11d62107a5d2a963527",
                 "sha256:88206b0eb87e6d677d424843ac5209e3fb9d0190d0ee169599165ec25e9d9115"
             ],
-            "markers": "python_version >= '3.4'",
             "version": "==1.25.9"
         }
     },
