@@ -89,6 +89,8 @@ extern "C" const char* __tsan_default_suppressions() {
          // Bug 1614605 - permanent
          "deadlock:SanctionsTestServer\n"
          "deadlock:OCSPStaplingServer\n"
+         // Bug 1643087 - permanent
+         "deadlock:BadCertAndPinningServer\n"
 
          // Bug 1153409
          "race:third_party/sqlite3/*\n"
