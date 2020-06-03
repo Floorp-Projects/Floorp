@@ -930,6 +930,11 @@ bool RenderCompositorANGLE::UsePartialPresent() { return mUsePartialPresent; }
 
 bool RenderCompositorANGLE::RequestFullRender() {
   if (!gfx::gfxVars::DwmCompositionEnabled()) {
+    // When DWM is disabled, background window needs to repaint its visible
+    // region with WM_PAINT. But invalid region is not supported yet by
+    // WebRenderLayerManager::SendInvalidRegion(). When partial present is
+    // enabled, there is a case that updated rectangle does not cover the
+    // invalid region. Then requests full render for now.
     mFullRender = true;
   }
   return mFullRender;
