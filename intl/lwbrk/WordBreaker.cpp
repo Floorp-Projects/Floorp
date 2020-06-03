@@ -94,6 +94,9 @@ WordBreakClass WordBreaker::GetClass(char16_t c) {
     if (c == 0x00A0 /*NBSP*/) {
       return kWbClassSpace;
     }
+    if (GetGenCategory(c) == nsUGenCategory::kPunctuation) {
+      return kWbClassPunct;
+    }
     if (IsScriptioContinua(c)) {
       return kWbClassScriptioContinua;
     }
@@ -110,6 +113,9 @@ WordBreakClass WordBreaker::GetClass(char16_t c) {
   }
   if (IS_HALFWIDTHKATAKANA(c)) {
     return kWbClassHWKatakanaLetter;
+  }
+  if (GetGenCategory(c) == nsUGenCategory::kPunctuation) {
+    return kWbClassPunct;
   }
   if (IsScriptioContinua(c)) {
     return kWbClassScriptioContinua;
