@@ -14,7 +14,6 @@
 #include "mozilla/Poison.h"
 #include "mozilla/RemoteDecoderManagerChild.h"
 #include "mozilla/SharedThreadPool.h"
-#include "mozilla/TaskController.h"
 #include "mozilla/XPCOM.h"
 #include "mozJSComponentLoader.h"
 #include "nsXULAppAPI.h"
@@ -807,8 +806,6 @@ nsresult ShutdownXPCOM(nsIServiceManager* aServMgr) {
 
   delete sMessageLoop;
   sMessageLoop = nullptr;
-
-  mozilla::TaskController::Shutdown();
 
   if (sCommandLineWasInitialized) {
     CommandLine::Terminate();

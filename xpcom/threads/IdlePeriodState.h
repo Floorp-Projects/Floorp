@@ -25,7 +25,6 @@
 class nsIIdlePeriod;
 
 namespace mozilla {
-class TaskManager;
 namespace ipc {
 class IdleSchedulerChild;
 }  // namespace ipc

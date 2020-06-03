@@ -8,7 +8,6 @@
 #define nsThread_h__
 
 #include "mozilla/Mutex.h"
-#include "prenv.h"
 #include "nsIThreadInternal.h"
 #include "nsISupportsPriority.h"
 #include "nsThreadUtils.h"
@@ -42,13 +41,6 @@ class nsThreadEnumerator;
 
 // See https://www.w3.org/TR/longtasks
 #define LONGTASK_BUSY_WINDOW_MS 50
-
-static inline bool UseTaskController() {
-  if (PR_GetEnv("MOZ_USE_TASKCONTROLLER")) {
-    return true;
-  }
-  return false;
-}
 
 // A class for managing performance counter state.
 namespace mozilla {
@@ -237,9 +229,6 @@ class nsThread : public nsIThreadInternal,
 
   virtual mozilla::PerformanceCounter* GetPerformanceCounter(
       nsIRunnable* aEvent) const;
-
-  static mozilla::PerformanceCounter* GetPerformanceCounterBase(
-      nsIRunnable* aEvent);
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
