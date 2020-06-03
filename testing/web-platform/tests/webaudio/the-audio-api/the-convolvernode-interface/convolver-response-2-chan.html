@@ -126,7 +126,7 @@
       audit.define(
           {
             label: '3-channel input explicit mode',
-            description: '3->2 downmix producing 2-channel output'
+            description: '3->1 downmix producing 2-channel output'
           },
           (task, should) => {
             stereoResponseExplicitTest(
@@ -142,7 +142,7 @@
       audit.define(
           {
             label: '4-channel input explicit mode',
-            description: '4->2 downmix producing 2-channel output'
+            description: '4->1 downmix producing 2-channel output'
           },
           (task, should) => {
             stereoResponseExplicitTest(
@@ -158,11 +158,16 @@
       audit.define(
           {
             label: '5.1-channel input explicit mode',
-            description: '5.1->2 downmix producing 2-channel output'
+            description: '5.1->1 downmix producing 2-channel output'
           },
           (task, should) => {
-            stereoResponseTest({numberOfInputs: 6, prefix: '5.1-in explicit', absoluteThresholds:
-            [0, 0]}, should)
+            stereoResponseExplicitTest(
+                {
+                  numberOfInputs: 6,
+                  prefix: '5.1-in explicit',
+                  absoluteThresholds: [0, 0]
+                },
+                should)
                 .then(() => task.done());
           });
 
