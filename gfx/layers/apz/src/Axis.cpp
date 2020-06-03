@@ -58,7 +58,7 @@ float Axis::ToLocalVelocity(float aVelocityInchesPerMs) const {
 }
 
 void Axis::UpdateWithTouchAtDevicePoint(ParentLayerCoord aPos,
-                                        uint32_t aTimestampMs) {
+                                        TimeStamp aTimestamp) {
   // mVelocityTracker is controller-thread only
   APZThreadUtils::AssertOnControllerThread();
 
@@ -67,17 +67,17 @@ void Axis::UpdateWithTouchAtDevicePoint(ParentLayerCoord aPos,
   AXIS_LOG("%p|%s got position %f\n", mAsyncPanZoomController, Name(),
            mPos.value);
   if (Maybe<float> newVelocity =
-          mVelocityTracker->AddPosition(aPos, aTimestampMs)) {
+          mVelocityTracker->AddPosition(aPos, aTimestamp)) {
     mVelocity = mAxisLocked ? 0 : *newVelocity;
     AXIS_LOG("%p|%s velocity from tracker is %f\n", mAsyncPanZoomController,
              Name(), mVelocity);
   }
 }
 
-void Axis::StartTouch(ParentLayerCoord aPos, uint32_t aTimestampMs) {
+void Axis::StartTouch(ParentLayerCoord aPos, TimeStamp aTimestamp) {
   mStartPos = aPos;
   mPos = aPos;
-  mVelocityTracker->StartTracking(aPos, aTimestampMs);
+  mVelocityTracker->StartTracking(aPos, aTimestamp);
   mAxisLocked = false;
 }
 
@@ -226,7 +226,7 @@ ParentLayerCoord Axis::PanDistance(ParentLayerCoord aPos) const {
   return fabs(aPos - mStartPos);
 }
 
-void Axis::EndTouch(uint32_t aTimestampMs) {
+void Axis::EndTouch(TimeStamp aTimestamp) {
   // mVelocityQueue is controller-thread only
   APZThreadUtils::AssertOnControllerThread();
 
@@ -238,7 +238,7 @@ void Axis::EndTouch(uint32_t aTimestampMs) {
   if (mAxisLocked) {
     mVelocity = 0;
   } else if (Maybe<float> velocity =
-                 mVelocityTracker->ComputeVelocity(aTimestampMs)) {
+                 mVelocityTracker->ComputeVelocity(aTimestamp)) {
     mVelocity = *velocity;
   } else {
     mVelocity = 0;

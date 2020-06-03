@@ -805,12 +805,12 @@ class AsyncPanZoomController {
    * Register the start of a touch or pan gesture at the given position and
    * time.
    */
-  void StartTouch(const ParentLayerPoint& aPoint, uint32_t aTimestampMs);
+  void StartTouch(const ParentLayerPoint& aPoint, TimeStamp aTimestamp);
 
   /**
    * Register the end of a touch or pan gesture at the given time.
    */
-  void EndTouch(uint32_t aTimestampMs);
+  void EndTouch(TimeStamp aTimestamp);
 
   /**
    * Utility function to send updated FrameMetrics to Gecko so that it can paint

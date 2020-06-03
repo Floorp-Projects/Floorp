@@ -20,14 +20,14 @@ namespace layers {
 class SimpleVelocityTracker : public VelocityTracker {
  public:
   explicit SimpleVelocityTracker(Axis* aAxis);
-  void StartTracking(ParentLayerCoord aPos, uint32_t aTimestamp) override;
+  void StartTracking(ParentLayerCoord aPos, TimeStamp aTimestamp) override;
   Maybe<float> AddPosition(ParentLayerCoord aPos,
-                           uint32_t aTimestampMs) override;
-  Maybe<float> ComputeVelocity(uint32_t aTimestampMs) override;
+                           TimeStamp aTimestamp) override;
+  Maybe<float> ComputeVelocity(TimeStamp aTimestamp) override;
   void Clear() override;
 
  private:
-  void AddVelocityToQueue(uint32_t aTimestampMs, float aVelocity);
+  void AddVelocityToQueue(TimeStamp aTimestamp, float aVelocity);
   float ApplyFlingCurveToVelocity(float aVelocity) const;
 
   // The Axis that uses this velocity tracker.
@@ -36,16 +36,15 @@ class SimpleVelocityTracker : public VelocityTracker {
   Axis* MOZ_NON_OWNING_REF mAxis;
 
   // A queue of (timestamp, velocity) pairs; these are the historical
-  // velocities at the given timestamps. Timestamps are in milliseconds,
-  // velocities are in screen pixels per ms. This member can only be
-  // accessed on the controller/UI thread.
-  nsTArray<std::pair<uint32_t, float>> mVelocityQueue;
+  // velocities at the given timestamps. Velocities are in screen pixels per ms.
+  // This member can only be accessed on the controller/UI thread.
+  nsTArray<std::pair<TimeStamp, float>> mVelocityQueue;
 
-  // mVelocitySampleTimeMs and mVelocitySamplePos are the time and position
+  // mVelocitySampleTime and mVelocitySamplePos are the time and position
   // used in the last velocity sampling. They get updated when a new sample is
   // taken (which may not happen on every input event, if the time delta is too
   // small).
-  uint32_t mVelocitySampleTimeMs;
+  TimeStamp mVelocitySampleTime;
   ParentLayerCoord mVelocitySamplePos;
 };
 
