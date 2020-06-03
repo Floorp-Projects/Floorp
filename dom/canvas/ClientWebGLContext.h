@@ -2178,6 +2178,7 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
   bool mResetLayer = true;
   Maybe<const WebGLContextOptions> mInitialOptions;
   WebGLPixelStore mPixelStore;
+  bool mXRCompatible = false;
 };
 
 // used by DOM bindings in conjunction with GetParentObject
