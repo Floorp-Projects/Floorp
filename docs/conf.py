@@ -5,10 +5,7 @@
 from __future__ import absolute_import, unicode_literals
 
 import os
-import re
 import sys
-
-from datetime import datetime
 
 from recommonmark.transform import AutoStructify
 
@@ -66,22 +63,8 @@ templates_path = ['_templates']
 source_suffix = '.rst'
 source_suffix = ['.rst', '.md']
 master_doc = 'index'
-project = u'Firefox Source Tree Docs'
-year = datetime.now().year
-
-# Grab the version from the source tree's milestone.
-# FUTURE Use Python API from bug 941299.
-with open(os.path.join(topsrcdir, 'config', 'milestone.txt'), 'rt') as fh:
-    for line in fh:
-        line = line.strip()
-
-        if not line or line.startswith('#'):
-            continue
-
-        release = line
-        break
-
-version = re.sub(r'[ab]\d+$', '', release)
+project = u'Firefox Source Docs'
+html_logo = u'../browser/branding/nightly/content/firefox-wordmark.svg'
 
 exclude_patterns = ['_build', '_staging', '_venv']
 pygments_style = 'sphinx'
