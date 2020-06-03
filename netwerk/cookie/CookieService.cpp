@@ -420,7 +420,7 @@ CookieService::GetCookieStringFromHttp(nsIURI* aHostURI, nsIChannel* aChannel,
       aHostURI, aChannel, result.contains(ThirdPartyAnalysis::IsForeign),
       result.contains(ThirdPartyAnalysis::IsThirdPartyTrackingResource),
       result.contains(ThirdPartyAnalysis::IsThirdPartySocialTrackingResource),
-      result.contains(ThirdPartyAnalysis::IsFirstPartyStorageAccessGranted),
+      result.contains(ThirdPartyAnalysis::IsStorageAccessPermissionGranted),
       rejectedReason, isSafeTopLevelNav, isSameSiteForeign, true, attrs,
       foundCookieList);
 
@@ -541,7 +541,7 @@ CookieService::SetCookieStringFromHttp(nsIURI* aHostURI,
       result.contains(ThirdPartyAnalysis::IsForeign),
       result.contains(ThirdPartyAnalysis::IsThirdPartyTrackingResource),
       result.contains(ThirdPartyAnalysis::IsThirdPartySocialTrackingResource),
-      result.contains(ThirdPartyAnalysis::IsFirstPartyStorageAccessGranted),
+      result.contains(ThirdPartyAnalysis::IsStorageAccessPermissionGranted),
       aCookieHeader, priorCookieCount, attrs, &rejectedReason);
 
   MOZ_ASSERT_IF(rejectedReason, cookieStatus == STATUS_REJECTED);
@@ -810,7 +810,7 @@ void CookieService::GetCookiesForURI(
     nsIURI* aHostURI, nsIChannel* aChannel, bool aIsForeign,
     bool aIsThirdPartyTrackingResource,
     bool aIsThirdPartySocialTrackingResource,
-    bool aFirstPartyStorageAccessGranted, uint32_t aRejectedReason,
+    bool aStorageAccessPermissionGranted, uint32_t aRejectedReason,
     bool aIsSafeTopLevelNav, bool aIsSameSiteForeign, bool aHttpBound,
     const OriginAttributes& aOriginAttrs, nsTArray<Cookie*>& aCookieList) {
   NS_ASSERTION(aHostURI, "null host!");
@@ -865,7 +865,7 @@ void CookieService::GetCookiesForURI(
 
   CookieStatus cookieStatus = CheckPrefs(
       cookieJarSettings, aHostURI, aIsForeign, aIsThirdPartyTrackingResource,
-      aIsThirdPartySocialTrackingResource, aFirstPartyStorageAccessGranted,
+      aIsThirdPartySocialTrackingResource, aStorageAccessPermissionGranted,
       VoidCString(), priorCookieCount, aOriginAttrs, &rejectedReason);
 
   MOZ_ASSERT_IF(rejectedReason, cookieStatus == STATUS_REJECTED);
@@ -1467,7 +1467,7 @@ CookieStatus CookieService::CheckPrefs(nsICookieJarSettings* aCookieJarSettings,
                                        nsIURI* aHostURI, bool aIsForeign,
                                        bool aIsThirdPartyTrackingResource,
                                        bool aIsThirdPartySocialTrackingResource,
-                                       bool aFirstPartyStorageAccessGranted,
+                                       bool aStorageAccessPermissionGranted,
                                        const nsACString& aCookieHeader,
                                        const int aNumOfCookies,
                                        const OriginAttributes& aOriginAttrs,
@@ -1520,7 +1520,7 @@ CookieStatus CookieService::CheckPrefs(nsICookieJarSettings* aCookieJarSettings,
   // context, when anti-tracking protection is enabled and when we don't have
   // access to the first-party cookie jar.
   if (aIsForeign && aIsThirdPartyTrackingResource &&
-      !aFirstPartyStorageAccessGranted &&
+      !aStorageAccessPermissionGranted &&
       aCookieJarSettings->GetRejectThirdPartyContexts()) {
     bool rejectThirdPartyWithExceptions =
         CookieJarSettings::IsRejectThirdPartyWithExceptions(
@@ -1551,12 +1551,12 @@ CookieStatus CookieService::CheckPrefs(nsICookieJarSettings* aCookieJarSettings,
   }
 
   // check default prefs.
-  // Check aFirstPartyStorageAccessGranted when checking aCookieBehavior
+  // Check aStorageAccessPermissionGranted when checking aCookieBehavior
   // so that we take things such as the content blocking allow list into
   // account.
   if (aCookieJarSettings->GetCookieBehavior() ==
           nsICookieService::BEHAVIOR_REJECT &&
-      !aFirstPartyStorageAccessGranted) {
+      !aStorageAccessPermissionGranted) {
     COOKIE_LOGFAILURE(aCookieHeader.IsVoid() ? GET_COOKIE : SET_COOKIE,
                       aHostURI, aCookieHeader, "cookies are disabled");
     *aRejectedReason = nsIWebProgressListener::STATE_COOKIES_BLOCKED_ALL;
@@ -1567,7 +1567,7 @@ CookieStatus CookieService::CheckPrefs(nsICookieJarSettings* aCookieJarSettings,
   if (aIsForeign) {
     if (aCookieJarSettings->GetCookieBehavior() ==
             nsICookieService::BEHAVIOR_REJECT_FOREIGN &&
-        !aFirstPartyStorageAccessGranted) {
+        !aStorageAccessPermissionGranted) {
       COOKIE_LOGFAILURE(aCookieHeader.IsVoid() ? GET_COOKIE : SET_COOKIE,
                         aHostURI, aCookieHeader, "context is third party");
       *aRejectedReason = nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN;
@@ -1575,7 +1575,7 @@ CookieStatus CookieService::CheckPrefs(nsICookieJarSettings* aCookieJarSettings,
     }
 
     if (aCookieJarSettings->GetLimitForeignContexts() &&
-        !aFirstPartyStorageAccessGranted && aNumOfCookies == 0) {
+        !aStorageAccessPermissionGranted && aNumOfCookies == 0) {
       COOKIE_LOGFAILURE(aCookieHeader.IsVoid() ? GET_COOKIE : SET_COOKIE,
                         aHostURI, aCookieHeader, "context is third party");
       *aRejectedReason = nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN;

@@ -70,7 +70,7 @@ child:
 
   async DispatchSecurityPolicyViolation(nsString aViolationEventJSON);
 
-  async SaveStorageAccessGranted();
+  async SaveStorageAccessPermissionGranted();
 
 both:
   async RawMessage(JSActorMessageMeta aMetadata, ClonedMessageData aData,

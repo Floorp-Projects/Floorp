@@ -533,11 +533,11 @@ ThirdPartyUtil::AnalyzeChannel(nsIChannel* aChannel, bool aNotify, nsIURI* aURI,
     if (performStorageChecks &&
         ContentBlocking::ShouldAllowAccessFor(aChannel, aURI ? aURI : uri.get(),
                                               aRejectedReason)) {
-      result += ThirdPartyAnalysis::IsFirstPartyStorageAccessGranted;
+      result += ThirdPartyAnalysis::IsStorageAccessPermissionGranted;
     }
 
     if (aNotify && !result.contains(
-                       ThirdPartyAnalysis::IsFirstPartyStorageAccessGranted)) {
+                       ThirdPartyAnalysis::IsStorageAccessPermissionGranted)) {
       ContentBlockingNotifier::OnDecision(
           aChannel, ContentBlockingNotifier::BlockingDecision::eBlock,
           *aRejectedReason);
