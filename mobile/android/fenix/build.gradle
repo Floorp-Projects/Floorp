@@ -130,7 +130,10 @@ allprojects {
     tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
         kotlinOptions.jvmTarget = "1.8"
         kotlinOptions.allWarningsAsErrors = true
-        kotlinOptions.freeCompilerArgs += ["-Xuse-experimental=kotlin.Experimental", "-Xskip-runtime-version-check"]
+        kotlinOptions.freeCompilerArgs += [
+            "-Xuse-experimental=kotlin.Experimental",
+            "-Xskip-runtime-version-check"
+        ]
     }
 }
 

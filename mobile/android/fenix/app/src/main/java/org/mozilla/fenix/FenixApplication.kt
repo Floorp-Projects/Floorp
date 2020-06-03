@@ -13,6 +13,7 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.getSystemService
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
@@ -21,6 +22,7 @@ import mozilla.appservices.Megazord
 import mozilla.components.browser.session.Session
 import mozilla.components.concept.push.PushProcessor
 import mozilla.components.feature.addons.update.GlobalAddonDependencyProvider
+import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.service.glean.Glean
 import mozilla.components.service.glean.config.Configuration
 import mozilla.components.service.glean.net.ConceptFetchHttpUploader
@@ -46,14 +48,12 @@ import org.mozilla.fenix.session.PerformanceActivityLifecycleCallbacks
 import org.mozilla.fenix.session.VisibilityLifecycleCallback
 import org.mozilla.fenix.utils.BrowsersCache
 import org.mozilla.fenix.utils.Settings
-import mozilla.components.lib.crash.CrashReporter
 
 /**
  *The main application class for Fenix. Records data to measure initialization performance.
  *  Installs [CrashReporter], initializes [Glean]  in fenix builds and setup Megazord in the main process.
  */
-@SuppressLint("Registered")
-@Suppress("TooManyFunctions", "LargeClass")
+@Suppress("Registered", "TooManyFunctions", "LargeClass")
 open class FenixApplication : LocaleAwareApplication() {
     init {
         recordOnInit() // DO NOT MOVE ANYTHING ABOVE HERE: the timing of this measurement is critical.
@@ -66,6 +66,7 @@ open class FenixApplication : LocaleAwareApplication() {
     var visibilityLifecycleCallback: VisibilityLifecycleCallback? = null
         private set
 
+    @ExperimentalCoroutinesApi
     override fun onCreate() {
         super.onCreate()
 
@@ -114,6 +115,7 @@ open class FenixApplication : LocaleAwareApplication() {
         Log.addSink(AndroidLogSink())
     }
 
+    @ExperimentalCoroutinesApi
     @CallSuper
     open fun setupInMainProcessOnly() {
         run {
@@ -151,7 +153,8 @@ open class FenixApplication : LocaleAwareApplication() {
         visibilityLifecycleCallback = VisibilityLifecycleCallback(getSystemService())
         registerActivityLifecycleCallbacks(visibilityLifecycleCallback)
 
-        components.core.sessionManager.register(NotificationSessionObserver(this))
+        val privateNotificationObserver = NotificationSessionObserver(this)
+        privateNotificationObserver.start()
 
         // Storage maintenance disabled, for now, as it was interfering with background migrations.
         // See https://github.com/mozilla-mobile/fenix/issues/7227 for context.

@@ -1,63 +1,82 @@
 package org.mozilla.fenix.session
 
+import android.content.Context
+import io.mockk.Called
 import io.mockk.MockKAnnotations
+import io.mockk.confirmVerified
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
-import io.mockk.mockk
 import io.mockk.verify
-import mozilla.components.support.test.robolectric.testContext
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.runBlocking
+import mozilla.components.browser.state.action.CustomTabListAction
+import mozilla.components.browser.state.action.TabListAction
+import mozilla.components.browser.state.state.createCustomTab
+import mozilla.components.browser.state.state.createTab
+import mozilla.components.browser.state.store.BrowserStore
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
-import mozilla.components.browser.session.Session
 
+@ExperimentalCoroutinesApi
 @RunWith(FenixRobolectricTestRunner::class)
 class NotificationSessionObserverTest {
 
     private lateinit var observer: NotificationSessionObserver
+    private lateinit var store: BrowserStore
+    @MockK private lateinit var context: Context
     @MockK(relaxed = true) private lateinit var notificationService: SessionNotificationService.Companion
 
     @Before
     fun before() {
         MockKAnnotations.init(this)
-        observer = NotificationSessionObserver(testContext, notificationService)
+        store = BrowserStore()
+        every { context.components.core.store } returns store
+        observer = NotificationSessionObserver(context, notificationService)
     }
 
     @Test
-    fun `GIVEN session is private and non-custom WHEN it is added THEN notification service should be started`() {
-        val privateSession = mockSession(true, false)
+    fun `GIVEN session is private and non-custom WHEN it is added THEN notification service should be started`() = runBlocking {
+        val privateSession = createTab("https://firefox.com", private = true)
 
-        observer.onSessionAdded(privateSession)
-        verify(exactly = 1) { notificationService.start(any()) }
+        store.dispatch(TabListAction.AddTabAction(privateSession)).join()
+
+        observer.start()
+        verify(exactly = 1) { notificationService.start(context) }
+        confirmVerified(notificationService)
     }
 
     @Test
-    fun `GIVEN session is not private WHEN it is added THEN notification service should not be started`() {
-        val normalSession = mockSession(false, true)
-        val customSession = mockSession(false, false)
+    fun `GIVEN session is not private WHEN it is added THEN notification service should not be started`() = runBlocking {
+        val normalSession = createTab("https://firefox.com")
+        val customSession = createCustomTab("https://firefox.com")
 
-        observer.onSessionAdded(normalSession)
-        verify(exactly = 0) { notificationService.start(any()) }
+        observer.start()
+        verify { notificationService wasNot Called }
 
-        observer.onSessionAdded(customSession)
-        verify(exactly = 0) { notificationService.start(any()) }
+        store.dispatch(TabListAction.AddTabAction(normalSession)).join()
+        verify(exactly = 0) { notificationService.start(context) }
+
+        store.dispatch(CustomTabListAction.AddCustomTabAction(customSession)).join()
+        verify(exactly = 0) { notificationService.start(context) }
     }
 
     @Test
-    fun `GIVEN session is custom tab WHEN it is added THEN notification service should not be started`() {
-        val privateCustomSession = mockSession(true, true)
-        val customSession = mockSession(false, true)
+    fun `GIVEN session is custom tab WHEN it is added THEN notification service should not be started`() = runBlocking {
+        val privateCustomSession = createCustomTab("https://firefox.com").let {
+            it.copy(content = it.content.copy(private = true))
+        }
+        val customSession = createCustomTab("https://firefox.com")
 
-        observer.onSessionAdded(privateCustomSession)
-        verify(exactly = 0) { notificationService.start(any()) }
+        observer.start()
+        verify { notificationService wasNot Called }
 
-        observer.onSessionAdded(customSession)
-        verify(exactly = 0) { notificationService.start(any()) }
+        store.dispatch(CustomTabListAction.AddCustomTabAction(privateCustomSession)).join()
+        verify(exactly = 0) { notificationService.start(context) }
+
+        store.dispatch(CustomTabListAction.AddCustomTabAction(customSession)).join()
+        verify(exactly = 0) { notificationService.start(context) }
     }
-}
-
-private fun mockSession(isPrivate: Boolean, isCustom: Boolean) = mockk<Session> {
-    every { private } returns isPrivate
-    every { isCustomTabSession() } returns isCustom
 }

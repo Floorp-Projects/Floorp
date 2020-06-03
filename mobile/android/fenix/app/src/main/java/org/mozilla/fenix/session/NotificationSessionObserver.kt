@@ -5,38 +5,46 @@
 package org.mozilla.fenix.session
 
 import android.content.Context
-import mozilla.components.browser.session.Session
-import mozilla.components.browser.session.SessionManager
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.map
+import mozilla.components.browser.state.selector.privateTabs
+import mozilla.components.lib.state.ext.flowScoped
+import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.ext.sessionsOfType
 
 /**
  * This observer starts and stops the service to show a notification
  * indicating that a private tab is open.
  */
-
 class NotificationSessionObserver(
     private val context: Context,
     private val notificationService: SessionNotificationService.Companion = SessionNotificationService
-) : SessionManager.Observer {
+) {
 
-    override fun onSessionRemoved(session: Session) {
-        val privateTabsEmpty = context.components.core.sessionManager.sessionsOfType(private = true).none()
+    private var scope: CoroutineScope? = null
+    private var started = false
 
-        if (privateTabsEmpty) {
-            notificationService.stop(context)
+    @ExperimentalCoroutinesApi
+    fun start() {
+        scope = context.components.core.store.flowScoped { flow ->
+            flow.map { state -> state.privateTabs.isNotEmpty() }
+                .ifChanged()
+                .collect { hasPrivateTabs ->
+                    if (hasPrivateTabs) {
+                        notificationService.start(context)
+                        started = true
+                    } else if (started) {
+                        notificationService.stop(context)
+                        started = false
+                    }
+                }
         }
     }
 
-    override fun onAllSessionsRemoved() {
-        notificationService.stop(context)
-    }
-
-    override fun onSessionAdded(session: Session) {
-        // Custom tabs are meant to feel like part of the app that opened them, not Fenix, so we
-        // don't need to show a 'close tab' notification for them
-        if (session.private && !session.isCustomTabSession()) {
-            notificationService.start(context)
-        }
+    fun stop() {
+        scope?.cancel()
     }
 }

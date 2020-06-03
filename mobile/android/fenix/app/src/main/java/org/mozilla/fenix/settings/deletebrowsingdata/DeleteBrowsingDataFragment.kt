@@ -13,10 +13,15 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import kotlinx.android.synthetic.main.fragment_delete_browsing_data.*
 import kotlinx.android.synthetic.main.fragment_delete_browsing_data.view.*
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import mozilla.components.browser.session.Session
-import mozilla.components.browser.session.SessionManager
+import mozilla.components.lib.state.ext.flowScoped
+import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.metrics.Event
@@ -25,23 +30,15 @@ import org.mozilla.fenix.ext.showToolbar
 
 @SuppressWarnings("TooManyFunctions")
 class DeleteBrowsingDataFragment : Fragment(R.layout.fragment_delete_browsing_data) {
-    private lateinit var sessionObserver: SessionManager.Observer
+
     private lateinit var controller: DeleteBrowsingDataController
+    private var scope: CoroutineScope? = null
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
         controller = DefaultDeleteBrowsingDataController(requireContext())
 
-        sessionObserver = object : SessionManager.Observer {
-            override fun onSessionAdded(session: Session) = updateTabCount()
-            override fun onSessionRemoved(session: Session) = updateTabCount()
-            override fun onSessionSelected(session: Session) = updateTabCount()
-            override fun onSessionsRestored() = updateTabCount()
-            override fun onAllSessionsRemoved() = updateTabCount()
-        }
-
-        requireComponents.core.sessionManager.register(sessionObserver, owner = this)
         getCheckboxes().forEach {
             it.onCheckListener = { _ -> updateDeleteButton() }
         }
@@ -53,11 +50,15 @@ class DeleteBrowsingDataFragment : Fragment(R.layout.fragment_delete_browsing_da
         }
     }
 
-    private fun updateDeleteButton() {
-        val enabled = getCheckboxes().any { it.isChecked }
+    @ExperimentalCoroutinesApi
+    override fun onStart() {
+        super.onStart()
 
-        view?.delete_data?.isEnabled = enabled
-        view?.delete_data?.alpha = if (enabled) ENABLED_ALPHA else DISABLED_ALPHA
+        scope = requireComponents.core.store.flowScoped(viewLifecycleOwner) { flow ->
+            flow.map { state -> state.tabs.size }
+                .ifChanged()
+                .collect { openTabs -> updateTabCount(openTabs) }
+        }
     }
 
     override fun onResume() {
@@ -69,6 +70,13 @@ class DeleteBrowsingDataFragment : Fragment(R.layout.fragment_delete_browsing_da
         }
 
         updateItemCounts()
+    }
+
+    private fun updateDeleteButton() {
+        val enabled = getCheckboxes().any { it.isChecked }
+
+        view?.delete_data?.isEnabled = enabled
+        view?.delete_data?.alpha = if (enabled) ENABLED_ALPHA else DISABLED_ALPHA
     }
 
     private fun askToDelete() {
@@ -162,6 +170,11 @@ class DeleteBrowsingDataFragment : Fragment(R.layout.fragment_delete_browsing_da
         progress_bar.visibility = View.GONE
     }
 
+    override fun onStop() {
+        super.onStop()
+        scope?.cancel()
+    }
+
     private fun updateItemCounts() {
         updateTabCount()
         updateHistoryCount()
@@ -170,9 +183,8 @@ class DeleteBrowsingDataFragment : Fragment(R.layout.fragment_delete_browsing_da
         updateSitePermissions()
     }
 
-    private fun updateTabCount() {
+    private fun updateTabCount(openTabs: Int = requireComponents.core.store.state.tabs.size) {
         view?.open_tabs_item?.apply {
-            val openTabs = requireComponents.core.sessionManager.sessions.size
             subtitleView.text = resources.getString(
                 R.string.preferences_delete_browsing_data_tabs_subtitle,
                 openTabs

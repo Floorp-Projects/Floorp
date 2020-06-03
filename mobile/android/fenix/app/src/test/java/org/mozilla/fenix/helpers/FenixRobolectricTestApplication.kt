@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.helpers
 
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.mozilla.fenix.FenixApplication
 import org.mozilla.fenix.components.TestComponents
 
@@ -18,5 +19,6 @@ class FenixRobolectricTestApplication : FenixApplication() {
 
     override fun setupInAllProcesses() = Unit
 
+    @ExperimentalCoroutinesApi
     override fun setupInMainProcessOnly() = Unit
 }
