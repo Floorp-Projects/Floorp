@@ -32,6 +32,8 @@ add_task(async function tabsSendMessageReply() {
                 browser.tabs.sendMessage(tabId, "respond-soon", resolve)
               ),
               browser.tabs.sendMessage(tabId, "respond-promise"),
+              browser.tabs.sendMessage(tabId, "respond-promise-false"),
+              browser.tabs.sendMessage(tabId, "respond-false"),
               browser.tabs.sendMessage(tabId, "respond-never"),
               new Promise(resolve => {
                 browser.runtime.sendMessage("respond-never", response => {
@@ -57,6 +59,8 @@ add_task(async function tabsSendMessageReply() {
                   respondNow2,
                   respondSoon,
                   respondPromise,
+                  respondPromiseFalse,
+                  respondFalse,
                   respondNever,
                   respondNever2,
                   respondError,
@@ -88,6 +92,16 @@ add_task(async function tabsSendMessageReply() {
                     "respond-promise",
                     respondPromise,
                     "Got the expected promise response"
+                  );
+                  browser.test.assertEq(
+                    false,
+                    respondPromiseFalse,
+                    "Got the expected false value as a promise result"
+                  );
+                  browser.test.assertEq(
+                    undefined,
+                    respondFalse,
+                    "Got the expected no-response when onMessage returns false"
                   );
                   browser.test.assertEq(
                     undefined,
@@ -151,6 +165,12 @@ add_task(async function tabsSendMessageReply() {
             return true;
           } else if (msg == "respond-promise") {
             return Promise.resolve(msg);
+          } else if (msg == "respond-promise-false") {
+            return Promise.resolve(false);
+          } else if (msg == "respond-false") {
+            // return false means that respond() is not expected to be called.
+            setTimeout(() => respond("should be ignored"));
+            return false;
           } else if (msg == "respond-never") {
             return undefined;
           } else if (msg == "respond-error") {
