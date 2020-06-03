@@ -10,10 +10,7 @@ job-defaults:
             android-em-7.*: geckoview-androidTest.apk
             android-hw-.*: geckoview-androidTest.apk
             default: null
-    variants:
-        by-test-platform:
-            linux1804-64/debug: ['fission']
-            default: ['fission']
+    variants: ['fission']
     fission-tier: 2
     run-on-projects:
         by-test-platform:
@@ -62,6 +59,14 @@ crashtest:
             windows10-aarch64.*: 2
             android-hw-.*-qr/.*: 2
             default: default
+    fission-tier:
+        by-test-platform:
+            linux1804-64-qr/debug: 1
+            default: 2
+    fission-run-on-projects:
+        by-test-platform:
+            linux1804-64-qr/debug: ['trunk']
+            default: []
 
 crashtest-qr:
     description: "Crashtest Webrender run"
