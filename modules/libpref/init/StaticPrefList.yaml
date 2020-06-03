@@ -965,6 +965,12 @@
   value: true
   mirror: always
 
+# Open PDFs in Edge with the --app flag if it is the default.
+- name: browser.pdf.launchDefaultEdgeAsApp
+  type: bool
+  value: true
+  mirror: always
+
 # Force usage of in-memory (rather than file on disk) media cache for video streaming when private browsing
 - name: browser.privatebrowsing.forceMediaMemoryCache
   type: bool
