@@ -2,7 +2,7 @@
 
 # &lt;init&gt;
 
-`ExceptionHandler(context: <ERROR CLASS>, crashReporter: `[`CrashReporter`](../../mozilla.components.lib.crash/-crash-reporter/index.md)`, defaultExceptionHandler: `[`UncaughtExceptionHandler`](http://docs.oracle.com/javase/7/docs/api/java/lang/Thread/UncaughtExceptionHandler.html)`? = null)`
+`ExceptionHandler(context: <ERROR CLASS>, crashReporter: `[`CrashReporter`](../../mozilla.components.lib.crash/-crash-reporter/index.md)`)`
 
 [Thread.UncaughtExceptionHandler](http://docs.oracle.com/javase/7/docs/api/java/lang/Thread/UncaughtExceptionHandler.html) implementation that forwards crashes to the [CrashReporter](../../mozilla.components.lib.crash/-crash-reporter/index.md) instance.
 
