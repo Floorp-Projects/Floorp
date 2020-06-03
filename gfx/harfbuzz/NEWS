@@ -1,3 +1,15 @@
+Overview of changes leading to 2.6.7
+Wednesday, June 3, 2020
+====================================
+- Update to Unicode 13.0.0.
+- Fix hb_ot_layout_get_ligature_carets for fonts without lcar table, it was
+  completely broken for all the other fonts since 2.1.2.
+- As a part of our migration to meson, this release will be the last one
+  to provide cmake port files but autotools still is our main build system.
+  There is a possibility that the next version or the after be released
+  using meson.
+
+
 Overview of changes leading to 2.6.6
 Tuesday, May 12, 2020
 ====================================

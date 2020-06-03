@@ -367,6 +367,14 @@ typedef enum
   /*12.0*/HB_SCRIPT_NYIAKENG_PUACHUE_HMONG	= HB_TAG ('H','m','n','p'),
   /*12.0*/HB_SCRIPT_WANCHO			= HB_TAG ('W','c','h','o'),
 
+  /*
+   * Since 2.6.7
+   */
+  /*13.0*/HB_SCRIPT_CHORASMIAN			= HB_TAG ('C','h','r','s'),
+  /*13.0*/HB_SCRIPT_DIVES_AKURU			= HB_TAG ('D','i','a','k'),
+  /*13.0*/HB_SCRIPT_KHITAN_SMALL_SCRIPT		= HB_TAG ('K','i','t','s'),
+  /*13.0*/HB_SCRIPT_YEZIDI			= HB_TAG ('Y','e','z','i'),
+
   /* No script set. */
   HB_SCRIPT_INVALID				= HB_TAG_NONE,
 

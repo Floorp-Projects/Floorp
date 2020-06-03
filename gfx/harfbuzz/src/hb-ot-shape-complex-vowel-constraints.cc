@@ -10,8 +10,8 @@
  * # Date: 2015-03-12, 21:17:00 GMT [AG]
  * # Date: 2019-11-08, 23:22:00 GMT [AG]
  *
- * # Scripts-12.1.0.txt
- * # Date: 2019-04-01, 09:10:42 GMT
+ * # Scripts-13.0.0.txt
+ * # Date: 2020-01-22, 00:07:43 GMT
  */
 
 #include "hb.hh"
@@ -98,8 +98,7 @@ _hb_preprocess_text_vowel_constraints (const hb_ot_shape_plan_t *plan HB_UNUSED,
 		0x0907u == buffer->cur (2).codepoint)
 	    {
 	      buffer->next_glyph ();
-	      buffer->next_glyph ();
-	      _output_dotted_circle (buffer);
+	      matched = true;
 	    }
 	    break;
 	}
@@ -219,8 +218,7 @@ _hb_preprocess_text_vowel_constraints (const hb_ot_shape_plan_t *plan HB_UNUSED,
 	if (0x0B85u == buffer->cur ().codepoint &&
 	    0x0BC2u == buffer->cur (1).codepoint)
 	{
-	  buffer->next_glyph ();
-	  _output_dotted_circle (buffer);
+	  matched = true;
 	}
 	buffer->next_glyph ();
 	if (matched) _output_with_dotted_circle (buffer);

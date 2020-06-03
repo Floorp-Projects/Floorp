@@ -150,6 +150,28 @@ struct hb_subset_layout_context_t :
   unsigned lookup_index_count;
 };
 
+struct hb_collect_variation_indices_context_t :
+       hb_dispatch_context_t<hb_collect_variation_indices_context_t, hb_empty_t, 0>
+{
+  const char *get_name () { return "CLOSURE_LAYOUT_VARIATION_IDXES"; }
+  template <typename T>
+  return_t dispatch (const T &obj) { obj.collect_variation_indices (this); return hb_empty_t (); }
+  static return_t default_return_value () { return hb_empty_t (); }
+
+  hb_set_t *layout_variation_indices;
+  const hb_set_t *glyph_set;
+  const hb_map_t *gpos_lookups;
+  unsigned int debug_depth;
+
+  hb_collect_variation_indices_context_t (hb_set_t *layout_variation_indices_,
+					  const hb_set_t *glyph_set_,
+					  const hb_map_t *gpos_lookups_) :
+					layout_variation_indices (layout_variation_indices_),
+					glyph_set (glyph_set_),
+					gpos_lookups (gpos_lookups_),
+					debug_depth (0) {}
+};
+
 template<typename OutputArray>
 struct subset_offset_array_t
 {
@@ -699,6 +721,12 @@ struct FeatureParamsSize
       return_trace (true);
   }
 
+  bool subset (hb_subset_context_t *c) const
+  {
+    TRACE_SUBSET (this);
+    return_trace ((bool) c->serializer->embed (*this));
+  }
+
   HBUINT16	designSize;	/* Represents the design size in 720/inch
 				 * units (decipoints).  The design size entry
 				 * must be non-zero.  When there is a design
@@ -749,6 +777,12 @@ struct FeatureParamsStylisticSet
     return_trace (c->check_struct (this));
   }
 
+  bool subset (hb_subset_context_t *c) const
+  {
+    TRACE_SUBSET (this);
+    return_trace ((bool) c->serializer->embed (*this));
+  }
+
   HBUINT16	version;	/* (set to 0): This corresponds to a “minor”
 				 * version number. Additional data may be
 				 * added to the end of this Feature Parameters
@@ -780,6 +814,15 @@ struct FeatureParamsCharacterVariants
     TRACE_SANITIZE (this);
     return_trace (c->check_struct (this) &&
 		  characters.sanitize (c));
+  }
+
+  unsigned get_size () const
+  { return min_size + characters.len * HBUINT24::static_size; }
+
+  bool subset (hb_subset_context_t *c) const
+  {
+    TRACE_SUBSET (this);
+    return_trace ((bool) c->serializer->embed (*this));
   }
 
   HBUINT16	format;			/* Format number is set to 0. */
@@ -829,6 +872,19 @@ struct FeatureParams
     if ((tag & 0xFFFF0000u) == HB_TAG ('c','v','\0','\0')) /* cvXX */
       return_trace (u.characterVariants.sanitize (c));
     return_trace (true);
+  }
+
+  bool subset (hb_subset_context_t *c, const Tag* tag) const
+  {
+    TRACE_SUBSET (this);
+    if (!tag) return_trace (false);
+    if (*tag == HB_TAG ('s','i','z','e'))
+      return_trace (u.size.subset (c));
+    if ((*tag & 0xFFFF0000u) == HB_TAG ('s','s','\0','\0')) /* ssXX */
+      return_trace (u.stylisticSet.subset (c));
+    if ((*tag & 0xFFFF0000u) == HB_TAG ('c','v','\0','\0')) /* cvXX */
+      return_trace (u.characterVariants.subset (c));
+    return_trace (false);
   }
 
 #ifndef HB_NO_LAYOUT_FEATURE_PARAMS
@@ -889,7 +945,7 @@ struct Feature
     auto *out = c->serializer->start_embed (*this);
     if (unlikely (!out || !c->serializer->extend_min (out))) return_trace (false);
 
-    out->featureParams = 0; /* TODO(subset) FeatureParams. */
+    bool subset_featureParams = out->featureParams.serialize_subset (c, featureParams, this, tag);
 
     auto it =
     + hb_iter (lookupIndex)
@@ -898,7 +954,8 @@ struct Feature
     ;
 
     out->lookupIndex.serialize (c->serializer, l, it);
-    return_trace (bool (it) || (tag && *tag == HB_TAG ('p', 'r', 'e', 'f')));
+    return_trace (bool (it) || subset_featureParams
+                  || (tag && *tag == HB_TAG ('p', 'r', 'e', 'f')));
   }
 
   bool sanitize (hb_sanitize_context_t *c,
@@ -2440,6 +2497,41 @@ struct VariationStore
     return_trace (true);
   }
 
+  bool subset (hb_subset_context_t *c) const
+  {
+    TRACE_SUBSET (this);
+
+    VariationStore *varstore_prime = c->serializer->start_embed<VariationStore> ();
+    if (unlikely (!varstore_prime)) return_trace (false);
+
+    const hb_set_t *variation_indices = c->plan->layout_variation_indices;
+    if (variation_indices->is_empty ()) return_trace (false);
+
+    hb_vector_t<hb_inc_bimap_t> inner_maps;
+    inner_maps.resize ((unsigned) dataSets.len);
+    for (unsigned i = 0; i < inner_maps.length; i++)
+      inner_maps[i].init ();
+
+    for (unsigned idx : c->plan->layout_variation_indices->iter ())
+    {
+      uint16_t major = idx >> 16;
+      uint16_t minor = idx & 0xFFFF;
+
+      if (major >= inner_maps.length)
+      {
+        for (unsigned i = 0; i < inner_maps.length; i++)
+          inner_maps[i].fini ();
+        return_trace (false);
+      }
+      inner_maps[major].add (minor);
+    }
+    varstore_prime->serialize (c->serializer, this, inner_maps.as_array ());
+
+    for (unsigned i = 0; i < inner_maps.length; i++)
+      inner_maps[i].fini ();
+    return_trace (bool (varstore_prime->dataSets));
+  }
+
   unsigned int get_region_index_count (unsigned int ivs) const
   { return (this+dataSets[ivs]).get_region_index_count (); }
 
@@ -2910,10 +3002,30 @@ struct VariationDevice
   hb_position_t get_y_delta (hb_font_t *font, const VariationStore &store) const
   { return font->em_scalef_y (get_delta (font, store)); }
 
-  VariationDevice* copy (hb_serialize_context_t *c) const
+  VariationDevice* copy (hb_serialize_context_t *c, const hb_map_t *layout_variation_idx_map) const
   {
     TRACE_SERIALIZE (this);
-    return_trace (c->embed<VariationDevice> (this));
+    auto snap = c->snapshot ();
+    auto *out = c->embed (this);
+    if (unlikely (!out)) return_trace (nullptr);
+    if (!layout_variation_idx_map || layout_variation_idx_map->is_empty ()) return_trace (out);
+
+    unsigned org_idx = (outerIndex << 16) + innerIndex;
+    if (!layout_variation_idx_map->has (org_idx))
+    {
+      c->revert (snap);
+      return_trace (nullptr);
+    }
+    unsigned new_idx = layout_variation_idx_map->get (org_idx);
+    out->outerIndex = new_idx >> 16;
+    out->innerIndex = new_idx & 0xFFFF;
+    return_trace (out);
+  }
+
+  void record_variation_index (hb_set_t *layout_variation_indices) const
+  {
+    unsigned var_idx = (outerIndex << 16) + innerIndex;
+    layout_variation_indices->add (var_idx);
   }
 
   bool sanitize (hb_sanitize_context_t *c) const
@@ -3001,7 +3113,7 @@ struct Device
     }
   }
 
-  Device* copy (hb_serialize_context_t *c) const
+  Device* copy (hb_serialize_context_t *c, const hb_map_t *layout_variation_idx_map=nullptr) const
   {
     TRACE_SERIALIZE (this);
     switch (u.b.format) {
@@ -3013,10 +3125,29 @@ struct Device
 #endif
 #ifndef HB_NO_VAR
     case 0x8000:
-      return_trace (reinterpret_cast<Device *> (u.variation.copy (c)));
+      return_trace (reinterpret_cast<Device *> (u.variation.copy (c, layout_variation_idx_map)));
 #endif
     default:
       return_trace (nullptr);
+    }
+  }
+
+  void collect_variation_indices (hb_set_t *layout_variation_indices) const
+  {
+    switch (u.b.format) {
+#ifndef HB_NO_HINTING
+    case 1:
+    case 2:
+    case 3:
+      return;
+#endif
+#ifndef HB_NO_VAR
+    case 0x8000:
+      u.variation.record_variation_index (layout_variation_indices);
+      return;
+#endif
+    default:
+      return;
     }
   }
 

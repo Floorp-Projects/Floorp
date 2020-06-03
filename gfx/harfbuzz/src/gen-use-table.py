@@ -1,22 +1,23 @@
 #!/usr/bin/env python3
-# flake8: noqa
+# flake8: noqa: F821
 
-import io
-import sys
+"""usage: ./gen-use-table.py IndicSyllabicCategory.txt IndicPositionalCategory.txt UnicodeData.txt Blocks.txt
 
-if len (sys.argv) != 5:
-	print ("""usage: ./gen-use-table.py IndicSyllabicCategory.txt IndicPositionalCategory.txt UnicodeData.txt Blocks.txt
-
-Input file, as of Unicode 12:
+Input file:
 * https://unicode.org/Public/UCD/latest/ucd/IndicSyllabicCategory.txt
 * https://unicode.org/Public/UCD/latest/ucd/IndicPositionalCategory.txt
 * https://unicode.org/Public/UCD/latest/ucd/UnicodeData.txt
-* https://unicode.org/Public/UCD/latest/ucd/Blocks.txt""", file=sys.stderr)
-	sys.exit (1)
+* https://unicode.org/Public/UCD/latest/ucd/Blocks.txt
+"""
+
+import sys
+
+if len (sys.argv) != 5:
+	sys.exit (__doc__)
 
 BLACKLISTED_BLOCKS = ["Thai", "Lao"]
 
-files = [io.open (x, encoding='utf-8') for x in sys.argv[1:]]
+files = [open (x, encoding='utf-8') for x in sys.argv[1:]]
 
 headers = [[f.readline () for i in range (2)] for j,f in enumerate(files) if j != 2]
 headers.append (["UnicodeData.txt does not have a header."])
@@ -142,6 +143,7 @@ property_names = [
 	'Top',
 	'Bottom',
 	'Top_And_Bottom',
+	'Top_And_Bottom_And_Left',
 	'Top_And_Right',
 	'Top_And_Left',
 	'Top_And_Left_And_Right',
@@ -297,9 +299,9 @@ use_positions = {
 	},
 	'M': {
 		'Abv': [Top],
-		'Blw': [Bottom, Bottom_And_Left],
+		'Blw': [Bottom, Bottom_And_Left, Bottom_And_Right],
 		'Pst': [Right],
-		'Pre': [Left],
+		'Pre': [Left, Top_And_Bottom_And_Left],
 	},
 	'CM': {
 		'Abv': [Top],
@@ -339,11 +341,11 @@ def map_to_use(data):
 
 		# Resolve Indic_Syllabic_Category
 
-		# TODO: These don't have UISC assigned in Unicode 12.0, but have UIPC
+		# TODO: These don't have UISC assigned in Unicode 13.0.0, but have UIPC
 		if 0x1CE2 <= U <= 0x1CE8: UISC = Cantillation_Mark
 
 		# Tibetan:
-		# TODO: These don't have UISC assigned in Unicode 12.0, but have UIPC
+		# TODO: These don't have UISC assigned in Unicode 13.0.0, but have UIPC
 		if 0x0F18 <= U <= 0x0F19 or 0x0F3E <= U <= 0x0F3F: UISC = Vowel_Dependent
 		if 0x0F86 <= U <= 0x0F87: UISC = Tone_Mark
 		# Overrides to allow NFC order matching syllable
@@ -376,24 +378,21 @@ def map_to_use(data):
 
 		# Resolve Indic_Positional_Category
 
-		# TODO: These should die, but have UIPC in Unicode 12.0
+		# TODO: These should die, but have UIPC in Unicode 13.0.0
 		if U in [0x953, 0x954]: UIPC = Not_Applicable
-
-		# TODO: In USE's override list but not in Unicode 12.0
-		if U == 0x103C: UIPC = Left
 
 		# TODO: https://github.com/harfbuzz/harfbuzz/pull/2012
 		if U == 0x1C29: UIPC = Left
 
-		# TODO: These are not in USE's override list that we have, nor are they in Unicode 12.0
+		# TODO: These are not in USE's override list that we have, nor are they in Unicode 13.0.0
 		if 0xA926 <= U <= 0xA92A: UIPC = Top
 		# TODO: https://github.com/harfbuzz/harfbuzz/pull/1037
 		#  and https://github.com/harfbuzz/harfbuzz/issues/1631
 		if U in [0x11302, 0x11303, 0x114C1]: UIPC = Top
-		if U == 0x1171E: UIPC = Left
 		if 0x1CF8 <= U <= 0x1CF9: UIPC = Top
 
 		assert (UIPC in [Not_Applicable, Visual_Order_Left] or
+			USE == 'R' or
 			USE in use_positions), "%s %s %s %s %s" % (hex(U), UIPC, USE, UISC, UGC)
 
 		pos_mapping = use_positions.get(USE, None)
