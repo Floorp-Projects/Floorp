@@ -40,13 +40,6 @@ XPCOMUtils.defineLazyPreferenceGetter(
   false
 );
 
-XPCOMUtils.defineLazyPreferenceGetter(
-  this,
-  "geoSpecificDefaults",
-  "browser.search.geoSpecificDefaults",
-  false
-);
-
 const log = console.createInstance({
   prefix: "Region.jsm",
   maxLogLevel: loggingEnabled ? "All" : "Warn",
@@ -106,9 +99,6 @@ class RegionDetector {
    *   The country_code defining users current region.
    */
   async _fetchRegion() {
-    if (!geoSpecificDefaults) {
-      return null;
-    }
     let startTime = Date.now();
     let telemetryResult = this.TELEMETRY.SUCCESS;
     let result = null;
@@ -247,9 +237,14 @@ class RegionDetector {
       }
     }
     let url = Services.urlFormatter.formatURLPref("browser.region.network.url");
-    let req = await fetch(url, fetchOpts);
+    log.info("_getRegion url is: ", url);
+
+    if (!url) {
+      return null;
+    }
 
     try {
+      let req = await fetch(url, fetchOpts);
       let res = await req.json();
       this.fetchController = null;
       log.info("_getRegion returning ", res.country_code);
