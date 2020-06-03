@@ -152,6 +152,7 @@ static bool CanInlineCrossRealm(InlinableNative native) {
     case InlinableNative::IntrinsicGuardToSetIterator:
     case InlinableNative::IntrinsicGuardToStringIterator:
     case InlinableNative::IntrinsicGuardToRegExpStringIterator:
+    case InlinableNative::IntrinsicGuardToWrapForValidIterator:
     case InlinableNative::IntrinsicObjectHasPrototype:
     case InlinableNative::IntrinsicFinishBoundFunctionInit:
     case InlinableNative::IntrinsicIsPackedArray:
@@ -574,6 +575,8 @@ IonBuilder::InliningResult IonBuilder::inlineNativeCall(CallInfo& callInfo,
       return inlineGuardToClass(callInfo, &StringIteratorObject::class_);
     case InlinableNative::IntrinsicGuardToRegExpStringIterator:
       return inlineGuardToClass(callInfo, &RegExpStringIteratorObject::class_);
+    case InlinableNative::IntrinsicGuardToWrapForValidIterator:
+      return inlineGuardToClass(callInfo, &WrapForValidIteratorObject::class_);
     case InlinableNative::IntrinsicObjectHasPrototype:
       return inlineObjectHasPrototype(callInfo);
     case InlinableNative::IntrinsicFinishBoundFunctionInit:
