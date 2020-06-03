@@ -13,7 +13,6 @@
 #include "nsThreadUtils.h"
 #include "PrioritizedEventQueue.h"
 #include "ThreadEventTarget.h"
-#include "mozilla/TaskController.h"
 
 using namespace mozilla;
 
@@ -47,14 +46,10 @@ class ThreadEventQueue<InnerQueueT>::NestedSink : public ThreadTargetSink {
 };
 
 template <class InnerQueueT>
-ThreadEventQueue<InnerQueueT>::ThreadEventQueue(UniquePtr<InnerQueueT> aQueue,
-                                                bool aIsMainThread)
+ThreadEventQueue<InnerQueueT>::ThreadEventQueue(UniquePtr<InnerQueueT> aQueue)
     : mBaseQueue(std::move(aQueue)),
       mLock("ThreadEventQueue"),
       mEventsAvailable(mLock, "EventsAvail") {
-  if (aIsMainThread) {
-    TaskController::Get()->SetConditionVariable(&mEventsAvailable);
-  }
   static_assert(std::is_base_of<AbstractEventQueue, InnerQueueT>::value,
                 "InnerQueueT must be an AbstractEventQueue subclass");
 }
@@ -91,7 +86,7 @@ bool ThreadEventQueue<InnerQueueT>::PutEventInternal(
         if (prio == nsIRunnablePriority::PRIORITY_HIGH) {
           aPriority = EventQueuePriority::High;
         } else if (prio == nsIRunnablePriority::PRIORITY_INPUT_HIGH) {
-          aPriority = EventQueuePriority::InputHigh;
+          aPriority = EventQueuePriority::Input;
         } else if (prio == nsIRunnablePriority::PRIORITY_MEDIUMHIGH) {
           aPriority = EventQueuePriority::MediumHigh;
         } else if (prio == nsIRunnablePriority::PRIORITY_DEFERRED_TIMERS) {
@@ -377,9 +372,6 @@ template <class InnerQueueT>
 void ThreadEventQueue<InnerQueueT>::SetObserver(nsIThreadObserver* aObserver) {
   MutexAutoLock lock(mLock);
   mObserver = aObserver;
-  if (NS_IsMainThread()) {
-    TaskController::Get()->SetThreadObserver(aObserver);
-  }
 }
 
 namespace mozilla {
