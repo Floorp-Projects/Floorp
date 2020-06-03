@@ -301,6 +301,7 @@ function objectMatches(object, fields) {
 
 add_task(async function head_initialize() {
   Services.prefs.setStringPref("extensions.formautofill.available", "on");
+  Services.prefs.setBoolPref("extensions.experiments.enabled", true);
   Services.prefs.setBoolPref(
     "extensions.formautofill.creditCards.available",
     true
@@ -315,6 +316,7 @@ add_task(async function head_initialize() {
   // Clean up after every test.
   registerCleanupFunction(function head_cleanup() {
     Services.prefs.clearUserPref("extensions.formautofill.available");
+    Services.prefs.clearUserPref("extensions.experiments.enabled");
     Services.prefs.clearUserPref(
       "extensions.formautofill.creditCards.available"
     );
