@@ -18,7 +18,7 @@ def getChunk(things, chunks, thisChunk):
     possibleThings = copy(things)
     nThings = len(possibleThings)
     for c in range(1, chunks + 1):
-        n = nThings / chunks
+        n = nThings // chunks
         # If our things aren't evenly divisible by the number of chunks
         # we need to append one more onto some of them
         if c <= (nThings % chunks):
