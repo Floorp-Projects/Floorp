@@ -230,7 +230,12 @@ def get_subgraph(target_task_graph, removed_tasks, replaced_tasks, label_to_task
                 if label in label_to_taskid and label not in omit
             })
 
-        task.task = resolve_task_references(task.label, task.task, named_task_dependencies)
+        task.task = resolve_task_references(
+            task.label,
+            task.task,
+            task_id=task.task_id,
+            dependencies=named_task_dependencies,
+        )
         deps = task.task.setdefault('dependencies', [])
         deps.extend(sorted(named_task_dependencies.itervalues()))
         tasks_by_taskid[task.task_id] = task
