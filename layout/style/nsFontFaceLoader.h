@@ -35,8 +35,6 @@ class nsFontFaceLoader final : public nsIStreamLoaderObserver,
   NS_DECL_NSISTREAMLOADEROBSERVER
   NS_DECL_NSIREQUESTOBSERVER
 
-  // initiate the load
-  nsresult Init();
   // cancel the load and remove its reference to mFontFaceSet
   void Cancel();
 
