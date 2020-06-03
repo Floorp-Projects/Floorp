@@ -691,14 +691,15 @@ label[for="tab-cryptominer"]:hover ~ #highlight-hover {
 .monitor-breaches-wrapper {
   display: grid;
   grid-area: 2 / 1 / 2 / 7;
-  grid: 1fr 80px auto / repeat(6, 1fr);
+  grid: 1fr auto / repeat(6, 1fr);
+  margin-bottom: 24px;
 }
 
 .monitor-partial-breaches-wrapper {
   display: grid;
   grid-area: 2 / 1 / 2 / 8;
   grid-template-columns: repeat(7, 1fr);
-  margin-block: 30px;
+  margin-block: 24px;
 }
 
 .monitor-partial-breaches-header {
@@ -719,19 +720,20 @@ label[for="tab-cryptominer"]:hover ~ #highlight-hover {
   margin-inline-start: 15px;
   border-radius: 4px;
   height: 25px;
-  box-shadow: 0 0 0 1px #cdcdd4;
+  box-shadow: 0 0 0 1px rgba(202, 201, 213, 0.5);
   border: none;
-  background: linear-gradient(-90deg, #ff9100 0%, #f10366 50%, #6173ff 100%);
+  background: linear-gradient(-45deg, #0250BB 0%, #9059FF 100%);
   direction: rtl;
 }
 
 .progress-bar:dir(rtl) {
   direction: ltr;
-  background: linear-gradient(-90deg, #6173ff 0%, #f10366 50%, #ff9100 100%);
+  background: linear-gradient(-45deg, #0250BB 0%, #9059FF 100%);
 }
 
 .progress-bar::-moz-progress-bar {
   background: #FFFFFF;
+  border-radius: 0 4px 4px 0;
 }
 
 .monitor-partial-breaches-motivation-text {
@@ -742,21 +744,25 @@ label[for="tab-cryptominer"]:hover ~ #highlight-hover {
 }
 
 .monitor-partial-breaches-motivation-wrapper {
-  grid-area: 1 / 1 / 1 / 5;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  grid-area: 2 / 1 / 2 / 8;
 }
 
 #monitor-partial-breaches-link {
-  margin-top: 3px;
+  margin-block: auto;
   grid-area: 1 / 5 / 1 / 7;
 }
 
 #monitor-partial-breaches-motivation-title {
-  display: block;
   font-weight: 700;
+  grid-area: 1 / 1 / 1 / 7;
+  margin-inline-end: 15px;
 }
 
 #monitor-partial-breaches-motivation-desc {
-  display: block;
+  grid-area: 1 / 1 / 1 / 5;
+  margin-block: auto;
 }
 
 .monitor-breaches-header {
@@ -814,6 +820,11 @@ label[for="tab-cryptominer"]:hover ~ #highlight-hover {
   display: grid;
   grid: 1fr auto / repeat(7, 1fr);
   align-items: center;
+}
+
+.monitor-card .card-body {
+  padding-top: 0;
+  border-block-start: none;
 }
 
 .monitor-block {
