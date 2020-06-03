@@ -11,6 +11,7 @@
 #include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/Telemetry.h"
 
 #include <winspool.h>
 
@@ -125,6 +126,65 @@ NS_IMETHODIMP nsDeviceContextSpecWin::Init(nsIWidget* aWidget,
                                            bool aIsPrintPreview) {
   mPrintSettings = aPrintSettings;
 
+  // Get the Printer Name to be used and output format.
+  nsAutoString printerName;
+  if (mPrintSettings) {
+    mPrintSettings->GetOutputFormat(&mOutputFormat);
+    mPrintSettings->GetPrinterName(printerName);
+  }
+
+  // If there is no name then use the default printer
+  if (printerName.IsEmpty()) {
+    GlobalPrinters::GetInstance()->GetDefaultPrinterName(printerName);
+  }
+
+  // Gather telemetry on the print target type.
+  //
+  // Unfortunately, if we're not using our own internal save-to-pdf codepaths,
+  // there isn't a good way to determine whether a print is going to be to a
+  // physical printer or to a file or some other non-physical output. We do our
+  // best by checking for what seems to be the most common save-to-PDF virtual
+  // printers.
+  //
+  // We use StringBeginsWith below, since printer names are often followed by a
+  // version number or other product differentiating string.  (True for doPDF,
+  // novaPDF, PDF-XChange and Soda PDF, for example.)
+  if (mOutputFormat == nsIPrintSettings::kOutputFormatPDF) {
+    Telemetry::ScalarAdd(Telemetry::ScalarID::PRINTING_TARGET_TYPE,
+                         NS_LITERAL_STRING("pdf_file"), 1);
+  } else if (StringBeginsWith(printerName,
+                              NS_LITERAL_STRING("Microsoft Print to PDF")) ||
+             StringBeginsWith(printerName, NS_LITERAL_STRING("Adobe PDF")) ||
+             StringBeginsWith(printerName,
+                              NS_LITERAL_STRING("Bullzip PDF Printer")) ||
+             StringBeginsWith(printerName,
+                              NS_LITERAL_STRING("CutePDF Writer")) ||
+             StringBeginsWith(printerName, NS_LITERAL_STRING("doPDF")) ||
+             StringBeginsWith(printerName,
+                              NS_LITERAL_STRING("Foxit Reader PDF Printer")) ||
+             StringBeginsWith(printerName,
+                              NS_LITERAL_STRING("Nitro PDF Creator")) ||
+             StringBeginsWith(printerName, NS_LITERAL_STRING("novaPDF")) ||
+             StringBeginsWith(printerName, NS_LITERAL_STRING("PDF-XChange")) ||
+             StringBeginsWith(printerName, NS_LITERAL_STRING("PDF24 PDF")) ||
+             StringBeginsWith(printerName, NS_LITERAL_STRING("PDFCreator")) ||
+             StringBeginsWith(printerName, NS_LITERAL_STRING("PrimoPDF")) ||
+             StringBeginsWith(printerName, NS_LITERAL_STRING("Soda PDF")) ||
+             StringBeginsWith(printerName,
+                              NS_LITERAL_STRING("Solid PDF Creator")) ||
+             StringBeginsWith(
+                 printerName,
+                 NS_LITERAL_STRING("Universal Document Converter"))) {
+    Telemetry::ScalarAdd(Telemetry::ScalarID::PRINTING_TARGET_TYPE,
+                         NS_LITERAL_STRING("pdf_file"), 1);
+  } else if (printerName.EqualsLiteral("Microsoft XPS Document Writer")) {
+    Telemetry::ScalarAdd(Telemetry::ScalarID::PRINTING_TARGET_TYPE,
+                         NS_LITERAL_STRING("xps_file"), 1);
+  } else {
+    Telemetry::ScalarAdd(Telemetry::ScalarID::PRINTING_TARGET_TYPE,
+                         NS_LITERAL_STRING("unknown"), 1);
+  }
+
   nsresult rv = NS_ERROR_GFX_PRINTER_NO_PRINTER_AVAILABLE;
   if (aPrintSettings) {
 #ifdef MOZ_ENABLE_SKIA_PDF
@@ -137,7 +197,6 @@ NS_IMETHODIMP nsDeviceContextSpecWin::Init(nsIWidget* aWidget,
 
     // If we're in the child and printing via the parent or we're printing to
     // PDF we only need information from the print settings.
-    mPrintSettings->GetOutputFormat(&mOutputFormat);
     if ((XRE_IsContentProcess() &&
          Preferences::GetBool("print.print_via_parent")) ||
         mOutputFormat == nsIPrintSettings::kOutputFormatPDF) {
@@ -179,17 +238,6 @@ NS_IMETHODIMP nsDeviceContextSpecWin::Init(nsIWidget* aWidget,
     }
   } else {
     PR_PL(("***** nsDeviceContextSpecWin::Init - aPrintSettingswas NULL!\n"));
-  }
-
-  // Get the Printer Name to be used and output format.
-  nsAutoString printerName;
-  if (mPrintSettings) {
-    mPrintSettings->GetPrinterName(printerName);
-  }
-
-  // If there is no name then use the default printer
-  if (printerName.IsEmpty()) {
-    GlobalPrinters::GetInstance()->GetDefaultPrinterName(printerName);
   }
 
   if (printerName.IsEmpty()) {
