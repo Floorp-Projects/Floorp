@@ -173,6 +173,10 @@ nsresult ServiceWorkerPrivateImpl::Initialize() {
   // contexts.
   mRemoteWorkerData.partitionedPrincipalInfo() = principalInfo;
 
+  // ServiceWorkers run as first-party, no storage-access permission needed.
+  mRemoteWorkerData.useRegularPrincipal() = true;
+  mRemoteWorkerData.hasStorageAccessPermissionGranted() = false;
+
   rv = uri->GetHost(mRemoteWorkerData.domain());
   NS_ENSURE_SUCCESS(rv, rv);
   mRemoteWorkerData.isSecureContext() = true;
