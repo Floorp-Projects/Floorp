@@ -85,7 +85,7 @@ class Frame extends Component {
   }
 
   componentWillUnmount() {
-    if (typeof this.unsubscribeSourceMapService === "function") {
+    if (this.unsubscribeSourceMapService) {
       this.unsubscribeSourceMapService();
     }
   }

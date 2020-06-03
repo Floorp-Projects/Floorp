@@ -26,6 +26,8 @@ add_task(async function() {
         resolve(args);
       }
       count += 1;
+
+      return () => {};
     });
   });
 

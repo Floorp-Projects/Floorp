@@ -1361,7 +1361,7 @@ function SelectorView(tree, selectorInfo) {
       column: rule.column,
     };
     this.sourceMapURLService = this.tree.inspector.toolbox.sourceMapURLService;
-    this.sourceMapURLService.subscribe(
+    this._unsubscribeCallback = this.sourceMapURLService.subscribe(
       this.generatedLocation.href,
       this.generatedLocation.line,
       this.generatedLocation.column,
@@ -1529,15 +1529,8 @@ SelectorView.prototype = {
    * Destroy this selector view, removing event listeners
    */
   destroy: function() {
-    const rule = this.selectorInfo.rule;
-    if (rule?.parentStyleSheet && rule.type != ELEMENT_STYLE) {
-      const url = rule.parentStyleSheet.href || rule.parentStyleSheet.nodeHref;
-      this.sourceMapURLService.unsubscribe(
-        url,
-        rule.line,
-        rule.column,
-        this._updateLocation
-      );
+    if (this._unsubscribeCallback) {
+      this._unsubscribeCallback();
     }
   },
 };

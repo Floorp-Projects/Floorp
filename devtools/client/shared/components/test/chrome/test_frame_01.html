@@ -302,8 +302,7 @@ window.onload = async function () {
       subscribe: function (url, line, column, callback) {
         // Resolve immediately.
         callback(true, resolvedLocation.sourceUrl, resolvedLocation.line);
-      },
-      unsubscribe: function (url, line, column, callback) {
+        return () => {};
       },
     };
     await checkFrameComponent({

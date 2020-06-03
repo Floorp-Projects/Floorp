@@ -52,8 +52,8 @@ window.onload = function() {
 	        const newLine = Number(line.toString().repeat(2));
 	        // Resolve immediately.
 	        callback(true, "https://bugzilla.mozilla.org/original.js", newLine, column);
+          return () => {};
 	      },
-        unsubscribe: function (url, line, column, callback) {},
       },
     };
 
@@ -120,8 +120,9 @@ window.onload = function() {
             const newLine = Number(line.toString().repeat(2));
             callback(true, "http://myfile.com/react.js", newLine, column);
           }, sourcemapTimeout)
+
+          return () => {};
         },
-        unsubscribe: function (url, line, column, callback) {},
       },
     };
 
@@ -212,13 +213,13 @@ window.onload = function() {
           // Don't call the callback for the second frame to simulate a flaky sourcemap
           // service request.
           if (line === 2) {
-            return;
+            return () => {};
           }
 
           const newLine = Number(line.toString().repeat(2));
           callback(true, `http://myfile.com/file-${line}.js`, newLine, column);
+          return () => {};
         },
-        unsubscribe: function (url, line, column, callback) {},
       },
     };
 

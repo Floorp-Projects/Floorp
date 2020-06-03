@@ -147,9 +147,7 @@ class SmartTrace extends Component {
 
     if (this.sourceMapURLServiceUnsubscriptions) {
       this.sourceMapURLServiceUnsubscriptions.forEach(unsubscribe => {
-        if (typeof unsubscribe === "function") {
-          unsubscribe();
-        }
+        unsubscribe();
       });
     }
   }
