@@ -392,6 +392,10 @@ import_sibling_modules()
 
 # Register composite strategies.
 register_strategy('build', args=('skip-unless-schedules',))(Alias)
+register_strategy('build-optimized', args=(
+    Any('skip-unless-schedules', 'bugbug-reduced-fallback', split_args=tuple),
+    'backstop',
+))(All)
 register_strategy('build-fuzzing', args=('push-interval-10',))(Alias)
 register_strategy('test', args=(
     Any('skip-unless-schedules', 'bugbug-reduced-fallback', split_args=tuple),
