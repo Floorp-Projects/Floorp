@@ -1788,12 +1788,27 @@ class nsTArray_Impl
   void RemoveElementAt(index_type aIndex) { RemoveElementsAt(aIndex, 1); }
 
   // A variation on the RemoveElementAt that removes the last element.
-  void RemoveLastElement() { RemoveElementAt(Length() - 1); }
+  void RemoveLastElement() {
+    // This assertion is redundant, but produces a better error message than the
+    // release assertion within TruncateLength.
+    MOZ_ASSERT(!base_type::IsEmpty());
+    TruncateLength(Length() - 1);
+  }
 
   // Removes the last element of the array and returns a copy of it.
   [[nodiscard]] elem_type PopLastElement() {
-    elem_type elem = std::move(LastElement());
-    RemoveLastElement();
+    // This function intentionally does not call ElementsAt and calls
+    // TruncateLengthUnsafe directly to avoid multiple release checks for
+    // non-emptiness.
+    // This debug assertion is redundant, but produces a better error message
+    // than the release assertion below.
+    MOZ_ASSERT(!base_type::IsEmpty());
+    const size_type oldLen = Length();
+    if (MOZ_UNLIKELY(0 == oldLen)) {
+      InvalidArrayIndex_CRASH(1, 0);
+    }
+    elem_type elem = std::move(Elements()[oldLen - 1]);
+    TruncateLengthUnsafe(oldLen - 1);
     return elem;
   }
 
@@ -2132,19 +2147,19 @@ class nsTArray_Impl
   // removes elements from the array (see also RemoveElementsAt).
   // @param aNewLen The desired length of this array.
   // @return True if the operation succeeded; false otherwise.
-  // See also TruncateLength if the new length is guaranteed to be smaller than
-  // the old.
+  // See also TruncateLength for a more efficient variant if the new length is
+  // guaranteed to be smaller than the old.
  protected:
   template <typename ActualAlloc = Alloc>
   typename ActualAlloc::ResultType SetLength(size_type aNewLen) {
-    size_type oldLen = Length();
+    const size_type oldLen = Length();
     if (aNewLen > oldLen) {
       return ActualAlloc::ConvertBoolToResultType(
           InsertElementsAtInternal<ActualAlloc>(oldLen, aNewLen - oldLen) !=
           nullptr);
     }
 
-    TruncateLength(aNewLen);
+    TruncateLengthUnsafe(aNewLen);
     return ActualAlloc::ConvertBoolToResultType(true);
   }
 
@@ -2160,9 +2175,24 @@ class nsTArray_Impl
   // RemoveElementsAt).
   // @param aNewLen The desired length of this array.
   void TruncateLength(size_type aNewLen) {
-    size_type oldLen = Length();
-    MOZ_ASSERT(aNewLen <= oldLen, "caller should use SetLength instead");
-    RemoveElementsAt(aNewLen, oldLen - aNewLen);
+    // This assertion is redundant, but produces a better error message than the
+    // release assertion below.
+    MOZ_ASSERT(aNewLen <= Length(), "caller should use SetLength instead");
+
+    if (MOZ_UNLIKELY(aNewLen > Length())) {
+      InvalidArrayIndex_CRASH(aNewLen, Length());
+    }
+
+    TruncateLengthUnsafe(aNewLen);
+  }
+
+ private:
+  void TruncateLengthUnsafe(size_type aNewLen) {
+    const size_type oldLen = Length();
+    if (oldLen) {
+      DestructRange(aNewLen, oldLen - aNewLen);
+      base_type::mHdr->mLength = aNewLen;
+    }
   }
 
   // This method ensures that the array has length at least the given
