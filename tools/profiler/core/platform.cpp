@@ -4546,6 +4546,12 @@ void profiler_pause() {
     RacyFeatures::SetPaused();
     ActivePS::SetIsPaused(lock, true);
     ActivePS::Buffer(lock).AddEntry(ProfileBufferEntry::Pause(profiler_time()));
+
+#if defined(GP_OS_android)
+    if (ActivePS::FeatureJava(lock)) {
+      java::GeckoJavaSampler::Pause();
+    }
+#endif
   }
 
   // gPSMutex must be unlocked when we notify, to avoid potential deadlocks.
@@ -4569,6 +4575,12 @@ void profiler_resume() {
         ProfileBufferEntry::Resume(profiler_time()));
     ActivePS::SetIsPaused(lock, false);
     RacyFeatures::SetUnpaused();
+
+#if defined(GP_OS_android)
+    if (ActivePS::FeatureJava(lock)) {
+      java::GeckoJavaSampler::Unpause();
+    }
+#endif
   }
 
   // gPSMutex must be unlocked when we notify, to avoid potential deadlocks.
