@@ -1008,6 +1008,12 @@ static bool GetLabeledRunnableName(nsIRunnable* aEvent, nsACString& aName,
 
 mozilla::PerformanceCounter* nsThread::GetPerformanceCounter(
     nsIRunnable* aEvent) const {
+  return GetPerformanceCounterBase(aEvent);
+}
+
+// static
+mozilla::PerformanceCounter* nsThread::GetPerformanceCounterBase(
+    nsIRunnable* aEvent) {
   RefPtr<SchedulerGroup::Runnable> docRunnable = do_QueryObject(aEvent);
   if (docRunnable) {
     mozilla::dom::DocGroup* docGroup = docRunnable->DocGroup();

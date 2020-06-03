@@ -230,6 +230,9 @@ class nsThread : public nsIThreadInternal,
   virtual mozilla::PerformanceCounter* GetPerformanceCounter(
       nsIRunnable* aEvent) const;
 
+  static mozilla::PerformanceCounter* GetPerformanceCounterBase(
+      nsIRunnable* aEvent);
+
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
   // Returns the size of this object, its PRThread, and its shutdown contexts,
