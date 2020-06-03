@@ -45,7 +45,7 @@ def python_executable_version(exe):
 def _find_python_executable(major):
     if major not in (2, 3):
         raise ValueError('Expected a Python major version of 2 or 3')
-    min_versions = {2: '2.7.0', 3: '3.5.0'}
+    min_versions = {2: '2.7.0', 3: '3.6.0'}
 
     def ret(min_version=min_versions[major]):
         from mozfile import which
