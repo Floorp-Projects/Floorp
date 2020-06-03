@@ -152,7 +152,7 @@ class OpenH264Build(TransferMixin, VCSScript, TooltoolMixin):
             bits = '32'
         version = self.config['revision']
 
-        if sys.platform == 'linux2':
+        if sys.platform in ('linux2', 'linux'):
             if self.config.get('operating_system') == 'android':
                 return 'openh264-android-{arch}-{version}.zip'.format(
                     version=version, arch=self.config['arch'])

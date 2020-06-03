@@ -11,6 +11,7 @@ import os
 import posixpath
 import re
 import signal
+import six
 import subprocess
 import time
 import tempfile
@@ -254,19 +255,21 @@ class AndroidMixin(object):
             f.write('\n\nHost cpufreq/scaling_governor:\n')
             cpus = glob.glob('/sys/devices/system/cpu/cpu*/cpufreq/scaling_governor')
             for cpu in cpus:
-                out = subprocess.check_output(['cat', cpu])
+                out = subprocess.check_output(['cat', cpu], universal_newlines=True)
                 f.write("%s: %s" % (cpu, out))
 
             f.write('\n\nHost /proc/cpuinfo:\n')
-            out = subprocess.check_output(['cat', '/proc/cpuinfo'])
+            out = subprocess.check_output(['cat', '/proc/cpuinfo'],
+                                          universal_newlines=True)
             f.write(out)
 
             f.write('\n\nHost /proc/meminfo:\n')
-            out = subprocess.check_output(['cat', '/proc/meminfo'])
+            out = subprocess.check_output(['cat', '/proc/meminfo'],
+                                          universal_newlines=True)
             f.write(out)
 
             f.write('\n\nHost process list:\n')
-            out = subprocess.check_output(['ps', '-ef'])
+            out = subprocess.check_output(['ps', '-ef'], universal_newlines=True)
             f.write(out)
 
             f.write('\n\nDevice /proc/cpuinfo:\n')
@@ -456,6 +459,7 @@ class AndroidMixin(object):
 
     def kill_processes(self, process_name):
         self.info("Killing every process called %s" % process_name)
+        process_name = six.ensure_binary(process_name)
         out = subprocess.check_output(['ps', '-A'])
         for line in out.splitlines():
             if process_name in line:
