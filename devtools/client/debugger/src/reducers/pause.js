@@ -285,7 +285,7 @@ function update(
 
     case "CONNECT":
       return {
-        ...initialPauseState(action.mainThread.actor),
+        ...initialPauseState(action.mainThreadActorID),
       };
 
     case "PAUSE_ON_EXCEPTIONS": {

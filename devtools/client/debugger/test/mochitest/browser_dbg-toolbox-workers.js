@@ -20,7 +20,7 @@ add_task(async function() {
   await pushPref("dom.serviceWorkers.testing.enabled", true);
 
   const ToolboxTask = await initBrowserToolboxTask();
-  await ToolboxTask.importFunctions({ getThreads, waitUntil });
+  await ToolboxTask.importFunctions({ waitUntil });
 
   addTab(EXAMPLE_URL + "doc-all-workers.html");
 

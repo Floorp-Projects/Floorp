@@ -201,7 +201,8 @@ class DebuggerPanel {
   }
 
   async selectWorker(workerTargetFront) {
-    const threadActorID = workerTargetFront.threadFront.actorID;
+    const threadActorID = workerTargetFront.threadFront?.actorID;
+
     const isThreadAvailable = this._selectors
       .getThreads(this._getState())
       .find(x => x.actor === threadActorID);

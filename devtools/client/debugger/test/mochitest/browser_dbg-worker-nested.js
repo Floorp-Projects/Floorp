@@ -6,6 +6,7 @@
 add_task(async function() {
   const dbg = await initDebugger("doc-nested-worker.html");
 
-  const workers = await getThreads(dbg);
+  await waitForThreadCount(dbg, 2);
+  const workers = dbg.selectors.getThreads();
   ok(workers.length == 2, "Got two workers");
 });
