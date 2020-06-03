@@ -148,7 +148,7 @@ set_config('MOZ_PGO', depends('MOZ_PGO')(lambda x: bool(x)))
 wine = check_prog(
     'WINE', ['wine64', 'wine'], allow_missing=True,
     when=depends(target, host)(
-        lambda t, h: t.kernel == 'WINNT' and h.kernel == 'Linux'))
+        lambda t, h: t.kernel == 'WINNT' and h.kernel != 'WINNT'))
 
 
 include('build/moz.configure/toolchain.configure',
