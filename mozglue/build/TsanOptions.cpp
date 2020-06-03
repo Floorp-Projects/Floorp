@@ -253,6 +253,10 @@ extern "C" const char* __tsan_default_suppressions() {
          "race:EnsurePerformanceCounter\n"
          "race:GetPerformanceCounter\n"
 
+         // Bug 1642884
+         "race:Axis::UpdateWithTouchAtDevicePoint\n"
+         "race:AsyncPanZoomController::RequestContentRepaint\n"
+
          // ~GLContextGLX unlocks a libGL mutex that cannot be seen
          // by TSan because libGL is not instrumented.
          "mutex:GLContextGLX::~GLContextGLX\n"
