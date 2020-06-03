@@ -39,8 +39,8 @@ import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.nav
-import org.mozilla.fenix.share.listadapters.AppShareOption
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
+import org.mozilla.fenix.share.listadapters.AppShareOption
 
 @RunWith(FenixRobolectricTestRunner::class)
 @ExperimentalCoroutinesApi
@@ -57,7 +57,7 @@ class ShareControllerTest {
         TabData("title0", "url0"),
         TabData("title1", "url1")
     )
-    private val textToShare = "${shareData[0].title}\n${shareData[0].url}\n\n${shareData[1].title}\n${shareData[1].url}"
+    private val textToShare = "${shareData[0].url}\n\n${shareData[1].url}"
     private val testCoroutineScope = TestCoroutineScope()
     private val sendTabUseCases = mockk<SendTabUseCases>(relaxed = true)
     private val snackbar = mockk<FenixSnackbar>(relaxed = true)

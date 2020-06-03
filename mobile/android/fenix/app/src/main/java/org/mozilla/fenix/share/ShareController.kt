@@ -172,7 +172,7 @@ class DefaultShareController(
 
     @VisibleForTesting
     fun getShareText() = shareData.joinToString("\n\n") { data ->
-        listOfNotNull(data.title, data.url).joinToString("\n")
+        data.url.orEmpty()
     }
 
     // Navigation between app fragments uses ShareTab as arguments. SendTabUseCases uses TabData.
