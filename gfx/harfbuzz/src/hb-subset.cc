@@ -89,7 +89,7 @@ _subset (hb_subset_plan_t *plan)
   retry:
     hb_serialize_context_t serializer ((void *) buf, buf_size);
     serializer.start_serialize<TableType> ();
-    hb_subset_context_t c (source_blob, plan, &serializer);
+    hb_subset_context_t c (source_blob, plan, &serializer, tag);
     bool needed = table->subset (&c);
     if (serializer.ran_out_of_room)
     {

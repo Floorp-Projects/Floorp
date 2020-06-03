@@ -53,6 +53,9 @@ struct hb_subset_plan_t
   // name_languages we would like to retain
   hb_set_t *name_languages;
 
+  //glyph ids requested to retain
+  hb_set_t *glyphs_requested;
+
   // Tables which should be dropped.
   hb_set_t *drop_tables;
 
@@ -78,6 +81,11 @@ struct hb_subset_plan_t
   //active features we'd like to retain
   hb_map_t *gsub_features;
   hb_map_t *gpos_features;
+
+  //The set of layout item variation store delta set indices to be retained
+  hb_set_t *layout_variation_indices;
+  //Old -> New layout item variation store delta set index mapping
+  hb_map_t *layout_variation_idx_map;
 
  public:
 
