@@ -50,7 +50,6 @@ function checkVerticallyCentered(dialog) {
 }
 
 function reset() {
-    document.body.style.width = "auto";
     if (dialog.open)
         dialog.close();
     dialog.remove();
@@ -128,6 +127,8 @@ test(function() {
     dialog.showModal();
     checkVerticallyCentered(dialog);
 
+    // Set back original value to 'width'.
+    document.body.style.width = 'auto';
 }, "The dialog should be centered regardless of the presence of a horizontal scrollbar.");
 
 test(function() {
