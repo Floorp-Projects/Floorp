@@ -59,10 +59,13 @@ void js::Mutex::preUnlockChecks() {
   owningThread_.reset();
 }
 
+bool js::Mutex::isHeld() const { return owningThread_.isSome(); }
+
 bool js::Mutex::ownedByCurrentThread() const {
   // First determine this using the owningThread_ property, then check it via
   // the mutex stack.
-  bool check = ThreadId::ThisThreadId() == owningThread_.value();
+  bool check = owningThread_.isSome() &&
+               ThreadId::ThisThreadId() == owningThread_.value();
 
   Mutex* stack = HeldMutexStack.get();
 
