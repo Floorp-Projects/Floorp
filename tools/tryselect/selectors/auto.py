@@ -36,6 +36,7 @@ def run(message='{msg}', push=True, closed_tree=False, try_config=None):
         'parameters': {
             'optimize_target_tasks': True,
             'target_tasks_method': 'try_auto',
+            'test_manifest_loader': 'bugbug',
             'try_mode': 'try_auto',
             'try_task_config': try_config or {},
         }
