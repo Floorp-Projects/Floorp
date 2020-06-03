@@ -15,6 +15,7 @@ import mozilla.components.concept.storage.PageObservation
 import mozilla.components.concept.storage.PageVisit
 import mozilla.components.concept.storage.SearchResult
 import mozilla.components.concept.storage.RedirectSource
+import mozilla.components.concept.storage.TopFrecentSiteInfo
 import mozilla.components.concept.storage.VisitInfo
 import mozilla.components.concept.storage.VisitType
 import mozilla.components.concept.sync.SyncAuthInfo
@@ -94,6 +95,12 @@ open class PlacesHistoryStorage(context: Context) : PlacesStorage(context), Hist
     override suspend fun getVisitsPaginated(offset: Long, count: Long, excludeTypes: List<VisitType>): List<VisitInfo> {
         return withContext(scope.coroutineContext) {
             places.reader().getVisitPage(offset, count, excludeTypes.map { it.into() }).map { it.into() }
+        }
+    }
+
+    override suspend fun getTopFrecentSites(numItems: Int): List<TopFrecentSiteInfo> {
+        return withContext(scope.coroutineContext) {
+            places.reader().getTopFrecentSiteInfos(numItems).map { it.into() }
         }
     }
 

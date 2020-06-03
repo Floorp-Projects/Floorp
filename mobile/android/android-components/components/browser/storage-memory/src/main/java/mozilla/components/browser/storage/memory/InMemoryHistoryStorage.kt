@@ -11,6 +11,7 @@ import mozilla.components.concept.storage.PageObservation
 import mozilla.components.concept.storage.SearchResult
 import mozilla.components.concept.storage.PageVisit
 import mozilla.components.concept.storage.RedirectSource
+import mozilla.components.concept.storage.TopFrecentSiteInfo
 import mozilla.components.concept.storage.VisitInfo
 import mozilla.components.concept.storage.VisitType
 import mozilla.components.support.utils.StorageUtils.levenshteinDistance
@@ -91,6 +92,10 @@ class InMemoryHistoryStorage : HistoryStorage {
         }
 
         return visits
+    }
+
+    override suspend fun getTopFrecentSites(numItems: Int): List<TopFrecentSiteInfo> {
+        throw UnsupportedOperationException("getTopFrecentSites is not yet supported by the in-memory history storage")
     }
 
     override fun getSuggestions(query: String, limit: Int): List<SearchResult> = synchronized(pages + pageMeta) {

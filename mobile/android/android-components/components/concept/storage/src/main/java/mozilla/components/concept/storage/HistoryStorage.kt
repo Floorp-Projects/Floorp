@@ -69,6 +69,15 @@ interface HistoryStorage : Storage {
     ): List<VisitInfo>
 
     /**
+     * Returns a list of the top frecent site infos limited by the given number of items
+     * sorted by most to least frecent.
+     *
+     * @param numItems the number of top frecent sites to return in the list.
+     * @return a list of the [TopFrecentSiteInfo], most frecent first.
+     */
+    suspend fun getTopFrecentSites(numItems: Int): List<TopFrecentSiteInfo>
+
+    /**
      * Retrieves suggestions matching the [query].
      * @param query A query by which to search the underlying store.
      * @return A List of [SearchResult] matching the query, in no particular order.
@@ -144,6 +153,17 @@ enum class RedirectSource {
 }
 
 data class PageObservation(val title: String?)
+
+/**
+ * Information about a top frecent site. This represents a most frequently visited site.
+ *
+ * @property url The URL of the page that was visited.
+ * @property title The title of the page that was visited, if known.
+ */
+data class TopFrecentSiteInfo(
+    val url: String,
+    val title: String?
+)
 
 /**
  * Information about a history visit.
