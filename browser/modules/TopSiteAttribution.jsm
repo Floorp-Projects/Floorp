@@ -12,24 +12,43 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 var TopSiteAttribution = {
   async makeRequest({ searchProvider, siteURL }) {
+    function record(objectString, value = "") {
+      recordTelemetryEvent("search_override_exp", objectString, value, {
+        searchProvider,
+      });
+    }
+    record("click");
+
     const attributionUrl = Services.prefs.getStringPref(
       `browser.newtabpage.searchTileOverride.${searchProvider}.attributionURL`,
       ""
     );
     if (!attributionUrl) {
-      throw new Error(
-        `TopSiteAttribution.makeRequest: attribution URL not found for search provider ${searchProvider}`
-      );
+      record("attribution", "abort");
+      return;
     }
     const request = new Request(attributionUrl);
     const response = await fetch(request);
 
     if (response.ok) {
       if (siteURL == response.responseText) {
-        console.log("success");
-        return;
+        record("attribution", "success");
+      } else {
+        record("attribution", "url_mismatch");
       }
+    } else {
+      record("attribution", "failure");
     }
-    console.log("fail");
   },
 };
+
+function recordTelemetryEvent(method, objectString, value, extra) {
+  Services.telemetry.setEventRecordingEnabled("top_sites", true);
+  Services.telemetry.recordEvent(
+    "top_sites",
+    method,
+    objectString,
+    value,
+    extra
+  );
+}
