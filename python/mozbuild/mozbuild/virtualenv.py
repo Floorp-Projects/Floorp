@@ -686,7 +686,7 @@ def verify_python_version(log_handle):
 
     major, minor, micro = sys.version_info[:3]
     minimum_python_version = (
-        LooseVersion('3.6.0') if major == 3 else LooseVersion('2.7.3'))
+        LooseVersion('3.5.0') if major == 3 else LooseVersion('2.7.3'))
     our = LooseVersion('%d.%d.%d' % (major, minor, micro))
 
     if major not in (2, 3) or our < minimum_python_version:
