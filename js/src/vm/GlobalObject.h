@@ -111,6 +111,7 @@ class GlobalObject : public NativeObject {
     ASYNC_GENERATOR_PROTO,
     MAP_ITERATOR_PROTO,
     SET_ITERATOR_PROTO,
+    WRAP_FOR_VALID_ITERATOR_PROTO,
     MODULE_PROTO,
     IMPORT_ENTRY_PROTO,
     EXPORT_ENTRY_PROTO,
@@ -726,6 +727,13 @@ class GlobalObject : public NativeObject {
     return &global->getConstructor(JSProto_Promise).toObject();
   }
 
+  static NativeObject* getOrCreateWrapForValidIteratorPrototype(
+      JSContext* cx, Handle<GlobalObject*> global) {
+    return MaybeNativeObject(getOrCreateObject(cx, global,
+                                               WRAP_FOR_VALID_ITERATOR_PROTO,
+                                               initWrapForValidIteratorProto));
+  }
+
   static NativeObject* getIntrinsicsHolder(JSContext* cx,
                                            Handle<GlobalObject*> global);
 
@@ -829,6 +837,8 @@ class GlobalObject : public NativeObject {
   static bool initStringIteratorProto(JSContext* cx,
                                       Handle<GlobalObject*> global);
   static bool initRegExpStringIteratorProto(JSContext* cx,
+                                            Handle<GlobalObject*> global);
+  static bool initWrapForValidIteratorProto(JSContext*,
                                             Handle<GlobalObject*> global);
 
   // Implemented in vm/AsyncIteration.cpp.
