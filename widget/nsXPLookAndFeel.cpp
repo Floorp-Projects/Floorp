@@ -220,7 +220,10 @@ const char nsXPLookAndFeel::sColorPrefs[][41] = {
     "ui.-moz-visitedhyperlinktext",
     "ui.-moz-comboboxtext",
     "ui.-moz-combobox",
-    "ui.-moz-gtk-info-bar-text"};
+    "ui.-moz-gtk-info-bar-text",
+    "ui.-moz-colheadertext",
+    "ui.-moz-colheaderhovertext"};
+
 
 int32_t nsXPLookAndFeel::sCachedColors[size_t(LookAndFeel::ColorID::End)] = {0};
 int32_t nsXPLookAndFeel::sCachedColorBits[COLOR_CACHE_SIZE] = {0};
@@ -633,6 +636,8 @@ nscolor nsXPLookAndFeel::GetStandinForNativeColor(ColorID aID) {
       result = NS_RGB(0xF0, 0xF0, 0xF0);
       break;
     case ColorID::MozDialogtext:
+    case ColorID::MozColheadertext:
+    case ColorID::MozColheaderhovertext:
       result = NS_RGB(0x00, 0x00, 0x00);
       break;
     case ColorID::MozDragtargetzone:

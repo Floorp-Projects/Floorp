@@ -335,6 +335,8 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, nscolor& aColor) {
     case ColorID::MozDialogtext:
     case ColorID::MozCellhighlighttext:
     case ColorID::MozHtmlCellhighlighttext:
+    case ColorID::MozColheadertext:
+    case ColorID::MozColheaderhovertext:
       aColor = mColorDialogText;
       break;
     case ColorID::MozDragtargetzone:

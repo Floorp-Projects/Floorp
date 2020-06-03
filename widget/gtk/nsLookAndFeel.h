@@ -89,6 +89,8 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
   nscolor mTextSelectedBackground = kWhite;
   nscolor mMozScrollbar = kWhite;
   nscolor mInfoBarText = kBlack;
+  nscolor mMozColHeaderText = kBlack;
+  nscolor mMozColHeaderHoverText = kBlack;
   char16_t mInvisibleCharacter = 0;
   float mCaretRatio = 0.0f;
   int32_t mCaretBlinkTime = 0;
