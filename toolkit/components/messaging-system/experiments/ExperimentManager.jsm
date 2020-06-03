@@ -24,6 +24,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Sampling: "resource://gre/modules/components-utils/Sampling.jsm",
   TelemetryEvents: "resource://normandy/lib/TelemetryEvents.jsm",
   TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.jsm",
+  FirstStartup: "resource://gre/modules/FirstStartup.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(this, "log", () => {
@@ -50,14 +51,29 @@ class _ExperimentManager {
     this.id = id;
     this.store = store || new ExperimentStore();
     this.sessions = new Map();
+  }
 
-    this.filterContext = {};
-    Object.defineProperty(this.filterContext, "activeExperiments", {
-      get: async () => {
-        await this.store.ready();
-        return this.store.getAllActive().map(exp => exp.slug);
+  /**
+   * Creates a targeting context with following filters:
+   *
+   *   * `activeExperiments`: an object with an async function `get` which returns
+   *      an array of slugs of all the active experiments
+   *   * `isFirstStartup`: a boolean indicating whether or not the current enrollment
+   *      is performed during the first startup
+   *
+   * @returns {Object} A context object
+   * @memberof _ExperimentManager
+   */
+  createTargetingContext() {
+    return {
+      isFirstStartup: FirstStartup.state === FirstStartup.IN_PROGRESS,
+      activeExperiments: {
+        get: async () => {
+          await this.store.ready();
+          return this.store.getAllActive().map(exp => exp.slug);
+        },
       },
-    });
+    };
   }
 
   /**
