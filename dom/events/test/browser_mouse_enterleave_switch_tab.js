@@ -43,6 +43,13 @@ add_task(async function testSwitchTabs() {
     gBrowser,
     "http://example.com/browser/browser/base/content/test/general/dummy_page.html"
   );
+  // Synthesize a mousemove to generate corresponding mouseenter and mouseleave
+  // events.
+  await EventUtils.synthesizeAndWaitNativeMouseMove(
+    tabSecond.linkedBrowser,
+    10,
+    10
+  );
   // Wait a bit to see if there is any unexpected mouse event.
   await TestUtils.waitForTick();
   await clearMouseEventListenerAndCheck(tabFirst.linkedBrowser, ["mouseleave"]);
@@ -51,6 +58,13 @@ add_task(async function testSwitchTabs() {
   await AddMouseEventListener(tabFirst.linkedBrowser);
   await AddMouseEventListener(tabSecond.linkedBrowser);
   await BrowserTestUtils.switchTab(gBrowser, tabFirst);
+  // Synthesize a mousemove to generate corresponding mouseenter and mouseleave
+  // events.
+  await EventUtils.synthesizeAndWaitNativeMouseMove(
+    tabFirst.linkedBrowser,
+    10,
+    10
+  );
   // Wait a bit to see if there is any unexpected mouse event.
   await TestUtils.waitForTick();
   await clearMouseEventListenerAndCheck(tabFirst.linkedBrowser, ["mouseenter"]);
