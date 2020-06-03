@@ -7,7 +7,6 @@ Add notifications via taskcluster-notify for release tasks
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-import os
 from pipes import quote as shell_quote
 
 from taskgraph.transforms.base import TransformSequence
@@ -36,16 +35,16 @@ def add_notifications(config, jobs):
         ]
         for address in emails:
             command += ['--address', address]
-        if 'TASK_ID' in os.environ:
-            command += [
-                '--task-group-id', os.environ['TASK_ID'],
-            ]
+        command += [
+            # We wrap this in `{'task-reference': ...}` below
+            '--task-group-id', '<decision>',
+        ]
 
         job['scopes'] = ['notify:email:{}'.format(address) for address in emails]
         job['run'] = {
             'using': 'mach',
             'sparse-profile': 'mach',
-            'mach': ' '.join(map(shell_quote, command)),
+            'mach': {'task-reference': ' '.join(map(shell_quote, command))},
         }
 
         yield job
