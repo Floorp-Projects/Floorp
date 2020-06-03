@@ -732,6 +732,9 @@ def split_triplet(triplet, allow_msvc=False):
     elif cpu.startswith('arm'):
         canonical_cpu = 'arm'
         endianness = 'big' if cpu.startswith(('armeb', 'armbe')) else 'little'
+    elif cpu in ('m68k'):
+        canonical_cpu = 'm68k'
+        endianness = 'big'
     elif cpu in ('mips', 'mipsel'):
         canonical_cpu = 'mips32'
         endianness = 'little' if 'el' in cpu else 'big'
