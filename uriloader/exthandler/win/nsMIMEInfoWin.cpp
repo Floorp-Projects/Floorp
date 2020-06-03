@@ -19,8 +19,9 @@
 #include "nsUnicharUtils.h"
 #include "nsITextToSubURI.h"
 #include "nsVariant.h"
-#include "mozilla/AssembleCmdLine.h"
+#include "mozilla/CmdLineAndEnvUtils.h"
 #include "mozilla/ShellHeaderOnlyUtils.h"
+#include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/UrlmonHeaderOnlyUtils.h"
 #include "mozilla/UniquePtrExtensions.h"
 
@@ -39,9 +40,11 @@ nsresult nsMIMEInfoWin::LaunchDefaultWithFile(nsIFile* aFile) {
   return aFile->Launch();
 }
 
-nsresult nsMIMEInfoWin::ShellExecuteWithIFile(nsIFile* aExecutable,
-                                              const nsString& aArgs) {
+nsresult nsMIMEInfoWin::ShellExecuteWithIFile(nsIFile* aExecutable, int aArgc,
+                                              const wchar_t** aArgv) {
   nsresult rv;
+
+  NS_ASSERTION(aArgc >= 1, "aArgc must be at least 1");
 
   nsAutoString execPath;
   rv = aExecutable->GetTarget(execPath);
@@ -52,7 +55,7 @@ nsresult nsMIMEInfoWin::ShellExecuteWithIFile(nsIFile* aExecutable,
     return rv;
   }
 
-  auto assembledArgs = mozilla::assembleSingleArgument(aArgs);
+  auto assembledArgs = mozilla::MakeCommandLine(aArgc, aArgv);
   if (!assembledArgs) {
     return NS_ERROR_FILE_EXECUTION_FAILED;
   }
@@ -73,9 +76,10 @@ nsresult nsMIMEInfoWin::ShellExecuteWithIFile(nsIFile* aExecutable,
   mozilla::LauncherVoidResult shellExecuteOk = mozilla::ShellExecuteByExplorer(
       execPathBStr, assembledArgs.get(), verbDefault, workingDir, showCmd);
   if (shellExecuteOk.isErr()) {
-    // No need to pass assembledArgs to LaunchWithIProcess.  aArgs will be
+    // No need to pass assembledArgs to LaunchWithIProcess.  aArgv will be
     // processed in nsProcess::RunProcess.
-    return LaunchWithIProcess(aExecutable, aArgs);
+    return LaunchWithIProcess(aExecutable, aArgc,
+                              reinterpret_cast<const char16_t**>(aArgv));
   }
 
   return NS_OK;
@@ -90,6 +94,34 @@ nsMIMEInfoWin::LaunchWithFile(nsIFile* aFile) {
                "nsMIMEInfoBase should have mClass == eMIMEInfo");
 
   if (mPreferredAction == useSystemDefault) {
+    if (StaticPrefs::browser_pdf_launchDefaultEdgeAsApp()) {
+      // Since Edgium is the default PDF handler, if we're using the OS default
+      // and it's Edgium prefer it's app mode so it operates as a PDF viewer
+      // (without browser toolbars). Bug 1632277.
+      bool isPdf;
+      rv = IsPdf(&isPdf);
+      if (NS_SUCCEEDED(rv) && isPdf) {
+        nsAutoCString defaultAppExecutable;
+        rv = mDefaultApplication->GetNativeLeafName(defaultAppExecutable);
+        if (NS_SUCCEEDED(rv) &&
+            defaultAppExecutable.LowerCaseEqualsLiteral("msedge.exe")) {
+          nsAutoString path;
+          rv = aFile->GetPath(path);
+          if (NS_SUCCEEDED(rv)) {
+            // If the --app flag doesn't work we'll want to fallback to a
+            // regular path. Send two args so we call `msedge.exe --app={path}
+            // {path}`.
+            nsAutoString appArg;
+            appArg.AppendLiteral("--app=");
+            appArg.Append(path);
+            const wchar_t* argv[] = {appArg.get(), path.get()};
+
+            return ShellExecuteWithIFile(mDefaultApplication,
+                                         mozilla::ArrayLength(argv), argv);
+          }
+        }
+      }
+    }
     return LaunchDefaultWithFile(aFile);
   }
 
@@ -170,7 +202,8 @@ nsMIMEInfoWin::LaunchWithFile(nsIFile* aFile) {
     }
     nsAutoString path;
     aFile->GetPath(path);
-    return ShellExecuteWithIFile(executable, path);
+    const wchar_t* argv[] = {path.get()};
+    return ShellExecuteWithIFile(executable, mozilla::ArrayLength(argv), argv);
   }
 
   return NS_ERROR_INVALID_ARG;
