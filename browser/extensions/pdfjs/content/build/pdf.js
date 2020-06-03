@@ -234,12 +234,6 @@ Object.defineProperty(exports, "MissingPDFException", {
     return _util.MissingPDFException;
   }
 });
-Object.defineProperty(exports, "NativeImageDecoding", {
-  enumerable: true,
-  get: function () {
-    return _util.NativeImageDecoding;
-  }
-});
 Object.defineProperty(exports, "OPS", {
   enumerable: true,
   get: function () {
@@ -341,8 +335,8 @@ var _text_layer = __w_pdfjs_require__(17);
 
 var _svg = __w_pdfjs_require__(18);
 
-const pdfjsVersion = '2.5.179';
-const pdfjsBuild = '604a6f96a';
+const pdfjsVersion = '2.6.2';
+const pdfjsBuild = '8fc1126b5';
 ;
 
 /***/ }),
@@ -361,7 +355,6 @@ exports.isFetchSupported = isFetchSupported;
 exports.isValidFetchUrl = isValidFetchUrl;
 exports.loadScript = loadScript;
 exports.deprecated = deprecated;
-exports.releaseImageResources = releaseImageResources;
 exports.PDFDateString = exports.StatTimer = exports.DOMSVGFactory = exports.DOMCMapReaderFactory = exports.DOMCanvasFactory = exports.DEFAULT_LINK_REL = exports.LinkTarget = exports.RenderingCancelledException = exports.PageViewport = void 0;
 
 var _util = __w_pdfjs_require__(2);
@@ -754,17 +747,6 @@ function deprecated(details) {
   console.log("Deprecated API usage: " + details);
 }
 
-function releaseImageResources(img) {
-  (0, _util.assert)(img instanceof Image, "Invalid `img` parameter.");
-  const url = img.src;
-
-  if (typeof url === "string" && url.startsWith("blob:") && URL.revokeObjectURL) {
-    URL.revokeObjectURL(url);
-  }
-
-  img.removeAttribute("src");
-}
-
 let pdfDateStringRegex;
 
 class PDFDateString {
@@ -850,7 +832,7 @@ exports.stringToUTF8String = stringToUTF8String;
 exports.utf8StringToString = utf8StringToString;
 exports.warn = warn;
 exports.unreachable = unreachable;
-exports.IsEvalSupportedCached = exports.IsLittleEndianCached = exports.createObjectURL = exports.FormatError = exports.Util = exports.UnknownErrorException = exports.UnexpectedResponseException = exports.TextRenderingMode = exports.StreamType = exports.PermissionFlag = exports.PasswordResponses = exports.PasswordException = exports.NativeImageDecoding = exports.MissingPDFException = exports.InvalidPDFException = exports.AbortException = exports.CMapCompressionType = exports.ImageKind = exports.FontType = exports.AnnotationType = exports.AnnotationStateModelType = exports.AnnotationReviewState = exports.AnnotationReplyType = exports.AnnotationMarkedState = exports.AnnotationFlag = exports.AnnotationFieldFlag = exports.AnnotationBorderStyleType = exports.UNSUPPORTED_FEATURES = exports.VerbosityLevel = exports.OPS = exports.IDENTITY_MATRIX = exports.FONT_IDENTITY_MATRIX = exports.BaseException = void 0;
+exports.IsEvalSupportedCached = exports.IsLittleEndianCached = exports.createObjectURL = exports.FormatError = exports.Util = exports.UnknownErrorException = exports.UnexpectedResponseException = exports.TextRenderingMode = exports.StreamType = exports.PermissionFlag = exports.PasswordResponses = exports.PasswordException = exports.MissingPDFException = exports.InvalidPDFException = exports.AbortException = exports.CMapCompressionType = exports.ImageKind = exports.FontType = exports.AnnotationType = exports.AnnotationStateModelType = exports.AnnotationReviewState = exports.AnnotationReplyType = exports.AnnotationMarkedState = exports.AnnotationFlag = exports.AnnotationFieldFlag = exports.AnnotationBorderStyleType = exports.UNSUPPORTED_FEATURES = exports.VerbosityLevel = exports.OPS = exports.IDENTITY_MATRIX = exports.FONT_IDENTITY_MATRIX = exports.BaseException = void 0;
 
 __w_pdfjs_require__(3);
 
@@ -858,12 +840,6 @@ const IDENTITY_MATRIX = [1, 0, 0, 1, 0, 0];
 exports.IDENTITY_MATRIX = IDENTITY_MATRIX;
 const FONT_IDENTITY_MATRIX = [0.001, 0, 0, 0.001, 0, 0];
 exports.FONT_IDENTITY_MATRIX = FONT_IDENTITY_MATRIX;
-const NativeImageDecoding = {
-  NONE: "none",
-  DECODE: "decode",
-  DISPLAY: "display"
-};
-exports.NativeImageDecoding = NativeImageDecoding;
 const PermissionFlag = {
   PRINT: 0x04,
   MODIFY_CONTENTS: 0x08,
@@ -1784,11 +1760,6 @@ function getDocument(src) {
   params.ignoreErrors = params.stopAtErrors !== true;
   params.fontExtraProperties = params.fontExtraProperties === true;
   params.pdfBug = params.pdfBug === true;
-  const NativeImageDecoderValues = Object.values(_util.NativeImageDecoding);
-
-  if (params.nativeImageDecoderSupport === undefined || !NativeImageDecoderValues.includes(params.nativeImageDecoderSupport)) {
-    params.nativeImageDecoderSupport = _api_compatibility.apiCompatibilityParams.nativeImageDecoderSupport || _util.NativeImageDecoding.DECODE;
-  }
 
   if (!Number.isInteger(params.maxImageSize)) {
     params.maxImageSize = -1;
@@ -1812,10 +1783,6 @@ function getDocument(src) {
 
   if (typeof params.disableAutoFetch !== "boolean") {
     params.disableAutoFetch = false;
-  }
-
-  if (typeof params.disableCreateObjectURL !== "boolean") {
-    params.disableCreateObjectURL = _api_compatibility.apiCompatibilityParams.disableCreateObjectURL || false;
   }
 
   (0, _util.setVerbosityLevel)(params.verbosity);
@@ -1890,7 +1857,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   return worker.messageHandler.sendWithPromise("GetDocRequest", {
     docId,
-    apiVersion: '2.5.179',
+    apiVersion: '2.6.2',
     source: {
       data: source.data,
       url: source.url,
@@ -1901,10 +1868,8 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
     },
     maxImageSize: source.maxImageSize,
     disableFontFace: source.disableFontFace,
-    disableCreateObjectURL: source.disableCreateObjectURL,
     postMessageTransfers: worker.postMessageTransfers,
     docBaseUrl: source.docBaseUrl,
-    nativeImageDecoderSupport: source.nativeImageDecoderSupport,
     ignoreErrors: source.ignoreErrors,
     isEvalSupported: source.isEvalSupported,
     fontExtraProperties: source.fontExtraProperties
@@ -3285,6 +3250,7 @@ class WorkerTransport {
 
         case "FontPath":
         case "FontType3Res":
+        case "Image":
           this.commonObjs.resolve(id, exportedData);
           break;
 
@@ -3305,24 +3271,6 @@ class WorkerTransport {
       }
 
       switch (type) {
-        case "JpegStream":
-          return new Promise((resolve, reject) => {
-            const img = new Image();
-
-            img.onload = function () {
-              resolve(img);
-            };
-
-            img.onerror = function () {
-              reject(new Error("Error during JPEG image loading"));
-              (0, _display_utils.releaseImageResources)(img);
-            };
-
-            img.src = imageData;
-          }).then(img => {
-            pageProxy.objs.resolve(id, img);
-          });
-
         case "Image":
           pageProxy.objs.resolve(id, imageData);
           const MAX_IMAGE_SIZE_TO_STORE = 8000000;
@@ -3352,69 +3300,6 @@ class WorkerTransport {
       }
     });
     messageHandler.on("UnsupportedFeature", this._onUnsupportedFeature.bind(this));
-    messageHandler.on("JpegDecode", ([imageUrl, components]) => {
-      if (this.destroyed) {
-        return Promise.reject(new Error("Worker was destroyed"));
-      }
-
-      if (typeof document === "undefined") {
-        return Promise.reject(new Error('"document" is not defined.'));
-      }
-
-      if (components !== 3 && components !== 1) {
-        return Promise.reject(new Error("Only 3 components or 1 component can be returned"));
-      }
-
-      return new Promise(function (resolve, reject) {
-        const img = new Image();
-
-        img.onload = function () {
-          const {
-            width,
-            height
-          } = img;
-          const size = width * height;
-          const rgbaLength = size * 4;
-          const buf = new Uint8ClampedArray(size * components);
-          let tmpCanvas = document.createElement("canvas");
-          tmpCanvas.width = width;
-          tmpCanvas.height = height;
-          let tmpCtx = tmpCanvas.getContext("2d");
-          tmpCtx.drawImage(img, 0, 0);
-          const data = tmpCtx.getImageData(0, 0, width, height).data;
-
-          if (components === 3) {
-            for (let i = 0, j = 0; i < rgbaLength; i += 4, j += 3) {
-              buf[j] = data[i];
-              buf[j + 1] = data[i + 1];
-              buf[j + 2] = data[i + 2];
-            }
-          } else if (components === 1) {
-            for (let i = 0, j = 0; i < rgbaLength; i += 4, j++) {
-              buf[j] = data[i];
-            }
-          }
-
-          resolve({
-            data: buf,
-            width,
-            height
-          });
-          (0, _display_utils.releaseImageResources)(img);
-          tmpCanvas.width = 0;
-          tmpCanvas.height = 0;
-          tmpCanvas = null;
-          tmpCtx = null;
-        };
-
-        img.onerror = function () {
-          reject(new Error("JpegDecode failed to load image"));
-          (0, _display_utils.releaseImageResources)(img);
-        };
-
-        img.src = imageUrl;
-      });
-    });
     messageHandler.on("FetchBuiltInCMap", (data, sink) => {
       if (this.destroyed) {
         sink.error(new Error("Worker was destroyed"));
@@ -3583,9 +3468,7 @@ class WorkerTransport {
     const params = this._params;
     return (0, _util.shadow)(this, "loadingParams", {
       disableAutoFetch: params.disableAutoFetch,
-      disableCreateObjectURL: params.disableCreateObjectURL,
-      disableFontFace: params.disableFontFace,
-      nativeImageDecoderSupport: params.nativeImageDecoderSupport
+      disableFontFace: params.disableFontFace
     });
   }
 
@@ -3638,16 +3521,6 @@ class PDFObjects {
   }
 
   clear() {
-    for (const objId in this._objs) {
-      const {
-        data
-      } = this._objs[objId];
-
-      if (typeof Image !== "undefined" && data instanceof Image) {
-        (0, _display_utils.releaseImageResources)(data);
-      }
-    }
-
     this._objs = Object.create(null);
   }
 
@@ -3835,9 +3708,9 @@ const InternalRenderTask = function InternalRenderTaskClosure() {
   return InternalRenderTask;
 }();
 
-const version = '2.5.179';
+const version = '2.6.2';
 exports.version = version;
-const build = '604a6f96a';
+const build = '8fc1126b5';
 exports.build = build;
 
 /***/ }),
@@ -5890,33 +5763,6 @@ var CanvasGraphics = function CanvasGraphicsClosure() {
     endAnnotation: function CanvasGraphics_endAnnotation() {
       this.restore();
     },
-    paintJpegXObject: function CanvasGraphics_paintJpegXObject(objId, w, h) {
-      const domImage = this.processingType3 ? this.commonObjs.get(objId) : this.objs.get(objId);
-
-      if (!domImage) {
-        (0, _util.warn)("Dependent image isn't ready yet");
-        return;
-      }
-
-      this.save();
-      var ctx = this.ctx;
-      ctx.scale(1 / w, -1 / h);
-      ctx.drawImage(domImage, 0, 0, domImage.width, domImage.height, 0, -h, w, h);
-
-      if (this.imageLayer) {
-        var currentTransform = ctx.mozCurrentTransformInverse;
-        var position = this.getCanvasPosition(0, 0);
-        this.imageLayer.appendImage({
-          objId,
-          left: position[0],
-          top: position[1],
-          width: w / currentTransform[0],
-          height: h / currentTransform[3]
-        });
-      }
-
-      this.restore();
-    },
     paintImageMaskXObject: function CanvasGraphics_paintImageMaskXObject(img) {
       var ctx = this.ctx;
       var width = img.width,
@@ -6000,7 +5846,7 @@ var CanvasGraphics = function CanvasGraphicsClosure() {
       }
     },
     paintImageXObject: function CanvasGraphics_paintImageXObject(objId) {
-      const imgData = this.processingType3 ? this.commonObjs.get(objId) : this.objs.get(objId);
+      const imgData = objId.startsWith("g_") ? this.commonObjs.get(objId) : this.objs.get(objId);
 
       if (!imgData) {
         (0, _util.warn)("Dependent image isn't ready yet");
@@ -6010,7 +5856,7 @@ var CanvasGraphics = function CanvasGraphicsClosure() {
       this.paintInlineImageXObject(imgData);
     },
     paintImageXObjectRepeat: function CanvasGraphics_paintImageXObjectRepeat(objId, scaleX, scaleY, positions) {
-      const imgData = this.processingType3 ? this.commonObjs.get(objId) : this.objs.get(objId);
+      const imgData = objId.startsWith("g_") ? this.commonObjs.get(objId) : this.objs.get(objId);
 
       if (!imgData) {
         (0, _util.warn)("Dependent image isn't ready yet");
