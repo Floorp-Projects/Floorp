@@ -10,15 +10,6 @@
 
 #include "builtin/AtomicsObject.h"
 #include "builtin/DataViewObject.h"
-#ifdef JS_HAS_INTL_API
-#  include "builtin/intl/Collator.h"
-#  include "builtin/intl/DateTimeFormat.h"
-#  include "builtin/intl/DisplayNames.h"
-#  include "builtin/intl/ListFormat.h"
-#  include "builtin/intl/NumberFormat.h"
-#  include "builtin/intl/PluralRules.h"
-#  include "builtin/intl/RelativeTimeFormat.h"
-#endif
 #include "builtin/MapObject.h"
 #include "builtin/String.h"
 #include "builtin/TestingFunctions.h"
@@ -370,19 +361,13 @@ IonBuilder::InliningResult IonBuilder::inlineNativeCall(CallInfo& callInfo,
 #ifdef JS_HAS_INTL_API
     // Intl natives.
     case InlinableNative::IntlGuardToCollator:
-      return inlineGuardToClass(callInfo, &CollatorObject::class_);
     case InlinableNative::IntlGuardToDateTimeFormat:
-      return inlineGuardToClass(callInfo, &DateTimeFormatObject::class_);
     case InlinableNative::IntlGuardToDisplayNames:
-      return inlineGuardToClass(callInfo, &DisplayNamesObject::class_);
     case InlinableNative::IntlGuardToListFormat:
-      return inlineGuardToClass(callInfo, &ListFormatObject::class_);
     case InlinableNative::IntlGuardToNumberFormat:
-      return inlineGuardToClass(callInfo, &NumberFormatObject::class_);
     case InlinableNative::IntlGuardToPluralRules:
-      return inlineGuardToClass(callInfo, &PluralRulesObject::class_);
     case InlinableNative::IntlGuardToRelativeTimeFormat:
-      return inlineGuardToClass(callInfo, &RelativeTimeFormatObject::class_);
+      return inlineGuardToClass(callInfo, inlNative);
 #else
     case InlinableNative::IntlGuardToCollator:
     case InlinableNative::IntlGuardToDateTimeFormat:
@@ -566,17 +551,12 @@ IonBuilder::InliningResult IonBuilder::inlineNativeCall(CallInfo& callInfo,
     case InlinableNative::IntrinsicSubstringKernel:
       return inlineSubstringKernel(callInfo);
     case InlinableNative::IntrinsicGuardToArrayIterator:
-      return inlineGuardToClass(callInfo, &ArrayIteratorObject::class_);
     case InlinableNative::IntrinsicGuardToMapIterator:
-      return inlineGuardToClass(callInfo, &MapIteratorObject::class_);
     case InlinableNative::IntrinsicGuardToSetIterator:
-      return inlineGuardToClass(callInfo, &SetIteratorObject::class_);
     case InlinableNative::IntrinsicGuardToStringIterator:
-      return inlineGuardToClass(callInfo, &StringIteratorObject::class_);
     case InlinableNative::IntrinsicGuardToRegExpStringIterator:
-      return inlineGuardToClass(callInfo, &RegExpStringIteratorObject::class_);
     case InlinableNative::IntrinsicGuardToWrapForValidIterator:
-      return inlineGuardToClass(callInfo, &WrapForValidIteratorObject::class_);
+      return inlineGuardToClass(callInfo, inlNative);
     case InlinableNative::IntrinsicObjectHasPrototype:
       return inlineObjectHasPrototype(callInfo);
     case InlinableNative::IntrinsicFinishBoundFunctionInit:
@@ -586,21 +566,21 @@ IonBuilder::InliningResult IonBuilder::inlineNativeCall(CallInfo& callInfo,
 
     // Map intrinsics.
     case InlinableNative::IntrinsicGuardToMapObject:
-      return inlineGuardToClass(callInfo, &MapObject::class_);
+      return inlineGuardToClass(callInfo, inlNative);
     case InlinableNative::IntrinsicGetNextMapEntryForIterator:
       return inlineGetNextEntryForIterator(callInfo,
                                            MGetNextEntryForIterator::Map);
 
     // Set intrinsics.
     case InlinableNative::IntrinsicGuardToSetObject:
-      return inlineGuardToClass(callInfo, &SetObject::class_);
+      return inlineGuardToClass(callInfo, inlNative);
     case InlinableNative::IntrinsicGetNextSetEntryForIterator:
       return inlineGetNextEntryForIterator(callInfo,
                                            MGetNextEntryForIterator::Set);
 
     // ArrayBuffer intrinsics.
     case InlinableNative::IntrinsicGuardToArrayBuffer:
-      return inlineGuardToClass(callInfo, &ArrayBufferObject::class_);
+      return inlineGuardToClass(callInfo, inlNative);
     case InlinableNative::IntrinsicArrayBufferByteLength:
       return inlineArrayBufferByteLength(callInfo);
     case InlinableNative::IntrinsicPossiblyWrappedArrayBufferByteLength:
@@ -608,7 +588,7 @@ IonBuilder::InliningResult IonBuilder::inlineNativeCall(CallInfo& callInfo,
 
     // SharedArrayBuffer intrinsics.
     case InlinableNative::IntrinsicGuardToSharedArrayBuffer:
-      return inlineGuardToClass(callInfo, &SharedArrayBufferObject::class_);
+      return inlineGuardToClass(callInfo, inlNative);
 
     // TypedArray intrinsics.
     case InlinableNative::TypedArrayConstructor:
@@ -2934,9 +2914,11 @@ IonBuilder::InliningResult IonBuilder::inlineHasClass(CallInfo& callInfo,
 }
 
 IonBuilder::InliningResult IonBuilder::inlineGuardToClass(
-    CallInfo& callInfo, const JSClass* clasp) {
+    CallInfo& callInfo, InlinableNative native) {
   MOZ_ASSERT(!callInfo.constructing());
   MOZ_ASSERT(callInfo.argc() == 1);
+
+  const JSClass* clasp = InlinableNativeGuardToClass(native);
 
   if (callInfo.getArg(0)->type() != MIRType::Object) {
     return InliningStatus_NotInlined;
