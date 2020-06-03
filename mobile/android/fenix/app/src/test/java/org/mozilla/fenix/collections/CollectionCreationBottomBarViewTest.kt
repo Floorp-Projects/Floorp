@@ -10,8 +10,8 @@ import android.widget.Button
 import android.widget.ImageButton
 import android.widget.TextView
 import androidx.core.view.isVisible
-import io.mockk.Called
 import io.mockk.mockk
+import io.mockk.spyk
 import io.mockk.verify
 import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.support.test.robolectric.testContext
@@ -37,7 +37,7 @@ class CollectionCreationBottomBarViewTest {
     @Before
     fun setup() {
         interactor = mockk(relaxed = true)
-        layout = mockk(relaxed = true)
+        layout = spyk()
         iconButton = ImageButton(testContext)
         textView = TextView(testContext)
         saveButton = Button(testContext)
@@ -69,12 +69,10 @@ class CollectionCreationBottomBarViewTest {
     fun testIconButtonUpdateForSelectCollection() {
         bottomBarView.update(SaveCollectionStep.SelectCollection, CollectionCreationState())
 
-        verify { layout wasNot Called }
-
         assertEquals(null, iconButton.contentDescription)
         assertEquals(View.IMPORTANT_FOR_ACCESSIBILITY_NO, iconButton.importantForAccessibility)
 
-        iconButton.performClick()
+        layout.performClick()
         verify { interactor.addNewCollection() }
     }
 
