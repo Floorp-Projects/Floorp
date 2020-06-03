@@ -20,14 +20,14 @@ export type QuickOpenState = {
   searchType: QuickOpenType,
 };
 
-export const createQuickOpenState = (): QuickOpenState => ({
+export const initialQuickOpenState = (): QuickOpenState => ({
   enabled: false,
   query: "",
   searchType: "sources",
 });
 
 export default function update(
-  state: QuickOpenState = createQuickOpenState(),
+  state: QuickOpenState = initialQuickOpenState(),
   action: Action
 ): QuickOpenState {
   switch (action.type) {
@@ -42,7 +42,7 @@ export default function update(
       }
       return { ...state, enabled: true };
     case "CLOSE_QUICK_OPEN":
-      return createQuickOpenState();
+      return initialQuickOpenState();
     case "SET_QUICK_OPEN_QUERY":
       return {
         ...state,

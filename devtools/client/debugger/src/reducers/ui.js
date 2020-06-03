@@ -44,7 +44,7 @@ export type UIState = {
   javascriptEnabled: boolean,
 };
 
-export const createUIState = (): UIState => ({
+export const initialUIState = (): UIState => ({
   selectedPrimaryPaneTab: "sources",
   activeSearch: null,
   shownSource: null,
@@ -62,7 +62,7 @@ export const createUIState = (): UIState => ({
   javascriptEnabled: true,
 });
 
-function update(state: UIState = createUIState(), action: Action): UIState {
+function update(state: UIState = initialUIState(), action: Action): UIState {
   switch (action.type) {
     case "TOGGLE_ACTIVE_SEARCH": {
       return { ...state, activeSearch: action.value };

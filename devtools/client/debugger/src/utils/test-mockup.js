@@ -26,9 +26,14 @@ import type {
   URL,
   WasmSourceContent,
   Why,
+  Thread,
 } from "../types";
 import * as asyncValue from "./async-value";
+
+import { initialState } from "../reducers/index";
+
 import type { SourceBase } from "../reducers/sources";
+import type { State } from "../reducers/types";
 
 function makeMockSource(url: URL = "url", id: SourceId = "source"): SourceBase {
   return {
@@ -213,6 +218,23 @@ const mockthreadcx = {
   isPaused: false,
 };
 
+function makeMockThread(fields: $Shape<Thread>) {
+  return {
+    actor: "test",
+    url: "example.com",
+    type: "worker",
+    name: "test",
+    ...fields,
+  };
+}
+
+function makeMockState(state: $Shape<State>) {
+  return {
+    ...initialState(),
+    ...state,
+  };
+}
+
 export {
   makeMockSource,
   makeMockSourceWithContent,
@@ -229,4 +251,6 @@ export {
   makeMockExpression,
   mockcx,
   mockthreadcx,
+  makeMockState,
+  makeMockThread,
 };
