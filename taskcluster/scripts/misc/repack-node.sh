@@ -36,7 +36,7 @@ esac
 # useful for when we need to do upgrades and have multiple versions of node
 # live in taskcluster at once.
 case "$2" in
-10) VERSION="10.19.0" ;;
+10) VERSION="10.21.0" ;;
 *)
     echo "Unknown version $2 not recognized in repack-node.sh" >&2
     exit 1
@@ -44,11 +44,11 @@ case "$2" in
 esac
 
 case "$ARCH--$VERSION" in
-    # From https://nodejs.org/dist/v10.19.0/SHASUMS256.txt.asc
-    linux-x64--10.19.0)   SHA256SUM=34127c7c6b1ba02d6d4dc3a926f38a5fb88bb37fc7f051349005ce331c7a53c6 ;;
-    darwin-x64--10.19.0)  SHA256SUM=91725d2ed64e4ccd265259e3e29a0e64a4d26d9d1cd9ba390e0cdec13ea7b02f ;;
-    win-x64--10.19.0)     SHA256SUM=210efd45a7f79cf4c350d8f575f990becdd3833cd922796a4c83b27996f5679e ;;
-    win-x86--10.19.0)     SHA256SUM=afd176d4f022b6a5dbd4a908d42c6d85d4f739c040f65430ab3bf60b8f3b9a96 ;;
+    # From https://nodejs.org/dist/v10.21.0/SHASUMS256.txt.asc
+    linux-x64--10.21.0)   SHA256SUM=1d3296763e46540047099e4910812e81c4899c0595f2d82474e2099c1e1603e2 ;;
+    darwin-x64--10.21.0)  SHA256SUM=36eec82a6cd881a937c94a2d03136c9836b39e254ab325840426acd5f3c5787c ;;
+    win-x64--10.21.0)     SHA256SUM=03dddcdaccdb40978ddf15d189acdc20409d9a666636db2595118690ff83ce82 ;;
+    win-x86--10.21.0)     SHA256SUM=1ed92df4f39d183b0dee5205813ba9a32b8aff3e6f55d7f4d65193659dbad248 ;;
 esac
 
 # From https://nodejs.org/en/download/
