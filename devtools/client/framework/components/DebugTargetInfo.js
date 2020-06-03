@@ -267,25 +267,62 @@ class DebugTargetInfo extends PureComponent {
     );
   }
 
-  renderReloadButton() {
-    const { L10N, debugTargetData } = this.props;
+  renderNavigationButton(detail) {
+    const { L10N } = this.props;
+
+    return dom.button(
+      {
+        className: `iconized-label navigation-button ${detail.className}`,
+        onClick: detail.onClick,
+      },
+      dom.img({
+        src: detail.icon,
+        alt: L10N.getStr(detail.l10nId),
+      })
+    );
+  }
+
+  renderNavigation() {
+    const { debugTargetData } = this.props;
     const { targetType } = debugTargetData;
 
     if (targetType !== DEBUG_TARGET_TYPES.TAB) {
       return null;
     }
 
-    return dom.button(
-      {
-        className: "iconized-label reload-button qa-reload-button",
-        onClick: () => {
-          this.props.toolbox.target.reload();
-        },
-      },
-      dom.img({
-        src: "chrome://browser/skin/reload.svg",
-        alt: L10N.getStr("toolbox.debugTargetInfo.reload"),
+    const items = [];
+
+    if (this.props.toolbox.target.traits.navigation) {
+      items.push(
+        this.renderNavigationButton({
+          className: "qa-back-button",
+          icon: "chrome://browser/skin/back.svg",
+          l10nId: "toolbox.debugTargetInfo.back",
+          onClick: () => this.props.toolbox.target.goBack(),
+        }),
+        this.renderNavigationButton({
+          className: "qa-forward-button",
+          icon: "chrome://browser/skin/forward.svg",
+          l10nId: "toolbox.debugTargetInfo.forward",
+          onClick: () => this.props.toolbox.target.goForward(),
+        })
+      );
+    }
+
+    items.push(
+      this.renderNavigationButton({
+        className: "qa-reload-button",
+        icon: "chrome://browser/skin/reload.svg",
+        l10nId: "toolbox.debugTargetInfo.reload",
+        onClick: () => this.props.toolbox.target.reload(),
       })
+    );
+
+    return dom.div(
+      {
+        className: "debug-target-navigation",
+      },
+      ...items
     );
   }
 
@@ -297,7 +334,7 @@ class DebugTargetInfo extends PureComponent {
       this.shallRenderConnection() ? this.renderConnection() : null,
       this.renderRuntime(),
       this.renderTargetTitle(),
-      this.renderReloadButton(),
+      this.renderNavigation(),
       this.renderTargetURI()
     );
   }

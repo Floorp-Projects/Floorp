@@ -416,3 +416,33 @@ async function updateSelectedTab(browser, tab, store) {
     await onTabsSuccess;
   }
 }
+
+/**
+ * Synthesizes key input inside the DebugTargetInfo's URL component.
+ *
+ * @param {DevToolsToolbox} toolbox
+ *        The DevToolsToolbox debugging the target.
+ * @param {HTMLElement} inputEl
+ *        The <input> element to submit the URL with.
+ * @param {String}  url
+ *        The URL to navigate to.
+ */
+async function synthesizeUrlKeyInput(toolbox, inputEl, url) {
+  const { devtoolsDocument, devtoolsWindow } = toolbox;
+  info("Wait for URL input to be focused.");
+  const onInputFocused = waitUntil(
+    () => devtoolsDocument.activeElement === inputEl
+  );
+  inputEl.focus();
+  await onInputFocused;
+
+  info("Synthesize entering URL into text field");
+  const onInputChange = waitUntil(() => inputEl.value === url);
+  for (const key of url.split("")) {
+    EventUtils.synthesizeKey(key, {}, devtoolsWindow);
+  }
+  await onInputChange;
+
+  info("Submit URL to navigate to");
+  EventUtils.synthesizeKey("KEY_Enter");
+}
