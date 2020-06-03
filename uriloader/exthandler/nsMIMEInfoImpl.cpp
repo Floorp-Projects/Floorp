@@ -14,6 +14,7 @@
 #include "nsCURILoader.h"
 #include "nsCExternalHandlerService.h"
 #include "nsIExternalProtocolService.h"
+#include "nsMimeTypes.h"
 #include "mozilla/StaticPtr.h"
 
 static bool sInitializedOurData = false;
@@ -257,6 +258,25 @@ nsMIMEInfoBase::SetAlwaysAskBeforeHandling(bool aAlwaysAsk) {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsMIMEInfoBase::IsPdf(bool* isPdf) {
+  if (mSchemeOrType == APPLICATION_PDF) {
+    *isPdf = true;
+    return NS_OK;
+  }
+
+  nsAutoCString fileExt;
+  nsresult rv = GetPrimaryExtension(fileExt);
+
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  *isPdf = fileExt.LowerCaseEqualsASCII("pdf") ||
+           fileExt.LowerCaseEqualsASCII(".pdf");
+  return NS_OK;
+}
+
 /* static */
 nsresult nsMIMEInfoBase::GetLocalFileFromURI(nsIURI* aURI, nsIFile** aFile) {
   nsresult rv;
@@ -401,6 +421,18 @@ nsresult nsMIMEInfoBase::LaunchWithIProcess(nsIFile* aApp,
   const char16_t* string = aArg.get();
 
   return process->Runw(false, &string, 1);
+}
+
+/* static */
+nsresult nsMIMEInfoBase::LaunchWithIProcess(nsIFile* aApp, const int aArgc,
+                                            const char16_t** aArgv) {
+  nsresult rv;
+  nsCOMPtr<nsIProcess> process = InitProcess(aApp, &rv);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  return process->Runw(false, aArgv, aArgc);
 }
 
 // nsMIMEInfoImpl implementation
