@@ -685,13 +685,16 @@ def verify_python_version(log_handle):
     from distutils.version import LooseVersion
 
     major, minor, micro = sys.version_info[:3]
-    minimum_python_version = (
-        LooseVersion('3.5.0') if major == 3 else LooseVersion('2.7.3'))
+    minimum_python_versions = {
+        2: LooseVersion('2.7.3'),
+        3: LooseVersion('3.5.0'),
+    }
     our = LooseVersion('%d.%d.%d' % (major, minor, micro))
 
-    if major not in (2, 3) or our < minimum_python_version:
-        log_handle.write('One of the following Python versions are required to build:\n')
-        for minver in MINIMUM_PYTHON_VERSIONS.values():
+    if (major not in minimum_python_versions or
+        our < minimum_python_versions[major]):
+        log_handle.write('One of the following Python versions are required:\n')
+        for minver in minimum_python_versions.values():
             log_handle.write('* Python %s or greater\n' % minver)
         log_handle.write('You are running Python %s.\n' % our)
 
