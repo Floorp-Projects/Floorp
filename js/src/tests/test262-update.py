@@ -44,7 +44,6 @@ RELEASE_OR_BETA = set([
     "Intl.DateTimeFormat-dayPeriod",
     "Promise.any",
     "AggregateError",
-    "logical-assignment-operators",
 ])
 
 
