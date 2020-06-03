@@ -52,12 +52,7 @@ class TestTaskRefs(unittest.TestCase):
 
     def do(self, input, output):
         taskid_for_edge_name = {'edge%d' % n: 'tid%d' % n for n in range(1, 4)}
-        self.assertEqual(
-            resolve_task_references(
-                "subject", input, "tid-self", "tid-decision", taskid_for_edge_name,
-            ),
-            output,
-        )
+        self.assertEqual(resolve_task_references('subject', input, taskid_for_edge_name), output)
 
     def test_no_change(self):
         "resolve_task_references does nothing when there are no task references"
@@ -94,24 +89,12 @@ class TestTaskRefs(unittest.TestCase):
         self.do({'escape': {'task-reference': '<edge3>', 'another-key': True}},
                 {'escape': {'task-reference': '<edge3>', 'another-key': True}})
 
-    def test_self(self):
-        "resolve_task_references resolves `self` to the provided task id"
-        self.do({'escape': {'task-reference': '<self>'}},
-                {'escape': 'tid-self'})
-
-    def test_decision(self):
-        "resolve_task_references resolves `decision` to the provided decision task id"
-        self.do({'escape': {'task-reference': '<decision>'}},
-                {'escape': 'tid-decision'})
-
     def test_invalid(self):
         "resolve_task_references raises a KeyError on reference to an invalid task"
         self.assertRaisesRegexp(
             KeyError,
             "task 'subject' has no dependency named 'no-such'",
-            lambda: resolve_task_references(
-                "subject", {"task-reference": "<no-such>"}, "tid-self", "tid-decision", {}
-            ),
+            lambda: resolve_task_references('subject', {'task-reference': '<no-such>'}, {})
         )
 
 
@@ -123,12 +106,8 @@ class TestArtifactRefs(unittest.TestCase):
     def do(self, input, output):
         taskid_for_edge_name = {'edge%d' % n: 'tid%d' % n for n in range(1, 4)}
         with mock.patch.dict(os.environ, {'TASKCLUSTER_ROOT_URL': 'https://tc-tests.localhost'}):
-            self.assertEqual(
-                resolve_task_references(
-                    "subject", input, "tid-self", "tid-decision", taskid_for_edge_name
-                ),
-                output,
-            )
+            self.assertEqual(resolve_task_references('subject', input, taskid_for_edge_name),
+                             output)
 
     def test_in_list(self):
         "resolve_task_references resolves artifact references in a list"
@@ -156,42 +135,10 @@ class TestArtifactRefs(unittest.TestCase):
                 '/task/tid1/artifacts/public/filename and '
                 'https://tc-tests.localhost/api/queue/v1/task/tid2/artifacts/public/bar'})
 
-    def test_self(self):
-        "resolve_task_references raises KeyError on artifact references to `self`"
-        self.assertRaisesRegexp(
-            KeyError,
-            "task 'subject' can't reference artifacts of self",
-            lambda: resolve_task_references(
-                "subject", {"artifact-reference": "<self/public/artifact>"},
-                "tid-self", "tid-decision",  {}
-            ),
-        )
-
-    def test_decision(self):
-        "resolve_task_references resolves `decision` to the provided decision task id"
-        self.do(
-            {'stuff': {'artifact-reference': '<decision/public/artifact>'}},
-            {'stuff': 'https://tc-tests.localhost/api/queue/v1/task/tid-decision/'
-             'artifacts/public/artifact'},
-        )
-
     def test_invalid(self):
-        "resolve_task_references raises a KeyError on reference to an invalid task"
-        self.assertRaisesRegexp(
-            KeyError,
-            "task 'subject' has no dependency named 'no-such'",
-            lambda: resolve_task_references(
-                "subject", {"artifact-reference": "<no-such/public/artifact>"},
-                "tid-self", "tid-decision", {}
-            ),
-        )
-
-    def test_badly_formed(self):
         "resolve_task_references ignores badly-formatted artifact references"
         for inv in ['<edge1>', 'edge1/foo>', '<edge1>/foo', '<edge1>foo']:
-            resolved = resolve_task_references(
-                "subject", {"artifact-reference": inv}, "tid-self", "tid-decision", {}
-            )
+            resolved = resolve_task_references('subject', {'artifact-reference': inv}, {})
             self.assertEqual(resolved, inv)
 
 

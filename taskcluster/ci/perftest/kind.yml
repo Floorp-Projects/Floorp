@@ -9,7 +9,6 @@ kind-dependencies:
     - build
 
 transforms:
-    - taskgraph.transforms.perftest:transforms
     - taskgraph.transforms.source_test:transforms
     - taskgraph.transforms.job:transforms
     - taskgraph.transforms.task:transforms
@@ -19,6 +18,7 @@ job-defaults:
     treeherder:
         kind: other
         tier: 3
+    require-decision-task-id: true
     worker:
         taskcluster-proxy: true
         max-run-time: 3600

@@ -129,10 +129,6 @@ try_task_config_schema = Schema({
     Optional('env'): {text_type: text_type},
     Optional('gecko-profile'): bool,
     Optional(
-        "perftest-options",
-        description="Options passed from `mach perftest` to try."
-    ): object,
-    Optional(
         "optimize-strategies",
         description="Alternative optimization strategies to use instead of the default. "
                     "A module path pointing to a dict to be use as the `strategy_override` "
@@ -212,23 +208,16 @@ def taskgraph_decision(options, parameters=None):
         lambda graph_config: get_decision_parameters(graph_config, options)
     )
 
-    decision_task_id = os.environ['TASK_ID']
-
     # create a TaskGraphGenerator instance
     tgg = TaskGraphGenerator(
         root_dir=options.get('root'),
-        parameters=parameters,
-        decision_task_id=decision_task_id,
-    )
+        parameters=parameters)
 
     # write out the parameters used to generate this graph
     write_artifact('parameters.yml', dict(**tgg.parameters))
 
     # write out the public/actions.json file
-    write_artifact(
-        'actions.json',
-        render_actions_json(tgg.parameters, tgg.graph_config, decision_task_id),
-    )
+    write_artifact('actions.json', render_actions_json(tgg.parameters, tgg.graph_config))
 
     # write out the full graph for reference
     full_task_json = tgg.full_task_graph.to_json()
@@ -260,13 +249,7 @@ def taskgraph_decision(options, parameters=None):
         write_artifact("bugbug-push-schedules.json", push_schedules.popitem()[1])
 
     # actually create the graph
-    create_tasks(
-        tgg.graph_config,
-        tgg.morphed_task_graph,
-        tgg.label_to_taskid,
-        tgg.parameters,
-        decision_task_id=decision_task_id,
-    )
+    create_tasks(tgg.graph_config, tgg.morphed_task_graph, tgg.label_to_taskid, tgg.parameters)
 
 
 def get_decision_parameters(graph_config, options):
