@@ -133,7 +133,8 @@ struct WorkerLoadInfoData {
   bool mPrincipalIsAddonOrExpandedAddon;
   bool mWatchedByDevTools;
   StorageAccess mStorageAccess;
-  bool mFirstPartyStorageAccessGranted;
+  bool mUseRegularPrincipal;
+  bool mHasStorageAccessPermissionGranted;
   bool mServiceWorkersTestingInWindow;
   OriginAttributes mOriginAttributes;
 
