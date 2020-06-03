@@ -229,8 +229,10 @@ def clean():
     """Remove temporary directory and package file.
     """
     logging.info('Cleaning {} and {} ...'.format(package_file, target_dir))
-    package_file.unlink()
-    shutil.rmtree(str(target_dir))
+    if package_file.exists():
+        package_file.unlink()
+    if target_dir.exists():
+        shutil.rmtree(str(target_dir))
 
 
 def assert_clean():
