@@ -4,9 +4,12 @@
 ---
 job-defaults:
     description: "Node repack toolchain build"
+    attributes:
+        local-toolchain: true
     worker-type: b-linux
     worker:
         max-run-time: 1800
+    run-on-projects: [trunk]
     run:
         script: repack-node.sh
         toolchain-artifact: public/build/node.tar.xz
@@ -21,8 +24,6 @@ linux64-node-10:
 macosx64-node-10:
     treeherder:
         symbol: TM(node-10)
-    run-on-projects:
-        - trunk
     run:
         arguments: ['macosx64', '10']
         toolchain-alias: macosx64-node
@@ -42,5 +43,3 @@ win32-node-10:
         arguments: ['win32', '10']
         toolchain-artifact: public/build/node.tar.bz2
         toolchain-alias: win32-node
-    run-on-projects:
-        - trunk

@@ -49,8 +49,11 @@ linux64-clang-7:
 
 linux64-clang-9:
     description: "Clang 9 toolchain build"
+    attributes:
+        local-toolchain: true
     treeherder:
         symbol: TL(clang9)
+    run-on-projects: [trunk]
     run:
         using: toolchain-script
         script: build-clang.sh
@@ -235,6 +238,8 @@ linux64-clang-10:
 
 macosx64-clang:
     description: "Clang toolchain build"
+    attributes:
+        local-toolchain: true
     treeherder:
         symbol: TM(clang)
     worker-type: b-linux-large
@@ -265,12 +270,16 @@ macosx64-clang:
 
 win64-clang-cl:
     description: "Clang-cl toolchain build"
+    attributes:
+        local-toolchain: true
     treeherder:
         symbol: TW64(clang-cl)
     worker-type: b-win2012
     worker:
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/vs2017.manifest"
+    run-on-projects:
+        - trunk
     run:
         script: build-clang.sh
         arguments:

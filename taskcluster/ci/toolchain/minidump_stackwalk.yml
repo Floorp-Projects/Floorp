@@ -4,6 +4,8 @@
 ---
 job-defaults:
     description: "minidump_stackwalk toolchain build"
+    attributes:
+        local-toolchain: true
     worker-type: b-linux
     worker:
         max-run-time: 1800

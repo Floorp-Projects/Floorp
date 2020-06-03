@@ -395,3 +395,8 @@ rebuild-on-release
 If true, the digest for this task will also depend on if the branch is a
 release branch.  This will cause tasks like toolchains to be rebuilt as they
 move from e.g. autoland to mozilla-central.
+
+local-toolchain
+===============
+This toolchain is used for local development, so should be built on trunk, even
+if it does not have any in-graph consumers.
