@@ -16321,8 +16321,9 @@ void Document::RemoveToplevelLoadingDocument(Document* aDoc) {
 }
 
 StylePrefersColorScheme Document::PrefersColorScheme(
-    Document::IgnoreRFP aIgnoreRFP /* = IgnoreRFP::No */) const {
-  if (aIgnoreRFP == IgnoreRFP::No && nsContentUtils::ShouldResistFingerprinting(this)) {
+    IgnoreRFP aIgnoreRFP) const {
+  if (aIgnoreRFP == IgnoreRFP::No &&
+      nsContentUtils::ShouldResistFingerprinting(this)) {
     return StylePrefersColorScheme::Light;
   }
 
