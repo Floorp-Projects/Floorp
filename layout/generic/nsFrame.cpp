@@ -1410,9 +1410,121 @@ void nsIFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle) {
     }
   }
 
+  RecordAppearanceTelemetry();
+
   RemoveStateBits(NS_FRAME_SIMPLE_EVENT_REGIONS | NS_FRAME_SIMPLE_DISPLAYLIST);
 
   mMayHaveRoundedCorners = true;
+}
+
+void nsIFrame::RecordAppearanceTelemetry() {
+  // Record uses of -moz-appearance values in the wild that would affect our
+  // ability to implement the css-ui-4 unprefixed appearance property.
+
+  StyleAppearance appearance = StyleDisplay()->mAppearance;
+  StyleAppearance defaultAppearance = StyleDisplay()->mDefaultAppearance;
+
+  if ((appearance == StyleAppearance::None &&
+       defaultAppearance == StyleAppearance::None) ||
+      !mContent || mContent->IsInNativeAnonymousSubtree()) {
+    return;
+  }
+
+  // The css-ui-4 specification defines unprefixed appearance as taking values:
+  //
+  //   none | auto | button | textfield | menulist-button | <compat-auto>
+  //
+  // where:
+  //
+  //   <compat-auto> = searchfield | textarea | push-button |
+  //                   slider-horizontal | checkbox | radio | square-button |
+  //                   menulist | listbox | meter | progress-bar
+  //
+  // Of these, we don't currently support auto, push-button, slider-horizontal,
+  // or square-button.  The auto value we will support soon, but the other three
+  // may not be required for compatibility.  So we don't record any telemetry
+  // for the use of those values.
+  //
+  // We support a number of values exposed to content, which are not in the
+  // spec:
+  //
+  //   number-input | range | inner-spin-button | progressbar-vertical |
+  //   scale-horizontal | scale-vertical | scalethumb-horizontal |
+  //   scalethumb-vertical | scalethumbstart | scalethumbend | scalethumbtick |
+  //   range-thumb | scrollbarthumb-horizontal | scrollbarthumb-vertical |
+  //   scrollbartrack-horizontal | scrollbartrack-vertical
+  //
+  // Of these, number-input and range are used by UA sheets (set on <input
+  // type=number> and <input type=range> elements) and exposed to content.  We
+  // want to measure whether these values are being used to override some other
+  // values (e.g. none) in author sheets on these elements, since that means we
+  // should add them to the <compat-auto> set.
+  if (appearance == defaultAppearance) {
+    UseCounter counter = eUseCounter_UNKNOWN;
+    switch (appearance) {
+      case StyleAppearance::NumberInput:
+        counter = eUseCounter_custom_Appearance_Overridden_NumberInput;
+        break;
+      case StyleAppearance::Range:
+        counter = eUseCounter_custom_Appearance_Overridden_Range;
+        break;
+      default:
+        return;
+    }
+    if (mComputedStyle->HasOverriddenAppearance(appearance)) {
+      PresContext()->Document()->SetUseCounter(counter);
+    }
+    return;
+  }
+
+  // For all values, we want to check whether they have been set on an element
+  // that would not normally have that value from the UA sheets.  We record
+  // separate use counters for whether the -moz-appearance value was used with
+  // an underlying value of none ("on a non-widget") or with some non-none value
+  // ("on a widget").
+  UseCounter onWidget;
+  UseCounter onNonWidget;
+#define CASE(name_)                                                \
+  case StyleAppearance::name_:                                     \
+    onWidget = eUseCounter_custom_Appearance_Widget_##name_;       \
+    onNonWidget = eUseCounter_custom_Appearance_NonWidget_##name_; \
+    break;
+  switch (appearance) {
+    CASE(Button)
+    CASE(Textfield)
+    CASE(MenulistButton)
+    CASE(Searchfield)
+    CASE(Textarea)
+    CASE(Checkbox)
+    CASE(Radio)
+    CASE(Menulist)
+    CASE(Listbox)
+    CASE(Meter)
+    CASE(ProgressBar)
+    CASE(NumberInput)
+    CASE(Range)
+    CASE(InnerSpinButton)
+    CASE(ProgressbarVertical)
+    CASE(ScaleHorizontal)
+    CASE(ScaleVertical)
+    CASE(ScalethumbHorizontal)
+    CASE(ScalethumbVertical)
+    CASE(Scalethumbstart)
+    CASE(Scalethumbend)
+    CASE(Scalethumbtick)
+    CASE(RangeThumb)
+    CASE(ScrollbarthumbHorizontal)
+    CASE(ScrollbarthumbVertical)
+    CASE(ScrollbartrackHorizontal)
+    CASE(ScrollbartrackVertical)
+    default:
+      return;
+  }
+#undef CASE
+
+  auto counter =
+      defaultAppearance == StyleAppearance::None ? onNonWidget : onWidget;
+  PresContext()->Document()->SetUseCounter(counter);
 }
 
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
