@@ -124,18 +124,14 @@ EventTooltip.prototype = {
             }
           };
 
-          sourceMapURLService.subscribe(
-            location.url,
-            location.line,
-            location.column,
-            callback
+          this._subscriptions.push(
+            sourceMapURLService.subscribe(
+              location.url,
+              location.line,
+              location.column,
+              callback
+            )
           );
-          this._subscriptions.push({
-            url: location.url,
-            line: location.line,
-            column: location.column,
-            callback,
-          });
         }
       }
 
@@ -359,14 +355,8 @@ EventTooltip.prototype = {
       node.removeEventListener("click", this._debugClicked);
     }
 
-    const sourceMapURLService = this._toolbox.sourceMapURLService;
-    for (const subscription of this._subscriptions) {
-      sourceMapURLService.unsubscribe(
-        subscription.url,
-        subscription.line,
-        subscription.column,
-        subscription.callback
-      );
+    for (const unsubscribe of this._subscriptions) {
+      unsubscribe();
     }
 
     this._eventListenerInfos = this._toolbox = this._tooltip = null;

@@ -85,28 +85,8 @@ RuleEditor.prototype = {
     this.toolbox.off("tool-registered", this._onToolChanged);
     this.toolbox.off("tool-unregistered", this._onToolChanged);
 
-    let url = null;
-    if (this.rule.sheet) {
-      url = this.rule.sheet.href || this.rule.sheet.nodeHref;
-    }
-    if (
-      url &&
-      !this.rule.isSystem &&
-      this.rule.domRule.type !== ELEMENT_STYLE
-    ) {
-      // Only get the original source link if the rule isn't a system
-      // rule and if it isn't an inline rule.
-      const sourceLine = this.rule.ruleLine;
-      const sourceColumn = this.rule.ruleColumn;
-
-      if (this._sourceMapURLService) {
-        this._sourceMapURLService.unsubscribe(
-          url,
-          sourceLine,
-          sourceColumn,
-          this._updateLocation
-        );
-      }
+    if (this._unsubscribeSourceMap) {
+      this._unsubscribeSourceMap();
     }
   },
 
@@ -389,7 +369,10 @@ RuleEditor.prototype = {
       // rule and if it isn't an inline rule.
       const sourceLine = this.rule.ruleLine;
       const sourceColumn = this.rule.ruleColumn;
-      this.sourceMapURLService.subscribe(
+      if (this._unsubscribeSourceMap) {
+        this._unsubscribeSourceMap();
+      }
+      this._unsubscribeSourceMap = this.sourceMapURLService.subscribe(
         url,
         sourceLine,
         sourceColumn,
