@@ -6,6 +6,7 @@ job-defaults:
     description: "dump_syms toolchain build"
     worker:
         max-run-time: 1800
+    run-on-projects: [trunk]
     run:
         script: build-dump-syms.sh
     fetches:
@@ -25,6 +26,8 @@ linux64-dump-syms:
             - linux64-rust
 
 win64-dump-syms:
+    attributes:
+        local-toolchain: true
     treeherder:
         symbol: TW64(dump_syms)
     worker-type: b-win2012

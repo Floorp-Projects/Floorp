@@ -4,6 +4,8 @@
 ---
 job-defaults:
     description: "sccache-dist toolchain archive build"
+    attributes:
+        local-toolchain: true
     worker-type: b-linux
     run-on-projects:
         - trunk

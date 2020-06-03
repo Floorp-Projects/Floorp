@@ -184,6 +184,12 @@ class PackageFrontend(MachCommandBase):
                      help='Do not unpack any downloaded file')
     @CommandArgument('--retry', type=int, default=4,
                      help='Number of times to retry failed downloads')
+    @CommandArgument(
+        "--bootstrap",
+        action="store_true",
+        help="Whether this is being called from bootstrap. "
+        "This verifies the toolchain is annotated as a toolchain used for local development."
+    )
     @CommandArgument('--artifact-manifest', metavar='FILE',
                      help='Store a manifest about the downloaded taskcluster artifacts')
     @CommandArgument('files', nargs='*',
@@ -193,6 +199,7 @@ class PackageFrontend(MachCommandBase):
                            skip_cache=False, from_build=(),
                            tooltool_manifest=None, authentication_file=None,
                            no_unpack=False, retry=0,
+                           bootstrap=False,
                            artifact_manifest=None, files=()):
         '''Download, cache and install pre-built toolchains.
         '''
@@ -324,6 +331,15 @@ class PackageFrontend(MachCommandBase):
                 if not task:
                     self.log(logging.ERROR, 'artifact', {'build': user_value},
                              'Could not find a toolchain build named `{build}`')
+                    return 1
+
+                # Ensure that toolchains installed by `mach bootstrap` have the
+                # `local-toolchain attribute set. Taskgraph ensures that these
+                # are built on trunk projects, so the task will be available to
+                # install here.
+                if bootstrap and not task.attributes.get('local-toolchain'):
+                    self.log(logging.ERROR, 'artifact', {'build': user_value},
+                             'Toolchain `{build}` is not annotated as used for local development.')
                     return 1
 
                 artifact_name = task.attributes.get('toolchain-artifact')
