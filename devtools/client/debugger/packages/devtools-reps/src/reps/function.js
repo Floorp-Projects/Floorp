@@ -21,16 +21,10 @@ const IGNORED_SOURCE_URLS = ["debugger eval code"];
 FunctionRep.propTypes = {
   object: PropTypes.object.isRequired,
   onViewSourceInDebugger: PropTypes.func,
-  sourceMapURLService: PropTypes.object,
 };
 
 function FunctionRep(props) {
-  const {
-    object: grip,
-    onViewSourceInDebugger,
-    recordTelemetryEvent,
-    sourceMapURLService,
-  } = props;
+  const { object: grip, onViewSourceInDebugger, recordTelemetryEvent } = props;
 
   let jumpToDefinitionButton;
   if (
@@ -51,11 +45,7 @@ function FunctionRep(props) {
           recordTelemetryEvent("jump_to_definition");
         }
 
-        const sourceLocation = await getSourceLocation(
-          grip.location,
-          sourceMapURLService
-        );
-        onViewSourceInDebugger(sourceLocation);
+        onViewSourceInDebugger(grip.location);
       },
     });
   }
@@ -228,26 +218,7 @@ function supportsObject(grip, noGrip = false) {
   return type == "Function";
 }
 
-async function getSourceLocation(location, sourceMapURLService) {
-  if (!sourceMapURLService) {
-    return location;
-  }
-  try {
-    const originalLocation = await sourceMapURLService.originalPositionFor(
-      location.url,
-      location.line,
-      location.column
-    );
-    if (originalLocation) {
-      const { sourceUrl, line, column } = originalLocation;
-      return { url: sourceUrl, line, column };
-    }
-  } catch (e) {}
-  return location;
-}
-
 // Exports from this module
-
 module.exports = {
   rep: wrapRender(FunctionRep),
   supportsObject,
