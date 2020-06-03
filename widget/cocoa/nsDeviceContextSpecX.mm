@@ -16,6 +16,7 @@
 #include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/Telemetry.h"
 
 #include "nsCocoaUtils.h"
 #include "nsCRT.h"
@@ -206,6 +207,29 @@ NS_IMETHODIMP nsDeviceContextSpecX::Init(nsIWidget* aWidget, nsIPrintSettings* a
     }
   }
 #endif
+
+  int16_t outputFormat;
+  aPS->GetOutputFormat(&outputFormat);
+
+  if (outputFormat == nsIPrintSettings::kOutputFormatPDF) {
+    // We don't actually currently support/use kOutputFormatPDF on mac, but
+    // this is for completeness in case we add that (we probably need to in
+    // order to support adding links into saved PDFs, for example).
+    Telemetry::ScalarAdd(Telemetry::ScalarID::PRINTING_TARGET_TYPE, NS_LITERAL_STRING("pdf_file"),
+                         1);
+  } else {
+    PMDestinationType destination;
+    OSStatus status = ::PMSessionGetDestinationType(mPrintSession, mPrintSettings, &destination);
+    if (status == noErr &&
+        (destination == kPMDestinationFile || destination == kPMDestinationPreview ||
+         destination == kPMDestinationProcessPDF)) {
+      Telemetry::ScalarAdd(Telemetry::ScalarID::PRINTING_TARGET_TYPE, NS_LITERAL_STRING("pdf_file"),
+                           1);
+    } else {
+      Telemetry::ScalarAdd(Telemetry::ScalarID::PRINTING_TARGET_TYPE, NS_LITERAL_STRING("unknown"),
+                           1);
+    }
+  }
 
   return NS_OK;
 
