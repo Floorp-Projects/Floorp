@@ -131,10 +131,12 @@ class CollectionCreationView(
             }
         }
 
-        selectTabsConstraints.clone(collection_constraint_layout)
-        selectTabsConstraints.applyTo(collection_constraint_layout)
-
+        selectTabsConstraints.clone(
+            containerView.context,
+            R.layout.component_collection_creation
+        )
         collectionCreationTabListAdapter.updateData(state.tabs, state.selectedTabs)
+        selectTabsConstraints.applyTo(collection_constraint_layout)
     }
 
     private fun updateForSelectCollection() {
