@@ -267,10 +267,10 @@ break the build process**
    regression tests, for well-known security bugs, can include code
    samples that some antivirus software will identify as a threat, and
    will either quarantine or otherwise corrupt the files involved. To
-   resolve this you will need to whitelist your source and object
-   directories (the ``mozilla-source`` and ``mozilla-build``
-   directories) in Windows Defender or your antivirus software and if
-   you're missing files, revert your source tree with the
+   resolve this you will need to add your source and object directories
+   (the ``mozilla-source`` and ``mozilla-build``
+   directories) to the allow list in Windows Defender or your antivirus 
+   software and if you're missing files, revert your source tree with the
    "``hg update -C" `` command. Once this is done your next
    ``./mach build`` should complete successfully.
 
