@@ -45,6 +45,10 @@ class TabDescriptorFront extends FrontClassWithSpec(tabDescriptorSpec) {
     this._localTab = localTab;
   }
 
+  get isZombieTab() {
+    return this._form.isZombieTab;
+  }
+
   get outerWindowID() {
     return this._form.outerWindowID;
   }
