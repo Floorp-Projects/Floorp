@@ -112,62 +112,47 @@ nsIContent* SVGSwitchElement::FindActiveChild() const {
   nsAutoString acceptLangs;
   Preferences::GetLocalizedString("intl.accept_languages", acceptLangs);
 
-  if (!acceptLangs.IsEmpty()) {
-    int32_t bestLanguagePreferenceRank = -1;
-    nsIContent* bestChild = nullptr;
-    nsIContent* defaultChild = nullptr;
-    for (nsIContent* child = nsINode::GetFirstChild(); child;
-         child = child->GetNextSibling()) {
-      if (!child->IsElement()) {
-        continue;
-      }
-      nsCOMPtr<SVGTests> tests(do_QueryInterface(child));
-      if (tests) {
-        if (tests->PassesConditionalProcessingTests(
-                SVGTests::kIgnoreSystemLanguage)) {
-          int32_t languagePreferenceRank =
-              tests->GetBestLanguagePreferenceRank(acceptLangs);
-          switch (languagePreferenceRank) {
-            case 0:
-              // best possible match
-              return child;
-            case -1:
-              // no match
-              break;
-            case -2:
-              // no systemLanguage attribute. If there's nothing better
-              // we'll use the first such child.
-              if (!defaultChild) {
-                defaultChild = child;
-              }
-              break;
-            default:
-              if (bestLanguagePreferenceRank == -1 ||
-                  languagePreferenceRank < bestLanguagePreferenceRank) {
-                bestLanguagePreferenceRank = languagePreferenceRank;
-                bestChild = child;
-              }
-              break;
-          }
-        }
-      } else if (!bestChild) {
-        bestChild = child;
-      }
-    }
-    return bestChild ? bestChild : defaultChild;
-  }
-
+  int32_t bestLanguagePreferenceRank = -1;
+  nsIContent* bestChild = nullptr;
+  nsIContent* defaultChild = nullptr;
   for (nsIContent* child = nsINode::GetFirstChild(); child;
        child = child->GetNextSibling()) {
     if (!child->IsElement()) {
       continue;
     }
     nsCOMPtr<SVGTests> tests(do_QueryInterface(child));
-    if (!tests || tests->PassesConditionalProcessingTests(&acceptLangs)) {
-      return child;
+    if (tests) {
+      if (tests->PassesConditionalProcessingTestsIgnoringSystemLanguage()) {
+        int32_t languagePreferenceRank =
+            tests->GetBestLanguagePreferenceRank(acceptLangs);
+        switch (languagePreferenceRank) {
+          case 0:
+            // best possible match
+            return child;
+          case -1:
+            // no match
+            break;
+          case -2:
+            // no systemLanguage attribute. If there's nothing better
+            // we'll use the first such child.
+            if (!defaultChild) {
+              defaultChild = child;
+            }
+            break;
+          default:
+            if (bestLanguagePreferenceRank == -1 ||
+                languagePreferenceRank < bestLanguagePreferenceRank) {
+              bestLanguagePreferenceRank = languagePreferenceRank;
+              bestChild = child;
+            }
+            break;
+        }
+      }
+    } else if (!bestChild) {
+      bestChild = child;
     }
   }
-  return nullptr;
+  return bestChild ? bestChild : defaultChild;
 }
 
 }  // namespace dom
