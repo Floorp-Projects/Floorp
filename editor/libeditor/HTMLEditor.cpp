@@ -6132,7 +6132,7 @@ bool HTMLEditor::OurWindowHasFocus() const {
   return ourWindow == focusedWindow;
 }
 
-bool HTMLEditor::IsAcceptableInputEvent(WidgetGUIEvent* aGUIEvent) {
+bool HTMLEditor::IsAcceptableInputEvent(WidgetGUIEvent* aGUIEvent) const {
   if (!EditorBase::IsAcceptableInputEvent(aGUIEvent)) {
     return false;
   }
