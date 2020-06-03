@@ -51,6 +51,9 @@ struct RemoteWorkerData
   PrincipalInfo principalInfo;
   PrincipalInfo partitionedPrincipalInfo;
 
+  bool useRegularPrincipal;
+  bool hasStorageAccessPermissionGranted;
+
   nsCString domain;
 
   bool isSecureContext;

@@ -22,12 +22,12 @@ namespace dom {
 already_AddRefed<SharedWorkerManagerHolder> SharedWorkerManager::Create(
     SharedWorkerService* aService, nsIEventTarget* aPBackgroundEventTarget,
     const RemoteWorkerData& aData, nsIPrincipal* aLoadingPrincipal,
-    const OriginAttributes& aPartitionedPrincipalAttrs) {
+    const OriginAttributes& aEffectiveStoragePrincipalAttrs) {
   MOZ_ASSERT(NS_IsMainThread());
 
   RefPtr<SharedWorkerManager> manager =
       new SharedWorkerManager(aPBackgroundEventTarget, aData, aLoadingPrincipal,
-                              aPartitionedPrincipalAttrs);
+                              aEffectiveStoragePrincipalAttrs);
 
   RefPtr<SharedWorkerManagerHolder> holder =
       new SharedWorkerManagerHolder(manager, aService);
@@ -37,11 +37,11 @@ already_AddRefed<SharedWorkerManagerHolder> SharedWorkerManager::Create(
 SharedWorkerManager::SharedWorkerManager(
     nsIEventTarget* aPBackgroundEventTarget, const RemoteWorkerData& aData,
     nsIPrincipal* aLoadingPrincipal,
-    const OriginAttributes& aPartitionedPrincipalAttrs)
+    const OriginAttributes& aEffectiveStoragePrincipalAttrs)
     : mPBackgroundEventTarget(aPBackgroundEventTarget),
       mLoadingPrincipal(aLoadingPrincipal),
       mDomain(aData.domain()),
-      mPartitionedPrincipalAttrs(aPartitionedPrincipalAttrs),
+      mEffectiveStoragePrincipalAttrs(aEffectiveStoragePrincipalAttrs),
       mResolvedScriptURL(DeserializeURI(aData.resolvedScriptURL())),
       mName(aData.name()),
       mIsSecureContext(aData.isSecureContext()),
@@ -83,7 +83,7 @@ already_AddRefed<SharedWorkerManagerHolder>
 SharedWorkerManager::MatchOnMainThread(
     SharedWorkerService* aService, const nsACString& aDomain,
     nsIURI* aScriptURL, const nsAString& aName, nsIPrincipal* aLoadingPrincipal,
-    const OriginAttributes& aPartitionedPrincipalAttrs) {
+    const OriginAttributes& aEffectiveStoragePrincipalAttrs) {
   MOZ_ASSERT(NS_IsMainThread());
 
   bool urlEquals;
@@ -91,12 +91,13 @@ SharedWorkerManager::MatchOnMainThread(
     return nullptr;
   }
 
-  bool match = aDomain == mDomain && urlEquals && aName == mName &&
-               // We want to be sure that the window's principal subsumes the
-               // SharedWorker's loading principal and vice versa.
-               mLoadingPrincipal->Subsumes(aLoadingPrincipal) &&
-               aLoadingPrincipal->Subsumes(mLoadingPrincipal) &&
-               mPartitionedPrincipalAttrs == aPartitionedPrincipalAttrs;
+  bool match =
+      aDomain == mDomain && urlEquals && aName == mName &&
+      // We want to be sure that the window's principal subsumes the
+      // SharedWorker's loading principal and vice versa.
+      mLoadingPrincipal->Subsumes(aLoadingPrincipal) &&
+      aLoadingPrincipal->Subsumes(mLoadingPrincipal) &&
+      mEffectiveStoragePrincipalAttrs == aEffectiveStoragePrincipalAttrs;
   if (!match) {
     return nullptr;
   }

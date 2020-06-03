@@ -188,13 +188,18 @@ void SharedWorkerService::GetOrCreateWorkerManagerOnMainThread(
   nsCOMPtr<nsIPrincipal> partitionedPrincipal =
       partitionedPrincipalOrErr.unwrap();
 
+  nsCOMPtr<nsIPrincipal> effectiveStoragePrincipal = partitionedPrincipal;
+  if (aData.useRegularPrincipal()) {
+    effectiveStoragePrincipal = loadingPrincipal;
+  }
+
   // Let's see if there is already a SharedWorker to share.
   nsCOMPtr<nsIURI> resolvedScriptURL =
       DeserializeURI(aData.resolvedScriptURL());
   for (SharedWorkerManager* workerManager : mWorkerManagers) {
     managerHolder = workerManager->MatchOnMainThread(
         this, aData.domain(), resolvedScriptURL, aData.name(), loadingPrincipal,
-        BasePrincipal::Cast(partitionedPrincipal)->OriginAttributesRef());
+        BasePrincipal::Cast(effectiveStoragePrincipal)->OriginAttributesRef());
     if (managerHolder) {
       break;
     }
@@ -204,7 +209,7 @@ void SharedWorkerService::GetOrCreateWorkerManagerOnMainThread(
   if (!managerHolder) {
     managerHolder = SharedWorkerManager::Create(
         this, aBackgroundEventTarget, aData, loadingPrincipal,
-        BasePrincipal::Cast(partitionedPrincipal)->OriginAttributesRef());
+        BasePrincipal::Cast(effectiveStoragePrincipal)->OriginAttributesRef());
 
     mWorkerManagers.AppendElement(managerHolder->Manager());
   } else {
