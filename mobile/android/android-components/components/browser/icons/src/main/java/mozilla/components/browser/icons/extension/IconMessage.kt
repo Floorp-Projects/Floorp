@@ -88,7 +88,7 @@ private fun JSONObject.toIconResource(): IconRequest.Resource? {
         val maskable = optBoolean("maskable", false)
 
         return IconRequest.Resource(
-            url = url,
+            url = url.trim(),
             type = type,
             sizes = sizes,
             mimeType = if (mimeType.isNullOrEmpty()) null else mimeType,
