@@ -10,6 +10,7 @@
 #include "mozilla/PresShell.h"
 #include "mozilla/RestyleManager.h"
 #include "mozilla/ServoStyleSet.h"
+#include "mozilla/Telemetry.h"
 #include "nscore.h"
 #include "nsCOMPtr.h"
 #include "nsCRT.h"
@@ -3341,6 +3342,8 @@ nsDocumentViewer::PrintPreview(nsIPrintSettings* aPrintSettings,
       return rv;
     }
     mPrintJob = printJob;
+
+    Telemetry::ScalarAdd(Telemetry::ScalarID::PRINTING_PREVIEW_OPENED, 1);
   }
   if (autoBeforeAndAfterPrint && printJob->HasPrintCallbackCanvas()) {
     // Postpone the 'afterprint' event until after the mozPrintCallback
@@ -3519,6 +3522,10 @@ nsDocumentViewer::ExitPrintPreview() {
   if (!GetIsPrintPreview()) {
     NS_ERROR("Wow, we should never get here!");
     return NS_OK;
+  }
+
+  if (!mPrintJob->HasEverPrinted()) {
+    Telemetry::ScalarAdd(Telemetry::ScalarID::PRINTING_PREVIEW_CANCELLED, 1);
   }
 
 #  ifdef NS_PRINT_PREVIEW
