@@ -224,25 +224,26 @@ def fzf_bootstrap(update=False):
     def get_fzf():
         return find_executable('fzf', os.path.join(fzf_path, 'bin'))
 
-    if update:
-        ret = run_cmd(['git', 'pull'], cwd=fzf_path)
-        if ret:
-            print("Update fzf failed.")
-            sys.exit(1)
-
-        run_fzf_install_script(fzf_path)
-        return get_fzf()
-
     if os.path.isdir(fzf_path):
+        if update:
+            ret = run_cmd(['git', 'pull'], cwd=fzf_path)
+            if ret:
+                print("Update fzf failed.")
+                sys.exit(1)
+
+            run_fzf_install_script(fzf_path)
+            return get_fzf()
+
         fzf_bin = get_fzf()
         if not fzf_bin or should_force_fzf_update(fzf_bin):
             return fzf_bootstrap(update=True)
 
         return fzf_bin
 
-    install = input("Could not detect fzf, install it now? [y/n]: ")
-    if install.lower() != 'y':
-        return
+    if not update:
+        install = input("Could not detect fzf, install it now? [y/n]: ")
+        if install.lower() != 'y':
+            return
 
     if not find_executable('git'):
         print("Git not found.")
