@@ -758,7 +758,20 @@ static mozilla::Atomic<bool> sStreamsEnabled(false);
 
 static mozilla::Atomic<bool> sPropertyErrorMessageFixEnabled(false);
 static mozilla::Atomic<bool> sWeakRefsEnabled(false);
+static mozilla::Atomic<bool> sWeakRefsExposeCleanupSome(false);
 static mozilla::Atomic<bool> sIteratorHelpersEnabled(false);
+
+static JS::WeakRefSpecifier GetWeakRefsEnabled() {
+  if (!sWeakRefsEnabled) {
+    return JS::WeakRefSpecifier::Disabled;
+  }
+
+  if (sWeakRefsExposeCleanupSome) {
+    return JS::WeakRefSpecifier::EnabledWithCleanupSome;
+  }
+
+  return JS::WeakRefSpecifier::EnabledWithoutCleanupSome;
+}
 
 void xpc::SetPrefableRealmOptions(JS::RealmOptions& options) {
   options.creationOptions()
@@ -770,7 +783,7 @@ void xpc::SetPrefableRealmOptions(JS::RealmOptions& options) {
       .setWritableStreamsEnabled(
           StaticPrefs::javascript_options_writable_streams())
       .setPropertyErrorMessageFixEnabled(sPropertyErrorMessageFixEnabled)
-      .setWeakRefsEnabled(sWeakRefsEnabled)
+      .setWeakRefsEnabled(GetWeakRefsEnabled())
       .setIteratorHelpersEnabled(sIteratorHelpersEnabled);
 }
 
@@ -948,7 +961,9 @@ static void ReloadPrefsCallback(const char* pref, void* aXpccx) {
       Preferences::GetBool(JS_OPTIONS_DOT_STR "property_error_message_fix");
 #ifdef NIGHTLY_BUILD
   sWeakRefsEnabled =
-      Preferences::GetBool(JS_OPTIONS_DOT_STR "experimental.weakrefs");
+      Preferences::GetBool(JS_OPTIONS_DOT_STR "experimental.weakrefs.enabled");
+  sWeakRefsExposeCleanupSome = Preferences::GetBool(
+      JS_OPTIONS_DOT_STR "experimental.weakrefs.expose_cleanupSome");
   sIteratorHelpersEnabled =
       Preferences::GetBool(JS_OPTIONS_DOT_STR "experimental.iterator_helpers");
 #endif

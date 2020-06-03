@@ -2844,6 +2844,12 @@ JS_FRIEND_API bool js::ShouldIgnorePropertyDefinition(JSContext* cx,
            id == NameToId(cx->names().uneval);
   }
 
+  if (key == JSProto_FinalizationRegistry &&
+      cx->realm()->creationOptions().getWeakRefsEnabled() ==
+          JS::WeakRefSpecifier::EnabledWithoutCleanupSome) {
+    return id == NameToId(cx->names().cleanupSome);
+  }
+
   return false;
 }
 
