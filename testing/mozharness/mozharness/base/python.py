@@ -439,7 +439,7 @@ class VirtualenvMixin(object):
         """Import the virtualenv's packages into this Python interpreter."""
         bin_dir = os.path.dirname(self.query_python_path())
         activate = os.path.join(bin_dir, 'activate_this.py')
-        execfile(activate, dict(__file__=activate))
+        exec(open(activate).read(), dict(__file__=activate))
 
 
 # This is (sadly) a mixin for logging methods.
@@ -563,7 +563,7 @@ class ResourceMonitoringMixin(PerfherderResourceOptionsMixin):
                 upload_dir = self.query_abs_dirs()['abs_blob_upload_dir']
                 if not os.path.exists(upload_dir):
                     os.makedirs(upload_dir)
-                with open(os.path.join(upload_dir, 'resource-usage.json'), 'wb') as fh:
+                with open(os.path.join(upload_dir, 'resource-usage.json'), 'w') as fh:
                     json.dump(self._resource_monitor.as_dict(), fh,
                               sort_keys=True, indent=4)
             except (AttributeError, KeyError):
