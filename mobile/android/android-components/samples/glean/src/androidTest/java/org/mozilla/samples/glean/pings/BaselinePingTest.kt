@@ -24,6 +24,35 @@ import org.json.JSONObject
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import java.util.concurrent.TimeUnit
+import java.io.BufferedReader
+import java.io.ByteArrayInputStream
+import java.util.zip.GZIPInputStream
+
+/**
+ * Decompress the GZIP returned by the glean-core layer.
+ *
+ * @param data the gzipped [ByteArray] to decompress
+ * @return a [String] containing the uncompressed data.
+ */
+fun decompressGZIP(data: ByteArray): String {
+    return GZIPInputStream(ByteArrayInputStream(data)).bufferedReader().use(BufferedReader::readText)
+}
+
+/**
+ * Convenience method to get the body of a request as a String.
+ * The UTF8 representation of the request body will be returned.
+ * If the request body is gzipped, it will be decompressed first.
+ *
+ * @return a [String] containing the body of the request.
+ */
+fun RecordedRequest.getPlainBody(): String {
+    return if (this.getHeader("Content-Encoding") == "gzip") {
+        val bodyInBytes = this.body.readByteArray()
+        decompressGZIP(bodyInBytes)
+    } else {
+        this.body.readUtf8()
+    }
+}
 
 @RunWith(AndroidJUnit4::class)
 class BaselinePingTest {
@@ -64,7 +93,7 @@ class BaselinePingTest {
             val request = server.takeRequest(20L, TimeUnit.SECONDS)
             val docType = request.path.split("/")[3]
             if (pingName == docType) {
-                val parsedPayload = JSONObject(request.body.readUtf8())
+                val parsedPayload = JSONObject(request.getPlainBody())
                 if (pingReason == null) {
                     return parsedPayload
                 }
