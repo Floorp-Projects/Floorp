@@ -228,7 +228,7 @@ This operation is sanitized, and Fluent takes care of selecting which elements a
 attributes can be safely provided by the localization.
 The list of allowed elements and attributes is `maintained by the W3C`__, and if
 the developer needs to allow for localization of additional attributes, they can
-whitelist them using :code:`data-l10n-attrs` list:
+allow them using :code:`data-l10n-attrs` list:
 
 .. code-block:: html
 
