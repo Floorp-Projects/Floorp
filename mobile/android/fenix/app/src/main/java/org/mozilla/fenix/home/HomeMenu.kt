@@ -156,15 +156,16 @@ class HomeMenu(
         if (shouldUseBottomToolbar) {
             listOfNotNull(
                 accountAuthItem,
+                helpItem,
                 whatsNewItem,
                 BrowserMenuDivider(),
-                bookmarksItem,
+                addons,
+                BrowserMenuDivider(),
                 historyItem,
+                bookmarksItem,
                 if (FeatureFlags.syncedTabs) syncedTabsItem else null,
                 BrowserMenuDivider(),
-                addons,
                 settingsItem,
-                helpItem,
                 if (Settings.getInstance(context).shouldDeleteBrowsingDataOnQuit) quitItem else null
             ).also { items ->
                 items.getHighlight()?.let { onHighlightPresent(it) }
@@ -172,16 +173,17 @@ class HomeMenu(
         } else {
             listOfNotNull(
                 if (Settings.getInstance(context).shouldDeleteBrowsingDataOnQuit) quitItem else null,
-                helpItem,
                 settingsItem,
-                addons,
-                accountAuthItem,
                 BrowserMenuDivider(),
+                if (FeatureFlags.syncedTabs) syncedTabsItem else null,
                 bookmarksItem,
                 historyItem,
-                if (FeatureFlags.syncedTabs) syncedTabsItem else null,
                 BrowserMenuDivider(),
-                whatsNewItem
+                addons,
+                BrowserMenuDivider(),
+                whatsNewItem,
+                helpItem,
+                accountAuthItem
             ).also { items ->
                 items.getHighlight()?.let { onHighlightPresent(it) }
             }
