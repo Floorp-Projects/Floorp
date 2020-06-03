@@ -260,6 +260,8 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, nscolor& aColor) {
     case ColorID::MozDialogtext:
     case ColorID::MozComboboxtext:
     case ColorID::Windowtext:
+    case ColorID::MozColheadertext:
+    case ColorID::MozColheaderhovertext:
       aColor = NS_RGB(0x10, 0x10, 0x10);
       break;
     case ColorID::MozDragtargetzone:

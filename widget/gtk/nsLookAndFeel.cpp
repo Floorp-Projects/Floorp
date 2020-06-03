@@ -501,6 +501,12 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, nscolor& aColor) {
     case ColorID::MozGtkInfoBarText:
       aColor = mInfoBarText;
       break;
+    case ColorID::MozColheadertext:
+      aColor = mMozColHeaderText;
+      break;
+    case ColorID::MozColheaderhovertext:
+      aColor = mMozColHeaderHoverText;
+      break;
     default:
       /* default color is BLACK */
       aColor = 0;
@@ -1190,6 +1196,13 @@ void nsLookAndFeel::EnsureInit() {
   gtk_style_context_get_background_color(style, GTK_STATE_FLAG_NORMAL, &color);
   mOddCellBackground = GDK_RGBA_TO_NS_RGBA(color);
   gtk_style_context_restore(style);
+
+  // Column header colors
+  style = GetStyleContext(MOZ_GTK_TREE_HEADER_CELL);
+  gtk_style_context_get_color(style, GTK_STATE_FLAG_NORMAL, &color);
+  mMozColHeaderText = GDK_RGBA_TO_NS_RGBA(color);
+  gtk_style_context_get_color(style, GTK_STATE_FLAG_PRELIGHT, &color);
+  mMozColHeaderHoverText = GDK_RGBA_TO_NS_RGBA(color);
 
   // Compute cell highlight colors
   InitCellHighlightColors();
