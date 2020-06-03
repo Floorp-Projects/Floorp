@@ -1856,11 +1856,6 @@ panelview[mainview] #PanelUI-whatsNew-content {
   height: 43em;
 }
 
-/* Hide the What's New header when the panel is a subview */
-panelview:not([mainview]) #PanelUI-whatsNew-title {
-  display: none;
-}
-
 #PanelUI-whatsNew .panel-subview-body {
   padding-top: 0;
 }
@@ -1904,7 +1899,7 @@ panelview:not([mainview]) #PanelUI-whatsNew-title {
   border: 1px solid #A9A9A9;
   border-radius: 2px;
   margin: 0;
-  margin-inline-end: 6px;
+  margin-inline-end: 10px;
   background-color: #FFF;
   background-position: center;
   background-repeat: no-repeat;
@@ -1920,7 +1915,7 @@ panelview:not([mainview]) #PanelUI-whatsNew-title {
 
 #PanelUI-whatsNew .whatsNew-message {
   cursor: pointer;
-  margin: 0;
+  margin: 0 12px;
   padding: 0;
 }
 
@@ -1945,14 +1940,12 @@ panelview:not([mainview]) #PanelUI-whatsNew-title {
   font-size: .85em;
   margin: -12px;
   margin-top: 0;
-  margin-inline-start: 0;
   padding: 6px 16px;
   background: var(--arrowpanel-dimmed);
 }
 
 #PanelUI-whatsNew .whatsNew-message-body {
-  padding: 5px 0 10px;
-  margin-inline-start: 12px;
+  padding: 6px 6px 10px;
   text-align: inherit;
   text-decoration: none;
   color: inherit;
@@ -1977,7 +1970,7 @@ panelview:not([mainview]) #PanelUI-whatsNew-title {
   inset-inline-end: 6px;
   height: 32px;
   position: absolute;
-  top: 24px;
+  top: 22px;
   width: 32px;
 }
 
@@ -2006,7 +1999,7 @@ panelview:not([mainview]) #PanelUI-whatsNew-title {
 
 #PanelUI-whatsNew .whatsNew-message-content {
   display: block;
-  margin: 5px 0 10px;
+  margin: 10px 0;
 }
 
 #PanelUI-whatsNew .text-link {
