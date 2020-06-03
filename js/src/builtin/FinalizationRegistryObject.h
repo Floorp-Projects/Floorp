@@ -222,6 +222,8 @@ class FinalizationRegistryObject : public NativeObject {
       HandleFinalizationRegistryObject registry, HandleObject unregisterToken,
       HandleFinalizationRecordObject record);
 
+  static bool preserveDOMWrapper(JSContext* cx, HandleObject obj);
+
   static void trace(JSTracer* trc, JSObject* obj);
   static void finalize(JSFreeOp* fop, JSObject* obj);
 };

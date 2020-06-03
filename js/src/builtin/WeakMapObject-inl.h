@@ -12,18 +12,17 @@
 #include "vm/ProxyObject.h"
 
 #include "gc/WeakMap-inl.h"
+#include "vm/JSObject-inl.h"
 
 namespace js {
 
 static bool TryPreserveReflector(JSContext* cx, HandleObject obj) {
-  if (obj->getClass()->isDOMClass()) {
-    MOZ_ASSERT(cx->runtime()->preserveWrapperCallback);
-    if (!cx->runtime()->preserveWrapperCallback(cx, obj)) {
-      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                JSMSG_BAD_WEAKMAP_KEY);
-      return false;
-    }
+  if (!MaybePreserveDOMWrapper(cx, obj)) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_BAD_WEAKMAP_KEY);
+    return false;
   }
+
   return true;
 }
 
