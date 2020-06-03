@@ -254,4 +254,34 @@ bool EditorUtils::IsContentPreformatted(nsIContent& aContent) {
   return elementStyle->StyleText()->WhiteSpaceIsSignificant();
 }
 
+bool EditorUtils::IsPointInSelection(const Selection& aSelection,
+                                     nsINode& aParentNode, int32_t aOffset) {
+  if (aSelection.IsCollapsed()) {
+    return false;
+  }
+
+  uint32_t rangeCount = aSelection.RangeCount();
+  for (uint32_t i = 0; i < rangeCount; i++) {
+    RefPtr<const nsRange> range = aSelection.GetRangeAt(i);
+    if (!range) {
+      // Don't bail yet, iterate through them all
+      continue;
+    }
+
+    IgnoredErrorResult ignoredError;
+    bool nodeIsInSelection =
+        range->IsPointInRange(aParentNode, aOffset, ignoredError) &&
+        !ignoredError.Failed();
+    NS_WARNING_ASSERTION(!ignoredError.Failed(),
+                         "nsRange::IsPointInRange() failed");
+
+    // Done when we find a range that we are in
+    if (nodeIsInSelection) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 }  // namespace mozilla

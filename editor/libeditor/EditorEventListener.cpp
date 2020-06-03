@@ -1028,26 +1028,8 @@ bool EditorEventListener::CanInsertAtDropPosition(DragEvent* aDragEvent) {
     return false;
   }
 
-  uint32_t rangeCount = selection->RangeCount();
-  IgnoredErrorResult ignoredError;
-  for (uint32_t i = 0; i < rangeCount; i++) {
-    RefPtr<const nsRange> range = selection->GetRangeAt(i);
-    if (!range) {
-      // Don't bail yet, iterate through them all
-      continue;
-    }
-
-    bool inRange =
-        range->IsPointInRange(*dropParentContent, dropOffset, ignoredError);
-    NS_WARNING_ASSERTION(!ignoredError.Failed(),
-                         "nsRange::IsPointInRange() failed");
-    if (!ignoredError.Failed() && inRange) {
-      // Okay, now you can bail, we are over the orginal selection
-      return false;
-    }
-    ignoredError.SuppressException();
-  }
-  return true;
+  return !EditorUtils::IsPointInSelection(*selection, *dropParentContent,
+                                          dropOffset);
 }
 
 nsresult EditorEventListener::HandleStartComposition(
