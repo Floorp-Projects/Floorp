@@ -18,7 +18,6 @@ import {
   getHasSiblingOfSameName,
   hasPrettyTab as checkHasPrettyTab,
   getContext,
-  getMainThread,
   getExtensionNameBySourceUrl,
   getSourceContent,
 } from "../../selectors";
@@ -68,7 +67,6 @@ type Props = {
   focused: boolean,
   expanded: boolean,
   threads: Thread[],
-  mainThread: Thread,
   hasMatchingGeneratedSource: boolean,
   hasSiblingOfSameName: boolean,
   hasPrettyTab: boolean,
@@ -470,7 +468,6 @@ const mapStateToProps = (state, props: OwnProps) => {
   const { source, item } = props;
   return {
     cx: getContext(state),
-    mainThread: getMainThread(state),
     hasMatchingGeneratedSource: getHasMatchingGeneratedSource(state, source),
     hasSiblingOfSameName: getHasSiblingOfSameName(state, source),
     hasPrettyTab: source ? checkHasPrettyTab(state, source.url) : false,

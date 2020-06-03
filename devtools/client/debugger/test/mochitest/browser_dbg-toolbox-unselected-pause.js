@@ -30,6 +30,10 @@ add_task(async function() {
     waitForSelectedSource,
     waitForLoadedScopes: () => {},
   });
+  // Select the debugger in advance. (??? not sure about this)
+  await ToolboxTask.spawn(null, async () => {
+    await gToolbox.selectTool("jsdebugger");
+  });
 
   addTab("data:text/html,<script>debugger;</script>");
 

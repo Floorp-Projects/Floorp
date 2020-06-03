@@ -75,10 +75,15 @@ import type {
   BreakpointPositions,
   URL,
 } from "../types";
-import type { PendingSelectedLocation, Selector, State } from "./types";
+
+import type {
+  PendingSelectedLocation,
+  Selector,
+  State as AppState,
+} from "./types";
+
 import type { Action, DonePromiseAction, FocusItem } from "../actions/types";
 import type { LoadSourceAction } from "../actions/types/SourceAction";
-import type { ThreadsState } from "./threads";
 import { uniq } from "lodash";
 
 export type SourcesMap = { [SourceId]: Source };
@@ -590,8 +595,7 @@ function updateBlackBoxListSources(
 // top-level app state, so we'd have to "wrap" them to automatically
 // pick off the piece of state we're interested in. It's impossible
 // (right now) to type those wrapped functions.
-type OuterState = State;
-type ThreadsOuterState = { threads: ThreadsState };
+type OuterState = { sources: SourcesState };
 
 const getSourcesState = (state: OuterState) => state.sources;
 
@@ -784,7 +788,7 @@ export function getSourceList(state: OuterState): Source[] {
 }
 
 export function getDisplayedSourcesList(
-  state: OuterState & SourceActorOuterState & ThreadsOuterState
+  state: OuterState & SourceActorOuterState & AppState
 ): Source[] {
   return ((Object.values(getDisplayedSources(state)): any).flatMap(
     Object.values
@@ -910,9 +914,7 @@ const queryAllDisplayedSources: ShallowQuery<
     }, []),
 });
 
-export function getAllDisplayedSources(
-  state: OuterState & ThreadsOuterState
-): Array<SourceId> {
+function getAllDisplayedSources(state: OuterState & AppState): Array<SourceId> {
   return queryAllDisplayedSources(state.sources.sources, {
     sourcesWithUrls: state.sources.sourcesWithUrls,
     projectDirectoryRoot: state.sources.projectDirectoryRoot,
@@ -923,7 +925,7 @@ export function getAllDisplayedSources(
 }
 
 type GetDisplayedSourceIDsSelector = (
-  OuterState & SourceActorOuterState & ThreadsOuterState
+  OuterState & SourceActorOuterState
 ) => { [ThreadId]: Set<SourceId> };
 const getDisplayedSourceIDs: GetDisplayedSourceIDsSelector = createSelector(
   getAllThreadsBySource,
@@ -949,7 +951,7 @@ const getDisplayedSourceIDs: GetDisplayedSourceIDsSelector = createSelector(
 );
 
 type GetDisplayedSourcesSelector = (
-  OuterState & SourceActorOuterState & ThreadsOuterState
+  OuterState & SourceActorOuterState
 ) => SourcesMapByThread;
 export const getDisplayedSources: GetDisplayedSourcesSelector = createSelector(
   state => state.sources.sources,

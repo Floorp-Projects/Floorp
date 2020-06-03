@@ -79,7 +79,7 @@ export function updateTree({
   for (const context of contexts) {
     const thread = threads.find(t => t.actor === context);
     if (!thread) {
-      return;
+      continue;
     }
 
     const sourcesToAdd = getSourcesToAdd(
