@@ -649,28 +649,28 @@ $(OBJS) $(HOST_OBJS) $(PROGOBJS) $(HOST_PROGOBJS): $(GLOBAL_DEPS)
 # Rules for building native targets must come first because of the host_ prefix
 $(HOST_COBJS):
 	$(REPORT_BUILD_VERBOSE)
-	$(HOST_CC) $(HOST_OUTOPTION)$@ -c $(HOST_CPPFLAGS) $(HOST_CFLAGS) $(NSPR_CFLAGS) -- $<
+	$(HOST_CC) $(HOST_OUTOPTION)$@ -c $(HOST_CPPFLAGS) $(HOST_CFLAGS) $(NSPR_CFLAGS) $<
 
 $(HOST_CPPOBJS):
 	$(REPORT_BUILD_VERBOSE)
 	$(call BUILDSTATUS,OBJECT_FILE $@)
-	$(HOST_CXX) $(HOST_OUTOPTION)$@ -c $(HOST_CPPFLAGS) $(HOST_CXXFLAGS) $(NSPR_CFLAGS) -- $<
+	$(HOST_CXX) $(HOST_OUTOPTION)$@ -c $(HOST_CPPFLAGS) $(HOST_CXXFLAGS) $(NSPR_CFLAGS) $<
 
 $(HOST_CMOBJS):
 	$(REPORT_BUILD_VERBOSE)
-	$(HOST_CC) $(HOST_OUTOPTION)$@ -c $(HOST_CPPFLAGS) $(HOST_CFLAGS) $(HOST_CMFLAGS) $(NSPR_CFLAGS) -- $<
+	$(HOST_CC) $(HOST_OUTOPTION)$@ -c $(HOST_CPPFLAGS) $(HOST_CFLAGS) $(HOST_CMFLAGS) $(NSPR_CFLAGS) $<
 
 $(HOST_CMMOBJS):
 	$(REPORT_BUILD_VERBOSE)
-	$(HOST_CXX) $(HOST_OUTOPTION)$@ -c $(HOST_CPPFLAGS) $(HOST_CXXFLAGS) $(HOST_CMMFLAGS) $(NSPR_CFLAGS) -- $<
+	$(HOST_CXX) $(HOST_OUTOPTION)$@ -c $(HOST_CPPFLAGS) $(HOST_CXXFLAGS) $(HOST_CMMFLAGS) $(NSPR_CFLAGS) $<
 
 $(COBJS):
 	$(REPORT_BUILD_VERBOSE)
-	$(CC) $(OUTOPTION)$@ -c $(COMPILE_CFLAGS) $($(notdir $<)_FLAGS) -- $<
+	$(CC) $(OUTOPTION)$@ -c $(COMPILE_CFLAGS) $($(notdir $<)_FLAGS) $<
 
 $(CWASMOBJS):
 	$(REPORT_BUILD_VERBOSE)
-	$(WASM_CC) $(OUTOPTION)$@ -c $(WASM_CFLAGS) $($(notdir $<)_FLAGS) -- $<
+	$(WASM_CC) $(OUTOPTION)$@ -c $(WASM_CFLAGS) $($(notdir $<)_FLAGS) $<
 
 WINEWRAP = $(if $(and $(filter %.exe,$1),$(WINE)),$(WINE) $1,$1)
 
@@ -745,7 +745,7 @@ $(SOBJS):
 $(CPPOBJS):
 	$(REPORT_BUILD_VERBOSE)
 	$(call BUILDSTATUS,OBJECT_FILE $@)
-	$(CCC) $(OUTOPTION)$@ -c $(COMPILE_CXXFLAGS) $($(notdir $<)_FLAGS) -- $<
+	$(CCC) $(OUTOPTION)$@ -c $(COMPILE_CXXFLAGS) $($(notdir $<)_FLAGS) $<
 
 $(CPPWASMOBJS):
 	$(REPORT_BUILD_VERBOSE)
@@ -754,27 +754,27 @@ $(CPPWASMOBJS):
 
 $(CMMOBJS):
 	$(REPORT_BUILD_VERBOSE)
-	$(CCC) -o $@ -c $(COMPILE_CXXFLAGS) $(COMPILE_CMMFLAGS) $($(notdir $<)_FLAGS) -- $<
+	$(CCC) -o $@ -c $(COMPILE_CXXFLAGS) $(COMPILE_CMMFLAGS) $($(notdir $<)_FLAGS) $<
 
 $(CMOBJS):
 	$(REPORT_BUILD_VERBOSE)
-	$(CC) -o $@ -c $(COMPILE_CFLAGS) $(COMPILE_CMFLAGS) $($(notdir $<)_FLAGS) -- $<
+	$(CC) -o $@ -c $(COMPILE_CFLAGS) $(COMPILE_CMFLAGS) $($(notdir $<)_FLAGS) $<
 
 $(filter %.s,$(CPPSRCS:%.cpp=%.s)): %.s: %.cpp $(call mkdir_deps,$(MDDEPDIR))
 	$(REPORT_BUILD_VERBOSE)
-	$(CCC) -S $(COMPILE_CXXFLAGS) $($(notdir $<)_FLAGS) -- $<
+	$(CCC) -S $(COMPILE_CXXFLAGS) $($(notdir $<)_FLAGS) $<
 
 $(filter %.s,$(CPPSRCS:%.cc=%.s)): %.s: %.cc $(call mkdir_deps,$(MDDEPDIR))
 	$(REPORT_BUILD_VERBOSE)
-	$(CCC) -S $(COMPILE_CXXFLAGS) $($(notdir $<)_FLAGS) -- $<
+	$(CCC) -S $(COMPILE_CXXFLAGS) $($(notdir $<)_FLAGS) $<
 
 $(filter %.s,$(CPPSRCS:%.cxx=%.s)): %.s: %.cpp $(call mkdir_deps,$(MDDEPDIR))
 	$(REPORT_BUILD_VERBOSE)
-	$(CCC) -S $(COMPILE_CXXFLAGS) $($(notdir $<)_FLAGS) -- $<
+	$(CCC) -S $(COMPILE_CXXFLAGS) $($(notdir $<)_FLAGS) $<
 
 $(filter %.s,$(CSRCS:%.c=%.s)): %.s: %.c $(call mkdir_deps,$(MDDEPDIR))
 	$(REPORT_BUILD_VERBOSE)
-	$(CC) -S $(COMPILE_CFLAGS) $($(notdir $<)_FLAGS) -- $<
+	$(CC) -S $(COMPILE_CFLAGS) $($(notdir $<)_FLAGS) $<
 
 ifneq (,$(filter %.i,$(MAKECMDGOALS)))
 # Call as $(call _group_srcs,extension,$(SRCS)) - this will create a list
