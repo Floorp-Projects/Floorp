@@ -70,3 +70,24 @@ jobs:
                 - ['automation/taskcluster/androidTest/ui-test.sh', 'samples-glean', 'arm', '1']
         treeherder:
             symbol: 'ui-samples-glean'
+    android-feature-pwa:
+        description: 'Run unit tests on device for feature pwa'
+        run:
+            post-gradlew:
+                - ['automation/taskcluster/androidTest/ui-test.sh', 'feature-pwa', 'arm', '1']
+        treeherder:
+            symbol: 'unit-feature-pwa'
+    android-feature-sitepermissions:
+        description: 'Run unit tests on device for feature site permissions'
+        run:
+            post-gradlew:
+                - ['automation/taskcluster/androidTest/ui-test.sh', 'feature-sitepermissions', 'arm', '1']
+        treeherder:
+            symbol: 'unit-sitepermissions'
+    android-feature-top-sites:
+        description: 'Run unit tests on device for feature top sites'
+        run:
+            post-gradlew:
+                - ['automation/taskcluster/androidTest/ui-test.sh', 'feature-top-sites', 'arm', '1']
+        treeherder:
+            symbol: 'unit-feature-top-sites'

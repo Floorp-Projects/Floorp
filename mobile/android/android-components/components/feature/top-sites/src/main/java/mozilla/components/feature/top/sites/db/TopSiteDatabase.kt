@@ -44,16 +44,16 @@ internal abstract class TopSiteDatabase : RoomDatabase() {
 internal object Migrations {
     val migration_1_2 = object : Migration(1, 2) {
         override fun migrate(database: SupportSQLiteDatabase) {
-            // Add the new isDefault column and set isDefault to 0 (false) for every entry.
+            // Add the new is_default column and set is_default to 0 (false) for every entry.
             database.execSQL(
-                "ALTER TABLE top_sites ADD COLUMN isDefault INTEGER NOT NULL DEFAULT 0"
+                "ALTER TABLE top_sites ADD COLUMN is_default INTEGER NOT NULL DEFAULT 0"
             )
 
             // Prior to version 2, pocket top sites, wikipedia and youtube were added as default
-            // sites in Fenix. Look for these entries and set isDefault to 1 (true).
+            // sites in Fenix. Look for these entries and set is_default to 1 (true).
             database.execSQL(
                 "UPDATE top_sites " +
-                    "SET isDefault = 1 " +
+                    "SET is_default = 1 " +
                     "WHERE url IN " +
                     "('https://getpocket.com/fenix-top-articles', " +
                     "'https://www.wikipedia.org/', " +
