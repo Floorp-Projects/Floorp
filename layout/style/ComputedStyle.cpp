@@ -411,8 +411,4 @@ bool ComputedStyle::EqualForCachedAnonymousContentStyle(
 
 #endif
 
-bool ComputedStyle::HasOverriddenAppearance(StyleAppearance aAppearance) const {
-  return Servo_ComputedValues_HasOverriddenAppearance(this, aAppearance);
-}
-
 }  // namespace mozilla
