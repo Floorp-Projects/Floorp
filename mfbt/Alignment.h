@@ -62,18 +62,18 @@ struct AlignasHelper {
  *
  * For instance,
  *
- *   MOZ_ALIGNED_DECL(char arr[2], 8);
+ *   MOZ_ALIGNED_DECL(8, char arr[2]);
  *
  * will declare a two-character array |arr| aligned to 8 bytes.
  */
 
 #if defined(__GNUC__)
-#  define MOZ_ALIGNED_DECL(_type, _align) _type __attribute__((aligned(_align)))
+#  define MOZ_ALIGNED_DECL(_align, _type) _type __attribute__((aligned(_align)))
 #elif defined(_MSC_VER)
-#  define MOZ_ALIGNED_DECL(_type, _align) __declspec(align(_align)) _type
+#  define MOZ_ALIGNED_DECL(_align, _type) __declspec(align(_align)) _type
 #else
 #  warning "We don't know how to align variables on this compiler."
-#  define MOZ_ALIGNED_DECL(_type, _align) _type
+#  define MOZ_ALIGNED_DECL(_align, _type) _type
 #endif
 
 /*
@@ -92,27 +92,27 @@ struct AlignedElem;
 
 template <>
 struct AlignedElem<1> {
-  MOZ_ALIGNED_DECL(uint8_t elem, 1);
+  MOZ_ALIGNED_DECL(1, uint8_t elem);
 };
 
 template <>
 struct AlignedElem<2> {
-  MOZ_ALIGNED_DECL(uint8_t elem, 2);
+  MOZ_ALIGNED_DECL(2, uint8_t elem);
 };
 
 template <>
 struct AlignedElem<4> {
-  MOZ_ALIGNED_DECL(uint8_t elem, 4);
+  MOZ_ALIGNED_DECL(4, uint8_t elem);
 };
 
 template <>
 struct AlignedElem<8> {
-  MOZ_ALIGNED_DECL(uint8_t elem, 8);
+  MOZ_ALIGNED_DECL(8, uint8_t elem);
 };
 
 template <>
 struct AlignedElem<16> {
-  MOZ_ALIGNED_DECL(uint8_t elem, 16);
+  MOZ_ALIGNED_DECL(16, uint8_t elem);
 };
 
 template <typename T>
