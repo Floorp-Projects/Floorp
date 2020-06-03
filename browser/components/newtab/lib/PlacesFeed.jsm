@@ -24,6 +24,11 @@ ChromeUtils.defineModuleGetter(
   "PrivateBrowsingUtils",
   "resource://gre/modules/PrivateBrowsingUtils.jsm"
 );
+ChromeUtils.defineModuleGetter(
+  this,
+  "TopSiteAttribution",
+  "resource:///modules/TopSiteAttribution.jsm"
+);
 
 const LINK_BLOCKED_EVENT = "newtab-linkBlocked";
 const PLACES_LINKS_CHANGED_DELAY_TIME = 1000; // time in ms to delay timer for places links changed events
@@ -499,6 +504,9 @@ class PlacesFeed {
         this.openLink(action);
         break;
       }
+      case at.TOP_SITES_ATTRIBUTION:
+        TopSiteAttribution.makeRequest(action.data);
+        break;
     }
   }
 }
