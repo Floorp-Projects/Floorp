@@ -69,6 +69,5 @@ def test_setup_wptrunner(venv, logger, product):
     kwargs["binary"] = sys.argv[0]
     kwargs["webdriver_binary"] = sys.argv[0]
     if kwargs["product"] == "sauce":
-        kwargs["sauce_browser"] = "firefox"
-        kwargs["sauce_version"] = "63"
+        kwargs["product"] = "sauce:firefox:63"
     run.setup_wptrunner(venv, **kwargs)
