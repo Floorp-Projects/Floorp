@@ -59,7 +59,6 @@ describe("ASRouter", () => {
   let messageBlockList;
   let providerBlockList;
   let messageImpressions;
-  let providerImpressions;
   let groupImpressions;
   let previousSessionEnd;
   let fetchStub;
@@ -87,9 +86,6 @@ describe("ASRouter", () => {
       .returns(Promise.resolve(messageImpressions));
     getStub.withArgs("groupImpressions").resolves(groupImpressions);
     getStub
-      .withArgs("providerImpressions")
-      .returns(Promise.resolve(providerImpressions));
-    getStub
       .withArgs("previousSessionEnd")
       .returns(Promise.resolve(previousSessionEnd));
     return {
@@ -116,7 +112,6 @@ describe("ASRouter", () => {
     messageBlockList = [];
     providerBlockList = [];
     messageImpressions = {};
-    providerImpressions = {};
     groupImpressions = {};
     previousSessionEnd = 100;
     sandbox = sinon.createSandbox();
@@ -247,20 +242,6 @@ describe("ASRouter", () => {
       await Router.init(channel, createFakeStorage(), dispatchStub);
 
       assert.deepEqual(Router.state.messageBlockList, ["foo"]);
-    });
-    it("should migrate provider impressions to group impressions", async () => {
-      setMessageProviderPref([
-        { id: "onboarding", type: "local", messages: [] },
-      ]);
-      providerImpressions = { onboarding: [1, 2, 3] };
-      Router = new _ASRouter();
-      await Router.init(channel, createFakeStorage(), dispatchStub);
-
-      assert.property(Router.state.groupImpressions, "onboarding");
-      assert.deepEqual(
-        Router.state.groupImpressions.onboarding,
-        providerImpressions.onboarding
-      );
     });
     it("should initialize all the hub providers", async () => {
       // ASRouter init called in `beforeEach` block above
@@ -3186,7 +3167,7 @@ describe("ASRouter", () => {
             {},
             state.messageImpressions
           );
-          const gImpressions = Object.assign({}, state.providerImpressions);
+          let gImpressions = {};
           gImpressions.bar = barGroupImpressions;
           messageImpressions.foo = fooMessageImpressions;
           return {
