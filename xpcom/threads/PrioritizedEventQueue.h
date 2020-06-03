@@ -8,10 +8,8 @@
 #define mozilla_PrioritizedEventQueue_h
 
 #include "mozilla/AbstractEventQueue.h"
-#include "mozilla/Atomics.h"
 #include "mozilla/EventQueue.h"
 #include "mozilla/IdlePeriodState.h"
-#include "mozilla/TaskController.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
 #include "nsCOMPtr.h"
@@ -23,42 +21,6 @@ namespace mozilla {
 namespace ipc {
 class IdleSchedulerChild;
 }
-
-class InputTaskManager : public TaskManager {
- public:
-  InputTaskManager() : mInputQueueState(STATE_DISABLED) {}
-  int32_t GetPriorityModifierForEventLoopTurn(
-      const MutexAutoLock& aProofOfLock) final;
-  void WillRunTask() final;
-  void DidRunTask() final;
-
-  enum InputEventQueueState {
-    STATE_DISABLED,
-    STATE_FLUSHING,
-    STATE_SUSPEND,
-    STATE_ENABLED
-  };
-
-  void EnableInputEventPrioritization();
-  void FlushInputEventPrioritization();
-  void SuspendInputEventPrioritization();
-  void ResumeInputEventPrioritization();
-
-  InputEventQueueState State() { return mInputQueueState; }
-
-  void SetState(InputEventQueueState aState) { mInputQueueState = aState; }
-
-  TimeStamp InputHandlingStartTime() { return mInputHandlingStartTime; }
-
-  void SetInputHandlingStartTime(TimeStamp aStartTime) {
-    mInputHandlingStartTime = aStartTime;
-  }
-
- private:
-  TimeStamp mInputHandlingStartTime;
-  Atomic<InputEventQueueState> mInputQueueState;
-  AutoTArray<TimeStamp, 4> mStartTimes;
-};
 
 // This AbstractEventQueue implementation has one queue for each
 // EventQueuePriority. The type of queue used for each priority is determined by
@@ -111,21 +73,12 @@ class PrioritizedEventQueue final : public AbstractEventQueue {
   // least as long as the queue.
   void SetMutexRef(Mutex& aMutex) { mMutex = &aMutex; }
 
-  void EnableInputEventPrioritization(const MutexAutoLock& aProofOfLock) final {
-    mInputTaskManager->EnableInputEventPrioritization();
-  }
-  void FlushInputEventPrioritization(const MutexAutoLock& aProofOfLock) final {
-    mInputTaskManager->FlushInputEventPrioritization();
-  }
-  void SuspendInputEventPrioritization(
-      const MutexAutoLock& aProofOfLock) final {
-    mInputTaskManager->SuspendInputEventPrioritization();
-  }
-  void ResumeInputEventPrioritization(const MutexAutoLock& aProofOfLock) final {
-    mInputTaskManager->ResumeInputEventPrioritization();
-  }
+  void EnableInputEventPrioritization(const MutexAutoLock& aProofOfLock) final;
+  void FlushInputEventPrioritization(const MutexAutoLock& aProofOfLock) final;
+  void SuspendInputEventPrioritization(const MutexAutoLock& aProofOfLock) final;
+  void ResumeInputEventPrioritization(const MutexAutoLock& aProofOfLock) final;
 
-  IdlePeriodState* GetIdlePeriodState() { return &mIdleTaskManager->State(); }
+  IdlePeriodState* GetIdlePeriodState() { return &mIdlePeriodState; }
 
   bool HasIdleRunnables(const MutexAutoLock& aProofOfLock) const;
 
@@ -140,7 +93,7 @@ class PrioritizedEventQueue final : public AbstractEventQueue {
     n += mDeferredTimersQueue->SizeOfIncludingThis(aMallocSizeOf);
     n += mIdleQueue->SizeOfIncludingThis(aMallocSizeOf);
 
-    n += mIdleTaskManager->State().SizeOfExcludingThis(aMallocSizeOf);
+    n += mIdlePeriodState.SizeOfExcludingThis(aMallocSizeOf);
 
     return n;
   }
@@ -168,8 +121,18 @@ class PrioritizedEventQueue final : public AbstractEventQueue {
   TimeDuration mLastEventDelay;
   TimeStamp mLastEventStart;
 
-  RefPtr<InputTaskManager> mInputTaskManager;
-  RefPtr<IdleTaskManager> mIdleTaskManager;
+  TimeStamp mInputHandlingStartTime;
+
+  enum InputEventQueueState {
+    STATE_DISABLED,
+    STATE_FLUSHING,
+    STATE_SUSPEND,
+    STATE_ENABLED
+  };
+  InputEventQueueState mInputQueueState = STATE_DISABLED;
+
+  // Tracking of our idle state of various sorts.
+  IdlePeriodState mIdlePeriodState;
 };
 
 }  // namespace mozilla
