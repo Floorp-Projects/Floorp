@@ -13,9 +13,6 @@ with Files("unit/*macwebapputils*"):
 with Files("unit/*taskbar_jumplistitems*"):
     BUG_COMPONENT = ("Core", "Widget: Win32")
 
-with Files("TestAppShellSteadyState.cpp"):
-    BUG_COMPONENT = ("Core", "Storage: IndexedDB")
-
 with Files("TestChromeMargin.cpp"):
     BUG_COMPONENT = ("Core", "Widget: Win32")
 
