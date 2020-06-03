@@ -39,7 +39,7 @@ add_task(async function() {
 
 async function testClickingLink(toolbox, view) {
   info("Listening for switch to the style editor");
-  const onStyleEditorReady = toolbox.once("styleeditor-ready");
+  const onStyleEditorReady = toolbox.once("styleeditor-selected");
 
   info("Finding the stylesheet link and clicking it");
   const link = getRuleViewLinkByIndex(view, 1);
@@ -51,7 +51,7 @@ async function testClickingLink(toolbox, view) {
 function checkDisplayedStylesheet(toolbox) {
   const panel = toolbox.getCurrentPanel();
   return new Promise((resolve, reject) => {
-    panel.UI.on("editor-selected", editor => {
+    const maybeContinue = editor => {
       // The style editor selects the first sheet at first load before
       // selecting the desired sheet.
       if (editor.styleSheet.href.endsWith("scss")) {
@@ -61,7 +61,12 @@ function checkDisplayedStylesheet(toolbox) {
           .then(editorSelected)
           .then(resolve, reject);
       }
-    });
+    };
+    if (panel.UI.selectedEditor) {
+      maybeContinue(panel.UI.selectedEditor);
+    } else {
+      panel.UI.on("editor-selected", maybeContinue);
+    }
   });
 }
 

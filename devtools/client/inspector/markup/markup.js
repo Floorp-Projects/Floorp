@@ -1099,7 +1099,7 @@ MarkupView.prototype = {
           if (type === "uri") {
             openContentLink(url);
           } else if (type === "cssresource") {
-            return this.toolbox.viewSourceInStyleEditor(url);
+            return this.toolbox.viewSourceInStyleEditorByURL(url);
           } else if (type === "jsresource") {
             return this.toolbox.viewSourceInDebugger(url);
           }
