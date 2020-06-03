@@ -208,10 +208,14 @@ def taskgraph_decision(options, parameters=None):
         lambda graph_config: get_decision_parameters(graph_config, options)
     )
 
+    decision_task_id = os.environ['TASK_ID']
+
     # create a TaskGraphGenerator instance
     tgg = TaskGraphGenerator(
         root_dir=options.get('root'),
-        parameters=parameters)
+        parameters=parameters,
+        decision_task_id=decision_task_id,
+    )
 
     # write out the parameters used to generate this graph
     write_artifact('parameters.yml', dict(**tgg.parameters))

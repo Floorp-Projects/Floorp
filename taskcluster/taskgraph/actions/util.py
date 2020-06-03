@@ -162,7 +162,8 @@ def create_tasks(graph_config, to_run, full_task_graph, label_to_taskid,
     optimized_task_graph, label_to_taskid = optimize_task_graph(target_task_graph,
                                                                 params,
                                                                 to_run,
-                                                                label_to_taskid)
+                                                                decision_task_id,
+                                                                existing_tasks=label_to_taskid)
     write_artifact('task-graph{}.json'.format(suffix), optimized_task_graph.to_json())
     write_artifact('label-to-taskid{}.json'.format(suffix), label_to_taskid)
     write_artifact('to-run{}.json'.format(suffix), list(to_run))

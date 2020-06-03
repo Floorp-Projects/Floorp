@@ -185,8 +185,10 @@ using simple parameterized values, as follows:
     The task definition may contain "task references" of this form.  These will
     be replaced during the optimization step, with the appropriate taskId for
     the named dependency substituted for ``<dep-name>`` in the string.
-    Multiple labels may be substituted in a single string, and ``<<>`` can be
-    used to escape a literal ``<``.
+    Additionally, `decision` and `self` can be used a dependency names to refer
+    to the decision task, and the task itself.  Multiple labels may be
+    substituted in a single string, and ``<<>`` can be used to escape a literal
+    ``<``.
 
 ``{"artifact-reference": "..<dep-name/artifact/name>.."}``
     Similar to a ``task-reference``, but this substitutes a URL to the queue's
