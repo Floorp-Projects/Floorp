@@ -4141,7 +4141,9 @@ nsresult nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext,
       list->PaintRoot(builder, aRenderingContext, flags);
   Telemetry::AccumulateTimeDelta(Telemetry::PAINT_RASTERIZE_TIME, paintStart);
 
-  presShell->EndPaint();
+  if (builder->IsPaintingToWindow()) {
+    presShell->EndPaint();
+  }
   builder->Check();
 
   if (StaticPrefs::gfx_logging_painted_pixel_count_enabled()) {
