@@ -224,27 +224,6 @@ class WebConsole {
   }
 
   /**
-   * Tries to open a Stylesheet file related to the web page for the web console
-   * instance in the Style Editor. If the file is not found, it is opened in
-   * source view instead.
-   *
-   * Manually handle the case where toolbox does not exist (Browser Console).
-   *
-   * @param string sourceURL
-   *        The URL of the file.
-   * @param integer sourceLine
-   *        The line number which you want to place the caret.
-   */
-  viewSourceInStyleEditor(sourceURL, sourceLine) {
-    const { toolbox } = this;
-    if (!toolbox) {
-      this.viewSource(sourceURL, sourceLine);
-      return;
-    }
-    toolbox.viewSourceInStyleEditor(sourceURL, sourceLine);
-  }
-
-  /**
    * Tries to open a JavaScript file related to the web page for the web console
    * instance in the Script Debugger. If the file is not found, it is opened in
    * source view instead.
@@ -396,7 +375,7 @@ class WebConsole {
     if (!this.toolbox) {
       return;
     }
-    await this.toolbox.viewSourceInStyleEditor(
+    await this.toolbox.viewSourceInStyleEditorByURL(
       frame.url,
       frame.line,
       frame.column

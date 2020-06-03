@@ -32,12 +32,6 @@ const EventEmitter = require("devtools/shared/event-emitter");
 const CssLogic = require("devtools/shared/inspector/css-logic");
 
 loader.lazyRequireGetter(this, "Tools", "devtools/client/definitions", true);
-loader.lazyRequireGetter(
-  this,
-  "gDevTools",
-  "devtools/client/framework/devtools",
-  true
-);
 
 const STYLE_INSPECTOR_PROPERTIES =
   "devtools/shared/locales/styleinspector.properties";
@@ -300,23 +294,18 @@ RuleEditor.prototype = {
   },
 
   _onSourceClick: function() {
-    if (this.source.hasAttribute("unselectable") || !this._currentLocation) {
+    if (this.source.hasAttribute("unselectable")) {
       return;
     }
 
-    const target = this.ruleView.inspector.currentTarget;
+    const { inspector } = this.ruleView;
+    const target = inspector.currentTarget;
     if (Tools.styleEditor.isTargetSupported(target)) {
-      gDevTools.showToolbox(target, "styleeditor").then(toolbox => {
-        const { url, line, column } = this._currentLocation;
-
-        if (!this.rule.sheet.href && this.rule.sheet.nodeHref) {
-          toolbox
-            .getCurrentPanel()
-            .selectStyleSheet(this.rule.sheet, line, column);
-        } else {
-          toolbox.getCurrentPanel().selectStyleSheet(url, line, column);
-        }
-      });
+      inspector.toolbox.viewSourceInStyleEditorByFront(
+        this.rule.sheet,
+        this.rule.ruleLine,
+        this.rule.ruleColumn
+      );
     }
   },
 
@@ -334,27 +323,16 @@ RuleEditor.prototype = {
    *        The original URL
    * @param {Number} line
    *        The original line number
-   * @param {number} column
-   *        The original column number
    */
-  _updateLocation: function(enabled, url, line, column) {
+  _updateLocation: function(enabled, url, line) {
     let displayURL = url;
     if (!enabled) {
-      url = null;
       displayURL = null;
       if (this.rule.sheet) {
-        url = this.rule.sheet.href || this.rule.sheet.nodeHref;
         displayURL = this.rule.sheet.href;
       }
       line = this.rule.ruleLine;
-      column = this.rule.ruleColumn;
     }
-
-    this._currentLocation = {
-      url,
-      line,
-      column,
-    };
 
     let sourceTextContent = CssLogic.shortSource({ href: displayURL });
     let title = displayURL ? displayURL : sourceTextContent;

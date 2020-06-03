@@ -12,7 +12,6 @@ const { ELEMENT_STYLE } = require("devtools/shared/specs/styles");
 const OutputParser = require("devtools/client/shared/output-parser");
 const { PrefObserver } = require("devtools/client/shared/prefs");
 const { createChild } = require("devtools/client/inspector/shared/utils");
-const { gDevTools } = require("devtools/client/framework/devtools");
 const {
   VIEW_NODE_SELECTOR_TYPE,
   VIEW_NODE_PROPERTY_TYPE,
@@ -1355,18 +1354,17 @@ function SelectorView(tree, selectorInfo) {
     const sheet = rule.parentStyleSheet;
     this.source = CssLogic.shortSource(sheet) + ":" + rule.line;
 
-    const url = sheet.href || sheet.nodeHref;
-    this.currentLocation = {
-      href: url,
+    this.generatedLocation = {
+      sheet: sheet,
+      href: sheet.href || sheet.nodeHref,
       line: rule.line,
       column: rule.column,
     };
-    this.generatedLocation = this.currentLocation;
     this.sourceMapURLService = this.tree.inspector.toolbox.sourceMapURLService;
     this.sourceMapURLService.subscribe(
-      url,
-      rule.line,
-      rule.column,
+      this.generatedLocation.href,
+      this.generatedLocation.line,
+      this.generatedLocation.column,
       this._updateLocation
     );
   }
@@ -1481,19 +1479,16 @@ SelectorView.prototype = {
 
     // Update |currentLocation| to be whichever location is being
     // displayed at the moment.
+    let currentLocation = this.generatedLocation;
     if (enabled) {
-      this.currentLocation = { href: url, line, column };
-    } else {
-      this.currentLocation = this.generatedLocation;
+      currentLocation = { href: url, line, column };
     }
 
     const selector = '[sourcelocation="' + this.source + '"]';
     const link = this.tree.element.querySelector(selector);
     if (link) {
       const text =
-        CssLogic.shortSource(this.currentLocation) +
-        ":" +
-        this.currentLocation.line;
+        CssLogic.shortSource(currentLocation) + ":" + currentLocation.line;
       link.textContent = text;
     }
 
@@ -1523,12 +1518,10 @@ SelectorView.prototype = {
       return;
     }
 
-    const { href, line, column } = this.currentLocation;
+    const { sheet, line, column } = this.generatedLocation;
     const target = inspector.currentTarget;
     if (ToolDefinitions.styleEditor.isTargetSupported(target)) {
-      gDevTools.showToolbox(target, "styleeditor").then(function(toolbox) {
-        toolbox.getCurrentPanel().selectStyleSheet(href, line, column);
-      });
+      inspector.toolbox.viewSourceInStyleEditorByFront(sheet, line, column);
     }
   },
 

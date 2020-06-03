@@ -15,7 +15,7 @@ add_task(async function() {
   const editor = ui.editors[1];
 
   info("Selecting style sheet #1.");
-  await ui.selectStyleSheet(editor.styleSheet.href, LINE_NO);
+  await ui.selectStyleSheet(editor.styleSheet, LINE_NO);
 
   is(ui.selectedEditor, ui.editors[1], "Second editor is selected.");
   const { line, ch } = ui.selectedEditor.sourceEditor.getCursor();

@@ -95,8 +95,8 @@ StyleEditorPanel.prototype = {
   /**
    * Select a stylesheet.
    *
-   * @param {string} href
-   *        Url of stylesheet to find and select in editor
+   * @param {string|StyleSheetFront} href
+   *        Url or front of stylesheet to find and select in editor.
    * @param {number} line
    *        Line number to jump to after selecting. One-indexed
    * @param {number} col
@@ -109,6 +109,7 @@ StyleEditorPanel.prototype = {
     if (!this.UI) {
       return null;
     }
+
     return this.UI.selectStyleSheet(href, line - 1, col ? col - 1 : 0);
   },
 
