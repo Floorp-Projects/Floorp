@@ -38,6 +38,7 @@ import mozilla.components.feature.pwa.WebAppShortcutManager
 import mozilla.components.feature.readerview.ReaderViewMiddleware
 import mozilla.components.feature.session.HistoryDelegate
 import mozilla.components.feature.webcompat.WebCompatFeature
+import mozilla.components.feature.webcompat.reporter.WebCompatReporterFeature
 import mozilla.components.feature.webnotifications.WebNotificationFeature
 import mozilla.components.lib.dataprotect.SecureAbove22Preferences
 import mozilla.components.lib.dataprotect.generateEncryptionKey
@@ -46,6 +47,7 @@ import org.mozilla.fenix.AppRequestInterceptor
 import org.mozilla.fenix.Config
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ReleaseChannel
 import org.mozilla.fenix.downloads.DownloadService
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
@@ -84,6 +86,20 @@ class Core(private val context: Context) {
             GeckoProvider.getOrCreateRuntime(context, lazyPasswordsStorage)
         ).also {
             WebCompatFeature.install(it)
+
+            /**
+             * There are some issues around localization to be resolved, as well as questions around
+             * the capacity of the WebCompat team, so the "Report site issue" feature should stay
+             * disabled in Fenix Release builds for now.
+             * This is consistent with both Fennec and Firefox Desktop.
+             */
+            val shouldEnableWebcompatReporter = Config.channel !in setOf(
+                ReleaseChannel.FenixProduction,
+                ReleaseChannel.FennecProduction
+            )
+            if (shouldEnableWebcompatReporter) {
+                WebCompatReporterFeature.install(it)
+            }
         }
     }
 
