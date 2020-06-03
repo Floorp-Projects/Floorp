@@ -98,6 +98,8 @@
     <string name="browser_menu_add_to_homescreen">Titz\'aqatisäx pa ri Rutikirib\'al ruwa</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
     <string name="browser_menu_install_on_homescreen">Tiyak</string>
+    <!-- Menu option on the toolbar that takes you to synced tabs page-->
+    <string name="synced_tabs">Ximon taq ruwi\'</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">Tikanöx pa ruxaq</string>
     <!-- Browser menu button that creates a private tab -->
@@ -299,6 +301,8 @@
     <string name="preferences_sync_bookmarks">Taq yaketal</string>
     <!-- Preference for syncing logins -->
     <string name="preferences_sync_logins">Ketikirisäx molojri\'ïl</string>
+    <!-- Preference for syncing tabs -->
+    <string name="preferences_sync_tabs">Taq ruwi\'</string>
     <!-- Preference for signing out -->
     <string name="preferences_sign_out">Titz\'apïx molojri\'ïl</string>
     <!-- Preference displays and allows changing current FxA device name -->
@@ -437,6 +441,8 @@
     <string name="library_desktop_bookmarks_unfiled">Ch\'aqa\' chik taq Yaketal</string>
     <!-- Option in Library to open History page -->
     <string name="library_history">Natab\'äl</string>
+    <!-- Option in Library to open Synced Tabs page -->
+    <string name="library_synced_tabs">Ximon taq ruwi\'</string>
     <!-- Option in Library to open Reading List -->
     <string name="library_reading_list">Rucholajem sik\'inem</string>
     <!-- Menu Item Label for Search in Library -->
@@ -977,6 +983,8 @@
 
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">K\'atzinel (chilab\'en)</string>
+    <!-- text for tracking protection radio button option for strict level of blocking -->
+    <string name="onboarding_tracking_protection_strict_option">Nimaläj</string>
     <!-- text for strict blocking option button description -->
     <string name="onboarding_tracking_protection_strict_button_description">K\'ïy ojqanela\' keq\'at richin jun ütz chajinïk chuqa\' rub\'eyal nisamäj, xa xe chi rik\'in jub\'a\' jujun taq ruxaq man xkesamäj ta ütz</string>
     <!-- text for the toolbar position card header
@@ -1435,4 +1443,10 @@ Achi\'el: \nhttps://www.google.com/search?q=%s</string>
     <string name="voice_search_content_description">Tikanöx chi ch\'ab\'äl</string>
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
     <string name="voice_search_explainer">Kach\'o wakami</string>
-</resources>
+
+    <!-- Synced Tabs -->
+    <!-- Text displayed when user is not logged into a Firefox Account -->
+    <string name="synced_tabs_connect_to_sync_account">Tok rik\'in jun Rub\'i\' Rutaqoya\'l Firefox</string>
+    <!-- Text displayed to ask user to connect another device as no devices found with account -->
+    <string name="synced_tabs_connect_another_device">Tokisäx jun chik okisab\'äl</string>
+    </resources>

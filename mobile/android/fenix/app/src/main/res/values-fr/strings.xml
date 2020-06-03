@@ -1010,7 +1010,7 @@ Cependant, il peut être moins stable. Téléchargez la version bêta de notre n
         en ligne et sur ce que vous partagez avec nous.
     </string>
     <!-- Text for the button to read the privacy notice -->
-    <string name="onboarding_privacy_notice_read_button">Consultez notre politique de confidentialité</string>
+    <string name="onboarding_privacy_notice_read_button">Consulter notre politique de confidentialité</string>
 
     <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
     <string name="onboarding_close">Fermer</string>
@@ -1430,4 +1430,5 @@ Cependant, il peut être moins stable. Téléchargez la version bêta de notre n
     <string name="voice_search_content_description">Recherche vocale</string>
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
     <string name="voice_search_explainer">Vous pouvez parler</string>
-</resources>
+
+    </resources>

@@ -95,6 +95,8 @@
     <string name="browser_menu_add_to_homescreen">Dodaj do ekranu głównego</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
     <string name="browser_menu_install_on_homescreen">Zainstaluj</string>
+    <!-- Menu option on the toolbar that takes you to synced tabs page-->
+    <string name="synced_tabs">Karty z innych urządzeń</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">Znajdź na stronie</string>
     <!-- Browser menu button that creates a private tab -->
@@ -293,6 +295,8 @@
     <string name="preferences_sync_bookmarks">Zakładki</string>
     <!-- Preference for syncing logins -->
     <string name="preferences_sync_logins">Dane logowania</string>
+    <!-- Preference for syncing tabs -->
+    <string name="preferences_sync_tabs">Karty</string>
     <!-- Preference for signing out -->
     <string name="preferences_sign_out">Wyloguj się</string>
     <!-- Preference displays and allows changing current FxA device name -->
@@ -426,6 +430,8 @@
     <string name="library_desktop_bookmarks_unfiled">Pozostałe zakładki</string>
     <!-- Option in Library to open History page -->
     <string name="library_history">Historia</string>
+    <!-- Option in Library to open Synced Tabs page -->
+    <string name="library_synced_tabs">Karty z innych urządzeń</string>
     <!-- Option in Library to open Reading List -->
     <string name="library_reading_list">Do przeczytania</string>
     <!-- Menu Item Label for Search in Library -->
@@ -820,7 +826,7 @@
     <!-- Sample text for accessibility font size -->
     <string name="accessibility_text_size_sample_text_1">To przykładowy tekst. Pokazuje, jak tekst będzie wyglądał po zwiększeniu lub zmniejszeniu rozmiaru za pomocą tego ustawienia.</string>
     <!-- Summary for Accessibility Text Size Scaling Preference -->
-    <string name="preference_accessibility_text_size_summary">Powiększenie lub pomniejszenie tekstu na stronach</string>
+    <string name="preference_accessibility_text_size_summary">Powiększ lub pomniejsz tekst na stronach.</string>
     <!-- Title for Accessibility Text Size Scaling Preference -->
     <string name="preference_accessibility_font_size_title">Rozmiar czcionki</string>
 
@@ -955,6 +961,8 @@
     <string name="onboarding_tracking_protection_standard_button_description">Blokuje mniej elementów śledzących, ale strony będą działać bez problemów</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">Ścisła (zalecana)</string>
+    <!-- text for tracking protection radio button option for strict level of blocking -->
+    <string name="onboarding_tracking_protection_strict_option">Ścisła</string>
     <!-- text for strict blocking option button description -->
     <string name="onboarding_tracking_protection_strict_button_description">Blokuje więcej elementów śledzących, zapewniając lepszą ochronę i większą wydajność, ale niektóre strony mogą nie działać poprawnie</string>
     <!-- text for the toolbar position card header
@@ -1403,4 +1411,15 @@
     <string name="voice_search_content_description">Wyszukiwanie głosowe</string>
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
     <string name="voice_search_explainer">Mów teraz</string>
+
+    <!-- Synced Tabs -->
+    <!-- Text displayed when user is not logged into a Firefox Account -->
+    <string name="synced_tabs_connect_to_sync_account">Połącz się z kontem Firefoksa.</string>
+    <!-- Text displayed to ask user to connect another device as no devices found with account -->
+    <string name="synced_tabs_connect_another_device">Połącz inne urządzenie.</string>
+    <!-- Text displayed asking user to re-authenticate -->
+    <string name="synced_tabs_reauth">Proszę uwierzytelnić się ponownie.</string>
+    <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->
+    <string name="synced_tabs_enable_tab_syncing">Proszę włączyć synchronizację kart.</string>
+
 </resources>

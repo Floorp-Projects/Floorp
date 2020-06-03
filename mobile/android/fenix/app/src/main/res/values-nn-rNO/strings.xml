@@ -96,6 +96,8 @@
     <string name="browser_menu_add_to_homescreen">Legg til på startskjermen</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
     <string name="browser_menu_install_on_homescreen">Installer</string>
+    <!-- Menu option on the toolbar that takes you to synced tabs page-->
+    <string name="synced_tabs">Synkroniserte faner</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">Finn på sida</string>
     <!-- Browser menu button that creates a private tab -->
@@ -292,6 +294,8 @@
     <string name="preferences_sync_bookmarks">Bokmerke</string>
     <!-- Preference for syncing logins -->
     <string name="preferences_sync_logins">Innloggingar</string>
+    <!-- Preference for syncing tabs -->
+    <string name="preferences_sync_tabs">Faner</string>
     <!-- Preference for signing out -->
     <string name="preferences_sign_out">Logg ut</string>
     <!-- Preference displays and allows changing current FxA device name -->
@@ -426,6 +430,8 @@
     <string name="library_desktop_bookmarks_unfiled">Andre bokmerke</string>
     <!-- Option in Library to open History page -->
     <string name="library_history">Historikk</string>
+    <!-- Option in Library to open Synced Tabs page -->
+    <string name="library_synced_tabs">Synkroniserte faner</string>
     <!-- Option in Library to open Reading List -->
     <string name="library_reading_list">Leseliste</string>
     <!-- Menu Item Label for Search in Library -->
@@ -959,6 +965,8 @@
     <string name="onboarding_tracking_protection_standard_button_description">Blokkerer færre sporingsmetodar, men gjer det muleg for sider å lesast inn normalt</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">Streng (tilrådd)</string>
+    <!-- text for tracking protection radio button option for strict level of blocking -->
+    <string name="onboarding_tracking_protection_strict_option">Streng</string>
     <!-- text for strict blocking option button description -->
     <string name="onboarding_tracking_protection_strict_button_description">Blokkerer fleire sporingsmekanismar for betre vern og yting, men kan føre til at nokre nettstadar ikkje fungerer optimalt</string>
     <!-- text for the toolbar position card header
@@ -1391,6 +1399,12 @@
     <string name="dialog_delete_positive">Slett</string>
     <!--  The saved login options menu description. -->
     <string name="login_options_menu">Innloggingsalternativ</string>
+    <!--  The editable text field for a login's web address. -->
+    <string name="saved_login_hostname_description">Det redigerbare tekstfeltet for innloggings-nettadressa.</string>
+    <!--  The editable text field for a login's username. -->
+    <string name="saved_login_username_description">Det redigerbare tekstfeltet for innloggings-brukarnamnet.</string>
+    <!--  The editable text field for a login's password. -->
+    <string name="saved_login_password_description">Det redigerbare tekstfeltet for innloggings-passordet.</string>
     <!--  The button description to save changes to an edited login. -->
     <string name="save_changes_to_login">Lagre endringar for innlogging.</string>
     <!--  The button description to discard changes to an edited login. -->
@@ -1403,4 +1417,15 @@
     <string name="voice_search_content_description">Stemmesøk</string>
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
     <string name="voice_search_explainer">Snakk no</string>
+
+    <!-- Synced Tabs -->
+    <!-- Text displayed when user is not logged into a Firefox Account -->
+    <string name="synced_tabs_connect_to_sync_account">Kople til med ein Firefox Account.</string>
+    <!-- Text displayed to ask user to connect another device as no devices found with account -->
+    <string name="synced_tabs_connect_another_device">Kople til ei anna eining.</string>
+    <!-- Text displayed asking user to re-authenticate -->
+    <string name="synced_tabs_reauth">Godkjenn på nytt.</string>
+    <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->
+    <string name="synced_tabs_enable_tab_syncing">Slå på fane-synkronisering.</string>
+
 </resources>

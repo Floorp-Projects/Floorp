@@ -19,6 +19,9 @@
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">Tu bodo prikazani vaši odprti zavihki.</string>
 
+    <!-- No Private Tabs Message Description -->
+    <string name="no_private_tabs_description">Tu bodo prikazani vaši zasebni zavihki.</string>
+
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s izdeluje Mozilla.</string>
 
@@ -34,13 +37,21 @@
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">Izbriši sejo</string>
 
-    <!-- Private mode shortcut "contextual feature recommender" (CFR) -->
+    <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
     <string name="cfr_message">Dodajte bližnjico za odpiranje zasebnih zavihkov z začetnega zaslona.</string>
     <!-- Text for the positive button -->
     <string name="cfr_pos_button_text">Dodaj bližnjico</string>
     <!-- Text for the negative button -->
     <string name="cfr_neg_button_text">Ne, hvala</string>
+
+    <!-- Search widget "contextual feature recommendation" (CFR) -->
+    <!-- Text for the main message. 'Firefox' intentionally hardcoded here.-->
+    <string name="search_widget_cfr_message">Hitreje pridite do Firefoxa. Dodajte bližnjico na začetni zaslon.</string>
+    <!-- Text for the positive button -->
+    <string name="search_widget_cfr_pos_button_text">Dodajte bližnjico</string>
+    <!-- Text for the negative button -->
+    <string name="search_widget_cfr_neg_button_text">Ne zdaj</string>
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
@@ -84,6 +95,8 @@
     <string name="browser_menu_add_to_homescreen">Dodaj na domač zaslon</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
     <string name="browser_menu_install_on_homescreen">Namesti</string>
+    <!-- Menu option on the toolbar that takes you to synced tabs page-->
+    <string name="synced_tabs">Sinhronizirani zavihki</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">Najdi na strani</string>
     <!-- Browser menu button that creates a private tab -->
@@ -280,6 +293,8 @@
     <string name="preferences_sync_bookmarks">Zaznamki</string>
     <!-- Preference for syncing logins -->
     <string name="preferences_sync_logins">Prijave</string>
+    <!-- Preference for syncing tabs -->
+    <string name="preferences_sync_tabs">Zavihki</string>
     <!-- Preference for signing out -->
     <string name="preferences_sign_out">Odjava</string>
     <!-- Preference displays and allows changing current FxA device name -->
@@ -417,6 +432,8 @@
     <string name="library_desktop_bookmarks_unfiled">Drugi zaznamki</string>
     <!-- Option in Library to open History page -->
     <string name="library_history">Zgodovina</string>
+    <!-- Option in Library to open Synced Tabs page -->
+    <string name="library_synced_tabs">Sinhronizirani zavihki</string>
     <!-- Option in Library to open Reading List -->
     <string name="library_reading_list">Bralni seznam</string>
     <!-- Menu Item Label for Search in Library -->
@@ -946,6 +963,8 @@
     <string name="onboarding_tracking_protection_standard_button_description">Zavrača manj sledilcev, vendar omogoča normalno nalaganje strani</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">Strogo (priporočljivo)</string>
+    <!-- text for tracking protection radio button option for strict level of blocking -->
+    <string name="onboarding_tracking_protection_strict_option">Strogo</string>
     <!-- text for strict blocking option button description -->
     <string name="onboarding_tracking_protection_strict_button_description">Zavrača več sledilcev za večjo zaščito in boljše delovanje, vendar lahko povzroči nedelovanje nekaterih strani</string>
     <!-- text for the toolbar position card header
@@ -1400,4 +1419,15 @@
     <string name="voice_search_content_description">Glasovno iskanje</string>
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
     <string name="voice_search_explainer">Govorite</string>
+
+    <!-- Synced Tabs -->
+    <!-- Text displayed when user is not logged into a Firefox Account -->
+    <string name="synced_tabs_connect_to_sync_account">Povežite se s Firefox Računom.</string>
+    <!-- Text displayed to ask user to connect another device as no devices found with account -->
+    <string name="synced_tabs_connect_another_device">Poveži drugo napravo.</string>
+    <!-- Text displayed asking user to re-authenticate -->
+    <string name="synced_tabs_reauth">Ponovno se prijavite.</string>
+    <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->
+    <string name="synced_tabs_enable_tab_syncing">Omogočite sinhronizacijo zavihkov.</string>
+
 </resources>

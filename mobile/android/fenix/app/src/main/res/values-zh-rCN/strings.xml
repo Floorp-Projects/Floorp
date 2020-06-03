@@ -97,6 +97,8 @@
     <string name="browser_menu_add_to_homescreen">添加到主屏幕</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
     <string name="browser_menu_install_on_homescreen">安装</string>
+    <!-- Menu option on the toolbar that takes you to synced tabs page-->
+    <string name="synced_tabs">受同步的标签页</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">在页面中查找</string>
     <!-- Browser menu button that creates a private tab -->
@@ -300,6 +302,8 @@
     <string name="preferences_sync_bookmarks">书签</string>
     <!-- Preference for syncing logins -->
     <string name="preferences_sync_logins">登录信息</string>
+    <!-- Preference for syncing tabs -->
+    <string name="preferences_sync_tabs">标签页</string>
     <!-- Preference for signing out -->
     <string name="preferences_sign_out">退出登录</string>
     <!-- Preference displays and allows changing current FxA device name -->
@@ -437,6 +441,8 @@
     <string name="library_desktop_bookmarks_unfiled">其他书签</string>
     <!-- Option in Library to open History page -->
     <string name="library_history">历史</string>
+    <!-- Option in Library to open Synced Tabs page -->
+    <string name="library_synced_tabs">受同步的标签页</string>
     <!-- Option in Library to open Reading List -->
     <string name="library_reading_list">阅读列表</string>
     <!-- Menu Item Label for Search in Library -->
@@ -988,6 +994,8 @@
     <string name="onboarding_tracking_protection_standard_button_description">拦截较少跟踪器，以允许页面正常加载</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">严格（推荐）</string>
+    <!-- text for tracking protection radio button option for strict level of blocking -->
+    <string name="onboarding_tracking_protection_strict_option">严格</string>
     <!-- text for strict blocking option button description -->
     <string name="onboarding_tracking_protection_strict_button_description">拦截更多跟踪器以获得更好的保护和性能，但可能导致某些网站异常</string>
     <!-- text for the toolbar position card header
@@ -1432,4 +1440,15 @@
     <string name="voice_search_content_description">语音搜索</string>
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
     <string name="voice_search_explainer">现在请说</string>
+
+    <!-- Synced Tabs -->
+    <!-- Text displayed when user is not logged into a Firefox Account -->
+    <string name="synced_tabs_connect_to_sync_account">绑定 Firefox 账户</string>
+    <!-- Text displayed to ask user to connect another device as no devices found with account -->
+    <string name="synced_tabs_connect_another_device">绑定其他设备</string>
+    <!-- Text displayed asking user to re-authenticate -->
+    <string name="synced_tabs_reauth">请重新验证。</string>
+    <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->
+    <string name="synced_tabs_enable_tab_syncing">请启用标签页同步。</string>
+
 </resources>

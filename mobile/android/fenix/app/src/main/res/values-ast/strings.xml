@@ -19,6 +19,9 @@
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">Equi van amosase les llingüetes abiertes.</string>
 
+    <!-- No Private Tabs Message Description -->
+    <string name="no_private_tabs_description">Les llingüetes privaes van amosase equí.</string>
+
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s ta producíu por Mozilla.</string>
 
@@ -34,13 +37,16 @@
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">Desaniciar la sesión</string>
 
-    <!-- Private mode shortcut "contextual feature recommender" (CFR) -->
+    <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
     <string name="cfr_message">¿Amestar un atayu p\'abrir llingüetes privaes dende la pantalla d\'aniciu?</string>
     <!-- Text for the positive button -->
     <string name="cfr_pos_button_text">Sí</string>
     <!-- Text for the negative button -->
     <string name="cfr_neg_button_text">Non, gracies</string>
+
+    <!-- Text for the negative button -->
+    <string name="search_widget_cfr_neg_button_text">Agora non</string>
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
@@ -264,6 +270,8 @@
     <string name="preferences_sync_bookmarks">Marcadores</string>
     <!-- Preference for syncing logins -->
     <string name="preferences_sync_logins">Anicios de sesión</string>
+    <!-- Preference for syncing tabs -->
+    <string name="preferences_sync_tabs">Llingüetes</string>
     <!-- Preference for signing out -->
     <string name="preferences_sign_out">Zarrar sesión</string>
     <!-- Preference displays and allows changing current FxA device name -->
@@ -334,9 +342,6 @@
     <!-- Header of the Turn on Sync preference view -->
     <string name="preferences_sync">Activación de Sync</string>
 
-    <!-- Pairing Feature strings -->
-    <!-- Instructions on how to access pairing -->
-    <string name="pair_instructions"><![CDATA[Visita <b>firefox.com/pair</b> con Firefox nel ordenador pa consiguir el códigu QR.]]></string>
     <!-- Button to open camera for pairing -->
     <string name="pair_open_camera">Abrir la cámara</string>
     <!-- Button to cancel pairing -->
@@ -714,8 +719,6 @@
 
     <!-- Title for the Delete browsing data preference -->
     <string name="preferences_delete_browsing_data">Desaniciu de los datos de restolar</string>
-    <!-- Title for the tabs item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_tabs_title">Llingüetes abiertes</string>
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
     <string name="preferences_delete_browsing_data_tabs_subtitle">%d llingüetes</string>
     <!-- Title for the data and history items in Delete browsing data -->
@@ -1222,4 +1225,5 @@
     <string name="login_menu_delete_button">Desaniciar</string>
     <!-- Message in delete confirmation dialog for logins -->
     <string name="login_deletion_confirmation">¿De xuru que quies desaniciar esti aniciu de sesión?</string>
+
     </resources>

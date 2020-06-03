@@ -96,6 +96,8 @@
     <string name="browser_menu_add_to_homescreen">Thêm vào màn hình chính</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
     <string name="browser_menu_install_on_homescreen">Cài đặt</string>
+    <!-- Menu option on the toolbar that takes you to synced tabs page-->
+    <string name="synced_tabs">Các thẻ đã đồng bộ</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">Tìm trong trang</string>
     <!-- Browser menu button that creates a private tab -->
@@ -290,6 +292,8 @@
     <string name="preferences_sync_bookmarks">Dấu trang</string>
     <!-- Preference for syncing logins -->
     <string name="preferences_sync_logins">Đăng nhập</string>
+    <!-- Preference for syncing tabs -->
+    <string name="preferences_sync_tabs">Thẻ</string>
     <!-- Preference for signing out -->
     <string name="preferences_sign_out">Đăng xuất</string>
     <!-- Preference displays and allows changing current FxA device name -->
@@ -422,6 +426,8 @@
     <string name="library_desktop_bookmarks_unfiled">Dấu trang khác</string>
     <!-- Option in Library to open History page -->
     <string name="library_history">Lịch sử</string>
+    <!-- Option in Library to open Synced Tabs page -->
+    <string name="library_synced_tabs">Các thẻ đã đồng bộ</string>
     <!-- Option in Library to open Reading List -->
     <string name="library_reading_list">Danh sách đọc</string>
     <!-- Menu Item Label for Search in Library -->
@@ -943,6 +949,8 @@
     <string name="onboarding_tracking_protection_standard_button_description">Chặn ít trình theo dõi hơn nhưng cho phép các trang tải bình thường</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">Nghiêm ngặt (được khuyến nghị)</string>
+    <!-- text for tracking protection radio button option for strict level of blocking -->
+    <string name="onboarding_tracking_protection_strict_option">Nghiêm ngặt</string>
     <!-- text for strict blocking option button description -->
     <string name="onboarding_tracking_protection_strict_button_description">Chặn nhiều trình theo dõi hơn để bảo vệ và hiệu suất tốt hơn, nhưng có thể khiến một số trang web không hoạt động đúng</string>
     <!-- text for the toolbar position card header
@@ -1388,4 +1396,15 @@
     <string name="voice_search_content_description">Tìm kiếm bằng giọng nói</string>
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
     <string name="voice_search_explainer">Nói bây giờ</string>
+
+    <!-- Synced Tabs -->
+    <!-- Text displayed when user is not logged into a Firefox Account -->
+    <string name="synced_tabs_connect_to_sync_account">Kết nối với tài khoản Firefox.</string>
+    <!-- Text displayed to ask user to connect another device as no devices found with account -->
+    <string name="synced_tabs_connect_another_device">Kết nối thiết bị khác.</string>
+    <!-- Text displayed asking user to re-authenticate -->
+    <string name="synced_tabs_reauth">Vui lòng xác thực lại.</string>
+    <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->
+    <string name="synced_tabs_enable_tab_syncing">Vui lòng kích hoạt đồng bộ hóa thẻ.</string>
+
 </resources>

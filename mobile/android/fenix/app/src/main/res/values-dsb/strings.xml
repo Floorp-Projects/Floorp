@@ -18,6 +18,9 @@
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">Waše wócynjone rejtariki se how wócyniju.</string>
 
+    <!-- No Private Tabs Message Description -->
+    <string name="no_private_tabs_description">Waše priwatne rejtariki se how wócyniju.</string>
+
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s se pśez Mozilla zgótujo.</string>
 
@@ -34,13 +37,22 @@
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">Pósejźenje lašowaś</string>
 
-    <!-- Private mode shortcut "contextual feature recommender" (CFR) -->
+    <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
     <string name="cfr_message">Pśidajśo skrotconku, aby priwatne rejtariki ze swójeje startoweje wobrazowki wócynił.</string>
     <!-- Text for the positive button -->
     <string name="cfr_pos_button_text">Skrotconku pśidaś</string>
     <!-- Text for the negative button -->
     <string name="cfr_neg_button_text">Ně, źěkujom se</string>
+
+    <!-- Search widget "contextual feature recommendation" (CFR) -->
+    <!-- Text for the main message. 'Firefox' intentionally hardcoded here.-->
+    <string name="search_widget_cfr_message">Dostańśo se malsnje k Firefox. Pśidajśo swójej startowej wobrazowce asistent.</string>
+    <!-- Text for the positive button -->
+    <string name="search_widget_cfr_pos_button_text">Asistent pśidaś</string>
+
+    <!-- Text for the negative button -->
+    <string name="search_widget_cfr_neg_button_text">Nic něnto</string>
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
@@ -84,6 +96,8 @@
     <string name="browser_menu_add_to_homescreen">Startowej wobrazowce pśidaś</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
     <string name="browser_menu_install_on_homescreen">Instalěrowaś</string>
+    <!-- Menu option on the toolbar that takes you to synced tabs page-->
+    <string name="synced_tabs">Synchronizěrowane rejtariki</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">Na boku pytaś</string>
     <!-- Browser menu button that creates a private tab -->
@@ -279,6 +293,8 @@
     <string name="preferences_sync_bookmarks">Cytańske znamjenja</string>
     <!-- Preference for syncing logins -->
     <string name="preferences_sync_logins">Pśizjawjenja</string>
+    <!-- Preference for syncing tabs -->
+    <string name="preferences_sync_tabs">Rejtariki</string>
     <!-- Preference for signing out -->
     <string name="preferences_sign_out">Wótzjawiś</string>
     <!-- Preference displays and allows changing current FxA device name -->
@@ -412,6 +428,8 @@
     <string name="library_desktop_bookmarks_unfiled">Druge cytańske znamjenja</string>
     <!-- Option in Library to open History page -->
     <string name="library_history">Historija</string>
+    <!-- Option in Library to open Synced Tabs page -->
+    <string name="library_synced_tabs">Synchronizěrowane rejtariki</string>
     <!-- Option in Library to open Reading List -->
     <string name="library_reading_list">Cytańska lisćina</string>
     <!-- Menu Item Label for Search in Library -->
@@ -937,6 +955,8 @@
     <string name="onboarding_tracking_protection_standard_button_description">Blokěrujo mjenjej pśeslědowakow, ale zmóžnja bokam se normalnje zacytaś</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">Striktny (dopórucony)</string>
+    <!-- text for tracking protection radio button option for strict level of blocking -->
+    <string name="onboarding_tracking_protection_strict_option">Striktny</string>
     <!-- text for strict blocking option button description -->
     <string name="onboarding_tracking_protection_strict_button_description">Blokěrujo wěcej pśeslědowakow za lěpšy šćit a lěpše wugbaśe, ale móžo zawinowaś, až někotare sedła pšawje njefunkcioněruju</string>
     <!-- text for the toolbar position card header
@@ -1387,4 +1407,15 @@
     <string name="voice_search_content_description">Głosowe pytanje</string>
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
     <string name="voice_search_explainer">Něnto powědaś</string>
+
+    <!-- Synced Tabs -->
+    <!-- Text displayed when user is not logged into a Firefox Account -->
+    <string name="synced_tabs_connect_to_sync_account">Z kontom Firefox zwězaś.</string>
+    <!-- Text displayed to ask user to connect another device as no devices found with account -->
+    <string name="synced_tabs_connect_another_device">Z drugim rědom zwězaś.</string>
+    <!-- Text displayed asking user to re-authenticate -->
+    <string name="synced_tabs_reauth">Pšosym awtentificěrujśo znowego.</string>
+    <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->
+    <string name="synced_tabs_enable_tab_syncing">Pšosym zmóžniśo synchronizěrowanje rejtarikow.</string>
+
 </resources>
