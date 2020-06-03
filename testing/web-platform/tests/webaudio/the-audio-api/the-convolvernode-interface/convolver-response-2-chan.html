@@ -116,8 +116,7 @@
             stereoResponseExplicitTest(
                 {
                   numberOfInputes: 2,
-                  prefix: '2-in explicit mode',
-                  absoluteThresholds: [0, 0]
+                  prefix: '2-in explicit mode'
                 },
                 should)
                 .then(() => task.done());
@@ -132,8 +131,7 @@
             stereoResponseExplicitTest(
                 {
                   numberOfInputs: 3,
-                  prefix: '3-in explicit',
-                  absoluteThresholds: [0, 0]
+                  prefix: '3-in explicit'
                 },
                 should)
                 .then(() => task.done());
@@ -148,8 +146,7 @@
             stereoResponseExplicitTest(
                 {
                   numberOfInputs: 4,
-                  prefix: '4-in explicit',
-                  absoluteThresholds: [3.5763e-7, 2.9803e-7]
+                  prefix: '4-in explicit'
                 },
                 should)
                 .then(() => task.done());
@@ -161,11 +158,15 @@
             description: '5.1->1 downmix producing 2-channel output'
           },
           (task, should) => {
+            // Scale tolerance by maximum amplitude expected in down-mix
+            // output.
+            let threshold = (Math.sqrt(0.5) * 2 + 2.0) * absoluteThreshold;
+
             stereoResponseExplicitTest(
                 {
                   numberOfInputs: 6,
                   prefix: '5.1-in explicit',
-                  absoluteThresholds: [0, 0]
+                  absoluteThreshold: threshold
                 },
                 should)
                 .then(() => task.done());
@@ -354,16 +355,15 @@
           let expected0 = audioBuffer.getChannelData(2);
           let expected1 = audioBuffer.getChannelData(3);
 
+          let threshold = options.absoluteThreshold ?
+              options.absoluteThreshold : absoluteThreshold;
+
           // Verify that each output channel of the convolver matches
           // the delayed signal from the reference
           should(actual0, options.prefix + ': Channel 0')
-              .beCloseToArray(
-                  expected0,
-                  {absoluteThreshold: options.absoluteThresholds[0]});
+              .beCloseToArray(expected0, {absoluteThreshold: threshold});
           should(actual1, options.prefix + ': Channel 1')
-              .beCloseToArray(
-                  expected1,
-                  {absoluteThreshold: options.absoluteThresholds[1]});
+              .beCloseToArray(expected1, {absoluteThreshold: threshold});
         });
       }
 
