@@ -90,7 +90,7 @@ class CollectionCreationBottomBarView(
             setImageDrawable(drawable)
             contentDescription = null
             importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
-            setOnClickListener { interactor.addNewCollection() }
         }
+        layout.setOnClickListener { interactor.addNewCollection() }
     }
 }
