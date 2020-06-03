@@ -16,15 +16,16 @@ const ConsoleApiCall = createFactory(
   require("devtools/client/webconsole/components/Output/message-types/ConsoleApiCall")
 );
 
-const { prepareMessage } = require("devtools/client/webconsole/utils/messages");
+const {
+  stubPreparedMessages,
+} = require("devtools/client/webconsole/test/node/fixtures/stubs/index");
+
 const serviceContainer = require("devtools/client/webconsole/test/node/fixtures/serviceContainer");
 
-describe("ConsoleAPICall component:", () => {
+describe("ConsoleAPICall component for platform message", () => {
   describe("Services.console.logStringMessage", () => {
     it("renders logMessage grips", () => {
-      const message = prepareMessage(logMessageStubPacket, {
-        getNextId: () => "1",
-      });
+      const message = stubPreparedMessages.get("platform-simple-message");
       const wrapper = render(ConsoleApiCall({ message, serviceContainer }));
 
       expect(wrapper.find(".message-body").text()).toBe("foobar test");
@@ -34,9 +35,7 @@ describe("ConsoleAPICall component:", () => {
     });
 
     it("renders longString logMessage grips", () => {
-      const message = prepareMessage(logMessageLongStringStubPacket, {
-        getNextId: () => "1",
-      });
+      const message = stubPreparedMessages.get("platform-longString-message");
 
       // We need to wrap the ConsoleApiElement in a Provider in order for the
       // ObjectInspector to work.
@@ -47,32 +46,9 @@ describe("ConsoleAPICall component:", () => {
         )
       );
 
-      expect(wrapper.find(".message-body").text()).toInclude(initialText);
+      expect(wrapper.find(".message-body").text()).toInclude(
+        `a\n${"a".repeat(100)}`
+      );
     });
   });
 });
-
-// Stub packet
-const logMessageStubPacket = {
-  from: "server1.conn0.consoleActor2",
-  resourceType: "platform-message",
-  message: "foobar test",
-  timeStamp: 1519052480060,
-};
-
-const multilineFullText = `a\n${Array(20000)
-  .fill("a")
-  .join("")}`;
-const fullTextLength = multilineFullText.length;
-const initialText = multilineFullText.substring(0, 10000);
-const logMessageLongStringStubPacket = {
-  from: "server1.conn0.consoleActor2",
-  resourceType: "platform-message",
-  message: {
-    type: "longString",
-    initial: initialText,
-    length: fullTextLength,
-    actor: "server1.conn1.child1/longString58",
-  },
-  timeStamp: 1519052480060,
-};

@@ -1037,3 +1037,7 @@ async function moveWindowTo(win, left, top) {
   info("Wait for window screenLeft and screenTop to be updated");
   return waitUntil(() => win.screenLeft === left && win.screenTop === top);
 }
+
+function getCurrentTestFilePath() {
+  return gTestPath.replace("chrome://mochitests/content/browser/", "");
+}

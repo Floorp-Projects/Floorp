@@ -15,14 +15,19 @@ const STUBS_FOLDER = "devtools/client/webconsole/test/node/fixtures/stubs/";
 const STUBS_UPDATE_ENV = "WEBCONSOLE_STUBS_UPDATE";
 
 async function createResourceWatcherForTab(tab) {
+  const { TargetFactory } = require("devtools/client/framework/target");
+  const target = await TargetFactory.forTab(tab);
+  const resourceWatcher = await createResourceWatcherForTarget(target);
+  return resourceWatcher;
+}
+
+async function createResourceWatcherForTarget(target) {
   // Avoid mocha to try to load these module and fail while doing it when running node tests
   const {
     ResourceWatcher,
   } = require("devtools/shared/resources/resource-watcher");
   const { TargetList } = require("devtools/shared/resources/target-list");
-  const { TargetFactory } = require("devtools/client/framework/target");
 
-  const target = await TargetFactory.forTab(tab);
   const targetList = new TargetList(target.client.mainRoot, target);
 
   await target.attach();
@@ -93,7 +98,9 @@ function getCleanedPacket(key, packet) {
       }
     }
     // Clean innerWindowId on the message prop.
-    res.message.innerWindowID = existingPacket.message.innerWindowID;
+    if (existingPacket.message.innerWindowID) {
+      res.message.innerWindowID = existingPacket.message.innerWindowID;
+    }
 
     if (Array.isArray(res.message.arguments)) {
       res.message.arguments = res.message.arguments.map((argument, i) => {
@@ -117,6 +124,10 @@ function getCleanedPacket(key, packet) {
         }
         return newArgument;
       });
+    }
+
+    if (res.message.actor && existingPacket?.message?.actor) {
+      res.message.actor = existingPacket.message.actor;
     }
 
     if (res.message.sourceId) {
@@ -533,6 +544,7 @@ function parsePacketAndCreateFronts(packet) {
 module.exports = {
   STUBS_UPDATE_ENV,
   createResourceWatcherForTab,
+  createResourceWatcherForTarget,
   getStubFile,
   getCleanedPacket,
   getSerializedPacket,
