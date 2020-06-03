@@ -27,7 +27,7 @@ class ContentBlockingNotifier final {
     eBlock,
     eAllow,
   };
-  enum StorageAccessGrantedReason {
+  enum StorageAccessPermissionGrantedReason {
     eStorageAccessAPI,
     eOpenerAfterUserInteraction,
     eOpener
@@ -60,11 +60,11 @@ class ContentBlockingNotifier final {
   static void OnEvent(
       nsIChannel* aChannel, bool aBlocked, uint32_t aRejectedReason,
       const nsACString& aTrackingOrigin,
-      const Maybe<StorageAccessGrantedReason>& aReason = Nothing());
+      const Maybe<StorageAccessPermissionGrantedReason>& aReason = Nothing());
 
-  static void ReportUnblockingToConsole(dom::BrowsingContext* aBrowsingContext,
-                                        const nsAString& aTrackingOrigin,
-                                        StorageAccessGrantedReason aReason);
+  static void ReportUnblockingToConsole(
+      dom::BrowsingContext* aBrowsingContext, const nsAString& aTrackingOrigin,
+      StorageAccessPermissionGrantedReason aReason);
 };
 
 }  // namespace mozilla

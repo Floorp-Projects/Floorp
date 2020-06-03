@@ -1223,22 +1223,23 @@ class ContentParent final
       const nsACString& aHostName, int32_t aPort, bool aIsTemporary,
       AddCertExceptionResolver&& aResolver);
 
-  mozilla::ipc::IPCResult RecvAutomaticStorageAccessCanBeGranted(
+  mozilla::ipc::IPCResult RecvAutomaticStorageAccessPermissionCanBeGranted(
       const Principal& aPrincipal,
-      AutomaticStorageAccessCanBeGrantedResolver&& aResolver);
+      AutomaticStorageAccessPermissionCanBeGrantedResolver&& aResolver);
 
-  mozilla::ipc::IPCResult RecvFirstPartyStorageAccessGrantedForOrigin(
+  mozilla::ipc::IPCResult RecvStorageAccessPermissionGrantedForOrigin(
       uint64_t aTopLevelWindowId,
       const MaybeDiscarded<BrowsingContext>& aParentContext,
       const Principal& aTrackingPrincipal, const nsCString& aTrackingOrigin,
       const int& aAllowMode,
-      FirstPartyStorageAccessGrantedForOriginResolver&& aResolver);
+      StorageAccessPermissionGrantedForOriginResolver&& aResolver);
 
   mozilla::ipc::IPCResult RecvCompleteAllowAccessFor(
       const MaybeDiscarded<BrowsingContext>& aParentContext,
       uint64_t aTopLevelWindowId, const Principal& aTrackingPrincipal,
       const nsCString& aTrackingOrigin, uint32_t aCookieBehavior,
-      const ContentBlockingNotifier::StorageAccessGrantedReason& aReason,
+      const ContentBlockingNotifier::StorageAccessPermissionGrantedReason&
+          aReason,
       CompleteAllowAccessForResolver&& aResolver);
 
   mozilla::ipc::IPCResult RecvStoreUserInteractionAsPermission(
