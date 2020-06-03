@@ -49,7 +49,7 @@ class FormValidationParent extends JSWindowActorParent {
           return;
         }
 
-        this._showPopup(window, data);
+        this._showPopup(data);
         break;
       case "FormValidation:HidePopup":
         this._hidePopup();
@@ -85,7 +85,6 @@ class FormValidationParent extends JSWindowActorParent {
     tabBrowser.selectedBrowser.removeEventListener("FullZoomChange", this);
     tabBrowser.selectedBrowser.removeEventListener("TextZoomChange", this);
 
-    this._panel.hidden = true;
     this._panel = null;
     this._anchor.hidden = true;
     this._anchor = null;
@@ -95,7 +94,6 @@ class FormValidationParent extends JSWindowActorParent {
    * Shows the form validation popup at a specified position or updates the
    * messaging and position if the popup is already displayed.
    *
-   * @aWindow - the chrome window
    * @aPanelData - Object that contains popup information
    *  aPanelData stucture detail:
    *   contentRect - the bounding client rect of the target element. If
@@ -104,13 +102,15 @@ class FormValidationParent extends JSWindowActorParent {
    *   position - popup positional string constants.
    *   message - the form element validation message text.
    */
-  _showPopup(aWindow, aPanelData) {
+  _showPopup(aPanelData) {
     let previouslyShown = !!this._panel;
-    this._panel = aWindow.document.getElementById("invalid-form-popup");
+    this._panel = this._getAndMaybeCreatePanel();
     this._panel.firstChild.textContent = aPanelData.message;
-    this._panel.hidden = false;
 
-    let tabBrowser = aWindow.gBrowser;
+    let browser = this.browsingContext.top.embedderElement;
+    let window = browser.ownerGlobal;
+
+    let tabBrowser = window.gBrowser;
     this._anchor = tabBrowser.selectedBrowser.popupAnchor;
     this._anchor.style.left = aPanelData.contentRect.left + "px";
     this._anchor.style.top = aPanelData.contentRect.top + "px";
@@ -141,5 +141,20 @@ class FormValidationParent extends JSWindowActorParent {
     if (this._panel) {
       this._panel.hidePopup();
     }
+  }
+
+  _getAndMaybeCreatePanel() {
+    // Lazy load the invalid form popup the first time we need to display it.
+    if (!this._panel) {
+      let browser = this.browsingContext.top.embedderElement;
+      let window = browser.ownerGlobal;
+      let template = window.document.getElementById("invalidFormTemplate");
+      if (template) {
+        template.replaceWith(template.content);
+      }
+      this._panel = window.document.getElementById("invalid-form-popup");
+    }
+
+    return this._panel;
   }
 }
