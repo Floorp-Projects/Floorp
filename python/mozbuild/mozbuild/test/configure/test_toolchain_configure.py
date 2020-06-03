@@ -1201,9 +1201,6 @@ class LinuxCrossCompileToolchainTest(BaseToolchainTest):
                 '__arch64__': 1,
             },
         },
-        'm68k-unknown-linux-gnu': big_endian + {
-            '__m68k__': 1,
-        },
         'mips64-unknown-linux-gnuabi64': big_endian + {
             '__mips64': 1,
             '__mips__': 1,
