@@ -153,6 +153,7 @@ EXTRA_JS_MODULES += [
     'TabsList.jsm',
     'TabUnloader.jsm',
     'ThemeVariableMap.jsm',
+    'TopSiteAttribution.jsm',
     'TransientPrefs.jsm',
     'webrtcUI.jsm',
     'ZoomUI.jsm',
