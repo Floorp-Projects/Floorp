@@ -3338,7 +3338,7 @@
       this._clearMultiSelectionLocked = false;
       this.avoidSingleSelectedTab();
       let closedTabsCount =
-        initialTabCount - tabs.filter(t => !t.closing).length;
+        initialTabCount - tabs.filter(t => t.isConnected && !t.closing).length;
       // Don't use document.l10n.setAttributes because the FTL file is loaded
       // lazily and we won't be able to resolve the string.
       document
