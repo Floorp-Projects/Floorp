@@ -565,7 +565,7 @@ class EditorBase : public nsIEditor,
    * i.e., The aGUIEvent should be handled by another inner editor or ancestor
    * elements.
    */
-  virtual bool IsAcceptableInputEvent(WidgetGUIEvent* aGUIEvent);
+  virtual bool IsAcceptableInputEvent(WidgetGUIEvent* aGUIEvent) const;
 
   /**
    * FindSelectionRoot() returns a selection root of this editor when aNode

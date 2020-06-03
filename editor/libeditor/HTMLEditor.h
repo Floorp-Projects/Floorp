@@ -171,7 +171,7 @@ class HTMLEditor final : public TextEditor,
   virtual bool IsActiveInDOMWindow() const override;
   virtual dom::EventTarget* GetDOMEventTarget() const override;
   virtual Element* FindSelectionRoot(nsINode* aNode) const override;
-  virtual bool IsAcceptableInputEvent(WidgetGUIEvent* aGUIEvent) override;
+  virtual bool IsAcceptableInputEvent(WidgetGUIEvent* aGUIEvent) const override;
   virtual nsresult GetPreferredIMEState(widget::IMEState* aState) override;
 
   /**
