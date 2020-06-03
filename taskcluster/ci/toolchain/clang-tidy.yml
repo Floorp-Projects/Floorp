@@ -4,6 +4,8 @@
 ---
 job-defaults:
     description: "Clang-tidy build"
+    attributes:
+        local-toolchain: true
     index:
         product: static-analysis
     worker-type: b-linux-large

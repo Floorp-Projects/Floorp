@@ -350,7 +350,7 @@ class BaseBootstrapper(object):
             raise ValueError("cannot determine path to Python executable")
 
         cmd = [sys.executable, mach_binary, 'artifact', 'toolchain',
-               '--from-build', toolchain_job]
+               '--bootstrap', '--from-build', toolchain_job]
 
         if no_unpack:
             cmd += ['--no-unpack']
