@@ -676,6 +676,11 @@ const GfxDeviceFamily* GfxDriverInfo::GetDeviceFamily(DeviceFamily id) {
       APPEND_DEVICE(0x15dd);
       APPEND_DEVICE(0x15d8);
 
+#ifdef EARLY_BETA_OR_EARLIER
+      // Stoney
+      APPEND_DEVICE(0x98e4);
+#endif
+
 #if defined(NIGHTLY_BUILD)
       // Evergreen
       APPEND_RANGE(0x6840, 0x684b);
