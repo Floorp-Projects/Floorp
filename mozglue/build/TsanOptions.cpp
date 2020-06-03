@@ -153,20 +153,9 @@ extern "C" const char* __tsan_default_suppressions() {
          "race:ScriptPreloader::MaybeFinishOffThreadDecode\n"
          "race:ScriptPreloader::DoFinishOffThreadDecode\n"
 
-         // Bug 1601940
-         "race:ApplyAsyncTestAttributes\n"
-         "race:UnapplyAsyncTestAttributes\n"
-         "race:MarkAsyncTransformAppliedToContent\n"
-
          // Bug 1601980
          "race:image::RasterImage::StartDecoding\n"
          "race:image::RasterImage::OnImageDataAvailable\n"
-
-         // Bug 1603504
-         "race:HttpChannelParent::OnDataAvailable\n"
-
-         // Bug 1606647
-         "race:nsSocketTransport::OnSocketReady\n"
 
          // Bug 1606651
          "race:nsPluginTag::nsPluginTag\n"
@@ -192,26 +181,12 @@ extern "C" const char* __tsan_default_suppressions() {
          // Bug 1607212
          "race:CacheEntry::InvokeCallback\n"
 
-         // Bug 1607218
-         "race:nsProxyInfo::SetResolveFlags\n"
-         "race:nsProxyInfo::GetResolveFlags\n"
-
-         // Bug 1615014
-         "race:EnsurePerformanceCounter\n"
-         "race:GetPerformanceCounter\n"
-
-         // Bug 1607134
-         "race:net::sRunningIndex\n"
-
          // Bug 1607138
          "race:gXPCOMThreadsShutDown\n"
 
          // Bug 1607426
          "race:PACLoadComplete::Run\n"
          "race:nsPACMan::ProcessPending\n"
-
-         // Bug 1607221
-         "race:nsSocketTransport::SetTimeout\n"
 
          // Bug 1607446
          "race:nsJARChannel::Suspend\n"
@@ -254,18 +229,6 @@ extern "C" const char* __tsan_default_suppressions() {
          "race:nsContentSecurityUtils::IsEvalAllowed\n"
          "race:nsContentSecurityUtils::ValidateScriptFilename\n"
 
-         // Bug 1613384
-         "race:GCRuntime::setPerformanceHint\n"
-         "race:GCHeapThreshold::updateAfterGC\n"
-
-         // Bug 1614646
-         "race:CookieService::CountCookiesFromHostInternal\n"
-         "race:CookieService::InitDBStates\n"
-
-         // Bug 1614706
-         "race:CacheFileInputStream::Release\n"
-         "race:CacheFileInputStream::CloseWithStatus\n"
-
          // Bug 1615017
          "race:CacheFileMetadata::SetHash\n"
          "race:CacheFileMetadata::OnDataWritten\n"
@@ -284,11 +247,15 @@ extern "C" const char* __tsan_default_suppressions() {
          // Bug 1615569
          "race:mp_exptmod.max_window_bits\n"
 
+         // Bug 1642906
+         "race:EnsurePerformanceCounter\n"
+         "race:GetPerformanceCounter\n"
+
          // ~GLContextGLX unlocks a libGL mutex that cannot be seen
          // by TSan because libGL is not instrumented.
          "mutex:GLContextGLX::~GLContextGLX\n"
 
-         // Bug 1637707
+         // Bug 1637707 - permanent.
          // Cannot suppress library because it is unloaded later
          "mutex:libEGL_mesa.so\n"
 
