@@ -51,6 +51,12 @@ permalink: /changelog/
 * **support-ktx**
   * `String.isUrlStrict`, deprecated in 40.0.0, was now removed due to performance issues. Use the less strict `isURL` instead or customize based on `:lib-publicsuffixlist`.
 
+* **service-glean**
+  * Glean was updated to v31.0.2
+    * Provide a new upload mechanism, now driven by internals. This has no impact to consumers of service-glean.
+    * Automatically Gzip-compress ping payloads before upload
+    * Upgrade `glean_parser` to v1.22.0
+
 # 43.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v42.0.0...v43.0.0)
