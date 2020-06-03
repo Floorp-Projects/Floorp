@@ -58,26 +58,13 @@ const { navigate } = ChromeUtils.import(
 );
 const { proxy } = ChromeUtils.import("chrome://marionette/content/proxy.js");
 
-XPCOMUtils.defineLazyGetter(this, "logger", () => Log.getWithPrefix(contentId));
+XPCOMUtils.defineLazyGetter(this, "logger", () =>
+  Log.getWithPrefix(outerWindowID)
+);
 XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
 
-const contentId = content.docShell.browsingContext.id;
-
-const curContainer = {
-  _frame: null,
-  shadowRoot: null,
-
-  get frame() {
-    return this._frame;
-  },
-
-  set frame(frame) {
-    this._frame = frame;
-
-    this.id = this._frame.docShell.browsingContext.id;
-    this.shadowRoot = null;
-  },
-};
+let { outerWindowID } = winUtil;
+let curContainer = { frame: content, shadowRoot: null };
 
 // Listen for click event to indicate one click has happened, so actions
 // code can send dblclick event
@@ -386,16 +373,17 @@ const loadListener = {
   },
 
   observe(subject, topic) {
-    logger.trace(`Received observer notification ${topic}`);
+    const win = curContainer.frame;
+    const winID = subject.QueryInterface(Ci.nsISupportsPRUint64).data;
+    const curWinID = win.windowUtils.outerWindowID;
 
-    const winId = subject.QueryInterface(Ci.nsISupportsPRUint64).data;
-    const bc = BrowsingContext.get(curContainer.id);
+    logger.trace(`Received observer notification ${topic}`);
 
     switch (topic) {
       // In the case when the currently selected frame is closed,
       // there will be no further load events. Stop listening immediately.
       case "outer-window-destroyed":
-        if (bc.window.windowUtils.outerWindowID == winId) {
+        if (curWinID === winID) {
           this.stop();
           sendOk(this.commandID);
         }
@@ -493,27 +481,25 @@ const loadListener = {
 function registerSelf() {
   logger.trace("Frame script loaded");
 
-  curContainer.frame = content;
-
   sandboxes.clear();
+  curContainer = {
+    frame: content,
+    shadowRoot: null,
+  };
   legacyactions.mouseEventsOnly = false;
   action.inputStateMap = new Map();
   action.inputsToCancel = [];
 
-  let reply = sendSyncMessage("Marionette:Register", {
-    frameId: contentId,
-  });
+  let reply = sendSyncMessage("Marionette:Register", { outerWindowID });
   if (reply.length == 0) {
     logger.error("No reply from Marionette:Register");
     return;
   }
 
-  if (reply[0].frameId === contentId) {
+  if (reply[0].outerWindowID === outerWindowID) {
     logger.trace("Frame script registered");
     startListeners();
-    sendAsyncMessage("Marionette:ListenersAttached", {
-      frameId: contentId,
-    });
+    sendAsyncMessage("Marionette:ListenersAttached", { outerWindowID });
   }
 }
 
@@ -680,11 +666,9 @@ function deregister() {
 
 function deleteSession() {
   seenEls.clear();
-
   // reset container frame to the top-most frame
-  curContainer.frame = content;
+  curContainer = { frame: content, shadowRoot: null };
   curContainer.frame.focus();
-
   legacyactions.touchIds = {};
   if (action.inputStateMap !== undefined) {
     action.inputStateMap.clear();
@@ -765,7 +749,8 @@ function emitTouchEvent(type, touch) {
   );
 
   const win = curContainer.frame;
-  if (win.docShell.asyncPanZoomEnabled && legacyactions.scrolling) {
+  let docShell = win.docShell;
+  if (docShell.asyncPanZoomEnabled && legacyactions.scrolling) {
     let ev = {
       index: 0,
       type,
@@ -1530,9 +1515,7 @@ function switchToParentFrame(msg) {
  */
 function switchToFrame(msg) {
   let commandID = msg.json.commandID;
-
-  let foundFrame;
-  let frameWebEl;
+  let foundFrame = null;
 
   // check if curContainer.frame reference is dead
   let frames = [];
@@ -1552,7 +1535,6 @@ function switchToFrame(msg) {
     sendSyncMessage("Marionette:switchedToFrame", { frameValue: null });
 
     curContainer.frame = content;
-
     if (msg.json.focus) {
       curContainer.frame.focus();
     }
@@ -1588,12 +1570,13 @@ function switchToFrame(msg) {
         let wrappedItem = new XPCNativeWrapper(frameEl);
         let wrappedWanted = new XPCNativeWrapper(wantedFrame);
         if (wrappedItem == wrappedWanted) {
-          foundFrame = frameEl;
+          curContainer.frame = frameEl;
+          foundFrame = i;
         }
       }
     }
 
-    if (!foundFrame) {
+    if (foundFrame === null) {
       // Either the frame has been removed or we have a OOP frame
       // so lets just get all the iframes and do a quick loop before
       // throwing in the towel
@@ -1604,47 +1587,48 @@ function switchToFrame(msg) {
         let wrappedEl = new XPCNativeWrapper(frameEl);
         let wrappedWanted = new XPCNativeWrapper(wantedFrame);
         if (wrappedEl == wrappedWanted) {
-          foundFrame = iframes[i];
+          curContainer.frame = iframes[i];
+          foundFrame = i;
         }
       }
     }
   }
 
-  if (!foundFrame) {
+  if (foundFrame === null) {
     if (typeof msg.json.id === "number") {
       try {
-        if (msg.json.id >= 0 && msg.json.id < frames.length) {
-          foundFrame = frames[msg.json.id].frameElement;
-          if (foundFrame !== null) {
-            frameWebEl = seenEls.add(foundFrame.wrappedJSObject);
-          } else {
-            // If foundFrame is null at this point then we have the top
-            // level browsing context so should treat it accordingly.
-            sendSyncMessage("Marionette:switchedToFrame", { frameValue: null });
-            curContainer.frame = content;
+        foundFrame = frames[msg.json.id].frameElement;
+        if (foundFrame !== null) {
+          curContainer.frame = foundFrame;
+          foundFrame = seenEls.add(curContainer.frame);
+        } else {
+          // If foundFrame is null at this point then we have the top
+          // level browsing context so should treat it accordingly.
+          sendSyncMessage("Marionette:switchedToFrame", { frameValue: null });
+          curContainer.frame = content;
 
-            if (msg.json.focus) {
-              curContainer.frame.focus();
-            }
-
-            sendOk(commandID);
-            return;
+          if (msg.json.focus) {
+            curContainer.frame.focus();
           }
+
+          sendOk(commandID);
+          return;
         }
       } catch (e) {
         // Since window.frames does not return OOP frames it will throw
         // and we land up here. Let's not give up and check if there are
         // iframes and switch to the indexed frame there
-        let doc = foundFrame.document;
+        let doc = curContainer.frame.document;
         let iframes = doc.getElementsByTagName("iframe");
         if (msg.json.id >= 0 && msg.json.id < iframes.length) {
-          foundFrame = iframes[msg.json.id];
+          curContainer.frame = iframes[msg.json.id];
+          foundFrame = msg.json.id;
         }
       }
     }
   }
 
-  if (!foundFrame) {
+  if (foundFrame === null) {
     let failedFrame = msg.json.id || msg.json.element;
     let err = new NoSuchFrameError(`Unable to locate frame: ${failedFrame}`);
     sendError(err, commandID);
@@ -1653,14 +1637,12 @@ function switchToFrame(msg) {
 
   // send a synchronous message to let the server update the currently active
   // frame element (for getActiveFrame)
-  if (!frameWebEl) {
-    frameWebEl = seenEls.add(foundFrame.wrappedJSObject);
-  }
+  let frameWebEl = seenEls.add(curContainer.frame.wrappedJSObject);
   sendSyncMessage("Marionette:switchedToFrame", {
     frameValue: frameWebEl.uuid,
   });
 
-  curContainer.frame = foundFrame.contentWindow;
+  curContainer.frame = curContainer.frame.contentWindow;
   if (msg.json.focus) {
     curContainer.frame.focus();
   }

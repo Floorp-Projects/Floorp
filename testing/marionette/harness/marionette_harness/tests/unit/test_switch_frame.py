@@ -6,7 +6,6 @@ from __future__ import absolute_import
 
 from marionette_driver.by import By
 from marionette_driver.errors import (
-    InvalidArgumentException,
     JavascriptException,
     NoSuchFrameException,
 )
@@ -123,13 +122,11 @@ class TestSwitchFrame(MarionetteTestCase):
     def test_switch_to_frame_with_out_of_bounds_index(self):
         self.marionette.navigate(self.marionette.absolute_url("test_iframe.html"))
         count = self.marionette.execute_script("return window.frames.length;")
-        for index in [count, 65535]:
-            self.assertRaises(NoSuchFrameException, self.marionette.switch_to_frame, index)
+        self.assertRaises(NoSuchFrameException, self.marionette.switch_to_frame, count)
 
-    def test_switch_to_frame_with_invalid_index(self):
+    def test_switch_to_frame_with_negative_index(self):
         self.marionette.navigate(self.marionette.absolute_url("test_iframe.html"))
-        for index in [-1, 65536]:
-            self.assertRaises(InvalidArgumentException, self.marionette.switch_to_frame, index)
+        self.assertRaises(NoSuchFrameException, self.marionette.switch_to_frame, -1)
 
     def test_switch_to_parent_frame(self):
         frame_html = self.marionette.absolute_url("frameset.html")

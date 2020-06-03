@@ -92,7 +92,7 @@ class WindowManagerMixin(object):
                 return self.marionette.execute_script("""
                   Components.utils.import("resource://gre/modules/Services.jsm");
 
-                  const win = BrowsingContext.get(Number(arguments[0])).window;
+                  let win = Services.wm.getOuterWindowWithId(Number(arguments[0]));
                   return win.document.readyState == "complete";
                 """, script_args=[handle])
 
@@ -174,7 +174,7 @@ class WindowManagerMixin(object):
                       await focused;
                     }
 
-                    resolve(win.docShell.browsingContext.id);
+                    resolve(win.windowUtils.outerWindowID);
                   })();
                 """, script_args=(url, focus))
 
