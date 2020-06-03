@@ -1769,7 +1769,7 @@ def build_task(config, tasks):
 
         # set up extra
         extra = task.get('extra', {})
-        extra['parent'] = os.environ.get('TASK_ID', '')
+        extra['parent'] = {'task-reference': '<decision>'}
         task_th = task.get('treeherder')
         if task_th:
             extra.setdefault('treeherder-platform', task_th['platform'])
