@@ -23,6 +23,8 @@ ID
 
 # Emacs directory variable files.
 **/.dir-locals.el
+# Emacs project sentinel files.
+**/.projectile
 
 # User files that may appear at the root
 /.mozconfig*
