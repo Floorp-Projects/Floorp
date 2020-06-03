@@ -102,9 +102,10 @@ class _RemoteSettingsExperimentLoader {
   /**
    * Checks targeting of a recipe if it is defined
    * @param {Recipe} recipe
+   * @param {{[key: string]: any}} customContext A custom filter context
    * @returns {Promise<boolean>} Should we process the recipe?
    */
-  async checkTargeting(recipe) {
+  async checkTargeting(recipe, customContext = {}) {
     const { targeting } = recipe;
     if (!targeting) {
       log.debug("No targeting for recipe, so it matches automatically");
@@ -113,7 +114,7 @@ class _RemoteSettingsExperimentLoader {
     log.debug("Testing targeting expression:", targeting);
     const result = await ASRouterTargeting.isMatch(
       targeting,
-      this.manager.filterContext,
+      customContext,
       err => {
         log.debug("Targeting failed because of an error");
         Cu.reportError(err);
@@ -132,7 +133,7 @@ class _RemoteSettingsExperimentLoader {
     }
     this._updating = true;
 
-    log.debug("Updating recipes");
+    log.debug("Updating recipes" + (trigger ? ` with trigger ${trigger}` : ""));
 
     let recipes;
     let loadingError = false;
@@ -148,8 +149,10 @@ class _RemoteSettingsExperimentLoader {
 
     let matches = 0;
     if (recipes && !loadingError) {
+      const context = this.manager.createTargetingContext();
+
       for (const r of recipes) {
-        if (await this.checkTargeting(r)) {
+        if (await this.checkTargeting(r, context)) {
           matches++;
           log.debug(`${r.id} matched`);
           await this.manager.onRecipe(r.arguments, "rs-loader");

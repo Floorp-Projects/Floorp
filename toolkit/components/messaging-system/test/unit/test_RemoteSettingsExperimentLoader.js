@@ -105,6 +105,44 @@ add_task(async function test_updateRecipes() {
   );
 });
 
+add_task(async function test_updateRecipes_forFirstStartup() {
+  const loader = ExperimentFakes.rsLoader();
+  const PASS_FILTER_RECIPE = {
+    targeting: "isFirstStartup",
+    arguments: ExperimentFakes.recipe("foo"),
+  };
+  sinon.stub(loader.remoteSettingsClient, "get").resolves([PASS_FILTER_RECIPE]);
+  sinon.stub(loader.manager, "onRecipe").resolves();
+  sinon.stub(loader.manager, "onFinalize");
+  sinon
+    .stub(loader.manager, "createTargetingContext")
+    .returns({ isFirstStartup: true });
+
+  Services.prefs.setBoolPref(ENABLED_PREF, true);
+  await loader.init({ isFirstStartup: true });
+
+  ok(loader.manager.onRecipe.calledOnce, "should pass the targeting filter");
+});
+
+add_task(async function test_updateRecipes_forNoneFirstStartup() {
+  const loader = ExperimentFakes.rsLoader();
+  const PASS_FILTER_RECIPE = {
+    targeting: "isFirstStartup",
+    arguments: ExperimentFakes.recipe("foo"),
+  };
+  sinon.stub(loader.remoteSettingsClient, "get").resolves([PASS_FILTER_RECIPE]);
+  sinon.stub(loader.manager, "onRecipe").resolves();
+  sinon.stub(loader.manager, "onFinalize");
+  sinon
+    .stub(loader.manager, "createTargetingContext")
+    .returns({ isFirstStartup: false });
+
+  Services.prefs.setBoolPref(ENABLED_PREF, true);
+  await loader.init({ isFirstStartup: true });
+
+  ok(loader.manager.onRecipe.notCalled, "should not pass the targeting filter");
+});
+
 add_task(async function test_checkTargeting() {
   const loader = ExperimentFakes.rsLoader();
   equal(
