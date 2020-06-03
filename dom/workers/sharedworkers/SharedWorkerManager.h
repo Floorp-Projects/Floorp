@@ -70,7 +70,7 @@ class SharedWorkerManager final : public RemoteWorkerObserver {
   static already_AddRefed<SharedWorkerManagerHolder> Create(
       SharedWorkerService* aService, nsIEventTarget* aPBackgroundEventTarget,
       const RemoteWorkerData& aData, nsIPrincipal* aLoadingPrincipal,
-      const OriginAttributes& aStoragePrincipalAttrs);
+      const OriginAttributes& aPartitionedPrincipalAttrs);
 
   // Returns a holder if this manager matches. The holder blocks the shutdown of
   // the manager.
@@ -78,7 +78,7 @@ class SharedWorkerManager final : public RemoteWorkerObserver {
       SharedWorkerService* aService, const nsACString& aDomain,
       nsIURI* aScriptURL, const nsAString& aName,
       nsIPrincipal* aLoadingPrincipal,
-      const OriginAttributes& aStoragePrincipalAttrs);
+      const OriginAttributes& aPartitionedPrincipalAttrs);
 
   // RemoteWorkerObserver
 
@@ -119,7 +119,7 @@ class SharedWorkerManager final : public RemoteWorkerObserver {
   SharedWorkerManager(nsIEventTarget* aPBackgroundEventTarget,
                       const RemoteWorkerData& aData,
                       nsIPrincipal* aLoadingPrincipal,
-                      const OriginAttributes& aStoragePrincipalAttrs);
+                      const OriginAttributes& aPartitionedPrincipalAttrs);
 
   ~SharedWorkerManager();
 
@@ -127,7 +127,7 @@ class SharedWorkerManager final : public RemoteWorkerObserver {
 
   nsCOMPtr<nsIPrincipal> mLoadingPrincipal;
   const nsCString mDomain;
-  const OriginAttributes mStoragePrincipalAttrs;
+  const OriginAttributes mPartitionedPrincipalAttrs;
   const nsCOMPtr<nsIURI> mResolvedScriptURL;
   const nsString mName;
   const bool mIsSecureContext;
