@@ -2700,8 +2700,6 @@ void GCMarker::repush(JSObject* obj) {
 }
 
 bool GCMarker::enterWeakMarkingMode() {
-  MOZ_ASSERT(runtime()->gc.nursery().isEmpty());
-
   MOZ_ASSERT(weakMapAction() == ExpandWeakMaps);
   MOZ_ASSERT(state != MarkingState::WeakMarking);
   if (state == MarkingState::IterativeMarking) {
@@ -3745,8 +3743,7 @@ inline bool SweepingTracer::sweepEdge(T** thingp) {
   // Bug 1501334 : IsAboutToBeFinalized doesn't work for atoms
   // Bug 1071218 : Refactor Debugger::sweepAll and
   //               JitRuntime::SweepJitcodeGlobalTable to work per sweep group
-  TenuredCell& tenured = thing->asTenured();
-  if (!tenured.isMarkedAny()) {
+  if (!thing->isMarkedAny()) {
     *thingp = nullptr;
     return false;
   }

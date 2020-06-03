@@ -30,6 +30,7 @@
   _(GlobalHelperThreadState, 300)     \
                                       \
   _(GCLock, 400)                      \
+  _(StoreBuffer, 400)                 \
                                       \
   _(SharedImmutableStringsCache, 500) \
   _(FutexThread, 500)                 \

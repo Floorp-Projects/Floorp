@@ -354,8 +354,8 @@ void WeakMap<K, V>::traceMappings(WeakMapTracer* tracer) {
 template <class K, class V>
 void WeakMap<K, V>::assertEntriesNotAboutToBeFinalized() {
   for (Range r = Base::all(); !r.empty(); r.popFront()) {
-    K k(r.front().key());
-    MOZ_ASSERT(!gc::IsAboutToBeFinalized(&k));
+    auto k = gc::detail::ExtractUnbarriered(r.front().key());
+    MOZ_ASSERT(!gc::IsAboutToBeFinalizedUnbarriered(&k));
     JSObject* delegate = gc::detail::GetDelegate(k);
     if (delegate) {
       MOZ_ASSERT(!gc::IsAboutToBeFinalizedUnbarriered(&delegate),

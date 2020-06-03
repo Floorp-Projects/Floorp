@@ -10,12 +10,24 @@
 
 #include "gc/Statistics.h"
 #include "vm/ArgumentsObject.h"
+#include "vm/JSContext.h"
+#include "vm/MutexIDs.h"
 #include "vm/Runtime.h"
 
 #include "gc/GC-inl.h"
 
 using namespace js;
 using namespace js::gc;
+
+JS_PUBLIC_API void js::gc::LockStoreBuffer(StoreBuffer* sb) {
+  MOZ_ASSERT(sb);
+  sb->lock();
+}
+
+JS_PUBLIC_API void js::gc::UnlockStoreBuffer(StoreBuffer* sb) {
+  MOZ_ASSERT(sb);
+  sb->unlock();
+}
 
 bool StoreBuffer::WholeCellBuffer::init() {
   MOZ_ASSERT(!head_);
@@ -55,18 +67,21 @@ void StoreBuffer::GenericBuffer::trace(JSTracer* trc) {
 }
 
 StoreBuffer::StoreBuffer(JSRuntime* rt, const Nursery& nursery)
-    : bufferVal(this, JS::GCReason::FULL_VALUE_BUFFER),
+    : lock_(mutexid::StoreBuffer),
+      bufferVal(this, JS::GCReason::FULL_VALUE_BUFFER),
       bufStrCell(this, JS::GCReason::FULL_CELL_PTR_STR_BUFFER),
       bufBigIntCell(this, JS::GCReason::FULL_CELL_PTR_BIGINT_BUFFER),
       bufObjCell(this, JS::GCReason::FULL_CELL_PTR_OBJ_BUFFER),
       bufferSlot(this, JS::GCReason::FULL_SLOT_BUFFER),
       bufferWholeCell(this),
       bufferGeneric(this),
-      cancelIonCompilations_(false),
       runtime_(rt),
       nursery_(nursery),
       aboutToOverflow_(false),
-      enabled_(false)
+      enabled_(false),
+      cancelIonCompilations_(false),
+      hasTypeSetPointers_(false),
+      mayHavePointersToDeadCells_(false)
 #ifdef DEBUG
       ,
       mEntered(false)
@@ -118,6 +133,8 @@ void StoreBuffer::clear() {
 
   aboutToOverflow_ = false;
   cancelIonCompilations_ = false;
+  hasTypeSetPointers_ = false;
+  mayHavePointersToDeadCells_ = false;
 
   bufferVal.clear();
   bufStrCell.clear();

@@ -2167,9 +2167,12 @@ void GCRuntime::sweepZoneAfterCompacting(MovingTracer* trc, Zone* zone) {
   sweepTypesAfterCompacting(zone);
   sweepFinalizationRegistries(zone);
   zone->weakRefMap().sweep();
-  zone->sweepWeakMaps();
-  for (auto* cache : zone->weakCaches()) {
-    cache->sweep();
+
+  {
+    zone->sweepWeakMaps();
+    for (auto* cache : zone->weakCaches()) {
+      cache->sweep(nullptr);
+    }
   }
 
   if (jit::JitZone* jitZone = zone->jitZone()) {
@@ -2365,7 +2368,7 @@ void GCRuntime::updateTypeDescrObjects(MovingTracer* trc, Zone* zone) {
   // need to be updated. Do not update any non-reserved slots, since they might
   // point back to unprocessed descriptor objects.
 
-  zone->typeDescrObjects().sweep();
+  zone->typeDescrObjects().sweep(nullptr);
 
   for (auto r = zone->typeDescrObjects().all(); !r.empty(); r.popFront()) {
     NativeObject* obj = &r.front()->as<NativeObject>();
@@ -2547,7 +2550,7 @@ void GCRuntime::updateRuntimePointersToRelocatedCells(AutoGCSession& session) {
   DebugAPI::sweepAll(rt->defaultFreeOp());
   jit::JitRuntime::TraceWeakJitcodeGlobalTable(rt, &trc);
   for (JS::detail::WeakCacheBase* cache : rt->weakCaches()) {
-    cache->sweep();
+    cache->sweep(nullptr);
   }
 
   // Type inference may put more blocks here to free.
@@ -4424,7 +4427,7 @@ bool Compartment::findSweepGroupEdges() {
       // zone is not still being marked when we start sweeping the wrapped zone.
       // As an optimization, if the wrapped object is already marked black there
       // is no danger of later marking and we can skip this.
-      if (key->asTenured().isMarkedBlack()) {
+      if (key->isMarkedBlack()) {
         continue;
       }
 
@@ -4960,7 +4963,7 @@ class ImmediateSweepWeakCacheTask : public GCParallelTask {
 
   void run() override {
     AutoSetThreadIsSweeping threadIsSweeping(zone);
-    cache.sweep();
+    cache.sweep(&gc->storeBuffer());
   }
 };
 
@@ -5040,6 +5043,9 @@ void GCRuntime::sweepWeakMaps() {
       oomUnsafe.crash("clearing weak keys in beginSweepingSweepGroup()");
     }
 
+    // Lock the storebuffer since this may access it when rehashing or resizing
+    // the tables.
+    AutoLockStoreBuffer lock(&storeBuffer());
     zone->sweepWeakMaps();
   }
 }
@@ -5240,7 +5246,7 @@ static void SweepAllWeakCachesOnMainThread(JSRuntime* rt) {
     if (cache->needsIncrementalBarrier()) {
       cache->setNeedsIncrementalBarrier(false);
     }
-    cache->sweep();
+    cache->sweep(nullptr);
     return true;
   });
 }
@@ -5253,6 +5259,8 @@ IncrementalProgress GCRuntime::beginSweepingSweepGroup(JSFreeOp* fop,
    */
 
   using namespace gcstats;
+
+  MOZ_ASSERT(!storeBuffer().hasTypeSetPointers());
 
   AutoSCC scc(stats(), sweepGroupIndex);
 
@@ -5598,6 +5606,8 @@ IncrementalProgress GCRuntime::sweepTypeInformation(JSFreeOp* fop,
   // the sweep group finishes we won't be able to determine which things in
   // the zone are live.
 
+  MOZ_ASSERT(!storeBuffer().hasTypeSetPointers());
+
   gcstats::AutoPhase ap1(stats(), gcstats::PhaseKind::SWEEP_COMPARTMENTS);
   gcstats::AutoPhase ap2(stats(), gcstats::PhaseKind::SWEEP_TYPES);
 
@@ -5685,7 +5695,7 @@ static size_t IncrementalSweepWeakCache(GCRuntime* gc,
 
   JS::detail::WeakCacheBase* cache = item.cache;
   MOZ_ASSERT(cache->needsIncrementalBarrier());
-  size_t steps = cache->sweep();
+  size_t steps = cache->sweep(&gc->storeBuffer());
   cache->setNeedsIncrementalBarrier(false);
 
   return steps;
@@ -6555,15 +6565,15 @@ void GCRuntime::incrementalSlice(SliceBudget& budget,
 
   MOZ_ASSERT_IF(isIncrementalGCInProgress(), isIncremental);
 
+  isIncremental = !budget.isUnlimited();
+
   /*
    * Non-incremental collection expects that the nursery is empty.
    */
-  if (!isIncremental) {
+  if (!isIncremental && !isIncrementalGCInProgress()) {
     MOZ_ASSERT(nursery().isEmpty());
     storeBuffer().checkEmpty();
   }
-
-  isIncremental = !budget.isUnlimited();
 
   if (useZeal && hasIncrementalTwoSliceZealMode()) {
     /*
@@ -6663,14 +6673,12 @@ void GCRuntime::incrementalSlice(SliceBudget& budget,
 
       incrementalState = State::Sweep;
       lastMarkSlice = false;
+
       beginSweepPhase(reason, session);
 
       [[fallthrough]];
 
     case State::Sweep:
-      MOZ_ASSERT(nursery().isEmpty());
-      storeBuffer().checkEmpty();
-
       rt->mainContextFromOwnThread()->traceWrapperGCRooters(&marker);
 
       if (performSweepActions(budget) == NotFinished) {
@@ -7103,23 +7111,47 @@ bool GCRuntime::shouldCollectNurseryForSlice(bool nonincrementalByAPI,
     return false;
   }
 
+  if (nursery().shouldCollect()) {
+    return true;
+  }
+
+  bool nonIncremental = nonincrementalByAPI || budget.isUnlimited();
+
+  bool shouldCollectForSweeping = storeBuffer().hasTypeSetPointers() ||
+                                  storeBuffer().mayHavePointersToDeadCells();
+
   switch (incrementalState) {
     case State::NotActive:
-    case State::Sweep:
-    case State::Compact:
       return true;
     case State::Mark:
+      return (mightSweepInThisSlice(nonIncremental) &&
+              shouldCollectForSweeping) ||
+             mightCompactInThisSlice(nonIncremental);
+    case State::Sweep:
+      return shouldCollectForSweeping ||
+             mightCompactInThisSlice(nonIncremental);
     case State::Finalize:
+      return mightCompactInThisSlice(nonIncremental);
+    case State::Compact:
+      return true;
     case State::Decommit:
-      return (nonincrementalByAPI || budget.isUnlimited() || lastMarkSlice ||
-              nursery().shouldCollect() || hasIncrementalTwoSliceZealMode());
     case State::Finish:
       return false;
-    case State::MarkRoots:
+    default:
       MOZ_CRASH("Unexpected GC state");
   }
 
   return false;
+}
+
+inline bool GCRuntime::mightSweepInThisSlice(bool nonIncremental) {
+  MOZ_ASSERT(incrementalState < State::Sweep);
+  return nonIncremental || lastMarkSlice || hasIncrementalTwoSliceZealMode();
+}
+
+inline bool GCRuntime::mightCompactInThisSlice(bool nonIncremental) {
+  MOZ_ASSERT(incrementalState < State::Compact);
+  return isCompacting && (nonIncremental || hasIncrementalTwoSliceZealMode());
 }
 
 #ifdef JS_GC_ZEAL

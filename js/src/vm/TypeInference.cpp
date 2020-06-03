@@ -733,6 +733,7 @@ void ConstraintTypeSet::postWriteBarrier(JSContext* cx, Type type) {
     if (gc::StoreBuffer* sb = type.singletonNoBarrier()->storeBuffer()) {
       sb->putGeneric(TypeSetRef(cx->zone(), this));
       sb->setShouldCancelIonCompilations();
+      sb->setHasTypeSetPointers();
     }
   }
 }
@@ -4575,6 +4576,8 @@ TypeZone::~TypeZone() {
 
 void TypeZone::beginSweep() {
   MOZ_ASSERT(zone()->isGCSweepingOrCompacting());
+  MOZ_ASSERT(
+      !zone()->runtimeFromMainThread()->gc.storeBuffer().hasTypeSetPointers());
 
   // Clear the analysis pool, but don't release its data yet. While sweeping
   // types any live data will be allocated into the pool.
