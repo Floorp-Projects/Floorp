@@ -9,6 +9,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.util.AttributeSet
 import android.view.View
+import android.view.WindowManager
 import androidx.annotation.CallSuper
 import androidx.annotation.IdRes
 import androidx.annotation.VisibleForTesting
@@ -166,6 +167,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity() {
 
     @CallSuper
     override fun onResume() {
+        checkAndUpdateScreenshotPermission(settings())
         super.onResume()
 
         components.backgroundServices.accountManagerAvailableQueue.runIfReadyOrQueue {
@@ -181,6 +183,11 @@ open class HomeActivity : LocaleAwareAppCompatActivity() {
     }
 
     final override fun onPause() {
+        if (settings().lastKnownMode.isPrivate) {
+            window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
+        } else {
+            window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+        }
         super.onPause()
 
         // Every time the application goes into the background, it is possible that the user
