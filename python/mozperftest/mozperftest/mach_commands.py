@@ -53,10 +53,13 @@ class Perftest(MachCommandBase):
                     continue
                 perftest_parameters[name] = value
 
-            parameters = {"try_options": {"perftest": perftest_parameters}}
-            try_config = {"tasks": [_TRY_PLATFORMS[platform]]}
-            parameters["try_task_config"] = try_config
-            parameters["try_mode"] = "try_task_config"
+            parameters = {
+                "try_task_config": {
+                    "tasks": [_TRY_PLATFORMS[platform]],
+                    "perftest-options": perftest_parameters,
+                },
+                "try_mode": "try_task_config",
+            }
 
             task_config = {"parameters": parameters, "version": 2}
             push_to_try("perftest", "perftest", try_task_config=task_config)
