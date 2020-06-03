@@ -29,13 +29,13 @@ import {
   getMappedResource,
   getResourceIds,
   memoizeResourceShallow,
-  makeReduceQuery,
+  makeShallowQuery,
   makeReduceAllQuery,
   makeMapWithArgs,
   type Resource,
   type ResourceState,
-  type ReduceQuery,
   type ReduceAllQuery,
+  type ShallowQuery,
 } from "../utils/resource";
 
 import { findPosition } from "../utils/breakpoint/breakpointPositions";
@@ -60,7 +60,7 @@ import {
   type SourceActorId,
   type SourceActorOuterState,
 } from "./source-actors";
-import { getThreads, getMainThread } from "./threads";
+import { getAllThreads } from "./threads";
 import type {
   Source,
   SourceId,
@@ -69,12 +69,13 @@ import type {
   SourceContent,
   SourceWithContent,
   ThreadId,
+  Thread,
   MappedLocation,
   BreakpointPosition,
   BreakpointPositions,
   URL,
 } from "../types";
-import type { PendingSelectedLocation, Selector } from "./types";
+import type { PendingSelectedLocation, Selector, State } from "./types";
 import type { Action, DonePromiseAction, FocusItem } from "../actions/types";
 import type { LoadSourceAction } from "../actions/types/SourceAction";
 import type { ThreadsState } from "./threads";
@@ -107,6 +108,8 @@ export type SourceResource = Resource<{
 }>;
 export type SourceResourceState = ResourceState<SourceResource>;
 
+type IdsList = Array<SourceId>;
+
 export type SourcesState = {
   epoch: number,
 
@@ -128,6 +131,8 @@ export type SourcesState = {
   // disambiguation.
   plainUrls: PlainUrlsMap,
 
+  sourcesWithUrls: IdsList,
+
   pendingSelectedLocation?: PendingSelectedLocation,
   selectedLocation: ?SourceLocation,
   projectDirectoryRoot: string,
@@ -143,6 +148,7 @@ export function initialSourcesState(
     sources: createInitial(),
     urls: {},
     plainUrls: {},
+    sourcesWithUrls: [],
     content: {},
     actors: {},
     breakpointPositions: {},
@@ -293,6 +299,8 @@ const resourceAsSourceWithContent = memoizeResourceShallow(
  * - Add the source URL to the urls map
  */
 function addSources(state: SourcesState, sources: SourceBase[]): SourcesState {
+  const originalState = state;
+
   state = {
     ...state,
     urls: { ...state.urls },
@@ -321,6 +329,13 @@ function addSources(state: SourcesState, sources: SourceBase[]): SourcesState {
       if (!existingPlainUrls.includes(source.url)) {
         state.plainUrls[plainUrl] = [...existingPlainUrls, source.url];
       }
+
+      // NOTE: we only want to copy the list once
+      if (originalState.sourcesWithUrls === state.sourcesWithUrls) {
+        state.sourcesWithUrls = [...state.sourcesWithUrls];
+      }
+
+      state.sourcesWithUrls.push(source.id);
     }
   }
 
@@ -575,7 +590,7 @@ function updateBlackBoxListSources(
 // top-level app state, so we'd have to "wrap" them to automatically
 // pick off the piece of state we're interested in. It's impossible
 // (right now) to type those wrapped functions.
-type OuterState = { sources: SourcesState };
+type OuterState = State;
 type ThreadsOuterState = { threads: ThreadsState };
 
 const getSourcesState = (state: OuterState) => state.sources;
@@ -855,17 +870,19 @@ export function getProjectDirectoryRoot(state: OuterState): string {
   return state.sources.projectDirectoryRoot;
 }
 
-const queryAllDisplayedSources: ReduceQuery<
+const queryAllDisplayedSources: ShallowQuery<
   SourceResource,
   {|
+    sourcesWithUrls: IdsList,
     projectDirectoryRoot: string,
     chromeAndExtensionsEnabled: boolean,
     debuggeeIsWebExtension: boolean,
-    threadActors: Array<ThreadId>,
+    threads: Array<Thread>,
   |},
   Array<SourceId>
-> = makeReduceQuery(
-  makeMapWithArgs(
+> = makeShallowQuery({
+  filter: (_, { sourcesWithUrls }) => sourcesWithUrls,
+  map: makeMapWithArgs(
     (
       resource,
       ident,
@@ -873,37 +890,35 @@ const queryAllDisplayedSources: ReduceQuery<
         projectDirectoryRoot,
         chromeAndExtensionsEnabled,
         debuggeeIsWebExtension,
-        threadActors,
+        threads,
       }
     ) => ({
       id: resource.id,
       displayed:
-        underRoot(resource, projectDirectoryRoot, threadActors) &&
+        underRoot(resource, projectDirectoryRoot, threads) &&
         (!resource.isExtension ||
           chromeAndExtensionsEnabled ||
           debuggeeIsWebExtension),
     })
   ),
-  items =>
+  reduce: items =>
     items.reduce((acc, { id, displayed }) => {
       if (displayed) {
         acc.push(id);
       }
       return acc;
-    }, [])
-);
+    }, []),
+});
 
-function getAllDisplayedSources(
+export function getAllDisplayedSources(
   state: OuterState & ThreadsOuterState
 ): Array<SourceId> {
   return queryAllDisplayedSources(state.sources.sources, {
+    sourcesWithUrls: state.sources.sourcesWithUrls,
     projectDirectoryRoot: state.sources.projectDirectoryRoot,
     chromeAndExtensionsEnabled: state.sources.chromeAndExtensionsEnabled,
     debuggeeIsWebExtension: state.threads.isWebExtension,
-    threadActors: [
-      getMainThread(state).actor,
-      ...getThreads(state).map(t => t.actor),
-    ],
+    threads: getAllThreads(state),
   });
 }
 

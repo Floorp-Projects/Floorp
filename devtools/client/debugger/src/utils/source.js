@@ -28,7 +28,7 @@ import type {
   SourceActor,
   SourceContent,
   SourceLocation,
-  ThreadId,
+  Thread,
   URL,
 } from "../types";
 
@@ -495,12 +495,12 @@ export function getRelativeUrl(source: Source, root: string): string {
 export function underRoot(
   source: Source,
   root: string,
-  threadActors: Array<ThreadId>
+  threads: Array<Thread>
 ): boolean {
   // source.url doesn't include thread actor ID, so remove the thread actor ID from the root
-  threadActors.forEach(threadActor => {
-    if (root.includes(threadActor)) {
-      root = root.slice(threadActor.length + 1);
+  threads.forEach(thread => {
+    if (root.includes(thread.actor)) {
+      root = root.slice(thread.actor.length + 1);
     }
   });
 

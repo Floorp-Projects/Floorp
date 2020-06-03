@@ -44,7 +44,7 @@ const emptySearchResults = Object.freeze({
   count: 0,
 });
 
-export const createFileSearchState = () => ({
+export const initialFileSearchState = () => ({
   query: "",
   searchResults: emptySearchResults,
   modifiers: {
@@ -55,7 +55,7 @@ export const createFileSearchState = () => ({
 });
 
 function update(
-  state: FileSearchState = createFileSearchState(),
+  state: FileSearchState = initialFileSearchState(),
   action: Action
 ): FileSearchState {
   switch (action.type) {

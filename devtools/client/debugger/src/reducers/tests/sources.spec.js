@@ -12,7 +12,7 @@ import { initialThreadsState } from "../threads";
 import updateSourceActors from "../source-actors";
 import type { SourceActor } from "../../types";
 import { prefs } from "../../utils/prefs";
-import { makeMockSource, mockcx } from "../../utils/test-mockup";
+import { makeMockSource, mockcx, makeMockState } from "../../utils/test-mockup";
 import { getResourceIds } from "../../utils/resource";
 
 const extensionSource = {
@@ -90,11 +90,11 @@ describe("sources selectors", () => {
       type: "INSERT_SOURCE_ACTORS",
       items: mockSourceActors,
     };
-    state = {
+    state = makeMockState({
       sources: update(state.sources, insertAction),
       sourceActors: updateSourceActors(state.sourceActors, insertAction),
       threads: initialThreadsState(),
-    };
+    });
     const threadSources = getDisplayedSources(state);
     expect(Object.values(threadSources.foo)).toHaveLength(3);
   });
@@ -116,11 +116,11 @@ describe("sources selectors", () => {
       items: mockSourceActors,
     };
 
-    state = {
+    state = makeMockState({
       sources: update(state.sources, insertAction),
       sourceActors: updateSourceActors(state.sourceActors, insertAction),
       threads: initialThreadsState(),
-    };
+    });
     const threadSources = getDisplayedSources(state);
     expect(Object.values(threadSources.foo)).toHaveLength(1);
   });

@@ -16,7 +16,7 @@ export type SourceTreeState = {
   focusedItem: ?FocusItem,
 };
 
-export function InitialState(): SourceTreeState {
+export function initialSourcesTreeState(): SourceTreeState {
   return {
     expanded: new Set(),
     focusedItem: null,
@@ -24,7 +24,7 @@ export function InitialState(): SourceTreeState {
 }
 
 export default function update(
-  state: SourceTreeState = InitialState(),
+  state: SourceTreeState = initialSourcesTreeState(),
   action: SourceTreeAction
 ): SourceTreeState {
   switch (action.type) {

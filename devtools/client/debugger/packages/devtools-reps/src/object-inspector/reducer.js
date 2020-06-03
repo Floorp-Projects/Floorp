@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-function initialState(overrides) {
+function initialOIState(overrides) {
   return {
     expandedPaths: new Set(),
     loadedProperties: new Map(),
@@ -12,7 +12,7 @@ function initialState(overrides) {
   };
 }
 
-function reducer(state = initialState(), action = {}) {
+function reducer(state = initialOIState(), action = {}) {
   const { type, data } = action;
 
   const cloneState = overrides => ({ ...state, ...overrides });
@@ -84,7 +84,7 @@ function reducer(state = initialState(), action = {}) {
   // NOTE: we clear the state on resume because otherwise the scopes pane
   // would be out of date. Bug 1514760
   if (type === "RESUME" || type == "NAVIGATE") {
-    return initialState({ watchpoints: state.watchpoints });
+    return initialOIState({ watchpoints: state.watchpoints });
   }
 
   return state;
@@ -143,5 +143,5 @@ const selectors = {
 Object.defineProperty(module.exports, "__esModule", {
   value: true,
 });
-module.exports = selectors;
+module.exports = { ...selectors, initialOIState };
 module.exports.default = reducer;

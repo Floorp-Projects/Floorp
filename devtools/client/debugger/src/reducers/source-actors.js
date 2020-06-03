@@ -71,7 +71,7 @@ type SourceActorResource = Resource<{
 export type SourceActorsState = ResourceState<SourceActorResource>;
 export type SourceActorOuterState = { sourceActors: SourceActorsState };
 
-const initial: SourceActorsState = createInitial();
+export const initial: SourceActorsState = createInitial();
 
 export default function update(
   state: SourceActorsState = initial,
