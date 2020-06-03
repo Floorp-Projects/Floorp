@@ -21,9 +21,9 @@ add_task(async function() {
 
   const scriptMapped = new Promise(resolve => {
     let count = 0;
-    service.subscribe(JS_URL, GENERATED_LINE, undefined, (...args) => {
+    service.subscribe(JS_URL, GENERATED_LINE, undefined, originalLocation => {
       if (count === 0) {
-        resolve(args);
+        resolve(originalLocation);
       }
       count += 1;
 
@@ -37,8 +37,7 @@ add_task(async function() {
   await sourceSeen;
 
   // Ensure that the URL service fired an event about the location loading.
-  const [isSourceMapped, url, line] = await scriptMapped;
-  is(isSourceMapped, true, "check is mapped");
+  const { url, line } = await scriptMapped;
   is(url, ORIGINAL_URL, "check mapped URL");
   is(line, ORIGINAL_LINE, "check mapped line number");
 

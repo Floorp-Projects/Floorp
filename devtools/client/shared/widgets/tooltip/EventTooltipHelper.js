@@ -101,14 +101,13 @@ EventTooltip.prototype = {
       } else {
         const location = this._parseLocation(text);
         if (location) {
-          const callback = (enabled, url, line, column) => {
+          const callback = originalLocation => {
             // Do nothing if the tooltip was destroyed while we were
             // waiting for a response.
             if (this._tooltip) {
-              const newUrl = enabled ? url : location.url;
-              const newLine = enabled ? line : location.line;
+              const currentLoc = originalLocation || location;
 
-              const newURI = newUrl + ":" + newLine;
+              const newURI = currentLoc.url + ":" + currentLoc.line;
               filename.textContent = newURI;
               filename.setAttribute("title", newURI);
               const eventEditor = this._eventEditors.get(content);

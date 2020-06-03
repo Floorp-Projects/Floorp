@@ -29,8 +29,8 @@ add_task(async function() {
   const service = toolbox.sourceMapURLService;
 
   const cbCalls = [];
-  const cb = (...args) => cbCalls.push(args);
-  const expectedArgs = [true, ORIGINAL_URL, ORIGINAL_LINE, 0];
+  const cb = originalLocation => cbCalls.push(originalLocation);
+  const expectedArg = { url: ORIGINAL_URL, line: ORIGINAL_LINE, column: 0 };
 
   const unsubscribe1 = service.subscribe(JS_URL, GENERATED_LINE, 1, cb);
   await waitForSubscribtionsPromise(service);
@@ -41,7 +41,7 @@ add_task(async function() {
   );
   Assert.deepEqual(
     cbCalls[0],
-    expectedArgs,
+    expectedArg,
     "callback called with expected arguments"
   );
 
@@ -50,7 +50,7 @@ add_task(async function() {
   is(cbCalls.length, 2, "Subscribing to the same location twice works");
   Assert.deepEqual(
     cbCalls[1],
-    expectedArgs,
+    expectedArg,
     "callback called with expected arguments"
   );
 
@@ -60,7 +60,7 @@ add_task(async function() {
   is(cbCalls.length, 4, "both subscribers were called");
   Assert.deepEqual(
     cbCalls[2],
-    expectedArgs,
+    expectedArg,
     "callback called with expected arguments"
   );
   Assert.deepEqual(
@@ -76,7 +76,7 @@ add_task(async function() {
   is(cbCalls.length, 5, "Only remainer subscriber callback was called");
   Assert.deepEqual(
     cbCalls[4],
-    expectedArgs,
+    expectedArg,
     "callback called with expected arguments"
   );
 
