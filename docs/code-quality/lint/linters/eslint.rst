@@ -19,7 +19,7 @@ ESLint.
 Configuration
 -------------
 
-The ESLint mozilla-central integration uses a blacklist to exclude certain directories from being
+The ESLint mozilla-central integration uses a skip list to exclude certain directories from being
 linted. This lives in ``topsrcdir/.eslintignore``. If you don't wish your directory to be linted, it
 must be added here.
 
