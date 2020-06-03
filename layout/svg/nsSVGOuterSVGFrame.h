@@ -261,4 +261,11 @@ class nsSVGOuterSVGAnonChildFrame final : public nsSVGDisplayContainerFrame {
   }
 };
 
+/**
+ * Recursively checks if any atom in the parameter pack is equal to |aString|.
+ */
+template <typename... Atoms>
+bool IsAnyAtomEqual(const nsAString& aString, nsAtom* aFirst, Atoms... aArgs);
+bool IsAnyAtomEqual(const nsAString& aString);
+
 #endif
