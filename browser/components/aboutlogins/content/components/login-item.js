@@ -2,7 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { recordTelemetryEvent } from "../aboutLoginsUtils.js";
+import {
+  recordTelemetryEvent,
+  promptForMasterPassword,
+} from "../aboutLoginsUtils.js";
 
 export default class LoginItem extends HTMLElement {
   /**
@@ -349,12 +352,9 @@ export default class LoginItem extends HTMLElement {
         if (classList.contains("reveal-password-checkbox")) {
           // We prompt for the master password when entering edit mode already.
           if (this._revealCheckbox.checked && !this.dataset.editing) {
-            let masterPasswordAuth = await new Promise(resolve => {
-              window.AboutLoginsUtils.promptForMasterPassword(
-                resolve,
-                "about-logins-reveal-password-os-auth-dialog-message"
-              );
-            });
+            let masterPasswordAuth = await promptForMasterPassword(
+              "about-logins-reveal-password-os-auth-dialog-message"
+            );
             if (!masterPasswordAuth) {
               this._revealCheckbox.checked = false;
               return;
@@ -402,12 +402,9 @@ export default class LoginItem extends HTMLElement {
               ? this._copyUsernameButton
               : this._copyPasswordButton;
           if (copyButton.dataset.copyLoginProperty == "password") {
-            let masterPasswordAuth = await new Promise(resolve => {
-              window.AboutLoginsUtils.promptForMasterPassword(
-                resolve,
-                "about-logins-copy-password-os-auth-dialog-message"
-              );
-            });
+            let masterPasswordAuth = await promptForMasterPassword(
+              "about-logins-copy-password-os-auth-dialog-message"
+            );
             if (!masterPasswordAuth) {
               return;
             }
@@ -456,12 +453,9 @@ export default class LoginItem extends HTMLElement {
           return;
         }
         if (classList.contains("edit-button")) {
-          let masterPasswordAuth = await new Promise(resolve => {
-            window.AboutLoginsUtils.promptForMasterPassword(
-              resolve,
-              "about-logins-edit-login-os-auth-dialog-message"
-            );
-          });
+          let masterPasswordAuth = await promptForMasterPassword(
+            "about-logins-edit-login-os-auth-dialog-message"
+          );
           if (!masterPasswordAuth) {
             return;
           }

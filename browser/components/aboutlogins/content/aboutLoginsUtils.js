@@ -50,3 +50,9 @@ export function setKeyboardAccessForNonDialogElements(enableKeyboardAccess) {
     }
   });
 }
+
+export function promptForMasterPassword(messageId) {
+  return new Promise(resolve => {
+    window.AboutLoginsUtils.promptForMasterPassword(resolve, messageId);
+  });
+}

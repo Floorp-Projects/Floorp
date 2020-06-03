@@ -8,6 +8,9 @@
  * Test the export logins file picker appears.
  */
 
+let { OSKeyStore } = ChromeUtils.import(
+  "resource://gre/modules/OSKeyStore.jsm"
+);
 let { TelemetryTestUtils } = ChromeUtils.import(
   "resource://testing-common/TelemetryTestUtils.jsm"
 );
@@ -65,8 +68,6 @@ add_task(async function test_open_export() {
         let exportButton = menuButton.shadowRoot.querySelector(
           ".menuitem-export"
         );
-        // Force the menu item to be visible for the test.
-        exportButton.hidden = false;
         return exportButton;
       }
 
@@ -85,6 +86,22 @@ add_task(async function test_open_export() {
       );
 
       info("Clicking confirm button");
+      let osReAuthPromise = null;
+
+      if (
+        OSKeyStore.canReauth() &&
+        !OSKeyStoreTestUtils.canTestOSKeyStoreLogin()
+      ) {
+        todo(
+          OSKeyStoreTestUtils.canTestOSKeyStoreLogin(),
+          "Cannot test OS key store login in this build."
+        );
+        return;
+      }
+
+      if (OSKeyStore.canReauth()) {
+        osReAuthPromise = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(true);
+      }
       let filePicker = waitForFilePicker();
       await BrowserTestUtils.synthesizeMouseAtCenter(
         () => {
@@ -99,15 +116,33 @@ add_task(async function test_open_export() {
         browser
       );
 
+      if (osReAuthPromise) {
+        ok(osReAuthPromise, "Waiting for OS re-auth promise");
+        await osReAuthPromise;
+      }
+
       info("waiting for Export file picker to get opened");
       await filePicker;
       ok(true, "Export file picker opened");
 
       info("Waiting for the export to complete");
-      await LoginTestUtils.telemetry.waitForEventCount(1, "parent");
+      let expectedEvents = [
+        [
+          "pwmgr",
+          "reauthenticate",
+          "os_auth",
+          osReAuthPromise ? "success" : "success_unsupported_platform",
+        ],
+        ["pwmgr", "mgmt_menu_item_used", "export_complete"],
+      ];
+      await LoginTestUtils.telemetry.waitForEventCount(
+        expectedEvents.length,
+        "parent"
+      );
+
       TelemetryTestUtils.assertEvents(
-        [["pwmgr", "mgmt_menu_item_used", "export_complete"]],
-        { category: "pwmgr", method: "mgmt_menu_item_used" },
+        expectedEvents,
+        { category: "pwmgr", method: /(reauthenticate|mgmt_menu_item_used)/ },
         { process: "parent" }
       );
     }
