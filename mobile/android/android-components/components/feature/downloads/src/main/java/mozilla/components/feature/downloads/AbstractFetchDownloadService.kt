@@ -299,12 +299,16 @@ abstract class AbstractFetchDownloadService : Service() {
      * Be aware that you need to pass [latestUIStatus] as [DownloadJobState.status] can be modified
      * from another thread, causing inconsistencies in the ui.
      */
-    private fun updateDownloadNotification(latestUIStatus: DownloadJobStatus, download: DownloadJobState) {
+    @VisibleForTesting
+    internal fun updateDownloadNotification(latestUIStatus: DownloadJobStatus, download: DownloadJobState) {
         val notification = when (latestUIStatus) {
             ACTIVE -> DownloadNotification.createOngoingDownloadNotification(context, download)
             PAUSED -> DownloadNotification.createPausedDownloadNotification(context, download)
-            COMPLETED -> DownloadNotification.createDownloadCompletedNotification(context, download)
             FAILED -> DownloadNotification.createDownloadFailedNotification(context, download)
+            COMPLETED -> {
+                addToDownloadSystemDatabaseCompat(download.state)
+                DownloadNotification.createDownloadCompletedNotification(context, download)
+            }
             CANCELLED -> {
                 removeNotification(context, download)
                 download.lastNotificationUpdate = System.currentTimeMillis()
@@ -358,6 +362,33 @@ abstract class AbstractFetchDownloadService : Service() {
     internal fun deleteDownloadingFile(downloadState: DownloadState) {
         val downloadedFile = File(downloadState.filePath)
         downloadedFile.delete()
+    }
+
+    /**
+     * Adds a file to the downloads database system, so it could appear in Downloads App
+     * (and thus become eligible for management by the Downloads App) only for compatible devices
+     * otherwise nothing will happen.
+     */
+    @VisibleForTesting
+    internal fun addToDownloadSystemDatabaseCompat(download: DownloadState) {
+        if (SDK_INT < Build.VERSION_CODES.Q) {
+            val fileName = download.fileName
+                    ?: throw IllegalStateException("A fileName for a download is required")
+            val file = File(download.filePath)
+
+            context.addCompletedDownload(
+                    title = fileName,
+                    description = fileName,
+                    isMediaScannerScannable = true,
+                    mimeType = download.contentType ?: "*/*",
+                    path = file.absolutePath,
+                    length = download.contentLength ?: file.length(),
+                    // Only show notifications if our channel is blocked
+                    showNotification = !DownloadNotification.isChannelEnabled(context),
+                    uri = download.url.toUri(),
+                    referer = download.referrerUrl?.toUri()
+            )
+        }
     }
 
     @VisibleForTesting
@@ -670,27 +701,7 @@ abstract class AbstractFetchDownloadService : Service() {
     @TargetApi(Build.VERSION_CODES.P)
     @Suppress("Deprecation")
     private fun useFileStreamLegacy(download: DownloadState, append: Boolean, block: (OutputStream) -> Unit) {
-        val fileName = download.fileName ?: throw IllegalStateException("A fileName for a download is required")
-        val dir = Environment.getExternalStoragePublicDirectory(download.destinationDirectory)
-        val file = File(dir, fileName)
-
-        FileOutputStream(file, append).use(block)
-
-        val downloadJobState = downloadJobs[download.id] ?: return
-        if (getDownloadJobStatus(downloadJobState) != COMPLETED) { return }
-
-        addCompletedDownload(
-            title = fileName,
-            description = fileName,
-            isMediaScannerScannable = true,
-            mimeType = download.contentType ?: "*/*",
-            path = file.absolutePath,
-            length = download.contentLength ?: file.length(),
-            // Only show notifications if our channel is blocked
-            showNotification = !DownloadNotification.isChannelEnabled(context),
-            uri = download.url.toUri(),
-            referer = download.referrerUrl?.toUri()
-        )
+        FileOutputStream(File(download.filePath), append).use(block)
     }
 
     companion object {
