@@ -62,6 +62,10 @@
     <string name="mozac_feature_addons_settings_on">চালু</string>
     <!-- Indicates the add-on is disabled. -->
     <string name="mozac_feature_addons_settings_off">বন্ধ</string>
+    <!-- Indicates the add-on is allowed in private browsing mode. -->
+    <string name="mozac_feature_addons_settings_allow_in_private_browsing">ব্যক্তিগত ব্রাউজিংয়ে অনুমতি দিন</string>
+    <!-- Indicates the add-on is allowed in private browsing mode. -->
+    <string name="mozac_feature_addons_settings_run_in_private_browsing">ব্যক্তিগত ব্রাউজিংয়ে চালু করুন</string>
     <!-- Indicates the add-on is enabled. -->
     <string name="mozac_feature_addons_enabled">সক্রিয় হয়েছে</string>
     <!-- Indicates the add-on is disabled. -->
@@ -72,6 +76,8 @@
     <string name="mozac_feature_addons_recommended_section">সুপারিশকৃত</string>
     <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the not yet supported section. -->
     <string name="mozac_feature_addons_unsupported_section">এখনো সমর্থিত নয়</string>
+    <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the not yet available section. -->
+    <string name="mozac_feature_addons_unavailable_section">এখনো বিদ্যমান না</string>
     <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the disabled section. -->
     <string name="mozac_feature_addons_disabled_section">নিষ্ক্রিয় করা হয়েছে</string>
     <!-- Displays a page with all the details of an add-on. -->
@@ -104,6 +110,8 @@
     <string name="mozac_feature_addons_updater_notification_title">%1$s এর একটি নতুন আপডেট রয়েছে</string>
     <!-- The content of the notification, this will be shown when an add-on needs new permissions, to be updated. %1$d is the amount of new permissions-->
     <string name="mozac_feature_addons_updater_notification_content" tools:ignore="PluralsCandidate">%1$d নতুন অনুমতির প্রয়োজন</string>
+    <!-- The content of the notification displayed when an add-on needs a new permission-->
+    <string name="mozac_feature_addons_updater_notification_content_singular">একটি নতুন অনুমতির প্রয়োজন</string>
     <!-- Name of the "notification channel" used for displaying a notification for updating an add-on. See https://developer.android.com/training/notify-user/channels -->
     <string name="mozac_feature_addons_updater_notification_channel">অ্যাড-অনের আপডেট</string>
     <!-- This is the caption for not yet supported screen caption -->
@@ -130,7 +138,7 @@
     <string name="mozac_feature_addons_successfully_removed" tools:ignore="UnusedResources">সফলভাবে %1$s অপসারিত হয়েছে</string>
     <!-- Text shown after failed to remove an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_failed_to_remove" tools:ignore="UnusedResources">%1$s অপসারণ করতে ব্যর্থ</string>
-    <!-- Label shown to indicate that the add-on was migrated from a previous version of the app. %1$s is the app name most of the case it will be FireFox. -->
+    <!-- Label shown to indicate that the add-on was migrated from a previous version of the app. %1$s is the app name most of the case it will be Firefox. -->
     <string name="mozac_feature_addons_migrated_from_a_previous_version_label" tools:ignore="UnusedResources">এই অ্যাড-অনটি %1$s এর পূর্ববর্তী সংস্করণ থেকে স্থানান্তরিত হয়েছিল</string>
     <!-- Text shown in not yet supported add-ons section in AddonsManagerAdapter. -->
     <string name="mozac_feature_addons_unsupported_caption">1 অ্যাড-অন</string>
@@ -138,4 +146,4 @@
     <string name="mozac_feature_addons_unsupported_caption_plural">%1$s অ্যাড-অনগুলো</string>
     <!-- Text link to a sumo page for learning more about unsupported add-ons. -->
     <string name="mozac_feature_addons_unsupported_learn_more">আরো জানুন</string>
-</resources>
+    </resources>

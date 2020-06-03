@@ -37,6 +37,14 @@
     <string name="mozac_feature_prompts_allow">Разрешить</string>
     <!-- Text of a negative button in dialog requesting to open a new window. -->
     <string name="mozac_feature_prompts_deny">Не разрешать</string>
+    <!-- Title of the dialog shown when a user is leaving a website and there is still data not saved yet. -->
+    <string name="mozac_feature_prompt_before_unload_dialog_title">Вы уверены?</string>
+    <!-- Body text of the dialog shown when a user is leaving a website and there is still data not saved yet. -->
+    <string name="mozac_feature_prompt_before_unload_dialog_body">Вы действительно хотите покинуть этот сайт? Все введённые данные могут быть потеряны</string>
+    <!-- Stay button of the dialog shown when a user is leaving a website and there is still data not saved yet, this indicates that the user wants to stay in the website. -->
+    <string name="mozac_feature_prompts_before_unload_stay">Остаться</string>
+    <!-- Leave button of the dialog shown when a user is leaving a website and there is still data not saved yet, this indicates that the user wants to leave in the website. -->
+    <string name="mozac_feature_prompts_before_unload_leave">Уйти</string>
     <!-- Title of the month chooser dialog. -->
     <string name="mozac_feature_prompts_set_month">Выберите месяц</string>
     <!-- January (short description), used on the month chooser dialog. -->

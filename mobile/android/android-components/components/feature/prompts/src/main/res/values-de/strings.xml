@@ -49,6 +49,14 @@
     <!-- Text of a negative button in dialog requesting to open a new window. -->
     <string name="mozac_feature_prompts_deny">Ablehnen</string>
 
+    <!-- Title of the dialog shown when a user is leaving a website and there is still data not saved yet. -->
+    <string name="mozac_feature_prompt_before_unload_dialog_title">Sind Sie sicher?</string>
+    <!-- Body text of the dialog shown when a user is leaving a website and there is still data not saved yet. -->
+    <string name="mozac_feature_prompt_before_unload_dialog_body">Möchten Sie diese Seite verlassen? Von Ihnen eingegebene Daten werden möglicherweise nicht gespeichert</string>
+    <!-- Stay button of the dialog shown when a user is leaving a website and there is still data not saved yet, this indicates that the user wants to stay in the website. -->
+    <string name="mozac_feature_prompts_before_unload_stay">Bleiben</string>
+    <!-- Leave button of the dialog shown when a user is leaving a website and there is still data not saved yet, this indicates that the user wants to leave in the website. -->
+    <string name="mozac_feature_prompts_before_unload_leave">Verlassen</string>
     <!-- Title of the month chooser dialog. -->
     <string name="mozac_feature_prompts_set_month">Monat auswählen</string>
     <!-- January (short description), used on the month chooser dialog. -->

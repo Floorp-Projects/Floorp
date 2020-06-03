@@ -181,7 +181,7 @@
     <!-- Text shown in the dialog when add-on installation is completed. %1$s is the add-on name. %2$s is the app name. -->
     <string name="mozac_feature_addons_installed_dialog_title">%1$s hè statu aghjuntu à %2$s</string>
     <!-- Text shown in the dialog when add-on installation is completed. %1$s is the add-on name. -->
-    <string name="mozac_feature_addons_installed_dialog_description">Aprelu da u listinu</string>
+    <string name="mozac_feature_addons_installed_dialog_description">Apritelu da u listinu</string>
     <!-- Confirmation button text for the dialog when add-on installation is completed. -->
     <string name="mozac_feature_addons_installed_dialog_okay_button">Iè, aghju capitu</string>
 </resources>

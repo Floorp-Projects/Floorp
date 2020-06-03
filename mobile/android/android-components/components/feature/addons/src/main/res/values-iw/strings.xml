@@ -32,6 +32,8 @@
     <string name="mozac_feature_addons_permissions_history_description">גישה להיסטוריית הגלישה</string>
     <!-- Description for management permission. -->
     <string name="mozac_feature_addons_permissions_management_description">ניטור שימוש בהרחבות וניהול ערכות נושא</string>
+    <!-- Description for native_messaging permission. -->
+    <string name="mozac_feature_addons_permissions_native_messaging_description">החלפת הודעות עם יישומונים אחרים</string>
     <!-- Description for notifications permission. -->
     <string name="mozac_feature_addons_permissions_notifications_description">הצגת התרעות</string>
     <!-- Description for pkcs11 permission. -->
@@ -50,6 +52,8 @@
     <string name="mozac_feature_addons_version">גרסה</string>
     <!-- The authors of an add-on. -->
     <string name="mozac_feature_addons_authors">יוצרים</string>
+    <!-- The last date that the add-on was updated. -->
+    <string name="mozac_feature_addons_last_updated">עדכון אחרון</string>
     <!-- The developer website (Homepage) of the add-on. -->
     <string name="mozac_feature_addons_home_page">דף הבית</string>
     <!-- A link where users can find more information about add-ons permissions. -->
@@ -58,12 +62,28 @@
     <string name="mozac_feature_addons_rating">דירוג</string>
     <!-- The settings of the add-on. -->
     <string name="mozac_feature_addons_settings">הגדרות</string>
+    <!-- Indicates the add-on is enabled. -->
+    <string name="mozac_feature_addons_settings_on">פעיל</string>
+    <!-- Indicates the add-on is disabled. -->
+    <string name="mozac_feature_addons_settings_off">כבוי</string>
     <!-- Indicates the add-on is allowed in private browsing mode. -->
     <string name="mozac_feature_addons_settings_allow_in_private_browsing">לאפשר בגלישה פרטית</string>
     <!-- Indicates the add-on is allowed in private browsing mode. -->
     <string name="mozac_feature_addons_settings_run_in_private_browsing">הפעלה בגלישה פרטית</string>
+    <!-- Indicates the add-on is enabled. -->
+    <string name="mozac_feature_addons_enabled">מופעל</string>
+    <!-- Indicates the add-on is disabled. -->
+    <string name="mozac_feature_addons_disabled">מושבת</string>
+    <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the installed section. -->
+    <string name="mozac_feature_addons_installed_section">מותקן</string>
     <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the recommended section. -->
     <string name="mozac_feature_addons_recommended_section">מומלצות</string>
+    <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the not yet supported section. -->
+    <string name="mozac_feature_addons_unsupported_section">טרם נתמך</string>
+    <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the not yet available section. -->
+    <string name="mozac_feature_addons_unavailable_section">אינה זמינה עדיין</string>
+    <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the disabled section. -->
+    <string name="mozac_feature_addons_disabled_section">מושבת</string>
     <!-- Displays a page with all the details of an add-on. -->
     <string name="mozac_feature_addons_details">פרטים</string>
     <!-- Displays a page with all the permissions of an add-on. -->
@@ -110,6 +130,10 @@
     <string name="mozac_feature_addons_supported_checker_notification_content_two">הוספת %1$s ו־%2$s אל %3$s</string>
     <!-- The content of the notification, this will be shown to the user when more than two newly supported add-ons are available. %1$s is the app name (in most cases Firefox). -->
     <string name="mozac_feature_addons_supported_checker_notification_content_more_than_two">להוסיף אותם אל %1$s</string>
+    <!-- This is the caption for not yet supported screen caption -->
+    <string name="mozac_feature_addons_not_yet_supported_caption">טכנולוגיית התוספות של Firefox מתחדשת. תוספות אלה משתמשות במערכות שאינן נתמכות ב־Firefox 75 ומעלה.</string>
+    <!-- This is the caption for not yet supported screen caption -->
+    <string name="mozac_feature_addons_not_yet_supported_caption2">אנו בונים כעת תמיכה עבור מבחר ראשוני של הרחבות מומלצות.</string>
     <!-- This is the caption for the add-on installation progress overlay -->
     <string name="mozac_add_on_install_progress_caption">בתהליך הורדה ואימות תוספת…</string>
     <!-- Error shown when something unexpected happened while trying to get the add-on list from the server -->
@@ -126,10 +150,16 @@
     <string name="mozac_feature_addons_successfully_disabled">התוספת %1$s הושבתה בהצלחה</string>
     <!-- Text shown after failed to disable an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_failed_to_disable">השבתת התוספת %1$s נכשלה</string>
+    <!-- Text shown after successfully uninstalled an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_successfully_uninstalled">התוספת %1$s הוסרה בהצלחה</string>
     <!-- Text shown after failed to uninstall an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_failed_to_uninstall">הסרת ההתקנה של התוספת %1$s נכשלה</string>
+    <!-- Text shown after successfully removed an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_successfully_removed" tools:ignore="UnusedResources">התוספת %1$s הוסרה בהצלחה</string>
     <!-- Text shown after failed to remove an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_failed_to_remove" tools:ignore="UnusedResources">הסרת התוספת %1$s נכשלה</string>
+    <!-- Label shown to indicate that the add-on was migrated from a previous version of the app. %1$s is the app name most of the case it will be Firefox. -->
+    <string name="mozac_feature_addons_migrated_from_a_previous_version_label" tools:ignore="UnusedResources">תוספת זו הועברה מגרסה קודמת של %1$s</string>
     <!-- Text shown in not yet supported add-ons section in AddonsManagerAdapter. -->
     <string name="mozac_feature_addons_unsupported_caption">תוספת אחת</string>
     <!-- Text shown in not yet supported add-ons section in AddonsManagerAdapter - plural. %1$s is the number of unsupported add-ons -->
@@ -142,6 +172,8 @@
     <string name="mozac_feature_addons_updater_status_no_update_available">אין עדכון זמין</string>
     <!-- Displayed in the "Status" field for the updater when there was an error during the add-on update. -->
     <string name="mozac_feature_addons_updater_status_error">שגיאה</string>
+    <!-- Text shown in a dialog that displays information about the last attempt to update an add-on. This is the title of the dialog. -->
+    <string name="mozac_feature_addons_updater_dialog_title">פרטי המעדכן</string>
     <!-- Label in the dialog displaying information for the last attempt to update add-ons. It's followed by the date of the last attempt. -->
     <string name="mozac_feature_addons_updater_dialog_last_attempt">ניסיון אחרון:</string>
     <!-- Displayed in the "Status" field for the updater when an add-on has been correctly updated -->

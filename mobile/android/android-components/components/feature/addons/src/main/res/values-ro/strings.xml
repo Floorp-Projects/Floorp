@@ -178,4 +178,6 @@
     <string name="mozac_feature_addons_updater_dialog_last_attempt">Ultima încercare:</string>
     <!-- Displayed in the "Status" field for the updater when an add-on has been correctly updated -->
     <string name="mozac_feature_addons_updater_dialog_status">Stare:</string>
-</resources>
+    <!-- Text shown in the dialog when add-on installation is completed. %1$s is the add-on name. %2$s is the app name. -->
+    <string name="mozac_feature_addons_installed_dialog_title">%1$s a fost adăugat la %2$s</string>
+    </resources>

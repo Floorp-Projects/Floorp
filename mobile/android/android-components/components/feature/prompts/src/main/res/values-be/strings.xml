@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Text for password field in an authentication dialog. -->
+    <string name="mozac_feature_prompt_password_hint">Пароль</string>
+    <!-- Positive confirmation that we should save the updated login -->
+    <string name="mozac_feature_prompt_update_confirmation">Абнавіць</string>
+    </resources>

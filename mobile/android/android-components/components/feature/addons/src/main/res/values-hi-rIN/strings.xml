@@ -66,6 +66,10 @@
     <string name="mozac_feature_addons_settings_on">चालू</string>
     <!-- Indicates the add-on is disabled. -->
     <string name="mozac_feature_addons_settings_off">बंद</string>
+    <!-- Indicates the add-on is allowed in private browsing mode. -->
+    <string name="mozac_feature_addons_settings_allow_in_private_browsing">निजी ब्राउज़िंग में चलने की अनुमति दे</string>
+    <!-- Indicates the add-on is allowed in private browsing mode. -->
+    <string name="mozac_feature_addons_settings_run_in_private_browsing">निजी ब्राउज़िंग में चलाएं</string>
     <!-- Indicates the add-on is enabled. -->
     <string name="mozac_feature_addons_enabled">सक्रिय किया गया</string>
     <!-- Indicates the add-on is disabled. -->
@@ -172,4 +176,4 @@
     <string name="mozac_feature_addons_updater_dialog_last_attempt">पिछला प्रयास:</string>
     <!-- Displayed in the "Status" field for the updater when an add-on has been correctly updated -->
     <string name="mozac_feature_addons_updater_dialog_status">स्थिति:</string>
-</resources>
+    </resources>

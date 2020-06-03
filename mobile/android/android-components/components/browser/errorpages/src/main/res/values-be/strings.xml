@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- The default document title of an error page (i.e., the contents of the `<title>` tag). -->
+    <string name="mozac_browser_errorpages_page_title">Памылка загрузкі старонкі</string>
+
+    <!-- The button that appears at the bottom of an error page. -->
+    <string name="mozac_browser_errorpages_page_refresh">Паспрабаваць зноў</string>
+
+    <!-- The button that appears at the bottom of an error page. -->
+    <string name="mozac_browser_errorpages_page_go_back">Вярнуцца</string>
+
+    <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_title">Немагчыма скончыць запыт</string>
+    <!-- The error message shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_message"><![CDATA[¶
+ · <p>Дадатковыя звесткі пра гэтую праблему або памылку зараз недаступны.</p>¶
+ ·]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_title">Няўдача бяспечнага злучэння</string>
+
+    <!-- The error message shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[<ul>
+        <li>Старонка, якую вы спрабуеце адкрыць, не можа быць паказана, бо сапраўднасць атрыманых звестак нельга пацвердзіць.</li>
+        <li>Калі ласка, паведаміце ўладальніку сайта пра гэтую праблему.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">Няўдача бяспечнага злучэння</string>
+    <!-- The error message shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[<ul>
+        <li>Гэта можа быць праблемай налад сервера ці, магчыма,¶
+хтосьці спрабуе прыкінуцца гэтым серверам</li>
+        <li>Калі вы паспяхова злучаліся з гэтым серверам раней, памылка можа¶
+быць часовай, таму вы можаце паспрабаваць зноў пазней.</li>
+      </ul>]]></string>
+
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_advanced">Дадаткова…</string>
+    <!-- The advanced certificate information shown when a website sends has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[<label>Хтось можа спрабаваць падмяніць гэты вэб-сайт. Вам лепш не працягваць.</label>
+        <br><br>
+        <label>Вэб-сайты пацвярджаюць сваю ідэнтычнасць з дапамогаю сертыфікатаў. %1$s не давярае <b>%2$s</b>, таму што выдавец яго сертыфіката нявызначаны, сертыфікат самападпісаны, або сервер не дае спраўных прамежкавых сертыфікатаў.</label>]]></string>
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_back">Вярнуцца (рэкамендуецца)</string>
+    <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_accept_temporary">Прыняць рызыку і працягнуць</string>
+
+    <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_title">Злучэнне перарвана</string>
+
+    <!-- The error message shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_message"><![CDATA[<p>Браўзер паспяхова падлучыўся, але злучэнне было перарвана падчас перадачы інфармацыі. Паспрабуйце, калі ласка, зноў.</p>
+      <ul>
+        <li>Магчыма, сайт часова недаступны ці перагружаны запытамі. Пачакайце некаторы час і паспрабуйце зноў.</li>
+        <li>Калі вы не можаце загрузіць ніводную старонку, праверце злучэнне вашай прылады з мабільнай або Wi-Fi сеткай.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website takes too long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_title">Час чакання злучэння выйшаў</string>
+    <!-- The error message shown when a website took long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[<p>Запатрабаваны сайт не адказаў на запыт злучэння і браўзер скончыў чакаць адказ.</p>
+      <ul>
+        <li>Ці не можа сервер быць перагружаным або часова спыненым? Паспрабуйце зноў пазней.</li>
+        <li>Вы не здольны аглядаць іншыя сайты? Праверце злучэнне прылады з сеткай.</li>
+        <li>Ваша прылада альбо сетка абараняецца фаерволам або проксі? Няправільныя налады могуць замінаць агляданню ў сеціве.</li>
+        <li>Дагэтуль маеце праблемы? Парайцеся з адмістратарам сеткі або дастаўшчыком паслугаў Інтэрнэту.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_title">Нельга злучыцца</string>
+    <!-- The error message shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[<ul>
+        <li>Магчыма, сайт часова недаступны ці перагружаны запытамі. Пачакайце некаторы час і паспрабуйце зноў.</li>
+        <li>Калі вы не можаце загрузіць ніводную старонку, праверце злучэнне вашай прылады з мабільнай або Wi-Fi сеткай.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_title">Нечаканы адказ сервера</string>
+    <!-- The error message shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_message"><![CDATA[<p>Сайт адказаў на сеткавы запыт нечаканым спосабам, таму браўзер не можа працягваць.</p>]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_title">Старонка няправільна перанакіроўваецца</string>
+    <!-- The error message shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[<p>Браўзер спыніў спробы атрымаць запатрабаваную адзінку. Сайт перанакіроўвае запыты да сябе спосабам, які ніколі не будзе завершаны.</p>
+      <ul>
+        <li>Магчыма вы забаранілі або блакавалі кукі, якія патрэбны гэтаму сайту?</li>
+        <li>Калі разблакаванне кук сайта не вырашае праблему, дык гэта хутчэй праблема налад сервера, а не вашай прылады.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_title">Пазасеткавы рэжым</string>
+    <!-- The error message shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_message"><![CDATA[<p>Браўзер працуе ў пазасеткавым рэжыме і не можа злучыцца з запатрабаванай адзінкай.</p>
+      <ul>
+        <li>Прылада злучана з дзейнай сеткай?</li>
+        <li>Націсніце “Паспрабаваць зноў”, каб пераключыцца ў сеткавы рэжым і абнавіць старонку.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_title">Порт абмежаваны дзеля бяспекі</string>
+    <!-- The error message shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_message"><![CDATA[<p>Запатрабаваны адрас прызначае порт (напрыклад, <q>mozilla.org:80</q> – порт 80 на mozilla.org) , які звычайна ўжываецца ў <em>іншых</em> мэтах, а не для аглядання ў Сеціве. Браўзер скасаваў гэты запыт дзеля вашай аховы і бяспекі.</p>]]></string>
+
+    <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_title">Злучэнне скінута</string>
+
+    <!-- The error message shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_message"><![CDATA[<p>Сеткавае злучэнне абарвана падчас яго наладжвання. Паспрабуйце, калі ласка, зноў.</p>
+      <ul>
+        <li>Магчыма, сайт часова недаступны ці перагружаны запытамі. Пачакайце некаторы час і паспрабуйце зноў.</li>
+        <li>Калі вы не можаце загрузіць ніводную старонку, праверце злучэнне вашай прылады з мабільнай або Wi-Fi сеткай.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_title">Небяспечны тып файла</string>
+    <!-- The error message shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_message"><![CDATA[<ul>
+        <li>Паведамце, калі ласка, уладальнікам вэб-сайта пра гэтую праблему.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_title">Памылка пашкоджанага змесціва</string>
+    <!-- The error message shown when shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_message"><![CDATA[<p>Старонка, якую вы спрабуеце адкрыць, не можа быць паказана, бо выяўлена памылка перадачы дадзеных.</p>
+      <ul>
+        <li>Калі ласка, паведаміце ўладальніку сайта пра гэтую праблему.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_content_crashed_title">Крах змесціва</string>
+    <string name="mozac_browser_errorpages_content_crashed_message"><![CDATA[<p>Старонка, якую вы спрабуеце адкрыць, не можа быць паказана, бо выяўлена памылка перадачы дадзеных.</p>
+      <ul>
+        <li>Калі ласка, паведаміце ўладальніку сайта пра гэтую праблему.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_invalid_content_encoding_title">Памылка кадавання змесціва</string>
+    <string name="mozac_browser_errorpages_invalid_content_encoding_message"><![CDATA[<p>Старонку, якую вы спрабуеце пабачыць, немагчыма паказаць, бо яна выкарыстоўвае недапушчальную або непадтрымальную форму сціскання.</p>
+      <ul>
+        <li>Паведамце, калі ласка, уладальнікам вэб-сайта пра гэтую праблему.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_host_title">Адрас не знойдзены</string>
+    <!-- In the example, the two URLs in markup do not need to be translated. -->
+    <string name="mozac_browser_errorpages_unknown_host_message"><![CDATA[<p>Браўзер не змог знайсці хост-сервер па ўказаным адрасе.</p>
+      <ul>
+        <li>Праверце адрас на памылкі ўводу такія як
+          <strong>ww</strong>.example.com замест
+          <strong>www</strong>.example.com.</li>
+        <li>Калі вы не можаце загрузіць ніводную старонку, праверце злучэнне вашай прылады з мабільнай або Wi-Fi сеткай.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_no_internet_title">Няма інтэрнэт-злучэння</string>
+    <!-- The main body text of this error page. It will be shown beneath the title -->
+    <string name="mozac_browser_errorpages_no_internet_message">Праверце падлучэнне да сеткі або паспрабуйце перазагрузіць старонку праз некаторы час.</string>
+    <!-- Text that will show up on the button at the bottom of the error page -->
+    <string name="mozac_browser_errorpages_no_internet_refresh_button">Перачытаць</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title">Несапраўдны адрас</string>
+    <string name="mozac_browser_errorpages_malformed_uri_message"><![CDATA[<p>Фармат дадзенага адраса не апазнаны. Праверце, калі ласка, ці няма памылак на паліцы месцазнаходжання і паспрабуйце зноў.</p>]]></string>
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title_alternative">Несапраўдны адрас</string>
+    <!-- This string contains markup. The URL should not be localized. -->
+    <string name="mozac_browser_errorpages_malformed_uri_message_alternative"><![CDATA[<ul>
+        <li>Адрас Сеціва звычайна пішацца, як <strong>http://www.example.com/</strong></li>
+        <li>Упэўніцеся, што вы ўжываеце простыя косыя рыскі (г.зн. <strong>/</strong>).</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_protocol_title">Невядомы пратакол</string>
+
+    <string name="mozac_browser_errorpages_unknown_protocol_message"><![CDATA[<p>Адрас вызначае пратакол (напрыклад: <q>wxyz://</q>), які не распазнаецца браўзерам, таму браўзер не можа злучыцца з сайтам належным чынам.</p>
+      <ul>
+        <li>Вы спрабуеце даступіцца да мультымедыйных або нетэкставых службаў? Праверце, ці існуюць на сайце дадатковыя патрабаванні.</li>
+        <li>Асобныя пратаколы могуць патрабаваць пабочныя праграмы або плагіны, каб браўзер мог распазнаваць іх.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_not_found_title">Файл не знойдзены</string>
+    <string name="mozac_browser_errorpages_file_not_found_message"><![CDATA[<ul>
+        <li>Ці не была адзінка перайменавана, выдалена або перамешчана?</li>
+        <li>Можа існуе нейкая памылка ў адрасе, як прапушчаная/лішняя літара або вялікая літара замест малой, ці інакшая?</li>
+        <li>Вы маеце дастатковыя дазволы для доступу да запатрабаванай адзінкі?</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_access_denied_title">Доступ да файла забаронены</string>
+    <string name="mozac_browser_errorpages_file_access_denied_message"><![CDATA[<ul>
+        <li>Магчыма, што ён быў выдалены або перамешчаны, або дазволы на файл не даюць атрымаць да яго доступ.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_proxy_connection_refused_title">Проксі-сервер адмовіўся злучацца</string>
+
+    </resources>
