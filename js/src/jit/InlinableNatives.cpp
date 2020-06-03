@@ -23,7 +23,7 @@
 using namespace js;
 using namespace js::jit;
 
-const JSClass* InlinableNativeGuardToClass(InlinableNative native) {
+const JSClass* js::jit::InlinableNativeGuardToClass(InlinableNative native) {
   switch (native) {
 #ifdef JS_HAS_INTL_API
     // Intl natives.
