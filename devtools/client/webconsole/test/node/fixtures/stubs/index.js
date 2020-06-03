@@ -11,6 +11,7 @@ const maps = [];
   "evaluationResult",
   "networkEvent",
   "pageError",
+  "platformMessage",
 ].forEach(filename => {
   maps[filename] = require(`./${filename}`);
 });
@@ -23,6 +24,7 @@ module.exports = {
     ...maps.evaluationResult.stubPreparedMessages,
     ...maps.networkEvent.stubPreparedMessages,
     ...maps.pageError.stubPreparedMessages,
+    ...maps.platformMessage.stubPreparedMessages,
   ]),
   stubPackets: new Map([
     ...maps.consoleApi.stubPackets,
@@ -30,5 +32,6 @@ module.exports = {
     ...maps.evaluationResult.stubPackets,
     ...maps.networkEvent.stubPackets,
     ...maps.pageError.stubPackets,
+    ...maps.platformMessage.stubPackets,
   ]),
 };

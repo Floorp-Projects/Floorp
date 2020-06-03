@@ -10,7 +10,7 @@ const {
   getCleanedPacket,
   getSerializedPacket,
   writeStubsToFile,
-} = require("chrome://mochitests/content/browser/devtools/client/webconsole/test/browser/stub-generator-helpers");
+} = require(`${CHROME_URL_ROOT}stub-generator-helpers`);
 
 const TEST_URI =
   "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html";
@@ -29,10 +29,9 @@ add_task(async function() {
   }
   const existingStubs = getStubFile(STUB_FILE);
   const FAILURE_MSG =
-    "The consoleApi stubs file needs to be updated by running " +
-    "`mach test devtools/client/webconsole/test/browser/" +
-    "browser_webconsole_stubs_console_api.js --headless " +
-    "--setenv WEBCONSOLE_STUBS_UPDATE=true`";
+    "The consoleApi stubs file needs to be updated by running `" +
+    `mach test ${getCurrentTestFilePath()} --headless --setenv WEBCONSOLE_STUBS_UPDATE=true` +
+    "`";
 
   if (generatedStubs.size !== existingStubs.rawPackets.size) {
     ok(false, FAILURE_MSG);
