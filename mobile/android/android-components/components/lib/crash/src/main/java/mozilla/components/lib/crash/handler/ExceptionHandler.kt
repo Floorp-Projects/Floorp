@@ -14,8 +14,7 @@ import mozilla.components.lib.crash.CrashReporter
  */
 class ExceptionHandler(
     private val context: Context,
-    private val crashReporter: CrashReporter,
-    private val defaultExceptionHandler: Thread.UncaughtExceptionHandler? = null
+    private val crashReporter: CrashReporter
 ) : Thread.UncaughtExceptionHandler {
     private var crashing = false
 
@@ -34,8 +33,6 @@ class ExceptionHandler(
                     breadcrumbs = crashReporter.crashBreadcrumbs.toSortedArrayList()
                 )
             )
-
-            defaultExceptionHandler?.uncaughtException(thread, throwable)
         } finally {
             terminateProcess()
         }
