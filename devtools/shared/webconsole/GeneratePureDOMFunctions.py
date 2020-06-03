@@ -62,7 +62,7 @@ file_list = json.load(open(input_file))
 
 parser = WebIDL.Parser()
 for filepath in file_list["webidls"]:
-  with open(filepath, 'r') as f:
+  with open(filepath, 'r', encoding="utf8") as f:
     parser.parse(f.read(), filepath)
 results = parser.finish()
 
