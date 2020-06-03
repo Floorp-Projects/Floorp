@@ -1619,7 +1619,6 @@ bool InnerViewTable::sweepEntry(JSObject** pkey, ViewVector& views) {
 }
 
 void InnerViewTable::sweep() {
-  MOZ_ASSERT(nurseryKeys.empty());
   map.sweep();
 }
 

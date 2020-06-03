@@ -19,12 +19,17 @@
 #include "js/AllocPolicy.h"
 #include "js/MemoryMetrics.h"
 #include "js/UniquePtr.h"
+#include "threading/Mutex.h"
 
 namespace js {
 namespace gc {
 
 class Arena;
 class ArenaCellSet;
+
+#ifdef DEBUG
+extern bool CurrentThreadHasLockedGC();
+#endif
 
 /*
  * BufferableRef represents an abstract reference for use in the generational
@@ -378,10 +383,23 @@ class StoreBuffer {
     } Hasher;
   };
 
+  // The GC runs tasks that may access the storebuffer in parallel and so must
+  // take a lock. The mutator may only access the storebuffer from the main
+  // thread.
+  inline void CheckAccess() const {
+#ifdef DEBUG
+    if (JS::RuntimeHeapIsBusy()) {
+      MOZ_ASSERT((CurrentThreadCanAccessRuntime(runtime_) && !lock_.isHeld()) ||
+                 lock_.ownedByCurrentThread());
+    } else {
+      MOZ_ASSERT(CurrentThreadCanAccessRuntime(runtime_));
+    }
+#endif
+  }
+
   template <typename Buffer, typename Edge>
   void unput(Buffer& buffer, const Edge& edge) {
-    MOZ_ASSERT(!JS::RuntimeHeapIsBusy());
-    MOZ_ASSERT(CurrentThreadCanAccessRuntime(runtime_));
+    CheckAccess();
     if (!isEnabled()) {
       return;
     }
@@ -391,8 +409,7 @@ class StoreBuffer {
 
   template <typename Buffer, typename Edge>
   void put(Buffer& buffer, const Edge& edge) {
-    MOZ_ASSERT(!JS::RuntimeHeapIsBusy());
-    MOZ_ASSERT(CurrentThreadCanAccessRuntime(runtime_));
+    CheckAccess();
     if (!isEnabled()) {
       return;
     }
@@ -402,6 +419,8 @@ class StoreBuffer {
     }
   }
 
+  Mutex lock_;
+
   MonoTypeBuffer<ValueEdge> bufferVal;
   MonoTypeBuffer<StringPtrEdge> bufStrCell;
   MonoTypeBuffer<BigIntPtrEdge> bufBigIntCell;
@@ -409,13 +428,15 @@ class StoreBuffer {
   MonoTypeBuffer<SlotsEdge> bufferSlot;
   WholeCellBuffer bufferWholeCell;
   GenericBuffer bufferGeneric;
-  bool cancelIonCompilations_;
 
   JSRuntime* runtime_;
   const Nursery& nursery_;
 
   bool aboutToOverflow_;
   bool enabled_;
+  bool cancelIonCompilations_;
+  bool hasTypeSetPointers_;
+  bool mayHavePointersToDeadCells_;
 #ifdef DEBUG
   bool mEntered; /* For ReentrancyGuard. */
 #endif
@@ -435,6 +456,21 @@ class StoreBuffer {
   bool isAboutToOverflow() const { return aboutToOverflow_; }
 
   bool cancelIonCompilations() const { return cancelIonCompilations_; }
+
+  /*
+   * Type inference data structures are moved during sweeping, so if we we are
+   * to sweep them then we must make sure that the storebuffer has no pointers
+   * into them.
+   */
+  bool hasTypeSetPointers() const { return hasTypeSetPointers_; }
+
+  /*
+   * Brain transplants may add whole cell buffer entires for dead cells. We must
+   * evict the nursery prior to sweeping arenas if any such entries are present.
+   */
+  bool mayHavePointersToDeadCells() const {
+    return mayHavePointersToDeadCells_;
+  }
 
   /* Insert a single edge into the buffer/remembered set. */
   void putValue(JS::Value* vp) { put(bufferVal, ValueEdge(vp)); }
@@ -467,6 +503,8 @@ class StoreBuffer {
   }
 
   void setShouldCancelIonCompilations() { cancelIonCompilations_ = true; }
+  void setHasTypeSetPointers() { hasTypeSetPointers_ = true; }
+  void setMayHavePointersToDeadCells() { mayHavePointersToDeadCells_ = true; }
 
   /* Methods to trace the source of all edges in the store buffer. */
   void traceValues(TenuringTracer& mover) { bufferVal.trace(mover); }
@@ -486,6 +524,10 @@ class StoreBuffer {
                               JS::GCSizes* sizes);
 
   void checkEmpty() const;
+
+  // For use by the GC only.
+  void lock() { lock_.lock(); }
+  void unlock() { lock_.unlock(); }
 };
 
 // A set of cells in an arena used to implement the whole cell store buffer.
