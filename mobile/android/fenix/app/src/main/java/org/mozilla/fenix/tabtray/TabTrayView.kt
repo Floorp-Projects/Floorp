@@ -26,7 +26,6 @@ import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.tabstray.BrowserTabsTray
 import mozilla.components.concept.tabstray.Tab
 import mozilla.components.concept.tabstray.TabsTray
-import mozilla.components.feature.tabs.tabstray.TabsFeature
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 
@@ -45,8 +44,9 @@ interface TabTrayInteractor {
 class TabTrayView(
     private val container: ViewGroup,
     private val interactor: TabTrayInteractor,
-    private val isPrivate: Boolean,
-    private val startingInLandscape: Boolean
+    isPrivate: Boolean,
+    startingInLandscape: Boolean,
+    private val filterTabs: ((TabSessionState) -> Boolean) -> Unit
 ) : LayoutContainer, TabsTray.Observer, TabLayout.OnTabSelectedListener {
     val fabView = LayoutInflater.from(container.context)
         .inflate(R.layout.component_tabstray_fab, container, true)
@@ -57,7 +57,7 @@ class TabTrayView(
     val isPrivateModeSelected: Boolean get() = view.tab_layout.selectedTabPosition == PRIVATE_TAB_ID
 
     private val behavior = BottomSheetBehavior.from(view.tab_wrapper)
-    private var tabsFeature: TabsFeature
+
     private var tabTrayItemMenu: TabTrayItemMenu
 
     private var hasLoaded = false
@@ -95,15 +95,6 @@ class TabTrayView(
         }
 
         view.tab_layout.addOnTabSelectedListener(this)
-
-        tabsFeature = TabsFeature(
-            view.tabsTray,
-            view.context.components.core.store,
-            view.context.components.useCases.tabsUseCases,
-            view.context.components.useCases.thumbnailUseCases,
-            { it.content.private == isPrivate },
-            { }
-        )
 
         val tabs = if (isPrivate) {
             view.context.components.core.store.state.privateTabs
@@ -160,8 +151,7 @@ class TabTrayView(
             interactor.onNewTabTapped(isPrivateModeSelected)
         }
 
-        tabsTray.register(this)
-        tabsFeature.start()
+        tabsTray.register(this, view)
     }
 
     fun expand() {
@@ -180,7 +170,7 @@ class TabTrayView(
         }
 
         toggleFabText(isPrivateModeSelected)
-        tabsFeature.filterTabs(filter)
+        filterTabs.invoke(filter)
 
         updateState(view.context.components.core.store.state)
     }

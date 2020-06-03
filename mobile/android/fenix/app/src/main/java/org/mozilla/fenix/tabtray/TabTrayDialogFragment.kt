@@ -24,7 +24,9 @@ import mozilla.components.browser.state.selector.privateTabs
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.concept.engine.prompt.ShareData
 import mozilla.components.concept.tabstray.Tab
+import mozilla.components.feature.tabs.tabstray.TabsFeature
 import mozilla.components.lib.state.ext.consumeFrom
+import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
@@ -36,7 +38,10 @@ import org.mozilla.fenix.utils.allowUndo
 
 @SuppressWarnings("TooManyFunctions")
 class TabTrayDialogFragment : AppCompatDialogFragment(), TabTrayInteractor {
-    private lateinit var tabTrayView: TabTrayView
+    private val tabsFeature = ViewBoundFeatureWrapper<TabsFeature>()
+    private var _tabTrayView: TabTrayView? = null
+    private val tabTrayView: TabTrayView
+        get() = _tabTrayView!!
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -59,11 +64,26 @@ class TabTrayDialogFragment : AppCompatDialogFragment(), TabTrayInteractor {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        tabTrayView = TabTrayView(
+        val isPrivate = (activity as HomeActivity).browsingModeManager.mode.isPrivate
+
+        _tabTrayView = TabTrayView(
             view.tabLayout,
             this,
-            (activity as HomeActivity).browsingModeManager.mode.isPrivate,
+            isPrivate,
             requireContext().resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+        ) { tabsFeature.get()?.filterTabs(it) }
+
+        tabsFeature.set(
+            TabsFeature(
+                tabTrayView.view.tabsTray,
+                view.context.components.core.store,
+                view.context.components.useCases.tabsUseCases,
+                view.context.components.useCases.thumbnailUseCases,
+                { it.content.private == isPrivate },
+                { }
+            ),
+            viewLifecycleOwner,
+            view
         )
 
         tabLayout.setOnClickListener {
@@ -88,6 +108,11 @@ class TabTrayDialogFragment : AppCompatDialogFragment(), TabTrayInteractor {
             tabTrayView.updateState(it)
             navigateHomeIfNeeded(it)
         }
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _tabTrayView = null
     }
 
     override fun onTabClosed(tab: Tab) {
