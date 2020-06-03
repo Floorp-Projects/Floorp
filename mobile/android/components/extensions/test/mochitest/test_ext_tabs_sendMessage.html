@@ -45,6 +45,8 @@ add_task(async function tabsSendMessageReply() {
               browser.tabs.sendMessage(tabId, "respond-now-2"),
               new Promise(resolve => browser.tabs.sendMessage(tabId, "respond-soon", resolve)),
               browser.tabs.sendMessage(tabId, "respond-promise"),
+              browser.tabs.sendMessage(tabId, "respond-promise-false"),
+              browser.tabs.sendMessage(tabId, "respond-false"),
               browser.tabs.sendMessage(tabId, "respond-never"),
               new Promise(resolve => {
                 browser.runtime.sendMessage("respond-never", response => { resolve(response); });
@@ -54,13 +56,15 @@ add_task(async function tabsSendMessageReply() {
               browser.tabs.sendMessage(tabId, "throw-error").catch(error => Promise.resolve({error})),
 
               browser.tabs.sendMessage(firstTab, "no-listener").catch(error => Promise.resolve({error})),
-            ]).then(([response, respondNow, respondNow2, respondSoon, respondPromise, respondNever, respondNever2, respondError, throwError, noListener]) => {
+            ]).then(([response, respondNow, respondNow2, respondSoon, respondPromise, respondPromiseFalse, respondFalse, respondNever, respondNever2, respondError, throwError, noListener]) => {
               browser.test.assertEq("expected-response", response, "Content script got the expected response");
 
               browser.test.assertEq("respond-now", respondNow, "Got the expected immediate response");
               browser.test.assertEq("respond-now-2", respondNow2, "Got the expected immediate response from the second listener");
               browser.test.assertEq("respond-soon", respondSoon, "Got the expected delayed response");
               browser.test.assertEq("respond-promise", respondPromise, "Got the expected promise response");
+              browser.test.assertEq(false, respondPromiseFalse, "Got the expected false value as a promise result");
+              browser.test.assertEq(undefined, respondFalse, "Got the expected no-response when onMessage returns false");
               browser.test.assertEq(undefined, respondNever, "Got the expected no-response resolution");
               browser.test.assertEq(undefined, respondNever2, "Got the expected no-response resolution");
 
@@ -98,6 +102,12 @@ add_task(async function tabsSendMessageReply() {
             return true;
           } else if (msg == "respond-promise") {
             return Promise.resolve(msg);
+          } else if (msg == "respond-promise-false") {
+            return Promise.resolve(false);
+          } else if (msg == "respond-false") {
+            // return false means that respond() is not expected to be called.
+            setTimeout(() => respond("should be ignored"));
+            return false;
           } else if (msg == "respond-never") {
             return undefined;
           } else if (msg == "respond-error") {
