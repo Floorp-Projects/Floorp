@@ -38,14 +38,12 @@ internal const val APP_LINKS_CACHE_INTERVAL = 30 * 1000L // 30 seconds
  * @param context Context the feature is associated with.
  * @param launchInApp If {true} then launch app links in third party app(s). Default to false because
  * of security concerns.
- * @param browserPackageNames Set of browser package names installed.
  * @param unguessableWebUrl URL is not likely to be opened by a native app but will fallback to a browser.
  * @param alwaysDeniedSchemes List of schemes that will never be opened in a third-party app.
  */
 class AppLinksUseCases(
     private val context: Context,
     private val launchInApp: () -> Boolean = { false },
-    private val browserPackageNames: Set<String>? = null,
     private val unguessableWebUrl: String = "https://${UUID.randomUUID()}.net",
     private val alwaysDeniedSchemes: Set<String> = ALWAYS_DENY_SCHEMES
 ) {
@@ -80,10 +78,6 @@ class AppLinksUseCases(
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal fun getBrowserPackageNames(): Set<String> {
-        if (browserPackageNames != null) {
-            return browserPackageNames
-        }
-
         val currentTimeStamp = SystemClock.elapsedRealtime()
         val cache = browserNamesCache
         if (cache != null && currentTimeStamp <= cache.cacheTimeStamp + APP_LINKS_CACHE_INTERVAL) {
