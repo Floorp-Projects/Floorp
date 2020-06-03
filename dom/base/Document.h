@@ -3880,7 +3880,8 @@ class Document : public nsINode,
 
   static bool HasRecentlyStartedForegroundLoads();
 
-  static bool AutomaticStorageAccessCanBeGranted(nsIPrincipal* aPrincipal);
+  static bool AutomaticStorageAccessPermissionCanBeGranted(
+      nsIPrincipal* aPrincipal);
 
   already_AddRefed<Promise> AddCertException(bool aIsTemporary);
 
@@ -4174,9 +4175,10 @@ class Document : public nsINode,
 
   void MaybeResolveReadyForIdle();
 
-  typedef MozPromise<bool, bool, true> AutomaticStorageAccessGrantPromise;
-  MOZ_MUST_USE RefPtr<AutomaticStorageAccessGrantPromise>
-  AutomaticStorageAccessCanBeGranted();
+  typedef MozPromise<bool, bool, true>
+      AutomaticStorageAccessPermissionGrantPromise;
+  MOZ_MUST_USE RefPtr<AutomaticStorageAccessPermissionGrantPromise>
+  AutomaticStorageAccessPermissionCanBeGranted();
 
   static void AddToplevelLoadingDocument(Document* aDoc);
   static void RemoveToplevelLoadingDocument(Document* aDoc);
