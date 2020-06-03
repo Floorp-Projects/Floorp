@@ -22,7 +22,6 @@ _target_task_methods = {}
 UNCOMMON_TRY_TASK_LABELS = [
     # Platforms and/or Build types
     r'build-.*-gcp',  # Bug 1631990
-    r'build-.*-aarch64',  # Bug 1631990
     r'mingwclang',  # Bug 1631990
     r'valgrind',  # Bug 1631990
     # Android tasks
