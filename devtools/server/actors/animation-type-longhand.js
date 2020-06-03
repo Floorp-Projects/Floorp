@@ -203,7 +203,6 @@ exports.ANIMATION_TYPE_FOR_LONGHANDS = [
       "border-inline-start-width",
       "-moz-context-properties",
       "-moz-control-character-visibility",
-      "-moz-default-appearance",
       "display",
       "font-optical-sizing",
       "inline-size",

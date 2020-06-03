@@ -85,7 +85,6 @@ label {
 input {
   display: inline-block;
   -moz-appearance: textfield;
-  -moz-default-appearance: textfield;
   /* The sum of border and padding on block-start and block-end
      must be the same here, for buttons, and for <select> (including its
      internal padding magic) */
@@ -108,7 +107,6 @@ input::placeholder {
 
 textarea {
   -moz-appearance: textarea;
-  -moz-default-appearance: textarea;
   margin-block: 1px;
   border: 2px inset ThreeDLightShadow;
   /* The 1px inline padding is for parity with Win/IE */
@@ -227,7 +225,6 @@ select {
   box-sizing: border-box;
   user-select: none;
   -moz-appearance: menulist;
-  -moz-default-appearance: menulist;
   border-width: 2px;
   border-style: inset;
   overflow: -moz-hidden-unscrollable;
@@ -256,7 +253,6 @@ select:is([size], [multiple], [size][multiple]) {
   padding-inline: 0;
   vertical-align: text-bottom;
   -moz-appearance: listbox;
-  -moz-default-appearance: listbox;
 }
 
 select:is([size="0"], [size="1"]) {
@@ -266,7 +262,6 @@ select:is([size="0"], [size="1"]) {
   vertical-align: baseline;
   padding: unset;
   -moz-appearance: menulist;
-  -moz-default-appearance: menulist;
 }
 
 select > button {
@@ -444,7 +439,6 @@ optgroup:disabled {
 /* hidden inputs */
 input[type="hidden"] {
   -moz-appearance: none;
-  -moz-default-appearance: none;
   display: none !important;
   padding: unset;
   border: 0;
@@ -455,7 +449,6 @@ input[type="hidden"] {
 /* image buttons */
 input[type="image"] {
   -moz-appearance: none;
-  -moz-default-appearance: none;
   padding: unset;
   border: none;
   background-color: transparent;
@@ -483,7 +476,6 @@ input[type="image"]:disabled {
 /* radio buttons */
 input[type="radio"] {
   -moz-appearance: radio;
-  -moz-default-appearance: radio;
   margin-block: 3px 0;
   margin-inline: 5px 3px;
 }
@@ -491,7 +483,6 @@ input[type="radio"] {
 /* check boxes */
 input[type="checkbox"] {
   -moz-appearance: checkbox;
-  -moz-default-appearance: checkbox;
   margin-block: 3px;
   margin-inline: 4px 3px;
 }
@@ -538,7 +529,6 @@ button,
 ::file-chooser-button,
 input:is([type="color"], [type="reset"], [type="button"], [type="submit"]) {
   -moz-appearance: button;
-  -moz-default-appearance: button;
   /* The sum of border and padding on block-start and block-end
      must be the same here, for text inputs, and for <select>.
      Note -moz-focus-inner padding does not affect button size. */
@@ -683,7 +673,6 @@ input[type="file"] {
 
   /* Revert rules which apply on all inputs. */
   -moz-appearance: none;
-  -moz-default-appearance: none;
   cursor: default;
 
   border: none;
@@ -767,7 +756,6 @@ output:-moz-ui-invalid {
 
 progress {
   -moz-appearance: progress-bar;
-  -moz-default-appearance: progress-bar;
   display: inline-block;
   vertical-align: -0.2em;
 
@@ -797,7 +785,6 @@ progress {
 
 meter {
   -moz-appearance: meter;
-  -moz-default-appearance: meter;
   display: inline-block;
   vertical-align: -0.2em;
   background: linear-gradient(#e6e6e6, #e6e6e6, #eeeeee 20%, #cccccc 45%, #cccccc 55%);
@@ -830,7 +817,6 @@ meter {
 
 input[type=range] {
   -moz-appearance: range;
-  -moz-default-appearance: range;
   margin: 2px;
   /* Override some rules that apply on all input types: */
   cursor: default;
@@ -901,7 +887,6 @@ input[type=range]::-moz-range-thumb {
    * to get rid of it. The thumb's -moz-appearance is fixed.
    */
   -moz-appearance: range-thumb !important;
-  -moz-default-appearance: range-thumb: !important;
   /* Prevent styling that would change the type of frame we construct. */
   display: block !important;
   float: none !important;
@@ -920,7 +905,6 @@ input[type=range]::-moz-range-thumb {
 
 input[type="number"] {
   -moz-appearance: number-input;
-  -moz-default-appearance: number-input;
 }
 
 input[type=number]::-moz-number-wrapper {
