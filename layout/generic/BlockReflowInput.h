@@ -9,9 +9,11 @@
 #ifndef BlockReflowInput_h
 #define BlockReflowInput_h
 
+#include <tuple>
+
+#include "mozilla/ReflowInput.h"
 #include "nsFloatManager.h"
 #include "nsLineBox.h"
-#include "mozilla/ReflowInput.h"
 
 class nsBlockFrame;
 class nsFrameList;
@@ -140,8 +142,14 @@ class BlockReflowInput {
   // Returns the first coordinate >= aBCoord that clears the
   // floats indicated by aBreakType and has enough inline size between floats
   // (or no floats remaining) to accomodate aReplacedBlock.
-  nscoord ClearFloats(nscoord aBCoord, mozilla::StyleClear aBreakType,
-                      nsIFrame* aReplacedBlock = nullptr, uint32_t aFlags = 0);
+  enum class ClearFloatsResult : uint8_t {
+    BCoordNoChange,
+    BCoordAdvanced,
+    FloatsPushedOrSplit,
+  };
+  std::tuple<nscoord, ClearFloatsResult> ClearFloats(
+      nscoord aBCoord, mozilla::StyleClear aBreakType,
+      nsIFrame* aReplacedBlock = nullptr, uint32_t aFlags = 0);
 
   nsFloatManager* FloatManager() const {
     MOZ_ASSERT(mReflowInput.mFloatManager,
