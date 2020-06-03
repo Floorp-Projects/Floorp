@@ -6,13 +6,6 @@
 
 const { Ci } = require("chrome");
 
-loader.lazyRequireGetter(
-  this,
-  "getAriaRoles",
-  "devtools/server/actors/utils/accessibility",
-  true
-);
-
 const {
   accessibility: {
     AUDIT_TYPE: { TEXT_LABEL },
@@ -145,23 +138,6 @@ const dialogRule = shouldHaveNonEmptyNameRule.bind(null, DIALOG_NO_NAME);
  */
 const imageRule = function(accessible) {
   const name = getAccessibleName(accessible);
-  const { DOMNode } = accessible;
-  if (
-    DOMNode instanceof DOMNode.ownerGlobal.SVGElement &&
-    DOMNode.ownerSVGElement
-  ) {
-    let ownerSVGAccessible = accessible.parent;
-    while (ownerSVGAccessible.DOMNode.ownerSVGElement) {
-      ownerSVGAccessible = ownerSVGAccessible.parent;
-    }
-
-    const ariaRoles = getAriaRoles(ownerSVGAccessible);
-    if (ariaRoles && ariaRoles.includes("img")) {
-      // Do not require a defined name if a wrapping SVG has a role="img".
-      return null;
-    }
-  }
-
   return name != null ? null : { score: FAIL, issue: IMAGE_NO_NAME };
 };
 
