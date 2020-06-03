@@ -131,6 +131,23 @@ var gIdentityHandler = {
     );
   },
 
+  get _isAboutNetErrorPage() {
+    return (
+      gBrowser.selectedBrowser.documentURI &&
+      gBrowser.selectedBrowser.documentURI.scheme == "about" &&
+      gBrowser.selectedBrowser.documentURI.pathQueryRef.startsWith("neterror")
+    );
+  },
+
+  get _isPotentiallyTrustworthy() {
+    return (
+      !this._isBrokenConnection &&
+      (this._isSecureContext ||
+        (gBrowser.selectedBrowser.documentURI &&
+          gBrowser.selectedBrowser.documentURI.scheme == "chrome"))
+    );
+  },
+
   // smart getters
   get _identityPopup() {
     delete this._identityPopup;
@@ -707,14 +724,12 @@ var gIdentityHandler = {
     } else if (this._isAboutCertErrorPage) {
       // We show a warning lock icon for 'about:certerror' page.
       this._identityBox.className = "certErrorPage";
-    } else if (
-      this._isSecureContext ||
-      (gBrowser.selectedBrowser.documentURI &&
-        (gBrowser.selectedBrowser.documentURI.scheme == "about" ||
-          gBrowser.selectedBrowser.documentURI.scheme == "chrome"))
-    ) {
-      // This is a local resource (and shouldn't be marked insecure).
+    } else if (this._isAboutNetErrorPage) {
+      // Network errors get a more neutral icon
       this._identityBox.className = "unknownIdentity";
+    } else if (this._isPotentiallyTrustworthy) {
+      // This is a local resource (and shouldn't be marked insecure).
+      this._identityBox.className = "localResource";
     } else {
       // This is an insecure connection.
       let warnOnInsecure =
@@ -893,6 +908,10 @@ var gIdentityHandler = {
       customRoot = this._hasCustomRoot();
     } else if (this._isAboutCertErrorPage) {
       connection = "cert-error-page";
+    } else if (this._isAboutNetErrorPage) {
+      connection = "not-secure";
+    } else if (this._isPotentiallyTrustworthy) {
+      connection = "file";
     }
 
     // Determine the mixed content state.
