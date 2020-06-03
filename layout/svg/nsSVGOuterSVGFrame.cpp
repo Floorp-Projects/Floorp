@@ -902,18 +902,16 @@ bool nsSVGOuterSVGFrame::IsContainingWindowElementOfType(
     nsIFrame** aContainingWindowFrame, Args... aArgs) const {
   if (!mContent->GetParent()) {
     // Our content is the document element
-    nsCOMPtr<nsIDocShell> docShell = PresContext()->GetDocShell();
-    nsCOMPtr<nsPIDOMWindowOuter> window;
-    if (docShell) {
-      window = docShell->GetWindow();
-    }
+    if (nsCOMPtr<nsIDocShell> docShell = PresContext()->GetDocShell()) {
+      RefPtr<BrowsingContext> bc = docShell->GetBrowsingContext();
+      const Maybe<nsString>& type = bc->GetEmbedderElementType();
 
-    if (window) {
-      RefPtr<Element> frameElement = window->GetFrameElement();
-      if (frameElement && frameElement->IsAnyOfHTMLElements(aArgs...)) {
+      if (type && IsAnyAtomEqual(*type, aArgs...)) {
         if (aContainingWindowFrame) {
-          *aContainingWindowFrame = frameElement->GetPrimaryFrame();
-          NS_ASSERTION(*aContainingWindowFrame, "Yikes, no frame!");
+          if (const Element* const element = bc->GetEmbedderElement()) {
+            *aContainingWindowFrame = element->GetPrimaryFrame();
+            NS_ASSERTION(*aContainingWindowFrame, "Yikes, no frame!");
+          }
         }
         return true;
       }
@@ -1046,3 +1044,9 @@ bool nsSVGOuterSVGAnonChildFrame::IsSVGTransformed(
 
   return true;
 }
+
+template <typename... Atoms>
+bool IsAnyAtomEqual(const nsAString& aString, nsAtom* aFirst, Atoms... aArgs) {
+  return aFirst->Equals(aString) || IsAnyAtomEqual(aString, aArgs...);
+}
+bool IsAnyAtomEqual(const nsAString& aString) { return false; }
