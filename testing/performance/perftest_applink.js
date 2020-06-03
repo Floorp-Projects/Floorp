@@ -26,9 +26,9 @@ async function test(context, commands) {
 module.exports = {
   test,
   owner: "Performance Team",
-  test_name: "App-link",
+  name: "App-link",
   description: "Measures cold process applink time",
-  long_description: `
+  longDescription: `
   This test launches the appropriate android app, simulating an app link
   workflow. The application is launched with the intent action
   android.intent.action.VIEW loading a trivially simple website. The reported
@@ -41,6 +41,6 @@ module.exports = {
     --android-app-name org.mozilla.fennec_aurora \
     --perfherder-metrics processLaunchToNavStart
   `,
-  supported_browser: ["Fenix nightly", "Geckoview_example", "Fennec"],
-  platform: ["Android"],
+  supportedBrowsers: ["Fenix nightly", "Geckoview_example", "Fennec"],
+  supportedPlatforms: ["Android"],
 };
