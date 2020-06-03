@@ -1595,7 +1595,7 @@ nsEventStatus AsyncPanZoomController::OnScale(const PinchGestureInput& aEvent) {
   }
 
   mPinchEventBuffer.push(aEvent);
-  HandlePinchLocking();
+  HandlePinchLocking(aEvent);
   bool allowZoom = mZoomConstraints.mAllowZoom && !mPinchLocked;
 
   // If zooming is not allowed, this is a two-finger pan.
@@ -3076,7 +3076,8 @@ void AsyncPanZoomController::HandlePanningUpdate(
   }
 }
 
-void AsyncPanZoomController::HandlePinchLocking() {
+void AsyncPanZoomController::HandlePinchLocking(
+    const PinchGestureInput& aEvent) {
   // Focus change and span distance calculated from an event buffer
   // Used to handle pinch locking irrespective of touch screen sensitivity
   // Note: both values fall back to the same value as
@@ -3124,6 +3125,10 @@ void AsyncPanZoomController::HandlePinchLocking() {
       if (spanDistance < spanLockThreshold &&
           focusChange.Length() > scrollLockThreshold) {
         mPinchLocked = true;
+
+        // We are transitioning to a two-finger pan that could trigger
+        // a fling at its end, so start tracking velocity.
+        StartTouch(aEvent.mLocalFocusPoint, aEvent.mTimeStamp);
       }
     }
   }
