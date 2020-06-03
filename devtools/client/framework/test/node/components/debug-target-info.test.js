@@ -35,6 +35,9 @@ const TEST_TOOLBOX = {
   target: {
     name: "Test Tab Name",
     url: "http://some.target/url",
+    traits: {
+      navigation: true,
+    },
   },
   doc: {},
 };
@@ -42,6 +45,9 @@ const TEST_TOOLBOX = {
 const TEST_TOOLBOX_NO_NAME = {
   target: {
     url: "http://some.target/without/a/name",
+    traits: {
+      navigation: true,
+    },
   },
   doc: {},
 };

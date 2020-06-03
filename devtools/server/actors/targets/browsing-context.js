@@ -288,6 +288,8 @@ const browsingContextTargetPrototype = {
       logInPage: true,
       // Supports watchpoints in the server for Fx71+
       watchpoints: true,
+      // Supports back and forward navigation
+      navigation: true,
     };
 
     this._workerTargetActorList = null;
@@ -1061,6 +1063,44 @@ const browsingContextTargetPrototype = {
     return {};
   },
 
+  // Added in Firefox 79
+  goForward() {
+    // Wait a tick so that the response packet can be dispatched before the
+    // subsequent navigation event packet.
+    Services.tm.dispatchToMainThread(
+      DevToolsUtils.makeInfallible(() => {
+        // This won't work while the browser is shutting down and we don't really
+        // care.
+        if (Services.startup.shuttingDown) {
+          return;
+        }
+
+        this.webNavigation.goForward();
+      }, "BrowsingContextTargetActor.prototype.goForward's delayed body")
+    );
+
+    return {};
+  },
+
+  // Added in Firefox 79
+  goBack() {
+    // Wait a tick so that the response packet can be dispatched before the
+    // subsequent navigation event packet.
+    Services.tm.dispatchToMainThread(
+      DevToolsUtils.makeInfallible(() => {
+        // This won't work while the browser is shutting down and we don't really
+        // care.
+        if (Services.startup.shuttingDown) {
+          return;
+        }
+
+        this.webNavigation.goBack();
+      }, "BrowsingContextTargetActor.prototype.goBack's delayed body")
+    );
+
+    return {};
+  },
+
   /**
    * Reload the page in this browsing context.
    */
@@ -1075,6 +1115,7 @@ const browsingContextTargetPrototype = {
         if (Services.startup.shuttingDown) {
           return;
         }
+
         this.webNavigation.reload(
           force
             ? Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CACHE
