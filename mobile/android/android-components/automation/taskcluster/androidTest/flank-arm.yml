@@ -36,6 +36,8 @@ gcloud:
   device:
    - model: walleye
      version: 28
+   - model: Nexus6
+     version: 21
 
 flank:
   project: GOOGLE_PROJECT
