@@ -17,6 +17,7 @@ import os
 import re
 import moznetwork
 import time
+import traceback
 
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 from six import iteritems
@@ -46,6 +47,9 @@ class EasyServer(ThreadingMixIn, HTTPServer):
             pass  # remote hang up before the result is sent
         else:
             logging.error(error)
+            # The error can be ambiguous just the short description is logged, so we
+            # dump a stack trace to discover its origin.
+            traceback.print_exc()
 
 
 class Request(object):
