@@ -2490,19 +2490,23 @@ class MOZ_STACK_CLASS PromiseForOfIterator : public JS::ForOfIterator {
 
 static MOZ_MUST_USE bool PerformPromiseAll(
     JSContext* cx, PromiseForOfIterator& iterator, HandleObject C,
-    Handle<PromiseCapability> resultCapability, bool* done);
+    Handle<PromiseCapability> resultCapability, HandleValue promiseResolve,
+    bool* done);
 
 static MOZ_MUST_USE bool PerformPromiseAllSettled(
     JSContext* cx, PromiseForOfIterator& iterator, HandleObject C,
-    Handle<PromiseCapability> resultCapability, bool* done);
+    Handle<PromiseCapability> resultCapability, HandleValue promiseResolve,
+    bool* done);
 
 static MOZ_MUST_USE bool PerformPromiseAny(
     JSContext* cx, PromiseForOfIterator& iterator, HandleObject C,
-    Handle<PromiseCapability> resultCapability, bool* done);
+    Handle<PromiseCapability> resultCapability, HandleValue promiseResolve,
+    bool* done);
 
 static MOZ_MUST_USE bool PerformPromiseRace(
     JSContext* cx, PromiseForOfIterator& iterator, HandleObject C,
-    Handle<PromiseCapability> resultCapability, bool* done);
+    Handle<PromiseCapability> resultCapability, HandleValue promiseResolve,
+    bool* done);
 
 enum class CombinatorKind { All, AllSettled, Any, Race };
 
@@ -2553,6 +2557,33 @@ static MOZ_MUST_USE bool CommonPromiseCombinator(JSContext* cx, CallArgs& args,
     return false;
   }
 
+  RootedValue promiseResolve(cx, UndefinedValue());
+  {
+    JSObject* promiseCtor =
+        GlobalObject::getOrCreatePromiseConstructor(cx, cx->global());
+    if (!promiseCtor) {
+      return false;
+    }
+
+    PromiseLookup& promiseLookup = cx->realm()->promiseLookup;
+    if (C != promiseCtor || !promiseLookup.isDefaultPromiseState(cx)) {
+      // 25.6.4.1, step 3.
+      // 25.6.4.2, step 3.
+      // 25.6.4.4, step 3.
+      if (!GetProperty(cx, C, C, cx->names().resolve, &promiseResolve)) {
+        return AbruptRejectPromise(cx, args, promiseCapability);
+      }
+
+      // 25.6.4.1, step 4.
+      // 25.6.4.2, step 4.
+      // 25.6.4.4, step 4.
+      if (!IsCallable(promiseResolve)) {
+        ReportIsNotFunction(cx, promiseResolve);
+        return AbruptRejectPromise(cx, args, promiseCapability);
+      }
+    }
+  }
+
   // Steps 3-4.
   PromiseForOfIterator iter(cx);
   if (!iter.init(iterable, JS::ForOfIterator::AllowNonIterable)) {
@@ -2584,16 +2615,20 @@ static MOZ_MUST_USE bool CommonPromiseCombinator(JSContext* cx, CallArgs& args,
   bool done, result;
   switch (kind) {
     case CombinatorKind::All:
-      result = PerformPromiseAll(cx, iter, C, promiseCapability, &done);
+      result = PerformPromiseAll(cx, iter, C, promiseCapability, promiseResolve,
+                                 &done);
       break;
     case CombinatorKind::AllSettled:
-      result = PerformPromiseAllSettled(cx, iter, C, promiseCapability, &done);
+      result = PerformPromiseAllSettled(cx, iter, C, promiseCapability,
+                                        promiseResolve, &done);
       break;
     case CombinatorKind::Any:
-      result = PerformPromiseAny(cx, iter, C, promiseCapability, &done);
+      result = PerformPromiseAny(cx, iter, C, promiseCapability, promiseResolve,
+                                 &done);
       break;
     case CombinatorKind::Race:
-      result = PerformPromiseRace(cx, iter, C, promiseCapability, &done);
+      result = PerformPromiseRace(cx, iter, C, promiseCapability,
+                                  promiseResolve, &done);
       break;
   }
 
@@ -2863,8 +2898,8 @@ static bool IsPromiseSpecies(JSContext* cx, JSFunction* species);
 template <typename T>
 static MOZ_MUST_USE bool CommonPerformPromiseCombinator(
     JSContext* cx, PromiseForOfIterator& iterator, HandleObject C,
-    HandleObject resultPromise, bool* done, bool resolveReturnsUndefined,
-    T getResolveAndReject) {
+    HandleObject resultPromise, HandleValue promiseResolve, bool* done,
+    bool resolveReturnsUndefined, T getResolveAndReject) {
   RootedObject promiseCtor(
       cx, GlobalObject::getOrCreatePromiseConstructor(cx, cx->global()));
   if (!promiseCtor) {
@@ -2883,22 +2918,6 @@ static MOZ_MUST_USE bool CommonPerformPromiseCombinator(
   bool isDefaultPromiseState =
       C == promiseCtor && promiseLookup.isDefaultPromiseState(cx);
   bool validatePromiseState = iterationMayHaveSideEffects;
-
-  RootedValue promiseResolve(cx, UndefinedValue());
-  if (!isDefaultPromiseState) {
-    // 25.6.4.1.1, step 5.
-    // 25.6.4.3.1, step 3.
-    if (!GetProperty(cx, C, C, cx->names().resolve, &promiseResolve)) {
-      return false;
-    }
-
-    // 25.6.4.1.1, step 6.
-    // 25.6.4.3.1, step 4.
-    if (!IsCallable(promiseResolve)) {
-      ReportIsNotFunction(cx, promiseResolve);
-      return false;
-    }
-  }
 
   RootedValue CVal(cx, ObjectValue(*C));
   RootedValue resolveFunVal(cx);
@@ -3295,7 +3314,8 @@ static bool PromiseCombinatorElementFunctionAlreadyCalled(
 // 25.6.4.1.1 PerformPromiseAll (iteratorRecord, constructor, resultCapability)
 static MOZ_MUST_USE bool PerformPromiseAll(
     JSContext* cx, PromiseForOfIterator& iterator, HandleObject C,
-    Handle<PromiseCapability> resultCapability, bool* done) {
+    Handle<PromiseCapability> resultCapability, HandleValue promiseResolve,
+    bool* done) {
   *done = false;
 
   // Step 1.
@@ -3352,9 +3372,9 @@ static MOZ_MUST_USE bool PerformPromiseAll(
   };
 
   // Steps 5-6 and 8.
-  if (!CommonPerformPromiseCombinator(cx, iterator, C,
-                                      resultCapability.promise(), done, true,
-                                      getResolveAndReject)) {
+  if (!CommonPerformPromiseCombinator(
+          cx, iterator, C, resultCapability.promise(), promiseResolve, done,
+          true, getResolveAndReject)) {
     return false;
   }
 
@@ -3431,7 +3451,8 @@ static bool Promise_static_race(JSContext* cx, unsigned argc, Value* vp) {
 // 25.6.4.3.1 PerformPromiseRace (iteratorRecord, constructor, resultCapability)
 static MOZ_MUST_USE bool PerformPromiseRace(
     JSContext* cx, PromiseForOfIterator& iterator, HandleObject C,
-    Handle<PromiseCapability> resultCapability, bool* done) {
+    Handle<PromiseCapability> resultCapability, HandleValue promiseResolve,
+    bool* done) {
   *done = false;
 
   // Step 1.
@@ -3455,8 +3476,8 @@ static MOZ_MUST_USE bool PerformPromiseRace(
 
   // Steps 3-5.
   return CommonPerformPromiseCombinator(
-      cx, iterator, C, resultCapability.promise(), done, isDefaultResolveFn,
-      getResolveAndReject);
+      cx, iterator, C, resultCapability.promise(), promiseResolve, done,
+      isDefaultResolveFn, getResolveAndReject);
 }
 
 enum class PromiseAllSettledElementFunctionKind { Resolve, Reject };
@@ -3485,7 +3506,8 @@ static bool Promise_static_allSettled(JSContext* cx, unsigned argc, Value* vp) {
 // PerformPromiseAllSettled ( iteratorRecord, constructor, resultCapability )
 static MOZ_MUST_USE bool PerformPromiseAllSettled(
     JSContext* cx, PromiseForOfIterator& iterator, HandleObject C,
-    Handle<PromiseCapability> resultCapability, bool* done) {
+    Handle<PromiseCapability> resultCapability, HandleValue promiseResolve,
+    bool* done) {
   *done = false;
 
   // Step 1.
@@ -3556,9 +3578,9 @@ static MOZ_MUST_USE bool PerformPromiseAllSettled(
   };
 
   // Steps 5-6 and 8.
-  if (!CommonPerformPromiseCombinator(cx, iterator, C,
-                                      resultCapability.promise(), done, true,
-                                      getResolveAndReject)) {
+  if (!CommonPerformPromiseCombinator(
+          cx, iterator, C, resultCapability.promise(), promiseResolve, done,
+          true, getResolveAndReject)) {
     return false;
   }
 
@@ -3697,7 +3719,8 @@ static void ThrowAggregateError(JSContext* cx,
 // PerformPromiseAny ( iteratorRecord, constructor, resultCapability )
 static MOZ_MUST_USE bool PerformPromiseAny(
     JSContext* cx, PromiseForOfIterator& iterator, HandleObject C,
-    Handle<PromiseCapability> resultCapability, bool* done) {
+    Handle<PromiseCapability> resultCapability, HandleValue promiseResolve,
+    bool* done) {
   *done = false;
 
   // Step 1.
@@ -3761,8 +3784,8 @@ static MOZ_MUST_USE bool PerformPromiseAny(
 
   // Steps 6-8.
   if (!CommonPerformPromiseCombinator(
-          cx, iterator, C, resultCapability.promise(), done, isDefaultResolveFn,
-          getResolveAndReject)) {
+          cx, iterator, C, resultCapability.promise(), promiseResolve, done,
+          isDefaultResolveFn, getResolveAndReject)) {
     return false;
   }
 
