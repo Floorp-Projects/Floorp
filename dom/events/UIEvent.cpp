@@ -133,7 +133,7 @@ void UIEvent::InitUIEvent(const nsAString& typeArg, bool canBubbleArg,
 }
 
 already_AddRefed<nsIContent> UIEvent::GetRangeParentContentAndOffset(
-    int32_t* aOffset) {
+    int32_t* aOffset) const {
   if (NS_WARN_IF(!mPresContext)) {
     return nullptr;
   }

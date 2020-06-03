@@ -4692,7 +4692,7 @@ bool EditorBase::IsActiveInDOMWindow() const {
   return SameCOMIdentity(content, piTarget);
 }
 
-bool EditorBase::IsAcceptableInputEvent(WidgetGUIEvent* aGUIEvent) {
+bool EditorBase::IsAcceptableInputEvent(WidgetGUIEvent* aGUIEvent) const {
   // If the event is trusted, the event should always cause input.
   if (NS_WARN_IF(!aGUIEvent)) {
     return false;
