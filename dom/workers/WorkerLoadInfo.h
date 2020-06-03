@@ -104,7 +104,11 @@ struct WorkerLoadInfoData {
   UniquePtr<mozilla::ipc::PrincipalInfo> mPrincipalInfo;
   UniquePtr<mozilla::ipc::PrincipalInfo> mStoragePrincipalInfo;
   nsCString mDomain;
-  nsString mOrigin;  // Derived from mPrincipal; can be used on worker thread.
+  nsString mOriginNoSuffix;  // Derived from mPrincipal; can be used on worker
+                             // thread.
+  nsCString mOrigin;  // Derived from mPrincipal; can be used on worker thread.
+  nsCString mPartitionedOrigin;  // Derived from mPartitionedPrincipal; can be
+                                 // used on worker thread.
 
   nsString mServiceWorkerCacheName;
   Maybe<ServiceWorkerDescriptor> mServiceWorkerDescriptor;
