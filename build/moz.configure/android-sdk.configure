@@ -8,7 +8,7 @@
 
 
 @depends(host, mozbuild_state_path, '--help')
-@imports('os')
+@imports(_from='os.path', _import='isdir')
 def default_android_sdk_root(host, mozbuild_state_path, _):
     sdk_basename = {
         'Darwin': 'android-sdk-macosx',
@@ -17,7 +17,7 @@ def default_android_sdk_root(host, mozbuild_state_path, _):
     }.get(host.kernel)
     if sdk_basename:
         path = os.path.join(mozbuild_state_path, sdk_basename)
-        if os.path.isdir(path):
+        if isdir(path):
             return path
 
 

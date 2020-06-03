@@ -6,11 +6,11 @@
 
 
 @depends(mozbuild_state_path, '--help')
-@imports('os')
+@imports(_from='os.path', _import='isdir')
 @imports(_from='mozboot.android', _import='NDK_VERSION')
 def default_android_ndk_root(mozbuild_state_path, _):
     path = os.path.join(mozbuild_state_path, 'android-ndk-%s' % NDK_VERSION)
-    if os.path.isdir(path):
+    if isdir(path):
         return path
 
 
