@@ -12,7 +12,9 @@ AUTOMATION=1 DIST=$UPLOAD_DIR $GECKO_PATH/js/src/make-source-package.sh
 # Extract the tarball into a new directory in the workspace.
 
 PACKAGE_DIR=$WORK/sm-package
-mkdir -p $PACKAGE_DIR
+
+# Do not use -p option because the package directory should not exist.
+mkdir $PACKAGE_DIR
 pushd $PACKAGE_DIR
 
 tar -xjvf $UPLOAD_DIR/mozjs-*.tar.bz2
