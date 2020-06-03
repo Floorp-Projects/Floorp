@@ -17,6 +17,7 @@ import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.coroutines.test.TestCoroutineScope
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
+import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -52,6 +53,7 @@ class AppLinksUseCasesTest {
     @Before
     fun setup() {
         AppLinksUseCases.redirectCache = null
+        AppLinksUseCases.browserNamesCache = null
     }
 
     private fun createContext(vararg urlToPackages: Pair<String, String>, default: Boolean = false): Context {
@@ -207,23 +209,13 @@ class AppLinksUseCasesTest {
     }
 
     @Test
-    fun `browser package names is lazily initialized`() {
-        val unguessable = "https://unguessable-test-url.com"
-        val context = createContext(unguessable to browserPackage)
-        val subject = AppLinksUseCases(context, unguessableWebUrl = unguessable)
-        assertFalse(subject.browserPackageNames.isInitialized())
-    }
-
-    @Test
     fun `A list of browser package names can be generated if not supplied`() {
         val unguessable = "https://unguessable-test-url.com"
         val context = createContext(unguessable to browserPackage)
         val subject = AppLinksUseCases(context, unguessableWebUrl = unguessable)
-        assertFalse(subject.browserPackageNames.isInitialized())
 
         subject.appLinkRedirect(unguessable)
-        assertTrue(subject.browserPackageNames.isInitialized())
-        assertEquals(subject.browserPackageNames.value, setOf(browserPackage))
+        assertEquals(subject.getBrowserPackageNames(), setOf(browserPackage))
     }
 
     @Test
@@ -345,6 +337,34 @@ class AppLinksUseCasesTest {
             redirect = subject.interceptedAppLinkRedirect(appUrl)
             assertTrue(redirect.isRedirect())
             assert(timestamp != AppLinksUseCases.redirectCache?.cacheTimeStamp)
+        }
+    }
+
+    @Test
+    fun `AppLinksUsecases uses browser names cache`() {
+        val testDispatcher = TestCoroutineDispatcher()
+        TestCoroutineScope(testDispatcher).launch {
+            val context = createContext(appUrl to appPackage)
+
+            var subject = AppLinksUseCases(context, { true })
+            whenever(subject.findExcludedPackages(any())).thenReturn(emptySet())
+            var browserNames = subject.getBrowserPackageNames()
+            assertTrue(browserNames.isEmpty())
+            val timestamp = AppLinksUseCases.browserNamesCache?.cacheTimeStamp
+
+            whenever(subject.findExcludedPackages(any())).thenReturn(setOf(appPackage))
+            testDispatcher.advanceTimeBy(APP_LINKS_CACHE_INTERVAL / 2)
+            subject = AppLinksUseCases(context, { true })
+            browserNames = subject.getBrowserPackageNames()
+            assertTrue(browserNames.isEmpty())
+            assert(timestamp == AppLinksUseCases.browserNamesCache?.cacheTimeStamp)
+
+            testDispatcher.advanceTimeBy(APP_LINKS_CACHE_INTERVAL / 2 + 1)
+            subject = AppLinksUseCases(context, { true })
+            browserNames = subject.getBrowserPackageNames()
+            assertFalse(browserNames.isEmpty())
+            assertFalse(browserNames.contains(appPackage))
+            assert(timestamp != AppLinksUseCases.browserNamesCache?.cacheTimeStamp)
         }
     }
 
