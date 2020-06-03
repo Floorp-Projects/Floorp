@@ -64,7 +64,6 @@ interface QuickSettingsController {
  * @param addNewTab [AddNewTabUseCase] callback allowing for loading a URL in a new tab.
  * @param requestRuntimePermissions [OnNeedToRequestPermissions] callback allowing for requesting
  * specific Android runtime permissions.
- * @param reportSiteIssue callback allowing to report an issue with the current web page.
  * @param displayPermissions callback for when [WebsitePermissionsView] needs to be displayed.
  * @param dismiss callback allowing to request this entire Fragment to be dismissed.
  */
@@ -81,7 +80,6 @@ class DefaultQuickSettingsController(
     private val reload: ReloadUrlUseCase,
     private val addNewTab: AddNewTabUseCase,
     private val requestRuntimePermissions: OnNeedToRequestPermissions = { },
-    private val reportSiteIssue: () -> Unit,
     private val displayPermissions: () -> Unit,
     private val dismiss: () -> Unit
 ) : QuickSettingsController {

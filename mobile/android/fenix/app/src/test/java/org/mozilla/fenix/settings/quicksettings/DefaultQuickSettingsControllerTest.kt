@@ -51,7 +51,6 @@ class DefaultQuickSettingsControllerTest {
     private val reload = mockk<SessionUseCases.ReloadUrlUseCase>(relaxed = true)
     private val addNewTab = mockk<TabsUseCases.AddNewTabUseCase>(relaxed = true)
     private val requestPermissions = mockk<(Array<String>) -> Unit>(relaxed = true)
-    private val reportIssue = mockk<() -> Unit>(relaxed = true)
     private val displayPermissions = mockk<() -> Unit>(relaxed = true)
     private val dismiss = mockk<() -> Unit>(relaxed = true)
     private val controller = DefaultQuickSettingsController(
@@ -66,7 +65,6 @@ class DefaultQuickSettingsControllerTest {
         reload = reload,
         addNewTab = addNewTab,
         requestRuntimePermissions = requestPermissions,
-        reportSiteIssue = reportIssue,
         displayPermissions = displayPermissions,
         dismiss = dismiss
     )
@@ -147,7 +145,6 @@ class DefaultQuickSettingsControllerTest {
             reload = reload,
             addNewTab = addNewTab,
             requestRuntimePermissions = requestPermissions,
-            reportSiteIssue = reportIssue,
             displayPermissions = displayPermissions,
             dismiss = dismiss
         )

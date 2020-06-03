@@ -20,7 +20,6 @@ import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.state.selector.findTab
-import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.concept.engine.prompt.ShareData
 import mozilla.components.support.ktx.kotlin.isUrl
@@ -28,7 +27,6 @@ import org.mozilla.fenix.NavGraphDirections
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.BrowserAnimator
 import org.mozilla.fenix.browser.BrowserAnimator.Companion.getToolbarNavOptions
-import org.mozilla.fenix.browser.BrowserFragment
 import org.mozilla.fenix.browser.BrowserFragmentDirections
 import org.mozilla.fenix.browser.readermode.ReaderModeController
 import org.mozilla.fenix.collections.SaveCollectionStep
@@ -215,15 +213,6 @@ class DefaultBrowserToolbarController(
                 findInPageLauncher()
                 activity.components.analytics.metrics.track(Event.FindInPageOpened)
             }
-            ToolbarMenu.Item.ReportIssue -> {
-                val selectedTab = activity.components.core.store.state.selectedTab
-                selectedTab?.let {
-                    val currentUrl = it.content.url
-                    val reportUrl = String.format(BrowserFragment.REPORT_SITE_ISSUE_URL, currentUrl)
-                    val private = it.content.private
-                    reportSiteIssue(reportUrl, private)
-                }
-            }
 
             ToolbarMenu.Item.AddonsManager -> {
                 navController.nav(
@@ -346,14 +335,6 @@ class DefaultBrowserToolbarController(
         }
     }
 
-    private fun reportSiteIssue(reportUrl: String, private: Boolean) {
-        if (private) {
-            activity.components.useCases.tabsUseCases.addPrivateTab.invoke(reportUrl)
-        } else {
-            activity.components.useCases.tabsUseCases.addTab.invoke(reportUrl)
-        }
-    }
-
     @SuppressWarnings("ComplexMethod")
     private fun trackToolbarItemInteraction(item: ToolbarMenu.Item) {
         val eventItem = when (item) {
@@ -370,7 +351,6 @@ class DefaultBrowserToolbarController(
                 }
 
             ToolbarMenu.Item.FindInPage -> Event.BrowserMenuItemTapped.Item.FIND_IN_PAGE
-            ToolbarMenu.Item.ReportIssue -> Event.BrowserMenuItemTapped.Item.REPORT_SITE_ISSUE
             ToolbarMenu.Item.OpenInFenix -> Event.BrowserMenuItemTapped.Item.OPEN_IN_FENIX
             ToolbarMenu.Item.Share -> Event.BrowserMenuItemTapped.Item.SHARE
             ToolbarMenu.Item.SaveToCollection -> Event.BrowserMenuItemTapped.Item.SAVE_TO_COLLECTION

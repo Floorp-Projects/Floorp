@@ -17,7 +17,6 @@ interface ToolbarMenu {
         object Forward : Item()
         object Reload : Item()
         object Stop : Item()
-        object ReportIssue : Item()
         object OpenInFenix : Item()
         object SaveToCollection : Item()
         object AddToTopSites : Item()

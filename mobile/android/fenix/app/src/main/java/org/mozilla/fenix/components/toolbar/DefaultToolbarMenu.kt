@@ -26,10 +26,8 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.storage.BookmarksStorage
 import mozilla.components.support.ktx.android.content.getColorFromAttr
 import org.mozilla.fenix.R
-import org.mozilla.fenix.Config
 import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.HomeActivity
-import org.mozilla.fenix.ReleaseChannel
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.ext.asActivity
 import org.mozilla.fenix.ext.components
@@ -183,10 +181,6 @@ class DefaultToolbarMenu(
             ?.browsingModeManager?.mode == BrowsingMode.Normal
         val shouldDeleteDataOnQuit = Settings.getInstance(context)
             .shouldDeleteBrowsingDataOnQuit
-        val shouldShowWebcompatReporter = Config.channel !in setOf(
-            ReleaseChannel.FenixProduction,
-            ReleaseChannel.FennecProduction
-        )
 
         val menuItems = listOfNotNull(
             historyItem,
@@ -195,7 +189,6 @@ class DefaultToolbarMenu(
             settings,
             if (shouldDeleteDataOnQuit) deleteDataOnQuit else null,
             BrowserMenuDivider(),
-            if (shouldShowWebcompatReporter) reportIssue else null,
             findInPage,
             addToTopSites,
             addToHomescreen.apply { visible = ::canAddToHomescreen },
@@ -290,14 +283,6 @@ class DefaultToolbarMenu(
         iconTintColorResource = primaryTextColor()
     ) {
         onItemTapped.invoke(ToolbarMenu.Item.FindInPage)
-    }
-
-    private val reportIssue = BrowserMenuImageText(
-        label = context.getString(R.string.browser_menu_report_issue),
-        imageResource = R.drawable.ic_report_issues,
-        iconTintColorResource = primaryTextColor()
-    ) {
-        onItemTapped.invoke(ToolbarMenu.Item.ReportIssue)
     }
 
     private val saveToCollection = BrowserMenuImageText(

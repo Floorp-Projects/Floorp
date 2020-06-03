@@ -257,7 +257,5 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
     companion object {
         private const val SHARED_TRANSITION_MS = 200L
         private const val TAB_ITEM_TRANSITION_NAME = "tab_item"
-        const val REPORT_SITE_ISSUE_URL =
-            "https://webcompat.com/issues/new?url=%s&label=browser-fenix"
     }
 }

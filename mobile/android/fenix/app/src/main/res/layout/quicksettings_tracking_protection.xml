@@ -34,17 +34,5 @@
         android:textColor="?accentBright"
         android:visibility="gone"
         tools:visibility="visible"
-        app:layout_constraintBottom_toTopOf="@id/reportSiteIssueAction" />
-
-    <TextView
-        android:id="@+id/reportSiteIssueAction"
-        style="@style/QuickSettingsText.Icon"
-        android:layout_width="match_parent"
-        android:layout_height="@dimen/quicksettings_item_height"
-        android:gravity="top"
-        android:paddingStart="48dp"
-        android:paddingEnd="0dp"
-        android:text="@string/browser_menu_report_issue"
-        android:textColor="?accentUsedOnDarkBackground"
         app:layout_constraintBottom_toBottomOf="parent" />
 </androidx.constraintlayout.widget.ConstraintLayout>

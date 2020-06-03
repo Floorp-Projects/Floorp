@@ -87,7 +87,6 @@ class QuickSettingsSheetDialogFragment : AppCompatDialogFragment() {
                 requestPermissions(permissions, REQUEST_CODE_QUICK_SETTINGS_PERMISSIONS)
                 tryToRequestPermissions = true
             },
-            reportSiteIssue = ::launchIntentReceiver,
             displayPermissions = ::showPermissionsView,
             dismiss = ::dismiss
         )

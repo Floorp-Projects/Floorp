@@ -36,7 +36,6 @@ import mozilla.components.concept.engine.EngineView
 import mozilla.components.feature.search.SearchUseCases
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.tab.collections.TabCollection
-import mozilla.components.feature.tabs.TabsUseCases
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
@@ -45,7 +44,6 @@ import org.junit.runner.RunWith
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.BrowserAnimator
-import org.mozilla.fenix.browser.BrowserFragment
 import org.mozilla.fenix.browser.BrowserFragmentDirections
 import org.mozilla.fenix.browser.readermode.ReaderModeController
 import org.mozilla.fenix.collections.SaveCollectionStep
@@ -420,84 +418,6 @@ class DefaultBrowserToolbarControllerTest {
 
         verify { findInPageLauncher() }
         verify { metrics.track(Event.FindInPageOpened) }
-    }
-
-    @Test
-    fun handleToolbarReportIssuePressInNormalMode() {
-        val tabsUseCases: TabsUseCases = mockk(relaxed = true)
-        val addTabUseCase: TabsUseCases.AddNewTabUseCase = mockk(relaxed = true)
-
-        val browserStore =
-            BrowserStore(
-                BrowserState(
-                    tabs = listOf(
-                        createTab(
-                            url = "https://mozilla.org",
-                            private = false,
-                            id = "tab1"
-                        )
-                    ),
-                    selectedTabId = "tab1"
-                )
-            )
-
-        val item = ToolbarMenu.Item.ReportIssue
-
-        every { activity.components.core.store } returns browserStore
-        every { activity.components.useCases.tabsUseCases } returns tabsUseCases
-        every { tabsUseCases.addTab } returns addTabUseCase
-
-        controller.handleToolbarItemInteraction(item)
-
-        verify { metrics.track(Event.BrowserMenuItemTapped(Event.BrowserMenuItemTapped.Item.REPORT_SITE_ISSUE)) }
-        verify {
-            // Hardcoded URL because this function modifies the URL with an apply
-            addTabUseCase.invoke(
-                String.format(
-                    BrowserFragment.REPORT_SITE_ISSUE_URL,
-                    "https://mozilla.org"
-                )
-            )
-        }
-    }
-
-    @Test
-    fun handleToolbarReportIssuePressInPrivateMode() {
-        val tabsUseCases: TabsUseCases = mockk(relaxed = true)
-        val addPrivateTabUseCase: TabsUseCases.AddNewPrivateTabUseCase = mockk(relaxed = true)
-
-        val browserStore =
-            BrowserStore(
-                BrowserState(
-                    tabs = listOf(
-                        createTab(
-                            url = "https://mozilla.org",
-                            private = true,
-                            id = "tab1"
-                        )
-                    ),
-                    selectedTabId = "tab1"
-                )
-            )
-
-        val item = ToolbarMenu.Item.ReportIssue
-
-        every { activity.components.core.store } returns browserStore
-        every { activity.components.useCases.tabsUseCases } returns tabsUseCases
-        every { tabsUseCases.addPrivateTab } returns addPrivateTabUseCase
-
-        controller.handleToolbarItemInteraction(item)
-
-        verify { metrics.track(Event.BrowserMenuItemTapped(Event.BrowserMenuItemTapped.Item.REPORT_SITE_ISSUE)) }
-        verify {
-            // Hardcoded URL because this function modifies the URL with an apply
-            addPrivateTabUseCase.invoke(
-                String.format(
-                    BrowserFragment.REPORT_SITE_ISSUE_URL,
-                    "https://mozilla.org"
-                )
-            )
-        }
     }
 
     @Test
