@@ -2,7 +2,7 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-add_task(async function tabsSendMessageReply() {
+add_task(async function runtimeSendMessageReply() {
   function background() {
     browser.runtime.onMessage.addListener((msg, sender, respond) => {
       if (msg == "respond-now") {
@@ -14,6 +14,12 @@ add_task(async function tabsSendMessageReply() {
         return true;
       } else if (msg == "respond-promise") {
         return Promise.resolve(msg);
+      } else if (msg == "respond-promise-false") {
+        return Promise.resolve(false);
+      } else if (msg == "respond-false") {
+        // return false means that respond() is not expected to be called.
+        setTimeout(() => respond("should be ignored"));
+        return false;
       } else if (msg == "respond-never") {
         return undefined;
       } else if (msg == "respond-error") {
@@ -44,6 +50,8 @@ add_task(async function tabsSendMessageReply() {
         browser.runtime.sendMessage("respond-soon", resolve)
       ),
       browser.runtime.sendMessage("respond-promise"),
+      browser.runtime.sendMessage("respond-promise-false"),
+      browser.runtime.sendMessage("respond-false"),
       browser.runtime.sendMessage("respond-never"),
       new Promise(resolve => {
         browser.runtime.sendMessage("respond-never", response => {
@@ -64,6 +72,8 @@ add_task(async function tabsSendMessageReply() {
           respondNow2,
           respondSoon,
           respondPromise,
+          respondPromiseFalse,
+          respondFalse,
           respondNever,
           respondNever2,
           respondError,
@@ -88,6 +98,16 @@ add_task(async function tabsSendMessageReply() {
             "respond-promise",
             respondPromise,
             "Got the expected promise response"
+          );
+          browser.test.assertEq(
+            false,
+            respondPromiseFalse,
+            "Got the expected false value as a promise result"
+          );
+          browser.test.assertEq(
+            undefined,
+            respondFalse,
+            "Got the expected no-response when onMessage returns false"
           );
           browser.test.assertEq(
             undefined,
@@ -133,7 +153,7 @@ add_task(async function tabsSendMessageReply() {
   await extension.unload();
 });
 
-add_task(async function tabsSendMessageBlob() {
+add_task(async function runtimeSendMessageBlob() {
   function background() {
     browser.runtime.onMessage.addListener(msg => {
       browser.test.assertTrue(msg.blob instanceof Blob, "Message is a blob");
