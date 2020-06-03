@@ -1099,12 +1099,16 @@ impl TextureResolver {
         // generally prevent any sustained build-up of unused textures, unless we don't
         // generate frames for a long period. This can happen when the window is
         // minimized, and we probably want to flush all the WebRender caches in that case [1].
+        // There is also a second "red line" memory threshold which prevents
+        // memory exhaustion if many render targets are allocated within a small
+        // number of frames. For now this is set at 320 MB (10x the normal memory threshold).
         //
         // [1] https://bugzilla.mozilla.org/show_bug.cgi?id=1494099
         self.gc_targets(
             device,
             frame_id,
             32 * 1024 * 1024,
+            32 * 1024 * 1024 * 10,
             60,
         );
     }
@@ -1132,6 +1136,7 @@ impl TextureResolver {
         device: &mut Device,
         current_frame_id: GpuFrameId,
         total_bytes_threshold: usize,
+        total_bytes_red_line_threshold: usize,
         frames_threshold: usize,
     ) {
         // Get the total GPU memory size used by the current render target pool
@@ -1157,8 +1162,9 @@ impl TextureResolver {
             // However, if it's been used in very recently, it is always kept around,
             // which ensures we don't thrash texture allocations on pages that do
             // require a very large render target pool and are regularly changing.
-            if rt_pool_size_in_bytes > total_bytes_threshold &&
-               !target.used_recently(current_frame_id, frames_threshold)
+            if (rt_pool_size_in_bytes > total_bytes_red_line_threshold) ||
+               (rt_pool_size_in_bytes > total_bytes_threshold &&
+                !target.used_recently(current_frame_id, frames_threshold))
             {
                 rt_pool_size_in_bytes -= target.size_in_bytes();
                 device.delete_texture(target);
