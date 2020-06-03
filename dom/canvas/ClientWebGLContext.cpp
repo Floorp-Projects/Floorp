@@ -907,6 +907,8 @@ ClientWebGLContext::SetContextOptions(JSContext* cx,
     return NS_ERROR_FAILURE;
   }
 
+  mXRCompatible = attributes.mXrCompatible;
+
   mInitialOptions.emplace(newOpts);
   return NS_OK;
 }
