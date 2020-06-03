@@ -46,12 +46,6 @@ const INSPECTOR_L10N = new LocalizationHelper(
 loader.lazyRequireGetter(this, "Tools", "devtools/client/definitions", true);
 loader.lazyRequireGetter(
   this,
-  "gDevTools",
-  "devtools/client/framework/devtools",
-  true
-);
-loader.lazyRequireGetter(
-  this,
   "ClassList",
   "devtools/client/inspector/rules/models/class-list"
 );
@@ -470,17 +464,8 @@ class RulesView {
       return;
     }
 
-    const toolbox = await gDevTools.showToolbox(
-      this.currentTarget,
-      "styleeditor"
-    );
-    const styleEditor = toolbox.getCurrentPanel();
-    if (!styleEditor) {
-      return;
-    }
-
-    const { url, line, column } = rule.sourceLocation;
-    styleEditor.selectStyleSheet(url, line, column);
+    const { sheet, line, column } = rule.generatedLocation;
+    this.toolbox.viewSourceInStyleEditorByFront(sheet, line, column);
   }
 
   /**

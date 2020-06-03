@@ -442,7 +442,7 @@ class RequestListContextMenu {
    */
   openInStyleEditor(url) {
     const toolbox = gDevTools.getToolbox(this.props.connector.getTabTarget());
-    toolbox.viewSourceInStyleEditor(url, 0);
+    toolbox.viewSourceInStyleEditorByURL(url, 0);
   }
 
   /**
