@@ -68,6 +68,14 @@ const browsingContextTargetSpecPrototype = {
       request: {},
       response: {},
     },
+    goForward: {
+      request: {},
+      response: {},
+    },
+    goBack: {
+      request: {},
+      response: {},
+    },
     reload: {
       request: {
         options: Option(0, "browsingContextTarget.reload"),

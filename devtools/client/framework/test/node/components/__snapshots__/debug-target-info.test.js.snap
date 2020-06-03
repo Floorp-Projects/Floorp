@@ -44,15 +44,37 @@ exports[`DebugTargetInfo component Connection info renders the expected snapshot
       Test Tab Name
     </b>
   </span>
-  <button
-    className="iconized-label reload-button qa-reload-button"
-    onClick={[Function]}
+  <div
+    className="debug-target-navigation"
   >
-    <img
-      alt="toolbox.debugTargetInfo.reload"
-      src="chrome://browser/skin/reload.svg"
-    />
-  </button>
+    <button
+      className="iconized-label navigation-button qa-back-button"
+      onClick={[Function]}
+    >
+      <img
+        alt="toolbox.debugTargetInfo.back"
+        src="chrome://browser/skin/back.svg"
+      />
+    </button>
+    <button
+      className="iconized-label navigation-button qa-forward-button"
+      onClick={[Function]}
+    >
+      <img
+        alt="toolbox.debugTargetInfo.forward"
+        src="chrome://browser/skin/forward.svg"
+      />
+    </button>
+    <button
+      className="iconized-label navigation-button qa-reload-button"
+      onClick={[Function]}
+    >
+      <img
+        alt="toolbox.debugTargetInfo.reload"
+        src="chrome://browser/skin/reload.svg"
+      />
+    </button>
+  </div>
   <span
     className="debug-target-url"
   >
@@ -171,15 +193,37 @@ exports[`DebugTargetInfo component Target icon renders the expected snapshot for
       Test Tab Name
     </b>
   </span>
-  <button
-    className="iconized-label reload-button qa-reload-button"
-    onClick={[Function]}
+  <div
+    className="debug-target-navigation"
   >
-    <img
-      alt="toolbox.debugTargetInfo.reload"
-      src="chrome://browser/skin/reload.svg"
-    />
-  </button>
+    <button
+      className="iconized-label navigation-button qa-back-button"
+      onClick={[Function]}
+    >
+      <img
+        alt="toolbox.debugTargetInfo.back"
+        src="chrome://browser/skin/back.svg"
+      />
+    </button>
+    <button
+      className="iconized-label navigation-button qa-forward-button"
+      onClick={[Function]}
+    >
+      <img
+        alt="toolbox.debugTargetInfo.forward"
+        src="chrome://browser/skin/forward.svg"
+      />
+    </button>
+    <button
+      className="iconized-label navigation-button qa-reload-button"
+      onClick={[Function]}
+    >
+      <img
+        alt="toolbox.debugTargetInfo.reload"
+        src="chrome://browser/skin/reload.svg"
+      />
+    </button>
+  </div>
   <span
     className="debug-target-url"
   >
@@ -343,15 +387,37 @@ exports[`DebugTargetInfo component Target title renders the expected snapshot fo
       Test Tab Name
     </b>
   </span>
-  <button
-    className="iconized-label reload-button qa-reload-button"
-    onClick={[Function]}
+  <div
+    className="debug-target-navigation"
   >
-    <img
-      alt="toolbox.debugTargetInfo.reload"
-      src="chrome://browser/skin/reload.svg"
-    />
-  </button>
+    <button
+      className="iconized-label navigation-button qa-back-button"
+      onClick={[Function]}
+    >
+      <img
+        alt="toolbox.debugTargetInfo.back"
+        src="chrome://browser/skin/back.svg"
+      />
+    </button>
+    <button
+      className="iconized-label navigation-button qa-forward-button"
+      onClick={[Function]}
+    >
+      <img
+        alt="toolbox.debugTargetInfo.forward"
+        src="chrome://browser/skin/forward.svg"
+      />
+    </button>
+    <button
+      className="iconized-label navigation-button qa-reload-button"
+      onClick={[Function]}
+    >
+      <img
+        alt="toolbox.debugTargetInfo.reload"
+        src="chrome://browser/skin/reload.svg"
+      />
+    </button>
+  </div>
   <span
     className="debug-target-url"
   >
@@ -398,15 +464,37 @@ exports[`DebugTargetInfo component Target title renders the expected snapshot fo
       src="chrome://devtools/skin/images/globe.svg"
     />
   </span>
-  <button
-    className="iconized-label reload-button qa-reload-button"
-    onClick={[Function]}
+  <div
+    className="debug-target-navigation"
   >
-    <img
-      alt="toolbox.debugTargetInfo.reload"
-      src="chrome://browser/skin/reload.svg"
-    />
-  </button>
+    <button
+      className="iconized-label navigation-button qa-back-button"
+      onClick={[Function]}
+    >
+      <img
+        alt="toolbox.debugTargetInfo.back"
+        src="chrome://browser/skin/back.svg"
+      />
+    </button>
+    <button
+      className="iconized-label navigation-button qa-forward-button"
+      onClick={[Function]}
+    >
+      <img
+        alt="toolbox.debugTargetInfo.forward"
+        src="chrome://browser/skin/forward.svg"
+      />
+    </button>
+    <button
+      className="iconized-label navigation-button qa-reload-button"
+      onClick={[Function]}
+    >
+      <img
+        alt="toolbox.debugTargetInfo.reload"
+        src="chrome://browser/skin/reload.svg"
+      />
+    </button>
+  </div>
   <span
     className="debug-target-url"
   >
