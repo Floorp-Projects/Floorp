@@ -32,6 +32,8 @@
     <string name="mozac_feature_addons_permissions_history_description">ເຂົ້າເຖິງປະຫວັດການທ່ອງເວັບ</string>
     <!-- Description for management permission. -->
     <string name="mozac_feature_addons_permissions_management_description">ຕິດຕາມການນຳໃຊ້ເອັກສເທັນຊັນ ແລະ ຈັດການເທມ</string>
+    <!-- Description for native_messaging permission. -->
+    <string name="mozac_feature_addons_permissions_native_messaging_description">ແລກປ່ຽນຂໍ້ຄວາມກັບໂປຣແກຣມອື່ນທີ່ນອກເຫນືອຈາກໂປຣແກຣມນີ້</string>
     <!-- Description for notifications permission. -->
     <string name="mozac_feature_addons_permissions_notifications_description">ສະແດງການແຈ້ງເຕືອນໃຫ້ທ່ານ</string>
     <!-- Description for proxy permission. -->
@@ -134,4 +136,4 @@
     <string name="mozac_feature_addons_unsupported_caption_plural">%1$s add-ons</string>
     <!-- Text link to a sumo page for learning more about unsupported add-ons. -->
     <string name="mozac_feature_addons_unsupported_learn_more">ຮຽນຮູ້ເພີ່ມເຕີມ</string>
-</resources>
+    </resources>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Watermark/Hint for the find in page input field. -->
+    <string name="mozac_feature_findindpage_input">ಪುಟದಲ್ಲಿ ಹುಡುಕು</string>
+
+    <!-- String to be read by the accessibility service when focusing the next result button. -->
+    <string name="mozac_feature_findindpage_next_result">ಮುಂದಿನ ಫಲಿತಾಂಶವನ್ನು ಹುಡುಕಿ</string>
+
+    <!-- String to be read by the accessibility service when focusing the previous result button. -->
+    <string name="mozac_feature_findindpage_previous_result">ಹಿಂದಿನ ಫಲಿತಾಂಶವನ್ನು ಹುಡುಕಿ</string>
+
+    <!-- String to be read by the accessibility service when focusing the dismiss button in the "find in page" UI. -->
+    <string name="mozac_feature_findindpage_dismiss">ಪುಟದಲ್ಲಿನ ಹುಡುಕು ವಜಾಗೊಳಿಸಿ</string>
+
+</resources>

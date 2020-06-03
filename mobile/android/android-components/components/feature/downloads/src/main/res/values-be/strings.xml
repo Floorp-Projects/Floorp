@@ -6,4 +6,9 @@
     <!-- Button that opens the downloaded file when pressed -->
     <string name="mozac_feature_downloads_button_open">Адкрыць</string>
 
-    </resources>
+    <!-- Button that restarts the download after a failed attempt -->
+    <string name="mozac_feature_downloads_button_try_again">Паспрабаваць зноў</string>
+
+    <!-- Content description for close button -->
+    <string name="mozac_feature_downloads_button_close">Закрыць</string>
+</resources>

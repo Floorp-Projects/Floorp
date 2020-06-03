@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Name for one of the font options available to use -->
+    <string name="mozac_feature_readerview_serif_font">ಸೆರಿಫ್</string>
+
+    <!-- Color option for the background -->
+    <string name="mozac_feature_readerview_dark">ಗಾಢ</string>
+    <!-- Color option for the background -->
+    <string name="mozac_feature_readerview_light">ತಿಳಿ</string>
+    <!-- Accessible description for the color option -->
+    <string name="mozac_feature_readerview_light_color_scheme_desc">ತಿಳಿ ಬಣ್ಣದ ಯೋಜನೆ</string>
+</resources>
