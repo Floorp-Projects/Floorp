@@ -326,6 +326,7 @@ add_task(async function test_get_can_verify_signature_pulled() {
       return true;
     },
   };
+  client.verifySignature = true;
 
   // No metadata in local DB, but gets pulled and then verifies.
   ok(ObjectUtils.isEmpty(await client.db.getMetadata()), "Metadata is empty");
@@ -802,6 +803,24 @@ add_task(async function test_bucketname_changes_when_bucket_pref_changes() {
 
   equal(client.bucketName, "main-preview");
 });
+add_task(clear_state);
+
+add_task(
+  async function test_get_loads_default_records_from_a_local_dump_if_preview_collection() {
+    if (IS_ANDROID) {
+      // Skip test: we don't ship remote settings dumps on Android (see package-manifest).
+      return;
+    }
+    Services.prefs.setCharPref(
+      "services.settings.default_bucket",
+      "main-preview"
+    );
+    // When collection has a dump in services/settings/dumps/{bucket}/{collection}.json
+    const data = await clientWithDump.get();
+    notEqual(data.length, 0);
+    // No synchronization happened (responses are not mocked).
+  }
+);
 add_task(clear_state);
 
 add_task(
