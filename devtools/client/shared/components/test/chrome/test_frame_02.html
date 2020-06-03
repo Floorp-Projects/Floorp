@@ -33,9 +33,13 @@ window.onload = async function () {
     };
     const mockSourceMapService = {
       _update: function () {
-        this._callback(Services.prefs.getBoolPref(PREF),
-                       resolvedLocation.sourceUrl,
-                       resolvedLocation.line);
+        this._callback(Services.prefs.getBoolPref(PREF)
+          ? {
+              url: resolvedLocation.sourceUrl,
+              line: resolvedLocation.line,
+              column: undefined,
+            }
+          : null);
       },
       subscribe: function (url, line, column, callback) {
         this._callback = callback;

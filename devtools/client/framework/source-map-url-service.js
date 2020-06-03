@@ -334,7 +334,7 @@ SourceMapURLService.prototype._callOneCallback = async function(
 ) {
   // If source maps are disabled, immediately call with just "false".
   if (!this._prefValue) {
-    callback(false);
+    callback(null);
     return;
   }
 
@@ -344,11 +344,13 @@ SourceMapURLService.prototype._callOneCallback = async function(
   }
 
   const resolvedLocation = await subscriptionEntry.promise;
-  if (resolvedLocation) {
-    const { line, column, sourceUrl } = resolvedLocation;
-    // In case we're racing a pref change, pass the current value
-    // here, not plain "true".
-    callback(this._prefValue, sourceUrl, line, column);
+
+  if (!this._prefValue) {
+    // If the pref changed to falsy while we were querying, this callback
+    // will have already been notified of that.
+  } else if (resolvedLocation) {
+    const { line, column, sourceUrl: url } = resolvedLocation;
+    callback({ url, line, column });
   }
 };
 
@@ -368,12 +370,9 @@ SourceMapURLService.prototype._callOneCallback = async function(
  *                 more times -- it may not be called if the location
  *                 is not source mapped; and it may be called multiple
  *                 times if the source map pref changes.  It is called
- *                 as callback(enabled, url, line, column).  |enabled|
- *                 is a boolean.  If true then source maps are enabled
- *                 and the remaining arguments are the original
- *                 location.  If false, then source maps are disabled
- *                 and the generated location should be used; in this
- *                 case the remaining arguments should be ignored.
+ *                 as callback({url, line, column} | null).  |null| means
+ *                 that the generated position should be used, otherwise
+ *                 the given object describes the original position.
  * @returns {Function} An unsubscribe function.
  */
 SourceMapURLService.prototype.subscribe = function(

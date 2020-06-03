@@ -294,24 +294,15 @@ RuleEditor.prototype = {
    * original sources or not.  This is a callback for
    * SourceMapURLService.subscribe, which see.
    *
-   * @param {Boolean} enabled
-   *        True if the passed-in location should be used; this means
-   *        that source mapping is in use and the remaining arguments
-   *        are the original location.  False if the already-known
-   *        (stored) location should be used.
-   * @param {String} url
-   *        The original URL
-   * @param {Number} line
-   *        The original line number
+   * @param {Object | null} originalLocation
+   *        The original position object (url/line/column) or null.
    */
-  _updateLocation: function(enabled, url, line) {
-    let displayURL = url;
-    if (!enabled) {
-      displayURL = null;
-      if (this.rule.sheet) {
-        displayURL = this.rule.sheet.href;
-      }
-      line = this.rule.ruleLine;
+  _updateLocation: function(originalLocation) {
+    let displayURL = this.rule.sheet ? this.rule.sheet.href : null;
+    let line = this.rule.ruleLine;
+    if (originalLocation) {
+      displayURL = originalLocation.url;
+      line = originalLocation.line;
     }
 
     let sourceTextContent = CssLogic.shortSource({ href: displayURL });
@@ -353,7 +344,7 @@ RuleEditor.prototype = {
         sourceLabel.removeAttribute("title");
       }
     } else {
-      this._updateLocation(false);
+      this._updateLocation(null);
     }
 
     let url = null;

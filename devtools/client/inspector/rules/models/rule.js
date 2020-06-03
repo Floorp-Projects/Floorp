@@ -951,12 +951,7 @@ class Rule {
         url,
         line,
         column,
-        (enabled, sourceUrl, sourceLine, sourceColumn) => {
-          if (enabled) {
-            // Only update the source location if source map is in use.
-            this.updateOriginalLocation(sourceUrl, sourceLine, sourceColumn);
-          }
-        }
+        this.updateOriginalLocation
       );
     }
 
@@ -967,19 +962,11 @@ class Rule {
    * Handler for any location changes called from the SourceMapURLService and can also be
    * called from onLocationChanged(). Updates the source location for the rule.
    *
-   * @param  {String} url
-   *         The original URL.
-   * @param  {Number} line
-   *         The original line number.
-   * @param  {number} column
-   *         The original column number.
+   * @param  {Object | null} url/line/column
+   *         The original URL/line/column position of this sheet or null.
    */
-  updateOriginalLocation(url, line, column) {
-    this._originalLocation = {
-      column,
-      line,
-      url,
-    };
+  updateOriginalLocation(originalLocation) {
+    this._originalLocation = originalLocation;
     this.store.dispatch(
       updateSourceLink(this.domRule.actorID, this.sourceLink)
     );

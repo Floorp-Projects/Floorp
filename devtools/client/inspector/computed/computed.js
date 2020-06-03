@@ -1460,19 +1460,10 @@ SelectorView.prototype = {
    * original sources or not.  This is a callback for
    * SourceMapURLService.subscribe, which see.
    *
-   * @param {Boolean} enabled
-   *        True if the passed-in location should be used; this means
-   *        that source mapping is in use and the remaining arguments
-   *        are the original location.  False if the already-known
-   *        (stored) location should be used.
-   * @param {String} url
-   *        The original URL
-   * @param {Number} line
-   *        The original line number
-   * @param {number} column
-   *        The original column number
+   * @param {Object | null} originalLocation
+   *        The original position object (url/line/column) or null.
    */
-  _updateLocation: function(enabled, url, line, column) {
+  _updateLocation: function(originalLocation) {
     if (!this.tree.element) {
       return;
     }
@@ -1480,7 +1471,8 @@ SelectorView.prototype = {
     // Update |currentLocation| to be whichever location is being
     // displayed at the moment.
     let currentLocation = this.generatedLocation;
-    if (enabled) {
+    if (originalLocation) {
+      const { url, line, column } = originalLocation;
       currentLocation = { href: url, line, column };
     }
 
