@@ -59,8 +59,9 @@ void ClonedErrorHolder::Init(JSContext* aCx, JS::Handle<JSObject*> aError,
       mFilename = err->filename;
     }
     if (err->linebuf()) {
-      AppendUTF16toUTF8(nsDependentString(err->linebuf(), err->linebufLength()),
-                        mSourceLine);
+      AppendUTF16toUTF8(
+          nsDependentSubstring(err->linebuf(), err->linebufLength()),
+          mSourceLine);
       mTokenOffset = err->tokenOffset();
     }
     mLineNumber = err->lineno;
