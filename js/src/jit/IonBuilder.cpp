@@ -3692,11 +3692,6 @@ AbortReasonOr<Ok> IonBuilder::binaryArithTrySpecializedOnBaselineInspector(
   // Try to emit a specialized binary instruction speculating the
   // type using the baseline caches.
 
-  // Anything complex - strings, symbols, and objects - are not specialized
-  if (!SimpleArithOperand(left) || !SimpleArithOperand(right)) {
-    return Ok();
-  }
-
   MIRType specialization = inspector->expectedBinaryArithSpecialization(pc);
   if (specialization == MIRType::None) {
     return Ok();
@@ -3929,11 +3924,6 @@ AbortReasonOr<Ok> IonBuilder::unaryArithTrySpecializedOnBaselineInspector(
 
   // Try to emit a specialized binary instruction speculating the
   // type using the baseline caches.
-
-  // Anything complex - strings, symbols, and objects - are not specialized
-  if (!SimpleArithOperand(value)) {
-    return Ok();
-  }
 
   MIRType specialization = inspector->expectedBinaryArithSpecialization(pc);
   if (specialization == MIRType::None) {
