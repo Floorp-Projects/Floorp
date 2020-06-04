@@ -175,6 +175,7 @@ DEBIAN_DISTROS = (
     'linuxmint',
     'elementary',
     'neon',
+    'pop',
 )
 
 ADD_GIT_TOOLS_PATH = '''
