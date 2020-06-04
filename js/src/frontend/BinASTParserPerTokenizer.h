@@ -309,13 +309,9 @@ class BinASTParserPerTokenizer : public BinASTParserBase,
         *reflags |= JS::RegExpFlag::IgnoreCase;
       } else if (c == 'm' && !reflags->multiline()) {
         *reflags |= JS::RegExpFlag::Multiline;
-      }
-#ifdef ENABLE_NEW_REGEXP
-      else if (c == 's' && !reflags->dotAll()) {
+      } else if (c == 's' && !reflags->dotAll()) {
         *reflags |= JS::RegExpFlag::DotAll;
-      }
-#endif
-      else if (c == 'u' && !reflags->unicode()) {
+      } else if (c == 'u' && !reflags->unicode()) {
         *reflags |= JS::RegExpFlag::Unicode;
       } else if (c == 'y' && !reflags->sticky()) {
         *reflags |= JS::RegExpFlag::Sticky;

@@ -47,13 +47,8 @@ cpp:
     #include "frontend/ParseNode.h"
     #include "frontend/Parser.h"
     #include "frontend/SharedContext.h"
-    #ifndef ENABLE_NEW_REGEXP
-    #  include "irregexp/RegExpParser.h"
-    #endif
     #include "js/RegExpFlags.h"  //  JS::RegExpFlag, JS::RegExpFlags
-    #ifdef ENABLE_NEW_REGEXP
-    #  include "new-regexp/RegExpAPI.h"
-    #endif
+    #include "new-regexp/RegExpAPI.h"
     #include "vm/GeneratorAndAsyncKind.h"  // js::GeneratorKind, js::FunctionAsyncKind
     #include "vm/RegExpObject.h"
 
