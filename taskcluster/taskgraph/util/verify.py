@@ -14,7 +14,7 @@ import six
 
 from .. import GECKO
 from .treeherder import join_symbol
-from taskgraph.util.attributes import match_run_on_projects
+from taskgraph.util.attributes import match_run_on_projects, RELEASE_PROJECTS
 
 logger = logging.getLogger(__name__)
 doc_base_path = os.path.join(GECKO, 'taskcluster', 'docs')
@@ -302,7 +302,7 @@ def verify_always_optimized(task, taskgraph, scratch_pad, graph_config):
         raise Exception('Could not optimize the task {!r}'.format(task.label))
 
 
-@verifications.add('full_task_graph')
+@verifications.add('full_task_graph', run_on_projects=RELEASE_PROJECTS)
 def verify_shippable_no_sccache(task, taskgraph, scratch_pad, graph_config):
     if task and task.attributes.get('shippable'):
         if task.task.get('payload', {}).get('env', {}).get('USE_SCCACHE'):
