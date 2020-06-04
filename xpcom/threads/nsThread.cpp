@@ -31,9 +31,10 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/SchedulerGroup.h"
 #include "mozilla/Services.h"
+#include "mozilla/StaticPrefs_threads.h"
+#include "mozilla/TaskController.h"
 #include "nsXPCOMPrivate.h"
 #include "mozilla/ChaosMode.h"
-#include "mozilla/SchedulerGroup.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Unused.h"
@@ -595,6 +596,10 @@ nsThread::nsThread(NotNull<SynchronizedEventQueue*> aQueue,
       mLastWakeupCheckTime(TimeStamp::Now()),
 #endif
       mPerformanceCounterState(mNestedEventLoopDepth, mIsMainThread) {
+  if (UseTaskController() && mIsMainThread) {
+    mozilla::TaskController::Get()->SetPerformanceCounterState(
+        &mPerformanceCounterState);
+  }
 }
 
 nsThread::nsThread()
@@ -902,7 +907,11 @@ nsThread::HasPendingEvents(bool* aResult) {
     return NS_ERROR_NOT_SAME_THREAD;
   }
 
-  *aResult = mEvents->HasPendingEvent();
+  if (mIsMainThread && UseTaskController() && !mIsInLocalExecutionMode) {
+    *aResult = TaskController::Get()->HasMainThreadPendingTasks();
+  } else {
+    *aResult = mEvents->HasPendingEvent();
+  }
   return NS_OK;
 }
 
@@ -998,7 +1007,7 @@ static bool GetLabeledRunnableName(nsIRunnable* aEvent, nsACString& aName,
     aName.AssignLiteral("anonymous runnable");
   }
 
-  if (!labeled && aPriority > EventQueuePriority::Input) {
+  if (!labeled && aPriority > EventQueuePriority::InputHigh) {
     aName.AppendLiteral("(unlabeled)");
   }
 
@@ -1062,14 +1071,13 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult) {
   }
 
   // The toplevel event loop normally blocks waiting for the next event, but
-  // if we're trying to shut this thread down, we must exit the event loop when
-  // the event queue is empty.
-  // This only applys to the toplevel event loop! Nested event loops (e.g.
-  // during sync dispatch) are waiting for some state change and must be able
-  // to block even if something has requested shutdown of the thread. Otherwise
-  // we'll just busywait as we endlessly look for an event, fail to find one,
-  // and repeat the nested event loop since its state change hasn't happened
-  // yet.
+  // if we're trying to shut this thread down, we must exit the event loop
+  // when the event queue is empty. This only applys to the toplevel event
+  // loop! Nested event loops (e.g. during sync dispatch) are waiting for
+  // some state change and must be able to block even if something has
+  // requested shutdown of the thread. Otherwise we'll just busywait as we
+  // endlessly look for an event, fail to find one, and repeat the nested
+  // event loop since its state change hasn't happened yet.
   bool reallyWait = aMayWait && (mNestedEventLoopDepth > 0 || !ShuttingDown());
 
   if (mIsInLocalExecutionMode) {
@@ -1098,8 +1106,8 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult) {
 
   ++mNestedEventLoopDepth;
 
-  // We only want to create an AutoNoJSAPI on threads that actually do DOM stuff
-  // (including workers).  Those are exactly the threads that have an
+  // We only want to create an AutoNoJSAPI on threads that actually do DOM
+  // stuff (including workers).  Those are exactly the threads that have an
   // mScriptObserver.
   bool callScriptObserver = !!mScriptObserver;
   if (callScriptObserver) {
@@ -1131,9 +1139,17 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult) {
     // Scope for |event| to make sure that its destructor fires while
     // mNestedEventLoopDepth has been incremented, since that destructor can
     // also do work.
-    EventQueuePriority priority;
-    nsCOMPtr<nsIRunnable> event =
-        mEvents->GetEvent(reallyWait, &priority, &mLastEventDelay);
+    EventQueuePriority priority = EventQueuePriority::Normal;
+    nsCOMPtr<nsIRunnable> event;
+    bool usingTaskController = mIsMainThread && UseTaskController();
+    if (usingTaskController) {
+      // XXX should set priority?  Maybe we can just grab the "last task"
+      // priority from the TaskController where we currently grab the
+      // "ranIdleTask" state?
+      event = TaskController::Get()->GetRunnableForMTTask(reallyWait);
+    } else {
+      event = mEvents->GetEvent(reallyWait, &priority, &mLastEventDelay);
+    }
 
     *aResult = (event.get() != nullptr);
 
@@ -1177,8 +1193,8 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult) {
       }
 
 #ifdef MOZ_COLLECTING_RUNNABLE_TELEMETRY
-      // If we're on the main thread, we want to record our current runnable's
-      // name in a static so that BHR can record it.
+      // If we're on the main thread, we want to record our current
+      // runnable's name in a static so that BHR can record it.
       Array<char, kRunnableNameBufSize> restoreRunnableName;
       restoreRunnableName[0] = '\0';
       auto clear = MakeScopeExit([&] {
@@ -1202,23 +1218,27 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult) {
         sMainThreadRunnableName[length] = '\0';
       }
 #endif
+      // Note, with TaskController InputTaskManager handles these updates.
       Maybe<AutoTimeDurationHelper> timeDurationHelper;
-      if (priority == EventQueuePriority::Input) {
+      if (priority == EventQueuePriority::InputHigh) {
         timeDurationHelper.emplace();
       }
 
-      PerformanceCounterState::Snapshot snapshot =
-          mPerformanceCounterState.RunnableWillRun(
-              GetPerformanceCounter(event), now,
-              priority == EventQueuePriority::Idle);
+      Maybe<PerformanceCounterState::Snapshot> snapshot;
+      if (!usingTaskController) {
+        snapshot.emplace(mPerformanceCounterState.RunnableWillRun(
+            GetPerformanceCounter(event), now,
+            priority == EventQueuePriority::Idle));
+      }
 
       mLastEventStart = now;
 
       event->Run();
 
-      mEvents->DidRunEvent();
-
-      mPerformanceCounterState.RunnableDidRun(std::move(snapshot));
+      if (!usingTaskController) {
+        mEvents->DidRunEvent();
+        mPerformanceCounterState.RunnableDidRun(std::move(snapshot.ref()));
+      }
 
       // To cover the event's destructor code inside the LogRunnable span.
       event = nullptr;
@@ -1272,7 +1292,8 @@ nsThread::SetPriority(int32_t aPriority) {
   //   PR_PRIORITY_NORMAL
   //   PR_PRIORITY_HIGH
   //   PR_PRIORITY_URGENT
-  // We map the priority values defined on nsISupportsPriority to these values.
+  // We map the priority values defined on nsISupportsPriority to these
+  // values.
 
   mPriority = aPriority;
 
@@ -1472,8 +1493,8 @@ void PerformanceCounterState::RunnableDidRun(Snapshot&& aSnapshot) {
   mCurrentPerformanceCounter = std::move(aSnapshot.mOldPerformanceCounter);
   mCurrentRunnableIsIdleRunnable = aSnapshot.mOldIsIdleRunnable;
   if (IsNestedRunnable()) {
-    // Reset mCurrentTimeSliceStart to right now, so our parent runnable's next
-    // slice can be properly accounted for.
+    // Reset mCurrentTimeSliceStart to right now, so our parent runnable's
+    // next slice can be properly accounted for.
     mCurrentTimeSliceStart = now;
   } else {
     // We are done at the outermost level; we are no longer in a timeslice.
