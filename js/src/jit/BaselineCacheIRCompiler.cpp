@@ -1487,6 +1487,48 @@ bool BaselineCacheIRCompiler::emitIsArrayResult(ValOperandId inputId) {
   return true;
 }
 
+bool BaselineCacheIRCompiler::emitStringFromCharCodeResult(
+    Int32OperandId codeId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoOutputRegister output(*this);
+  AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
+
+  Register code = allocator.useRegister(masm, codeId);
+
+  allocator.discardStack(masm);
+
+
+  // We pre-allocate atoms for the first UNIT_STATIC_LIMIT characters.
+  // For code units larger than that, we must do a VM call.
+  Label vmCall;
+  masm.boundsCheck32PowerOfTwo(code, StaticStrings::UNIT_STATIC_LIMIT, &vmCall);
+
+  masm.movePtr(ImmPtr(cx_->runtime()->staticStrings->unitStaticTable), scratch);
+  masm.loadPtr(BaseIndex(scratch, code, ScalePointer), scratch);
+  Label done;
+  masm.jump(&done);
+
+  {
+    masm.bind(&vmCall);
+
+    AutoStubFrame stubFrame(*this);
+    stubFrame.enter(masm, scratch);
+
+    masm.Push(code);
+
+    using Fn = JSLinearString* (*)(JSContext*, int32_t);
+    callVM<Fn, jit::StringFromCharCode>(masm);
+
+    stubFrame.leave(masm);
+    masm.mov(ReturnReg, scratch);
+  }
+
+  masm.bind(&done);
+  masm.tagValue(JSVAL_TYPE_STRING, scratch, output.valueReg());
+  return true;
+}
+
 bool BaselineCacheIRCompiler::emitCallNativeSetter(ObjOperandId objId,
                                                    uint32_t setterOffset,
                                                    ValOperandId rhsId) {

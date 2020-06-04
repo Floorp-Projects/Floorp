@@ -5273,6 +5273,35 @@ AttachDecision CallIRGenerator::tryAttachStringCharAt(HandleFunction callee) {
   return tryAttachStringChar(callee, StringChar::At);
 }
 
+AttachDecision CallIRGenerator::tryAttachStringFromCharCode(
+    HandleFunction callee) {
+  // Need one int32 argument.
+  if (argc_ != 1 || !args_[0].isInt32()) {
+    return AttachDecision::NoAction;
+  }
+
+  // Initialize the input operand.
+  Int32OperandId argcId(writer.setInputOperandId(0));
+
+  // Guard callee is the 'fromCharCode' native function.
+  emitNativeCalleeGuard(callee);
+
+  // Guard int32 argument.
+  ValOperandId argId = writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
+  Int32OperandId codeId = writer.guardToInt32(argId);
+
+  // Return string created from code.
+  writer.stringFromCharCodeResult(codeId);
+
+  // This stub does not need to be monitored, because it always
+  // returns a string.
+  writer.returnFromIC();
+  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
+
+  trackAttached("StringFromCharCode");
+  return AttachDecision::Attach;
+}
+
 AttachDecision CallIRGenerator::tryAttachMathAbs(HandleFunction callee) {
   // Need one argument.
   if (argc_ != 1) {
@@ -5735,6 +5764,8 @@ AttachDecision CallIRGenerator::tryAttachInlinableNative(
       return tryAttachStringCharCodeAt(callee);
     case InlinableNative::StringCharAt:
       return tryAttachStringCharAt(callee);
+    case InlinableNative::StringFromCharCode:
+      return tryAttachStringFromCharCode(callee);
 
     // Math natives.
     case InlinableNative::MathAbs:
