@@ -117,6 +117,14 @@ struct FontFamilyName final {
     return FontFamilyName(genericType);
   }
 
+  bool IsNamedFamily(const nsAString& aFamilyName) const {
+    if (!IsNamed()) {
+      return false;
+    }
+    nsDependentAtomString name{mName};
+    return name.Equals(aFamilyName, nsCaseInsensitiveStringComparator);
+  }
+
   RefPtr<nsAtom> mName;  // null if mGeneric != Default
   StyleFontFamilyNameSyntax mSyntax = StyleFontFamilyNameSyntax::Quoted;
   StyleGenericFontFamily mGeneric = StyleGenericFontFamily::None;
@@ -300,11 +308,7 @@ class FontFamilyList {
   // searches for a specific non-generic name, case-insensitive comparison
   bool Contains(const nsAString& aFamilyName) const {
     for (const FontFamilyName& name : mFontlist->mNames) {
-      if (!name.IsNamed()) {
-        continue;
-      }
-      nsDependentAtomString listname(name.mName);
-      if (listname.Equals(aFamilyName, nsCaseInsensitiveStringComparator)) {
+      if (name.IsNamedFamily(aFamilyName)) {
         return true;
       }
     }
