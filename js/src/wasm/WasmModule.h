@@ -19,6 +19,7 @@
 #ifndef wasm_module_h
 #define wasm_module_h
 
+#include "js/WasmModule.h"
 #include "js/BuildId.h"
 
 #include "wasm/WasmCode.h"
@@ -209,7 +210,8 @@ class Module : public JS::WasmModule {
 
   // JS API and JS::WasmModule implementation:
 
-  JSObject* createObject(JSContext* cx) override;
+  JSObject* createObject(JSContext* cx) const override;
+  JSObject* createObjectForAsmJS(JSContext* cx) const override;
 
   // about:memory reporting:
 

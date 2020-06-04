@@ -68,6 +68,7 @@
 #include "js/StructuredClone.h"
 #include "js/Symbol.h"
 #include "js/Utility.h"
+#include "js/WasmModule.h"
 #include "js/Wrapper.h"
 #include "util/CompleteFile.h"
 #include "util/StringBuffer.h"
