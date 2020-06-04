@@ -75,17 +75,21 @@ const double kVRMaxFrameSubmitDuration = 4000.0f;  // milliseconds
 
 static StaticRefPtr<VRManager> sVRManagerSingleton;
 
+static bool ValidVRManagerProcess() {
+  return XRE_IsParentProcess() || XRE_IsGPUProcess();
+}
+
 /* static */
 VRManager* VRManager::Get() {
   MOZ_ASSERT(sVRManagerSingleton != nullptr);
-  MOZ_ASSERT(XRE_IsParentProcess() || XRE_IsGPUProcess());
+  MOZ_ASSERT(ValidVRManagerProcess());
 
   return sVRManagerSingleton;
 }
 
 /* static */
 VRManager* VRManager::MaybeGet() {
-  MOZ_ASSERT(XRE_IsParentProcess() || XRE_IsGPUProcess());
+  MOZ_ASSERT(ValidVRManagerProcess());
 
   return sVRManagerSingleton;
 }
@@ -98,6 +102,10 @@ uint32_t VRManager::AllocateDisplayID() { return ++sDisplayBase; }
 /*static*/
 void VRManager::ManagerInit() {
   MOZ_ASSERT(NS_IsMainThread());
+
+  if (!ValidVRManagerProcess()) {
+    return;
+  }
 
   // Enable gamepad extensions while VR is enabled.
   // Preference only can be set at the Parent process.
@@ -137,6 +145,7 @@ VRManager::VRManager()
       mLastSensorState{} {
   MOZ_ASSERT(sVRManagerSingleton == nullptr);
   MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(ValidVRManagerProcess());
 
 #if !defined(MOZ_WIDGET_ANDROID)
   // XRE_IsGPUProcess() is helping us to check some platforms like
