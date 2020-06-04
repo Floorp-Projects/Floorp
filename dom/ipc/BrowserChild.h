@@ -752,10 +752,6 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
   void DispatchMessageManagerMessage(const nsAString& aMessageName,
                                      const nsAString& aJSONData);
 
-  void ProcessUpdateFrame(const mozilla::layers::RepaintRequest& aRequest);
-
-  bool UpdateFrameHandler(const mozilla::layers::RepaintRequest& aRequest);
-
   void HandleDoubleTap(const CSSPoint& aPoint, const Modifiers& aModifiers,
                        const ScrollableLayerGuid& aGuid);
 
