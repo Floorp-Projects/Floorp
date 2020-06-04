@@ -455,26 +455,14 @@ if CONFIG['MOZ_VTUNE']:
             '-Wno-stringop-overflow'
         ]
 
-if not CONFIG['ENABLE_NEW_REGEXP']:
-    UNIFIED_SOURCES += [
-        'irregexp/NativeRegExpMacroAssembler.cpp',
-        'irregexp/RegExpAST.cpp',
-        'irregexp/RegExpCharacters.cpp',
-        'irregexp/RegExpEngine.cpp',
-        'irregexp/RegExpInterpreter.cpp',
-        'irregexp/RegExpMacroAssembler.cpp',
-        'irregexp/RegExpParser.cpp',
-        'irregexp/RegExpStack.cpp',
-        ]
-
 DIRS += [
     'build',
     'debugger',
     'frontend',
     'gc',
     'jit',
-    'wasm',
-] + (['new-regexp'] if CONFIG['ENABLE_NEW_REGEXP'] else [])
+    'new-regexp',
+    'wasm']
 
 if CONFIG['JS_JITSPEW']:
     DIRS += ['zydis']

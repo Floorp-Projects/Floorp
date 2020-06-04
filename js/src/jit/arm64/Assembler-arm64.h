@@ -89,9 +89,6 @@ static constexpr Register PseudoStackPointer{Registers::x28};
 static constexpr ARMRegister PseudoStackPointer64 = {Registers::x28, 64};
 static constexpr ARMRegister PseudoStackPointer32 = {Registers::x28, 32};
 
-// StackPointer for use by irregexp.
-static constexpr Register RegExpStackPointer = PseudoStackPointer;
-
 static constexpr Register IntArgReg0{Registers::x0};
 static constexpr Register IntArgReg1{Registers::x1};
 static constexpr Register IntArgReg2{Registers::x2};
