@@ -8,7 +8,7 @@
 #include "irregexp/RegExpShim.h"
 
 #ifdef V8_INTL_SUPPORT
-#include "unicode/uchar.h"
+#  include "unicode/uchar.h"
 #endif
 
 namespace v8 {
@@ -594,8 +594,8 @@ static const int32_t kEcma262CanonicalizeTable0[996] = {
     1073749882, 448,    8059,       448,  // NOLINT
     1073749884, 504,    8061,       504,    1073749936, 32,
     8113,       32,     8126,       -28820, 1073749968, 32,
-    8145,       32,     1073749984, 32,                           // NOLINT
-    8161,       32,     8165,       28};                          // NOLINT
+    8145,       32,     1073749984, 32,   // NOLINT
+    8161,       32,     8165,       28};  // NOLINT
 static const MultiCharacterSpecialCase<1> kEcma262CanonicalizeMultiStrings1[1] =
     {                                                       // NOLINT
         {{kSentinel}}};                                     // NOLINT
@@ -627,13 +627,14 @@ static const int32_t kEcma262CanonicalizeTable1[146] = {
     3293,       -4,     3295,       -4,  // NOLINT
     3297,       -4,     3299,       -4,     3308,       -4,
     3310,       -4,     3315,       -4,     1073745152, -29056,
-    3365,       -29056, 3367,       -29056,                       // NOLINT
-    3373,       -29056};                                          // NOLINT
+    3365,       -29056, 3367,       -29056,  // NOLINT
+    3373,       -29056};                     // NOLINT
 static const MultiCharacterSpecialCase<1> kEcma262CanonicalizeMultiStrings5[1] =
     {                                                       // NOLINT
         {{kSentinel}}};                                     // NOLINT
 static const uint16_t kEcma262CanonicalizeTable5Size = 95;  // NOLINT
-static const int32_t kEcma262CanonicalizeTable5[190] = {
+static const int32_t kEcma262CanonicalizeTable5[190] =
+    {
         1601, -4, 1603, -4, 1605, -4, 1607, -4,
         1609, -4, 1611, -4, 1613, -4, 1615, -4,  // NOLINT
         1617, -4, 1619, -4, 1621, -4, 1623, -4,
@@ -657,13 +658,13 @@ static const int32_t kEcma262CanonicalizeTable5[190] = {
         1925, -4, 1927, -4, 1932, -4, 1937, -4,
         1939, -4, 1943, -4, 1945, -4, 1947, -4,  // NOLINT
         1949, -4, 1951, -4, 1953, -4, 1955, -4,
-        1957, -4, 1959, -4, 1961, -4};                            // NOLINT
+        1957, -4, 1959, -4, 1961, -4};  // NOLINT
 static const MultiCharacterSpecialCase<1> kEcma262CanonicalizeMultiStrings7[1] =
     {                                                      // NOLINT
         {{kSentinel}}};                                    // NOLINT
 static const uint16_t kEcma262CanonicalizeTable7Size = 2;  // NOLINT
 static const int32_t kEcma262CanonicalizeTable7[4] = {1073749825, -128, 8026,
-                                                      -128};      // NOLINT
+                                                      -128};  // NOLINT
 int Ecma262Canonicalize::Convert(uchar c, uchar n, uchar* result,
                                  bool* allow_caching_ptr) {
   int chunk_index = c >> 13;
@@ -1576,7 +1577,7 @@ static const int32_t kEcma262UnCanonicalizeTable0[2010] = {
     8165,       2021, 1073749992, 2013, 8169,       2017,
     1073749994, 1981, 8171,       1985,  // NOLINT
     8172,       2021, 1073750008, 1973, 8185,       1977,
-    1073750010, 1989, 8187,       1993};                              // NOLINT
+    1073750010, 1989, 8187,       1993};  // NOLINT
 static const MultiCharacterSpecialCase<2>
     kEcma262UnCanonicalizeMultiStrings1[83] = {  // NOLINT
         {{8498, 8526}},   {{8544, 8560}},   {{8559, 8575}},
@@ -1659,7 +1660,7 @@ static const int32_t kEcma262UnCanonicalizeTable1[298] = {
     3297,       293, 3298,       297, 3299,       297, 3307, 301,
     3308,       301, 3309,       305, 3310,       305, 3314, 309,  // NOLINT
     3315,       309, 1073745152, 313, 3365,       317, 3367, 321,
-    3373,       325};                                                // NOLINT
+    3373,       325};  // NOLINT
 static const MultiCharacterSpecialCase<2>
     kEcma262UnCanonicalizeMultiStrings5[104] = {  // NOLINT
         {{42560, 42561}}, {{42562, 42563}},
@@ -1766,7 +1767,7 @@ static const int32_t
          1954, 373, 1955, 373, 1956, 377, 1957, 377,
          1958, 381, 1959, 381, 1960, 385, 1961, 385,  // NOLINT
          1962, 389, 1963, 393, 1964, 397, 1965, 401,
-         1968, 405, 1969, 409};                                       // NOLINT
+         1968, 405, 1969, 409};  // NOLINT
 static const MultiCharacterSpecialCase<2>
     kEcma262UnCanonicalizeMultiStrings7[3] = {  // NOLINT
         {{65313, 65345}},
@@ -1774,7 +1775,7 @@ static const MultiCharacterSpecialCase<2>
         {{kSentinel}}};                                      // NOLINT
 static const uint16_t kEcma262UnCanonicalizeTable7Size = 4;  // NOLINT
 static const int32_t kEcma262UnCanonicalizeTable7[8] = {
-    1073749793, 1, 7994, 5, 1073749825, 1, 8026, 5};                // NOLINT
+    1073749793, 1, 7994, 5, 1073749825, 1, 8026, 5};  // NOLINT
 int Ecma262UnCanonicalize::Convert(uchar c, uchar n, uchar* result,
                                    bool* allow_caching_ptr) {
   int chunk_index = c >> 13;
@@ -1822,7 +1823,7 @@ static const int32_t kCanonicalizationRangeTable0[140] = {
     1073749816, 28,  7999, 0, 1073749824, 20,  8005, 0,
     1073749832, 20,  8013, 0, 1073749856, 28,  8039, 0,  // NOLINT
     1073749864, 28,  8047, 0, 1073749874, 12,  8053, 0,
-    1073749960, 12,  8139, 0};                                      // NOLINT
+    1073749960, 12,  8139, 0};  // NOLINT
 static const MultiCharacterSpecialCase<1>
     kCanonicalizationRangeMultiStrings1[1] = {                // NOLINT
         {{kSentinel}}};                                       // NOLINT
@@ -1831,13 +1832,13 @@ static const int32_t kCanonicalizationRangeTable1[28] = {
     1073742176, 60,  367,  0, 1073742192, 60,  383,  0,
     1073743030, 100, 1231, 0, 1073743056, 100, 1257, 0,  // NOLINT
     1073744896, 184, 3118, 0, 1073744944, 184, 3166, 0,
-    1073745152, 148, 3365, 0};                                      // NOLINT
+    1073745152, 148, 3365, 0};  // NOLINT
 static const MultiCharacterSpecialCase<1>
     kCanonicalizationRangeMultiStrings7[1] = {               // NOLINT
         {{kSentinel}}};                                      // NOLINT
 static const uint16_t kCanonicalizationRangeTable7Size = 4;  // NOLINT
 static const int32_t kCanonicalizationRangeTable7[8] = {
-    1073749793, 100, 7994, 0, 1073749825, 100, 8026, 0};            // NOLINT
+    1073749793, 100, 7994, 0, 1073749825, 100, 8026, 0};  // NOLINT
 int CanonicalizationRange::Convert(uchar c, uchar n, uchar* result,
                                    bool* allow_caching_ptr) {
   int chunk_index = c >> 13;

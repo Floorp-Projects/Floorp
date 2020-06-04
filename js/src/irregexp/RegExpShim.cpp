@@ -37,7 +37,9 @@ void PrintF(FILE* out, const char* format, ...) {
 StdoutStream::operator std::ostream&() const { return std::cerr; }
 
 template <typename T>
-std::ostream& StdoutStream::operator<<(T t) { return std::cerr << t; }
+std::ostream& StdoutStream::operator<<(T t) {
+  return std::cerr << t;
+}
 
 template std::ostream& StdoutStream::operator<<(char const* c);
 
@@ -64,8 +66,7 @@ std::ostream& operator<<(std::ostream& os, const AsUC32& c) {
   return os << buf;
 }
 
-HandleScope::HandleScope(Isolate* isolate)
-  : isolate_(isolate) {
+HandleScope::HandleScope(Isolate* isolate) : isolate_(isolate) {
   isolate->openHandleScope(*this);
 }
 
@@ -84,8 +85,8 @@ template Handle<String>::Handle(String s, Isolate* isolate);
 
 template <typename T>
 Handle<T>::Handle(const JS::Value& value, Isolate* isolate)
-  : location_(isolate->getHandleLocation(value)) {
-  T::cast(Object(value)); // Assert that value has the correct type.
+    : location_(isolate->getHandleLocation(value)) {
+  T::cast(Object(value));  // Assert that value has the correct type.
 }
 
 JS::Value* Isolate::getHandleLocation(const JS::Value& value) {
@@ -123,7 +124,7 @@ PseudoHandle<T> Isolate::takeOwnership(void* ptr) {
 
 PseudoHandle<ByteArrayData> ByteArray::takeOwnership(Isolate* isolate) {
   PseudoHandle<ByteArrayData> result =
-    isolate->takeOwnership<ByteArrayData>(value().toPrivate());
+      isolate->takeOwnership<ByteArrayData>(value().toPrivate());
   setValue(JS::PrivateValue(nullptr));
   return result;
 }
@@ -182,7 +183,7 @@ Handle<ByteArray> Isolate::NewByteArray(int length, AllocationType alloc) {
 
   size_t alloc_size = sizeof(uint32_t) + length;
   ByteArrayData* data =
-    static_cast<ByteArrayData*>(allocatePseudoHandle(alloc_size));
+      static_cast<ByteArrayData*>(allocatePseudoHandle(alloc_size));
   if (!data) {
     oomUnsafe.crash("Irregexp NewByteArray");
   }
@@ -212,10 +213,10 @@ Handle<String> Isolate::InternalizeString(const Vector<const CharT>& str) {
   return Handle<String>(JS::StringValue(atom), this);
 }
 
-template Handle<String>
-Isolate::InternalizeString(const Vector<const uint8_t>& str);
-template Handle<String>
-Isolate::InternalizeString(const Vector<const char16_t>& str);
+template Handle<String> Isolate::InternalizeString(
+    const Vector<const uint8_t>& str);
+template Handle<String> Isolate::InternalizeString(
+    const Vector<const char16_t>& str);
 
 static_assert(JSRegExp::RegistersForCaptureCount(JSRegExp::kMaxCaptures) <=
               RegExpMacroAssembler::kMaxRegisterCount);
