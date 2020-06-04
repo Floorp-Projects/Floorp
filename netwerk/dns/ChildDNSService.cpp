@@ -18,7 +18,6 @@
 #include "mozilla/net/DNSListenerProxy.h"
 #include "mozilla/net/TRRServiceParent.h"
 #include "nsServiceManagerUtils.h"
-#include "prsystem.h"
 
 namespace mozilla {
 namespace net {
@@ -433,15 +432,6 @@ ChildDNSService::GetCurrentTrrMode(uint32_t* aMode) {
 
 NS_IMETHODIMP
 ChildDNSService::GetMyHostName(nsACString& result) {
-  if (XRE_IsParentProcess()) {
-    char name[100];
-    if (PR_GetSystemInfo(PR_SI_HOSTNAME, name, sizeof(name)) == PR_SUCCESS) {
-      result = name;
-      return NS_OK;
-    }
-
-    return NS_ERROR_FAILURE;
-  }
   // TODO: get value from parent during PNecko construction?
   return NS_ERROR_NOT_AVAILABLE;
 }

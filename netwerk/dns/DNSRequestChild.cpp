@@ -52,7 +52,6 @@ class ChildDNSRecord : public nsIDNSRecord {
   uint16_t mFlags;
   double mTrrFetchDuration;
   double mTrrFetchDurationNetworkOnly;
-  bool mIsTRR;
 };
 
 NS_IMPL_ISUPPORTS(ChildDNSRecord, nsIDNSRecord)
@@ -62,7 +61,6 @@ ChildDNSRecord::ChildDNSRecord(const DNSRecord& reply, uint16_t flags)
   mCanonicalName = reply.canonicalName();
   mTrrFetchDuration = reply.trrFetchDuration();
   mTrrFetchDurationNetworkOnly = reply.trrFetchDurationNetworkOnly();
-  mIsTRR = reply.isTRR();
 
   // A shame IPDL gives us no way to grab ownership of array: so copy it.
   const nsTArray<NetAddr>& addrs = reply.addrs();
@@ -85,8 +83,8 @@ ChildDNSRecord::GetCanonicalName(nsACString& result) {
 
 NS_IMETHODIMP
 ChildDNSRecord::IsTRR(bool* retval) {
-  *retval = mIsTRR;
-  return NS_OK;
+  *retval = false;
+  return NS_ERROR_NOT_AVAILABLE;
 }
 
 NS_IMETHODIMP
