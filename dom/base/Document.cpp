@@ -16238,7 +16238,7 @@ nsICookieJarSettings* Document::CookieJarSettings() {
                   inProcessParent->CookieJarSettings()->GetCookieBehavior(),
                   mozilla::net::CookieJarSettings::Cast(
                       inProcessParent->CookieJarSettings())
-                      ->GetFirstPartyDomain(),
+                      ->GetPartitionKey(),
                   inProcessParent->CookieJarSettings()
                       ->GetIsFirstPartyIsolated())
             : net::CookieJarSettings::Create();
