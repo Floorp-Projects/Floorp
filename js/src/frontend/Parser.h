@@ -1704,10 +1704,11 @@ class MOZ_STACK_CLASS Parser<FullParseHandler, Unit> final
   // Parse a function, used for the Function, GeneratorFunction, and
   // AsyncFunction constructors.
   FunctionNodeType standaloneFunction(
-      HandleFunction fun, HandleScope enclosingScope,
+      HandleScope enclosingScope,
       const mozilla::Maybe<uint32_t>& parameterListEnd,
-      GeneratorKind generatorKind, FunctionAsyncKind asyncKind,
-      Directives inheritedDirectives, Directives* newDirectives);
+      FunctionSyntaxKind syntaxKind, GeneratorKind generatorKind,
+      FunctionAsyncKind asyncKind, Directives inheritedDirectives,
+      Directives* newDirectives);
 
   bool checkStatementsEOF();
 
