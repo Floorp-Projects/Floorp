@@ -460,6 +460,24 @@ bool SignPolicy::adjustInputs(TempAllocator& alloc, MInstruction* ins) const {
 }
 
 template <unsigned Op>
+bool SymbolPolicy<Op>::staticAdjustInputs(TempAllocator& alloc,
+                                          MInstruction* ins) {
+  MDefinition* in = ins->getOperand(Op);
+  if (in->type() == MIRType::Symbol) {
+    return true;
+  }
+
+  MUnbox* replace = MUnbox::New(alloc, in, MIRType::Symbol, MUnbox::Fallible);
+  ins->block()->insertBefore(ins, replace);
+  ins->replaceOperand(Op, replace);
+
+  return replace->typePolicy()->adjustInputs(alloc, replace);
+}
+
+template bool SymbolPolicy<0>::staticAdjustInputs(TempAllocator& alloc,
+                                                  MInstruction* ins);
+
+template <unsigned Op>
 bool StringPolicy<Op>::staticAdjustInputs(TempAllocator& alloc,
                                           MInstruction* ins) {
   MDefinition* in = ins->getOperand(Op);
@@ -1291,7 +1309,8 @@ bool TypedArrayIndexPolicy::adjustInputs(TempAllocator& alloc,
   _(ObjectPolicy<0>)                                                          \
   _(ObjectPolicy<1>)                                                          \
   _(ObjectPolicy<3>)                                                          \
-  _(StringPolicy<0>)
+  _(StringPolicy<0>)                                                          \
+  _(SymbolPolicy<0>)
 
 namespace js {
 namespace jit {

@@ -6050,6 +6050,20 @@ class LGuardSpecificAtom : public LInstructionHelper<0, 1, 0> {
   const MGuardSpecificAtom* mir() const { return mir_->toGuardSpecificAtom(); }
 };
 
+class LGuardSpecificSymbol : public LInstructionHelper<0, 1, 0> {
+ public:
+  LIR_HEADER(GuardSpecificSymbol)
+
+  explicit LGuardSpecificSymbol(const LAllocation& symbol)
+      : LInstructionHelper(classOpcode) {
+    setOperand(0, symbol);
+  }
+  const LAllocation* symbol() { return getOperand(0); }
+  const MGuardSpecificSymbol* mir() const {
+    return mir_->toGuardSpecificSymbol();
+  }
+};
+
 class LGuardShape : public LInstructionHelper<1, 1, 1> {
  public:
   LIR_HEADER(GuardShape)

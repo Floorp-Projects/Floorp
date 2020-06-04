@@ -123,6 +123,9 @@ enum BailoutKind {
   // JSString was not equal to the expected JSAtom
   Bailout_SpecificAtomGuard,
 
+  // Symbol was not equal the expected JS::Symbol.
+  Bailout_SpecificSymbolGuard,
+
   // Unbox expects a given type, bails out if it doesn't get it.
   Bailout_NonInt32Input,
   Bailout_NonNumericInput,  // unboxing a double works with int32 too
@@ -222,6 +225,8 @@ inline const char* BailoutKindString(BailoutKind kind) {
       return "Bailout_ObjectIdentityOrTypeGuard";
     case Bailout_SpecificAtomGuard:
       return "Bailout_SpecifcAtomGuard";
+    case Bailout_SpecificSymbolGuard:
+      return "Bailout_SpecifcSymbolGuard";
     case Bailout_NonInt32Input:
       return "Bailout_NonInt32Input";
     case Bailout_NonNumericInput:
