@@ -175,6 +175,7 @@ class GeckoEngineTest {
         whenever(runtimeSettings.fontInflationEnabled).thenReturn(true)
         whenever(runtimeSettings.fontSizeFactor).thenReturn(1.0F)
         whenever(runtimeSettings.forceUserScalableEnabled).thenReturn(false)
+        whenever(runtimeSettings.loginAutofillEnabled).thenReturn(false)
         whenever(runtimeSettings.contentBlocking).thenReturn(contentBlockingSettings)
         whenever(runtimeSettings.preferredColorScheme).thenReturn(GeckoRuntimeSettings.COLOR_SCHEME_SYSTEM)
         whenever(runtime.settings).thenReturn(runtimeSettings)
@@ -183,6 +184,10 @@ class GeckoEngineTest {
         assertTrue(engine.settings.javascriptEnabled)
         engine.settings.javascriptEnabled = false
         verify(runtimeSettings).javaScriptEnabled = false
+
+        assertFalse(engine.settings.loginAutofillEnabled)
+        engine.settings.loginAutofillEnabled = true
+        verify(runtimeSettings).loginAutofillEnabled = true
 
         assertTrue(engine.settings.webFontsEnabled)
         engine.settings.webFontsEnabled = false
