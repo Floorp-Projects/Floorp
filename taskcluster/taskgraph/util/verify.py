@@ -14,9 +14,16 @@ import six
 
 from .. import GECKO
 from .treeherder import join_symbol
+from taskgraph.util.attributes import match_run_on_projects
 
 logger = logging.getLogger(__name__)
 doc_base_path = os.path.join(GECKO, 'taskcluster', 'docs')
+
+
+@attr.s(frozen=True)
+class Verification(object):
+    verify = attr.ib()
+    run_on_projects = attr.ib()
 
 
 @attr.s(frozen=True)
@@ -30,16 +37,22 @@ class VerificationSequence(object):
     """
     _verifications = attr.ib(factory=dict)
 
-    def __call__(self, graph_name, graph, graph_config):
+    def __call__(self, graph_name, graph, graph_config, parameters):
         for verification in self._verifications.get(graph_name, []):
+            if not match_run_on_projects(parameters["project"], verification.run_on_projects):
+                continue
             scratch_pad = {}
-            graph.for_each_task(verification, scratch_pad=scratch_pad, graph_config=graph_config)
-            verification(None, graph, scratch_pad=scratch_pad, graph_config=graph_config)
+            graph.for_each_task(
+                verification.verify, scratch_pad=scratch_pad, graph_config=graph_config
+            )
+            verification.verify(None, graph, scratch_pad=scratch_pad, graph_config=graph_config)
         return graph_name, graph
 
-    def add(self, graph_name):
+    def add(self, graph_name, run_on_projects={"all"}):
         def wrap(func):
-            self._verifications.setdefault(graph_name, []).append(func)
+            self._verifications.setdefault(graph_name, []).append(
+                Verification(func, run_on_projects)
+            )
             return func
         return wrap
 
