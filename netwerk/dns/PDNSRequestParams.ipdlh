@@ -22,6 +22,7 @@ struct DNSRecord
   NetAddr[] addrs;
   double trrFetchDuration;
   double trrFetchDurationNetworkOnly;
+  bool isTRR;
 };
 
 union DNSRequestResponse
