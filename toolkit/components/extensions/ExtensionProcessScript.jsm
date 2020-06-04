@@ -215,7 +215,7 @@ ExtensionManager = {
 
         isPrivileged: extension.isPrivileged,
         permissions: extension.permissions,
-        allowedOrigins: extension.whiteListedHosts,
+        allowedOrigins: extension.allowedOrigins,
         webAccessibleResources: extension.webAccessibleResources,
 
         extensionPageCSP: extension.extensionPageCSP,

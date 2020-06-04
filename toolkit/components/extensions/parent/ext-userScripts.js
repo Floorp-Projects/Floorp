@@ -102,9 +102,7 @@ this.userScripts = class extends ExtensionAPI {
       userScripts: {
         register: async details => {
           for (let origin of details.matches) {
-            if (
-              !extension.whiteListedHosts.subsumes(new MatchPattern(origin))
-            ) {
+            if (!extension.allowedOrigins.subsumes(new MatchPattern(origin))) {
               throw new ExtensionError(
                 `Permission denied to register a user script for ${origin}`
               );

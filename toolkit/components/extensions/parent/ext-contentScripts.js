@@ -147,9 +147,7 @@ this.contentScripts = class extends ExtensionAPI {
       contentScripts: {
         async register(details) {
           for (let origin of details.matches) {
-            if (
-              !extension.whiteListedHosts.subsumes(new MatchPattern(origin))
-            ) {
+            if (!extension.allowedOrigins.subsumes(new MatchPattern(origin))) {
               throw new ExtensionError(
                 `Permission denied to register a content script for ${origin}`
               );
