@@ -296,7 +296,7 @@ class GeckoInstance(object):
             instance_class = apps[app]
         except (IOError, KeyError):
             exc, val, tb = sys.exc_info()
-            msg = 'Application "{0}" unknown (should be one of {1})'.format(app, apps.keys())
+            msg = 'Application "{0}" unknown (should be one of {1})'.format(app, list(apps.keys()))
             reraise(NotImplementedError, NotImplementedError(msg), tb)
 
         return instance_class(*args, **kwargs)

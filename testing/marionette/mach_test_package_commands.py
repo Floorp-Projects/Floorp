@@ -34,7 +34,7 @@ def run_marionette(context, **kwargs):
                                    'marionette_harness', 'tests', 'unit-tests.ini')]
 
     normalize = partial(context.normalize_test_path, test_root)
-    args.tests = map(normalize, args.tests)
+    args.tests = list(map(normalize, args.tests))
 
     commandline.add_logging_group(parser)
     parser.verify_usage(args)

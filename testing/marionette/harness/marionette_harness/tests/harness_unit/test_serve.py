@@ -6,6 +6,8 @@ from __future__ import absolute_import
 
 import types
 
+import six
+
 import mozunit
 import pytest
 
@@ -37,7 +39,7 @@ def test_start():
     assert "http" in serve.servers
     assert "https" in serve.servers
     for url in iter_url(serve.servers):
-        assert isinstance(url, types.StringTypes)
+        assert isinstance(url, six.string_types)
 
 
 def test_start_with_custom_root(tmpdir_factory):
@@ -56,7 +58,7 @@ def test_iter_proc():
 def test_iter_url():
     serve.start()
     for url in iter_url(serve.servers):
-        assert isinstance(url, types.StringTypes)
+        assert isinstance(url, six.string_types)
 
 
 def test_where_is():
