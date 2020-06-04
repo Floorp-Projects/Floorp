@@ -25,12 +25,29 @@
 
 namespace mozilla {
 
+namespace {
+
+nsresult GetBaseDomain(nsIURI* aURI, nsACString& aBaseDomain) {
+  nsCOMPtr<nsIEffectiveTLDService> tldService =
+      do_GetService(NS_EFFECTIVETLDSERVICE_CONTRACTID);
+
+  if (!tldService) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return tldService->GetBaseDomain(aURI, 0, aBaseDomain);
+}
+
 // check if there's any interacting visit within the given seconds
-static bool HasEligibleVisit(
-    const nsACString& aBaseDomain,
+bool HasEligibleVisit(
+    nsIURI* aURI,
     int64_t aSinceInSec = StaticPrefs::
         privacy_restrict3rdpartystorage_heuristic_recently_visited_time()) {
   nsresult rv;
+
+  nsAutoCString baseDomain;
+  rv = GetBaseDomain(aURI, baseDomain);
+  NS_ENSURE_SUCCESS(rv, false);
 
   nsCOMPtr<nsINavHistoryService> histSrv =
       do_GetService(NS_NAVHISTORYSERVICE_CONTRACTID);
@@ -43,7 +60,7 @@ static bool HasEligibleVisit(
     return false;
   }
 
-  rv = histQuery->SetDomain(aBaseDomain);
+  rv = histQuery->SetDomain(baseDomain);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return false;
   }
@@ -114,20 +131,9 @@ static bool HasEligibleVisit(
   return childCount > 0;
 }
 
-static nsresult GetBaseDomain(nsIURI* aURI, nsACString& aBaseDomain) {
-  nsCOMPtr<nsIEffectiveTLDService> tldService =
-      do_GetService(NS_EFFECTIVETLDSERVICE_CONTRACTID);
-
-  if (!tldService) {
-    return NS_ERROR_FAILURE;
-  }
-
-  return tldService->GetBaseDomain(aURI, 0, aBaseDomain);
-}
-
-static void AddConsoleReport(nsIChannel* aNewChannel, nsIURI* aNewURI,
-                             const nsACString& aOldOrigin,
-                             const nsACString& aNewOrigin) {
+void AddConsoleReport(nsIChannel* aNewChannel, nsIURI* aNewURI,
+                      const nsACString& aOldOrigin,
+                      const nsACString& aNewOrigin) {
   nsCOMPtr<net::HttpBaseChannel> httpChannel = do_QueryInterface(aNewChannel);
   if (!httpChannel) {
     return;
@@ -147,6 +153,8 @@ static void AddConsoleReport(nsIChannel* aNewChannel, nsIURI* aNewURI,
       nsContentUtils::eNECKO_PROPERTIES, uri, 0, 0,
       NS_LITERAL_CSTRING("CookieAllowedForFpiByHeuristic"), params);
 }
+
+}  // namespace
 
 void DynamicFpiRedirectHeuristic(nsIChannel* aOldChannel, nsIURI* aOldURI,
                                  nsIChannel* aNewChannel, nsIURI* aNewURI) {
@@ -260,10 +268,7 @@ void DynamicFpiRedirectHeuristic(nsIChannel* aOldChannel, nsIURI* aOldURI,
     return;
   }
 
-  nsAutoCString baseDomainOld, baseDomainNew;
-  GetBaseDomain(aOldURI, baseDomainOld);
-  GetBaseDomain(aNewURI, baseDomainNew);
-  if (!HasEligibleVisit(baseDomainOld) || !HasEligibleVisit(baseDomainNew)) {
+  if (!HasEligibleVisit(aOldURI) || !HasEligibleVisit(aNewURI)) {
     LOG(("No previous visit record, bailing out early."));
     return;
   }
