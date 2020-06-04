@@ -62,6 +62,10 @@
                 "description": "Indicates whether browser policy blocks DoH",
                 "type": "string"
               },
+              "steeredProvider": {
+                "description": "Indicates whether we steered to a provider-endpoint. Value is the name of the provider",
+                "type": "string"
+              },
               "evaluateReason": {
                 "description": "Reason why we are running heuristics, e.g. startup",
                 "type": "string"
