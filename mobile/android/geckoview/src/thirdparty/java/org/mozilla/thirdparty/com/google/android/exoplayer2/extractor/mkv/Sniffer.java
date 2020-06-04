@@ -40,7 +40,7 @@ import java.io.IOException;
   }
 
   /**
-   * @see org.mozilla.thirdparty.com.google.android.exoplayer2.extractor.Extractor#sniff(ExtractorInput)
+   * @see com.google.android.exoplayer2.extractor.Extractor#sniff(ExtractorInput)
    */
   public boolean sniff(ExtractorInput input) throws IOException, InterruptedException {
     long inputLength = input.getLength();
@@ -78,8 +78,9 @@ import java.io.IOException;
         return false;
       }
       if (size != 0) {
-        input.advancePeekPosition((int) size);
-        peekLength += size;
+        int sizeInt = (int) size;
+        input.advancePeekPosition(sizeInt);
+        peekLength += sizeInt;
       }
     }
     return peekLength == headerStart + headerSize;

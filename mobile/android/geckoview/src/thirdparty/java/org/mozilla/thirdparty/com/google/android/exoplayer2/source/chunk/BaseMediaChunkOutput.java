@@ -15,36 +15,37 @@
  */
 package org.mozilla.thirdparty.com.google.android.exoplayer2.source.chunk;
 
-import android.util.Log;
-import org.mozilla.thirdparty.com.google.android.exoplayer2.extractor.DefaultTrackOutput;
 import org.mozilla.thirdparty.com.google.android.exoplayer2.extractor.DummyTrackOutput;
 import org.mozilla.thirdparty.com.google.android.exoplayer2.extractor.TrackOutput;
+import org.mozilla.thirdparty.com.google.android.exoplayer2.source.SampleQueue;
 import org.mozilla.thirdparty.com.google.android.exoplayer2.source.chunk.ChunkExtractorWrapper.TrackOutputProvider;
+import org.mozilla.thirdparty.com.google.android.exoplayer2.util.Log;
 
 /**
- * An output for {@link BaseMediaChunk}s.
+ * A {@link TrackOutputProvider} that provides {@link TrackOutput TrackOutputs} based on a
+ * predefined mapping from track type to output.
  */
-/* package */ final class BaseMediaChunkOutput implements TrackOutputProvider {
+public final class BaseMediaChunkOutput implements TrackOutputProvider {
 
   private static final String TAG = "BaseMediaChunkOutput";
 
   private final int[] trackTypes;
-  private final DefaultTrackOutput[] trackOutputs;
+  private final SampleQueue[] sampleQueues;
 
   /**
    * @param trackTypes The track types of the individual track outputs.
-   * @param trackOutputs The individual track outputs.
+   * @param sampleQueues The individual sample queues.
    */
-  public BaseMediaChunkOutput(int[] trackTypes, DefaultTrackOutput[] trackOutputs) {
+  public BaseMediaChunkOutput(int[] trackTypes, SampleQueue[] sampleQueues) {
     this.trackTypes = trackTypes;
-    this.trackOutputs = trackOutputs;
+    this.sampleQueues = sampleQueues;
   }
 
   @Override
   public TrackOutput track(int id, int type) {
     for (int i = 0; i < trackTypes.length; i++) {
       if (type == trackTypes[i]) {
-        return trackOutputs[i];
+        return sampleQueues[i];
       }
     }
     Log.e(TAG, "Unmatched track of type: " + type);
@@ -52,13 +53,13 @@ import org.mozilla.thirdparty.com.google.android.exoplayer2.source.chunk.ChunkEx
   }
 
   /**
-   * Returns the current absolute write indices of the individual track outputs.
+   * Returns the current absolute write indices of the individual sample queues.
    */
   public int[] getWriteIndices() {
-    int[] writeIndices = new int[trackOutputs.length];
-    for (int i = 0; i < trackOutputs.length; i++) {
-      if (trackOutputs[i] != null) {
-        writeIndices[i] = trackOutputs[i].getWriteIndex();
+    int[] writeIndices = new int[sampleQueues.length];
+    for (int i = 0; i < sampleQueues.length; i++) {
+      if (sampleQueues[i] != null) {
+        writeIndices[i] = sampleQueues[i].getWriteIndex();
       }
     }
     return writeIndices;
@@ -66,12 +67,12 @@ import org.mozilla.thirdparty.com.google.android.exoplayer2.source.chunk.ChunkEx
 
   /**
    * Sets an offset that will be added to the timestamps (and sub-sample timestamps) of samples
-   * subsequently written to the track outputs.
+   * subsequently written to the sample queues.
    */
   public void setSampleOffsetUs(long sampleOffsetUs) {
-    for (DefaultTrackOutput trackOutput : trackOutputs) {
-      if (trackOutput != null) {
-        trackOutput.setSampleOffsetUs(sampleOffsetUs);
+    for (SampleQueue sampleQueue : sampleQueues) {
+      if (sampleQueue != null) {
+        sampleQueue.setSampleOffsetUs(sampleOffsetUs);
       }
     }
   }

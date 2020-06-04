@@ -26,9 +26,8 @@ import org.mozilla.thirdparty.com.google.android.exoplayer2.extractor.TrackOutpu
 import org.mozilla.thirdparty.com.google.android.exoplayer2.util.ParsableByteArray;
 import java.io.IOException;
 
-/**
- * StreamReader abstract class.
- */
+/** StreamReader abstract class. */
+@SuppressWarnings("UngroupedOverloads")
 /* package */ abstract class StreamReader {
 
   private static final int STATE_READ_HEADERS = 0;
@@ -41,7 +40,8 @@ import java.io.IOException;
     OggSeeker oggSeeker;
   }
 
-  private OggPacket oggPacket;
+  private final OggPacket oggPacket;
+
   private TrackOutput trackOutput;
   private ExtractorOutput extractorOutput;
   private OggSeeker oggSeeker;
@@ -55,11 +55,13 @@ import java.io.IOException;
   private boolean seekMapSet;
   private boolean formatSet;
 
+  public StreamReader() {
+    oggPacket = new OggPacket();
+  }
+
   void init(ExtractorOutput output, TrackOutput trackOutput) {
     this.extractorOutput = output;
     this.trackOutput = trackOutput;
-    this.oggPacket = new OggPacket();
-
     reset(true);
   }
 
@@ -89,7 +91,8 @@ import java.io.IOException;
       reset(!seekMapSet);
     } else {
       if (state != STATE_READ_HEADERS) {
-        targetGranule = oggSeeker.startSeek(timeUs);
+        targetGranule = convertTimeToGranule(timeUs);
+        oggSeeker.startSeek(targetGranule);
         state = STATE_READ_PAYLOAD;
       }
     }
@@ -103,15 +106,12 @@ import java.io.IOException;
     switch (state) {
       case STATE_READ_HEADERS:
         return readHeaders(input);
-
       case STATE_SKIP_HEADERS:
         input.skipFully((int) payloadStartPosition);
         state = STATE_READ_PAYLOAD;
         return Extractor.RESULT_CONTINUE;
-
       case STATE_READ_PAYLOAD:
         return readPayload(input, seekPosition);
-
       default:
         // Never happens.
         throw new IllegalStateException();
@@ -145,13 +145,21 @@ import java.io.IOException;
       oggSeeker = new UnseekableOggSeeker();
     } else {
       OggPageHeader firstPayloadPageHeader = oggPacket.getPageHeader();
-      oggSeeker = new DefaultOggSeeker(payloadStartPosition, input.getLength(), this,
-          firstPayloadPageHeader.headerSize + firstPayloadPageHeader.bodySize,
-          firstPayloadPageHeader.granulePosition);
+      boolean isLastPage = (firstPayloadPageHeader.type & 0x04) != 0; // Type 4 is end of stream.
+      oggSeeker =
+          new DefaultOggSeeker(
+              this,
+              payloadStartPosition,
+              input.getLength(),
+              firstPayloadPageHeader.headerSize + firstPayloadPageHeader.bodySize,
+              firstPayloadPageHeader.granulePosition,
+              isLastPage);
     }
 
     setupData = null;
     state = STATE_READ_PAYLOAD;
+    // First payload packet. Trim the payload array of the ogg packet after headers have been read.
+    oggPacket.trimPayload();
     return Extractor.RESULT_CONTINUE;
   }
 
@@ -241,13 +249,13 @@ import java.io.IOException;
   private static final class UnseekableOggSeeker implements OggSeeker {
 
     @Override
-    public long read(ExtractorInput input) throws IOException, InterruptedException {
+    public long read(ExtractorInput input) {
       return -1;
     }
 
     @Override
-    public long startSeek(long timeUs) {
-      return 0;
+    public void startSeek(long targetGranule) {
+      // Do nothing.
     }
 
     @Override
