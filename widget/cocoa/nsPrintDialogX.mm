@@ -260,9 +260,9 @@ static const char sHeaderFooterTags[][4] = {"", "&T", "&U", "&D", "&P", "&PT"};
 }
 
 - (void)exportSettings {
-  mSettings->SetPrintRange([mPrintSelectionOnlyCheckbox state] == NSOnState
-                               ? (int16_t)nsIPrintSettings::kRangeSelection
-                               : (int16_t)nsIPrintSettings::kRangeAllPages);
+  if ([mPrintSelectionOnlyCheckbox state] == NSOnState) {
+    mSettings->SetPrintRange(nsIPrintSettings::kRangeSelection);
+  }
   mSettings->SetShrinkToFit([mShrinkToFitCheckbox state] == NSOnState);
   mSettings->SetPrintBGColors([mPrintBGColorsCheckbox state] == NSOnState);
   mSettings->SetPrintBGImages([mPrintBGImagesCheckbox state] == NSOnState);
