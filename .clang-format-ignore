@@ -7,9 +7,8 @@ config/msvc-stl-wrapper.template.h
 js/src/builtin/intl/LanguageTagGenerated.cpp
 js/src/builtin/intl/TimeZoneDataGenerated.h
 
-# Don't want to reformat irregexp. bug 1510128
-js/src/irregexp/.*
-js/src/new-regexp/.*
+# Don't want to reformat irregexp (third-party code)
+js/src/irregexp/imported/.*
 
 # Don't want to reformat zydis (third-party library subject to occasional updates).
 js/src/zydis/.*

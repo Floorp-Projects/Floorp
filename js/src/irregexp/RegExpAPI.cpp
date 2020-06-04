@@ -138,9 +138,7 @@ Isolate* CreateIsolate(JSContext* cx) {
   return isolate.release();
 }
 
-void DestroyIsolate(Isolate* isolate) {
-  js_delete(isolate);
-}
+void DestroyIsolate(Isolate* isolate) { js_delete(isolate); }
 
 static size_t ComputeColumn(const Latin1Char* begin, const Latin1Char* end) {
   return PointerRangeSize(begin, end);
@@ -548,7 +546,7 @@ RegExpRunStatus ExecuteRaw(jit::JitCode* code, const CharT* chars,
   auto function = reinterpret_cast<RegExpCodeSignature>(code->raw());
   {
     JS::AutoSuppressGCAnalysis nogc;
-    return (RegExpRunStatus) CALL_GENERATED_1(function, &data);
+    return (RegExpRunStatus)CALL_GENERATED_1(function, &data);
   }
 }
 
@@ -568,8 +566,8 @@ RegExpRunStatus Interpret(JSContext* cx, MutableHandleRegExpShared re,
 
   RegExpRunStatus status =
       (RegExpRunStatus)IrregexpInterpreter::MatchForCallFromRuntime(
-           cx->isolate, wrappedRegExp, wrappedInput, matches->pairsRaw(),
-           matches->pairCount() * 2, startIndex);
+          cx->isolate, wrappedRegExp, wrappedInput, matches->pairsRaw(),
+          uint32_t(matches->pairCount() * 2), uint32_t(startIndex));
 
   MOZ_ASSERT(status == RegExpRunStatus_Error ||
              status == RegExpRunStatus_Success ||
@@ -603,8 +601,7 @@ RegExpRunStatus Execute(JSContext* cx, MutableHandleRegExpShared re,
 
 RegExpRunStatus ExecuteForFuzzing(JSContext* cx, HandleAtom pattern,
                                   HandleLinearString input,
-                                  JS::RegExpFlags flags,
-                                  size_t startIndex,
+                                  JS::RegExpFlags flags, size_t startIndex,
                                   VectorMatchPairs* matches,
                                   RegExpShared::CodeKind codeKind) {
   RootedRegExpShared re(cx, cx->zone()->regExps().get(cx, pattern, flags));
