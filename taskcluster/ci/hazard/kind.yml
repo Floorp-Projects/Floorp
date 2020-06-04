@@ -50,9 +50,6 @@ jobs:
                 - linux64-rust
                 - linux64-cbindgen
                 - linux64-node
-        optimization:
-            push-interval-25:
-                - linux
 
     linux64-haz/debug:
         description: "Browser Hazard Analysis Linux"
@@ -78,6 +75,3 @@ jobs:
                 - linux64-node
                 - linux64-lucetc
                 - wasi-sysroot
-        optimization:
-            push-interval-25:
-                - linux
