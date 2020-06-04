@@ -49,6 +49,8 @@
     <attr name="onboardingDeselected" format="reference"/>
     <attr name="addOnPrivateBrowsingExteriorCircleBackground" format="reference"/>
     <attr name="addOnPrivateBrowsingInteriorIconBackground" format="reference"/>
+    <attr name="readerModeStartGradient" format="reference"/>
+    <attr name="readerModeEndGradient" format="reference"/>
 
     <!-- Tab tray -->
     <attr name="tabTrayItemBackground" format="reference" />

@@ -6,7 +6,6 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.spyk
-import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.ReaderState
@@ -69,15 +68,10 @@ class DefaultToolbarMenuTest {
         every { appLinkRedirect.hasExternalApp() } returns true
         every { getAppLinkRedirect(any()) } returns appLinkRedirect
 
-        val session: Session = mockk(relaxed = true)
-        every { session.id } returns "readerable-tab"
-        every { sessionManager.selectedSession } returns session
-
         val list = defaultToolbarMenu.getLowPrioHighlightItems()
 
         assertEquals(ToolbarMenu.Item.InstallToHomeScreen, list[0])
-        assertEquals(ToolbarMenu.Item.ReaderMode(false), list[1])
-        assertEquals(ToolbarMenu.Item.OpenInApp, list[2])
+        assertEquals(ToolbarMenu.Item.OpenInApp, list[1])
     }
 
     @Test
@@ -94,39 +88,15 @@ class DefaultToolbarMenuTest {
         every { appLinkRedirect.hasExternalApp() } returns true
         every { getAppLinkRedirect(any()) } returns appLinkRedirect
 
-        val session: Session = mockk(relaxed = true)
-        every { session.id } returns "readerable-tab"
-        every { sessionManager.selectedSession } returns session
-
         val list = defaultToolbarMenu.getLowPrioHighlightItems()
 
-        assertEquals(ToolbarMenu.Item.ReaderMode(false), list[0])
-        assertEquals(ToolbarMenu.Item.OpenInApp, list[1])
-    }
-
-    @Test
-    fun `get all low prio highlight items without ReaderMode`() {
-        every { context.components.useCases.webAppUseCases.isPinningSupported() } returns true
-        every { context.components.useCases.webAppUseCases.isInstallable() } returns true
-
-        val getAppLinkRedirect: AppLinksUseCases.GetAppLinkRedirect = mockk(relaxed = true)
-        every { context.components.useCases.appLinksUseCases.appLinkRedirect } returns getAppLinkRedirect
-        every { getAppLinkRedirect(any()).hasExternalApp() } returns true
-
-        val list = defaultToolbarMenu.getLowPrioHighlightItems()
-
-        assertEquals(ToolbarMenu.Item.InstallToHomeScreen, list[0])
-        assertEquals(ToolbarMenu.Item.OpenInApp, list[1])
+        assertEquals(ToolbarMenu.Item.OpenInApp, list[0])
     }
 
     @Test
     fun `get all low prio highlight items without OpenInApp`() {
         every { context.components.useCases.webAppUseCases.isPinningSupported() } returns true
         every { context.components.useCases.webAppUseCases.isInstallable() } returns true
-
-        val session: Session = mockk(relaxed = true)
-        every { session.id } returns "readerable-tab"
-        every { sessionManager.selectedSession } returns session
 
         val getAppLinkRedirect: AppLinksUseCases.GetAppLinkRedirect = mockk(relaxed = true)
         every { context.components.useCases.appLinksUseCases.appLinkRedirect } returns getAppLinkRedirect
@@ -135,6 +105,5 @@ class DefaultToolbarMenuTest {
         val list = defaultToolbarMenu.getLowPrioHighlightItems()
 
         assertEquals(ToolbarMenu.Item.InstallToHomeScreen, list[0])
-        assertEquals(ToolbarMenu.Item.ReaderMode(false), list[1])
     }
 }

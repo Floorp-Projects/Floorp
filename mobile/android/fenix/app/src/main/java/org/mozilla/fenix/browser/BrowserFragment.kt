@@ -10,6 +10,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.coordinatorlayout.widget.CoordinatorLayout
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.Observer
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.snackbar.Snackbar
@@ -17,6 +18,8 @@ import kotlinx.android.synthetic.main.fragment_browser.*
 import kotlinx.android.synthetic.main.fragment_browser.view.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.browser.session.Session
+import mozilla.components.browser.state.selector.findTab
+import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.feature.app.links.AppLinksUseCases
 import mozilla.components.feature.contextmenu.ContextMenuCandidate
 import mozilla.components.feature.readerview.ReaderViewFeature
@@ -52,6 +55,8 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
     private val windowFeature = ViewBoundFeatureWrapper<WindowFeature>()
     private val searchFeature = ViewBoundFeatureWrapper<SearchFeature>()
 
+    private var readerModeAvailable = false
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -68,17 +73,39 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
         val components = context.components
 
         return super.initializeUI(view)?.also {
+            val readerModeAction =
+                BrowserToolbar.ToggleButton(
+                    image = ContextCompat.getDrawable(requireContext(), R.drawable.ic_readermode)!!,
+                    imageSelected = ContextCompat.getDrawable(requireContext(), R.drawable.ic_readermode_selected)!!,
+                    contentDescription = requireContext().getString(R.string.browser_menu_read),
+                    contentDescriptionSelected = requireContext().getString(R.string.browser_menu_read_close),
+                    visible = {
+                        readerModeAvailable
+                    },
+                    selected = getSessionById()?.let {
+                            activity?.components?.core?.store?.state?.findTab(it.id)?.readerState?.active
+                        } ?: false,
+                    listener = browserInteractor::onReaderModePressed
+                )
+
+            browserToolbarView.view.addPageAction(readerModeAction)
+
             readerViewFeature.set(
                 feature = ReaderViewFeature(
                     context,
                     components.core.engine,
                     components.core.store,
                     view.readerViewControlsBar
-                ) { available, _ ->
+                ) { available, active ->
                     if (available) {
                         components.analytics.metrics.track(Event.ReaderModeAvailable)
                     }
+
+                    readerModeAvailable = available
+                    readerModeAction.setSelected(active)
+
                     runIfFragmentIsAttached {
+                        browserToolbarView.view.invalidateActions()
                         browserToolbarView.toolbarIntegration.invalidateMenu()
                     }
                 },

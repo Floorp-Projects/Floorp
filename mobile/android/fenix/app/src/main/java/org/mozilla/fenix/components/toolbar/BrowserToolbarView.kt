@@ -52,6 +52,7 @@ interface BrowserToolbarViewInteractor {
     fun onTabCounterClicked()
     fun onBrowserMenuDismissed(lowPrioHighlightItems: List<ToolbarMenu.Item>)
     fun onScrolled(offset: Int)
+    fun onReaderModePressed(enabled: Boolean)
 }
 @SuppressWarnings("LargeClass")
 class BrowserToolbarView(

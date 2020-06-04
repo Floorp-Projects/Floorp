@@ -53,9 +53,10 @@ interface BrowserToolbarController {
     fun handleToolbarClick()
     fun handleTabCounterClick()
     fun handleBrowserMenuDismissed(lowPrioHighlightItems: List<ToolbarMenu.Item>)
+    fun handleReaderModePressed(enabled: Boolean)
 }
 
-@Suppress("LargeClass")
+@Suppress("LargeClass", "TooManyFunctions")
 class DefaultBrowserToolbarController(
     private val activity: Activity,
     private val navController: NavController,
@@ -122,6 +123,14 @@ class DefaultBrowserToolbarController(
 
     override fun handleTabCounterClick() {
         onTabCounterClicked.invoke()
+    }
+
+    override fun handleReaderModePressed(enabled: Boolean) {
+        if (enabled) {
+            readerModeController.showReaderView()
+        } else {
+            readerModeController.hideReaderView()
+        }
     }
 
     override fun handleBrowserMenuDismissed(lowPrioHighlightItems: List<ToolbarMenu.Item>) {

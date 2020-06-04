@@ -15,7 +15,6 @@ import mozilla.components.browser.menu.BrowserMenuHighlight
 import mozilla.components.browser.menu.WebExtensionBrowserMenuBuilder
 import mozilla.components.browser.menu.item.BrowserMenuDivider
 import mozilla.components.browser.menu.item.BrowserMenuHighlightableItem
-import mozilla.components.browser.menu.item.BrowserMenuHighlightableSwitch
 import mozilla.components.browser.menu.item.BrowserMenuImageSwitch
 import mozilla.components.browser.menu.item.BrowserMenuImageText
 import mozilla.components.browser.menu.item.BrowserMenuItemToolbar
@@ -143,9 +142,6 @@ class DefaultToolbarMenu(
         if (canInstall() && installToHomescreen.isHighlighted()) {
             lowPrioHighlightItems.add(ToolbarMenu.Item.InstallToHomeScreen)
         }
-        if (shouldShowReaderMode() && readerMode.isHighlighted()) {
-            lowPrioHighlightItems.add(ToolbarMenu.Item.ReaderMode(false))
-        }
         if (shouldShowOpenInApp() && openInApp.isHighlighted()) {
             lowPrioHighlightItems.add(ToolbarMenu.Item.OpenInApp)
         }
@@ -160,10 +156,6 @@ class DefaultToolbarMenu(
     private fun canInstall(): Boolean =
         session != null && context.components.useCases.webAppUseCases.isPinningSupported() &&
                 context.components.useCases.webAppUseCases.isInstallable()
-
-    private fun shouldShowReaderMode(): Boolean = session?.let {
-        store.state.findTab(it.id)?.readerState?.readerable
-    } ?: false
 
     private fun shouldShowOpenInApp(): Boolean = session?.let { session ->
         val appLink = context.components.useCases.appLinksUseCases.appLinkRedirect
@@ -196,7 +188,6 @@ class DefaultToolbarMenu(
             if (shouldShowSaveToCollection) saveToCollection else null,
             desktopMode,
             openInApp.apply { visible = ::shouldShowOpenInApp },
-            readerMode.apply { visible = ::shouldShowReaderMode },
             readerAppearance.apply { visible = ::shouldShowReaderAppearance },
             BrowserMenuDivider(),
             menuToolbar
@@ -299,23 +290,6 @@ class DefaultToolbarMenu(
         iconTintColorResource = primaryTextColor()
     ) {
         onItemTapped.invoke(ToolbarMenu.Item.Quit)
-    }
-
-    private val readerMode = BrowserMenuHighlightableSwitch(
-        label = context.getString(R.string.browser_menu_read),
-        startImageResource = R.drawable.ic_readermode,
-        initialState = {
-            session?.let {
-                store.state.findTab(it.id)?.readerState?.active
-            } ?: false
-        },
-        highlight = BrowserMenuHighlight.LowPriority(
-            label = context.getString(R.string.browser_menu_read),
-            notificationTint = getColor(context, R.color.whats_new_notification_color)
-        ),
-        isHighlighted = { !context.settings().readerModeOpened }
-    ) { checked ->
-        onItemTapped.invoke(ToolbarMenu.Item.ReaderMode(checked))
     }
 
     private val readerAppearance = BrowserMenuImageText(

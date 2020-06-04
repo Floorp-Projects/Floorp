@@ -35,4 +35,8 @@ open class BrowserInteractor(
     override fun onScrolled(offset: Int) {
         browserToolbarController.handleScroll(offset)
     }
+
+    override fun onReaderModePressed(enabled: Boolean) {
+        browserToolbarController.handleReaderModePressed(enabled)
+    }
 }

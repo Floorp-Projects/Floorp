@@ -45,6 +45,8 @@
     <color name="add_on_private_browsing_exterior_circle_background_normal_theme">@color/add_on_private_browsing_exterior_circle_background_dark_theme</color>
     <color name="add_on_private_browsing_interior_icon_background_normal_theme">@color/add_on_private_browsing_interior_icon_background_dark_theme</color>
     <color name="prompt_login_edit_text_cursor_color_normal_theme">@color/prompt_login_edit_text_cursor_color_dark_theme</color>
+    <color name="readermode_start_gradient_normal_theme">#C689FF</color>
+    <color name="readermode_end_gradient_normal_theme">#00B3F4</color>
 
     <!-- Tab tray -->
     <color name="tab_tray_item_text_normal_theme">@color/tab_tray_item_text_dark_theme</color>
