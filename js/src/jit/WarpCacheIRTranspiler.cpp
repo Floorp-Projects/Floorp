@@ -93,6 +93,9 @@ class MOZ_RAII WarpCacheIRTranspiler : public WarpBuilderShared {
   JSObject* objectStubField(uint32_t offset) {
     return reinterpret_cast<JSObject*>(readStubWord(offset));
   }
+  const void* rawPointerField(uint32_t offset) {
+    return reinterpret_cast<const void*>(readStubWord(offset));
+  }
   int32_t int32StubField(uint32_t offset) {
     return static_cast<int32_t>(readStubWord(offset));
   }
@@ -1040,6 +1043,21 @@ bool WarpCacheIRTranspiler::emitCompareStringResult(JSOp op,
                                                     StringOperandId lhsId,
                                                     StringOperandId rhsId) {
   return emitCompareResult(op, lhsId, rhsId, MCompare::Compare_String);
+}
+
+bool WarpCacheIRTranspiler::emitMathRandomResult(uint32_t rngOffset) {
+#ifdef DEBUG
+  // CodeGenerator uses CompileRealm::addressOfRandomNumberGenerator. Assert it
+  // matches the RNG pointer stored in the stub field.
+  const void* rng = rawPointerField(rngOffset);
+  MOZ_ASSERT(rng == mirGen().realm->addressOfRandomNumberGenerator());
+#endif
+
+  auto* ins = MRandom::New(alloc());
+  add(ins);
+
+  pushResult(ins);
+  return true;
 }
 
 bool WarpCacheIRTranspiler::emitMathAbsInt32Result(Int32OperandId inputId) {

@@ -719,7 +719,7 @@
 # instruction loads a pointer to the RNG from a stub field.
 - name: MathRandomResult
   shared: false
-  transpile: false
+  transpile: true
   args:
     rng: RawPointerField
 
