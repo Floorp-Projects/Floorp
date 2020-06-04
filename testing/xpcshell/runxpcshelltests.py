@@ -1077,6 +1077,11 @@ class XPCShellTests(object):
 
         self.env["MOZ_DISABLE_SOCKET_PROCESS_SANDBOX"] = "1"
 
+        if self.mozInfo.get("socketprocess_networking"):
+            self.env["MOZ_FORCE_USE_SOCKET_PROCESS"] = "1"
+        else:
+            self.env["MOZ_DISABLE_SOCKET_PROCESS"] = "1"
+
         if self.enable_webrender:
             self.env["MOZ_WEBRENDER"] = "1"
             self.env["MOZ_ACCELERATED"] = "1"
