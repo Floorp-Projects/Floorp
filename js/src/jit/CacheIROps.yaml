@@ -693,7 +693,7 @@
 
 - name: StringFromCharCodeResult
   shared: false
-  transpile: false
+  transpile: true
   args:
     code: Int32Id
 
