@@ -65,6 +65,7 @@ source_suffix = ['.rst', '.md']
 master_doc = 'index'
 project = u'Firefox Source Docs'
 html_logo = u'../browser/branding/nightly/content/firefox-wordmark.svg'
+html_favicon = u'../browser/branding/nightly/firefox.ico'
 
 exclude_patterns = ['_build', '_staging', '_venv']
 pygments_style = 'sphinx'
