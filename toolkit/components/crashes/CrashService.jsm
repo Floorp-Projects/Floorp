@@ -31,7 +31,9 @@ async function maybeRunMinidumpAnalyzer(minidumpPath, allThreads) {
     return;
   }
 
-  await runMinidumpAnalyzer(minidumpPath, allThreads);
+  await runMinidumpAnalyzer(minidumpPath, allThreads).catch(e =>
+    Cu.reportError(e)
+  );
 }
 
 function getMinidumpAnalyzerPath() {
@@ -89,7 +91,7 @@ function runMinidumpAnalyzer(minidumpPath, allThreads) {
 
       gRunningProcesses.add(process);
     } catch (e) {
-      Cu.reportError(e);
+      reject(e);
     }
   });
 }
