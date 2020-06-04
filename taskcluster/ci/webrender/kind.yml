@@ -452,7 +452,7 @@ jobs:
                 MOZ_FETCHES_DIR: fetches
         dependencies:
             webrender-wrench-android-release: webrender-wrench-android-release
-            android-build: build-android-aarch64-shippable/opt
+            android-build: build-android-aarch64/opt
         fetches:
             webrender-wrench-android-release:
                 - 'wrench-release.apk'
