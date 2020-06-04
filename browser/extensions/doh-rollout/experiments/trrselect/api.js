@@ -8,6 +8,7 @@
 
 ChromeUtils.import("resource://gre/modules/Services.jsm", this);
 
+const kEnabledPref = "doh-rollout.trr-selection.enabled";
 const kCommitSelectionPref = "doh-rollout.trr-selection.commit-result";
 const kDryRunResultPref = "doh-rollout.trr-selection.dry-run-result";
 const kRolloutURIPref = "doh-rollout.uri";
@@ -71,6 +72,10 @@ this.trrselect = class trrselect extends ExtensionAPI {
           },
 
           async run() {
+            if (!Services.prefs.getBoolPref(kEnabledPref, false)) {
+              return;
+            }
+
             if (Services.prefs.prefHasUserValue(kRolloutURIPref)) {
               return;
             }

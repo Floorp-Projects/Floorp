@@ -1859,6 +1859,10 @@ pref("extensions.screenshots.upload-disabled", false);
 // the number is outside the signed 32-bit integer range.
 pref("doh-rollout.profileCreationThreshold", "1572476400000");
 
+// DoH Rollout: whether to enable automatic performance-based TRR-selection.
+// This pref is controlled by a Normandy rollout so we don't overload providers.
+pref("doh-rollout.trr-selection.enabled", false);
+
 // URL for Learn More link for browser error logging in preferences
 pref("browser.chrome.errorReporter.infoURL",
      "https://support.mozilla.org/1/firefox/%VERSION%/%OS%/%LOCALE%/nightly-error-collection");
