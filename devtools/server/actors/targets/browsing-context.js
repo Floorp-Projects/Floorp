@@ -399,6 +399,10 @@ const browsingContextTargetPrototype = {
     return null;
   },
 
+  get browsingContextID() {
+    return this.docShell && this.docShell.browsingContext.id;
+  },
+
   /**
    * Getter for the WebExtensions ContentScript globals related to the
    * browsing context's current DOM window.
@@ -505,7 +509,7 @@ const browsingContextTargetPrototype = {
 
     const response = {
       actor: this.actorID,
-      browsingContextID: this.docShell.browsingContext.id,
+      browsingContextID: this.browsingContextID,
       traits: {
         // FF64+ exposes a new trait to help identify BrowsingContextActor's inherited
         // actorss from the client side.
