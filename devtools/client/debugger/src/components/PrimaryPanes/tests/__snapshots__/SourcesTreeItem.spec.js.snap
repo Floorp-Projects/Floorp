@@ -2448,7 +2448,7 @@ Object {
 }
 `;
 
-exports[`SourceTreeItem renderItem should show source item with blackbox icon 1`] = `
+exports[`SourceTreeItem renderItem should show source item with ignore icon 1`] = `
 Object {
   "component": <div
     className="node"

@@ -147,8 +147,8 @@ class SourceFooter extends PureComponent<Props, State> {
     const blackboxed = selectedSource.isBlackBoxed;
 
     const tooltip = blackboxed
-      ? L10N.getStr("sourceFooter.unblackbox")
-      : L10N.getStr("sourceFooter.blackbox");
+      ? L10N.getStr("sourceFooter.unignore")
+      : L10N.getStr("sourceFooter.ignore");
 
     const type = "black-box";
 

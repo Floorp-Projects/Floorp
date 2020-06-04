@@ -34,15 +34,14 @@ add_task(async function() {
   rightClickElement(dbg, "sourceTreeRootNode");
   selectContextMenuItem(dbg, "#node-menu-expand-all");
   await waitForAllElements(dbg, "sourceTreeFolderNode", 3);
-
   const sourceTreeFolderNodeEls = findAllElements(dbg, "sourceTreeFolderNode");
   const sourceTreeRootNodeEl = findElement(dbg, "sourceTreeRootNode");
 
   info("Blackbox files in this directory.");
   rightClickEl(dbg, sourceTreeFolderNodeEls[1]);
   selectContextMenuItem(dbg, NODE_SELECTORS.nodeBlackBoxAll);
-  await assertContextMenuLabel(dbg, NODE_SELECTORS.nodeBlackBoxAllInside, "Blackbox files in this directory");
-  await assertContextMenuLabel(dbg, NODE_SELECTORS.nodeBlackBoxAllOutside, "Blackbox files outside this directory");
+  await assertContextMenuLabel(dbg, NODE_SELECTORS.nodeBlackBoxAllInside, "Ignore files in this directory");
+  await assertContextMenuLabel(dbg, NODE_SELECTORS.nodeBlackBoxAllOutside, "Ignore files outside this directory");
   selectContextMenuItem(dbg, NODE_SELECTORS.nodeBlackBoxAllInside);
   await waitForBlackboxCount(dbg, 1);
   await waitForRequestsToSettle(dbg);
@@ -57,8 +56,8 @@ add_task(async function() {
   info("Unblackbox files outside this directory.");
   rightClickEl(dbg, sourceTreeFolderNodeEls[2]);
   selectContextMenuItem(dbg, NODE_SELECTORS.nodeBlackBoxAll);
-  await assertContextMenuLabel(dbg, NODE_SELECTORS.nodeBlackBoxAllInside, "Blackbox files in this directory");
-  await assertContextMenuLabel(dbg, NODE_SELECTORS.nodeUnBlackBoxAllOutside, "Unblackbox files outside this directory");
+  await assertContextMenuLabel(dbg, NODE_SELECTORS.nodeBlackBoxAllInside, "Ignore files in this directory");
+  await assertContextMenuLabel(dbg, NODE_SELECTORS.nodeUnBlackBoxAllOutside, "Unignore files outside this directory");
   selectContextMenuItem(dbg, NODE_SELECTORS.nodeUnBlackBoxAllOutside);
   await waitForBlackboxCount(dbg, 0);
   await waitForRequestsToSettle(dbg);
@@ -73,7 +72,7 @@ add_task(async function() {
 
   info("Blackbox files in this group.");
   rightClickEl(dbg, sourceTreeRootNodeEl);
-  await assertContextMenuLabel(dbg, NODE_SELECTORS.nodeBlackBoxAllInside, "Blackbox files in this group");
+  await assertContextMenuLabel(dbg, NODE_SELECTORS.nodeBlackBoxAllInside, "Ignore files in this group");
   selectContextMenuItem(dbg, NODE_SELECTORS.nodeBlackBoxAllInside);
   await waitForBlackboxCount(dbg, 2);
   await waitForRequestsToSettle(dbg);
@@ -83,7 +82,7 @@ add_task(async function() {
  
   info("Unblackbox files in this group.");
   rightClickEl(dbg, sourceTreeRootNodeEl);
-  await assertContextMenuLabel(dbg, NODE_SELECTORS.nodeUnBlackBoxAllInside, "Unblackbox files in this group");
+  await assertContextMenuLabel(dbg, NODE_SELECTORS.nodeUnBlackBoxAllInside, "Unignore files in this group");
   selectContextMenuItem(dbg, NODE_SELECTORS.nodeUnBlackBoxAllInside);
   await waitForBlackboxCount(dbg, 0);
   await waitForRequestsToSettle(dbg);

@@ -55,7 +55,7 @@ describe("FrameMenu", () => {
     const sourceId = generateMockId("copySourceUri2");
     const stacktraceId = generateMockId("copyStackTrace");
     const frameworkGroupingId = generateMockId("framework.enableGrouping");
-    const blackBoxId = generateMockId("sourceFooter.blackbox");
+    const blackBoxId = generateMockId("sourceFooter.ignore");
 
     FrameMenu(
       mockFrame,

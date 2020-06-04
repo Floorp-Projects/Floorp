@@ -8,8 +8,8 @@ import { copyToTheClipboard } from "../../../utils/clipboard";
 import type { ContextMenuItem, Frame, ThreadContext } from "../../../types";
 import { kebabCase } from "lodash";
 
-const blackboxString = "blackboxContextItem.blackbox";
-const unblackboxString = "blackboxContextItem.unblackbox";
+const blackboxString = "ignoreContextItem.ignore";
+const unblackboxString = "ignoreContextItem.unignore";
 
 function formatMenuElement(
   labelString: string,
