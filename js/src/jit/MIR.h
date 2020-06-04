@@ -5206,7 +5206,7 @@ class MPow : public MBinaryInstruction, public PowPolicy::Data {
     return congruentIfOperandsEqual(ins);
   }
   AliasSet getAliasSet() const override { return AliasSet::None(); }
-  bool possiblyCalls() const override { return true; }
+  bool possiblyCalls() const override { return type() != MIRType::Int32; }
   MOZ_MUST_USE bool writeRecoverData(
       CompactBufferWriter& writer) const override;
   bool canRecoverOnBailout() const override { return true; }
