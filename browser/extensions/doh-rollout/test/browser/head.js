@@ -12,6 +12,20 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/Preferences.jsm"
 );
 
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "gDNSService",
+  "@mozilla.org/network/dns-service;1",
+  "nsIDNSService"
+);
+
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "gDNSOverride",
+  "@mozilla.org/network/native-dns-override;1",
+  "nsINativeDNSResolverOverride"
+);
+
 const { CommonUtils } = ChromeUtils.import(
   "resource://services-common/utils.js"
 );
@@ -37,31 +51,9 @@ const prefs = {
   DOH_TRR_SELECT_COMMIT_PREF: "doh-rollout.trr-selection.commit-result",
   DOH_TRR_SELECT_DRY_RUN_RESULT_PREF:
     "doh-rollout.trr-selection.dry-run-result",
-  MOCK_HEURISTICS_PREF: "doh-rollout.heuristics.mockValues",
+  DOH_PROVIDER_STEERING_PREF: "doh-rollout.provider-steering.enabled",
   PROFILE_CREATION_THRESHOLD_PREF: "doh-rollout.profileCreationThreshold",
 };
-
-const fakePassingHeuristics = JSON.stringify({
-  google: "enable_doh",
-  youtube: "enable_doh",
-  zscalerCanary: "enable_doh",
-  canary: "enable_doh",
-  modifiedRoots: "enable_doh",
-  browserParent: "enable_doh",
-  thirdPartyRoots: "enable_doh",
-  policy: "enable_doh",
-});
-
-const fakeFailingHeuristics = JSON.stringify({
-  google: "disable_doh",
-  youtube: "disable_doh",
-  zscalerCanary: "disable_doh",
-  canary: "disable_doh",
-  modifiedRoots: "disable_doh",
-  browserParent: "disable_doh",
-  thirdPartyRoots: "disable_doh",
-  policy: "disable_doh",
-});
 
 async function setup() {
   SpecialPowers.pushPrefEnv({
@@ -84,9 +76,36 @@ async function setup() {
   // it can be controlled e.g. via Normandy, but for testing let's set enable.
   Preferences.set(prefs.DOH_TRR_SELECT_COMMIT_PREF, true);
 
+  // Enable provider steering. This pref ships false by default so it can be
+  // controlled e.g. via Normandy, but for testing let's enable.
+  Preferences.set(prefs.DOH_PROVIDER_STEERING_PREF, true);
+
+  // Set up heuristics, all passing by default.
+
+  // Google safesearch overrides
+  gDNSOverride.addIPOverride("www.google.com", "1.1.1.1");
+  gDNSOverride.addIPOverride("google.com", "1.1.1.1");
+  gDNSOverride.addIPOverride("forcesafesearch.google.com", "1.1.1.2");
+
+  // YouTube safesearch overrides
+  gDNSOverride.addIPOverride("www.youtube.com", "2.1.1.1");
+  gDNSOverride.addIPOverride("m.youtube.com", "2.1.1.1");
+  gDNSOverride.addIPOverride("youtubei.googleapis.com", "2.1.1.1");
+  gDNSOverride.addIPOverride("youtube.googleapis.com", "2.1.1.1");
+  gDNSOverride.addIPOverride("www.youtube-nocookie.com", "2.1.1.1");
+  gDNSOverride.addIPOverride("restrict.youtube.com", "2.1.1.2");
+  gDNSOverride.addIPOverride("restrictmoderate.youtube.com", "2.1.1.2");
+
+  // Zscaler override
+  gDNSOverride.addIPOverride("sitereview.zscaler.com", "3.1.1.1");
+
+  // Global canary
+  gDNSOverride.addIPOverride("use-application-dns.net", "4.1.1.1");
+
   registerCleanupFunction(async () => {
     Services.telemetry.canRecordExtended = oldCanRecord;
     Services.telemetry.clearEvents();
+    gDNSOverride.clearOverrides();
     await resetPrefsAndRestartAddon();
   });
 }
@@ -178,12 +197,17 @@ async function waitForStateTelemetry() {
   Services.telemetry.clearEvents();
 }
 
+// setPassing/FailingHeuristics are used generically to test that DoH is enabled
+// or disabled correctly. We use the zscaler canary arbitrarily here, individual
+// heuristics are tested separately.
 function setPassingHeuristics() {
-  Preferences.set(prefs.MOCK_HEURISTICS_PREF, fakePassingHeuristics);
+  gDNSOverride.clearHostOverride("sitereview.zscaler.com");
+  gDNSOverride.addIPOverride("sitereview.zscaler.com", "3.1.1.1");
 }
 
 function setFailingHeuristics() {
-  Preferences.set(prefs.MOCK_HEURISTICS_PREF, fakeFailingHeuristics);
+  gDNSOverride.clearHostOverride("sitereview.zscaler.com");
+  gDNSOverride.addIPOverride("sitereview.zscaler.com", "213.152.228.242");
 }
 
 async function restartAddon() {
