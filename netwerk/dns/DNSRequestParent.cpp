@@ -131,9 +131,13 @@ DNSRequestHandler::OnLookupComplete(nsICancelable* request, nsIDNSRecord* rec,
     double trrFetchDurationNetworkOnly;
     rec->GetTrrFetchDurationNetworkOnly(&trrFetchDurationNetworkOnly);
 
+    bool isTRR = false;
+    rec->IsTRR(&isTRR);
+
     SendLookupCompletedHelper(
-        mIPCActor, DNSRequestResponse(DNSRecord(cname, array, trrFetchDuration,
-                                                trrFetchDurationNetworkOnly)));
+        mIPCActor,
+        DNSRequestResponse(DNSRecord(cname, array, trrFetchDuration,
+                                     trrFetchDurationNetworkOnly, isTRR)));
   } else {
     SendLookupCompletedHelper(mIPCActor, DNSRequestResponse(status));
   }
