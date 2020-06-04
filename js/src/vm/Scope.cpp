@@ -1330,7 +1330,8 @@ template
 static const uint32_t ModuleScopeEnvShapeFlags =
     BaseShape::NOT_EXTENSIBLE | BaseShape::QUALIFIED_VAROBJ;
 
-Zone* ModuleScope::Data::zone() const {
+template <>
+Zone* ModuleScope::AbstractData<BindingName>::zone() const {
   return module ? module->zone() : nullptr;
 }
 
@@ -1481,8 +1482,8 @@ template
     ModuleScope::XDR(XDRState<XDR_DECODE>* xdr, HandleModuleObject module,
                      HandleScope enclosing, MutableHandleScope scope);
 
-static void InitializeTrailingName(TrailingNamesArray& trailingNames, size_t i,
-                                   JSAtom* name) {
+static void InitializeTrailingName(
+    AbstractTrailingNamesArray<JSAtom>& trailingNames, size_t i, JSAtom* name) {
   void* trailingName = &trailingNames[i];
   new (trailingName) BindingName(name, false);
 }
