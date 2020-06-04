@@ -877,10 +877,10 @@ class nsFrameSelection final {
 
   static nsIContent* GetFirstCellNodeInRange(const nsRange* aRange);
   // Returns non-null table if in same table, null otherwise
-  static nsIContent* IsInSameTable(nsIContent* aContent1,
-                                   nsIContent* aContent2);
+  static nsIContent* IsInSameTable(const nsIContent* aContent1,
+                                   const nsIContent* aContent2);
   // Might return null
-  static nsIContent* GetParentTable(nsIContent* aCellNode);
+  static nsIContent* GetParentTable(const nsIContent* aCellNode);
 
   ////////////BEGIN nsFrameSelection members
 
@@ -922,7 +922,7 @@ class nsFrameSelection final {
                                mozilla::dom::Selection& aNormalSelection);
 
     MOZ_CAN_RUN_SCRIPT nsresult
-    UnselectCells(nsIContent* aTable, int32_t aStartRowIndex,
+    UnselectCells(const nsIContent* aTable, int32_t aStartRowIndex,
                   int32_t aStartColumnIndex, int32_t aEndRowIndex,
                   int32_t aEndColumnIndex, bool aRemoveOutsideOfCellRange,
                   mozilla::dom::Selection& aNormalSelection);
