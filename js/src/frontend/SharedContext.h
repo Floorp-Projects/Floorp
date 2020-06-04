@@ -604,9 +604,6 @@ class FunctionBox : public SharedContext {
 
   size_t nargs() { return nargs_; }
 
-  // Flush the acquired argCount to the associated function.
-  void synchronizeArgCount() { function()->setArgCount(nargs_); }
-
   bool setTypeForScriptedFunction(JSContext* cx) {
     RootedFunction fun(cx, function());
     return JSFunction::setTypeForScriptedFunction(cx, fun, isSingleton);
