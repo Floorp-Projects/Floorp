@@ -177,6 +177,12 @@ class JsepTransceiver {
     return false;
   }
 
+  // See Bug 1642419, this can be removed when all sites are working with RTX.
+  void SetRtxIsAllowed(bool aRtxIsAllowed) {
+    mSendTrack.SetRtxIsAllowed(aRtxIsAllowed);
+    mRecvTrack.SetRtxIsAllowed(aRtxIsAllowed);
+  }
+
   // This is the direction JS wants. It might not actually happen.
   SdpDirectionAttribute::Direction mJsDirection;
 
