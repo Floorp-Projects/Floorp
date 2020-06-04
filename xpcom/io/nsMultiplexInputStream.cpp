@@ -70,6 +70,8 @@ class nsMultiplexInputStream final : public nsIMultiplexInputStream,
 
   struct StreamData {
     nsresult Initialize(nsIInputStream* aOriginalStream) {
+      mCurrentPos = 0;
+
       mOriginalStream = aOriginalStream;
 
       mBufferedStream = aOriginalStream;
@@ -83,7 +85,6 @@ class nsMultiplexInputStream final : public nsIMultiplexInputStream,
 
       mAsyncStream = do_QueryInterface(mBufferedStream);
       mSeekableStream = do_QueryInterface(mBufferedStream);
-      mTellableStream = do_QueryInterface(mBufferedStream);
 
       return NS_OK;
     }
@@ -98,8 +99,8 @@ class nsMultiplexInputStream final : public nsIMultiplexInputStream,
     nsCOMPtr<nsIAsyncInputStream> mAsyncStream;
     // This can be null.
     nsCOMPtr<nsISeekableStream> mSeekableStream;
-    // This can be null.
-    nsCOMPtr<nsITellableStream> mTellableStream;
+
+    uint64_t mCurrentPos;
   };
 
   Mutex& GetLock() { return mLock; }
@@ -132,7 +133,6 @@ class nsMultiplexInputStream final : public nsIMultiplexInputStream,
                             uint32_t aCount, uint32_t* aWriteCount);
 
   bool IsSeekable() const;
-  bool IsTellable() const;
   bool IsIPCSerializable() const;
   bool IsCloneable() const;
   bool IsAsyncInputStream() const;
@@ -156,7 +156,6 @@ class nsMultiplexInputStream final : public nsIMultiplexInputStream,
   RefPtr<AsyncWaitLengthHelper> mAsyncWaitLengthHelper;
 
   uint32_t mSeekableStreams;
-  uint32_t mTellableStreams;
   uint32_t mIPCSerializableStreams;
   uint32_t mCloneableStreams;
   uint32_t mAsyncInputStreams;
@@ -174,7 +173,7 @@ NS_INTERFACE_MAP_BEGIN(nsMultiplexInputStream)
   NS_INTERFACE_MAP_ENTRY(nsIMultiplexInputStream)
   NS_INTERFACE_MAP_ENTRY(nsIInputStream)
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsISeekableStream, IsSeekable())
-  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsITellableStream, IsTellable())
+  NS_INTERFACE_MAP_ENTRY(nsITellableStream)
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIIPCSerializableInputStream,
                                      IsIPCSerializable())
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsICloneableInputStream, IsCloneable())
@@ -212,22 +211,6 @@ static nsresult AvailableMaybeSeek(nsMultiplexInputStream::StreamData& aStream,
   return rv;
 }
 
-static nsresult TellMaybeSeek(nsITellableStream* aTellable,
-                              nsISeekableStream* aSeekable, int64_t* aResult) {
-  nsresult rv = aTellable->Tell(aResult);
-  if (rv == NS_BASE_STREAM_CLOSED && aSeekable) {
-    // Blindly seek to the current position if Tell() returns
-    // NS_BASE_STREAM_CLOSED.
-    // If nsIFileInputStream is closed in Read() due to CLOSE_ON_EOF flag,
-    // Seek() could reopen the file if REOPEN_ON_REWIND flag is set.
-    nsresult rvSeek = aSeekable->Seek(nsISeekableStream::NS_SEEK_CUR, 0);
-    if (NS_SUCCEEDED(rvSeek)) {
-      rv = aTellable->Tell(aResult);
-    }
-  }
-  return rv;
-}
-
 nsMultiplexInputStream::nsMultiplexInputStream()
     : mLock("nsMultiplexInputStream lock"),
       mCurrentStream(0),
@@ -236,7 +219,6 @@ nsMultiplexInputStream::nsMultiplexInputStream()
       mAsyncWaitFlags(0),
       mAsyncWaitRequestedCount(0),
       mSeekableStreams(0),
-      mTellableStreams(0),
       mIPCSerializableStreams(0),
       mCloneableStreams(0),
       mAsyncInputStreams(0),
@@ -424,6 +406,8 @@ nsMultiplexInputStream::Read(char* aBuf, uint32_t aCount, uint32_t* aResult) {
       aCount -= read;
       aBuf += read;
       mStartedReadingCurrent = true;
+
+      mStreams[mCurrentStream].mCurrentPos += read;
     }
   }
   return *aResult ? NS_OK : rv;
@@ -482,6 +466,8 @@ nsMultiplexInputStream::ReadSegments(nsWriteSegmentFun aWriter, void* aClosure,
       state.mOffset += read;
       aCount -= read;
       mStartedReadingCurrent = true;
+
+      mStreams[mCurrentStream].mCurrentPos += read;
     }
   }
 
@@ -553,8 +539,6 @@ nsMultiplexInputStream::Seek(int32_t aWhence, int64_t aOffset) {
         return NS_ERROR_FAILURE;
       }
 
-      MOZ_ASSERT(mStreams[i].mTellableStream);
-
       // See if all remaining streams should be rewound
       if (remaining == 0) {
         if (i < oldCurrentStream ||
@@ -563,31 +547,31 @@ nsMultiplexInputStream::Seek(int32_t aWhence, int64_t aOffset) {
           if (NS_WARN_IF(NS_FAILED(rv))) {
             return rv;
           }
+
+          mStreams[i].mCurrentPos = 0;
           continue;
         } else {
           break;
         }
       }
 
-      // Get position in current stream
+      // Get position in the current stream
       int64_t streamPos;
       if (i > oldCurrentStream ||
           (i == oldCurrentStream && !oldStartedReadingCurrent)) {
         streamPos = 0;
       } else {
-        rv = TellMaybeSeek(mStreams[i].mTellableStream, stream, &streamPos);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
+        streamPos = mStreams[i].mCurrentPos;
       }
 
-      // See if we need to seek current stream forward or backward
+      // See if we need to seek the current stream forward or backward
       if (remaining < streamPos) {
         rv = stream->Seek(NS_SEEK_SET, remaining);
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
 
+        mStreams[i].mCurrentPos = remaining;
         mCurrentStream = i;
         mStartedReadingCurrent = remaining != 0;
 
@@ -611,6 +595,7 @@ nsMultiplexInputStream::Seek(int32_t aWhence, int64_t aOffset) {
             return rv;
           }
 
+          mStreams[i].mCurrentPos = newPos;
           mCurrentStream = i;
           mStartedReadingCurrent = true;
 
@@ -645,6 +630,7 @@ nsMultiplexInputStream::Seek(int32_t aWhence, int64_t aOffset) {
         return rv;
       }
 
+      mStreams[i].mCurrentPos += seek;
       mCurrentStream = i;
       mStartedReadingCurrent = true;
 
@@ -657,12 +643,7 @@ nsMultiplexInputStream::Seek(int32_t aWhence, int64_t aOffset) {
   if (aWhence == NS_SEEK_CUR && aOffset < 0) {
     int64_t remaining = -aOffset;
     for (uint32_t i = mCurrentStream; remaining && i != (uint32_t)-1; --i) {
-      int64_t pos;
-      rv = TellMaybeSeek(mStreams[i].mTellableStream,
-                         mStreams[i].mSeekableStream, &pos);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
+      int64_t pos = mStreams[i].mCurrentPos;
 
       int64_t seek = XPCOM_MIN(pos, remaining);
 
@@ -671,6 +652,7 @@ nsMultiplexInputStream::Seek(int32_t aWhence, int64_t aOffset) {
         return rv;
       }
 
+      mStreams[i].mCurrentPos -= seek;
       mCurrentStream = i;
       mStartedReadingCurrent = seek != -pos;
 
@@ -697,10 +679,18 @@ nsMultiplexInputStream::Seek(int32_t aWhence, int64_t aOffset) {
       // See if all remaining streams should be seeked to end
       if (remaining == 0) {
         if (i >= oldCurrentStream) {
+          uint64_t avail;
+          rv = AvailableMaybeSeek(mStreams[i], &avail);
+          if (NS_WARN_IF(NS_FAILED(rv))) {
+            return rv;
+          }
+
           rv = stream->Seek(NS_SEEK_END, 0);
           if (NS_WARN_IF(NS_FAILED(rv))) {
             return rv;
           }
+
+          mStreams[i].mCurrentPos += avail;
         } else {
           break;
         }
@@ -711,13 +701,7 @@ nsMultiplexInputStream::Seek(int32_t aWhence, int64_t aOffset) {
       if (i < oldCurrentStream) {
         streamPos = 0;
       } else {
-        uint64_t avail;
-        rv = AvailableMaybeSeek(mStreams[i], &avail);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
-
-        streamPos = avail;
+        streamPos = mStreams[i].mCurrentPos;
       }
 
       // See if we have enough data in the current stream.
@@ -727,6 +711,8 @@ nsMultiplexInputStream::Seek(int32_t aWhence, int64_t aOffset) {
           return rv;
         }
 
+        // remaining is negative.
+        mStreams[i].mCurrentPos = streamPos + remaining;
         mCurrentStream = i;
         mStartedReadingCurrent = true;
 
@@ -737,14 +723,9 @@ nsMultiplexInputStream::Seek(int32_t aWhence, int64_t aOffset) {
           // We're already at start so no need to seek this stream
           remaining += streamPos;
         } else {
-          int64_t avail;
-          rv = TellMaybeSeek(mStreams[i].mTellableStream, stream, &avail);
-          if (NS_WARN_IF(NS_FAILED(rv))) {
-            return rv;
-          }
-
-          int64_t newPos =
-              streamPos + XPCOM_MIN(avail, DeprecatedAbs(remaining));
+          int64_t diff =
+              XPCOM_MIN((int64_t)streamPos, DeprecatedAbs(remaining));
+          int64_t newPos = streamPos + diff;
 
           rv = stream->Seek(NS_SEEK_END, -newPos);
           if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -753,6 +734,7 @@ nsMultiplexInputStream::Seek(int32_t aWhence, int64_t aOffset) {
 
           mCurrentStream = i;
           mStartedReadingCurrent = true;
+          mStreams[i].mCurrentPos += diff;
 
           remaining += newPos;
         }
@@ -777,22 +759,22 @@ nsMultiplexInputStream::Tell(int64_t* aResult) {
     return mStatus;
   }
 
-  nsresult rv;
   int64_t ret64 = 0;
-  uint32_t i, last;
-  last = mStartedReadingCurrent ? mCurrentStream + 1 : mCurrentStream;
-  for (i = 0; i < last; ++i) {
-    if (NS_WARN_IF(!mStreams[i].mTellableStream)) {
-      return NS_ERROR_NO_INTERFACE;
-    }
+#ifdef DEBUG
+  bool zeroFound = false;
+#endif
 
-    int64_t pos;
-    rv = TellMaybeSeek(mStreams[i].mTellableStream, mStreams[i].mSeekableStream,
-                       &pos);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+  for (uint32_t i = 0; i < mStreams.Length(); ++i) {
+    ret64 += mStreams[i].mCurrentPos;
+
+#ifdef DEBUG
+    // When we see 1 stream with currentPos = 0, all the remaining streams must
+    // be set to 0 as well.
+    MOZ_ASSERT_IF(zeroFound, mStreams[i].mCurrentPos == 0);
+    if (mStreams[i].mCurrentPos == 0) {
+      zeroFound = true;
     }
-    ret64 += pos;
+#endif
   }
   *aResult = ret64;
 
@@ -1445,7 +1427,6 @@ void nsMultiplexInputStream::AsyncWaitCompleted(
 
 void nsMultiplexInputStream::UpdateQIMap(StreamData& aStream) {
   MAYBE_UPDATE_VALUE_REAL(mSeekableStreams, aStream.mSeekableStream)
-  MAYBE_UPDATE_VALUE_REAL(mTellableStreams, aStream.mTellableStream)
   MAYBE_UPDATE_VALUE(mIPCSerializableStreams, nsIIPCSerializableInputStream)
   MAYBE_UPDATE_VALUE(mCloneableStreams, nsICloneableInputStream)
   MAYBE_UPDATE_VALUE_REAL(mAsyncInputStreams, aStream.mAsyncStream)
@@ -1457,10 +1438,6 @@ void nsMultiplexInputStream::UpdateQIMap(StreamData& aStream) {
 
 bool nsMultiplexInputStream::IsSeekable() const {
   return mStreams.Length() == mSeekableStreams;
-}
-
-bool nsMultiplexInputStream::IsTellable() const {
-  return mStreams.Length() == mTellableStreams;
 }
 
 bool nsMultiplexInputStream::IsIPCSerializable() const {
