@@ -76,11 +76,12 @@ NS_IMPL_ISUPPORTS(SSLTokensCache, nsIMemoryReporter)
 nsresult SSLTokensCache::Init() {
   StaticMutexAutoLock lock(sLock);
 
-  if (nsIOService::UseSocketProcess()) {
-    if (!XRE_IsSocketProcess()) {
-      return NS_OK;
-    }
-  } else if (!XRE_IsParentProcess()) {
+  // SSLTokensCache should be only used in parent process and socket process.
+  // Ideally, parent process should not use this when socket process is enabled.
+  // However, some xpcsehll tests may need to create and use sockets directly,
+  // so we still allow to use this in parent process no matter socket process is
+  // enabled or not.
+  if (!(XRE_IsSocketProcess() || XRE_IsParentProcess())) {
     return NS_OK;
   }
 
