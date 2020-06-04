@@ -268,6 +268,14 @@ DYNAMIC_CHUNK_DURATION = 20 * 60  # seconds
 """The approximate time each test chunk should take to run."""
 
 
+DYNAMIC_CHUNK_MULTIPLIER = {
+    # Desktop xpcshell tests run in parallel. Reduce the total runtime to
+    # compensate.
+    '^(?!android).*-xpcshell.*': 0.2,
+}
+"""A multiplication factor to tweak the total duration per platform / suite."""
+
+
 logger = logging.getLogger(__name__)
 
 transforms = TransformSequence()
@@ -1453,6 +1461,16 @@ def resolve_dynamic_chunks(config, tasks):
         # with the average of all present manifests.
         missing = [m for m in task['test-manifests']['active'] if m not in runtimes]
         total += avg * len(missing)
+
+        # Apply any chunk multipliers if found.
+        key = "{}-{}".format(task["test-platform"], task["test-name"])
+        matches = keymatch(DYNAMIC_CHUNK_MULTIPLIER, key)
+        if len(matches) > 1:
+            raise Exception(
+                "Multiple matching values for {} found while "
+                "determining dynamic chunk multiplier!".format(key))
+        elif matches:
+            total = total * matches[0]
 
         chunks = int(round(total / DYNAMIC_CHUNK_DURATION))
 
