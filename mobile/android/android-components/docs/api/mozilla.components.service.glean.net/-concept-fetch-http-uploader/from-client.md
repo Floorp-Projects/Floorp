@@ -2,7 +2,7 @@
 
 # fromClient
 
-`@JvmStatic fun fromClient(client: `[`Client`](../../mozilla.components.concept.fetch/-client/index.md)`): `[`ConceptFetchHttpUploader`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/net/ConceptFetchHttpUploader.kt#L45)
+`@JvmStatic fun fromClient(client: `[`Client`](../../mozilla.components.concept.fetch/-client/index.md)`): `[`ConceptFetchHttpUploader`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/net/ConceptFetchHttpUploader.kt#L46)
 
 Export a constructor that is usable from Java.
 

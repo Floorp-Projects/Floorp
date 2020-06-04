@@ -2,7 +2,7 @@
 
 # HistoryAutocompleteResult
 
-`data class HistoryAutocompleteResult` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/storage/src/main/java/mozilla/components/concept/storage/HistoryStorage.kt#L207)
+`data class HistoryAutocompleteResult` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/storage/src/main/java/mozilla/components/concept/storage/HistoryStorage.kt#L227)
 
 Describes an autocompletion result against history storage.
 

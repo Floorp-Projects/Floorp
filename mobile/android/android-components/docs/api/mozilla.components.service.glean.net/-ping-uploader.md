@@ -2,7 +2,7 @@
 
 # PingUploader
 
-`typealias PingUploader = PingUploader` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/net/ConceptFetchHttpUploader.kt#L21)
+`typealias PingUploader = PingUploader` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/net/ConceptFetchHttpUploader.kt#L22)
 
 ### Inheritors
 

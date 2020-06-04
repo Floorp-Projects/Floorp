@@ -21,5 +21,6 @@
 | [RedirectSource](-redirect-source/index.md) | `enum class RedirectSource`<br>A redirect source describes how a page redirected to another page. |
 | [SearchResult](-search-result/index.md) | `data class SearchResult`<br>Encapsulates a set of properties which define a result of querying history storage. |
 | [Storage](-storage/index.md) | `interface Storage`<br>An interface which provides generic operations for storing browser data like history and bookmarks. |
+| [TopFrecentSiteInfo](-top-frecent-site-info/index.md) | `data class TopFrecentSiteInfo`<br>Information about a top frecent site. This represents a most frequently visited site. |
 | [VisitInfo](-visit-info/index.md) | `data class VisitInfo`<br>Information about a history visit. |
 | [VisitType](-visit-type/index.md) | `enum class VisitType`<br>Visit type constants as defined by Desktop Firefox. |
