@@ -34,13 +34,15 @@ namespace fontlist {
  */
 struct AliasData {
   nsTArray<Pointer> mFaces;
+  nsCString mBaseFamily;
   uint32_t mIndex = 0;
   FontVisibility mVisibility = FontVisibility::Unknown;
   bool mBundled = false;
   bool mBadUnderline = false;
   bool mForceClassic = false;
 
-  void InitFromFamily(const Family* aFamily) {
+  void InitFromFamily(const Family* aFamily, const nsCString& aBaseFamily) {
+    mBaseFamily = aBaseFamily;
     mIndex = aFamily->Index();
     mVisibility = aFamily->Visibility();
     mBundled = aFamily->IsBundled();
