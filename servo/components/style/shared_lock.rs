@@ -15,7 +15,6 @@ use std::cell::UnsafeCell;
 use std::fmt;
 #[cfg(feature = "servo")]
 use std::mem;
-use std::mem::ManuallyDrop;
 #[cfg(feature = "gecko")]
 use std::ptr;
 use to_shmem::{SharedMemoryBuilder, ToShmem};
@@ -259,6 +258,8 @@ impl<T> Locked<T> {
 #[cfg(feature = "gecko")]
 impl<T: ToShmem> ToShmem for Locked<T> {
     fn to_shmem(&self, builder: &mut SharedMemoryBuilder) -> to_shmem::Result<Self> {
+        use std::mem::ManuallyDrop;
+
         let guard = self.shared_lock.read();
         Ok(ManuallyDrop::new(Locked {
             shared_lock: SharedRwLock::read_only(),
