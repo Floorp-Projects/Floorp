@@ -126,7 +126,6 @@ use style::stylesheets::{StyleRule, StylesheetContents, SupportsRule, UrlExtraDa
 use style::stylesheets::{SanitizationData, SanitizationKind, AllowImportRules};
 use style::stylist::{add_size_of_ua_cache, AuthorStylesEnabled, RuleInclusion, Stylist};
 use style::thread_state;
-use style::timer::Timer;
 use style::traversal::resolve_style;
 use style::traversal::DomTraversal;
 use style::traversal_flags::{self, TraversalFlags};
@@ -217,7 +216,7 @@ fn create_shared_context<'a>(
         visited_styles_enabled: per_doc_data.visited_styles_enabled(),
         options: global_style_data.options.clone(),
         guards: StylesheetGuards::same(guard),
-        timer: Timer::new(),
+        current_time_for_animations: 0.0, // Unused for Gecko, at least for now.
         traversal_flags,
         snapshot_map,
     }
