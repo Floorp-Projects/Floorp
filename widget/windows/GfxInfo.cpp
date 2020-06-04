@@ -1860,12 +1860,12 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
         "FEATURE_ROLLOUT_NIGHTLY_BATTERY_AMD_S_SCRN");
 
     APPEND_TO_DRIVER_BLOCKLIST2_EXT(
-        OperatingSystem::Windows, ScreenSizeStatus::SmallAndMedium,
-        BatteryStatus::Present, DesktopEnvironment::All, WindowProtocol::All,
+        OperatingSystem::Windows, ScreenSizeStatus::All,
+        BatteryStatus::All, DesktopEnvironment::All, WindowProtocol::All,
         DriverVendor::All, DeviceFamily::IntelRolloutWebRender,
         nsIGfxInfo::FEATURE_WEBRENDER, nsIGfxInfo::FEATURE_ALLOW_ALWAYS,
         DRIVER_COMPARISON_IGNORED, V(0, 0, 0, 0),
-        "FEATURE_ROLLOUT_NIGHTLY_BATTERY_INTEL_S_SCRN");
+        "FEATURE_ROLLOUT_EARLY_BETA_INTEL");
 #endif
 
 #ifdef NIGHTLY_BUILD
