@@ -64,9 +64,14 @@ const Agent = {
    * (eg. blocklists/certificates, main/onboarding)
    * @param {String} bucket
    * @param {String} collection
+   * @returns {int} Number of records loaded from dump or -1 if no dump found.
    */
   async importJSONDump(bucket, collection) {
     const { data: records } = await loadJSONDump(bucket, collection);
+    if (records === null) {
+      // Return -1 if file is missing.
+      return -1;
+    }
     if (gShutdown) {
       throw new Error("Can't import when we've started shutting down.");
     }
@@ -141,8 +146,8 @@ async function loadJSONDump(bucket, collection) {
   try {
     response = await fetch(fileURI);
   } catch (e) {
-    // Return empty dataset if file is missing.
-    return { data: [] };
+    // Return null if file is missing.
+    return { data: null };
   }
   if (gShutdown) {
     throw new Error("Can't import when we've started shutting down.");

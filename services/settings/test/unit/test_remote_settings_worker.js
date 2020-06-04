@@ -78,6 +78,10 @@ add_task(async function test_throws_error_if_worker_fails() {
 });
 
 add_task(async function test_throws_error_if_worker_fails_async() {
+  if (IS_ANDROID) {
+    // Skip test: we don't ship dump, so importJSONDump() is no-op.
+    return;
+  }
   // Delete the Remote Settings database, and try to import a dump.
   // This is not supported, and the error thrown asynchronously in the worker
   // should be reported to the caller.
