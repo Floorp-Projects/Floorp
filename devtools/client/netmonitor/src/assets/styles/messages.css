@@ -1,0 +1,160 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Scroll to bottom */
+
+#messages-panel .uncontrolled {
+  flex-direction: column;
+}
+
+#messages-panel .message-list-scroll-anchor {
+  /* anchor nodes are required to have non-zero area */
+  min-height: 1px;
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+/* Empty notice */
+
+#messages-panel .message-list-empty-notice {
+  width: 100%;
+}
+
+/* Frame type icon in the Time column */
+
+#messages-panel .message-list-type-icon {
+  display: inline-block;
+  /* align bottom of image 4px below the text baseline
+     this tends to give a better result than "middle" */
+  vertical-align: -4px;
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+
+#messages-panel .message-list-type-icon-sent {
+  color: var(--green-70);
+}
+
+#messages-panel .theme-dark .message-list-type-icon-sent {
+  color: var(--green-50);
+}
+
+#messages-panel .message-list-type-icon-received {
+  color: var(--red-60);
+  transform: scaleY(-1);
+}
+
+#messages-panel .theme-dark .message-list-type-icon-received {
+  color: var(--red-40);
+}
+
+#messages-panel .message-list-item.selected .message-list-type-icon {
+  color: inherit;
+}
+
+#messages-panel .msg-connection-closed-message {
+  text-align: center;
+}
+
+/* Use lining numbers so that seconds and milliseconds align */
+
+#messages-panel .message-list-time {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Styles related to the Accordion items in the MessagePayload component */
+
+#messages-panel .message-payload {
+  width: 100%;
+}
+
+#messages-panel .message-rawData-payload {
+  display: block;
+  width: 100%;
+  overflow: auto;
+  white-space: pre;
+  padding: 4px 8px;
+  padding-inline-start: 20px;
+  border: none;
+  font-family: var(--monospace-font-family);
+  font-size: var(--theme-code-font-size);
+  line-height: calc(15/11);
+  direction: ltr;
+  text-align: left;
+  resize: none;
+}
+
+/* Styles related to JSONPreview */
+
+#messages-panel .treeTable .objectBox {
+  white-space: normal;
+  overflow-wrap: break-word;
+}
+
+/* Styles related to truncated data */
+
+.theme-light #messages-panel .truncated-data-message {
+  background: var(--grey-20);
+}
+
+.theme-dark #messages-panel .truncated-data-message {
+  background: var(--grey-70);
+}
+
+.truncated-data-message {
+  border-bottom: 1px solid var(--theme-splitter-color);
+  padding: 4px 8px;
+  font-size: 12px;
+}
+
+/* Styles related to truncated messages */
+
+.theme-light #messages-panel .truncated-messages-header {
+  background: var(--grey-20);
+}
+
+.theme-dark #messages-panel .truncated-messages-header {
+  background: var(--grey-70);
+}
+
+.theme-dark #messages-panel .truncated-messages-warning-icon {
+  fill: var(--grey-40);
+}
+
+#messages-panel .truncated-messages-cell {
+  padding: 0; /* reset td default padding */
+}
+
+#messages-panel .truncated-messages-header {
+  border-bottom: 1px solid var(--theme-splitter-color);
+  padding: 2px 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+#messages-panel .truncated-messages-container,
+#messages-panel .truncated-messages-checkbox-label {
+  display: flex;
+  align-items: center;
+}
+
+#messages-panel .truncated-messages-warning-icon {
+  width: 12px;
+  height: 12px;
+  margin-inline-end: 8px;
+  background-image: url(chrome://global/skin/icons/info.svg);
+  background-repeat: no-repeat;
+  -moz-context-properties: fill;
+  fill: inherit;
+}
+
+#messages-panel .truncation-checkbox {
+  margin-inline-end: 5px;
+}
+
+#messages-panel .truncated-message {
+  font-variant-numeric: tabular-nums;
+}

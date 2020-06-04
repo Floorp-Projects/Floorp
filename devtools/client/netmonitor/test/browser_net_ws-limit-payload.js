@@ -10,8 +10,8 @@
 add_task(async function() {
   await pushPref("devtools.netmonitor.features.webSockets", true);
 
-  // Set WS frame payload limit to a lower value for testing
-  await pushPref("devtools.netmonitor.ws.messageDataLimit", 100);
+  // Set WS message payload limit to a lower value for testing
+  await pushPref("devtools.netmonitor.msg.messageDataLimit", 100);
 
   const { tab, monitor } = await initNetMonitor(WS_PAGE_URL, {
     requestCount: 1,
@@ -35,7 +35,7 @@ add_task(async function() {
   // Wait for all sent/received messages to be displayed in DevTools
   const wait = waitForDOM(
     document,
-    "#messages-panel .ws-frames-list-table .ws-frame-list-item",
+    "#messages-panel .message-list-table .message-list-item",
     2
   );
 
@@ -51,13 +51,13 @@ add_task(async function() {
 
   // Get all messages present in the "Messages" panel
   const frames = document.querySelectorAll(
-    "#messages-panel .ws-frames-list-table .ws-frame-list-item"
+    "#messages-panel .message-list-table .message-list-item"
   );
 
   // Check expected results
   is(frames.length, 2, "There should be two frames");
 
-  // Wait for next tick to do async stuff (The FramePayload component uses the async function getFramePayload)
+  // Wait for next tick to do async stuff (The MessagePayload component uses the async function getMessagePayload)
   await waitForTick();
   EventUtils.sendMouseEvent({ type: "mousedown" }, frames[0]);
 
@@ -68,7 +68,7 @@ add_task(async function() {
     "Truncated data header shown"
   );
   is(
-    document.querySelector("#messages-panel .ws-frame-rawData-payload")
+    document.querySelector("#messages-panel .message-rawData-payload")
       .textContent.length,
     100,
     "Payload size is kept to the limit"

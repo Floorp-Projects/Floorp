@@ -24,7 +24,7 @@
 @import "chrome://devtools/content/netmonitor/src/assets/styles/StatisticsPanel.css";
 @import "chrome://devtools/content/netmonitor/src/assets/styles/CustomRequestPanel.css";
 @import "chrome://devtools/content/netmonitor/src/assets/styles/StatusCode.css";
-@import "chrome://devtools/content/netmonitor/src/assets/styles/websockets.css";
+@import "chrome://devtools/content/netmonitor/src/assets/styles/messages.css";
 @import "chrome://devtools/content/netmonitor/src/assets/styles/search.css";
 @import "chrome://devtools/content/netmonitor/src/assets/styles/UrlPreview.css";
 @import "chrome://devtools/content/netmonitor/src/assets/styles/HeadersPanel.css";

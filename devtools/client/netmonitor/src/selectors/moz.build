@@ -4,9 +4,9 @@
 
 DevToolsModules(
     'index.js',
+    'messages.js',
     'requests.js',
     'search.js',
     'timing-markers.js',
     'ui.js',
-    'web-sockets.js',
 )

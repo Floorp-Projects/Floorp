@@ -26,8 +26,8 @@ const CookiesPanel = createFactory(
 const HeadersPanel = createFactory(
   require("devtools/client/netmonitor/src/components/request-details/HeadersPanel")
 );
-const WebSocketsPanel = createFactory(
-  require("devtools/client/netmonitor/src/components/websockets/WebSocketsPanel")
+const MessagesPanel = createFactory(
+  require("devtools/client/netmonitor/src/components/messages/MessagesPanel")
 );
 const RequestPanel = createFactory(
   require("devtools/client/netmonitor/src/components/request-details/RequestPanel")
@@ -76,7 +76,7 @@ class TabboxPanel extends Component {
       hideToggleButton: PropTypes.bool,
       toggleNetworkDetails: PropTypes.func,
       openNetworkDetails: PropTypes.func.isRequired,
-      showWebSocketsTab: PropTypes.bool,
+      showMessagesTab: PropTypes.bool,
       targetSearchResult: PropTypes.object,
     };
   }
@@ -108,7 +108,7 @@ class TabboxPanel extends Component {
       selectTab,
       sourceMapService,
       toggleNetworkDetails,
-      showWebSocketsTab,
+      showMessagesTab,
       targetSearchResult,
     } = this.props;
 
@@ -116,12 +116,12 @@ class TabboxPanel extends Component {
       return null;
     }
 
-    const showWebSocketsPanel =
+    const showMessagesPanel =
       request.cause.type === "websocket" &&
       Services.prefs.getBoolPref("devtools.netmonitor.features.webSockets") &&
-      showWebSocketsTab === undefined
+      showMessagesTab === undefined
         ? true
-        : showWebSocketsTab;
+        : showMessagesTab;
 
     return Tabbar(
       {
@@ -153,14 +153,14 @@ class TabboxPanel extends Component {
           targetSearchResult,
         })
       ),
-      showWebSocketsPanel &&
+      showMessagesPanel &&
         TabPanel(
           {
             id: PANELS.MESSAGES,
             title: MESSAGES_TITLE,
             className: "panel-with-code",
           },
-          WebSocketsPanel({
+          MessagesPanel({
             connector,
           })
         ),
