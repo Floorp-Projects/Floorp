@@ -29,9 +29,9 @@ add_task(async function() {
   await sourceSeen;
 
   info(`checking original location for ${JS_URL}:84`);
-  const newLoc = await service.originalPositionFor(JS_URL, 84);
+  const newLoc = await service.originalPositionForURL(JS_URL, 84);
 
-  is(newLoc.sourceUrl, ORIGINAL_URL, "check mapped URL");
+  is(newLoc.url, ORIGINAL_URL, "check mapped URL");
   is(newLoc.line, 11, "check mapped line number");
 
   await toolbox.destroy();

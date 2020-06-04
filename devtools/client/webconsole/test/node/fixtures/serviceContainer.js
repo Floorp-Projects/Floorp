@@ -15,10 +15,18 @@ module.exports = {
   openNetworkPanel: () => {},
   resendNetworkRequest: () => {},
   sourceMapURLService: {
-    subscribe: () => {
+    subscribeByURL: () => {
       return () => {};
     },
-    originalPositionFor: () => {
+    subscribeByID: () => {
+      return () => {};
+    },
+    originalPositionForURL: () => {
+      return new Promise(resolve => {
+        resolve();
+      });
+    },
+    originalPositionForID: () => {
       return new Promise(resolve => {
         resolve();
       });

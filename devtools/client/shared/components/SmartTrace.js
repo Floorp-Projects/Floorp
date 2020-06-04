@@ -76,7 +76,7 @@ class SmartTrace extends Component {
               this.onSourceMapServiceChange(originalLocation, index);
               resolve();
             };
-            const unsubscribe = this.props.sourceMapURLService.subscribe(
+            const unsubscribe = this.props.sourceMapURLService.subscribeByURL(
               source,
               lineNumber,
               columnNumber,
