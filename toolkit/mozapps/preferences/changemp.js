@@ -56,6 +56,13 @@ function process() {
     }
   }
 
+  if (
+    !token.hasPassword &&
+    !Services.policies.isAllowed("removeMasterPassword")
+  ) {
+    document.getElementById("admin").hidden = false;
+  }
+
   if (params) {
     // Return value 0 means "canceled"
     params.SetInt(1, 0);
@@ -204,7 +211,10 @@ function checkPasswords() {
     }
   }
 
-  if (pw1 == pw2) {
+  if (
+    pw1 == pw2 &&
+    (pw1 != "" || Services.policies.isAllowed("removeMasterPassword"))
+  ) {
     ok.setAttribute("disabled", "false");
   } else {
     ok.setAttribute("disabled", "true");
