@@ -3,6 +3,26 @@
 
 const { Service } = ChromeUtils.import("resource://services-sync/service.js");
 
+// This sucks, but this test fails if this engine is enabled, due to dumb
+// things that aren't related to this engine. In short:
+// * Because the addon manager isn't initialized, the addons engine fails to
+//   initialize. So we end up writing a meta/global with `extension-storage`
+//   but not addons.
+// * After we sync, we discover 'addons' is locally enabled, but because it's
+//   not in m/g, we decide it's been remotely declined (and it decides this
+//   without even considering `declined`). So we disable 'addons'.
+// * Disabling 'addons' means 'extension-storage' is disabled - but because
+//   that *is* in meta/global we re-update meta/global to remove it.
+// * This test fails due to the extra, unexpected update of m/g.
+//
+// Another option would be to ensure the addons manager is initialized, but
+// that's a larger patch and still isn't strictly relevant to what's being
+// tested here, so...
+Services.prefs.setBoolPref(
+  "services.sync.engine.extension-storage.force",
+  false
+);
+
 add_task(async function run_test() {
   enableValidationPrefs();
 

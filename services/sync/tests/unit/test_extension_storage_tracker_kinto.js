@@ -3,6 +3,8 @@
 
 "use strict";
 
+Services.prefs.setBoolPref("webextensions.storage.sync.kinto", true);
+
 const { ExtensionStorageEngine } = ChromeUtils.import(
   "resource://services-sync/engines/extension-storage.js"
 );
