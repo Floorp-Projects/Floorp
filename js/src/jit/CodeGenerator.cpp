@@ -8429,6 +8429,18 @@ void CodeGenerator::visitAbsF(LAbsF* ins) {
   masm.absFloat32(input, input);
 }
 
+void CodeGenerator::visitPowII(LPowII* ins) {
+  Register value = ToRegister(ins->value());
+  Register power = ToRegister(ins->power());
+  Register output = ToRegister(ins->output());
+  Register temp1 = ToRegister(ins->temp1());
+  Register temp2 = ToRegister(ins->temp2());
+
+  Label bailout;
+  masm.pow32(value, power, output, temp1, temp2, &bailout);
+  bailoutFrom(&bailout, ins->snapshot());
+}
+
 void CodeGenerator::visitPowI(LPowI* ins) {
   FloatRegister value = ToFloatRegister(ins->value());
   Register power = ToRegister(ins->power());
