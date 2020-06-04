@@ -292,7 +292,7 @@ RuleEditor.prototype = {
   /**
    * Update the text of the source link to reflect whether we're showing
    * original sources or not.  This is a callback for
-   * SourceMapURLService.subscribeByURL, which see.
+   * SourceMapURLService.subscribeByID, which see.
    *
    * @param {Object | null} originalLocation
    *        The original position object (url/line/column) or null.
@@ -347,26 +347,20 @@ RuleEditor.prototype = {
       this._updateLocation(null);
     }
 
-    let url = null;
-    if (this.rule.sheet) {
-      url = this.rule.sheet.href || this.rule.sheet.nodeHref;
-    }
     if (
-      url &&
+      this.rule.sheet &&
       !this.rule.isSystem &&
       this.rule.domRule.type !== ELEMENT_STYLE
     ) {
       // Only get the original source link if the rule isn't a system
       // rule and if it isn't an inline rule.
-      const sourceLine = this.rule.ruleLine;
-      const sourceColumn = this.rule.ruleColumn;
       if (this._unsubscribeSourceMap) {
         this._unsubscribeSourceMap();
       }
-      this._unsubscribeSourceMap = this.sourceMapURLService.subscribeByURL(
-        url,
-        sourceLine,
-        sourceColumn,
+      this._unsubscribeSourceMap = this.sourceMapURLService.subscribeByID(
+        this.rule.sheet.actorID,
+        this.rule.ruleLine,
+        this.rule.ruleColumn,
         this._updateLocation
       );
       // Set "unselectable" appropriately.
