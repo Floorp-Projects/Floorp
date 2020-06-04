@@ -92,6 +92,19 @@ async function setupPage(htmlPageName, blockedPage) {
   // to open the blocked page in a new window/tab
   await SpecialPowers.spawn(iframe, [], async function() {
     let doc = content.document;
+
+    // aboutNetError.js is using async localization to format several messages
+    // and in result the translation may be applied later.
+    // We want to return the textContent of the element only after
+    // the translation completes, so let's wait for it here.
+    let elements = [
+      doc.getElementById("errorLongDesc"),
+      doc.getElementById("openInNewWindowButton"),
+    ];
+    await ContentTaskUtils.waitForCondition(() => {
+      return elements.every(elem => !!elem.textContent.trim().length);
+    });
+
     let textLongDescription = doc.getElementById("errorLongDesc").textContent;
     Assert.ok(
       textLongDescription.includes(
