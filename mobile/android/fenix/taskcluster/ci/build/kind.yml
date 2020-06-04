@@ -155,13 +155,10 @@ jobs:
 
     fennec-production:
         attributes:
-            # TODO replace `nightly: true` by `release-type: production` once the data migration
-            # testing is over
-            # TODO when making the above change, uncomment `filter-incomplete-translations: true`
-            nightly: true
+            release-type: production
         include-release-version: true
         include-shippable-secrets: true
-#        filter-incomplete-translations: true
+        filter-incomplete-translations: true
         run:
             geckoview-engine: geckoBeta
             gradle-build-type: fennecProduction

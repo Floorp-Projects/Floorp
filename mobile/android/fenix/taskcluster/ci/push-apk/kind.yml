@@ -19,6 +19,7 @@ group-by: build-type
 only-for-build-types:
     - fennec-nightly
     - fennec-beta
+    - fennec-production
     - nightly
     - beta
     - production
@@ -27,11 +28,15 @@ job-template:
     description: Publish Fenix
     worker-type: push-apk
     worker:
-        commit: true
+        commit:
+            by-build-type:
+                fennec-production: false
+                default: true
         channel:
             by-build-type:
                 fennec-nightly: fennec-nightly
                 fennec-beta: fennec-beta
+                fennec-production: fennec-production
                 nightly: nightly
                 beta: beta
                 production: production

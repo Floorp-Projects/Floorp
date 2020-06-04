@@ -58,11 +58,11 @@ def _filter_fennec(fennec_type, task, parameters):
     return task.attributes.get("build-type", "") == "fennec-{}".format(fennec_type)
 
 
-@_target_task("fennec-beta")
+@_target_task("fennec-production")
 def target_tasks_fennec_nightly(full_task_graph, parameters, graph_config):
-    """Select the set of tasks required for a beta build signed with the fennec key."""
+    """Select the set of tasks required for a production build signed with the fennec key."""
 
-    return [l for l, t in full_task_graph.tasks.iteritems() if _filter_fennec("beta", t, parameters)]
+    return [l for l, t in full_task_graph.tasks.iteritems() if _filter_fennec("production", t, parameters)]
 
 
 @_target_task("bump_android_components")
