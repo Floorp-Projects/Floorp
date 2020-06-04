@@ -1228,25 +1228,6 @@ class nsDocShell final : public nsDocLoader,
   // Possible values are defined as constants in nsIDocShell.idl.
   MetaViewportOverride mMetaViewportOverride;
 
-  // mFullscreenAllowed stores how we determine whether fullscreen is allowed
-  // when GetFullscreenAllowed() is called. Fullscreen is allowed in a
-  // docshell when all containing iframes have the allowfullscreen
-  // attribute set to true. When mFullscreenAllowed is CHECK_ATTRIBUTES
-  // we check this docshell's containing frame for the allowfullscreen
-  // attribute, and recurse onto the parent docshell to ensure all containing
-  // frames also have the allowfullscreen attribute. If we find an ancestor
-  // docshell with mFullscreenAllowed not equal to CHECK_ATTRIBUTES, we've
-  // reached a content boundary, and mFullscreenAllowed denotes whether the
-  // parent across the content boundary has allowfullscreen=true in all its
-  // containing iframes. mFullscreenAllowed defaults to CHECK_ATTRIBUTES and
-  // is set otherwise when docshells which are content boundaries are created.
-  enum FullscreenAllowedState : uint8_t {
-    CHECK_ATTRIBUTES,
-    PARENT_ALLOWS,
-    PARENT_PROHIBITS
-  };
-  FullscreenAllowedState mFullscreenAllowed;
-
   // The following two fields cannot be declared as bit fields
   // because of uses with AutoRestore.
   bool mCreatingDocument;  // (should be) debugging only
