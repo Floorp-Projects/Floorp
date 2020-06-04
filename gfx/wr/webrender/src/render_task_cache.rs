@@ -147,14 +147,6 @@ impl RenderTaskCache {
 
         // Allocate space in the texture cache, but don't supply
         // and CPU-side data to be uploaded.
-        //
-        // Note that we currently use Eager eviction for cached render
-        // tasks, which means that any cached item not used in the last
-        // frame is discarded. There's room to be a lot smarter here,
-        // especially by considering the relative costs of re-rendering
-        // each type of item (box shadow blurs are an order of magnitude
-        // more expensive than borders, for example). Telemetry could
-        // inform our decisions here as well.
         texture_cache.update(
             &mut entry.handle,
             descriptor,
@@ -165,7 +157,7 @@ impl RenderTaskCache {
             gpu_cache,
             None,
             render_task.uv_rect_kind(),
-            Eviction::Eager,
+            Eviction::Auto,
         );
 
         // Get the allocation details in the texture cache, and store
