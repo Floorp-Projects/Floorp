@@ -22,6 +22,7 @@
 #include "mozilla/ThreadEventQueue.h"
 #include "mozilla/ThreadLocal.h"
 #include "PrioritizedEventQueue.h"
+#include "TaskController.h"
 #ifdef MOZ_CANARY
 #  include <fcntl.h>
 #  include <unistd.h>
@@ -365,6 +366,8 @@ nsresult nsThreadManager::Init() {
           ? (env_var_flag[0] ? open(env_var_flag, flags, mode) : STDERR_FILENO)
           : 0;
 #endif
+
+  TaskController::Initialize();
 
   nsCOMPtr<nsIIdlePeriod> idlePeriod = new MainThreadIdlePeriod();
 

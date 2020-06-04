@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/plugins/PluginProcessChild.h"
+#include "mozilla/TaskController.h"
 
 #include "ClearOnShutdown.h"
 #include "base/command_line.h"
@@ -195,7 +196,10 @@ void PluginProcessChild::CleanUp() {
 #endif
 
   mozilla::KillClearOnShutdown(ShutdownPhase::ShutdownFinal);
+
   AbstractThread::ShutdownMainThread();
+
+  mozilla::TaskController::Shutdown();
 }
 
 }  // namespace plugins
