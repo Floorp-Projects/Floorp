@@ -489,7 +489,8 @@ mozilla::ipc::IPCResult HttpTransactionParent::RecvOnStopRequest(
     const int64_t& aTransferSize, const TimingStructArgs& aTimings,
     const Maybe<nsHttpHeaderArray>& aResponseTrailers,
     const bool& aHasStickyConn,
-    Maybe<TransactionObserverResult>&& aTransactionObserverResult) {
+    Maybe<TransactionObserverResult>&& aTransactionObserverResult,
+    const int64_t& aRequestSize) {
   LOG(("HttpTransactionParent::RecvOnStopRequest [this=%p status=%" PRIx32
        "]\n",
        this, static_cast<uint32_t>(aStatus)));
@@ -497,11 +498,12 @@ mozilla::ipc::IPCResult HttpTransactionParent::RecvOnStopRequest(
       this, [self = UnsafePtr<HttpTransactionParent>(this), aStatus,
              aResponseIsComplete, aTransferSize, aTimings, aResponseTrailers,
              aHasStickyConn,
-             aTransactionObserverResult{
-                 std::move(aTransactionObserverResult)}]() mutable {
+             aTransactionObserverResult{std::move(aTransactionObserverResult)},
+             aRequestSize]() mutable {
         self->DoOnStopRequest(aStatus, aResponseIsComplete, aTransferSize,
                               aTimings, aResponseTrailers, aHasStickyConn,
-                              std::move(aTransactionObserverResult));
+                              std::move(aTransactionObserverResult),
+                              aRequestSize);
       }));
   return IPC_OK();
 }
@@ -511,7 +513,8 @@ void HttpTransactionParent::DoOnStopRequest(
     const int64_t& aTransferSize, const TimingStructArgs& aTimings,
     const Maybe<nsHttpHeaderArray>& aResponseTrailers,
     const bool& aHasStickyConn,
-    Maybe<TransactionObserverResult>&& aTransactionObserverResult) {
+    Maybe<TransactionObserverResult>&& aTransactionObserverResult,
+    const int64_t& aRequestSize) {
   LOG(("HttpTransactionParent::DoOnStopRequest [this=%p]\n", this));
   if (mCanceled) {
     return;
@@ -525,6 +528,7 @@ void HttpTransactionParent::DoOnStopRequest(
 
   mResponseIsComplete = aResponseIsComplete;
   mTransferSize = aTransferSize;
+  mRequestSize = aRequestSize;
   TimingStructArgsToTimingsStruct(aTimings, mTimings);
 
   if (aResponseTrailers.isSome()) {
