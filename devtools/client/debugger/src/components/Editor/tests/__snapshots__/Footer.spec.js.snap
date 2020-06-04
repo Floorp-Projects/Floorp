@@ -11,11 +11,11 @@ exports[`SourceFooter Component default case should render 1`] = `
       className="commands"
     >
       <button
-        aria-label="Blackbox source"
+        aria-label="Ignore source"
         className="action black-box"
         key="black-box"
         onClick={[Function]}
-        title="Blackbox source"
+        title="Ignore source"
       >
         <AccessibleImage
           className="blackBox"
@@ -53,11 +53,11 @@ exports[`SourceFooter Component move cursor should render new cursor position 1`
       className="commands"
     >
       <button
-        aria-label="Blackbox source"
+        aria-label="Ignore source"
         className="action black-box"
         key="black-box"
         onClick={[Function]}
-        title="Blackbox source"
+        title="Ignore source"
       >
         <AccessibleImage
           className="blackBox"

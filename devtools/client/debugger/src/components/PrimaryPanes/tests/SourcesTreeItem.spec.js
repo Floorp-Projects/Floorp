@@ -19,17 +19,17 @@ jest.mock("../../../utils/clipboard", () => ({
 
 const blackBoxAllContexMenuItem = {
   id: "node-blackbox-all",
-  label: "Blackbox",
+  label: "Ignore",
   submenu: [
     {
       id: "node-blackbox-all-inside",
-      label: "Blackbox files in this directory",
+      label: "Ignore files in this directory",
       disabled: false,
       click: expect.any(Function),
     },
     {
       id: "node-blackbox-all-outside",
-      label: "Blackbox files outside this directory",
+      label: "Ignore files outside this directory",
       disabled: false,
       click: expect.any(Function),
     },
@@ -105,11 +105,11 @@ describe("SourceTreeItem", () => {
           label: "Copy source URI",
         },
         {
-          accesskey: "B",
+          accesskey: "I",
           click: expect.any(Function),
           disabled: false,
           id: "node-menu-blackbox",
-          label: "Blackbox source",
+          label: "Ignore source",
         },
         {
           accesskey: "d",
@@ -140,7 +140,7 @@ describe("SourceTreeItem", () => {
       expect(copyToTheClipboard).toHaveBeenCalled();
     });
 
-    it("shows context menu on file to blackbox source", async () => {
+    it("shows context menu on file to ignore source", async () => {
       const menuOptions = [
         {
           accesskey: "u",
@@ -150,11 +150,11 @@ describe("SourceTreeItem", () => {
           label: "Copy source URI",
         },
         {
-          accesskey: "B",
+          accesskey: "I",
           click: expect.any(Function),
           disabled: false,
           id: "node-menu-blackbox",
-          label: "Blackbox source",
+          label: "Ignore source",
         },
         {
           accesskey: "d",
@@ -186,7 +186,7 @@ describe("SourceTreeItem", () => {
       expect(props.toggleBlackBox).toHaveBeenCalled();
     });
 
-    it("shows context menu on directory to blackbox all with submenu options", async () => {
+    it("shows context menu on directory to ignore all with submenu options", async () => {
       const menuOptions = [
         {
           click: expect.any(Function),
@@ -247,11 +247,11 @@ describe("SourceTreeItem", () => {
           label: "Copy source URI",
         },
         {
-          accesskey: "B",
+          accesskey: "I",
           click: expect.any(Function),
           disabled: false,
           id: "node-menu-blackbox",
-          label: "Blackbox source",
+          label: "Ignore source",
         },
         {
           accesskey: "d",
@@ -420,7 +420,7 @@ describe("SourceTreeItem", () => {
       expect(node).toMatchSnapshot();
     });
 
-    it("should show source item with blackbox icon", async () => {
+    it("should show source item with ignore icon", async () => {
       const isBlackBoxed = true;
       const mockSource = {
         ...makeMockSource("http://mdn.com/one.js", "server1.conn13.child1/39"),
