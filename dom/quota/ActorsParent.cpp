@@ -660,15 +660,19 @@ nsresult SaveLocalStorageArchiveVersion(mozIStorageConnection* aConnection,
 }  // namespace
 
 class DirectoryLockImpl final : public DirectoryLock {
-  RefPtr<QuotaManager> mQuotaManager;
+  // ToDo: Use NotNull for this.
+  const RefPtr<QuotaManager> mQuotaManager;
 
   const Nullable<PersistenceType> mPersistenceType;
   const nsCString mGroup;
   const OriginScope mOriginScope;
   const Nullable<Client::Type> mClientType;
+  // ToDo: Use InitializedOnce for this.
   RefPtr<OpenDirectoryListener> mOpenListener;
 
+  // ToDo: Use NotNull for this.
   nsTArray<DirectoryLockImpl*> mBlocking;
+  // ToDo: Use NotNull for this.
   nsTArray<DirectoryLockImpl*> mBlockedOn;
 
   const int64_t mId;
@@ -680,14 +684,16 @@ class DirectoryLockImpl final : public DirectoryLock {
   const bool mInternal;
 
   bool mRegistered;
+  // ToDo: Use FlippedOnce.
   bool mInvalidated;
 
  public:
-  DirectoryLockImpl(QuotaManager* aQuotaManager, const int64_t aId,
+  DirectoryLockImpl(RefPtr<QuotaManager> aQuotaManager, const int64_t aId,
                     const Nullable<PersistenceType>& aPersistenceType,
                     const nsACString& aGroup, const OriginScope& aOriginScope,
                     const Nullable<Client::Type>& aClientType, bool aExclusive,
-                    bool aInternal, OpenDirectoryListener* aOpenListener);
+                    bool aInternal,
+                    RefPtr<OpenDirectoryListener> aOpenListener);
 
   void AssertIsOnOwningThread() const
 #ifdef DEBUG
@@ -734,24 +740,24 @@ class DirectoryLockImpl final : public DirectoryLock {
   // Test whether this DirectoryLock needs to wait for the given lock.
   bool MustWaitFor(const DirectoryLockImpl& aLock) const;
 
-  void AddBlockingLock(DirectoryLockImpl* aLock) {
+  void AddBlockingLock(DirectoryLockImpl& aLock) {
     AssertIsOnOwningThread();
 
-    mBlocking.AppendElement(aLock);
+    mBlocking.AppendElement(&aLock);
   }
 
   const nsTArray<DirectoryLockImpl*>& GetBlockedOnLocks() { return mBlockedOn; }
 
-  void AddBlockedOnLock(DirectoryLockImpl* aLock) {
+  void AddBlockedOnLock(DirectoryLockImpl& aLock) {
     AssertIsOnOwningThread();
 
-    mBlockedOn.AppendElement(aLock);
+    mBlockedOn.AppendElement(&aLock);
   }
 
-  void MaybeUnblock(DirectoryLockImpl* aLock) {
+  void MaybeUnblock(DirectoryLockImpl& aLock) {
     AssertIsOnOwningThread();
 
-    mBlockedOn.RemoveElement(aLock);
+    mBlockedOn.RemoveElement(&aLock);
     if (mBlockedOn.IsEmpty()) {
       NotifyOpenListener();
     }
@@ -2853,23 +2859,24 @@ already_AddRefed<DirectoryLock> DirectoryLock::Specialize(
 void DirectoryLock::Log() const { GetDirectoryLockImpl(this)->Log(); }
 
 DirectoryLockImpl::DirectoryLockImpl(
-    QuotaManager* aQuotaManager, const int64_t aId,
+    RefPtr<QuotaManager> aQuotaManager, const int64_t aId,
     const Nullable<PersistenceType>& aPersistenceType, const nsACString& aGroup,
     const OriginScope& aOriginScope, const Nullable<Client::Type>& aClientType,
-    bool aExclusive, bool aInternal, OpenDirectoryListener* aOpenListener)
-    : mQuotaManager(aQuotaManager),
+    bool aExclusive, bool aInternal,
+    RefPtr<OpenDirectoryListener> aOpenListener)
+    : mQuotaManager(std::move(aQuotaManager)),
       mPersistenceType(aPersistenceType),
       mGroup(aGroup),
       mOriginScope(aOriginScope),
       mClientType(aClientType),
-      mOpenListener(aOpenListener),
+      mOpenListener(std::move(aOpenListener)),
       mId(aId),
       mExclusive(aExclusive),
       mInternal(aInternal),
       mRegistered(false),
       mInvalidated(false) {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(aQuotaManager);
+  MOZ_ASSERT(mQuotaManager);
   MOZ_ASSERT_IF(aOriginScope.IsOrigin(), !aOriginScope.GetOrigin().IsEmpty());
   MOZ_ASSERT_IF(!aInternal, !aPersistenceType.IsNull());
   MOZ_ASSERT_IF(!aInternal,
@@ -2878,7 +2885,7 @@ DirectoryLockImpl::DirectoryLockImpl(
   MOZ_ASSERT_IF(!aInternal, aOriginScope.IsOrigin());
   MOZ_ASSERT_IF(!aInternal, !aClientType.IsNull());
   MOZ_ASSERT_IF(!aInternal, aClientType.Value() < Client::TypeMax());
-  MOZ_ASSERT_IF(!aInternal, aOpenListener);
+  MOZ_ASSERT_IF(!aInternal, mOpenListener);
 }
 
 DirectoryLockImpl::~DirectoryLockImpl() {
@@ -2886,7 +2893,7 @@ DirectoryLockImpl::~DirectoryLockImpl() {
   MOZ_ASSERT(mQuotaManager);
 
   for (DirectoryLockImpl* blockingLock : mBlocking) {
-    blockingLock->MaybeUnblock(this);
+    blockingLock->MaybeUnblock(*this);
   }
 
   mBlocking.Clear();
@@ -3001,8 +3008,8 @@ already_AddRefed<DirectoryLock> DirectoryLockImpl::Specialize(
     MOZ_ASSERT(blockedLock);
 
     if (blockedLock->MustWaitFor(*lock)) {
-      lock->AddBlockingLock(blockedLock);
-      blockedLock->AddBlockedOnLock(lock);
+      lock->AddBlockingLock(*blockedLock);
+      blockedLock->AddBlockedOnLock(*lock);
     }
   }
 
@@ -3708,8 +3715,8 @@ auto QuotaManager::CreateDirectoryLock(
   for (uint32_t index = mDirectoryLocks.Length(); index > 0; index--) {
     DirectoryLockImpl* existingLock = mDirectoryLocks[index - 1];
     if (lock->MustWaitFor(*existingLock)) {
-      existingLock->AddBlockingLock(lock);
-      lock->AddBlockedOnLock(existingLock);
+      existingLock->AddBlockingLock(*lock);
+      lock->AddBlockedOnLock(*existingLock);
       blocked = true;
     }
   }
