@@ -48,7 +48,7 @@ bool ChooseOriginAttributes(nsIChannel* aChannel, OriginAttributes& aAttrs,
   }
 
   nsAutoString partitionKey;
-  Unused << cjs->GetFirstPartyDomain(partitionKey);
+  Unused << cjs->GetPartitionKey(partitionKey);
 
   if (!partitionKey.IsEmpty()) {
     aAttrs.SetPartitionKey(partitionKey);

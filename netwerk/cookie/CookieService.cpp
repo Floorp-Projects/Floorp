@@ -1531,7 +1531,7 @@ CookieStatus CookieService::CheckPrefs(nsICookieJarSettings* aCookieJarSettings,
             ? nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN
             : nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER;
     if (StoragePartitioningEnabled(rejectReason, aCookieJarSettings)) {
-      MOZ_ASSERT(!aOriginAttrs.mFirstPartyDomain.IsEmpty(),
+      MOZ_ASSERT(!aOriginAttrs.mPartitionKey.IsEmpty(),
                  "We must have a StoragePrincipal here!");
       return STATUS_ACCEPTED;
     }

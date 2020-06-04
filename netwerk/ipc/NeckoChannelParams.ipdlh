@@ -47,7 +47,7 @@ struct CookieJarSettingsArgs
   bool isOnContentBlockingAllowList;
   CookiePermissionData[] cookiePermissions;
   bool isFixed;
-  nsString firstPartyDomain;
+  nsString partitionKey;
 };
 
 //-----------------------------------------------------------------------------
