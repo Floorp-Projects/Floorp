@@ -691,6 +691,12 @@
   args:
     obj: ObjId
 
+- name: StringFromCharCodeResult
+  shared: false
+  transpile: false
+  args:
+    code: Int32Id
+
 - name: MathAbsInt32Result
   shared: true
   transpile: true
