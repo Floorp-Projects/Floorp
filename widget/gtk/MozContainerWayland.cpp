@@ -445,10 +445,14 @@ struct wl_surface* moz_container_wayland_surface_lock(MozContainer* container) {
   return surface;
 }
 
-void moz_container_wayland_surface_unlock(MozContainer* container) {
+void moz_container_wayland_surface_unlock(MozContainer* container,
+                                          struct wl_surface** surface) {
   LOGWAYLAND(("%s [%p] surface %p\n", __FUNCTION__, (void*)container,
               (void*)container->wl_container.surface));
-  container->wl_container.container_lock->Unlock();
+  if (*surface) {
+    container->wl_container.container_lock->Unlock();
+    *surface = nullptr;
+  }
 }
 
 struct wl_egl_window* moz_container_wayland_get_egl_window(
