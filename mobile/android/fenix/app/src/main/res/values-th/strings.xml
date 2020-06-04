@@ -32,7 +32,7 @@
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">ลบวาระ</string>
 
-    <!-- Private mode shortcut "contextual feature recommender" (CFR) -->
+    <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
     <string name="cfr_message">เพิ่มทางลัดเพื่อเปิดแท็บส่วนตัวจากหน้าจอหลักของคุณ</string>
     <!-- Text for the positive button -->
@@ -212,6 +212,12 @@
     <string name="preferences_add_private_browsing_shortcut">เพิ่มทางลัดการเรียกดูแบบส่วนตัว</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">การช่วยเข้าถึง</string>
+    <!-- Preference to override the Firefox Account server -->
+    <string name="preferences_override_fxa_server">เซิร์ฟเวอร์บัญชี Firefox ที่กำหนดเอง</string>
+    <!-- Preference to override the Sync token server -->
+    <string name="preferences_override_sync_tokenserver">เซิร์ฟเวอร์ Sync ที่กำหนดเอง</string>
+    <!-- Toast shown after updating the FxA/Sync server override preferences -->
+    <string name="toast_override_fxa_sync_server_done">เปลี่ยนแปลงเซิร์ฟเวอร์บัญชี Firefox/Sync แล้ว กำลังออกจากแอปพลิเคชันเพื่อนำการเปลี่ยนแปลงไปใช้…</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">บัญชี</string>
     <!-- Preference shown on banner to sign into account -->
@@ -288,6 +294,11 @@
     <!-- Label summary showing never synced -->
     <string name="sync_never_synced_summary">ซิงค์ล่าสุด: ไม่เคย</string>
 
+    <!-- Text for displaying the default device name.
+        The first parameter is the application name, the second is the device manufacturer name
+        and the third is the device model. -->
+    <string name="default_device_name_2">%1$s บน %2$s %3$s</string>
+
     <!-- Send Tab -->
     <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="fxa_received_tab_channel_name">แท็บที่ได้รับ</string>
@@ -355,9 +366,6 @@
     <!-- Preference for removing FxA account -->
     <string name="preferences_sync_remove_account">เอาบัญชีออก</string>
 
-    <!-- Pairing Feature strings -->
-    <!-- Instructions on how to access pairing -->
-    <string name="pair_instructions"><![CDATA[เยี่ยมชม <b>firefox.com/pair</b> ใน Firefox บนคอมพิวเตอร์ของคุณเพื่อรับรหัส QR ของคุณ]]></string>
     <!-- Button to open camera for pairing -->
     <string name="pair_open_camera">เปิดกล้อง</string>
     <!-- Button to cancel pairing -->
@@ -454,6 +462,9 @@
 
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">เอาออก</string>
+
+    <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
+    <string name="pwa_site_controls_title_private">%1$s (โหมดส่วนตัว)</string>
 
     <!-- History -->
     <!-- Text for the button to clear all history -->
@@ -787,8 +798,6 @@
     <!-- Title for Accessibility Text Size Scaling Preference -->
     <string name="preference_accessibility_font_size_title">ขนาดแบบอักษร</string>
 
-    <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
-    <string name="preference_accessibility_auto_size">การปรับขนาดแบบอักษรโดยอัตโนมัติ</string>
     <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
     <string name="preference_accessibility_auto_size_summary">ขนาดแบบอักษรจะตรงกับการตั้งค่า Android ของคุณ ปิดใช้งานเพื่อจัดการขนาดแบบอักษรที่นี่</string>
 
@@ -796,7 +805,7 @@
     <string name="preferences_delete_browsing_data">ลบข้อมูลการเรียกดู</string>
 
     <!-- Title for the tabs item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_tabs_title">แท็บที่เปิด</string>
+    <string name="preferences_delete_browsing_data_tabs_title_2">แท็บที่เปิด</string>
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
     <string name="preferences_delete_browsing_data_tabs_subtitle">%d แท็บ</string>
     <!-- Title for the data and history items in Delete browsing data -->
@@ -846,13 +855,25 @@
     <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
     <string name="deleting_browsing_data_in_progress">กำลังลบข้อมูลการเรียกดู…</string>
 
+    <!-- text for firefox preview moving tip description -->
+    <string name="tip_firefox_preview_moved_description">Firefox Nightly อัปเดตทุกคืนและมีลูกเล่นใหม่ ๆ ทุกคืน
+        อย่างไรก็ตามความเสถียรอาจลดลง ดาวน์โหลดเบราว์เซอร์เบต้าของเราเพื่อประสบการณ์ที่เสถียรยิ่งขึ้น</string>
+    <!-- text for firefox preview moving tip button. "Mozilla Firefox Browser" is intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_button">รับ Mozilla Firefox เบราว์เซอร์</string>
+
     <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_header_preview_installed">Firefox Nightly ย้ายไปแล้ว</string>
+    <!-- text for firefox preview moving tip description -->
+    <string name="tip_firefox_preview_moved_description_preview_installed">แอพนี้จะไม่ได้รับการอัปเดตด้านความปลอดภัยอีกต่อไป หยุดใช้งานแอปนี้และเปลี่ยนเป็น Nightly ตัวใหม่
+        \n\nหากต้องการโอนที่คั่นหน้า การเข้าสู่ระบบ และประวัติการท่องของตุณไปยังแอปอื่นให้สร้างบัญชี Firefox ขึ้นมา</string>
     <!-- text for firefox preview moving tip button  -->
     <string name="tip_firefox_preview_moved_button_preview_installed">โยกไปใช้ Nightly ตัวใหม่</string>
 
     <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_header_preview_not_installed">Firefox Nightly ได้ย้ายไปแล้ว</string>
+    <!-- text for firefox preview moving tip description -->
+    <string name="tip_firefox_preview_moved_description_preview_not_installed">แอพนี้จะไม่ได้รับการอัปเดตความปลอดภัยอีกต่อไป รับ Nightly ใหม่และหยุดใช้แอปนี้
+        \n\nหากต้องการโอนที่คั่นหน้า การเข้าสู่ระบบ และประวัติการท่องของคุณไปยังแอปอื่นให้สร้างบัญชี Firefox ขึ้นมา</string>
     <!-- text for firefox preview moving tip button  -->
     <string name="tip_firefox_preview_moved_button_preview_not_installed">รับ Nightly ตัวใหม่</string>
 
@@ -969,6 +990,8 @@
     <string name="sign_in_with_email">ใช้อีเมลแทน</string>
     <!-- Text shown in confirmation dialog to sign out of account -->
     <string name="sign_out_confirmation_message">Firefox จะหยุดการซิงค์กับบัญชีของคุณ แต่จะไม่ลบข้อมูลการเรียกดูใด ๆ ของคุณบนอุปกรณ์นี้</string>
+    <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="sign_out_confirmation_message_2">%s จะหยุดซิงค์กับบัญชีของคุณ แต่จะไม่ลบข้อมูลการท่องเว็บใด ๆ ของคุณบนอุปกรณ์นี้</string>
     <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
     <string name="sign_out_disconnect">ตัดการเชื่อมต่อ</string>
     <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->
@@ -1124,6 +1147,9 @@
     <string name="add_to_homescreen_continue">ดำเนินการต่อไปยังเว็บไซต์</string>
     <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
     <string name="add_to_homescreen_text_placeholder">ชื่อทางลัด</string>
+
+    <!-- Describes the add to homescreen functionality -->
+    <string name="add_to_homescreen_description">คุณสามารถเพิ่มเว็บไซต์นี้ลงในหน้าจอหลักของโทรศัพท์ของคุณเพื่อเข้าถึงและเรียกดูได้เร็วขึ้นด้วยประสบการณ์ที่เหมือนแอป</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">การเข้าสู่ระบบและรหัสผ่าน</string>
@@ -1316,8 +1342,23 @@
     <string name="certificate_info_verified_by">ยืนยันโดย: %1$s</string>
     <!-- Login overflow menu delete button -->
     <string name="login_menu_delete_button">ลบ</string>
+    <!-- Login overflow menu edit button -->
+    <string name="login_menu_edit_button">แก้ไข</string>
     <!-- Message in delete confirmation dialog for logins -->
     <string name="login_deletion_confirmation">คุณแน่ใจหรือไม่ที่ต้องการจะลบการเข้าสู่ระบบนี้?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">ลบ</string>
+    <!--  The saved login options menu description. -->
+    <string name="login_options_menu">ตัวเลือกการเข้าสู่ระบบ</string>
+    <!--  The button description to discard changes to an edited login. -->
+    <string name="discard_changes">ละทิ้งการเปลี่ยนแปลง</string>
+    <!--  The page title for editing a saved login. -->
+    <string name="edit">แก้ไข</string>
+    <!--  The error message in edit login view when password field is blank. -->
+    <string name="saved_login_password_required">ต้องการรหัสผ่าน</string>
+    <!-- Voice search button content description  -->
+    <string name="voice_search_content_description">ค้นหาด้วยเสียง</string>
+    <!-- Voice search prompt description displayed after the user presses the voice search button -->
+    <string name="voice_search_explainer">พูดเลย</string>
+
     </resources>

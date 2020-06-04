@@ -94,6 +94,8 @@
     <string name="browser_menu_add_to_homescreen">Įtraukti į pradžios ekraną</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
     <string name="browser_menu_install_on_homescreen">Įdiegti</string>
+    <!-- Menu option on the toolbar that takes you to synced tabs page-->
+    <string name="synced_tabs">Sinchronizuotos kortelės</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">Rasti tinklalapyje</string>
     <!-- Browser menu button that creates a private tab -->
@@ -292,6 +294,8 @@
     <string name="preferences_sync_bookmarks">Adresynas</string>
     <!-- Preference for syncing logins -->
     <string name="preferences_sync_logins">Prisijungimai</string>
+    <!-- Preference for syncing tabs -->
+    <string name="preferences_sync_tabs">Kortelės</string>
     <!-- Preference for signing out -->
     <string name="preferences_sign_out">Atsijungti</string>
     <!-- Preference displays and allows changing current FxA device name -->
@@ -427,6 +431,8 @@
     <string name="library_desktop_bookmarks_unfiled">Kiti adresai</string>
     <!-- Option in Library to open History page -->
     <string name="library_history">Žurnalas</string>
+    <!-- Option in Library to open Synced Tabs page -->
+    <string name="library_synced_tabs">Sinchronizuotos kortelės</string>
     <!-- Option in Library to open Reading List -->
     <string name="library_reading_list">Skaitinių sąrašas</string>
     <!-- Menu Item Label for Search in Library -->
@@ -957,6 +963,8 @@
     <string name="onboarding_tracking_protection_standard_button_description">Blokuoja mažiau stebėjimo elementų, tačiau leidžia įprastai įkelti tinklalapius</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">Griežta (rekomenduojama)</string>
+    <!-- text for tracking protection radio button option for strict level of blocking -->
+    <string name="onboarding_tracking_protection_strict_option">Griežta</string>
     <!-- text for strict blocking option button description -->
     <string name="onboarding_tracking_protection_strict_button_description">Blokuoja daugiau stebėjimo elementų dėl geresnės apsaugos ir našumo, tačiau gali sutrikti kai kurių svetainių veikimas</string>
     <!-- text for the toolbar position card header
@@ -1411,4 +1419,15 @@
     <string name="voice_search_content_description">Paieška balsu</string>
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
     <string name="voice_search_explainer">Kalbėkite dabar</string>
+
+    <!-- Synced Tabs -->
+    <!-- Text displayed when user is not logged into a Firefox Account -->
+    <string name="synced_tabs_connect_to_sync_account">Prisijunkite su „Firefox“ paskyra.</string>
+    <!-- Text displayed to ask user to connect another device as no devices found with account -->
+    <string name="synced_tabs_connect_another_device">Susiekite kitą įrenginį.</string>
+    <!-- Text displayed asking user to re-authenticate -->
+    <string name="synced_tabs_reauth">Prisijunkite iš naujo.</string>
+    <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->
+    <string name="synced_tabs_enable_tab_syncing">Įjunkite kortelių sinchronizavimą.</string>
+
 </resources>

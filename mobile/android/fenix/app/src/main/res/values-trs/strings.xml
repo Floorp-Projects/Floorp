@@ -30,4 +30,58 @@
     <!-- Title for private session option -->
     <string name="private_browsing_title">Riña \’ngō sesiûn huìi nunt</string>
 
+    <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="private_browsing_placeholder_description_2">%1$snadure\' nej sa nana\'uî\'t nga gaché nunt riña nej rakïj ñanj huì garâj sunt nan sisī naránt asi gahuīt riña aplikasiûn nan. Nan nī sê sī gāta ruhuaj sisī à\'ngō nādure\'ej sò\' riña nej sîtio asi riña duguî\' dû\'uèj internet, sanī rugûñu\'un da\' \'ngōrïnt gīni\'in sa \'iát ngà aché nunt nī sī ga\'ue gīni\'in a\'ngô guìi ngà\'.</string>
+    <string name="private_browsing_common_myths">Nuguan\' nē huā rayi\'î riña aché nu huì\'</string>
+    <!-- Delete session button to erase your history in a private session -->
+    <string name="private_browsing_delete_session">Nādure\' sesiûn</string>
+
+    <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
+    <!-- Text for the main message -->
+    <string name="cfr_message">Nūtà\' \'ngō aksêso dirêckto da\' na\'nïnt rakïj ñanj huìi asìj riña pantayâ ayi\'ìt.</string>
+    <!-- Text for the positive button -->
+    <string name="cfr_pos_button_text">Nūtà\' \'ngō aksêso dirêckto</string>
+    <!-- Text for the negative button -->
+    <string name="cfr_neg_button_text">Guruhuât nānj ân</string>
+
+    <!-- Search widget "contextual feature recommendation" (CFR) -->
+    <!-- Text for the main message. 'Firefox' intentionally hardcoded here.-->
+    <string name="search_widget_cfr_message">Gūchì\' hìo doj riña Firefox. Nūtà\' \'ngō widget riña pantayâ ayi\'ìt.</string>
+    <!-- Text for the positive button -->
+    <string name="search_widget_cfr_pos_button_text">Nūtà\' widget</string>
+    <!-- Text for the negative button -->
+    <string name="search_widget_cfr_neg_button_text">Sī ga\'ue akuan\' nïn</string>
+
+    <!-- Home screen icons - Long press shortcuts -->
+    <!-- Shortcut action to open new tab -->
+    <string name="home_screen_shortcut_open_new_tab_2">Rakïj ñanj nakàa</string>
+    <!-- Shortcut action to open new private tab -->
+    <string name="home_screen_shortcut_open_new_private_tab_2">Rakïj ñaj nakà gārasun \'ngō rïn\'</string>
+    <!-- Heading for the Top Sites block -->
+    <string name="home_screen_top_sites_heading">Hiūj ni\'iāj yītïnj rè\'</string>
+
+    <!-- Browser Fragment -->
+    <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
+    <string name="browser_tabs_button">Nej Rakïj ñanj huā nî\'nïnj ïn</string>
+    <!-- Content description (not visible, for screen readers etc.): Navigate backward (browsing history) -->
+    <string name="browser_menu_back">Ne\' rukùu</string>
+    <!-- Content description (not visible, for screen readers etc.): Navigate forward (browsing history) -->
+    <string name="browser_menu_forward">Ne\' ñāan</string>
+    <!-- Content description (not visible, for screen readers etc.): Refresh current website -->
+    <string name="browser_menu_refresh">Nāgi\'iaj nākà</string>
+    <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
+    <string name="browser_menu_stop">Gānikïn\'</string>
+    <!-- Content description (not visible, for screen readers etc.): Bookmark the current page -->
+    <string name="browser_menu_bookmark">Sa arâj sun nīchrò\' doj</string>
+    <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
+    <string name="browser_menu_edit_bookmark">Nādūnā sa arâj sun nīchrò\' doj</string>
+
+    <!-- Browser menu button that opens the addon manager -->
+    <string name="browser_menu_add_ons">Sa gā\'ue nūtò\'</string>
+    <!-- Text displayed when there are no add-ons to be shown -->
+    <string name="no_add_ons">Nitāj sa gā\'ue nūtò\' mân hiūj nan</string>
+    <!-- Browser menu button that sends a user to help articles -->
+    <string name="browser_menu_help">Sa rūgûñu\'ūnj un</string>
+
     </resources>

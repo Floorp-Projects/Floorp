@@ -99,6 +99,8 @@
     <string name="browser_menu_add_to_homescreen">Embojuaju mba’erechaha ñepyrũgua</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
     <string name="browser_menu_install_on_homescreen">Mohenda</string>
+    <!-- Menu option on the toolbar that takes you to synced tabs page-->
+    <string name="synced_tabs">Tendayke mbojuehepyre</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">Eheka kuatiaroguépe</string>
     <!-- Browser menu button that creates a private tab -->
@@ -295,6 +297,8 @@
     <string name="preferences_sync_bookmarks">Techaukaha</string>
     <!-- Preference for syncing logins -->
     <string name="preferences_sync_logins">Tembiapo ñepyrũ</string>
+    <!-- Preference for syncing tabs -->
+    <string name="preferences_sync_tabs">Tendayke</string>
     <!-- Preference for signing out -->
     <string name="preferences_sign_out">Emboty tembiapo</string>
     <!-- Preference displays and allows changing current FxA device name -->
@@ -428,6 +432,8 @@
     <string name="library_desktop_bookmarks_unfiled">Ambue techaukahakuéra</string>
     <!-- Option in Library to open History page -->
     <string name="library_history">Tembiasakue</string>
+    <!-- Option in Library to open Synced Tabs page -->
+    <string name="library_synced_tabs">Tendayke mbojuehepyre</string>
     <!-- Option in Library to open Reading List -->
     <string name="library_reading_list">Moñe’ẽrã rysýi</string>
 
@@ -965,6 +971,8 @@
     <string name="onboarding_tracking_protection_standard_button_description">Ojoko’ive tapykuehoha hákatu omoneĩ kuatiarogue henyhẽvo hekopete</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">Mbaretépe (jeroviaháva)</string>
+    <!-- text for tracking protection radio button option for strict level of blocking -->
+    <string name="onboarding_tracking_protection_strict_option">Mbaretépe</string>
     <!-- text for strict blocking option button description -->
     <string name="onboarding_tracking_protection_strict_button_description">Ejokove tapykuehoha eñemo’ãve ha apopykuaave hag̃ua, hákatu ikatu avei oimeraẽva tenda nahenyhẽi hekopete</string>
     <!-- text for the toolbar position card header
@@ -1422,4 +1430,15 @@
     <string name="voice_search_content_description">Hekaha ñe’ẽgua</string>
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
     <string name="voice_search_explainer">Eñe’ẽ ko’ág̃a</string>
+
+    <!-- Synced Tabs -->
+    <!-- Text displayed when user is not logged into a Firefox Account -->
+    <string name="synced_tabs_connect_to_sync_account">Eike Firefox Account ndive.</string>
+    <!-- Text displayed to ask user to connect another device as no devices found with account -->
+    <string name="synced_tabs_connect_another_device">Emoinge ambue mba’e’oka.</string>
+    <!-- Text displayed asking user to re-authenticate -->
+    <string name="synced_tabs_reauth">Ikatúpiko emoneĩjey.</string>
+    <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->
+    <string name="synced_tabs_enable_tab_syncing">Embojuruja tendayke ñembojuehe.</string>
+
 </resources>

@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- App name for private browsing mode, only the "Private" portion should be localized. -->
-    <string name="app_name_private_2">Firefox Preview ສ່ວນຕົວ</string>
-    <!-- App name for private browsing mode, only the "Private" portion should be localized. -->
-    <string name="app_name_private_3">Firefox Preview (ສ່ວນຕົວ)</string>
+    <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="app_name_private_5">ສ່ວນຕົວ %s</string>
+    <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="app_name_private_4">%s (ສ່ວນຕົວ)</string>
     <!-- Home Fragment -->
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
     <string name="content_description_menu">ຕົວເລືອກເພີ່ມເຕີມ</string>
@@ -18,6 +18,12 @@
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">ແທັບທີ່ເປີດຂອງທ່ານຈະຖືກສະແດງຢູ່ບ່ອນນີ້.</string>
 
+    <!-- No Private Tabs Message Description -->
+    <string name="no_private_tabs_description">ແທັບສ່ວນຕົວຂອງທ່ານຈະຖືກສະແດງຢູ່ບ່ອນນີ້.</string>
+
+    <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
+    <string name="about_content">%1$s ແມ່ນຜະລິດຂື້ນໂດຍ Mozilla.</string>
+
     <!-- Private Browsing -->
     <!-- Title for private session option -->
     <string name="private_browsing_title">ທ່ານກຳລັງຢູ່ໃນເຊສສັນສ່ວນຕົວ</string>
@@ -25,16 +31,30 @@
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">ລົບເຊສສັນ</string>
 
+    <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
+    <!-- Text for the main message -->
+    <string name="cfr_message">ເພີ່ມທາງລັດເພື່ອເປີດແຖບສ່ວນຕົວຈາກໜ້າຈໍຫລັກຂອງທ່ານ.</string>
     <!-- Text for the positive button -->
     <string name="cfr_pos_button_text">ເພີ່ມທາງລັດ</string>
     <!-- Text for the negative button -->
     <string name="cfr_neg_button_text">ບໍ່, ຂອບໃຈ</string>
+
+    <!-- Search widget "contextual feature recommendation" (CFR) -->
+    <!-- Text for the main message. 'Firefox' intentionally hardcoded here.-->
+    <string name="search_widget_cfr_message">ເຂົ້າ Firefox ໄດ້ໄວຂຶ້ນ. ເພີ່ມ widget ໃສ່ໜ້າຈໍຫລັກຂອງທ່ານ.</string>
+    <!-- Text for the positive button -->
+    <string name="search_widget_cfr_pos_button_text">ເພີ່ມ widget</string>
+    <!-- Text for the negative button -->
+    <string name="search_widget_cfr_neg_button_text">ບໍ່ແມ່ນຕອນນີ້</string>
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
     <string name="home_screen_shortcut_open_new_tab_2">ແທັບໃຫມ່</string>
     <!-- Shortcut action to open new private tab -->
     <string name="home_screen_shortcut_open_new_private_tab_2">ແທັບສ່ວນຕົວໃຫມ່</string>
+
+    <!-- Heading for the Top Sites block -->
+    <string name="home_screen_top_sites_heading">ເວັບໄຊທຍອດນິຍົມ</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
@@ -53,7 +73,7 @@
     <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
     <string name="browser_menu_edit_bookmark">ແກ້ໄຂບຸກມາກ</string>
     <!-- Browser menu button that opens the addon manager -->
-    <string name="browser_menu_addon_manager">ຕົວຈັດການ Add-ons</string>
+    <string name="browser_menu_add_ons">Add-ons</string>
     <!-- Text displayed when there are no add-ons to be shown -->
     <string name="no_add_ons">ບໍ່ມີ add-ons ຢູ່ທີ່ນີ້</string>
     <!-- Browser menu button that sends a user to help articles -->
@@ -63,13 +83,15 @@
     <!-- Browser menu button that opens the settings menu -->
     <string name="browser_menu_settings">ການຕັ້ງຄ່າ</string>
     <!-- Browser menu button that opens a user's library -->
-    <string name="browser_menu_your_library">ຫ້ອງສະຫມຸດຂອງທ່ານ</string>
+    <string name="browser_menu_library">ຄັງເກັບມ້ຽນ</string>
     <!-- Browser menu toggle that requests a desktop site -->
     <string name="browser_menu_desktop_site">ໂຫມດເດັກສທັອບ</string>
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
     <string name="browser_menu_add_to_homescreen">ເພີ່ມເຂົ້າໄປຫນ້າທຳອິດ</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
     <string name="browser_menu_install_on_homescreen">ຕິດຕັ້ງ</string>
+    <!-- Menu option on the toolbar that takes you to synced tabs page-->
+    <string name="synced_tabs">ແທັບທີ່ Sync ແລ້ວ</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">ຄົ້ນຫາໃນຫນ້ານີ້</string>
     <!-- Browser menu button that creates a private tab -->
@@ -231,10 +253,6 @@
     <string name="sync_last_synced_summary">Sync ຄັ້ງຫລ້າສຸດ: %s</string>
     <!-- Label summary showing never synced -->
     <string name="sync_never_synced_summary">Sync ຄັ້ງຫລ່າສຸດ: ບໍ່ເຄີຍ</string>
-    <!-- Text for displaying the default device name.
-        The first parameter is the application name, the second is the device manufacturer name
-        and the third is the device model. -->
-    <string name="default_device_name">%s ໃນ %s %s</string>
 
     <!-- Send Tab -->
     <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
@@ -321,8 +339,6 @@
     <string name="library_reading_list">ລາຍການອ່ານ</string>
     <!-- Menu Item Label for Search in Library -->
     <string name="library_search">ຄົ້ນຫາ</string>
-    <!-- Library Page Title -->
-    <string name="library_title">ຫ້ອງສະໝຸດ</string>
     <!-- Settings Page Title -->
     <string name="settings_title">ການຕັ້ງຄ່າ</string>
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->

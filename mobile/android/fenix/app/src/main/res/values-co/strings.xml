@@ -739,7 +739,7 @@
     <!-- An option to connect additional devices -->
     <string name="sync_connect_device">Cunnettà un altru apparechju</string>
     <!-- The dialog text shown when additional devices are not available -->
-    <string name="sync_connect_device_dialog">Per mandà un’unghjetta, cunnettatevi à u vostru contu Firefox nant’à al menu un altru apparechju.</string>
+    <string name="sync_connect_device_dialog">Per mandà un’unghjetta, cunnettatevi à u vostru contu Firefox nant’à omancu un altru apparechju.</string>
     <!-- Confirmation dialog button -->
     <string name="sync_confirmation_button">Ahju capitu</string>
     <!-- Share error message -->
@@ -1402,4 +1402,5 @@
     <string name="voice_search_content_description">Ricerca vucale</string>
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
     <string name="voice_search_explainer">Parlate avà</string>
-</resources>
+
+    </resources>
