@@ -15,7 +15,7 @@
  */
 package org.mozilla.thirdparty.com.google.android.exoplayer2.upstream;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 import org.mozilla.thirdparty.com.google.android.exoplayer2.C;
 import org.mozilla.thirdparty.com.google.android.exoplayer2.util.Assertions;
 import java.io.IOException;

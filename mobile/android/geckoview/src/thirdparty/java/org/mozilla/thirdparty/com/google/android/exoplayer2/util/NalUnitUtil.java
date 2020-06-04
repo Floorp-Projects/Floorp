@@ -15,7 +15,6 @@
  */
 package org.mozilla.thirdparty.com.google.android.exoplayer2.util;
 
-import android.util.Log;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
@@ -31,6 +30,9 @@ public final class NalUnitUtil {
    */
   public static final class SpsData {
 
+    public final int profileIdc;
+    public final int constraintsFlagsAndReservedZero2Bits;
+    public final int levelIdc;
     public final int seqParameterSetId;
     public final int width;
     public final int height;
@@ -42,9 +44,23 @@ public final class NalUnitUtil {
     public final int picOrderCntLsbLength;
     public final boolean deltaPicOrderAlwaysZeroFlag;
 
-    public SpsData(int seqParameterSetId, int width, int height, float pixelWidthAspectRatio,
-        boolean separateColorPlaneFlag, boolean frameMbsOnlyFlag, int frameNumLength,
-        int picOrderCountType, int picOrderCntLsbLength, boolean deltaPicOrderAlwaysZeroFlag) {
+    public SpsData(
+        int profileIdc,
+        int constraintsFlagsAndReservedZero2Bits,
+        int levelIdc,
+        int seqParameterSetId,
+        int width,
+        int height,
+        float pixelWidthAspectRatio,
+        boolean separateColorPlaneFlag,
+        boolean frameMbsOnlyFlag,
+        int frameNumLength,
+        int picOrderCountType,
+        int picOrderCntLsbLength,
+        boolean deltaPicOrderAlwaysZeroFlag) {
+      this.profileIdc = profileIdc;
+      this.constraintsFlagsAndReservedZero2Bits = constraintsFlagsAndReservedZero2Bits;
+      this.levelIdc = levelIdc;
       this.seqParameterSetId = seqParameterSetId;
       this.width = width;
       this.height = height;
@@ -251,7 +267,8 @@ public final class NalUnitUtil {
     ParsableNalUnitBitArray data = new ParsableNalUnitBitArray(nalData, nalOffset, nalLimit);
     data.skipBits(8); // nal_unit
     int profileIdc = data.readBits(8);
-    data.skipBits(16); // constraint bits (6), reserved (2) and level_idc (8)
+    int constraintsFlagsAndReservedZero2Bits = data.readBits(8);
+    int levelIdc = data.readBits(8);
     int seqParameterSetId = data.readUnsignedExpGolombCodedInt();
 
     int chromaFormatIdc = 1; // Default is 4:2:0
@@ -265,7 +282,7 @@ public final class NalUnitUtil {
       }
       data.readUnsignedExpGolombCodedInt(); // bit_depth_luma_minus8
       data.readUnsignedExpGolombCodedInt(); // bit_depth_chroma_minus8
-      data.skipBits(1); // qpprime_y_zero_transform_bypass_flag
+      data.skipBit(); // qpprime_y_zero_transform_bypass_flag
       boolean seqScalingMatrixPresentFlag = data.readBit();
       if (seqScalingMatrixPresentFlag) {
         int limit = (chromaFormatIdc != 3) ? 8 : 12;
@@ -295,17 +312,17 @@ public final class NalUnitUtil {
       }
     }
     data.readUnsignedExpGolombCodedInt(); // max_num_ref_frames
-    data.skipBits(1); // gaps_in_frame_num_value_allowed_flag
+    data.skipBit(); // gaps_in_frame_num_value_allowed_flag
 
     int picWidthInMbs = data.readUnsignedExpGolombCodedInt() + 1;
     int picHeightInMapUnits = data.readUnsignedExpGolombCodedInt() + 1;
     boolean frameMbsOnlyFlag = data.readBit();
     int frameHeightInMbs = (2 - (frameMbsOnlyFlag ? 1 : 0)) * picHeightInMapUnits;
     if (!frameMbsOnlyFlag) {
-      data.skipBits(1); // mb_adaptive_frame_field_flag
+      data.skipBit(); // mb_adaptive_frame_field_flag
     }
 
-    data.skipBits(1); // direct_8x8_inference_flag
+    data.skipBit(); // direct_8x8_inference_flag
     int frameWidth = picWidthInMbs * 16;
     int frameHeight = frameHeightInMbs * 16;
     boolean frameCroppingFlag = data.readBit();
@@ -349,9 +366,20 @@ public final class NalUnitUtil {
       }
     }
 
-    return new SpsData(seqParameterSetId, frameWidth, frameHeight, pixelWidthHeightRatio,
-        separateColorPlaneFlag, frameMbsOnlyFlag, frameNumLength, picOrderCntType,
-        picOrderCntLsbLength, deltaPicOrderAlwaysZeroFlag);
+    return new SpsData(
+        profileIdc,
+        constraintsFlagsAndReservedZero2Bits,
+        levelIdc,
+        seqParameterSetId,
+        frameWidth,
+        frameHeight,
+        pixelWidthHeightRatio,
+        separateColorPlaneFlag,
+        frameMbsOnlyFlag,
+        frameNumLength,
+        picOrderCntType,
+        picOrderCntLsbLength,
+        deltaPicOrderAlwaysZeroFlag);
   }
 
   /**
@@ -368,7 +396,7 @@ public final class NalUnitUtil {
     data.skipBits(8); // nal_unit
     int picParameterSetId = data.readUnsignedExpGolombCodedInt();
     int seqParameterSetId = data.readUnsignedExpGolombCodedInt();
-    data.skipBits(1); // entropy_coding_mode_flag
+    data.skipBit(); // entropy_coding_mode_flag
     boolean bottomFieldPicOrderInFramePresentFlag = data.readBit();
     return new PpsData(picParameterSetId, seqParameterSetId, bottomFieldPicOrderInFramePresentFlag);
   }
