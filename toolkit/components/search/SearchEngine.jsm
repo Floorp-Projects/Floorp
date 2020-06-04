@@ -278,10 +278,6 @@ function getVerificationHash(name) {
  * @returns {object}
  */
 function getDir(key, iface) {
-  if (!key) {
-    SearchUtils.fail("getDir requires a directory key!");
-  }
-
   return Services.dirsvc.get(key, iface || Ci.nsIFile);
 }
 
@@ -362,7 +358,10 @@ class QueryParameter {
    */
   constructor(name, value, purpose) {
     if (!name || value == null) {
-      SearchUtils.fail("missing name or value for QueryParameter!");
+      throw Components.Exception(
+        "missing name or value for QueryParameter!",
+        Cr.NS_ERROR_INVALID_ARG
+      );
     }
 
     this.name = name;
@@ -559,14 +558,20 @@ function getInternalAliases(engine) {
  */
 function EngineURL(mimeType, requestMethod, template, resultDomain) {
   if (!mimeType || !requestMethod || !template) {
-    SearchUtils.fail("missing mimeType, method or template for EngineURL!");
+    throw Components.Exception(
+      "missing mimeType, method or template for EngineURL!",
+      Cr.NS_ERROR_INVALID_ARG
+    );
   }
 
   var method = requestMethod.toUpperCase();
   var type = mimeType.toLowerCase();
 
   if (method != "GET" && method != "POST") {
-    SearchUtils.fail('method passed to EngineURL must be "GET" or "POST"');
+    throw Components.Exception(
+      'method passed to EngineURL must be "GET" or "POST"',
+      Cr.NS_ERROR_INVALID_ARG
+    );
   }
 
   this.type = type;
@@ -576,7 +581,7 @@ function EngineURL(mimeType, requestMethod, template, resultDomain) {
 
   var templateURI = SearchUtils.makeURI(template);
   if (!templateURI) {
-    SearchUtils.fail(
+    throw Components.Exception(
       "new EngineURL: template is not a valid URI!",
       Cr.NS_ERROR_FAILURE
     );
@@ -591,7 +596,7 @@ function EngineURL(mimeType, requestMethod, template, resultDomain) {
       this.template = template;
       break;
     default:
-      SearchUtils.fail(
+      throw Components.Exception(
         "new EngineURL: template uses invalid scheme!",
         Cr.NS_ERROR_FAILURE
       );
@@ -920,7 +925,7 @@ SearchEngine.prototype = {
    */
   async _initFromFile(file) {
     if (!file || !(await OS.File.exists(file.path))) {
-      SearchUtils.fail(
+      throw Components.Exception(
         "File must exist before calling initFromFile!",
         Cr.NS_ERROR_UNEXPECTED
       );
@@ -1391,7 +1396,7 @@ SearchEngine.prototype = {
       this._parse();
     } else {
       Cu.reportError("Invalid search plugin due to namespace not matching.");
-      SearchUtils.fail(
+      throw Components.Exception(
         this._location + " is not a valid search plugin.",
         Cr.NS_ERROR_FILE_CORRUPTED
       );
@@ -1613,7 +1618,7 @@ SearchEngine.prototype = {
     try {
       var url = new EngineURL(type, method, template, resultDomain);
     } catch (ex) {
-      SearchUtils.fail(
+      throw Components.Exception(
         "_parseURL: failed to add " + template + " as a URL",
         Cr.NS_ERROR_FAILURE
       );
@@ -1755,10 +1760,13 @@ SearchEngine.prototype = {
       }
     }
     if (!this.name || !this._urls.length) {
-      SearchUtils.fail("_parse: No name, or missing URL!", Cr.NS_ERROR_FAILURE);
+      throw Components.Exception(
+        "_parse: No name, or missing URL!",
+        Cr.NS_ERROR_FAILURE
+      );
     }
     if (!this.supportsResponseType(SearchUtils.URL_TYPE.SEARCH)) {
-      SearchUtils.fail(
+      throw Components.Exception(
         "_parse: No text/html result type!",
         Cr.NS_ERROR_FAILURE
       );
@@ -2156,7 +2164,10 @@ SearchEngine.prototype = {
   // from nsISearchEngine
   addParam(name, value, responseType) {
     if (!name || value == null) {
-      SearchUtils.fail("missing name or value for nsISearchEngine::addParam!");
+      throw Components.Exception(
+        "missing name or value for nsISearchEngine::addParam",
+        Cr.NS_ERROR_INVALID_ARG
+      );
     }
     ENSURE_WARN(
       !this._isBuiltin,
@@ -2169,7 +2180,7 @@ SearchEngine.prototype = {
 
     var url = this._getURLOfType(responseType);
     if (!url) {
-      SearchUtils.fail(
+      throw Components.Exception(
         "Engine object has no URL for response type " + responseType,
         Cr.NS_ERROR_FAILURE
       );
