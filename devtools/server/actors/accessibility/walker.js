@@ -233,6 +233,7 @@ class AuditProgress {
       progress: {
         total: this.size,
         percentage: this.percentage,
+        completed: this.completed,
       },
     });
   }
