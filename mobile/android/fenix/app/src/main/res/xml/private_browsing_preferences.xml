@@ -14,7 +14,7 @@
         android:title="@string/preferences_open_links_in_a_private_tab"
         app:iconSpaceReserved="false" />
     <SwitchPreference
-        android:defaultValue="true"
+        android:defaultValue="false"
         android:key="@string/pref_key_allow_screenshots_in_private_mode"
         android:title="@string/preferences_allow_screenshots_in_private_mode"
         app:iconSpaceReserved="false" />

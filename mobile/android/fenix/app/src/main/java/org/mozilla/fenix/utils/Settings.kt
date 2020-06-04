@@ -142,7 +142,7 @@ class Settings private constructor(
 
     var allowScreenshotsInPrivateMode by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_allow_screenshots_in_private_mode),
-        default = true
+        default = false
     )
 
     // If any of the prefs have been modified, quit displaying the fenix moved tip
