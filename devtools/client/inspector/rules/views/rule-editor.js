@@ -292,7 +292,7 @@ RuleEditor.prototype = {
   /**
    * Update the text of the source link to reflect whether we're showing
    * original sources or not.  This is a callback for
-   * SourceMapURLService.subscribe, which see.
+   * SourceMapURLService.subscribeByURL, which see.
    *
    * @param {Object | null} originalLocation
    *        The original position object (url/line/column) or null.
@@ -363,7 +363,7 @@ RuleEditor.prototype = {
       if (this._unsubscribeSourceMap) {
         this._unsubscribeSourceMap();
       }
-      this._unsubscribeSourceMap = this.sourceMapURLService.subscribe(
+      this._unsubscribeSourceMap = this.sourceMapURLService.subscribeByURL(
         url,
         sourceLine,
         sourceColumn,

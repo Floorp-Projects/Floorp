@@ -124,7 +124,7 @@ EventTooltip.prototype = {
           };
 
           this._subscriptions.push(
-            sourceMapURLService.subscribe(
+            sourceMapURLService.subscribeByURL(
               location.url,
               location.line,
               location.column,

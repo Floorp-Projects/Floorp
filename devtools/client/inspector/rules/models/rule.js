@@ -947,7 +947,7 @@ class Rule {
       if (this._unsubscribeSourceMap) {
         this._unsubscribeSourceMap();
       }
-      this._unsubscribeSourceMap = this.sourceMapURLService.subscribe(
+      this._unsubscribeSourceMap = this.sourceMapURLService.subscribeByURL(
         url,
         line,
         column,
