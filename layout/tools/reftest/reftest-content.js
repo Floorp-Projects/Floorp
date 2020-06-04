@@ -256,9 +256,8 @@ function setupPrintMode() {
    docShell.contentViewer.setPageModeForTesting(/* aPageMode */ true, ps);
 }
 
-// Prints current page to a PDF file and calls callback when sucessfully
-// printed and written.
-function printToPdf(callback) {
+// Message the parent process to ask it to print the current page to a PDF file.
+function printToPdf() {
     let currentDoc = content.document;
     let isPrintSelection = false;
     let printRange = '';
@@ -277,45 +276,7 @@ function printToPdf(callback) {
         }
     }
 
-    let fileName =`reftest-print-${Date.now()}-`;
-    content.crypto.getRandomValues(new Uint8Array(4)).forEach(x => fileName += x.toString(16));
-    fileName += ".pdf"
-    let file = Services.dirsvc.get("TmpD", Ci.nsIFile);
-    file.append(fileName);
-
-    let PSSVC = Cc[PRINTSETTINGS_CONTRACTID].getService(Ci.nsIPrintSettingsService);
-    let ps = PSSVC.newPrintSettings;
-    ps.printSilent = true;
-    ps.showPrintProgress = false;
-    ps.printBGImages = true;
-    ps.printBGColors = true;
-    ps.printToFile = true;
-    ps.toFileName = file.path;
-    ps.outputFormat = Ci.nsIPrintSettings.kOutputFormatPDF;
-
-    if (isPrintSelection) {
-        ps.printRange = Ci.nsIPrintSettings.kRangeSelection;
-    } else if (printRange) {
-        ps.printRange = Ci.nsIPrintSettings.kRangeSpecifiedPageRange;
-        let range = printRange.split('-');
-        ps.startPageRange = +range[0] || 1;
-        ps.endPageRange = +range[1] || 1;
-    }
-
-    let webBrowserPrint = content.getInterface(Ci.nsIWebBrowserPrint);
-    webBrowserPrint.print(ps, {
-        onStateChange: function(webProgress, request, stateFlags, status) {
-            if (stateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
-                stateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK) {
-                callback(status, file.path);
-            }
-        },
-        onProgressChange: function () {},
-        onLocationChange: function () {},
-        onStatusChange: function () {},
-        onSecurityChange: function () {},
-        onContentBlockingEvent: function () {},
-    });
+    SendStartPrint(isPrintSelection, printRange);
 }
 
 function attrOrDefault(element, attr, def) {
@@ -1270,10 +1231,7 @@ function RecordResult(forURL)
     gCurrentURLTargetType = undefined;
 
     if (gCurrentTestType == TYPE_PRINT) {
-        printToPdf(function (status, fileName) {
-            SendPrintResult(currentTestRunTime, status, fileName);
-            FinishTestItem();
-        });
+        printToPdf();
         return;
     }
     if (gCurrentTestType == TYPE_SCRIPT) {
@@ -1473,6 +1431,10 @@ function RegisterMessageListeners()
         "reftest:ResetRenderingState",
         function (m) { RecvResetRenderingState(); }
     );
+    addMessageListener(
+        "reftest:PrintDone",
+        function (m) { RecvPrintDone(m.json.status, m.json.fileName); }
+    );
 }
 
 function RecvClear()
@@ -1500,6 +1462,13 @@ function RecvResetRenderingState()
 {
     resetZoomAndTextZoom();
     resetDisplayportAndViewport();
+}
+
+function RecvPrintDone(status, fileName)
+{
+    const currentTestRunTime = Date.now() - gCurrentTestStartTime;
+    SendPrintResult(currentTestRunTime, status, fileName);
+    FinishTestItem();
 }
 
 function SendAssertionCount(numAssertions)
@@ -1609,6 +1578,11 @@ function SendScriptResults(runtimeMs, error, results)
 {
     sendAsyncMessage("reftest:ScriptResults",
                      { runtimeMs: runtimeMs, error: error, results: results });
+}
+
+function SendStartPrint(isPrintSelection, printRange)
+{
+    sendAsyncMessage("reftest:StartPrint", { isPrintSelection, printRange });
 }
 
 function SendPrintResult(runtimeMs, status, fileName)

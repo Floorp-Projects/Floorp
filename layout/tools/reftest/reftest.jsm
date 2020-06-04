@@ -1536,6 +1536,10 @@ function RegisterMessageListenersAndLoadContentScript(aReload)
         function (m) { RecvScriptResults(m.json.runtimeMs, m.json.error, m.json.results); }
     );
     g.browserMessageManager.addMessageListener(
+        "reftest:StartPrint",
+        function (m) { RecvStartPrint(m.json.isPrintSelection, m.json.printRange); }
+    );
+    g.browserMessageManager.addMessageListener(
         "reftest:PrintResult",
         function (m) { RecvPrintResult(m.json.runtimeMs, m.json.status, m.json.fileName); }
     );
@@ -1657,6 +1661,47 @@ function RecvScriptResults(runtimeMs, error, results)
     RecordResult(runtimeMs, error, results);
 }
 
+function RecvStartPrint(isPrintSelection, printRange)
+{
+    let fileName =`reftest-print-${Date.now()}-`;
+    crypto.getRandomValues(new Uint8Array(4)).forEach(x => fileName += x.toString(16));
+    fileName += ".pdf"
+    let file = Services.dirsvc.get("TmpD", Ci.nsIFile);
+    file.append(fileName);
+
+    let PSSVC = Cc["@mozilla.org/gfx/printsettings-service;1"].getService(Ci.nsIPrintSettingsService);
+    let ps = PSSVC.newPrintSettings;
+    ps.printSilent = true;
+    ps.showPrintProgress = false;
+    ps.printBGImages = true;
+    ps.printBGColors = true;
+    ps.printToFile = true;
+    ps.toFileName = file.path;
+    ps.outputFormat = Ci.nsIPrintSettings.kOutputFormatPDF;
+    if (isPrintSelection) {
+        ps.printRange = Ci.nsIPrintSettings.kRangeSelection;
+    } else if (printRange) {
+        ps.printRange = Ci.nsIPrintSettings.kRangeSpecifiedPageRange;
+        let range = printRange.split('-');
+        ps.startPageRange = +range[0] || 1;
+        ps.endPageRange = +range[1] || 1;
+    }
+
+    g.browser.frameLoader.print(g.browser.outerWindowID, ps, {
+        onStateChange: function(webProgress, request, stateFlags, status) {
+            if (stateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
+                stateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK) {
+                SendPrintDone(status, file.path);
+            }
+        },
+        onProgressChange: function () {},
+        onLocationChange: function () {},
+        onStatusChange: function () {},
+        onSecurityChange: function () {},
+        onContentBlockingEvent: function () {},
+    });
+}
+
 function RecvPrintResult(runtimeMs, status, fileName)
 {
     if (!Components.isSuccessCode(status)) {
@@ -1748,6 +1793,11 @@ function SendLoadTest(type, uri, uriTargetType, timeout)
 function SendResetRenderingState()
 {
     g.browserMessageManager.sendAsyncMessage("reftest:ResetRenderingState");
+}
+
+function SendPrintDone(status, fileName)
+{
+    g.browserMessageManager.sendAsyncMessage("reftest:PrintDone", { status, fileName });
 }
 
 var pdfjsHasLoaded;
