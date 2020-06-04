@@ -17,6 +17,7 @@ out/
 .gradle/
 build/
 !taskcluster/ci/build/
+.build-cache/
 
 # Local configuration file (sdk path, etc)
 local.properties
