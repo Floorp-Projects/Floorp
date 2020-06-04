@@ -1,7 +1,12 @@
 {
   "manifest_version": 2,
+  "applications": {
+    "gecko": {
+      "id": "ads@mozac.org"
+    }
+  },
   "name": "Mozilla Android Components - Ads",
-  "version": "1.0",
+  "version": "${version}",
   "content_scripts": [
     {
       "matches": ["https://*/*"],
@@ -16,6 +21,7 @@
   ],
   "permissions": [
     "geckoViewAddons",
-    "nativeMessaging"
+    "nativeMessaging",
+    "nativeMessagingFromContent"
   ]
 }

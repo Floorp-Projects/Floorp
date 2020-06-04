@@ -93,7 +93,6 @@ abstract class BaseSearchTelemetry {
         engine.installWebExtension(
             id = extensionInfo.id,
             url = extensionInfo.resourceUrl,
-            allowContentMessaging = true,
             onSuccess = { extension ->
                 store.flowScoped { flow -> subscribeToUpdates(flow, extension, extensionInfo) }
             },

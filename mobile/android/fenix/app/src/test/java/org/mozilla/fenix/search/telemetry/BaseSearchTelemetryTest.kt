@@ -44,7 +44,6 @@ class BaseSearchTelemetryTest {
             engine.installWebExtension(
                 id = id,
                 url = resourceUrl,
-                allowContentMessaging = true,
                 onSuccess = any(),
                 onError = any()
             )

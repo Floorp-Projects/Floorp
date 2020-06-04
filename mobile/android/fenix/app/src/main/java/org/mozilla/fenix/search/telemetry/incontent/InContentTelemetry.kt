@@ -131,7 +131,7 @@ class InContentTelemetry(private val metrics: MetricController) : BaseSearchTele
 
     companion object {
         @VisibleForTesting
-        internal const val COOKIES_EXTENSION_ID = "BrowserCookiesExtension"
+        internal const val COOKIES_EXTENSION_ID = "cookies@mozac.org"
         @VisibleForTesting
         internal const val COOKIES_EXTENSION_RESOURCE_URL =
             "resource://android/assets/extensions/cookies/"

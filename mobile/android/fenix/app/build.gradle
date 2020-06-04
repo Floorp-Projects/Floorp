@@ -186,6 +186,10 @@ android {
         // GeckoView must uncompress it before it can do anything else which
         // causes a significant delay on startup.
         noCompress 'ja'
+
+        // manifest.template.json is converted to manifest.json at build time.
+        // No need to package the template in the APK.
+        ignoreAssetsPattern "manifest.template.json"
     }
 
     testOptions {
@@ -755,3 +759,34 @@ if (gradle.hasProperty('localProperties.autoPublish.application-services.dir')) 
     ext.appServicesSrcDir = gradle."localProperties.autoPublish.application-services.dir"
     apply from: "../${appServicesSrcDir}/build-scripts/substitute-local-appservices.gradle"
 }
+
+// Define a reusable task for updating the versions of our built-in web extensions. We automate this
+// to make sure we never forget to update the version, either in local development or for releases.
+// In both cases, we want to make sure the latest version of all extensions (including their latest
+// changes) are installed on first start-up.
+// We're using the A-C version here as we want to uplift all built-in extensions to A-C (Once that's
+// done we can also remove the task below):
+// https://github.com/mozilla-mobile/android-components/issues/7249
+ext.updateExtensionVersion = { task, extDir ->
+    configure(task) {
+        from extDir
+        include 'manifest.template.json'
+        rename { 'manifest.json' }
+        into extDir
+
+        def values = ['version': AndroidComponents.VERSION + "." + new Date().format('MMddHHmmss')]
+        inputs.properties(values)
+        expand(values)
+    }
+}
+
+tasks.register("updateAdsExtensionVersion", Copy) { task ->
+    updateExtensionVersion(task, 'src/main/assets/extensions/ads')
+}
+
+tasks.register("updateCookiesExtensionVersion", Copy) { task ->
+    updateExtensionVersion(task, 'src/main/assets/extensions/cookies')
+}
+
+preBuild.dependsOn updateAdsExtensionVersion
+preBuild.dependsOn updateCookiesExtensionVersion

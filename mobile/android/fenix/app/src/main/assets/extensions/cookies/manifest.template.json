@@ -1,7 +1,12 @@
 {
   "manifest_version": 2,
+  "applications": {
+    "gecko": {
+      "id": "cookies@mozac.org"
+    }
+  },
   "name": "Mozilla Android Components - Cookies",
-  "version": "1.0",
+  "version": "${version}",
   "content_scripts": [
     {
       "matches": ["https://*/*"],
@@ -23,6 +28,7 @@
   "permissions": [
     "geckoViewAddons",
     "nativeMessaging",
+    "nativeMessagingFromContent",
     "webNavigation",
     "webRequest",
     "webRequestBlocking",

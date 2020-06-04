@@ -51,7 +51,7 @@ class AdsTelemetry(private val metrics: MetricController) : BaseSearchTelemetry(
 
     companion object {
         @VisibleForTesting
-        internal const val ADS_EXTENSION_ID = "mozacBrowserAds"
+        internal const val ADS_EXTENSION_ID = "ads@mozac.org"
         @VisibleForTesting
         internal const val ADS_EXTENSION_RESOURCE_URL = "resource://android/assets/extensions/ads/"
         @VisibleForTesting
