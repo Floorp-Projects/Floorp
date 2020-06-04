@@ -5,7 +5,7 @@
 import os
 import mozunit
 from mozperftest.tests.support import get_running_env
-from mozperftest.browser.profile import Profile
+from mozperftest.test.profile import Profile
 
 
 def test_profile():
