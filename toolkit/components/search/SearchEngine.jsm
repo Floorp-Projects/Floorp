@@ -33,6 +33,13 @@ XPCOMUtils.defineLazyPreferenceGetter(
   false
 );
 
+XPCOMUtils.defineLazyGetter(this, "logConsole", () => {
+  return console.createInstance({
+    prefix: "SearchEngine",
+    maxLogLevel: SearchUtils.loggingEnabled ? "Debug" : "Warn",
+  });
+});
+
 const SEARCH_BUNDLE = "chrome://global/locale/search/search.properties";
 const BRAND_BUNDLE = "chrome://branding/locale/brand.properties";
 
@@ -152,14 +159,14 @@ loadListener.prototype = {
 
   // nsIRequestObserver
   onStartRequest(request) {
-    SearchUtils.log("loadListener: Starting request: " + request.name);
+    logConsole.debug("loadListener: Starting request:", request.name);
     this._stream = Cc["@mozilla.org/binaryinputstream;1"].createInstance(
       Ci.nsIBinaryInputStream
     );
   },
 
   onStopRequest(request, statusCode) {
-    SearchUtils.log("loadListener: Stopping request: " + request.name);
+    logConsole.debug("loadListener: Stopping request:", request.name);
 
     var requestFailed = !Components.isSuccessCode(statusCode);
     if (!requestFailed && request instanceof Ci.nsIHttpChannel) {
@@ -167,7 +174,7 @@ loadListener.prototype = {
     }
 
     if (requestFailed || this._countRead == 0) {
-      SearchUtils.log("loadListener: request failed!");
+      logConsole.warn("loadListener: request failed!");
       // send null so the callback can deal with the failure
       this._bytes = null;
     }
@@ -872,9 +879,9 @@ SearchEngine.prototype = {
     if (/^https?:/i.test(value)) {
       this.__searchForm = value;
     } else {
-      SearchUtils.log(
-        "_searchForm: Invalid URL dropped for " + this._name ||
-          "the current engine"
+      logConsole.debug(
+        "_searchForm: Invalid URL dropped for",
+        this._name || "the current engine"
       );
     }
   },
@@ -940,8 +947,9 @@ SearchEngine.prototype = {
       Cr.NS_ERROR_UNEXPECTED
     );
 
-    SearchUtils.log(
-      '_initFromURIAndLoad: Downloading engine from: "' + loadURI.spec + '".'
+    logConsole.debug(
+      "_initFromURIAndLoad: Downloading engine from:",
+      loadURI.spec
     );
 
     var chan = SearchUtils.makeChannel(loadURI);
@@ -965,7 +973,7 @@ SearchEngine.prototype = {
    *   The uri to load the search plugin from.
    */
   async _initFromURI(uri) {
-    SearchUtils.log('_initFromURI: Loading engine from: "' + uri.spec + '".');
+    logConsole.debug("_initFromURI: Loading engine from:", uri.spec);
     await this._retrieveSearchXMLData(uri.spec);
     // Now that the data is loaded, initialize the engine object
     this._initFromData();
@@ -1097,7 +1105,7 @@ SearchEngine.prototype = {
 
       if (engine._engineToUpdate) {
         // We're in an update, so just fail quietly
-        SearchUtils.log("updating " + engine._engineToUpdate.name + " failed");
+        logConsole.warn("Failed to update", engine._engineToUpdate.name);
         return;
       }
       var brandBundle = Services.strings.createBundle(BRAND_BUNDLE);
@@ -1128,7 +1136,7 @@ SearchEngine.prototype = {
       // Initialize the engine from the obtained data
       engine._initFromData();
     } catch (ex) {
-      SearchUtils.log("_onLoad: Failed to init engine!\n" + ex);
+      logConsole.error("_onLoad: Failed to init engine!", ex);
       // Report an error to the user
       if (ex.result == Cr.NS_ERROR_FILE_CORRUPTED) {
         promptError({
@@ -1177,7 +1185,7 @@ SearchEngine.prototype = {
         } else {
           onError(Ci.nsISearchService.ERROR_DUPLICATE_ENGINE);
         }
-        SearchUtils.log("_onLoad: duplicate engine found, bailing");
+        logConsole.debug("_onLoad: duplicate engine found, bailing");
         return;
       }
 
@@ -1186,12 +1194,7 @@ SearchEngine.prototype = {
       // nsISearchService::addEngine.
       if (engine._confirm) {
         var confirmation = engine._confirmAddEngine();
-        SearchUtils.log(
-          "_onLoad: confirm is " +
-            confirmation.confirmed +
-            "; useNow is " +
-            confirmation.useNow
-        );
+        logConsole.debug("_onLoad: confirm", confirmation);
         if (!confirmation.confirmed) {
           onError();
           return;
@@ -1285,12 +1288,11 @@ SearchEngine.prototype = {
       return;
     }
 
-    SearchUtils.log(
-      '_setIcon: Setting icon url "' +
-        limitURILength(uri.spec) +
-        '" for engine "' +
-        this.name +
-        '".'
+    logConsole.debug(
+      "_setIcon: Setting icon url for",
+      this.name,
+      "to",
+      limitURILength(uri.spec)
     );
     // Only accept remote icons from http[s] or ftp
     switch (uri.scheme) {
@@ -1310,13 +1312,6 @@ SearchEngine.prototype = {
       case "http":
       case "https":
       case "ftp":
-        SearchUtils.log(
-          '_setIcon: Downloading icon: "' +
-            uri.spec +
-            '" for engine: "' +
-            this.name +
-            '"'
-        );
         var chan = SearchUtils.makeChannel(uri);
 
         let iconLoadCallback = function(byteArray, engine) {
@@ -1327,20 +1322,17 @@ SearchEngine.prototype = {
           }
 
           if (!byteArray) {
-            SearchUtils.log("iconLoadCallback: load failed");
+            logConsole.warn("iconLoadCallback: load failed");
             return;
           }
 
           let contentType = chan.contentType;
           if (byteArray.length > SearchUtils.MAX_ICON_SIZE) {
             try {
-              SearchUtils.log("iconLoadCallback: rescaling icon");
+              logConsole.debug("iconLoadCallback: rescaling icon");
               [byteArray, contentType] = rescaleIcon(byteArray, contentType);
             } catch (ex) {
-              SearchUtils.log("iconLoadCallback: got exception: " + ex);
-              Cu.reportError(
-                "Unable to set an icon for the search engine because: " + ex
-              );
+              logConsole.error("Unable to set icon for the search engine:", ex);
               return;
             }
           }
@@ -1394,7 +1386,7 @@ SearchEngine.prototype = {
       (element.localName == OPENSEARCH_LOCALNAME &&
         OPENSEARCH_NAMESPACES.includes(element.namespaceURI))
     ) {
-      SearchUtils.log("_init: Initing search plugin from " + this._location);
+      logConsole.debug("Initing search plugin from", this._location);
 
       this._parse();
     } else {
@@ -1638,7 +1630,7 @@ SearchEngine.prototype = {
           url.addParam(param.getAttribute("name"), param.getAttribute("value"));
         } catch (ex) {
           // Ignore failure
-          SearchUtils.log("_parseURL: Url element has an invalid param");
+          logConsole.error("_parseURL: Url element has an invalid param");
         }
       } else if (
         param.localName == "MozParam" &&
@@ -1647,16 +1639,7 @@ SearchEngine.prototype = {
       ) {
         let condition = param.getAttribute("condition");
 
-        // MozParams must have a condition to be valid
         if (!condition) {
-          let engineLoc = this._location;
-          let paramName = param.getAttribute("name");
-          SearchUtils.log(
-            "_parseURL: MozParam (" +
-              paramName +
-              ") without a condition attribute found parsing engine: " +
-              engineLoc
-          );
           continue;
         }
 
@@ -1680,15 +1663,14 @@ SearchEngine.prototype = {
             });
             break;
           default:
-            let engineLoc = this._location;
-            let paramName = param.getAttribute("name");
-            SearchUtils.log(
-              "_parseURL: MozParam (" +
-                paramName +
-                ") has an unknown condition: " +
-                condition +
-                ". Found parsing engine: " +
-                engineLoc
+            // MozParams must have a condition to be valid
+            logConsole.error(
+              "Parsing engine:",
+              this._location,
+              "MozParam:",
+              param.getAttribute("name"),
+              "has an unknown condition:",
+              condition
             );
             break;
         }
@@ -1706,18 +1688,12 @@ SearchEngine.prototype = {
    * @see http://opensearch.a9.com/spec/1.1/description/#image
    */
   _parseImage(element) {
-    SearchUtils.log(
-      '_parseImage: Image textContent: "' +
-        limitURILength(element.textContent) +
-        '"'
-    );
-
     let width = parseInt(element.getAttribute("width"), 10);
     let height = parseInt(element.getAttribute("height"), 10);
     let isPrefered = width == 16 && height == 16;
 
     if (isNaN(width) || isNaN(height) || width <= 0 || height <= 0) {
-      SearchUtils.log(
+      logConsole.warn(
         "OpenSearch image element must have positive width and height."
       );
       return;
@@ -1750,7 +1726,7 @@ SearchEngine.prototype = {
             this._parseURL(child);
           } catch (ex) {
             // Parsing of the element failed, just skip it.
-            SearchUtils.log("_parse: failed to parse URL child: " + ex);
+            logConsole.error("Failed to parse URL child:", ex);
           }
           break;
         case "Image":
@@ -2250,9 +2226,6 @@ SearchEngine.prototype = {
       );
     }
 
-    SearchUtils.log(
-      'getSubmission: In data: "' + data + '"; Purpose: "' + purpose + '"'
-    );
     var submissionData = "";
     try {
       submissionData = Services.textToSubURI.ConvertAndEscape(
@@ -2260,13 +2233,12 @@ SearchEngine.prototype = {
         data
       );
     } catch (ex) {
-      SearchUtils.log("getSubmission: Falling back to default queryCharset!");
+      logConsole.warn("getSubmission: Falling back to default queryCharset!");
       submissionData = Services.textToSubURI.ConvertAndEscape(
         SearchUtils.DEFAULT_QUERY_CHARSET,
         data
       );
     }
-    SearchUtils.log('getSubmission: Out data: "' + submissionData + '"');
     return url.getSubmission(submissionData, this, purpose);
   },
 
@@ -2283,8 +2255,6 @@ SearchEngine.prototype = {
           ? this._defaultMobileResponseType
           : SearchUtils.URL_TYPE.SEARCH;
     }
-
-    SearchUtils.log('getResultDomain: responseType: "' + responseType + '"');
 
     let url = this._getURLOfType(responseType);
     if (url) {
