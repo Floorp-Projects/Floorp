@@ -1,3 +1,9 @@
+// Platforms may default to reducing motion. We override this to ensure the
+// alert slide animation is enabled in tests.
+SpecialPowers.pushPrefEnv({
+  set: [["ui.prefersReducedMotion", 0]],
+});
+
 async function addNotificationPermission(originString) {
   return SpecialPowers.pushPermissions([
     {
