@@ -85,7 +85,7 @@ class AutoPushFeature(
     private val prefToken: String?
         get() = preferences(context).getString(PREF_TOKEN, null)
     private var prefLastVerified: Long
-        get() = preferences(context).getLong(LAST_VERIFIED, System.currentTimeMillis())
+        get() = preferences(context).getLong(LAST_VERIFIED, 0)
         set(value) = preferences(context).edit().putLong(LAST_VERIFIED, value).apply()
 
     private val coroutineScope = CoroutineScope(coroutineContext) + SupervisorJob() + exceptionHandler { onError(it) }

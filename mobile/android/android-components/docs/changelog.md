@@ -31,6 +31,9 @@ permalink: /changelog/
 * **support-rustlog**
   * `RustLog.enable` now takes an optional [CrashReporting] instance which is used to submit error-level log messages as `RustErrorException`s.
 
+* **feature-push**
+  * Fixed a bug where we do not verify subscriptions on first attempt.
+
 # 44.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v43.0.0...v44.0.0)
