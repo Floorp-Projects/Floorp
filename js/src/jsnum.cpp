@@ -1273,9 +1273,6 @@ static const JSFunctionSpec number_static_methods[] = {
     JS_FS_END};
 
 static const JSPropertySpec number_static_properties[] = {
-    // Our NaN must be one particular canonical value, because we rely on NaN
-    // encoding for our value representation.  See Value.h.
-    JS_DOUBLE_PS("NaN", GenericNaN(), JSPROP_READONLY | JSPROP_PERMANENT),
     JS_DOUBLE_PS("POSITIVE_INFINITY", mozilla::PositiveInfinity<double>(),
                  JSPROP_READONLY | JSPROP_PERMANENT),
     JS_DOUBLE_PS("NEGATIVE_INFINITY", mozilla::NegativeInfinity<double>(),
@@ -1408,6 +1405,12 @@ static bool NumberClassFinish(JSContext* cx, HandleObject ctor,
 
   RootedValue valueNaN(cx, JS::NaNValue());
   RootedValue valueInfinity(cx, JS::InfinityValue());
+
+  if (!DefineDataProperty(
+          cx, ctor, cx->names().NaN, valueNaN,
+          JSPROP_PERMANENT | JSPROP_READONLY | JSPROP_RESOLVING)) {
+    return false;
+  }
 
   // ES5 15.1.1.1, 15.1.1.2
   if (!NativeDefineDataProperty(
