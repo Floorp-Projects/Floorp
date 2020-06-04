@@ -154,6 +154,37 @@ void AddConsoleReport(nsIChannel* aNewChannel, nsIURI* aNewURI,
       NS_LITERAL_CSTRING("CookieAllowedForFpiByHeuristic"), params);
 }
 
+bool ShouldRedirectHeuristicApplyTrackingResource(nsIChannel* aOldChannel,
+                                                  nsIURI* aOldURI,
+                                                  nsIChannel* aNewChannel,
+                                                  nsIURI* aNewURI) {
+  nsCOMPtr<nsIClassifiedChannel> classifiedOldChannel =
+      do_QueryInterface(aOldChannel);
+  if (!classifiedOldChannel) {
+    LOG_SPEC2(("Ignoring redirect for %s to %s because there is not "
+               "nsIClassifiedChannel interface",
+               _spec1, _spec2),
+              aOldURI, aNewURI);
+    return false;
+  }
+
+  // We're looking at the first-party classification flags because we're
+  // interested in first-party redirects.
+  uint32_t oldClassificationFlags =
+      classifiedOldChannel->GetFirstPartyClassificationFlags();
+
+  if (net::UrlClassifierCommon::IsTrackingClassificationFlag(
+          oldClassificationFlags)) {
+    // This is a redirect from tracking.
+    LOG_SPEC2(("Ignoring redirect for %s to %s because it's from tracking ",
+               _spec1, _spec2),
+              aOldURI, aNewURI);
+    return false;
+  }
+
+  return true;
+}
+
 }  // namespace
 
 void DynamicFpiRedirectHeuristic(nsIChannel* aOldChannel, nsIURI* aOldURI,
@@ -242,6 +273,14 @@ void DynamicFpiRedirectHeuristic(nsIChannel* aOldChannel, nsIURI* aOldURI,
 
   if (oldPrincipal->Equals(newPrincipal)) {
     LOG(("No permission needed for same principals."));
+    return;
+  }
+
+  if (!ShouldRedirectHeuristicApplyTrackingResource(aOldChannel, aOldURI,
+                                                    aNewChannel, aNewURI)) {
+    LOG_SPEC2(("Ignoring redirect for %s to %s because tracking test failed",
+               _spec1, _spec2),
+              aOldURI, aNewURI);
     return;
   }
 
