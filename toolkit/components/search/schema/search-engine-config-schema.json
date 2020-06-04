@@ -78,7 +78,7 @@
         },
         "excludedDistributions": {
           "type": "array",
-          "title": "Exlucuded Distributions",
+          "title": "Excluded Distributions",
           "description": "Which distributions this does not apply to.",
           "items": {
             "type": "string"
@@ -377,6 +377,11 @@
         },
         "extraParams": {
           "$ref": "#/definitions/extraParams"
+        },
+        "experiment": {
+          "type": "string",
+          "title": "Experiment",
+          "description": "The experiment this section is associated with, if blank it is associate with any configuration."
         }
       }
     }
