@@ -40,7 +40,7 @@ stun_ifaddr_get_v6_flags(struct ifaddrs *ifaddr)
   struct sockaddr_in6 *sin6 = (struct sockaddr_in6*)ifaddr->ifa_addr;
   ifr6.ifr_addr = *sin6;
   if (ioctl(s, SIOCGIFAFLAG_IN6, &ifr6) != -1) {
-    flags = ifr6.ifr_flags;
+    flags = ifr6.ifr_ifru.ifru_flags6;
   } else {
     r_log(NR_LOG_STUN, LOG_ERR, "ioctl(SIOCGIFAFLAG_IN6) failed, errno=%d", errno);
     assert(0);
