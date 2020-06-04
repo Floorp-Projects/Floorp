@@ -26,13 +26,13 @@
 #include "frontend/Stencil.h"           // ScopeCreationData, RegExpIndex
 #include "frontend/TokenStream.h"       // TokenStreamAnyChars
 #include "gc/Rooting.h"                 // RootedScriptSourceObject
+#include "irregexp/RegExpAPI.h"         // irregexp::CheckPatternSyntax
 #include "js/CharacterEncoding.h"  // JS::UTF8Chars, UTF8CharsToNewTwoByteCharsZ
 #include "js/HeapAPI.h"            // JS::GCCellPtr
 #include "js/RegExpFlags.h"        // JS::RegExpFlag, JS::RegExpFlags
 #include "js/RootingAPI.h"         // JS::Handle, JS::Rooted
 #include "js/TypeDecls.h"          // Rooted{Script,Value,String,Object}
 #include "js/Utility.h"            // JS::UniqueTwoByteChars, StringBufferArena
-#include "new-regexp/RegExpAPI.h"  // irregexp::CheckPatternSyntax
 #include "vm/JSAtom.h"             // AtomizeUTF8Chars
 #include "vm/JSScript.h"           // JSScript
 #include "vm/Scope.h"              // BindingName

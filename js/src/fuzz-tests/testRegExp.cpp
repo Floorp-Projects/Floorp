@@ -10,7 +10,7 @@
 #include "jsapi.h"
 
 #include "fuzz-tests/tests.h"
-#include "new-regexp/RegExpAPI.h"
+#include "irregexp/RegExpAPI.h"
 #include "vm/Interpreter.h"
 #include "vm/JSAtom.h"
 #include "vm/MatchPairs.h"

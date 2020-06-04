@@ -19,12 +19,12 @@
 #include "gc/Barrier.h"
 #include "gc/Marking.h"
 #include "gc/ZoneAllocator.h"
+#include "irregexp/RegExpTypes.h"
 #include "jit/JitOptions.h"
 #include "js/AllocPolicy.h"
 #include "js/RegExpFlags.h"  // JS::RegExpFlag, JS::RegExpFlags
 #include "js/UbiNode.h"
 #include "js/Vector.h"
-#include "new-regexp/RegExpTypes.h"
 #include "vm/ArrayObject.h"
 #include "vm/JSAtom.h"
 
