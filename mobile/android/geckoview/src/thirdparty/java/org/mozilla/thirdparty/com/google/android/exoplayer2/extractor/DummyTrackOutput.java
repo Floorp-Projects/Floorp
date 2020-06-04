@@ -15,6 +15,7 @@
  */
 package org.mozilla.thirdparty.com.google.android.exoplayer2.extractor;
 
+import androidx.annotation.Nullable;
 import org.mozilla.thirdparty.com.google.android.exoplayer2.C;
 import org.mozilla.thirdparty.com.google.android.exoplayer2.Format;
 import org.mozilla.thirdparty.com.google.android.exoplayer2.util.ParsableByteArray;
@@ -50,9 +51,12 @@ public final class DummyTrackOutput implements TrackOutput {
   }
 
   @Override
-  public void sampleMetadata(long timeUs, @C.BufferFlags int flags, int size, int offset,
-      byte[] encryptionKey) {
+  public void sampleMetadata(
+      long timeUs,
+      @C.BufferFlags int flags,
+      int size,
+      int offset,
+      @Nullable CryptoData cryptoData) {
     // Do nothing.
   }
-
 }

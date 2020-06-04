@@ -15,9 +15,11 @@
  */
 package org.mozilla.thirdparty.com.google.android.exoplayer2.extractor.ogg;
 
+import androidx.annotation.VisibleForTesting;
 import org.mozilla.thirdparty.com.google.android.exoplayer2.Format;
 import org.mozilla.thirdparty.com.google.android.exoplayer2.ParserException;
-import org.mozilla.thirdparty.com.google.android.exoplayer2.extractor.ogg.VorbisUtil.Mode;
+import org.mozilla.thirdparty.com.google.android.exoplayer2.extractor.VorbisUtil;
+import org.mozilla.thirdparty.com.google.android.exoplayer2.extractor.VorbisUtil.Mode;
 import org.mozilla.thirdparty.com.google.android.exoplayer2.util.MimeTypes;
 import org.mozilla.thirdparty.com.google.android.exoplayer2.util.ParsableByteArray;
 import java.io.IOException;
@@ -101,13 +103,13 @@ import java.util.ArrayList;
     codecInitialisationData.add(vorbisSetup.setupHeaderData);
 
     setupData.format = Format.createAudioSampleFormat(null, MimeTypes.AUDIO_VORBIS, null,
-        this.vorbisSetup.idHeader.bitrateNominal, OggPageHeader.MAX_PAGE_PAYLOAD,
+        this.vorbisSetup.idHeader.bitrateNominal, Format.NO_VALUE,
         this.vorbisSetup.idHeader.channels, (int) this.vorbisSetup.idHeader.sampleRate,
         codecInitialisationData, null, 0, null);
     return true;
   }
 
-  //@VisibleForTesting
+  @VisibleForTesting
   /* package */ VorbisSetup readSetupHeaders(ParsableByteArray scratch) throws IOException {
 
     if (vorbisIdHeader == null) {
@@ -133,27 +135,27 @@ import java.util.ArrayList;
   }
 
   /**
-   * Reads an int of {@code length} bits from {@code src} starting at
-   * {@code leastSignificantBitIndex}.
+   * Reads an int of {@code length} bits from {@code src} starting at {@code
+   * leastSignificantBitIndex}.
    *
    * @param src the {@code byte} to read from.
    * @param length the length in bits of the int to read.
    * @param leastSignificantBitIndex the index of the least significant bit of the int to read.
    * @return the int value read.
    */
-  //@VisibleForTesting
+  @VisibleForTesting
   /* package */ static int readBits(byte src, int length, int leastSignificantBitIndex) {
     return (src >> leastSignificantBitIndex) & (255 >>> (8 - length));
   }
 
-  //@VisibleForTesting
-  /* package */ static void appendNumberOfSamples(ParsableByteArray buffer,
-      long packetSampleCount) {
+  @VisibleForTesting
+  /* package */ static void appendNumberOfSamples(
+      ParsableByteArray buffer, long packetSampleCount) {
 
     buffer.setLimit(buffer.limit() + 4);
     // The vorbis decoder expects the number of samples in the packet
     // to be appended to the audio data as an int32
-    buffer.data[buffer.limit() - 4] = (byte) ((packetSampleCount) & 0xFF);
+    buffer.data[buffer.limit() - 4] = (byte) (packetSampleCount & 0xFF);
     buffer.data[buffer.limit() - 3] = (byte) ((packetSampleCount >>> 8) & 0xFF);
     buffer.data[buffer.limit() - 2] = (byte) ((packetSampleCount >>> 16) & 0xFF);
     buffer.data[buffer.limit() - 1] = (byte) ((packetSampleCount >>> 24) & 0xFF);

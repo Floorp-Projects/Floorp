@@ -20,6 +20,7 @@ import org.mozilla.thirdparty.com.google.android.exoplayer2.extractor.ExtractorI
 import org.mozilla.thirdparty.com.google.android.exoplayer2.util.Assertions;
 import org.mozilla.thirdparty.com.google.android.exoplayer2.util.ParsableByteArray;
 import java.io.IOException;
+import java.util.Arrays;
 
 /**
  * OGG packet class.
@@ -27,8 +28,8 @@ import java.io.IOException;
 /* package */ final class OggPacket {
 
   private final OggPageHeader pageHeader = new OggPageHeader();
-  private final ParsableByteArray packetArray =
-      new ParsableByteArray(new byte[OggPageHeader.MAX_PAGE_PAYLOAD], 0);
+  private final ParsableByteArray packetArray = new ParsableByteArray(
+      new byte[OggPageHeader.MAX_PAGE_PAYLOAD], 0);
 
   private int currentSegmentIndex = C.INDEX_UNSET;
   private int segmentCount;
@@ -50,11 +51,11 @@ import java.io.IOException;
    * can resume properly from an error while reading a continued packet spanned across multiple
    * pages.
    *
-   * @param input the {@link ExtractorInput} to read data from.
-   * @return {@code true} if the read was successful. {@code false} if the end of the input was
-   *    encountered having read no data.
-   * @throws IOException thrown if reading from the input fails.
-   * @throws InterruptedException thrown if interrupted while reading from input.
+   * @param input The {@link ExtractorInput} to read data from.
+   * @return {@code true} if the read was successful. The read fails if the end of the input is
+   *     encountered without reading data.
+   * @throws IOException If reading from the input fails.
+   * @throws InterruptedException If the thread is interrupted.
    */
   public boolean populate(ExtractorInput input) throws IOException, InterruptedException {
     Assertions.checkState(input != null);
@@ -85,6 +86,9 @@ import java.io.IOException;
       int size = calculatePacketSize(currentSegmentIndex);
       int segmentIndex = currentSegmentIndex + segmentCount;
       if (size > 0) {
+        if (packetArray.capacity() < packetArray.limit() + size) {
+          packetArray.data = Arrays.copyOf(packetArray.data, packetArray.limit() + size);
+        }
         input.readFully(packetArray.data, packetArray.limit(), size);
         packetArray.setLimit(packetArray.limit() + size);
         populated = pageHeader.laces[segmentIndex - 1] != 255;
@@ -99,14 +103,13 @@ import java.io.IOException;
   /**
    * An OGG Packet may span multiple pages. Returns the {@link OggPageHeader} of the last page read,
    * or an empty header if the packet has yet to be populated.
-   * <p>
-   * Note that the returned {@link OggPageHeader} is mutable and may be updated during subsequent
+   *
+   * <p>Note that the returned {@link OggPageHeader} is mutable and may be updated during subsequent
    * calls to {@link #populate(ExtractorInput)}.
    *
    * @return the {@code PageHeader} of the last page read or an empty header if the packet has yet
    *     to be populated.
    */
-  //@VisibleForTesting
   public OggPageHeader getPageHeader() {
     return pageHeader;
   }
@@ -116,6 +119,17 @@ import java.io.IOException;
    */
   public ParsableByteArray getPayload() {
     return packetArray;
+  }
+
+  /**
+   * Trims the packet data array.
+   */
+  public void trimPayload() {
+    if (packetArray.data.length == OggPageHeader.MAX_PAGE_PAYLOAD) {
+      return;
+    }
+    packetArray.data = Arrays.copyOf(packetArray.data, Math.max(OggPageHeader.MAX_PAGE_PAYLOAD,
+        packetArray.limit()));
   }
 
   /**

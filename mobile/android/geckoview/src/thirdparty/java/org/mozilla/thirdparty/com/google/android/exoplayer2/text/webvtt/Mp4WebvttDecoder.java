@@ -17,6 +17,7 @@ package org.mozilla.thirdparty.com.google.android.exoplayer2.text.webvtt;
 
 import org.mozilla.thirdparty.com.google.android.exoplayer2.text.Cue;
 import org.mozilla.thirdparty.com.google.android.exoplayer2.text.SimpleSubtitleDecoder;
+import org.mozilla.thirdparty.com.google.android.exoplayer2.text.Subtitle;
 import org.mozilla.thirdparty.com.google.android.exoplayer2.text.SubtitleDecoderException;
 import org.mozilla.thirdparty.com.google.android.exoplayer2.util.ParsableByteArray;
 import org.mozilla.thirdparty.com.google.android.exoplayer2.util.Util;
@@ -24,16 +25,20 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-/**
- * A {@link SimpleSubtitleDecoder} for Webvtt embedded in a Mp4 container file.
- */
+/** A {@link SimpleSubtitleDecoder} for Webvtt embedded in a Mp4 container file. */
+@SuppressWarnings("ConstantField")
 public final class Mp4WebvttDecoder extends SimpleSubtitleDecoder {
 
   private static final int BOX_HEADER_SIZE = 8;
 
-  private static final int TYPE_payl = Util.getIntegerCodeForString("payl");
-  private static final int TYPE_sttg = Util.getIntegerCodeForString("sttg");
-  private static final int TYPE_vttc = Util.getIntegerCodeForString("vttc");
+  @SuppressWarnings("ConstantCaseForConstants")
+  private static final int TYPE_payl = 0x7061796c;
+
+  @SuppressWarnings("ConstantCaseForConstants")
+  private static final int TYPE_sttg = 0x73747467;
+
+  @SuppressWarnings("ConstantCaseForConstants")
+  private static final int TYPE_vttc = 0x76747463;
 
   private final ParsableByteArray sampleData;
   private final WebvttCue.Builder builder;
@@ -45,7 +50,7 @@ public final class Mp4WebvttDecoder extends SimpleSubtitleDecoder {
   }
 
   @Override
-  protected Mp4WebvttSubtitle decode(byte[] bytes, int length, boolean reset)
+  protected Subtitle decode(byte[] bytes, int length, boolean reset)
       throws SubtitleDecoderException {
     // Webvtt in Mp4 samples have boxes inside of them, so we have to do a traditional box parsing:
     // first 4 bytes size and then 4 bytes type.
@@ -78,14 +83,14 @@ public final class Mp4WebvttDecoder extends SimpleSubtitleDecoder {
       int boxType = sampleData.readInt();
       remainingCueBoxBytes -= BOX_HEADER_SIZE;
       int payloadLength = boxSize - BOX_HEADER_SIZE;
-      String boxPayload = new String(sampleData.data, sampleData.getPosition(), payloadLength);
+      String boxPayload =
+          Util.fromUtf8Bytes(sampleData.data, sampleData.getPosition(), payloadLength);
       sampleData.skipBytes(payloadLength);
       remainingCueBoxBytes -= payloadLength;
       if (boxType == TYPE_sttg) {
         WebvttCueParser.parseCueSettingsList(boxPayload, builder);
       } else if (boxType == TYPE_payl) {
-        WebvttCueParser.parseCueText(null, boxPayload.trim(), builder,
-            Collections.<WebvttCssStyle>emptyList());
+        WebvttCueParser.parseCueText(null, boxPayload.trim(), builder, Collections.emptyList());
       } else {
         // Other VTTCueBox children are still not supported and are ignored.
       }

@@ -16,12 +16,11 @@
 package org.mozilla.thirdparty.com.google.android.exoplayer2.text.dvb;
 
 import org.mozilla.thirdparty.com.google.android.exoplayer2.text.SimpleSubtitleDecoder;
+import org.mozilla.thirdparty.com.google.android.exoplayer2.text.Subtitle;
 import org.mozilla.thirdparty.com.google.android.exoplayer2.util.ParsableByteArray;
 import java.util.List;
 
-/**
- * A {@link SimpleSubtitleDecoder} for DVB Subtitles.
- */
+/** A {@link SimpleSubtitleDecoder} for DVB subtitles. */
 public final class DvbDecoder extends SimpleSubtitleDecoder {
 
   private final DvbParser parser;
@@ -40,7 +39,7 @@ public final class DvbDecoder extends SimpleSubtitleDecoder {
   }
 
   @Override
-  protected DvbSubtitle decode(byte[] data, int length, boolean reset) {
+  protected Subtitle decode(byte[] data, int length, boolean reset) {
     if (reset) {
       parser.reset();
     }
