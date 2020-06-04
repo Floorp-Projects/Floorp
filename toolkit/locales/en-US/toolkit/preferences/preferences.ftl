@@ -26,6 +26,7 @@ set-password-new-password = Enter new password:
 set-password-reenter-password = Re-enter password:
 set-password-meter = Password quality meter
 set-password-meter-loading = Loading
+master-password-admin = Your administrator requires that you have a Master Password set in order to save passwords.
 master-password-description = A Master Password is used to protect sensitive information like site passwords. If you create a Master Password you will be asked to enter it once per session when { -brand-short-name } retrieves saved information protected by the password.
 master-password-warning = Please make sure you remember the Master Password you have set. If you forget your Master Password, you will be unable to access any of the information protected by it.
 
