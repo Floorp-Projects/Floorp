@@ -18,11 +18,6 @@ async function log() {
 // Gate-keeping pref to run the add-on
 const DOH_ENABLED_PREF = "doh-rollout.enabled";
 
-// When in automation, we parse this string pref as JSON and use it as our
-// heuristics results set. This allows tests to set up different cases and
-// verify the correct response.
-const MOCK_HEURISTICS_PREF = "doh-rollout.heuristics.mockValues";
-
 // Pref that sets DoH to on/off. It has multiple modes:
 // 0: Off (default)
 // 1: null (No setting)
@@ -223,14 +218,6 @@ const rollout = {
   // Pretend that there was a network change at the beginning of time.
   lastNetworkChangeTime: 0,
 
-  async isTesting() {
-    if (this._isTesting === undefined) {
-      this._isTesting = await browser.experiments.heuristics.isTesting();
-    }
-
-    return this._isTesting;
-  },
-
   addDoorhangerListeners() {
     browser.experiments.doorhanger.onDoorhangerAccept.addListener(
       rollout.doorhangerAcceptListener
@@ -279,17 +266,7 @@ const rollout = {
     }
 
     // Run heuristics defined in heuristics.js and experiments/heuristics/api.js
-    let results;
-
-    if (await rollout.isTesting()) {
-      results = await browser.experiments.preferences.getCharPref(
-        MOCK_HEURISTICS_PREF,
-        `{ "test": "disable_doh" }`
-      );
-      results = JSON.parse(results);
-    } else {
-      results = await runHeuristics();
-    }
+    let results = await runHeuristics();
 
     // Check if DoH should be disabled
     let decision = Object.values(results).includes("disable_doh")
