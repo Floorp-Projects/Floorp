@@ -699,6 +699,17 @@ bool WarpCacheIRTranspiler::emitLoadStringCharCodeResult(
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitStringFromCharCodeResult(
+    Int32OperandId codeId) {
+  MDefinition* code = getOperand(codeId);
+
+  auto* fromCharCode = MFromCharCode::New(alloc(), code);
+  add(fromCharCode);
+
+  pushResult(fromCharCode);
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitStoreDynamicSlot(ObjOperandId objId,
                                                  uint32_t offsetOffset,
                                                  ValOperandId rhsId) {
