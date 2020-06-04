@@ -575,10 +575,10 @@ async function updateFormDataSections(props) {
 }
 
 /**
- * This helper function helps to resolve the full payload of a WebSocket frame
+ * This helper function helps to resolve the full payload of a message
  * that is wrapped in a LongStringActor object.
  */
-async function getFramePayload(payload, getLongString) {
+async function getMessagePayload(payload, getLongString) {
   const result = await getLongString(payload);
   return result;
 }
@@ -675,7 +675,7 @@ module.exports = {
   getFileName,
   getEndTime,
   getFormattedProtocol,
-  getFramePayload,
+  getMessagePayload,
   getRequestHeader,
   getResponseHeader,
   getResponseTime,

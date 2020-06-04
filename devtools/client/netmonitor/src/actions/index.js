@@ -11,7 +11,7 @@ const selection = require("devtools/client/netmonitor/src/actions/selection");
 const sort = require("devtools/client/netmonitor/src/actions/sort");
 const timingMarkers = require("devtools/client/netmonitor/src/actions/timing-markers");
 const ui = require("devtools/client/netmonitor/src/actions/ui");
-const webSockets = require("devtools/client/netmonitor/src/actions/web-sockets");
+const messages = require("devtools/client/netmonitor/src/actions/messages");
 const search = require("devtools/client/netmonitor/src/actions/search");
 const requestBlocking = require("devtools/client/netmonitor/src/actions/request-blocking");
 
@@ -25,6 +25,6 @@ Object.assign(
   sort,
   timingMarkers,
   ui,
-  webSockets,
+  messages,
   requestBlocking
 );

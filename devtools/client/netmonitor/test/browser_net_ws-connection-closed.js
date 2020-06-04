@@ -40,7 +40,7 @@ add_task(async function() {
 
   const wait = waitForDOM(
     document,
-    "#messages-panel .ws-connection-closed-message"
+    "#messages-panel .msg-connection-closed-message"
   );
 
   // Close WS connection
@@ -50,7 +50,7 @@ add_task(async function() {
   await wait;
 
   is(
-    !!document.querySelector("#messages-panel .ws-connection-closed-message"),
+    !!document.querySelector("#messages-panel .msg-connection-closed-message"),
     true,
     "Connection closed message should be displayed"
   );

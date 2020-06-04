@@ -34,7 +34,7 @@ add_task(async function() {
   // Wait for all sent/received messages to be displayed in DevTools
   let wait = waitForDOM(
     document,
-    "#messages-panel .ws-frames-list-table .ws-frame-list-item",
+    "#messages-panel .message-list-table .message-list-item",
     4
   );
 
@@ -50,7 +50,7 @@ add_task(async function() {
 
   // Get all messages present in the "Messages" panel
   const frames = document.querySelectorAll(
-    "#messages-panel .ws-frames-list-table .ws-frame-list-item"
+    "#messages-panel .message-list-table .message-list-item"
   );
 
   // Check expected results
@@ -65,12 +65,12 @@ add_task(async function() {
   // Click on "sent" option and check
   const sentOption = getContextMenuItem(
     monitor,
-    "ws-frame-list-context-filter-sent"
+    "message-list-context-filter-sent"
   );
   sentOption.click();
 
   const sentFrames = document.querySelectorAll(
-    "#messages-panel .ws-frames-list-table .ws-frame-list-item"
+    "#messages-panel .message-list-table .message-list-item"
   );
   is(sentFrames.length, 2, "There should be two frames");
   is(
@@ -87,12 +87,12 @@ add_task(async function() {
   // Click on "received" option and check
   const receivedOption = getContextMenuItem(
     monitor,
-    "ws-frame-list-context-filter-received"
+    "message-list-context-filter-received"
   );
   receivedOption.click();
 
   const receivedFrames = document.querySelectorAll(
-    "#messages-panel .ws-frames-list-table .ws-frame-list-item"
+    "#messages-panel .message-list-table .message-list-item"
   );
   is(receivedFrames.length, 2, "There should be two frames");
   is(
@@ -110,12 +110,12 @@ add_task(async function() {
   EventUtils.sendMouseEvent({ type: "mousedown" }, requests[1]);
   wait = waitForDOM(
     document,
-    "#messages-panel .ws-frames-list-table .ws-frame-list-item",
+    "#messages-panel .message-list-table .message-list-item",
     3
   );
   await wait;
   const secondRequestFrames = document.querySelectorAll(
-    "#messages-panel .ws-frames-list-table .ws-frame-list-item"
+    "#messages-panel .message-list-table .message-list-item"
   );
   is(secondRequestFrames.length, 3, "There should be three frames");
   is(

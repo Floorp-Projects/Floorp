@@ -3,12 +3,12 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DIRS += [
+    'messages',
     'previews',
     'request-blocking',
     'request-details',
     'request-list',
     'search',
-    'websockets',
 ]
 
 DevToolsModules(

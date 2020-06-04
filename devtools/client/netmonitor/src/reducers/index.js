@@ -18,20 +18,20 @@ const {
 } = require("devtools/client/netmonitor/src/reducers/timing-markers");
 const { ui } = require("devtools/client/netmonitor/src/reducers/ui");
 const {
-  webSockets,
-} = require("devtools/client/netmonitor/src/reducers/web-sockets");
+  messages,
+} = require("devtools/client/netmonitor/src/reducers/messages");
 const networkThrottling = require("devtools/client/shared/components/throttling/reducer");
 
 module.exports = batchingReducer(
   combineReducers({
+    filters,
+    messages,
+    networkThrottling,
     requestBlocking: requestBlockingReducer,
     requests: requestsReducer,
     search,
     sort: sortReducer,
-    webSockets,
-    filters,
     timingMarkers,
     ui,
-    networkThrottling,
   })
 );

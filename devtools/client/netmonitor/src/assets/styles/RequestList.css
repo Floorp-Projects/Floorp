@@ -68,7 +68,7 @@
 }
 
 .requests-list-table,
-.ws-frames-list-table {
+.message-list-table {
   /* Reset default browser style of <table> */
   border-spacing: 0;
   width: 100%;
@@ -84,7 +84,7 @@
 }
 
 .requests-list-column,
-.ws-frames-list-column {
+.message-list-column {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -104,7 +104,7 @@
 /* Requests list headers */
 
 .requests-list-headers-group,
-.ws-frames-list-headers-group {
+.message-list-headers-group {
   position: sticky;
   top: 0;
   left: 0;
@@ -113,14 +113,14 @@
 }
 
 .requests-list-headers,
-.ws-frames-list-headers {
+.message-list-headers {
   padding: 0;
   color: var(--theme-body-color);
   background-color: var(--theme-toolbar-background);
 }
 
 .requests-list-headers th,
-.ws-frames-list-headers th {
+.message-list-headers th {
   height: calc(var(--theme-toolbar-height) + 1px);
   border-bottom: 1px solid var(--theme-splitter-color);
 }
@@ -131,12 +131,12 @@
 }
 
 .requests-list-headers th:not(:first-child),
-.ws-frames-list-headers th:not(:first-child) {
+.message-list-headers th:not(:first-child) {
   border-inline-start: 1px solid var(--theme-splitter-color);
 }
 
 .requests-list-header-button,
-.ws-frames-list-header-button {
+.message-list-header-button {
   width: 100%;
   min-height: var(--theme-toolbar-height);
   border-width: 0;
@@ -149,7 +149,7 @@
 }
 
 .requests-list-header-button::-moz-focus-inner,
-.ws-frames-list-header-button::-moz-focus-inner {
+.message-list-header-button::-moz-focus-inner {
   border: 0;
   padding: 0;
 }
@@ -159,7 +159,7 @@
 }
 
 .requests-list-header-button > .button-text,
-.ws-frames-list-header-button > .button-text {
+.message-list-header-button > .button-text {
   display: inline-block;
   vertical-align: middle;
   width: 100%;
@@ -168,7 +168,7 @@
 }
 
 .requests-list-header-button > .button-icon,
-.ws-frames-list-header-button > .button-icon {
+.message-list-header-button > .button-icon {
   /* display icon only when column sorted otherwise display:none */
   display: none;
   width: 7px;
@@ -320,7 +320,7 @@
 }
 
 .request-list-item .requests-list-column,
-.ws-frame-list-item .ws-frames-list-column {
+.message-list-item .message-list-column {
   padding-inline-start: 5px;
   /* Column text should not touch the next column's border.
      We could use a 5px space to be symmetrical, but we're using
@@ -330,14 +330,14 @@
 }
 
 .request-list-item .requests-list-column:not(:first-child),
-.ws-frame-list-item .ws-frames-list-column:not(:first-child) {
+.message-list-item .message-list-column:not(:first-child) {
   border-inline-start: 1px solid var(--table-splitter-color);
 }
 
 .request-list-item:hover .requests-list-column,
 .request-list-item.selected .requests-list-column,
-.ws-frame-list-item:hover .ws-frames-list-column,
-.ws-frame-list-item.selected .ws-frames-list-column {
+.message-list-item:hover .message-list-column,
+.message-list-item.selected .message-list-column {
   border-inline-start-color: transparent;
 }
 
@@ -493,18 +493,18 @@
 /* Request list item */
 
 .request-list-item,
-.ws-frame-list-item {
+.message-list-item {
   height: 24px;
   line-height: 24px;
 }
 
 .request-list-item:not(.selected).odd,
-.ws-frame-list-item:not(.selected).odd {
+.message-list-item:not(.selected).odd {
   background-color: var(--table-zebra-background);
 }
 
 .request-list-item:not(.selected):hover,
-.ws-frame-list-item:not(.selected):hover {
+.message-list-item:not(.selected):hover {
   background-color: var(--table-selection-background-hover);
 }
 
@@ -538,7 +538,7 @@
  * Bug 1530914 - Highlighted Security Value is difficult to read.
  */
 .request-list-item.selected,
-.ws-frame-list-item.selected {
+.message-list-item.selected {
   background-color: var(--theme-selection-background);
   color: var(--theme-selection-color);
   /* Rows have tabindex=0 and get a default outline when clicked, but we already

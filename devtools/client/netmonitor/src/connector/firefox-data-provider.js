@@ -482,7 +482,7 @@ class FirefoxDataProvider {
    * @param {object} data websocket frame information
    */
   async onFrameSent(httpChannelId, data) {
-    this.addFrame(httpChannelId, data);
+    this.addMessage(httpChannelId, data);
   }
 
   /**
@@ -492,7 +492,7 @@ class FirefoxDataProvider {
    * @param {object} data websocket frame information
    */
   async onFrameReceived(httpChannelId, data) {
-    this.addFrame(httpChannelId, data);
+    this.addMessage(httpChannelId, data);
   }
 
   /**
@@ -501,9 +501,9 @@ class FirefoxDataProvider {
    * @param {number} httpChannelId the channel ID
    * @param {object} data websocket frame information
    */
-  async addFrame(httpChannelId, data) {
-    if (this.actionsEnabled && this.actions.addFrame) {
-      await this.actions.addFrame(httpChannelId, data, true);
+  async addMessage(httpChannelId, data) {
+    if (this.actionsEnabled && this.actions.addMessage) {
+      await this.actions.addMessage(httpChannelId, data, true);
     }
     // TODO: Emit an event for test here
   }
@@ -817,7 +817,7 @@ class FirefoxDataProvider {
 
   async onEventReceived(httpChannelId, data) {
     // Dispatch the same action used by websocket inspector.
-    this.addFrame(httpChannelId, data);
+    this.addMessage(httpChannelId, data);
   }
 
   /**

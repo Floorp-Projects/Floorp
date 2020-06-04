@@ -34,7 +34,7 @@ add_task(async function() {
   // Wait for all sent/received messages to be displayed in DevTools
   let wait = waitForDOM(
     document,
-    "#messages-panel .ws-frames-list-table .ws-frame-list-item",
+    "#messages-panel .message-list-table .message-list-item",
     4
   );
 
@@ -50,7 +50,7 @@ add_task(async function() {
 
   // Get all messages present in the "Messages" panel
   const frames = document.querySelectorAll(
-    "#messages-panel .ws-frames-list-table .ws-frame-list-item"
+    "#messages-panel .message-list-table .message-list-item"
   );
 
   // Check expected results
@@ -58,11 +58,11 @@ add_task(async function() {
 
   // Clear messages
   const clearButton = document.querySelector(
-    "#messages-panel .ws-frames-list-clear-button"
+    "#messages-panel .message-list-clear-button"
   );
   clearButton.click();
   is(
-    document.querySelectorAll(".ws-frame-list-empty-notice").length,
+    document.querySelectorAll(".message-list-empty-notice").length,
     1,
     "Empty notice visible"
   );
@@ -71,12 +71,12 @@ add_task(async function() {
   EventUtils.sendMouseEvent({ type: "mousedown" }, requests[1]);
   wait = waitForDOM(
     document,
-    "#messages-panel .ws-frames-list-table .ws-frame-list-item",
+    "#messages-panel .message-list-table .message-list-item",
     2
   );
   await wait;
   const secondRequestFrames = document.querySelectorAll(
-    "#messages-panel .ws-frames-list-table .ws-frame-list-item"
+    "#messages-panel .message-list-table .message-list-item"
   );
   is(secondRequestFrames.length, 2, "There should be two frames");
 
