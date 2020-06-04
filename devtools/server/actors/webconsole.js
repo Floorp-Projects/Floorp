@@ -701,7 +701,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
                   "devtools/server/actors/network-monitor/network-monitor",
                 constructor: "NetworkMonitorActor",
                 args: [
-                  { outerWindowID: this.parentActor.outerWindowID },
+                  { browsingContextID: this.parentActor.browsingContextID },
                   this.actorID,
                 ],
               });

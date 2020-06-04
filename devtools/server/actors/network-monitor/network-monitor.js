@@ -29,7 +29,7 @@ const NetworkMonitorActor = ActorClassWithSpec(networkMonitorSpec, {
    * parent process.
    *
    * @param object filters
-   *        Contains an `outerWindowID` attribute when this is used across processes.
+   *        Contains an `browsingContextID` attribute when this is used across processes.
    *        Or a `window` attribute when instanciated in the same process.
    * @param number parentID (optional)
    *        To be removed, specify the ID of the Web console actor.

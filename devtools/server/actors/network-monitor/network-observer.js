@@ -69,7 +69,7 @@ const HTTP_TEMPORARY_REDIRECT = 307;
  */
 function matchRequest(channel, filters) {
   // Log everything if no filter is specified
-  if (!filters.outerWindowID && !filters.window) {
+  if (!filters.browsingContextID && !filters.window) {
     return true;
   }
 
@@ -109,24 +109,17 @@ function matchRequest(channel, filters) {
     }
   }
 
-  if (filters.outerWindowID) {
+  if (filters.browsingContextID) {
     const topFrame = NetworkHelper.getTopFrameForRequest(channel);
     // topFrame is typically null for some chrome requests like favicons
-    if (topFrame) {
-      try {
-        if (topFrame.outerWindowID == filters.outerWindowID) {
-          return true;
-        }
-      } catch (e) {
-        // outerWindowID getter from browser.js (non-remote <xul:browser>) may
-        // throw when closing a tab while resources are still loading.
-      }
+    if (topFrame && topFrame.browsingContext.id == filters.browsingContextID) {
+      return true;
     } else if (
       channel.loadInfo &&
-      channel.loadInfo.topOuterWindowID == filters.outerWindowID
+      channel.loadInfo.browsingContext.id == filters.browsingContextID
     ) {
-      // If we couldn't get the top frame outerWindowID from the loadContext,
-      // look to the channel.loadInfo.topOuterWindowID instead.
+      // If we couldn't get the top frame BrowsingContext from the loadContext,
+      // look for it on channel.loadInfo instead.
       return true;
     }
   }
@@ -146,7 +139,7 @@ exports.matchRequest = matchRequest;
  *        Object with the filters to use for network requests:
  *        - window (nsIDOMWindow): filter network requests by the associated
  *          window object.
- *        - outerWindowID (number): filter requests by their top frame's outerWindowID.
+ *        - browsingContextID (number): filter requests by their top frame's BrowsingContext.
  *        Filters are optional. If any of these filters match the request is
  *        logged (OR is applied). If no filter is provided then all requests are
  *        logged.
