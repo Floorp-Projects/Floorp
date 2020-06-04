@@ -212,6 +212,8 @@ class MachCommands(MachCommandBase):
              description='Run js/src/tests in the browser.',
              parser=get_parser)
     def run_jstestbrowser(self, **kwargs):
+        if '--enable-js-shell' not in self.mozconfig['configure_args']:
+            raise Exception('jstestbrowser requires --enable-js-shell be specified in mozconfig.')
         self._mach_context.commands.dispatch("build",
                                              self._mach_context,
                                              what=["stage-jstests"])
