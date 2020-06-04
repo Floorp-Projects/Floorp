@@ -2385,9 +2385,21 @@ SearchService.prototype = {
   },
 
   async addEngineWithDetails(name, details, isReload = false) {
+    if (!name) {
+      throw Components.Exception(
+        "Empty name passed to addEngineWithDetails!",
+        Cr.NS_ERROR_INVALID_ARG
+      );
+    }
+    let params = details;
+    if (!params.template) {
+      throw Components.Exception(
+        "Empty template passed to addEngineWithDetails!",
+        Cr.NS_ERROR_INVALID_ARG
+      );
+    }
     logConsole.debug("addEngineWithDetails: Adding", name);
     let isCurrent = false;
-    var params = details;
 
     let isBuiltin = !!params.isBuiltin;
     // We install search extensions during the init phase, both built in
@@ -2395,12 +2407,6 @@ SearchService.prototype = {
     // user installed extensions being reenabled calling this directly.
     if (!gInitialized && !isBuiltin && !params.initEngine) {
       await this.init();
-    }
-    if (!name) {
-      SearchUtils.fail("Invalid name passed to addEngineWithDetails!");
-    }
-    if (!params.template) {
-      SearchUtils.fail("Invalid template passed to addEngineWithDetails!");
     }
     let existingEngine = this._engines.get(name);
     // In the modern configuration, distributions are app-provided engines,
@@ -2410,7 +2416,7 @@ SearchService.prototype = {
       existingEngine &&
       existingEngine._loadPath.startsWith("[distribution]")
     ) {
-      SearchUtils.fail(
+      throw Components.Exception(
         "Not loading engine due to having a distribution engine with the same name",
         Cr.NS_ERROR_FILE_ALREADY_EXISTS
       );
@@ -2426,7 +2432,7 @@ SearchService.prototype = {
         isCurrent = this.defaultEngine == existingEngine;
         await this.removeEngine(existingEngine);
       } else {
-        SearchUtils.fail(
+        throw Components.Exception(
           "An engine with that name already exists!",
           Cr.NS_ERROR_FILE_ALREADY_EXISTS
         );
@@ -2727,7 +2733,7 @@ SearchService.prototype = {
       if (engine) {
         engine._installCallback = null;
       }
-      SearchUtils.fail(
+      throw Components.Exception(
         "addEngine: Error adding engine:\n" + ex,
         errCode || Cr.NS_ERROR_FAILURE
       );
@@ -2745,7 +2751,10 @@ SearchService.prototype = {
   async removeEngine(engine) {
     await this.init();
     if (!engine) {
-      SearchUtils.fail("no engine passed to removeEngine!");
+      throw Components.Exception(
+        "no engine passed to removeEngine!",
+        Cr.NS_ERROR_INVALID_ARG
+      );
     }
 
     var engineToRemove = null;
@@ -2756,7 +2765,7 @@ SearchService.prototype = {
     }
 
     if (!engineToRemove) {
-      SearchUtils.fail(
+      throw Components.Exception(
         "removeEngine: Can't find engine to remove!",
         Cr.NS_ERROR_FILE_NOT_FOUND
       );
@@ -2797,7 +2806,7 @@ SearchService.prototype = {
       // Remove the engine from _sortedEngines
       var index = this._sortedEngines.indexOf(engineToRemove);
       if (index == -1) {
-        SearchUtils.fail(
+        throw Components.Exception(
           "Can't find engine to remove in _sortedEngines!",
           Cr.NS_ERROR_FAILURE
         );
@@ -2816,16 +2825,19 @@ SearchService.prototype = {
   async moveEngine(engine, newIndex) {
     await this.init();
     if (newIndex > this._sortedEngines.length || newIndex < 0) {
-      SearchUtils.fail("moveEngine: Index out of bounds!");
+      throw Components.Exception("moveEngine: Index out of bounds!");
     }
     if (
       !(engine instanceof Ci.nsISearchEngine) &&
       !(engine instanceof SearchEngine)
     ) {
-      SearchUtils.fail("moveEngine: Invalid engine passed to moveEngine!");
+      throw Components.Exception(
+        "moveEngine: Invalid engine passed to moveEngine!",
+        Cr.NS_ERROR_INVALID_ARG
+      );
     }
     if (engine.hidden) {
-      SearchUtils.fail(
+      throw Components.Exception(
         "moveEngine: Can't move a hidden engine!",
         Cr.NS_ERROR_FAILURE
       );
@@ -2835,7 +2847,7 @@ SearchService.prototype = {
 
     var currentIndex = this._sortedEngines.indexOf(engine);
     if (currentIndex == -1) {
-      SearchUtils.fail(
+      throw Components.Exception(
         "moveEngine: Can't find engine to move!",
         Cr.NS_ERROR_UNEXPECTED
       );
@@ -2854,7 +2866,7 @@ SearchService.prototype = {
     // newIndexEngine directly instead of newIndex.
     var newIndexEngine = this._getSortedEngines(false)[newIndex];
     if (!newIndexEngine) {
-      SearchUtils.fail(
+      throw Components.Exception(
         "moveEngine: Can't find engine to replace!",
         Cr.NS_ERROR_UNEXPECTED
       );
@@ -2988,12 +3000,18 @@ SearchService.prototype = {
       !(newEngine instanceof Ci.nsISearchEngine) &&
       !(newEngine instanceof SearchEngine)
     ) {
-      SearchUtils.fail("Invalid argument passed to defaultEngine setter");
+      throw Components.Exception(
+        "Invalid argument passed to defaultEngine setter",
+        Cr.NS_ERROR_INVALID_ARG
+      );
     }
 
     const newCurrentEngine = this.getEngineByName(newEngine.name);
     if (!newCurrentEngine) {
-      SearchUtils.fail("Can't find engine in store!", Cr.NS_ERROR_UNEXPECTED);
+      throw Components.Exception(
+        "Can't find engine in store!",
+        Cr.NS_ERROR_UNEXPECTED
+      );
     }
 
     if (!newCurrentEngine.isAppProvided) {
