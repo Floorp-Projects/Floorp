@@ -62,7 +62,7 @@ add_task(async function() {
   const tests = [
     {
       prefValue: true,
-      originAttributes: { firstPartyDomain: "(http,example.org)" },
+      originAttributes: { partitionKey: "(http,example.org)" },
     },
     {
       prefValue: false,

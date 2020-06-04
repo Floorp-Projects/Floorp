@@ -16,10 +16,10 @@ const HAS_FIRST_PARTY_DOMAIN = [
 const OUTER_ORIGIN = "http://mochi.test:8888";
 const FIRST_PARTY_DOMAIN = escape("(http,mochi.test)");
 const INNER_ORIGIN = HAS_FIRST_PARTY_DOMAIN
-  ? `http://example.com^firstPartyDomain=${FIRST_PARTY_DOMAIN}`
+  ? `http://example.com^partitionKey=${FIRST_PARTY_DOMAIN}`
   : "http://example.com";
 const SECURE_INNER_ORIGIN = HAS_FIRST_PARTY_DOMAIN
-  ? `https://example.com^firstPartyDomain=${FIRST_PARTY_DOMAIN}`
+  ? `https://example.com^partitionKey=${FIRST_PARTY_DOMAIN}`
   : "https://example.com";
 
 const OUTER_VALUE = "outer-value-" + RAND;
