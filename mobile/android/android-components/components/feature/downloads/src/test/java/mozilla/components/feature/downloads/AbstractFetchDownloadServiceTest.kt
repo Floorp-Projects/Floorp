@@ -1059,6 +1059,27 @@ class AbstractFetchDownloadServiceTest {
     }
 
     @Test
+    @Config(sdk = [Build.VERSION_CODES.P])
+    fun `WHEN a download is completed on devices older than Q the file MUST be added manually to the download system database`() {
+        val download = DownloadState(
+                url = "http://www.mozilla.org",
+                fileName = "example.apk",
+                destinationDirectory = folder.root.path
+        )
+        val service = spy(object : AbstractFetchDownloadService() {
+            override val httpClient = client
+            override val store = browserStore
+        })
+
+        val downloadJobState = DownloadJobState(state = download, status = COMPLETED)
+
+        doReturn(testContext).`when`(service).context
+        service.updateDownloadNotification(COMPLETED, downloadJobState)
+
+        verify(service).addToDownloadSystemDatabaseCompat(any())
+    }
+
+    @Test
     fun `cancelled download does not prevent other notifications`() = runBlocking {
         val cancelledDownload = DownloadState("https://example.com/file.txt", "file.txt")
         val response = Response(
