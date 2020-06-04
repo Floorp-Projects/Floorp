@@ -112,18 +112,6 @@ class AccessibilityProxy {
     });
   }
 
-  /**
-   * Stop picking and remove all walker listeners.
-   */
-  async cancelPick(onHovered, onPicked, onPreviewed, onCanceled) {
-    const front = this.accessibleWalkerFront;
-    await front.cancelPick();
-    this._off(front, "picker-accessible-hovered", onHovered);
-    this._off(front, "picker-accessible-picked", onPicked);
-    this._off(front, "picker-accessible-previewed", onPreviewed);
-    this._off(front, "picker-accessible-canceled", onCanceled);
-  }
-
   async disableAccessibility() {
     // Accessibility service is shut down using the parent accessibility front.
     // That, in turn, shuts down accessibility service in all content processes.
@@ -156,17 +144,94 @@ class AccessibilityProxy {
   }
 
   /**
+   * Look up accessibility fronts (get an existing one or create a new one) for
+   * all existing target fronts and run a task with each one of them.
+   * @param {Function} task
+   *        Function to execute with each accessiblity front.
+   */
+  async withAllAccessibilityFronts(taskFn) {
+    const accessibilityFronts = await this.toolbox.targetList.getAllFronts(
+      this.toolbox.targetList.TYPES.FRAME,
+      "accessibility"
+    );
+    const tasks = [];
+    for (const accessibilityFront of accessibilityFronts) {
+      tasks.push(taskFn(accessibilityFront));
+    }
+
+    return Promise.all(tasks);
+  }
+
+  /**
+   * Look up accessibility walker fronts (get an existing one or create a new
+   * one using accessibility front) for all existing target fronts and run a
+   * task with each one of them.
+   * @param {Function} task
+   *        Function to execute with each accessiblity walker front.
+   */
+  withAllAccessibilityWalkerFronts(taskFn) {
+    return this.withAllAccessibilityFronts(async accessibilityFront => {
+      if (!accessibilityFront.accessibleWalkerFront) {
+        await accessibilityFront.bootstrap();
+      }
+
+      return taskFn(accessibilityFront.accessibleWalkerFront);
+    });
+  }
+
+  /**
    * Start picking and add walker listeners.
    * @param  {Boolean} doFocus
    *         If true, move keyboard focus into content.
    */
-  async pick(doFocus, onHovered, onPicked, onPreviewed, onCanceled) {
-    const front = this.accessibleWalkerFront;
-    this._on(front, "picker-accessible-hovered", onHovered);
-    this._on(front, "picker-accessible-picked", onPicked);
-    this._on(front, "picker-accessible-previewed", onPreviewed);
-    this._on(front, "picker-accessible-canceled", onCanceled);
-    await front.pick(doFocus);
+  pick(doFocus, onHovered, onPicked, onPreviewed, onCanceled) {
+    return this.withAllAccessibilityWalkerFronts(
+      async accessibleWalkerFront => {
+        this._on(accessibleWalkerFront, "picker-accessible-hovered", onHovered);
+        this._on(accessibleWalkerFront, "picker-accessible-picked", onPicked);
+        this._on(
+          accessibleWalkerFront,
+          "picker-accessible-previewed",
+          onPreviewed
+        );
+        this._on(
+          accessibleWalkerFront,
+          "picker-accessible-canceled",
+          onCanceled
+        );
+        await accessibleWalkerFront.pick(
+          // Only pass doFocus to the top level accessibility walker front.
+          doFocus && accessibleWalkerFront.targetFront.isTopLevel
+        );
+      }
+    );
+  }
+
+  /**
+   * Stop picking and remove all walker listeners.
+   */
+  cancelPick(onHovered, onPicked, onPreviewed, onCanceled) {
+    return this.withAllAccessibilityWalkerFronts(
+      async accessibleWalkerFront => {
+        await accessibleWalkerFront.cancelPick();
+        this._off(
+          accessibleWalkerFront,
+          "picker-accessible-hovered",
+          onHovered
+        );
+        this._off(accessibleWalkerFront, "picker-accessible-picked", onPicked);
+        this._off(
+          accessibleWalkerFront,
+          "picker-accessible-previewed",
+          onPreviewed
+        );
+        this._off(
+          accessibleWalkerFront,
+          "picker-accessible-canceled",
+          onCanceled
+        );
+      }
+    );
   }
 
   async resetAccessiblity() {
