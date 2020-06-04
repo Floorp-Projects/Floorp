@@ -451,6 +451,7 @@ std::vector<UniquePtr<JsepCodecDescription>> JsepTrack::NegotiateCodecs(
           JsepVideoCodecDescription* cloneVideoCodec =
               static_cast<JsepVideoCodecDescription*>(clone.get());
           bool useRtx =
+              mRtxIsAllowed &&
               Preferences::GetBool("media.peerconnection.video.use_rtx", false);
           videoCodec->mRtxEnabled = useRtx && cloneVideoCodec->mRtxEnabled;
           videoCodec->mRtxPayloadType = cloneVideoCodec->mRtxPayloadType;
