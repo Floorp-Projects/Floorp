@@ -204,6 +204,13 @@ void OriginAttributes::CreateSuffix(nsACString& aStr) const {
                sanitizedGeckoViewUserContextId);
   }
 
+  if (!mPartitionKey.IsEmpty()) {
+    nsAutoString sanitizedPartitionKey(mPartitionKey);
+    sanitizedPartitionKey.ReplaceChar(kSourceChar, kSanitizedChar);
+
+    params.Set(NS_LITERAL_STRING("partitionKey"), sanitizedPartitionKey);
+  }
+
   aStr.Truncate();
 
   params.Serialize(value);
@@ -227,6 +234,10 @@ void OriginAttributes::CreateAnonymizedSuffix(nsACString& aStr) const {
 
   if (!attrs.mFirstPartyDomain.IsEmpty()) {
     attrs.mFirstPartyDomain.AssignLiteral("_anonymizedFirstPartyDomain_");
+  }
+
+  if (!attrs.mPartitionKey.IsEmpty()) {
+    attrs.mPartitionKey.AssignLiteral("_anonymizedPartitionKey_");
   }
 
   attrs.CreateSuffix(aStr);
@@ -296,6 +307,14 @@ class MOZ_STACK_CLASS PopulateFromSuffixIterator final
       MOZ_RELEASE_ASSERT(
           mOriginAttributes->mGeckoViewSessionContextId.IsEmpty());
       mOriginAttributes->mGeckoViewSessionContextId.Assign(aValue);
+      return true;
+    }
+
+    if (aName.EqualsLiteral("partitionKey")) {
+      MOZ_RELEASE_ASSERT(mOriginAttributes->mPartitionKey.IsEmpty());
+      nsAutoString partitionKey(aValue);
+      partitionKey.ReplaceChar(kSanitizedChar, kSourceChar);
+      mOriginAttributes->mPartitionKey.Assign(partitionKey);
       return true;
     }
 
