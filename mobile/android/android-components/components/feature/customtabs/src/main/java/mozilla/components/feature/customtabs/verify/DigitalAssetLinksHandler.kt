@@ -10,6 +10,7 @@ import androidx.core.net.toUri
 import mozilla.components.concept.fetch.Client
 import mozilla.components.concept.fetch.Request
 import mozilla.components.concept.fetch.Response
+import mozilla.components.support.ktx.kotlin.sanitizeURL
 import org.json.JSONException
 import org.json.JSONObject
 import java.io.IOException
@@ -49,7 +50,7 @@ internal class DigitalAssetLinksHandler(
         return try {
             val response = httpClient.fetch(
                 Request(
-                    requestUrl,
+                    requestUrl.sanitizeURL(),
                     connectTimeout = TIMEOUT,
                     readTimeout = TIMEOUT
                 )

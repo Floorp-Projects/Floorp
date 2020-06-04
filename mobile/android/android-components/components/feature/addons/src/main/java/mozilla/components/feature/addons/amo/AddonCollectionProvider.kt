@@ -17,6 +17,7 @@ import mozilla.components.concept.fetch.isSuccess
 import mozilla.components.feature.addons.Addon
 import mozilla.components.feature.addons.AddonsProvider
 import mozilla.components.support.base.log.logger.Logger
+import mozilla.components.support.ktx.kotlin.sanitizeURL
 import mozilla.components.support.ktx.util.readAndDeserialize
 import mozilla.components.support.ktx.util.writeString
 import org.json.JSONArray
@@ -110,7 +111,7 @@ class AddonCollectionProvider(
         var bitmap: Bitmap? = null
         if (addon.iconUrl != "") {
             client.fetch(
-                    Request(url = addon.iconUrl)
+                    Request(url = addon.iconUrl.sanitizeURL())
             ).use { response ->
                 if (response.isSuccess) {
                     response.body.useStream {

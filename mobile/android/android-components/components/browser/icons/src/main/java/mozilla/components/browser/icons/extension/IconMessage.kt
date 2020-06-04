@@ -10,6 +10,7 @@ import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.android.org.json.asSequence
 import mozilla.components.support.ktx.android.org.json.toJSONArray
 import mozilla.components.support.ktx.android.org.json.tryGetString
+import mozilla.components.support.ktx.kotlin.sanitizeURL
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
@@ -88,7 +89,7 @@ private fun JSONObject.toIconResource(): IconRequest.Resource? {
         val maskable = optBoolean("maskable", false)
 
         return IconRequest.Resource(
-            url = url.trim(),
+            url = url.sanitizeURL(),
             type = type,
             sizes = sizes,
             mimeType = if (mimeType.isNullOrEmpty()) null else mimeType,

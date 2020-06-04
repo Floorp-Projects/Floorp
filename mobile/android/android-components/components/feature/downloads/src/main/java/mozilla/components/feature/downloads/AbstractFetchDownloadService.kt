@@ -61,6 +61,7 @@ import mozilla.components.feature.downloads.facts.emitNotificationPauseFact
 import mozilla.components.feature.downloads.facts.emitNotificationCancelFact
 import mozilla.components.feature.downloads.facts.emitNotificationTryAgainFact
 import mozilla.components.feature.downloads.facts.emitNotificationOpenFact
+import mozilla.components.support.ktx.kotlin.sanitizeURL
 import mozilla.components.support.utils.DownloadUtils
 import java.io.File
 import java.io.FileOutputStream
@@ -546,7 +547,7 @@ abstract class AbstractFetchDownloadService : Service() {
             headers.append(RANGE, "bytes=${currentDownloadJobState.currentBytesCopied}-")
         }
 
-        val request = Request(download.url, headers = headers)
+        val request = Request(download.url.sanitizeURL(), headers = headers)
         val response = httpClient.fetch(request)
 
         // If we are resuming a download and the response does not contain a CONTENT_RANGE
