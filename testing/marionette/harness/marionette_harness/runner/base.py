@@ -18,6 +18,8 @@ from argparse import ArgumentParser
 from collections import defaultdict
 from copy import deepcopy
 
+import six
+
 import mozinfo
 import moznetwork
 import mozprofile
@@ -638,7 +640,7 @@ class BaseMarionetteTestRunner(object):
 
         def update(d, u):
             """Update a dictionary that may contain nested dictionaries."""
-            for k, v in u.iteritems():
+            for k, v in six.iteritems(u):
                 o = d.get(k, {})
                 if isinstance(v, dict) and isinstance(o, dict):
                     d[k] = update(d.get(k, {}), v)

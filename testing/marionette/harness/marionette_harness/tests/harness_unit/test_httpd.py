@@ -9,6 +9,9 @@ import os
 import types
 import urllib2
 
+import six
+from six.moves.urllib_request import urlopen
+
 import mozunit
 import pytest
 
@@ -42,7 +45,7 @@ def test_start_stop(server):
 def test_get_url(server):
     server.start()
     url = server.get_url("/")
-    assert isinstance(url, types.StringTypes)
+    assert isinstance(url, six.string_types)
     assert "http://" in url
 
     server.stop()
@@ -52,9 +55,9 @@ def test_get_url(server):
 
 def test_doc_root(server):
     server.start()
-    assert isinstance(server.doc_root, types.StringTypes)
+    assert isinstance(server.doc_root, six.string_types)
     server.stop()
-    assert isinstance(server.doc_root, types.StringTypes)
+    assert isinstance(server.doc_root, six.string_types)
 
 
 def test_router(server):
@@ -83,7 +86,7 @@ def test_handler(server):
     server.start()
 
     url = server.get_url("/httpd/test_handler")
-    body = urllib2.urlopen(url).read()
+    body = urlopen(url).read()
     res = json.loads(body)
     assert res["count"] == counter
 
