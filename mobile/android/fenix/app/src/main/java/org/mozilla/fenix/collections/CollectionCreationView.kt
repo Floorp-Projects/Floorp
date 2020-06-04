@@ -141,20 +141,28 @@ class CollectionCreationView(
 
     private fun updateForSelectCollection() {
         tab_list.isClickable = false
-
-        back_button.setOnClickListener {
-            interactor.onBackPressed(SaveCollectionStep.SelectCollection)
-        }
-        TransitionManager.beginDelayedTransition(collection_constraint_layout, transition)
         selectCollectionConstraints.clone(
             containerView.context,
             R.layout.component_collection_creation_select_collection
         )
         selectCollectionConstraints.applyTo(collection_constraint_layout)
+
+        back_button.apply {
+            text = context.getString(R.string.create_collection_select_collection)
+            setOnClickListener {
+                interactor.onBackPressed(SaveCollectionStep.SelectCollection)
+            }
+        }
+        TransitionManager.beginDelayedTransition(collection_constraint_layout, transition)
     }
 
     private fun updateForNameCollection(state: CollectionCreationState) {
         tab_list.isClickable = false
+        nameCollectionConstraints.clone(
+            containerView.context,
+            R.layout.component_collection_creation_name_collection
+        )
+        nameCollectionConstraints.applyTo(collection_constraint_layout)
 
         collectionCreationTabListAdapter.updateData(state.selectedTabs.toList(), state.selectedTabs, true)
         back_button.apply {
@@ -169,11 +177,7 @@ class CollectionCreationView(
         }
 
         name_collection_edittext.showKeyboard()
-        nameCollectionConstraints.clone(
-            containerView.context,
-            R.layout.component_collection_creation_name_collection
-        )
-        nameCollectionConstraints.applyTo(collection_constraint_layout)
+
         name_collection_edittext.setText(
             containerView.context.getString(
                 R.string.create_collection_default_name,
