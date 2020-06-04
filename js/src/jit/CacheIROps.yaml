@@ -715,6 +715,14 @@
   args:
     input: NumberId
 
+# Because Baseline stub code is shared by all realms in the Zone, this
+# instruction loads a pointer to the RNG from a stub field.
+- name: MathRandomResult
+  shared: false
+  transpile: false
+  args:
+    rng: RawPointerField
+
 - name: MathFloorToInt32Result
   shared: true
   transpile: true
