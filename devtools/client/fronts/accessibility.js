@@ -318,6 +318,13 @@ class AccessibleWalkerFront extends FrontClassWithSpec(accessibleWalkerSpec) {
       frameNodeFront
     );
 
+    if (!frameAccessibleFront) {
+      // Most likely we are inside a hidden frame.
+      return Promise.reject(
+        `Can't get the ancestry for an accessible front ${accessible.actorID}. It is in the detached tree.`
+      );
+    }
+
     // Compose the final ancestry out of ancestry for the given accessible in
     // the current process and recursively get the ancestry for the frame
     // accessible.
@@ -330,6 +337,79 @@ class AccessibleWalkerFront extends FrontClassWithSpec(accessibleWalkerSpec) {
     );
 
     return ancestry;
+  }
+
+  /**
+   * Run an accessibility audit for a document that accessibility walker is
+   * responsible for (in process). In addition to plainly running an audit (in
+   * cases when the document is in the OOP frame), this method also updates
+   * relative ancestries of audited accessible objects all the way up to the top
+   * level document for the toolbox.
+   * @param {Object} options
+   *                 - {Array}    types
+   *                   types of the accessibility issues to audit for
+   *                 - {Function} onProgress
+   *                   callback function for a progress audit-event
+   */
+  async audit({ types, onProgress }) {
+    const onAudit = new Promise(resolve => {
+      const auditEventHandler = ({ type, ancestries, progress }) => {
+        switch (type) {
+          case "error":
+            this.off("audit-event", auditEventHandler);
+            resolve({ error: true });
+            break;
+          case "completed":
+            this.off("audit-event", auditEventHandler);
+            resolve({ ancestries });
+            break;
+          case "progress":
+            onProgress(progress);
+            break;
+          default:
+            break;
+        }
+      };
+
+      this.on("audit-event", auditEventHandler);
+      super.startAudit({ types });
+    });
+
+    const audit = await onAudit;
+    // If audit resulted in an error or there's nothing to report, we are done
+    // (no need to check for ancestry across the remote frame hierarchy). See
+    // also https://bugzilla.mozilla.org/show_bug.cgi?id=1641551 why the rest of
+    // the code path is only supported when content toolbox fission is enabled.
+    if (audit.error || audit.ancestries.length === 0) {
+      return audit;
+    }
+
+    const parentTarget = await this.targetFront.getParentTarget();
+    // If there is no parent target, we do not need to update ancestries as we
+    // are in the top level document.
+    if (!parentTarget) {
+      return audit;
+    }
+
+    // Retrieve an ancestry (cross process) for a current root document and make
+    // audit report ancestries relative to it.
+    const [docAccessibleFront] = await this.children();
+    let docAccessibleAncestry;
+    try {
+      docAccessibleAncestry = await this.getAncestry(docAccessibleFront);
+    } catch (e) {
+      // We are in a detached subtree. We do not consider this an error, instead
+      // we need to ignore the audit for this frame and return an empty report.
+      return { ancestries: [] };
+    }
+    for (const ancestry of audit.ancestries) {
+      // Compose the final ancestries out of the ones in the audit report
+      // relative to this document and the ancestry of the document itself
+      // (cross process).
+      ancestry.push(...docAccessibleAncestry);
+    }
+
+    return audit;
   }
 }
 
