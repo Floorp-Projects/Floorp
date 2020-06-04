@@ -15,6 +15,7 @@
 
 #include "ds/TraceableFifo.h"
 #include "gc/Memory.h"
+#include "irregexp/RegExpTypes.h"
 #include "js/CharacterEncoding.h"
 #include "js/ContextOptions.h"  // JS::ContextOptions
 #include "js/GCVector.h"
@@ -22,7 +23,6 @@
 #include "js/Result.h"
 #include "js/Utility.h"
 #include "js/Vector.h"
-#include "new-regexp/RegExpTypes.h"
 #include "threading/ProtectedData.h"
 #include "util/StructuredSpewer.h"
 #include "vm/Activation.h"  // js::Activation

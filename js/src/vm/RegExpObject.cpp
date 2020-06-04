@@ -16,12 +16,12 @@
 #include "builtin/SelfHostingDefines.h"  // REGEXP_*_FLAG
 #include "frontend/TokenStream.h"
 #include "gc/HashUtil.h"
+#include "irregexp/regexp-stack.h"
+#include "irregexp/RegExpAPI.h"
 #include "jit/VMFunctions.h"
 #include "js/RegExp.h"
 #include "js/RegExpFlags.h"  // JS::RegExpFlags
 #include "js/StableStringChars.h"
-#include "new-regexp/regexp-stack.h"
-#include "new-regexp/RegExpAPI.h"
 #include "util/StringBuffer.h"
 #include "vm/MatchPairs.h"
 #include "vm/RegExpStatics.h"

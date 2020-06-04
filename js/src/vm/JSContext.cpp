@@ -37,6 +37,7 @@
 #include "gc/FreeOp.h"
 #include "gc/Marking.h"
 #include "gc/PublicIterators.h"
+#include "irregexp/RegExpAPI.h"
 #include "jit/Ion.h"
 #include "jit/PcScriptCache.h"
 #include "js/CharacterEncoding.h"
@@ -54,7 +55,6 @@
 #ifdef JS_SIMULATOR_MIPS64
 #  include "jit/mips64/Simulator-mips64.h"
 #endif
-#include "new-regexp/RegExpAPI.h"
 #include "util/DiagnosticAssertions.h"
 #include "util/DoubleToString.h"
 #include "util/NativeStack.h"

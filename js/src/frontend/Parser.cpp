@@ -46,8 +46,8 @@
 #include "frontend/ParseNode.h"
 #include "frontend/ParseNodeVerify.h"
 #include "frontend/TokenStream.h"
+#include "irregexp/RegExpAPI.h"
 #include "js/RegExpFlags.h"  // JS::RegExpFlags
-#include "new-regexp/RegExpAPI.h"
 #include "vm/BigIntType.h"
 #include "vm/BytecodeUtil.h"
 #include "vm/FunctionFlags.h"          // js::FunctionFlags

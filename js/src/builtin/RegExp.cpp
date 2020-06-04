@@ -11,10 +11,10 @@
 #include "mozilla/TextUtils.h"
 
 #include "frontend/TokenStream.h"
+#include "irregexp/RegExpAPI.h"
 #include "jit/InlinableNatives.h"
 #include "js/PropertySpec.h"
 #include "js/RegExpFlags.h"  // JS::RegExpFlag, JS::RegExpFlags
-#include "new-regexp/RegExpAPI.h"
 #include "util/StringBuffer.h"
 #include "util/Unicode.h"
 #include "vm/JSContext.h"
