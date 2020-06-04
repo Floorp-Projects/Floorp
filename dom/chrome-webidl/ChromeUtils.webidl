@@ -630,6 +630,7 @@ dictionary OriginAttributesDictionary {
   unsigned long privateBrowsingId = 0;
   DOMString firstPartyDomain = "";
   DOMString geckoViewSessionContextId = "";
+  DOMString partitionKey = "";
 };
 
 [GenerateInitFromJSON, GenerateToJSON]
@@ -639,6 +640,7 @@ dictionary OriginAttributesPatternDictionary {
   unsigned long privateBrowsingId;
   DOMString firstPartyDomain;
   DOMString geckoViewSessionContextId;
+  DOMString partitionKey;
 };
 
 dictionary CompileScriptOptionsDictionary {
