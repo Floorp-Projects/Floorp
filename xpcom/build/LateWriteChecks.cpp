@@ -14,14 +14,10 @@
 #include "mozilla/StaticPtr.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/Unused.h"
-#include "mozilla/Mutex.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsDirectoryServiceUtils.h"
 #include "nsLocalFile.h"
 #include "nsPrintfCString.h"
-#ifndef ANDROID
-#  include "nsTerminator.h"
-#endif
 #include "mozilla/StackWalk.h"
 #include "plstr.h"
 #include "prio.h"
@@ -199,11 +195,6 @@ void LateWriteObserver::Observe(
     sha1Stream.Printf("%d %x\n", frame.mModIndex, (unsigned)frame.mOffset);
   }
 
-#ifndef ANDROID
-  sha1Stream.Printf("%d\n", mozilla::nsTerminator::IsCheckingLateWrites());
-#else
-  sha1Stream.Printf("%d\n", false);
-#endif
   mozilla::SHA1Sum::Hash sha1;
   sha1Stream.Finish(sha1);
 
@@ -225,7 +216,6 @@ void LateWriteObserver::Observe(
 /******************************* Setup/Teardown *******************************/
 
 static mozilla::StaticAutoPtr<LateWriteObserver> sLateWriteObserver;
-mozilla::Mutex* mMutex = nullptr;
 
 namespace mozilla {
 
@@ -238,20 +228,13 @@ void InitLateWriteChecks() {
       sLateWriteObserver = new LateWriteObserver(nativePath.get());
     }
   }
-  mMutex = new Mutex("LateWriteCheck::mMutex");
 }
 
 void BeginLateWriteChecks() {
-  if (mMutex) {
-    MutexAutoLock lock(*mMutex);
-  }
-
   if (sLateWriteObserver) {
     IOInterposer::Register(IOInterposeObserver::OpWriteFSync,
                            sLateWriteObserver);
   }
-  delete mMutex;
-  mMutex = nullptr;
 }
 
 void StopLateWriteChecks() {
