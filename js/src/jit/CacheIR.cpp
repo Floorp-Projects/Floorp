@@ -5442,6 +5442,34 @@ AttachDecision CallIRGenerator::tryAttachMathSqrt(HandleFunction callee) {
   return AttachDecision::Attach;
 }
 
+AttachDecision CallIRGenerator::tryAttachMathPow(HandleFunction callee) {
+  // Need two number arguments.
+  if (argc_ != 2 || !args_[0].isNumber() || !args_[1].isNumber()) {
+    return AttachDecision::NoAction;
+  }
+
+  // Initialize the input operand.
+  Int32OperandId argcId(writer.setInputOperandId(0));
+
+  // Guard callee is the 'pow' function.
+  emitNativeCalleeGuard(callee);
+
+  ValOperandId baseId = writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
+  ValOperandId exponentId =
+      writer.loadArgumentFixedSlot(ArgumentKind::Arg1, argc_);
+
+  NumberOperandId baseNumberId = writer.guardIsNumber(baseId);
+  NumberOperandId exponentNumberId = writer.guardIsNumber(exponentId);
+
+  writer.doublePowResult(baseNumberId, exponentNumberId);
+
+  writer.typeMonitorResult();
+  cacheIRStubKind_ = BaselineCacheIRStubKind::Monitored;
+
+  trackAttached("MathPow");
+  return AttachDecision::Attach;
+}
+
 AttachDecision CallIRGenerator::tryAttachMathFunction(HandleFunction callee,
                                                       UnaryMathFunction fun) {
   // Need one argument.
@@ -5729,6 +5757,8 @@ AttachDecision CallIRGenerator::tryAttachInlinableNative(
       return tryAttachMathFunction(callee, UnaryMathFunction::ATanH);
     case InlinableNative::MathCbrt:
       return tryAttachMathFunction(callee, UnaryMathFunction::Cbrt);
+    case InlinableNative::MathPow:
+      return tryAttachMathPow(callee);
 
     // Map intrinsics.
     case InlinableNative::IntrinsicGuardToMapObject:
