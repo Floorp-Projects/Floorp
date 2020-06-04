@@ -1037,6 +1037,20 @@ class nsWindow::LayerViewSupport final
       mCompositorPaused = true;
       child->Pause();
     }
+
+    if (LockedWindowPtr lock{mWindow}) {
+      while (!mCapturePixelsResults.empty()) {
+        auto result =
+            java::GeckoResult::LocalRef(mCapturePixelsResults.front().mResult);
+        if (result) {
+          result->CompleteExceptionally(
+              java::sdk::IllegalStateException::New(
+                  "The compositor has detached from the session")
+                  .Cast<jni::Throwable>());
+        }
+        mCapturePixelsResults.pop();
+      }
+    }
   }
 
   void SyncResumeCompositor() {
@@ -1205,22 +1219,21 @@ class nsWindow::LayerViewSupport final
 
   void RecvScreenPixels(Shmem&& aMem, const ScreenIntSize& aSize) {
     MOZ_ASSERT(AndroidBridge::IsJavaUiThread());
-    CaptureRequest aCaptureRequest;
-    java::GeckoResult::LocalRef aResult = nullptr;
+    CaptureRequest request;
+    java::GeckoResult::LocalRef result = nullptr;
     if (LockedWindowPtr window{mWindow}) {
-      aCaptureRequest = mCapturePixelsResults.front();
-      aResult = java::GeckoResult::LocalRef(aCaptureRequest.mResult);
-      if (aResult) {
+      request = mCapturePixelsResults.front();
+      result = java::GeckoResult::LocalRef(request.mResult);
+      if (result) {
         mCapturePixelsResults.pop();
       }
     }
 
-    if (aResult) {
+    if (result) {
       auto pixels = mozilla::jni::ByteBuffer::New(
-          FlipScreenPixels(aMem, aSize, aCaptureRequest.mSource,
-                           aCaptureRequest.mOutputSize),
+          FlipScreenPixels(aMem, aSize, request.mSource, request.mOutputSize),
           aMem.Size<int8_t>());
-      aResult->Complete(pixels);
+      result->Complete(pixels);
     }
 
     // Pixels have been copied, so Dealloc Shmem

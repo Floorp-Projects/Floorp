@@ -27,6 +27,7 @@ import kotlin.math.max
 import android.graphics.BitmapFactory
 import android.graphics.Bitmap
 import androidx.test.platform.app.InstrumentationRegistry
+import java.lang.IllegalStateException
 import java.lang.NullPointerException
 
 
@@ -137,6 +138,18 @@ class ScreenshotTest : BaseSessionTest() {
             texture.setDefaultBufferSize(SCREEN_WIDTH, SCREEN_HEIGHT)
             val surface = Surface(texture)
             it.surfaceChanged(surface, SCREEN_WIDTH, SCREEN_HEIGHT)
+            sessionRule.waitForResult(result)
+        }
+    }
+
+    @WithDisplay(height = SCREEN_HEIGHT, width = SCREEN_WIDTH)
+    @Test(expected = IllegalStateException::class)
+    fun capturePixelsFailsCompositorPaused() {
+        sessionRule.display?.let {
+            it.surfaceDestroyed()
+            val result = it.capturePixels()
+            it.surfaceDestroyed()
+
             sessionRule.waitForResult(result)
         }
     }
