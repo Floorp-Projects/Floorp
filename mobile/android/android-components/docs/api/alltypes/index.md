@@ -792,6 +792,7 @@
 | [mozilla.components.feature.toolbar.ToolbarFeature](../mozilla.components.feature.toolbar/-toolbar-feature/index.md) | Feature implementation for connecting a toolbar implementation with the session module. |
 | [mozilla.components.feature.toolbar.ToolbarInteractor](../mozilla.components.feature.toolbar/-toolbar-interactor/index.md) | Connects a toolbar instance to the browser engine via use cases |
 | [mozilla.components.feature.toolbar.ToolbarPresenter](../mozilla.components.feature.toolbar/-toolbar-presenter/index.md) | Presenter implementation for a toolbar implementation in order to update the toolbar whenever the state of the selected session. |
+| [mozilla.components.concept.storage.TopFrecentSiteInfo](../mozilla.components.concept.storage/-top-frecent-site-info/index.md) | Information about a top frecent site. This represents a most frequently visited site. |
 | [mozilla.components.feature.top.sites.TopSite](../mozilla.components.feature.top.sites/-top-site/index.md) | A top site. |
 | [mozilla.components.feature.top.sites.TopSiteStorage](../mozilla.components.feature.top.sites/-top-site-storage/index.md) | A storage implementation for organizing top sites. |
 | [mozilla.components.concept.engine.content.blocking.Tracker](../mozilla.components.concept.engine.content.blocking/-tracker/index.md) | Represents a blocked content tracker. |

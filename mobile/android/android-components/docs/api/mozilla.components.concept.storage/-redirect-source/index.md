@@ -2,7 +2,7 @@
 
 # RedirectSource
 
-`enum class RedirectSource` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/storage/src/main/java/mozilla/components/concept/storage/HistoryStorage.kt#L137)
+`enum class RedirectSource` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/storage/src/main/java/mozilla/components/concept/storage/HistoryStorage.kt#L146)
 
 A redirect source describes how a page redirected to another page.
 

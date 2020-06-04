@@ -2,7 +2,7 @@
 
 # DOWNLOAD
 
-`DOWNLOAD` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/storage/src/main/java/mozilla/components/concept/storage/HistoryStorage.kt#L178)
+`DOWNLOAD` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/storage/src/main/java/mozilla/components/concept/storage/HistoryStorage.kt#L198)
 
 ### Inherited Properties
 

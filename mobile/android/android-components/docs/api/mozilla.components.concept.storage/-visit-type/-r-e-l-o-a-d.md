@@ -2,7 +2,7 @@
 
 # RELOAD
 
-`RELOAD` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/storage/src/main/java/mozilla/components/concept/storage/HistoryStorage.kt#L180)
+`RELOAD` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/storage/src/main/java/mozilla/components/concept/storage/HistoryStorage.kt#L200)
 
 ### Inherited Properties
 

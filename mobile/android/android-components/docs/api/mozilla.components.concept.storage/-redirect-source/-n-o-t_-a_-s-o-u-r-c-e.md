@@ -2,4 +2,4 @@
 
 # NOT_A_SOURCE
 
-`NOT_A_SOURCE` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/storage/src/main/java/mozilla/components/concept/storage/HistoryStorage.kt#L139)
+`NOT_A_SOURCE` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/storage/src/main/java/mozilla/components/concept/storage/HistoryStorage.kt#L148)

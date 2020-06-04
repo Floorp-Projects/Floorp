@@ -2,7 +2,7 @@
 
 # PageVisit
 
-`data class PageVisit` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/storage/src/main/java/mozilla/components/concept/storage/HistoryStorage.kt#L129)
+`data class PageVisit` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/storage/src/main/java/mozilla/components/concept/storage/HistoryStorage.kt#L138)
 
 Information to record about a visit.
 
