@@ -93,6 +93,10 @@ this.heuristics = class heuristics extends ExtensionAPI {
           },
 
           async checkEnterprisePolicies() {
+            if (Cu.isInAutomation) {
+              return "no_policy_set";
+            }
+
             if (Services.policies.status === Services.policies.ACTIVE) {
               let policies = Services.policies.getActivePolicies();
 
@@ -115,6 +119,10 @@ this.heuristics = class heuristics extends ExtensionAPI {
           },
 
           async checkParentalControls() {
+            if (Cu.isInAutomation) {
+              return "enable_doh";
+            }
+
             if (pcs.parentalControlsEnabled) {
               return "disable_doh";
             }
@@ -122,6 +130,10 @@ this.heuristics = class heuristics extends ExtensionAPI {
           },
 
           async checkThirdPartyRoots() {
+            if (Cu.isInAutomation) {
+              return "enable_doh";
+            }
+
             let certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(
               Ci.nsIX509CertDB
             );
