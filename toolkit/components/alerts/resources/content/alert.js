@@ -211,9 +211,7 @@ function onAlertLoad() {
 
   // If the require interaction flag is set, prevent auto-closing the notification.
   if (!gRequireInteraction) {
-    if (
-      !Services.prefs.getBoolPref("toolkit.cosmeticAnimations.enabled", true)
-    ) {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       setTimeout(function() {
         window.close();
       }, ALERT_DURATION_IMMEDIATE);
