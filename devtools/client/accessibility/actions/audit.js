@@ -21,9 +21,10 @@ exports.auditing = filter => dispatch => {
 };
 
 exports.audit = (auditFunc, filter) => dispatch =>
-  auditFunc(
-    filter,
-    () => dispatch({ type: AUDIT, error: true }),
-    progress => dispatch({ type: AUDIT_PROGRESS, progress }),
-    ancestries => dispatch({ type: AUDIT, response: ancestries })
-  );
+  auditFunc(filter, progress =>
+    dispatch({ type: AUDIT_PROGRESS, progress })
+  ).then(({ error, ancestries }) => {
+    return error
+      ? dispatch({ type: AUDIT, error: true })
+      : dispatch({ type: AUDIT, response: ancestries });
+  });

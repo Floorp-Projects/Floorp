@@ -6,6 +6,13 @@
 
 const Services = require("Services");
 
+loader.lazyRequireGetter(
+  this,
+  "CombinedProgress",
+  "devtools/client/accessibility/utils/audit",
+  true
+);
+
 const {
   accessibility: { AUDIT_TYPE },
 } = require("devtools/shared/constants");
@@ -71,45 +78,45 @@ class AccessibilityProxy {
    *
    * @param  {String} filter
    *         Type of an audit to perform.
-   * @param  {Function} onError
-   *         Audit error callback.
    * @param  {Function} onProgress
    *         Audit progress callback.
-   * @param  {Function} onCompleted
-   *         Audit completion callback.
    *
    * @return {Promise}
-   *         Resolves when the audit for a top document, that the walker
-   *         traverses, completes.
+   *         Resolves when the audit for every document, that each of the frame
+   *         accessibility walkers traverse, completes.
    */
-  audit(filter, onError, onProgress, onCompleted) {
-    return new Promise(resolve => {
-      const front = this.accessibleWalkerFront;
-      const types =
-        filter === FILTERS.ALL ? Object.values(AUDIT_TYPE) : [filter];
-      const auditEventHandler = ({ type, ancestries, progress }) => {
-        switch (type) {
-          case "error":
-            this._off(front, "audit-event", auditEventHandler);
-            onError();
-            resolve();
-            break;
-          case "completed":
-            this._off(front, "audit-event", auditEventHandler);
-            onCompleted(ancestries);
-            resolve();
-            break;
-          case "progress":
-            onProgress(progress);
-            break;
-          default:
-            break;
-        }
-      };
-
-      this._on(front, "audit-event", auditEventHandler);
-      front.startAudit({ types });
+  async audit(filter, onProgress) {
+    const types = filter === FILTERS.ALL ? Object.values(AUDIT_TYPE) : [filter];
+    const totalFrames = this.toolbox.targetList.getAllTargets([
+      this.toolbox.targetList.TYPES.FRAME,
+    ]).length;
+    const progress = new CombinedProgress({
+      onProgress,
+      totalFrames,
     });
+    const audits = await this.withAllAccessibilityWalkerFronts(
+      async accessibleWalkerFront =>
+        accessibleWalkerFront.audit({
+          types,
+          onProgress: progress.onProgressForWalker.bind(
+            progress,
+            accessibleWalkerFront
+          ),
+        })
+    );
+
+    // Accumulate all audits into a single structure.
+    const combinedAudit = { ancestries: [] };
+    for (const audit of audits) {
+      // If any of the audits resulted in an error, no need to continue.
+      if (audit.error) {
+        return audit;
+      }
+
+      combinedAudit.ancestries.push(...audit.ancestries);
+    }
+
+    return combinedAudit;
   }
 
   async disableAccessibility() {
