@@ -179,14 +179,13 @@ open class FenixApplication : LocaleAwareApplication() {
                         kintoEndpoint = KINTO_ENDPOINT_PROD
                     )
                 )
+                ExperimentsManager.initSearchWidgetExperiment(this)
             }
         } else {
             // We should make a better way to opt out for when we have more experiments
             // See https://github.com/mozilla-mobile/fenix/issues/6278
             ExperimentsManager.optOutSearchWidgetExperiment(this)
         }
-
-        ExperimentsManager.initSearchWidgetExperiment(this)
 
         components.performance.visualCompletenessQueue.runIfReadyOrQueue {
             GlobalScope.launch(Dispatchers.IO) {
