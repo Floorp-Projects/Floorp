@@ -64,7 +64,7 @@ nsresult ContentPrincipal::Init(nsIURI* aURI,
   // or fall back to a null principal.  These are schemes which return
   // URI_INHERITS_SECURITY_CONTEXT from their protocol handler's
   // GetProtocolFlags function.
-  bool hasFlag;
+  bool hasFlag = false;
   Unused << hasFlag;  // silence possible compiler warnings.
   MOZ_DIAGNOSTIC_ASSERT(
       NS_SUCCEEDED(NS_URIChainHasFlags(
