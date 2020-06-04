@@ -4023,10 +4023,8 @@ Toolbox.prototype = {
 
     let frontOrURL = stylesheetFront;
     try {
-      const sourceMappedLoc = await this.sourceMapURLService.originalPositionForURL(
-        stylesheetFront
-          ? stylesheetFront.href || stylesheetFront.nodeHref
-          : null,
+      const sourceMappedLoc = await this.sourceMapURLService.originalPositionForID(
+        stylesheetFront.actorID,
         line,
         column
       );
