@@ -483,30 +483,7 @@ const GfxDeviceFamily* GfxDriverInfo::GetDeviceFamily(DeviceFamily id) {
       APPEND_DEVICE(0x163d);
       APPEND_DEVICE(0x163e);
 
-#if defined(MOZ_WIDGET_GTK) || defined(NIGHTLY_BUILD)
-      // Gen7.5 not allowed until bug 1576637 is resolved.
-      // gen7.5 gt1
-      APPEND_DEVICE(0x0402);
-      APPEND_DEVICE(0x0406);
-      APPEND_DEVICE(0x040a);
-      APPEND_DEVICE(0x040b);
-      APPEND_DEVICE(0x040e);
-      APPEND_DEVICE(0x0a02);
-      APPEND_DEVICE(0x0a06);
-      APPEND_DEVICE(0x0a0a);
-      APPEND_DEVICE(0x0a0b);
-      APPEND_DEVICE(0x0a0e);
-      APPEND_DEVICE(0x0c02);
-      APPEND_DEVICE(0x0c06);
-      APPEND_DEVICE(0x0c0c);
-      APPEND_DEVICE(0x0c0b);
-      APPEND_DEVICE(0x0c0e);
-      APPEND_DEVICE(0x0d02);
-      APPEND_DEVICE(0x0d06);
-      APPEND_DEVICE(0x0d0a);
-      APPEND_DEVICE(0x0d0b);
-      APPEND_DEVICE(0x0d0e);
-
+#ifdef EARLY_BETA_OR_EARLIER
       // gen7.5 gt2
       APPEND_DEVICE(0x0412);
       APPEND_DEVICE(0x0416);
@@ -541,6 +518,31 @@ const GfxDeviceFamily* GfxDriverInfo::GetDeviceFamily(DeviceFamily id) {
       APPEND_DEVICE(0x0d26);
       APPEND_DEVICE(0x0d2b);
       APPEND_DEVICE(0x0d2e);
+#endif
+
+#if defined(MOZ_WIDGET_GTK) || defined(NIGHTLY_BUILD)
+      // Gen7.5 not allowed until bug 1576637 is resolved.
+      // gen7.5 gt1
+      APPEND_DEVICE(0x0402);
+      APPEND_DEVICE(0x0406);
+      APPEND_DEVICE(0x040a);
+      APPEND_DEVICE(0x040b);
+      APPEND_DEVICE(0x040e);
+      APPEND_DEVICE(0x0a02);
+      APPEND_DEVICE(0x0a06);
+      APPEND_DEVICE(0x0a0a);
+      APPEND_DEVICE(0x0a0b);
+      APPEND_DEVICE(0x0a0e);
+      APPEND_DEVICE(0x0c02);
+      APPEND_DEVICE(0x0c06);
+      APPEND_DEVICE(0x0c0c);
+      APPEND_DEVICE(0x0c0b);
+      APPEND_DEVICE(0x0c0e);
+      APPEND_DEVICE(0x0d02);
+      APPEND_DEVICE(0x0d06);
+      APPEND_DEVICE(0x0d0a);
+      APPEND_DEVICE(0x0d0b);
+      APPEND_DEVICE(0x0d0e);
 
       // gen7 gt1
       APPEND_DEVICE(0x0152);
