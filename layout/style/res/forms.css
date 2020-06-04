@@ -243,9 +243,12 @@ select:active:hover {
 %endif
 
 /* Need the "select[size][multiple]" selector to override the settings on
-   'select[size="1"]', eg if one has <select size="1" multiple> */
+   'select[size="1"]', eg if one has <select size="1" multiple>, and that it
+   needs to be separate from the other :is() selector because otherwise it'd
+   increase the specificity of it, and override the rule below */
 
-select:is([size], [multiple], [size][multiple]) {
+select:is([size], [multiple]),
+select[size][multiple] {
   /* Different alignment and padding for listbox vs combobox */
   background-color: -moz-Field;
   color: -moz-FieldText;
