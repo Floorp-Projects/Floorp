@@ -58,6 +58,11 @@ jobs:
             --exclude-directory-metadata=recursive
             --exclude b/firefox/chrome/toolkit/content/global/buildconfig.html
             --exclude b/firefox/uninstall/helper.exe
+        # This is necessary to avoid building `build-win64-aarch64` on every push on autoland
+        # A more robust fix for this is https://bugzilla.mozilla.org/show_bug.cgi?id=1643346
+        optimization:
+            push-interval-10:
+                - windows
 
     reproducible-linux32:
         symbol: Linux32
