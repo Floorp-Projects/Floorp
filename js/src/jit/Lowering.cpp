@@ -1525,6 +1525,17 @@ void LIRGenerator::visitPow(MPow* ins) {
   MDefinition* input = ins->input();
   MDefinition* power = ins->power();
 
+  if (ins->type() == MIRType::Int32) {
+    MOZ_ASSERT(input->type() == MIRType::Int32);
+    MOZ_ASSERT(power->type() == MIRType::Int32);
+
+    auto* lir = new (alloc())
+        LPowII(useRegister(input), useRegister(power), temp(), temp());
+    assignSnapshot(lir, Bailout_PrecisionLoss);
+    define(lir, ins);
+    return;
+  }
+
   MOZ_ASSERT(ins->type() == MIRType::Double);
   MOZ_ASSERT(input->type() == MIRType::Double);
   MOZ_ASSERT(power->type() == MIRType::Int32 ||
