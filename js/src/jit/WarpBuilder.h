@@ -54,8 +54,7 @@ namespace jit {
   _(Generator)                           \
   _(AsyncAwait)                          \
   _(AsyncResolve)                        \
-  /* Catch/finally */                    \
-  _(Exception)                           \
+  /* try-finally */                      \
   _(Finally)                             \
   _(Gosub)                               \
   _(Retsub)                              \

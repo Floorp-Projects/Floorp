@@ -2710,6 +2710,10 @@ bool WarpBuilder::build_Try(BytecodeLocation loc) {
   return addPendingEdge(PendingEdge::NewGotoWithFake(pred), afterTryLoc);
 }
 
+bool WarpBuilder::build_Exception(BytecodeLocation) {
+  MOZ_CRASH("Unreachable because we skip catch-blocks");
+}
+
 bool WarpBuilder::build_Throw(BytecodeLocation loc) {
   MDefinition* def = current->pop();
 

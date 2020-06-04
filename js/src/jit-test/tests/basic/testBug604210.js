@@ -6,6 +6,6 @@ function f() {
     } catch (e) {
         ex = e;
     }
-    assertEq(ex.message.endsWith(`x is undefined`), true);
+    assertEq(/(x is|"foo" of) undefined/.test(ex.message), true);
 }
 f();

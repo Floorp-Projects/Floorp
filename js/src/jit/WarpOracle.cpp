@@ -602,6 +602,7 @@ AbortReasonOr<WarpScriptSnapshot*> WarpOracle::createScriptSnapshot(
       case JSOp::Debugger:
       case JSOp::TableSwitch:
       case JSOp::Try:
+      case JSOp::Exception:
       case JSOp::Throw:
       case JSOp::ThrowSetConst:
       case JSOp::SetRval:
