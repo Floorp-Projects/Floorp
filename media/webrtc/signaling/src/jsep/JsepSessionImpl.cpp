@@ -407,8 +407,7 @@ std::vector<SdpExtmapAttributeList::Extmap> JsepSessionImpl::GetRtpExtensions(
         AddVideoRtpExtension(webrtc::RtpExtension::kRtpStreamIdUri,
                              SdpDirectionAttribute::kSendonly);
 
-        if (mRtxIsAllowed &&
-            Preferences::GetBool("media.peerconnection.video.use_rtx", false)) {
+        if (Preferences::GetBool("media.peerconnection.video.use_rtx", false)) {
           AddVideoRtpExtension(webrtc::RtpExtension::kRepairedRtpStreamIdUri,
                                SdpDirectionAttribute::kSendonly);
         }
@@ -1950,7 +1949,6 @@ void JsepSessionImpl::SetupDefaultCodecs() {
       new JsepAudioCodecDescription("101", "telephone-event", 8000, 1));
 
   bool useRtx =
-      mRtxIsAllowed &&
       Preferences::GetBool("media.peerconnection.video.use_rtx", false);
   // Supported video codecs.
   // Note: order here implies priority for building offers!
