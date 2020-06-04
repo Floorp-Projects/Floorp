@@ -25,29 +25,12 @@
 
 namespace mozilla {
 
-namespace {
-
-nsresult GetBaseDomain(nsIURI* aURI, nsACString& aBaseDomain) {
-  nsCOMPtr<nsIEffectiveTLDService> tldService =
-      do_GetService(NS_EFFECTIVETLDSERVICE_CONTRACTID);
-
-  if (!tldService) {
-    return NS_ERROR_FAILURE;
-  }
-
-  return tldService->GetBaseDomain(aURI, 0, aBaseDomain);
-}
-
 // check if there's any interacting visit within the given seconds
-bool HasEligibleVisit(
-    nsIURI* aURI,
+static bool HasEligibleVisit(
+    const nsACString& aBaseDomain,
     int64_t aSinceInSec = StaticPrefs::
         privacy_restrict3rdpartystorage_heuristic_recently_visited_time()) {
   nsresult rv;
-
-  nsAutoCString baseDomain;
-  rv = GetBaseDomain(aURI, baseDomain);
-  NS_ENSURE_SUCCESS(rv, false);
 
   nsCOMPtr<nsINavHistoryService> histSrv =
       do_GetService(NS_NAVHISTORYSERVICE_CONTRACTID);
@@ -60,7 +43,7 @@ bool HasEligibleVisit(
     return false;
   }
 
-  rv = histQuery->SetDomain(baseDomain);
+  rv = histQuery->SetDomain(aBaseDomain);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return false;
   }
@@ -131,9 +114,20 @@ bool HasEligibleVisit(
   return childCount > 0;
 }
 
-void AddConsoleReport(nsIChannel* aNewChannel, nsIURI* aNewURI,
-                      const nsACString& aOldOrigin,
-                      const nsACString& aNewOrigin) {
+static nsresult GetBaseDomain(nsIURI* aURI, nsACString& aBaseDomain) {
+  nsCOMPtr<nsIEffectiveTLDService> tldService =
+      do_GetService(NS_EFFECTIVETLDSERVICE_CONTRACTID);
+
+  if (!tldService) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return tldService->GetBaseDomain(aURI, 0, aBaseDomain);
+}
+
+static void AddConsoleReport(nsIChannel* aNewChannel, nsIURI* aNewURI,
+                             const nsACString& aOldOrigin,
+                             const nsACString& aNewOrigin) {
   nsCOMPtr<net::HttpBaseChannel> httpChannel = do_QueryInterface(aNewChannel);
   if (!httpChannel) {
     return;
@@ -153,39 +147,6 @@ void AddConsoleReport(nsIChannel* aNewChannel, nsIURI* aNewURI,
       nsContentUtils::eNECKO_PROPERTIES, uri, 0, 0,
       NS_LITERAL_CSTRING("CookieAllowedForFpiByHeuristic"), params);
 }
-
-bool ShouldRedirectHeuristicApplyTrackingResource(nsIChannel* aOldChannel,
-                                                  nsIURI* aOldURI,
-                                                  nsIChannel* aNewChannel,
-                                                  nsIURI* aNewURI) {
-  nsCOMPtr<nsIClassifiedChannel> classifiedOldChannel =
-      do_QueryInterface(aOldChannel);
-  if (!classifiedOldChannel) {
-    LOG_SPEC2(("Ignoring redirect for %s to %s because there is not "
-               "nsIClassifiedChannel interface",
-               _spec1, _spec2),
-              aOldURI, aNewURI);
-    return false;
-  }
-
-  // We're looking at the first-party classification flags because we're
-  // interested in first-party redirects.
-  uint32_t oldClassificationFlags =
-      classifiedOldChannel->GetFirstPartyClassificationFlags();
-
-  if (net::UrlClassifierCommon::IsTrackingClassificationFlag(
-          oldClassificationFlags)) {
-    // This is a redirect from tracking.
-    LOG_SPEC2(("Ignoring redirect for %s to %s because it's from tracking ",
-               _spec1, _spec2),
-              aOldURI, aNewURI);
-    return false;
-  }
-
-  return true;
-}
-
-}  // namespace
 
 void DynamicFpiRedirectHeuristic(nsIChannel* aOldChannel, nsIURI* aOldURI,
                                  nsIChannel* aNewChannel, nsIURI* aNewURI) {
@@ -276,14 +237,6 @@ void DynamicFpiRedirectHeuristic(nsIChannel* aOldChannel, nsIURI* aOldURI,
     return;
   }
 
-  if (!ShouldRedirectHeuristicApplyTrackingResource(aOldChannel, aOldURI,
-                                                    aNewChannel, aNewURI)) {
-    LOG_SPEC2(("Ignoring redirect for %s to %s because tracking test failed",
-               _spec1, _spec2),
-              aOldURI, aNewURI);
-    return;
-  }
-
   if (!ContentBlockingUserInteraction::Exists(oldPrincipal) ||
       !ContentBlockingUserInteraction::Exists(newPrincipal)) {
     LOG_SPEC2(("Ignoring redirect for %s to %s because no user-interaction on "
@@ -307,7 +260,10 @@ void DynamicFpiRedirectHeuristic(nsIChannel* aOldChannel, nsIURI* aOldURI,
     return;
   }
 
-  if (!HasEligibleVisit(aOldURI) || !HasEligibleVisit(aNewURI)) {
+  nsAutoCString baseDomainOld, baseDomainNew;
+  GetBaseDomain(aOldURI, baseDomainOld);
+  GetBaseDomain(aNewURI, baseDomainNew);
+  if (!HasEligibleVisit(baseDomainOld) || !HasEligibleVisit(baseDomainNew)) {
     LOG(("No previous visit record, bailing out early."));
     return;
   }
