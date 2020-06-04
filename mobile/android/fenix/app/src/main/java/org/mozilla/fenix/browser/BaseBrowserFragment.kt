@@ -749,8 +749,8 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
         getSessionById()?.let { session ->
             val sessionManager = requireComponents.core.sessionManager
             if (session.source == Session.Source.ACTION_VIEW) {
-                sessionManager.remove(session)
                 activity?.finish()
+                sessionManager.remove(session)
             } else {
                 val isLastSession =
                     sessionManager.sessionsOfType(private = session.private).count() == 1

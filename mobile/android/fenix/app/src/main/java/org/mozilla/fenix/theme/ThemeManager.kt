@@ -19,6 +19,7 @@ import mozilla.components.support.ktx.android.content.getColorFromAttr
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
+import org.mozilla.fenix.customtabs.ExternalAppBrowserActivity
 
 abstract class ThemeManager {
 
@@ -110,6 +111,11 @@ class DefaultThemeManager(
     override var currentTheme: BrowsingMode = currentTheme
         set(value) {
             if (currentTheme != value) {
+                // ExternalAppBrowserActivity doesn't need to switch between private and non-private.
+                if (activity is ExternalAppBrowserActivity) return
+                // Don't recreate if activity is finishing
+                if (activity.isFinishing) return
+
                 field = value
 
                 val intent = activity.intent ?: Intent().also { activity.intent = it }
