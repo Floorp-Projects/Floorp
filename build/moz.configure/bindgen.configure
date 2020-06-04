@@ -225,13 +225,13 @@ def bindgen_config_paths(clang, libclang, build_project):
 def min_libclang_version(libclang):
     try:
         lib = CDLL(libclang)
-        # We want at least 4.0. The API we test below is enough for that.
+        # We want at least 5.0. The API we test below is enough for that.
         # Just accessing it should throw if not found.
-        fun = lib.clang_EvalResult_getAsLongLong
+        fun = lib.clang_getAddressSpace
         return True
     except:
         die(dedent('''\
-        The libclang located at {} is too old (need at least 4.0).
+        The libclang located at {} is too old (need at least 5.0).
 
         Please make sure to update it or point to a newer libclang using
         --with-libclang-path.
