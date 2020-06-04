@@ -113,6 +113,7 @@ class TestGenerator(unittest.TestCase):
             'try_mode': None,
             'try_task_config': {},
             'tasks_for': 'hg-push',
+            'project': 'mozilla-central',
         })
         parameters.update(params)
 
