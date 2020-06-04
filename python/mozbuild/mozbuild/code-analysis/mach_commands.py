@@ -2309,8 +2309,14 @@ class StaticAnalysis(MachCommandBase):
                             # Replace the temp path by the path relative to the repository to
                             # display a valid patch
                             relative_path = os.path.relpath(original_path, self.topsrcdir)
-                            patch = e.output.replace(target_file, relative_path)
-                            patch = patch.replace(original_path, relative_path)
+                            # We must modify the paths in order to be compatible with the
+                            # `diff` format.
+                            original_path_diff = os.path.join("a", relative_path)
+                            target_path_diff = os.path.join("b", relative_path)
+                            patch = e.output.replace("+++ {}".format(target_file),
+                                                     "+++ {}".format(target_path_diff)).replace(
+                                                         "-- {}".format(original_path),
+                                                         "-- {}".format(original_path_diff))
                             patches[original_path] = patch
 
             if output_format == 'json':
