@@ -7,9 +7,9 @@
 #ifndef jit_InlinableNatives_h
 #define jit_InlinableNatives_h
 
-#include <stdint.h> // For uint16_t
+#include <stdint.h>  // For uint16_t
 
-#include "jspubtd.h" // For JSClass
+#include "jspubtd.h"  // For JSClass
 
 #define INLINABLE_NATIVE_LIST(_)                   \
   _(Array)                                         \
@@ -201,6 +201,8 @@ INLINABLE_NATIVE_LIST(ADD_NATIVE)
 #undef ADD_NATIVE
 
 const JSClass* InlinableNativeGuardToClass(InlinableNative native);
+
+bool CanInlineNativeCrossRealm(InlinableNative native);
 
 }  // namespace jit
 }  // namespace js
