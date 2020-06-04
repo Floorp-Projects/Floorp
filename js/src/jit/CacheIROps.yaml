@@ -1241,7 +1241,7 @@
 
 - name: Int32PowResult
   shared: true
-  transpile: false
+  transpile: true
   args:
     lhs: Int32Id
     rhs: Int32Id

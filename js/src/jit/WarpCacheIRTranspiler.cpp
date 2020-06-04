@@ -937,6 +937,11 @@ bool WarpCacheIRTranspiler::emitInt32ModResult(Int32OperandId lhsId,
   return emitInt32BinaryArithResult<MMod>(lhsId, rhsId);
 }
 
+bool WarpCacheIRTranspiler::emitInt32PowResult(Int32OperandId lhsId,
+                                               Int32OperandId rhsId) {
+  return emitInt32BinaryArithResult<MPow>(lhsId, rhsId);
+}
+
 bool WarpCacheIRTranspiler::emitInt32BitOrResult(Int32OperandId lhsId,
                                                  Int32OperandId rhsId) {
   return emitInt32BinaryArithResult<MBitOr>(lhsId, rhsId);
