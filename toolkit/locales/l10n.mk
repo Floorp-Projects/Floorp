@@ -209,6 +209,16 @@ ifdef NIGHTLY_BUILD
 endif
 	$(RM) -rf $(REAL_LOCALE_MERGEDIR)
 	-$(MOZILLA_DIR)/mach compare-locales --merge $(BASE_MERGE) $(srcdir)/l10n.toml $(L10NBASEDIR) $*
+# Hunspell dictionaries are interesting, as we don't ship the en-US
+# dictionary in repacks. Thus we can't use the merge logic from
+# compare-locales above, which would add en-US.dic and en-US.aff to
+# the merge directory.
+# Copy them to the merge dir, if exist. The repackaged app can still decide
+# on whether to package them or not in `libs-%` and `chrome-%`.
+	if  test -d $(L10NBASEDIR)/$(AB_CD)/extensions/spellcheck ; then \
+		$(NSINSTALL) -D $(REAL_LOCALE_MERGEDIR)/extensions/spellcheck/hunspell ; \
+		cp $(L10NBASEDIR)/$(AB_CD)/extensions/spellcheck/hunspell/*.* $(REAL_LOCALE_MERGEDIR)/extensions/spellcheck/hunspell ; \
+	fi
 
 langpack-%: IS_LANGUAGE_REPACK=1
 langpack-%: IS_LANGPACK=1
