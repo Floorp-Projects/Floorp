@@ -32,6 +32,7 @@
 #include "builtin/String.h"
 #include "builtin/TypedObject.h"
 #include "gc/Nursery.h"
+#include "irregexp/RegExpTypes.h"
 #include "jit/AtomicOperations.h"
 #include "jit/BaselineCodeGen.h"
 #include "jit/IonIC.h"
@@ -48,7 +49,6 @@
 #include "jit/StackSlotAllocator.h"
 #include "jit/VMFunctions.h"
 #include "js/RegExpFlags.h"  // JS::RegExpFlag
-#include "new-regexp/RegExpTypes.h"
 #include "util/CheckedArithmetic.h"
 #include "util/Unicode.h"
 #include "vm/ArrayBufferViewObject.h"

@@ -460,8 +460,8 @@ DIRS += [
     'debugger',
     'frontend',
     'gc',
+    'irregexp',
     'jit',
-    'new-regexp',
     'wasm']
 
 if CONFIG['JS_JITSPEW']:
