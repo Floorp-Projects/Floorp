@@ -4569,13 +4569,12 @@ static nsSize GetScrollPortSizeExcludingHeadersAndFooters(
 nsSize ScrollFrameHelper::GetPageScrollAmount() const {
   nsSize effectiveScrollPortSize;
 
-  PresShell* presShell = mOuter->PresShell();
-  if (mIsRoot && presShell->IsVisualViewportSizeSet()) {
+  if (GetVisualViewportSize() != mScrollPort.Size()) {
     // We want to use the visual viewport size if one is set.
     // The headers/footers adjustment is too complicated to do if there is a
     // visual viewport that differs from the layout viewport, this is probably
     // okay.
-    effectiveScrollPortSize = presShell->GetVisualViewportSize();
+    effectiveScrollPortSize = GetVisualViewportSize();
   } else {
     // Reduce effective scrollport height by the height of any
     // fixed-pos/sticky-pos headers or footers
