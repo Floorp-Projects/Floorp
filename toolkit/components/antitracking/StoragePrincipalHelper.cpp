@@ -47,11 +47,11 @@ bool ChooseOriginAttributes(nsIChannel* aChannel, OriginAttributes& aAttrs,
     }
   }
 
-  nsAutoString domain;
-  Unused << cjs->GetFirstPartyDomain(domain);
+  nsAutoString partitionKey;
+  Unused << cjs->GetFirstPartyDomain(partitionKey);
 
-  if (!domain.IsEmpty()) {
-    aAttrs.SetFirstPartyDomain(false, domain, true /* aForced */);
+  if (!partitionKey.IsEmpty()) {
+    aAttrs.SetPartitionKey(partitionKey);
     return true;
   }
 
@@ -71,7 +71,7 @@ bool ChooseOriginAttributes(nsIChannel* aChannel, OriginAttributes& aAttrs,
     return false;
   }
 
-  aAttrs.SetFirstPartyDomain(false, principalURI, true /* aForced */);
+  aAttrs.SetPartitionKey(principalURI);
   return true;
 }
 
