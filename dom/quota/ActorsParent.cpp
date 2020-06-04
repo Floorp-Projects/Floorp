@@ -682,8 +682,7 @@ class DirectoryLockImpl final : public DirectoryLock {
   const bool mInternal;
 
   bool mRegistered;
-  // ToDo: Use FlippedOnce.
-  bool mInvalidated;
+  FlippedOnce<false> mInvalidated;
 
  public:
   DirectoryLockImpl(MovingNotNull<RefPtr<QuotaManager>> aQuotaManager,
@@ -769,7 +768,7 @@ class DirectoryLockImpl final : public DirectoryLock {
   void Invalidate() {
     AssertIsOnOwningThread();
 
-    mInvalidated = true;
+    mInvalidated.Flip();
   }
 
   NS_INLINE_DECL_REFCOUNTING(DirectoryLockImpl, override)
@@ -2873,8 +2872,7 @@ DirectoryLockImpl::DirectoryLockImpl(
       mId(aId),
       mExclusive(aExclusive),
       mInternal(aInternal),
-      mRegistered(false),
-      mInvalidated(false) {
+      mRegistered(false) {
   AssertIsOnOwningThread();
   MOZ_ASSERT_IF(aOriginScope.IsOrigin(), !aOriginScope.GetOrigin().IsEmpty());
   MOZ_ASSERT_IF(!aInternal, !aPersistenceType.IsNull());
@@ -3072,7 +3070,7 @@ void DirectoryLockImpl::Log() const {
 
   QM_LOG(("  mInternal: %d", mInternal));
 
-  QM_LOG(("  mInvalidated: %d", mInvalidated));
+  QM_LOG(("  mInvalidated: %d", static_cast<bool>(mInvalidated)));
 
   for (auto blockedOn : mBlockedOn) {
     blockedOn->Log();
