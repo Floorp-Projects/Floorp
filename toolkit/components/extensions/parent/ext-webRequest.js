@@ -39,7 +39,7 @@ function registerEvent(
   let filter2 = {};
   if (filter.urls) {
     let perms = new MatchPatternSet([
-      ...extension.whiteListedHosts.patterns,
+      ...extension.allowedOrigins.patterns,
       ...extension.optionalOrigins.patterns,
     ]);
 

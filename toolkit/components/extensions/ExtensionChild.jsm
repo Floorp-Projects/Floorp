@@ -382,7 +382,7 @@ class BrowserExtensionContent extends EventEmitter {
       }
 
       if (permissions.origins.length) {
-        let patterns = this.whiteListedHosts.patterns.map(host => host.pattern);
+        let patterns = this.allowedOrigins.patterns.map(host => host.pattern);
 
         this.policy.allowedOrigins = new MatchPatternSet(
           [...patterns, ...permissions.origins],
@@ -406,7 +406,7 @@ class BrowserExtensionContent extends EventEmitter {
         );
 
         this.policy.allowedOrigins = new MatchPatternSet(
-          this.whiteListedHosts.patterns.filter(
+          this.allowedOrigins.patterns.filter(
             host => !origins.includes(host.pattern)
           )
         );
@@ -429,7 +429,7 @@ class BrowserExtensionContent extends EventEmitter {
     return new Set(this.policy.permissions);
   }
 
-  get whiteListedHosts() {
+  get allowedOrigins() {
     return this.policy.allowedOrigins;
   }
 

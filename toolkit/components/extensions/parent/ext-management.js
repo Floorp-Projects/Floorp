@@ -67,7 +67,7 @@ const getExtensionInfoForAddon = (extension, addon) => {
   if (extension) {
     let m = extension.manifest;
 
-    let hostPerms = extension.whiteListedHosts.patterns.map(
+    let hostPerms = extension.allowedOrigins.patterns.map(
       matcher => matcher.pattern
     );
 

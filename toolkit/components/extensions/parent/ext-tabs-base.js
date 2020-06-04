@@ -717,7 +717,7 @@ class TabBase {
     }
 
     options.hasActiveTabPermission = this.hasActiveTabPermission;
-    options.matches = this.extension.whiteListedHosts.patterns.map(
+    options.matches = this.extension.allowedOrigins.patterns.map(
       host => host.pattern
     );
 
