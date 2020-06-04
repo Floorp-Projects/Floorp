@@ -57,6 +57,7 @@ import EditorMenu from "./EditorMenu";
 import ConditionalPanel from "./ConditionalPanel";
 import InlinePreviews from "./InlinePreviews";
 import HighlightCalls from "./HighlightCalls";
+import Exceptions from "./Exceptions";
 
 import {
   showSourceText,
@@ -669,6 +670,7 @@ class Editor extends PureComponent<Props, State> {
         <Breakpoints editor={editor} cx={cx} />
         <Preview editor={editor} editorRef={this.$editorWrapper} />
         <HighlightLines editor={editor} />
+        <Exceptions />
         {
           <EditorMenu
             editor={editor}
