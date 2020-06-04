@@ -10,6 +10,7 @@
 #include <utility>
 
 #include "js/StructuredClone.h"
+#include "js/WasmModule.h"
 #include "jsapi.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/UniquePtr.h"

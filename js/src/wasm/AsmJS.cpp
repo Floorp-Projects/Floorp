@@ -7100,8 +7100,7 @@ static bool DoCompileAsmJS(JSContext* cx, AsmJSParser<Unit>& parser,
 
   // Hand over ownership to a GC object wrapper which can then be referenced
   // from the module function.
-  Rooted<WasmModuleObject*> moduleObj(
-      cx, WasmModuleObject::create(cx, *module, nullptr));
+  RootedObject moduleObj(cx, module->createObjectForAsmJS(cx));
   if (!moduleObj) {
     return false;
   }
