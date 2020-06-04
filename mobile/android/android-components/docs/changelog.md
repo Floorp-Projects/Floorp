@@ -28,6 +28,9 @@ permalink: /changelog/
 * **local development**
   * Enable local Gradle Build Cache to speed-up local builds. Build cache is located in `.build-cache/`, clear it if you run into strange problems and please file an issue.
 
+* **support-rustlog**
+  * `RustLog.enable` now takes an optional [CrashReporting] instance which is used to submit error-level log messages as `RustErrorException`s.
+
 # 44.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v43.0.0...v44.0.0)
