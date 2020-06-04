@@ -385,6 +385,22 @@ class LoginManagerPrompter {
       label: this._getLocalizedString(initialMsgNames.buttonLabel),
       accessKey: this._getLocalizedString(initialMsgNames.buttonAccessKey),
       callback: () => {
+        readDataFromUI();
+        if (
+          type == "password-save" &&
+          !Services.policies.isAllowed("removeMasterPassword")
+        ) {
+          if (!LoginHelper.isMasterPasswordSet()) {
+            browser.ownerGlobal.openDialog(
+              "chrome://mozapps/content/preferences/changemp.xhtml",
+              "",
+              "centerscreen,chrome,modal,titlebar"
+            );
+            if (!LoginHelper.isMasterPasswordSet()) {
+              return;
+            }
+          }
+        }
         histogram.add(PROMPT_ADD_OR_UPDATE);
         if (histogramName == "PWMGR_PROMPT_REMEMBER_ACTION") {
           Services.obs.notifyObservers(browser, "LoginStats:NewSavedPassword");
@@ -393,7 +409,6 @@ class LoginManagerPrompter {
         } else {
           throw new Error("Unknown histogram");
         }
-        readDataFromUI();
         persistData();
         Services.obs.notifyObservers(
           null,
