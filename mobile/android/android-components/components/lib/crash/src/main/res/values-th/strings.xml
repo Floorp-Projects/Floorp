@@ -20,4 +20,7 @@
 
     <!-- Label of notification showing that the crash report service is running. %1$s will be replaced with the name of the organization (e.g. Mozilla). -->
     <string name="mozac_lib_send_crash_report_in_progress">กำลังส่งรายงานข้อขัดข้องไปยัง %1$s</string>
+
+    <!-- Text link that will show an app chooser to share a crash report with a third-party app (e.g. gmail) -->
+    <string name="mozac_lib_crash_share">แบ่งปัน</string>
 </resources>

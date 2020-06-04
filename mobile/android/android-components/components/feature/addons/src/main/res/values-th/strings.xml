@@ -66,6 +66,10 @@
     <string name="mozac_feature_addons_settings_on">เปิด</string>
     <!-- Indicates the add-on is disabled. -->
     <string name="mozac_feature_addons_settings_off">ปิด</string>
+    <!-- Indicates the add-on is allowed in private browsing mode. -->
+    <string name="mozac_feature_addons_settings_allow_in_private_browsing">อนุญาตในการเรียกดูแบบส่วนตัว</string>
+    <!-- Indicates the add-on is allowed in private browsing mode. -->
+    <string name="mozac_feature_addons_settings_run_in_private_browsing">เรียกใช้ในการเรียกดูแบบส่วนตัว</string>
     <!-- Indicates the add-on is enabled. -->
     <string name="mozac_feature_addons_enabled">ถูกเปิดใช้งาน</string>
     <!-- Indicates the add-on is disabled. -->
@@ -174,4 +178,4 @@
     <string name="mozac_feature_addons_updater_dialog_last_attempt">ความพยายามครั้งล่าสุด:</string>
     <!-- Displayed in the "Status" field for the updater when an add-on has been correctly updated -->
     <string name="mozac_feature_addons_updater_dialog_status">สถานะ:</string>
-</resources>
+    </resources>
