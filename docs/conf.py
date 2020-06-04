@@ -60,7 +60,6 @@ root_for_relative_js_paths = '.'
 jsdoc_config_path = 'jsdoc.json'
 
 templates_path = ['_templates']
-source_suffix = '.rst'
 source_suffix = ['.rst', '.md']
 master_doc = 'index'
 project = u'Firefox Source Docs'
@@ -102,6 +101,6 @@ def setup(app):
         'enable_inline_math': False,
         # We use it for testing/web-platform/tests
         'enable_eval_rst': True,
-            }, True)
+        }, True)
     app.add_stylesheet('custom_theme.css')
     app.add_transform(AutoStructify)
