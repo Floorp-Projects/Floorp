@@ -207,16 +207,10 @@ class JsepSession {
     }
   }
 
-  // See Bug 1642419, this can be removed when all sites are working with RTX.
-  void SetRtxIsAllowed(bool aRtxIsAllowed) { mRtxIsAllowed = aRtxIsAllowed; }
-
  protected:
   const std::string mName;
   JsepSignalingState mState;
   uint32_t mNegotiations;
-
-  // See Bug 1642419, this can be removed when all sites are working with RTX.
-  bool mRtxIsAllowed = true;
 };
 
 }  // namespace mozilla
