@@ -40,8 +40,10 @@
     <CheckBox
         android:id="@+id/sendCrashCheckbox"
         android:layout_width="0dp"
-        android:layout_height="32dp"
-        android:layout_marginBottom="20dp"
+        android:layout_height="48dp"
+        android:paddingTop="6dp"
+        android:paddingBottom="6dp"
+        android:layout_marginBottom="8dp"
         android:buttonTint="?accentHighContrast"
         android:checked="true"
         android:text="@string/tab_crash_send_report"
@@ -55,7 +57,7 @@
     <Button
         android:id="@+id/restoreTabButton"
         android:layout_width="0dp"
-        android:layout_height="36dp"
+        android:layout_height="48dp"
         android:layout_marginStart="@dimen/crash_reporter_close_tab_button_horizontal_margin"
         android:layout_marginEnd="@dimen/crash_reporter_close_tab_button_horizontal_margin"
         android:layout_marginBottom="@dimen/crash_reporter_close_tab_button_bottom_margin"
@@ -74,7 +76,7 @@
     <Button
         android:id="@+id/closeTabButton"
         android:layout_width="0dp"
-        android:layout_height="36dp"
+        android:layout_height="48dp"
         android:layout_marginStart="@dimen/crash_reporter_close_tab_button_horizontal_margin"
         android:layout_marginEnd="@dimen/crash_reporter_close_tab_button_horizontal_margin"
         android:layout_marginBottom="@dimen/crash_reporter_close_tab_button_bottom_margin"
