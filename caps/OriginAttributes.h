@@ -36,6 +36,7 @@ class OriginAttributes : public dom::OriginAttributesDictionary {
     STRIP_FIRST_PARTY_DOMAIN = 0x01,
     STRIP_USER_CONTEXT_ID = 0x02,
     STRIP_PRIVATE_BROWSING_ID = 0x04,
+    STRIP_PARITION_KEY = 0x08,
   };
 
   inline void StripAttributes(uint32_t aFlags) {
@@ -51,6 +52,10 @@ class OriginAttributes : public dom::OriginAttributesDictionary {
       mPrivateBrowsingId =
           nsIScriptSecurityManager::DEFAULT_PRIVATE_BROWSING_ID;
     }
+
+    if (aFlags & STRIP_PARITION_KEY) {
+      mPartitionKey.Truncate();
+    }
   }
 
   bool operator==(const OriginAttributes& aOther) const {
@@ -58,7 +63,8 @@ class OriginAttributes : public dom::OriginAttributesDictionary {
            mUserContextId == aOther.mUserContextId &&
            mPrivateBrowsingId == aOther.mPrivateBrowsingId &&
            mFirstPartyDomain == aOther.mFirstPartyDomain &&
-           mGeckoViewSessionContextId == aOther.mGeckoViewSessionContextId;
+           mGeckoViewSessionContextId == aOther.mGeckoViewSessionContextId &&
+           mPartitionKey == aOther.mPartitionKey;
   }
 
   bool operator!=(const OriginAttributes& aOther) const {
@@ -167,6 +173,11 @@ class OriginAttributesPattern : public dom::OriginAttributesPatternDictionary {
       return false;
     }
 
+    if (mPartitionKey.WasPassed() &&
+        mPartitionKey.Value() != aAttrs.mPartitionKey) {
+      return false;
+    }
+
     return true;
   }
 
@@ -197,6 +208,11 @@ class OriginAttributesPattern : public dom::OriginAttributesPatternDictionary {
         aOther.mGeckoViewSessionContextId.WasPassed() &&
         mGeckoViewSessionContextId.Value() !=
             aOther.mGeckoViewSessionContextId.Value()) {
+      return false;
+    }
+
+    if (mPartitionKey.WasPassed() && aOther.mPartitionKey.WasPassed() &&
+        mPartitionKey.Value() != aOther.mPartitionKey.Value()) {
       return false;
     }
 
