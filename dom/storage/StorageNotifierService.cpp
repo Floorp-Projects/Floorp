@@ -82,7 +82,17 @@ void StorageNotifierService::Broadcast(StorageEvent* aEvent,
 
     RefPtr<Runnable> r = NS_NewRunnableFunction(
         "StorageNotifierService::Broadcast",
-        [observer, event, aStorageType, aPrivateBrowsing]() {
+        [observer, event, aStorageType, aPrivateBrowsing,
+         aImmediateDispatch]() {
+          // Check principals again. EffectiveStoragePrincipal may be changed
+          // when relaxed.
+          if (!aImmediateDispatch &&
+              !StorageUtils::PrincipalsEqual(
+                  event->GetPrincipal(),
+                  observer->GetEffectiveStoragePrincipal())) {
+            return;
+          }
+
           observer->ObserveStorageNotification(event, aStorageType,
                                                aPrivateBrowsing);
         });
