@@ -43,7 +43,7 @@ class Profile(Layer):
         # calling cleanup. We override this silly behavior here.
         profile.cleanup = self._cleanup
 
-        prefs = metadata.get_browser_prefs()
+        prefs = metadata.get_options("browser_prefs")
 
         if prefs == {}:
             prefs["mozperftest"] = "true"

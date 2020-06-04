@@ -12,8 +12,8 @@ from pathlib import Path
 
 from mozperftest.scriptinfo import ScriptInfo
 from mozperftest.utils import install_package
-from mozperftest.browser.noderunner import NodeRunner
-from mozperftest.browser.browsertime.setup import (
+from mozperftest.test.noderunner import NodeRunner
+from mozperftest.test.browsertime.setup import (
     system_prerequisites,
     append_system_env,
 )

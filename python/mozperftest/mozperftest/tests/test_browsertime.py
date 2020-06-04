@@ -10,8 +10,8 @@ import pytest
 
 from mozperftest.tests.support import get_running_env, EXAMPLE_TEST
 from mozperftest.environment import BROWSER
-from mozperftest.browser.browsertime import add_options
-from mozperftest.browser.browsertime.runner import (
+from mozperftest.test.browsertime import add_options
+from mozperftest.test.browsertime.runner import (
     NodeException,
     matches,
     extract_browser_name,
@@ -26,13 +26,13 @@ def fetch(self, url):
     return os.path.join(HERE, "fetched_artifact.zip")
 
 
-@mock.patch("mozperftest.browser.browsertime.runner.install_package")
+@mock.patch("mozperftest.test.browsertime.runner.install_package")
 @mock.patch(
-    "mozperftest.browser.noderunner.NodeRunner.verify_node_install", new=lambda x: True
+    "mozperftest.test.noderunner.NodeRunner.verify_node_install", new=lambda x: True
 )
 @mock.patch("mozbuild.artifact_cache.ArtifactCache.fetch", new=fetch)
 @mock.patch(
-    "mozperftest.browser.browsertime.runner.BrowsertimeRunner._setup_node_packages",
+    "mozperftest.test.browsertime.runner.BrowsertimeRunner._setup_node_packages",
     new=lambda x, y: None,
 )
 def test_browser(*mocked):
@@ -70,13 +70,13 @@ def test_browser(*mocked):
     assert results[0]["name"] == "Example"
 
 
-@mock.patch("mozperftest.browser.browsertime.runner.install_package")
+@mock.patch("mozperftest.test.browsertime.runner.install_package")
 @mock.patch(
-    "mozperftest.browser.noderunner.NodeRunner.verify_node_install", new=lambda x: True
+    "mozperftest.test.noderunner.NodeRunner.verify_node_install", new=lambda x: True
 )
 @mock.patch("mozbuild.artifact_cache.ArtifactCache.fetch", new=fetch)
 @mock.patch(
-    "mozperftest.browser.browsertime.runner.BrowsertimeRunner._setup_node_packages",
+    "mozperftest.test.browsertime.runner.BrowsertimeRunner._setup_node_packages",
     new=lambda x, y: None,
 )
 def test_browser_failed(*mocked):
@@ -96,13 +96,13 @@ def test_browser_failed(*mocked):
         b(metadata)
 
 
-@mock.patch("mozperftest.browser.browsertime.runner.install_package")
+@mock.patch("mozperftest.test.browsertime.runner.install_package")
 @mock.patch(
-    "mozperftest.browser.noderunner.NodeRunner.verify_node_install", new=lambda x: True
+    "mozperftest.test.noderunner.NodeRunner.verify_node_install", new=lambda x: True
 )
 @mock.patch("mozbuild.artifact_cache.ArtifactCache.fetch", new=fetch)
 @mock.patch(
-    "mozperftest.browser.browsertime.runner.BrowsertimeRunner._setup_node_packages",
+    "mozperftest.test.browsertime.runner.BrowsertimeRunner._setup_node_packages",
     new=lambda x, y: None,
 )
 def test_browser_desktop(*mocked):
@@ -140,12 +140,12 @@ def test_add_options():
     assert "two=2" in extra
 
 
-@mock.patch("mozperftest.browser.browsertime.runner.install_package")
+@mock.patch("mozperftest.test.browsertime.runner.install_package")
 @mock.patch(
-    "mozperftest.browser.noderunner.NodeRunner.verify_node_install", new=lambda x: True
+    "mozperftest.test.noderunner.NodeRunner.verify_node_install", new=lambda x: True
 )
 @mock.patch("mozbuild.artifact_cache.ArtifactCache.fetch", new=fetch)
-@mock.patch("mozperftest.browser.browsertime.runner.BrowsertimeRunner.setup_helper")
+@mock.patch("mozperftest.test.browsertime.runner.BrowsertimeRunner.setup_helper")
 def test_install_url(*mocked):
     url = "https://here/tarball/" + "".join(
         [random.choice(string.hexdigits[:-6]) for c in range(40)]
@@ -163,13 +163,13 @@ def test_install_url(*mocked):
     assert mach.run_process.call_count == 1
 
 
-@mock.patch("mozperftest.browser.browsertime.runner.install_package")
+@mock.patch("mozperftest.test.browsertime.runner.install_package")
 @mock.patch(
-    "mozperftest.browser.noderunner.NodeRunner.verify_node_install", new=lambda x: True
+    "mozperftest.test.noderunner.NodeRunner.verify_node_install", new=lambda x: True
 )
 @mock.patch("mozbuild.artifact_cache.ArtifactCache.fetch", new=fetch)
 @mock.patch(
-    "mozperftest.browser.browsertime.runner.BrowsertimeRunner._setup_node_packages",
+    "mozperftest.test.browsertime.runner.BrowsertimeRunner._setup_node_packages",
     new=lambda x, y: None,
 )
 def test_install_url_bad(*mocked):
