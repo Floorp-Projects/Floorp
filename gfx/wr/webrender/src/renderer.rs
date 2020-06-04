@@ -4062,8 +4062,8 @@ impl Renderer {
             RenderTaskKind::Picture(ref task_info) => (task_info.content_origin, task_info.device_pixel_scale),
             _ => panic!("bug: composite on non-picture?"),
         };
-        let source_screen_origin = match source.kind {
-            RenderTaskKind::Picture(ref task_info) => task_info.content_origin,
+        let (source_screen_origin, source_scale) = match source.kind {
+            RenderTaskKind::Picture(ref task_info) => (task_info.content_origin, task_info.device_pixel_scale),
             _ => panic!("bug: composite on non-picture?"),
         };
 
@@ -4077,7 +4077,7 @@ impl Renderer {
             false,
         );
 
-        let source_in_backdrop_space = source_screen_origin.to_f32() * backdrop_scale.0;
+        let source_in_backdrop_space = source_screen_origin.to_f32() * (backdrop_scale.0 / source_scale.0);
 
         let mut src = DeviceIntRect::new(
             (source_in_backdrop_space + (backdrop_rect.origin - backdrop_screen_origin).to_f32()).to_i32(),
