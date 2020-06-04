@@ -66,7 +66,7 @@ def construct_query(suite, platform):
     "from":"unittest",
     "limit":200000,
     "groupby":["result.test"],
-    "select":{"value":"result.duration","aggregate":"average"},
+    "select":{"value":"result.duration","aggregate":"median"},
     %s
     "where":{"and":[
         {"eq":{"repo.branch.name": "mozilla-central"}},
