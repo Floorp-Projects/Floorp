@@ -9259,6 +9259,41 @@ class MGuardSpecificAtom : public MUnaryInstruction,
   }
 };
 
+class MGuardSpecificSymbol : public MUnaryInstruction,
+                             public SymbolPolicy<0>::Data {
+  CompilerGCPointer<JS::Symbol*> expected_;
+
+  MGuardSpecificSymbol(MDefinition* symbol, JS::Symbol* expected)
+      : MUnaryInstruction(classOpcode, symbol), expected_(expected) {
+    setGuard();
+    setMovable();
+    setResultType(MIRType::Symbol);
+  }
+
+ public:
+  INSTRUCTION_HEADER(GuardSpecificSymbol)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, symbol))
+
+  JS::Symbol* expected() const { return expected_; }
+
+  bool congruentTo(const MDefinition* ins) const override {
+    if (!ins->isGuardSpecificSymbol()) {
+      return false;
+    }
+    if (expected() != ins->toGuardSpecificSymbol()->expected()) {
+      return false;
+    }
+    return congruentIfOperandsEqual(ins);
+  }
+  MDefinition* foldsTo(TempAllocator& alloc) override;
+  AliasSet getAliasSet() const override { return AliasSet::None(); }
+
+  bool appendRoots(MRootList& roots) const override {
+    return roots.append(expected_);
+  }
+};
+
 // Load from vp[slot] (slots that are not inline in an object).
 class MLoadDynamicSlot : public MUnaryInstruction, public NoTypePolicy::Data {
   uint32_t slot_;

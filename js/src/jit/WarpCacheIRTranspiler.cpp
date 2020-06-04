@@ -90,6 +90,9 @@ class MOZ_RAII WarpCacheIRTranspiler : public WarpBuilderShared {
   JSString* stringStubField(uint32_t offset) {
     return reinterpret_cast<JSString*>(readStubWord(offset));
   }
+  JS::Symbol* symbolStubField(uint32_t offset) {
+    return reinterpret_cast<JS::Symbol*>(readStubWord(offset));
+  }
   JSObject* objectStubField(uint32_t offset) {
     return reinterpret_cast<JSObject*>(readStubWord(offset));
   }
@@ -227,6 +230,18 @@ bool WarpCacheIRTranspiler::emitGuardSpecificAtom(StringOperandId strId,
   add(ins);
 
   setOperand(strId, ins);
+  return true;
+}
+
+bool WarpCacheIRTranspiler::emitGuardSpecificSymbol(SymbolOperandId symId,
+                                                    uint32_t expectedOffset) {
+  MDefinition* symbol = getOperand(symId);
+  JS::Symbol* expected = symbolStubField(expectedOffset);
+
+  auto* ins = MGuardSpecificSymbol::New(alloc(), symbol, expected);
+  add(ins);
+
+  setOperand(symId, ins);
   return true;
 }
 
