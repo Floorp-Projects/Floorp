@@ -1361,8 +1361,8 @@ function SelectorView(tree, selectorInfo) {
       column: rule.column,
     };
     this.sourceMapURLService = this.tree.inspector.toolbox.sourceMapURLService;
-    this._unsubscribeCallback = this.sourceMapURLService.subscribeByURL(
-      this.generatedLocation.href,
+    this._unsubscribeCallback = this.sourceMapURLService.subscribeByID(
+      this.generatedLocation.sheet.actorID,
       this.generatedLocation.line,
       this.generatedLocation.column,
       this._updateLocation
