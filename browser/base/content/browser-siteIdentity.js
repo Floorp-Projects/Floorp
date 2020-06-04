@@ -57,7 +57,7 @@ var gIdentityHandler = {
    * RegExp used to decide if an about url should be shown as being part of
    * the browser UI.
    */
-  _secureInternalUIWhitelist: /^(?:accounts|addons|cache|certificate|config|crashes|downloads|license|logins|preferences|protections|rights|sessionrestore|support|welcomeback)(?:[?#]|$)/i,
+  _secureInternalPages: /^(?:accounts|addons|cache|certificate|config|crashes|downloads|license|logins|preferences|protections|rights|sessionrestore|support|welcomeback)(?:[?#]|$)/i,
 
   /**
    * Whether the established HTTPS connection is considered "broken".
@@ -1032,8 +1032,7 @@ var gIdentityHandler = {
     }
 
     this._isSecureInternalUI =
-      uri.schemeIs("about") &&
-      this._secureInternalUIWhitelist.test(uri.pathQueryRef);
+      uri.schemeIs("about") && this._secureInternalPages.test(uri.pathQueryRef);
 
     this._pageExtensionPolicy = WebExtensionPolicy.getByURI(uri);
 
