@@ -938,6 +938,14 @@ class nsFrameSelection final {
     bool mDragSelectingCells = false;
 
    private:
+    struct MOZ_STACK_CLASS FirstAndLastCell {
+      nsCOMPtr<nsIContent> mFirst;
+      nsCOMPtr<nsIContent> mLast;
+    };
+
+    mozilla::Result<FirstAndLastCell, nsresult>
+    FindFirstAndLastCellOfRowOrColumn(const nsIContent& aCellContent) const;
+
     [[nodiscard]] nsresult HandleDragSelecting(
         mozilla::TableSelectionMode aTarget, nsIContent* aChildContent,
         const mozilla::WidgetMouseEvent* aMouseEvent,
