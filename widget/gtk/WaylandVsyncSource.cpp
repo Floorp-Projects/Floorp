@@ -136,7 +136,7 @@ void WaylandVsyncSource::WaylandDisplay::SetupFrameCallback() {
                            mCallbackContext);
   wl_surface_commit(surface);
   wl_display_flush(mDisplay);
-  moz_container_wayland_surface_unlock(mContainer);
+  moz_container_wayland_surface_unlock(mContainer, &surface);
 }
 
 void WaylandVsyncSource::WaylandDisplay::FrameCallback() {
