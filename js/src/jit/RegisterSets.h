@@ -123,6 +123,9 @@ class ValueOperand {
 
   constexpr Register typeReg() const { return type_; }
   constexpr Register payloadReg() const { return payload_; }
+  constexpr Register64 toRegister64() const {
+    return Register64(typeReg(), payloadReg());
+  }
   constexpr bool aliases(Register reg) const {
     return type_ == reg || payload_ == reg;
   }
@@ -141,6 +144,7 @@ class ValueOperand {
   explicit constexpr ValueOperand(Register value) : value_(value) {}
 
   constexpr Register valueReg() const { return value_; }
+  constexpr Register64 toRegister64() const { return Register64(valueReg()); }
   constexpr bool aliases(Register reg) const { return value_ == reg; }
   constexpr Register payloadOrValueReg() const { return valueReg(); }
   constexpr bool operator==(const ValueOperand& o) const {

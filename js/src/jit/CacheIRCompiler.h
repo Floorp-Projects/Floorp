@@ -556,6 +556,33 @@ class MOZ_RAII AutoSpectreBoundsScratchRegister {
   operator Register() const { return reg_; }
 };
 
+// Scratch Register64. Implemented with a single AutoScratchRegister on 64-bit
+// platforms and two AutoScratchRegisters on 32-bit platforms.
+class MOZ_RAII AutoScratchRegister64 {
+  AutoScratchRegister reg1_;
+#if JS_BITS_PER_WORD == 32
+  AutoScratchRegister reg2_;
+#endif
+
+ public:
+  AutoScratchRegister64(const AutoScratchRegister64&) = delete;
+  void operator=(const AutoScratchRegister64&) = delete;
+
+#if JS_BITS_PER_WORD == 32
+  AutoScratchRegister64(CacheRegisterAllocator& alloc, MacroAssembler& masm)
+      : reg1_(alloc, masm), reg2_(alloc, masm) {}
+
+  Register64 get() const { return Register64(reg1_, reg2_); }
+#else
+  AutoScratchRegister64(CacheRegisterAllocator& alloc, MacroAssembler& masm)
+      : reg1_(alloc, masm) {}
+
+  Register64 get() const { return Register64(reg1_); }
+#endif
+
+  operator Register64() const { return get(); }
+};
+
 // The FailurePath class stores everything we need to generate a failure path
 // at the end of the IC code. The failure path restores the input registers, if
 // needed, and jumps to the next stub.
