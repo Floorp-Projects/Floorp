@@ -78,7 +78,23 @@ const TabDescriptorActor = ActorClassWithSpec(tabDescriptorSpec, {
   },
 
   _getTitle() {
-    return this._browser.contentTitle || this._getZombieTabTitle();
+    // If the content already provides a title, use it.
+    if (this._browser.contentTitle) {
+      return this._browser.contentTitle;
+    }
+
+    // For zombie or lazy tabs (tab created, but content has not been loaded),
+    // try to retrieve the title from the XUL Tab itself.
+    // Note: this only works on Firefox desktop.
+    if (this._tabbrowser) {
+      const tab = this._tabbrowser.getTabForBrowser(this._browser);
+      if (tab) {
+        return tab.label;
+      }
+    }
+
+    // No title available.
+    return null;
   },
 
   _getUrl() {
@@ -146,8 +162,7 @@ const TabDescriptorActor = ActorClassWithSpec(tabDescriptorSpec, {
           onDestroy
         );
 
-        const form = this._createTargetForm(connectForm);
-        resolve(form);
+        resolve(connectForm);
       } catch (e) {
         reject({
           error: "tabDestroyed",
@@ -197,34 +212,6 @@ const TabDescriptorActor = ActorClassWithSpec(tabDescriptorSpec, {
     const tabbrowser = this._tabbrowser;
     const tab = tabbrowser ? tabbrowser.getTabForBrowser(this._browser) : null;
     return tab?.hasAttribute && tab.hasAttribute("pending");
-  },
-
-  /**
-   * If we don't have a title from the content side because it's a zombie tab, try to find
-   * it on the chrome side.
-   */
-  _getZombieTabTitle() {
-    // If contentTitle is empty (e.g. on a not-yet-restored tab), but there is a
-    // tabbrowser (i.e. desktop Firefox, but not GeckoView), we can use the label
-    // as the title.
-    if (this._tabbrowser) {
-      const tab = this._tabbrowser.getTabForBrowser(this._browser);
-      if (tab) {
-        return tab.label;
-      }
-    }
-
-    return null;
-  },
-
-  _createTargetForm(connectedForm) {
-    const form = Object.assign({}, connectedForm);
-    // In case of Zombie tabs (not yet restored), look up title from other.
-    if (this._isZombieTab()) {
-      form.title = this._getZombieTabTitle() || form.title;
-    }
-
-    return form;
   },
 
   destroy() {
