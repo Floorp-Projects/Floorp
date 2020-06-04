@@ -59,7 +59,8 @@ void moz_container_wayland_class_init(MozContainerClass* klass);
 void moz_container_wayland_init(MozContainerWayland* container);
 
 struct wl_surface* moz_container_wayland_surface_lock(MozContainer* container);
-void moz_container_wayland_surface_unlock(MozContainer* container);
+void moz_container_wayland_surface_unlock(MozContainer* container,
+                                          struct wl_surface** surface);
 
 struct wl_egl_window* moz_container_wayland_get_egl_window(
     MozContainer* container, int scale);
