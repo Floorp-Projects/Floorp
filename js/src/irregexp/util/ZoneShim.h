@@ -40,12 +40,14 @@ class Zone {
   bool excess_allocation() const {
     return lifoAlloc_.computedSizeOfExcludingThis() > kExcessLimit;
   }
-private:
- js::LifoAlloc& lifoAlloc_;
+
+ private:
+  js::LifoAlloc& lifoAlloc_;
 };
 
 // Superclass for classes allocated in a Zone.
-// Origin: https://github.com/v8/v8/blob/7b3332844212d78ee87a9426f3a6f7f781a8fbfa/src/zone/zone.h#L138-L155
+// Origin:
+// https://github.com/v8/v8/blob/7b3332844212d78ee87a9426f3a6f7f781a8fbfa/src/zone/zone.h#L138-L155
 class ZoneObject {
  public:
   // Allocate a new ZoneObject of 'size' bytes in the Zone.
@@ -68,8 +70,10 @@ class ZoneObject {
 // Zone. ZoneLists cannot be deleted individually; you can delete all
 // objects in the Zone by calling Zone::DeleteAll().
 // Used throughout irregexp.
-// Origin: https://github.com/v8/v8/blob/5e514a969376dc63517d575b062758efd36cd757/src/zone/zone.h#L173-L318
-// Inlines: https://github.com/v8/v8/blob/5e514a969376dc63517d575b062758efd36cd757/src/zone/zone-list-inl.h#L17-L155
+// Origin:
+// https://github.com/v8/v8/blob/5e514a969376dc63517d575b062758efd36cd757/src/zone/zone.h#L173-L318
+// Inlines:
+// https://github.com/v8/v8/blob/5e514a969376dc63517d575b062758efd36cd757/src/zone/zone-list-inl.h#L17-L155
 template <typename T>
 class ZoneList final {
  public:
@@ -148,7 +152,7 @@ class ZoneList final {
       memcpy(data_ + length_, other.begin(), sizeof(*data_) * other.length());
     } else {
       for (int i = 0; i < other.length(); i++) {
-	data_[length_ + i] = other.at(i);
+        data_[length_ + i] = other.at(i);
       }
     }
     length_ = result_length;
@@ -208,11 +212,11 @@ class ZoneList final {
       oomUnsafe.crash("Irregexp stable sort scratch space");
     }
     auto comparator = [cmp](const T& a, const T& b, bool* lessOrEqual) {
-			*lessOrEqual = cmp(&a, &b) <= 0;
-			return true;
-		      };
-    MOZ_ALWAYS_TRUE(js::MergeSort(begin() + start, length, scratch,
-				  comparator));
+      *lessOrEqual = cmp(&a, &b) <= 0;
+      return true;
+    };
+    MOZ_ALWAYS_TRUE(
+        js::MergeSort(begin() + start, length, scratch, comparator));
     js_free(scratch);
   }
 
@@ -258,10 +262,11 @@ class ZoneList final {
   ZoneList(const ZoneList&) = delete;
 };
 
-// Origin: https://github.com/v8/v8/blob/5e514a969376dc63517d575b062758efd36cd757/src/zone/zone-allocator.h#L14-L77
+// Origin:
+// https://github.com/v8/v8/blob/5e514a969376dc63517d575b062758efd36cd757/src/zone/zone-allocator.h#L14-L77
 template <typename T>
 class ZoneAllocator {
-public:
+ public:
   using pointer = T*;
   using const_pointer = const T*;
   using reference = T&;
@@ -291,21 +296,22 @@ public:
     return zone_ != other.zone_;
   }
 
-private:
+ private:
   Zone* zone_;
 };
 
 // Zone wrappers for std containers:
-// Origin: https://github.com/v8/v8/blob/5e514a969376dc63517d575b062758efd36cd757/src/zone/zone-containers.h#L25-L169
+// Origin:
+// https://github.com/v8/v8/blob/5e514a969376dc63517d575b062758efd36cd757/src/zone/zone-containers.h#L25-L169
 
 // A wrapper subclass for std::vector to make it easy to construct one
 // that uses a zone allocator.
 // Used throughout irregexp
 template <typename T>
 class ZoneVector : public std::vector<T, ZoneAllocator<T>> {
-public:
+ public:
   ZoneVector(Zone* zone)
-    : std::vector<T, ZoneAllocator<T>>(ZoneAllocator<T>(zone)) {}
+      : std::vector<T, ZoneAllocator<T>>(ZoneAllocator<T>(zone)) {}
 
   // Constructs a new vector and fills it with the contents of the range
   // [first, last).
@@ -367,7 +373,7 @@ class ZoneUnorderedMap
             ZoneAllocator<std::pair<const K, V>>(zone)) {}
 };
 
-} // namespace internal
-} // namespace v8
+}  // namespace internal
+}  // namespace v8
 
 #endif  // V8_UTIL_FLAG_H_

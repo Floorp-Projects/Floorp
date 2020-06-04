@@ -163,7 +163,8 @@ inline uint8_t saturated_cast<uint8_t, int>(int x) {
   return (x >= 0) ? ((x < 255) ? uint8_t(x) : 255) : 0;
 }
 
-// Origin: https://github.com/v8/v8/blob/fc088cdaccadede84886eee881e67af9db53669a/src/base/bounds.h#L14-L28
+// Origin:
+// https://github.com/v8/v8/blob/fc088cdaccadede84886eee881e67af9db53669a/src/base/bounds.h#L14-L28
 // Checks if value is in range [lower_limit, higher_limit] using a single
 // branch.
 template <typename T, typename U>
@@ -176,7 +177,8 @@ inline constexpr bool IsInRange(T value, U lower_limit, U higher_limit) {
                                  static_cast<unsigned_T>(lower_limit));
 }
 
-#define LAZY_INSTANCE_INITIALIZER { }
+#define LAZY_INSTANCE_INITIALIZER \
+  {}
 
 template <typename T>
 class LazyInstanceImpl {
@@ -190,16 +192,16 @@ class LazyInstanceImpl {
     }
     return val->ptr();
   }
+
  private:
   js::ExclusiveData<mozilla::Maybe<T>> value_;
 };
 
 template <typename T>
 class LazyInstance {
-public:
+ public:
   using type = LazyInstanceImpl<T>;
 };
-
 
 namespace bits {
 
@@ -392,9 +394,7 @@ constexpr int kUC16Size = sizeof(uc16);
 
 inline constexpr bool IsDecimalDigit(uc32 c) { return c >= '0' && c <= '9'; }
 
-inline bool is_uint24(int64_t val) {
-  return (val >> 24) == 0;
-}
+inline bool is_uint24(int64_t val) { return (val >> 24) == 0; }
 inline bool is_int24(int64_t val) {
   int64_t limit = int64_t(1) << 23;
   return (-limit <= val) && (val < limit);
@@ -428,9 +428,10 @@ std::ostream& operator<<(std::ostream& os, const AsUC32& c);
 // code). This is an empty wrapper that will convert itself to
 // std::cerr when used.
 class StdoutStream {
-public:
+ public:
   operator std::ostream&() const;
-  template <typename T> std::ostream& operator<<(T t);
+  template <typename T>
+  std::ostream& operator<<(T t);
 };
 
 // Reuse existing Maybe implementation
@@ -445,7 +446,6 @@ template <typename T>
 mozilla::Nothing Nothing() {
   return mozilla::Nothing();
 }
-
 
 template <typename T>
 using PseudoHandle = mozilla::UniquePtr<T, JS::FreePolicy>;
@@ -516,9 +516,7 @@ class Object {
   // which has its low bit clear and is interpreted as Smi(0).
   constexpr Object() : asBits_(JS::Int32Value(0).asRawBits()) {}
 
-  Object(const JS::Value& value) {
-    setValue(value);
-  }
+  Object(const JS::Value& value) : asBits_(value.asRawBits()) {}
 
   // Used in regexp-interpreter.cc to check the return value of
   // isolate->stack_guard()->HandleInterrupts(). We want to handle
@@ -529,16 +527,12 @@ class Object {
     return true;
   }
 
-  JS::Value value() const {
-    return JS::Value::fromRawBits(asBits_);
-  }
+  JS::Value value() const { return JS::Value::fromRawBits(asBits_); }
 
   inline static Object cast(Object object) { return object; }
 
  protected:
-  void setValue(const JS::Value& val) {
-    asBits_ = val.asRawBits();
-  }
+  void setValue(const JS::Value& val) { asBits_ = val.asRawBits(); }
   uint64_t asBits_;
 } JS_HAZ_GC_POINTER;
 
@@ -602,7 +596,8 @@ class ByteArray : public HeapObject {
   ByteArrayData* inner() const {
     return static_cast<ByteArrayData*>(value().toPrivate());
   }
-public:
+
+ public:
   PseudoHandle<ByteArrayData> takeOwnership(Isolate* isolate);
   byte get(uint32_t index) {
     MOZ_ASSERT(index < length());
@@ -647,13 +642,13 @@ public:
 // manually moved out of the arena using takeOwnership.
 
 class MOZ_STACK_CLASS HandleScope {
-public:
+ public:
   HandleScope(Isolate* isolate);
- ~HandleScope();
+  ~HandleScope();
 
  private:
-  size_t level_;
-  size_t non_gc_level_;
+  size_t level_ = 0;
+  size_t non_gc_level_ = 0;
   Isolate* isolate_;
 
   friend class Isolate;
@@ -675,9 +670,7 @@ class MOZ_NONHEAP_CLASS Handle {
 
   inline bool is_null() const { return location_ == nullptr; }
 
-  inline T operator*() const {
-    return T::cast(Object(*location_));
-  };
+  inline T operator*() const { return T::cast(Object(*location_)); };
 
   // {ObjectRef} is returned by {Handle::operator->}. It should never be stored
   // anywhere or used in any other code; no one should ever have to spell out
@@ -750,7 +743,7 @@ class MOZ_NONHEAP_CLASS MaybeHandle final {
     }
   }
 
-private:
+ private:
   JS::Value* location_;
 };
 
@@ -820,6 +813,7 @@ class String : public HeapObject {
       return Vector<const uc16>(string_->twoByteChars(no_gc_),
                                 string_->length());
     }
+
    private:
     const JSLinearString* string_;
     const JS::AutoAssertNoGC& no_gc_;
@@ -872,10 +866,10 @@ inline Vector<const uc16> String::GetCharVector(
 class MOZ_STACK_CLASS FlatStringReader {
  public:
   FlatStringReader(JSContext* cx, js::HandleLinearString string)
-    : string_(string), length_(string->length()) {}
+      : string_(string), length_(string->length()) {}
 
   FlatStringReader(const mozilla::Range<const char16_t> range)
-    : string_(nullptr), range_(range), length_(range.length()) {}
+      : string_(nullptr), range_(range), length_(range.length()) {}
 
   int length() { return length_; }
 
@@ -926,9 +920,7 @@ class JSRegExp : public HeapObject {
     return (count + 1) * 2;
   }
 
-  inline int MaxRegisterCount() const {
-    return inner()->getMaxRegisters();
-  }
+  inline int MaxRegisterCount() const { return inner()->getMaxRegisters(); }
 
   // ******************************
   // Static constants
@@ -954,10 +946,10 @@ class JSRegExp : public HeapObject {
 
   static constexpr int kNoBacktrackLimit = 0;
 
-private:
- js::RegExpShared* inner() const {
-   return value().toGCThing()->as<js::RegExpShared>();
- }
+ private:
+  js::RegExpShared* inner() const {
+    return value().toGCThing()->as<js::RegExpShared>();
+  }
 };
 
 class Histogram {
@@ -1012,14 +1004,14 @@ class Isolate {
     return &jsregexp_canonrange_;
   }
 
-private:
+ private:
   unibrow::Mapping<unibrow::Ecma262UnCanonicalize> jsregexp_uncanonicalize_;
   unibrow::Mapping<unibrow::Ecma262Canonicalize>
-  regexp_macro_assembler_canonicalize_;
+      regexp_macro_assembler_canonicalize_;
   unibrow::Mapping<unibrow::CanonicalizationRange> jsregexp_canonrange_;
-#endif // !V8_INTL_SUPPORT
+#endif  // !V8_INTL_SUPPORT
 
-public:
+ public:
   // An empty stub for telemetry we don't support
   void IncreaseTotalRegexpCodeGenerated(Handle<HeapObject> code) {}
 
@@ -1055,17 +1047,16 @@ public:
   JS::Value* getHandleLocation(const JS::Value& value);
 
  private:
-
   mozilla::SegmentedVector<JS::Value> handleArena_;
   mozilla::SegmentedVector<PseudoHandle<void>> uniquePtrArena_;
 
   void* allocatePseudoHandle(size_t bytes);
 
-public:
+ public:
   template <typename T>
   PseudoHandle<T> takeOwnership(void* ptr);
 
-private:
+ private:
   void openHandleScope(HandleScope& scope) {
     scope.level_ = handleArena_.Length();
     scope.non_gc_level_ = uniquePtrArena_.Length();
@@ -1217,7 +1208,8 @@ const bool FLAG_regexp_tier_up = true;
 
 #define FLAG_trace_regexp_bytecodes js::jit::JitOptions.traceRegExpInterpreter
 #define FLAG_trace_regexp_parser js::jit::JitOptions.traceRegExpParser
-#define FLAG_trace_regexp_peephole_optimization js::jit::JitOptions.traceRegExpPeephole
+#define FLAG_trace_regexp_peephole_optimization \
+  js::jit::JitOptions.traceRegExpPeephole
 
 #define V8_USE_COMPUTED_GOTO 1
 #define COMPILING_IRREGEXP_FOR_EXTERNAL_EMBEDDER

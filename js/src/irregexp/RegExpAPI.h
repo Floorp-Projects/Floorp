@@ -34,8 +34,7 @@ RegExpRunStatus Execute(JSContext* cx, MutableHandleRegExpShared re,
 
 RegExpRunStatus ExecuteForFuzzing(JSContext* cx, HandleAtom pattern,
                                   HandleLinearString input,
-                                  JS::RegExpFlags flags,
-                                  size_t startIndex,
+                                  JS::RegExpFlags flags, size_t startIndex,
                                   VectorMatchPairs* matches,
                                   RegExpShared::CodeKind codeKind);
 

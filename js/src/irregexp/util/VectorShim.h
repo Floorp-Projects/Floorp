@@ -19,7 +19,8 @@ namespace internal {
 
 //////////////////////////////////////////////////
 
-// Adapted from: https://github.com/v8/v8/blob/5f69bbc233c2d1baf149faf869a7901603929914/src/utils/allocation.h#L36-L58
+// Adapted from:
+// https://github.com/v8/v8/blob/5f69bbc233c2d1baf149faf869a7901603929914/src/utils/allocation.h#L36-L58
 
 template <typename T>
 T* NewArray(size_t size) {
@@ -171,14 +172,13 @@ namespace base {
 // SmallVector uses inline storage first, and reallocates when full.
 // It is basically equivalent to js::Vector, and is implemented
 // as a thin wrapper.
-// V8's implementation: https://github.com/v8/v8/blob/master/src/base/small-vector.h
+// V8's implementation:
+// https://github.com/v8/v8/blob/master/src/base/small-vector.h
 template <typename T, size_t kSize>
 class SmallVector {
-public:
+ public:
   SmallVector() = default;
-  SmallVector(size_t size) {
-    resize_no_init(size);
-  }
+  SmallVector(size_t size) { resize_no_init(size); }
 
   inline bool empty() const { return inner_.empty(); }
   inline const T& back() const { return inner_.back(); }
@@ -197,19 +197,18 @@ public:
   T& operator[](size_t index) { return inner_[index]; }
   const T& operator[](size_t index) const { return inner_[index]; }
 
-
   void resize_no_init(size_t new_size) {
     js::AutoEnterOOMUnsafeRegion oomUnsafe;
     if (!inner_.resizeUninitialized(new_size)) {
       oomUnsafe.crash("Irregexp SmallVector resize");
     }
   }
-private:
+
+ private:
   js::Vector<T, kSize, js::SystemAllocPolicy> inner_;
 };
 
-
-} // namespace base
+}  // namespace base
 
 }  // namespace v8
 

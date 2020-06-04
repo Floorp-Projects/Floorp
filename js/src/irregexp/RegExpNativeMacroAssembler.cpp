@@ -112,8 +112,7 @@ void SMRegExpMacroAssembler::CheckAtStartImpl(int cp_offset, Label* on_cond,
   Address addr(current_position_, cp_offset * char_size());
   masm_.computeEffectiveAddress(addr, temp0_);
 
-  masm_.branchPtr(cond, inputStart(), temp0_,
-                  LabelOrBacktrack(on_cond));
+  masm_.branchPtr(cond, inputStart(), temp0_, LabelOrBacktrack(on_cond));
 }
 
 void SMRegExpMacroAssembler::CheckAtStart(int cp_offset, Label* on_at_start) {
@@ -165,8 +164,7 @@ void SMRegExpMacroAssembler::CheckCharacterAfterAndImpl(uint32_t c,
   }
 }
 
-void SMRegExpMacroAssembler::CheckCharacterAfterAnd(uint32_t c,
-                                                    uint32_t mask,
+void SMRegExpMacroAssembler::CheckCharacterAfterAnd(uint32_t c, uint32_t mask,
                                                     Label* on_equal) {
   CheckCharacterAfterAndImpl(c, mask, on_equal, /*is_not =*/false);
 }
@@ -176,7 +174,6 @@ void SMRegExpMacroAssembler::CheckNotCharacterAfterAnd(uint32_t c,
                                                        Label* on_not_equal) {
   CheckCharacterAfterAndImpl(c, mask, on_not_equal, /*is_not =*/true);
 }
-
 
 // Subtract minus from the current character, then bitwise-and the
 // result with mask, then check for a match with c.
@@ -250,7 +247,7 @@ void SMRegExpMacroAssembler::CheckNotBackReferenceImpl(int start_reg,
   // Captures are stored as a sequential pair of registers.
   // Find the length of the back-referenced capture and load the
   // capture's start index into current_character_.
-  masm_.loadPtr(register_location(start_reg),               // index of start
+  masm_.loadPtr(register_location(start_reg),  // index of start
                 current_character_);
   masm_.loadPtr(register_location(start_reg + 1), temp0_);  // index of end
   masm_.subPtr(current_character_, temp0_);                 // length of capture
@@ -310,7 +307,7 @@ void SMRegExpMacroAssembler::CheckNotBackReferenceImpl(int start_reg,
     masm_.passABIArg(current_position_);
     masm_.passABIArg(temp0_);
 
-    bool unicode = true; // TODO: Fix V8 bug
+    bool unicode = true;  // TODO: Fix V8 bug
     if (unicode) {
       uint32_t (*fun)(const char16_t*, const char16_t*, size_t) =
           CaseInsensitiveCompareUCStrings;
@@ -491,8 +488,7 @@ bool SMRegExpMacroAssembler::CheckSpecialCharacterClass(uc16 type,
                      &success);
 
       // Check '\t'..'\r'
-      masm_.computeEffectiveAddress(Address(current_character_, -'\t'),
-                                    temp0_);
+      masm_.computeEffectiveAddress(Address(current_character_, -'\t'), temp0_);
       masm_.branch32(Assembler::BelowOrEqual, temp0_, Imm32('\r' - '\t'),
                      &success);
 

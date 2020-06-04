@@ -5,7 +5,8 @@
 #ifndef V8_UTIL_FLAGS_H_
 #define V8_UTIL_FLAGS_H_
 
-// Origin: https://github.com/v8/v8/blob/1bafcc6b999b23ea1d394f5d267a08183e3c4e19/src/base/flags.h#L15-L90
+// Origin:
+// https://github.com/v8/v8/blob/1bafcc6b999b23ea1d394f5d267a08183e3c4e19/src/base/flags.h#L15-L90
 
 namespace v8 {
 namespace base {
@@ -26,8 +27,7 @@ class Flags final {
   using mask_type = S;
 
   constexpr Flags() : mask_(0) {}
-  constexpr Flags(flag_type flag)
-      : mask_(static_cast<S>(flag)) {}
+  constexpr Flags(flag_type flag) : mask_(static_cast<S>(flag)) {}
   constexpr explicit Flags(mask_type mask) : mask_(static_cast<S>(mask)) {}
 
   constexpr bool operator==(flag_type flag) const {
@@ -87,7 +87,7 @@ class Flags final {
   mask_type mask_;
 };
 
-} // namespace base
-} // namespace v8
+}  // namespace base
+}  // namespace v8
 
 #endif  // V8_UTIL_FLAG_H_
