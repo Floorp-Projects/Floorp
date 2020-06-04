@@ -1403,7 +1403,8 @@ def set_test_manifests(config, tasks):
 
         mozinfo = guess_mozinfo_from_task(task)
 
-        loader = manifest_loaders[config.params['test_manifest_loader']]
+        loader_cls = manifest_loaders[config.params['test_manifest_loader']]
+        loader = loader_cls(config.params)
         task['test-manifests'] = loader.get_manifests(
             task['suite'],
             frozenset(mozinfo.items()),
@@ -1413,6 +1414,13 @@ def set_test_manifests(config, tasks):
         # associated suite.
         if not task['test-manifests']['active'] and not task['test-manifests']['skipped']:
             continue
+
+        # The default loader loads all manifests. If we use a non-default
+        # loader, we'll only run some subset of manifests and the hardcoded
+        # chunk numbers will no longer be valid. Dynamic chunking should yield
+        # better results.
+        if config.params['test_manifest_loader'] != 'default':
+            task['chunks'] = "dynamic"
 
         yield task
 
