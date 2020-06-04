@@ -17,6 +17,11 @@ add_task(async function testTrrSelectionDisable() {
     undefined,
     "TRR selection dry run not performed."
   );
+  is(
+    Preferences.get(prefs.DOH_TRR_SELECT_URI_PREF),
+    undefined,
+    "doh-rollout.uri remained unset."
+  );
   ensureNoTRRSelectionTelemetry();
 
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, EXAMPLE_URL);
@@ -64,6 +69,11 @@ add_task(async function testTrrSelectionDisable() {
     Preferences.get(prefs.DOH_TRR_SELECT_DRY_RUN_RESULT_PREF),
     undefined,
     "TRR selection dry run not performed."
+  );
+  is(
+    Preferences.get(prefs.DOH_TRR_SELECT_URI_PREF),
+    undefined,
+    "doh-rollout.uri remained unset."
   );
   await ensureNoTRRModeChange(2);
   await checkHeuristicsTelemetry("enable_doh", "startup");
