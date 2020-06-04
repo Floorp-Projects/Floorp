@@ -84,7 +84,7 @@ static const JSFunctionSpec collator_methods[] = {
 
 static const JSPropertySpec collator_properties[] = {
     JS_SELF_HOSTED_GET("compare", "$Intl_Collator_compare_get", 0),
-    JS_STRING_SYM_PS(toStringTag, "Object", JSPROP_READONLY), JS_PS_END};
+    JS_STRING_SYM_PS(toStringTag, "Intl.Collator", JSPROP_READONLY), JS_PS_END};
 
 static bool Collator(JSContext* cx, unsigned argc, Value* vp);
 

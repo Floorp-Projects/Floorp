@@ -7,13 +7,13 @@
 var desc = Object.getOwnPropertyDescriptor(Intl.DateTimeFormat.prototype, Symbol.toStringTag);
 
 assertEq(desc !== undefined, true);
-assertEq(desc.value, "Object");
+assertEq(desc.value, "Intl.DateTimeFormat");
 assertEq(desc.writable, false);
 assertEq(desc.enumerable, false);
 assertEq(desc.configurable, true);
 
-assertEq(Object.prototype.toString.call(Intl.DateTimeFormat.prototype), "[object Object]");
-assertEq(Object.prototype.toString.call(new Intl.DateTimeFormat), "[object Object]");
+assertEq(Object.prototype.toString.call(Intl.DateTimeFormat.prototype), "[object Intl.DateTimeFormat]");
+assertEq(Object.prototype.toString.call(new Intl.DateTimeFormat), "[object Intl.DateTimeFormat]");
 
 Object.defineProperty(Intl.DateTimeFormat.prototype, Symbol.toStringTag, {value: "DateTimeFormat"});
 

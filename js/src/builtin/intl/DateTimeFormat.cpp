@@ -96,7 +96,8 @@ static const JSFunctionSpec dateTimeFormat_methods[] = {
 
 static const JSPropertySpec dateTimeFormat_properties[] = {
     JS_SELF_HOSTED_GET("format", "$Intl_DateTimeFormat_format_get", 0),
-    JS_STRING_SYM_PS(toStringTag, "Object", JSPROP_READONLY), JS_PS_END};
+    JS_STRING_SYM_PS(toStringTag, "Intl.DateTimeFormat", JSPROP_READONLY),
+    JS_PS_END};
 
 static bool DateTimeFormat(JSContext* cx, unsigned argc, Value* vp);
 

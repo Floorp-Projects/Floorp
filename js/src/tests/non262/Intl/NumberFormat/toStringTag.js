@@ -7,13 +7,13 @@
 var desc = Object.getOwnPropertyDescriptor(Intl.NumberFormat.prototype, Symbol.toStringTag);
 
 assertEq(desc !== undefined, true);
-assertEq(desc.value, "Object");
+assertEq(desc.value, "Intl.NumberFormat");
 assertEq(desc.writable, false);
 assertEq(desc.enumerable, false);
 assertEq(desc.configurable, true);
 
-assertEq(Object.prototype.toString.call(Intl.NumberFormat.prototype), "[object Object]");
-assertEq(Object.prototype.toString.call(new Intl.NumberFormat), "[object Object]");
+assertEq(Object.prototype.toString.call(Intl.NumberFormat.prototype), "[object Intl.NumberFormat]");
+assertEq(Object.prototype.toString.call(new Intl.NumberFormat), "[object Intl.NumberFormat]");
 
 Object.defineProperty(Intl.NumberFormat.prototype, Symbol.toStringTag, {value: "NumberFormat"});
 
