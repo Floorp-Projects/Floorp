@@ -15,7 +15,6 @@ import androidx.annotation.IdRes
 import androidx.annotation.VisibleForTesting
 import androidx.annotation.VisibleForTesting.PROTECTED
 import androidx.appcompat.app.ActionBar
-import androidx.appcompat.content.res.AppCompatResources
 import androidx.appcompat.widget.Toolbar
 import androidx.core.view.doOnPreDraw
 import androidx.lifecycle.lifecycleScope
@@ -24,7 +23,6 @@ import androidx.navigation.NavDirections
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.NavigationUI
-import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import kotlinx.android.synthetic.main.activity_home.*
 import kotlinx.coroutines.CoroutineScope
@@ -54,17 +52,17 @@ import org.mozilla.fenix.browser.browsingmode.DefaultBrowsingModeManager
 import org.mozilla.fenix.components.metrics.BreadcrumbsRecorder
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.exceptions.ExceptionsFragmentDirections
-import org.mozilla.fenix.ext.checkAndUpdateScreenshotPermission
-import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.alreadyOnDestination
-import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.ext.checkAndUpdateScreenshotPermission
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.nav
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.home.HomeFragmentDirections
+import org.mozilla.fenix.home.intent.CrashReporterIntentProcessor
 import org.mozilla.fenix.home.intent.DeepLinkIntentProcessor
 import org.mozilla.fenix.home.intent.OpenBrowserIntentProcessor
-import org.mozilla.fenix.home.intent.StartSearchIntentProcessor
-import org.mozilla.fenix.home.intent.CrashReporterIntentProcessor
 import org.mozilla.fenix.home.intent.SpeechProcessingIntentProcessor
+import org.mozilla.fenix.home.intent.StartSearchIntentProcessor
 import org.mozilla.fenix.library.bookmarks.BookmarkFragmentDirections
 import org.mozilla.fenix.library.history.HistoryFragmentDirections
 import org.mozilla.fenix.perf.Performance
@@ -235,20 +233,11 @@ open class HomeActivity : LocaleAwareAppCompatActivity() {
             }
 
             val adapter = FenixTabsAdapter(context)
-            val decoration = DividerItemDecoration(
-                context,
-                DividerItemDecoration.VERTICAL
-            )
-            val drawable = AppCompatResources.getDrawable(context, R.drawable.tab_tray_divider)
-            drawable?.let {
-                decoration.setDrawable(it)
-            }
             BrowserTabsTray(
                 context,
                 attrs,
                 tabsAdapter = adapter,
-                layout = layout,
-                itemDecoration = decoration
+                layout = layout
             )
         }
         else -> super.onCreateView(parent, name, context, attrs)
