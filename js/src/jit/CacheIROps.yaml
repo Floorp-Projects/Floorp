@@ -261,7 +261,7 @@
 
 - name: GuardSpecificSymbol
   shared: false
-  transpile: false
+  transpile: true
   args:
     sym: SymbolId
     expected: SymbolField

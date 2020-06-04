@@ -4021,6 +4021,13 @@ void LIRGenerator::visitGuardSpecificAtom(MGuardSpecificAtom* ins) {
   redefine(ins, ins->str());
 }
 
+void LIRGenerator::visitGuardSpecificSymbol(MGuardSpecificSymbol* ins) {
+  auto* guard = new (alloc()) LGuardSpecificSymbol(useRegister(ins->symbol()));
+  assignSnapshot(guard, Bailout_SpecificSymbolGuard);
+  add(guard, ins);
+  redefine(ins, ins->symbol());
+}
+
 void LIRGenerator::visitGuardShape(MGuardShape* ins) {
   MOZ_ASSERT(ins->object()->type() == MIRType::Object);
 

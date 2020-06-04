@@ -5669,6 +5669,16 @@ MDefinition* MGuardSpecificAtom::foldsTo(TempAllocator& alloc) {
   return this;
 }
 
+MDefinition* MGuardSpecificSymbol::foldsTo(TempAllocator& alloc) {
+  if (symbol()->isConstant()) {
+    if (symbol()->toConstant()->toSymbol() == expected()) {
+      return symbol();
+    }
+  }
+
+  return this;
+}
+
 MDefinition* MGuardToClass::foldsTo(TempAllocator& alloc) {
   if (getClass() == &ArrayObject::class_) {
     if (object()->isNewArray() || object()->isNewArrayCopyOnWrite()) {
