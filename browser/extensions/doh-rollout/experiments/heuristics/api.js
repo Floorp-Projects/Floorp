@@ -31,6 +31,7 @@ const HEURISTICS_TELEMETRY_EVENTS = {
       "browserParent",
       "thirdPartyRoots",
       "policy",
+      "steeredProvider",
       "evaluateReason",
     ],
     record_on_release: true,
