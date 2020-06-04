@@ -176,11 +176,9 @@ DefaultJitOptions::DefaultJitOptions() {
   // Duplicated in all.js - ensure both match.
   SET_DEFAULT(fullIonWarmUpThreshold, 100'000);
 
-#ifdef ENABLE_NEW_REGEXP
   // How many invocations are needed before regexps are compiled to
   // native code.
   SET_DEFAULT(regexpWarmUpThreshold, 10);
-#endif
 
   // Number of exception bailouts (resuming into catch/finally block) before
   // we invalidate and forbid Ion compilation.
@@ -286,7 +284,6 @@ DefaultJitOptions::DefaultJitOptions() {
   SET_DEFAULT(enableTraceLogger, false);
 #endif
 
-#ifdef ENABLE_NEW_REGEXP
   // Dumps a representation of parsed regexps to stderr
   SET_DEFAULT(traceRegExpParser, false);
   // Dumps the calls made to the regexp assembler to stderr
@@ -295,7 +292,6 @@ DefaultJitOptions::DefaultJitOptions() {
   SET_DEFAULT(traceRegExpInterpreter, false);
   // Dumps the changes made by the regexp peephole optimizer to stderr
   SET_DEFAULT(traceRegExpPeephole, false);
-#endif
 
   SET_DEFAULT(enableWasmJitExit, true);
   SET_DEFAULT(enableWasmJitEntry, true);
@@ -315,9 +311,7 @@ void DefaultJitOptions::enableGvn(bool enable) { disableGvn = !enable; }
 void DefaultJitOptions::setEagerBaselineCompilation() {
   baselineInterpreterWarmUpThreshold = 0;
   baselineJitWarmUpThreshold = 0;
-#ifdef ENABLE_NEW_REGEXP
   regexpWarmUpThreshold = 0;
-#endif
 }
 
 void DefaultJitOptions::setEagerIonCompilation() {

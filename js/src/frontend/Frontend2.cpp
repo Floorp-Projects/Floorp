@@ -26,23 +26,18 @@
 #include "frontend/Stencil.h"           // ScopeCreationData, RegExpIndex
 #include "frontend/TokenStream.h"       // TokenStreamAnyChars
 #include "gc/Rooting.h"                 // RootedScriptSourceObject
-#ifndef ENABLE_NEW_REGEXP
-#  include "irregexp/RegExpParser.h"  // irregexp::ParsePatternSyntax
-#endif
 #include "js/CharacterEncoding.h"  // JS::UTF8Chars, UTF8CharsToNewTwoByteCharsZ
 #include "js/HeapAPI.h"            // JS::GCCellPtr
 #include "js/RegExpFlags.h"        // JS::RegExpFlag, JS::RegExpFlags
 #include "js/RootingAPI.h"         // JS::Handle, JS::Rooted
 #include "js/TypeDecls.h"          // Rooted{Script,Value,String,Object}
 #include "js/Utility.h"            // JS::UniqueTwoByteChars, StringBufferArena
-#ifdef ENABLE_NEW_REGEXP
-#  include "new-regexp/RegExpAPI.h"  // irregexp::CheckPatternSyntax
-#endif
-#include "vm/JSAtom.h"         // AtomizeUTF8Chars
-#include "vm/JSScript.h"       // JSScript
-#include "vm/Scope.h"          // BindingName
-#include "vm/ScopeKind.h"      // ScopeKind
-#include "vm/SharedStencil.h"  // ImmutableScriptData, ScopeNote, TryNote
+#include "new-regexp/RegExpAPI.h"  // irregexp::CheckPatternSyntax
+#include "vm/JSAtom.h"             // AtomizeUTF8Chars
+#include "vm/JSScript.h"           // JSScript
+#include "vm/Scope.h"              // BindingName
+#include "vm/ScopeKind.h"          // ScopeKind
+#include "vm/SharedStencil.h"      // ImmutableScriptData, ScopeNote, TryNote
 
 #include "vm/JSContext-inl.h"  // AutoKeepAtoms (used by BytecodeCompiler)
 
@@ -268,16 +263,9 @@ class SmooshScriptStencil : public ScriptStencil {
       // See Parser<FullParseHandler, Unit>::newRegExp.
 
       LifoAllocScope allocScope(&cx->tempLifoAlloc());
-#ifdef ENABLE_NEW_REGEXP
       if (!irregexp::CheckPatternSyntax(cx, ts, range, flags)) {
         return false;
       }
-#else
-      if (!irregexp::ParsePatternSyntax(ts, allocScope.alloc(), range,
-                                        flags & JS::RegExpFlag::Unicode)) {
-        return false;
-      }
-#endif
 
       RegExpIndex index(compilationInfo_.regExpData.length());
       if (!compilationInfo_.regExpData.emplaceBack()) {

@@ -22,9 +22,7 @@
 #include "js/Result.h"
 #include "js/Utility.h"
 #include "js/Vector.h"
-#ifdef ENABLE_NEW_REGEXP
-#  include "new-regexp/RegExpTypes.h"
-#endif
+#include "new-regexp/RegExpTypes.h"
 #include "threading/ProtectedData.h"
 #include "util/StructuredSpewer.h"
 #include "vm/Activation.h"  // js::Activation
@@ -425,14 +423,8 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
    */
   js::ContextData<js::jit::JitActivation*> jitActivation;
 
-#ifdef ENABLE_NEW_REGEXP
   // Shim for V8 interfaces used by irregexp code
   js::ContextData<js::irregexp::Isolate*> isolate;
-#else
-  // Information about the heap allocated backtrack stack used by RegExp JIT
-  // code.
-  js::ContextData<js::irregexp::RegExpStack> regexpStack;
-#endif
 
   /*
    * Points to the most recent activation running on the thread.
