@@ -152,13 +152,12 @@ nsHttpActivityDistributor::AddObserver(nsIHttpActivityObserver* aObserver) {
   }
 
   if (nsIOService::UseSocketProcess() && wasEmpty) {
-    auto task = []() {
-      SocketProcessParent* parent = SocketProcessParent::GetSingleton();
-      if (parent && parent->CanSend()) {
-        Unused << parent->SendOnHttpActivityDistributorActivated(true);
-      }
-    };
-    gIOService->CallOrWaitForSocketProcess(task);
+    SocketProcessParent* parent = SocketProcessParent::GetSingleton();
+    if (parent && parent->CanSend()) {
+      Unused << parent->SendOnHttpActivityDistributorActivated(true);
+    } else {
+      return NS_ERROR_FAILURE;
+    }
   }
   return NS_OK;
 }
@@ -178,13 +177,12 @@ nsHttpActivityDistributor::RemoveObserver(nsIHttpActivityObserver* aObserver) {
   }
 
   if (nsIOService::UseSocketProcess() && isEmpty) {
-    auto task = []() {
-      SocketProcessParent* parent = SocketProcessParent::GetSingleton();
-      if (parent && parent->CanSend()) {
-        Unused << parent->SendOnHttpActivityDistributorActivated(false);
-      }
-    };
-    gIOService->CallOrWaitForSocketProcess(task);
+    SocketProcessParent* parent = SocketProcessParent::GetSingleton();
+    if (parent && parent->CanSend()) {
+      Unused << parent->SendOnHttpActivityDistributorActivated(false);
+    } else {
+      return NS_ERROR_FAILURE;
+    }
   }
   return NS_OK;
 }
