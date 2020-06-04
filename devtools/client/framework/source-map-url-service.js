@@ -17,454 +17,549 @@ const SOURCE_MAP_PREF = "devtools.source-map.client-service.enabled";
  * @param {SourceMapService} sourceMapService
  *        The devtools-source-map functions
  */
-function SourceMapURLService(toolbox, sourceMapService) {
-  this._toolbox = toolbox;
-  Object.defineProperty(this, "_target", {
-    get() {
-      return toolbox.target;
-    },
-  });
-  this._sourceMapService = sourceMapService;
-  // Map from content URLs to descriptors.  Descriptors are later
-  // passed to the source map worker.
-  this._urls = new Map();
-  // Map from (stringified) locations to callbacks that are called
-  // when the service decides a location should change (say, a source
-  // map is available or the user changes the pref).
-  this._subscriptions = new Map();
-  // A backward map from actor IDs to the original URL.  This is used
-  // to support pretty-printing.
-  this._idMap = new Map();
+class SourceMapURLService {
+  constructor(toolbox, sourceMapService) {
+    this._toolbox = toolbox;
+    this._sourceMapService = sourceMapService;
 
-  this._onSourceUpdated = this._onSourceUpdated.bind(this);
-  this.reset = this.reset.bind(this);
-  this._prefValue = Services.prefs.getBoolPref(SOURCE_MAP_PREF);
-  this._onPrefChanged = this._onPrefChanged.bind(this);
-  this._onNewStyleSheet = this._onNewStyleSheet.bind(this);
+    this._prefValue = Services.prefs.getBoolPref(SOURCE_MAP_PREF);
+    this._pendingIDSubscriptions = new Map();
+    this._pendingURLSubscriptions = new Map();
+    this._urlToIDMap = new Map();
+    this._mapsById = new Map();
+    this._listeningStylesheetFront = null;
+    this._sourcesLoading = null;
+    this._runningCallback = false;
 
-  this._target.on("source-updated", this._onSourceUpdated);
-  this._target.on("will-navigate", this.reset);
+    this._syncPrevValue = this._syncPrevValue.bind(this);
+    this._onSourceUpdatedEvent = this._onSourceUpdatedEvent.bind(this);
+    this._clearAllState = this._clearAllState.bind(this);
+    this._onNewStyleSheet = this._onNewStyleSheet.bind(this);
 
-  Services.prefs.addObserver(SOURCE_MAP_PREF, this._onPrefChanged);
-
-  this._stylesheetsFront = null;
-  this._loadingPromise = null;
-}
-
-/**
- * Lazy initialization.  Returns a promise that will resolve when all
- * the relevant URLs have been registered.
- */
-SourceMapURLService.prototype._getLoadingPromise = function() {
-  if (!this._loadingPromise) {
-    this._loadingPromise = (async () => {
-      if (this._target.isWorkerTarget) {
-        return;
-      }
-      let styleSheetsLoadingPromise;
-      if (this._target.hasActor("styleSheets")) {
-        this._stylesheetsFront = await this._target.getFront("stylesheets");
-        this._stylesheetsFront.on("stylesheet-added", this._onNewStyleSheet);
-        styleSheetsLoadingPromise = this._stylesheetsFront
-          .getStyleSheets()
-          .then(
-            sheets => {
-              sheets.forEach(this._registerNewStyleSheet, this);
-            },
-            () => {
-              // Ignore any protocol-based errors.
-            }
-          );
-      }
-
-      // Start fetching the sources now.
-      if (!this._toolbox.threadFront) {
-        return Promise.reject("threadFront is null");
-      }
-
-      const loadingPromise = this._toolbox.threadFront.getSources().then(
-        ({ sources }) => {
-          // Ignore errors.  Register the sources we got; we can't rely on
-          // an event to arrive if the source actor already existed.
-          for (const source of sources) {
-            this._registerNewSource(source);
-          }
-        },
-        e => {
-          // Also ignore any protocol-based errors.
-        }
-      );
-
-      if (styleSheetsLoadingPromise) {
-        await styleSheetsLoadingPromise;
-      }
-      await loadingPromise;
-    })();
-  }
-  return this._loadingPromise;
-};
-
-/**
- * Reset the service.  This flushes the internal cache.
- */
-SourceMapURLService.prototype.reset = function() {
-  this._sourceMapService.clearSourceMaps();
-  this._urls.clear();
-  this._subscriptions.clear();
-  this._idMap.clear();
-  this._loadingPromise = null;
-};
-
-/**
- * Shut down the service, unregistering its event listeners and
- * flushing the cache.  After this call the service will no longer
- * function.
- */
-SourceMapURLService.prototype.destroy = function() {
-  this.reset();
-  this._target.off("source-updated", this._onSourceUpdated);
-  this._target.off("will-navigate", this.reset);
-  if (this._stylesheetsFront) {
-    this._stylesheetsFront.off("stylesheet-added", this._onNewStyleSheet);
-  }
-  Services.prefs.removeObserver(SOURCE_MAP_PREF, this._onPrefChanged);
-  this._urls = this._subscriptions = this._idMap = null;
-};
-
-/**
- * A helper function that is called when a new source is available.
- */
-SourceMapURLService.prototype._onSourceUpdated = function(sourceEvent) {
-  const url = this._registerNewSource(sourceEvent.source);
-
-  if (url) {
-    // Subscribers might have been added for this file before the
-    // "source-updated" event was fired.
-    this._dispatchSubscribersForURL(url);
-  }
-};
-
-/**
- * A helper function that registers a new source file with the service.
- *
- * @param {SourceActor} source The new source's actor.
- * @returns {string | undefined} A URL for the registered file,
- *        if registered successfully.
- */
-SourceMapURLService.prototype._registerNewSource = function(source) {
-  // Maybe we were shut down while waiting.
-  if (!this._urls) {
-    return;
+    this._target.on("will-navigate", this._clearAllState);
+    this._target.on("source-updated", this._onSourceUpdatedEvent);
+    Services.prefs.addObserver(SOURCE_MAP_PREF, this._syncPrevValue);
   }
 
-  const {
-    generatedUrl,
-    url,
-    actor: id,
-    sourceMapBaseURL,
-    sourceMapURL,
-  } = source;
-
-  // |generatedUrl| comes from the actor and is extracted from the
-  // source code by SpiderMonkey.
-  const seenUrl = generatedUrl || url;
-  this._urls.set(seenUrl, { id, url: seenUrl, sourceMapBaseURL, sourceMapURL });
-  this._idMap.set(id, seenUrl);
-
-  return seenUrl;
-};
-
-/**
- * A helper function that is called when a new style sheet is
- * available.
- * @param {StyleSheetActor} sheet
- *        The new style sheet's actor.
- */
-SourceMapURLService.prototype._onNewStyleSheet = function(sheet) {
-  const url = this._registerNewStyleSheet(sheet);
-
-  if (url) {
-    // Subscribers might have been added for this file before the
-    // "stylesheet-added" event was fired.
-    this._dispatchSubscribersForURL(url);
-  }
-};
-
-/**
- * A helper function that registers a new stylesheet with the service.
- * @param {StyleSheetActor} sheet
- *        The new style sheet's actor.
- * @returns {string | undefined} A URL for the registered file,
- *        if registered successfully.
- */
-SourceMapURLService.prototype._registerNewStyleSheet = function(sheet) {
-  // Maybe we were shut down while waiting.
-  if (!this._urls) {
-    return;
+  get _target() {
+    return this._toolbox.target;
   }
 
-  const { href, nodeHref, sourceMapBaseURL, sourceMapURL, actorID: id } = sheet;
-  const url = href || nodeHref;
-  this._urls.set(url, { id, url, sourceMapBaseURL, sourceMapURL });
-  this._idMap.set(id, url);
-
-  return url;
-};
-
-/**
- * A callback that is called from the lower-level source map service
- * proxy (see toolbox.js) when some tool has installed a new source
- * map.  This happens when pretty-printing a source.
- *
- * @param {String} id
- *        The actor ID (used as a cookie here as elsewhere in this file)
- * @param {String} newUrl
- *        The URL of the pretty-printed source
- */
-SourceMapURLService.prototype.sourceMapChanged = function(id, newUrl) {
-  if (!this._urls) {
-    return;
+  destroy() {
+    this._clearAllState();
+    this._target.off("will-navigate", this._clearAllState);
+    this._target.off("source-updated", this._onSourceUpdatedEvent);
+    Services.prefs.removeObserver(SOURCE_MAP_PREF, this._syncPrevValue);
   }
 
-  const urlKey = this._idMap.get(id);
-  if (urlKey) {
-    // The source map URL here doesn't actually matter.
-    this._urls.set(urlKey, { id, url: newUrl, sourceMapURL: "" });
+  /**
+   * Query for the original position of a location in a generated file.
+   *
+   * This function will wait for all sources to have loaded, since the
+   * sourcemap worker may not know about a particular source yet.
+   *
+   * @param {string} id The actor ID of the source.
+   * @param {number} line The line number in the source.
+   * @param {number} column The column number in the source.
+   *
+   * @return {Object | null} An object with url/line/column properties
+   *      specifying a location in the original file, or null if no particular
+   *      original location could be found.
+   */
+  async originalPositionForID(id, line, column) {
+    await this._ensureAllSourcesPopulated();
 
-    this._dispatchSubscribersForURL(urlKey);
-  }
-};
-
-/**
- * A helper function that dispatches subscribers for a specific URL.
- * @param {string} urlKey
- *        The url to trigger subscribers for.
- */
-SourceMapURLService.prototype._dispatchSubscribersForURL = function(urlKey) {
-  // Walk over all the location subscribers, looking for any that
-  // are subscribed to a location coming from |urlKey|.  Then,
-  // re-notify any such subscriber by clearing the stored promise
-  // and forcing a re-evaluation.
-  for (const [, subscriptionEntry] of this._subscriptions) {
-    if (subscriptionEntry.url === urlKey) {
-      // Force an update.
-      subscriptionEntry.promise = null;
-      for (const callback of subscriptionEntry.callbacks) {
-        this._callOneCallback(subscriptionEntry, callback);
-      }
+    if (!this._prefValue) {
+      return null;
     }
-  }
-};
 
-/**
- * Look up the original position for a given location.  This returns a
- * promise resolving to either the original location, or null if the
- * given location is not source-mapped.  If a location is returned, it
- * is of the same form as devtools-source-map's |getOriginalLocation|.
- *
- * @param {String} url
- *        The URL to map.
- * @param {number} line
- *        The line number to map.
- * @param {number} column
- *        The column number to map.
- * @return Promise
- *        A promise resolving either to the original location, or null.
- */
-SourceMapURLService.prototype.originalPositionFor = async function(
-  url,
-  line,
-  column
-) {
-  if (!this._prefValue) {
-    return null;
+    const map = this._mapsById.get(id);
+    if (!map) {
+      return null;
+    }
+
+    const query = this._buildQuery(map, line, column);
+    return this._dispatchQuery(query);
   }
 
-  // Ensure the sources are loaded before replying.
-  try {
-    await this._getLoadingPromise();
-  } catch (e) {
-    console.warn("Error in _getLoadingPromise", e);
-    return null;
+  /**
+   * Query for the original position of a location in a generated file.
+   *
+   * This function will wait for all sources to have loaded, since the
+   * sourcemap worker may not know about a particular source yet.
+   *
+   * @param {string} url The url of the source. If multiple files with this
+   *      URL exist, the result is indeterminate.
+   * @param {number} line The line number in the source.
+   * @param {number} column The column number in the source.
+   *
+   * @return {Object | null} An object with url/line/column properties
+   *      specifying a location in the original file, or null if no particular
+   *      original location could be found.
+   */
+  async originalPositionForURL(url, line, column) {
+    await this._ensureAllSourcesPopulated();
+
+    if (!this._prefValue) {
+      return null;
+    }
+
+    const id = this._urlToIDMap.get(url);
+    if (!id) {
+      return null;
+    }
+
+    const map = this._mapsById.get(id);
+    if (!map) {
+      return null;
+    }
+
+    const query = this._buildQuery(map, line, column);
+    return this._dispatchQuery(query);
   }
 
-  // Maybe we were shut down while waiting.
-  if (!this._urls) {
-    return null;
-  }
+  /**
+   * Subscribe to notifications about the original location of a given
+   * generated location, as it may not be known at this time, may become
+   * available at some unknown time in the future, or may change from one
+   * location to another.
+   *
+   * @param {string} id The actor ID of the source.
+   * @param {number} line The line number in the source.
+   * @param {number} column The column number in the source.
+   * @param {Function} callback A callback that may eventually be passed an
+   *      an object with url/line/column properties specifying a location in
+   *      the original file, or null if no particular original location could
+   *      be found. The callback will run synchronously if the location is
+   *      already know to the URL service.
+   *
+   * @return {Function} A function to call to remove this subscription. The
+   *      "callback" argument is guaranteed to never run once unsubscribed.
+   */
+  subscribeByID(id, line, column, callback) {
+    this._ensureAllSourcesPopulated();
 
-  const urlInfo = this._urls.get(url);
-  if (!urlInfo) {
-    return null;
-  }
-  // Call getOriginalURLs to make sure the source map has been
-  // fetched.  We don't actually need the result of this though.
-  await this._sourceMapService.getOriginalURLs({
-    id: urlInfo.id,
-    url: urlInfo.url,
-    sourceMapBaseURL: urlInfo.sourceMapBaseURL,
-    sourceMapURL: urlInfo.sourceMapURL,
-  });
-  const location = { sourceId: urlInfo.id, line, column, sourceUrl: url };
-  const resolvedLocation = await this._sourceMapService.getOriginalLocation(
-    location
-  );
-  if (
-    !resolvedLocation ||
-    (resolvedLocation.line === location.line &&
-      resolvedLocation.column === location.column &&
-      resolvedLocation.sourceUrl === location.sourceUrl)
-  ) {
-    return null;
-  }
-  return resolvedLocation;
-};
-
-/**
- * Helper function to call a single callback for a given subscription
- * entry.
- * @param {Object} subscriptionEntry
- *                 An entry in the _subscriptions map.
- * @param {Function} callback
- *                 The callback to call; @see subscribe
- */
-SourceMapURLService.prototype._callOneCallback = async function(
-  subscriptionEntry,
-  callback
-) {
-  // If source maps are disabled, immediately call with just "false".
-  if (!this._prefValue) {
-    callback(null);
-    return;
-  }
-
-  if (!subscriptionEntry.promise) {
-    const { url, line, column } = subscriptionEntry;
-    subscriptionEntry.promise = this.originalPositionFor(url, line, column);
-  }
-
-  const resolvedLocation = await subscriptionEntry.promise;
-
-  if (!this._prefValue) {
-    // If the pref changed to falsy while we were querying, this callback
-    // will have already been notified of that.
-  } else if (resolvedLocation) {
-    const { line, column, sourceUrl: url } = resolvedLocation;
-    callback({ url, line, column });
-  }
-};
-
-/**
- * Subscribe to changes to a given location.  This will arrange to
- * call a callback when an original location is determined (if source
- * maps are enabled), or when the source map pref changes.
- *
- * @param {String} url
- *                 The URL of the generated location.
- * @param {Number} line
- *                 The line number of the generated location.
- * @param {Number} column
- *                 The column number of the generated location (can be undefined).
- * @param {Function} callback
- *                 The callback to call.  This may be called zero or
- *                 more times -- it may not be called if the location
- *                 is not source mapped; and it may be called multiple
- *                 times if the source map pref changes.  It is called
- *                 as callback({url, line, column} | null).  |null| means
- *                 that the generated position should be used, otherwise
- *                 the given object describes the original position.
- * @returns {Function} An unsubscribe function.
- */
-SourceMapURLService.prototype.subscribe = function(
-  url,
-  line,
-  column,
-  callback
-) {
-  if (!this._subscriptions) {
-    return () => {};
-  }
-
-  const key = JSON.stringify([url, line, column]);
-  let subscriptionEntry = this._subscriptions.get(key);
-  if (!subscriptionEntry) {
-    subscriptionEntry = {
-      url,
+    let pending = this._pendingIDSubscriptions.get(id);
+    if (!pending) {
+      pending = new Set();
+      this._pendingIDSubscriptions.set(id, pending);
+    }
+    const entry = {
       line,
       column,
-      promise: null,
-      callbacks: [],
+      callback,
+      unsubscribed: false,
+      owner: pending,
     };
-    this._subscriptions.set(key, subscriptionEntry);
-  }
-  subscriptionEntry.callbacks.push(callback);
+    pending.add(entry);
 
-  // Only notify upon subscription if source maps are actually in use.
-  if (this._prefValue) {
-    this._callOneCallback(subscriptionEntry, callback);
+    const map = this._mapsById.get(id);
+    if (map) {
+      this._flushPendingIDSubscriptionsToMapQueries(map);
+    }
+
+    return () => {
+      entry.unsubscribed = true;
+      entry.owner.delete(entry);
+    };
   }
 
-  let unsubscribed = false;
-  return () => {
-    if (unsubscribed) {
+  /**
+   * Subscribe to notifications about the original location of a given
+   * generated location, as it may not be known at this time, may become
+   * available at some unknown time in the future, or may change from one
+   * location to another.
+   *
+   * @param {string} id The actor ID of the source.
+   * @param {number} line The line number in the source.
+   * @param {number} column The column number in the source.
+   * @param {Function} callback A callback that may eventually be passed an
+   *      an object with url/line/column properties specifying a location in
+   *      the original file, or null if no particular original location could
+   *      be found. The callback will run synchronously if the location is
+   *      already know to the URL service.
+   *
+   * @return {Function} A function to call to remove this subscription. The
+   *      "callback" argument is guaranteed to never run once unsubscribed.
+   */
+  subscribeByURL(url, line, column, callback) {
+    this._ensureAllSourcesPopulated();
+
+    let pending = this._pendingURLSubscriptions.get(url);
+    if (!pending) {
+      pending = new Set();
+      this._pendingURLSubscriptions.set(url, pending);
+    }
+    const entry = {
+      line,
+      column,
+      callback,
+      unsubscribed: false,
+      owner: pending,
+    };
+    pending.add(entry);
+
+    const id = this._urlToIDMap.get(url);
+    if (id) {
+      this._convertPendingURLSubscriptionsToID(url, id);
+      const map = this._mapsById.get(id);
+      if (map) {
+        this._flushPendingIDSubscriptionsToMapQueries(map);
+      }
+    }
+
+    return () => {
+      entry.unsubscribed = true;
+      entry.owner.delete(entry);
+    };
+  }
+
+  /**
+   * Tell the URL service than some external entity has registered a sourcemap
+   * in the worker for one of the source files.
+   *
+   * @param {string} id The actor ID of the source that had the map registered.
+   */
+  async newSourceMapCreated(id) {
+    await this._ensureAllSourcesPopulated();
+
+    const map = this._mapsById.get(id);
+    if (!map) {
+      // State could have been cleared.
       return;
     }
-    unsubscribed = true;
-    this._unsubscribe(url, line, column, callback);
-  };
-};
 
-/**
- * Unsubscribe from changes to a given location.
- *
- * @param {String} url
- *                 The URL of the generated location.
- * @param {Number} line
- *                 The line number of the generated location.
- * @param {Number} column
- *                 The column number of the generated location (can be undefined).
- * @param {Function} callback
- *                 The callback.
- */
-SourceMapURLService.prototype._unsubscribe = function(
-  url,
-  line,
-  column,
-  callback
-) {
-  if (!this._subscriptions) {
-    return;
-  }
-  const key = JSON.stringify([url, line, column]);
-  const subscriptionEntry = this._subscriptions.get(key);
-  if (subscriptionEntry) {
-    const index = subscriptionEntry.callbacks.indexOf(callback);
-    if (index !== -1) {
-      subscriptionEntry.callbacks.splice(index, 1);
-      // Remove the whole entry when the last subscriber is removed.
-      if (subscriptionEntry.callbacks.length === 0) {
-        this._subscriptions.delete(key);
+    map.loaded = Promise.resolve();
+    for (const query of map.queries.values()) {
+      query.action = null;
+      query.result = null;
+      if (this._prefValue) {
+        this._dispatchQuery(query);
       }
     }
   }
-};
 
-/**
- * A helper function that is called when the source map pref changes.
- * This function notifies all subscribers of the state change.
- */
-SourceMapURLService.prototype._onPrefChanged = function() {
-  this._prefValue = Services.prefs.getBoolPref(SOURCE_MAP_PREF);
+  _syncPrevValue() {
+    this._prefValue = Services.prefs.getBoolPref(SOURCE_MAP_PREF);
 
-  if (!this._subscriptions) {
-    return;
-  }
-
-  for (const [, subscriptionEntry] of this._subscriptions) {
-    for (const callback of subscriptionEntry.callbacks) {
-      this._callOneCallback(subscriptionEntry, callback);
+    for (const map of this._mapsById.values()) {
+      for (const query of map.queries.values()) {
+        this._ensureSubscribersSynchronized(query);
+      }
     }
   }
-};
+
+  _clearAllState() {
+    this._sourceMapService.clearSourceMaps();
+    this._pendingIDSubscriptions.clear();
+    this._pendingURLSubscriptions.clear();
+    this._urlToIDMap.clear();
+
+    if (this._listeningStylesheetFront) {
+      this._listeningStylesheetFront.off(
+        "stylesheet-added",
+        this._onNewStyleSheet
+      );
+      this._listeningStylesheetFront = null;
+    }
+    this._sourcesLoading = null;
+  }
+
+  _onSourceUpdatedEvent(sourceEvent) {
+    this._onNewJavascript(sourceEvent.source);
+  }
+
+  _onNewJavascript(source) {
+    const { url, actor: id, sourceMapBaseURL, sourceMapURL } = source;
+
+    this._onNewSource(id, url, sourceMapURL, sourceMapBaseURL);
+  }
+
+  _onNewStyleSheet(sheet) {
+    const {
+      href,
+      nodeHref,
+      sourceMapBaseURL,
+      sourceMapURL,
+      actorID: id,
+    } = sheet;
+    const url = href || nodeHref;
+
+    this._onNewSource(id, url, sourceMapURL, sourceMapBaseURL);
+  }
+
+  _onNewSource(id, url, sourceMapURL, sourceMapBaseURL) {
+    this._urlToIDMap.set(url, id);
+    this._convertPendingURLSubscriptionsToID(url, id);
+
+    let map = this._mapsById.get(id);
+    if (!map) {
+      map = {
+        id,
+        url,
+        sourceMapURL,
+        sourceMapBaseURL,
+        loaded: null,
+        queries: new Map(),
+      };
+      this._mapsById.set(id, map);
+    } else if (
+      map.id !== id &&
+      map.url !== url &&
+      map.sourceMapURL !== sourceMapURL &&
+      map.sourceMapBaseURL !== sourceMapBaseURL
+    ) {
+      console.warn(
+        `Attempted to load populate sourcemap for source ${id} multiple times`
+      );
+    }
+
+    this._flushPendingIDSubscriptionsToMapQueries(map);
+  }
+
+  _buildQuery(map, line, column) {
+    const key = `${line}:${column}`;
+    let query = map.queries.get(key);
+    if (!query) {
+      query = {
+        map,
+        line,
+        column,
+        subscribers: new Set(),
+        action: null,
+        result: null,
+        mostRecentEmitted: null,
+      };
+      map.queries.set(key, query);
+    }
+    return query;
+  }
+
+  _dispatchQuery(query, newSubscribers = null) {
+    if (!this._prefValue) {
+      throw new Error("This function should only be called if the pref is on.");
+    }
+
+    if (!query.action) {
+      const { map } = query;
+
+      // Call getOriginalURLs to make sure the source map has been
+      // fetched.  We don't actually need the result of this though.
+      if (!map.loaded) {
+        map.loaded = this._sourceMapService.getOriginalURLs({
+          id: map.id,
+          url: map.url,
+          sourceMapBaseURL: map.sourceMapBaseURL,
+          sourceMapURL: map.sourceMapURL,
+        });
+      }
+
+      const action = (async () => {
+        let result = null;
+        try {
+          await map.loaded;
+
+          const position = await this._sourceMapService.getOriginalLocation({
+            sourceId: map.id,
+            line: query.line,
+            column: query.column,
+          });
+          if (position && position.sourceId !== map.id) {
+            result = {
+              url: position.sourceUrl,
+              line: position.line,
+              column: position.column,
+            };
+          }
+        } finally {
+          // If this action was dispatched and then the file was pretty-printed
+          // we want to ignore the result since the query has restarted.
+          if (action === query.action) {
+            // It is important that we consistently set the query result and
+            // trigger the subscribers here in order to maintain the invariant
+            // that if 'result' is truthy, then the subscribers will have run.
+            const position = result;
+            query.result = { position };
+            this._ensureSubscribersSynchronized(query);
+          }
+        }
+
+        return result;
+      })();
+      query.action = action;
+    }
+
+    this._ensureSubscribersSynchronized(query);
+
+    return query.action;
+  }
+
+  _ensureSubscribersSynchronized(query) {
+    // Synchronize the subscribers with the pref-disabled state if they need it.
+    if (!this._prefValue) {
+      if (query.mostRecentEmitted) {
+        query.mostRecentEmitted = null;
+        this._dispatchSubscribers(null, query.subscribers);
+      }
+      return;
+    }
+
+    // Synchronize the subscribers with the newest computed result if they
+    // need it.
+    const { result } = query;
+    if (result && query.mostRecentEmitted !== result.position) {
+      query.mostRecentEmitted = result.position;
+      this._dispatchSubscribers(result.position, query.subscribers);
+    }
+  }
+
+  _dispatchSubscribers(position, subscribers) {
+    // We copy the subscribers before iterating because something could be
+    // removed while we're calling the callbacks, which is also why we check
+    // the 'unsubscribed' flag.
+    for (const subscriber of Array.from(subscribers)) {
+      if (subscriber.unsubscribed) {
+        continue;
+      }
+
+      if (this._runningCallback) {
+        console.error(
+          "The source map url service does not support reentrant subscribers."
+        );
+        continue;
+      }
+
+      try {
+        this._runningCallback = true;
+
+        const { callback } = subscriber;
+        callback(position ? { ...position } : null);
+      } catch (err) {
+        console.error("Error in source map url service subscriber", err);
+      } finally {
+        this._runningCallback = false;
+      }
+    }
+  }
+
+  _flushPendingIDSubscriptionsToMapQueries(map) {
+    const subscriptions = this._pendingIDSubscriptions.get(map.id);
+    if (!subscriptions || subscriptions.size === 0) {
+      return;
+    }
+    this._pendingIDSubscriptions.delete(map.id);
+
+    for (const entry of subscriptions) {
+      const query = this._buildQuery(map, entry.line, entry.column);
+
+      const { subscribers } = query;
+
+      entry.owner = subscribers;
+      subscribers.add(entry);
+
+      if (query.mostRecentEmitted) {
+        // Maintain the invariant that if a query has emitted a value, then
+        // _all_ subscribers will have received that value.
+        this._dispatchSubscribers(query.mostRecentEmitted, [entry]);
+      }
+
+      if (this._prefValue) {
+        this._dispatchQuery(query);
+      }
+    }
+  }
+
+  _ensureAllSourcesPopulated() {
+    if (!this._prefValue) {
+      return null;
+    }
+
+    if (!this._sourcesLoading) {
+      const sourcesLoading = (async () => {
+        if (this._target.isWorkerTarget) {
+          return;
+        }
+
+        await Promise.all([
+          (async () => {
+            if (!this._target.hasActor("styleSheets")) {
+              return;
+            }
+
+            try {
+              const front = await this._target.getFront("stylesheets");
+
+              if (this._listeningStylesheetFront) {
+                this._listeningStylesheetFront.off(
+                  "stylesheet-added",
+                  this._onNewStyleSheet
+                );
+              }
+              this._listeningStylesheetFront = front;
+              this._listeningStylesheetFront.on(
+                "stylesheet-added",
+                this._onNewStyleSheet
+              );
+
+              const sheets = await front.getStyleSheets();
+              if (this._sourcesLoading === sourcesLoading) {
+                // If we've cleared the state since starting this request,
+                // we don't want to populate these.
+                for (const sheet of sheets) {
+                  this._onNewStyleSheet(sheet);
+                }
+              }
+            } catch (err) {
+              // Ignore any protocol-based errors.
+            }
+          })(),
+          (async () => {
+            const { threadFront } = this._toolbox;
+            if (!threadFront) {
+              console.warn(
+                "sourcemap url service cannot query for sources, no threadFront found"
+              );
+              return;
+            }
+
+            try {
+              const { sources } = await threadFront.getSources();
+              if (this._sourcesLoading === sourcesLoading) {
+                // If we've cleared the state since starting this request,
+                // we don't want to populate these.
+                for (const source of sources) {
+                  this._onNewJavascript(source);
+                }
+              }
+            } catch (err) {
+              // Also ignore any protocol-based errors.
+            }
+          })(),
+        ]);
+      })();
+      this._sourcesLoading = sourcesLoading;
+    }
+
+    return this._sourcesLoading;
+  }
+
+  _convertPendingURLSubscriptionsToID(url, id) {
+    const urlSubscriptions = this._pendingURLSubscriptions.get(url);
+    if (!urlSubscriptions) {
+      return;
+    }
+    this._pendingURLSubscriptions.delete(url);
+
+    let pending = this._pendingIDSubscriptions.get(id);
+    if (!pending) {
+      pending = new Set();
+      this._pendingIDSubscriptions.set(id, pending);
+    }
+    for (const entry of urlSubscriptions) {
+      entry.owner = pending;
+      pending.add(entry);
+    }
+  }
+}
 
 exports.SourceMapURLService = SourceMapURLService;

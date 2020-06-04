@@ -75,7 +75,7 @@ class Frame extends Component {
   componentWillMount() {
     if (this.props.sourceMapURLService) {
       const { source, line, column } = this.props.frame;
-      this.unsubscribeSourceMapService = this.props.sourceMapURLService.subscribe(
+      this.unsubscribeSourceMapService = this.props.sourceMapURLService.subscribeByURL(
         source,
         line,
         column,

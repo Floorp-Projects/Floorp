@@ -1361,7 +1361,7 @@ function SelectorView(tree, selectorInfo) {
       column: rule.column,
     };
     this.sourceMapURLService = this.tree.inspector.toolbox.sourceMapURLService;
-    this._unsubscribeCallback = this.sourceMapURLService.subscribe(
+    this._unsubscribeCallback = this.sourceMapURLService.subscribeByURL(
       this.generatedLocation.href,
       this.generatedLocation.line,
       this.generatedLocation.column,

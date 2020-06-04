@@ -32,11 +32,11 @@ add_task(async function() {
   await sourceSeen;
 
   const loc1 = { url: JS_URL, line: 6 };
-  const newLoc1 = await service.originalPositionFor(loc1.url, loc1.line, 4);
+  const newLoc1 = await service.originalPositionForURL(loc1.url, loc1.line, 4);
   checkLoc1(loc1, newLoc1);
 
   const loc2 = { url: JS_URL, line: 8, column: 3 };
-  const newLoc2 = await service.originalPositionFor(
+  const newLoc2 = await service.originalPositionForURL(
     loc2.url,
     loc2.line,
     loc2.column
@@ -58,7 +58,7 @@ function checkLoc1(oldLoc, newLoc) {
     2,
     "Correct column for JS:6 -> COFFEE -- handles falsy column entries"
   );
-  is(newLoc.sourceUrl, COFFEE_URL, "Correct url for JS:6 -> COFFEE");
+  is(newLoc.url, COFFEE_URL, "Correct url for JS:6 -> COFFEE");
 }
 
 function checkLoc2(oldLoc, newLoc) {
@@ -67,5 +67,5 @@ function checkLoc2(oldLoc, newLoc) {
   is(oldLoc.url, JS_URL, "Correct url for JS:8:3");
   is(newLoc.line, 6, "Correct line for JS:8:3 -> COFFEE");
   is(newLoc.column, 10, "Correct column for JS:8:3 -> COFFEE");
-  is(newLoc.sourceUrl, COFFEE_URL, "Correct url for JS:8:3 -> COFFEE");
+  is(newLoc.url, COFFEE_URL, "Correct url for JS:8:3 -> COFFEE");
 }

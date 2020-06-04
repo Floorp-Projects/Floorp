@@ -1357,16 +1357,15 @@ Toolbox.prototype = {
             return (generatedId, url, code, mappings) => {
               return target
                 .applySourceMap(generatedId, url, code, mappings)
-                .then(result => {
+                .then(async result => {
                   // If a tool has changed or introduced a source map
                   // (e.g, by pretty-printing a source), tell the
                   // source map URL service about the change, so that
                   // subscribers to that service can be updated as
                   // well.
                   if (this._sourceMapURLService) {
-                    this._sourceMapURLService.sourceMapChanged(
-                      generatedId,
-                      url
+                    await this._sourceMapURLService.newSourceMapCreated(
+                      generatedId
                     );
                   }
                   return result;
@@ -4024,7 +4023,7 @@ Toolbox.prototype = {
 
     let frontOrURL = stylesheetFront;
     try {
-      const sourceMappedLoc = await this.sourceMapURLService.originalPositionFor(
+      const sourceMappedLoc = await this.sourceMapURLService.originalPositionForURL(
         stylesheetFront
           ? stylesheetFront.href || stylesheetFront.nodeHref
           : null,
@@ -4032,7 +4031,7 @@ Toolbox.prototype = {
         column
       );
       if (sourceMappedLoc) {
-        frontOrURL = sourceMappedLoc.sourceUrl;
+        frontOrURL = sourceMappedLoc.url;
         line = sourceMappedLoc.line;
         column = sourceMappedLoc.column;
       }
@@ -4082,13 +4081,13 @@ Toolbox.prototype = {
     reason
   ) {
     try {
-      const sourceMappedLoc = await this.sourceMapURLService.originalPositionFor(
+      const sourceMappedLoc = await this.sourceMapURLService.originalPositionForURL(
         sourceURL,
         sourceLine,
         sourceColumn
       );
       if (sourceMappedLoc) {
-        sourceURL = sourceMappedLoc.sourceUrl;
+        sourceURL = sourceMappedLoc.url;
         sourceLine = sourceMappedLoc.line;
         sourceColumn = sourceMappedLoc.column;
         sourceId = null;

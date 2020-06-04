@@ -21,14 +21,19 @@ add_task(async function() {
 
   const scriptMapped = new Promise(resolve => {
     let count = 0;
-    service.subscribe(JS_URL, GENERATED_LINE, undefined, originalLocation => {
-      if (count === 0) {
-        resolve(originalLocation);
-      }
-      count += 1;
+    service.subscribeByURL(
+      JS_URL,
+      GENERATED_LINE,
+      undefined,
+      originalLocation => {
+        if (count === 0) {
+          resolve(originalLocation);
+        }
+        count += 1;
 
-      return () => {};
-    });
+        return () => {};
+      }
+    );
   });
 
   // Inject JS script
