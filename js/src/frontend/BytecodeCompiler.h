@@ -12,6 +12,7 @@
 
 #include "NamespaceImports.h"
 
+#include "frontend/FunctionSyntaxKind.h"
 #include "js/BinASTFormat.h"  // JS::BinASTFormat
 #include "js/CompileOptions.h"
 #include "js/SourceText.h"
@@ -152,26 +153,30 @@ ModuleObject* ParseModule(JSContext* cx,
 //     Function("/*", "*/x) {")
 //     Function("x){ if (3", "return x;}")
 //
-MOZ_MUST_USE bool CompileStandaloneFunction(
-    JSContext* cx, MutableHandleFunction fun,
-    const JS::ReadOnlyCompileOptions& options, JS::SourceText<char16_t>& srcBuf,
+MOZ_MUST_USE JSFunction* CompileStandaloneFunction(
+    JSContext* cx, const JS::ReadOnlyCompileOptions& options,
+    JS::SourceText<char16_t>& srcBuf,
     const mozilla::Maybe<uint32_t>& parameterListEnd,
+    frontend::FunctionSyntaxKind syntaxKind,
     HandleScope enclosingScope = nullptr);
 
-MOZ_MUST_USE bool CompileStandaloneGenerator(
-    JSContext* cx, MutableHandleFunction fun,
-    const JS::ReadOnlyCompileOptions& options, JS::SourceText<char16_t>& srcBuf,
-    const mozilla::Maybe<uint32_t>& parameterListEnd);
+MOZ_MUST_USE JSFunction* CompileStandaloneGenerator(
+    JSContext* cx, const JS::ReadOnlyCompileOptions& options,
+    JS::SourceText<char16_t>& srcBuf,
+    const mozilla::Maybe<uint32_t>& parameterListEnd,
+    frontend::FunctionSyntaxKind syntaxKind);
 
-MOZ_MUST_USE bool CompileStandaloneAsyncFunction(
-    JSContext* cx, MutableHandleFunction fun,
-    const JS::ReadOnlyCompileOptions& options, JS::SourceText<char16_t>& srcBuf,
-    const mozilla::Maybe<uint32_t>& parameterListEnd);
+MOZ_MUST_USE JSFunction* CompileStandaloneAsyncFunction(
+    JSContext* cx, const JS::ReadOnlyCompileOptions& options,
+    JS::SourceText<char16_t>& srcBuf,
+    const mozilla::Maybe<uint32_t>& parameterListEnd,
+    frontend::FunctionSyntaxKind syntaxKind);
 
-MOZ_MUST_USE bool CompileStandaloneAsyncGenerator(
-    JSContext* cx, MutableHandleFunction fun,
-    const JS::ReadOnlyCompileOptions& options, JS::SourceText<char16_t>& srcBuf,
-    const mozilla::Maybe<uint32_t>& parameterListEnd);
+MOZ_MUST_USE JSFunction* CompileStandaloneAsyncGenerator(
+    JSContext* cx, const JS::ReadOnlyCompileOptions& options,
+    JS::SourceText<char16_t>& srcBuf,
+    const mozilla::Maybe<uint32_t>& parameterListEnd,
+    frontend::FunctionSyntaxKind syntaxKind);
 
 ScriptSourceObject* CreateScriptSourceObject(
     JSContext* cx, const JS::ReadOnlyCompileOptions& options);

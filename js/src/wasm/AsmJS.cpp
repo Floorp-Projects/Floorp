@@ -6880,6 +6880,8 @@ static bool TryInstantiate(JSContext* cx, CallArgs args, const Module& module,
 
 static bool HandleInstantiationFailure(JSContext* cx, CallArgs args,
                                        const AsmJSMetadata& metadata) {
+  using js::frontend::FunctionSyntaxKind;
+
   RootedAtom name(cx, args.callee().as<JSFunction>().explicitName());
 
   if (cx->isExceptionPending()) {
@@ -6904,14 +6906,6 @@ static bool HandleInstantiationFailure(JSContext* cx, CallArgs args,
   uint32_t end = metadata.srcEndAfterCurly();
   Rooted<JSLinearString*> src(cx, source->substringDontDeflate(cx, begin, end));
   if (!src) {
-    return false;
-  }
-
-  RootedFunction fun(
-      cx, NewScriptedFunction(cx, 0, FunctionFlags::INTERPRETED_NORMAL, name,
-                              /* proto = */ nullptr, gc::AllocKind::FUNCTION,
-                              TenuredObject));
-  if (!fun) {
     return false;
   }
 
@@ -6942,10 +6936,15 @@ static bool HandleInstantiationFailure(JSContext* cx, CallArgs args,
     return false;
   }
 
-  if (!frontend::CompileStandaloneFunction(cx, &fun, options, srcBuf,
-                                           Nothing())) {
+  FunctionSyntaxKind syntaxKind = FunctionSyntaxKind::Statement;
+
+  RootedFunction fun(cx, frontend::CompileStandaloneFunction(
+                             cx, options, srcBuf, Nothing(), syntaxKind));
+  if (!fun) {
     return false;
   }
+
+  fun->initEnvironment(&cx->global()->lexicalEnvironment());
 
   // Call the function we just recompiled.
   args.setCallee(ObjectValue(*fun));
