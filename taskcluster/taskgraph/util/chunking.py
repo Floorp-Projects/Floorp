@@ -22,6 +22,7 @@ from moztest.resolve import (
 )
 
 from taskgraph import GECKO
+from taskgraph.util.bugbug import CT_LOW, push_schedules
 
 here = os.path.abspath(os.path.dirname(__file__))
 resolver = TestResolver.from_environment(cwd=here, loader_cls=TestManifestLoader)
@@ -93,7 +94,8 @@ def chunk_manifests(suite, platform, chunks, manifests):
         A list of length `chunks` where each item contains a list of manifests
         that run in that chunk.
     """
-    runtimes = get_runtimes(platform, suite)
+    manifests = set(manifests)
+    runtimes = {k: v for k, v in get_runtimes(platform, suite).items() if k in manifests}
 
     if "web-platform-tests" not in suite:
         return [
@@ -154,6 +156,10 @@ def chunk_manifests(suite, platform, chunks, manifests):
 
 @six.add_metaclass(ABCMeta)
 class BaseManifestLoader(object):
+
+    def __init__(self, params):
+        self.params = params
+
     @abstractmethod
     def get_manifests(self, flavor, subsuite, mozinfo):
         """Compute which manifests should run for the given flavor, subsuite and mozinfo.
@@ -237,6 +243,24 @@ class DefaultLoader(BaseManifestLoader):
         return {"active": list(active), "skipped": list(skipped)}
 
 
+class BugbugLoader(DefaultLoader):
+    """Load manifests using metadata from the TestResolver, and then
+    filter them based on a query to bugbug."""
+    CONFIDENCE_THRESHOLD = CT_LOW
+
+    @memoize
+    def get_manifests(self, suite, mozinfo):
+        manifests = super(BugbugLoader, self).get_manifests(suite, mozinfo)
+
+        data = push_schedules(self.params['project'], self.params['head_rev'])
+        bugbug_manifests = {m for m, c in data.get('groups', {}).items()
+                            if c >= self.CONFIDENCE_THRESHOLD}
+
+        manifests['active'] = list(set(manifests['active']) & bugbug_manifests)
+        return manifests
+
+
 manifest_loaders = {
-    'default': DefaultLoader(),
+    'bugbug': BugbugLoader,
+    'default': DefaultLoader,
 }
