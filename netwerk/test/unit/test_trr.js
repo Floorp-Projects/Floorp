@@ -1947,6 +1947,31 @@ add_task(async function test_pref_changes() {
   gDefaultPref.setCharPref("network.trr.uri", defaultURI);
 });
 
+add_task(async function test_async_resolve_with_trr_server_bad_port() {
+  dns.clearCache(true);
+  Services.prefs.setIntPref("network.trr.mode", 2); // TRR-first
+  Services.prefs.setCharPref(
+    "network.trr.uri",
+    `https://foo.example.com:${h2Port}/doh?responseIP=2.2.2.2`
+  );
+
+  let [, , inStatus] = await new DNSListener(
+    "only_once.example.com",
+    undefined,
+    false,
+    undefined,
+    `https://target.example.com:666/404`
+  );
+  Assert.ok(
+    !Components.isSuccessCode(inStatus),
+    `${inStatus} should be an error code`
+  );
+
+  // // MOZ_LOG=sync,timestamp,nsHostResolver:5 We should not keep resolving only_once.example.com
+  // // TODO: find a way of automating this
+  // await new Promise(resolve => {});
+});
+
 add_task(async function test_dohrollout_mode() {
   Services.prefs.clearUserPref("network.trr.mode");
   Services.prefs.clearUserPref("doh-rollout.mode");
