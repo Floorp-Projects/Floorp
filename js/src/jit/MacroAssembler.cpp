@@ -3022,6 +3022,8 @@ void MacroAssembler::pow32(Register base, Register power, Register dest,
   // large enough so that the result is no longer representable as a double with
   // fractional parts. We can't easily determine when y is too large, so we bail
   // here.
+  // Note: it's important for this condition to match the code in CacheIR.cpp
+  // (CanAttachInt32Pow) to prevent failure loops.
   Label start;
   branchTest32(Assembler::NotSigned, power, power, &start);
   jump(onOver);
