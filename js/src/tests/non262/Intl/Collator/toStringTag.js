@@ -7,13 +7,13 @@
 var desc = Object.getOwnPropertyDescriptor(Intl.Collator.prototype, Symbol.toStringTag);
 
 assertEq(desc !== undefined, true);
-assertEq(desc.value, "Object");
+assertEq(desc.value, "Intl.Collator");
 assertEq(desc.writable, false);
 assertEq(desc.enumerable, false);
 assertEq(desc.configurable, true);
 
-assertEq(Object.prototype.toString.call(Intl.Collator.prototype), "[object Object]");
-assertEq(Object.prototype.toString.call(new Intl.Collator), "[object Object]");
+assertEq(Object.prototype.toString.call(Intl.Collator.prototype), "[object Intl.Collator]");
+assertEq(Object.prototype.toString.call(new Intl.Collator), "[object Intl.Collator]");
 
 Object.defineProperty(Intl.Collator.prototype, Symbol.toStringTag, {value: "Collator"});
 

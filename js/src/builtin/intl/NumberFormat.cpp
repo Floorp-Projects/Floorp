@@ -108,7 +108,8 @@ static const JSFunctionSpec numberFormat_methods[] = {
 
 static const JSPropertySpec numberFormat_properties[] = {
     JS_SELF_HOSTED_GET("format", "$Intl_NumberFormat_format_get", 0),
-    JS_STRING_SYM_PS(toStringTag, "Object", JSPROP_READONLY), JS_PS_END};
+    JS_STRING_SYM_PS(toStringTag, "Intl.NumberFormat", JSPROP_READONLY),
+    JS_PS_END};
 
 static bool NumberFormat(JSContext* cx, unsigned argc, Value* vp);
 
