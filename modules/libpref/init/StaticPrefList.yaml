@@ -2011,7 +2011,7 @@
 - name: dom.ipc.tabs.shutdownTimeoutSecs
   type: RelaxedAtomicUint32
 #if !defined(DEBUG) && !defined(MOZ_ASAN) && !defined(MOZ_VALGRIND) && !defined(MOZ_TSAN)
-  value: 5
+  value: 20
 #else
   value: 0
 #endif
