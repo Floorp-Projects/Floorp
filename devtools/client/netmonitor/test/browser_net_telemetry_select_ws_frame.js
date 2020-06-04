@@ -42,7 +42,7 @@ add_task(async function() {
   // Wait for all sent/received messages to be displayed in DevTools.
   const wait = waitForDOM(
     document,
-    "#messages-panel .ws-frames-list-table .ws-frame-list-item",
+    "#messages-panel .message-list-table .message-list-item",
     2
   );
 
@@ -55,7 +55,7 @@ add_task(async function() {
 
   // Get all messages present in the "Messages" panel.
   const frames = document.querySelectorAll(
-    "#messages-panel .ws-frames-list-table .ws-frame-list-item"
+    "#messages-panel .message-list-table .message-list-item"
   );
 
   // Check expected results.

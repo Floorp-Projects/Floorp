@@ -239,7 +239,7 @@ devtools.jar:
     content/netmonitor/src/assets/icons/blocked.svg (netmonitor/src/assets/icons/blocked.svg)
     content/netmonitor/index.html (netmonitor/index.html)
     content/netmonitor/src/assets/styles/StatusCode.css (netmonitor/src/assets/styles/StatusCode.css)
-    content/netmonitor/src/assets/styles/websockets.css (netmonitor/src/assets/styles/websockets.css)
+    content/netmonitor/src/assets/styles/messages.css (netmonitor/src/assets/styles/messages.css)
     content/netmonitor/src/assets/styles/search.css (netmonitor/src/assets/styles/search.css)
     content/netmonitor/src/assets/styles/UrlPreview.css (netmonitor/src/assets/styles/UrlPreview.css)
     content/netmonitor/src/assets/styles/HeadersPanel.css (netmonitor/src/assets/styles/HeadersPanel.css)

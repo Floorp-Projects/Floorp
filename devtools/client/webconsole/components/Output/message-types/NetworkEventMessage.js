@@ -191,7 +191,7 @@ function NetworkEventMessage({
           }
         },
         hideToggleButton: true,
-        showWebSocketsTab: false,
+        showMessagesTab: false,
       })
     );
 

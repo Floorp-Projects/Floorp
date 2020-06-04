@@ -47,9 +47,9 @@ const {
   ColumnsData,
 } = require("devtools/client/netmonitor/src/reducers/ui");
 const {
-  WebSockets,
-  getWebSocketsDefaultColumnsState,
-} = require("devtools/client/netmonitor/src/reducers/web-sockets");
+  Messages,
+  getMessageDefaultColumnsState,
+} = require("devtools/client/netmonitor/src/reducers/messages");
 const { Search } = require("devtools/client/netmonitor/src/reducers/search");
 
 /**
@@ -68,8 +68,8 @@ function configureStore(connector, telemetry) {
       columns: getColumnState(),
       columnsData: getColumnsData(),
     }),
-    webSockets: WebSockets({
-      columns: getWebSocketsColumnState(),
+    messages: Messages({
+      columns: getMessageColumnState(),
     }),
     search: new Search(),
   };
@@ -107,11 +107,11 @@ function getColumnState() {
 }
 
 /**
- * Get column state of WebSockets from preferences.
+ * Get column state of Messages from preferences.
  */
-function getWebSocketsColumnState() {
-  const columns = getWebSocketsDefaultColumnsState();
-  const visibleColumns = getPref("devtools.netmonitor.ws.visibleColumns");
+function getMessageColumnState() {
+  const columns = getMessageDefaultColumnsState();
+  const visibleColumns = getPref("devtools.netmonitor.msg.visibleColumns");
 
   const state = {};
   for (const col in columns) {

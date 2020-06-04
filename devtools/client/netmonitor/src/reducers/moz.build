@@ -6,11 +6,11 @@ DevToolsModules(
     'batching.js',
     'filters.js',
     'index.js',
+    'messages.js',
     'request-blocking.js',
     'requests.js',
     'search.js',
     'sort.js',
     'timing-markers.js',
     'ui.js',
-    'web-sockets.js',
 )

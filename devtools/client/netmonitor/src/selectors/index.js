@@ -8,6 +8,6 @@ const requests = require("devtools/client/netmonitor/src/selectors/requests");
 const search = require("devtools/client/netmonitor/src/selectors/search");
 const timingMarkers = require("devtools/client/netmonitor/src/selectors/timing-markers");
 const ui = require("devtools/client/netmonitor/src/selectors/ui");
-const webSockets = require("devtools/client/netmonitor/src/selectors/web-sockets");
+const messages = require("devtools/client/netmonitor/src/selectors/messages");
 
-Object.assign(exports, search, requests, timingMarkers, ui, webSockets);
+Object.assign(exports, search, requests, timingMarkers, ui, messages);
