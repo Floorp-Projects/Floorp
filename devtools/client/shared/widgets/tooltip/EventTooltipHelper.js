@@ -93,42 +93,36 @@ EventTooltip.prototype = {
       const filename = doc.createElementNS(XHTML_NS, "span");
       filename.className = "event-tooltip-filename devtools-monospace";
 
+      let location = null;
       let text = listener.origin;
       let title = text;
       if (listener.hide.filename) {
         text = L10N.getStr("eventsTooltip.unknownLocation");
         title = L10N.getStr("eventsTooltip.unknownLocationExplanation");
       } else {
-        const location = this._parseLocation(text);
-        if (location) {
-          const callback = originalLocation => {
-            // Do nothing if the tooltip was destroyed while we were
-            // waiting for a response.
-            if (this._tooltip) {
-              const currentLoc = originalLocation || location;
+        location = this._parseLocation(listener.origin);
 
-              const newURI = currentLoc.url + ":" + currentLoc.line;
-              filename.textContent = newURI;
-              filename.setAttribute("title", newURI);
-              const eventEditor = this._eventEditors.get(content);
-              eventEditor.uri = newURI;
-
-              // Since we just changed the URI/line, we need to clear out the
-              // source actor ID. These must be consistent with each other when
-              // we call viewSourceInDebugger with the event's information.
-              eventEditor.sourceActor = null;
-
-              // This is emitted for testing.
-              this._tooltip.emit("event-tooltip-source-map-ready");
-            }
-          };
+        // There will be no source actor if the listener is a native function
+        // or wasn't a debuggee, in which case there's also not going to be
+        // a sourcemap, so we don't need to worry about subscribing.
+        if (location && listener.sourceActor) {
+          location.id = listener.sourceActor;
 
           this._subscriptions.push(
-            sourceMapURLService.subscribeByURL(
-              location.url,
+            sourceMapURLService.subscribeByID(
+              location.id,
               location.line,
               location.column,
-              callback
+              originalLocation => {
+                const currentLoc = originalLocation || location;
+
+                const newURI = currentLoc.url + ":" + currentLoc.line;
+                filename.textContent = newURI;
+                filename.setAttribute("title", newURI);
+
+                // This is emitted for testing.
+                this._tooltip.emit("event-tooltip-source-map-ready");
+              }
             )
           );
         }
@@ -192,11 +186,10 @@ EventTooltip.prototype = {
       this._eventEditors.set(content, {
         editor: editor,
         handler: listener.handler,
-        uri: listener.origin,
-        sourceActor: listener.sourceActor,
         dom0: listener.DOM0,
         native: listener.native,
         appended: false,
+        location,
       });
 
       content.className = "event-tooltip-content-box";
@@ -280,8 +273,7 @@ EventTooltip.prototype = {
     const header = event.currentTarget;
     const content = header.nextElementSibling;
 
-    const { sourceActor, uri } = this._eventEditors.get(content);
-    const location = this._parseLocation(uri);
+    const { location } = this._eventEditors.get(content);
     if (location) {
       // Save a copy of toolbox as it will be set to null when we hide the tooltip.
       const toolbox = this._toolbox;
@@ -292,7 +284,7 @@ EventTooltip.prototype = {
         location.url,
         location.line,
         location.column,
-        sourceActor
+        location.id
       );
     }
   },
