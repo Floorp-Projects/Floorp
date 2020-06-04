@@ -90,16 +90,16 @@ add_task(async function test_WebExtensionPolicy() {
 
   ok(
     policy.canAccessURI(newURI("http://foo.bar/quux")),
-    "Should be able to access whitelisted URI"
+    "Should be able to access permitted URI"
   );
   ok(
     policy.canAccessURI(newURI("https://x.baz/foo")),
-    "Should be able to access whitelisted URI"
+    "Should be able to access permitted URI"
   );
 
   ok(
     !policy.canAccessURI(newURI("https://foo.bar/quux")),
-    "Should not be able to access non-whitelisted URI"
+    "Should not be able to access non-permitted URI"
   );
 
   policy.allowedOrigins = new MatchPatternSet(["https://foo.bar/"], {
@@ -108,11 +108,11 @@ add_task(async function test_WebExtensionPolicy() {
 
   ok(
     policy.canAccessURI(newURI("https://foo.bar/quux")),
-    "Should be able to access updated whitelisted URI"
+    "Should be able to access updated permitted URI"
   );
   ok(
     !policy.canAccessURI(newURI("https://x.baz/foo")),
-    "Should not be able to access removed whitelisted URI"
+    "Should not be able to access removed permitted URI"
   );
 
   // Web-accessible resources

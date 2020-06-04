@@ -102,7 +102,7 @@ const checkSetCookiePermissions = (extension, uri, cookie) => {
     return false;
   }
 
-  if (!extension.whiteListedHosts.matches(uri)) {
+  if (!extension.allowedOrigins.matches(uri)) {
     return false;
   }
 
@@ -321,7 +321,7 @@ const query = function*(detailsIn, props, context) {
     }
 
     // Check that the extension has permissions for this host.
-    if (!context.extension.whiteListedHosts.matchesCookie(cookie)) {
+    if (!context.extension.allowedOrigins.matchesCookie(cookie)) {
       return false;
     }
 
@@ -552,7 +552,7 @@ this.cookies = class extends ExtensionAPI {
               let notify = (removed, cookie, cause) => {
                 cookie.QueryInterface(Ci.nsICookie);
 
-                if (extension.whiteListedHosts.matchesCookie(cookie)) {
+                if (extension.allowedOrigins.matchesCookie(cookie)) {
                   fire.async({
                     removed,
                     cookie: convertCookie({

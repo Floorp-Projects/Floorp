@@ -59,7 +59,7 @@ this.permissions = class extends ExtensionAPI {
             );
             origins = origins.filter(
               origin =>
-                !context.extension.whiteListedHosts.subsumes(
+                !context.extension.allowedOrigins.subsumes(
                   new MatchPattern(origin)
                 )
             );
@@ -113,7 +113,7 @@ this.permissions = class extends ExtensionAPI {
 
           for (let origin of permissions.origins) {
             if (
-              !context.extension.whiteListedHosts.subsumes(
+              !context.extension.allowedOrigins.subsumes(
                 new MatchPattern(origin)
               )
             ) {
