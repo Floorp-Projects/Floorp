@@ -431,6 +431,20 @@ bool WarpCacheIRTranspiler::emitLoadInt32Result(Int32OperandId valId) {
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitLoadDoubleResult(NumberOperandId valId) {
+  MDefinition* val = getOperand(valId);
+  MOZ_ASSERT(val->type() == MIRType::Double);
+  pushResult(val);
+  return true;
+}
+
+bool WarpCacheIRTranspiler::emitLoadBigIntResult(BigIntOperandId valId) {
+  MDefinition* val = getOperand(valId);
+  MOZ_ASSERT(val->type() == MIRType::BigInt);
+  pushResult(val);
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitLoadObjectResult(ObjOperandId objId) {
   MDefinition* obj = getOperand(objId);
   MOZ_ASSERT(obj->type() == MIRType::Object);
