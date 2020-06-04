@@ -552,99 +552,91 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
       static mozilla::Atomic<bool> sHighPriorityEnabled;
     };
 
-    void NotifyParentProcessVsync() {
-      MOZ_ASSERT(NS_IsMainThread());
-      MOZ_ASSERT(XRE_IsParentProcess());
-
-      VsyncEvent vsync;
-      {
-        MonitorAutoLock lock(mParentProcessRefreshTickLock);
-        vsync = mRecentParentProcessVsync;
-        mPendingParentProcessVsync = false;
-      }
-      NotifyVsync(vsync);
-    }
-
     bool NotifyVsync(const VsyncEvent& aVsync) override {
-      // IMPORTANT: All paths through this method MUST hold a strong ref on
-      // |this| for the duration of the TickRefreshDriver callback.
-
-      if (!NS_IsMainThread()) {
-        MOZ_ASSERT(XRE_IsParentProcess());
-        // Compress vsync notifications such that only 1 may run at a time
-        // This is so that we don't flood the refresh driver with vsync messages
-        // if the main thread is blocked for long periods of time
-        {  // scope lock
-          MonitorAutoLock lock(mParentProcessRefreshTickLock);
-          mRecentParentProcessVsync = aVsync;
-          if (mPendingParentProcessVsync) {
-            return true;
-          }
-          mPendingParentProcessVsync = true;
-        }
-        nsCOMPtr<nsIRunnable> vsyncEvent = new ParentProcessVsyncNotifier(this);
-        NS_DispatchToMainThread(vsyncEvent);
-      } else {
-        mRecentVsync = aVsync.mTime;
-        mRecentVsyncId = aVsync.mId;
-        if (!mBlockUntil.IsNull() && mBlockUntil > aVsync.mTime) {
-          if (mProcessedVsync) {
-            // Re-post vsync update as a normal priority runnable. This way
-            // runnables already in normal priority queue get processed.
-            mProcessedVsync = false;
-            nsCOMPtr<nsIRunnable> vsyncEvent = NewRunnableMethod<>(
-                "RefreshDriverVsyncObserver::NormalPriorityNotify", this,
-                &RefreshDriverVsyncObserver::NormalPriorityNotify);
-            NS_DispatchToMainThread(vsyncEvent);
-          }
-
+      // Compress vsync notifications such that only 1 may run at a time
+      // This is so that we don't flood the refresh driver with vsync messages
+      // if the main thread is blocked for long periods of time
+      {  // scope lock
+        MonitorAutoLock lock(mParentProcessRefreshTickLock);
+        mRecentParentProcessVsync = aVsync;
+        if (mPendingParentProcessVsync) {
           return true;
         }
+        mPendingParentProcessVsync = true;
+      }
+      nsCOMPtr<nsIRunnable> vsyncEvent = new ParentProcessVsyncNotifier(this);
+      NS_DispatchToMainThread(vsyncEvent);
+      return true;
+    }
 
-        if (StaticPrefs::layout_lower_priority_refresh_driver_during_load() &&
-            mVsyncRefreshDriverTimer) {
-          nsPresContext* pctx =
-              mVsyncRefreshDriverTimer->GetPresContextForOnlyRefreshDriver();
-          if (pctx && pctx->HadContentfulPaint() && pctx->Document() &&
-              pctx->Document()->GetReadyStateEnum() <
-                  Document::READYSTATE_COMPLETE) {
-            nsPIDOMWindowInner* win = pctx->Document()->GetInnerWindow();
-            uint32_t frameRateMultiplier = pctx->GetNextFrameRateMultiplier();
-            if (!frameRateMultiplier) {
-              pctx->DidUseFrameRateMultiplier();
-            }
-            if (win && frameRateMultiplier) {
-              dom::Performance* perf = win->GetPerformance();
-              // Limit slower refresh rate to 5 seconds between the
-              // first contentful paint and page load.
-              if (perf &&
-                  perf->Now() <
-                      StaticPrefs::page_load_deprioritization_period()) {
-                if (mProcessedVsync) {
-                  mProcessedVsync = false;
-                  // Handle this case similarly to the code above, but just
-                  // use idle queue.
-                  TimeDuration rate = mVsyncRefreshDriverTimer->GetTimerRate();
-                  uint32_t slowRate = static_cast<uint32_t>(
-                      rate.ToMilliseconds() * frameRateMultiplier);
-                  pctx->DidUseFrameRateMultiplier();
-                  nsCOMPtr<nsIRunnable> vsyncEvent = NewRunnableMethod<>(
-                      "RefreshDriverVsyncObserver::NormalPriorityNotify[IDLE]",
-                      this, &RefreshDriverVsyncObserver::NormalPriorityNotify);
-                  NS_DispatchToCurrentThreadQueue(vsyncEvent.forget(), slowRate,
-                                                  EventQueuePriority::Idle);
-                }
-                return true;
+    void NotifyParentProcessVsync() {
+      // IMPORTANT: All paths through this method MUST hold a strong ref on
+      // |this| for the duration of the TickRefreshDriver callback.
+      MOZ_ASSERT(NS_IsMainThread());
+
+      VsyncEvent aVsync;
+      {
+        MonitorAutoLock lock(mParentProcessRefreshTickLock);
+        aVsync = mRecentParentProcessVsync;
+        mPendingParentProcessVsync = false;
+      }
+
+      mRecentVsync = aVsync.mTime;
+      mRecentVsyncId = aVsync.mId;
+      if (!mBlockUntil.IsNull() && mBlockUntil > aVsync.mTime) {
+        if (mProcessedVsync) {
+          // Re-post vsync update as a normal priority runnable. This way
+          // runnables already in normal priority queue get processed.
+          mProcessedVsync = false;
+          nsCOMPtr<nsIRunnable> vsyncEvent = NewRunnableMethod<>(
+              "RefreshDriverVsyncObserver::NormalPriorityNotify", this,
+              &RefreshDriverVsyncObserver::NormalPriorityNotify);
+          NS_DispatchToMainThread(vsyncEvent);
+        }
+
+        return;
+      }
+
+      if (StaticPrefs::layout_lower_priority_refresh_driver_during_load() &&
+          mVsyncRefreshDriverTimer) {
+        nsPresContext* pctx =
+            mVsyncRefreshDriverTimer->GetPresContextForOnlyRefreshDriver();
+        if (pctx && pctx->HadContentfulPaint() && pctx->Document() &&
+            pctx->Document()->GetReadyStateEnum() <
+                Document::READYSTATE_COMPLETE) {
+          nsPIDOMWindowInner* win = pctx->Document()->GetInnerWindow();
+          uint32_t frameRateMultiplier = pctx->GetNextFrameRateMultiplier();
+          if (!frameRateMultiplier) {
+            pctx->DidUseFrameRateMultiplier();
+          }
+          if (win && frameRateMultiplier) {
+            dom::Performance* perf = win->GetPerformance();
+            // Limit slower refresh rate to 5 seconds between the
+            // first contentful paint and page load.
+            if (perf && perf->Now() <
+                            StaticPrefs::page_load_deprioritization_period()) {
+              if (mProcessedVsync) {
+                mProcessedVsync = false;
+                // Handle this case similarly to the code above, but just
+                // use idle queue.
+                TimeDuration rate = mVsyncRefreshDriverTimer->GetTimerRate();
+                uint32_t slowRate = static_cast<uint32_t>(
+                    rate.ToMilliseconds() * frameRateMultiplier);
+                pctx->DidUseFrameRateMultiplier();
+                nsCOMPtr<nsIRunnable> vsyncEvent = NewRunnableMethod<>(
+                    "RefreshDriverVsyncObserver::NormalPriorityNotify[IDLE]",
+                    this, &RefreshDriverVsyncObserver::NormalPriorityNotify);
+                NS_DispatchToCurrentThreadQueue(vsyncEvent.forget(), slowRate,
+                                                EventQueuePriority::Idle);
               }
+              return;
             }
           }
         }
-
-        RefPtr<RefreshDriverVsyncObserver> kungFuDeathGrip(this);
-        TickRefreshDriver(aVsync.mId, aVsync.mTime);
       }
 
-      return true;
+      RefPtr<RefreshDriverVsyncObserver> kungFuDeathGrip(this);
+      TickRefreshDriver(aVsync.mId, aVsync.mTime);
     }
 
     void Shutdown() {
