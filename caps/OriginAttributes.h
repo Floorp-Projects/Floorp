@@ -32,6 +32,10 @@ class OriginAttributes : public dom::OriginAttributesDictionary {
   void SetFirstPartyDomain(const bool aIsTopLevelDocument,
                            const nsAString& aDomain, bool aForced = false);
 
+  void SetPartitionKey(nsIURI* aURI);
+  void SetPartitionKey(const nsACString& aDomain);
+  void SetPartitionKey(const nsAString& aDomain);
+
   enum {
     STRIP_FIRST_PARTY_DOMAIN = 0x01,
     STRIP_USER_CONTEXT_ID = 0x02,

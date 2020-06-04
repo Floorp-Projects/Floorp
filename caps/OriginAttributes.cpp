@@ -160,6 +160,19 @@ void OriginAttributes::SetFirstPartyDomain(const bool aIsTopLevelDocument,
   mFirstPartyDomain = aDomain;
 }
 
+void OriginAttributes::SetPartitionKey(nsIURI* aURI) {
+  // TODO: implement this function
+  MOZ_ASSERT(false);
+}
+
+void OriginAttributes::SetPartitionKey(const nsACString& aDomain) {
+  SetPartitionKey(NS_ConvertUTF8toUTF16(aDomain));
+}
+
+void OriginAttributes::SetPartitionKey(const nsAString& aDomain) {
+  mPartitionKey = aDomain;
+}
+
 void OriginAttributes::CreateSuffix(nsACString& aStr) const {
   URLParams params;
   nsAutoString value;
