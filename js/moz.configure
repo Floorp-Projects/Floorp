@@ -626,19 +626,6 @@ set_config('ENABLE_SHARED_MEMORY', enable_shared_memory)
 set_define('ENABLE_SHARED_MEMORY', enable_shared_memory)
 
 
-# Initial support for new regexp engine
-# ==================================================
-
-js_option('--disable-new-regexp', help='{Enable|Disable} new regexp engine')
-
-@depends('--disable-new-regexp')
-def enable_new_regexp(value):
-    if value:
-        return True
-
-set_config('ENABLE_NEW_REGEXP', enable_new_regexp)
-set_define('ENABLE_NEW_REGEXP', enable_new_regexp)
-
 # Support for WebAssembly SIMD
 # =====================================================
 
