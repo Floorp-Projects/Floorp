@@ -48,7 +48,7 @@
             app:isPreferenceVisible="false"
             android:key="@string/pref_key_sync_tabs"
             android:layout="@layout/checkbox_left_preference"
-            android:title="@string/preferences_sync_tabs"/>
+            android:title="@string/preferences_sync_tabs_2"/>
 
     </androidx.preference.PreferenceCategory>
 </PreferenceScreen>
