@@ -773,12 +773,18 @@
     }
 
     enterResponsiveMode() {
+      if (this.browsingContext.inRDMPane) {
+        return;
+      }
       this.browsingContext.inRDMPane = true;
       this._rdmFullZoom = this.browsingContext.fullZoom;
       this.browsingContext.fullZoom = 1.0;
     }
 
     leaveResponsiveMode() {
+      if (!this.browsingContext.inRDMPane) {
+        return;
+      }
       this.browsingContext.inRDMPane = false;
       this.browsingContext.fullZoom = this._rdmFullZoom;
     }
