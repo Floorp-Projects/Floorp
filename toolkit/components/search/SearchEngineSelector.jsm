@@ -177,11 +177,14 @@ class SearchEngineSelector {
     if (!this._configuration) {
       await this.getEngineConfiguration();
     }
-    let cohort = Services.prefs.getCharPref("browser.search.cohort", null);
+    let experiment = Services.prefs.getCharPref(
+      "browser.search.experiment",
+      null
+    );
     let name = getAppInfo("name");
     let version = getAppInfo("version");
     logConsole.debug(
-      `fetchEngineConfiguration ${locale}:${region}:${channel}:${distroID}:${cohort}:${name}:${version}`
+      `fetchEngineConfiguration ${locale}:${region}:${channel}:${distroID}:${experiment}:${name}:${version}`
     );
     let engines = [];
     const lcLocale = locale.toLowerCase();
@@ -189,7 +192,7 @@ class SearchEngineSelector {
     for (let config of this._configuration) {
       const appliesTo = config.appliesTo || [];
       const applies = appliesTo.filter(section => {
-        if ("cohort" in section && cohort != section.cohort) {
+        if ("experiment" in section && experiment != section.experiment) {
           return false;
         }
         const distroExcluded =

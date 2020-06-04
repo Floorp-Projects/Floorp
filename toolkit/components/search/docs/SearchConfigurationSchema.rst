@@ -334,11 +334,11 @@ Experiments
 ===========
 
 We can run experiments by giving sections within ``appliesTo`` a
-``cohort`` value, the Search Service can then optionally pass in a
-matching ``cohort`` value to match those sections.
+``experiment`` value, the Search Service can then optionally pass in a
+matching ``experiment`` value to match those sections.
 
-Sections which have a ``cohort`` will not be used unless a matching
-``cohort`` has been passed in, for example:
+Sections which have a ``experiment`` will not be used unless a matching
+``experiment`` has been passed in, for example:
 
 .. code-block:: js
 
@@ -350,7 +350,7 @@ Sections which have a ``cohort`` will not be used unless a matching
         "included": {
           "everywhere": true
         },
-        "cohort": "nov-16",
+        "experiment": "nov-16",
         "webExtension": {
           "id": "web-experimental@ext"
         }

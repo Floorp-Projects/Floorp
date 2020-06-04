@@ -60,7 +60,7 @@ const TEST_CONFIG = [
       },
       {
         included: { everywhere: true },
-        cohort: "acohortid",
+        experiment: "acohortid",
       },
     ],
   },
@@ -106,7 +106,7 @@ add_task(async function() {
     "The engines should be in the correct order"
   );
 
-  Services.prefs.setCharPref("browser.search.cohort", "acohortid");
+  Services.prefs.setCharPref("browser.search.experiment", "acohortid");
   ({ engines, privateDefault } = await engineSelector.fetchEngineConfiguration(
     "en-US",
     "us",
@@ -115,7 +115,7 @@ add_task(async function() {
   Assert.deepEqual(
     engines.map(obj => obj.engineName),
     ["lycos", "altavista", "aol", "excite"],
-    "Engines are in the correct order and include the cohort engine"
+    "Engines are in the correct order and include the experiment engine"
   );
 
   ({ engines, privateDefault } = await engineSelector.fetchEngineConfiguration(
