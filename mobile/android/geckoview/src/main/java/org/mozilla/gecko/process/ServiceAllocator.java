@@ -303,7 +303,6 @@ import java.util.Map.Entry;
             int numBindSuccesses = 0;
             int numBindFailures = 0;
             int numUnbindSuccesses = 0;
-            int numUnbindFailures = 0;
 
             final Context context = GeckoAppShell.getApplicationContext();
 
@@ -366,11 +365,10 @@ import java.util.Map.Entry;
                    .append(mRelativeImportance).append(" importance, ")
                    .append(numBindSuccesses).append(" successful binds, ")
                    .append(numBindFailures).append(" failed binds, ")
-                   .append(numUnbindSuccesses).append(" successful unbinds, ")
-                   .append(numUnbindFailures).append(" failed unbinds");
+                   .append(numUnbindSuccesses).append(" successful unbinds");
             Log.d(LOGTAG, builder.toString());
 
-            return numBindFailures == 0 && numUnbindFailures == 0;
+            return numBindFailures == 0;
         }
     }
 
