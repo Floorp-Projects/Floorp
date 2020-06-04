@@ -30,7 +30,7 @@ namespace mozilla::Telemetry {
 
 const size_t kMaxChromeStackDepth = 50;
 
-ProcessedStack::ProcessedStack() : mIsFromTerminatorWatchdog(false){};
+ProcessedStack::ProcessedStack() = default;
 
 size_t ProcessedStack::GetStackSize() const { return mStack.size(); }
 
@@ -54,15 +54,6 @@ const ProcessedStack::Module& ProcessedStack::GetModule(unsigned aIndex) const {
 
 void ProcessedStack::AddModule(const Module& aModule) {
   mModules.push_back(aModule);
-}
-
-const bool& ProcessedStack::GetIsFromTerminatorWatchdog() const {
-  return mIsFromTerminatorWatchdog;
-}
-
-void ProcessedStack::SetIsFromTerminatorWatchdog(
-    const bool aIsFromTerminatorWatchdog) {
-  mIsFromTerminatorWatchdog = aIsFromTerminatorWatchdog;
 }
 
 void ProcessedStack::Clear() {

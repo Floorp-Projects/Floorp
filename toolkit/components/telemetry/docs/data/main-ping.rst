@@ -536,7 +536,7 @@ Structure:
 
 lateWrites
 ----------
-This sections reports writes to the file system that happen during shutdown. The reported data contains the stack, the file names of the loaded libraries at the time the writes happened, and indicates if the late writes originated from the terminator watchdog.
+This sections reports writes to the file system that happen during shutdown. The reported data contains the stack and the file names of the loaded libraries at the time the writes happened.
 
 The file names of the loaded libraries can contain unicode characters.
 
@@ -560,7 +560,6 @@ Structure:
          ],
          ... other stacks ...
       ],
-      "isFromTerminatorWatchdog": <boolean>
     },
 
 addonDetails
