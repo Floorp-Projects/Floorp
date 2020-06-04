@@ -69,14 +69,13 @@ this.DynamicFPIHelper = {
             ifr.onload = async _ => {
               await SpecialPowers.spawn(ifr, [], async _ => {
                 is(
-                  content.document.nodePrincipal.originAttributes
-                    .firstPartyDomain,
+                  content.document.nodePrincipal.originAttributes.partitionKey,
                   "",
                   "We don't have first-party set on nodePrincipal"
                 );
                 is(
                   content.document.effectiveStoragePrincipal.originAttributes
-                    .firstPartyDomain,
+                    .partitionKey,
                   "(http,example.net)",
                   "We have first-party set on storagePrincipal"
                 );
