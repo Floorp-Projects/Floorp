@@ -1525,6 +1525,7 @@ void LIRGenerator::visitPow(MPow* ins) {
   MDefinition* input = ins->input();
   MDefinition* power = ins->power();
 
+  MOZ_ASSERT(ins->type() == MIRType::Double);
   MOZ_ASSERT(input->type() == MIRType::Double);
   MOZ_ASSERT(power->type() == MIRType::Int32 ||
              power->type() == MIRType::Double);

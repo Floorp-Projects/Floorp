@@ -5173,11 +5173,17 @@ class MHypot : public MVariadicInstruction, public AllDoublePolicy::Data {
 
 // Inline implementation of Math.pow().
 class MPow : public MBinaryInstruction, public PowPolicy::Data {
-  MPow(MDefinition* input, MDefinition* power, MIRType powerType)
-      : MBinaryInstruction(classOpcode, input, power) {
-    MOZ_ASSERT(powerType == MIRType::Double || powerType == MIRType::Int32);
-    specialization_ = powerType;
-    setResultType(MIRType::Double);
+  // If true, convert the power operand to int32 instead of double (this only
+  // affects the Double specialization). This exists because we can sometimes
+  // get more precise types during MIR building than in type analysis.
+  bool powerIsInt32_;
+
+  MPow(MDefinition* input, MDefinition* power, MIRType specialization)
+      : MBinaryInstruction(classOpcode, input, power),
+        powerIsInt32_(power->type() == MIRType::Int32) {
+    MOZ_ASSERT(specialization == MIRType::Int32 ||
+               specialization == MIRType::Double);
+    setResultType(specialization);
     setMovable();
   }
 
@@ -5191,7 +5197,12 @@ class MPow : public MBinaryInstruction, public PowPolicy::Data {
 
   MDefinition* input() const { return lhs(); }
   MDefinition* power() const { return rhs(); }
+  bool powerIsInt32() const { return powerIsInt32_; }
+
   bool congruentTo(const MDefinition* ins) const override {
+    if (!ins->isPow() || ins->toPow()->powerIsInt32() != powerIsInt32()) {
+      return false;
+    }
     return congruentIfOperandsEqual(ins);
   }
   AliasSet getAliasSet() const override { return AliasSet::None(); }

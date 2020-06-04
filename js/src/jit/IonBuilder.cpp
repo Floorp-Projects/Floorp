@@ -3605,11 +3605,7 @@ AbortReasonOr<Ok> IonBuilder::powTrySpecialized(bool* emitted,
     return Ok();
   }
 
-  if (powerType == MIRType::Float32) {
-    powerType = MIRType::Double;
-  }
-
-  MPow* pow = MPow::New(alloc(), base, power, powerType);
+  MPow* pow = MPow::New(alloc(), base, power, MIRType::Double);
   current->add(pow);
   output = pow;
 
