@@ -43,9 +43,12 @@ def guess_mozinfo_from_task(task):
     """
     info = {
         'asan': 'asan' in task['build-attributes']['build_platform'],
+        'bits': 32 if '32' in task['build-attributes']['build_platform'] else 64,
         'ccov': 'ccov' in task['build-attributes']['build_platform'],
         'debug': task['build-attributes']['build_type'] == 'debug',
         'e10s': task['attributes']['e10s'],
+        'fission': task['attributes'].get('unittest_variant') == 'fission',
+        'headless': '-headless' in task['test-name'],
         'tsan': 'tsan' in task['build-attributes']['build_platform'],
         'webrender': task.get('webrender', False),
     }
@@ -56,6 +59,27 @@ def guess_mozinfo_from_task(task):
     else:
         raise ValueError("{} is not a known platform!".format(
                          task['build-attributes']['build_platform']))
+
+    info['appname'] = 'fennec' if info['os'] == 'android' else 'firefox'
+
+    # guess processor
+    if 'aarch64' in task['build-attributes']['build_platform']:
+        info['processor'] = 'aarch64'
+    elif info['os'] == 'android' and 'arm' in task['test-platform']:
+        info['processor'] = 'arm'
+    elif info['bits'] == 32:
+        info['processor'] = 'x86'
+    else:
+        info['processor'] = 'x86_64'
+
+    # guess toolkit
+    if info['os'] in ('android', 'windows'):
+        info['toolkit'] = info['os']
+    elif info['os'] == 'mac':
+        info['toolkit'] = 'cocoa'
+    else:
+        info['toolkit'] = 'gtk'
+
     return info
 
 
