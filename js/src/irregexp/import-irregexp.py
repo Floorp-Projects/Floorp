@@ -7,12 +7,12 @@
 # This script handles all the mechanical steps of importing irregexp from v8:
 #
 # 1. Acquire the source: either from github, or optionally from a local copy of v8.
-# 2. Copy the contents of v8/src/regexp into js/src/irregexp
+# 2. Copy the contents of v8/src/regexp into js/src/irregexp/imported
 #    - Exclude files that we have chosen not to import.
 # 3. While doing so, update #includes:
-#    - Change "src/regexp/*" to "irregexp/*".
+#    - Change "src/regexp/*" to "irregexp/imported/*".
 #    - Remove other v8-specific headers completely.
-# 4. Add '#include "irregexp/regexp-shim.h" in the necessary places.
+# 4. Add '#include "irregexp/RegExpShim.h" in the necessary places.
 # 5. Update the IRREGEXP_VERSION file to include the correct git hash.
 #
 # Usage:
@@ -60,25 +60,25 @@ def copy_and_update_includes(src_path, dst_path):
 
     # 1. Rewrite includes of V8 regexp headers:
     regexp_include = re.compile('#include "src/regexp')
-    regexp_include_new = '#include "irregexp'
+    regexp_include_new = '#include "irregexp/imported'
 
     # 2. Remove includes of other V8 headers
     other_include = re.compile('#include "src/')
 
-    # 3. If needed, add '#include "irregexp/regexp-shim.h"'.
+    # 3. If needed, add '#include "irregexp/RegExpShim.h"'.
     #    Note: We get a little fancy to ensure that header files are
     #    in alphabetic order. `need_to_add_shim` is true if we still
     #    have to add the shim header in this file. `adding_shim_now`
     #    is true if we have found a '#include "src/*' and we are just
-    #    waiting to find something alphabetically smaller (or an empty
-    #    line) so that we can insert the shim header in the right place.
+    #    waiting to find an empty line so that we can insert the shim
+    #    header in the right place.
     need_to_add_shim = src_path.name in need_shim
     adding_shim_now = False
 
     for line in src:
         if adding_shim_now:
-            if (line == '\n' or line > '#include "src/regexp/regexp-shim.h"'):
-                dst.write('#include "irregexp/regexp-shim.h"\n')
+            if line == '\n':
+                dst.write('#include "irregexp/RegExpShim.h"\n')
                 need_to_add_shim = False
                 adding_shim_now = False
 
@@ -103,7 +103,7 @@ def import_from(srcdir, dstdir):
             continue
         if str(file.name) in excluded:
             continue
-        copy_and_update_includes(file, dstdir / file.name)
+        copy_and_update_includes(file, dstdir / "imported" / file.name)
 
     # Update IRREGEXP_VERSION file
     hash = get_hash(srcdir)
