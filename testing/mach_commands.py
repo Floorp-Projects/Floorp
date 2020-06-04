@@ -359,6 +359,7 @@ class Test(MachCommandBase):
             suite = TEST_SUITES[suite_name]
             kwargs = suite['kwargs']
             kwargs['log'] = log
+            kwargs.setdefault('subsuite', None)
 
             if 'mach_command' in suite:
                 res = self._mach_context.commands.dispatch(
@@ -382,6 +383,7 @@ class Test(MachCommandBase):
 
             kwargs = dict(m['kwargs'])
             kwargs['log'] = log
+            kwargs.setdefault('subsuite', None)
 
             res = self._mach_context.commands.dispatch(
                 m['mach_command'], self._mach_context,
