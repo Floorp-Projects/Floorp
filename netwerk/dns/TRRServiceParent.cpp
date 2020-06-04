@@ -21,7 +21,7 @@ namespace mozilla {
 namespace net {
 
 static const char* gTRRUriCallbackPrefs[] = {
-    "network.trr.uri", "network.trr.mode", kRolloutURIPref, kRolloutModePref,
+    "network.trr.uri", "network.trr.mode", kRolloutURIPref, kRolloutURIPref,
     nullptr,
 };
 
