@@ -14,6 +14,8 @@ extern crate derive_more;
 extern crate fxhash;
 #[macro_use]
 extern crate log;
+#[macro_use]
+extern crate matches;
 extern crate phf;
 extern crate precomputed_hash;
 extern crate servo_arc;
