@@ -341,15 +341,9 @@ class RemoteSettingsClient extends EventEmitter {
       try {
         // .get() was called before we had the chance to synchronize the local database.
         // We'll try to avoid returning an empty list.
-        if (
-          gLoadDump &&
-          (await Utils.hasLocalDump(this.bucketName, this.collectionName))
-        ) {
-          // Since there is a JSON dump, load it as default data.
-          console.debug(`${this.identifier} Local DB is empty, load JSON dump`);
-          await this._importJSONDump();
-        } else {
-          // There is no JSON dump, force a synchronization from the server.
+        const importedFromDump = gLoadDump ? await this._importJSONDump() : -1;
+        if (importedFromDump < 0) {
+          // There is no JSON dump to load, force a synchronization from the server.
           console.debug(
             `${this.identifier} Local DB is empty, pull data from server`
           );
@@ -720,9 +714,14 @@ class RemoteSettingsClient extends EventEmitter {
    * Import the JSON files from services/settings/dump into the local DB.
    */
   async _importJSONDump() {
+    console.info(`${this.identifier} restore dump`);
+
+    // When using the preview bucket, we still want to load the main dump.
+    const bucketName = this.bucketName.replace("-preview", "");
+
     const start = Cu.now() * 1000;
     const result = await RemoteSettingsWorker.importJSONDump(
-      this.bucketName,
+      bucketName,
       this.collectionName
     );
     if (gTimingEnabled) {
@@ -921,13 +920,10 @@ class RemoteSettingsClient extends EventEmitter {
           await this.db.importBulk(localRecords);
           await this.db.saveLastModified(localTimestamp);
           await this.db.saveMetadata(localMetadata);
-        } else if (
+        } else {
           // The local data was tampered.
           // We retried and signature failed again.
-          // So restore the dump if available.
-          await Utils.hasLocalDump(this.bucketName, this.collectionName)
-        ) {
-          console.info(`${this.identifier} restore dump`);
+          // So restore the dump if available (no-op if no dump)
           await this._importJSONDump();
         }
 
