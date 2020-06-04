@@ -14248,73 +14248,20 @@ void CodeGenerator::visitRandom(LRandom* ins) {
   using mozilla::non_crypto::XorShift128PlusRNG;
 
   FloatRegister output = ToFloatRegister(ins->output());
-  Register tempReg = ToRegister(ins->temp0());
+  Register rngReg = ToRegister(ins->temp0());
 
 #ifdef JS_PUNBOX64
-  Register64 s0Reg(ToRegister(ins->temp1()));
-  Register64 s1Reg(ToRegister(ins->temp2()));
+  Register64 temp1(ToRegister(ins->temp1()));
+  Register64 temp2(ToRegister(ins->temp2()));
 #else
-  Register64 s0Reg(ToRegister(ins->temp1()), ToRegister(ins->temp2()));
-  Register64 s1Reg(ToRegister(ins->temp3()), ToRegister(ins->temp4()));
+  Register64 temp1(ToRegister(ins->temp1()), ToRegister(ins->temp2()));
+  Register64 temp2(ToRegister(ins->temp3()), ToRegister(ins->temp4()));
 #endif
 
   const XorShift128PlusRNG* rng = gen->realm->addressOfRandomNumberGenerator();
-  masm.movePtr(ImmPtr(rng), tempReg);
+  masm.movePtr(ImmPtr(rng), rngReg);
 
-  static_assert(
-      sizeof(XorShift128PlusRNG) == 2 * sizeof(uint64_t),
-      "Code below assumes XorShift128PlusRNG contains two uint64_t values");
-
-  Address state0Addr(tempReg, XorShift128PlusRNG::offsetOfState0());
-  Address state1Addr(tempReg, XorShift128PlusRNG::offsetOfState1());
-
-  // uint64_t s1 = mState[0];
-  masm.load64(state0Addr, s1Reg);
-
-  // s1 ^= s1 << 23;
-  masm.move64(s1Reg, s0Reg);
-  masm.lshift64(Imm32(23), s1Reg);
-  masm.xor64(s0Reg, s1Reg);
-
-  // s1 ^= s1 >> 17
-  masm.move64(s1Reg, s0Reg);
-  masm.rshift64(Imm32(17), s1Reg);
-  masm.xor64(s0Reg, s1Reg);
-
-  // const uint64_t s0 = mState[1];
-  masm.load64(state1Addr, s0Reg);
-
-  // mState[0] = s0;
-  masm.store64(s0Reg, state0Addr);
-
-  // s1 ^= s0
-  masm.xor64(s0Reg, s1Reg);
-
-  // s1 ^= s0 >> 26
-  masm.rshift64(Imm32(26), s0Reg);
-  masm.xor64(s0Reg, s1Reg);
-
-  // mState[1] = s1
-  masm.store64(s1Reg, state1Addr);
-
-  // s1 += mState[0]
-  masm.load64(state0Addr, s0Reg);
-  masm.add64(s0Reg, s1Reg);
-
-  // See comment in XorShift128PlusRNG::nextDouble().
-  static const int MantissaBits = FloatingPoint<double>::kExponentShift + 1;
-  static const double ScaleInv = double(1) / (1ULL << MantissaBits);
-
-  masm.and64(Imm64((1ULL << MantissaBits) - 1), s1Reg);
-
-  if (masm.convertUInt64ToDoubleNeedsTemp()) {
-    masm.convertUInt64ToDouble(s1Reg, output, tempReg);
-  } else {
-    masm.convertUInt64ToDouble(s1Reg, output, Register::Invalid());
-  }
-
-  // output *= ScaleInv
-  masm.mulDoublePtr(ImmPtr(&ScaleInv), tempReg, output);
+  masm.randomDouble(rngReg, output, temp1, temp2);
 }
 
 void CodeGenerator::visitSignExtendInt32(LSignExtendInt32* ins) {
