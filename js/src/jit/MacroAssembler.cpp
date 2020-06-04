@@ -3099,17 +3099,15 @@ void MacroAssembler::randomDouble(Register rng, FloatRegister dest,
   add64(s0Reg, s1Reg);
 
   // See comment in XorShift128PlusRNG::nextDouble().
-  static const int MantissaBits =
+  static constexpr int MantissaBits =
       mozilla::FloatingPoint<double>::kExponentShift + 1;
-  static const double ScaleInv = double(1) / (1ULL << MantissaBits);
+  static constexpr double ScaleInv = double(1) / (1ULL << MantissaBits);
 
   and64(Imm64((1ULL << MantissaBits) - 1), s1Reg);
 
-  if (convertUInt64ToDoubleNeedsTemp()) {
-    convertUInt64ToDouble(s1Reg, dest, s0Reg.scratchReg());
-  } else {
-    convertUInt64ToDouble(s1Reg, dest, Register::Invalid());
-  }
+  // Note: we know s1Reg isn't signed after the and64 so we can use the faster
+  // convertInt64ToDouble instead of convertUInt64ToDouble.
+  convertInt64ToDouble(s1Reg, dest);
 
   // dest *= ScaleInv
   mulDoublePtr(ImmPtr(&ScaleInv), s0Reg.scratchReg(), dest);
