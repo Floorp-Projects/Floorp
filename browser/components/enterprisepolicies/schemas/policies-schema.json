@@ -631,6 +631,10 @@
       }
     },
 
+    "MasterPassword": {
+      "type": "boolean"
+    },
+
     "NetworkPrediction": {
       "type": "boolean"
     },

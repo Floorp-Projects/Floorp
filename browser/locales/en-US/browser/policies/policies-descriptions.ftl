@@ -130,6 +130,8 @@ policy-LegacySameSiteCookieBehaviorEnabledForDomainList = Revert to legacy SameS
 
 policy-LocalFileLinks = Allow specific websites to link to local files.
 
+policy-MasterPassword = Require or prevent using a master password.
+
 policy-NetworkPrediction = Enable or disable network prediction (DNS prefetching).
 
 policy-NewTabPage = Enable or disable the New Tab page.
