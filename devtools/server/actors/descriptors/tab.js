@@ -57,7 +57,7 @@ const TabDescriptorActor = ActorClassWithSpec(tabDescriptorSpec, {
           : null,
       outerWindowID: this._getOuterWindowId(),
       selected: this.selected,
-      title: this._getZombieTabTitle(),
+      title: this._getTitle(),
       traits: {
         // Backward compatibility for FF75 or older.
         // Remove when FF76 is on the release channel.
@@ -74,6 +74,10 @@ const TabDescriptorActor = ActorClassWithSpec(tabDescriptorSpec, {
     };
 
     return form;
+  },
+
+  _getTitle() {
+    return this._browser.contentTitle || this._getZombieTabTitle();
   },
 
   _getUrl() {
