@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The default document title of an error page (i.e., the contents of the `<title>` tag). -->
+    <string name="mozac_browser_errorpages_page_title">Erô caregamento pagina</string>
+
+    <!-- The button that appears at the bottom of an error page. -->
+    <string name="mozac_browser_errorpages_page_refresh">Preuva torna</string>
+
+    <!-- The button that appears at the bottom of an error page. -->
+    <string name="mozac_browser_errorpages_page_go_back">Vanni inderê</string>
+
+    <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_title">No riescio a finî a domanda</string>
+    <!-- The error message shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_message"><![CDATA[<p>No gh\'é son atre informaçioin in sciô problema.</p>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_title">Conescion segua no riescia</string>
+    <!-- The error message shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[<ul>
+
+A pagina che ti veu vedde a no peu ese mostrâ perché no l\'é poscibile verificâ l’aotenticitæ di dæti riçevui.</li>
+        <li>Ciamma o responsabile do scito web pe informalo do problema.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">Conescion segua no riescia</string>
+
+    <!-- The error message shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[<ul>
+        <li>Sto chi o peu ese un problema co-e inpostaçion do server ò peu ascì ese quarchedun che o preuva a fâ finta de ese o server.</li>
+        <li>Se ti ê conesso sensa problemi a sto server into passou, aloa l\'erô o peu esê tenporaneo e ti peu provâ torna dòppo.</li>
+      </ul>]]></string>
+
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_advanced">Avansæ…</string>
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_back">Vanni inderê (Racomandou)</string>
+    <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_accept_temporary">Acetta o reizego e vanni</string>
+
+    <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_title">A conescion a l\'é stæta scancelâ</string>
+
+    <!-- The document title and heading of the error page shown when a website takes too long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_title">A conescion a gh\'à misso tròppo tenpo</string>
+
+    <!-- The document title and heading of the error page shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_title">No riescio a conetime</string>
+
+    <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_title">Acesso a-a pòrta dizabilitou pe raxoin de seguessa</string>
+
+    <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_title">Conescion scancelâ</string>
+
+    <!-- The document title and heading of the error page shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_title">Erô contegnuo andæto a mâ</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_invalid_content_encoding_title">Erô còdifica do contegnuo</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_host_title">Indirisso no trovou</string>
+
+    <!-- Text that will show up on the button at the bottom of the error page -->
+    <string name="mozac_browser_errorpages_no_internet_refresh_button">Recarega</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title">Indirisso no valido</string>
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title_alternative">L\'indirisso o no l\'é valido</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_protocol_title">Protocòllo sconosciuo</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_not_found_title">File no trovou</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_proxy_host_title">No treuvo o proxy</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_title">Scito pericolozo</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_title">Scito inganevole</string>
+    </resources>
