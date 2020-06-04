@@ -1544,6 +1544,11 @@ nsresult nsHostResolver::NameLookup(nsHostRecord* rec) {
          gTRRService->ParentalControlEnabled())) {
       return NS_ERROR_UNKNOWN_HOST;
     }
+
+    if (rec->flags & RES_DISABLE_TRR) {
+      LOG(("TRR with server and DISABLE_TRR flag. Returning error."));
+      return NS_ERROR_UNKNOWN_HOST;
+    }
     return TrrLookup(rec);
   }
 
@@ -2016,14 +2021,14 @@ nsHostResolver::LookupStatus nsHostResolver::CompleteLookup(
 
 #ifdef DNSQUERY_AVAILABLE
   // Unless the result is from TRR, resolve again to get TTL
-  bool fromTRR = false;
+  bool hasNativeResult = false;
   {
     MutexAutoLock lock(addrRec->addr_info_lock);
-    if (addrRec->addr_info && addrRec->addr_info->IsTRR()) {
-      fromTRR = true;
+    if (addrRec->addr_info && !addrRec->addr_info->IsTRR()) {
+      hasNativeResult = true;
     }
   }
-  if (!fromTRR && !mShutdown && !addrRec->mGetTtl && !rec->mResolving &&
+  if (hasNativeResult && !mShutdown && !addrRec->mGetTtl && !rec->mResolving &&
       sGetTtlEnabled) {
     LOG(("Issuing second async lookup for TTL for host [%s].",
          addrRec->host.get()));
