@@ -13,7 +13,7 @@ add_task(async function testDoorhangerUserReject() {
   is(Preferences.get(prefs.DOH_SELF_ENABLED_PREF), true, "Breadcrumb saved.");
   is(
     Preferences.get(prefs.DOH_TRR_SELECT_URI_PREF),
-    "https://dummytrr.com/query",
+    "dummyTRR",
     "TRR selection complete."
   );
   await checkTRRSelectionTelemetry();
