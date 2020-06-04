@@ -45,9 +45,9 @@ interface nsICookieJarSettings : nsISupports
   [infallible] readonly attribute boolean isOnContentBlockingAllowList;
 
   /**
-   * The domain for the top-level document.
+   * The key used for partitioning.
    */
-  readonly attribute AString firstPartyDomain;
+  readonly attribute AString partitionKey;
 
   /**
    * CookiePermission at the loading of the document for a particular

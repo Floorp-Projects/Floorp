@@ -1869,7 +1869,7 @@ void nsHttpChannel::UpdateAntiTrackingInfo() {
     // We only need to set FPD for top-level loads. FPD will automatically be
     // propagated to non-top level loads via CookieJarSetting.
     mozilla::net::CookieJarSettings::Cast(cookieJarSettings)
-        ->SetFirstPartyDomain(mURI);
+        ->SetPartitionKey(mURI);
   }
 }
 
