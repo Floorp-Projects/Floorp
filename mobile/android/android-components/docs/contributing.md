@@ -21,6 +21,7 @@ Before contributing, please review our [Community Participation Guidelines](http
 
 ### Development
 
+* [Design Axioms]({{ site.baseurl }}/contributing/design-axioms)
 * [Architecture and Overview]({{ site.baseurl }}/contributing/architecture)
 * [Code coverage]({{ site.baseurl }}/contributing/code-coverage)
 * [Working on unreleased component code in an app]({{ site.baseurl }}{% link contribute/components_inside_app.md %})
