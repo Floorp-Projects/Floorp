@@ -121,7 +121,8 @@ class DNSListener {
     expectedSuccess = true,
     delay,
     trrServer = "",
-    expectEarlyFail = false
+    expectEarlyFail = false,
+    flags = 0
   ) {
     this.name = name;
     this.expectedAnswer = expectedAnswer;
@@ -133,7 +134,7 @@ class DNSListener {
     if (trrServer == "") {
       this.request = dns.asyncResolve(
         name,
-        0,
+        flags,
         this,
         mainThread,
         defaultOriginAttributes
@@ -143,7 +144,7 @@ class DNSListener {
         this.request = dns.asyncResolveWithTrrServer(
           name,
           trrServer,
-          0,
+          flags,
           this,
           mainThread,
           defaultOriginAttributes
@@ -2033,3 +2034,76 @@ add_task(async function test_dohrollout_mode() {
   Services.prefs.clearUserPref("doh-rollout.mode");
   equal(dns.currentTrrMode, 0);
 });
+
+add_task(async function test_ipv6_trr_fallback() {
+  dns.clearCache(true);
+  let httpserver = new HttpServer();
+  httpserver.registerPathHandler("/content", (metadata, response) => {
+    response.setHeader("Content-Type", "text/plain");
+    response.setHeader("Cache-Control", "no-cache");
+
+    const responseBody = "anybody";
+    response.bodyOutputStream.write(responseBody, responseBody.length);
+  });
+  httpserver.start(-1);
+
+  Services.prefs.setBoolPref("network.captive-portal-service.testMode", true);
+  let url = `http://127.0.0.1:666/doom_port_should_not_be_open`;
+  Services.prefs.setCharPref("network.connectivity-service.IPv6.url", url);
+  let ncs = Cc[
+    "@mozilla.org/network/network-connectivity-service;1"
+  ].getService(Ci.nsINetworkConnectivityService);
+
+  function promiseObserverNotification(topic, matchFunc) {
+    return new Promise((resolve, reject) => {
+      Services.obs.addObserver(function observe(subject, topic, data) {
+        let matches =
+          typeof matchFunc != "function" || matchFunc(subject, data);
+        if (!matches) {
+          return;
+        }
+        Services.obs.removeObserver(observe, topic);
+        resolve({ subject, data });
+      }, topic);
+    });
+  }
+
+  let checks = promiseObserverNotification(
+    "network:connectivity-service:ip-checks-complete"
+  );
+
+  ncs.recheckIPConnectivity();
+
+  await checks;
+  equal(
+    ncs.IPv6,
+    Ci.nsINetworkConnectivityService.NOT_AVAILABLE,
+    "Check IPv6 support (expect NOT_AVAILABLE)"
+  );
+
+  Services.prefs.setIntPref("network.trr.mode", 2);
+  Services.prefs.setCharPref(
+    "network.trr.uri",
+    `https://foo.example.com:${h2Port}/doh?responseIP=4.4.4.4`
+  );
+  const override = Cc["@mozilla.org/network/native-dns-override;1"].getService(
+    Ci.nsINativeDNSResolverOverride
+  );
+  override.addIPOverride("ipv6.host.com", "1:1::2");
+
+  await new DNSListener(
+    "ipv6.host.com",
+    "1:1::2",
+    true,
+    0,
+    "",
+    false,
+    Ci.nsIDNSService.RESOLVE_DISABLE_IPV4
+  );
+
+  Services.prefs.clearUserPref("network.captive-portal-service.testMode");
+  Services.prefs.clearUserPref("network.connectivity-service.IPv6.url");
+
+  override.clearOverrides();
+  await httpserver.stop();
+}).only();
