@@ -17,6 +17,8 @@ CompiledModules(
     'DebugLine.js',
     'EditorMenu.js',
     'EmptyLines.js',
+    'Exception.js',
+    'Exceptions.js',
     'Footer.js',
     'HighlightCalls.js',
     'HighlightLine.js',

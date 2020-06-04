@@ -12,6 +12,7 @@ CompiledModules(
     'async-requests.js',
     'breakpoints.js',
     'event-listeners.js',
+    'exceptions.js',
     'expressions.js',
     'file-search.js',
     'index.js',

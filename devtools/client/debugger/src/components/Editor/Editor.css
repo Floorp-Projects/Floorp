@@ -7,12 +7,14 @@
   --debug-expression-background: rgba(202, 227, 255, 0.5);
   --debug-line-error-border: rgb(255, 0, 0);
   --debug-expression-error-background: rgba(231, 116, 113, 0.3);
+  --line-exception-background: hsl(344, 73%, 97%);
   --highlight-line-duration: 5000ms;
 }
 
 .theme-dark .editor-wrapper {
   --debug-expression-background: rgba(202, 227, 255, 0.3);
   --debug-line-border: #7786a2;
+  --line-exception-background: hsl(345, 23%, 24%);
 }
 
 .editor-wrapper .CodeMirror-linewidget {
@@ -213,4 +215,14 @@ html[dir="rtl"] .editor-mount {
 .editor-wrapper .CodeMirror-foldgutter .CodeMirror-linenumber {
   text-align: left;
   padding: 0 0 0 2px;
+}
+
+/* Exception line */
+.line-exception {
+  background-color: var(--line-exception-background);
+}
+
+.mark-text-exception {
+  text-decoration: var(--red-50) wavy underline;
+  text-decoration-skip-ink: none;
 }

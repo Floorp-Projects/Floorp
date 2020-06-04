@@ -30,6 +30,7 @@ import threads, { initialThreadsState } from "./threads";
 import eventListenerBreakpoints, {
   initialEventListenerState,
 } from "./event-listeners";
+import exceptions, { initialExceptionsState } from "./exceptions";
 
 import type { SourceActorsState } from "./source-actors";
 // eslint-disable-next-line import/named
@@ -57,6 +58,7 @@ export function initialState() {
     objectInspector: objectInspector.reducer.initialOIState(),
     eventListenerBreakpoints: initialEventListenerState(),
     preview: initialPreviewState(),
+    exceptions: initialExceptionsState(),
   };
 }
 
@@ -79,4 +81,5 @@ export default {
   objectInspector: objectInspector.reducer.default,
   eventListenerBreakpoints,
   preview,
+  exceptions,
 };
