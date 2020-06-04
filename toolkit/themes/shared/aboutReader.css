@@ -27,7 +27,6 @@
   --toolbar-button-active: var(--grey-90-a20);
 }
 
-
 body {
   --main-background: #fff;
   --main-foreground: #333;
@@ -62,7 +61,7 @@ body.dark {
   --toolbar-button-active: var(--grey-90-a80);
   --popup-button-active: hsla(0,0%,70%,.6);
   --popup-bgcolor: #4c4a50;
-  --popup-button:  #5c5c61;
+  --popup-button: #5c5c61;
   --popup-line: #5c5c61;
   --opaque-popup-border: #434146;
   --font-value-border: #656468;
@@ -202,14 +201,14 @@ body.dark blockquote {
 .header > .credits {
   font-size: 0.9em;
   line-height: 1.48em;
-  margin: 0 0 10px 0;
+  margin: 0 0 10px;
   padding: 0;
   font-style: italic;
 }
 
 .header > .meta-data {
   font-size: 0.65em;
-  margin: 0 0 15px 0;
+  margin: 0 0 15px;
 }
 
 .reader-estimated-time {
@@ -333,8 +332,9 @@ body.dark blockquote {
 
 .hover-label {
   position: absolute;
-  top: 6px;
+  top: 4px;
   inset-inline-start: 36px;
+  line-height: 16px;
   white-space: pre; /* make sure we don't wrap */
   background-color: var(--tooltip-background);
   color: var(--tooltip-foreground);
@@ -412,7 +412,7 @@ button:disabled {
   inset-inline-start: -16px;
   background-image: url("chrome://global/skin/reader/RM-Type-Controls-Arrow.svg");
   display: block;
-  -moz-context-properties:  fill, stroke;
+  -moz-context-properties: fill, stroke;
   fill: var(--popup-bgcolor);
   stroke: var(--opaque-popup-border);
   pointer-events: none;
@@ -645,7 +645,7 @@ button:disabled {
   .moz-reader-content li,
   .moz-reader-content figure,
   .moz-reader-content .wp-caption {
-    margin: 0 0 10px 0 !important;
+    margin: 0 0 10px !important;
     padding: 0 !important;
   }
 }
@@ -701,7 +701,7 @@ button:disabled {
 .moz-reader-content li,
 .moz-reader-content figure,
 .moz-reader-content .wp-caption {
-  margin: -10px -10px 20px -10px;
+  margin: -10px -10px 20px;
   padding: 10px;
   border-radius: 5px;
 }
@@ -723,8 +723,7 @@ button:disabled {
 }
 
 .moz-reader-content img[moz-reader-center] {
-  margin-left: auto;
-  margin-right: auto;
+  margin-inline: auto;
 }
 
 .moz-reader-content .caption,
