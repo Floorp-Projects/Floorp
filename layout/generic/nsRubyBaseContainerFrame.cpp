@@ -420,8 +420,6 @@ void nsRubyBaseContainerFrame::Reflow(nsPresContext* aPresContext,
     nsLayoutUtils::SetBSizeFromFontMetrics(this, aDesiredSize, borderPadding,
                                            lineWM, frameWM);
   }
-
-  ReflowAbsoluteFrames(aPresContext, aDesiredSize, aReflowInput, aStatus);
 }
 
 /**
