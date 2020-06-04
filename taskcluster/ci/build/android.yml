@@ -74,7 +74,6 @@ android-x86/opt:
     treeherder:
         platform: android-4-2-x86/opt
         symbol: B
-    run-on-projects: ['mozilla-central']
     worker-type: b-linux
     worker:
         env:
@@ -147,11 +146,11 @@ android-api-16/opt:
     treeherder:
         platform: android-4-0-armv7-api16/opt
         symbol: B
-    run-on-projects: ['mozilla-central']
     worker-type: b-linux
     worker:
         env:
             TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android/releng.manifest"
+            MOZ_AUTOMATION_PACKAGE_TESTS: "1"
     run:
         actions: [get-secrets, build]
         config: ["builds/releng_base_android_64_builds.py"]
@@ -199,7 +198,6 @@ android-aarch64/opt:
     treeherder:
         platform: android-5-0-aarch64/opt
         symbol: B
-    run-on-projects: ['mozilla-central']
     worker-type: b-linux
     worker:
         env:
@@ -275,11 +273,11 @@ android-x86_64/opt:
     treeherder:
         platform: android-5-0-x86_64/opt
         symbol: B
-    run-on-projects: ['mozilla-central']
     worker-type: b-linux
     worker:
         env:
             TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android-x86/releng.manifest"
+            MOZ_AUTOMATION_PACKAGE_TESTS: "1"
     run:
         actions: [get-secrets, build]
         config: ["builds/releng_base_android_64_builds.py"]
