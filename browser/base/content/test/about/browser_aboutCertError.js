@@ -497,18 +497,26 @@ add_task(async function checkSandboxedIframe() {
   let bc = browser.browsingContext.children[0];
   await SpecialPowers.spawn(bc, [], async function() {
     let doc = content.document;
+
+    // aboutNetError.js is using async localization to format several messages
+    // and in result the translation may be applied later.
+    // We want to return the textContent of the element only after
+    // the translation completes, so let's wait for it here.
+    let elements = [
+      doc.querySelector(".title-text"),
+      doc.getElementById("errorCode"),
+    ];
+    await ContentTaskUtils.waitForCondition(() => {
+      return elements.every(elem => !!elem.textContent.trim().length);
+    });
+
     let titleText = doc.querySelector(".title-text");
     Assert.ok(
       titleText.textContent.endsWith("Security Issue"),
       "Title shows Did Not Connect: Potential Security Issue"
     );
 
-    // Wait until fluent sets the errorCode inner text.
-    let el;
-    await ContentTaskUtils.waitForCondition(() => {
-      el = doc.getElementById("errorCode");
-      return el.textContent != "";
-    }, "error code has been set inside the advanced button panel");
+    let el = doc.getElementById("errorCode");
 
     Assert.equal(
       el.textContent,
