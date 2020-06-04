@@ -51,7 +51,8 @@ parent:
                       TimingStructArgs timings,
                       nsHttpHeaderArray? responseTrailers,
                       bool hasStickyConn,
-                      TransactionObserverResult? transactionObserverResult);
+                      TransactionObserverResult? transactionObserverResult,
+                      int64_t requestSize);
   async OnNetAddrUpdate(NetAddr selfAddr, NetAddr peerAddr, bool resolvedByTRR);
   async OnInitFailed(nsresult status);
   async OnH2PushStream(uint32_t pushedStreamId,
