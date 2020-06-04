@@ -11,19 +11,19 @@ from recommonmark.transform import AutoStructify
 
 # Set up Python environment to load build system packages.
 OUR_DIR = os.path.dirname(__file__)
-topsrcdir = os.path.normpath(os.path.join(OUR_DIR, '..'))
+topsrcdir = os.path.normpath(os.path.join(OUR_DIR, ".."))
 
 EXTRA_PATHS = (
-    'layout/tools/reftest',
-    'python/mach',
-    'python/mozbuild',
-    'python/mozversioncontrol',
-    'testing/mozbase/manifestparser',
-    'testing/mozbase/mozfile',
-    'testing/mozbase/mozprocess',
-    'third_party/python/futures',
-    'third_party/python/jsmin',
-    'third_party/python/which',
+    "layout/tools/reftest",
+    "python/mach",
+    "python/mozbuild",
+    "python/mozversioncontrol",
+    "testing/mozbase/manifestparser",
+    "testing/mozbase/mozfile",
+    "testing/mozbase/mozprocess",
+    "third_party/python/futures",
+    "third_party/python/jsmin",
+    "third_party/python/which",
 )
 
 sys.path[:0] = [os.path.join(topsrcdir, p) for p in EXTRA_PATHS]
@@ -31,76 +31,81 @@ sys.path[:0] = [os.path.join(topsrcdir, p) for p in EXTRA_PATHS]
 sys.path.insert(0, OUR_DIR)
 
 extensions = [
-    'sphinx.ext.autodoc',
-    'sphinx.ext.autosectionlabel',
-    'sphinx.ext.doctest',
-    'sphinx.ext.graphviz',
-    'sphinx.ext.napoleon',
-    'sphinx.ext.todo',
-    'mozbuild.sphinx',
-    'sphinx_js',
-    'sphinxcontrib.mermaid',
-    'recommonmark',
-    'sphinx_copybutton',
+    "sphinx.ext.autodoc",
+    "sphinx.ext.autosectionlabel",
+    "sphinx.ext.doctest",
+    "sphinx.ext.graphviz",
+    "sphinx.ext.napoleon",
+    "sphinx.ext.todo",
+    "mozbuild.sphinx",
+    "sphinx_js",
+    "sphinxcontrib.mermaid",
+    "recommonmark",
+    "sphinx_copybutton",
 ]
 
 # JSDoc must run successfully for dirs specified, so running
 # tree-wide (the default) will not work currently.
 js_source_path = [
-    'browser/components/extensions',
-    'browser/components/uitour',
-    'testing/marionette',
-    'toolkit/components/extensions',
-    'toolkit/components/extensions/parent',
-    'toolkit/components/featuregates',
-    'toolkit/mozapps/extensions',
-    'toolkit/components/prompts/src',
+    "browser/components/extensions",
+    "browser/components/uitour",
+    "testing/marionette",
+    "toolkit/components/extensions",
+    "toolkit/components/extensions/parent",
+    "toolkit/components/featuregates",
+    "toolkit/mozapps/extensions",
+    "toolkit/components/prompts/src",
 ]
-root_for_relative_js_paths = '.'
-jsdoc_config_path = 'jsdoc.json'
+root_for_relative_js_paths = "."
+jsdoc_config_path = "jsdoc.json"
 
-templates_path = ['_templates']
-source_suffix = ['.rst', '.md']
-master_doc = 'index'
-project = u'Firefox Source Docs'
-html_logo = u'../browser/branding/nightly/content/firefox-wordmark.svg'
-html_favicon = u'../browser/branding/nightly/firefox.ico'
+templates_path = ["_templates"]
+source_suffix = [".rst", ".md"]
+master_doc = "index"
+project = "Firefox Source Docs"
+html_logo = "../browser/branding/nightly/content/firefox-wordmark.svg"
+html_favicon = "../browser/branding/nightly/firefox.ico"
 
-exclude_patterns = ['_build', '_staging', '_venv']
-pygments_style = 'sphinx'
+exclude_patterns = ["_build", "_staging", "_venv"]
+pygments_style = "sphinx"
 
 # We need to perform some adjustment of the settings and environment
 # when running on Read The Docs.
-on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
+on_rtd = os.environ.get("READTHEDOCS", None) == "True"
 
 if on_rtd:
     # SHELL isn't set on RTD and mach.mixin.process's import raises if a
     # shell-related environment variable can't be found. Set the variable here
     # to hack us into working on RTD.
-    assert 'SHELL' not in os.environ
-    os.environ['SHELL'] = '/bin/bash'
+    assert "SHELL" not in os.environ
+    os.environ["SHELL"] = "/bin/bash"
 else:
     # We only need to set the RTD theme when not on RTD because the RTD
     # environment handles this otherwise.
     import sphinx_rtd_theme
-    html_theme = 'sphinx_rtd_theme'
+
+    html_theme = "sphinx_rtd_theme"
     html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 
 
-html_static_path = ['_static']
-htmlhelp_basename = 'MozillaTreeDocs'
+html_static_path = ["_static"]
+htmlhelp_basename = "MozillaTreeDocs"
 
-moz_project_name = 'main'
+moz_project_name = "main"
 
 html_show_copyright = False
 
 
 def setup(app):
-    app.add_config_value('recommonmark_config', {
-        # Crashes with sphinx
-        'enable_inline_math': False,
-        # We use it for testing/web-platform/tests
-        'enable_eval_rst': True,
-        }, True)
-    app.add_stylesheet('custom_theme.css')
+    app.add_config_value(
+        "recommonmark_config",
+        {
+            # Crashes with sphinx
+            "enable_inline_math": False,
+            # We use it for testing/web-platform/tests
+            "enable_eval_rst": True,
+        },
+        True,
+    )
+    app.add_stylesheet("custom_theme.css")
     app.add_transform(AutoStructify)
