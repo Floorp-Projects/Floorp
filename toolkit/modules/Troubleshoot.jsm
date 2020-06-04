@@ -196,7 +196,9 @@ var dataProviders = {
       osVersion:
         Services.sysinfo.getProperty("name") +
         " " +
-        Services.sysinfo.getProperty("version"),
+        Services.sysinfo.getProperty("version") +
+        " " +
+        Services.sysinfo.getProperty("build"),
       version: AppConstants.MOZ_APP_VERSION_DISPLAY,
       buildID: Services.appinfo.appBuildID,
       distributionID: Services.prefs

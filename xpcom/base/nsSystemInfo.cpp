@@ -846,7 +846,8 @@ nsresult nsSystemInfo::Init() {
     const char* name;
   } items[] = {{PR_SI_SYSNAME, "name"},
                {PR_SI_ARCHITECTURE, "arch"},
-               {PR_SI_RELEASE, "version"}};
+               {PR_SI_RELEASE, "version"},
+               {PR_SI_RELEASE_BUILD, "build"}};
 
   for (uint32_t i = 0; i < (sizeof(items) / sizeof(items[0])); i++) {
     char buf[SYS_INFO_BUFFER_LENGTH];
