@@ -30,11 +30,11 @@ function sanitizeStorageObject(ob) {
   if (!ob) {
     return null;
   }
-  const whitelist = ["timeCreated", "timeLastUsed", "timeLastModified"];
+  const allowList = ["timeCreated", "timeLastUsed", "timeLastModified"];
   let result = {};
   for (let key of Object.keys(ob)) {
     let origVal = ob[key];
-    if (whitelist.includes(key)) {
+    if (allowList.includes(key)) {
       result[key] = origVal;
     } else if (typeof origVal == "string") {
       result[key] = "X".repeat(origVal.length);
