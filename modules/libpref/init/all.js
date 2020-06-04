@@ -4512,7 +4512,7 @@ pref("webextensions.webRequest.requestBodyMaxRawBytes", 16777216);
 
 pref("webextensions.storage.sync.enabled", true);
 // Should we use the old kinto-based implementation of storage.sync? To be removed in bug 1637465.
-pref("webextensions.storage.sync.kinto", true);
+pref("webextensions.storage.sync.kinto", false);
 // Server used by the old kinto-based implementation of storage.sync.
 pref("webextensions.storage.sync.serverURL", "https://webextensions.settings.services.mozilla.com/v1");
 
