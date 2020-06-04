@@ -65,16 +65,31 @@ p {
 button {
   display: block;
   height: 36px;
+  box-sizing: content-box;
   width: 100%;
-  border-radius: 5px;
   border: 0;
+  padding: 6px 0px;
   font-family: inherit;
-  background-color: var(--primary-button-color);
+  background-color: transparent;
   color: var(--primary-button-text-color);
   font-size: 14px;
   font-weight: bold;
-  margin: var(--moz-vertical-spacing) auto;
+  margin: 0 auto;
   text-align: center;
+  position: relative;
+}
+
+button::after {
+  background-color: var(--primary-button-color);
+  content: '';
+  border-radius: 5px;
+  display: block;
+  position: absolute;
+  top: 6px;
+  left: 0px;
+  right: 0px;
+  bottom: 6px;
+  z-index: -1;
 }
 
 hr {
@@ -90,8 +105,12 @@ hr {
 }
 
 .buttonSecondary {
-  background-color: var(--secondary-button-color);
+  background-color: transparent;
   color: var(--secondary-button-text-color);
+}
+
+.buttonSecondary::after {
+  background-color: var(--secondary-button-color);
 }
 
 #errorPageContainer {
