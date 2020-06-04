@@ -224,6 +224,18 @@ class AboutLoginsParent extends JSWindowActorParent {
     let ownerGlobal = this.browsingContext.embedderElement.ownerGlobal;
     switch (message.name) {
       case "AboutLogins:CreateLogin": {
+        if (!Services.policies.isAllowed("removeMasterPassword")) {
+          if (!LoginHelper.isMasterPasswordSet()) {
+            ownerGlobal.openDialog(
+              "chrome://mozapps/content/preferences/changemp.xhtml",
+              "",
+              "centerscreen,chrome,modal,titlebar"
+            );
+            if (!LoginHelper.isMasterPasswordSet()) {
+              return;
+            }
+          }
+        }
         let newLogin = message.data.login;
         // Remove the path from the origin, if it was provided.
         let origin = LoginHelper.getLoginOrigin(newLogin.origin);
