@@ -20,10 +20,11 @@ namespace mozilla {
 
 using dom::URLParams;
 
-void MakeFirstPartyDomain(const nsACString& aScheme, const nsACString& aHost,
-                          int32_t aPort, nsAString& aFirstPartyDomain) {
-  if (!OriginAttributes::UseSiteForFirstPartyDomain()) {
-    aFirstPartyDomain.Assign(NS_ConvertUTF8toUTF16(aHost));
+static void MakeTopLevelInfo(const nsACString& aScheme, const nsACString& aHost,
+                             int32_t aPort, bool aUseSite,
+                             nsAString& aTopLevelInfo) {
+  if (!aUseSite) {
+    aTopLevelInfo.Assign(NS_ConvertUTF8toUTF16(aHost));
     return;
   }
 
@@ -38,16 +39,19 @@ void MakeFirstPartyDomain(const nsACString& aScheme, const nsACString& aHost,
   }
   site.AppendLiteral(")");
 
-  aFirstPartyDomain.Assign(NS_ConvertUTF8toUTF16(site));
+  aTopLevelInfo.Assign(NS_ConvertUTF8toUTF16(site));
 }
 
-void MakeFirstPartyDomain(const nsACString& aScheme, const nsACString& aHost,
-                          nsAString& aFirstPartyDomain) {
-  MakeFirstPartyDomain(aScheme, aHost, -1, aFirstPartyDomain);
+static void MakeTopLevelInfo(const nsACString& aScheme, const nsACString& aHost,
+                             bool aUseSite, nsAString& aTopLevelInfo) {
+  MakeTopLevelInfo(aScheme, aHost, -1, aUseSite, aTopLevelInfo);
 }
 
-void OriginAttributes::SetFirstPartyDomain(const bool aIsTopLevelDocument,
-                                           nsIURI* aURI, bool aForced) {
+static void PopulateTopLevelInfoFromURI(const bool aIsTopLevelDocument,
+                                        nsIURI* aURI, bool aIsFirstPartyEnabled,
+                                        bool aForced, bool aUseSite,
+                                        nsString OriginAttributes::*aTarget,
+                                        OriginAttributes& aOriginAttributes) {
   nsresult rv;
 
   if (!aURI) {
@@ -55,18 +59,19 @@ void OriginAttributes::SetFirstPartyDomain(const bool aIsTopLevelDocument,
   }
 
   // If the prefs are off or this is not a top level load, bail out.
-  if ((!IsFirstPartyEnabled() || !aIsTopLevelDocument) && !aForced) {
+  if ((!aIsFirstPartyEnabled || !aIsTopLevelDocument) && !aForced) {
     return;
   }
+
+  nsAString& topLevelInfo = aOriginAttributes.*aTarget;
 
   nsAutoCString scheme;
   rv = aURI->GetScheme(scheme);
   NS_ENSURE_SUCCESS_VOID(rv);
 
   if (scheme.EqualsLiteral("about")) {
-    MakeFirstPartyDomain(scheme,
-                         NS_LITERAL_CSTRING(ABOUT_URI_FIRST_PARTY_DOMAIN),
-                         mFirstPartyDomain);
+    MakeTopLevelInfo(scheme, NS_LITERAL_CSTRING(ABOUT_URI_FIRST_PARTY_DOMAIN),
+                     aUseSite, topLevelInfo);
     return;
   }
 
@@ -81,7 +86,7 @@ void OriginAttributes::SetFirstPartyDomain(const bool aIsTopLevelDocument,
   if (dom::BlobURLProtocolHandler::GetBlobURLPrincipal(
           aURI, getter_AddRefs(blobPrincipal))) {
     MOZ_ASSERT(blobPrincipal);
-    mFirstPartyDomain = blobPrincipal->OriginAttributesRef().mFirstPartyDomain;
+    topLevelInfo = blobPrincipal->OriginAttributesRef().*aTarget;
     return;
   }
 
@@ -93,7 +98,7 @@ void OriginAttributes::SetFirstPartyDomain(const bool aIsTopLevelDocument,
   nsAutoCString baseDomain;
   rv = tldService->GetBaseDomain(aURI, 0, baseDomain);
   if (NS_SUCCEEDED(rv)) {
-    MakeFirstPartyDomain(scheme, baseDomain, mFirstPartyDomain);
+    MakeTopLevelInfo(scheme, baseDomain, aUseSite, topLevelInfo);
     return;
   }
 
@@ -111,7 +116,7 @@ void OriginAttributes::SetFirstPartyDomain(const bool aIsTopLevelDocument,
 
   if (isIpAddress) {
     // If the host is an IPv4/IPv6 address, we still accept it as a
-    // valid firstPartyDomain.
+    // valid topLevelInfo.
     nsAutoCString ipAddr;
 
     if (net_IsValidIPv6Addr(host)) {
@@ -125,12 +130,12 @@ void OriginAttributes::SetFirstPartyDomain(const bool aIsTopLevelDocument,
       ipAddr = host;
     }
 
-    MakeFirstPartyDomain(scheme, ipAddr, port, mFirstPartyDomain);
+    MakeTopLevelInfo(scheme, ipAddr, port, aUseSite, topLevelInfo);
     return;
   }
 
-  if (OriginAttributes::UseSiteForFirstPartyDomain()) {
-    MakeFirstPartyDomain(scheme, host, port, mFirstPartyDomain);
+  if (aUseSite) {
+    MakeTopLevelInfo(scheme, host, port, aUseSite, topLevelInfo);
     return;
   }
 
@@ -138,10 +143,18 @@ void OriginAttributes::SetFirstPartyDomain(const bool aIsTopLevelDocument,
     nsAutoCString publicSuffix;
     rv = tldService->GetPublicSuffix(aURI, publicSuffix);
     if (NS_SUCCEEDED(rv)) {
-      MakeFirstPartyDomain(scheme, publicSuffix, port, mFirstPartyDomain);
+      MakeTopLevelInfo(scheme, publicSuffix, port, aUseSite, topLevelInfo);
       return;
     }
   }
+}
+
+void OriginAttributes::SetFirstPartyDomain(const bool aIsTopLevelDocument,
+                                           nsIURI* aURI, bool aForced) {
+  PopulateTopLevelInfoFromURI(
+      aIsTopLevelDocument, aURI, IsFirstPartyEnabled(), aForced,
+      StaticPrefs::privacy_firstparty_isolate_use_site(),
+      &OriginAttributes::mFirstPartyDomain, *this);
 }
 
 void OriginAttributes::SetFirstPartyDomain(const bool aIsTopLevelDocument,
@@ -161,8 +174,10 @@ void OriginAttributes::SetFirstPartyDomain(const bool aIsTopLevelDocument,
 }
 
 void OriginAttributes::SetPartitionKey(nsIURI* aURI) {
-  // TODO: implement this function
-  MOZ_ASSERT(false);
+  PopulateTopLevelInfoFromURI(
+      false /* aIsTopLevelDocument */, aURI, IsFirstPartyEnabled(),
+      true /* aForced */, StaticPrefs::privacy_dynamic_firstparty_use_site(),
+      &OriginAttributes::mPartitionKey, *this);
 }
 
 void OriginAttributes::SetPartitionKey(const nsACString& aDomain) {
