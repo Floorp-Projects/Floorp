@@ -8,6 +8,7 @@ import type { AstLocation } from "../workers/parser";
 
 import type { Action } from "../actions/types";
 import type { Node, Grip } from "devtools-reps";
+import type { Exception } from "../types";
 
 export type Preview = {|
   expression: string,
@@ -18,6 +19,7 @@ export type Preview = {|
   cursorPos: any,
   tokenPos: AstLocation,
   target: HTMLDivElement,
+  exception: ?Exception,
 |};
 
 export type PreviewState = {

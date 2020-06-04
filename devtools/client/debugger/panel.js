@@ -76,6 +76,12 @@ class DebuggerPanel {
 
     registerStoreObserver(this._store, this._onDebuggerStateChange.bind(this));
 
+    const resourceWatcher = this.toolbox.resourceWatcher;
+    await resourceWatcher.watchResources(
+      [resourceWatcher.TYPES.ERROR_MESSAGE],
+      { onAvailable: actions.addException }
+    );
+
     return this;
   }
 

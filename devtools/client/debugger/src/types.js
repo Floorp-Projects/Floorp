@@ -517,3 +517,11 @@ export type Preview = {
   column: number,
   line: number,
 };
+
+export type Exception = {
+  columnNumber: number,
+  errorMessage: string,
+  fileName: URL,
+  lineNumber: number,
+  sourceActorId: SourceActorId,
+};

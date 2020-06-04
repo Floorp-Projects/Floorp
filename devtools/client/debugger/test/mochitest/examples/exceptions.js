@@ -76,3 +76,9 @@ function deepErrorThrowDifferent() {
 
   debugger;
 }
+
+function inlineExc() {
+  'abc'.push(1);
+}
+
+inlineExc();

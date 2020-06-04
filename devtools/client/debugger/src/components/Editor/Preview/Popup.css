@@ -138,3 +138,12 @@
   font-size: 14px;
   color: var(--theme-comment);
 }
+
+/* Exception popup */
+.exception-popup .exception-text {
+  color: var(--red-70);
+}
+
+.theme-dark .exception-popup .exception-text {
+  color: var(--red-20);
+}

@@ -10,6 +10,7 @@ import type {
   SourceLocation,
   Context,
   URL,
+  Exception,
 } from "../../types";
 import type { PromiseAction } from "../utils/middleware/promise";
 import type { SourceBase } from "../../reducers/sources";
@@ -95,4 +96,8 @@ export type SourceAction =
       +cx: Context,
       breakableLines: number[],
       sourceId: SourceId,
+    |}
+  | {|
+      type: "ADD_EXCEPTION",
+      exception: Exception,
     |};

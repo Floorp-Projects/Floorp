@@ -9,7 +9,7 @@ import { connect } from "../../../utils/connect";
 
 import Reps from "devtools-reps";
 const {
-  REPS: { Rep },
+  REPS: { Rep, StringRep },
   MODE,
   objectInspector,
 } = Reps;
@@ -27,7 +27,7 @@ import PreviewFunction from "../../shared/PreviewFunction";
 
 import "./Popup.css";
 
-import type { ThreadContext } from "../../../types";
+import type { ThreadContext, Exception } from "../../../types";
 import type { Preview } from "../../../reducers/types";
 
 type OwnProps = {|
@@ -178,13 +178,27 @@ export class Popup extends Component<Props> {
     );
   }
 
+  renderExceptionPreview(exception: Exception) {
+    const errorMessage = exception.errorMessage;
+
+    return (
+      <div className="preview-popup exception-popup">
+        {StringRep.rep({
+          object: errorMessage,
+          useQuotes: false,
+          className: "exception-text",
+        })}
+      </div>
+    );
+  }
+
   renderPreview() {
     // We don't have to check and
     // return on `false`, `""`, `0`, `undefined` etc,
     // these falsy simple typed value because we want to
     // do `renderSimplePreview` on these values below.
     const {
-      preview: { root },
+      preview: { root, exception },
     } = this.props;
 
     if (nodeIsFunction(root)) {
@@ -195,14 +209,19 @@ export class Popup extends Component<Props> {
       return <div>{this.renderObjectPreview()}</div>;
     }
 
+    if (exception) {
+      return this.renderExceptionPreview(exception);
+    }
+
     return this.renderSimplePreview();
   }
 
   getPreviewType() {
     const {
-      preview: { root, properties },
+      preview: { root, properties, exception },
     } = this.props;
     if (
+      exception ||
       nodeIsPrimitive(root) ||
       nodeIsFunction(root) ||
       !Array.isArray(properties) ||
@@ -216,16 +235,20 @@ export class Popup extends Component<Props> {
 
   onMouseOut = () => {
     const { clearPreview, cx } = this.props;
+
     clearPreview(cx);
   };
 
   render() {
     const {
-      preview: { cursorPos, resultGrip },
+      preview: { cursorPos, resultGrip, exception },
       editorRef,
     } = this.props;
 
-    if (typeof resultGrip == "undefined" || resultGrip?.optimizedOut) {
+    if (
+      !exception &&
+      (typeof resultGrip == "undefined" || resultGrip?.optimizedOut)
+    ) {
       return null;
     }
 
