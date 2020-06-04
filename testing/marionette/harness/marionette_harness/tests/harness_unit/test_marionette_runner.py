@@ -109,7 +109,7 @@ def manifest_with_tests(request):
         included += [(u'test_pass_disabled.py', 'pass', 'skip-if: true'),
                      (u'test_fail_disabled.py', 'fail', 'skip-if: true')]
     keys = ('path', 'expected', 'disabled')
-    active_tests = [dict(zip(keys, values)) for values in included]
+    active_tests = [dict(list(zip(keys, values))) for values in included]
 
     return ManifestFixture(request.param, active_tests)
 

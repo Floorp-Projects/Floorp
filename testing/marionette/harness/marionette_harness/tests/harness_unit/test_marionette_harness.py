@@ -85,7 +85,7 @@ def test_call_harness_with_no_args_yields_num_failures(runner_class):
 
 
 def test_args_passed_to_runner_class(mach_parsed_kwargs, runner_class):
-    arg_list = mach_parsed_kwargs.keys()
+    arg_list = list(mach_parsed_kwargs.keys())
     arg_list.remove('tests')
     mach_parsed_kwargs.update([(a, getattr(sentinel, a)) for a in arg_list])
     harness = MarionetteHarness(runner_class, args=mach_parsed_kwargs)
