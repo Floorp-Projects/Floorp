@@ -73,6 +73,7 @@ if os.path.isdir(mozbase):
 
 from manifestparser import TestManifest
 from manifestparser.filters import chunk_by_slice, tags, pathprefix
+from manifestparser.util import normsep
 from mozlog import commandline
 import mozcrash
 import mozfile
@@ -1693,7 +1694,11 @@ class XPCShellTests(object):
 
         tests_by_manifest = defaultdict(list)
         for test in self.alltests:
-            tests_by_manifest[test['manifest']].append(test['id'])
+            group = test['manifest']
+            if 'ancestor_manifest' in test and '/' in normsep(test['ancestor_manifest']):
+                group = "{}:{}".format(test['ancestor_manifest'], group)
+            tests_by_manifest[group].append(test['id'])
+
         self.log.suite_start(tests_by_manifest, name='xpcshell')
 
         while tests_queue or running_tests:
