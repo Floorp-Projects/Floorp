@@ -94,7 +94,7 @@ using namespace mozilla::dom;
  * @param  aEndRowIndex       [in] row index where the cells range ends
  * @param  aEndColumnIndex    [in] column index where the cells range ends
  */
-static nsresult AddCellsToSelection(nsIContent* aTableContent,
+static nsresult AddCellsToSelection(const nsIContent* aTableContent,
                                     int32_t aStartRowIndex,
                                     int32_t aStartColumnIndex,
                                     int32_t aEndRowIndex,
@@ -2631,7 +2631,7 @@ nsresult nsFrameSelection::TableSelection::SelectBlockOfCells(
   nsresult result = NS_OK;
 
   // If new end cell is in a different table, do nothing
-  const RefPtr<nsIContent> table = IsInSameTable(aStartCell, aEndCell);
+  const RefPtr<const nsIContent> table = IsInSameTable(aStartCell, aEndCell);
   if (!table) {
     return NS_OK;
   }
@@ -2657,7 +2657,7 @@ nsresult nsFrameSelection::TableSelection::SelectBlockOfCells(
 }
 
 nsresult nsFrameSelection::TableSelection::UnselectCells(
-    nsIContent* aTableContent, int32_t aStartRowIndex,
+    const nsIContent* aTableContent, int32_t aStartRowIndex,
     int32_t aStartColumnIndex, int32_t aEndRowIndex, int32_t aEndColumnIndex,
     bool aRemoveOutsideOfCellRange, mozilla::dom::Selection& aNormalSelection) {
   MOZ_ASSERT(aNormalSelection.Type() == SelectionType::eNormal);
@@ -2743,7 +2743,7 @@ nsresult SelectCellElement(nsIContent* aCellElement,
   return CreateAndAddRange(parent, offset, aNormalSelection);
 }
 
-static nsresult AddCellsToSelection(nsIContent* aTableContent,
+static nsresult AddCellsToSelection(const nsIContent* aTableContent,
                                     int32_t aStartRowIndex,
                                     int32_t aStartColumnIndex,
                                     int32_t aEndRowIndex,
@@ -2840,7 +2840,7 @@ nsresult nsFrameSelection::TableSelection::SelectRowOrColumn(
     return NS_ERROR_NULL_POINTER;
   }
 
-  nsIContent* table = GetParentTable(aCellContent);
+  const nsIContent* table = GetParentTable(aCellContent);
   if (!table) {
     return NS_ERROR_NULL_POINTER;
   }
@@ -3014,8 +3014,8 @@ nsresult nsFrameSelection::GetCellIndexes(const nsIContent* aCell,
 }
 
 // static
-nsIContent* nsFrameSelection::IsInSameTable(nsIContent* aContent1,
-                                            nsIContent* aContent2) {
+nsIContent* nsFrameSelection::IsInSameTable(const nsIContent* aContent1,
+                                            const nsIContent* aContent2) {
   if (!aContent1 || !aContent2) return nullptr;
 
   nsIContent* tableNode1 = GetParentTable(aContent1);
@@ -3027,7 +3027,7 @@ nsIContent* nsFrameSelection::IsInSameTable(nsIContent* aContent1,
 }
 
 // static
-nsIContent* nsFrameSelection::GetParentTable(nsIContent* aCell) {
+nsIContent* nsFrameSelection::GetParentTable(const nsIContent* aCell) {
   if (!aCell) {
     return nullptr;
   }
