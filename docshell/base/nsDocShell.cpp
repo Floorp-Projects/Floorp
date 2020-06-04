@@ -364,7 +364,6 @@ nsDocShell::nsDocShell(BrowsingContext* aBrowsingContext,
       mJSRunToCompletionDepth(0),
       mTouchEventsOverride(nsIDocShell::TOUCHEVENTS_OVERRIDE_NONE),
       mMetaViewportOverride(nsIDocShell::META_VIEWPORT_OVERRIDE_NONE),
-      mFullscreenAllowed(CHECK_ATTRIBUTES),
       mCreatingDocument(false),
 #ifdef DEBUG
       mInEnsureScriptEnv(false),
@@ -1746,13 +1745,6 @@ nsDocShell::SetAllowContentRetargetingOnChildren(
 NS_IMETHODIMP
 nsDocShell::GetFullscreenAllowed(bool* aFullscreenAllowed) {
   NS_ENSURE_ARG_POINTER(aFullscreenAllowed);
-
-  // Browsers and apps have their mFullscreenAllowed retrieved from their
-  // corresponding iframe in their parent upon creation.
-  if (mFullscreenAllowed != CHECK_ATTRIBUTES) {
-    *aFullscreenAllowed = (mFullscreenAllowed == PARENT_ALLOWS);
-    return NS_OK;
-  }
 
   // Assume false until we determine otherwise...
   *aFullscreenAllowed = false;
