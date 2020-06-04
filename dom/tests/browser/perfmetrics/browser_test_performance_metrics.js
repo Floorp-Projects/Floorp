@@ -13,36 +13,6 @@ const TIMEOUT_URL = ROOT_URL + "/settimeout.html";
 const SOUND_URL = ROOT_URL + "/sound.html";
 const CATEGORY_TIMER = 2;
 
-let nextId = 0;
-
-function jsonrpc(tab, method, params) {
-  let currentId = nextId++;
-  let messageManager = tab.linkedBrowser.messageManager;
-  messageManager.sendAsyncMessage("jsonrpc", {
-    id: currentId,
-    method,
-    params,
-  });
-  return new Promise(function(resolve, reject) {
-    messageManager.addMessageListener("jsonrpc", function listener(event) {
-      let { id, result, error } = event.data;
-      if (id !== currentId) {
-        return;
-      }
-      messageManager.removeMessageListener("jsonrpc", listener);
-      if (error) {
-        reject(error);
-        return;
-      }
-      resolve(result);
-    });
-  });
-}
-
-function postMessageToWorker(tab, message) {
-  return jsonrpc(tab, "postMessageToWorker", [WORKER_URL, message]);
-}
-
 add_task(async function test() {
   waitForExplicitFinish();
 
