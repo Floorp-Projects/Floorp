@@ -109,7 +109,7 @@ class MOZ_RAII AutoHeapSession {
 
   GCRuntime* gc;
   JS::HeapState prevState;
-  AutoGeckoProfilerEntry profilingStackFrame;
+  mozilla::Maybe<AutoGeckoProfilerEntry> profilingStackFrame;
 };
 
 class MOZ_RAII AutoGCSession : public AutoHeapSession {

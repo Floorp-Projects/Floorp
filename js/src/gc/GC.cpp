@@ -6356,19 +6356,14 @@ void GCRuntime::finishCollection() {
   lastGCEndTime_ = currentTime;
 }
 
-static const char* HeapStateToLabel(JS::HeapState heapState) {
+static const char* GCHeapStateToLabel(JS::HeapState heapState) {
   switch (heapState) {
     case JS::HeapState::MinorCollecting:
       return "js::Nursery::collect";
     case JS::HeapState::MajorCollecting:
       return "js::GCRuntime::collect";
-    case JS::HeapState::Tracing:
-      return "JS_IterateCompartments";
-    case JS::HeapState::Idle:
-    case JS::HeapState::CycleCollecting:
-      MOZ_CRASH(
-          "Should never have an Idle or CC heap state when pushing GC "
-          "profiling stack frames!");
+    default:
+      MOZ_CRASH("Unexpected heap state when pushing GC profiling stack frame");
   }
   MOZ_ASSERT_UNREACHABLE("Should have exhausted every JS::HeapState variant!");
   return nullptr;
@@ -6376,16 +6371,19 @@ static const char* HeapStateToLabel(JS::HeapState heapState) {
 
 /* Start a new heap session. */
 AutoHeapSession::AutoHeapSession(GCRuntime* gc, JS::HeapState heapState)
-    : gc(gc),
-      prevState(gc->heapState_),
-      profilingStackFrame(gc->rt->mainContextFromOwnThread(),
-                          HeapStateToLabel(heapState),
-                          JS::ProfilingCategoryPair::GCCC) {
+    : gc(gc), prevState(gc->heapState_) {
   MOZ_ASSERT(CurrentThreadCanAccessRuntime(gc->rt));
   MOZ_ASSERT(prevState == JS::HeapState::Idle);
   MOZ_ASSERT(heapState != JS::HeapState::Idle);
 
   gc->heapState_ = heapState;
+
+  if (heapState == JS::HeapState::MinorCollecting ||
+      heapState == JS::HeapState::MajorCollecting) {
+    profilingStackFrame.emplace(gc->rt->mainContextFromOwnThread(),
+                                GCHeapStateToLabel(heapState),
+                                JS::ProfilingCategoryPair::GCCC);
+  }
 }
 
 AutoHeapSession::~AutoHeapSession() {
