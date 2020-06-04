@@ -138,6 +138,16 @@ add_task(async function checkBadStsCert() {
           : content.document;
         let advancedButton = doc.getElementById("advancedButton");
         advancedButton.click();
+
+        // aboutNetError.js is using async localization to format several messages
+        // and in result the translation may be applied later.
+        // We want to return the textContent of the element only after
+        // the translation completes, so let's wait for it here.
+        let elements = [doc.getElementById("badCertTechnicalInfo")];
+        await ContentTaskUtils.waitForCondition(() => {
+          return elements.every(elem => !!elem.textContent.trim().length);
+        });
+
         return doc.getElementById("badCertTechnicalInfo").textContent;
       }
     );
