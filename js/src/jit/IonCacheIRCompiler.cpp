@@ -2426,3 +2426,7 @@ bool IonCacheIRCompiler::emitIsArrayResult(ValOperandId inputId) {
 bool IonCacheIRCompiler::emitStringFromCharCodeResult(Int32OperandId codeId) {
   MOZ_CRASH("Call ICs not used in ion");
 }
+
+bool IonCacheIRCompiler::emitMathRandomResult(uint32_t rngOffset) {
+  MOZ_CRASH("Call ICs not used in ion");
+}

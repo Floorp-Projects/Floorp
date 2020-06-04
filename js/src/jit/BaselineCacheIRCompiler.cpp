@@ -1529,6 +1529,24 @@ bool BaselineCacheIRCompiler::emitStringFromCharCodeResult(
   return true;
 }
 
+bool BaselineCacheIRCompiler::emitMathRandomResult(uint32_t rngOffset) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoOutputRegister output(*this);
+  AutoScratchRegister scratch1(allocator, masm);
+  AutoScratchRegister64 scratch2(allocator, masm);
+  AutoAvailableFloatRegister scratchFloat(*this, FloatReg0);
+
+  Address rngAddr(stubAddress(rngOffset));
+  masm.loadPtr(rngAddr, scratch1);
+
+  masm.randomDouble(scratch1, scratchFloat, scratch2,
+                    output.valueReg().toRegister64());
+
+  masm.boxDouble(scratchFloat, output.valueReg(), scratchFloat);
+  return true;
+}
+
 bool BaselineCacheIRCompiler::emitCallNativeSetter(ObjOperandId objId,
                                                    uint32_t setterOffset,
                                                    ValOperandId rhsId) {
