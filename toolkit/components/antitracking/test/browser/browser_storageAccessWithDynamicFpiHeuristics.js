@@ -28,6 +28,10 @@ add_task(async () => {
         "network.cookie.cookieBehavior",
         Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN,
       ],
+      ["privacy.restrict3rdpartystorage.heuristic.redirect", false],
+      ["privacy.trackingprotection.enabled", false],
+      ["privacy.trackingprotection.pbmode.enabled", false],
+      ["privacy.trackingprotection.annotate_channels", true],
     ],
   });
   registerCleanupFunction(cleanup);
@@ -140,6 +144,9 @@ async function checkData(browser, options) {
 add_task(async () => {
   info("Starting Dynamic FPI Redirect Heuristic test...");
 
+  // mark third-party as tracker
+  await UrlClassifierTestUtils.addTestTrackers();
+
   info("Creating a new tab");
   let tab = BrowserTestUtils.addTab(gBrowser, TEST_TOP_PAGE);
   gBrowser.selectedTab = tab;
@@ -157,7 +164,7 @@ add_task(async () => {
 
   await checkData(browser, {
     firstParty: "firstParty",
-    thirdParty: "undefined",
+    thirdParty: "",
   });
 
   info("load third-party content as first-party");
@@ -170,6 +177,33 @@ add_task(async () => {
   await checkData(browser, { firstParty: "" });
   await createDataInFirstParty(browser, "heuristicFirstParty");
   await checkData(browser, { firstParty: "heuristicFirstParty" });
+
+  info("redirect back to first-party page");
+  await redirectWithUserInteraction(
+    browser,
+    TEST_REDIRECT_TOP_PAGE,
+    TEST_TOP_PAGE
+  );
+
+  info("third-party tracker should NOT able to access first-party data");
+  await checkData(browser, {
+    firstParty: "firstParty",
+    thirdParty: "",
+  });
+
+  // remove third-party from tracker
+  await UrlClassifierTestUtils.cleanupTestTrackers();
+
+  info("load third-party content as first-party");
+  await redirectWithUserInteraction(
+    browser,
+    TEST_REDIRECT_3RD_PARTY_PAGE,
+    TEST_3RD_PARTY_PARTITIONED_PAGE
+  );
+
+  await checkData(browser, {
+    firstParty: "heuristicFirstParty",
+  });
 
   info("redirect back to first-party page");
   await redirectWithUserInteraction(
