@@ -650,7 +650,7 @@ var snapshotFormatters = {
         if (value === undefined || value === "") {
           continue;
         }
-        trs.push(buildRow(key, value));
+        trs.push(buildRow(key, [new Text(value)]));
       }
 
       if (!trs.length) {
