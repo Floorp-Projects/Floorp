@@ -1070,13 +1070,13 @@
 
 - name: LoadDoubleResult
   shared: true
-  transpile: false
+  transpile: true
   args:
     val: NumberId
 
 - name: LoadBigIntResult
   shared: true
-  transpile: false
+  transpile: true
   args:
     val: BigIntId
 
