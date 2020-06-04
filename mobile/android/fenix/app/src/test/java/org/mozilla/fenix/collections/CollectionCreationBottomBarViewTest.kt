@@ -74,6 +74,9 @@ class CollectionCreationBottomBarViewTest {
 
         layout.performClick()
         verify { interactor.addNewCollection() }
+
+        iconButton.performClick()
+        verify { interactor.addNewCollection() }
     }
 
     @Test
