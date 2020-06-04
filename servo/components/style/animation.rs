@@ -13,10 +13,10 @@ use crate::dom::{OpaqueNode, TElement, TNode};
 use crate::font_metrics::FontMetricsProvider;
 use crate::properties::animated_properties::AnimationValue;
 use crate::properties::longhands::animation_direction::computed_value::single_value::T as AnimationDirection;
+use crate::properties::longhands::animation_fill_mode::computed_value::single_value::T as AnimationFillMode;
 use crate::properties::longhands::animation_play_state::computed_value::single_value::T as AnimationPlayState;
-use crate::properties::{self, CascadeMode, ComputedValues, LonghandId};
-#[cfg(feature = "servo")]
 use crate::properties::LonghandIdSet;
+use crate::properties::{self, CascadeMode, ComputedValues, LonghandId};
 use crate::stylesheets::keyframes_rule::{KeyframesAnimation, KeyframesStep, KeyframesStepValue};
 use crate::stylesheets::Origin;
 use crate::values::animated::{Animate, Procedure};
@@ -139,15 +139,25 @@ impl PropertyAnimation {
 /// This structure represents the state of an animation.
 #[derive(Clone, Debug, MallocSizeOf, PartialEq)]
 pub enum AnimationState {
+    /// The animation has been created, but is not running yet. This state
+    /// is also used when an animation is still in the first delay phase.
+    Pending,
+    /// This animation is currently running.
+    Running,
     /// This animation is paused. The inner field is the percentage of progress
     /// when it was paused, from 0 to 1.
     Paused(f64),
-    /// This animation is currently running.
-    Running,
     /// This animation has finished.
     Finished,
     /// This animation has been canceled.
     Canceled,
+}
+
+impl AnimationState {
+    /// Whether or not this state requires its owning animation to be ticked.
+    fn needs_to_be_ticked(&self) -> bool {
+        *self == AnimationState::Running || *self == AnimationState::Pending
+    }
 }
 
 /// This structure represents a keyframes animation current iteration state.
@@ -156,12 +166,10 @@ pub enum AnimationState {
 /// have to keep track the current iteration and the max iteration count.
 #[derive(Clone, Debug, MallocSizeOf)]
 pub enum KeyframesIterationState {
-    /// Infinite iterations, so no need to track a state.
-    Infinite,
+    /// Infinite iterations with the current iteration count.
+    Infinite(f64),
     /// Current and max iterations.
-    /// TODO: Everything else in this file uses f64, so perhaps this should
-    /// be as well.
-    Finite(f32, f32),
+    Finite(f64, f64),
 }
 
 /// A CSS Animation
@@ -176,7 +184,8 @@ pub struct Animation {
     /// The internal animation from the style system.
     pub keyframes_animation: KeyframesAnimation,
 
-    /// The time this animation started at.
+    /// The time this animation started at, which is the current value of the animation
+    /// timeline when this animation was created plus any animation delay.
     pub started_at: f64,
 
     /// The duration of this animation.
@@ -184,6 +193,9 @@ pub struct Animation {
 
     /// The delay of the animation.
     pub delay: f64,
+
+    /// The `animation-fill-mode` property of this animation.
+    pub fill_mode: AnimationFillMode,
 
     /// The current iteration state for the animation.
     pub iteration_state: KeyframesIterationState,
@@ -224,26 +236,26 @@ impl Animation {
 
     /// Given the current time, advances this animation to the next iteration,
     /// updates times, and then toggles the direction if appropriate. Otherwise
-    /// does nothing.
-    pub fn iterate_if_necessary(&mut self, time: f64) {
+    /// does nothing. Returns true if this animation has iterated.
+    pub fn iterate_if_necessary(&mut self, time: f64) -> bool {
         if !self.iteration_over(time) {
-            return;
+            return false;
         }
 
         // Only iterate animations that are currently running.
         if self.state != AnimationState::Running {
-            return;
+            return false;
         }
 
         if let KeyframesIterationState::Finite(ref mut current, max) = self.iteration_state {
-            // If we are already on the final iteration, just exit now.
-            // NB: This prevent us from updating the direction, which might be
-            // needed for the correct handling of animation-fill-mode.
-            if (max - *current) <= 1.0 {
-                return;
+            // If we are already on the final iteration, just exit now. This prevents
+            // us from updating the direction, which might be needed for the correct
+            // handling of animation-fill-mode and also firing animationiteration events
+            // at the end of animations.
+            *current = (*current + 1.).min(max);
+            if *current == max {
+                return false;
             }
-
-            *current += 1.0;
         }
 
         // Update the next iteration direction if applicable.
@@ -259,6 +271,8 @@ impl Animation {
             },
             _ => {},
         }
+
+        true
     }
 
     fn iteration_over(&self, time: f64) -> bool {
@@ -270,9 +284,11 @@ impl Animation {
     /// canceled due to changes in the style.
     pub fn has_ended(&self, time: f64) -> bool {
         match self.state {
-            AnimationState::Canceled | AnimationState::Paused(_) => return false,
-            AnimationState::Finished => return true,
             AnimationState::Running => {},
+            AnimationState::Finished => return true,
+            AnimationState::Pending | AnimationState::Canceled | AnimationState::Paused(_) => {
+                return false
+            },
         }
 
         if !self.iteration_over(time) {
@@ -282,8 +298,8 @@ impl Animation {
         // If we have a limited number of iterations and we cannot advance to another
         // iteration, then we have ended.
         return match self.iteration_state {
-            KeyframesIterationState::Finite(current, max) if (max - current) <= 1.0 => true,
-            KeyframesIterationState::Finite(..) | KeyframesIterationState::Infinite => false,
+            KeyframesIterationState::Finite(current, max) => max == current,
+            KeyframesIterationState::Infinite(..) => false,
         };
     }
 
@@ -309,27 +325,11 @@ impl Animation {
         let old_direction = self.current_direction;
         let old_state = self.state.clone();
         let old_iteration_state = self.iteration_state.clone();
+
         *self = other.clone();
 
-        let mut new_started_at = old_started_at;
-
-        // If we're unpausing the animation, fake the start time so we seem to
-        // restore it.
-        //
-        // If the animation keeps paused, keep the old value.
-        //
-        // If we're pausing the animation, compute the progress value.
-        match (&mut self.state, old_state) {
-            (&mut Running, Paused(progress)) => new_started_at = now - (self.duration * progress),
-            (&mut Paused(ref mut new), Paused(old)) => *new = old,
-            (&mut Paused(ref mut progress), Running) => {
-                *progress = (now - old_started_at) / old_duration
-            },
-            // TODO(mrobinson): We should handle the case where a new animation replaces
-            // a finished one.
-            (_, Finished) | (Finished, _) => unreachable!("Did not expect Finished animation."),
-            _ => {},
-        }
+        self.started_at = old_started_at;
+        self.current_direction = old_direction;
 
         // Don't update the iteration count, just the iteration limit.
         // TODO: see how changing the limit affects rendering in other browsers.
@@ -342,18 +342,36 @@ impl Animation {
             _ => {},
         }
 
-        self.current_direction = old_direction;
-        self.started_at = new_started_at;
-    }
+        // Don't pause or restart animations that should remain finished.
+        // We call mem::replace because `has_ended(...)` looks at `Animation::state`.
+        let new_state = std::mem::replace(&mut self.state, Running);
+        if old_state == Finished && self.has_ended(now) {
+            self.state = Finished;
+        } else {
+            self.state = new_state;
+        }
 
-    /// Calculate the active-duration of this animation according to
-    /// https://drafts.csswg.org/css-animations/#active-duration. active-duration
-    /// is not really meaningful for infinite animations so we just return 0
-    /// here in that case.
-    pub fn active_duration(&self) -> f64 {
-        match self.iteration_state {
-            KeyframesIterationState::Finite(_, max) => self.duration * (max as f64),
-            KeyframesIterationState::Infinite => 0.,
+        // If we're unpausing the animation, fake the start time so we seem to
+        // restore it.
+        //
+        // If the animation keeps paused, keep the old value.
+        //
+        // If we're pausing the animation, compute the progress value.
+        match (&mut self.state, &old_state) {
+            (&mut Pending, &Paused(progress)) => {
+                self.started_at = now - (self.duration * progress);
+            },
+            (&mut Paused(ref mut new), &Paused(old)) => *new = old,
+            (&mut Paused(ref mut progress), &Running) => {
+                *progress = (now - old_started_at) / old_duration
+            },
+            _ => {},
+        }
+
+        // Try to detect when we should skip straight to the running phase to
+        // avoid sending multiple animationstart events.
+        if self.state == Pending && self.started_at <= now && old_state != Pending {
+            self.state = Running;
         }
     }
 
@@ -362,7 +380,7 @@ impl Animation {
     fn update_style<E>(
         &self,
         context: &SharedStyleContext,
-        style: &mut ComputedValues,
+        style: &mut Arc<ComputedValues>,
         font_metrics_provider: &dyn FontMetricsProvider,
     ) where
         E: TElement,
@@ -371,46 +389,54 @@ impl Animation {
         let started_at = self.started_at;
 
         let now = match self.state {
-            AnimationState::Running => context.current_time_for_animations,
+            AnimationState::Running | AnimationState::Pending | AnimationState::Finished => {
+                context.current_time_for_animations
+            },
             AnimationState::Paused(progress) => started_at + duration * progress,
-            AnimationState::Canceled | AnimationState::Finished => return,
+            AnimationState::Canceled => return,
         };
 
         debug_assert!(!self.keyframes_animation.steps.is_empty());
+
         let mut total_progress = (now - started_at) / duration;
-        if total_progress < 0. {
-            warn!("Negative progress found for animation {:?}", self.name);
+        if total_progress < 0. &&
+            self.fill_mode != AnimationFillMode::Backwards &&
+            self.fill_mode != AnimationFillMode::Both
+        {
             return;
         }
-        if total_progress > 1. {
-            total_progress = 1.;
-        }
 
-        // Get the target and the last keyframe position.
-        let last_keyframe_position;
-        let target_keyframe_position;
+        if total_progress > 1. &&
+            self.fill_mode != AnimationFillMode::Forwards &&
+            self.fill_mode != AnimationFillMode::Both
+        {
+            return;
+        }
+        total_progress = total_progress.min(1.0).max(0.0);
+
+        // Get the indices of the previous (from) keyframe and the next (to) keyframe.
+        let next_keyframe_index;
+        let prev_keyframe_index;
         match self.current_direction {
             AnimationDirection::Normal => {
-                target_keyframe_position = self
+                next_keyframe_index = self
                     .keyframes_animation
                     .steps
                     .iter()
                     .position(|step| total_progress as f32 <= step.start_percentage.0);
-
-                last_keyframe_position = target_keyframe_position
+                prev_keyframe_index = next_keyframe_index
                     .and_then(|pos| if pos != 0 { Some(pos - 1) } else { None })
                     .unwrap_or(0);
             },
             AnimationDirection::Reverse => {
-                target_keyframe_position = self
+                next_keyframe_index = self
                     .keyframes_animation
                     .steps
                     .iter()
                     .rev()
                     .position(|step| total_progress as f32 <= 1. - step.start_percentage.0)
                     .map(|pos| self.keyframes_animation.steps.len() - pos - 1);
-
-                last_keyframe_position = target_keyframe_position
+                prev_keyframe_index = next_keyframe_index
                     .and_then(|pos| {
                         if pos != self.keyframes_animation.steps.len() - 1 {
                             Some(pos + 1)
@@ -418,52 +444,83 @@ impl Animation {
                             None
                         }
                     })
-                    .unwrap_or(self.keyframes_animation.steps.len() - 1);
+                    .unwrap_or(self.keyframes_animation.steps.len() - 1)
             },
             _ => unreachable!(),
         }
 
         debug!(
             "Animation::update_style: keyframe from {:?} to {:?}",
-            last_keyframe_position, target_keyframe_position
+            prev_keyframe_index, next_keyframe_index
         );
 
-        let target_keyframe = match target_keyframe_position {
+        let prev_keyframe = &self.keyframes_animation.steps[prev_keyframe_index];
+        let next_keyframe = match next_keyframe_index {
             Some(target) => &self.keyframes_animation.steps[target],
             None => return,
         };
 
-        let last_keyframe = &self.keyframes_animation.steps[last_keyframe_position];
+        let update_with_single_keyframe_style = |style, computed_style: &Arc<ComputedValues>| {
+            let mutable_style = Arc::make_mut(style);
+            for property in self
+                .keyframes_animation
+                .properties_changed
+                .iter()
+                .filter_map(|longhand| {
+                    AnimationValue::from_computed_values(longhand, &**computed_style)
+                })
+            {
+                property.set_in_style_for_servo(mutable_style);
+            }
+        };
+
+        // TODO: How could we optimise it? Is it such a big deal?
+        let prev_keyframe_style = compute_style_for_animation_step::<E>(
+            context,
+            prev_keyframe,
+            style,
+            &self.cascade_style,
+            font_metrics_provider,
+        );
+        if total_progress <= 0.0 {
+            update_with_single_keyframe_style(style, &prev_keyframe_style);
+            return;
+        }
+
+        let next_keyframe_style = compute_style_for_animation_step::<E>(
+            context,
+            next_keyframe,
+            &prev_keyframe_style,
+            &self.cascade_style,
+            font_metrics_provider,
+        );
+        if total_progress >= 1.0 {
+            update_with_single_keyframe_style(style, &next_keyframe_style);
+            return;
+        }
 
         let relative_timespan =
-            (target_keyframe.start_percentage.0 - last_keyframe.start_percentage.0).abs();
+            (next_keyframe.start_percentage.0 - prev_keyframe.start_percentage.0).abs();
         let relative_duration = relative_timespan as f64 * duration;
         let last_keyframe_ended_at = match self.current_direction {
             AnimationDirection::Normal => {
-                self.started_at + (duration * last_keyframe.start_percentage.0 as f64)
+                self.started_at + (duration * prev_keyframe.start_percentage.0 as f64)
             },
             AnimationDirection::Reverse => {
-                self.started_at + (duration * (1. - last_keyframe.start_percentage.0 as f64))
+                self.started_at + (duration * (1. - prev_keyframe.start_percentage.0 as f64))
             },
             _ => unreachable!(),
         };
         let relative_progress = (now - last_keyframe_ended_at) / relative_duration;
 
-        // TODO: How could we optimise it? Is it such a big deal?
-        let from_style = compute_style_for_animation_step::<E>(
-            context,
-            last_keyframe,
-            style,
-            &self.cascade_style,
-            font_metrics_provider,
-        );
-
         // NB: The spec says that the timing function can be overwritten
         // from the keyframe style.
-        let timing_function = if last_keyframe.declared_timing_function {
+        let timing_function = if prev_keyframe.declared_timing_function {
             // NB: animation_timing_function can never be empty, always has
             // at least the default value (`ease`).
-            from_style.get_box().animation_timing_function_at(0)
+            prev_keyframe_style
+                .get_box()
+                .animation_timing_function_at(0)
         } else {
             // TODO(mrobinson): It isn't optimal to have to walk this list every
             // time. Perhaps this should be stored in the animation.
@@ -478,18 +535,10 @@ impl Animation {
             style.get_box().animation_timing_function_mod(index)
         };
 
-        let target_style = compute_style_for_animation_step::<E>(
-            context,
-            target_keyframe,
-            &from_style,
-            &self.cascade_style,
-            font_metrics_provider,
-        );
-
-        let mut new_style = (*style).clone();
+        let mut new_style = (**style).clone();
         let mut update_style_for_longhand = |longhand| {
-            let from = AnimationValue::from_computed_values(longhand, &from_style)?;
-            let to = AnimationValue::from_computed_values(longhand, &target_style)?;
+            let from = AnimationValue::from_computed_values(longhand, &prev_keyframe_style)?;
+            let to = AnimationValue::from_computed_values(longhand, &next_keyframe_style)?;
             PropertyAnimation {
                 from,
                 to,
@@ -504,7 +553,7 @@ impl Animation {
             update_style_for_longhand(property);
         }
 
-        *style = new_style;
+        *Arc::make_mut(style) = new_style;
     }
 }
 
@@ -531,8 +580,11 @@ pub struct Transition {
     pub node: OpaqueNode,
 
     /// The start time of this transition, which is the current value of the animation
-    /// timeline when this transition created.
+    /// timeline when this transition was created plus any animation delay.
     pub start_time: f64,
+
+    /// The delay used for this transition.
+    pub delay: f64,
 
     /// The internal style `PropertyAnimation` for this transition.
     pub property_animation: PropertyAnimation,
@@ -543,9 +595,84 @@ pub struct Transition {
     /// Whether or not this transition is new and or has already been tracked
     /// by the script thread.
     pub is_new: bool,
+
+    /// If this `Transition` has been replaced by a new one this field is
+    /// used to help produce better reversed transitions.
+    pub reversing_adjusted_start_value: AnimationValue,
+
+    /// If this `Transition` has been replaced by a new one this field is
+    /// used to help produce better reversed transitions.
+    pub reversing_shortening_factor: f64,
 }
 
 impl Transition {
+    fn update_for_possibly_reversed_transition(
+        &mut self,
+        replaced_transition: &Transition,
+        delay: f64,
+        now: f64,
+    ) {
+        // If we reach here, we need to calculate a reversed transition according to
+        // https://drafts.csswg.org/css-transitions/#starting
+        //
+        //  "...if the reversing-adjusted start value of the running transition
+        //  is the same as the value of the property in the after-change style (see
+        //  the section on reversing of transitions for why these case exists),
+        //  implementations must cancel the running transition and start
+        //  a new transition..."
+        if replaced_transition.reversing_adjusted_start_value != self.property_animation.to {
+            return;
+        }
+
+        // "* reversing-adjusted start value is the end value of the running transition"
+        let replaced_animation = &replaced_transition.property_animation;
+        self.reversing_adjusted_start_value = replaced_animation.to.clone();
+
+        // "* reversing shortening factor is the absolute value, clamped to the
+        //    range [0, 1], of the sum of:
+        //    1. the output of the timing function of the old transition at the
+        //      time of the style change event, times the reversing shortening
+        //      factor of the old transition
+        //    2.  1 minus the reversing shortening factor of the old transition."
+        let transition_progress = replaced_transition.progress(now);
+        let timing_function_output = replaced_animation.timing_function_output(transition_progress);
+        let old_reversing_shortening_factor = replaced_transition.reversing_shortening_factor;
+        self.reversing_shortening_factor = ((timing_function_output *
+            old_reversing_shortening_factor) +
+            (1.0 - old_reversing_shortening_factor))
+            .abs()
+            .min(1.0)
+            .max(0.0);
+
+        // "* start time is the time of the style change event plus:
+        //    1. if the matching transition delay is nonnegative, the matching
+        //       transition delay, or.
+        //    2. if the matching transition delay is negative, the product of the new
+        //       transition’s reversing shortening factor and the matching transition delay,"
+        self.start_time = if delay >= 0. {
+            now + delay
+        } else {
+            now + (self.reversing_shortening_factor * delay)
+        };
+
+        // "* end time is the start time plus the product of the matching transition
+        //    duration and the new transition’s reversing shortening factor,"
+        self.property_animation.duration *= self.reversing_shortening_factor;
+
+        // "* start value is the current value of the property in the running transition,
+        //  * end value is the value of the property in the after-change style,"
+        let procedure = Procedure::Interpolate {
+            progress: timing_function_output,
+        };
+        match replaced_animation
+            .from
+            .animate(&replaced_animation.to, procedure)
+        {
+            Ok(new_start) => self.property_animation.from = new_start,
+            Err(..) => {},
+        }
+    }
+
     /// Whether or not this animation has ended at the provided time. This does
     /// not take into account canceling i.e. when an animation or transition is
     /// canceled due to changes in the style.
@@ -561,7 +688,7 @@ impl Transition {
     }
 
     /// Update a style to the value specified by this `Transition` given a `SharedStyleContext`.
-    fn update_style(&self, context: &SharedStyleContext, style: &mut ComputedValues) {
+    fn update_style(&self, context: &SharedStyleContext, style: &mut Arc<ComputedValues>) {
         // Never apply canceled transitions to a style.
         if self.state == AnimationState::Canceled {
             return;
@@ -569,7 +696,8 @@ impl Transition {
 
         let progress = self.progress(context.current_time_for_animations);
         if progress >= 0.0 {
-            self.property_animation.update(style, progress);
+            self.property_animation
+                .update(Arc::make_mut(style), progress);
         }
     }
 }
@@ -604,12 +732,6 @@ impl ElementAnimationSet {
     ) where
         E: TElement,
     {
-        // Return early to avoid potentially copying the style.
-        if self.animations.is_empty() && self.transitions.is_empty() {
-            return;
-        }
-
-        let style = Arc::make_mut(style);
         for animation in &self.animations {
             animation.update_style::<E>(context, style, font_metrics);
         }
@@ -617,15 +739,6 @@ impl ElementAnimationSet {
         for transition in &self.transitions {
             transition.update_style(context, style);
         }
-    }
-
-    pub(crate) fn clear_finished_animations(&mut self) {
-        // TODO(mrobinson): This should probably not clear finished animations
-        // because of `animation-fill-mode`.
-        self.animations
-            .retain(|animation| animation.state != AnimationState::Finished);
-        self.transitions
-            .retain(|animation| animation.state != AnimationState::Finished);
     }
 
     /// Clear all canceled animations and transitions from this `ElementAnimationSet`.
@@ -643,26 +756,25 @@ impl ElementAnimationSet {
     }
 
     /// Whether or not this state needs animation ticks for its transitions
-    /// or animations. New animations don't need ticks until they are no
-    /// longer marked as new.
+    /// or animations.
     pub fn needs_animation_ticks(&self) -> bool {
         self.animations
             .iter()
-            .any(|animation| animation.state == AnimationState::Running && !animation.is_new) ||
-            self.transitions.iter().any(|transition| {
-                transition.state == AnimationState::Running && !transition.is_new
-            })
+            .any(|animation| animation.state.needs_to_be_ticked()) ||
+            self.transitions
+                .iter()
+                .any(|transition| transition.state.needs_to_be_ticked())
     }
 
     /// The number of running animations and transitions for this `ElementAnimationSet`.
     pub fn running_animation_and_transition_count(&self) -> usize {
         self.animations
             .iter()
-            .filter(|animation| animation.state == AnimationState::Running)
+            .filter(|animation| animation.state.needs_to_be_ticked())
             .count() +
             self.transitions
                 .iter()
-                .filter(|transition| transition.state == AnimationState::Running)
+                .filter(|transition| transition.state.needs_to_be_ticked())
                 .count()
     }
 
@@ -692,11 +804,6 @@ impl ElementAnimationSet {
         }
 
         maybe_start_animations(element, &context, &new_style, self);
-
-        // When necessary, iterate our running animations to the next iteration.
-        for animation in self.animations.iter_mut() {
-            animation.iterate_if_necessary(context.current_time_for_animations);
-        }
     }
 
     /// Update our transitions given a new style, canceling or starting new animations
@@ -746,6 +853,75 @@ impl ElementAnimationSet {
             transition.state = AnimationState::Canceled;
         }
     }
+
+    fn start_transition_if_applicable(
+        &mut self,
+        context: &SharedStyleContext,
+        opaque_node: OpaqueNode,
+        longhand_id: LonghandId,
+        index: usize,
+        old_style: &ComputedValues,
+        new_style: &Arc<ComputedValues>,
+    ) {
+        let box_style = new_style.get_box();
+        let timing_function = box_style.transition_timing_function_mod(index);
+        let duration = box_style.transition_duration_mod(index);
+        let delay = box_style.transition_delay_mod(index).seconds() as f64;
+        let now = context.current_time_for_animations;
+
+        // Only start a new transition if the style actually changes between
+        // the old style and the new style.
+        let property_animation = match PropertyAnimation::from_longhand(
+            longhand_id,
+            timing_function,
+            duration,
+            old_style,
+            new_style,
+        ) {
+            Some(property_animation) => property_animation,
+            None => return,
+        };
+
+        // Per [1], don't trigger a new transition if the end state for that
+        // transition is the same as that of a transition that's running or
+        // completed. We don't take into account any canceled animations.
+        // [1]: https://drafts.csswg.org/css-transitions/#starting
+        if self
+            .transitions
+            .iter()
+            .filter(|transition| transition.state != AnimationState::Canceled)
+            .any(|transition| transition.property_animation.to == property_animation.to)
+        {
+            return;
+        }
+
+        // We are going to start a new transition, but we might have to update
+        // it if we are replacing a reversed transition.
+        let reversing_adjusted_start_value = property_animation.from.clone();
+        let mut new_transition = Transition {
+            node: opaque_node,
+            start_time: now + delay,
+            delay,
+            property_animation,
+            state: AnimationState::Pending,
+            is_new: true,
+            reversing_adjusted_start_value,
+            reversing_shortening_factor: 1.0,
+        };
+
+        if let Some(old_transition) = self
+            .transitions
+            .iter_mut()
+            .filter(|transition| transition.state == AnimationState::Running)
+            .find(|transition| transition.property_animation.property_id() == longhand_id)
+        {
+            // We always cancel any running transitions for the same property.
+            old_transition.state = AnimationState::Canceled;
+            new_transition.update_for_possibly_reversed_transition(old_transition, delay, now);
+        }
+
+        self.transitions.push(new_transition);
+    }
 }
 
 /// Kick off any new transitions for this node and return all of the properties that are
@@ -769,46 +945,17 @@ pub fn start_transitions_if_applicable(
         let physical_property = transition.longhand_id.to_physical(new_style.writing_mode);
         if properties_that_transition.contains(physical_property) {
             continue;
-        } else {
-            properties_that_transition.insert(physical_property);
         }
 
-        let property_animation = match PropertyAnimation::from_longhand(
-            transition.longhand_id,
-            box_style.transition_timing_function_mod(transition.index),
-            box_style.transition_duration_mod(transition.index),
+        properties_that_transition.insert(physical_property);
+        animation_state.start_transition_if_applicable(
+            context,
+            opaque_node,
+            physical_property,
+            transition.index,
             old_style,
             new_style,
-        ) {
-            Some(property_animation) => property_animation,
-            None => continue,
-        };
-
-        // Per [1], don't trigger a new transition if the end state for that
-        // transition is the same as that of a transition that's running or
-        // completed. We don't take into account any canceled animations.
-        // [1]: https://drafts.csswg.org/css-transitions/#starting
-        if animation_state
-            .transitions
-            .iter()
-            .filter(|transition| transition.state != AnimationState::Canceled)
-            .any(|transition| transition.property_animation.to == property_animation.to)
-        {
-            continue;
-        }
-
-        // Kick off the animation.
-        debug!("Kicking off transition of {:?}", property_animation);
-        let box_style = new_style.get_box();
-        let start_time = context.current_time_for_animations +
-            (box_style.transition_delay_mod(transition.index).seconds() as f64);
-        animation_state.transitions.push(Transition {
-            node: opaque_node,
-            start_time,
-            property_animation,
-            state: AnimationState::Running,
-            is_new: true,
-        });
+        );
     }
 
     properties_that_transition
@@ -831,13 +978,7 @@ where
         } => {
             let guard = declarations.read_with(context.guards.author);
 
-            // This currently ignores visited styles, which seems acceptable,
-            // as existing browsers don't appear to animate visited styles.
-            let computed = properties::apply_declarations::<E, _>(
-                context.stylist.device(),
-                /* pseudo = */ None,
-                previous_style.rules(),
-                &context.guards,
+            let iter = || {
                 // It's possible to have !important properties in keyframes
                 // so we have to filter them out.
                 // See the spec issue https://github.com/w3c/csswg-drafts/issues/1824
@@ -845,7 +986,17 @@ where
                 guard
                     .normal_declaration_iter()
                     .filter(|declaration| declaration.is_animatable())
-                    .map(|decl| (decl, Origin::Author)),
+                    .map(|decl| (decl, Origin::Author))
+            };
+
+            // This currently ignores visited styles, which seems acceptable,
+            // as existing browsers don't appear to animate visited styles.
+            let computed = properties::apply_declarations::<E, _, _>(
+                context.stylist.device(),
+                /* pseudo = */ None,
+                previous_style.rules(),
+                &context.guards,
+                iter,
                 Some(previous_style),
                 Some(previous_style),
                 Some(previous_style),
@@ -904,8 +1055,8 @@ pub fn maybe_start_animations<E>(
         let delay = box_style.animation_delay_mod(i).seconds();
         let animation_start = context.current_time_for_animations + delay as f64;
         let iteration_state = match box_style.animation_iteration_count_mod(i) {
-            AnimationIterationCount::Infinite => KeyframesIterationState::Infinite,
-            AnimationIterationCount::Number(n) => KeyframesIterationState::Finite(0.0, n),
+            AnimationIterationCount::Infinite => KeyframesIterationState::Infinite(0.0),
+            AnimationIterationCount::Number(n) => KeyframesIterationState::Finite(0.0, n.into()),
         };
 
         let animation_direction = box_style.animation_direction_mod(i);
@@ -921,7 +1072,7 @@ pub fn maybe_start_animations<E>(
 
         let state = match box_style.animation_play_state_mod(i) {
             AnimationPlayState::Paused => AnimationState::Paused(0.),
-            AnimationPlayState::Running => AnimationState::Running,
+            AnimationPlayState::Running => AnimationState::Pending,
         };
 
         let new_animation = Animation {
@@ -930,6 +1081,7 @@ pub fn maybe_start_animations<E>(
             keyframes_animation: anim.clone(),
             started_at: animation_start,
             duration: duration as f64,
+            fill_mode: box_style.animation_fill_mode_mod(i),
             delay: delay as f64,
             iteration_state,
             state,
@@ -941,7 +1093,7 @@ pub fn maybe_start_animations<E>(
 
         // If the animation was already present in the list for the node, just update its state.
         for existing_animation in animation_state.animations.iter_mut() {
-            if existing_animation.state != AnimationState::Running {
+            if existing_animation.state == AnimationState::Canceled {
                 continue;
             }
 
