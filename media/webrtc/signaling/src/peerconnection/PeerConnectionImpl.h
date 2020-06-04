@@ -441,6 +441,11 @@ class PeerConnectionImpl final
     return mTimestampMaker;
   }
 
+  // Utility function, given a string pref and an URI, returns whether or not
+  // the URI occurs in the pref. Wildcards are supported (e.g. *.example.com)
+  // and multiple hostnames can be present, separated by commas.
+  static bool HostnameInPref(const char* aPrefList, nsIURI* aDocURI);
+
  private:
   virtual ~PeerConnectionImpl();
   PeerConnectionImpl(const PeerConnectionImpl& rhs);
@@ -608,6 +613,9 @@ class PeerConnectionImpl final
 
   DOMMediaStream* GetReceiveStream(const std::string& aId) const;
   DOMMediaStream* CreateReceiveStream(const std::string& aId);
+
+  // See Bug 1642419, this can be removed when all sites are working with RTX.
+  bool mRtxIsAllowed = true;
 
  public:
   // these are temporary until the DataChannel Listen/Connect API is removed
