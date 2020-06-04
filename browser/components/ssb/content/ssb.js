@@ -238,7 +238,15 @@ class BrowserDOMWindow {
   }
 
   canClose() {
-    return BrowserUtils.canCloseWindow(window);
+    /* globals docShell */
+    for (let i = 0; i < docShell.childCount; i++) {
+      let childShell = docShell.getChildAt(i).QueryInterface(Ci.nsIDocShell);
+      let { contentViewer } = childShell;
+      if (contentViewer && !contentViewer.permitUnload()) {
+        return false;
+      }
+    }
+    return true;
   }
 
   get tabCount() {

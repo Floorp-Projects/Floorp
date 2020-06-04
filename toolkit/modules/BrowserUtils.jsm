@@ -609,20 +609,6 @@ var BrowserUtils = {
     };
   },
 
-  // Iterates through every docshell in the window and calls PermitUnload.
-  canCloseWindow(window) {
-    let docShell = window.docShell;
-    for (let i = 0; i < docShell.childCount; ++i) {
-      let childShell = docShell.getChildAt(i).QueryInterface(Ci.nsIDocShell);
-      let contentViewer = childShell.contentViewer;
-      if (contentViewer && !contentViewer.permitUnload()) {
-        return false;
-      }
-    }
-
-    return true;
-  },
-
   /**
    * Replaces %s or %S in the provided url or postData with the given parameter,
    * acccording to the best charset for the given url.
