@@ -109,21 +109,6 @@ var SearchUtils = {
   },
 
   /**
-   * Logs the failure message (if browser.search.log is enabled) and throws.
-   * @param {string} message
-   *   A message to display
-   * @param {number} resultCode
-   *   The NS_ERROR_* value to throw.
-   * @throws resultCode or NS_ERROR_INVALID_ARG if resultCode isn't specified.
-   */
-  fail(message, resultCode) {
-    if (SearchUtils.loggingEnabled) {
-      Services.console.logStringMessage(message);
-    }
-    throw Components.Exception(message, resultCode || Cr.NS_ERROR_INVALID_ARG);
-  },
-
-  /**
    * Wrapper function for nsIIOService::newURI.
    * @param {string} urlSpec
    *        The URL string from which to create an nsIURI.
