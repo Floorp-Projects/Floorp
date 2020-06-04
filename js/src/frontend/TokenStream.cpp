@@ -2629,13 +2629,9 @@ MOZ_MUST_USE bool TokenStreamSpecific<Unit, AnyCharsAccess>::regexpLiteral(
       flag = RegExpFlag::IgnoreCase;
     } else if (unit == 'm') {
       flag = RegExpFlag::Multiline;
-    }
-#ifdef ENABLE_NEW_REGEXP
-    else if (unit == 's') {
+    } else if (unit == 's') {
       flag = RegExpFlag::DotAll;
-    }
-#endif
-    else if (unit == 'u') {
+    } else if (unit == 'u') {
       flag = RegExpFlag::Unicode;
     } else if (unit == 'y') {
       flag = RegExpFlag::Sticky;

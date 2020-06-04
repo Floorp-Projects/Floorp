@@ -24,9 +24,7 @@
 #include "js/RegExpFlags.h"  // JS::RegExpFlag, JS::RegExpFlags
 #include "js/UbiNode.h"
 #include "js/Vector.h"
-#ifdef ENABLE_NEW_REGEXP
-#  include "new-regexp/RegExpTypes.h"
-#endif
+#include "new-regexp/RegExpTypes.h"
 #include "vm/ArrayObject.h"
 #include "vm/JSAtom.h"
 
@@ -48,25 +46,13 @@ enum RegExpRunStatus : int32_t {
   RegExpRunStatus_Success_NotFound = 0,
 };
 
-#ifdef ENABLE_NEW_REGEXP
-
 inline bool IsNativeRegExpEnabled() {
-#  ifdef JS_CODEGEN_NONE
+#ifdef JS_CODEGEN_NONE
   return false;
-#  else
-  return jit::JitOptions.nativeRegExp;
-#  endif
-}
-
 #else
-/*
- * Layout of the reg exp bytecode header.
- */
-struct RegExpByteCodeHeader {
-  uint32_t length;        // Number of instructions.
-  uint32_t numRegisters;  // Number of registers used.
-};
-#endif  // ENABLE_NEW_REGEXP
+  return jit::JitOptions.nativeRegExp;
+#endif
+}
 
 /*
  * A RegExpShared is the compiled representation of a regexp. A RegExpShared is
@@ -90,13 +76,8 @@ class RegExpShared : public gc::TenuredCell {
   enum class Kind { Unparsed, Atom, RegExp };
   enum class CodeKind { Bytecode, Jitcode, Any };
 
-#ifdef ENABLE_NEW_REGEXP
   using ByteCode = js::irregexp::ByteArrayData;
   using JitCodeTable = js::irregexp::ByteArray;
-#else
-  using ByteCode = uint8_t;
-  using JitCodeTable = UniquePtr<uint8_t[], JS::FreePolicy>;
-#endif
   using JitCodeTables = Vector<JitCodeTable, 0, SystemAllocPolicy>;
 
  private:
@@ -121,12 +102,7 @@ class RegExpShared : public gc::TenuredCell {
 
     size_t byteCodeLength() const {
       MOZ_ASSERT(byteCode);
-#ifdef ENABLE_NEW_REGEXP
       return byteCode->length;
-#else
-      auto header = reinterpret_cast<RegExpByteCodeHeader*>(byteCode);
-      return header->length;
-#endif
     }
   };
 
@@ -139,20 +115,14 @@ class RegExpShared : public gc::TenuredCell {
   uint32_t pairCount_;
   JS::RegExpFlags flags;
 
-#ifdef ENABLE_NEW_REGEXP
   RegExpShared::Kind kind_ = Kind::Unparsed;
   GCPtrAtom patternAtom_;
   uint32_t maxRegisters_ = 0;
   uint32_t ticks_ = 0;
-#else
-  bool canStringMatch = false;
-#endif
 
-#ifdef ENABLE_NEW_REGEXP
   uint32_t numNamedCaptures_ = {};
   uint32_t* namedCaptureIndices_ = {};
   GCPtr<PlainObject*> groupsTemplate_ = {};
-#endif
 
   static int CompilationIndex(bool latin1) { return latin1 ? 0 : 1; }
 
@@ -198,15 +168,10 @@ class RegExpShared : public gc::TenuredCell {
   /* Accessors */
 
   size_t pairCount() const {
-#ifdef ENABLE_NEW_REGEXP
     MOZ_ASSERT(kind() != Kind::Unparsed);
-#else
-    MOZ_ASSERT(isCompiled());
-#endif
     return pairCount_;
   }
 
-#ifdef ENABLE_NEW_REGEXP
   RegExpShared::Kind kind() const { return kind_; }
 
   // Use simple string matching for this regexp.
@@ -246,15 +211,9 @@ class RegExpShared : public gc::TenuredCell {
     return namedCaptureIndices_[idx];
   }
 
-#endif
-
   JSAtom* getSource() const { return headerAndSource.ptr(); }
 
-#ifdef ENABLE_NEW_REGEXP
   JSAtom* patternAtom() const { return patternAtom_; }
-#else
-  JSAtom* patternAtom() const { return getSource(); }
-#endif
 
   JS::RegExpFlags getFlags() const { return flags; }
 
@@ -290,11 +249,10 @@ class RegExpShared : public gc::TenuredCell {
            (CompilationIndex(latin1) * sizeof(RegExpCompilation)) +
            offsetof(RegExpCompilation, jitCode);
   }
-#ifdef ENABLE_NEW_REGEXP
+
   static size_t offsetOfGroupsTemplate() {
     return offsetof(RegExpShared, groupsTemplate_);
   }
-#endif
 
   size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf);
 
@@ -397,9 +355,7 @@ class RegExpRealm {
 
   static const size_t MatchResultObjectIndexSlot = 0;
   static const size_t MatchResultObjectInputSlot = 1;
-#ifdef ENABLE_NEW_REGEXP
   static const size_t MatchResultObjectGroupsSlot = 2;
-#endif
 
   static size_t offsetOfMatchResultObjectIndexSlot() {
     return sizeof(Value) * MatchResultObjectIndexSlot;
@@ -407,11 +363,9 @@ class RegExpRealm {
   static size_t offsetOfMatchResultObjectInputSlot() {
     return sizeof(Value) * MatchResultObjectInputSlot;
   }
-#ifdef ENABLE_NEW_REGEXP
   static size_t offsetOfMatchResultObjectGroupsSlot() {
     return sizeof(Value) * MatchResultObjectGroupsSlot;
   }
-#endif
 
   /* Get or create template object used to base the result of .exec() on. */
   ArrayObject* getOrCreateMatchResultTemplateObject(JSContext* cx) {

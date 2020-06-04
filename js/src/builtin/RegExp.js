@@ -27,11 +27,9 @@ function $RegExpFlagsGetter() {
     if (R.multiline)
         result += "m";
 
-#ifdef ENABLE_NEW_REGEXP
     // Steps 10-11.
     if (R.dotAll)
         result += "s";
-#endif
 
     // Steps 12-13.
     if (R.unicode)

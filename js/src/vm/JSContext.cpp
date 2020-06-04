@@ -54,9 +54,7 @@
 #ifdef JS_SIMULATOR_MIPS64
 #  include "jit/mips64/Simulator-mips64.h"
 #endif
-#ifdef ENABLE_NEW_REGEXP
-#  include "new-regexp/RegExpAPI.h"
-#endif
+#include "new-regexp/RegExpAPI.h"
 #include "util/DiagnosticAssertions.h"
 #include "util/DoubleToString.h"
 #include "util/NativeStack.h"
@@ -124,12 +122,6 @@ bool JSContext::init(ContextKind kind) {
     TlsContext.set(this);
     currentThread_ = ThreadId::ThisThreadId();
 
-#ifndef ENABLE_NEW_REGEXP
-    if (!regexpStack.ref().init()) {
-      return false;
-    }
-#endif
-
     if (!fx.initInstance()) {
       return false;
     }
@@ -148,12 +140,10 @@ bool JSContext::init(ContextKind kind) {
     }
   }
 
-#ifdef ENABLE_NEW_REGEXP
   isolate = irregexp::CreateIsolate(this);
   if (!isolate) {
     return false;
   }
-#endif
 
   // Set the ContextKind last, so that ProtectedData checks will allow us to
   // initialize this context before it becomes the runtime's active context.
@@ -912,11 +902,7 @@ JSContext::JSContext(JSRuntime* runtime, const JS::ContextOptions& options)
       defaultFreeOp_(this, runtime, true),
       freeUnusedMemory(false),
       jitActivation(this, nullptr),
-#ifdef ENABLE_NEW_REGEXP
       isolate(this, nullptr),
-#else
-      regexpStack(this),
-#endif
       activation_(this, nullptr),
       profilingActivation_(nullptr),
       nativeStackBase(GetNativeStackBase()),
@@ -1014,9 +1000,7 @@ JSContext::~JSContext() {
   }
 #endif
 
-#ifdef ENABLE_NEW_REGEXP
   irregexp::DestroyIsolate(isolate.ref());
-#endif
 
   js_delete(atomsZoneFreeLists_.ref());
 
