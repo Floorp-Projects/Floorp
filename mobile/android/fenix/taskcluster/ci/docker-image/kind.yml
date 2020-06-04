@@ -19,9 +19,6 @@ jobs:
     bump:
         parent: base
         symbol: I(bump)
-    nimbledroid:
-        parent: base
-        symbol: I(nimbledroid)
     ui-tests:
         parent: base
         symbol: I(ui-tests)
