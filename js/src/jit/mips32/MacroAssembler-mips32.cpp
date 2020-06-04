@@ -2768,4 +2768,12 @@ void MacroAssembler::convertUInt64ToDouble(Register64 src, FloatRegister dest,
   addDouble(ScratchDoubleReg, dest);
 }
 
+void MacroAssembler::convertInt64ToDouble(Register64 src, FloatRegister dest) {
+  convertInt32ToDouble(src.high, dest);
+  loadConstantDouble(TO_DOUBLE_HIGH_SCALE, ScratchDoubleReg);
+  mulDouble(ScratchDoubleReg, dest);
+  convertUInt32ToDouble(src.low, ScratchDoubleReg);
+  addDouble(ScratchDoubleReg, dest);
+}
+
 //}}} check_macroassembler_style

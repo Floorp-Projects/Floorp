@@ -2512,8 +2512,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
   void convertUInt64ToDouble(Register64 src, FloatRegister dest,
                              Register temp) PER_ARCH;
 
-  void convertInt64ToDouble(Register64 src, FloatRegister dest)
-      DEFINED_ON(arm64, mips64, x64, x86);
+  void convertInt64ToDouble(Register64 src, FloatRegister dest) PER_ARCH;
 
  public:
   // ========================================================================

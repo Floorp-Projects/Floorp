@@ -5654,6 +5654,20 @@ void MacroAssembler::convertUInt64ToDouble(Register64 src, FloatRegister dest,
   addDouble(scratchDouble, dest);
 }
 
+void MacroAssembler::convertInt64ToDouble(Register64 src, FloatRegister dest) {
+  ScratchDoubleScope scratchDouble(*this);
+
+  convertInt32ToDouble(src.high, dest);
+  {
+    ScratchRegisterScope scratch(*this);
+    movePtr(ImmPtr(&TO_DOUBLE_HIGH_SCALE), scratch);
+    ma_vldr(Operand(Address(scratch, 0)).toVFPAddr(), scratchDouble);
+  }
+  mulDouble(scratchDouble, dest);
+  convertUInt32ToDouble(src.low, scratchDouble);
+  addDouble(scratchDouble, dest);
+}
+
 extern "C" {
 extern MOZ_EXPORT int64_t __aeabi_idivmod(int, int);
 extern MOZ_EXPORT int64_t __aeabi_uidivmod(int, int);
