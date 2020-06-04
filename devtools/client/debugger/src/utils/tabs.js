@@ -92,8 +92,8 @@ export function getTabMenuItems(): Object {
     },
     toggleBlackBox: {
       id: "node-menu-blackbox",
-      label: L10N.getStr("blackboxContextItem.blackbox"),
-      accesskey: L10N.getStr("blackboxContextItem.blackbox.accesskey"),
+      label: L10N.getStr("ignoreContextItem.ignore"),
+      accesskey: L10N.getStr("ignoreContextItem.ignore.accesskey"),
       disabled: false,
     },
     prettyPrint: {

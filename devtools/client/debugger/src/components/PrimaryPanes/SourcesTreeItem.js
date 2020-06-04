@@ -140,11 +140,11 @@ class SourceTreeItem extends Component<Props, State> {
           const blackBoxMenuItem = {
             id: "node-menu-blackbox",
             label: source.isBlackBoxed
-              ? L10N.getStr("blackboxContextItem.unblackbox")
-              : L10N.getStr("blackboxContextItem.blackbox"),
+              ? L10N.getStr("ignoreContextItem.unignore")
+              : L10N.getStr("ignoreContextItem.ignore"),
             accesskey: source.isBlackBoxed
-              ? L10N.getStr("blackboxContextItem.unblackbox.accesskey")
-              : L10N.getStr("blackboxContextItem.blackbox.accesskey"),
+              ? L10N.getStr("ignoreContextItem.unignore.accesskey")
+              : L10N.getStr("ignoreContextItem.ignore.accesskey"),
             disabled: !shouldBlackbox(source),
             click: () => this.props.toggleBlackBox(cx, source),
           };
@@ -220,21 +220,21 @@ class SourceTreeItem extends Component<Props, State> {
     let blackBoxOutsideMenuItemLabel;
     if (depth === 0 || (depth === 1 && projectRoot === "")) {
       blackBoxInsideMenuItemLabel = allInsideBlackBoxed
-        ? L10N.getStr("unblackBoxAllInGroup.label")
-        : L10N.getStr("blackBoxAllInGroup.label");
+        ? L10N.getStr("unignoreAllInGroup.label")
+        : L10N.getStr("ignoreAllInGroup.label");
       if (sourcesOuside.length > 0) {
         blackBoxOutsideMenuItemLabel = allOusideBlackBoxed
-          ? L10N.getStr("unblackBoxAllOutsideGroup.label")
-          : L10N.getStr("blackBoxAllOutsideGroup.label");
+          ? L10N.getStr("unignoreAllOutsideGroup.label")
+          : L10N.getStr("ignoreAllOutsideGroup.label");
       }
     } else {
       blackBoxInsideMenuItemLabel = allInsideBlackBoxed
-        ? L10N.getStr("unblackBoxAllInDir.label")
-        : L10N.getStr("blackBoxAllInDir.label");
+        ? L10N.getStr("unignoreAllInDir.label")
+        : L10N.getStr("ignoreAllInDir.label");
       if (sourcesOuside.length > 0) {
         blackBoxOutsideMenuItemLabel = allOusideBlackBoxed
-          ? L10N.getStr("unblackBoxAllOutsideDir.label")
-          : L10N.getStr("blackBoxAllOutsideDir.label");
+          ? L10N.getStr("unignoreAllOutsideDir.label")
+          : L10N.getStr("ignoreAllOutsideDir.label");
       }
     }
 
@@ -251,7 +251,7 @@ class SourceTreeItem extends Component<Props, State> {
     if (sourcesOuside.length > 0) {
       menuOptions.push({
         id: "node-blackbox-all",
-        label: L10N.getStr("blackBoxAll.label"),
+        label: L10N.getStr("ignoreAll.label"),
         submenu: [
           blackBoxInsideMenuItem,
           {
