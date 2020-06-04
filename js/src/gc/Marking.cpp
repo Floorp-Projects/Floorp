@@ -1338,7 +1338,8 @@ static inline void TraceNullableBindingNames(JSTracer* trc, BindingName* names,
     }
   }
 };
-void BindingName::trace(JSTracer* trc) {
+template <>
+void AbstractBindingName<JSAtom>::trace(JSTracer* trc) {
   if (JSAtom* atom = name()) {
     TraceManuallyBarrieredEdge(trc, &atom, "binding name");
   }
@@ -1346,31 +1347,39 @@ void BindingName::trace(JSTracer* trc) {
 void BindingIter::trace(JSTracer* trc) {
   TraceNullableBindingNames(trc, names_, length_);
 }
-void LexicalScope::Data::trace(JSTracer* trc) {
+template <>
+void LexicalScope::AbstractData<JSAtom>::trace(JSTracer* trc) {
   TraceBindingNames(trc, trailingNames.start(), length);
 }
-void FunctionScope::Data::trace(JSTracer* trc) {
+template <>
+void FunctionScope::AbstractData<JSAtom>::trace(JSTracer* trc) {
   TraceNullableEdge(trc, &canonicalFunction, "scope canonical function");
   TraceNullableBindingNames(trc, trailingNames.start(), length);
 }
-void VarScope::Data::trace(JSTracer* trc) {
+template <>
+void VarScope::AbstractData<JSAtom>::trace(JSTracer* trc) {
   TraceBindingNames(trc, trailingNames.start(), length);
 }
-void GlobalScope::Data::trace(JSTracer* trc) {
+template <>
+void GlobalScope::AbstractData<JSAtom>::trace(JSTracer* trc) {
   TraceBindingNames(trc, trailingNames.start(), length);
 }
-void EvalScope::Data::trace(JSTracer* trc) {
+template <>
+void EvalScope::AbstractData<JSAtom>::trace(JSTracer* trc) {
   TraceBindingNames(trc, trailingNames.start(), length);
 }
-void ModuleScope::Data::trace(JSTracer* trc) {
+template <>
+void ModuleScope::AbstractData<JSAtom>::trace(JSTracer* trc) {
   TraceNullableEdge(trc, &module, "scope module");
   TraceBindingNames(trc, trailingNames.start(), length);
 }
-void WasmInstanceScope::Data::trace(JSTracer* trc) {
+template <>
+void WasmInstanceScope::AbstractData<JSAtom>::trace(JSTracer* trc) {
   TraceNullableEdge(trc, &instance, "wasm instance");
   TraceBindingNames(trc, trailingNames.start(), length);
 }
-void WasmFunctionScope::Data::trace(JSTracer* trc) {
+template <>
+void WasmFunctionScope::AbstractData<JSAtom>::trace(JSTracer* trc) {
   TraceBindingNames(trc, trailingNames.start(), length);
 }
 void Scope::traceChildren(JSTracer* trc) {
@@ -1383,7 +1392,7 @@ inline void js::GCMarker::eagerlyMarkChildren(Scope* scope) {
     if (scope->environmentShape()) {
       traverseEdge(scope, scope->environmentShape());
     }
-    TrailingNamesArray* names = nullptr;
+    AbstractTrailingNamesArray<JSAtom>* names = nullptr;
     uint32_t length = 0;
     switch (scope->kind()) {
       case ScopeKind::Function: {
