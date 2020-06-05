@@ -4,14 +4,17 @@
 
 package mozilla.components.feature.pwa.feature
 
+import android.app.Notification
 import android.app.PendingIntent
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.graphics.drawable.Icon
+import android.os.Build
+import android.os.Build.VERSION.SDK_INT
 import android.widget.Toast
-import androidx.core.app.NotificationCompat
 import androidx.core.content.getSystemService
 import mozilla.components.browser.session.Session
 import mozilla.components.feature.pwa.R
@@ -27,7 +30,7 @@ interface SiteControlsBuilder {
      * and additional actions can be added here. Actions should be represented as [PendingIntent]
      * that are filtered by [getFilter] and handled in [onReceiveBroadcast].
      */
-    fun buildNotification(context: Context, builder: NotificationCompat.Builder, channelId: String)
+    fun buildNotification(context: Context, builder: Notification.Builder)
 
     /**
      * Return an intent filter that matches the actions specified in [buildNotification].
@@ -48,7 +51,7 @@ interface SiteControlsBuilder {
             addAction(ACTION_COPY)
         }
 
-        override fun buildNotification(context: Context, builder: NotificationCompat.Builder, channelId: String) {
+        override fun buildNotification(context: Context, builder: Notification.Builder) {
             val copyIntent = createPendingIntent(context, ACTION_COPY, 1)
 
             builder.setContentText(context.getString(R.string.mozac_feature_pwa_site_controls_notification_text))
@@ -93,13 +96,21 @@ interface SiteControlsBuilder {
             addAction(ACTION_REFRESH)
         }
 
-        override fun buildNotification(context: Context, builder: NotificationCompat.Builder, channelId: String) {
-            super.buildNotification(context, builder, channelId)
-            val refreshAction = NotificationCompat.Action(
-                R.drawable.ic_refresh,
-                context.getString(R.string.mozac_feature_pwa_site_controls_refresh),
-                createPendingIntent(context, ACTION_REFRESH, 2)
-            )
+        override fun buildNotification(context: Context, builder: Notification.Builder) {
+            super.buildNotification(context, builder)
+
+            val title = context.getString(R.string.mozac_feature_pwa_site_controls_refresh)
+            val intent = createPendingIntent(context, ACTION_REFRESH, 2)
+            val refreshAction = if (SDK_INT >= Build.VERSION_CODES.M) {
+                Notification.Action.Builder(
+                    Icon.createWithResource(context, R.drawable.ic_refresh),
+                    title,
+                    intent
+                )
+            } else {
+                @Suppress("Deprecation")
+                Notification.Action.Builder(R.drawable.ic_refresh, title, intent)
+            }.build()
 
             builder.addAction(refreshAction)
         }

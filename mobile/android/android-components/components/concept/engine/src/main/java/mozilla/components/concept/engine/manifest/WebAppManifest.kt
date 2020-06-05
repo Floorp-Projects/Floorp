@@ -113,7 +113,7 @@ data class WebAppManifest(
              * A user agent can present this icon where space constraints and/or color requirements differ from those
              * of the application icon.
              */
-            BADGE,
+            MONOCHROME,
 
             /**
              * The image is designed with icon masks and safe zone in mind, such that any part of the image that is

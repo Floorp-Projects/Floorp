@@ -489,7 +489,7 @@ class WebAppManifestParserTest {
             assertEquals(96, sizes[1].height)
             assertEquals(128, sizes[2].width)
             assertEquals(128, sizes[2].height)
-            assertEquals(setOf(WebAppManifest.Icon.Purpose.BADGE), purpose)
+            assertEquals(setOf(WebAppManifest.Icon.Purpose.MONOCHROME), purpose)
         }
 
         manifest.icons[1].apply {
@@ -535,7 +535,7 @@ class WebAppManifestParserTest {
             assertEquals(96, sizes[1].height)
             assertEquals(128, sizes[2].width)
             assertEquals(128, sizes[2].height)
-            assertEquals(setOf(WebAppManifest.Icon.Purpose.BADGE), purpose)
+            assertEquals(setOf(WebAppManifest.Icon.Purpose.MONOCHROME), purpose)
         }
 
         manifest.icons[1].apply {

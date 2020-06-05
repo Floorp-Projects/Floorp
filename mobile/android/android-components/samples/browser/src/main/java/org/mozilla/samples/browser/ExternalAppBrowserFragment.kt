@@ -93,7 +93,8 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), UserInteractionHandler
                     components.sessionManager,
                     components.sessionUseCases.reload,
                     sessionId!!,
-                    manifest
+                    manifest,
+                    icons = components.icons
                 )
             )
         }
