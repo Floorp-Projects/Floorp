@@ -546,7 +546,7 @@ def generate_emit_methods(out_f, opcodes, types):
             assert len(params) == 1
             assert params[0][0] == 'u32'
             params[0] = ('GCThingIndex', params[0][1])
-        elif 'JOF_OBJECT' in opcode.format_:
+        elif 'JOF_OBJECT' in opcode.format_ or 'JOF_SCOPE' in opcode.format_:
             assert len(params) == 1
             assert params[0][0] == 'u32'
             params[0] = ('GCThingIndex', params[0][1])

@@ -142,7 +142,7 @@ impl From<ScopeData> for SmooshScopeData {
         match data {
             ScopeData::Global(data) => Self {
                 kind: SmooshScopeDataKind::Global,
-                bindings: CVec::from(data.bindings.into_iter().map(|x| x.into()).collect()),
+                bindings: CVec::from(data.base.bindings.into_iter().map(|x| x.into()).collect()),
                 let_start: data.let_start,
                 const_start: data.const_start,
                 enclosing: 0,
@@ -150,7 +150,7 @@ impl From<ScopeData> for SmooshScopeData {
             },
             ScopeData::Lexical(data) => Self {
                 kind: SmooshScopeDataKind::Lexical,
-                bindings: CVec::from(data.bindings.into_iter().map(|x| x.into()).collect()),
+                bindings: CVec::from(data.base.bindings.into_iter().map(|x| x.into()).collect()),
                 let_start: 0,
                 const_start: data.const_start,
                 enclosing: data.enclosing.into(),
