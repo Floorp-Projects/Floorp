@@ -280,8 +280,8 @@ class WebrtcVideoConduit
   bool GetRTCPReceiverReport(uint32_t* jitterMs, uint32_t* packetsReceived,
                              uint64_t* bytesReceived, uint32_t* cumulativeLost,
                              Maybe<double>* aOutRttSec) override;
-  bool GetRTCPSenderReport(unsigned int* packetsSent,
-                           uint64_t* bytesSent) override;
+  bool GetRTCPSenderReport(unsigned int* packetsSent, uint64_t* bytesSent,
+                           DOMHighResTimeStamp* aRemoteTimestamp) override;
 
   void GetRtpSources(nsTArray<dom::RTCRtpSourceEntry>& outSources) override;
 
@@ -442,6 +442,7 @@ class WebrtcVideoConduit
     uint32_t PacketsLost() const;
     uint32_t PacketsSent() const;
     uint32_t Ssrc() const;
+    DOMHighResTimeStamp RemoteTimestamp() const;
     void Update(const webrtc::VideoReceiveStream::Stats& aStats);
 
    private:
@@ -452,6 +453,7 @@ class WebrtcVideoConduit
     uint32_t mPacketsLost = 0;
     uint32_t mPacketsSent = 0;
     uint32_t mSsrc = 0;
+    DOMHighResTimeStamp mRemoteTimestamp = 0;
   };
 
   // Utility function to dump recv codec database

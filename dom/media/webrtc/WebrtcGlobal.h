@@ -417,12 +417,14 @@ struct ParamTraits<mozilla::dom::RTCRemoteOutboundRtpStreamStats> {
 
   static void Write(Message* aMsg, const paramType& aParam) {
     WriteParam(aMsg, aParam.mLocalId);
+    WriteParam(aMsg, aParam.mRemoteTimestamp);
     WriteRTCSentRtpStreamStats(aMsg, aParam);
   }
 
   static bool Read(const Message* aMsg, PickleIterator* aIter,
                    paramType* aResult) {
     return ReadParam(aMsg, aIter, &(aResult->mLocalId)) &&
+           ReadParam(aMsg, aIter, &(aResult->mRemoteTimestamp)) &&
            ReadRTCSentRtpStreamStats(aMsg, aIter, aResult);
   }
 };

@@ -85,6 +85,7 @@ dictionary RTCOutboundRtpStreamStats : RTCSentRtpStreamStats {
 
 dictionary RTCRemoteOutboundRtpStreamStats : RTCSentRtpStreamStats {
   DOMString localId;
+  DOMHighResTimeStamp remoteTimestamp;
 };
 
 dictionary RTCRTPContributingSourceStats : RTCStats {

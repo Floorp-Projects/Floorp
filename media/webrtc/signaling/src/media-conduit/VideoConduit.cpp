@@ -421,6 +421,13 @@ uint32_t WebrtcVideoConduit::ReceiveStreamStatistics::Ssrc() const {
   return mSsrc;
 }
 
+DOMHighResTimeStamp
+WebrtcVideoConduit::ReceiveStreamStatistics::RemoteTimestamp() const {
+  ASSERT_ON_THREAD(mStatsThread);
+
+  return mRemoteTimestamp;
+}
+
 void WebrtcVideoConduit::ReceiveStreamStatistics::Update(
     const webrtc::VideoReceiveStream::Stats& aStats) {
   ASSERT_ON_THREAD(mStatsThread);
@@ -436,6 +443,7 @@ void WebrtcVideoConduit::ReceiveStreamStatistics::Update(
       aStats.rtcp_stats.jitter / (webrtc::kVideoPayloadTypeFrequency / 1000);
   mPacketsLost = aStats.rtcp_stats.packets_lost;
   mPacketsSent = aStats.rtcp_sender_packets_sent;
+  mRemoteTimestamp = aStats.rtcp_sender_ntp_timestamp.ToMs();
   mSsrc = aStats.ssrc;
 }
 
@@ -1260,8 +1268,9 @@ bool WebrtcVideoConduit::GetRTCPReceiverReport(uint32_t* jitterMs,
   return true;
 }
 
-bool WebrtcVideoConduit::GetRTCPSenderReport(unsigned int* packetsSent,
-                                             uint64_t* bytesSent) {
+bool WebrtcVideoConduit::GetRTCPSenderReport(
+    unsigned int* packetsSent, uint64_t* bytesSent,
+    DOMHighResTimeStamp* aRemoteTimestamp) {
   ASSERT_ON_THREAD(mStsThread);
 
   CSFLogVerbose(LOGTAG, "%s for VideoConduit:%p", __FUNCTION__, this);
@@ -1272,6 +1281,7 @@ bool WebrtcVideoConduit::GetRTCPSenderReport(unsigned int* packetsSent,
 
   *packetsSent = mRecvStreamStats.PacketsSent();
   *bytesSent = mRecvStreamStats.BytesSent();
+  *aRemoteTimestamp = mRecvStreamStats.RemoteTimestamp();
   return true;
 }
 
