@@ -1,11 +1,13 @@
 {
   "compilerOptions": {
-    "noEmit": true,
     "allowJs": true,
     "checkJs": true,
-    "target": "ESNext"
+    "outDir": "./lib",
+    "target": "ESNext",
+    "moduleResolution": "node",
+    "module": "CommonJS"
   },
   "include": [
-    "lib"
+    "src"
   ]
 }

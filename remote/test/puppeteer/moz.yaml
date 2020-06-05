@@ -5,6 +5,6 @@ origin:
   description: Headless Chrome Node API
   license: Apache-2.0
   name: puppeteer
-  release: firefox
-  url: https://github.com/andreastt/puppeteer.git
+  release: 8ba36752e735b245baf4915cff341d2b85a83161
+  url: https://github.com/mjzffr/puppeteer.git
 schema: 1

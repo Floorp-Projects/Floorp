@@ -14,21 +14,36 @@
  * limitations under the License.
  */
 
-const {helper} = require('./lib/helper');
+const { helper } = require('./lib/helper');
 const api = require('./lib/api');
+const { Page } = require('./lib/Page');
 for (const className in api) {
-  // Puppeteer-web excludes certain classes from bundle, e.g. BrowserFetcher.
   if (typeof api[className] === 'function')
     helper.installAsyncStackHooks(api[className]);
 }
 
-// If node does not support async await, use the compiled version.
-const Puppeteer = require('./lib/Puppeteer');
-const packageJson = require('./package.json');
-const preferredRevision = packageJson.puppeteer.chromium_revision;
-const isPuppeteerCore = packageJson.name === 'puppeteer-core';
+// Expose alias for deprecated method.
+Page.prototype.emulateMedia = Page.prototype.emulateMediaType;
 
-const puppeteer = new Puppeteer(__dirname, preferredRevision, isPuppeteerCore);
+const { Puppeteer } = require('./lib/Puppeteer');
+const packageJson = require('./package.json');
+let preferredRevision = packageJson.puppeteer.chromium_revision;
+const isPuppeteerCore = packageJson.name === 'puppeteer-core';
+// puppeteer-core ignores environment variables
+const product = isPuppeteerCore
+  ? undefined
+  : process.env.PUPPETEER_PRODUCT ||
+    process.env.npm_config_puppeteer_product ||
+    process.env.npm_package_config_puppeteer_product;
+if (!isPuppeteerCore && product === 'firefox')
+  preferredRevision = packageJson.puppeteer.firefox_revision;
+
+const puppeteer = new Puppeteer(
+  __dirname,
+  preferredRevision,
+  isPuppeteerCore,
+  product
+);
 
 // The introspection in `Helper.installAsyncStackHooks` references `Puppeteer._launcher`
 // before the Puppeteer ctor is called, such that an invalid Launcher is selected at import,

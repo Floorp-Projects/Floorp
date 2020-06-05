@@ -13,28 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+const expect = require('expect');
+const {
+  getTestState,
+  setupTestBrowserHooks,
+  setupTestPageAndContextHooks,
+} = require('./mocha-utils');
 
-module.exports.addTests = function({testRunner, expect, defaultBrowserOptions, puppeteer}) {
-  const {describe, xdescribe, fdescribe, describe_fails_ffox} = testRunner;
-  const {it, fit, xit, it_fails_ffox} = testRunner;
-  const {beforeAll, beforeEach, afterAll, afterEach} = testRunner;
+describe('DefaultBrowserContext', function () {
+  setupTestBrowserHooks();
+  setupTestPageAndContextHooks();
+  it('page.cookies() should work', async () => {
+    const { page, server } = getTestState();
 
-  describe('DefaultBrowserContext', function() {
-    beforeEach(async state => {
-      state.browser = await puppeteer.launch(defaultBrowserOptions);
-      state.page = await state.browser.newPage();
+    await page.goto(server.EMPTY_PAGE);
+    await page.evaluate(() => {
+      document.cookie = 'username=John Doe';
     });
-    afterEach(async state => {
-      await state.browser.close();
-      delete state.browser;
-      delete state.page;
-    });
-    it('page.cookies() should work', async({page, server}) => {
-      await page.goto(server.EMPTY_PAGE);
-      await page.evaluate(() => {
-        document.cookie = 'username=John Doe';
-      });
-      expect(await page.cookies()).toEqual([{
+    expect(await page.cookies()).toEqual([
+      {
         name: 'username',
         value: 'John Doe',
         domain: 'localhost',
@@ -43,17 +40,23 @@ module.exports.addTests = function({testRunner, expect, defaultBrowserOptions, p
         size: 16,
         httpOnly: false,
         secure: false,
-        session: true
-      }]);
+        session: true,
+      },
+    ]);
+  });
+  it('page.setCookie() should work', async () => {
+    const { page, server } = getTestState();
+
+    await page.goto(server.EMPTY_PAGE);
+    await page.setCookie({
+      name: 'username',
+      value: 'John Doe',
     });
-    it('page.setCookie() should work', async({page, server}) => {
-      await page.goto(server.EMPTY_PAGE);
-      await page.setCookie({
-        name: 'username',
-        value: 'John Doe'
-      });
-      expect(await page.evaluate(() => document.cookie)).toBe('username=John Doe');
-      expect(await page.cookies()).toEqual([{
+    expect(await page.evaluate(() => document.cookie)).toBe(
+      'username=John Doe'
+    );
+    expect(await page.cookies()).toEqual([
+      {
         name: 'username',
         value: 'John Doe',
         domain: 'localhost',
@@ -62,22 +65,29 @@ module.exports.addTests = function({testRunner, expect, defaultBrowserOptions, p
         size: 16,
         httpOnly: false,
         secure: false,
-        session: true
-      }]);
-    });
-    it('page.deleteCookie() should work', async({page, server}) => {
-      await page.goto(server.EMPTY_PAGE);
-      await page.setCookie({
+        session: true,
+      },
+    ]);
+  });
+  it('page.deleteCookie() should work', async () => {
+    const { page, server } = getTestState();
+
+    await page.goto(server.EMPTY_PAGE);
+    await page.setCookie(
+      {
         name: 'cookie1',
-        value: '1'
-      }, {
+        value: '1',
+      },
+      {
         name: 'cookie2',
-        value: '2'
-      });
-      expect(await page.evaluate('document.cookie')).toBe('cookie1=1; cookie2=2');
-      await page.deleteCookie({name: 'cookie2'});
-      expect(await page.evaluate('document.cookie')).toBe('cookie1=1');
-      expect(await page.cookies()).toEqual([{
+        value: '2',
+      }
+    );
+    expect(await page.evaluate('document.cookie')).toBe('cookie1=1; cookie2=2');
+    await page.deleteCookie({ name: 'cookie2' });
+    expect(await page.evaluate('document.cookie')).toBe('cookie1=1');
+    expect(await page.cookies()).toEqual([
+      {
         name: 'cookie1',
         value: '1',
         domain: 'localhost',
@@ -86,8 +96,8 @@ module.exports.addTests = function({testRunner, expect, defaultBrowserOptions, p
         size: 8,
         httpOnly: false,
         secure: false,
-        session: true
-      }]);
-    });
+        session: true,
+      },
+    ]);
   });
-};
+});

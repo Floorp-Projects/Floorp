@@ -45,22 +45,27 @@ machine to check which dependencies are missing. The common ones are provided be
 <summary>Debian (e.g. Ubuntu) Dependencies</summary>
 
 ```
+ca-certificates
+fonts-liberation
 gconf-service
+libappindicator1
 libasound2
-libatk1.0-0
 libatk-bridge2.0-0
+libatk1.0-0
 libc6
 libcairo2
 libcups2
 libdbus-1-3
 libexpat1
 libfontconfig1
+libgbm1
 libgcc1
 libgconf-2-4
 libgdk-pixbuf2.0-0
 libglib2.0-0
 libgtk-3-0
 libnspr4
+libnss3
 libpango-1.0-0
 libpangocairo-1.0-0
 libstdc++6
@@ -77,13 +82,9 @@ libxrandr2
 libxrender1
 libxss1
 libxtst6
-ca-certificates
-fonts-liberation
-libappindicator1
-libnss3
 lsb-release
-xdg-utils
 wget
+xdg-utils
 ```
 </details>
 
@@ -91,27 +92,27 @@ wget
 <summary>CentOS Dependencies</summary>
 
 ```
-pango.x86_64
+alsa-lib.x86_64
+atk.x86_64
+cups-libs.x86_64
+GConf2.x86_64
+gtk3.x86_64
+ipa-gothic-fonts
 libXcomposite.x86_64
 libXcursor.x86_64
 libXdamage.x86_64
 libXext.x86_64
 libXi.x86_64
-libXtst.x86_64
-cups-libs.x86_64
-libXScrnSaver.x86_64
 libXrandr.x86_64
-GConf2.x86_64
-alsa-lib.x86_64
-atk.x86_64
-gtk3.x86_64
-ipa-gothic-fonts
+libXScrnSaver.x86_64
+libXtst.x86_64
+pango.x86_64
 xorg-x11-fonts-100dpi
 xorg-x11-fonts-75dpi
-xorg-x11-utils
 xorg-x11-fonts-cyrillic
-xorg-x11-fonts-Type1
 xorg-x11-fonts-misc
+xorg-x11-fonts-Type1
+xorg-x11-utils
 ```
 
 After installing dependencies you need to update nss library using this command
@@ -186,33 +187,20 @@ export CHROME_DEVEL_SANDBOX=/usr/local/sbin/chrome-devel-sandbox
 > 👋 We run our tests for Puppeteer on Travis CI - see our [`.travis.yml`](https://github.com/puppeteer/puppeteer/blob/master/.travis.yml) for reference.
 
 Tips-n-tricks:
-- The `libnss3` package must be installed in order to run Chromium on Ubuntu Trusty
-- [user namespace cloning](http://man7.org/linux/man-pages/man7/user_namespaces.7.html) should be enabled to support
-  proper sandboxing
-- [xvfb](https://en.wikipedia.org/wiki/Xvfb) should be launched in order to run Chromium in non-headless mode (e.g. to test Chrome Extensions)
+- [xvfb](https://en.wikipedia.org/wiki/Xvfb) service should be launched in order to run Chromium in non-headless mode
+- Runs on Xenial Linux on Travis by default
+- Runs `npm install` by default
+- `node_modules` is cached by default
 
-To sum up, your `.travis.yml` might look like this:
+`.travis.yml` might look like this:
 
 ```yml
 language: node_js
-dist: trusty
-addons:
-  apt:
-    packages:
-      # This is required to run new chrome on old trusty
-      - libnss3
-notifications:
-  email: false
-cache:
-  directories:
-    - node_modules
-# allow headful tests
-before_install:
-  # Enable user namespace cloning
-  - "sysctl kernel.unprivileged_userns_clone=1"
-  # Launch XVFB
-  - "export DISPLAY=:99.0"
-  - "sh -e /etc/init.d/xvfb start"
+node_js: node
+services: xvfb
+
+script:
+  - npm run test
 ```
 
 ## Running Puppeteer on CircleCI
@@ -249,7 +237,7 @@ Running Puppeteer smoothly on CircleCI requires the following steps:
 
 ## Running Puppeteer in Docker
 
-> 👋 We use [Cirrus Ci](https://cirrus-ci.org/) to run our tests for Puppeteer in a Docker container - see our [`Dockerfile.linux`](https://github.com/puppeteer/puppeteer/blob/master/.ci/node8/Dockerfile.linux) for reference.
+> 👋 We use [Cirrus Ci](https://cirrus-ci.org/) to run our tests for Puppeteer in a Docker container - see our [`Dockerfile.linux`](https://github.com/puppeteer/puppeteer/blob/master/.ci/node10/Dockerfile.linux) for reference.
 
 Getting headless Chrome up and running in Docker can be tricky.
 The bundled Chromium that Puppeteer installs is missing the necessary
@@ -264,7 +252,9 @@ FROM node:10-slim
 # Install latest chrome dev package and fonts to support major charsets (Chinese, Japanese, Arabic, Hebrew, Thai and a few others)
 # Note: this installs the necessary libs to make the bundled version of Chromium that Puppeteer
 # installs, work.
-RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - \
+RUN apt-get update \
+    && apt-get install -y wget gnupg \
+    && wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - \
     && sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list' \
     && apt-get update \
     && apt-get install -y google-chrome-unstable fonts-ipafont-gothic fonts-wqy-zenhei fonts-thai-tlwg fonts-kacst fonts-freefont-ttf \
@@ -338,7 +328,8 @@ RUN apk add --no-cache \
 ...
 
 # Tell Puppeteer to skip installing Chrome. We'll be using the installed package.
-ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD true
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
+    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
 
 # Puppeteer v1.19.0 works with Chromium 77.
 RUN yarn add puppeteer@1.19.0
@@ -353,14 +344,6 @@ RUN addgroup -S pptruser && adduser -S -g pptruser pptruser \
 USER pptruser
 
 ...
-```
-
-And when launching Chrome, be sure to use the `chromium-browser` executable:
-
-```js
-const browser = await puppeteer.launch({
-  executablePath: '/usr/bin/chromium-browser'
-});
 ```
 
 #### Tips
@@ -398,9 +381,9 @@ To use `puppeteer`, simply list the module as a dependency in your `package.json
 
 ### Running Puppeteer on Google Cloud Functions
 
-The Node.js 8 runtime of [Google Cloud Functions](https://cloud.google.com/functions/docs/) comes with all system packages needed to run Headless Chrome.
+The Node.js 10 runtime of [Google Cloud Functions](https://cloud.google.com/functions/docs/) comes with all system packages needed to run Headless Chrome.
 
-To use `puppeteer`, simply list the module as a dependency in your `package.json` and deploy your function to Google Cloud Functions using the `nodejs8` runtime.
+To use `puppeteer`, simply list the module as a dependency in your `package.json` and deploy your function to Google Cloud Functions using the `nodejs10` runtime.
 
 ### Running Puppeteer on Heroku
 
