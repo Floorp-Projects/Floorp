@@ -935,20 +935,20 @@
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
     <string name="onboarding_firefox_account_automatic_signin_failed">Failed to sign-in</string>
     <!-- text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header">Protect yourself</string>
+    <string name="onboarding_tracking_protection_header_2">Automatic privacy</string>
     <!-- text for the tracking protection card description
     The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_tracking_protection_description1">%s helps stop websites from tracking you online.</string>
+    <string name="onboarding_tracking_protection_description_2">Privacy and security settings block trackers, malware, and companies that follow you.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
-    <string name="onboarding_tracking_protection_standard_button">Standard</string>
+    <string name="onboarding_tracking_protection_standard_button_2">Standard (default)</string>
     <!-- text for standard blocking option button description -->
-    <string name="onboarding_tracking_protection_standard_button_description">Blocks fewer trackers but allows pages to load normally</string>
+    <string name="onboarding_tracking_protection_standard_button_description_2">Blocks fewer trackers. Pages will load normally.</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">Strict (recommended)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">Strict</string>
     <!-- text for strict blocking option button description -->
-    <string name="onboarding_tracking_protection_strict_button_description">Blocks more trackers for better protection and performance, but may cause some sites to not work properly</string>
+    <string name="onboarding_tracking_protection_strict_button_description_2">Blocks more trackers, ads, and popups. Pages load faster, but some functionality might not work.</string>
     <!-- text for the toolbar position card header
         In English this is an idiom for "choose a side as in an argument or fight"
         but it is ok to make this more literally about "choosing a position in a physical space -->

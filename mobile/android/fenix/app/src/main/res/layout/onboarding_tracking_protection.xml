@@ -16,7 +16,7 @@
         android:drawablePadding="12dp"
         android:gravity="center_vertical"
         android:lines="1"
-        android:text="@string/onboarding_tracking_protection_header"
+        android:text="@string/onboarding_tracking_protection_header_2"
         android:textAppearance="@style/HeaderTextStyle"
         app:layout_constraintEnd_toStartOf="@id/tracking_protection_toggle"
         app:layout_constraintStart_toStartOf="parent"
@@ -43,7 +43,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/header_text"
-        tools:text="@string/onboarding_tracking_protection_description1" />
+        tools:text="@string/onboarding_tracking_protection_description_2" />
 
     <View
         android:id="@+id/clickable_region_standard"
@@ -74,7 +74,7 @@
         android:id="@+id/protection_standard_title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/onboarding_tracking_protection_standard_button"
+        android:text="@string/onboarding_tracking_protection_standard_button_2"
         android:textColor="@color/primary_state_list_text_color"
         android:textSize="16sp"
         app:layout_constraintStart_toEndOf="@+id/tracking_protection_standard_option"
@@ -84,7 +84,7 @@
         android:id="@+id/protection_standard_description"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="@string/onboarding_tracking_protection_standard_button_description"
+        android:text="@string/onboarding_tracking_protection_standard_button_description_2"
         android:textColor="@color/secondary_state_list_text_color"
         android:textSize="14sp"
         app:layout_constraintEnd_toEndOf="parent"
@@ -131,7 +131,7 @@
         android:id="@+id/protection_strict_description"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="@string/onboarding_tracking_protection_strict_button_description"
+        android:text="@string/onboarding_tracking_protection_strict_button_description_2"
         android:textColor="@color/secondary_state_list_text_color"
         android:textSize="14sp"
         app:layout_constraintBottom_toBottomOf="parent"

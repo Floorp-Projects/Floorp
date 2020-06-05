@@ -78,9 +78,9 @@ class HomeScreenRobot {
     fun verifyDarkThemeDescription() = assertDarkThemeDescription()
     fun verifyAutomaticThemeToggle() = assertAutomaticThemeToggle()
     fun verifyAutomaticThemeDescription() = assertAutomaticThemeDescription()
-    fun verifyProtectYourselfHeader() = assertProtectYourselfHeader()
+    fun verifyAutomaticPrivacyfHeader() = assertAutomaticPrivacyHeader()
     fun verifyTrackingProtectionToggle() = assertTrackingProtectionToggle()
-    fun verifyProtectYourselfText() = assertProtectYourselfText()
+    fun verifyAutomaticPrivacyText() = assertAutomaticPrivacyText()
 
     // What's new elements
     fun verifyWhatsNewHeader() = assertWhatsNewHeather()
@@ -593,8 +593,8 @@ private fun assertAutomaticThemeDescription() =
     onView(allOf(withText("Automatic")))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
-private fun assertProtectYourselfHeader() =
-    onView(allOf(withText("Protect yourself")))
+private fun assertAutomaticPrivacyHeader() =
+    onView(allOf(withText("Automatic privacy")))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
 private fun assertTrackingProtectionToggle() = onView(
@@ -602,11 +602,11 @@ private fun assertTrackingProtectionToggle() = onView(
 )
     .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
-private fun assertProtectYourselfText() {
+private fun assertAutomaticPrivacyText() {
     onView(
         allOf(
             withText(
-                "Firefox Preview helps stop websites from tracking you online."
+                "Privacy and security settings block trackers, malware, and companies that follow you."
             )
         )
     )

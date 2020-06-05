@@ -76,11 +76,11 @@ class HomeScreenTest {
             verifyWhatsNewHeader()
             verifyWhatsNewLink()
 
-            // Protect yourself
-            scrollToElementByText("Protect yourself")
-            verifyProtectYourselfHeader()
+            // Automatic privacy
+            scrollToElementByText("Automatic privacy")
+            verifyAutomaticPrivacyfHeader()
             verifyTrackingProtectionToggle()
-            verifyProtectYourselfText()
+            verifyAutomaticPrivacyText()
 
             /* Check disable due to Firebase failures on Pixel 2 API 28
             // Choose your theme
