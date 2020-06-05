@@ -113,7 +113,8 @@ struct nsWidgetInitData {
         mHasRemoteContent(false),
         mAlwaysOnTop(false),
         mPIPWindow(false),
-        mFissionWindow(false) {}
+        mFissionWindow(false),
+        mResizable(false) {}
 
   nsWindowType mWindowType;
   nsBorderStyle mBorderStyle;
@@ -143,6 +144,8 @@ struct nsWidgetInitData {
   bool mPIPWindow;
   // True if fission is enabled for this window
   bool mFissionWindow;
+  // True if the window is user-resizable.
+  bool mResizable;
 };
 
 #endif  // nsWidgetInitData_h__
