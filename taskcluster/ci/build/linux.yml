@@ -80,8 +80,7 @@ linux64-plain/opt:
             - linux64-lucetc
             - wasi-sysroot
     optimization:
-        push-interval-10:
-            - linux
+        push-interval-10: null
 
 linux64-fuzzing/debug:
     description: "Linux64 Fuzzing Debug"
@@ -262,8 +261,7 @@ linux64-plain/debug:
             - linux64-lucetc
             - wasi-sysroot
     optimization:
-        push-interval-10:
-            - linux
+        push-interval-10: null
 
 linux64-devedition/opt:
     description: "Linux64 devedition (shippable)"
@@ -360,8 +358,7 @@ linux64-base-toolchains/debug:
         platform: linux64/debug
         symbol: Bb
     optimization:
-        push-interval-10:
-            - linux
+        push-interval-10: null
     worker-type: b-linux
     worker:
         docker-image: {in-tree: debian8-amd64-build-base}
@@ -444,8 +441,7 @@ linux64-base-toolchains-clang/debug:
         platform: linux64/debug
         symbol: Bbc
     optimization:
-        push-interval-10:
-            - linux
+        push-interval-10: null
     worker-type: b-linux
     worker:
         docker-image: {in-tree: debian8-amd64-build-base}
@@ -1129,8 +1125,7 @@ linux64-asan/debug:
             # this dependency can be removed.
             - linux64-fix-stacks
     optimization:
-        push-interval-10:
-            - linux
+        push-interval-10: null
 
 linux64-shippable/opt:
     description: "Linux64 Shippable"
@@ -1423,8 +1418,7 @@ linux64-aarch64/opt:
             - linux64-lucetc
             - wasi-sysroot
     optimization:
-        push-interval-10:
-            - linux
+        push-interval-10: null
 
 linux-gcp/debug:
     description: "Linux32 Debug - built on GCP"
@@ -1473,8 +1467,7 @@ linux-gcp/debug:
             # this dependency can be removed.
             - linux64-fix-stacks
     optimization:
-        push-interval-25:
-            - linux
+        push-interval-25: null
 
 linux-gcp/opt:
     description: "Linux32 Opt - built on GCP"
@@ -1562,8 +1555,7 @@ linux64-gcp/debug:
             # this dependency can be removed.
             - linux64-fix-stacks
     optimization:
-        push-interval-25:
-            - linux
+        push-interval-25: null
 
 linux64-gcp/opt:
     description: "Linux64 Opt - built on GCP"

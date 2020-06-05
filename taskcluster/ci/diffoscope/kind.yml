@@ -61,8 +61,7 @@ jobs:
         # This is necessary to avoid building `build-win64-aarch64` on every push on autoland
         # A more robust fix for this is https://bugzilla.mozilla.org/show_bug.cgi?id=1643346
         optimization:
-            push-interval-10:
-                - windows
+            push-interval-10: null
 
     reproducible-linux32:
         symbol: Linux32
