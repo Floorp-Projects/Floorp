@@ -3930,6 +3930,45 @@ bool CacheIRCompiler::emitMathRoundToInt32Result(NumberOperandId inputId) {
   return true;
 }
 
+bool CacheIRCompiler::emitInt32MinMax(bool isMax, Int32OperandId firstId,
+                                      Int32OperandId secondId,
+                                      Int32OperandId resultId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  Register first = allocator.useRegister(masm, firstId);
+  Register second = allocator.useRegister(masm, secondId);
+  Register result = allocator.defineRegister(masm, resultId);
+
+  Assembler::Condition cond =
+      isMax ? Assembler::GreaterThan : Assembler::LessThan;
+  masm.move32(first, result);
+  masm.cmp32Move32(cond, second, first, second, result);
+  return true;
+}
+
+bool CacheIRCompiler::emitNumberMinMax(bool isMax, NumberOperandId firstId,
+                                       NumberOperandId secondId,
+                                       NumberOperandId resultId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  ValueOperand output = allocator.defineValueRegister(masm, resultId);
+
+  AutoAvailableFloatRegister scratch1(*this, FloatReg0);
+  AutoAvailableFloatRegister scratch2(*this, FloatReg1);
+
+  allocator.ensureDoubleRegister(masm, firstId, scratch1);
+  allocator.ensureDoubleRegister(masm, secondId, scratch2);
+
+  if (isMax) {
+    masm.maxDouble(scratch2, scratch1, /* handleNaN = */ true);
+  } else {
+    masm.minDouble(scratch2, scratch1, /* handleNaN = */ true);
+  }
+
+  masm.boxDouble(scratch1, output, scratch1);
+  return true;
+}
+
 bool CacheIRCompiler::emitMathFunctionNumberResult(NumberOperandId inputId,
                                                    UnaryMathFunction fun) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);

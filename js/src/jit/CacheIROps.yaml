@@ -748,6 +748,24 @@
   args:
     input: NumberId
 
+- name: Int32MinMax
+  shared: true
+  transpile: true
+  args:
+    isMax: BoolImm
+    first: Int32Id
+    second: Int32Id
+    result: Int32Id
+
+- name: NumberMinMax
+  shared: true
+  transpile: true
+  args:
+    isMax: BoolImm
+    first: NumberId
+    second: NumberId
+    result: NumberId
+
 - name: MathFunctionNumberResult
   shared: true
   transpile: true
