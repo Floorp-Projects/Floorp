@@ -3200,9 +3200,9 @@ JSObject* js::GetThisObject(JSObject* obj) {
   return obj;
 }
 
-Value js::GetThisValueOfLexical(JSObject* env) {
+JSObject* js::GetThisObjectOfLexical(JSObject* env) {
   MOZ_ASSERT(IsExtensibleLexicalEnvironment(env));
-  return env->as<LexicalEnvironmentObject>().thisValue();
+  return env->as<LexicalEnvironmentObject>().thisObject();
 }
 
 JSObject* js::GetThisObjectOfWith(JSObject* env) {

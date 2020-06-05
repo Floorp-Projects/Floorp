@@ -1423,7 +1423,7 @@ JS_FRIEND_API void js::SetWindowProxy(JSContext* cx, HandleObject global,
 
   GlobalObject& globalObj = global->as<GlobalObject>();
   globalObj.setWindowProxy(windowProxy);
-  globalObj.lexicalEnvironment().setWindowProxyThisValue(windowProxy);
+  globalObj.lexicalEnvironment().setWindowProxyThisObject(windowProxy);
 }
 
 JS_FRIEND_API JSObject* js::ToWindowIfWindowProxy(JSObject* obj) {

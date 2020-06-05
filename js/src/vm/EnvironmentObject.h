@@ -496,7 +496,7 @@ class WasmFunctionCallObject : public EnvironmentObject {
 
 class LexicalEnvironmentObject : public EnvironmentObject {
   // Global and non-syntactic lexical environments need to store a 'this'
-  // value and all other lexical environments have a fixed shape and store a
+  // object and all other lexical environments have a fixed shape and store a
   // backpointer to the LexicalScope.
   //
   // Since the two sets are disjoint, we only use one slot to save space.
@@ -511,7 +511,7 @@ class LexicalEnvironmentObject : public EnvironmentObject {
       JSContext* cx, HandleShape shape, HandleObject enclosing,
       gc::InitialHeap heap, IsSingletonEnv isSingleton);
 
-  void initThisValue(JSObject* obj) {
+  void initThisObject(JSObject* obj) {
     MOZ_ASSERT(isGlobal() || !isSyntactic());
     JSObject* thisObj = GetThisObject(obj);
     initReservedSlot(THIS_VALUE_OR_SCOPE_SLOT, ObjectValue(*thisObj));
@@ -568,7 +568,7 @@ class LexicalEnvironmentObject : public EnvironmentObject {
     return enclosingEnvironment().as<GlobalObject>();
   }
 
-  void setWindowProxyThisValue(JSObject* obj);
+  void setWindowProxyThisObject(JSObject* obj);
 
   // Global and non-syntactic lexical scopes are extensible. All other
   // lexical scopes are not.
@@ -578,9 +578,9 @@ class LexicalEnvironmentObject : public EnvironmentObject {
   // environment?
   bool isSyntactic() const { return !isExtensible() || isGlobal(); }
 
-  // For extensible lexical environments, the 'this' value for its
+  // For extensible lexical environments, the 'this' object for its
   // scope. Otherwise asserts.
-  Value thisValue() const;
+  JSObject* thisObject() const;
 
   static constexpr size_t offsetOfThisValueOrScopeSlot() {
     return getFixedSlotOffset(THIS_VALUE_OR_SCOPE_SLOT);

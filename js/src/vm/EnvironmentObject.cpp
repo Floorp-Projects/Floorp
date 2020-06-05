@@ -994,7 +994,7 @@ LexicalEnvironmentObject* LexicalEnvironmentObject::createGlobal(
     return nullptr;
   }
 
-  env->initThisValue(global);
+  env->initThisObject(global);
   return env;
 }
 
@@ -1016,7 +1016,7 @@ LexicalEnvironmentObject* LexicalEnvironmentObject::createNonSyntactic(
     return nullptr;
   }
 
-  env->initThisValue(thisv);
+  env->initThisObject(thisv);
 
   return env;
 }
@@ -1094,22 +1094,22 @@ bool LexicalEnvironmentObject::isExtensible() const {
   return NativeObject::isExtensible();
 }
 
-Value LexicalEnvironmentObject::thisValue() const {
+JSObject* LexicalEnvironmentObject::thisObject() const {
   MOZ_ASSERT(isExtensible());
-  Value v = getReservedSlot(THIS_VALUE_OR_SCOPE_SLOT);
+  JSObject* obj = &getReservedSlot(THIS_VALUE_OR_SCOPE_SLOT).toObject();
 
   // Windows must never be exposed to script. setWindowProxyThisValue should
   // have set this to the WindowProxy.
-  MOZ_ASSERT_IF(v.isObject(), !IsWindow(&v.toObject()));
+  MOZ_ASSERT(!IsWindow(obj));
 
   // WarpBuilder relies on the return value not being nursery-allocated for the
   // global lexical environment.
-  MOZ_ASSERT_IF(isGlobal() && v.isGCThing(), v.toGCThing()->isTenured());
+  MOZ_ASSERT_IF(isGlobal(), obj->isTenured());
 
-  return v;
+  return obj;
 }
 
-void LexicalEnvironmentObject::setWindowProxyThisValue(JSObject* obj) {
+void LexicalEnvironmentObject::setWindowProxyThisObject(JSObject* obj) {
   MOZ_ASSERT(isGlobal());
   MOZ_ASSERT(IsWindowProxy(obj));
   setReservedSlot(THIS_VALUE_OR_SCOPE_SLOT, ObjectValue(*obj));

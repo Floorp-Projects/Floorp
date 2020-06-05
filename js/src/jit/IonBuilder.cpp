@@ -12082,7 +12082,7 @@ AbortReasonOr<Ok> IonBuilder::jsop_functionthis() {
   if (IsNullOrUndefined(def->type())) {
     LexicalEnvironmentObject* globalLexical =
         &script()->global().lexicalEnvironment();
-    pushConstant(globalLexical->thisValue());
+    pushConstant(ObjectValue(*globalLexical->thisObject()));
     return Ok();
   }
 
@@ -12103,7 +12103,7 @@ AbortReasonOr<Ok> IonBuilder::jsop_globalthis() {
 
   LexicalEnvironmentObject* globalLexical =
       &script()->global().lexicalEnvironment();
-  pushConstant(globalLexical->thisValue());
+  pushConstant(ObjectValue(*globalLexical->thisObject()));
   return Ok();
 }
 
