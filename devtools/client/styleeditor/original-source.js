@@ -26,6 +26,10 @@ function OriginalSource(url, sourceId, sourceMapService) {
 }
 
 OriginalSource.prototype = {
+  get sourceId() {
+    return this._sourceId;
+  },
+
   /** Get the original source's URL.  */
   get url() {
     return this._url;
