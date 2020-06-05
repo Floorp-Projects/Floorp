@@ -76,6 +76,7 @@ class MozillaSocorroService(
 ) : CrashReporterService {
     private val logger = Logger("mozac/MozillaSocorroCrashHelperService")
     private val startTime = System.currentTimeMillis()
+    private val ignoreKeys = hashSetOf("URL", "ServerURL", "StackTraces")
 
     override val id: String = "socorro"
 
@@ -363,6 +364,7 @@ class MozillaSocorroService(
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    @Suppress("NestedBlockDepth")
     internal fun readExtrasFromLegacyFile(file: File): HashMap<String, String> {
         var fileReader: FileReader? = null
         var bufReader: BufferedReader? = null
@@ -378,7 +380,9 @@ class MozillaSocorroService(
                 if ((equalsPos) != -1) {
                     val key = line.substring(0, equalsPos)
                     val value = unescape(line.substring(equalsPos + 1))
-                    map[key] = value
+                    if (!ignoreKeys.contains(key)) {
+                        map[key] = value
+                    }
                 }
                 line = bufReader.readLine()
             }
@@ -397,6 +401,7 @@ class MozillaSocorroService(
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    @Suppress("NestedBlockDepth")
     internal fun readExtrasFromFile(file: File): HashMap<String, String> {
         var resultMap = HashMap<String, String>()
         var notJson = false
@@ -408,7 +413,9 @@ class MozillaSocorroService(
 
                 val jsonObject = JSONObject(input)
                 for (key in jsonObject.keys()) {
-                    resultMap[key] = jsonUnescape(jsonObject.getString(key))
+                    if (!ignoreKeys.contains(key)) {
+                        resultMap[key] = jsonUnescape(jsonObject.getString(key))
+                    }
                 }
             }
         } catch (e: FileNotFoundException) {

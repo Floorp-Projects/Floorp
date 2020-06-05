@@ -13,6 +13,7 @@ import mozilla.components.support.test.robolectric.testContext
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -290,7 +291,7 @@ class MozillaSocorroServiceTest {
         val file = File(getResource("TestExtrasFile").file)
         val extrasMap = service.readExtrasFromFile(file)
 
-        assertEquals(extrasMap.size, 27)
+        assertEquals(extrasMap.size, 25)
         assertEquals(extrasMap["ContentSandboxLevel"], "2")
         assertEquals(extrasMap["TelemetryEnvironment"], "{\"EscapedField\":\"EscapedData\n\nfoo\"}")
         assertEquals(extrasMap["EMCheckCompatibility"], "true")
@@ -301,7 +302,6 @@ class MozillaSocorroServiceTest {
         assertEquals(extrasMap["InstallTime"], "1000000000")
         assertEquals(extrasMap["Theme"], "classic/1.0")
         assertEquals(extrasMap["ReleaseChannel"], "default")
-        assertEquals(extrasMap["ServerURL"], "https://crash-reports.mozilla.com")
         assertEquals(extrasMap["SafeMode"], "0")
         assertEquals(extrasMap["ContentSandboxCapable"], "1")
         assertEquals(extrasMap["useragent_locale"], "en-US")
@@ -316,7 +316,9 @@ class MozillaSocorroServiceTest {
         assertEquals(extrasMap["ThreadIdNameMapping"], "")
         assertEquals(extrasMap["ContentSandboxEnabled"], "1")
         assertEquals(extrasMap["StartupTime"], "1000000000")
-        assertEquals(extrasMap["URL"], "about:home")
+        assertFalse(extrasMap.contains("URL"))
+        assertFalse(extrasMap.contains("ServerURL"))
+        assertFalse(extrasMap.contains("StackTraces"))
     }
 
     @Test
@@ -328,7 +330,7 @@ class MozillaSocorroServiceTest {
         val file = File(getResource("TestLegacyExtrasFile").file)
         val extrasMap = service.readExtrasFromFile(file)
 
-        assertEquals(extrasMap.size, 27)
+        assertEquals(extrasMap.size, 25)
         assertEquals(extrasMap["ContentSandboxLevel"], "2")
         assertEquals(extrasMap["TelemetryEnvironment"], "{\"EscapedField\":\"EscapedData\n\nfoo\"}")
         assertEquals(extrasMap["EMCheckCompatibility"], "true")
@@ -339,7 +341,6 @@ class MozillaSocorroServiceTest {
         assertEquals(extrasMap["InstallTime"], "1000000000")
         assertEquals(extrasMap["Theme"], "classic/1.0")
         assertEquals(extrasMap["ReleaseChannel"], "default")
-        assertEquals(extrasMap["ServerURL"], "https://crash-reports.mozilla.com")
         assertEquals(extrasMap["SafeMode"], "0")
         assertEquals(extrasMap["ContentSandboxCapable"], "1")
         assertEquals(extrasMap["useragent_locale"], "en-US")
@@ -354,7 +355,9 @@ class MozillaSocorroServiceTest {
         assertEquals(extrasMap["ThreadIdNameMapping"], "")
         assertEquals(extrasMap["ContentSandboxEnabled"], "1")
         assertEquals(extrasMap["StartupTime"], "1000000000")
-        assertEquals(extrasMap["URL"], "about:home")
+        assertFalse(extrasMap.contains("URL"))
+        assertFalse(extrasMap.contains("ServerURL"))
+        assertFalse(extrasMap.contains("StackTraces"))
     }
 
     @Test
