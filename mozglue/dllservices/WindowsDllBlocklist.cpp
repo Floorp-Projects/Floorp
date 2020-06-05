@@ -463,13 +463,8 @@ static NTSTATUS NTAPI patched_LdrLoadDll(PWCHAR filePath, PULONG flags,
             "Ignoring the REDIRECT_TO_NOOP_ENTRYPOINT flag\n");
       }
 
-      if ((info->mFlags & DllBlockInfo::BLOCK_WIN8PLUS_ONLY) &&
-          !IsWin8OrLater()) {
-        goto continue_loading;
-      }
-
-      if ((info->mFlags & DllBlockInfo::BLOCK_WIN8_ONLY) &&
-          (!IsWin8OrLater() || IsWin8Point1OrLater())) {
+      if ((info->mFlags & DllBlockInfo::BLOCK_WIN8_AND_OLDER) &&
+          IsWin8Point1OrLater()) {
         goto continue_loading;
       }
 
