@@ -23,6 +23,7 @@ import org.mozilla.thirdparty.com.google.android.exoplayer2.mediacodec.MediaCode
 import org.mozilla.thirdparty.com.google.android.exoplayer2.util.MimeTypes;
 
 import java.nio.ByteBuffer;
+import java.util.List;
 
 public class GeckoHlsAudioRenderer extends GeckoHlsRendererBase {
     public GeckoHlsAudioRenderer(final GeckoHlsPlayer.ComponentEventDispatcher eventDispatcher) {
@@ -55,18 +56,19 @@ public class GeckoHlsAudioRenderer extends GeckoHlsRendererBase {
          */
         String mimeType = format.sampleMimeType;
         if (!MimeTypes.isAudio(mimeType)) {
-            return RendererCapabilities.FORMAT_UNSUPPORTED_TYPE;
+            return RendererCapabilities.create(FORMAT_UNSUPPORTED_TYPE);
         }
-        MediaCodecInfo decoderInfo = null;
+        List<MediaCodecInfo> decoderInfos = null;
         try {
             MediaCodecSelector mediaCodecSelector = MediaCodecSelector.DEFAULT;
-            decoderInfo = mediaCodecSelector.getDecoderInfo(mimeType, false);
+            decoderInfos = mediaCodecSelector.getDecoderInfos(mimeType, false, false);
         } catch (MediaCodecUtil.DecoderQueryException e) {
             Log.e(LOGTAG, e.getMessage());
         }
-        if (decoderInfo == null) {
-            return RendererCapabilities.FORMAT_UNSUPPORTED_SUBTYPE;
+        if (decoderInfos == null || decoderInfos.isEmpty()) {
+            return RendererCapabilities.create(FORMAT_UNSUPPORTED_SUBTYPE);
         }
+        MediaCodecInfo info = decoderInfos.get(0);
         /*
          *  Note : If the code can make it to this place, ExoPlayer assumes
          *         support for unknown sampleRate and channelCount when
@@ -75,13 +77,13 @@ public class GeckoHlsAudioRenderer extends GeckoHlsRendererBase {
          */
         boolean decoderCapable = (Build.VERSION.SDK_INT < 21) ||
                                  ((format.sampleRate == Format.NO_VALUE ||
-                                  decoderInfo.isAudioSampleRateSupportedV21(format.sampleRate)) &&
+                                 info.isAudioSampleRateSupportedV21(format.sampleRate)) &&
                                  (format.channelCount == Format.NO_VALUE ||
-                                  decoderInfo.isAudioChannelCountSupportedV21(format.channelCount)));
-        int formatSupport = decoderCapable ?
-            RendererCapabilities.FORMAT_HANDLED :
-            RendererCapabilities.FORMAT_EXCEEDS_CAPABILITIES;
-        return RendererCapabilities.ADAPTIVE_NOT_SEAMLESS | formatSupport;
+                                 info.isAudioChannelCountSupportedV21(format.channelCount)));
+        return RendererCapabilities.create(
+                decoderCapable ? FORMAT_HANDLED : FORMAT_EXCEEDS_CAPABILITIES,
+                ADAPTIVE_NOT_SEAMLESS,
+                TUNNELING_NOT_SUPPORTED);
     }
 
     @Override

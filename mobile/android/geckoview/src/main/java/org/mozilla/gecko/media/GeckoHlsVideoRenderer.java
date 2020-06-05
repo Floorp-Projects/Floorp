@@ -23,6 +23,7 @@ import org.mozilla.thirdparty.com.google.android.exoplayer2.RendererCapabilities
 import org.mozilla.thirdparty.com.google.android.exoplayer2.util.MimeTypes;
 
 import java.nio.ByteBuffer;
+import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class GeckoHlsVideoRenderer extends GeckoHlsRendererBase {
@@ -89,21 +90,28 @@ public class GeckoHlsVideoRenderer extends GeckoHlsRendererBase {
          */
         final String mimeType = format.sampleMimeType;
         if (!MimeTypes.isVideo(mimeType)) {
-            return RendererCapabilities.FORMAT_UNSUPPORTED_TYPE;
+            return RendererCapabilities.create(FORMAT_UNSUPPORTED_TYPE);
         }
 
-        MediaCodecInfo decoderInfo = null;
+        List<MediaCodecInfo> decoderInfos = null;
         try {
             MediaCodecSelector mediaCodecSelector = MediaCodecSelector.DEFAULT;
-            decoderInfo = mediaCodecSelector.getDecoderInfo(mimeType, false);
+            decoderInfos = mediaCodecSelector.getDecoderInfos(mimeType, false, false);
         } catch (MediaCodecUtil.DecoderQueryException e) {
             Log.e(LOGTAG, e.getMessage());
         }
-        if (decoderInfo == null) {
-            return RendererCapabilities.FORMAT_UNSUPPORTED_SUBTYPE;
+        if (decoderInfos == null || decoderInfos.isEmpty()) {
+            return RendererCapabilities.create(FORMAT_UNSUPPORTED_SUBTYPE);
         }
 
-        boolean decoderCapable = decoderInfo.isCodecSupported(format.codecs);
+        boolean decoderCapable = false;
+        MediaCodecInfo info = null;
+        for (MediaCodecInfo i : decoderInfos) {
+            if (i.isCodecSupported(format)) {
+                decoderCapable = true;
+                info = i;
+            }
+        }
         if (decoderCapable && format.width > 0 && format.height > 0) {
             if (Build.VERSION.SDK_INT < 21) {
                 try {
@@ -118,20 +126,16 @@ public class GeckoHlsVideoRenderer extends GeckoHlsRendererBase {
                     }
                 }
             } else {
-                decoderCapable =
-                    decoderInfo.isVideoSizeAndRateSupportedV21(format.width,
-                                                               format.height,
-                                                               format.frameRate);
+                decoderCapable = info.isVideoSizeAndRateSupportedV21(format.width,
+                                                                     format.height,
+                                                                     format.frameRate);
             }
         }
 
-        int adaptiveSupport = decoderInfo.adaptive ?
-            RendererCapabilities.ADAPTIVE_SEAMLESS :
-            RendererCapabilities.ADAPTIVE_NOT_SEAMLESS;
-        int formatSupport = decoderCapable ?
-            RendererCapabilities.FORMAT_HANDLED :
-            RendererCapabilities.FORMAT_EXCEEDS_CAPABILITIES;
-        return adaptiveSupport | formatSupport;
+        return RendererCapabilities.create(
+                decoderCapable ? FORMAT_HANDLED : FORMAT_EXCEEDS_CAPABILITIES,
+                info != null && info.adaptive ? ADAPTIVE_SEAMLESS : ADAPTIVE_NOT_SEAMLESS,
+                TUNNELING_NOT_SUPPORTED);
     }
 
     @Override
@@ -149,7 +153,10 @@ public class GeckoHlsVideoRenderer extends GeckoHlsRendererBase {
             mInputBuffer = ByteBuffer.wrap(new byte[mCodecMaxValues.inputSize]);
         } catch (OutOfMemoryError e) {
             Log.e(LOGTAG, "cannot allocate input buffer of size " + mCodecMaxValues.inputSize, e);
-            throw ExoPlaybackException.createForRenderer(new Exception(e), getIndex());
+            throw ExoPlaybackException.createForRenderer(new Exception(e),
+                    getIndex(),
+                    mFormats.isEmpty() ? null : getFormat(mFormats.size() - 1),
+                    RendererCapabilities.FORMAT_HANDLED);
         }
     }
 
@@ -429,7 +436,7 @@ public class GeckoHlsVideoRenderer extends GeckoHlsRendererBase {
     }
 
     @Override
-    protected void onStreamChanged(final Format[] formats) {
+    protected void onStreamChanged(final Format[] formats, final long offsetUs) {
         mStreamFormats = formats;
     }
 
