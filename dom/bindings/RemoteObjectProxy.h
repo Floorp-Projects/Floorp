@@ -134,7 +134,7 @@ class RemoteObjectProxyBase : public js::BaseProxyHandler,
  * hash map in the JS compartment's private (@see
  * xpc::CompartmentPrivate::GetRemoteProxyMap).
  */
-template <class Native, JSPropertySpec* P, JSFunctionSpec* F>
+template <class Native, const CrossOriginProperties& P>
 class RemoteObjectProxy : public RemoteObjectProxyBase {
  public:
   void finalize(JSFreeOp* aFop, JSObject* aProxy) const final {
@@ -160,7 +160,7 @@ class RemoteObjectProxy : public RemoteObjectProxyBase {
   bool EnsureHolder(JSContext* aCx, JS::Handle<JSObject*> aProxy,
                     JS::MutableHandle<JSObject*> aHolder) const final {
     return MaybeCrossOriginObjectMixins::EnsureHolder(
-        aCx, aProxy, /* slot = */ 0, P, F, aHolder);
+        aCx, aProxy, /* slot = */ 0, P, aHolder);
   }
 
   static const JSClass sClass;

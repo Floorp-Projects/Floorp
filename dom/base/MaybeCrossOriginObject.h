@@ -34,6 +34,22 @@
 namespace mozilla {
 namespace dom {
 
+/**
+ * "mAttributes" and "mMethods" are the cross-origin attributes and methods we
+ * care about, which should get defined on holders.
+ *
+ * "mChromeOnlyAttributes" and "mChromeOnlyMethods" are the cross-origin
+ * attributes and methods we care about, which should get defined on holders
+ * for the chrome realm, in addition to the properties that are in
+ * "mAttributes" and "mMethods".
+ */
+struct CrossOriginProperties {
+  const JSPropertySpec* mAttributes;
+  const JSFunctionSpec* mMethods;
+  const JSPropertySpec* mChromeOnlyAttributes;
+  const JSFunctionSpec* mChromeOnlyMethods;
+};
+
 // Methods that MaybeCrossOriginObject wants that do not depend on the "Base"
 // template parameter.  We can avoid having multiple instantiations of them by
 // pulling them out into this helper class.
@@ -118,12 +134,11 @@ class MaybeCrossOriginObjectMixins {
    * "obj" is the object which has space to store the collection of holders in
    * the given slot.
    *
-   * "attributes" and "methods" are the cross-origin attributes and methods we
-   * care about, which should get defined on holders.
+   * "properties" are the cross-origin attributes and methods we care about,
+   * which should get defined on holders.
    */
   static bool EnsureHolder(JSContext* cx, JS::Handle<JSObject*> obj,
-                           size_t slot, JSPropertySpec* attributes,
-                           JSFunctionSpec* methods,
+                           size_t slot, const CrossOriginProperties& properties,
                            JS::MutableHandle<JSObject*> holder);
 
   /**
