@@ -235,7 +235,7 @@ bool MaybeCrossOriginObjectMixins::CrossOriginSet(
 /* static */
 bool MaybeCrossOriginObjectMixins::EnsureHolder(
     JSContext* cx, JS::Handle<JSObject*> obj, size_t slot,
-    JSPropertySpec* attributes, JSFunctionSpec* methods,
+    const CrossOriginProperties& properties,
     JS::MutableHandle<JSObject*> holder) {
   MOZ_ASSERT(!IsPlatformObjectSameOrigin(cx, obj) || IsRemoteObjectProxy(obj),
              "Why are we calling this at all in same-origin cases?");
@@ -311,9 +311,14 @@ bool MaybeCrossOriginObjectMixins::EnsureHolder(
   // cross-compartment references to all the methods it holds, since those
   // methods need to be in our current Realm.  It seems better to allocate the
   // holder in our current Realm.
+  bool isChrome = xpc::AccessCheck::isChrome(js::GetContextRealm(cx));
   holder.set(JS_NewObjectWithGivenProto(cx, nullptr, nullptr));
-  if (!holder || !JS_DefineProperties(cx, holder, attributes) ||
-      !JS_DefineFunctions(cx, holder, methods)) {
+  if (!holder || !JS_DefineProperties(cx, holder, properties.mAttributes) ||
+      !JS_DefineFunctions(cx, holder, properties.mMethods) ||
+      (isChrome && properties.mChromeOnlyAttributes &&
+       !JS_DefineProperties(cx, holder, properties.mChromeOnlyAttributes)) ||
+      (isChrome && properties.mChromeOnlyMethods &&
+       !JS_DefineFunctions(cx, holder, properties.mChromeOnlyMethods))) {
     return false;
   }
 

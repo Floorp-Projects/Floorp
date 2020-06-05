@@ -24,8 +24,7 @@ namespace dom {
 
 class RemoteOuterWindowProxy
     : public RemoteObjectProxy<BrowsingContext,
-                               Window_Binding::sCrossOriginAttributes,
-                               Window_Binding::sCrossOriginMethods> {
+                               Window_Binding::sCrossOriginProperties> {
  public:
   typedef RemoteObjectProxy Base;
 

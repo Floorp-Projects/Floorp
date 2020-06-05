@@ -4324,7 +4324,9 @@ class CGClearCachedValueMethod(CGAbstractMethod):
 class CGCrossOriginProperties(CGThing):
     def __init__(self, descriptor):
         attrs = []
+        chromeOnlyAttrs = []
         methods = []
+        chromeOnlyMethods = []
         for m in descriptor.interface.members:
             if m.isAttr() and (m.getExtendedAttribute("CrossOriginReadable") or
                                m.getExtendedAttribute("CrossOriginWritable")):
@@ -4337,7 +4339,10 @@ class CGCrossOriginProperties(CGThing):
                 if len(m.bindingAliases) > 0:
                     raise TypeError("Don't know how to deal with aliases for %s" %
                                     m.identifier.name)
-                attrs.extend(AttrDefiner.attrData(m, overrideFlags="0"))
+                if m.getExtendedAttribute("ChromeOnly") is not None:
+                    chromeOnlyAttrs.extend(AttrDefiner.attrData(m, overrideFlags="0"))
+                else:
+                    attrs.extend(AttrDefiner.attrData(m, overrideFlags="0"))
             elif m.isMethod() and m.getExtendedAttribute("CrossOriginCallable"):
                 if m.isStatic():
                     raise TypeError("Don't know how to deal with static method %s" %
@@ -4348,7 +4353,10 @@ class CGCrossOriginProperties(CGThing):
                 if len(m.aliases) > 0:
                     raise TypeError("Don't know how to deal with aliases for %s" %
                                     m.identifier.name)
-                methods.append(MethodDefiner.methodData(m, descriptor, overrideFlags="JSPROP_READONLY"))
+                if m.getExtendedAttribute("ChromeOnly") is not None:
+                    chromeOnlyMethods.append(MethodDefiner.methodData(m, descriptor, overrideFlags="JSPROP_READONLY"))
+                else:
+                    methods.append(MethodDefiner.methodData(m, descriptor, overrideFlags="JSPROP_READONLY"))
 
         if len(attrs) > 0:
             self.attributeSpecs, _ = PropertyDefiner.generatePrefableArrayValues(
@@ -4363,15 +4371,42 @@ class CGCrossOriginProperties(CGThing):
         else:
             self.methodSpecs = ['  JS_FS_END\n']
 
+        if len(chromeOnlyAttrs) > 0:
+            self.chromeOnlyAttributeSpecs, _ = PropertyDefiner.generatePrefableArrayValues(
+                chromeOnlyAttrs, descriptor, AttrDefiner.formatSpec, '  JS_PS_END\n',
+                AttrDefiner.condition, functools.partial(AttrDefiner.specData, crossOriginOnly=True))
+        else:
+            self.chromeOnlyAttributeSpecs = []
+        if len(chromeOnlyMethods) > 0:
+            self.chromeOnlyMethodSpecs, _ = PropertyDefiner.generatePrefableArrayValues(
+                chromeOnlyMethods, descriptor, MethodDefiner.formatSpec, '  JS_FS_END\n',
+                MethodDefiner.condition, MethodDefiner.specData)
+        else:
+            self.chromeOnlyMethodSpecs = []
+
     def declare(self):
-        return fill("""
-            extern JSPropertySpec sCrossOriginAttributes[${attributesLength}];
-            extern JSFunctionSpec sCrossOriginMethods[${methodsLength}];
-            """,
-            attributesLength=len(self.attributeSpecs),
-            methodsLength=len(self.methodSpecs))
+        return dedent("""
+            extern const CrossOriginProperties sCrossOriginProperties;
+            """)
 
     def define(self):
+        def defineChromeOnly(name, specs, specType):
+            if len(specs) == 0:
+                return ("", "nullptr")
+            name = "sChromeOnlyCrossOrigin" + name
+            define = fill(
+                """
+                static const ${specType} ${name}[] = {
+                  $*{specs}
+                };
+                """,
+                specType=specType,
+                name=name,
+                specs=",\n".join(specs))
+            return (define, name)
+
+        chromeOnlyAttributes = defineChromeOnly("Attributes", self.chromeOnlyAttributeSpecs, "JSPropertySpec")
+        chromeOnlyMethods = defineChromeOnly("Methods", self.chromeOnlyMethodSpecs, "JSFunctionSpec")
         return fill(
             """
             // We deliberately use brace-elision to make Visual Studio produce better initalization code.
@@ -4379,18 +4414,30 @@ class CGCrossOriginProperties(CGThing):
             #pragma clang diagnostic push
             #pragma clang diagnostic ignored "-Wmissing-braces"
             #endif
-            JSPropertySpec sCrossOriginAttributes[] = {
+            static const JSPropertySpec sCrossOriginAttributes[] = {
               $*{attributeSpecs}
             };
-            JSFunctionSpec sCrossOriginMethods[] = {
+            static const JSFunctionSpec sCrossOriginMethods[] = {
               $*{methodSpecs}
+            };
+            $*{chromeOnlyAttributeSpecs}
+            $*{chromeOnlyMethodSpecs}
+            const CrossOriginProperties sCrossOriginProperties = {
+              sCrossOriginAttributes,
+              sCrossOriginMethods,
+              ${chromeOnlyAttributes},
+              ${chromeOnlyMethods}
             };
             #if defined(__clang__)
             #pragma clang diagnostic pop
             #endif
             """,
             attributeSpecs=",\n".join(self.attributeSpecs),
-            methodSpecs=",\n".join(self.methodSpecs))
+            methodSpecs=",\n".join(self.methodSpecs),
+            chromeOnlyAttributeSpecs=chromeOnlyAttributes[0],
+            chromeOnlyMethodSpecs=chromeOnlyMethods[0],
+            chromeOnlyAttributes=chromeOnlyAttributes[1],
+            chromeOnlyMethods=chromeOnlyMethods[1])
 
 
 class CGCycleCollectionTraverseForOwningUnionMethod(CGAbstractMethod):
@@ -13589,7 +13636,7 @@ class CGDOMJSProxyHandler_set(ClassMethod):
 
 class CGDOMJSProxyHandler_EnsureHolder(ClassMethod):
     """
-    Implementation of set().  We only use this for cross-origin objects.
+    Implementation of EnsureHolder().  We only use this for cross-origin objects.
     """
     def __init__(self, descriptor):
         args = [Argument('JSContext*', 'cx'),
@@ -13602,10 +13649,9 @@ class CGDOMJSProxyHandler_EnsureHolder(ClassMethod):
     def getBody(self):
         return dedent(
             """
-            // Our holder slot is our last slot.
             return EnsureHolder(cx, proxy,
                                 JSCLASS_RESERVED_SLOTS(js::GetObjectClass(proxy)) - 1,
-                                sCrossOriginAttributes, sCrossOriginMethods, holder);
+                                sCrossOriginProperties, holder);
             """)
 
 
