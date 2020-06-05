@@ -10,9 +10,14 @@ const {
 } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const { connect } = require("devtools/client/shared/vendor/react-redux");
 
 const FluentReact = require("devtools/client/shared/vendor/fluent-react");
 const Localized = createFactory(FluentReact.Localized);
+
+const {
+  getCurrentRuntimeDetails,
+} = require("devtools/client/aboutdebugging/src/modules/runtimes-state-helper");
 
 const DetailsLog = createFactory(
   require("devtools/client/aboutdebugging/src/components/shared/DetailsLog")
@@ -26,6 +31,7 @@ const Message = createFactory(
 
 const {
   MESSAGE_LEVEL,
+  RUNTIMES,
 } = require("devtools/client/aboutdebugging/src/constants");
 const Types = require("devtools/client/aboutdebugging/src/types/index");
 
@@ -38,6 +44,8 @@ class ExtensionDetail extends PureComponent {
       children: PropTypes.node,
       // Provided by wrapping the component with FluentReact.withLocalization.
       getString: PropTypes.func.isRequired,
+      // Provided by redux state
+      runtimeDetails: Types.runtimeDetails.isRequired,
       target: Types.debugTarget.isRequired,
     };
   }
@@ -128,11 +136,13 @@ class ExtensionDetail extends PureComponent {
   }
 
   renderManifest() {
-    const { manifestURL } = this.props.target.details;
-    if (!manifestURL) {
+    // Manifest links are only relevant when debugging the current Firefox
+    // instance.
+    if (this.props.runtimeDetails.info.type !== RUNTIMES.THIS_FIREFOX) {
       return null;
     }
 
+    const { manifestURL } = this.props.target.details;
     const link = dom.a(
       {
         className: "qa-manifest-url",
@@ -172,4 +182,12 @@ class ExtensionDetail extends PureComponent {
   }
 }
 
-module.exports = FluentReact.withLocalization(ExtensionDetail);
+const mapStateToProps = state => {
+  return {
+    runtimeDetails: getCurrentRuntimeDetails(state.runtimes),
+  };
+};
+
+module.exports = FluentReact.withLocalization(
+  connect(mapStateToProps)(ExtensionDetail)
+);
