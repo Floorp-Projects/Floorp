@@ -725,7 +725,7 @@
 
 - name: MathAtan2NumberResult
   shared: true
-  transpile: false
+  transpile: true
   args:
     lhs: NumberId
     rhs: NumberId
