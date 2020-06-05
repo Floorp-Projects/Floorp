@@ -228,7 +228,7 @@ const Localization = {
    * @param   {Array<String>}     resourceIds - List of resource ids used by this
    *                                            localization.
    * @param   {Iter<FluentBundle>}    bundles - Iterator over bundles.
-   * @param   {Array<string|Object>}  keys    - Translation keys to format.
+   * @param   {Array<Object>}         keys    - Translation keys to format.
    * @param   {Function}              method  - Formatting function.
    * @returns {Promise<Array<string?|Object?>>}
    * @private
@@ -271,7 +271,7 @@ const Localization = {
    * @param   {Array<String>}     resourceIds - List of resource ids used by this
    *                                            localization.
    * @param   {Iter<FluentBundle>}    bundles - Iterator over bundles.
-   * @param   {Array<string|Object>}  keys    - Translation keys to format.
+   * @param   {Array<Object>}         keys    - Translation keys to format.
    * @param   {Function}              method  - Formatting function.
    * @returns {Array<string|Object>}
    * @private
@@ -330,7 +330,7 @@ const Localization = {
    * @param   {Array<String>}     resourceIds - List of resource ids used by this
    *                                            localization.
    * @param   {Iter<FluentBundle>}    bundles - Iterator over bundles.
-   * @param   {Array<string|Object>}  keys    - Translation keys to format.
+   * @param   {Array<Object>}         keys    - Translation keys to format.
    * @returns {Promise<Array<{value: string, attributes: Object}?>>}
    * @private
    */
@@ -346,7 +346,7 @@ const Localization = {
    * @param   {Array<String>}     resourceIds - List of resource ids used by this
    *                                            localization.
    * @param   {Iter<FluentBundle>}    bundles - Iterator over bundles.
-   * @param   {Array<string|Object>}  keys    - Translation keys to format.
+   * @param   {Array<Object>}         keys    - Translation keys to format.
    * @returns {Array<{value: string, attributes: Object}?>}
    * @private
    */
@@ -373,7 +373,7 @@ const Localization = {
    * @param   {Array<String>}     resourceIds - List of resource ids used by this
    *                                            localization.
    * @param   {Iter<FluentBundle>}    bundles - Iterator over bundles.
-   * @param   {Array<string|Object>}  keys    - Translation keys to format.
+   * @param   {Array<Object>}         keys    - Translation keys to format.
    * @returns {Promise<Array<string?>>}
    */
   formatValues(resourceIds, bundles, keys) {
@@ -388,7 +388,7 @@ const Localization = {
    * @param   {Array<String>}     resourceIds - List of resource ids used by this
    *                                            localization.
    * @param   {Iter<FluentBundle>}    bundles - Iterator over bundles.
-   * @param   {Array<string|Object>}  keys    - Translation keys to format.
+   * @param   {Array<Object>}         keys    - Translation keys to format.
    * @returns {Array<string?>}
    * @private
    */
@@ -563,7 +563,7 @@ function messageFromBundle(bundle, errors, message, args) {
  *
  * @param {Function}       method
  * @param {FluentBundle}   bundle
- * @param {Array<string|Object>} keys
+ * @param {Array<string>}  keys
  * @param {{Array<{value: string, attributes: Object}>}} translations
  *
  * @returns {Set<string>}
@@ -573,16 +573,7 @@ function keysFromBundle(method, bundle, keys, translations) {
   const messageErrors = [];
   const missingIds = new Set();
 
-  keys.forEach((key, i) => {
-    let id;
-    let args = undefined;
-    if (typeof key == "object" && "id" in key) {
-      id = String(key.id);
-      args = key.args;
-    } else {
-      id = String(key);
-    }
-
+  keys.forEach(({id, args}, i) => {
     if (translations[i] !== null) {
       return;
     }

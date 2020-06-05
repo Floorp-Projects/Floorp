@@ -273,7 +273,7 @@ already_AddRefed<Promise> Localization::FormatValue(
 void Localization::SetIsSync(const bool aIsSync) { mIsSync = aIsSync; }
 
 already_AddRefed<Promise> Localization::FormatValues(
-    JSContext* aCx, const Sequence<OwningUTF8StringOrL10nIdArgs>& aKeys, ErrorResult& aRv) {
+    JSContext* aCx, const Sequence<L10nKey>& aKeys, ErrorResult& aRv) {
   if (!mLocalization) {
     Activate(false);
   }
@@ -300,7 +300,7 @@ already_AddRefed<Promise> Localization::FormatValues(
 }
 
 already_AddRefed<Promise> Localization::FormatMessages(
-    JSContext* aCx, const Sequence<OwningUTF8StringOrL10nIdArgs>& aKeys, ErrorResult& aRv) {
+    JSContext* aCx, const Sequence<L10nKey>& aKeys, ErrorResult& aRv) {
   if (!mLocalization) {
     Activate(false);
   }
@@ -354,7 +354,7 @@ void Localization::FormatValueSync(JSContext* aCx, const nsACString& aId,
 }
 
 void Localization::FormatValuesSync(JSContext* aCx,
-                                    const Sequence<OwningUTF8StringOrL10nIdArgs>& aKeys,
+                                    const Sequence<L10nKey>& aKeys,
                                     nsTArray<nsCString>& aRetVal,
                                     ErrorResult& aRv) {
   if (!mIsSync) {
@@ -382,7 +382,7 @@ void Localization::FormatValuesSync(JSContext* aCx,
 }
 
 void Localization::FormatMessagesSync(JSContext* aCx,
-                                      const Sequence<OwningUTF8StringOrL10nIdArgs>& aKeys,
+                                      const Sequence<L10nKey>& aKeys,
                                       nsTArray<Nullable<L10nMessage>>& aRetVal,
                                       ErrorResult& aRv) {
   if (!mIsSync) {

@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /**
- * L10nIdArgs is an object used to carry localization tuple for message
+ * L10nKey is an object used to carry localization tuple for message
  * translation.
  *
  * Fields:
@@ -13,16 +13,10 @@
  *         The argument will be converted to/from JSON, and the API
  *         will only handle strings and numbers.
  */
-dictionary L10nIdArgs {
-  required UTF8String id;
+dictionary L10nKey {
+  UTF8String? id = null;
   L10nArgs? args = null;
 };
-
-/**
- * When no arguments are required to format a message a simple string can be
- * used instead.
- */
-typedef (UTF8String or L10nIdArgs) L10nKey;
 
 /**
  * L10nMessage is a compound translation unit from Fluent which
