@@ -66,22 +66,24 @@ class Localization : public nsIObserver,
                                         const Optional<L10nArgs>& aArgs,
                                         ErrorResult& aRv);
 
-  already_AddRefed<Promise> FormatValues(JSContext* aCx,
-                                         const Sequence<L10nKey>& aKeys,
-                                         ErrorResult& aRv);
+  already_AddRefed<Promise> FormatValues(
+      JSContext* aCx, const Sequence<OwningUTF8StringOrL10nIdArgs>& aKeys,
+      ErrorResult& aRv);
 
-  already_AddRefed<Promise> FormatMessages(JSContext* aCx,
-                                           const Sequence<L10nKey>& aKeys,
-                                           ErrorResult& aRv);
+  already_AddRefed<Promise> FormatMessages(
+      JSContext* aCx, const Sequence<OwningUTF8StringOrL10nIdArgs>& aKeys,
+      ErrorResult& aRv);
 
   void SetIsSync(const bool aIsSync);
 
   void FormatValueSync(JSContext* aCx, const nsACString& aId,
                        const Optional<L10nArgs>& aArgs, nsACString& aRetVal,
                        ErrorResult& aRv);
-  void FormatValuesSync(JSContext* aCx, const Sequence<L10nKey>& aKeys,
+  void FormatValuesSync(JSContext* aCx,
+                        const Sequence<OwningUTF8StringOrL10nIdArgs>& aKeys,
                         nsTArray<nsCString>& aRetVal, ErrorResult& aRv);
-  void FormatMessagesSync(JSContext* aCx, const Sequence<L10nKey>& aKeys,
+  void FormatMessagesSync(JSContext* aCx,
+                          const Sequence<OwningUTF8StringOrL10nIdArgs>& aKeys,
                           nsTArray<Nullable<L10nMessage>>& aRetVal,
                           ErrorResult& aRv);
 
