@@ -125,17 +125,17 @@ class RuntimePage extends PureComponent {
     throw new Error(`Unsupported type [${type}]`);
   }
 
-  renderDebugTargetPane(
-    name,
-    icon,
-    targets,
-    children,
+  renderDebugTargetPane({
     actionComponent,
     additionalActionsComponent,
+    children,
     detailComponent,
+    icon,
+    localizationId,
+    name,
     paneKey,
-    localizationId
-  ) {
+    targets,
+  }) {
     const { collapsibilities, dispatch, runtimeDetails } = this.props;
 
     if (!isSupportedDebugTargetPane(runtimeDetails.info.type, paneKey)) {
@@ -214,85 +214,76 @@ class RuntimePage extends PureComponent {
       RuntimeActions({ dispatch, runtimeId, runtimeDetails }),
       runtimeDetails.serviceWorkersAvailable ? null : ServiceWorkersWarning(),
       CompatibilityWarning({ compatibilityReport }),
-      this.renderDebugTargetPane(
-        "Tabs",
-        this.getIconByType(DEBUG_TARGETS.TAB),
-        tabs,
-        null,
-        TabAction,
-        null,
-        TabDetail,
-        DEBUG_TARGET_PANE.TAB,
-        "about-debugging-runtime-tabs"
-      ),
-      this.renderDebugTargetPane(
-        "Temporary Extensions",
-        this.getIconByType(DEBUG_TARGETS.EXTENSION),
-        temporaryExtensions,
-        this.renderTemporaryExtensionInstallSection(),
-        InspectAction,
-        supportsTemporaryExtensionAdditionalActions(runtimeDetails.info.type)
+      this.renderDebugTargetPane({
+        actionComponent: TabAction,
+        detailComponent: TabDetail,
+        icon: this.getIconByType(DEBUG_TARGETS.TAB),
+        localizationId: "about-debugging-runtime-tabs",
+        name: "Tabs",
+        paneKey: DEBUG_TARGET_PANE.TAB,
+        targets: tabs,
+      }),
+      this.renderDebugTargetPane({
+        actionComponent: InspectAction,
+        additionalActionsComponent: supportsTemporaryExtensionAdditionalActions(
+          runtimeDetails.info.type
+        )
           ? TemporaryExtensionAdditionalActions
           : null,
-        TemporaryExtensionDetail,
-        DEBUG_TARGET_PANE.TEMPORARY_EXTENSION,
-        "about-debugging-runtime-temporary-extensions"
-      ),
-      this.renderDebugTargetPane(
-        "Extensions",
-        this.getIconByType(DEBUG_TARGETS.EXTENSION),
-        installedExtensions,
-        null,
-        InspectAction,
-        null,
-        ExtensionDetail,
-        DEBUG_TARGET_PANE.INSTALLED_EXTENSION,
-        "about-debugging-runtime-extensions"
-      ),
-      this.renderDebugTargetPane(
-        "Service Workers",
-        this.getIconByType(DEBUG_TARGETS.WORKER),
-        serviceWorkers,
-        null,
-        ServiceWorkerAction,
-        ServiceWorkerAdditionalActions,
-        WorkerDetail,
-        DEBUG_TARGET_PANE.SERVICE_WORKER,
-        "about-debugging-runtime-service-workers"
-      ),
-      this.renderDebugTargetPane(
-        "Shared Workers",
-        this.getIconByType(DEBUG_TARGETS.WORKER),
-        sharedWorkers,
-        null,
-        InspectAction,
-        null,
-        WorkerDetail,
-        DEBUG_TARGET_PANE.SHARED_WORKER,
-        "about-debugging-runtime-shared-workers"
-      ),
-      this.renderDebugTargetPane(
-        "Other Workers",
-        this.getIconByType(DEBUG_TARGETS.WORKER),
-        otherWorkers,
-        null,
-        InspectAction,
-        null,
-        WorkerDetail,
-        DEBUG_TARGET_PANE.OTHER_WORKER,
-        "about-debugging-runtime-other-workers"
-      ),
-      this.renderDebugTargetPane(
-        "Processes",
-        this.getIconByType(DEBUG_TARGETS.PROCESS),
-        processes,
-        null,
-        InspectAction,
-        null,
-        ProcessDetail,
-        DEBUG_TARGET_PANE.PROCESSES,
-        "about-debugging-runtime-processes"
-      ),
+        children: this.renderTemporaryExtensionInstallSection(),
+        detailComponent: TemporaryExtensionDetail,
+        icon: this.getIconByType(DEBUG_TARGETS.EXTENSION),
+        localizationId: "about-debugging-runtime-temporary-extensions",
+        name: "Temporary Extensions",
+        paneKey: DEBUG_TARGET_PANE.TEMPORARY_EXTENSION,
+        targets: temporaryExtensions,
+      }),
+      this.renderDebugTargetPane({
+        actionComponent: InspectAction,
+        detailComponent: ExtensionDetail,
+        icon: this.getIconByType(DEBUG_TARGETS.EXTENSION),
+        localizationId: "about-debugging-runtime-extensions",
+        name: "Extensions",
+        paneKey: DEBUG_TARGET_PANE.INSTALLED_EXTENSION,
+        targets: installedExtensions,
+      }),
+      this.renderDebugTargetPane({
+        actionComponent: ServiceWorkerAction,
+        additionalActionsComponent: ServiceWorkerAdditionalActions,
+        detailComponent: WorkerDetail,
+        icon: this.getIconByType(DEBUG_TARGETS.WORKER),
+        localizationId: "about-debugging-runtime-service-workers",
+        name: "Service Workers",
+        paneKey: DEBUG_TARGET_PANE.SERVICE_WORKER,
+        targets: serviceWorkers,
+      }),
+      this.renderDebugTargetPane({
+        actionComponent: InspectAction,
+        detailComponent: WorkerDetail,
+        icon: this.getIconByType(DEBUG_TARGETS.WORKER),
+        localizationId: "about-debugging-runtime-shared-workers",
+        name: "Shared Workers",
+        paneKey: DEBUG_TARGET_PANE.SHARED_WORKER,
+        targets: sharedWorkers,
+      }),
+      this.renderDebugTargetPane({
+        actionComponent: InspectAction,
+        detailComponent: WorkerDetail,
+        icon: this.getIconByType(DEBUG_TARGETS.WORKER),
+        localizationId: "about-debugging-runtime-other-workers",
+        name: "Other Workers",
+        paneKey: DEBUG_TARGET_PANE.OTHER_WORKER,
+        targets: otherWorkers,
+      }),
+      this.renderDebugTargetPane({
+        actionComponent: InspectAction,
+        detailComponent: ProcessDetail,
+        icon: this.getIconByType(DEBUG_TARGETS.PROCESS),
+        localizationId: "about-debugging-runtime-processes",
+        name: "Processes",
+        paneKey: DEBUG_TARGET_PANE.PROCESSES,
+        targets: processes,
+      }),
 
       showProfilerDialog ? ProfilerDialog({ dispatch, runtimeDetails }) : null
     );
