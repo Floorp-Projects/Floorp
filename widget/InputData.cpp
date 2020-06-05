@@ -610,21 +610,19 @@ WidgetWheelEvent PinchGestureInput::ToWidgetWheelEvent(
   // Specifically, it creates a PinchGestureInput with |mCurrentSpan == 100.0 *
   // currentScale| and |mPreviousSpan == 100.0 * lastScale| where currentScale
   // is the scale from the current OS event and lastScale is the scale when the
-  // previous OS event happened. It then seems reasonable to calculate |M =
-  // currentScale / lastScale| and use the same formula as the macOS code
+  // previous OS event happened. On macOS [event magnification] is a relative
+  // change in scale factor, ie if the scale factor changed from 1 to 1.1 it
+  // will be 0.1, similarly if it changed from 1 to 0.9 it will be -0.1. To
+  // calculate the relative scale change on Windows we would calculate |M =
+  // currentScale - lastScale = (mCurrentSpan-mPreviousSpan)/100| and use the
+  // same formula as the macOS code
   // (|-100.0 * M * GetDefaultScaleInternal()|).
 
   // XXX When we write the code for other platforms to do the same we'll need to
   // make sure this calculation is reasonable.
 
-  if (mPreviousSpan != 0.f) {
-    wheelEvent.mDeltaY = -100.0 * (mCurrentSpan / mPreviousSpan) *
-                         (aWidget ? aWidget->GetDefaultScaleInternal() : 1.f);
-  } else {
-    // Not sure what makes sense here, this seems reasonable.
-    wheelEvent.mDeltaY = -100.0 * mCurrentSpan *
-                         (aWidget ? aWidget->GetDefaultScaleInternal() : 1.f);
-  }
+  wheelEvent.mDeltaY = (mPreviousSpan - mCurrentSpan) *
+                       (aWidget ? aWidget->GetDefaultScaleInternal() : 1.f);
 #endif
 
   return wheelEvent;
