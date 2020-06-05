@@ -9026,6 +9026,7 @@ void nsLayoutUtils::SetVisualViewportSize(PresShell* aPresShell,
 /* static */
 bool nsLayoutUtils::CanScrollOriginClobberApz(ScrollOrigin aScrollOrigin) {
   switch (aScrollOrigin) {
+    case ScrollOrigin::None:
     case ScrollOrigin::NotSpecified:
     case ScrollOrigin::Apz:
     case ScrollOrigin::Restore:
