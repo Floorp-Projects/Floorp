@@ -17,7 +17,7 @@ template <>
 struct ParamTraits<mozilla::dom::MediaControlKeysEvent>
     : public ContiguousEnumSerializerInclusive<
           mozilla::dom::MediaControlKeysEvent,
-          mozilla::dom::MediaControlKeysEvent::ePlay,
+          mozilla::dom::MediaControlKeysEvent::eFocus,
           mozilla::dom::MediaControlKeysEvent::eStop> {};
 
 template <>
