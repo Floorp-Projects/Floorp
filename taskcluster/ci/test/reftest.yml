@@ -14,8 +14,8 @@ job-defaults:
     fission-tier: 2
     run-on-projects:
         by-test-platform:
-            android-hw-.*-qr/debug: ['try', 'mozilla-central']
-            android-hw-.*-qr/opt: ['try', 'mozilla-central', 'autoland']
+            android-hw-.*-qr/debug: ['mozilla-central']
+            android-hw-.*-qr/opt: ['mozilla-central', 'autoland']
             windows10-aarch64/.*: []  # Specific repos enabled below
             default: built-projects
     mozharness:
@@ -51,7 +51,7 @@ crashtest:
     e10s: true
     run-on-projects:
         by-test-platform:
-            windows10-aarch64/.*: ['try', 'mozilla-central', 'mozilla-beta', 'mozilla-release']
+            windows10-aarch64/.*: ['mozilla-central', 'mozilla-beta', 'mozilla-release']
             default: built-projects
     max-run-time: 3600
     tier:
@@ -107,8 +107,8 @@ jsreftest:
     tier: default
     run-on-projects:
         by-test-platform:
-            android-hw-.*-aarch64(?:-shippable)?/.*: ['try', 'mozilla-central', 'release']
-            android-hw-.*-api-16(?:-shippable)?/.*: ['try', 'mozilla-central', 'release']
+            android-hw-.*-aarch64(?:-shippable)?/.*: ['mozilla-central', 'release']
+            android-hw-.*-api-16(?:-shippable)?/.*: ['mozilla-central', 'release']
             default: built-projects
 
 reftest:
@@ -131,7 +131,7 @@ reftest:
     e10s: true
     run-on-projects:
         by-test-platform:
-            windows10-aarch64/.*: ['try', 'mozilla-central', 'mozilla-beta', 'mozilla-release']
+            windows10-aarch64/.*: ['mozilla-central', 'mozilla-beta', 'mozilla-release']
             default: built-projects
     max-run-time:
         by-test-platform:

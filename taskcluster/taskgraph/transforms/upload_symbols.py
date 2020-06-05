@@ -76,9 +76,6 @@ def fill_template(config, tasks):
             # XXX Better to run this on promote phase instead?
             task['run-on-projects'] = dep.attributes.get('run_on_projects')
             task['optimization'] = dep.optimization
-        else:
-            # For other builds, these can be requested to upload to the try symbol sever.
-            task['run-on-projects'] = ['try']
 
         # clear out the stuff that's not part of a task description
         del task['primary-dependency']
