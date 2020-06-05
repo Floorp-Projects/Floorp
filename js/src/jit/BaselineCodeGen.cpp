@@ -851,7 +851,8 @@ void BaselineInterpreterCodeGen::pushGlobalLexicalEnvironmentValue(
 
 template <>
 void BaselineCompilerCodeGen::loadGlobalThisValue(ValueOperand dest) {
-  masm.moveValue(cx->global()->lexicalEnvironment().thisValue(), dest);
+  JSObject* thisObj = cx->global()->lexicalEnvironment().thisObject();
+  masm.moveValue(ObjectValue(*thisObj), dest);
 }
 
 template <>

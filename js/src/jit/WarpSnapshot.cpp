@@ -26,7 +26,7 @@ static_assert(!std::is_polymorphic_v<WarpOpSnapshot>,
 WarpSnapshot::WarpSnapshot(JSContext* cx, WarpScriptSnapshot* script)
     : script_(script),
       globalLexicalEnv_(&cx->global()->lexicalEnvironment()),
-      globalLexicalEnvThis_(globalLexicalEnv_->thisValue()) {}
+      globalLexicalEnvThis_(globalLexicalEnv_->thisObject()) {}
 
 WarpScriptSnapshot::WarpScriptSnapshot(
     JSScript* script, const WarpEnvironment& env,
@@ -53,8 +53,7 @@ void WarpSnapshot::dump(GenericPrinter& out) const {
   out.printf("WarpSnapshot (0x%p)\n", this);
   out.printf("------------------------------\n");
   out.printf("globalLexicalEnv: 0x%p\n", globalLexicalEnv());
-  out.printf("globalLexicalEnvThis: 0x%016" PRIx64 "\n",
-             globalLexicalEnvThis().asRawBits());
+  out.printf("globalLexicalEnvThis: 0x%p\n", globalLexicalEnvThis());
   out.printf("\n");
 
   script_->dump(out);
