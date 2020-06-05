@@ -13,7 +13,7 @@
 
     <item
         android:id="@+id/edit_login_button"
-        android:contentDescription="@string/login_menu_delete_button"
+        android:contentDescription="@string/login_menu_edit_button"
         android:icon="@drawable/ic_edit"
         android:minWidth="82dp"
         android:padding="20dp"
