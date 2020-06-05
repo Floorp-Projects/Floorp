@@ -119,18 +119,19 @@ def test_metrics_last():
     system = create_mock()
     browser = create_mock()
 
-    # check that the metrics layer is called after
+    # check that the metrics layer is entered after
     # other have finished
     class M:
         def __enter__(self):
+            system.teardown.assert_called()
+            browser.teardown.assert_called()
             return self
 
         def __exit__(self, *args, **kw):
             return
 
         def __call__(self, metadata):
-            system.teardown.assert_called()
-            browser.teardown.assert_called()
+            return
 
     env.layers = [system, browser, M()]
     with env:
