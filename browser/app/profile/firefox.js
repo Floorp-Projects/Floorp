@@ -282,11 +282,7 @@ pref("browser.urlbar.maxRichResults", 10);
 pref("browser.urlbar.delay", 50);
 
 // The maximum number of historical search results to show.
-#ifdef EARLY_BETA_OR_EARLIER
 pref("browser.urlbar.maxHistoricalSearchSuggestions", 2);
-#else
-pref("browser.urlbar.maxHistoricalSearchSuggestions", 0);
-#endif
 
 // When true, URLs in the user's history that look like search result pages
 // are styled to look like search engine results instead of the usual history
