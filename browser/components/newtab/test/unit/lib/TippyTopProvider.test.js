@@ -58,6 +58,20 @@ describe("TippyTopProvider", () => {
     );
     assert.equal(site.backgroundColor, "#3b5998");
   });
+  it("should not provide an icon for other.facebook.com", () => {
+    const site = instance.processSite({ url: "https://other.facebook.com" });
+    assert.isUndefined(site.tippyTopIcon);
+  });
+  it("should provide an icon for other.facebook.com with stripping", () => {
+    const site = instance.processSite(
+      { url: "https://other.facebook.com" },
+      "*"
+    );
+    assert.equal(
+      site.tippyTopIcon,
+      "resource://activity-stream/data/content/tippytop/images/facebook-com.png"
+    );
+  });
   it("should provide an icon for facebook.com/foobar", () => {
     const site = instance.processSite({ url: "https://facebook.com/foobar" });
     assert.equal(
