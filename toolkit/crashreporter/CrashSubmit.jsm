@@ -9,9 +9,6 @@ const { FileUtils } = ChromeUtils.import(
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
-const { AppConstants } = ChromeUtils.import(
-  "resource://gre/modules/AppConstants.jsm"
-);
 XPCOMUtils.defineLazyGlobalGetters(this, [
   "File",
   "FormData",
@@ -123,26 +120,6 @@ function getPendingMinidump(id) {
   return [".dmp", ".extra", ".memory.json.gz"].map(suffix => {
     return OS.Path.join(pendingDir, `${id}${suffix}`);
   });
-}
-
-async function synthesizeExtraFile(extra) {
-  let url = "https://crash-reports.mozilla.com/submit?id=";
-  Services.appinfo.ID +
-    "&version=" +
-    Services.appinfo.version +
-    "&buildid=" +
-    Services.appinfo.appBuildID;
-  let data = {
-    ServerURL: url,
-    Vendor: Services.appinfo.vendor,
-    ProductName: Services.appinfo.name,
-    ProductID: Services.appinfo.ID,
-    Version: Services.appinfo.version,
-    BuildID: Services.appinfo.appBuildID,
-    ReleaseChannel: AppConstants.MOZ_UPDATE_CHANNEL,
-  };
-
-  await OS.File.writeAtomic(extra, JSON.stringify(data), { encoding: "utf-8" });
 }
 
 async function writeSubmittedReportAsync(crashID, viewURL) {
@@ -400,14 +377,10 @@ Submitter.prototype = {
       OS.File.exists(memory),
     ]);
 
-    if (!dumpExists) {
+    if (!dumpExists || !extraExists) {
       this.notifyStatus(FAILED);
       this.cleanup();
       return this.submitStatusPromise;
-    }
-
-    if (!extraExists) {
-      await synthesizeExtraFile(extra);
     }
 
     this.dump = dump;
