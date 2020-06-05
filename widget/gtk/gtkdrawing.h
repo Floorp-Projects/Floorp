@@ -18,6 +18,7 @@
 #include <gdk/gdk.h>
 #include <gtk/gtk.h>
 #include <algorithm>
+#include "mozilla/Span.h"
 
 /*** type definitions ***/
 typedef struct {
@@ -608,18 +609,16 @@ const ToolbarButtonGTKMetrics* GetToolbarButtonMetrics(
 
 /**
  * Get toolbar button layout.
- * aButtonLayout:  [IN][OUT] An array which will be filled by WidgetNodeType
- *                           references to visible titlebar buttons.
- *                           Must contains at least TOOLBAR_BUTTONS entries.
- * aMaxButtonNums: [IN] Allocated aButtonLayout entries. Must be at least
- *                      TOOLBAR_BUTTONS wide.
+ * aButtonLayout:  [OUT] An array which will be filled by ButtonLayout
+ *                       references to visible titlebar buttons. Must contain at
+ *                       least TOOLBAR_BUTTONS entries if non-empty.
  * aReversedButtonsPlacement: [OUT] True if the buttons are placed in opposite
  *                                  titlebar corner.
  *
  * returns:    Number of returned entries at aButtonLayout.
  */
-int GetGtkHeaderBarButtonLayout(ButtonLayout* aButtonLayout, int aMaxButtonNums,
-                                bool* aReversedButtonsPlacement);
+size_t GetGtkHeaderBarButtonLayout(mozilla::Span<ButtonLayout>,
+                                   bool* aReversedButtonsPlacement);
 
 /**
  * Get size of CSD window extents.
