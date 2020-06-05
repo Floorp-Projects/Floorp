@@ -245,7 +245,7 @@ class RegExpBytecodePeephole {
 
 template <typename T>
 T GetValue(const byte* buffer, int pos) {
-  DCHECK(IsAligned(reinterpret_cast<v8::Address>(buffer + pos), alignof(T)));
+  DCHECK(IsAligned(reinterpret_cast<Address>(buffer + pos), alignof(T)));
   return *reinterpret_cast<const T*>(buffer + pos);
 }
 
