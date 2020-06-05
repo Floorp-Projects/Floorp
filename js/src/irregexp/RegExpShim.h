@@ -983,6 +983,8 @@ class Isolate {
   ~Isolate();
   bool init();
 
+  size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
+
   //********** Isolate code **********//
   RegExpStack* regexp_stack() const { return regexpStack_; }
   byte* top_of_regexp_stack() const;
