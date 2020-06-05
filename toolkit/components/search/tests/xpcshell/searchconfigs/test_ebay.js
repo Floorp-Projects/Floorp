@@ -69,7 +69,6 @@ const test = new SearchConfigTest({
     ],
   },
   searchUrlBase: "https://rover.ebay.com/rover/1/",
-  suggestionUrlBase: "https://autosug.ebay.com/autosug",
   details: [
     {
       // Note: These should be based on region, but we don't currently enforce that.
@@ -86,7 +85,6 @@ const test = new SearchConfigTest({
         },
       ],
       searchUrlEnd: "1553-53471-19255-0/1",
-      suggestUrlCode: "sId=23",
     },
     {
       domain: "ebay.at",
@@ -98,7 +96,6 @@ const test = new SearchConfigTest({
         },
       ],
       searchUrlEnd: "5221-53469-19255-0/1",
-      suggestUrlCode: "sId=16",
     },
     {
       domain: "ebay.ca",
@@ -127,7 +124,6 @@ const test = new SearchConfigTest({
         },
       ],
       searchUrlEnd: "706-53473-19255-0/1",
-      suggestUrlCode: "sId=2",
     },
     {
       domain: "ebay.ch",
@@ -155,7 +151,6 @@ const test = new SearchConfigTest({
         },
       ],
       searchUrlEnd: "5222-53480-19255-0/1",
-      suggestUrlCode: "sId=193",
     },
     {
       domain: "ebay.com",
@@ -167,7 +162,6 @@ const test = new SearchConfigTest({
       ],
       excluded: [{ regions: ["au", "be", "ca", "ch", "gb", "ie", "nl"] }],
       searchUrlEnd: "711-53200-19255-0/1",
-      suggestUrlCode: "sId=0",
     },
     {
       domain: "ebay.com.au",
@@ -179,7 +173,6 @@ const test = new SearchConfigTest({
         },
       ],
       searchUrlEnd: "705-53470-19255-0/1",
-      suggestUrlCode: "sId=15",
     },
     {
       domain: "ebay.ie",
@@ -194,7 +187,6 @@ const test = new SearchConfigTest({
         },
       ],
       searchUrlEnd: "5282-53468-19255-0/1",
-      suggestUrlCode: "sId=205",
     },
     {
       domain: "ebay.co.uk",
@@ -210,7 +202,6 @@ const test = new SearchConfigTest({
       ],
       excluded: [{ regions: ["au", "ie"] }],
       searchUrlEnd: "710-53481-19255-0/1",
-      suggestUrlCode: "sId=3",
     },
     {
       domain: "ebay.de",
@@ -222,7 +213,6 @@ const test = new SearchConfigTest({
       ],
       excluded: [{ regions: ["at", "ch"] }],
       searchUrlEnd: "707-53477-19255-0/1",
-      suggestUrlCode: "sId=77",
     },
     {
       domain: "ebay.es",
@@ -235,7 +225,6 @@ const test = new SearchConfigTest({
         },
       ],
       searchUrlEnd: "1185-53479-19255-0/1",
-      suggestUrlCode: "sId=186",
     },
     {
       domain: "ebay.fr",
@@ -247,7 +236,6 @@ const test = new SearchConfigTest({
       ],
       excluded: [{ regions: ["be", "ca", "ch"] }],
       searchUrlEnd: "709-53476-19255-0/1",
-      suggestUrlCode: "sId=71",
     },
     {
       domain: "ebay.it",
@@ -258,7 +246,6 @@ const test = new SearchConfigTest({
         },
       ],
       searchUrlEnd: "724-53478-19255-0/1",
-      suggestUrlCode: "sId=101",
     },
     {
       domain: "ebay.nl",
@@ -274,9 +261,9 @@ const test = new SearchConfigTest({
       ],
       excluded: [{ regions: ["be"] }],
       searchUrlEnd: "1346-53482-19255-0/1",
-      suggestUrlCode: "sId=146",
     },
   ],
+  noSuggestionsURL: true,
 });
 
 add_task(async function setup() {
