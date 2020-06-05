@@ -630,6 +630,18 @@ public class WebExtension {
                                                    @NonNull CreateTabDetails createDetails) {
             return null;
         }
+
+        /**
+         * Called when runtime.openOptionsPage is invoked with
+         * options_ui.open_in_tab = false.
+         * In this case, GeckoView delegates options page handling to the app.
+         * With options_ui.open_in_tab = true, {@link #onNewTab} is called
+         * instead.
+         *
+         * @param source An instance of {@link WebExtension}.
+         */
+        @UiThread
+        default void onOpenOptionsPage(@NonNull WebExtension source) {}
     }
 
     /**
@@ -842,7 +854,8 @@ public class WebExtension {
                     this,
                     "GeckoView:WebExtension:NewTab",
                     "GeckoView:WebExtension:UpdateTab",
-                    "GeckoView:WebExtension:CloseTab"
+                    "GeckoView:WebExtension:CloseTab",
+                    "GeckoView:WebExtension:OpenOptionsPage"
             );
             mTabDelegateRegistered = true;
         }
@@ -874,7 +887,8 @@ public class WebExtension {
                         this,
                         "GeckoView:WebExtension:NewTab",
                         "GeckoView:WebExtension:UpdateTab",
-                        "GeckoView:WebExtension:CloseTab"
+                        "GeckoView:WebExtension:CloseTab",
+                        "GeckoView:WebExtension:OpenOptionsPage"
                 );
                 mTabDelegateRegistered = true;
             }
@@ -901,7 +915,8 @@ public class WebExtension {
                         this,
                         "GeckoView:WebExtension:NewTab",
                         "GeckoView:WebExtension:UpdateTab",
-                        "GeckoView:WebExtension:CloseTab"
+                        "GeckoView:WebExtension:CloseTab",
+                        "GeckoView:WebExtension:OpenOptionsPage"
                 );
                 mTabDelegateRegistered = true;
             }
