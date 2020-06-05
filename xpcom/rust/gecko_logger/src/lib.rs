@@ -199,6 +199,10 @@ impl GeckoLogger {
 
     #[cfg(target_os = "android")]
     fn log_out(&self, record: &log::Record) {
+        if !self.logger.matches(record) {
+            return;
+        }
+
         let msg = CString::new(format!("{}", record.args())).unwrap();
         let tag = CString::new(record.module_path().unwrap()).unwrap();
         let prio = match record.metadata().level() {
