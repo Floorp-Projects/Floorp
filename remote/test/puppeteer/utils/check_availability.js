@@ -16,30 +16,34 @@
  */
 
 const assert = require('assert');
-const puppeteer = require('..');
 const https = require('https');
-const SUPPORTER_PLATFORMS = ['linux', 'mac', 'win32', 'win64'];
 
-const fetchers = SUPPORTER_PLATFORMS.map(platform => puppeteer.createBrowserFetcher({platform}));
+const packageJSON = require('../package.json');
+const BrowserFetcher = require('../lib/BrowserFetcher').BrowserFetcher;
+
+const SUPPORTER_PLATFORMS = ['linux', 'mac', 'win32', 'win64'];
+const fetchers = SUPPORTER_PLATFORMS.map(
+  (platform) => new BrowserFetcher('', { platform })
+);
 
 const colors = {
   reset: '\x1b[0m',
   red: '\x1b[31m',
   green: '\x1b[32m',
-  yellow: '\x1b[33m'
+  yellow: '\x1b[33m',
 };
 
 class Table {
   /**
-     * @param {!Array<number>} columnWidths
-     */
+   * @param {!Array<number>} columnWidths
+   */
   constructor(columnWidths) {
     this.widths = columnWidths;
   }
 
   /**
-     * @param {!Array<string>} values
-     */
+   * @param {!Array<string>} values
+   */
   drawRow(values) {
     assert(values.length === this.widths.length);
     let row = '';
@@ -49,47 +53,149 @@ class Table {
   }
 }
 
-if (process.argv.length === 2) {
-  checkOmahaProxyAvailability();
-  return;
-}
-if (process.argv.length !== 4) {
-  console.log(`
-  Usage: node check_revisions.js [fromRevision] [toRevision]
+const helpMessage = `
+This script checks availability of prebuilt Chromium snapshots.
 
-This script checks availability of different prebuild chromium revisions.
-Running command without arguments will check against omahaproxy revisions.`);
-  return;
-}
+Usage: node check_availability.js [<options>] [<browser version(s)>]
 
-const fromRevision = parseInt(process.argv[2], 10);
-const toRevision = parseInt(process.argv[3], 10);
-checkRangeAvailability(fromRevision, toRevision, false /* stopWhenAllAvailable */);
+options
+    -f          full mode checks availability of all the platforms, default mode
+    -r          roll mode checks for the most recent Chromium roll candidate
+    -h          show this help
+
+browser version(s)
+    <revision>  single revision number means checking for this specific revision
+    <from> <to> checks all the revisions within a given range, inclusively
+
+Examples
+  To check Chromium availability of a certain revision
+    node check_availability.js [revision]
+
+  To find a Chromium roll candidate for current Stable Linux version
+    node check_availability.js -r
+
+  To check Chromium availability from the latest revision in a descending order
+    node check_availability.js
+`;
+
+function main() {
+  const args = process.argv.slice(2);
+
+  if (args.length > 3) {
+    console.log(helpMessage);
+    return;
+  }
+
+  if (args.length === 0) {
+    checkOmahaProxyAvailability();
+    return;
+  }
+
+  if (args[0].startsWith('-')) {
+    const option = args[0].substring(1);
+    switch (option) {
+      case 'f':
+        break;
+      case 'r':
+        checkRollCandidate();
+        return;
+      default:
+        console.log(helpMessage);
+        return;
+    }
+    args.splice(0, 1); // remove options arg since we are done with options
+  }
+
+  if (args.length === 1) {
+    const revision = parseInt(args[0], 10);
+    checkRangeAvailability({
+      fromRevision: revision,
+      toRevision: revision,
+      stopWhenAllAvailable: false,
+    });
+  } else {
+    const fromRevision = parseInt(args[0], 10);
+    const toRevision = parseInt(args[1], 10);
+    checkRangeAvailability({
+      fromRevision,
+      toRevision,
+      stopWhenAllAvailable: false,
+    });
+  }
+}
 
 async function checkOmahaProxyAvailability() {
-  const lastchanged = (await Promise.all([
-    fetch('https://storage.googleapis.com/chromium-browser-snapshots/Mac/LAST_CHANGE'),
-    fetch('https://storage.googleapis.com/chromium-browser-snapshots/Linux_x64/LAST_CHANGE'),
-    fetch('https://storage.googleapis.com/chromium-browser-snapshots/Win/LAST_CHANGE'),
-    fetch('https://storage.googleapis.com/chromium-browser-snapshots/Win_x64/LAST_CHANGE'),
-  ])).map(s => parseInt(s, 10));
-  const from = Math.max(...lastchanged);
-  checkRangeAvailability(from, 0, true /* stopWhenAllAvailable */);
+  const latestRevisions = (
+    await Promise.all([
+      fetch(
+        'https://storage.googleapis.com/chromium-browser-snapshots/Mac/LAST_CHANGE'
+      ),
+      fetch(
+        'https://storage.googleapis.com/chromium-browser-snapshots/Linux_x64/LAST_CHANGE'
+      ),
+      fetch(
+        'https://storage.googleapis.com/chromium-browser-snapshots/Win/LAST_CHANGE'
+      ),
+      fetch(
+        'https://storage.googleapis.com/chromium-browser-snapshots/Win_x64/LAST_CHANGE'
+      ),
+    ])
+  ).map((s) => parseInt(s, 10));
+  const from = Math.max(...latestRevisions);
+  checkRangeAvailability({
+    fromRevision: from,
+    toRevision: 0,
+    stopWhenAllAvailable: false,
+  });
+}
+
+async function checkRollCandidate() {
+  const omahaResponse = await fetch(
+    'https://omahaproxy.appspot.com/all.json?channel=stable&os=linux'
+  );
+  const stableLinuxInfo = JSON.parse(omahaResponse)[0];
+  if (!stableLinuxInfo) {
+    console.error('no stable linux information available from omahaproxy');
+    return;
+  }
+
+  const stableLinuxRevision = parseInt(
+    stableLinuxInfo.versions[0].branch_base_position,
+    10
+  );
+  const currentRevision = parseInt(packageJSON.puppeteer.chromium_revision, 10);
+
+  checkRangeAvailability({
+    fromRevision: stableLinuxRevision,
+    toRevision: currentRevision,
+    stopWhenAllAvailable: true,
+  });
 }
 
 /**
- * @param {number} fromRevision
- * @param {number} toRevision
- * @param {boolean} stopWhenAllAvailable
+ * @param {*} options
  */
-async function checkRangeAvailability(fromRevision, toRevision, stopWhenAllAvailable) {
+async function checkRangeAvailability({
+  fromRevision,
+  toRevision,
+  stopWhenAllAvailable,
+}) {
   const table = new Table([10, 7, 7, 7, 7]);
   table.drawRow([''].concat(SUPPORTER_PLATFORMS));
+
   const inc = fromRevision < toRevision ? 1 : -1;
-  for (let revision = fromRevision; revision !== toRevision; revision += inc) {
-    const allAvailable = await checkAndDrawRevisionAvailability(table, '', revision);
-    if (allAvailable && stopWhenAllAvailable)
-      break;
+  const revisionToStop = toRevision + inc; // +inc so the range is fully inclusive
+  for (
+    let revision = fromRevision;
+    revision !== revisionToStop;
+    revision += inc
+  ) {
+    const allAvailable = await checkAndDrawRevisionAvailability(
+      table,
+      '',
+      revision
+    );
+    if (allAvailable && stopWhenAllAvailable) break;
   }
 }
 
@@ -100,10 +206,14 @@ async function checkRangeAvailability(fromRevision, toRevision, stopWhenAllAvail
  * @return {boolean}
  */
 async function checkAndDrawRevisionAvailability(table, name, revision) {
-  const promises = fetchers.map(fetcher => fetcher.canDownload(revision));
+  const promises = fetchers.map((fetcher) => fetcher.canDownload(revision));
   const availability = await Promise.all(promises);
-  const allAvailable = availability.every(e => !!e);
-  const values = [name + ' ' + (allAvailable ? colors.green + revision + colors.reset : revision)];
+  const allAvailable = availability.every((e) => !!e);
+  const values = [
+    name +
+      ' ' +
+      (allAvailable ? colors.green + revision + colors.reset : revision),
+  ];
   for (let i = 0; i < availability.length; ++i) {
     const decoration = availability[i] ? '+' : '-';
     const color = availability[i] ? colors.green : colors.red;
@@ -119,23 +229,25 @@ async function checkAndDrawRevisionAvailability(table, name, revision) {
  */
 function fetch(url) {
   let resolve;
-  const promise = new Promise(x => resolve = x);
-  https.get(url, response => {
-    if (response.statusCode !== 200) {
+  const promise = new Promise((x) => (resolve = x));
+  https
+    .get(url, (response) => {
+      if (response.statusCode !== 200) {
+        resolve(null);
+        return;
+      }
+      let body = '';
+      response.on('data', function (chunk) {
+        body += chunk;
+      });
+      response.on('end', function () {
+        resolve(body);
+      });
+    })
+    .on('error', function (e) {
+      console.error('Error fetching json: ' + e);
       resolve(null);
-      return;
-    }
-    let body = '';
-    response.on('data', function(chunk){
-      body += chunk;
     });
-    response.on('end', function(){
-      resolve(body);
-    });
-  }).on('error', function(e){
-    console.error('Error fetching json: ' + e);
-    resolve(null);
-  });
   return promise;
 }
 
@@ -166,9 +278,10 @@ function filterOutColors(text) {
  */
 function padCenter(text, length) {
   const printableCharacters = filterOutColors(text);
-  if (printableCharacters.length >= length)
-    return text;
+  if (printableCharacters.length >= length) return text;
   const left = Math.floor((length - printableCharacters.length) / 2);
   const right = Math.ceil((length - printableCharacters.length) / 2);
   return spaceString(left) + text + spaceString(right);
 }
+
+main();

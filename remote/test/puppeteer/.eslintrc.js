@@ -1,55 +1,41 @@
 module.exports = {
     "root": true,
-
     "env": {
         "node": true,
         "es6": true
     },
 
-    "parserOptions": {
-        "ecmaVersion": 9
-    },
+    "parser": "@typescript-eslint/parser",
 
-    /**
-     * ESLint rules
-     *
-     * All available rules: http://eslint.org/docs/rules/
-     *
-     * Rules take the following form:
-     *   "rule-name", [severity, { opts }]
-     * Severity: 2 == error, 1 == warning, 0 == off.
-     */
+    "plugins": [
+        "mocha",
+        "@typescript-eslint",
+        "unicorn"
+    ],
+
+    "extends": [
+        "plugin:prettier/recommended"
+    ],
+
     "rules": {
-        /**
-         * Enforced rules
-         */
-
-
+        // Error if files are not formatted with Prettier correctly.
+        "prettier/prettier": 2,
         // syntax preferences
         "quotes": [2, "single", {
             "avoidEscape": true,
             "allowTemplateLiterals": true
         }],
-        "semi": 2,
-        "no-extra-semi": 2,
-        "comma-style": [2, "last"],
-        "wrap-iife": [2, "inside"],
         "spaced-comment": [2, "always", {
             "markers": ["*"]
         }],
         "eqeqeq": [2],
-        "arrow-body-style": [2, "as-needed"],
         "accessor-pairs": [2, {
             "getWithoutSet": false,
             "setWithoutGet": false
         }],
-        "brace-style": [2, "1tbs", {"allowSingleLine": true}],
-        "curly": [2, "multi-or-nest", "consistent"],
         "new-parens": 2,
         "func-call-spacing": 2,
-        "arrow-parens": [2, "as-needed"],
         "prefer-const": 2,
-        "quote-props": [2, "consistent"],
 
         // anti-patterns
         "no-var": 2,
@@ -78,35 +64,32 @@ module.exports = {
         "require-yield": 2,
         "template-curly-spacing": [2, "never"],
 
-        // spacing details
-        "space-infix-ops": 2,
-        "space-in-parens": [2, "never"],
-        "space-before-function-paren": [2, "never"],
-        "no-whitespace-before-property": 2,
-        "keyword-spacing": [2, {
-            "overrides": {
-                "if": {"after": true},
-                "else": {"after": true},
-                "for": {"after": true},
-                "while": {"after": true},
-                "do": {"after": true},
-                "switch": {"after": true},
-                "return": {"after": true}
-            }
-        }],
-        "arrow-spacing": [2, {
-            "after": true,
-            "before": true
-        }],
+        // ensure we don't have any it.only or describe.only in prod
+        "mocha/no-exclusive-tests": "error",
 
-        // file whitespace
-        "no-multiple-empty-lines": [2, {"max": 2}],
-        "no-mixed-spaces-and-tabs": 2,
-        "no-trailing-spaces": 2,
-        "linebreak-style": [ process.platform === "win32" ? 0 : 2, "unix" ],
-        "indent": [2, 2, { "SwitchCase": 1, "CallExpression": {"arguments": 2}, "MemberExpression": 2 }],
-        "key-spacing": [2, {
-            "beforeColon": false
-        }]
-    }
+        // enforce the variable in a catch block is named error
+        "unicorn/catch-error-name": "error"
+    },
+    "overrides": [
+        {
+            "files": ["*.ts"],
+            "extends": [
+                'plugin:@typescript-eslint/eslint-recommended',
+                'plugin:@typescript-eslint/recommended',
+            ],
+            "rules": {
+                "no-unused-vars": 0,
+                "@typescript-eslint/no-unused-vars": 2,
+                "semi": 0,
+                "@typescript-eslint/semi": 2,
+                "@typescript-eslint/no-empty-function": 0,
+                "@typescript-eslint/no-use-before-define": 0,
+                // We know it's bad and use it very sparingly but it's needed :(
+                "@typescript-eslint/ban-ts-ignore": 0,
+                "@typescript-eslint/array-type": [2, {
+                    "default": "array-simple"
+                }]
+            }
+        }
+    ]
 };

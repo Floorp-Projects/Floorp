@@ -106,7 +106,10 @@ _OPT\.OBJ/
 ^remote/test/puppeteer/node_modules/
 ^remote/test/puppeteer/.local-chromium/
 ^remote/test/puppeteer/.local-firefox/
-^remote/test/puppeteer/experimental
+^remote/test/puppeteer/experimental/
+^remote/test/puppeteer/lib/
+^remote/test/puppeteer/test/output-firefox
+^remote/test/puppeteer/test/output-chromium
 
 # git checkout of libstagefright
 ^media/libstagefright/android$
