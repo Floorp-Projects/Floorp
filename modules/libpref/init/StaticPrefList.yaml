@@ -8751,6 +8751,12 @@
   value: 300000
   mirror: always
 
+- name: telemetry.fog.test.localhost_port
+  type: RelaxedAtomicUint32
+  value: 0
+  mirror: always
+  rust: true
+
 #---------------------------------------------------------------------------
 # Prefs starting with "test."
 #---------------------------------------------------------------------------
