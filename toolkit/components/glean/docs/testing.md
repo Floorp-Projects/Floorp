@@ -3,6 +3,12 @@
 Given the multiple API languages, processes, and dependencies,
 testing FOG is a matter of choosing the right tool for the situation.
 
+## Logging
+
+An often-overlooked first line of testing is "what do the logs say?".
+To turn on logging for FOG, run Firefox with `RUST_LOG="glean,fog"`.
+This will also turn on logging for `glean_core` which is often illuminating.
+
 ## Rust
 
 Not all of our Rust code can be tested in a single fashion, unfortunately.
