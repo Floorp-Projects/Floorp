@@ -513,16 +513,17 @@ class nsContainerFrame : public nsSplittableFrame {
    */
   void BuildDisplayListForNonBlockChildren(nsDisplayListBuilder* aBuilder,
                                            const nsDisplayListSet& aLists,
-                                           uint32_t aFlags = 0);
+                                           DisplayChildFlags aFlags = {});
 
   /**
-   * A version of BuildDisplayList that use DISPLAY_CHILD_INLINE.
+   * A version of BuildDisplayList that use DisplayChildFlag::Inline.
    * Intended as a convenience for derived classes.
    */
   void BuildDisplayListForInline(nsDisplayListBuilder* aBuilder,
                                  const nsDisplayListSet& aLists) {
     DisplayBorderBackgroundOutline(aBuilder, aLists);
-    BuildDisplayListForNonBlockChildren(aBuilder, aLists, DISPLAY_CHILD_INLINE);
+    BuildDisplayListForNonBlockChildren(aBuilder, aLists,
+                                        DisplayChildFlag::Inline);
   }
 
   // ==========================================================================

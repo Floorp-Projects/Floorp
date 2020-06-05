@@ -1314,7 +1314,7 @@ void nsTextControlFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     clipToRoot(overlayTextClip);
     auto* kid = mPlaceholderDiv->GetPrimaryFrame();
     MOZ_ASSERT(kid->GetParent() == this);
-    BuildDisplayListForChild(aBuilder, kid, set, 0);
+    BuildDisplayListForChild(aBuilder, kid, set);
   }
 
   for (auto* kid : mFrames) {
@@ -1329,7 +1329,7 @@ void nsTextControlFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     if (kidContent == mPreviewDiv) {
       clipToRoot(overlayTextClip);
     }
-    BuildDisplayListForChild(aBuilder, kid, set, 0);
+    BuildDisplayListForChild(aBuilder, kid, set);
   }
 }
 

@@ -355,7 +355,7 @@ void nsContainerFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
 
 void nsContainerFrame::BuildDisplayListForNonBlockChildren(
     nsDisplayListBuilder* aBuilder, const nsDisplayListSet& aLists,
-    uint32_t aFlags) {
+    DisplayChildFlags aFlags) {
   nsIFrame* kid = mFrames.FirstChild();
   // Put each child's background directly onto the content list
   nsDisplayListSet set(aLists, aLists.Content());

@@ -112,7 +112,7 @@ void nsHTMLButtonControlFrame::BuildDisplayList(
     }
 
     BuildDisplayListForChild(aBuilder, mFrames.FirstChild(), set,
-                             DISPLAY_CHILD_FORCE_PSEUDO_STACKING_CONTEXT);
+                             DisplayChildFlag::ForcePseudoStackingContext);
   }
 
   // Put the foreground outline and focus rects on top of the children
