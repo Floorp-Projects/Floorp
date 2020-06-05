@@ -256,7 +256,7 @@ class nsDocumentEncoder : public nsIDocumentEncoder {
     return -1;
   }
 
-  bool IsInvisibleNodeAndShouldBeSkipped(nsINode& aNode) const {
+  bool IsInvisibleNodeAndShouldBeSkipped(const nsINode& aNode) const {
     if (mFlags & SkipInvisibleContent) {
       // Treat the visibility of the ShadowRoot as if it were
       // the host content.
@@ -264,8 +264,8 @@ class nsDocumentEncoder : public nsIDocumentEncoder {
       // FIXME(emilio): I suspect instead of this a bunch of the GetParent()
       // calls here should be doing GetFlattenedTreeParent, then this condition
       // should be unreachable...
-      nsINode* node{&aNode};
-      if (ShadowRoot* shadowRoot = ShadowRoot::FromNode(node)) {
+      const nsINode* node{&aNode};
+      if (const ShadowRoot* shadowRoot = ShadowRoot::FromNode(node)) {
         node = shadowRoot->GetHost();
       }
 
