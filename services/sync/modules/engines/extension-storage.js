@@ -80,6 +80,9 @@ ExtensionStorageEngineBridge.prototype = {
   // we don't support repair at all!
   _skipPercentageChance: 100,
 
+  // Used to override the engine name in telemetry, so that we can distinguish .
+  overrideTelemetryName: "rust-webext-storage",
+
   _notifyPendingChanges() {
     return new Promise(resolve => {
       this._bridge
