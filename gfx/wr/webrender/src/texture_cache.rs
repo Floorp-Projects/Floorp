@@ -38,13 +38,21 @@ const PICTURE_TILE_FORMAT: ImageFormat = ImageFormat::RGBA8;
 const TEXTURE_REGION_PIXELS: usize =
     (TEXTURE_REGION_DIMENSIONS as usize) * (TEXTURE_REGION_DIMENSIONS as usize);
 
+/// If the total bytes allocated in shared / standalone cache is less
+/// than this, then allow the cache to grow without forcing an eviction.
+// TODO(gw): In future, it's probably reasonable to make this higher again, perhaps 64-128 MB.
+const CACHE_EVICTION_THRESHOLD_BYTES: usize = 32 * 1024 * 1024;
+
 /// Items in the texture cache can either be standalone textures,
 /// or a sub-rect inside the shared cache.
 #[derive(Debug)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 enum EntryDetails {
-    Standalone,
+    Standalone {
+        /// Number of bytes this entry allocates
+        size_in_bytes: usize,
+    },
     Picture {
         // Index in the picture_textures array
         texture_index: usize,
@@ -62,9 +70,9 @@ enum EntryDetails {
 impl EntryDetails {
     fn describe(&self) -> (LayerIndex, DeviceIntPoint) {
         match *self {
-            EntryDetails::Standalone => (0, DeviceIntPoint::zero()),
+            EntryDetails::Standalone { .. }  => (0, DeviceIntPoint::zero()),
             EntryDetails::Picture { layer_index, .. } => (layer_index, DeviceIntPoint::zero()),
-            EntryDetails::Cache { origin, layer_index } => (layer_index, origin),
+            EntryDetails::Cache { origin, layer_index, .. } => (layer_index, origin),
         }
     }
 }
@@ -73,7 +81,7 @@ impl EntryDetails {
     /// Returns the kind associated with the details.
     fn kind(&self) -> EntryKind {
         match *self {
-            EntryDetails::Standalone => EntryKind::Standalone,
+            EntryDetails::Standalone { .. } => EntryKind::Standalone,
             EntryDetails::Picture { .. } => EntryKind::Picture,
             EntryDetails::Cache { .. } => EntryKind::Shared,
         }
@@ -129,12 +137,15 @@ impl CacheEntry {
         last_access: FrameStamp,
         params: &CacheAllocParams,
         swizzle: Swizzle,
+        size_in_bytes: usize,
     ) -> Self {
         CacheEntry {
             size: params.descriptor.size,
             user_data: params.user_data,
             last_access,
-            details: EntryDetails::Standalone,
+            details: EntryDetails::Standalone {
+                size_in_bytes,
+            },
             texture_id,
             input_format: params.descriptor.format,
             filter: params.filter,
@@ -199,10 +210,6 @@ pub enum Eviction {
     /// The entry will not be evicted until the policy is explicitly set to a
     /// different value.
     Manual,
-    /// The entry will be evicted if it was not used in the last frame.
-    ///
-    /// FIXME(bholley): Currently this only applies to the standalone case.
-    Eager,
 }
 
 // An eviction notice is a shared condition useful for detecting
@@ -630,13 +637,20 @@ pub struct TextureCache {
     /// Maintains the list of all current items in the texture cache.
     entries: FreeList<CacheEntry, CacheEntryMarker>,
 
-    /// The last `FrameStamp` in which we expired the shared cache for
-    /// this document.
+    /// The last `FrameStamp` in which we expired the shared cache.
     last_shared_cache_expiration: FrameStamp,
 
     /// Strong handles for all entries that this document has allocated
     /// from the shared FreeList.
     handles: EntryHandles,
+
+    /// Estimated memory usage of allocated entries in all of the shared textures. This
+    /// is used to decide when to evict old items from the cache.
+    shared_bytes_allocated: usize,
+
+    /// Number of bytes allocated in standalone textures. Used as an input to deciding
+    /// when to run texture cache eviction.
+    standalone_bytes_allocated: usize,
 }
 
 impl TextureCache {
@@ -705,6 +719,8 @@ impl TextureCache {
             now: FrameStamp::INVALID,
             last_shared_cache_expiration: FrameStamp::INVALID,
             handles: EntryHandles::default(),
+            shared_bytes_allocated: 0,
+            standalone_bytes_allocated: 0,
         }
     }
 
@@ -793,7 +809,7 @@ impl TextureCache {
         // at an acceptable level.
         let threshold = self.default_eviction();
         self.expire_old_entries(EntryKind::Standalone, threshold);
-        self.expire_old_entries(EntryKind::Picture, threshold);
+        self.expire_old_picture_cache_tiles();
 
         self.shared_textures.array_alpha8_linear.release_empty_textures(&mut self.pending_updates);
         self.shared_textures.array_alpha16_linear.release_empty_textures(&mut self.pending_updates);
@@ -1040,10 +1056,46 @@ impl TextureCache {
             .build()
     }
 
+    /// Expire picture cache tiles that haven't been referenced in the last frame.
+    /// The picture cache code manually keeps tiles alive by calling `request` on
+    /// them if it wants to retain a tile that is currently not visible.
+    fn expire_old_picture_cache_tiles(&mut self) {
+        for i in (0 .. self.handles.picture.len()).rev() {
+            let evict = {
+                let entry = self.entries.get(&self.handles.picture[i]);
+
+                // Texture cache entries can be evicted at the start of
+                // a frame, or at any time during the frame when a cache
+                // allocation is occurring. This means that entries tagged
+                // with eager eviction may get evicted before they have a
+                // chance to be requested on the current frame. Instead,
+                // advance the frame id of the entry by one before
+                // comparison. This ensures that an eager entry will
+                // not be evicted until it is not used for at least
+                // one complete frame.
+                let mut entry_frame_id = entry.last_access.frame_id();
+                entry_frame_id.advance();
+
+                entry_frame_id < self.now.frame_id()
+            };
+
+            if evict {
+                let handle = self.handles.picture.swap_remove(i);
+                let entry = self.entries.free(handle);
+                entry.evict();
+                self.free(&entry);
+            }
+        }
+    }
+
     /// Shared eviction code for standalone and shared entries.
     ///
     /// See `EvictionThreshold` for more details on policy.
     fn expire_old_entries(&mut self, kind: EntryKind, threshold: EvictionThreshold) {
+        // Should not be used to expire picture tiles. This entire method will be
+        // removed soon, in favor of proper LRU eviction for shared / standalone entries.
+        debug_assert_ne!(kind, EntryKind::Picture);
+
         debug_assert!(self.now.is_valid());
         // Iterate over the entries in reverse order, evicting the ones older than
         // the frame age threshold. Reverse order avoids iterator invalidation when
@@ -1054,21 +1106,6 @@ impl TextureCache {
                 match entry.eviction {
                     Eviction::Manual => false,
                     Eviction::Auto => threshold.should_evict(entry.last_access),
-                    Eviction::Eager => {
-                        // Texture cache entries can be evicted at the start of
-                        // a frame, or at any time during the frame when a cache
-                        // allocation is occurring. This means that entries tagged
-                        // with eager eviction may get evicted before they have a
-                        // chance to be requested on the current frame. Instead,
-                        // advance the frame id of the entry by one before
-                        // comparison. This ensures that an eager entry will
-                        // not be evicted until it is not used for at least
-                        // one complete frame.
-                        let mut entry_frame_id = entry.last_access.frame_id();
-                        entry_frame_id.advance();
-
-                        entry_frame_id < self.now.frame_id()
-                    }
                 }
             };
             if evict {
@@ -1091,6 +1128,15 @@ impl TextureCache {
         }
     }
 
+    /// Return the total used bytes in standalone and shared textures. This is
+    /// used to determine how many textures need to be evicted to keep texture
+    /// cache memory usage under a reasonable limit. Note that this does not
+    /// include memory allocated to picture cache tiles, which are considered
+    /// separately for the purposes of texture cache eviction.
+    fn current_memory_estimate(&self) -> usize {
+        self.standalone_bytes_allocated + self.shared_bytes_allocated
+    }
+
     // Free a cache entry from the standalone list or shared cache.
     fn free(&mut self, entry: &CacheEntry) {
         match entry.details {
@@ -1110,11 +1156,13 @@ impl TextureCache {
                     );
                 }
             }
-            EntryDetails::Standalone => {
+            EntryDetails::Standalone { size_in_bytes, .. } => {
+                self.standalone_bytes_allocated -= size_in_bytes;
+
                 // This is a standalone texture allocation. Free it directly.
                 self.pending_updates.push_free(entry.texture_id);
             }
-            EntryDetails::Cache { origin, layer_index } => {
+            EntryDetails::Cache { origin, layer_index, .. } => {
                 // Free the block in the given region.
                 let texture_array = self.shared_textures.select(entry.input_format, entry.filter);
                 let unit = texture_array.units
@@ -1122,6 +1170,8 @@ impl TextureCache {
                     .find(|unit| unit.texture_id == entry.texture_id)
                     .expect("Unable to find the associated texture array unit");
                 let region = &mut unit.regions[layer_index];
+
+                self.shared_bytes_allocated -= region.slab_size.size_in_bytes(texture_array.formats.internal);
 
                 if self.debug_flags.contains(
                     DebugFlags::TEXTURE_CACHE_DBG |
@@ -1222,6 +1272,8 @@ impl TextureCache {
             index
         };
 
+        self.shared_bytes_allocated += slab_size.size_in_bytes(texture_array.formats.internal);
+
         // Do the allocation. This can fail and return None
         // if there are no free slots or regions available.
         texture_array.alloc(params, unit_index, self.now, swizzle)
@@ -1276,6 +1328,10 @@ impl TextureCache {
             is_shared_cache: false,
             has_depth: false,
         };
+
+        let size_in_bytes = (info.width * info.height * info.format.bytes_per_pixel()) as usize;
+        self.standalone_bytes_allocated += size_in_bytes;
+
         self.pending_updates.push_alloc(texture_id, info);
 
         // Special handing for BGRA8 textures that may need to be swizzled.
@@ -1290,6 +1346,7 @@ impl TextureCache {
             self.now,
             params,
             swizzle.unwrap_or_default(),
+            size_in_bytes,
         )
     }
 
@@ -1307,7 +1364,8 @@ impl TextureCache {
         // If this image doesn't qualify to go in the shared (batching) cache,
         // allocate a standalone entry.
         if self.is_allowed_in_shared_cache(params.filter, &params.descriptor) {
-            if !self.has_space_in_shared_cache(params) {
+            if !self.has_space_in_shared_cache(params) &&
+               self.current_memory_estimate() > CACHE_EVICTION_THRESHOLD_BYTES {
                 // If we don't have extra space and haven't GCed this frame, do so.
                 let threshold = self.default_eviction();
                 self.maybe_expire_old_shared_entries(threshold);
@@ -1439,6 +1497,11 @@ impl SlabSize {
             width,
             height,
         }
+    }
+
+    fn size_in_bytes(&self, format: ImageFormat) -> usize {
+        let bpp = format.bytes_per_pixel();
+        (self.width * self.height * bpp) as usize
     }
 
     fn invalid() -> SlabSize {
@@ -1778,7 +1841,7 @@ impl WholeTextureArray {
             texture_id,
             eviction_notice: None,
             uv_rect_kind: UvRectKind::Rect,
-            eviction: Eviction::Eager,
+            eviction: Eviction::Auto,
         }
     }
 

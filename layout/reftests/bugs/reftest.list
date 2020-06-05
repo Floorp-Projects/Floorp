@@ -1602,7 +1602,7 @@ needs-focus == 613433-2.html 613433-3-ref.html
 needs-focus == 613433-3.html 613433-1-ref.html
 needs-focus == 613433-3.html 613433-2-ref.html
 needs-focus == 613433-3.html 613433-3-ref.html
-== 614272-1.svg  614272-1-ref.svg
+fuzzy-if(webrender,0-64,0-45) == 614272-1.svg  614272-1-ref.svg
 == 615121-1.html 615121-1-ref.html
 != 615121-2.html 615121-2-notref.html
 == 617242-1.html 617242-1-ref.html
