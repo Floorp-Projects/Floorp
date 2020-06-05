@@ -18,6 +18,7 @@ include protocol PAltService;
 include protocol PAltSvcTransaction;
 include protocol PTRRService;
 include protocol PProxyConfigLookup;
+include protocol PNativeDNSResolverOverride;
 
 include MemoryReportTypes;
 include NeckoChannelParams;
@@ -54,6 +55,7 @@ sync protocol PSocketProcess
   manages PAltSvcTransaction;
   manages PTRRService;
   manages PProxyConfigLookup;
+  manages PNativeDNSResolverOverride;
 
 parent:
   async InitCrashReporter(NativeThreadId threadId);
@@ -119,6 +121,7 @@ child:
   async PTRRService(bool aCaptiveIsPassed,
                     bool aParentalControlEnabled,
                     nsCString[] aDNSSuffixList);
+  async PNativeDNSResolverOverride();
 
 both:
   async PFileDescriptorSet(FileDescriptor fd);
