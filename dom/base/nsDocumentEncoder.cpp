@@ -325,6 +325,7 @@ class nsDocumentEncoder : public nsIDocumentEncoder {
   nsCOMPtr<Document> mDocument;
   EncodingScope mEncodingScope;
   nsCOMPtr<nsIContentSerializer> mSerializer;
+
   Maybe<TextStreamer> mTextStreamer;
   /**
    * https://dom.spec.whatwg.org/#concept-tree-inclusive-ancestor.
@@ -357,6 +358,30 @@ class nsDocumentEncoder : public nsIDocumentEncoder {
   bool mDisableContextSerialize;
   bool mIsCopying;  // Set to true only while copying
   nsStringBuffer* mCachedBuffer;
+
+  class NodeSerializer {
+   public:
+    /**
+     * @param aFlags multiple of the flags defined in nsIDocumentEncoder.idl.
+     */
+    NodeSerializer(const bool& aNeedsPreformatScanning,
+                   const nsCOMPtr<nsIContentSerializer>& aSerializer,
+                   const uint32_t& aFlags,
+                   const nsCOMPtr<nsIDocumentEncoderNodeFixup>& aNodeFixup)
+        : mNeedsPreformatScanning{aNeedsPreformatScanning},
+          mSerializer{aSerializer},
+          mFlags{aFlags},
+          mNodeFixup{aNodeFixup} {}
+
+   private:
+    const bool& mNeedsPreformatScanning;
+    const nsCOMPtr<nsIContentSerializer>& mSerializer;
+    // Multiple of the flags defined in nsIDocumentEncoder.idl.
+    const uint32_t& mFlags;
+    const nsCOMPtr<nsIDocumentEncoderNodeFixup>& mNodeFixup;
+  };
+
+  NodeSerializer mNodeSerializer;
 };
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsDocumentEncoder)
@@ -374,7 +399,11 @@ NS_IMPL_CYCLE_COLLECTION(nsDocumentEncoder, mDocument,
                          mClosestCommonInclusiveAncestorOfRange)
 
 nsDocumentEncoder::nsDocumentEncoder()
-    : mEncoding(nullptr), mIsCopying(false), mCachedBuffer(nullptr) {
+    : mEncoding(nullptr),
+      mIsCopying(false),
+      mCachedBuffer(nullptr),
+      mNodeSerializer(mNeedsPreformatScanning, mSerializer, mFlags,
+                      mNodeFixup) {
   Initialize();
   mMimeType.AssignLiteral("text/plain");
 }
