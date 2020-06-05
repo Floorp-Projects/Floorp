@@ -9,7 +9,7 @@ import random
 import pytest
 
 from mozperftest.tests.support import get_running_env, EXAMPLE_TEST
-from mozperftest.environment import BROWSER
+from mozperftest.environment import TEST
 from mozperftest.test.browsertime import add_options
 from mozperftest.test.browsertime.runner import (
     NodeException,
@@ -44,7 +44,7 @@ def test_browser(*mocked):
         browsertime_extra_options="one=1,two=2",
     )
 
-    browser = env.layers[BROWSER]
+    browser = env.layers[TEST]
     env.set_arg("tests", [EXAMPLE_TEST])
 
     try:
@@ -89,7 +89,7 @@ def test_browser_failed(*mocked):
     )
     # set the return value to 1 to simulate a node failure
     mach_cmd.run_process.return_value = 1
-    browser = env.layers[BROWSER]
+    browser = env.layers[TEST]
     env.set_arg("tests", [EXAMPLE_TEST])
 
     with browser as b, silence(), pytest.raises(NodeException):
@@ -109,7 +109,7 @@ def test_browser_desktop(*mocked):
     mach_cmd, metadata, env = get_running_env(
         browsertime_iterations=1, browsertime_extra_options="one=1,two=2",
     )
-    browser = env.layers[BROWSER]
+    browser = env.layers[TEST]
     env.set_arg("tests", [EXAMPLE_TEST])
 
     try:
@@ -151,7 +151,7 @@ def test_install_url(*mocked):
         [random.choice(string.hexdigits[:-6]) for c in range(40)]
     )
     mach, metadata, env = get_running_env(browsertime_install_url=url)
-    browser = env.layers[BROWSER]
+    browser = env.layers[TEST]
     env.set_arg("tests", [EXAMPLE_TEST])
 
     try:
@@ -174,7 +174,7 @@ def test_install_url(*mocked):
 )
 def test_install_url_bad(*mocked):
     mach, metadata, env = get_running_env(browsertime_install_url="meh")
-    browser = env.layers[BROWSER]
+    browser = env.layers[TEST]
     env.set_arg("tests", [EXAMPLE_TEST])
 
     with pytest.raises(ValueError):

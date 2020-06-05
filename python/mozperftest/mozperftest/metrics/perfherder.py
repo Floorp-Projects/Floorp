@@ -112,9 +112,7 @@ class Perfherder(Layer):
             subtests = {}
             for r in res:
                 vals = [
-                    v["value"]
-                    for v in r["data"]
-                    if type(v["value"]) in (int, float)
+                    v["value"] for v in r["data"] if type(v["value"]) in (int, float)
                 ]
                 if vals:
                     subtests[r["subtest"]] = vals
