@@ -36,10 +36,6 @@ job-template:
                     by-level:
                         '3': fennec-nightly-signing
                         default: dep-signing
-                nightly-simulation:
-                    by-level:
-                        '3': fennec-nightly-signing
-                        default: dep-signing
                 nightly:
                     by-level:
                         '3': nightly-signing
