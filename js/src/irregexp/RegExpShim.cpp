@@ -151,11 +151,20 @@ void Isolate::trace(JSTracer* trc) {
   return Handle<String>(JS::StringValue(linear), isolate);
 }
 
-// This is only used for trace messages printing the source of a
-// regular expression. To keep things simple, we just return an
-// empty string and don't print anything.
+// This is only used for trace messages printing the source pattern of
+// a regular expression. We have to return a unique_ptr, but we don't
+// care about the contents, so we return an empty null-terminated string.
 std::unique_ptr<char[]> String::ToCString() {
-  return std::unique_ptr<char[]>();
+  js::AutoEnterOOMUnsafeRegion oomUnsafe;
+
+  std::unique_ptr<char[]> ptr;
+  ptr.reset(static_cast<char*>(js_malloc(1)));
+  if (!ptr) {
+    oomUnsafe.crash("Irregexp String::ToCString");
+  }
+  ptr[0] = '\0';
+
+  return ptr;
 }
 
 bool Isolate::init() {
