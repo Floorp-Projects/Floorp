@@ -31,6 +31,7 @@ raptor_description_schema = Schema({
     Optional('raptor-test'): text_type,
     Optional('raptor-subtests'): optionally_keyed_by(
         'app',
+        'tier',
         list
     ),
     Optional('activity'): optionally_keyed_by(
@@ -69,6 +70,7 @@ raptor_description_schema = Schema({
     Optional('tier'): optionally_keyed_by(
         'app',
         'raptor-test',
+        'raptor-subtests',
         test_description_schema['tier']
     ),
     Optional('run-visual-metrics'): optionally_keyed_by(
