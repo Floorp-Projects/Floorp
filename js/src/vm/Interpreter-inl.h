@@ -388,8 +388,9 @@ static MOZ_ALWAYS_INLINE bool DecOperation(JSContext* cx, HandleValue val,
   return BigInt::decValue(cx, val, res);
 }
 
-static MOZ_ALWAYS_INLINE bool ToIdOperation(JSContext* cx, HandleValue idval,
-                                            MutableHandleValue res) {
+static MOZ_ALWAYS_INLINE bool ToPropertyKeyOperation(JSContext* cx,
+                                                     HandleValue idval,
+                                                     MutableHandleValue res) {
   if (idval.isInt32()) {
     res.set(idval);
     return true;

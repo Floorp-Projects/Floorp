@@ -11849,7 +11849,7 @@ void CodeGenerator::visitToIdV(LToIdV* lir) {
   ValueOperand input = ToValue(lir, LToIdV::Input);
 
   using Fn = bool (*)(JSContext*, HandleValue, MutableHandleValue);
-  OutOfLineCode* ool = oolCallVM<Fn, ToIdOperation>(
+  OutOfLineCode* ool = oolCallVM<Fn, ToPropertyKeyOperation>(
       lir, ArgList(ToValue(lir, LToIdV::Input)), StoreValueTo(out));
 
   Register tag = masm.extractTag(input, out.scratchReg());

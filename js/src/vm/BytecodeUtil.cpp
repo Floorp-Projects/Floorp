@@ -2114,8 +2114,8 @@ bool ExpressionDecompiler::decompilePC(jsbytecode* pc, uint8_t defIndex) {
       case JSOp::SuperBase:
         return write("HOMEOBJECTPROTO");
 
-      case JSOp::ToId:
-        return write("TOID(") && decompilePCForStackOperand(pc, -1) &&
+      case JSOp::ToPropertyKey:
+        return write("TOPROPERTYKEY(") && decompilePCForStackOperand(pc, -1) &&
                write(")");
       case JSOp::ToString:
         return write("TOSTRING(") && decompilePCForStackOperand(pc, -1) &&
