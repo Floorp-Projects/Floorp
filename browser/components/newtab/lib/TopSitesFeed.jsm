@@ -406,10 +406,20 @@ this.TopSitesFeed = class TopSitesFeed {
     // Insert the original pinned sites into the deduped frecent and defaults
     const withPinned = insertPinned(checkedAdult, pinned).slice(0, numItems);
 
-    const amazonSearchTileOverrideURL = Services.prefs.getStringPref(
+    let amazonSearchTileOverrideURL = Services.prefs.getStringPref(
       AMAZON_SEARCH_TILE_OVERRIDE_PREF,
       ""
     );
+    if (amazonSearchTileOverrideURL) {
+      let date = new Date();
+      let pad = number => number.toString().padStart(2, "0");
+      amazonSearchTileOverrideURL = amazonSearchTileOverrideURL.replace(
+        "%YYYYMMDD%",
+        String(date.getFullYear()) +
+          pad(date.getMonth() + 1) +
+          pad(date.getDate())
+      );
+    }
 
     // Now, get a tippy top icon, a rich icon, or screenshot for every item
     for (const link of withPinned) {
