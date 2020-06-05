@@ -1519,7 +1519,7 @@ bool WarpBuilder::build_ToAsyncIter(BytecodeLocation loc) {
   return resumeAfter(ins, loc);
 }
 
-bool WarpBuilder::build_ToId(BytecodeLocation loc) {
+bool WarpBuilder::build_ToPropertyKey(BytecodeLocation loc) {
   MDefinition* index = current->pop();
   MToId* ins = MToId::New(alloc(), index);
   current->add(ins);

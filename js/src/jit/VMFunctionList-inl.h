@@ -269,8 +269,8 @@ namespace jit {
   _(ThrowRuntimeLexicalError, js::jit::ThrowRuntimeLexicalError)               \
   _(ThrowUninitializedThis, js::ThrowUninitializedThis)                        \
   _(ToBigInt, js::ToBigInt)                                                    \
-  _(ToIdOperation, js::ToIdOperation)                                          \
   _(ToObjectSlow, js::ToObjectSlow)                                            \
+  _(ToPropertyKeyOperation, js::ToPropertyKeyOperation)                        \
   _(ToStringSlow, js::ToStringSlow<CanGC>)                                     \
   _(TrySkipAwait, js::jit::TrySkipAwait)
 

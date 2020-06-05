@@ -209,7 +209,7 @@ bool PropertyEmitter::prepareForComputedPropValue() {
 
   //                [stack] CTOR? OBJ CTOR? KEY
 
-  if (!bce_->emit1(JSOp::ToId)) {
+  if (!bce_->emit1(JSOp::ToPropertyKey)) {
     //              [stack] CTOR? OBJ CTOR? KEY
     return false;
   }
