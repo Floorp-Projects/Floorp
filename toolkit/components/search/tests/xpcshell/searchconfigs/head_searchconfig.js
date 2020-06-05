@@ -531,35 +531,26 @@ class SearchConfigTest {
        Got "${searchForm.host}", expected to end with "${rules.domain}".`
     );
 
-    let submission = engine.getSubmission("test", URLTYPE_SEARCH_HTML);
-
-    if (this._config.searchUrlBase) {
-      this.assertEqual(
-        submission.uri.prePath + submission.uri.filePath,
-        this._config.searchUrlBase + rules.searchUrlEnd,
-        `Should have the correct domain for type: ${URLTYPE_SEARCH_HTML} ${location}.`
-      );
-    } else {
-      this.assertOk(
-        submission.uri.host.endsWith(rules.domain),
-        `Should have the correct domain for type: ${URLTYPE_SEARCH_HTML} ${location}.
-         Got "${submission.uri.host}", expected to end with "${rules.domain}".`
-      );
-    }
-
-    submission = engine.getSubmission("test", URLTYPE_SUGGEST_JSON);
-    if (this._config.noSuggestionsURL || rules.noSuggestionsURL) {
-      this.assertOk(!submission, "Should not have a submission url");
-    } else if (this._config.suggestionUrlBase) {
-      this.assertEqual(
-        submission.uri.prePath + submission.uri.filePath,
-        this._config.suggestionUrlBase,
-        `Should have the correct domain for type: ${URLTYPE_SUGGEST_JSON} ${location}.`
-      );
-      this.assertOk(
-        submission.uri.query.includes(rules.suggestUrlCode),
-        `Should have the code in the uri`
-      );
+    for (const urlType of [URLTYPE_SUGGEST_JSON, URLTYPE_SEARCH_HTML]) {
+      const submission = engine.getSubmission("test", urlType);
+      if (
+        urlType == URLTYPE_SUGGEST_JSON &&
+        (this._config.noSuggestionsURL || rules.noSuggestionsURL)
+      ) {
+        this.assertOk(!submission, "Should not have a submission url");
+      } else if (this._config.searchUrlBase) {
+        this.assertEqual(
+          submission.uri.prePath + submission.uri.filePath,
+          this._config.searchUrlBase + rules.searchUrlEnd,
+          `Should have the correct domain for type: ${urlType} ${location}.`
+        );
+      } else {
+        this.assertOk(
+          submission.uri.host.endsWith(rules.domain),
+          `Should have the correct domain for type: ${urlType} ${location}.
+           Got "${submission.uri.host}", expected to end with "${rules.domain}".`
+        );
+      }
     }
   }
 
