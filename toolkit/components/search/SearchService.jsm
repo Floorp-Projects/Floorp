@@ -2482,7 +2482,7 @@ SearchService.prototype = {
         if (locale != SearchUtils.DEFAULT_TAG) {
           manifest = await extension.getLocalizedManifest(locale);
         }
-        let params = await this.getEngineParams(extension, manifest, locale);
+        let params = this.getEngineParams(extension, manifest, locale);
         engine._updateFromMetadata(params);
       }
       return engines;
@@ -2548,7 +2548,7 @@ SearchService.prototype = {
       manifest = await policy.extension.getLocalizedManifest(locale);
     }
 
-    let engineParams = await Services.search.getEngineParams(
+    let engineParams = this.getEngineParams(
       policy.extension,
       manifest,
       locale,
