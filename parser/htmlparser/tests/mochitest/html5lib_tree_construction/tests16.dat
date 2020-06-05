@@ -1172,6 +1172,28 @@
 |     "-->"
 
 #data
+<!doctype html><style></style</style>
+#errors
+#document
+| <!DOCTYPE html>
+| <html>
+|   <head>
+|     <style>
+|       "</style"
+|   <body>
+
+#data
+<!doctype html><style></stylee</style>
+#errors
+#document
+| <!DOCTYPE html>
+| <html>
+|   <head>
+|     <style>
+|       "</stylee"
+|   <body>
+
+#data
 <!doctype html><noembed><!--<noembed></noembed>--></noembed>
 #errors
 (1,60): unexpected-end-tag
