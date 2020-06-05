@@ -1829,6 +1829,7 @@ main {
   .asrouter-admin .collapsed {
     display: none; }
   .asrouter-admin .icon {
+    display: inline-table;
     cursor: pointer;
     width: 18px;
     height: 18px; }

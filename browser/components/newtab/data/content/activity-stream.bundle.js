@@ -1182,7 +1182,7 @@ class ASRouterAdminInner extends react__WEBPACK_IMPORTED_MODULE_4___default.a.Pu
     this.onNewTargetingParams = this.onNewTargetingParams.bind(this);
     this.handleUpdateWNMessages = this.handleUpdateWNMessages.bind(this);
     this.handleForceWNP = this.handleForceWNP.bind(this);
-    this.pushWNMessage = this.pushWNMessage.bind(this);
+    this.restoreWNMessageState = this.restoreWNMessageState.bind(this);
     this.toggleJSON = this.toggleJSON.bind(this);
     this.toggleAllMessages = this.toggleAllMessages.bind(this);
     this.state = {
@@ -1270,12 +1270,13 @@ class ASRouterAdminInner extends react__WEBPACK_IMPORTED_MODULE_4___default.a.Pu
     return () => _asrouter_asrouter_content__WEBPACK_IMPORTED_MODULE_1__["ASRouterUtils"].overrideMessage(id);
   }
 
-  handleUpdateWNMessages() {
+  async handleUpdateWNMessages() {
+    await this.restoreWNMessageState();
     let messages = this.state.WNMessages;
-    _asrouter_asrouter_content__WEBPACK_IMPORTED_MODULE_1__["ASRouterUtils"].sendMessage({
-      type: "RENDER_WHATSNEW_MESSAGES",
-      data: messages
-    });
+
+    for (const msg of messages) {
+      _asrouter_asrouter_content__WEBPACK_IMPORTED_MODULE_1__["ASRouterUtils"].modifyMessageJson(JSON.parse(msg));
+    }
   }
 
   handleForceWNP() {
@@ -1547,27 +1548,23 @@ class ASRouterAdminInner extends react__WEBPACK_IMPORTED_MODULE_4___default.a.Pu
     }, JSON.stringify(msg, null, 2)))));
   }
 
-  pushWNMessage(event, msg) {
-    let ele = event.target;
+  restoreWNMessageState() {
+    // check the page for checked boxes, and reset the state of WNMessages based on that.
+    let tempState = [];
+    let messageCheckboxes = document.querySelectorAll('input[type="checkbox"]'); // put the JSON of all the checked checkboxes in the array
 
-    if (ele.checked) {
-      this.setState(prevState => ({
-        WNMessages: prevState.WNMessages.concat(msg)
-      }));
-    } else if (!ele.checked && this.state.WNMessages.length === 1) {
-      this.setState({
-        WNMessages: []
-      });
-    } else {
-      this.setState(prevState => ({
-        WNMessages: prevState.WNMessages.splice(prevState.WNMessages.indexOf(msg), 1)
-      }));
+    for (const checkbox of messageCheckboxes) {
+      let trimmedId = checkbox.id.replace(" checkbox", "");
+      let msg = document.getElementById(`${trimmedId}-textarea`).value;
+
+      if (checkbox.checked) {
+        tempState.push(msg);
+      }
     }
-  }
 
-  modifyJson(content) {
-    let newContent = JSON.parse(content);
-    _asrouter_asrouter_content__WEBPACK_IMPORTED_MODULE_1__["ASRouterUtils"].modifyMessageJson(newContent);
+    this.setState({
+      WNMessages: tempState
+    });
   }
 
   renderWNMessageItem(msg) {
@@ -1592,19 +1589,12 @@ class ASRouterAdminInner extends react__WEBPACK_IMPORTED_MODULE_4___default.a.Pu
     })), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("td", null, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("input", {
       type: "checkbox",
       id: `${msg.id} checkbox`,
-      name: `${msg.id} checkbox` // eslint-disable-next-line react/jsx-no-bind
-      ,
-      onClick: e => this.pushWNMessage(e, msg.id)
+      name: `${msg.id} checkbox`
     })), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("td", {
       className: `message-summary`
     }, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("pre", {
       className: isCollapsed ? "collapsed" : "expanded"
-    }, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("button", {
-      className: "button json-button",
-      name: msg.id // eslint-disable-next-line react/jsx-no-bind
-      ,
-      onClick: e => this.modifyJson(document.getElementById(`${msg.id}-textarea`).value)
-    }, "Modify Template"), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("textarea", {
+    }, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("textarea", {
       id: `${msg.id}-textarea`,
       className: "wnp-textarea",
       name: msg.id
@@ -1643,7 +1633,7 @@ class ASRouterAdminInner extends react__WEBPACK_IMPORTED_MODULE_4___default.a.Pu
       return null;
     }
 
-    const messagesToShow = this.state.messages.filter(message => message.provider === "whats-new-panel");
+    const messagesToShow = this.state.messages.filter(message => message.provider === "whats-new-panel" && message.content.body);
     return react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("table", null, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("tbody", null, messagesToShow.map(msg => this.renderWNMessageItem(msg))));
   }
 
@@ -1958,7 +1948,7 @@ class ASRouterAdminInner extends react__WEBPACK_IMPORTED_MODULE_4___default.a.Pu
       className: "helpLink"
     }, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("span", {
       className: "icon icon-small-spacer icon-info"
-    }), " ", react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("span", null, "To correctly render selected messages, please check \"Disable Popup Auto-Hide\" in the browser toolbox, or set", " ", react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("i", null, "ui.popup.disable_autohide"), " to ", react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("b", null, "true"), " in", " ", react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("i", null, "about:config"), ". ", react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("br", null), "To modify a message, render it first using 'Render Selected Messages'. Then, modify the JSON and click 'Modify Template' to see your changes.")), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("div", null, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("button", {
+    }), " ", react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("span", null, "To correctly render selected messages, please check \"Disable Popup Auto-Hide\" in the browser toolbox, or set", " ", react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("i", null, "ui.popup.disable_autohide"), " to ", react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("b", null, "true"), " in", " ", react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("i", null, "about:config"), ". Then, click 'Open What's New Panel', select the messages you want to see, and click 'Render Selected Messages'.", react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("br", null), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("br", null), "To modify a message, select it, modify the JSON and click 'Render Selected Messages' again to see your changes.")), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("div", null, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("button", {
       className: "ASRouterButton primary button",
       onClick: this.handleForceWNP
     }, "Open What's New Panel"), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("button", {
