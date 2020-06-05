@@ -36,11 +36,11 @@ job-defaults:
             refbrow:
                 by-test-platform:
                     android-hw.*-aarch64.*/.*:
-                        index: project.mobile.reference-browser.v2.raptor.latest.aarch64
-                        name: target.apk
+                        index: project.mobile.reference-browser.v3.raptor.latest
+                        name: target.arm64-v8a.apk
                     default:
-                        index: project.mobile.reference-browser.v2.raptor.latest.arm
-                        name: target.apk
+                        index: project.mobile.reference-browser.v3.raptor.latest
+                        name: target.armeabi-v7a.apk
             default: geckoview_example.apk
     e10s: true
     virtualization: hardware
@@ -107,17 +107,19 @@ browsertime-tp6m:
                 - wikipedia
                 - youtube
                 - [youtube-watch, youtube-w]
-    apps: ["geckoview", "fenix", "fennec", "chrome-m"]
+    apps: ["geckoview", "fenix", "fennec", "chrome-m", "refbrow"]
     tier:
         by-raptor-test:
             amazon:
                 by-app:
                     fenix: 1
                     geckoview: 1
+                    refbrow: 2
                     default: 3
             default:
                 by-app:
                     geckoview: 1
+                    refbrow: 2
                     default: 3
     run-on-projects:
         by-raptor-test:
@@ -148,6 +150,7 @@ browsertime-tp6m:
                 by-app:
                     fenix: []
                     chrome-m: []
+                    refbrow: []
                     geckoview:
                         by-pageload:
                             cold:
@@ -193,6 +196,7 @@ browsertime-tp6m:
         by-app:
             fenix: both
             geckoview: both
+            refrbow: both
             default: cold
     run-visual-metrics:
         by-app:
