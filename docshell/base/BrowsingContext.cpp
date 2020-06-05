@@ -1456,8 +1456,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 class RemoteLocationProxy
     : public RemoteObjectProxy<BrowsingContext::LocationProxy,
-                               Location_Binding::sCrossOriginAttributes,
-                               Location_Binding::sCrossOriginMethods> {
+                               Location_Binding::sCrossOriginProperties> {
  public:
   typedef RemoteObjectProxy Base;
 
