@@ -282,6 +282,16 @@ bool WarpCacheIRTranspiler::emitGuardSpecificFunction(
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitGuardNoDenseElements(ObjOperandId objId) {
+  MDefinition* obj = getOperand(objId);
+
+  auto* ins = MGuardNoDenseElements::New(alloc(), obj);
+  add(ins);
+
+  setOperand(objId, ins);
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitGuardNonDoubleType(ValOperandId inputId,
                                                    ValueType type) {
   switch (type) {
