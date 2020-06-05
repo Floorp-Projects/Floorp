@@ -99,7 +99,7 @@ bool js::BoxNonStrictThis(JSContext* cx, HandleValue thisv,
   MOZ_ASSERT(!thisv.isMagic());
 
   if (thisv.isNullOrUndefined()) {
-    vp.set(cx->global()->lexicalEnvironment().thisValue());
+    vp.setObject(*cx->global()->lexicalEnvironment().thisObject());
     return true;
   }
 
@@ -143,7 +143,7 @@ bool js::GetFunctionThis(JSContext* cx, AbstractFramePtr frame,
     RootedObject env(cx, frame.environmentChain());
     while (true) {
       if (IsNSVOLexicalEnvironment(env) || IsGlobalLexicalEnvironment(env)) {
-        res.set(GetThisValueOfLexical(env));
+        res.setObject(*GetThisObjectOfLexical(env));
         return true;
       }
       if (!env->enclosingEnvironment()) {
@@ -165,7 +165,7 @@ void js::GetNonSyntacticGlobalThis(JSContext* cx, HandleObject envChain,
   RootedObject env(cx, envChain);
   while (true) {
     if (IsExtensibleLexicalEnvironment(env)) {
-      res.set(GetThisValueOfLexical(env));
+      res.setObject(*GetThisObjectOfLexical(env));
       return;
     }
     if (!env->enclosingEnvironment()) {
@@ -2938,7 +2938,7 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
         GetNonSyntacticGlobalThis(cx, REGS.fp()->environmentChain(),
                                   REGS.stackHandleAt(-1));
       } else {
-        PUSH_COPY(cx->global()->lexicalEnvironment().thisValue());
+        PUSH_OBJECT(*cx->global()->lexicalEnvironment().thisObject());
       }
     }
     END_CASE(GlobalThis)

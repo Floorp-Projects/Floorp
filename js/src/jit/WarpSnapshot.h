@@ -406,10 +406,10 @@ class WarpSnapshot : public TempObject {
   // The script to compile.
   WarpScriptSnapshot* script_;
 
-  // The global lexical environment and its thisValue(). We don't inline
+  // The global lexical environment and its thisObject(). We don't inline
   // cross-realm calls so this can be stored once per snapshot.
   WarpGCPtr<LexicalEnvironmentObject*> globalLexicalEnv_;
-  WarpGCPtr<Value> globalLexicalEnvThis_;
+  WarpGCPtr<JSObject*> globalLexicalEnvThis_;
 
  public:
   explicit WarpSnapshot(JSContext* cx, WarpScriptSnapshot* script);
@@ -419,7 +419,7 @@ class WarpSnapshot : public TempObject {
   LexicalEnvironmentObject* globalLexicalEnv() const {
     return globalLexicalEnv_;
   }
-  Value globalLexicalEnvThis() const { return globalLexicalEnvThis_; }
+  JSObject* globalLexicalEnvThis() const { return globalLexicalEnvThis_; }
 
   void trace(JSTracer* trc);
 
