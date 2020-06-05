@@ -1211,11 +1211,11 @@ def enable_code_coverage(config, tasks):
 
             # Temporarily disable Mac tests on mozilla-central
             if 'mac' in task['build-platform']:
-                task['run-on-projects'] = ['try']
+                task['run-on-projects'] = []
 
             # Ensure we always run on the projects defined by the build, unless the test
             # is try only or shouldn't run at all.
-            if task['run-on-projects'] not in [[], ['try']]:
+            if task['run-on-projects'] not in [[]]:
                 task['run-on-projects'] = 'built-projects'
 
             # Ensure we don't optimize test suites out.

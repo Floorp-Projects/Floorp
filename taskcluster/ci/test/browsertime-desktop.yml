@@ -12,7 +12,7 @@ job-defaults:
     workdir: /home/cltbld
     run-on-projects:
         by-test-platform:
-            linux.*shippable[^-qr].*: ['mozilla-central', 'try']
+            linux.*shippable[^-qr].*: ['mozilla-central']
             default: []
     tier: 3
     fission-tier: 3
@@ -57,7 +57,7 @@ browsertime-tp6:
             chrome: []
             default:
                 by-test-platform:
-                    linux.*shippable[^-qr].*: ['mozilla-central', 'try']
+                    linux.*shippable[^-qr].*: ['mozilla-central']
                     default: []
     limit-platforms:
         by-app:
