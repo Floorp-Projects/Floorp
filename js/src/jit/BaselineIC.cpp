@@ -3437,6 +3437,9 @@ bool DoToPropertyKeyFallback(JSContext* cx, BaselineFrame* frame,
   stub->incrementEnteredCount();
   FallbackICSpew(cx, stub, "ToPropertyKey");
 
+  TryAttachStub<ToPropertyKeyIRGenerator>(
+      "ToPropertyKey", cx, frame, stub, BaselineCacheIRStubKind::Regular, val);
+
   return ToPropertyKeyOperation(cx, val, res);
 }
 
