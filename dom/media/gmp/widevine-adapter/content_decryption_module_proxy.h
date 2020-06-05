@@ -12,7 +12,7 @@ typedef unsigned char uint8_t;
 typedef unsigned int uint32_t;
 typedef unsigned __int64 uint64_t;
 #else
-#include <stdint.h>
+#  include <stdint.h>
 #endif
 
 namespace cdm {
@@ -32,6 +32,11 @@ class CDM_CLASS_API CdmProxy {
     // There will be more values in the future e.g. for D3D11 RSA method.
   };
 
+  enum KeyType : uint32_t {
+    kDecryptOnly = 0,
+    kDecryptAndDecode = 1,
+  };
+
   // Initializes the proxy. The results will be returned in
   // CdmProxyClient::OnInitialized().
   virtual void Initialize() = 0;
@@ -40,10 +45,8 @@ class CDM_CLASS_API CdmProxy {
   // |output_data_size| is required by some protocol to set up the output data.
   // The operation may fail if the |output_data_size| is wrong. The results will
   // be returned in CdmProxyClient::OnProcessed().
-  virtual void Process(Function function,
-                       uint32_t crypto_session_id,
-                       const uint8_t* input_data,
-                       uint32_t input_data_size,
+  virtual void Process(Function function, uint32_t crypto_session_id,
+                       const uint8_t* input_data, uint32_t input_data_size,
                        uint32_t output_data_size) = 0;
 
   // Creates a crypto session for handling media.
@@ -54,20 +57,17 @@ class CDM_CLASS_API CdmProxy {
                                         uint32_t input_data_size) = 0;
 
   // Sets a key for the session identified by |crypto_session_id|.
-  virtual void SetKey(uint32_t crypto_session_id,
-                      const uint8_t* key_id,
-                      uint32_t key_id_size,
-                      const uint8_t* key_blob,
-                      uint32_t key_blob_size) = 0;
+  virtual void SetKey(uint32_t crypto_session_id, const uint8_t* key_id,
+                      uint32_t key_id_size, KeyType key_type,
+                      const uint8_t* key_blob, uint32_t key_blob_size) = 0;
 
   // Removes a key for the session identified by |crypto_session_id|.
-  virtual void RemoveKey(uint32_t crypto_session_id,
-                         const uint8_t* key_id,
+  virtual void RemoveKey(uint32_t crypto_session_id, const uint8_t* key_id,
                          uint32_t key_id_size) = 0;
 
  protected:
-  CdmProxy() = default;
-  virtual ~CdmProxy() = default;
+  CdmProxy() {}
+  virtual ~CdmProxy() {}
 };
 
 // Responses to CdmProxy calls. All responses will be called asynchronously.
@@ -80,20 +80,18 @@ class CDM_CLASS_API CdmProxyClient {
 
   enum Protocol : uint32_t {
     kNone = 0,  // No protocol supported. Can be used in failure cases.
-    kIntel,  // Method using Intel CSME.
+    kIntel,     // Method using Intel CSME.
     // There will be more values in the future e.g. kD3D11RsaHardware,
     // kD3D11RsaSoftware to use the D3D11 RSA method.
   };
 
   // Callback for Initialize(). If the proxy created a crypto session, then the
   // ID for the crypto session is |crypto_session_id|.
-  virtual void OnInitialized(Status status,
-                             Protocol protocol,
+  virtual void OnInitialized(Status status, Protocol protocol,
                              uint32_t crypto_session_id) = 0;
 
   // Callback for Process(). |output_data| is the output of processing.
-  virtual void OnProcessed(Status status,
-                           const uint8_t* output_data,
+  virtual void OnProcessed(Status status, const uint8_t* output_data,
                            uint32_t output_data_size) = 0;
 
   // Callback for CreateMediaCryptoSession(). On success:
@@ -104,12 +102,18 @@ class CDM_CLASS_API CdmProxyClient {
                                            uint32_t crypto_session_id,
                                            uint64_t output_data) = 0;
 
+  // Callback for SetKey().
+  virtual void OnKeySet(Status status) = 0;
+
+  // Callback for RemoveKey().
+  virtual void OnKeyRemoved(Status status) = 0;
+
   // Called when there is a hardware reset and all the hardware context is lost.
   virtual void NotifyHardwareReset() = 0;
 
  protected:
-  CdmProxyClient() = default;
-  virtual ~CdmProxyClient() = default;
+  CdmProxyClient() {}
+  virtual ~CdmProxyClient() {}
 };
 
 }  // namespace cdm
