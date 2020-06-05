@@ -58,6 +58,20 @@ key-attr =
   }
 
   {
+    let values = await l10n.formatValues([
+      "key-value1",
+      "key-value2",
+      "key-missing",
+      "key-attr"
+    ]);
+
+    strictEqual(values[0], "[de] Value2");
+    strictEqual(values[1], "[en] Value3");
+    strictEqual(values[2], null);
+    strictEqual(values[3], null);
+  }
+
+  {
     strictEqual(await l10n.formatValue("key-missing"), null);
     strictEqual(await l10n.formatValue("key-value1"), "[de] Value2");
     strictEqual(await l10n.formatValue("key-value2"), "[en] Value3");
@@ -160,6 +174,16 @@ add_task(async function test_add_remove_resourceIds() {
   l10n.addResourceIds(["/toolkit/menu.ftl"]);
 
   values = await l10n.formatValues([{id: "key1"}, {id: "key2"}]);
+
+  strictEqual(values[0], "Value1");
+  strictEqual(values[1], "Value2");
+
+  values = await l10n.formatValues(["key1", {id: "key2"}]);
+
+  strictEqual(values[0], "Value1");
+  strictEqual(values[1], "Value2");
+
+  values = await l10n.formatValues([{id: "key1"}, "key2"]);
 
   strictEqual(values[0], "Value1");
   strictEqual(values[1], "Value2");
