@@ -723,6 +723,13 @@
   args:
     rng: RawPointerField
 
+- name: MathAtan2NumberResult
+  shared: true
+  transpile: false
+  args:
+    lhs: NumberId
+    rhs: NumberId
+
 - name: MathFloorToInt32Result
   shared: true
   transpile: true
