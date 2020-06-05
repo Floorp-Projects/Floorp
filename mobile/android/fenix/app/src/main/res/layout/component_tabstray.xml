@@ -32,13 +32,14 @@
         android:gravity="center_horizontal"
         android:paddingTop="80dp"
         android:text="@string/no_open_tabs_description"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
         android:textColor="?secondaryText"
         android:textSize="16sp"
-        android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@id/tabsTray" />
+        app:layout_constraintTop_toBottomOf="@id/tab_layout" />
 
     <com.google.android.material.tabs.TabLayout
         android:id="@+id/tab_layout"

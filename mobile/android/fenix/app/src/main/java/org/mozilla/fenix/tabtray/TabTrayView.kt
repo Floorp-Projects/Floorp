@@ -192,6 +192,7 @@ class TabTrayView(
                 }
             }
 
+            view.tabsTray.asView().isVisible = !hasNoTabs
             view.tab_tray_overflow.isVisible = !hasNoTabs
         }
     }
