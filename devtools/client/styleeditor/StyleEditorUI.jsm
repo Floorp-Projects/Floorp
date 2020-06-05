@@ -419,7 +419,7 @@ StyleEditorUI.prototype = {
   /**
    * Add a new editor to the UI for a source.
    *
-   * @param {StyleSheet}  styleSheet
+   * @param {StyleSheet|OriginalSource}  styleSheet
    *        Object representing stylesheet
    * @param {Boolean} isNew
    *         Optional if stylesheet is a new sheet created by user
@@ -869,6 +869,48 @@ StyleEditorUI.prototype = {
     return styleSheet.href
       ? styleSheet.href
       : "inline-" + styleSheet.styleSheetIndex + "-at-" + styleSheet.nodeHref;
+  },
+
+  /**
+   * Get the OriginalSource object for a given original sourceId returned from
+   * the sourcemap worker service.
+   *
+   * @param {string} sourceId
+   *        The ID to search for from the sourcemap worker.
+   *
+   * @return {OriginalSource | null}
+   */
+  getOriginalSourceSheet: function(sourceId) {
+    for (const editor of this.editors) {
+      const { styleSheet } = editor;
+      if (styleSheet.isOriginalSource && styleSheet.sourceId === sourceId) {
+        return styleSheet;
+      }
+    }
+    return null;
+  },
+
+  /**
+   * Given an URL, find a stylesheet front with that URL, if one has been
+   * loaded into the editor.js
+   *
+   * Do not use this unless you have no other way to get a StyleSheetFront
+   * multiple sheets could share the same URL, so this will give you _one_
+   * of possibly many sheets with that URL.
+   *
+   * @param {string} url
+   *        An arbitrary URL to search for.
+   *
+   * @return {StyleSheetFront|null}
+   */
+  getStylesheetFrontForGeneratedURL: function(url) {
+    for (const styleSheet of this._seenSheets.keys()) {
+      const sheetURL = styleSheet.href || styleSheet.nodeHref;
+      if (!styleSheet.isOriginalSource && sheetURL === url) {
+        return styleSheet;
+      }
+    }
+    return null;
   },
 
   /**
