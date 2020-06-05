@@ -984,25 +984,6 @@ export function getSourceActorsForSource(
   return getSourceActors(state, actors);
 }
 
-export function canLoadSource(
-  state: OuterState & SourceActorOuterState,
-  sourceId: SourceId
-): boolean {
-  // Return false if we know that loadSourceText() will fail if called on this
-  // source. This is used to avoid viewing such sources in the debugger.
-  const source = getSource(state, sourceId);
-  if (!source) {
-    return false;
-  }
-
-  if (isOriginalSource(source)) {
-    return true;
-  }
-
-  const actors = getSourceActorsForSource(state, sourceId);
-  return actors.length != 0;
-}
-
 export function isSourceWithMap(
   state: OuterState & SourceActorOuterState,
   id: SourceId
