@@ -194,12 +194,9 @@ pref("security.pki.mitm_detected", false);
 // Intermediate CA Preloading settings
 #if defined(MOZ_NEW_CERT_STORAGE) && !defined(MOZ_WIDGET_ANDROID)
   pref("security.remote_settings.intermediates.enabled", true);
-  pref("security.intermediate_preloading_healer.enabled", true);
 #else
   pref("security.remote_settings.intermediates.enabled", false);
-  pref("security.intermediate_preloading_healer.enabled", false);
 #endif
-pref("security.intermediate_preloading_healer.timer_interval_ms", 300000);
 pref("security.remote_settings.intermediates.bucket", "security-state");
 pref("security.remote_settings.intermediates.collection", "intermediates");
 pref("security.remote_settings.intermediates.checked", 0);
