@@ -916,7 +916,7 @@
 
 - name: LoadDenseElementHoleResult
   shared: true
-  transpile: false
+  transpile: true
   args:
     obj: ObjId
     index: Int32Id
