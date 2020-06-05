@@ -23,7 +23,7 @@ use crate::compilation_info::CompilationInfo;
 
 use ast::source_atom_set::SourceAtomSet;
 use ast::source_slice_list::SourceSliceList;
-use scope::ScopeDataMapAndFunctionMap;
+use scope::ScopePassResult;
 use stencil::result::EmitResult;
 
 pub fn emit<'alloc>(
@@ -32,11 +32,20 @@ pub fn emit<'alloc>(
     atoms: SourceAtomSet<'alloc>,
     slices: SourceSliceList<'alloc>,
 ) -> Result<EmitResult<'alloc>, EmitError> {
-    let ScopeDataMapAndFunctionMap {
+    let ScopePassResult {
         scope_data_map,
         function_map,
+        function_stencil_indices,
+        functions,
     } = scope::generate_scope_data(ast);
-    let compilation_info = CompilationInfo::new(atoms, slices, scope_data_map, function_map);
+    let compilation_info = CompilationInfo::new(
+        atoms,
+        slices,
+        scope_data_map,
+        function_map,
+        function_stencil_indices,
+        functions,
+    );
     ast_emitter::emit_program(ast, options, compilation_info)
 }
 

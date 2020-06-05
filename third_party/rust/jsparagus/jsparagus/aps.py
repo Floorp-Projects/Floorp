@@ -7,12 +7,9 @@ from .grammar import Nt
 from .lr0 import ShiftedTerm, Term
 from .actions import Action, Reduce
 
-
-StateId = int
-
-# Hack to avoid circular reference between this module and parse_table.py
-StateAndTransition = typing.Any
-ParseTable = typing.Any
+# Avoid circular reference between this module and parse_table.py
+if typing.TYPE_CHECKING:
+    from .parse_table import StateId, StateAndTransitions, ParseTable
 
 
 def shifted_path_to(pt: ParseTable, n: int, right_of: Path) -> typing.Iterator[Path]:
@@ -23,10 +20,10 @@ def shifted_path_to(pt: ParseTable, n: int, right_of: Path) -> typing.Iterator[P
     state = right_of[0].src
     assert isinstance(state, int)
     for edge in pt.states[state].backedges:
-        if not pt.is_term_shifted(edge.term):
+        if not pt.term_is_shifted(edge.term):
             print(repr(edge))
             print(pt.states[edge.src])
-        assert pt.is_term_shifted(edge.term)
+        assert pt.term_is_shifted(edge.term)
         if pt.term_is_stacked(edge.term):
             s_n = n - 1
             if n == 0:
@@ -99,7 +96,7 @@ class Edge:
     src: StateId
     term: typing.Optional[Term]
 
-    def stable_str(self, states: typing.List[StateAndTransition]) -> str:
+    def stable_str(self, states: typing.List[StateAndTransitions]) -> str:
         return "{} -- {} -->".format(states[self.src].stable_hash, str(self.term))
 
     def __str__(self) -> str:
@@ -153,7 +150,7 @@ class APS:
     # to be shifted. This list corresponds to terminals and non-terminals which
     # were necessary for removing inconsistencies, but have to be replayed
     # after shifting the reduced non-terminals.
-    replay: typing.List[typing.Union[str, Nt]]
+    replay: typing.List[ShiftedTerm]
 
     # This is the list of edges visited since the starting state.
     history: Path
@@ -199,8 +196,8 @@ class APS:
             for term, to in state.shifted_edges():
                 edge = Edge(last_edge.src, term)
                 new_sh = self.shift[:-1] + [edge]
-                to = Edge(to, None)
-                yield APS(st, new_sh + [to], la + [term], rp, hs + [edge], False)
+                edge_to = Edge(to, None)
+                yield APS(st, new_sh + [edge_to], la + [term], rp, hs + [edge], False)
         else:
             term = self.replay[0]
             rp = self.replay[1:]
@@ -208,10 +205,9 @@ class APS:
                 edge = Edge(last_edge.src, term)
                 new_sh = self.shift[:-1] + [edge]
                 to = state[term]
-                to = Edge(to, None)
-                yield APS(st, new_sh + [to], la, rp, hs + [edge], False)
+                edge_to = Edge(to, None)
+                yield APS(st, new_sh + [edge_to], la, rp, hs + [edge], False)
 
-        term = None
         rp = self.replay
         for a, to in state.epsilon:
             edge = Edge(last_edge.src, a)
@@ -276,18 +272,21 @@ class APS:
                     # computed here such that we can traverse the graph from
                     # `to` state, using the replayed terms.
                     replay = reducer.replay
-                    new_rp = [reducer.nt]
+                    new_rp: typing.List[ShiftedTerm] = [reducer.nt]
                     if replay > 0:
-                        stacked_terms = [edge.term for edge in path if pt.term_is_stacked(edge.term)]
+                        stacked_terms = [
+                            typing.cast(ShiftedTerm, edge.term)
+                            for edge in path if pt.term_is_stacked(edge.term)
+                        ]
                         new_rp = new_rp + stacked_terms[-replay:]
                     new_rp = new_rp + rp
                     new_la = la[:max(len(la) - replay, 0)]
                     yield APS(new_st, new_sh, new_la, new_rp, hs + [edge], True)
             else:
-                to = Edge(to, None)
-                yield APS(st, prev_sh + [to], la, rp, hs + [edge], self.reducing)
+                edge_to = Edge(to, None)
+                yield APS(st, prev_sh + [edge_to], la, rp, hs + [edge], self.reducing)
 
-    def stable_str(self, states: typing.List[StateAndTransition], name: str = "aps") -> str:
+    def stable_str(self, states: typing.List[StateAndTransitions], name: str = "aps") -> str:
         return """{}.stack = [{}]
 {}.shift = [{}]
 {}.lookahead = [{}]
@@ -325,7 +324,7 @@ class APS:
 
 def stable_aps_lanes_str(
         aps_lanes: typing.List[APS],
-        states: typing.List[StateAndTransition],
+        states: typing.List[StateAndTransitions],
         header: str = "lanes:",
         name: str = "\taps"
 ) -> str:

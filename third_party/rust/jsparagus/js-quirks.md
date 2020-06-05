@@ -1,5 +1,9 @@
 ## JS syntactic quirks
 
+> *To make a labyrinth, it takes*
+> *Some good intentions, some mistakes.*
+> —A. E. Stallings, “Daedal”
+
 JavaScript is rather hard to parse. Here is an in-depth accounting of
 its syntactic quirks, with an eye toward actually implementing a parser
 from scratch.
@@ -7,7 +11,9 @@ from scratch.
 With apologies to the generous people who work on the standard. Thanks
 for doing that—better you than me.
 
-Thanks to @mathiasbynens for pointing out an additional quirk.
+Thanks to [@bakkot](https://github.com/bakkot) and
+[@mathiasbynens](https://github.com/mathiasbynens) for pointing out
+several additional quirks.
 
 Problems are rated in terms of difficulty, from `(*)` = easy to `(***)`
 = hard. We’ll start with the easiest problems.
@@ -403,7 +409,7 @@ You can use escape sequences to write variable and property names, but
 not keywords (including contextual keywords in contexts where they act
 as keywords).
 
-So `if (foo) {}` and `{ i\f: 0 }` are legal but `i\u0066 (foo)` is not.
+So `if (foo) {}` and `{ i\u0066: 0 }` are legal but `i\u0066 (foo)` is not.
 
 And you don't necessarily know if you're lexing a contextual keyword
 until the next token: `({ g\u0065t: 0 })` is legal, but
@@ -496,8 +502,8 @@ that are covered adequately elsewhere:
 
 *   `const x;` without an initializer is a Syntax Error.
 
-*   A direct substatement of an `if` statement, loop statement, can’t be a labelled
-    `function`.
+*   A direct substatement of an `if` statement, loop statement, or
+    `with` statement can’t be a labelled `function`.
 
 *   Early errors are used to hook up cover grammars.
 
@@ -1016,3 +1022,15 @@ though syntactic rules are applied after the fact:
 
     ["a", "b", "c"]++;  // same
     ```
+
+
+## Conclusion
+
+What have we learned today?
+
+*   Do not write a JS parser.
+
+*   JavaScript has some syntactic horrors in it. But hey, you don't
+    make the world's most widely used programming language by avoiding
+    all mistakes. You do it by shipping a serviceable tool, in the right
+    circumstances, for the right users.

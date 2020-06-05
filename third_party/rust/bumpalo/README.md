@@ -15,7 +15,7 @@
 Bump allocation is a fast, but limited approach to allocation. We have a chunk
 of memory, and we maintain a pointer within that memory. Whenever we allocate an
 object, we do a quick test that we have enough capacity left in our chunk to
-allocate the object and then increment the pointer by the object's size. *That's
+allocate the object and then update the pointer by the object's size. *That's
 it!*
 
 The disadvantage of bump allocation is that there is no general way to
@@ -32,6 +32,13 @@ To deallocate all the objects in the arena at once, we can simply reset the bump
 pointer back to the start of the arena's memory chunk. This makes mass
 deallocation *extremely* fast, but allocated objects' `Drop` implementations are
 not invoked.
+
+> **However:** [`bumpalo::boxed::Box<T>`][crate::boxed::Box] can be used to wrap
+> `T` values allocated in the `Bump` arena, and calls `T`'s `Drop`
+> implementation when the `Box<T>` wrapper goes out of scope. This is similar to
+> how [`std::boxed::Box`] works, except without deallocating its backing memory.
+
+[`std::boxed::Box`]: https://doc.rust-lang.org/std/boxed/struct.Box.html
 
 ### What happens when the memory chunk is full?
 
@@ -65,8 +72,8 @@ assert!(scooter.scritches_required);
 
 ### Collections
 
-When the on-by-default `"collections"` feature is enabled, a fork of some of the
-`std` library's collections are available in the `collections` module. These
+When the `"collections"` cargo feature is enabled, a fork of some of the `std`
+library's collections are available in the `collections` module. These
 collection types are modified to allocate their space inside `bumpalo::Bump`
 arenas.
 
@@ -91,13 +98,47 @@ Eventually [all `std` collection types will be parameterized by an
 allocator](https://github.com/rust-lang/rust/issues/42774) and we can remove
 this `collections` module and use the `std` versions.
 
+### `bumpalo::boxed::Box`
+
+When the `"boxed"` cargo feature is enabled, a fork of `std::boxed::Box` library
+is available in the `boxed` module. This `Box` type is modified to allocate its
+space inside `bumpalo::Bump` arenas.
+
+**A `Box<T>` runs `T`'s drop implementation when the `Box<T>` is dropped.** You
+can use this to work around the fact that `Bump` does not drop values allocated
+in its space itself.
+
+```rust
+use bumpalo::{Bump, boxed::Box};
+use std::sync::atomic::{AtomicUsize, Ordering};
+
+static NUM_DROPPED: AtomicUsize = AtomicUsize::new(0);
+
+struct CountDrops;
+
+impl Drop for CountDrops {
+    fn drop(&mut self) {
+        NUM_DROPPED.fetch_add(1, Ordering::SeqCst);
+    }
+}
+
+// Create a new bump arena.
+let bump = Bump::new();
+
+// Create a `CountDrops` inside the bump arena.
+let mut c = Box::new_in(CountDrops, &bump);
+
+// No `CountDrops` have been dropped yet.
+assert_eq!(NUM_DROPPED.load(Ordering::SeqCst), 0);
+
+// Drop our `Box<CountDrops>`.
+drop(c);
+
+// Its `Drop` implementation was run, and so `NUM_DROPS` has been incremented.
+assert_eq!(NUM_DROPPED.load(Ordering::SeqCst), 1);
+```
+
 ### `#![no_std]` Support
 
-Requires the `alloc` nightly feature. Disable the on-by-default `"std"` feature:
-
-```toml
-[dependencies.bumpalo]
-version = "1"
-default-features = false
-```
+Bumpalo is a `no_std` crate. It depends only on the `alloc` and `core` crates.
 

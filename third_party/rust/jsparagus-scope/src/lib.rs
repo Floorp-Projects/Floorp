@@ -18,7 +18,7 @@ extern crate jsparagus_stencil as stencil;
 
 use ast::visit::Pass;
 
-pub use pass::ScopeDataMapAndFunctionMap;
+pub use pass::ScopePassResult;
 
 /// Visit all nodes in the AST, and create a scope data.
 ///
@@ -27,7 +27,7 @@ pub use pass::ScopeDataMapAndFunctionMap;
 /// `let` variable.
 pub fn generate_scope_data<'alloc, 'a>(
     ast: &'alloc ast::types::Program<'alloc>,
-) -> ScopeDataMapAndFunctionMap {
+) -> ScopePassResult {
     let mut scope_pass = pass::ScopePass::new();
     scope_pass.visit_program(ast);
     scope_pass.into()

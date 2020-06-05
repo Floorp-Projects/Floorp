@@ -84,6 +84,8 @@
 //! [`vec!`]: ../../macro.vec.html
 
 use super::raw_vec::RawVec;
+use crate::collections::CollectionAllocErr;
+use crate::Bump;
 use core::cmp::Ordering;
 use core::fmt;
 use core::hash::{self, Hash};
@@ -95,8 +97,7 @@ use core::ops::Bound::{Excluded, Included, Unbounded};
 use core::ops::{Index, IndexMut, RangeBounds};
 use core::ptr;
 use core::ptr::NonNull;
-use std::slice;
-use crate::Bump;
+use core::slice;
 
 unsafe fn arith_offset<T>(p: *const T, offset: isize) -> *const T {
     p.offset(offset)
@@ -264,7 +265,7 @@ macro_rules! vec {
         $( v.push($x); )*
         v
     }};
-    (in $bump:expr; $(, $x:expr,)*) => (bumpalo::vec![in $bump; $($x),*])
+    (in $bump:expr; $($x:expr,)*) => (bumpalo::vec![in $bump; $($x),*])
 }
 
 /// A contiguous growable array type, written `Vec<'bump, T>` but pronounced 'vector'.
@@ -634,30 +635,28 @@ impl<'bump, T: 'bump> Vec<'bump, T> {
     /// use std::ptr;
     /// use std::mem;
     ///
-    /// fn main() {
-    ///     let b = Bump::new();
+    /// let b = Bump::new();
     ///
-    ///     let mut v = bumpalo::vec![in &b; 1, 2, 3];
+    /// let mut v = bumpalo::vec![in &b; 1, 2, 3];
     ///
-    ///     // Pull out the various important pieces of information about `v`
-    ///     let p = v.as_mut_ptr();
-    ///     let len = v.len();
-    ///     let cap = v.capacity();
+    /// // Pull out the various important pieces of information about `v`
+    /// let p = v.as_mut_ptr();
+    /// let len = v.len();
+    /// let cap = v.capacity();
     ///
-    ///     unsafe {
-    ///         // Cast `v` into the void: no destructor run, so we are in
-    ///         // complete control of the allocation to which `p` points.
-    ///         mem::forget(v);
+    /// unsafe {
+    ///     // Cast `v` into the void: no destructor run, so we are in
+    ///     // complete control of the allocation to which `p` points.
+    ///     mem::forget(v);
     ///
-    ///         // Overwrite memory with 4, 5, 6
-    ///         for i in 0..len as isize {
-    ///             ptr::write(p.offset(i), 4 + i);
-    ///         }
-    ///
-    ///         // Put everything back together into a Vec
-    ///         let rebuilt = Vec::from_raw_parts_in(p, len, cap, &b);
-    ///         assert_eq!(rebuilt, [4, 5, 6]);
+    ///     // Overwrite memory with 4, 5, 6
+    ///     for i in 0..len as isize {
+    ///         ptr::write(p.offset(i), 4 + i);
     ///     }
+    ///
+    ///     // Put everything back together into a Vec
+    ///     let rebuilt = Vec::from_raw_parts_in(p, len, cap, &b);
+    ///     assert_eq!(rebuilt, [4, 5, 6]);
     /// }
     /// ```
     pub unsafe fn from_raw_parts_in(
@@ -740,6 +739,57 @@ impl<'bump, T: 'bump> Vec<'bump, T> {
         self.buf.reserve_exact(self.len, additional);
     }
 
+    /// Attempts to reserve capacity for at least `additional` more elements to be inserted
+    /// in the given `Vec<'bump, T>`. The collection may reserve more space to avoid
+    /// frequent reallocations. After calling `try_reserve`, capacity will be
+    /// greater than or equal to `self.len() + additional`. Does nothing if
+    /// capacity is already sufficient.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the new capacity overflows `usize`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bumpalo::{Bump, collections::Vec};
+    ///
+    /// let b = Bump::new();
+    /// let mut vec = bumpalo::vec![in &b; 1];
+    /// vec.try_reserve(10).unwrap();
+    /// assert!(vec.capacity() >= 11);
+    /// ```
+    pub fn try_reserve(&mut self, additional: usize) -> Result<(), CollectionAllocErr> {
+        self.buf.try_reserve(self.len, additional)
+    }
+
+    /// Attempts to reserve the minimum capacity for exactly `additional` more elements to
+    /// be inserted in the given `Vec<'bump, T>`. After calling `try_reserve_exact`,
+    /// capacity will be greater than or equal to `self.len() + additional`.
+    /// Does nothing if the capacity is already sufficient.
+    ///
+    /// Note that the allocator may give the collection more space than it
+    /// requests. Therefore capacity can not be relied upon to be precisely
+    /// minimal. Prefer `try_reserve` if future insertions are expected.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the new capacity overflows `usize`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bumpalo::{Bump, collections::Vec};
+    ///
+    /// let b = Bump::new();
+    /// let mut vec = bumpalo::vec![in &b; 1];
+    /// vec.try_reserve_exact(10).unwrap();
+    /// assert!(vec.capacity() >= 11);
+    /// ```
+    pub fn try_reserve_exact(&mut self, additional: usize) -> Result<(), CollectionAllocErr> {
+        self.buf.try_reserve_exact(self.len, additional)
+    }
+
     /// Shrinks the capacity of the vector as much as possible.
     ///
     /// It will drop down as close as possible to the length but the allocator
@@ -777,13 +827,38 @@ impl<'bump, T: 'bump> Vec<'bump, T> {
     /// let slice = v.into_bump_slice();
     /// assert_eq!(slice, [1, 2, 3]);
     /// ```
-    pub fn into_bump_slice(mut self) -> &'bump [T] {
+    pub fn into_bump_slice(self) -> &'bump [T] {
         unsafe {
-            let ptr = self.as_mut_ptr();
+            let ptr = self.as_ptr();
             let len = self.len();
             mem::forget(self);
             slice::from_raw_parts(ptr, len)
         }
+    }
+
+    /// Converts the vector into `&'bump mut [T]`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bumpalo::{Bump, collections::Vec};
+    ///
+    /// let b = Bump::new();
+    /// let v = bumpalo::vec![in &b; 1, 2, 3];
+    ///
+    /// let mut slice = v.into_bump_slice_mut();
+    ///
+    /// slice[0] = 3;
+    /// slice[2] = 1;
+    ///
+    /// assert_eq!(slice, [3, 2, 1]);
+    /// ```
+    pub fn into_bump_slice_mut(mut self) -> &'bump mut [T] {
+        let ptr = self.as_mut_ptr();
+        let len = self.len();
+        mem::forget(self);
+
+        unsafe { slice::from_raw_parts_mut(ptr, len) }
     }
 
     /// Shortens the vector, keeping the first `len` elements and dropping
@@ -904,6 +979,13 @@ impl<'bump, T: 'bump> Vec<'bump, T> {
     /// modifying its buffers, so it is up to the caller to ensure that the
     /// vector is actually the specified size.
     ///
+    /// # Safety
+    ///
+    /// - `new_len` must be less than or equal to [`capacity()`].
+    /// - The elements at `old_len..new_len` must be initialized.
+    ///
+    /// [`capacity()`]: struct.Vec.html#method.capacity
+    ///
     /// # Examples
     ///
     /// ```
@@ -955,8 +1037,8 @@ impl<'bump, T: 'bump> Vec<'bump, T> {
     /// }
     /// ```
     #[inline]
-    pub unsafe fn set_len(&mut self, len: usize) {
-        self.len = len;
+    pub unsafe fn set_len(&mut self, new_len: usize) {
+        self.len = new_len;
     }
 
     /// Removes an element from the vector and returns it.
@@ -1458,6 +1540,38 @@ impl<'bump, T: 'bump> Vec<'bump, T> {
     }
 }
 
+#[cfg(feature = "boxed")]
+impl<'bump, T> Vec<'bump, T> {
+    /// Converts the vector into [`Box<[T]>`][owned slice].
+    ///
+    /// Note that this will drop any excess capacity.
+    ///
+    /// [owned slice]: ../boxed/struct.Box.html
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bumpalo::{Bump, collections::Vec, vec};
+    ///
+    /// let b = Bump::new();
+    ///
+    /// let v = vec![in &b; 1, 2, 3];
+    ///
+    /// let slice = v.into_boxed_slice();
+    /// ```
+    pub fn into_boxed_slice(mut self) -> crate::boxed::Box<'bump, [T]> {
+        use crate::boxed::Box;
+
+        // Unlike `alloc::vec::Vec` shrinking here isn't necessary as `bumpalo::boxed::Box` doesn't own memory.
+        unsafe {
+            let slice = slice::from_raw_parts_mut(self.as_mut_ptr(), self.len);
+            let output: Box<'bump, [T]> = Box::from_raw(slice);
+            mem::forget(self);
+            output
+        }
+    }
+}
+
 impl<'bump, T: 'bump + Clone> Vec<'bump, T> {
     /// Resizes the `Vec` in-place so that `len` is equal to `new_len`.
     ///
@@ -1588,7 +1702,7 @@ impl<'a> SetLenOnDrop<'a> {
     fn new(len: &'a mut usize) -> Self {
         SetLenOnDrop {
             local_len: *len,
-            len: len,
+            len,
         }
     }
 
@@ -1772,6 +1886,9 @@ impl<'a, 'bump, T> IntoIterator for &'a mut Vec<'bump, T> {
 impl<'bump, T: 'bump> Extend<T> for Vec<'bump, T> {
     #[inline]
     fn extend<I: IntoIterator<Item = T>>(&mut self, iter: I) {
+        let iter = iter.into_iter();
+        self.reserve(iter.size_hint().0);
+
         for t in iter {
             self.push(t);
         }
@@ -1848,13 +1965,16 @@ macro_rules! __impl_slice_eq1 {
         __impl_slice_eq1! { $Lhs, $Rhs, Sized }
     };
     ($Lhs: ty, $Rhs: ty, $Bound: ident) => {
-        impl<'a, 'b, A: $Bound, B> PartialEq<$Rhs> for $Lhs where A: PartialEq<B> {
+        impl<'a, 'b, A: $Bound, B> PartialEq<$Rhs> for $Lhs
+        where
+            A: PartialEq<B>,
+        {
             #[inline]
-            fn eq(&self, other: &$Rhs) -> bool { self[..] == other[..] }
-            #[inline]
-            fn ne(&self, other: &$Rhs) -> bool { self[..] != other[..] }
+            fn eq(&self, other: &$Rhs) -> bool {
+                self[..] == other[..]
+            }
         }
-    }
+    };
 }
 
 __impl_slice_eq1! { Vec<'a, A>, Vec<'b, B> }
@@ -1931,13 +2051,12 @@ impl<'bump, T: 'bump> AsMut<[T]> for Vec<'bump, T> {
     }
 }
 
-// // note: test pulls in libstd, which causes errors here
-// #[cfg(not(test))]
-// impl<'bump, T: 'bump> From<Vec<'bump, T>> for Box<[T]> {
-//     fn from(v: Vec<'bump, T>) -> Box<[T]> {
-//         v.into_boxed_slice()
-//     }
-// }
+#[cfg(feature = "boxed")]
+impl<'bump, T: 'bump> From<Vec<'bump, T>> for crate::boxed::Box<'bump, [T]> {
+    fn from(v: Vec<'bump, T>) -> crate::boxed::Box<'bump, [T]> {
+        v.into_boxed_slice()
+    }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // Clone-on-write
@@ -2031,21 +2150,19 @@ impl<'bump, T: 'bump> Iterator for IntoIter<T> {
         unsafe {
             if self.ptr as *const _ == self.end {
                 None
+            } else if mem::size_of::<T>() == 0 {
+                // purposefully don't use 'ptr.offset' because for
+                // vectors with 0-size elements this would return the
+                // same pointer.
+                self.ptr = arith_offset(self.ptr as *const i8, 1) as *mut T;
+
+                // Make up a value of this ZST.
+                Some(mem::zeroed())
             } else {
-                if mem::size_of::<T>() == 0 {
-                    // purposefully don't use 'ptr.offset' because for
-                    // vectors with 0-size elements this would return the
-                    // same pointer.
-                    self.ptr = arith_offset(self.ptr as *const i8, 1) as *mut T;
+                let old = self.ptr;
+                self.ptr = self.ptr.offset(1);
 
-                    // Make up a value of this ZST.
-                    Some(mem::zeroed())
-                } else {
-                    let old = self.ptr;
-                    self.ptr = self.ptr.offset(1);
-
-                    Some(ptr::read(old))
-                }
+                Some(ptr::read(old))
             }
         }
     }
@@ -2072,18 +2189,16 @@ impl<'bump, T: 'bump> DoubleEndedIterator for IntoIter<T> {
         unsafe {
             if self.end == self.ptr {
                 None
+            } else if mem::size_of::<T>() == 0 {
+                // See above for why 'ptr.offset' isn't used
+                self.end = arith_offset(self.end as *const i8, -1) as *mut T;
+
+                // Make up a value of this ZST.
+                Some(mem::zeroed())
             } else {
-                if mem::size_of::<T>() == 0 {
-                    // See above for why 'ptr.offset' isn't used
-                    self.end = arith_offset(self.end as *const i8, -1) as *mut T;
+                self.end = self.end.offset(-1);
 
-                    // Make up a value of this ZST.
-                    Some(mem::zeroed())
-                } else {
-                    self.end = self.end.offset(-1);
-
-                    Some(ptr::read(self.end))
-                }
+                Some(ptr::read(self.end))
             }
         }
     }

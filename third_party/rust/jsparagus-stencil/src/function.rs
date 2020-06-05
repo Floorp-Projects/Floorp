@@ -1,3 +1,4 @@
+use crate::gcthings::GCThing;
 use crate::script::{ScriptStencil, ScriptStencilBase};
 use ast::source_atom_set::SourceAtomSetIndex;
 
@@ -11,7 +12,7 @@ pub struct FunctionFlags {
 // Do mot modify manually.
 //
 // @@@@ BEGIN TYPES @@@@
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub enum FunctionKind {
     NormalFunction = 0,
     Arrow = 1,
@@ -108,6 +109,78 @@ const MUTABLE_FLAGS: u16 = RESOLVED_NAME | RESOLVED_LENGTH | NEW_SCRIPT_CLEARED;
 const STABLE_ACROSS_CLONES: u16 = CONSTRUCTOR | LAMBDA | SELF_HOSTED | FUNCTION_KIND_MASK;
 // @@@@ END TYPES @@@@
 
+#[derive(Debug)]
+pub struct FunctionSyntaxKind {
+    kind: FunctionKind,
+    is_lambda: bool,
+    is_generator: bool,
+    is_async: bool,
+}
+
+impl FunctionSyntaxKind {
+    pub fn function_declaration(is_generator: bool, is_async: bool) -> Self {
+        Self {
+            kind: FunctionKind::NormalFunction,
+            is_lambda: false,
+            is_generator,
+            is_async,
+        }
+    }
+
+    pub fn function_expression(is_generator: bool, is_async: bool) -> Self {
+        Self {
+            kind: FunctionKind::NormalFunction,
+            is_lambda: true,
+            is_generator,
+            is_async,
+        }
+    }
+
+    pub fn method(is_generator: bool, is_async: bool) -> Self {
+        Self {
+            kind: FunctionKind::Method,
+            is_lambda: false,
+            is_generator,
+            is_async,
+        }
+    }
+
+    pub fn getter() -> Self {
+        FunctionSyntaxKind {
+            kind: FunctionKind::Getter,
+            is_lambda: false,
+            is_generator: false,
+            is_async: false,
+        }
+    }
+
+    pub fn setter() -> Self {
+        FunctionSyntaxKind {
+            kind: FunctionKind::Setter,
+            is_lambda: false,
+            is_generator: false,
+            is_async: false,
+        }
+    }
+
+    pub fn arrow(is_async: bool) -> Self {
+        Self {
+            kind: FunctionKind::Arrow,
+            is_lambda: true,
+            is_generator: false,
+            is_async,
+        }
+    }
+
+    pub fn is_generator(&self) -> bool {
+        self.is_generator
+    }
+
+    pub fn is_async(&self) -> bool {
+        self.is_async
+    }
+}
+
 impl FunctionFlags {
     fn new(flags: u16) -> Self {
         debug_assert!(
@@ -118,8 +191,26 @@ impl FunctionFlags {
         Self { flags }
     }
 
-    pub fn interpreted_normal() -> Self {
-        Self::new(INTERPRETED_NORMAL)
+    pub fn interpreted(syntax_kind: FunctionSyntaxKind) -> Self {
+        let kind_flag = (syntax_kind.kind as u16) << FUNCTION_KIND_SHIFT;
+        let mut flags = BASESCRIPT | kind_flag;
+        match syntax_kind.kind {
+            FunctionKind::NormalFunction => {
+                if !syntax_kind.is_generator && !syntax_kind.is_async {
+                    flags |= CONSTRUCTOR;
+                }
+                if syntax_kind.is_lambda {
+                    flags |= LAMBDA;
+                }
+            }
+            FunctionKind::ClassConstructor => {
+                debug_assert!(!syntax_kind.is_generator);
+                debug_assert!(!syntax_kind.is_async);
+                flags |= CONSTRUCTOR;
+            }
+            _ => {}
+        }
+        Self::new(flags)
     }
 }
 
@@ -139,6 +230,17 @@ pub enum FunctionScript {
     Lazy(LazyFunctionScript),
 }
 
+#[derive(Debug)]
+pub struct SourceExtent {
+    pub source_start: u32,
+    pub source_end: u32,
+    pub to_string_start: u32,
+    pub to_string_end: u32,
+
+    pub lineno: u32,
+    pub column: u32,
+}
+
 /// Maps to JSFunction in m-c/js/src/vm/JSFunction.h, and BaseScript/JSScript
 /// in m-c/js/src/vm/JSScript.h, linked from it.
 #[derive(Debug)]
@@ -146,6 +248,7 @@ pub struct FunctionStencil {
     name: Option<SourceAtomSetIndex>,
     script: FunctionScript,
     flags: FunctionFlags,
+    extent: SourceExtent,
     // FIXME: add more fields
 }
 
@@ -154,11 +257,13 @@ impl FunctionStencil {
         name: Option<SourceAtomSetIndex>,
         script: ScriptStencil,
         flags: FunctionFlags,
+        extent: SourceExtent,
     ) -> Self {
         Self {
             name,
             script: FunctionScript::NonLazy(NonLazyFunctionScript { script }),
             flags,
+            extent,
         }
     }
 
@@ -166,11 +271,13 @@ impl FunctionStencil {
         name: Option<SourceAtomSetIndex>,
         script: ScriptStencilBase,
         flags: FunctionFlags,
+        extent: SourceExtent,
     ) -> Self {
         Self {
             name,
             script: FunctionScript::Lazy(LazyFunctionScript { script }),
             flags,
+            extent,
         }
     }
 
@@ -193,6 +300,48 @@ impl FunctionStencil {
             FunctionScript::NonLazy(nonlazy) => &nonlazy.script,
             FunctionScript::Lazy(_) => panic!("unexpeceted function type"),
         }
+    }
+
+    pub fn lazy_script<'a>(&'a self) -> &'a ScriptStencilBase {
+        match &self.script {
+            FunctionScript::NonLazy(_) => panic!("unexpeceted function type"),
+            FunctionScript::Lazy(lazy) => &lazy.script,
+        }
+    }
+
+    pub fn lazy_script_mut<'a>(&'a mut self) -> &'a mut ScriptStencilBase {
+        match &mut self.script {
+            FunctionScript::NonLazy(_) => panic!("unexpeceted function type"),
+            FunctionScript::Lazy(lazy) => &mut lazy.script,
+        }
+    }
+
+    pub fn set_name(&mut self, name: SourceAtomSetIndex) {
+        self.name = Some(name);
+    }
+
+    pub fn set_has_rest(&mut self) {
+        self.lazy_script_mut().set_has_rest();
+    }
+
+    pub fn set_to_string_starts(&mut self, to_string_start: usize) {
+        self.extent.to_string_start = to_string_start as u32;
+    }
+
+    pub fn set_to_string_end(&mut self, to_string_end: usize) {
+        self.extent.to_string_end = to_string_end as u32;
+    }
+
+    pub fn set_source_end(&mut self, source_end: usize) {
+        self.extent.source_end = source_end as u32;
+    }
+
+    pub fn push_inner_function(&mut self, fun: FunctionStencilIndex) {
+        self.lazy_script_mut().gcthings.push(GCThing::Function(fun));
+    }
+
+    pub fn push_closed_over_bindings(&mut self, name: SourceAtomSetIndex) {
+        self.lazy_script_mut().gcthings.push(GCThing::Atom(name));
     }
 }
 
@@ -229,6 +378,10 @@ impl FunctionStencilList {
         let index = self.items.len();
         self.items.push(fun_data);
         FunctionStencilIndex::new(index)
+    }
+
+    pub fn get_mut<'a>(&'a mut self, index: FunctionStencilIndex) -> &'a mut FunctionStencil {
+        &mut self.items[usize::from(index)]
     }
 }
 

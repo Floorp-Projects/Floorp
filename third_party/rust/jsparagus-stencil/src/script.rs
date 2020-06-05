@@ -10,7 +10,7 @@ use crate::scope_notes::ScopeNote;
 // Do mot modify manually.
 //
 // @@@@ BEGIN TYPES @@@@
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub enum ImmutableScriptFlagsEnum {
     #[allow(dead_code)]
     IsForEval = 1 << 0,
@@ -72,7 +72,7 @@ pub enum ImmutableScriptFlagsEnum {
     IsLikelyConstructorWrapper = 1 << 28,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub enum MutableScriptFlagsEnum {
     #[allow(dead_code)]
     HasRunOnce = 1 << 8,
@@ -122,6 +122,10 @@ impl ImmutableScriptFlags {
         Self { value: 0 }
     }
 
+    pub fn from_raw(bits: u32) -> Self {
+        Self { value: bits }
+    }
+
     pub fn set(&mut self, bit: ImmutableScriptFlagsEnum) {
         self.value |= bit as u32;
     }
@@ -158,6 +162,26 @@ pub struct ScriptStencilBase {
     /// For lazy function script, this is a list of inner functions and
     /// closed over bindings.
     pub gcthings: Vec<GCThing>,
+}
+
+impl ScriptStencilBase {
+    pub fn lazy_function(is_generator: bool, is_async: bool) -> Self {
+        let mut flags = ImmutableScriptFlagsEnum::IsFunction as u32;
+        if is_generator {
+            flags |= ImmutableScriptFlagsEnum::IsGenerator as u32;
+        }
+        if is_async {
+            flags |= ImmutableScriptFlagsEnum::IsAsync as u32;
+        }
+        Self {
+            immutable_flags: ImmutableScriptFlags::from_raw(flags),
+            gcthings: Vec::new(),
+        }
+    }
+
+    pub fn set_has_rest(&mut self) {
+        self.immutable_flags.set(ImmutableScriptFlagsEnum::HasRest);
+    }
 }
 
 /// Data used to instantiate the non-lazy script.

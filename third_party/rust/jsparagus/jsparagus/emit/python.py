@@ -11,8 +11,7 @@ from ..actions import (Accept, Action, CheckNotOnNewLine, FilterFlag, FunCall,
 from ..runtime import ErrorToken, ErrorTokenClass
 from ..ordered import OrderedSet
 from ..lr0 import Term
-from ..aps import StateId
-from ..parse_table import ParseTable
+from ..parse_table import StateId, ParseTable
 
 
 def method_name_to_python(name: str) -> str:

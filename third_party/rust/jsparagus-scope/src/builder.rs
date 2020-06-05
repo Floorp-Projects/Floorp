@@ -40,10 +40,15 @@ use ast::source_location_accessor::SourceLocationAccessor;
 use ast::type_id::NodeTypeIdAccessor;
 use indexmap::set::IndexSet;
 use std::collections::HashSet;
+use stencil::function::{
+    FunctionFlags, FunctionStencil, FunctionStencilIndex, FunctionStencilList, FunctionSyntaxKind,
+    SourceExtent,
+};
 use stencil::scope::{
     BindingName, FunctionScopeData, GlobalScopeData, LexicalScopeData, ScopeData, ScopeDataList,
     ScopeDataMap, ScopeIndex, VarScopeData,
 };
+use stencil::script::ScriptStencilBase;
 
 /// The kind of items inside the result of VarScopedDeclarations.
 ///
@@ -1654,6 +1659,160 @@ impl ScopeBuilderStack {
     }
 }
 
+/// Builds `FunctionStencil` for all functions (both non-lazy and lazy).
+/// `FunctionStencil.script` is set to lazy function, with inner functions and
+/// closed over bindings populated in gcthings list.
+///
+/// TODO: For non-lazy function, gcthings list should be populated in the
+///       emitter pass, not here.
+#[derive(Debug)]
+pub struct FunctionStencilBuilder {
+    /// The map from function node to FunctionStencil.
+    ///
+    /// The map is separated into `function_stencil_indicies` and `functions`,
+    /// because it can be referred to in different ways from multiple places:
+    ///   * map from Function AST node (`function_stencil_indices`)
+    ///   * enclosing script/function, to list inner functions
+    function_stencil_indices: AssociatedData<FunctionStencilIndex>,
+    functions: FunctionStencilList,
+
+    /// The stack of functions that the current context is in.
+    ///
+    /// The last element in this stack represents the current function, where
+    /// the inner function will be stored
+    function_stack: Vec<FunctionStencilIndex>,
+}
+
+impl FunctionStencilBuilder {
+    fn new() -> Self {
+        Self {
+            function_stencil_indices: AssociatedData::new(),
+            functions: FunctionStencilList::new(),
+            function_stack: Vec::new(),
+        }
+    }
+
+    /// Enter a function.
+    ///
+    /// This creates `FunctionStencil` for the function, and adds it to
+    /// enclosing function if exists.
+    fn enter<T>(&mut self, fun: &T, syntax_kind: FunctionSyntaxKind)
+    where
+        T: SourceLocationAccessor + NodeTypeIdAccessor,
+    {
+        let loc = fun.get_loc();
+        let source_start = loc.start as u32;
+
+        // FIXME: Map from offset to line/column.
+        let lineno = 1;
+        let column = 0;
+
+        let extent = SourceExtent {
+            source_start,
+            source_end: 0,
+            to_string_start: source_start,
+            to_string_end: 0,
+            lineno,
+            column,
+        };
+
+        let script =
+            ScriptStencilBase::lazy_function(syntax_kind.is_generator(), syntax_kind.is_async());
+        let flags = FunctionFlags::interpreted(syntax_kind);
+        let function_stencil = FunctionStencil::lazy(None, script, flags, extent);
+        let index = self.functions.push(function_stencil);
+        self.function_stencil_indices.insert(fun, index);
+
+        match self.maybe_current_mut() {
+            Some(enclosing) => {
+                enclosing.push_inner_function(index);
+            }
+            None => {}
+        }
+
+        self.function_stack.push(index);
+    }
+
+    /// Leave a function, setting its source location.
+    fn leave<T>(&mut self, fun: &T)
+    where
+        T: SourceLocationAccessor + NodeTypeIdAccessor,
+    {
+        let loc = fun.get_loc();
+        let source_end = loc.end;
+
+        self.current_mut().set_source_end(source_end);
+        self.current_mut().set_to_string_end(source_end);
+
+        self.function_stack.pop();
+    }
+
+    /// Returns a mutable reference to the innermost function. None otherwise.
+    fn maybe_current_mut<'a>(&'a mut self) -> Option<&'a mut FunctionStencil> {
+        let maybe_index = self.function_stack.last();
+        if maybe_index.is_none() {
+            return None;
+        }
+
+        let index = *maybe_index.unwrap();
+        Some(self.functions.get_mut(index))
+    }
+
+    /// Returns a mutable reference to the current function.
+    /// Panics if no current function is found.
+    fn current_mut<'a>(&'a mut self) -> &'a mut FunctionStencil {
+        self.maybe_current_mut().expect("should be inside function")
+    }
+
+    /// Sets the name of the current function.
+    fn set_function_name(&mut self, name: SourceAtomSetIndex) {
+        self.current_mut().set_name(name);
+    }
+
+    /// Sets the position of the function parameters.
+    /// `params` should point to the `(` of the function parameters.
+    /// If it's an arrow function without parenthesis, `params` should point
+    /// the parameter binding.
+    fn on_function_parameters<T>(&mut self, params: &T)
+    where
+        T: SourceLocationAccessor + NodeTypeIdAccessor,
+    {
+        let loc = params.get_loc();
+        let params_start = loc.start;
+        self.current_mut().set_to_string_starts(params_start);
+    }
+
+    /// Flags that the current function has rest parameter.
+    fn on_rest_parameter(&mut self) {
+        self.current_mut().set_has_rest();
+    }
+
+    /// Add all closed over bindings of the current function,
+    /// that is calculated by `parameter_scope_builder`.
+    fn add_closed_over_bindings(
+        &mut self,
+        parameter_scope_builder: &FunctionParametersScopeBuilder,
+    ) {
+        let closed_over_freevars: HashSet<SourceAtomSetIndex> = parameter_scope_builder
+            .name_tracker
+            .closed_over_freevars()
+            .cloned()
+            .collect();
+        let used_freevars: HashSet<SourceAtomSetIndex> = parameter_scope_builder
+            .name_tracker
+            .used_freevars()
+            .cloned()
+            .collect();
+        let all_freevars = closed_over_freevars.union(&used_freevars);
+
+        let current = self.current_mut();
+
+        for name in all_freevars {
+            current.push_closed_over_bindings(*name);
+        }
+    }
+}
+
 /// Receives method calls telling about a JS script and builds a
 /// `ScopeDataMap`.
 ///
@@ -1673,6 +1832,8 @@ pub struct ScopeDataMapBuilder {
 
     /// The map from non-global AST node to scope information.
     non_global: AssociatedData<ScopeIndex>,
+
+    function_stencil_builder: FunctionStencilBuilder,
 }
 
 impl ScopeDataMapBuilder {
@@ -1683,6 +1844,7 @@ impl ScopeDataMapBuilder {
             scopes: ScopeDataList::new(),
             global: None,
             non_global: AssociatedData::new(),
+            function_stencil_builder: FunctionStencilBuilder::new(),
         }
     }
 
@@ -1830,7 +1992,10 @@ impl ScopeDataMapBuilder {
             ScopeKind::Var => self.builder_stack.innermost_var().declare_var(name),
             ScopeKind::Let => self.builder_stack.innermost_lexical().declare_let(name),
             ScopeKind::Const => self.builder_stack.innermost_lexical().declare_const(name),
-            ScopeKind::FunctionName => self.builder_stack.innermost().set_function_name(name),
+            ScopeKind::FunctionName => {
+                self.builder_stack.innermost().set_function_name(name);
+                self.function_stencil_builder.set_function_name(name);
+            }
             ScopeKind::FormalParameter => self.builder_stack.innermost().declare_param(name),
             _ => panic!("Not implemeneted"),
         }
@@ -1843,8 +2008,13 @@ impl ScopeDataMapBuilder {
             .note_use(name);
     }
 
-    pub fn before_function_declaration<T>(&mut self, name: SourceAtomSetIndex, fun: &T)
-    where
+    pub fn before_function_declaration<T>(
+        &mut self,
+        name: SourceAtomSetIndex,
+        fun: &T,
+        is_generator: bool,
+        is_async: bool,
+    ) where
         T: SourceLocationAccessor + NodeTypeIdAccessor,
     {
         match self.builder_stack.innermost_lexical() {
@@ -1853,9 +2023,25 @@ impl ScopeDataMapBuilder {
             ScopeBuilder::FunctionBody(ref mut builder) => builder.declare_function(name, fun),
             _ => panic!("unexpected lexical for FunctionDeclaration"),
         }
+
+        self.scope_kind_stack.push(ScopeKind::FunctionName);
+
+        self.function_stencil_builder.enter(
+            fun,
+            FunctionSyntaxKind::function_declaration(is_generator, is_async),
+        );
     }
 
-    pub fn before_function_expression<T>(&mut self, fun: &T)
+    pub fn after_function_declaration<T>(&mut self, fun: &T)
+    where
+        T: SourceLocationAccessor + NodeTypeIdAccessor,
+    {
+        self.function_stencil_builder.leave(fun);
+
+        self.scope_kind_stack.pop(ScopeKind::FunctionName);
+    }
+
+    pub fn before_function_expression<T>(&mut self, fun: &T, is_generator: bool, is_async: bool)
     where
         T: SourceLocationAccessor + NodeTypeIdAccessor,
     {
@@ -1866,9 +2052,19 @@ impl ScopeDataMapBuilder {
         self.builder_stack.push_function_expression(builder);
 
         self.scope_kind_stack.push(ScopeKind::FunctionName);
+
+        self.function_stencil_builder.enter(
+            fun,
+            FunctionSyntaxKind::function_expression(is_generator, is_async),
+        );
     }
 
-    pub fn after_function_expression(&mut self) {
+    pub fn after_function_expression<T>(&mut self, fun: &T)
+    where
+        T: SourceLocationAccessor + NodeTypeIdAccessor,
+    {
+        self.function_stencil_builder.leave(fun);
+
         self.scope_kind_stack.pop(ScopeKind::FunctionName);
 
         let builder = self.builder_stack.pop_function_expression();
@@ -1878,10 +2074,92 @@ impl ScopeDataMapBuilder {
             .populate(builder.scope_index, builder.into_scope_data(enclosing));
     }
 
+    pub fn before_method<T>(&mut self, fun: &T, is_generator: bool, is_async: bool)
+    where
+        T: SourceLocationAccessor + NodeTypeIdAccessor,
+    {
+        self.function_stencil_builder
+            .enter(fun, FunctionSyntaxKind::method(is_generator, is_async));
+    }
+
+    pub fn after_method<T>(&mut self, fun: &T)
+    where
+        T: SourceLocationAccessor + NodeTypeIdAccessor,
+    {
+        self.function_stencil_builder.leave(fun);
+    }
+
+    pub fn before_getter<T>(&mut self, fun: &T)
+    where
+        T: SourceLocationAccessor + NodeTypeIdAccessor,
+    {
+        self.function_stencil_builder
+            .enter(fun, FunctionSyntaxKind::getter());
+    }
+
+    pub fn on_getter_parameter<T>(&mut self, param: &T)
+    where
+        T: SourceLocationAccessor + NodeTypeIdAccessor,
+    {
+        self.before_function_parameters(param);
+        self.after_function_parameters();
+    }
+
+    pub fn after_getter<T>(&mut self, fun: &T)
+    where
+        T: SourceLocationAccessor + NodeTypeIdAccessor,
+    {
+        self.function_stencil_builder.leave(fun);
+    }
+
+    pub fn before_setter<T>(&mut self, fun: &T)
+    where
+        T: SourceLocationAccessor + NodeTypeIdAccessor,
+    {
+        self.function_stencil_builder
+            .enter(fun, FunctionSyntaxKind::setter());
+    }
+
+    pub fn before_setter_parameter<T>(&mut self, param: &T)
+    where
+        T: SourceLocationAccessor + NodeTypeIdAccessor,
+    {
+        self.before_function_parameters(param);
+        self.before_parameter();
+    }
+
+    pub fn after_setter_parameter(&mut self) {
+        self.after_function_parameters();
+    }
+
+    pub fn after_setter<T>(&mut self, fun: &T)
+    where
+        T: SourceLocationAccessor + NodeTypeIdAccessor,
+    {
+        self.function_stencil_builder.leave(fun);
+    }
+
+    pub fn before_arrow_function<T>(&mut self, is_async: bool, params: &T)
+    where
+        T: SourceLocationAccessor + NodeTypeIdAccessor,
+    {
+        self.function_stencil_builder
+            .enter(params, FunctionSyntaxKind::arrow(is_async));
+    }
+
+    pub fn after_arrow_function<T>(&mut self, body: &T)
+    where
+        T: SourceLocationAccessor + NodeTypeIdAccessor,
+    {
+        self.function_stencil_builder.leave(body);
+    }
+
     pub fn before_function_parameters<T>(&mut self, params: &T)
     where
         T: SourceLocationAccessor + NodeTypeIdAccessor,
     {
+        self.function_stencil_builder.on_function_parameters(params);
+
         let index = self.scopes.allocate();
 
         let builder = FunctionParametersScopeBuilder::new(index);
@@ -1928,6 +2206,8 @@ impl ScopeDataMapBuilder {
     }
 
     pub fn before_rest_parameter(&mut self) {
+        self.function_stencil_builder.on_rest_parameter();
+
         let builder = self.builder_stack.get_function_parameters();
         builder.before_rest_parameter();
     }
@@ -1950,6 +2230,9 @@ impl ScopeDataMapBuilder {
         let body_scope_builder = self.builder_stack.pop_function_body();
         let parameter_scope_builder = self.builder_stack.pop_function_parameters();
         let enclosing = self.builder_stack.current_scope_index();
+
+        self.function_stencil_builder
+            .add_closed_over_bindings(&parameter_scope_builder);
 
         let function_scope_index = parameter_scope_builder.scope_index;
         let var_scope_index = body_scope_builder.var_scope_index;
@@ -1976,12 +2259,22 @@ impl ScopeDataMapBuilder {
     }
 }
 
-impl From<ScopeDataMapBuilder> for ScopeDataMap {
-    fn from(builder: ScopeDataMapBuilder) -> ScopeDataMap {
-        ScopeDataMap::new(
-            builder.scopes,
-            builder.global.expect("There should be global scope data"),
-            builder.non_global,
-        )
+pub struct ScopeDataMapAndFunctionStencilList {
+    pub scope_data_map: ScopeDataMap,
+    pub function_stencil_indices: AssociatedData<FunctionStencilIndex>,
+    pub functions: FunctionStencilList,
+}
+
+impl From<ScopeDataMapBuilder> for ScopeDataMapAndFunctionStencilList {
+    fn from(builder: ScopeDataMapBuilder) -> ScopeDataMapAndFunctionStencilList {
+        ScopeDataMapAndFunctionStencilList {
+            scope_data_map: ScopeDataMap::new(
+                builder.scopes,
+                builder.global.expect("There should be global scope data"),
+                builder.non_global,
+            ),
+            function_stencil_indices: builder.function_stencil_builder.function_stencil_indices,
+            functions: builder.function_stencil_builder.functions,
+        }
     }
 }
