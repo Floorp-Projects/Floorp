@@ -16,6 +16,7 @@ import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.contrib.RecyclerViewActions
+import androidx.test.espresso.matcher.RootMatchers
 import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.Visibility
 import androidx.test.espresso.matcher.ViewMatchers.hasDescendant
@@ -186,12 +187,12 @@ class ThreeDotMenuMainRobot {
             return BrowserRobot.Transition()
         }
 
-        fun closeAllTabs(interact: HomeScreenRobot.() -> Unit): HomeScreenRobot.Transition {
-            mDevice.waitNotNull(Until.findObject(By.text("Close all tabs")), waitingTime)
+        fun closeAllTabs(interact: TabDrawerRobot.() -> Unit): TabDrawerRobot.Transition {
+//            mDevice.waitNotNull(Until.findObject(By.text("Close all tabs")), waitingTime)
             closeAllTabsButton().click()
 
-            HomeScreenRobot().interact()
-            return HomeScreenRobot.Transition()
+            TabDrawerRobot().interact()
+            return TabDrawerRobot.Transition()
         }
 
         fun openFindInPage(interact: FindInPageRobot.() -> Unit): FindInPageRobot.Transition {
@@ -313,11 +314,11 @@ private fun refreshButton() = onView(ViewMatchers.withContentDescription("Refres
 private fun assertRefreshButton() = refreshButton()
     .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
-private fun closeAllTabsButton() = onView(allOf(withText("Close all tabs")))
+private fun closeAllTabsButton() = onView(allOf(withText("Close all tabs"))).inRoot(RootMatchers.isPlatformPopup())
 private fun assertCloseAllTabsButton() = closeAllTabsButton()
     .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
-private fun shareTabButton() = onView(allOf(withText("Share tabs")))
+private fun shareTabButton() = onView(allOf(withText("Share all tabs"))).inRoot(RootMatchers.isPlatformPopup())
 private fun assertShareTabButton() = shareTabButton()
     .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
@@ -332,7 +333,7 @@ private fun browserViewSaveCollectionButton() = onView(
     )
 )
 
-private fun saveCollectionButton() = onView(allOf(withText("Save to collection")))
+private fun saveCollectionButton() = onView(allOf(withText("Save to collection"))).inRoot(RootMatchers.isPlatformPopup())
 private fun assertSaveCollectionButton() = saveCollectionButton()
     .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 

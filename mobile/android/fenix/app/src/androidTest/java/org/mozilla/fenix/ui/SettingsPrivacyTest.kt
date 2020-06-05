@@ -191,6 +191,7 @@ class SettingsPrivacyTest {
             verifySaveLoginPromptIsShown()
             // Click save to save the login
             saveLoginFromPrompt("Save")
+        }.openTabDrawer {
         }.openHomeScreen {
         }.openThreeDotMenu {
         }.openSettings {
@@ -215,6 +216,7 @@ class SettingsPrivacyTest {
             verifySaveLoginPromptIsShown()
             // Don't save the login
             saveLoginFromPrompt("Don’t save")
+        }.openTabDrawer {
         }.openHomeScreen {
         }.openThreeDotMenu {
         }.openSettings {
@@ -264,17 +266,17 @@ class SettingsPrivacyTest {
         openAppFromExternalLink(defaultWebPage.url.toString())
 
         browserScreen {
-        }.openHomeScreen {
-            verifyPrivateSessionHeader()
-        }
+        }.openTabDrawer {
+            verifyPrivateModeSelected()
+        }.openHomeScreen { }
 
         setOpenLinksInPrivateOff()
 
         openAppFromExternalLink(defaultWebPage.url.toString())
 
         browserScreen {
-        }.openHomeScreen {
-            verifyOpenTabsHeader()
+        }.openTabDrawer {
+            verifyNormalModeSelected()
         }
     }
 
@@ -293,8 +295,8 @@ class SettingsPrivacyTest {
             clickAddShortcutButton()
             clickAddAutomaticallyButton()
         }.openHomeScreenShortcut(pageShortcutName) {
-        }.openHomeScreen {
-            verifyPrivateSessionHeader()
+        }.openTabDrawer {
+            verifyPrivateModeSelected()
         }
     }
 
@@ -312,7 +314,8 @@ class SettingsPrivacyTest {
             clickAddShortcutButton()
             clickAddAutomaticallyButton()
         }.openHomeScreenShortcut(pageShortcutName) {
-        }.openHomeScreen {}
+        }.openTabDrawer {
+        }.openHomeScreen { }
 
         setOpenLinksInPrivateOff()
         restartApp(activityTestRule)
@@ -320,14 +323,14 @@ class SettingsPrivacyTest {
 
         addToHomeScreen {
         }.searchAndOpenHomeScreenShortcut(pageShortcutName) {
+        }.openTabDrawer {
+            verifyNormalModeSelected()
         }.openHomeScreen {
-            verifyOpenTabsHeader()
         }.openThreeDotMenu {
         }.openSettings {
         }.openPrivateBrowsingSubMenu {
             verifyOpenLinksInPrivateTabOff()
         }
-
     }
 
     @Test
@@ -341,8 +344,8 @@ class SettingsPrivacyTest {
         }.openPrivateBrowsingShortcut {
             verifySearchView()
         }.openBrowser {
-        }.openHomeScreen {
-            verifyPrivateSessionHeader()
+        }.openTabDrawer {
+            verifyPrivateModeSelected()
         }
     }
 

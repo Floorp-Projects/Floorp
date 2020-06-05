@@ -72,7 +72,7 @@ class MediaNotificationTest {
 
         browserScreen {
             verifyMediaIsPaused()
-        }.openHomeScreen {
+        }.openTabDrawer {
             closeTab()
         }
 
@@ -105,7 +105,7 @@ class MediaNotificationTest {
 
         browserScreen {
             verifyMediaIsPaused()
-        }.openHomeScreen {
+        }.openTabDrawer {
             closeTab()
         }
 
@@ -129,7 +129,7 @@ class MediaNotificationTest {
             clickMediaPlayerPlayButton()
             waitForPlaybackToStart()
             verifyPageContent("Media file is playing")
-        }.openHomeScreen {
+        }.openTabDrawer {
             verifyTabMediaControlButtonState("Pause")
             clickTabMediaControlButton()
             verifyTabMediaControlButtonState("Play")
@@ -160,9 +160,9 @@ class MediaNotificationTest {
 
         browserScreen {
             verifyMediaIsPaused()
-        }.openHomeScreen {
+        }.openTabDrawer {
             closeTab()
-        }
+        }.openHomeScreen { }
 
         mDevice.openNotification()
 

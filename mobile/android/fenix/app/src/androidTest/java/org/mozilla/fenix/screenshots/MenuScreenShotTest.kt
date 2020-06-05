@@ -178,8 +178,8 @@ class MenuScreenShotTest : ScreenshotTest() {
         }.openThreeDotMenu {
             Screengrab.screenshot("browser-tab-menu")
         }.closeBrowserMenuToBrowser {
-        }.openHomeScreen {
-            Screengrab.screenshot("homescree-with-tabs")
+        }.openTabDrawer {
+            Screengrab.screenshot("tab-drawer-with-tabs")
             closeTab()
             Screengrab.screenshot("remove-tab")
         }

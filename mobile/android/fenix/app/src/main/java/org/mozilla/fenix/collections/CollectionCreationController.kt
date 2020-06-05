@@ -10,13 +10,13 @@ import androidx.annotation.VisibleForTesting
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.feature.tab.collections.TabCollection
 import org.mozilla.fenix.components.Analytics
 import org.mozilla.fenix.components.TabCollectionStorage
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.home.Tab
-import org.mozilla.fenix.home.toSessionBundle
 
 interface CollectionCreationController {
 
@@ -56,6 +56,10 @@ interface CollectionCreationController {
     fun addTabToSelection(tab: Tab)
 
     fun removeTabFromSelection(tab: Tab)
+}
+
+fun List<Tab>.toSessionBundle(sessionManager: SessionManager): List<Session> {
+    return this.mapNotNull { sessionManager.findSessionById(it.sessionId) }
 }
 
 class DefaultCollectionCreationController(

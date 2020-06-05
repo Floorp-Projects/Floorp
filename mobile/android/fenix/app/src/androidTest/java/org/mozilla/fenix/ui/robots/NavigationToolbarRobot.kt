@@ -16,7 +16,6 @@ import androidx.test.espresso.action.ViewActions.typeText
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.hasDescendant
-import androidx.test.espresso.matcher.ViewMatchers.withContentDescription
 import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
@@ -100,8 +99,9 @@ class NavigationToolbarRobot {
             interact: BrowserRobot.() -> Unit
         ): BrowserRobot.Transition {
             sessionLoadedIdlingResource = SessionLoadedIdlingResource()
-            mDevice.waitNotNull(Until.findObject(By.descContains("Add tab")), waitingTime)
-            newTab().click()
+            mDevice.waitNotNull(Until.findObject(By.res("org.mozilla.fenix.debug:id/toolbar")), waitingTime)
+
+            urlBar().click()
             awesomeBar().perform(replaceText(url.toString()), pressImeActionButton())
 
             runWithIdleRes(sessionLoadedIdlingResource) {
@@ -181,7 +181,6 @@ private fun dismissOnboardingButton() = onView(withId(R.id.close_onboarding))
 private fun urlBar() = onView(withId(R.id.toolbar))
 private fun awesomeBar() = onView(withId(R.id.mozac_browser_toolbar_edit_url_view))
 private fun threeDotButton() = onView(withId(R.id.mozac_browser_toolbar_menu))
-private fun newTab() = onView(withContentDescription("Add tab"))
 private fun fillLinkButton() = onView(withId(R.id.fill_link_from_clipboard))
 private fun clearAddressBar() = onView(withId(R.id.mozac_browser_toolbar_clear_view))
 private fun goBackButton() = mDevice.pressBack()

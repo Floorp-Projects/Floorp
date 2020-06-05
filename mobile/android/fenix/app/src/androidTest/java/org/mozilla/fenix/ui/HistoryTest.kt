@@ -47,6 +47,7 @@ class HistoryTest {
         // Clearing all history data after each test to avoid overlapping data
         val applicationContext: Context = activityTestRule.activity.applicationContext
         val historyStorage = PlacesHistoryStorage(applicationContext)
+
         runBlocking {
             historyStorage.deleteEverything()
         }
@@ -124,8 +125,8 @@ class HistoryTest {
         }.openThreeDotMenu {
         }.clickOpenInNormalTab {
             verifyPageContent(firstWebPage.content)
-        }.openHomeScreen {
-            verifyOpenTabsHeader()
+        }.openTabDrawer {
+            verifyNormalModeSelected()
         }
     }
 
@@ -141,8 +142,8 @@ class HistoryTest {
         }.openThreeDotMenu {
         }.clickOpenInPrivateTab {
             verifyPageContent(firstWebPage.content)
-        }.openHomeScreen {
-            verifyPrivateSessionHeader()
+        }.openTabDrawer {
+            verifyPrivateModeSelected()
         }
     }
 
@@ -206,18 +207,18 @@ class HistoryTest {
         navigationToolbar {
         }.enterURLAndEnterToBrowser(firstWebPage.url) {
             verifyPageContent("Page content: 1")
-        }.openHomeScreen {
+        }.openTabDrawer {
             closeTab()
-        }.openThreeDotMenu {
+        }.openHomeScreen { }.openThreeDotMenu {
         }.openHistory {
             longTapSelectItem(firstWebPage.url)
             openActionBarOverflowOrOptionsMenu(activityTestRule.activity)
         }
 
         multipleSelectionToolbar {
-        }.clickOpenNewTab {
+        }.clickOpenNewTab { }.openTabDrawer {
             verifyExistingTabList()
-            verifyOpenTabsHeader()
+            verifyNormalModeSelected()
         }
     }
 
@@ -235,9 +236,9 @@ class HistoryTest {
         }
 
         multipleSelectionToolbar {
-        }.clickOpenPrivateTab {
+        }.clickOpenPrivateTab { }.openTabDrawer {
+            verifyPrivateModeSelected()
             verifyExistingTabList()
-            verifyPrivateSessionHeader()
         }
     }
 
@@ -249,7 +250,7 @@ class HistoryTest {
         navigationToolbar {
         }.enterURLAndEnterToBrowser(firstWebPage.url) {
             verifyPageContent("Page content: 1")
-        }.openHomeScreen {}
+        }.openTabDrawer { }.openHomeScreen { }
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(secondWebPage.url) {

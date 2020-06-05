@@ -27,15 +27,11 @@ import androidx.constraintlayout.widget.ConstraintSet.TOP
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.content.ContextCompat
 import androidx.core.view.doOnLayout
-import androidx.core.view.isVisible
 import androidx.core.view.updateLayoutParams
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.Observer
-import androidx.lifecycle.OnLifecycleEvent
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
@@ -46,34 +42,27 @@ import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.fragment_home.*
 import kotlinx.android.synthetic.main.fragment_home.view.*
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.browser.menu.view.MenuButton
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
-import mozilla.components.browser.state.state.MediaState.State.PLAYING
-import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.browser.state.selector.normalTabs
+import mozilla.components.browser.state.selector.privateTabs
 import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.AuthType
 import mozilla.components.concept.sync.OAuthAccount
-import mozilla.components.feature.media.ext.pauseIfPlaying
 import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.top.sites.TopSite
 import mozilla.components.lib.state.ext.consumeFrom
-import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.ktx.android.util.dpToPx
-import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
-import org.mozilla.fenix.addons.runIfFragmentIsAttached
 import org.mozilla.fenix.browser.BrowserAnimator.Companion.getToolbarNavOptions
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.cfr.SearchWidgetCFR
@@ -92,9 +81,7 @@ import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.sessionsOfType
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.toTab
-import org.mozilla.fenix.home.sessioncontrol.AdapterItem
 import org.mozilla.fenix.home.sessioncontrol.DefaultSessionControlController
-import org.mozilla.fenix.home.sessioncontrol.SessionControlAdapter
 import org.mozilla.fenix.home.sessioncontrol.SessionControlInteractor
 import org.mozilla.fenix.home.sessioncontrol.SessionControlView
 import org.mozilla.fenix.home.sessioncontrol.viewholders.CollectionViewHolder
@@ -106,7 +93,6 @@ import org.mozilla.fenix.settings.deletebrowsingdata.deleteAndQuit
 import org.mozilla.fenix.tabtray.TabTrayDialogFragment
 import org.mozilla.fenix.theme.ThemeManager
 import org.mozilla.fenix.utils.FragmentPreDrawManager
-import org.mozilla.fenix.utils.allowUndo
 import org.mozilla.fenix.whatsnew.WhatsNew
 import java.lang.ref.WeakReference
 import kotlin.math.abs
@@ -117,8 +103,6 @@ class HomeFragment : Fragment() {
     private val homeViewModel: HomeScreenViewModel by viewModels {
         ViewModelProvider.AndroidViewModelFactory(requireActivity().application)
     }
-
-    private val sharedViewModel: SharedViewModel by activityViewModels()
 
     private val snackbarAnchorView: View?
         get() {
@@ -131,11 +115,6 @@ class HomeFragment : Fragment() {
 
     private val browsingModeManager get() = (activity as HomeActivity).browsingModeManager
     private var homeAppBarOffset = 0
-    private val singleSessionObserver = object : Session.Observer {
-        override fun onTitleChanged(session: Session, title: String) {
-            if (deleteAllSessionsJob == null) emitSessionChanges()
-        }
-    }
 
     private val collectionStorageObserver = object : TabCollectionStorage.Observer {
         override fun onCollectionCreated(title: String, sessions: List<Session>) {
@@ -153,11 +132,6 @@ class HomeFragment : Fragment() {
 
     private val sessionManager: SessionManager
         get() = requireComponents.core.sessionManager
-
-    var deleteAllSessionsJob: (suspend () -> Unit)? = null
-    private var pendingSessionDeletion: PendingSessionDeletion? = null
-
-    data class PendingSessionDeletion(val deletionJob: (suspend () -> Unit), val sessionId: String)
 
     private lateinit var homeAppBarOffSetListener: AppBarLayout.OnOffsetChangedListener
     private val onboarding by lazy { FenixOnboarding(requireContext()) }
@@ -185,16 +159,6 @@ class HomeFragment : Fragment() {
         val view = inflater.inflate(R.layout.fragment_home, container, false)
         val activity = activity as HomeActivity
 
-        val sessionObserver = BrowserSessionsObserver(
-            sessionManager,
-            requireComponents.core.store,
-            singleSessionObserver
-        ) {
-            emitSessionChanges()
-        }
-
-        viewLifecycleOwner.lifecycle.addObserver(sessionObserver)
-
         currentMode = CurrentMode(
             view.context,
             onboarding,
@@ -208,7 +172,6 @@ class HomeFragment : Fragment() {
                     collections = requireComponents.core.tabCollectionStorage.cachedTabCollections,
                     expandedCollections = emptySet(),
                     mode = currentMode.getCurrentMode(),
-                    tabs = emptyList(),
                     topSites = requireComponents.core.topSiteStorage.cachedTopSites,
                     tip = FenixTipManager(listOf(MigrationTipProvider(requireContext()))).getTip()
                 )
@@ -217,22 +180,15 @@ class HomeFragment : Fragment() {
 
         _sessionControlInteractor = SessionControlInteractor(
             DefaultSessionControlController(
-                store = requireComponents.core.store,
                 activity = activity,
                 fragmentStore = homeFragmentStore,
                 navController = findNavController(),
-                browsingModeManager = browsingModeManager,
                 viewLifecycleScope = viewLifecycleOwner.lifecycleScope,
-                closeTab = ::closeTab,
-                closeAllTabs = ::closeAllTabs,
                 getListOfTabs = ::getListOfTabs,
                 hideOnboarding = ::hideOnboardingAndOpenSearch,
-                invokePendingDeleteJobs = ::invokePendingDeleteJobs,
                 registerCollectionStorageObserver = ::registerCollectionStorageObserver,
-                scrollToTheTop = ::scrollToTheTop,
                 showDeleteCollectionPrompt = ::showDeleteCollectionPrompt,
                 openSettingsScreen = ::openSettingsScreen,
-                openSearchScreen = ::navigateToSearch,
                 openWhatsNewLink = { openInNormalTab(SupportUtils.getWhatsNewUrl(activity)) },
                 openPrivacyNotice = { openInNormalTab(SupportUtils.getMozillaPageUrl(PRIVATE_NOTICE)) },
                 showTabTray = ::openTabTray
@@ -249,10 +205,16 @@ class HomeFragment : Fragment() {
 
         view.consumeFrom(homeFragmentStore, viewLifecycleOwner) {
             sessionControlView?.update(it)
+        }
 
-            if (context?.settings()?.useNewTabTray == true) {
-                view.tab_button.setCountWithAnimation(it.tabs.size)
+        view.consumeFrom(requireComponents.core.store, viewLifecycleOwner) {
+            val tabCount = if (currentMode.getCurrentMode() == Mode.Normal) {
+                it.normalTabs.size
+            } else {
+                it.privateTabs.size
             }
+
+            view.tab_button.setCountWithAnimation(tabCount)
         }
 
         return view
@@ -263,9 +225,9 @@ class HomeFragment : Fragment() {
 
         if (!shouldUseBottomToolbar) {
             view.toolbarLayout.layoutParams = CoordinatorLayout.LayoutParams(
-                    ConstraintLayout.LayoutParams.MATCH_PARENT,
-                    ConstraintLayout.LayoutParams.WRAP_CONTENT
-                )
+                ConstraintLayout.LayoutParams.MATCH_PARENT,
+                ConstraintLayout.LayoutParams.WRAP_CONTENT
+            )
                 .apply {
                     gravity = Gravity.TOP
                 }
@@ -339,24 +301,19 @@ class HomeFragment : Fragment() {
 
         createHomeMenu(requireContext(), WeakReference(view.menuButton))
 
-        view.menuButton.setColorFilter(ContextCompat.getColor(
-            requireContext(),
-            ThemeManager.resolveAttribute(R.attr.primaryText, requireContext())
-        ))
+        view.menuButton.setColorFilter(
+            ContextCompat.getColor(
+                requireContext(),
+                ThemeManager.resolveAttribute(R.attr.primaryText, requireContext())
+            )
+        )
 
         view.toolbar.compoundDrawablePadding =
             view.resources.getDimensionPixelSize(R.dimen.search_bar_search_engine_icon_padding)
         view.toolbar_wrapper.setOnClickListener {
-            invokePendingDeleteJobs()
             hideOnboardingIfNeeded()
             navigateToSearch()
             requireComponents.analytics.metrics.track(Event.SearchBarTapped(Event.SearchBarTapped.Source.HOME))
-        }
-
-        view.add_tab_button.setOnClickListener {
-            invokePendingDeleteJobs()
-            hideOnboardingIfNeeded()
-            navigateToSearch()
         }
 
         view.tab_button.setOnClickListener {
@@ -367,8 +324,6 @@ class HomeFragment : Fragment() {
             privateBrowsingButton,
             browsingModeManager
         ) { newMode ->
-            invokePendingDeleteJobs()
-
             if (newMode == BrowsingMode.Private) {
                 requireContext().settings().incrementNumTimesPrivateModeOpened()
             }
@@ -408,7 +363,6 @@ class HomeFragment : Fragment() {
             HomeFragmentAction.Change(
                 collections = components.core.tabCollectionStorage.cachedTabCollections,
                 mode = currentMode.getCurrentMode(),
-                tabs = getListOfSessions().toTabs(),
                 topSites = components.core.topSiteStorage.cachedTopSites,
                 tip = FenixTipManager(listOf(MigrationTipProvider(requireContext()))).getTip()
             )
@@ -428,7 +382,8 @@ class HomeFragment : Fragment() {
                 override fun onAuthenticated(account: OAuthAccount, authType: AuthType) {
                     if (authType != AuthType.Existing) {
                         view?.let {
-                            FenixSnackbar.make(view = it,
+                            FenixSnackbar.make(
+                                view = it,
                                 duration = Snackbar.LENGTH_SHORT,
                                 isDisplayedWithBrowserToolbar = false
                             )
@@ -451,76 +406,9 @@ class HomeFragment : Fragment() {
         requireComponents.core.tabCollectionStorage.unregister(collectionStorageObserver)
     }
 
-    private fun closeTab(sessionId: String) {
-        val deletionJob = pendingSessionDeletion?.deletionJob
-        context?.let {
-            if (sessionManager.findSessionById(sessionId)?.toTab(it)?.mediaState == PLAYING) {
-                it.components.core.store.state.media.pauseIfPlaying()
-            }
-        }
-
-        if (deletionJob == null) {
-            removeTabWithUndo(sessionId, browsingModeManager.mode.isPrivate)
-        } else {
-            viewLifecycleOwner.lifecycleScope.launch {
-                deletionJob.invoke()
-            }.invokeOnCompletion {
-                pendingSessionDeletion = null
-                removeTabWithUndo(sessionId, browsingModeManager.mode.isPrivate)
-            }
-        }
-    }
-
-    private fun closeAllTabs(isPrivateMode: Boolean) {
-        val deletionJob = pendingSessionDeletion?.deletionJob
-
-        context?.let {
-            sessionManager.sessionsOfType(private = isPrivateMode).forEach { session ->
-                if (session.toTab(it).mediaState == PLAYING) {
-                    it.components.core.store.state.media.pauseIfPlaying()
-                }
-            }
-        }
-
-        if (deletionJob == null) {
-            removeAllTabsWithUndo(
-                sessionManager.sessionsOfType(private = isPrivateMode),
-                isPrivateMode
-            )
-        } else {
-            viewLifecycleOwner.lifecycleScope.launch {
-                deletionJob.invoke()
-            }.invokeOnCompletion {
-                pendingSessionDeletion = null
-                removeAllTabsWithUndo(
-                    sessionManager.sessionsOfType(private = isPrivateMode),
-                    isPrivateMode
-                )
-            }
-        }
-    }
-
     private fun dispatchModeChanges(mode: Mode) {
         if (mode != Mode.fromBrowsingMode(browsingModeManager.mode)) {
             homeFragmentStore.dispatch(HomeFragmentAction.ModeChange(mode))
-        }
-    }
-
-    private fun invokePendingDeleteJobs() {
-        pendingSessionDeletion?.deletionJob?.let {
-            viewLifecycleOwner.lifecycleScope.launch {
-                it.invoke()
-            }.invokeOnCompletion {
-                pendingSessionDeletion = null
-            }
-        }
-
-        deleteAllSessionsJob?.let {
-            viewLifecycleOwner.lifecycleScope.launch {
-                it.invoke()
-            }.invokeOnCompletion {
-                deleteAllSessionsJob = null
-            }
         }
     }
 
@@ -546,7 +434,6 @@ class HomeFragment : Fragment() {
     }
 
     override fun onStop() {
-        invokePendingDeleteJobs()
         super.onStop()
         val homeViewModel: HomeScreenViewModel by activityViewModels {
             ViewModelProvider.NewInstanceFactory() // this is a workaround for #4652
@@ -561,17 +448,6 @@ class HomeFragment : Fragment() {
             activity?.window?.setBackgroundDrawableResource(R.drawable.private_home_background_gradient)
         }
         hideToolbar()
-        if (sharedViewModel.shouldScrollToSelectedTab) {
-            scrollToSelectedTab()
-            sharedViewModel.shouldScrollToSelectedTab = false
-        }
-
-        requireContext().settings().useNewTabTray.also {
-            view?.add_tab_button?.isVisible = !it
-            view?.tab_button?.isVisible = it
-            // Scrolls to the top of the screen
-            view?.homeAppBar?.setExpanded(true, false)
-        }
     }
 
     override fun onPause() {
@@ -631,8 +507,7 @@ class HomeFragment : Fragment() {
             onboarding.finish()
             homeFragmentStore.dispatch(
                 HomeFragmentAction.ModeChange(
-                    mode = currentMode.getCurrentMode(),
-                    tabs = getListOfSessions().toTabs()
+                    mode = currentMode.getCurrentMode()
                 )
             )
         }
@@ -665,96 +540,91 @@ class HomeFragment : Fragment() {
     }
 
     @SuppressWarnings("ComplexMethod", "LongMethod")
-    private fun createHomeMenu(context: Context, menuButtonView: WeakReference<MenuButton>) = HomeMenu(
-        this.viewLifecycleOwner,
-        context,
-        onItemTapped = {
-            when (it) {
-                HomeMenu.Item.Settings -> {
-                    invokePendingDeleteJobs()
-                    hideOnboardingIfNeeded()
-                    nav(
-                        R.id.homeFragment,
-                        HomeFragmentDirections.actionGlobalSettingsFragment()
-                    )
-                }
-                HomeMenu.Item.SyncedTabs -> {
-                    invokePendingDeleteJobs()
-                    hideOnboardingIfNeeded()
-                    nav(
-                        R.id.homeFragment,
-                        HomeFragmentDirections.actionGlobalSyncedTabsFragment()
-                    )
-                }
-                HomeMenu.Item.Bookmarks -> {
-                    invokePendingDeleteJobs()
-                    hideOnboardingIfNeeded()
-                    nav(
-                        R.id.homeFragment,
-                        HomeFragmentDirections.actionGlobalBookmarkFragment(BookmarkRoot.Mobile.id)
-                    )
-                }
-                HomeMenu.Item.History -> {
-                    invokePendingDeleteJobs()
-                    hideOnboardingIfNeeded()
-                    nav(
-                        R.id.homeFragment,
-                        HomeFragmentDirections.actionGlobalHistoryFragment()
-                    )
-                }
-                HomeMenu.Item.Help -> {
-                    invokePendingDeleteJobs()
-                    hideOnboardingIfNeeded()
-                    (activity as HomeActivity).openToBrowserAndLoad(
-                        searchTermOrURL = SupportUtils.getSumoURLForTopic(context, HELP),
-                        newTab = true,
-                        from = BrowserDirection.FromHome
-                    )
-                }
-                HomeMenu.Item.WhatsNew -> {
-                    invokePendingDeleteJobs()
-                    hideOnboardingIfNeeded()
-                    WhatsNew.userViewedWhatsNew(context)
-                    context.metrics.track(Event.WhatsNewTapped)
-                    (activity as HomeActivity).openToBrowserAndLoad(
-                        searchTermOrURL = SupportUtils.getWhatsNewUrl(context),
-                        newTab = true,
-                        from = BrowserDirection.FromHome
-                    )
-                }
-                // We need to show the snackbar while the browsing data is deleting(if "Delete
-                // browsing data on quit" is activated). After the deletion is over, the snackbar
-                // is dismissed.
-                HomeMenu.Item.Quit -> activity?.let { activity ->
-                    deleteAndQuit(
-                        activity,
-                        viewLifecycleOwner.lifecycleScope,
-                        view?.let { view -> FenixSnackbar.make(
-                            view = view,
-                            isDisplayedWithBrowserToolbar = false
+    private fun createHomeMenu(context: Context, menuButtonView: WeakReference<MenuButton>) =
+        HomeMenu(
+            this.viewLifecycleOwner,
+            context,
+            onItemTapped = {
+                when (it) {
+                    HomeMenu.Item.Settings -> {
+                        hideOnboardingIfNeeded()
+                        nav(
+                            R.id.homeFragment,
+                            HomeFragmentDirections.actionGlobalSettingsFragment()
                         )
-                        }
-                    )
+                    }
+                    HomeMenu.Item.SyncedTabs -> {
+                        hideOnboardingIfNeeded()
+                        nav(
+                            R.id.homeFragment,
+                            HomeFragmentDirections.actionGlobalSyncedTabsFragment()
+                        )
+                    }
+                    HomeMenu.Item.Bookmarks -> {
+                        hideOnboardingIfNeeded()
+                        nav(
+                            R.id.homeFragment,
+                            HomeFragmentDirections.actionGlobalBookmarkFragment(BookmarkRoot.Mobile.id)
+                        )
+                    }
+                    HomeMenu.Item.History -> {
+                        hideOnboardingIfNeeded()
+                        nav(
+                            R.id.homeFragment,
+                            HomeFragmentDirections.actionGlobalHistoryFragment()
+                        )
+                    }
+                    HomeMenu.Item.Help -> {
+                        hideOnboardingIfNeeded()
+                        (activity as HomeActivity).openToBrowserAndLoad(
+                            searchTermOrURL = SupportUtils.getSumoURLForTopic(context, HELP),
+                            newTab = true,
+                            from = BrowserDirection.FromHome
+                        )
+                    }
+                    HomeMenu.Item.WhatsNew -> {
+                        hideOnboardingIfNeeded()
+                        WhatsNew.userViewedWhatsNew(context)
+                        context.metrics.track(Event.WhatsNewTapped)
+                        (activity as HomeActivity).openToBrowserAndLoad(
+                            searchTermOrURL = SupportUtils.getWhatsNewUrl(context),
+                            newTab = true,
+                            from = BrowserDirection.FromHome
+                        )
+                    }
+                    // We need to show the snackbar while the browsing data is deleting(if "Delete
+                    // browsing data on quit" is activated). After the deletion is over, the snackbar
+                    // is dismissed.
+                    HomeMenu.Item.Quit -> activity?.let { activity ->
+                        deleteAndQuit(
+                            activity,
+                            viewLifecycleOwner.lifecycleScope,
+                            view?.let { view ->
+                                FenixSnackbar.make(
+                                    view = view,
+                                    isDisplayedWithBrowserToolbar = false
+                                )
+                            }
+                        )
+                    }
+                    HomeMenu.Item.Sync -> {
+                        hideOnboardingIfNeeded()
+                        nav(
+                            R.id.homeFragment,
+                            HomeFragmentDirections.actionGlobalAccountProblemFragment()
+                        )
+                    }
+                    HomeMenu.Item.AddonsManager -> {
+                        nav(
+                            R.id.homeFragment,
+                            HomeFragmentDirections.actionGlobalAddonsManagementFragment()
+                        )
+                    }
                 }
-                HomeMenu.Item.Sync -> {
-                    invokePendingDeleteJobs()
-                    hideOnboardingIfNeeded()
-                    nav(
-                        R.id.homeFragment,
-                        HomeFragmentDirections.actionGlobalAccountProblemFragment()
-                    )
-                }
-                HomeMenu.Item.AddonsManager -> {
-                    nav(
-                        R.id.homeFragment,
-                        HomeFragmentDirections.actionGlobalAddonsManagementFragment()
-                    )
-                }
-            }
-        },
-        onHighlightPresent = { menuButtonView.get()?.setHighlight(it) },
-        onMenuBuilderChanged = { menuButtonView.get()?.menuBuilder = it }
-    )
+            },
+            onHighlightPresent = { menuButtonView.get()?.setHighlight(it) },
+            onMenuBuilderChanged = { menuButtonView.get()?.menuBuilder = it }
+        )
 
     private fun subscribeToTabCollections(): Observer<List<TabCollection>> {
         return Observer<List<TabCollection>> {
@@ -776,93 +646,8 @@ class HomeFragment : Fragment() {
         }
     }
 
-    private fun removeAllTabsWithUndo(listOfSessionsToDelete: Sequence<Session>, private: Boolean) {
-        homeFragmentStore.dispatch(HomeFragmentAction.TabsChange(emptyList()))
-        listOfSessionsToDelete.forEach {
-            requireComponents.core.pendingSessionDeletionManager.addSession(
-                it.id
-            )
-        }
-
-        val deleteOperation: (suspend () -> Unit) = {
-            listOfSessionsToDelete.forEach {
-                sessionManager.remove(it)
-                requireComponents.core.pendingSessionDeletionManager.removeSession(it.id)
-            }
-        }
-        deleteAllSessionsJob = deleteOperation
-
-        val snackbarMessage = if (private) {
-            getString(R.string.snackbar_private_tabs_closed)
-        } else {
-            getString(R.string.snackbar_tabs_closed)
-        }
-
-        viewLifecycleOwner.lifecycleScope.allowUndo(
-            requireView(),
-            snackbarMessage,
-            getString(R.string.snackbar_deleted_undo), {
-                listOfSessionsToDelete.forEach {
-                    requireComponents.core.pendingSessionDeletionManager.removeSession(
-                        it.id
-                    )
-                }
-                if (private) {
-                    requireComponents.analytics.metrics.track(Event.PrivateBrowsingSnackbarUndoTapped)
-                }
-                deleteAllSessionsJob = null
-                emitSessionChanges()
-            },
-            operation = deleteOperation,
-            anchorView = snackbarAnchorView
-        )
-    }
-
-    private fun removeTabWithUndo(sessionId: String, private: Boolean) {
-        val sessionManager = requireComponents.core.sessionManager
-        requireComponents.core.pendingSessionDeletionManager.addSession(sessionId)
-        val deleteOperation: (suspend () -> Unit) = {
-            sessionManager.findSessionById(sessionId)
-                ?.let { session ->
-                    pendingSessionDeletion = null
-                    sessionManager.remove(session)
-                    requireComponents.core.pendingSessionDeletionManager.removeSession(sessionId)
-                }
-        }
-
-        pendingSessionDeletion = PendingSessionDeletion(deleteOperation, sessionId)
-
-        val snackbarMessage = if (private) {
-            getString(R.string.snackbar_private_tab_closed)
-        } else {
-            getString(R.string.snackbar_tab_closed)
-        }
-
-        viewLifecycleOwner.lifecycleScope.allowUndo(
-            requireView(),
-            snackbarMessage,
-            getString(R.string.snackbar_deleted_undo), {
-                requireComponents.core.pendingSessionDeletionManager.removeSession(sessionId)
-                pendingSessionDeletion = null
-                emitSessionChanges()
-            },
-            operation = deleteOperation,
-            anchorView = snackbarAnchorView
-        )
-
-        // Update the UI with the tab removed, but don't remove it from storage yet
-        emitSessionChanges()
-    }
-
-    private fun emitSessionChanges() {
-        runIfFragmentIsAttached {
-            homeFragmentStore.dispatch(HomeFragmentAction.TabsChange(getListOfTabs()))
-        }
-    }
-
     private fun getListOfSessions(private: Boolean = browsingModeManager.mode.isPrivate): List<Session> {
         return sessionManager.sessionsOfType(private = private)
-            .filter { session: Session -> session.id != pendingSessionDeletion?.sessionId }
             .toList()
     }
 
@@ -872,13 +657,6 @@ class HomeFragment : Fragment() {
 
     private fun registerCollectionStorageObserver() {
         requireComponents.core.tabCollectionStorage.register(collectionStorageObserver, this)
-    }
-
-    private fun scrollToTheTop() {
-        viewLifecycleOwner.lifecycleScope.launch(Main) {
-            delay(ANIM_SCROLL_DELAY)
-            sessionControlView!!.view.smoothScrollToPosition(0)
-        }
     }
 
     private fun scrollAndAnimateCollection(
@@ -968,7 +746,8 @@ class HomeFragment : Fragment() {
                 } else {
                     R.string.create_collection_tab_saved
                 }
-                FenixSnackbar.make(view = view,
+                FenixSnackbar.make(
+                    view = view,
                     duration = Snackbar.LENGTH_LONG,
                     isDisplayedWithBrowserToolbar = false
                 )
@@ -1025,20 +804,7 @@ class HomeFragment : Fragment() {
             }
     }
 
-    private fun scrollToSelectedTab() {
-        val position = (sessionControlView!!.view.adapter as SessionControlAdapter)
-            .currentList.indexOfFirst {
-            it is AdapterItem.TabItem && it.tab.selected == true
-        }
-        if (position > 0) {
-            (sessionControlView!!.view.layoutManager as LinearLayoutManager)
-                .scrollToPositionWithOffset(position, SELECTED_TAB_OFFSET)
-        }
-    }
-
     private fun openTabTray() {
-        invokePendingDeleteJobs()
-        hideOnboardingIfNeeded()
         TabTrayDialogFragment.show(parentFragmentManager)
     }
 
@@ -1052,97 +818,8 @@ class HomeFragment : Fragment() {
         private const val ANIM_SNACKBAR_DELAY = 100L
         private const val CFR_WIDTH_DIVIDER = 1.7
         private const val CFR_Y_OFFSET = -20
-        private const val SELECTED_TAB_OFFSET = 20
 
         // Layout
         private const val HEADER_MARGIN = 60
-
-        private const val SNACKBAR_ELEVATION = 80f
-    }
-}
-
-/**
- * Wrapper around sessions manager to observe changes in sessions.
- * Similar to [mozilla.components.browser.session.utils.AllSessionsObserver] but ignores CustomTab sessions.
- *
- * Call [onStart] to start receiving updates into [onChanged] callback.
- * Call [onStop] to stop receiving updates.
- *
- * @param manager [SessionManager] instance to subscribe to.
- * @param observer [Session.Observer] instance that will recieve updates.
- * @param onChanged callback that will be called when any of [SessionManager.Observer]'s events are fired.
- */
-private class BrowserSessionsObserver(
-    private val manager: SessionManager,
-    private val store: BrowserStore,
-    private val observer: Session.Observer,
-    private val onChanged: () -> Unit
-) : LifecycleObserver {
-    private var scope: CoroutineScope? = null
-
-    /**
-     * Start observing
-     */
-    @OnLifecycleEvent(Lifecycle.Event.ON_START)
-    fun onStart() {
-        manager.register(managerObserver)
-        subscribeToAll()
-
-        scope = store.flowScoped { flow ->
-            flow.ifChanged { it.media.aggregate }
-                .collect { onChanged() }
-        }
-    }
-
-    /**
-     * Stop observing (will not receive updates till next [onStop] call)
-     */
-    @OnLifecycleEvent(Lifecycle.Event.ON_STOP)
-    fun onStop() {
-        scope?.cancel()
-        manager.unregister(managerObserver)
-        unsubscribeFromAll()
-    }
-
-    private fun subscribeToAll() {
-        manager.sessions.forEach(::subscribeTo)
-    }
-
-    private fun unsubscribeFromAll() {
-        manager.sessions.forEach(::unsubscribeFrom)
-    }
-
-    private fun subscribeTo(session: Session) {
-        session.register(observer)
-    }
-
-    private fun unsubscribeFrom(session: Session) {
-        session.unregister(observer)
-    }
-
-    private val managerObserver = object : SessionManager.Observer {
-        override fun onSessionAdded(session: Session) {
-            subscribeTo(session)
-            onChanged()
-        }
-
-        override fun onSessionsRestored() {
-            subscribeToAll()
-            onChanged()
-        }
-
-        override fun onAllSessionsRemoved() {
-            unsubscribeFromAll()
-            onChanged()
-        }
-
-        override fun onSessionRemoved(session: Session) {
-            unsubscribeFrom(session)
-            onChanged()
-        }
-
-        override fun onSessionSelected(session: Session) {
-            onChanged()
-        }
     }
 }

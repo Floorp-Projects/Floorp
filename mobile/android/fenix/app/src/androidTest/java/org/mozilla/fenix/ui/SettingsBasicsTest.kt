@@ -197,6 +197,7 @@ class SettingsBasicsTest {
         }.openNavigationToolbar {
         }.enterURLAndEnterToBrowser(webpage) {
             checkTextSizeOnWebsite(textSizePercentage, fenixApp.components)
+        }.openTabDrawer {
         }.openHomeScreen {
         }.openThreeDotMenu {
         }.openSettings {

@@ -11,9 +11,11 @@ import androidx.core.graphics.BlendModeCompat.SRC_IN
 import kotlinx.android.synthetic.main.collection_home_list_row.*
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
+import mozilla.components.browser.state.selector.normalTabs
 import mozilla.components.feature.tab.collections.TabCollection
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.ViewHolder
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getIconColor
 import org.mozilla.fenix.ext.increaseTapArea
 import org.mozilla.fenix.ext.removeAndDisable
@@ -29,11 +31,13 @@ class CollectionViewHolder(
 
     private lateinit var collection: TabCollection
     private var expanded = false
-    private var sessionHasOpenTabs = false
     private var collectionMenu: CollectionItemMenu
 
     init {
-        collectionMenu = CollectionItemMenu(view.context, sessionHasOpenTabs) {
+        collectionMenu = CollectionItemMenu(
+            view.context,
+            { view.context.components.core.store.state.normalTabs.isNotEmpty() }
+        ) {
             when (it) {
                 is CollectionItemMenu.Item.DeleteCollection -> interactor.onDeleteCollectionTapped(collection)
                 is CollectionItemMenu.Item.AddTab -> interactor.onCollectionAddTabTapped(collection)
@@ -58,11 +62,9 @@ class CollectionViewHolder(
         }
     }
 
-    fun bindSession(collection: TabCollection, expanded: Boolean, sessionHasOpenTabs: Boolean) {
+    fun bindSession(collection: TabCollection, expanded: Boolean) {
         this.collection = collection
         this.expanded = expanded
-        this.sessionHasOpenTabs = sessionHasOpenTabs
-        collectionMenu.sessionHasOpenTabs = sessionHasOpenTabs
         updateCollectionUI()
     }
 
@@ -106,7 +108,7 @@ class CollectionViewHolder(
 
 class CollectionItemMenu(
     private val context: Context,
-    var sessionHasOpenTabs: Boolean,
+    private val shouldShowAddTab: () -> Boolean,
     private val onItemTapped: (Item) -> Unit = {}
 ) {
     sealed class Item {
@@ -136,7 +138,7 @@ class CollectionItemMenu(
                 context.getString(R.string.add_tab)
             ) {
                 onItemTapped.invoke(Item.AddTab)
-            }.apply { visible = { sessionHasOpenTabs } },
+            }.apply { visible = shouldShowAddTab },
 
             SimpleBrowserMenuItem(
                 context.getString(R.string.collection_delete),

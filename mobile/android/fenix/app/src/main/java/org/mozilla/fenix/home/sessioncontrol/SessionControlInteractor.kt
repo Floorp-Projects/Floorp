@@ -4,11 +4,21 @@
 
 package org.mozilla.fenix.home.sessioncontrol
 
-import android.view.View
 import mozilla.components.feature.tab.collections.Tab
 import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.top.sites.TopSite
 import org.mozilla.fenix.components.tips.Tip
+
+/**
+ * Interface for tab related actions in the [SessionControlInteractor].
+ */
+interface TabSessionInteractor {
+    /**
+     * Shows the Private Browsing Learn More page in a new tab. Called when a user clicks on the
+     * "Common myths about private browsing" link in private mode.
+     */
+    fun onPrivateBrowsingLearnMoreClicked()
+}
 
 /**
  * Interface for collection related actions in the [SessionControlInteractor].
@@ -113,72 +123,6 @@ interface TipInteractor {
 }
 
 /**
- * Interface for tab related actions in the [SessionControlInteractor].
- */
-interface TabSessionInteractor {
-    /**
-     * Closes the given tab. Called when a user swipes to close a tab or clicks on the Close Tab
-     * button in the tab view.
-     *
-     * @param sessionId The selected tab session id to close.
-     */
-    fun onCloseTab(sessionId: String)
-
-    /**
-     * Closes all the tabs. Called when a user clicks on the Close Tabs button or "Close all tabs"
-     * tab header menu item.
-     *
-     * @param isPrivateMode True if the [BrowsingMode] is [Private] and false otherwise.
-     */
-    fun onCloseAllTabs(isPrivateMode: Boolean)
-
-    /**
-     * Pauses all playing [Media]. Called when a user clicks on the Pause button in the tab view.
-     */
-    fun onPauseMediaClicked()
-
-    /**
-     * Resumes playing all paused [Media]. Called when a user clicks on the Play button in the tab
-     * view.
-     */
-    fun onPlayMediaClicked()
-
-    /**
-     * Shows the Private Browsing Learn More page in a new tab. Called when a user clicks on the
-     * "Common myths about private browsing" link in private mode.
-     */
-    fun onPrivateBrowsingLearnMoreClicked()
-
-    /**
-     * Saves the given tab to collection. Called when a user clicks on the "Save to collection"
-     * button or tab header menu item, and on long click of an open tab.
-     *
-     * @param sessionId The selected tab session id to save.
-     */
-    fun onSaveToCollection(sessionId: String?)
-
-    /**
-     * Selects the given tab. Called when a user clicks on a tab.
-     *
-     * @param tabView [View] of the current Fragment to match with a View in the Fragment being
-     * navigated to.
-     * @param sessionId The tab session id to select.
-     */
-    fun onSelectTab(tabView: View, sessionId: String)
-
-    /**
-     * Shares the current opened tabs. Called when a user clicks on the Share Tabs button in private
-     * mode or tab header menu item.
-     */
-    fun onShareTabs()
-
-    /**
-     * Opens a new tab
-     */
-    fun onOpenNewTabClicked()
-}
-
-/**
  * Interface for top site related actions in the [SessionControlInteractor].
  */
 interface TopSiteInteractor {
@@ -214,15 +158,7 @@ interface TopSiteInteractor {
 @SuppressWarnings("TooManyFunctions")
 class SessionControlInteractor(
     private val controller: SessionControlController
-) : CollectionInteractor, OnboardingInteractor, TabSessionInteractor, TopSiteInteractor, TipInteractor {
-    override fun onCloseTab(sessionId: String) {
-        controller.handleCloseTab(sessionId)
-    }
-
-    override fun onCloseAllTabs(isPrivateMode: Boolean) {
-        controller.handleCloseAllTabs(isPrivateMode)
-    }
-
+) : CollectionInteractor, OnboardingInteractor, TopSiteInteractor, TipInteractor, TabSessionInteractor {
     override fun onCollectionAddTabTapped(collection: TabCollection) {
         controller.handleCollectionAddTabTapped(collection)
     }
@@ -251,18 +187,6 @@ class SessionControlInteractor(
         controller.handleOpenInPrivateTabClicked(topSite)
     }
 
-    override fun onPauseMediaClicked() {
-        controller.handlePauseMediaClicked()
-    }
-
-    override fun onPlayMediaClicked() {
-        controller.handlePlayMediaClicked()
-    }
-
-    override fun onPrivateBrowsingLearnMoreClicked() {
-        controller.handlePrivateBrowsingLearnMoreClicked()
-    }
-
     override fun onRemoveTopSiteClicked(topSite: TopSite) {
         controller.handleRemoveTopSiteClicked(topSite)
     }
@@ -271,20 +195,8 @@ class SessionControlInteractor(
         controller.handleRenameCollectionTapped(collection)
     }
 
-    override fun onSaveToCollection(sessionId: String?) {
-        controller.handleSaveTabToCollection(sessionId)
-    }
-
-    override fun onSelectTab(tabView: View, sessionId: String) {
-        controller.handleSelectTab(tabView, sessionId)
-    }
-
     override fun onSelectTopSite(url: String, isDefault: Boolean) {
         controller.handleSelectTopSite(url, isDefault)
-    }
-
-    override fun onShareTabs() {
-        controller.handleShareTabs()
     }
 
     override fun onStartBrowsingClicked() {
@@ -307,11 +219,11 @@ class SessionControlInteractor(
         controller.handleToggleCollectionExpanded(collection, expand)
     }
 
-    override fun onOpenNewTabClicked() {
-        controller.handleonOpenNewTabClicked()
-    }
-
     override fun onCloseTip(tip: Tip) {
         controller.handleCloseTip(tip)
+    }
+
+    override fun onPrivateBrowsingLearnMoreClicked() {
+        controller.handlePrivateBrowsingLearnMoreClicked()
     }
 }

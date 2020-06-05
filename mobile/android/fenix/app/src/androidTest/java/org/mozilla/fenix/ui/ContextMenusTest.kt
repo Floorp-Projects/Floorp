@@ -69,8 +69,7 @@ class ContextMenusTest {
             verifySnackBarText("New tab opened")
             snackBarButtonClick("Switch")
             verifyUrl(genericURL.url.toString())
-        }.openHomeScreen {
-            verifyHomeScreen()
+        }.openTabDrawer {
             verifyExistingOpenTabs("Test_Page_1")
             verifyExistingOpenTabs("Test_Page_4")
         }
@@ -93,8 +92,8 @@ class ContextMenusTest {
             verifySnackBarText("New private tab opened")
             snackBarButtonClick("Switch")
             verifyUrl(genericURL.url.toString())
-        }.openHomeScreen {
-            verifyPrivateSessionHeader()
+        }.openTabDrawer {
+            verifyPrivateModeSelected()
             verifyExistingOpenTabs("Test_Page_2")
         }
     }

@@ -13,7 +13,6 @@ import androidx.recyclerview.widget.RecyclerView
 import mozilla.components.support.ktx.android.content.getColorFromAttr
 import org.mozilla.fenix.R
 import org.mozilla.fenix.home.sessioncontrol.viewholders.TabInCollectionViewHolder
-import org.mozilla.fenix.home.sessioncontrol.viewholders.TabViewHolder
 
 class SwipeToDeleteCallback(
     val interactor: SessionControlInteractor
@@ -29,7 +28,6 @@ class SwipeToDeleteCallback(
 
     override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
         when (viewHolder) {
-            is TabViewHolder -> interactor.onCloseTab(viewHolder.tab?.sessionId!!)
             is TabInCollectionViewHolder -> {
                 interactor.onCollectionRemoveTab(viewHolder.collection, viewHolder.tab)
             }
@@ -108,7 +106,7 @@ class SwipeToDeleteCallback(
         viewHolder: RecyclerView.ViewHolder
     ): Int {
         return if (recyclerView.hasWindowFocus() &&
-            (viewHolder is TabViewHolder || viewHolder is TabInCollectionViewHolder)
+            viewHolder is TabInCollectionViewHolder
         ) {
             super.getSwipeDirs(recyclerView, viewHolder)
         } else 0
