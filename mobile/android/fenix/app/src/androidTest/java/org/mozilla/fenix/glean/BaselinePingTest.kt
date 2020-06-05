@@ -20,11 +20,11 @@ import mozilla.components.service.glean.Glean
 import mozilla.components.service.glean.config.Configuration
 import mozilla.components.service.glean.net.ConceptFetchHttpUploader
 import mozilla.components.service.glean.testing.GleanTestLocalServer
+import okhttp3.mockwebserver.RecordedRequest
 import org.json.JSONObject
 import org.junit.Assert.assertTrue
 import org.junit.Assert.assertFalse
 import org.junit.BeforeClass
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -33,6 +33,35 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.HomeActivityTestRule
 import org.mozilla.fenix.helpers.MockWebServerHelper
 import java.util.concurrent.TimeUnit
+import java.io.BufferedReader
+import java.io.ByteArrayInputStream
+import java.util.zip.GZIPInputStream
+
+/**
+ * Decompress the GZIP returned by the glean-core layer.
+ *
+ * @param data the gzipped [ByteArray] to decompress
+ * @return a [String] containing the uncompressed data.
+ */
+fun decompressGZIP(data: ByteArray): String {
+    return GZIPInputStream(ByteArrayInputStream(data)).bufferedReader().use(BufferedReader::readText)
+}
+
+/**
+ * Convenience method to get the body of a request as a String.
+ * The UTF8 representation of the request body will be returned.
+ * If the request body is gzipped, it will be decompressed first.
+ *
+ * @return a [String] containing the body of the request.
+ */
+fun RecordedRequest.getPlainBody(): String {
+    return if (this.getHeader("Content-Encoding") == "gzip") {
+        val bodyInBytes = this.body.readByteArray()
+        decompressGZIP(bodyInBytes)
+    } else {
+        this.body.readUtf8()
+    }
+}
 
 @RunWith(AndroidJUnit4::class)
 class BaselinePingTest {
@@ -81,10 +110,10 @@ class BaselinePingTest {
         var attempts = 0
         do {
             attempts += 1
-            val request = server.takeRequest(20L, TimeUnit.SECONDS)
+            val request = server.takeRequest(20L, TimeUnit.SECONDS) ?: break
             val docType = request.path.split("/")[3]
             if (pingName == docType) {
-                val parsedPayload = JSONObject(request.body.readUtf8())
+                val parsedPayload = JSONObject(request.getPlainBody())
                 if (pingReason == null) {
                     return parsedPayload
                 }
@@ -100,7 +129,6 @@ class BaselinePingTest {
         return null
     }
 
-    @Ignore("Currently failing on firebase: https://github.com/mozilla-mobile/fenix/issues/10652")
     @Test
     fun validateBaselinePing() {
         // Wait for the app to be idle/ready.
