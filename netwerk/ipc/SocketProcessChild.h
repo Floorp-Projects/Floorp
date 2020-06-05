@@ -114,6 +114,11 @@ class SocketProcessChild final
       const bool& aParentalControlEnabled,
       nsTArray<nsCString>&& aDNSSuffixList) override;
 
+  already_AddRefed<PNativeDNSResolverOverrideChild>
+  AllocPNativeDNSResolverOverrideChild();
+  mozilla::ipc::IPCResult RecvPNativeDNSResolverOverrideConstructor(
+      PNativeDNSResolverOverrideChild* aActor) override;
+
  protected:
   friend class SocketProcessImpl;
   ~SocketProcessChild();

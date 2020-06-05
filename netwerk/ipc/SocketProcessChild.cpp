@@ -22,6 +22,7 @@
 #include "mozilla/net/BackgroundDataBridgeParent.h"
 #include "mozilla/net/DNSRequestChild.h"
 #include "mozilla/net/DNSRequestParent.h"
+#include "mozilla/net/NativeDNSResolverOverrideChild.h"
 #include "mozilla/net/TRRServiceChild.h"
 #include "mozilla/ipc/PChildToParentStreamChild.h"
 #include "mozilla/ipc/PParentToChildStreamChild.h"
@@ -424,6 +425,19 @@ mozilla::ipc::IPCResult SocketProcessChild::RecvPTRRServiceConstructor(
     const bool& aParentalControlEnabled, nsTArray<nsCString>&& aDNSSuffixList) {
   static_cast<TRRServiceChild*>(aActor)->Init(
       aCaptiveIsPassed, aParentalControlEnabled, std::move(aDNSSuffixList));
+  return IPC_OK();
+}
+
+already_AddRefed<PNativeDNSResolverOverrideChild>
+SocketProcessChild::AllocPNativeDNSResolverOverrideChild() {
+  RefPtr<NativeDNSResolverOverrideChild> actor =
+      new NativeDNSResolverOverrideChild();
+  return actor.forget();
+}
+
+mozilla::ipc::IPCResult
+SocketProcessChild::RecvPNativeDNSResolverOverrideConstructor(
+    PNativeDNSResolverOverrideChild* aActor) {
   return IPC_OK();
 }
 
