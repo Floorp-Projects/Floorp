@@ -24,6 +24,10 @@
       error: "Expected ‘none’, URL, or filter function but found ‘alpha(’.  Error in parsing value for ‘filter’.  Declaration dropped.",
       cssSelectors: "x",
     }, {
+      css: "x { color: red; abc; }",
+      error: "Unknown property ‘abc;’.  Declaration dropped.",
+      cssSelectors: "x",
+    }, {
       css: "x { filter: 5; }",
       error: "Expected ‘none’, URL, or filter function but found ‘5’.  Error in parsing value for ‘filter’.  Declaration dropped.",
       cssSelectors: "x",
