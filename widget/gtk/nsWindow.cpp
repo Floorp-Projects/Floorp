@@ -4931,11 +4931,26 @@ void nsWindow::WaylandStartVsync() {
 
   if (!mWaylandVsyncSource) {
     mWaylandVsyncSource = new mozilla::WaylandVsyncSource(mContainer);
+    WaylandVsyncSource::WaylandDisplay& display =
+        static_cast<WaylandVsyncSource::WaylandDisplay&>(
+            mWaylandVsyncSource->GetGlobalDisplay());
+    if (!display.Setup()) {
+      NS_WARNING("Could not start Wayland vsync monitor");
+    }
   }
-  WaylandVsyncSource::WaylandDisplay& display =
-      static_cast<WaylandVsyncSource::WaylandDisplay&>(
-          mWaylandVsyncSource->GetGlobalDisplay());
-  display.EnableMonitor();
+
+  // The widget is going to be shown, so reconfigure the surface
+  // of our vsync source.
+  RefPtr<nsWindow> self(this);
+  moz_container_wayland_add_initial_draw_callback(mContainer, [self]() -> void {
+    WaylandVsyncSource::WaylandDisplay& display =
+        static_cast<WaylandVsyncSource::WaylandDisplay&>(
+            self->mWaylandVsyncSource->GetGlobalDisplay());
+    display.EnableMonitor();
+    if (display.IsVsyncEnabled()) {
+      display.Notify();
+    }
+  });
 #endif
 }
 
