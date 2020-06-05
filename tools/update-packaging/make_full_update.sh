@@ -40,6 +40,8 @@ fi
 
 # -----------------------------------------------------------------------------
 
+mar_command="$MAR -V ${MOZ_PRODUCT_VERSION:?} -H ${MAR_CHANNEL_ID:?}"
+
 archive="$1"
 targetdir="$2"
 # Prevent the workdir from being inside the targetdir so it isn't included in
@@ -122,15 +124,6 @@ else
   $XZ --compress $BCJ_OPTIONS --lzma2 --format=xz --check=crc64 --force "$updatemanifestv3" && mv -f "$updatemanifestv3.xz" "$updatemanifestv3"
 fi
 
-mar_command="$MAR"
-if [[ -n $MOZ_PRODUCT_VERSION ]]
-then
-  mar_command="$mar_command -V $MOZ_PRODUCT_VERSION"
-fi
-if [[ -n $MAR_CHANNEL_ID ]]
-then
-  mar_command="$mar_command -H $MAR_CHANNEL_ID"
-fi
 mar_command="$mar_command -C \"$workdir\" -c output.mar"
 eval "$mar_command $targetfiles"
 mv -f "$workdir/output.mar" "$archive"
