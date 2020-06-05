@@ -468,6 +468,11 @@ static NTSTATUS NTAPI patched_LdrLoadDll(PWCHAR filePath, PULONG flags,
         goto continue_loading;
       }
 
+      if ((info->mFlags & DllBlockInfo::BLOCK_WIN7_AND_OLDER) &&
+          IsWin8OrLater()) {
+        goto continue_loading;
+      }
+
       if ((info->mFlags & DllBlockInfo::CHILD_PROCESSES_ONLY) &&
           !(sInitFlags & eDllBlocklistInitFlagIsChildProcess)) {
         goto continue_loading;
