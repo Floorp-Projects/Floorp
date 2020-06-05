@@ -12141,7 +12141,7 @@ AbortReasonOr<Ok> IonBuilder::jsop_topropertykey() {
   }
 
   MDefinition* index = current->pop();
-  MToId* ins = MToId::New(alloc(), index);
+  auto* ins = MToPropertyKeyCache::New(alloc(), index);
 
   current->add(ins);
   current->push(ins);

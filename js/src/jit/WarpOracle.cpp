@@ -480,6 +480,7 @@ AbortReasonOr<WarpScriptSnapshot*> WarpOracle::createScriptSnapshot(
       case JSOp::InitGLexical:
       case JSOp::SetElem:
       case JSOp::StrictSetElem:
+      case JSOp::ToPropertyKey:
         MOZ_TRY(maybeInlineIC(opSnapshots, script, loc));
         break;
 
@@ -549,7 +550,6 @@ AbortReasonOr<WarpScriptSnapshot*> WarpOracle::createScriptSnapshot(
       case JSOp::ClassConstructor:
       case JSOp::DerivedConstructor:
       case JSOp::ToAsyncIter:
-      case JSOp::ToPropertyKey:
       case JSOp::Typeof:
       case JSOp::TypeofExpr:
       case JSOp::ObjWithProto:

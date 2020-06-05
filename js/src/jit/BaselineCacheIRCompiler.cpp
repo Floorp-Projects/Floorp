@@ -1985,6 +1985,7 @@ bool BaselineCacheIRCompiler::init(CacheKind kind) {
       break;
     case CacheKind::GetProp:
     case CacheKind::TypeOf:
+    case CacheKind::ToPropertyKey:
     case CacheKind::GetIterator:
     case CacheKind::ToBool:
     case CacheKind::UnaryArith:
