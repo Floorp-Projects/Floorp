@@ -7389,38 +7389,19 @@ class LArrowNewTarget : public LInstructionHelper<BOX_PIECES, 1, 0> {
 };
 
 // Math.random().
-#ifdef JS_PUNBOX64
-#  define LRANDOM_NUM_TEMPS 3
-#else
-#  define LRANDOM_NUM_TEMPS 5
-#endif
-
-class LRandom : public LInstructionHelper<1, 0, LRANDOM_NUM_TEMPS> {
+class LRandom : public LInstructionHelper<1, 0, 1 + 2 * INT64_PIECES> {
  public:
   LIR_HEADER(Random)
-  LRandom(const LDefinition& temp0, const LDefinition& temp1,
-          const LDefinition& temp2
-#ifndef JS_PUNBOX64
-          ,
-          const LDefinition& temp3, const LDefinition& temp4
-#endif
-          )
+  LRandom(const LDefinition& temp0, const LInt64Definition& temp1,
+          const LInt64Definition& temp2)
       : LInstructionHelper(classOpcode) {
     setTemp(0, temp0);
-    setTemp(1, temp1);
-    setTemp(2, temp2);
-#ifndef JS_PUNBOX64
-    setTemp(3, temp3);
-    setTemp(4, temp4);
-#endif
+    setInt64Temp(1, temp1);
+    setInt64Temp(1 + INT64_PIECES, temp2);
   }
   const LDefinition* temp0() { return getTemp(0); }
-  const LDefinition* temp1() { return getTemp(1); }
-  const LDefinition* temp2() { return getTemp(2); }
-#ifndef JS_PUNBOX64
-  const LDefinition* temp3() { return getTemp(3); }
-  const LDefinition* temp4() { return getTemp(4); }
-#endif
+  LInt64Definition temp1() { return getInt64Temp(1); }
+  LInt64Definition temp2() { return getInt64Temp(1 + INT64_PIECES); }
 
   MRandom* mir() const { return mir_->toRandom(); }
 };

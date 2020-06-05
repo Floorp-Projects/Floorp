@@ -341,11 +341,6 @@ void LIRGenerator::visitSubstr(MSubstr* ins) {
   assignSafepoint(lir, ins);
 }
 
-void LIRGenerator::visitRandom(MRandom* ins) {
-  LRandom* lir = new (alloc()) LRandom(temp(), temp(), temp());
-  defineFixed(lir, ins, LFloatReg(ReturnDoubleReg));
-}
-
 void LIRGeneratorX64::lowerDivI64(MDiv* div) {
   if (div->isUnsigned()) {
     lowerUDivI64(div);

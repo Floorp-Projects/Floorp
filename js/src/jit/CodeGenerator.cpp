@@ -14031,13 +14031,8 @@ void CodeGenerator::visitRandom(LRandom* ins) {
   FloatRegister output = ToFloatRegister(ins->output());
   Register rngReg = ToRegister(ins->temp0());
 
-#ifdef JS_PUNBOX64
-  Register64 temp1(ToRegister(ins->temp1()));
-  Register64 temp2(ToRegister(ins->temp2()));
-#else
-  Register64 temp1(ToRegister(ins->temp1()), ToRegister(ins->temp2()));
-  Register64 temp2(ToRegister(ins->temp3()), ToRegister(ins->temp4()));
-#endif
+  Register64 temp1 = ToRegister64(ins->temp1());
+  Register64 temp2 = ToRegister64(ins->temp2());
 
   const XorShift128PlusRNG* rng = gen->realm->addressOfRandomNumberGenerator();
   masm.movePtr(ImmPtr(rng), rngReg);

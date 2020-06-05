@@ -1595,6 +1595,11 @@ void LIRGenerator::visitMathFunction(MMathFunction* ins) {
   defineReturn(lir, ins);
 }
 
+void LIRGenerator::visitRandom(MRandom* ins) {
+  auto* lir = new (alloc()) LRandom(temp(), tempInt64(), tempInt64());
+  define(lir, ins);
+}
+
 // Try to mark an add or sub instruction as able to recover its input when
 // bailing out.
 template <typename S, typename T>

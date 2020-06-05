@@ -146,11 +146,6 @@ void LIRGeneratorMIPS64::lowerTruncateFToInt32(MTruncateToInt32* ins) {
   define(new (alloc()) LTruncateFToInt32(useRegister(opd), tempFloat32()), ins);
 }
 
-void LIRGenerator::visitRandom(MRandom* ins) {
-  LRandom* lir = new (alloc()) LRandom(temp(), temp(), temp());
-  defineFixed(lir, ins, LFloatReg(ReturnDoubleReg));
-}
-
 void LIRGenerator::visitWasmTruncateToInt64(MWasmTruncateToInt64* ins) {
   MDefinition* opd = ins->input();
   MOZ_ASSERT(opd->type() == MIRType::Double || opd->type() == MIRType::Float32);
