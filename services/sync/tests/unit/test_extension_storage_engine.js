@@ -143,7 +143,13 @@ add_task(async function test_engine() {
     );
 
     info("Sync the engine");
-    await sync_engine_and_validate_telem(engine, false);
+
+    let ping = await sync_engine_and_validate_telem(engine, false);
+    Assert.ok(ping.engines.find(e => e.name == "rust-webext-storage"));
+    Assert.equal(
+      ping.engines.find(e => e.name == "extension-storage"),
+      null
+    );
 
     // We should have applied the data from the existing collection record.
     Assert.deepEqual(await extensionStorageSync.get({ id: "ext-1" }, null), {
