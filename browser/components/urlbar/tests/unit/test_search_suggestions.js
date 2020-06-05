@@ -141,7 +141,6 @@ add_task(async function disabled_urlbarSuggestions() {
     context,
     matches: [
       makeSearchResult(context, { engineName: ENGINE_NAME, heuristic: true }),
-      ...makeExpectedFormHistoryResults(context),
     ],
   });
   await cleanUpSuggestions();
@@ -155,7 +154,6 @@ add_task(async function disabled_allSuggestions() {
     context,
     matches: [
       makeSearchResult(context, { engineName: ENGINE_NAME, heuristic: true }),
-      ...makeExpectedFormHistoryResults(context),
     ],
   });
   await cleanUpSuggestions();
@@ -170,7 +168,6 @@ add_task(async function disabled_privateWindow() {
     context,
     matches: [
       makeSearchResult(context, { engineName: ENGINE_NAME, heuristic: true }),
-      ...makeExpectedFormHistoryResults(context),
     ],
   });
   await cleanUpSuggestions();
