@@ -75,6 +75,3 @@ jobs:
                 - linux64-node
                 - linux64-lucetc
                 - wasi-sysroot
-        optimization:
-            push-interval-25:
-                - linux
