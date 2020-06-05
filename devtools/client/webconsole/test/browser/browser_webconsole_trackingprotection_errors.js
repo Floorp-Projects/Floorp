@@ -83,7 +83,7 @@ add_task(async function testForeignCookieBlockedMessage() {
   );
   await testLearnMoreClickOpenNewTab(
     message,
-    getStorageErrorUrl("CookieBlockedForeign")
+    getStorageErrorUrl("BlockedCookieForeign")
   );
   win.close();
 });
@@ -113,7 +113,7 @@ add_task(async function testLimitForeignCookieBlockedMessage() {
   info("Check that clicking on the Learn More link works as expected");
   await testLearnMoreClickOpenNewTab(
     message,
-    getStorageErrorUrl("CookieBlockedForeign")
+    getStorageErrorUrl("BlockedCookieForeign")
   );
   win.close();
 });
@@ -153,7 +153,7 @@ add_task(async function testTrackerCookieBlockedMessage() {
   );
   await testLearnMoreClickOpenNewTab(
     message,
-    getStorageErrorUrl("CookieBlockedTracker")
+    getStorageErrorUrl("BlockedCookieTracker")
   );
   win.close();
 });
