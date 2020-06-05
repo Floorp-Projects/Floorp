@@ -17,6 +17,7 @@ DevToolsModules(
     'make-debugger.js',
     'shapes-utils.js',
     'source-map-utils.js',
+    'source-url.js',
     'stack.js',
     'TabSources.js',
     'track-change-emitter.js',

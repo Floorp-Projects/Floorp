@@ -81,7 +81,7 @@ window.onload = function() {
 
     // The frame that called eval, in turn, was introduced at the call that
     // inserted the script element into the document.
-    ok(frame2.script.source.introductionType === "scriptElement",
+    ok(frame2.script.source.introductionType === "injectedScript",
        "older frame has no introduction type");
     ok(frame2.script.source.introductionScript === frame3.script,
        "older frame has introduction script");
