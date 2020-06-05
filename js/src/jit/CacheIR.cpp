@@ -59,6 +59,7 @@ size_t js::jit::NumInputsForCacheKind(CacheKind kind) {
       return 0;
     case CacheKind::GetProp:
     case CacheKind::TypeOf:
+    case CacheKind::ToPropertyKey:
     case CacheKind::GetIterator:
     case CacheKind::ToBool:
     case CacheKind::UnaryArith:

@@ -62,6 +62,8 @@ Register IonIC::scratchRegisterForEntryJump() {
       return asInstanceOfIC()->output();
     case CacheKind::UnaryArith:
       return asUnaryArithIC()->output().scratchReg();
+    case CacheKind::ToPropertyKey:
+      return asToPropertyKeyIC()->output().scratchReg();
     case CacheKind::BinaryArith:
       return asBinaryArithIC()->output().scratchReg();
     case CacheKind::Compare:
@@ -505,6 +507,13 @@ bool IonInstanceOfIC::update(JSContext* cx, HandleScript outerScript,
                                                            lhs, rhs);
 
   return HasInstance(cx, rhs, lhs, res);
+}
+
+/*  static */
+bool IonToPropertyKeyIC::update(JSContext* cx, HandleScript outerScript,
+                                IonToPropertyKeyIC* ic, HandleValue val,
+                                MutableHandleValue res) {
+  return ToPropertyKeyOperation(cx, val, res);
 }
 
 /*  static */

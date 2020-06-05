@@ -1156,8 +1156,11 @@ void LIRGenerator::visitToAsyncIter(MToAsyncIter* ins) {
   assignSafepoint(lir, ins);
 }
 
-void LIRGenerator::visitToId(MToId* ins) {
-  LToIdV* lir = new (alloc()) LToIdV(useBox(ins->input()), tempDouble());
+void LIRGenerator::visitToPropertyKeyCache(MToPropertyKeyCache* ins) {
+  MDefinition* input = ins->getOperand(0);
+  MOZ_ASSERT(ins->type() == MIRType::Value);
+
+  auto* lir = new (alloc()) LToPropertyKeyCache(useBox(input));
   defineBox(lir, ins);
   assignSafepoint(lir, ins);
 }

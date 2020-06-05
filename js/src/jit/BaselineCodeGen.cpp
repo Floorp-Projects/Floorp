@@ -5091,27 +5091,12 @@ bool BaselineCodeGen<Handler>::emit_RetRval() {
 
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_ToPropertyKey() {
-  // Load index in R0, but keep values on the stack for the decompiler.
-  frame.syncStack(0);
-  masm.loadValue(frame.addressOfStackValue(-1), R0);
+  frame.popRegsAndSync(1);
 
-  // No-op if the index is trivally convertable to an id.
-  Label done;
-  masm.branchTestInt32(Assembler::Equal, R0, &done);
-  masm.branchTestString(Assembler::Equal, R0, &done);
-  masm.branchTestSymbol(Assembler::Equal, R0, &done);
-
-  prepareVMCall();
-
-  pushArg(R0);
-
-  using Fn = bool (*)(JSContext*, HandleValue, MutableHandleValue);
-  if (!callVM<Fn, js::ToPropertyKeyOperation>()) {
+  if (!emitNextIC()) {
     return false;
   }
 
-  masm.bind(&done);
-  frame.pop();  // Pop index.
   frame.push(R0);
   return true;
 }
