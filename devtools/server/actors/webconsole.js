@@ -1721,7 +1721,6 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
       chromeContext: pageError.isFromChromeContext,
       cssSelectors: pageError.cssSelectors,
       isPromiseRejection: pageError.isPromiseRejection,
-      isForwardedFromContentProcess: pageError.isForwardedFromContentProcess,
     };
 
     // If the pageError does have an exception object, we want to return the grip for it,

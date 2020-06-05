@@ -37,8 +37,7 @@ nsScriptErrorBase::nsScriptErrorBase()
       mInitializedOnMainThread(false),
       mIsFromPrivateWindow(false),
       mIsFromChromeContext(false),
-      mIsPromiseRejection(false),
-      mIsForwardedFromContentProcess(false) {}
+      mIsPromiseRejection(false) {}
 
 nsScriptErrorBase::~nsScriptErrorBase() = default;
 
@@ -419,20 +418,6 @@ nsScriptErrorBase::GetIsPromiseRejection(bool* aIsPromiseRejection) {
 NS_IMETHODIMP
 nsScriptErrorBase::InitIsPromiseRejection(bool aIsPromiseRejection) {
   mIsPromiseRejection = aIsPromiseRejection;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsScriptErrorBase::GetIsForwardedFromContentProcess(
-    bool* aIsForwardedFromContentProcess) {
-  *aIsForwardedFromContentProcess = mIsForwardedFromContentProcess;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsScriptErrorBase::SetIsForwardedFromContentProcess(
-    bool aIsForwardedFromContentProcess) {
-  mIsForwardedFromContentProcess = aIsForwardedFromContentProcess;
   return NS_OK;
 }
 
