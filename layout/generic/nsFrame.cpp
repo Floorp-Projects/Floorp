@@ -8173,7 +8173,7 @@ nsresult nsIFrame::PeekOffsetParagraph(nsPeekOffsetStruct* aPos) {
   nsIFrame* frame = this;
   nsContentAndOffset blockFrameOrBR;
   blockFrameOrBR.mContent = nullptr;
-  bool reachedLimit = frame->IsBlockOutside() || IsEditingHost(frame);
+  bool reachedBlockAncestor = frame->IsBlockOutside();
 
   auto traverse = [&aPos](nsIFrame* current) {
     return aPos->mDirection == eDirPrevious ? current->GetPrevSibling()
@@ -8184,12 +8184,12 @@ nsresult nsIFrame::PeekOffsetParagraph(nsPeekOffsetStruct* aPos) {
   // In each step, search the previous (or next) siblings for the closest
   // "stop frame" (a block frame or a BRFrame).
   // If found, set it to be the selection boundary and abort.
-  while (!reachedLimit) {
+  while (!reachedBlockAncestor) {
     nsIFrame* parent = frame->GetParent();
     // Treat a frame associated with the root content as if it were a block
     // frame.
     if (!frame->mContent || !frame->mContent->GetParent()) {
-      reachedLimit = true;
+      reachedBlockAncestor = true;
       break;
     }
 
@@ -8209,10 +8209,10 @@ nsresult nsIFrame::PeekOffsetParagraph(nsPeekOffsetStruct* aPos) {
       break;
     }
     frame = parent;
-    reachedLimit = frame && (frame->IsBlockOutside() || IsEditingHost(frame));
+    reachedBlockAncestor = frame && frame->IsBlockOutside();
   }
 
-  if (reachedLimit) {  // no "stop frame" found
+  if (reachedBlockAncestor) {  // no "stop frame" found
     aPos->mResultContent = frame->GetContent();
     if (aPos->mDirection == eDirPrevious) {
       aPos->mContentOffset = 0;
