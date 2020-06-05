@@ -2090,7 +2090,7 @@ ScrollFrameHelper::ScrollFrameHelper(nsContainerFrame* aOuter, bool aIsRoot)
       mAsyncScroll(nullptr),
       mAsyncSmoothMSDScroll(nullptr),
       mLastScrollOrigin(ScrollOrigin::None),
-      mLastSmoothScrollOrigin(ScrollOrigin::NotSpecified),
+      mLastSmoothScrollOrigin(ScrollOrigin::None),
       mScrollGeneration(++sScrollGenerationCounter),
       mDestination(0, 0),
       mRestorePos(-1, -1),
@@ -2893,7 +2893,7 @@ void ScrollFrameHelper::ScrollToImpl(nsPoint aPt, const nsRect& aRange,
     mLastScrollOrigin = aOrigin;
     mAllowScrollOriginDowngrade = false;
   }
-  mLastSmoothScrollOrigin = ScrollOrigin::NotSpecified;
+  mLastSmoothScrollOrigin = ScrollOrigin::None;
   mScrollGeneration = ++sScrollGenerationCounter;
   if (mLastScrollOrigin == ScrollOrigin::Apz) {
     mApzScrollPos = GetScrollPosition();
@@ -6655,7 +6655,7 @@ UniquePtr<PresState> ScrollFrameHelper::SaveState() const {
   // Don't store a scroll state if we never have been scrolled or restored
   // a previous scroll state, and we're not in the middle of a smooth scroll.
   bool isInSmoothScroll = IsProcessingAsyncScroll() ||
-                          mLastSmoothScrollOrigin != ScrollOrigin::NotSpecified;
+                          mLastSmoothScrollOrigin != ScrollOrigin::None;
   if (!mHasBeenScrolled && !mDidHistoryRestore && !isInSmoothScroll) {
     return nullptr;
   }
@@ -7244,7 +7244,7 @@ void ScrollFrameHelper::ApzSmoothScrollTo(const nsPoint& aDestination,
   // The animation will be handled in the compositor, pass the
   // information needed to start the animation and skip the main-thread
   // animation for this scroll.
-  MOZ_ASSERT(aOrigin != ScrollOrigin::NotSpecified);
+  MOZ_ASSERT(aOrigin != ScrollOrigin::None);
   mLastSmoothScrollOrigin = aOrigin;
   mApzSmoothScrollDestination = Some(aDestination);
   mScrollGeneration = ++sScrollGenerationCounter;
