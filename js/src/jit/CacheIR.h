@@ -1662,6 +1662,23 @@ class MOZ_RAII UnaryArithIRGenerator : public IRGenerator {
   AttachDecision tryAttachStub();
 };
 
+class MOZ_RAII ToPropertyKeyIRGenerator : public IRGenerator {
+  HandleValue val_;
+
+  AttachDecision tryAttachInt32();
+  AttachDecision tryAttachNumber();
+  AttachDecision tryAttachString();
+  AttachDecision tryAttachSymbol();
+
+  void trackAttached(const char* name);
+
+ public:
+  ToPropertyKeyIRGenerator(JSContext* cx, HandleScript, jsbytecode* pc,
+                           ICState::Mode mode, HandleValue val);
+
+  AttachDecision tryAttachStub();
+};
+
 class MOZ_RAII BinaryArithIRGenerator : public IRGenerator {
   JSOp op_;
   HandleValue lhs_;

@@ -311,6 +311,10 @@ bool WarpCacheIRTranspiler::emitGuardToString(ValOperandId inputId) {
   return emitGuardTo(inputId, MIRType::String);
 }
 
+bool WarpCacheIRTranspiler::emitGuardToSymbol(ValOperandId inputId) {
+  return emitGuardTo(inputId, MIRType::Symbol);
+}
+
 bool WarpCacheIRTranspiler::emitGuardToBoolean(ValOperandId inputId,
                                                Int32OperandId resultId) {
   MDefinition* input = getOperand(inputId);
@@ -456,6 +460,13 @@ bool WarpCacheIRTranspiler::emitLoadStringResult(StringOperandId strId) {
   MDefinition* str = getOperand(strId);
   MOZ_ASSERT(str->type() == MIRType::String);
   pushResult(str);
+  return true;
+}
+
+bool WarpCacheIRTranspiler::emitLoadSymbolResult(SymbolOperandId symId) {
+  MDefinition* sym = getOperand(symId);
+  MOZ_ASSERT(sym->type() == MIRType::Symbol);
+  pushResult(sym);
   return true;
 }
 

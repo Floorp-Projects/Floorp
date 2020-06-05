@@ -513,6 +513,11 @@ bool IonInstanceOfIC::update(JSContext* cx, HandleScript outerScript,
 bool IonToPropertyKeyIC::update(JSContext* cx, HandleScript outerScript,
                                 IonToPropertyKeyIC* ic, HandleValue val,
                                 MutableHandleValue res) {
+  IonScript* ionScript = outerScript->ionScript();
+
+  TryAttachIonStub<ToPropertyKeyIRGenerator, IonToPropertyKeyIC>(
+      cx, ic, ionScript, val);
+
   return ToPropertyKeyOperation(cx, val, res);
 }
 

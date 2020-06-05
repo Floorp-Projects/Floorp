@@ -4422,6 +4422,20 @@ bool CacheIRCompiler::emitLoadStringResult(StringOperandId strId) {
   return true;
 }
 
+bool CacheIRCompiler::emitLoadSymbolResult(SymbolOperandId symId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+  AutoOutputRegister output(*this);
+  Register sym = allocator.useRegister(masm, symId);
+
+  if (output.hasValue()) {
+    masm.tagValue(JSVAL_TYPE_SYMBOL, sym, output.valueReg());
+  } else {
+    masm.mov(sym, output.typedReg().gpr());
+  }
+
+  return true;
+}
+
 bool CacheIRCompiler::emitLoadInt32Result(Int32OperandId valId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoOutputRegister output(*this);

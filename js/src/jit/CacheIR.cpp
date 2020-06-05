@@ -7319,6 +7319,98 @@ AttachDecision UnaryArithIRGenerator::tryAttachStringNumber() {
   return AttachDecision::Attach;
 }
 
+ToPropertyKeyIRGenerator::ToPropertyKeyIRGenerator(JSContext* cx,
+                                                   HandleScript script,
+                                                   jsbytecode* pc,
+                                                   ICState::Mode mode,
+                                                   HandleValue val)
+    : IRGenerator(cx, script, pc, CacheKind::ToPropertyKey, mode), val_(val) {}
+
+void ToPropertyKeyIRGenerator::trackAttached(const char* name) {
+#ifdef JS_CACHEIR_SPEW
+  if (const CacheIRSpewer::Guard& sp = CacheIRSpewer::Guard(*this, name)) {
+    sp.valueProperty("val", val_);
+  }
+#endif
+}
+
+AttachDecision ToPropertyKeyIRGenerator::tryAttachStub() {
+  AutoAssertNoPendingException aanpe(cx_);
+  TRY_ATTACH(tryAttachInt32());
+  TRY_ATTACH(tryAttachNumber());
+  TRY_ATTACH(tryAttachString());
+  TRY_ATTACH(tryAttachSymbol());
+
+  trackAttached(IRGenerator::NotAttached);
+  return AttachDecision::NoAction;
+}
+
+AttachDecision ToPropertyKeyIRGenerator::tryAttachInt32() {
+  if (!val_.isInt32()) {
+    return AttachDecision::NoAction;
+  }
+
+  ValOperandId valId(writer.setInputOperandId(0));
+
+  Int32OperandId intId = writer.guardToInt32(valId);
+  writer.loadInt32Result(intId);
+  writer.returnFromIC();
+
+  trackAttached("ToPropertyKey.Int32");
+  return AttachDecision::Attach;
+}
+
+AttachDecision ToPropertyKeyIRGenerator::tryAttachNumber() {
+  if (!val_.isNumber()) {
+    return AttachDecision::NoAction;
+  }
+
+  // We allow negative zero here because ToPropertyKey(-0.0) is 0.
+  int32_t unused;
+  if (!mozilla::NumberEqualsInt32(val_.toNumber(), &unused)) {
+    return AttachDecision::NoAction;
+  }
+
+  ValOperandId valId(writer.setInputOperandId(0));
+
+  Int32OperandId intId = writer.guardToInt32Index(valId);
+  writer.loadInt32Result(intId);
+  writer.returnFromIC();
+
+  trackAttached("ToPropertyKey.Number");
+  return AttachDecision::Attach;
+}
+
+AttachDecision ToPropertyKeyIRGenerator::tryAttachString() {
+  if (!val_.isString()) {
+    return AttachDecision::NoAction;
+  }
+
+  ValOperandId valId(writer.setInputOperandId(0));
+
+  StringOperandId strId = writer.guardToString(valId);
+  writer.loadStringResult(strId);
+  writer.returnFromIC();
+
+  trackAttached("ToPropertyKey.String");
+  return AttachDecision::Attach;
+}
+
+AttachDecision ToPropertyKeyIRGenerator::tryAttachSymbol() {
+  if (!val_.isSymbol()) {
+    return AttachDecision::NoAction;
+  }
+
+  ValOperandId valId(writer.setInputOperandId(0));
+
+  SymbolOperandId strId = writer.guardToSymbol(valId);
+  writer.loadSymbolResult(strId);
+  writer.returnFromIC();
+
+  trackAttached("ToPropertyKey.Symbol");
+  return AttachDecision::Attach;
+}
+
 BinaryArithIRGenerator::BinaryArithIRGenerator(
     JSContext* cx, HandleScript script, jsbytecode* pc, ICState::Mode mode,
     JSOp op, HandleValue lhs, HandleValue rhs, HandleValue res)
