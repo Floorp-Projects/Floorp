@@ -52,7 +52,7 @@ this.trrselect = class trrselect extends ExtensionAPI {
             if (Cu.isInAutomation) {
               // For mochitests, just record telemetry with a dummy result.
               // TRRPerformance.jsm is tested in xpcshell.
-              setDryRunResultAndRecordTelemetry("dummyTRR");
+              setDryRunResultAndRecordTelemetry("https://dummytrr.com/query");
               return;
             }
 

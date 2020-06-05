@@ -125,7 +125,11 @@ async function checkTRRSelectionTelemetry() {
       e[3] == "dryrunresult"
   );
   is(events.length, 1, "Found the expected trrselect event.");
-  is(events[0][4], "dummyTRR", "The event records the expected decision");
+  is(
+    events[0][4],
+    "https://dummytrr.com/query",
+    "The event records the expected decision"
+  );
 }
 
 function ensureNoTRRSelectionTelemetry() {
