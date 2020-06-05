@@ -35,7 +35,9 @@ add_task(async function() {
   const service = toolbox.sourceMapURLService;
 
   info(`checking original location for ${JS_URL}:${GENERATED_LINE}`);
-  const newLoc = await service.originalPositionForURL(JS_URL, GENERATED_LINE);
+  const newLoc = await new Promise(r =>
+    service.subscribeByURL(JS_URL, GENERATED_LINE, undefined, r)
+  );
   is(newLoc.url, ORIGINAL_URL, "check mapped URL");
   is(newLoc.line, ORIGINAL_LINE, "check mapped line number");
 });

@@ -32,14 +32,14 @@ add_task(async function() {
   await sourceSeen;
 
   const loc1 = { url: JS_URL, line: 6 };
-  const newLoc1 = await service.originalPositionForURL(loc1.url, loc1.line, 4);
+  const newLoc1 = await new Promise(r =>
+    service.subscribeByURL(loc1.url, loc1.line, 4, r)
+  );
   checkLoc1(loc1, newLoc1);
 
   const loc2 = { url: JS_URL, line: 8, column: 3 };
-  const newLoc2 = await service.originalPositionForURL(
-    loc2.url,
-    loc2.line,
-    loc2.column
+  const newLoc2 = await new Promise(r =>
+    service.subscribeByURL(loc2.url, loc2.line, loc2.column, r)
   );
   checkLoc2(loc2, newLoc2);
 
