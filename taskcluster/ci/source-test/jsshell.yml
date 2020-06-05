@@ -33,11 +33,11 @@ job-defaults:
             sm:
                 by-test-platform:
                     (linux|windows|macos)(?!.*shippable).*: []
-                    default: ['mozilla-central', 'integration']
+                    default: ['mozilla-central', 'try', 'integration']
             default:
                 by-test-platform:
                     (linux|windows|macos)(?!.*shippable).*: []
-                    default: ['mozilla-central']
+                    default: ['mozilla-central', 'try']
     fetches:
         build:
             - target.jsshell.zip
