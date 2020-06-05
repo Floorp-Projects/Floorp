@@ -4,7 +4,6 @@
 
 package mozilla.components.browser.menu2
 
-import mozilla.components.concept.menu.Side
 import android.view.View
 import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import android.widget.PopupWindow
@@ -14,7 +13,10 @@ import mozilla.components.browser.menu2.ext.displayPopup
 import mozilla.components.browser.menu2.view.MenuView
 import mozilla.components.concept.menu.MenuController
 import mozilla.components.concept.menu.Orientation
+import mozilla.components.concept.menu.Side
 import mozilla.components.concept.menu.candidate.MenuCandidate
+import mozilla.components.concept.menu.candidate.NestedMenuCandidate
+import mozilla.components.concept.menu.ext.findNestedMenuCandidate
 import mozilla.components.support.base.observer.Observable
 import mozilla.components.support.base.observer.ObserverRegistry
 
@@ -26,8 +28,15 @@ class BrowserMenuController(
     private val visibleSide: Side = Side.START
 ) : MenuController, Observable<MenuController.Observer> by ObserverRegistry() {
 
+    private var currentPopupInfo: PopupMenuInfo? = null
     private var menuCandidates: List<MenuCandidate> = emptyList()
-    private var currentPopup: PopupWindow? = null
+
+    private val menuDismissListener = PopupWindow.OnDismissListener {
+        currentPopupInfo = null
+        notifyObservers { onDismiss() }
+    }
+
+    override fun show(anchor: View): PopupWindow = show(anchor, orientation = null)
 
     /**
      * @param anchor The view on which to pin the popup window.
@@ -36,35 +45,59 @@ class BrowserMenuController(
      */
     fun show(
         anchor: View,
-        orientation: Orientation = determineMenuOrientation(anchor.parent as? View?),
+        orientation: Orientation? = null,
         @Px width: Int = anchor.resources.getDimensionPixelSize(R.dimen.mozac_browser_menu2_width)
     ): PopupWindow {
+        val desiredOrientation = orientation ?: determineMenuOrientation(anchor.parent as? View?)
         val view = MenuView(anchor.context).apply {
+            // Show nested list if present, or the standard menu candidates list.
             submitList(menuCandidates)
             setVisibleSide(visibleSide)
         }
 
-        return PopupWindow(view, width, WRAP_CONTENT, true).apply {
+        return MenuPopupWindow(view, width).apply {
             view.onDismiss = ::dismiss
-            setOnDismissListener {
-                currentPopup = null
-                notifyObservers { onDismiss() }
-            }
-
-            displayPopup(view, anchor, orientation)
+            view.onReopenMenu = ::reopenMenu
+            setOnDismissListener(menuDismissListener)
+            displayPopup(view, anchor, desiredOrientation)
         }.also {
-            currentPopup = it
+            currentPopupInfo = PopupMenuInfo(
+                window = it,
+                anchor = anchor,
+                orientation = desiredOrientation,
+                nested = null
+            )
         }
     }
 
-    override fun show(anchor: View): PopupWindow =
-        show(anchor, orientation = determineMenuOrientation(anchor.parent as? View?))
+    /**
+     * Re-opens the menu and displays the given nested list.
+     * No-op if the menu is not yet open.
+     */
+    private fun reopenMenu(nested: NestedMenuCandidate?) {
+        val info = currentPopupInfo ?: return
+        info.window.run {
+            // Dismiss silently
+            setOnDismissListener(null)
+            dismiss()
+            setOnDismissListener(menuDismissListener)
+
+            // Quickly remove the current list
+            view.submitList(null)
+            // Display the new nested list
+            view.submitList(nested?.subMenuItems ?: menuCandidates)
+
+            // Reopen the menu
+            displayPopup(view, info.anchor, info.orientation)
+        }
+        currentPopupInfo = info.copy(nested = nested)
+    }
 
     /**
      * Dismiss the menu popup if the menu is visible.
      */
     override fun dismiss() {
-        currentPopup?.dismiss()
+        currentPopupInfo?.window?.dismiss()
     }
 
     /**
@@ -72,12 +105,40 @@ class BrowserMenuController(
      */
     override fun submitList(list: List<MenuCandidate>) {
         menuCandidates = list
+        val info = currentPopupInfo
 
-        val openMenu = currentPopup?.contentView as MenuView?
-        openMenu?.submitList(list)
+        // If menu is already open, update the displayed items
+        if (info != null) {
+            // If a nested menu is open, it should be displayed
+            val displayedItems = if (info.nested != null) {
+                list.findNestedMenuCandidate(info.nested.id)?.subMenuItems
+            } else {
+                list
+            }
+
+            // If the new menu is null, close & reopen the popup on the main list
+            if (displayedItems == null) {
+                // close & reopen popup
+                reopenMenu(nested = null)
+            } else {
+                info.window.view.submitList(displayedItems)
+            }
+        }
 
         notifyObservers { onMenuListSubmit(list) }
     }
+
+    private class MenuPopupWindow(
+        val view: MenuView,
+        @Px width: Int
+    ) : PopupWindow(view, width, WRAP_CONTENT, true)
+
+    private data class PopupMenuInfo(
+        val window: MenuPopupWindow,
+        val anchor: View,
+        val orientation: Orientation,
+        val nested: NestedMenuCandidate? = null
+    )
 }
 
 /**

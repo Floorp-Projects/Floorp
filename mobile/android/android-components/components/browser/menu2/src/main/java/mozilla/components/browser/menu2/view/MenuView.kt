@@ -18,6 +18,7 @@ import mozilla.components.browser.menu2.R
 import mozilla.components.browser.menu2.adapter.MenuCandidateListAdapter
 import mozilla.components.concept.menu.Side
 import mozilla.components.concept.menu.candidate.MenuCandidate
+import mozilla.components.concept.menu.candidate.NestedMenuCandidate
 import mozilla.components.support.ktx.android.view.onNextGlobalLayout
 
 /**
@@ -30,13 +31,22 @@ class MenuView @JvmOverloads constructor(
 ) : FrameLayout(context, attrs, defStyleAttr) {
 
     private val layoutManager = LinearLayoutManager(context, RecyclerView.VERTICAL, false)
-    private val menuAdapter = MenuCandidateListAdapter(LayoutInflater.from(context)) { onDismiss() }
+    private val menuAdapter = MenuCandidateListAdapter(
+        inflater = LayoutInflater.from(context),
+        dismiss = { onDismiss() },
+        reopenMenu = { onReopenMenu(it) }
+    )
     private val recyclerView: RecyclerView
 
     /**
      * Called when the menu is clicked and should be dismissed.
      */
     var onDismiss: () -> Unit = {}
+
+    /**
+     * Called when a nested menu should be opened.
+     */
+    var onReopenMenu: (NestedMenuCandidate?) -> Unit = {}
 
     init {
         View.inflate(context, R.layout.mozac_browser_menu2_view, this)
@@ -49,7 +59,7 @@ class MenuView @JvmOverloads constructor(
     /**
      * Changes the contents of the menu.
      */
-    fun submitList(list: List<MenuCandidate>) = menuAdapter.submitList(list)
+    fun submitList(list: List<MenuCandidate>?) = menuAdapter.submitList(list)
 
     /**
      * Displays either the start or the end of the list.

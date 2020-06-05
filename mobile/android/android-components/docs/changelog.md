@@ -29,6 +29,17 @@ permalink: /changelog/
   * ⚠️ **This is a breaking change**: `ViewHolderProvider` no longer has a second param.
   * ⚠️ **This is a breaking change**: `TabsAdapter` has a `styling` field `TabsTrayStyling`.
 
+* **browser-menu2**
+  * Added new component to replace **browser-menu**. menu2 uses immutable data types and better integrates with `BrowserStore`.
+
+* **concept-menu**
+  * Added concept component to contain data classes for menu items and interfaces for menu controllers.
+
+* **browser-toolbar**
+  * Added support for the new `MenuController` interface for menu2.
+    When a menu controller is added to a toolbar, it will be used in place of the `BrowserMenuBuilder`.
+    The builder will supply items to the `MenuController` in `invalidateMenu` if it is kept.
+
 # 51.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v50.0.0...v51.0.0)
@@ -197,17 +208,6 @@ permalink: /changelog/
 
 * **feature-addons**
   * Add `Addon.createdAtDate` and `Addon.updatedAtDate` extensions to get `Addon.createdAt` and `Addon.updatedAt` as a `Date`.
-
-* **browser-menu2**
-  * Added new component to replace **browser-menu**. menu2 uses immutable data types and better integrates with `BrowserStore`.
-
-* **concept-menu**
-  * Added concept component to contain data classes for menu items and interfaces for menu controllers.
-
-* **browser-toolbar**
-  * Added support for the new `MenuController` interface for menu2.
-    When a menu controller is added to a toolbar, it will be used in place of the `BrowserMenuBuilder`.
-    The builder will supply items to the `MenuController` in `invalidateMenu` if it is kept.
 
 # 47.0.0
 

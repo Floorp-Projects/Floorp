@@ -12,35 +12,41 @@ import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.menu.BrowserMenuHighlight
 import mozilla.components.browser.menu.ext.getHighlight
 import mozilla.components.browser.menu.item.BrowserMenuHighlightableItem
+import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
+import mozilla.components.concept.menu.MenuController
+import mozilla.components.concept.menu.candidate.DecorativeTextMenuCandidate
+import mozilla.components.concept.menu.candidate.TextMenuCandidate
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
-import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mock
+import org.mockito.Mockito.`when`
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
+import org.mockito.MockitoAnnotations
 
 @RunWith(AndroidJUnit4::class)
 class MenuButtonTest {
-    private lateinit var menuBuilder: BrowserMenuBuilder
-    private lateinit var menu: BrowserMenu
-    private lateinit var menuButtonInternal: mozilla.components.browser.menu.view.MenuButton
+    @Mock private lateinit var menuBuilder: BrowserMenuBuilder
+    @Mock private lateinit var menuController: MenuController
+    @Mock private lateinit var menu: BrowserMenu
+    @Mock private lateinit var menuButtonInternal: mozilla.components.browser.menu.view.MenuButton
     private lateinit var menuButton: MenuButton
 
     @Before
     fun setup() {
-        menu = mock()
-        menuBuilder = mock()
-        doReturn(menu).`when`(menuBuilder).build(testContext)
+        MockitoAnnotations.initMocks(this)
+        `when`(menuBuilder.build(testContext)).thenReturn(menu)
+        `when`(menuButtonInternal.context).thenReturn(testContext)
 
-        menuButtonInternal = mock()
         menuButton = MenuButton(menuButtonInternal)
     }
 
@@ -48,10 +54,10 @@ class MenuButtonTest {
     fun `menu button is visible only if menu builder attached`() {
         verify(menuButtonInternal).visibility = View.GONE
 
-        doReturn(mock<BrowserMenuBuilder>()).`when`(menuButtonInternal).menuBuilder
+        `when`(menuButtonInternal.menuBuilder).thenReturn(mock())
         assertTrue(menuButton.shouldBeVisible())
 
-        doReturn(null).`when`(menuButtonInternal).menuBuilder
+        `when`(menuButtonInternal.menuBuilder).thenReturn(null)
         assertFalse(menuButton.shouldBeVisible())
     }
 
@@ -79,10 +85,10 @@ class MenuButtonTest {
                 isHighlighted = { isHighlighted }
             )
         )))
-        whenever(highlightMenuBuilder.build(testContext)).thenReturn(menu)
+        doReturn(menu).`when`(highlightMenuBuilder).build(testContext)
 
         menuButton.menuBuilder = highlightMenuBuilder
-        doReturn(highlightMenuBuilder).`when`(menuButtonInternal).menuBuilder
+        `when`(menuButtonInternal.menuBuilder).thenReturn(highlightMenuBuilder)
         menuButton.invalidateMenu()
 
         verify(menuButtonInternal).setHighlight(null)
@@ -92,5 +98,46 @@ class MenuButtonTest {
 
         assertEquals(highlight, highlightMenuBuilder.items.getHighlight())
         verify(menuButtonInternal).setHighlight(highlight)
+    }
+
+    @Test
+    fun `invalidateMenu should invalidate the internal menu`() {
+        `when`(menuButtonInternal.menuController).thenReturn(null)
+        `when`(menuButtonInternal.menuBuilder).thenReturn(mock())
+        verify(menuButtonInternal, never()).invalidateBrowserMenu()
+
+        menuButton.invalidateMenu()
+
+        verify(menuButtonInternal).invalidateBrowserMenu()
+    }
+
+    @Test
+    fun `invalidateMenu should do nothing if using the menu controller`() {
+        `when`(menuButtonInternal.menuController).thenReturn(menuController)
+        `when`(menuButtonInternal.menuBuilder).thenReturn(null)
+        verify(menuButtonInternal, never()).invalidateBrowserMenu()
+
+        menuButton.invalidateMenu()
+
+        verify(menuButtonInternal, never()).invalidateBrowserMenu()
+    }
+
+    @Test
+    fun `invalidateMenu should automatically upgrade menu items if both builder and controller are present`() {
+        val onClick = {}
+        `when`(menuButtonInternal.menuController).thenReturn(menuController)
+        `when`(menuButtonInternal.menuBuilder).thenReturn(BrowserMenuBuilder(listOf(
+            SimpleBrowserMenuItem("Item 1", listener = onClick),
+            SimpleBrowserMenuItem("Item 2")
+        )))
+        verify(menuButtonInternal, never()).invalidateBrowserMenu()
+
+        menuButton.invalidateMenu()
+
+        verify(menuButtonInternal, never()).invalidateBrowserMenu()
+        verify(menuController).submitList(listOf(
+            TextMenuCandidate("Item 1", onClick = onClick),
+            DecorativeTextMenuCandidate("Item 2")
+        ))
     }
 }

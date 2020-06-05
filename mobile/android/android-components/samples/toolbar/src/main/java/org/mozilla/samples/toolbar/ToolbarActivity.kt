@@ -38,6 +38,7 @@ import mozilla.components.browser.toolbar.display.DisplayToolbar
 import mozilla.components.concept.menu.Side
 import mozilla.components.concept.menu.candidate.DividerMenuCandidate
 import mozilla.components.concept.menu.candidate.DrawableMenuIcon
+import mozilla.components.concept.menu.candidate.NestedMenuCandidate
 import mozilla.components.concept.menu.candidate.TextMenuCandidate
 import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.feature.toolbar.ToolbarAutocompleteFeature
@@ -325,7 +326,15 @@ class ToolbarActivity : AppCompatActivity() {
         val share = TextMenuCandidate("Share…") { /* Do nothing */ }
         val homeScreen = TextMenuCandidate("Add to Home screen") { /* Do nothing */ }
         val open = TextMenuCandidate("Open in…") { /* Do nothing */ }
-        val settings = TextMenuCandidate("Settings") { /* Do nothing */ }
+        val settings = NestedMenuCandidate(
+            id = R.id.mozac_browser_toolbar_menu,
+            text = "Settings",
+            subMenuItems = listOf(
+                NestedMenuCandidate(id = R.id.container, text = "Back", subMenuItems = null),
+                TextMenuCandidate("Setting 1") { /* Do nothing */ },
+                TextMenuCandidate("Setting 2") { /* Do nothing */ }
+            )
+        )
 
         val items = listOf(share, homeScreen, open, settings)
         toolbar.display.menuController = BrowserMenuController().apply {

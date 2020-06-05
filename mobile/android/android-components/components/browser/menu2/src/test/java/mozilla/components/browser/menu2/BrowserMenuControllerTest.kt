@@ -36,6 +36,16 @@ class BrowserMenuControllerTest {
     }
 
     @Test
+    fun `can show with custom width`() {
+        val menu = BrowserMenuController()
+        val width = 500
+        val anchor = Button(testContext)
+        val popup = menu.show(anchor, Orientation.UP, width)
+
+        assertEquals(width, popup.width)
+    }
+
+    @Test
     fun `observer is notified when submitList is called`() {
         var submitted: List<MenuCandidate>? = null
         val menu: MenuController = BrowserMenuController()
@@ -64,6 +74,9 @@ class BrowserMenuControllerTest {
 
             override fun onMenuListSubmit(list: List<MenuCandidate>) = Unit
         })
+
+        menu.dismiss()
+        assertFalse(dismissed)
 
         val anchor = Button(testContext)
         val popup = menu.show(anchor)
