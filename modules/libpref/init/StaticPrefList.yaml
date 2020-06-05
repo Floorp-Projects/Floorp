@@ -2674,7 +2674,7 @@
 # opener/noopener.
 - name: dom.targetBlankNoOpener.enabled
   type: bool
-  value: @IS_EARLY_BETA_OR_EARLIER@
+  value: true
   mirror: always
 
 # Is support for Selection.GetRangesForInterval enabled?
