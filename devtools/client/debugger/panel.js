@@ -256,8 +256,8 @@ class DebuggerPanel {
     }
   }
 
-  canLoadSource(sourceId) {
-    return this._selectors.canLoadSource(this._getState(), sourceId);
+  getSourceActorsForSource(sourceId) {
+    return this._selectors.getSourceActorsForSource(this._getState(), sourceId);
   }
 
   getSourceByActorId(sourceId) {
@@ -266,6 +266,10 @@ class DebuggerPanel {
 
   getSourceByURL(sourceURL) {
     return this._selectors.getSourceByURL(this._getState(), sourceURL);
+  }
+
+  getSource(sourceId) {
+    return this._selectors.getSource(this._getState(), sourceId);
   }
 
   destroy() {

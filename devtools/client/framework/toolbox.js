@@ -4078,24 +4078,9 @@ Toolbox.prototype = {
     sourceId,
     reason
   ) {
-    try {
-      const sourceMappedLoc = await this.sourceMapURLService.originalPositionForURL(
-        sourceURL,
-        sourceLine,
-        sourceColumn
-      );
-      if (sourceMappedLoc) {
-        sourceURL = sourceMappedLoc.url;
-        sourceLine = sourceMappedLoc.line;
-        sourceColumn = sourceMappedLoc.column;
-        sourceId = null;
-      }
-    } catch (err) {
-      console.error(
-        "Failed to resolve sourcemapped location for the given source location",
-        { sourceURL, sourceLine, sourceColumn, sourceId, reason },
-        err
-      );
+    if (typeof sourceURL !== "string" && typeof sourceId !== "string") {
+      console.warn("Failed to open generated source, no url/id given");
+      return;
     }
 
     return viewSource.viewSourceInDebugger(
