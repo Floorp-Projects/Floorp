@@ -2621,21 +2621,6 @@ nscoord nsFlexContainerFrame::GetLogicalBaseline(
   return mBaselineFromLastReflow;
 }
 
-// Helper for BuildDisplayList, to implement this special-case for flex items
-// from the spec:
-//    Flex items paint exactly the same as block-level elements in the
-//    normal flow, except that 'z-index' values other than 'auto' create
-//    a stacking context even if 'position' is 'static'.
-// http://www.w3.org/TR/2012/CR-css3-flexbox-20120918/#painting
-static nsIFrame::DisplayChildFlag GetDisplayFlagsForFlexItem(nsIFrame* aFrame) {
-  MOZ_ASSERT(aFrame->IsFlexItem(), "Should only be called on flex items");
-  const nsStylePosition* pos = aFrame->StylePosition();
-  if (pos->mZIndex.IsInteger()) {
-    return nsIFrame::DisplayChildFlag::ForceStackingContext;
-  }
-  return nsIFrame::DisplayChildFlag::ForcePseudoStackingContext;
-}
-
 void nsFlexContainerFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                             const nsDisplayListSet& aLists) {
   nsDisplayListCollection tempLists(aBuilder);
@@ -2656,7 +2641,7 @@ void nsFlexContainerFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   for (; !iter.AtEnd(); iter.Next()) {
     nsIFrame* childFrame = *iter;
     BuildDisplayListForChild(aBuilder, childFrame, childLists,
-                             GetDisplayFlagsForFlexItem(childFrame));
+                             childFrame->DisplayFlagForFlexOrGridItem());
   }
 
   tempLists.MoveTo(aLists);
