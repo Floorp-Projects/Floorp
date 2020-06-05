@@ -47,6 +47,11 @@
     <!-- Text for the negative button -->
     <string name="cfr_neg_button_text">Innò, vi ringraziu</string>
 
+    <!-- Search widget "contextual feature recommendation" (CFR) -->
+    <!-- Text for the main message. 'Firefox' intentionally hardcoded here.-->
+    <string name="search_widget_cfr_message">Accidite più prestu à Firefox. Aghjunghjite un widget à u vostru screnu d’accolta.</string>
+    <!-- Text for the positive button -->
+    <string name="search_widget_cfr_pos_button_text">Aghjunghje u widget</string>
     <!-- Text for the negative button -->
     <string name="search_widget_cfr_neg_button_text">Micca subitu</string>
 
@@ -93,6 +98,8 @@
     <string name="browser_menu_add_to_homescreen">Aghjunghje à u screnu d’accolta</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
     <string name="browser_menu_install_on_homescreen">Installà</string>
+    <!-- Menu option on the toolbar that takes you to synced tabs page-->
+    <string name="synced_tabs">Unghjette sincrunizate</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">Circà in a pagina</string>
     <!-- Browser menu button that creates a private tab -->
@@ -290,6 +297,8 @@
     <string name="preferences_sync_bookmarks">Indette</string>
     <!-- Preference for syncing logins -->
     <string name="preferences_sync_logins">Identificazioni di cunnessione</string>
+    <!-- Preference for syncing tabs -->
+    <string name="preferences_sync_tabs">Unghjette</string>
     <!-- Preference for signing out -->
     <string name="preferences_sign_out">Scunnettassi</string>
     <!-- Preference displays and allows changing current FxA device name -->
@@ -421,6 +430,8 @@
     <string name="library_desktop_bookmarks_unfiled">Altre indette</string>
     <!-- Option in Library to open History page -->
     <string name="library_history">Crunulogia</string>
+    <!-- Option in Library to open Synced Tabs page -->
+    <string name="library_synced_tabs">Unghjette sincrunizate</string>
     <!-- Option in Library to open Reading List -->
     <string name="library_reading_list">Lista di lettura</string>
     <!-- Menu Item Label for Search in Library -->
@@ -950,7 +961,9 @@
     <!-- text for standard blocking option button description -->
     <string name="onboarding_tracking_protection_standard_button_description">Bluccheghja menu di perseguitatori ma permette à e pagine di caricassi nurmalmente</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
-    <string name="onboarding_tracking_protection_strict_button">Severu (ricumandatu)</string>
+    <string name="onboarding_tracking_protection_strict_button">Severa (ricumandata)</string>
+    <!-- text for tracking protection radio button option for strict level of blocking -->
+    <string name="onboarding_tracking_protection_strict_option">Severa</string>
     <!-- text for strict blocking option button description -->
     <string name="onboarding_tracking_protection_strict_button_description">Bluccheghja più di perseguitatori per una prutezzione più forte contr’à u spiunagiu è un andamentu piu rapidu, ma certi siti puderianu ùn micca funziunà currettamente</string>
     <!-- text for the toolbar position card header
@@ -1050,13 +1063,13 @@
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Ciò chì hè bluccatu da a prutezzione classica contr’à u spiunagiu</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict">Severu</string>
+    <string name="preference_enhanced_tracking_protection_strict">Severa</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings, default setting -->
-    <string name="preference_enhanced_tracking_protection_strict_default">Severu (predefinitu)</string>
+    <string name="preference_enhanced_tracking_protection_strict_default">Severa (predefinita)</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict_default_description">Una prutezzione più forte contr’à u spiunagiu è un andamentu piu rapidu, ma certi siti ponu ùn micca funziunà currettamente.</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_recommended">Severu (ricumandatu)</string>
+    <string name="preference_enhanced_tracking_protection_strict_recommended">Severa (ricumandata)</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict_description">Prutezzione più forte, ma certi siti o cuntenuti puderianu esse alterati.</string>
     <!--  Accessibility text for the Strict protection information icon  -->

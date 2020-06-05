@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+    <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="app_name_private_5">ব্যক্তিগত %s</string>
+    <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="app_name_private_4">%s (ব্যক্তিগত)</string>
     <!-- Home Fragment -->
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
     <string name="content_description_menu">আরও অপশন</string>
@@ -21,7 +25,7 @@
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">সেশন মুছুন</string>
 
-    <!-- Private mode shortcut "contextual feature recommender" (CFR) -->
+    <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
     <string name="cfr_message">আপনার হোম স্ক্রীন থেকে ব্যক্তিগত ট্যাবগুলি খুলতে একটি শর্টকাট যোগ করুন।</string>
     <!-- Text for the positive button -->
@@ -34,6 +38,9 @@
     <string name="home_screen_shortcut_open_new_tab_2">নতুন ট্যাব</string>
     <!-- Shortcut action to open new private tab -->
     <string name="home_screen_shortcut_open_new_private_tab_2">নতুন ব্যক্তিগত ট্যাব</string>
+
+    <!-- Heading for the Top Sites block -->
+    <string name="home_screen_top_sites_heading">শীর্ষ সাইটগুলি</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
@@ -51,7 +58,7 @@
     <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
     <string name="browser_menu_edit_bookmark">বুকমার্ক সম্পাদনা করুন</string>
     <!-- Browser menu button that opens the addon manager -->
-    <string name="browser_menu_addon_manager">অ্যাড-অন ব্যবস্থাপক</string>
+    <string name="browser_menu_add_ons">অ্যাড-অনগুলো</string>
     <!-- Text displayed when there are no add-ons to be shown -->
     <string name="no_add_ons">এখানে কোনো অ্যাড-অন নেই</string>
     <!-- Browser menu button that sends a user to help articles -->
@@ -62,7 +69,7 @@
     <!-- Browser menu button that opens the settings menu -->
     <string name="browser_menu_settings">সেটিংস</string>
     <!-- Browser menu button that opens a user's library -->
-    <string name="browser_menu_your_library">আপনার লাইব্রেরি</string>
+    <string name="browser_menu_library">লাইব্রেরি</string>
     <!-- Browser menu toggle that requests a desktop site -->
     <string name="browser_menu_desktop_site">ডেস্কটপ সাইট</string>
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
@@ -76,11 +83,13 @@
     <!-- Browser menu button that creates a new tab -->
     <string name="browser_menu_new_tab">নতুন ট্যাব</string>
     <!-- Browser menu button that saves the current tab to a collection -->
-    <string name="browser_menu_save_to_collection">সংগ্রহে সংরক্ষণ করুন</string>
+    <string name="browser_menu_save_to_collection_2">সংগ্রহে সংরক্ষণ করুন</string>
     <!-- Browser menu button that opens a dialog to report issues with the current site -->
     <string name="browser_menu_report_issue">সাইটের সমস্যা রিপোর্ট করুন</string>
     <!-- Browser menu button that open a share menu to share the current site -->
     <string name="browser_menu_share">শেয়ার</string>
+    <!-- Share menu title, displayed when a user is sharing their current site -->
+    <string name="menu_share_with">এর সাথে শেয়ার করুন…</string>
     <!-- Browser menu button shown in custom tabs that opens the current tab in Fenix
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="browser_menu_open_in_fenix">%1$s এ খোলা</string>
@@ -156,8 +165,14 @@
     <string name="preferences_about">%1$s সম্পর্কে</string>
     <!-- Preference linking to the your rights SUMO page -->
     <string name="preferences_your_rights">আপনার অধিকারগুলো</string>
+    <!-- Preference for settings related to saved passwords -->
+    <string name="preferences_passwords">পাসওয়ার্ড</string>
+    <!-- Preference for settings related to saved credit cards and addresses -->
+    <string name="preferences_credit_cards_addresses">ক্রেডিট কার্ড এবং ঠিকানা</string>
     <!-- Preference for settings related to changing the default browser -->
     <string name="preferences_set_as_default_browser">ডিফল্ট ব্রাউজার হিসাবে নির্ধারণ করুন</string>
+    <!-- Preference category for advanced settings -->
+    <string name="preferences_category_advanced">উচ্চপর্যায়</string>
     <!-- Preference category for privacy settings -->
     <string name="preferences_category_privacy">গোপনীয়তা</string>
     <!-- Preference category for privacy and security settings -->
@@ -187,6 +202,8 @@
     <!-- Preference for language -->
     <string name="preferences_language">ভাষা</string>
 
+    <!-- Preference for data choices -->
+    <string name="preferences_data_choices">ডাটা পছন্দ</string>
     <!-- Preference for data collection -->
     <string name="preferences_data_collection">তথ্য সংগ্রহ</string>
     <!-- Preference linking to the privacy notice -->
@@ -223,6 +240,8 @@
     <string name="preferences_sync_history">ইতিহাস</string>
     <!-- Preference for syncing bookmarks -->
     <string name="preferences_sync_bookmarks">বুকমার্কসমূহ</string>
+    <!-- Preference for syncing logins -->
+    <string name="preferences_sync_logins">লগইন</string>
     <!-- Preference for signing out -->
     <string name="preferences_sign_out">সাইন আউট</string>
 
@@ -240,10 +259,6 @@
     <string name="sync_last_synced_summary">শেষ Sync হয়েছিল: %s</string>
     <!-- Label summary showing never synced -->
     <string name="sync_never_synced_summary">শেষ Sync হয়েছিল: কখনো না</string>
-    <!-- Text for displaying the default device name.
-        The first parameter is the application name, the second is the device manufacturer name
-        and the third is the device model. -->
-    <string name="default_device_name">%s%s এ %s</string>
 
     <!--  The body for these is the URL of the tab received  -->
     <string name="fxa_tab_received_notification_name">ট্যাব এসেছে</string>
@@ -297,9 +312,6 @@
     <!-- Preference for removing FxA account -->
     <string name="preferences_sync_remove_account">অ্যাকাউন্ট মুছুন</string>
 
-    <!-- Pairing Feature strings -->
-    <!-- Instructions on how to access pairing -->
-    <string name="pair_instructions"><![CDATA[আপনার QR কোড পেতে আপনার কম্পিউটারের Firefox থেকে <b>firefox.com/pair</b> এ যান।]]></string>
     <!-- Button to open camera for pairing -->
     <string name="pair_open_camera">ক্যামেরা খুলুন</string>
     <!-- Button to cancel pairing -->
@@ -321,6 +333,9 @@
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">ডিভাইসের থিম অনুসরণ করুন</string>
 
+    <!-- Library -->
+    <!-- Option in Library to open Sessions page -->
+    <string name="library_sessions">সেশনসমূহ</string>
     <!-- Option in Library to open Screenshots page -->
     <string name="library_screenshots">স্ক্রিনশটগুলি</string>
     <!-- Option in Library to open Downloads page -->
@@ -341,8 +356,6 @@
     <string name="library_reading_list">পড়ার তালিকা</string>
     <!-- Menu Item Label for Search in Library -->
     <string name="library_search">অনুসন্ধান</string>
-    <!-- Library Page Title -->
-    <string name="library_title">লাইব্রেরি</string>
     <!-- Settings Page Title -->
     <string name="settings_title">সেটিংস</string>
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
@@ -362,14 +375,20 @@
     <string name="open_tabs_menu">ট্যাব মেনু খুলুন</string>
     <!-- Open tabs menu item to close all tabs -->
     <string name="tabs_menu_close_all_tabs">সব ট্যাব বন্ধ করুন</string>
+    <!-- Open tabs menu item to save tabs to collection -->
+    <string name="tabs_menu_save_to_collection">সংগ্রহে সংরক্ষণ করুন</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
     <string name="tab_menu">ট্যাব মেনু</string>
+    <!-- Tab menu item to share the tab -->
+    <string name="tab_share">ট্যাব শেয়ার করুন</string>
     <!-- Button in the current session menu. Deletes the session when pressed -->
     <string name="current_session_delete">মুছুন</string>
     <!-- Button in the current session menu. Saves the session when pressed -->
     <string name="current_session_save">সংরক্ষণ</string>
     <!-- Button in the current session menu. Opens the share menu when pressed -->
     <string name="current_session_share">শেয়ার</string>
+    <!-- Button to save the current set of tabs into a collection -->
+    <string name="save_to_collection">সংগ্রহে সংরক্ষণ করুন</string>
     <!-- Text for the menu button to delete a collection -->
     <string name="collection_delete">সংগ্রহ মুছে ফেলুন</string>
     <!-- Text for the menu button to rename a collection -->
@@ -382,8 +401,18 @@
     <string name="history_delete_all">ইতিহাস মুছুন</string>
     <!-- Text for the dialog to confirm clearing all history -->
     <string name="history_delete_all_dialog">আপনি কি নিশ্চিত আপনি নিজের ইতিহাস সাফ করতে চান?</string>
+    <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
+    <string name="history_delete_multiple_items_snackbar">ইতিহাস মুছে ফেলা হয়েছে</string>
+    <!-- Text for the snackbar to confirm that a single browsing history item has been deleted. The first parameter is the shortened URL of the deleted history item. -->
+    <string name="history_delete_single_item_snackbar">%1$s মুছে ফেলা হয়েছে</string>
     <!-- Text for positive action to delete history in deleting history dialog -->
     <string name="history_clear_dialog">পরিষ্কার</string>
+    <!-- History overflow menu share button -->
+    <string name="history_menu_share_button">শেয়ার</string>
+    <!-- History overflow menu open in new tab button -->
+    <string name="history_menu_open_in_new_tab_button">নতুন ট্যাবে খুলুন</string>
+    <!-- History overflow menu open in private tab button -->
+    <string name="history_menu_open_in_private_tab_button">ব্যক্তিগত ট্যাবে খুলুন</string>
     <!-- Text for the button to delete a single history item -->
     <string name="history_delete_item">মুছুন</string>
     <!-- History multi select title in app bar
@@ -426,6 +455,8 @@
     <string name="bookmark_edit">বুকমার্ক সম্পাদনা করুন</string>
     <!-- Screen title for selecting a bookmarks folder -->
     <string name="bookmark_select_folder">ফোল্ডার নির্বাচন করুন</string>
+    <!-- Snackbar title shown after a folder has been deleted. This first parameter is the name of the deleted folder -->
+    <string name="bookmark_delete_folder_snackbar">%1$s কে মুছে ফেলা হয়েছে</string>
     <!-- Screen title for adding a bookmarks folder -->
     <string name="bookmark_add_folder">ফোল্ডার যোগ করুন</string>
     <!-- deprecated: Snackbar title shown after a bookmark has been created. -->
@@ -474,11 +505,11 @@
     <string name="bookmark_empty_title_error">একটি শিরোনাম থাকতেই হবে</string>
     <!-- Bookmark editing error missing or improper URL -->
     <string name="bookmark_invalid_url_error">অবৈধ URL</string>
+    <!-- Bookmark screen message for empty bookmarks folder -->
+    <string name="bookmarks_empty_message">এখানে কোনও বুকমার্ক নেই</string>
     <!-- Bookmark snackbar message on deletion
      The first parameter is the host part of the URL of the bookmark deleted, if any -->
     <string name="bookmark_deletion_snackbar_message">%1$s মুছে ফেলা হয়েছে</string>
-    <!-- Bookmark snackbar message on deleting multiple bookmarks -->
-    <string name="bookmark_deletion_multiple_snackbar_message">নির্বাচিত বুকমার্কগুলি মুছে ফেলা হচ্ছে</string>
     <!-- Bookmark undo button for deletion snackbar action -->
     <string name="bookmark_undo_deletion">UNDO</string>
 
@@ -487,6 +518,10 @@
     <string name="permissions_header">অনুমতিসমূহ</string>
     <!-- Button label that take the user to the Android App setting -->
     <string name="phone_feature_go_to_settings">সেটিংস এ যান</string>
+    <!-- Content description (not visible, for screen readers etc.): Quick settings sheet
+        to give users access to site specific information / settings. For example:
+        Secure settings status and a button to modify site permissions -->
+    <string name="quick_settings_sheet">দ্রুত সেটিংস শীট</string>
     <!-- Label that indicates that this option it the recommended one -->
     <string name="phone_feature_recommended">সুপারিশকৃত</string>
     <!-- button that allows editing site permissions settings -->
@@ -513,14 +548,18 @@
     <string name="preference_option_phone_feature_blocked">ব্লক করা হয়েছে</string>
     <!-- Label that indicates that a permission must be allowed -->
     <string name="preference_option_phone_feature_allowed">অনুমতি দেওয়া হয়েছে</string>
+    <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
+    <string name="preference_exceptions">ব্যতিক্রমসমূহ</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
     <string name="tracking_protection_on">চালু</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">বন্ধ</string>
-    <!-- Label that indicates video and audio autoplay is blocked -->
-    <string name="preference_option_autoplay_blocked">ভিডিও এবং অডিও ব্লক করা হয়েছে</string>
-    <!-- Label that indicates video and audio autoplay is allowed -->
-    <string name="preference_option_autoplay_allowed">ভিডিও এবং অডিও অনুমোদিত</string>
+    <!-- Label that indicates that all video and audio autoplay is allowed -->
+    <string name="preference_option_autoplay_allowed2">অডিও এবং ভিডিওর অনুমোদন দিন</string>
+    <!-- Label that indicates that video autoplay is allowed, but audio autoplay is blocked -->
+    <string name="preference_option_autoplay_block_audio2">কেবল অডিওকে অবরুদ্ধ করুন</string>
+    <!-- Label that indicates that all video and audio autoplay is blocked -->
+    <string name="preference_option_autoplay_blocked3">অডিও এবং ভিডিও অবরুদ্ধ করুন</string>
     <!-- Summary of delete browsing data on quit preference if it is set to on -->
     <string name="delete_browsing_data_quit_on">চালু</string>
     <!-- Summary of delete browsing data on quit preference if it is set to off -->
@@ -537,8 +576,12 @@
     <string name="no_collections_header">কোনও সংগ্রহ নেই</string>
     <!-- No Open Tabs Message Description -->
     <string name="no_collections_description">আপনার সংগ্রহগুলি এখানে প্রদর্শিত হবে।</string>
+    <!-- Title for the "select tabs" step of the collection creator -->
+    <string name="create_collection_select_tabs">ট্যাব নির্বাচন করুন</string>
     <!-- Title for the "select collection" step of the collection creator -->
     <string name="create_collection_select_collection">সংগ্রহ নির্বাচন করুন</string>
+    <!-- Title for the "name collection" step of the collection creator -->
+    <string name="create_collection_name_collection">সংগ্রহের নাম</string>
     <!-- Button to add new collection for the "select collection" step of the collection creator -->
     <string name="create_collection_add_new_collection">নতুন সংগ্রহ যুক্ত করুন</string>
     <!-- Button to select all tabs in the "select tabs" step of the collection creator -->
@@ -547,6 +590,9 @@
     <string name="create_collection_deselect_all">সব অনির্বাচিত কর</string>
     <!-- Text to prompt users to select the tabs to save in the "select tabs" step of the collection creator -->
     <string name="create_collection_save_to_collection_empty">সংরক্ষণ করতে ট্যাবগুলো নির্বাচন করুন</string>
+    <!-- Text to show users how many tabs they have selected in the "select tabs" step of the collection creator.
+     %d is a placeholder for the number of tabs selected. -->
+    <string name="create_collection_save_to_collection_tabs_selected">%d ট্যাব নির্বাচন করা হয়েছে</string>
     <!-- Text to show users they have one tab selected in the "select tabs" step of the collection creator.
     %d is a placeholder for the number of tabs selected. -->
     <string name="create_collection_save_to_collection_tab_selected">%d ট্যাব নির্বাচন করা হয়েছে</string>
@@ -601,6 +647,9 @@
     <!-- Text for the button to connect another device -->
     <string name="sync_add_new_device_connect_button">অন্য ডিভাইস সংযুক্ত করুন…</string>
 
+    <!-- Notifications -->
+    <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active. -->
+    <string name="notification_pbm_channel_name">ব্যক্তিগত ব্রাউজিং সেশন</string>
     <!-- Notification action to open Fenix and resume the current browsing session. -->
     <string name="notification_pbm_action_open">খুলুন</string>
     <!-- Notification action to delete all current private browsing sessions AND switch to Fenix (bring it to the foreground) -->
@@ -644,9 +693,6 @@
     <string name="preference_accessibility_text_size_summary">ওয়েবসাইটগুলির লেখা বড় বা ছোট করুন</string>
     <!-- Title for Accessibility Text Size Scaling Preference -->
     <string name="preference_accessibility_font_size_title">অক্ষরের আকার</string>
-
-    <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
-    <string name="preference_accessibility_auto_size">স্বয়ংক্রিয়ভাবে অক্ষরের আকার পরিবর্তন</string>
 
     <!-- Title for the Delete browsing data preference -->
     <string name="preferences_delete_browsing_data">ব্রাউজিং ডেটা মুছুন</string>
@@ -729,6 +775,8 @@
     <string name="onboarding_tracking_protection_description1">%s আপনাকে অনলাইনে ট্র্যাকিং থেকে ওয়েবসাইটগুলি বন্ধ করতে সহায়তা করে।</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button">আদর্শ</string>
+    <!-- text for tracking protection radio button option for strict level of blocking -->
+    <string name="onboarding_tracking_protection_strict_button">কঠোর (প্রস্তাবিত)</string>
     <!-- text for strict blocking option button description -->
     <string name="onboarding_tracking_protection_strict_button_description">উন্নত সুরক্ষা এবং কার্য সম্পাদনের জন্য আরো ট্র্যাকার ব্লক করুন, কিন্তু তা কিছু সাইট সঠিকভাবে কাজ না করার কারণ হতে পারে</string>
     <!-- text for the toolbar position card header
@@ -749,6 +797,9 @@
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">আমাদের গোপনীয়তা বিজ্ঞপ্তি পড়ুন</string>
 
+    <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
+    <string name="onboarding_close">বন্ধ</string>
+
     <!-- text for the button to finish onboarding -->
     <string name="onboarding_finish">ব্রাউজিং শুরু করুন</string>
 
@@ -757,6 +808,11 @@
     <string name="onboarding_theme_picker_header">আপনার থিম পছন্দ করুন</string>
     <!-- Automatic theme setting (will follow device setting) -->
     <string name="onboarding_theme_automatic_title">স্বয়ংক্রিয়</string>
+
+    <!-- Theme setting for dark mode -->
+    <string name="onboarding_theme_dark_title">ডার্ক থিম</string>
+    <!-- Theme setting for light mode -->
+    <string name="onboarding_theme_light_title">লাইট থিম</string>
 
     <!-- Text shown in snackbar when one tab has been sent to device  -->
     <string name="sync_sent_tab_snackbar">ট্যাব পাঠানো হয়েছে!</string>
@@ -800,6 +856,10 @@
     <string name="preference_enhanced_tracking_protection_standard_description">সুরক্ষা এবং কর্মক্ষমতার জন্য ভারসাম্যপূর্ণ।</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">কঠোর</string>
+    <!-- Preference for enhanced tracking protection for the strict protection settings, default setting -->
+    <string name="preference_enhanced_tracking_protection_strict_default">কঠোর (ডিফল্ট)</string>
+    <!-- Preference for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_recommended">কঠোর (প্রস্তাবিত)</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom">স্বনির্ধারিত</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
@@ -809,14 +869,24 @@
     <string name="preference_enhanced_tracking_protection_custom_cookies">কুকিস</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies_4">সমস্ত কুকিস (ওয়েবসাইট ভাঙার কারণ হতে পারে)</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content">ট্র্যাকিং কন্টেন্ট</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom_cryptominers">ক্রিপ্টোমাইনারস</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom_fingerprinters">ফিঙ্গারপ্রিন্টারস</string>
+    <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
+    <string name="enhanced_tracking_protection_allowed">অনুমতি দেওয়া হয়েছে</string>
+    <!-- Category of trackers (social media trackers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_social_media_trackers_title">সোশ্যাল মিডিয়া ট্র্যাকার</string>
+    <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_title">ক্রস-সাইট ট্র্যাকিং কুকিস</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_title">ক্রিপ্টোমাইনারস</string>
     <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_fingerprinters_title">ফিঙ্গারপ্রিন্টারস</string>
+    <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_tracking_content_title">ট্র্যাকিং কন্টেন্ট</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">এই সাইটের জন্য সুরক্ষা ON আছে</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
@@ -839,6 +909,9 @@
     <!-- Content description of the tab counter toolbar button when one tab is open -->
     <string name="tab_counter_content_description_one_tab">1 ট্যাব</string>
 
+    <!-- Content description of the tab counter toolbar button when multiple tabs are open. First parameter will be replaced with the number of tabs (always more than one) -->
+    <string name="tab_counter_content_description_multi_tab">%d ট্যাব</string>
+
     <!-- Browser long press popup menu -->
     <!-- Copy the current url -->
     <string name="browser_toolbar_long_press_popup_copy">কপি</string>
@@ -858,6 +931,8 @@
     <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
     <string name="add_to_homescreen_text_placeholder">শর্টকাটের নাম</string>
 
+    <!-- Preference for managing the settings for logins and passwords in Fenix -->
+    <string name="preferences_passwords_logins_and_passwords">লগইন এবং পাসওয়ার্ড</string>
     <!-- Preference option for asking to save passwords in Fenix -->
     <string name="preferences_passwords_save_logins_ask_to_save">সংরক্ষণ করতে বলুন</string>
     <!-- Preference option for never saving passwords in Fenix -->
@@ -876,6 +951,8 @@
     <string name="preferences_passwords_sync_logins_sign_in">Sync করতে সাইন ইন করুন</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">Sync সম্পর্কে আরো জানুন।</string>
+    <!-- Preference to access list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions">ব্যতিক্রমসমূহ</string>
     <!-- Hint for search box in logins list -->
     <string name="preferences_passwords_saved_logins_search">লগইন অনুসন্ধান করুন</string>
     <!-- Option to sort logins list A-Z, alphabetically -->
@@ -922,6 +999,9 @@
     <string name="logins_warning_dialog_set_up_now">এখনই সেট আপ করুন</string>
     <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their logins -->
     <string name="logins_biometric_prompt_message_pin">আপনার ডিভাইসটি আনলক করুন</string>
+
+    <!-- Title for Accessibility Force Enable Zoom Preference -->
+    <string name="preference_accessibility_force_enable_zoom">সব ওয়েবসাইটে জুম করুন</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">সার্চ ইঞ্জিন যোগ করুন</string>
@@ -991,4 +1071,12 @@
     <string name="certificate_info_verified_by">যাচাই করা হয়েছে : %1$s দিয়ে</string>
     <!-- Login overflow menu delete button -->
     <string name="login_menu_delete_button">মুছুন</string>
-</resources>
+
+    <!-- Message in delete confirmation dialog for logins -->
+    <string name="login_deletion_confirmation">আপনি কি নিশ্চিত যে আপনি এই লগইনটি মুছতে চান?</string>
+    <!-- Positive action of a dialog asking to delete  -->
+    <string name="dialog_delete_positive">মুছে ফেলুন</string>
+    <!--  The error message in edit login view when password field is blank. -->
+    <string name="saved_login_password_required">পাসওয়ার্ড প্রয়োজন</string>
+
+    </resources>

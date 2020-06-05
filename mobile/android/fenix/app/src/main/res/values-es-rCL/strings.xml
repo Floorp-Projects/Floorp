@@ -94,6 +94,8 @@
     <string name="browser_menu_add_to_homescreen">Añadir a la pantalla de inicio</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
     <string name="browser_menu_install_on_homescreen">Instalar</string>
+    <!-- Menu option on the toolbar that takes you to synced tabs page-->
+    <string name="synced_tabs">Pestañas sincronizadas</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">Buscar en la página</string>
     <!-- Browser menu button that creates a private tab -->
@@ -290,6 +292,8 @@
     <string name="preferences_sync_bookmarks">Marcadores</string>
     <!-- Preference for syncing logins -->
     <string name="preferences_sync_logins">Credenciales</string>
+    <!-- Preference for syncing tabs -->
+    <string name="preferences_sync_tabs">Pestañas</string>
     <!-- Preference for signing out -->
     <string name="preferences_sign_out">Salir</string>
     <!-- Preference displays and allows changing current FxA device name -->
@@ -423,6 +427,8 @@
     <string name="library_desktop_bookmarks_unfiled">Otros marcadores</string>
     <!-- Option in Library to open History page -->
     <string name="library_history">Historial</string>
+    <!-- Option in Library to open Synced Tabs page -->
+    <string name="library_synced_tabs">Pestañas sincronizadas</string>
     <!-- Option in Library to open Reading List -->
     <string name="library_reading_list">Lista de lectura</string>
     <!-- Menu Item Label for Search in Library -->
@@ -946,6 +952,8 @@
     <string name="onboarding_tracking_protection_standard_button_description">Bloquea menos rastreadores pero permite que las páginas carguen con normalidad</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">Estricta (recomendada)</string>
+    <!-- text for tracking protection radio button option for strict level of blocking -->
+    <string name="onboarding_tracking_protection_strict_option">Estricto</string>
     <!-- text for strict blocking option button description -->
     <string name="onboarding_tracking_protection_strict_button_description">Bloquea más rastreadores para una mejor protección y rendimiento, pero puede hacer que algunos sitios no funcionen adecuadamente</string>
     <!-- text for the toolbar position card header
@@ -1395,4 +1403,15 @@
     <string name="voice_search_content_description">Búsqueda por voz</string>
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
     <string name="voice_search_explainer">Habla ahora</string>
+
+    <!-- Synced Tabs -->
+    <!-- Text displayed when user is not logged into a Firefox Account -->
+    <string name="synced_tabs_connect_to_sync_account">Conectarse con una cuenta de Firefox.</string>
+    <!-- Text displayed to ask user to connect another device as no devices found with account -->
+    <string name="synced_tabs_connect_another_device">Conectar otro dispositivo.</string>
+    <!-- Text displayed asking user to re-authenticate -->
+    <string name="synced_tabs_reauth">Por favor, vuelve a autentificarte.</string>
+    <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->
+    <string name="synced_tabs_enable_tab_syncing">Por favor, habilita la sincronización de pestañas.</string>
+
 </resources>

@@ -19,6 +19,9 @@
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">Irekitako fitxak hemen erakutsiko dira.</string>
 
+    <!-- No Private Tabs Message Description -->
+    <string name="no_private_tabs_description">Zure fitxa pribatuak hemen erakutsiko dira.</string>
+
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s Mozillak egina da.</string>
 
@@ -35,13 +38,21 @@
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">Ezabatu saioa</string>
 
-    <!-- Private mode shortcut "contextual feature recommender" (CFR) -->
+    <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
     <string name="cfr_message">Gehitu lasterbidea fitxa pribatuak zure hasierako pantailatik irekitzeko.</string>
     <!-- Text for the positive button -->
     <string name="cfr_pos_button_text">Gehitu lasterbidea</string>
     <!-- Text for the negative button -->
     <string name="cfr_neg_button_text">Ez, eskerrik asko</string>
+
+    <!-- Search widget "contextual feature recommendation" (CFR) -->
+    <!-- Text for the main message. 'Firefox' intentionally hardcoded here.-->
+    <string name="search_widget_cfr_message">Sartu azkarrago Firefoxera. Gehitu widget-a zure hasierako pantailan.</string>
+    <!-- Text for the positive button -->
+    <string name="search_widget_cfr_pos_button_text">Gehitu widget-a</string>
+    <!-- Text for the negative button -->
+    <string name="search_widget_cfr_neg_button_text">Orain ez</string>
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
@@ -85,6 +96,8 @@
     <string name="browser_menu_add_to_homescreen">Gehitu hasierako pantailan</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
     <string name="browser_menu_install_on_homescreen">Instalatu</string>
+    <!-- Menu option on the toolbar that takes you to synced tabs page-->
+    <string name="synced_tabs">Sinkronizatutako fitxak</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">Bilatu orrian</string>
     <!-- Browser menu button that creates a private tab -->
@@ -284,6 +297,8 @@
     <string name="preferences_sync_bookmarks">Laster-markak</string>
     <!-- Preference for syncing logins -->
     <string name="preferences_sync_logins">Saio-hasierak</string>
+    <!-- Preference for syncing tabs -->
+    <string name="preferences_sync_tabs">Fitxak</string>
     <!-- Preference for signing out -->
     <string name="preferences_sign_out">Amaitu saioa</string>
     <!-- Preference displays and allows changing current FxA device name -->
@@ -379,7 +394,7 @@
 
     <!-- Pairing Feature strings -->
     <!-- Instructions on how to access pairing -->
-    <string name="pair_instructions"><![CDATA[QR kodea lortzeko, bisitatu <b>firefox.com/pair</b> zure ordenagailuko Firefoxen.]]></string>
+    <string name="pair_instructions_2"><![CDATA[Eskaneatu <b>firefox.com/pair</b> helbideko QR kodea]]></string>
     <!-- Button to open camera for pairing -->
     <string name="pair_open_camera">Ireki kamera</string>
     <!-- Button to cancel pairing -->
@@ -421,6 +436,8 @@
     <string name="library_desktop_bookmarks_unfiled">Beste laster-markak</string>
     <!-- Option in Library to open History page -->
     <string name="library_history">Historia</string>
+    <!-- Option in Library to open Synced Tabs page -->
+    <string name="library_synced_tabs">Sinkronizatutako fitxak</string>
     <!-- Option in Library to open Reading List -->
     <string name="library_reading_list">Irakurketa-zerrenda</string>
     <!-- Menu Item Label for Search in Library -->
@@ -820,14 +837,14 @@
     <string name="preference_accessibility_font_size_title">Letra-tamaina</string>
 
     <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
-    <string name="preference_accessibility_auto_size">Letra-tamaina automatikoa</string>
+    <string name="preference_accessibility_auto_size_2">Letra-tamaina automatikoa</string>
     <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
     <string name="preference_accessibility_auto_size_summary">Letra-tamaina zure Androideko ezarpenekin bat etorriko da. Desgaitu letra-tamaina hemen kudeatzeko.</string>
 
     <!-- Title for the Delete browsing data preference -->
     <string name="preferences_delete_browsing_data">Ezabatu nabigatze-datuak</string>
     <!-- Title for the tabs item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_tabs_title">Irekitako fitxak</string>
+    <string name="preferences_delete_browsing_data_tabs_title_2">Irekitako fitxak</string>
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
     <string name="preferences_delete_browsing_data_tabs_subtitle">%d fitxa</string>
     <!-- Title for the data and history items in Delete browsing data -->
@@ -951,6 +968,8 @@
     <string name="onboarding_tracking_protection_standard_button_description">Jarraipen-elementu gutxiago blokeatzen ditu baina orriak normal kargatzea baimentzen du</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">Zorrotza (gomendatua)</string>
+    <!-- text for tracking protection radio button option for strict level of blocking -->
+    <string name="onboarding_tracking_protection_strict_option">Zorrotza</string>
     <!-- text for strict blocking option button description -->
     <string name="onboarding_tracking_protection_strict_button_description">Jarraipen-elementu gehiago blokeatzen ditu babes eta errendimendu hoberako baina zenbait gune ondo ez ibiltzea eragin lezake</string>
     <!-- text for the toolbar position card header
@@ -1398,4 +1417,15 @@
     <string name="voice_search_content_description">Ahots bidezko bilaketa</string>
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
     <string name="voice_search_explainer">Hitz egin orain</string>
+
+    <!-- Synced Tabs -->
+    <!-- Text displayed when user is not logged into a Firefox Account -->
+    <string name="synced_tabs_connect_to_sync_account">Konektatu Firefoxen kontu batekin.</string>
+    <!-- Text displayed to ask user to connect another device as no devices found with account -->
+    <string name="synced_tabs_connect_another_device">Konektatu beste gailu bat.</string>
+    <!-- Text displayed asking user to re-authenticate -->
+    <string name="synced_tabs_reauth">Autentifikatu berriro mesedez.</string>
+    <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->
+    <string name="synced_tabs_enable_tab_syncing">Gaitu fitxen sinkronizazioa mesedez.</string>
+
 </resources>

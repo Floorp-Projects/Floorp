@@ -1449,4 +1449,9 @@ Achi\'el: \nhttps://www.google.com/search?q=%s</string>
     <string name="synced_tabs_connect_to_sync_account">Tok rik\'in jun Rub\'i\' Rutaqoya\'l Firefox</string>
     <!-- Text displayed to ask user to connect another device as no devices found with account -->
     <string name="synced_tabs_connect_another_device">Tokisäx jun chik okisab\'äl</string>
-    </resources>
+    <!-- Text displayed asking user to re-authenticate -->
+    <string name="synced_tabs_reauth">Tajuxub\'ej chik awi\'.</string>
+    <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->
+    <string name="synced_tabs_enable_tab_syncing">Tatzija\' ri kiximik taq ruwi\'.</string>
+
+</resources>
