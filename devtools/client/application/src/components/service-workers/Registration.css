@@ -64,6 +64,8 @@
   height: calc(var(--base-unit) * 4);
   content: "";
   background-image: url(chrome://devtools/skin/images/debugging-workers.svg);
+  -moz-context-properties: fill;
+  fill: currentColor;
 }
 
 .registration__scope {
