@@ -8181,19 +8181,18 @@ void CodeGenerator::visitMinMaxI(LMinMaxI* ins) {
 
   MOZ_ASSERT(first == output);
 
-  Label done;
   Assembler::Condition cond =
       ins->mir()->isMax() ? Assembler::GreaterThan : Assembler::LessThan;
 
   if (ins->second()->isConstant()) {
+    Label done;
     masm.branch32(cond, first, Imm32(ToInt32(ins->second())), &done);
     masm.move32(Imm32(ToInt32(ins->second())), output);
+    masm.bind(&done);
   } else {
-    masm.branch32(cond, first, ToRegister(ins->second()), &done);
-    masm.move32(ToRegister(ins->second()), output);
+    Register second = ToRegister(ins->second());
+    masm.cmp32Move32(cond, second, first, second, output);
   }
-
-  masm.bind(&done);
 }
 
 void CodeGenerator::visitAbsI(LAbsI* ins) {
