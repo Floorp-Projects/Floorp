@@ -102,6 +102,94 @@ add_task(async function test_enable() {
   }
 });
 
+add_task(async function test_notifyPendingChanges() {
+  let engine = new ExtensionStorageEngineBridge(Service);
+
+  let extension = { id: "ext-1" };
+  let expectedChange = {
+    a: "b",
+    c: "d",
+  };
+
+  let lastSync = 0;
+  let syncID = Utils.makeGUID();
+  let error = null;
+  engine._bridge = {
+    QueryInterface: ChromeUtils.generateQI([
+      Ci.mozIBridgedSyncEngine,
+      Ci.mozISyncedExtensionStorageArea,
+    ]),
+    ensureCurrentSyncId(id, callback) {
+      if (syncID != id) {
+        syncID = id;
+        lastSync = 0;
+      }
+      callback.handleSuccess(id);
+    },
+    resetSyncId(callback) {
+      callback.handleSuccess(syncID);
+    },
+    syncStarted(callback) {
+      callback.handleSuccess();
+    },
+    getLastSync(callback) {
+      callback.handleSuccess(lastSync);
+    },
+    setLastSync(lastSyncMillis, callback) {
+      lastSync = lastSyncMillis;
+      callback.handleSuccess();
+    },
+    apply(callback) {
+      callback.handleSuccess([]);
+    },
+    fetchPendingSyncChanges(callback) {
+      if (error) {
+        callback.handleError(Cr.NS_ERROR_FAILURE, error.message);
+      } else {
+        callback.onChanged(extension.id, JSON.stringify(expectedChange));
+        callback.handleSuccess();
+      }
+    },
+    setUploaded(modified, ids, callback) {
+      callback.handleSuccess();
+    },
+    syncFinished(callback) {
+      callback.handleSuccess();
+    },
+  };
+
+  let server = await serverForFoo(engine);
+
+  let actualChanges = [];
+  let listener = changes => actualChanges.push(changes);
+  extensionStorageSync.addOnChangedListener(extension, listener);
+
+  try {
+    await SyncTestingInfrastructure(server);
+
+    info("Sync engine; notify about changes");
+    await sync_engine_and_validate_telem(engine, false);
+    deepEqual(
+      actualChanges,
+      [expectedChange],
+      "Should notify about changes during sync"
+    );
+
+    error = new Error("oops!");
+    actualChanges = [];
+    await sync_engine_and_validate_telem(engine, false);
+    deepEqual(
+      actualChanges,
+      [],
+      "Should finish syncing even if notifying about changes fails"
+    );
+  } finally {
+    extensionStorageSync.removeOnChangedListener(extension, listener);
+    await promiseStopServer(server);
+    await engine.finalize();
+  }
+});
+
 // It's difficult to know what to test - there's already tests for the bridged
 // engine etc - so we just try and check that this engine conforms to the
 // mozIBridgedSyncEngine interface guarantees.

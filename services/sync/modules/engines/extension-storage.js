@@ -109,6 +109,7 @@ ExtensionStorageEngineBridge.prototype = {
               message,
               code
             );
+            resolve();
           },
         });
     });
