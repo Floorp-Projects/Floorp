@@ -148,7 +148,14 @@ fn register_uploader() {
         );
         let result: std::result::Result<UploadResult, viaduct::Error> = (move || {
             const SERVER: &str = "https://incoming.telemetry.mozilla.org";
-            let url = Url::parse(SERVER)?.join(&ping_request.path)?;
+            let mut server = String::from(SERVER);
+            let localhost_port = static_prefs::pref!("telemetry.fog.test.localhost_port");
+            if localhost_port > 0 {
+                server = format!("http://localhost:{}", localhost_port);
+            }
+            let url = Url::parse(&server)?.join(&ping_request.path)?;
+            log::info!("FOG Ping uploader uploading to {:?}", url);
+
             let mut req = Request::post(url).body(ping_request.body.clone());
             for (&header_key, header_value) in ping_request.headers.iter() {
                 req = req.header(header_key, header_value)?;
