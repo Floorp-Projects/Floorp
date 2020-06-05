@@ -20,6 +20,7 @@ add_task(async function testDoorhanger() {
     "TRR selection complete."
   );
   await checkTRRSelectionTelemetry();
+  await checkHeuristicsTelemetry("enable_doh", "startup");
 
   await doorhangerPrefPromise;
   is(
