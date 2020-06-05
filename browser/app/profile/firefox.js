@@ -205,6 +205,10 @@ pref("browser.fixup.domainsuffixwhitelist.internal", true);
 // https://tools.ietf.org/html/rfc6762
 pref("browser.fixup.domainsuffixwhitelist.local", true);
 
+// Whether to always go through the DNS server before sending a single word
+// search string, that may contain a valid host, to a search engine.
+pref("browser.fixup.dns_first_for_single_words", false);
+
 #ifdef UNIX_BUT_NOT_MAC
   pref("general.autoScroll", false);
 #else
