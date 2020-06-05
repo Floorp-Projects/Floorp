@@ -1143,12 +1143,12 @@ bool TryPreserveWrapper(JS::Handle<JSObject*> obj) {
   MOZ_RELEASE_ASSERT(!clasp->isProxy(),
                      "Should not call addProperty for proxies.");
 
-  // The class should have an addProperty hook iff it is a CC participant.
-  MOZ_RELEASE_ASSERT(bool(domClass->mParticipant) == bool(addProperty));
-
   if (!addProperty) {
     return true;
   }
+
+  // The class should have an addProperty hook iff it is a CC participant.
+  MOZ_RELEASE_ASSERT(domClass->mParticipant);
 
   JS::Rooted<jsid> dummyId(RootingCx());
   JS::Rooted<JS::Value> dummyValue(RootingCx());
