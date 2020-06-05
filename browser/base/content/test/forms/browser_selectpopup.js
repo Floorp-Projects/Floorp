@@ -1192,10 +1192,10 @@ add_task(async function test_zoom() {
   );
   info("Zoomed font-size is " + zoomedFontSize);
 
-  is(
-    zoomedFontSize,
-    nonZoomedFontSize * 2.0,
-    "Zoom should affect menu popup size"
+  ok(
+    Math.abs(zoomedFontSize - nonZoomedFontSize * 2.0) < 0.01,
+    `Zoom should affect menu popup size, got ${zoomedFontSize}, ` +
+      `expected ${nonZoomedFontSize * 2.0}`
   );
 
   await hideSelectPopup(selectPopup);
