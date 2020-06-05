@@ -12086,7 +12086,7 @@ AbortReasonOr<Ok> IonBuilder::jsop_functionthis() {
     return Ok();
   }
 
-  MComputeThis* thisObj = MComputeThis::New(alloc(), def);
+  MBoxNonStrictThis* thisObj = MBoxNonStrictThis::New(alloc(), def);
   current->add(thisObj);
   current->push(thisObj);
 

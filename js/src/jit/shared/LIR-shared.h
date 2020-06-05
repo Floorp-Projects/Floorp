@@ -921,18 +921,18 @@ class LReturnFromCtor : public LInstructionHelper<1, BOX_PIECES + 1, 0> {
   static const size_t ObjectIndex = BOX_PIECES;
 };
 
-class LComputeThis : public LInstructionHelper<1, BOX_PIECES, 0> {
+class LBoxNonStrictThis : public LInstructionHelper<1, BOX_PIECES, 0> {
  public:
-  LIR_HEADER(ComputeThis)
+  LIR_HEADER(BoxNonStrictThis)
 
   static const size_t ValueIndex = 0;
 
-  explicit LComputeThis(const LBoxAllocation& value)
+  explicit LBoxNonStrictThis(const LBoxAllocation& value)
       : LInstructionHelper(classOpcode) {
     setBoxOperand(ValueIndex, value);
   }
 
-  MComputeThis* mir() const { return mir_->toComputeThis(); }
+  MBoxNonStrictThis* mir() const { return mir_->toBoxNonStrictThis(); }
 };
 
 class LImplicitThis : public LCallInstructionHelper<BOX_PIECES, 1, 0> {

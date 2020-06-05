@@ -222,10 +222,10 @@ AbortReasonOr<WarpScriptSnapshot*> WarpOracle::createScriptSnapshot(
 
       case JSOp::FunctionThis:
         if (!script->strict() && script->hasNonSyntacticScope()) {
-          // Abort because MComputeThis doesn't support non-syntactic scopes
-          // (a deprecated SpiderMonkey mechanism). If this becomes an issue we
-          // could support it by refactoring GetFunctionThis to not take a frame
-          // pointer and then call that.
+          // Abort because MBoxNonStrictThis doesn't support non-syntactic
+          // scopes (a deprecated SpiderMonkey mechanism). If this becomes an
+          // issue we could support it by refactoring GetFunctionThis to not
+          // take a frame pointer and then call that.
           return abort(AbortReason::Disable,
                        "JSOp::FunctionThis with non-syntactic scope");
         }
