@@ -13,5 +13,8 @@
   },
   "searchUrlGetParams": {
     "message": "ff3=4&toolid=20004&campid=5338192028&customid=&mpre=https://www.ebay.ca/sch/{searchTerms}"
+  },
+  "suggestUrlGetParams": {
+    "message": "sId=2&fmt=osr&kwd={searchTerms}"
   }
 }
