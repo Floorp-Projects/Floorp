@@ -1534,7 +1534,7 @@ void nsNSSComponent::UpdateCertVerifierWithEnterpriseRoots() {
 nsresult nsNSSComponent::SetEnabledTLSVersions() {
   // Keep these values in sync with all.js.
   // 1 means TLS 1.0, 2 means TLS 1.1, etc.
-  static const uint32_t PSM_DEFAULT_MIN_TLS_VERSION = 1;
+  static const uint32_t PSM_DEFAULT_MIN_TLS_VERSION = 3;
   static const uint32_t PSM_DEFAULT_MAX_TLS_VERSION = 4;
   static const uint32_t PSM_DEPRECATED_TLS_VERSION = 1;
 
@@ -1543,8 +1543,8 @@ nsresult nsNSSComponent::SetEnabledTLSVersions() {
   uint32_t maxFromPrefs = Preferences::GetUint("security.tls.version.max",
                                                PSM_DEFAULT_MAX_TLS_VERSION);
 
-  // This override should be removed after PSM_DEFAULT_MIN_TLS_VERSION is
-  // increased to 3 in March 2020, see bug 1579285.
+  // This override should be removed some time after
+  // PSM_DEFAULT_MIN_TLS_VERSION is increased to 3.
   bool enableDeprecated =
       Preferences::GetBool("security.tls.version.enable-deprecated", false);
   if (enableDeprecated) {
