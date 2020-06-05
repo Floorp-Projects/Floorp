@@ -106,6 +106,9 @@ enum BailoutKind {
   // We hit a hole in an array.
   Bailout_Hole,
 
+  // The object has dense array elements
+  Bailout_NoDenseElementsGuard,
+
   // Array access with negative index
   Bailout_NegativeIndex,
 
@@ -217,6 +220,8 @@ inline const char* BailoutKindString(BailoutKind kind) {
       return "Bailout_MonitorTypes";
     case Bailout_Hole:
       return "Bailout_Hole";
+    case Bailout_NoDenseElementsGuard:
+      return "Bailout_NoDenseElementsGuard";
     case Bailout_NegativeIndex:
       return "Bailout_NegativeIndex";
     case Bailout_NonIntegerIndex:
