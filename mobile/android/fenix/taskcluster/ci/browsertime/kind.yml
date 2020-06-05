@@ -13,7 +13,7 @@ kind-dependencies:
 primary-dependency: signing
 
 only-for-build-types:
-    - nightly
+    - nightly-simulation
 
 only-for-abis:
     - armeabi-v7a

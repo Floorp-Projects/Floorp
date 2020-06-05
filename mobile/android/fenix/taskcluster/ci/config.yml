@@ -11,6 +11,7 @@ treeherder:
         'forPerformanceTest': 'Builds made for Raptor and other performance tests'
         'I': 'Docker Image Builds'
         'nightly': 'Nightly-related tasks'
+        'nightlySim': 'Nightly-related tasks that run on each github push'
         'nightlyFennec': 'Nightly-related tasks with same APK configuration as Fennec'
         'production': 'Release-related tasks'
         'productionFennec': 'Production-related tasks with same APK configuration as Fennec'

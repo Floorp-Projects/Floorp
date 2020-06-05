@@ -104,6 +104,18 @@ jobs:
         treeherder:
             symbol: nightly(B)
 
+    nightly-simulation:
+        attributes:
+            nightly: false
+        run-on-tasks-for: [github-push]
+        include-nightly-version: true
+        include-shippable-secrets: true
+        run:
+            geckoview-engine: geckoNightly
+            gradle-build-type: fennecNightly
+        treeherder:
+            symbol: nightlySim(B)
+
     beta:
         attributes:
             release-type: beta
