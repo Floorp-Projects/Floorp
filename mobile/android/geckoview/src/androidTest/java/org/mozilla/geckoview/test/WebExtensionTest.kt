@@ -44,6 +44,10 @@ class WebExtensionTest : BaseSessionTest() {
                 "resource://android/assets/web_extensions/messaging/"
         private const val MESSAGING_CONTENT: String =
                 "resource://android/assets/web_extensions/messaging-content/"
+        private const val OPENOPTIONSPAGE_1_BACKGROUND: String =
+                "resource://android/assets/web_extensions/openoptionspage-1/"
+        private const val OPENOPTIONSPAGE_2_BACKGROUND: String =
+                "resource://android/assets/web_extensions/openoptionspage-2/"
     }
 
     private val controller
@@ -1598,4 +1602,62 @@ class WebExtensionTest : BaseSessionTest() {
         testUpdatingExtensionDisabledBy(EnableSource.APP)
     }
 
+    // This test
+    // - Listen for a newTab request from a web extension
+    // - Registers a web extension
+    // - Waits for onNewTab request
+    // - Verify that request came from right extension
+    @Test
+    fun testBrowserRuntimeOpenOptionsPageInNewTab() {
+        val tabsCreateResult = GeckoResult<Void>()
+        var optionsExtension: WebExtension? = null
+        val tabDelegate = object : WebExtension.TabDelegate {
+            @AssertCalled(count = 1)
+            override fun onNewTab(
+                    source: WebExtension,
+                    details: WebExtension.CreateTabDetails)
+                    : GeckoResult<GeckoSession> {
+                assertThat(details.url, endsWith("options.html"))
+                assertEquals(details.active, true)
+                assertEquals(optionsExtension!!, source)
+                tabsCreateResult.complete(null)
+                return GeckoResult.fromValue(null)
+            }
+        }
+
+        optionsExtension = sessionRule.waitForResult(
+                controller.installBuiltIn(OPENOPTIONSPAGE_1_BACKGROUND))
+        optionsExtension.setTabDelegate(tabDelegate)
+        sessionRule.waitForResult(tabsCreateResult)
+
+        sessionRule.waitForResult(controller.uninstall(optionsExtension))
+    }
+
+    // This test
+    // - Listen for an openOptionsPage request from a web extension
+    // - Registers a web extension
+    // - Waits for onOpenOptionsPage request
+    // - Verify that request came from right extension
+    @Test
+    fun testBrowserRuntimeOpenOptionsPageDelegate() {
+        val openOptionsPageResult = GeckoResult<Void>()
+        var optionsExtension: WebExtension? = null
+        val tabDelegate = object : WebExtension.TabDelegate {
+            @AssertCalled(count = 1)
+            override fun onOpenOptionsPage(source: WebExtension) {
+                assertThat(
+                    source.metaData!!.optionsPageUrl,
+                    endsWith("options.html"))
+                assertEquals(optionsExtension!!, source)
+                openOptionsPageResult.complete(null)
+            }
+        }
+
+        optionsExtension = sessionRule.waitForResult(
+                controller.installBuiltIn(OPENOPTIONSPAGE_2_BACKGROUND))
+        optionsExtension.setTabDelegate(tabDelegate)
+        sessionRule.waitForResult(openOptionsPageResult)
+
+        sessionRule.waitForResult(controller.uninstall(optionsExtension))
+    }
 }
