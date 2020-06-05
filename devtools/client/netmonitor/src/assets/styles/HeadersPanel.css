@@ -127,17 +127,17 @@
   margin-inline-start: 4px;
 }
 
-.network-monitor .accordion .properties-view tr.treeRow {
+.network-monitor .headers-panel-container .accordion .properties-view tr.treeRow {
   padding: 3px 0 0 0;
 }
-.network-monitor .accordion .properties-view tr.treeRow .treeLabelCell {
+.network-monitor .headers-panel-container .accordion .properties-view tr.treeRow .treeLabelCell {
   float: left;
   margin-right: -33px;
   margin-left: 5px;
   padding: 0;
   
 }
-.network-monitor .accordion .properties-view tr.treeRow .treeValueCell {
+.network-monitor .headers-panel-container .accordion .properties-view tr.treeRow .treeValueCell {
   display: inline;
   word-break: break-all;
   box-decoration-break: clone;
@@ -145,7 +145,7 @@
   padding-right: 20px;
 }
 
-.network-monitor .accordion .properties-view tr.treeRow .treeValueCell div {
+.network-monitor .headers-panel-container .accordion .properties-view tr.treeRow .treeValueCell div {
   display: inline;
 }
 
