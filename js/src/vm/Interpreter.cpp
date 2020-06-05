@@ -2910,19 +2910,14 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     }
     END_CASE(DelElem)
 
-    CASE(ToId) {
-      /*
-       * Increment or decrement requires use to lookup the same property twice,
-       * but we need to avoid the observable stringification the second time.
-       * There must be an object value below the id, which will not be popped.
-       */
+    CASE(ToPropertyKey) {
       ReservedRooted<Value> idval(&rootValue1, REGS.sp[-1]);
       MutableHandleValue res = REGS.stackHandleAt(-1);
-      if (!ToIdOperation(cx, idval, res)) {
+      if (!ToPropertyKeyOperation(cx, idval, res)) {
         goto error;
       }
     }
-    END_CASE(ToId)
+    END_CASE(ToPropertyKey)
 
     CASE(TypeofExpr)
     CASE(Typeof) {

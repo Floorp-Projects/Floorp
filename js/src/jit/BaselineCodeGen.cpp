@@ -5090,7 +5090,7 @@ bool BaselineCodeGen<Handler>::emit_RetRval() {
 }
 
 template <typename Handler>
-bool BaselineCodeGen<Handler>::emit_ToId() {
+bool BaselineCodeGen<Handler>::emit_ToPropertyKey() {
   // Load index in R0, but keep values on the stack for the decompiler.
   frame.syncStack(0);
   masm.loadValue(frame.addressOfStackValue(-1), R0);
@@ -5106,7 +5106,7 @@ bool BaselineCodeGen<Handler>::emit_ToId() {
   pushArg(R0);
 
   using Fn = bool (*)(JSContext*, HandleValue, MutableHandleValue);
-  if (!callVM<Fn, js::ToIdOperation>()) {
+  if (!callVM<Fn, js::ToPropertyKeyOperation>()) {
     return false;
   }
 

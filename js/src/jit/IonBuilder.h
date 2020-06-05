@@ -644,7 +644,7 @@ class MOZ_STACK_CLASS IonBuilder {
   AbortReasonOr<Ok> jsop_typeof();
   AbortReasonOr<Ok> jsop_toasync();
   AbortReasonOr<Ok> jsop_toasynciter();
-  AbortReasonOr<Ok> jsop_toid();
+  AbortReasonOr<Ok> jsop_topropertykey();
   AbortReasonOr<Ok> jsop_iter();
   AbortReasonOr<Ok> jsop_itermore();
   AbortReasonOr<Ok> jsop_isnoiter();

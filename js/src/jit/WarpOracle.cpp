@@ -549,7 +549,7 @@ AbortReasonOr<WarpScriptSnapshot*> WarpOracle::createScriptSnapshot(
       case JSOp::ClassConstructor:
       case JSOp::DerivedConstructor:
       case JSOp::ToAsyncIter:
-      case JSOp::ToId:
+      case JSOp::ToPropertyKey:
       case JSOp::Typeof:
       case JSOp::TypeofExpr:
       case JSOp::ObjWithProto:

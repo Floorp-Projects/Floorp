@@ -3534,7 +3534,7 @@ bool BytecodeEmitter::emitDestructuringOpsArray(ListNode* pattern,
 
 bool BytecodeEmitter::emitComputedPropertyName(UnaryNode* computedPropName) {
   MOZ_ASSERT(computedPropName->isKind(ParseNodeKind::ComputedName));
-  return emitTree(computedPropName->kid()) && emit1(JSOp::ToId);
+  return emitTree(computedPropName->kid()) && emit1(JSOp::ToPropertyKey);
 }
 
 bool BytecodeEmitter::emitDestructuringOpsObject(ListNode* pattern,
@@ -8352,7 +8352,7 @@ bool BytecodeEmitter::emitPropertyList(ListNode* obj, PropertyEmitter& pe,
           return false;
         }
 
-        if (!emit1(JSOp::ToId)) {
+        if (!emit1(JSOp::ToPropertyKey)) {
           //        [stack] CTOR? OBJ ARRAY KEY
           return false;
         }
