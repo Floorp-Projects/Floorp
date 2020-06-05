@@ -52,6 +52,8 @@ const prefs = {
   DOH_TRR_SELECT_DRY_RUN_RESULT_PREF:
     "doh-rollout.trr-selection.dry-run-result",
   DOH_PROVIDER_STEERING_PREF: "doh-rollout.provider-steering.enabled",
+  DOH_PROVIDER_STEERING_LIST_PREF:
+    "doh-rollout.provider-steering.provider-list",
   PROFILE_CREATION_THRESHOLD_PREF: "doh-rollout.profileCreationThreshold",
 };
 
@@ -149,7 +151,11 @@ function ensureNoTRRSelectionTelemetry() {
   is(events.length, 0, "Found no trrselect events.");
 }
 
-async function checkHeuristicsTelemetry(decision, evaluateReason) {
+async function checkHeuristicsTelemetry(
+  decision,
+  evaluateReason,
+  steeredProvider = ""
+) {
   let events;
   await BrowserTestUtils.waitForCondition(() => {
     events = Services.telemetry.snapshotEvents(
@@ -165,6 +171,7 @@ async function checkHeuristicsTelemetry(decision, evaluateReason) {
   if (evaluateReason) {
     is(events[0][5].evaluateReason, evaluateReason, "Got the expected reason.");
   }
+  is(events[0][5].steeredProvider, steeredProvider, "Got expected provider.");
 
   // After checking the event, clear all telemetry. Since we check for a single
   // event above, this ensures all heuristics events are intentional and tested.
