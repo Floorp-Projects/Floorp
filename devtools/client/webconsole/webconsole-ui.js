@@ -65,6 +65,10 @@ class WebConsoleUI {
       this.hud.currentTarget &&
       this.hud.currentTarget.isParentProcess &&
       !this.hud.currentTarget.isAddon;
+    this.fissionSupport = Services.prefs.getBoolPref(
+      constants.PREFS.FEATURES.BROWSER_TOOLBOX_FISSION
+    );
+
     this.window = this.hud.iframeWindow;
 
     this._onPanelSelected = this._onPanelSelected.bind(this);
@@ -343,6 +347,15 @@ class WebConsoleUI {
   }
 
   _onResourceAvailable({ resourceType, targetFront, resource }) {
+    // Ignore messages forwarded from content processes if we're in fission browser toolbox.
+    if (
+      resourceType === this.hud.resourceWatcher.TYPES.ERROR_MESSAGE &&
+      resource.pageError.isForwardedFromContentProcess &&
+      (this.isBrowserToolboxConsole || this.isBrowserConsole) &&
+      this.fissionSupport
+    ) {
+      return;
+    }
     this.wrapper.dispatchMessageAdd(resource);
   }
 
@@ -370,11 +383,10 @@ class WebConsoleUI {
     // This is a top level target. It may update on process switches
     // when navigating to another domain.
     if (targetFront.isTopLevel) {
-      const fissionSupport = Services.prefs.getBoolPref(
-        constants.PREFS.FEATURES.BROWSER_TOOLBOX_FISSION
-      );
       const needContentProcessMessagesListener =
-        targetFront.isParentProcess && !targetFront.isAddon && !fissionSupport;
+        targetFront.isParentProcess &&
+        !targetFront.isAddon &&
+        !this.fissionSupport;
       this.proxy = new WebConsoleConnectionProxy(
         this,
         targetFront,
