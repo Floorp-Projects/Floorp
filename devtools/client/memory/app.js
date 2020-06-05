@@ -277,12 +277,9 @@ class MemoryApp extends Component {
         Heap({
           snapshot: selectedSnapshot,
           diffing,
-          onViewSourceInDebugger: frame =>
-            toolbox.viewSourceInDebugger(
-              frame.source,
-              frame.line,
-              frame.column
-            ),
+          onViewSourceInDebugger: ({ url, line, column }) => {
+            toolbox.viewSourceInDebugger(url, line, column);
+          },
           onSnapshotClick: () =>
             dispatch(takeSnapshotAndCensus(front, heapWorker)),
           onLoadMoreSiblings: lazyChildren =>

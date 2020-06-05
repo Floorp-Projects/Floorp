@@ -130,7 +130,7 @@ const JsCallTreeView = extend(DetailsSubview, {
     const optimizations = JITOptimizationsView({
       frameData,
       optimizationSites,
-      onViewSourceInDebugger: (url, line, column) => {
+      onViewSourceInDebugger: ({ url, line, column }) => {
         PerformanceController.toolbox
           .viewSourceInDebugger(url, line, column)
           .then(success => {

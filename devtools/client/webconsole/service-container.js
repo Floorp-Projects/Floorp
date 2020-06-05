@@ -37,7 +37,7 @@ function setupServiceContainer({
     openLink: (url, e) => hud.openLink(url, e),
     openNodeInInspector: grip => hud.openNodeInInspector(grip),
     getInputSelection: () => hud.getInputSelection(),
-    onViewSource: frame => hud.viewSource(frame.url, frame.line),
+    onViewSource: location => hud.viewSource(location.url, location.line),
     resendNetworkRequest: requestId => hud.resendNetworkRequest(requestId),
     focusInput: () => hud.focusInput(),
     setInputValue: value => hud.setInputValue(value),
@@ -56,8 +56,9 @@ function setupServiceContainer({
       sourceMapURLService: toolbox.sourceMapURLService,
       highlightDomElement: highlight,
       unHighlightDomElement: unhighlight,
-      onViewSourceInDebugger: frame => hud.onViewSourceInDebugger(frame),
-      onViewSourceInStyleEditor: frame => hud.onViewSourceInStyleEditor(frame),
+      onViewSourceInDebugger: location => hud.onViewSourceInDebugger(location),
+      onViewSourceInStyleEditor: location =>
+        hud.onViewSourceInStyleEditor(location),
     });
   }
 

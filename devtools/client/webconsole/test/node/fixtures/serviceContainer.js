@@ -21,6 +21,9 @@ module.exports = {
     subscribeByID: () => {
       return () => {};
     },
+    subscribeByLocation: () => {
+      return () => {};
+    },
     originalPositionForURL: () => {
       return new Promise(resolve => {
         resolve();

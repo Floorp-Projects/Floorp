@@ -299,7 +299,7 @@ window.onload = async function () {
       sourceUrl: "https://bugzilla.mozilla.org/original.js",
     };
     const mockSourceMapService = {
-      subscribeByURL: function (url, line, column, callback) {
+      subscribeByLocation: function (loc, callback) {
         // Resolve immediately.
         callback({
           url: resolvedLocation.sourceUrl,
