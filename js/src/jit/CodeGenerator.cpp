@@ -7571,14 +7571,13 @@ void CodeGenerator::visitReturnFromCtor(LReturnFromCtor* lir) {
 
 void CodeGenerator::visitComputeThis(LComputeThis* lir) {
   ValueOperand value = ToValue(lir, LComputeThis::ValueIndex);
-  ValueOperand output = ToOutValue(lir);
+  Register output = ToRegister(lir->output());
 
-  using Fn = bool (*)(JSContext*, HandleValue, MutableHandleValue);
+  using Fn = JSObject* (*)(JSContext*, HandleValue);
   OutOfLineCode* ool = oolCallVM<Fn, BoxNonStrictThis>(lir, ArgList(value),
-                                                       StoreValueTo(output));
+                                                       StoreRegisterTo(output));
 
-  masm.branchTestObject(Assembler::NotEqual, value, ool->entry());
-  masm.moveValue(value, output);
+  masm.fallibleUnboxObject(value, output, ool->entry());
   masm.bind(ool->rejoin());
 }
 

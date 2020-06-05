@@ -5925,7 +5925,7 @@ class MStringSplit : public MBinaryInstruction,
 class MComputeThis : public MUnaryInstruction, public BoxPolicy<0>::Data {
   explicit MComputeThis(MDefinition* def)
       : MUnaryInstruction(classOpcode, def) {
-    setResultType(MIRType::Value);
+    setResultType(MIRType::Object);
   }
 
  public:
