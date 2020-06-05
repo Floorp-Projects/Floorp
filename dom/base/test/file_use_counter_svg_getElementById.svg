@@ -16,4 +16,7 @@
                            false);
     ]]>
   </script>
+
+  <!-- Sentinel use counter to signal that telemetry for this document has been captured -->
+  <style>x { marker-mid: initial; }</style>
 </svg>
