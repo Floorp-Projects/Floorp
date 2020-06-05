@@ -3973,6 +3973,23 @@ Toolbox.prototype = {
   },
 
   /**
+   * Open a CSS file when there is no line or column information available.
+   *
+   * @param {string} url The URL of the CSS file to open.
+   */
+  viewGeneratedSourceInStyleEditor: async function(url) {
+    if (typeof url !== "string") {
+      console.warn("Failed to open generated source, no url given");
+      return;
+    }
+
+    // The style editor hides the generated file if the file has original
+    // sources, so we have no choice but to open whichever original file
+    // corresponds to the first line of the generated file.
+    return viewSource.viewSourceInStyleEditor(this, url, 1);
+  },
+
+  /**
    * Given a URL for a stylesheet (generated or original), open in the style
    * editor if possible. Falls back to plain "view-source:".
    * If the stylesheet has a sourcemap, we will attempt to open the original
@@ -3982,6 +3999,16 @@ Toolbox.prototype = {
     if (typeof url !== "string") {
       console.warn("Failed to open source, no url given");
       return;
+    }
+    if (typeof line !== "number") {
+      console.warn(
+        "No line given when navigating to source. If you're seeing this, there is a bug."
+      );
+
+      // This is a fallback in case of programming errors, but in a perfect
+      // world, viewSourceInStyleEditorByURL would always get a line/colum.
+      line = 1;
+      column = null;
     }
 
     return viewSource.viewSourceInStyleEditor(this, url, line, column);
@@ -4000,6 +4027,16 @@ Toolbox.prototype = {
     if (!stylesheetFront || typeof stylesheetFront !== "object") {
       console.warn("Failed to open source, no stylesheet given");
       return;
+    }
+    if (typeof line !== "number") {
+      console.warn(
+        "No line given when navigating to source. If you're seeing this, there is a bug."
+      );
+
+      // This is a fallback in case of programming errors, but in a perfect
+      // world, viewSourceInStyleEditorByFront would always get a line/colum.
+      line = 1;
+      column = null;
     }
 
     return viewSource.viewSourceInStyleEditor(
@@ -4024,6 +4061,20 @@ Toolbox.prototype = {
   },
 
   /**
+   * Open a JS file when there is no line or column information available.
+   *
+   * @param {string} url The URL of the JS file to open.
+   */
+  viewGeneratedSourceInDebugger: async function(url) {
+    if (typeof url !== "string") {
+      console.warn("Failed to open generated source, no url given");
+      return;
+    }
+
+    return viewSource.viewSourceInDebugger(this, url, null, null, null, null);
+  },
+
+  /**
    * Opens source in debugger, the sourcemapped location will be selected in
    * the debugger panel, if the given location resolves to a know sourcemapped one.
    *
@@ -4041,6 +4092,16 @@ Toolbox.prototype = {
     if (typeof sourceURL !== "string" && typeof sourceId !== "string") {
       console.warn("Failed to open generated source, no url/id given");
       return;
+    }
+    if (typeof sourceLine !== "number") {
+      console.warn(
+        "No line given when navigating to source. If you're seeing this, there is a bug."
+      );
+
+      // This is a fallback in case of programming errors, but in a perfect
+      // world, viewSourceInDebugger would always get a line/colum.
+      sourceLine = 1;
+      sourceColumn = null;
     }
 
     return viewSource.viewSourceInDebugger(

@@ -183,6 +183,12 @@ async function getOriginalLocation(
   generatedLine,
   generatedColumn
 ) {
+  // If there is no line number, then there's no chance that we'll get back
+  // a useful original location.
+  if (typeof generatedLine !== "number") {
+    return null;
+  }
+
   let originalLocation = null;
   try {
     originalLocation = await toolbox.sourceMapService.getOriginalLocation({
