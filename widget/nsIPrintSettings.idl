@@ -77,12 +77,6 @@ interface nsIPrintSettings : nsISupports
   const long kJustRight  = 2;
 
   /**
-   * Page Size Type Constants
-   */
-  const short kPaperSizeNativeData  = 0;
-  const short kPaperSizeDefined     = 1;
-
-  /**
    * Page Size Unit Constants
    */
   const short kPaperSizeInches      = 0;
