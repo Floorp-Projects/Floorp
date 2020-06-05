@@ -38,7 +38,8 @@ rawPackets.set(`Unknown property ‘such-unknown-property’.  Declaration dropp
     "notes": null,
     "chromeContext": false,
     "cssSelectors": "p",
-    "isPromiseRejection": false
+    "isPromiseRejection": false,
+    "isForwardedFromContentProcess": false
   },
   "resourceType": "error-message"
 });
@@ -63,7 +64,8 @@ rawPackets.set(`Error in parsing value for ‘padding-top’.  Declaration dropp
     "notes": null,
     "chromeContext": false,
     "cssSelectors": "p",
-    "isPromiseRejection": false
+    "isPromiseRejection": false,
+    "isForwardedFromContentProcess": false
   },
   "resourceType": "error-message"
 });
