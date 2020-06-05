@@ -891,7 +891,7 @@ class AbstractFetchDownloadServiceTest {
     }
 
     @Test
-    fun `job status is set to failed when IOException is thrown while performDownload`() = runBlocking {
+    fun `job status is set to failed when an Exception is thrown while performDownload`() = runBlocking {
         doThrow(IOException()).`when`(client).fetch(any())
         val download = DownloadState("https://example.com/file.txt", "file.txt")
 
