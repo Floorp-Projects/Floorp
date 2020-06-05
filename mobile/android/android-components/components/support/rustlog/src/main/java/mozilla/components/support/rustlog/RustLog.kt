@@ -6,7 +6,10 @@ package mozilla.components.support.rustlog
 
 import mozilla.appservices.rustlog.LogLevelFilter
 import mozilla.appservices.rustlog.RustLogAdapter
+import mozilla.components.support.base.crash.CrashReporting
 import mozilla.components.support.base.log.Log
+
+internal class RustErrorException(tag: String?, msg: String) : Exception("$tag - $msg")
 
 object RustLog {
 
@@ -29,10 +32,20 @@ object RustLog {
      * (We say "almost" nothing, as calling this will hook up logging for the dynamic
      * library containing the Rust log hooking (and only that), as well as logging
      * a single message indicating that it completed initialization).
+     *
+     * @param crashReporter [CrashReporting] instance used for reporting 'error' log messages.
      */
-    fun enable() {
+    fun enable(crashReporter: CrashReporting? = null) {
         RustLogAdapter.enable { level, tagStr, msgStr ->
-            Log.log(levelToPriority(level), tagStr, null, msgStr)
+            val priority = levelToPriority(level)
+
+            crashReporter?.let {
+                if (priority == Log.Priority.ERROR) {
+                    it.submitCaughtException(RustErrorException(tagStr, msgStr))
+                }
+            }
+
+            Log.log(priority, tagStr, null, msgStr)
             // Return true to keep open. Eventually we could intercept calls
             // to disable that happen as the direct result of the above call
             // (e.g. on this thread, before this function returns) and return

@@ -31,6 +31,7 @@ dependencies {
     implementation Dependencies.mozilla_rustlog
 
     implementation Dependencies.kotlin_stdlib
+    implementation Dependencies.kotlin_coroutines
     // Log.Priority is in the public api.
     api project(':support-base')
 
