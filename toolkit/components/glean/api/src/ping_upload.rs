@@ -33,7 +33,7 @@ pub fn register_uploader(uploader: Box<UploadFn>) -> Result<(), ()> {
 
 /// Called occasionally on any thread to nudge the Scheduler to ask Glean for
 /// ping requests.
-pub(crate) fn check_for_uploads() {
+pub fn check_for_uploads() {
     if UPLOADER.get().is_none() {
         return;
     }
