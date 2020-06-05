@@ -51,29 +51,6 @@ interface nsISearchEngine : nsISupports
                                     [optional] in AString purpose);
 
   /**
-   * Adds a parameter to the search engine's submission data. This should only
-   * be called on engines created via addEngineWithDetails.
-   *
-   * @param name
-   *        The parameter's name. Must not be null.
-   *
-   * @param value
-   *        The value to pass. If value is "{searchTerms}", it will be
-   *        substituted with the user-entered data when retrieving the
-   *        submission. Must not be null.
-   *
-   * @param responseType
-   *        Since an engine can have several different request URLs,
-   *        differentiated by response types, this parameter selects
-   *        a request to add parameters to.  If null, will default
-   *        to "text/html"
-   *
-   * @throws NS_ERROR_FAILURE if the search engine is read-only.
-   * @throws NS_ERROR_INVALID_ARG if name or value are null.
-   */
-  void addParam(in AString name, in AString value, in AString responseType);
-
-  /**
    * Determines whether the engine can return responses in the given
    * MIME type.  Returns true if the engine spec has a URL with the
    * given responseType, false otherwise.

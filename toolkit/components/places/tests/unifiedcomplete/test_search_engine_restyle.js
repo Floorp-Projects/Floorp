@@ -3,12 +3,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 add_task(async function test_searchEngine() {
-  await Services.search.addEngineWithDetails("SearchEngine", {
+  let engine = await Services.search.addEngineWithDetails("SearchEngine", {
     method: "GET",
     template: "http://s.example.com/search",
+    searchGetParams: "q={searchTerms}",
   });
-  let engine = Services.search.getEngineByName("SearchEngine");
-  engine.addParam("q", "{searchTerms}", null);
   registerCleanupFunction(async () => Services.search.removeEngine(engine));
 
   let uri = NetUtil.newURI("http://s.example.com/search?q=Terms");
