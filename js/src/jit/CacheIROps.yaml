@@ -96,7 +96,7 @@
 
 - name: GuardToSymbol
   shared: true
-  transpile: false
+  transpile: true
   custom_writer: true
   args:
     input: ValId
@@ -1061,6 +1061,12 @@
   transpile: true
   args:
     str: StringId
+
+- name: LoadSymbolResult
+  shared: true
+  transpile: true
+  args:
+    sym: SymbolId
 
 - name: LoadInt32Result
   shared: true
