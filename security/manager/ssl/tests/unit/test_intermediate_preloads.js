@@ -586,6 +586,70 @@ add_task(
   }
 );
 
+function findCertByCommonName(certDB, commonName) {
+  for (let cert of certDB.getCerts()) {
+    if (cert.commonName == commonName) {
+      return cert;
+    }
+  }
+  return null;
+}
+
+add_task(
+  {
+    skip_if: () => !AppConstants.MOZ_NEW_CERT_STORAGE,
+  },
+  async function test_healer() {
+    Services.prefs.setBoolPref(INTERMEDIATES_ENABLED_PREF, true);
+    Services.prefs.setIntPref(INTERMEDIATES_DL_PER_POLL_PREF, 100);
+
+    let certDB = Cc["@mozilla.org/security/x509certdb;1"].getService(
+      Ci.nsIX509CertDB
+    );
+    // Add an intermediate as if it had previously been cached.
+    addCertFromFile(certDB, "test_intermediate_preloads/int.pem", ",,");
+    // Add an intermediate with non-default trust settings as if it had been added by the user.
+    addCertFromFile(certDB, "test_intermediate_preloads/int2.pem", "CTu,,");
+
+    let syncResult = await syncAndDownload(["int.pem", "int2.pem"]);
+    equal(syncResult, "success", "Preloading update should have run");
+
+    equal(
+      (await locallyDownloaded()).length,
+      2,
+      "There should have been 2 downloads"
+    );
+
+    let healerRanPromise = TestUtils.topicObserved(
+      "psm:intermediate-preloading-healer-ran"
+    );
+    Services.prefs.setIntPref(
+      "security.intermediate_preloading_healer.timer_interval_ms",
+      500
+    );
+    Services.prefs.setBoolPref(
+      "security.intermediate_preloading_healer.enabled",
+      true
+    );
+    await healerRanPromise;
+    Services.prefs.setBoolPref(
+      "security.intermediate_preloading_healer.enabled",
+      false
+    );
+
+    let intermediate = findCertByCommonName(
+      certDB,
+      "intermediate-preloading-intermediate"
+    );
+    equal(intermediate, null, "should not find intermediate in NSS");
+    let intermediate2 = findCertByCommonName(
+      certDB,
+      "intermediate-preloading-intermediate2"
+    );
+    notEqual(intermediate2, null, "should find second intermediate in NSS");
+  }
+);
+
 function run_test() {
   server = new HttpServer();
   server.start(-1);
