@@ -236,8 +236,6 @@ class nsDocumentEncoder : public nsIDocumentEncoder {
    */
   nsresult SerializeWholeDocument(uint32_t aMaxLength);
 
-  nsresult SerializeToStringRecursive(nsINode* aNode, bool aDontSerializeRoot,
-                                      uint32_t aMaxLength = 0);
   // This serializes the content of aNode.
   nsresult SerializeRangeToString(const nsRange* aRange);
   nsresult SerializeRangeNodes(const nsRange* aRange, nsINode* aNode,
@@ -361,15 +359,20 @@ class nsDocumentEncoder : public nsIDocumentEncoder {
     NodeSerializer(const bool& aNeedsPreformatScanning,
                    const nsCOMPtr<nsIContentSerializer>& aSerializer,
                    const uint32_t& aFlags,
-                   const nsCOMPtr<nsIDocumentEncoderNodeFixup>& aNodeFixup)
+                   const nsCOMPtr<nsIDocumentEncoderNodeFixup>& aNodeFixup,
+                   Maybe<TextStreamer>& aTextStreamer)
         : mNeedsPreformatScanning{aNeedsPreformatScanning},
           mSerializer{aSerializer},
           mFlags{aFlags},
-          mNodeFixup{aNodeFixup} {}
+          mNodeFixup{aNodeFixup},
+          mTextStreamer{aTextStreamer} {}
 
     nsresult SerializeNodeStart(nsINode& aOriginalNode, int32_t aStartOffset,
                                 int32_t aEndOffset,
                                 nsINode* aFixupNode = nullptr) const;
+
+    nsresult SerializeToStringRecursive(nsINode* aNode, bool aDontSerializeRoot,
+                                        uint32_t aMaxLength = 0);
 
     nsresult SerializeNodeEnd(nsINode& aOriginalNode,
                               nsINode* aFixupNode = nullptr) const;
@@ -382,6 +385,7 @@ class nsDocumentEncoder : public nsIDocumentEncoder {
     // Multiple of the flags defined in nsIDocumentEncoder.idl.
     const uint32_t& mFlags;
     const nsCOMPtr<nsIDocumentEncoderNodeFixup>& mNodeFixup;
+    Maybe<TextStreamer>& mTextStreamer;
   };
 
   NodeSerializer mNodeSerializer;
@@ -405,8 +409,8 @@ nsDocumentEncoder::nsDocumentEncoder()
     : mEncoding(nullptr),
       mIsCopying(false),
       mCachedBuffer(nullptr),
-      mNodeSerializer(mNeedsPreformatScanning, mSerializer, mFlags,
-                      mNodeFixup) {
+      mNodeSerializer(mNeedsPreformatScanning, mSerializer, mFlags, mNodeFixup,
+                      mTextStreamer) {
   Initialize();
   mMimeType.AssignLiteral("text/plain");
 }
@@ -553,7 +557,7 @@ nsresult nsDocumentEncoder::SerializeNode() {
       nodeIsContainer) {
     rv = mNodeSerializer.SerializeToStringIterative(node);
   } else {
-    rv = SerializeToStringRecursive(node, nodeIsContainer);
+    rv = mNodeSerializer.SerializeToStringRecursive(node, nodeIsContainer);
   }
 
   return rv;
@@ -567,7 +571,7 @@ nsresult nsDocumentEncoder::SerializeWholeDocument(uint32_t aMaxLength) {
   nsresult rv = mSerializer->AppendDocumentStart(mDocument);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = SerializeToStringRecursive(mDocument, false, aMaxLength);
+  rv = mNodeSerializer.SerializeToStringRecursive(mDocument, false, aMaxLength);
   return rv;
 }
 
@@ -783,9 +787,8 @@ nsresult nsDocumentEncoder::NodeSerializer::SerializeNodeEnd(
   return rv;
 }
 
-nsresult nsDocumentEncoder::SerializeToStringRecursive(nsINode* aNode,
-                                                       bool aDontSerializeRoot,
-                                                       uint32_t aMaxLength) {
+nsresult nsDocumentEncoder::NodeSerializer::SerializeToStringRecursive(
+    nsINode* aNode, bool aDontSerializeRoot, uint32_t aMaxLength) {
   uint32_t outputLength{0};
   nsresult rv = mSerializer->GetOutputLength(outputLength);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -820,8 +823,7 @@ nsresult nsDocumentEncoder::SerializeToStringRecursive(nsINode* aNode,
       MOZ_ASSERT(aMaxLength >= outputLength);
       endOffset = aMaxLength - outputLength;
     }
-    rv = mNodeSerializer.SerializeNodeStart(*aNode, 0, endOffset,
-                                            maybeFixedNode);
+    rv = SerializeNodeStart(*aNode, 0, endOffset, maybeFixedNode);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -836,7 +838,7 @@ nsresult nsDocumentEncoder::SerializeToStringRecursive(nsINode* aNode,
   }
 
   if (!aDontSerializeRoot) {
-    rv = mNodeSerializer.SerializeNodeEnd(*aNode, maybeFixedNode);
+    rv = SerializeNodeEnd(*aNode, maybeFixedNode);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -916,7 +918,7 @@ nsresult nsDocumentEncoder::SerializeRangeNodes(const nsRange* const aRange,
   if (startNode != content && endNode != content) {
     // node is completely contained in range.  Serialize the whole subtree
     // rooted by this node.
-    rv = SerializeToStringRecursive(aNode, false);
+    rv = mNodeSerializer.SerializeToStringRecursive(aNode, false);
     NS_ENSURE_SUCCESS(rv, rv);
   } else {
     // due to implementation it is impossible for text node to be both start and
@@ -1002,7 +1004,7 @@ nsresult nsDocumentEncoder::SerializeRangeNodes(const nsRange* const aRange,
           if ((j == startOffset) || (j == endOffset - 1)) {
             rv = SerializeRangeNodes(aRange, childAsNode, aDepth + 1);
           } else {
-            rv = SerializeToStringRecursive(childAsNode, false);
+            rv = mNodeSerializer.SerializeToStringRecursive(childAsNode, false);
           }
 
           NS_ENSURE_SUCCESS(rv, rv);
