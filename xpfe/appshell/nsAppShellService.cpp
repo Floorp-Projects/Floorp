@@ -651,6 +651,7 @@ nsresult nsAppShellService::JustCreateTopWindow(
       widgetInitData.mBorderStyle = static_cast<enum nsBorderStyle>(
           widgetInitData.mBorderStyle | eBorderStyle_close);
     if (aChromeMask & nsIWebBrowserChrome::CHROME_WINDOW_RESIZE) {
+      widgetInitData.mResizable = true;
       widgetInitData.mBorderStyle = static_cast<enum nsBorderStyle>(
           widgetInitData.mBorderStyle | eBorderStyle_resizeh);
       // only resizable windows get the maximize button (but not dialogs)
