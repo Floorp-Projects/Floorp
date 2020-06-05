@@ -235,8 +235,9 @@ bool WebrtcAudioConduit::GetRTCPReceiverReport(uint32_t* jitterMs,
   return res;
 }
 
-bool WebrtcAudioConduit::GetRTCPSenderReport(unsigned int* packetsSent,
-                                             uint64_t* bytesSent) {
+bool WebrtcAudioConduit::GetRTCPSenderReport(
+    unsigned int* packetsSent, uint64_t* bytesSent,
+    DOMHighResTimeStamp* aRemoteTimestamp) {
   ASSERT_ON_THREAD(mStsThread);
   MutexAutoLock lock(mMutex);
   if (!mRecvChannelProxy) {
@@ -246,6 +247,7 @@ bool WebrtcAudioConduit::GetRTCPSenderReport(unsigned int* packetsSent,
   webrtc::CallStatistics stats = mRecvChannelProxy->GetRTCPStatistics();
   *packetsSent = stats.rtcp_sender_packets_sent;
   *bytesSent = stats.rtcp_sender_octets_sent;
+  *aRemoteTimestamp = stats.rtcp_sender_ntp_timestamp.ToMs();
   return *packetsSent > 0 && *bytesSent > 0;
 }
 

@@ -145,6 +145,7 @@ const statsExpectedByType = {
       "packetsSent",
       "bytesSent",
       "localId",
+      "remoteTimestamp",
     ],
     optional: [
       "nackCount",
@@ -651,6 +652,9 @@ var pedanticChecks = report => {
       ok(stat.bytesSent, stat.type + ".bytesSent has a value."
         + " Value not expected to be sane, bug 1339104. value="
         + stat.bytesSent);
+
+      ok(stat.remoteTimestamp !== undefined, `${stat.type}.remoteTimestamp `
+	+ ` is not undefined`);
 
     } else if (stat.type == "candidate-pair") {
       info("candidate-pair is: " + JSON.stringify(stat));
