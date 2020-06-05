@@ -18,4 +18,7 @@
        and stroked with black -->
   <ellipse fill="url(#TrianglePattern)" stroke="black" stroke-width="5"  
            cx="400" cy="200" rx="350" ry="150" />
+
+  <!-- Sentinel use counter to signal that telemetry for this document has been captured -->
+  <style>x { marker-mid: initial; }</style>
 </svg>
