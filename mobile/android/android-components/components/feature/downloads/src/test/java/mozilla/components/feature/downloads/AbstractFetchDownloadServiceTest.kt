@@ -4,6 +4,7 @@
 
 package mozilla.components.feature.downloads
 
+import android.app.DownloadManager
 import android.app.DownloadManager.EXTRA_DOWNLOAD_ID
 import android.app.Notification
 import android.app.NotificationManager
@@ -12,6 +13,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.getSystemService
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.Dispatchers
@@ -63,6 +65,9 @@ import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyBoolean
+import org.mockito.ArgumentMatchers.anyString
+import org.mockito.ArgumentMatchers.anyLong
+import org.mockito.ArgumentMatchers.isNull
 import org.mockito.Mock
 import org.mockito.Mockito.doCallRealMethod
 import org.mockito.Mockito.doNothing
@@ -1077,6 +1082,56 @@ class AbstractFetchDownloadServiceTest {
         service.updateDownloadNotification(COMPLETED, downloadJobState)
 
         verify(service).addToDownloadSystemDatabaseCompat(any())
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.P])
+    @Suppress("Deprecation")
+    fun `do not pass non-http(s) url to addCompletedDownload`() {
+        val download = DownloadState(
+            url = "blob:moz-extension://d5ea9baa-64c9-4c3d-bb38-49308c47997c/",
+            fileName = "example.apk",
+            destinationDirectory = folder.root.path
+        )
+
+        val service = spy(object : AbstractFetchDownloadService() {
+            override val httpClient = client
+            override val store = browserStore
+        })
+
+        val spyContext = spy(testContext)
+        val downloadManager: DownloadManager = mock()
+
+        doReturn(spyContext).`when`(service).context
+        doReturn(downloadManager).`when`(spyContext).getSystemService<DownloadManager>()
+
+        service.addToDownloadSystemDatabaseCompat(download)
+        verify(downloadManager).addCompletedDownload(anyString(), anyString(), anyBoolean(), anyString(), anyString(), anyLong(), anyBoolean(), isNull(), any())
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.P])
+    @Suppress("Deprecation")
+    fun `pass http(s) url to addCompletedDownload`() {
+        val download = DownloadState(
+            url = "https://mozilla.com",
+            fileName = "example.apk",
+            destinationDirectory = folder.root.path
+        )
+
+        val service = spy(object : AbstractFetchDownloadService() {
+            override val httpClient = client
+            override val store = browserStore
+        })
+
+        val spyContext = spy(testContext)
+        val downloadManager: DownloadManager = mock()
+
+        doReturn(spyContext).`when`(service).context
+        doReturn(downloadManager).`when`(spyContext).getSystemService<DownloadManager>()
+
+        service.addToDownloadSystemDatabaseCompat(download)
+        verify(downloadManager).addCompletedDownload(anyString(), anyString(), anyBoolean(), anyString(), anyString(), anyLong(), anyBoolean(), any(), any())
     }
 
     @Test

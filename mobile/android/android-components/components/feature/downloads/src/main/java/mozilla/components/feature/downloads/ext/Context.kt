@@ -27,7 +27,7 @@ internal fun Context.addCompletedDownload(
     path: String,
     length: Long,
     showNotification: Boolean,
-    uri: Uri,
+    uri: Uri?,
     referer: Uri?
 ) = getSystemService<DownloadManager>()!!.run {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
