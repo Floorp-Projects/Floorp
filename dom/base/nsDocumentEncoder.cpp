@@ -239,7 +239,6 @@ class nsDocumentEncoder : public nsIDocumentEncoder {
   nsresult SerializeToStringRecursive(nsINode* aNode, bool aDontSerializeRoot,
                                       uint32_t aMaxLength = 0);
   // This serializes the content of aNode.
-  nsresult SerializeToStringIterative(nsINode* aNode);
   nsresult SerializeRangeToString(const nsRange* aRange);
   nsresult SerializeRangeNodes(const nsRange* aRange, nsINode* aNode,
                                int32_t aDepth);
@@ -374,6 +373,8 @@ class nsDocumentEncoder : public nsIDocumentEncoder {
 
     nsresult SerializeNodeEnd(nsINode& aOriginalNode,
                               nsINode* aFixupNode = nullptr) const;
+
+    nsresult SerializeToStringIterative(nsINode* aNode) const;
 
    private:
     const bool& mNeedsPreformatScanning;
@@ -550,7 +551,7 @@ nsresult nsDocumentEncoder::SerializeNode() {
   const bool nodeIsContainer = mEncodingScope.mNodeIsContainer;
   if (!mNodeFixup && !(mFlags & SkipInvisibleContent) && !mTextStreamer &&
       nodeIsContainer) {
-    rv = SerializeToStringIterative(node);
+    rv = mNodeSerializer.SerializeToStringIterative(node);
   } else {
     rv = SerializeToStringRecursive(node, nodeIsContainer);
   }
@@ -846,17 +847,18 @@ nsresult nsDocumentEncoder::SerializeToStringRecursive(nsINode* aNode,
   return rv;
 }
 
-nsresult nsDocumentEncoder::SerializeToStringIterative(nsINode* aNode) {
+nsresult nsDocumentEncoder::NodeSerializer::SerializeToStringIterative(
+    nsINode* aNode) const {
   nsresult rv;
 
   nsINode* node = aNode->GetFirstChildOfTemplateOrNode();
   while (node) {
     nsINode* current = node;
-    rv = mNodeSerializer.SerializeNodeStart(*current, 0, -1, current);
+    rv = SerializeNodeStart(*current, 0, -1, current);
     NS_ENSURE_SUCCESS(rv, rv);
     node = current->GetFirstChildOfTemplateOrNode();
     while (!node && current && current != aNode) {
-      rv = mNodeSerializer.SerializeNodeEnd(*current);
+      rv = SerializeNodeEnd(*current);
       NS_ENSURE_SUCCESS(rv, rv);
       // Check if we have siblings.
       node = current->GetNextSibling();
