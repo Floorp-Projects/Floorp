@@ -1259,7 +1259,7 @@ bool DebuggerObject::CallData::createSource() {
 
   if (isScriptElement) {
     // The introduction type must be a statically allocated string.
-    compileOptions.setIntroductionType("scriptElement");
+    compileOptions.setIntroductionType("inlineScript");
   }
 
   Vector<char16_t> textChars(cx);
