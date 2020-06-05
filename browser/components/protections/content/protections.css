@@ -690,8 +690,8 @@ label[for="tab-cryptominer"]:hover ~ #highlight-hover {
 
 .monitor-breaches-wrapper {
   display: grid;
-  grid-area: 2 / 1 / 2 / 7;
-  grid: 1fr auto / repeat(6, 1fr);
+  grid-area: 2 / 1 / 2 / 8;
+  grid: 1fr auto / repeat(7, 1fr);
   margin-bottom: 24px;
 }
 
@@ -749,25 +749,28 @@ label[for="tab-cryptominer"]:hover ~ #highlight-hover {
   grid-area: 2 / 1 / 2 / 8;
 }
 
-#monitor-partial-breaches-link {
-  margin-block: auto;
-  grid-area: 1 / 5 / 1 / 7;
-}
-
 #monitor-partial-breaches-motivation-title {
   font-weight: 700;
   grid-area: 1 / 1 / 1 / 7;
   margin-inline-end: 15px;
 }
 
+#monitor-breaches-description,
 #monitor-partial-breaches-motivation-desc {
   grid-area: 1 / 1 / 1 / 5;
   margin-block: auto;
+  margin-inline-end: 15px;
 }
 
 .monitor-breaches-header {
   margin-top: 30px;
-  grid-area: 1 / 1 / 1 / 7;
+  grid-area: 1 / 1 / 1 / 8;
+}
+
+.monitor-breaches-description-wrapper {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  grid-area: 2 / 1 / 2 / 8;
 }
 
 #monitor-partial-breaches-icon,
@@ -790,23 +793,23 @@ label[for="tab-cryptominer"]:hover ~ #highlight-hover {
   cursor: default;
 }
 
-#monitor-breaches-description {
-  margin-inline-end: 15px;
-  grid-area: 2 / 1 / 2 / 5;
-}
-
-#monitor-breaches-link {
-  grid-area: 2 / 5 / 2 / 7;
-}
-
-#monitor-partial-breaches-link,
-#monitor-breaches-link {
-  height: 39.5px;
+.monitor-partial-breaches-link-wrapper,
+.monitor-breaches-link-wrapper {
+  margin-block: auto;
+  grid-area: 1 / 5 / 1 / 7;
   margin-inline: 0 15px;
-  text-align: center;
   font-size: 0.95em;
-  padding-top: 9px;
+  text-align: center;
+  display: flex;
+}
+
+#monitor-breaches-link,
+#monitor-partial-breaches-link {
+  color: var(--in-content-selected-text);
   outline: none;
+  text-decoration: none;
+  width: 157.267px;
+  padding: 9px;
 }
 
 .lockwise-card #lockwise-header-content > a,
@@ -903,8 +906,8 @@ label[for="tab-cryptominer"]:hover ~ #highlight-hover {
 #manage-protections,
 #sign-up-for-monitor-link,
 #get-proxy-extension-link,
-#monitor-partial-breaches-link,
-#monitor-breaches-link {
+.monitor-partial-breaches-link-wrapper,
+.monitor-breaches-link-wrapper {
   -moz-appearance: button;
   background-color: var(--in-content-primary-button-background);  
   border: 1px solid transparent;
