@@ -13,5 +13,8 @@
   },
   "searchUrlGetParams": {
     "message": "ff3=4&toolid=20004&campid=5338192028&customid=&mpre=https://www.befr.ebay.be/sch/{searchTerms}"
+  },
+  "suggestUrlGetParams": {
+    "message": "sId=23&fmt=osr&kwd={searchTerms}"
   }
 }
