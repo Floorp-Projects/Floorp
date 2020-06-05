@@ -13,6 +13,7 @@
 
 #include "nsCoord.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/ScrollOrigin.h"
 #include "mozilla/ScrollStyles.h"
 #include "mozilla/ScrollTypes.h"
 #include "mozilla/gfx/Point.h"
@@ -29,7 +30,6 @@ class nsIScrollPositionListener;
 class nsIFrame;
 class nsPresContext;
 class nsIContent;
-class nsAtom;
 class nsDisplayListBuilder;
 
 namespace mozilla {
@@ -57,6 +57,7 @@ class nsIScrollableFrame : public nsIScrollbarMediator {
   typedef mozilla::layers::ScrollSnapInfo ScrollSnapInfo;
   typedef mozilla::layout::ScrollAnchorContainer ScrollAnchorContainer;
   typedef mozilla::ScrollMode ScrollMode;
+  typedef mozilla::ScrollOrigin ScrollOrigin;
 
   NS_DECL_QUERYFRAME_TARGET(nsIScrollableFrame)
 
@@ -267,11 +268,12 @@ class nsIScrollableFrame : public nsIScrollbarMediator {
    * FIXME: Drop |aSnap| argument once after we finished the migration to the
    * Scroll Snap Module v1. We should alway use ENABLE_SNAP.
    */
-  virtual void ScrollToCSSPixels(const CSSIntPoint& aScrollPosition,
-                                 ScrollMode aMode = ScrollMode::Instant,
-                                 nsIScrollbarMediator::ScrollSnapMode aSnap =
-                                     nsIScrollbarMediator::DEFAULT,
-                                 nsAtom* aOrigin = nullptr) = 0;
+  virtual void ScrollToCSSPixels(
+      const CSSIntPoint& aScrollPosition,
+      ScrollMode aMode = ScrollMode::Instant,
+      nsIScrollbarMediator::ScrollSnapMode aSnap =
+          nsIScrollbarMediator::DEFAULT,
+      ScrollOrigin aOrigin = ScrollOrigin::NotSpecified) = 0;
   /**
    * @note This method might destroy the frame, pres shell and other objects.
    * Scrolls to a particular position in float CSS pixels.
@@ -281,7 +283,8 @@ class nsIScrollableFrame : public nsIScrollbarMediator {
    * number of layer pixels (so the operation is fast and looks clean).
    */
   virtual void ScrollToCSSPixelsApproximate(
-      const mozilla::CSSPoint& aScrollPosition, nsAtom* aOrigin = nullptr) = 0;
+      const mozilla::CSSPoint& aScrollPosition,
+      ScrollOrigin aOrigin = ScrollOrigin::NotSpecified) = 0;
 
   /**
    * Returns the scroll position in integer CSS pixels, rounded to the nearest
@@ -300,7 +303,7 @@ class nsIScrollableFrame : public nsIScrollbarMediator {
    */
   virtual void ScrollBy(nsIntPoint aDelta, mozilla::ScrollUnit aUnit,
                         ScrollMode aMode, nsIntPoint* aOverflow = nullptr,
-                        nsAtom* aOrigin = nullptr,
+                        ScrollOrigin aOrigin = ScrollOrigin::NotSpecified,
                         ScrollMomentum aMomentum = NOT_MOMENTUM,
                         nsIScrollbarMediator::ScrollSnapMode aSnap =
                             nsIScrollbarMediator::DISABLE_SNAP) = 0;
@@ -309,11 +312,11 @@ class nsIScrollableFrame : public nsIScrollbarMediator {
    * FIXME: Drop |aSnap| argument once after we finished the migration to the
    * Scroll Snap Module v1. We should alway use ENABLE_SNAP.
    */
-  virtual void ScrollByCSSPixels(const CSSIntPoint& aDelta,
-                                 ScrollMode aMode = ScrollMode::Instant,
-                                 nsAtom* aOrigin = nullptr,
-                                 nsIScrollbarMediator::ScrollSnapMode aSnap =
-                                     nsIScrollbarMediator::DEFAULT) = 0;
+  virtual void ScrollByCSSPixels(
+      const CSSIntPoint& aDelta, ScrollMode aMode = ScrollMode::Instant,
+      ScrollOrigin aOrigin = ScrollOrigin::NotSpecified,
+      nsIScrollbarMediator::ScrollSnapMode aSnap =
+          nsIScrollbarMediator::DEFAULT) = 0;
 
   /**
    * Perform scroll snapping, possibly resulting in a smooth scroll to
@@ -413,13 +416,13 @@ class nsIScrollableFrame : public nsIScrollbarMediator {
   virtual nsRect ExpandRectToNearlyVisible(const nsRect& aRect) const = 0;
   /**
    * Returns the origin that triggered the last instant scroll. Will equal
-   * nsGkAtoms::apz when the compositor's replica frame metrics includes the
+   * ScrollOrigin::Apz when the compositor's replica frame metrics includes the
    * latest instant scroll.
    */
-  virtual nsAtom* LastScrollOrigin() = 0;
+  virtual ScrollOrigin LastScrollOrigin() = 0;
   /**
    * Returns the origin that triggered the last smooth scroll.
-   * Will equal nsGkAtoms::apz when the compositor's replica frame
+   * Will equal ScrollOrigin::Apz when the compositor's replica frame
    * metrics includes the latest smooth scroll.  The compositor will always
    * perform an instant scroll prior to instantiating any smooth scrolls
    * if LastScrollOrigin and LastSmoothScrollOrigin indicate that
@@ -431,7 +434,7 @@ class nsIScrollableFrame : public nsIScrollbarMediator {
    * by an instant scroll before the smooth scroll could be started by the
    * compositor, this is set to nullptr to clear the smooth scroll.
    */
-  virtual nsAtom* LastSmoothScrollOrigin() = 0;
+  virtual ScrollOrigin LastSmoothScrollOrigin() = 0;
   /**
    * Returns the current generation counter for the scroll. This counter
    * increments every time the scroll position is set.
