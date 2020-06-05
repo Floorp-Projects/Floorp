@@ -1,6 +1,4 @@
-extern crate criterion;
-
-use criterion::{criterion_group, criterion_main, Criterion, ParameterizedBenchmark, Throughput};
+use criterion::*;
 
 #[derive(Default)]
 struct Small(u8);
@@ -8,113 +6,61 @@ struct Small(u8);
 #[derive(Default)]
 struct Big([usize; 32]);
 
-struct Huge([usize; 1024]);
-
-impl Default for Huge {
-    fn default() -> Huge {
-        Huge([0; 1024])
-    }
-}
-
 fn alloc<T: Default>(n: usize) {
-    let arena = bumpalo::Bump::new();
+    let arena = bumpalo::Bump::with_capacity(n * std::mem::size_of::<T>());
     for _ in 0..n {
-        let val: &mut T = arena.alloc(Default::default());
-        criterion::black_box(val);
+        let arena = black_box(&arena);
+        let val: &mut T = arena.alloc(black_box(Default::default()));
+        black_box(val);
     }
 }
 
 fn alloc_with<T: Default>(n: usize) {
-    let arena = bumpalo::Bump::new();
+    let arena = bumpalo::Bump::with_capacity(n * std::mem::size_of::<T>());
     for _ in 0..n {
-        let val: &mut T = arena.alloc_with(|| Default::default());
-        criterion::black_box(val);
+        let arena = black_box(&arena);
+        let val: &mut T = arena.alloc_with(|| black_box(Default::default()));
+        black_box(val);
     }
 }
 
+#[cfg(feature = "collections")]
 fn format_realloc(bump: &bumpalo::Bump, n: usize) {
     let n = criterion::black_box(n);
     let s = bumpalo::format!(in bump, "Hello {:.*}", n, "World! ");
     criterion::black_box(s);
 }
 
-fn criterion_benchmark(c: &mut Criterion) {
-    c.bench(
-        "alloc",
-        ParameterizedBenchmark::new(
-            "small",
-            |b, n| b.iter(|| alloc::<Small>(*n)),
-            (1..3).map(|n| n * 1000).collect::<Vec<usize>>(),
-        )
-        .throughput(|n| Throughput::Elements(*n as u32)),
-    );
+const ALLOCATIONS: usize = 10_000;
 
-    c.bench(
-        "alloc",
-        ParameterizedBenchmark::new(
-            "big",
-            |b, n| b.iter(|| alloc::<Big>(*n)),
-            (1..3).map(|n| n * 1000).collect::<Vec<usize>>(),
-        )
-        .throughput(|n| Throughput::Elements(*n as u32)),
-    );
-
-    c.bench(
-        "alloc",
-        ParameterizedBenchmark::new(
-            "huge",
-            |b, n| b.iter(|| alloc::<Huge>(*n)),
-            (1..3).map(|n| n * 1000).collect::<Vec<usize>>(),
-        )
-        .throughput(|n| Throughput::Elements(*n as u32)),
-    );
-
-    c.bench(
-        "alloc_with",
-        ParameterizedBenchmark::new(
-            "small",
-            |b, n| b.iter(|| alloc_with::<Small>(*n)),
-            (1..3).map(|n| n * 1000).collect::<Vec<usize>>(),
-        )
-        .throughput(|n| Throughput::Elements(*n as u32)),
-    );
-
-    c.bench(
-        "alloc_with",
-        ParameterizedBenchmark::new(
-            "big",
-            |b, n| b.iter(|| alloc_with::<Big>(*n)),
-            (1..3).map(|n| n * 1000).collect::<Vec<usize>>(),
-        )
-        .throughput(|n| Throughput::Elements(*n as u32)),
-    );
-
-    c.bench(
-        "alloc_with",
-        ParameterizedBenchmark::new(
-            "huge",
-            |b, n| b.iter(|| alloc_with::<Huge>(*n)),
-            (1..3).map(|n| n * 1000).collect::<Vec<usize>>(),
-        )
-        .throughput(|n| Throughput::Elements(*n as u32)),
-    );
-
-    c.bench(
-        "format-realloc",
-        ParameterizedBenchmark::new(
-            "hello {someone}",
-            |b, n| {
-                let mut bump = bumpalo::Bump::new();
-                b.iter(|| {
-                    bump.reset();
-                    format_realloc(&bump, *n);
-                });
-            },
-            (1..5).map(|n| n * n * n * 10).collect::<Vec<usize>>(),
-        )
-        .throughput(|n| Throughput::Elements(*n as u32)),
-    );
+fn bench_alloc(c: &mut Criterion) {
+    let mut group = c.benchmark_group("alloc");
+    group.throughput(Throughput::Elements(ALLOCATIONS as u64));
+    group.bench_function("small", |b| b.iter(|| alloc::<Small>(ALLOCATIONS)));
+    group.bench_function("big", |b| b.iter(|| alloc::<Big>(ALLOCATIONS)));
 }
 
-criterion_group!(benches, criterion_benchmark);
+fn bench_alloc_with(c: &mut Criterion) {
+    let mut group = c.benchmark_group("alloc-with");
+    group.throughput(Throughput::Elements(ALLOCATIONS as u64));
+    group.bench_function("small", |b| b.iter(|| alloc_with::<Small>(ALLOCATIONS)));
+    group.bench_function("big", |b| b.iter(|| alloc_with::<Big>(ALLOCATIONS)));
+}
+
+fn bench_format_realloc(c: &mut Criterion) {
+    let mut group = c.benchmark_group("format-realloc");
+
+    for n in (1..5).map(|n| n * n * n * 10) {
+        group.throughput(Throughput::Elements(n as u64));
+        group.bench_with_input(BenchmarkId::new("format-realloc", n), &n, |b, n| {
+            let mut bump = bumpalo::Bump::new();
+            b.iter(|| {
+                bump.reset();
+                format_realloc(&bump, *n);
+            });
+        });
+    }
+}
+
+criterion_group!(benches, bench_alloc, bench_alloc_with, bench_format_realloc);
 criterion_main!(benches);

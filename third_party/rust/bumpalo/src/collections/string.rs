@@ -59,7 +59,9 @@
 //! assert_eq!(bytes, [240, 159, 146, 150]);
 //! ```
 
-use super::str::lossy;
+use crate::collections::str::lossy;
+use crate::collections::vec::Vec;
+use crate::Bump;
 use core::char::decode_utf16;
 use core::fmt;
 use core::hash;
@@ -68,11 +70,8 @@ use core::mem;
 use core::ops::Bound::{Excluded, Included, Unbounded};
 use core::ops::{self, Add, AddAssign, Index, IndexMut, RangeBounds};
 use core::ptr;
-use crate::Bump;
-
-use crate::collections::vec::Vec;
-use std::borrow::Cow;
-use std::str::{self, Chars, Utf8Error};
+use core::str::{self, Chars, Utf8Error};
+use core_alloc::borrow::Cow;
 
 /// Like the `format!` macro for creating `std::string::String`s but for
 /// `bumpalo::collections::String`.
@@ -91,12 +90,16 @@ use std::str::{self, Chars, Utf8Error};
 #[macro_export]
 macro_rules! format {
     ( in $bump:expr, $fmt:expr, $($args:expr),* ) => {{
-        use std::fmt::Write;
+        use $crate::core_alloc::fmt::Write;
         let bump = $bump;
         let mut s = $crate::collections::String::new_in(bump);
         let _ = write!(&mut s, $fmt, $($args),*);
         s
-    }}
+    }};
+
+    ( in $bump:expr, $fmt:expr, $($args:expr,)* ) => {
+        $crate::format!(in $bump, $fmt, $($args),*)
+    };
 }
 
 /// A UTF-8 encoded, growable string.
@@ -220,11 +223,9 @@ macro_rules! format {
 ///
 /// fn example_func<A: TraitExample>(example_arg: A) {}
 ///
-/// fn main() {
-///     let b = Bump::new();
-///     let example_string = String::from_str_in("example_string", &b);
-///     example_func(&example_string);
-/// }
+/// let b = Bump::new();
+/// let example_string = String::from_str_in("example_string", &b);
+/// example_func(&example_string);
 /// ```
 ///
 /// There are two options that would work instead. The first would be to
@@ -644,7 +645,7 @@ impl<'bump> String<'bump> {
             return String::from_str_in("", bump);
         };
 
-        const REPLACEMENT: &'static str = "\u{FFFD}";
+        const REPLACEMENT: &str = "\u{FFFD}";
 
         let mut res = String::with_capacity_in(v.len(), bump);
         res.push_str(first_valid);
@@ -1509,14 +1510,12 @@ impl<'bump> String<'bump> {
     /// ```
     /// use bumpalo::{Bump, collections::String};
     ///
-    /// # fn main() {
     /// let b = Bump::new();
     ///
     /// let mut hello = String::from_str_in("Hello, World!", &b);
     /// let world = hello.split_off(7);
     /// assert_eq!(hello, "Hello, ");
     /// assert_eq!(world, "World!");
-    /// # }
     /// ```
     #[inline]
     pub fn split_off(&mut self, at: usize) -> String<'bump> {
@@ -1814,8 +1813,8 @@ impl<'bump> Extend<String<'bump>> for String<'bump> {
     }
 }
 
-impl<'bump> Extend<::std::string::String> for String<'bump> {
-    fn extend<I: IntoIterator<Item = ::std::string::String>>(&mut self, iter: I) {
+impl<'bump> Extend<core_alloc::string::String> for String<'bump> {
+    fn extend<I: IntoIterator<Item = core_alloc::string::String>>(&mut self, iter: I) {
         for s in iter {
             self.push_str(&s)
         }
@@ -1835,10 +1834,6 @@ impl<'bump> PartialEq for String<'bump> {
     fn eq(&self, other: &String) -> bool {
         PartialEq::eq(&self[..], &other[..])
     }
-    #[inline]
-    fn ne(&self, other: &String) -> bool {
-        PartialEq::ne(&self[..], &other[..])
-    }
 }
 
 macro_rules! impl_eq {
@@ -1848,20 +1843,12 @@ macro_rules! impl_eq {
             fn eq(&self, other: &$rhs) -> bool {
                 PartialEq::eq(&self[..], &other[..])
             }
-            #[inline]
-            fn ne(&self, other: &$rhs) -> bool {
-                PartialEq::ne(&self[..], &other[..])
-            }
         }
 
         impl<'a, 'b, 'bump> PartialEq<$lhs> for $rhs {
             #[inline]
             fn eq(&self, other: &$lhs) -> bool {
                 PartialEq::eq(&self[..], &other[..])
-            }
-            #[inline]
-            fn ne(&self, other: &$lhs) -> bool {
-                PartialEq::ne(&self[..], &other[..])
             }
         }
     };
@@ -1870,7 +1857,7 @@ macro_rules! impl_eq {
 impl_eq! { String<'bump>, str }
 impl_eq! { String<'bump>, &'a str }
 impl_eq! { Cow<'a, str>, String<'bump> }
-impl_eq! { ::std::string::String, String<'bump> }
+impl_eq! { core_alloc::string::String, String<'bump> }
 
 impl<'bump> fmt::Display for String<'bump> {
     #[inline]

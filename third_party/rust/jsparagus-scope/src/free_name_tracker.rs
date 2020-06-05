@@ -80,12 +80,12 @@ impl FreeNameTracker {
     }
 
     /// Names closed over in inner script-scopes, that's not yet defined.
-    fn closed_over_freevars(&self) -> Difference<'_, SourceAtomSetIndex, RandomState> {
+    pub fn closed_over_freevars(&self) -> Difference<'_, SourceAtomSetIndex, RandomState> {
         self.closed_over_names.difference(&self.def_names)
     }
 
     /// Names used in this and inner non-script scopes, that's not yet defined.
-    fn used_freevars(&self) -> Difference<'_, SourceAtomSetIndex, RandomState> {
+    pub fn used_freevars(&self) -> Difference<'_, SourceAtomSetIndex, RandomState> {
         self.used_names.difference(&self.def_names)
     }
 

@@ -14,6 +14,7 @@ jobs:
           set -ex
           export RUST_BACKTRACE=1
           cargo test
+          cargo test --all-features
         displayName: "Run `cargo test`"
       - bash: |
           set -ex
@@ -22,7 +23,10 @@ jobs:
       - bash: |
           set -ex
           export RUST_BACKTRACE=1
-          CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUNNER=valgrind cargo test
+          # Don't leak-check, as Rust globals tend to cause false positives.
+          export CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUNNER="valgrind --suppressions=valgrind.supp --leak-check=no --error-exitcode=1"
+          cargo test
+          cargo test --all-features
         displayName: "Run `cargo test` under Valgrind"
   - job: check_benches
     displayName: "Check that benches build"
@@ -32,5 +36,5 @@ jobs:
           rust_version: stable
       - bash: |
           set -ex
-          cargo check --benches
+          cargo check --benches --all-features
         displayName: "Run cargo check"
