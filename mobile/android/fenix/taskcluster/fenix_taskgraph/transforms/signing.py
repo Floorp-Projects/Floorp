@@ -18,7 +18,7 @@ transforms = TransformSequence()
 @transforms.add
 def resolve_keys(config, tasks):
     for task in tasks:
-        for key in ("index", "worker-type", "worker.signing-type", "signing-format"):
+        for key in ("index", "run-on-tasks-for", "worker-type", "worker.signing-type", "signing-format"):
             resolve_keyed_by(
                 task,
                 key,
