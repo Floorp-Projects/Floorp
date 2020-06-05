@@ -131,6 +131,9 @@ pub fn set_upload_enabled(enabled: bool) -> bool {
             // If uploading is being re-enabled, we have to restore the
             // application-lifetime metrics.
             initialize_core_metrics(&glean, &state.client_info);
+        } else if old_enabled && !enabled {
+            // If upload is being disabled, check for pings to send.
+            ping_upload::check_for_uploads();
         }
 
         enabled
