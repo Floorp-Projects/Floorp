@@ -85,7 +85,8 @@ class RTCPReceiver {
 
   // Get received sender packet and octet counts
   void RemoteRTCPSenderInfo(uint32_t* packet_count,
-                            uint32_t* octet_count) const;
+                            uint32_t* octet_count,
+                            NtpTime* ntp_timestamp) const;
 
   bool LastReceivedXrReferenceTimeInfo(rtcp::ReceiveTimeInfo* info) const;
 

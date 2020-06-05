@@ -258,7 +258,8 @@ VideoReceiveStream::Stats VideoReceiveStream::GetStats() const {
   RtpRtcp* rtp_rtcp = rtp_video_stream_receiver_.rtp_rtcp();
   if (rtp_rtcp) {
     rtp_rtcp->RemoteRTCPSenderInfo(&stats.rtcp_sender_packets_sent,
-                                   &stats.rtcp_sender_octets_sent);
+                                   &stats.rtcp_sender_octets_sent,
+                                   &stats.rtcp_sender_ntp_timestamp);
   }
 
   return stats;
