@@ -18,20 +18,31 @@ namespace mozilla {
 static void WaylandVsyncSourceCallbackHandler(void* data,
                                               struct wl_callback* callback,
                                               uint32_t time) {
-  WaylandVsyncSource::WaylandDisplay* context =
-      (WaylandVsyncSource::WaylandDisplay*)data;
+  WaylandVsyncSource::WaylandFrameCallbackContext* context =
+      (WaylandVsyncSource::WaylandFrameCallbackContext*)data;
   wl_callback_destroy(callback);
-  context->FrameCallback();
+
+  if (!context->mEnabled) {
+    // We have been terminated, so just clean up the context and return.
+    delete context;
+    return;
+  }
+
+  context->mDisplay->FrameCallback();
 }
 
 static const struct wl_callback_listener WaylandVsyncSourceCallbackListener = {
     WaylandVsyncSourceCallbackHandler};
 
 WaylandVsyncSource::WaylandDisplay::WaylandDisplay(MozContainer* container)
-    : mEnabledLock("WaylandVsyncEnabledLock"),
+    : mThread("WaylandVsyncThread"),
+      mTask(nullptr),
+      mCallbackContext(nullptr),
+      mNotifyThreadMonitor("WaylandVsyncNotifyThreadMonitor"),
+      mEnabledLock("WaylandVsyncEnabledLock"),
       mVsyncEnabled(false),
       mMonitorEnabled(false),
-      mCallback(nullptr),
+      mShutdown(false),
       mContainer(container) {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -40,39 +51,39 @@ WaylandVsyncSource::WaylandDisplay::WaylandDisplay(MozContainer* container)
   mDisplay = widget::WaylandDisplayGet()->GetDisplay();
 }
 
-void WaylandVsyncSource::WaylandDisplay::ClearFrameCallback() {
-  if (mCallback) {
-    wl_callback_destroy(mCallback);
-    mCallback = nullptr;
+void WaylandVsyncSource::WaylandDisplay::Loop() {
+  MonitorAutoLock lock(mNotifyThreadMonitor);
+  while (true) {
+    lock.Wait();
+    if (mShutdown) {
+      return;
+    }
+
+    NotifyVsync(TimeStamp::Now());
   }
 }
 
-void WaylandVsyncSource::WaylandDisplay::Refresh() {
-  if (!mMonitorEnabled || !mVsyncEnabled || mCallback) {
-    // We don't need to do anything because:
-    // * We are unwanted by our widget or monitor, or
-    // * The last frame callback hasn't yet run to see that it had been shut
-    //   down, so we can reuse it after having set mVsyncEnabled to true.
-    return;
+void WaylandVsyncSource::WaylandDisplay::ClearFrameCallback() {
+  if (mCallbackContext) {
+    mCallbackContext->mEnabled = false;
+    mCallbackContext = nullptr;
   }
+}
 
-  struct wl_surface* surface = moz_container_wayland_surface_lock(mContainer);
-  if (!surface) {
-    // The surface hasn't been created yet. Try again when the surface is ready.
-    RefPtr<WaylandVsyncSource::WaylandDisplay> self(this);
-    moz_container_wayland_add_initial_draw_callback(
-        mContainer, [self]() -> void {
-          MutexAutoLock lock(self->mEnabledLock);
-          self->Refresh();
-        });
-    return;
+bool WaylandVsyncSource::WaylandDisplay::Setup() {
+  MutexAutoLock lock(mEnabledLock);
+  MOZ_ASSERT(!mTask);
+  MOZ_ASSERT(!mShutdown);
+
+  if (!mThread.Start()) {
+    return false;
   }
-  moz_container_wayland_surface_unlock(mContainer, &surface);
+  mTask = NewRunnableMethod("WaylandVsyncSource::WaylandDisplay::Loop", this,
+                            &WaylandDisplay::Loop);
+  RefPtr<Runnable> addrefedTask = mTask;
+  mThread.message_loop()->PostTask(addrefedTask.forget());
 
-  // Vsync is enabled, but we don't have a callback configured. Set one up so
-  // we can get to work.
-  SetupFrameCallback();
-  NotifyVsync(TimeStamp::Now());
+  return true;
 }
 
 void WaylandVsyncSource::WaylandDisplay::EnableMonitor() {
@@ -81,7 +92,11 @@ void WaylandVsyncSource::WaylandDisplay::EnableMonitor() {
     return;
   }
   mMonitorEnabled = true;
-  Refresh();
+  if (mVsyncEnabled && (!mCallbackContext || !mCallbackContext->mEnabled)) {
+    // Vsync is enabled, but we don't have a callback configured. Set one up so
+    // we can get to work.
+    SetupFrameCallback();
+  }
 }
 
 void WaylandVsyncSource::WaylandDisplay::DisableMonitor() {
@@ -93,8 +108,13 @@ void WaylandVsyncSource::WaylandDisplay::DisableMonitor() {
   ClearFrameCallback();
 }
 
+void WaylandVsyncSource::WaylandDisplay::Notify() {
+  // Use our vsync thread to notify any vsync observers.
+  MonitorAutoLock lock(mNotifyThreadMonitor);
+  mNotifyThreadMonitor.NotifyAll();
+}
+
 void WaylandVsyncSource::WaylandDisplay::SetupFrameCallback() {
-  MOZ_ASSERT(mCallback == nullptr);
   struct wl_surface* surface = moz_container_wayland_surface_lock(mContainer);
   if (!surface) {
     // We don't have a surface, either due to being called before it was made
@@ -104,9 +124,16 @@ void WaylandVsyncSource::WaylandDisplay::SetupFrameCallback() {
     return;
   }
 
-  mCallback = wl_surface_frame(surface);
-  wl_callback_add_listener(mCallback, &WaylandVsyncSourceCallbackListener,
-                           this);
+  if (mCallbackContext == nullptr) {
+    // We don't have a context as we're not currently running, so allocate one.
+    // The callback handler is responsible for deallocating the context, as
+    // the callback might be called after we have been destroyed.
+    mCallbackContext = new WaylandFrameCallbackContext(this);
+  }
+
+  struct wl_callback* callback = wl_surface_frame(surface);
+  wl_callback_add_listener(callback, &WaylandVsyncSourceCallbackListener,
+                           mCallbackContext);
   wl_surface_commit(surface);
   wl_display_flush(mDisplay);
   moz_container_wayland_surface_unlock(mContainer, &surface);
@@ -115,7 +142,6 @@ void WaylandVsyncSource::WaylandDisplay::SetupFrameCallback() {
 void WaylandVsyncSource::WaylandDisplay::FrameCallback() {
   {
     MutexAutoLock lock(mEnabledLock);
-    mCallback = nullptr;
 
     if (!mVsyncEnabled || !mMonitorEnabled) {
       // We are unwanted by either our creator or our consumer, so we just stop
@@ -127,7 +153,7 @@ void WaylandVsyncSource::WaylandDisplay::FrameCallback() {
     SetupFrameCallback();
   }
 
-  NotifyVsync(TimeStamp::Now());
+  Notify();
 }
 
 void WaylandVsyncSource::WaylandDisplay::EnableVsync() {
@@ -136,8 +162,18 @@ void WaylandVsyncSource::WaylandDisplay::EnableVsync() {
   if (mVsyncEnabled) {
     return;
   }
+
   mVsyncEnabled = true;
-  Refresh();
+  if (!mMonitorEnabled || (mCallbackContext && mCallbackContext->mEnabled)) {
+    // We don't need to do anything because:
+    // * We are unwanted by our widget, or
+    // * The last frame callback hasn't yet run to see that it had been shut
+    //   down, so we can reuse it after having set mVsyncEnabled to true.
+    return;
+  }
+
+  // We don't have a callback configured, so set one up.
+  SetupFrameCallback();
 }
 
 void WaylandVsyncSource::WaylandDisplay::DisableVsync() {
@@ -154,7 +190,19 @@ bool WaylandVsyncSource::WaylandDisplay::IsVsyncEnabled() {
 void WaylandVsyncSource::WaylandDisplay::Shutdown() {
   MOZ_ASSERT(NS_IsMainThread());
   DisableVsync();
-  wl_display_roundtrip(mDisplay);
+
+  // Terminate our task by setting the shutdown flag and waking up the thread so
+  // that it may check the flag.
+  {
+    MonitorAutoLock lock(mNotifyThreadMonitor);
+    mShutdown = true;
+    mNotifyThreadMonitor.NotifyAll();
+  }
+
+  // Stop the thread. Note that Stop() waits for tasks to terminate, so we must
+  // manually ensure that we will break out of our thread loop first in order to
+  // not block forever.
+  mThread.Stop();
 }
 
 }  // namespace mozilla
