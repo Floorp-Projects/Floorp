@@ -40,4 +40,14 @@ class NotebookTransformOptionsError(Exception):
 class NotebookTransformError(Exception):
     """Raised on generic errors within the transformers."""
 
+
+class NotebookDuplicateTransformsError(Exception):
+    """Raised when a directory contains more than one transformers have the same class name."""
+
+    pass
+
+
+class NotebookInvalidPathError(Exception):
+    """Raised when an invalid path is given."""
+
     pass

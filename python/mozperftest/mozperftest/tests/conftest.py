@@ -1,8 +1,9 @@
 import json
+import os
 import pathlib
 import pytest
-from mozperftest.tests.support import temp_dir
 from mozperftest.metrics.notebook.perftestetl import PerftestETL
+from mozperftest.tests.support import temp_dir, HERE
 from mozperftest.metrics.notebook.perftestnotebook import PerftestNotebook
 
 
@@ -83,12 +84,16 @@ def files(data):
 
     output = dirs["output"] / "output.json"
 
-    yield resources, dirs, output.resolve().as_posix()
+    yield {
+        "resources": resources,
+        "dirs": dirs,
+        "output": output,
+    }
 
 
 @pytest.fixture(scope="session", autouse=True)
 def ptetls(files):
-    resources, dirs, output = files
+    resources, dirs, output = files["resources"], files["dirs"], files["output"]
     config = {"output": output}
     file_group_list = {"group_1": list(resources.values())}
     file_group_str = {"group_1": dirs["resources"].resolve().as_posix()}
@@ -102,3 +107,15 @@ def ptetls(files):
 @pytest.fixture(scope="session", autouse=True)
 def ptnb(standarized_data):
     return PerftestNotebook(standarized_data)
+
+
+@pytest.fixture(scope="function", autouse=True)
+def perftestetl_plugin():
+
+    ret = HERE / "data" / "perftestetl_plugin"
+
+    os.environ["PERFTESTETL_PLUGIN"] = ret.resolve().as_posix()
+
+    yield ret
+
+    del os.environ["PERFTESTETL_PLUGIN"]
