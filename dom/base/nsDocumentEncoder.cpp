@@ -236,13 +236,8 @@ class nsDocumentEncoder : public nsIDocumentEncoder {
    */
   nsresult SerializeWholeDocument(uint32_t aMaxLength);
 
-  nsresult SerializeNodeStart(nsINode& aOriginalNode, int32_t aStartOffset,
-                              int32_t aEndOffset,
-                              nsINode* aFixupNode = nullptr);
   nsresult SerializeToStringRecursive(nsINode* aNode, bool aDontSerializeRoot,
                                       uint32_t aMaxLength = 0);
-  nsresult SerializeNodeEnd(nsINode& aOriginalNode,
-                            nsINode* aFixupNode = nullptr);
   // This serializes the content of aNode.
   nsresult SerializeToStringIterative(nsINode* aNode);
   nsresult SerializeRangeToString(const nsRange* aRange);
@@ -373,6 +368,13 @@ class nsDocumentEncoder : public nsIDocumentEncoder {
           mFlags{aFlags},
           mNodeFixup{aNodeFixup} {}
 
+    nsresult SerializeNodeStart(nsINode& aOriginalNode, int32_t aStartOffset,
+                                int32_t aEndOffset,
+                                nsINode* aFixupNode = nullptr) const;
+
+    nsresult SerializeNodeEnd(nsINode& aOriginalNode,
+                              nsINode* aFixupNode = nullptr) const;
+
    private:
     const bool& mNeedsPreformatScanning;
     const nsCOMPtr<nsIContentSerializer>& mSerializer;
@@ -475,7 +477,7 @@ nsresult nsDocumentEncoder::SerializeSelection() {
     NS_ENSURE_TRUE(node, NS_ERROR_FAILURE);
     if (node != prevNode) {
       if (prevNode) {
-        rv = SerializeNodeEnd(*prevNode);
+        rv = mNodeSerializer.SerializeNodeEnd(*prevNode);
         NS_ENSURE_SUCCESS(rv, rv);
       }
       nsCOMPtr<nsIContent> content = do_QueryInterface(node);
@@ -492,7 +494,7 @@ nsresult nsDocumentEncoder::SerializeSelection() {
           mDisableContextSerialize = true;
         }
 
-        rv = SerializeNodeStart(*node, 0, -1);
+        rv = mNodeSerializer.SerializeNodeStart(*node, 0, -1);
         NS_ENSURE_SUCCESS(rv, rv);
         prevNode = node;
       } else if (prevNode) {
@@ -520,7 +522,7 @@ nsresult nsDocumentEncoder::SerializeSelection() {
   mContextInfoDepth.mStart = firstRangeStartDepth;
 
   if (prevNode) {
-    rv = SerializeNodeEnd(*prevNode);
+    rv = mNodeSerializer.SerializeNodeEnd(*prevNode);
     NS_ENSURE_SUCCESS(rv, rv);
     mDisableContextSerialize = false;
 
@@ -684,10 +686,9 @@ class FixupNodeDeterminer {
   nsINode& mOriginalNode;
 };
 
-nsresult nsDocumentEncoder::SerializeNodeStart(nsINode& aOriginalNode,
-                                               int32_t aStartOffset,
-                                               int32_t aEndOffset,
-                                               nsINode* aFixupNode) {
+nsresult nsDocumentEncoder::NodeSerializer::SerializeNodeStart(
+    nsINode& aOriginalNode, int32_t aStartOffset, int32_t aEndOffset,
+    nsINode* aFixupNode) const {
   if (mNeedsPreformatScanning) {
     if (aOriginalNode.IsElement()) {
       mSerializer->ScanElementForPreformat(aOriginalNode.AsElement());
@@ -750,8 +751,8 @@ nsresult nsDocumentEncoder::SerializeNodeStart(nsINode& aOriginalNode,
   return rv;
 }
 
-nsresult nsDocumentEncoder::SerializeNodeEnd(nsINode& aOriginalNode,
-                                             nsINode* aFixupNode) {
+nsresult nsDocumentEncoder::NodeSerializer::SerializeNodeEnd(
+    nsINode& aOriginalNode, nsINode* aFixupNode) const {
   if (mNeedsPreformatScanning) {
     if (aOriginalNode.IsElement()) {
       mSerializer->ForgetElementForPreformat(aOriginalNode.AsElement());
@@ -818,7 +819,8 @@ nsresult nsDocumentEncoder::SerializeToStringRecursive(nsINode* aNode,
       MOZ_ASSERT(aMaxLength >= outputLength);
       endOffset = aMaxLength - outputLength;
     }
-    rv = SerializeNodeStart(*aNode, 0, endOffset, maybeFixedNode);
+    rv = mNodeSerializer.SerializeNodeStart(*aNode, 0, endOffset,
+                                            maybeFixedNode);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -833,7 +835,7 @@ nsresult nsDocumentEncoder::SerializeToStringRecursive(nsINode* aNode,
   }
 
   if (!aDontSerializeRoot) {
-    rv = SerializeNodeEnd(*aNode, maybeFixedNode);
+    rv = mNodeSerializer.SerializeNodeEnd(*aNode, maybeFixedNode);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -850,11 +852,11 @@ nsresult nsDocumentEncoder::SerializeToStringIterative(nsINode* aNode) {
   nsINode* node = aNode->GetFirstChildOfTemplateOrNode();
   while (node) {
     nsINode* current = node;
-    rv = SerializeNodeStart(*current, 0, -1, current);
+    rv = mNodeSerializer.SerializeNodeStart(*current, 0, -1, current);
     NS_ENSURE_SUCCESS(rv, rv);
     node = current->GetFirstChildOfTemplateOrNode();
     while (!node && current && current != aNode) {
-      rv = SerializeNodeEnd(*current);
+      rv = mNodeSerializer.SerializeNodeEnd(*current);
       NS_ENSURE_SUCCESS(rv, rv);
       // Check if we have siblings.
       node = current->GetNextSibling();
@@ -921,14 +923,14 @@ nsresult nsDocumentEncoder::SerializeRangeNodes(const nsRange* const aRange,
     if (IsTextNode(aNode)) {
       if (startNode == content) {
         int32_t startOffset = aRange->StartOffset();
-        rv = SerializeNodeStart(*aNode, startOffset, -1);
+        rv = mNodeSerializer.SerializeNodeStart(*aNode, startOffset, -1);
         NS_ENSURE_SUCCESS(rv, rv);
       } else {
         int32_t endOffset = aRange->EndOffset();
-        rv = SerializeNodeStart(*aNode, 0, endOffset);
+        rv = mNodeSerializer.SerializeNodeStart(*aNode, 0, endOffset);
         NS_ENSURE_SUCCESS(rv, rv);
       }
-      rv = SerializeNodeEnd(*aNode);
+      rv = mNodeSerializer.SerializeNodeEnd(*aNode);
       NS_ENSURE_SUCCESS(rv, rv);
     } else {
       if (aNode != mClosestCommonInclusiveAncestorOfRange) {
@@ -945,7 +947,7 @@ nsresult nsDocumentEncoder::SerializeRangeNodes(const nsRange* const aRange,
         }
 
         // serialize the start of this node
-        rv = SerializeNodeStart(*aNode, 0, -1);
+        rv = mNodeSerializer.SerializeNodeStart(*aNode, 0, -1);
         NS_ENSURE_SUCCESS(rv, rv);
       }
 
@@ -1008,7 +1010,7 @@ nsresult nsDocumentEncoder::SerializeRangeNodes(const nsRange* const aRange,
 
       // serialize the end of this node
       if (aNode != mClosestCommonInclusiveAncestorOfRange) {
-        rv = SerializeNodeEnd(*aNode);
+        rv = mNodeSerializer.SerializeNodeEnd(*aNode);
         NS_ENSURE_SUCCESS(rv, rv);
       }
     }
@@ -1036,7 +1038,7 @@ nsresult nsDocumentEncoder::SerializeRangeContextStart(
 
     // Either a general inclusion or as immediate context
     if (IncludeInContext(node) || i < j) {
-      rv = SerializeNodeStart(*node, 0, -1);
+      rv = mNodeSerializer.SerializeNodeStart(*node, 0, -1);
       serializedContext->AppendElement(node);
       if (NS_FAILED(rv)) break;
     }
@@ -1056,7 +1058,7 @@ nsresult nsDocumentEncoder::SerializeRangeContextEnd() {
 
   nsresult rv = NS_OK;
   for (nsINode* node : Reversed(serializedContext)) {
-    rv = SerializeNodeEnd(*node);
+    rv = mNodeSerializer.SerializeNodeEnd(*node);
 
     if (NS_FAILED(rv)) break;
   }
@@ -1129,9 +1131,10 @@ nsresult nsDocumentEncoder::SerializeRangeToString(const nsRange* aRange) {
         }
       }
     }
-    rv = SerializeNodeStart(*startContainer, startOffset, endOffset);
+    rv = mNodeSerializer.SerializeNodeStart(*startContainer, startOffset,
+                                            endOffset);
     NS_ENSURE_SUCCESS(rv, rv);
-    rv = SerializeNodeEnd(*startContainer);
+    rv = mNodeSerializer.SerializeNodeEnd(*startContainer);
     NS_ENSURE_SUCCESS(rv, rv);
   } else {
     rv = SerializeRangeNodes(aRange, mClosestCommonInclusiveAncestorOfRange, 0);
@@ -1502,13 +1505,13 @@ nsHTMLCopyEncoder::EncodeToStringWithContext(nsAString& aContextString,
   i = count;
   while (i > 0) {
     node = mCommonInclusiveAncestors.ElementAt(--i);
-    rv = SerializeNodeStart(*node, 0, -1);
+    rv = mNodeSerializer.SerializeNodeStart(*node, 0, -1);
     NS_ENSURE_SUCCESS(rv, rv);
   }
   // i = 0; guaranteed by above
   while (i < count) {
     node = mCommonInclusiveAncestors.ElementAt(i++);
-    rv = SerializeNodeEnd(*node);
+    rv = mNodeSerializer.SerializeNodeEnd(*node);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
