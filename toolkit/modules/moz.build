@@ -109,7 +109,7 @@ with Files('PermissionsUtils.jsm'):
     BUG_COMPONENT = ('Toolkit', 'Add-ons Manager')
 
 with Files('PopupNotifications.jsm'):
-    BUG_COMPONENT = ('Toolkit', 'Password Manager')
+    BUG_COMPONENT = ('Toolkit', 'Notifications and Alerts')
 
 with Files('PrivateBrowsingUtils.jsm'):
     BUG_COMPONENT = ('Firefox', 'Private Browsing')
