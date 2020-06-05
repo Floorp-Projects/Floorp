@@ -678,10 +678,10 @@ void nsAccessibilityService::RecreateAccessible(PresShell* aPresShell,
 }
 
 void nsAccessibilityService::GetStringRole(uint32_t aRole, nsAString& aString) {
-#define ROLE(geckoRole, stringRole, atkRole, macRole, msaaRole, ia2Role, \
-             androidClass, nameRule)                                     \
-  case roles::geckoRole:                                                 \
-    aString.AssignLiteral(stringRole);                                   \
+#define ROLE(geckoRole, stringRole, atkRole, macRole, macSubrole, msaaRole, \
+             ia2Role, androidClass, nameRule)                               \
+  case roles::geckoRole:                                                    \
+    aString.AssignLiteral(stringRole);                                      \
     return;
 
   switch (aRole) {

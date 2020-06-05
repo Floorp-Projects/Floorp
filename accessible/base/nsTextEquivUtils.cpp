@@ -313,9 +313,9 @@ bool nsTextEquivUtils::AppendString(nsAString* aString,
 }
 
 uint32_t nsTextEquivUtils::GetRoleRule(role aRole) {
-#define ROLE(geckoRole, stringRole, atkRole, macRole, msaaRole, ia2Role, \
-             androidClass, nameRule)                                     \
-  case roles::geckoRole:                                                 \
+#define ROLE(geckoRole, stringRole, atkRole, macRole, macSubrole, msaaRole, \
+             ia2Role, androidClass, nameRule)                               \
+  case roles::geckoRole:                                                    \
     return nameRule;
 
   switch (aRole) {

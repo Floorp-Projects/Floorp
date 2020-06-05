@@ -579,9 +579,9 @@ AccessibleWrap::AttributeArrayToProperties(
 }
 
 int32_t AccessibleWrap::GetAndroidClass(role aRole) {
-#define ROLE(geckoRole, stringRole, atkRole, macRole, msaaRole, ia2Role, \
-             androidClass, nameRule)                                     \
-  case roles::geckoRole:                                                 \
+#define ROLE(geckoRole, stringRole, atkRole, macRole, macSubrole, msaaRole, \
+             ia2Role, androidClass, nameRule)                               \
+  case roles::geckoRole:                                                    \
     return androidClass;
 
   switch (aRole) {

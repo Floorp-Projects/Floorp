@@ -154,10 +154,10 @@ ia2Accessible::role(long* aRole) {
   AccessibleWrap* acc = static_cast<AccessibleWrap*>(this);
   if (acc->IsDefunct()) return CO_E_OBJNOTCONNECTED;
 
-#define ROLE(_geckoRole, stringRole, atkRole, macRole, msaaRole, ia2Role, \
-             androidClass, nameRule)                                      \
-  case roles::_geckoRole:                                                 \
-    *aRole = ia2Role;                                                     \
+#define ROLE(_geckoRole, stringRole, atkRole, macRole, macSubrole, msaaRole, \
+             ia2Role, androidClass, nameRule)                                \
+  case roles::_geckoRole:                                                    \
+    *aRole = ia2Role;                                                        \
     break;
 
   a11y::role geckoRole;
