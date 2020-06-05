@@ -94,7 +94,8 @@ nsMIMEInfoWin::LaunchWithFile(nsIFile* aFile) {
                "nsMIMEInfoBase should have mClass == eMIMEInfo");
 
   if (mPreferredAction == useSystemDefault) {
-    if (StaticPrefs::browser_pdf_launchDefaultEdgeAsApp()) {
+    if (mDefaultApplication &&
+        StaticPrefs::browser_pdf_launchDefaultEdgeAsApp()) {
       // Since Edgium is the default PDF handler, if we're using the OS default
       // and it's Edgium prefer it's app mode so it operates as a PDF viewer
       // (without browser toolbars). Bug 1632277.
