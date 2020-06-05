@@ -28,6 +28,7 @@ add_task(async function test_parseSubmissionURL() {
         description: "Search Bacon",
         method: "GET",
         template: "http://www.bacon.test/find",
+        searchGetParams: "q={searchTerms}",
       },
     },
     {
@@ -37,6 +38,7 @@ add_task(async function test_parseSubmissionURL() {
         description: "Search IDN",
         method: "GET",
         template: "http://www.xn--bcher-kva.ch/search",
+        searchGetParams: "q={searchTerms}",
       },
     },
     // The following engines cannot identify the search parameter.
@@ -51,9 +53,6 @@ add_task(async function test_parseSubmissionURL() {
       },
     },
   ]);
-
-  engine3.addParam("q", "{searchTerms}", null);
-  engine4.addParam("q", "{searchTerms}", null);
 
   // Test the first engine, whose URLs use UTF-8 encoding.
   let url = "http://www.google.com/search?foo=bar&q=caff%C3%A8";

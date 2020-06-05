@@ -234,16 +234,15 @@ async function setupKeywords() {
     }
 
     if (data instanceof searchKeywordData) {
-      await Services.search.addEngineWithDetails(data.keyword, {
-        alias: data.keyword,
-        method: data.method,
-        template: data.uri.spec,
-      });
-      let addedEngine = Services.search.getEngineByName(data.keyword);
-      if (data.postData) {
-        let [paramName, paramValue] = data.postData.split("=");
-        addedEngine.addParam(paramName, paramValue, null);
-      }
+      let addedEngine = await Services.search.addEngineWithDetails(
+        data.keyword,
+        {
+          alias: data.keyword,
+          method: data.method,
+          template: data.uri.spec,
+          searchPostParams: data.postData,
+        }
+      );
       gAddedEngines.push(addedEngine);
     }
   }

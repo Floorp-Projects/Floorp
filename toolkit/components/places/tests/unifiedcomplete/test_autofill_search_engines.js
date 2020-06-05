@@ -15,12 +15,11 @@ add_task(async function searchEngines() {
   let schemes = ["http", "https"];
   for (let i = 0; i < schemes.length; i++) {
     let scheme = schemes[i];
-    await Services.search.addEngineWithDetails("TestEngine", {
+    let engine = await Services.search.addEngineWithDetails("TestEngine", {
       method: "GET",
       template: scheme + "://www.example.com/",
+      searchGetParams: "q={searchTerms}",
     });
-    let engine = Services.search.getEngineByName("TestEngine");
-    engine.addParam("q", "{searchTerms}", null);
 
     await check_autocomplete({
       search: "ex",
