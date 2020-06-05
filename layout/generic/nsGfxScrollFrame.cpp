@@ -3216,10 +3216,10 @@ void ScrollFrameHelper::AppendScrollPartsTo(nsDisplayListBuilder* aBuilder,
           aBuilder, scrollTargetId, scrollDirection, createLayer);
       mOuter->BuildDisplayListForChild(
           aBuilder, scrollParts[i], partList,
-          nsIFrame::DISPLAY_CHILD_FORCE_STACKING_CONTEXT);
+          nsIFrame::DisplayChildFlag::ForceStackingContext);
     }
 
-    // DISPLAY_CHILD_FORCE_STACKING_CONTEXT put everything into
+    // DisplayChildFlag::ForceStackingContext put everything into
     // partList.PositionedDescendants().
     if (partList.PositionedDescendants()->IsEmpty()) {
       continue;

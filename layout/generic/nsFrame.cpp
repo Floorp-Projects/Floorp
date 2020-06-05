@@ -3977,7 +3977,7 @@ static bool ShouldSkipFrame(nsDisplayListBuilder* aBuilder,
 void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
                                         nsIFrame* aChild,
                                         const nsDisplayListSet& aLists,
-                                        uint32_t aFlags) {
+                                        DisplayChildFlags aFlags) {
   AutoCheckBuilder check(aBuilder);
 
   if (ShouldSkipFrame(aBuilder, aChild)) {
@@ -4093,9 +4093,10 @@ void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
 
   // true if this is a real or pseudo stacking context
   bool pseudoStackingContext =
-      (aFlags & DISPLAY_CHILD_FORCE_PSEUDO_STACKING_CONTEXT) != 0;
+      aFlags.contains(DisplayChildFlag::ForcePseudoStackingContext);
 
-  if (!pseudoStackingContext && !isSVG && (aFlags & DISPLAY_CHILD_INLINE) &&
+  if (!pseudoStackingContext && !isSVG &&
+      aFlags.contains(DisplayChildFlag::Inline) &&
       !child->IsFrameOfType(eLineParticipant)) {
     // child is a non-inline frame in an inline context, i.e.,
     // it acts like inline-block or inline-table. Therefore it is a
@@ -4129,7 +4130,7 @@ void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
   const bool isPositioned = disp->IsAbsPosContainingBlock(child);
 
   const bool isStackingContext =
-      (aFlags & DISPLAY_CHILD_FORCE_STACKING_CONTEXT) ||
+      aFlags.contains(DisplayChildFlag::ForceStackingContext) ||
       child->IsStackingContext(disp, pos, effects, isPositioned);
 
   if (pseudoStackingContext || isStackingContext || isPositioned ||
@@ -4296,7 +4297,7 @@ void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
   buildingForChild.RestoreBuildingInvisibleItemsValue();
 
   if (isPositioned || isStackingContext ||
-      (aFlags & DISPLAY_CHILD_FORCE_STACKING_CONTEXT)) {
+      aFlags.contains(DisplayChildFlag::ForceStackingContext)) {
     // Genuine stacking contexts, and positioned pseudo-stacking-contexts,
     // go in this level.
     if (!list.IsEmpty()) {

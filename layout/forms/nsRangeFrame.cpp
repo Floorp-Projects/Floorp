@@ -158,7 +158,7 @@ void nsRangeFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     nsIFrame* thumb = mThumbDiv->GetPrimaryFrame();
     if (thumb) {
       nsDisplayListSet set(aLists, aLists.Content());
-      BuildDisplayListForChild(aBuilder, thumb, set, DISPLAY_CHILD_INLINE);
+      BuildDisplayListForChild(aBuilder, thumb, set, DisplayChildFlag::Inline);
     }
   } else {
     BuildDisplayListForInline(aBuilder, aLists);
