@@ -14,60 +14,68 @@
  * limitations under the License.
  */
 
-module.exports.addTests = function({testRunner, expect, headless, puppeteer, CHROME}) {
-  const {describe, xdescribe, fdescribe} = testRunner;
-  const {it, fit, xit, it_fails_ffox} = testRunner;
-  const {beforeAll, beforeEach, afterAll, afterEach} = testRunner;
+const expect = require('expect');
+const { getTestState, setupTestBrowserHooks } = require('./mocha-utils');
 
-  describe('Browser.version', function() {
-    it('should return whether we are in headless', async({browser}) => {
+describe('Browser specs', function () {
+  setupTestBrowserHooks();
+
+  describe('Browser.version', function () {
+    it('should return whether we are in headless', async () => {
+      const { browser, isHeadless } = getTestState();
+
       const version = await browser.version();
       expect(version.length).toBeGreaterThan(0);
-      if (CHROME)
-        expect(version.startsWith('Headless')).toBe(headless);
-      else
-        expect(version.startsWith('Firefox/')).toBe(true);
+      expect(version.startsWith('Headless')).toBe(isHeadless);
     });
   });
 
-  describe('Browser.userAgent', function() {
-    it('should include WebKit', async({browser}) => {
+  describe('Browser.userAgent', function () {
+    it('should include WebKit', async () => {
+      const { browser, isChrome } = getTestState();
+
       const userAgent = await browser.userAgent();
       expect(userAgent.length).toBeGreaterThan(0);
-      if (CHROME)
-        expect(userAgent).toContain('WebKit');
-      else
-        expect(userAgent).toContain('Gecko');
+      if (isChrome) expect(userAgent).toContain('WebKit');
+      else expect(userAgent).toContain('Gecko');
     });
   });
 
-  describe('Browser.target', function() {
-    it('should return browser target', async({browser}) => {
+  describe('Browser.target', function () {
+    it('should return browser target', async () => {
+      const { browser } = getTestState();
+
       const target = browser.target();
       expect(target.type()).toBe('browser');
     });
   });
 
-  describe('Browser.process', function() {
-    it('should return child_process instance', async function({browser}) {
+  describe('Browser.process', function () {
+    it('should return child_process instance', async () => {
+      const { browser } = getTestState();
+
       const process = await browser.process();
       expect(process.pid).toBeGreaterThan(0);
     });
-    it('should not return child_process for remote browser', async function({browser}) {
+    it('should not return child_process for remote browser', async () => {
+      const { browser, puppeteer } = getTestState();
+
       const browserWSEndpoint = browser.wsEndpoint();
-      const remoteBrowser = await puppeteer.connect({browserWSEndpoint});
+      const remoteBrowser = await puppeteer.connect({ browserWSEndpoint });
       expect(remoteBrowser.process()).toBe(null);
       remoteBrowser.disconnect();
     });
   });
 
   describe('Browser.isConnected', () => {
-    it('should set the browser connected state', async({browser}) => {
+    it('should set the browser connected state', async () => {
+      const { browser, puppeteer } = getTestState();
+
       const browserWSEndpoint = browser.wsEndpoint();
-      const newBrowser = await puppeteer.connect({browserWSEndpoint});
+      const newBrowser = await puppeteer.connect({ browserWSEndpoint });
       expect(newBrowser.isConnected()).toBe(true);
       newBrowser.disconnect();
       expect(newBrowser.isConnected()).toBe(false);
     });
   });
-};
+});
