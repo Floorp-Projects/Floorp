@@ -565,7 +565,7 @@ exception.  The `options` object can have the following properties:
     If not specified, the source map URL can be filled in if specified by
     the source's text.
   * `isScriptElement`: Optional boolean which will set the source's
-    `introductionType` to `"scriptElement"` if specified.  Otherwise, the
+    `introductionType` to `"inlineScript"` if specified.  Otherwise, the
     source's `introductionType` will be `undefined`.
 
 ### `asEnvironment()`

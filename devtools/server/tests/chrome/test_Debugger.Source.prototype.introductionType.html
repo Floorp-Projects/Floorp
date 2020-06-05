@@ -107,7 +107,7 @@ addTest(function checkAuddie() {
      "Function auddie's script belongs to script element 'Auddie'");
   is(fnDO.script.source.elementAttributeName, undefined,
      "Function auddie's script doesn't belong to any attribute of 'Auddie'");
-  is(fnDO.script.source.introductionType, "scriptElement",
+  is(fnDO.script.source.introductionType, "inlineScript",
      "Function auddie's script's source was introduced by a script element");
 
   runNextTest();
@@ -129,8 +129,8 @@ addTest(function InsertRover() {
        "Rover script doesn't belong to an attribute of Rover");
 
     // Check the introduction type.
-    ok(frame.script.source.introductionType === "scriptElement",
-       "Rover script's introduction type is 'scriptElement'");
+    ok(frame.script.source.introductionType === "injectedScript",
+       "Rover script's introduction type is 'injectedScript'");
 
     runNextTest();
   }
@@ -158,8 +158,8 @@ addTest(function XULDocumentScript() {
     is(xulFnDO.script.source.element, undefined,
        "XUL script code should not be attributed to any individual element");
 
-    is(xulFnDO.script.source.introductionType, "scriptElement",
-       "xulScriptFunc's introduction type is 'scriptElement'");
+    is(xulFnDO.script.source.introductionType, "inlineScript",
+       "xulScriptFunc's introduction type is 'inlineScript'");
     runNextTest();
   }
 });
