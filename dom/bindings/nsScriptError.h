@@ -89,7 +89,6 @@ class nsScriptErrorBase : public nsIScriptError {
   bool mIsFromPrivateWindow;
   bool mIsFromChromeContext;
   bool mIsPromiseRejection;
-  bool mIsForwardedFromContentProcess;
 };
 
 class nsScriptError final : public nsScriptErrorBase {
