@@ -13,13 +13,13 @@ namespace mozilla {
 enum class ScrollOrigin : uint8_t {
   // This is used as an initial value for the "LastScrollOrigin" property on
   // scrollable frames. It is not intended to be an actual scroll origin, but
-  // a sentinel value that indicates that there was no "last scroll".
+  // a sentinel value that indicates that there was no "last scroll". It is
+  // used similarly for the "LastSmoothScrollOrigin" property, to indicate
+  // no smooth scroll is in progress.
   None,
 
   // This is a default value that we use when we don't know of a more specific
-  // value that we can use. Note that for the "LastSmoothScrollOrigin" property
-  // on a scrollable frame, the NotSpecified value is special, in that it means
-  // there is no smooth scroll in progress.
+  // value that we can use.
   NotSpecified,
   // The scroll came from APZ code.
   Apz,
