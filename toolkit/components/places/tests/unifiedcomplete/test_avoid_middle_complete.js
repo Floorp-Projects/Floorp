@@ -36,12 +36,11 @@ add_task(async function test_trailing_space_noautofill() {
 
 add_task(async function test_searchEngine_autofill() {
   Services.prefs.setBoolPref("browser.urlbar.autoFill.searchEngines", true);
-  await Services.search.addEngineWithDetails("CakeSearch", {
+  let engine = await Services.search.addEngineWithDetails("CakeSearch", {
     method: "GET",
     template: "http://cake.search/",
+    searchGetParams: "q={searchTerms}",
   });
-  let engine = Services.search.getEngineByName("CakeSearch");
-  engine.addParam("q", "{searchTerms}", null);
   registerCleanupFunction(async () => Services.search.removeEngine(engine));
 
   info(
@@ -58,12 +57,11 @@ add_task(async function test_searchEngine_autofill() {
 
 add_task(async function test_searchEngine_prefix_space_noautofill() {
   Services.prefs.setBoolPref("browser.urlbar.autoFill.searchEngines", true);
-  await Services.search.addEngineWithDetails("CupcakeSearch", {
+  let engine = await Services.search.addEngineWithDetails("CupcakeSearch", {
     method: "GET",
     template: "http://cupcake.search/",
+    searchGetParams: "q={searchTerms}",
   });
-  let engine = Services.search.getEngineByName("CupcakeSearch");
-  engine.addParam("q", "{searchTerms}", null);
   registerCleanupFunction(async () => Services.search.removeEngine(engine));
 
   info(
@@ -80,12 +78,11 @@ add_task(async function test_searchEngine_prefix_space_noautofill() {
 
 add_task(async function test_searchEngine_trailing_space_noautofill() {
   Services.prefs.setBoolPref("browser.urlbar.autoFill.searchEngines", true);
-  await Services.search.addEngineWithDetails("BaconSearch", {
+  let engine = await Services.search.addEngineWithDetails("BaconSearch", {
     method: "GET",
     template: "http://bacon.search/",
+    searchGetParams: "q={searchTerms}",
   });
-  let engine = Services.search.getEngineByName("BaconSearch");
-  engine.addParam("q", "{searchTerms}", null);
   registerCleanupFunction(async () => Services.search.removeEngine(engine));
 
   info(
@@ -102,12 +99,11 @@ add_task(async function test_searchEngine_trailing_space_noautofill() {
 
 add_task(async function test_searchEngine_www_noautofill() {
   Services.prefs.setBoolPref("browser.urlbar.autoFill.searchEngines", true);
-  await Services.search.addEngineWithDetails("HamSearch", {
+  let engine = await Services.search.addEngineWithDetails("HamSearch", {
     method: "GET",
     template: "http://ham.search/",
+    searchGetParams: "q={searchTerms}",
   });
-  let engine = Services.search.getEngineByName("HamSearch");
-  engine.addParam("q", "{searchTerms}", null);
   registerCleanupFunction(async () => Services.search.removeEngine(engine));
 
   info(
@@ -124,12 +120,11 @@ add_task(async function test_searchEngine_www_noautofill() {
 
 add_task(async function test_searchEngine_different_scheme_noautofill() {
   Services.prefs.setBoolPref("browser.urlbar.autoFill.searchEngines", true);
-  await Services.search.addEngineWithDetails("PieSearch", {
+  let engine = await Services.search.addEngineWithDetails("PieSearch", {
     method: "GET",
     template: "https://pie.search/",
+    searchGetParams: "q={searchTerms}",
   });
-  let engine = Services.search.getEngineByName("PieSearch");
-  engine.addParam("q", "{searchTerms}", null);
   registerCleanupFunction(async () => Services.search.removeEngine(engine));
 
   info(
@@ -146,12 +141,11 @@ add_task(async function test_searchEngine_different_scheme_noautofill() {
 
 add_task(async function test_searchEngine_matching_prefix_autofill() {
   Services.prefs.setBoolPref("browser.urlbar.autoFill.searchEngines", true);
-  await Services.search.addEngineWithDetails("BeanSearch", {
+  let engine = await Services.search.addEngineWithDetails("BeanSearch", {
     method: "GET",
     template: "http://www.bean.search/",
+    searchGetParams: "q={searchTerms}",
   });
-  let engine = Services.search.getEngineByName("BeanSearch");
-  engine.addParam("q", "{searchTerms}", null);
   registerCleanupFunction(async () => Services.search.removeEngine(engine));
 
   info("Should autoFill search engine if search string has matching prefix.");

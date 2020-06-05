@@ -1526,7 +1526,15 @@ SearchEngine.prototype = {
     if (params.postData) {
       let queries = new URLSearchParams(params.postData);
       for (let [name, value] of queries) {
-        this.addParam(name, value);
+        let url = this._getURLOfType(SearchUtils.URL_TYPE.SEARCH);
+        if (!url) {
+          throw Components.Exception(
+            `Engine has no URL for response type ${SearchUtils.URL_TYPE.SEARCH}`,
+            Cr.NS_ERROR_FAILURE
+          );
+        }
+
+        url.addParam(name, value);
       }
     }
 
@@ -2159,34 +2167,6 @@ SearchEngine.prototype = {
       return this._queryCharset;
     }
     return (this._queryCharset = "windows-1252"); // the default
-  },
-
-  // from nsISearchEngine
-  addParam(name, value, responseType) {
-    if (!name || value == null) {
-      throw Components.Exception(
-        "missing name or value for nsISearchEngine::addParam",
-        Cr.NS_ERROR_INVALID_ARG
-      );
-    }
-    ENSURE_WARN(
-      !this._isBuiltin,
-      "called nsISearchEngine::addParam on a built-in engine!",
-      Cr.NS_ERROR_FAILURE
-    );
-    if (!responseType) {
-      responseType = SearchUtils.URL_TYPE.SEARCH;
-    }
-
-    var url = this._getURLOfType(responseType);
-    if (!url) {
-      throw Components.Exception(
-        "Engine object has no URL for response type " + responseType,
-        Cr.NS_ERROR_FAILURE
-      );
-    }
-
-    url.addParam(name, value);
   },
 
   get _defaultMobileResponseType() {
