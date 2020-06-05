@@ -59,10 +59,9 @@ const { navigate } = ChromeUtils.import(
 const { proxy } = ChromeUtils.import("chrome://marionette/content/proxy.js");
 
 XPCOMUtils.defineLazyGetter(this, "logger", () => Log.getWithPrefix(contentId));
-
 XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
 
-const contentId = winUtil.outerWindowID;
+const contentId = content.docShell.browsingContext.id;
 
 const curContainer = {
   _frame: null,
@@ -75,7 +74,7 @@ const curContainer = {
   set frame(frame) {
     this._frame = frame;
 
-    this.id = this._frame.windowUtils.outerWindowID;
+    this.id = this._frame.docShell.browsingContext.id;
     this.shadowRoot = null;
   },
 };
@@ -387,15 +386,16 @@ const loadListener = {
   },
 
   observe(subject, topic) {
-    const winID = subject.QueryInterface(Ci.nsISupportsPRUint64).data;
-
     logger.trace(`Received observer notification ${topic}`);
+
+    const winId = subject.QueryInterface(Ci.nsISupportsPRUint64).data;
+    const bc = BrowsingContext.get(curContainer.id);
 
     switch (topic) {
       // In the case when the currently selected frame is closed,
       // there will be no further load events. Stop listening immediately.
       case "outer-window-destroyed":
-        if (winID == curContainer.id) {
+        if (bc.window.windowUtils.outerWindowID == winId) {
           this.stop();
           sendOk(this.commandID);
         }
@@ -1552,6 +1552,7 @@ function switchToFrame(msg) {
     sendSyncMessage("Marionette:switchedToFrame", { frameValue: null });
 
     curContainer.frame = content;
+
     if (msg.json.focus) {
       curContainer.frame.focus();
     }
