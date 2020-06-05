@@ -923,6 +923,9 @@ static bool CompileLazyFunctionImpl(JSContext* cx, Handle<BaseScript*> lazy,
     return false;
   }
 
+  AutoGeckoProfilerEntry pseudoFrame(cx, "script delazify",
+                                     JS::ProfilingCategoryPair::JS_Parsing);
+
   FunctionNode* pn =
       parser.standaloneLazyFunction(fun, lazy->toStringStart(), lazy->strict(),
                                     lazy->generatorKind(), lazy->asyncKind());
