@@ -498,6 +498,14 @@ bool JitScript::initICEntriesAndBytecodeTypeMap(JSContext* cx,
         }
         break;
       }
+      case JSOp::ToPropertyKey: {
+        ICStub* stub =
+            alloc.newStub<ICToPropertyKey_Fallback>(Kind::ToPropertyKey);
+        if (!addIC(loc, stub)) {
+          return false;
+        }
+        break;
+      }
       case JSOp::Iter: {
         ICStub* stub = alloc.newStub<ICGetIterator_Fallback>(Kind::GetIterator);
         if (!addIC(loc, stub)) {
@@ -3417,6 +3425,31 @@ bool FallbackICCodeCompiler::emit_TypeOf() {
   using Fn = bool (*)(JSContext*, BaselineFrame*, ICTypeOf_Fallback*,
                       HandleValue, MutableHandleValue);
   return tailCallVM<Fn, DoTypeOfFallback>(masm);
+}
+
+//
+// ToPropertyKey_Fallback
+//
+
+bool DoToPropertyKeyFallback(JSContext* cx, BaselineFrame* frame,
+                             ICToPropertyKey_Fallback* stub, HandleValue val,
+                             MutableHandleValue res) {
+  stub->incrementEnteredCount();
+  FallbackICSpew(cx, stub, "ToPropertyKey");
+
+  return ToPropertyKeyOperation(cx, val, res);
+}
+
+bool FallbackICCodeCompiler::emit_ToPropertyKey() {
+  EmitRestoreTailCallReg(masm);
+
+  masm.pushValue(R0);
+  masm.push(ICStubReg);
+  pushStubPayload(masm, R0.scratchReg());
+
+  using Fn = bool (*)(JSContext*, BaselineFrame*, ICToPropertyKey_Fallback*,
+                      HandleValue, MutableHandleValue);
+  return tailCallVM<Fn, DoToPropertyKeyFallback>(masm);
 }
 
 ICTypeMonitor_SingleObject::ICTypeMonitor_SingleObject(JitCode* stubCode,

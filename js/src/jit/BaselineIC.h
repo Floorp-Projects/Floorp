@@ -1661,9 +1661,13 @@ class ICTypeOf_Fallback : public ICFallbackStub {
 
   explicit ICTypeOf_Fallback(TrampolinePtr stubCode)
       : ICFallbackStub(ICStub::TypeOf_Fallback, stubCode) {}
+};
 
- public:
-  static const uint32_t MAX_OPTIMIZED_STUBS = 6;
+class ICToPropertyKey_Fallback : public ICFallbackStub {
+  friend class ICStubSpace;
+
+  explicit ICToPropertyKey_Fallback(TrampolinePtr stubCode)
+      : ICFallbackStub(ICStub::ToPropertyKey_Fallback, stubCode) {}
 };
 
 class ICRest_Fallback : public ICFallbackStub {
@@ -1887,6 +1891,10 @@ extern bool DoInstanceOfFallback(JSContext* cx, BaselineFrame* frame,
 extern bool DoTypeOfFallback(JSContext* cx, BaselineFrame* frame,
                              ICTypeOf_Fallback* stub, HandleValue val,
                              MutableHandleValue res);
+
+extern bool DoToPropertyKeyFallback(JSContext* cx, BaselineFrame* frame,
+                                    ICToPropertyKey_Fallback* stub,
+                                    HandleValue val, MutableHandleValue res);
 
 extern bool DoRestFallback(JSContext* cx, BaselineFrame* frame,
                            ICRest_Fallback* stub, MutableHandleValue res);

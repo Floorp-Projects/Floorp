@@ -762,21 +762,23 @@ class LToAsyncIter : public LCallInstructionHelper<1, 1 + BOX_PIECES, 0> {
   const LAllocation* iterator() { return getOperand(0); }
 };
 
-class LToIdV : public LInstructionHelper<BOX_PIECES, BOX_PIECES, 1> {
+class LToPropertyKeyCache
+    : public LInstructionHelper<BOX_PIECES, BOX_PIECES, 0> {
  public:
-  LIR_HEADER(ToIdV)
+  LIR_HEADER(ToPropertyKeyCache)
 
-  LToIdV(const LBoxAllocation& input, const LDefinition& temp)
+  explicit LToPropertyKeyCache(const LBoxAllocation& input)
       : LInstructionHelper(classOpcode) {
     setBoxOperand(Input, input);
-    setTemp(0, temp);
   }
 
+  const MToPropertyKeyCache* mir() const {
+    return mir_->toToPropertyKeyCache();
+  }
+
+  const LAllocation* input() { return getOperand(Input); }
+
   static const size_t Input = 0;
-
-  MToId* mir() const { return mir_->toToId(); }
-
-  const LDefinition* tempFloat() { return getTemp(0); }
 };
 
 // Allocate an object for |new| on the caller-side,

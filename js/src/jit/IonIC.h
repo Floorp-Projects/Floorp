@@ -66,6 +66,7 @@ class IonInstanceOfIC;
 class IonCompareIC;
 class IonUnaryArithIC;
 class IonBinaryArithIC;
+class IonToPropertyKeyIC;
 
 class IonIC {
   // This either points at the OOL path for the fallback path, or the code for
@@ -194,6 +195,10 @@ class IonIC {
   IonBinaryArithIC* asBinaryArithIC() {
     MOZ_ASSERT(kind_ == CacheKind::BinaryArith);
     return (IonBinaryArithIC*)this;
+  }
+  IonToPropertyKeyIC* asToPropertyKeyIC() {
+    MOZ_ASSERT(kind_ == CacheKind::ToPropertyKey);
+    return (IonToPropertyKeyIC*)this;
   }
 
   // Returns the Register to use as scratch when entering IC stubs. This
@@ -532,6 +537,28 @@ class IonUnaryArithIC : public IonIC {
 
   static MOZ_MUST_USE bool update(JSContext* cx, HandleScript outerScript,
                                   IonUnaryArithIC* stub, HandleValue val,
+                                  MutableHandleValue res);
+};
+
+class IonToPropertyKeyIC : public IonIC {
+  LiveRegisterSet liveRegs_;
+  ValueOperand input_;
+  ValueOperand output_;
+
+ public:
+  IonToPropertyKeyIC(LiveRegisterSet liveRegs, ValueOperand input,
+                     ValueOperand output)
+      : IonIC(CacheKind::ToPropertyKey),
+        liveRegs_(liveRegs),
+        input_(input),
+        output_(output) {}
+
+  LiveRegisterSet liveRegs() const { return liveRegs_; }
+  ValueOperand input() const { return input_; }
+  ValueOperand output() const { return output_; }
+
+  static MOZ_MUST_USE bool update(JSContext* cx, HandleScript outerScript,
+                                  IonToPropertyKeyIC* ic, HandleValue val,
                                   MutableHandleValue res);
 };
 

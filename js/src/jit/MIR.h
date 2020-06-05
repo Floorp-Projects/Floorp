@@ -4542,13 +4542,15 @@ class MToAsyncIter : public MBinaryInstruction,
   NAMED_OPERANDS((0, getIterator), (1, getNextMethod))
 };
 
-class MToId : public MUnaryInstruction, public BoxInputsPolicy::Data {
-  explicit MToId(MDefinition* index) : MUnaryInstruction(classOpcode, index) {
+class MToPropertyKeyCache : public MUnaryInstruction,
+                            public BoxPolicy<0>::Data {
+  explicit MToPropertyKeyCache(MDefinition* input)
+      : MUnaryInstruction(classOpcode, input) {
     setResultType(MIRType::Value);
   }
 
  public:
-  INSTRUCTION_HEADER(ToId)
+  INSTRUCTION_HEADER(ToPropertyKeyCache)
   TRIVIAL_NEW_WRAPPERS
 };
 

@@ -1520,11 +1520,8 @@ bool WarpBuilder::build_ToAsyncIter(BytecodeLocation loc) {
 }
 
 bool WarpBuilder::build_ToPropertyKey(BytecodeLocation loc) {
-  MDefinition* index = current->pop();
-  MToId* ins = MToId::New(alloc(), index);
-  current->add(ins);
-  current->push(ins);
-  return resumeAfter(ins, loc);
+  MDefinition* value = current->pop();
+  return buildIC(loc, CacheKind::ToPropertyKey, {value});
 }
 
 bool WarpBuilder::build_Typeof(BytecodeLocation) {
@@ -2766,6 +2763,13 @@ bool WarpBuilder::buildIC(BytecodeLocation loc, CacheKind kind,
     case CacheKind::UnaryArith: {
       MOZ_ASSERT(numInputs == 1);
       auto* ins = MUnaryCache::New(alloc(), getInput(0));
+      current->add(ins);
+      current->push(ins);
+      return resumeAfter(ins, loc);
+    }
+    case CacheKind::ToPropertyKey: {
+      MOZ_ASSERT(numInputs == 1);
+      auto* ins = MToPropertyKeyCache::New(alloc(), getInput(0));
       current->add(ins);
       current->push(ins);
       return resumeAfter(ins, loc);

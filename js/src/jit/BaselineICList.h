@@ -54,6 +54,8 @@ namespace jit {
                                       \
   _(TypeOf_Fallback)                  \
                                       \
+  _(ToPropertyKey_Fallback)           \
+                                      \
   _(Rest_Fallback)                    \
                                       \
   _(BinaryArith_Fallback)             \
@@ -94,6 +96,7 @@ namespace jit {
   _(GetIterator)                               \
   _(InstanceOf)                                \
   _(TypeOf)                                    \
+  _(ToPropertyKey)                             \
   _(Rest)                                      \
   _(BinaryArith)                               \
   _(Compare)                                   \

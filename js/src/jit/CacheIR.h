@@ -167,6 +167,7 @@ class TypedOperandId : public OperandId {
   _(In)                   \
   _(HasOwn)               \
   _(TypeOf)               \
+  _(ToPropertyKey)        \
   _(InstanceOf)           \
   _(GetIterator)          \
   _(Compare)              \
