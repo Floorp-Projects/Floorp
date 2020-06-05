@@ -193,7 +193,8 @@ ALL_PROCESSES += [
     DllBlocklistEntry("nahimicmsidevprops.dll", UNVERSIONED),
 
     # Bug 1268470 - crashes with Kaspersky Lab on Windows 8
-    DllBlocklistEntry("klsihk64.dll", (14, 0, 456, 0xffff), BLOCK_WIN8_ONLY),
+    DllBlocklistEntry("klsihk64.dll", (14, 0, 456, 0xffff),
+                      BLOCK_WIN8_AND_OLDER),
 
     # Bug 1579758, crashes with OpenSC nightly version 0.19.0.448 and lower
     DllBlocklistEntry("onepin-opensc-pkcs11.dll", (0, 19, 0, 448)),
