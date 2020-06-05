@@ -53,8 +53,19 @@ add_task(async function test_remove_history() {
 
 add_task(async function test_remove_form_history() {
   await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.maxHistoricalSearchSuggestions", 1]],
+    set: [
+      ["browser.urlbar.suggest.searches", true],
+      ["browser.urlbar.maxHistoricalSearchSuggestions", 1],
+    ],
   });
+
+  await Services.search.addEngineWithDetails("test", {
+    method: "GET",
+    template: "http://example.com/?q={searchTerms}",
+  });
+  let engine = Services.search.getEngineByName("test");
+  let originalEngine = await Services.search.getDefault();
+  await Services.search.setDefault(engine);
 
   let formHistoryValue = "foobar";
   await UrlbarTestUtils.formHistory.add([formHistoryValue]);
@@ -124,6 +135,8 @@ add_task(async function test_remove_form_history() {
   );
 
   await SpecialPowers.popPrefEnv();
+  await Services.search.setDefault(originalEngine);
+  await Services.search.removeEngine(engine);
 });
 
 // We shouldn't be able to remove a bookmark item.
