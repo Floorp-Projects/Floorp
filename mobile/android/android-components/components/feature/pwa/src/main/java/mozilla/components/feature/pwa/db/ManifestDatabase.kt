@@ -16,11 +16,12 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 /**
  * Internal database for storing web app manifests and metadata.
  */
-@Database(entities = [ManifestEntity::class], version = 2)
+@Database(entities = [ManifestEntity::class], version = 3)
 @TypeConverters(ManifestConverter::class)
 internal abstract class ManifestDatabase : RoomDatabase() {
     abstract fun manifestDao(): ManifestDao
 
+    @Suppress("MagicNumber")
     companion object {
         @Volatile private var instance: ManifestDatabase? = null
 
@@ -42,6 +43,17 @@ internal abstract class ManifestDatabase : RoomDatabase() {
             }
         }
 
+        @VisibleForTesting
+        internal val MIGRATION_2_3: Migration = object : Migration(2, 3) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("ALTER TABLE manifests ADD COLUMN has_share_targets INTEGER NOT NULL DEFAULT 0")
+
+                database.execSQL(
+                    "CREATE INDEX IF NOT EXISTS index_manifests_has_share_targets ON manifests (has_share_targets)"
+                )
+            }
+        }
+
         @Synchronized
         fun get(context: Context): ManifestDatabase {
             instance?.let { return it }
@@ -50,7 +62,7 @@ internal abstract class ManifestDatabase : RoomDatabase() {
                 context,
                 ManifestDatabase::class.java,
                 "manifests"
-            ).addMigrations(MIGRATION_1_2).build().also {
+            ).addMigrations(MIGRATION_1_2, MIGRATION_2_3).build().also {
                 instance = it
             }
         }

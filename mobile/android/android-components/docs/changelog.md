@@ -36,6 +36,9 @@ permalink: /changelog/
   * Added `TrackingProtectionPolicy.toContentBlockingSetting` extension methods to convert a policy to GeckoView's `ContentBlocking.Setting`.
   * Added checks to not apply the same policy twice if they are the same as already on the engine.
 
+* **feature-pwa**
+  * Added `ManifestStorage.loadShareableManifests` to get manifest with a `WebAppManifest.ShareTarget`.
+
 # 50.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v49.0.0...v50.0.0)
@@ -61,7 +64,7 @@ permalink: /changelog/
 
 * **browser-state**
   * Added map of `SessionState.contextId` and their respective `ContainerState` in `BrowserState` to track the state of a container.
-  
+
 * **browser-menu**
   * Added an optional `longClickListener` parameter to `BrowserMenuItemToolbar.Button` and `BrowserMenuItemToolbar.TwoStateButton` to handle long click events.
 

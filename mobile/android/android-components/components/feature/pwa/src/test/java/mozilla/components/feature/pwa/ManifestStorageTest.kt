@@ -17,8 +17,8 @@ import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentCaptor
@@ -82,11 +82,7 @@ class ManifestStorageTest {
     fun `update replaces the manifest as JSON`() = runBlocking {
         val storage = spy(ManifestStorage(testContext))
         val dao = mockDatabase(storage)
-        val existing = ManifestEntity(
-            manifest = firefoxManifest,
-            createdAt = 0,
-            updatedAt = 0
-        )
+        val existing = ManifestEntity(firefoxManifest, currentTime = 0)
 
         `when`(dao.getManifest("https://firefox.com")).thenReturn(existing)
 
@@ -135,11 +131,38 @@ class ManifestStorageTest {
     }
 
     @Test
+    fun `loading manifests with share targets returns list of manifests`() = runBlocking {
+        val storage = spy(ManifestStorage(testContext))
+        val dao = mockDatabase(storage)
+        val manifest1 = WebAppManifest(
+            name = "Mozilla",
+            startUrl = "https://mozilla.org",
+            shareTarget = WebAppManifest.ShareTarget("https://mozilla.org/share")
+        )
+        val manifest2 = WebAppManifest(
+            name = "Firefox",
+            startUrl = "https://firefox.com",
+            shareTarget = WebAppManifest.ShareTarget("https://firefox.com/share")
+        )
+        val timeout = ManifestStorage.ACTIVE_THRESHOLD_MS
+        val currentTime = System.currentTimeMillis()
+        val deadline = currentTime - timeout
+
+        whenever(dao.getRecentShareableManifests(deadline))
+            .thenReturn(listOf(ManifestEntity(manifest1), ManifestEntity(manifest2)))
+
+        assertEquals(
+            listOf(manifest1, manifest2),
+            storage.loadShareableManifests(currentTime)
+        )
+    }
+
+    @Test
     fun `updateManifestUsedAt updates usedAt to current timestamp`() = runBlocking {
         val storage = spy(ManifestStorage(testContext))
         val dao = mockDatabase(storage)
         val manifest = WebAppManifest(name = "Mozilla", startUrl = "https://mozilla.org")
-        val entity = ManifestEntity(manifest, usedAt = 0)
+        val entity = ManifestEntity(manifest, currentTime = 0)
 
         val entityCaptor = ArgumentCaptor.forClass(ManifestEntity::class.java)
 
@@ -219,9 +242,9 @@ class ManifestStorageTest {
         val storage = spy(ManifestStorage(testContext))
         val dao = mockDatabase(storage)
 
-        val manifest1 = ManifestEntity(manifest = firefoxManifest, createdAt = 0, updatedAt = 0)
-        val manifest2 = ManifestEntity(manifest = googleMapsManifest, createdAt = 0, updatedAt = 0)
-        val manifest3 = ManifestEntity(manifest = exampleWebAppManifest, createdAt = 0, updatedAt = 0)
+        val manifest1 = ManifestEntity(manifest = firefoxManifest, currentTime = 0)
+        val manifest2 = ManifestEntity(manifest = googleMapsManifest, currentTime = 0)
+        val manifest3 = ManifestEntity(manifest = exampleWebAppManifest, currentTime = 0)
 
         whenever(dao.getInstalledScopes(0)).thenReturn(listOf(manifest1, manifest2, manifest3))
 
@@ -242,9 +265,9 @@ class ManifestStorageTest {
         val storage = spy(ManifestStorage(testContext))
         val dao = mockDatabase(storage)
 
-        val manifest1 = ManifestEntity(manifest = firefoxManifest, createdAt = 0, updatedAt = 0)
-        val manifest2 = ManifestEntity(manifest = googleMapsManifest, createdAt = 0, updatedAt = 0)
-        val manifest3 = ManifestEntity(manifest = exampleWebAppManifest, createdAt = 0, updatedAt = 0)
+        val manifest1 = ManifestEntity(manifest = firefoxManifest, currentTime = 0)
+        val manifest2 = ManifestEntity(manifest = googleMapsManifest, currentTime = 0)
+        val manifest3 = ManifestEntity(manifest = exampleWebAppManifest, currentTime = 0)
 
         whenever(dao.getInstalledScopes(0)).thenReturn(listOf(manifest1, manifest2, manifest3))
 
@@ -260,9 +283,9 @@ class ManifestStorageTest {
         val storage = spy(ManifestStorage(testContext))
         val dao = mockDatabase(storage)
 
-        val manifest1 = ManifestEntity(manifest = firefoxManifest, createdAt = 0, updatedAt = 0)
-        val manifest2 = ManifestEntity(manifest = googleMapsManifest, createdAt = 0, updatedAt = 0)
-        val manifest3 = ManifestEntity(manifest = exampleWebAppManifest, createdAt = 0, updatedAt = 0)
+        val manifest1 = ManifestEntity(manifest = firefoxManifest, currentTime = 0)
+        val manifest2 = ManifestEntity(manifest = googleMapsManifest, currentTime = 0)
+        val manifest3 = ManifestEntity(manifest = exampleWebAppManifest, currentTime = 0)
 
         whenever(dao.getInstalledScopes(0)).thenReturn(listOf(manifest1, manifest2, manifest3))
 
