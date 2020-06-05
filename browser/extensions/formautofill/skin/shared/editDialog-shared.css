@@ -102,7 +102,3 @@ dialog[subdialog] form {
   justify-content: end;
   margin: 1em 0 0;
 }
-
-#billingAddressGUID-container {
-  display: none;
-}
