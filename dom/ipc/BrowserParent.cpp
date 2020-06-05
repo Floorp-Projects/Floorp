@@ -455,20 +455,14 @@ ParentShowInfo BrowserParent::GetShowInfo() {
   if (mFrameElement) {
     nsAutoString name;
     mFrameElement->GetAttr(kNameSpaceID_None, nsGkAtoms::name, name);
-    // FIXME(emilio, bug 1606660): allowfullscreen should probably move to
-    // OwnerShowInfo.
-    bool allowFullscreen =
-        mFrameElement->HasAttr(kNameSpaceID_None, nsGkAtoms::allowfullscreen) ||
-        mFrameElement->HasAttr(kNameSpaceID_None,
-                               nsGkAtoms::mozallowfullscreen);
     bool isTransparent =
         nsContentUtils::IsChromeDoc(mFrameElement->OwnerDoc()) &&
         mFrameElement->HasAttr(kNameSpaceID_None, nsGkAtoms::transparent);
-    return ParentShowInfo(name, allowFullscreen, false, isTransparent, mDPI,
-                          mRounding, mDefaultScale.scale);
+    return ParentShowInfo(name, false, isTransparent, mDPI, mRounding,
+                          mDefaultScale.scale);
   }
 
-  return ParentShowInfo(EmptyString(), false, false, false, mDPI, mRounding,
+  return ParentShowInfo(EmptyString(), false, false, mDPI, mRounding,
                         mDefaultScale.scale);
 }
 

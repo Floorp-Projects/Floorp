@@ -1067,7 +1067,8 @@ nsresult ContentChild::ProvideWindowCommon(
     }
 
     ParentShowInfo showInfo(
-        EmptyString(), false, true, false, aTabOpener->WebWidget()->GetDPI(),
+        EmptyString(), /* fakeShowInfo = */ true, /* isTransparent = */ false,
+        aTabOpener->WebWidget()->GetDPI(),
         aTabOpener->WebWidget()->RoundsWidgetCoordinatesTo(),
         aTabOpener->WebWidget()->GetDefaultScale().scale);
 

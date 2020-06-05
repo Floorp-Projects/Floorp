@@ -1753,6 +1753,8 @@ nsDocShell::GetFullscreenAllowed(bool* aFullscreenAllowed) {
   if (!win) {
     return NS_OK;
   }
+
+  // FIXME(emilio, bug 1606660): What makes this work in fission?
   if (nsCOMPtr<Element> frameElement = win->GetFrameElementInternal()) {
     if (frameElement->IsXULElement()) {
       if (frameElement->HasAttr(kNameSpaceID_None,
