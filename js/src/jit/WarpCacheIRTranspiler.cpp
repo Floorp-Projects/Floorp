@@ -1192,6 +1192,18 @@ bool WarpCacheIRTranspiler::emitMathSqrtNumberResult(NumberOperandId inputId) {
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitMathAtan2NumberResult(NumberOperandId yId,
+                                                      NumberOperandId xId) {
+  MDefinition* y = getOperand(yId);
+  MDefinition* x = getOperand(xId);
+
+  auto* ins = MAtan2::New(alloc(), y, x);
+  add(ins);
+
+  pushResult(ins);
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitMathFunctionNumberResult(
     NumberOperandId inputId, UnaryMathFunction fun) {
   MDefinition* input = getOperand(inputId);
