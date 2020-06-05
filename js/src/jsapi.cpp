@@ -1245,11 +1245,12 @@ JS_PUBLIC_API bool JS::detail::ComputeThis(JSContext* cx, Value* vp,
   cx->check(vp[0], vp[1]);
 
   MutableHandleValue thisv = MutableHandleValue::fromMarkedLocation(&vp[1]);
-  if (!BoxNonStrictThis(cx, thisv, thisv)) {
+  JSObject* obj = BoxNonStrictThis(cx, thisv);
+  if (!obj) {
     return false;
   }
 
-  thisObject.set(&thisv.toObject());
+  thisObject.set(obj);
   return true;
 }
 

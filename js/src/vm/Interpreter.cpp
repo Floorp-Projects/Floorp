@@ -94,27 +94,18 @@ static MOZ_ALWAYS_INLINE bool LooseEqualityOp(JSContext* cx,
   return true;
 }
 
-bool js::BoxNonStrictThis(JSContext* cx, HandleValue thisv,
-                          MutableHandleValue vp) {
+JSObject* js::BoxNonStrictThis(JSContext* cx, HandleValue thisv) {
   MOZ_ASSERT(!thisv.isMagic());
 
   if (thisv.isNullOrUndefined()) {
-    vp.setObject(*cx->global()->lexicalEnvironment().thisObject());
-    return true;
+    return cx->global()->lexicalEnvironment().thisObject();
   }
 
   if (thisv.isObject()) {
-    vp.set(thisv);
-    return true;
+    return &thisv.toObject();
   }
 
-  JSObject* obj = PrimitiveToObject(cx, thisv);
-  if (!obj) {
-    return false;
-  }
-
-  vp.setObject(*obj);
-  return true;
+  return PrimitiveToObject(cx, thisv);
 }
 
 bool js::GetFunctionThis(JSContext* cx, AbstractFramePtr frame,
@@ -157,7 +148,13 @@ bool js::GetFunctionThis(JSContext* cx, AbstractFramePtr frame,
     }
   }
 
-  return BoxNonStrictThis(cx, thisv, res);
+  JSObject* obj = BoxNonStrictThis(cx, thisv);
+  if (!obj) {
+    return false;
+  }
+
+  res.setObject(*obj);
+  return true;
 }
 
 void js::GetNonSyntacticGlobalThis(JSContext* cx, HandleObject envChain,
