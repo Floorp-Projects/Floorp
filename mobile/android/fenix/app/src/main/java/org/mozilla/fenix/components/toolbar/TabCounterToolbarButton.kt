@@ -4,14 +4,12 @@
 
 package org.mozilla.fenix.components.toolbar
 
-import android.content.Context
 import android.util.TypedValue
 import android.view.View
 import android.view.ViewGroup
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.toolbar.Toolbar
-import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.sessionsOfType
 import java.lang.ref.WeakReference
 
@@ -33,12 +31,6 @@ class TabCounterToolbarButton(
             setOnClickListener {
                 showTabs.invoke()
             }
-
-            val count = sessionManager.sessions.count {
-                it.private == isPrivate
-            }
-
-            contentDescription = getDescriptionForTabCount(context, count)
 
             addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
                 override fun onViewAttachedToWindow(v: View?) {
@@ -66,16 +58,8 @@ class TabCounterToolbarButton(
         val count = sessionManager.sessionsOfType(private = isPrivate).count()
 
         reference.get()?.let {
-            it.contentDescription = getDescriptionForTabCount(it.context, count)
             it.setCountWithAnimation(count)
         }
-    }
-
-    private fun getDescriptionForTabCount(context: Context?, count: Int): String? {
-        return if (count > 1) context?.getString(
-            R.string.tab_counter_content_description_multi_tab,
-            count
-        ) else context?.getString(R.string.tab_counter_content_description_one_tab)
     }
 
     private val sessionManagerObserver = object : SessionManager.Observer {

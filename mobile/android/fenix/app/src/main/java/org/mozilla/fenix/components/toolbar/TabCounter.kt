@@ -34,11 +34,22 @@ open class TabCounter @JvmOverloads constructor(
             TypedValue.COMPLEX_UNIT_DIP, TWO_DIGIT_PADDING, context.resources.displayMetrics
         ).toInt()
         counter_text.setPadding(0, shiftThreeDp, shiftThreeDp, 0)
+        updateContentDescription(0)
 
         animationSet = createAnimatorSet()
     }
 
+    private fun updateContentDescription(count: Int) {
+        counter_root.contentDescription = if (count == 1) {
+            context?.getString(R.string.open_tab_tray_single)
+        } else {
+            context?.getString(R.string.open_tab_tray_plural, count.toString())
+        }
+    }
+
     fun setCountWithAnimation(count: Int) {
+        updateContentDescription(count)
+
         // Don't animate from initial state.
         if (this.count == 0) {
             setCount(count)
@@ -69,6 +80,7 @@ open class TabCounter @JvmOverloads constructor(
     }
 
     fun setCount(count: Int) {
+        updateContentDescription(count)
         adjustTextSize(count)
 
         counter_text.text = formatForDisplay(count)

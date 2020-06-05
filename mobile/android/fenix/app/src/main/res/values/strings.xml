@@ -21,6 +21,10 @@
     <string name="no_open_tabs_description">Your open tabs will be shown here.</string>
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">Your private tabs will be shown here.</string>
+    <!-- Message announced to the user when tab tray is selected with 1 tab -->
+    <string name="open_tab_tray_single">1 open tab. Tap to switch tabs.</string>
+    <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
+    <string name="open_tab_tray_plural">%1$s open tabs. Tap to switch tabs.</string>
 
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s is produced by Mozilla.</string>
