@@ -3984,25 +3984,6 @@ Toolbox.prototype = {
       return;
     }
 
-    try {
-      const sourceMappedLoc = await this.sourceMapURLService.originalPositionForURL(
-        url,
-        line,
-        column
-      );
-      if (sourceMappedLoc) {
-        url = sourceMappedLoc.url;
-        line = sourceMappedLoc.line;
-        column = sourceMappedLoc.column;
-      }
-    } catch (err) {
-      console.error(
-        "Failed to resolve sourcemapped location for the given source location",
-        { url, line, column },
-        err
-      );
-    }
-
     return viewSource.viewSourceInStyleEditor(this, url, line, column);
   },
 
@@ -4021,33 +4002,12 @@ Toolbox.prototype = {
       return;
     }
 
-    let frontOrURL = stylesheetFront;
-    try {
-      const sourceMappedLoc = await this.sourceMapURLService.originalPositionForID(
-        stylesheetFront.actorID,
-        line,
-        column
-      );
-      if (sourceMappedLoc) {
-        frontOrURL = sourceMappedLoc.url;
-        line = sourceMappedLoc.line;
-        column = sourceMappedLoc.column;
-      }
-    } catch (err) {
-      console.error(
-        "Failed to resolve sourcemapped location for the given source location",
-        {
-          url: stylesheetFront
-            ? stylesheetFront.href || stylesheetFront.nodeHref
-            : null,
-          line,
-          column,
-        },
-        err
-      );
-    }
-
-    return viewSource.viewSourceInStyleEditor(this, frontOrURL, line, column);
+    return viewSource.viewSourceInStyleEditor(
+      this,
+      stylesheetFront,
+      line,
+      column
+    );
   },
 
   viewElementInInspector: async function(objectActor, inspectFromAnnotation) {

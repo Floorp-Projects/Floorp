@@ -19,20 +19,61 @@
  */
 exports.viewSourceInStyleEditor = async function(
   toolbox,
-  sourceURL,
-  sourceLine,
-  sourceColumn
+  stylesheetFrontOrGeneratedURL,
+  generatedLine,
+  generatedColumn
 ) {
   const panel = await toolbox.loadTool("styleeditor");
 
-  try {
-    await panel.selectStyleSheet(sourceURL, sourceLine, sourceColumn);
-    await toolbox.selectTool("styleeditor");
-    return true;
-  } catch (e) {
-    exports.viewSource(toolbox, sourceURL, sourceLine);
-    return false;
+  let stylesheetFront;
+  if (typeof stylesheetFrontOrGeneratedURL === "string") {
+    stylesheetFront = panel.getStylesheetFrontForGeneratedURL(
+      stylesheetFrontOrGeneratedURL
+    );
+  } else {
+    stylesheetFront = stylesheetFrontOrGeneratedURL;
   }
+
+  const originalLocation = stylesheetFront
+    ? await getOriginalLocation(
+        toolbox,
+        stylesheetFront.actorID,
+        generatedLine,
+        generatedColumn
+      )
+    : null;
+
+  try {
+    if (originalLocation) {
+      await panel.selectOriginalSheet(
+        originalLocation.sourceId,
+        originalLocation.line,
+        originalLocation.column
+      );
+      await toolbox.selectTool("styleeditor");
+      return true;
+    } else if (stylesheetFront) {
+      await panel.selectStyleSheet(
+        stylesheetFront,
+        generatedLine,
+        generatedColumn
+      );
+      await toolbox.selectTool("styleeditor");
+      return true;
+    }
+  } catch (e) {
+    console.error("Failed to view source in style editor", e);
+  }
+
+  exports.viewSource(
+    toolbox,
+    typeof stylesheetFrontOrGeneratedURL === "string"
+      ? stylesheetFrontOrGeneratedURL
+      : stylesheetFrontOrGeneratedURL.href ||
+          stylesheetFrontOrGeneratedURL.nodeHref,
+    generatedLine
+  );
+  return false;
 };
 
 /**
