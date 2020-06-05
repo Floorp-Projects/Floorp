@@ -15,6 +15,7 @@ import android.widget.ImageView
 import androidx.core.view.isGone
 import androidx.core.view.isVisible
 import androidx.core.view.marginTop
+import kotlinx.android.synthetic.main.tracking_protection_onboarding_popup.*
 import kotlinx.android.synthetic.main.tracking_protection_onboarding_popup.view.*
 import mozilla.components.browser.session.Session
 import org.mozilla.fenix.R
@@ -55,7 +56,7 @@ class TrackingProtectionOverlay(
 
         layout.onboarding_message.text =
             context.getString(
-                R.string.etp_onboarding_message_2,
+                R.string.etp_onboarding_cfr_message,
                 context.getString(R.string.app_name)
             )
 
@@ -95,6 +96,13 @@ class TrackingProtectionOverlay(
                 (trackingProtectionIcon.y + trackingProtectionIcon.height - trackingProtectionIcon.marginTop).toInt()
             it.attributes = attr
             it.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        }
+
+        val etpShield =
+            getToolbar().findViewById<View>(R.id.mozac_browser_toolbar_tracking_protection_indicator)
+        trackingOnboardingDialog.message.setOnClickListener {
+            trackingOnboardingDialog.dismiss()
+            etpShield.performClick()
         }
 
         trackingOnboardingDialog.show()

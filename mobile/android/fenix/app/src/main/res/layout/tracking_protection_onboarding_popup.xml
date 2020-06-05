@@ -48,7 +48,7 @@
             android:layout_marginTop="8dp"
             android:layout_marginBottom="8dp"
             android:lineSpacingExtra="2dp"
-            android:text="@string/etp_onboarding_message_2"
+            android:text="@string/etp_onboarding_cfr_message"
             android:textColor="@color/primary_text_dark_theme"
             android:textSize="16sp"
             app:layout_constraintBottom_toBottomOf="parent"
