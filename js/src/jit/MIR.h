@@ -9294,6 +9294,25 @@ class MGuardSpecificSymbol : public MUnaryInstruction,
   }
 };
 
+class MGuardNoDenseElements : public MUnaryInstruction,
+                              public ObjectPolicy<0>::Data {
+  explicit MGuardNoDenseElements(MDefinition* obj)
+      : MUnaryInstruction(classOpcode, obj) {
+    setGuard();
+    setMovable();
+    setResultType(MIRType::Object);
+  }
+
+ public:
+  INSTRUCTION_HEADER(GuardNoDenseElements)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, object))
+
+  AliasSet getAliasSet() const override {
+    return AliasSet::Load(AliasSet::ObjectFields);
+  }
+};
+
 // Load from vp[slot] (slots that are not inline in an object).
 class MLoadDynamicSlot : public MUnaryInstruction, public NoTypePolicy::Data {
   uint32_t slot_;

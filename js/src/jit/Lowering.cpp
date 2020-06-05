@@ -4028,6 +4028,14 @@ void LIRGenerator::visitGuardSpecificSymbol(MGuardSpecificSymbol* ins) {
   redefine(ins, ins->symbol());
 }
 
+void LIRGenerator::visitGuardNoDenseElements(MGuardNoDenseElements* ins) {
+  auto* guard =
+      new (alloc()) LGuardNoDenseElements(useRegister(ins->object()), temp());
+  assignSnapshot(guard, Bailout_NoDenseElementsGuard);
+  add(guard, ins);
+  redefine(ins, ins->object());
+}
+
 void LIRGenerator::visitGuardShape(MGuardShape* ins) {
   MOZ_ASSERT(ins->object()->type() == MIRType::Object);
 

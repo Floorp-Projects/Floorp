@@ -6090,6 +6090,19 @@ class LGuardObjectGroup : public LInstructionHelper<1, 1, 1> {
   const MGuardObjectGroup* mir() const { return mir_->toGuardObjectGroup(); }
 };
 
+class LGuardNoDenseElements : public LInstructionHelper<0, 1, 1> {
+ public:
+  LIR_HEADER(GuardNoDenseElements)
+
+  LGuardNoDenseElements(const LAllocation& in, const LDefinition& temp)
+      : LInstructionHelper(classOpcode) {
+    setOperand(0, in);
+    setTemp(0, temp);
+  }
+
+  const LDefinition* temp() { return getTemp(0); }
+};
+
 // Guard against the sharedness of a TypedArray's memory.
 class LGuardSharedTypedArray : public LInstructionHelper<0, 1, 1> {
  public:

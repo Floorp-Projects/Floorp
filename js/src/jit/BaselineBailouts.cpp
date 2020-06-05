@@ -1989,6 +1989,7 @@ bool jit::FinishBailoutToBaseline(BaselineBailoutInfo* bailoutInfoArg) {
     case Bailout_NullOrUndefinedGuard:
     case Bailout_MonitorTypes:
     case Bailout_Hole:
+    case Bailout_NoDenseElementsGuard:
     case Bailout_NegativeIndex:
     case Bailout_NonInt32Input:
     case Bailout_NonNumericInput:
