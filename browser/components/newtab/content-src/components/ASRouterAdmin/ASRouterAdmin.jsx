@@ -501,7 +501,7 @@ export class ASRouterAdminInner extends React.PureComponent {
     this.onNewTargetingParams = this.onNewTargetingParams.bind(this);
     this.handleUpdateWNMessages = this.handleUpdateWNMessages.bind(this);
     this.handleForceWNP = this.handleForceWNP.bind(this);
-    this.pushWNMessage = this.pushWNMessage.bind(this);
+    this.restoreWNMessageState = this.restoreWNMessageState.bind(this);
     this.toggleJSON = this.toggleJSON.bind(this);
     this.toggleAllMessages = this.toggleAllMessages.bind(this);
     this.state = {
@@ -584,12 +584,13 @@ export class ASRouterAdminInner extends React.PureComponent {
     return () => ASRouterUtils.overrideMessage(id);
   }
 
-  handleUpdateWNMessages() {
+  async handleUpdateWNMessages() {
+    await this.restoreWNMessageState();
     let messages = this.state.WNMessages;
-    ASRouterUtils.sendMessage({
-      type: "RENDER_WHATSNEW_MESSAGES",
-      data: messages,
-    });
+
+    for (const msg of messages) {
+      ASRouterUtils.modifyMessageJson(JSON.parse(msg));
+    }
   }
 
   handleForceWNP() {
@@ -859,27 +860,23 @@ export class ASRouterAdminInner extends React.PureComponent {
     );
   }
 
-  pushWNMessage(event, msg) {
-    let ele = event.target;
-    if (ele.checked) {
-      this.setState(prevState => ({
-        WNMessages: prevState.WNMessages.concat(msg),
-      }));
-    } else if (!ele.checked && this.state.WNMessages.length === 1) {
-      this.setState({ WNMessages: [] });
-    } else {
-      this.setState(prevState => ({
-        WNMessages: prevState.WNMessages.splice(
-          prevState.WNMessages.indexOf(msg),
-          1
-        ),
-      }));
-    }
-  }
+  restoreWNMessageState() {
+    // check the page for checked boxes, and reset the state of WNMessages based on that.
+    let tempState = [];
+    let messageCheckboxes = document.querySelectorAll('input[type="checkbox"]');
+    // put the JSON of all the checked checkboxes in the array
+    for (const checkbox of messageCheckboxes) {
+      let trimmedId = checkbox.id.replace(" checkbox", "");
+      let msg = document.getElementById(`${trimmedId}-textarea`).value;
 
-  modifyJson(content) {
-    let newContent = JSON.parse(content);
-    ASRouterUtils.modifyMessageJson(newContent);
+      if (checkbox.checked) {
+        tempState.push(msg);
+      }
+    }
+
+    this.setState({
+      WNMessages: tempState,
+    });
   }
 
   renderWNMessageItem(msg) {
@@ -917,24 +914,10 @@ export class ASRouterAdminInner extends React.PureComponent {
             type="checkbox"
             id={`${msg.id} checkbox`}
             name={`${msg.id} checkbox`}
-            // eslint-disable-next-line react/jsx-no-bind
-            onClick={e => this.pushWNMessage(e, msg.id)}
           />
         </td>
         <td className={`message-summary`}>
           <pre className={isCollapsed ? "collapsed" : "expanded"}>
-            <button
-              className="button json-button"
-              name={msg.id}
-              // eslint-disable-next-line react/jsx-no-bind
-              onClick={e =>
-                this.modifyJson(
-                  document.getElementById(`${msg.id}-textarea`).value
-                )
-              }
-            >
-              Modify Template
-            </button>
             <textarea
               id={`${msg.id}-textarea`}
               className="wnp-textarea"
@@ -996,7 +979,7 @@ export class ASRouterAdminInner extends React.PureComponent {
       return null;
     }
     const messagesToShow = this.state.messages.filter(
-      message => message.provider === "whats-new-panel"
+      message => message.provider === "whats-new-panel" && message.content.body
     );
     return (
       <table>
@@ -1554,10 +1537,12 @@ export class ASRouterAdminInner extends React.PureComponent {
             To correctly render selected messages, please check "Disable Popup
             Auto-Hide" in the browser toolbox, or set{" "}
             <i>ui.popup.disable_autohide</i> to <b>true</b> in{" "}
-            <i>about:config</i>. <br />
-            To modify a message, render it first using 'Render Selected
-            Messages'. Then, modify the JSON and click 'Modify Template' to see
-            your changes.
+            <i>about:config</i>. Then, click 'Open What's New Panel', select the
+            messages you want to see, and click 'Render Selected Messages'.
+            <br />
+            <br />
+            To modify a message, select it, modify the JSON and click 'Render
+            Selected Messages' again to see your changes.
           </span>
         </p>
         <div>
