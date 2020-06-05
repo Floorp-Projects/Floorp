@@ -309,35 +309,6 @@ void MacroAssembler::subFromStackPtr(Imm32 imm32) {
   }
 }
 
-void MacroAssemblerX64::rightShiftInt64x2(Imm32 count, FloatRegister src,
-                                          FloatRegister dest) {
-  MOZ_ASSERT(count.value <= 63);
-
-  if (count.value < 32) {
-    ScratchSimd128Scope scratch(asMasm());
-    // Compute high dwords and mask low dwords
-    asMasm().moveSimd128(src, scratch);
-    vpsrad(count, scratch, scratch);
-    vpandSimd128(SimdConstant::SplatX2(int64_t(0xFFFFFFFF00000000LL)), scratch);
-    // Compute low dwords (high dwords at most have clear high bits where the
-    // result will have set low high bits)
-    if (src != dest) {
-      asMasm().moveSimd128(src, dest);
-    }
-    vpsrlq(count, dest, dest);
-    // Merge the parts
-    vpor(scratch, dest, dest);
-  } else {
-    ScratchRegisterScope scratch(asMasm());
-    vpextrq(0, src, scratch);
-    sarq(count, scratch);
-    vpinsrq(0, scratch, dest, dest);
-    vpextrq(1, src, scratch);
-    sarq(count, scratch);
-    vpinsrq(1, scratch, dest, dest);
-  }
-}
-
 //{{{ check_macroassembler_style
 // ===============================================================
 // ABI function calls.

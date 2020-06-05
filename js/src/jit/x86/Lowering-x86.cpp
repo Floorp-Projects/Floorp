@@ -375,6 +375,13 @@ void LIRGenerator::visitWasmStore(MWasmStore* ins) {
       // instruction layout which affects patching.
       valueAlloc = useRegisterAtStart(ins->value());
       break;
+    case Scalar::Simd128:
+#ifdef ENABLE_WASM_SIMD
+      valueAlloc = useRegisterAtStart(ins->value());
+      break;
+#else
+      MOZ_CRASH("unexpected array type");
+#endif
     case Scalar::Int64: {
       LInt64Allocation valueAlloc = useInt64RegisterAtStart(ins->value());
       auto* lir = new (alloc())
@@ -386,7 +393,6 @@ void LIRGenerator::visitWasmStore(MWasmStore* ins) {
     case Scalar::BigInt64:
     case Scalar::BigUint64:
     case Scalar::MaxTypedArrayViewType:
-    case Scalar::Simd128:
       MOZ_CRASH("unexpected array type");
   }
 
@@ -679,4 +685,15 @@ void LIRGenerator::visitSignExtendInt64(MSignExtendInt64* ins) {
   defineInt64Fixed(lir, ins,
                    LInt64Allocation(LAllocation(AnyRegister(edx)),
                                     LAllocation(AnyRegister(eax))));
+}
+
+void LIRGeneratorX86::lowerForWasmI64x2Mul(MWasmBinarySimd128* ins,
+                                           MDefinition* lhs, MDefinition* rhs) {
+  LAllocation lhsDestAlloc = useRegisterAtStart(lhs);
+  LAllocation rhsAlloc =
+      lhs != rhs ? useRegister(rhs) : useRegisterAtStart(rhs);
+  auto* lir = new (alloc())
+      LWasmI64x2Mul(lhsDestAlloc, rhsAlloc,
+                    tempInt64Fixed(Register64(edx, eax)), tempInt64(), temp());
+  defineReuseInput(lir, ins, LWasmI64x2Mul::LhsDest);
 }

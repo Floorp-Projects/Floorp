@@ -705,7 +705,7 @@ void CodeGenerator::visitWasmI64x2Mul(LWasmI64x2Mul* ins) {
 #ifdef ENABLE_WASM_SIMD
   FloatRegister lhsDest = ToFloatRegister(ins->lhsDest());
   FloatRegister rhs = ToFloatRegister(ins->rhs());
-  Register64 temp = ToRegister64(ins->getInt64Temp(0));
+  Register64 temp = ToRegister64(ins->temp1());
   masm.mulInt64x2(rhs, lhsDest, temp);
 #else
   MOZ_CRASH("No SIMD");

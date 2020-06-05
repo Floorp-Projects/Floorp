@@ -699,10 +699,10 @@ for ( let byte of [3, 11, 8, 2] ) {
 
 for ( let lanes of ['i8x16', 'i16x8', 'i32x4', 'i64x2'] ) {
     for ( let shift of ['shl', 'shr_s', 'shr_u'] ) {
-        for ( let [count, result] of [['(i32.const 5)', 'shift -> constant shift'],
-                                      ['(local.get 1)', 'shift -> variable shift']] ) {
+        for ( let [count, result] of [['(i32.const 5)', /shift -> constant shift/],
+                                      ['(local.get 1)', /shift -> variable(?: scalarized)? shift/]] ) {
             wasmCompile(`(module (func (param v128) (param i32) (result v128) (${lanes}.${shift} (local.get 0) ${count})))`);
-            assertEq(wasmSimdAnalysis(), result);
+            assertEq(wasmSimdAnalysis().match(result).length, 1);
         }
     }
 }

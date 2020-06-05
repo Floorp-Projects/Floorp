@@ -74,6 +74,16 @@ void MacroAssemblerX86::loadConstantSimd128Float(const SimdConstant& v,
   propagateOOM(f4->uses.append(CodeOffset(masm.size())));
 }
 
+void MacroAssemblerX86::vpandSimd128(const SimdConstant& v,
+                                     FloatRegister srcDest) {
+  SimdData* val = getSimdData(v);
+  if (!val) {
+    return;
+  }
+  masm.vpand_mr(nullptr, srcDest.encoding(), srcDest.encoding());
+  propagateOOM(val->uses.append(CodeOffset(masm.size())));
+}
+
 void MacroAssemblerX86::finish() {
   // Last instruction may be an indirect jump so eagerly insert an undefined
   // instruction byte to prevent processors from decoding data values into
@@ -609,8 +619,10 @@ void MacroAssembler::wasmLoad(const wasm::MemoryAccessDesc& access,
     case Scalar::Float64:
       vmovsd(srcAddr, out.fpu());
       break;
-    case Scalar::Int64:
     case Scalar::Simd128:
+      vmovups(srcAddr, out.fpu());
+      break;
+    case Scalar::Int64:
     case Scalar::Uint8Clamped:
     case Scalar::BigInt64:
     case Scalar::BigUint64:
@@ -723,12 +735,14 @@ void MacroAssembler::wasmStore(const wasm::MemoryAccessDesc& access,
     case Scalar::Float64:
       vmovsd(value.fpu(), dstAddr);
       break;
+    case Scalar::Simd128:
+      vmovups(value.fpu(), dstAddr);
+      break;
     case Scalar::Int64:
       MOZ_CRASH("Should be handled in storeI64.");
     case Scalar::MaxTypedArrayViewType:
     case Scalar::BigInt64:
     case Scalar::BigUint64:
-    case Scalar::Simd128:
       MOZ_CRASH("unexpected type");
   }
 

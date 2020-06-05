@@ -783,26 +783,6 @@ void MacroAssembler::mulInt64x2(FloatRegister rhs, FloatRegister lhsDest,
   vpinsrq(1, t1, lhsDest, lhsDest);
 }
 
-// Right shift by scalar
-
-void MacroAssembler::rightShiftInt64x2(Register rhs, FloatRegister lhsDest) {
-  ScratchRegisterScope scratch(*this);
-
-  MOZ_ASSERT(rhs == rcx);  // We need CL
-
-  vpextrq(0, lhsDest, scratch);
-  sarq_cl(scratch);
-  vpinsrq(0, scratch, lhsDest, lhsDest);
-  vpextrq(1, lhsDest, scratch);
-  sarq_cl(scratch);
-  vpinsrq(1, scratch, lhsDest, lhsDest);
-}
-
-void MacroAssembler::rightShiftInt64x2(Imm32 count, FloatRegister src,
-                                       FloatRegister dest) {
-  MacroAssemblerX64::rightShiftInt64x2(count, src, dest);
-}
-
 // Extract lane as scalar
 
 void MacroAssembler::extractLaneInt64x2(uint32_t lane, FloatRegister src,
@@ -822,6 +802,11 @@ void MacroAssembler::replaceLaneInt64x2(unsigned lane, Register64 rhs,
 void MacroAssembler::splatX2(Register64 src, FloatRegister dest) {
   vpinsrq(0, src.reg, dest, dest);
   vpinsrq(1, src.reg, dest, dest);
+}
+
+void MacroAssembler::bitwiseAndSimd128(const SimdConstant& rhs,
+                                       FloatRegister lhsDest) {
+  vpandSimd128(rhs, lhsDest);
 }
 
 // ========================================================================
