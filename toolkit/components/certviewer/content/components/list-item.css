@@ -5,15 +5,15 @@
 :host {
   display: grid;
   padding: 1em 0 1em;
-  background-color: #f1f1f1;
+  background-color: var(--in-content-box-background);
   border-style: solid;
-  border-color: #363535;
+  border-color: var(--in-content-box-border-color);
   border-width: .5px;
   position: relative;
 }
 
 :host(:hover) {
-  background-color: #f9f9fa;
+  background-color: var(--in-content-box-background-hover);
   cursor: pointer;
 }
 
