@@ -337,11 +337,11 @@ void LIRGenerator::visitReturnFromCtor(MReturnFromCtor* ins) {
   define(lir, ins);
 }
 
-void LIRGenerator::visitComputeThis(MComputeThis* ins) {
+void LIRGenerator::visitBoxNonStrictThis(MBoxNonStrictThis* ins) {
   MOZ_ASSERT(ins->type() == MIRType::Object);
   MOZ_ASSERT(ins->input()->type() == MIRType::Value);
 
-  LComputeThis* lir = new (alloc()) LComputeThis(useBox(ins->input()));
+  auto* lir = new (alloc()) LBoxNonStrictThis(useBox(ins->input()));
   define(lir, ins);
   assignSafepoint(lir, ins);
 }
