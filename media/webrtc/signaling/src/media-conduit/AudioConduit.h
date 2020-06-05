@@ -236,8 +236,8 @@ class WebrtcAudioConduit : public AudioSessionConduit,
   bool GetRTCPReceiverReport(uint32_t* jitterMs, uint32_t* packetsReceived,
                              uint64_t* bytesReceived, uint32_t* cumulativeLost,
                              Maybe<double>* aOutRttSec) override;
-  bool GetRTCPSenderReport(unsigned int* packetsSent,
-                           uint64_t* bytesSent) override;
+  bool GetRTCPSenderReport(unsigned int* packetsSent, uint64_t* bytesSent,
+                           DOMHighResTimeStamp* aRemoteTimestamp) override;
 
   bool SetDtmfPayloadType(unsigned char type, int freq) override;
 

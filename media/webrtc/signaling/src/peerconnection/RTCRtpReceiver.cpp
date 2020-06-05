@@ -180,10 +180,11 @@ static UniquePtr<dom::RTCStatsCollection> GetReceiverStats_s(
   // First, fill in remote stat with rtcp sender data, if present.
   uint32_t packetsSent;
   uint64_t bytesSent;
+  DOMHighResTimeStamp remoteTimestamp;
   Maybe<DOMHighResTimeStamp> timestamp =
       aPipeline->Conduit()->LastRtcpReceived();
-  if (timestamp.isSome() &&
-      aPipeline->Conduit()->GetRTCPSenderReport(&packetsSent, &bytesSent)) {
+  if (timestamp.isSome() && aPipeline->Conduit()->GetRTCPSenderReport(
+                                &packetsSent, &bytesSent, &remoteTimestamp)) {
     RTCRemoteOutboundRtpStreamStats s;
     remoteId = NS_LITERAL_STRING("inbound_rtcp_") + idstr;
     s.mTimestamp.Construct(*timestamp);
@@ -195,6 +196,7 @@ static UniquePtr<dom::RTCStatsCollection> GetReceiverStats_s(
     s.mLocalId.Construct(localId);
     s.mPacketsSent.Construct(packetsSent);
     s.mBytesSent.Construct(bytesSent);
+    s.mRemoteTimestamp.Construct(remoteTimestamp);
     if (!report->mRemoteOutboundRtpStreamStats.AppendElement(s, fallible)) {
       mozalloc_handle_oom(0);
     }
@@ -202,8 +204,8 @@ static UniquePtr<dom::RTCStatsCollection> GetReceiverStats_s(
 
   // Then, fill in local side (with cross-link to remote only if present)
   RTCInboundRtpStreamStats s;
-  // TODO(bug 1496533): Should we use the time of the most-recently received RTP
-  // packet? If so, what do we use if we haven't received any RTP? Now?
+  // TODO(bug 1496533): Should we use the time of the most-recently received
+  // RTP packet? If so, what do we use if we haven't received any RTP? Now?
   s.mTimestamp.Construct(aPipeline->GetNow());
   s.mId.Construct(localId);
   s.mType.Construct(RTCStatsType::Inbound_rtp);
@@ -377,9 +379,9 @@ nsresult RTCRtpReceiver::UpdateVideoConduit() {
       static_cast<VideoSessionConduit*>(mPipeline->Conduit());
 
   // NOTE(pkerr) - this is new behavior. Needed because the
-  // CreateVideoReceiveStream method of the Call API will assert (in debug) and
-  // fail if a value is not provided for the remote_ssrc that will be used by
-  // the far-end sender.
+  // CreateVideoReceiveStream method of the Call API will assert (in debug)
+  // and fail if a value is not provided for the remote_ssrc that will be used
+  // by the far-end sender.
   if (!mJsepTransceiver->mRecvTrack.GetSsrcs().empty()) {
     MOZ_LOG(gReceiverLog, LogLevel::Debug,
             ("%s[%s]: %s Setting remote SSRC %u", mPCHandle.c_str(),
@@ -392,9 +394,9 @@ nsresult RTCRtpReceiver::UpdateVideoConduit() {
                            rtxSsrc);
   }
 
-  // TODO (bug 1423041) once we pay attention to receiving MID's in RTP packets
-  // (see bug 1405495) we could make this depending on the presence of MID in
-  // the RTP packets instead of relying on the signaling.
+  // TODO (bug 1423041) once we pay attention to receiving MID's in RTP
+  // packets (see bug 1405495) we could make this depending on the presence of
+  // MID in the RTP packets instead of relying on the signaling.
   if (mJsepTransceiver->HasBundleLevel() &&
       (!mJsepTransceiver->mRecvTrack.GetNegotiatedDetails() ||
        !mJsepTransceiver->mRecvTrack.GetNegotiatedDetails()->GetExt(
