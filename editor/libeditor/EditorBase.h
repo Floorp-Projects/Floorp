@@ -201,8 +201,16 @@ class EditorBase : public nsIEditor,
   nsPIDOMWindowInner* GetInnerWindow() const {
     return mDocument ? mDocument->GetInnerWindow() : nullptr;
   }
-  // @param aMutationEventType One or multiple of NS_EVENT_BITS_MUTATION_*.
-  // @return true, iff at least one of NS_EVENT_BITS_MUTATION_* is set.
+
+  /**
+   * MaybeHasMutationEventListeners() returns true when the window may have
+   * mutation event listeners.
+   *
+   * @param aMutationEventType  One or multiple of NS_EVENT_BITS_MUTATION_*.
+   * @return                    true if the editor is an HTMLEditor instance,
+   *                            and at least one of NS_EVENT_BITS_MUTATION_* is
+   *                            set to the window or in debug build.
+   */
   bool MaybeHasMutationEventListeners(
       uint32_t aMutationEventType = 0xFFFFFFFF) const {
     if (IsTextEditor()) {
@@ -210,8 +218,16 @@ class EditorBase : public nsIEditor,
       // <input type="text"> nor <textarea>.
       return false;
     }
+#ifdef DEBUG
+    // On debug build, this should always return true for testing complicated
+    // path without mutation event listeners because when mutation event
+    // listeners do not touch the DOM, editor needs to run as there is no
+    // mutation event listeners.
+    return true;
+#else   // #ifdef DEBUG
     nsPIDOMWindowInner* window = GetInnerWindow();
     return window ? window->HasMutationListeners(aMutationEventType) : false;
+#endif  // #ifdef DEBUG #else
   }
 
   PresShell* GetPresShell() const {
