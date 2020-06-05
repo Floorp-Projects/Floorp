@@ -12,6 +12,8 @@
 #include "js/TypeDecls.h"
 
 // Forward declarations of all the types a TraceKind can denote.
+class JSLinearString;
+
 namespace js {
 class BaseScript;
 class BaseShape;
@@ -144,6 +146,19 @@ inline constexpr bool IsBaseTraceType_v = IsBaseTraceType<T>::value;
 JS_FOR_EACH_TRACEKIND(JS_EXPAND_DEF);
 #undef JS_EXPAND_DEF
 
+template <>
+struct MapTypeToTraceKind<JSLinearString> {
+  static const JS::TraceKind kind = JS::TraceKind::String;
+};
+template <>
+struct MapTypeToTraceKind<JSFunction> {
+  static const JS::TraceKind kind = JS::TraceKind::Object;
+};
+template <>
+struct MapTypeToTraceKind<JSScript> {
+  static const JS::TraceKind kind = JS::TraceKind::Script;
+};
+
 // RootKind is closely related to TraceKind. Whereas TraceKind's indices are
 // laid out for convenient embedding as a pointer tag, the indicies of RootKind
 // are designed for use as array keys via EnumeratedArray.
@@ -203,11 +218,6 @@ template <>
 struct MapTypeToRootKind<jsid> {
   static const JS::RootKind kind = JS::RootKind::Id;
 };
-template <>
-struct MapTypeToRootKind<JSFunction*> : public MapTypeToRootKind<JSObject*> {};
-template <>
-struct MapTypeToRootKind<JSScript*>
-    : public MapTypeToRootKind<js::BaseScript*> {};
 
 // Fortunately, few places in the system need to deal with fully abstract
 // cells. In those places that do, we generally want to move to a layout
