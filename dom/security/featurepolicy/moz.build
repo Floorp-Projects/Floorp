@@ -28,5 +28,11 @@ LOCAL_INCLUDES += [
   '/netwerk/base',
 ]
 include('/ipc/chromium/chromium-config.mozbuild')
+include('/tools/fuzzing/libfuzzer-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'
+
+if CONFIG['FUZZING_INTERFACES']:
+    TEST_DIRS += [
+            'fuzztest'
+    ]
