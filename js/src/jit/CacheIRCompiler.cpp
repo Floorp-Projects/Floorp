@@ -3835,6 +3835,36 @@ bool CacheIRCompiler::emitMathSqrtNumberResult(NumberOperandId inputId) {
   return true;
 }
 
+bool CacheIRCompiler::emitMathAtan2NumberResult(NumberOperandId yId,
+                                                NumberOperandId xId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+  AutoOutputRegister output(*this);
+  AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
+
+  AutoAvailableFloatRegister floatScratch0(*this, FloatReg0);
+  AutoAvailableFloatRegister floatScratch1(*this, FloatReg1);
+
+  allocator.ensureDoubleRegister(masm, yId, floatScratch0);
+  allocator.ensureDoubleRegister(masm, xId, floatScratch1);
+
+  LiveRegisterSet save(GeneralRegisterSet::Volatile(), liveVolatileFloatRegs());
+  masm.PushRegsInMask(save);
+
+  masm.setupUnalignedABICall(scratch);
+  masm.passABIArg(floatScratch0, MoveOp::DOUBLE);
+  masm.passABIArg(floatScratch1, MoveOp::DOUBLE);
+  masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, js::ecmaAtan2), MoveOp::DOUBLE);
+  masm.storeCallFloatResult(floatScratch0);
+
+  LiveRegisterSet ignore;
+  ignore.add(floatScratch0);
+  masm.PopRegsInMaskIgnore(save, ignore);
+
+  masm.boxDouble(floatScratch0, output.valueReg(), floatScratch0);
+
+  return true;
+}
+
 bool CacheIRCompiler::emitMathFloorToInt32Result(NumberOperandId inputId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
 
