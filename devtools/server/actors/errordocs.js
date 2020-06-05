@@ -156,9 +156,9 @@ const storageAccessPolicyParams =
   "?utm_source=devtools&utm_medium=firefox-cookie-errors&utm_campaign=default";
 const StorageAccessPolicyErrorDocs = {
   cookieBlockedPermission: "CookieBlockedByPermission",
-  cookieBlockedTracker: "CookieBlockedTracker",
+  cookieBlockedTracker: "BlockedCookieTracker",
   cookieBlockedAll: "CookieBlockedAll",
-  cookieBlockedForeign: "CookieBlockedForeign",
+  cookieBlockedForeign: "BlockedCookieForeign",
 };
 
 exports.GetURL = error => {

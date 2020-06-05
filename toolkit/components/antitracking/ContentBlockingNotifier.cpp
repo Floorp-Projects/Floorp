@@ -147,7 +147,7 @@ void ReportBlockingToConsole(uint64_t aWindowID, nsIURI* aURI,
             break;
 
           case nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER:
-            message = "CookieBlockedTracker";
+            message = "BlockedCookieTracker";
             category = NS_LITERAL_CSTRING("cookieBlockedTracker");
             break;
 
@@ -157,7 +157,7 @@ void ReportBlockingToConsole(uint64_t aWindowID, nsIURI* aURI,
             break;
 
           case nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN:
-            message = "CookieBlockedForeign";
+            message = "BlockedCookieForeign";
             category = NS_LITERAL_CSTRING("cookieBlockedForeign");
             break;
 
