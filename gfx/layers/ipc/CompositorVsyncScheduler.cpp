@@ -172,11 +172,25 @@ void CompositorVsyncScheduler::ScheduleComposition() {
 bool CompositorVsyncScheduler::NotifyVsync(const VsyncEvent& aVsync) {
   // Called from the vsync dispatch thread. When in the GPU Process, that's
   // the same as the compositor thread.
-  MOZ_ASSERT_IF(XRE_IsParentProcess(),
-                !CompositorThreadHolder::IsInCompositorThread());
+#ifdef DEBUG
+#  ifdef MOZ_WAYLAND
+  // On Wayland, we dispatch vsync from the main thread, without a GPU process.
+  // To allow this, we skip the following asserts if we're currently utilizing
+  // the Wayland backend. The IsParentProcess guard is needed to ensure that
+  // we don't accidentally attempt to initialize the gfxPlatform in the GPU
+  // process on X11.
+  if (!XRE_IsParentProcess() ||
+      !gfxPlatformGtk::GetPlatform()->IsWaylandDisplay())
+#  endif  // MOZ_WAYLAND
+  {
+    MOZ_ASSERT_IF(XRE_IsParentProcess(),
+                  !CompositorThreadHolder::IsInCompositorThread());
+    MOZ_ASSERT(!NS_IsMainThread());
+  }
+
   MOZ_ASSERT_IF(XRE_GetProcessType() == GeckoProcessType_GPU,
                 CompositorThreadHolder::IsInCompositorThread());
-  MOZ_ASSERT(!NS_IsMainThread());
+#endif  // DEBUG
 
 #if defined(MOZ_WIDGET_ANDROID)
   gfx::VRManager* vm = gfx::VRManager::Get();
