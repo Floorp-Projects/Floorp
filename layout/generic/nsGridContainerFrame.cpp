@@ -3651,24 +3651,6 @@ void nsGridContainerFrame::GridReflowInput::CalculateTrackSizes(
                              aConstraint);
 }
 
-/**
- * (XXX share this utility function with nsFlexContainerFrame at some point)
- *
- * Helper for BuildDisplayList, to implement this special-case for grid
- * items from the spec:
- *   The painting order of grid items is exactly the same as inline blocks,
- *   except that [...] 'z-index' values other than 'auto' create a stacking
- *   context even if 'position' is 'static'.
- * http://dev.w3.org/csswg/css-grid/#z-order
- */
-static nsIFrame::DisplayChildFlag GetDisplayFlagsForGridItem(nsIFrame* aFrame) {
-  const nsStylePosition* pos = aFrame->StylePosition();
-  if (pos->mZIndex.IsInteger()) {
-    return nsIFrame::DisplayChildFlag::ForceStackingContext;
-  }
-  return nsIFrame::DisplayChildFlag::ForcePseudoStackingContext;
-}
-
 // Align an item's margin box in its aAxis inside aCBSize.
 static void AlignJustifySelf(StyleAlignFlags aAlignment, LogicalAxis aAxis,
                              AlignJustifyFlags aFlags, nscoord aBaselineAdjust,
@@ -9252,7 +9234,7 @@ void nsGridContainerFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   for (; !iter.AtEnd(); iter.Next()) {
     nsIFrame* child = *iter;
     BuildDisplayListForChild(aBuilder, child, aLists,
-                             ::GetDisplayFlagsForGridItem(child));
+                             child->DisplayFlagForFlexOrGridItem());
   }
 }
 
