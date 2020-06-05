@@ -398,6 +398,10 @@ class GeckoWebExtensionTest {
         extension.registerTabHandler(session, tabHandler)
         verify(webExtensionSessionController).setTabDelegate(eq(nativeGeckoWebExt), tabDelegateCaptor.capture())
 
+        assertFalse(extension.hasTabHandler(session))
+        whenever(webExtensionSessionController.getTabDelegate(nativeGeckoWebExt)).thenReturn(tabDelegateCaptor.value)
+        assertTrue(extension.hasTabHandler(session))
+
         // Verify that tab methods are forwarded to the handler
         val tabBundle = GeckoBundle()
         tabBundle.putBoolean("active", true)

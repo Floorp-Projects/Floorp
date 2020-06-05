@@ -331,6 +331,14 @@ class GeckoWebExtension(
     }
 
     /**
+     * See [WebExtension.hasTabHandler].
+     */
+    override fun hasTabHandler(session: EngineSession): Boolean {
+        val geckoSession = (session as GeckoEngineSession).geckoSession
+        return geckoSession.webExtensionController.getTabDelegate(nativeExtension) != null
+    }
+
+    /**
      * See [WebExtension.getMetadata].
      */
     override fun getMetadata(): Metadata? {

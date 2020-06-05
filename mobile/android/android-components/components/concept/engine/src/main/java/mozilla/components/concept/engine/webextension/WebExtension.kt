@@ -139,6 +139,15 @@ abstract class WebExtension(
     abstract fun registerTabHandler(session: EngineSession, tabHandler: TabHandler)
 
     /**
+     * Checks whether there is an existing tab handler for the provided
+     * session.
+     *
+     * @param session the session the tab handler was registered for.
+     * @return true if an tab handler is registered, otherwise false.
+     */
+    abstract fun hasTabHandler(session: EngineSession): Boolean
+
+    /**
      * Returns additional information about this extension.
      *
      * @return extension [Metadata], or null if the extension isn't
