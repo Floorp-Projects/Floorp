@@ -357,29 +357,20 @@ class WebConsole {
     return panel.selection;
   }
 
-  async onViewSourceInDebugger(frame) {
+  async onViewSourceInDebugger({ id, url, line, column }) {
     if (this.toolbox) {
-      await this.toolbox.viewSourceInDebugger(
-        frame.url,
-        frame.line,
-        frame.column,
-        frame.sourceId
-      );
+      await this.toolbox.viewSourceInDebugger(url, line, column, id);
 
       this.recordEvent("jump_to_source");
       this.emitForTests("source-in-debugger-opened");
     }
   }
 
-  async onViewSourceInStyleEditor(frame) {
+  async onViewSourceInStyleEditor({ url, line, column }) {
     if (!this.toolbox) {
       return;
     }
-    await this.toolbox.viewSourceInStyleEditorByURL(
-      frame.url,
-      frame.line,
-      frame.column
-    );
+    await this.toolbox.viewSourceInStyleEditorByURL(url, line, column);
     this.recordEvent("jump_to_source");
   }
 

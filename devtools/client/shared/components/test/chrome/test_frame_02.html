@@ -41,7 +41,7 @@ window.onload = async function () {
             }
           : null);
       },
-      subscribeByURL: function (url, line, column, callback) {
+      subscribeByLocation: function (loc, callback) {
         this._callback = callback;
         // Resolve immediately.
         this._update();
