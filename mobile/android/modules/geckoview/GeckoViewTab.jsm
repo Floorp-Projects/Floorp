@@ -45,7 +45,7 @@ const GeckoViewTabBridge = {
   /**
    * Converts windowId to tabId as in GeckoView every browser window has exactly one tab.
    *
-   * @param {windowId} number outerWindowId
+   * @param {number} windowId outerWindowId
    *
    * @returns {number} tabId
    */
@@ -56,7 +56,7 @@ const GeckoViewTabBridge = {
   /**
    * Converts tabId to windowId.
    *
-   * @param {windowId} number
+   * @param {number} tabId
    *
    * @returns {number}
    *          outerWindowId of browser window to which the tab belongs.
@@ -66,13 +66,31 @@ const GeckoViewTabBridge = {
   },
 
   /**
+   * Delegates openOptionsPage handling to the app.
+   *
+   * @param {number} extensionId
+   *        The ID of the extension requesting the options menu.
+   *
+   * @returns {Promise<Void>}
+   *          A promise resolved after successful handling.
+   */
+  async openOptionsPage(extensionId) {
+    debug`openOptionsPage for extensionId ${extensionId}`;
+
+    return EventDispatcher.instance.sendRequestForResult({
+      type: "GeckoView:WebExtension:OpenOptionsPage",
+      extensionId,
+    });
+  },
+
+  /**
    * Request the GeckoView App to create a new tab (GeckoSession).
    *
    * @param {object} options
-   * @param {string} options.url The url to load in the newly created tab
-   * @param {nsIPrincipal} options.triggeringPrincipal
-   * @param {boolean} [options.disallowInheritPrincipal]
    * @param {string} options.extensionId
+   *        The ID of the extension that requested a new tab.
+   * @param {object} options.createProperties
+   *        The properties for the new tab, see tabs.create reference for details.
    *
    * @returns {Promise<Tab>}
    *          A promise resolved to the newly created tab.
@@ -80,6 +98,8 @@ const GeckoViewTabBridge = {
    *         Throws an error if the GeckoView app doesn't support tabs.create or fails to handle the request.
    */
   async createNewTab({ extensionId, createProperties } = {}) {
+    debug`createNewTab`;
+
     const sessionId = await EventDispatcher.instance.sendRequestForResult({
       type: "GeckoView:WebExtension:NewTab",
       extensionId,

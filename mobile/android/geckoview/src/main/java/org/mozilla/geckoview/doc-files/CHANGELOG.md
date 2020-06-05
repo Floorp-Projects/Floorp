@@ -13,6 +13,13 @@ exclude: true
 
 ⚠️  breaking change and deprecation notices
 
+## v79
+- Added `runtime.openOptionsPage` support. For `options_ui.open_in_new_tab` ==
+  `false`, [`TabDelegate.onOpenOptionsPage`][79.1] is called.
+  ([bug 1618058]({{bugzilla}}1619766))
+
+[79.1]: {{javadoc_uri}}/WebExtension.TabDelegate.html#onOpenOptionsPage-org.mozilla.geckoview.WebExtension-
+
 ## v78
 - Added [`WebExtensionController.installBuiltIn`][78.1] that allows installing an
   extension that is bundled with the APK. This method is meant as a replacement
@@ -712,4 +719,4 @@ exclude: true
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: f334c3c72b512156da2d96b2d2e7bbf4392c0b0e
+[api-version]: c75d02b7653f49b0d301d95a50f6d559dca1c48c

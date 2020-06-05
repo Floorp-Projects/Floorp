@@ -832,6 +832,8 @@ public class WebExtensionController {
                                      final EventCallback callback, final GeckoSession session) {
         final Message message = new Message(event, bundle, callback, session);
 
+        Log.d(LOGTAG, "handleMessage " + event);
+
         if ("GeckoView:WebExtension:Disconnect".equals(event)) {
             disconnect(bundle.getLong("portId", -1), callback);
             return;
@@ -880,6 +882,9 @@ public class WebExtensionController {
                 return;
             } else if ("GeckoView:PageAction:OpenPopup".equals(event)) {
                 openPopup(message, extension, WebExtension.Action.TYPE_PAGE_ACTION);
+                return;
+            } else if ("GeckoView:WebExtension:OpenOptionsPage".equals(event)) {
+                openOptionsPage(message, extension);
                 return;
             }
 
@@ -984,6 +989,22 @@ public class WebExtensionController {
             response.putBoolean("allow", AllowOrDeny.ALLOW.equals(allowOrDeny));
             callback.sendSuccess(response);
         });
+    }
+
+    /* package */ void openOptionsPage(
+            final Message message,
+            final WebExtension extension) {
+        final GeckoBundle bundle = message.bundle;
+        final WebExtension.TabDelegate delegate =
+              mListener.getTabDelegate(extension);
+
+        if (delegate != null) {
+            delegate.onOpenOptionsPage(extension);
+        } else {
+            // TODO: Save as pending?
+        }
+
+        message.callback.sendSuccess(null);
     }
 
     /* package */ void newTab(final Message message, final WebExtension extension) {

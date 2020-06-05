@@ -1,4 +1,16 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 "use strict";
+
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+
+XPCOMUtils.defineLazyModuleGetters(this, {
+  mobileWindowTracker: "resource://gre/modules/GeckoViewWebExtension.jsm",
+});
 
 // This function is pretty tightly tied to Extension.jsm.
 // Its job is to fill in the |tab| property of the sender.
@@ -37,9 +49,35 @@ extensions.on("page-shutdown", (type, context) => {
 });
 /* eslint-enable mozilla/balanced-listeners */
 
-global.openOptionsPage = extension => {
-  // TODO: Bug 1619766
-  return Promise.reject({ message: "Not implemented yet." });
+global.openOptionsPage = async extension => {
+  const { options_ui } = extension.manifest;
+  const extensionId = extension.id;
+
+  if (options_ui.open_in_tab) {
+    // Delegate new tab creation and open the options page in the new tab.
+    const tab = await GeckoViewTabBridge.createNewTab({
+      extensionId,
+      createProperties: {
+        url: options_ui.page,
+        active: true,
+      },
+    });
+
+    const { browser } = tab;
+    const flags = Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
+
+    browser.loadURI(options_ui.page, {
+      flags,
+      triggeringPrincipal: extension.principal,
+    });
+
+    const newWindow = browser.ownerGlobal;
+    mobileWindowTracker.setTabActive(newWindow, true);
+    return;
+  }
+
+  // Delegate option page handling to the app.
+  return GeckoViewTabBridge.openOptionsPage(extensionId);
 };
 
 extensions.registerModules({

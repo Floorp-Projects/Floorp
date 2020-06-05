@@ -1635,6 +1635,7 @@ package org.mozilla.geckoview {
 
   public static interface WebExtension.TabDelegate {
     method @UiThread @Nullable default public GeckoResult<GeckoSession> onNewTab(@NonNull WebExtension, @NonNull WebExtension.CreateTabDetails);
+    method @UiThread default public void onOpenOptionsPage(@NonNull WebExtension);
   }
 
   public static class WebExtension.UpdateTabDetails {
