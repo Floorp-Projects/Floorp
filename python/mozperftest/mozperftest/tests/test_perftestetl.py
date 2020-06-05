@@ -42,7 +42,7 @@ def test_parse_file_grouping(ptetls):
 
 def test_process(ptetls, files):
     # Temporary resource files.
-    files, _, output = files
+    files, output = files["resources"], files["output"]
     file_1 = files["file_1"]
     file_2 = files["file_2"]
 
