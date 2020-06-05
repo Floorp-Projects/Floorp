@@ -673,11 +673,11 @@ WithEnvironmentObject* WithEnvironmentObject::create(JSContext* cx,
     return nullptr;
   }
 
-  Value thisv = GetThisValue(object);
+  JSObject* thisObj = GetThisObject(object);
 
   obj->initEnclosingEnvironment(enclosing);
   obj->initReservedSlot(OBJECT_SLOT, ObjectValue(*object));
-  obj->initReservedSlot(THIS_SLOT, thisv);
+  obj->initReservedSlot(THIS_SLOT, ObjectValue(*thisObj));
   if (scope) {
     obj->initReservedSlot(SCOPE_SLOT, PrivateGCThingValue(scope));
   } else {

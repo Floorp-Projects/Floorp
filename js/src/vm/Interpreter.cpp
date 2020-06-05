@@ -154,7 +154,7 @@ bool js::GetFunctionThis(JSContext* cx, AbstractFramePtr frame,
         // This can only happen in Debugger eval frames: in that case we
         // don't always have a global lexical env, see EvaluateInEnv.
         MOZ_ASSERT(env->is<GlobalObject>());
-        res.set(GetThisValue(env));
+        res.setObject(*GetThisObject(env));
         return true;
       }
       env = env->enclosingEnvironment();
@@ -176,7 +176,7 @@ void js::GetNonSyntacticGlobalThis(JSContext* cx, HandleObject envChain,
       // This can only happen in Debugger eval frames: in that case we
       // don't always have a global lexical env, see EvaluateInEnv.
       MOZ_ASSERT(env->is<GlobalObject>());
-      res.set(GetThisValue(env));
+      res.setObject(*GetThisObject(env));
       return;
     }
     env = env->enclosingEnvironment();
@@ -640,8 +640,8 @@ static bool InternalCall(JSContext* cx, const AnyInvokeArgs& args,
             .as<JSFunction>()
             .jitInfo()
             ->needsOuterizedThisObject()) {
-      JSObject* thisObj = &args.thisv().toObject();
-      args.mutableThisv().set(GetThisValue(thisObj));
+      JSObject* thisObj = GetThisObject(&args.thisv().toObject());
+      args.mutableThisv().setObject(*thisObj);
     }
   }
 
@@ -1393,7 +1393,7 @@ static inline Value ComputeImplicitThis(JSObject* env) {
 
   // WithEnvironmentObjects have an actual implicit |this|
   if (env->is<WithEnvironmentObject>()) {
-    return GetThisValueOfWith(env);
+    return ObjectValue(*GetThisObjectOfWith(env));
   }
 
   // Debugger environments need special casing, as despite being
