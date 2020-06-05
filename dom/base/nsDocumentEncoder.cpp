@@ -256,8 +256,12 @@ class nsDocumentEncoder : public nsIDocumentEncoder {
     return -1;
   }
 
-  bool IsInvisibleNodeAndShouldBeSkipped(const nsINode& aNode) const {
-    if (mFlags & SkipInvisibleContent) {
+  /**
+   * @param aFlags multiple of the flags defined in nsIDocumentEncoder.idl.o
+   */
+  static bool IsInvisibleNodeAndShouldBeSkipped(const nsINode& aNode,
+                                                const uint32_t aFlags) {
+    if (aFlags & SkipInvisibleContent) {
       // Treat the visibility of the ShadowRoot as if it were
       // the host content.
       //
@@ -666,7 +670,7 @@ nsresult nsDocumentEncoder::SerializeNodeStart(nsINode& aOriginalNode,
     }
   }
 
-  if (IsInvisibleNodeAndShouldBeSkipped(aOriginalNode)) {
+  if (IsInvisibleNodeAndShouldBeSkipped(aOriginalNode, mFlags)) {
     return NS_OK;
   }
 
@@ -730,7 +734,7 @@ nsresult nsDocumentEncoder::SerializeNodeEnd(nsINode& aOriginalNode,
     }
   }
 
-  if (IsInvisibleNodeAndShouldBeSkipped(aOriginalNode)) {
+  if (IsInvisibleNodeAndShouldBeSkipped(aOriginalNode, mFlags)) {
     return NS_OK;
   }
 
@@ -761,7 +765,7 @@ nsresult nsDocumentEncoder::SerializeToStringRecursive(nsINode* aNode,
 
   NS_ENSURE_TRUE(aNode, NS_ERROR_NULL_POINTER);
 
-  if (IsInvisibleNodeAndShouldBeSkipped(*aNode)) {
+  if (IsInvisibleNodeAndShouldBeSkipped(*aNode, mFlags)) {
     return NS_OK;
   }
 
@@ -852,7 +856,7 @@ nsresult nsDocumentEncoder::SerializeRangeNodes(const nsRange* const aRange,
   nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
   NS_ENSURE_TRUE(content, NS_ERROR_FAILURE);
 
-  if (IsInvisibleNodeAndShouldBeSkipped(*aNode)) {
+  if (IsInvisibleNodeAndShouldBeSkipped(*aNode, mFlags)) {
     return NS_OK;
   }
 
@@ -1091,7 +1095,7 @@ nsresult nsDocumentEncoder::SerializeRangeToString(const nsRange* aRange) {
       nsCOMPtr<nsIContent> content = do_QueryInterface(startContainer);
       if (content && !content->GetPrimaryFrame()) {
         nsIContent* parent = content->GetParent();
-        if (!parent || IsInvisibleNodeAndShouldBeSkipped(*parent)) {
+        if (!parent || IsInvisibleNodeAndShouldBeSkipped(*parent, mFlags)) {
           return NS_OK;
         }
       }
