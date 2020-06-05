@@ -2165,8 +2165,7 @@ PeerConnectionWrapper.prototype = {
               } else {
                 ok(rem.type == "remote-outbound-rtp", "Rtcp is outbound");
                 ok(rem.packetsSent !== undefined, "Rtcp packetsSent");
-                // We may have received more than outdated Rtcp packetsSent
-                ok(rem.bytesSent >= rem.packetsSent, "Rtcp bytesSent");
+                ok(rem.bytesSent !== undefined, "Rtcp bytesSent");
               }
               ok(rem.ssrc == res.ssrc, "Remote ssrc match");
             } else {
