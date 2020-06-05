@@ -61,15 +61,15 @@ contents_hash.update(b"\x00")
 
 untracked_files = []
 
-changes_lines = iter(ln.strip() for ln in changes.split(b"\n"))
+# First, get a list of all untracked files sans standard exclusions.
+
+# -o is for getting other (i.e. untracked) files
+# --exclude-standard is to handle standard Git exclusions: .git/info/exclude, .gitignore in each directory,
+# and the user's global exclusion file.
+changes_others = run_cmd_checked(["git", "ls-files", "-o", "--exclude-standard"], capture_output=True).stdout
+changes_lines = iter(ln.strip() for ln in changes_others.split(b"\n"))
+
 try:
-    ln = next(changes_lines)
-    # Skip the tracked files.
-    while not ln.startswith(b"Untracked files:"):
-        ln = next(changes_lines)
-    # Skip instructional line about using `git add`.
-    ln = next(changes_lines)
-    # Now we're at the list of untracked files.
     ln = next(changes_lines)
     while ln:
         untracked_files.append(ln)
@@ -77,20 +77,23 @@ try:
 except StopIteration:
     pass
 
+# Then, account for some excluded files that we care about.
 untracked_files.extend(GITIGNORED_FILES_THAT_AFFECT_THE_BUILD)
 
-# So, we'll need to slurp the contents of such files for ourselves.
-
-for nm in untracked_files:
-    with open(nm, "rb") as f:
-        contents_hash.update(f.read())
-    contents_hash.update(b"\x00")
+# Finally, get hashes of everything.
+# Skip files that don't exist, e.g. missing GITIGNORED_FILES_THAT_AFFECT_THE_BUILD. `hash-object` errors out if it gets
+# a non-existent file, so we hope that disk won't change between this filter and the cmd run just below.
+filtered_untracked = [nm for nm in untracked_files if os.path.isfile(nm)]
+# Reading contents of the files is quite slow when there are lots of them, so delegate to `git hash-object`.
+git_hash_object_cmd = ["git", "hash-object"]
+git_hash_object_cmd.extend(filtered_untracked)
+changes_untracked = run_cmd_checked(git_hash_object_cmd, capture_output=True).stdout
+contents_hash.update(changes_untracked)
 contents_hash.update(b"\x00")
 
 contents_hash = contents_hash.hexdigest()
 
 # If the contents hash has changed since last publish, re-publish.
-
 last_contents_hash = ""
 try:
     with open(LAST_CONTENTS_HASH_FILE) as f:
