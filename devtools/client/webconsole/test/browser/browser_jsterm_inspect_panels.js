@@ -47,15 +47,6 @@ async function testInspectingFunction(hud) {
   );
   ok(true, "inspected source-mapped function is now selected in the debugger");
 
-  info("Test `inspect(test_mangled)` with sourcemaps disabled");
-  SpecialPowers.pushPrefEnv({
-    set: [["devtools.source-map.client-service.enabled", false]],
-  });
-  execute(hud, "inspect(test_mangled)");
-  await waitFor(expectedSourceSelected("test-mangled-function.js", 1));
-  ok(true, "non source-mapped function is now selected in the debugger");
-  SpecialPowers.popPrefEnv();
-
   info("Test `inspect(test_bound)`");
   execute(hud, "inspect(test_bound)");
   await waitFor(expectedSourceSelected("test-simple-function.js", 7));
