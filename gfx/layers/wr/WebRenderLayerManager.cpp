@@ -671,6 +671,18 @@ void WebRenderLayerManager::WaitOnTransactionProcessed() {
 
 void WebRenderLayerManager::SendInvalidRegion(const nsIntRegion& aRegion) {
   // XXX Webrender does not support invalid region yet.
+
+#ifdef XP_WIN
+  // When DWM is disabled, each window does not have own back buffer. They would
+  // paint directly to a buffer that was to be displayed by the video card.
+  // WM_PAINT via SendInvalidRegion() requests necessary re-paint.
+  const bool needsInvalidate = !gfx::gfxVars::DwmCompositionEnabled();
+#else
+  const bool needsInvalidate = true;
+#endif
+  if (needsInvalidate && WrBridge()) {
+    WrBridge()->SendInvalidateRenderedFrame();
+  }
 }
 
 void WebRenderLayerManager::ScheduleComposite() {
