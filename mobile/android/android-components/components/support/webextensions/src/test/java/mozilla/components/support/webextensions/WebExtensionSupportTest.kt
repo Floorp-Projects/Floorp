@@ -9,6 +9,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
+import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.EngineAction
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.action.WebExtensionAction
@@ -326,9 +327,16 @@ class WebExtensionSupportTest {
         val tabHandlerCaptor = argumentCaptor<TabHandler>()
         verify(ext).registerActionHandler(eq(engineSession), actionHandlerCaptor.capture())
         verify(ext).registerTabHandler(eq(engineSession), tabHandlerCaptor.capture())
+        whenever(ext.hasActionHandler(engineSession)).thenReturn(true)
+        whenever(ext.hasTabHandler(engineSession)).thenReturn(true)
+
+        // Verify we only register the handlers once
+        store.dispatch(ContentAction.UpdateUrlAction(sessionId = "1", url = "https://www.firefox.com")).joinBlocking()
+        verify(ext, times(1)).registerActionHandler(eq(engineSession), actionHandlerCaptor.capture())
+        verify(ext, times(1)).registerTabHandler(eq(engineSession), tabHandlerCaptor.capture())
 
         actionHandlerCaptor.value.onBrowserAction(ext, engineSession, mock())
-        verify(store, times(3)).dispatch(actionCaptor.capture())
+        verify(store, times(4)).dispatch(actionCaptor.capture())
         assertEquals(ext.id, (actionCaptor.allValues.last() as WebExtensionAction.UpdateTabBrowserAction).extensionId)
 
         tabHandlerCaptor.value.onUpdateTab(ext, engineSession, true, null)

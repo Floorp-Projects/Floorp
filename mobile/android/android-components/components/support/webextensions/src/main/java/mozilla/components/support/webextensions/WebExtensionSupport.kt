@@ -360,21 +360,15 @@ object WebExtensionSupport {
         session: EngineSession,
         sessionId: String
     ) {
-        val actionHandler = SessionActionHandler(store, sessionId)
-        registerSessionActionHandler(extension, session, actionHandler)
-
-        val tabHandler = SessionTabHandler(store, sessionId, onCloseTabOverride, onSelectTabOverride)
-        registerSessionTabHandler(extension, session, tabHandler)
-    }
-
-    private fun registerSessionActionHandler(ext: WebExtension, session: EngineSession, handler: SessionActionHandler) {
-        if (ext.supportActions && !ext.hasActionHandler(session)) {
-            ext.registerActionHandler(session, handler)
+        if (extension.supportActions && !extension.hasActionHandler(session)) {
+            val actionHandler = SessionActionHandler(store, sessionId)
+            extension.registerActionHandler(session, actionHandler)
         }
-    }
 
-    private fun registerSessionTabHandler(ext: WebExtension, session: EngineSession, handler: TabHandler) {
-        ext.registerTabHandler(session, handler)
+        if (!extension.hasTabHandler(session)) {
+            val tabHandler = SessionTabHandler(store, sessionId, onCloseTabOverride, onSelectTabOverride)
+            extension.registerTabHandler(session, tabHandler)
+        }
     }
 
     @Suppress("LongParameterList")
