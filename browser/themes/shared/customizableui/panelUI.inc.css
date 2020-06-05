@@ -1952,7 +1952,7 @@ panelview:not([mainview]) #PanelUI-whatsNew-title {
 
 #PanelUI-whatsNew .whatsNew-message-body {
   padding: 5px 0 10px;
-  margin-inline-start: 12px;
+  margin: 0 16px;
   text-align: inherit;
   text-decoration: none;
   color: inherit;
