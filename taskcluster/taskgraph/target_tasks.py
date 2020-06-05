@@ -265,6 +265,7 @@ def target_tasks_try_auto(full_task_graph, parameters, graph_config):
     return [l for l, t in six.iteritems(full_task_graph.tasks)
             if standard_filter(t, parameters)
             and filter_out_shipping_phase(t, parameters)
+            and filter_out_devedition(t, parameters)
             and filter_by_uncommon_try_tasks(t.label)]
 
 
