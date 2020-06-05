@@ -598,7 +598,7 @@
 
 - name: apz.windows.force_disable_direct_manipulation
   type: RelaxedAtomicBool
-  value: @IS_NOT_NIGHTLY_BUILD@
+  value: false
   mirror: always
 
 - name: apz.windows.use_direct_manipulation
