@@ -28,3 +28,4 @@ DOMIPCEnabled=1
 StartupTime=1000000000
 URL=about:home
 ContentSandboxCapabilities=119
+StackTraces=test
