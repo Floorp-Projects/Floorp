@@ -30,8 +30,8 @@ function clone_repo {
     ${CLONE_CMD}
   fi
 
-  ${HG} -R ${REPODIR} pull
-  ${HG} -R ${REPODIR} update -C default
+  ${HG} -R "${REPODIR}" pull
+  ${HG} -R "${REPODIR}" update -C default
 }
 
 # Push all pending commits to Phabricator
