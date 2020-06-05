@@ -72,14 +72,22 @@ this.trrselect = class trrselect extends ExtensionAPI {
           },
 
           async run() {
+            // If persisting the selection is disabled, clear the existing
+            // selection.
+            if (!Services.prefs.getBoolPref(kCommitSelectionPref, false)) {
+              Services.prefs.clearUserPref(kRolloutURIPref);
+            }
+
             if (!Services.prefs.getBoolPref(kEnabledPref, false)) {
               return;
             }
 
+            // If we already have a selection, nothing to be done.
             if (Services.prefs.prefHasUserValue(kRolloutURIPref)) {
               return;
             }
 
+            // Populate the dry-run-result if needed.
             await this.dryRun();
 
             // If persisting the selection is disabled, don't commit the value.
@@ -87,6 +95,7 @@ this.trrselect = class trrselect extends ExtensionAPI {
               return;
             }
 
+            // All good, commit the value!
             Services.prefs.setCharPref(
               kRolloutURIPref,
               Services.prefs.getCharPref(kDryRunResultPref)
