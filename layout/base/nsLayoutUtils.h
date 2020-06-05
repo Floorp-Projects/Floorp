@@ -74,6 +74,7 @@ class WritingMode;
 class DisplayItemClip;
 class EffectSet;
 struct ActiveScrolledRoot;
+enum class ScrollOrigin : uint8_t;
 enum class StyleImageOrientation : uint8_t;
 namespace dom {
 class CanvasRenderingContext2D;
@@ -149,6 +150,7 @@ class nsLayoutUtils {
   typedef mozilla::ContainerLayerParameters ContainerLayerParameters;
   typedef mozilla::IntrinsicSize IntrinsicSize;
   typedef mozilla::RelativeTo RelativeTo;
+  typedef mozilla::ScrollOrigin ScrollOrigin;
   typedef mozilla::ViewportType ViewportType;
   typedef mozilla::gfx::SourceSurface SourceSurface;
   typedef mozilla::gfx::sRGBColor sRGBColor;
@@ -2870,7 +2872,7 @@ class nsLayoutUtils {
    * returns true for those, and returns false for other origins like APZ
    * itself, or scroll position updates from the history restore code.
    */
-  static bool CanScrollOriginClobberApz(nsAtom* aScrollOrigin);
+  static bool CanScrollOriginClobberApz(ScrollOrigin aScrollOrigin);
 
   static ScrollMetadata ComputeScrollMetadata(
       nsIFrame* aForFrame, nsIFrame* aScrollFrame, nsIContent* aContent,

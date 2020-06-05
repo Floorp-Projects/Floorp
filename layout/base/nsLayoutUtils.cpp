@@ -24,6 +24,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/PerfStats.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/ScrollOrigin.h"
 #include "mozilla/ServoStyleSetInlines.h"
 #include "mozilla/StaticPrefs_apz.h"
 #include "mozilla/StaticPrefs_dom.h"
@@ -9023,9 +9024,15 @@ void nsLayoutUtils::SetVisualViewportSize(PresShell* aPresShell,
 }
 
 /* static */
-bool nsLayoutUtils::CanScrollOriginClobberApz(nsAtom* aScrollOrigin) {
-  return aScrollOrigin != nullptr && aScrollOrigin != nsGkAtoms::apz &&
-         aScrollOrigin != nsGkAtoms::restore;
+bool nsLayoutUtils::CanScrollOriginClobberApz(ScrollOrigin aScrollOrigin) {
+  switch (aScrollOrigin) {
+    case ScrollOrigin::NotSpecified:
+    case ScrollOrigin::Apz:
+    case ScrollOrigin::Restore:
+      return false;
+    default:
+      return true;
+  }
 }
 
 /* static */
@@ -9163,20 +9170,21 @@ ScrollMetadata nsLayoutUtils::ComputeScrollMetadata(
     // its scroll offset. We want to distinguish the case where the scroll
     // offset was "restored" because in that case the restored scroll position
     // should not overwrite a user-driven scroll.
-    nsAtom* lastOrigin = scrollableFrame->LastScrollOrigin();
-    if (lastOrigin == nsGkAtoms::restore) {
+    ScrollOrigin lastOrigin = scrollableFrame->LastScrollOrigin();
+    if (lastOrigin == ScrollOrigin::Restore) {
       metrics.SetScrollGeneration(scrollableFrame->CurrentScrollGeneration());
       metrics.SetScrollOffsetUpdateType(FrameMetrics::eRestore);
     } else if (CanScrollOriginClobberApz(lastOrigin)) {
-      if (lastOrigin == nsGkAtoms::relative) {
+      if (lastOrigin == ScrollOrigin::Relative) {
         metrics.SetIsRelative(true);
       }
       metrics.SetScrollGeneration(scrollableFrame->CurrentScrollGeneration());
       metrics.SetScrollOffsetUpdateType(FrameMetrics::eMainThread);
     }
 
-    nsAtom* lastSmoothScrollOrigin = scrollableFrame->LastSmoothScrollOrigin();
-    if (lastSmoothScrollOrigin) {
+    ScrollOrigin lastSmoothScrollOrigin =
+        scrollableFrame->LastSmoothScrollOrigin();
+    if (lastSmoothScrollOrigin != ScrollOrigin::NotSpecified) {
       metrics.SetSmoothScrollOffsetUpdated(
           scrollableFrame->CurrentScrollGeneration());
     }
