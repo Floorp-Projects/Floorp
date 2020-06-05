@@ -23,7 +23,7 @@ class DiskIconProcessorTest {
         val processor = DiskIconProcessor(cache)
         processor.process(mock(), mock(), mock(), icon, mock())
 
-        verify(cache, never()).put(any(), any(), any(), eq(icon))
+        verify(cache, never()).putIcon(any(), any(), eq(icon))
     }
 
     @Test
@@ -34,7 +34,7 @@ class DiskIconProcessorTest {
         val processor = DiskIconProcessor(cache)
         processor.process(mock(), mock(), mock(), icon, mock())
 
-        verify(cache, never()).put(any(), any(), any(), eq(icon))
+        verify(cache, never()).putIcon(any(), any(), eq(icon))
     }
 
     @Test
@@ -45,7 +45,7 @@ class DiskIconProcessorTest {
         val processor = DiskIconProcessor(cache)
         processor.process(mock(), mock(), mock(), icon, mock())
 
-        verify(cache, never()).put(any(), any(), any(), eq(icon))
+        verify(cache, never()).putIcon(any(), any(), eq(icon))
     }
 
     @Test
@@ -58,7 +58,7 @@ class DiskIconProcessorTest {
         val resource: IconRequest.Resource = mock()
         processor.process(mock(), request, resource, icon, mock())
 
-        verify(cache).put(any(), eq(request), eq(resource), eq(icon))
+        verify(cache).putIcon(any(), eq(resource), eq(icon))
     }
 
     @Test
@@ -71,7 +71,7 @@ class DiskIconProcessorTest {
         val resource: IconRequest.Resource = mock()
         processor.process(mock(), request, resource, icon, mock())
 
-        verify(cache).put(any(), eq(request), eq(resource), eq(icon))
+        verify(cache).putIcon(any(), eq(resource), eq(icon))
     }
 
     @Test
@@ -82,7 +82,7 @@ class DiskIconProcessorTest {
         val processor = DiskIconProcessor(cache)
         processor.process(context = mock(), request = mock(), resource = null, icon = icon, desiredSize = mock())
 
-        verify(cache, never()).put(any(), any(), any(), eq(icon))
+        verify(cache, never()).putIcon(any(), any(), eq(icon))
     }
 
     @Test
@@ -97,7 +97,7 @@ class DiskIconProcessorTest {
         val resource: IconRequest.Resource = mock()
         processor.process(context = mock(), request = request, resource = resource, icon = icon, desiredSize = mock())
 
-        verify(cache, never()).put(any(), any(), any(), eq(icon))
+        verify(cache, never()).putIcon(any(), any(), eq(icon))
     }
 
     @Test
@@ -112,6 +112,6 @@ class DiskIconProcessorTest {
         val resource: IconRequest.Resource = mock()
         processor.process(context = mock(), request = request, resource = resource, icon = icon, desiredSize = mock())
 
-        verify(cache).put(any(), eq(request), eq(resource), eq(icon))
+        verify(cache).putIcon(any(), eq(resource), eq(icon))
     }
 }
