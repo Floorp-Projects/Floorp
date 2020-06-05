@@ -36,11 +36,12 @@ struct DllBlockInfoT {
   // only when we are a child process.
   enum Flags {
     FLAGS_DEFAULT = 0,
-    BLOCK_WIN8_AND_OLDER = 1 << 0,
-    USE_TIMESTAMP = 1 << 1,
-    CHILD_PROCESSES_ONLY = 1 << 2,
-    BROWSER_PROCESS_ONLY = 1 << 3,
-    REDIRECT_TO_NOOP_ENTRYPOINT = 1 << 4,
+    BLOCK_WIN7_AND_OLDER = 1 << 0,
+    BLOCK_WIN8_AND_OLDER = 1 << 1,
+    USE_TIMESTAMP = 1 << 2,
+    CHILD_PROCESSES_ONLY = 1 << 3,
+    BROWSER_PROCESS_ONLY = 1 << 4,
+    REDIRECT_TO_NOOP_ENTRYPOINT = 1 << 5,
   } mFlags;
 
   bool IsVersionBlocked(const uint64_t aOther) const {
