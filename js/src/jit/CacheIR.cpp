@@ -5591,6 +5591,57 @@ AttachDecision CallIRGenerator::tryAttachMathATan2(HandleFunction callee) {
   return AttachDecision::Attach;
 }
 
+AttachDecision CallIRGenerator::tryAttachMathMinMax(HandleFunction callee,
+                                                    bool isMax) {
+  // For now only optimize if there are 1-4 arguments.
+  if (argc_ < 1 || argc_ > 4) {
+    return AttachDecision::NoAction;
+  }
+
+  // Ensure all arguments are numbers.
+  bool allInt32 = true;
+  for (size_t i = 0; i < argc_; i++) {
+    if (!args_[i].isNumber()) {
+      return AttachDecision::NoAction;
+    }
+    if (!args_[i].isInt32()) {
+      allInt32 = false;
+    }
+  }
+
+  // Initialize the input operand.
+  Int32OperandId argcId(writer.setInputOperandId(0));
+
+  // Guard callee is this Math function.
+  emitNativeCalleeGuard(callee);
+
+  if (allInt32) {
+    ValOperandId valId = writer.loadStandardCallArgument(0, argc_);
+    Int32OperandId resId = writer.guardToInt32(valId);
+    for (size_t i = 1; i < argc_; i++) {
+      ValOperandId argId = writer.loadStandardCallArgument(i, argc_);
+      Int32OperandId argInt32Id = writer.guardToInt32(argId);
+      resId = writer.int32MinMax(isMax, resId, argInt32Id);
+    }
+    writer.loadInt32Result(resId);
+  } else {
+    ValOperandId valId = writer.loadStandardCallArgument(0, argc_);
+    NumberOperandId resId = writer.guardIsNumber(valId);
+    for (size_t i = 1; i < argc_; i++) {
+      ValOperandId argId = writer.loadStandardCallArgument(i, argc_);
+      NumberOperandId argNumId = writer.guardIsNumber(argId);
+      resId = writer.numberMinMax(isMax, resId, argNumId);
+    }
+    writer.loadDoubleResult(resId);
+  }
+
+  writer.typeMonitorResult();
+  cacheIRStubKind_ = BaselineCacheIRStubKind::Monitored;
+
+  trackAttached(isMax ? "MathMax" : "MathMin");
+  return AttachDecision::Attach;
+}
+
 AttachDecision CallIRGenerator::tryAttachMathFunction(HandleFunction callee,
                                                       UnaryMathFunction fun) {
   // Need one argument.
@@ -5893,6 +5944,10 @@ AttachDecision CallIRGenerator::tryAttachInlinableNative(
       return tryAttachMathFunction(callee, UnaryMathFunction::Cbrt);
     case InlinableNative::MathPow:
       return tryAttachMathPow(callee);
+    case InlinableNative::MathMin:
+      return tryAttachMathMinMax(callee, /* isMax = */ false);
+    case InlinableNative::MathMax:
+      return tryAttachMathMinMax(callee, /* isMax = */ true);
 
     // Map intrinsics.
     case InlinableNative::IntrinsicGuardToMapObject:
