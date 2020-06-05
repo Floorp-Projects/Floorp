@@ -3142,9 +3142,9 @@ toolbar#nav-bar {
 
         def countline(self, message):
             if message['action'] == 'log':
-                line = message['message']
+                line = message.get('message', '')
             elif message['action'] == 'process_output':
-                line = message['data']
+                line = message.get('data', '')
             else:
                 return message
             val = 0
