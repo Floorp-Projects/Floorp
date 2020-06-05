@@ -85,8 +85,13 @@ const SEARCH_FILTERS = [
   "ask",
   "duckduckgo",
 ];
-const AMAZON_SEARCH_TILE_OVERRIDE_PREF =
-  "browser.newtabpage.searchTileOverride.amazon.url";
+let SEARCH_TILE_OVERRIDE_PREFS = new Map();
+for (let searchProvider of ["amazon", "google"]) {
+  SEARCH_TILE_OVERRIDE_PREFS.set(
+    `browser.newtabpage.searchTileOverride.${searchProvider}.url`,
+    searchProvider
+  );
+}
 
 function getShortURLForCurrentSearch() {
   const url = shortURL({ url: Services.search.defaultEngine.searchForm });
@@ -125,13 +130,17 @@ this.TopSitesFeed = class TopSitesFeed {
     this._storage = this.store.dbStorage.getDbTable("sectionPrefs");
     this.refresh({ broadcast: true });
     Services.obs.addObserver(this, "browser-search-engine-modified");
-    Services.prefs.addObserver(AMAZON_SEARCH_TILE_OVERRIDE_PREF, this);
+    for (let [pref] of SEARCH_TILE_OVERRIDE_PREFS) {
+      Services.prefs.addObserver(pref, this);
+    }
   }
 
   uninit() {
     PageThumbs.removeExpirationFilter(this);
     Services.obs.removeObserver(this, "browser-search-engine-modified");
-    Services.prefs.removeObserver(AMAZON_SEARCH_TILE_OVERRIDE_PREF, this);
+    for (let [pref] of SEARCH_TILE_OVERRIDE_PREFS) {
+      Services.prefs.removeObserver(pref, this);
+    }
   }
 
   observe(subj, topic, data) {
@@ -147,7 +156,7 @@ this.TopSitesFeed = class TopSitesFeed {
       this.refresh({ broadcast: true });
     } else if (
       topic === "nsPref:changed" &&
-      data === AMAZON_SEARCH_TILE_OVERRIDE_PREF
+      SEARCH_TILE_OVERRIDE_PREFS.has(data)
     ) {
       this.refresh({ broadcast: true });
     }
@@ -406,19 +415,20 @@ this.TopSitesFeed = class TopSitesFeed {
     // Insert the original pinned sites into the deduped frecent and defaults
     const withPinned = insertPinned(checkedAdult, pinned).slice(0, numItems);
 
-    let amazonSearchTileOverrideURL = Services.prefs.getStringPref(
-      AMAZON_SEARCH_TILE_OVERRIDE_PREF,
-      ""
-    );
-    if (amazonSearchTileOverrideURL) {
-      let date = new Date();
-      let pad = number => number.toString().padStart(2, "0");
-      amazonSearchTileOverrideURL = amazonSearchTileOverrideURL.replace(
-        "%YYYYMMDD%",
-        String(date.getFullYear()) +
-          pad(date.getMonth() + 1) +
-          pad(date.getDate())
-      );
+    let searchTileOverrideURLs = new Map();
+    for (let [pref, hostname] of SEARCH_TILE_OVERRIDE_PREFS) {
+      let url = Services.prefs.getStringPref(pref, "");
+      if (url) {
+        let date = new Date();
+        let pad = number => number.toString().padStart(2, "0");
+        url = url.replace(
+          "%YYYYMMDD%",
+          String(date.getFullYear()) +
+            pad(date.getMonth() + 1) +
+            pad(date.getDate())
+        );
+        searchTileOverrideURLs.set(hostname, url);
+      }
     }
 
     // Now, get a tippy top icon, a rich icon, or screenshot for every item
@@ -439,16 +449,16 @@ this.TopSitesFeed = class TopSitesFeed {
         // Indicate that these links should get a frecency bonus when clicked
         link.typedBonus = true;
 
-        if (amazonSearchTileOverrideURL) {
+        for (let [hostname, url] of searchTileOverrideURLs) {
           // The `searchVendor` property is set if the engine was re-added manually.
           if (
             link.searchTopSite &&
             !link.searchVendor &&
-            link.label === "@amazon"
+            link.hostname === hostname
           ) {
             delete link.searchTopSite;
             delete link.label;
-            link.url = amazonSearchTileOverrideURL;
+            link.url = url;
             link.overriddenSearchTopSite = true;
           }
         }
