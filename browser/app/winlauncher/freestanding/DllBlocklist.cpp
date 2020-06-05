@@ -163,21 +163,16 @@ static BlockAction CheckBlockInfo(const DllBlockInfo* aInfo,
                                   uint64_t& aVersion) {
   aVersion = DllBlockInfo::ALL_VERSIONS;
 
-  if (aInfo->mFlags &
-      (DllBlockInfo::BLOCK_WIN8PLUS_ONLY | DllBlockInfo::BLOCK_WIN8_ONLY)) {
+  if (aInfo->mFlags & DllBlockInfo::BLOCK_WIN8_AND_OLDER) {
     RTL_OSVERSIONINFOW osv = {sizeof(osv)};
     NTSTATUS ntStatus = ::RtlGetVersion(&osv);
     if (!NT_SUCCESS(ntStatus)) {
       return BlockAction::Error;
     }
 
-    if (osv.dwMajorVersion < 8) {
-      return BlockAction::Allow;
-    }
-
-    if ((aInfo->mFlags & DllBlockInfo::BLOCK_WIN8_ONLY) &&
-        (osv.dwMajorVersion > 8 ||
-         (osv.dwMajorVersion == 8 && osv.dwMinorVersion > 0))) {
+    if ((aInfo->mFlags & DllBlockInfo::BLOCK_WIN8_AND_OLDER) &&
+        (osv.dwMajorVersion > 6 ||
+         (osv.dwMajorVersion == 6 && osv.dwMinorVersion > 2))) {
       return BlockAction::Allow;
     }
   }
