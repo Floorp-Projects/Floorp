@@ -352,7 +352,6 @@ struct IPDLProperty
 struct ParentShowInfo
 {
   nsString name;
-  bool fullscreenAllowed;
   bool fakeShowInfo;
   bool isTransparent;
   float dpi;
