@@ -58,13 +58,27 @@ const { navigate } = ChromeUtils.import(
 );
 const { proxy } = ChromeUtils.import("chrome://marionette/content/proxy.js");
 
-XPCOMUtils.defineLazyGetter(this, "logger", () =>
-  Log.getWithPrefix(outerWindowID)
-);
+XPCOMUtils.defineLazyGetter(this, "logger", () => Log.getWithPrefix(contentId));
+
 XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
 
-let { outerWindowID } = winUtil;
-let curContainer = { frame: content, shadowRoot: null };
+const contentId = winUtil.outerWindowID;
+
+const curContainer = {
+  _frame: null,
+  shadowRoot: null,
+
+  get frame() {
+    return this._frame;
+  },
+
+  set frame(frame) {
+    this._frame = frame;
+
+    this.id = this._frame.windowUtils.outerWindowID;
+    this.shadowRoot = null;
+  },
+};
 
 // Listen for click event to indicate one click has happened, so actions
 // code can send dblclick event
@@ -373,9 +387,7 @@ const loadListener = {
   },
 
   observe(subject, topic) {
-    const win = curContainer.frame;
     const winID = subject.QueryInterface(Ci.nsISupportsPRUint64).data;
-    const curWinID = win.windowUtils.outerWindowID;
 
     logger.trace(`Received observer notification ${topic}`);
 
@@ -383,7 +395,7 @@ const loadListener = {
       // In the case when the currently selected frame is closed,
       // there will be no further load events. Stop listening immediately.
       case "outer-window-destroyed":
-        if (curWinID === winID) {
+        if (winID == curContainer.id) {
           this.stop();
           sendOk(this.commandID);
         }
@@ -481,25 +493,27 @@ const loadListener = {
 function registerSelf() {
   logger.trace("Frame script loaded");
 
+  curContainer.frame = content;
+
   sandboxes.clear();
-  curContainer = {
-    frame: content,
-    shadowRoot: null,
-  };
   legacyactions.mouseEventsOnly = false;
   action.inputStateMap = new Map();
   action.inputsToCancel = [];
 
-  let reply = sendSyncMessage("Marionette:Register", { outerWindowID });
+  let reply = sendSyncMessage("Marionette:Register", {
+    frameId: contentId,
+  });
   if (reply.length == 0) {
     logger.error("No reply from Marionette:Register");
     return;
   }
 
-  if (reply[0].outerWindowID === outerWindowID) {
+  if (reply[0].frameId === contentId) {
     logger.trace("Frame script registered");
     startListeners();
-    sendAsyncMessage("Marionette:ListenersAttached", { outerWindowID });
+    sendAsyncMessage("Marionette:ListenersAttached", {
+      frameId: contentId,
+    });
   }
 }
 
@@ -666,9 +680,11 @@ function deregister() {
 
 function deleteSession() {
   seenEls.clear();
+
   // reset container frame to the top-most frame
-  curContainer = { frame: content, shadowRoot: null };
+  curContainer.frame = content;
   curContainer.frame.focus();
+
   legacyactions.touchIds = {};
   if (action.inputStateMap !== undefined) {
     action.inputStateMap.clear();
@@ -749,8 +765,7 @@ function emitTouchEvent(type, touch) {
   );
 
   const win = curContainer.frame;
-  let docShell = win.docShell;
-  if (docShell.asyncPanZoomEnabled && legacyactions.scrolling) {
+  if (win.docShell.asyncPanZoomEnabled && legacyactions.scrolling) {
     let ev = {
       index: 0,
       type,
