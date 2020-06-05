@@ -44,6 +44,8 @@ add_task(async function test_removingSingleAndMultipleCreditCards() {
   await saveCreditCard(TEST_CREDIT_CARD_1);
   await saveCreditCard(TEST_CREDIT_CARD_2);
   await saveCreditCard(TEST_CREDIT_CARD_3);
+  await saveCreditCard(TEST_CREDIT_CARD_4);
+  await saveCreditCard(TEST_CREDIT_CARD_5);
 
   let win = window.openDialog(
     MANAGE_CREDIT_CARDS_DIALOG_URL,
@@ -56,25 +58,36 @@ add_task(async function test_removingSingleAndMultipleCreditCards() {
   let btnRemove = win.document.querySelector(TEST_SELECTORS.btnRemove);
   let btnEdit = win.document.querySelector(TEST_SELECTORS.btnEdit);
 
-  is(selRecords.length, 3, "Three credit cards");
-  is(selRecords[0].text, "**** 7870", "Masked credit card 3");
+  is(selRecords.length, 5, "Five credit cards");
+  is(selRecords[0].text, "**** 1881, Chris P. Bacon", "Masked credit card 5");
+  is(selRecords[1].text, "**** 5100", "Masked credit card 4");
   is(
-    selRecords[1].text,
-    "**** 1045, Timothy Berners-Lee",
+    selRecords[2].text,
+    "**** 7870, Expires on 1/2000",
+    "Masked credit card 3"
+  );
+  is(
+    selRecords[3].text,
+    "**** 1045, Timothy Berners-Lee, Expires on 12/" +
+      (new Date().getFullYear() + 10),
     "Masked credit card 2"
   );
-  is(selRecords[2].text, "**** 1111, John Doe", "Masked credit card 1");
+  is(
+    selRecords[4].text,
+    "**** 1111, John Doe, Expires on 4/" + new Date().getFullYear(),
+    "Masked credit card 1"
+  );
 
   EventUtils.synthesizeMouseAtCenter(selRecords.children[0], {}, win);
   is(btnRemove.disabled, false, "Remove button enabled");
   is(btnEdit.disabled, false, "Edit button enabled");
   EventUtils.synthesizeMouseAtCenter(btnRemove, {}, win);
   await BrowserTestUtils.waitForEvent(selRecords, "RecordsRemoved");
-  is(selRecords.length, 2, "Two credit cards left");
+  is(selRecords.length, 4, "Four credit cards left");
 
   EventUtils.synthesizeMouseAtCenter(selRecords.children[0], {}, win);
   EventUtils.synthesizeMouseAtCenter(
-    selRecords.children[1],
+    selRecords.children[3],
     { shiftKey: true },
     win
   );
