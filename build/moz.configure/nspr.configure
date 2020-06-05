@@ -16,13 +16,13 @@ def enable_nspr_build(enable):
 
 js_option('--with-system-nspr', help='Use system NSPR')
 
-@depends(enable_nspr_build, '--with-system-nspr')
-def build_nspr(nspr_build, system_nspr):
+@depends(enable_nspr_build, '--with-system-nspr', 'JS_STANDALONE')
+def build_nspr(nspr_build, system_nspr, js_standalone):
     if nspr_build is not None and nspr_build.origin != 'default':
         if nspr_build and system_nspr:
             die('Cannot use both --enable-nspr-build and --with-system-nspr')
-        if not nspr_build and not system_nspr:
-            die('Cannot use --disable-nspr-build without --with-system-nspr')
+    if js_standalone:
+        return nspr_build
     return not system_nspr
 
 set_config('MOZ_BUILD_NSPR', True, when=build_nspr)
