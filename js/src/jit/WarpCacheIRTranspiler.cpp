@@ -1130,6 +1130,31 @@ bool WarpCacheIRTranspiler::emitMathRandomResult(uint32_t rngOffset) {
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitInt32MinMax(bool isMax, Int32OperandId firstId,
+                                            Int32OperandId secondId,
+                                            Int32OperandId resultId) {
+  MDefinition* first = getOperand(firstId);
+  MDefinition* second = getOperand(secondId);
+
+  auto* ins = MMinMax::New(alloc(), first, second, MIRType::Int32, isMax);
+  add(ins);
+
+  return defineOperand(resultId, ins);
+}
+
+bool WarpCacheIRTranspiler::emitNumberMinMax(bool isMax,
+                                             NumberOperandId firstId,
+                                             NumberOperandId secondId,
+                                             NumberOperandId resultId) {
+  MDefinition* first = getOperand(firstId);
+  MDefinition* second = getOperand(secondId);
+
+  auto* ins = MMinMax::New(alloc(), first, second, MIRType::Double, isMax);
+  add(ins);
+
+  return defineOperand(resultId, ins);
+}
+
 bool WarpCacheIRTranspiler::emitMathAbsInt32Result(Int32OperandId inputId) {
   MDefinition* input = getOperand(inputId);
 
