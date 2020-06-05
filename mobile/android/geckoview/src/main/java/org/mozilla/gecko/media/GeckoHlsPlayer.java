@@ -14,13 +14,12 @@ import org.mozilla.thirdparty.com.google.android.exoplayer2.C;
 import org.mozilla.thirdparty.com.google.android.exoplayer2.DefaultLoadControl;
 import org.mozilla.thirdparty.com.google.android.exoplayer2.ExoPlaybackException;
 import org.mozilla.thirdparty.com.google.android.exoplayer2.ExoPlayer;
-import org.mozilla.thirdparty.com.google.android.exoplayer2.ExoPlayerFactory;
 import org.mozilla.thirdparty.com.google.android.exoplayer2.Format;
 import org.mozilla.thirdparty.com.google.android.exoplayer2.PlaybackParameters;
 import org.mozilla.thirdparty.com.google.android.exoplayer2.RendererCapabilities;
 import org.mozilla.thirdparty.com.google.android.exoplayer2.Timeline;
-import org.mozilla.thirdparty.com.google.android.exoplayer2.source.AdaptiveMediaSourceEventListener;
 import org.mozilla.thirdparty.com.google.android.exoplayer2.source.MediaSource;
+import org.mozilla.thirdparty.com.google.android.exoplayer2.source.MediaSourceEventListener;
 import org.mozilla.thirdparty.com.google.android.exoplayer2.source.TrackGroup;
 import org.mozilla.thirdparty.com.google.android.exoplayer2.source.TrackGroupArray;
 import org.mozilla.thirdparty.com.google.android.exoplayer2.source.hls.HlsMediaSource;
@@ -29,8 +28,6 @@ import org.mozilla.thirdparty.com.google.android.exoplayer2.trackselection.Defau
 import org.mozilla.thirdparty.com.google.android.exoplayer2.trackselection.MappingTrackSelector.MappedTrackInfo;
 import org.mozilla.thirdparty.com.google.android.exoplayer2.trackselection.TrackSelection;
 import org.mozilla.thirdparty.com.google.android.exoplayer2.trackselection.TrackSelectionArray;
-import org.mozilla.thirdparty.com.google.android.exoplayer2.upstream.DataSource;
-import org.mozilla.thirdparty.com.google.android.exoplayer2.upstream.DataSpec;
 import org.mozilla.thirdparty.com.google.android.exoplayer2.upstream.DefaultAllocator;
 import org.mozilla.thirdparty.com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
 import org.mozilla.thirdparty.com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
@@ -44,14 +41,13 @@ import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.annotation.ReflectionTarget;
 import org.mozilla.geckoview.BuildConfig;
 
-import java.io.IOException;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @ReflectionTarget
 public class GeckoHlsPlayer implements BaseHlsPlayer, ExoPlayer.EventListener {
     private static final String LOGTAG = "GeckoHlsPlayer";
-    private static final DefaultBandwidthMeter BANDWIDTH_METER = new DefaultBandwidthMeter();
+    private static final DefaultBandwidthMeter BANDWIDTH_METER = new DefaultBandwidthMeter.Builder(null).build();
     private static final int MAX_TIMELINE_ITEM_LINES = 3;
     private static final boolean DEBUG = !BuildConfig.MOZILLA_OFFICIAL;
 
@@ -78,7 +74,6 @@ public class GeckoHlsPlayer implements BaseHlsPlayer, ExoPlayer.EventListener {
     // Default value is PLAY_STATE_PREPARING and it will be set to PLAY_STATE_PLAYING
     // once HTMLMediaElement calls PlayInternal().
     private MediaDecoderPlayState mMediaDecoderPlayState = MediaDecoderPlayState.PLAY_STATE_PREPARING;
-    private DataSource.Factory mMediaDataSourceFactory;
 
     private Handler mMainHandler;
     private HandlerThread mThread;
@@ -202,76 +197,27 @@ public class GeckoHlsPlayer implements BaseHlsPlayer, ExoPlayer.EventListener {
         }
     }
 
-    private final class SourceEventListener implements AdaptiveMediaSourceEventListener {
-        public void onLoadStarted(final DataSpec dataSpec,
-                                  final int dataType,
-                                  final int trackType,
-                                  final Format trackFormat,
-                                  final int trackSelectionReason,
-                                  final Object trackSelectionData,
-                                  final long mediaStartTimeMs,
-                                  final long mediaEndTimeMs,
-                                  final long elapsedRealtimeMs) {
+    private final class SourceEventListener implements MediaSourceEventListener {
+        public void onLoadStarted(
+                final int windowIndex,
+                final MediaSource.MediaPeriodId mediaPeriodId,
+                final LoadEventInfo loadEventInfo,
+                final MediaLoadData mediaLoadData) {
+            if (mediaLoadData.dataType != C.DATA_TYPE_MEDIA) {
+                // Don't report non-media URLs.
+                return;
+            }
             if (mMainHandler != null && mResourceCallbacks != null) {
                 mMainHandler.post(new Runnable() {
                     @Override
                     public void run() {
                         if (DEBUG) {
-                            Log.d(LOGTAG, "[SourceEvent] load-started: url=" + dataSpec.uri + " track=" + trackType + " format=" + trackFormat);
+                            Log.d(LOGTAG, "on-load: url=" + loadEventInfo.uri);
                         }
-                        mResourceCallbacks.onLoad(dataSpec.uri.toString());
+                        mResourceCallbacks.onLoad(loadEventInfo.uri.toString());
                     }
                 });
             }
-        }
-        // Not interested in the following events.
-        public void onLoadCompleted(final DataSpec dataSpec,
-                                    final int dataType,
-                                    final int trackType,
-                                    final Format trackFormat,
-                                    final int trackSelectionReason,
-                                    final Object trackSelectionData,
-                                    final long mediaStartTimeMs,
-                                    final long mediaEndTimeMs,
-                                    final long elapsedRealtimeMs,
-                                    final long loadDurationMs,
-                                    final long bytesLoaded) {
-        }
-        public void onLoadCanceled(final DataSpec dataSpec,
-                                   final int dataType,
-                                   final int trackType,
-                                   final Format trackFormat,
-                                   final int trackSelectionReason,
-                                   final Object trackSelectionData,
-                                   final long mediaStartTimeMs,
-                                   final long mediaEndTimeMs,
-                                   final long elapsedRealtimeMs,
-                                   final long loadDurationMs,
-                                   final long bytesLoaded) {
-        }
-        public void onLoadError(final DataSpec dataSpec,
-                                final int dataType,
-                                final int trackType,
-                                final Format trackFormat,
-                                final int trackSelectionReason,
-                                final Object trackSelectionData,
-                                final long mediaStartTimeMs,
-                                final long mediaEndTimeMs,
-                                final long elapsedRealtimeMs,
-                                final long loadDurationMs,
-                                final long bytesLoaded,
-                                final IOException error,
-                                final boolean wasCanceled) {
-        }
-        public void onUpstreamDiscarded(final int trackType,
-                                        final long mediaStartTimeMs,
-                                        final long mediaEndTimeMs) {
-        }
-        public void onDownstreamFormatChanged(final int trackType,
-                                              final Format trackFormat,
-                                              final int trackSelectionReason,
-                                              final Object trackSelectionData,
-                                              final long mediaTimeMs) {
         }
     }
 
@@ -372,10 +318,10 @@ public class GeckoHlsPlayer implements BaseHlsPlayer, ExoPlayer.EventListener {
         }
     }
 
-    private DataSource.Factory buildDataSourceFactory(final Context ctx,
+    private HlsMediaSource.Factory buildDataSourceFactory(final Context ctx,
                                                       final DefaultBandwidthMeter bandwidthMeter) {
-        return new DefaultDataSourceFactory(ctx, bandwidthMeter,
-                buildHttpDataSourceFactory(bandwidthMeter));
+        return new HlsMediaSource.Factory(new DefaultDataSourceFactory(ctx, bandwidthMeter,
+                buildHttpDataSourceFactory(bandwidthMeter)));
     }
 
     private HttpDataSource.Factory buildHttpDataSourceFactory(
@@ -459,9 +405,9 @@ public class GeckoHlsPlayer implements BaseHlsPlayer, ExoPlayer.EventListener {
 
     // Called on GeckoHlsPlayerThread from ExoPlayer
     @Override
-    public void onPositionDiscontinuity() {
+    public void onPositionDiscontinuity(final int reason) {
         if (DEBUG) {
-            Log.d(LOGTAG, "positionDiscontinuity");
+            Log.d(LOGTAG, "positionDiscontinuity: reason=" + reason);
         }
     }
 
@@ -572,7 +518,7 @@ public class GeckoHlsPlayer implements BaseHlsPlayer, ExoPlayer.EventListener {
 
     // Called on GeckoHlsPlayerThread from ExoPlayer
     @Override
-    public synchronized void onTimelineChanged(final Timeline timeline, final Object manifest) {
+    public synchronized void onTimelineChanged(final Timeline timeline, final int reason) {
         // For now, we use the interface ExoPlayer.getDuration() for gecko,
         // so here we create local variable 'window' & 'peroid' to obtain
         // the dynamic duration.
@@ -685,21 +631,24 @@ public class GeckoHlsPlayer implements BaseHlsPlayer, ExoPlayer.EventListener {
         mRenderers[0] = mVRenderer;
         mRenderers[1] = mARenderer;
 
-        DefaultLoadControl dlc =
-            new DefaultLoadControl(
-                new DefaultAllocator(true, C.DEFAULT_BUFFER_SEGMENT_SIZE),
-                DEFAULT_MIN_BUFFER_MS,
-                DEFAULT_MAX_BUFFER_MS,
-                DefaultLoadControl.DEFAULT_BUFFER_FOR_PLAYBACK_MS,
-                DefaultLoadControl.DEFAULT_BUFFER_FOR_PLAYBACK_AFTER_REBUFFER_MS);
+        DefaultLoadControl dlc = new DefaultLoadControl.Builder()
+                .setAllocator(new DefaultAllocator(true, C.DEFAULT_BUFFER_SEGMENT_SIZE))
+                .setBufferDurationsMs(DEFAULT_MIN_BUFFER_MS,
+                        DEFAULT_MAX_BUFFER_MS,
+                        DefaultLoadControl.DEFAULT_BUFFER_FOR_PLAYBACK_MS,
+                        DefaultLoadControl.DEFAULT_BUFFER_FOR_PLAYBACK_AFTER_REBUFFER_MS)
+                .createDefaultLoadControl();
         // Create ExoPlayer instance with specific components.
-        mPlayer = ExoPlayerFactory.newInstance(mRenderers, mTrackSelector, dlc);
+        mPlayer = new ExoPlayer.Builder(ctx, mRenderers)
+                .setTrackSelector(mTrackSelector)
+                .setLoadControl(dlc)
+                .build();
         mPlayer.addListener(this);
 
         Uri uri = Uri.parse(url);
-        mMediaDataSourceFactory = buildDataSourceFactory(ctx, BANDWIDTH_METER);
+        mMediaSource = buildDataSourceFactory(ctx, BANDWIDTH_METER).createMediaSource(uri);
         mSourceEventListener = new SourceEventListener();
-        mMediaSource = new HlsMediaSource(uri, mMediaDataSourceFactory, mMainHandler, mSourceEventListener);
+        mMediaSource.addEventListener(mMainHandler, mSourceEventListener);
         if (DEBUG) {
             Log.d(LOGTAG, "Uri is " + uri +
                           ", ContentType is " + Util.inferContentType(uri.getLastPathSegment()));
