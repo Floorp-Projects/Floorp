@@ -7569,8 +7569,8 @@ void CodeGenerator::visitReturnFromCtor(LReturnFromCtor* lir) {
   masm.bind(&end);
 }
 
-void CodeGenerator::visitComputeThis(LComputeThis* lir) {
-  ValueOperand value = ToValue(lir, LComputeThis::ValueIndex);
+void CodeGenerator::visitBoxNonStrictThis(LBoxNonStrictThis* lir) {
+  ValueOperand value = ToValue(lir, LBoxNonStrictThis::ValueIndex);
   Register output = ToRegister(lir->output());
 
   using Fn = JSObject* (*)(JSContext*, HandleValue);

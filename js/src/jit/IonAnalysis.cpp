@@ -1197,7 +1197,7 @@ bool jit::EliminateDeadResumePointOperands(MIRGenerator* mir, MIRGraph& graph) {
       // in resume points may affect the interpreter's behavior. Rather
       // than doing a more sophisticated analysis, just ignore these.
       if (ins->isUnbox() || ins->isParameter() || ins->isTypeBarrier() ||
-          ins->isComputeThis() || ins->isFilterTypeSet()) {
+          ins->isBoxNonStrictThis() || ins->isFilterTypeSet()) {
         continue;
       }
 
