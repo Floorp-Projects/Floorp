@@ -1789,6 +1789,19 @@ class nsIFrame : public nsQueryFrame {
                                       nsIFrame* aChild,
                                       const nsDisplayListSet& aLists);
 
+  /**
+   * Helper for BuildDisplayListForChild, to implement this special-case for
+   * grid (and flex) items from the spec:
+   *   The painting order of grid items is exactly the same as inline blocks,
+   *   except that [...], and 'z-index' values other than 'auto' create a
+   *   stacking context even if 'position' is 'static' (behaving exactly as if
+   *   'position' were 'relative'). https://drafts.csswg.org/css-grid/#z-order
+   *
+   * Flex items also have the same special-case described in
+   * https://drafts.csswg.org/css-flexbox/#painting
+   */
+  DisplayChildFlag DisplayFlagForFlexOrGridItem() const;
+
   bool RefusedAsyncAnimation() const {
     return GetProperty(RefusedAsyncAnimationProperty());
   }
