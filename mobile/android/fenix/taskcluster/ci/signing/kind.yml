@@ -20,7 +20,7 @@ job-template:
     description: Sign Fenix
     worker-type:
         by-build-type:
-            (fennec-.+|nightly|beta|production|android-test-nightly|nightly-simulation):
+            (fennec-.+|nightly|beta|production|android-test-nightly):
                 by-level:
                     '3': signing
                     default: dep-signing
