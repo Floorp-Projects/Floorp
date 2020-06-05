@@ -29,11 +29,9 @@ UNIFIED_SOURCES += [
     'imported/regexp-parser.cc',
     'imported/regexp-stack.cc',
     'RegExpAPI.cpp',
+    'RegExpNativeMacroAssembler.cpp',
     'RegExpShim.cpp',
     'util/UnicodeShim.cpp'
-]
-SOURCES += [
-    'RegExpNativeMacroAssembler.cpp'
 ]
 
 if CONFIG['JS_HAS_INTL_API']:
