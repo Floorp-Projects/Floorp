@@ -50,7 +50,7 @@ WebrtcGmpPCHandleSetter::~WebrtcGmpPCHandleSetter() {
   return sCurrentHandle;
 }
 
-std::string WebrtcGmpPCHandleSetter::sCurrentHandle = "";
+std::string WebrtcGmpPCHandleSetter::sCurrentHandle;
 
 // Encoder.
 WebrtcGmpVideoEncoder::WebrtcGmpVideoEncoder()
