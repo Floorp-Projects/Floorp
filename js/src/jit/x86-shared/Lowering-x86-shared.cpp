@@ -758,14 +758,12 @@ void LIRGenerator::visitWasmBinarySimd128(MWasmBinarySimd128* ins) {
       break;
   }
 
-  LAllocation lhsDestAlloc = useRegisterAtStart(lhs);
-  LAllocation rhsAlloc =
-      lhs != rhs ? useRegister(rhs) : useRegisterAtStart(rhs);
   if (ins->simdOp() == wasm::SimdOp::I64x2Mul) {
-    auto* lir =
-        new (alloc()) LWasmI64x2Mul(lhsDestAlloc, rhsAlloc, tempInt64());
-    defineReuseInput(lir, ins, LWasmI64x2Mul::LhsDest);
+    lowerForWasmI64x2Mul(ins, lhs, rhs);
   } else {
+    LAllocation lhsDestAlloc = useRegisterAtStart(lhs);
+    LAllocation rhsAlloc =
+        lhs != rhs ? useRegister(rhs) : useRegisterAtStart(rhs);
     auto* lir = new (alloc())
         LWasmBinarySimd128(lhsDestAlloc, rhsAlloc, tempReg0, tempReg1);
     defineReuseInput(lir, ins, LWasmBinarySimd128::LhsDest);
@@ -826,8 +824,6 @@ void LIRGenerator::visitWasmShiftSimd128(MWasmShiftSimd128* ins) {
   LDefinition tempReg0 = LDefinition::BogusTemp();
   LDefinition tempReg1 = LDefinition::BogusTemp();
   switch (ins->simdOp()) {
-    case wasm::SimdOp::I64x2ShrS:
-      break;
     case wasm::SimdOp::I8x16Shl:
     case wasm::SimdOp::I8x16ShrS:
     case wasm::SimdOp::I8x16ShrU:
@@ -840,9 +836,7 @@ void LIRGenerator::visitWasmShiftSimd128(MWasmShiftSimd128* ins) {
   }
 
   LAllocation lhsDestAlloc = useRegisterAtStart(lhs);
-  LAllocation rhsAlloc = ins->simdOp() == wasm::SimdOp::I64x2ShrS
-                             ? useFixed(rhs, ecx)
-                             : useRegister(rhs);
+  LAllocation rhsAlloc = useRegister(rhs);
   auto* lir = new (alloc())
       LWasmVariableShiftSimd128(lhsDestAlloc, rhsAlloc, tempReg0, tempReg1);
   defineReuseInput(lir, ins, LWasmVariableShiftSimd128::LhsDest);

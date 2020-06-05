@@ -569,6 +569,20 @@ LDefinition LIRGeneratorShared::tempFixed(Register reg) {
   return t;
 }
 
+LInt64Definition LIRGeneratorShared::tempInt64Fixed(Register64 reg) {
+#if JS_BITS_PER_WORD == 32
+  LDefinition high = temp(LDefinition::GENERAL);
+  LDefinition low = temp(LDefinition::GENERAL);
+  high.setOutput(LGeneralReg(reg.high));
+  low.setOutput(LGeneralReg(reg.low));
+  return LInt64Definition(high, low);
+#else
+  LDefinition t = temp(LDefinition::GENERAL);
+  t.setOutput(LGeneralReg(reg.reg));
+  return LInt64Definition(t);
+#endif
+}
+
 LDefinition LIRGeneratorShared::tempFixed(FloatRegister reg) {
   LDefinition t = temp(LDefinition::DOUBLE);
   t.setOutput(LFloatReg(reg));

@@ -2311,9 +2311,6 @@ void CodeGenerator::visitPopcntI64(LPopcntI64* lir) {
 
 // BEGIN WASM SIMD
 
-// These code generators are really x86-shared but some Masm interfaces
-// are not yet available on x86.
-
 void CodeGenerator::visitSimd128(LSimd128* ins) {
 #ifdef ENABLE_WASM_SIMD
   const LDefinition* out = ins->getDef(0);
@@ -2686,9 +2683,6 @@ void CodeGenerator::visitWasmVariableShiftSimd128(
       break;
     case wasm::SimdOp::I64x2Shl:
       masm.leftShiftInt64x2(rhs, lhsDest, temp1);
-      break;
-    case wasm::SimdOp::I64x2ShrS:
-      masm.rightShiftInt64x2(rhs, lhsDest);
       break;
     case wasm::SimdOp::I64x2ShrU:
       masm.unsignedRightShiftInt64x2(rhs, lhsDest, temp1);

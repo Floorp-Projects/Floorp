@@ -8066,6 +8066,7 @@ class BaseCompiler final : public BaseCompilerInterface {
   MOZ_MUST_USE bool emitBitselect();
   MOZ_MUST_USE bool emitVectorShuffle();
   MOZ_MUST_USE bool emitVectorShiftRightI64x2();
+  MOZ_MUST_USE bool emitVectorMulI64x2();
 #endif
 };
 
@@ -12692,11 +12693,6 @@ static void MulF32x4(MacroAssembler& masm, RegV128 rs, RegV128 rsd) {
   masm.mulFloat32x4(rs, rsd);
 }
 
-static void MulI64x2(MacroAssembler& masm, RegV128 rs, RegV128 rsd,
-                     RegI64 temp) {
-  masm.mulInt64x2(rs, rsd, temp);
-}
-
 static void MulF64x2(MacroAssembler& masm, RegV128 rs, RegV128 rsd) {
   masm.mulFloat64x2(rs, rsd);
 }
@@ -13405,11 +13401,53 @@ bool BaseCompiler::emitVectorShiftRightI64x2() {
   needI32(specific_.ecx);
   RegI32 count = popI32ToSpecific(specific_.ecx);
   RegV128 lhsDest = popV128();
+  RegI64 tmp = needI64();
   masm.and32(Imm32(63), count);
-  masm.rightShiftInt64x2(count, lhsDest);
+  masm.extractLaneInt64x2(0, lhsDest, tmp);
+  masm.rshift64Arithmetic(count, tmp);
+  masm.replaceLaneInt64x2(0, tmp, lhsDest);
+  masm.extractLaneInt64x2(1, lhsDest, tmp);
+  masm.rshift64Arithmetic(count, tmp);
+  masm.replaceLaneInt64x2(1, tmp, lhsDest);
+  freeI64(tmp);
   freeI32(count);
   pushV128(lhsDest);
 
+  return true;
+}
+
+// Must be scalarized on x86/x64 and requires different temp regs on the
+// two architectures.
+bool BaseCompiler::emitVectorMulI64x2() {
+  Nothing unused_a, unused_b;
+  if (!iter_.readBinary(ValType::V128, &unused_a, &unused_b)) {
+    return false;
+  }
+
+  if (deadCode_) {
+    return true;
+  }
+
+#  if defined(JS_CODEGEN_X64)
+  emitVectorBinopWithTemp<RegI64>(
+      [](MacroAssembler& masm, RegV128 rs, RegV128 rsd, RegI64 temp) {
+        masm.mulInt64x2(rs, rsd, temp);
+      });
+#  elif defined(JS_CODEGEN_X86)
+  RegV128 r, rs;
+  pop2xV128(&r, &rs);
+  needI64(specific_.edx_eax);
+  RegI64 temp1 = specific_.edx_eax;
+  RegI64 temp2 = needI64();
+  ScratchI32 temp3(*this);
+  masm.mulInt64x2(rs, r, temp1, temp2, temp3);
+  freeV128(rs);
+  freeI64(temp1);
+  freeI64(temp2);
+  pushV128(r);
+#  else
+  MOZ_CRASH("No porting API for MulI64x2");
+#  endif
   return true;
 }
 #endif
@@ -14425,7 +14463,7 @@ bool BaseCompiler::emitBody() {
           case uint32_t(SimdOp::I64x2Sub):
             CHECK_NEXT(dispatchVectorBinary(emitVectorBinop, SubI64x2));
           case uint32_t(SimdOp::I64x2Mul):
-            CHECK_NEXT(dispatchVectorBinary(emitVectorBinopWithTemp, MulI64x2));
+            CHECK_NEXT(emitVectorMulI64x2());
           case uint32_t(SimdOp::F32x4Add):
             CHECK_NEXT(dispatchVectorBinary(emitVectorBinop, AddF32x4));
           case uint32_t(SimdOp::F32x4Sub):

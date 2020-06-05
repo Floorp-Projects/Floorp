@@ -986,6 +986,53 @@ void MacroAssembler::spectreBoundsCheck32(Register index, const Address& length,
 }
 
 // ========================================================================
+// SIMD
+
+void MacroAssembler::anyTrueSimd128(FloatRegister src, Register dest) {
+  Label done;
+  movl(Imm32(1), dest);
+  vptest(src, src);  // SSE4.1
+  j(NonZero, &done);
+  movl(Imm32(0), dest);
+  bind(&done);
+}
+
+void MacroAssembler::mulInt64x2(FloatRegister rhs, FloatRegister lhsDest,
+                                Register64 temp1, Register64 temp2,
+                                Register temp3) {
+  extractLaneInt64x2(0, lhsDest, temp1);
+  extractLaneInt64x2(0, rhs, temp2);
+  mul64(temp2, temp1, temp3);
+  replaceLaneInt64x2(0, temp1, lhsDest);
+  extractLaneInt64x2(1, lhsDest, temp1);
+  extractLaneInt64x2(1, rhs, temp2);
+  mul64(temp2, temp1, temp3);
+  replaceLaneInt64x2(1, temp1, lhsDest);
+}
+
+void MacroAssembler::extractLaneInt64x2(uint32_t lane, FloatRegister src,
+                                        Register64 dest) {
+  vpextrd(2 * lane, src, dest.low);
+  vpextrd(2 * lane + 1, src, dest.high);
+}
+
+void MacroAssembler::replaceLaneInt64x2(unsigned lane, Register64 rhs,
+                                        FloatRegister lhsDest) {
+  vpinsrd(2 * lane, rhs.low, lhsDest, lhsDest);
+  vpinsrd(2 * lane + 1, rhs.high, lhsDest, lhsDest);
+}
+
+void MacroAssembler::splatX2(Register64 src, FloatRegister dest) {
+  replaceLaneInt64x2(0, src, dest);
+  replaceLaneInt64x2(1, src, dest);
+}
+
+void MacroAssembler::bitwiseAndSimd128(const SimdConstant& rhs,
+                                       FloatRegister lhsDest) {
+  vpandSimd128(rhs, lhsDest);
+}
+
+// ========================================================================
 // Truncate floating point.
 
 void MacroAssembler::truncateFloat32ToUInt64(Address src, Address dest,
