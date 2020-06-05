@@ -85,7 +85,7 @@ class DominatorTreeItem extends Component {
       if (isSavedFrame(piece)) {
         label[i * 2] = Frame({
           key,
-          onClick: () => onViewSourceInDebugger(piece),
+          onClick: onViewSourceInDebugger,
           frame: piece,
           showFunctionName: true,
         });

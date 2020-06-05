@@ -93,8 +93,7 @@ class JITOptimizationsItem extends Component {
       `${lastStrategy}${propString} – (${sampleString})`
     );
     const frame = Frame({
-      onClick: () =>
-        onViewSourceInDebugger(frameData.url, site.data.line, site.data.column),
+      onClick: onViewSourceInDebugger,
       frame: {
         source: frameData.url,
         line: +site.data.line,
@@ -159,8 +158,7 @@ class JITOptimizationsItem extends Component {
     if (type.location && type.line) {
       children.push(
         Frame({
-          onClick: () =>
-            onViewSourceInDebugger(type.location, type.line, type.column),
+          onClick: onViewSourceInDebugger,
           frame: {
             source: type.location,
             line: type.line,

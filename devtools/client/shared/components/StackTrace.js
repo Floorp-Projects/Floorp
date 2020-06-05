@@ -68,14 +68,13 @@ class StackTrace extends Component {
         );
       }
 
-      const source = s.filename;
       frames.push(
         "\t",
         Frame({
           key: `${i}-frame`,
           frame: {
             functionDisplayName: s.functionName,
-            source,
+            source: s.filename,
             line: s.lineNumber,
             column: s.columnNumber,
           },

@@ -50,6 +50,10 @@ as the content compartment sees it, waive the xray wrapper with
 ### `source`
 The source URL for this stack frame, as a string.
 
+### `sourceId`
+The process-unique internal integer ID of this source. Usable to match up
+a SavedFrame with a [Debugger.Source][dbg-source] using its `id` property.
+
 ### `line`
 The line number for this stack frame.
 
@@ -87,3 +91,5 @@ stack. In this case, there might be an `asyncParent` instead.
 ### `toString()`
 Return this frame and its parents formatted as a human readable stack trace
 string.
+
+[dbg-source]: ../Debugger/Debugger.Source.md

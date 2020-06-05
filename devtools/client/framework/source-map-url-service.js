@@ -215,6 +215,22 @@ class SourceMapURLService {
   }
 
   /**
+   * Subscribe generically based on either an ID or a URL.
+   *
+   * In an ideal world we'd always know which of these to use, but there are
+   * still cases where end up with a mixture of both, so this is provided as
+   * a helper. If you can specifically use one of these, please do that
+   * instead however.
+   */
+  subscribeByLocation({ id, url, line, column }, callback) {
+    if (id) {
+      return this.subscribeByID(id, line, column, callback);
+    }
+
+    return this.subscribeByURL(url, line, column, callback);
+  }
+
+  /**
    * Tell the URL service than some external entity has registered a sourcemap
    * in the worker for one of the source files.
    *

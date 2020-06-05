@@ -51,11 +51,11 @@ class CensusTreeItem extends Component {
     );
   }
 
-  toLabel(name, linkToDebugger) {
+  toLabel(name, onViewSourceInDebugger) {
     if (isSavedFrame(name)) {
       return Frame({
         frame: name,
-        onClick: () => linkToDebugger(name),
+        onClick: onViewSourceInDebugger,
         showFunctionName: true,
         showHost: true,
       });
