@@ -52,7 +52,7 @@ class DOMLocalization : public intl::Localization {
   void SetAttributes(JSContext* aCx, Element& aElement, const nsAString& aId,
                      const Optional<JS::Handle<JSObject*>>& aArgs,
                      ErrorResult& aRv);
-  void GetAttributes(Element& aElement, L10nKey& aResult, ErrorResult& aRv);
+  void GetAttributes(Element& aElement, L10nIdArgs& aResult, ErrorResult& aRv);
 
   already_AddRefed<Promise> TranslateFragment(nsINode& aNode, ErrorResult& aRv);
 
