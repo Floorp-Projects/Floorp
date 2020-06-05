@@ -33,6 +33,9 @@ class EnvironmentShapeCreationData;
 template <typename NameT>
 class AbstractBaseScopeData;
 
+template <typename NameT>
+class AbstractBindingIter;
+
 class ModuleObject;
 class AbstractScopePtr;
 
@@ -109,7 +112,8 @@ class AbstractBindingName {
   bool closedOver() const { return bits_ & ClosedOverFlag; }
 
  private:
-  friend class BindingIter;
+  friend class AbstractBindingIter<NameT>;
+
   // This method should be called only for binding names in `vars` range in
   // BindingIter.
   bool isTopLevelFunction() const { return bits_ & TopLevelFunctionFlag; }
@@ -1140,7 +1144,8 @@ void Scope::applyScopeDataTyped(F&& f) {
 //     use(bi);
 //   }
 //
-class BindingIter {
+template <typename NameT>
+class AbstractBindingIter {
  protected:
   // Bindings are sorted by kind. Because different Scopes have differently
   // laid out Data for packing, BindingIter must handle all binding kinds.
@@ -1201,12 +1206,12 @@ class BindingIter {
   MOZ_INIT_OUTSIDE_CTOR uint32_t frameSlot_;
   MOZ_INIT_OUTSIDE_CTOR uint32_t environmentSlot_;
 
-  MOZ_INIT_OUTSIDE_CTOR BindingName* names_;
+  MOZ_INIT_OUTSIDE_CTOR AbstractBindingName<NameT>* names_;
 
   void init(uint32_t positionalFormalStart, uint32_t nonPositionalFormalStart,
             uint32_t varStart, uint32_t letStart, uint32_t constStart,
             uint8_t flags, uint32_t firstFrameSlot,
-            uint32_t firstEnvironmentSlot, BindingName* names,
+            uint32_t firstEnvironmentSlot, AbstractBindingName<NameT>* names,
             uint32_t length) {
     positionalFormalStart_ = positionalFormalStart;
     nonPositionalFormalStart_ = nonPositionalFormalStart;
@@ -1224,14 +1229,17 @@ class BindingIter {
     settle();
   }
 
-  void init(LexicalScope::Data& data, uint32_t firstFrameSlot, uint8_t flags);
-  void init(FunctionScope::Data& data, uint8_t flags);
-  void init(VarScope::Data& data, uint32_t firstFrameSlot);
-  void init(GlobalScope::Data& data);
-  void init(EvalScope::Data& data, bool strict);
-  void init(ModuleScope::Data& data);
-  void init(WasmInstanceScope::Data& data);
-  void init(WasmFunctionScope::Data& data);
+  void init(LexicalScope::AbstractData<NameT>& data, uint32_t firstFrameSlot,
+            uint8_t flags);
+
+  void init(FunctionScope::AbstractData<NameT>& data, uint8_t flags);
+
+  void init(VarScope::AbstractData<NameT>& data, uint32_t firstFrameSlot);
+  void init(GlobalScope::AbstractData<NameT>& data);
+  void init(EvalScope::AbstractData<NameT>& data, bool strict);
+  void init(ModuleScope::AbstractData<NameT>& data);
+  void init(WasmInstanceScope::AbstractData<NameT>& data);
+  void init(WasmFunctionScope::AbstractData<NameT>& data);
 
   bool hasFormalParameterExprs() const {
     return flags_ & HasFormalParameterExprs;
@@ -1279,33 +1287,43 @@ class BindingIter {
     }
   }
 
- public:
-  explicit BindingIter(Scope* scope);
-  explicit BindingIter(JSScript* script);
+  AbstractBindingIter() = default;
 
-  BindingIter(LexicalScope::Data& data, uint32_t firstFrameSlot,
-              bool isNamedLambda) {
+ public:
+  AbstractBindingIter(LexicalScope::AbstractData<NameT>& data,
+                      uint32_t firstFrameSlot, bool isNamedLambda) {
     init(data, firstFrameSlot, isNamedLambda ? IsNamedLambda : 0);
   }
 
-  BindingIter(FunctionScope::Data& data, bool hasParameterExprs) {
+  AbstractBindingIter(FunctionScope::AbstractData<NameT>& data,
+                      bool hasParameterExprs) {
     init(data, IgnoreDestructuredFormalParameters |
                    (hasParameterExprs ? HasFormalParameterExprs : 0));
   }
 
-  BindingIter(VarScope::Data& data, uint32_t firstFrameSlot) {
+  AbstractBindingIter(VarScope::AbstractData<NameT>& data,
+                      uint32_t firstFrameSlot) {
     init(data, firstFrameSlot);
   }
 
-  explicit BindingIter(GlobalScope::Data& data) { init(data); }
+  explicit AbstractBindingIter(GlobalScope::AbstractData<NameT>& data) {
+    init(data);
+  }
 
-  explicit BindingIter(ModuleScope::Data& data) { init(data); }
+  explicit AbstractBindingIter(ModuleScope::AbstractData<NameT>& data) {
+    init(data);
+  }
 
-  explicit BindingIter(WasmFunctionScope::Data& data) { init(data); }
+  explicit AbstractBindingIter(WasmFunctionScope::AbstractData<NameT>& data) {
+    init(data);
+  }
 
-  BindingIter(EvalScope::Data& data, bool strict) { init(data, strict); }
+  AbstractBindingIter(EvalScope::AbstractData<NameT>& data, bool strict) {
+    init(data, strict);
+  }
 
-  MOZ_IMPLICIT BindingIter(const BindingIter& bi) = default;
+  MOZ_IMPLICIT AbstractBindingIter(const AbstractBindingIter<NameT>& bi) =
+      default;
 
   bool done() const { return index_ == length_; }
 
@@ -1329,7 +1347,7 @@ class BindingIter {
     return flags_ & CanHaveEnvironmentSlots;
   }
 
-  JSAtom* name() const {
+  NameT* name() const {
     MOZ_ASSERT(!done());
     return names_[index_].name();
   }
@@ -1416,6 +1434,18 @@ class BindingIter {
     MOZ_ASSERT(canHaveEnvironmentSlots());
     return environmentSlot_;
   }
+};
+
+class BindingIter : public AbstractBindingIter<JSAtom> {
+  using Base = AbstractBindingIter<JSAtom>;
+
+ public:
+  explicit BindingIter(Scope* scope);
+  explicit BindingIter(JSScript* script);
+
+  using Base::Base;
+
+  MOZ_IMPLICIT BindingIter(const BindingIter& bi) = default;
 
   void trace(JSTracer* trc);
 };
