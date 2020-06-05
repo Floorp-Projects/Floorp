@@ -4,11 +4,14 @@
 import json
 import importlib.util
 import inspect
-import os
-import pathlib
+import sys
 
 from .logger import NotebookLogger
-from mozperftest.metrics.exceptions import NotebookInvalidTransformError
+from mozperftest.metrics.exceptions import (
+    NotebookInvalidTransformError,
+    NotebookInvalidPathError,
+    NotebookDuplicateTransformsError,
+)
 
 logger = NotebookLogger()
 
@@ -51,6 +54,10 @@ class Transformer(object):
             logger.warning("`files` must be a list, got %s" % type(val))
             return
         self._files = val
+
+    @property
+    def custom_transformer(self):
+        return self._custom_transformer
 
     def open_data(self, file):
         """Opens a file of data.
@@ -140,27 +147,23 @@ def get_transformers(dirpath=None):
 
     If more than one transformers have the same class name, an exception will be raised.
 
-    :param str dirpath: Path to a directory containing the transformers.
-    :return dict: {"transformer name": Transformer class}.
+    :param Path object dirpath: Path to a directory containing the transformers.
+    :return dict: {"Transformer class name": Transformer class}.
     """
 
-    #
-    # XXX: This function is broken when in-tree, we need to fix it eventually.
-    #
-    raise Exception("Do not use this function.")
-
-    if not dirpath or not os.path.exists(dirpath):
-        logger.warning(f"Could not find directory for transformers: {dirpath}")
-        return {}
-
     ret = {}
-    tfm_path = pathlib.Path(dirpath)
 
-    if not tfm_path.is_dir():
-        raise Exception(f"{tfm_path} is not a directory or it does not exist.")
+    if not dirpath.exists():
+        raise NotebookInvalidPathError(f"The path {dirpath.as_posix()} does not exist.")
 
-    tfm_files = list(tfm_path.glob("*.py"))
+    if not dirpath.is_dir():
+        raise NotebookInvalidPathError(
+            f"Path given is not a directory: {dirpath.as_posix()}"
+        )
+
+    tfm_files = list(dirpath.glob("*.py"))
     importlib.machinery.SOURCE_SUFFIXES.append("")
+
     for file in tfm_files:
 
         # Importing a source file directly
@@ -168,17 +171,23 @@ def get_transformers(dirpath=None):
             name=file.name, location=file.resolve().as_posix()
         )
         module = importlib.util.module_from_spec(spec)
+        sys.modules[file.name] = module
         spec.loader.exec_module(module)
 
         members = inspect.getmembers(
-            module, lambda c: inspect.isclass(c) and issubclass(c, Transformer)
+            module,
+            lambda c: inspect.isclass(c)
+            and hasattr(c, "transform")
+            and hasattr(c, "merge")
+            and callable(c.transform)
+            and callable(c.merge),
         )
 
         for (name, tfm_class) in members:
-            if name in ret and name != "Transformer":
-                raise Exception(
-                    f"""Duplicated transformer {name} is found in the folder {dirpath}.
-                    Please define each transformer class with a unique class name."""
+            if name in ret:
+                raise NotebookDuplicateTransformsError(
+                    f"Duplicated transformer {name} is found in the directory {dirpath}. "
+                    + "Please define each transformer class with a unique class name.",
                 )
             ret.update({name: tfm_class})
 
