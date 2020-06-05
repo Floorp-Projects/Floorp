@@ -1133,7 +1133,8 @@ size_t JSContext::sizeOfExcludingThis(
    * ones have been found by DMD to be worth measuring.  More stuff may be
    * added later.
    */
-  return cycleDetectorVector().sizeOfExcludingThis(mallocSizeOf);
+  return cycleDetectorVector().sizeOfExcludingThis(mallocSizeOf) +
+         irregexp::IsolateSizeOfIncludingThis(isolate, mallocSizeOf);
 }
 
 #ifdef DEBUG
