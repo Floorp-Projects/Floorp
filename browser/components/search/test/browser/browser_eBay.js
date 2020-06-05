@@ -62,6 +62,28 @@ add_task(async function test() {
             },
           ],
         },
+        {
+          type: "application/x-suggestions+json",
+          method: "GET",
+          template: "https://autosug.ebay.com/autosug",
+          params: [
+            {
+              name: "sId",
+              value: "0",
+              purpose: undefined,
+            },
+            {
+              name: "fmt",
+              value: "osr",
+              purpose: undefined,
+            },
+            {
+              name: "kwd",
+              value: "{searchTerms}",
+              purpose: undefined,
+            },
+          ],
+        },
       ],
     },
   };
