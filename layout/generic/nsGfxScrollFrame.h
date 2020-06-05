@@ -467,7 +467,7 @@ class ScrollFrameHelper : public nsIReflowCallback {
   void ResetScrollInfoIfGeneration(uint32_t aGeneration) {
     if (aGeneration == mScrollGeneration) {
       mLastScrollOrigin = ScrollOrigin::NotSpecified;
-      mLastSmoothScrollOrigin = ScrollOrigin::NotSpecified;
+      mLastSmoothScrollOrigin = ScrollOrigin::None;
     }
   }
   bool WantAsyncScroll() const;

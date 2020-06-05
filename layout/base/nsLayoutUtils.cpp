@@ -9185,7 +9185,7 @@ ScrollMetadata nsLayoutUtils::ComputeScrollMetadata(
 
     ScrollOrigin lastSmoothScrollOrigin =
         scrollableFrame->LastSmoothScrollOrigin();
-    if (lastSmoothScrollOrigin != ScrollOrigin::NotSpecified) {
+    if (lastSmoothScrollOrigin != ScrollOrigin::None) {
       metrics.SetSmoothScrollOffsetUpdated(
           scrollableFrame->CurrentScrollGeneration());
     }
