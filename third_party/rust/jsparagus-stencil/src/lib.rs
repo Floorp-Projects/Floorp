@@ -1,4 +1,5 @@
 pub mod bytecode_offset;
+pub mod env_coord;
 pub mod frame_slot;
 pub mod function;
 pub mod gcthings;

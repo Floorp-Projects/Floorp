@@ -1204,9 +1204,9 @@ impl InstructionWriter {
         self.write_g_c_thing_index(name_index);
     }
 
-    pub fn push_lexical_env(&mut self, lexical_scope_index: u32) {
+    pub fn push_lexical_env(&mut self, lexical_scope_index: GCThingIndex) {
         self.emit_op(Opcode::PushLexicalEnv);
-        self.write_u32(lexical_scope_index);
+        self.write_g_c_thing_index(lexical_scope_index);
     }
 
     pub fn pop_lexical_env(&mut self) {
@@ -1225,14 +1225,14 @@ impl InstructionWriter {
         self.emit_op(Opcode::FreshenLexicalEnv);
     }
 
-    pub fn push_var_env(&mut self, scope_index: u32) {
+    pub fn push_var_env(&mut self, scope_index: GCThingIndex) {
         self.emit_op(Opcode::PushVarEnv);
-        self.write_u32(scope_index);
+        self.write_g_c_thing_index(scope_index);
     }
 
-    pub fn enter_with(&mut self, static_with_index: u32) {
+    pub fn enter_with(&mut self, static_with_index: GCThingIndex) {
         self.emit_op(Opcode::EnterWith);
-        self.write_u32(static_with_index);
+        self.write_g_c_thing_index(static_with_index);
     }
 
     pub fn leave_with(&mut self) {
@@ -1394,6 +1394,7 @@ impl InstructionWriter {
         scope_index: ScopeIndex,
         parent_scope_note_index: Option<ScopeNoteIndex>,
         next_frame_slot: FrameSlot,
+        needs_environment_object: bool,
     ) -> ScopeNoteIndex {
         self.update_max_frame_slots(next_frame_slot);
 
@@ -1402,27 +1403,46 @@ impl InstructionWriter {
         let note_index =
             self.scope_notes
                 .enter_scope(gcthing_index, offset, parent_scope_note_index);
+
+        if needs_environment_object {
+            self.push_lexical_env(gcthing_index);
+        }
+
         note_index
     }
 
-    pub fn leave_lexical_scope(&mut self, index: ScopeNoteIndex) {
-        self.debug_leave_lexical_env();
+    pub fn leave_lexical_scope(&mut self, index: ScopeNoteIndex, needs_environment_object: bool) {
+        self.emit_leave_lexical_scope(needs_environment_object);
         let offset = self.bytecode_offset();
         self.scope_notes.leave_scope(index, offset);
     }
 
-    pub fn enter_scope_hole(
+    fn emit_leave_lexical_scope(&mut self, needs_environment_object: bool) {
+        if needs_environment_object {
+            self.pop_lexical_env();
+        } else {
+            self.debug_leave_lexical_env();
+        }
+    }
+
+    pub fn enter_scope_hole_from_lexical(
         &mut self,
-        maybe_scope_note_index: &Option<ScopeNoteIndex>,
+        maybe_hole_scope_note_index: &Option<ScopeNoteIndex>,
+        parent_scope_note_index: Option<ScopeNoteIndex>,
+        needs_environment_object: bool,
+    ) -> ScopeNoteIndex {
+        self.emit_leave_lexical_scope(needs_environment_object);
+        self.enter_scope_hole(maybe_hole_scope_note_index, parent_scope_note_index)
+    }
+
+    fn enter_scope_hole(
+        &mut self,
+        maybe_hole_scope_note_index: &Option<ScopeNoteIndex>,
         parent_scope_note_index: Option<ScopeNoteIndex>,
     ) -> ScopeNoteIndex {
-        // TODO: the bytecode sequence before leaving scope (entering hole) depends on the kind
-        // of scope (and also controls). This is currently only debug_leave_lexical_env because
-        // there's only simple lexical scope.
-        self.debug_leave_lexical_env();
         let offset = self.bytecode_offset();
 
-        let gcthing_index = match maybe_scope_note_index {
+        let gcthing_index = match maybe_hole_scope_note_index {
             Some(index) => self.scope_notes.get_scope_hole_gcthing_index(index),
             None => self
                 .body_scope_index

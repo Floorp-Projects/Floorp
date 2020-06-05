@@ -1,7 +1,7 @@
 use crate::ast_emitter::AstEmitter;
 use crate::emitter::EmitError;
 use crate::emitter::InstructionWriter;
-use crate::emitter_scope::EmitterScopeDepth;
+use crate::emitter_scope::{EmitterScope, EmitterScopeDepth};
 use ast::source_atom_set::SourceAtomSetIndex;
 use stencil::bytecode_offset::{BytecodeOffset, BytecodeOffsetDiff};
 
@@ -674,31 +674,35 @@ where
         };
 
         // Step 2: find the current emitter scope
-        let current_scope_index = emitter.scope_stack.current_depth();
+        let mut parent_scope_note_index = emitter.scope_stack.get_current_scope_note_index();
 
-        // Step 3: iterate over scopes that have been entered since the enclosing scope,
-        // add a scope note hole for each one as we exit
+        // Step 3: iterate over scopes that have been entered since the
+        // enclosing scope, add a scope note hole for each one as we exit
         let mut holes = Vec::new();
-        let scope_indicies = emitter
+        for item in emitter
             .scope_stack
-            .scope_note_indices_from_to(&enclosing_emitter_scope_depth, &current_scope_index);
-        let mut parent_scope_note_index = emitter
-            .scope_stack
-            .get_scope_note_index_for(current_scope_index);
-        for maybe_scope_note_index in scope_indicies.iter().rev() {
-            let scope_note_index = emitter
-                .emit
-                .enter_scope_hole(maybe_scope_note_index, parent_scope_note_index);
-            holes.push(scope_note_index);
-            parent_scope_note_index = Some(scope_note_index);
+            .walk_up_to_including(enclosing_emitter_scope_depth)
+        {
+            // We're entering `item.outer` as a scope hole of `item.inner`.
+
+            let hole_scope_note_index = match item.inner {
+                EmitterScope::Global(_) => panic!("global shouldn't be enclosed by other scope"),
+                EmitterScope::Lexical(scope) => emitter.emit.enter_scope_hole_from_lexical(
+                    &item.outer.scope_note_index(),
+                    parent_scope_note_index,
+                    scope.has_environment_object(),
+                ),
+            };
+            holes.push(hole_scope_note_index);
+            parent_scope_note_index = Some(hole_scope_note_index);
         }
 
         // Step 4: perform the jump
         self.registered_jump.emit(emitter);
 
         // Step 5: close each scope hole after the jump
-        for scope_note_hole_index in holes.iter() {
-            emitter.emit.leave_scope_hole(*scope_note_hole_index);
+        for hole_scope_note_index in holes.iter() {
+            emitter.emit.leave_scope_hole(*hole_scope_note_index);
         }
     }
 }

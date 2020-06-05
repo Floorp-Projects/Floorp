@@ -320,6 +320,10 @@ impl FunctionStencil {
         self.name = Some(name);
     }
 
+    pub fn name<'a>(&'a self) -> &'a Option<SourceAtomSetIndex> {
+        &self.name
+    }
+
     pub fn set_has_rest(&mut self) {
         self.lazy_script_mut().set_has_rest();
     }
@@ -346,7 +350,7 @@ impl FunctionStencil {
 }
 
 /// Index into FunctionStencilList.items.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct FunctionStencilIndex {
     index: usize,
 }
@@ -378,6 +382,10 @@ impl FunctionStencilList {
         let index = self.items.len();
         self.items.push(fun_data);
         FunctionStencilIndex::new(index)
+    }
+
+    pub fn get<'a>(&'a self, index: FunctionStencilIndex) -> &'a FunctionStencil {
+        &self.items[usize::from(index)]
     }
 
     pub fn get_mut<'a>(&'a mut self, index: FunctionStencilIndex) -> &'a mut FunctionStencil {

@@ -10,6 +10,7 @@
 //! describing each scope, binding, and function in the AST.
 
 mod builder;
+pub mod data;
 pub mod free_name_tracker;
 mod pass;
 
