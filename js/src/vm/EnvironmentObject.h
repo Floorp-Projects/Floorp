@@ -513,7 +513,8 @@ class LexicalEnvironmentObject : public EnvironmentObject {
 
   void initThisValue(JSObject* obj) {
     MOZ_ASSERT(isGlobal() || !isSyntactic());
-    initReservedSlot(THIS_VALUE_OR_SCOPE_SLOT, GetThisValue(obj));
+    JSObject* thisObj = GetThisObject(obj);
+    initReservedSlot(THIS_VALUE_OR_SCOPE_SLOT, ObjectValue(*thisObj));
   }
 
   void initScopeUnchecked(LexicalScope* scope) {
