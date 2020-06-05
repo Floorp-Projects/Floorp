@@ -23,11 +23,10 @@ class EnvironmentIter;
 class PlainObject;
 
 /*
- * Convert null/undefined |thisv| into the current global object for the
- * compartment, and replace other primitives with boxed versions.
+ * Convert null/undefined |thisv| into the global lexical's |this| object, and
+ * replace other primitives with boxed versions.
  */
-extern bool BoxNonStrictThis(JSContext* cx, HandleValue thisv,
-                             MutableHandleValue vp);
+extern JSObject* BoxNonStrictThis(JSContext* cx, HandleValue thisv);
 
 extern bool GetFunctionThis(JSContext* cx, AbstractFramePtr frame,
                             MutableHandleValue res);
