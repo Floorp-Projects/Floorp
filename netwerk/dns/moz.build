@@ -45,6 +45,8 @@ EXPORTS.mozilla.net += [
     'DNSRequestParent.h',
     'HTTPSSVC.h',
     'IDNBlocklistUtils.h',
+    'NativeDNSResolverOverrideChild.h',
+    'NativeDNSResolverOverrideParent.h',
     'TRRService.h',
     'TRRServiceBase.h',
     'TRRServiceChild.h',
@@ -65,6 +67,8 @@ UNIFIED_SOURCES += [
     'GetAddrInfo.cpp',
     'HTTPSSVC.cpp',
     'IDNBlocklistUtils.cpp',
+    'NativeDNSResolverOverrideChild.cpp',
+    'NativeDNSResolverOverrideParent.cpp',
     'nsDNSService2.cpp',
     'nsIDNService.cpp',
     'punycode.c',
@@ -78,6 +82,7 @@ UNIFIED_SOURCES += [
 IPDL_SOURCES = [
     'PDNSRequest.ipdl',
     'PDNSRequestParams.ipdlh',
+    'PNativeDNSResolverOverride.ipdl',
     'PTRRService.ipdl',
 ]
 

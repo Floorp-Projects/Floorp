@@ -7,7 +7,9 @@
 #include "GetAddrInfo.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/net/DNS.h"
+#include "NativeDNSResolverOverrideParent.h"
 #include "prnetdb.h"
+#include "nsIOService.h"
 #include "nsHostResolver.h"
 #include "nsError.h"
 #include "mozilla/net/DNS.h"
@@ -288,6 +290,10 @@ nsresult GetAddrInfo(const nsACString& aHost, uint16_t aAddressFamily,
 // static
 already_AddRefed<nsINativeDNSResolverOverride>
 NativeDNSResolverOverride::GetSingleton() {
+  if (nsIOService::UseSocketProcess() && XRE_IsParentProcess()) {
+    return NativeDNSResolverOverrideParent::GetSingleton();
+  }
+
   if (gOverrideService) {
     return do_AddRef(gOverrideService);
   }
