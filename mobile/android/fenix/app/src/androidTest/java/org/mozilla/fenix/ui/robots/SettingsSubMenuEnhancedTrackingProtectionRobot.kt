@@ -117,10 +117,10 @@ private fun assertEnhancedTrackingProtectionTextWithSwitchWidget() {
 }
 
 private fun assertEnhancedTrackingProtectionOptions() {
-    onView(withText("Standard"))
+    onView(withText("Standard (default)"))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
-    val stdText = "Pages will load normally, but block fewer trackers."
+    val stdText = "Blocks fewer trackers. Pages will load normally."
     onView(withText(stdText))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
@@ -128,7 +128,7 @@ private fun assertEnhancedTrackingProtectionOptions() {
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
     val strictText =
-        "Stronger tracking protection and faster performance, but some sites may not work properly."
+        "Blocks more trackers, ads, and popups. Pages load faster, but some functionality might not work."
     onView(withText(strictText))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
@@ -136,7 +136,7 @@ private fun assertEnhancedTrackingProtectionOptions() {
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
     val customText =
-        "Choose which trackers and scripts to block"
+        "Choose which trackers and scripts to block."
     onView(withText(customText))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
@@ -158,7 +158,7 @@ private fun assertRadioButtonDefaults() {
     onView(
         allOf(
             withId(org.mozilla.fenix.R.id.radio_button),
-            hasSibling(withText("Standard"))
+            hasSibling(withText("Standard (default)"))
         )
     ).assertIsChecked(true)
 

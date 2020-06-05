@@ -18,19 +18,19 @@
         android:defaultValue="true"
         android:dependency="@string/pref_key_tracking_protection"
         android:key="@string/pref_key_tracking_protection_standard_option"
-        android:summary="@string/preference_enhanced_tracking_protection_standard_description_2"
-        android:title="@string/preference_enhanced_tracking_protection_standard_option" />
+        android:summary="@string/preference_enhanced_tracking_protection_standard_description_3"
+        android:title="@string/preference_enhanced_tracking_protection_standard_default_1" />
     <org.mozilla.fenix.settings.RadioButtonInfoPreference
         android:defaultValue="false"
         android:dependency="@string/pref_key_tracking_protection"
         android:key="@string/pref_key_tracking_protection_strict_default"
-        android:summary="@string/preference_enhanced_tracking_protection_strict_default_description"
+        android:summary="@string/preference_enhanced_tracking_protection_strict_description_2"
         android:title="@string/preference_enhanced_tracking_protection_strict" />
     <org.mozilla.fenix.settings.RadioButtonInfoPreference
         android:defaultValue="false"
         android:dependency="@string/pref_key_tracking_protection"
         android:key="@string/pref_key_tracking_protection_custom_option"
-        android:summary="@string/preference_enhanced_tracking_protection_custom_description"
+        android:summary="@string/preference_enhanced_tracking_protection_custom_description_2"
         android:title="@string/preference_enhanced_tracking_protection_custom" />
     <CheckBoxPreference
         android:defaultValue="true"
