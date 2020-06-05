@@ -131,12 +131,24 @@ class ProviderSearchSuggestions extends UrlbarProvider {
       return false;
     }
 
-    return this._formHistoryCount || this._allowRemoteSuggestions(queryContext);
+    return (
+      this._getFormHistoryCount(queryContext) ||
+      this._allowRemoteSuggestions(queryContext)
+    );
   }
 
-  _allowRemoteSuggestions(queryContext) {
-    // Check preferences and other values that immediately prohibit remote
-    // suggestions.
+  /**
+   * Returns whether suggestions in general are allowed for a given query
+   * context.  If this returns false, then we shouldn't fetch either form
+   * history or remote suggestions.  Otherwise further checks are necessary to
+   * determine whether to allow either form history or remote suggestions; see
+   * _getFormHistoryCount and _allowRemoteSuggestions.
+   *
+   * @param {object} queryContext The query context object
+   * @returns {boolean} True if suggestions in general are allowed and false if
+   *   not.
+   */
+  _allowSuggestions(queryContext) {
     if (
       !queryContext.allowSearchSuggestions ||
       !UrlbarPrefs.get("suggest.searches") ||
@@ -144,6 +156,20 @@ class ProviderSearchSuggestions extends UrlbarProvider {
       (queryContext.isPrivate &&
         !UrlbarPrefs.get("browser.search.suggest.enabled.private"))
     ) {
+      return false;
+    }
+    return true;
+  }
+
+  /**
+   * Returns whether remote suggestions are allowed for a given query context.
+   *
+   * @param {object} queryContext The query context object
+   * @returns {boolean} True if remote suggestions are allowed and false if not.
+   */
+  _allowRemoteSuggestions(queryContext) {
+    // Check whether suggestions in general are allowed.
+    if (!this._allowSuggestions(queryContext)) {
       return false;
     }
 
@@ -324,11 +350,23 @@ class ProviderSearchSuggestions extends UrlbarProvider {
     this.queries.delete(queryContext);
   }
 
-  get _formHistoryCount() {
+  /**
+   * Returns the number of form history entries we should fetch from the
+   * suggestions controller for a given query context.
+   *
+   * @param {object} queryContext The query context object
+   * @returns {number} The number of form history results we should fetch.
+   */
+  _getFormHistoryCount(queryContext) {
+    if (!this._allowSuggestions(queryContext)) {
+      return 0;
+    }
+
     let count = UrlbarPrefs.get("maxHistoricalSearchSuggestions");
     if (!count) {
       return 0;
     }
+
     // If there's a form history entry that equals the search string, the search
     // suggestions controller will include it, and we'll make a result for it.
     // If the heuristic result ends up being a search result, the muxer will
@@ -346,13 +384,15 @@ class ProviderSearchSuggestions extends UrlbarProvider {
 
     this._suggestionsController = new SearchSuggestionController();
     this._suggestionsController.formHistoryParam = queryContext.formHistoryName;
-    this._suggestionsController.maxLocalResults = this._formHistoryCount;
+    this._suggestionsController.maxLocalResults = this._getFormHistoryCount(
+      queryContext
+    );
 
     let allowRemote = this._allowRemoteSuggestions(queryContext);
 
     // Request maxResults + 1 remote suggestions for the same reason we request
     // maxHistoricalSearchSuggestions + 1 form history entries; see
-    // _formHistoryCount.  We allow for the possibility that the engine may
+    // _getFormHistoryCount.  We allow for the possibility that the engine may
     // return a suggestion that's the same as the search string.
     this._suggestionsController.maxRemoteResults = allowRemote
       ? queryContext.maxResults + 1
