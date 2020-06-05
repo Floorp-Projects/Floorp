@@ -245,8 +245,7 @@ win64-plain/debug:
             - win64-cbindgen
             - win64-winchecksec
     optimization:
-        push-interval-10:
-            - windows
+        push-interval-10: null
 
 win64/opt:
     description: "Win64 Opt"
@@ -341,8 +340,7 @@ win64-plain/opt:
             - win64-cbindgen
             - win64-winchecksec
     optimization:
-        push-interval-10:
-            - windows
+        push-interval-10: null
 
 win32-shippable/opt:
     description: "Win32 Opt Shippable"
@@ -900,8 +898,7 @@ win64-asan/debug:
             - win32-fix-stacks
             - win64-winchecksec
     optimization:
-        push-interval-10:
-            - windows
+        push-interval-10: null
 
 win64-asan/opt:
     description: "Win64 Opt ASAN"
@@ -1204,8 +1201,7 @@ win64-aarch64/debug:
             - nsis-3.01-win
             - upx-3.95-win
     optimization:
-        push-interval-10:
-            - windows
+        push-interval-10: null
 
 win64-aarch64/opt:
     description: "AArch64 Win64 Opt"
@@ -1263,8 +1259,7 @@ win64-aarch64/opt:
             - nsis-3.01-win
             - upx-3.95-win
     optimization:
-        push-interval-10:
-            - windows
+        push-interval-10: null
 
 win64-aarch64-eme/opt:
     description: "AArch64 Win64 Opt w/ EME"
@@ -1307,8 +1302,7 @@ win64-aarch64-eme/opt:
             - nsis-3.01-win
             - upx-3.95-win
     optimization:
-        push-interval-10:
-            - windows
+        push-interval-10: null
 
 win64-aarch64-shippable/opt:
     description: "AArch64 Win64 Shippable"
@@ -1407,8 +1401,7 @@ win64-aarch64-shippable/opt:
             - nsis-3.01-win
             - upx-3.95-win
     optimization:
-        push-interval-10:
-            - windows
+        push-interval-10: null
 
 win64-aarch64-shippable-no-eme/opt:
     description: "AArch64 Win64 Shippable w/o EME"
@@ -1470,8 +1463,7 @@ win64-aarch64-shippable-no-eme/opt:
             - nsis-3.01-win
             - upx-3.95-win
     optimization:
-        push-interval-10:
-            - windows
+        push-interval-10: null
 
 win64-aarch64-devedition/opt:
     description: "AArch64 Win64 Dev Edition (shippable)"

@@ -58,5 +58,4 @@ jobs:
                 - linux64-lucetc
                 - wasi-sysroot
         optimization:
-            push-interval-10:
-                - linux
+            push-interval-10: null

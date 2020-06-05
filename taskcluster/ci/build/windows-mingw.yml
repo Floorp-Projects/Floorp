@@ -13,8 +13,7 @@ job-defaults:
         script: mozharness/scripts/fx_desktop_build.py
         need-xvfb: false
     optimization:
-        push-interval-10:
-            - windows
+        push-interval-10: null
 
 win32-mingwclang/opt:
     description: "Win32 MinGW-Clang Opt"
