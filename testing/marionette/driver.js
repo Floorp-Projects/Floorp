@@ -1758,6 +1758,10 @@ GeckoDriver.prototype.switchToFrame = async function(cmd) {
 
   let { id, focus } = cmd.parameters;
 
+  if (typeof id == "number") {
+    assert.unsignedShort(id, `Expected id to be unsigned short, got ${id}`);
+  }
+
   // TODO(ato): element can be either string (deprecated) or a web
   // element JSON Object.  Can be removed with Firefox 60.
   let byFrame;
