@@ -406,8 +406,8 @@ function clone_repo {
     ${HG} robustcheckout --sharebase /tmp/hg-store -b default "${HGREPO}" "${REPODIR}"
   fi
 
-  ${HG} -R ${REPODIR} pull
-  ${HG} -R ${REPODIR} update -C default
+  ${HG} -R "${REPODIR}" pull
+  ${HG} -R "${REPODIR}" update -C default
 }
 
 # Copies new HSTS files in place, and commits them.
