@@ -53,20 +53,6 @@ key-attr =
   }
 
   {
-    let values = l10n.formatValuesSync([
-      "key-value1",
-      "key-value2",
-      "key-missing",
-      "key-attr"
-    ]);
-
-    strictEqual(values[0], "[de] Value2");
-    strictEqual(values[1], "[en] Value3");
-    strictEqual(values[2], null);
-    strictEqual(values[3], null);
-  }
-
-  {
     strictEqual(l10n.formatValueSync("key-missing"), null);
     strictEqual(l10n.formatValueSync("key-value1"), "[de] Value2");
     strictEqual(l10n.formatValueSync("key-value2"), "[en] Value3");
@@ -169,16 +155,6 @@ add_task(function test_add_remove_resourceIds() {
   l10n.addResourceIds(["/toolkit/menu.ftl"]);
 
   values = l10n.formatValuesSync([{id: "key1"}, {id: "key2"}]);
-
-  strictEqual(values[0], "Value1");
-  strictEqual(values[1], "Value2");
-
-  values = l10n.formatValuesSync(["key1", {id: "key2"}]);
-
-  strictEqual(values[0], "Value1");
-  strictEqual(values[1], "Value2");
-
-  values = l10n.formatValuesSync([{id: "key1"}, "key2"]);
 
   strictEqual(values[0], "Value1");
   strictEqual(values[1], "Value2");
