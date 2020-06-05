@@ -6834,7 +6834,10 @@ static void DisplayLine(nsDisplayListBuilder* aBuilder,
       collection,
       aLineInLine ? collection.Content() : collection.BlockBorderBackgrounds());
 
-  uint32_t flags = aLineInLine ? nsIFrame::DISPLAY_CHILD_INLINE : 0;
+  auto flags =
+      aLineInLine
+          ? nsIFrame::DisplayChildFlags(nsIFrame::DisplayChildFlag::Inline)
+          : nsIFrame::DisplayChildFlags();
 
   nsIFrame* kid = aLine->mFirstChild;
   int32_t n = aLine->GetChildCount();
