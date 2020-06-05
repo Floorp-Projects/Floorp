@@ -24,16 +24,6 @@ module.exports = {
     subscribeByLocation: () => {
       return () => {};
     },
-    originalPositionForURL: () => {
-      return new Promise(resolve => {
-        resolve();
-      });
-    },
-    originalPositionForID: () => {
-      return new Promise(resolve => {
-        resolve();
-      });
-    },
   },
   openLink: () => {},
   // eslint-disable-next-line react/display-name
