@@ -66,8 +66,8 @@ impl UnstableLayoutMethods for Layout {
         let padded_size = self
             .size()
             .checked_add(self.padding_needed_for(self.align()))
-            .ok_or(new_layout_err())?;
-        let alloc_size = padded_size.checked_mul(n).ok_or(new_layout_err())?;
+            .ok_or_else(new_layout_err)?;
+        let alloc_size = padded_size.checked_mul(n).ok_or_else(new_layout_err)?;
 
         unsafe {
             // self.align is already known to be valid and alloc_size has been
@@ -381,11 +381,11 @@ pub unsafe trait Alloc {
         let old_size = layout.size();
 
         if new_size >= old_size {
-            if let Ok(()) = self.grow_in_place(ptr, layout.clone(), new_size) {
+            if let Ok(()) = self.grow_in_place(ptr, layout, new_size) {
                 return Ok(ptr);
             }
         } else if new_size < old_size {
-            if let Ok(()) = self.shrink_in_place(ptr, layout.clone(), new_size) {
+            if let Ok(()) = self.shrink_in_place(ptr, layout, new_size) {
                 return Ok(ptr);
             }
         }
@@ -700,9 +700,7 @@ pub unsafe trait Alloc {
         Self: Sized,
     {
         match Layout::array::<T>(n) {
-            Ok(ref layout) if layout.size() > 0 => unsafe {
-                self.alloc(layout.clone()).map(|p| p.cast())
-            },
+            Ok(layout) if layout.size() > 0 => unsafe { self.alloc(layout).map(|p| p.cast()) },
             _ => Err(AllocErr),
         }
     }
@@ -785,7 +783,10 @@ pub unsafe trait Alloc {
         Self: Sized,
     {
         match Layout::array::<T>(n) {
-            Ok(ref k) if k.size() > 0 => Ok(self.dealloc(ptr.cast(), k.clone())),
+            Ok(k) if k.size() > 0 => {
+                self.dealloc(ptr.cast(), k);
+                Ok(())
+            }
             _ => Err(AllocErr),
         }
     }

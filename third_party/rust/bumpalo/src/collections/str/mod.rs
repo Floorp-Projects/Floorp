@@ -16,6 +16,7 @@
 pub mod lossy;
 
 // https://tools.ietf.org/html/rfc3629
+#[rustfmt::skip]
 static UTF8_CHAR_WIDTH: [u8; 256] = [
 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, // 0x1F

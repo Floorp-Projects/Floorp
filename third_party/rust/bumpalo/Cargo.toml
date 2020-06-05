@@ -13,30 +13,41 @@
 [package]
 edition = "2018"
 name = "bumpalo"
-version = "2.6.0"
+version = "3.4.0"
 authors = ["Nick Fitzgerald <fitzgen@gmail.com>"]
 description = "A fast bump allocation arena for Rust."
-documentation = "https://docs.rs/id-arena"
+documentation = "https://docs.rs/bumpalo"
 readme = "./README.md"
 categories = ["memory-management", "rust-patterns", "no-std"]
 license = "MIT/Apache-2.0"
 repository = "https://github.com/fitzgen/bumpalo"
+[package.metadata.docs.rs]
+all-features = true
 
 [lib]
 path = "src/lib.rs"
 bench = false
 
+[[test]]
+name = "try_alloc"
+path = "tests/try_alloc.rs"
+harness = false
+
 [[bench]]
 name = "benches"
 path = "benches/benches.rs"
 harness = false
+required-features = ["collections"]
 [dev-dependencies.criterion]
-version = "0.2.10"
+version = "0.3.0"
 
 [dev-dependencies.quickcheck]
-version = "0.8.2"
+version = "0.9.0"
+
+[dev-dependencies.rand]
+version = "0.7"
 
 [features]
-collections = ["std"]
-default = ["collections", "std"]
-std = []
+boxed = []
+collections = []
+default = []

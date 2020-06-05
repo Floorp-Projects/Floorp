@@ -7,16 +7,19 @@
 //! but the goal is to do this analysis as part of the parse phase, even when
 //! no AST is built. So we try to keep AST use separate from the analysis code.
 
-use crate::builder::ScopeDataMapBuilder;
+use crate::builder::{ScopeDataMapAndFunctionStencilList, ScopeDataMapBuilder};
 use ast::arena;
 use ast::associated_data::AssociatedData;
 use ast::{types::*, visit::Pass};
+use stencil::function::{FunctionStencilIndex, FunctionStencilList};
 use stencil::scope::ScopeDataMap;
 
 /// The result of scope analysis.
-pub struct ScopeDataMapAndFunctionMap<'alloc> {
+pub struct ScopePassResult<'alloc> {
     pub scope_data_map: ScopeDataMap,
     pub function_map: AssociatedData<&'alloc Function<'alloc>>,
+    pub function_stencil_indices: AssociatedData<FunctionStencilIndex>,
+    pub functions: FunctionStencilList,
 }
 
 /// The top-level struct responsible for extracting the necessary information
@@ -39,11 +42,18 @@ impl<'alloc> ScopePass<'alloc> {
     }
 }
 
-impl<'alloc> From<ScopePass<'alloc>> for ScopeDataMapAndFunctionMap<'alloc> {
-    fn from(pass: ScopePass<'alloc>) -> ScopeDataMapAndFunctionMap<'alloc> {
-        ScopeDataMapAndFunctionMap {
-            scope_data_map: pass.builder.into(),
+impl<'alloc> From<ScopePass<'alloc>> for ScopePassResult<'alloc> {
+    fn from(pass: ScopePass<'alloc>) -> ScopePassResult<'alloc> {
+        let ScopeDataMapAndFunctionStencilList {
+            scope_data_map,
+            function_stencil_indices,
+            functions,
+        } = pass.builder.into();
+        ScopePassResult {
+            scope_data_map,
             function_map: pass.function_map,
+            function_stencil_indices,
+            functions,
         }
     }
 }
@@ -111,19 +121,22 @@ impl<'alloc> Pass<'alloc> for ScopePass<'alloc> {
         } else {
             panic!("FunctionDeclaration should have name");
         };
-        self.builder.before_function_declaration(name, ast);
+        self.builder
+            .before_function_declaration(name, ast, ast.is_generator, ast.is_async);
         self.function_map.insert(ast, ast);
     }
 
-    fn enter_enum_expression_variant_function_expression(&mut self, ast: &'alloc Function<'alloc>) {
-        self.builder.before_function_expression(ast);
+    fn leave_enum_statement_variant_function_declaration(&mut self, ast: &'alloc Function<'alloc>) {
+        self.builder.after_function_declaration(ast);
     }
 
-    fn leave_enum_expression_variant_function_expression(
-        &mut self,
-        _ast: &'alloc Function<'alloc>,
-    ) {
-        self.builder.after_function_expression();
+    fn enter_enum_expression_variant_function_expression(&mut self, ast: &'alloc Function<'alloc>) {
+        self.builder
+            .before_function_expression(ast, ast.is_generator, ast.is_async);
+    }
+
+    fn leave_enum_expression_variant_function_expression(&mut self, ast: &'alloc Function<'alloc>) {
+        self.builder.after_function_expression(ast);
     }
 
     fn visit_formal_parameters(&mut self, ast: &'alloc FormalParameters<'alloc>) {
@@ -143,32 +156,53 @@ impl<'alloc> Pass<'alloc> for ScopePass<'alloc> {
         self.builder.after_function_parameters();
     }
 
+    fn enter_enum_method_definition_variant_method(&mut self, ast: &'alloc Method<'alloc>) {
+        self.builder
+            .before_method(ast, ast.is_generator, ast.is_async);
+        // FIXME: Call self.builder.on_function_name
+    }
+
+    fn leave_enum_method_definition_variant_method(&mut self, ast: &'alloc Method<'alloc>) {
+        self.builder.after_method(ast);
+    }
+
     /// Getter doesn't have FormalParameters.
     /// Call builder methods just before body.
     fn visit_getter(&mut self, ast: &'alloc Getter<'alloc>) {
+        self.builder.before_getter(ast);
+        // FIXME: Call self.builder.on_function_name
+
         self.enter_getter(ast);
         self.visit_property_name(&ast.property_name);
 
-        self.builder.before_function_parameters(ast);
-        self.builder.after_function_parameters();
+        // FIXME: Pass something that points `()` part of getter.
+        self.builder.on_getter_parameter(ast);
 
         self.visit_function_body(&ast.body);
         self.leave_getter(ast);
+
+        self.builder.after_getter(ast);
     }
 
     /// Setter doesn't have FormalParameters, but single Parameter.
     /// Call builder methods around it.
     fn visit_setter(&mut self, ast: &'alloc Setter<'alloc>) {
+        self.builder.before_setter(ast);
+        // FIXME: Call self.builder.on_function_name
+
         self.enter_setter(ast);
         self.visit_property_name(&ast.property_name);
 
-        self.builder.before_function_parameters(ast);
-        self.builder.before_parameter();
+        // FIXME: Pass something that points `(param)` part of setter,
+        // including `(` and `)`.
+        self.builder.before_setter_parameter(&ast.param);
         self.visit_parameter(&ast.param);
-        self.builder.after_function_parameters();
+        self.builder.after_setter_parameter();
 
         self.visit_function_body(&ast.body);
         self.leave_setter(ast);
+
+        self.builder.after_setter(ast);
     }
 
     fn leave_binding_with_default(&mut self, _ast: &'alloc BindingWithDefault<'alloc>) {
@@ -192,6 +226,24 @@ impl<'alloc> Pass<'alloc> for ScopePass<'alloc> {
 
     fn leave_function_body(&mut self, _ast: &'alloc FunctionBody<'alloc>) {
         self.builder.after_function_body();
+    }
+
+    fn enter_enum_expression_variant_arrow_expression(
+        &mut self,
+        is_async: &'alloc bool,
+        params: &'alloc FormalParameters<'alloc>,
+        _body: &'alloc ArrowExpressionBody<'alloc>,
+    ) {
+        self.builder.before_arrow_function(*is_async, params);
+    }
+
+    fn leave_enum_expression_variant_arrow_expression(
+        &mut self,
+        _is_async: &'alloc bool,
+        _params: &'alloc FormalParameters<'alloc>,
+        body: &'alloc ArrowExpressionBody<'alloc>,
+    ) {
+        self.builder.after_arrow_function(body);
     }
 
     /// Arrow function with expression body.

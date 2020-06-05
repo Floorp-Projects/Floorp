@@ -2,6 +2,7 @@
 
 use crate::numeric_value::{parse_float, parse_int, NumericLiteralBase};
 use crate::parser::Parser;
+use crate::unicode::{is_id_continue, is_id_start};
 use ast::arena;
 use ast::source_atom_set::{CommonSourceAtomSetIndices, SourceAtomSet};
 use ast::source_slice_list::SourceSliceList;
@@ -12,7 +13,6 @@ use std::cell::RefCell;
 use std::convert::TryFrom;
 use std::rc::Rc;
 use std::str::Chars;
-use unic_ucd_ident::{is_id_continue, is_id_start};
 
 pub struct Lexer<'alloc> {
     allocator: &'alloc Bump,

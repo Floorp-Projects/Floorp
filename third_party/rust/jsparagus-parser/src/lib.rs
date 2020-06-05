@@ -5,6 +5,8 @@ pub mod numeric_value;
 mod parser;
 mod queue_stack;
 mod simulator;
+mod unicode;
+mod unicode_data;
 
 #[cfg(test)]
 mod tests;

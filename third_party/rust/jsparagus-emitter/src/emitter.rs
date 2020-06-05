@@ -27,13 +27,13 @@ use stencil::script::{ImmutableScriptFlags, ScriptStencil, ScriptStencilBase};
 // Do mot modify manually.
 //
 // @@@@ BEGIN TYPES @@@@
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub enum AsyncFunctionResolveKind {
     Fulfill = 0,
     Reject = 1,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub enum CheckIsObjectKind {
     IteratorNext = 0,
     IteratorReturn = 1,
@@ -42,28 +42,28 @@ pub enum CheckIsObjectKind {
     GetAsyncIterator = 4,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub enum FunctionPrefixKind {
     None = 0,
     Get = 1,
     Set = 2,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub enum GeneratorResumeKind {
     Next = 0,
     Throw = 1,
     Return = 2,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub enum ThrowMsgKind {
     AssignToCall = 0,
     IteratorNoThrow = 1,
     CantDeleteSuper = 2,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub enum TryNoteKind {
     Catch = 0,
     Finally = 1,
@@ -74,7 +74,7 @@ pub enum TryNoteKind {
     Loop = 6,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub enum SymbolCode {
     IsConcatSpreadable = 0,
     Iterator = 1,
@@ -91,7 +91,7 @@ pub enum SymbolCode {
     MatchAll = 12,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub enum SrcNoteType {
     Null = 0,
     AssignOp = 1,

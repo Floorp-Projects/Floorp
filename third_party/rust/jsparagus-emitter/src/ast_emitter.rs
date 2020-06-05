@@ -8,7 +8,7 @@ use crate::compilation_info::CompilationInfo;
 use crate::emitter::{EmitError, EmitOptions, InstructionWriter};
 use crate::emitter_scope::{EmitterScopeStack, NameLocation};
 use crate::expression_emitter::*;
-use crate::function_declaration_emitter::{DummyFunctionScriptEmitter, FunctionDeclarationEmitter};
+use crate::function_declaration_emitter::{FunctionDeclarationEmitter, LazyFunctionEmitter};
 use crate::object_emitter::*;
 use crate::reference_op_emitter::{
     AssignmentEmitter, CallEmitter, DeclarationEmitter, ElemReferenceEmitter, GetElemEmitter,
@@ -80,17 +80,6 @@ impl<'alloc, 'opt> AstEmitter<'alloc, 'opt> {
         }
     }
 
-    pub fn with_inner<ScriptFn>(&mut self, callback: ScriptFn) -> Result<ScriptStencil, EmitError>
-    where
-        ScriptFn: Fn(&mut AstEmitter) -> Result<(), EmitError>,
-    {
-        let mut inner_emitter = AstEmitter::new(self.options, self.compilation_info);
-
-        callback(&mut inner_emitter)?;
-
-        Ok(inner_emitter.emit.into())
-    }
-
     pub fn lookup_name(&mut self, name: SourceAtomSetIndex) -> NameLocation {
         self.scope_stack.lookup_name(name)
     }
@@ -124,18 +113,19 @@ impl<'alloc, 'opt> AstEmitter<'alloc, 'opt> {
     }
 
     fn emit_top_level_function_declaration(&mut self, fun: &Function) -> Result<(), EmitError> {
-        let name = fun
-            .name
-            .as_ref()
-            .expect("function declaration should have name")
-            .name
-            .value;
-
-        let fun_index = DummyFunctionScriptEmitter { name }.emit(self)?;
+        let stencil_index = *self
+            .compilation_info
+            .function_stencil_indices
+            .get(fun)
+            .expect("FunctionStencil should be created");
+        let fun_index = LazyFunctionEmitter { stencil_index }.emit(self);
 
         FunctionDeclarationEmitter { fun: fun_index }.emit(self);
 
-        Ok(())
+        Err(EmitError::NotImplemented(
+            "TODO: closed over bindings for function",
+        ))
+        //Ok(())
     }
 
     fn emit_statement(&mut self, ast: &Statement) -> Result<(), EmitError> {

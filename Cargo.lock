@@ -447,9 +447,9 @@ dependencies = [
 
 [[package]]
 name = "bumpalo"
-version = "2.6.0"
+version = "3.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ad807f2fc2bf185eeb98ff3a901bd46dc5ad58163d0fa4577ba0d25674d71708"
+checksum = "2e8c087f005730276d1096a652e92a8bacee2e2472bcc9715a74d2bec38b5820"
 
 [[package]]
 name = "byte-tools"
@@ -2373,7 +2373,7 @@ dependencies = [
 [[package]]
 name = "jsparagus"
 version = "0.1.0"
-source = "git+https://github.com/mozilla-spidermonkey/jsparagus?rev=efc1291d05e5ba8dbb4bd1197937a0291e72742c#efc1291d05e5ba8dbb4bd1197937a0291e72742c"
+source = "git+https://github.com/mozilla-spidermonkey/jsparagus?rev=a62ca363140935fdd77549b6e17bb9d79f76af75#a62ca363140935fdd77549b6e17bb9d79f76af75"
 dependencies = [
  "jsparagus-ast",
  "jsparagus-emitter",
@@ -2387,7 +2387,7 @@ dependencies = [
 [[package]]
 name = "jsparagus-ast"
 version = "0.1.0"
-source = "git+https://github.com/mozilla-spidermonkey/jsparagus?rev=efc1291d05e5ba8dbb4bd1197937a0291e72742c#efc1291d05e5ba8dbb4bd1197937a0291e72742c"
+source = "git+https://github.com/mozilla-spidermonkey/jsparagus?rev=a62ca363140935fdd77549b6e17bb9d79f76af75#a62ca363140935fdd77549b6e17bb9d79f76af75"
 dependencies = [
  "bumpalo",
  "indexmap",
@@ -2398,7 +2398,7 @@ dependencies = [
 [[package]]
 name = "jsparagus-emitter"
 version = "0.1.0"
-source = "git+https://github.com/mozilla-spidermonkey/jsparagus?rev=efc1291d05e5ba8dbb4bd1197937a0291e72742c#efc1291d05e5ba8dbb4bd1197937a0291e72742c"
+source = "git+https://github.com/mozilla-spidermonkey/jsparagus?rev=a62ca363140935fdd77549b6e17bb9d79f76af75#a62ca363140935fdd77549b6e17bb9d79f76af75"
 dependencies = [
  "bumpalo",
  "byteorder",
@@ -2411,7 +2411,7 @@ dependencies = [
 [[package]]
 name = "jsparagus-generated-parser"
 version = "0.1.0"
-source = "git+https://github.com/mozilla-spidermonkey/jsparagus?rev=efc1291d05e5ba8dbb4bd1197937a0291e72742c#efc1291d05e5ba8dbb4bd1197937a0291e72742c"
+source = "git+https://github.com/mozilla-spidermonkey/jsparagus?rev=a62ca363140935fdd77549b6e17bb9d79f76af75#a62ca363140935fdd77549b6e17bb9d79f76af75"
 dependencies = [
  "bumpalo",
  "jsparagus-ast",
@@ -2421,24 +2421,23 @@ dependencies = [
 [[package]]
 name = "jsparagus-json-log"
 version = "0.1.0"
-source = "git+https://github.com/mozilla-spidermonkey/jsparagus?rev=efc1291d05e5ba8dbb4bd1197937a0291e72742c#efc1291d05e5ba8dbb4bd1197937a0291e72742c"
+source = "git+https://github.com/mozilla-spidermonkey/jsparagus?rev=a62ca363140935fdd77549b6e17bb9d79f76af75#a62ca363140935fdd77549b6e17bb9d79f76af75"
 
 [[package]]
 name = "jsparagus-parser"
 version = "0.1.0"
-source = "git+https://github.com/mozilla-spidermonkey/jsparagus?rev=efc1291d05e5ba8dbb4bd1197937a0291e72742c#efc1291d05e5ba8dbb4bd1197937a0291e72742c"
+source = "git+https://github.com/mozilla-spidermonkey/jsparagus?rev=a62ca363140935fdd77549b6e17bb9d79f76af75#a62ca363140935fdd77549b6e17bb9d79f76af75"
 dependencies = [
  "bumpalo",
  "jsparagus-ast",
  "jsparagus-generated-parser",
  "jsparagus-json-log",
- "unic-ucd-ident",
 ]
 
 [[package]]
 name = "jsparagus-scope"
 version = "0.1.0"
-source = "git+https://github.com/mozilla-spidermonkey/jsparagus?rev=efc1291d05e5ba8dbb4bd1197937a0291e72742c#efc1291d05e5ba8dbb4bd1197937a0291e72742c"
+source = "git+https://github.com/mozilla-spidermonkey/jsparagus?rev=a62ca363140935fdd77549b6e17bb9d79f76af75#a62ca363140935fdd77549b6e17bb9d79f76af75"
 dependencies = [
  "indexmap",
  "jsparagus-ast",
@@ -2448,7 +2447,7 @@ dependencies = [
 [[package]]
 name = "jsparagus-stencil"
 version = "0.1.0"
-source = "git+https://github.com/mozilla-spidermonkey/jsparagus?rev=efc1291d05e5ba8dbb4bd1197937a0291e72742c#efc1291d05e5ba8dbb4bd1197937a0291e72742c"
+source = "git+https://github.com/mozilla-spidermonkey/jsparagus?rev=a62ca363140935fdd77549b6e17bb9d79f76af75#a62ca363140935fdd77549b6e17bb9d79f76af75"
 dependencies = [
  "jsparagus-ast",
 ]
@@ -5158,27 +5157,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "unic-char-property"
-version = "0.9.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a8c57a407d9b6fa02b4795eb81c5b6652060a15a7903ea981f3d723e6c0be221"
-dependencies = [
- "unic-char-range",
-]
-
-[[package]]
-name = "unic-char-range"
-version = "0.9.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0398022d5f700414f6b899e10b8348231abf9173fa93144cbc1a43b9793c1fbc"
-
-[[package]]
-name = "unic-common"
-version = "0.9.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "80d7ff825a6a654ee85a63e80f92f054f904f21e7d12da4e22f9834a4aaa35bc"
-
-[[package]]
 name = "unic-langid"
 version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5205,26 +5183,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c43c61e94492eb67f20facc7b025778a904de83d953d8fcb60dd9adfd6e2d0ea"
 dependencies = [
  "tinystr",
-]
-
-[[package]]
-name = "unic-ucd-ident"
-version = "0.9.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e230a37c0381caa9219d67cf063aa3a375ffed5bf541a452db16e744bdab6987"
-dependencies = [
- "unic-char-property",
- "unic-char-range",
- "unic-ucd-version",
-]
-
-[[package]]
-name = "unic-ucd-version"
-version = "0.9.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "96bd2f2237fe450fcd0a1d2f5f4e91711124f7857ba2e964247776ebeeb7b0c4"
-dependencies = [
- "unic-common",
 ]
 
 [[package]]
