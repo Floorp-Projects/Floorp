@@ -20,6 +20,8 @@
   width: calc(var(--base-unit) * 4);
   height: calc(var(--base-unit) * 4);
   content: "";
+  -moz-context-properties: fill;
+  fill: currentColor;
   background-image: url(chrome://browser/skin/developer.svg);
   /* the icon size is taller than the line-height of the text. Since the
      text can occupy multiple lines, and we want to keep the icon aligned
