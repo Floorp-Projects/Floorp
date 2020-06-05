@@ -115,8 +115,12 @@ add_task(async function test_calling_sync_calls_ext_storage_sync() {
     await withSyncContext(async function(context) {
       // Set something so that everyone knows that we're using storage.sync
       await extensionStorageSync.set(extension, { a: "b" }, context);
-
-      await engine._sync();
+      let ping = await sync_engine_and_validate_telem(engine, false);
+      Assert.ok(ping.engines.find(e => e.name == "extension-storage"));
+      Assert.equal(
+        ping.engines.find(e => e.name == "rust-webext-storage"),
+        null
+      );
     });
   } finally {
     extensionStorageSync.syncAll = oldSync;
