@@ -634,10 +634,7 @@ def default_wasm_simd(jit_enabled, simulator, target, milestone):
     if not jit_enabled or simulator:
         return
 
-    # Note, not `target.cpu in ('x86_64')`, as the parens are stripped
-    # from the 1-element tuple and the operation does string matching.
-    # Good grief.
-    if milestone.is_nightly and target.cpu == 'x86_64':
+    if milestone.is_nightly and target.cpu in ('x86_64', 'x86'):
         return True
 
 js_option('--enable-wasm-simd',
@@ -650,10 +647,10 @@ def wasm_simd(value, jit_enabled, simulator, target):
         return
 
     if jit_enabled and not simulator:
-        if target.cpu == 'x86_64':
+        if target.cpu in ('x86_64', 'x86'):
             return True
 
-    die('--enable-wasm-simd only possible when targeting the x86_64 jit')
+    die('--enable-wasm-simd only possible when targeting the x86_64/x86 jit')
 
 set_config('ENABLE_WASM_SIMD', wasm_simd)
 set_define('ENABLE_WASM_SIMD', wasm_simd)

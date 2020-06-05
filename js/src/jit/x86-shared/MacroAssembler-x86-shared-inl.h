@@ -1737,6 +1737,11 @@ void MacroAssembler::unsignedRightShiftInt32x4(Imm32 count, FloatRegister src,
   vpsrld(count, src, dest);
 }
 
+void MacroAssembler::rightShiftInt64x2(Imm32 count, FloatRegister src,
+                                       FloatRegister dest) {
+  MacroAssemblerX86Shared::packedRightShiftByScalarInt64x2(count, src, dest);
+}
+
 void MacroAssembler::unsignedRightShiftInt64x2(Register rhs,
                                                FloatRegister lhsDest,
                                                Register temp) {

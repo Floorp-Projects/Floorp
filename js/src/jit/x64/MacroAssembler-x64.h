@@ -943,8 +943,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared {
 
   void loadConstantSimd128Int(const SimdConstant& v, FloatRegister dest);
   void loadConstantSimd128Float(const SimdConstant& v, FloatRegister dest);
-  void vpandSimd128(const SimdConstant& v, FloatRegister dest);
-  void rightShiftInt64x2(Imm32 count, FloatRegister src, FloatRegister dest);
+  void vpandSimd128(const SimdConstant& v, FloatRegister srcDest);
 
   void loadWasmGlobalPtr(uint32_t globalDataOffset, Register dest) {
     loadPtr(Address(WasmTlsReg,

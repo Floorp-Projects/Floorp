@@ -1770,6 +1770,30 @@ void MacroAssemblerX86Shared::packedUnsignedRightShiftByScalarInt64x2(
   vpsrlq(scratch, in, dest);
 }
 
+void MacroAssemblerX86Shared::packedRightShiftByScalarInt64x2(
+    Imm32 count, FloatRegister src, FloatRegister dest) {
+  MOZ_ASSERT(count.value < 32);
+#ifdef ENABLE_WASM_SIMD
+  MOZ_ASSERT(!MacroAssembler::MustScalarizeShiftSimd128(wasm::SimdOp::I64x2ShrS,
+                                                        count));
+#endif
+
+  ScratchSimd128Scope scratch(asMasm());
+  // Compute high dwords and mask low dwords
+  asMasm().moveSimd128(src, scratch);
+  vpsrad(count, scratch, scratch);
+  asMasm().bitwiseAndSimd128(
+      SimdConstant::SplatX2(int64_t(0xFFFFFFFF00000000LL)), scratch);
+  // Compute low dwords (high dwords at most have clear high bits where the
+  // result will have set low high bits)
+  if (src != dest) {
+    asMasm().moveSimd128(src, dest);
+  }
+  vpsrlq(count, dest, dest);
+  // Merge the parts
+  vpor(scratch, dest, dest);
+}
+
 void MacroAssemblerX86Shared::selectSimd128(FloatRegister mask,
                                             FloatRegister onTrue,
                                             FloatRegister onFalse,
