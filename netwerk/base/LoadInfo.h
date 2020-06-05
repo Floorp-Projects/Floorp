@@ -83,6 +83,12 @@ class LoadInfo final : public nsILoadInfo {
            const OriginAttributes& aOriginAttributes, uint64_t aOuterWindowID,
            nsSecurityFlags aSecurityFlags, uint32_t aSandboxFlags);
 
+  // Used for loads initiated by DocumentLoadListener.
+  LoadInfo(dom::WindowGlobalParent* aParentWGP,
+           nsIPrincipal* aTriggeringPrincipal, uint64_t aFrameOuterWindowID,
+           nsContentPolicyType aContentPolicyType,
+           nsSecurityFlags aSecurityFlags, uint32_t aSandboxFlags);
+
   // create an exact copy of the loadinfo
   already_AddRefed<nsILoadInfo> Clone() const;
 
