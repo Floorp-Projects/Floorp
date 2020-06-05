@@ -359,8 +359,52 @@ def _find_all_js_files(location):
                 yield root, fn
 
 
-TEST_HEADER_PATTERN_INLINE = re.compile(r'//\s*\|(.*?)\|\s*(.*?)\s*(--\s*(.*))?$')
-TEST_HEADER_PATTERN_MULTI = re.compile(r'/\*\s*\|(.*?)\|\s*(.*?)\s*(--\s*(.*))?\*/')
+# The pattern for test header lines.
+TEST_HEADER_PATTERN = r'''
+# Ignore any space before the tag.
+\s*
+
+# The reftest tag is enclosed in pipes.
+\|(?P<tag>.*?)\|
+
+# Ignore any space before the options.
+\s*
+
+# Accept some options.
+(?P<options>.*?)
+
+# Ignore space before the comments.
+\s*
+
+# Accept an optional comment starting with "--".
+(?:
+  # Unless "--" is directly preceded by "(".
+  (?<!\()
+  --
+
+  # Ignore more space.
+  \s*
+
+  # The actual comment.
+  (?P<comment>.*)
+)?
+'''
+
+
+TEST_HEADER_PATTERN_INLINE = re.compile(r'''
+# Start a single line comment
+//
+''' + TEST_HEADER_PATTERN + r'''
+# Match the end of line.
+$
+''', re.VERBOSE)
+TEST_HEADER_PATTERN_MULTI = re.compile(r'''
+# Start a multi line comment
+/\*
+''' + TEST_HEADER_PATTERN + r'''
+# Match the end of comment.
+\*/
+''', re.VERBOSE)
 
 
 def _append_terms_and_comment(testcase, terms, comment):
@@ -402,9 +446,9 @@ def _parse_test_header(fullpath, testcase, xul_tester):
         if not matches:
             return
 
-    testcase.tag = matches.group(1)
-    _append_terms_and_comment(testcase, matches.group(2), matches.group(4))
-    _parse_one(testcase, matches.group(2), xul_tester)
+    testcase.tag = matches.group('tag')
+    _append_terms_and_comment(testcase, matches.group('options'), matches.group('comment'))
+    _parse_one(testcase, matches.group('options'), xul_tester)
 
 
 def _parse_external_manifest(filename, relpath):
