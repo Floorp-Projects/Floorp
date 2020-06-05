@@ -166,3 +166,51 @@ add_task(async function testPrivateWindow() {
 
   await BrowserTestUtils.closeWindow(privateWindow);
 });
+
+/**
+ * Tests notification silencing when sharing a screen while already
+ * sharing the microphone. Alone ensures that if we stop sharing the
+ * screen, but continue sharing the microphone, that notification
+ * silencing ends.
+ */
+add_task(async function testWhileSharingMic() {
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: TEST_PAGE,
+    },
+    async browser => {
+      let promise = promisePopupNotificationShown("webRTC-shareDevices");
+      let observerPromise = expectObserverCalled("getUserMedia:request");
+      await promiseRequestDevice(true, true);
+      await promise;
+      await observerPromise;
+
+      let indicator = promiseIndicatorWindow();
+      let observerPromise1 = expectObserverCalled(
+        "getUserMedia:response:allow"
+      );
+      let observerPromise2 = expectObserverCalled("recording-device-events");
+
+      promise = promiseMessage("ok", () => {
+        PopupNotifications.panel.firstElementChild.button.click();
+      });
+      await observerPromise1;
+      await observerPromise2;
+      await promise;
+
+      Assert.deepEqual(
+        await getMediaCaptureState(),
+        { audio: true, video: true },
+        "expected camera and microphone to be shared"
+      );
+
+      await indicator;
+      await checkSharingUI({ audio: true, video: true });
+
+      await testNotificationSilencing(browser);
+
+      await closeStream();
+    }
+  );
+});
