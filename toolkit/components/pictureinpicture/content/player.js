@@ -154,13 +154,6 @@ let Player = {
     });
 
     this.computeAndSetMinimumSize(window.outerWidth, window.outerHeight);
-
-    // alwaysontop windows are not focused by default, so we have to do it
-    // ourselves. We use requestAnimationFrame since we have to wait until the
-    // window is visible before it can focus.
-    window.requestAnimationFrame(() => {
-      window.focus();
-    });
   },
 
   uninit() {
