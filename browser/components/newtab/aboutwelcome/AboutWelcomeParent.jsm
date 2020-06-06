@@ -13,6 +13,8 @@ const { XPCOMUtils } = ChromeUtils.import(
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   FxAccounts: "resource://gre/modules/FxAccounts.jsm",
+  MigrationUtils: "resource:///modules/MigrationUtils.jsm",
+  OS: "resource://gre/modules/osfile.jsm",
   SpecialMessageActions:
     "resource://messaging-system/lib/SpecialMessageActions.jsm",
   AboutWelcomeTelemetry:
@@ -40,6 +42,47 @@ const AWTerminate = {
   APP_SHUT_DOWN: "app-shut-down",
   ADDRESS_BAR_NAVIGATED: "address-bar-navigated",
 };
+
+async function getImportableSites() {
+  const sites = [];
+
+  // Just handle these chromium-based browsers for now
+  for (const browserId of ["chrome", "chromium-edge", "chromium"]) {
+    // Skip if there's no profile data.
+    const migrator = await MigrationUtils.getMigrator(browserId);
+    if (!migrator) {
+      continue;
+    }
+
+    // Check each profile for top sites
+    const dataPath = await migrator.wrappedJSObject._getChromeUserDataPathIfExists();
+    for (const profile of await migrator.getSourceProfiles()) {
+      let path = OS.Path.join(dataPath, profile.id, "Top Sites");
+      // Skip if top sites data is missing
+      if (!(await OS.File.exists(path))) {
+        Cu.reportError(`Missing file at ${path}`);
+        continue;
+      }
+
+      try {
+        for (const row of await MigrationUtils.getRowsFromDBWithoutLocks(
+          path,
+          `Importable ${browserId} top sites`,
+          `SELECT url
+           FROM top_sites
+           ORDER BY url_rank`
+        )) {
+          sites.push(row.getString(0));
+        }
+      } catch (ex) {
+        Cu.reportError(
+          `Failed to get importable top sites from ${browserId} ${ex}`
+        );
+      }
+    }
+  }
+  return sites;
+}
 
 class AboutWelcomeObserver {
   constructor() {
@@ -135,6 +178,8 @@ class AboutWelcomeParent extends JSWindowActorParent {
         break;
       case "AWPage:FXA_METRICS_FLOW_URI":
         return FxAccounts.config.promiseMetricsFlowURI("aboutwelcome");
+      case "AWPage:IMPORTABLE_SITES":
+        return getImportableSites();
       case "AWPage:TELEMETRY_EVENT":
         Telemetry.sendTelemetry(data);
         break;
