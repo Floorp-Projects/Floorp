@@ -479,7 +479,6 @@ nsWindow::nsWindow() {
 
   mHasAlphaVisual = false;
   mIsPIPWindow = false;
-  mAlwaysOnTop = false;
 
   mWindowScaleFactorChanged = true;
   mWindowScaleFactor = 1;
@@ -4178,7 +4177,6 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
     }
   }
 
-  mAlwaysOnTop = aInitData && aInitData->mAlwaysOnTop;
   mIsPIPWindow = aInitData && aInitData->mPIPWindow;
 
   // ok, create our windows
@@ -4396,7 +4394,7 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
         g_object_unref(group);
       }
 
-      if (mAlwaysOnTop) {
+      if (aInitData->mAlwaysOnTop) {
         gtk_window_set_keep_above(GTK_WINDOW(mShell), TRUE);
       }
 
@@ -4453,21 +4451,11 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
       gtk_widget_set_has_window(container, mDrawToContainer);
 
       gtk_container_add(GTK_CONTAINER(mShell), container);
-
-      // alwaysontop windows are generally used for peripheral indicators,
-      // so we don't focus them by default.
-      if (mAlwaysOnTop) {
-        gtk_window_set_focus_on_map(GTK_WINDOW(mShell), FALSE);
-      }
-
       gtk_widget_realize(container);
 
       // make sure this is the focus widget in the container
       gtk_widget_show(container);
-
-      if (!mAlwaysOnTop) {
-        gtk_widget_grab_focus(container);
-      }
+      gtk_widget_grab_focus(container);
 
       // the drawing window
       mGdkWindow = gtk_widget_get_window(eventWidget);
@@ -4975,7 +4963,6 @@ void nsWindow::NativeShow(bool aAction) {
           return;
         }
       }
-
       gtk_widget_show(mShell);
       if (!mIsX11Display) {
         WaylandStartVsync();
