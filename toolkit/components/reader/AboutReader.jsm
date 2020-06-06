@@ -737,7 +737,9 @@ AboutReader.prototype = {
     let article;
     if (this._articlePromise) {
       article = await this._articlePromise;
-    } else {
+    }
+
+    if (!article) {
       try {
         article = await ReaderMode.downloadAndParseDocument(url);
       } catch (e) {

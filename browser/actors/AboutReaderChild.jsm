@@ -43,13 +43,18 @@ class AboutReaderChild extends JSWindowActorChild {
     this._reader = null;
   }
 
-  receiveMessage(message) {
+  async receiveMessage(message) {
     switch (message.name) {
       case "Reader:ToggleReaderMode":
         if (!this.isAboutReader) {
           this._articlePromise = ReaderMode.parseDocument(this.document).catch(
             Cu.reportError
           );
+
+          // Get the article data and cache it in the parent process. The reader mode
+          // page will retrieve it when it has loaded.
+          let article = await this._articlePromise;
+          await this.sendQuery("Reader:CacheArticle", article);
           ReaderMode.enterReaderMode(this.docShell, this.contentWindow);
         } else {
           this._isLeavingReaderableReaderMode = this.isReaderableAboutReader;
@@ -92,6 +97,14 @@ class AboutReaderChild extends JSWindowActorChild {
         }
 
         if (this.document.body) {
+          if (!this._articlePromise) {
+            let url = this.document.documentURI;
+            url = decodeURIComponent(url.substr("about:reader?url=".length));
+            this._articlePromise = this.sendQuery("Reader:GetCachedArticle", {
+              url,
+            });
+          }
+
           // Update the toolbar icon to show the "reader active" icon.
           this.sendAsyncMessage("Reader:UpdateReaderButton");
           this._reader = new AboutReader(this, this._articlePromise);
@@ -133,6 +146,7 @@ class AboutReaderChild extends JSWindowActorChild {
       !Readerable.isEnabledForParseOnLoad ||
       this.isAboutReader ||
       !this.contentWindow ||
+      !this.contentWindow.windowRoot ||
       !(this.document instanceof this.contentWindow.HTMLDocument) ||
       this.document.mozSyntheticDocument
     ) {
