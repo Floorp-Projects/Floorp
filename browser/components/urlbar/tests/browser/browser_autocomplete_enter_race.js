@@ -152,10 +152,10 @@ add_task(
 
     // Set a large delay.
     const TIMEOUT = 3000;
-    let delay = Preferences.get("browser.urlbar.delay");
-    Preferences.set("browser.urlbar.delay", TIMEOUT);
+    let delay = UrlbarPrefs.get("delay");
+    UrlbarPrefs.set("delay", TIMEOUT);
     registerCleanupFunction(function() {
-      Preferences.set("browser.urlbar.delay", delay);
+      UrlbarPrefs.set("delay", delay);
     });
 
     let start = Cu.now();
