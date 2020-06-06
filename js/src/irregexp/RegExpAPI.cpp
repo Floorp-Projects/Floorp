@@ -138,16 +138,7 @@ Isolate* CreateIsolate(JSContext* cx) {
   return isolate.release();
 }
 
-void DestroyIsolate(Isolate* isolate) {
-  MOZ_ASSERT(isolate->liveHandles() == 0);
-  MOZ_ASSERT(isolate->livePseudoHandles() == 0);
-  js_delete(isolate);
-}
-
-size_t IsolateSizeOfIncludingThis(Isolate* isolate,
-                                  mozilla::MallocSizeOf mallocSizeOf) {
-  return isolate->sizeOfIncludingThis(mallocSizeOf);
-}
+void DestroyIsolate(Isolate* isolate) { js_delete(isolate); }
 
 static size_t ComputeColumn(const Latin1Char* begin, const Latin1Char* end) {
   return PointerRangeSize(begin, end);
@@ -453,7 +444,6 @@ bool CompilePattern(JSContext* cx, MutableHandleRegExpShared re,
   RootedAtom pattern(cx, re->getSource());
   JS::RegExpFlags flags = re->getFlags();
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
-  HandleScope handleScope(cx->isolate);
   Zone zone(allocScope.alloc());
 
   RegExpCompileData data;
@@ -506,6 +496,7 @@ bool CompilePattern(JSContext* cx, MutableHandleRegExpShared re,
 
   MOZ_ASSERT(re->kind() == RegExpShared::Kind::RegExp);
 
+  HandleScope handleScope(cx->isolate);
   RegExpCompiler compiler(cx->isolate, &zone, data.capture_count,
                           input->hasLatin1Chars());
 

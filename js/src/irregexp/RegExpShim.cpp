@@ -10,8 +10,6 @@
 
 #include "irregexp/RegExpShim.h"
 
-#include "mozilla/MemoryReporting.h"
-
 #include <iostream>
 
 #include "irregexp/imported/regexp-macro-assembler.h"
@@ -138,21 +136,6 @@ void Isolate::trace(JSTracer* trc) {
     auto& elem = iter.Get();
     JS::GCPolicy<JS::Value>::trace(trc, &elem, "Isolate handle arena");
   }
-}
-
-size_t Isolate::sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
-  size_t size = mallocSizeOf(this);
-
-  // The RegExpStack code is imported from V8, so we peek inside it to
-  // measure its memory from here.
-  size += mallocSizeOf(regexpStack_);
-  if (regexpStack_->thread_local_.owns_memory_) {
-    size += mallocSizeOf(regexpStack_->thread_local_.memory_);
-  }
-
-  size += handleArena_.SizeOfExcludingThis(mallocSizeOf);
-  size += uniquePtrArena_.SizeOfExcludingThis(mallocSizeOf);
-  return size;
 }
 
 /*static*/ Handle<String> String::Flatten(Isolate* isolate,
