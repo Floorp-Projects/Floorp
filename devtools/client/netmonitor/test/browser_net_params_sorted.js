@@ -49,18 +49,18 @@ add_task(async function() {
   //           2: "b"
   //         c: 15
   const expectedKeys = [
-    "watches\n[…]",
-    `0\n"hello"`,
-    `1\n"how"`,
-    `2\n"are"`,
-    `3\n"you"`,
-    "4\n{…}",
-    "a\n10",
-    "b\n[…]",
-    `0\n"a"`,
-    `1\n"c"`,
-    `2\n"b"`,
-    "c\n15",
+    "watches\t[…]",
+    `0\t"hello"`,
+    `1\t"how"`,
+    `2\t"are"`,
+    `3\t"you"`,
+    "4\t{…}",
+    "a\t10",
+    "b\t[…]",
+    `0\t"a"`,
+    `1\t"c"`,
+    `2\t"b"`,
+    "c\t15",
   ];
 
   const waitForTreeRow = waitForDOM(
