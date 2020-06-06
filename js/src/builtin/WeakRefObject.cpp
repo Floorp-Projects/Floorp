@@ -193,6 +193,9 @@ bool WeakRefObject::deref(JSContext* cx, unsigned argc, Value* vp) {
   Rooted<WeakRefObject*> weakRef(cx,
                                  &args.thisv().toObject().as<WeakRefObject>());
 
+  // We need to perform a read barrier, which may clear the target.
+  readBarrier(cx, weakRef);
+
   // 4. Let target be the value of weakRef.[[Target]].
   // 5. If target is not empty,
   //    a. Perform ! KeepDuringJob(target).
@@ -207,9 +210,6 @@ bool WeakRefObject::deref(JSContext* cx, unsigned argc, Value* vp) {
   if (!target->zone()->keepDuringJob(target)) {
     return false;
   }
-
-  // We need to perform a read barrier on the object.
-  JSObject::readBarrier(target);
 
   // Target should be wrapped into the current realm before returning it.
   RootedObject wrappedTarget(cx, target);
@@ -226,6 +226,28 @@ inline JSObject* WeakRefObject::target() {
 }
 
 void WeakRefObject::setTarget(JSObject* target) { setPrivate(target); }
+
+/* static */
+void WeakRefObject::readBarrier(JSContext* cx, Handle<WeakRefObject*> self) {
+  RootedObject obj(cx, self->target());
+  if (!obj) {
+    return;
+  }
+
+  if (obj->getClass()->isDOMClass()) {
+    // We preserved the target when the WeakRef was created. If it has since
+    // been released then the DOM object it wraps has been collected, so clear
+    // the target.
+    MOZ_ASSERT(cx->runtime()->hasReleasedWrapperCallback);
+    bool wasReleased = cx->runtime()->hasReleasedWrapperCallback(obj);
+    if (wasReleased) {
+      self->setTarget(nullptr);
+      return;
+    }
+  }
+
+  JSObject::readBarrier(obj);
+}
 
 namespace gc {
 

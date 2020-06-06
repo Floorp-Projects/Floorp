@@ -21,6 +21,7 @@
 #include "mozilla/dom/JSSlots.h"
 
 class nsCycleCollectionParticipant;
+class nsWrapperCache;
 struct JSStructuredCloneReader;
 struct JSStructuredCloneWriter;
 class nsIGlobalObject;
@@ -413,6 +414,8 @@ typedef JSObject* (*WebIDLDeserializer)(JSContext* aCx,
                                         nsIGlobalObject* aGlobal,
                                         JSStructuredCloneReader* aReader);
 
+typedef nsWrapperCache* (*WrapperCacheGetter)(JS::Handle<JSObject*> aObj);
+
 // Special JSClass for reflected DOM objects.
 struct DOMJSClass {
   // It would be nice to just inherit from JSClass, but that precludes pure
@@ -446,6 +449,10 @@ struct DOMJSClass {
   // The serializer for this class if the relevant object is [Serializable].
   // Null otherwise.
   WebIDLSerializer mSerializer;
+
+  // A callback to get the wrapper cache for C++ objects that don't inherit from
+  // nsISupports, or null.
+  WrapperCacheGetter mWrapperCacheGetter;
 
   static const DOMJSClass* FromJSClass(const JSClass* base) {
     MOZ_ASSERT(base->flags & JSCLASS_IS_DOMJSCLASS);

@@ -129,7 +129,7 @@ class WorkletJSContext final : public CycleCollectedJSContext {
 
     JSContext* cx = Context();
 
-    js::SetPreserveWrapperCallback(cx, PreserveWrapper);
+    js::SetPreserveWrapperCallbacks(cx, PreserveWrapper, HasReleasedWrapper);
     JS_InitDestroyPrincipalsCallback(cx, WorkletPrincipals::Destroy);
     JS_SetWrapObjectCallbacks(cx, &WrapObjectCallbacks);
     JS_SetFutexCanWait(cx);
