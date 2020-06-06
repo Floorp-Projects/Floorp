@@ -68,7 +68,7 @@ const PREF_URLBAR_DEFAULTS = new Map([
   ["filter.javascript", true],
 
   // Applies URL highlighting and other styling to the text in the urlbar input.
-  ["formatting.enabled", false],
+  ["formatting.enabled", true],
 
   // Controls the composition of search results.
   ["matchBuckets", "suggestion:4,general:Infinity"],
@@ -137,7 +137,7 @@ const PREF_URLBAR_DEFAULTS = new Map([
   ["trimURLs", true],
 
   // Results will include a built-in set of popular domains when this is true.
-  ["usepreloadedtopurls.enabled", true],
+  ["usepreloadedtopurls.enabled", false],
 
   // After this many days from the profile creation date, the built-in set of
   // popular domains will no longer be included in the results.
