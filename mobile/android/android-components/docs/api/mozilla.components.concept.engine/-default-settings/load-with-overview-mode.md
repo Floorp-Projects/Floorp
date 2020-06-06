@@ -2,7 +2,7 @@
 
 # loadWithOverviewMode
 
-`var loadWithOverviewMode: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/Settings.kt#L190)
+`var loadWithOverviewMode: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/Settings.kt#L195)
 
 Overrides [Settings.loadWithOverviewMode](../-settings/load-with-overview-mode.md)
 

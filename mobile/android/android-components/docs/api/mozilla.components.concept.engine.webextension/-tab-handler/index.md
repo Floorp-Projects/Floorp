@@ -2,7 +2,7 @@
 
 # TabHandler
 
-`interface TabHandler` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/webextension/WebExtension.kt#L259)
+`interface TabHandler` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/webextension/WebExtension.kt#L268)
 
 A handler for all tab related events (triggered by browser.tabs.* methods).
 

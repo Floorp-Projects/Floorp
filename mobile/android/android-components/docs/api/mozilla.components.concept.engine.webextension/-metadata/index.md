@@ -2,7 +2,7 @@
 
 # Metadata
 
-`data class Metadata` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/webextension/WebExtension.kt#L327)
+`data class Metadata` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/webextension/WebExtension.kt#L336)
 
 Provides information about a [WebExtension](../-web-extension/index.md).
 

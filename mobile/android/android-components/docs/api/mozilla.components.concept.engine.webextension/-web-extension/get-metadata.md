@@ -2,7 +2,7 @@
 
 # getMetadata
 
-`abstract fun getMetadata(): `[`Metadata`](../-metadata/index.md)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/webextension/WebExtension.kt#L147)
+`abstract fun getMetadata(): `[`Metadata`](../-metadata/index.md)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/webextension/WebExtension.kt#L156)
 
 Returns additional information about this extension.
 

@@ -2,7 +2,7 @@
 
 # EnableSource
 
-`enum class EnableSource` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/webextension/WebExtension.kt#L404)
+`enum class EnableSource` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/webextension/WebExtension.kt#L413)
 
 Provides additional information about why an extension is being enabled or disabled.
 
