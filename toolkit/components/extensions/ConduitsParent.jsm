@@ -252,8 +252,9 @@ class BroadcastConduit extends BaseConduit {
         // TODO: Bug 1453343 - get rid of this:
         (r.envType === "addon_child" || arg.sender.envType !== "content_child"),
 
-      // Target Messengers by extensionId, tabId (topBC) and frameId.
+      // Target content Messengers by extensionId, tabId (topBC) and frameId.
       tab: remote =>
+        !remote.verified &&
         remote.extensionId === arg.extensionId &&
         remote.actor.manager.browsingContext.top.id === arg.topBC &&
         (arg.frameId == null || remote.frameId === arg.frameId) &&
