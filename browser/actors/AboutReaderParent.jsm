@@ -32,13 +32,24 @@ let gAllActors = new Set();
 // received by the AboutReaderParent actors.
 let gListeners = new Map();
 
+// As a reader mode document could be loaded in a different process than
+// the source article, temporarily cache the article data here in the
+// parent while switching to it.
+let gCachedArticles = new Map();
+
 class AboutReaderParent extends JSWindowActorParent {
   didDestroy() {
     gAllActors.delete(this);
+
+    if (this.isReaderMode()) {
+      let url = this.manager.documentURI.spec;
+      url = decodeURIComponent(url.substr("about:reader?url=".length));
+      gCachedArticles.delete(url);
+    }
   }
 
-  isReaderMode(browser) {
-    return browser.currentURI.spec.startsWith("about:reader");
+  isReaderMode() {
+    return this.manager.documentURI.spec.startsWith("about:reader");
   }
 
   static addMessageListener(name, listener) {
@@ -84,6 +95,15 @@ class AboutReaderParent extends JSWindowActorParent {
 
   async receiveMessage(message) {
     switch (message.name) {
+      case "Reader:CacheArticle": {
+        gCachedArticles.set(message.data.url, message.data);
+        break;
+      }
+      case "Reader:GetCachedArticle": {
+        let cachedArticle = gCachedArticles.get(message.data.url);
+        gCachedArticles.delete(message.data.url);
+        return cachedArticle;
+      }
       case "Reader:FaviconRequest": {
         try {
           let preferredWidth = message.data.preferredWidth || 0;
@@ -161,7 +181,7 @@ class AboutReaderParent extends JSWindowActorParent {
     let button = win.document.getElementById("reader-mode-button");
     let menuitem = win.document.getElementById("menu_readerModeItem");
     let key = win.document.getElementById("key_toggleReaderMode");
-    if (this.isReaderMode(browser)) {
+    if (this.isReaderMode()) {
       gAllActors.add(this);
 
       let closeText = gStringBundle.GetStringFromName("readerView.close");
@@ -222,7 +242,7 @@ class AboutReaderParent extends JSWindowActorParent {
       let windowGlobal = browser.browsingContext.currentWindowGlobal;
       let actor = windowGlobal.getActor("AboutReader");
       if (actor) {
-        if (actor.isReaderMode(browser)) {
+        if (actor.isReaderMode()) {
           gAllActors.delete(this);
         }
         actor.sendAsyncMessage("Reader:ToggleReaderMode", {});
