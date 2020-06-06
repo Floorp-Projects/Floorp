@@ -26,7 +26,7 @@
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">سیشن کو حذف کریں</string>
 
-    <!-- Private mode shortcut "contextual feature recommender" (CFR) -->
+    <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
     <string name="cfr_message">اپنے ہوم اسکرین سے نجی ٹیب کھولنے کے لئے ایک شارٹ کٹ جوڑیں۔</string>
     <!-- Text for the positive button -->
@@ -351,9 +351,6 @@
     <!-- Preference for removing FxA account -->
     <string name="preferences_sync_remove_account">اکائونٹ ہٹائیں</string>
 
-    <!-- Pairing Feature strings -->
-    <!-- Instructions on how to access pairing -->
-    <string name="pair_instructions"><![CDATA[اپنے QR کوڈ کو حاصل کرنے کے لیے اپنے کمپیوٹر کے Firefox میں <b>firefox.com/pair</b> پر جائیں۔]]></string>
     <!-- Button to open camera for pairing -->
     <string name="pair_open_camera">کیمرا کھولیں</string>
     <!-- Button to cancel pairing -->
@@ -573,7 +570,7 @@
      The first parameter is the host part of the URL of the bookmark deleted, if any -->
     <string name="bookmark_deletion_snackbar_message">حذف شدہ %s</string>
     <!-- Bookmark undo button for deletion snackbar action -->
-    <string name="bookmark_undo_deletion">‏‏پہلے جیسا کریں</string>
+    <string name="bookmark_undo_deletion">کالعدم</string>
 
     <!-- Site Permissions -->
     <!-- Site permissions preferences header -->
@@ -757,11 +754,11 @@
     <!-- Text shown in snackbar when user deletes all private tabs -->
     <string name="snackbar_private_tabs_deleted">نجی ٹیبز حذف ہوگئے</string>
     <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->
-    <string name="snackbar_deleted_undo">‏‏پہلے جیسا کریں</string>
+    <string name="snackbar_deleted_undo">کالعدم</string>
     <!-- Text shown in snackbar when user removes a top site -->
     <string name="snackbar_top_site_removed">سائٹ ہٹا دی گئی</string>
     <!-- Text for action to undo deleting a tab or collection shown in a11y dialog -->
-    <string name="a11y_dialog_deleted_undo">ہلے جیسا کریں</string>
+    <string name="a11y_dialog_deleted_undo">کالعدم کريں</string>
     <!-- Text for action to confirm deleting a tab or collection shown in a11y dialog -->
     <string name="a11y_dialog_deleted_confirm">تصدیق کریں</string>
     <!-- QR code scanner prompt which appears after scanning a code, but before navigating to it
@@ -786,16 +783,11 @@
     <!-- Title for Accessibility Text Size Scaling Preference -->
     <string name="preference_accessibility_font_size_title">حرف کا سائز</string>
 
-    <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
-    <string name="preference_accessibility_auto_size">خودکار فونٹ سائز تبدیلی</string>
-
     <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
     <string name="preference_accessibility_auto_size_summary">فونٹ سائز آپکے Android کی سیٹنگس سے مشابہ ہوگا۔ یہاں فونٹ سائز بدلنے کے لیے غیر فعال کریں۔</string>
 
     <!-- Title for the Delete browsing data preference -->
     <string name="preferences_delete_browsing_data">براؤزنگ کا ڈیٹا مٹائیں</string>
-    <!-- Title for the tabs item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_tabs_title">ٹیب کھولیں</string>
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
     <string name="preferences_delete_browsing_data_tabs_subtitle">%d ٹیب</string>
     <!-- Title for the data and history items in Delete browsing data -->
@@ -846,6 +838,12 @@
     <string name="tip_firefox_preview_moved_header">Firefox Preview اب Firefox Nightly ہو گیا ہے</string>
     <!-- text for firefox preview moving tip button. "Mozilla Firefox Browser" is intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_button">Mozilla Firefox براؤزر حاصل کریں</string>
+
+    <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_header_preview_installed">Firefox Nightly منتقل ہوگیا</string>
+
+    <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_header_preview_not_installed">Firefox Nightly منتقل ہوگیا</string>
 
     <!-- Onboarding -->
     <!-- Text for onboarding welcome message
@@ -930,6 +928,8 @@
     <string name="sign_in_instructions"><![CDATA[اپنے کمپیوٹر پر Firefox کھولیں اور <b>https://firefox.com/pair</b> پر جائیں]]></string>
     <!-- Text shown for sign in pairing when ready -->
     <string name="sign_in_ready_for_scan">سکین کرنے کے لئے تیار</string>
+    <!-- Text shown for settings option for sign with pairing -->
+    <string name="sign_in_with_camera">اپنے کیمرے کے ساتھ سائن ان کریں</string>
     <!-- Text shown for settings option for sign with email -->
     <string name="sign_in_with_email">اس کے بجائے ای میل کا استعمال کریں</string>
     <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
@@ -1267,4 +1267,8 @@
     <string name="dialog_delete_positive">حذف کریں</string>
     <!--  The page title for editing a saved login. -->
     <string name="edit">تدوین</string>
+
+    <!-- Voice search prompt description displayed after the user presses the voice search button -->
+    <string name="voice_search_explainer">اب بولیں</string>
+
     </resources>

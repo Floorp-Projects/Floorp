@@ -84,4 +84,104 @@
     <!-- Browser menu button that sends a user to help articles -->
     <string name="browser_menu_help">Sa rūgûñu\'ūnj un</string>
 
+    <!-- Browser menu button that sends a to a the what's new article -->
+    <string name="browser_menu_whats_new">Nùhuin sā huā nākà doj</string>
+
+    <!-- Browser menu button that opens the settings menu -->
+    <string name="browser_menu_settings">Nāgi\'iô\'</string>
+
+    <!-- Browser menu button that opens a user's library -->
+    <string name="browser_menu_library">Dukuâ ñanj</string>
+    <!-- Browser menu toggle that requests a desktop site -->
+    <string name="browser_menu_desktop_site">Si luguâ eskritôrio</string>
+    <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
+    <string name="browser_menu_add_to_homescreen">Nāchrūn riña pantayâ Ayi\'ìi</string>
+    <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
+    <string name="browser_menu_install_on_homescreen">Gā\'nïnj</string>
+    <!-- Menu option on the toolbar that takes you to synced tabs page-->
+    <string name="synced_tabs">Nej rakïj ñanj Guñā huaa</string>
+    <!-- Browser menu button that opens the find in page menu -->
+    <string name="browser_menu_find_in_page">Nānà\'uì\' riña ñanj</string>
+    <!-- Browser menu button that creates a private tab -->
+    <string name="browser_menu_private_tab">Rakïj ñanj huìi</string>
+    <!-- Browser menu button that creates a new tab -->
+    <string name="browser_menu_new_tab">Rakïj ñanj nakàa</string>
+    <!-- Browser menu button that saves the current tab to a collection -->
+    <string name="browser_menu_save_to_collection_2">Na\'nïnj sà\' riña màn si yi\'nïnj</string>
+
+    <!-- Browser menu button that opens a dialog to report issues with the current site -->
+    <string name="browser_menu_report_issue">Nātà\' sa \'iaj sun a\'nan\' riña sitiô nan</string>
+    <!-- Browser menu button that open a share menu to share the current site -->
+    <string name="browser_menu_share">Dūyingô\'</string>
+    <!-- Share menu title, displayed when a user is sharing their current site -->
+    <string name="menu_share_with">Dūyingô\' ngà…</string>
+    <!-- Browser menu button shown in custom tabs that opens the current tab in Fenix
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="browser_menu_open_in_fenix">Na\'nīn\' riña %1$s</string>
+    <!-- Browser menu text shown in custom tabs to indicate this is a Fenix tab
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="browser_menu_powered_by">RUGÛÑU\'ŪNJ SA GU\'NÀJ %1$s</string>
+    <!-- Browser menu text shown in custom tabs to indicate this is a Fenix tab
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="browser_menu_powered_by2">Rugûñu\'ūnj sa gu\'nàj %1$s</string>
+
+    <!-- Browser menu button to put the the current page in reader mode -->
+    <string name="browser_menu_read">Sa ni\'iāj duguî\' ahiaa</string>
+    <!-- Browser menu button to open the current page in an external app -->
+    <string name="browser_menu_open_app_link">Na\'nīn\' riña aplikasiûn</string>
+    <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
+    <string name="browser_menu_read_appearance">Dàj huaj</string>
+    <!-- Error message to show when the user tries to access a scheme not
+        handled by the app (Ex: blob, tel etc) -->
+    <string name="unknown_scheme_error_message">Na\'ue gi\'iaj konektandoj. Na\'ue nāni\'in URL.</string>
+
+    <!-- Locale Settings Fragment -->
+    <!-- Content description for tick mark on selected language -->
+    <string name="a11y_selected_locale_content_description">Nāguī nânj gā\'min</string>
+    <!-- Content description for search icon -->
+    <string name="a11y_search_icon_content_description">Nānà\'uì\'</string>
+    <!-- Text for default locale item -->
+    <string name="default_locale_text">Gārāsun nânj nikāj aga\' nan \'naj</string>
+    <!-- Placeholder text shown in the search bar before a user enters text -->
+    <string name="locale_search_hint">Nānà\'uì\' nânj huāa</string>
+
+    <!-- Search Fragment -->
+    <!-- Button in the search view that lets a user search by scanning a QR code -->
+    <string name="search_scan_button">Nātsij hue\'ê</string>
+    <!-- Button in the search view that lets a user search by using a shortcut -->
+    <string name="search_shortcuts_button">Nānà\'uì\' a\'ngô hiūj u</string>
+
+    <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
+    <string name="search_shortcuts_engine_settings">Sa nagi\'iaj sa nānà\'ui\'i</string>
+    <!-- DEPRECATED: Header displayed when selecting a shortcut search engine -->
+    <string name="search_shortcuts_search_with">Nānà\'uì\' ngà</string>
+
+    <!-- Header displayed when selecting a shortcut search engine -->
+    <string name="search_shortcuts_search_with_2">Hìaj nī, nānà\'uì\' ngà:</string>
+    <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
+    <string name="awesomebar_clipboard_title">Gāchrūn si enlasê portapâpel</string>
+    <!-- Button in the search suggestions onboarding that allows search suggestions in private sessions -->
+    <string name="search_suggestions_onboarding_allow_button">Ga\'nīn</string>
+    <!-- Button in the search suggestions onboarding that does not allow search suggestions in private sessions -->
+    <string name="search_suggestions_onboarding_do_not_allow_button">Sī ga\'nïnjt</string>
+
+    <!-- Search suggestion onboarding hint title text -->
+    <string name="search_suggestions_onboarding_title">Dīganj nuguan\' dàj nanà\'uì\'t riña sesiûn guendâ \'ngō rînt</string>
+    <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="search_suggestions_onboarding_text">%s dūyingaj daran\' sa gāchrūnt riña barra direksiûn ngà sa nana\'ui\' nīkājt.</string>
+    <!-- Search suggestion onboarding hint Learn more link text -->
+    <string name="search_suggestions_onboarding_learn_more_link">Gāhuin chrūn doj</string>
+
+    <!-- Search Widget -->
+    <!-- Text preview for smaller sized widgets -->
+    <string name="search_widget_text_short">Nānà\'uì\'</string>
+    <!-- Text preview for larger sized widgets -->
+    <string name="search_widget_text_long">Nānà\'uì\' riña web</string>
+    <!-- Content description (not visible, for screen readers etc.): Voice search -->
+    <string name="search_widget_voice">Nānà\'uì\' ngà nanèt</string>
+
+    <!-- Preferences -->
+    <!-- Title for the settings page-->
+    <string name="settings">Nāgi\'iô\'</string>
+
     </resources>

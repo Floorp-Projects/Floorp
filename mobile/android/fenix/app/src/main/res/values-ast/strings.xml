@@ -1226,4 +1226,12 @@
     <!-- Message in delete confirmation dialog for logins -->
     <string name="login_deletion_confirmation">¿De xuru que quies desaniciar esti aniciu de sesión?</string>
 
-    </resources>
+    <!-- Voice search prompt description displayed after the user presses the voice search button -->
+    <string name="voice_search_explainer">Fala agora</string>
+
+    <!-- Text displayed asking user to re-authenticate -->
+    <string name="synced_tabs_reauth">Volvi autenticate, por favor.</string>
+    <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->
+    <string name="synced_tabs_enable_tab_syncing">Activa la sincronización de llingüetes, por favor.</string>
+
+</resources>
