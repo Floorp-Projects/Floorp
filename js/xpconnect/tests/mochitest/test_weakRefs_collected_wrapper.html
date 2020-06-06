@@ -1,0 +1,52 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Test WeakRefs with DOM wrappers that get cycle collected</title>
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+    <script type="application/javascript">
+      let weakrefs = [];
+
+      function go() {
+        SimpleTest.waitForExplicitFinish();
+
+        // 1. nsISupports-derived object.
+        let doc = document.implementation.createHTMLDocument();
+        weakrefs.push(new WeakRef(doc));
+
+        // 2. non-nsISupports-derived object.
+        let buffer = new AudioBuffer({length: 1, sampleRate: 8000});
+        weakrefs.push(new WeakRef(buffer));
+
+        // 3. nsISupports non-wrapper-cached object.
+        let image = new ImageData(1, 1);
+        weakrefs.push(new WeakRef(image));
+
+        // 4. non-nsISupports non-wrapper-cached object.
+        let iterator = document.fonts.values();
+        weakrefs.push(new WeakRef(iterator));
+
+        for (let wr of weakrefs) {
+          isnot(wr.deref(), undefined, "Check that live wrapper is returned");
+        }
+
+        // setTimeout will call its callback in a new task.
+        setTimeout(task2, 0);
+      }
+
+      function task2() {
+        // Trigger a GC and CC to collect the DOM objects, but no GC to
+        // collect the wrappers.
+        SpecialPowers.DOMWindowUtils.garbageCollect();
+        SpecialPowers.DOMWindowUtils.cycleCollect();
+
+        for (let wr of weakrefs) {
+          is(wr.deref(), undefined, "Check that stale wrapper is not exposed");
+        }
+
+        SimpleTest.finish();
+      }
+    </script>
+  </head>
+  <body onload="go()"></body>
+</html>

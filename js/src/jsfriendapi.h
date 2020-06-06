@@ -431,6 +431,7 @@ extern JS_FRIEND_API void RunJobs(JSContext* cx);
 extern JS_FRIEND_API JS::Zone* GetRealmZone(JS::Realm* realm);
 
 using PreserveWrapperCallback = bool (*)(JSContext*, JS::HandleObject);
+using HasReleasedWrapperCallback = bool (*)(JS::HandleObject);
 
 typedef enum {
   CollectNurseryBeforeDump,
@@ -935,8 +936,9 @@ JS_FRIEND_API bool StringIsArrayIndex(const char* str, uint32_t length,
 JS_FRIEND_API bool StringIsArrayIndex(const char16_t* str, uint32_t length,
                                       uint32_t* indexp);
 
-JS_FRIEND_API void SetPreserveWrapperCallback(JSContext* cx,
-                                              PreserveWrapperCallback callback);
+JS_FRIEND_API void SetPreserveWrapperCallbacks(
+    JSContext* cx, PreserveWrapperCallback preserveWrapper,
+    HasReleasedWrapperCallback hasReleasedWrapper);
 
 JS_FRIEND_API bool IsObjectInContextCompartment(JSObject* obj,
                                                 const JSContext* cx);

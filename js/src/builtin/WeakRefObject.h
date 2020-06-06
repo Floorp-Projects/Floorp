@@ -32,6 +32,7 @@ class WeakRefObject : public NativeObject {
   static bool preserveDOMWrapper(JSContext* cx, HandleObject obj);
 
   static bool deref(JSContext* cx, unsigned argc, Value* vp);
+  static void readBarrier(JSContext* cx, Handle<WeakRefObject*> self);
 };
 
 }  // namespace js
