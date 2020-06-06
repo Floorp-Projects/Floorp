@@ -170,6 +170,8 @@ void nsRubyFrame::Reflow(nsPresContext* aPresContext,
   if (nsRubyBaseContainerFrame* rbc = FindRubyBaseContainerAncestor(this)) {
     rbc->UpdateDescendantLeadings(mLeadings);
   }
+
+  ReflowAbsoluteFrames(aPresContext, aDesiredSize, aReflowInput, aStatus);
 }
 
 void nsRubyFrame::ReflowSegment(nsPresContext* aPresContext,
