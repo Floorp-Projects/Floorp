@@ -278,6 +278,9 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
+const DEFAULT_SITES = ["youtube-com", "facebook-com", "amazon", "reddit-com", "wikipedia-org", "twitter-com"].map(site => ({
+  icon: `resource://activity-stream/data/content/tippytop/images/${site}@2x.png`
+}));
 const MultiStageAboutWelcome = props => {
   const [index, setScreenIndex] = Object(react__WEBPACK_IMPORTED_MODULE_0__["useState"])(0);
   Object(react__WEBPACK_IMPORTED_MODULE_0__["useEffect"])(() => {
@@ -307,7 +310,19 @@ const MultiStageAboutWelcome = props => {
       where: "current"
     }
   });
-  const [topSites] = Object(react__WEBPACK_IMPORTED_MODULE_0__["useState"])(["resource://activity-stream/data/content/tippytop/images/youtube-com@2x.png", "resource://activity-stream/data/content/tippytop/images/facebook-com@2x.png", "resource://activity-stream/data/content/tippytop/images/amazon@2x.png", "resource://activity-stream/data/content/tippytop/images/reddit-com@2x.png", "resource://activity-stream/data/content/tippytop/images/wikipedia-org@2x.png", "resource://activity-stream/data/content/tippytop/images/twitter-com@2x.png"]);
+  const useImportable = props.message_id.includes("IMPORTABLE");
+  const [topSites, setTopSites] = Object(react__WEBPACK_IMPORTED_MODULE_0__["useState"])(DEFAULT_SITES);
+  Object(react__WEBPACK_IMPORTED_MODULE_0__["useEffect"])(() => {
+    (async () => {
+      const importable = JSON.parse((await window.AWGetImportableSites()));
+      const showImportable = useImportable && importable.length >= 5;
+      _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_2__["AboutWelcomeUtils"].sendImpressionTelemetry(`${props.message_id}_SITES`, {
+        display: showImportable ? "importable" : "static",
+        importable: importable.length
+      });
+      setTopSites(showImportable ? importable : DEFAULT_SITES);
+    })();
+  }, [useImportable]);
   return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(react__WEBPACK_IMPORTED_MODULE_0___default.a.Fragment, null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
     className: `multistageContainer`
   }, props.screens.map(screen => {
@@ -402,13 +417,21 @@ class WelcomeScreen extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureCom
   renderTiles() {
     return this.props.content.tiles && this.props.topSites ? react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
       className: "tiles-section"
-    }, this.props.topSites.slice(0, 5).map(icon => react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+    }, this.props.topSites.slice(0, 5).map(({
+      icon,
+      label
+    }) => react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+      className: "site",
+      key: icon + label
+    }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
       className: "icon",
-      key: icon,
-      style: {
+      style: icon ? {
+        backgroundColor: "transparent",
         backgroundImage: `url(${icon})`
-      }
-    }))) : null;
+      } : {}
+    }, icon ? "" : label[0].toUpperCase()), label && react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+      className: "host"
+    }, label)))) : null;
   }
 
   renderStepsIndicator() {
@@ -526,9 +549,10 @@ const AboutWelcomeUtils = {
     window.AWSendToParent("SPECIAL_ACTION", action);
   },
 
-  sendImpressionTelemetry(messageId) {
+  sendImpressionTelemetry(messageId, context) {
     window.AWSendEventTelemetry({
       event: "IMPRESSION",
+      event_context: context,
       message_id: messageId
     });
   },

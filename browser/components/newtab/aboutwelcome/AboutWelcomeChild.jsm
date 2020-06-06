@@ -12,6 +12,8 @@ const { XPCOMUtils } = ChromeUtils.import(
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   ExperimentAPI: "resource://messaging-system/experiments/ExperimentAPI.jsm",
+  shortURL: "resource://activity-stream/lib/ShortURL.jsm",
+  TippyTopProvider: "resource://activity-stream/lib/TippyTopProvider.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(this, "log", () => {
@@ -39,6 +41,35 @@ XPCOMUtils.defineLazyPreferenceGetter(
   null,
   _parseOverrideContent
 );
+
+/**
+ * Lazily get importable sites from parent or reuse cached ones.
+ */
+function getImportableSites(child) {
+  return (
+    getImportableSites.cache ??
+    (getImportableSites.cache = (async () => {
+      // Use tippy top to get packaged rich icons
+      const tippyTop = new TippyTopProvider();
+      await tippyTop.init();
+
+      // Remove duplicate entries if they would appear the same
+      return `[${[
+        ...new Set(
+          (await child.sendQuery("AWPage:IMPORTABLE_SITES")).map(url => {
+            // Get both rich icon and short name and save for deduping
+            const site = { url };
+            tippyTop.processSite(site, "*");
+            return JSON.stringify({
+              icon: site.tippyTopIcon,
+              label: shortURL(site),
+            });
+          })
+        ),
+      ]}]`;
+    })())
+  );
+}
 
 class AboutWelcomeChild extends JSWindowActorChild {
   actorCreated() {
@@ -102,6 +133,10 @@ class AboutWelcomeChild extends JSWindowActorChild {
       defineAs: "AWGetFxAMetricsFlowURI",
     });
 
+    Cu.exportFunction(this.AWGetImportableSites.bind(this), window, {
+      defineAs: "AWGetImportableSites",
+    });
+
     Cu.exportFunction(this.AWSendEventTelemetry.bind(this), window, {
       defineAs: "AWSendEventTelemetry",
     });
@@ -115,6 +150,9 @@ class AboutWelcomeChild extends JSWindowActorChild {
     });
   }
 
+  /**
+   * Wrap a promise so content can use Promise methods.
+   */
   wrapPromise(promise) {
     return new this.contentWindow.Promise((resolve, reject) =>
       promise.then(resolve, reject)
@@ -158,6 +196,10 @@ class AboutWelcomeChild extends JSWindowActorChild {
 
   AWGetFxAMetricsFlowURI() {
     return this.wrapPromise(this.sendQuery("AWPage:FXA_METRICS_FLOW_URI"));
+  }
+
+  AWGetImportableSites() {
+    return this.wrapPromise(getImportableSites(this));
   }
 
   /**
