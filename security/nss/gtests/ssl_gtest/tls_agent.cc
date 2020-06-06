@@ -73,8 +73,8 @@ TlsAgent::TlsAgent(const std::string& nm, Role rl, SSLProtocolVariant var)
       falsestart_enabled_(false),
       expected_version_(0),
       expected_cipher_suite_(0),
-      expect_resumption_(false),
       expect_client_auth_(false),
+      expect_psk_(ssl_psk_none),
       can_falsestart_hook_called_(false),
       sni_hook_called_(false),
       auth_certificate_hook_called_(false),
@@ -301,7 +301,7 @@ bool TlsAgent::MaybeSetResumptionToken() {
 
     // rv is SECFailure with error set to SSL_ERROR_BAD_RESUMPTION_TOKEN_ERROR
     // if the resumption token was bad (expired/malformed/etc.).
-    if (expect_resumption_) {
+    if (expect_psk_ == ssl_psk_resume) {
       // Only in case we expect resumption this has to be successful. We might
       // not expect resumption due to some reason but the token is totally fine.
       EXPECT_EQ(SECSuccess, rv);
@@ -309,8 +309,8 @@ bool TlsAgent::MaybeSetResumptionToken() {
     if (rv != SECSuccess) {
       EXPECT_EQ(SSL_ERROR_BAD_RESUMPTION_TOKEN_ERROR, PORT_GetError());
       resumption_token_.clear();
-      EXPECT_FALSE(expect_resumption_);
-      if (expect_resumption_) return false;
+      EXPECT_FALSE(expect_psk_ == ssl_psk_resume);
+      if (expect_psk_ == ssl_psk_resume) return false;
     }
   }
 
@@ -634,7 +634,9 @@ void TlsAgent::CheckAuthType(SSLAuthType auth,
                              SSLSignatureScheme sig_scheme) const {
   EXPECT_EQ(STATE_CONNECTED, state_);
   EXPECT_EQ(auth, info_.authType);
-  EXPECT_EQ(server_key_bits_, info_.authKeyBits);
+  if (auth != ssl_auth_psk) {
+    EXPECT_EQ(server_key_bits_, info_.authKeyBits);
+  }
   if (expected_version_ < SSL_LIBRARY_VERSION_TLS_1_2) {
     switch (auth) {
       case ssl_auth_rsa_sign:
@@ -685,11 +687,29 @@ void TlsAgent::EnableFalseStart() {
   SetOption(SSL_ENABLE_FALSE_START, PR_TRUE);
 }
 
-void TlsAgent::ExpectResumption() { expect_resumption_ = true; }
+void TlsAgent::ExpectPsk() { expect_psk_ = ssl_psk_external; }
+
+void TlsAgent::ExpectResumption() { expect_psk_ = ssl_psk_resume; }
 
 void TlsAgent::EnableAlpn(const uint8_t* val, size_t len) {
   EXPECT_TRUE(EnsureTlsSetup());
   EXPECT_EQ(SECSuccess, SSL_SetNextProtoNego(ssl_fd(), val, len));
+}
+
+void TlsAgent::AddPsk(const ScopedPK11SymKey& psk, std::string label,
+                      SSLHashType hash, uint16_t zeroRttSuite) {
+  EXPECT_TRUE(EnsureTlsSetup());
+  EXPECT_EQ(SECSuccess, SSL_AddExternalPsk0Rtt(
+                            ssl_fd(), psk.get(),
+                            reinterpret_cast<const uint8_t*>(label.data()),
+                            label.length(), hash, zeroRttSuite, 1000));
+}
+
+void TlsAgent::RemovePsk(std::string label) {
+  EXPECT_EQ(SECSuccess,
+            SSL_RemoveExternalPsk(
+                ssl_fd(), reinterpret_cast<const uint8_t*>(label.data()),
+                label.length()));
 }
 
 void TlsAgent::CheckAlpn(SSLNextProtoState expected_state,
@@ -821,22 +841,22 @@ void TlsAgent::CheckPreliminaryInfo() {
 void TlsAgent::CheckCallbacks() const {
   // If false start happens, the handshake is reported as being complete at the
   // point that false start happens.
-  if (expect_resumption_ || !falsestart_enabled_) {
+  if (expect_psk_ == ssl_psk_resume || !falsestart_enabled_) {
     EXPECT_TRUE(handshake_callback_called_);
   }
 
   // These callbacks shouldn't fire if we are resuming, except on TLS 1.3.
   if (role_ == SERVER) {
     PRBool have_sni = SSLInt_ExtensionNegotiated(ssl_fd(), ssl_server_name_xtn);
-    EXPECT_EQ(((!expect_resumption_ && have_sni) ||
+    EXPECT_EQ(((expect_psk_ != ssl_psk_resume && have_sni) ||
                expected_version_ >= SSL_LIBRARY_VERSION_TLS_1_3),
               sni_hook_called_);
   } else {
-    EXPECT_EQ(!expect_resumption_, auth_certificate_hook_called_);
+    EXPECT_EQ(expect_psk_ == ssl_psk_none, auth_certificate_hook_called_);
     // Note that this isn't unconditionally called, even with false start on.
     // But the callback is only skipped if a cipher that is ridiculously weak
     // (80 bits) is chosen.  Don't test that: plan to remove bad ciphers.
-    EXPECT_EQ(falsestart_enabled_ && !expect_resumption_,
+    EXPECT_EQ(falsestart_enabled_ && expect_psk_ != ssl_psk_resume,
               can_falsestart_hook_called_);
   }
 }
@@ -872,7 +892,7 @@ void TlsAgent::ValidateCipherSpecs() {
     } else {
       // For DTLS 1.1 and 1.2, the last endpoint to send maintains a cipher spec
       // until the holddown timer runs down.
-      if (expect_resumption_) {
+      if (expect_psk_ == ssl_psk_resume) {
         if (role_ == CLIENT) {
           expected = 3;
         }
@@ -910,7 +930,8 @@ void TlsAgent::Connected() {
   EXPECT_EQ(SECSuccess, rv);
   EXPECT_EQ(sizeof(info_), info_.length);
 
-  EXPECT_EQ(expect_resumption_, info_.resumed == PR_TRUE);
+  EXPECT_EQ(expect_psk_ == ssl_psk_resume, info_.resumed == PR_TRUE);
+  EXPECT_EQ(expect_psk_, info_.pskType);
 
   // Preliminary values are exposed through callbacks during the handshake.
   // If either expected values were set or the callbacks were called, check

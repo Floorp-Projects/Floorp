@@ -1,5 +1,0 @@
-
-1 Added function:
-
-  [A] 'function PRBool SECMOD_GetSystemFIPSEnabled()'    {SECMOD_GetSystemFIPSEnabled@@NSS_3.53}
-

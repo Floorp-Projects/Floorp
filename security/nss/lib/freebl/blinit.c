@@ -232,6 +232,7 @@ CheckARMSupport()
     arm_neon_support_ = PR_GetEnvSecure("NSS_DISABLE_ARM_NEON") == NULL;
     arm_aes_support_ &= PR_GetEnvSecure("NSS_DISABLE_HW_AES") == NULL;
     arm_pmull_support_ &= PR_GetEnvSecure("NSS_DISABLE_PMULL") == NULL;
+    arm_sha2_support_ &= PR_GetEnvSecure("NSS_DISABLE_HW_SHA2") == NULL;
 }
 #endif /* defined(__aarch64__) */
 
@@ -355,6 +356,7 @@ CheckARMSupport()
         arm_sha2_support_ = hwcaps & HWCAP2_SHA2;
     }
     arm_neon_support_ = GetNeonSupport();
+    arm_sha2_support_ &= PR_GetEnvSecure("NSS_DISABLE_HW_SHA2") == NULL;
 }
 #endif /* defined(__arm__) */
 

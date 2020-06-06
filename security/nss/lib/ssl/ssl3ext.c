@@ -10,6 +10,7 @@
 
 #include "nssrenam.h"
 #include "nss.h"
+#include "pk11pub.h"
 #include "ssl.h"
 #include "sslimpl.h"
 #include "sslproto.h"
@@ -962,6 +963,7 @@ ssl3_InitExtensionData(TLSExtensionData *xtnData, const sslSocket *ss)
     xtnData->peerDelegCred = NULL;
     xtnData->peerRequestedDelegCred = PR_FALSE;
     xtnData->sendingDelegCredToPeer = PR_FALSE;
+    xtnData->selectedPsk = NULL;
 }
 
 void

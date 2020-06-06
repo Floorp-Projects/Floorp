@@ -7,6 +7,7 @@
 #include "sslimpl.h"
 #include "sslproto.h"
 #include "tls13hkdf.h"
+#include "tls13psk.h"
 #include "tls13subcerts.h"
 
 SECStatus
@@ -80,6 +81,13 @@ SSL_GetChannelInfo(PRFileDesc *fd, SSLChannelInfo *info, PRUintn len)
             inf.signatureScheme = sid->sigScheme;
         }
         inf.resumed = ss->statelessResume || ss->ssl3.hs.isResuming;
+        if (inf.resumed) {
+            inf.pskType = ssl_psk_resume;
+        } else if (inf.authType == ssl_auth_psk) {
+            inf.pskType = ssl_psk_external;
+        } else {
+            inf.pskType = ssl_psk_none;
+        }
         inf.peerDelegCred = tls13_IsVerifyingWithDelegatedCredential(ss);
 
         if (sid) {
@@ -147,8 +155,14 @@ SSL_GetPreliminaryChannelInfo(PRFileDesc *fd,
     if (ss->sec.ci.sid &&
         (ss->ssl3.hs.zeroRttState == ssl_0rtt_sent ||
          ss->ssl3.hs.zeroRttState == ssl_0rtt_accepted)) {
-        inf.maxEarlyDataSize =
-            ss->sec.ci.sid->u.ssl3.locked.sessionTicket.max_early_data_size;
+        if (ss->statelessResume) {
+            inf.maxEarlyDataSize =
+                ss->sec.ci.sid->u.ssl3.locked.sessionTicket.max_early_data_size;
+        } else if (ss->psk) {
+            /* We may have cleared the handshake list, so check the socket.
+             * This is permissable since we only support one EPSK at a time. */
+            inf.maxEarlyDataSize = ss->psk->maxEarlyData;
+        }
     } else {
         inf.maxEarlyDataSize = 0;
     }
@@ -415,20 +429,33 @@ tls13_Exporter(sslSocket *ss, PK11SymKey *secret,
         return SECFailure;
     }
 
+    SSLHashType hashAlg;
+    /* Early export requires a PSK. As in 0-RTT, default
+     * to the first PSK if no suite is negotiated yet. */
+    if (secret == ss->ssl3.hs.earlyExporterSecret && !ss->ssl3.hs.suite_def) {
+        if (PR_CLIST_IS_EMPTY(&ss->ssl3.hs.psks)) {
+            PORT_SetError(SEC_ERROR_INVALID_ARGS);
+            return SECFailure;
+        }
+        hashAlg = ((sslPsk *)PR_LIST_HEAD(&ss->ssl3.hs.psks))->hash;
+    } else {
+        hashAlg = tls13_GetHash(ss);
+    }
+
     /* Pre-hash the context. */
-    rv = tls13_ComputeHash(ss, &contextHash, context, contextLen);
+    rv = tls13_ComputeHash(ss, &contextHash, context, contextLen, hashAlg);
     if (rv != SECSuccess) {
         return rv;
     }
 
     rv = tls13_DeriveSecretNullHash(ss, secret, label, labelLen,
-                                    &innerSecret);
+                                    &innerSecret, hashAlg);
     if (rv != SECSuccess) {
         return rv;
     }
 
     rv = tls13_HkdfExpandLabelRaw(innerSecret,
-                                  tls13_GetHash(ss),
+                                  hashAlg,
                                   contextHash.u.raw, contextHash.len,
                                   kExporterInnerLabel,
                                   strlen(kExporterInnerLabel),
