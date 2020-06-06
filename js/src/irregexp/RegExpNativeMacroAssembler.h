@@ -79,7 +79,7 @@ class SMRegExpMacroAssembler final : public NativeRegExpMacroAssembler {
   virtual void CheckNotBackReference(int start_reg, bool read_backward,
                                      Label* on_no_match);
   virtual void CheckNotBackReferenceIgnoreCase(int start_reg,
-                                               bool read_backward,
+                                               bool read_backward, bool unicode,
                                                Label* on_no_match);
 
   virtual void LoadCurrentCharacterImpl(int cp_offset, Label* on_end_of_input,
@@ -129,7 +129,8 @@ class SMRegExpMacroAssembler final : public NativeRegExpMacroAssembler {
   void CheckCharacterInRangeImpl(uc16 from, uc16 to, Label* on_cond,
                                  js::jit::Assembler::Condition cond);
   void CheckNotBackReferenceImpl(int start_reg, bool read_backward,
-                                 Label* on_no_match, bool ignore_case);
+                                 bool unicode, Label* on_no_match,
+                                 bool ignore_case);
 
   void LoadCurrentCharacterUnchecked(int cp_offset, int characters);
 
@@ -147,12 +148,12 @@ class SMRegExpMacroAssembler final : public NativeRegExpMacroAssembler {
 
   static bool GrowBacktrackStack(RegExpStack* regexp_stack);
 
-  static uint32_t CaseInsensitiveCompareStrings(const char16_t* substring1,
+  static uint32_t CaseInsensitiveCompareNonUnicode(const char16_t* substring1,
+                                                   const char16_t* substring2,
+                                                   size_t byteLength);
+  static uint32_t CaseInsensitiveCompareUnicode(const char16_t* substring1,
                                                 const char16_t* substring2,
                                                 size_t byteLength);
-  static uint32_t CaseInsensitiveCompareUCStrings(const char16_t* substring1,
-                                                  const char16_t* substring2,
-                                                  size_t byteLength);
 
   inline int char_size() { return static_cast<int>(mode_); }
   inline js::jit::Scale factor() {
