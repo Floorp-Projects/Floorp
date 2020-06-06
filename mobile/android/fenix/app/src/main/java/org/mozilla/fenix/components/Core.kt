@@ -76,7 +76,8 @@ class Core(private val context: Context) {
             automaticFontSizeAdjustment = context.settings().shouldUseAutoSize,
             fontInflationEnabled = context.settings().shouldUseAutoSize,
             suspendMediaWhenInactive = false,
-            forceUserScalableContent = context.settings().forceEnableZoom
+            forceUserScalableContent = context.settings().forceEnableZoom,
+            loginAutofillEnabled = context.settings().shouldAutofillLogins
         )
 
         GeckoEngine(

@@ -169,6 +169,7 @@ class SettingsPrivacyTest {
         }.openLoginsAndPasswordSubMenu {
             verifyDefaultView()
             verifyDefaultValueSyncLogins()
+            verifyDefaultValueAutofillLogins()
         }.openSavedLogins {
             verifySavedLoginsView()
             tapSetupLater()

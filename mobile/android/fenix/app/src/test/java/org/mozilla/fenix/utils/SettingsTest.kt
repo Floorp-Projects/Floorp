@@ -218,6 +218,19 @@ class SettingsTest {
     }
 
     @Test
+    fun shouldAutofill() {
+        // When just created
+        // Then
+        assertTrue(settings.shouldAutofillLogins)
+
+        // When
+        settings.shouldAutofillLogins = false
+
+        // Then
+        assertFalse(settings.shouldAutofillLogins)
+    }
+
+    @Test
     fun fontSizeFactor() {
         // When just created
         // Then

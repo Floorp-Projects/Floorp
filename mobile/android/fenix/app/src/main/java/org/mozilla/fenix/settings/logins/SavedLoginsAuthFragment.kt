@@ -30,6 +30,7 @@ import mozilla.components.concept.sync.AuthType
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.service.fxa.SyncEngine
 import mozilla.components.service.fxa.manager.SyncEnginesStorage
+import org.mozilla.fenix.Config
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
@@ -112,11 +113,17 @@ class SavedLoginsAuthFragment : PreferenceFragmentCompat(), AccountObserver {
 
         val autofillPreferenceKey = getPreferenceKey(R.string.pref_key_autofill_logins)
         findPreference<SwitchPreference>(autofillPreferenceKey)?.apply {
-            isEnabled = context.settings().shouldPromptToSaveLogins
-            isChecked =
-                context.settings().shouldAutofillLogins && context.settings().shouldPromptToSaveLogins
-            onPreferenceChangeListener =
-                SharedPreferenceUpdater()
+            // The ability to toggle autofill on the engine is only available in Nightly currently
+            // See https://github.com/mozilla-mobile/fenix/issues/11320
+            isVisible = Config.channel.isNightlyOrDebug
+            isChecked = context.settings().shouldAutofillLogins
+            onPreferenceChangeListener = object : SharedPreferenceUpdater() {
+                override fun onPreferenceChange(preference: Preference, newValue: Any?): Boolean {
+                    context?.components?.core?.engine?.settings?.loginAutofillEnabled =
+                        newValue as Boolean
+                    return super.onPreferenceChange(preference, newValue)
+                }
+            }
         }
 
         val savedLoginsKey = getPreferenceKey(R.string.pref_key_saved_logins)

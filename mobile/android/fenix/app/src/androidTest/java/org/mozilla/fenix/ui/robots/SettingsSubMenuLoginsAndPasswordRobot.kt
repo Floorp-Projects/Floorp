@@ -38,7 +38,9 @@ class SettingsSubMenuLoginsAndPasswordRobot {
         mDevice.waitNotNull(Until.findObjects(By.text("On")), TestAssetHelper.waitingTime)
     }
 
-    fun verifyDefaultValueSyncLogins() = asserDefaultValueSyncLogins()
+    fun verifyDefaultValueAutofillLogins() = assertDefaultValueAutofillLogins()
+
+    fun verifyDefaultValueSyncLogins() = assertDefaultValueSyncLogins()
 
     class Transition {
         val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
@@ -87,5 +89,8 @@ private fun goBackButton() =
 private fun assertDefaultView() = onView(ViewMatchers.withText("Sync logins"))
         .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 
-private fun asserDefaultValueSyncLogins() = onView(ViewMatchers.withText("Sign in to Sync"))
+private fun assertDefaultValueAutofillLogins() = onView(ViewMatchers.withText("Autofill"))
+    .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+
+private fun assertDefaultValueSyncLogins() = onView(ViewMatchers.withText("Sign in to Sync"))
         .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
