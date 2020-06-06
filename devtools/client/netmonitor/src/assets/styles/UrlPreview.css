@@ -75,15 +75,15 @@
 .url-preview tr.treeRow .treeLabelCell {
   float: left;
   margin-right: -15px;
-  padding: 0;
-  
+  padding: 0 2px 0 0;
+
 }
 .url-preview tr.treeRow .treeValueCell {
   display: inline;
   word-break: break-all;
   max-width: none;
   box-decoration-break: clone;
-  padding-left: 20px;
+  margin-left: 14px;
 }
 
 .url-preview .treeTable .treeValueCell {
