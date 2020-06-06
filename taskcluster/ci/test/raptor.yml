@@ -74,7 +74,7 @@ job-defaults:
                 by-test-platform:
                     windows10-64-ccov/.*: 3
                     linux64-ccov/.*: 3
-                    default: 2
+                    default: 1
             default: 2
     fission-tier: 2
     virtualization:
@@ -134,10 +134,6 @@ job-defaults:
 raptor-tp6:
     description: "Raptor (webextension) tp6"
     apps: ["firefox", "chrome", "chromium"]
-    tier:
-        by-app:
-            firefox: 1
-            default: 2
     variants:
         # Used for defining webrender and fission build variant tests,
         by-app:
@@ -163,41 +159,6 @@ raptor-tp6:
     raptor-test: tp6
     raptor-subtests:
         - amazon
-        - [google-mail, gmail]
-        - [slides, gslides]
-        - imgur
-        - tumblr
-        - twitch
-        - twitter
-
-
-raptor-tp6-t2:
-    description: "Raptor (webextension) tp6"
-    apps: ["firefox", "chrome", "chromium"]
-    variants:
-        # Used for defining webrender and fission build variant tests,
-        by-app:
-            firefox: ["fission"]
-            chrome: []
-            chromium: []
-            default: []
-    pageload:
-        by-app:
-            firefox: "both"
-            chrome: "both"
-            chromium: "both"
-            default: "cold"
-    limit-platforms:
-        by-app:
-            chrome:
-                - .*shippable[^-qr].*
-            chromium:
-                - .*shippable[^-qr].*
-            default: []
-    treeherder-symbol: Rap-t2(tp6)
-    max-run-time: 4000
-    raptor-test: tp6
-    raptor-subtests:
         - apple
         - [binast-instagram, inst-b]
         - bing
@@ -206,9 +167,12 @@ raptor-tp6-t2:
         - [facebook-redesign, fb-r]
         - fandom
         - [docs, gdoc]
+        - [google-mail, gmail]
         - google
         - [sheets, gsheets]
+        - [slides, gslides]
         - imdb
+        - imgur
         - instagram
         - linkedin
         - microsoft
@@ -218,11 +182,14 @@ raptor-tp6-t2:
         - paypal
         - pinterest
         - reddit
+        - twitch
+        - twitter
         - wikipedia
         - yahoo-mail
-        - yahoo-news
         - yandex
         - youtube
+        - tumblr
+        - yahoo-news
 
 raptor-speedometer-firefox:
     description: "Raptor Speedometer on Firefox"
@@ -238,6 +205,7 @@ raptor-speedometer-firefox-profiling:
     try-name: raptor-speedometer-firefox-profiling
     treeherder-symbol: Rap-Prof(sp)
     max-run-time: 900
+    tier: 2
     mozharness:
         extra-options:
             - --test=raptor-speedometer
@@ -257,6 +225,7 @@ raptor-stylebench-firefox-profiling:
     try-name: raptor-stylebench-firefox-profiling
     treeherder-symbol: Rap-Prof(sb)
     max-run-time: 900
+    tier: 2
     mozharness:
         extra-options:
             - --test=raptor-stylebench
@@ -275,6 +244,7 @@ raptor-motionmark-htmlsuite-firefox-profiling:
     description: "Raptor MotionMark HtmlSuite on Firefox with Gecko Profiling"
     try-name: raptor-motionmark-htmlsuite-firefox-profiling
     treeherder-symbol: Rap-Prof(mm-h)
+    tier: 2
     mozharness:
         extra-options:
             - --test=raptor-motionmark-htmlsuite
@@ -285,7 +255,6 @@ raptor-motionmark-animometer-firefox:
     variants: ["fission"]
     try-name: raptor-motionmark-animometer-firefox
     treeherder-symbol: Rap(mm-a)
-    tier: 1
     mozharness:
         extra-options:
             - --test=raptor-motionmark-animometer
@@ -295,6 +264,7 @@ raptor-motionmark-animometer-firefox-profiling:
     try-name: raptor-motionmark-animometer-firefox-profiling
     treeherder-symbol: Rap-Prof(mm-a)
     max-run-time: 900
+    tier: 2
     mozharness:
         extra-options:
             - --test=raptor-motionmark-animometer
@@ -305,7 +275,6 @@ raptor-webaudio-firefox:
     variants: ["fission"]
     try-name: raptor-webaudio-firefox
     treeherder-symbol: Rap(wa)
-    tier: 1
     mozharness:
         extra-options:
             - --test=raptor-webaudio
@@ -315,6 +284,7 @@ raptor-webaudio-firefox-profiling:
     try-name: raptor-webaudio-firefox
     treeherder-symbol: Rap-Prof(wa)
     max-run-time: 900
+    tier: 2
     mozharness:
         extra-options:
             - --test=raptor-webaudio
@@ -334,6 +304,7 @@ raptor-sunspider-firefox-profiling:
     try-name: raptor-sunspider-firefox-profiling
     treeherder-symbol: Rap-Prof(ss)
     max-run-time: 900
+    tier: 2
     mozharness:
         extra-options:
             - --test=raptor-sunspider
@@ -360,6 +331,7 @@ raptor-unity-webgl-firefox-profiling:
     description: "Raptor Unity WebGL on Firefox with Gecko Profiling"
     try-name: raptor-unity-webgl-firefox-profiling
     treeherder-symbol: Rap-Prof(ugl)
+    tier: 2
     mozharness:
         extra-options:
             - --test=raptor-unity-webgl
@@ -378,6 +350,7 @@ raptor-wasm-misc-cranelift-firefox:
             (linux|windows|macos)(?!.*shippable).*: []
             default: ["mozilla-central", "try"]
     max-run-time: 1800
+    tier: 2
     mozharness:
         extra-options:
             - --test=raptor-wasm-misc-cranelift
@@ -402,6 +375,7 @@ raptor-wasm-misc-firefox-profiling:
     try-name: raptor-wasm-misc-firefox-profiling
     treeherder-symbol: Rap-Prof(wm)
     max-run-time: 900
+    tier: 2
     mozharness:
         extra-options:
             - --test=raptor-wasm-misc
@@ -427,6 +401,7 @@ raptor-wasm-misc-baseline-firefox-profiling:
     try-name: raptor-wasm-misc-baseline-firefox-profiling
     treeherder-symbol: Rap-Prof(wm-b)
     max-run-time: 900
+    tier: 2
     mozharness:
         extra-options:
             - --test=raptor-wasm-misc-baseline
@@ -452,6 +427,7 @@ raptor-wasm-misc-ion-firefox-profiling:
     try-name: raptor-wasm-misc-ion-firefox-profiling
     treeherder-symbol: Rap-Prof(wm-i)
     max-run-time: 900
+    tier: 2
     mozharness:
         extra-options:
             - --test=raptor-wasm-misc-ion
@@ -482,6 +458,7 @@ raptor-assorted-dom-firefox-profiling:
     try-name: raptor-assorted-dom-firefox-profiling
     treeherder-symbol: Rap-Prof(dom)
     max-run-time: 900
+    tier: 2
     mozharness:
         extra-options:
             - --test=raptor-assorted-dom
@@ -509,6 +486,7 @@ raptor-wasm-godot-firefox-profiling:
     try-name: raptor-wasm-godot-firefox-profiling
     treeherder-symbol: Rap-Prof(godot)
     max-run-time: 900
+    tier: 2
     mozharness:
         extra-options:
             - --test=raptor-wasm-godot
@@ -533,6 +511,7 @@ raptor-wasm-godot-baseline-firefox-profiling:
     try-name: raptor-wasm-godot-baseline-firefox-profiling
     treeherder-symbol: Rap-Prof(godot-b)
     max-run-time: 900
+    tier: 2
     mozharness:
         extra-options:
             - --test=raptor-wasm-godot-baseline
@@ -552,6 +531,7 @@ raptor-wasm-godot-cranelift-firefox:
             .*-qr/.*: 2100
             .*-ref-hw-2017/.*: 2100
             default: 1500
+    tier: 2
     mozharness:
         extra-options:
             - --test=raptor-wasm-godot-cranelift
@@ -561,6 +541,7 @@ raptor-wasm-godot-cranelift-firefox-profiling:
     try-name: raptor-wasm-godot-cranelift-firefox-profiling
     treeherder-symbol: Rap-Prof(godot-c)
     max-run-time: 900
+    tier: 2
     mozharness:
         extra-options:
             - --test=raptor-wasm-godot-cranelift
@@ -585,6 +566,7 @@ raptor-wasm-godot-ion-firefox-profiling:
     try-name: raptor-wasm-godot-ion-firefox-profiling
     treeherder-symbol: Rap-Prof(godot-i)
     max-run-time: 900
+    tier: 2
     mozharness:
         extra-options:
             - --test=raptor-wasm-godot-ion
@@ -601,6 +583,7 @@ raptor-youtube-playback-firefox:
             (linux|windows|macos)(?!.*shippable).*: []
             default: ["mozilla-central", "try"]
     max-run-time: 3000
+    tier: 2
     mozharness:
         extra-options:
             - --test=raptor-youtube-playback
@@ -610,6 +593,7 @@ raptor-youtube-playback-firefox-profiling:
     try-name: raptor-youtube-playback-firefox-profiling
     treeherder-symbol: Rap-Prof(ytp)
     max-run-time: 4000
+    tier: 2
     mozharness:
         extra-options:
             - --test=raptor-youtube-playback
@@ -662,6 +646,7 @@ raptor-youtube-playback-av1-sfr-firefox:
         by-test-platform:
             windows10-aarch64/opt: 3600
             default: 1800
+    tier: 2
     mozharness:
         extra-options:
             - --test=raptor-youtube-playback-av1-sfr
@@ -680,6 +665,7 @@ raptor-youtube-playback-h264-sfr-firefox:
         by-test-platform:
             windows10-aarch64/opt: 3600
             default: 1800
+    tier: 2
     mozharness:
         extra-options:
             - --test=raptor-youtube-playback-h264-sfr
@@ -698,6 +684,7 @@ raptor-youtube-playback-vp9-sfr-firefox:
         by-test-platform:
             windows10-aarch64/opt: 3600
             default: 1800
+    tier: 2
     mozharness:
         extra-options:
             - --test=raptor-youtube-playback-vp9-sfr
@@ -716,6 +703,7 @@ raptor-youtube-playback-widevine-hfr-firefox:
         by-test-platform:
             windows10-aarch64/opt: 3600
             default: 2700
+    tier: 2
     mozharness:
         extra-options:
             - --test=raptor-youtube-playback-widevine-hfr
@@ -734,6 +722,7 @@ raptor-youtube-playback-widevine-h264-sfr-firefox:
         by-test-platform:
             windows10-aarch64/opt: 3600
             default: 2700
+    tier: 2
     mozharness:
         extra-options:
             - --test=raptor-youtube-playback-widevine-h264-sfr
@@ -752,6 +741,7 @@ raptor-youtube-playback-widevine-vp9-sfr-firefox:
         by-test-platform:
             windows10-aarch64/opt: 3600
             default: 2700
+    tier: 2
     mozharness:
         extra-options:
             - --test=raptor-youtube-playback-widevine-vp9-sfr
