@@ -7,6 +7,12 @@
 
 #include "prtypes.h"
 
+struct SHA256ContextStr;
+
+typedef void (*sha256_compress_t)(struct SHA256ContextStr *);
+typedef void (*sha256_update_t)(struct SHA256ContextStr *, const unsigned char *,
+                                unsigned int);
+
 struct SHA256ContextStr {
     union {
         PRUint32 w[64]; /* message schedule, input buffer, plus 48 words */
@@ -14,6 +20,8 @@ struct SHA256ContextStr {
     } u;
     PRUint32 h[8];           /* 8 state variables */
     PRUint32 sizeHi, sizeLo; /* 64-bit count of hashed bytes. */
+    sha256_compress_t compress;
+    sha256_update_t update;
 };
 
 #endif /* _SHA_256_H_ */

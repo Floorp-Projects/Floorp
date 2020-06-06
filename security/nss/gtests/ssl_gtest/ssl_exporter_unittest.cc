@@ -148,4 +148,41 @@ TEST_P(TlsConnectTls13, EarlyExporter) {
   SendReceive();
 }
 
+TEST_P(TlsConnectTls13, EarlyExporterExternalPsk) {
+  RolloverAntiReplay();
+  ScopedPK11SlotInfo slot(PK11_GetInternalSlot());
+  ASSERT_TRUE(!!slot);
+  ScopedPK11SymKey scoped_psk(
+      PK11_KeyGen(slot.get(), CKM_HKDF_KEY_GEN, nullptr, 16, nullptr));
+  AddPsk(scoped_psk, std::string("foo"), ssl_hash_sha256,
+         TLS_CHACHA20_POLY1305_SHA256);
+  StartConnect();
+  client_->Set0RttEnabled(true);
+  server_->Set0RttEnabled(true);
+  client_->Handshake();  // Send ClientHello.
+  uint8_t client_value[10] = {0};
+  RegularExporterShouldFail(client_.get(), nullptr, 0);
+
+  EXPECT_EQ(SECSuccess,
+            SSL_ExportEarlyKeyingMaterial(
+                client_->ssl_fd(), kExporterLabel, strlen(kExporterLabel),
+                kExporterContext, sizeof(kExporterContext), client_value,
+                sizeof(client_value)));
+
+  server_->SetSniCallback(RegularExporterShouldFail);
+  server_->Handshake();  // Handle ClientHello.
+  uint8_t server_value[10] = {0};
+  EXPECT_EQ(SECSuccess,
+            SSL_ExportEarlyKeyingMaterial(
+                server_->ssl_fd(), kExporterLabel, strlen(kExporterLabel),
+                kExporterContext, sizeof(kExporterContext), server_value,
+                sizeof(server_value)));
+  EXPECT_EQ(0, memcmp(client_value, server_value, sizeof(client_value)));
+
+  Handshake();
+  ExpectEarlyDataAccepted(true);
+  CheckConnected();
+  SendReceive();
+}
+
 }  // namespace nss_test

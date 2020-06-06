@@ -51,13 +51,15 @@ SSLHashType tls13_GetHashForCipherSuite(ssl3CipherSuite suite);
 unsigned int tls13_GetHashSize(const sslSocket *ss);
 unsigned int tls13_GetHashSizeForHash(SSLHashType hash);
 SECStatus tls13_ComputeHash(sslSocket *ss, SSL3Hashes *hashes,
-                            const PRUint8 *buf, unsigned int len);
+                            const PRUint8 *buf, unsigned int len,
+                            SSLHashType hash);
 SECStatus tls13_ComputeHandshakeHashes(sslSocket *ss,
                                        SSL3Hashes *hashes);
 SECStatus tls13_DeriveSecretNullHash(sslSocket *ss, PK11SymKey *key,
                                      const char *label,
                                      unsigned int labelLen,
-                                     PK11SymKey **dest);
+                                     PK11SymKey **dest,
+                                     SSLHashType hash);
 void tls13_FatalError(sslSocket *ss, PRErrorCode prError,
                       SSL3AlertDescription desc);
 SECStatus tls13_SetupClientHello(sslSocket *ss, sslClientHelloType chType);

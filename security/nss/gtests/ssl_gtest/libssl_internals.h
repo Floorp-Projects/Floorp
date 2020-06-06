@@ -47,5 +47,6 @@ SECStatus SSLInt_TweakChannelInfoForDC(PRFileDesc *fd, PRBool changeAuthKeyBits,
 SECStatus SSLInt_SetDCAdvertisedSigSchemes(PRFileDesc *fd,
                                            const SSLSignatureScheme *schemes,
                                            uint32_t num_sig_schemes);
+SECStatus SSLInt_RemoveServerCertificates(PRFileDesc *fd);
 
 #endif  // ndef libssl_internals_h_

@@ -946,6 +946,26 @@ TEST_F(TlsExtensionTest13Stream, ResumeIncorrectBinderValue) {
   server_->CheckErrorCode(SSL_ERROR_BAD_HANDSHAKE_HASH_VALUE);
 }
 
+// Do the same with an External PSK.
+TEST_P(TlsConnectTls13, TestTls13PskInvalidBinderValue) {
+  ScopedPK11SlotInfo slot(PK11_GetInternalSlot());
+  ASSERT_TRUE(!!slot);
+  ScopedPK11SymKey key(
+      PK11_KeyGen(slot.get(), CKM_HKDF_KEY_GEN, nullptr, 16, nullptr));
+  ASSERT_TRUE(!!key);
+  AddPsk(key, std::string("foo"), ssl_hash_sha256);
+  StartConnect();
+  ASSERT_TRUE(client_->MaybeSetResumptionToken());
+
+  MakeTlsFilter<TlsPreSharedKeyReplacer>(
+      client_, [](TlsPreSharedKeyReplacer* r) {
+        r->binders_[0].Write(0, r->binders_[0].data()[0] ^ 0xff, 1);
+      });
+  ConnectExpectAlert(server_, kTlsAlertDecryptError);
+  client_->CheckErrorCode(SSL_ERROR_DECRYPT_ERROR_ALERT);
+  server_->CheckErrorCode(SSL_ERROR_BAD_HANDSHAKE_HASH_VALUE);
+}
+
 // Extend the binder by one.
 TEST_F(TlsExtensionTest13Stream, ResumeIncorrectBinderLength) {
   SetupForResume();

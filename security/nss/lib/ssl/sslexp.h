@@ -254,7 +254,8 @@ typedef struct SSLAntiReplayContextStr SSLAntiReplayContext;
  *
  * This function will fail unless the socket has an active TLS 1.3 session.
  * Earlier versions of TLS do not support the spontaneous sending of the
- * NewSessionTicket message.
+ * NewSessionTicket message. It will also fail when external PSK
+ * authentication has been negotiated.
  */
 #define SSL_SendSessionTicket(fd, appToken, appTokenLen)              \
     SSL_EXPERIMENTAL_API("SSL_SendSessionTicket",                     \
@@ -379,6 +380,10 @@ typedef SSLHelloRetryRequestAction(PR_CALLBACK *SSLHelloRetryRequestCallback)(
  * This function will cause a CertificateRequest message to be sent by
  * a server.  This can be called once at a time, and is not allowed
  * until an answer is received.
+ *
+ * This function is not allowed for use with DTLS or when external
+ * PSK authentication has been negotiated. SECFailure is returned
+ * in both cases.
  *
  * The AuthCertificateCallback is called when the answer is received.
  * If the answer is accepted by the server, the value returned by
@@ -946,6 +951,51 @@ typedef struct SSLMaskingContextStr {
 #define SSL_SetDtls13VersionWorkaround(fd, enabled)        \
     SSL_EXPERIMENTAL_API("SSL_SetDtls13VersionWorkaround", \
                          (PRFileDesc * _fd, PRBool _enabled), (fd, enabled))
+
+/* SSL_AddExternalPsk() and SSL_AddExternalPsk0Rtt() can be used to
+ * set an external PSK on a socket. If successful, this PSK will
+ * be used in all subsequent connection attempts for this socket.
+ * This has no effect if the maximum TLS version is < 1.3.
+ *
+ * This API currently only accepts a single PSK, so multiple calls to
+ * either function will fail. An EPSK can be replaced by calling
+ * SSL_RemoveExternalPsk followed by SSL_AddExternalPsk.
+ * For both functions, the label is expected to be a unique identifier
+ * for the external PSK. Should en external PSK have the same label
+ * as a configured resumption PSK identity, the external PSK will
+ * take precedence.
+ *
+ * If you want to enable early data, you need to also provide a
+ * cipher suite for 0-RTT and a limit for the early data using
+ * SSL_AddExternalPsk0Rtt(). If you want to explicitly disallow
+ * certificate authentication, use SSL_AuthCertificateHook to set
+ * a callback that rejects all certificate chains.
+ */
+#define SSL_AddExternalPsk(fd, psk, identity, identityLen, hash)               \
+    SSL_EXPERIMENTAL_API("SSL_AddExternalPsk",                                 \
+                         (PRFileDesc * _fd, PK11SymKey * _psk,                 \
+                          const PRUint8 *_identity, unsigned int _identityLen, \
+                          SSLHashType _hash),                                  \
+                         (fd, psk, identity, identityLen, hash))
+
+#define SSL_AddExternalPsk0Rtt(fd, psk, identity, identityLen, hash,           \
+                               zeroRttSuite, maxEarlyData)                     \
+    SSL_EXPERIMENTAL_API("SSL_AddExternalPsk0Rtt",                             \
+                         (PRFileDesc * _fd, PK11SymKey * _psk,                 \
+                          const PRUint8 *_identity, unsigned int _identityLen, \
+                          SSLHashType _hash, PRUint16 _zeroRttSuite,           \
+                          PRUint32 _maxEarlyData),                             \
+                         (fd, psk, identity, identityLen, hash,                \
+                          zeroRttSuite, maxEarlyData))
+
+/* SSLExp_RemoveExternalPsk() removes an external PSK from socket
+ * configuration. Returns SECSuccess if the PSK was removed
+ * successfully, and SECFailure otherwise. */
+#define SSL_RemoveExternalPsk(fd, identity, identityLen)              \
+    SSL_EXPERIMENTAL_API("SSL_RemoveExternalPsk",                     \
+                         (PRFileDesc * _fd, const PRUint8 *_identity, \
+                          unsigned int _identityLen),                 \
+                         (fd, identity, identityLen))
 
 /* Deprecated experimental APIs */
 #define SSL_UseAltServerHelloType(fd, enable) SSL_DEPRECATED_EXPERIMENTAL_API

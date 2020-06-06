@@ -184,6 +184,12 @@ typedef enum {
     ssl_auth_size /* number of authentication types */
 } SSLAuthType;
 
+typedef enum {
+    ssl_psk_none = 0,
+    ssl_psk_resume = 1,
+    ssl_psk_external = 2,
+} SSLPskType;
+
 /* This is defined for backward compatibility reasons */
 #define ssl_auth_rsa ssl_auth_rsa_decrypt
 
@@ -357,6 +363,10 @@ typedef struct SSLChannelInfoStr {
      * authentication.
      */
     PRBool peerDelegCred;
+
+    /* The following fields were added in NSS 3.54. */
+    /* Indicates what type of PSK, if any, was used in a handshake. */
+    SSLPskType pskType;
 
     /* When adding new fields to this structure, please document the
      * NSS version in which they were added. */
