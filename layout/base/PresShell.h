@@ -356,6 +356,12 @@ class PresShell final : public nsStubDocumentObserver,
    */
   void AddResizeEventFlushObserverIfNeeded();
 
+  /**
+   * Returns true if the document hosted by this presShell is in a devtools
+   * Responsive Design Mode browsing context.
+   */
+  bool InRDMPane();
+
  private:
   /**
    * This is what ResizeReflowIgnoreOverride does when not shrink-wrapping (that
