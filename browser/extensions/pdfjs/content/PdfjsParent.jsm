@@ -15,7 +15,7 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["PdfjsChromeUtils"];
+var EXPORTED_SYMBOLS = ["PdfjsParent"];
 
 const PREF_PREFIX = "pdfjs";
 
@@ -44,73 +44,29 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "accessibility.typeaheadfind.matchesCountLimit"
 );
 
-var PdfjsChromeUtils = {
-  // For security purposes when running remote, we restrict preferences
-  // content can access.
-  _allowedPrefNames: Object.keys(PdfJsDefaultPreferences),
-  _ppmm: null,
-  _mmg: null,
+let gFindTypes = [
+  "find",
+  "findagain",
+  "findhighlightallchange",
+  "findcasesensitivitychange",
+  "findbarclose",
+];
 
-  /*
-   * Public API
-   */
+class PdfjsParent extends JSWindowActorParent {
+  constructor() {
+    super();
 
-  init() {
-    this._browsers = new WeakSet();
-    if (!this._ppmm) {
-      // global parent process message manager (PPMM)
-      this._ppmm = Services.ppmm;
-      this._ppmm.addMessageListener("PDFJS:Parent:clearUserPref", this);
-      this._ppmm.addMessageListener("PDFJS:Parent:setIntPref", this);
-      this._ppmm.addMessageListener("PDFJS:Parent:setBoolPref", this);
-      this._ppmm.addMessageListener("PDFJS:Parent:setCharPref", this);
-      this._ppmm.addMessageListener("PDFJS:Parent:setStringPref", this);
+    // For security purposes when running remote, we restrict preferences
+    // content can access.
+    this._allowedPrefNames = Object.keys(PdfJsDefaultPreferences);
+    this._boundToFindbar = null;
+  }
 
-      // global dom message manager (MMg)
-      this._mmg = Services.mm;
-      this._mmg.addMessageListener("PDFJS:Parent:displayWarning", this);
-
-      this._mmg.addMessageListener("PDFJS:Parent:addEventListener", this);
-      this._mmg.addMessageListener("PDFJS:Parent:removeEventListener", this);
-      this._mmg.addMessageListener("PDFJS:Parent:updateControlState", this);
-      this._mmg.addMessageListener("PDFJS:Parent:updateMatchesCount", this);
-
-      // Observer to handle shutdown.
-      Services.obs.addObserver(this, "quit-application");
+  didDestroy() {
+    if (this._boundToFindbar) {
+      this._removeEventListener();
     }
-  },
-
-  uninit() {
-    if (this._ppmm) {
-      this._ppmm.removeMessageListener("PDFJS:Parent:clearUserPref", this);
-      this._ppmm.removeMessageListener("PDFJS:Parent:setIntPref", this);
-      this._ppmm.removeMessageListener("PDFJS:Parent:setBoolPref", this);
-      this._ppmm.removeMessageListener("PDFJS:Parent:setCharPref", this);
-      this._ppmm.removeMessageListener("PDFJS:Parent:setStringPref", this);
-
-      this._mmg.removeMessageListener("PDFJS:Parent:displayWarning", this);
-
-      this._mmg.removeMessageListener("PDFJS:Parent:addEventListener", this);
-      this._mmg.removeMessageListener("PDFJS:Parent:removeEventListener", this);
-      this._mmg.removeMessageListener("PDFJS:Parent:updateControlState", this);
-      this._mmg.removeMessageListener("PDFJS:Parent:updateMatchesCount", this);
-
-      Services.obs.removeObserver(this, "quit-application");
-
-      this._mmg = null;
-      this._ppmm = null;
-    }
-  },
-
-  /*
-   * Events
-   */
-
-  observe(aSubject, aTopic, aData) {
-    if (aTopic === "quit-application") {
-      this.uninit();
-    }
-  },
+  }
 
   receiveMessage(aMsg) {
     switch (aMsg.name) {
@@ -138,20 +94,26 @@ var PdfjsChromeUtils = {
       case "PDFJS:Parent:updateMatchesCount":
         return this._updateMatchesCount(aMsg);
       case "PDFJS:Parent:addEventListener":
-        return this._addEventListener(aMsg);
-      case "PDFJS:Parent:removeEventListener":
-        return this._removeEventListener(aMsg);
+        return this._addEventListener();
     }
     return undefined;
-  },
+  }
 
   /*
    * Internal
    */
 
+  get browser() {
+    let browser = this.browsingContext.top.embedderElement;
+    if (browser.outerBrowser) {
+      browser = browser.outerBrowser; // handle RDM mode
+    }
+    return browser;
+  }
+
   _updateControlState(aMsg) {
     let data = aMsg.data;
-    let browser = aMsg.target;
+    let browser = this.browser;
     let tabbrowser = browser.getTabBrowser();
     let tab = tabbrowser.getTabForBrowser(browser);
     tabbrowser.getFindBar(tab).then(fb => {
@@ -164,11 +126,11 @@ var PdfjsChromeUtils = {
       const matchesCount = this._requestMatchesCount(data.matchesCount);
       fb.onMatchesCountResult(matchesCount);
     });
-  },
+  }
 
   _updateMatchesCount(aMsg) {
     let data = aMsg.data;
-    let browser = aMsg.target;
+    let browser = this.browser;
     let tabbrowser = browser.getTabBrowser();
     let tab = tabbrowser.getTabForBrowser(browser);
     tabbrowser.getFindBar(tab).then(fb => {
@@ -179,7 +141,7 @@ var PdfjsChromeUtils = {
       const matchesCount = this._requestMatchesCount(data);
       fb.onMatchesCountResult(matchesCount);
     });
-  },
+  }
 
   _requestMatchesCount(data) {
     if (!data) {
@@ -194,7 +156,7 @@ var PdfjsChromeUtils = {
       result.total = -1;
     }
     return result;
-  },
+  }
 
   handleEvent(aEvent) {
     const type = aEvent.type;
@@ -220,39 +182,29 @@ var PdfjsChromeUtils = {
     }
 
     let browser = aEvent.currentTarget.browser;
-    if (!this._browsers.has(browser)) {
+    if (!this._boundToFindbar) {
       throw new Error(
         "FindEventManager was not bound for the current browser."
       );
     }
-    // Only forward the events if the current browser is a registered browser.
-    let mm = browser.messageManager;
-    mm.sendAsyncMessage("PDFJS:Child:handleEvent", { type, detail });
+    browser.sendMessageToActor(
+      "PDFJS:Child:handleEvent",
+      { type, detail },
+      "Pdfjs"
+    );
     aEvent.preventDefault();
-  },
+  }
 
-  _types: [
-    "find",
-    "findagain",
-    "findhighlightallchange",
-    "findcasesensitivitychange",
-    "findbarclose",
-  ],
-
-  _addEventListener(aMsg) {
-    let browser = aMsg.target;
-    if (this._browsers.has(browser)) {
+  _addEventListener() {
+    let browser = this.browser;
+    if (this._boundToFindbar) {
       throw new Error(
         "FindEventManager was bound 2nd time without unbinding it first."
       );
     }
 
-    // Since this jsm is global, we need to store all the browsers
-    // we have to forward the messages for.
-    this._browsers.add(browser);
-
     this._hookupEventListeners(browser);
-  },
+  }
 
   /**
    * Either hook up all the find event listeners if a findbar exists,
@@ -265,36 +217,30 @@ var PdfjsChromeUtils = {
     let findbar = tabbrowser.getCachedFindBar(tab);
     if (findbar) {
       // And we need to start listening to find events.
-      for (var i = 0; i < this._types.length; i++) {
-        var type = this._types[i];
+      for (var i = 0; i < gFindTypes.length; i++) {
+        var type = gFindTypes[i];
         findbar.addEventListener(type, this, true);
       }
+      this._boundToFindbar = findbar;
     } else {
       tab.addEventListener("TabFindInitialized", this);
     }
     return !!findbar;
-  },
+  }
 
-  _removeEventListener(aMsg) {
-    let browser = aMsg.target;
-    if (!this._browsers.has(browser)) {
-      throw new Error("FindEventManager was unbound without binding it first.");
-    }
-
-    this._browsers.delete(browser);
-
-    let tabbrowser = browser.getTabBrowser();
-    let tab = tabbrowser.getTabForBrowser(browser);
-    tab.removeEventListener("TabFindInitialized", this);
-    let findbar = tabbrowser.getCachedFindBar(tab);
+  _removeEventListener() {
+    // make sure the listener has been removed.
+    let findbar = this._boundToFindbar;
     if (findbar) {
       // No reason to listen to find events any longer.
-      for (var i = 0; i < this._types.length; i++) {
-        var type = this._types[i];
+      for (var i = 0; i < gFindTypes.length; i++) {
+        var type = gFindTypes[i];
         findbar.removeEventListener(type, this, true);
       }
     }
-  },
+
+    this._boundToFindbar = null;
+  }
 
   _ensurePreferenceAllowed(aPrefName) {
     let unPrefixedName = aPrefName.split(PREF_PREFIX + ".");
@@ -306,35 +252,35 @@ var PdfjsChromeUtils = {
         '"' +
         aPrefName +
         '" ' +
-        "can't be accessed from content. See PdfjsChromeUtils.";
+        "can't be accessed from content. See PdfjsParent.";
       throw new Error(msg);
     }
-  },
+  }
 
   _clearUserPref(aPrefName) {
     this._ensurePreferenceAllowed(aPrefName);
     Services.prefs.clearUserPref(aPrefName);
-  },
+  }
 
   _setIntPref(aPrefName, aPrefValue) {
     this._ensurePreferenceAllowed(aPrefName);
     Services.prefs.setIntPref(aPrefName, aPrefValue);
-  },
+  }
 
   _setBoolPref(aPrefName, aPrefValue) {
     this._ensurePreferenceAllowed(aPrefName);
     Services.prefs.setBoolPref(aPrefName, aPrefValue);
-  },
+  }
 
   _setCharPref(aPrefName, aPrefValue) {
     this._ensurePreferenceAllowed(aPrefName);
     Services.prefs.setCharPref(aPrefName, aPrefValue);
-  },
+  }
 
   _setStringPref(aPrefName, aPrefValue) {
     this._ensurePreferenceAllowed(aPrefName);
     Services.prefs.setStringPref(aPrefName, aPrefValue);
-  },
+  }
 
   /*
    * Display a notification warning when the renderer isn't sure
@@ -342,7 +288,7 @@ var PdfjsChromeUtils = {
    */
   _displayWarning(aMsg) {
     let data = aMsg.data;
-    let browser = aMsg.target;
+    let browser = this.browser;
 
     let tabbrowser = browser.getTabBrowser();
     let notificationBox = tabbrowser.getNotificationBox(browser);
@@ -351,10 +297,9 @@ var PdfjsChromeUtils = {
     // "open with different viewer" both the button callback and
     // eventCallback will be called.
     let messageSent = false;
-    function sendMessage(download) {
-      let mm = browser.messageManager;
-      mm.sendAsyncMessage("PDFJS:Child:fallbackDownload", { download });
-    }
+    let sendMessage = download => {
+      this.sendAsyncMessage("PDFJS:Child:fallbackDownload", { download });
+    };
     let buttons = [
       {
         label: data.label,
@@ -385,5 +330,5 @@ var PdfjsChromeUtils = {
         sendMessage(false);
       }
     );
-  },
-};
+  }
+}
