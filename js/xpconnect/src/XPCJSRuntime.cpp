@@ -2749,7 +2749,14 @@ static bool PreserveWrapper(JSContext* cx, JS::Handle<JSObject*> obj) {
   MOZ_ASSERT(obj);
   MOZ_ASSERT(mozilla::dom::IsDOMObject(obj));
 
-  return mozilla::dom::TryPreserveWrapper(obj);
+  if (!mozilla::dom::TryPreserveWrapper(obj)) {
+    return false;
+  }
+
+  MOZ_ASSERT(!mozilla::dom::HasReleasedWrapper(obj),
+             "There should be no released wrapper since we just preserved it");
+
+  return true;
 }
 
 static nsresult ReadSourceFromFilename(JSContext* cx, const char* filename,
@@ -3034,7 +3041,7 @@ void XPCJSRuntime::Initialize(JSContext* cx) {
     JS::SetFilenameValidationCallback(
         nsContentSecurityUtils::ValidateScriptFilename);
   }
-  js::SetPreserveWrapperCallback(cx, PreserveWrapper);
+  js::SetPreserveWrapperCallbacks(cx, PreserveWrapper, HasReleasedWrapper);
   JS_InitReadPrincipalsCallback(cx, nsJSPrincipals::ReadPrincipals);
   JS_SetAccumulateTelemetryCallback(cx, AccumulateTelemetryCallback);
   JS_SetSetUseCounterCallback(cx, SetUseCounterCallback);
