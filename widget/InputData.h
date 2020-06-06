@@ -457,6 +457,9 @@ class PinchGestureInput : public InputData {
       ONE_TOUCH, // From one-finger pinch gesture
       TRACKPAD, // From trackpad pinch gesture
       MOUSEWHEEL // Synthesized from modifier+mousewheel
+
+      // If adding more items here, increase n_values for the
+      // APZ_ZOOM_PINCHSOURCE Telemetry metric.
   ));
   // clang-format on
 
