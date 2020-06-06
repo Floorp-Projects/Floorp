@@ -881,14 +881,7 @@ void nsCocoaWindow::Show(bool bState) {
         [mWindow setAnimationBehavior:behavior];
         mWindowAnimationBehavior = behavior;
       }
-
-      // We don't want alwaysontop windows to pull focus when they're opened,
-      // as these tend to be for peripheral indicators and displays.
-      if (mAlwaysOnTop) {
-        [mWindow orderFront:nil];
-      } else {
-        [mWindow makeKeyAndOrderFront:nil];
-      }
+      [mWindow makeKeyAndOrderFront:nil];
       NS_OBJC_END_TRY_ABORT_BLOCK;
       SendSetZLevelEvent();
     }
