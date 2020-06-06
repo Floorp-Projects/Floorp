@@ -71,9 +71,9 @@ var PdfjsContentUtils = {
    * when the renderer isn't sure a pdf displayed correctly.
    */
   displayWarning(aWindow, aMessage, aLabel, aAccessKey) {
-    // the child's dom frame mm associated with the window.
-    let winmm = aWindow.docShell.messageManager;
-    winmm.sendAsyncMessage("PDFJS:Parent:displayWarning", {
+    // the child's dom frame actor associated with the window.
+    let actor = aWindow.windowGlobalChild.getActor("Pdfjs");
+    actor.sendAsyncMessage("PDFJS:Parent:displayWarning", {
       message: aMessage,
       label: aLabel,
       accessKey: aAccessKey,
