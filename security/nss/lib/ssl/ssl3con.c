@@ -21,6 +21,7 @@
 #include "sslerr.h"
 #include "ssl3ext.h"
 #include "ssl3exthandle.h"
+#include "tls13psk.h"
 #include "tls13subcerts.h"
 #include "prtime.h"
 #include "prinrval.h"
@@ -912,6 +913,13 @@ ssl3_config_match_init(sslSocket *ss)
     if (SSL_ALL_VERSIONS_DISABLED(&ss->vrange)) {
         return 0;
     }
+    if (ss->sec.isServer && ss->psk &&
+        PR_CLIST_IS_EMPTY(&ss->serverCerts) &&
+        (ss->opt.requestCertificate || ss->opt.requireCertificate)) {
+        /* PSK and certificate auth cannot be combined. */
+        PORT_SetError(SSL_ERROR_NO_CERTIFICATE);
+        return 0;
+    }
     if (ssl_CheckSignatureSchemes(ss) != SECSuccess) {
         return 0; /* Code already set. */
     }
@@ -1007,6 +1015,16 @@ ssl3_config_match(const ssl3CipherSuiteCfg *suite, PRUint8 policy,
 
     if (ss->sec.isServer && !ssl_HasCert(ss, vrange->max, kea_def->authKeyType)) {
         return PR_FALSE;
+    }
+
+    /* If a PSK is selected, disable suites that use a different hash than
+     * the PSK. We advertise non-PSK-compatible suites in the CH, as we could
+     * fallback to certificate auth. The client handler will check hash
+     * compatibility before committing to use the PSK. */
+    if (ss->xtnData.selectedPsk) {
+        if (ss->xtnData.selectedPsk->hash != cipher_def->prf_hash) {
+            return PR_FALSE;
+        }
     }
 
     return ssl3_CipherSuiteAllowedForVersionRange(suite->cipher_suite, vrange);
@@ -5333,10 +5351,11 @@ ssl3_SendClientHello(sslSocket *ss, sslClientHelloType type)
     }
 
     if (extensionBuf.len) {
-        /* If we are sending a PSK binder, replace the dummy value.  Note that
-         * we only set statelessResume on the client in TLS 1.3. */
-        if (ss->statelessResume &&
-            ss->xtnData.sentSessionTicketInClientHello) {
+        /* If we are sending a PSK binder, replace the dummy value. */
+        if (ssl3_ExtensionAdvertised(ss, ssl_tls13_pre_shared_key_xtn)) {
+            PORT_Assert(ss->psk ||
+                        (ss->statelessResume && ss->xtnData.sentSessionTicketInClientHello));
+            PORT_Assert(!PR_CLIST_IS_EMPTY(&ss->ssl3.hs.psks));
             rv = tls13_WriteExtensionsWithBinder(ss, &extensionBuf);
         } else {
             rv = ssl3_AppendBufferToHandshakeVariable(ss, &extensionBuf, 2);
@@ -8105,26 +8124,53 @@ ssl3_KEASupportsTickets(const ssl3KEADef *kea_def)
     return PR_TRUE;
 }
 
+static PRBool
+ssl3_PeerSupportsCipherSuite(const SECItem *peerSuites, uint16_t suite)
+{
+    for (unsigned int i = 0; i + 1 < peerSuites->len; i += 2) {
+        PRUint16 suite_i = (peerSuites->data[i] << 8) | peerSuites->data[i + 1];
+        if (suite_i == suite) {
+            return PR_TRUE;
+        }
+    }
+    return PR_FALSE;
+}
+
 SECStatus
 ssl3_NegotiateCipherSuiteInner(sslSocket *ss, const SECItem *suites,
                                PRUint16 version, PRUint16 *suitep)
 {
-    unsigned int j;
     unsigned int i;
+    SSLVersionRange vrange = { version, version };
 
-    for (j = 0; j < ssl_V3_SUITES_IMPLEMENTED; j++) {
-        ssl3CipherSuiteCfg *suite = &ss->cipherSuites[j];
-        SSLVersionRange vrange = { version, version };
+    /* If we negotiated an External PSK and that PSK has a ciphersuite
+     * configured, we need to constrain our choice. If the client does
+     * not support it, negotiate a certificate auth suite and fall back.
+     */
+    if (ss->version >= SSL_LIBRARY_VERSION_TLS_1_3 &&
+        ss->xtnData.selectedPsk &&
+        ss->xtnData.selectedPsk->type == ssl_psk_external &&
+        ss->xtnData.selectedPsk->zeroRttSuite != TLS_NULL_WITH_NULL_NULL) {
+        PRUint16 pskSuite = ss->xtnData.selectedPsk->zeroRttSuite;
+        ssl3CipherSuiteCfg *pskSuiteCfg = ssl_LookupCipherSuiteCfgMutable(pskSuite,
+                                                                          ss->cipherSuites);
+        if (ssl3_config_match(pskSuiteCfg, ss->ssl3.policy, &vrange, ss) &&
+            ssl3_PeerSupportsCipherSuite(suites, pskSuite)) {
+            *suitep = pskSuite;
+            return SECSuccess;
+        }
+    }
+
+    for (i = 0; i < ssl_V3_SUITES_IMPLEMENTED; i++) {
+        ssl3CipherSuiteCfg *suite = &ss->cipherSuites[i];
         if (!ssl3_config_match(suite, ss->ssl3.policy, &vrange, ss)) {
             continue;
         }
-        for (i = 0; i + 1 < suites->len; i += 2) {
-            PRUint16 suite_i = (suites->data[i] << 8) | suites->data[i + 1];
-            if (suite_i == suite->cipher_suite) {
-                *suitep = suite_i;
-                return SECSuccess;
-            }
+        if (!ssl3_PeerSupportsCipherSuite(suites, suite->cipher_suite)) {
+            continue;
         }
+        *suitep = suite->cipher_suite;
+        return SECSuccess;
     }
     PORT_SetError(SSL_ERROR_NO_CYPHER_OVERLAP);
     return SECFailure;
@@ -13102,7 +13148,6 @@ ssl3_InitState(sslSocket *ss)
     ss->ssl3.hs.currentSecret = NULL;
     ss->ssl3.hs.resumptionMasterSecret = NULL;
     ss->ssl3.hs.dheSecret = NULL;
-    ss->ssl3.hs.pskBinderKey = NULL;
     ss->ssl3.hs.clientEarlyTrafficSecret = NULL;
     ss->ssl3.hs.clientHsTrafficSecret = NULL;
     ss->ssl3.hs.serverHsTrafficSecret = NULL;
@@ -13476,8 +13521,6 @@ ssl3_DestroySSL3Info(sslSocket *ss)
         PK11_FreeSymKey(ss->ssl3.hs.resumptionMasterSecret);
     if (ss->ssl3.hs.dheSecret)
         PK11_FreeSymKey(ss->ssl3.hs.dheSecret);
-    if (ss->ssl3.hs.pskBinderKey)
-        PK11_FreeSymKey(ss->ssl3.hs.pskBinderKey);
     if (ss->ssl3.hs.clientEarlyTrafficSecret)
         PK11_FreeSymKey(ss->ssl3.hs.clientEarlyTrafficSecret);
     if (ss->ssl3.hs.clientHsTrafficSecret)
@@ -13496,6 +13539,8 @@ ssl3_DestroySSL3Info(sslSocket *ss)
     ss->ssl3.hs.zeroRttState = ssl_0rtt_none;
     /* Destroy TLS 1.3 buffered early data. */
     tls13_DestroyEarlyData(&ss->ssl3.hs.bufferedEarlyData);
+    /* Destroy TLS 1.3 PSKs */
+    tls13_DestroyPskList(&ss->ssl3.hs.psks);
 }
 
 #define MAP_NULL(x) (((x) != 0) ? (x) : SEC_OID_NULL_CIPHER)

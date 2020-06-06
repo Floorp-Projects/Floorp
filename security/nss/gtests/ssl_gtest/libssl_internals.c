@@ -15,6 +15,24 @@
 #include "secmodti.h"
 #include "sslproto.h"
 
+SECStatus SSLInt_RemoveServerCertificates(PRFileDesc *fd) {
+  if (!fd) {
+    return SECFailure;
+  }
+  sslSocket *ss = ssl_FindSocket(fd);
+  if (!ss) {
+    return SECFailure;
+  }
+
+  PRCList *cursor;
+  while (!PR_CLIST_IS_EMPTY(&ss->serverCerts)) {
+    cursor = PR_LIST_TAIL(&ss->serverCerts);
+    PR_REMOVE_LINK(cursor);
+    ssl_FreeServerCert((sslServerCert *)cursor);
+  }
+  return SECSuccess;
+}
+
 SECStatus SSLInt_SetDCAdvertisedSigSchemes(PRFileDesc *fd,
                                            const SSLSignatureScheme *schemes,
                                            uint32_t num_sig_schemes) {

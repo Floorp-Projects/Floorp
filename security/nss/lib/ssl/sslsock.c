@@ -20,6 +20,7 @@
 #include "pk11pqg.h"
 #include "pk11pub.h"
 #include "tls13esni.h"
+#include "tls13psk.h"
 #include "tls13subcerts.h"
 
 static const sslSocketOps ssl_default_ops = { /* No SSL. */
@@ -383,6 +384,12 @@ ssl_DupSocket(sslSocket *os)
                 goto loser;
             }
         }
+        if (os->psk) {
+            ss->psk = tls13_CopyPsk(os->psk);
+            if (!ss->psk) {
+                goto loser;
+            }
+        }
 
         /* Create security data */
         rv = ssl_CopySecurityInfo(ss, os);
@@ -469,9 +476,15 @@ ssl_DestroySocketContents(sslSocket *ss)
 
     ssl_ClearPRCList(&ss->ssl3.hs.dtlsSentHandshake, NULL);
     ssl_ClearPRCList(&ss->ssl3.hs.dtlsRcvdHandshake, NULL);
+    tls13_DestroyPskList(&ss->ssl3.hs.psks);
 
     tls13_DestroyESNIKeys(ss->esniKeys);
     tls13_ReleaseAntiReplayContext(ss->antiReplay);
+
+    if (ss->psk) {
+        tls13_DestroyPsk(ss->psk);
+        ss->psk = NULL;
+    }
 }
 
 /*
@@ -2468,6 +2481,8 @@ SSL_ReconfigFD(PRFileDesc *model, PRFileDesc *fd)
         }
     }
 
+    tls13_ResetHandshakePsks(sm, &ss->ssl3.hs.psks);
+
     if (sm->authCertificate)
         ss->authCertificate = sm->authCertificate;
     if (sm->authCertificateArg)
@@ -4161,10 +4176,12 @@ ssl_NewSocket(PRBool makeLocks, SSLProtocolVariant protocolVariant)
     ssl3_InitExtensionData(&ss->xtnData, ss);
     PR_INIT_CLIST(&ss->ssl3.hs.dtlsSentHandshake);
     PR_INIT_CLIST(&ss->ssl3.hs.dtlsRcvdHandshake);
+    PR_INIT_CLIST(&ss->ssl3.hs.psks);
     dtls_InitTimers(ss);
 
     ss->esniKeys = NULL;
     ss->antiReplay = NULL;
+    ss->psk = NULL;
 
     if (makeLocks) {
         rv = ssl_MakeLocks(ss);
@@ -4231,6 +4248,8 @@ struct {
     void *function;
 } ssl_experimental_functions[] = {
 #ifndef SSL_DISABLE_EXPERIMENTAL_API
+    EXP(AddExternalPsk),
+    EXP(AddExternalPsk0Rtt),
     EXP(AeadDecrypt),
     EXP(AeadEncrypt),
     EXP(CipherSuiteOrderGet),
@@ -4261,6 +4280,7 @@ struct {
     EXP(RecordLayerData),
     EXP(RecordLayerWriteCallback),
     EXP(ReleaseAntiReplayContext),
+    EXP(RemoveExternalPsk),
     EXP(SecretCallback),
     EXP(SendCertificateRequest),
     EXP(SendSessionTicket),

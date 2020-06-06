@@ -37,6 +37,7 @@
 typedef struct sslSocketStr sslSocket;
 typedef struct sslNamedGroupDefStr sslNamedGroupDef;
 typedef struct sslEsniKeysStr sslEsniKeys;
+typedef struct sslPskStr sslPsk;
 typedef struct sslDelegatedCredentialStr sslDelegatedCredential;
 typedef struct sslEphemeralKeyPairStr sslEphemeralKeyPair;
 typedef struct TLS13KeyShareEntryStr TLS13KeyShareEntry;
@@ -691,9 +692,8 @@ typedef struct SSL3HandshakeStateStr {
     /* This group of values is used for TLS 1.3 and above */
     PK11SymKey *currentSecret;            /* The secret down the "left hand side"
                                            * of the TLS 1.3 key schedule. */
-    PK11SymKey *resumptionMasterSecret;   /* The resumption PSK. */
+    PK11SymKey *resumptionMasterSecret;   /* The resumption_master_secret. */
     PK11SymKey *dheSecret;                /* The (EC)DHE shared secret. */
-    PK11SymKey *pskBinderKey;             /* Used to compute the PSK binder. */
     PK11SymKey *clientEarlyTrafficSecret; /* The secret we use for 0-RTT. */
     PK11SymKey *clientHsTrafficSecret;    /* The source keys for handshake */
     PK11SymKey *serverHsTrafficSecret;    /* traffic keys. */
@@ -724,6 +724,7 @@ typedef struct SSL3HandshakeStateStr {
     PRCList dtlsSentHandshake; /* Used to map records to handshake fragments. */
     PRCList dtlsRcvdHandshake; /* Handshake records we have received
                                 * used to generate ACKs. */
+    PRCList psks;              /* A list of PSKs, resumption and/or external. */
 } SSL3HandshakeState;
 
 #define SSL_ASSERT_HASHES_EMPTY(ss)                                  \
@@ -1101,6 +1102,9 @@ struct sslSocketStr {
 
     /* Anti-replay for TLS 1.3 0-RTT. */
     SSLAntiReplayContext *antiReplay;
+
+    /* An out-of-band PSK. */
+    sslPsk *psk;
 };
 
 struct sslSelfEncryptKeysStr {

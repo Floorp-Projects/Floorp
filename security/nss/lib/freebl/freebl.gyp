@@ -329,6 +329,7 @@
       'type': 'static_library',
       'sources': [
         'aes-armv8.c',
+        'sha256-armv8.c',
       ],
       'dependencies': [
         '<(DEPTH)/exports.gyp:nss_exports'
@@ -384,7 +385,7 @@
           'dependencies': [
             'gcm-aes-x86_c_lib',
           ],
-        }, 'disable_arm_hw_aes==0 and (target_arch=="arm" or target_arch=="arm64" or target_arch=="aarch64")', {
+        }, '(disable_arm_hw_aes==0 or disable_arm_hw_sha2==0) and (target_arch=="arm" or target_arch=="arm64" or target_arch=="aarch64")', {
           'dependencies': [
             'armv8_c_lib'
           ],
@@ -642,6 +643,11 @@
           'USE_HW_AES',
         ],
       }],
+      [ 'OS=="win" and (target_arch=="arm64" or target_arch=="aarch64") and disable_arm_hw_sha2==0', {
+        'defines': [
+          'USE_HW_SHA2',
+        ],
+      }],
       [ 'cc_use_gnu_ld==1 and OS=="win" and target_arch=="x64"', {
         # mingw x64
         'defines': [
@@ -702,6 +708,11 @@
           [ 'disable_arm_hw_aes==0 and (target_arch=="arm" or target_arch=="arm64" or target_arch=="aarch64")', {
             'defines': [
               'USE_HW_AES',
+            ],
+          }],
+          [ 'disable_arm_hw_sha2==0 and (target_arch=="arm" or target_arch=="arm64" or target_arch=="aarch64")', {
+            'defines': [
+              'USE_HW_SHA2',
             ],
           }],
         ],

@@ -9,6 +9,7 @@
 
 #include "prio.h"
 #include "ssl.h"
+#include "sslproto.h"
 
 #include <functional>
 #include <iostream>
@@ -157,6 +158,7 @@ class TlsAgent : public PollTarget {
   void SetServerKeyBits(uint16_t bits);
   void ExpectReadWriteError();
   void EnableFalseStart();
+  void ExpectPsk();
   void ExpectResumption();
   void SkipVersionChecks();
   void SetSignatureSchemes(const SSLSignatureScheme* schemes, size_t count);
@@ -176,6 +178,9 @@ class TlsAgent : public PollTarget {
   // Send data directly to the underlying socket, skipping the TLS layer.
   void SendDirect(const DataBuffer& buf);
   void SendRecordDirect(const TlsRecord& record);
+  void AddPsk(const ScopedPK11SymKey& psk, std::string label, SSLHashType hash,
+              uint16_t zeroRttSuite = TLS_NULL_WITH_NULL_NULL);
+  void RemovePsk(std::string label);
   void ReadBytes(size_t max = 16384U);
   void ResetSentBytes();  // Hack to test drops.
   void EnableExtendedMasterSecret();
@@ -247,6 +252,8 @@ class TlsAgent : public PollTarget {
     *suite = info_.cipherSuite;
     return true;
   }
+
+  void expected_cipher_suite(uint16_t suite) { expected_cipher_suite_ = suite; }
 
   std::string cipher_suite_name() const {
     if (state_ != STATE_CONNECTED) return "UNKNOWN";
@@ -418,8 +425,8 @@ class TlsAgent : public PollTarget {
   bool falsestart_enabled_;
   uint16_t expected_version_;
   uint16_t expected_cipher_suite_;
-  bool expect_resumption_;
   bool expect_client_auth_;
+  SSLPskType expect_psk_;
   bool can_falsestart_hook_called_;
   bool sni_hook_called_;
   bool auth_certificate_hook_called_;
