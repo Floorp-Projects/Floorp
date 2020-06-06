@@ -47,11 +47,6 @@ XPCOMUtils.defineLazyServiceGetter(
 );
 ChromeUtils.defineModuleGetter(
   this,
-  "PdfjsChromeUtils",
-  "resource://pdf.js/PdfjsChromeUtils.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
   "PdfJsDefaultPreferences",
   "resource://pdf.js/PdfJsDefaultPreferences.jsm"
 );
@@ -108,7 +103,6 @@ var PdfJs = {
         "PdfJs.init should only get called in the parent process."
       );
     }
-    PdfjsChromeUtils.init();
     this.initPrefs();
     this.checkIsDefault(isNewProfile);
   },

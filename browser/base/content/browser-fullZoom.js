@@ -327,6 +327,14 @@ var FullZoom = {
 
   // Setting & Pref Manipulation
 
+  sendMessageToPDFViewer(browser, name) {
+    try {
+      browser.sendMessageToActor(name, {}, "Pdfjs");
+    } catch (ex) {
+      Cu.reportError(ex);
+    }
+  },
+
   /**
    * If browser in reader mode sends message to reader in order to decrease font size,
    * Otherwise reduces the zoom level of the page in the current browser.
@@ -336,7 +344,7 @@ var FullZoom = {
     if (browser.currentURI.spec.startsWith("about:reader")) {
       browser.sendMessageToActor("Reader:ZoomOut", {}, "AboutReader");
     } else if (this._isPDFViewer(browser)) {
-      browser.messageManager.sendAsyncMessage("PDFJS:ZoomOut");
+      this.sendMessageToPDFViewer(browser, "PDFJS:ZoomOut");
     } else {
       ZoomManager.reduce();
       this._ignorePendingZoomAccesses(browser);
@@ -353,7 +361,7 @@ var FullZoom = {
     if (browser.currentURI.spec.startsWith("about:reader")) {
       browser.sendMessageToActor("Reader:ZoomIn", {}, "AboutReader");
     } else if (this._isPDFViewer(browser)) {
-      browser.messageManager.sendAsyncMessage("PDFJS:ZoomIn");
+      this.sendMessageToPDFViewer(browser, "PDFJS:ZoomIn");
     } else {
       ZoomManager.enlarge();
       this._ignorePendingZoomAccesses(browser);
@@ -375,7 +383,7 @@ var FullZoom = {
       return;
     } else if (this._isPDFViewer(aBrowser)) {
       const message = aValue > 0 ? "PDFJS::ZoomIn" : "PDFJS:ZoomOut";
-      aBrowser.messageManager.sendAsyncMessage(message);
+      this.sendMessageToPDFViewer(aBrowser, message);
       return;
     }
     let zoom = ZoomManager.getZoomForBrowser(aBrowser);
@@ -414,7 +422,7 @@ var FullZoom = {
     if (browser.currentURI.spec.startsWith("about:reader")) {
       browser.sendMessageToActor("Reader:ResetZoom", {}, "AboutReader");
     } else if (this._isPDFViewer(browser)) {
-      browser.messageManager.sendAsyncMessage("PDFJS:ZoomReset");
+      this.sendMessageToPDFViewer(browser, "PDFJS:ZoomReset");
       // Ensure that the UI elements of the PDF viewer won't be zoomed in/out
       // on reset, even if/when browser default zoom value is not set to 100%.
       forceValue = 1;
