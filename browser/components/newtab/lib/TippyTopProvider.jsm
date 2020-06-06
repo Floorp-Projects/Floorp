@@ -6,19 +6,30 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
+XPCOMUtils.defineLazyModuleGetters(this, {
+  Services: "resource://gre/modules/Services.jsm",
+});
+
 XPCOMUtils.defineLazyGlobalGetters(this, ["fetch", "URL"]);
 
 const TIPPYTOP_PATH = "resource://activity-stream/data/content/tippytop/";
 const TIPPYTOP_JSON_PATH =
   "resource://activity-stream/data/content/tippytop/top_sites.json";
 
-function getDomain(url) {
-  let domain;
+/*
+ * Get a domain from a url optionally stripping subdomains.
+ */
+function getDomain(url, strip = "www.") {
+  let domain = "";
   try {
     domain = new URL(url).hostname;
   } catch (ex) {}
-  if (domain && domain.startsWith("www.")) {
-    domain = domain.slice(4);
+  if (strip === "*") {
+    try {
+      domain = Services.eTLD.getBaseDomainFromHost(domain);
+    } catch (ex) {}
+  } else if (domain.startsWith(strip)) {
+    domain = domain.slice(strip.length);
   }
   return domain;
 }
@@ -49,8 +60,8 @@ this.TippyTopProvider = class TippyTopProvider {
     }
   }
 
-  processSite(site) {
-    const tippyTop = this._sitesByDomain.get(getDomain(site.url));
+  processSite(site, strip) {
+    const tippyTop = this._sitesByDomain.get(getDomain(site.url, strip));
     if (tippyTop) {
       site.tippyTopIcon = TIPPYTOP_PATH + tippyTop.image_url;
       site.smallFavicon = TIPPYTOP_PATH + tippyTop.favicon_url;

@@ -6,9 +6,10 @@ export const AboutWelcomeUtils = {
   handleUserAction(action) {
     window.AWSendToParent("SPECIAL_ACTION", action);
   },
-  sendImpressionTelemetry(messageId) {
+  sendImpressionTelemetry(messageId, context) {
     window.AWSendEventTelemetry({
       event: "IMPRESSION",
+      event_context: context,
       message_id: messageId,
     });
   },
