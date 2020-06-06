@@ -17,17 +17,8 @@
 
 var EXPORTED_SYMBOLS = ["PdfjsParent"];
 
-const PREF_PREFIX = "pdfjs";
-
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
-);
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
-ChromeUtils.defineModuleGetter(
-  this,
-  "PdfJsDefaultPreferences",
-  "resource://pdf.js/PdfJsDefaultPreferences.jsm"
 );
 
 var Svc = {};
@@ -55,10 +46,6 @@ let gFindTypes = [
 class PdfjsParent extends JSWindowActorParent {
   constructor() {
     super();
-
-    // For security purposes when running remote, we restrict preferences
-    // content can access.
-    this._allowedPrefNames = Object.keys(PdfJsDefaultPreferences);
     this._boundToFindbar = null;
   }
 
@@ -70,21 +57,6 @@ class PdfjsParent extends JSWindowActorParent {
 
   receiveMessage(aMsg) {
     switch (aMsg.name) {
-      case "PDFJS:Parent:clearUserPref":
-        this._clearUserPref(aMsg.data.name);
-        break;
-      case "PDFJS:Parent:setIntPref":
-        this._setIntPref(aMsg.data.name, aMsg.data.value);
-        break;
-      case "PDFJS:Parent:setBoolPref":
-        this._setBoolPref(aMsg.data.name, aMsg.data.value);
-        break;
-      case "PDFJS:Parent:setCharPref":
-        this._setCharPref(aMsg.data.name, aMsg.data.value);
-        break;
-      case "PDFJS:Parent:setStringPref":
-        this._setStringPref(aMsg.data.name, aMsg.data.value);
-        break;
       case "PDFJS:Parent:displayWarning":
         this._displayWarning(aMsg);
         break;
@@ -240,46 +212,6 @@ class PdfjsParent extends JSWindowActorParent {
     }
 
     this._boundToFindbar = null;
-  }
-
-  _ensurePreferenceAllowed(aPrefName) {
-    let unPrefixedName = aPrefName.split(PREF_PREFIX + ".");
-    if (
-      unPrefixedName[0] !== "" ||
-      !this._allowedPrefNames.includes(unPrefixedName[1])
-    ) {
-      let msg =
-        '"' +
-        aPrefName +
-        '" ' +
-        "can't be accessed from content. See PdfjsParent.";
-      throw new Error(msg);
-    }
-  }
-
-  _clearUserPref(aPrefName) {
-    this._ensurePreferenceAllowed(aPrefName);
-    Services.prefs.clearUserPref(aPrefName);
-  }
-
-  _setIntPref(aPrefName, aPrefValue) {
-    this._ensurePreferenceAllowed(aPrefName);
-    Services.prefs.setIntPref(aPrefName, aPrefValue);
-  }
-
-  _setBoolPref(aPrefName, aPrefValue) {
-    this._ensurePreferenceAllowed(aPrefName);
-    Services.prefs.setBoolPref(aPrefName, aPrefValue);
-  }
-
-  _setCharPref(aPrefName, aPrefValue) {
-    this._ensurePreferenceAllowed(aPrefName);
-    Services.prefs.setCharPref(aPrefName, aPrefValue);
-  }
-
-  _setStringPref(aPrefName, aPrefValue) {
-    this._ensurePreferenceAllowed(aPrefName);
-    Services.prefs.setStringPref(aPrefName, aPrefValue);
   }
 
   /*

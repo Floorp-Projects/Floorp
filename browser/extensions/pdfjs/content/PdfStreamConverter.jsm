@@ -35,6 +35,11 @@ const { AppConstants } = ChromeUtils.import(
 
 ChromeUtils.defineModuleGetter(
   this,
+  "AsyncPrefs",
+  "resource://gre/modules/AsyncPrefs.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
   "NetUtil",
   "resource://gre/modules/NetUtil.jsm"
 );
@@ -57,11 +62,6 @@ ChromeUtils.defineModuleGetter(
   "resource://pdf.js/PdfJsTelemetry.jsm"
 );
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "PdfjsContentUtils",
-  "resource://pdf.js/PdfjsContentUtils.jsm"
-);
 ChromeUtils.defineModuleGetter(this, "PdfJs", "resource://pdf.js/PdfJs.jsm");
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["XMLHttpRequest"]);
@@ -505,15 +505,21 @@ class ChromeActions {
       message = getLocalizedString(strings, "unsupported_feature");
     }
     PdfJsTelemetry.onFallback(featureId);
-    PdfjsContentUtils.displayWarning(
-      domWindow,
-      message,
-      getLocalizedString(strings, "open_with_different_viewer"),
-      getLocalizedString(strings, "open_with_different_viewer", "accessKey")
-    );
 
+    // Request the display of a notification warning in the associated window
+    // when the renderer isn't sure a pdf displayed correctly.
     let actor = getActor(domWindow);
     if (actor) {
+      actor.sendAsyncMessage("PDFJS:Parent:displayWarning", {
+        message,
+        label: getLocalizedString(strings, "open_with_different_viewer"),
+        accessKey: getLocalizedString(
+          strings,
+          "open_with_different_viewer",
+          "accessKey"
+        ),
+      });
+
       actor.fallbackCallback = sendResponse;
     }
   }
@@ -580,10 +586,10 @@ class ChromeActions {
       prefName = PREF_PREFIX + "." + key;
       switch (typeof prefValue) {
         case "boolean":
-          PdfjsContentUtils.setBoolPref(prefName, prefValue);
+          AsyncPrefs.set(prefName, prefValue);
           break;
         case "number":
-          PdfjsContentUtils.setIntPref(prefName, prefValue);
+          AsyncPrefs.set(prefName, prefValue);
           break;
         case "string":
           if (prefValue.length > MAX_STRING_PREF_LENGTH) {
@@ -592,7 +598,7 @@ class ChromeActions {
                 "for a string preference."
             );
           } else {
-            PdfjsContentUtils.setStringPref(prefName, prefValue);
+            AsyncPrefs.set(prefName, prefValue);
           }
           break;
       }
