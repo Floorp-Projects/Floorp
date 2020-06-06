@@ -3407,7 +3407,7 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     // taller area, it doesn't mean the area is clipped by the toolbar because
     // the dynamic toolbar is laid out outside of our topmost window and it
     // transitions without changing our topmost window size.
-    effectiveScrollPort.SizeTo(nsLayoutUtils::ExpandHeightForViewportUnits(
+    effectiveScrollPort.SizeTo(nsLayoutUtils::ExpandHeightForDynamicToolbar(
         mOuter->PresContext(), effectiveScrollPort.Size()));
   }
 

@@ -3101,9 +3101,12 @@ class nsLayoutUtils {
    * With dynamic toolbar(s) the height for `vh` units is greater than the
    * ICB height, we need to expand it in some places.
    **/
+  static nsSize ExpandHeightForViewportUnits(nsPresContext* aPresContext,
+                                             const nsSize& aSize);
+
   template <typename SizeType>
-  static SizeType ExpandHeightForViewportUnits(nsPresContext* aPresContext,
-                                               const SizeType& aSize);
+  static SizeType ExpandHeightForDynamicToolbar(nsPresContext* aPresContext,
+                                                const SizeType& aSize);
 
  private:
   /**
@@ -3161,7 +3164,7 @@ template <typename PointType, typename RectType, typename CoordType>
 }
 
 template <typename SizeType>
-/* static */ SizeType nsLayoutUtils::ExpandHeightForViewportUnits(
+/* static */ SizeType nsLayoutUtils::ExpandHeightForDynamicToolbar(
     nsPresContext* aPresContext, const SizeType& aSize) {
   nsSize sizeForViewportUnits = aPresContext->GetSizeForViewportUnits();
 
