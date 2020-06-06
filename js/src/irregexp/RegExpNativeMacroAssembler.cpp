@@ -10,6 +10,7 @@
 
 #include "irregexp/imported/regexp-macro-assembler-arch.h"
 #include "irregexp/imported/regexp-stack.h"
+#include "irregexp/imported/special-case.h"
 #include "jit/Linker.h"
 #include "vm/MatchPairs.h"
 
@@ -240,6 +241,7 @@ void SMRegExpMacroAssembler::CheckBitInTable(Handle<ByteArray> table,
 
 void SMRegExpMacroAssembler::CheckNotBackReferenceImpl(int start_reg,
                                                        bool read_backward,
+                                                       bool unicode,
                                                        Label* on_no_match,
                                                        bool ignore_case) {
   js::jit::Label fallthrough;
@@ -307,14 +309,13 @@ void SMRegExpMacroAssembler::CheckNotBackReferenceImpl(int start_reg,
     masm_.passABIArg(current_position_);
     masm_.passABIArg(temp0_);
 
-    bool unicode = true;  // TODO: Fix V8 bug
     if (unicode) {
       uint32_t (*fun)(const char16_t*, const char16_t*, size_t) =
-          CaseInsensitiveCompareUCStrings;
+          CaseInsensitiveCompareUnicode;
       masm_.callWithABI(JS_FUNC_TO_DATA_PTR(void*, fun));
     } else {
       uint32_t (*fun)(const char16_t*, const char16_t*, size_t) =
-          CaseInsensitiveCompareStrings;
+          CaseInsensitiveCompareNonUnicode;
       masm_.callWithABI(JS_FUNC_TO_DATA_PTR(void*, fun));
     }
     masm_.storeCallInt32Result(temp1_);
@@ -431,13 +432,13 @@ void SMRegExpMacroAssembler::CheckNotBackReferenceImpl(int start_reg,
 void SMRegExpMacroAssembler::CheckNotBackReference(int start_reg,
                                                    bool read_backward,
                                                    Label* on_no_match) {
-  CheckNotBackReferenceImpl(start_reg, read_backward, on_no_match,
-                            /*ignore_case = */ false);
+  CheckNotBackReferenceImpl(start_reg, read_backward, /*unicode = */ false,
+                            on_no_match, /*ignore_case = */ false);
 }
 
 void SMRegExpMacroAssembler::CheckNotBackReferenceIgnoreCase(
-    int start_reg, bool read_backward, Label* on_no_match) {
-  CheckNotBackReferenceImpl(start_reg, read_backward, on_no_match,
+    int start_reg, bool read_backward, bool unicode, Label* on_no_match) {
+  CheckNotBackReferenceImpl(start_reg, read_backward, unicode, on_no_match,
                             /*ignore_case = */ true);
 }
 
@@ -1161,8 +1162,9 @@ SMRegExpMacroAssembler::Implementation() {
   return kBytecodeImplementation;
 }
 
+// Compare two strings in `/i` mode (ignoreCase, but not unicode).
 /*static */
-uint32_t SMRegExpMacroAssembler::CaseInsensitiveCompareStrings(
+uint32_t SMRegExpMacroAssembler::CaseInsensitiveCompareNonUnicode(
     const char16_t* substring1, const char16_t* substring2, size_t byteLength) {
   js::AutoUnsafeCallWithABI unsafe;
 
@@ -1173,8 +1175,16 @@ uint32_t SMRegExpMacroAssembler::CaseInsensitiveCompareStrings(
     char16_t c1 = substring1[i];
     char16_t c2 = substring2[i];
     if (c1 != c2) {
-      c1 = js::unicode::ToUpperCase(c1);
-      c2 = js::unicode::ToUpperCase(c2);
+#ifdef JS_HAS_INTL_API
+      // Non-unicode regexps have weird case-folding rules.
+      c1 = RegExpCaseFolding::Canonicalize(c1);
+      c2 = RegExpCaseFolding::Canonicalize(c2);
+#else
+      // If we aren't building with ICU, fall back to `/iu` mode. The only
+      // differences are in corner cases.
+      c1 = js::unicode::FoldCase(c1);
+      c2 = js::unicode::FoldCase(c2);
+#endif
       if (c1 != c2) {
         return 0;
       }
@@ -1184,8 +1194,9 @@ uint32_t SMRegExpMacroAssembler::CaseInsensitiveCompareStrings(
   return 1;
 }
 
+// Compare two strings in `/iu` mode (ignoreCase and unicode).
 /*static */
-uint32_t SMRegExpMacroAssembler::CaseInsensitiveCompareUCStrings(
+uint32_t SMRegExpMacroAssembler::CaseInsensitiveCompareUnicode(
     const char16_t* substring1, const char16_t* substring2, size_t byteLength) {
   js::AutoUnsafeCallWithABI unsafe;
 
@@ -1196,6 +1207,8 @@ uint32_t SMRegExpMacroAssembler::CaseInsensitiveCompareUCStrings(
     char16_t c1 = substring1[i];
     char16_t c2 = substring2[i];
     if (c1 != c2) {
+      // Unicode regexps use the common and simple case-folding
+      // mappings of the Unicode Character Database.
       c1 = js::unicode::FoldCase(c1);
       c2 = js::unicode::FoldCase(c2);
       if (c1 != c2) {
