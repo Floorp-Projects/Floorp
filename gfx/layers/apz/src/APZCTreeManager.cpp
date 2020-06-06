@@ -2250,6 +2250,7 @@ void APZCTreeManager::SynthesizePinchGestureFromMouseWheel(
   TargetConfirmationFlags confFlags{true};
 
   PinchGestureInput pinchStart{PinchGestureInput::PINCHGESTURE_START,
+                               PinchGestureInput::MOUSEWHEEL,
                                aWheelInput.mTime,
                                aWheelInput.mTimeStamp,
                                ExternalPoint(0, 0),
@@ -2258,6 +2259,7 @@ void APZCTreeManager::SynthesizePinchGestureFromMouseWheel(
                                oldSpan,
                                aWheelInput.modifiers};
   PinchGestureInput pinchScale1{PinchGestureInput::PINCHGESTURE_SCALE,
+                                PinchGestureInput::MOUSEWHEEL,
                                 aWheelInput.mTime,
                                 aWheelInput.mTimeStamp,
                                 ExternalPoint(0, 0),
@@ -2266,6 +2268,7 @@ void APZCTreeManager::SynthesizePinchGestureFromMouseWheel(
                                 oldSpan,
                                 aWheelInput.modifiers};
   PinchGestureInput pinchScale2{PinchGestureInput::PINCHGESTURE_SCALE,
+                                PinchGestureInput::MOUSEWHEEL,
                                 aWheelInput.mTime,
                                 aWheelInput.mTimeStamp,
                                 ExternalPoint(0, 0),
@@ -2274,6 +2277,7 @@ void APZCTreeManager::SynthesizePinchGestureFromMouseWheel(
                                 newSpan,
                                 aWheelInput.modifiers};
   PinchGestureInput pinchEnd{PinchGestureInput::PINCHGESTURE_END,
+                             PinchGestureInput::MOUSEWHEEL,
                              aWheelInput.mTime,
                              aWheelInput.mTimeStamp,
                              ExternalPoint(0, 0),

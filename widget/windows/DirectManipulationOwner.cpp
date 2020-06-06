@@ -393,6 +393,7 @@ void DManipEventHandler::SendPinch(Phase aPhase, float aScale) {
 
   PinchGestureInput event{
       pinchGestureType,
+      PinchGestureInput::TRACKPAD,
       eventIntervalTime,
       eventTimeStamp,
       screenOffset,

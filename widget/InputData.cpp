@@ -538,14 +538,17 @@ ParentLayerPoint PanGestureInput::UserMultipliedLocalPanDisplacement() const {
 PinchGestureInput::PinchGestureInput()
     : InputData(PINCHGESTURE_INPUT),
       mType(PINCHGESTURE_START),
+      mSource(UNKNOWN),
       mHandledByAPZ(false) {}
 
 PinchGestureInput::PinchGestureInput(
-    PinchGestureType aType, uint32_t aTime, TimeStamp aTimeStamp,
-    const ExternalPoint& aScreenOffset, const ScreenPoint& aFocusPoint,
-    ScreenCoord aCurrentSpan, ScreenCoord aPreviousSpan, Modifiers aModifiers)
+    PinchGestureType aType, PinchGestureSource aSource, uint32_t aTime,
+    TimeStamp aTimeStamp, const ExternalPoint& aScreenOffset,
+    const ScreenPoint& aFocusPoint, ScreenCoord aCurrentSpan,
+    ScreenCoord aPreviousSpan, Modifiers aModifiers)
     : InputData(PINCHGESTURE_INPUT, aTime, aTimeStamp, aModifiers),
       mType(aType),
+      mSource(aSource),
       mFocusPoint(aFocusPoint),
       mScreenOffset(aScreenOffset),
       mCurrentSpan(aCurrentSpan),

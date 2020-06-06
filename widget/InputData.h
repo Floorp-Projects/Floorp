@@ -449,11 +449,21 @@ class PinchGestureInput : public InputData {
       // meaningful data.
       PINCHGESTURE_END
   ));
+
+  MOZ_DEFINE_ENUM_AT_CLASS_SCOPE(
+    PinchGestureSource, (
+      UNKNOWN, // Default initialization value. Should never actually be used.
+      TOUCH, // From two-finger pinch gesture
+      ONE_TOUCH, // From one-finger pinch gesture
+      TRACKPAD, // From trackpad pinch gesture
+      MOUSEWHEEL // Synthesized from modifier+mousewheel
+  ));
   // clang-format on
 
   // Construct a pinch gesture from a Screen point.
-  PinchGestureInput(PinchGestureType aType, uint32_t aTime,
-                    TimeStamp aTimeStamp, const ExternalPoint& aScreenOffset,
+  PinchGestureInput(PinchGestureType aType, PinchGestureSource aSource,
+                    uint32_t aTime, TimeStamp aTimeStamp,
+                    const ExternalPoint& aScreenOffset,
                     const ScreenPoint& aFocusPoint, ScreenCoord aCurrentSpan,
                     ScreenCoord aPreviousSpan, Modifiers aModifiers);
 
@@ -464,6 +474,9 @@ class PinchGestureInput : public InputData {
   // Warning, this class is serialized and sent over IPC. Any change to its
   // fields must be reflected in its ParamTraits<>, in nsGUIEventIPC.h
   PinchGestureType mType;
+
+  // Some indication of the input device that generated this pinch gesture.
+  PinchGestureSource mSource;
 
   // Center point of the pinch gesture. That is, if there are two fingers on the
   // screen, it is their midpoint. In the case of more than two fingers, the
