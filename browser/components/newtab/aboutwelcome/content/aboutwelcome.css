@@ -313,12 +313,33 @@ body {
     @media (max-width: 610px) {
       .multistageContainer .tiles-section {
         grid-template-columns: repeat(3, auto); } }
+    .multistageContainer .tiles-section .site {
+      width: 96px; }
     .multistageContainer .tiles-section .icon {
       background-size: cover;
       border-radius: 4px;
       box-shadow: var(--newtab-card-shadow);
+      color: rgba(255, 255, 255, 0.5);
+      font-size: 24px;
+      font-weight: bold;
       height: 96px;
-      width: 96px; }
+      line-height: 96px; }
+    .multistageContainer .tiles-section .host {
+      font-size: 12px;
+      line-height: 36px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap; }
+    .multistageContainer .tiles-section .site:nth-child(1) .icon {
+      background-color: #7542E5; }
+    .multistageContainer .tiles-section .site:nth-child(2) .icon {
+      background-color: #952BB9; }
+    .multistageContainer .tiles-section .site:nth-child(3) .icon {
+      background-color: #E31587; }
+    .multistageContainer .tiles-section .site:nth-child(4) .icon {
+      background-color: #E25920; }
+    .multistageContainer .tiles-section .site:nth-child(5) .icon {
+      background-color: #0250BB; }
   .multistageContainer button {
     font-family: inherit;
     cursor: pointer;

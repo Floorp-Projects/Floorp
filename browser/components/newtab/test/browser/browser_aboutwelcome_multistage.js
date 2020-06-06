@@ -219,30 +219,77 @@ add_task(async function test_AWMultistage_Primary_Action() {
   let aboutWelcomeActor = await getAboutWelcomeParent(browser);
   const sandbox = sinon.createSandbox();
   // Stub AboutWelcomeParent Content Message Handler
-  sandbox.stub(aboutWelcomeActor, "onContentMessage").resolves("");
+  sandbox
+    .stub(aboutWelcomeActor, "onContentMessage")
+    .resolves("")
+    .withArgs("AWPage:IMPORTABLE_SITES")
+    .resolves([]);
   registerCleanupFunction(() => {
     sandbox.restore();
   });
 
   await onButtonClick(browser, "button.primary");
-  ok(aboutWelcomeActor.onContentMessage.callCount === 1, "Stub was called");
+  const { callCount } = aboutWelcomeActor.onContentMessage;
+  ok(callCount >= 1, `${callCount} Stub was called`);
+
+  let clickCall;
+  let impressionCall;
+  for (let i = 0; i < callCount; i++) {
+    const call = aboutWelcomeActor.onContentMessage.getCall(i);
+    info(`Call #${i}: ${call.args[0]} ${JSON.stringify(call.args[1])}`);
+    if (call.calledWithMatch("", { event: "CLICK_BUTTON" })) {
+      clickCall = call;
+    } else if (call.calledWithMatch("", { event: "IMPRESSION" })) {
+      impressionCall = call;
+    }
+  }
+
+  // For some builds, we can stub fast enough to catch the impression
+  if (impressionCall) {
+    Assert.equal(
+      impressionCall.args[0],
+      "AWPage:TELEMETRY_EVENT",
+      "send telemetry event"
+    );
+    Assert.equal(
+      impressionCall.args[1].event,
+      "IMPRESSION",
+      "impression event recorded in telemetry"
+    );
+    Assert.equal(
+      impressionCall.args[1].event_context.display,
+      "static",
+      "static sites display recorded in telemetry"
+    );
+    Assert.equal(
+      typeof impressionCall.args[1].event_context.importable,
+      "number",
+      "numeric importable sites recorded in telemetry"
+    );
+    Assert.equal(
+      impressionCall.args[1].message_id,
+      `${TEST_MULTISTAGE_CONTENT.id}_SITES`.toUpperCase(),
+      "SITES MessageId sent in impression event telemetry"
+    );
+  }
+
   Assert.equal(
-    aboutWelcomeActor.onContentMessage.firstCall.args[0],
+    clickCall.args[0],
     "AWPage:TELEMETRY_EVENT",
     "send telemetry event"
   );
   Assert.equal(
-    aboutWelcomeActor.onContentMessage.firstCall.args[1].event,
+    clickCall.args[1].event,
     "CLICK_BUTTON",
     "click button event recorded in telemetry"
   );
   Assert.equal(
-    aboutWelcomeActor.onContentMessage.firstCall.args[1].event_context.source,
+    clickCall.args[1].event_context.source,
     "primary_button",
     "primary button click source recorded in telemetry"
   );
   Assert.equal(
-    aboutWelcomeActor.onContentMessage.firstCall.args[1].message_id,
+    clickCall.args[1].message_id,
     `${TEST_MULTISTAGE_CONTENT.id}_${TEST_MULTISTAGE_CONTENT.screens[0].id}`.toUpperCase(),
     "MessageId sent in click event telemetry"
   );
@@ -253,19 +300,34 @@ add_task(async function test_AWMultistage_Secondary_Open_URL_Action() {
   let aboutWelcomeActor = await getAboutWelcomeParent(browser);
   const sandbox = sinon.createSandbox();
   // Stub AboutWelcomeParent Content Message Handler
-  sandbox.stub(aboutWelcomeActor, "onContentMessage").resolves("");
+  sandbox
+    .stub(aboutWelcomeActor, "onContentMessage")
+    .resolves("")
+    .withArgs("AWPage:IMPORTABLE_SITES")
+    .resolves([]);
   registerCleanupFunction(() => {
     sandbox.restore();
   });
 
   await onButtonClick(browser, "button.secondary");
+  const { callCount } = aboutWelcomeActor.onContentMessage;
   ok(
-    aboutWelcomeActor.onContentMessage.callCount === 2,
-    "Stub called twice to handle Open_URL and Telemetry"
+    callCount >= 2,
+    `${callCount} Stub called twice to handle Open_URL and Telemetry`
   );
 
-  const actionCall = aboutWelcomeActor.onContentMessage.secondCall;
-  const eventCall = aboutWelcomeActor.onContentMessage.firstCall;
+  let actionCall;
+  let eventCall;
+  for (let i = 0; i < callCount; i++) {
+    const call = aboutWelcomeActor.onContentMessage.getCall(i);
+    info(`Call #${i}: ${call.args[0]} ${JSON.stringify(call.args[1])}`);
+    if (call.calledWithMatch("SPECIAL")) {
+      actionCall = call;
+    } else if (call.calledWithMatch("", { event: "CLICK_BUTTON" })) {
+      eventCall = call;
+    }
+  }
+
   Assert.equal(
     actionCall.args[0],
     "AWPage:SPECIAL_ACTION",

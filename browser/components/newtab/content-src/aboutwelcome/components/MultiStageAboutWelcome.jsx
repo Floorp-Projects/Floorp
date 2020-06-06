@@ -7,6 +7,17 @@ import { Localized } from "./MSLocalized";
 import { AboutWelcomeUtils } from "../../lib/aboutwelcome-utils";
 import { addUtmParams } from "../../asrouter/templates/FirstRun/addUtmParams";
 
+const DEFAULT_SITES = [
+  "youtube-com",
+  "facebook-com",
+  "amazon",
+  "reddit-com",
+  "wikipedia-org",
+  "twitter-com",
+].map(site => ({
+  icon: `resource://activity-stream/data/content/tippytop/images/${site}@2x.png`,
+}));
+
 export const MultiStageAboutWelcome = props => {
   const [index, setScreenIndex] = useState(0);
   useEffect(() => {
@@ -39,14 +50,19 @@ export const MultiStageAboutWelcome = props => {
           data: { args: "home", where: "current" },
         });
 
-  const [topSites] = useState([
-    "resource://activity-stream/data/content/tippytop/images/youtube-com@2x.png",
-    "resource://activity-stream/data/content/tippytop/images/facebook-com@2x.png",
-    "resource://activity-stream/data/content/tippytop/images/amazon@2x.png",
-    "resource://activity-stream/data/content/tippytop/images/reddit-com@2x.png",
-    "resource://activity-stream/data/content/tippytop/images/wikipedia-org@2x.png",
-    "resource://activity-stream/data/content/tippytop/images/twitter-com@2x.png",
-  ]);
+  const useImportable = props.message_id.includes("IMPORTABLE");
+  const [topSites, setTopSites] = useState(DEFAULT_SITES);
+  useEffect(() => {
+    (async () => {
+      const importable = JSON.parse(await window.AWGetImportableSites());
+      const showImportable = useImportable && importable.length >= 5;
+      AboutWelcomeUtils.sendImpressionTelemetry(`${props.message_id}_SITES`, {
+        display: showImportable ? "importable" : "static",
+        importable: importable.length,
+      });
+      setTopSites(showImportable ? importable : DEFAULT_SITES);
+    })();
+  }, [useImportable]);
 
   return (
     <React.Fragment>
@@ -139,12 +155,23 @@ export class WelcomeScreen extends React.PureComponent {
   renderTiles() {
     return this.props.content.tiles && this.props.topSites ? (
       <div className="tiles-section">
-        {this.props.topSites.slice(0, 5).map(icon => (
-          <div
-            className="icon"
-            key={icon}
-            style={{ backgroundImage: `url(${icon})` }}
-          />
+        {this.props.topSites.slice(0, 5).map(({ icon, label }) => (
+          <div className="site" key={icon + label}>
+            <div
+              className="icon"
+              style={
+                icon
+                  ? {
+                      backgroundColor: "transparent",
+                      backgroundImage: `url(${icon})`,
+                    }
+                  : {}
+              }
+            >
+              {icon ? "" : label[0].toUpperCase()}
+            </div>
+            {label && <div className="host">{label}</div>}
+          </div>
         ))}
       </div>
     ) : null;
