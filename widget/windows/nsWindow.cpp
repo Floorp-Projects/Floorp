@@ -5733,21 +5733,6 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
       DispatchPendingEvents();
       break;
 
-    case WM_NCLBUTTONDOWN: {
-      // Dispatch a mousedown event asynchronously, otherwise dragging the
-      // window stops working.
-      // Hold a reference to self alive and pass it into the lambda to make
-      // sure this nsIWidget stays alive long enough to run this function.
-      nsCOMPtr<nsIWidget> self(this);
-      NS_DispatchToMainThread(NS_NewRunnableFunction(
-          "DispatchNCLButtonDownEvent", [self, this, lParam]() -> void {
-            DispatchMouseEvent(eMouseDown, 0, lParamToClient(lParam), false,
-                               MouseButton::eLeft, MOUSE_INPUT_SOURCE());
-            DispatchPendingEvents();
-          }));
-      break;
-    }
-
     case WM_MBUTTONDOWN:
       result = DispatchMouseEvent(eMouseDown, wParam, lParam, false,
                                   MouseButton::eMiddle, MOUSE_INPUT_SOURCE());
