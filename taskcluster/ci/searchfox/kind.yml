@@ -107,7 +107,7 @@ jobs:
             platform: windows2012-64/debug
         worker-type: b-linux
         worker:
-            docker-image: {in-tree: debian9-amd64-build}
+            docker-image: {in-tree: debian10-amd64-build}
             max-run-time: 36000
             env:
                 TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/releng.manifest"
