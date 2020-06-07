@@ -201,7 +201,7 @@ jobs:
         definition: gdb-test
     mingw32-build:
         symbol: I(mingw)
-        parent: debian9-base
+        parent: debian10-base
     index-task:
         symbol: I(idx)
     funsize-update-generator:
