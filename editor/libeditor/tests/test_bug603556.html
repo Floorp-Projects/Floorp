@@ -32,8 +32,13 @@ SimpleTest.waitForFocus(function() {
     function() {
       i.focus();
       synthesizeKey("V", {accelKey: true});
-      is(i.value, src.textContent,
-         "Pasting should paste the clipboard contents regardless of maxlength");
+      if (!SpecialPowers.getBoolPref("editor.truncate_user_pastes")) {
+        is(i.value, src.textContent,
+           "Pasting should paste the clipboard contents regardless of maxlength");
+      } else {
+        is(i.value, src.textContent.substr(0, i.maxLength),
+           "Pasting should paste maxlength chars worth of the clipboard contents");
+      }
       SimpleTest.finish();
     },
     function() {
