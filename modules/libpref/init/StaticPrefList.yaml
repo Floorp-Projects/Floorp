@@ -3280,7 +3280,7 @@
 # Whether user pastes should be truncated.
 - name: editor.truncate_user_pastes
   type: bool
-  value: false
+  value: @IS_NOT_EARLY_BETA_OR_EARLIER@
   mirror: always
 
 # How line breakers are treated in single line editor:
