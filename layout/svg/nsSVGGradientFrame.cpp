@@ -568,25 +568,6 @@ already_AddRefed<gfxPattern> nsSVGRadialGradientFrame::CreateGradient() {
   fy = GetLengthValue(dom::SVGRadialGradientElement::ATTR_FY, cy);
   fr = GetLengthValue(dom::SVGRadialGradientElement::ATTR_FR);
 
-  if (fx != cx || fy != cy) {
-    // The focal point (fFx and fFy) must be clamped to be *inside* - not on -
-    // the circumference of the gradient or we'll get rendering anomalies. We
-    // calculate the distance from the focal point to the gradient center and
-    // make sure it is *less* than the gradient radius.
-    // 1/128 is the limit of the fractional part of cairo's 24.8 fixed point
-    // representation divided by 2 to ensure that we get different cairo
-    // fractions
-    double dMax = std::max(0.0, r - 1.0 / 128);
-    double dx = fx - cx;
-    double dy = fy - cy;
-    double d = std::sqrt((dx * dx) + (dy * dy));
-    if (d > dMax) {
-      double angle = std::atan2(dy, dx);
-      fx = float(dMax * std::cos(angle)) + cx;
-      fy = float(dMax * std::sin(angle)) + cy;
-    }
-  }
-
   RefPtr<gfxPattern> pattern = new gfxPattern(fx, fy, fr, cx, cy, r);
   return pattern.forget();
 }
