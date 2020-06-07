@@ -175,7 +175,7 @@ jobs:
             platform: windows2012-32-shippable/opt
         worker-type: b-linux
         worker:
-            docker-image: {in-tree: debian9-amd64-build}
+            docker-image: {in-tree: debian10-amd64-build}
             env:
                 TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win32/releng.manifest"
         run:
@@ -218,7 +218,7 @@ jobs:
             platform: windows2012-64-shippable/opt
         worker-type: b-linux
         worker:
-            docker-image: {in-tree: debian9-amd64-build}
+            docker-image: {in-tree: debian10-amd64-build}
             env:
                 TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/releng.manifest"
         run:
