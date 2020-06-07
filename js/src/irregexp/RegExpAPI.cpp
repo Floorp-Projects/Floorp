@@ -144,6 +144,11 @@ void DestroyIsolate(Isolate* isolate) {
   js_delete(isolate);
 }
 
+size_t IsolateSizeOfIncludingThis(Isolate* isolate,
+                                  mozilla::MallocSizeOf mallocSizeOf) {
+  return isolate->sizeOfIncludingThis(mallocSizeOf);
+}
+
 static size_t ComputeColumn(const Latin1Char* begin, const Latin1Char* end) {
   return PointerRangeSize(begin, end);
 }
