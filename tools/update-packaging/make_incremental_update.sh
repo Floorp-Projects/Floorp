@@ -217,7 +217,7 @@ for ((i=0; $i<$num_oldfiles; i=$i+1)); do
         if [[ -n $MAR_OLD_FORMAT ]]; then
           $BZIP2 -z9 "$workdir/$f.patch"
         else
-          $XZ --compress $BCJ_OPTIONS --lzma2 --format=xz --check=crc64 --force "$workdir/$f.patch"
+          $XZ --compress --lzma2 --format=xz --check=crc64 --force "$workdir/$f.patch"
         fi
       else
         # if service enabled then check patch existence for retrieval
@@ -236,7 +236,7 @@ for ((i=0; $i<$num_oldfiles; i=$i+1)); do
           else
             # if not found already - compute it and cache it for future use
             $MBSDIFF "$olddir/$f" "$newdir/$f" "$workdir/$f.patch"
-            $XZ --compress $BCJ_OPTIONS --lzma2 --format=xz --check=crc64 --force "$workdir/$f.patch"
+            $XZ --compress --lzma2 --format=xz --check=crc64 --force "$workdir/$f.patch"
             $MBSDIFF_HOOK -u "$olddir/$f" "$newdir/$f" "$workdir/$f.patch.xz"
           fi
         fi
