@@ -213,7 +213,7 @@ jobs:
         parent: debian10-base
     partner-repack:
         symbol: I(PR)
-        parent: debian9-base
+        parent: debian10-base
         definition: partner-repack
     periodic-updates:
         symbol: I(file)
