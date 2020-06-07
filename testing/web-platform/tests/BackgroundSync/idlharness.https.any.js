@@ -4,10 +4,10 @@
 
 'use strict';
 
-// https://wicg.github.io/background-sync/spec/
+// https://wicg.github.io/BackgroundSync/spec/
 
 idl_test(
-  ['background-sync'],
+  ['BackgroundSync'],
   ['service-workers', 'html', 'dom'],
   idlArray => {
     const isServiceWorker = location.pathname.includes('.serviceworker.');

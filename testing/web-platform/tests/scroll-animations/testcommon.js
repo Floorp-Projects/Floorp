@@ -7,19 +7,6 @@ function createScroller(test) {
   return scroller;
 }
 
-function createScrollerWithStartAndEnd(test, orientationClass = 'vertical') {
-  var scroller = createDiv(test);
-  scroller.innerHTML =
-    `<div class='contents'>
-        <div id='start'></div>
-        <div id='end'></div>
-      </div>`;
-  scroller.classList.add('scroller');
-  scroller.classList.add(orientationClass);
-
-  return scroller;
-}
-
 function createScrollTimeline(test, options) {
   options = options || {
     scrollSource: createScroller(test),
@@ -46,4 +33,3 @@ function createScrollLinkedAnimation(test, timeline) {
   return new Animation(
     new KeyframeEffect(createDiv(test), KEYFRAMES, DURATION), timeline);
 }
-
