@@ -5043,9 +5043,11 @@ AttachDecision CallIRGenerator::tryAttachToString(HandleFunction callee) {
   return AttachDecision::Attach;
 }
 
-AttachDecision CallIRGenerator::tryAttachToObject(HandleFunction callee) {
+AttachDecision CallIRGenerator::tryAttachToObject(HandleFunction callee,
+                                                  InlinableNative native) {
   // Need a single object argument.
   // TODO(Warp): Support all or more conversions to object.
+  // Note: ToObject and Object differ in their behavior for undefined/null.
   if (argc_ != 1 || !args_[0].isObject()) {
     return AttachDecision::NoAction;
   }
@@ -5053,7 +5055,7 @@ AttachDecision CallIRGenerator::tryAttachToObject(HandleFunction callee) {
   // Initialize the input operand.
   Int32OperandId argcId(writer.setInputOperandId(0));
 
-  // Guard callee is the 'ToObject' intrinsic native function.
+  // Guard callee is the 'ToObject' or 'Object' function.
   emitNativeCalleeGuard(callee);
 
   // Guard that the argument is an object.
@@ -5067,7 +5069,12 @@ AttachDecision CallIRGenerator::tryAttachToObject(HandleFunction callee) {
   writer.typeMonitorResult();
   cacheIRStubKind_ = BaselineCacheIRStubKind::Monitored;
 
-  trackAttached("ToObject");
+  if (native == InlinableNative::IntrinsicToObject) {
+    trackAttached("ToObject");
+  } else {
+    MOZ_ASSERT(native == InlinableNative::Object);
+    trackAttached("Object");
+  }
   return AttachDecision::Attach;
 }
 
@@ -5806,7 +5813,7 @@ AttachDecision CallIRGenerator::tryAttachInlinableNative(
     case InlinableNative::IntrinsicToString:
       return tryAttachToString(callee);
     case InlinableNative::IntrinsicToObject:
-      return tryAttachToObject(callee);
+      return tryAttachToObject(callee, native);
     case InlinableNative::IntrinsicToInteger:
       return tryAttachToInteger(callee);
     case InlinableNative::IntrinsicIsObject:
@@ -5890,6 +5897,10 @@ AttachDecision CallIRGenerator::tryAttachInlinableNative(
     // Map intrinsics.
     case InlinableNative::IntrinsicGuardToMapObject:
       return tryAttachGuardToClass(callee, native);
+
+    // Object natives.
+    case InlinableNative::Object:
+      return tryAttachToObject(callee, native);
 
     // Set intrinsics.
     case InlinableNative::IntrinsicGuardToSetObject:
