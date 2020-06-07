@@ -349,7 +349,6 @@ class WebDriverRun(TimedRunner):
 
 class WebDriverTestharnessExecutor(TestharnessExecutor):
     supports_testdriver = True
-    protocol_cls = WebDriverProtocol
 
     def __init__(self, logger, browser, server_config, timeout_multiplier=1,
                  close_after_done=True, capabilities=None, debug_info=None,
@@ -358,7 +357,7 @@ class WebDriverTestharnessExecutor(TestharnessExecutor):
         TestharnessExecutor.__init__(self, logger, browser, server_config,
                                      timeout_multiplier=timeout_multiplier,
                                      debug_info=debug_info)
-        self.protocol = self.protocol_cls(self, browser, capabilities)
+        self.protocol = WebDriverProtocol(self, browser, capabilities)
         with open(os.path.join(here, "testharness_webdriver_resume.js")) as f:
             self.script_resume = f.read()
         self.close_after_done = close_after_done
@@ -450,8 +449,6 @@ if (location.href === "about:blank") {
 
 
 class WebDriverRefTestExecutor(RefTestExecutor):
-    protocol_cls = WebDriverProtocol
-
     def __init__(self, logger, browser, server_config, timeout_multiplier=1,
                  screenshot_cache=None, close_after_done=True,
                  debug_info=None, capabilities=None, **kwargs):
@@ -463,8 +460,7 @@ class WebDriverRefTestExecutor(RefTestExecutor):
                                  screenshot_cache=screenshot_cache,
                                  timeout_multiplier=timeout_multiplier,
                                  debug_info=debug_info)
-        self.protocol = self.protocol_cls(self,
-                                          browser,
+        self.protocol = WebDriverProtocol(self, browser,
                                           capabilities=capabilities)
         self.implementation = RefTestImplementation(self)
         self.close_after_done = close_after_done
@@ -522,8 +518,6 @@ class WebDriverRefTestExecutor(RefTestExecutor):
 
 
 class WebDriverCrashtestExecutor(CrashtestExecutor):
-    protocol_cls = WebDriverProtocol
-
     def __init__(self, logger, browser, server_config, timeout_multiplier=1,
                  screenshot_cache=None, close_after_done=True,
                  debug_info=None, capabilities=None, **kwargs):
@@ -535,8 +529,7 @@ class WebDriverCrashtestExecutor(CrashtestExecutor):
                                    screenshot_cache=screenshot_cache,
                                    timeout_multiplier=timeout_multiplier,
                                    debug_info=debug_info)
-        self.protocol = self.protocol_cls(self,
-                                          browser,
+        self.protocol = WebDriverProtocol(self, browser,
                                           capabilities=capabilities)
 
         with open(os.path.join(here, "test-wait.js")) as f:
