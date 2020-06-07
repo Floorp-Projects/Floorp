@@ -24,7 +24,8 @@ is then marked as `tooLong`.
 
 /** Test for Bug 1320229 **/
 SimpleTest.waitForExplicitFinish();
-SimpleTest.waitForFocus(function() {
+SimpleTest.waitForFocus(async function() {
+  await SpecialPowers.pushPrefEnv({"set": [["editor.truncate_user_pastes", false]]});
   var src = document.getElementById("src");
   var pwd = document.getElementById("form-password");
   SimpleTest.waitForClipboard(src.textContent,
