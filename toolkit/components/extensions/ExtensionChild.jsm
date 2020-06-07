@@ -194,7 +194,12 @@ class MessageEvent extends SimpleEventAPI {
     });
 
     let result = fire.raw(message, sender, sendResponse);
-    if (result instanceof this.context.cloneScope.Promise) {
+    if (
+      result &&
+      typeof result === "object" &&
+      Cu.getClassName(result, true) === "Promise" &&
+      this.context.principal.subsumes(Cu.getObjectPrincipal(result))
+    ) {
       return StrongPromise.wrap(result, fire.location);
     } else if (result === true) {
       return StrongPromise.wrap(promise, fire.location);
