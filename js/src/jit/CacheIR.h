@@ -1525,7 +1525,8 @@ class MOZ_RAII CallIRGenerator : public IRGenerator {
   AttachDecision tryAttachArrayIsArray(HandleFunction callee);
   AttachDecision tryAttachIsSuspendedGenerator(HandleFunction callee);
   AttachDecision tryAttachToString(HandleFunction callee);
-  AttachDecision tryAttachToObject(HandleFunction callee);
+  AttachDecision tryAttachToObject(HandleFunction callee,
+                                   InlinableNative native);
   AttachDecision tryAttachToInteger(HandleFunction callee);
   AttachDecision tryAttachIsObject(HandleFunction callee);
   AttachDecision tryAttachIsCallable(HandleFunction callee);
