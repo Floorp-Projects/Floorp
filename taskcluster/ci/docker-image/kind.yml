@@ -81,7 +81,7 @@ jobs:
             - deb10-cmake
     custom-v8:
         symbol: I(custom-v8)
-        parent: debian9-base
+        parent: debian10-base
     debian8-amd64-build-base:
         symbol: I(deb8-bb)
         parent: debian8-base
