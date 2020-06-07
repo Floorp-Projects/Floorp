@@ -462,7 +462,6 @@ class Session(object):
         :raises ValueError: If the response body does not contain a
             `value` key.
         """
-
         response = self.transport.send(
             method, url, body,
             encoder=protocol.Encoder, decoder=protocol.Decoder,
