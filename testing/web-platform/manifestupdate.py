@@ -67,6 +67,8 @@ def ensure_kwargs(kwargs):
 def run(src_root, obj_root, logger=None, **kwargs):
     kwargs = ensure_kwargs(kwargs)
 
+    kwargs["rebuild"] = True
+
     if logger is None:
         from wptrunner import wptlogging
         logger = wptlogging.setup(kwargs, {"mach": sys.stdout})
@@ -178,6 +180,7 @@ def generate_config(logger, repo_root, wpt_dir, dest_path, force_rewrite=False):
 
 def load_and_update(logger, wpt_dir, test_paths, rebuild=False, config_dir=None, cache_root=None,
                     update=True):
+    rebuild = True
     rv = {}
     wptdir_hash = hashlib.sha256(os.path.abspath(wpt_dir).encode()).hexdigest()
     for url_base, paths in six.iteritems(test_paths):
