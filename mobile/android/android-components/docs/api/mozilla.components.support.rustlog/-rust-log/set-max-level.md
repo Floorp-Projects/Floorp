@@ -2,7 +2,7 @@
 
 # setMaxLevel
 
-`fun setMaxLevel(level: `[`Priority`](../../mozilla.components.support.base.log/-log/-priority/index.md)`, includePII: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = false): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/rustlog/src/main/java/mozilla/components/support/rustlog/RustLog.kt#L70)
+`fun setMaxLevel(level: `[`Priority`](../../mozilla.components.support.base.log/-log/-priority/index.md)`, includePII: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = false): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/rustlog/src/main/java/mozilla/components/support/rustlog/RustLog.kt#L83)
 
 Set the maximum level of logs that will be forwarded to [Log](../../mozilla.components.support.base.log/-log/index.md). By
 default, the max level is DEBUG.

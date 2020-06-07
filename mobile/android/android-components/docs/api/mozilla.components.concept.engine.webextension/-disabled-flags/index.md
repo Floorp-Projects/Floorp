@@ -2,7 +2,7 @@
 
 # DisabledFlags
 
-`class DisabledFlags` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/webextension/WebExtension.kt#L420)
+`class DisabledFlags` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/webextension/WebExtension.kt#L429)
 
 Flags to check for different reasons why an extension is disabled.
 

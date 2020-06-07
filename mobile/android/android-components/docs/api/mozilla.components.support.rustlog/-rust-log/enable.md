@@ -2,7 +2,7 @@
 
 # enable
 
-`fun enable(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/rustlog/src/main/java/mozilla/components/support/rustlog/RustLog.kt#L33)
+`fun enable(crashReporter: `[`CrashReporting`](../../mozilla.components.support.base.crash/-crash-reporting/index.md)`? = null): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/rustlog/src/main/java/mozilla/components/support/rustlog/RustLog.kt#L38)
 
 Enable the Rust log adapter.
 
@@ -23,3 +23,6 @@ component log system, they still have logs available for development use.
 library containing the Rust log hooking (and only that), as well as logging
 a single message indicating that it completed initialization).
 
+### Parameters
+
+`crashReporter` - [CrashReporting](../../mozilla.components.support.base.crash/-crash-reporting/index.md) instance used for reporting 'error' log messages.

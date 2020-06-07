@@ -2,7 +2,7 @@
 
 # historyTrackingDelegate
 
-`var historyTrackingDelegate: `[`HistoryTrackingDelegate`](../../mozilla.components.concept.engine.history/-history-tracking-delegate/index.md)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/Settings.kt#L186)
+`var historyTrackingDelegate: `[`HistoryTrackingDelegate`](../../mozilla.components.concept.engine.history/-history-tracking-delegate/index.md)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/Settings.kt#L191)
 
 Overrides [Settings.historyTrackingDelegate](../-settings/history-tracking-delegate.md)
 

@@ -2,7 +2,7 @@
 
 # onMessage
 
-`open fun onMessage(message: `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`, source: `[`EngineSession`](../../mozilla.components.concept.engine/-engine-session/index.md)`?): `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/webextension/WebExtension.kt#L253)
+`open fun onMessage(message: `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`, source: `[`EngineSession`](../../mozilla.components.concept.engine/-engine-session/index.md)`?): `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/webextension/WebExtension.kt#L262)
 
 Invoked when a message was received as a result of a
 `browser.runtime.sendNativeMessage` call in JavaScript.

@@ -2,7 +2,7 @@
 
 # isAllowedInPrivateBrowsing
 
-`fun isAllowedInPrivateBrowsing(): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko-beta/src/main/java/mozilla/components/browser/engine/gecko/webextension/GeckoWebExtension.kt#L359)
+`fun isAllowedInPrivateBrowsing(): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko-beta/src/main/java/mozilla/components/browser/engine/gecko/webextension/GeckoWebExtension.kt#L367)
 
 Overrides [WebExtension.isAllowedInPrivateBrowsing](../../mozilla.components.concept.engine.webextension/-web-extension/is-allowed-in-private-browsing.md)
 
