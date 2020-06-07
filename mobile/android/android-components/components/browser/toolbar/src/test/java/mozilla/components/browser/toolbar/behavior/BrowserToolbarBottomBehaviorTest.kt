@@ -202,10 +202,26 @@ class BrowserToolbarBottomBehaviorTest {
         behavior.browserToolbar = child
         doReturn(100).`when`(child).height
         doReturn(0f).`when`(child).translationY
+        behavior.startedScroll = true
 
         behavior.tryToScrollVertically(25f)
 
         verify(child).translationY = 25f
+    }
+
+    @Test
+    fun `Behavior will not scroll vertically if startedScroll is false`() {
+        val behavior = spy(BrowserToolbarBottomBehavior(testContext, attrs = null))
+        doReturn(true).`when`(behavior).shouldScroll
+        val child = spy(BrowserToolbar(testContext, null, 0))
+        behavior.browserToolbar = child
+        doReturn(100).`when`(child).height
+        doReturn(0f).`when`(child).translationY
+        behavior.startedScroll = false
+
+        behavior.tryToScrollVertically(25f)
+
+        verify(child, never()).translationY
     }
 
     @Test

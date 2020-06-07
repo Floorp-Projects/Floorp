@@ -47,6 +47,9 @@ class BrowserToolbarBottomBehavior(
     private var lastSnapStartedWasUp = false
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal var startedScroll = false
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal var snapAnimator: ValueAnimator = ValueAnimator().apply {
         interpolator = DecelerateInterpolator()
         duration = SNAP_ANIMATION_DURATION
@@ -90,6 +93,7 @@ class BrowserToolbarBottomBehavior(
         type: Int
     ): Boolean {
         return if (shouldScroll && axes == ViewCompat.SCROLL_AXIS_VERTICAL) {
+            startedScroll = true
             shouldSnapAfterScroll = type == ViewCompat.TYPE_TOUCH
             snapAnimator.cancel()
             true
@@ -110,6 +114,7 @@ class BrowserToolbarBottomBehavior(
         target: View,
         type: Int
     ) {
+        startedScroll = false
         if (shouldSnapAfterScroll || type == ViewCompat.TYPE_NON_TOUCH) {
             if (child.translationY >= (child.height / 2f)) {
                 animateSnap(child, SnapDirection.DOWN)
@@ -188,7 +193,7 @@ class BrowserToolbarBottomBehavior(
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal fun tryToScrollVertically(distance: Float) {
-        if (shouldScroll) {
+        if (shouldScroll && startedScroll) {
             browserToolbar.translationY =
                 max(0f, min(browserToolbar.height.toFloat(), browserToolbar.translationY + distance))
         } else {
