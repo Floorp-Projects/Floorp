@@ -34,6 +34,9 @@
     <!-- Text for the negative button -->
     <string name="cfr_neg_button_text">نہیں شکریہ</string>
 
+    <!-- Text for the negative button -->
+    <string name="search_widget_cfr_neg_button_text">ابھی نہیں</string>
+
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
     <string name="home_screen_shortcut_open_new_tab_2">نیا ٹیب</string>
@@ -263,6 +266,8 @@
     <string name="preferences_sync_bookmarks">بک مارکس</string>
     <!-- Preference for syncing logins -->
     <string name="preferences_sync_logins">لاگانز</string>
+    <!-- Preference for syncing tabs -->
+    <string name="preferences_sync_tabs">ٹیبس</string>
     <!-- Preference for signing out -->
     <string name="preferences_sign_out">سائن آؤٹ</string>
     <!-- Preference displays and allows changing current FxA device name -->
@@ -788,6 +793,8 @@
 
     <!-- Title for the Delete browsing data preference -->
     <string name="preferences_delete_browsing_data">براؤزنگ کا ڈیٹا مٹائیں</string>
+    <!-- Title for the tabs item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_tabs_title_2">ٹیبز کھولیں</string>
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
     <string name="preferences_delete_browsing_data_tabs_subtitle">%d ٹیب</string>
     <!-- Title for the data and history items in Delete browsing data -->

@@ -156,6 +156,9 @@
     <!-- Text preview for larger sized widgets -->
     <string name="search_widget_text_long">ຄົ້ນຫາເວັບໄຊທ</string>
 
+    <!-- Content description (not visible, for screen readers etc.): Voice search -->
+    <string name="search_widget_voice">ຄົ້ນຫາດ້ວຍສຽງ</string>
+
     <!-- Preferences -->
     <!-- Title for the settings page-->
     <string name="settings">ການຕັ້ງຄ່າ</string>
@@ -165,6 +168,8 @@
     <string name="preferences_category_general">ທົ່ວໄປ</string>
     <!-- Preference category for all links about Fenix -->
     <string name="preferences_category_about">ກ່ຽວກັບ</string>
+    <!-- Preference for settings related to changing the default search engine -->
+    <string name="preferences_default_search_engine">ເຄື່ອງມືການຄົ້ນຫາພື້ນຖານ</string>
     <!-- Preference for settings related to Search -->
     <string name="preferences_search">ຄົ້ນຫາ</string>
     <!-- Preference for settings related to Search address bar -->
@@ -184,6 +189,8 @@
     <string name="preferences_passwords">ລະຫັດຜ່ານ</string>
     <!-- Preference for settings related to saved credit cards and addresses -->
     <string name="preferences_credit_cards_addresses">ບັດເຄດິດ ແລະ ທີ່ຢູ່</string>
+    <!-- Preference for settings related to changing the default browser -->
+    <string name="preferences_set_as_default_browser">ຕັ້ງໃຫ້ເປັນບຣາວເຊີພື້ນຖານ</string>
     <!-- Preference category for advanced settings -->
     <string name="preferences_category_advanced">ຂັ້ນສູງ</string>
     <!-- Preference category for privacy settings -->
@@ -194,6 +201,8 @@
     <string name="preferences_private_browsing_options">ການທ່ອງເວັບແບບສ່ວນຕົວ</string>
     <!-- Preference for opening links in a private tab-->
     <string name="preferences_open_links_in_a_private_tab">ເປີດລີ້ງໃນແທັບສ່ວນຕົວ</string>
+    <!-- Preference for allowing screenshots to be taken while in a private tab-->
+    <string name="preferences_allow_screenshots_in_private_mode">ອະນຸຍາດໃຫ້ຖ່າຍຫນ້າຈໍໃນໂຫມດການທ່ອງເວັບແບບສ່ວນຕົວ</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">ເພີ່ມທາງລັດການທ່ອງເວັບແບບສ່ວນຕົວ</string>
     <!-- Preference for accessibility -->
@@ -208,8 +217,12 @@
     <string name="preferences_theme">ຊຸດປັບແຕ່ງ</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">ການປັບແຕ່ງ</string>
+    <!-- Preference description for banner about signing in -->
+    <string name="preferences_sign_in_description">Sync ບຸກມາກ, ປະຫວັດ, ແລະ ອື່ນໆດ້ວຍບັນຊີ Firefox ຂອງທ່ານ</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
     <string name="preferences_account_default_name">ບັນຊີ Firefox</string>
+    <!-- Preference text for account title when there was an error syncing FxA -->
+    <string name="preferences_account_sync_error">ເຊື່ອມຕໍຄືນເພື່ອເລີ່ມ sync ຄືນໃຫມ່</string>
     <!-- Preference for language -->
     <string name="preferences_language">ພາສາ</string>
 
@@ -224,6 +237,10 @@
     <!-- Preference for developers -->
     <string name="preferences_remote_debugging">ການດີບັກທາງໄກຜ່ານທາງ USB</string>
 
+    <!-- Preference for account settings -->
+    <string name="preferences_account_settings">ການຕັ້ງ​ຄ່າ​ບັນ​ຊີ</string>
+    <!-- Preference for open links in third party apps -->
+    <string name="preferences_open_links_in_apps">ເປີດລີ້ງໃນແອັບ</string>
     <!-- Preference for add_ons -->
     <string name="preferences_addons">Add-ons</string>
 
@@ -238,6 +255,8 @@
     <string name="preferences_sync_bookmarks">ບຸກມາກ</string>
     <!-- Preference for syncing logins -->
     <string name="preferences_sync_logins">ລັອກອິນ</string>
+    <!-- Preference for syncing tabs -->
+    <string name="preferences_sync_tabs">ແທັບ</string>
     <!-- Preference for signing out -->
     <string name="preferences_sign_out">ອອກ​ຈາກ​ລະ​ບົບ</string>
     <!-- Preference displays and allows changing current FxA device name -->

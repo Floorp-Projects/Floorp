@@ -1139,6 +1139,9 @@
     <!-- Summary for Accessibility Force Enable Zoom Preference -->
     <string name="preference_accessibility_force_enable_zoom_summary">Activa l\'averamientu y alloñamientu, tamién en sitios web qu\'eviten estos xestos.</string>
 
+    <!-- Saved logins sorting strategy menu item -by name- (if selected, it will sort saved logins alphabetically) -->
+    <string name="saved_logins_sort_strategy_alphabetically">Nome (A-Z)</string>
+
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Amestar un motor de gueta</string>
     <!-- Title of the Edit search engine screen -->
@@ -1226,6 +1229,8 @@
     <!-- Message in delete confirmation dialog for logins -->
     <string name="login_deletion_confirmation">¿De xuru que quies desaniciar esti aniciu de sesión?</string>
 
+    <!-- Voice search button content description  -->
+    <string name="voice_search_content_description">Gueta pela voz</string>
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
     <string name="voice_search_explainer">Fala agora</string>
 

@@ -1440,6 +1440,14 @@
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
     <string name="voice_search_explainer">Parla ora</string>
 
+    <!-- Synced Tabs -->
+    <!-- Text displayed when user is not logged into a Firefox Account -->
+    <string name="synced_tabs_connect_to_sync_account">Connetti un account Firefox.</string>
     <!-- Text displayed to ask user to connect another device as no devices found with account -->
     <string name="synced_tabs_connect_another_device">Connetti un altro dispositivo.</string>
-    </resources>
+    <!-- Text displayed asking user to re-authenticate -->
+    <string name="synced_tabs_reauth">Esegui nuovamente l’accesso.</string>
+    <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->
+    <string name="synced_tabs_enable_tab_syncing">Attiva la sincronizzazione delle schede.</string>
+
+</resources>

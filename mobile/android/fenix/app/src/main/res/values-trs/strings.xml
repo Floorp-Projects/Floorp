@@ -184,4 +184,63 @@
     <!-- Title for the settings page-->
     <string name="settings">Nāgi\'iô\'</string>
 
+    <!-- Preference for settings related to Search -->
+    <string name="preferences_search">Nānà\'uì\'</string>
+
+    <!-- Preference for syncing tabs -->
+    <string name="preferences_sync_tabs">Nej rakïj ñaj</string>
+
+    <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
+    <string name="exceptions_empty_message_learn_more_link">Gāhuin chrūn doj</string>
+
+    <!-- Option in Library to open Downloads page -->
+    <string name="library_downloads">Sa nadunïnjt</string>
+    <!-- Menu Item Label for Search in Library -->
+    <string name="library_search">Nānà\'uì\'</string>
+
+    <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
+    <string name="content_description_close_button">Nārán</string>
+
+    <!-- Sessions -->
+    <!-- Title for the list of tabs -->
+    <string name="tab_header_label">Nej Rakïj ñanj huā nî\'nïnj ïn</string>
+    <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
+    <string name="close_tab">Nārán rakïj ñanj</string>
+    <!-- Content description (not visible, for screen readers etc.): Close tab <title> button. First parameter is tab title  -->
+    <string name="close_tab_title">Nārán rakij ñanj %s</string>
+
+    <!-- Bookmark overflow menu share button -->
+    <string name="bookmark_menu_share_button">Dūyingô\'</string>
+    <!-- Bookmark URL editing field label -->
+    <string name="bookmark_url_label">URL</string>
+
+    <!-- Summary of tracking protection preference if tracking protection is set to on -->
+    <string name="tracking_protection_on">Nāchrūn</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to off -->
+    <string name="tracking_protection_off">Dūnâ\’àj</string>
+    <!-- Summary of delete browsing data on quit preference if it is set to on -->
+    <string name="delete_browsing_data_quit_on">Nāchrūn</string>
+    <!-- Summary of delete browsing data on quit preference if it is set to off -->
+    <string name="delete_browsing_data_quit_off">Dūnâ\’àj</string>
+
+    <!-- Content description (not visible, for screen readers etc.): button to close the collection creator -->
+    <string name="create_collection_close">Nārán</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
+    <string name="onboarding_close">Nārán</string>
+
+    <!-- Text displayed that links to website about enhanced tracking protection -->
+    <string name="preference_enhanced_tracking_protection_explanation_learn_more">Gāhuin chrūn doj</string>
+
+    <!-- Syncing saved logins in Fenix is on -->
+    <string name="preferences_passwords_sync_logins_on">Nāchrūn</string>
+    <!-- Syncing saved logins in Fenix is off -->
+    <string name="preferences_passwords_sync_logins_off">Dūnâ\’àj</string>
+
+    <!-- Learn more link that will link to a page with more information displayed when a connection is insecure and we detect the user is entering a password -->
+    <string name="logins_insecure_connection_warning_learn_more">Gāhuin chrūn doj</string>
+
+    <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
+    <string name="search_add_custom_engine_name_hint">Si yugui</string>
+
     </resources>
