@@ -14,7 +14,6 @@ RUN apt-get update && \
       curl \
       libbz2-dev \
       libglib2.0-dev \
-      lsb-core \
       pkg-config \
       tar \
       unzip \
