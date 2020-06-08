@@ -512,7 +512,7 @@ class Nursery {
   // used for tenuring and other decisions.
   //
   // Must only be called if the previousGC data is initialised.
-  float calcPromotionRate(bool* validForTenuring) const;
+  double calcPromotionRate(bool* validForTenuring) const;
 
   // The set of externally malloced buffers potentially kept live by objects
   // stored in the nursery. Any external buffers that do not belong to a
@@ -650,9 +650,9 @@ class Nursery {
   void freeChunksFrom(unsigned firstFreeChunk);
 
   void sendTelemetry(JS::GCReason reason, mozilla::TimeDuration totalTime,
-                     size_t pretenureCount, float promotionRate);
+                     size_t pretenureCount, double promotionRate);
 
-  void printCollectionProfile(JS::GCReason reason, float promotionRate);
+  void printCollectionProfile(JS::GCReason reason, double promotionRate);
   void printTenuringData(const gc::TenureCountCache& tenureCounts);
 
   // Profile recording and printing.
