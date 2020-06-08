@@ -100,7 +100,6 @@
 #include "mozilla/dom/LocalStorageCommon.h"
 #include "mozilla/dom/MediaController.h"
 #include "mozilla/dom/MemoryReportRequest.h"
-#include "mozilla/dom/MediaSessionUtils.h"
 #include "mozilla/dom/MediaStatusManager.h"
 #include "mozilla/dom/Notification.h"
 #include "mozilla/dom/PContentPermissionRequestParent.h"
@@ -6094,7 +6093,14 @@ mozilla::ipc::IPCResult ContentParent::RecvNotifyMediaSessionUpdated(
     return IPC_OK();
   }
 
-  NotfiyMediaSessionCreationOrDeconstruction(aContext.get(), aIsCreated);
+  RefPtr<IMediaInfoUpdater> updater =
+      aContext.get_canonical()->GetMediaController();
+  MOZ_ASSERT(updater);
+  if (aIsCreated) {
+    updater->NotifySessionCreated(aContext->Id());
+  } else {
+    updater->NotifySessionDestroyed(aContext->Id());
+  }
   return IPC_OK();
 }
 

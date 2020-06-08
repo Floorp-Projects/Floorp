@@ -10,7 +10,6 @@
 #include "MediaControlUtils.h"
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/CanonicalBrowsingContext.h"
-#include "mozilla/dom/MediaSessionUtils.h"
 
 // avoid redefined macro in unified build
 #undef LOG

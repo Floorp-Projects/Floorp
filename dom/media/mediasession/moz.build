@@ -10,7 +10,6 @@ EXPORTS.mozilla.dom += [
     'MediaMetadata.h',
     'MediaSession.h',
     'MediaSessionIPCUtils.h',
-    'MediaSessionUtils.h',
 ]
 
 UNIFIED_SOURCES += [

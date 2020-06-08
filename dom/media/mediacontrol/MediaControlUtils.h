@@ -130,6 +130,21 @@ inline const char* ToMediaAudibleStateStr(MediaAudibleState aState) {
   }
 }
 
+inline const char* ToMediaSessionPlaybackStateStr(
+    const MediaSessionPlaybackState& aState) {
+  switch (aState) {
+    case MediaSessionPlaybackState::None:
+      return "none";
+    case MediaSessionPlaybackState::Paused:
+      return "paused";
+    case MediaSessionPlaybackState::Playing:
+      return "playing";
+    default:
+      MOZ_ASSERT_UNREACHABLE("Invalid MediaSessionPlaybackState.");
+      return "Unknown";
+  }
+}
+
 BrowsingContext* GetAliveTopBrowsingContext(BrowsingContext* aBC);
 
 }  // namespace dom
