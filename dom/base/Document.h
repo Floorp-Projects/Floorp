@@ -857,29 +857,9 @@ class Document : public nsINode,
                      nsIPrincipal* aPartitionedPrincipal);
 
   /**
-   * Get the list of ancestor principals for a document.  This is the same as
-   * the ancestor list for the document's docshell the last time SetContainer()
-   * was called with a non-null argument. See the documentation for the
-   * corresponding getter in docshell for how this list is determined.  We store
-   * a copy of the list, because we may lose the ability to reach our docshell
-   * before people stop asking us for this information.
-   */
-  const nsTArray<nsCOMPtr<nsIPrincipal>>& AncestorPrincipals() const {
-    return mAncestorPrincipals;
-  }
-
-  /**
    * Returns true if exempt from HTTPS-Only Mode upgrade.
    */
   uint32_t HttpsOnlyStatus() const { return mHttpsOnlyStatus; }
-
-  /**
-   * Get the list of ancestor outerWindowIDs for a document that correspond to
-   * the ancestor principals (see above for more details).
-   */
-  const nsTArray<uint64_t>& AncestorOuterWindowIDs() const {
-    return mAncestorOuterWindowIDs;
-  }
 
   /**
    * Return the LoadGroup for the document. May return null.
@@ -4826,12 +4806,6 @@ class Document : public nsINode,
   // calling NoteScriptTrackingStatus().  Currently we assume that a URL not
   // existing in the set means the corresponding script isn't a tracking script.
   nsTHashtable<nsCStringHashKey> mTrackingScripts;
-
-  // List of ancestor principals.  This is set at the point a document
-  // is connected to a docshell and not mutated thereafter.
-  nsTArray<nsCOMPtr<nsIPrincipal>> mAncestorPrincipals;
-  // List of ancestor outerWindowIDs that correspond to the ancestor principals.
-  nsTArray<uint64_t> mAncestorOuterWindowIDs;
 
   // Pointer to our parser if we're currently in the process of being
   // parsed into.
