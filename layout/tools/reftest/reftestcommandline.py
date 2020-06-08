@@ -200,6 +200,12 @@ class ReftestArgumentsParser(argparse.ArgumentParser):
                           dest="e10s",
                           help="disables content processes")
 
+        self.add_argument("--enable-fission",
+                          action="store_true",
+                          default=False,
+                          dest="fission",
+                          help="Run tests with fission (site isolation) enabled.")
+
         self.add_argument("--setpref",
                           action="append",
                           type=str,
@@ -322,6 +328,9 @@ class ReftestArgumentsParser(argparse.ArgumentParser):
         if options.totalChunks:
             if not 1 <= options.thisChunk <= options.totalChunks:
                 self.error("thisChunk must be between 1 and totalChunks")
+
+        if options.fission and not options.e10s:
+            self.error("Fission is not supported without e10s.")
 
         if options.logFile:
             options.logFile = reftest.getFullPath(options.logFile)
