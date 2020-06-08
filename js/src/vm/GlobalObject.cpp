@@ -212,6 +212,7 @@ bool GlobalObject::skipDeselectedConstructor(JSContext* cx, JSProtoKey key) {
              JS::WeakRefSpecifier::Disabled;
 
     case JSProto_Iterator:
+    case JSProto_AsyncIterator:
       return !cx->realm()->creationOptions().getIteratorHelpersEnabled();
 
     case JSProto_AggregateError:
@@ -1112,5 +1113,21 @@ JSObject* GlobalObject::createIteratorPrototype(JSContext* cx,
   }
   JSObject* proto = &global->getPrototype(JSProto_Iterator).toObject();
   global->setReservedSlot(ITERATOR_PROTO, ObjectValue(*proto));
+  return proto;
+}
+
+/* static */
+JSObject* GlobalObject::createAsyncIteratorPrototype(
+    JSContext* cx, Handle<GlobalObject*> global) {
+  if (!cx->realm()->creationOptions().getIteratorHelpersEnabled()) {
+    return getOrCreateObject(cx, global, ASYNC_ITERATOR_PROTO,
+                             initAsyncIteratorProto);
+  }
+
+  if (!ensureConstructor(cx, global, JSProto_AsyncIterator)) {
+    return nullptr;
+  }
+  JSObject* proto = &global->getPrototype(JSProto_AsyncIterator).toObject();
+  global->setReservedSlot(ASYNC_ITERATOR_PROTO, ObjectValue(*proto));
   return proto;
 }

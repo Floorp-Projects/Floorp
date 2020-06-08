@@ -730,6 +730,14 @@ skip script test262/intl402/DateTimeFormat/prototype/builtin.js
 ##############################################
 # Enable Iterator Helpers tests in the shell #
 ##############################################
+shell-option(--enable-iterator-helpers) script non262/AsyncIterator/asynciterator.js
+shell-option(--enable-iterator-helpers) script non262/AsyncIterator/length.js
+shell-option(--enable-iterator-helpers) script non262/AsyncIterator/name.js
+shell-option(--enable-iterator-helpers) script non262/AsyncIterator/proto.js
+shell-option(--enable-iterator-helpers) script non262/AsyncIterator/constructor.js
+shell-option(--enable-iterator-helpers) script non262/AsyncIterator/constructor-subclassable.js
+shell-option(--enable-iterator-helpers) script non262/AsyncIterator/constructor-throw-when-called-directly.js
+shell-option(--enable-iterator-helpers) script non262/AsyncIterator/constructor-throw-without-new.js
 shell-option(--enable-iterator-helpers) script non262/Iterator/iterator.js
 shell-option(--enable-iterator-helpers) script non262/Iterator/length.js
 shell-option(--enable-iterator-helpers) script non262/Iterator/name.js
