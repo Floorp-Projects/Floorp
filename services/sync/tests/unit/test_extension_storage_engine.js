@@ -106,7 +106,13 @@ add_task(async function test_enable() {
 // engine etc - so we just try and check that this engine conforms to the
 // mozIBridgedSyncEngine interface guarantees.
 add_task(async function test_engine() {
-  let engine = new ExtensionStorageEngineBridge(Service);
+  // Forcibly set the bridged engine in the engine manager. the reason we do
+  // this, unlike the other tests where we just create the engine, is so that
+  // telemetry can get at the engine's `overrideTelemetryName`, which it gets
+  // through the engine manager.
+  await Service.engineManager.unregister("extension-storage");
+  await Service.engineManager.register(ExtensionStorageEngineBridge);
+  let engine = Service.engineManager.get("extension-storage");
   Assert.equal(engine.version, 1);
 
   Assert.deepEqual(await engine.getSyncID(), null);
