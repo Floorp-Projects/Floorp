@@ -272,7 +272,7 @@ class WebRenderCanvasData : public WebRenderUserData {
   void ClearImageContainer();
 
  protected:
-  UniquePtr<WebRenderCanvasRendererAsync> mCanvasRenderer;
+  RefPtr<WebRenderCanvasRendererAsync> mCanvasRenderer;
   RefPtr<ImageContainer> mContainer;
 };
 
