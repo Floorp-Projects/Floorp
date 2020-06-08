@@ -34,6 +34,9 @@ permalink: /changelog/
 * **feature-push**
   * Fixed a bug where we do not verify subscriptions on first attempt.
 
+* **feature-session**
+  * ⚠️ **This is a breaking change**: `SettingsUseCases` now requires an engine reference, to clear speculative sessions if engine settings change.
+
 # 44.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v43.0.0...v44.0.0)

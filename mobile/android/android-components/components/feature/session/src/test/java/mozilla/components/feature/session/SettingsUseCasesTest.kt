@@ -6,6 +6,7 @@ package mozilla.components.feature.session
 
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
 import mozilla.components.concept.engine.Settings
@@ -18,19 +19,33 @@ import org.mockito.Mockito.verify
 
 class SettingsUseCasesTest {
 
-    private val settings = mock<Settings>()
-    private val sessionManager = mock<SessionManager>()
-    private val sessionA = mock<Session>()
-    private val engineSessionA = mock<EngineSession>()
-    private val settingsA = mock<Settings>()
-    private val sessionB = mock<Session>()
-    private val engineSessionB = mock<EngineSession>()
-    private val settingsB = mock<Settings>()
-    private val sessionC = mock<Session>()
-    private val useCases = SettingsUseCases(settings, sessionManager)
+    private lateinit var settings: Settings
+    private lateinit var sessionManager: SessionManager
+    private lateinit var sessionA: Session
+    private lateinit var engineSessionA: EngineSession
+    private lateinit var settingsA: Settings
+    private lateinit var sessionB: Session
+    private lateinit var engineSessionB: EngineSession
+    private lateinit var settingsB: Settings
+    private lateinit var sessionC: Session
+    private lateinit var engine: Engine
+    private lateinit var useCases: SettingsUseCases
 
     @Before
     fun setup() {
+        settings = mock()
+        sessionManager = mock()
+        sessionA = mock()
+        engineSessionA = mock()
+        settingsA = mock()
+        sessionB = mock()
+        engineSessionB = mock()
+        settingsB = mock()
+        sessionC = mock()
+        engine = mock()
+        whenever(engine.settings).thenReturn(settings)
+        useCases = SettingsUseCases(engine, sessionManager)
+
         whenever(sessionManager.sessions).thenReturn(listOf(sessionA, sessionB, sessionC))
         whenever(sessionManager.getEngineSession(sessionA)).thenReturn(engineSessionA)
         whenever(sessionManager.getEngineSession(sessionB)).thenReturn(engineSessionB)
@@ -41,7 +56,7 @@ class SettingsUseCasesTest {
 
     @Test
     fun `UpdateSettingUseCase will update all sessions`() {
-        val allowFileAccessSetting = object : UpdateSettingUseCase<Boolean>(settings, sessionManager) {
+        val allowFileAccessSetting = object : UpdateSettingUseCase<Boolean>(engine, sessionManager) {
             override fun update(settings: Settings, value: Boolean) {
                 settings.allowFileAccess = value
             }
@@ -51,6 +66,18 @@ class SettingsUseCasesTest {
         verify(settings).allowFileAccess = true
         verify(engineSessionA.settings).allowFileAccess = true
         verify(engineSessionB.settings).allowFileAccess = true
+    }
+
+    @Test
+    fun `UpdateSettingUseCase will clear speculative engine session`() {
+        val allowFileAccessSetting = object : UpdateSettingUseCase<Boolean>(engine, sessionManager) {
+            override fun update(settings: Settings, value: Boolean) {
+                settings.allowFileAccess = value
+            }
+        }
+
+        allowFileAccessSetting(true)
+        verify(engine).clearSpeculativeSession()
     }
 
     @Test

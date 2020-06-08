@@ -5,30 +5,30 @@
 package mozilla.components.feature.session
 
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
 import mozilla.components.concept.engine.Settings
 
 /**
- * Contains use cases related to user settings.
+ * Contains use cases related to engine [Settings].
  *
- * @param engineSettings the engine's [Settings].
- * @param sessionManager the application's [SessionManager].
+ * @param engine reference to the application's browser [Engine].
+ * @param sessionManager the application's [SessionManager].*
  */
 class SettingsUseCases(
-    engineSettings: Settings,
+    engine: Engine,
     sessionManager: SessionManager
 ) {
 
     /**
      * Use case to update a setting and then change all
      * active browsing sessions to use the new setting.
-     *
-     * @param engineSettings the engine's [Settings]. The first settings object that is updated.
-     * @param sessionManager the application's [SessionManager]. Used to query the active sessions.
+     * @property engine reference to the application's browser [Engine].
+     * @property sessionManager the application's [SessionManager]. Used to query the active sessions.
      */
     abstract class UpdateSettingUseCase<T> internal constructor(
-        private val engineSettings: Settings,
+        private val engine: Engine,
         private val sessionManager: SessionManager
     ) {
 
@@ -38,12 +38,13 @@ class SettingsUseCases(
          * @param value The new setting value
          */
         operator fun invoke(value: T) {
-            update(engineSettings, value)
+            update(engine.settings, value)
             with(sessionManager) {
                 sessions.forEach {
                     getEngineSession(it)?.let { session -> forEachSession(session, value) }
                 }
             }
+            engine.clearSpeculativeSession()
         }
 
         /**
@@ -64,9 +65,9 @@ class SettingsUseCases(
      * All active sessions are automatically updated with the new policy.
      */
     class UpdateTrackingProtectionUseCase internal constructor(
-        engineSettings: Settings,
+        engine: Engine,
         sessionManager: SessionManager
-    ) : UpdateSettingUseCase<TrackingProtectionPolicy>(engineSettings, sessionManager) {
+    ) : UpdateSettingUseCase<TrackingProtectionPolicy>(engine, sessionManager) {
 
         override fun update(settings: Settings, value: TrackingProtectionPolicy) {
             settings.trackingProtectionPolicy = value
@@ -78,6 +79,6 @@ class SettingsUseCases(
     }
 
     val updateTrackingProtection: UpdateTrackingProtectionUseCase by lazy {
-        UpdateTrackingProtectionUseCase(engineSettings, sessionManager)
+        UpdateTrackingProtectionUseCase(engine, sessionManager)
     }
 }
