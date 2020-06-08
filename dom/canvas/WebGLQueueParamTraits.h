@@ -136,32 +136,10 @@ struct QueueParamTraits<RawBuffer<T>> {
 };
 
 template <>
-struct QueueParamTraits<webgl::ContextLossReason> {
-  using ParamType = webgl::ContextLossReason;
-
-  template <typename U>
-  static QueueStatus Write(ProducerView<U>& aProducerView,
-                           const ParamType& aArg) {
-    return aProducerView.WriteParam(static_cast<uint8_t>(aArg));
-  }
-
-  template <typename U>
-  static QueueStatus Read(ConsumerView<U>& aConsumerView, ParamType* aArg) {
-    uint8_t val;
-    auto status = aConsumerView.ReadParam(&val);
-    if (!status) return status;
-    if (!ReadContextLossReason(val, aArg)) {
-      MOZ_ASSERT_UNREACHABLE("Invalid ContextLossReason");
-      return QueueStatus::kFatalError;
-    }
-    return status;
-  }
-
-  template <typename View>
-  static size_t MinSize(View& aView, const ParamType* aArg) {
-    return aView.template MinSizeParam<uint8_t>();
-  }
-};
+struct QueueParamTraits<webgl::ContextLossReason>
+    : public ContiguousEnumSerializerInclusive<
+          webgl::ContextLossReason, webgl::ContextLossReason::None,
+          webgl::ContextLossReason::Guilty> {};
 
 template <typename V, typename E>
 struct QueueParamTraits<Result<V, E>> {
@@ -287,33 +265,10 @@ struct QueueParamTraits<std::vector<U>> {
 };
 
 template <>
-struct QueueParamTraits<WebGLExtensionID> {
-  using T = WebGLExtensionID;
-
-  template <typename U>
-  static QueueStatus Write(ProducerView<U>& aProducerView, const T& aArg) {
-    return aProducerView.WriteParam(mozilla::EnumValue(aArg));
-  }
-
-  template <typename U>
-  static QueueStatus Read(ConsumerView<U>& aConsumerView, T* const aArg) {
-    QueueStatus status = QueueStatus::kSuccess;
-    if (aArg) {
-      status = aConsumerView.ReadParam(
-          reinterpret_cast<typename std::underlying_type<T>::type*>(aArg));
-      if (*aArg >= WebGLExtensionID::Max) {
-        MOZ_ASSERT(false);
-        return QueueStatus::kFatalError;
-      }
-    }
-    return status;
-  }
-
-  template <typename View>
-  static size_t MinSize(View& aView, const T* const aArg) {
-    return sizeof(T);
-  }
-};
+struct QueueParamTraits<WebGLExtensionID>
+    : public ContiguousEnumSerializer<WebGLExtensionID,
+                                      WebGLExtensionID::ANGLE_instanced_arrays,
+                                      WebGLExtensionID::Max> {};
 
 template <>
 struct QueueParamTraits<CompileResult> {
@@ -343,41 +298,6 @@ struct QueueParamTraits<CompileResult> {
            aView.MinSizeParam(aArg ? &aArg->success : nullptr);
   }
 };
-
-#if 0
-// TODO: QueueParamTraits for LinkActiveResult and friends.
-template <>
-struct QueueParamTraits<LinkResult> {
-  using T = LinkResult;
-
-  template <typename U>
-  static QueueStatus Write(ProducerView<U>& aProducerView, const T& aArg) {
-    aProducerView.WriteParam(aArg.pending);
-    aProducerView.WriteParam(aArg.log);
-    aProducerView.WriteParam(aArg.active);
-    aProducerView.WriteParam(aArg.tfBufferMode);
-    return aProducerView.WriteParam(aArg.success);
-  }
-
-  template <typename U>
-  static QueueStatus Read(ConsumerView<U>& aConsumerView, T* const aArg) {
-    aConsumerView.ReadParam(aArg ? &aArg->pending : nullptr);
-    aConsumerView.ReadParam(aArg ? &aArg->log : nullptr);
-    aConsumerView.ReadParam(aArg ? &aArg->active : nullptr);
-    aConsumerView.ReadParam(aArg ? &aArg->tfBufferMode : nullptr);
-    return aConsumerView.ReadParam(aArg ? &aArg->success : nullptr);
-  }
-
-  template <typename View>
-  static size_t MinSize(View& aView, const T* const aArg) {
-    return aView.MinSizeParam(aArg ? &aArg->pending : nullptr) +
-        aView.MinSizeParam(aArg ? &aArg->log : nullptr) +
-        aView.MinSizeParam(aArg ? &aArg->active : nullptr) +
-        aView.MinSizeParam(aArg ? &aArg->tfBufferMode : nullptr) +
-        aView.MinSizeParam(aArg ? &aArg->success : nullptr);
-  }
-};
-#endif
 
 }  // namespace webgl
 }  // namespace mozilla
