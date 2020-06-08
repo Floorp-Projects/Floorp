@@ -2164,27 +2164,6 @@ nsresult nsFrameLoader::MaybeCreateDocShell() {
     }
   }
 
-  // Typically there will be a window, however for some cases such as printing
-  // the document is cloned with a docshell that has no window.  We check
-  // that the window exists to ensure we don't try to gather ancestors for
-  // those cases.
-  nsCOMPtr<nsPIDOMWindowOuter> win = doc->GetWindow();
-  if (parentDocShell->ItemType() == docShell->ItemType() &&
-      !doc->IsStaticDocument() && win) {
-    // Propagate through the ancestor principals.
-    nsTArray<nsCOMPtr<nsIPrincipal>> ancestorPrincipals;
-    // Make a copy, so we can modify it.
-    ancestorPrincipals = doc->AncestorPrincipals().Clone();
-    ancestorPrincipals.InsertElementAt(0, doc->NodePrincipal());
-    docShell->SetAncestorPrincipals(std::move(ancestorPrincipals));
-
-    // Repeat for outer window IDs.
-    nsTArray<uint64_t> ancestorOuterWindowIDs;
-    ancestorOuterWindowIDs = doc->AncestorOuterWindowIDs().Clone();
-    ancestorOuterWindowIDs.InsertElementAt(0, win->WindowID());
-    docShell->SetAncestorOuterWindowIDs(std::move(ancestorOuterWindowIDs));
-  }
-
   ReallyLoadFrameScripts();
   InitializeBrowserAPI();
 
