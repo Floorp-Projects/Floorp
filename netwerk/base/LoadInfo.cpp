@@ -611,25 +611,9 @@ LoadInfo::LoadInfo(dom::WindowGlobalParent* aParentWGP,
       mLoadingEmbedderPolicy(nsILoadInfo::EMBEDDER_POLICY_NULL) {
   CanonicalBrowsingContext* parentBC = aParentWGP->BrowsingContext();
   MOZ_ASSERT(parentBC);
-  nsTArray<nsCOMPtr<nsIPrincipal>> ancestorPrincipals;
-  nsTArray<uint64_t> ancestorOuterWindowIDs;
-  CanonicalBrowsingContext* ancestorBC = parentBC;
-  RefPtr<WindowGlobalParent> topLevelWGP = aParentWGP->TopWindowContext();
+  ComputeAncestors(parentBC, mAncestorPrincipals, mAncestorOuterWindowIDs);
 
-  // Iterate over ancestor WindowGlobalParents, collecting principals and outer
-  // window IDs.
-  while (WindowGlobalParent* ancestorWGP =
-             ancestorBC->GetParentWindowContext()) {
-    nsCOMPtr<nsIPrincipal> parentPrincipal = ancestorWGP->DocumentPrincipal();
-    MOZ_ASSERT(parentPrincipal, "Ancestor principal is null");
-    ancestorPrincipals.AppendElement(parentPrincipal.forget());
-    ancestorOuterWindowIDs.AppendElement(ancestorWGP->OuterWindowId());
-    ancestorBC = ancestorWGP->BrowsingContext();
-  }
-  mAncestorPrincipals = std::move(ancestorPrincipals);
-  mAncestorOuterWindowIDs = std::move(ancestorOuterWindowIDs);
-  MOZ_DIAGNOSTIC_ASSERT(mAncestorPrincipals.Length() ==
-                        mAncestorOuterWindowIDs.Length());
+  RefPtr<WindowGlobalParent> topLevelWGP = aParentWGP->TopWindowContext();
 
   if (WindowGlobalParent* ancestorWGP = aParentWGP->GetParentWindowContext()) {
     mParentOuterWindowID = ancestorWGP->OuterWindowId();
@@ -935,6 +919,25 @@ LoadInfo::LoadInfo(
   mRedirectChain.SwapElements(aRedirectChain);
 }
 
+// static
+void LoadInfo::ComputeAncestors(
+    CanonicalBrowsingContext* aBC,
+    nsTArray<nsCOMPtr<nsIPrincipal>>& aAncestorPrincipals,
+    nsTArray<uint64_t>& aOuterWindowIDs) {
+  MOZ_ASSERT(aAncestorPrincipals.IsEmpty());
+  MOZ_ASSERT(aOuterWindowIDs.IsEmpty());
+  CanonicalBrowsingContext* ancestorBC = aBC;
+  // Iterate over ancestor WindowGlobalParents, collecting principals and outer
+  // window IDs.
+  while (WindowGlobalParent* ancestorWGP =
+             ancestorBC->GetParentWindowContext()) {
+    nsCOMPtr<nsIPrincipal> parentPrincipal = ancestorWGP->DocumentPrincipal();
+    MOZ_ASSERT(parentPrincipal, "Ancestor principal is null");
+    aAncestorPrincipals.AppendElement(parentPrincipal.forget());
+    aOuterWindowIDs.AppendElement(ancestorWGP->OuterWindowId());
+    ancestorBC = ancestorWGP->BrowsingContext();
+  }
+}
 void LoadInfo::ComputeIsThirdPartyContext(nsPIDOMWindowOuter* aOuterWindow) {
   nsContentPolicyType type =
       nsContentUtils::InternalContentPolicyTypeToExternal(
