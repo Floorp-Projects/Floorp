@@ -55,10 +55,7 @@ class Connection final : public mozIStorageConnection,
    * Structure used to describe user functions on the database connection.
    */
   struct FunctionInfo {
-    enum FunctionType { SIMPLE, AGGREGATE };
-
     nsCOMPtr<nsISupports> function;
-    FunctionType type;
     int32_t numArgs;
   };
 
