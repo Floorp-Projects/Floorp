@@ -588,6 +588,17 @@ nsresult GfxInfo::GetFeatureStatusImpl(
       }
       return NS_OK;
     }
+
+    if (aFeature == FEATURE_WEBRENDER_SCISSORED_CACHE_CLEARS) {
+      const bool isMali = false;  // TODO
+      if (isMali) {
+        *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DEVICE;
+        aFailureId = "FEATURE_FAILURE_BUG_1603515";
+      } else {
+        *aStatus = nsIGfxInfo::FEATURE_STATUS_OK;
+      }
+      return NS_OK;
+    }
   }
 
   return GfxInfoBase::GetFeatureStatusImpl(

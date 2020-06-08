@@ -47,6 +47,7 @@ class gfxVarReceiver;
   _(UseWebRenderProgramBinaryDisk, bool, false)                    \
   _(UseWebRenderOptimizedShaders, bool, false)                     \
   _(UseWebRenderMultithreading, bool, false)                       \
+  _(UseWebRenderScissoredCacheClears, bool, true)                  \
   _(WebRenderMaxPartialPresentRects, int32_t, 0)                   \
   _(WebRenderDebugFlags, int32_t, 0)                               \
   _(WebRenderBatchingLookback, int32_t, 10)                        \

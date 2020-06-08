@@ -212,6 +212,9 @@ static const char* GetPrefNameForFeature(int32_t aFeature) {
     case nsIGfxInfo::FEATURE_GL_SWIZZLE:
       name = BLACKLIST_PREF_BRANCH "gl.swizzle";
       break;
+    case nsIGfxInfo::FEATURE_WEBRENDER_SCISSORED_CACHE_CLEARS:
+      name = BLACKLIST_PREF_BRANCH "webrender.scissored_cache_clears";
+      break;
     default:
       MOZ_ASSERT_UNREACHABLE("Unexpected nsIGfxInfo feature?!");
       break;
@@ -399,6 +402,8 @@ static int32_t BlacklistFeatureToGfxFeature(const nsAString& aFeature) {
   // in downloadable blocklist.
   else if (aFeature.EqualsLiteral("GL_SWIZZLE"))
     return nsIGfxInfo::FEATURE_GL_SWIZZLE;
+  else if (aFeature.EqualsLiteral("WEBRENDER_SCISSORED_CACHE_CLEARS"))
+    return nsIGfxInfo::FEATURE_WEBRENDER_SCISSORED_CACHE_CLEARS;
 
   // If we don't recognize the feature, it may be new, and something
   // this version doesn't understand.  So, nothing to do.  This is
