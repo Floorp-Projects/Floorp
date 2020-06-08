@@ -581,6 +581,7 @@ class nsWindow final : public nsBaseWidget {
   LayoutDeviceIntRegion mDraggableRegion;
   // It's PictureInPicture window.
   bool mIsPIPWindow;
+  bool mAlwaysOnTop;
 
 #ifdef ACCESSIBILITY
   RefPtr<mozilla::a11y::Accessible> mRootAccessible;
