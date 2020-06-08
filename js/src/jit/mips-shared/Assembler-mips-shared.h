@@ -419,6 +419,7 @@ enum FunctionField {
   ff_dinsu = 6,
   ff_dins = 7,
   ff_bshfl = 32,
+  ff_dbshfl = 36,
   ff_sc = 38,
   ff_scd = 39,
   ff_ll = 54,
@@ -1066,6 +1067,9 @@ class AssemblerMIPSShared : public AssemblerShared {
   // Bit twiddling.
   BufferOffset as_clz(Register rd, Register rs);
   BufferOffset as_dclz(Register rd, Register rs);
+  BufferOffset as_wsbh(Register rd, Register rt);
+  BufferOffset as_dsbh(Register rd, Register rt);
+  BufferOffset as_dshd(Register rd, Register rt);
   BufferOffset as_ins(Register rt, Register rs, uint16_t pos, uint16_t size);
   BufferOffset as_dins(Register rt, Register rs, uint16_t pos, uint16_t size);
   BufferOffset as_dinsm(Register rt, Register rs, uint16_t pos, uint16_t size);

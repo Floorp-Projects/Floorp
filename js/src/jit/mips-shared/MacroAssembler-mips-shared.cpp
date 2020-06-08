@@ -240,6 +240,11 @@ void MacroAssemblerMIPSShared::ma_xor(Register rd, Register rs, Imm32 imm) {
   }
 }
 
+// word swap bytes within halfwords
+void MacroAssemblerMIPSShared::ma_wsbh(Register rd, Register rt) {
+  as_wsbh(rd, rt);
+}
+
 void MacroAssemblerMIPSShared::ma_ctz(Register rd, Register rs) {
   as_addiu(ScratchRegister, rs, -1);
   as_xor(rd, ScratchRegister, rs);

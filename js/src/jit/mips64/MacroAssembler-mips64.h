@@ -94,6 +94,10 @@ class MacroAssemblerMIPS64 : public MacroAssemblerMIPSShared {
   void ma_dins(Register rt, Register rs, Imm32 pos, Imm32 size);
   void ma_dext(Register rt, Register rs, Imm32 pos, Imm32 size);
 
+  // doubleword swap bytes
+  void ma_dsbh(Register rd, Register rt);
+  void ma_dshd(Register rd, Register rt);
+
   void ma_dctz(Register rd, Register rs);
 
   // load

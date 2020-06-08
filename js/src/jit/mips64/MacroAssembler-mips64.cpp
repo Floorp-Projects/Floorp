@@ -338,6 +338,14 @@ void MacroAssemblerMIPS64::ma_dext(Register rt, Register rs, Imm32 pos,
   }
 }
 
+void MacroAssemblerMIPS64::ma_dsbh(Register rd, Register rt) {
+  as_dsbh(rd, rt);
+}
+
+void MacroAssemblerMIPS64::ma_dshd(Register rd, Register rt) {
+  as_dshd(rd, rt);
+}
+
 void MacroAssemblerMIPS64::ma_dctz(Register rd, Register rs) {
   ma_dnegu(ScratchRegister, rs);
   as_and(rd, ScratchRegister, rs);
