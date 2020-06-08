@@ -4312,19 +4312,19 @@ impl PrimitiveInstance {
 }
 
 // Ensures that the size of mask render tasks are within MAX_MASK_SIZE.
-fn adjust_mask_scale_for_max_size(device_rect: DeviceIntRect, device_pixel_scale: DevicePixelScale) -> (DeviceIntRect, DevicePixelScale) {
-    if device_rect.width() > MAX_MASK_SIZE as i32 || device_rect.height() > MAX_MASK_SIZE as i32 {
+fn adjust_mask_scale_for_max_size(device_rect: DeviceRect, device_pixel_scale: DevicePixelScale) -> (DeviceIntRect, DevicePixelScale) {
+    if device_rect.width() > MAX_MASK_SIZE || device_rect.height() > MAX_MASK_SIZE {
         // round_out will grow by 1 integer pixel if origin is on a
         // fractional position, so keep that margin for error with -1:
         let scale = (MAX_MASK_SIZE - 1.0) /
-            (i32::max(device_rect.width(), device_rect.height()) as f32);
+            f32::max(device_rect.width(), device_rect.height());
         let new_device_pixel_scale = device_pixel_scale * Scale::new(scale);
         let new_device_rect = (device_rect.to_f32() * Scale::new(scale))
             .round_out()
             .to_i32();
         (new_device_rect, new_device_pixel_scale)
     } else {
-        (device_rect, device_pixel_scale)
+        (device_rect.to_i32(), device_pixel_scale)
     }
 }
 
@@ -4349,7 +4349,7 @@ fn get_clipped_device_rect(
     map_to_world: &SpaceMapper<RasterPixel, WorldPixel>,
     prim_bounding_rect: WorldRect,
     device_pixel_scale: DevicePixelScale,
-) -> Option<DeviceIntRect> {
+) -> Option<DeviceRect> {
     let unclipped_raster_rect = {
         let world_rect = *unclipped * Scale::new(1.0);
         let raster_rect = world_rect * device_pixel_scale.inv();
@@ -4375,7 +4375,7 @@ fn get_clipped_device_rect(
         device_pixel_scale,
     );
 
-    Some(clipped.to_i32())
+    Some(clipped)
 }
 
 pub fn get_raster_rects(
@@ -4384,7 +4384,7 @@ pub fn get_raster_rects(
     map_to_world: &SpaceMapper<RasterPixel, WorldPixel>,
     prim_bounding_rect: WorldRect,
     device_pixel_scale: DevicePixelScale,
-) -> Option<(DeviceIntRect, DeviceRect)> {
+) -> Option<(DeviceRect, DeviceRect)> {
     let unclipped_raster_rect = map_to_raster.map(&pic_rect)?;
 
     let unclipped = raster_rect_to_device_pixels(
@@ -4410,7 +4410,7 @@ pub fn get_raster_rects(
         return None;
     }
 
-    Some((clipped.to_i32(), unclipped))
+    Some((clipped, unclipped))
 }
 
 /// Choose the decoration mask tile size for a given line.
