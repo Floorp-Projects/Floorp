@@ -500,7 +500,11 @@ impl CompositeState {
                     let surface = descriptor.resolve(resource_cache, tile_cache.current_tile_size);
                     (
                         CompositeTileSurface::Texture { surface },
-                        tile.is_opaque || tile_cache.is_opaque(),
+                        // If a tile has compositor surface intersecting with it, we need to
+                        // respect the tile.is_opaque property even if the overall tile cache
+                        // is opaque. In this case, the tile.is_opaque property is required
+                        // in order to ensure correct draw order with compositor surfaces.
+                        tile.is_opaque || (!tile.has_compositor_surface && tile_cache.is_opaque()),
                     )
                 }
             };
