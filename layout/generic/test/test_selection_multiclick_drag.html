@@ -1,0 +1,137 @@
+<!DOCTYPE>
+<html>
+<head>
+<meta charset="utf-8">
+<title>multi-click selection extension test</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+<style>
+  .testingDiv { font: 16px/1.25 monospace; width: -moz-fit-content; }
+  p { margin: 0; unicode-bidi: bidi-override; }
+</style>
+</head>
+
+<body>
+  <div id="testDiv" class="testingDiv">
+      <p>one two three</p>
+      <p>un deux trois</p>
+      <p>ein zwei drei</p>
+  </div>
+  <br>
+  <div id="rtlTestDiv" class="testingDiv" dir="rtl">
+      <p>one two three</p>
+      <p>un deux trois</p>
+      <p>ein zwei drei</p>
+  </div>
+
+  <pre id="test">
+  <script class="testbody" type="text/javascript">
+
+  function test() {
+    const testDiv = document.getElementById("testDiv");
+    const rtlTestDiv = document.getElementById("rtlTestDiv");
+
+    // Expected line height (CSS 'lh' unit), given that font-size = 16px and
+    // line-height = 1.25.
+    const lh = 20;
+
+    // Width of one character in the monospace font (the CSS 'ch' unit),
+    // calculated by measuring the test text that contains 13 chars per line.
+    const ch = testDiv.offsetWidth / 13;
+
+    const platformIsWindows = !navigator.platform.indexOf("Win");
+    const eatSpaceAfterWord = SpecialPowers.getBoolPref("layout.word_select.eat_space_to_next_word");
+
+    // Y-coordinates that will fall within each line:
+    const firstLine = 0.5 * lh;
+    const secondLine = 1.5 * lh;
+    const thirdLine = 2.5 * lh;
+
+    // Return the character offset of "^", representing the position to click/drag
+    // within the test string.
+    function xPosForClick(s) {
+      return s.indexOf("^") * ch;
+    }
+
+    // Test expectation strings use "_" to represent a space that is only expected
+    // to be present on Windows, where layout.word_select.eat_space_to_next_word
+    // is set by default, and <PAR> to denote a paragraph separator sequence (two
+    // platform-specific newlines).
+    function expectation(s) {
+      let result = s.replace("_", eatSpaceAfterWord ? " " : "");
+      result = result.replace("<PAR>", platformIsWindows ? "\r\n\r\n" : "\n\n");
+      return result;
+    }
+
+    // Sanity-check that we're hitting what we expect with our clicks:
+    synthesizeMouse(testDiv, xPosForClick("un de^ux trois"), secondLine, { clickCount: 2 });
+    is(window.getSelection().toString(), expectation("deux_"), "Double-click middle word");
+
+    // Each entry in the array specifies which line to drag to, the character position
+    // within that line (indicated by the caret ^ in the given string), and what the
+    // expected selection should then be.
+    const wordSelectTests = [
+      [secondLine, "un^ deux trois", "un deux_", "Drag left to extend by word"],
+      [secondLine, "un ^deux trois", "deux_", "Return to edge of anchor word"],
+      [secondLine, "un d^eux trois", "deux_", "Return to within anchor word"],
+      [secondLine, "un deux t^rois", "deux trois", "Drag right to extend by word"],
+      [firstLine, "one t^wo three", "two three<PAR>un deux_", "Drag into previous line"],
+      [secondLine, "un ^deux trois", "deux_", "Drag back to start of anchor word"],
+      [secondLine, "un de^ux trois", "deux_", "Drag back to middle of anchor word"],
+      [thirdLine, "ein zw^ei drei", "deux trois<PAR>ein zwei_", "Drag into next line"],
+      [secondLine, "un de^ux trois", "deux_", "Return to anchor word"],
+    ];
+
+    const lineSelectTests = [
+      [secondLine, "un de^ux trois", "un deux trois", "Triple-click selected whole line"],
+      [firstLine, "one t^wo three", "one two three<PAR>un deux trois", "Drag up into previous line"],
+      [secondLine, "un de^ux trois", "un deux trois", "Return to middle line"],
+      [thirdLine, "ein z^wei drei", "un deux trois<PAR>ein zwei drei", "Drag down into next line"],
+      [secondLine, "un de^ux trois", "un deux trois", "Return to middle line"],
+    ];
+
+    // The RTL tests use monospaced latin text with bidi-override applied;
+    // we specify caret positions by counting characters in a reversed string.
+    const rtlWordSelectTests = [
+      [secondLine, "siort xued ^nu", "un deux_", "Drag right to extend by word"],
+      [secondLine, "siort xued^ nu", "deux_", "Return to edge of anchor word"],
+      [secondLine, "siort xu^ed nu", "deux_", "Return to within anchor word"],
+      [secondLine, "siort^ xued nu", "deux trois", "Drag left to extend by word"],
+      [firstLine, "eerht ow^t eno", "two three<PAR>un deux_", "Drag into previous line"],
+      [secondLine, "siort xued^ nu", "deux_", "Drag back to start of anchor word"],
+      [secondLine, "siort xu^ed nu", "deux_", "Drag back to middle of anchor word"],
+      [thirdLine, "ierd ie^wz nie", "deux trois<PAR>ein zwei_", "Drag into next line"],
+      [secondLine, "siort xu^ed nu", "deux_", "Return to anchor word"],
+    ];
+
+    function testMultiClickAndDrag(elem, initialPos, clickCount, tests) {
+      // Initial multi-click in the middle word of the middle line:
+      synthesizeMouse(elem, xPosForClick(initialPos), secondLine, { type: "mousedown", clickCount: clickCount });
+
+      // Now drag to each test position and check the resulting selection:
+      tests.forEach(function(t) {
+        synthesizeMouse(elem, xPosForClick(t[1]), t[0], { type: "mousemove" });
+        is(window.getSelection().toString(), expectation(t[2]), t[3]);
+      });
+
+      // Finish the test sequence with mouseUp.
+      synthesizeMouse(elem, xPosForClick(initialPos), secondLine, { type: "mouseup" });
+    }
+
+    testMultiClickAndDrag(testDiv, "un de^ux trois", 2, wordSelectTests);
+
+    testMultiClickAndDrag(testDiv, "un de^ux trois", 3, lineSelectTests);
+
+    testMultiClickAndDrag(rtlTestDiv, "siort xu^ed nu", 2, rtlWordSelectTests);
+
+    SimpleTest.finish();
+  }
+  window.onload = function() {
+    setTimeout(test, 0);
+  };
+  SimpleTest.waitForExplicitFinish();
+  </script>
+  </pre>
+</body>
+</html>
