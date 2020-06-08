@@ -172,6 +172,11 @@ static_assert(CodeAlignment % SimdMemoryAlignment == 0,
 static const uint32_t WasmStackAlignment = SimdMemoryAlignment;
 static const uint32_t WasmTrapInstructionLength = 4;
 
+// The offsets are dynamically asserted during
+// code generation in the prologue/epilogue.
+static constexpr uint32_t CheckedCallEntryOffset = 0u;
+static constexpr uint32_t CheckedTailEntryOffset = 32u;
+
 class Assembler : public vixl::Assembler {
  public:
   Assembler() : vixl::Assembler() {}
