@@ -413,7 +413,7 @@ instructions! {
 
         RefNull(RefType<'a>) : [0xd0] : "ref.null",
         RefIsNull(RefType<'a>) : [0xd1] : "ref.is_null",
-        RefHost(u32) : [0xff] : "ref.host", // only used in test harness
+        RefExtern(u32) : [0xff] : "ref.extern", // only used in test harness
         RefFunc(ast::Index<'a>) : [0xd2] : "ref.func",
 
         // function-references proposal
@@ -781,6 +781,7 @@ instructions! {
         I8x16Neg : [0xfd, 0x61] : "i8x16.neg",
         I8x16AnyTrue : [0xfd, 0x62] : "i8x16.any_true",
         I8x16AllTrue : [0xfd, 0x63] : "i8x16.all_true",
+        I8x16Bitmask : [0xfd, 0x64] : "i8x16.bitmask",
         I8x16NarrowI16x8S : [0xfd, 0x65] : "i8x16.narrow_i16x8_s",
         I8x16NarrowI16x8U : [0xfd, 0x66] : "i8x16.narrow_i16x8_u",
         I8x16Shl : [0xfd, 0x6b] : "i8x16.shl",
@@ -802,6 +803,7 @@ instructions! {
         I16x8Neg : [0xfd, 0x81] : "i16x8.neg",
         I16x8AnyTrue : [0xfd, 0x82] : "i16x8.any_true",
         I16x8AllTrue : [0xfd, 0x83] : "i16x8.all_true",
+        I16x8Bitmask : [0xfd, 0x84] : "i16x8.bitmask",
         I16x8NarrowI32x4S : [0xfd, 0x85] : "i16x8.narrow_i32x4_s",
         I16x8NarrowI32x4U : [0xfd, 0x86] : "i16x8.narrow_i32x4_u",
         I16x8WidenLowI8x16S : [0xfd, 0x87] : "i16x8.widen_low_i8x16_s",
@@ -828,6 +830,7 @@ instructions! {
         I32x4Neg : [0xfd, 0xa1] : "i32x4.neg",
         I32x4AnyTrue : [0xfd, 0xa2] : "i32x4.any_true",
         I32x4AllTrue : [0xfd, 0xa3] : "i32x4.all_true",
+        I32x4Bitmask : [0xfd, 0xa4] : "i32x4.bitmask",
         I32x4WidenLowI16x8S : [0xfd, 0xa7] : "i32x4.widen_low_i16x8_s",
         I32x4WidenHighI16x8S : [0xfd, 0xa8] : "i32x4.widen_high_i16x8_s",
         I32x4WidenLowI16x8U : [0xfd, 0xa9] : "i32x4.widen_low_i16x8_u",
@@ -1320,20 +1323,22 @@ impl<'a> Parse<'a> for V8x16Shuffle {
 #[derive(Debug)]
 pub struct SelectTypes<'a> {
     #[allow(missing_docs)]
-    pub tys: Vec<ast::ValType<'a>>,
+    pub tys: Option<Vec<ast::ValType<'a>>>,
 }
 
 impl<'a> Parse<'a> for SelectTypes<'a> {
     fn parse(parser: Parser<'a>) -> Result<Self> {
-        let mut tys = Vec::new();
+        let mut tys = None;
         while parser.peek2::<kw::result>() {
+            let mut list = Vec::new();
             parser.parens(|p| {
                 p.parse::<kw::result>()?;
                 while !p.is_empty() {
-                    tys.push(p.parse()?);
+                    list.push(p.parse()?);
                 }
                 Ok(())
             })?;
+            tys = Some(list);
         }
         Ok(SelectTypes { tys })
     }

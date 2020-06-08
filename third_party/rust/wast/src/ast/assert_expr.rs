@@ -1,4 +1,4 @@
-use crate::ast::{kw, Float32, Float64, Index};
+use crate::ast::{kw, Float32, Float64, Index, RefType};
 use crate::parser::{Parse, Parser, Result};
 
 /// An expression that is valid inside an `assert_return` directive.
@@ -17,8 +17,8 @@ pub enum AssertExpression<'a> {
     F64(NanPattern<Float64>),
     V128(V128Pattern),
 
-    RefNull,
-    RefHost(u32),
+    RefNull(RefType<'a>),
+    RefExtern(u32),
     RefFunc(Option<Index<'a>>),
 
     // Either matches an f32 or f64 for an arithmetic nan pattern
@@ -27,13 +27,11 @@ pub enum AssertExpression<'a> {
     LegacyCanonicalNaN,
 }
 
-impl <'a> Parse<'a> for AssertExpression<'a> {
+impl<'a> Parse<'a> for AssertExpression<'a> {
     fn parse(parser: Parser<'a>) -> Result<Self> {
-        let keyword = parser.step(|c| {
-            match c.keyword() {
-                Some(pair) => Ok(pair),
-                None => Err(c.error("expected a keyword")),
-            }
+        let keyword = parser.step(|c| match c.keyword() {
+            Some(pair) => Ok(pair),
+            None => Err(c.error("expected a keyword")),
         })?;
 
         match keyword {
@@ -42,10 +40,10 @@ impl <'a> Parse<'a> for AssertExpression<'a> {
             "f32.const" => Ok(AssertExpression::F32(parser.parse()?)),
             "f64.const" => Ok(AssertExpression::F64(parser.parse()?)),
             "v128.const" => Ok(AssertExpression::V128(parser.parse()?)),
-            "ref.null" => Ok(AssertExpression::RefNull),
-            "ref.host" => Ok(AssertExpression::RefHost(parser.parse()?)),
+            "ref.null" => Ok(AssertExpression::RefNull(parser.parse()?)),
+            "ref.extern" => Ok(AssertExpression::RefExtern(parser.parse()?)),
             "ref.func" => Ok(AssertExpression::RefFunc(parser.parse()?)),
-            _ => Err(parser.error("expected a [type].const expression"))
+            _ => Err(parser.error("expected a [type].const expression")),
         }
     }
 }
@@ -56,10 +54,13 @@ impl <'a> Parse<'a> for AssertExpression<'a> {
 pub enum NanPattern<T> {
     CanonicalNan,
     ArithmeticNan,
-    Value(T)
+    Value(T),
 }
 
-impl <'a, T> Parse<'a> for NanPattern<T> where T: Parse<'a> {
+impl<'a, T> Parse<'a> for NanPattern<T>
+where
+    T: Parse<'a>,
+{
     fn parse(parser: Parser<'a>) -> Result<Self> {
         if parser.peek::<kw::nan_canonical>() {
             parser.parse::<kw::nan_canonical>()?;

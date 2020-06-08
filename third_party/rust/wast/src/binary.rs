@@ -797,11 +797,12 @@ impl Encode for V8x16Shuffle {
 
 impl<'a> Encode for SelectTypes<'a> {
     fn encode(&self, dst: &mut Vec<u8>) {
-        if self.tys.len() == 0 {
-            dst.push(0x1b);
-        } else {
-            dst.push(0x1c);
-            self.tys.encode(dst);
+        match &self.tys {
+            Some(list) => {
+                dst.push(0x1c);
+                list.encode(dst);
+            }
+            None => dst.push(0x1b),
         }
     }
 }
