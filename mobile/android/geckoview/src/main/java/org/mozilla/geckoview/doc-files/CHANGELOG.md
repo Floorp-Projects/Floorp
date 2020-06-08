@@ -17,8 +17,12 @@ exclude: true
 - Added `runtime.openOptionsPage` support. For `options_ui.open_in_new_tab` ==
   `false`, [`TabDelegate.onOpenOptionsPage`][79.1] is called.
   ([bug 1618058]({{bugzilla}}1619766))
+- Added [`WebNotification.source`][79.2], which is the URL of the page
+  or Service Worker that created the notification.
+
 
 [79.1]: {{javadoc_uri}}/WebExtension.TabDelegate.html#onOpenOptionsPage-org.mozilla.geckoview.WebExtension-
+[79.2]: {{javadoc_uri}}/WebNotification.html#source
 
 ## v78
 - Added [`WebExtensionController.installBuiltIn`][78.1] that allows installing an
@@ -719,4 +723,4 @@ exclude: true
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: c75d02b7653f49b0d301d95a50f6d559dca1c48c
+[api-version]: 820c4bbc052bd8b8b19c2460c3996b86e1786ff7

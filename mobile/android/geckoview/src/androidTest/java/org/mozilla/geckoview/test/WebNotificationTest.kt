@@ -56,6 +56,7 @@ class WebNotificationTest : BaseSessionTest() {
                     assertThat("Direction should match", notification.textDirection, equalTo("ltr"))
                     assertThat("Require Interaction should match", notification.requireInteraction,
                             equalTo(requireInteraction))
+                    assertThat("Source should match", notification.source, equalTo(createTestUrl(HELLO_HTML_PATH)))
                     notificationResult.complete(null)
                 }
         })
