@@ -374,6 +374,15 @@ nsIURI* SVGUseElement::GetSourceDocURI() {
   return targetElement->OwnerDoc()->GetDocumentURI();
 }
 
+const Encoding* SVGUseElement::GetSourceDocCharacterSet() {
+  nsIContent* targetElement = mReferencedElementTracker.get();
+  if (!targetElement) {
+    return nullptr;
+  }
+
+  return targetElement->OwnerDoc()->GetDocumentCharacterSet();
+}
+
 static nsINode* GetClonedChild(const SVGUseElement& aUseElement) {
   const ShadowRoot* shadow = aUseElement.GetShadowRoot();
   return shadow ? shadow->GetFirstChild() : nullptr;
