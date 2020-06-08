@@ -4274,6 +4274,11 @@
   value: true
   mirror: once
 
+- name: gfx.webrender.precache-shaders
+  type: bool
+  value: false
+  mirror: once
+
 # When gl debug message is a high severity message, forwward it to gfx critical
 # note.
 - name: gfx.webrender.gl-debug-message-critical-note
