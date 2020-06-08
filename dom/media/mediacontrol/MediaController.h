@@ -10,6 +10,8 @@
 #include "MediaEventSource.h"
 #include "MediaPlaybackStatus.h"
 #include "MediaStatusManager.h"
+#include "mozilla/DOMEventTargetHelper.h"
+#include "mozilla/dom/MediaControllerBinding.h"
 #include "mozilla/LinkedList.h"
 #include "nsDataHashtable.h"
 #include "nsISupportsImpl.h"
@@ -66,14 +68,22 @@ class IMediaController {
  * tabs playing media at the same time, we can use the ID to query the specific
  * controller from `MediaControlService`.
  */
-class MediaController final
-    : public IMediaController,
-      public MediaStatusManager,
-      public LinkedListElement<RefPtr<MediaController>> {
+class MediaController final : public DOMEventTargetHelper,
+                              public IMediaController,
+                              public LinkedListElement<RefPtr<MediaController>>,
+                              public MediaStatusManager {
  public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaController, override);
-
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(MediaController,
+                                                         DOMEventTargetHelper)
   explicit MediaController(uint64_t aBrowsingContextId);
+
+  // WebIDL methods
+  nsISupports* GetParentObject() const;
+  JSObject* WrapObject(JSContext* aCx,
+                       JS::Handle<JSObject*> aGivenProto) override;
+  void GetSupportedKeys(nsTArray<MediaControlKey>& aRetVal) const;
+  IMPL_EVENT_HANDLER(supportedkeyschange);
 
   // IMediaController's methods
   void Focus() override;

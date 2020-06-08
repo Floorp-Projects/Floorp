@@ -56,6 +56,7 @@ WEBIDL_FILES = [
     'Localization.webidl',
     'MatchGlob.webidl',
     'MatchPattern.webidl',
+    'MediaController.webidl',
     'MessageManager.webidl',
     'MozDocumentObserver.webidl',
     'MozSharedMap.webidl',
