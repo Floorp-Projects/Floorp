@@ -62,11 +62,13 @@ class ReadStream::Inner final : public ReadStream::Controllable {
 
   nsresult IsNonBlocking(bool* aNonBlockingOut);
 
+  NS_DECL_OWNINGTHREAD;
+
+  ~Inner();
+
  private:
   class NoteClosedRunnable;
   class ForgetRunnable;
-
-  ~Inner();
 
   void NoteClosed();
 
@@ -83,6 +85,10 @@ class ReadStream::Inner final : public ReadStream::Controllable {
   void MaybeAbortAsyncOpenStream();
 
   void OpenStreamFailed();
+
+  inline SafeRefPtr<Inner> SafeRefPtrFromThis() {
+    return Controllable::SafeRefPtrFromThis().downcast<Inner>();
+  }
 
   // Weak ref to the stream control actor.  The actor will always call either
   // CloseStream() or CloseStreamWithoutReporting() before it's destroyed.  The
@@ -106,8 +112,6 @@ class ReadStream::Inner final : public ReadStream::Controllable {
   CondVar mCondVar;
   nsCOMPtr<nsIInputStream> mStream;
   nsCOMPtr<nsIInputStream> mSnappyStream;
-
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(cache::ReadStream::Inner, override)
 };
 
 // ----------------------------------------------------------------------------
@@ -118,9 +122,9 @@ class ReadStream::Inner final : public ReadStream::Controllable {
 // ReadStream is constructed on a child process Worker thread).
 class ReadStream::Inner::NoteClosedRunnable final : public CancelableRunnable {
  public:
-  explicit NoteClosedRunnable(ReadStream::Inner* aStream)
+  explicit NoteClosedRunnable(SafeRefPtr<ReadStream::Inner> aStream)
       : CancelableRunnable("dom::cache::ReadStream::Inner::NoteClosedRunnable"),
-        mStream(aStream) {}
+        mStream(std::move(aStream)) {}
 
   NS_IMETHOD Run() override {
     mStream->NoteClosedOnOwningThread();
@@ -138,7 +142,7 @@ class ReadStream::Inner::NoteClosedRunnable final : public CancelableRunnable {
  private:
   ~NoteClosedRunnable() = default;
 
-  RefPtr<ReadStream::Inner> mStream;
+  SafeRefPtr<ReadStream::Inner> mStream;
 };
 
 // ----------------------------------------------------------------------------
@@ -150,9 +154,9 @@ class ReadStream::Inner::NoteClosedRunnable final : public CancelableRunnable {
 // ReadStream is constructed on a child process Worker thread).
 class ReadStream::Inner::ForgetRunnable final : public CancelableRunnable {
  public:
-  explicit ForgetRunnable(ReadStream::Inner* aStream)
+  explicit ForgetRunnable(SafeRefPtr<ReadStream::Inner> aStream)
       : CancelableRunnable("dom::cache::ReadStream::Inner::ForgetRunnable"),
-        mStream(aStream) {}
+        mStream(std::move(aStream)) {}
 
   NS_IMETHOD Run() override {
     mStream->ForgetOnOwningThread();
@@ -170,7 +174,7 @@ class ReadStream::Inner::ForgetRunnable final : public CancelableRunnable {
  private:
   ~ForgetRunnable() = default;
 
-  RefPtr<ReadStream::Inner> mStream;
+  SafeRefPtr<ReadStream::Inner> mStream;
 };
 
 // ----------------------------------------------------------------------------
@@ -189,7 +193,7 @@ ReadStream::Inner::Inner(StreamControl* aControl, const nsID& aId,
       mSnappyStream(aStream ? new SnappyUncompressInputStream(aStream)
                             : nullptr) {
   MOZ_DIAGNOSTIC_ASSERT(mControl);
-  mControl->AddReadStream(this);
+  mControl->AddReadStream(SafeRefPtrFromThis());
 }
 
 void ReadStream::Inner::Serialize(
@@ -364,7 +368,7 @@ void ReadStream::Inner::NoteClosed() {
     return;
   }
 
-  nsCOMPtr<nsIRunnable> runnable = new NoteClosedRunnable(this);
+  nsCOMPtr<nsIRunnable> runnable = new NoteClosedRunnable(SafeRefPtrFromThis());
   MOZ_ALWAYS_SUCCEEDS(mOwningEventTarget->Dispatch(runnable.forget(),
                                                    nsIThread::DISPATCH_NORMAL));
 }
@@ -380,7 +384,7 @@ void ReadStream::Inner::Forget() {
     return;
   }
 
-  nsCOMPtr<nsIRunnable> runnable = new ForgetRunnable(this);
+  nsCOMPtr<nsIRunnable> runnable = new ForgetRunnable(SafeRefPtrFromThis());
   MOZ_ALWAYS_SUCCEEDS(mOwningEventTarget->Dispatch(runnable.forget(),
                                                    nsIThread::DISPATCH_NORMAL));
 }
@@ -396,7 +400,7 @@ void ReadStream::Inner::NoteClosedOnOwningThread() {
   MaybeAbortAsyncOpenStream();
 
   MOZ_DIAGNOSTIC_ASSERT(mControl);
-  mControl->NoteClosed(this, mId);
+  mControl->NoteClosed(SafeRefPtrFromThis(), mId);
   mControl = nullptr;
 }
 
@@ -411,7 +415,7 @@ void ReadStream::Inner::ForgetOnOwningThread() {
   MaybeAbortAsyncOpenStream();
 
   MOZ_DIAGNOSTIC_ASSERT(mControl);
-  mControl->ForgetReadStream(this);
+  mControl->ForgetReadStream(SafeRefPtrFromThis());
   mControl = nullptr;
 }
 
@@ -552,9 +556,8 @@ already_AddRefed<ReadStream> ReadStream::Create(
   }
 #endif
 
-  RefPtr<Inner> inner = new Inner(control, aReadStream.id(), stream);
-  RefPtr<ReadStream> ref = new ReadStream(inner);
-  return ref.forget();
+  return MakeAndAddRef<ReadStream>(MakeSafeRefPtr<ReadStream::Inner>(
+      std::move(control), aReadStream.id(), stream));
 }
 
 // static
@@ -562,10 +565,9 @@ already_AddRefed<ReadStream> ReadStream::Create(
     PCacheStreamControlParent* aControl, const nsID& aId,
     nsIInputStream* aStream) {
   MOZ_DIAGNOSTIC_ASSERT(aControl);
-  auto actor = static_cast<CacheStreamControlParent*>(aControl);
-  RefPtr<Inner> inner = new Inner(actor, aId, aStream);
-  RefPtr<ReadStream> ref = new ReadStream(inner);
-  return ref.forget();
+
+  return MakeAndAddRef<ReadStream>(MakeSafeRefPtr<ReadStream::Inner>(
+      static_cast<CacheStreamControlParent*>(aControl), aId, aStream));
 }
 
 void ReadStream::Serialize(
@@ -580,7 +582,8 @@ void ReadStream::Serialize(
   mInner->Serialize(aReadStreamOut, aStreamCleanupList, aRv);
 }
 
-ReadStream::ReadStream(ReadStream::Inner* aInner) : mInner(aInner) {
+ReadStream::ReadStream(SafeRefPtr<ReadStream::Inner> aInner)
+    : mInner(std::move(aInner)) {
   MOZ_DIAGNOSTIC_ASSERT(mInner);
 }
 
