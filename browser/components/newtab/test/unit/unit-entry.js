@@ -334,6 +334,7 @@ const TEST_GLOBAL = {
           __internalAliases: ["@bing"],
         },
       },
+      getEngineByAlias: () => null,
     },
     scriptSecurityManager: {
       createNullPrincipal() {},
