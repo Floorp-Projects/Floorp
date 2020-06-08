@@ -795,7 +795,8 @@ var DownloadIntegration = {
     if (
       aDownload.handleInternally ||
       (mimeInfo &&
-        mimeInfo.type == PDF_CONTENT_TYPE &&
+        (mimeInfo.type == PDF_CONTENT_TYPE ||
+          fileExtension?.toLowerCase() == "pdf") &&
         !mimeInfo.alwaysAskBeforeHandling &&
         mimeInfo.preferredAction === Ci.nsIHandlerInfo.handleInternally &&
         !aDownload.launchWhenSucceeded)
