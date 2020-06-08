@@ -186,7 +186,8 @@ add_task(async function test_granted_permissions_removed() {
   await extension.unload();
 });
 
-add_task(async function test_theme_update() {
+// Test an update where an add-on becomes a theme.
+add_task(async function test_addon_to_theme_update() {
   let id = "theme-test@test";
   let extData = {
     manifest: {
@@ -225,6 +226,10 @@ add_task(async function test_theme_update() {
     },
     useAddonManager: "permanent",
   });
+  // When a theme is installed, it starts off in disabled mode, as seen in
+  //  toolkit/mozapps/extensions/test/xpcshell/test_update_theme.js .
+  // But if we upgrade from an enabled extension, the theme is enabled.
+  equal(extension.addon.userDisabled, false, "Theme is enabled");
 
   policy = WebExtensionPolicy.getByID(id);
   ok(!policy.hasPermission("tabs"), "addon tabs permission was removed");
