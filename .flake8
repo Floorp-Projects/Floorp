@@ -6,7 +6,6 @@ exclude =
     devtools/shared,
     dom/base,
     dom/bindings,
-    dom/browser-element,
     dom/canvas,
     dom/encoding,
     dom/websocket,
