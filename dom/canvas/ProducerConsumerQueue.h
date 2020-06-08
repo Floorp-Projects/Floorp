@@ -34,7 +34,7 @@ extern LazyLogModule gPCQLog;
 #define PCQ_LOGD(...) PCQ_LOG_(LogLevel::Debug, __VA_ARGS__)
 #define PCQ_LOGE(...) PCQ_LOG_(LogLevel::Error, __VA_ARGS__)
 
-class ProducerConsumerQuue;
+class ProducerConsumerQueue;
 class PcqProducer;
 class PcqConsumer;
 
