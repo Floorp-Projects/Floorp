@@ -16,6 +16,7 @@
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/HTMLEmbedElement.h"
 #include "mozilla/dom/HTMLIFrameElement.h"
 #include "mozilla/dom/Location.h"
 #include "mozilla/dom/LocationBinding.h"
@@ -293,6 +294,10 @@ already_AddRefed<BrowsingContext> BrowsingContext::CreateDetached(
   context->mFields.SetWithoutSyncing<IDX_AllowContentRetargetingOnChildren>(
       allowContentRetargeting);
 
+  // Assume top allows fullscreen for its children unless otherwise stated.
+  // Subframes start with it false unless otherwise noted in SetEmbedderElement.
+  context->mFields.SetWithoutSyncing<IDX_FullscreenAllowedByOwner>(!aParent);
+
   const bool allowPlugins = inherit ? inherit->GetAllowPlugins() : true;
   context->mFields.SetWithoutSyncing<IDX_AllowPlugins>(allowPlugins);
 
@@ -470,11 +475,34 @@ void BrowsingContext::CleanUpDanglingRemoteOuterWindowProxies(
   js::RemapRemoteWindowProxies(aCx, &cb, aOuter);
 }
 
+bool BrowsingContext::FullscreenAllowed() const {
+  for (auto* current = this; current; current = current->GetParent()) {
+    if (!current->GetFullscreenAllowedByOwner()) {
+      return false;
+    }
+  }
+  return true;
+}
+
+static bool OwnerAllowsFullscreen(const Element& aEmbedder) {
+  if (aEmbedder.IsXULElement()) {
+    return !aEmbedder.HasAttr(nsGkAtoms::disablefullscreen);
+  }
+  if (const auto* iframe = HTMLIFrameElement::FromNode(aEmbedder)) {
+    return iframe->AllowFullscreen();
+  }
+  if (const auto* embed = HTMLEmbedElement::FromNode(aEmbedder)) {
+    return embed->AllowFullscreen();
+  }
+  return false;
+}
+
 void BrowsingContext::SetEmbedderElement(Element* aEmbedder) {
   mEmbeddedByThisProcess = true;
 
   // Update embedder-element-specific fields in a shared transaction.
-  // this when clearing our embedder, as we're being destroyed either way.
+  // Don't do this when clearing our embedder, as we're being destroyed either
+  // way.
   if (aEmbedder) {
     Transaction txn;
     txn.SetEmbedderElementType(Some(aEmbedder->LocalName()));
@@ -482,6 +510,7 @@ void BrowsingContext::SetEmbedderElement(Element* aEmbedder) {
             do_QueryInterface(aEmbedder->GetOwnerGlobal())) {
       txn.SetEmbedderInnerWindowId(inner->WindowID());
     }
+    txn.SetFullscreenAllowedByOwner(OwnerAllowsFullscreen(*aEmbedder));
     if (XRE_IsParentProcess() && IsTopContent()) {
       nsAutoString messageManagerGroup;
       if (aEmbedder->IsXULElement()) {
@@ -2022,6 +2051,11 @@ bool BrowsingContext::CanSet(FieldIndex<IDX_AllowPlugins>,
                              const bool& aAllowPlugins,
                              ContentParent* aSource) {
   return CheckOnlyOwningProcessCanSet(aSource);
+}
+
+bool BrowsingContext::CanSet(FieldIndex<IDX_FullscreenAllowedByOwner>,
+                             const bool& aAllowed, ContentParent* aSource) {
+  return CheckOnlyEmbedderCanSet(aSource);
 }
 
 // We map `watchedByDevTools` WebIDL attribute to `watchedByDevToolsInternal`
