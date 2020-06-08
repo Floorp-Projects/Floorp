@@ -28,12 +28,11 @@ class WidevineVideoFrame : public cdm::VideoFrame {
   void SetFrameBuffer(cdm::Buffer* aFrameBuffer) override;
   cdm::Buffer* FrameBuffer() override;
 
-  void SetPlaneOffset(cdm::VideoFrame::VideoPlane aPlane,
-                      uint32_t aOffset) override;
-  uint32_t PlaneOffset(cdm::VideoFrame::VideoPlane aPlane) override;
+  void SetPlaneOffset(cdm::VideoPlane aPlane, uint32_t aOffset) override;
+  uint32_t PlaneOffset(cdm::VideoPlane aPlane) override;
 
-  void SetStride(cdm::VideoFrame::VideoPlane aPlane, uint32_t aStride) override;
-  uint32_t Stride(cdm::VideoFrame::VideoPlane aPlane) override;
+  void SetStride(cdm::VideoPlane aPlane, uint32_t aStride) override;
+  uint32_t Stride(cdm::VideoPlane aPlane) override;
 
   void SetTimestamp(int64_t aTimestamp) override;
   int64_t Timestamp() const override;
@@ -45,8 +44,8 @@ class WidevineVideoFrame : public cdm::VideoFrame {
   cdm::VideoFormat mFormat;
   cdm::Size mSize;
   cdm::Buffer* mBuffer;
-  uint32_t mPlaneOffsets[kMaxPlanes];
-  uint32_t mPlaneStrides[kMaxPlanes];
+  uint32_t mPlaneOffsets[cdm::VideoPlane::kMaxPlanes];
+  uint32_t mPlaneStrides[cdm::VideoPlane::kMaxPlanes];
   int64_t mTimestamp;
 };
 
