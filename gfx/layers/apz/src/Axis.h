@@ -11,6 +11,7 @@
 
 #include "APZUtils.h"
 #include "AxisPhysicsMSDModel.h"
+#include "mozilla/DataMutex.h"  // for DataMutex
 #include "mozilla/gfx/Types.h"  // for Side
 #include "mozilla/TimeStamp.h"  // for TimeDuration
 #include "nsTArray.h"           // for nsTArray
@@ -301,7 +302,11 @@ class Axis {
   ParentLayerCoord mPos;
 
   ParentLayerCoord mStartPos;
-  float mVelocity;   // Units: ParentLayerCoords per millisecond
+  // The velocity can be accessed from multiple threads (e.g. APZ
+  // controller thread and APZ sampler thread), so needs to be
+  // protected by a mutex.
+  // Units: ParentLayerCoords per millisecond
+  mutable DataMutex<float> mVelocity;
   bool mAxisLocked;  // Whether movement on this axis is locked.
   AsyncPanZoomController* mAsyncPanZoomController;
 
@@ -315,6 +320,9 @@ class Axis {
   // a resulting velocity to use for e.g. starting a fling animation.
   // This member can only be accessed on the controller/UI thread.
   UniquePtr<VelocityTracker> mVelocityTracker;
+
+  float DoGetVelocity() const;
+  void DoSetVelocity(float aVelocity);
 
   const FrameMetrics& GetFrameMetrics() const;
   const ScrollMetadata& GetScrollMetadata() const;
