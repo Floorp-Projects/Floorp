@@ -88,15 +88,9 @@ struct QueueParamTraits<RawBuffer<T>> {
     }
 
     if (len == 0) {
-      if (aArg) {
-        aArg->mLength = 0;
-        aArg->mData = nullptr;
-      }
+      aArg->mLength = 0;
+      aArg->mData = nullptr;
       return QueueStatus::kSuccess;
-    }
-
-    if (!aArg) {
-      return aConsumerView.Read(nullptr, len * sizeof(T));
     }
 
     struct RawBufferReadMatcher {
@@ -159,7 +153,7 @@ struct QueueParamTraits<Result<V, E>> {
   }
 
   template <typename U>
-  static QueueStatus Read(ConsumerView<U>& aConsumerView, T* const aArg) {
+  static QueueStatus Read(ConsumerView<U>& aConsumerView, T* aArg) {
     bool ok;
     auto status = aConsumerView.ReadParam(&ok);
     if (!status) return status;
@@ -202,7 +196,7 @@ struct QueueParamTraits<std::string> {
   }
 
   template <typename U>
-  static QueueStatus Read(ConsumerView<U>& aConsumerView, T* const aArg) {
+  static QueueStatus Read(ConsumerView<U>& aConsumerView, T* aArg) {
     size_t size;
     auto status = aConsumerView.ReadParam(&size);
     if (!status) return status;
@@ -212,9 +206,7 @@ struct QueueParamTraits<std::string> {
     if (!dest) return QueueStatus::kFatalError;
 
     status = aConsumerView.Read(dest, size);
-    if (aArg) {
-      aArg->assign(dest, size);
-    }
+    aArg->assign(dest, size);
     return status;
   }
 
@@ -239,14 +231,14 @@ struct QueueParamTraits<std::vector<U>> {
   }
 
   template <typename V>
-  static QueueStatus Read(ConsumerView<V>& aConsumerView, T* const aArg) {
+  static QueueStatus Read(ConsumerView<V>& aConsumerView, T* aArg) {
     MOZ_CRASH("no way to fallibly resize vectors without exceptions");
     size_t size;
     auto status = aConsumerView.ReadParam(&size);
     if (!status) return status;
 
     aArg->resize(size);
-    status = aConsumerView.Read(aArg->data(), aArg->size());
+    status = aConsumerView.Read(aArg->data(), size);
     return status;
   }
 
@@ -277,11 +269,11 @@ struct QueueParamTraits<CompileResult> {
   }
 
   template <typename U>
-  static QueueStatus Read(ConsumerView<U>& aConsumerView, T* const aArg) {
-    aConsumerView.ReadParam(aArg ? &aArg->pending : nullptr);
-    aConsumerView.ReadParam(aArg ? &aArg->log : nullptr);
-    aConsumerView.ReadParam(aArg ? &aArg->translatedSource : nullptr);
-    return aConsumerView.ReadParam(aArg ? &aArg->success : nullptr);
+  static QueueStatus Read(ConsumerView<U>& aConsumerView, T* aArg) {
+    aConsumerView.ReadParam(&aArg->pending);
+    aConsumerView.ReadParam(&aArg->log);
+    aConsumerView.ReadParam(&aArg->translatedSource);
+    return aConsumerView.ReadParam(&aArg->success);
   }
 
   template <typename View>
