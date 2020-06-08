@@ -14,8 +14,10 @@ import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.fragment_add_ons.*
+import kotlinx.android.synthetic.main.overlay_add_on_progress.view.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import mozilla.components.feature.addons.Addon
 import mozilla.components.feature.addons.AddonManagerException
@@ -26,6 +28,7 @@ import mozilla.components.feature.addons.ui.PermissionsDialogFragment
 import mozilla.components.feature.addons.ui.translatedName
 import org.mozilla.samples.browser.R
 import org.mozilla.samples.browser.ext.components
+import java.util.concurrent.CancellationException
 
 /**
  * Fragment use for managing add-ons.
@@ -54,7 +57,6 @@ class AddonsFragment : Fragment(), AddonsManagerAdapterDelegate {
         this@AddonsFragment.view?.let { view ->
             bindRecyclerView(view)
         }
-        addonProgressOverlay.visibility = View.GONE
 
         findPreviousDialogFragment()?.let { dialog ->
             dialog.onPositiveButtonClicked = onPositiveButtonClicked
@@ -168,7 +170,7 @@ class AddonsFragment : Fragment(), AddonsManagerAdapterDelegate {
         addonProgressOverlay.visibility = View.VISIBLE
         isInstallationInProgress = true
 
-        requireContext().components.addonManager.installAddon(
+        val installOperation = requireContext().components.addonManager.installAddon(
             addon,
             onSuccess = {
                 adapter?.updateAddon(it)
@@ -176,20 +178,31 @@ class AddonsFragment : Fragment(), AddonsManagerAdapterDelegate {
                 isInstallationInProgress = false
                 showInstallationDialog(it)
             },
-            onError = { _, _ ->
-                Toast.makeText(
-                    requireContext(),
-                    getString(
+            onError = { _, e ->
+                // No need to display an error message if installation was cancelled by the user.
+                if (e !is CancellationException) {
+                    Toast.makeText(
+                        requireContext(), getString(
                         R.string.mozac_feature_addons_failed_to_install,
                         addon.translatedName
-                    ),
-                    Toast.LENGTH_SHORT
-                ).show()
+                ),
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
 
                 addonProgressOverlay.visibility = View.GONE
                 isInstallationInProgress = false
             }
         )
+
+        addonProgressOverlay.cancel_button.setOnClickListener {
+            MainScope().launch {
+                // Hide the installation progress overlay once cancellation is successful.
+                if (installOperation.cancel().await()) {
+                    addonProgressOverlay.visibility = View.GONE
+                }
+            }
+        }
     }
 
     /**
