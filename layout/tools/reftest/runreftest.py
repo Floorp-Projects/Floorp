@@ -412,6 +412,11 @@ class RefTest(object):
         else:
             prefs['browser.tabs.remote.autostart'] = False
 
+        if options.fission:
+            prefs['fission.autostart'] = True
+        else:
+            prefs['fission.autostart'] = False
+
         if not self.run_by_manifest:
             if options.totalChunks:
                 prefs['reftest.totalChunks'] = options.totalChunks
@@ -773,6 +778,7 @@ class RefTest(object):
         env = self.buildBrowserEnv(options, profile.profile)
 
         self.log.info("Running with e10s: {}".format(options.e10s))
+        self.log.info("Running with fission: {}".format(options.fission))
 
         def timeoutHandler():
             self.handleTimeout(
