@@ -7,7 +7,6 @@
 #ifndef DOM_MEDIA_MEDIACONTROL_MEDIACONTROLLER_H_
 #define DOM_MEDIA_MEDIACONTROL_MEDIACONTROLLER_H_
 
-#include "ContentMediaController.h"
 #include "MediaEventSource.h"
 #include "MediaPlaybackStatus.h"
 #include "MediaStatusManager.h"
@@ -94,7 +93,8 @@ class MediaController final
                                   MediaPlaybackState aState) override;
   void NotifyMediaAudibleChanged(uint64_t aBrowsingContextId,
                                  MediaAudibleState aState) override;
-  void SetIsInPictureInPictureMode(bool aIsInPictureInPictureMode) override;
+  void SetIsInPictureInPictureMode(uint64_t aBrowsingContextId,
+                                   bool aIsInPictureInPictureMode) override;
 
   // Reture true if any of controlled media is being used in Picture-In-Picture
   // mode.

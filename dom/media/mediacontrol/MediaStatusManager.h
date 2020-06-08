@@ -5,6 +5,8 @@
 #ifndef DOM_MEDIA_MEDIACONTROL_MEDIASTATUSMANAGER_H_
 #define DOM_MEDIA_MEDIACONTROL_MEDIASTATUSMANAGER_H_
 
+#include "MediaEventSource.h"
+#include "MediaPlaybackStatus.h"
 #include "mozilla/dom/MediaMetadata.h"
 #include "mozilla/dom/MediaSessionBinding.h"
 #include "mozilla/Maybe.h"
@@ -45,12 +47,22 @@ class IMediaInfoUpdater {
   NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
 
   // Use this method to update controlled media's playback state and the
-  // browsing context where controlled media exists.
+  // browsing context where controlled media exists. When notifying the state
+  // change, we MUST follow the following rules.
+  // (1) `eStart` MUST be the first state and `eStop` MUST be the last state
+  // (2) Do not notify same state again
+  // (3) `ePaused` can only be notified after notifying `ePlayed`.
   virtual void NotifyMediaPlaybackChanged(uint64_t aBrowsingContextId,
                                           MediaPlaybackState aState) = 0;
 
-  // Use this method to update controlled media's audible state and the
-  // browsing context where controlled media exists.
+  // Use this method to update the audible state of controlled media, and MUST
+  // follow the following rules in which `audible` and `inaudible` should be a
+  // pair. `inaudible` should always be notified after `audible`. When audible
+  // media paused, `inaudible` should be notified
+  // Eg. (O) `audible` -> `inaudible` -> `audible` -> `inaudible`
+  //     (X) `inaudible` -> `audible`    [notify `inaudible` before `audible`]
+  //     (X) `audible` -> `audible`      [notify `audible` twice]
+  //     (X) `audible` -> (media pauses) [forgot to notify `inaudible`]
   virtual void NotifyMediaAudibleChanged(uint64_t aBrowsingContextId,
                                          MediaAudibleState aState) = 0;
 
@@ -68,9 +80,10 @@ class IMediaInfoUpdater {
   virtual void UpdateMetadata(uint64_t aBrowsingContextId,
                               const Maybe<MediaMetadataBase>& aMetadata) = 0;
 
-  // Use this method to update if the media in content process is being used in
-  // Picture-in-Picture mode.
-  virtual void SetIsInPictureInPictureMode(bool aIsInPictureInPictureMode) = 0;
+  // Use this method to update the picture in picture mode state of controlled
+  // media, and it's safe to notify same state again.
+  virtual void SetIsInPictureInPictureMode(uint64_t aBrowsingContextId,
+                                           bool aIsInPictureInPictureMode) = 0;
 };
 
 /**
