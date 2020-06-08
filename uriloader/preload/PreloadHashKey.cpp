@@ -9,6 +9,8 @@
 #include "nsIPrincipal.h"
 #include "nsIReferrerInfo.h"
 
+#define IGNORE_REFERRER_POLICY_FOR_PRELOAD_COALESCING true
+
 namespace mozilla {
 
 PreloadHashKey::PreloadHashKey(const nsIURI* aKey, ResourceType aAs)
@@ -166,10 +168,16 @@ PreloadHashKey PreloadHashKey::CreateAsFont(
 }
 
 bool PreloadHashKey::KeyEquals(KeyTypePointer aOther) const {
-  if (mAs != aOther->mAs || mCORSMode != aOther->mCORSMode ||
-      mReferrerPolicy != aOther->mReferrerPolicy) {
+  if (mAs != aOther->mAs || mCORSMode != aOther->mCORSMode) {
     return false;
   }
+
+#if !IGNORE_REFERRER_POLICY_FOR_PRELOAD_COALESCING
+  if (mReferrerPolicy != aOther->mReferrerPolicy) {
+    return false;
+  }
+#endif
+
   if (!mPrincipal != !aOther->mPrincipal) {
     // One or the other has a principal, but not both... not equal
     return false;
@@ -227,7 +235,10 @@ PLDHashNumber PreloadHashKey::HashKey(KeyTypePointer aKey) {
   // Enough to use the common attributes
   hash = AddToHash(hash, static_cast<uint32_t>(aKey->mAs));
   hash = AddToHash(hash, static_cast<uint32_t>(aKey->mCORSMode));
+
+#if !IGNORE_REFERRER_POLICY_FOR_PRELOAD_COALESCING
   hash = AddToHash(hash, static_cast<uint32_t>(aKey->mReferrerPolicy));
+#endif
 
   return hash;
 }
