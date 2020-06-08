@@ -8,31 +8,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 });
 
 /**
- * Fake the installation of an add-on in the profile, by creating the
- * directory and registering it with the directory service.
- *
- * @param {string} [name]
- *   The engine name to install.
- */
-function installAddonEngine(name = "engine-addon") {
-  const profD = do_get_profile().QueryInterface(Ci.nsIFile);
-
-  let dir = profD.clone();
-  dir.append("extensions");
-  if (!dir.exists()) {
-    dir.create(dir.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
-  }
-
-  dir.append("search-engine@tests.mozilla.org");
-  dir.create(dir.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
-
-  do_get_file("data/install.rdf").copyTo(dir, "install.rdf");
-  dir.append("searchplugins");
-  dir.create(dir.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
-  do_get_file("data/" + name + ".xml").copyTo(dir, "bug645970.xml");
-}
-
-/**
  * Copy the engine-distribution.xml engine to a fake distribution
  * created in the profile, and registered with the directory service.
  *

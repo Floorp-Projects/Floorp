@@ -7,14 +7,6 @@ add_task(async function setup() {
   await AddonTestUtils.promiseStartupManager();
   await useTestEngines("data1");
   Assert.ok(!Services.search.isInitialized);
-
-  let engineDummyFile = do_get_profile().clone();
-  engineDummyFile.append("searchplugins");
-  engineDummyFile.append("test-search-engine.xml");
-  let engineDir = engineDummyFile.parent;
-  engineDir.create(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
-
-  do_get_file("data/engine.xml").copyTo(engineDir, "engine.xml");
 });
 
 // Check that the default engine matches the defaultenginename pref

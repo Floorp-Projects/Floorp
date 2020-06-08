@@ -28,19 +28,6 @@ add_task(async function setup() {
   );
   cacheTemplate = readJSONFile(cacheTemplateFile);
   cacheTemplate.buildID = getAppInfo().platformBuildID;
-
-  let engineFile = do_get_profile().clone();
-  engineFile.append("searchplugins");
-  engineFile.append("test-search-engine.xml");
-  engineFile.parent.create(
-    Ci.nsIFile.DIRECTORY_TYPE,
-    FileUtils.PERMS_DIRECTORY
-  );
-
-  // Copy the test engine to the test profile.
-  let engineTemplateFile = do_get_file("data/engine.xml");
-  engineTemplateFile.copyTo(engineFile.parent, "test-search-engine.xml");
-
   cacheTemplate.version = SearchUtils.CACHE_VERSION;
 
   if (gModernConfig) {
