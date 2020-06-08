@@ -19,6 +19,7 @@
 #include <set>
 #include <stdint.h>
 
+#include "GLContext.h"  // Bug 1635644
 #include "GLContextTypes.h"
 #include "GLDefs.h"
 #include "mozilla/Attributes.h"
@@ -27,7 +28,6 @@
 #include "mozilla/Mutex.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/WeakPtr.h"
-#include "ScopedGLHelpers.h"
 #include "SurfaceTypes.h"
 
 class nsIThread;
@@ -39,45 +39,45 @@ class DrawTarget;
 }  // namespace gfx
 
 namespace layers {
+class KnowsCompositor;
+enum class LayersBackend : int8_t;
 class LayersIPCChannel;
 class SharedSurfaceTextureClient;
-enum class TextureFlags : uint32_t;
 class SurfaceDescriptor;
 class TextureClient;
+enum class TextureFlags : uint32_t;
+enum class TextureType : int8_t;
 }  // namespace layers
 
 namespace gl {
 
-class GLContext;
+class MozFramebuffer;
+struct ScopedBindFramebuffer;
 class SurfaceFactory;
-class ShSurfHandle;
+
+struct PartialSharedSurfaceDesc {
+  const WeakPtr<GLContext> gl;
+  const SharedSurfaceType type;
+  const layers::TextureType consumerType;
+  const bool canRecycle;
+};
+struct SharedSurfaceDesc : public PartialSharedSurfaceDesc {
+  gfx::IntSize size = {};
+};
 
 class SharedSurface {
  public:
-  static bool ProdCopy(SharedSurface* src, SharedSurface* dest,
-                       SurfaceFactory* factory);
-
-  const SharedSurfaceType mType;
-  const AttachmentType mAttachType;
-  const WeakPtr<GLContext> mGL;
-  const gfx::IntSize mSize;
-  const bool mHasAlpha;
-  const bool mCanRecycle;
+  const SharedSurfaceDesc mDesc;
+  const UniquePtr<MozFramebuffer> mFb;  // null if we should use fb=0.
 
  protected:
-  bool mIsLocked;
-  bool mIsProducerAcquired;
+  bool mIsLocked = false;
+  bool mIsProducerAcquired = false;
 
-  SharedSurface(SharedSurfaceType type, AttachmentType attachType,
-                GLContext* gl, const gfx::IntSize& size, bool hasAlpha,
-                bool canRecycle);
+  SharedSurface(const SharedSurfaceDesc&, UniquePtr<MozFramebuffer>);
 
  public:
   virtual ~SharedSurface();
-
-  // Specifies to the TextureClient any flags which
-  // are required by the SharedSurface backend.
-  virtual layers::TextureFlags GetTextureFlags() const;
 
   bool IsLocked() const { return mIsLocked; }
   bool IsProducerAcquired() const { return mIsProducerAcquired; }
@@ -94,11 +94,12 @@ class SharedSurface {
   virtual void Commit() {}
 
  protected:
-  virtual void LockProdImpl() = 0;
-  virtual void UnlockProdImpl() = 0;
+  virtual void LockProdImpl(){};
+  virtual void UnlockProdImpl(){};
 
-  virtual void ProducerAcquireImpl() = 0;
-  virtual void ProducerReleaseImpl() = 0;
+  virtual void ProducerAcquireImpl(){};
+  virtual void ProducerReleaseImpl(){};
+
   virtual void ProducerReadAcquireImpl() { ProducerAcquireImpl(); }
   virtual void ProducerReadReleaseImpl() { ProducerReleaseImpl(); }
 
@@ -133,176 +134,47 @@ class SharedSurface {
   // You can call WaitForBufferOwnership to wait for availability.
   virtual bool IsBufferAvailable() const { return true; }
 
-  // For use when AttachType is correct.
-  virtual GLenum ProdTextureTarget() const {
-    MOZ_ASSERT(mAttachType == AttachmentType::GLTexture);
-    return LOCAL_GL_TEXTURE_2D;
-  }
-
-  virtual GLuint ProdTexture() {
-    MOZ_ASSERT(mAttachType == AttachmentType::GLTexture);
-    MOZ_CRASH("GFX: Did you forget to override this function?");
-  }
-
-  virtual GLuint ProdRenderbuffer() {
-    MOZ_ASSERT(mAttachType == AttachmentType::GLRenderbuffer);
-    MOZ_CRASH("GFX: Did you forget to override this function?");
-  }
-
-  virtual bool CopyTexImage2D(GLenum target, GLint level, GLenum internalformat,
-                              GLint x, GLint y, GLsizei width, GLsizei height,
-                              GLint border) {
-    return false;
-  }
-
-  virtual bool ReadPixels(GLint x, GLint y, GLsizei width, GLsizei height,
-                          GLenum format, GLenum type, GLvoid* pixels) {
-    return false;
-  }
-
   virtual bool NeedsIndirectReads() const { return false; }
 
-  virtual bool ToSurfaceDescriptor(
-      layers::SurfaceDescriptor* const out_descriptor) = 0;
+  virtual Maybe<layers::SurfaceDescriptor> ToSurfaceDescriptor() = 0;
 
   virtual bool ReadbackBySharedHandle(gfx::DataSourceSurface* out_surface) {
     return false;
   }
 };
 
-template <typename T>
-class RefSet {
-  std::set<T*> mSet;
+// -
 
+class SurfaceFactory {
  public:
-  ~RefSet() { clear(); }
-
-  auto begin() -> decltype(mSet.begin()) { return mSet.begin(); }
-
-  void clear() {
-    for (auto itr = mSet.begin(); itr != mSet.end(); ++itr) {
-      (*itr)->Release();
-    }
-    mSet.clear();
-  }
-
-  bool empty() const { return mSet.empty(); }
-
-  bool insert(T* x) {
-    if (mSet.insert(x).second) {
-      x->AddRef();
-      return true;
-    }
-
-    return false;
-  }
-
-  bool erase(T* x) {
-    if (mSet.erase(x)) {
-      x->Release();
-      return true;
-    }
-
-    return false;
-  }
-};
-
-template <typename T>
-class RefQueue {
-  std::queue<T*> mQueue;
-
- public:
-  ~RefQueue() { clear(); }
-
-  void clear() {
-    while (!empty()) {
-      pop();
-    }
-  }
-
-  bool empty() const { return mQueue.empty(); }
-
-  size_t size() const { return mQueue.size(); }
-
-  void push(T* x) {
-    mQueue.push(x);
-    x->AddRef();
-  }
-
-  T* front() const { return mQueue.front(); }
-
-  void pop() {
-    T* x = mQueue.front();
-    x->Release();
-    mQueue.pop();
-  }
-};
-
-class SurfaceFactory : public SupportsWeakPtr<SurfaceFactory> {
- public:
-  // Should use the VIRTUAL version, but it's currently incompatible
-  // with SupportsWeakPtr. (bug 1049278)
-  MOZ_DECLARE_WEAKREFERENCE_TYPENAME(SurfaceFactory)
-
-  const SharedSurfaceType mType;
-  GLContext* const mGL;
-  const SurfaceCaps mCaps;
-  const RefPtr<layers::LayersIPCChannel> mAllocator;
-  const layers::TextureFlags mFlags;
-  const GLFormats mFormats;
-  Mutex mMutex;
+  const PartialSharedSurfaceDesc mDesc;
 
  protected:
-  SurfaceCaps mDrawCaps;
-  SurfaceCaps mReadCaps;
-  RefQueue<layers::SharedSurfaceTextureClient> mRecycleFreePool;
-  RefSet<layers::SharedSurfaceTextureClient> mRecycleTotalPool;
+  Mutex mMutex;
 
-  SurfaceFactory(SharedSurfaceType type, GLContext* gl, const SurfaceCaps& caps,
-                 const RefPtr<layers::LayersIPCChannel>& allocator,
-                 const layers::TextureFlags& flags);
+ public:
+  static UniquePtr<SurfaceFactory> Create(GLContext*, layers::TextureType);
+
+ protected:
+  explicit SurfaceFactory(const PartialSharedSurfaceDesc&);
 
  public:
   virtual ~SurfaceFactory();
 
-  const SurfaceCaps& DrawCaps() const { return mDrawCaps; }
-
-  const SurfaceCaps& ReadCaps() const { return mReadCaps; }
-
  protected:
-  virtual UniquePtr<SharedSurface> CreateShared(const gfx::IntSize& size) = 0;
-
-  void StartRecycling(layers::SharedSurfaceTextureClient* tc);
-  void SetRecycleCallback(layers::SharedSurfaceTextureClient* tc);
-  void StopRecycling(layers::SharedSurfaceTextureClient* tc);
+  virtual UniquePtr<SharedSurface> CreateSharedImpl(
+      const SharedSurfaceDesc&) = 0;
 
  public:
-  UniquePtr<SharedSurface> NewSharedSurface(const gfx::IntSize& size);
-  // already_AddRefed<ShSurfHandle> NewShSurfHandle(const gfx::IntSize& size);
-  already_AddRefed<layers::SharedSurfaceTextureClient> NewTexClient(
-      const gfx::IntSize& size);
-
-  static void RecycleCallback(layers::TextureClient* tc, void* /*closure*/);
-
-  // Auto-deletes surfs of the wrong type.
-  bool Recycle(layers::SharedSurfaceTextureClient* texClient);
+  UniquePtr<SharedSurface> CreateShared(const gfx::IntSize& size) {
+    return CreateSharedImpl({mDesc, size});
+  }
 };
 
-class ScopedReadbackFB final {
-  GLContext* const mGL;
-  ScopedBindFramebuffer mAutoFB;
-  GLuint mTempFB = 0;
-  GLuint mTempTex = 0;
-  SharedSurface* mSurfToUnlock = nullptr;
-  SharedSurface* mSurfToLock = nullptr;
-
- public:
-  explicit ScopedReadbackFB(SharedSurface* src);
-  ~ScopedReadbackFB();
-};
-
-bool ReadbackSharedSurface(SharedSurface* src, gfx::DrawTarget* dst);
-uint32_t ReadPixel(SharedSurface* src);
+template <typename T>
+inline UniquePtr<T> AsUnique(T* const p) {
+  return UniquePtr<T>(p);
+}
 
 }  // namespace gl
 }  // namespace mozilla

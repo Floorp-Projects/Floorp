@@ -29,7 +29,6 @@ namespace mozilla {
 class ClientWebGLContext;
 
 namespace layers {
-class AsyncCanvasRenderer;
 class CanvasRenderer;
 class CanvasLayer;
 class Image;
@@ -123,7 +122,6 @@ class HTMLCanvasElement final : public nsGenericHTMLElement,
                                 public SupportsWeakPtr<HTMLCanvasElement> {
   enum { DEFAULT_CANVAS_WIDTH = 300, DEFAULT_CANVAS_HEIGHT = 150 };
 
-  typedef layers::AsyncCanvasRenderer AsyncCanvasRenderer;
   typedef layers::CanvasRenderer CanvasRenderer;
   typedef layers::CanvasLayer CanvasLayer;
   typedef layers::Layer Layer;
@@ -332,22 +330,13 @@ class HTMLCanvasElement final : public nsGenericHTMLElement,
   layers::LayersBackend GetCompositorBackendType() const;
 
   void OnVisibilityChange();
-
   void OnMemoryPressure();
-
   void OnDeviceReset();
-
-  static void SetAttrFromAsyncCanvasRenderer(AsyncCanvasRenderer* aRenderer);
-  static void InvalidateFromAsyncCanvasRenderer(AsyncCanvasRenderer* aRenderer);
 
   already_AddRefed<layers::SharedSurfaceTextureClient> GetVRFrame();
   void ClearVRFrame();
 
   bool MaybeModified() const { return mMaybeModified; };
-
-  AsyncCanvasRenderer* GetAsyncCanvasRenderer();
-
-  layers::OOPCanvasRenderer* GetOOPCanvasRenderer();
 
  protected:
   virtual ~HTMLCanvasElement();
@@ -392,8 +381,7 @@ class HTMLCanvasElement final : public nsGenericHTMLElement,
   RefPtr<HTMLCanvasPrintState> mPrintState;
   nsTArray<WeakPtr<FrameCaptureListener>> mRequestedFrameListeners;
   RefPtr<RequestedFrameRefreshObserver> mRequestedFrameRefreshObserver;
-  RefPtr<AsyncCanvasRenderer> mAsyncCanvasRenderer;
-  RefPtr<layers::OOPCanvasRenderer> mOOPCanvasRenderer;
+  RefPtr<CanvasRenderer> mCanvasRenderer;
   RefPtr<OffscreenCanvas> mOffscreenCanvas;
   RefPtr<HTMLCanvasElementObserver> mContextObserver;
 
