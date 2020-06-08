@@ -441,11 +441,18 @@ bool ProxyAutoConfig::ResolveAddress(const nsCString& aHostName,
   RefPtr<PACResolver> helper = new PACResolver(mMainThreadEventTarget);
   OriginAttributes attrs;
 
-  if (NS_FAILED(dns->AsyncResolveNative(
-          aHostName, nsIDNSService::RESOLVE_PRIORITY_MEDIUM, helper,
-          GetCurrentThreadEventTarget(), attrs,
-          getter_AddRefs(helper->mRequest))))
+  // When the PAC script attempts to resolve a domain, we must make sure we
+  // don't use TRR, otherwise the TRR channel might also attempt to resolve
+  // a name and we'll have a deadlock.
+  uint32_t flags =
+      nsIDNSService::RESOLVE_PRIORITY_MEDIUM |
+      nsIDNSService::GetFlagsFromTRRMode(nsIRequest::TRR_DISABLED_MODE);
+
+  if (NS_FAILED(dns->AsyncResolveNative(aHostName, flags, helper,
+                                        GetCurrentThreadEventTarget(), attrs,
+                                        getter_AddRefs(helper->mRequest)))) {
     return false;
+  }
 
   if (aTimeout && helper->mRequest) {
     if (!mTimer) mTimer = NS_NewTimer();
