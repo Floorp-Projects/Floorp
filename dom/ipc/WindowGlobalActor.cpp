@@ -115,11 +115,9 @@ WindowGlobalInit WindowGlobalActor::WindowInitializer(
   }
 
   // Init Mixed Content Fields
-  nsCOMPtr<nsIURI> innerDocURI = NS_GetInnermostURI(doc->GetDocumentURI());
-  if (innerDocURI) {
-    mozilla::Get<WindowContext::IDX_IsSecure>(init.context().mFields) =
-        innerDocURI->SchemeIs("https");
-  }
+  mozilla::Get<WindowContext::IDX_IsPotentiallyTrustWorthy>(
+      init.context().mFields) =
+      doc->NodePrincipal()->GetIsOriginPotentiallyTrustworthy();
   nsCOMPtr<nsIChannel> mixedChannel;
   aWindow->GetDocShell()->GetMixedContentChannel(getter_AddRefs(mixedChannel));
   // A non null mixedContent channel on the docshell indicates,
