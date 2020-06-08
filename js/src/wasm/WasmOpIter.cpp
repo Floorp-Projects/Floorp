@@ -314,6 +314,9 @@ OpKind wasm::Classify(OpBytes op) {
         case SimdOp::I16x8AllTrue:
         case SimdOp::I32x4AnyTrue:
         case SimdOp::I32x4AllTrue:
+        case SimdOp::I8x16Bitmask:
+        case SimdOp::I16x8Bitmask:
+        case SimdOp::I32x4Bitmask:
           WASM_SIMD_OP(OpKind::Conversion);
         case SimdOp::I8x16ReplaceLane:
         case SimdOp::I16x8ReplaceLane:

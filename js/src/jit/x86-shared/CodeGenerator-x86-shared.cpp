@@ -3194,6 +3194,15 @@ void CodeGenerator::visitWasmReduceSimd128(LWasmReduceSimd128* ins) {
     case wasm::SimdOp::I32x4AllTrue:
       masm.allTrueInt32x4(src, ToRegister(dest));
       break;
+    case wasm::SimdOp::I8x16Bitmask:
+      masm.bitmaskInt8x16(src, ToRegister(dest));
+      break;
+    case wasm::SimdOp::I16x8Bitmask:
+      masm.bitmaskInt16x8(src, ToRegister(dest));
+      break;
+    case wasm::SimdOp::I32x4Bitmask:
+      masm.bitmaskInt32x4(src, ToRegister(dest));
+      break;
     case wasm::SimdOp::I8x16ExtractLaneS:
       masm.extractLaneInt8x16(imm, src, ToRegister(dest));
       break;

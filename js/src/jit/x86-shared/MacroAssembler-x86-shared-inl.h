@@ -1374,6 +1374,28 @@ void MacroAssembler::allTrueInt32x4(FloatRegister src, Register dest) {
   movzbl(dest, dest);
 }
 
+// Bitmask
+
+void MacroAssembler::bitmaskInt8x16(FloatRegister src, Register dest) {
+  vpmovmskb(src, dest);
+}
+
+void MacroAssembler::bitmaskInt16x8(FloatRegister src, Register dest) {
+  ScratchSimd128Scope scratch(*this);
+  // A three-instruction sequence is possible by using scratch as a don't-care
+  // input and shifting rather than masking at the end, but creates a false
+  // dependency on the old value of scratch.  The better fix is to allow src to
+  // be clobbered.
+  moveSimd128(src, scratch);
+  vpacksswb(Operand(scratch), scratch, scratch);
+  vpmovmskb(scratch, dest);
+  andl(Imm32(0xFF), dest);
+}
+
+void MacroAssembler::bitmaskInt32x4(FloatRegister src, Register dest) {
+  vmovmskps(src, dest);
+}
+
 // Swizzle - permute with variable indices
 
 void MacroAssembler::swizzleInt8x16(FloatRegister rhs, FloatRegister lhsDest,
