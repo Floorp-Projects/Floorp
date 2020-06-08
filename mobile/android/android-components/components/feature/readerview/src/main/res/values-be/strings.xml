@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Name for one of the font options available to use -->
+    <string name="mozac_feature_readerview_sans_serif_font">Без засечак</string>
+    <!-- Name for one of the font options available to use -->
+    <string name="mozac_feature_readerview_serif_font">З засечкамі</string>
+
+    <!-- Color option for the background -->
+    <string name="mozac_feature_readerview_dark"></string>
+    <!-- Color option for the background -->
+    <string name="mozac_feature_readerview_sephia">Сэпія</string>
+    <!-- Color option for the background -->
+    <string name="mozac_feature_readerview_light">Светлая</string>
+    </resources>

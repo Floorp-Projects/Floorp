@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Option in a dialog for requesting a microphone permission, this option will give access to
+         the first microphone-->
+    <string name="mozac_feature_sitepermissions_option_microphone_one">Мікрафон 1</string>
+    </resources>

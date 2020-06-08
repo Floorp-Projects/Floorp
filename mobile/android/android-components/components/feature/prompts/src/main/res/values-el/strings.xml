@@ -18,10 +18,16 @@
     <string name="mozac_feature_prompt_save_confirmation">Αποθήκευση</string>
     <!-- Positive confirmation that we should save the updated login -->
     <string name="mozac_feature_prompt_update_confirmation">Ενημέρωση</string>
+    <!-- Title of a color picker dialog, this text is shown above a color picker. -->
+    <string name="mozac_feature_prompts_choose_a_color">Επιλέξτε χρώμα</string>
     <!-- Text of a confirm button in dialog requesting to open a new window. -->
     <string name="mozac_feature_prompts_allow">Αποδοχή</string>
     <!-- Text of a negative button in dialog requesting to open a new window. -->
     <string name="mozac_feature_prompts_deny">Άρνηση</string>
+    <!-- Stay button of the dialog shown when a user is leaving a website and there is still data not saved yet, this indicates that the user wants to stay in the website. -->
+    <string name="mozac_feature_prompts_before_unload_stay">Παραμονή</string>
+    <!-- Leave button of the dialog shown when a user is leaving a website and there is still data not saved yet, this indicates that the user wants to leave in the website. -->
+    <string name="mozac_feature_prompts_before_unload_leave">Αποχώρηση</string>
     <!-- Title of the month chooser dialog. -->
     <string name="mozac_feature_prompts_set_month">Επιλέξτε μήνα</string>
     <!-- January (short description), used on the month chooser dialog. -->

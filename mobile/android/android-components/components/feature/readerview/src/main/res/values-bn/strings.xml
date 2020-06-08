@@ -22,4 +22,8 @@
     <string name="mozac_feature_readerview_sephia">কালচে-বাদামী রং</string>
     <!-- Accessible description for the color option -->
     <string name="mozac_feature_readerview_sepia_color_scheme_desc">কালচে-বাদামী রঙের নকশা</string>
-    </resources>
+    <!-- Color option for the background -->
+    <string name="mozac_feature_readerview_light">হালকা</string>
+    <!-- Accessible description for the color option -->
+    <string name="mozac_feature_readerview_light_color_scheme_desc">হালকা রঙের স্কিম</string>
+</resources>

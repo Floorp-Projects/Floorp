@@ -30,6 +30,9 @@
     <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
     <string name="mozac_browser_errorpages_security_bad_cert_back">ಹಿಂತಿರುಗಿ (ಶಿಫಾರಸು ಮಾಡಲಾಗಿದೆ)</string>
 
+    <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_accept_temporary">ಅಪಾಯವನ್ನು ಸ್ವೀಕರಿಸಿ ಮತ್ತು ಮುಂದುವರಿಸಿ</string>
+
     <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
     <string name="mozac_browser_errorpages_net_interrupt_title">ಸಂಪರ್ಕಕ್ಕೆ ಅಡಚಣೆಯಾಗಿದೆ</string>
 
@@ -41,6 +44,9 @@
 
     <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
     <string name="mozac_browser_errorpages_unknown_socket_type_title">ಪರಿಚಾರಕದಿಂದ ಅನಿರೀಕ್ಷಿತ ಪ್ರತಿಕ್ರಿಯೆ</string>
+
+    <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_title">ಪುಟವು ಸರಿಯಾಗಿ ಮರಳಿ ನಿರ್ದೇಶನಗೊಳ್ಳುತ್ತಿಲ್ಲ</string>
 
     <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
     <string name="mozac_browser_errorpages_offline_title">ಆಫ್‍ಲೈನ್ ವಿಧಾನ</string>
@@ -76,8 +82,15 @@
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_malformed_uri_title">ಅಸಿಂಧುವಾದ ವಿಳಾಸ</string>
+    <string name="mozac_browser_errorpages_malformed_uri_message"><![CDATA[<p>ಒದಗಿಸಲಾದ ವಿಳಾಸವು ಒಂದು ಗುರುತಿಸಬಲ್ಲ ಮಾದರಿಯಲ್ಲಿ ಇಲ್ಲ. ದಯವಿಟ್ಟು  ತಪ್ಪುಗಳಿಗಾಗಿ ಸ್ಥಳ ಪಟ್ಟಿಯಲ್ಲಿ ನೋಡಿ ನಂತರ ಮರಳಿ ಪ್ರಯತ್ನಿಸಿ.</p>]]></string>
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_malformed_uri_title_alternative">ವಿಳಾಸವು ಸಮಂಜಸವಾಗಿಲ್ಲ</string>
+
+    <!-- This string contains markup. The URL should not be localized. -->
+    <string name="mozac_browser_errorpages_malformed_uri_message_alternative"><![CDATA[<ul>
+        <li>ಜಾಲ ವಿಳಾಸವು ಸಾಮಾನ್ಯವಾಗಿ <strong>http://www.example.com/</strong> ರೀತಿಯಲ್ಲಿ  ಬರೆಯಲ್ಪಡುತ್ತದೆ</li>
+        <li>ಮುಮ್ಮುಖವಾಗಿರುವ ಅಡ್ಡಗೆರಗಳನ್ನು ನೀವು ಬಳಸಿದ್ದೀರ ಎಂದು ಖಚಿತಪಡಿಸಿಕೊಳ್ಳಿ (ಉದಾ. <strong>/</strong>).</li>
+      </ul>]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_protocol_title">ಅಜ್ಞಾತ ಪ್ರೊಟೊಕಾಲ್</string>

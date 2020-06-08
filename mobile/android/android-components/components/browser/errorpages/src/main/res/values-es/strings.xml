@@ -17,7 +17,7 @@
 	]]></string>
 
     <!-- The document title and heading of the error page shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
-    <string name="mozac_browser_errorpages_security_ssl_title">La conexión segura ha fallado</string>
+    <string name="mozac_browser_errorpages_security_ssl_title">Conexión segura fallida</string>
     <!-- The error message shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
     <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[
 	<ul>
@@ -27,7 +27,7 @@
 	]]></string>
 
     <!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->
-    <string name="mozac_browser_errorpages_security_bad_cert_title">La conexión segura ha fallado</string>
+    <string name="mozac_browser_errorpages_security_bad_cert_title">Conexión segura fallida</string>
     <!-- The error message shown when a website sends has an invalid or expired SSL certificate. -->
     <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[
 	<ul>

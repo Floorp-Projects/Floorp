@@ -19,6 +19,12 @@
     <!-- The document title and heading of the error page shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
     <string name="mozac_browser_errorpages_security_ssl_title">নিরাপদ সংযোগ স্থাপনে ব্যর্থ হয়েছে</string>
 
+    <!-- The error message shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[<ul>
+        <li>আপনি যে পাতাটি দেখার চেষ্টা করছেন সেটি প্রদর্শিত হবে না কারণ প্রাপ্ত ডাটার সত্যতা যাচাই করা যায়নি।</li>
+        <li>এই সমস্যা সম্পর্কে তাদের অবহিত করতে ওয়েবসাইটের মালিকদের সাথে যোগাযোগ করুন।</li>
+      </ul>]]></string>
+
     <!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->
     <string name="mozac_browser_errorpages_security_bad_cert_title">নিরাপদ সংযোগ স্থাপনে ব্যর্থ হয়েছে</string>
 
@@ -60,6 +66,9 @@
     <string name="mozac_browser_errorpages_unsafe_content_type_message"><![CDATA[<ul>
         <li>অনুগ্রহ করে এই সমস্যা সম্পর্কে ওয়েব সাইট নির্মাতাদের অবগত করুন।</li>
       </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_title">ক্ষতিগ্রস্ত কন্টেন্টের ত্রুটি</string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_content_crashed_title">কন্টেন্ট ক্র্যাশ করেছে</string>

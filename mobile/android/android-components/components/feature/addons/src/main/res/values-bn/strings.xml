@@ -32,6 +32,8 @@
     <string name="mozac_feature_addons_permissions_history_description">ব্রাউজিং ইতিহাসে প্রবেশ করুন</string>
     <!-- Description for management permission. -->
     <string name="mozac_feature_addons_permissions_management_description">এক্সটেনশনের ব্যবহার পর্যবেক্ষণ এবং থিম পরিচালনা করুন</string>
+    <!-- Description for native_messaging permission. -->
+    <string name="mozac_feature_addons_permissions_native_messaging_description">এর মতো অন্য অ্যাপ্লিকেশনগুলোর মধ্যে বার্তা বিনিময় করুন</string>
     <!-- Description for notifications permission. -->
     <string name="mozac_feature_addons_permissions_notifications_description">আপনাকে নোটিফিকেশন দেখাবে</string>
     <!-- Description for pkcs11 permission. -->
@@ -114,6 +116,12 @@
     <string name="mozac_feature_addons_updater_notification_content_singular">একটি নতুন অনুমতির প্রয়োজন</string>
     <!-- Name of the "notification channel" used for displaying a notification for updating an add-on. See https://developer.android.com/training/notify-user/channels -->
     <string name="mozac_feature_addons_updater_notification_channel">অ্যাড-অনের আপডেট</string>
+    <!-- Name of the "notification channel" used for displaying a notification for new supported add-ons. See https://developer.android.com/training/notify-user/channels -->
+    <string name="mozac_feature_addons_supported_checker_notification_channel">অ্যাড-অন পরীক্ষক সমর্থিত</string>
+    <!-- The tile of the notification, this will be shown to the user when one newly supported add-on is available.-->
+    <string name="mozac_feature_addons_supported_checker_notification_title">নতুন অ্যাড-অন বিদ্যমান</string>
+    <!-- The content of the notification, this will be shown to the user when more than two newly supported add-ons are available. %1$s is the app name (in most cases Firefox). -->
+    <string name="mozac_feature_addons_supported_checker_notification_content_more_than_two">এগুলোকে %1$s এ যুক্ত করুন</string>
     <!-- This is the caption for not yet supported screen caption -->
     <string name="mozac_feature_addons_not_yet_supported_caption">Firefox অ্যাড-অন প্রযুক্তি আধুনিকীকরণ করছে। এই অ্যাড-অনগুলি এমন ফ্রেমওয়ার্কগুলি ব্যবহার করে যা Firefox 75 এবং এর বাইরে উপযুক্ত নয়।</string>
     <!-- This is the caption for the add-on installation progress overlay -->
@@ -146,4 +154,10 @@
     <string name="mozac_feature_addons_unsupported_caption_plural">%1$s অ্যাড-অনগুলো</string>
     <!-- Text link to a sumo page for learning more about unsupported add-ons. -->
     <string name="mozac_feature_addons_unsupported_learn_more">আরো জানুন</string>
-    </resources>
+    <!-- Displayed in the "Status" field for the updater when there was an error during the add-on update. -->
+    <string name="mozac_feature_addons_updater_status_error">ত্রুটি</string>
+    <!-- Label in the dialog displaying information for the last attempt to update add-ons. It's followed by the date of the last attempt. -->
+    <string name="mozac_feature_addons_updater_dialog_last_attempt">শেষ চেষ্টা:</string>
+    <!-- Confirmation button text for the dialog when add-on installation is completed. -->
+    <string name="mozac_feature_addons_installed_dialog_okay_button">ঠিক আছে, বুঝতে পেরেছি</string>
+</resources>
