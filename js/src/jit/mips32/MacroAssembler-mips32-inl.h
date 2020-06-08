@@ -137,6 +137,19 @@ void MacroAssembler::xorPtr(Register src, Register dest) { ma_xor(dest, src); }
 void MacroAssembler::xorPtr(Imm32 imm, Register dest) { ma_xor(dest, imm); }
 
 // ===============================================================
+// Swap instructions
+
+void MacroAssembler::swap64(Register64 reg) {
+  swap32(reg.high);
+  swap32(reg.low);
+
+  // swap reg.high and reg.low.
+  ma_xor(reg.high, reg.low);
+  ma_xor(reg.low, reg.high);
+  ma_xor(reg.high, reg.low);
+}
+
+// ===============================================================
 // Arithmetic functions
 
 void MacroAssembler::addPtr(Register src, Register dest) { ma_addu(dest, src); }

@@ -95,6 +95,9 @@ class MacroAssemblerMIPSShared : public Assembler {
   void ma_xor(Register rd, Imm32 imm);
   void ma_xor(Register rd, Register rs, Imm32 imm);
 
+  // word swap byte within halfwords
+  void ma_wsbh(Register rd, Register rt);
+
   void ma_ctz(Register rd, Register rs);
 
   // load

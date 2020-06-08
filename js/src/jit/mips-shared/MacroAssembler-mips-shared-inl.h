@@ -71,13 +71,20 @@ void MacroAssembler::xor32(Imm32 imm, Register dest) { ma_xor(dest, imm); }
 // ===============================================================
 // Swap instructions
 
-void MacroAssembler::swap16SignExtend(Register reg) { MOZ_CRASH("NYI"); }
+void MacroAssembler::swap16SignExtend(Register reg) {
+  ma_wsbh(reg, reg);
+  ma_seh(reg, reg);
+}
 
-void MacroAssembler::swap16ZeroExtend(Register reg) { MOZ_CRASH("NYI"); }
+void MacroAssembler::swap16ZeroExtend(Register reg) {
+  ma_wsbh(reg, reg);
+  ma_and(reg, Imm32(0xFFFF));
+}
 
-void MacroAssembler::swap32(Register reg) { MOZ_CRASH("NYI"); }
-
-void MacroAssembler::swap64(Register64 reg) { MOZ_CRASH("NYI"); }
+void MacroAssembler::swap32(Register reg) {
+  ma_wsbh(reg, reg);
+  as_rotr(reg, reg, 16);
+}
 
 // ===============================================================
 // Arithmetic instructions

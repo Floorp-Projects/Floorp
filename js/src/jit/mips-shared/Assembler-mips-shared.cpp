@@ -1045,6 +1045,21 @@ BufferOffset AssemblerMIPSShared::as_dclz(Register rd, Register rs) {
 #endif
 }
 
+BufferOffset AssemblerMIPSShared::as_wsbh(Register rd, Register rt) {
+  spew("wsbh   %3s,%3s", rd.name(), rt.name());
+  return writeInst(InstReg(op_special3, zero, rt, rd, 0x2, ff_bshfl).encode());
+}
+
+BufferOffset AssemblerMIPSShared::as_dsbh(Register rd, Register rt) {
+  spew("dsbh   %3s,%3s", rd.name(), rt.name());
+  return writeInst(InstReg(op_special3, zero, rt, rd, 0x2, ff_dbshfl).encode());
+}
+
+BufferOffset AssemblerMIPSShared::as_dshd(Register rd, Register rt) {
+  spew("dshd   %3s,%3s", rd.name(), rt.name());
+  return writeInst(InstReg(op_special3, zero, rt, rd, 0x5, ff_dbshfl).encode());
+}
+
 BufferOffset AssemblerMIPSShared::as_ins(Register rt, Register rs, uint16_t pos,
                                          uint16_t size) {
   MOZ_ASSERT(pos < 32 && size != 0 && size <= 32 && pos + size != 0 &&
