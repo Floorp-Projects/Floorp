@@ -12,13 +12,13 @@
 #include "HeadlessLookAndFeel.h"
 #include "nsCRT.h"
 #include "nsFont.h"
+#include "nsIXULRuntime.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/StaticPrefs_editor.h"
 #include "mozilla/StaticPrefs_findbar.h"
-#include "mozilla/StaticPrefs_fission.h"
 #include "mozilla/StaticPrefs_ui.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/widget/WidgetMessageUtils.h"
@@ -870,8 +870,7 @@ nsresult nsXPLookAndFeel::GetColorImpl(ColorID aID,
 #endif
 
   if (aID == ColorID::TextSelectBackgroundAttention) {
-    if (StaticPrefs::findbar_modalHighlight() &&
-        !StaticPrefs::fission_autostart()) {
+    if (StaticPrefs::findbar_modalHighlight() && !mozilla::FissionAutostart()) {
       aResult = NS_RGBA(0, 0, 0, 0);
       return NS_OK;
     }
