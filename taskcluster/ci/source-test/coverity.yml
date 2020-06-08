@@ -11,7 +11,7 @@ job-defaults:
         by-platform:
             linux64.*: b-linux
     worker:
-        docker-image: {in-tree: debian9-amd64-build}
+        docker-image: {in-tree: debian10-amd64-build}
         max-run-time: 5400
     treeherder:
         kind: other
