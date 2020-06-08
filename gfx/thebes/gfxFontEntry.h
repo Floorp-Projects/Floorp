@@ -834,11 +834,7 @@ class gfxFontFamily {
     // we need to ensure any null entries are removed, as well as clearing
     // the flag (which may be set again later).
     if (mIsSimpleFamily) {
-      for (size_t i = mAvailableFonts.Length() - 1; i-- > 0;) {
-        if (!mAvailableFonts[i]) {
-          mAvailableFonts.RemoveElementAt(i);
-        }
-      }
+      mAvailableFonts.RemoveElementsBy([](const auto& font) { return !font; });
       mIsSimpleFamily = false;
     }
   }

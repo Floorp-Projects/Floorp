@@ -1780,14 +1780,12 @@ void DocAccessible::RemoveDependentIDsFor(Accessible* aRelProvider,
 
       AttrRelProviders* providers = GetRelProviders(relProviderElm, id);
       if (providers) {
-        for (uint32_t jdx = 0; jdx < providers->Length();) {
-          const auto& provider = (*providers)[jdx];
-          if (provider->mRelAttr == relAttr &&
-              provider->mContent == relProviderElm)
-            providers->RemoveElementAt(jdx);
-          else
-            jdx++;
-        }
+        providers->RemoveElementsBy(
+            [relAttr, relProviderElm](const auto& provider) {
+              return provider->mRelAttr == relAttr &&
+                     provider->mContent == relProviderElm;
+            });
+
         RemoveRelProvidersIfEmpty(relProviderElm, id);
       }
     }

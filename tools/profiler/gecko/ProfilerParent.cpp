@@ -215,14 +215,14 @@ void ProfileBufferGlobalController::HandleChunkManagerUpdate(
     }
 
     size_t released = 0;
-    size_t i = mReleasedChunksByTime.Length();
-    while (i != 0) {
-      --i;
-      if (mReleasedChunksByTime[i].mProcessId == aProcessId) {
-        released += mReleasedChunksByTime[i].mBytes;
-        mReleasedChunksByTime.RemoveElementAt(i);
-      }
-    }
+    mReleasedChunksByTime.RemoveElementsBy(
+        [&released, aProcessId](const auto& chunk) {
+          const bool match = chunk.mProcessId == aProcessId;
+          if (match) {
+            released += chunk.mBytes;
+          }
+          return match;
+        });
     if (released != 0) {
       mReleasedTotalBytes -= released;
     }

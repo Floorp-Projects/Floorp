@@ -693,13 +693,8 @@ void MediaEngineRemoteVideoSource::TrimLessFitCandidates(
       best = candidate.mDistance;
     }
   }
-  for (size_t i = 0; i < aSet.Length();) {
-    if (aSet[i].mDistance > best) {
-      aSet.RemoveElementAt(i);
-    } else {
-      ++i;
-    }
-  }
+  aSet.RemoveElementsBy(
+      [best](const auto& set) { return set.mDistance > best; });
   MOZ_ASSERT(aSet.Length());
 }
 

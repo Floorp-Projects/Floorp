@@ -78,13 +78,8 @@ void URLParams::Set(const nsAString& aName, const nsAString& aValue) {
 }
 
 void URLParams::Delete(const nsAString& aName) {
-  for (uint32_t i = 0; i < mParams.Length();) {
-    if (mParams[i].mKey.Equals(aName)) {
-      mParams.RemoveElementAt(i);
-    } else {
-      ++i;
-    }
-  }
+  mParams.RemoveElementsBy(
+      [&aName](const auto& param) { return param.mKey.Equals(aName); });
 }
 
 /* static */

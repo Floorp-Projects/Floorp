@@ -487,7 +487,7 @@ nsThreadPool::ShutdownWithTimeout(int32_t aTimeoutMs) {
         // We must leak the shutdown context just in case the leaked thread
         // does get unstuck and completes before the main thread is done.
         Unused << currentThread->mRequestedShutdownContexts[index].release();
-        currentThread->mRequestedShutdownContexts.RemoveElementsAt(index, 1);
+        currentThread->mRequestedShutdownContexts.RemoveElementAt(index);
       }
     }
   }
