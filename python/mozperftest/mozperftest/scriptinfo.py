@@ -13,6 +13,24 @@ import textwrap
 import esprima
 
 
+METADATA = set(
+    [
+        "setUp",
+        "tearDown",
+        "test",
+        "owner",
+        "author",
+        "name",
+        "description",
+        "longDescription",
+        "usage",
+        "supportedBrowsers",
+        "supportedPlatforms",
+        "filename",
+    ]
+)
+
+
 _INFO = """\
 %(filename)s
 %(filename_underline)s
@@ -39,7 +57,6 @@ class ScriptInfo(MetadataDict):
         super(ScriptInfo, self).__init__()
         filename = os.path.basename(script)
         self["filename"] = script, filename
-        self["filename_underline"] = None, "-" * len(filename)
         self.script = script
         with open(script) as f:
             self.parsed = esprima.parseScript(f.read())
@@ -77,8 +94,13 @@ class ScriptInfo(MetadataDict):
 
                 self[prop.key.name] = value, repr
 
+        # If the fields found, don't match our known ones,
+        # then an error is raised
+        assert set(list(self.keys())) - METADATA == set()
+
     def __str__(self):
         reprs = dict((k, v[1]) for k, v in self.items())
         d = MetadataDict()
         d.update(reprs)
+        d.update({"filename_underline": "-" * len(self["filename"])})
         return _INFO % d

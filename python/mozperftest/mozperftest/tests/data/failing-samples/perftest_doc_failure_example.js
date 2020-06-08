@@ -26,7 +26,7 @@ module.exports = {
   tearDown,
   test,
   owner: "Performance Testing Team",
-  name: "Example",
+  badName: "Example",
   description: "The description of the example test.",
   longDescription: `
   This is a longer description of the test perhaps including information
