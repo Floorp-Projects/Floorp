@@ -543,8 +543,10 @@ impl<'a, 'b> ExprResolver<'a, 'b> {
             }
 
             Select(s) => {
-                for ty in &mut s.tys {
-                    self.resolver.resolve_valtype(ty)?;
+                if let Some(list) = &mut s.tys {
+                    for ty in list {
+                        self.resolver.resolve_valtype(ty)?;
+                    }
                 }
                 Ok(())
             }
