@@ -45,7 +45,8 @@ if __name__ == "__main__":
     verifyConfigFile = options.verifyConfig
 
     fd, configFile = mkstemp()
-    fh = os.fdopen(fd, "w")
+    # Needs to be opened in "bytes" mode because we perform relative seeks on it
+    fh = os.fdopen(fd, "wb")
     try:
         verifyConfig = UpdateVerifyConfig()
         verifyConfig.read(path.join(UPDATE_VERIFY_DIR, verifyConfigFile))

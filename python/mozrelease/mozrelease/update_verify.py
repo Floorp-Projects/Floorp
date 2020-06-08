@@ -7,8 +7,6 @@ from __future__ import absolute_import, print_function
 
 import os
 import re
-
-import six
 from six import string_types
 
 from .chunking import getChunk
@@ -109,13 +107,12 @@ class UpdateVerifyConfig(object):
                 else:
                     value = None
                 if value is not None:
-                    fh.write(six.ensure_binary(key))
+                    fh.write(key.encode("utf-8"))
                     fh.write(b"=")
                     if isinstance(value, (list, tuple)):
-                        binary_values = [six.ensure_binary(str(v)) for v in value]
-                        fh.write(b'"%s" ' % b" ".join(binary_values))
+                        fh.write(('"%s" ' % " ".join(value)).encode("utf-8"))
                     else:
-                        fh.write(b'"%s" ' % six.ensure_binary(str(value)))
+                        fh.write(('"%s" ' % value).encode("utf-8"))
             # Rewind one character to avoid having a trailing space
             fh.seek(-1, os.SEEK_CUR)
             fh.write(b"\n")
