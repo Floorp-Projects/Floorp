@@ -204,12 +204,13 @@ class OSXBootstrapper(BaseBootstrapper):
         getattr(self, 'ensure_%s_mobile_android_packages' %
                 self.package_manager)(artifact_mode=True)
 
-    def suggest_mobile_android_mozconfig(self):
-        getattr(self, 'suggest_%s_mobile_android_mozconfig' % self.package_manager)()
+    def generate_mobile_android_mozconfig(self):
+        return getattr(self, 'generate_%s_mobile_android_mozconfig' %
+                       self.package_manager)()
 
-    def suggest_mobile_android_artifact_mode_mozconfig(self):
-        getattr(self, 'suggest_%s_mobile_android_mozconfig' %
-                self.package_manager)(artifact_mode=True)
+    def generate_mobile_android_artifact_mode_mozconfig(self):
+        return getattr(self, 'generate_%s_mobile_android_mozconfig' %
+                       self.package_manager)(artifact_mode=True)
 
     def ensure_xcode(self):
         if self.os_version < StrictVersion('10.7'):
@@ -405,9 +406,9 @@ class OSXBootstrapper(BaseBootstrapper):
         android.ensure_android('macosx', artifact_mode=artifact_mode,
                                no_interactive=self.no_interactive)
 
-    def suggest_homebrew_mobile_android_mozconfig(self, artifact_mode=False):
+    def generate_homebrew_mobile_android_mozconfig(self, artifact_mode=False):
         from mozboot import android
-        android.suggest_mozconfig('macosx', artifact_mode=artifact_mode)
+        return android.generate_mozconfig('macosx', artifact_mode=artifact_mode)
 
     def _ensure_macports_packages(self, packages):
         self.port = self.which('port')
@@ -482,9 +483,9 @@ class OSXBootstrapper(BaseBootstrapper):
         android.ensure_android('macosx', artifact_mode=artifact_mode,
                                no_interactive=self.no_interactive)
 
-    def suggest_macports_mobile_android_mozconfig(self, artifact_mode=False):
+    def generate_macports_mobile_android_mozconfig(self, artifact_mode=False):
         from mozboot import android
-        android.suggest_mozconfig('macosx', artifact_mode=artifact_mode)
+        return android.generate_mozconfig('macosx', artifact_mode=artifact_mode)
 
     def ensure_package_manager(self):
         '''

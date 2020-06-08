@@ -142,14 +142,9 @@ tool or package manager on your system, or directly from https://rust-lang.org/
 '''
 
 BROWSER_ARTIFACT_MODE_MOZCONFIG = '''
-Paste the lines between the chevrons (>>> and <<<) into your
-$topsrcdir/mozconfig file, or create the file if it does not exist:
-
->>>
 # Automatically download and use compiled C++ components:
 ac_add_options --enable-artifact-builds
-<<<
-'''
+'''.strip()
 
 # Upgrade Mercurial older than this.
 MODERN_MERCURIAL_VERSION = LooseVersion('4.8')
@@ -191,7 +186,7 @@ class BaseBootstrapper(object):
                                   '%s does not yet implement install_browser_packages()' %
                                   __name__)
 
-    def suggest_browser_mozconfig(self):
+    def generate_browser_mozconfig(self):
         '''
         Print a message to the console detailing what the user's mozconfig
         should contain.
@@ -211,7 +206,7 @@ class BaseBootstrapper(object):
             '%s does not yet implement install_browser_artifact_mode_packages()' %
             __name__)
 
-    def suggest_browser_artifact_mode_mozconfig(self):
+    def generate_browser_artifact_mode_mozconfig(self):
         '''
         Print a message to the console detailing what the user's mozconfig
         should contain.
@@ -219,7 +214,7 @@ class BaseBootstrapper(object):
         Firefox for Desktop Artifact Mode needs to enable artifact builds and
         a path where the build artifacts will be written to.
         '''
-        print(BROWSER_ARTIFACT_MODE_MOZCONFIG)
+        return BROWSER_ARTIFACT_MODE_MOZCONFIG
 
     def install_mobile_android_packages(self):
         '''
@@ -230,7 +225,7 @@ class BaseBootstrapper(object):
                                   '%s does not yet implement install_mobile_android_packages()'
                                   % __name__)
 
-    def suggest_mobile_android_mozconfig(self):
+    def generate_mobile_android_mozconfig(self):
         '''
         Print a message to the console detailing what the user's mozconfig
         should contain.
@@ -238,7 +233,7 @@ class BaseBootstrapper(object):
         GeckoView/Firefox for Android needs an application and an ABI set, and it needs
         paths to the Android SDK and NDK.
         '''
-        raise NotImplementedError('%s does not yet implement suggest_mobile_android_mozconfig()' %
+        raise NotImplementedError('%s does not yet implement generate_mobile_android_mozconfig()' %
                                   __name__)
 
     def install_mobile_android_artifact_mode_packages(self):
@@ -251,7 +246,7 @@ class BaseBootstrapper(object):
             '%s does not yet implement install_mobile_android_artifact_mode_packages()'
             % __name__)
 
-    def suggest_mobile_android_artifact_mode_mozconfig(self):
+    def generate_mobile_android_artifact_mode_mozconfig(self):
         '''
         Print a message to the console detailing what the user's mozconfig
         should contain.
@@ -260,7 +255,7 @@ class BaseBootstrapper(object):
         and it needs paths to the Android SDK.
         '''
         raise NotImplementedError(
-            '%s does not yet implement suggest_mobile_android_artifact_mode_mozconfig()'
+            '%s does not yet implement generate_mobile_android_artifact_mode_mozconfig()'
             % __name__)
 
     def ensure_clang_static_analysis_package(self, state_dir, checkout_root):

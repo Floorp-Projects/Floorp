@@ -20,6 +20,7 @@ except ImportError:
 
 
 base_dir = os.path.abspath(os.path.dirname(__file__))
+sys.path.insert(0, os.path.join(base_dir, 'python', 'mozboot'))
 sys.path.insert(0, os.path.join(base_dir, 'python', 'mozbuild'))
 sys.path.insert(0, os.path.join(base_dir, 'third_party', 'python', 'six'))
 from mozbuild.configure import (

@@ -16,6 +16,7 @@ import sys
 import errno
 
 from mach.mixin.process import ProcessExecutionMixin
+from mozboot.mozconfig import MozconfigFindException
 from mozfile import which
 from mozversioncontrol import (
     get_repository_from_build_config,
@@ -33,7 +34,6 @@ from .backend.configenvironment import (
 from .configure import ConfigureSandbox
 from .controller.clobber import Clobberer
 from .mozconfig import (
-    MozconfigFindException,
     MozconfigLoadException,
     MozconfigLoader,
 )
