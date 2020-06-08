@@ -88,6 +88,7 @@ TRRServiceChannel::TRRServiceChannel()
     : HttpAsyncAborter<TRRServiceChannel>(this),
       mTopWindowOriginComputed(false),
       mPushedStreamId(0),
+      mProxyRequest(nullptr, "TRRServiceChannel::mProxyRequest"),
       mCurrentEventTarget(GetCurrentThreadEventTarget()) {
   LOG(("TRRServiceChannel ctor [this=%p]\n", this));
 }
@@ -107,15 +108,21 @@ TRRServiceChannel::Cancel(nsresult status) {
 
   mCanceled = true;
   mStatus = status;
-  if (mProxyRequest) {
-    nsCOMPtr<nsICancelable> proxyRequet;
-    proxyRequet.swap(mProxyRequest);
+
+  nsCOMPtr<nsICancelable> proxyRequest;
+  {
+    auto req = mProxyRequest.Lock();
+    proxyRequest.swap(*req);
+  }
+
+  if (proxyRequest) {
     NS_DispatchToMainThread(
         NS_NewRunnableFunction(
             "CancelProxyRequest",
-            [proxyRequet, status]() { proxyRequet->Cancel(status); }),
+            [proxyRequest, status]() { proxyRequest->Cancel(status); }),
         NS_DISPATCH_NORMAL);
   }
+
   CancelNetworkRequest(status);
   return NS_OK;
 }
@@ -248,19 +255,35 @@ nsresult TRRServiceChannel::ResolveProxy() {
 
   // TODO: bug 1625171. Consider moving proxy resolution to socket process.
   RefPtr<TRRServiceChannel> self = this;
+  nsCOMPtr<nsICancelable> proxyRequest;
   nsresult rv = ProxyConfigLookup::Create(
       [self](nsIProxyInfo* aProxyInfo, nsresult aStatus) {
         self->OnProxyAvailable(nullptr, nullptr, aProxyInfo, aStatus);
       },
-      mURI, mProxyResolveFlags);
+      mURI, mProxyResolveFlags, getter_AddRefs(proxyRequest));
 
   if (NS_FAILED(rv)) {
     if (!mCurrentEventTarget->IsOnCurrentThread()) {
-      mCurrentEventTarget->Dispatch(
+      return mCurrentEventTarget->Dispatch(
           NewRunnableMethod<nsresult>("TRRServiceChannel::AsyncAbort", this,
                                       &TRRServiceChannel::AsyncAbort, rv),
           NS_DISPATCH_NORMAL);
     }
+  }
+
+  {
+    auto req = mProxyRequest.Lock();
+    // We only set mProxyRequest if the channel hasn't already been cancelled
+    // on another thread.
+    if (!mCanceled) {
+      *req = proxyRequest.forget();
+    }
+  }
+
+  // If the channel has been cancelled, we go ahead and cancel the proxy
+  // request right here.
+  if (proxyRequest) {
+    proxyRequest->Cancel(mStatus);
   }
 
   return rv;
@@ -288,7 +311,10 @@ TRRServiceChannel::OnProxyAvailable(nsICancelable* request, nsIChannel* channel,
 
   MOZ_ASSERT(mCurrentEventTarget->IsOnCurrentThread());
 
-  mProxyRequest = nullptr;
+  {
+    auto proxyRequest = mProxyRequest.Lock();
+    *proxyRequest = nullptr;
+  }
 
   nsresult rv;
 
