@@ -124,7 +124,6 @@ impl Drop for Device {
     }
 }
 
-
 enum RingBufferConsumer {
     IntegerRingBufferConsumer(ringbuf::Consumer<i16>),
     FloatRingBufferConsumer(ringbuf::Consumer<f32>)
@@ -206,6 +205,7 @@ impl BufferManager {
             }
         }
     }
+
     fn get_linear_input_data(&mut self, nsamples: usize) -> *const c_void {
         let p: *mut c_void;
         match &mut self.linear_input_buffer {
@@ -643,7 +643,22 @@ impl<'ctx> StreamOps for PulseStream<'ctx> {
     }
 
     fn input_latency(&mut self) -> Result<u32> {
-        Err(Error::error())
+        match self.input_stream {
+            None => Err(Error::error()),
+            Some(ref stm) => match stm.get_latency() {
+                Ok(StreamLatency::Positive(w_usec)) => {
+                    let latency = (w_usec * pa_usec_t::from(self.input_sample_spec.rate)
+                        / PA_USEC_PER_SEC) as u32;
+                    Ok(latency)
+                }
+                // Input stream can be negative only if it is attached to a
+                // monitor source device
+                Ok(StreamLatency::Negative(_)) => {
+                    return Ok(0);
+                }
+                Err(_) => Err(Error::error()),
+            },
+        }
     }
 
     fn set_volume(&mut self, volume: f32) -> Result<()> {
