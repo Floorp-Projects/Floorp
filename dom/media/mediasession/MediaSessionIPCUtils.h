@@ -71,6 +71,13 @@ struct ParamTraits<mozilla::dom::MediaSessionPlaybackState>
           mozilla::dom::MediaSessionPlaybackState::None,
           mozilla::dom::MediaSessionPlaybackState::EndGuard_> {};
 
+template <>
+struct ParamTraits<mozilla::dom::MediaSessionAction>
+    : public ContiguousEnumSerializer<
+          mozilla::dom::MediaSessionAction,
+          mozilla::dom::MediaSessionAction::Play,
+          mozilla::dom::MediaSessionAction::EndGuard_> {};
+
 }  // namespace IPC
 
 #endif  // DOM_MEDIA_MEDIASESSION_MEDIASESSIONIPCUTILS_H_

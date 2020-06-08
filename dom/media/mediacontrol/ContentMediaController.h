@@ -66,6 +66,10 @@ class ContentMediaAgent : public IMediaInfoUpdater {
   void NotifySessionDestroyed(uint64_t aBrowsingContextId) override;
   void UpdateMetadata(uint64_t aBrowsingContextId,
                       const Maybe<MediaMetadataBase>& aMetadata) override;
+  void EnableAction(uint64_t aBrowsingContextId,
+                    MediaSessionAction aAction) override;
+  void DisableAction(uint64_t aBrowsingContextId,
+                     MediaSessionAction aAction) override;
 
   // Use these methods to register/unregister `ContentControlKeyEventReceiver`
   // in order to listen to media control key events.
