@@ -184,8 +184,33 @@
     <!-- Title for the settings page-->
     <string name="settings">Nāgi\'iô\'</string>
 
+    <!-- Preference category for basic settings -->
+    <string name="preferences_category_basics">Dòj sā huāa</string>
+    <!-- Preference category for general settings -->
+    <string name="preferences_category_general">Da\' huā ngej</string>
+    <!-- Preference category for all links about Fenix -->
+    <string name="preferences_category_about">Rayi\'î</string>
+    <!-- Preference for settings related to changing the default search engine -->
+    <string name="preferences_default_search_engine">Sa nana\'ui\' nīka \'na\'</string>
     <!-- Preference for settings related to Search -->
     <string name="preferences_search">Nānà\'uì\'</string>
+
+    <!-- Preference for settings related to Search address bar -->
+    <string name="preferences_search_address_bar">Dukuán direksion</string>
+
+    <!-- Preference linking to help about Fenix -->
+    <string name="preferences_help">Sa rugûñu\'ūnj</string>
+    <!-- Preference link to rating Fenix on the Play Store -->
+    <string name="preferences_rate">Nāga\'uì\' du\'uej riña Google Play</string>
+    <!-- Preference for giving feedback about Fenix -->
+    <string name="preferences_feedback">Ga\'uì\' si nūguàn\'t</string>
+    <!-- Preference linking to about page for Fenix
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="preferences_about">Rayi\'î %1$s</string>
+    <!-- Preference linking to the your rights SUMO page -->
+    <string name="preferences_your_rights">Sa tna\'uēj Rayi\'ît</string>
+    <!-- Preference for settings related to saved passwords -->
+    <string name="preferences_passwords">Nej da\'nga\' huìi</string>
 
     <!-- Preference for syncing tabs -->
     <string name="preferences_sync_tabs">Nej rakïj ñaj</string>

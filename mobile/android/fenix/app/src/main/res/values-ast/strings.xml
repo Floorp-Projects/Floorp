@@ -89,6 +89,8 @@
     <string name="browser_menu_add_to_homescreen">Amestar a la pantalla d\'aniciu</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
     <string name="browser_menu_install_on_homescreen">Instalar</string>
+    <!-- Menu option on the toolbar that takes you to synced tabs page-->
+    <string name="synced_tabs">Llingüetes sincronizaes</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">Alcontrar na páxina</string>
     <!-- Browser menu button that creates a private tab -->
@@ -377,6 +379,8 @@
     <string name="library_desktop_bookmarks_unfiled">Otros marcadores</string>
     <!-- Option in Library to open History page -->
     <string name="library_history">Historial</string>
+    <!-- Option in Library to open Synced Tabs page -->
+    <string name="library_synced_tabs">Llingüetes sincronizaes</string>
     <!-- Option in Library to open Reading List -->
     <string name="library_reading_list">Llista de llectura</string>
     <!-- Settings Page Title -->

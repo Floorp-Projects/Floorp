@@ -24,7 +24,7 @@
     <string name="no_private_tabs_description">Yksityiset välilehdet näkyvät tässä.</string>
 
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
-    <string name="about_content">%1$s on Mozillan tekemä.</string>
+    <string name="about_content">%1$s on Mozillan tuote.</string>
 
     <!-- Private Browsing -->
     <!-- Title for private session option -->
@@ -1192,7 +1192,7 @@
     <string name="add_to_homescreen_text_placeholder">Pikakuvakkeen nimi</string>
 
     <!-- Describes the add to homescreen functionality -->
-    <string name="add_to_homescreen_description">Voit lisätä tämän sivuston puhelimesi kotinäytölle, jolloin sivuston käyttö onnistuu nopeasti ja tarjoaa sovelluksen kaltaisen kokemuksen.</string>
+    <string name="add_to_homescreen_description">Voit lisätä tämän sivuston puhelimesi aloitusnäytölle, jolloin sivuston käyttö onnistuu nopeasti ja tarjoaa sovelluksen kaltaisen kokemuksen.</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">Käyttäjätunnukset ja salasanat</string>
@@ -1411,4 +1411,5 @@
     <string name="voice_search_content_description">Äänihaku</string>
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
     <string name="voice_search_explainer">Puhu nyt</string>
-</resources>
+
+    </resources>

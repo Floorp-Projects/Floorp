@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Text for the negative button -->
+    <string name="search_widget_cfr_neg_button_text">Не зараз</string>
+
+    <!-- Home screen icons - Long press shortcuts -->
+    <!-- Shortcut action to open new tab -->
+    <string name="home_screen_shortcut_open_new_tab_2">Новая картка</string>
+    <!-- Shortcut action to open new private tab -->
+    <string name="home_screen_shortcut_open_new_private_tab_2">Прыватная картка</string>
+    <!-- Heading for the Top Sites block -->
+    <string name="home_screen_top_sites_heading">Папулярныя сайты</string>
+
+    <!-- Browser Fragment -->
+    <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
+    <string name="browser_tabs_button">Адкрытыя карткі</string>
+    <!-- Content description (not visible, for screen readers etc.): Navigate backward (browsing history) -->
+    <string name="browser_menu_back">Назад</string>
+    <!-- Content description (not visible, for screen readers etc.): Navigate forward (browsing history) -->
+    <string name="browser_menu_forward">Наперад</string>
+    <!-- Content description (not visible, for screen readers etc.): Refresh current website -->
+    <string name="browser_menu_refresh">Абнавіць</string>
+    <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
+    <string name="browser_menu_stop">Спыніць</string>
+    <!-- Content description (not visible, for screen readers etc.): Bookmark the current page -->
+    <string name="browser_menu_bookmark">Дадаць у закладкі</string>
+    <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
+    <string name="browser_menu_edit_bookmark">Рэдагаваць закладку</string>
+    <!-- Browser menu button that opens the addon manager -->
+    <string name="browser_menu_add_ons">Дадаткі</string>
+    <!-- Browser menu button that sends a user to help articles -->
+    <string name="browser_menu_help">Даведка</string>
+    <!-- Browser menu button that sends a to a the what's new article -->
+    <string name="browser_menu_whats_new">Што новага</string>
+    <!-- Browser menu button that opens the settings menu -->
+    <string name="browser_menu_settings">Налады</string>
+    <!-- Browser menu button that opens a user's library -->
+    <string name="browser_menu_library">Бібліятэка</string>
+    <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
+    <string name="browser_menu_install_on_homescreen">Усталяваць</string>
+    <!-- Menu option on the toolbar that takes you to synced tabs page-->
+    <string name="synced_tabs">Сінхранізаваныя карткі</string>
+    <!-- Browser menu button that opens the find in page menu -->
+    <string name="browser_menu_find_in_page">Знайсці на старонцы</string>
+    <!-- Browser menu button that creates a private tab -->
+    <string name="browser_menu_private_tab">Прыватная картка</string>
+    <!-- Browser menu button that creates a new tab -->
+    <string name="browser_menu_new_tab">Новая картка</string>
+    <!-- Browser menu button that saves the current tab to a collection -->
+    <string name="browser_menu_save_to_collection_2">Захаваць у калекцыі</string>
+
+    <!-- Browser menu button that opens a dialog to report issues with the current site -->
+    <string name="browser_menu_report_issue">Паведаміць аб праблеме з сайтам</string>
+    <!-- Browser menu button that open a share menu to share the current site -->
+    <string name="browser_menu_share">Падзяліцца</string>
+
+    <!-- Search suggestion onboarding hint Learn more link text -->
+    <string name="search_suggestions_onboarding_learn_more_link">Даведацца больш</string>
+
+    <!-- Search Widget -->
+    <!-- Text preview for smaller sized widgets -->
+    <string name="search_widget_text_short">Пошук</string>
+    <!-- Text preview for larger sized widgets -->
+    <string name="search_widget_text_long">Пошук у інтэрнэце</string>
+    <!-- Content description (not visible, for screen readers etc.): Voice search -->
+    <string name="search_widget_voice">Галасавы пошук</string>
+
+    <!-- Preferences -->
+    <!-- Title for the settings page-->
+    <string name="settings">Налады</string>
+    <!-- Preference category for basic settings -->
+    <string name="preferences_category_basics">Асноўнае</string>
+    <!-- Preference category for general settings -->
+    <string name="preferences_category_general">Агульныя</string>
+    <!-- Preference category for all links about Fenix -->
+    <string name="preferences_category_about">Аб праграме</string>
+    <!-- Preference for settings related to changing the default search engine -->
+    <string name="preferences_default_search_engine">Прадвызначаны пашукавік</string>
+    <!-- Preference for settings related to Search -->
+    <string name="preferences_search">Пошук</string>
+    <!-- Preference for settings related to Search address bar -->
+    <string name="preferences_search_address_bar">Адрасны радок</string>
+    <!-- Preference linking to help about Fenix -->
+    <string name="preferences_help">Даведка</string>
+    <!-- Preference linking to about page for Fenix
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="preferences_about">Пра %1$s</string>
+    <!-- Preference linking to the your rights SUMO page -->
+    <string name="preferences_your_rights">Вашы правы</string>
+    <!-- Preference for settings related to saved passwords -->
+    <string name="preferences_passwords">Паролі</string>
+    <!-- Preference for settings related to saved credit cards and addresses -->
+    <string name="preferences_credit_cards_addresses">Крэдытныя карткі і адрасы</string>
+    <!-- Preference for settings related to changing the default browser -->
+    <string name="preferences_set_as_default_browser">Зрабіць прадвызначаным браўзерам</string>
+    <!-- Preference category for advanced settings -->
+    <string name="preferences_category_advanced">Дадаткова</string>
+    <!-- Preference category for privacy settings -->
+    <string name="preferences_category_privacy">Прыватнасць</string>
+    <!-- Preference category for privacy and security settings -->
+    <string name="preferences_category_privacy_security">Прыватнасць і бяспека</string>
+    <!-- Preference for advanced site permissions -->
+    <string name="preferences_site_permissions">Дазволы для сайтаў</string>
+    <!-- Preference for private browsing options -->
+    <string name="preferences_private_browsing_options">Прыватнае агляданне</string>
+    <!-- Preference for opening links in a private tab-->
+    <string name="preferences_open_links_in_a_private_tab">Адкрываць спасылкі ў прыватнай картцы</string>
+    <!-- Preference shown on banner to sign into account -->
+    <string name="preferences_sign_in">Увайсці</string>
+    <!-- Preference for changing where the toolbar is positioned -->
+    <string name="preferences_toolbar">Паліца прылад</string>
+    <!-- Preference for changing default theme to dark or light mode -->
+    <string name="preferences_theme">Тэма</string>
+    <!-- Preference for settings related to visual options -->
+    <string name="preferences_customize">Уладкаванне</string>
+
+    <!-- Preference description for banner about signing in -->
+    <string name="preferences_sign_in_description">Сінхранізуйце закладкі, гісторыю і шмат іншага з уліковым запісам Firefox</string>
+    <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
+    <string name="preferences_account_default_name">Уліковы запіс Firefox</string>
+    <!-- Preference text for account title when there was an error syncing FxA -->
+    <string name="preferences_account_sync_error">Падключыцеся, каб аднавіць сінхранізацыю</string>
+    <!-- Preference for language -->
+    <string name="preferences_language">Мова</string>
+    <!-- Preference for data choices -->
+    <string name="preferences_data_choices">Выбар дадзеных</string>
+    <!-- Preference for data collection -->
+    <string name="preferences_data_collection">Збор дадзеных</string>
+    <!-- Preference linking to the privacy notice -->
+    <string name="preferences_privacy_link">Паведамленне аб прыватнасці</string>
+    <!-- Preference category for developer tools -->
+    <string name="developer_tools_category">Прылады распрацоўшчыка</string>
+    <!-- Preference for add_ons -->
+    <string name="preferences_addons">Дадаткі</string>
+
+    <!-- Account Preferences -->
+    <!-- Preference for triggering sync -->
+    <string name="preferences_sync_now">Сінхранізаваць</string>
+    <!-- Preference category for sync -->
+    <string name="preferences_sync_category">Выберыце, што сінхранізаваць</string>
+    <!-- Preference for syncing history -->
+    <string name="preferences_sync_history">Гісторыю</string>
+    <!-- Preference for syncing bookmarks -->
+    <string name="preferences_sync_bookmarks">Закладкі</string>
+    <!-- Preference for syncing logins -->
+    <string name="preferences_sync_logins">Лагіны</string>
+    <!-- Preference for syncing tabs -->
+    <string name="preferences_sync_tabs">Карткі</string>
+    <!-- Preference for signing out -->
+    <string name="preferences_sign_out">Выйсці</string>
+    <!-- Preference displays and allows changing current FxA device name -->
+    <string name="preferences_sync_device_name">Назва прылады</string>
+
+    <!-- Option in library to open Bookmarks page -->
+    <string name="library_bookmarks">Закладкі</string>
+    <!-- Option in library to open Desktop Bookmarks "menu" page -->
+    <string name="library_desktop_bookmarks_menu">Меню закладак</string>
+    <!-- Option in library to open Desktop Bookmarks "toolbar" page -->
+    <string name="library_desktop_bookmarks_toolbar">Паліца закладак</string>
+    <!-- Option in library to open Desktop Bookmarks "unfiled" page -->
+    <string name="library_desktop_bookmarks_unfiled">Іншыя закладкі</string>
+    <!-- Option in Library to open History page -->
+    <string name="library_history">Гісторыя</string>
+    <!-- Option in Library to open Synced Tabs page -->
+    <string name="library_synced_tabs">Сінхранізаваныя карткі</string>
+    <!-- Option in Library to open Reading List -->
+    <string name="library_reading_list">Спіс для чытання</string>
+    <!-- Menu Item Label for Search in Library -->
+    <string name="library_search">Пошук</string>
+    <!-- Settings Page Title -->
+    <string name="settings_title">Налады</string>
+    <!-- Content description (not visible, for screen readers etc.): "Menu icon for items on a history item" -->
+    <string name="content_description_history_menu">Меню элемента гісторыі</string>
+    <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
+    <string name="content_description_close_button">Закрыць</string>
+
+    <!-- Sessions -->
+    <!-- Title for the list of tabs -->
+    <string name="tab_header_label">Адкрытыя карткі</string>
+    <!-- Title for the list of tabs in the current private session -->
+    <string name="tabs_header_private_title">Прыватны сеанс</string>
+    <!-- Title for the list of tabs in the current private session -->
+    <string name="tabs_header_private_tabs_title">Прыватныя карткі</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
+    <string name="add_tab">Дадаць картку</string>
+    <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
+    <string name="remove_tab_from_collection">Выдаліць картку з калекцыі</string>
+    <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
+    <string name="close_tab">Закрыць картку</string>
+    <!-- Content description (not visible, for screen readers etc.): Close tab <title> button. First parameter is tab title  -->
+    <string name="close_tab_title">Закрыць картку %s</string>
+    <!-- Open tabs menu item to close all tabs -->
+    <string name="tabs_menu_close_all_tabs">Закрыць усе карткі</string>
+    <!-- Open tabs menu item to share all tabs -->
+    <string name="tabs_menu_share_tabs">Падзяліцца карткамі</string>
+    <!-- Open tabs menu item to save tabs to collection -->
+    <string name="tabs_menu_save_to_collection">Захаваць у калекцыі</string>
+    <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
+    <string name="tab_menu">Меню картак</string>
+    <!-- Tab menu item to share the tab -->
+    <string name="tab_share">Падзяліцца карткай</string>
+    <!-- Button in the current session menu. Deletes the session when pressed -->
+    <string name="current_session_delete">Выдаліць</string>
+    <!-- Button in the current session menu. Saves the session when pressed -->
+    <string name="current_session_save">Захаваць</string>
+    <!-- Button in the current session menu. Opens the share menu when pressed -->
+    <string name="current_session_share">Падзяліцца</string>
+    <!-- Content description (not visible, for screen readers etc.): Title icon for current session menu -->
+    <string name="current_session_image">Выява бягучага сеансу</string>
+    <!-- Button to save the current set of tabs into a collection -->
+    <string name="save_to_collection">Захаваць у калекцыі</string>
+    <!-- Text for the menu button to delete a collection -->
+    <string name="collection_delete">Выдаліць калекцыю</string>
+    <!-- Text for the menu button to rename a collection -->
+    <string name="collection_rename">Перайменаваць калекцыю</string>
+    <!-- Text for the button to open tabs of the selected collection -->
+    <string name="collection_open_tabs">Адкрыць карткі</string>
+    <!-- Text for the menu button to remove a top site -->
+    <string name="remove_top_site">Выдаліць</string>
+
+    </resources>

@@ -889,6 +889,8 @@
     <string name="onboarding_tracking_protection_standard_button">معیاری</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">سخت (سفارش شدا)</string>
+    <!-- text for tracking protection radio button option for strict level of blocking -->
+    <string name="onboarding_tracking_protection_strict_option">سخت</string>
     <!-- text for the toolbar position card header
         In English this is an idiom for "choose a side as in an argument or fight"
         but it is ok to make this more literally about "choosing a position in a physical space -->
@@ -1046,6 +1048,8 @@
     <!-- About page link text to open support link -->
     <string name="about_support">معاونت</string>
 
+    <!-- About page link text to list of past crashes (like about:crashes on desktop) -->
+    <string name="about_crashes">کریش</string>
     <!-- About page link text to open privacy notice link -->
     <string name="about_privacy_notice">رازداری کا نوٹس</string>
     <!-- About page link text to open know your rights link -->
@@ -1272,10 +1276,27 @@
     <string name="login_deletion_confirmation">کیا آپ واقعی اس لاگ ان کو حذف کرنا چاہتے ہیں؟</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">حذف کریں</string>
+    <!--  The saved login options menu description. -->
+    <string name="login_options_menu">لاگ ان اختیارات</string>
+    <!--  The button description to save changes to an edited login. -->
+    <string name="save_changes_to_login">لاگ ان میں تبدیلیاں محفوظ کریں۔</string>
+    <!--  The button description to discard changes to an edited login. -->
+    <string name="discard_changes">تبدیلیاں ترک کریں</string>
     <!--  The page title for editing a saved login. -->
     <string name="edit">تدوین</string>
 
+    <!--  The error message in edit login view when password field is blank. -->
+    <string name="saved_login_password_required">پاس ورڈ کی درکار</string>
+    <!-- Voice search button content description  -->
+    <string name="voice_search_content_description">آواز سے تلاش</string>
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
     <string name="voice_search_explainer">اب بولیں</string>
 
+    <!-- Synced Tabs -->
+    <!-- Text displayed when user is not logged into a Firefox Account -->
+    <string name="synced_tabs_connect_to_sync_account">Firefox اکاؤنٹس کے ساتھ جوڑیں۔</string>
+    <!-- Text displayed to ask user to connect another device as no devices found with account -->
+    <string name="synced_tabs_connect_another_device">ایک اور آلہ جوڑیں۔</string>
+    <!-- Text displayed asking user to re-authenticate -->
+    <string name="synced_tabs_reauth">برائے مہربانی دوبارہ توثیق کریں۔</string>
     </resources>
