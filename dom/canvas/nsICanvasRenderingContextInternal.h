@@ -137,7 +137,7 @@ class nsICanvasRenderingContextInternal : public nsISupports,
   virtual already_AddRefed<mozilla::gfx::SourceSurface> GetSurfaceSnapshot(
       gfxAlphaType* out_alphaType = nullptr) = 0;
 
-  virtual RefPtr<mozilla::gfx::SourceSurface> GetFrontBufferSnapshot() {
+  virtual RefPtr<mozilla::gfx::SourceSurface> GetFrontBufferSnapshot(bool) {
     return GetSurfaceSnapshot();
   }
 
