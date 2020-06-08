@@ -3705,8 +3705,8 @@ var AddonManager = {
     ["STATE_AVAILABLE", 0],
     // The install is being downloaded.
     ["STATE_DOWNLOADING", 1],
-    // The install is checking for compatibility information.
-    ["STATE_CHECKING", 2],
+    // The install is checking the update for compatibility information.
+    ["STATE_CHECKING_UPDATE", 2],
     // The install is downloaded and ready to install.
     ["STATE_DOWNLOADED", 3],
     // The download failed.

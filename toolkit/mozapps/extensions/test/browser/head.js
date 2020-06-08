@@ -1401,7 +1401,7 @@ MockInstall.prototype = {
         this.callListeners("onInstallEnded");
         break;
       case AddonManager.STATE_DOWNLOADING:
-      case AddonManager.STATE_CHECKING:
+      case AddonManager.STATE_CHECKING_UPDATE:
       case AddonManager.STATE_INSTALLING:
         // Installation is already running
         return;
