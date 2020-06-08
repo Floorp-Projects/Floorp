@@ -20,7 +20,7 @@ DevToolsModules(
     'types.js',
 )
 
-BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
+BROWSER_CHROME_MANIFESTS += ['test/browser_part1.ini']
 
 with Files('**'):
     BUG_COMPONENT = ('DevTools', 'Inspector: Rules')
