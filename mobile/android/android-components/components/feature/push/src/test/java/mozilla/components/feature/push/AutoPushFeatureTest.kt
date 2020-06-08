@@ -26,6 +26,7 @@ import mozilla.components.support.test.mock
 import mozilla.components.support.test.nullable
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.whenever
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -54,9 +55,12 @@ class AutoPushFeatureTest {
 
     @Before
     fun setup() {
-        lastVerified = 0L
-
         whenever(connection.isInitialized()).thenReturn(true)
+    }
+
+    @After
+    fun shutdown() {
+        preference(testContext).edit().remove(LAST_VERIFIED).apply()
     }
 
     @Test
@@ -405,6 +409,23 @@ class AutoPushFeatureTest {
         feature.initialize()
 
         verify(feature, never()).verifyActiveSubscriptions()
+    }
+
+    @Test
+    fun `verification always happens on first attempt`() = runBlockingTest {
+        val feature = spy(
+            AutoPushFeature(
+                context = testContext,
+                service = mock(),
+                config = mock(),
+                coroutineContext = coroutineContext,
+                connection = mock()
+            )
+        )
+
+        feature.initialize()
+
+        verify(feature).verifyActiveSubscriptions()
     }
 
     @Test
