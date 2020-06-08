@@ -84,7 +84,6 @@ class NewRenderer : public RendererEvent {
         StaticPrefs::gfx_webrender_panic_on_gl_error_AtStartup();
 #endif
 
-    bool allow_texture_swizzling = gfx::gfxVars::UseGLSwizzle();
     bool isMainWindow = true;  // TODO!
     bool supportLowPriorityTransactions = isMainWindow;
     bool supportLowPriorityThreadpool =
@@ -95,9 +94,10 @@ class NewRenderer : public RendererEvent {
     if (!wr_window_new(
             aWindowId, mSize.width, mSize.height,
             supportLowPriorityTransactions, supportLowPriorityThreadpool,
-            allow_texture_swizzling,
+            gfx::gfxVars::UseGLSwizzle(),
             StaticPrefs::gfx_webrender_picture_caching() &&
                 supportPictureCaching,
+            gfx::gfxVars::UseWebRenderScissoredCacheClears(),
 #ifdef NIGHTLY_BUILD
             StaticPrefs::gfx_webrender_start_debug_server(),
 #else

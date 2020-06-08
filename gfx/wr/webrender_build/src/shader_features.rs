@@ -145,6 +145,8 @@ pub fn get_shader_features(flags: ShaderFeatureFlags) -> ShaderFeatures {
 
     shaders.insert("ps_split_composite", features![pls_feature]);
 
+    shaders.insert("ps_clear", features![""]);
+
     shaders
 }
 
