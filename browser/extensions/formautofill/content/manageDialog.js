@@ -156,12 +156,17 @@ class ManageRecords {
     let selectedGuids = this._selectedOptions.map(option => option.value);
     this.clearRecordElements();
     for (let record of records) {
+      let { id, args, raw } = this.getLabelInfo(record);
       let option = new Option(
-        this.getLabel(record),
+        raw ?? "",
         record.guid,
         false,
         selectedGuids.includes(record.guid)
       );
+      if (id) {
+        document.l10n.setAttributes(option, id, args);
+      }
+
       option.record = record;
       this._elements.records.appendChild(option);
     }
@@ -345,8 +350,8 @@ class ManageAddresses extends ManageRecords {
     });
   }
 
-  getLabel(address) {
-    return FormAutofillUtils.getAddressLabel(address);
+  getLabelInfo(address) {
+    return { raw: FormAutofillUtils.getAddressLabel(address) };
   }
 }
 
@@ -411,10 +416,12 @@ class ManageCreditCards extends ManageRecords {
    * @param {object} creditCard
    * @returns {string}
    */
-  getLabel(creditCard) {
-    return CreditCard.getLabel({
+  getLabelInfo(creditCard) {
+    return CreditCard.getLabelInfo({
       name: creditCard["cc-name"],
       number: creditCard["cc-number"],
+      month: creditCard["cc-exp-month"],
+      year: creditCard["cc-exp-year"],
     });
   }
 
