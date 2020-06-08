@@ -11,6 +11,7 @@
 
 #include <algorithm>
 
+#include "gc/Nursery.h"
 #include "gc/RelocationOverlay.h"
 #include "gc/ZoneAllocator.h"
 #include "vm/MutexIDs.h"
@@ -39,8 +40,8 @@ static constexpr double MinHeapGrowthFactor =
 
 GCSchedulingTunables::GCSchedulingTunables()
     : gcMaxBytes_(0),
-      gcMinNurseryBytes_(TuningDefaults::GCMinNurseryBytes),
-      gcMaxNurseryBytes_(JS::DefaultNurseryMaxBytes),
+      gcMinNurseryBytes_(Nursery::roundSize(TuningDefaults::GCMinNurseryBytes)),
+      gcMaxNurseryBytes_(Nursery::roundSize(JS::DefaultNurseryMaxBytes)),
       gcZoneAllocThresholdBase_(TuningDefaults::GCZoneAllocThresholdBase),
       smallHeapIncrementalLimit_(TuningDefaults::SmallHeapIncrementalLimit),
       largeHeapIncrementalLimit_(TuningDefaults::LargeHeapIncrementalLimit),
@@ -78,14 +79,21 @@ bool GCSchedulingTunables::setParameter(JSGCParamKey key, uint32_t value,
       gcMaxBytes_ = value;
       break;
     case JSGC_MIN_NURSERY_BYTES:
-      if (value > gcMaxNurseryBytes_ || value < ArenaSize ||
-          value >= MaxNurseryBytes) {
+      if (value < ArenaSize || value >= MaxNurseryBytes) {
+        return false;
+      }
+      value = Nursery::roundSize(value);
+      if (value > gcMaxNurseryBytes_) {
         return false;
       }
       gcMinNurseryBytes_ = value;
       break;
     case JSGC_MAX_NURSERY_BYTES:
-      if (value < gcMinNurseryBytes_ || value >= MaxNurseryBytes) {
+      if (value < ArenaSize || value >= MaxNurseryBytes) {
+        return false;
+      }
+      value = Nursery::roundSize(value);
+      if (value < gcMinNurseryBytes_) {
         return false;
       }
       gcMaxNurseryBytes_ = value;
