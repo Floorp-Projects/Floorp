@@ -34,6 +34,7 @@ import { initialState } from "../reducers/index";
 
 import type { SourceBase } from "../reducers/sources";
 import type { State } from "../reducers/types";
+import type { FulfilledValue } from "./async-value";
 
 function makeMockSource(url: URL = "url", id: SourceId = "source"): SourceBase {
   return {
@@ -85,6 +86,17 @@ function makeMockSourceAndContent(
       contentType,
     },
   };
+}
+
+function makeFullfilledMockSourceContent(
+  text: string = "",
+  contentType?: string = "text/javascript"
+): FulfilledValue<TextSourceContent> {
+  return asyncValue.fulfilled({
+    type: "text",
+    value: text,
+    contentType,
+  });
 }
 
 function makeMockWasmSource(): SourceBase {
@@ -253,4 +265,5 @@ export {
   mockthreadcx,
   makeMockState,
   makeMockThread,
+  makeFullfilledMockSourceContent,
 };
