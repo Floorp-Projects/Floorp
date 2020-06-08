@@ -25,9 +25,9 @@
 #include "mozilla/CheckedInt.h"
 
 using namespace wmf;
-using namespace cdm;
 
-VideoDecoder::VideoDecoder(Host_10* aHost) : mHost(aHost), mHasShutdown(false) {
+VideoDecoder::VideoDecoder(cdm::Host_10* aHost)
+    : mHost(aHost), mHasShutdown(false) {
   CK_LOGD("VideoDecoder created");
 
   // We drop the ref in DecodingComplete().
@@ -45,20 +45,20 @@ VideoDecoder::VideoDecoder(Host_10* aHost) : mHost(aHost), mHasShutdown(false) {
 
 VideoDecoder::~VideoDecoder() { CK_LOGD("VideoDecoder destroyed"); }
 
-Status VideoDecoder::InitDecode(const VideoDecoderConfig_2& aConfig) {
+cdm::Status VideoDecoder::InitDecode(const cdm::VideoDecoderConfig_2& aConfig) {
   CK_LOGD("VideoDecoder::InitDecode");
 
   if (!mDecoder) {
     CK_LOGD("VideoDecoder::InitDecode failed to init WMFH264Decoder");
 
-    return Status::kDecodeError;
+    return cdm::Status::kDecodeError;
   }
 
-  return Status::kSuccess;
+  return cdm::Status::kSuccess;
 }
 
-Status VideoDecoder::Decode(const InputBuffer_2& aInputBuffer,
-                            VideoFrame* aVideoFrame) {
+cdm::Status VideoDecoder::Decode(const cdm::InputBuffer_2& aInputBuffer,
+                                 cdm::VideoFrame* aVideoFrame) {
   CK_LOGD("VideoDecoder::Decode");
   // If the input buffer we have been passed has a null buffer, it means we
   // should drain.
@@ -79,7 +79,7 @@ Status VideoDecoder::Decode(const InputBuffer_2& aInputBuffer,
 
   if (!data || !mDecoder) {
     CK_LOGE("Decode job not set up correctly!");
-    return Status::kDecodeError;
+    return cdm::Status::kDecodeError;
   }
 
   std::vector<uint8_t>& buffer = data->mBuffer;
@@ -105,13 +105,13 @@ Status VideoDecoder::Decode(const InputBuffer_2& aInputBuffer,
     CK_LOGE("VideoDecoder::Decode() decode failed ret=0x%x%s", hr,
             ((hr == MF_E_NOTACCEPTING) ? " (MF_E_NOTACCEPTING)" : ""));
     CK_LOGD("Decode failed. The decoder is not accepting input");
-    return Status::kDecodeError;
+    return cdm::Status::kDecodeError;
   }
 
   return OutputFrame(aVideoFrame);
 }
 
-Status VideoDecoder::OutputFrame(VideoFrame* aVideoFrame) {
+cdm::Status VideoDecoder::OutputFrame(cdm::VideoFrame* aVideoFrame) {
   CK_LOGD("VideoDecoder::OutputFrame");
 
   HRESULT hr = S_OK;
@@ -137,14 +137,14 @@ Status VideoDecoder::OutputFrame(VideoFrame* aVideoFrame) {
   // If we don't have any inputs, we need more data.
   if (mOutputQueue.empty()) {
     CK_LOGD("Decode failed. Not enought data; Requesting more input");
-    return Status::kNeedMoreData;
+    return cdm::Status::kNeedMoreData;
   }
 
   // We will get a MF_E_TRANSFORM_NEED_MORE_INPUT every time, as we always
   // consume everything in the buffer.
   if (hr != MF_E_TRANSFORM_NEED_MORE_INPUT && FAILED(hr)) {
     CK_LOGD("Decode failed output ret=0x%x", hr);
-    return Status::kDecodeError;
+    return cdm::Status::kDecodeError;
   }
 
   CComPtr<IMFSample> result = mOutputQueue.front();
@@ -154,7 +154,7 @@ Status VideoDecoder::OutputFrame(VideoFrame* aVideoFrame) {
   // they are theoretically possible in real world data.
   if (mDecoder->GetStride() <= 0) {
     CK_LOGD("VideoDecoder::OutputFrame Failed! (negative stride)");
-    return Status::kDecodeError;
+    return cdm::Status::kDecodeError;
   }
 
   const IntRect& picture = mDecoder->GetPictureRegion();
@@ -163,18 +163,18 @@ Status VideoDecoder::OutputFrame(VideoFrame* aVideoFrame) {
                           aVideoFrame);
   if (FAILED(hr)) {
     CK_LOGD("VideoDecoder::OutputFrame Failed!");
-    return Status::kDecodeError;
+    return cdm::Status::kDecodeError;
   }
 
   CK_LOGD("VideoDecoder::OutputFrame Succeeded.");
-  return Status::kSuccess;
+  return cdm::Status::kSuccess;
 }
 
 HRESULT
 VideoDecoder::SampleToVideoFrame(IMFSample* aSample, int32_t aPictureWidth,
                                  int32_t aPictureHeight, int32_t aStride,
                                  int32_t aFrameHeight,
-                                 VideoFrame* aVideoFrame) {
+                                 cdm::VideoFrame* aVideoFrame) {
   CK_LOGD("[%p] VideoDecoder::SampleToVideoFrame()", this);
 
   ENSURE(aSample != nullptr, E_POINTER);
@@ -218,11 +218,11 @@ VideoDecoder::SampleToVideoFrame(IMFSample* aSample, int32_t aPictureWidth,
   uint32_t srcUVSize = stride * (aFrameHeight + padding) / 4;
   uint32_t halfStride = (stride + 1) / 2;
 
-  aVideoFrame->SetStride(VideoFrame::kYPlane, stride);
-  aVideoFrame->SetStride(VideoFrame::kUPlane, halfStride);
-  aVideoFrame->SetStride(VideoFrame::kVPlane, halfStride);
+  aVideoFrame->SetStride(cdm::VideoPlane::kYPlane, stride);
+  aVideoFrame->SetStride(cdm::VideoPlane::kUPlane, halfStride);
+  aVideoFrame->SetStride(cdm::VideoPlane::kVPlane, halfStride);
 
-  aVideoFrame->SetSize(Size{aPictureWidth, aPictureHeight});
+  aVideoFrame->SetSize(cdm::Size{aPictureWidth, aPictureHeight});
 
   // Note: We allocate the minimal sized buffer required to send the
   // frame back over to the parent process. This is so that we request the
@@ -239,7 +239,7 @@ VideoDecoder::SampleToVideoFrame(IMFSample* aSample, int32_t aPictureWidth,
   }
 
   // Get the buffer from the host.
-  Buffer* buffer = mHost->Allocate(bufferSize.value());
+  cdm::Buffer* buffer = mHost->Allocate(bufferSize.value());
   aVideoFrame->SetFrameBuffer(buffer);
 
   // Make sure the buffer is non-null (allocate guarantees it will be of
@@ -251,17 +251,17 @@ VideoDecoder::SampleToVideoFrame(IMFSample* aSample, int32_t aPictureWidth,
 
   uint8_t* outBuffer = buffer->Data();
 
-  aVideoFrame->SetPlaneOffset(VideoFrame::kYPlane, 0);
+  aVideoFrame->SetPlaneOffset(cdm::VideoPlane::kYPlane, 0);
 
   // Offset of U plane is the size of the Y plane, excluding the padding that
   // WMF adds.
   uint32_t dstUOffset = stride * aPictureHeight;
-  aVideoFrame->SetPlaneOffset(VideoFrame::kUPlane, dstUOffset);
+  aVideoFrame->SetPlaneOffset(cdm::VideoPlane::kUPlane, dstUOffset);
 
   // Offset of the V plane is the size of the Y plane + the size of the U plane,
   // excluding any padding WMF adds.
   uint32_t dstVOffset = stride * aPictureHeight + (stride * aPictureHeight) / 4;
-  aVideoFrame->SetPlaneOffset(VideoFrame::kVPlane, dstVOffset);
+  aVideoFrame->SetPlaneOffset(cdm::VideoPlane::kVPlane, dstVOffset);
 
   // Copy the pixel data, excluding WMF's padding.
   memcpy(outBuffer, data, stride * aPictureHeight);
@@ -298,7 +298,7 @@ void VideoDecoder::Reset() {
   }
 }
 
-Status VideoDecoder::Drain(VideoFrame* aVideoFrame) {
+cdm::Status VideoDecoder::Drain(cdm::VideoFrame* aVideoFrame) {
   CK_LOGD("VideoDecoder::Drain()");
 
   if (!mDecoder) {
