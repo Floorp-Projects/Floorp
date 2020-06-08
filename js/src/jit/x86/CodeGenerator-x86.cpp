@@ -1077,16 +1077,3 @@ void CodeGenerator::visitTestI64AndBranch(LTestI64AndBranch* lir) {
   masm.testl(input.low, input.low);
   emitBranch(Assembler::NonZero, lir->ifTrue(), lir->ifFalse());
 }
-
-void CodeGenerator::visitWasmI64x2Mul(LWasmI64x2Mul* ins) {
-#ifdef ENABLE_WASM_SIMD
-  FloatRegister lhsDest = ToFloatRegister(ins->lhsDest());
-  FloatRegister rhs = ToFloatRegister(ins->rhs());
-  Register64 temp1 = ToRegister64(ins->temp1());
-  Register64 temp2 = ToRegister64(ins->temp2());
-  Register temp3 = ToRegister(ins->temp3());
-  masm.mulInt64x2(rhs, lhsDest, temp1, temp2, temp3);
-#else
-  MOZ_CRASH("No SIMD");
-#endif
-}

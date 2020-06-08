@@ -1432,6 +1432,28 @@ void MacroAssembler::mulInt32x4(FloatRegister rhs, FloatRegister lhsDest) {
   vpmulld(Operand(rhs), lhsDest, lhsDest);
 }
 
+void MacroAssembler::mulInt64x2(FloatRegister rhs, FloatRegister lhsDest,
+                                FloatRegister temp) {
+  ScratchSimd128Scope temp2(*this);
+  // lhsDest = <D C> <B A>
+  // rhs = <H G> <F E>
+  // result = <(DG+CH)_low+CG_high CG_low> <(BE+AF)_low+AE_high AE_low>
+  moveSimd128(lhsDest, temp);                // temp  = <D C> <B A>
+  vpsrlq(Imm32(32), temp, temp);             // temp  = <0 D> <0 B>
+  vpmuludq(rhs, temp, temp);                 // temp  = <DG> <BE>
+  moveSimd128(rhs, temp2);                   // temp2 = <H G> <F E>
+  vpsrlq(Imm32(32), temp2, temp2);           // temp2 = <0 H> <0 F>
+  vpmuludq(lhsDest, temp2, temp2);           // temp2 = <CH> <AF>
+  vpaddq(Operand(temp), temp2, temp2);       // temp2 = <DG+CH> <BE+AF>
+  vpsllq(Imm32(32), temp2, temp2);           // temp2 = <(DG+CH)_low 0>
+                                             //         <(BE+AF)_low 0>
+  vpmuludq(rhs, lhsDest, lhsDest);           // lhsDest = <CG_high CG_low>
+                                             //           <AE_high AE_low>
+  vpaddq(Operand(temp2), lhsDest, lhsDest);  // lhsDest =
+                                             //    <(DG+CH)_low+CG_high CG_low>
+                                             //    <(BE+AF)_low+AE_high AE_low>
+}
+
 // Integer negate
 
 void MacroAssembler::negInt8x16(FloatRegister src, FloatRegister dest) {

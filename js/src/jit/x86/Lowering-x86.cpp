@@ -681,14 +681,3 @@ void LIRGenerator::visitSignExtendInt64(MSignExtendInt64* ins) {
                    LInt64Allocation(LAllocation(AnyRegister(edx)),
                                     LAllocation(AnyRegister(eax))));
 }
-
-void LIRGeneratorX86::lowerForWasmI64x2Mul(MWasmBinarySimd128* ins,
-                                           MDefinition* lhs, MDefinition* rhs) {
-  LAllocation lhsDestAlloc = useRegisterAtStart(lhs);
-  LAllocation rhsAlloc =
-      lhs != rhs ? useRegister(rhs) : useRegisterAtStart(rhs);
-  auto* lir = new (alloc())
-      LWasmI64x2Mul(lhsDestAlloc, rhsAlloc,
-                    tempInt64Fixed(Register64(edx, eax)), tempInt64(), temp());
-  defineReuseInput(lir, ins, LWasmI64x2Mul::LhsDest);
-}

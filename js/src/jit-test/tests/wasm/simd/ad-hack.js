@@ -256,7 +256,9 @@ Int32Array.rectify = (x) => sign_extend(x,32);
 Uint32Array.inputs = Int32Array.inputs;
 Uint32Array.rectify = (x) => zero_extend(x,32);
 
-BigInt64Array.inputs = [[1,2],[2,1],[-1,-2],[-2,-1],[2n ** 32n, 2n ** 32n - 5n]];
+BigInt64Array.inputs = [[1,2],[2,1],[-1,-2],[-2,-1],[2n ** 32n, 2n ** 32n - 5n],
+                        [(2n ** 38n) / 5n, (2n ** 41n) / 7n],
+                        [-((2n ** 38n) / 5n), (2n ** 41n) / 7n]];
 BigInt64Array.rectify = (x) => BigInt(x);
 
 Float32Array.inputs = [[1, -1, 1e10, -1e10],

@@ -997,19 +997,6 @@ void MacroAssembler::anyTrueSimd128(FloatRegister src, Register dest) {
   bind(&done);
 }
 
-void MacroAssembler::mulInt64x2(FloatRegister rhs, FloatRegister lhsDest,
-                                Register64 temp1, Register64 temp2,
-                                Register temp3) {
-  extractLaneInt64x2(0, lhsDest, temp1);
-  extractLaneInt64x2(0, rhs, temp2);
-  mul64(temp2, temp1, temp3);
-  replaceLaneInt64x2(0, temp1, lhsDest);
-  extractLaneInt64x2(1, lhsDest, temp1);
-  extractLaneInt64x2(1, rhs, temp2);
-  mul64(temp2, temp1, temp3);
-  replaceLaneInt64x2(1, temp1, lhsDest);
-}
-
 void MacroAssembler::extractLaneInt64x2(uint32_t lane, FloatRegister src,
                                         Register64 dest) {
   vpextrd(2 * lane, src, dest.low);
