@@ -237,6 +237,8 @@ const browsingContextTargetPrototype = {
    *
    * @param connection DevToolsServerConnection
    *        The conection to the client.
+   * @param docShell nsIDocShell
+   *        The |docShell| for the debugged frame.
    * @param options Object
    *        Object with following attributes:
    *        - followWindowGlobalLifeCycle Boolean
@@ -250,8 +252,15 @@ const browsingContextTargetPrototype = {
    *          for the top level target, in order to populate the toolbox iframe selector dropdown.
    *          But we can avoid sending these RDP messages for any additional remote target.
    */
-  initialize: function(connection, options = {}) {
+  initialize: function(connection, docShell, options = {}) {
     Actor.prototype.initialize.call(this, connection);
+
+    if (!docShell) {
+      throw new Error(
+        "A docShell should be provided as constructor argument of BrowsingContextTargetActor"
+      );
+    }
+    this.docShell = docShell;
 
     this.followWindowGlobalLifeCycle = options.followWindowGlobalLifeCycle;
     this.doNotFireFrameUpdates = options.doNotFireFrameUpdates;
@@ -365,16 +374,6 @@ const browsingContextTargetPrototype = {
       // then,
       return null;
     }
-  },
-
-  /**
-   * Getter for the browsing context's `docShell`.
-   */
-  get docShell() {
-    throw new Error(
-      "`docShell` getter should be overridden by a subclass of " +
-        "`BrowsingContextTargetActor`"
-    );
   },
 
   /**
@@ -578,10 +577,7 @@ const browsingContextTargetPrototype = {
 
     this._detach();
 
-    Object.defineProperty(this, "docShell", {
-      value: null,
-      configurable: true,
-    });
+    this.docShell = null;
 
     this._extraActors = null;
 
@@ -1385,15 +1381,10 @@ const browsingContextTargetPrototype = {
   },
 
   _setWindow(window) {
-    const docShell = window.docShell;
     // Here is the very important call where we switch the currently targeted
     // browsing context (it will indirectly update this.window and many other
     // attributes defined from docShell).
-    Object.defineProperty(this, "docShell", {
-      value: docShell,
-      enumerable: true,
-      configurable: true,
-    });
+    this.docShell = window.docShell;
     this.emit("changed-toplevel-document");
     this.emit("frameUpdate", {
       selected: this.outerWindowID,

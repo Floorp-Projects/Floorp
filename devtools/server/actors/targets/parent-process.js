@@ -50,17 +50,6 @@ const parentProcessTargetPrototype = extend({}, browsingContextTargetPrototype);
  *        it is passed as a constructor argument here.
  */
 parentProcessTargetPrototype.initialize = function(connection, window) {
-  BrowsingContextTargetActor.prototype.initialize.call(this, connection);
-
-  // This creates a Debugger instance for chrome debugging all globals.
-  this.makeDebugger = makeDebugger.bind(null, {
-    findDebuggees: dbg => dbg.findAllGlobals(),
-    shouldAddNewGlobalAsDebuggee: () => true,
-  });
-
-  // Ensure catching the creation of any new content docshell
-  this.watchNewDocShells = true;
-
   // Defines the default docshell selected for the target actor
   if (!window) {
     window = Services.wm.getMostRecentWindow(DevToolsServer.chromeWindowType);
@@ -78,10 +67,20 @@ parentProcessTargetPrototype.initialize = function(connection, window) {
     window = Services.appShell.hiddenDOMWindow;
   }
 
-  Object.defineProperty(this, "docShell", {
-    value: window.docShell,
-    configurable: true,
+  BrowsingContextTargetActor.prototype.initialize.call(
+    this,
+    connection,
+    window.docShell
+  );
+
+  // This creates a Debugger instance for chrome debugging all globals.
+  this.makeDebugger = makeDebugger.bind(null, {
+    findDebuggees: dbg => dbg.findAllGlobals(),
+    shouldAddNewGlobalAsDebuggee: () => true,
   });
+
+  // Ensure catching the creation of any new content docshell
+  this.watchNewDocShells = true;
 };
 
 parentProcessTargetPrototype.isRootActor = true;
