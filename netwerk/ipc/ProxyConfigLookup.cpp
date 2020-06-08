@@ -20,12 +20,12 @@ namespace net {
 // static
 nsresult ProxyConfigLookup::Create(
     std::function<void(nsIProxyInfo*, nsresult)>&& aCallback, nsIURI* aURI,
-    uint32_t aProxyResolveFlags, nsICancelable** aLookupCancellable) {
+    uint32_t aProxyResolveFlags) {
   MOZ_ASSERT(NS_IsMainThread());
 
   RefPtr<ProxyConfigLookup> lookUp =
       new ProxyConfigLookup(std::move(aCallback), aURI, aProxyResolveFlags);
-  return lookUp->DoProxyResolve(aLookupCancellable);
+  return lookUp->DoProxyResolve();
 }
 
 ProxyConfigLookup::ProxyConfigLookup(
@@ -37,7 +37,7 @@ ProxyConfigLookup::ProxyConfigLookup(
 
 ProxyConfigLookup::~ProxyConfigLookup() = default;
 
-nsresult ProxyConfigLookup::DoProxyResolve(nsICancelable** aLookupCancellable) {
+nsresult ProxyConfigLookup::DoProxyResolve() {
   if (!XRE_IsParentProcess()) {
     RefPtr<ProxyConfigLookup> self = this;
     bool result = ProxyConfigLookupChild::Create(
@@ -75,10 +75,6 @@ nsresult ProxyConfigLookup::DoProxyResolve(nsICancelable** aLookupCancellable) {
   } else {
     rv = pps->AsyncResolve(channel, mProxyResolveFlags, this, nullptr,
                            getter_AddRefs(proxyRequest));
-  }
-
-  if (aLookupCancellable) {
-    proxyRequest.forget(aLookupCancellable);
   }
 
   return rv;
