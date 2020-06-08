@@ -101,12 +101,12 @@ class SolusBootstrapper(
         android.ensure_android('linux', artifact_mode=artifact_mode,
                                no_interactive=self.no_interactive)
 
-    def suggest_mobile_android_mozconfig(self, artifact_mode=False):
+    def generate_mobile_android_mozconfig(self, artifact_mode=False):
         from mozboot import android
-        android.suggest_mozconfig('linux', artifact_mode=artifact_mode)
+        return android.generate_mozconfig('linux', artifact_mode=artifact_mode)
 
-    def suggest_mobile_android_artifact_mode_mozconfig(self):
-        self.suggest_mobile_android_mozconfig(artifact_mode=True)
+    def generate_mobile_android_artifact_mode_mozconfig(self):
+        return self.generate_mobile_android_mozconfig(artifact_mode=True)
 
     def _update_package_manager(self):
         pass

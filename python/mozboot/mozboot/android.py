@@ -13,6 +13,8 @@ import sys
 # We need the NDK version in multiple different places, and it's inconvenient
 # to pass down the NDK version to all relevant places, so we have this global
 # variable.
+from mozboot.bootstrap import MOZCONFIG_SUGGESTION_TEMPLATE
+
 NDK_VERSION = 'r20'
 
 ANDROID_NDK_EXISTS = '''
@@ -42,10 +44,6 @@ output as packages are downloaded and installed.
 '''
 
 MOBILE_ANDROID_MOZCONFIG_TEMPLATE = '''
-Paste the lines between the chevrons (>>> and <<<) into your
-$topsrcdir/mozconfig file, or create the file if it does not exist:
-
->>>
 # Build GeckoView/Firefox for Android:
 ac_add_options --enable-application=mobile/android
 
@@ -59,14 +57,9 @@ ac_add_options --enable-application=mobile/android
 # ac_add_options --target=x86_64
 
 {extra_lines}
-<<<
 '''
 
 MOBILE_ANDROID_ARTIFACT_MODE_MOZCONFIG_TEMPLATE = '''
-Paste the lines between the chevrons (>>> and <<<) into your
-$topsrcdir/mozconfig file, or create the file if it does not exist:
-
->>>
 # Build GeckoView/Firefox for Android Artifact Mode:
 ac_add_options --enable-application=mobile/android
 ac_add_options --target=arm-linux-androideabi
@@ -75,7 +68,6 @@ ac_add_options --enable-artifact-builds
 {extra_lines}
 # Write build artifacts to:
 mk_add_options MOZ_OBJDIR=./objdir-frontend
-<<<
 '''
 
 
@@ -304,7 +296,7 @@ def ensure_android_packages(sdkmanager_tool, emulator_only=False, no_interactive
         raise e
 
 
-def suggest_mozconfig(os_name, artifact_mode=False):
+def generate_mozconfig(os_name, artifact_mode=False):
     moz_state_dir, sdk_path, ndk_path = get_paths(os_name)
 
     extra_lines = []
@@ -322,7 +314,7 @@ def suggest_mozconfig(os_name, artifact_mode=False):
         moz_state_dir=moz_state_dir,
         extra_lines='\n'.join(extra_lines),
     )
-    print(template.format(**kwargs))
+    return template.format(**kwargs).strip()
 
 
 def android_ndk_url(os_name, ver=NDK_VERSION):
@@ -379,7 +371,14 @@ def main(argv):
                    ndk_only=options.ndk_only,
                    emulator_only=options.emulator_only,
                    no_interactive=options.no_interactive)
-    suggest_mozconfig(os_name, options.artifact_mode)
+    mozconfig = generate_mozconfig(os_name, options.artifact_mode)
+
+    # |./mach bootstrap| automatically creates a mozconfig file for you if it doesn't
+    # exist. However, here, we don't know where the "topsrcdir" is, and it's not worth
+    # pulling in CommandContext (and its dependencies) to find out.
+    # So, instead, we'll politely ask users to create (or update) the file themselves.
+    suggestion = MOZCONFIG_SUGGESTION_TEMPLATE % ("$topsrcdir/mozconfig", mozconfig)
+    print('\n' + suggestion)
 
     return 0
 

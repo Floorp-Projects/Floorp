@@ -57,7 +57,13 @@ Finding the active mozconfig
 Multiple mozconfig files can exist to provide different configuration
 options for different tasks. The rules for finding the active mozconfig
 are defined in the
-:py:func:`mozbuild.mozconfig.MozconfigLoader.find_mozconfig` method:
+:py:func:`mozboot.mozconfig.find_mozconfig` method.
+
+.. automodule:: mozboot.mozconfig
+   :members: find_mozconfig
+
+Loading the active mozconfig
+----------------------------
 
 .. autoclass:: mozbuild.mozconfig.MozconfigLoader
-   :members: find_mozconfig
+   :members: read_mozconfig
