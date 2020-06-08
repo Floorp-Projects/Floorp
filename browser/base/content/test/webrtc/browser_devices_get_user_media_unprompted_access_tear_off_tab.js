@@ -42,6 +42,7 @@ var gTests = [
       info("tearing off the tab");
       let win = gBrowser.replaceTabWithWindow(gBrowser.selectedTab);
       await whenDelayedStartupFinished(win);
+      await SimpleTest.promiseFocus(win);
       await checkSharingUI({ audio: true, video: true }, win);
 
       await enableObserverVerification(win.gBrowser.selectedBrowser);
