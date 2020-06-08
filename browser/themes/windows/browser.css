@@ -498,9 +498,11 @@ menuitem.bookmark-item {
     -moz-image-region: rect(32px, 49px, 48px, 32px);
   }
 
-  #minimize-button:-moz-locale-dir(rtl),
-  #restore-button:-moz-locale-dir(rtl),
-  #close-button:-moz-locale-dir(rtl) {
+  /* Normally there's no need to mirror these buttons for RTL,
+     but both have curves at their bottom right/left, and without
+     mirroring them their curves would appear in the wrong spot. */
+  #minimize-button > .toolbarbutton-icon:-moz-locale-dir(rtl),
+  #close-button > .toolbarbutton-icon:-moz-locale-dir(rtl) {
     transform: scaleX(-1);
   }
 }
