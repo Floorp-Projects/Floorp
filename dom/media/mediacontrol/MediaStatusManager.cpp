@@ -297,6 +297,32 @@ void MediaStatusManager::UpdateActualPlaybackState() {
   HandleActualPlaybackStateChanged();
 }
 
+void MediaStatusManager::EnableAction(uint64_t aBrowsingContextId,
+                                      MediaSessionAction aAction) {
+  if (!mMediaSessionInfoMap.Contains(aBrowsingContextId)) {
+    return;
+  }
+  MediaSessionInfo* info = mMediaSessionInfoMap.GetValue(aBrowsingContextId);
+  MOZ_DIAGNOSTIC_ASSERT(!info->IsActionSupported(aAction),
+                        "Action has already been enabled!");
+  LOG("Enable action %s for context %" PRIu64, ToMediaSessionActionStr(aAction),
+      aBrowsingContextId);
+  info->EnableAction(aAction);
+}
+
+void MediaStatusManager::DisableAction(uint64_t aBrowsingContextId,
+                                       MediaSessionAction aAction) {
+  if (!mMediaSessionInfoMap.Contains(aBrowsingContextId)) {
+    return;
+  }
+  MediaSessionInfo* info = mMediaSessionInfoMap.GetValue(aBrowsingContextId);
+  MOZ_DIAGNOSTIC_ASSERT(info->IsActionSupported(aAction),
+                        "Action hasn't been enabled yet!");
+  LOG("Disable action %s for context %" PRIu64,
+      ToMediaSessionActionStr(aAction), aBrowsingContextId);
+  info->DisableAction(aAction);
+}
+
 MediaMetadataBase MediaStatusManager::GetCurrentMediaMetadata() const {
   // If we don't have active media session, active media session doesn't have
   // media metadata, or we're in private browsing mode, then we should create a
