@@ -184,9 +184,11 @@ class HostWebGLContext final : public SupportsWeakPtr<HostWebGLContext> {
     mContext->SetCompositableHost(compositableHost);
   }
 
-  void Present() { return (void)mContext->Present(); }
-  Maybe<layers::SurfaceDescriptor> GetFrontBuffer(
-      const layers::TextureType t) const;
+  void Present(const ObjectId fb, const layers::TextureType t) const {
+    return (void)mContext->Present(AutoResolve(fb), t);
+  }
+  Maybe<layers::SurfaceDescriptor> GetFrontBuffer(ObjectId fb,
+                                                  layers::TextureType) const;
 
   RefPtr<gfx::DataSourceSurface> GetFrontBufferSnapshot() const {
     return mContext->GetFrontBufferSnapshot();
