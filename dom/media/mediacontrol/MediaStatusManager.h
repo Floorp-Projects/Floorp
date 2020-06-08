@@ -5,6 +5,7 @@
 #ifndef DOM_MEDIA_MEDIACONTROL_MEDIASTATUSMANAGER_H_
 #define DOM_MEDIA_MEDIACONTROL_MEDIASTATUSMANAGER_H_
 
+#include "MediaControlKeysEvent.h"
 #include "MediaEventSource.h"
 #include "MediaPlaybackStatus.h"
 #include "mozilla/dom/MediaMetadata.h"
@@ -32,11 +33,29 @@ class MediaSessionInfo {
 
   static MediaSessionInfo EmptyInfo() { return MediaSessionInfo(); }
 
+  static uint32_t GetActionBitMask(MediaSessionAction aAction) {
+    return 1 << static_cast<uint8_t>(aAction);
+  }
+
+  void EnableAction(MediaSessionAction aAction) {
+    mSupportedActions |= GetActionBitMask(aAction);
+  }
+
+  void DisableAction(MediaSessionAction aAction) {
+    mSupportedActions &= ~GetActionBitMask(aAction);
+  }
+
+  bool IsActionSupported(MediaSessionAction aAction) const {
+    return mSupportedActions & GetActionBitMask(aAction);
+  }
+
   // These attributes are all propagated from the media session in the content
   // process.
   Maybe<MediaMetadataBase> mMetadata;
   MediaSessionPlaybackState mDeclaredPlaybackState =
       MediaSessionPlaybackState::None;
+  // Use bitwise to store the supported actions.
+  uint32_t mSupportedActions = 0;
 };
 
 /**
@@ -84,6 +103,15 @@ class IMediaInfoUpdater {
   // media, and it's safe to notify same state again.
   virtual void SetIsInPictureInPictureMode(uint64_t aBrowsingContextId,
                                            bool aIsInPictureInPictureMode) = 0;
+
+  // Use these methods to update the supported media session action for the
+  // specific media session. For a media session from a given browsing context,
+  // do not re-enable the same action, or disable the action without enabling it
+  // before.
+  virtual void EnableAction(uint64_t aBrowsingContextId,
+                            MediaSessionAction aAction) = 0;
+  virtual void DisableAction(uint64_t aBrowsingContextId,
+                             MediaSessionAction aAction) = 0;
 };
 
 /**
@@ -123,6 +151,10 @@ class MediaStatusManager : public IMediaInfoUpdater {
   void NotifySessionDestroyed(uint64_t aSessionContextId) override;
   void UpdateMetadata(uint64_t aSessionContextId,
                       const Maybe<MediaMetadataBase>& aMetadata) override;
+  void EnableAction(uint64_t aBrowsingContextId,
+                    MediaSessionAction aAction) override;
+  void DisableAction(uint64_t aBrowsingContextId,
+                     MediaSessionAction aAction) override;
 
   // Return active media session's metadata if active media session exists and
   // it has already set its metadata. Otherwise, return default media metadata
