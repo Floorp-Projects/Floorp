@@ -1,5 +1,33 @@
+// Swaps the content of tab a into tab b and then closes tab a.
 function swapTabsAndCloseOther(a, b) {
   gBrowser.swapBrowsersAndCloseOther(gBrowser.tabs[b], gBrowser.tabs[a]);
+}
+
+// Mirrors the effect of the above function on an array.
+function swapArrayContentsAndRemoveOther(arr, a, b) {
+  arr[b] = arr[a];
+  arr.splice(a, 1);
+}
+
+function checkBrowserIds(expected) {
+  is(
+    gBrowser.tabs.length,
+    expected.length,
+    "Should have the right number of tabs."
+  );
+
+  for (let [i, tab] of gBrowser.tabs.entries()) {
+    is(
+      tab.linkedBrowser.browserId,
+      expected[i],
+      `Tab ${i} should have the right browser ID.`
+    );
+    is(
+      tab.linkedBrowser.browserId,
+      tab.linkedBrowser.browsingContext.browserId,
+      `Browser for tab ${i} has the same browserId as its BrowsingContext`
+    );
+  }
 }
 
 var getClicks = function(tab) {
@@ -112,23 +140,40 @@ add_task(async function() {
   );
   await BrowserTestUtils.switchTab(gBrowser, tabs[3]);
 
-  swapTabsAndCloseOther(2, 3); // now: 0 1 2 4
+  let browserIds = tabs.map(t => t.linkedBrowser.browserId);
+  checkBrowserIds(browserIds);
+
   is(gBrowser.tabs[1], tabs[1], "tab1");
-  is(gBrowser.tabs[2], tabs[3], "tab3");
-  is(gBrowser.tabs[3], tabs[4], "tab4");
-  delete tabs[2];
+  is(gBrowser.tabs[2], tabs[2], "tab2");
+  is(gBrowser.tabs[3], tabs[3], "tab3");
+  is(gBrowser.tabs[4], tabs[4], "tab4");
+
+  swapTabsAndCloseOther(2, 3); // now: 0 1 2 4
+  // Tab 2 is gone (what was tab 3 is displaying its content).
+  tabs.splice(2, 1);
+  swapArrayContentsAndRemoveOther(browserIds, 2, 3);
+
+  is(gBrowser.tabs[1], tabs[1], "tab1");
+  is(gBrowser.tabs[2], tabs[2], "tab2");
+  is(gBrowser.tabs[3], tabs[3], "tab4");
+
+  checkBrowserIds(browserIds);
 
   info("about to cacheObjectValue");
-  await cacheObjectValue(tabs[4].linkedBrowser);
+  await cacheObjectValue(tabs[3].linkedBrowser);
   info("just finished cacheObjectValue");
 
   swapTabsAndCloseOther(3, 2); // now: 0 1 4
+  tabs.splice(3, 1);
+  swapArrayContentsAndRemoveOther(browserIds, 3, 2);
+
   is(
     Array.prototype.indexOf.call(gBrowser.tabs, gBrowser.selectedTab),
     2,
     "The third tab should be selected"
   );
-  delete tabs[4];
+
+  checkBrowserIds(browserIds);
 
   ok(
     await checkObjectValue(gBrowser.tabs[2].linkedBrowser),
@@ -136,15 +181,19 @@ add_task(async function() {
   );
 
   is(gBrowser.tabs[1], tabs[1], "tab1");
-  is(gBrowser.tabs[2], tabs[3], "tab4");
+  is(gBrowser.tabs[2], tabs[2], "tab4");
 
   let clicks = await getClicks(gBrowser.tabs[2]);
   is(clicks, 0, "no click on BODY so far");
   await clickTest(gBrowser.tabs[2]);
 
   swapTabsAndCloseOther(2, 1); // now: 0 4
-  is(gBrowser.tabs[1], tabs[1], "tab1");
-  delete tabs[3];
+  tabs.splice(2, 1);
+  swapArrayContentsAndRemoveOther(browserIds, 2, 1);
+
+  is(gBrowser.tabs[1], tabs[1], "tab4");
+
+  checkBrowserIds(browserIds);
 
   ok(
     await checkObjectValue(gBrowser.tabs[1].linkedBrowser),
@@ -175,9 +224,14 @@ add_task(async function() {
   await loadURI(tabs[1], "about:blank");
   let key = tabs[1].linkedBrowser.permanentKey;
 
+  checkBrowserIds(browserIds);
+
   let win = gBrowser.replaceTabWithWindow(tabs[1]);
   await new Promise(resolve => whenDelayedStartupFinished(win, resolve));
-  delete tabs[1];
+
+  let newWinBrowserId = browserIds[1];
+  browserIds.splice(1, 1);
+  checkBrowserIds(browserIds);
 
   // Verify that the original window now only has the initial tab left in it.
   is(gBrowser.tabs[0], tabs[0], "tab0");
@@ -185,6 +239,12 @@ add_task(async function() {
 
   let tab = win.gBrowser.tabs[0];
   is(tab.linkedBrowser.permanentKey, key, "Should have kept the key");
+  is(tab.linkedBrowser.browserId, newWinBrowserId, "Should have kept the ID");
+  is(
+    tab.linkedBrowser.browserId,
+    tab.linkedBrowser.browsingContext.browserId,
+    "Should have kept the ID"
+  );
 
   let awaitPageShow = BrowserTestUtils.waitForContentEvent(
     tab.linkedBrowser,

@@ -29,7 +29,7 @@ class BrowsingContext;
 class XULFrameElement final : public nsXULElement, public nsFrameLoaderOwner {
  public:
   explicit XULFrameElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
-      : nsXULElement(std::move(aNodeInfo)) {}
+      : nsXULElement(std::move(aNodeInfo)), mBrowserId(0) {}
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(XULFrameElement, nsXULElement)
@@ -39,6 +39,7 @@ class XULFrameElement final : public nsXULElement, public nsFrameLoaderOwner {
   already_AddRefed<nsIWebNavigation> GetWebNavigation();
   Nullable<WindowProxyHolder> GetContentWindow();
   Document* GetContentDocument();
+  uint64_t BrowserId();
 
   void SwapFrameLoaders(mozilla::dom::HTMLIFrameElement& aOtherLoaderOwner,
                         mozilla::ErrorResult& rv);
@@ -46,6 +47,9 @@ class XULFrameElement final : public nsXULElement, public nsFrameLoaderOwner {
                         mozilla::ErrorResult& rv);
   void SwapFrameLoaders(nsFrameLoaderOwner* aOtherLoaderOwner,
                         mozilla::ErrorResult& rv);
+
+  // Should only be called during initialisation or frameloader swaps.
+  void SetBrowserId(uint64_t aBrowserId);
 
   // nsIContent
   virtual nsresult BindToTree(BindContext&, nsINode& aParent) override;
@@ -70,6 +74,8 @@ class XULFrameElement final : public nsXULElement, public nsFrameLoaderOwner {
                      JS::Handle<JSObject*> aGivenProto) override;
 
   void LoadSrc();
+
+  uint64_t mBrowserId;
 };
 
 }  // namespace dom

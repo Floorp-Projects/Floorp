@@ -107,6 +107,13 @@ class WindowProxyHolder;
   FIELD(FeaturePolicy, RefPtr<mozilla::dom::FeaturePolicy>)                  \
   /* See nsSandboxFlags.h for the possible flags. */                         \
   FIELD(SandboxFlags, uint32_t)                                              \
+  /* A unique identifier for the browser element that is hosting this        \
+   * BrowsingContext tree. Every BrowsingContext in the element's tree will  \
+   * return the same ID in all processes and it will remain stable           \
+   * regardless of process changes. When a browser element's frameloader is  \
+   * switched to another browser element this ID will remain the same but    \
+   * hosted under the under the new browser element. */                      \
+  FIELD(BrowserId, uint64_t)                                                 \
   FIELD(HistoryID, nsID)                                                     \
   FIELD(InRDMPane, bool)                                                     \
   FIELD(Loading, bool)                                                       \
@@ -197,7 +204,7 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   // DocShell, BrowserParent, or BrowserBridgeChild.
   static already_AddRefed<BrowsingContext> CreateDetached(
       nsGlobalWindowInner* aParent, BrowsingContext* aOpener,
-      const nsAString& aName, Type aType);
+      const nsAString& aName, Type aType, uint64_t aBrowserId);
 
   void EnsureAttached();
 
@@ -414,6 +421,9 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   }
 
   void SetAllowContentRetargeting(bool aAllowContentRetargeting);
+
+  // Needed for the webidl property
+  uint64_t BrowserId() const { return GetBrowserId(); }
 
   // Using the rules for choosing a browsing context we try to find
   // the browsing context with the given name in the set of
@@ -757,6 +767,9 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
               ContentParent* aSource);
 
   void DidSet(FieldIndex<IDX_HasSessionHistory>, bool aOldValue);
+
+  bool CanSet(FieldIndex<IDX_BrowserId>, const uint32_t& aValue,
+              ContentParent* aSource);
 
   template <size_t I, typename T>
   bool CanSet(FieldIndex<I>, const T&, ContentParent*) {
