@@ -847,7 +847,7 @@ nsresult Connection::databaseElementExists(
   return convertResultCode(srv);
 }
 
-bool Connection::findFunctionByInstance(nsISupports* aInstance) {
+bool Connection::findFunctionByInstance(mozIStorageFunction* aInstance) {
   sharedDBMutex.assertCurrentThreadOwns();
 
   for (auto iter = mFunctions.Iter(); !iter.Done(); iter.Next()) {
@@ -1545,9 +1545,7 @@ nsresult Connection::initializeClone(Connection* aClone, bool aReadOnly) {
     const nsACString& key = iter.Key();
     Connection::FunctionInfo data = iter.UserData();
 
-    mozIStorageFunction* function =
-        static_cast<mozIStorageFunction*>(data.function.get());
-    rv = aClone->CreateFunction(key, data.numArgs, function);
+    rv = aClone->CreateFunction(key, data.numArgs, data.function);
     if (NS_FAILED(rv)) {
       NS_WARNING("Failed to copy function to cloned connection");
     }
