@@ -92,7 +92,7 @@ interface DOMLocalization : Localization {
    *    let l10nAttrs = document.l10n.getAttributes(h1);
    *    assert.deepEqual(l10nAttrs, {id: "key1", args: { emailCount: 5});
    */
-  [Throws] L10nKey getAttributes(Element aElement);
+  [Throws] L10nIdArgs getAttributes(Element aElement);
 
   /**
    * Triggers translation of a subtree rooted at aNode.
