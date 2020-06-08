@@ -6843,9 +6843,6 @@ void Document::SetContainer(nsDocShell* aContainer) {
     }
     SetIsContentDocument(true);
   }
-
-  mAncestorPrincipals = aContainer->AncestorPrincipals().Clone();
-  mAncestorOuterWindowIDs = aContainer->AncestorOuterWindowIDs().Clone();
 }
 
 nsISupports* Document::GetContainer() const {

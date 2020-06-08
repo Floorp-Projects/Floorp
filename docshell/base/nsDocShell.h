@@ -374,60 +374,6 @@ class nsDocShell final : public nsDocLoader,
 
   nsresult SetOriginAttributes(const mozilla::OriginAttributes& aAttrs);
 
-  /**
-   * Get the list of ancestor principals for this docshell.  The list is meant
-   * to be the list of principals of the documents this docshell is "nested
-   * through" in the sense of
-   * <https://html.spec.whatwg.org/multipage/browsers.html#browsing-context-nested-through>.
-   * In practice, it is defined as follows:
-   *
-   * If this is an <iframe mozbrowser> or a toplevel content docshell
-   * (i.e. toplevel document in spec terms), the list is empty.
-   *
-   * Otherwise the list is the list for the document we're nested through (again
-   * in the spec sense), with the principal of that document prepended.  Note
-   * that this matches the ordering specified for Location.ancestorOrigins.
-   */
-  const nsTArray<nsCOMPtr<nsIPrincipal>>& AncestorPrincipals() const {
-    return mAncestorPrincipals;
-  }
-
-  /**
-   * Set the list of ancestor principals for this docshell.  This is really only
-   * needed for use by the frameloader.  We can't do this ourselves, inside
-   * docshell, because there's a bunch of state setup that frameloader does
-   * (like telling us whether we're a mozbrowser), some of which comes after the
-   * docshell is added to the docshell tree, which can affect what the ancestor
-   * principals should look like.
-   *
-   * This method steals the data from the passed-in array.
-   */
-  void SetAncestorPrincipals(
-      nsTArray<nsCOMPtr<nsIPrincipal>>&& aAncestorPrincipals) {
-    mAncestorPrincipals = std::move(aAncestorPrincipals);
-  }
-
-  /**
-   * Get the list of ancestor outerWindowIDs for this docshell.  The list is
-   * meant to be the list of outer window IDs that correspond to the
-   * ancestorPrincipals above.   For each ancestor principal, we store the
-   * parent window ID.
-   */
-  const nsTArray<uint64_t>& AncestorOuterWindowIDs() const {
-    return mAncestorOuterWindowIDs;
-  }
-
-  /**
-   * Set the list of ancestor outer window IDs for this docshell.  We call this
-   * from frameloader as well in order to keep the array matched with the
-   * ancestor principals.
-   *
-   * This method steals the data from the passed-in array.
-   */
-  void SetAncestorOuterWindowIDs(nsTArray<uint64_t>&& aAncestorOuterWindowIDs) {
-    mAncestorOuterWindowIDs = std::move(aAncestorOuterWindowIDs);
-  }
-
   const mozilla::OriginAttributes& GetOriginAttributes() {
     return mBrowsingContext->OriginAttributesRef();
   }
@@ -1152,12 +1098,6 @@ class nsDocShell final : public nsDocLoader,
   // pagehide/unload is happening for some reason other than just loading a
   // new URI.
   nsCOMPtr<nsIURI> mLoadingURI;
-
-  // Our list of ancestor principals.
-  nsTArray<nsCOMPtr<nsIPrincipal>> mAncestorPrincipals;
-
-  // Our list of ancestor outerWindowIDs.
-  nsTArray<uint64_t> mAncestorOuterWindowIDs;
 
   // Set in LoadErrorPage from the method argument and used later
   // in CreateContentViewer. We have to delay an shistory entry creation

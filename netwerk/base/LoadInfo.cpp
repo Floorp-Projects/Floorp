@@ -255,12 +255,6 @@ LoadInfo::LoadInfo(
     if (ctx) {
       mLoadingEmbedderPolicy = ctx->GetEmbedderPolicy();
     }
-    mAncestorPrincipals =
-        aLoadingContext->OwnerDoc()->AncestorPrincipals().Clone();
-    mAncestorOuterWindowIDs =
-        aLoadingContext->OwnerDoc()->AncestorOuterWindowIDs().Clone();
-    MOZ_DIAGNOSTIC_ASSERT(mAncestorPrincipals.Length() ==
-                          mAncestorOuterWindowIDs.Length());
     mDocumentHasUserInteracted =
         aLoadingContext->OwnerDoc()->UserHasInteracted();
 
@@ -449,10 +443,6 @@ LoadInfo::LoadInfo(nsPIDOMWindowOuter* aOuterWindow,
   if (aSecurityFlags != nsILoadInfo::SEC_ONLY_FOR_EXPLICIT_CONTENTSEC_CHECK) {
     MOZ_ASSERT(aOuterWindow->GetInProcessScriptableParent() == aOuterWindow);
     MOZ_ASSERT(mTopOuterWindowID == FindTopOuterWindowID(aOuterWindow));
-    MOZ_DIAGNOSTIC_ASSERT(
-        nsDocShell::Cast(docShell)->AncestorPrincipals().IsEmpty());
-    MOZ_DIAGNOSTIC_ASSERT(
-        nsDocShell::Cast(docShell)->AncestorOuterWindowIDs().IsEmpty());
   }
 
 #ifdef DEBUG
