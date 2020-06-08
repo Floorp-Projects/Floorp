@@ -282,9 +282,6 @@ const nsStaticAtom* const kPresAttributesHTML[] = {
     // clang-format on
 };
 
-// List of HTML attributes with URLs that the
-// browser will fetch. Should be kept in sync with
-// https://html.spec.whatwg.org/multipage/indices.html#attributes-3
 const nsStaticAtom* const kURLAttributesHTML[] = {
     // clang-format off
   nsGkAtoms::action,
@@ -293,10 +290,6 @@ const nsStaticAtom* const kURLAttributesHTML[] = {
   nsGkAtoms::longdesc,
   nsGkAtoms::cite,
   nsGkAtoms::background,
-  nsGkAtoms::formaction,
-  nsGkAtoms::data,
-  nsGkAtoms::ping,
-  nsGkAtoms::poster,
   nullptr
     // clang-format on
 };
