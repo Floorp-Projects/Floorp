@@ -140,7 +140,6 @@ decorate_task(
 decorate_task(
   withStub(Normandy, "finishInit"),
   async function testStartupDelayed(finishInitStub) {
-    Normandy._state = Normandy.STATE_UNINITIALIZED;
     await Normandy.init();
     ok(
       !finishInitStub.called,
@@ -174,7 +173,6 @@ decorate_task(
     Normandy.applyStartupPrefs("app.normandy.startupExperimentPrefs.");
     Normandy.studyPrefsChanged = { "test.study-pref": 1 };
     Normandy.rolloutPrefsChanged = { "test.rollout-pref": 1 };
-    Normandy._state = Normandy.STATE_QUEUED;
     await Normandy.finishInit();
 
     Assert.deepEqual(
@@ -215,7 +213,6 @@ decorate_task(
 
 decorate_task(withStubInits, async function testStartup() {
   const initObserved = TestUtils.topicObserved("shield-init-complete");
-  Normandy._state = Normandy.STATE_QUEUED;
   await Normandy.finishInit();
   ok(AddonStudies.init.called, "startup calls AddonStudies.init");
   ok(
@@ -229,7 +226,6 @@ decorate_task(withStubInits, async function testStartup() {
 decorate_task(withStubInits, async function testStartupPrefInitFail() {
   PreferenceExperiments.init.rejects();
 
-  Normandy._state = Normandy.STATE_QUEUED;
   await Normandy.finishInit();
   ok(AddonStudies.init.called, "startup calls AddonStudies.init");
   ok(AddonRollouts.init.called, "startup calls AddonRollouts.init");
@@ -245,7 +241,6 @@ decorate_task(withStubInits, async function testStartupPrefInitFail() {
 decorate_task(withStubInits, async function testStartupAddonStudiesInitFail() {
   AddonStudies.init.rejects();
 
-  Normandy._state = Normandy.STATE_QUEUED;
   await Normandy.finishInit();
   ok(AddonStudies.init.called, "startup calls AddonStudies.init");
   ok(AddonRollouts.init.called, "startup calls AddonRollouts.init");
@@ -263,7 +258,6 @@ decorate_task(
   async function testStartupTelemetryEventsInitFail() {
     TelemetryEvents.init.throws();
 
-    Normandy._state = Normandy.STATE_QUEUED;
     await Normandy.finishInit();
     ok(AddonStudies.init.called, "startup calls AddonStudies.init");
     ok(AddonRollouts.init.called, "startup calls AddonRollouts.init");
@@ -282,7 +276,6 @@ decorate_task(
   async function testStartupPreferenceRolloutsInitFail() {
     PreferenceRollouts.init.throws();
 
-    Normandy._state = Normandy.STATE_QUEUED;
     await Normandy.finishInit();
     ok(AddonStudies.init.called, "startup calls AddonStudies.init");
     ok(AddonRollouts.init.called, "startup calls AddonRollouts.init");
