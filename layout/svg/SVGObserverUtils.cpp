@@ -111,6 +111,43 @@ static already_AddRefed<URLAndReferrerInfo> ResolveURLUsingLocalRef(
   return info.forget();
 }
 
+static already_AddRefed<URLAndReferrerInfo> ResolveURLUsingLocalRef(
+    nsIFrame* aFrame, const nsAString& aURL, nsIReferrerInfo* aReferrerInfo) {
+  MOZ_ASSERT(aFrame);
+
+  nsIContent* content = aFrame->GetContent();
+
+  // Like SVGObserverUtils::GetBaseURLForLocalRef, we want to resolve the
+  // URL against any <use> element shadow tree's source document.
+  //
+  // Unlike GetBaseURLForLocalRef, we are assuming that the URL was specified
+  // directly on mFrame's content (because this ResolveURLUsingLocalRef
+  // overload is used for href="" attributes and not CSS URL values), so there
+  // is no need to check whether the URL was specified / inherited from
+  // outside the shadow tree.
+  nsIURI* base = nullptr;
+  const Encoding* encoding = nullptr;
+  if (SVGUseElement* use = content->GetContainingSVGUseShadowHost()) {
+    base = use->GetSourceDocURI();
+    encoding = use->GetSourceDocCharacterSet();
+  }
+
+  if (!base) {
+    base = content->OwnerDoc()->GetDocumentURI();
+    encoding = content->OwnerDoc()->GetDocumentCharacterSet();
+  }
+
+  nsCOMPtr<nsIURI> uri;
+  Unused << NS_NewURI(getter_AddRefs(uri), aURL, WrapNotNull(encoding), base);
+
+  if (!uri) {
+    return nullptr;
+  }
+
+  RefPtr<URLAndReferrerInfo> info = new URLAndReferrerInfo(uri, aReferrerInfo);
+  return info.forget();
+}
+
 namespace mozilla {
 
 class SVGFilterObserverList;
@@ -1371,17 +1408,12 @@ SVGGeometryElement* SVGObserverUtils::GetAndObserveTextPathsPath(
       return nullptr;  // no URL
     }
 
-    nsCOMPtr<nsIURI> targetURI;
-    nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(targetURI), href,
-                                              content->GetUncomposedDoc(),
-                                              content->GetBaseURI());
-
     // There's no clear refererer policy spec about non-CSS SVG resource
     // references Bug 1415044 to investigate which referrer we should use
     nsCOMPtr<nsIReferrerInfo> referrerInfo =
         ReferrerInfo::CreateForSVGResources(content->OwnerDoc());
     RefPtr<URLAndReferrerInfo> target =
-        new URLAndReferrerInfo(targetURI, referrerInfo);
+        ResolveURLUsingLocalRef(aTextPathFrame, href, referrerInfo);
 
     property =
         GetEffectProperty(target, aTextPathFrame, HrefAsTextPathProperty());
