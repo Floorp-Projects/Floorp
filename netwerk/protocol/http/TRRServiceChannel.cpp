@@ -252,7 +252,7 @@ nsresult TRRServiceChannel::ResolveProxy() {
       [self](nsIProxyInfo* aProxyInfo, nsresult aStatus) {
         self->OnProxyAvailable(nullptr, nullptr, aProxyInfo, aStatus);
       },
-      mURI, mProxyResolveFlags);
+      mURI, mProxyResolveFlags, getter_AddRefs(mProxyRequest));
 
   if (NS_FAILED(rv)) {
     if (!mCurrentEventTarget->IsOnCurrentThread()) {
