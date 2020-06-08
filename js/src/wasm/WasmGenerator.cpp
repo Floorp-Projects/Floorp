@@ -519,7 +519,7 @@ bool ModuleGenerator::linkCallSites() {
       case CallSiteDesc::Func: {
         if (funcIsCompiled(target.funcIndex())) {
           uint32_t calleeOffset =
-              funcCodeRange(target.funcIndex()).funcUncheckedCallEntry();
+              funcCodeRange(target.funcIndex()).funcNormalEntry();
           if (InRange(callerOffset, calleeOffset)) {
             masm_.patchCall(callerOffset, calleeOffset);
             break;
@@ -945,7 +945,7 @@ bool ModuleGenerator::finishCodegen() {
 
   for (CallFarJump far : callFarJumps_) {
     masm_.patchFarJump(far.jump,
-                       funcCodeRange(far.funcIndex).funcUncheckedCallEntry());
+                       funcCodeRange(far.funcIndex).funcNormalEntry());
   }
 
   for (CodeOffset farJump : debugTrapFarJumps_) {
