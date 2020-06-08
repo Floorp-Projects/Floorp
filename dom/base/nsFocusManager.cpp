@@ -287,13 +287,13 @@ Element* nsFocusManager::GetFocusedDescendant(
     nsPIDOMWindowOuter* aWindow, SearchRange aSearchRange,
     nsPIDOMWindowOuter** aFocusedWindow) {
   bool ignored;
-  return GetFocusedDescendant(aWindow, &ignored, aSearchRange, aFocusedWindow);
+  return GetFocusedDescendant(aWindow, aSearchRange, &ignored, aFocusedWindow);
 }
 
 // static
 Element* nsFocusManager::GetFocusedDescendant(
-    nsPIDOMWindowOuter* aWindow, bool* aFocusIsOutOfProcess,
-    SearchRange aSearchRange, nsPIDOMWindowOuter** aFocusedWindow) {
+    nsPIDOMWindowOuter* aWindow, SearchRange aSearchRange,
+    bool* aFocusIsOutOfProcess, nsPIDOMWindowOuter** aFocusedWindow) {
   NS_ENSURE_TRUE(aWindow, nullptr);
 
   *aFocusIsOutOfProcess = false;
@@ -736,11 +736,12 @@ nsFocusManager::WindowRaised(mozIDOMWindowProxy* aWindow) {
   nsCOMPtr<nsPIDOMWindowOuter> currentWindow;
   bool focusInOtherContentProcess = false;
   RefPtr<Element> currentFocus = GetFocusedDescendant(
-      window, &focusInOtherContentProcess, eIncludeAllDescendants,
+      window, eIncludeAllDescendants, &focusInOtherContentProcess,
       getter_AddRefs(currentWindow));
 
   // Keep mochitest-browser-chrome harness happy by ignoring
-  // focusInOtherContentProcess in the chrome process.
+  // focusInOtherContentProcess in the chrome process, because
+  // the harness expects that.
   if (XRE_IsParentProcess()) {
     focusInOtherContentProcess = false;
   }
@@ -948,10 +949,12 @@ nsFocusManager::WindowShown(mozIDOMWindowProxy* aWindow, bool aNeedsFocus) {
     nsCOMPtr<nsPIDOMWindowOuter> currentWindow;
     bool focusInOtherContentProcess = false;
     RefPtr<Element> currentFocus = GetFocusedDescendant(
-        window, &focusInOtherContentProcess, eIncludeAllDescendants,
+        window, eIncludeAllDescendants, &focusInOtherContentProcess,
         getter_AddRefs(currentWindow));
 
-    // Keep the mochitest-browser-chrome harness happy.
+    // Keep mochitest-browser-chrome harness happy by ignoring
+    // focusInOtherContentProcess in the chrome process, because
+    // the harness expects that.
     if (XRE_IsParentProcess()) {
       focusInOtherContentProcess = false;
     }
@@ -1350,11 +1353,13 @@ void nsFocusManager::SetFocusInner(Element* aNewContent, int32_t aFlags,
   if (subWindow) {
     // XXX What if this is an out-of-process iframe?
     // https://bugzilla.mozilla.org/show_bug.cgi?id=1613054
-    elementToFocus =
-        GetFocusedDescendant(subWindow, &focusInOtherContentProcess,
-                             eIncludeAllDescendants, getter_AddRefs(newWindow));
+    elementToFocus = GetFocusedDescendant(subWindow, eIncludeAllDescendants,
+                                          &focusInOtherContentProcess,
+                                          getter_AddRefs(newWindow));
 
-    // Keep mochitest-browser-chrome happy.
+    // Keep mochitest-browser-chrome harness happy by ignoring
+    // focusInOtherContentProcess in the chrome process, because
+    // the harness expects that.
     if (XRE_IsParentProcess()) {
       focusInOtherContentProcess = false;
     }

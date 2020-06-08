@@ -169,7 +169,7 @@ class nsFocusManager final : public nsIFocusManager,
    * aFocusedWindow may be still be set -- this means that the document is
    * focused but no element within it is focused.
    *
-   * aWindow, aFocusIsOutOfProcess aFocusedWindow must all be non-null.
+   * aWindow, aFocusIsOutOfProcess, aFocusedWindow must all be non-null.
    */
   enum SearchRange {
     // Return focused content in aWindow.  So, aFocusedWindow is always aWindow.
@@ -180,8 +180,8 @@ class nsFocusManager final : public nsIFocusManager,
     eIncludeVisibleDescendants,
   };
   static mozilla::dom::Element* GetFocusedDescendant(
-      nsPIDOMWindowOuter* aWindow, bool* aFocusIsOutOfProcess,
-      SearchRange aSearchRange, nsPIDOMWindowOuter** aFocusedWindow);
+      nsPIDOMWindowOuter* aWindow, SearchRange aSearchRange,
+      bool* aFocusIsOutOfProcess, nsPIDOMWindowOuter** aFocusedWindow);
   static mozilla::dom::Element* GetFocusedDescendant(
       nsPIDOMWindowOuter* aWindow, SearchRange aSearchRange,
       nsPIDOMWindowOuter** aFocusedWindow);
