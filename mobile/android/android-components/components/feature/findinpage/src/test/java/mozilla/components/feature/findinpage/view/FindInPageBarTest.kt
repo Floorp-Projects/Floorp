@@ -19,6 +19,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
+import org.robolectric.shadows.ShadowLooper
 
 @RunWith(AndroidJUnit4::class)
 class FindInPageBarTest {
@@ -137,5 +138,22 @@ class FindInPageBarTest {
         assertEquals(0, edit.imeOptions and
                 EditorInfoCompat.IME_FLAG_NO_PERSONALIZED_LEARNING)
         assertEquals(false, findInPageBar.private)
+    }
+
+    @Test
+    fun `clearing the focus of the find in page bar hides the keyboard`() {
+        val findInPageBar = spy(FindInPageBar(testContext))
+
+        // re-initialize the listener to use the spy
+        findInPageBar.bindQueryEditText()
+
+        // Focus the find in page bar first
+        findInPageBar.focus()
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+
+        // clearing the focus should hide the keyboard
+        findInPageBar.clear()
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+        verify(findInPageBar).hideKeyboard()
     }
 }
