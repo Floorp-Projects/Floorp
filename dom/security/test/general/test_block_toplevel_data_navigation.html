@@ -80,11 +80,7 @@ function test4() {
   setTimeout(function () {
     // Please note that the data: URI will be displayed in the URL-Bar but not
     // loaded, hence we rather rely on document.body than document.location
-    // GeckoView displays an error page for invalid navigations,
-    // so catch the case where we're not allowed to access to (cross-origin)
-    // error document and treat that as blocked.
-    let body = SpecialPowers.wrap(win4).document.body;
-    is(body ? body.innerHTML : "", "",
+    is(win4.document.body.innerHTML, "",
       "navigating to a data: URI using window.open() should be blocked");
     test5();
   }, 1000);
@@ -96,8 +92,7 @@ function test5() {
   setTimeout(function () {
     // Please note that the data: URI will be displayed in the URL-Bar but not
     // loaded, hence we rather rely on document.body than document.location
-    let body = SpecialPowers.wrap(win5).document.body;
-    is(body ? body.innerHTML : "", "",
+    is(SpecialPowers.wrap(win5).document.body.innerHTML, "",
       "navigating to URI which redirects to a data: URI using window.open() should be blocked");
     win5.close();
     SimpleTest.finish();
