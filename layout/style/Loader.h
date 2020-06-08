@@ -312,6 +312,10 @@ class Loader final {
   // Measure our size.
   size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const;
 
+  // The loader principal is the document's node principal, if this loader is
+  // owned by a document, or the system principal otherwise.
+  nsIPrincipal* LoaderPrincipal() const;
+
  private:
   friend class SheetLoadData;
   friend class StreamLoader;
