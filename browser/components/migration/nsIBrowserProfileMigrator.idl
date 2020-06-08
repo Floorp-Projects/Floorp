@@ -15,7 +15,7 @@ interface nsIBrowserProfileMigrator : nsISupports
    * profile items to migrate. use with migrate().
    */
   const unsigned short ALL         = 0x0000;
-  const unsigned short SETTINGS    = 0x0001;
+  /* 0x01 used to be used for settings, but was removed. */
   const unsigned short COOKIES     = 0x0002;
   const unsigned short HISTORY     = 0x0004;
   const unsigned short FORMDATA    = 0x0008;

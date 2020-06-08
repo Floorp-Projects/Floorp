@@ -99,158 +99,68 @@ source-name-360se = 360 Secure Browser
 imported-safari-reading-list = Reading List (From Safari)
 imported-edge-reading-list = Reading List (From Edge)
 
-# Import Sources
-# Note: When adding an import source for profile reset, add the string name to
-# resetProfile.js if it should be listed in the reset dialog.
+## Browser data types
+## All of these strings get a $browser variable passed in.
+## You can use the browser variable to differentiate the name of items,
+## which may have different labels in different browsers.
+## The supported values for the $browser variable are:
+## 360se
+## chrome
+## edge
+## firefox
+## safari
+## The various beta and development versions of edge and chrome all get
+## normalized to just "edge" and "chrome" for these strings.
 
-browser-data-ie-1 =
-    .label = Internet Options
-    .value = Internet Options
-browser-data-edge-1 =
-    .label = Settings
-    .value = Settings
-browser-data-safari-1 =
-    .label = Preferences
-    .value = Preferences
-browser-data-chrome-1 =
-    .label = Preferences
-    .value = Preferences
-browser-data-canary-1 =
-    .label = Preferences
-    .value = Preferences
-browser-data-360se-1 =
-    .label = Preferences
-    .value = Preferences
+browser-data-cookies-checkbox =
+  .label = Cookies
+browser-data-cookies-label =
+  .value = Cookies
 
-browser-data-ie-2 =
-    .label = Cookies
-    .value = Cookies
-browser-data-edge-2 =
-    .label = Cookies
-    .value = Cookies
-browser-data-safari-2 =
-    .label = Cookies
-    .value = Cookies
-browser-data-chrome-2 =
-    .label = Cookies
-    .value = Cookies
-browser-data-canary-2 =
-    .label = Cookies
-    .value = Cookies
-browser-data-firefox-2 =
-    .label = Cookies
-    .value = Cookies
-browser-data-360se-2 =
-    .label = Cookies
-    .value = Cookies
+browser-data-history-checkbox =
+  .label = { $browser ->
+     [firefox] Browsing History and Bookmarks
+    *[other] Browsing History
+  }
+browser-data-history-label =
+  .value = { $browser ->
+     [firefox] Browsing History and Bookmarks
+    *[other] Browsing History
+  }
 
-browser-data-ie-4 =
-    .label = Browsing History
-    .value = Browsing History
-browser-data-edge-4 =
-    .label = Browsing History
-    .value = Browsing History
-browser-data-safari-4 =
-    .label = Browsing History
-    .value = Browsing History
-browser-data-chrome-4 =
-    .label = Browsing History
-    .value = Browsing History
-browser-data-canary-4 =
-    .label = Browsing History
-    .value = Browsing History
-browser-data-firefox-history-and-bookmarks-4 =
-    .label = Browsing History and Bookmarks
-    .value = Browsing History and Bookmarks
-browser-data-360se-4 =
-    .label = Browsing History
-    .value = Browsing History
+browser-data-formdata-checkbox =
+  .label = Saved Form History
+browser-data-formdata-label =
+  .value = Saved Form History
 
-browser-data-ie-8 =
-    .label = Saved Form History
-    .value = Saved Form History
-browser-data-edge-8 =
-    .label = Saved Form History
-    .value = Saved Form History
-browser-data-safari-8 =
-    .label = Saved Form History
-    .value = Saved Form History
-browser-data-chrome-8 =
-    .label = Saved Form History
-    .value = Saved Form History
-browser-data-canary-8 =
-    .label = Saved Form History
-    .value = Saved Form History
-browser-data-firefox-8 =
-    .label = Saved Form History
-    .value = Saved Form History
-browser-data-360se-8 =
-    .label = Saved Form History
-    .value = Saved Form History
+# This string should use the same phrase for "logins and passwords" as the
+# label in the main hamburger menu that opens about:logins.
+browser-data-passwords-checkbox =
+  .label = Saved Logins and Passwords
+# This string should use the same phrase for "logins and passwords" as the
+# label in the main hamburger menu that opens about:logins.
+browser-data-passwords-label =
+  .value = Saved Logins and Passwords
 
-browser-data-ie-16 =
-    .label = Saved Passwords
-    .value = Saved Passwords
-browser-data-edge-16 =
-    .label = Saved Passwords
-    .value = Saved Passwords
-browser-data-safari-16 =
-    .label = Saved Passwords
-    .value = Saved Passwords
-browser-data-chrome-16 =
-    .label = Saved Passwords
-    .value = Saved Passwords
-browser-data-canary-16 =
-    .label = Saved Passwords
-    .value = Saved Passwords
-browser-data-firefox-16 =
-    .label = Saved Passwords
-    .value = Saved Passwords
-browser-data-360se-16 =
-    .label = Saved Passwords
-    .value = Saved Passwords
+browser-data-bookmarks-checkbox =
+  .label = { $browser ->
+     [ie] Favorites
+     [edge] Favorites
+    *[other] Bookmarks
+  }
+browser-data-bookmarks-label =
+  .value = { $browser ->
+     [ie] Favorites
+     [edge] Favorites
+    *[other] Bookmarks
+  }
+  
+browser-data-otherdata-checkbox =
+  .label = Other Data
+browser-data-otherdata-label =
+  .label = Other Data
 
-browser-data-ie-32 =
-    .label = Favorites
-    .value = Favorites
-browser-data-edge-32 =
-    .label = Favorites
-    .value = Favorites
-browser-data-safari-32 =
-    .label = Bookmarks
-    .value = Bookmarks
-browser-data-chrome-32 =
-    .label = Bookmarks
-    .value = Bookmarks
-browser-data-canary-32 =
-    .label = Bookmarks
-    .value = Bookmarks
-browser-data-360se-32 =
-    .label = Bookmarks
-    .value = Bookmarks
-
-browser-data-ie-64 =
-    .label = Other Data
-    .value = Other Data
-browser-data-edge-64 =
-    .label = Other Data
-    .value = Other Data
-browser-data-safari-64 =
-    .label = Other Data
-    .value = Other Data
-browser-data-chrome-64 =
-    .label = Other Data
-    .value = Other Data
-browser-data-canary-64 =
-    .label = Other Data
-    .value = Other Data
-browser-data-firefox-other-64 =
-    .label = Other Data
-    .value = Other Data
-browser-data-360se-64 =
-    .label = Other Data
-    .value = Other Data
-
-browser-data-firefox-128 =
-    .label = Windows and Tabs
-    .value = Windows and Tabs
+browser-data-session-checkbox =
+  .label = Windows and Tabs
+browser-data-session-label =
+  .value = Windows and Tabs

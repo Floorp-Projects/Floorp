@@ -529,7 +529,6 @@ var MigratorPrototype = {
 
 var MigrationUtils = Object.freeze({
   resourceTypes: {
-    SETTINGS: Ci.nsIBrowserProfileMigrator.SETTINGS,
     COOKIES: Ci.nsIBrowserProfileMigrator.COOKIES,
     HISTORY: Ci.nsIBrowserProfileMigrator.HISTORY,
     FORMDATA: Ci.nsIBrowserProfileMigrator.FORMDATA,
