@@ -49,11 +49,12 @@ add_task(async function() {
   const browser = tab.linkedBrowser;
   const doc = browser.contentDocument;
   const win = browser.contentWindow;
+  const store = win.AboutDebugging.store;
 
   info("Wait until Connect page is displayed");
   await waitUntil(() => doc.querySelector(".qa-connect-page"));
 
-  await selectThisFirefoxPage(doc, win.AboutDebugging.store);
+  await selectThisFirefoxPage(doc, store);
 
   // Check that all inspect butttons are disabled.
   checkInspectButton("TEST_TAB_1", doc, { expectDisabled: true });
@@ -68,8 +69,13 @@ add_task(async function() {
   gBrowser.selectedTab = gBrowser.tabs[2];
   await onTabRestored;
 
+  const onTabsSuccess = waitForDispatch(store, "REQUEST_TABS_SUCCESS");
+
   info("Select the about:debugging tab again");
   gBrowser.selectedTab = tab;
+
+  info("Wait until the tabs update is finished");
+  await onTabsSuccess;
 
   info("Wait until the inspect button for TEST_TAB_2 is enabled");
   await waitUntil(() => {
