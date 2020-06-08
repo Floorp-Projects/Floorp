@@ -3749,10 +3749,11 @@ pub unsafe extern "C" fn wr_device_delete(device: *mut Device) {
 pub extern "C" fn wr_shaders_new(
     gl_context: *mut c_void,
     program_cache: Option<&mut WrProgramCache>,
+    precache_shaders: bool,
 ) -> *mut WrShaders {
     let mut device = wr_device_new(gl_context, program_cache);
 
-    let precache_flags = if env_var_to_bool("MOZ_WR_PRECACHE_SHADERS") {
+    let precache_flags = if precache_shaders || env_var_to_bool("MOZ_WR_PRECACHE_SHADERS") {
         ShaderPrecacheFlags::FULL_COMPILE
     } else {
         ShaderPrecacheFlags::ASYNC_COMPILE

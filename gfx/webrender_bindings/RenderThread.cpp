@@ -926,7 +926,9 @@ void RenderThread::MaybeEnableGLDebugMessage(gl::GLContext* aGLContext) {
 WebRenderShaders::WebRenderShaders(gl::GLContext* gl,
                                    WebRenderProgramCache* programCache) {
   mGL = gl;
-  mShaders = wr_shaders_new(gl, programCache ? programCache->Raw() : nullptr);
+  mShaders =
+      wr_shaders_new(gl, programCache ? programCache->Raw() : nullptr,
+                     StaticPrefs::gfx_webrender_precache_shaders_AtStartup());
 }
 
 WebRenderShaders::~WebRenderShaders() {
