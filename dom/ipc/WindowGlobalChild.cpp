@@ -220,11 +220,8 @@ void WindowGlobalChild::OnNewDocument(Document* aDocument) {
   }
 
   // Init Mixed Content Fields
-  nsCOMPtr<nsIURI> innerDocURI =
-      NS_GetInnermostURI(aDocument->GetDocumentURI());
-  if (innerDocURI) {
-    txn.SetIsSecure(innerDocURI->SchemeIs("https"));
-  }
+  txn.SetIsPotentiallyTrustWorthy(
+      aDocument->NodePrincipal()->GetIsOriginPotentiallyTrustworthy());
   nsCOMPtr<nsIChannel> mixedChannel;
   mWindowGlobal->GetDocShell()->GetMixedContentChannel(
       getter_AddRefs(mixedChannel));

@@ -114,7 +114,7 @@ void nsSecureBrowserUI::UpdateForLocationOrMixedContentChange() {
   // with a channel that has a securityInfo that indicates the connection is
   // secure - e.g. h2/alt-svc or by visiting an http URI over an https proxy).
   nsCOMPtr<nsITransportSecurityInfo> securityInfo;
-  if (win && win->GetIsSecure()) {
+  if (win && win->GetIsPotentiallyTrustWorthy()) {
     securityInfo = win->GetSecurityInfo();
     if (securityInfo) {
       MOZ_LOG(gSecureBrowserUILog, LogLevel::Debug,
@@ -148,7 +148,8 @@ void nsSecureBrowserUI::UpdateForLocationOrMixedContentChange() {
   static const uint32_t kLoadedMixedContentFlags =
       nsIWebProgressListener::STATE_LOADED_MIXED_DISPLAY_CONTENT |
       nsIWebProgressListener::STATE_LOADED_MIXED_ACTIVE_CONTENT;
-  if (win && win->GetIsSecure() && (mState & kLoadedMixedContentFlags)) {
+  if (win && win->GetIsPotentiallyTrustWorthy() &&
+      (mState & kLoadedMixedContentFlags)) {
     // reset state security flag
     mState = mState >> 4 << 4;
     // set state security flag to broken, since there is mixed content

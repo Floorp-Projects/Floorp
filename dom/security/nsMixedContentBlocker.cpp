@@ -700,22 +700,23 @@ nsresult nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
   // Determine if the rootDoc is https and if the user decided to allow Mixed
   // Content
   WindowContext* topWC = requestingWindow->TopWindowContext();
-  bool rootHasSecureConnection = topWC->GetIsSecure();
+  bool rootIsPotentiallyTrustWorthy = topWC->GetIsPotentiallyTrustWorthy();
   bool allowMixedContent = topWC->GetAllowMixedContent();
 
   // When navigating an iframe, the iframe may be https
   // but its parents may not be.  Check the parents to see if any of them are
   // https. If none of the parents are https, allow the load.
-  if (contentType == TYPE_SUBDOCUMENT && !rootHasSecureConnection) {
-    bool httpsParentExists = false;
+  if (contentType == TYPE_SUBDOCUMENT && !rootIsPotentiallyTrustWorthy) {
+    bool potentiallyTrustWorthyParentExists = false;
 
     RefPtr<WindowContext> curWindow = requestingWindow;
-    while (!httpsParentExists && curWindow) {
-      httpsParentExists = curWindow->GetIsSecure();
+    while (!potentiallyTrustWorthyParentExists && curWindow) {
+      potentiallyTrustWorthyParentExists =
+          curWindow->GetIsPotentiallyTrustWorthy();
       curWindow = curWindow->GetParentWindowContext();
     }
 
-    if (!httpsParentExists) {
+    if (!potentiallyTrustWorthyParentExists) {
       *aDecision = nsIContentPolicy::ACCEPT;
       return NS_OK;
     }
