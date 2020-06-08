@@ -94,7 +94,10 @@ class TabTrayDialogFragment : AppCompatDialogFragment(), TabTrayInteractor {
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
 
-        if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+        val isLandscape = newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE
+        tabTrayView.setTopOffset(isLandscape)
+
+        if (isLandscape) {
             tabTrayView.expand()
         }
     }

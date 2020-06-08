@@ -104,7 +104,7 @@ class TabTrayView(
             expand()
         }
 
-        behavior.setExpandedOffset(view.context.resources.getDimension(R.dimen.tab_tray_top_offset).toInt())
+        setTopOffset(startingInLandscape)
 
         (view.tabsTray as? BrowserTabsTray)?.also { tray ->
             TabsTouchHelper(tray.tabsAdapter).attachToRecyclerView(tray)
@@ -197,6 +197,16 @@ class TabTrayView(
             fabView.new_tab_button.shrink()
             fabView.new_tab_button.contentDescription = view.context.resources.getString(R.string.add_tab)
         }
+    }
+
+    fun setTopOffset(landscape: Boolean) {
+        val topOffset = if (landscape) {
+            0
+        } else {
+            view.context.resources.getDimension(R.dimen.tab_tray_top_offset).toInt()
+        }
+
+        behavior.setExpandedOffset(topOffset)
     }
 
     companion object {
