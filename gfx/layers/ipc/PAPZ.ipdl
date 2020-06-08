@@ -54,9 +54,9 @@ child:
 
   async RequestContentRepaint(RepaintRequest request);
 
-  async UpdateOverscrollVelocity(float aX, float aY, bool aIsRootContent);
+  async UpdateOverscrollVelocity(ScrollableLayerGuid aGuid, float aX, float aY, bool aIsRootContent);
 
-  async UpdateOverscrollOffset(float aX, float aY, bool aIsRootContent);
+  async UpdateOverscrollOffset(ScrollableLayerGuid aGuid, float aX, float aY, bool aIsRootContent);
 
   async NotifyMozMouseScrollEvent(ViewID aScrollId, nsString aEvent);
 

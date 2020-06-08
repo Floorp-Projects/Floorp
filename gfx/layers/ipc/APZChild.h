@@ -32,10 +32,12 @@ class APZChild final : public PAPZChild {
       const RepaintRequest& aRequest);
 
   mozilla::ipc::IPCResult RecvUpdateOverscrollVelocity(
-      const float& aX, const float& aY, const bool& aIsRootContent);
+      const ScrollableLayerGuid& aGuid, const float& aX, const float& aY,
+      const bool& aIsRootContent);
 
   mozilla::ipc::IPCResult RecvUpdateOverscrollOffset(
-      const float& aX, const float& aY, const bool& aIsRootContent);
+      const ScrollableLayerGuid& aGuid, const float& aX, const float& aY,
+      const bool& aIsRootContent);
 
   mozilla::ipc::IPCResult RecvNotifyMozMouseScrollEvent(const ViewID& aScrollId,
                                                         const nsString& aEvent);

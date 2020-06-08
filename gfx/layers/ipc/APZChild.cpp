@@ -42,14 +42,16 @@ mozilla::ipc::IPCResult APZChild::RecvRequestContentRepaint(
 }
 
 mozilla::ipc::IPCResult APZChild::RecvUpdateOverscrollVelocity(
-    const float& aX, const float& aY, const bool& aIsRootContent) {
-  mController->UpdateOverscrollVelocity(aX, aY, aIsRootContent);
+    const ScrollableLayerGuid& aGuid, const float& aX, const float& aY,
+    const bool& aIsRootContent) {
+  mController->UpdateOverscrollVelocity(aGuid, aX, aY, aIsRootContent);
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult APZChild::RecvUpdateOverscrollOffset(
-    const float& aX, const float& aY, const bool& aIsRootContent) {
-  mController->UpdateOverscrollOffset(aX, aY, aIsRootContent);
+    const ScrollableLayerGuid& aGuid, const float& aX, const float& aY,
+    const bool& aIsRootContent) {
+  mController->UpdateOverscrollOffset(aGuid, aX, aY, aIsRootContent);
   return IPC_OK();
 }
 
