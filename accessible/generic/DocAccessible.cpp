@@ -2361,7 +2361,7 @@ void DocAccessible::PutChildrenBack(nsTArray<RefPtr<Accessible>>* aChildren,
     }
   }
 
-  aChildren->RemoveElementsAt(aStartIdx, aChildren->Length() - aStartIdx);
+  aChildren->RemoveLastElements(aChildren->Length() - aStartIdx);
 }
 
 bool DocAccessible::MoveChild(Accessible* aChild, Accessible* aNewParent,
