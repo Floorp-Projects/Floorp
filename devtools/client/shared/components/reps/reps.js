@@ -5142,6 +5142,7 @@ function getLinkifiedElements({
         // displayed in content page (e.g. in the JSONViewer).
         href: openLink || isInContentPage ? useUrl : null,
         target: "_blank",
+        rel: "noopener noreferrer",
         onClick: openLink ? e => {
           e.preventDefault();
           openLink(useUrl, e);
