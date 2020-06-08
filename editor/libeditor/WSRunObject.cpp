@@ -487,18 +487,10 @@ nsresult WSRunObject::DeleteWSBackward() {
   // Caller's job to ensure that previous char is really ws.  If it is normal
   // ws, we need to delete the whole run.
   if (atPreviousCharOfStart.IsCharASCIISpace()) {
-    EditorDOMPointInText start, end;
-    Tie(start, end) =
-        GetASCIIWhitespacesBounds(eBoth, atPreviousCharOfStart.NextPoint());
-    NS_WARNING_ASSERTION(start.IsSet(),
-                         "WSRunObject::GetASCIIWhitespacesBounds() didn't "
-                         "return start position, but ignored");
-    NS_WARNING_ASSERTION(end.IsSet(),
-                         "WSRunObject::GetASCIIWhitespacesBounds() didn't "
-                         "return end position, but ignored");
-
-    // adjust surrounding ws
-    EditorDOMPoint startToDelete(start), endToDelete(end);
+    EditorDOMPoint startToDelete =
+        GetFirstASCIIWhitespacePointCollapsedTo(atPreviousCharOfStart);
+    EditorDOMPoint endToDelete =
+        GetEndOfCollapsibleASCIIWhitespaces(atPreviousCharOfStart);
     nsresult rv = WSRunObject::PrepareToDeleteRange(
         MOZ_KnownLive(mHTMLEditor), &startToDelete, &endToDelete);
     if (NS_FAILED(rv)) {
@@ -562,17 +554,10 @@ nsresult WSRunObject::DeleteWSForward() {
   // Caller's job to ensure that next char is really ws.  If it is normal ws,
   // we need to delete the whole run.
   if (atNextCharOfStart.IsCharASCIISpace()) {
-    EditorDOMPointInText start, end;
-    Tie(start, end) =
-        GetASCIIWhitespacesBounds(eBoth, atNextCharOfStart.NextPoint());
-    NS_WARNING_ASSERTION(start.IsSet(),
-                         "WSRunObject::GetASCIIWhitespacesBounds() didn't "
-                         "return start position, but ignored");
-    NS_WARNING_ASSERTION(end.IsSet(),
-                         "WSRunObject::GetASCIIWhitespacesBounds() didn't "
-                         "return end position, but ignored");
-    // Adjust surrounding ws
-    EditorDOMPoint startToDelete(start), endToDelete(end);
+    EditorDOMPoint startToDelete =
+        GetFirstASCIIWhitespacePointCollapsedTo(atNextCharOfStart);
+    EditorDOMPoint endToDelete =
+        GetEndOfCollapsibleASCIIWhitespaces(atNextCharOfStart);
     nsresult rv = WSRunObject::PrepareToDeleteRange(
         MOZ_KnownLive(mHTMLEditor), &startToDelete, &endToDelete);
     if (NS_FAILED(rv)) {
@@ -1223,15 +1208,7 @@ nsresult WSRunObject::PrepareToDeleteRangePriv(WSRunObject* aEndObject) {
       if (atPreviousCharOfStart.IsSet() &&
           !atPreviousCharOfStart.IsEndOfContainer() &&
           atPreviousCharOfStart.IsCharASCIISpace()) {
-        EditorDOMPointInText start, end;
-        Tie(start, end) = GetASCIIWhitespacesBounds(eBoth, mScanStartPoint);
-        NS_WARNING_ASSERTION(start.IsSet(),
-                             "WSRunObject::GetASCIIWhitespacesBounds() didn't "
-                             "return start point, but ignored");
-        NS_WARNING_ASSERTION(end.IsSet(),
-                             "WSRunObject::GetASCIIWhitespacesBounds() didn't "
-                             "return end point, but ignored");
-        nsresult rv = ReplaceASCIIWhitespacesWithOneNBSP(start);
+        nsresult rv = ReplaceASCIIWhitespacesWithOneNBSP(atPreviousCharOfStart);
         if (NS_FAILED(rv)) {
           NS_WARNING(
               "WSRunObject::ReplaceASCIIWhitespacesWithOneNBSP() failed");
@@ -1280,15 +1257,7 @@ nsresult WSRunObject::PrepareToSplitAcrossBlocksPriv() {
     if (atPreviousCharOfStart.IsSet() &&
         !atPreviousCharOfStart.IsEndOfContainer() &&
         atPreviousCharOfStart.IsCharASCIISpace()) {
-      EditorDOMPointInText start, end;
-      Tie(start, end) = GetASCIIWhitespacesBounds(eBoth, mScanStartPoint);
-      NS_WARNING_ASSERTION(start.IsSet(),
-                           "WSRunObject::GetASCIIWhitespacesBounds() didn't "
-                           "return start point, but ignored");
-      NS_WARNING_ASSERTION(end.IsSet(),
-                           "WSRunObject::GetASCIIWhitespacesBounds() didn't "
-                           "return end point, but ignored");
-      nsresult rv = ReplaceASCIIWhitespacesWithOneNBSP(start);
+      nsresult rv = ReplaceASCIIWhitespacesWithOneNBSP(atPreviousCharOfStart);
       if (NS_FAILED(rv)) {
         NS_WARNING("WSRunObject::ReplaceASCIIWhitespacesWithOneNBSP() failed");
         return rv;
@@ -1437,32 +1406,156 @@ EditorDOMPointInText WSRunScanner::GetPreviousEditableCharPoint(
   return EditorDOMPointInText();
 }
 
+EditorDOMPointInText WSRunScanner::GetEndOfCollapsibleASCIIWhitespaces(
+    const EditorDOMPointInText& aPointAtASCIIWhitespace) const {
+  MOZ_ASSERT(aPointAtASCIIWhitespace.IsSet());
+  MOZ_ASSERT(!aPointAtASCIIWhitespace.IsEndOfContainer());
+  MOZ_ASSERT(aPointAtASCIIWhitespace.IsCharASCIISpace());
+
+  // If it's not the last character in the text node, let's scan following
+  // characters in it.
+  if (!aPointAtASCIIWhitespace.IsAtLastContent()) {
+    Maybe<uint32_t> nextVisibleCharOffset =
+        HTMLEditUtils::GetNextCharOffsetExceptASCIIWhitespaces(
+            aPointAtASCIIWhitespace);
+    if (nextVisibleCharOffset.isSome()) {
+      // There is non-whitespace character in it.
+      return EditorDOMPointInText(aPointAtASCIIWhitespace.ContainerAsText(),
+                                  nextVisibleCharOffset.value());
+    }
+  }
+
+  // Otherwise, i.e., the text node ends with ASCII whitespace, keep scanning
+  // the following text nodes.
+  // XXX Perhaps, we should stop scanning if there is non-editable and visible
+  //     content.
+  for (EditorDOMPointInText atEndOfPreviousTextNode =
+           EditorDOMPointInText::AtEndOf(
+               *aPointAtASCIIWhitespace.ContainerAsText());
+       ;) {
+    EditorDOMPointInText atStartOfNextTextNode =
+        GetInclusiveNextEditableCharPoint(atEndOfPreviousTextNode);
+    if (!atStartOfNextTextNode.IsSet()) {
+      // There is no more text nodes.  Return end of the previous text node.
+      return atEndOfPreviousTextNode;
+    }
+
+    // We can ignore empty text nodes.
+    if (atStartOfNextTextNode.IsContainerEmpty()) {
+      atEndOfPreviousTextNode = atStartOfNextTextNode;
+      continue;
+    }
+
+    // If next node starts with non-whitespace character, return end of
+    // previous text node.
+    if (!atStartOfNextTextNode.IsCharASCIISpace()) {
+      return atEndOfPreviousTextNode;
+    }
+
+    // Otherwise, scan the text node.
+    Maybe<uint32_t> nextVisibleCharOffset =
+        HTMLEditUtils::GetNextCharOffsetExceptASCIIWhitespaces(
+            atStartOfNextTextNode);
+    if (nextVisibleCharOffset.isSome()) {
+      return EditorDOMPointInText(atStartOfNextTextNode.ContainerAsText(),
+                                  nextVisibleCharOffset.value());
+    }
+
+    // The next text nodes ends with whitespace too.  Try next one.
+    atEndOfPreviousTextNode =
+        EditorDOMPointInText::AtEndOf(*atStartOfNextTextNode.ContainerAsText());
+  }
+}
+
+EditorDOMPointInText WSRunScanner::GetFirstASCIIWhitespacePointCollapsedTo(
+    const EditorDOMPointInText& aPointAtASCIIWhitespace) const {
+  MOZ_ASSERT(aPointAtASCIIWhitespace.IsSet());
+  MOZ_ASSERT(!aPointAtASCIIWhitespace.IsEndOfContainer());
+  MOZ_ASSERT(aPointAtASCIIWhitespace.IsCharASCIISpace());
+
+  // If there is some characters before it, scan it in the text node first.
+  if (!aPointAtASCIIWhitespace.IsStartOfContainer()) {
+    uint32_t firstASCIIWhitespaceOffset =
+        HTMLEditUtils::GetFirstASCIIWhitespaceOffsetCollapsedWith(
+            aPointAtASCIIWhitespace);
+    if (firstASCIIWhitespaceOffset) {
+      // There is a non-whitespace character in it.
+      return EditorDOMPointInText(aPointAtASCIIWhitespace.ContainerAsText(),
+                                  firstASCIIWhitespaceOffset);
+    }
+  }
+
+  // Otherwise, i.e., the text node starts with ASCII whitespace, keep scanning
+  // the preceding text nodes.
+  // XXX Perhaps, we should stop scanning if there is non-editable and visible
+  //     content.
+  for (EditorDOMPointInText atStartOfPreviousTextNode =
+           EditorDOMPointInText(aPointAtASCIIWhitespace.ContainerAsText(), 0);
+       ;) {
+    EditorDOMPointInText atLastCharOfNextTextNode =
+        GetPreviousEditableCharPoint(atStartOfPreviousTextNode);
+    if (!atLastCharOfNextTextNode.IsSet()) {
+      // There is no more text nodes.  Return end of last text node.
+      return atStartOfPreviousTextNode;
+    }
+
+    // We can ignore empty text nodes.
+    if (atLastCharOfNextTextNode.IsContainerEmpty()) {
+      atStartOfPreviousTextNode = atLastCharOfNextTextNode;
+      continue;
+    }
+
+    // If next node ends with non-whitespace character, return start of
+    // previous text node.
+    if (!atLastCharOfNextTextNode.IsCharASCIISpace()) {
+      return atStartOfPreviousTextNode;
+    }
+
+    // Otherwise, scan the text node.
+    uint32_t firstASCIIWhitespaceOffset =
+        HTMLEditUtils::GetFirstASCIIWhitespaceOffsetCollapsedWith(
+            atLastCharOfNextTextNode);
+    if (firstASCIIWhitespaceOffset) {
+      return EditorDOMPointInText(atLastCharOfNextTextNode.ContainerAsText(),
+                                  firstASCIIWhitespaceOffset);
+    }
+
+    // The next text nodes starts with whitespace too.  Try next one.
+    atStartOfPreviousTextNode =
+        EditorDOMPointInText(atLastCharOfNextTextNode.ContainerAsText(), 0);
+  }
+}
+
 nsresult WSRunObject::ReplaceASCIIWhitespacesWithOneNBSP(
     const EditorDOMPointInText& aPointAtASCIIWhitespace) {
   MOZ_ASSERT(aPointAtASCIIWhitespace.IsSet());
   MOZ_ASSERT(!aPointAtASCIIWhitespace.IsEndOfContainer());
   MOZ_ASSERT(aPointAtASCIIWhitespace.IsCharASCIISpace());
 
-  EditorDOMPointInText start, end;
-  Tie(start, end) = GetASCIIWhitespacesBounds(eAfter, aPointAtASCIIWhitespace);
-  if (NS_WARN_IF(!start.IsSet()) || NS_WARN_IF(!end.IsSet())) {
-    return NS_OK;
-  }
-  MOZ_ASSERT(start.GetContainer() != end.GetContainer() ||
-             end.Offset() > start.Offset());
-
   AutoTransactionsConserveSelection dontChangeMySelection(mHTMLEditor);
+  EditorDOMPointInText atFirstASCIIWhitespace =
+      GetFirstASCIIWhitespacePointCollapsedTo(aPointAtASCIIWhitespace);
+  EditorDOMPointInText afterLastASCIIWhitespace =
+      GetEndOfCollapsibleASCIIWhitespaces(aPointAtASCIIWhitespace);
   nsresult rv =
       MOZ_KnownLive(mHTMLEditor)
           .ReplaceTextWithTransaction(
-              MOZ_KnownLive(*start.ContainerAsText()), start.Offset(),
-              end.Offset() - start.Offset(), nsDependentSubstring(&kNBSP, 1));
+              MOZ_KnownLive(*atFirstASCIIWhitespace.ContainerAsText()),
+              atFirstASCIIWhitespace.Offset(),
+              atFirstASCIIWhitespace.ContainerAsText() ==
+                      afterLastASCIIWhitespace.ContainerAsText()
+                  ? afterLastASCIIWhitespace.Offset() -
+                        atFirstASCIIWhitespace.Offset()
+                  : atFirstASCIIWhitespace.ContainerAsText()->TextLength() -
+                        atFirstASCIIWhitespace.Offset(),
+              nsDependentSubstring(&kNBSP, 1));
   if (NS_FAILED(rv)) {
     NS_WARNING("HTMLEditor::ReplaceTextWithTransaction() failed");
     return rv;
   }
 
-  if (start.GetContainer() == end.GetContainer()) {
+  if (atFirstASCIIWhitespace.GetContainer() ==
+      afterLastASCIIWhitespace.GetContainer()) {
     return NS_OK;
   }
 
@@ -1470,66 +1563,13 @@ nsresult WSRunObject::ReplaceASCIIWhitespacesWithOneNBSP(
   // collapsed them into the start node.
   rv = MOZ_KnownLive(mHTMLEditor)
            .DeleteTextAndTextNodesWithTransaction(
-               EditorDOMPointInText::AtEndOf(*start.ContainerAsText()), end);
+               EditorDOMPointInText::AtEndOf(
+                   *atFirstASCIIWhitespace.ContainerAsText()),
+               afterLastASCIIWhitespace);
   NS_WARNING_ASSERTION(
       NS_SUCCEEDED(rv),
       "HTMLEditor::DeleteTextAndTextNodesWithTransaction() failed");
   return rv;
-}
-
-template <typename PT, typename CT>
-Tuple<EditorDOMPointInText, EditorDOMPointInText>
-WSRunObject::GetASCIIWhitespacesBounds(
-    int16_t aDir, const EditorDOMPointBase<PT, CT>& aPoint) const {
-  MOZ_ASSERT(aPoint.IsSet());
-
-  EditorDOMPointInText start, end;
-
-  if (aDir & eAfter) {
-    EditorDOMPointInText atNextChar = GetInclusiveNextEditableCharPoint(aPoint);
-    if (atNextChar.IsSet()) {
-      // We found a text node, at least.
-      start = end = atNextChar;
-      // Scan ahead to end of ASCII whitespaces.
-      // XXX Looks like that this is too expensive in most cases.  While we
-      //     are scanning a text node, we should do it without
-      //     GetInclusiveNextEditableCharPoint().
-      // XXX This loop ends at end of a text node.  Shouldn't we keep looking
-      //     next text node?
-      for (; atNextChar.IsSet() && !atNextChar.IsEndOfContainer() &&
-             atNextChar.IsCharASCIISpace();
-           atNextChar = GetInclusiveNextEditableCharPoint(atNextChar)) {
-        // End of the range should be after the whitespace.
-        end = atNextChar = atNextChar.NextPoint();
-      }
-    }
-  }
-
-  if (aDir & eBefore) {
-    // XXX Different from eAfter case, this may cross element boundaries with
-    //     this call.  I think that it's not expected case.
-    EditorDOMPointInText atPreviousChar = GetPreviousEditableCharPoint(aPoint);
-    if (atPreviousChar.IsSet()) {
-      // We found a text node, at least.
-      start = atPreviousChar.NextPoint();
-      if (!end.IsSet()) {
-        end = start;
-      }
-      // Scan back to start of ASCII whitespaces.
-      // XXX Looks like that this is too expensive in most cases.  While we
-      //     are scanning a text node, we should do it without
-      //     GetPreviousEditableCharPoint().
-      // XXX This loop ends at end of a text node.  Shouldn't we keep looking
-      //     the text node?
-      for (; atPreviousChar.IsSet() && !atPreviousChar.IsEndOfContainer() &&
-             atPreviousChar.IsCharASCIISpace();
-           atPreviousChar = GetPreviousEditableCharPoint(atPreviousChar)) {
-        start = atPreviousChar;
-      }
-    }
-  }
-
-  return MakeTuple(start, end);
 }
 
 template <typename PT, typename CT>
@@ -1672,6 +1712,8 @@ nsresult WSRunObject::NormalizeWhitespacesAtEndOf(const WSFragment& aRun) {
         atPreviousCharOfEndOfRun = GetPreviousEditableCharPoint(atEndOfRun);
         atPreviousCharOfPreviousCharOfEndOfRun =
             GetPreviousEditableCharPoint(atPreviousCharOfEndOfRun);
+        isPreviousCharASCIIWhitespace =
+            atPreviousCharOfPreviousCharOfEndOfRun.IsCharASCIISpace();
         followedByVisibleContentOrBRElement = true;
       }
     }
@@ -1704,45 +1746,39 @@ nsresult WSRunObject::NormalizeWhitespacesAtEndOf(const WSFragment& aRun) {
     return NS_OK;
   }
 
-  // Currently, we're at an NBSP following an ASCII space (in theory,
-  // GetASCIIWhitespacesBounds() may return earlier text node's ASCII
-  // whitespace point to `start` though).  Then, we need to replace it with
-  // `"&nbsp; "` for avoiding collapsing whitespaces.
+  // Currently, we're at an NBSP following an ASCII space, and we need to
+  // replace them with `"&nbsp; "` for avoiding collapsing whitespaces.
   MOZ_ASSERT(!atPreviousCharOfPreviousCharOfEndOfRun.IsEndOfContainer());
-  // XXX `eBoth` is required even though the following code does not refer
-  //     `end` because GetASCIIWhitespacesBounds() may not set `start` nor
-  //     `end` if `eBefore`.
-  EditorDOMPointInText start, end;
-  Tie(start, end) = GetASCIIWhitespacesBounds(eBoth, atPreviousCharOfEndOfRun);
-  MOZ_ASSERT(
-      start.IsSet(),
-      "WSRunObject::GetASCIIWhitespacesBounds() didn't return start point");
-  MOZ_ASSERT(start.GetContainer() != atPreviousCharOfEndOfRun.GetContainer() ||
-                 start.Offset() < atPreviousCharOfEndOfRun.Offset(),
-             "There must be at least one ASCII whitespace");
-
+  EditorDOMPointInText atFirstASCIIWhitespace =
+      GetFirstASCIIWhitespacePointCollapsedTo(
+          atPreviousCharOfPreviousCharOfEndOfRun);
   AutoTransactionsConserveSelection dontChangeMySelection(mHTMLEditor);
   uint32_t numberOfASCIIWhitespacesInStartNode =
-      start.ContainerAsText() == atPreviousCharOfEndOfRun.ContainerAsText()
-          ? atPreviousCharOfEndOfRun.Offset() - start.Offset()
-          : start.ContainerAsText()->Length() - start.Offset();
+      atFirstASCIIWhitespace.ContainerAsText() ==
+              atPreviousCharOfEndOfRun.ContainerAsText()
+          ? atPreviousCharOfEndOfRun.Offset() - atFirstASCIIWhitespace.Offset()
+          : atFirstASCIIWhitespace.ContainerAsText()->Length() -
+                atFirstASCIIWhitespace.Offset();
   // Replace all preceding ASCII whitespaces **and** the NBSP.
   uint32_t replaceLengthInStartNode =
       numberOfASCIIWhitespacesInStartNode +
-      (start.ContainerAsText() == atPreviousCharOfEndOfRun.ContainerAsText()
+      (atFirstASCIIWhitespace.ContainerAsText() ==
+               atPreviousCharOfEndOfRun.ContainerAsText()
            ? 1
            : 0);
   nsresult rv =
       MOZ_KnownLive(mHTMLEditor)
-          .ReplaceTextWithTransaction(MOZ_KnownLive(*start.ContainerAsText()),
-                                      start.Offset(), replaceLengthInStartNode,
-                                      NS_LITERAL_STRING(u"\x00A0 "));
+          .ReplaceTextWithTransaction(
+              MOZ_KnownLive(*atFirstASCIIWhitespace.ContainerAsText()),
+              atFirstASCIIWhitespace.Offset(), replaceLengthInStartNode,
+              NS_LITERAL_STRING(u"\x00A0 "));
   if (NS_FAILED(rv)) {
     NS_WARNING("HTMLEditor::ReplaceTextWithTransaction() failed");
     return rv;
   }
 
-  if (start.GetContainer() == atPreviousCharOfEndOfRun.GetContainer()) {
+  if (atFirstASCIIWhitespace.GetContainer() ==
+      atPreviousCharOfEndOfRun.GetContainer()) {
     return NS_OK;
   }
 
@@ -1751,7 +1787,8 @@ nsresult WSRunObject::NormalizeWhitespacesAtEndOf(const WSFragment& aRun) {
   // the start node.
   rv = MOZ_KnownLive(mHTMLEditor)
            .DeleteTextAndTextNodesWithTransaction(
-               EditorDOMPointInText::AtEndOf(*start.ContainerAsText()),
+               EditorDOMPointInText::AtEndOf(
+                   *atFirstASCIIWhitespace.ContainerAsText()),
                atPreviousCharOfEndOfRun.NextPoint());
   NS_WARNING_ASSERTION(
       NS_SUCCEEDED(rv),
