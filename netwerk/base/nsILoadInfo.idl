@@ -866,19 +866,30 @@ interface nsILoadInfo : nsISupports
   nsIRedirectHistoryEntryArray binaryRedirectChain();
 
   /**
-   * An array of nsIPrincipals which stores the principals of the parent frames,
-   * not including the frame loading this request.  The closest ancestor is at
-   * index zero and the top level ancestor is at the last index.
+   * This array is only filled out when we are in the parent process and we are
+   * creating a loadInfo object or deserializing LoadInfoArgs into LoadInfo,
+   * as we ever only need in the parent process.
    *
-   * The ancestorPrincipals[0] entry for an iframe load will be the principal of
-   * the iframe element's owner document.
-   * The ancestorPrincipals[0] entry for an image loaded in an iframe will be the
-   * principal of the iframe element's owner document.
+   * The array is meant to be a list of principals of the documents that the
+   * browsing context, corresponding to this loadInfo object, is "nested through" in
+   * the sense of
+   * <https://html.spec.whatwg.org/multipage/browsers.html#browsing-context-nested-through>.
+   * Note that the array does not include the principal corresponding to the frame
+   * loading this request. The closest ancestor is at index zero and the top level
+   * ancestor is at the last index.
    *
-   * See Document::AncestorPrincipals for more information.
+   * If this is a toplevel content browsing context (i.e. toplevel document in spec
+   * terms), the list is empty.
    *
-   * Please note that this array has the same lifetime as the
-   * loadInfo object - use with caution!
+   * Otherwise the array is a list for the document we're nested through (again in
+   * the spec sense), with the principal of that document prepended. The
+   * ancestorPrincipals[0] entry for an iframe load will be the principal of the
+   * iframe element's owner document. The ancestorPrincipals[0] entry for an image
+   * loaded in an iframe will be the principal of the iframe element's owner
+   * document. This matches the ordering specified for Location.ancestorOrigins.
+   *
+   * Please note that this array has the same lifetime as the loadInfo object - use
+   * with caution!
    */
   [noscript, notxpcom, nostdcall]
   PrincipalArrayRef AncestorPrincipals();
