@@ -576,10 +576,7 @@ LoadInfo::LoadInfo(dom::WindowGlobalParent* aParentWGP,
       mFrameOuterWindowID(aFrameOuterWindowID),
       mBrowsingContextID(0),
       mFrameBrowsingContextID(0),
-      // annyG: we are mimicking the old LoadInfo since it has gone through
-      // security checks in the content and we wouldn't reach this point
-      // if the load got blocked earlier.
-      mInitialSecurityCheckDone(true),
+      mInitialSecurityCheckDone(false),
       mIsThirdPartyContext(false),
       mIsThirdPartyContextToTopWindow(true),
       mIsFormSubmission(false),
