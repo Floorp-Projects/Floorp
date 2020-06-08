@@ -2,6 +2,6 @@
 
 set -e
 
-/etc/init.d/dbus start 2&>1
+/etc/init.d/dbus start 2>&1
 
 exec "${@}"
