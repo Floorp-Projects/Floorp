@@ -142,6 +142,86 @@ void ContentMediaAgent::SetIsInPictureInPictureMode(
   }
 }
 
+void ContentMediaAgent::SetDeclaredPlaybackState(
+    uint64_t aBrowsingContextId, MediaSessionPlaybackState aState) {
+  RefPtr<BrowsingContext> bc = BrowsingContext::Get(aBrowsingContextId);
+  if (!bc || bc->IsDiscarded()) {
+    return;
+  }
+
+  LOG("Notify declared playback state  '%s' in BC %" PRId64,
+      ToMediaSessionPlaybackStateStr(aState), bc->Id());
+  if (XRE_IsContentProcess()) {
+    ContentChild* contentChild = ContentChild::GetSingleton();
+    Unused << contentChild->SendNotifyMediaSessionPlaybackStateChanged(bc,
+                                                                       aState);
+    return;
+  }
+  // This would only happen when we disable e10s.
+  if (RefPtr<IMediaInfoUpdater> updater =
+          bc->Canonical()->GetMediaController()) {
+    updater->SetDeclaredPlaybackState(bc->Id(), aState);
+  }
+}
+
+void ContentMediaAgent::NotifySessionCreated(uint64_t aBrowsingContextId) {
+  RefPtr<BrowsingContext> bc = BrowsingContext::Get(aBrowsingContextId);
+  if (!bc || bc->IsDiscarded()) {
+    return;
+  }
+
+  LOG("Notify media session being created in BC %" PRId64, bc->Id());
+  if (XRE_IsContentProcess()) {
+    ContentChild* contentChild = ContentChild::GetSingleton();
+    Unused << contentChild->SendNotifyMediaSessionUpdated(bc, true);
+    return;
+  }
+  // This would only happen when we disable e10s.
+  if (RefPtr<IMediaInfoUpdater> updater =
+          bc->Canonical()->GetMediaController()) {
+    updater->NotifySessionCreated(bc->Id());
+  }
+}
+
+void ContentMediaAgent::NotifySessionDestroyed(uint64_t aBrowsingContextId) {
+  RefPtr<BrowsingContext> bc = BrowsingContext::Get(aBrowsingContextId);
+  if (!bc || bc->IsDiscarded()) {
+    return;
+  }
+
+  LOG("Notify media session being destroyed in BC %" PRId64, bc->Id());
+  if (XRE_IsContentProcess()) {
+    ContentChild* contentChild = ContentChild::GetSingleton();
+    Unused << contentChild->SendNotifyMediaSessionUpdated(bc, false);
+    return;
+  }
+  // This would only happen when we disable e10s.
+  if (RefPtr<IMediaInfoUpdater> updater =
+          bc->Canonical()->GetMediaController()) {
+    updater->NotifySessionDestroyed(bc->Id());
+  }
+}
+
+void ContentMediaAgent::UpdateMetadata(
+    uint64_t aBrowsingContextId, const Maybe<MediaMetadataBase>& aMetadata) {
+  RefPtr<BrowsingContext> bc = BrowsingContext::Get(aBrowsingContextId);
+  if (!bc || bc->IsDiscarded()) {
+    return;
+  }
+
+  LOG("Notify media session metadata change in BC %" PRId64, bc->Id());
+  if (XRE_IsContentProcess()) {
+    ContentChild* contentChild = ContentChild::GetSingleton();
+    Unused << contentChild->SendNotifyUpdateMediaMetadata(bc, aMetadata);
+    return;
+  }
+  // This would only happen when we disable e10s.
+  if (RefPtr<IMediaInfoUpdater> updater =
+          bc->Canonical()->GetMediaController()) {
+    updater->UpdateMetadata(bc->Id(), aMetadata);
+  }
+}
+
 ContentMediaController::ContentMediaController(uint64_t aId)
     : mTopLevelBrowsingContextId(aId) {}
 
