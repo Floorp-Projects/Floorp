@@ -21,6 +21,8 @@
 #include "nsIParentRedirectingChannel.h"
 #include "nsIRedirectResultListener.h"
 #include "nsIMultiPartChannel.h"
+#include "nsIProgressEventSink.h"
+#include "nsIBrowser.h"
 
 #define DOCUMENT_LOAD_LISTENER_IID                   \
   {                                                  \
@@ -89,7 +91,8 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
                              public nsIParentChannel,
                              public nsIChannelEventSink,
                              public HttpChannelSecurityWarningReporter,
-                             public nsIMultiPartChannelListener {
+                             public nsIMultiPartChannelListener,
+                             public nsIProgressEventSink {
  public:
   explicit DocumentLoadListener(dom::CanonicalBrowsingContext* aBrowsingContext,
                                 ADocumentChannelBridge* aBridge);
@@ -128,6 +131,7 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
   NS_DECL_NSIASYNCVERIFYREDIRECTREADYCALLBACK
   NS_DECL_NSICHANNELEVENTSINK
   NS_DECL_NSIMULTIPARTCHANNELLISTENER
+  NS_DECL_NSIPROGRESSEVENTSINK
 
   // We suspend the underlying channel when replacing ourselves with
   // the real listener channel.
@@ -142,6 +146,10 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
   void Cancel(const nsresult& status);
 
   nsIChannel* GetChannel() const { return mChannel; }
+
+  already_AddRefed<nsIBrowser> GetBrowser();
+  already_AddRefed<nsIWebProgressListener> GetRemoteWebProgressListener(
+      nsIWebProgress** aWebProgress, nsIRequest** aRequest);
 
   nsresult ReportSecurityMessage(const nsAString& aMessageTag,
                                  const nsAString& aMessageCategory) override {
