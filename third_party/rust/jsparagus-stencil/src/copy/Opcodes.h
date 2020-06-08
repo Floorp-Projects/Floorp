@@ -705,7 +705,7 @@
      *   Operands:
      *   Stack: propertyNameValue => propertyKey
      */ \
-    MACRO(ToId, to_id, NULL, 1, 1, 1, JOF_BYTE) \
+    MACRO(ToPropertyKey, to_property_key, NULL, 1, 1, 1, JOF_BYTE|JOF_IC) \
     /*
      * Convert a value to a numeric value (a Number or BigInt).
      *

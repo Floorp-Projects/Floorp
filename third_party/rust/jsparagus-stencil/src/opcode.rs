@@ -54,7 +54,7 @@ macro_rules! using_opcode_database {
                 (Div, div, "/", 1, 2, 1, JOF_BYTE|JOF_IC),
                 (Mod, mod, "%", 1, 2, 1, JOF_BYTE|JOF_IC),
                 (Pow, pow, "**", 1, 2, 1, JOF_BYTE|JOF_IC),
-                (ToId, to_id, NULL, 1, 1, 1, JOF_BYTE),
+                (ToPropertyKey, to_property_key, NULL, 1, 1, 1, JOF_BYTE|JOF_IC),
                 (ToNumeric, to_numeric, NULL, 1, 1, 1, JOF_BYTE|JOF_IC),
                 (ToString, to_string, NULL, 1, 1, 1, JOF_BYTE),
                 (GlobalThis, global_this, NULL, 1, 0, 1, JOF_BYTE),

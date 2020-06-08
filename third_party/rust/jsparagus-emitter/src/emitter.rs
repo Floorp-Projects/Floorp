@@ -483,8 +483,8 @@ impl InstructionWriter {
         self.emit_op(Opcode::Dec);
     }
 
-    pub fn to_id(&mut self) {
-        self.emit_op(Opcode::ToId);
+    pub fn to_property_key(&mut self) {
+        self.emit_op(Opcode::ToPropertyKey);
     }
 
     pub fn to_numeric(&mut self) {
