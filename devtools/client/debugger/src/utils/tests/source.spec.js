@@ -16,6 +16,7 @@ import {
   underRoot,
   isUrlExtension,
   isExtensionDirectoryPath,
+  getLineText,
 } from "../source.js";
 
 import {
@@ -24,6 +25,7 @@ import {
   makeMockSourceAndContent,
   makeMockWasmSourceWithContent,
   makeMockThread,
+  makeFullfilledMockSourceContent,
 } from "../test-mockup";
 import { isFulfilled } from "../async-value.js";
 
@@ -562,6 +564,49 @@ describe("sources", () => {
       expect(isExtensionDirectoryPath("moz-extension://id/js/content.js")).toBe(
         false
       );
+    });
+  });
+
+  describe("getLineText", () => {
+    it("first line", () => {
+      const text = getLineText(
+        "fake-source",
+        makeFullfilledMockSourceContent("aaa\nbbb\nccc"),
+        1
+      );
+
+      expect(text).toEqual("aaa");
+    });
+
+    it("last line", () => {
+      const text = getLineText(
+        "fake-source",
+        makeFullfilledMockSourceContent("aaa\nbbb\nccc"),
+        3
+      );
+
+      expect(text).toEqual("ccc");
+    });
+
+    it("one line", () => {
+      const text = getLineText(
+        "fake-source",
+        makeFullfilledMockSourceContent("aaa"),
+        1
+      );
+
+      expect(text).toEqual("aaa");
+    });
+
+    it("bad line", () => {
+      const text = getLineText(
+        "fake-source",
+        makeFullfilledMockSourceContent("aaa\nbbb\nccc"),
+
+        5
+      );
+
+      expect(text).toEqual("");
     });
   });
 });

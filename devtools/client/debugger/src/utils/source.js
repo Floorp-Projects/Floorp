@@ -417,6 +417,26 @@ export function isInlineScript(source: SourceActor): boolean {
   return source.introductionType === "scriptElement";
 }
 
+function getNthLine(str: string, lineNum: number) {
+  let startIndex = -1;
+
+  let newLinesFound = 0;
+  while (newLinesFound < lineNum) {
+    const nextIndex = str.indexOf("\n", startIndex + 1);
+    if (nextIndex === -1) {
+      return null;
+    }
+    startIndex = nextIndex;
+    newLinesFound++;
+  }
+  const endIndex = str.indexOf("\n", startIndex + 1);
+  if (endIndex === -1) {
+    return str.slice(startIndex + 1);
+  }
+
+  return str.slice(startIndex + 1, endIndex);
+}
+
 export const getLineText = memoizeLast(
   (
     sourceId: SourceId,
@@ -435,7 +455,7 @@ export const getLineText = memoizeLast(
       return lines[editorLine] || "";
     }
 
-    const lineText = content.value.split("\n")[line - 1];
+    const lineText = getNthLine(content.value, line - 1);
     return lineText || "";
   }
 );
