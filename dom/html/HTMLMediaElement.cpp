@@ -491,8 +491,8 @@ class HTMLMediaElement::MediaControlEventListener final
       return;
     }
     mIsPictureInPictureEnabled = aIsEnabled;
-    mControlAgent->NotifyPictureInPictureModeChanged(
-        this, mIsPictureInPictureEnabled);
+    mControlAgent->SetIsInPictureInPictureMode(mOwnerBrowsingContextId,
+                                               mIsPictureInPictureEnabled);
   }
 
   void HandleEvent(MediaControlKeysEvent aEvent) override {
@@ -515,13 +515,13 @@ class HTMLMediaElement::MediaControlEventListener final
     }
 
     BrowsingContext* currentBC = GetCurrentBrowsingContext();
-    MOZ_ASSERT(currentBC && mOwnerBrowsingContext);
+    MOZ_ASSERT(currentBC);
     // Still in the same browsing context, no need to update.
-    if (currentBC == mOwnerBrowsingContext) {
+    if (currentBC->Id() == mOwnerBrowsingContextId) {
       return;
     }
     MEDIACONTROL_LOG("Change browsing context from %" PRIu64 " to %" PRIu64,
-                     mOwnerBrowsingContext->Id(), currentBC->Id());
+                     mOwnerBrowsingContextId, currentBC->Id());
     // This situation would happen when we start a media in an original browsing
     // context, then we move it to another browsing context, such as an iframe,
     // so its owner browsing context would be changed. Therefore, we should
@@ -538,16 +538,12 @@ class HTMLMediaElement::MediaControlEventListener final
     }
   }
 
-  BrowsingContext* GetBrowsingContext() const override {
-    return mOwnerBrowsingContext;
-  }
-
  private:
   ~MediaControlEventListener() = default;
 
-  // The media can be moved around different browsing context, so this context
-  // might be different from `mOwnerBrowsingContext` that we use to initialize
-  // the `ContentMediaAgent`.
+  // The media can be moved around different browsing contexts, so this context
+  // might be different from the one that we used to initialize
+  // `ContentMediaAgent`.
   BrowsingContext* GetCurrentBrowsingContext() const {
     nsPIDOMWindowInner* window = Owner()->OwnerDoc()->GetInnerWindow();
     return window ? window->GetBrowsingContext() : nullptr;
@@ -560,10 +556,10 @@ class HTMLMediaElement::MediaControlEventListener final
     if (!mControlAgent) {
       return false;
     }
-    mOwnerBrowsingContext = currentBC;
-    MOZ_ASSERT(mOwnerBrowsingContext);
+    MOZ_ASSERT(currentBC);
+    mOwnerBrowsingContextId = currentBC->Id();
     MEDIACONTROL_LOG("Init agent in browsing context %" PRIu64,
-                     mOwnerBrowsingContext->Id());
+                     mOwnerBrowsingContextId);
     mControlAgent->AddReceiver(this);
     return true;
   }
@@ -581,13 +577,13 @@ class HTMLMediaElement::MediaControlEventListener final
                      ToMediaPlaybackStateStr(aState));
     MOZ_ASSERT(mState != aState, "Should not notify same state again!");
     mState = aState;
-    mControlAgent->NotifyPlaybackStateChanged(this, mState);
+    mControlAgent->NotifyMediaPlaybackChanged(mOwnerBrowsingContextId, mState);
   }
 
   void NotifyAudibleStateChanged(MediaAudibleState aState) {
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(IsStarted());
-    mControlAgent->NotifyAudibleStateChanged(this, aState);
+    mControlAgent->NotifyMediaAudibleChanged(mOwnerBrowsingContextId, aState);
   }
 
   MediaPlaybackState mState = MediaPlaybackState::eStopped;
@@ -595,7 +591,7 @@ class HTMLMediaElement::MediaControlEventListener final
   RefPtr<ContentMediaAgent> mControlAgent;
   bool mIsPictureInPictureEnabled = false;
   bool mIsOwnerAudible = false;
-  BrowsingContext* MOZ_NON_OWNING_REF mOwnerBrowsingContext = nullptr;
+  uint64_t mOwnerBrowsingContextId;
 };
 
 class HTMLMediaElement::MediaStreamTrackListener
