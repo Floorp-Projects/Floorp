@@ -286,7 +286,9 @@ var Policies = {
               try {
                 cert = gCertDB.constructX509(certFileArray);
               } catch (e) {
-                log.debug(`constructX509 failed with error '${e}' - trying constructX509FromBase64.`);
+                log.debug(
+                  `constructX509 failed with error '${e}' - trying constructX509FromBase64.`
+                );
                 try {
                   // It might be PEM instead of DER.
                   cert = gCertDB.constructX509FromBase64(pemToBase64(certFile));
