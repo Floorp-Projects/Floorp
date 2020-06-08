@@ -24,14 +24,16 @@ void AndroidContentController::Destroy() {
 }
 
 void AndroidContentController::UpdateOverscrollVelocity(
-    const float aX, const float aY, const bool aIsRootContent) {
+    const ScrollableLayerGuid& aGuid, const float aX, const float aY,
+    const bool aIsRootContent) {
   if (aIsRootContent && mAndroidWindow) {
     mAndroidWindow->UpdateOverscrollVelocity(aX, aY);
   }
 }
 
 void AndroidContentController::UpdateOverscrollOffset(
-    const float aX, const float aY, const bool aIsRootContent) {
+    const ScrollableLayerGuid& aGuid, const float aX, const float aY,
+    const bool aIsRootContent) {
   if (aIsRootContent && mAndroidWindow) {
     mAndroidWindow->UpdateOverscrollOffset(aX, aY);
   }

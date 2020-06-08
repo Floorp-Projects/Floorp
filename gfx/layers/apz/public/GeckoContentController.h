@@ -145,9 +145,11 @@ class GeckoContentController {
 
   virtual void CancelAutoscroll(const ScrollableLayerGuid& aGuid) = 0;
 
-  virtual void UpdateOverscrollVelocity(float aX, float aY,
+  virtual void UpdateOverscrollVelocity(const ScrollableLayerGuid& aGuid,
+                                        float aX, float aY,
                                         bool aIsRootContent) {}
-  virtual void UpdateOverscrollOffset(float aX, float aY, bool aIsRootContent) {
+  virtual void UpdateOverscrollOffset(const ScrollableLayerGuid& aGuid,
+                                      float aX, float aY, bool aIsRootContent) {
   }
 
   GeckoContentController() = default;
