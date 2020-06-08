@@ -1240,7 +1240,7 @@ mod tests {
 
     #[test]
     fn test_json_scale_invalid() {
-        assert!(serde_json::from_value::<AddonInstallParameters>(json!({"scale": 3})).is_err());
+        assert!(serde_json::from_value::<PrintParameters>(json!({"scale": 3})).is_err());
     }
 
     #[test]
