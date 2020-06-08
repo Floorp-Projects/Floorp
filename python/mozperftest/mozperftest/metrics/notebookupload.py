@@ -6,6 +6,7 @@
 from mozperftest.layers import Layer
 from mozperftest.metrics.common import filtered_metrics
 from mozperftest.metrics.notebook import PerftestNotebook
+from mozperftest.metrics.utils import is_number
 
 
 class Notebook(Layer):
@@ -58,7 +59,7 @@ class Notebook(Layer):
         for name, res in results.items():
             for r in res:
                 val = r["data"][0]["value"]
-                if type(val) in (int, float):
+                if is_number(val):
                     data_to_post.append(r)
                 elif self.get_arg("analyze-strings"):
                     data_to_post.append(r)

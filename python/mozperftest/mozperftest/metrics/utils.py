@@ -28,6 +28,11 @@ KNOWN_SUITE_PROPS = set(
 KNOWN_SINGLE_MEASURE_PROPS = set(set(["values"]) | KNOWN_PERFHERDER_PROPS)
 
 
+def is_number(value):
+    """Determines if the value is an int/float."""
+    return isinstance(value, (int, float)) and not isinstance(value, bool)
+
+
 def open_file(path):
     """Opens a file and returns its contents.
 
