@@ -33,6 +33,7 @@ const {
   SEARCH_SHORTCUTS_HAVE_PINNED_PREF,
   checkHasSearchEngine,
   getSearchProvider,
+  getSearchFormURL,
 } = ChromeUtils.import("resource://activity-stream/lib/SearchShortcuts.jsm");
 
 ChromeUtils.defineModuleGetter(
@@ -438,7 +439,7 @@ this.TopSitesFeed = class TopSitesFeed {
         if (link.customScreenshotURL) {
           this._fetchScreenshot(link, link.customScreenshotURL);
         } else if (link.searchTopSite && !link.isDefault) {
-          this._tippyTopProvider.processSite(link);
+          this._attachTippyTopIconForSearchShortcut(link, link.label);
         } else {
           this._fetchIcon(link);
         }
@@ -466,6 +467,30 @@ this.TopSitesFeed = class TopSitesFeed {
     }
 
     return withPinned;
+  }
+
+  /**
+   * Attach TippyTop icon to the given search shortcut
+   *
+   * Note that it queries the search form URL from search service For Yandex,
+   * and uses it to choose the best icon for its shortcut variants.
+   *
+   * @param {Object} link A link object with a `url` property
+   * @param {string} keyword Search keyword
+   */
+  _attachTippyTopIconForSearchShortcut(link, keyword) {
+    if (
+      ["@\u044F\u043D\u0434\u0435\u043A\u0441", "@yandex"].includes(keyword)
+    ) {
+      let site = { url: link.url };
+      site.url = getSearchFormURL(keyword) || site.url;
+      this._tippyTopProvider.processSite(site);
+      link.tippyTopIcon = site.tippyTopIcon;
+      link.smallFavicon = site.smallFavicon;
+      link.backgroundColor = site.backgroundColor;
+    } else {
+      this._tippyTopProvider.processSite(link);
+    }
   }
 
   /**
@@ -513,7 +538,9 @@ this.TopSitesFeed = class TopSitesFeed {
           engine.wrappedJSObject._internalAliases.includes(s.keyword)
         );
         if (shortcut) {
-          result.push(this._tippyTopProvider.processSite({ ...shortcut }));
+          let clone = { ...shortcut };
+          this._attachTippyTopIconForSearchShortcut(clone, clone.keyword);
+          result.push(clone);
         }
         return result;
       },

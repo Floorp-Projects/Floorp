@@ -52,6 +52,15 @@ function getSearchProvider(candidateShortURL) {
 }
 this.getSearchProvider = getSearchProvider;
 
+// Get the search form URL for a given search keyword. This allows us to pick
+// different tippytop icons for the different variants. Sush as yandex.com vs. yandex.ru.
+// See more details in bug 1643523.
+function getSearchFormURL(keyword) {
+  const engine = Services.search.getEngineByAlias(keyword);
+  return engine?.wrappedJSObject._searchForm;
+}
+this.getSearchFormURL = getSearchFormURL;
+
 // Check topsite against predefined list of valid search engines
 // https://searchfox.org/mozilla-central/rev/ca869724246f4230b272ed1c8b9944596e80d920/toolkit/components/search/nsSearchService.js#939
 async function checkHasSearchEngine(keyword) {
@@ -64,6 +73,7 @@ this.checkHasSearchEngine = checkHasSearchEngine;
 const EXPORTED_SYMBOLS = [
   "checkHasSearchEngine",
   "getSearchProvider",
+  "getSearchFormURL",
   "SEARCH_SHORTCUTS",
   "CUSTOM_SEARCH_SHORTCUTS",
   "SEARCH_SHORTCUTS_EXPERIMENT",
