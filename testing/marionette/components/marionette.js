@@ -277,9 +277,6 @@ const RECOMMENDED_PREFS = new Map([
   ["startup.homepage_welcome_url", "about:blank"],
   ["startup.homepage_welcome_url.additional", ""],
 
-  // Disable browser animations (tabs, fullscreen, sliding alerts)
-  ["toolkit.cosmeticAnimations.enabled", false],
-
   // Prevent starting into safe mode after application crashes
   ["toolkit.startup.max_resumed_crashes", -1],
 ]);

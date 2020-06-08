@@ -566,9 +566,6 @@ class DesktopInstance(GeckoInstance):
         # Start with a blank page by default
         "browser.startup.page": 0,
 
-        # Disable browser animations
-        "toolkit.cosmeticAnimations.enabled": False,
-
         # Bug 1557457: Disable because modal dialogs might not appear in Firefox
         "browser.tabs.remote.separatePrivilegedContentProcess": False,
 

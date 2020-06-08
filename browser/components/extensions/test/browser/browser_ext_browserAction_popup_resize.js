@@ -76,7 +76,3 @@ add_task(async function testBrowserActionMenuResizeStandards() {
 add_task(async function testBrowserActionMenuResizeQuirks() {
   await testPopupSize(false);
 });
-
-add_task(async function testTeardown() {
-  Services.prefs.clearUserPref("toolkit.cosmeticAnimations.enabled");
-});

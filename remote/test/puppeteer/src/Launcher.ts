@@ -665,9 +665,6 @@ class FirefoxLauncher implements ProductLauncher {
       // Disable first-run welcome page
       'startup.homepage_welcome_url.additional': '',
 
-      // Disable browser animations (tabs, fullscreen, sliding alerts)
-      'toolkit.cosmeticAnimations.enabled': false,
-
       // We want to collect telemetry, but we don't want to send in the results
       'toolkit.telemetry.server': `https://${server}/dummy/telemetry/`,
       // Prevent starting into safe mode after application crashes
