@@ -7,7 +7,6 @@
 #include "mozilla/AbstractThread.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/ClearOnShutdown.h"
-#include "mozilla/ContentBlockingUserInteraction.h"
 #include "mozilla/ContentPrincipal.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/dom/ContentParent.h"
@@ -123,9 +122,7 @@ static const nsLiteralCString kPreloadPermissions[] = {
     // interception when a user has disabled storage for a specific site.  Once
     // service worker interception moves to the parent process this should be
     // removed.  See bug 1428130.
-    NS_LITERAL_CSTRING("cookie"),
-
-    USER_INTERACTION_PERM};
+    NS_LITERAL_CSTRING("cookie")};
 
 // Certain permissions should never be persisted to disk under GeckoView; it's
 // the responsibility of the app to manage storing these beyond the scope of
