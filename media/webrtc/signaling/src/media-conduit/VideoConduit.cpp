@@ -1847,7 +1847,9 @@ void WebrtcVideoConduit::AddOrUpdateSink(
         NS_NewRunnableFunction("WebrtcVideoConduit::UpdateSink",
                                [this, self = RefPtr<WebrtcVideoConduit>(this),
                                 sink, wants = std::move(wants)]() {
-                                 AddOrUpdateSinkNotLocked(sink, wants);
+                                 if (mRegisteredSinks.Contains(sink)) {
+                                   AddOrUpdateSinkNotLocked(sink, wants);
+                                 }
                                }));
     return;
   }
