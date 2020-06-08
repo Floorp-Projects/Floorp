@@ -382,8 +382,88 @@ struct QueueParamTraits {
 
 // ---------------------------------------------------------------
 
+// Adapted from IPC::EnumSerializer, this class safely handles enum values,
+// validating that they are in range using the same EnumValidators as IPDL
+// (namely ContiguousEnumValidator and ContiguousEnumValidatorInclusive).
+template <typename E, typename EnumValidator>
+struct EnumSerializer {
+  typedef E ParamType;
+  typedef typename std::underlying_type<E>::type DataType;
+
+  template <typename U>
+  static void Write(ProducerView<U>& aProducerView, const ParamType& aValue) {
+    MOZ_RELEASE_ASSERT(EnumValidator::IsLegalValue(aValue));
+    aProducerView.WriteParam(DataType(aValue));
+  }
+
+  template <typename U>
+  static bool Read(ConsumerView<U>& aConsumerView, PickleIterator* aIter,
+                   ParamType* aResult) {
+    DataType value;
+    if (!aConsumerView.ReadParam(&value)) {
+      CrashReporter::AnnotateCrashReport(
+          CrashReporter::Annotation::IPCReadErrorReason,
+          NS_LITERAL_CSTRING("Bad iter"));
+      return aConsumerView.GetStatus();
+    }
+    if (!EnumValidator::IsLegalValue(ParamType(value))) {
+      CrashReporter::AnnotateCrashReport(
+          CrashReporter::Annotation::IPCReadErrorReason,
+          NS_LITERAL_CSTRING("Illegal value"));
+      return aConsumerView.GetStatus();
+    }
+
+    *aResult = ParamType(value);
+    return QueueStatus::kSuccess;
+  }
+
+  template <typename View>
+  static constexpr size_t MinSize(View& aView, const ParamType* aArg) {
+    return aView.template MinSizeParam<DataType>(nullptr);
+  }
+};
+
+using IPC::ContiguousEnumValidator;
+using IPC::ContiguousEnumValidatorInclusive;
+
+template <typename E, E MinLegal, E HighBound>
+struct ContiguousEnumSerializer
+    : EnumSerializer<E, ContiguousEnumValidator<E, MinLegal, HighBound>> {};
+
+template <typename E, E MinLegal, E MaxLegal>
+struct ContiguousEnumSerializerInclusive
+    : EnumSerializer<E,
+                     ContiguousEnumValidatorInclusive<E, MinLegal, MaxLegal>> {
+};
+
+// ---------------------------------------------------------------
+
 template <>
-struct IsTriviallySerializable<QueueStatus> : std::true_type {};
+struct QueueParamTraits<QueueStatus::EStatus>
+    : public ContiguousEnumSerializerInclusive<
+          QueueStatus::EStatus, QueueStatus::EStatus::kSuccess,
+          QueueStatus::EStatus::kOOMError> {};
+
+template <>
+struct QueueParamTraits<QueueStatus> {
+  using ParamType = QueueStatus;
+
+  template <typename U>
+  static QueueStatus Write(ProducerView<U>& aProducerView,
+                           const ParamType& aArg) {
+    return aProducerView.WriteParam(aArg.mValue);
+  }
+
+  template <typename U>
+  static QueueStatus Read(ConsumerView<U>& aConsumerView, ParamType* aArg) {
+    return aConsumerView.ReadParam(aArg ? &aArg->mValue : nullptr);
+  }
+
+  template <typename View>
+  static size_t MinSize(View& aView, const ParamType* aArg) {
+    return aView.MinSize(aArg ? &aArg->mValue : nullptr);
+  }
+};
 
 // ---------------------------------------------------------------
 
