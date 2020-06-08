@@ -194,7 +194,7 @@ jobs:
             - deb10-python-zstandard
     static-analysis-build:
         symbol: I(static-analysis-build)
-        parent: debian9-base
+        parent: debian10-base
     gdb-test:
         symbol: I(gdb)
         parent: debian8-amd64-build
