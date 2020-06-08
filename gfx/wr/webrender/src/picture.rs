@@ -390,6 +390,8 @@ pub fn tile_cache_sizes(testing: bool) -> &'static [DeviceIntSize] {
 /// The maximum size per axis of a surface,
 ///  in WorldPixel coordinates.
 const MAX_SURFACE_SIZE: f32 = 4096.0;
+/// Maximum size of a compositor surface.
+const MAX_COMPOSITOR_SURFACES_SIZE: f32 = 8192.0;
 
 /// The maximum number of sub-dependencies (e.g. clips, transforms) we can handle
 /// per-primitive. If a primitive has more than this, it will invalidate every frame.
@@ -2990,7 +2992,7 @@ impl TileCacheInstance {
         color_depth: ColorDepth,
         color_space: YuvColorSpace,
         format: YuvFormat,
-    ) {
+    ) -> bool {
         self.setup_compositor_surfaces_impl(
             prim_info,
             prim_rect,
@@ -3005,7 +3007,7 @@ impl TileCacheInstance {
             resource_cache,
             composite_state,
             image_rendering,
-        );
+        )
     }
 
     fn setup_compositor_surfaces_rgb(
@@ -3019,7 +3021,7 @@ impl TileCacheInstance {
         composite_state: &mut CompositeState,
         image_rendering: ImageRendering,
         flip_y: bool,
-    ) {
+    ) -> bool {
         let mut api_keys = [ImageKey::DUMMY; 3];
         api_keys[0] = api_key;
         self.setup_compositor_surfaces_impl(
@@ -3034,9 +3036,11 @@ impl TileCacheInstance {
             resource_cache,
             composite_state,
             image_rendering,
-        );
+        )
     }
 
+    // returns false if composition is not available for this surface,
+    // and the non-compositor path should be used to draw it instead.
     fn setup_compositor_surfaces_impl(
         &mut self,
         prim_info: &mut PrimitiveDependencyInfo,
@@ -3047,7 +3051,7 @@ impl TileCacheInstance {
         resource_cache: &mut ResourceCache,
         composite_state: &mut CompositeState,
         image_rendering: ImageRendering,
-    ) {
+    ) -> bool {
         prim_info.is_compositor_surface = true;
 
         let pic_to_world_mapper = SpaceMapper::new_with_target(
@@ -3066,7 +3070,7 @@ impl TileCacheInstance {
 
         let is_visible = world_clip_rect.intersects(&frame_context.global_screen_world_rect);
         if !is_visible {
-            return;
+            return true;
         }
 
         // TODO(gw): Is there any case where if the primitive ends up on a fractional
@@ -3074,6 +3078,11 @@ impl TileCacheInstance {
         //           draw it as part of the content?
         let device_rect = (world_rect * frame_context.global_device_pixel_scale).round();
         let clip_rect = (world_clip_rect * frame_context.global_device_pixel_scale).round();
+
+        if device_rect.size.width >= MAX_COMPOSITOR_SURFACES_SIZE ||
+           device_rect.size.height >= MAX_COMPOSITOR_SURFACES_SIZE {
+               return false;
+        }
 
         // When using native compositing, we need to find an existing native surface
         // handle to use, or allocate a new one. For existing native surfaces, we can
@@ -3158,6 +3167,8 @@ impl TileCacheInstance {
             native_surface_id,
             update_params,
         });
+
+        true
     }
 
     /// Update the dependencies for each tile for a given primitive instance.
@@ -3361,7 +3372,6 @@ impl TileCacheInstance {
                         }
                     }
                 }
-                *is_compositor_surface = promote_to_surface;
 
                 if opacity_binding_index == OpacityBindingIndex::INVALID {
                     if let Some(image_properties) = resource_cache.get_image_properties(image_data.key) {
@@ -3386,7 +3396,7 @@ impl TileCacheInstance {
                 }
 
                 if promote_to_surface {
-                    self.setup_compositor_surfaces_rgb(
+                    promote_to_surface = self.setup_compositor_surfaces_rgb(
                         &mut prim_info,
                         prim_rect,
                         frame_context,
@@ -3400,12 +3410,16 @@ impl TileCacheInstance {
                         image_data.image_rendering,
                         promote_with_flip_y,
                     );
-                } else {
+                }
+
+                if !promote_to_surface {
                     prim_info.images.push(ImageDependency {
                         key: image_data.key,
                         generation: resource_cache.get_image_generation(image_data.key),
                     });
                 }
+
+                *is_compositor_surface = promote_to_surface;
             }
             PrimitiveInstanceKind::YuvImage { data_handle, ref mut is_compositor_surface, .. } => {
                 let prim_data = &data_stores.yuv_image[data_handle];
@@ -3430,11 +3444,6 @@ impl TileCacheInstance {
                     //           need to check if opaque (YUV images are implicitly opaque).
                 }
 
-                // Store on the YUV primitive instance whether this is a promoted surface.
-                // This is used by the batching code to determine whether to draw the
-                // image to the content tiles, or just a transparent z-write.
-                *is_compositor_surface = promote_to_surface;
-
                 // If this primitive is being promoted to a surface, construct an external
                 // surface descriptor for use later during batching and compositing. We only
                 // add the image keys for this primitive as a dependency if this is _not_
@@ -3451,7 +3460,7 @@ impl TileCacheInstance {
                         }
                     }
 
-                    self.setup_compositor_surfaces_yuv(
+                    promote_to_surface = self.setup_compositor_surfaces_yuv(
                         &mut prim_info,
                         prim_rect,
                         frame_context,
@@ -3464,7 +3473,9 @@ impl TileCacheInstance {
                         prim_data.kind.color_space,
                         prim_data.kind.format,
                     );
-                } else {
+                }
+
+                if !promote_to_surface {
                     prim_info.images.extend(
                         prim_data.kind.yuv_key.iter().map(|key| {
                             ImageDependency {
@@ -3474,6 +3485,12 @@ impl TileCacheInstance {
                         })
                     );
                 }
+
+                // Store on the YUV primitive instance whether this is a promoted surface.
+                // This is used by the batching code to determine whether to draw the
+                // image to the content tiles, or just a transparent z-write.
+                *is_compositor_surface = promote_to_surface;
+
             }
             PrimitiveInstanceKind::ImageBorder { data_handle, .. } => {
                 let border_data = &data_stores.image_border[data_handle].kind;
