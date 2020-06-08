@@ -260,8 +260,8 @@ class ConsumerView {
   template <typename Arg>
   QueueStatus ReadParam(Arg* aArg) {
     MOZ_ASSERT(aArg);
-    return mozilla::webgl::QueueParamTraits<
-        typename RemoveCVR<Arg>::Type>::Read(*this, aArg);
+    return mozilla::webgl::QueueParamTraits<std::remove_cv_t<Arg>*>::Read(*this,
+                                                                          aArg);
   }
 
   /**
@@ -270,8 +270,8 @@ class ConsumerView {
   template <typename Arg>
   size_t MinSizeParam(Arg& aArg) {
     MOZ_ASSERT(aArg);
-    return mozilla::webgl::QueueParamTraits<
-        typename RemoveCVR<Arg>::Type>::MinSize(*this, aArg);
+    return mozilla::webgl::QueueParamTraits<std::remove_cv_t<Arg>&>::MinSize(
+        *this, aArg);
   }
 
   inline size_t MinSizeBytes(size_t aNBytes);
@@ -393,8 +393,7 @@ struct EnumSerializer {
   }
 
   template <typename U>
-  static bool Read(ConsumerView<U>& aConsumerView, PickleIterator* aIter,
-                   ParamType* aResult) {
+  static bool Read(ConsumerView<U>& aConsumerView, ParamType* aResult) {
     DataType value;
     if (!aConsumerView.ReadParam(&value)) {
       CrashReporter::AnnotateCrashReport(
@@ -452,7 +451,7 @@ struct QueueParamTraits<QueueStatus> {
 
   template <typename U>
   static QueueStatus Read(ConsumerView<U>& aConsumerView, ParamType* aArg) {
-    return aConsumerView.ReadParam(aArg ? &aArg->mValue : nullptr);
+    return aConsumerView.ReadParam(&aArg->mValue);
   }
 
   template <typename View>
@@ -488,9 +487,7 @@ struct QueueParamTraits<nsACString> {
     if (!aConsumerView.ReadParam(&isVoid)) {
       return aConsumerView.GetStatus();
     }
-    if (aArg) {
-      aArg->SetIsVoid(isVoid);
-    }
+    aArg->SetIsVoid(isVoid);
     if (isVoid) {
       return QueueStatus::kSuccess;
     }
@@ -501,23 +498,19 @@ struct QueueParamTraits<nsACString> {
     }
 
     if (len == 0) {
-      if (aArg) {
-        *aArg = "";
-      }
+      *aArg = "";
       return QueueStatus::kSuccess;
     }
 
-    char* buf = aArg ? new char[len + 1] : nullptr;
-    if (aArg && (!buf)) {
+    char* buf = new char[len + 1];
+    if (!buf) {
       return QueueStatus::kOOMError;
     }
     if (!aConsumerView.Read(buf, len)) {
       return aConsumerView.GetStatus();
     }
     buf[len] = '\0';
-    if (aArg) {
-      aArg->Adopt(buf, len);
-    }
+    aArg->Adopt(buf, len);
     return QueueStatus::kSuccess;
   }
 
@@ -558,9 +551,7 @@ struct QueueParamTraits<nsAString> {
     if (!aConsumerView.ReadParam(&isVoid)) {
       return aConsumerView.GetStatus();
     }
-    if (aArg) {
-      aArg->SetIsVoid(isVoid);
-    }
+    aArg->SetIsVoid(isVoid);
     if (isVoid) {
       return QueueStatus::kSuccess;
     }
@@ -572,20 +563,16 @@ struct QueueParamTraits<nsAString> {
     }
 
     if (len == 0) {
-      if (aArg) {
-        *aArg = nsString();
-      }
+      *aArg = nsString();
       return QueueStatus::kSuccess;
     }
 
     uint32_t sizeofchar = sizeof(typename ParamType::char_type);
     typename ParamType::char_type* buf = nullptr;
-    if (aArg) {
-      buf = static_cast<typename ParamType::char_type*>(
-          malloc((len + 1) * sizeofchar));
-      if (!buf) {
-        return QueueStatus::kOOMError;
-      }
+    buf = static_cast<typename ParamType::char_type*>(
+        malloc((len + 1) * sizeofchar));
+    if (!buf) {
+      return QueueStatus::kOOMError;
     }
 
     if (!aConsumerView.Read(buf, len * sizeofchar)) {
@@ -593,10 +580,7 @@ struct QueueParamTraits<nsAString> {
     }
 
     buf[len] = L'\0';
-    if (aArg) {
-      aArg->Adopt(buf, len);
-    }
-
+    aArg->Adopt(buf, len);
     return QueueStatus::kSuccess;
   }
 
@@ -653,12 +637,12 @@ struct NSArrayQueueParamTraits<nsTArray<_ElementType>, false> {
       return aConsumerView.GetStatus();
     }
 
-    if (aArg && !aArg->AppendElements(arrayLen, fallible)) {
+    if (!aArg->AppendElements(arrayLen, fallible)) {
       return QueueStatus::kOOMError;
     }
 
     for (auto i : IntegerRange(arrayLen)) {
-      ElementType* elt = aArg ? (&aArg->ElementAt(i)) : nullptr;
+      ElementType& elt = aArg->ElementAt(i);
       aConsumerView.ReadParam(elt);
     }
     return aConsumerView.GetStatus();
@@ -696,7 +680,7 @@ struct NSArrayQueueParamTraits<nsTArray<_ElementType>, true> {
       return aConsumerView.GetStatus();
     }
 
-    if (aArg && !aArg->AppendElements(arrayLen, fallible)) {
+    if (!aArg->AppendElements(arrayLen, fallible)) {
       return QueueStatus::kOOMError;
     }
 
@@ -733,16 +717,15 @@ struct ArrayQueueParamTraits<Array<_ElementType, Length>, false> {
   template <typename U>
   static QueueStatus Write(ProducerView<U>& aProducerView,
                            const ParamType& aArg) {
-    for (size_t i = 0; i < Length; ++i) {
-      aProducerView.WriteParam(aArg[i]);
+    for (const auto& elt : aArg) {
+      aProducerView.WriteParam(elt);
     }
     return aProducerView.GetStatus();
   }
 
   template <typename U>
   static QueueStatus Read(ConsumerView<U>& aConsumerView, ParamType* aArg) {
-    for (size_t i = 0; i < Length; ++i) {
-      ElementType* elt = aArg ? (&((*aArg)[i])) : nullptr;
+    for (auto& elt : *aArg) {
       aConsumerView.ReadParam(elt);
     }
     return aConsumerView.GetStatus();
@@ -751,8 +734,8 @@ struct ArrayQueueParamTraits<Array<_ElementType, Length>, false> {
   template <typename View>
   static size_t MinSize(View& aView, const ParamType& aArg) {
     size_t ret = 0;
-    for (size_t i = 0; i < Length; ++i) {
-      ret += aView.MinSizeParam(aArg[i]);
+    for (const auto& elt : aArg) {
+      ret += aView.MinSizeParam(elt);
     }
     return ret;
   }
@@ -809,14 +792,8 @@ struct QueueParamTraits<Maybe<ElementType>> {
     }
 
     if (!isSome) {
-      if (aArg) {
-        aArg->reset();
-      }
+      aArg->reset();
       return QueueStatus::kSuccess;
-    }
-
-    if (!aArg) {
-      return aConsumerView.template ReadParam<ElementType>(nullptr);
     }
 
     aArg->emplace();
@@ -854,14 +831,8 @@ struct QueueParamTraits<Maybe<Variant<T, Ts...>>> {
     }
 
     if (!isSome) {
-      if (aArg) {
-        aArg->reset();
-      }
+      aArg->reset();
       return QueueStatus::kSuccess;
-    }
-
-    if (!aArg) {
-      return aConsumerView.template ReadParam<Variant<T, Ts...>>(nullptr);
     }
 
     aArg->emplace(VariantType<T>());
@@ -890,8 +861,8 @@ struct QueueParamTraits<std::pair<TypeA, TypeB>> {
 
   template <typename U>
   static QueueStatus Read(ConsumerView<U>& aConsumerView, ParamType* aArg) {
-    aConsumerView.ReadParam(aArg ? (&aArg->first()) : nullptr);
-    return aConsumerView.ReadParam(aArg ? (&aArg->second()) : nullptr);
+    aConsumerView.ReadParam(aArg->first());
+    return aConsumerView.ReadParam(aArg->second());
   }
 
   template <typename View>
@@ -924,29 +895,22 @@ struct QueueParamTraits<UniquePtr<T>> {
       return aConsumerView.GetStatus();
     }
     if (isNull) {
-      if (aArg) {
-        aArg->reset(nullptr);
-      }
+      aArg->reset(nullptr);
       return QueueStatus::kSuccess;
     }
 
     T* obj = nullptr;
-    if (aArg) {
-      obj = new T();
-      if (!obj) {
-        return QueueStatus::kOOMError;
-      }
-      aArg->reset(obj);
+    obj = new T();
+    if (!obj) {
+      return QueueStatus::kOOMError;
     }
+    aArg->reset(obj);
     return aConsumerView.ReadParam(obj);
   }
 
   template <typename View>
   static size_t MinSize(View& aView, const ParamType& aArg) {
     size_t ret = aView.template MinSizeParam<bool>(aArg);
-    if (!aArg) {
-      return ret;
-    }
     return ret + aView.MinSizeParam(*aArg);
   }
 };
@@ -984,10 +948,7 @@ struct QueueParamTraits<Variant<Types...>> {
     static QueueStatus Read(ConsumerView<U>& aView, Tag aTag, ParamType* aArg) {
       if (aTag == N - 1) {
         using EntryType = typename mozilla::detail::Nth<N - 1, Types...>::Type;
-        if (aArg) {
-          return aView.ReadParam(static_cast<EntryType*>(aArg->ptr()));
-        }
-        return aView.template ReadParam<EntryType>();
+        return aView.ReadParam(*static_cast<EntryType*>(aArg->ptr()));
       }
       return Next::Read(aView, aTag, aArg);
     }
@@ -1008,9 +969,7 @@ struct QueueParamTraits<Variant<Types...>> {
     if (!aConsumerView.ReadParam(&tag)) {
       return aConsumerView.GetStatus();
     }
-    if (aArg) {
-      aArg->tag = tag;
-    }
+    aArg->tag = tag;
     return VariantReader<sizeof...(Types)>::Read(aConsumerView, tag, aArg);
   }
 
