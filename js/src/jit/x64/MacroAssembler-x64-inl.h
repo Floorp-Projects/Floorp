@@ -767,22 +767,6 @@ void MacroAssembler::anyTrueSimd128(FloatRegister src, Register dest) {
   cmovCCl(NonZero, one, dest);
 }
 
-// Integer Multiply
-
-void MacroAssembler::mulInt64x2(FloatRegister rhs, FloatRegister lhsDest,
-                                Register64 temp) {
-  ScratchRegisterScope t1(*this);
-  Register t2 = temp.reg;
-  vpextrq(0, lhsDest, t1);
-  vpextrq(0, rhs, t2);
-  imulq(t2, t1);
-  vpinsrq(0, t1, lhsDest, lhsDest);
-  vpextrq(1, lhsDest, t1);
-  vpextrq(1, rhs, t2);
-  imulq(t2, t1);
-  vpinsrq(1, t1, lhsDest, lhsDest);
-}
-
 // Extract lane as scalar
 
 void MacroAssembler::extractLaneInt64x2(uint32_t lane, FloatRegister src,

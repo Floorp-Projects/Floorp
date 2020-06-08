@@ -361,43 +361,6 @@ class LWasmBinarySimd128 : public LInstructionHelper<1, 2, 2> {
   wasm::SimdOp simdOp() const { return mir_->toWasmBinarySimd128()->simdOp(); }
 };
 
-// (v128, v128) -> v128 effect-free operations for i64x2.mul
-// lhs and dest are the same.
-// x64: one i64 temp.
-// x86: two i64 temps and one i32 temp
-class LWasmI64x2Mul : public LInstructionHelper<1, 2, INT64_PIECES * 2 + 1> {
- public:
-  LIR_HEADER(WasmI64x2Mul)
-
-  static constexpr uint32_t LhsDest = 0;
-  static constexpr uint32_t Rhs = 1;
-
-  LWasmI64x2Mul(const LAllocation& lhsDest, const LAllocation& rhs,
-                const LInt64Definition& temp)
-      : LInstructionHelper(classOpcode) {
-    setOperand(LhsDest, lhsDest);
-    setOperand(Rhs, rhs);
-    setInt64Temp(0, temp);
-  }
-
-  LWasmI64x2Mul(const LAllocation& lhsDest, const LAllocation& rhs,
-                const LInt64Definition& temp1, const LInt64Definition& temp2,
-                const LDefinition& temp3)
-      : LInstructionHelper(classOpcode) {
-    setOperand(LhsDest, lhsDest);
-    setOperand(Rhs, rhs);
-    setInt64Temp(0, temp1);
-    setInt64Temp(INT64_PIECES, temp2);
-    setTemp(INT64_PIECES * 2, temp3);
-  }
-
-  const LAllocation* lhsDest() { return getOperand(LhsDest); }
-  const LAllocation* rhs() { return getOperand(Rhs); }
-  const LInt64Definition temp1() { return getInt64Temp(0); }
-  const LInt64Definition temp2() { return getInt64Temp(INT64_PIECES); }
-  const LDefinition* temp3() { return getTemp(INT64_PIECES * 2); }
-};
-
 // (v128, i32) -> v128 effect-free variable-width shift operations
 // lhs and dest are the same.
 // temp0 is a GPR (if in use).
