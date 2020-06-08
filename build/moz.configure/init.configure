@@ -159,6 +159,7 @@ add_old_configure_assignment('EXTERNAL_SOURCE_DIR', external_source_dir)
          check_build_environment, '--with-external-source-dir',
          '--help')
 @imports(_from='mozbuild.mozconfig', _import='MozconfigLoader')
+@imports(_from='mozboot.mozconfig', _import='find_mozconfig')
 def mozconfig(mozconfig, old_configure, build_env,
               external_source_dir, help):
     if not old_configure and not help:
@@ -188,7 +189,7 @@ def mozconfig(mozconfig, old_configure, build_env,
         topsrcdir = external_source_dir[0]
     loader = MozconfigLoader(topsrcdir)
     mozconfig = mozconfig[0] if mozconfig else None
-    mozconfig = loader.find_mozconfig(env={'MOZCONFIG': mozconfig})
+    mozconfig = find_mozconfig(topsrcdir, env={'MOZCONFIG': mozconfig})
     mozconfig = loader.read_mozconfig(mozconfig)
 
     return mozconfig
