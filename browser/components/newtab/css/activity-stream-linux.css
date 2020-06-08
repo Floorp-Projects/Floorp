@@ -3474,7 +3474,8 @@ main {
     width: 16px;
     background-image: url("resource://activity-stream/data/content/assets/glyph-dismiss-16.svg");
     -moz-context-properties: fill;
-    fill: var(--newtab-icon-primary-color);
+    color: inherit;
+    fill: currentColor;
     opacity: 0.5;
     margin-top: -8px;
     padding: 0;
