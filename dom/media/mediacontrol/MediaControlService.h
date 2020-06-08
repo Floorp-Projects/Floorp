@@ -101,6 +101,9 @@ class MediaControlService final : public nsIObserver {
     ~ControllerManager() = default;
 
     using MediaKeysArray = nsTArray<MediaControlKeysEvent>;
+    using LinkedListControllerPtr = LinkedListElement<RefPtr<MediaController>>*;
+    using ConstLinkedListControllerPtr =
+        const LinkedListElement<RefPtr<MediaController>>*;
 
     bool AddController(MediaController* aController);
     bool RemoveController(MediaController* aController);

@@ -2380,6 +2380,9 @@ STATIC_ATOMS = [
     Atom("onmark", "onmark"),
     Atom("onboundary", "onboundary"),
 
+    # Media Controller
+    Atom("onsupportedkeyschange", "onsupportedkeyschange"),
+
     # Contextual Identity / Containers
     Atom("usercontextid", "usercontextid"),
     Atom("geckoViewSessionContextId", "geckoViewSessionContextId"),

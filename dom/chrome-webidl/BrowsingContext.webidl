@@ -148,6 +148,8 @@ interface CanonicalBrowsingContext : BrowsingContext {
   void loadURI(DOMString aURI, optional LoadURIOptions aOptions = {});
 
   readonly attribute nsISHistory? sessionHistory;
+
+  readonly attribute MediaController? mediaController;
 };
 
 [Exposed=Window, ChromeOnly]
