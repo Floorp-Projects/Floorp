@@ -72,10 +72,6 @@ struct IsTriviallySerializable
     : public std::integral_constant<bool, std::is_enum<T>::value ||
                                               std::is_arithmetic<T>::value> {};
 
-class ProducerConsumerQueue;
-class PcqProducer;
-class PcqConsumer;
-
 /**
  * QueueParamTraits provide the user with a way to implement PCQ argument
  * (de)serialization.  It uses a PcqView, which permits the system to
@@ -146,7 +142,6 @@ class Marshaller {
     return QueueStatus::kSuccess;
   }
 
-  // The PcqBase must belong to a Consumer.
   static QueueStatus ReadObject(const uint8_t* aQueue, size_t aQueueBufferSize,
                                 size_t* aRead, size_t aWrite, void* aArg,
                                 size_t aArgLength) {
@@ -188,11 +183,15 @@ class ProducerView {
         mStatus(QueueStatus::kSuccess) {}
 
   /**
-   * Write bytes from aBuffer to the producer if there is enough room.
+   * Copy bytes from aBuffer to the producer if there is enough room.
    * aBufferSize must not be 0.
    */
   inline QueueStatus Write(const void* aBuffer, size_t aBufferSize);
 
+  /**
+   * Copy bytes from src (an array of Ts), to the producer if there is
+   * enough room.  count is the number of elements in the array.
+   */
   template <typename T>
   inline QueueStatus Write(const T* src, size_t count) {
     return Write(reinterpret_cast<const void*>(src), count * sizeof(T));
@@ -248,6 +247,11 @@ class ConsumerView {
    */
   inline QueueStatus Read(void* aBuffer, size_t aBufferSize);
 
+  /**
+   * Read bytes from the consumer into an array of Ts, if there is enough data.
+   * aBuffer may be null (in which case the data is skipped).  count is the
+   * number of array elements to read.
+   */
   template <typename T>
   inline QueueStatus Read(T* dest, size_t count) {
     return Read(reinterpret_cast<void*>(dest), count * sizeof(T));
