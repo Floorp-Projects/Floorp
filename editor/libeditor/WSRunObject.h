@@ -13,7 +13,6 @@
 #include "mozilla/EditorDOMPoint.h"  // for EditorDOMPoint
 #include "mozilla/HTMLEditor.h"
 #include "mozilla/Maybe.h"
-#include "mozilla/Tuple.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLBRElement.h"
 #include "mozilla/dom/Text.h"
@@ -566,6 +565,27 @@ class MOZ_STACK_CLASS WSRunScanner {
   EditorDOMPointInText GetPreviousEditableCharPoint(
       const EditorDOMPointBase<PT, CT>& aPoint) const;
 
+  /**
+   * GetEndOfCollapsibleASCIIWhitespaces() returns the next visible char
+   * (meaning a character except ASCII whitespaces) point or end of last text
+   * node scanning from aPointAtASCIIWhitespace.
+   * Note that this may return different text node from the container of
+   * aPointAtASCIIWhitespace.
+   */
+  EditorDOMPointInText GetEndOfCollapsibleASCIIWhitespaces(
+      const EditorDOMPointInText& aPointAtASCIIWhitespace) const;
+
+  /**
+   * GetFirstASCIIWhitespacePointCollapsedTo() returns the first ASCII
+   * whitespace which aPointAtASCIIWhitespace belongs to.  In other words,
+   * the whitespace at aPointAtASCIIWhitespace should be collapsed into
+   * the result.
+   * Note that this may return different text node from the container of
+   * aPointAtASCIIWhitespace.
+   */
+  EditorDOMPointInText GetFirstASCIIWhitespacePointCollapsedTo(
+      const EditorDOMPointInText& aPointAtASCIIWhitespace) const;
+
   nsresult GetWSNodes();
 
   /**
@@ -644,10 +664,6 @@ class MOZ_STACK_CLASS WSRunObject final : public WSRunScanner {
 
  public:
   enum BlockBoundary { kBeforeBlock, kBlockStart, kBlockEnd, kAfterBlock };
-
-  enum { eBefore = 1 };
-  enum { eAfter = 1 << 1 };
-  enum { eBoth = eBefore | eAfter };
 
   /**
    * The constructors take 2 DOM points.  They represent a range in an editing
@@ -797,22 +813,6 @@ class MOZ_STACK_CLASS WSRunObject final : public WSRunScanner {
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult ReplaceASCIIWhitespacesWithOneNBSP(
       const EditorDOMPointInText& aPointAtASCIIWhitespace);
-
-  /**
-   * GetASCIIWhitespacesBounds() returns a range from start of whitespaces
-   * and end of whitespaces if the character at aPoint is an ASCII whitespace.
-   * Note that the end is next character of the last whitespace.
-   *
-   * @param aDir            Specify eBefore if you want to scan text backward.
-   *                        Specify eAfter if you want to scan text forward.
-   *                        Specify eBoth if you want to scan text to both
-   *                        direction.
-   * @param aPoint          The point to start to scan whitespaces from.
-   * @return                Start and end of the expanded range.
-   */
-  template <typename PT, typename CT>
-  Tuple<EditorDOMPointInText, EditorDOMPointInText> GetASCIIWhitespacesBounds(
-      int16_t aDir, const EditorDOMPointBase<PT, CT>& aPoint) const;
 
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
   NormalizeWhitespacesAtEndOf(const WSFragment& aRun);
