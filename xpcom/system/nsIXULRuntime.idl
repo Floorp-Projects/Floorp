@@ -13,6 +13,13 @@ namespace mozilla {
 // therefore be disabled. Bug 1065561 tracks its removal.
 bool BrowserTabsRemoteAutostart();
 uint32_t GetMaxWebProcessCount();
+
+// Returns the value of the fission.autostart pref. Since fission can be
+// disabled on a per-window basis, this should only be used when you need the
+// global value of the pref. For other use cases, you should use
+// nsILoadContext::UseRemoteSubframes instead. This will also check for special
+// conditions, like safe mode, which may require fission to be disabled.
+bool FissionAutostart();
 }
 
 %}
