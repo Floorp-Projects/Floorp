@@ -20,8 +20,8 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:drawablePadding="16dp"
-        android:focusableInTouchMode="true"
         android:focusable="true"
+        android:focusableInTouchMode="true"
         android:gravity="center_vertical"
         android:textColor="?android:textColorPrimary"
         android:textSize="16sp"
@@ -45,7 +45,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/host_name"
         app:layout_goneMarginTop="8dp"
-        tools:text="@string/mozac_feature_prompt_logins_save_message" />
+        tools:text="@string/mozac_feature_prompt_login_save_headline" />
 
     <mozilla.components.feature.prompts.widget.LoginPanelTextInputLayout
         android:id="@+id/userNameLayout"
@@ -97,18 +97,19 @@
 
     </mozilla.components.feature.prompts.widget.LoginPanelTextInputLayout>
 
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/save_cancel"
+        style="@style/Widget.MaterialComponents.Button.TextButton"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_height="48dp"
         android:layout_marginTop="16dp"
         android:layout_marginEnd="12dp"
-        android:backgroundTint="?android:colorEdgeEffect"
+        android:background="?android:attr/selectableItemBackground"
+        android:letterSpacing="0"
         android:text="@string/mozac_feature_prompt_dont_save"
         android:textAllCaps="false"
-        android:textColor="?android:windowBackground"
+        android:textColor="@color/button_state_list"
         android:textSize="14sp"
-        android:textStyle="bold"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/save_confirm"
         app:layout_constraintTop_toBottomOf="@+id/password_text_input_layout"

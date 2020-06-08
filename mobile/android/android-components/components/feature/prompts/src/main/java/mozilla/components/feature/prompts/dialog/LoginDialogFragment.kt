@@ -18,6 +18,7 @@ import androidx.annotation.VisibleForTesting
 import androidx.appcompat.widget.AppCompatTextView
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
+import com.google.android.material.button.MaterialButton
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
 import kotlinx.coroutines.CancellationException
@@ -35,7 +36,6 @@ import mozilla.components.concept.storage.Login
 import mozilla.components.concept.storage.LoginValidationDelegate.Result
 import mozilla.components.feature.prompts.R
 import mozilla.components.feature.prompts.ext.onDone
-import mozilla.components.support.ktx.android.content.appName
 import mozilla.components.support.ktx.android.view.hideKeyboard
 import mozilla.components.support.ktx.android.view.toScope
 import java.util.concurrent.CopyOnWriteArrayList
@@ -119,7 +119,7 @@ internal class LoginDialogFragment : PromptDialogFragment() {
         view.findViewById<AppCompatTextView>(R.id.host_name).text = origin
 
         view.findViewById<AppCompatTextView>(R.id.save_message).text =
-            getString(R.string.mozac_feature_prompt_logins_save_message, activity?.appName)
+            getString(R.string.mozac_feature_prompt_login_save_headline)
 
         view.findViewById<Button>(R.id.save_confirm).setOnClickListener {
             onPositiveClickAction()
@@ -268,12 +268,17 @@ internal class LoginDialogFragment : PromptDialogFragment() {
                 when (result) {
                     Result.CanBeCreated -> {
                         setViewState(
-                            confirmText =
-                            context?.getString(R.string.mozac_feature_prompt_save_confirmation)
+                            headline = context?.getString(R.string.mozac_feature_prompt_login_save_headline),
+                            negativeText = context?.getString(R.string.mozac_feature_prompt_dont_save),
+                            confirmText = context?.getString(R.string.mozac_feature_prompt_save_confirmation)
                         )
                     }
                     is Result.CanBeUpdated -> {
                         setViewState(
+                            headline = if (result.foundLogin.username.isEmpty()) context?.getString(
+                                R.string.mozac_feature_prompt_login_add_username_headline
+                            ) else context?.getString(R.string.mozac_feature_prompt_login_update_headline),
+                            negativeText = context?.getString(R.string.mozac_feature_prompt_dont_update),
                             confirmText =
                             context?.getString(R.string.mozac_feature_prompt_update_confirmation)
                         )
@@ -289,10 +294,20 @@ internal class LoginDialogFragment : PromptDialogFragment() {
     }
 
     private fun setViewState(
+        headline: String? = null,
+        negativeText: String? = null,
         confirmText: String? = null,
         confirmButtonEnabled: Boolean? = null,
         passwordErrorText: String? = null
     ) {
+        if (headline != null) {
+            view?.findViewById<AppCompatTextView>(R.id.save_message)?.text = headline
+        }
+
+        if (negativeText != null) {
+            view?.findViewById<MaterialButton>(R.id.save_cancel)?.text = negativeText
+        }
+
         if (confirmText != null) {
             view?.findViewById<Button>(R.id.save_confirm)?.text = confirmText
         }
