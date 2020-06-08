@@ -74,17 +74,11 @@ public class WebNotification {
      */
     public final @NonNull boolean requireInteraction;
 
-    /**
-     * This is the URL of the page or Service Worker that generated the notification.
-     */
-    public final @NonNull String source;
-
     @WrapForJNI
     /* package */ WebNotification(@Nullable final String title, @NonNull final String tag,
                         @Nullable final String cookie, @Nullable final String text,
                         @Nullable final String imageUrl, @Nullable final String textDirection,
-                        @Nullable final String lang, @NonNull final boolean requireInteraction,
-                        @NonNull final String source) {
+                        @Nullable final String lang, @NonNull final boolean requireInteraction) {
         this.tag = tag;
         this.mCookie = cookie;
         this.title = title;
@@ -93,7 +87,6 @@ public class WebNotification {
         this.textDirection = textDirection;
         this.lang = lang;
         this.requireInteraction = requireInteraction;
-        this.source = source;
     }
 
     /**

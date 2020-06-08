@@ -19,6 +19,7 @@ import org.mozilla.geckoview.*
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.RejectedPromiseException
 import org.mozilla.geckoview.test.util.Callbacks
+import java.math.BigInteger
 import java.security.KeyPair
 import java.security.KeyPairGenerator
 import java.security.SecureRandom
@@ -168,7 +169,6 @@ class WebPushTest : BaseSessionTest() {
             override fun onShowNotification(notification: WebNotification) {
                 assertThat("Title should match", notification.title, equalTo(expectedTitle))
                 assertThat("Body should match", notification.text, equalTo(expectedBody))
-                assertThat("Source should match", notification.source, endsWith("sw.js"))
                 notificationResult.complete(null)
             }
         })
