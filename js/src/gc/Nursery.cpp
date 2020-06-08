@@ -981,16 +981,19 @@ void js::Nursery::collect(JS::GCReason reason) {
   // nursery-allocated.
   MOZ_ASSERT(!IsNurseryAllocable(AllocKind::OBJECT_GROUP));
 
-  TenureCountCache tenureCounts;
   previousGC.reason = JS::GCReason::NO_REASON;
+  previousGC.nurseryUsedBytes = usedSpace();
+  previousGC.nurseryCapacity = capacity();
+  previousGC.nurseryCommitted = committed();
+  previousGC.tenuredBytes = 0;
+  previousGC.tenuredCells = 0;
+
+  TenureCountCache tenureCounts;
   if (!isEmpty()) {
-    doCollection(reason, tenureCounts);
-  } else {
-    previousGC.nurseryUsedBytes = 0;
-    previousGC.nurseryCapacity = capacity();
-    previousGC.nurseryCommitted = committed();
-    previousGC.tenuredBytes = 0;
-    previousGC.tenuredCells = 0;
+    CollectionResult result = doCollection(reason, tenureCounts);
+    previousGC.reason = reason;
+    previousGC.tenuredBytes = result.tenuredBytes;
+    previousGC.tenuredCells = result.tenuredCells;
   }
 
   // Resize the nursery.
@@ -1054,17 +1057,14 @@ void js::Nursery::collect(JS::GCReason reason) {
   }
 }
 
-void js::Nursery::doCollection(JS::GCReason reason,
-                               TenureCountCache& tenureCounts) {
+js::Nursery::CollectionResult js::Nursery::doCollection(
+    JS::GCReason reason, TenureCountCache& tenureCounts) {
   JSRuntime* rt = runtime();
   AutoGCSession session(gc, JS::HeapState::MinorCollecting);
   AutoSetThreadIsPerformingGC performingGC;
   AutoStopVerifyingBarriers av(rt, false);
   AutoDisableProxyCheck disableStrictProxyChecking;
   mozilla::DebugOnly<AutoEnterOOMUnsafeRegion> oomUnsafeRegion;
-
-  const size_t initialNurseryCapacity = capacity();
-  const size_t initialNurseryUsedBytes = usedSpace();
 
   // Move objects pointed to by roots from the nursery to the major heap.
   TenuringTracer mover(rt, this);
@@ -1163,12 +1163,7 @@ void js::Nursery::doCollection(JS::GCReason reason,
 #endif
   endProfile(ProfileKey::CheckHashTables);
 
-  previousGC.reason = reason;
-  previousGC.nurseryCapacity = initialNurseryCapacity;
-  previousGC.nurseryCommitted = spaceToEnd(allocatedChunkCount());
-  previousGC.nurseryUsedBytes = initialNurseryUsedBytes;
-  previousGC.tenuredBytes = mover.tenuredSize;
-  previousGC.tenuredCells = mover.tenuredCells;
+  return {mover.tenuredSize, mover.tenuredCells};
 }
 
 float js::Nursery::doPretenuring(JSRuntime* rt, JS::GCReason reason,
