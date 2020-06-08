@@ -12,6 +12,7 @@
 #include "mozilla/Unused.h"
 
 #include <algorithm>
+#include <cmath>
 #include <utility>
 
 #include "builtin/MapObject.h"
@@ -1467,96 +1468,76 @@ MOZ_ALWAYS_INLINE void js::Nursery::setStartPosition() {
 }
 
 void js::Nursery::maybeResizeNursery(JS::GCReason reason) {
-  if (maybeResizeExact(reason)) {
+#ifdef JS_GC_ZEAL
+  // This zeal mode disabled nursery resizing.
+  if (gc->hasZealMode(ZealMode::GenerationalGC)) {
     return;
   }
-
-  // This incorrect promotion rate results in better nursery sizing
-  // decisions, however we should to better tuning based on the real
-  // promotion rate in the future.
-  const double promotionRate =
-      double(previousGC.tenuredBytes) / double(previousGC.nurseryCapacity);
-
-  // Object lifetimes aren't going to behave linearly, but a better
-  // relationship that works for all programs and can be predicted in
-  // advance doesn't exist.
-  static const double GrowThreshold = 0.03;
-  static const double ShrinkThreshold = 0.01;
-  static const double PromotionGoal = (GrowThreshold + ShrinkThreshold) / 2.0;
-  const double factor = promotionRate / PromotionGoal;
-  MOZ_ASSERT(factor >= 0.0);
-
-#ifdef DEBUG
-  // This is |... <= SIZE_MAX|, just without the implicit value-changing
-  // conversion that expression would involve and modern clang would warn about.
-  static const double SizeMaxPlusOne =
-      2.0f * double(1ULL << (sizeof(void*) * CHAR_BIT - 1));
-  MOZ_ASSERT((double(capacity()) * factor) < SizeMaxPlusOne);
 #endif
 
-  size_t newCapacity = size_t(double(capacity()) * factor);
+  size_t newCapacity =
+      mozilla::Clamp(targetSize(reason), tunables().gcMinNurseryBytes(),
+                     tunables().gcMaxNurseryBytes());
 
-  const size_t minNurseryBytes = tunables().gcMinNurseryBytes();
-  MOZ_ASSERT(minNurseryBytes >= ArenaSize);
-  const size_t maxNurseryBytes = tunables().gcMaxNurseryBytes();
-  MOZ_ASSERT(maxNurseryBytes >= ArenaSize);
+  MOZ_ASSERT(roundSize(newCapacity) == newCapacity);
 
-  // If one of these conditions is true then we always shrink or grow the
-  // nursery. This way the thresholds still have an effect even if the goal
-  // seeking says the current size is ideal.
-  size_t lowLimit = std::max(minNurseryBytes, capacity() / 2);
-  size_t highLimit =
-      std::min(maxNurseryBytes, (CheckedInt<size_t>(capacity()) * 2).value());
-  newCapacity = roundSize(mozilla::Clamp(newCapacity, lowLimit, highLimit));
-
-  if (capacity() < maxNurseryBytes && promotionRate > GrowThreshold &&
-      newCapacity > capacity()) {
+  if (newCapacity > capacity()) {
     growAllocableSpace(newCapacity);
-  } else if (capacity() >= minNurseryBytes + SubChunkStep &&
-             promotionRate < ShrinkThreshold && newCapacity < capacity()) {
+  } else if (newCapacity < capacity()) {
     shrinkAllocableSpace(newCapacity);
   }
 }
 
-bool js::Nursery::maybeResizeExact(JS::GCReason reason) {
-  // Shrink the nursery to its minimum size if we ran out of memory or
-  // received a memory pressure event.
-  if (gc::IsOOMReason(reason) || gc->systemHasLowMemory()) {
-    minimizeAllocableSpace();
-    return true;
+static inline double ClampDouble(double value, double min, double max) {
+  MOZ_ASSERT(!isnan(value) && !isnan(min) && !isnan(max));
+  MOZ_ASSERT(max >= min);
+
+  if (value <= min) {
+    return min;
   }
 
-#ifdef JS_GC_ZEAL
-  // This zeal mode disabled nursery resizing.
-  if (gc->hasZealMode(ZealMode::GenerationalGC)) {
-    return true;
-  }
-#endif
-
-  MOZ_ASSERT(tunables().gcMaxNurseryBytes() >= ArenaSize);
-  const size_t newMaxNurseryBytes = tunables().gcMaxNurseryBytes();
-  MOZ_ASSERT(newMaxNurseryBytes >= ArenaSize);
-
-  if (capacity_ > newMaxNurseryBytes) {
-    // The configured maximum nursery size is changing.
-    // We need to shrink the nursery.
-    shrinkAllocableSpace(newMaxNurseryBytes);
-    return true;
+  if (value >= max) {
+    return max;
   }
 
-  const size_t newMinNurseryBytes = tunables().gcMinNurseryBytes();
-  MOZ_ASSERT(newMinNurseryBytes >= ArenaSize);
-
-  if (newMinNurseryBytes > capacity()) {
-    // the configured minimum nursery size is changing, so grow the nursery.
-    MOZ_ASSERT(newMinNurseryBytes <= tunables().gcMaxNurseryBytes());
-    growAllocableSpace(newMinNurseryBytes);
-    return true;
-  }
-
-  return false;
+  return value;
 }
 
+size_t js::Nursery::targetSize(JS::GCReason reason) {
+  if (gc::IsOOMReason(reason) || gc->systemHasLowMemory()) {
+    // Shrink the nursery as much as possible in low memory situations.
+    return 0;
+  }
+
+  // Calculate the fraction of the nursery promoted out of its entire
+  // capacity. This gives better results than using the promotion rate (based on
+  // the amount of nursery used) in cases where we collect before the nursery is
+  // full.
+  const double fractionPromoted =
+      double(previousGC.tenuredBytes) / double(previousGC.nurseryCapacity);
+
+  // Object lifetimes aren't going to behave linearly, but a better relationship
+  // that works for all programs and can be predicted in advance doesn't exist.
+  static const double GrowThreshold = 0.03;
+  static const double ShrinkThreshold = 0.01;
+  static const double PromotionGoal = (GrowThreshold + ShrinkThreshold) / 2.0;
+
+  // Leave size untouched if we don't cross either threshold.
+  if (fractionPromoted > ShrinkThreshold && fractionPromoted < GrowThreshold) {
+    return capacity();
+  }
+
+  const double growthFactor =
+      ClampDouble(fractionPromoted / PromotionGoal, 0.5, 2.0);
+
+  // The multiplication below cannot overflow because growthFactor is at most
+  // two.
+  MOZ_ASSERT(capacity() < SIZE_MAX / 2);
+
+  return roundSize(size_t(double(capacity()) * growthFactor));
+}
+
+/* static */
 size_t js::Nursery::roundSize(size_t size) {
   if (size >= ChunkSize) {
     size = Round(size, ChunkSize);
@@ -1669,21 +1650,6 @@ void js::Nursery::shrinkAllocableSpace(size_t newCapacity) {
     decommitTask.queueRange(capacity_, chunk(0), lock);
     decommitTask.startOrRunIfIdle(lock);
   }
-}
-
-void js::Nursery::minimizeAllocableSpace() {
-  if (capacity_ < tunables().gcMinNurseryBytes()) {
-    // The nursery is already smaller than the minimum size. This can happen
-    // because changing parameters (like an increase in minimum size) can only
-    // occur after a minor GC. See Bug 1585159.
-    //
-    // We could either do the /correct/ thing and increase the size to the
-    // configured minimum size. Or do nothing, keeping the nursery smaller. We
-    // do nothing because this can be executed as a last-ditch GC and we don't
-    // want to add memory pressure then.
-    return;
-  }
-  shrinkAllocableSpace(tunables().gcMinNurseryBytes());
 }
 
 bool js::Nursery::queueDictionaryModeObjectToSweep(NativeObject* obj) {
