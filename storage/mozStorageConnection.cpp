@@ -1545,20 +1545,11 @@ nsresult Connection::initializeClone(Connection* aClone, bool aReadOnly) {
     const nsACString& key = iter.Key();
     Connection::FunctionInfo data = iter.UserData();
 
-    MOZ_ASSERT(data.type == Connection::FunctionInfo::SIMPLE ||
-                   data.type == Connection::FunctionInfo::AGGREGATE,
-               "Invalid function type!");
-
-    if (data.type == Connection::FunctionInfo::SIMPLE) {
-      mozIStorageFunction* function =
-          static_cast<mozIStorageFunction*>(data.function.get());
-      rv = aClone->CreateFunction(key, data.numArgs, function);
-      if (NS_FAILED(rv)) {
-        NS_WARNING("Failed to copy function to cloned connection");
-      }
-
-    } else {
-      MOZ_CRASH("Not implemented.");
+    mozIStorageFunction* function =
+        static_cast<mozIStorageFunction*>(data.function.get());
+    rv = aClone->CreateFunction(key, data.numArgs, function);
+    if (NS_FAILED(rv)) {
+      NS_WARNING("Failed to copy function to cloned connection");
     }
   }
 
@@ -2036,8 +2027,7 @@ Connection::CreateFunction(const nsACString& aFunctionName,
       SQLITE_ANY, aFunction, basicFunctionHelper, nullptr, nullptr);
   if (srv != SQLITE_OK) return convertResultCode(srv);
 
-  FunctionInfo info = {aFunction, Connection::FunctionInfo::SIMPLE,
-                       aNumArguments};
+  FunctionInfo info = {aFunction, aNumArguments};
   mFunctions.Put(aFunctionName, info);
 
   return NS_OK;
