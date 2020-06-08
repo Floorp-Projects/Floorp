@@ -2432,8 +2432,8 @@ void nsHttpChannel::ProcessAltService() {
   }
 
   OriginAttributes originAttributes;
-  StoragePrincipalHelper::GetOriginAttributesForNetworkState(this,
-                                                             originAttributes);
+  StoragePrincipalHelper::GetOriginAttributes(
+      this, originAttributes, StoragePrincipalHelper::eRegularPrincipal);
 
   AltSvcMapping::ProcessHeader(
       altSvc, scheme, originHost, originPort, mUsername, GetTopWindowOrigin(),
@@ -6761,8 +6761,8 @@ nsresult nsHttpChannel::BeginConnect() {
   SetDoNotTrack();
 
   OriginAttributes originAttributes;
-  StoragePrincipalHelper::GetOriginAttributesForNetworkState(this,
-                                                             originAttributes);
+  StoragePrincipalHelper::GetOriginAttributes(
+      this, originAttributes, StoragePrincipalHelper::eRegularPrincipal);
 
   RefPtr<nsHttpConnectionInfo> connInfo = new nsHttpConnectionInfo(
       host, port, EmptyCString(), mUsername, GetTopWindowOrigin(), proxyInfo,

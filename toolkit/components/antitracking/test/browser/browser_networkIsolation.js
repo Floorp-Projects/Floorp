@@ -45,7 +45,6 @@ add_task(async function() {
       ["privacy.trackingprotection.enabled", false],
       ["privacy.trackingprotection.pbmode.enabled", false],
       ["privacy.trackingprotection.annotate_channels", true],
-      ["privacy.partition.network_state", false],
     ],
   });
 
