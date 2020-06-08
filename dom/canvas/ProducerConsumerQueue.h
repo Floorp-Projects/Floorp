@@ -128,24 +128,13 @@ constexpr size_t GetMaxHeaderSize() {
 }
 
 template <typename View, typename Arg, typename... Args>
-size_t MinSizeofArgs(View& aView, const Arg* aArg, const Args*... aArgs) {
+size_t MinSizeofArgs(View& aView, const Arg& aArg, const Args&... aArgs) {
   return aView.MinSizeParam(aArg) + MinSizeofArgs(aView, aArgs...);
 }
 
 template <typename View>
 size_t MinSizeofArgs(View&) {
   return 0;
-}
-
-template <typename View, typename Arg1, typename Arg2, typename... Args>
-size_t MinSizeofArgs(View& aView) {
-  return aView.template MinSizeParam<Arg1>(nullptr) +
-         MinSizeofArgs<Arg2, Args...>(aView);
-}
-
-template <typename View, typename Arg>
-size_t MinSizeofArgs(View& aView) {
-  return aView.MinSizeParam(nullptr);
 }
 
 class PcqRCSemaphore {
@@ -429,7 +418,7 @@ class PcqProducer : public detail::PcqBase {
 
     // Check that the queue has enough unoccupied room for all Args types.
     // This is based on the user's size estimate for args from QueueParamTraits.
-    size_t bytesNeeded = detail::MinSizeofArgs(view, &aArgs...);
+    size_t bytesNeeded = detail::MinSizeofArgs(view, aArgs...);
 
     if (Size() < bytesNeeded) {
       PCQ_LOGE(
@@ -665,7 +654,7 @@ class PcqConsumer : public detail::PcqBase {
 
     // Check that the queue has enough unoccupied room for all Args types.
     // This is based on the user's size estimate for Args from QueueParamTraits.
-    size_t bytesNeeded = detail::MinSizeofArgs(view);
+    size_t bytesNeeded = detail::MinSizeofArgs(view, aArgs...);
 
     if (Size() < bytesNeeded) {
       PCQ_LOGE(
