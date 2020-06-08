@@ -1000,7 +1000,9 @@ JSContext::~JSContext() {
   }
 #endif
 
-  irregexp::DestroyIsolate(isolate.ref());
+  if (isolate) {
+    irregexp::DestroyIsolate(isolate.ref());
+  }
 
   js_delete(atomsZoneFreeLists_.ref());
 
