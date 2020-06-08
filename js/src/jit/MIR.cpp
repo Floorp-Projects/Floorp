@@ -4939,6 +4939,42 @@ bool MWasmLoadGlobalCell::congruentTo(const MDefinition* ins) const {
   return congruentIfOperandsEqual(other);
 }
 
+MDefinition* MWasmScalarToSimd128::foldsTo(TempAllocator& alloc) {
+  if (input()->isConstant()) {
+    MConstant* c = input()->toConstant();
+    switch (simdOp()) {
+      case wasm::SimdOp::I8x16Splat:
+        return MWasmFloatConstant::NewSimd128(
+            alloc, SimdConstant::SplatX16(c->toInt32()));
+      case wasm::SimdOp::I16x8Splat:
+        return MWasmFloatConstant::NewSimd128(
+            alloc, SimdConstant::SplatX8(c->toInt32()));
+      case wasm::SimdOp::I32x4Splat:
+        return MWasmFloatConstant::NewSimd128(
+            alloc, SimdConstant::SplatX4(c->toInt32()));
+      case wasm::SimdOp::I64x2Splat:
+        return MWasmFloatConstant::NewSimd128(
+            alloc, SimdConstant::SplatX2(c->toInt64()));
+      default:
+        return this;
+    }
+  }
+  if (input()->isWasmFloatConstant()) {
+    MWasmFloatConstant* c = input()->toWasmFloatConstant();
+    switch (simdOp()) {
+      case wasm::SimdOp::F32x4Splat:
+        return MWasmFloatConstant::NewSimd128(
+            alloc, SimdConstant::SplatX4(c->toFloat32()));
+      case wasm::SimdOp::F64x2Splat:
+        return MWasmFloatConstant::NewSimd128(
+            alloc, SimdConstant::SplatX2(c->toDouble()));
+      default:
+        return this;
+    }
+  }
+  return this;
+}
+
 MDefinition::AliasType MLoadDynamicSlot::mightAlias(
     const MDefinition* def) const {
   if (def->isStoreDynamicSlot()) {
