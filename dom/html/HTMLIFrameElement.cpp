@@ -176,6 +176,7 @@ nsresult HTMLIFrameElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
           aName == nsGkAtoms::srcdoc || aName == nsGkAtoms::sandbox) {
         RefreshFeaturePolicy(true /* parse the feature policy attribute */);
       } else if (aName == nsGkAtoms::allowfullscreen ||
+                 aName == nsGkAtoms::mozallowfullscreen ||
                  aName == nsGkAtoms::allowpaymentrequest) {
         RefreshFeaturePolicy(false /* parse the feature policy attribute */);
       }
