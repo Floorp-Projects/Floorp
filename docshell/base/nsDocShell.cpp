@@ -58,6 +58,7 @@
 #include "mozilla/dom/DocGroup.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLAnchorElement.h"
+#include "mozilla/dom/HTMLIFrameElement.h"
 #include "mozilla/dom/PerformanceNavigation.h"
 #include "mozilla/dom/PermissionMessageUtils.h"
 #include "mozilla/dom/PopupBlocker.h"
@@ -1765,13 +1766,10 @@ nsDocShell::GetFullscreenAllowed(bool* aFullscreenAllowed) {
     } else {
       // We do not allow document inside any containing element other
       // than iframe to enter fullscreen.
-      if (frameElement->IsHTMLElement(nsGkAtoms::iframe)) {
+      if (auto* iframe = HTMLIFrameElement::FromNode(*frameElement)) {
         // If any ancestor iframe does not have allowfullscreen attribute
         // set, then fullscreen is not allowed.
-        if (!frameElement->HasAttr(kNameSpaceID_None,
-                                   nsGkAtoms::allowfullscreen) &&
-            !frameElement->HasAttr(kNameSpaceID_None,
-                                   nsGkAtoms::mozallowfullscreen)) {
+        if (!iframe->AllowFullscreen()) {
           return NS_OK;
         }
       } else if (frameElement->IsHTMLElement(nsGkAtoms::embed)) {

@@ -71,12 +71,22 @@ class HTMLIFrameElement final : public nsGenericHTMLFrameElement {
     }
     return mSandbox;
   }
-  bool AllowFullscreen() const {
+
+  bool AllowFullscreenForBindings() const {
     return GetBoolAttr(nsGkAtoms::allowfullscreen);
   }
-  void SetAllowFullscreen(bool aAllow, ErrorResult& aError) {
+
+  void SetAllowFullscreenForBindings(bool aAllow, ErrorResult& aError) {
     SetHTMLBoolAttr(nsGkAtoms::allowfullscreen, aAllow, aError);
   }
+
+  // This and AllowFullscreenForBindings can be merged when we remove support
+  // for mozallowfullscreen.
+  bool AllowFullscreen() const {
+    return GetBoolAttr(nsGkAtoms::allowfullscreen) ||
+           GetBoolAttr(nsGkAtoms::mozallowfullscreen);
+  }
+
   bool AllowPaymentRequest() const {
     return GetBoolAttr(nsGkAtoms::allowpaymentrequest);
   }
