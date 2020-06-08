@@ -1356,7 +1356,7 @@ class AddonInstall {
         logger.debug(`Postponing install of ${this.addon.id}`);
         break;
       case AddonManager.STATE_DOWNLOADING:
-      case AddonManager.STATE_CHECKING:
+      case AddonManager.STATE_CHECKING_UPDATE:
       case AddonManager.STATE_INSTALLING:
         // Installation is already running
         break;
@@ -2040,7 +2040,7 @@ var LocalAddonInstall = class extends AddonInstall {
     this.addon.installDate = addon ? addon.installDate : this.addon.updateDate;
 
     if (!this.addon.isCompatible) {
-      this.state = AddonManager.STATE_CHECKING;
+      this.state = AddonManager.STATE_CHECKING_UPDATE;
 
       await new Promise(resolve => {
         new UpdateChecker(
@@ -2434,7 +2434,7 @@ var DownloadAddonInstall = class extends AddonInstall {
               this.downloadCompleted();
             } else {
               // TODO Should we send some event here (bug 557716)?
-              this.state = AddonManager.STATE_CHECKING;
+              this.state = AddonManager.STATE_CHECKING_UPDATE;
               new UpdateChecker(
                 this.addon,
                 {
