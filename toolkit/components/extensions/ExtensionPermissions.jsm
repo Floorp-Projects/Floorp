@@ -11,7 +11,6 @@ const { XPCOMUtils } = ChromeUtils.import(
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   ExtensionParent: "resource://gre/modules/ExtensionParent.jsm",
-  JSONFile: "resource://gre/modules/JSONFile.jsm",
   OS: "resource://gre/modules/osfile.jsm",
 });
 
@@ -19,6 +18,18 @@ XPCOMUtils.defineLazyGetter(
   this,
   "StartupCache",
   () => ExtensionParent.StartupCache
+);
+
+ChromeUtils.defineModuleGetter(
+  this,
+  "KeyValueService",
+  "resource://gre/modules/kvstore.jsm"
+);
+
+ChromeUtils.defineModuleGetter(
+  this,
+  "FileUtils",
+  "resource://gre/modules/FileUtils.jsm"
 );
 
 XPCOMUtils.defineLazyGetter(
@@ -29,54 +40,142 @@ XPCOMUtils.defineLazyGetter(
 
 var EXPORTED_SYMBOLS = ["ExtensionPermissions"];
 
+// This is the old preference file pre-migration to rkv
 const FILE_NAME = "extension-preferences.json";
-
-let prefs;
-let _initPromise;
-
-async function _lazyInit() {
-  let path = OS.Path.join(OS.Constants.Path.profileDir, FILE_NAME);
-
-  prefs = new JSONFile({ path });
-  prefs.data = {};
-
-  try {
-    let { buffer } = await OS.File.read(path);
-    prefs.data = JSON.parse(new TextDecoder().decode(buffer));
-  } catch (e) {
-    if (!e.becauseNoSuchFile) {
-      Cu.reportError(e);
-    }
-  }
-}
-
-function lazyInit() {
-  if (!_initPromise) {
-    _initPromise = _lazyInit();
-  }
-  return _initPromise;
-}
 
 function emptyPermissions() {
   return { permissions: [], origins: [] };
 }
 
+const DEFAULT_VALUE = JSON.stringify(emptyPermissions());
+
+const VERSION_KEY = "_version";
+const VERSION_VALUE = 1;
+
+const KEY_PREFIX = "id-";
+
+class PermissionStore {
+  async _init() {
+    const dir = FileUtils.getDir("ProfD", ["extension-store"], true);
+    this._store = await KeyValueService.getOrCreate(dir.path, "permissions");
+    if (!(await this._store.has(VERSION_KEY))) {
+      await this.maybeMigrateData();
+    }
+  }
+
+  lazyInit() {
+    if (!this._initPromise) {
+      this._initPromise = this._init();
+    }
+    return this._initPromise;
+  }
+
+  validateMigratedData(json) {
+    let data = {};
+    for (let [extensionId, permissions] of Object.entries(json)) {
+      // If both arrays are empty there's no need to include the value since
+      // it's the default
+      if (
+        "permissions" in permissions &&
+        "origins" in permissions &&
+        (permissions.permissions.length || permissions.origins.length)
+      ) {
+        data[extensionId] = permissions;
+      }
+    }
+    return data;
+  }
+
+  async maybeMigrateData() {
+    let migrationWasSuccessful = false;
+    let oldStore = OS.Path.join(OS.Constants.Path.profileDir, FILE_NAME);
+    try {
+      await this.migrateFrom(oldStore);
+      migrationWasSuccessful = true;
+    } catch (e) {
+      if (!e.becauseNoSuchFile) {
+        Cu.reportError(e);
+      }
+    }
+
+    await this._store.put(VERSION_KEY, VERSION_VALUE);
+
+    if (migrationWasSuccessful) {
+      OS.File.remove(oldStore);
+    }
+  }
+
+  async migrateFrom(oldStore) {
+    // Some other migration job might have started and not completed, let's
+    // start from scratch
+    await this._store.clear();
+
+    let { buffer } = await OS.File.read(oldStore);
+    let json = JSON.parse(new TextDecoder().decode(buffer));
+    let data = this.validateMigratedData(json);
+
+    if (data) {
+      let entries = Object.entries(data).map(([extensionId, permissions]) => [
+        this.makeKey(extensionId),
+        JSON.stringify(permissions),
+      ]);
+      if (entries.length) {
+        await this._store.writeMany(entries);
+      }
+    }
+  }
+
+  makeKey(extensionId) {
+    // We do this so that the extensionId field cannot clash with internal
+    // fields like `_version`
+    return KEY_PREFIX + extensionId;
+  }
+
+  async has(extensionId) {
+    await this.lazyInit();
+    return this._store.has(this.makeKey(extensionId));
+  }
+
+  async get(extensionId) {
+    await this.lazyInit();
+    return this._store
+      .get(this.makeKey(extensionId), DEFAULT_VALUE)
+      .then(JSON.parse);
+  }
+
+  async put(extensionId, permissions) {
+    await this.lazyInit();
+    return this._store.put(
+      this.makeKey(extensionId),
+      JSON.stringify(permissions)
+    );
+  }
+
+  async delete(extensionId) {
+    await this.lazyInit();
+    return this._store.delete(this.makeKey(extensionId));
+  }
+
+  async resetVersionForTest() {
+    await this.lazyInit();
+    return this._store.delete(VERSION_KEY);
+  }
+
+  get initPromiseForTest() {
+    return this._initPromise;
+  }
+}
+
+let store = new PermissionStore();
+
 var ExtensionPermissions = {
-  _update(extensionId, perms) {
-    prefs.data[extensionId] = perms;
-    prefs.saveSoon();
+  async _update(extensionId, perms) {
+    await store.put(extensionId, perms);
     return StartupCache.permissions.set(extensionId, perms);
   },
 
   async _get(extensionId) {
-    await lazyInit();
-
-    let perms = prefs.data[extensionId];
-    if (!perms) {
-      perms = emptyPermissions();
-    }
-
-    return perms;
+    return store.get(extensionId);
   },
 
   async _getCached(extensionId) {
@@ -177,28 +276,30 @@ var ExtensionPermissions = {
   },
 
   async removeAll(extensionId) {
-    await lazyInit();
     StartupCache.permissions.delete(extensionId);
-    if (prefs.data[extensionId]) {
-      let removed = prefs.data[extensionId];
-      delete prefs.data[extensionId];
-      prefs.saveSoon();
-      Management.emit("change-permissions", {
-        extensionId,
-        removed,
-      });
-    }
+
+    let removed = store.get(extensionId);
+    await store.delete(extensionId);
+    Management.emit("change-permissions", {
+      extensionId,
+      removed: await removed,
+    });
+  },
+
+  // This is meant for tests only
+  async _has(extensionId) {
+    return store.has(extensionId);
+  },
+
+  // This is meant for tests only
+  async _resetVersion() {
+    await store.resetVersionForTest();
   },
 
   // This is meant for tests only
   async _uninit() {
-    if (!_initPromise) {
-      return;
-    }
-
-    await _initPromise;
-    await prefs.finalize();
-    prefs = null;
-    _initPromise = null;
+    // Make sure the store is not in the middle of initializing itself
+    await store.initPromiseForTest;
+    store = new PermissionStore();
   },
 };

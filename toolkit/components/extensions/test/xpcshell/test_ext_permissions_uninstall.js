@@ -47,24 +47,11 @@ async function getCachedPermissions(extensionId) {
 }
 
 // Look up the permissions from the file. Internal methods are used to avoid
-// inadvertently changing the permissions in the cache or JSON file.
+// inadvertently changing the permissions in the cache or the database.
 async function getStoredPermissions(extensionId) {
-  // The two _get calls that follow are expected to return the same object if
-  // the entry exists in the JSON file, otherwise we expect two different
-  // objects (with the same default properties).
-  let perms1 = await ExtensionPermissions._get(extensionId);
-  let perms2 = await ExtensionPermissions._get(extensionId);
-  if (perms1 === perms2) {
-    // There is an entry in the file.
-    return perms1;
+  if (await ExtensionPermissions._has(extensionId)) {
+    return ExtensionPermissions._get(extensionId);
   }
-  // Sanity check: The returned object should be empty.
-  Assert.deepEqual(perms1, perms2, "Expected same permission values");
-  Assert.deepEqual(
-    perms1,
-    { origins: [], permissions: [] },
-    "Expected empty permissions"
-  );
   return null;
 }
 
@@ -156,7 +143,7 @@ add_task(async function test_permissions_removed() {
   equal(perms.origins.length, 0, "no origin permissions after uninstall");
 
   // The public ExtensionPermissions.get method should not store (empty)
-  // permissions in the persistent JSON file. Polluting the cache is not ideal,
+  // permissions in the persistent database. Polluting the cache is not ideal,
   // but acceptable since the cache will eventually be cleared, and non-test
   // code is not likely to call ExtensionPermissions.get() for non-installed
   // extensions anyway.
