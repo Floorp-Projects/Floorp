@@ -55,6 +55,7 @@ import mozilla.components.feature.downloads.AbstractFetchDownloadService.Downloa
 import mozilla.components.feature.downloads.AbstractFetchDownloadService.DownloadJobStatus.PAUSED
 import mozilla.components.feature.downloads.DownloadNotification.NOTIFICATION_DOWNLOAD_GROUP_ID
 import mozilla.components.feature.downloads.ext.addCompletedDownload
+import mozilla.components.feature.downloads.ext.isScheme
 import mozilla.components.feature.downloads.ext.withResponse
 import mozilla.components.feature.downloads.facts.emitNotificationResumeFact
 import mozilla.components.feature.downloads.facts.emitNotificationPauseFact
@@ -375,6 +376,8 @@ abstract class AbstractFetchDownloadService : Service() {
             val fileName = download.fileName
                     ?: throw IllegalStateException("A fileName for a download is required")
             val file = File(download.filePath)
+            // addCompletedDownload can't handle any non http(s) urls
+            val url = if (!download.isScheme(listOf("http", "https"))) null else download.url.toUri()
 
             context.addCompletedDownload(
                     title = fileName,
@@ -385,7 +388,7 @@ abstract class AbstractFetchDownloadService : Service() {
                     length = download.contentLength ?: file.length(),
                     // Only show notifications if our channel is blocked
                     showNotification = !DownloadNotification.isChannelEnabled(context),
-                    uri = download.url.toUri(),
+                    uri = url,
                     referer = download.referrerUrl?.toUri()
             )
         }
