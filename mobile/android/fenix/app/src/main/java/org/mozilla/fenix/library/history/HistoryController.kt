@@ -10,6 +10,8 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.res.Resources
 import androidx.navigation.NavController
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import mozilla.components.concept.engine.prompt.ShareData
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
@@ -25,6 +27,7 @@ interface HistoryController {
     fun handleDeleteSome(items: Set<HistoryItem>)
     fun handleCopyUrl(item: HistoryItem)
     fun handleShare(item: HistoryItem)
+    fun handleRequestSync()
 }
 
 class DefaultHistoryController(
@@ -33,16 +36,21 @@ class DefaultHistoryController(
     private val resources: Resources,
     private val snackbar: FenixSnackbar,
     private val clipboardManager: ClipboardManager,
+    private val scope: CoroutineScope,
     private val openToBrowser: (item: HistoryItem, mode: BrowsingMode?) -> Unit,
     private val displayDeleteAll: () -> Unit,
     private val invalidateOptionsMenu: () -> Unit,
-    private val deleteHistoryItems: (Set<HistoryItem>) -> Unit
+    private val deleteHistoryItems: (Set<HistoryItem>) -> Unit,
+    private val syncHistory: suspend () -> Unit
 ) : HistoryController {
     override fun handleOpen(item: HistoryItem, mode: BrowsingMode?) {
         openToBrowser(item, mode)
     }
 
     override fun handleSelect(item: HistoryItem) {
+        if (store.state.mode === HistoryFragmentState.Mode.Syncing) {
+            return
+        }
         store.dispatch(HistoryFragmentAction.AddItemForRemoval(item))
     }
 
@@ -86,5 +94,13 @@ class DefaultHistoryController(
                 data = arrayOf(ShareData(url = item.url, title = item.title))
             )
         )
+    }
+
+    override fun handleRequestSync() {
+        scope.launch {
+            store.dispatch(HistoryFragmentAction.StartSync)
+            syncHistory.invoke()
+            store.dispatch(HistoryFragmentAction.FinishSync)
+        }
     }
 }

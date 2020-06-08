@@ -24,6 +24,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 import mozilla.components.concept.engine.prompt.ShareData
 import mozilla.components.lib.state.ext.consumeFrom
+import mozilla.components.service.fxa.sync.SyncReason
 import mozilla.components.support.base.feature.UserInteractionHandler
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
@@ -72,10 +73,12 @@ class HistoryFragment : LibraryPageFragment<HistoryItem>(), UserInteractionHandl
                 isDisplayedWithBrowserToolbar = false
             ),
             activity?.getSystemService(CLIPBOARD_SERVICE) as ClipboardManager,
+            lifecycleScope,
             ::openItem,
             ::displayDeleteAllDialog,
             ::invalidateOptionsMenu,
-            ::deleteHistoryItems
+            ::deleteHistoryItems,
+            ::syncHistory
         )
         historyInteractor = HistoryInteractor(
             historyController
@@ -267,5 +270,11 @@ class HistoryFragment : LibraryPageFragment<HistoryItem>(), UserInteractionHandl
             data = data.toTypedArray()
         )
         nav(R.id.historyFragment, directions)
+    }
+
+    private suspend fun syncHistory() {
+        val accountManager = requireComponents.backgroundServices.accountManager
+        accountManager.syncNowAsync(SyncReason.User).await()
+        viewModel.invalidate()
     }
 }

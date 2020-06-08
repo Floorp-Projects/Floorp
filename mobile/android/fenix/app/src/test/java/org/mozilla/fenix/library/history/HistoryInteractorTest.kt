@@ -120,4 +120,12 @@ class HistoryInteractorTest {
             controller.handleDeleteSome(items)
         }
     }
+
+    @Test
+    fun onRequestSync() {
+        interactor.onRequestSync()
+        verifyAll {
+            controller.handleRequestSync()
+        }
+    }
 }

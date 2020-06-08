@@ -16,6 +16,7 @@ import mozilla.components.support.base.feature.UserInteractionHandler
 import org.mozilla.fenix.R
 import org.mozilla.fenix.library.LibraryPageView
 import org.mozilla.fenix.library.SelectionInteractor
+import org.mozilla.fenix.theme.ThemeManager
 
 /**
  * Interface for the HistoryViewInteractor. This interface is implemented by objects that want
@@ -71,6 +72,11 @@ interface HistoryViewInteractor : SelectionInteractor<HistoryItem> {
      * @param items the history items to delete
      */
     fun onDeleteSome(items: Set<HistoryItem>)
+
+    /**
+     * Called when the user requests a sync of the history
+     */
+    fun onRequestSync()
 }
 
 /**
@@ -97,12 +103,23 @@ class HistoryView(
             adapter = historyAdapter
             (itemAnimator as SimpleItemAnimator).supportsChangeAnimations = false
         }
+
+        val primaryTextColor =
+            ThemeManager.resolveAttribute(R.attr.primaryText, context)
+        view.swipe_refresh.setColorSchemeColors(primaryTextColor)
+        view.swipe_refresh.setOnRefreshListener {
+            interactor.onRequestSync()
+            view.history_list.scrollToPosition(0)
+        }
     }
 
     fun update(state: HistoryFragmentState) {
         val oldMode = mode
 
         view.progress_bar.isVisible = state.mode === HistoryFragmentState.Mode.Deleting
+        view.swipe_refresh.isRefreshing = state.mode === HistoryFragmentState.Mode.Syncing
+        view.swipe_refresh.isEnabled =
+            state.mode === HistoryFragmentState.Mode.Normal || state.mode === HistoryFragmentState.Mode.Syncing
         items = state.items
         mode = state.mode
 

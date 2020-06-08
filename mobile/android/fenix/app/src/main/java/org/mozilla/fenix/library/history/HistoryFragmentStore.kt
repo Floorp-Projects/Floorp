@@ -32,6 +32,8 @@ sealed class HistoryFragmentAction : Action {
     data class RemoveItemForRemoval(val item: HistoryItem) : HistoryFragmentAction()
     object EnterDeletionMode : HistoryFragmentAction()
     object ExitDeletionMode : HistoryFragmentAction()
+    object StartSync : HistoryFragmentAction()
+    object FinishSync : HistoryFragmentAction()
 }
 
 /**
@@ -45,6 +47,7 @@ data class HistoryFragmentState(val items: List<HistoryItem>, val mode: Mode) : 
 
         object Normal : Mode()
         object Deleting : Mode()
+        object Syncing : Mode()
         data class Editing(override val selectedItems: Set<HistoryItem>) : Mode()
     }
 }
@@ -72,5 +75,7 @@ private fun historyStateReducer(
         is HistoryFragmentAction.ExitEditMode -> state.copy(mode = HistoryFragmentState.Mode.Normal)
         is HistoryFragmentAction.EnterDeletionMode -> state.copy(mode = HistoryFragmentState.Mode.Deleting)
         is HistoryFragmentAction.ExitDeletionMode -> state.copy(mode = HistoryFragmentState.Mode.Normal)
+        is HistoryFragmentAction.StartSync -> state.copy(mode = HistoryFragmentState.Mode.Syncing)
+        is HistoryFragmentAction.FinishSync -> state.copy(mode = HistoryFragmentState.Mode.Normal)
     }
 }

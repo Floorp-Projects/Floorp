@@ -46,6 +46,29 @@ class HistoryFragmentStoreTest {
         assertEquals(store.state.mode, HistoryFragmentState.Mode.Editing(setOf(historyItem)))
     }
 
+    @Test
+    fun startSync() = runBlocking {
+        val initialState = emptyDefaultState()
+        val store = HistoryFragmentStore(initialState)
+
+        store.dispatch(HistoryFragmentAction.StartSync).join()
+        assertNotSame(initialState, store.state)
+        assertEquals(HistoryFragmentState.Mode.Syncing, store.state.mode)
+    }
+
+    @Test
+    fun finishSync() = runBlocking {
+        val initialState = HistoryFragmentState(
+            items = listOf(),
+            mode = HistoryFragmentState.Mode.Syncing
+        )
+        val store = HistoryFragmentStore(initialState)
+
+        store.dispatch(HistoryFragmentAction.FinishSync).join()
+        assertNotSame(initialState, store.state)
+        assertEquals(HistoryFragmentState.Mode.Normal, store.state.mode)
+    }
+
     private fun emptyDefaultState(): HistoryFragmentState = HistoryFragmentState(
         items = listOf(),
         mode = HistoryFragmentState.Mode.Normal

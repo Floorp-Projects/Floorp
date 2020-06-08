@@ -9,10 +9,14 @@ import android.content.ClipboardManager
 import android.content.res.Resources
 import androidx.navigation.NavController
 import androidx.navigation.NavDirections
+import io.mockk.coVerifyOrder
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.TestCoroutineScope
 import mozilla.components.concept.engine.prompt.ShareData
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -26,9 +30,11 @@ import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 
 // Robolectric needed for `onShareItem()`
+@ExperimentalCoroutinesApi
 @RunWith(FenixRobolectricTestRunner::class)
 class HistoryControllerTest {
     private val historyItem = HistoryItem(0, "title", "url", 0.toLong())
+    private val scope: CoroutineScope = TestCoroutineScope()
     private val store: HistoryFragmentStore = mockk(relaxed = true)
     private val state: HistoryFragmentState = mockk(relaxed = true)
     private val navController: NavController = mockk(relaxed = true)
@@ -39,16 +45,19 @@ class HistoryControllerTest {
     private val displayDeleteAll: () -> Unit = mockk(relaxed = true)
     private val invalidateOptionsMenu: () -> Unit = mockk(relaxed = true)
     private val deleteHistoryItems: (Set<HistoryItem>) -> Unit = mockk(relaxed = true)
+    private val syncHistory: suspend () -> Unit = mockk(relaxed = true)
     private val controller = DefaultHistoryController(
         store,
         navController,
         resources,
         snackbar,
         clipboardManager,
+        scope,
         openInBrowser,
         displayDeleteAll,
         invalidateOptionsMenu,
-        deleteHistoryItems
+        deleteHistoryItems,
+        syncHistory
     )
 
     @Before
@@ -102,6 +111,17 @@ class HistoryControllerTest {
 
         verify {
             store.dispatch(HistoryFragmentAction.RemoveItemForRemoval(historyItem))
+        }
+    }
+
+    @Test
+    fun onSelectHistoryItemDuringSync() {
+        every { state.mode } returns HistoryFragmentState.Mode.Syncing
+
+        controller.handleSelect(historyItem)
+
+        verify(exactly = 0) {
+            store.dispatch(HistoryFragmentAction.AddItemForRemoval(historyItem))
         }
     }
 
@@ -189,5 +209,20 @@ class HistoryControllerTest {
         assertEquals(1, (directions.captured.arguments["data"] as Array<ShareData>).size)
         assertEquals(historyItem.title, (directions.captured.arguments["data"] as Array<ShareData>)[0].title)
         assertEquals(historyItem.url, (directions.captured.arguments["data"] as Array<ShareData>)[0].url)
+    }
+
+    @Test
+    fun onRequestSync() {
+        controller.handleRequestSync()
+
+        verify(exactly = 2) {
+            store.dispatch(any())
+        }
+
+        coVerifyOrder {
+            store.dispatch(HistoryFragmentAction.StartSync)
+            syncHistory.invoke()
+            store.dispatch(HistoryFragmentAction.FinishSync)
+        }
     }
 }

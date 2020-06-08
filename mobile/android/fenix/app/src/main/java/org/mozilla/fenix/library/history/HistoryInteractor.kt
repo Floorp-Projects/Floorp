@@ -57,4 +57,8 @@ class HistoryInteractor(
     override fun onDeleteSome(items: Set<HistoryItem>) {
         historyController.handleDeleteSome(items)
     }
+
+    override fun onRequestSync() {
+        historyController.handleRequestSync()
+    }
 }
