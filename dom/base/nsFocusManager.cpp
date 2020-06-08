@@ -2595,19 +2595,16 @@ void nsFocusManager::SendFocusOrBlurEvent(
   }
 
   if (aDocument && aDocument->EventHandlingSuppressed()) {
-    for (uint32_t i = mDelayedBlurFocusEvents.Length(); i > 0; --i) {
-      // if this event was already queued, remove it and append it to the end
-      if (mDelayedBlurFocusEvents[i - 1].mEventMessage == aEventMessage &&
-          mDelayedBlurFocusEvents[i - 1].mPresShell == aPresShell &&
-          mDelayedBlurFocusEvents[i - 1].mDocument == aDocument &&
-          mDelayedBlurFocusEvents[i - 1].mTarget == eventTarget &&
-          mDelayedBlurFocusEvents[i - 1].mRelatedTarget == aRelatedTarget) {
-        mDelayedBlurFocusEvents.RemoveElementAt(i - 1);
-      }
-    }
+    // if this event was already queued, remove it and append it to the end
+    mDelayedBlurFocusEvents.RemoveElementsBy([&](const auto& event) {
+      return event.mEventMessage == aEventMessage &&
+             event.mPresShell == aPresShell && event.mDocument == aDocument &&
+             event.mTarget == eventTarget &&
+             event.mRelatedTarget == aRelatedTarget;
+    });
 
-    mDelayedBlurFocusEvents.AppendElement(nsDelayedBlurOrFocusEvent(
-        aEventMessage, aPresShell, aDocument, eventTarget, aRelatedTarget));
+    mDelayedBlurFocusEvents.EmplaceBack(aEventMessage, aPresShell, aDocument,
+                                        eventTarget, aRelatedTarget);
     return;
   }
 

@@ -7726,12 +7726,11 @@ void QuotaManager::CheckTemporaryStorageLimits() {
         }
       }
 
-      for (uint32_t index = originInfos.Length(); index > 0; index--) {
-        if (doomedOriginInfos.Contains(originInfos[index - 1]) ||
-            originInfos[index - 1]->LockedPersisted()) {
-          originInfos.RemoveElementAt(index - 1);
-        }
-      }
+      originInfos.RemoveElementsBy(
+          [&doomedOriginInfos](const auto& originInfo) {
+            return doomedOriginInfos.Contains(originInfo) ||
+                   originInfo->LockedPersisted();
+          });
 
       originInfos.Sort(OriginInfoLRUComparator());
 

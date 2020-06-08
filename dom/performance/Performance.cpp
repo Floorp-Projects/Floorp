@@ -195,16 +195,11 @@ void Performance::GetEntriesByName(
 
 void Performance::ClearUserEntries(const Optional<nsAString>& aEntryName,
                                    const nsAString& aEntryType) {
-  for (uint32_t i = 0; i < mUserEntries.Length();) {
-    if ((!aEntryName.WasPassed() ||
-         mUserEntries[i]->GetName().Equals(aEntryName.Value())) &&
-        (aEntryType.IsEmpty() ||
-         mUserEntries[i]->GetEntryType().Equals(aEntryType))) {
-      mUserEntries.RemoveElementAt(i);
-    } else {
-      ++i;
-    }
-  }
+  mUserEntries.RemoveElementsBy([&aEntryName, &aEntryType](const auto& entry) {
+    return (!aEntryName.WasPassed() ||
+            entry->GetName().Equals(aEntryName.Value())) &&
+           (aEntryType.IsEmpty() || entry->GetEntryType().Equals(aEntryType));
+  });
 }
 
 void Performance::ClearResourceTimings() { mResourceEntries.Clear(); }

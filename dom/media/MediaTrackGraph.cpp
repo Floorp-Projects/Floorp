@@ -747,11 +747,9 @@ void MediaTrackGraphImpl::RegisterAudioOutput(MediaTrack* aTrack, void* aKey) {
 void MediaTrackGraphImpl::UnregisterAllAudioOutputs(MediaTrack* aTrack) {
   MOZ_ASSERT(OnGraphThreadOrNotRunning());
 
-  for (int32_t i = mAudioOutputs.Length() - 1; i >= 0; i--) {
-    if (mAudioOutputs[i].mTrack == aTrack) {
-      mAudioOutputs.RemoveElementAt(i);
-    }
-  }
+  mAudioOutputs.RemoveElementsBy([aTrack](const TrackKeyAndVolume& aTkv) {
+    return aTkv.mTrack == aTrack;
+  });
 }
 
 void MediaTrackGraphImpl::UnregisterAudioOutput(MediaTrack* aTrack,
@@ -3805,11 +3803,8 @@ void MediaTrackGraph::UnregisterCaptureTrackForWindow(uint64_t aWindowId) {
 
 void MediaTrackGraphImpl::UnregisterCaptureTrackForWindow(uint64_t aWindowId) {
   MOZ_ASSERT(NS_IsMainThread());
-  for (int32_t i = mWindowCaptureTracks.Length() - 1; i >= 0; i--) {
-    if (mWindowCaptureTracks[i].mWindowId == aWindowId) {
-      mWindowCaptureTracks.RemoveElementAt(i);
-    }
-  }
+  mWindowCaptureTracks.RemoveElementsBy(
+      [aWindowId](const auto& track) { return track.mWindowId == aWindowId; });
 }
 
 already_AddRefed<MediaInputPort> MediaTrackGraph::ConnectToCaptureTrack(

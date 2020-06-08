@@ -317,12 +317,8 @@ class MediaEventSourceImpl {
   using TakeArgs = detail::TakeArgs<Method>;
 
   void PruneListeners() {
-    int32_t last = static_cast<int32_t>(mListeners.Length()) - 1;
-    for (int32_t i = last; i >= 0; --i) {
-      if (mListeners[i]->IsRevoked()) {
-        mListeners.RemoveElementAt(i);
-      }
-    }
+    mListeners.RemoveElementsBy(
+        [](const auto& listener) { return listener->IsRevoked(); });
   }
 
   template <typename Target, typename Function>
