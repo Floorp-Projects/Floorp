@@ -390,7 +390,7 @@ class IpdlProducer final : public SupportsWeakPtr<IpdlProducer<_Actor>> {
     size_t read = 0;
     size_t write = 0;
     mozilla::webgl::ProducerView<SelfType> view(this, read, &write);
-    size_t bytesNeeded = MinSizeofArgs(view, &aArgs...);
+    size_t bytesNeeded = MinSizeofArgs(view, aArgs...);
     if (!mSerializedData.SetLength(bytesNeeded, fallible)) {
       return QueueStatus::kOOMError;
     }
@@ -444,11 +444,6 @@ class IpdlProducer final : public SupportsWeakPtr<IpdlProducer<_Actor>> {
   size_t MinSizeofArgs(mozilla::webgl::ProducerView<SelfType>& aView,
                        const Arg& aArg, const Args&... aArgs) {
     return aView.MinSizeParam(aArg) + MinSizeofArgs(aView, aArgs...);
-  }
-
-  template <typename Arg, typename... Args>
-  size_t MinSizeofArgs(mozilla::webgl::ProducerView<SelfType>& aView) {
-    return aView.template MinSizeParam<Arg>() + MinSizeofArgs<Args...>(aView);
   }
 };
 

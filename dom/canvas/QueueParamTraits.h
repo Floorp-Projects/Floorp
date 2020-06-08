@@ -96,23 +96,19 @@ struct IsTriviallySerializable
  * template<> struct QueueParamTraits<typename RemoveCVR<Arg>::Type> {
  *   // Write data from aArg into the PCQ.  It is an error to write less than
  *   // is reported by MinSize(aArg).
- *  *   static QueueStatus Write(ProducerView& aProducerView, const Arg& aArg)
- * {...};
+ *   static QueueStatus Write(ProducerView& aProducerView, const Arg& aArg)
+ *   {...};
  *
  *   // Read data from the PCQ into aArg, or just skip the data if aArg is null.
  *   // It is an error to read less than is reported by MinSize(aArg).
- *  *   static QueueStatus Read(ConsumerView& aConsumerView, Arg* aArg) {...}
+ *   static QueueStatus Read(ConsumerView& aConsumerView, Arg* aArg) {...}
  *
  *   // The minimum number of bytes needed to represent this object in the
- * queue.
- *   // It is intended to be a very fast estimate but most cases can easily
- *   // compute the exact value.
- *   // If aArg is null then this should be the minimum ever required (it is
- * only
- *   // null when checking for deserialization, since the argument is obviously
- *   // not yet available).  It is an error for the queue to require less room
- *   // than MinSize() reports.  A MinSize of 0 is always valid (albeit
- * wasteful). static size_t MinSize(const Arg* aArg) {...}
+ *   // queue.  It is intended to be a very fast estimate but most cases can
+ *   // easily compute the exact value.
+ *   // It is an error for the queue to require less room than MinSize()
+ *   // reports.  A MinSize of 0 is always valid (albeit wasteful).
+ *   static size_t MinSize(const Arg& aArg) {...}
  * };
  */
 template <typename Arg>
@@ -210,7 +206,7 @@ class ProducerView {
    * MinSize of Arg using QueueParamTraits.
    */
   template <typename Arg>
-  size_t MinSizeParam(const Arg* aArg = nullptr) {
+  size_t MinSizeParam(const Arg& aArg = nullptr) {
     return mozilla::webgl::QueueParamTraits<
         typename RemoveCVR<Arg>::Type>::MinSize(*this, aArg);
   }
@@ -272,7 +268,7 @@ class ConsumerView {
    * MinSize of Arg using QueueParamTraits.  aArg may be null.
    */
   template <typename Arg>
-  size_t MinSizeParam(Arg* aArg) {
+  size_t MinSizeParam(Arg& aArg) {
     MOZ_ASSERT(aArg);
     return mozilla::webgl::QueueParamTraits<
         typename RemoveCVR<Arg>::Type>::MinSize(*this, aArg);
@@ -310,9 +306,8 @@ QueueStatus ProducerView<T>::Write(const void* aBuffer, size_t aBufferSize) {
 
 template <typename T>
 size_t ProducerView<T>::MinSizeBytes(size_t aNBytes) {
-  return mProducer->NeedsSharedMemory(aNBytes)
-             ? MinSizeParam((mozilla::ipc::Shmem*)nullptr)
-             : aNBytes;
+  mozilla::ipc::Shmem shmem;
+  return mProducer->NeedsSharedMemory(aNBytes) ? MinSizeParam(shmem) : aNBytes;
 }
 
 template <typename T>
@@ -343,9 +338,8 @@ QueueStatus ConsumerView<T>::Read(void* aBuffer, size_t aBufferSize) {
 
 template <typename T>
 size_t ConsumerView<T>::MinSizeBytes(size_t aNBytes) {
-  return mConsumer->NeedsSharedMemory(aNBytes)
-             ? MinSizeParam((mozilla::ipc::Shmem*)nullptr)
-             : aNBytes;
+  mozilla::ipc::Shmem shmem;
+  return mConsumer->NeedsSharedMemory(aNBytes) ? MinSizeParam(shmem) : aNBytes;
 }
 
 // ---------------------------------------------------------------
@@ -374,7 +368,7 @@ struct QueueParamTraits {
   }
 
   template <typename View>
-  static constexpr size_t MinSize(View& aView, const Arg* aArg) {
+  static constexpr size_t MinSize(View& aView, const Arg& aArg) {
     static_assert(mozilla::webgl::template IsTriviallySerializable<Arg>::value,
                   "No QueueParamTraits specialization was found for this type "
                   "and it does not satisfy IsTriviallySerializable.");
@@ -420,8 +414,8 @@ struct EnumSerializer {
   }
 
   template <typename View>
-  static constexpr size_t MinSize(View& aView, const ParamType* aArg) {
-    return aView.template MinSizeParam<DataType>(nullptr);
+  static constexpr size_t MinSize(View& aView, const ParamType& aArg) {
+    return aView.MinSizeParam(DataType(aArg));
   }
 };
 
@@ -462,8 +456,8 @@ struct QueueParamTraits<QueueStatus> {
   }
 
   template <typename View>
-  static size_t MinSize(View& aView, const ParamType* aArg) {
-    return aView.MinSize(aArg ? &aArg->mValue : nullptr);
+  static size_t MinSize(View& aView, const ParamType& aArg) {
+    return aView.MinSize(aArg.mValue);
   }
 };
 
@@ -528,13 +522,13 @@ struct QueueParamTraits<nsACString> {
   }
 
   template <typename View>
-  static size_t MinSize(View& aView, const ParamType* aArg) {
-    size_t minSize = aView.template MinSizeParam<bool>(nullptr);
-    if ((!aArg) || aArg->IsVoid()) {
+  static size_t MinSize(View& aView, const ParamType& aArg) {
+    size_t minSize = aView.template MinSizeParam<bool>(aArg.IsVoid());
+    if (aArg.IsVoid()) {
       return minSize;
     }
-    minSize += aView.template MinSizeParam<uint32_t>(nullptr) +
-               aView.MinSizeBytes(aArg->Length());
+    minSize += aView.template MinSizeParam<uint32_t>(aArg.Length()) +
+               aView.MinSizeBytes(aArg.Length());
     return minSize;
   }
 };
@@ -607,14 +601,14 @@ struct QueueParamTraits<nsAString> {
   }
 
   template <typename View>
-  static size_t MinSize(View& aView, const ParamType* aArg) {
-    size_t minSize = aView.template MinSizeParam<bool>(nullptr);
-    if ((!aArg) || aArg->IsVoid()) {
+  static size_t MinSize(View& aView, const ParamType& aArg) {
+    size_t minSize = aView.template MinSizeParam<bool>(aArg.IsVoid());
+    if (aArg.IsVoid()) {
       return minSize;
     }
     uint32_t sizeofchar = sizeof(typename ParamType::char_type);
-    minSize += aView.template MinSizeParam<uint32_t>(nullptr) +
-               aView.MinSizeBytes(aArg->Length() * sizeofchar);
+    minSize += aView.template MinSizeParam<uint32_t>(aArg.Length()) +
+               aView.MinSizeBytes(aArg.Length() * sizeofchar);
     return minSize;
   }
 };
@@ -671,14 +665,10 @@ struct NSArrayQueueParamTraits<nsTArray<_ElementType>, false> {
   }
 
   template <typename View>
-  static size_t MinSize(View& aView, const ParamType* aArg) {
-    size_t ret = aView.template MinSizeParam<size_t>(nullptr);
-    if (!aArg) {
-      return ret;
-    }
-
+  static size_t MinSize(View& aView, const ParamType& aArg) {
+    size_t ret = aView.MinSizeParam(aArg.Length());
     for (auto& elt : aArg) {
-      ret += aView.MinSizeParam(&elt);
+      ret += aView.MinSizeParam(elt);
     }
     return ret;
   }
@@ -714,13 +704,9 @@ struct NSArrayQueueParamTraits<nsTArray<_ElementType>, true> {
   }
 
   template <typename View>
-  static size_t MinSize(View& aView, const ParamType* aArg) {
-    size_t ret = aView.template MinSizeParam<size_t>(nullptr);
-    if (!aArg) {
-      return ret;
-    }
-
-    ret += aView.MinSizeBytes(aArg->Length() * sizeof(ElementType));
+  static size_t MinSize(View& aView, const ParamType& aArg) {
+    size_t ret = aView.template MinSizeParam<size_t>(aArg.Length());
+    ret += aView.MinSizeBytes(aArg.Length() * sizeof(ElementType));
     return ret;
   }
 };
@@ -763,10 +749,10 @@ struct ArrayQueueParamTraits<Array<_ElementType, Length>, false> {
   }
 
   template <typename View>
-  static size_t MinSize(View& aView, const ParamType* aArg) {
+  static size_t MinSize(View& aView, const ParamType& aArg) {
     size_t ret = 0;
     for (size_t i = 0; i < Length; ++i) {
-      ret += aView.MinSizeParam(&((*aArg)[i]));
+      ret += aView.MinSizeParam(aArg[i]);
     }
     return ret;
   }
@@ -790,7 +776,7 @@ struct ArrayQueueParamTraits<Array<_ElementType, Length>, true> {
   }
 
   template <typename View>
-  static size_t MinSize(View& aView, const ParamType* aArg) {
+  static size_t MinSize(View& aView, const ParamType& aArg) {
     return aView.MinSizeBytes(sizeof(ElementType[Length]));
   }
 };
@@ -838,9 +824,9 @@ struct QueueParamTraits<Maybe<ElementType>> {
   }
 
   template <typename View>
-  static size_t MinSize(View& aView, const ParamType* aArg) {
-    return aView.template MinSizeParam<bool>(nullptr) +
-           ((aArg && aArg->isSome()) ? aView.MinSizeParam(&aArg->ref()) : 0);
+  static size_t MinSize(View& aView, const ParamType& aArg) {
+    return aView.template MinSizeParam<bool>(aArg) +
+           (aArg.isSome() ? aView.MinSizeParam(aArg.ref()) : 0);
   }
 };
 
@@ -883,9 +869,9 @@ struct QueueParamTraits<Maybe<Variant<T, Ts...>>> {
   }
 
   template <typename View>
-  static size_t MinSize(View& aView, const ParamType* aArg) {
-    return aView.template MinSizeParam<bool>(nullptr) +
-           ((aArg && aArg->isSome()) ? aView.MinSizeParam(&aArg->ref()) : 0);
+  static size_t MinSize(View& aView, const ParamType& aArg) {
+    return aView.MinSizeParam(aArg.mIsSome) +
+           (aArg.isSome() ? aView.MinSizeParam(aArg.ref()) : 0);
   }
 };
 
@@ -909,9 +895,8 @@ struct QueueParamTraits<std::pair<TypeA, TypeB>> {
   }
 
   template <typename View>
-  static size_t MinSize(View& aView, const ParamType* aArg) {
-    return aView.MinSizeParam(aArg ? aArg->first() : nullptr) +
-           aView.MinSizeParam(aArg ? aArg->second() : nullptr);
+  static size_t MinSize(View& aView, const ParamType& aArg) {
+    return aView.MinSizeParam(aArg.first()) + aView.MinSizeParam(aArg.second());
   }
 };
 
@@ -957,12 +942,12 @@ struct QueueParamTraits<UniquePtr<T>> {
   }
 
   template <typename View>
-  static size_t MinSize(View& aView, const ParamType* aArg) {
-    if ((!aArg) || (!aArg->get())) {
-      return aView.template MinSizeParam<bool>(nullptr);
+  static size_t MinSize(View& aView, const ParamType& aArg) {
+    size_t ret = aView.template MinSizeParam<bool>(aArg);
+    if (!aArg) {
+      return ret;
     }
-    return aView.template MinSizeParam<bool>(nullptr) +
-           aView.MinSizeParam(aArg->get());
+    return ret + aView.MinSizeParam(*aArg);
   }
 };
 
@@ -1034,15 +1019,11 @@ struct QueueParamTraits<Variant<Types...>> {
   template <size_t N, typename View>
   struct MinSizeVariant {
     using Next = MinSizeVariant<N - 1, View>;
-    static size_t MinSize(View& aView, const Tag* aTag, const ParamType* aArg) {
+    static size_t MinSize(View& aView, const Tag* aTag, const ParamType& aArg) {
       using EntryType = typename mozilla::detail::Nth<N - 1, Types...>::Type;
-      if (!aArg) {
-        return std::min(aView.template MinSizeParam<EntryType>(),
-                        Next::MinSize(aView, aTag, aArg));
-      }
       MOZ_ASSERT(aTag);
       if (*aTag == N - 1) {
-        return aView.MinSizeParam(&aArg->template as<EntryType>());
+        return aView.MinSizeParam(aArg.template as<EntryType>());
       }
       return Next::MinSize(aView, aTag, aArg);
     }
@@ -1052,20 +1033,17 @@ struct QueueParamTraits<Variant<Types...>> {
   struct MinSizeVariant<0, View> {
     // We've reached the end of the type list.  We will legitimately get here
     // when calculating MinSize for a null Variant.
-    static size_t MinSize(View& aView, const Tag* aTag, const ParamType* aArg) {
-      if (!aArg) {
-        return 0;
-      }
+    static size_t MinSize(View& aView, const Tag* aTag, const ParamType& aArg) {
       MOZ_ASSERT_UNREACHABLE("Tag wasn't for an entry in this Variant");
       return 0;
     }
   };
 
   template <typename View>
-  static size_t MinSize(View& aView, const ParamType* aArg) {
-    const Tag* tag = aArg ? &aArg->tag : nullptr;
-    return aView.MinSizeParam(tag) +
-           MinSizeVariant<sizeof...(Types), View>::MinSize(aView, tag, aArg);
+  static size_t MinSize(View& aView, const ParamType& aArg) {
+    return aView.MinSizeParam(aArg.tag) +
+           MinSizeVariant<sizeof...(Types), View>::MinSize(aView, aArg.tag,
+                                                           aArg);
   }
 };
 
@@ -1103,8 +1081,9 @@ struct QueueParamTraits<mozilla::ipc::Shmem> {
   }
 
   template <typename View>
-  static size_t MinSize(View& aView, const ParamType* aArg) {
-    return aView.template MinSizeParam<ParamType::id_t>();
+  static size_t MinSize(View& aView, const ParamType& aArg) {
+    return aView.MinSizeParam(
+        aArg.Id(mozilla::ipc::Shmem::PrivateIPDLCaller()));
   }
 };
 

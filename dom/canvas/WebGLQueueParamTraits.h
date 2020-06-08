@@ -129,9 +129,9 @@ struct QueueParamTraits<RawBuffer<T>> {
   }
 
   template <typename View>
-  static size_t MinSize(View& aView, const ParamType* aArg) {
-    return aView.template MinSizeParam<size_t>() +
-           aView.MinSizeBytes(aArg ? aArg->mLength * sizeof(T) : 0);
+  static size_t MinSize(View& aView, const ParamType& aArg) {
+    return aView.MinSizeParam(aArg.mLength) +
+           aView.MinSizeBytes(aArg.mLength * sizeof(T));
   }
 };
 
@@ -176,16 +176,14 @@ struct QueueParamTraits<Result<V, E>> {
   }
 
   template <typename View>
-  static size_t MinSize(View& aView, const T* const aArg) {
+  static size_t MinSize(View& aView, const T& aArg) {
     auto size = aView.template MinSizeParam<bool>();
-    if (aArg) {
-      if (aArg->isOk()) {
-        const auto& val = aArg->unwrap();
-        size += aView.MinSizeParam(&val);
-      } else {
-        const auto& val = aArg->unwrapErr();
-        size += aView.MinSizeParam(&val);
-      }
+    if (aArg.isOk()) {
+      const auto& val = aArg.unwrap();
+      size += aView.MinSizeParam(val);
+    } else {
+      const auto& val = aArg.unwrapErr();
+      size += aView.MinSizeParam(val);
     }
     return size;
   }
@@ -221,11 +219,9 @@ struct QueueParamTraits<std::string> {
   }
 
   template <typename View>
-  static size_t MinSize(View& aView, const T* const aArg) {
-    auto size = aView.template MinSizeParam<size_t>();
-    if (aArg) {
-      size += aArg->size();
-    }
+  static size_t MinSize(View& aView, const T& aArg) {
+    auto size = aView.MinSizeParam(aArg.size());
+    size += aView.MinSizeBytes(aArg.size());
     return size;
   }
 };
@@ -255,11 +251,9 @@ struct QueueParamTraits<std::vector<U>> {
   }
 
   template <typename View>
-  static size_t MinSize(View& aView, const T* const aArg) {
-    auto size = aView.template MinSizeParam<size_t>();
-    if (aArg) {
-      size += aArg->size() * sizeof(U);
-    }
+  static size_t MinSize(View& aView, const T& aArg) {
+    auto size = aView.MinSizeParam(aArg.size());
+    size += aView.MinSizeBytes(aArg.size() * sizeof(U));
     return size;
   }
 };
@@ -291,11 +285,10 @@ struct QueueParamTraits<CompileResult> {
   }
 
   template <typename View>
-  static size_t MinSize(View& aView, const T* const aArg) {
-    return aView.MinSizeParam(aArg ? &aArg->pending : nullptr) +
-           aView.MinSizeParam(aArg ? &aArg->log : nullptr) +
-           aView.MinSizeParam(aArg ? &aArg->translatedSource : nullptr) +
-           aView.MinSizeParam(aArg ? &aArg->success : nullptr);
+  static size_t MinSize(View& aView, const T& aArg) {
+    return aView.MinSizeParam(aArg.pending) + aView.MinSizeParam(aArg.log) +
+           aView.MinSizeParam(aArg.translatedSource) +
+           aView.MinSizeParam(aArg.success);
   }
 };
 
