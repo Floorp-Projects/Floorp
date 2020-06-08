@@ -190,7 +190,7 @@ void MediaController::Deactivate() {
 }
 
 void MediaController::SetIsInPictureInPictureMode(
-    bool aIsInPictureInPictureMode) {
+    uint64_t aBrowsingContextId, bool aIsInPictureInPictureMode) {
   if (mIsInPictureInPictureMode == aIsInPictureInPictureMode) {
     return;
   }

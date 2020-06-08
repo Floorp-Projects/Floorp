@@ -9,8 +9,8 @@
 
 #include "ipc/IPCMessageUtils.h"
 
-#include "mozilla/dom/ContentMediaController.h"
 #include "mozilla/dom/MediaControlKeysEvent.h"
+#include "mozilla/dom/MediaStatusManager.h"
 
 namespace IPC {
 template <>
