@@ -1868,7 +1868,7 @@ static bool SetTypeForExposedFunctions(JSContext* cx, FunctionBox* listHead) {
 
     // If the function was not referenced by enclosing script's bytecode, we do
     // not generate a BaseScript for it. For example, `(function(){});`.
-    if (!funbox->wasEmitted) {
+    if (!funbox->wasEmitted && !funbox->isStandalone) {
       continue;
     }
 
@@ -2136,6 +2136,9 @@ FunctionNode* Parser<FullParseHandler, Unit>::standaloneFunction(
   if (!funbox) {
     return null();
   }
+
+  // Function is not syntactically part of another script.
+  funbox->isStandalone = true;
 
   // Standalone functions are always scoped to the global. Note: HTML form event
   // handlers are standalone functions, but have a non-syntactic global scope
