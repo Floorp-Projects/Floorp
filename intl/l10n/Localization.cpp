@@ -273,7 +273,8 @@ already_AddRefed<Promise> Localization::FormatValue(
 void Localization::SetIsSync(const bool aIsSync) { mIsSync = aIsSync; }
 
 already_AddRefed<Promise> Localization::FormatValues(
-    JSContext* aCx, const Sequence<L10nKey>& aKeys, ErrorResult& aRv) {
+    JSContext* aCx, const Sequence<OwningUTF8StringOrL10nIdArgs>& aKeys,
+    ErrorResult& aRv) {
   if (!mLocalization) {
     Activate(false);
   }
@@ -300,7 +301,8 @@ already_AddRefed<Promise> Localization::FormatValues(
 }
 
 already_AddRefed<Promise> Localization::FormatMessages(
-    JSContext* aCx, const Sequence<L10nKey>& aKeys, ErrorResult& aRv) {
+    JSContext* aCx, const Sequence<OwningUTF8StringOrL10nIdArgs>& aKeys,
+    ErrorResult& aRv) {
   if (!mLocalization) {
     Activate(false);
   }
@@ -353,10 +355,9 @@ void Localization::FormatValueSync(JSContext* aCx, const nsACString& aId,
                                        aRetVal);
 }
 
-void Localization::FormatValuesSync(JSContext* aCx,
-                                    const Sequence<L10nKey>& aKeys,
-                                    nsTArray<nsCString>& aRetVal,
-                                    ErrorResult& aRv) {
+void Localization::FormatValuesSync(
+    JSContext* aCx, const Sequence<OwningUTF8StringOrL10nIdArgs>& aKeys,
+    nsTArray<nsCString>& aRetVal, ErrorResult& aRv) {
   if (!mIsSync) {
     aRv.ThrowInvalidStateError(
         "Can't use formatValuesSync when state is async.");
@@ -381,10 +382,9 @@ void Localization::FormatValuesSync(JSContext* aCx,
       mLocalization->FormatValuesSync(mResourceIds, bundlesJS, jsKeys, aRetVal);
 }
 
-void Localization::FormatMessagesSync(JSContext* aCx,
-                                      const Sequence<L10nKey>& aKeys,
-                                      nsTArray<Nullable<L10nMessage>>& aRetVal,
-                                      ErrorResult& aRv) {
+void Localization::FormatMessagesSync(
+    JSContext* aCx, const Sequence<OwningUTF8StringOrL10nIdArgs>& aKeys,
+    nsTArray<Nullable<L10nMessage>>& aRetVal, ErrorResult& aRv) {
   if (!mIsSync) {
     aRv.ThrowInvalidStateError(
         "Can't use formatMessagesSync when state is async.");
