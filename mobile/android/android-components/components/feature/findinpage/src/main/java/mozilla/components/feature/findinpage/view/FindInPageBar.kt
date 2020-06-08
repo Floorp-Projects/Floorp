@@ -92,8 +92,6 @@ class FindInPageBar @JvmOverloads constructor(
     }
 
     override fun clear() {
-        queryEditText.hideKeyboard()
-
         queryEditText.text = null
         queryEditText.clearFocus()
         resultsCountTextView.text = null
@@ -177,7 +175,8 @@ class FindInPageBar @JvmOverloads constructor(
         resultsCountTextView.setTextColorIfNotDefaultValue(styling.resultCountTextColor)
     }
 
-    private fun bindQueryEditText() {
+    @VisibleForTesting
+    internal fun bindQueryEditText() {
         with(queryEditText) {
             setTextSizeIfNotDefaultValue(styling.queryTextSize)
             setTextColorIfNotDefaultValue(styling.queryTextColor)
@@ -202,7 +201,18 @@ class FindInPageBar @JvmOverloads constructor(
                     onQueryChange(newQuery)
                 }
             })
+
+            onFocusChangeListener = OnFocusChangeListener { _, hasFocus ->
+                if (!hasFocus) {
+                    this@FindInPageBar.hideKeyboard()
+                }
+            }
         }
+    }
+
+    @VisibleForTesting
+    internal fun hideKeyboard() {
+        queryEditText.hideKeyboard()
     }
 }
 
