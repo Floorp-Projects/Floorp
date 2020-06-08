@@ -20,7 +20,6 @@
 #include "mozilla/dom/quota/QuotaObject.h"
 #include "mozilla/ScopeExit.h"
 
-#include "mozIStorageAggregateFunction.h"
 #include "mozIStorageCompletionCallback.h"
 #include "mozIStorageFunction.h"
 
@@ -230,39 +229,6 @@ void basicFunctionHelper(sqlite3_context* aCtx, int aArgc,
     NS_WARNING("User function returned invalid data type!");
     ::sqlite3_result_error(aCtx, "User function returned invalid data type",
                            -1);
-  }
-}
-
-void aggregateFunctionStepHelper(sqlite3_context* aCtx, int aArgc,
-                                 sqlite3_value** aArgv) {
-  void* userData = ::sqlite3_user_data(aCtx);
-  mozIStorageAggregateFunction* func =
-      static_cast<mozIStorageAggregateFunction*>(userData);
-
-  RefPtr<ArgValueArray> arguments(new ArgValueArray(aArgc, aArgv));
-  if (!arguments) return;
-
-  if (NS_FAILED(func->OnStep(arguments)))
-    NS_WARNING("User aggregate step function returned error code!");
-}
-
-void aggregateFunctionFinalHelper(sqlite3_context* aCtx) {
-  void* userData = ::sqlite3_user_data(aCtx);
-  mozIStorageAggregateFunction* func =
-      static_cast<mozIStorageAggregateFunction*>(userData);
-
-  RefPtr<nsIVariant> result;
-  if (NS_FAILED(func->OnFinal(getter_AddRefs(result)))) {
-    NS_WARNING("User aggregate final function returned error code!");
-    ::sqlite3_result_error(
-        aCtx, "User aggregate final function returned error code", -1);
-    return;
-  }
-
-  if (variantToSQLiteT(aCtx, result) != SQLITE_OK) {
-    NS_WARNING("User aggregate final function returned invalid data type!");
-    ::sqlite3_result_error(
-        aCtx, "User aggregate final function returned invalid data type", -1);
   }
 }
 
@@ -1592,12 +1558,7 @@ nsresult Connection::initializeClone(Connection* aClone, bool aReadOnly) {
       }
 
     } else {
-      mozIStorageAggregateFunction* function =
-          static_cast<mozIStorageAggregateFunction*>(data.function.get());
-      rv = aClone->CreateAggregateFunction(key, data.numArgs, function);
-      if (NS_FAILED(rv)) {
-        NS_WARNING("Failed to copy aggregate function to cloned connection");
-      }
+      MOZ_CRASH("Not implemented.");
     }
   }
 
@@ -2076,40 +2037,6 @@ Connection::CreateFunction(const nsACString& aFunctionName,
   if (srv != SQLITE_OK) return convertResultCode(srv);
 
   FunctionInfo info = {aFunction, Connection::FunctionInfo::SIMPLE,
-                       aNumArguments};
-  mFunctions.Put(aFunctionName, info);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-Connection::CreateAggregateFunction(const nsACString& aFunctionName,
-                                    int32_t aNumArguments,
-                                    mozIStorageAggregateFunction* aFunction) {
-  if (!connectionReady()) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-  nsresult rv = ensureOperationSupported(ASYNCHRONOUS);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  // Check to see if this function name is already defined.
-  SQLiteMutexAutoLock lockedScope(sharedDBMutex);
-  NS_ENSURE_FALSE(mFunctions.Get(aFunctionName, nullptr), NS_ERROR_FAILURE);
-
-  // Because aggregate functions depend on state across calls, you cannot have
-  // the same instance use the same name.  We want to enumerate all functions
-  // and make sure this instance is not already registered.
-  NS_ENSURE_FALSE(findFunctionByInstance(aFunction), NS_ERROR_FAILURE);
-
-  int srv = ::sqlite3_create_function(
-      mDBConn, nsPromiseFlatCString(aFunctionName).get(), aNumArguments,
-      SQLITE_ANY, aFunction, nullptr, aggregateFunctionStepHelper,
-      aggregateFunctionFinalHelper);
-  if (srv != SQLITE_OK) return convertResultCode(srv);
-
-  FunctionInfo info = {aFunction, Connection::FunctionInfo::AGGREGATE,
                        aNumArguments};
   mFunctions.Put(aFunctionName, info);
 

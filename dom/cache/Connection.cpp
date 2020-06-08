@@ -106,14 +106,6 @@ Connection::CreateFunction(const nsACString& aFunctionName,
 }
 
 NS_IMETHODIMP
-Connection::CreateAggregateFunction(const nsACString& aFunctionName,
-                                    int32_t aNumArguments,
-                                    mozIStorageAggregateFunction* aFunction) {
-  return mBase->CreateAggregateFunction(aFunctionName, aNumArguments,
-                                        aFunction);
-}
-
-NS_IMETHODIMP
 Connection::RemoveFunction(const nsACString& aFunctionName) {
   return mBase->RemoveFunction(aFunctionName);
 }
