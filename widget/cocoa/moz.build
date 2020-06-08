@@ -168,3 +168,5 @@ CXXFLAGS += CONFIG['TK_CFLAGS']
 OS_LIBS += [
     '-framework IOSurface',
 ]
+
+SPHINX_TREES['/widget/cocoa'] = 'docs'
