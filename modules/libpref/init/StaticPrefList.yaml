@@ -3374,7 +3374,8 @@
 - name: fission.autostart
   type: bool
   value: false
-  mirror: always
+  mirror: once
+  do_not_use_directly: true
 
 # This pref has no effect within fission windows, it only controls the
 # behaviour within non-fission windows. If true, preserve browsing contexts
