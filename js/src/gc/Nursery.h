@@ -495,14 +495,16 @@ class Nursery {
   ProfileDurations profileDurations_;
   ProfileDurations totalDurations_;
 
-  struct {
+  // Data about the previous collection.
+  struct PreviousGC {
     JS::GCReason reason = JS::GCReason::NO_REASON;
     size_t nurseryCapacity = 0;
     size_t nurseryCommitted = 0;
     size_t nurseryUsedBytes = 0;
     size_t tenuredBytes = 0;
     size_t tenuredCells = 0;
-  } previousGC;
+  };
+  PreviousGC previousGC;
 
   // Calculate the promotion rate of the most recent minor GC.
   // The valid_for_tenuring parameter is used to return whether this
@@ -596,7 +598,12 @@ class Nursery {
   void writeCanary(uintptr_t address);
 #endif
 
-  void doCollection(JS::GCReason reason, gc::TenureCountCache& tenureCounts);
+  struct CollectionResult {
+    size_t tenuredBytes;
+    size_t tenuredCells;
+  };
+  CollectionResult doCollection(JS::GCReason reason,
+                                gc::TenureCountCache& tenureCounts);
 
   float doPretenuring(JSRuntime* rt, JS::GCReason reason,
                       gc::TenureCountCache& tenureCounts);
