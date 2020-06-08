@@ -26,15 +26,18 @@ import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.concept.engine.prompt.ShareData
 import mozilla.components.concept.tabstray.Tab
 import mozilla.components.feature.tabs.tabstray.TabsFeature
+import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.lib.state.ext.consumeFrom
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.collections.SaveCollectionStep
+import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.sessionsOfType
 import org.mozilla.fenix.utils.allowUndo
+import org.mozilla.fenix.components.TabCollectionStorage
 
 @SuppressWarnings("TooManyFunctions")
 class TabTrayDialogFragment : AppCompatDialogFragment(), TabTrayInteractor {
@@ -42,6 +45,16 @@ class TabTrayDialogFragment : AppCompatDialogFragment(), TabTrayInteractor {
     private var _tabTrayView: TabTrayView? = null
     private val tabTrayView: TabTrayView
         get() = _tabTrayView!!
+
+    private val collectionStorageObserver = object : TabCollectionStorage.Observer {
+        override fun onCollectionCreated(title: String, sessions: List<Session>) {
+            showCollectionSnackbar()
+        }
+
+        override fun onTabsAdded(tabCollection: TabCollection, sessions: List<Session>) {
+            showCollectionSnackbar()
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -192,6 +205,9 @@ class TabTrayDialogFragment : AppCompatDialogFragment(), TabTrayInteractor {
 
         if (navController.currentDestination?.id == R.id.collectionCreationFragment) return
 
+        // Only register the observer right before moving to collection creation
+        registerCollectionStorageObserver()
+
         val directions = TabTrayDialogFragmentDirections.actionGlobalCollectionCreationFragment(
             tabIds = tabIds,
             saveCollectionStep = step,
@@ -259,6 +275,29 @@ class TabTrayDialogFragment : AppCompatDialogFragment(), TabTrayInteractor {
 
         if (shouldPop) {
             findNavController().popBackStack(R.id.homeFragment, false)
+        }
+    }
+
+    private fun registerCollectionStorageObserver() {
+        requireComponents.core.tabCollectionStorage.register(collectionStorageObserver, this)
+    }
+
+    private fun showCollectionSnackbar() {
+        view.let {
+            val snackbar = FenixSnackbar
+                .make(
+                    duration = FenixSnackbar.LENGTH_LONG,
+                    isDisplayedWithBrowserToolbar = true,
+                    view = (view as View)
+                )
+                .setText(requireContext().getString(R.string.create_collection_tabs_saved))
+                .setAction(requireContext().getString(R.string.create_collection_view)) {
+                    dismissAllowingStateLoss()
+                    findNavController().navigate(TabTrayDialogFragmentDirections.actionGlobalHome())
+                }
+
+            snackbar.view.elevation = ELEVATION
+            snackbar.show()
         }
     }
 
