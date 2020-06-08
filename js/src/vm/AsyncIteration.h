@@ -297,6 +297,12 @@ MOZ_MUST_USE bool AsyncGeneratorResume(
     JSContext* cx, Handle<AsyncGeneratorObject*> asyncGenObj,
     CompletionKind completionKind, HandleValue argument);
 
+class AsyncIteratorObject : public NativeObject {
+ public:
+  static const JSClass class_;
+  static const JSClass protoClass_;
+};
+
 }  // namespace js
 
 #endif /* vm_AsyncIteration_h */
