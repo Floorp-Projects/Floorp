@@ -88,6 +88,7 @@ impl AndroidProcess {
 
 #[derive(Debug, Default)]
 pub struct AndroidHandler {
+    pub config: PathBuf,
     pub options: AndroidOptions,
     pub process: Option<AndroidProcess>,
     pub profile: PathBuf,
@@ -105,6 +106,12 @@ impl Drop for AndroidHandler {
             match process.device.execute_host_shell_command(&clear_command) {
                 Ok(_) => debug!("Disabled reading from configuration file"),
                 Err(e) => error!("Failed disabling from configuration file: {}", e),
+            }
+
+            let remove_command = format!("rm -rf {}", self.config.display());
+            match process.device.execute_host_shell_command(&remove_command) {
+                Ok(_) => debug!("Deleted GeckoView configuration file"),
+                Err(e) => error!("Failed deleting GeckoView configuration file: {}", e),
             }
 
             match process.device.kill_forward_port(self.host_port) {
@@ -132,9 +139,15 @@ impl AndroidHandler {
             &options.package
         ));
 
+        let config = PathBuf::from(format!(
+            "/data/local/tmp/{}-geckoview-config.yaml",
+            &options.package
+        ));
+
         AndroidHandler {
             options: options.clone(),
             profile,
+            config,
             process: None,
             ..Default::default()
         }
@@ -269,25 +282,20 @@ impl AndroidHandler {
                     .device
                     .push_dir(&profile.path, &self.profile, 0o777)?;
 
-                let target_path = PathBuf::from(format!(
-                    "/data/local/tmp/{}-geckoview-config.yaml",
-                    process.package
-                ));
-
                 let contents = self.generate_config_file(env)?;
                 debug!("Content of generated GeckoView config file:\n{}", contents);
                 let reader = &mut io::BufReader::new(contents.as_bytes());
 
                 debug!(
                     "Pushing GeckoView configuration file to {}",
-                    target_path.display()
+                    self.config.display()
                 );
-                process.device.push(reader, &target_path, 0o777)?;
+                process.device.push(reader, &self.config, 0o777)?;
 
                 // Bug 1584966: File permissions are not correctly set by push()
                 process
                     .device
-                    .execute_host_shell_command(&format!("chmod a+rw {}", target_path.display()))?;
+                    .execute_host_shell_command(&format!("chmod a+rw {}", self.config.display()))?;
 
                 // Tell GeckoView to read configuration even when `android:debuggable="false"`.
                 process.device.execute_host_shell_command(&format!(
