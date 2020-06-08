@@ -649,10 +649,6 @@ class nsDocShell final : public nsDocLoader,
   nsresult AddChildSHEntryToParent(nsISHEntry* aNewEntry, int32_t aChildOffset,
                                    bool aCloneChildren);
 
-  nsresult AddChildSHEntryInternal(nsISHEntry* aCloneRef, nsISHEntry* aNewEntry,
-                                   int32_t aChildOffset, uint32_t aLoadType,
-                                   bool aCloneChildren);
-
   // Call this method to swap in a new history entry to m[OL]SHE, rather than
   // setting it directly. This completes the navigation in all docshells
   // in the case of a subframe navigation.
