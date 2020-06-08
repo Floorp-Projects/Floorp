@@ -605,8 +605,9 @@ class Nursery {
   CollectionResult doCollection(JS::GCReason reason,
                                 gc::TenureCountCache& tenureCounts);
 
-  float doPretenuring(JSRuntime* rt, JS::GCReason reason,
-                      gc::TenureCountCache& tenureCounts);
+  size_t doPretenuring(JSRuntime* rt, JS::GCReason reason,
+                       const gc::TenureCountCache& tenureCounts,
+                       bool highPromotionRate);
 
   // Move the object at |src| in the Nursery to an already-allocated cell
   // |dst| in Tenured.
@@ -647,6 +648,12 @@ class Nursery {
   // Free the chunks starting at firstFreeChunk until the end of the chunks
   // vector. Shrinks the vector but does not update maxChunkCount().
   void freeChunksFrom(unsigned firstFreeChunk);
+
+  void sendTelemetry(JS::GCReason reason, mozilla::TimeDuration totalTime,
+                     size_t pretenureCount, float promotionRate);
+
+  void printCollectionProfile(JS::GCReason reason, float promotionRate);
+  void printTenuringData(const gc::TenureCountCache& tenureCounts);
 
   // Profile recording and printing.
   void maybeClearProfileDurations();

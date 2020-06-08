@@ -1013,7 +1013,15 @@ void js::Nursery::collect(JS::GCReason reason) {
     poisonAndInitCurrentChunk(previousGC.nurseryUsedBytes);
   }
 
-  const float promotionRate = doPretenuring(rt, reason, tenureCounts);
+  bool validPromotionRate;
+  const float promotionRate = calcPromotionRate(&validPromotionRate);
+  bool highPromotionRate =
+      validPromotionRate && promotionRate > tunables().pretenureThreshold();
+
+  startProfile(ProfileKey::Pretenure);
+  size_t pretenureCount =
+      doPretenuring(rt, reason, tenureCounts, highPromotionRate);
+  endProfile(ProfileKey::Pretenure);
 
   // We ignore gcMaxBytes when allocating for minor collection. However, if we
   // overflowed, we disable the nursery. The next time we allocate, we'll fail
@@ -1026,33 +1034,51 @@ void js::Nursery::collect(JS::GCReason reason) {
   gc->incMinorGcNumber();
 
   TimeDuration totalTime = profileDurations_[ProfileKey::Total];
-  rt->addTelemetry(JS_TELEMETRY_GC_MINOR_US, totalTime.ToMicroseconds());
-  rt->addTelemetry(JS_TELEMETRY_GC_MINOR_REASON, uint32_t(reason));
-  if (totalTime.ToMilliseconds() > 1.0) {
-    rt->addTelemetry(JS_TELEMETRY_GC_MINOR_REASON_LONG, uint32_t(reason));
-  }
-  rt->addTelemetry(JS_TELEMETRY_GC_NURSERY_BYTES, committed());
+  sendTelemetry(reason, totalTime, pretenureCount, promotionRate);
 
   stats().endNurseryCollection(reason);
   gcprobes::MinorGCEnd();
   timeInChunkAlloc_ = mozilla::TimeDuration();
 
   if (enableProfiling_ && totalTime >= profileThreshold_) {
-    stats().maybePrintProfileHeaders();
+    printCollectionProfile(reason, promotionRate);
+  }
 
-    fprintf(stderr, "MinorGC: %20s %5.1f%% %5zu       ",
-            JS::ExplainGCReason(reason), promotionRate * 100,
-            capacity() / 1024);
-    printProfileDurations(profileDurations_);
+  if (reportTenurings_) {
+    printTenuringData(tenureCounts);
+  }
+}
 
-    if (reportTenurings_) {
-      for (auto& entry : tenureCounts.entries) {
-        if (entry.count >= reportTenurings_) {
-          fprintf(stderr, "  %u x ", entry.count);
-          AutoSweepObjectGroup sweep(entry.group);
-          entry.group->print(sweep);
-        }
-      }
+void js::Nursery::sendTelemetry(JS::GCReason reason, TimeDuration totalTime,
+                                size_t pretenureCount, float promotionRate) {
+  JSRuntime* rt = runtime();
+  rt->addTelemetry(JS_TELEMETRY_GC_MINOR_REASON, uint32_t(reason));
+  if (totalTime.ToMilliseconds() > 1.0) {
+    rt->addTelemetry(JS_TELEMETRY_GC_MINOR_REASON_LONG, uint32_t(reason));
+  }
+  rt->addTelemetry(JS_TELEMETRY_GC_MINOR_US, totalTime.ToMicroseconds());
+  rt->addTelemetry(JS_TELEMETRY_GC_NURSERY_BYTES, committed());
+  rt->addTelemetry(JS_TELEMETRY_GC_PRETENURE_COUNT, pretenureCount);
+  rt->addTelemetry(JS_TELEMETRY_GC_PRETENURE_COUNT_2, pretenureCount);
+  rt->addTelemetry(JS_TELEMETRY_GC_NURSERY_PROMOTION_RATE, promotionRate * 100);
+}
+
+void js::Nursery::printCollectionProfile(JS::GCReason reason,
+                                         float promotionRate) {
+  stats().maybePrintProfileHeaders();
+
+  fprintf(stderr, "MinorGC: %20s %5.1f%% %5zu       ",
+          JS::ExplainGCReason(reason), promotionRate * 100, capacity() / 1024);
+
+  printProfileDurations(profileDurations_);
+}
+
+void js::Nursery::printTenuringData(const TenureCountCache& tenureCounts) {
+  for (const auto& entry : tenureCounts.entries) {
+    if (entry.count >= reportTenurings_) {
+      fprintf(stderr, "  %u x ", entry.count);
+      AutoSweepObjectGroup sweep(entry.group);
+      entry.group->print(sweep);
     }
   }
 }
@@ -1166,38 +1192,34 @@ js::Nursery::CollectionResult js::Nursery::doCollection(
   return {mover.tenuredSize, mover.tenuredCells};
 }
 
-float js::Nursery::doPretenuring(JSRuntime* rt, JS::GCReason reason,
-                                 TenureCountCache& tenureCounts) {
+size_t js::Nursery::doPretenuring(JSRuntime* rt, JS::GCReason reason,
+                                  const TenureCountCache& tenureCounts,
+                                  bool highPromotionRate) {
   // If we are promoting the nursery, or exhausted the store buffer with
   // pointers to nursery things, which will force a collection well before
   // the nursery is full, look for object groups that are getting promoted
   // excessively and try to pretenure them.
-  startProfile(ProfileKey::Pretenure);
-  bool validPromotionRate;
-  const float promotionRate = calcPromotionRate(&validPromotionRate);
-  uint32_t pretenureCount = 0;
-  bool attempt = tunables().attemptPretenuring();
 
-  bool pretenureObj, pretenureStr, pretenureBigInt;
-  if (attempt) {
-    // Should we do pretenuring regardless of gcreason?
-    bool shouldPretenure = validPromotionRate &&
-                           promotionRate > tunables().pretenureThreshold() &&
-                           previousGC.nurseryUsedBytes >= 4 * 1024 * 1024;
+  bool pretenureObj = false;
+  bool pretenureStr = false;
+  bool pretenureBigInt = false;
+  if (tunables().attemptPretenuring()) {
+    // Should we check for pretenuring regardless of GCReason?
+    bool pretenureAll =
+        highPromotionRate && previousGC.nurseryUsedBytes >= 4 * 1024 * 1024;
+
     pretenureObj =
-        shouldPretenure ||
+        pretenureAll ||
         IsFullStoreBufferReason(reason, JS::GCReason::FULL_CELL_PTR_OBJ_BUFFER);
     pretenureStr =
-        shouldPretenure ||
+        pretenureAll ||
         IsFullStoreBufferReason(reason, JS::GCReason::FULL_CELL_PTR_STR_BUFFER);
-    pretenureBigInt = shouldPretenure ||
-                      IsFullStoreBufferReason(
-                          reason, JS::GCReason::FULL_CELL_PTR_BIGINT_BUFFER);
-  } else {
-    pretenureObj = false;
-    pretenureStr = false;
-    pretenureBigInt = false;
+    pretenureBigInt =
+        pretenureAll || IsFullStoreBufferReason(
+                            reason, JS::GCReason::FULL_CELL_PTR_BIGINT_BUFFER);
   }
+
+  size_t pretenureCount = 0;
 
   if (pretenureObj) {
     JSContext* cx = rt->mainContextFromOwnThread();
@@ -1268,13 +1290,8 @@ float js::Nursery::doPretenuring(JSRuntime* rt, JS::GCReason reason,
   stats().setStat(gcstats::STAT_NURSERY_BIGINT_REALMS_DISABLED,
                   numNurseryBigIntRealmsDisabled);
   stats().setStat(gcstats::STAT_BIGINTS_TENURED, numBigIntsTenured);
-  endProfile(ProfileKey::Pretenure);
 
-  rt->addTelemetry(JS_TELEMETRY_GC_PRETENURE_COUNT, pretenureCount);
-  rt->addTelemetry(JS_TELEMETRY_GC_PRETENURE_COUNT_2, pretenureCount);
-  rt->addTelemetry(JS_TELEMETRY_GC_NURSERY_PROMOTION_RATE, promotionRate * 100);
-
-  return promotionRate;
+  return pretenureCount;
 }
 
 bool js::Nursery::registerMallocedBuffer(void* buffer, size_t nbytes) {
