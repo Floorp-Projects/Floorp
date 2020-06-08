@@ -10,6 +10,8 @@ import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.paging.PagedList
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.DefaultSettings
@@ -21,13 +23,11 @@ import mozilla.components.concept.engine.Settings
 import mozilla.components.concept.engine.utils.EngineVersion
 import mozilla.components.feature.tab.collections.db.TabCollectionDatabase
 import mozilla.components.feature.tab.collections.db.TabEntity
-import mozilla.components.support.android.test.awaitValue
 import mozilla.components.support.ktx.java.io.truncateDirectory
 import org.json.JSONObject
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
-import org.junit.Assert.assertNotNull
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -220,7 +220,7 @@ class TabCollectionStorageTest {
 
     @Test
     @Suppress("ComplexMethod")
-    fun testGettingCollectionsWithLimit() {
+    fun testGettingCollectionsWithLimit() = runBlocking {
         storage.createCollection(
             "Articles", listOf(
                 Session("https://www.mozilla.org").apply { title = "Mozilla" }
@@ -249,10 +249,8 @@ class TabCollectionStorageTest {
             )
         )
 
-        val collections = storage.getCollections(limit = 4)
-            .awaitValue()
+        val collections = storage.getCollections(limit = 4).first()
 
-        assertNotNull(collections!!)
         assertEquals(4, collections.size)
 
         with(collections[0]) {
@@ -290,7 +288,7 @@ class TabCollectionStorageTest {
     }
 
     @Test
-    fun testGettingTabCollectionCount() {
+    fun testGettingTabCollectionCount() = runBlocking {
         assertEquals(0, storage.getTabCollectionsCount())
 
         storage.createCollection(
@@ -306,9 +304,7 @@ class TabCollectionStorageTest {
 
         assertEquals(2, storage.getTabCollectionsCount())
 
-        val collections = storage.getCollections(limit = 2)
-            .awaitValue()
-        assertNotNull(collections!!)
+        val collections = storage.getCollections(limit = 2).first()
         assertEquals(2, collections.size)
 
         storage.removeCollection(collections[0])

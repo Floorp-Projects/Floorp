@@ -4,7 +4,6 @@
 
 package mozilla.components.feature.tab.collections.db
 
-import androidx.lifecycle.LiveData
 import androidx.paging.DataSource
 import androidx.room.Dao
 import androidx.room.Delete
@@ -12,6 +11,7 @@ import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Update
+import kotlinx.coroutines.flow.Flow
 
 /**
  * Internal DAO for accessing [TabCollectionEntity] instances.
@@ -43,7 +43,7 @@ internal interface TabCollectionDao {
         ORDER BY created_at DESC
         LIMIT :limit
     """)
-    fun getTabCollections(limit: Int): LiveData<List<TabCollectionWithTabs>>
+    fun getTabCollections(limit: Int): Flow<List<TabCollectionWithTabs>>
 
     @Query("SELECT COUNT(*) FROM tab_collections")
     fun countTabCollections(): Int
