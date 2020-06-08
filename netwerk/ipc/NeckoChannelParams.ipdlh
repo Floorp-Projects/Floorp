@@ -111,13 +111,6 @@ struct LoadInfoArgs
   RedirectHistoryEntryInfo[]  redirectChain;
 
   /**
-   * Ancestor data for use with the WebRequest API.
-   * See nsILoadInfo.idl for details.
-   */
-  PrincipalInfo[]             ancestorPrincipals;
-  uint64_t[]                  ancestorOuterWindowIDs;
-
-  /**
    * ClientInfo structure representing the window or worker that triggered
    * this network request.  May be Nothing if its a system internal request.
    */
