@@ -877,6 +877,13 @@ interface nsIDOMWindowUtils : nsISupports {
   void getVisualViewportOffset(out long aOffsetX, out long aOffsetY);
 
   /**
+   * Transforms the passed in rect from layout relative coords (relative to
+   * this document) to be is visual coords.
+   */
+  DOMRect transformRectLayoutToVisual(in float aX, in float aY,
+                                      in float aWidth, in float aHeight);
+
+  /**
    * Sets the maximum height of the dynamic toolbar in Screen pixel units.
    */
   [can_run_script]

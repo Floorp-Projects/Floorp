@@ -60,6 +60,8 @@ class ViewportUtils {
       const LayoutDevicePoint& aPoint, PresShell* aShell);
   static LayoutDeviceRect DocumentRelativeLayoutToVisual(
       const LayoutDeviceRect& aRect, PresShell* aShell);
+  static CSSRect DocumentRelativeLayoutToVisual(const CSSRect& aRect,
+                                                PresShell* aShell);
 
   /*
    * These convert aPt/aRect, which is the layout space of aCtx, into a

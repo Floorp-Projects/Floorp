@@ -133,6 +133,15 @@ LayoutDeviceRect ViewportUtils::DocumentRelativeLayoutToVisual(
   return visualToLayout.Inverse().TransformBounds(aRect);
 }
 
+CSSRect ViewportUtils::DocumentRelativeLayoutToVisual(const CSSRect& aRect,
+                                                      PresShell* aShell) {
+  ScrollableLayerGuid::ViewID targetScrollId =
+      nsLayoutUtils::ScrollIdForRootScrollFrame(aShell->GetPresContext());
+  auto visualToLayout =
+      ViewportUtils::GetVisualToLayoutTransform(targetScrollId);
+  return visualToLayout.Inverse().TransformBounds(aRect);
+}
+
 template <class LDPointOrRect>
 LDPointOrRect ConvertToScreenRelativeVisual(const LDPointOrRect& aInput,
                                             nsPresContext* aCtx) {
