@@ -47,9 +47,9 @@ class Components(private val context: Context) {
     val useCases by lazy {
         UseCases(
             context,
+            core.engine,
             core.sessionManager,
             core.store,
-            core.engine.settings,
             search.searchEngineManager,
             core.webAppShortcutManager,
             core.thumbnailStorage
