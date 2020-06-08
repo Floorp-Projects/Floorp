@@ -11,7 +11,6 @@
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/StaticPrefs_dom.h"
-#include "mozilla/StaticPrefs_fission.h"
 #include "nsIPropertyBag2.h"
 #include "ProcessPriorityManager.h"
 #include "nsServiceManagerUtils.h"
@@ -177,7 +176,7 @@ void PreallocatedProcessManagerImpl::RereadPrefs() {
   if (mozilla::BrowserTabsRemoteAutostart() &&
       Preferences::GetBool("dom.ipc.processPrelaunch.enabled")) {
     int32_t number = 1;
-    if (StaticPrefs::fission_autostart()) {
+    if (mozilla::FissionAutostart()) {
       number = StaticPrefs::dom_ipc_processPrelaunch_fission_number();
     }
     if (number >= 0) {
@@ -296,9 +295,8 @@ void PreallocatedProcessManagerImpl::RemoveBlocker(ContentParent* aParent) {
 bool PreallocatedProcessManagerImpl::CanAllocate() {
   return mEnabled && sNumBlockers == 0 &&
          mPreallocatedProcesses.size() < mNumberPreallocs && !sShutdown &&
-         (StaticPrefs::fission_autostart() ||
-          !ContentParent::IsMaxProcessCountReached(
-              NS_LITERAL_STRING(DEFAULT_REMOTE_TYPE)));
+         (FissionAutostart() || !ContentParent::IsMaxProcessCountReached(
+                                    NS_LITERAL_STRING(DEFAULT_REMOTE_TYPE)));
 }
 
 void PreallocatedProcessManagerImpl::AllocateAfterDelay() {

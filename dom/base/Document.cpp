@@ -35,7 +35,6 @@
 #include "mozilla/RestyleManager.h"
 #include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/StaticPrefs_dom.h"
-#include "mozilla/StaticPrefs_fission.h"
 #include "mozilla/StaticPrefs_full_screen_api.h"
 #include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/StaticPrefs_network.h"
@@ -73,6 +72,7 @@
 #include "nsIObserver.h"
 #include "nsIBaseWindow.h"
 #include "nsILayoutHistoryState.h"
+#include "nsIXULRuntime.h"
 #include "mozilla/GlobalStyleSheetCache.h"
 #include "mozilla/css/Loader.h"
 #include "mozilla/css/ImageLoader.h"
@@ -15431,8 +15431,7 @@ void Document::TraceProtos(JSTracer* aTrc) {
 FlashClassification Document::DocumentFlashClassification() {
   // Disable flash blocking when fission is enabled(See Bug 1584931).
   const auto fnIsFlashBlockingEnabled = [] {
-    return StaticPrefs::plugins_flashBlock_enabled() &&
-           !StaticPrefs::fission_autostart();
+    return StaticPrefs::plugins_flashBlock_enabled() && !FissionAutostart();
   };
 
   // If neither pref is on, skip the null-principal and principal URI checks.
