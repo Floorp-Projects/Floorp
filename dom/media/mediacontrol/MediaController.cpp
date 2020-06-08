@@ -8,6 +8,7 @@
 
 #include "MediaControlService.h"
 #include "MediaControlUtils.h"
+#include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/CanonicalBrowsingContext.h"
 
@@ -20,6 +21,32 @@
 
 namespace mozilla {
 namespace dom {
+
+NS_IMPL_CYCLE_COLLECTION_INHERITED(MediaController, DOMEventTargetHelper)
+NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(MediaController,
+                                               DOMEventTargetHelper)
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(MediaController,
+                                               DOMEventTargetHelper)
+NS_IMPL_CYCLE_COLLECTION_TRACE_END
+
+nsISupports* MediaController::GetParentObject() const {
+  RefPtr<BrowsingContext> bc = BrowsingContext::Get(Id());
+  return bc;
+}
+
+JSObject* MediaController::WrapObject(JSContext* aCx,
+                                      JS::Handle<JSObject*> aGivenProto) {
+  return MediaController_Binding::Wrap(aCx, this, aGivenProto);
+}
+
+void MediaController::GetSupportedKeys(
+    nsTArray<MediaControlKey>& aRetVal) const {
+  aRetVal.Clear();
+  for (const auto& key : mSupportedKeys) {
+    // TODO : merge `MediaControlKey` and `MediaControlKeysEvent`.
+    aRetVal.AppendElement(ConvertToMediaControlKey(key));
+  }
+}
 
 static const MediaControlKeysEvent sDefaultSupportedKeys[] = {
     MediaControlKeysEvent::eFocus, MediaControlKeysEvent::ePlay,
@@ -260,6 +287,10 @@ void MediaController::HandleSupportedMediaSessionActionsChanged(
   LOG("Supported keys changes");
   mSupportedKeys = newSupportedKeys;
   mSupportedKeysChangedEvent.Notify(mSupportedKeys);
+  RefPtr<AsyncEventDispatcher> asyncDispatcher = new AsyncEventDispatcher(
+      this, NS_LITERAL_STRING("supportedkeyschange"), CanBubble::eYes);
+  asyncDispatcher->PostDOMEvent();
+  MediaController_Binding::ClearCachedSupportedKeysValue(this);
 }
 
 CopyableTArray<MediaControlKeysEvent> MediaController::GetSupportedMediaKeys()

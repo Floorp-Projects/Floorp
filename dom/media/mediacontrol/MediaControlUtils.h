@@ -10,6 +10,7 @@
 #include "MediaController.h"
 #include "MediaControlKeysEvent.h"
 #include "mozilla/dom/ChromeUtilsBinding.h"
+#include "mozilla/dom/MediaControllerBinding.h"
 #include "mozilla/Logging.h"
 
 extern mozilla::LazyLogModule gMediaControlLog;
@@ -126,6 +127,32 @@ inline MediaSessionPlaybackTestState ConvertToMediaSessionPlaybackTestState(
 inline MediaSessionAction ConvertToMediaSessionAction(uint8_t aActionValue) {
   MOZ_DIAGNOSTIC_ASSERT(aActionValue < uint8_t(MediaSessionAction::EndGuard_));
   return static_cast<MediaSessionAction>(aActionValue);
+}
+
+// TODO : merge `MediaControlKeysEvent` and `MediaControlKey`
+inline MediaControlKey ConvertToMediaControlKey(
+    MediaControlKeysEvent aKeyEvent) {
+  switch (aKeyEvent) {
+    case MediaControlKeysEvent::eFocus:
+      return MediaControlKey::Focus;
+    case MediaControlKeysEvent::ePause:
+      return MediaControlKey::Pause;
+    case MediaControlKeysEvent::ePlay:
+      return MediaControlKey::Play;
+    case MediaControlKeysEvent::ePlayPause:
+      return MediaControlKey::Playpause;
+    case MediaControlKeysEvent::ePrevTrack:
+      return MediaControlKey::Previoustrack;
+    case MediaControlKeysEvent::eNextTrack:
+      return MediaControlKey::Nexttrack;
+    case MediaControlKeysEvent::eSeekBackward:
+      return MediaControlKey::Seekbackward;
+    case MediaControlKeysEvent::eSeekForward:
+      return MediaControlKey::Seekforward;
+    default:
+      MOZ_ASSERT(aKeyEvent == MediaControlKeysEvent::eStop);
+      return MediaControlKey::Stop;
+  }
 }
 
 inline const char* ToMediaPlaybackStateStr(MediaPlaybackState aState) {

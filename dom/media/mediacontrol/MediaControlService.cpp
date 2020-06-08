@@ -243,7 +243,7 @@ bool MediaControlService::ControllerManager::RemoveController(
   }
   // This is LinkedListElement's method which will remove controller from
   // `mController`.
-  aController->remove();
+  static_cast<LinkedListControllerPtr>(aController)->remove();
   // If main controller is removed from the list, the last controller in the
   // list would become the main controller. Or reset the main controller when
   // the list is already empty.
@@ -291,7 +291,7 @@ void MediaControlService::ControllerManager::ReorderGivenController(
     // controller would be B. But if we don't maintain the controller order when
     // main controller changes, we would pick C as the main controller because
     // the list is still [A, B, C].
-    aController->remove();
+    static_cast<LinkedListControllerPtr>(aController)->remove();
     return mControllers.insertBack(aController);
   }
 
@@ -303,8 +303,9 @@ void MediaControlService::ControllerManager::ReorderGivenController(
     // a list [A, B, C, D, E] and E is the main controller. If we want to
     // reorder B to the front of E, then the list would become [A, C, D, B, E].
     MOZ_ASSERT(GetMainController() != aController);
-    aController->remove();
-    return GetMainController()->setPrevious(aController);
+    static_cast<LinkedListControllerPtr>(aController)->remove();
+    return static_cast<LinkedListControllerPtr>(GetMainController())
+        ->setPrevious(aController);
   }
 }
 
@@ -380,7 +381,14 @@ MediaController* MediaControlService::ControllerManager::GetMainController()
 }
 
 uint64_t MediaControlService::ControllerManager::GetControllersNum() const {
-  return mControllers.length();
+  size_t length = 0;
+  const auto* element =
+      static_cast<ConstLinkedListControllerPtr>(mControllers.getFirst());
+  while (element) {
+    length++;
+    element = element->getNext();
+  }
+  return length;
 }
 
 bool MediaControlService::ControllerManager::Contains(
