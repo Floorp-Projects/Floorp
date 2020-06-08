@@ -37,6 +37,14 @@
     <string name="mozac_feature_prompts_allow">อนุญาต</string>
     <!-- Text of a negative button in dialog requesting to open a new window. -->
     <string name="mozac_feature_prompts_deny">ปฏิเสธ</string>
+    <!-- Title of the dialog shown when a user is leaving a website and there is still data not saved yet. -->
+    <string name="mozac_feature_prompt_before_unload_dialog_title">คุณแน่ใจหรือไม่?</string>
+    <!-- Body text of the dialog shown when a user is leaving a website and there is still data not saved yet. -->
+    <string name="mozac_feature_prompt_before_unload_dialog_body">คุณต้องการออกจากไซต์นี้หรือไม่? ข้อมูลที่คุณใส่อาจไม่ถูกบันทึก</string>
+    <!-- Stay button of the dialog shown when a user is leaving a website and there is still data not saved yet, this indicates that the user wants to stay in the website. -->
+    <string name="mozac_feature_prompts_before_unload_stay">อยู่ต่อ</string>
+    <!-- Leave button of the dialog shown when a user is leaving a website and there is still data not saved yet, this indicates that the user wants to leave in the website. -->
+    <string name="mozac_feature_prompts_before_unload_leave">ออก</string>
     <!-- Title of the month chooser dialog. -->
     <string name="mozac_feature_prompts_set_month">เลือกเดือน</string>
     <!-- January (short description), used on the month chooser dialog. -->

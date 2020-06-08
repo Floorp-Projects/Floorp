@@ -6,6 +6,8 @@
     <string name="mozac_feature_contextmenu_open_link_in_private_tab">Άνοιγμα συνδέσμου σε ιδιωτική καρτέλα</string>
     <!-- Text for context menu item to open the image in a new tab. -->
     <string name="mozac_feature_contextmenu_open_image_in_new_tab">Άνοιγμα εικόνας σε νέα καρτέλα</string>
+    <!-- Text for context menu item to save / download the link. -->
+    <string name="mozac_feature_contextmenu_download_link">Λήψη συνδέσμου</string>
     <!-- Text for context menu item to share the link with an other app. -->
     <string name="mozac_feature_contextmenu_share_link">Κοινή χρήση συνδέσμου</string>
     <!-- Text for context menu item to copy the link to the clipboard. -->
@@ -14,14 +16,22 @@
     <string name="mozac_feature_contextmenu_copy_image_location">Αντιγραφή τοποθεσίας εικόνας</string>
     <!-- Text for context menu item to save / download the image. -->
     <string name="mozac_feature_contextmenu_save_image">Αποθήκευση εικόνας</string>
+    <!-- Text for context menu item to save / download the file. -->
+    <string name="mozac_feature_contextmenu_save_file_to_device">Αποθήκευση αρχείου στη συσκευή</string>
     <!-- Text for confirmation "snackbar" shown after opening a link in a new tab.  -->
     <string name="mozac_feature_contextmenu_snackbar_new_tab_opened">Άνοιξε νέα καρτέλα</string>
     <!-- Text for confirmation "snackbar" shown after opening a link in a new private tab.  -->
     <string name="mozac_feature_contextmenu_snackbar_new_private_tab_opened">Άνοιξε νέα ιδιωτική καρτέλα</string>
+    <!-- Text for confirmation "snackbar" shown after copying a link or image URL to the clipboard. -->
+    <string name="mozac_feature_contextmenu_snackbar_link_copied">Ο σύνδεσμος αντιγράφτηκε στο πρόχειρο</string>
     <!-- Action shown in a "snacbkar" after opening a new/private tab. Clicking this action will switch to the newly opened tab. -->
     <string name="mozac_feature_contextmenu_snackbar_action_switch">Εναλλαγή</string>
     <!-- Text for context menu item to open the link in an external app. -->
     <string name="mozac_feature_contextmenu_open_link_in_external_app">Άνοιγμα συνδέσμου σε εξωτερική εφαρμογή</string>
     <!-- Action shown in a text selection context menu. This will prompt a search using the selected text. The first parameter is the name of the application (For example: Fenix)-->
     <string name="mozac_selection_context_menu_search">Αναζήτηση %s</string>
-    </resources>
+    <!-- Action shown in a text selection context menu. This will prompt a search in a private tab using the selected text The first parameter is the name of the application (For example: Fenix) -->
+    <string name="mozac_selection_context_menu_search_privately">Ιδιωτική αναζήτηση %s</string>
+    <!-- Action shown in a text selection context menu. This will prompt a share of the selected text. -->
+    <string name="mozac_selection_context_menu_share">Κοινή χρήση</string>
+</resources>

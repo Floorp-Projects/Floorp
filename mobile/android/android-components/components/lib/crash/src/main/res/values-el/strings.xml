@@ -10,4 +10,6 @@
     <!-- Label of a notification action/button that will send the crash report to Mozilla. -->
     <string name="mozac_lib_crash_notification_action_report">Αναφορά</string>
 
-    </resources>
+    <!-- Text link that will show an app chooser to share a crash report with a third-party app (e.g. gmail) -->
+    <string name="mozac_lib_crash_share">Κοινή χρήση</string>
+</resources>

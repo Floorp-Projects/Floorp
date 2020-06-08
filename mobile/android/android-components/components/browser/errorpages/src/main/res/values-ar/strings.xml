@@ -62,6 +62,9 @@
     <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
     <string name="mozac_browser_errorpages_port_blocked_title">المنفذ ممنوع لأسباب الأمان</string>
 
+    <!-- The error message shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_message"><![CDATA[<p>حدَّد العنوان المطلوب منفذا (مثال <q>mozilla.org:80</q> من أجل المنفذ 80 على mozilla.org) يُستخدم عادة لأسباب <em>غير</em> تصفّح الوِب. ألغى المتصفّح الطّلب لحمايتك وأمنك.</p>]]></string>
+
     <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
     <string name="mozac_browser_errorpages_net_reset_title">صُفِّر الاتصال</string>
 
@@ -76,11 +79,18 @@
     <!-- The document title and heading of the error page shown when a file cannot be loaded because of a detected data corruption. -->
     <string name="mozac_browser_errorpages_corrupted_content_title">خطأ محتوى فاسد</string>
 
+    <!-- The error message shown when shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_message"><![CDATA[<p>تعذر عرض الصفحة التي تريد مشاهدتها بسبب خطأ أثناء نقل البيانات.</p><ul><li>الرجاء التواصل مع مالك الموقع لإبلاغه بهذه المشكلة.</li></ul>]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_content_crashed_title">انهار المحتوى</string>
 
+    <string name="mozac_browser_errorpages_content_crashed_message"><![CDATA[<p>تعذر عرض الصفحة التي تريد مشاهدتها بسبب خطأ أثناء نقل البيانات.</p><ul><li>الرجاء التواصل مع مالك الموقع لإبلاغه بهذه المشكلة.</li></ul>]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_invalid_content_encoding_title">خطأ في ترميز المحتوى</string>
+
+    <string name="mozac_browser_errorpages_invalid_content_encoding_message"><![CDATA[<p>الصفحة التي تحاول فتحها لا يمكن عرضها لأنها تستخدم صيغة ضغط غير سليمة أو غير مدعومة.</p><ul><li>الرجاء الاتصال أصحاب الموقع لإخبارهم بهذه المشكلة. </li></ul>]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_host_title">العنوان غير موجود</string>
@@ -92,11 +102,20 @@
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_malformed_uri_title">عنوان غير صحيح</string>
+    <string name="mozac_browser_errorpages_malformed_uri_message"><![CDATA[<p>تنسيق العنوان المُعطى غير معروف. من فضلك راجع شريط العنوان بحثا عن أخطاء ثم أعد المحاولة.</p>]]></string>
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_malformed_uri_title_alternative">العنوان غير صالح</string>
 
+    <!-- This string contains markup. The URL should not be localized. -->
+    <string name="mozac_browser_errorpages_malformed_uri_message_alternative"><![CDATA[<ul>
+  <li>تُكتب عناوين الوِب عادة على الشكل الآتي <strong>‪http://www.example.com/‬</strong>‏</li>
+  <li>تأكد أنك تستخدم الشرطة المائلة إلى اليمين (أي <strong>/</strong>).</li> 
+</ul>]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_protocol_title">بروتوكول مجهول</string>
+
+    <string name="mozac_browser_errorpages_unknown_protocol_message"><![CDATA[<p>يحدد العنوان بروتوكولا (مثلا: <q>wxyz://</q>) لا يتعرفه المتصفح، لذا لا يستطيع المتصفح الاتصال بالموقع بشكل سليم.</p><ul><li>هل تحاول الوصول لمحتوى متعدد الوسائط أو خدمة غير نصية؟ راجع الموقع لمتطلبات إضافية.</li><li>قد تحتاج بعض البروتوكولات لبرامج إضافية أو ملحقات ليستطيع المتصفح التعرف عليها.</li></ul>]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_file_not_found_title">الملف غير موجود</string>

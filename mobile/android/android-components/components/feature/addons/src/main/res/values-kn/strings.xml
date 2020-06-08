@@ -94,8 +94,24 @@
     <string name="mozac_feature_addons_updater_notification_deny_button">ನಿರಾಕರಿಸು</string>
     <!-- The content of the notification displayed when an add-on needs a new permission-->
     <string name="mozac_feature_addons_updater_notification_content_singular">ಹೊಸ ಅನುಮತಿ ಅಗತ್ಯವಿದೆ</string>
+    <!-- The tile of the notification, this will be shown to the user when one newly supported add-on is available.-->
+    <string name="mozac_feature_addons_supported_checker_notification_title">ಹೊಸ ಆಡ್-ಆನ್‌ ಲಭ್ಯವಿದೆ</string>
     <!-- The tile of the notification, this will be shown to the user when more than one newly supported add-ons are available.-->
     <string name="mozac_feature_addons_supported_checker_notification_title_plural">ಹೊಸ ಆಡ್-ಆನ್‌ಗಳು ಲಭ್ಯವಿದೆ</string>
+    <!-- The content of the notification, this will be shown to the user when one newly supported add-on is available. %1$s is the add-on name and %2$s is the app name (in most cases Firefox). -->
+    <string name="mozac_feature_addons_supported_checker_notification_content_one">%1$s ಅನ್ನು %2$sಗೆ ಸೇರಿಸಿ</string>
+    <!-- The content of the notification, this will be shown to the user when two newly supported add-ons are available. %1$s is the first add-on name. %2$s is the second add-on name. %3$s is the app name (in most cases Firefox). -->
+    <string name="mozac_feature_addons_supported_checker_notification_content_two">%1$s ಮತ್ತು %2$s ಅನ್ನು %3$s ಗೆ ಸೇರಿಸಿ</string>
+    <!-- The content of the notification, this will be shown to the user when more than two newly supported add-ons are available. %1$s is the app name (in most cases Firefox). -->
+    <string name="mozac_feature_addons_supported_checker_notification_content_more_than_two">ಅವುಗಳನ್ನು %1$sಗೆ ಸೇರಿಸಿ</string>
+    <!-- Text shown after successfully installed an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_successfully_installed">%1$s ಅನ್ನು ಯಶಸ್ವಿಯಾಗಿ ಸ್ಥಾಪಿಸಲಾಗಿದೆ</string>
+    <!-- Text shown in not yet supported add-ons section in AddonsManagerAdapter. -->
+    <string name="mozac_feature_addons_unsupported_caption">1 ಆಡ್-ಆನ್</string>
+    <!-- Text shown in not yet supported add-ons section in AddonsManagerAdapter - plural. %1$s is the number of unsupported add-ons -->
+    <string name="mozac_feature_addons_unsupported_caption_plural">%1$s ಆಡ್-ಆನ್‌ಗಳು</string>
+    <!-- Text link to a sumo page for learning more about unsupported add-ons. -->
+    <string name="mozac_feature_addons_unsupported_learn_more">ಇನ್ನಷ್ಟು ಅರಿತುಕೊಳ್ಳಿ</string>
     <!-- Displayed in the "Status" field for the updater when an add-on has no updates available. -->
     <string name="mozac_feature_addons_updater_status_no_update_available">ಯಾವುದೇ ಅಪ್‌ಡೇಟುಗಳು ಇಲ್ಲ</string>
     <!-- Displayed in the "Status" field for the updater when there was an error during the add-on update. -->
@@ -106,4 +122,6 @@
     <string name="mozac_feature_addons_updater_dialog_status">ಸ್ಥಿತಿ:</string>
     <!-- Text shown in the dialog when add-on installation is completed. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_installed_dialog_description">ಅದನ್ನು ಮೆನುವಿನಲ್ಲಿ ತೆರೆಯಿರಿ</string>
-    </resources>
+    <!-- Confirmation button text for the dialog when add-on installation is completed. -->
+    <string name="mozac_feature_addons_installed_dialog_okay_button">ಸರಿ, ಗೊತ್ತಾಯಿತು</string>
+</resources>
