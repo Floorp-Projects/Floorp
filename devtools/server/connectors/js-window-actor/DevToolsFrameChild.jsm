@@ -166,7 +166,10 @@ class DevToolsFrameChild extends JSWindowActorChild {
     );
 
     const { connection, targetActor } = this._createConnectionAndActor(prefix);
-    this._connections.set(prefix, { connection, actor: targetActor });
+    this._connections.set(parentConnectionPrefix, {
+      connection,
+      actor: targetActor,
+    });
 
     if (!this._isListeningForChange) {
       // Watch for disabling in order to destroy this DevToolsClientChild and its WindowGlobalTargets
