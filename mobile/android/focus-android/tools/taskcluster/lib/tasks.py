@@ -52,6 +52,7 @@ class TaskBuilder(object):
                     "-c",
                     command
                 ],
+                "env": {},
                 "artifacts": artifacts,
                 "deadline": taskcluster.stringDate(deadline)
             },
