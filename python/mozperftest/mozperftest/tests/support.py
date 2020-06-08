@@ -50,7 +50,7 @@ def get_running_env(**kwargs):
     mach_cmd.run_process.return_value = 0
 
     mach_args = {
-        "flavor": "script",
+        "flavor": "desktop-browser",
         "test_objects": None,
         "resolve_tests": True,
         "browsertime-clobber": False,
@@ -58,7 +58,7 @@ def get_running_env(**kwargs):
     }
     mach_args.update(kwargs)
     env = MachEnvironment(mach_cmd, **mach_args)
-    metadata = Metadata(mach_cmd, env, "script")
+    metadata = Metadata(mach_cmd, env, "desktop-browser")
     return mach_cmd, metadata, env
 
 

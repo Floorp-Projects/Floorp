@@ -61,7 +61,7 @@ class AndroidDevice(Layer):
         },
         "timeout": {
             "type": int,
-            "default": 30,
+            "default": 60,
             "help": "Timeout in seconds for adb operations",
         },
         "clear-logcat": {
@@ -98,7 +98,7 @@ class AndroidDevice(Layer):
     def __init__(self, env, mach_cmd):
         super(AndroidDevice, self).__init__(env, mach_cmd)
         self.android_activity = self.app_name = self.device = None
-        self.capture_file = None
+        self.capture_logcat = self.capture_file = None
 
     def setup(self):
         pass
@@ -121,7 +121,7 @@ class AndroidDevice(Layer):
             return Path(self.get_arg("output"), path)
         return path
 
-    def __call__(self, metadata):
+    def run(self, metadata):
         self.app_name = self.get_arg("android-app-name")
         self.android_activity = self.get_arg("android-activity")
         self.clear_logcat = self.get_arg("clear-logcat")

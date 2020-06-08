@@ -11,22 +11,22 @@ import shutil
 from mozperftest.test import pick_test
 from mozperftest.system import pick_system
 from mozperftest.metrics import pick_metrics
-from mozperftest.layers import Layers
-from mozperftest.utils import download_file
+from mozperftest.layers import Layers, StopRunError
+from mozperftest.utils import download_file, MachLogger
 
 
 SYSTEM, TEST, METRICS = 0, 1, 2
 
 
-class MachEnvironment:
-    def __init__(self, mach_cmd, flavor="script", **kwargs):
+class MachEnvironment(MachLogger):
+    def __init__(self, mach_cmd, flavor="desktop-browser", **kwargs):
+        MachLogger.__init__(self, mach_cmd)
         self._mach_cmd = mach_cmd
         self._mach_args = dict(
             [(self._normalize(key), value) for key, value in kwargs.items()]
         )
         self.layers = []
-        # XXX do something with flavors, etc
-        if flavor != "script":
+        if flavor not in ("mobile-browser", "desktop-browser"):
             raise NotImplementedError(flavor)
         for layer in (pick_system, pick_test, pick_metrics):
             self.add_layer(layer(self, flavor, mach_cmd))
@@ -87,28 +87,17 @@ class MachEnvironment:
         self._saved_mach_args = None
 
     def run(self, metadata):
-        has_exc_handler = self.has_hook("on_exception")
-
         # run the system and test layers
-        with self.layers[SYSTEM] as syslayer, self.layers[TEST] as testlayer:
-            metadata = syslayer(metadata)
-            try:
-                metadata = testlayer(metadata)
-            except Exception as e:
-                if has_exc_handler:
-                    # if the hook returns True, we abort and return
-                    # without error. If it returns False, we continue
-                    # the loop. The hook can also raise an exception or
-                    # re-raise this exception.
-                    if not self.run_hook("on_exception", testlayer, e):
-                        return metadata
-                else:
-                    raise
+        try:
+            with self.layers[SYSTEM] as syslayer, self.layers[TEST] as testlayer:
+                metadata = testlayer(syslayer(metadata))
 
-        # then run the metrics layers
-        with self.layers[METRICS] as metrics:
-            metadata = metrics(metadata)
-
+            # then run the metrics layers
+            with self.layers[METRICS] as metrics:
+                metadata = metrics(metadata)
+        except StopRunError:
+            # ends the cycle but without bubbling up the error
+            pass
         return metadata
 
     def __enter__(self):
@@ -144,11 +133,19 @@ class MachEnvironment:
             raise IOError(str(hooks))
 
     def has_hook(self, name):
+        if self._hooks is None:
+            return False
         return hasattr(self._hooks, name)
+
+    def get_hook(self, name):
+        if self._hooks is None:
+            return False
+        return getattr(self._hooks, name)
 
     def run_hook(self, name, *args, **kw):
         if self._hooks is None:
             return
         if not hasattr(self._hooks, name):
             return
+        self.debug("Running hook %s" % name)
         return getattr(self._hooks, name)(self, *args, **kw)

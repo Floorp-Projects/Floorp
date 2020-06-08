@@ -61,7 +61,7 @@ class Perfherder(Layer):
         },
     }
 
-    def __call__(self, metadata):
+    def run(self, metadata):
         """Processes the given results into a perfherder-formatted data blob.
 
         If the `--perfherder` flag isn't provided, then the

@@ -1,0 +1,75 @@
+#!/usr/bin/env python
+import mozunit
+from unittest import mock
+import pathlib
+
+from mozperftest.tests.support import get_running_env, EXAMPLE_TEST, temp_file, temp_dir
+from mozperftest.environment import SYSTEM, TEST, METRICS
+
+
+HERE = pathlib.Path(__file__).parent
+LOGCAT = HERE / "data" / "logcat"
+
+
+def fetch(self, url):
+    return str(HERE / "fetched_artifact.zip")
+
+
+class FakeDevice:
+    def __init__(self, **args):
+        self.apps = []
+
+    def install_app(self, apk, replace=True):
+        if apk not in self.apps:
+            self.apps.append(apk)
+
+    def is_app_installed(self, app_name):
+        return True
+
+    def get_logcat(self):
+        with LOGCAT.open() as f:
+            for line in f:
+                yield line
+
+
+@mock.patch("mozperftest.test.browsertime.runner.install_package")
+@mock.patch(
+    "mozperftest.test.noderunner.NodeRunner.verify_node_install", new=lambda x: True
+)
+@mock.patch("mozbuild.artifact_cache.ArtifactCache.fetch", new=fetch)
+@mock.patch(
+    "mozperftest.test.browsertime.runner.BrowsertimeRunner._setup_node_packages",
+    new=lambda x, y: None,
+)
+@mock.patch("mozperftest.system.android.ADBLoggedDevice", new=FakeDevice)
+def test_android_log(*mocked):
+    with temp_file() as logcat, temp_dir() as output:
+        args = {
+            "flavor": "mobile-browser",
+            "android-install-apk": ["this.apk"],
+            "android": True,
+            "console": True,
+            "android-timeout": 30,
+            "android-capture-adb": "stdout",
+            "android-capture-logcat": logcat,
+            "android-app-name": "org.mozilla.fenix",
+            "androidlog": True,
+            "output": output,
+        }
+
+        mach_cmd, metadata, env = get_running_env(**args)
+        env.set_arg("tests", [EXAMPLE_TEST])
+
+        with env.layers[SYSTEM] as sys, env.layers[TEST] as andro:
+            metadata = sys(andro(metadata))
+
+        # we want to drop the first result
+        metadata._results = metadata._results[1:]
+        with env.layers[METRICS] as metrics:
+            metadata = metrics(metadata)
+
+        assert pathlib.Path(output, "LogCatstd-output.json").exists()
+
+
+if __name__ == "__main__":
+    mozunit.main()

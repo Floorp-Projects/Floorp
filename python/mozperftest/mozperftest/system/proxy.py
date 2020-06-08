@@ -28,7 +28,7 @@ class ProxyRunner(Layer):
     def setup(self):
         pass
 
-    def __call__(self, metadata):
+    def run(self, metadata):
         self.metadata = metadata
 
         # replace with artifacts

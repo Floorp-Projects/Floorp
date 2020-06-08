@@ -11,6 +11,8 @@ def get_layers():
 
 
 def pick_system(env, flavor, mach_cmd):
-    if flavor == "script":
-        return Layers(env, mach_cmd, get_layers())
+    if flavor == "desktop-browser":
+        return Layers(env, mach_cmd, (ProxyRunner,))
+    if flavor == "mobile-browser":
+        return Layers(env, mach_cmd, (ProxyRunner, AndroidDevice))
     raise NotImplementedError(flavor)

@@ -71,6 +71,7 @@ jobs:
                 mkdir -p $MOZ_FETCHES_DIR/../artifacts &&
                 cd $GECKO_PATH &&
                 python3 python/mozperftest/mozperftest/runner.py
+                --flavor mobile-browser
                 --android
                 --android-app-name org.mozilla.fennec_aurora
                 --android-activity org.mozilla.fenix.IntentReceiverActivity
@@ -99,6 +100,7 @@ jobs:
                 mkdir -p $MOZ_FETCHES_DIR/../artifacts &&
                 cd $GECKO_PATH &&
                 python3 python/mozperftest/mozperftest/runner.py
+                --flavor mobile-browser
                 --android
                 --android-app-name org.mozilla.fennec_aurora
                 --perfherder-metrics processLaunchToNavStart
@@ -127,6 +129,7 @@ jobs:
                 mkdir -p $MOZ_FETCHES_DIR/../artifacts &&
                 cd $GECKO_PATH &&
                 python3 python/mozperftest/mozperftest/runner.py
+                --flavor mobile-browser
                 --android
                 --android-app-name org.mozilla.geckoview_example
                 --android-activity org.mozilla.geckoview_example.GeckoViewActivity
@@ -155,6 +158,7 @@ jobs:
                 mkdir -p $MOZ_FETCHES_DIR/../artifacts &&
                 cd $GECKO_PATH &&
                 python3 python/mozperftest/mozperftest/runner.py
+                --flavor mobile-browser
                 --android
                 --android-clear-logcat
                 --android-capture-logcat logcat
