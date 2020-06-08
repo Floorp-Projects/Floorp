@@ -1219,7 +1219,7 @@ this.ExtensionBlocklistRS = {
 
       // Ensure that softDisabled is false if the add-on is not soft blocked
       if (state != Ci.nsIBlocklistService.STATE_SOFTBLOCKED) {
-        addon.softDisabled = false;
+        await addon.setSoftDisabled(false);
       }
 
       // If an add-on has dropped from hard to soft blocked just mark it as
@@ -1228,7 +1228,7 @@ this.ExtensionBlocklistRS = {
         state == Ci.nsIBlocklistService.STATE_SOFTBLOCKED &&
         oldState == Ci.nsIBlocklistService.STATE_BLOCKED
       ) {
-        addon.softDisabled = true;
+        await addon.setSoftDisabled(true);
       }
 
       if (
@@ -1243,7 +1243,7 @@ this.ExtensionBlocklistRS = {
           state == Ci.nsIBlocklistService.STATE_SOFTBLOCKED &&
           !addon.userDisabled
         ) {
-          addon.softDisabled = true;
+          await addon.setSoftDisabled(true);
         }
         // It's a block. We must reset certain preferences.
         let entry = this._getEntry(addon, this._entries);
@@ -1579,7 +1579,7 @@ this.ExtensionBlocklistMLBF = {
       // Ensure that softDisabled is false if the add-on is not soft blocked
       // (by a previous implementation of the blocklist).
       if (state != Ci.nsIBlocklistService.STATE_SOFTBLOCKED) {
-        addon.softDisabled = false;
+        await addon.setSoftDisabled(false);
       }
     }
 

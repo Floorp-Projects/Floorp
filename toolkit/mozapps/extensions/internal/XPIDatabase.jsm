@@ -607,7 +607,7 @@ class AddonInternal {
     }
 
     if (this.inDatabase && updateDatabase) {
-      XPIDatabase.updateAddonDisabledState(this, {
+      await XPIDatabase.updateAddonDisabledState(this, {
         userDisabled,
         softDisabled,
       });
@@ -1163,7 +1163,7 @@ AddonWrapper = class {
     return addonFor(this).setUserDisabled(true, allowSystemAddons);
   }
 
-  set softDisabled(val) {
+  async setSoftDisabled(val) {
     let addon = addonFor(this);
     if (val == addon.softDisabled) {
       return val;
@@ -1173,10 +1173,14 @@ AddonWrapper = class {
       // When softDisabling a theme just enable the active theme
       if (addon.type === "theme" && val && !addon.userDisabled) {
         if (addon.isWebExtension) {
-          XPIDatabase.updateAddonDisabledState(addon, { softDisabled: val });
+          await XPIDatabase.updateAddonDisabledState(addon, {
+            softDisabled: val,
+          });
         }
       } else {
-        XPIDatabase.updateAddonDisabledState(addon, { softDisabled: val });
+        await XPIDatabase.updateAddonDisabledState(addon, {
+          softDisabled: val,
+        });
       }
     } else if (!addon.userDisabled) {
       // Only set softDisabled if not already disabled
