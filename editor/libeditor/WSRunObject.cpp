@@ -236,8 +236,10 @@ already_AddRefed<Element> WSRunObject::InsertBreak(
             atPreviousCharOfNextCharOfInsertionPoint.IsEndOfContainer() ||
             !atPreviousCharOfNextCharOfInsertionPoint.IsCharASCIISpace()) {
           // We are at start of non-nbsps.  Convert to a single nbsp.
-          nsresult rv =
-              ReplaceASCIIWhitespacesWithOneNBSP(atNextCharOfInsertionPoint);
+          EditorDOMPointInText endOfCollapsibleASCIIWhitespaces =
+              GetEndOfCollapsibleASCIIWhitespaces(atNextCharOfInsertionPoint);
+          nsresult rv = ReplaceASCIIWhitespacesWithOneNBSP(
+              atNextCharOfInsertionPoint, endOfCollapsibleASCIIWhitespaces);
           if (NS_FAILED(rv)) {
             NS_WARNING(
                 "WSRunObject::ReplaceASCIIWhitespacesWithOneNBSP() failed");
@@ -1171,8 +1173,15 @@ nsresult WSRunObject::PrepareToDeleteRangePriv(WSRunObject* aEndObject) {
           // mScanStartPoint will be referred bellow so that we need to keep
           // it a valid point.
           AutoEditorDOMPointChildInvalidator forgetChild(mScanStartPoint);
+          if (nextCharOfStartOfEnd.IsStartOfContainer() ||
+              nextCharOfStartOfEnd.IsPreviousCharASCIISpace()) {
+            nextCharOfStartOfEnd =
+                GetFirstASCIIWhitespacePointCollapsedTo(nextCharOfStartOfEnd);
+          }
+          EditorDOMPointInText endOfCollapsibleASCIIWhitespaces =
+              GetEndOfCollapsibleASCIIWhitespaces(nextCharOfStartOfEnd);
           nsresult rv = aEndObject->ReplaceASCIIWhitespacesWithOneNBSP(
-              nextCharOfStartOfEnd);
+              nextCharOfStartOfEnd, endOfCollapsibleASCIIWhitespaces);
           if (NS_FAILED(rv)) {
             NS_WARNING(
                 "WSRunObject::ReplaceASCIIWhitespacesWithOneNBSP() failed");
@@ -1208,7 +1217,15 @@ nsresult WSRunObject::PrepareToDeleteRangePriv(WSRunObject* aEndObject) {
       if (atPreviousCharOfStart.IsSet() &&
           !atPreviousCharOfStart.IsEndOfContainer() &&
           atPreviousCharOfStart.IsCharASCIISpace()) {
-        nsresult rv = ReplaceASCIIWhitespacesWithOneNBSP(atPreviousCharOfStart);
+        if (atPreviousCharOfStart.IsStartOfContainer() ||
+            atPreviousCharOfStart.IsPreviousCharASCIISpace()) {
+          atPreviousCharOfStart =
+              GetFirstASCIIWhitespacePointCollapsedTo(atPreviousCharOfStart);
+        }
+        EditorDOMPointInText endOfCollapsibleASCIIWhitespaces =
+            GetEndOfCollapsibleASCIIWhitespaces(atPreviousCharOfStart);
+        nsresult rv = ReplaceASCIIWhitespacesWithOneNBSP(
+            atPreviousCharOfStart, endOfCollapsibleASCIIWhitespaces);
         if (NS_FAILED(rv)) {
           NS_WARNING(
               "WSRunObject::ReplaceASCIIWhitespacesWithOneNBSP() failed");
@@ -1240,7 +1257,15 @@ nsresult WSRunObject::PrepareToSplitAcrossBlocksPriv() {
       // mScanStartPoint will be referred bellow so that we need to keep
       // it a valid point.
       AutoEditorDOMPointChildInvalidator forgetChild(mScanStartPoint);
-      nsresult rv = ReplaceASCIIWhitespacesWithOneNBSP(atNextCharOfStart);
+      if (atNextCharOfStart.IsStartOfContainer() ||
+          atNextCharOfStart.IsPreviousCharASCIISpace()) {
+        atNextCharOfStart =
+            GetFirstASCIIWhitespacePointCollapsedTo(atNextCharOfStart);
+      }
+      EditorDOMPointInText endOfCollapsibleASCIIWhitespaces =
+          GetEndOfCollapsibleASCIIWhitespaces(atNextCharOfStart);
+      nsresult rv = ReplaceASCIIWhitespacesWithOneNBSP(
+          atNextCharOfStart, endOfCollapsibleASCIIWhitespaces);
       if (NS_FAILED(rv)) {
         NS_WARNING("WSRunObject::ReplaceASCIIWhitespacesWithOneNBSP() failed");
         return rv;
@@ -1257,7 +1282,15 @@ nsresult WSRunObject::PrepareToSplitAcrossBlocksPriv() {
     if (atPreviousCharOfStart.IsSet() &&
         !atPreviousCharOfStart.IsEndOfContainer() &&
         atPreviousCharOfStart.IsCharASCIISpace()) {
-      nsresult rv = ReplaceASCIIWhitespacesWithOneNBSP(atPreviousCharOfStart);
+      if (atPreviousCharOfStart.IsStartOfContainer() ||
+          atPreviousCharOfStart.IsPreviousCharASCIISpace()) {
+        atPreviousCharOfStart =
+            GetFirstASCIIWhitespacePointCollapsedTo(atPreviousCharOfStart);
+      }
+      EditorDOMPointInText endOfCollapsibleASCIIWhitespaces =
+          GetEndOfCollapsibleASCIIWhitespaces(atPreviousCharOfStart);
+      nsresult rv = ReplaceASCIIWhitespacesWithOneNBSP(
+          atPreviousCharOfStart, endOfCollapsibleASCIIWhitespaces);
       if (NS_FAILED(rv)) {
         NS_WARNING("WSRunObject::ReplaceASCIIWhitespacesWithOneNBSP() failed");
         return rv;
@@ -1527,35 +1560,35 @@ EditorDOMPointInText WSRunScanner::GetFirstASCIIWhitespacePointCollapsedTo(
 }
 
 nsresult WSRunObject::ReplaceASCIIWhitespacesWithOneNBSP(
-    const EditorDOMPointInText& aPointAtASCIIWhitespace) {
-  MOZ_ASSERT(aPointAtASCIIWhitespace.IsSet());
-  MOZ_ASSERT(!aPointAtASCIIWhitespace.IsEndOfContainer());
-  MOZ_ASSERT(aPointAtASCIIWhitespace.IsCharASCIISpace());
+    const EditorDOMPointInText& aAtFirstASCIIWhitespace,
+    const EditorDOMPointInText& aEndOfCollapsibleASCIIWhitespaces) {
+  MOZ_ASSERT(aAtFirstASCIIWhitespace.IsSetAndValid());
+  MOZ_ASSERT(!aAtFirstASCIIWhitespace.IsEndOfContainer());
+  MOZ_ASSERT(aAtFirstASCIIWhitespace.IsCharASCIISpace());
+  MOZ_ASSERT(aEndOfCollapsibleASCIIWhitespaces.IsSetAndValid());
+  MOZ_ASSERT(aEndOfCollapsibleASCIIWhitespaces.IsEndOfContainer() ||
+             !aEndOfCollapsibleASCIIWhitespaces.IsCharASCIISpace());
 
   AutoTransactionsConserveSelection dontChangeMySelection(mHTMLEditor);
-  EditorDOMPointInText atFirstASCIIWhitespace =
-      GetFirstASCIIWhitespacePointCollapsedTo(aPointAtASCIIWhitespace);
-  EditorDOMPointInText afterLastASCIIWhitespace =
-      GetEndOfCollapsibleASCIIWhitespaces(aPointAtASCIIWhitespace);
   nsresult rv =
       MOZ_KnownLive(mHTMLEditor)
           .ReplaceTextWithTransaction(
-              MOZ_KnownLive(*atFirstASCIIWhitespace.ContainerAsText()),
-              atFirstASCIIWhitespace.Offset(),
-              atFirstASCIIWhitespace.ContainerAsText() ==
-                      afterLastASCIIWhitespace.ContainerAsText()
-                  ? afterLastASCIIWhitespace.Offset() -
-                        atFirstASCIIWhitespace.Offset()
-                  : atFirstASCIIWhitespace.ContainerAsText()->TextLength() -
-                        atFirstASCIIWhitespace.Offset(),
+              MOZ_KnownLive(*aAtFirstASCIIWhitespace.ContainerAsText()),
+              aAtFirstASCIIWhitespace.Offset(),
+              aAtFirstASCIIWhitespace.ContainerAsText() ==
+                      aEndOfCollapsibleASCIIWhitespaces.ContainerAsText()
+                  ? aEndOfCollapsibleASCIIWhitespaces.Offset() -
+                        aAtFirstASCIIWhitespace.Offset()
+                  : aAtFirstASCIIWhitespace.ContainerAsText()->TextLength() -
+                        aAtFirstASCIIWhitespace.Offset(),
               nsDependentSubstring(&kNBSP, 1));
   if (NS_FAILED(rv)) {
     NS_WARNING("HTMLEditor::ReplaceTextWithTransaction() failed");
     return rv;
   }
 
-  if (atFirstASCIIWhitespace.GetContainer() ==
-      afterLastASCIIWhitespace.GetContainer()) {
+  if (aAtFirstASCIIWhitespace.GetContainer() ==
+      aEndOfCollapsibleASCIIWhitespaces.GetContainer()) {
     return NS_OK;
   }
 
@@ -1564,8 +1597,8 @@ nsresult WSRunObject::ReplaceASCIIWhitespacesWithOneNBSP(
   rv = MOZ_KnownLive(mHTMLEditor)
            .DeleteTextAndTextNodesWithTransaction(
                EditorDOMPointInText::AtEndOf(
-                   *atFirstASCIIWhitespace.ContainerAsText()),
-               afterLastASCIIWhitespace);
+                   *aAtFirstASCIIWhitespace.ContainerAsText()),
+               aEndOfCollapsibleASCIIWhitespaces);
   NS_WARNING_ASSERTION(
       NS_SUCCEEDED(rv),
       "HTMLEditor::DeleteTextAndTextNodesWithTransaction() failed");
