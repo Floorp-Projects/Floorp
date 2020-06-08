@@ -342,6 +342,10 @@ class FunctionBox : public SharedContext {
   // compilation.
   bool emitBytecode : 1;
 
+  // This function is a standalone function that is not syntactically part of
+  // another script. Eg. Created by `new Function("")`.
+  bool isStandalone : 1;
+
   // This is set by the BytecodeEmitter of the enclosing script when a reference
   // to this function is generated. This is also used to determine a hoisted
   // function already is referenced by the bytecode.
