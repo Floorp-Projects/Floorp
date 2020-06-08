@@ -50,3 +50,5 @@ skip_on(android) fuzzy(60,917) == raster_root_B_8192.yaml raster_root_B_ref.yaml
 != raster-root-large-mask.yaml blank.yaml
 skip_on(android) == raster-root-scaling.yaml raster-root-scaling-ref.yaml
 skip_on(android) == raster-root-scaling-2.yaml raster-root-scaling-2-ref.yaml
+# Make sure we don't panic
+!= raster-root-huge-scale.yaml blank.yaml
