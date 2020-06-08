@@ -118,6 +118,7 @@
 #include "mozilla/layers/WebRenderBridgeChild.h"
 #include "mozilla/layers/WebRenderLayerManager.h"
 #include "mozilla/ResultExtensions.h"
+#include "mozilla/ViewportUtils.h"
 
 #ifdef XP_WIN
 #  undef GetClassName
@@ -1495,6 +1496,25 @@ nsDOMWindowUtils::GetVisualViewportOffset(int32_t* aOffsetX,
   *aOffsetX = nsPresContext::AppUnitsToIntCSSPixels(offset.x);
   *aOffsetY = nsPresContext::AppUnitsToIntCSSPixels(offset.y);
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWindowUtils::TransformRectLayoutToVisual(float aX, float aY, float aWidth,
+                                              float aHeight,
+                                              DOMRect** aResult) {
+  nsCOMPtr<nsPIDOMWindowOuter> window = do_QueryReferent(mWindow);
+  NS_ENSURE_STATE(window);
+
+  PresShell* presShell = GetPresShell();
+  NS_ENSURE_TRUE(presShell, NS_ERROR_NOT_AVAILABLE);
+
+  CSSRect rect(aX, aY, aWidth, aHeight);
+  rect = ViewportUtils::DocumentRelativeLayoutToVisual(rect, presShell);
+
+  RefPtr<DOMRect> outRect = new DOMRect(window);
+  outRect->SetRect(rect.x, rect.y, rect.width, rect.height);
+  outRect.forget(aResult);
   return NS_OK;
 }
 

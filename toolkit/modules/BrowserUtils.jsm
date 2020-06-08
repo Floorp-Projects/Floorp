@@ -231,8 +231,8 @@ var BrowserUtils = {
     let rect = aElement.getBoundingClientRect();
     let win = aElement.ownerGlobal;
 
-    let x = rect.left,
-      y = rect.top;
+    let x = rect.left;
+    let y = rect.top;
 
     // We need to compensate for any iframes that might shift things
     // over. We also need to compensate for zooming.
@@ -254,15 +254,32 @@ var BrowserUtils = {
       parentFrame = win.frameElement;
     }
 
+    rect = {
+      left: x,
+      top: y,
+      width: rect.width,
+      height: rect.height,
+    };
+    rect = win.windowUtils.transformRectLayoutToVisual(
+      rect.left,
+      rect.top,
+      rect.width,
+      rect.height
+    );
+
     if (aInScreenCoords) {
-      x += win.mozInnerScreenX;
-      y += win.mozInnerScreenY;
+      rect = {
+        left: rect.left + win.mozInnerScreenX,
+        top: rect.top + win.mozInnerScreenY,
+        width: rect.width,
+        height: rect.height,
+      };
     }
 
     let fullZoom = win.windowUtils.fullZoom;
     rect = {
-      left: x * fullZoom,
-      top: y * fullZoom,
+      left: rect.left * fullZoom,
+      top: rect.top * fullZoom,
       width: rect.width * fullZoom,
       height: rect.height * fullZoom,
     };
