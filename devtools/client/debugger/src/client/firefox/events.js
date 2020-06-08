@@ -27,7 +27,6 @@ type Dependencies = {
 let actions: typeof Actions;
 let isInterrupted: boolean;
 let threadFrontListeners: WeakMap<ThreadFront, Array<Function>>;
-let workersListener: Object;
 
 function addThreadEventListeners(thread: ThreadFront): void {
   const removeListeners = [];
@@ -60,7 +59,6 @@ function setupEvents(dependencies: Dependencies): void {
 
 function removeEventsTopTarget(targetFront: Target): void {
   removeThreadEventListeners(targetFront.threadFront);
-  workersListener.removeListener();
 }
 
 async function paused(
