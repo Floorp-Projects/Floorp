@@ -191,7 +191,11 @@ class LayoutApp extends PureComponent {
     }
 
     return dom.div(
-      { className: "layout-container", ref: this.containerRef },
+      {
+        className: "layout-container",
+        ref: this.containerRef,
+        role: "document",
+      },
       Accordion({ items })
     );
   }
