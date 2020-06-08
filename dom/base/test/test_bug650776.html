@@ -97,10 +97,6 @@ is(s.sanitize("<img>", u.SanitizerDropMedia), '<html><head></head><body></body><
 is(s.sanitize("<svg>foo</svg>", u.SanitizerDropMedia), '<html><head></head><body>foo</body></html>', "Wrong sanitizer result 58");
 is(s.sanitize("<video><source></video>", u.SanitizerDropMedia), '<html><head></head><body></body></html>', "Wrong sanitizer result 59");
 is(s.sanitize("<audio><source></audio>", u.SanitizerDropMedia), '<html><head></head><body></body></html>', "Wrong sanitizer result 60");
-// disallow 'formaction' attributes
-is(s.sanitize("<input formaction='http://mochi.test/'>", 0), '<html><head></head><body><input></body></html>', "Wrong sanitizer result 61");
-// disallow 'ping' attributes
-is(s.sanitize("<a ping='http://mochi.test/'></a>", 0), "<html><head></head><body><a></a></body></html>", "Wrong sanitizer result 62");
 
 
 </script>
