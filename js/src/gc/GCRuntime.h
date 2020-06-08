@@ -761,6 +761,7 @@ class GCRuntime {
   void markIncomingCrossCompartmentPointers(MarkColor color);
   IncrementalProgress beginSweepingSweepGroup(JSFreeOp* fop,
                                               SliceBudget& budget);
+  IncrementalProgress markDuringSweeping(JSFreeOp* fop, SliceBudget& budget);
   void updateAtomsBitmap();
   void sweepCCWrappers();
   void sweepObjectGroups();
