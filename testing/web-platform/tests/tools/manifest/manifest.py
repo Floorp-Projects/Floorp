@@ -376,6 +376,8 @@ def load_and_update(tests_root,  # type: bytes
                              allow_cached=allow_cached)
         except ManifestVersionMismatch:
             logger.info("Manifest version changed, rebuilding")
+        except ManifestError:
+            logger.warning("Failed to load manifest, rebuilding")
 
         if manifest is not None and manifest.url_base != url_base:
             logger.info("Manifest url base did not match, rebuilding")

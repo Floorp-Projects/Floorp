@@ -723,7 +723,7 @@ class TestResolver(MozbuildObject):
         logger = logging.getLogger("manifestupdate")
         logger.disabled = True
 
-        manifests = manifestupdate.run(self.topsrcdir, self.topobjdir, rebuild=True,
+        manifests = manifestupdate.run(self.topsrcdir, self.topobjdir, rebuild=False,
                                        download=True, config_path=None, rewrite_config=True,
                                        update=True, logger=logger)
         if not manifests:
