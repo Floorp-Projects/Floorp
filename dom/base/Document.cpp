@@ -13587,12 +13587,13 @@ static const char* GetFullscreenError(Document* aDoc, CallerType aCallerType) {
     return "FullscreenDeniedHidden";
   }
 
-  // Ensure that all containing elements are <iframe> and have
-  // allowfullscreen attribute set.
-  nsCOMPtr<nsIDocShell> docShell(aDoc->GetDocShell());
-  if (!docShell || !docShell->GetFullscreenAllowed()) {
+  // Ensure that all containing elements are <iframe> and have allowfullscreen
+  // attribute set.
+  BrowsingContext* bc = aDoc->GetBrowsingContext();
+  if (!bc || !bc->FullscreenAllowed()) {
     return "FullscreenDeniedContainerNotAllowed";
   }
+
   return nullptr;
 }
 

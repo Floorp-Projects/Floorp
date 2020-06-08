@@ -15,6 +15,7 @@
 #include "nsThreadUtils.h"
 #include "nsIWidget.h"
 #include "nsContentUtils.h"
+#include "nsFrameLoader.h"
 #ifdef XP_MACOSX
 #  include "mozilla/EventDispatcher.h"
 #  include "mozilla/dom/Event.h"
@@ -117,6 +118,13 @@ nsresult HTMLEmbedElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
   if (aValue) {
     nsresult rv = AfterMaybeChangeAttr(aNamespaceID, aName, aNotify);
     NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  if (aNamespaceID == kNameSpaceID_None &&
+      aName == nsGkAtoms::allowfullscreen && mFrameLoader) {
+    if (auto* bc = mFrameLoader->GetExtantBrowsingContext()) {
+      bc->SetFullscreenAllowedByOwner(AllowFullscreen());
+    }
   }
 
   return nsGenericHTMLElement::AfterSetAttr(

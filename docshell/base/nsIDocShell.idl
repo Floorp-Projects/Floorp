@@ -698,19 +698,6 @@ interface nsIDocShell : nsIDocShellTreeItem
    */
   [noscript, notxpcom] bool pluginsAllowedInCurrentDoc();
 
-
-  /**
-   * Attribute that determines whether fullscreen is allowed to be entered for
-   * this subtree of the docshell tree. This is true when all iframes containing
-   * this docshell have their "allowfullscreen" attribute set to "true".
-   * fullscreenAllowed is only writable at content boundaries, where it is used
-   * to propagate the value of the cross process parent's iframe's
-   * "allowfullscreen" attribute to the child process. Setting
-   * fullscreenAllowed on docshells which aren't content boundaries throws an
-   * exception.
-   */
-  [infallible] readonly attribute boolean fullscreenAllowed;
-
   [noscript, infallible] attribute boolean affectPrivateSessionLifetime;
 
   /**

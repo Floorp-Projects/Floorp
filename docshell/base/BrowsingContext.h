@@ -116,6 +116,7 @@ class WindowProxyHolder;
   FIELD(AllowContentRetargetingOnChildren, bool)                             \
   FIELD(ForceEnableTrackingProtection, bool)                                 \
   FIELD(UseGlobalHistory, bool)                                              \
+  FIELD(FullscreenAllowedByOwner, bool)                                      \
   /* These field are used to store the states of autoplay media request on   \
    * GeckoView only, and it would only be modified on the top level browsing \
    * context. */                                                             \
@@ -387,6 +388,8 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
 
   bool WatchedByDevTools();
   void SetWatchedByDevTools(bool aWatchedByDevTools, ErrorResult& aRv);
+
+  bool FullscreenAllowed() const;
 
   float FullZoom() const { return GetFullZoom(); }
   float TextZoom() const { return GetTextZoom(); }
@@ -746,6 +749,8 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
               ContentParent* aSource);
   bool CanSet(FieldIndex<IDX_AllowPlugins>, const bool& aAllowPlugins,
               ContentParent* aSource);
+  bool CanSet(FieldIndex<IDX_FullscreenAllowedByOwner>, const bool&,
+              ContentParent*);
   bool CanSet(FieldIndex<IDX_WatchedByDevToolsInternal>,
               const bool& aWatchedByDevToolsInternal, ContentParent* aSource);
 
