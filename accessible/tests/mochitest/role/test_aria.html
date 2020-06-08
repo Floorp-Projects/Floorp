@@ -198,7 +198,7 @@
         "chrome",
         []
       );
-      await SimpleTest.promiseFocus(win);
+      await new Promise(resolve => addA11yLoadEvent(resolve, win));
       testRole(win.document, ROLE_ALERT);
       win.close();
       // Other roles aren't valid on body elements.
