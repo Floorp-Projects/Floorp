@@ -776,8 +776,6 @@ class InstallableWrapper extends AOMExtensionWrapper {
   }
 
   async _install(xpiFile) {
-    // Timing here is different than in MockExtension so we need to handle
-    // incognitoOverride early.
     await this._setIncognitoOverride();
 
     if (this.installType === "temporary") {

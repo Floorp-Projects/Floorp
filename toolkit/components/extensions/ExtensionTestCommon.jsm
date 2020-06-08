@@ -155,12 +155,28 @@ class MockExtension {
     });
   }
 
+  _setIncognitoOverride() {
+    let { addonData } = this;
+    if (addonData && addonData.incognitoOverride) {
+      try {
+        let { id } = addonData.manifest.applications.gecko;
+        if (id) {
+          return ExtensionTestCommon.setIncognitoOverride({ id, addonData });
+        }
+      } catch (e) {}
+      throw new Error(
+        "Extension ID is required for setting incognito permission."
+      );
+    }
+  }
+
   async startup() {
+    await this._setIncognitoOverride();
+
     if (this.installType == "temporary") {
       return AddonManager.installTemporaryAddon(this.file).then(async addon => {
         this.addon = addon;
         this.id = addon.id;
-        await ExtensionTestCommon.setIncognitoOverride(this);
         return this._readyPromise;
       });
     } else if (this.installType == "permanent") {
@@ -174,7 +190,6 @@ class MockExtension {
           onInstallEnded: async (install, newAddon) => {
             this.addon = newAddon;
             this.id = newAddon.id;
-            await ExtensionTestCommon.setIncognitoOverride(this);
             this.resolveAddon(newAddon);
             resolve(this._readyPromise);
           },
