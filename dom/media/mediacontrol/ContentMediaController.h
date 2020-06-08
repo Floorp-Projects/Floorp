@@ -34,9 +34,9 @@ class ContentControlKeyEventReceiver {
 };
 
 /**
- * ContentMediaAgent is an interface which we use to (1) update controlled media
- * status to the media controller in the chrome process and (2) act an event
- * source to dispatch control key events to its listeners.
+ * ContentMediaAgent is an interface which we use to (1) propoagate media
+ * related information from the content process to the chrome process (2) act an
+ * event source to dispatch control key events to its listeners.
  *
  * If the media would like to know the media control key events, then media
  * MUST inherit from ContentControlKeyEventReceiver, and register themselves to
@@ -60,21 +60,17 @@ class ContentMediaAgent : public IMediaInfoUpdater {
                                  MediaAudibleState aState) override;
   void SetIsInPictureInPictureMode(uint64_t aBrowsingContextId,
                                    bool aIsInPictureInPictureMode) override;
+  void SetDeclaredPlaybackState(uint64_t aBrowsingContextId,
+                                MediaSessionPlaybackState aState) override;
+  void NotifySessionCreated(uint64_t aBrowsingContextId) override;
+  void NotifySessionDestroyed(uint64_t aBrowsingContextId) override;
+  void UpdateMetadata(uint64_t aBrowsingContextId,
+                      const Maybe<MediaMetadataBase>& aMetadata) override;
 
   // Use these methods to register/unregister `ContentControlKeyEventReceiver`
   // in order to listen to media control key events.
   virtual void AddReceiver(ContentControlKeyEventReceiver* aReceiver) = 0;
   virtual void RemoveReceiver(ContentControlKeyEventReceiver* aReceiver) = 0;
-
- protected:
-  // TODO : support these functions as well in order to allow media session
-  // uses this class to update the information.
-  void SetDeclaredPlaybackState(uint64_t aBrowsingContextId,
-                                MediaSessionPlaybackState aState) override{};
-  void NotifySessionCreated(uint64_t aBrowsingContextId) override{};
-  void NotifySessionDestroyed(uint64_t aBrowsingContextId) override{};
-  void UpdateMetadata(uint64_t aBrowsingContextId,
-                      const Maybe<MediaMetadataBase>& aMetadata) override{};
 };
 
 /**
