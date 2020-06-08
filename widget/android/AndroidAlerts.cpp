@@ -6,8 +6,7 @@
 #include "AndroidAlerts.h"
 #include "mozilla/java/GeckoRuntimeWrappers.h"
 #include "mozilla/java/WebNotificationWrappers.h"
-#include "nsIPrincipal.h"
-#include "nsIURI.h"
+#include "nsAlertsUtils.h"
 
 namespace mozilla {
 namespace widget {
@@ -77,13 +76,12 @@ AndroidAlerts::ShowPersistentNotification(const nsAString& aPersistentData,
   rv = aAlert->GetRequireInteraction(&requireInteraction);
   NS_ENSURE_SUCCESS(rv, NS_OK);
 
-  nsCOMPtr<nsIURI> uri;
-  rv = aAlert->GetURI(getter_AddRefs(uri));
+  nsCOMPtr<nsIPrincipal> principal;
+  rv = aAlert->GetPrincipal(getter_AddRefs(principal));
   NS_ENSURE_SUCCESS(rv, NS_OK);
 
-  nsCString spec;
-  rv = uri->GetDisplaySpec(spec);
-  NS_ENSURE_SUCCESS(rv, NS_OK);
+  nsAutoString host;
+  nsAlertsUtils::GetSourceHostPort(principal, host);
 
   if (aPersistentData.IsEmpty() && aAlertListener) {
     if (!sListenerMap) {
@@ -94,7 +92,7 @@ AndroidAlerts::ShowPersistentNotification(const nsAString& aPersistentData,
   }
 
   java::WebNotification::LocalRef notification = notification->New(
-      title, name, cookie, text, imageUrl, dir, lang, requireInteraction, spec);
+      title, name, cookie, text, imageUrl, dir, lang, requireInteraction);
   java::GeckoRuntime::LocalRef runtime = java::GeckoRuntime::GetInstance();
   if (runtime != NULL) {
     runtime->NotifyOnShow(notification);
