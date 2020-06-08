@@ -33,7 +33,6 @@ function resetSelection() {
 function runTest() {
     var rightClickDown = {type: "mousedown", button: 2},
         rightClickUp = {type: "mouseup", button: 2},
-        rightClickEnd = {type: "contextmenu", button: 2},
         singleClickDown = {type: "mousedown", button: 0},
         singleClickUp = {type: "mouseup", button: 0};
     var selection = window.getSelection();
@@ -56,7 +55,6 @@ function runTest() {
     resetSelection();
     synthesizeMouseAtCenter(img, rightClickDown);
     synthesizeMouseAtCenter(img, rightClickUp);
-    synthesizeMouseAtCenter(img, rightClickEnd);
     imgselected = selection.anchorNode == img.parentNode &&
                       selection.anchorOffset === 1 &&
                       selection.rangeCount === 1;
