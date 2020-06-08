@@ -814,6 +814,39 @@ TEST(TArray, RemoveElementsAt_ByIterator)
   ASSERT_EQ(expected, array);
 }
 
+TEST(TArray, RemoveLastElements_None)
+{
+  const nsTArray<int> original{1, 2, 3, 4};
+  nsTArray<int> array = original.Clone();
+  array.RemoveLastElements(0);
+
+  ASSERT_EQ(original, array);
+}
+
+TEST(TArray, RemoveLastElements_Empty_None)
+{
+  nsTArray<int> array;
+  array.RemoveLastElements(0);
+
+  ASSERT_EQ(0u, array.Length());
+}
+
+TEST(TArray, RemoveLastElements_All)
+{
+  nsTArray<int> array{1, 2, 3, 4};
+  array.RemoveLastElements(4);
+
+  ASSERT_EQ(0u, array.Length());
+}
+
+TEST(TArray, RemoveLastElements_One)
+{
+  nsTArray<int> array{1, 2, 3, 4};
+  array.RemoveLastElements(1);
+
+  ASSERT_EQ((nsTArray<int>{1, 2, 3}), array);
+}
+
 static_assert(std::is_copy_assignable<decltype(
                   MakeBackInserter(std::declval<nsTArray<int>&>()))>::value,
               "output iteraror must be copy-assignable");
