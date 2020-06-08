@@ -185,7 +185,6 @@ mozJSComponentLoader::mozJSComponentLoader()
       mInProgressImports(16),
       mLocations(16),
       mInitialized(false),
-      mShareLoaderGlobal(false),
       mLoaderGlobal(dom::RootingCx()) {
   MOZ_ASSERT(!sSelf, "mozJSComponentLoader should be a singleton");
 }
@@ -309,17 +308,6 @@ StaticRefPtr<mozJSComponentLoader> mozJSComponentLoader::sSelf;
 
 nsresult mozJSComponentLoader::ReallyInit() {
   MOZ_ASSERT(!mInitialized);
-
-  const char* shareGlobal = PR_GetEnv("MOZ_LOADER_SHARE_GLOBAL");
-  if (shareGlobal && *shareGlobal) {
-    nsDependentCString val(shareGlobal);
-    mShareLoaderGlobal =
-        !(val.EqualsLiteral("0") || val.LowerCaseEqualsLiteral("no") ||
-          val.LowerCaseEqualsLiteral("false") ||
-          val.LowerCaseEqualsLiteral("off"));
-  } else {
-    mShareLoaderGlobal = Preferences::GetBool("jsloader.shareGlobal");
-  }
 
   mInitialized = true;
 
@@ -619,23 +607,11 @@ JSObject* mozJSComponentLoader::GetSharedGlobal(JSContext* aCx) {
 }
 
 JSObject* mozJSComponentLoader::PrepareObjectForLocation(
-    JSContext* aCx, nsIFile* aComponentFile, nsIURI* aURI, bool* aReuseGlobal,
-    bool* aRealFile) {
+    JSContext* aCx, nsIFile* aComponentFile, nsIURI* aURI, bool* aRealFile) {
   nsAutoCString nativePath;
   NS_ENSURE_SUCCESS(aURI->GetSpec(nativePath), nullptr);
 
-  bool reuseGlobal = mShareLoaderGlobal;
-
-  *aReuseGlobal = reuseGlobal;
-
-  bool createdNewGlobal = false;
-  RootedObject globalObj(aCx);
-  if (reuseGlobal) {
-    globalObj = GetSharedGlobal(aCx);
-  } else if (!globalObj) {
-    CreateLoaderGlobal(aCx, nativePath, &globalObj);
-    createdNewGlobal = true;
-  }
+  RootedObject globalObj(aCx, GetSharedGlobal(aCx));
 
   // |thisObj| is the object we set properties on for a particular .jsm.
   RootedObject thisObj(aCx, globalObj);
@@ -643,10 +619,8 @@ JSObject* mozJSComponentLoader::PrepareObjectForLocation(
 
   JSAutoRealm ar(aCx, thisObj);
 
-  if (reuseGlobal) {
-    thisObj = js::NewJSMEnvironment(aCx);
-    NS_ENSURE_TRUE(thisObj, nullptr);
-  }
+  thisObj = js::NewJSMEnvironment(aCx);
+  NS_ENSURE_TRUE(thisObj, nullptr);
 
   *aRealFile = false;
 
@@ -691,13 +665,6 @@ JSObject* mozJSComponentLoader::PrepareObjectForLocation(
 
   if (!JS_DefineProperty(aCx, thisObj, "__URI__", exposedUri, 0)) {
     return nullptr;
-  }
-
-  if (createdNewGlobal) {
-    // AutoEntryScript required to invoke debugger hook, which is a
-    // Gecko-specific concept at present.
-    dom::AutoEntryScript aes(globalObj, "component loader report global");
-    JS_FireOnNewGlobalObject(aes.cx(), globalObj);
   }
 
   return thisObj;
@@ -748,11 +715,10 @@ nsresult mozJSComponentLoader::ObjectForLocation(
   bool realFile = false;
   nsresult rv = aInfo.EnsureURI();
   NS_ENSURE_SUCCESS(rv, rv);
-  bool reuseGlobal = false;
-  RootedObject obj(cx, PrepareObjectForLocation(cx, aComponentFile, aInfo.URI(),
-                                                &reuseGlobal, &realFile));
+  RootedObject obj(
+      cx, PrepareObjectForLocation(cx, aComponentFile, aInfo.URI(), &realFile));
   NS_ENSURE_TRUE(obj, NS_ERROR_FAILURE);
-  MOZ_ASSERT(JS_IsGlobalObject(obj) == !reuseGlobal);
+  MOZ_ASSERT(!JS_IsGlobalObject(obj));
 
   JSAutoRealm ar(cx, obj);
 
@@ -771,8 +737,7 @@ nsresult mozJSComponentLoader::ObjectForLocation(
 
   aInfo.EnsureResolvedURI();
 
-  nsAutoCString cachePath(reuseGlobal ? JS_CACHE_PREFIX("non-syntactic")
-                                      : JS_CACHE_PREFIX("global"));
+  nsAutoCString cachePath(JS_CACHE_PREFIX("non-syntactic"));
   rv = PathifyURI(aInfo.ResolvedURI(), cachePath);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -819,8 +784,7 @@ nsresult mozJSComponentLoader::ObjectForLocation(
       JS::SourceText<mozilla::Utf8Unit> srcBuf;
       if (srcBuf.init(cx, buf.get(), map.size(),
                       JS::SourceOwnership::Borrowed)) {
-        script = reuseGlobal ? CompileForNonSyntacticScope(cx, options, srcBuf)
-                             : Compile(cx, options, srcBuf);
+        script = CompileForNonSyntacticScope(cx, options, srcBuf);
       } else {
         MOZ_ASSERT(!script);
       }
@@ -831,8 +795,7 @@ nsresult mozJSComponentLoader::ObjectForLocation(
       JS::SourceText<mozilla::Utf8Unit> srcBuf;
       if (srcBuf.init(cx, str.get(), str.Length(),
                       JS::SourceOwnership::Borrowed)) {
-        script = reuseGlobal ? CompileForNonSyntacticScope(cx, options, srcBuf)
-                             : Compile(cx, options, srcBuf);
+        script = CompileForNonSyntacticScope(cx, options, srcBuf);
       } else {
         MOZ_ASSERT(!script);
       }
