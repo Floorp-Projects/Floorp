@@ -81,7 +81,7 @@ struct IsTriviallySerializable
  * complex.  Since the PCQ has a fixed amount of memory available to it,
  * TryInsert operations operations are expected to sometimes fail and be
  * re-issued later.  We want these failures to be inexpensive.  The same
- * goes for TryPeek/TryRemove, which fail when there isn't enough data in
+ * goes for TryRemove, which fails when there isn't enough data in
  * the queue yet for them to complete.
  *
  * QueueParamTraits resolve this problem by allowing the Try... operations to
@@ -262,7 +262,8 @@ class ConsumerView {
    * If the return value is not Success then aArg is not changed.
    */
   template <typename Arg>
-  QueueStatus ReadParam(Arg* aArg = nullptr) {
+  QueueStatus ReadParam(Arg* aArg) {
+    MOZ_ASSERT(aArg);
     return mozilla::webgl::QueueParamTraits<
         typename RemoveCVR<Arg>::Type>::Read(*this, aArg);
   }
@@ -271,7 +272,8 @@ class ConsumerView {
    * MinSize of Arg using QueueParamTraits.  aArg may be null.
    */
   template <typename Arg>
-  size_t MinSizeParam(Arg* aArg = nullptr) {
+  size_t MinSizeParam(Arg* aArg) {
+    MOZ_ASSERT(aArg);
     return mozilla::webgl::QueueParamTraits<
         typename RemoveCVR<Arg>::Type>::MinSize(*this, aArg);
   }
