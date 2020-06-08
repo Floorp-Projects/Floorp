@@ -24,6 +24,7 @@
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Services.h"
+#include "mozilla/StaticPrefs_fission.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/Utf8.h"
 #include "mozilla/intl/LocaleService.h"
@@ -5052,6 +5053,10 @@ bool BrowserTabsRemoteAutostart() {
   gBrowserTabsRemoteStatus = status;
 
   return gBrowserTabsRemoteAutostart;
+}
+
+bool FissionAutostart() {
+  return !gSafeMode && StaticPrefs::fission_autostart();
 }
 
 uint32_t GetMaxWebProcessCount() {
