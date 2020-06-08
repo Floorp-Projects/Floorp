@@ -166,8 +166,7 @@ class ProfilingStackFrame {
     return *this;
   }
 
-  // 9 bits for the flags.
-  // That leaves 32 - 9 = 23 bits for the category pair.
+  // Reserve up to 16 bits for flags, and 16 for category pair.
   enum class Flags : uint32_t {
     // The first three flags describe the kind of the frame and are
     // mutually exclusive. (We still give them individual bits for
@@ -209,9 +208,10 @@ class ProfilingStackFrame {
     // and to be replaced by the subcategory's label.
     LABEL_DETERMINED_BY_CATEGORY_PAIR = 1 << 8,
 
+    // Frame dynamic string does not contain user data.
     NONSENSITIVE = 1 << 9,
 
-    FLAGS_BITCOUNT = 10,
+    FLAGS_BITCOUNT = 16,
     FLAGS_MASK = (1 << FLAGS_BITCOUNT) - 1
   };
 
