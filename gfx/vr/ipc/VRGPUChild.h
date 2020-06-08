@@ -21,6 +21,9 @@ class VRGPUChild final : public PVRGPUChild {
   static bool IsCreated();
   static void Shutdown();
 
+  mozilla::ipc::IPCResult RecvNotifyPuppetComplete();
+  mozilla::ipc::IPCResult RecvNotifyServiceStarted();
+
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
   bool IsClosed();
 

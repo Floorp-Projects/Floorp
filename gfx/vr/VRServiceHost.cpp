@@ -34,15 +34,12 @@ VRServiceHost* VRServiceHost::Get() {
 }
 
 VRServiceHost::VRServiceHost(bool aEnableVRProcess)
-    : mPuppetActive(false)
-#if !defined(MOZ_WIDGET_ANDROID)
-      ,
-      mVRService(nullptr),
+    : mVRService(nullptr),
       mVRProcessEnabled(aEnableVRProcess),
       mVRProcessStarted(false),
+      mVRServiceReadyInVRProcess(false),
       mVRServiceRequested(false)
 
-#endif
 {
   MOZ_COUNT_CTOR(VRServiceHost);
 }
@@ -88,8 +85,6 @@ void VRServiceHost::Refresh() {
   }
 }
 
-#if !defined(MOZ_WIDGET_ANDROID)
-
 void VRServiceHost::CreateService(volatile VRExternalShmem* aShmem) {
   MOZ_ASSERT(!mVRProcessEnabled);
   mVRService = VRService::Create(aShmem);
@@ -99,13 +94,7 @@ bool VRServiceHost::NeedVRProcess() {
   if (!mVRProcessEnabled) {
     return false;
   }
-  if (mVRServiceRequested) {
-    return true;
-  }
-  if (mPuppetActive) {
-    return true;
-  }
-  return false;
+  return mVRServiceRequested;
 }
 
 void VRServiceHost::RefreshVRProcess() {
@@ -146,6 +135,36 @@ void VRServiceHost::CreateVRProcess() {
   Unused << gpu->SendCreateVRProcess();
 }
 
+void VRServiceHost::NotifyVRProcessStarted() {
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mVRProcessEnabled);
+  if (!mVRProcessStarted) {
+    // We have received this after the VR process
+    // has been stopped; the VR service is no
+    // longer running in the VR process.
+    return;
+  }
+
+  if (!VRGPUChild::IsCreated()) {
+    return;
+  }
+  VRGPUChild* vrGPUChild = VRGPUChild::Get();
+
+  // The VR service has started in the VR process
+  // If there were pending puppet commands, we
+  // can send them now.
+  // This must occur before the VRService
+  // is started so the buffer can be seen
+  // by VRPuppetSession::Initialize().
+  if (!mPuppetPendingCommands.IsEmpty()) {
+    vrGPUChild->SendPuppetSubmit(mPuppetPendingCommands);
+    mPuppetPendingCommands.Clear();
+  }
+
+  vrGPUChild->SendStartVRService();
+  mVRServiceReadyInVRProcess = true;
+}
+
 void VRServiceHost::ShutdownVRProcess() {
   // This is only allowed to run in the main thread of the GPU process
   if (!XRE_IsGPUProcess()) {
@@ -176,55 +195,129 @@ void VRServiceHost::ShutdownVRProcess() {
   MOZ_ASSERT(gpu);
   Unused << gpu->SendShutdownVRProcess();
   mVRProcessStarted = false;
+  mVRServiceReadyInVRProcess = false;
 }
 
-#endif  // !defined(MOZ_WIDGET_ANDROID)
-
 void VRServiceHost::PuppetSubmit(const nsTArray<uint64_t>& aBuffer) {
-  mPuppetActive = true;
-  if (mVRProcessEnabled) {
-    // TODO - Implement VR puppet support for VR process (Bug 1555188)
-    MOZ_ASSERT(false);  // Not implemented
-  } else {
+  if (!mVRProcessEnabled) {
+    // Puppet is running in this process, submit commands directly
     VRPuppetCommandBuffer::Get().Submit(aBuffer);
+    return;
+  }
+
+  // We need to send the buffer to the VR process
+  SendPuppetSubmitToVRProcess(aBuffer);
+}
+
+void VRServiceHost::SendPuppetSubmitToVRProcess(
+    const nsTArray<uint64_t>& aBuffer) {
+  // This is only allowed to run in the main thread of the GPU process
+  if (!XRE_IsGPUProcess()) {
+    return;
+  }
+  // Forward this to the main thread if not already there
+  if (!NS_IsMainThread()) {
+    RefPtr<Runnable> task = NS_NewRunnableFunction(
+        "VRServiceHost::SendPuppetSubmitToVRProcess",
+        [buffer{aBuffer.Clone()}]() -> void {
+          VRServiceHost::Get()->SendPuppetSubmitToVRProcess(buffer);
+        });
+    NS_DispatchToMainThread(task.forget());
+    return;
+  }
+  if (!mVRServiceReadyInVRProcess) {
+    // Queue the commands to be sent to the VR process once it is started
+    mPuppetPendingCommands.AppendElements(aBuffer);
+    return;
+  }
+  if (VRGPUChild::IsCreated()) {
+    VRGPUChild* vrGPUChild = VRGPUChild::Get();
+    vrGPUChild->SendPuppetSubmit(aBuffer);
   }
 }
 
 void VRServiceHost::PuppetReset() {
-  if (mVRProcessEnabled) {
-    mPuppetActive = false;
-    if (!mVRProcessStarted) {
-      // Process is stopped, so puppet state is already clear
-      return;
-    }
-    // TODO - Implement VR puppet support for VR process (Bug 1555188)
-    MOZ_ASSERT(false);  // Not implemented
-  } else if (mPuppetActive) {
+  if (!mVRProcessEnabled) {
+    // Puppet is running in this process, tell it to reset directly.
     VRPuppetCommandBuffer::Get().Reset();
-    mPuppetActive = false;
+  }
+
+  mPuppetPendingCommands.Clear();
+  if (!mVRProcessStarted) {
+    // Process is stopped, so puppet state is already clear
+    return;
+  }
+
+  // We need to tell the VR process to reset the puppet
+  SendPuppetResetToVRProcess();
+}
+
+void VRServiceHost::SendPuppetResetToVRProcess() {
+  // This is only allowed to run in the main thread of the GPU process
+  if (!XRE_IsGPUProcess()) {
+    return;
+  }
+  // Forward this to the main thread if not already there
+  if (!NS_IsMainThread()) {
+    RefPtr<Runnable> task = NS_NewRunnableFunction(
+        "VRServiceHost::SendPuppetResetToVRProcess",
+        []() -> void { VRServiceHost::Get()->SendPuppetResetToVRProcess(); });
+    NS_DispatchToMainThread(task.forget());
+    return;
+  }
+  if (VRGPUChild::IsCreated()) {
+    VRGPUChild* vrGPUChild = VRGPUChild::Get();
+    vrGPUChild->SendPuppetReset();
   }
 }
 
-bool VRServiceHost::PuppetHasEnded() {
-  if (mVRProcessEnabled) {
-    if (!mVRProcessStarted) {
-      // The VR process will be kept alive as long
-      // as there is a queue in the puppet command
-      // buffer.  If the process is stopped, we can
-      // infer that the queue has been cleared and
-      // puppet state is reset.
-      return true;
+void VRServiceHost::CheckForPuppetCompletion() {
+  if (!mVRProcessEnabled) {
+    // Puppet is running in this process, ask it directly
+    if (VRPuppetCommandBuffer::Get().HasEnded()) {
+      VRManager::Get()->NotifyPuppetComplete();
     }
-    // TODO - Implement VR puppet support for VR process (Bug 1555188)
-    MOZ_ASSERT(false);  // Not implemented
-    return false;
+  }
+  if (!mPuppetPendingCommands.IsEmpty()) {
+    // There are puppet commands pending to be sent to the
+    // VR process once its started, thus it has not ended.
+    return;
+  }
+  if (!mVRProcessStarted) {
+    // The VR process will be kept alive as long
+    // as there is a queue in the puppet command
+    // buffer.  If the process is stopped, we can
+    // infer that the queue has been cleared and
+    // puppet state is reset.
+    VRManager::Get()->NotifyPuppetComplete();
   }
 
-  if (mPuppetActive) {
-    return VRPuppetCommandBuffer::Get().HasEnded();
-  }
+  // We need to ask the VR process if the puppet has ended
+  SendPuppetCheckForCompletionToVRProcess();
 
-  return true;
+  // VRGPUChild::RecvNotifyPuppetComplete will call
+  // VRManager::NotifyPuppetComplete if the puppet has completed
+  // in the VR Process.
+}
+
+void VRServiceHost::SendPuppetCheckForCompletionToVRProcess() {
+  // This is only allowed to run in the main thread of the GPU process
+  if (!XRE_IsGPUProcess()) {
+    return;
+  }
+  // Forward this to the main thread if not already there
+  if (!NS_IsMainThread()) {
+    RefPtr<Runnable> task = NS_NewRunnableFunction(
+        "VRServiceHost::SendPuppetCheckForCompletionToVRProcess", []() -> void {
+          VRServiceHost::Get()->SendPuppetCheckForCompletionToVRProcess();
+        });
+    NS_DispatchToMainThread(task.forget());
+    return;
+  }
+  if (VRGPUChild::IsCreated()) {
+    VRGPUChild* vrGPUChild = VRGPUChild::Get();
+    vrGPUChild->SendPuppetCheckForCompletion();
+  }
 }
 
 }  // namespace gfx

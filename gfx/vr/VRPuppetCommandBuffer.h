@@ -178,6 +178,7 @@ class VRPuppetCommandBuffer {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(mozilla::gfx::VRPuppetCommandBuffer)
   static VRPuppetCommandBuffer& Get();
+  static bool IsCreated();
 
   // Interface to VRTestSystem
   void Submit(const nsTArray<uint64_t>& aBuffer);

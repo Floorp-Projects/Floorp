@@ -65,6 +65,7 @@ class VRManager : nsIObserver {
   bool RunPuppet(const nsTArray<uint64_t>& aBuffer,
                  VRManagerParent* aManagerParent);
   void ResetPuppet(VRManagerParent* aManagerParent);
+  void NotifyPuppetComplete();
 #endif
   void AddLayer(VRLayerParent* aLayer);
   void RemoveLayer(VRLayerParent* aLayer);
