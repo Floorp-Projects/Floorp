@@ -52,8 +52,6 @@ const { E10SUtils } = ChromeUtils.import(
 
 const PREF_ABOUT_HOME_CACHE_ENABLED =
   "browser.startup.homepage.abouthome_cache.enabled";
-const PREF_ABOUT_HOME_CACHE_TESTING =
-  "browser.startup.homepage.abouthome_cache.testing";
 const PREF_SEPARATE_ABOUT_WELCOME = "browser.aboutwelcome.enabled";
 const SEPARATE_ABOUT_WELCOME_URL =
   "resource://activity-stream/aboutwelcome/aboutwelcome.html";
@@ -120,24 +118,6 @@ const AboutHomeStartupCacheChild = {
     this._pageInputStream = pageInputStream;
     this._scriptInputStream = scriptInputStream;
     this._initted = true;
-  },
-
-  /**
-   * A function that lets us put the AboutHomeStartupCacheChild back into
-   * its initial state. This is used by tests to let us simulate the startup
-   * behaviour of the module without having to manually launch a new privileged
-   * about content process every time.
-   */
-  uninit() {
-    if (!Services.prefs.getBoolPref(PREF_ABOUT_HOME_CACHE_TESTING, false)) {
-      throw new Error(
-        "Cannot uninit AboutHomeStartupCacheChild unless testing."
-      );
-    }
-
-    this._pageInputStream = null;
-    this._scriptInputStream = null;
-    this._initted = false;
   },
 
   /**
