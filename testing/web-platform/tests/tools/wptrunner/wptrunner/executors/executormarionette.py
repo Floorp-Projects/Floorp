@@ -126,6 +126,8 @@ class MarionetteTestharnessProtocolPart(TestharnessProtocolPart):
         self.runner_handle = None
         with open(os.path.join(here, "runner.js")) as f:
             self.runner_script = f.read()
+        with open(os.path.join(here, "window-loaded.js")) as f:
+            self.window_loaded_script = f.read()
 
     def setup(self):
         self.marionette = self.parent.marionette
@@ -232,6 +234,19 @@ class MarionetteTestharnessProtocolPart(TestharnessProtocolPart):
             time.sleep(0.1)
 
         raise Exception("unable to find test window")
+
+    def test_window_loaded(self):
+        """Wait until the page in the new window has been loaded.
+
+        Hereby ignore Javascript execptions that are thrown when
+        the document has been unloaded due to a process change.
+        """
+        while True:
+            try:
+                self.parent.base.execute_script(self.window_loaded_script, asynchronous=True)
+                break
+            except errors.JavascriptException:
+                pass
 
 
 class MarionettePrefsProtocolPart(PrefsProtocolPart):
@@ -742,10 +757,12 @@ class MarionetteTestharnessExecutor(TestharnessExecutor):
 
         format_map = {"url": strip_server(url)}
 
-        protocol.base.execute_script("window.open(undefined, '%s', 'noopener')" % self.window_id)
+        protocol.base.execute_script("window.open('about:blank', '%s', 'noopener')" % self.window_id)
         test_window = protocol.testharness.get_test_window(self.window_id, parent_window,
-                                                           timeout=10*self.timeout_multiplier)
+                                                           timeout=10 * self.timeout_multiplier)
         self.protocol.base.set_window(test_window)
+        protocol.testharness.test_window_loaded()
+
         handler = CallbackHandler(self.logger, protocol, test_window)
         protocol.marionette.navigate(url)
         while True:
@@ -836,6 +853,7 @@ class MarionetteRefTestExecutor(RefTestExecutor):
                 self.protocol.base.execute_script(self.script)
                 self.protocol.base.set_window(self.protocol.marionette.window_handles[-1])
                 self.has_window = True
+                self.protocol.testharness.test_window_loaded()
 
         if self.protocol.coverage.is_enabled:
             self.protocol.coverage.reset()

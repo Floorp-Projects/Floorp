@@ -190,6 +190,10 @@ class TestharnessProtocolPart(ProtocolPart):
         """
         pass
 
+    @abstractmethod
+    def test_window_loaded(self):
+        """Wait until the newly opened test window has been loaded."""
+
 
 class PrefsProtocolPart(ProtocolPart):
     """Protocol part that allows getting and setting browser prefs."""
