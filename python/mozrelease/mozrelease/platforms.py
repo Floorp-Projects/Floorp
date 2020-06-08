@@ -5,6 +5,8 @@
 from __future__ import absolute_import
 
 # ftp -> update platform map
+import six
+
 update_platform_map = {
     "android": ["Android_arm-eabi-gcc3"],
     "android-api-11": ["Android_arm-eabi-gcc3"],
@@ -58,7 +60,7 @@ def shippedLocales2ftp(platform):
     matches = []
     try:
         [matches.append(
-            k) for k, v in sl_platform_map.iteritems() if v == platform][0]
+            k) for k, v in six.iteritems(sl_platform_map) if v == platform][0]
         return matches
     except IndexError:
         return [platform]

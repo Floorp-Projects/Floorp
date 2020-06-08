@@ -5,7 +5,7 @@ import os
 import pprint
 import re
 import sys
-from urlparse import urljoin
+from six.moves.urllib.parse import urljoin
 
 from mozilla_version.gecko import GeckoVersion
 from mozilla_version.version import VersionType
@@ -297,7 +297,7 @@ class UpdateVerifyConfigCreator(BaseScript):
             )
             self.log("Retrieving buildid from info file: %s" % info_file_url, level=DEBUG)
             ret = self._retry_download(info_file_url, "WARNING")
-            buildID = ret.read().split("=")[1].strip()
+            buildID = ret.read().split(b"=")[1].strip().decode("utf-8")
 
             branch = self._get_branch_url(self.config["branch_prefix"], version)
 
@@ -310,7 +310,7 @@ class UpdateVerifyConfigCreator(BaseScript):
                 ),
             )
             ret = self._retry_download(shipped_locales_url, "WARNING")
-            shipped_locales = ret.read().strip()
+            shipped_locales = ret.read().strip().decode("utf-8")
 
             app_version_url = urljoin(
                 self.config["hg_server"],
@@ -320,7 +320,8 @@ class UpdateVerifyConfigCreator(BaseScript):
                     self.config["app_name"],
                 ),
             )
-            app_version = self._retry_download(app_version_url, "WARNING").read().strip()
+            app_version = self._retry_download(app_version_url, "WARNING").read() \
+                .strip().decode("utf-8")
 
             self.log("Adding {} to update paths".format(version), level=INFO)
             self.update_paths[version] = {
@@ -393,7 +394,8 @@ class UpdateVerifyConfigCreator(BaseScript):
                 self.config["app_name"],
             ),
         )
-        to_shipped_locales = self._retry_download(to_shipped_locales_url, "WARNING").read().strip()
+        to_shipped_locales = self._retry_download(to_shipped_locales_url, "WARNING") \
+            .read().strip().decode("utf-8")
         to_locales = set(getPlatformLocales(to_shipped_locales, self.config["platform"]))
 
         completes_only_index = 0
@@ -474,7 +476,8 @@ class UpdateVerifyConfigCreator(BaseScript):
                 completes_only_index += 1
 
     def write_config(self):
-        with open(self.config["output_file"], "w+") as fh:
+        # Needs to be opened in "bytes" mode because we perform relative seeks on it
+        with open(self.config["output_file"], "wb+") as fh:
             self.update_verify_config.write(fh)
 
 
