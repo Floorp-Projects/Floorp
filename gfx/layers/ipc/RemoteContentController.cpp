@@ -223,31 +223,53 @@ void RemoteContentController::NotifyAPZStateChange(
   }
 }
 
-void RemoteContentController::UpdateOverscrollVelocity(float aX, float aY,
-                                                       bool aIsRootContent) {
-  if (!mCompositorThread->IsOnCurrentThread()) {
-    mCompositorThread->Dispatch(NewRunnableMethod<float, float, bool>(
-        "layers::RemoteContentController::UpdateOverscrollVelocity", this,
-        &RemoteContentController::UpdateOverscrollVelocity, aX, aY,
-        aIsRootContent));
-    return;
-  }
-  if (mCanSend) {
-    Unused << SendUpdateOverscrollVelocity(aX, aY, aIsRootContent);
+void RemoteContentController::UpdateOverscrollVelocity(
+    const ScrollableLayerGuid& aGuid, float aX, float aY, bool aIsRootContent) {
+  if (XRE_IsParentProcess()) {
+#ifdef MOZ_WIDGET_ANDROID
+    // We always want these to go to the parent process on Android
+    if (!NS_IsMainThread()) {
+      mozilla::jni::DispatchToGeckoPriorityQueue(
+          NewRunnableMethod<ScrollableLayerGuid, float, float, bool>(
+              "layers::RemoteContentController::UpdateOverscrollVelocity", this,
+              &RemoteContentController::UpdateOverscrollVelocity, aGuid, aX, aY,
+              aIsRootContent));
+      return;
+    }
+#endif
+
+    MOZ_ASSERT(NS_IsMainThread());
+    RefPtr<GeckoContentController> rootController =
+        CompositorBridgeParent::GetGeckoContentControllerForRoot(
+            aGuid.mLayersId);
+    if (rootController) {
+      rootController->UpdateOverscrollVelocity(aGuid, aX, aY, aIsRootContent);
+    }
   }
 }
 
-void RemoteContentController::UpdateOverscrollOffset(float aX, float aY,
-                                                     bool aIsRootContent) {
-  if (!mCompositorThread->IsOnCurrentThread()) {
-    mCompositorThread->Dispatch(NewRunnableMethod<float, float, bool>(
-        "layers::RemoteContentController::UpdateOverscrollOffset", this,
-        &RemoteContentController::UpdateOverscrollOffset, aX, aY,
-        aIsRootContent));
-    return;
-  }
-  if (mCanSend) {
-    Unused << SendUpdateOverscrollOffset(aX, aY, aIsRootContent);
+void RemoteContentController::UpdateOverscrollOffset(
+    const ScrollableLayerGuid& aGuid, float aX, float aY, bool aIsRootContent) {
+  if (XRE_IsParentProcess()) {
+#ifdef MOZ_WIDGET_ANDROID
+    // We always want these to go to the parent process on Android
+    if (!NS_IsMainThread()) {
+      mozilla::jni::DispatchToGeckoPriorityQueue(
+          NewRunnableMethod<ScrollableLayerGuid, float, float, bool>(
+              "layers::RemoteContentController::UpdateOverscrollOffset", this,
+              &RemoteContentController::UpdateOverscrollOffset, aGuid, aX, aY,
+              aIsRootContent));
+      return;
+    }
+#endif
+
+    MOZ_ASSERT(NS_IsMainThread());
+    RefPtr<GeckoContentController> rootController =
+        CompositorBridgeParent::GetGeckoContentControllerForRoot(
+            aGuid.mLayersId);
+    if (rootController) {
+      rootController->UpdateOverscrollOffset(aGuid, aX, aY, aIsRootContent);
+    }
   }
 }
 

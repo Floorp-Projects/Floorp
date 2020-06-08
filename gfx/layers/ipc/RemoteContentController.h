@@ -59,10 +59,11 @@ class RemoteContentController : public GeckoContentController,
   void NotifyAPZStateChange(const ScrollableLayerGuid& aGuid,
                             APZStateChange aChange, int aArg) override;
 
-  void UpdateOverscrollVelocity(float aX, float aY,
-                                bool aIsRootContent) override;
+  void UpdateOverscrollVelocity(const ScrollableLayerGuid& aGuid, float aX,
+                                float aY, bool aIsRootContent) override;
 
-  void UpdateOverscrollOffset(float aX, float aY, bool aIsRootContent) override;
+  void UpdateOverscrollOffset(const ScrollableLayerGuid& aGuid, float aX,
+                              float aY, bool aIsRootContent) override;
 
   void NotifyMozMouseScrollEvent(const ScrollableLayerGuid::ViewID& aScrollId,
                                  const nsString& aEvent) override;
