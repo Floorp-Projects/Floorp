@@ -343,7 +343,7 @@ class BrowsertimeRunner(NodeRunner):
         metadata.add_result(
             {
                 "results": str(result_dir),
-                "name": self._test_info.get("test_name", ("browsertime",))[0],
+                "name": self._test_info.get("name", ("browsertime",))[0],
             }
         )
 
