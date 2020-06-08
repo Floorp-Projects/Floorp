@@ -92,8 +92,8 @@
         android:name="org.mozilla.fenix.settings.sitepermissions.SitePermissionsManagePhoneFeatureFragment"
         tools:layout="@layout/fragment_manage_site_permissions_feature_phone">
         <argument
-            android:name="permission"
-            app:argType="integer" />
+            android:name="phoneFeature"
+            app:argType="org.mozilla.fenix.settings.PhoneFeature" />
     </fragment>
 
     <fragment
@@ -125,8 +125,8 @@
         android:name="org.mozilla.fenix.settings.sitepermissions.SitePermissionsManageExceptionsPhoneFeatureFragment"
         tools:layout="@layout/fragment_manage_site_permissions_feature_phone">
         <argument
-            android:name="phoneFeatureId"
-            app:argType="integer" />
+            android:name="phoneFeature"
+            app:argType="org.mozilla.fenix.settings.PhoneFeature" />
         <argument
             android:name="sitePermissions"
             app:argType="mozilla.components.feature.sitepermissions.SitePermissions" />

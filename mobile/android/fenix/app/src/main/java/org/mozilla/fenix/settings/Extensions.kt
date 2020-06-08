@@ -4,26 +4,33 @@
 
 package org.mozilla.fenix.settings
 
-import android.view.View
 import android.widget.RadioButton
-import android.widget.TextView
 import androidx.appcompat.content.res.AppCompatResources
-import androidx.core.text.HtmlCompat
 import androidx.preference.Preference
 import mozilla.components.feature.sitepermissions.SitePermissions
 import mozilla.components.support.ktx.android.view.putCompoundDrawablesRelative
-import org.mozilla.fenix.R
 import org.mozilla.fenix.theme.ThemeManager
 
 fun SitePermissions.toggle(featurePhone: PhoneFeature): SitePermissions {
-    return when (featurePhone) {
-        PhoneFeature.CAMERA -> copy(camera = camera.toggle())
-        PhoneFeature.LOCATION -> copy(location = location.toggle())
-        PhoneFeature.MICROPHONE -> copy(microphone = microphone.toggle())
-        PhoneFeature.NOTIFICATION -> copy(notification = notification.toggle())
-        PhoneFeature.AUTOPLAY_AUDIBLE -> copy(autoplayAudible = autoplayAudible.toggle())
-        PhoneFeature.AUTOPLAY_INAUDIBLE -> copy(autoplayInaudible = autoplayInaudible.toggle())
-    }
+    return update(featurePhone, get(featurePhone).toggle())
+}
+
+fun SitePermissions.get(field: PhoneFeature) = when (field) {
+    PhoneFeature.CAMERA -> camera
+    PhoneFeature.LOCATION -> location
+    PhoneFeature.MICROPHONE -> microphone
+    PhoneFeature.NOTIFICATION -> notification
+    PhoneFeature.AUTOPLAY_AUDIBLE -> autoplayAudible
+    PhoneFeature.AUTOPLAY_INAUDIBLE -> autoplayInaudible
+}
+
+fun SitePermissions.update(field: PhoneFeature, value: SitePermissions.Status) = when (field) {
+    PhoneFeature.CAMERA -> copy(camera = value)
+    PhoneFeature.LOCATION -> copy(location = value)
+    PhoneFeature.MICROPHONE -> copy(microphone = value)
+    PhoneFeature.NOTIFICATION -> copy(notification = value)
+    PhoneFeature.AUTOPLAY_AUDIBLE -> copy(autoplayAudible = value)
+    PhoneFeature.AUTOPLAY_INAUDIBLE -> copy(autoplayInaudible = value)
 }
 
 /**
@@ -37,26 +44,6 @@ fun RadioButton.setStartCheckedIndicator() {
         setBounds(0, 0, intrinsicWidth, intrinsicHeight)
     }
     putCompoundDrawablesRelative(start = buttonDrawable)
-}
-
-fun initBlockedByAndroidView(phoneFeature: PhoneFeature, blockedByAndroidView: View) {
-    val context = blockedByAndroidView.context
-    if (!phoneFeature.isAndroidPermissionGranted(context)) {
-        blockedByAndroidView.visibility = View.VISIBLE
-
-        val descriptionLabel = blockedByAndroidView.findViewById<TextView>(R.id.blocked_by_android_feature_label)
-        val descriptionText = context.getString(
-            R.string.phone_feature_blocked_step_feature,
-            phoneFeature.getLabel(context)
-        )
-        descriptionLabel.text = HtmlCompat.fromHtml(descriptionText, HtmlCompat.FROM_HTML_MODE_COMPACT)
-
-        val permissionsLabel = blockedByAndroidView.findViewById<TextView>(R.id.blocked_by_android_permissions_label)
-        val permissionsText = context.getString(R.string.phone_feature_blocked_step_permissions)
-        permissionsLabel.text = HtmlCompat.fromHtml(permissionsText, HtmlCompat.FROM_HTML_MODE_COMPACT)
-    } else {
-        blockedByAndroidView.visibility = View.GONE
-    }
 }
 
 /**

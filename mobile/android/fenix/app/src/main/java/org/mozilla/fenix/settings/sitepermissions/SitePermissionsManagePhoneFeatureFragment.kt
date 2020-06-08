@@ -20,10 +20,8 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.RadioButton
 import androidx.fragment.app.Fragment
-import kotlinx.android.synthetic.main.fragment_manage_site_permissions_feature_phone.view.ask_to_allow_radio
-import kotlinx.android.synthetic.main.fragment_manage_site_permissions_feature_phone.view.block_radio
-import kotlinx.android.synthetic.main.fragment_manage_site_permissions_feature_phone.view.fourth_radio
-import kotlinx.android.synthetic.main.fragment_manage_site_permissions_feature_phone.view.third_radio
+import androidx.navigation.fragment.navArgs
+import kotlinx.android.synthetic.main.fragment_manage_site_permissions_feature_phone.view.*
 import mozilla.components.feature.sitepermissions.SitePermissionsRules
 import mozilla.components.feature.sitepermissions.SitePermissionsRules.Action.ALLOWED
 import mozilla.components.feature.sitepermissions.SitePermissionsRules.Action.ASK_TO_ALLOW
@@ -31,10 +29,8 @@ import mozilla.components.feature.sitepermissions.SitePermissionsRules.Action.BL
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
-import org.mozilla.fenix.settings.PhoneFeature
 import org.mozilla.fenix.settings.PhoneFeature.AUTOPLAY_AUDIBLE
 import org.mozilla.fenix.settings.PhoneFeature.AUTOPLAY_INAUDIBLE
-import org.mozilla.fenix.settings.initBlockedByAndroidView
 import org.mozilla.fenix.settings.setStartCheckedIndicator
 import org.mozilla.fenix.utils.Settings
 
@@ -45,18 +41,10 @@ const val AUTOPLAY_ALLOW_ALL = 3
 
 @SuppressWarnings("TooManyFunctions")
 class SitePermissionsManagePhoneFeatureFragment : Fragment() {
-    private lateinit var phoneFeature: PhoneFeature
-    private lateinit var settings: Settings
+
+    private val args by navArgs<SitePermissionsManagePhoneFeatureFragmentArgs>()
+    private val settings by lazy { requireContext().settings() }
     private lateinit var blockedByAndroidView: View
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
-        phoneFeature = SitePermissionsManagePhoneFeatureFragmentArgs
-            .fromBundle(requireArguments())
-            .permission.toPhoneFeature()
-        settings = requireContext().settings()
-    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -80,13 +68,13 @@ class SitePermissionsManagePhoneFeatureFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        showToolbar(phoneFeature.getLabel(requireContext()))
-        initBlockedByAndroidView(phoneFeature, blockedByAndroidView)
+        showToolbar(args.phoneFeature.getLabel(requireContext()))
+        initBlockedByAndroidView(args.phoneFeature, blockedByAndroidView)
     }
 
     private fun initFirstRadio(rootView: View) {
         with(rootView.ask_to_allow_radio) {
-            if (phoneFeature == AUTOPLAY_AUDIBLE) {
+            if (args.phoneFeature == AUTOPLAY_AUDIBLE) {
                 // Disabled because GV does not allow this setting. TODO Reenable after
                 // https://bugzilla.mozilla.org/show_bug.cgi?id=1621825 is fixed
 //                text = getString(R.string.preference_option_autoplay_allowed2)
@@ -111,7 +99,7 @@ class SitePermissionsManagePhoneFeatureFragment : Fragment() {
 
     private fun initSecondRadio(rootView: View) {
         with(rootView.block_radio) {
-            if (phoneFeature == AUTOPLAY_AUDIBLE) {
+            if (args.phoneFeature == AUTOPLAY_AUDIBLE) {
                 text = getCombinedLabel(
                     getString(R.string.preference_option_autoplay_allowed_wifi_only2),
                     getString(R.string.preference_option_autoplay_allowed_wifi_subtext)
@@ -135,7 +123,7 @@ class SitePermissionsManagePhoneFeatureFragment : Fragment() {
 
     private fun initThirdRadio(rootView: View) {
         with(rootView.third_radio) {
-            if (phoneFeature == AUTOPLAY_AUDIBLE) {
+            if (args.phoneFeature == AUTOPLAY_AUDIBLE) {
                 visibility = View.VISIBLE
                 text = getString(R.string.preference_option_autoplay_block_audio2)
                 setOnClickListener {
@@ -150,7 +138,7 @@ class SitePermissionsManagePhoneFeatureFragment : Fragment() {
 
     private fun initFourthRadio(rootView: View) {
         with(rootView.fourth_radio) {
-            if (phoneFeature == AUTOPLAY_AUDIBLE) {
+            if (args.phoneFeature == AUTOPLAY_AUDIBLE) {
                 visibility = View.VISIBLE
                 text = getCombinedLabel(
                     getString(R.string.preference_option_autoplay_blocked3),
@@ -167,7 +155,7 @@ class SitePermissionsManagePhoneFeatureFragment : Fragment() {
     }
 
     private fun RadioButton.restoreState(buttonAction: SitePermissionsRules.Action) {
-        if (phoneFeature.getAction(settings) == buttonAction) {
+        if (args.phoneFeature.getAction(settings) == buttonAction) {
             this.isChecked = true
             this.setStartCheckedIndicator()
         }
@@ -181,7 +169,7 @@ class SitePermissionsManagePhoneFeatureFragment : Fragment() {
     }
 
     private fun saveActionInSettings(action: SitePermissionsRules.Action) {
-        settings.setSitePermissionsPhoneFeatureAction(phoneFeature, action)
+        settings.setSitePermissionsPhoneFeatureAction(args.phoneFeature, action)
     }
 
     /**
@@ -209,14 +197,6 @@ class SitePermissionsManagePhoneFeatureFragment : Fragment() {
     private fun bindBlockedByAndroidContainer(rootView: View) {
         blockedByAndroidView = rootView.findViewById(R.id.permissions_blocked_container)
         initSettingsButton(blockedByAndroidView)
-    }
-
-    private fun Int.toPhoneFeature(): PhoneFeature {
-        return requireNotNull(PhoneFeature.values().find { feature ->
-            this == feature.id
-        }) {
-            "$this is a invalid PhoneFeature"
-        }
     }
 
     private fun initSettingsButton(rootView: View) {

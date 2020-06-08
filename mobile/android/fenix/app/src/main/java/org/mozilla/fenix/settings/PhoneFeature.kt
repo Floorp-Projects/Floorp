@@ -8,7 +8,9 @@ import android.Manifest.permission.ACCESS_COARSE_LOCATION
 import android.Manifest.permission.ACCESS_FINE_LOCATION
 import android.Manifest.permission.RECORD_AUDIO
 import android.content.Context
+import android.os.Parcelable
 import androidx.annotation.StringRes
+import kotlinx.android.parcel.Parcelize
 import mozilla.components.feature.sitepermissions.SitePermissions
 import mozilla.components.feature.sitepermissions.SitePermissionsRules
 import mozilla.components.support.ktx.android.content.isPermissionGranted
@@ -21,26 +23,17 @@ import org.mozilla.fenix.settings.sitepermissions.AUTOPLAY_BLOCK_AUDIBLE
 import org.mozilla.fenix.utils.Settings
 import android.Manifest.permission.CAMERA as CAMERA_PERMISSION
 
-const val ID_CAMERA_PERMISSION = 0
-const val ID_LOCATION_PERMISSION = 1
-const val ID_MICROPHONE_PERMISSION = 2
-const val ID_NOTIFICATION_PERMISSION = 3
-const val ID_AUTOPLAY_AUDIBLE_PERMISSION = 4
-const val ID_AUTOPLAY_INAUDIBLE_PERMISSION = 5
-
-enum class PhoneFeature(val id: Int, val androidPermissionsList: Array<String>) {
-    CAMERA(ID_CAMERA_PERMISSION, arrayOf(CAMERA_PERMISSION)),
-    LOCATION(ID_LOCATION_PERMISSION, arrayOf(ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION)),
-    MICROPHONE(ID_MICROPHONE_PERMISSION, arrayOf(RECORD_AUDIO)),
-    NOTIFICATION(ID_NOTIFICATION_PERMISSION, emptyArray()),
-    AUTOPLAY_AUDIBLE(ID_AUTOPLAY_AUDIBLE_PERMISSION, emptyArray()),
-    AUTOPLAY_INAUDIBLE(ID_AUTOPLAY_INAUDIBLE_PERMISSION, emptyArray());
+@Parcelize
+enum class PhoneFeature(val androidPermissionsList: Array<String>) : Parcelable {
+    CAMERA(arrayOf(CAMERA_PERMISSION)),
+    LOCATION(arrayOf(ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION)),
+    MICROPHONE(arrayOf(RECORD_AUDIO)),
+    NOTIFICATION(emptyArray()),
+    AUTOPLAY_AUDIBLE(emptyArray()),
+    AUTOPLAY_INAUDIBLE(emptyArray());
 
     fun isAndroidPermissionGranted(context: Context): Boolean {
-        return when (this) {
-            CAMERA, LOCATION, MICROPHONE -> context.isPermissionGranted(androidPermissionsList.asIterable())
-            NOTIFICATION, AUTOPLAY_AUDIBLE, AUTOPLAY_INAUDIBLE -> true
-        }
+        return context.isPermissionGranted(androidPermissionsList.asIterable())
     }
 
     @Suppress("ComplexMethod")
@@ -78,7 +71,7 @@ enum class PhoneFeature(val id: Int, val androidPermissionsList: Array<String>) 
         sitePermissions: SitePermissions? = null,
         settings: Settings? = null
     ): SitePermissions.Status {
-        val status = getStatus(sitePermissions) ?: settings?.let(::getAction)?.toStatus()
+        val status = sitePermissions?.get(this) ?: settings?.let(::getAction)?.toStatus()
         return requireNotNull(status)
     }
 
@@ -111,18 +104,6 @@ enum class PhoneFeature(val id: Int, val androidPermissionsList: Array<String>) 
             AUTOPLAY_AUDIBLE -> SitePermissionsRules.Action.BLOCKED
             AUTOPLAY_INAUDIBLE -> SitePermissionsRules.Action.ALLOWED
             else -> SitePermissionsRules.Action.ASK_TO_ALLOW
-        }
-    }
-
-    private fun getStatus(sitePermissions: SitePermissions?): SitePermissions.Status? {
-        sitePermissions ?: return null
-        return when (this) {
-            CAMERA -> sitePermissions.camera
-            LOCATION -> sitePermissions.location
-            MICROPHONE -> sitePermissions.microphone
-            NOTIFICATION -> sitePermissions.notification
-            AUTOPLAY_AUDIBLE -> sitePermissions.autoplayAudible
-            AUTOPLAY_INAUDIBLE -> sitePermissions.autoplayInaudible
         }
     }
 

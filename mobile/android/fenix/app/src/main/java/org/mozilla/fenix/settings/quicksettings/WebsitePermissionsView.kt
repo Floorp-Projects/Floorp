@@ -10,7 +10,10 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.core.view.isVisible
 import kotlinx.android.extensions.LayoutContainer
+import kotlinx.android.synthetic.main.quicksettings_permissions.view.*
 import org.mozilla.fenix.R
+import org.mozilla.fenix.settings.PhoneFeature
+import java.util.EnumMap
 
 /**
  *  Contract declaring all possible user interactions with [WebsitePermissionsView]
@@ -49,26 +52,31 @@ class WebsitePermissionsView(
     val view: View = LayoutInflater.from(context)
         .inflate(R.layout.quicksettings_permissions, containerView, true)
 
+    private val permissionViews: Map<PhoneFeature, PermissionViewHolder> = EnumMap(mapOf(
+        PhoneFeature.CAMERA to PermissionViewHolder(view.cameraLabel, view.cameraStatus),
+        PhoneFeature.LOCATION to PermissionViewHolder(view.locationLabel, view.locationStatus),
+        PhoneFeature.MICROPHONE to PermissionViewHolder(view.microphoneLabel, view.microphoneStatus),
+        PhoneFeature.NOTIFICATION to PermissionViewHolder(view.notificationLabel, view.notificationStatus)
+    ))
+
     /**
      * Allows changing what this View displays.
      *
      * @param state [WebsitePermissionsState] to be rendered.
      */
     fun update(state: WebsitePermissionsState) {
-        if (state.isVisible) {
+        val isVisible = permissionViews.keys
+            .map { feature -> state.getValue(feature) }
+            .any { it.isVisible }
+        if (isVisible) {
             interactor.onPermissionsShown()
         }
 
         // If more permissions are added into this View we can display them into a list
         // and also use DiffUtil to only update one item in case of a permission change
-        bindPermission(state.camera,
-                Pair(view.findViewById(R.id.cameraLabel), view.findViewById(R.id.cameraStatus)))
-        bindPermission(state.location,
-                Pair(view.findViewById(R.id.locationLabel), view.findViewById(R.id.locationStatus)))
-        bindPermission(state.microphone,
-                Pair(view.findViewById(R.id.microphoneLabel), view.findViewById(R.id.microphoneStatus)))
-        bindPermission(state.notification,
-                Pair(view.findViewById(R.id.notificationLabel), view.findViewById(R.id.notificationStatus)))
+        for ((feature, views) in permissionViews) {
+            bindPermission(state.getValue(feature), views)
+        }
     }
 
     /**
@@ -76,15 +84,15 @@ class WebsitePermissionsView(
      * which will display permission's [icon, label, status] and register user inputs.
      *
      * @param permissionState [WebsitePermission] specific permission that can be shown to the user.
-     * @param permissionViews Views that will render [WebsitePermission]'s state.
+     * @param viewHolder Views that will render [WebsitePermission]'s state.
      */
-    private fun bindPermission(permissionState: WebsitePermission, permissionViews: Pair<TextView, TextView>) {
-        val (label, status) = permissionViews
-
-        status.text = permissionState.status
-        label.isEnabled = permissionState.isEnabled
-        label.isVisible = permissionState.isVisible
-        status.isVisible = permissionState.isVisible
-        status.setOnClickListener { interactor.onPermissionToggled(permissionState) }
+    private fun bindPermission(permissionState: WebsitePermission, viewHolder: PermissionViewHolder) {
+        viewHolder.label.isEnabled = permissionState.isEnabled
+        viewHolder.label.isVisible = permissionState.isVisible
+        viewHolder.status.text = permissionState.status
+        viewHolder.status.isVisible = permissionState.isVisible
+        viewHolder.status.setOnClickListener { interactor.onPermissionToggled(permissionState) }
     }
+
+    data class PermissionViewHolder(val label: TextView, val status: TextView)
 }

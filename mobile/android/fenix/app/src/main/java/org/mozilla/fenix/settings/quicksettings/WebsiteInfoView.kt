@@ -7,14 +7,11 @@ package org.mozilla.fenix.settings.quicksettings
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.annotation.ColorRes
-import androidx.annotation.DrawableRes
-import androidx.annotation.StringRes
-import androidx.appcompat.content.res.AppCompatResources
-import androidx.core.content.ContextCompat
+import androidx.core.content.ContextCompat.getColor
 import androidx.core.view.isVisible
 import kotlinx.android.extensions.LayoutContainer
 import kotlinx.android.synthetic.main.quicksettings_website_info.view.*
+import mozilla.components.support.ktx.android.content.getDrawableWithTint
 import org.mozilla.fenix.R
 
 /**
@@ -38,7 +35,7 @@ class WebsiteInfoView(
     fun update(state: WebsiteInfoState) {
         bindUrl(state.websiteUrl)
         bindTitle(state.websiteTitle)
-        bindSecurityInfo(state.securityInfoRes, state.iconRes, state.iconTintRes)
+        bindSecurityInfo(state.websiteSecurityUiValues)
         bindCertificateName(state.certificateName)
     }
 
@@ -56,14 +53,11 @@ class WebsiteInfoView(
         view.certificateInfo.isVisible = cert.isNotEmpty()
     }
 
-    private fun bindSecurityInfo(
-        @StringRes securityInfoRes: Int,
-        @DrawableRes iconRes: Int,
-        @ColorRes iconTintRes: Int
-    ) {
-        val icon = AppCompatResources.getDrawable(view.context, iconRes)
-        icon?.setTint(ContextCompat.getColor(view.context, iconTintRes))
-        view.securityInfo.setText(securityInfoRes)
-        view.securityInfoIcon.setImageResource(iconRes)
+    private fun bindSecurityInfo(uiValues: WebsiteSecurityUiValues) {
+        val tint = getColor(view.context, uiValues.iconTintRes)
+        view.securityInfo.setText(uiValues.securityInfoRes)
+        view.securityInfoIcon.setImageDrawable(
+            view.context.getDrawableWithTint(uiValues.iconRes, tint)
+        )
     }
 }

@@ -108,7 +108,7 @@ class SitePermissionsDetailsExceptionsFragment : PreferenceFragmentCompat() {
     private fun navigateToPhoneFeature(phoneFeature: PhoneFeature) {
         val directions =
             SitePermissionsDetailsExceptionsFragmentDirections.actionSitePermissionsToExceptionsToManagePhoneFeature(
-                phoneFeatureId = phoneFeature.id,
+                phoneFeature = phoneFeature,
                 sitePermissions = sitePermissions
             )
         requireView().findNavController().navigate(directions)

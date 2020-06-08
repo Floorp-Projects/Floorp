@@ -77,7 +77,7 @@ class SitePermissionsFragment : PreferenceFragmentCompat() {
 
     private fun navigateToPhoneFeature(phoneFeature: PhoneFeature) {
         val directions = SitePermissionsFragmentDirections
-            .actionSitePermissionsToManagePhoneFeatures(phoneFeature.id)
+            .actionSitePermissionsToManagePhoneFeatures(phoneFeature)
         Navigation.findNavController(requireView()).navigate(directions)
     }
 }

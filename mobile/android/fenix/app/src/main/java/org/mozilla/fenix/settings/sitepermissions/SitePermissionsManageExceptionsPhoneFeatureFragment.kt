@@ -28,29 +28,22 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
-import org.mozilla.fenix.settings.PhoneFeature
-import org.mozilla.fenix.settings.initBlockedByAndroidView
 import org.mozilla.fenix.settings.setStartCheckedIndicator
+import org.mozilla.fenix.settings.update
 
 @SuppressWarnings("TooManyFunctions")
 class SitePermissionsManageExceptionsPhoneFeatureFragment : Fragment() {
 
-    private lateinit var phoneFeature: PhoneFeature
-    private lateinit var sitePermissions: SitePermissions
     private lateinit var radioAllow: RadioButton
     private lateinit var radioBlock: RadioButton
     private lateinit var blockedByAndroidView: View
+    private val args by navArgs<SitePermissionsManageExceptionsPhoneFeatureFragmentArgs>()
     val settings by lazy { requireContext().settings() }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val args by navArgs<SitePermissionsManageExceptionsPhoneFeatureFragmentArgs>()
-
-        phoneFeature = args.phoneFeatureId.toPhoneFeature()
-        sitePermissions = args.sitePermissions
-
-        showToolbar(phoneFeature.getLabel(requireContext()))
+        showToolbar(args.phoneFeature.getLabel(requireContext()))
     }
 
     override fun onCreateView(
@@ -71,7 +64,7 @@ class SitePermissionsManageExceptionsPhoneFeatureFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        initBlockedByAndroidView(phoneFeature, blockedByAndroidView)
+        initBlockedByAndroidView(args.phoneFeature, blockedByAndroidView)
     }
 
     private fun initAskToAllowRadio(rootView: View) {
@@ -87,7 +80,7 @@ class SitePermissionsManageExceptionsPhoneFeatureFragment : Fragment() {
     }
 
     private fun RadioButton.restoreState(status: SitePermissions.Status) {
-        if (phoneFeature.getStatus(sitePermissions) == status) {
+        if (args.phoneFeature.getStatus(args.sitePermissions) == status) {
             this.isChecked = true
             this.setStartCheckedIndicator()
         }
@@ -109,7 +102,7 @@ class SitePermissionsManageExceptionsPhoneFeatureFragment : Fragment() {
                 setMessage(R.string.confirm_clear_permission_site)
                 setTitle(R.string.clear_permission)
                 setPositiveButton(android.R.string.yes) { dialog: DialogInterface, _ ->
-                    val defaultStatus = phoneFeature.getStatus(settings = settings)
+                    val defaultStatus = args.phoneFeature.getStatus(settings = settings)
                     updatedSitePermissions(defaultStatus)
                     resetRadioButtonsStatus(defaultStatus)
                     dialog.dismiss()
@@ -147,23 +140,8 @@ class SitePermissionsManageExceptionsPhoneFeatureFragment : Fragment() {
         startActivity(intent)
     }
 
-    private fun Int.toPhoneFeature(): PhoneFeature {
-        return requireNotNull(PhoneFeature.values().find { feature ->
-            this == feature.id
-        }) {
-            "$this is a invalid PhoneFeature"
-        }
-    }
-
     private fun updatedSitePermissions(status: SitePermissions.Status) {
-        val updatedSitePermissions = when (phoneFeature) {
-            PhoneFeature.CAMERA -> sitePermissions.copy(camera = status)
-            PhoneFeature.LOCATION -> sitePermissions.copy(location = status)
-            PhoneFeature.MICROPHONE -> sitePermissions.copy(microphone = status)
-            PhoneFeature.NOTIFICATION -> sitePermissions.copy(notification = status)
-            PhoneFeature.AUTOPLAY_AUDIBLE -> sitePermissions.copy(autoplayAudible = status)
-            PhoneFeature.AUTOPLAY_INAUDIBLE -> sitePermissions.copy(autoplayInaudible = status)
-        }
+        val updatedSitePermissions = args.sitePermissions.update(args.phoneFeature, status)
         viewLifecycleOwner.lifecycleScope.launch(IO) {
             requireComponents.core.permissionStorage.updateSitePermissions(updatedSitePermissions)
             launch(Main) {
