@@ -9,6 +9,33 @@ var EXPORTED_SYMBOLS = ["DOMFullscreenParent"];
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 class DOMFullscreenParent extends JSWindowActorParent {
+  updateFullscreenWindowReference(aWindow) {
+    if (aWindow.document.documentElement.hasAttribute("inDOMFullscreen")) {
+      this._fullscreenWindow = aWindow;
+    } else {
+      delete this._fullscreenWindow;
+    }
+  }
+
+  didDestroy() {
+    let window = this._fullscreenWindow;
+    if (!window) {
+      return;
+    }
+
+    // Need to resume Chrome UI if the window is still in fullscreen UI
+    // to avoid the window stays in fullscreen problem. (See Bug 1620341)
+    if (window.document.documentElement.hasAttribute("inDOMFullscreen")) {
+      if (window.FullScreen) {
+        window.FullScreen.cleanupDomFullscreen(this);
+      }
+      if (window.windowUtils) {
+        window.windowUtils.remoteFrameFullscreenReverted();
+      }
+    }
+    this.updateFullscreenWindowReference(window);
+  }
+
   receiveMessage(aMessage) {
     let topBrowsingContext = this.browsingContext.top;
     let browser = topBrowsingContext.embedderElement;
@@ -38,6 +65,7 @@ class DOMFullscreenParent extends JSWindowActorParent {
       }
       case "DOMFullscreen:Entered": {
         window.FullScreen.enterDomFullscreen(browser, this);
+        this.updateFullscreenWindowReference(window);
         break;
       }
       case "DOMFullscreen:Exit": {
@@ -46,6 +74,7 @@ class DOMFullscreenParent extends JSWindowActorParent {
       }
       case "DOMFullscreen:Exited": {
         window.FullScreen.cleanupDomFullscreen(this);
+        this.updateFullscreenWindowReference(window);
         break;
       }
       case "DOMFullscreen:Painted": {
@@ -83,6 +112,7 @@ class DOMFullscreenParent extends JSWindowActorParent {
 
         TelemetryStopwatch.start("FULLSCREEN_CHANGE_MS");
         window.FullScreen.enterDomFullscreen(browser, this);
+        this.updateFullscreenWindowReference(window);
         break;
       }
       case "MozDOMFullscreen:Exited": {
@@ -97,6 +127,7 @@ class DOMFullscreenParent extends JSWindowActorParent {
           this.requestOrigin = this;
         }
         window.FullScreen.cleanupDomFullscreen(this);
+        this.updateFullscreenWindowReference(window);
         this.removeListeners(window);
         break;
       }
