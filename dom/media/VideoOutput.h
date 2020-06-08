@@ -165,7 +165,7 @@ class VideoOutput : public DirectMediaTrackListener {
     // there might be old frames lingering. We'll find the current one and
     // re-send that.
     DropPastFrames();
-    mFrames.RemoveElementsAt(1, mFrames.Length() - 1);
+    mFrames.RemoveLastElements(mFrames.Length() - 1);
     SendFrames();
     mFrames.ClearAndRetainStorage();
   }

@@ -1806,18 +1806,20 @@ void HyperTextAccessible::Shutdown() {
 }
 
 bool HyperTextAccessible::RemoveChild(Accessible* aAccessible) {
-  int32_t childIndex = aAccessible->IndexInParent();
-  int32_t count = mOffsets.Length() - childIndex;
-  if (count > 0) mOffsets.RemoveElementsAt(childIndex, count);
+  const int32_t childIndex = aAccessible->IndexInParent();
+  if (childIndex < static_cast<int64_t>(mOffsets.Length())) {
+    mOffsets.RemoveLastElements(mOffsets.Length() -
+                                aAccessible->IndexInParent());
+  }
 
   return AccessibleWrap::RemoveChild(aAccessible);
 }
 
 bool HyperTextAccessible::InsertChildAt(uint32_t aIndex, Accessible* aChild) {
-  int32_t count = mOffsets.Length() - aIndex;
-  if (count > 0) {
-    mOffsets.RemoveElementsAt(aIndex, count);
+  if (aIndex < mOffsets.Length()) {
+    mOffsets.RemoveLastElements(mOffsets.Length() - aIndex);
   }
+
   return AccessibleWrap::InsertChildAt(aIndex, aChild);
 }
 

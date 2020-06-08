@@ -12752,12 +12752,12 @@ void ConnectionPool::NoteClosedDatabase(DatabaseInfo* aDatabaseInfo) {
 
   // See if we need to fire any complete callbacks now that the database is
   // finished.
-  mCompleteCallbacks.RemoveElementsAt(
+  mCompleteCallbacks.RemoveLastElements(
+      mCompleteCallbacks.end() -
       std::remove_if(mCompleteCallbacks.begin(), mCompleteCallbacks.end(),
                      [&me = *this](const auto& completeCallback) {
                        return me.MaybeFireCallback(completeCallback.get());
-                     }),
-      mCompleteCallbacks.end());
+                     }));
 
   // If that was the last database and we're supposed to be shutting down then
   // we are finished.
@@ -20826,14 +20826,14 @@ nsresult FactoryOp::SendVersionChangeMessages(
 
   // We don't want to wait forever if we were not able to send the
   // message.
-  mMaybeBlockedDatabases.RemoveElementsAt(
+  mMaybeBlockedDatabases.RemoveLastElements(
+      mMaybeBlockedDatabases.end() -
       std::remove_if(mMaybeBlockedDatabases.begin(),
                      mMaybeBlockedDatabases.end(),
                      [aOldVersion, &aNewVersion](auto& maybeBlockedDatabase) {
                        return !maybeBlockedDatabase->SendVersionChange(
                            aOldVersion, aNewVersion);
-                     }),
-      mMaybeBlockedDatabases.end());
+                     }));
 
   return NS_OK;
 }  // namespace indexedDB
