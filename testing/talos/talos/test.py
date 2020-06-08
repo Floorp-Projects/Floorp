@@ -187,10 +187,33 @@ class ts_paint_flex(ts_paint):
 
 @register_test()
 class startup_about_home_paint(ts_paint):
+    """
+    Tests loading about:home on startup with the about:home startup cache
+    disabled, to more accurately simulate startup when the cache does not
+    exist.
+    """
     url = None
     cycles = 20
     extensions = ['${talos}/startup_test/startup_about_home_paint/addon']
     tpmanifest = '${talos}/startup_test/startup_about_home_paint/startup_about_home_paint.manifest'
+    preferences = {
+        'browser.startup.homepage.abouthome_cache.enabled': False,
+    }
+
+
+@register_test()
+class startup_about_home_paint_cached(ts_paint):
+    """
+    Tests loading about:home on startup with the about:home startup cache
+    enabled.
+    """
+    url = None
+    cycles = 20
+    extensions = ['${talos}/startup_test/startup_about_home_paint/addon']
+    tpmanifest = '${talos}/startup_test/startup_about_home_paint/startup_about_home_paint.manifest'
+    preferences = {
+        'browser.startup.homepage.abouthome_cache.enabled': True,
+    }
 
 
 @register_test()
