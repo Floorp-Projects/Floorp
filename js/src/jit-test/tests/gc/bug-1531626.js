@@ -1,4 +1,8 @@
 // Test that setting the nursery size works as expected.
+//
+// It's an error to set the minimum size greater than the maximum
+// size. Parameter values are rounded to the nearest legal nursery
+// size.
 
 load(libdir + "asserts.js");
 
@@ -19,7 +23,7 @@ for (var max of testMaxSizesKB) {
 gcparam('minNurseryBytes', 256*1024); // need to avoid min > max;
 setMinMax(256, 1024);
 
-// try an invalid configuration.
+// Try an invalid configuration.
 assertErrorMessage(
   () => setMinMax(2*1024, 1024),
   Object,
@@ -29,8 +33,8 @@ function setMinMax(min, max) {
   // Set the maximum first so that we don't hit a case where max < min.
   gcparam('maxNurseryBytes', max * 1024);
   gcparam('minNurseryBytes', min * 1024);
-  assertEq(max * 1024, gcparam('maxNurseryBytes'));
-  assertEq(min * 1024, gcparam('minNurseryBytes'));
+  assertEq(nearestLegalSize(max) * 1024, gcparam('maxNurseryBytes'));
+  assertEq(nearestLegalSize(min) * 1024, gcparam('minNurseryBytes'));
   allocateSomeThings();
   gc();
 }
@@ -41,3 +45,15 @@ function allocateSomeThings() {
   }
 }
 
+function nearestLegalSize(sizeKB) {
+  if (sizeKB >= 1024) {
+    return round(sizeKB, 1024);
+  }
+
+  return Math.min(round(sizeKB, 4), 1020);
+}
+
+function round(x, y) {
+  x += y / 2;
+  return x - (x % y);
+}
