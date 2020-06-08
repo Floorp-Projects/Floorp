@@ -1,0 +1,45 @@
+<html><head>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src='/tests/SimpleTest/paint_listener.js'></script>
+<script src='apz_test_utils.js'></script>
+<script src='apz_test_native_event_utils.js'></script>
+<script>
+function getSelectRect() {
+    const input = document.getElementById("select");
+    let rect = input.getBoundingClientRect();
+    let x = rect.left;
+    let y = rect.top;
+
+    const offsetX = {};
+    const offsetY = {};
+    SpecialPowers.getDOMWindowUtils(window).getVisualViewportOffsetRelativeToLayoutViewport(offsetX, offsetY);
+
+    let resolution = SpecialPowers.getDOMWindowUtils(window).getResolution();
+    x = resolution * (x - offsetX.value);
+    y = resolution * (y - offsetY.value);
+
+    let fullZoom = SpecialPowers.getDOMWindowUtils(window).fullZoom;
+    rect = {
+      left: x * fullZoom,
+      top: y * fullZoom,
+      width: rect.width * fullZoom * resolution,
+      height: rect.height * fullZoom * resolution,
+    };
+
+    return rect;
+}
+</script>
+</head>
+<body>
+Here is some text to stare at as the test runs. It serves no functional
+purpose, but gives you an idea of the zoom level. It's harder to tell what
+the zoom level is when the page is just solid white.
+<select id='select' style="position: absolute; left:150px; top:300px;"><option>he he he</option><option>boo boo</option><option>baz baz</option></select>
+
+<script>
+  // Silence SimpleTest warning about missing assertions by having it wait
+  // indefinitely. We don't need to give it an explicit finish because the
+  // entire window this test runs in will be closed after subtestDone is called.
+  SimpleTest.waitForExplicitFinish();
+</script>
+</body></html>

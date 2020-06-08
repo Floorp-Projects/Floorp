@@ -856,6 +856,7 @@ module.exports = {
         "dom/push/test/xpcshell/head.js",
         "dom/push/test/xpcshell/test_broadcast_success.js",
         "dom/push/test/xpcshell/test_crypto.js",
+        "gfx/layers/apz/test/mochitest/browser_test_select_zoom.js",
         "security/manager/ssl/RemoteSecuritySettings.jsm",
         "security/manager/ssl/tests/unit/test_der.js",
         "security/manager/ssl/X509.jsm",
