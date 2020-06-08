@@ -245,7 +245,7 @@ js::Nursery::Nursery(GCRuntime* gc)
 }
 
 bool js::Nursery::init(AutoLockGCBgAlloc& lock) {
-  capacity_ = roundSize(tunables().gcMinNurseryBytes());
+  capacity_ = tunables().gcMinNurseryBytes();
   if (!allocateNextChunk(0, lock)) {
     capacity_ = 0;
     return false;
@@ -299,7 +299,7 @@ void js::Nursery::enable() {
 
   {
     AutoLockGCBgAlloc lock(gc);
-    capacity_ = roundSize(tunables().gcMinNurseryBytes());
+    capacity_ = tunables().gcMinNurseryBytes();
     if (!allocateNextChunk(0, lock)) {
       capacity_ = 0;
       return;
@@ -1496,9 +1496,9 @@ void js::Nursery::maybeResizeNursery(JS::GCReason reason) {
 
   size_t newCapacity = size_t(double(capacity()) * factor);
 
-  const size_t minNurseryBytes = roundSize(tunables().gcMinNurseryBytes());
+  const size_t minNurseryBytes = tunables().gcMinNurseryBytes();
   MOZ_ASSERT(minNurseryBytes >= ArenaSize);
-  const size_t maxNurseryBytes = roundSize(tunables().gcMaxNurseryBytes());
+  const size_t maxNurseryBytes = tunables().gcMaxNurseryBytes();
   MOZ_ASSERT(maxNurseryBytes >= ArenaSize);
 
   // If one of these conditions is true then we always shrink or grow the
@@ -1534,7 +1534,7 @@ bool js::Nursery::maybeResizeExact(JS::GCReason reason) {
 #endif
 
   MOZ_ASSERT(tunables().gcMaxNurseryBytes() >= ArenaSize);
-  const size_t newMaxNurseryBytes = roundSize(tunables().gcMaxNurseryBytes());
+  const size_t newMaxNurseryBytes = tunables().gcMaxNurseryBytes();
   MOZ_ASSERT(newMaxNurseryBytes >= ArenaSize);
 
   if (capacity_ > newMaxNurseryBytes) {
@@ -1544,12 +1544,12 @@ bool js::Nursery::maybeResizeExact(JS::GCReason reason) {
     return true;
   }
 
-  const size_t newMinNurseryBytes = roundSize(tunables().gcMinNurseryBytes());
+  const size_t newMinNurseryBytes = tunables().gcMinNurseryBytes();
   MOZ_ASSERT(newMinNurseryBytes >= ArenaSize);
 
   if (newMinNurseryBytes > capacity()) {
     // the configured minimum nursery size is changing, so grow the nursery.
-    MOZ_ASSERT(newMinNurseryBytes <= roundSize(tunables().gcMaxNurseryBytes()));
+    MOZ_ASSERT(newMinNurseryBytes <= tunables().gcMaxNurseryBytes());
     growAllocableSpace(newMinNurseryBytes);
     return true;
   }
@@ -1570,7 +1570,7 @@ size_t js::Nursery::roundSize(size_t size) {
 
 void js::Nursery::growAllocableSpace(size_t newCapacity) {
   MOZ_ASSERT_IF(!isSubChunkMode(), newCapacity > currentChunk_ * ChunkSize);
-  MOZ_ASSERT(newCapacity <= roundSize(tunables().gcMaxNurseryBytes()));
+  MOZ_ASSERT(newCapacity <= tunables().gcMaxNurseryBytes());
   MOZ_ASSERT(newCapacity > capacity());
 
   if (isSubChunkMode()) {
@@ -1672,7 +1672,7 @@ void js::Nursery::shrinkAllocableSpace(size_t newCapacity) {
 }
 
 void js::Nursery::minimizeAllocableSpace() {
-  if (capacity_ < roundSize(tunables().gcMinNurseryBytes())) {
+  if (capacity_ < tunables().gcMinNurseryBytes()) {
     // The nursery is already smaller than the minimum size. This can happen
     // because changing parameters (like an increase in minimum size) can only
     // occur after a minor GC. See Bug 1585159.
@@ -1683,7 +1683,7 @@ void js::Nursery::minimizeAllocableSpace() {
     // want to add memory pressure then.
     return;
   }
-  shrinkAllocableSpace(roundSize(tunables().gcMinNurseryBytes()));
+  shrinkAllocableSpace(tunables().gcMinNurseryBytes());
 }
 
 bool js::Nursery::queueDictionaryModeObjectToSweep(NativeObject* obj) {
