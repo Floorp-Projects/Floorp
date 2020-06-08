@@ -232,6 +232,9 @@ ALL_PROCESSES += [
 
     # Old version of COMODO Firewall, bug 1624336
     DllBlocklistEntry("guard64.dll", (5, 12, 59641, 2599)),
+
+    # Old version of Panda Security, bug 1637984
+    DllBlocklistEntry("PavLspHook64.dll", (9, 2, 2, 1), BLOCK_WIN7_AND_OLDER),
 ]
 
 ALL_PROCESSES_TESTS += [
