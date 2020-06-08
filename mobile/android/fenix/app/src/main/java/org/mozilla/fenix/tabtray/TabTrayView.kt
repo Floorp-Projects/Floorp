@@ -150,8 +150,6 @@ class TabTrayView(
         fabView.new_tab_button.setOnClickListener {
             interactor.onNewTabTapped(isPrivateModeSelected)
         }
-
-        tabsTray.register(this, view)
     }
 
     fun expand() {

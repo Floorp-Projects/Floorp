@@ -14,6 +14,7 @@ import androidx.core.view.updatePadding
 import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import kotlinx.android.synthetic.main.component_tabstray.*
 import kotlinx.android.synthetic.main.component_tabstray.view.*
 import kotlinx.android.synthetic.main.fragment_tab_tray_dialog.*
 import kotlinx.android.synthetic.main.fragment_tab_tray_dialog.view.*
@@ -26,7 +27,6 @@ import mozilla.components.concept.engine.prompt.ShareData
 import mozilla.components.concept.tabstray.Tab
 import mozilla.components.feature.tabs.tabstray.TabsFeature
 import mozilla.components.lib.state.ext.consumeFrom
-import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
@@ -38,7 +38,7 @@ import org.mozilla.fenix.utils.allowUndo
 
 @SuppressWarnings("TooManyFunctions")
 class TabTrayDialogFragment : AppCompatDialogFragment(), TabTrayInteractor {
-    private val tabsFeature = ViewBoundFeatureWrapper<TabsFeature>()
+    private var tabsFeature: TabsFeature? = null
     private var _tabTrayView: TabTrayView? = null
     private val tabTrayView: TabTrayView
         get() = _tabTrayView!!
@@ -71,9 +71,9 @@ class TabTrayDialogFragment : AppCompatDialogFragment(), TabTrayInteractor {
             this,
             isPrivate,
             requireContext().resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
-        ) { tabsFeature.get()?.filterTabs(it) }
+        ) { tabsFeature!!.filterTabs(it) }
 
-        tabsFeature.set(
+        tabsFeature =
             TabsFeature(
                 tabTrayView.view.tabsTray,
                 view.context.components.core.store,
@@ -81,10 +81,7 @@ class TabTrayDialogFragment : AppCompatDialogFragment(), TabTrayInteractor {
                 view.context.components.useCases.thumbnailUseCases,
                 { it.content.private == isPrivate },
                 { }
-            ),
-            viewLifecycleOwner,
-            view
-        )
+            )
 
         tabLayout.setOnClickListener {
             dismissAllowingStateLoss()
@@ -111,8 +108,21 @@ class TabTrayDialogFragment : AppCompatDialogFragment(), TabTrayInteractor {
     }
 
     override fun onDestroyView() {
-        super.onDestroyView()
         _tabTrayView = null
+        super.onDestroyView()
+    }
+
+    override fun onStart() {
+        super.onStart()
+        tabTrayView.tabsTray.register(tabTrayView, viewLifecycleOwner)
+        tabsFeature?.start()
+    }
+
+    override fun onStop() {
+        tabsFeature?.stop()
+        tabTrayView.tabsTray.unregister(tabTrayView)
+        tabsFeature = null
+        super.onStop()
     }
 
     override fun onTabClosed(tab: Tab) {
@@ -257,6 +267,9 @@ class TabTrayDialogFragment : AppCompatDialogFragment(), TabTrayInteractor {
         private const val FRAGMENT_TAG = "tabTrayDialogFragment"
 
         fun show(fragmentManager: FragmentManager) {
+            // If we've killed the fragmentManager. Let's not try to show the tabs tray.
+            if (fragmentManager.isDestroyed) { return }
+
             // We want to make sure we don't accidentally show the dialog twice if
             // a user somehow manages to trigger `show()` twice before we present the dialog.
             if (fragmentManager.findFragmentByTag(FRAGMENT_TAG) == null) {
