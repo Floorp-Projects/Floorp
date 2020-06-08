@@ -12,12 +12,18 @@ namespace mozilla::gfx {
 
 static StaticRefPtr<VRPuppetCommandBuffer> sVRPuppetCommandBufferSingleton;
 
+/* static */
 VRPuppetCommandBuffer& VRPuppetCommandBuffer::Get() {
   if (sVRPuppetCommandBufferSingleton == nullptr) {
     sVRPuppetCommandBufferSingleton = new VRPuppetCommandBuffer();
     ClearOnShutdown(&sVRPuppetCommandBufferSingleton);
   }
   return *sVRPuppetCommandBufferSingleton;
+}
+
+/* static */
+bool VRPuppetCommandBuffer::IsCreated() {
+  return sVRPuppetCommandBufferSingleton != nullptr;
 }
 
 VRPuppetCommandBuffer::VRPuppetCommandBuffer()
@@ -188,8 +194,7 @@ bool VRPuppetCommandBuffer::RunCommand(uint64_t aCommand, double aDeltaTime) {
                     (uint8_t*)&mPendingState + (aCommand & 0x00000000ffffffff);
       break;
     case VRPuppet_Command::VRPuppet_UpdateControllers:
-      mDataOffset = (uint8_t*)&mPendingState
-                        .controllerState[aCommand & 0x00000000000000ff] -
+      mDataOffset = (uint8_t*)&mPendingState.controllerState -
                     (uint8_t*)&mPendingState + (aCommand & 0x00000000ffffffff);
       break;
     case VRPuppet_Command::VRPuppet_Commit:

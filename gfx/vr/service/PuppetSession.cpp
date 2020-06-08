@@ -30,6 +30,12 @@ bool PuppetSession::Initialize(mozilla::gfx::VRSystemState& aSystemState,
   if (!StaticPrefs::dom_vr_enabled() || !StaticPrefs::dom_vr_puppet_enabled()) {
     return false;
   }
+  if (!VRPuppetCommandBuffer::IsCreated()) {
+    // We only want to initialize VRPuppetCommandBuffer on the main thread.
+    // We can assume if it is not initialized, that the puppet display
+    // would not be enumerated.
+    return false;
+  }
   if (aDetectRuntimesOnly) {
     aSystemState.displayState.capabilityFlags |=
         VRDisplayCapabilityFlags::Cap_ImmersiveVR;

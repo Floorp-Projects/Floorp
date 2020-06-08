@@ -534,13 +534,19 @@ void VRManager::CheckForPuppetCompletion() {
   }
   // Notify content process about completion of puppet test scripts
   if (mManagerParentRunningPuppet) {
-    if (mServiceHost->PuppetHasEnded()) {
-      Unused << mManagerParentRunningPuppet
-                    ->SendNotifyPuppetCommandBufferCompleted(true);
-      mManagerParentRunningPuppet = nullptr;
-    }
+    mServiceHost->CheckForPuppetCompletion();
   }
 }
+
+void VRManager::NotifyPuppetComplete() {
+  // Notify content process about completion of puppet test scripts
+  if (mManagerParentRunningPuppet) {
+    Unused << mManagerParentRunningPuppet
+                  ->SendNotifyPuppetCommandBufferCompleted(true);
+    mManagerParentRunningPuppet = nullptr;
+  }
+}
+
 #endif  // !defined(MOZ_WIDGET_ANDROID)
 
 void VRManager::StartFrame() {
