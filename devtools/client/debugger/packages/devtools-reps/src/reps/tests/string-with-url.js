@@ -51,6 +51,7 @@ describe("test String with URL", () => {
     const link = element.find("a");
     expect(link.prop("href")).toBe(null);
     expect(link.prop("title")).toBe(url);
+    expect(link.prop("rel")).toBe("noopener noreferrer");
   });
 
   it("renders a href when no openLink but isInContentPage is true", () => {
@@ -60,6 +61,7 @@ describe("test String with URL", () => {
     const link = element.find("a");
     expect(link.prop("href")).toBe(url);
     expect(link.prop("title")).toBe(url);
+    expect(link.prop("rel")).toBe("noopener noreferrer");
   });
 
   it("renders a simple quoted URL", () => {
