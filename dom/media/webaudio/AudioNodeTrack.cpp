@@ -480,8 +480,8 @@ void AudioNodeTrack::UpMixDownMixChunk(const AudioBlock* aChunk,
       }
     } else {
       // Drop the remaining aOutputChannels
-      aOutputChannels.RemoveElementsAt(
-          aOutputChannelCount, aOutputChannels.Length() - aOutputChannelCount);
+      aOutputChannels.RemoveLastElements(aOutputChannels.Length() -
+                                         aOutputChannelCount);
     }
   }
 }

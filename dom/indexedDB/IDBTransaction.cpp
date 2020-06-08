@@ -646,13 +646,13 @@ void IDBTransaction::AbortInternal(const nsresult aAbortCode,
             return static_cast<uint64_t>(objectStoreId);
           });
 
-      mObjectStores.RemoveElementsAt(
+      mObjectStores.RemoveLastElements(
+          mObjectStores.end() -
           std::remove_if(mObjectStores.begin(), mObjectStores.end(),
                          [&validIds](const auto& objectStore) {
                            return !validIds.Contains(
                                uint64_t(objectStore->Id()));
-                         }),
-          mObjectStores.end());
+                         }));
 
       std::copy_if(std::make_move_iterator(mDeletedObjectStores.begin()),
                    std::make_move_iterator(mDeletedObjectStores.end()),

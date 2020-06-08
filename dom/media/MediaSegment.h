@@ -479,7 +479,7 @@ class MediaSegmentBase : public MediaSegment {
     }
     // At this point `i` is already advanced due to last check in the loop.
     if (i < mChunks.Length()) {
-      mChunks.RemoveElementsAt(i, mChunks.Length() - i);
+      mChunks.RemoveLastElements(mChunks.Length() - i);
     }
     MOZ_ASSERT(mChunks.Capacity() >= DEFAULT_SEGMENT_CAPACITY,
                "Capacity must be retained after removing chunks");

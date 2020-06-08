@@ -412,7 +412,8 @@ void CycleCollectedJSContext::CleanupIDBTransactions(uint32_t aRecursionDepth) {
   nsTArray<PendingIDBTransactionData> localQueue =
       std::move(mPendingIDBTransactions);
 
-  localQueue.RemoveElementsAt(
+  localQueue.RemoveLastElements(
+      localQueue.end() -
       std::remove_if(localQueue.begin(), localQueue.end(),
                      [aRecursionDepth](PendingIDBTransactionData& data) {
                        if (data.mRecursionDepth != aRecursionDepth) {
@@ -426,8 +427,7 @@ void CycleCollectedJSContext::CleanupIDBTransactions(uint32_t aRecursionDepth) {
                        }
 
                        return true;
-                     }),
-      localQueue.end());
+                     }));
 
   // If mPendingIDBTransactions has events in it now, they were added from
   // something we called, so they belong at the end of the queue.

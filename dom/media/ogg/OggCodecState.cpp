@@ -1177,7 +1177,7 @@ bool OpusState::ReconstructOpusGranulepos(void) {
             // Encoders SHOULD NOT produce streams like this, but we'll handle
             // it for them anyway.
             gp = last_gp;
-            mUnstamped.RemoveElementsAt(i + 1, mUnstamped.Length() - (i + 1));
+            mUnstamped.RemoveLastElements(mUnstamped.Length() - (i + 1));
             packet->e_o_s = 1;
           }
         }

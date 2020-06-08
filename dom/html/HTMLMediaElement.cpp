@@ -3536,7 +3536,8 @@ void HTMLMediaElement::UpdateOutputTrackSources() {
   }
 
   // Then work out the differences.
-  mediaTracksToAdd.RemoveElementsAt(
+  mediaTracksToAdd.RemoveLastElements(
+      mediaTracksToAdd.end() -
       std::remove_if(mediaTracksToAdd.begin(), mediaTracksToAdd.end(),
                      [this, &trackSourcesToRemove](const auto& track) {
                        const bool remove =
@@ -3545,8 +3546,7 @@ void HTMLMediaElement::UpdateOutputTrackSources() {
                          trackSourcesToRemove.RemoveElement(track->GetId());
                        }
                        return remove;
-                     }),
-      mediaTracksToAdd.end());
+                     }));
 
   // First remove stale track sources.
   for (const auto& id : trackSourcesToRemove) {

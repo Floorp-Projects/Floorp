@@ -674,11 +674,8 @@ void TimerThread::RemoveLeadingCanceledTimersInternal() {
   }
 
   // Finally, remove the canceled timers from the back of the
-  // nsTArray.  Note, since std::pop_heap() uses iterators
-  // we must convert to nsTArray indices and number of
-  // elements here.
-  mTimers.RemoveElementsAt(sortedEnd - mTimers.begin(),
-                           mTimers.end() - sortedEnd);
+  // nsTArray.
+  mTimers.RemoveLastElements(mTimers.end() - sortedEnd);
 }
 
 void TimerThread::RemoveFirstTimerInternal() {
