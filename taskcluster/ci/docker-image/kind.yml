@@ -184,7 +184,7 @@ jobs:
             - deb10-python-zstandard
     android-build:
         symbol: I(agb)
-        parent: debian9-base
+        parent: debian10-base
         packages:
             - deb8-valgrind
     fetch:
