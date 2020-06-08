@@ -12691,6 +12691,7 @@ class MWasmScalarToSimd128 : public MUnaryInstruction,
     return ins->toWasmScalarToSimd128()->simdOp() == simdOp_ &&
            congruentIfOperandsEqual(ins);
   }
+  MDefinition* foldsTo(TempAllocator& alloc) override;
 
   wasm::SimdOp simdOp() const { return simdOp_; }
 

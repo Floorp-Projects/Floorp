@@ -662,48 +662,72 @@ for ( let [op, memtype, rop, resultmemtype] of
         testIt(a,b);
 }
 
-// Splat
+// Splat, with and without constants (different code paths in ion)
 
 var ins = wasmEvalText(`
   (module
     (memory (export "mem") 1 1)
     (func (export "splat_i8x16") (param $src i32)
       (v128.store (i32.const 0) (i8x16.splat (local.get $src))))
+    (func (export "csplat_i8x16")
+      (v128.store (i32.const 0) (i8x16.splat (i32.const 37))))
     (func (export "splat_i16x8") (param $src i32)
       (v128.store (i32.const 0) (i16x8.splat (local.get $src))))
+    (func (export "csplat_i16x8")
+      (v128.store (i32.const 0) (i16x8.splat (i32.const 1175))))
     (func (export "splat_i32x4") (param $src i32)
       (v128.store (i32.const 0) (i32x4.splat (local.get $src))))
+    (func (export "csplat_i32x4")
+      (v128.store (i32.const 0) (i32x4.splat (i32.const 127639))))
     (func (export "splat_i64x2") (param $src i64)
       (v128.store (i32.const 0) (i64x2.splat (local.get $src))))
+    (func (export "csplat_i64x2")
+      (v128.store (i32.const 0) (i64x2.splat (i64.const 0x1234_5678_4365))))
     (func (export "splat_f32x4") (param $src f32)
       (v128.store (i32.const 0) (f32x4.splat (local.get $src))))
+    (func (export "csplat_f32x4")
+      (v128.store (i32.const 0) (f32x4.splat (f32.const 9121.25))))
     (func (export "splat_f64x2") (param $src f64)
       (v128.store (i32.const 0) (f64x2.splat (local.get $src))))
+    (func (export "csplat_f64x2")
+      (v128.store (i32.const 0) (f64x2.splat (f64.const 26789.125))))
 )`);
 
-ins.exports.splat_i8x16(3);
 var mem8 = new Uint8Array(ins.exports.mem.buffer);
-assertSame(get(mem8, 0, 16), [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3]);
+ins.exports.splat_i8x16(3);
+assertSame(get(mem8, 0, 16), iota(16).map(_=>3));
+ins.exports.csplat_i8x16();
+assertSame(get(mem8, 0, 16), iota(16).map(_=>37));
 
-ins.exports.splat_i16x8(976);
 var mem16 = new Uint16Array(ins.exports.mem.buffer);
-assertSame(get(mem16, 0, 8), [976, 976, 976, 976, 976, 976, 976, 976]);
+ins.exports.splat_i16x8(976);
+assertSame(get(mem16, 0, 8), iota(8).map(_=>976));
+ins.exports.csplat_i16x8();
+assertSame(get(mem16, 0, 8), iota(8).map(_=>1175));
 
-ins.exports.splat_i32x4(147812);
 var mem32 = new Uint32Array(ins.exports.mem.buffer);
+ins.exports.splat_i32x4(147812);
 assertSame(get(mem32, 0, 4), [147812, 147812, 147812, 147812]);
+ins.exports.csplat_i32x4();
+assertSame(get(mem32, 0, 4), [127639, 127639, 127639, 127639]);
 
-ins.exports.splat_i64x2(147812n);
 var mem64 = new BigInt64Array(ins.exports.mem.buffer);
+ins.exports.splat_i64x2(147812n);
 assertSame(get(mem64, 0, 2), [147812, 147812]);
+ins.exports.csplat_i64x2();
+assertSame(get(mem64, 0, 2), [0x1234_5678_4365n, 0x1234_5678_4365n]);
 
-ins.exports.splat_f32x4(147812.5);
 var memf32 = new Float32Array(ins.exports.mem.buffer);
+ins.exports.splat_f32x4(147812.5);
 assertSame(get(memf32, 0, 4), [147812.5, 147812.5, 147812.5, 147812.5]);
+ins.exports.csplat_f32x4();
+assertSame(get(memf32, 0, 4), [9121.25, 9121.25, 9121.25, 9121.25]);
 
-ins.exports.splat_f64x2(147812.5);
 var memf64 = new Float64Array(ins.exports.mem.buffer);
+ins.exports.splat_f64x2(147812.5);
 assertSame(get(memf64, 0, 2), [147812.5, 147812.5]);
+ins.exports.csplat_f64x2();
+assertSame(get(memf64, 0, 2), [26789.125, 26789.125]);
 
 // Simple unary operators.  Place parameter in memory at offset 16,
 // read the result at offset 0.
