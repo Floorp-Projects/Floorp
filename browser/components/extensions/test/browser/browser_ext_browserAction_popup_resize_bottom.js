@@ -37,7 +37,3 @@ add_task(async function testBrowserActionMenuResizeBottomArrow() {
 
   await BrowserTestUtils.closeWindow(win);
 });
-
-add_task(async function testTeardown() {
-  Services.prefs.clearUserPref("toolkit.cosmeticAnimations.enabled");
-});
