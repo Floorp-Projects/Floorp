@@ -297,7 +297,7 @@ static already_AddRefed<BrowsingContext> CreateBrowsingContext(
 
   // By default we just use the same browserId as the parent.
   uint64_t browserId = parentBC->GetBrowserId();
-  RefPtr<XULFrameElement> xulFrame = XULFrameElement::FromNode(aOwner);
+  RefPtr<nsFrameLoaderOwner> owner = do_QueryObject(aOwner);
 
   // Create our BrowsingContext without immediately attaching it. It's possible
   // that no DocShell or remote browser will ever be created for this
@@ -306,11 +306,10 @@ static already_AddRefed<BrowsingContext> CreateBrowsingContext(
   // it will wind up attached as a child of the currently active inner window
   // for the BrowsingContext, and cause no end of trouble.
   if (IsTopContent(parentBC, aOwner)) {
-    // Transitioning into a new content tree means we want a new browserId.
-    if (xulFrame && xulFrame->BrowserId() != 0) {
+    if (owner && owner->GetBrowserId() != 0) {
       // This frame has already been assigned an Id. This can happen for example
       // if a frame is re-inserted into the DOM (i.e. on a remoteness change).
-      browserId = xulFrame->BrowserId();
+      browserId = owner->GetBrowserId();
 
       // This implies that we do not support changing a frame's "type"
       // attribute. Doing so would mean needing to change the browser Id for the
@@ -318,9 +317,8 @@ static already_AddRefed<BrowsingContext> CreateBrowsingContext(
       MOZ_DIAGNOSTIC_ASSERT(browserId != parentBC->GetBrowserId());
     } else {
       browserId = nsContentUtils::GenerateBrowserId();
-
-      if (xulFrame) {
-        xulFrame->SetBrowserId(browserId);
+      if (owner) {
+        owner->SetBrowserId(browserId);
       }
     }
 
@@ -332,10 +330,10 @@ static already_AddRefed<BrowsingContext> CreateBrowsingContext(
   MOZ_ASSERT(!aOpenWindowInfo,
              "Can't have openWindowInfo for non-toplevel context");
 
-  if (xulFrame) {
-    MOZ_DIAGNOSTIC_ASSERT(xulFrame->BrowserId() == 0 ||
-                          xulFrame->BrowserId() == browserId);
-    xulFrame->SetBrowserId(browserId);
+  if (owner) {
+    MOZ_DIAGNOSTIC_ASSERT(owner->GetBrowserId() == 0 ||
+                          owner->GetBrowserId() == browserId);
+    owner->SetBrowserId(browserId);
   }
 
   return BrowsingContext::CreateDetached(parentInner, nullptr, frameName,
@@ -1285,16 +1283,11 @@ nsresult nsFrameLoader::SwapWithOtherRemoteLoader(
   MaybeUpdatePrimaryBrowserParent(eBrowserParentRemoved);
   aOther->MaybeUpdatePrimaryBrowserParent(eBrowserParentRemoved);
 
-  RefPtr<XULFrameElement> ourXulFrame = XULFrameElement::FromNode(ourContent);
-  RefPtr<XULFrameElement> otherXulFrame =
-      XULFrameElement::FromNode(otherContent);
-  if (ourXulFrame && otherXulFrame) {
-    // Setting the owner content does checks that the browsing context's browser
-    // ID matches the element it is being attached to so swap that here.
-    uint64_t browserId = otherXulFrame->BrowserId();
-    otherXulFrame->SetBrowserId(ourXulFrame->BrowserId());
-    ourXulFrame->SetBrowserId(browserId);
-  }
+  // Setting the owner content does checks that the browsing context's browser
+  // ID matches the element it is being attached to so swap that here.
+  uint64_t ourBrowserId = aThisOwner->GetBrowserId();
+  aThisOwner->SetBrowserId(aOtherOwner->GetBrowserId());
+  aOtherOwner->SetBrowserId(ourBrowserId);
 
   SetOwnerContent(otherContent);
   aOther->SetOwnerContent(ourContent);
@@ -1711,16 +1704,11 @@ nsresult nsFrameLoader::SwapWithOtherLoader(nsFrameLoader* aOther,
       otherDocshell, ourOwner,
       ourBc->IsContent() ? ourChromeEventHandler.get() : nullptr);
 
-  RefPtr<XULFrameElement> ourXulFrame = XULFrameElement::FromNode(ourContent);
-  RefPtr<XULFrameElement> otherXulFrame =
-      XULFrameElement::FromNode(otherContent);
-  if (ourXulFrame && otherXulFrame) {
-    // Setting the owner content does checks that the browsing context's browser
-    // ID matches the element it is being attached to so swap that here.
-    uint64_t browserId = otherXulFrame->BrowserId();
-    otherXulFrame->SetBrowserId(ourXulFrame->BrowserId());
-    ourXulFrame->SetBrowserId(browserId);
-  }
+  // Setting the owner content does checks that the browsing context's browser
+  // ID matches the element it is being attached to so swap that here.
+  uint64_t ourBrowserId = aThisOwner->GetBrowserId();
+  aThisOwner->SetBrowserId(aOtherOwner->GetBrowserId());
+  aOtherOwner->SetBrowserId(ourBrowserId);
 
   // Switch the owner content before we start calling AddTreeItemToTreeOwner.
   // Note that we rely on this to deal with setting mObservingOwnerContent to

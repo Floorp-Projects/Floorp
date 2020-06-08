@@ -400,6 +400,8 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
 
   bool UseGlobalHistory() const { return GetUseGlobalHistory(); }
 
+  uint64_t BrowserId() const { return GetBrowserId(); }
+
   bool IsLoading();
 
   // ScreenOrientation related APIs
@@ -421,9 +423,6 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   }
 
   void SetAllowContentRetargeting(bool aAllowContentRetargeting);
-
-  // Needed for the webidl property
-  uint64_t BrowserId() const { return GetBrowserId(); }
 
   // Using the rules for choosing a browsing context we try to find
   // the browsing context with the given name in the set of

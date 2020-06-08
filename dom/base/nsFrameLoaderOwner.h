@@ -58,6 +58,9 @@ class nsFrameLoaderOwner : public nsISupports {
 
   void SubframeCrashed();
 
+  uint64_t GetBrowserId() { return mBrowserId; }
+  void SetBrowserId(uint64_t aBrowserId) { mBrowserId = aBrowserId; }
+
  private:
   bool UseRemoteSubframes();
   bool ShouldPreserveBrowsingContext(
@@ -86,6 +89,8 @@ class nsFrameLoaderOwner : public nsISupports {
  protected:
   virtual ~nsFrameLoaderOwner() = default;
   RefPtr<nsFrameLoader> mFrameLoader;
+
+  uint64_t mBrowserId = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsFrameLoaderOwner, NS_FRAMELOADEROWNER_IID)

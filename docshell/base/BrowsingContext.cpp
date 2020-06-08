@@ -50,6 +50,7 @@
 #include "nsGlobalWindowOuter.h"
 #include "nsIObserverService.h"
 #include "nsContentUtils.h"
+#include "nsQueryObject.h"
 #include "nsSandboxFlags.h"
 #include "nsScriptError.h"
 #include "nsThreadUtils.h"
@@ -487,27 +488,24 @@ void BrowsingContext::SetEmbedderElement(Element* aEmbedder) {
     Transaction txn;
     txn.SetEmbedderElementType(Some(aEmbedder->LocalName()));
 
-    if (RefPtr<XULFrameElement> xulFrame =
-            XULFrameElement::FromNode(aEmbedder)) {
+    // We don't care about browser Ids for chrome-type BrowsingContexts.
+    if (RefPtr<nsFrameLoaderOwner> owner = do_QueryObject(aEmbedder);
+        !IsChrome() && owner) {
       uint64_t browserId = GetBrowserId();
-      uint64_t frameBrowserId = xulFrame->BrowserId();
+      uint64_t frameBrowserId = owner->GetBrowserId();
+      MOZ_DIAGNOSTIC_ASSERT(browserId != 0);
 
-      if (browserId != 0 && frameBrowserId == 0) {
+      if (frameBrowserId == 0) {
         // We'll arrive here if we're a top-level BrowsingContext for a window
         // or tab that was opened in a content process. There should be no
         // children to update at this point. This Id was generated in
         // ContentChild::ProvideWindowCommon.
         MOZ_DIAGNOSTIC_ASSERT(IsTopContent());
         MOZ_DIAGNOSTIC_ASSERT(Children().IsEmpty());
-        xulFrame->SetBrowserId(browserId);
-      } else if (browserId == 0 && frameBrowserId == 0) {
-        // We don't set a browser Id for chrome-type BrowsingContexts.
-        // XXX: Should we?
-        MOZ_DIAGNOSTIC_ASSERT(IsChrome());
+        owner->SetBrowserId(browserId);
       } else {
-        // In any other scenario, we would've inherited or generated an Id in
-        // CreateBrowsingContext.
-        MOZ_DIAGNOSTIC_ASSERT(browserId != 0 && browserId == frameBrowserId);
+        // We would've inherited or generated an Id in CreateBrowsingContext.
+        MOZ_DIAGNOSTIC_ASSERT(browserId == frameBrowserId);
       }
     }
 
@@ -2403,7 +2401,7 @@ void BrowsingContext::DidSet(FieldIndex<IDX_HasSessionHistory>,
 bool BrowsingContext::CanSet(FieldIndex<IDX_BrowserId>, const uint32_t& aValue,
                              ContentParent* aSource) {
   // Should only be able to set if the ID is not already set.
-  return GetBrowserId() == 0 && Children().IsEmpty() && !GetParent();
+  return GetBrowserId() == 0 && IsTop() && Children().IsEmpty();
 }
 
 }  // namespace dom
