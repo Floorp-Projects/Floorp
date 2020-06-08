@@ -22,14 +22,15 @@ class ProxyConfigLookup final : public nsIProtocolProxyCallback {
 
   static nsresult Create(
       std::function<void(nsIProxyInfo*, nsresult)>&& aCallback, nsIURI* aURI,
-      uint32_t aProxyResolveFlags);
+      uint32_t aProxyResolveFlags,
+      nsICancelable** aLookupCancellable = nullptr);
 
  private:
   explicit ProxyConfigLookup(
       std::function<void(nsIProxyInfo*, nsresult)>&& aCallback, nsIURI* aURI,
       uint32_t aProxyResolveFlags);
   virtual ~ProxyConfigLookup();
-  nsresult DoProxyResolve();
+  nsresult DoProxyResolve(nsICancelable** aLookupCancellable);
 
   std::function<void(nsIProxyInfo*, nsresult)> mCallback;
   nsCOMPtr<nsIURI> mURI;
