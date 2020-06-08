@@ -1078,11 +1078,14 @@ CssRuleView.prototype = {
   createExpandableContainer: function(label, isPseudo = false) {
     const header = this.styleDocument.createElementNS(HTML_NS, "div");
     header.className = this._getRuleViewHeaderClassName(true);
+    header.setAttribute("role", "heading");
     header.textContent = label;
 
     const twisty = this.styleDocument.createElementNS(HTML_NS, "span");
     twisty.className = "ruleview-expander theme-twisty";
     twisty.setAttribute("open", "true");
+    twisty.setAttribute("role", "button");
+    twisty.setAttribute("aria-label", l10n("rules.twistyCollapse.label"));
 
     header.insertBefore(twisty, header.firstChild);
     this.element.appendChild(header);
@@ -1151,8 +1154,10 @@ CssRuleView.prototype = {
 
     if (isOpen) {
       twisty.removeAttribute("open");
+      twisty.setAttribute("aria-label", l10n("rule.twistyExpand.label"));
     } else {
       twisty.setAttribute("open", "true");
+      twisty.setAttribute("aria-label", l10n("rule.twistyCollapse.label"));
     }
   },
 
@@ -1207,6 +1212,7 @@ CssRuleView.prototype = {
         seenNormalElement = true;
         const div = this.styleDocument.createElementNS(HTML_NS, "div");
         div.className = this._getRuleViewHeaderClassName();
+        div.setAttribute("role", "heading");
         div.textContent = this.selectedElementLabel;
         this.element.appendChild(div);
       }
@@ -1215,6 +1221,8 @@ CssRuleView.prototype = {
       if (inheritedSource && inheritedSource !== lastInheritedSource) {
         const div = this.styleDocument.createElementNS(HTML_NS, "div");
         div.className = this._getRuleViewHeaderClassName();
+        div.setAttribute("role", "heading");
+        div.setAttribute("aria-level", "3");
         div.textContent = rule.inheritedSource;
         lastInheritedSource = inheritedSource;
         this.element.appendChild(div);
@@ -1234,6 +1242,7 @@ CssRuleView.prototype = {
         container = this.createExpandableContainer(rule.keyframesName);
       }
 
+      rule.editor.element.setAttribute("role", "article");
       if (container && (rule.pseudoElement || keyframes)) {
         container.appendChild(rule.editor.element);
       } else {
