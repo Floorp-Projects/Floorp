@@ -673,7 +673,7 @@ class PcqConsumer : public detail::PcqBase {
     }
 
     // Only update the queue if the operation was successful.
-    QueueStatus status = TryRemoveArgs(view, &aArgs...);
+    QueueStatus status = TryRemoveArgs(view, aArgs...);
     if (!status) {
       return status;
     }
@@ -748,13 +748,13 @@ class PcqConsumer : public detail::PcqBase {
 
   // Version of the helper for copying values out of the queue.
   template <typename... Args>
-  QueueStatus TryRemoveArgs(ConsumerView<PcqConsumer>& aView, Args*... aArgs);
+  QueueStatus TryRemoveArgs(ConsumerView<PcqConsumer>& aView, Args&... aArgs);
 
   template <typename Arg, typename... Args>
-  QueueStatus TryRemoveArgs(ConsumerView<PcqConsumer>& aView, Arg* aArg,
-                            Args*... aArgs) {
-    QueueStatus status = TryCopyItem<Arg>(aView, aArg);
-    return IsSuccess(status) ? TryRemoveArgs<Args...>(aView, aArgs...) : status;
+  QueueStatus TryRemoveArgs(ConsumerView<PcqConsumer>& aView, Arg& aArg,
+                            Args&... aArgs) {
+    QueueStatus status = TryCopyItem(aView, aArg);
+    return IsSuccess(status) ? TryRemoveArgs(aView, aArgs...) : status;
   }
 
   QueueStatus TryRemoveArgs(ConsumerView<PcqConsumer>&) {
@@ -764,10 +764,10 @@ class PcqConsumer : public detail::PcqBase {
   // If an item is available then it is copied into aArg.  The item is skipped
   // over if aArg is null.
   template <typename Arg>
-  QueueStatus TryCopyItem(ConsumerView<PcqConsumer>& aView, Arg* aArg) {
+  QueueStatus TryCopyItem(ConsumerView<PcqConsumer>& aView, Arg& aArg) {
     MOZ_ASSERT(aArg);
     return QueueParamTraits<typename RemoveCVR<Arg>::Type>::Read(
-        aView, const_cast<std::remove_cv_t<Arg>*>(aArg));
+        aView, const_cast<std::remove_cv_t<Arg>*>(&aArg));
   }
 
   template <typename Arg>
