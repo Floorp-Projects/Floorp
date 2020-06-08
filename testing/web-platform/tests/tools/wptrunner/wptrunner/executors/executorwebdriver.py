@@ -29,6 +29,7 @@ from .protocol import (BaseProtocolPart,
 from ..testrunner import Stop
 
 import webdriver as client
+from webdriver import error
 
 here = os.path.join(os.path.split(__file__)[0])
 
@@ -90,6 +91,8 @@ class WebDriverTestharnessProtocolPart(TestharnessProtocolPart):
         self.runner_handle = None
         with open(os.path.join(here, "runner.js")) as f:
             self.runner_script = f.read()
+        with open(os.path.join(here, "window-loaded.js")) as f:
+            self.window_loaded_script = f.read()
 
     def load_runner(self, url_protocol):
         if self.runner_handle:
@@ -152,6 +155,19 @@ class WebDriverTestharnessProtocolPart(TestharnessProtocolPart):
             time.sleep(0.1)
 
         raise Exception("unable to find test window")
+
+    def test_window_loaded(self):
+        """Wait until the page in the new window has been loaded.
+
+        Hereby ignore Javascript execptions that are thrown when
+        the document has been unloaded due to a process change.
+        """
+        while True:
+            try:
+                self.webdriver.execute_script(self.window_loaded_script, asynchronous=True)
+                break
+            except error.JavascriptErrorException:
+                pass
 
 
 class WebDriverSelectorProtocolPart(SelectorProtocolPart):
@@ -360,6 +376,9 @@ class WebDriverTestharnessExecutor(TestharnessExecutor):
         self.protocol = WebDriverProtocol(self, browser, capabilities)
         with open(os.path.join(here, "testharness_webdriver_resume.js")) as f:
             self.script_resume = f.read()
+        with open(os.path.join(here, "window-loaded.js")) as f:
+            self.window_loaded_script = f.read()
+
         self.close_after_done = close_after_done
         self.window_id = str(uuid.uuid4())
         self.supports_eager_pageload = supports_eager_pageload
@@ -396,6 +415,10 @@ class WebDriverTestharnessExecutor(TestharnessExecutor):
                                                            parent_window,
                                                            timeout=5*self.timeout_multiplier)
         self.protocol.base.set_window(test_window)
+
+        # Wait until about:blank has been loaded
+        protocol.base.execute_script(self.window_loaded_script, asynchronous=True)
+
         handler = WebDriverCallbackHandler(self.logger, protocol, test_window)
         protocol.webdriver.url = url
 
