@@ -1,4 +1,4 @@
-﻿<!DOCTYPE HTML>
+<!DOCTYPE HTML>
 <html>
 <head>
   <meta charset="utf-8">
@@ -17,90 +17,77 @@
  * type used for content policy checks is of TYPE_SUBDOCUMENT.
  */
 
-function createChromeScript() {
-  var categoryManager = Cc["@mozilla.org/categorymanager;1"].getService(
-    Ci.nsICategoryManager
-  );
+const Cc = SpecialPowers.Cc;
+const Ci = SpecialPowers.Ci;
 
-  const POLICYNAME = "@mozilla.org/testpolicy;1";
-  const POLICYID = Components.ID("{6cc95ef3-40e1-4d59-87f0-86f100373227}");
-  const EXPECTED_URL = 
-        "http://mochi.test:8888/tests/dom/security/test/general/file_contentpolicytype_targeted_link_iframe.sjs?innerframe";
+const EXPECTED_CONTENT_TYPE = Ci.nsIContentPolicy.TYPE_SUBDOCUMENT;
+const EXPECTED_URL = 
+  "http://mochi.test:8888/tests/dom/security/test/general/file_contentpolicytype_targeted_link_iframe.sjs?innerframe";
+const TEST_FRAME_URL =
+  "file_contentpolicytype_targeted_link_iframe.sjs?testframe";
 
-  var policy = {
-    // nsISupports implementation
-    QueryInterface: ChromeUtils.generateQI([
-       Ci.nsIFactory,
-       Ci.nsIContentPolicy,
-    ]),
+// -----  START Content Policy implementation for the test
+var categoryManager = Cc["@mozilla.org/categorymanager;1"].getService(Ci.nsICategoryManager);
 
-    // nsIFactory implementation
-    createInstance(outer, iid) {
-      return this.QueryInterface(iid);
-    },
+const POLICYNAME = "@mozilla.org/iframetestpolicy;1";
+const POLICYID = SpecialPowers.wrap(SpecialPowers.Components)
+                              .ID("{6cc95ef3-40e1-4d59-87f0-86f100373227}");
 
-    // nsIContentPolicy implementation
-    shouldLoad(contentLocation, loadInfo, mimeTypeGuess) {
-      if (contentLocation.asciiSpec === EXPECTED_URL) {
-        sendAsyncMessage("loadBlocked", { policyType: loadInfo.externalContentPolicyType});
-        categoryManager.deleteCategoryEntry(
-          "content-policy",
-          POLICYNAME,
-          false
-        );
-        componentManager.unregisterFactory(POLICYID, policy);
-        return Ci.nsIContentPolicy.REJECT_REQUEST;
-      }
-      return Ci.nsIContentPolicy.ACCEPT;
-    },
+var policy = {
+  // nsISupports implementation
+  QueryInterface(iid) {
+    iid = SpecialPowers.wrap(iid);
+    if (iid.equals(Ci.nsISupports) ||
+        iid.equals(Ci.nsIFactory) ||
+        iid.equals(Ci.nsIContentPolicy))
+      return this;
 
-    shouldProcess(contentLocation, loadInfo, mimeTypeGuess) {
-      return Ci.nsIContentPolicy.ACCEPT;
+    throw SpecialPowers.Cr.NS_ERROR_NO_INTERFACE;
+  },
+
+  // nsIFactory implementation
+  createInstance(outer, iid) {
+    return this.QueryInterface(iid);
+  },
+
+  // nsIContentPolicy implementation
+  shouldLoad(contentLocation, loadInfo, mimeTypeGuess) {
+    let contentType = loadInfo.externalContentPolicyType;
+
+    // make sure we get the right amount of content policy calls
+    // e.g. about:blank also gets chrcked by content policies
+    if (contentLocation.asciiSpec === EXPECTED_URL) {
+      is(contentType, EXPECTED_CONTENT_TYPE,
+         "content policy type should TYPESUBDOCUMENT");
+      categoryManager.deleteCategoryEntry("content-policy", POLICYNAME, false);
+      componentManager.unregisterFactory(POLICYID, policy);
+      SimpleTest.finish();
+      return Ci.nsIContentPolicy.REJECT_REQUEST;
     }
-  };
+    return Ci.nsIContentPolicy.ACCEPT;
+  },
 
-  // Register content policy
-  var componentManager = Components.manager.QueryInterface(
-    Ci.nsIComponentRegistrar
-  );
-
-  componentManager.registerFactory(
-    POLICYID,
-    "Test content policy",
-    POLICYNAME,
-    policy
-  );
-  categoryManager.addCategoryEntry(
-    "content-policy",
-    POLICYNAME,
-    POLICYNAME,
-    false,
-    true
-  );
-
-  // Adding a new category dispatches an event to update
-  // caches, so we need to also dispatch an event to make
-  // sure we don't start the load until after that happens.
-  Services.tm.dispatchToMainThread(() => {
-    sendAsyncMessage("setupComplete");
-  });
+  shouldProcess(contentLocation, loadInfo, mimeTypeGuess) {
+    return Ci.nsIContentPolicy.ACCEPT;
+  }
 }
+policy = SpecialPowers.wrapCallbackObject(policy);
 
-add_task(async function() {
-  let chromeScript = SpecialPowers.loadChromeScript(createChromeScript);
-  await chromeScript.promiseOneMessage("setupComplete");
+// Register content policy
+var componentManager = SpecialPowers.wrap(SpecialPowers.Components).manager
+                                    .QueryInterface(Ci.nsIComponentRegistrar);
 
-  var testframe = document.getElementById("testframe");
-  testframe.src =
-      "file_contentpolicytype_targeted_link_iframe.sjs?testframe";
+componentManager.registerFactory(POLICYID, "Test content policy", POLICYNAME, policy);
+categoryManager.addCategoryEntry("content-policy", POLICYNAME, POLICYNAME, false, true);
 
-  let result = await chromeScript.promiseOneMessage("loadBlocked");
+// ----- END Content Policy implementation for the test
 
-  is(result.policyType, SpecialPowers.Ci.nsIContentPolicy.TYPE_SUBDOCUMENT,
-     "content policy type should TYPESUBDOCUMENT");
 
-  chromeScript.destroy();
-});
+// start the test
+SimpleTest.waitForExplicitFinish();
+var testframe = document.getElementById("testframe");
+testframe.src = TEST_FRAME_URL;
+
 </script>
 </body>
 </html>
