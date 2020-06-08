@@ -3991,12 +3991,9 @@ void PluginInstanceChild::Destroy() {
   ManagedPBrowserStreamChild(streams);
 
   // First make sure none of these streams become deleted
-  for (uint32_t i = 0; i < streams.Length();) {
-    if (static_cast<BrowserStreamChild*>(streams[i])->InstanceDying())
-      ++i;
-    else
-      streams.RemoveElementAt(i);
-  }
+  streams.RemoveElementsBy([](const auto& stream) {
+    return !static_cast<BrowserStreamChild*>(stream)->InstanceDying();
+  });
   for (uint32_t i = 0; i < streams.Length(); ++i)
     static_cast<BrowserStreamChild*>(streams[i])->FinishDelivery();
 

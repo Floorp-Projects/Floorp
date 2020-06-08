@@ -1541,21 +1541,17 @@ void DataChannelConnection::HandleOpenRequestMessage(
 void DataChannelConnection::DeliverQueuedData(uint16_t stream) {
   mLock.AssertCurrentThreadOwns();
 
-  uint32_t i = 0;
-  while (i < mQueuedData.Length()) {
-    // Careful! we may modify the array length from within the loop!
-    if (mQueuedData[i]->mStream == stream) {
+  mQueuedData.RemoveElementsBy([stream, this](const auto& dataItem) {
+    const bool match = dataItem->mStream == stream;
+    if (match) {
       DC_DEBUG(("Delivering queued data for stream %u, length %u", stream,
-                mQueuedData[i]->mLength));
+                dataItem->mLength));
       // Deliver the queued data
-      HandleDataMessage(mQueuedData[i]->mData, mQueuedData[i]->mLength,
-                        mQueuedData[i]->mPpid, mQueuedData[i]->mStream,
-                        mQueuedData[i]->mFlags);
-      mQueuedData.RemoveElementAt(i);
-      continue;  // don't bump index since we removed the element
+      HandleDataMessage(dataItem->mData, dataItem->mLength, dataItem->mPpid,
+                        dataItem->mStream, dataItem->mFlags);
     }
-    i++;
-  }
+    return match;
+  });
 }
 
 // Caller must ensure that length <= SIZE_MAX

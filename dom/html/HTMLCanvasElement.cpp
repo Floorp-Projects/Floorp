@@ -1331,15 +1331,9 @@ bool HTMLCanvasElement::IsFrameCaptureRequested() const {
 }
 
 void HTMLCanvasElement::ProcessDestroyedFrameListeners() {
-  // Loop backwards to allow removing elements in the loop.
-  for (int i = mRequestedFrameListeners.Length() - 1; i >= 0; --i) {
-    WeakPtr<FrameCaptureListener> listener = mRequestedFrameListeners[i];
-    if (!listener) {
-      // listener was destroyed. Remove it from the list.
-      mRequestedFrameListeners.RemoveElementAt(i);
-      continue;
-    }
-  }
+  // Remove destroyed listeners from the list.
+  mRequestedFrameListeners.RemoveElementsBy(
+      [](const auto& weakListener) { return !weakListener; });
 
   if (mRequestedFrameListeners.IsEmpty()) {
     mRequestedFrameRefreshObserver->Unregister();

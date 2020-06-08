@@ -1506,14 +1506,8 @@ void HyperTextAccessible::GetSelectionDOMRanges(SelectionType aSelectionType,
   NS_ENSURE_SUCCESS_VOID(rv);
 
   // Remove collapsed ranges
-  uint32_t numRanges = aRanges->Length();
-  for (uint32_t idx = 0; idx < numRanges; idx++) {
-    if ((*aRanges)[idx]->Collapsed()) {
-      aRanges->RemoveElementAt(idx);
-      --numRanges;
-      --idx;
-    }
-  }
+  aRanges->RemoveElementsBy(
+      [](const auto& range) { return range->Collapsed(); });
 }
 
 int32_t HyperTextAccessible::SelectionCount() {

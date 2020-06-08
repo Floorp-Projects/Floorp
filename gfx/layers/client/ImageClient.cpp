@@ -171,12 +171,9 @@ bool ImageClientSingle::UpdateImage(ImageContainer* aContainer,
   }
   mLastUpdateGenerationCounter = generationCounter;
 
-  for (int32_t i = images.Length() - 1; i >= 0; --i) {
-    if (!images[i].mImage->IsValid()) {
-      // Don't try to update to an invalid image.
-      images.RemoveElementAt(i);
-    }
-  }
+  // Don't try to update to invalid images.
+  images.RemoveElementsBy(
+      [](const auto& image) { return !image.mImage->IsValid(); });
   if (images.IsEmpty()) {
     // This can happen if a ClearAllImages raced with SetCurrentImages from
     // another thread and ClearImagesFromImageBridge ran after the

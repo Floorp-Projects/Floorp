@@ -848,11 +848,9 @@ void Context::CancelForCacheId(CacheId aCacheId) {
   NS_ASSERT_OWNINGTHREAD(Context);
 
   // Remove matching pending actions
-  for (int32_t i = mPendingActions.Length() - 1; i >= 0; --i) {
-    if (mPendingActions[i].mAction->MatchesCacheId(aCacheId)) {
-      mPendingActions.RemoveElementAt(i);
-    }
-  }
+  mPendingActions.RemoveElementsBy([aCacheId](const auto& pendingAction) {
+    return pendingAction.mAction->MatchesCacheId(aCacheId);
+  });
 
   // Cancel activities and let them remove themselves
   ActivityList::ForwardIterator iter(mActivityList);

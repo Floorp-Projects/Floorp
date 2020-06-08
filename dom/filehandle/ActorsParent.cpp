@@ -835,14 +835,10 @@ void FileHandleThreadPool::FinishFileHandle(FileHandle* aFileHandle) {
     mDirectoryInfos.Remove(directoryId);
 
     // See if we need to fire any complete callbacks.
-    uint32_t index = 0;
-    while (index < mCompleteCallbacks.Length()) {
-      if (MaybeFireCallback(mCompleteCallbacks[index].get())) {
-        mCompleteCallbacks.RemoveElementAt(index);
-      } else {
-        index++;
-      }
-    }
+    mCompleteCallbacks.RemoveElementsBy(
+        [this](const UniquePtr<StoragesCompleteCallback>& callback) {
+          return MaybeFireCallback(callback.get());
+        });
 
     if (mShutdownRequested && !mDirectoryInfos.Count()) {
       Cleanup();
