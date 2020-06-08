@@ -27,6 +27,9 @@ class VRGPUParent final : public PVRGPUParent {
   void Bind(Endpoint<PVRGPUParent>&& aEndpoint);
   mozilla::ipc::IPCResult RecvStartVRService();
   mozilla::ipc::IPCResult RecvStopVRService();
+  mozilla::ipc::IPCResult RecvPuppetReset();
+  mozilla::ipc::IPCResult RecvPuppetSubmit(const nsTArray<uint64_t>& aBuffer);
+  mozilla::ipc::IPCResult RecvPuppetCheckForCompletion();
 
  private:
   explicit VRGPUParent(ProcessId aChildProcessId);

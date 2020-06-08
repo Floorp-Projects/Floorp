@@ -6,12 +6,18 @@
 namespace mozilla {
 namespace gfx {
 
-// IPC for VR-Content process
+// The parent process is the VR process.
+// The child process is the GPU process.
 async protocol PVRGPU
 {
 parent:
   async StartVRService();
   async StopVRService();
+  async PuppetSubmit(uint64_t[] aBuffer);
+  async PuppetReset();
+  async PuppetCheckForCompletion();
+child:
+  async NotifyPuppetComplete();
 };
 
 } // gfx

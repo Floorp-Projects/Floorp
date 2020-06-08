@@ -362,6 +362,7 @@ NS_IMPL_RELEASE_INHERITED(VRMockController, DOMEventTargetHelper)
 VRMockController::VRMockController(VRServiceTest* aVRServiceTest,
                                    uint32_t aControllerIdx)
     : DOMEventTargetHelper(aVRServiceTest->GetOwner()),
+      mVRServiceTest(aVRServiceTest),
       mControllerIdx(aControllerIdx) {
   MOZ_ASSERT(aControllerIdx < kVRControllerMaxCount);
 }
