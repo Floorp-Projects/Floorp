@@ -43,7 +43,7 @@ def _get_command(klass=Perftest):
         topdir = config.topobjdir
         cwd = os.getcwd()
         settings = {}
-        log_manager = {}
+        log_manager = mock.Mock()
         state_dir = tempfile.mkdtemp()
 
     try:
@@ -56,7 +56,7 @@ def _get_command(klass=Perftest):
 @mock.patch("mozperftest.mach_commands.MachCommandBase._activate_virtualenv")
 def test_command(mocked_func):
     with _get_command() as test, silence(test):
-        test.run_perftest(tests=[EXAMPLE_TESTS_DIR], flavor="script")
+        test.run_perftest(tests=[EXAMPLE_TESTS_DIR], flavor="desktop-browser")
         # XXX add assertions
 
 
@@ -67,7 +67,7 @@ def test_push_command(push_to_try, venv):
     with _get_command() as test, silence(test):
         test.run_perftest(
             tests=[EXAMPLE_TESTS_DIR],
-            flavor="script",
+            flavor="desktop-browser",
             push_to_try=True,
             try_platform="g5",
         )

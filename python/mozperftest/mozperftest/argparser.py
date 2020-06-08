@@ -19,7 +19,7 @@ from mozperftest.system import get_layers as system_layers  # noqa
 from mozperftest.test import get_layers as test_layers  # noqa
 from mozperftest.metrics import get_layers as metrics_layers  # noqa
 
-FLAVORS = ["script", "doc"]
+FLAVORS = ["desktop-browser", "mobile-browser", "doc"]
 
 
 class Options:
@@ -28,7 +28,7 @@ class Options:
         "--flavor": {
             "choices": FLAVORS,
             "metavar": "{{{}}}".format(", ".join(FLAVORS)),
-            "default": "script",
+            "default": "desktop-browser",
             "help": "Only run tests of this flavor.",
         },
         "tests": {

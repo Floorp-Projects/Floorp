@@ -27,6 +27,7 @@ import json
 import os
 import shutil
 import sys
+import logging
 
 
 HERE = os.path.dirname(__file__)
@@ -100,6 +101,9 @@ def run_tests(mach_cmd, **kwargs):
     kwargs["tests"], tmp_dir = build_test_list(
         kwargs["tests"], randomized=flavor != "doc"
     )
+    verbose = kwargs.get("verbose", False)
+    log_level = logging.DEBUG if verbose else logging.INFO
+    mach_cmd.log_manager.add_terminal_logging(level=log_level)
 
     try:
         if flavor == "doc":
@@ -138,11 +142,13 @@ def main(argv=sys.argv[1:]):
     from mozbuild.base import MachCommandBase, MozbuildObject
     from mozperftest import PerftestArgumentParser
     from mozboot.util import get_state_dir
+    from mach.logging import LoggingManager
 
     config = MozbuildObject.from_environment()
     config.topdir = config.topsrcdir
     config.cwd = os.getcwd()
     config.state_dir = get_state_dir()
+    config.log_manager = LoggingManager()
     mach_cmd = MachCommandBase(config)
     parser = PerftestArgumentParser(description="vanilla perftest")
     args = parser.parse_args(args=argv)

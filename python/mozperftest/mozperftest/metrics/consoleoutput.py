@@ -37,7 +37,7 @@ class ConsoleOutput(Layer):
         },
     }
 
-    def __call__(self, metadata):
+    def run(self, metadata):
         # Get filtered metrics
         results = filtered_metrics(
             metadata,

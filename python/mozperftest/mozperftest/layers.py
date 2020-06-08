@@ -1,7 +1,12 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
+import traceback
 from mozperftest.utils import MachLogger
+
+
+class StopRunError(Exception):
+    pass
 
 
 class Layer(MachLogger):
@@ -13,6 +18,9 @@ class Layer(MachLogger):
 
     # list of arguments grabbed by PerftestArgumentParser
     arguments = {}
+
+    # If true, calls on_exception() on errors
+    user_exception = False
 
     def __init__(self, env, mach_command):
         MachLogger.__init__(self, mach_command)
@@ -44,21 +52,41 @@ class Layer(MachLogger):
         return self.env.get_arg(name, default, self)
 
     def __enter__(self):
+        self.debug("Running %s:setup" % self.name)
         self.setup()
         return self
 
     def __exit__(self, type, value, traceback):
         # XXX deal with errors here
+        self.debug("Running %s:teardown" % self.name)
         self.teardown()
 
     def __call__(self, metadata):
-        pass
+        has_exc_handler = self.env.has_hook("on_exception")
+        self.debug("Running %s:run" % self.name)
+        try:
+            metadata = self.run(metadata)
+        except Exception as e:
+            if self.user_exception and has_exc_handler:
+                self.error("User handled error")
+                for line in traceback.format_exc().splitlines():
+                    self.error(line)
+                resume_run = self.env.run_hook("on_exception", self, e)
+                if resume_run:
+                    return metadata
+                raise StopRunError()
+            else:
+                raise
+        return metadata
 
     def setup(self):
         pass
 
     def teardown(self):
         pass
+
+    def run(self, metadata):
+        return metadata
 
 
 class Layers(Layer):
@@ -115,10 +143,12 @@ class Layers(Layer):
 
     def setup(self):
         for layer in self.layers:
+            self.debug("Running %s:setup" % layer.name)
             layer.setup()
 
     def teardown(self):
         for layer in self.layers:
+            self.debug("Running %s:teardown" % layer.name)
             layer.teardown()
 
     def __call__(self, metadata):

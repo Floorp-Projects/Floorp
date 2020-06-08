@@ -33,11 +33,14 @@ class Notebook(Layer):
         "analyze-strings": {
             "action": "store_true",
             "default": False,
-            "help": "If set, strings won't be filtered out of the results to analyze in Iodide.",
+            "help": (
+                "If set, strings won't be filtered out of the results to"
+                " analyze in Iodide."
+            ),
         },
     }
 
-    def __call__(self, metadata):
+    def run(self, metadata):
         # Get filtered metrics
         results = filtered_metrics(
             metadata,

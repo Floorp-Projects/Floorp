@@ -30,7 +30,7 @@ class Profile(Layer):
     def _cleanup(self):
         pass
 
-    def __call__(self, metadata):
+    def run(self, metadata):
         if self.get_arg("directory") is not None:
             # no need to create one or load a conditioned one
             return
