@@ -89,6 +89,14 @@ class LoadInfo final : public nsILoadInfo {
            nsContentPolicyType aContentPolicyType,
            nsSecurityFlags aSecurityFlags, uint32_t aSandboxFlags);
 
+  // Compute a list of ancestor principals and outer windowIDs.
+  // See methods AncestorPrincipals and AncestorOuterWindowIDs
+  // in nsILoadInfo.idl for details.
+  static void ComputeAncestors(
+      dom::CanonicalBrowsingContext* aBC,
+      nsTArray<nsCOMPtr<nsIPrincipal>>& aAncestorPrincipals,
+      nsTArray<uint64_t>& aOuterWindowIDs);
+
   // create an exact copy of the loadinfo
   already_AddRefed<nsILoadInfo> Clone() const;
 

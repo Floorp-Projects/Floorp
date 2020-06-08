@@ -28,6 +28,8 @@
 #include "mozilla/dom/nsCSPUtils.h"
 #include "mozilla/dom/nsCSPContext.h"
 #include "mozilla/dom/BrowsingContext.h"
+#include "mozilla/dom/CanonicalBrowsingContext.h"
+#include "mozilla/dom/WindowGlobalParent.h"
 
 namespace mozilla {
 
@@ -452,14 +454,6 @@ nsresult LoadInfoToLoadInfoArgs(nsILoadInfo* aLoadInfo,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  nsTArray<PrincipalInfo> ancestorPrincipals;
-  ancestorPrincipals.SetCapacity(aLoadInfo->AncestorPrincipals().Length());
-  for (const auto& principal : aLoadInfo->AncestorPrincipals()) {
-    rv =
-        PrincipalToPrincipalInfo(principal, ancestorPrincipals.AppendElement());
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
   Maybe<IPCClientInfo> ipcClientInfo;
   const Maybe<ClientInfo>& clientInfo = aLoadInfo->GetClientInfo();
   if (clientInfo.isSome()) {
@@ -532,10 +526,10 @@ nsresult LoadInfoToLoadInfoArgs(nsILoadInfo* aLoadInfo,
       aLoadInfo->GetIsThirdPartyContextToTopWindow(),
       aLoadInfo->GetIsFormSubmission(), aLoadInfo->GetSendCSPViolationEvents(),
       aLoadInfo->GetOriginAttributes(), redirectChainIncludingInternalRedirects,
-      redirectChain, ancestorPrincipals, aLoadInfo->AncestorOuterWindowIDs(),
-      ipcClientInfo, ipcReservedClientInfo, ipcInitialClientInfo, ipcController,
-      aLoadInfo->CorsUnsafeHeaders(), aLoadInfo->GetForcePreflight(),
-      aLoadInfo->GetIsPreflight(), aLoadInfo->GetLoadTriggeredFromExternal(),
+      redirectChain, {}, {}, ipcClientInfo, ipcReservedClientInfo,
+      ipcInitialClientInfo, ipcController, aLoadInfo->CorsUnsafeHeaders(),
+      aLoadInfo->GetForcePreflight(), aLoadInfo->GetIsPreflight(),
+      aLoadInfo->GetLoadTriggeredFromExternal(),
       aLoadInfo->GetServiceWorkerTaintingSynthesized(),
       aLoadInfo->GetDocumentHasUserInteracted(),
       aLoadInfo->GetDocumentHasLoaded(),
@@ -670,14 +664,19 @@ nsresult LoadInfoArgsToLoadInfo(
   }
 
   nsTArray<nsCOMPtr<nsIPrincipal>> ancestorPrincipals;
-  ancestorPrincipals.SetCapacity(loadInfoArgs.ancestorPrincipals().Length());
-  for (const PrincipalInfo& principalInfo : loadInfoArgs.ancestorPrincipals()) {
-    auto ancestorPrincipalOrErr = PrincipalInfoToPrincipal(principalInfo);
-    if (NS_WARN_IF(ancestorPrincipalOrErr.isErr())) {
-      return ancestorPrincipalOrErr.unwrapErr();
+  nsTArray<uint64_t> ancestorOuterWindowIDs;
+  if (XRE_IsParentProcess() &&
+      (nsContentUtils::InternalContentPolicyTypeToExternal(
+           loadInfoArgs.contentPolicyType()) !=
+       nsIContentPolicy::TYPE_DOCUMENT)) {
+    // Only fill out ancestor principals and outer window IDs when we
+    // are deserializing LoadInfoArgs to be LoadInfo for a subresource
+    RefPtr<BrowsingContext> parentBC =
+        BrowsingContext::Get(loadInfoArgs.browsingContextID());
+    if (parentBC) {
+      LoadInfo::ComputeAncestors(parentBC->Canonical(), ancestorPrincipals,
+                                 ancestorOuterWindowIDs);
     }
-    nsCOMPtr<nsIPrincipal> ancestorPrincipal = ancestorPrincipalOrErr.unwrap();
-    ancestorPrincipals.AppendElement(ancestorPrincipal.forget());
   }
 
   Maybe<ClientInfo> clientInfo;
@@ -757,10 +756,9 @@ nsresult LoadInfoArgsToLoadInfo(
       loadInfoArgs.isThirdPartyContextToTopWindow(),
       loadInfoArgs.isFormSubmission(), loadInfoArgs.sendCSPViolationEvents(),
       loadInfoArgs.originAttributes(), redirectChainIncludingInternalRedirects,
-      redirectChain, std::move(ancestorPrincipals),
-      loadInfoArgs.ancestorOuterWindowIDs(), loadInfoArgs.corsUnsafeHeaders(),
-      loadInfoArgs.forcePreflight(), loadInfoArgs.isPreflight(),
-      loadInfoArgs.loadTriggeredFromExternal(),
+      redirectChain, std::move(ancestorPrincipals), ancestorOuterWindowIDs,
+      loadInfoArgs.corsUnsafeHeaders(), loadInfoArgs.forcePreflight(),
+      loadInfoArgs.isPreflight(), loadInfoArgs.loadTriggeredFromExternal(),
       loadInfoArgs.serviceWorkerTaintingSynthesized(),
       loadInfoArgs.documentHasUserInteracted(),
       loadInfoArgs.documentHasLoaded(),
