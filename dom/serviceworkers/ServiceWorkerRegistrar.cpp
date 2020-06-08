@@ -16,6 +16,7 @@
 #include "nsIOutputStream.h"
 #include "nsISafeOutputStream.h"
 #include "nsIServiceWorkerManager.h"
+#include "nsIWritablePropertyBag2.h"
 
 #include "MainThreadUtils.h"
 #include "mozilla/ClearOnShutdown.h"
@@ -26,6 +27,8 @@
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/ipc/PBackgroundChild.h"
 #include "mozilla/ModuleUtils.h"
+#include "mozilla/Result.h"
+#include "mozilla/ResultExtensions.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPtr.h"
 #include "mozJSComponentLoader.h"
@@ -1192,7 +1195,20 @@ ServiceWorkerRegistrar::GetName(nsAString& aName) {
 }
 
 NS_IMETHODIMP
-ServiceWorkerRegistrar::GetState(nsIPropertyBag**) { return NS_OK; }
+ServiceWorkerRegistrar::GetState(nsIPropertyBag** aBagOut) {
+  nsCOMPtr<nsIWritablePropertyBag2> propertyBag =
+      do_CreateInstance("@mozilla.org/hash-property-bag;1");
+
+  MOZ_TRY(propertyBag->SetPropertyAsBool(NS_LITERAL_STRING("shuttingDown"),
+                                         mShuttingDown));
+
+  MOZ_TRY(propertyBag->SetPropertyAsBool(
+      NS_LITERAL_STRING("saveDataRunnableDispatched"), mRunnableDispatched));
+
+  propertyBag.forget(aBagOut);
+
+  return NS_OK;
+}
 
 #define RELEASE_ASSERT_SUCCEEDED(rv, name)                                    \
   do {                                                                        \
