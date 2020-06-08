@@ -21,8 +21,8 @@ are organized in three categories:
 
 - **system**: anything that sets up and tears down some resources or services
   on the system. Existing system layers: **android**, **proxy**
-- **browser**: layers that are in charge of starting the browser and executing
-  a test in it to collect metrics. Existing browser layers: **browsertime**
+- **test**: layers that are in charge of running a test to collect metrics.
+  Existing test layers: **browsertime** and **androidlog**
 - **metrics**: all layers that process the metrics to turn them into usable
   metrics. Existing system layers: **perfherder** and **console**
 
@@ -36,7 +36,8 @@ and that is completely independant from other layers (besides sharing the data
 through the common environment.)
 
 For instance, we could use `perftest` to run a C++ benchmark by implementing a
-new layer that replaces the browsertime layer.
+new **test** layer.
+
 
 Layer
 -----
@@ -48,9 +49,10 @@ List of methods and variables:
 
 - `name`: name of the layer (class variable, mandatory)
 - `activated`: boolean to activate by default the layer (class variable, False)
+- `user_exception`: will trigger the `on_exception` hook when an exception occurs
 - `arguments`: dict containing arguments. Each argument is following
   the `argparser` standard
-- `__call__(self, medatata)`: called to execute the layer
+- `run(self, medatata)`: called to execute the layer
 - `setup(self)`: called when the layer is about to be executed
 - `teardown(self)`: called when the layer is exiting
 
@@ -85,7 +87,7 @@ of layers for each category:
 
 - **mozperftest.metrics.pick_metrics** for the metrics category
 - **mozperftest.system.pick_system** for the system category
-- **mozperftest.browser.pick_browser** for the browser category
+- **mozperftest.test.pick_browser** for the test category
 
 And also added in each `get_layers` function in each of those category.
 The `get_layers` functions are invoked when building the argument parser.
@@ -100,7 +102,7 @@ Important layers
 ----------------
 
 **mozperftest** can be used to run performance tests against browsers using the
-**browsertime** layer. It leverages the `browsertime.js
+**browsertime** test layer. It leverages the `browsertime.js
 <https://www.sitespeed.io/documentation/browsertime/>`_ framework and provides
 a full integration into Mozilla's build and CI systems.
 

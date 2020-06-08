@@ -9,6 +9,7 @@ import pytest
 
 from mozperftest.environment import MachEnvironment
 from mozperftest.tests.support import get_running_env, requests_content
+from mozperftest.layers import Layer
 
 
 HERE = Path(__file__).parent.resolve()
@@ -52,14 +53,10 @@ class FailureException(Exception):
     pass
 
 
-class Failure:
-    def __enter__(self):
-        return self
+class Failure(Layer):
+    user_exception = True
 
-    def __exit__(self, *args, **kw):
-        pass
-
-    def __call__(self, *args, **kw):
+    def run(self, metadata):
         raise FailureException()
 
 
@@ -85,7 +82,7 @@ def test_exception_return():
     hooks = str(Path(HERE, "data", "hook.py"))
     mach, metadata, env = get_running_env(hooks=hooks)
     last_layer = create_mock()
-    env.layers = [create_mock(), Failure(), last_layer]
+    env.layers = [create_mock(), Failure(env, mach), last_layer]
     with env:
         env.run(metadata)
     last_layer.assert_not_called()
@@ -96,10 +93,24 @@ def test_exception_resume():
     hooks = str(Path(HERE, "data", "hook_resume.py"))
     mach, metadata, env = get_running_env(hooks=hooks)
     last_layer = create_mock()
-    env.layers = [create_mock(), Failure(), last_layer]
+    env.layers = [create_mock(), Failure(env, mach), last_layer]
     with env:
         env.run(metadata)
     last_layer.assert_called()
+
+
+def test_exception_no_user_exception():
+    # the last layer is called, the error is raised
+    # because user_exception = False
+    hooks = str(Path(HERE, "data", "hook_resume.py"))
+    mach, metadata, env = get_running_env(hooks=hooks)
+    last_layer = create_mock()
+    f = Failure(env, mach)
+    f.user_exception = False
+    env.layers = [create_mock(), f, last_layer]
+    with env, pytest.raises(FailureException):
+        env.run(metadata)
+    last_layer._call__.assert_not_called()
 
 
 def test_exception_raised():
@@ -107,7 +118,7 @@ def test_exception_raised():
     hooks = str(Path(HERE, "data", "hook_raises.py"))
     mach, metadata, env = get_running_env(hooks=hooks)
     last_layer = create_mock()
-    env.layers = [create_mock(), Failure(), last_layer]
+    env.layers = [create_mock(), Failure(env, mach), last_layer]
     with env, pytest.raises(FailureException):
         env.run(metadata)
     last_layer.__call__.assert_not_called()

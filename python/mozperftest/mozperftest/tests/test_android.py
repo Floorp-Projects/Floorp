@@ -24,6 +24,7 @@ class FakeDevice:
 @mock.patch("mozperftest.system.android.ADBLoggedDevice", new=FakeDevice)
 def test_android():
     args = {
+        "flavor": "mobile-browser",
         "android-install-apk": ["this.apk"],
         "android": True,
         "android-timeout": 30,
@@ -40,8 +41,10 @@ def test_android():
 def test_android_failure():
     # no patching so it'll try for real and fail
     args = {
+        "flavor": "mobile-browser",
         "android-install-apk": ["this"],
         "android": True,
+        "android-timeout": 120,
         "android-app-name": "org.mozilla.fenix",
         "android-capture-adb": "stdout",
     }
@@ -56,6 +59,7 @@ def test_android_failure():
 @mock.patch("mozperftest.system.android.ADBLoggedDevice")
 def test_android_apk_alias(device):
     args = {
+        "flavor": "mobile-browser",
         "android-install-apk": ["fenix_fennec_nightly_armeabi_v7a"],
         "android": True,
         "android-app-name": "org.mozilla.fenned_aurora",
@@ -74,6 +78,7 @@ def test_android_apk_alias(device):
 @mock.patch("mozperftest.system.android.ADBLoggedDevice")
 def test_android_timeout(device):
     args = {
+        "flavor": "mobile-browser",
         "android-install-apk": ["gve_nightly_api16"],
         "android": True,
         "android-timeout": 60,
@@ -93,6 +98,7 @@ def test_android_timeout(device):
 def test_android_log_adb():
     with temp_file() as log_adb:
         args = {
+            "flavor": "mobile-browser",
             "android-install-apk": ["gve_nightly_api16"],
             "android": True,
             "android-timeout": 60,
@@ -113,6 +119,7 @@ def test_android_log_adb():
 def test_android_log_cat(device):
     with temp_file() as log_cat:
         args = {
+            "flavor": "mobile-browser",
             "android-install-apk": ["gve_nightly_api16"],
             "android": True,
             "android-timeout": 60,

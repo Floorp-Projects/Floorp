@@ -55,6 +55,7 @@ class BrowsertimeRunner(NodeRunner):
 
     name = "browsertime"
     activated = True
+    user_exception = True
 
     arguments = {
         "cycles": {"type": int, "default": 1, "help": "Number of full cycles"},
@@ -277,7 +278,7 @@ class BrowsertimeRunner(NodeRunner):
 
         return args_list
 
-    def __call__(self, metadata):
+    def run(self, metadata):
         self.setup()
         cycles = self.get_arg("cycles", 1)
         for cycle in range(1, cycles + 1):
