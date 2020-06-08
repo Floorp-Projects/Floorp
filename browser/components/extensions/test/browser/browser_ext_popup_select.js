@@ -114,7 +114,3 @@ add_task(async function testPopupSelectPopup() {
   BrowserTestUtils.removeTab(tab);
   await extension.unload();
 });
-
-add_task(async function testTeardown() {
-  Services.prefs.clearUserPref("toolkit.cosmeticAnimations.enabled");
-});
