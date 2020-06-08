@@ -5,7 +5,6 @@
 
 #include "nsISupports.idl"
 
-interface mozIStorageAggregateFunction;
 interface mozIStorageCompletionCallback;
 interface mozIStorageFunction;
 interface mozIStorageProgressHandler;
@@ -272,24 +271,7 @@ interface mozIStorageAsyncConnection : nsISupports {
                       in mozIStorageFunction aFunction);
 
   /**
-   * Create a new SQL aggregate function.  If you use your connection on
-   * multiple threads, your function needs to be threadsafe, or it should only
-   * be called on one thread.
-   *
-   * @param aFunctionName
-   *        The name of aggregate function to create, as seen in SQL.
-   * @param aNumArguments
-   *        The number of arguments the function takes. Pass -1 for
-   *        variable-argument functions.
-   * @param aFunction
-   *        The instance of mozIStorageAggreagteFunction, which implements the
-   *        function in question.
-   */
-  void createAggregateFunction(in AUTF8String aFunctionName,
-                               in long aNumArguments,
-                               in mozIStorageAggregateFunction aFunction);
-  /**
-   * Delete custom SQL function (simple or aggregate one).
+   * Delete custom SQL function.
    *
    * @param aFunctionName
    *        The name of function to remove.

@@ -594,7 +594,7 @@ add_task(async function test_memory_clone_fails() {
 add_task(async function test_clone_copies_functions() {
   const FUNC_NAME = "test_func";
   let calls = ["openDatabase", "openUnsharedDatabase"];
-  let functionMethods = ["createFunction", "createAggregateFunction"];
+  let functionMethods = ["createFunction"];
   calls.forEach(function(methodName) {
     [true, false].forEach(function(readOnly) {
       functionMethods.forEach(function(functionMethod) {
@@ -636,7 +636,7 @@ add_task(async function test_clone_copies_overridden_functions() {
   };
 
   let calls = ["openDatabase", "openUnsharedDatabase"];
-  let functionMethods = ["createFunction", "createAggregateFunction"];
+  let functionMethods = ["createFunction"];
   calls.forEach(function(methodName) {
     [true, false].forEach(function(readOnly) {
       functionMethods.forEach(function(functionMethod) {
