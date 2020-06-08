@@ -222,6 +222,50 @@ void ContentMediaAgent::UpdateMetadata(
   }
 }
 
+void ContentMediaAgent::EnableAction(uint64_t aBrowsingContextId,
+                                     MediaSessionAction aAction) {
+  RefPtr<BrowsingContext> bc = BrowsingContext::Get(aBrowsingContextId);
+  if (!bc || bc->IsDiscarded()) {
+    return;
+  }
+
+  LOG("Notify to enable action '%s' in BC %" PRId64,
+      ToMediaSessionActionStr(aAction), bc->Id());
+  if (XRE_IsContentProcess()) {
+    ContentChild* contentChild = ContentChild::GetSingleton();
+    Unused << contentChild->SendNotifyMediaSessionSupportedActionChanged(
+        bc, aAction, true);
+    return;
+  }
+  // This would only happen when we disable e10s.
+  if (RefPtr<IMediaInfoUpdater> updater =
+          bc->Canonical()->GetMediaController()) {
+    updater->EnableAction(bc->Id(), aAction);
+  }
+}
+
+void ContentMediaAgent::DisableAction(uint64_t aBrowsingContextId,
+                                      MediaSessionAction aAction) {
+  RefPtr<BrowsingContext> bc = BrowsingContext::Get(aBrowsingContextId);
+  if (!bc || bc->IsDiscarded()) {
+    return;
+  }
+
+  LOG("Notify to disable action '%s' in BC %" PRId64,
+      ToMediaSessionActionStr(aAction), bc->Id());
+  if (XRE_IsContentProcess()) {
+    ContentChild* contentChild = ContentChild::GetSingleton();
+    Unused << contentChild->SendNotifyMediaSessionSupportedActionChanged(
+        bc, aAction, false);
+    return;
+  }
+  // This would only happen when we disable e10s.
+  if (RefPtr<IMediaInfoUpdater> updater =
+          bc->Canonical()->GetMediaController()) {
+    updater->DisableAction(bc->Id(), aAction);
+  }
+}
+
 ContentMediaController::ContentMediaController(uint64_t aId)
     : mTopLevelBrowsingContextId(aId) {}
 

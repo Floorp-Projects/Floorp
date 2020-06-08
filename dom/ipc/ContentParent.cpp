@@ -6095,7 +6095,9 @@ mozilla::ipc::IPCResult ContentParent::RecvNotifyMediaSessionUpdated(
 
   RefPtr<IMediaInfoUpdater> updater =
       aContext.get_canonical()->GetMediaController();
-  MOZ_ASSERT(updater);
+  if (!updater) {
+    return IPC_OK();
+  }
   if (aIsCreated) {
     updater->NotifySessionCreated(aContext->Id());
   } else {
@@ -6127,6 +6129,26 @@ ContentParent::RecvNotifyMediaSessionPlaybackStateChanged(
   if (RefPtr<IMediaInfoUpdater> updater =
           aContext.get_canonical()->GetMediaController()) {
     updater->SetDeclaredPlaybackState(aContext.ContextId(), aPlaybackState);
+  }
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+ContentParent::RecvNotifyMediaSessionSupportedActionChanged(
+    const MaybeDiscarded<BrowsingContext>& aContext, MediaSessionAction aAction,
+    bool aEnabled) {
+  if (aContext.IsNullOrDiscarded()) {
+    return IPC_OK();
+  }
+  RefPtr<IMediaInfoUpdater> updater =
+      aContext.get_canonical()->GetMediaController();
+  if (!updater) {
+    return IPC_OK();
+  }
+  if (aEnabled) {
+    updater->EnableAction(aContext.ContextId(), aAction);
+  } else {
+    updater->DisableAction(aContext.ContextId(), aAction);
   }
   return IPC_OK();
 }
