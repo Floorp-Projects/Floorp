@@ -75,7 +75,7 @@ var categoryManager = Cc["@mozilla.org/categorymanager;1"].getService(Ci.nsICate
 categoryManager.addCategoryEntry("content-policy", policyName, policyName, false, true);
 
 // Try creating different request types
-var tests = ["SCRIPT", "IMAGE", "STYLESHEET", "OBJECT", "XMLHTTPREQUEST"];
+var tests = ["SCRIPT", "IMAGE", "STYLESHEET", "OBJECT", "DOCUMENT", "SUBDOCUMENT", "XMLHTTPREQUEST"];
 var curTest = -1;
 var div;
 
@@ -145,6 +145,26 @@ function request_object() {
   var object = document.createElement("embed");
   object.setAttribute("src", testURL);
   content.appendChild(object);
+}
+
+function request_document() {
+  // GeckoView shows an error page for CSP errors, which breaks this test, so just skip in that case.
+  try {
+    if (!SpecialPowers.Cc["@mozilla.org/android/bridge;1"].getService(SpecialPowers.Ci.nsIAndroidBridge).isFennec) {
+      lastContentType = Ci.nsIContentPolicy.TYPE_DOCUMENT;
+      return;
+    }
+  } catch (e){}
+
+  top.location.href = testURL;
+}
+
+function request_subdocument() {
+  var content = $("content");
+
+  var frame = document.createElement("iframe");
+  frame.setAttribute("src", testURL);
+  content.appendChild(frame);
 }
 
 function request_xmlhttprequest() {
