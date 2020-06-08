@@ -398,7 +398,17 @@ ReturnType ClientWebGLContext::Run(Args&&... aArgs) const {
 
 // ------------------------- Composition, etc -------------------------
 
-void ClientWebGLContext::OnBeforePaintTransaction() { Present(); }
+void ClientWebGLContext::OnBeforePaintTransaction() {
+  const RefPtr<layers::ImageBridgeChild> imageBridge =
+      layers::ImageBridgeChild::GetSingleton();
+
+  auto texType = layers::TextureType::Unknown;
+  if (imageBridge) {
+    texType = layers::PreferredCanvasTextureType(*imageBridge);
+  }
+
+  Present(nullptr, texType);
+}
 
 void ClientWebGLContext::EndComposition() {
   // Mark ourselves as no longer invalidated.
@@ -407,43 +417,18 @@ void ClientWebGLContext::EndComposition() {
 
 // -
 
-namespace webgl {
-
-void Present(ClientWebGLContext& webgl) { webgl.Present(); }
-
-Maybe<layers::SurfaceDescriptor> GetFrontBuffer(
-    ClientWebGLContext& webgl, layers::KnowsCompositor* const kc) {
-  auto texType = layers::TextureType::Unknown;
-  if (kc) {
-    texType = layers::PreferredCanvasTextureType(*kc);
-  }
-  return webgl.GetFrontBuffer(texType);
-}
-
-}  // namespace webgl
-
-// -
-
-void ClientWebGLContext::Present() {
+void ClientWebGLContext::Present(WebGLFramebufferJS* const fb,
+                                 const layers::TextureType type) {
   if (!mIsCanvasDirty) return;
   mIsCanvasDirty = false;
-  mFrontBufferDesc = nullptr;
   mFrontBufferSnapshot = nullptr;
 
-  Run<RPROC(Present)>();
+  Run<RPROC(Present)>(fb ? fb->mId : 0, type);
 }
 
 Maybe<layers::SurfaceDescriptor> ClientWebGLContext::GetFrontBuffer(
-    const layers::TextureType type) {
-  if (!mFrontBufferDesc) {
-    const auto desc = Run<RPROC(GetFrontBuffer)>(type);
-    if (desc) {
-      mFrontBufferDesc = MakeUnique<layers::SurfaceDescriptor>(*desc);
-    }
-  }
-
-  if (!mFrontBufferDesc) return Nothing();
-  return Some(*mFrontBufferDesc);
+    WebGLFramebufferJS* const fb, const layers::TextureType type) {
+  return Run<RPROC(GetFrontBuffer)>(fb ? fb->mId : 0, type);
 }
 
 // -
@@ -620,9 +605,6 @@ ClientWebGLContext::SetDimensions(const int32_t signedWidth,
     }
     if (size == curSize) return NS_OK;  // MUST skip no-op resize
 
-    if (mIsCanvasDirty) {
-      Present();
-    }
     state.mDrawingBufferSize = Nothing();
     Run<RPROC(Resize)>(size);
 

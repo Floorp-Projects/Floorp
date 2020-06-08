@@ -10,6 +10,7 @@
 
 #include "mozilla/WeakPtr.h"
 
+#include "GLScreenBuffer.h"
 #include "WebGLObjectModel.h"
 #include "WebGLStrongTypes.h"
 #include "WebGLTexture.h"
@@ -138,6 +139,7 @@ class WebGLFramebuffer final : public WebGLContextBoundObject,
   const GLuint mGLName;
   bool mHasBeenBound = false;
   const UniquePtr<gl::MozFramebuffer> mOpaque;
+  gl::SwapChain mOpaqueSwapChain;
   bool mInOpaqueRAF = false;
 
  private:
