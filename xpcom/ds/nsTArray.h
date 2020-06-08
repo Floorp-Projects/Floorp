@@ -1787,12 +1787,15 @@ class nsTArray_Impl
   // A variation on the RemoveElementsAt method defined above.
   void RemoveElementAt(index_type aIndex) { RemoveElementsAt(aIndex, 1); }
 
-  // A variation on the RemoveElementAt that removes the last element.
-  void RemoveLastElement() {
+  // A variation on RemoveElementAt that removes the last element.
+  void RemoveLastElement() { RemoveLastElements(1); }
+
+  // A variation on RemoveElementsAt that removes the last 'aCount' elements.
+  void RemoveLastElements(const size_type aCount) {
     // This assertion is redundant, but produces a better error message than the
     // release assertion within TruncateLength.
-    MOZ_ASSERT(!base_type::IsEmpty());
-    TruncateLength(Length() - 1);
+    MOZ_ASSERT(aCount <= Length());
+    TruncateLength(Length() - aCount);
   }
 
   // Removes the last element of the array and returns a copy of it.
