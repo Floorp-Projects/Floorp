@@ -804,15 +804,21 @@ class MOZ_STACK_CLASS WSRunObject final : public WSRunScanner {
   MOZ_CAN_RUN_SCRIPT nsresult PrepareToSplitAcrossBlocksPriv();
 
   /**
-   * ReplaceASCIIWhitespacesWithOneNBSP() replaces all adjuscent ASCII
-   * whitespaces which includes aPointAtASCIIWitespace with an NBSP. Then, if
-   * Note that this may remove ASCII whitespaces which are not in container of
-   * aPointAtASCIIWhitespace.
+   * ReplaceASCIIWhitespacesWithOneNBSP() replaces the range between
+   * aAtFirstASCIIWhitespace and aEndOfCollapsibleASCIIWhitespace with
+   * one NBSP char.  If they span multiple text nodes, this puts an NBSP
+   * into the text node at aAtFirstASCIIWhitespace.  Then, removes other
+   * ASCII whitespaces in the following text nodes.
+   * Note that this assumes that all characters in the range is ASCII
+   * whitespaces.
    *
-   * @param aPointAtASCIIWhitespace     Point of an ASCII whitespace.
+   * @param aAtFirstASCIIWhitespace             First ASCII whitespace position.
+   * @param aEndOfCollapsibleASCIIWhitespaces   The position after last ASCII
+   *                                            whitespace.
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult ReplaceASCIIWhitespacesWithOneNBSP(
-      const EditorDOMPointInText& aPointAtASCIIWhitespace);
+      const EditorDOMPointInText& aAtFirstASCIIWhitespace,
+      const EditorDOMPointInText& aEndOfCollapsibleASCIIWhitespaces);
 
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
   NormalizeWhitespacesAtEndOf(const WSFragment& aRun);
