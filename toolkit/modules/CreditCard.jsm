@@ -212,8 +212,32 @@ class CreditCard {
   }
 
   /**
-   * Get credit card display label. It should display masked numbers and the
-   * cardholder's name, separated by a comma.
+   * Get credit card display label. It should display masked numbers, the
+   * cardholder's name, and the expiration date, separated by a commas.
+   */
+  static getLabelInfo({ number, name, month, year }) {
+    let formatSelector = ["number"];
+    if (name) {
+      formatSelector.push("name");
+    }
+    if (month && year) {
+      formatSelector.push("expiration");
+    }
+    let stringId = "credit-card-label-" + formatSelector.join("-");
+    return {
+      id: stringId,
+      args: {
+        number: CreditCard.getMaskedNumber(number),
+        name,
+        month: month?.toString(),
+        year: year?.toString(),
+      },
+    };
+  }
+
+  /**
+   * !!! DEPRECATED !!!
+   * Please use getLabelInfo above, as it allows for localization.
    */
   static getLabel({ number, name }) {
     let parts = [];

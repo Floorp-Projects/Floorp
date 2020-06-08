@@ -44,6 +44,8 @@ add_task(async function test_removingSingleAndMultipleCreditCards() {
   await saveCreditCard(TEST_CREDIT_CARD_1);
   await saveCreditCard(TEST_CREDIT_CARD_2);
   await saveCreditCard(TEST_CREDIT_CARD_3);
+  await saveCreditCard(TEST_CREDIT_CARD_4);
+  await saveCreditCard(TEST_CREDIT_CARD_5);
 
   let win = window.openDialog(
     MANAGE_CREDIT_CARDS_DIALOG_URL,
@@ -56,25 +58,70 @@ add_task(async function test_removingSingleAndMultipleCreditCards() {
   let btnRemove = win.document.querySelector(TEST_SELECTORS.btnRemove);
   let btnEdit = win.document.querySelector(TEST_SELECTORS.btnEdit);
 
-  is(selRecords.length, 3, "Three credit cards");
-  is(selRecords[0].text, "**** 7870", "Masked credit card 3");
+  const expectedLabels = [
+    {
+      id: "credit-card-label-number-name",
+      args: { number: "**** 1881", name: "Chris P. Bacon" },
+    },
+    {
+      id: "credit-card-label-number",
+      args: { number: "**** 5100" },
+    },
+    {
+      id: "credit-card-label-number-expiration",
+      args: { number: "**** 7870", month: "1", year: "2000" },
+    },
+    {
+      id: "credit-card-label-number-name-expiration",
+      args: {
+        number: "**** 1045",
+        name: "Timothy Berners-Lee",
+        month: "12",
+        year: (new Date().getFullYear() + 10).toString(),
+      },
+    },
+    {
+      id: "credit-card-label-number-name-expiration",
+      args: {
+        number: "**** 1111",
+        name: "John Doe",
+        month: "4",
+        year: new Date().getFullYear().toString(),
+      },
+    },
+  ];
+
   is(
-    selRecords[1].text,
-    "**** 1045, Timothy Berners-Lee",
-    "Masked credit card 2"
+    selRecords.length,
+    expectedLabels.length,
+    "Correct number of credit cards"
   );
-  is(selRecords[2].text, "**** 1111, John Doe", "Masked credit card 1");
+  expectedLabels.forEach((expected, i) => {
+    const l10nAttrs = document.l10n.getAttributes(selRecords[i]);
+    is(
+      l10nAttrs.id,
+      expected.id,
+      `l10n id set for credit card ${expectedLabels.length - i}`
+    );
+    Object.keys(expected.args).forEach(arg => {
+      is(
+        l10nAttrs.args[arg],
+        expected.args[arg],
+        `Set display ${arg} for credit card ${expectedLabels.length - i}`
+      );
+    });
+  });
 
   EventUtils.synthesizeMouseAtCenter(selRecords.children[0], {}, win);
   is(btnRemove.disabled, false, "Remove button enabled");
   is(btnEdit.disabled, false, "Edit button enabled");
   EventUtils.synthesizeMouseAtCenter(btnRemove, {}, win);
   await BrowserTestUtils.waitForEvent(selRecords, "RecordsRemoved");
-  is(selRecords.length, 2, "Two credit cards left");
+  is(selRecords.length, 4, "Four credit cards left");
 
   EventUtils.synthesizeMouseAtCenter(selRecords.children[0], {}, win);
   EventUtils.synthesizeMouseAtCenter(
-    selRecords.children[1],
+    selRecords.children[3],
     { shiftKey: true },
     win
   );
