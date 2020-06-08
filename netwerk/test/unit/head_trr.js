@@ -68,6 +68,7 @@ function trr_clear_prefs() {
   Services.prefs.clearUserPref("network.trr.excluded-domains");
   Services.prefs.clearUserPref("network.trr.builtin-excluded-domains");
   Services.prefs.clearUserPref("network.trr.clear-cache-on-pref-change");
+  Services.prefs.clearUserPref("network.trr.fetch_off_main_thread");
   Services.prefs.clearUserPref("captivedetect.canonicalURL");
 
   Services.prefs.clearUserPref("network.http.spdy.enabled");
