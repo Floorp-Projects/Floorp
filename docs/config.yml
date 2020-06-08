@@ -22,6 +22,7 @@ categories:
         - remote
         - services/common/services
         - uriloader
+        - widget/cocoa
         - code-quality
     build_doc:
         - mach
