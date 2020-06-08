@@ -445,7 +445,7 @@ mozilla::ipc::IPCResult ChromiumCDMChild::RecvCreateSessionAndGenerateRequest(
       "pid=%" PRIu32 ", sessionType=%" PRIu32 ", initDataType=%" PRIu32
       ") initDataLen=%zu",
       aPromiseId, aSessionType, aInitDataType, aInitData.Length());
-  MOZ_ASSERT(aSessionType <= cdm::SessionType::kPersistentKeyRelease);
+  MOZ_ASSERT(aSessionType <= cdm::SessionType::kPersistentUsageRecord);
   MOZ_ASSERT(aInitDataType <= cdm::InitDataType::kWebM);
   if (mCDM) {
     mCDM->CreateSessionAndGenerateRequest(
@@ -773,12 +773,12 @@ void ChromiumCDMChild::ReturnOutput(WidevineVideoFrame& aFrame) {
   output.mFormat() = static_cast<cdm::VideoFormat>(aFrame.Format());
   output.mImageWidth() = aFrame.Size().width;
   output.mImageHeight() = aFrame.Size().height;
-  output.mYPlane() = {aFrame.PlaneOffset(cdm::VideoFrame::kYPlane),
-                      aFrame.Stride(cdm::VideoFrame::kYPlane)};
-  output.mUPlane() = {aFrame.PlaneOffset(cdm::VideoFrame::kUPlane),
-                      aFrame.Stride(cdm::VideoFrame::kUPlane)};
-  output.mVPlane() = {aFrame.PlaneOffset(cdm::VideoFrame::kVPlane),
-                      aFrame.Stride(cdm::VideoFrame::kVPlane)};
+  output.mYPlane() = {aFrame.PlaneOffset(cdm::VideoPlane::kYPlane),
+                      aFrame.Stride(cdm::VideoPlane::kYPlane)};
+  output.mUPlane() = {aFrame.PlaneOffset(cdm::VideoPlane::kUPlane),
+                      aFrame.Stride(cdm::VideoPlane::kUPlane)};
+  output.mVPlane() = {aFrame.PlaneOffset(cdm::VideoPlane::kVPlane),
+                      aFrame.Stride(cdm::VideoPlane::kVPlane)};
   output.mTimestamp() = aFrame.Timestamp();
 
   uint64_t duration = 0;

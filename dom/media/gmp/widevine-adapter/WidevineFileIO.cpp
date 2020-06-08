@@ -10,8 +10,6 @@
 
 #include "gmp-api/gmp-platform.h"
 
-using namespace cdm;
-
 // Declared in ChromiumCDMAdapter.cpp.
 extern const GMPPlatformAPI* sPlatform;
 
@@ -25,13 +23,13 @@ void WidevineFileIO::Open(const char* aFilename, uint32_t aFilenameLength) {
   if (GMP_FAILED(err)) {
     GMP_LOG_DEBUG("WidevineFileIO::Open() '%s' GMPCreateRecord failed",
                   mName.c_str());
-    mClient->OnOpenComplete(FileIOClient::kError);
+    mClient->OnOpenComplete(cdm::FileIOClient::Status::kError);
     return;
   }
   if (GMP_FAILED(record->Open())) {
     GMP_LOG_DEBUG("WidevineFileIO::Open() '%s' record open failed",
                   mName.c_str());
-    mClient->OnOpenComplete(FileIOClient::kError);
+    mClient->OnOpenComplete(cdm::FileIOClient::Status::kError);
     return;
   }
 
@@ -43,7 +41,7 @@ void WidevineFileIO::Read() {
   if (!mRecord) {
     GMP_LOG_DEBUG("WidevineFileIO::Read() '%s' used uninitialized!",
                   mName.c_str());
-    mClient->OnReadComplete(FileIOClient::kError, nullptr, 0);
+    mClient->OnReadComplete(cdm::FileIOClient::Status::kError, nullptr, 0);
     return;
   }
   GMP_LOG_DEBUG("WidevineFileIO::Read() '%s'", mName.c_str());
@@ -54,7 +52,7 @@ void WidevineFileIO::Write(const uint8_t* aData, uint32_t aDataSize) {
   if (!mRecord) {
     GMP_LOG_DEBUG("WidevineFileIO::Write() '%s' used uninitialized!",
                   mName.c_str());
-    mClient->OnWriteComplete(FileIOClient::kError);
+    mClient->OnWriteComplete(cdm::FileIOClient::Status::kError);
     return;
   }
   mRecord->Write(aData, aDataSize);
@@ -69,14 +67,14 @@ void WidevineFileIO::Close() {
   delete this;
 }
 
-static FileIOClient::Status GMPToWidevineFileStatus(GMPErr aStatus) {
+static cdm::FileIOClient::Status GMPToWidevineFileStatus(GMPErr aStatus) {
   switch (aStatus) {
     case GMPRecordInUse:
-      return FileIOClient::kInUse;
+      return cdm::FileIOClient::Status::kInUse;
     case GMPNoErr:
-      return FileIOClient::kSuccess;
+      return cdm::FileIOClient::Status::kSuccess;
     default:
-      return FileIOClient::kError;
+      return cdm::FileIOClient::Status::kError;
   }
 }
 
