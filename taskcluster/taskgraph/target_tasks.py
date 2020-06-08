@@ -37,6 +37,7 @@ UNCOMMON_TRY_TASK_LABELS = [
     # Test tasks
     r'web-platform-tests.*backlog',  # hide wpt jobs that are not implemented yet - bug 1572820
     r'-ccov/',
+    r'-profiling-',  # talos/raptor profiling jobs are run too often
     # Shippable build tests, except those that don't have opt versions - bug 1638014
     # blacklist tasks on these platforms that aren't part of the named test suites,
     # which are known to only run on shippable builds
