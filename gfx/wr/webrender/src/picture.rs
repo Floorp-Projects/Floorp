@@ -4890,22 +4890,22 @@ impl PicturePrimitive {
                     map_raster_to_world: &SpaceMapper<RasterPixel, WorldPixel>,
                     clipped_prim_bounding_rect: WorldRect,
                     device_pixel_scale : &mut DevicePixelScale,
-                    device_rect: &mut DeviceIntRect,
+                    device_rect: &mut DeviceRect,
                     unclipped: &mut DeviceRect) -> Option<f32>
                 {
                     let limit = if raster_config.establishes_raster_root {
-                        MAX_SURFACE_SIZE as i32
+                        MAX_SURFACE_SIZE
                     } else {
-                        max_target_size
+                        max_target_size as f32
                     };
-                    if device_rect.size.width  > limit || device_rect.size.height > limit {
+                    if device_rect.size.width > limit || device_rect.size.height > limit {
                         // round_out will grow by 1 integer pixel if origin is on a
                         // fractional position, so keep that margin for error with -1:
                         let scale = (limit as f32 - 1.0) /
-                                    (i32::max(device_rect.size.width, device_rect.size.height) as f32);
+                                    (f32::max(device_rect.size.width, device_rect.size.height));
                         *device_pixel_scale = *device_pixel_scale * Scale::new(scale);
                         let new_device_rect = device_rect.to_f32() * Scale::new(scale);
-                        *device_rect = new_device_rect.round_out().try_cast::<i32>().unwrap();
+                        *device_rect = new_device_rect.round_out();
 
                         *unclipped = match get_raster_rects(
                             pic_rect,
@@ -4946,19 +4946,10 @@ impl PicturePrimitive {
                             // blur results, inflate that clipped area by the blur range, and
                             // then intersect with the total screen rect, to minimize the
                             // allocation size.
-                            // We cast clipped to f32 instead of casting unclipped to i32
-                            // because unclipped can overflow an i32.
-                            let device_rect = clipped.to_f32()
+                            clipped
                                 .inflate(inflation_factor * scale_factors.0, inflation_factor * scale_factors.1)
                                 .intersection(&unclipped)
-                                .unwrap();
-
-                            match device_rect.try_cast::<i32>() {
-                                Some(rect) => rect,
-                                None => {
-                                    return None
-                                }
-                            }
+                                .unwrap()
                         } else {
                             clipped
                         };
@@ -4980,9 +4971,11 @@ impl PicturePrimitive {
                             &mut device_pixel_scale, &mut device_rect, &mut unclipped,
                         ) {
                             blur_std_deviation = blur_std_deviation * scale;
-                            original_size = (original_size.to_f32() * scale).try_cast::<i32>().unwrap();
+                            original_size = original_size.to_f32() * scale;
                             raster_config.root_scaling_factor = scale;
                         }
+
+                        let device_rect = device_rect.to_i32();
 
                         let uv_rect_kind = calculate_uv_rect_kind(
                             &pic_rect,
@@ -5013,7 +5006,7 @@ impl PicturePrimitive {
                             RenderTargetKind::Color,
                             ClearMode::Transparent,
                             None,
-                            original_size,
+                            original_size.to_i32(),
                         );
 
                         Some((blur_render_task_id, picture_task_id))
@@ -5028,17 +5021,10 @@ impl PicturePrimitive {
 
                         // We cast clipped to f32 instead of casting unclipped to i32
                         // because unclipped can overflow an i32.
-                        let device_rect = clipped.to_f32()
+                        let mut device_rect = clipped
                                 .inflate(max_blur_range * scale_factors.0, max_blur_range * scale_factors.1)
                                 .intersection(&unclipped)
                                 .unwrap();
-
-                        let mut device_rect = match device_rect.try_cast::<i32>() {
-                            Some(rect) => rect,
-                            None => {
-                                return None
-                            }
-                        };
 
                         device_rect.size = RenderTask::adjusted_blur_source_size(
                             device_rect.size,
@@ -5057,6 +5043,8 @@ impl PicturePrimitive {
                             // std_dev adjusts automatically from using device_pixel_scale
                             raster_config.root_scaling_factor = scale;
                         }
+
+                        let device_rect = device_rect.to_i32();
 
                         let uv_rect_kind = calculate_uv_rect_kind(
                             &pic_rect,
@@ -5110,6 +5098,17 @@ impl PicturePrimitive {
                         Some((blur_render_task_id, picture_task_id))
                     }
                     PictureCompositeMode::MixBlend(..) if !frame_context.fb_config.gpu_supports_advanced_blend => {
+                        if let Some(scale) = adjust_scale_for_max_surface_size(
+                            raster_config, frame_context.fb_config.max_target_size,
+                            pic_rect, &map_pic_to_raster, &map_raster_to_world,
+                            clipped_prim_bounding_rect,
+                            &mut device_pixel_scale, &mut clipped, &mut unclipped,
+                        ) {
+                            raster_config.root_scaling_factor = scale;
+                        }
+
+                        let clipped = clipped.to_i32();
+
                         let uv_rect_kind = calculate_uv_rect_kind(
                             &pic_rect,
                             &transform,
@@ -5156,6 +5155,8 @@ impl PicturePrimitive {
                             raster_config.root_scaling_factor = scale;
                         }
 
+                        let clipped = clipped.to_i32();
+
                         let uv_rect_kind = calculate_uv_rect_kind(
                             &pic_rect,
                             &transform,
@@ -5189,6 +5190,8 @@ impl PicturePrimitive {
                         ) {
                             raster_config.root_scaling_factor = scale;
                         }
+
+                        let clipped = clipped.to_i32();
 
                         let uv_rect_kind = calculate_uv_rect_kind(
                             &pic_rect,
@@ -5517,6 +5520,8 @@ impl PicturePrimitive {
                             raster_config.root_scaling_factor = scale;
                         }
 
+                        let clipped = clipped.to_i32();
+
                         let uv_rect_kind = calculate_uv_rect_kind(
                             &pic_rect,
                             &transform,
@@ -5551,6 +5556,8 @@ impl PicturePrimitive {
                         ) {
                             raster_config.root_scaling_factor = scale;
                         }
+
+                        let clipped = clipped.to_i32();
 
                         let uv_rect_kind = calculate_uv_rect_kind(
                             &pic_rect,

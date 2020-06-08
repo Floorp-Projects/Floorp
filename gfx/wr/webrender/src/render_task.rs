@@ -654,20 +654,20 @@ impl RenderTask {
     // In order to do the blur down-scaling passes without introducing errors, we need the
     // source of each down-scale pass to be a multuple of two. If need be, this inflates
     // the source size so that each down-scale pass will sample correctly.
-    pub fn adjusted_blur_source_size(original_size: DeviceIntSize, mut std_dev: DeviceSize) -> DeviceIntSize {
+    pub fn adjusted_blur_source_size(original_size: DeviceSize, mut std_dev: DeviceSize) -> DeviceSize {
         let mut adjusted_size = original_size;
         let mut scale_factor = 1.0;
         while std_dev.width > MAX_BLUR_STD_DEVIATION && std_dev.height > MAX_BLUR_STD_DEVIATION {
-            if adjusted_size.width < MIN_DOWNSCALING_RT_SIZE ||
-               adjusted_size.height < MIN_DOWNSCALING_RT_SIZE {
+            if adjusted_size.width < MIN_DOWNSCALING_RT_SIZE as f32 ||
+               adjusted_size.height < MIN_DOWNSCALING_RT_SIZE as f32 {
                 break;
             }
             std_dev = std_dev * 0.5;
             scale_factor *= 2.0;
-            adjusted_size = (original_size.to_f32() / scale_factor).ceil().to_i32();
+            adjusted_size = (original_size.to_f32() / scale_factor).ceil();
         }
 
-        adjusted_size * scale_factor as i32
+        adjusted_size * scale_factor
     }
 
     // Construct a render task to apply a blur to a primitive.
