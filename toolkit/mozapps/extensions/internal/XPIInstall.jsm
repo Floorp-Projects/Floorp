@@ -2150,11 +2150,12 @@ var DownloadAddonInstall = class extends AddonInstall {
   }
 
   cancel() {
-    if (this.state == AddonManager.STATE_DOWNLOADING) {
-      if (this.channel) {
-        logger.debug("Cancelling download of " + this.sourceURI.spec);
-        this.channel.cancel(Cr.NS_BINDING_ABORTED);
-      }
+    // If we're done downloading the file but still processing it we cannot
+    // cancel the installation. We just call the base class which will handle
+    // the request by throwing an error.
+    if (this.channel && this.state == AddonManager.STATE_DOWNLOADING) {
+      logger.debug("Cancelling download of " + this.sourceURI.spec);
+      this.channel.cancel(Cr.NS_BINDING_ABORTED);
     } else {
       super.cancel();
     }
