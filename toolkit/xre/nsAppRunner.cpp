@@ -5056,7 +5056,8 @@ bool BrowserTabsRemoteAutostart() {
 }
 
 bool FissionAutostart() {
-  return !gSafeMode && StaticPrefs::fission_autostart();
+  return !gSafeMode &&
+         StaticPrefs::fission_autostart_AtStartup_DoNotUseDirectly();
 }
 
 uint32_t GetMaxWebProcessCount() {
