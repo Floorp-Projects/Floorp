@@ -10,6 +10,7 @@ import android.content.DialogInterface
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
+import android.os.StrictMode
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
@@ -59,6 +60,7 @@ import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.top.sites.TopSite
 import mozilla.components.lib.state.ext.consumeFrom
+import mozilla.components.support.ktx.android.os.resetAfter
 import mozilla.components.support.ktx.android.util.dpToPx
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
@@ -146,8 +148,10 @@ class HomeFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         postponeEnterTransition()
-        if (!onboarding.userHasBeenOnboarded()) {
-            requireComponents.analytics.metrics.track(Event.OpenedAppFirstRun)
+        StrictMode.allowThreadDiskReads().resetAfter {
+            if (!onboarding.userHasBeenOnboarded()) {
+                requireComponents.analytics.metrics.track(Event.OpenedAppFirstRun)
+            }
         }
     }
 
@@ -172,7 +176,9 @@ class HomeFragment : Fragment() {
                     collections = requireComponents.core.tabCollectionStorage.cachedTabCollections,
                     expandedCollections = emptySet(),
                     mode = currentMode.getCurrentMode(),
-                    topSites = requireComponents.core.topSiteStorage.cachedTopSites,
+                    topSites = StrictMode.allowThreadDiskReads().resetAfter {
+                        requireComponents.core.topSiteStorage.cachedTopSites
+                    },
                     tip = FenixTipManager(listOf(MigrationTipProvider(requireContext()))).getTip()
                 )
             )

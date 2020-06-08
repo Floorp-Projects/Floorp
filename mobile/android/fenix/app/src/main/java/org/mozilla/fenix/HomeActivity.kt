@@ -7,6 +7,7 @@ package org.mozilla.fenix
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.os.StrictMode
 import android.util.AttributeSet
 import android.view.View
 import android.view.WindowManager
@@ -39,6 +40,7 @@ import mozilla.components.service.fxa.sync.SyncReason
 import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.ktx.android.arch.lifecycle.addObservers
 import mozilla.components.support.ktx.android.content.share
+import mozilla.components.support.ktx.android.os.resetAfter
 import mozilla.components.support.ktx.kotlin.isUrl
 import mozilla.components.support.ktx.kotlin.toNormalizedUrl
 import mozilla.components.support.locale.LocaleAwareAppCompatActivity
@@ -122,7 +124,11 @@ open class HomeActivity : LocaleAwareAppCompatActivity() {
     }
 
     final override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+        StrictModeManager.changeStrictModePolicies(supportFragmentManager)
+        // There is disk read violations on some devices such as samsung and pixel for android 9/10
+        StrictMode.allowThreadDiskReads().resetAfter {
+            super.onCreate(savedInstanceState)
+        }
 
         components.publicSuffixList.prefetch()
 
@@ -426,6 +432,12 @@ open class HomeActivity : LocaleAwareAppCompatActivity() {
     fun updateThemeForSession(session: Session) {
         val sessionMode = BrowsingMode.fromBoolean(session.private)
         browsingModeManager.mode = sessionMode
+    }
+
+    override fun attachBaseContext(base: Context) {
+        StrictMode.allowThreadDiskReads().resetAfter {
+            super.attachBaseContext(base)
+        }
     }
 
     protected open fun createBrowsingModeManager(initialMode: BrowsingMode): BrowsingModeManager {

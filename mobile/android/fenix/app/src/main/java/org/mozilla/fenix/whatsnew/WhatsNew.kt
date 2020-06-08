@@ -5,6 +5,8 @@ package org.mozilla.fenix.whatsnew
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import android.content.Context
+import android.os.StrictMode
+import mozilla.components.support.ktx.android.os.resetAfter
 
 // This file is a modified port from Focus Android
 
@@ -68,7 +70,9 @@ class WhatsNew private constructor(private val storage: WhatsNewStorage) {
         fun shouldHighlightWhatsNew(context: Context): Boolean {
             return shouldHighlightWhatsNew(
                 ContextWhatsNewVersion(context),
-                SharedPreferenceWhatsNewStorage(context)
+                StrictMode.allowThreadDiskReads().resetAfter {
+                    SharedPreferenceWhatsNewStorage(context)
+                }
             )
         }
 

@@ -49,6 +49,8 @@ import org.mozilla.fenix.session.PerformanceActivityLifecycleCallbacks
 import org.mozilla.fenix.session.VisibilityLifecycleCallback
 import org.mozilla.fenix.utils.BrowsersCache
 import org.mozilla.fenix.utils.Settings
+import mozilla.components.support.ktx.android.os.resetAfter
+import org.mozilla.fenix.StrictModeManager.enableStrictMode
 
 /**
  *The main application class for Fenix. Records data to measure initialization performance.
@@ -124,12 +126,13 @@ open class FenixApplication : LocaleAwareApplication() {
             val megazordSetup = setupMegazord()
 
             setDayNightTheme()
-            enableStrictMode()
+            enableStrictMode(true)
             warmBrowsersCache()
 
             // Make sure the engine is initialized and ready to use.
-            components.core.engine.warmUp()
-
+            StrictMode.allowThreadDiskReads().resetAfter {
+                components.core.engine.warmUp()
+            }
             initializeWebExtensionSupport()
 
             // Just to make sure it is impossible for any application-services pieces
@@ -333,28 +336,6 @@ open class FenixApplication : LocaleAwareApplication() {
         // background thread.
         GlobalScope.launch(Dispatchers.Default) {
             BrowsersCache.all(this@FenixApplication)
-        }
-    }
-
-    private fun enableStrictMode() {
-        if (Config.channel.isDebug) {
-            StrictMode.setThreadPolicy(
-                StrictMode.ThreadPolicy.Builder()
-                    .detectAll()
-                    .penaltyLog()
-                    .build()
-            )
-            var builder = StrictMode.VmPolicy.Builder()
-                .detectLeakedSqlLiteObjects()
-                .detectLeakedClosableObjects()
-                .detectLeakedRegistrationObjects()
-                .detectActivityLeaks()
-                .detectFileUriExposure()
-                .penaltyLog()
-            if (SDK_INT >= Build.VERSION_CODES.O) builder =
-                builder.detectContentUriWithoutPermission()
-            if (SDK_INT >= Build.VERSION_CODES.P) builder = builder.detectNonSdkApiUsage()
-            StrictMode.setVmPolicy(builder.build())
         }
     }
 
