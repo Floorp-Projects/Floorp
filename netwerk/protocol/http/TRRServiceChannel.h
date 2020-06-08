@@ -151,7 +151,7 @@ class TRRServiceChannel : public HttpBaseChannel,
   RefPtr<HttpTransactionShell> mTransaction;
   uint32_t mPushedStreamId;
   RefPtr<HttpTransactionShell> mTransWithPushedStream;
-  nsCOMPtr<nsICancelable> mProxyRequest;
+  DataMutex<nsCOMPtr<nsICancelable>> mProxyRequest;
   nsCOMPtr<nsIEventTarget> mCurrentEventTarget;
 
   friend class HttpAsyncAborter<TRRServiceChannel>;
