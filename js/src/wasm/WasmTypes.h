@@ -2321,14 +2321,14 @@ struct JitExitOffsets : CallableOffsets {
 
 struct FuncOffsets : CallableOffsets {
   MOZ_IMPLICIT FuncOffsets()
-      : CallableOffsets(), uncheckedCallEntry(0), tierEntry(0) {}
+      : CallableOffsets(), normalEntry(0), tierEntry(0) {}
 
-  // Function CodeRanges have a checked call entry which takes an extra
-  // signature argument which is checked against the callee's signature before
-  // falling through to the normal prologue. The checked call entry is thus at
-  // the beginning of the CodeRange and the unchecked call entry is at some
-  // offset after the checked call entry.
-  uint32_t uncheckedCallEntry;
+  // Function CodeRanges have a table entry which takes an extra signature
+  // argument which is checked against the callee's signature before falling
+  // through to the normal prologue. The table entry is thus at the beginning
+  // of the CodeRange and the normal entry is at some offset after the table
+  // entry.
+  uint32_t normalEntry;
 
   // The tierEntry is the point within a function to which the patching code
   // within a Tier-1 function jumps.  It could be the instruction following
@@ -2369,7 +2369,7 @@ class CodeRange {
       union {
         struct {
           uint32_t lineOrBytecode_;
-          uint8_t beginToUncheckedCallEntry_;
+          uint8_t beginToNormalEntry_;
           uint8_t beginToTierEntry_;
         } func;
         struct {
@@ -2456,13 +2456,13 @@ class CodeRange {
   // known signature) and one for table calls (which involves dynamic
   // signature checking).
 
-  uint32_t funcCheckedCallEntry() const {
+  uint32_t funcTableEntry() const {
     MOZ_ASSERT(isFunction());
     return begin_;
   }
-  uint32_t funcUncheckedCallEntry() const {
+  uint32_t funcNormalEntry() const {
     MOZ_ASSERT(isFunction());
-    return begin_ + u.func.beginToUncheckedCallEntry_;
+    return begin_ + u.func.beginToNormalEntry_;
   }
   uint32_t funcTierEntry() const {
     MOZ_ASSERT(isFunction());
