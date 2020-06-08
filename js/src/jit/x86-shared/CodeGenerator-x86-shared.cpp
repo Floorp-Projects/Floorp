@@ -2452,6 +2452,9 @@ void CodeGenerator::visitWasmBinarySimd128(LWasmBinarySimd128* ins) {
     case wasm::SimdOp::I64x2Sub:
       masm.subInt64x2(rhs, lhsDest);
       break;
+    case wasm::SimdOp::I64x2Mul:
+      masm.mulInt64x2(rhs, lhsDest, temp1);
+      break;
     case wasm::SimdOp::F32x4Add:
       masm.addFloat32x4(rhs, lhsDest);
       break;
