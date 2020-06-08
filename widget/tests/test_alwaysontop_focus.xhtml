@@ -8,11 +8,17 @@
   <script><![CDATA[
     add_task(async function testAlwaysOnTop() {
       const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-      let topWin = docShell.rootTreeItem.domWindow;
+      let topWin = window.docShell.rootTreeItem.domWindow;
       await SimpleTest.promiseFocus(topWin);
       is(Services.focus.activeWindow, topWin, "Top level window is focused");
 
-      let newWin = Services.ww.openWindow(null, "about:blank", null, "chrome,alwaysontop,width=300,height=300", null);
+      let newWin = Services.ww.openWindow(
+        null,
+        "about:blank",
+        null,
+        "chrome,alwaysontop,width=300,height=300",
+        null
+      );
       await new Promise(resolve => {
         newWin.addEventListener("load", resolve, { once: true });
       });
