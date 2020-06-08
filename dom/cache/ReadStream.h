@@ -49,8 +49,10 @@ class ReadStream final : public nsIInputStream {
  public:
   // Interface that lets the StreamControl classes interact with
   // our private inner stream.
-  class Controllable {
+  class Controllable : public SafeRefCounted<Controllable> {
    public:
+    virtual ~Controllable() = default;
+
     // Closes the stream, notifies the stream control, and then forgets
     // the stream control.
     virtual void CloseStream() = 0;
@@ -63,7 +65,7 @@ class ReadStream final : public nsIInputStream {
 
     virtual bool HasEverBeenRead() const = 0;
 
-    NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
+    MOZ_DECLARE_REFCOUNTED_TYPENAME(ReadStream::Controllable);
   };
 
   static already_AddRefed<ReadStream> Create(
@@ -88,7 +90,6 @@ class ReadStream final : public nsIInputStream {
  private:
   class Inner;
 
-  explicit ReadStream(Inner* aInner);
   ~ReadStream();
 
   // Hold a strong ref to an inner class that actually implements the
@@ -96,9 +97,11 @@ class ReadStream final : public nsIInputStream {
   // ReadStream guarantees it will call Close() on the inner stream.
   // This is essential for the inner stream to avoid dealing with the
   // implicit close that can happen when a stream is destroyed.
-  RefPtr<Inner> mInner;
+  SafeRefPtr<ReadStream::Inner> mInner;
 
  public:
+  explicit ReadStream(SafeRefPtr<ReadStream::Inner> aInner);
+
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_DOM_CACHE_READSTREAM_IID);
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIINPUTSTREAM
