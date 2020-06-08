@@ -88,6 +88,7 @@ const DEFAULT_TEXTURE: TextureSlot = TextureSlot(0);
 
 #[repr(u32)]
 pub enum DepthFunction {
+    Always = gl::ALWAYS,
     Less = gl::LESS,
     LessEqual = gl::LEQUAL,
 }
@@ -3451,17 +3452,14 @@ impl Device {
         }
     }
 
-    pub fn enable_depth(&self) {
+    pub fn enable_depth(&self, depth_func: DepthFunction) {
         assert!(self.depth_available, "Enabling depth test without depth target");
         self.gl.enable(gl::DEPTH_TEST);
+        self.gl.depth_func(depth_func as gl::GLuint);
     }
 
     pub fn disable_depth(&self) {
         self.gl.disable(gl::DEPTH_TEST);
-    }
-
-    pub fn set_depth_func(&self, depth_func: DepthFunction) {
-        self.gl.depth_func(depth_func as gl::GLuint);
     }
 
     pub fn enable_depth_write(&self) {
@@ -3492,6 +3490,14 @@ impl Device {
 
     pub fn disable_scissor(&self) {
         self.gl.disable(gl::SCISSOR_TEST);
+    }
+
+    pub fn enable_color_write(&self) {
+        self.gl.color_mask(true, true, true, true);
+    }
+
+    pub fn disable_color_write(&self) {
+        self.gl.color_mask(false, false, false, false);
     }
 
     pub fn set_blend(&mut self, enable: bool) {

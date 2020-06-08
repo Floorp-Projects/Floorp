@@ -329,6 +329,14 @@ impl CompositeInstance {
     }
 }
 
+/// Vertex format for issuing colored quads.
+#[derive(Debug, Clone)]
+#[repr(C)]
+pub struct ClearInstance {
+    pub rect: [f32; 4],
+    pub color: [f32; 4],
+}
+
 #[derive(Debug, Copy, Clone)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]

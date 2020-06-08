@@ -158,8 +158,10 @@ interface nsIGfxInfo : nsISupports
   const long FEATURE_GL_SWIZZLE = 28;
   /* Whether WebRender native compositor is supported, starting in 73 */
   const long FEATURE_WEBRENDER_COMPOSITOR = 29;
+  /* Whether WebRender can use scissored clears for cached surfaces, staring in 79 */
+  const long FEATURE_WEBRENDER_SCISSORED_CACHE_CLEARS = 30;
   /* the maximum feature value. */
-  const long FEATURE_MAX_VALUE = FEATURE_WEBRENDER_COMPOSITOR;
+  const long FEATURE_MAX_VALUE = FEATURE_WEBRENDER_SCISSORED_CACHE_CLEARS;
 
   /*
    * A set of return values from GetFeatureStatus

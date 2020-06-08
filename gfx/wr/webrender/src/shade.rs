@@ -70,6 +70,7 @@ pub(crate) enum ShaderKind {
     VectorCover,
     Resolve,
     Composite,
+    Clear,
 }
 
 pub struct LazilyCompiledShader {
@@ -152,7 +153,7 @@ impl LazilyCompiledShader {
     ) -> Result<&mut Program, ShaderError> {
         if self.program.is_none() {
             let program = match self.kind {
-                ShaderKind::Primitive | ShaderKind::Brush | ShaderKind::Text | ShaderKind::Resolve => {
+                ShaderKind::Primitive | ShaderKind::Brush | ShaderKind::Text | ShaderKind::Resolve | ShaderKind::Clear => {
                     create_prim_shader(
                         self.name,
                         device,
@@ -211,6 +212,7 @@ impl LazilyCompiledShader {
                 ShaderKind::ClipCache => VertexArrayKind::Clip,
                 ShaderKind::Resolve => VertexArrayKind::Resolve,
                 ShaderKind::Composite => VertexArrayKind::Composite,
+                ShaderKind::Clear => VertexArrayKind::Clear,
             };
 
             let vertex_descriptor = match vertex_format {
@@ -226,6 +228,7 @@ impl LazilyCompiledShader {
                 VertexArrayKind::Resolve => &desc::RESOLVE,
                 VertexArrayKind::SvgFilter => &desc::SVG_FILTER,
                 VertexArrayKind::Composite => &desc::COMPOSITE,
+                VertexArrayKind::Clear => &desc::CLEAR,
             };
 
             device.link_program(program, vertex_descriptor)?;
@@ -571,6 +574,7 @@ pub struct Shaders {
     pub pls_resolve: Option<LazilyCompiledShader>,
 
     ps_split_composite: LazilyCompiledShader,
+    pub ps_clear: LazilyCompiledShader,
 
     // Composite shaders.  These are very simple shaders used to composite
     // picture cache tiles into the framebuffer on platforms that do not have an
@@ -839,6 +843,15 @@ impl Shaders {
             &shader_list,
         )?;
 
+        let ps_clear = LazilyCompiledShader::new(
+            ShaderKind::Clear,
+            "ps_clear",
+            &extra_features,
+            device,
+            options.precache_flags,
+            &shader_list,
+        )?;
+
         // All image configuration.
         let mut image_features = Vec::new();
         let mut brush_image = Vec::new();
@@ -1014,6 +1027,7 @@ impl Shaders {
             ps_text_run,
             ps_text_run_dual_source,
             ps_split_composite,
+            ps_clear,
             composite_rgba,
             composite_yuv,
         })
@@ -1151,6 +1165,8 @@ impl Shaders {
         self.cs_line_decoration.deinit(device);
         self.cs_border_segment.deinit(device);
         self.ps_split_composite.deinit(device);
+        self.ps_clear.deinit(device);
+
         for shader in self.composite_rgba {
             if let Some(shader) = shader {
                 shader.deinit(device);

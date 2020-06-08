@@ -2797,6 +2797,8 @@ void gfxPlatform::InitWebRenderConfig() {
   // Set features that affect WR's RendererOptions
   gfxVars::SetUseGLSwizzle(
       IsFeatureSupported(nsIGfxInfo::FEATURE_GL_SWIZZLE, true));
+  gfxVars::SetUseWebRenderScissoredCacheClears(IsFeatureSupported(
+      nsIGfxInfo::FEATURE_WEBRENDER_SCISSORED_CACHE_CLEARS, true));
 
   // The RemoveShaderCacheFromDiskIfNecessary() needs to be called after
   // WebRenderConfig initialization.
