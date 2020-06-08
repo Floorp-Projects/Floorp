@@ -502,7 +502,7 @@ bool DocumentLoadListener::Open(
             } else {
               nsresult rv = mChannel->AsyncOpen(openInfo);
               if (NS_FAILED(rv)) {
-                self->DisconnectChildListeners(NS_ERROR_ABORT, NS_ERROR_ABORT);
+                self->DisconnectChildListeners(rv, rv);
                 mParentChannelListener = nullptr;
               }
             }
