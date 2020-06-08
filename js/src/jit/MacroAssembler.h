@@ -2309,6 +2309,17 @@ class MacroAssembler : public MacroAssemblerSpecific {
   inline void allTrueInt32x4(FloatRegister src, Register dest)
       DEFINED_ON(x86_shared);
 
+  // Bitmask, ie extract and compress high bits of all lanes
+
+  inline void bitmaskInt8x16(FloatRegister src, Register dest)
+      DEFINED_ON(x86_shared);
+
+  inline void bitmaskInt16x8(FloatRegister src, Register dest)
+      DEFINED_ON(x86_shared);
+
+  inline void bitmaskInt32x4(FloatRegister src, Register dest)
+      DEFINED_ON(x86_shared);
+
   // Comparisons (integer and floating-point)
 
   inline void compareInt8x16(Assembler::Condition cond, FloatRegister rhs,

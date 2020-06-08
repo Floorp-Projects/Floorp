@@ -218,6 +218,12 @@ function shru(count, width) {
     }
 }
 
+function popcount(n) {
+  n = n - ((n >> 1) & 0x55555555)
+  n = (n & 0x33333333) + ((n >> 2) & 0x33333333)
+  return ((n + (n >> 4) & 0xF0F0F0F) * 0x1010101) >> 24
+}
+
 // For each input array, a set of arrays of the proper length for v128, with
 // values in range but possibly of the wrong signedness (eg, for Int8Array, 128
 // is in range but is really -128).  Also a unary operator `rectify` that
@@ -821,6 +827,54 @@ for ( let dope of [1, 7, 32, 195 ] ) {
     set(mem32, 4, iota(4).map((x) => x == 2 ? 0 : dope));
     assertEq(ins.exports.alltrue_i32x4(), 0);
 }
+
+// Bitmask
+
+var ins = wasmEvalText(`
+  (module
+    (memory (export "mem") 1 1)
+    (func (export "bitmask_i8x16") (result i32)
+      (i8x16.bitmask (v128.load (i32.const 16))))
+    (func (export "bitmask_i16x8") (result i32)
+      (i16x8.bitmask (v128.load (i32.const 16))))
+    (func (export "bitmask_i32x4") (result i32)
+      (i32x4.bitmask (v128.load (i32.const 16)))))`);
+
+var mem8 = new Uint8Array(ins.exports.mem.buffer);
+var mem16 = new Uint16Array(ins.exports.mem.buffer);
+var mem32 = new Uint32Array(ins.exports.mem.buffer);
+
+set(mem8, 16, iota(16).map((_) => 0));
+assertEq(ins.exports.bitmask_i8x16(), 0);
+assertEq(ins.exports.bitmask_i16x8(), 0);
+assertEq(ins.exports.bitmask_i32x4(), 0);
+
+set(mem8, 16, iota(16).map((_) => 0x80));
+assertEq(ins.exports.bitmask_i8x16(), 0xFFFF);
+
+set(mem8, 16, iota(16).map((_) => 0x7F));
+assertEq(ins.exports.bitmask_i8x16(), 0);
+
+set(mem8, 16, iota(16).map((i) => popcount(i) == 1 ? 0x80 : 0));
+assertEq(ins.exports.bitmask_i8x16(), (1 << 1) | (1 << 2) | (1 << 4) | (1 << 8));
+
+set(mem16, 8, iota(8).map((i) => 0x8000))
+assertEq(ins.exports.bitmask_i16x8(), 0xFF)
+
+set(mem16, 8, iota(8).map((i) => 0x7FFF))
+assertEq(ins.exports.bitmask_i16x8(), 0)
+
+set(mem16, 8, iota(8).map((i) => popcount(i) == 1 ? 0x8000 : 0))
+assertEq(ins.exports.bitmask_i16x8(), (1 << 1) | (1 << 2) | (1 << 4));
+
+set(mem32, 4, iota(4).map((_) => 0x80000000))
+assertEq(ins.exports.bitmask_i32x4(), 0xF);
+
+set(mem32, 4, iota(4).map((_) => 0x7FFFFFFF))
+assertEq(ins.exports.bitmask_i32x4(), 0);
+
+set(mem32, 4, iota(4).map((i) => popcount(i) == 1 ? 0x80000000 : 0))
+assertEq(ins.exports.bitmask_i32x4(), (1 << 1) | (1 << 2));
 
 // Shifts
 //
