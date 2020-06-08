@@ -43,15 +43,11 @@ frameTargetPrototype.initialize = function(connection, docShell, options) {
   BrowsingContextTargetActor.prototype.initialize.call(
     this,
     connection,
+    docShell,
     options
   );
 
   this.traits.reconfigure = false;
-
-  Object.defineProperty(this, "docShell", {
-    value: docShell,
-    configurable: true,
-  });
 };
 
 Object.defineProperty(frameTargetPrototype, "title", {
