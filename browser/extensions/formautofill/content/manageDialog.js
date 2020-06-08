@@ -46,8 +46,10 @@ XPCOMUtils.defineLazyGetter(this, "reauthPasswordPromptMessage", () => {
   const brandShortName = FormAutofillUtils.brandBundle.GetStringFromName(
     "brandShortName"
   );
+  // The string name for Mac is changed because the value needed updating.
+  const platform = AppConstants.platform.replace("macosx", "macos");
   return FormAutofillUtils.stringBundle.formatStringFromName(
-    `editCreditCardPasswordPrompt.${AppConstants.platform}`,
+    `editCreditCardPasswordPrompt.${platform}`,
     [brandShortName]
   );
 });
