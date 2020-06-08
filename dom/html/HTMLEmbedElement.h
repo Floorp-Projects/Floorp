@@ -32,6 +32,12 @@ class HTMLEmbedElement final : public nsGenericHTMLElement,
   NS_IMETHOD PostHandleEvent(EventChainPostVisitor& aVisitor) override;
 #endif
 
+  bool AllowFullscreen() const {
+    // We don't need to check prefixed attributes because Flash does not support
+    // them.
+    return IsRewrittenYoutubeEmbed() && GetBoolAttr(nsGkAtoms::allowfullscreen);
+  }
+
   // EventTarget
   virtual void AsyncEventRunning(AsyncEventDispatcher* aEvent) override;
 
