@@ -193,6 +193,9 @@ bool SVGGeometryElement::IsPointInStroke(const DOMPointInit& aPoint) {
   if (!path) {
     return false;
   }
+  if (nsCOMPtr<Document> doc = GetComposedDoc()) {
+    doc->FlushPendingNotifications(FlushType::Style);
+  }
 
   bool res = false;
   SVGGeometryProperty::DoForComputedStyle(this, [&](const ComputedStyle* s) {
