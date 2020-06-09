@@ -158,13 +158,13 @@ interface nsIURIFixup : nsISupports
                                  [optional] out nsIInputStream aPostData);
 
     /**
-     * Returns true if the specified domain is whitelisted and false otherwise.
-     * A whitelisted domain is relevant when we have a single word and can't be
+     * Returns true if the specified domain is known and false otherwise.
+     * A known domain is relevant when we have a single word and can't be
      * sure whether to treat the word as a host name or should instead be
      * treated as a search term.
      *
      * @param aDomain A domain name to query.
      */
-    bool isDomainWhitelisted(in AUTF8String aDomain);
+    bool isDomainKnown(in AUTF8String aDomain);
 };
 

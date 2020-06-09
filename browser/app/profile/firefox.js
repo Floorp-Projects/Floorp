@@ -193,7 +193,7 @@ pref("browser.uitour.surveyDuration", 7200);
 pref("keyword.enabled", true);
 // Fixup whitelists, the urlbar won't try to search for these words, but will
 // instead consider them valid TLDs. Don't check these directly, use
-// Services.uriFixup.isDomainWhitelisted() instead.
+// Services.uriFixup.isDomainKnown() instead.
 pref("browser.fixup.domainwhitelist.localhost", true);
 // https://tools.ietf.org/html/rfc2606
 pref("browser.fixup.domainsuffixwhitelist.test", true);
