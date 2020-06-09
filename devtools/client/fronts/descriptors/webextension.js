@@ -32,15 +32,64 @@ class WebExtensionDescriptorFront extends FrontClassWithSpec(
     // Do not use `form` name to avoid colliding with protocol.js's `form` method
     this._form = json;
     this.traits = json.traits || {};
+  }
 
-    // We used to manipulate the form rather than the front itself.
-    // Expose all form attributes to ease accessing them.
-    for (const name in json) {
-      if (name == "actor") {
-        continue;
-      }
-      this[name] = json[name];
-    }
+  get debuggable() {
+    return this._form.debuggable;
+  }
+
+  get hidden() {
+    return this._form.hidden;
+  }
+
+  get iconDataURL() {
+    return this._form.iconDataURL;
+  }
+
+  get iconURL() {
+    return this._form.iconURL;
+  }
+
+  get id() {
+    return this._form.id;
+  }
+
+  // Currently unused on the client.
+  get isAPIExtension() {
+    return this._form.isAPIExtension;
+  }
+
+  get isSystem() {
+    return this._form.isSystem;
+  }
+
+  get isWebExtension() {
+    return this._form.isWebExtension;
+  }
+
+  get manifestURL() {
+    return this._form.manifestURL;
+  }
+
+  get name() {
+    return this._form.name;
+  }
+
+  get temporarilyInstalled() {
+    return this._form.temporarilyInstalled;
+  }
+
+  // Currently unused on the client.
+  get type() {
+    return this._form.type;
+  }
+
+  get url() {
+    return this._form.url;
+  }
+
+  get warnings() {
+    return this._form.warnings;
   }
 
   /**
