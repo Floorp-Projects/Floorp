@@ -497,6 +497,114 @@ void MacroAssemblerMIPSShared::ma_load(Register dest, const BaseIndex& src,
                    extension);
 }
 
+void MacroAssemblerMIPSShared::ma_load_unaligned(Register dest,
+                                                 const BaseIndex& src,
+                                                 LoadStoreSize size,
+                                                 LoadStoreExtension extension) {
+  int16_t lowOffset, hiOffset;
+  SecondScratchRegisterScope base(asMasm());
+  asMasm().computeScaledAddress(src, base);
+  ScratchRegisterScope scratch(asMasm());
+
+  if (Imm16::IsInSignedRange(src.offset) &&
+      Imm16::IsInSignedRange(src.offset + size / 8 - 1)) {
+    lowOffset = Imm16(src.offset).encode();
+    hiOffset = Imm16(src.offset + size / 8 - 1).encode();
+  } else {
+    ma_li(scratch, Imm32(src.offset));
+    asMasm().addPtr(scratch, base);
+    lowOffset = Imm16(0).encode();
+    hiOffset = Imm16(size / 8 - 1).encode();
+  }
+
+  switch (size) {
+    case SizeHalfWord:
+      MOZ_ASSERT(dest != scratch);
+      if (extension == ZeroExtend) {
+        as_lbu(scratch, base, hiOffset);
+      } else {
+        as_lb(scratch, base, hiOffset);
+      }
+      as_lbu(dest, base, lowOffset);
+      ma_ins(dest, scratch, 8, 24);
+      break;
+    case SizeWord:
+      MOZ_ASSERT(dest != base);
+      as_lwl(dest, base, hiOffset);
+      as_lwr(dest, base, lowOffset);
+#ifdef JS_CODEGEN_MIPS64
+      if (extension == ZeroExtend) {
+        as_dext(dest, dest, 0, 32);
+      }
+#endif
+      break;
+#ifdef JS_CODEGEN_MIPS64
+    case SizeDouble:
+      MOZ_ASSERT(dest != base);
+      as_ldl(dest, base, hiOffset);
+      as_ldr(dest, base, lowOffset);
+      break;
+#endif
+    default:
+      MOZ_CRASH("Invalid argument for ma_load_unaligned");
+  }
+}
+
+void MacroAssemblerMIPSShared::ma_load_unaligned(Register dest,
+                                                 const Address& address,
+                                                 LoadStoreSize size,
+                                                 LoadStoreExtension extension) {
+  int16_t lowOffset, hiOffset;
+  ScratchRegisterScope scratch1(asMasm());
+  SecondScratchRegisterScope scratch2(asMasm());
+  Register base;
+
+  if (Imm16::IsInSignedRange(address.offset) &&
+      Imm16::IsInSignedRange(address.offset + size / 8 - 1)) {
+    base = address.base;
+    lowOffset = Imm16(address.offset).encode();
+    hiOffset = Imm16(address.offset + size / 8 - 1).encode();
+  } else {
+    ma_li(scratch1, Imm32(address.offset));
+    asMasm().addPtr(address.base, scratch1);
+    base = scratch1;
+    lowOffset = Imm16(0).encode();
+    hiOffset = Imm16(size / 8 - 1).encode();
+  }
+
+  switch (size) {
+    case SizeHalfWord:
+      MOZ_ASSERT(base != scratch2 && dest != scratch2);
+      if (extension == ZeroExtend) {
+        as_lbu(scratch2, base, hiOffset);
+      } else {
+        as_lb(scratch2, base, hiOffset);
+      }
+      as_lbu(dest, base, lowOffset);
+      ma_ins(dest, scratch2, 8, 24);
+      break;
+    case SizeWord:
+      MOZ_ASSERT(dest != base);
+      as_lwl(dest, base, hiOffset);
+      as_lwr(dest, base, lowOffset);
+#ifdef JS_CODEGEN_MIPS64
+      if (extension == ZeroExtend) {
+        as_dext(dest, dest, 0, 32);
+      }
+#endif
+      break;
+#ifdef JS_CODEGEN_MIPS64
+    case SizeDouble:
+      MOZ_ASSERT(dest != base);
+      as_ldl(dest, base, hiOffset);
+      as_ldr(dest, base, lowOffset);
+      break;
+#endif
+    default:
+      MOZ_CRASH("Invalid argument for ma_load_unaligned");
+  }
+}
+
 void MacroAssemblerMIPSShared::ma_load_unaligned(
     const wasm::MemoryAccessDesc& access, Register dest, const BaseIndex& src,
     Register temp, LoadStoreSize size, LoadStoreExtension extension) {
@@ -650,6 +758,91 @@ void MacroAssemblerMIPSShared::ma_store(Imm32 imm, const BaseIndex& dest,
   // so we can use it as a parameter here
   asMasm().ma_store(ScratchRegister, Address(SecondScratchReg, 0), size,
                     extension);
+}
+
+void MacroAssemblerMIPSShared::ma_store_unaligned(Register data,
+                                                  const Address& address,
+                                                  LoadStoreSize size) {
+  int16_t lowOffset, hiOffset;
+  ScratchRegisterScope scratch(asMasm());
+  Register base;
+
+  if (Imm16::IsInSignedRange(address.offset) &&
+      Imm16::IsInSignedRange(address.offset + size / 8 - 1)) {
+    base = address.base;
+    lowOffset = Imm16(address.offset).encode();
+    hiOffset = Imm16(address.offset + size / 8 - 1).encode();
+  } else {
+    ma_li(scratch, Imm32(address.offset));
+    asMasm().addPtr(address.base, scratch);
+    base = scratch;
+    lowOffset = Imm16(0).encode();
+    hiOffset = Imm16(size / 8 - 1).encode();
+  }
+
+  switch (size) {
+    case SizeHalfWord: {
+      SecondScratchRegisterScope scratch2(asMasm());
+      MOZ_ASSERT(base != scratch2);
+      as_sb(data, base, lowOffset);
+      ma_ext(scratch2, data, 8, 8);
+      as_sb(scratch2, base, hiOffset);
+      break;
+    }
+    case SizeWord:
+      as_swl(data, base, hiOffset);
+      as_swr(data, base, lowOffset);
+      break;
+#ifdef JS_CODEGEN_MIPS64
+    case SizeDouble:
+      as_sdl(data, base, hiOffset);
+      as_sdr(data, base, lowOffset);
+      break;
+#endif
+    default:
+      MOZ_CRASH("Invalid argument for ma_store_unaligned");
+  }
+}
+
+void MacroAssemblerMIPSShared::ma_store_unaligned(Register data,
+                                                  const BaseIndex& dest,
+                                                  LoadStoreSize size) {
+  int16_t lowOffset, hiOffset;
+  SecondScratchRegisterScope base(asMasm());
+  asMasm().computeScaledAddress(dest, base);
+  ScratchRegisterScope scratch(asMasm());
+
+  if (Imm16::IsInSignedRange(dest.offset) &&
+      Imm16::IsInSignedRange(dest.offset + size / 8 - 1)) {
+    lowOffset = Imm16(dest.offset).encode();
+    hiOffset = Imm16(dest.offset + size / 8 - 1).encode();
+  } else {
+    ma_li(scratch, Imm32(dest.offset));
+    asMasm().addPtr(scratch, base);
+    lowOffset = Imm16(0).encode();
+    hiOffset = Imm16(size / 8 - 1).encode();
+  }
+
+  switch (size) {
+    case SizeHalfWord:
+      MOZ_ASSERT(base != scratch);
+      as_sb(data, base, lowOffset);
+      ma_ext(scratch, data, 8, 8);
+      as_sb(scratch, base, hiOffset);
+      break;
+    case SizeWord:
+      as_swl(data, base, hiOffset);
+      as_swr(data, base, lowOffset);
+      break;
+#ifdef JS_CODEGEN_MIPS64
+    case SizeDouble:
+      as_sdl(data, base, hiOffset);
+      as_sdr(data, base, lowOffset);
+      break;
+#endif
+    default:
+      MOZ_CRASH("Invalid argument for ma_store_unaligned");
+  }
 }
 
 void MacroAssemblerMIPSShared::ma_store_unaligned(
