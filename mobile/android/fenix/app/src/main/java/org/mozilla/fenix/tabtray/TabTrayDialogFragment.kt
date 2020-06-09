@@ -14,7 +14,6 @@ import androidx.core.view.updatePadding
 import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
-import kotlinx.android.synthetic.main.component_tabstray.*
 import kotlinx.android.synthetic.main.component_tabstray.view.*
 import kotlinx.android.synthetic.main.fragment_tab_tray_dialog.*
 import kotlinx.android.synthetic.main.fragment_tab_tray_dialog.view.*
@@ -24,10 +23,11 @@ import mozilla.components.browser.state.selector.normalTabs
 import mozilla.components.browser.state.selector.privateTabs
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.concept.engine.prompt.ShareData
-import mozilla.components.concept.tabstray.Tab
 import mozilla.components.feature.tabs.tabstray.TabsFeature
 import mozilla.components.feature.tab.collections.TabCollection
+import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.lib.state.ext.consumeFrom
+import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
@@ -41,7 +41,7 @@ import org.mozilla.fenix.components.TabCollectionStorage
 
 @SuppressWarnings("TooManyFunctions", "LargeClass")
 class TabTrayDialogFragment : AppCompatDialogFragment(), TabTrayInteractor {
-    private var tabsFeature: TabsFeature? = null
+    private val tabsFeature = ViewBoundFeatureWrapper<TabsFeature>()
     private var _tabTrayView: TabTrayView? = null
     private val tabTrayView: TabTrayView
         get() = _tabTrayView!!
@@ -53,6 +53,30 @@ class TabTrayDialogFragment : AppCompatDialogFragment(), TabTrayInteractor {
 
         override fun onTabsAdded(tabCollection: TabCollection, sessions: List<Session>) {
             showCollectionSnackbar()
+        }
+    }
+
+    private val selectTabUseCase = object : TabsUseCases.SelectTabUseCase {
+        override fun invoke(tabId: String) {
+            requireComponents.useCases.tabsUseCases.selectTab(tabId)
+            navigateToBrowser()
+        }
+
+        override fun invoke(session: Session) {
+            requireComponents.useCases.tabsUseCases.selectTab(session)
+            navigateToBrowser()
+        }
+    }
+
+    private val removeTabUseCase = object : TabsUseCases.RemoveTabUseCase {
+        override fun invoke(sessionId: String) {
+            showUndoSnackbarForTab(sessionId)
+            requireComponents.useCases.tabsUseCases.removeTab(sessionId)
+        }
+
+        override fun invoke(session: Session) {
+            showUndoSnackbarForTab(session.id)
+            requireComponents.useCases.tabsUseCases.removeTab(session)
         }
     }
 
@@ -84,17 +108,21 @@ class TabTrayDialogFragment : AppCompatDialogFragment(), TabTrayInteractor {
             this,
             isPrivate,
             requireContext().resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
-        ) { tabsFeature!!.filterTabs(it) }
+        ) { tabsFeature.get()?.filterTabs(it) }
 
-        tabsFeature =
+        tabsFeature.set(
             TabsFeature(
                 tabTrayView.view.tabsTray,
                 view.context.components.core.store,
-                view.context.components.useCases.tabsUseCases,
+                selectTabUseCase,
+                removeTabUseCase,
                 view.context.components.useCases.thumbnailUseCases,
                 { it.content.private == isPrivate },
                 { }
-            )
+            ),
+            owner = viewLifecycleOwner,
+            view = view
+        )
 
         tabLayout.setOnClickListener {
             dismissAllowingStateLoss()
@@ -120,33 +148,15 @@ class TabTrayDialogFragment : AppCompatDialogFragment(), TabTrayInteractor {
         }
     }
 
-    override fun onDestroyView() {
-        _tabTrayView = null
-        tabsFeature = null
-        super.onDestroyView()
-    }
-
-    override fun onStart() {
-        super.onStart()
-        tabTrayView.tabsTray.register(tabTrayView, viewLifecycleOwner)
-        tabsFeature?.start()
-    }
-
-    override fun onStop() {
-        tabsFeature?.stop()
-        tabTrayView.tabsTray.unregister(tabTrayView)
-        super.onStop()
-    }
-
-    override fun onTabClosed(tab: Tab) {
+    private fun showUndoSnackbarForTab(sessionId: String) {
         val sessionManager = view?.context?.components?.core?.sessionManager
         val snapshot = sessionManager
-            ?.findSessionById(tab.id)?.let {
+            ?.findSessionById(sessionId)?.let {
                 sessionManager.createSessionSnapshot(it)
             } ?: return
 
         val state = snapshot.engineSession?.saveState()
-        val isSelected = tab.id == requireComponents.core.store.state.selectedTabId ?: false
+        val isSelected = sessionId == requireComponents.core.store.state.selectedTabId ?: false
 
         val snackbarMessage = if (snapshot.session.private) {
             getString(R.string.snackbar_private_tab_closed)
@@ -168,7 +178,12 @@ class TabTrayDialogFragment : AppCompatDialogFragment(), TabTrayInteractor {
         }
     }
 
-    override fun onTabSelected(tab: Tab) {
+    override fun onDestroyView() {
+        _tabTrayView = null
+        super.onDestroyView()
+    }
+
+    fun navigateToBrowser() {
         dismissAllowingStateLoss()
         if (findNavController().currentDestination?.id == R.id.browserFragment) return
         if (!findNavController().popBackStack(R.id.browserFragment, false)) {

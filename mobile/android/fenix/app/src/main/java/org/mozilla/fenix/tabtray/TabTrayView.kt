@@ -14,7 +14,6 @@ import androidx.core.view.isVisible
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.tabs.TabLayout
 import kotlinx.android.extensions.LayoutContainer
-import kotlinx.android.synthetic.main.component_tabstray.*
 import kotlinx.android.synthetic.main.component_tabstray.view.*
 import kotlinx.android.synthetic.main.component_tabstray_fab.view.*
 import mozilla.components.browser.menu.BrowserMenuBuilder
@@ -24,14 +23,10 @@ import mozilla.components.browser.state.selector.privateTabs
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.tabstray.BrowserTabsTray
-import mozilla.components.concept.tabstray.Tab
-import mozilla.components.concept.tabstray.TabsTray
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 
 interface TabTrayInteractor {
-    fun onTabClosed(tab: Tab)
-    fun onTabSelected(tab: Tab)
     fun onNewTabTapped(private: Boolean)
     fun onTabTrayDismissed()
     fun onShareTabsClicked(private: Boolean)
@@ -47,7 +42,7 @@ class TabTrayView(
     isPrivate: Boolean,
     startingInLandscape: Boolean,
     private val filterTabs: ((TabSessionState) -> Boolean) -> Unit
-) : LayoutContainer, TabsTray.Observer, TabLayout.OnTabSelectedListener {
+) : LayoutContainer, TabLayout.OnTabSelectedListener {
     val fabView = LayoutInflater.from(container.context)
         .inflate(R.layout.component_tabstray_fab, container, true)
 
@@ -156,10 +151,6 @@ class TabTrayView(
         behavior.state = BottomSheetBehavior.STATE_EXPANDED
     }
 
-    override fun onTabSelected(tab: Tab) {
-        interactor.onTabSelected(tab)
-    }
-
     override fun onTabSelected(tab: TabLayout.Tab?) {
         // We need a better way to determine which tab was selected.
         val filter: (TabSessionState) -> Boolean = when (tab?.position) {
@@ -172,6 +163,8 @@ class TabTrayView(
 
         updateState(view.context.components.core.store.state)
     }
+    override fun onTabReselected(tab: TabLayout.Tab?) { /*noop*/ }
+    override fun onTabUnselected(tab: TabLayout.Tab?) { /*noop*/ }
 
     fun updateState(state: BrowserState) {
         view.let {
@@ -195,13 +188,7 @@ class TabTrayView(
         }
     }
 
-    override fun onTabClosed(tab: Tab) {
-        interactor.onTabClosed(tab)
-    }
-    override fun onTabReselected(tab: TabLayout.Tab?) { /*noop*/ }
-    override fun onTabUnselected(tab: TabLayout.Tab?) { /*noop*/ }
-
-    fun toggleFabText(private: Boolean) {
+    private fun toggleFabText(private: Boolean) {
         if (private) {
             fabView.new_tab_button.extend()
             fabView.new_tab_button.contentDescription = view.context.resources.getString(R.string.add_private_tab)
