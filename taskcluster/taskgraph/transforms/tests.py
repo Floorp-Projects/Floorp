@@ -1586,7 +1586,7 @@ def set_profile(config, tasks):
 
     for task in tasks:
         if profile and task['suite'] in ['talos', 'raptor']:
-            task['mozharness']['extra-options'].append('--geckoProfile')
+            task['mozharness']['extra-options'].append('--gecko-profile')
         yield task
 
 

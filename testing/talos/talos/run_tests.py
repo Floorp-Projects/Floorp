@@ -247,7 +247,7 @@ function FindProxyForURL(url, host) {
         talos_results.add_extra_option('%s_thread' % config['stylothreads'])
 
     if config['gecko_profile']:
-        talos_results.add_extra_option('geckoProfile')
+        talos_results.add_extra_option('gecko-profile')
 
     # differentiate fission vs non-fission results in perfherder
     if browser_config.get('enable_fission', False):

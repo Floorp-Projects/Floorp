@@ -211,7 +211,7 @@ class Output(object):
 
         # This is the output that treeherder expects to find when parsing the
         # log file
-        if 'geckoProfile' not in self.results.extra_options:
+        if 'gecko-profile' not in self.results.extra_options:
             LOG.info("PERFHERDER_DATA: %s" % json.dumps(results,
                                                         ignore_nan=True))
         if results_scheme in ('file'):
