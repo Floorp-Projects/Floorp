@@ -25,6 +25,7 @@ import android.support.annotation.Nullable;
 import android.text.TextUtils;
 
 import org.mozilla.gecko.EventDispatcher;
+import org.mozilla.gecko.GeckoSystemStateListener;
 import org.mozilla.gecko.util.GeckoBundle;
 
 @AnyThread
@@ -358,7 +359,7 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
          * @return This Builder instance.
          */
         public @NonNull Builder preferredColorScheme(final @ColorScheme int scheme) {
-            getSettings().mPreferredColorScheme.set(scheme);
+            getSettings().setPreferredColorScheme(scheme);
             return this;
         }
 
@@ -477,8 +478,6 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
         "font.size.systemFontScale", 100);
     /* package */ final Pref<Integer> mFontInflationMinTwips = new Pref<>(
         "font.size.inflation.minTwips", 0);
-    /* package */ final Pref<Integer> mPreferredColorScheme = new Pref<>(
-        "ui.systemUsesDarkTheme", -1);
     /* package */ final Pref<Boolean> mInputAutoZoom = new Pref<>(
             "formhelper.autozoom", true);
     /* package */ final Pref<Boolean> mDoubleTapZooming = new Pref<>(
@@ -501,6 +500,8 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
             "browser.tabs.remote.autostart", true);
     /* package */ final Pref<Boolean> mAutofillLogins = new Pref<Boolean>(
         "signon.autofillForms", true);
+
+    /* package */ int mPreferredColorScheme = COLOR_SCHEME_SYSTEM;
 
     /* package */ boolean mDebugPause;
     /* package */ boolean mUseMaxScreenDepth;
@@ -984,7 +985,7 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
      * @return One of the {@link GeckoRuntimeSettings#COLOR_SCHEME_LIGHT COLOR_SCHEME_*} constants.
      */
     public @ColorScheme int getPreferredColorScheme() {
-        return mPreferredColorScheme.get();
+        return mPreferredColorScheme;
     }
 
     /**
@@ -995,7 +996,10 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
      * @return This GeckoRuntimeSettings instance.
      */
     public @NonNull GeckoRuntimeSettings setPreferredColorScheme(final @ColorScheme int scheme) {
-        mPreferredColorScheme.commit(scheme);
+        if (mPreferredColorScheme != scheme) {
+            mPreferredColorScheme = scheme;
+            GeckoSystemStateListener.onDeviceChanged();
+        }
         return this;
     }
 
