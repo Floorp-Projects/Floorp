@@ -33,7 +33,7 @@ logger = logging.getLogger(__name__)
     description=('Take the label of the current task, '
                  'and trigger the task with that label '
                  'on previous pushes in the same project '
-                 'while adding the --geckoProfile cmd arg.'),
+                 'while adding the --gecko-profile cmd arg.'),
     order=200,
     context=[{'test-type': 'talos'}, {'test-type': 'raptor'}],
     schema={},
@@ -86,7 +86,8 @@ def geckoprofile_action(parameters, graph_config, input, task_group_id, task_id)
                     return task
 
                 cmd = task.task['payload']['command']
-                task.task['payload']['command'] = add_args_to_perf_command(cmd, ['--geckoProfile'])
+                task.task['payload']['command'] = add_args_to_perf_command(
+                        cmd, ['--gecko-profile'])
                 task.task['extra']['treeherder']['symbol'] += '-p'
                 return task
 
