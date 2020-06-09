@@ -20,9 +20,6 @@
 #  include "mozilla/a11y/PDocAccessible.h"
 #endif
 #include "GeckoProfiler.h"
-#ifdef MOZ_GECKO_PROFILER
-#  include "ProfilerMarkerPayload.h"
-#endif
 #include "GMPServiceParent.h"
 #include "HandlerServiceParent.h"
 #include "IHistory.h"
@@ -352,11 +349,6 @@ extern FileDescriptor CreateAudioIPCConnection();
 
 namespace dom {
 
-LazyLogModule gProcessLog("Process");
-
-/* static */
-LogModule* ContentParent::GetLog() { return gProcessLog; }
-
 #define NS_IPC_IOSERVICE_SET_OFFLINE_TOPIC "ipc:network:set-offline"
 #define NS_IPC_IOSERVICE_SET_CONNECTIVITY_TOPIC "ipc:network:set-connectivity"
 
@@ -483,10 +475,6 @@ ContentParentsMemoryReporter::CollectReports(
   return NS_OK;
 }
 
-// A hashtable (by type) of processes/ContentParents.  This includes
-// processes that are in the Preallocator cache (which would be type
-// 'prealloc'), and recycled processes ('web' and in the future
-// eTLD+1-locked) processes).
 nsClassHashtable<nsStringHashKey, nsTArray<ContentParent*>>*
     ContentParent::sBrowserContentParents;
 
@@ -644,10 +632,8 @@ static const char* sObserverTopics[] = {
 /*static*/ RefPtr<ContentParent::LaunchPromise>
 ContentParent::PreallocateProcess() {
   RefPtr<ContentParent> process = new ContentParent(
-      /* aOpener = */ nullptr, NS_LITERAL_STRING(PREALLOC_REMOTE_TYPE));
+      /* aOpener = */ nullptr, NS_LITERAL_STRING(DEFAULT_REMOTE_TYPE));
 
-  MOZ_LOG(ContentParent::GetLog(), LogLevel::Debug,
-          ("Preallocating process of type " PREALLOC_REMOTE_TYPE));
   return process->LaunchSubprocessAsync(PROCESS_PRIORITY_PREALLOC);
 }
 
@@ -726,8 +712,6 @@ const nsDependentSubstring RemoteTypePrefix(
 }
 
 bool IsWebRemoteType(const nsAString& aContentProcessType) {
-  // Note: matches webIsolated as well as web (and webLargeAllocation, and
-  // webCOOP+COEP)
   return StringBeginsWith(aContentProcessType,
                           NS_LITERAL_STRING(DEFAULT_REMOTE_TYPE));
 }
@@ -745,7 +729,7 @@ uint32_t ContentParent::GetMaxProcessCount(
       RemoteTypePrefix(aContentProcessType);
 
   // Check for the default remote type of "web", as it uses different prefs.
-  if (processTypePrefix.EqualsLiteral(DEFAULT_REMOTE_TYPE)) {
+  if (processTypePrefix.EqualsLiteral("web")) {
     return GetMaxWebProcessCount();
   }
 
@@ -770,57 +754,27 @@ bool ContentParent::IsMaxProcessCountReached(
          GetMaxProcessCount(aContentProcessType);
 }
 
-// Really more ReleaseUnneededProcesses()
 /*static*/
 void ContentParent::ReleaseCachedProcesses() {
-  MOZ_LOG(ContentParent::GetLog(), LogLevel::Debug,
-          ("ReleaseCachedProcesses:"));
-  if (!sBrowserContentParents) {
+  if (!GetPoolSize(NS_LITERAL_STRING(DEFAULT_REMOTE_TYPE))) {
     return;
   }
 
-#ifdef DEBUG
-  int num = 0;
-  for (auto iter = sBrowserContentParents->Iter(); !iter.Done(); iter.Next()) {
-    nsTArray<ContentParent*>* contentParents = iter.Data().get();
-    num += contentParents->Length();
-    for (auto* cp : *contentParents) {
-      MOZ_LOG(
-          ContentParent::GetLog(), LogLevel::Debug,
-          ("%s: %zu processes", NS_ConvertUTF16toUTF8(cp->mRemoteType).get(),
-           contentParents->Length()));
-      break;
-    }
-  }
-#endif
-  // We process the toRelease array outside of the iteration to avoid modifying
-  // the list (via RemoveFromList()) while we're iterating it.
+  // We might want to extend this for other process types as well in the
+  // future...
+  nsTArray<ContentParent*>& contentParents =
+      GetOrCreatePool(NS_LITERAL_STRING(DEFAULT_REMOTE_TYPE));
   nsTArray<ContentParent*> toRelease;
-  for (auto iter = sBrowserContentParents->Iter(); !iter.Done(); iter.Next()) {
-    nsTArray<ContentParent*>* contentParents = iter.Data().get();
 
-    // Shutting down these processes will change the array so let's use another
-    // array for the removal.
-    for (auto* cp : *contentParents) {
-      if (cp->ManagedPBrowserParent().Count() == 0 &&
-          !cp->HasActiveWorkerOrJSPlugin() &&
-          cp->mRemoteType.EqualsLiteral(DEFAULT_REMOTE_TYPE)) {
-        toRelease.AppendElement(cp);
-      } else {
-        MOZ_LOG(ContentParent::GetLog(), LogLevel::Debug,
-                ("  Skipping %p (%s), count %d, HasActiveWorkerOrJSPlugin %d",
-                 cp, NS_ConvertUTF16toUTF8(cp->mRemoteType).get(),
-                 cp->ManagedPBrowserParent().Count(),
-                 cp->HasActiveWorkerOrJSPlugin()));
-      }
+  // Shuting down these processes will change the array so let's use another
+  // array for the removal.
+  for (auto* cp : contentParents) {
+    if (cp->ManagedPBrowserParent().Count() == 0) {
+      toRelease.AppendElement(cp);
     }
   }
 
   for (auto* cp : toRelease) {
-    MOZ_LOG(ContentParent::GetLog(), LogLevel::Debug,
-            ("  Shutdown %p (%s)", cp,
-             NS_ConvertUTF16toUTF8(cp->mRemoteType).get()));
-    PreallocatedProcessManager::Erase(cp);
     // Start a soft shutdown.
     cp->ShutDownProcess(SEND_SHUTDOWN_MESSAGE);
     // Make sure we don't select this process for new tabs.
@@ -885,19 +839,6 @@ already_AddRefed<ContentParent> ContentParent::GetUsedBrowserProcess(
     // If the provider returned an existing ContentParent, use that one.
     if (0 <= index && static_cast<uint32_t>(index) <= aMaxContentParents) {
       RefPtr<ContentParent> retval = aContentParents[index];
-#ifdef MOZ_GECKO_PROFILER
-      if (profiler_thread_is_being_profiled()) {
-        nsPrintfCString marker("Reused process %u",
-                               (unsigned int)retval->ChildID());
-        TimeStamp now = TimeStamp::Now();
-        PROFILER_ADD_MARKER_WITH_PAYLOAD("Process", DOM, TextMarkerPayload,
-                                         (marker, now, now));
-      }
-#endif
-      MOZ_LOG(ContentParent::GetLog(), LogLevel::Debug,
-              ("GetUsedProcess: Reused process %p (%u) for %s", retval.get(),
-               (unsigned int)retval->ChildID(),
-               NS_ConvertUTF16toUTF8(aRemoteType).get()));
       return retval.forget();
     }
   } else {
@@ -907,55 +848,21 @@ already_AddRefed<ContentParent> ContentParent::GetUsedBrowserProcess(
     RefPtr<ContentParent> random;
     if (aContentParents.Length() >= aMaxContentParents &&
         (random = MinTabSelect(aContentParents, aOpener, aMaxContentParents))) {
-      MOZ_LOG(ContentParent::GetLog(), LogLevel::Debug,
-              ("GetUsedProcess: Reused random process %p (%d) for %s",
-               random.get(), (unsigned int)random->ChildID(),
-               NS_ConvertUTF16toUTF8(aRemoteType).get()));
       return random.forget();
     }
   }
 
-  // Try to take the preallocated process except for blacklisted types.
+  // Try to take the preallocated process only for the default process type.
   // The preallocated process manager might not had the chance yet to release
   // the process after a very recent ShutDownProcess, let's make sure we don't
   // try to reuse a process that is being shut down.
   RefPtr<ContentParent> p;
-  bool preallocated = false;
-  if (!aRemoteType.EqualsLiteral(FILE_REMOTE_TYPE) &&
-      !aRemoteType.EqualsLiteral(EXTENSION_REMOTE_TYPE) &&  // Bug 1638119
-      (p = PreallocatedProcessManager::Take(aRemoteType)) &&
-      !p->mShutdownPending) {
-    // p may be a preallocated process, or (if not PREALLOC_REMOTE_TYPE)
-    // a perviously-used process that's being recycled.  Currently this is
-    // only done for short-duration web (DEFAULT_REMOTE_TYPE) processes
-    preallocated = p->mRemoteType.EqualsLiteral(PREALLOC_REMOTE_TYPE);
+  if (aRemoteType.EqualsLiteral(DEFAULT_REMOTE_TYPE) &&
+      (p = PreallocatedProcessManager::Take()) && !p->mShutdownPending) {
     // For pre-allocated process we have not set the opener yet.
-#ifdef MOZ_GECKO_PROFILER
-    if (profiler_thread_is_being_profiled()) {
-      nsPrintfCString marker("Assigned %s process %u",
-                             preallocated ? "preallocated" : "reused web",
-                             (unsigned int)p->ChildID());
-      TimeStamp now = TimeStamp::Now();
-      PROFILER_ADD_MARKER_WITH_PAYLOAD("Process", DOM, TextMarkerPayload,
-                                       (marker, now, now));
-    }
-#endif
-    MOZ_LOG(ContentParent::GetLog(), LogLevel::Debug,
-            ("Adopted %s process %p for type %s",
-             preallocated ? "preallocated" : "reused web", p.get(),
-             NS_ConvertUTF16toUTF8(aRemoteType).get()));
     p->mOpener = aOpener;
-    p->mActivateTS = TimeStamp::Now();
     aContentParents.AppendElement(p);
-    if (preallocated) {
-      p->mRemoteType.Assign(aRemoteType);
-      // Specialize this process for the appropriate eTLD+1
-      Unused << p->SendRemoteType(p->mRemoteType);
-    } else {
-      // we only allow "web" to "web" for security reasons
-      MOZ_RELEASE_ASSERT(p->mRemoteType.EqualsLiteral(DEFAULT_REMOTE_TYPE) &&
-                         aRemoteType.EqualsLiteral(DEFAULT_REMOTE_TYPE));
-    }
+    p->mActivateTS = TimeStamp::Now();
     return p.forget();
   }
 
@@ -970,17 +877,12 @@ ContentParent::GetNewOrUsedBrowserProcessInternal(Element* aFrameElement,
                                                   ContentParent* aOpener,
                                                   bool aPreferUsed,
                                                   bool aIsSync) {
-  MOZ_LOG(ContentParent::GetLog(), LogLevel::Debug,
-          ("GetNewOrUsedProcess for type %s",
-           NS_ConvertUTF16toUTF8(aRemoteType).get()));
   nsTArray<ContentParent*>& contentParents = GetOrCreatePool(aRemoteType);
   uint32_t maxContentParents = GetMaxProcessCount(aRemoteType);
   if (aRemoteType.EqualsLiteral(
           LARGE_ALLOCATION_REMOTE_TYPE)  // We never want to re-use
                                          // Large-Allocation processes.
       && contentParents.Length() >= maxContentParents) {
-    MOZ_LOG(ContentParent::GetLog(), LogLevel::Debug,
-            ("GetNewOrUsedProcess: returning Large Used process"));
     return GetNewOrUsedBrowserProcessInternal(
         aFrameElement, NS_LITERAL_STRING(DEFAULT_REMOTE_TYPE), aPriority,
         aOpener, /*aPreferUsed =*/false, aIsSync);
@@ -993,18 +895,11 @@ ContentParent::GetNewOrUsedBrowserProcessInternal(Element* aFrameElement,
   if (contentParent) {
     // We have located a process. It may not have finished initializing,
     // this will be for the caller to handle.
-    MOZ_LOG(ContentParent::GetLog(), LogLevel::Debug,
-            ("GetNewOrUsedProcess: Used process %p (launching %d)",
-             contentParent.get(), contentParent->IsLaunching()));
     return contentParent.forget();
   }
 
   // No reusable process. Let's create and launch one.
   // The life cycle will be set to `LifecycleState::LAUNCHING`.
-  MOZ_LOG(ContentParent::GetLog(), LogLevel::Debug,
-          ("Launching new process immediately for type %s",
-           NS_ConvertUTF16toUTF8(aRemoteType).get()));
-
   contentParent = new ContentParent(aOpener, aRemoteType);
   if (!contentParent->BeginSubprocessLaunch(aIsSync, aPriority)) {
     // Launch aborted because of shutdown. Bailout.
@@ -1017,12 +912,9 @@ ContentParent::GetNewOrUsedBrowserProcessInternal(Element* aFrameElement,
   // Until the new process is ready let's not allow to start up any
   // preallocated processes. The blocker will be removed once we receive
   // the first idle message.
-  contentParent->mIsAPreallocBlocker = true;
-  PreallocatedProcessManager::AddBlocker(aRemoteType, contentParent);
+  PreallocatedProcessManager::AddBlocker(contentParent);
 
   MOZ_ASSERT(contentParent->IsLaunching());
-  MOZ_LOG(ContentParent::GetLog(), LogLevel::Debug,
-          ("GetNewOrUsedProcess: new process %p", contentParent.get()));
   return contentParent.forget();
 }
 
@@ -1520,8 +1412,6 @@ void ContentParent::Init() {
 }
 
 void ContentParent::MaybeAsyncSendShutDownMessage() {
-  MOZ_LOG(ContentParent::GetLog(), LogLevel::Verbose,
-          ("MaybeAsyncSendShutDownMessage %p", this));
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!TryToRecycle());
 
@@ -1664,8 +1554,6 @@ void ContentParent::RemoveFromList() {
 }
 
 void ContentParent::MarkAsDead() {
-  MOZ_LOG(ContentParent::GetLog(), LogLevel::Verbose,
-          ("Marking ContentProcess %p as dead", this));
   if (!mShutdownPending) {
     RemoveFromList();
   }
@@ -1829,21 +1717,10 @@ void ContentParent::ActorDestroy(ActorDestroyReason why) {
   }
   mIdleListeners.Clear();
 
-  MOZ_LOG(ContentParent::GetLog(), LogLevel::Verbose,
-          ("destroying Subprocess in ActorDestroy: ContentParent %p "
-           "mSubprocess %p handle %ld",
-           this, mSubprocess,
-           mSubprocess ? (long)mSubprocess->GetChildProcessHandle() : -1));
   // FIXME (bug 1520997): does this really need an additional dispatch?
   MessageLoop::current()->PostTask(NS_NewRunnableFunction(
-      "DelayedDeleteSubprocessRunnable", [subprocess = mSubprocess] {
-        MOZ_LOG(
-            ContentParent::GetLog(), LogLevel::Debug,
-            ("destroyed Subprocess in ActorDestroy: Subprocess %p handle %ld",
-             subprocess,
-             subprocess ? (long)subprocess->GetChildProcessHandle() : -1));
-        subprocess->Destroy();
-      }));
+      "DelayedDeleteSubprocessRunnable",
+      [subprocess = mSubprocess] { subprocess->Destroy(); }));
   mSubprocess = nullptr;
 
   ContentProcessManager* cpm = ContentProcessManager::GetSingleton();
@@ -1877,51 +1754,23 @@ void ContentParent::ActorDestroy(ActorDestroyReason why) {
 void ContentParent::ActorDealloc() { mSelfRef = nullptr; }
 
 bool ContentParent::TryToRecycle() {
-  // We can only do this if we have a separate cache for recycled
-  // 'web' processes, and handle them differently than webIsolated ones
-  if (!mRemoteType.EqualsLiteral(DEFAULT_REMOTE_TYPE)) {
-    return false;
-  }
   // This life time check should be replaced by a memory health check (memory
   // usage + fragmentation).
-
-  // Note that this is specifically to help with edge cases that rapidly
-  // create-and-destroy processes
   const double kMaxLifeSpan = 5;
-  MOZ_LOG(
-      ContentParent::GetLog(), LogLevel::Debug,
-      ("TryToRecycle ContentProcess %p (%u) with lifespan %f seconds", this,
-       (unsigned int)ChildID(), (TimeStamp::Now() - mActivateTS).ToSeconds()));
-
   if (mShutdownPending || mCalledKillHard || !IsAlive() ||
       !mRemoteType.EqualsLiteral(DEFAULT_REMOTE_TYPE) ||
-      (TimeStamp::Now() - mActivateTS).ToSeconds() > kMaxLifeSpan) {
-    MOZ_LOG(ContentParent::GetLog(), LogLevel::Debug,
-            ("TryToRecycle did not take ownership of %p", this));
-    // It's possible that the process was already cached via Provide() (such
-    // as from TabDestroyed), and we're being called from a different path,
-    // such as UnregisterRemoveWorkerActor(), and we're now past kMaxLifeSpan
-    // (or some other).  Ensure that if we're going to destroy this process
-    // that we don't have it in the cache.
-    PreallocatedProcessManager::Erase(this);
+      (TimeStamp::Now() - mActivateTS).ToSeconds() > kMaxLifeSpan ||
+      !PreallocatedProcessManager::Provide(this)) {
     return false;
   }
-  // This will either cache it and take ownership, realize it was already
-  // cached (due to this being called a second time via a different
-  // path), or it will decide to not take ownership (if it has another
-  // already cached)
-  bool retval = PreallocatedProcessManager::Provide(this);
-  MOZ_LOG(ContentParent::GetLog(), LogLevel::Debug,
-          ("Provide did %stake ownership of %p", retval ? "" : "not ", this));
-  if (retval) {
-    // The PreallocatedProcessManager took over the ownership let's not keep a
-    // reference to it
-    RemoveFromList();
-  }
-  return retval;
+
+  // The PreallocatedProcessManager took over the ownership let's not keep a
+  // reference to it, until we don't take it back.
+  RemoveFromList();
+  return true;
 }
 
-bool ContentParent::HasActiveWorkerOrJSPlugin() {
+bool ContentParent::ShouldKeepProcessAlive() {
   if (IsForJSPlugin()) {
     return true;
   }
@@ -1932,13 +1781,6 @@ bool ContentParent::HasActiveWorkerOrJSPlugin() {
     if (lock->mCount) {
       return true;
     }
-  }
-  return false;
-}
-
-bool ContentParent::ShouldKeepProcessAlive() {
-  if (HasActiveWorkerOrJSPlugin()) {
-    return true;
   }
 
   if (!sBrowserContentParents) {
@@ -1997,8 +1839,6 @@ void ContentParent::NotifyTabDestroying() {
     return;
   }
 
-  MOZ_LOG(ContentParent::GetLog(), LogLevel::Verbose,
-          ("NotifyTabDestroying %p", this));
   if (TryToRecycle()) {
     return;
   }
@@ -2045,11 +1885,8 @@ void ContentParent::NotifyTabDestroyed(const TabId& aTabId,
   // There can be more than one PBrowser for a given app process
   // because of popup windows.  When the last one closes, shut
   // us down.
-  MOZ_LOG(ContentParent::GetLog(), LogLevel::Verbose,
-          ("NotifyTabDestroyed %p", this));
   if (ManagedPBrowserParent().Count() == 1 && !ShouldKeepProcessAlive() &&
       !TryToRecycle()) {
-    MarkAsDead();
     MaybeAsyncSendShutDownMessage();
   }
 }
@@ -2254,10 +2091,7 @@ void ContentParent::LaunchSubprocessReject() {
   // Now that communication with the child is complete, we can cleanup
   // the preference serializer.
   mPrefSerializer = nullptr;
-  if (mIsAPreallocBlocker) {
-    PreallocatedProcessManager::RemoveBlocker(mRemoteType, this);
-    mIsAPreallocBlocker = false;
-  }
+  PreallocatedProcessManager::RemoveBlocker(this);
   MarkAsDead();
 }
 
@@ -2269,16 +2103,6 @@ bool ContentParent::LaunchSubprocessResolve(bool aIsSync,
   mPrefSerializer = nullptr;
 
   const auto launchResumeTS = TimeStamp::Now();
-#ifdef MOZ_GECKO_PROFILER
-  if (profiler_thread_is_being_profiled()) {
-    nsPrintfCString marker("Process start%s for %u",
-                           mIsAPreallocBlocker ? " (immediate)" : "",
-                           (unsigned int)ChildID());
-    PROFILER_ADD_MARKER_WITH_PAYLOAD(
-        mIsAPreallocBlocker ? "Process Immediate Launch" : "Process Launch",
-        DOM, TextMarkerPayload, (marker, mLaunchTS, launchResumeTS));
-  }
-#endif
 
   if (!sCreatedFirstContentProcess) {
     nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
@@ -2384,7 +2208,6 @@ ContentParent::ContentParent(ContentParent* aOpener,
       mLaunchYieldTS(mLaunchTS),
       mActivateTS(mLaunchTS),
       mOpener(aOpener),
-      mIsAPreallocBlocker(false),
       mRemoteType(aRemoteType),
       mChildID(gContentChildID++),
       mGeolocationWatchID(-1),
@@ -2427,10 +2250,6 @@ ContentParent::ContentParent(ContentParent* aOpener,
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   bool isFile = mRemoteType.EqualsLiteral(FILE_REMOTE_TYPE);
   mSubprocess = new GeckoChildProcessHost(GeckoProcessType_Content, isFile);
-  MOZ_LOG(ContentParent::GetLog(), LogLevel::Verbose,
-          ("CreateSubprocess: ContentParent %p mSubprocess %p handle %ld", this,
-           mSubprocess,
-           mSubprocess ? (long)mSubprocess->GetChildProcessHandle() : -1));
 }
 
 ContentParent::~ContentParent() {
@@ -2440,13 +2259,6 @@ ContentParent::~ContentParent() {
 
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  if (mIsAPreallocBlocker) {
-    MOZ_LOG(ContentParent::GetLog(), LogLevel::Debug,
-            ("Removing blocker on ContentProcess destruction"));
-    PreallocatedProcessManager::RemoveBlocker(mRemoteType, this);
-    mIsAPreallocBlocker = false;
-  }
-
   // We should be removed from all these lists in ActorDestroy.
   MOZ_ASSERT(!sPrivateContent || !sPrivateContent->Contains(this));
   if (IsForJSPlugin()) {
@@ -2455,18 +2267,12 @@ ContentParent::~ContentParent() {
   } else {
     MOZ_ASSERT(!sBrowserContentParents ||
                !sBrowserContentParents->Contains(mRemoteType) ||
-               !sBrowserContentParents->Get(mRemoteType)->Contains(this) ||
-               sCanLaunchSubprocesses ==
-                   false);  // aka in shutdown - avoid timing issues
+               !sBrowserContentParents->Get(mRemoteType)->Contains(this));
   }
 
   // Normally mSubprocess is destroyed in ActorDestroy, but that won't
   // happen if the process wasn't launched or if it failed to launch.
   if (mSubprocess) {
-    MOZ_LOG(ContentParent::GetLog(), LogLevel::Verbose,
-            ("DestroySubprocess: ContentParent %p mSubprocess %p handle %ld",
-             this, mSubprocess,
-             mSubprocess ? (long)mSubprocess->GetChildProcessHandle() : -1));
     mSubprocess->Destroy();
   }
 }
@@ -2474,8 +2280,6 @@ ContentParent::~ContentParent() {
 bool ContentParent::InitInternal(ProcessPriority aInitialPriority) {
   XPCOMInitData xpcomInit;
 
-  MOZ_LOG(ContentParent::GetLog(), LogLevel::Debug,
-          ("ContentParent::InitInternal: %p", (void*)this));
   nsCOMPtr<nsIIOService> io(do_GetIOService());
   MOZ_ASSERT(io, "No IO service?");
   DebugOnly<nsresult> rv = io->GetOffline(&xpcomInit.isOffline());
@@ -3061,10 +2865,7 @@ mozilla::ipc::IPCResult ContentParent::RecvFirstIdle() {
   // When the ContentChild goes idle, it sends us a FirstIdle message
   // which we use as a good time to signal the PreallocatedProcessManager
   // that it can start allocating processes from now on.
-  if (mIsAPreallocBlocker) {
-    PreallocatedProcessManager::RemoveBlocker(mRemoteType, this);
-    mIsAPreallocBlocker = false;
-  }
+  PreallocatedProcessManager::RemoveBlocker(this);
   return IPC_OK();
 }
 
@@ -3562,10 +3363,6 @@ void ContentParent::KillHard(const char* aReason) {
   }
 
   if (mSubprocess) {
-    MOZ_LOG(ContentParent::GetLog(), LogLevel::Verbose,
-            ("KillHard Subprocess: ContentParent %p mSubprocess %p handle %ld",
-             this, mSubprocess,
-             mSubprocess ? (long)mSubprocess->GetChildProcessHandle() : -1));
     mSubprocess->SetAlreadyDead();
   }
 
@@ -6196,11 +5993,8 @@ void ContentParent::UnregisterRemoveWorkerActor() {
   }
 
   ContentProcessManager* cpm = ContentProcessManager::GetSingleton();
-  MOZ_LOG(ContentParent::GetLog(), LogLevel::Verbose,
-          ("UnregisterRemoveWorkerActor %p", this));
   if (!cpm->GetBrowserParentCountByProcessId(ChildID()) &&
       !ShouldKeepProcessAlive() && !TryToRecycle()) {
-    MarkAsDead();
     MaybeAsyncSendShutDownMessage();
   }
 }
