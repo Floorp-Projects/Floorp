@@ -13,6 +13,7 @@ class MediaControlKeysEventSourceTestImpl : public MediaControlKeysEventSource {
   NS_INLINE_DECL_REFCOUNTING(MediaControlKeysEventSourceTestImpl, override)
   bool Open() override { return true; }
   bool IsOpened() const override { return true; }
+  void SetSupportedMediaKeys(const MediaKeysArray& aSupportedKeys) override {}
 
  private:
   ~MediaControlKeysEventSourceTestImpl() = default;

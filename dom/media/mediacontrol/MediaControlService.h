@@ -100,6 +100,8 @@ class MediaControlService final : public nsIObserver {
     explicit ControllerManager(MediaControlService* aService);
     ~ControllerManager() = default;
 
+    using MediaKeysArray = nsTArray<MediaControlKeysEvent>;
+
     bool AddController(MediaController* aController);
     bool RemoveController(MediaController* aController);
     void UpdateMainControllerIfNeeded(MediaController* aController);
@@ -129,7 +131,7 @@ class MediaControlService final : public nsIObserver {
                                 InsertOptions aOption);
 
     void UpdateMainControllerInternal(MediaController* aController);
-    void ConnectToMainControllerEvents();
+    void ConnectMainControllerEvents();
     void DisconnectMainControllerEvents();
 
     LinkedList<RefPtr<MediaController>> mControllers;
@@ -138,8 +140,8 @@ class MediaControlService final : public nsIObserver {
     // These member are use to listen main controller's play state changes and
     // update the playback state to the event source.
     RefPtr<MediaControlKeysEventSource> mSource;
-    MediaEventListener mPlayStateChangedListener;
     MediaEventListener mMetadataChangedListener;
+    MediaEventListener mSupportedKeysChangedListener;
   };
 
   void Init();

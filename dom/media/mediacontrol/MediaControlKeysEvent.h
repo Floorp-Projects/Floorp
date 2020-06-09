@@ -73,6 +73,8 @@ class MediaControlKeysEventSource {
   NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
   MediaControlKeysEventSource();
 
+  using MediaKeysArray = nsTArray<MediaControlKeysEvent>;
+
   virtual void AddListener(MediaControlKeysEventListener* aListener);
   virtual void RemoveListener(MediaControlKeysEventListener* aListener);
   size_t GetListenersNum() const;
@@ -88,6 +90,10 @@ class MediaControlKeysEventSource {
 
   // Override this method if the event source needs to handle the metadata.
   virtual void SetMediaMetadata(const MediaMetadataBase& aMetadata) {}
+
+  // Set the supported media keys which the event source can use to determine
+  // what kinds of buttons should be shown on the UI.
+  virtual void SetSupportedMediaKeys(const MediaKeysArray& aSupportedKeys) = 0;
 
  protected:
   virtual ~MediaControlKeysEventSource() = default;
