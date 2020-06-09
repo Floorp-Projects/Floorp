@@ -221,10 +221,6 @@ class StoragePrincipalHelper final {
                          bool aForceIsolation,
                          nsIPrincipal** aStoragePrincipal);
 
-  static nsresult CreatePartitionedPrincipalForServiceWorker(
-      nsIPrincipal* aPrincipal, nsICookieJarSettings* aCookieJarSettings,
-      nsIPrincipal** aPartitionedPrincipal);
-
   static nsresult PrepareEffectiveStoragePrincipalOriginAttributes(
       nsIChannel* aChannel, OriginAttributes& aOriginAttributes);
 
