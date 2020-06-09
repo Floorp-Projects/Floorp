@@ -9,7 +9,6 @@ DIRS += [
 ]
 
 DevToolsModules(
-    'frame.js',
     'process.js',
     'tab.js',
     'webextension.js',
