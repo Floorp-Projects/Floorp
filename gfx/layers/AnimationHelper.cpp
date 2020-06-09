@@ -26,14 +26,14 @@ void CompositorAnimationStorage::Clear() {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
 
   mAnimatedValues.Clear();
-  mAnimations.Clear();
+  mAnimations.clear();
 }
 
 void CompositorAnimationStorage::ClearById(const uint64_t& aId) {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
 
   mAnimatedValues.Remove(aId);
-  mAnimations.Remove(aId);
+  mAnimations.erase(aId);
 }
 
 AnimatedValue* CompositorAnimationStorage::GetAnimatedValue(
@@ -126,7 +126,8 @@ void CompositorAnimationStorage::SetAnimatedValue(uint64_t aId,
 void CompositorAnimationStorage::SetAnimations(uint64_t aId,
                                                const AnimationArray& aValue) {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
-  mAnimations.Put(aId, AnimationHelper::ExtractAnimations(aValue));
+  mAnimations[aId] = std::make_unique<AnimationStorageData>(
+      AnimationHelper::ExtractAnimations(aValue));
 }
 
 enum class CanSkipCompose {
@@ -581,38 +582,37 @@ bool AnimationHelper::SampleAnimations(CompositorAnimationStorage* aStorage,
   bool isAnimating = false;
 
   // Do nothing if there are no compositor animations
-  if (!aStorage->AnimationsCount()) {
+  if (!aStorage->HasAnimations()) {
     return isAnimating;
   }
 
   // Sample the animations in CompositorAnimationStorage
-  for (auto iter = aStorage->ConstAnimationsTableIter(); !iter.Done();
-       iter.Next()) {
-    auto& animationStorageData = iter.Data();
-    if (animationStorageData.mAnimation.IsEmpty()) {
+  for (const auto& iter : aStorage->Animations()) {
+    const auto& animationStorageData = iter.second;
+    if (animationStorageData->mAnimation.IsEmpty()) {
       continue;
     }
 
     isAnimating = true;
     nsTArray<RefPtr<RawServoAnimationValue>> animationValues;
-    AnimatedValue* previousValue = aStorage->GetAnimatedValue(iter.Key());
+    AnimatedValue* previousValue = aStorage->GetAnimatedValue(iter.first);
     AnimationHelper::SampleResult sampleResult =
         AnimationHelper::SampleAnimationForEachNode(
             aPreviousFrameTime, aCurrentFrameTime, previousValue,
-            animationStorageData.mAnimation, animationValues);
+            animationStorageData->mAnimation, animationValues);
 
     if (sampleResult != AnimationHelper::SampleResult::Sampled) {
       continue;
     }
 
     const PropertyAnimationGroup& lastPropertyAnimationGroup =
-        animationStorageData.mAnimation.LastElement();
+        animationStorageData->mAnimation.LastElement();
 
     // Store the AnimatedValue
     switch (lastPropertyAnimationGroup.mProperty) {
       case eCSSProperty_background_color: {
         aStorage->SetAnimatedValue(
-            iter.Key(), previousValue,
+            iter.first, previousValue,
             Servo_AnimationValue_GetColor(animationValues[0],
                                           NS_RGBA(0, 0, 0, 0)));
         break;
@@ -620,7 +620,7 @@ bool AnimationHelper::SampleAnimations(CompositorAnimationStorage* aStorage,
       case eCSSProperty_opacity: {
         MOZ_ASSERT(animationValues.Length() == 1);
         aStorage->SetAnimatedValue(
-            iter.Key(), previousValue,
+            iter.first, previousValue,
             Servo_AnimationValue_GetOpacity(animationValues[0]));
         break;
       }
@@ -632,21 +632,21 @@ bool AnimationHelper::SampleAnimations(CompositorAnimationStorage* aStorage,
       case eCSSProperty_offset_distance:
       case eCSSProperty_offset_rotate:
       case eCSSProperty_offset_anchor: {
-        MOZ_ASSERT(animationStorageData.mTransformData);
+        MOZ_ASSERT(animationStorageData->mTransformData);
 
         const TransformData& transformData =
-            *animationStorageData.mTransformData;
+            *animationStorageData->mTransformData;
         MOZ_ASSERT(transformData.origin() == nsPoint());
 
         gfx::Matrix4x4 transform = ServoAnimationValueToMatrix4x4(
             animationValues, transformData,
-            animationStorageData.mCachedMotionPath);
+            animationStorageData->mCachedMotionPath);
         gfx::Matrix4x4 frameTransform = transform;
 
         transform.PostScale(transformData.inheritedXScale(),
                             transformData.inheritedYScale(), 1);
 
-        aStorage->SetAnimatedValue(iter.Key(), previousValue,
+        aStorage->SetAnimatedValue(iter.first, previousValue,
                                    std::move(transform),
                                    std::move(frameTransform), transformData);
         break;
