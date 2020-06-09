@@ -17,7 +17,24 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsIPKCS11ModuleDB"
 );
 
-var { DefaultMap } = ExtensionUtils;
+var { DefaultMap, ExtensionError } = ExtensionUtils;
+
+var { ExtensionPreferencesManager } = ChromeUtils.import(
+  "resource://gre/modules/ExtensionPreferencesManager.jsm"
+);
+
+var { getSettingsAPI } = ExtensionPreferencesManager;
+
+ExtensionPreferencesManager.addSetting("autoload", {
+  permission: "pkcs11",
+  prefNames: ["security.osclientcerts.autoload"],
+
+  setCallback(value) {
+    let returnObj = {};
+    returnObj[this.prefNames[0]] = !!value;
+    return returnObj;
+  },
+});
 
 const findModuleByPath = function(path) {
   for (let module of pkcs11db.listModules()) {
@@ -47,7 +64,10 @@ this.pkcs11 = class extends ExtensionAPI {
         if (AppConstants.platform !== "linux") {
           manifestLib = manifestLib.toLowerCase(manifestLib);
         }
-        if (manifestLib !== ctypes.libraryName("nssckbi")) {
+        if (
+          manifestLib !== ctypes.libraryName("nssckbi") &&
+          manifestLib !== ctypes.libraryName("osclientcerts")
+        ) {
           return hostInfo.manifest;
         }
       }
@@ -157,6 +177,28 @@ this.pkcs11 = class extends ExtensionAPI {
           }
           return rv;
         },
+
+        autoload: getSettingsAPI({
+          context,
+          name: "autoload",
+          callback() {
+            return Services.prefs.getBoolPref(
+              "security.osclientcerts.autoload"
+            );
+          },
+          validate() {
+            if (AppConstants.platform == "android") {
+              throw new ExtensionError(
+                `android is not a supported platform for the autoload setting.`
+              );
+            }
+            if (AppConstants.platform == "linux") {
+              throw new ExtensionError(
+                `linux is not a supported platform for the autoload setting.`
+              );
+            }
+          },
+        }),
       },
     };
   }
