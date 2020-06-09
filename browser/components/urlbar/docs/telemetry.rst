@@ -240,6 +240,11 @@ Event Extra
   - ``numChars``
     Number of input characters the user typed or pasted at the time of
     submission.
+  - ``numWords``
+    Number of words in the input. The measurement is taken from a trimmed input
+    split up by its spaces. This is not a perfect measurement, since it will
+    return an incorrect value for languages that do not use spaces or URLs
+    containing spaces in its query parameters, for example.
   - ``selType``
     The type of the selected result at the time of submission.
     This is only present for ``engagement`` events.

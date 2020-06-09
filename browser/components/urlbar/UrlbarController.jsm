@@ -17,6 +17,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
   UrlbarProvidersManager: "resource:///modules/UrlbarProvidersManager.jsm",
+  UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.jsm",
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
   URLBAR_SELECTED_RESULT_TYPES: "resource:///modules/BrowserUsageTelemetry.jsm",
 });
@@ -748,7 +749,10 @@ class TelemetryEvent {
    * blurring the input field, an abandonment event is recorded.
    * @param {event} [event] A DOM event.
    * @param {object} details An object describing action details.
-   * @param {string} details.numChars Number of input characters.
+   * @param {string} details.searchString The user's search string. Note that
+   *        this string is not sent with telemetry data. It is only used
+   *        locally to discern other data, such as the number of characters and
+   *        words in the string.
    * @param {string} details.selIndex Index of the selected result, undefined
    *        for "blur".
    * @param {string} details.selType type of the selected element, undefined
@@ -821,9 +825,17 @@ class TelemetryEvent {
       Services.telemetry.setEventRecordingEnabled("urlbar", recordingEnabled);
     }
 
+    // numWords is not a perfect measurement, since it will return an incorrect
+    // value for languages that do not use spaces or URLs containing spaces in
+    // its query parameters, for example.
     let extra = {
       elapsed: elapsed.toString(),
-      numChars: details.numChars.toString(),
+      numChars: details.searchString.length.toString(),
+      numWords: details.searchString
+        .trim()
+        .split(UrlbarTokenizer.REGEXP_SPACES)
+        .filter(t => t)
+        .length.toString(),
     };
     if (method == "engagement") {
       extra.selIndex = details.selIndex.toString();
