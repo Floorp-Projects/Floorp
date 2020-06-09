@@ -56,9 +56,33 @@ class TabsUseCases(
         }
     }
 
-    class RemoveTabUseCase internal constructor(
+    /**
+     * Contract for use cases that remove a tab.
+     */
+    interface RemoveTabUseCase {
+        /**
+         * Removes the session with the provided ID. This method
+         * has no effect if the session doesn't exist.
+         *
+         * @param sessionId The ID of the session to remove.
+         */
+        operator fun invoke(sessionId: String)
+
+        /**
+         * Removes the provided session.
+         *
+         * @param session The session to remove.
+         */
+        operator fun invoke(session: Session)
+    }
+
+    /**
+     * Default implementation of [RemoveTabUseCase], interacting
+     * with [SessionManager].
+     */
+    class DefaultRemoveTabUseCase internal constructor(
         private val sessionManager: SessionManager
-    ) {
+    ) : RemoveTabUseCase {
 
         /**
          * Removes the session with the provided ID. This method
@@ -66,7 +90,7 @@ class TabsUseCases(
          *
          * @param sessionId The ID of the session to remove.
          */
-        operator fun invoke(sessionId: String) {
+        override operator fun invoke(sessionId: String) {
             val session = sessionManager.findSessionById(sessionId)
             if (session != null) {
                 invoke(session)
@@ -78,7 +102,7 @@ class TabsUseCases(
          *
          * @param session The session to remove.
          */
-        operator fun invoke(session: Session) {
+        override operator fun invoke(session: Session) {
             sessionManager.remove(session)
         }
     }
@@ -204,7 +228,7 @@ class TabsUseCases(
     }
 
     val selectTab: SelectTabUseCase by lazy { DefaultSelectTabUseCase(sessionManager) }
-    val removeTab: RemoveTabUseCase by lazy { RemoveTabUseCase(sessionManager) }
+    val removeTab: RemoveTabUseCase by lazy { DefaultRemoveTabUseCase(sessionManager) }
     val addTab: AddNewTabUseCase by lazy { AddNewTabUseCase(sessionManager) }
     val addPrivateTab: AddNewPrivateTabUseCase by lazy { AddNewPrivateTabUseCase(sessionManager) }
     val removeAllTabs: RemoveAllTabsUseCase by lazy { RemoveAllTabsUseCase(sessionManager) }

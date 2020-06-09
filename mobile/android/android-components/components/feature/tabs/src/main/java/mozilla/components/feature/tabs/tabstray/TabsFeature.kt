@@ -23,7 +23,8 @@ import mozilla.components.support.base.feature.LifecycleAwareFeature
 class TabsFeature(
     tabsTray: TabsTray,
     private val store: BrowserStore,
-    tabsUseCases: TabsUseCases,
+    selectTabUseCase: TabsUseCases.SelectTabUseCase,
+    removeTabUseCase: TabsUseCases.RemoveTabUseCase,
     thumbnailsUseCases: ThumbnailsUseCases? = null,
     private val defaultTabsFilter: (TabSessionState) -> Boolean = { true },
     closeTabsTray: () -> Unit
@@ -40,8 +41,8 @@ class TabsFeature(
     @VisibleForTesting
     internal var interactor = TabsTrayInteractor(
         tabsTray,
-        tabsUseCases.selectTab,
-        tabsUseCases.removeTab,
+        selectTabUseCase,
+        removeTabUseCase,
         closeTabsTray)
 
     override fun start() {
