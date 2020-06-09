@@ -289,6 +289,8 @@ struct Statistics {
 
   TimeStamp end() const { return slices_.back().end; }
 
+  TimeStamp creationTime() const { return creationTime_; }
+
   // Occasionally print header lines for profiling information.
   void maybePrintProfileHeaders();
 
@@ -341,6 +343,8 @@ struct Statistics {
   /* Most recent time when the given phase ended. */
   EnumeratedArray<Phase, Phase::LIMIT, TimeStamp> phaseEndTimes;
 #endif
+
+  TimeStamp creationTime_;
 
   /* Bookkeeping for GC timings when timingMutator is true */
   TimeStamp timedGCStart;
