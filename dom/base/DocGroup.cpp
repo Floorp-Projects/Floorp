@@ -165,6 +165,8 @@ DocGroup::~DocGroup() {
     nsIEventTarget* target = EventTargetFor(TaskCategory::Other);
     NS_ProxyRelease("DocGroup::mReactionsStack", target,
                     mReactionsStack.forget());
+
+    NS_ProxyRelease("DocGroup::mArena", target, mArena.forget());
   }
 
   if (mIframePostMessageQueue) {
