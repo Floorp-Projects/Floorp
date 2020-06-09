@@ -68,6 +68,7 @@ import java.io.FileOutputStream
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
+import java.lang.Exception
 import java.lang.IllegalStateException
 import kotlin.random.Random
 
@@ -352,10 +353,11 @@ abstract class AbstractFetchDownloadService : Service() {
         }
     }
 
+    @Suppress("TooGenericExceptionCaught")
     internal fun startDownloadJob(currentDownloadJobState: DownloadJobState) {
         try {
             performDownload(currentDownloadJobState)
-        } catch (e: IOException) {
+        } catch (e: Exception) {
             setDownloadJobStatus(currentDownloadJobState, FAILED)
         }
     }
