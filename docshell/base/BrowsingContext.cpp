@@ -986,7 +986,8 @@ RefPtr<SessionStorageManager> BrowsingContext::GetSessionStorageManager() {
 bool BrowsingContext::CrossOriginIsolated() {
   MOZ_ASSERT(NS_IsMainThread());
 
-  return StaticPrefs::dom_postMessage_sharedArrayBuffer_withCOOP_COEP() &&
+  return StaticPrefs::
+             dom_postMessage_sharedArrayBuffer_withCOOP_COEP_AtStartup() &&
          Top()->GetOpenerPolicy() ==
              nsILoadInfo::
                  OPENER_POLICY_SAME_ORIGIN_EMBEDDER_POLICY_REQUIRE_CORP &&
