@@ -56,6 +56,7 @@ ParentProcessDocumentChannel::RedirectToRealChannel(
       msg.Insert(
           "Attempt to load a non-authorised load in the parent process: ", 0);
       NS_ASSERTION(false, msg.get());
+      RemoveObserver();
       return PDocumentChannelParent::RedirectToRealChannelPromise::
           CreateAndResolve(NS_ERROR_CONTENT_BLOCKED, __func__);
     }
@@ -68,6 +69,11 @@ ParentProcessDocumentChannel::RedirectToRealChannel(
   nsresult rv =
       gHttpHandler->AsyncOnChannelRedirect(this, channel, aRedirectFlags);
   if (NS_FAILED(rv)) {
+    LOG(
+        ("ParentProcessDocumentChannel RedirectToRealChannel "
+         "AsyncOnChannelRedirect failed [this=%p "
+         "aRv=%d]",
+         this, int(rv)));
     OnRedirectVerifyCallback(rv);
   }
 
@@ -81,11 +87,11 @@ ParentProcessDocumentChannel::OnRedirectVerifyCallback(nsresult aResult) {
        "aResult=%d]",
        this, int(aResult)));
 
-  MOZ_ASSERT(mCanceled || mDocumentLoadListener);
+  MOZ_ASSERT(mDocumentLoadListener);
 
   if (NS_FAILED(aResult)) {
     Cancel(aResult);
-  } else if (mCanceled && NS_SUCCEEDED(aResult)) {
+  } else if (mCanceled) {
     aResult = NS_ERROR_ABORT;
   } else {
     const nsCOMPtr<nsIChannel> channel = mDocumentLoadListener->GetChannel();
@@ -113,7 +119,7 @@ ParentProcessDocumentChannel::OnRedirectVerifyCallback(nsresult aResult) {
   mLoadGroup = nullptr;
   mListener = nullptr;
   mCallbacks = nullptr;
-  DisconnectDocumentLoadListener();
+  RemoveObserver();
 
   mPromise.ResolveIfExists(aResult, __func__);
 
@@ -124,7 +130,7 @@ NS_IMETHODIMP ParentProcessDocumentChannel::AsyncOpen(
     nsIStreamListener* aListener) {
   LOG(("ParentProcessDocumentChannel AsyncOpen [this=%p]", this));
   mDocumentLoadListener = new DocumentLoadListener(
-      GetDocShell()->GetBrowsingContext()->Canonical(), this);
+      GetDocShell()->GetBrowsingContext()->Canonical());
   LOG(("Created PPDocumentChannel with listener=%p",
        mDocumentLoadListener.get()));
 
@@ -140,15 +146,17 @@ NS_IMETHODIMP ParentProcessDocumentChannel::AsyncOpen(
 
   nsresult rv = NS_OK;
   Maybe<dom::ClientInfo> initialClientInfo = mInitialClientInfo;
-  if (!mDocumentLoadListener->Open(
-          mLoadState, mCacheKey, Some(mChannelId), mAsyncOpenTime, mTiming,
-          std::move(initialClientInfo), GetDocShell()->GetOuterWindowID(),
-          GetDocShell()
-              ->GetBrowsingContext()
-              ->HasValidTransientUserGestureActivation(),
-          Some(mUriModified), Some(mIsXFOError), &rv)) {
-    MOZ_ASSERT(NS_FAILED(rv));
-    DisconnectDocumentLoadListener();
+  auto promise = mDocumentLoadListener->Open(
+      mLoadState, mCacheKey, Some(mChannelId), mAsyncOpenTime, mTiming,
+      std::move(initialClientInfo), GetDocShell()->GetOuterWindowID(),
+      GetDocShell()
+          ->GetBrowsingContext()
+          ->HasValidTransientUserGestureActivation(),
+      Some(mUriModified), Some(mIsXFOError), 0 /* ProcessId */, &rv);
+  if (NS_FAILED(rv)) {
+    MOZ_ASSERT(!promise);
+    mDocumentLoadListener = nullptr;
+    RemoveObserver();
     return rv;
   }
 
@@ -156,6 +164,32 @@ NS_IMETHODIMP ParentProcessDocumentChannel::AsyncOpen(
   if (mLoadGroup) {
     mLoadGroup->AddRequest(this, nullptr);
   }
+
+  RefPtr<ParentProcessDocumentChannel> self = this;
+  promise
+      ->Then(
+          GetCurrentThreadSerialEventTarget(), __func__,
+          [self](
+              DocumentLoadListener::OpenPromiseSucceededType&& aResolveValue) {
+            self->mPromiseRequest.Complete();
+            // The DLL is waiting for us to resolve the
+            // PDocumentChannel::RedirectToRealChannelPromise given as
+            // parameter.
+            auto promise = self->RedirectToRealChannel(
+                std::move(aResolveValue.mStreamFilterEndpoints),
+                aResolveValue.mRedirectFlags, aResolveValue.mLoadFlags);
+            // We chain the promise the DLL is waiting on to the one returned by
+            // RedirectToRealChannel. As soon as the promise returned is
+            // resolved or rejected, so will the DLL's promise.
+            promise->ChainTo(aResolveValue.mPromise.forget(), __func__);
+          },
+          [self](DocumentLoadListener::OpenPromiseFailedType&& aRejectValue) {
+            self->mPromiseRequest.Complete();
+            self->DisconnectChildListeners(aRejectValue.mStatus,
+                                           aRejectValue.mLoadGroupStatus);
+            self->RemoveObserver();
+          })
+      ->Track(mPromiseRequest);
   return NS_OK;
 }
 
@@ -167,19 +201,10 @@ NS_IMETHODIMP ParentProcessDocumentChannel::Cancel(nsresult aStatus) {
 
   mCanceled = true;
   mDocumentLoadListener->Cancel(aStatus);
-
-  ShutdownListeners(aStatus);
-
-  return NS_OK;
-}
-
-void ParentProcessDocumentChannel::DisconnectDocumentLoadListener() {
-  if (!mDocumentLoadListener) {
-    return;
+  if (!mPromiseRequest.Exists()) {
+    DisconnectChildListeners(aStatus, aStatus);
   }
-  mDocumentLoadListener->DocumentChannelBridgeDisconnected();
-  mDocumentLoadListener = nullptr;
-  RemoveObserver();
+  return NS_OK;
 }
 
 void ParentProcessDocumentChannel::RemoveObserver() {
@@ -191,6 +216,7 @@ void ParentProcessDocumentChannel::RemoveObserver() {
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsIObserver
+////////////////////////////////////////////////////////////////////////////////
 
 NS_IMETHODIMP
 ParentProcessDocumentChannel::Observe(nsISupports* aSubject, const char* aTopic,
