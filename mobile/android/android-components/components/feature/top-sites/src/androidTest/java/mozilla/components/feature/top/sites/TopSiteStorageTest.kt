@@ -104,7 +104,7 @@ class TopSiteStorageTest {
 
         val topSites = storage.getTopSites().first()
 
-        assertNotNull(topSites!!)
+        assertNotNull(topSites)
         assertEquals(2, topSites.size)
 
         with(topSites[0]) {

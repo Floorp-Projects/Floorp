@@ -52,7 +52,7 @@ object Versions {
         const val lifecycle = "2.2.0"
         const val media = "1.1.0"
         const val work = "2.2.0"
-        const val arch_core_testing = "2.1.0"
+        const val arch = "2.1.0"
         const val uiautomator = "2.2.0"
         const val localbroadcastmanager = "1.0.0"
         const val swiperefreshlayout = "1.0.0"
@@ -82,7 +82,8 @@ object Dependencies {
 
     const val androidx_annotation = "androidx.annotation:annotation:${Versions.AndroidX.annotation}"
     const val androidx_appcompat = "androidx.appcompat:appcompat:${Versions.AndroidX.appcompat}"
-    const val androidx_arch_core_testing = "androidx.arch.core:core-testing:${Versions.AndroidX.arch_core_testing}"
+    const val androidx_arch_core_common = "androidx.arch.core:core-common:${Versions.AndroidX.arch}"
+    const val androidx_arch_core_testing = "androidx.arch.core:core-testing:${Versions.AndroidX.arch}"
     const val androidx_browser = "androidx.browser:browser:${Versions.AndroidX.browser}"
     const val androidx_cardview = "androidx.cardview:cardview:${Versions.AndroidX.cardview}"
     const val androidx_constraintlayout = "androidx.constraintlayout:constraintlayout:${Versions.AndroidX.constraintlayout}"
