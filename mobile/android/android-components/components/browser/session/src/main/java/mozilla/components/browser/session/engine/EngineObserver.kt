@@ -31,6 +31,7 @@ import mozilla.components.concept.engine.permission.PermissionRequest
 import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.concept.engine.window.WindowRequest
 import mozilla.components.support.base.observer.Consumable
+import mozilla.components.support.ktx.android.net.isInScope
 
 /**
  * [EngineSession.Observer] implementation responsible to update the state of a [Session] from the events coming out of
@@ -83,13 +84,6 @@ internal class EngineObserver(
             uri.query == originalUri.query
     }
 
-    private fun isHostEquals(sessionUrl: String, newUrl: String): Boolean {
-        val sessionUri = sessionUrl.toUri()
-        val newUri = newUrl.toUri()
-
-        return sessionUri.scheme == newUri.scheme && sessionUri.host == newUri.host
-    }
-
     /**
      * Checks that the [newUrl] is in scope of the web app manifest.
      *
@@ -100,9 +94,7 @@ internal class EngineObserver(
         val scopeUri = scope.toUri()
         val newUri = newUrl.toUri()
 
-        return isHostEquals(scope, newUrl) &&
-            scopeUri.port == newUri.port &&
-            newUri.path.orEmpty().startsWith(scopeUri.path.orEmpty())
+        return newUri.isInScope(listOf(scopeUri))
     }
 
     override fun onLoadRequest(
