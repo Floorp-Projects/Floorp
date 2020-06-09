@@ -1170,6 +1170,8 @@ void nsSliderFrame::RemoveListener() {
 
   thumbFrame->GetContent()->RemoveSystemEventListener(
       NS_LITERAL_STRING("mousedown"), mMediator, false);
+  thumbFrame->GetContent()->RemoveSystemEventListener(
+      NS_LITERAL_STRING("touchstart"), mMediator, false);
 }
 
 bool nsSliderFrame::ShouldScrollForEvent(WidgetGUIEvent* aEvent) {
