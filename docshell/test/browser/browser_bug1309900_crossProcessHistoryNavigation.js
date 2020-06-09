@@ -5,6 +5,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 add_task(async function runTests() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.navigation.requireUserInteraction", false]],
+  });
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
     "about:about"

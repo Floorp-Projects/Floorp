@@ -20,6 +20,10 @@ AddonTestUtils.initMochitest(this);
 
 const DISCOAPI_URL = `http://example.com/${RELATIVE_DIR}/discovery/api_response_empty.json`;
 
+SpecialPowers.pushPrefEnv({
+  set: [["browser.navigation.requireUserInteraction", false]],
+});
+
 var gProvider = new MockProvider();
 gProvider.createAddons([
   {
