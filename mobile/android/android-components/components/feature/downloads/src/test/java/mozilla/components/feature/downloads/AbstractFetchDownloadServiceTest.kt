@@ -963,6 +963,24 @@ class AbstractFetchDownloadServiceTest {
     }
 
     @Test
+    fun `updateDownloadState must update the download state in the store and in the downloadJobs`() {
+        val download = DownloadState("https://example.com/file.txt", "file1.txt")
+        val downloadJob = DownloadJobState(state = mock(), status = ACTIVE)
+        val mockStore = mock<BrowserStore>()
+        val service = spy(object : AbstractFetchDownloadService() {
+            override val httpClient = client
+            override val store = mockStore
+        })
+
+        service.downloadJobs[download.id] = downloadJob
+
+        service.updateDownloadState(download)
+
+        assertEquals(download, service.downloadJobs[download.id]!!.state)
+        verify(mockStore).dispatch(DownloadAction.UpdateQueuedDownloadAction(download))
+    }
+
+    @Test
     fun `onTaskRemoved cancels all notifications on the shadow notification manager`() = runBlocking {
         val download = DownloadState("https://example.com/file.txt", "file.txt")
         val response = Response(

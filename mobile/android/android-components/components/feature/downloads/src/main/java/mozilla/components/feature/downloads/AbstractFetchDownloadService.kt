@@ -628,13 +628,22 @@ abstract class AbstractFetchDownloadService : Service() {
         block: (OutputStream) -> Unit
     ) {
         val downloadWithUniqueFileName = makeUniqueFileNameIfNecessary(download, append)
-        downloadJobs[download.id]?.state = downloadWithUniqueFileName
+        updateDownloadState(downloadWithUniqueFileName)
 
         if (SDK_INT >= Build.VERSION_CODES.Q) {
             useFileStreamScopedStorage(downloadWithUniqueFileName, block)
         } else {
             useFileStreamLegacy(downloadWithUniqueFileName, append, block)
         }
+    }
+
+    /**
+     * Updates the given [updatedDownload] in the store and in the [downloadJobs].
+     */
+    @VisibleForTesting
+    internal fun updateDownloadState(updatedDownload: DownloadState) {
+        downloadJobs[updatedDownload.id]?.state = updatedDownload
+        store.dispatch(DownloadAction.UpdateQueuedDownloadAction(updatedDownload))
     }
 
     /**
