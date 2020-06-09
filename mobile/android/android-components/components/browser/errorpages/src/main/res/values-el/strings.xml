@@ -17,6 +17,12 @@
     <!-- The document title and heading of the error page shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
     <string name="mozac_browser_errorpages_security_ssl_title">Αποτυχία ασφαλούς σύνδεσης</string>
 
+    <!-- The error message shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[<ul>
+        <li>Η σελίδα που προσπαθείτε να προβάλετε δεν μπορεί να εμφανιστεί, επειδή δεν ήταν δυνατή η επαλήθευση της αυθεντικότητας των ληφθέντων δεδομένων.</li>
+        <li>Παρακαλούμε επικοινωνήστε με τους ιδιοκτήτες της ιστοσελίδας για να τους ενημερώσετε για αυτό το πρόβλημα.</li>
+      </ul>]]></string>
+
     <!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->
     <string name="mozac_browser_errorpages_security_bad_cert_title">Αποτυχία ασφαλούς σύνδεσης</string>
 
@@ -39,11 +45,20 @@
     <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
     <string name="mozac_browser_errorpages_unknown_socket_type_title">Απρόσμενη απάντηση από το διακομιστή</string>
 
+    <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_title">Η σελίδα δεν ανακατευθύνει σωστά</string>
+
+    <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_title">Λειτουργία εκτός σύνδεσης</string>
+
     <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
     <string name="mozac_browser_errorpages_net_reset_title">Έγινε επαναφορά της σύνδεσης</string>
 
     <!-- The document title and heading of the error page shown when the browser refuses to load a type of file that is considered unsafe. -->
     <string name="mozac_browser_errorpages_unsafe_content_type_title">Μη ασφαλής τύπος αρχείου</string>
+
+    <!-- The document title and heading of the error page shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_title">Σφάλμα κατεστραμμένου περιεχομένου</string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_invalid_content_encoding_title">Σφάλμα κωδικοποίησης περιεχομένου</string>
@@ -53,6 +68,8 @@
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_no_internet_title">Δεν υπάρχει σύνδεση στο διαδίκτυο</string>
+    <!-- The main body text of this error page. It will be shown beneath the title -->
+    <string name="mozac_browser_errorpages_no_internet_message">Ελέγξτε τη σύνδεση δικτύου σας ή δοκιμάστε να φορτώσετε εκ νέου τη σελίδα σε λίγα λεπτά.</string>
     <!-- Text that will show up on the button at the bottom of the error page -->
     <string name="mozac_browser_errorpages_no_internet_refresh_button">Ανανέωση</string>
 
@@ -68,8 +85,30 @@
     <string name="mozac_browser_errorpages_file_not_found_title">Το αρχείο δεν βρέθηκε</string>
 
     <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_access_denied_title">Άρνηση πρόσβασης στο αρχείο</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_proxy_connection_refused_title">Άρνηση σύνδεσης διαμεσολαβητή</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">Ζήτημα κακόβουλης ιστοσελίδας</string>
+
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_message"><![CDATA[<p>Η ιστοσελίδα στο %1$s έχει αναφερθεί ως ιστοσελίδα επιθέσεων και έχει αποκλειστεί βάσει των προτιμήσεων ασφαλείας σας.</p>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_title">Ζήτημα ανεπιθύμητης ιστοσελίδας</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_message"><![CDATA[<p>Η ιστοσελίδα στο %1$s έχει αναφερθεί για διανομή ανεπιθύμητου λογισμικού και έχει αποκλειστεί βάσει των προτιμήσεων ασφαλείας σας.</p>]]></string>
+
+    <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_harmful_uri_title">Ζήτημα επιβλαβούς ιστοσελίδας</string>
+
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_message"><![CDATA[<p>Η ιστοσελίδα στο %1$s έχει αναφερθεί ως πιθανώς επιβλαβής και έχει αποκλειστεί βάσει των προτιμήσεων ασφαλείας σας.</p>]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_phishing_uri_title">Ζήτημα παραπλανητικής ιστοσελίδας</string>
-    </resources>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[<p>Αυτή η ιστοσελίδα στο %1$s έχει αναφερθεί ως παραπλανητική ιστοσελίδα και έχει αποκλειστεί βάσει των προτιμήσεων ασφαλείας σας.</p>]]></string>
+</resources>
