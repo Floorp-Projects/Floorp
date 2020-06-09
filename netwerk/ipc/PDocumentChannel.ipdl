@@ -52,6 +52,11 @@ child:
   // and notifies the listener via a redirect to the new channel.
   async RedirectToRealChannel(RedirectToRealChannelArgs args, Endpoint<PStreamFilterParent>[] aEndpoint)
       returns (nsresult rv);
+
+  // Tell child to delete channel (all IPDL deletes must be done from child to
+  // avoid races: see bug 591708).
+  async DeleteSelf();
+
 };
 
 } // namespace net

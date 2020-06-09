@@ -982,22 +982,6 @@ class MozPromise : public MozPromiseBase {
     PROMISE_LOG(
         "%s invoking Chain() [this=%p, chainedPromise=%p, isPending=%d]",
         aCallSite, this, chainedPromise.get(), (int)IsPending());
-
-    // We want to use the same type of dispatching method with the chained
-    // promises.
-
-    // We need to ensure that the UseSynchronousTaskDispatch branch isn't taken
-    // at compilation time to ensure we're not triggering the static_assert in
-    // UseSynchronousTaskDispatch method. if constexpr (IsExclusive) ensures
-    // that.
-    if (mUseDirectTaskDispatch) {
-      chainedPromise->UseDirectTaskDispatch(aCallSite);
-    } else if constexpr (IsExclusive) {
-      if (mUseSynchronousTaskDispatch) {
-        chainedPromise->UseSynchronousTaskDispatch(aCallSite);
-      }
-    }
-
     if (!IsPending()) {
       ForwardTo(chainedPromise);
     } else {
@@ -1317,16 +1301,6 @@ class MozPromiseHolderBase {
       ResolveOrReject(std::forward<ResolveOrRejectValueType_>(aValue),
                       aMethodName);
     }
-  }
-
-  void UseSynchronousTaskDispatch(const char* aSite) {
-    MOZ_ASSERT(mPromise);
-    mPromise->UseSynchronousTaskDispatch(aSite);
-  }
-
-  void UseDirectTaskDispatch(const char* aSite) {
-    MOZ_ASSERT(mPromise);
-    mPromise->UseDirectTaskDispatch(aSite);
   }
 
  private:
