@@ -61,13 +61,35 @@ bool ChildSHistory::CanGo(int32_t aOffset) {
   return index.value() < Count() && index.value() >= 0;
 }
 
-void ChildSHistory::Go(int32_t aOffset, ErrorResult& aRv) {
-  CheckedInt<int32_t> index = Index();
-  index += aOffset;
-  if (!index.isValid()) {
-    aRv.Throw(NS_ERROR_FAILURE);
+void ChildSHistory::Go(int32_t aOffset, bool aRequireUserInteraction,
+                       ErrorResult& aRv) {
+  if (aRequireUserInteraction && aOffset != -1 && aOffset != 1) {
+    NS_ERROR(
+        "aRequireUserInteraction may only be used with an offset of -1 or 1");
+    aRv.Throw(NS_ERROR_INVALID_ARG);
     return;
   }
+
+  CheckedInt<int32_t> index = Index();
+  while (true) {
+    index += aOffset;
+    if (!index.isValid()) {
+      aRv.Throw(NS_ERROR_FAILURE);
+      return;
+    }
+
+    // Check for user interaction if desired, except for the first and last
+    // history entries. We compare with >= to account for the case where
+    // aOffset >= Count().
+    if (!aRequireUserInteraction || index.value() >= Count() - 1 ||
+        index.value() <= 0) {
+      break;
+    }
+    if (mHistory->HasUserInteractionAtIndex(index.value())) {
+      break;
+    }
+  }
+
   if (StaticPrefs::fission_sessionHistoryInParent()) {
     nsCOMPtr<nsISHistory> shistory = mHistory;
     ContentChild::GetSingleton()->SendHistoryGo(
@@ -83,13 +105,13 @@ void ChildSHistory::Go(int32_t aOffset, ErrorResult& aRv) {
   }
 }
 
-void ChildSHistory::AsyncGo(int32_t aOffset) {
+void ChildSHistory::AsyncGo(int32_t aOffset, bool aRequireUserInteraction) {
   if (!CanGo(aOffset)) {
     return;
   }
 
   RefPtr<PendingAsyncHistoryNavigation> asyncNav =
-      new PendingAsyncHistoryNavigation(this, aOffset);
+      new PendingAsyncHistoryNavigation(this, aOffset, aRequireUserInteraction);
   mPendingNavigations.insertBack(asyncNav);
   NS_DispatchToCurrentThread(asyncNav.forget());
 }

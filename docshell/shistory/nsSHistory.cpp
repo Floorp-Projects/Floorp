@@ -1505,6 +1505,16 @@ nsresult nsSHistory::GotoIndex(int32_t aIndex,
   return LoadEntry(aIndex, LOAD_HISTORY, HIST_CMD_GOTOINDEX, aLoadResults);
 }
 
+NS_IMETHODIMP_(bool)
+nsSHistory::HasUserInteractionAtIndex(int32_t aIndex) {
+  nsCOMPtr<nsISHEntry> entry;
+  GetEntryAtIndex(aIndex, getter_AddRefs(entry));
+  if (!entry) {
+    return false;
+  }
+  return entry->GetHasUserInteraction();
+}
+
 nsresult nsSHistory::LoadNextPossibleEntry(
     int32_t aNewIndex, long aLoadType, uint32_t aHistCmd,
     nsTArray<LoadEntryResult>& aLoadResults) {

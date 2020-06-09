@@ -63,8 +63,8 @@ class ChildSHistory : public nsISupports, public nsWrapperCache {
    * backwards.
    */
   bool CanGo(int32_t aOffset);
-  void Go(int32_t aOffset, ErrorResult& aRv);
-  void AsyncGo(int32_t aOffset);
+  void Go(int32_t aOffset, bool aRequireUserInteraction, ErrorResult& aRv);
+  void AsyncGo(int32_t aOffset, bool aRequireUserInteraction);
 
   void RemovePendingHistoryNavigations();
 
@@ -84,21 +84,24 @@ class ChildSHistory : public nsISupports, public nsWrapperCache {
       : public Runnable,
         public mozilla::LinkedListElement<PendingAsyncHistoryNavigation> {
    public:
-    PendingAsyncHistoryNavigation(ChildSHistory* aHistory, int32_t aOffset)
+    PendingAsyncHistoryNavigation(ChildSHistory* aHistory, int32_t aOffset,
+                                  bool aRequireUserInteraction)
         : Runnable("PendingAsyncHistoryNavigation"),
           mHistory(aHistory),
+          mRequireUserInteraction(aRequireUserInteraction),
           mOffset(aOffset) {}
 
     NS_IMETHOD Run() override {
       if (isInList()) {
         remove();
-        mHistory->Go(mOffset, IgnoreErrors());
+        mHistory->Go(mOffset, mRequireUserInteraction, IgnoreErrors());
       }
       return NS_OK;
     }
 
    private:
     RefPtr<ChildSHistory> mHistory;
+    bool mRequireUserInteraction;
     int32_t mOffset;
   };
 

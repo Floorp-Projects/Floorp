@@ -127,6 +127,13 @@ interface nsISHistory: nsISupports
   void gotoIndex(in long aIndex);
 
   /**
+   * If an element exists at the particular index and
+   * whether it has user interaction.
+   */
+  [noscript,notxpcom]
+  boolean hasUserInteractionAtIndex(in long aIndex);
+
+  /**
    * Called to obtain the index to a given history entry.
    *
    * @param aEntry            The entry to obtain the index of.
