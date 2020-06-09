@@ -201,11 +201,12 @@ class GeckoViewAutofill {
     rootInfo.children = aFormLike.elements
       .filter(
         element =>
-          !usernameField ||
-          element.type != "text" ||
-          element == usernameField ||
-          (element.getAutocompleteInfo() &&
-            element.getAutocompleteInfo().fieldName == "email")
+          element.type != "hidden" &&
+          (!usernameField ||
+            element.type != "text" ||
+            element == usernameField ||
+            (element.getAutocompleteInfo() &&
+              element.getAutocompleteInfo().fieldName == "email"))
       )
       .map(element => {
         sendFocusEvent |= element === focusedElement;

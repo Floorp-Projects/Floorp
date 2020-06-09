@@ -34,7 +34,7 @@ import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.ThreadUtils;
 
 public class Autofill {
-    private static final boolean DEBUG = true;
+    private static final boolean DEBUG = false;
 
     public static final class Notify {
         private Notify() {}
@@ -651,8 +651,6 @@ public class Autofill {
 
             Log.d(LOGTAG, "fillViewStructure");
 
-            final Node root = getRoot();
-
             if (Build.VERSION.SDK_INT >= 26) {
                 structure.setAutofillId(view.getAutofillId(), getId());
                 structure.setWebDomain(getDomain());
@@ -1026,11 +1024,13 @@ public class Autofill {
                 final CharSequence value = values.valueAt(i);
 
                 if (DEBUG) {
-                    Log.d(LOGTAG, "autofill(" + id + ')');
+                    Log.d(LOGTAG, "Process autofill for id=" + id + ", value=" + value);
                 }
+
                 int rootId = id;
                 for (int currentId = id; currentId != View.NO_ID; ) {
                     final Node elem = getAutofillSession().getNode(currentId);
+
                     if (elem == null) {
                         return;
                     }
