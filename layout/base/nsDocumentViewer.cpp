@@ -2739,8 +2739,6 @@ nsDocumentViewer::EmulatePrefersColorScheme(PrefersColorScheme aScheme) {
         return Some(StylePrefersColorScheme::Light);
       case PREFERS_COLOR_SCHEME_DARK:
         return Some(StylePrefersColorScheme::Dark);
-      case PREFERS_COLOR_SCHEME_NO_PREFERENCE:
-        return Some(StylePrefersColorScheme::NoPreference);
       case PREFERS_COLOR_SCHEME_NONE:
         return Nothing();
       default:

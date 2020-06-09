@@ -5515,6 +5515,15 @@
   mirror: always
   rust: true
 
+# Whether the `no-preference` value for `prefers-color-scheme` is parsed.
+#
+# It never matches regardless.
+- name: layout.css.prefers-color-scheme-no-preference.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+  rust: true
+
 # Whether the `:focus-visible` pseudo-class is enabled.
 #
 # TODO: There are various ambiguities in the spec about this, so we shouldn't

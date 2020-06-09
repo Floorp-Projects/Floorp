@@ -328,7 +328,6 @@ interface nsIContentViewer : nsISupports
   cenum PrefersColorScheme : 8 {
     PREFERS_COLOR_SCHEME_LIGHT,
     PREFERS_COLOR_SCHEME_DARK,
-    PREFERS_COLOR_SCHEME_NO_PREFERENCE,
     PREFERS_COLOR_SCHEME_NONE, /* This clears the override. */
   };
 
