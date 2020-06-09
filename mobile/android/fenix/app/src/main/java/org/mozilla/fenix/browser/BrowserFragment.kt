@@ -147,8 +147,7 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
         ) {
             browserToolbarView.view
         }
-        session?.register(toolbarSessionObserver, this, autoPause = true)
-        updateEngineBottomMargin()
+        session?.register(toolbarSessionObserver, viewLifecycleOwner, autoPause = true)
 
         if (settings.shouldShowFirstTimePwaFragment) {
             session?.register(
@@ -172,16 +171,6 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
             requireComponents.core.tabCollectionStorage.getCollections()
                 .observe(viewLifecycleOwner, observer)
         }
-    }
-
-    private fun updateEngineBottomMargin() {
-        val toolbarSessionObserver = TrackingProtectionOverlay(
-            context = requireContext(),
-            settings = requireContext().settings()
-        ) {
-            browserToolbarView.view
-        }
-        getSessionById()?.register(toolbarSessionObserver, this, autoPause = true)
     }
 
     override fun onResume() {
