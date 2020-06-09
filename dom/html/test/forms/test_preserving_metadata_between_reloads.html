@@ -34,7 +34,8 @@
   const str = "aaaaa";
 
   function afterLoad() {
-    SimpleTest.waitForFocus(function () {
+    SimpleTest.waitForFocus(async function () {
+      await SpecialPowers.pushPrefEnv({"set": [["editor.truncate_user_pastes", false]]});
       var iframeDoc = $("test-frame").contentDocument;
       var src = iframeDoc.getElementById("src");
 
