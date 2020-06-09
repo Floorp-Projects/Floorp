@@ -335,6 +335,10 @@ add_task(async function setup() {
   Services.prefs.setBoolPref("network.http.spdy.enabled", true);
   Services.prefs.setBoolPref("network.http.spdy.enabled.http2", true);
 
+  // Even with network state isolation active, we don't end up using the
+  // partitioned principal.
+  Services.prefs.setBoolPref("privacy.partition.network_state", true);
+
   // make all native resolve calls "secretly" resolve localhost instead
   Services.prefs.setBoolPref("network.dns.native-is-localhost", true);
 
