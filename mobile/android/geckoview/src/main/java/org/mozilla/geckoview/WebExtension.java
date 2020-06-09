@@ -836,9 +836,6 @@ public class WebExtension {
         private boolean mActionDelegateRegistered = false;
         private boolean mTabDelegateRegistered = false;
 
-        // TODO: remove Bug 1618987
-        private WebExtensionController.TabDelegate mLegacyTabDelegate;
-
         public GeckoRuntime runtime;
 
         public Listener(final GeckoRuntime runtime) {
@@ -847,7 +844,7 @@ public class WebExtension {
 
         public Listener(final GeckoSession session) {
             this(session, null);
-            // TODO: Remove Bug 1618987
+
             // Close tab event is forwarded to the main listener so we need to listen
             // to it here.
             mEventDispatcher.registerUiThreadListener(
@@ -877,29 +874,6 @@ public class WebExtension {
                     "GeckoView:WebExtension:PortMessage",
                     "GeckoView:WebExtension:Connect",
                     "GeckoView:WebExtension:Disconnect");
-        }
-
-        // TODO: remove Bug 1618987
-        @Deprecated
-        public void setTabDelegate(final WebExtensionController.TabDelegate delegate) {
-            if (!mTabDelegateRegistered && delegate != null) {
-                mEventDispatcher.registerUiThreadListener(
-                        this,
-                        "GeckoView:WebExtension:NewTab",
-                        "GeckoView:WebExtension:UpdateTab",
-                        "GeckoView:WebExtension:CloseTab",
-                        "GeckoView:WebExtension:OpenOptionsPage"
-                );
-                mTabDelegateRegistered = true;
-            }
-
-            mLegacyTabDelegate = delegate;
-        }
-
-        // TODO: remove Bug 1618987
-        @Deprecated
-        public WebExtensionController.TabDelegate getTabDelegate() {
-            return mLegacyTabDelegate;
         }
 
         public void unregisterWebExtension(final WebExtension extension) {
@@ -962,19 +936,6 @@ public class WebExtension {
                                   final EventCallback callback) {
             if (runtime == null) {
                 return;
-            }
-
-            // TODO: remove Bug 1618987
-            final WebExtensionController controller = runtime.getWebExtensionController();
-            WebExtensionController.TabDelegate delegate = controller.getTabDelegate();
-            if (delegate != null) {
-                if ("GeckoView:WebExtension:CloseTab".equals(event)) {
-                    controller.closeTab(message, callback, mSession, delegate);
-                    return;
-                } else if ("GeckoView:WebExtension:NewTab".equals(event)) {
-                    controller.newTab(message, callback, delegate);
-                    return;
-                }
             }
 
             runtime.getWebExtensionController().handleMessage(event, message, callback, mSession);
