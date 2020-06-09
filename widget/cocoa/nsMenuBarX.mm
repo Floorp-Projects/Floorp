@@ -918,7 +918,8 @@ static BOOL gMenuItemsExecuteCommands = YES;
     } else {
       nsCOMPtr<nsIAppStartup> appStartup = mozilla::components::AppStartup::Service();
       if (appStartup) {
-        appStartup->Quit(nsIAppStartup::eAttemptQuit);
+        bool userAllowedQuit = true;
+        appStartup->Quit(nsIAppStartup::eAttemptQuit, &userAllowedQuit);
       }
     }
     return;

@@ -86,7 +86,8 @@ void SocketProcessParent::ActorDestroy(ActorDestroyReason aWhy) {
       nsCOMPtr<nsIAppStartup> appService =
           do_GetService("@mozilla.org/toolkit/app-startup;1");
       if (appService) {
-        appService->Quit(nsIAppStartup::eForceQuit);
+        bool userAllowedQuit = true;
+        appService->Quit(nsIAppStartup::eForceQuit, &userAllowedQuit);
       }
     }
   }
