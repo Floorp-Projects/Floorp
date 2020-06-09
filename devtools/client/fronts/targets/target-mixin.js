@@ -62,6 +62,14 @@ function TargetMixin(parentClass) {
     }
 
     /**
+     * Boolean flag to help distinguish Target Fronts from other Fronts.
+     * As we are using a Mixin, we can't easily distinguish these fronts via instanceof().
+     */
+    get isTargetFront() {
+      return true;
+    }
+
+    /**
      * Get the descriptor front for this target.
      *
      * TODO: Should be removed. This is misleading as only the top level target should have a descriptor.

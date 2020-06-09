@@ -31,6 +31,20 @@ const watcherSpecPrototype = {
         browsingContextID: RetVal("nullable:number"),
       },
     },
+
+    watchResources: {
+      request: {
+        resourceTypes: Arg(0, "array:string"),
+      },
+      response: {},
+    },
+
+    unwatchResources: {
+      request: {
+        resourceTypes: Arg(0, "array:string"),
+      },
+      oneway: true,
+    },
   },
 
   events: {

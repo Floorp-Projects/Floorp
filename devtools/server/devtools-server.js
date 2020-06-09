@@ -345,11 +345,14 @@ var DevToolsServer = {
     return this._onConnection(transport, prefix, true);
   },
 
-  connectToParentWindowActor(prefix, devtoolsFrameActor) {
+  connectToParentWindowActor(devtoolsFrameActor, forwardingPrefix) {
     this._checkInit();
-    const transport = new JsWindowActorTransport(devtoolsFrameActor, prefix);
+    const transport = new JsWindowActorTransport(
+      devtoolsFrameActor,
+      forwardingPrefix
+    );
 
-    return this._onConnection(transport, prefix, true);
+    return this._onConnection(transport, forwardingPrefix, true);
   },
 
   /**

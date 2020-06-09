@@ -13,6 +13,7 @@ DIRS += [
     'inspector',
     'network-monitor',
     'object',
+    'resources',
     'targets',
     'utils',
     'webconsole',

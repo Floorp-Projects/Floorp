@@ -33,6 +33,9 @@ var { assert } = DevToolsUtils;
 var { TabSources } = require("devtools/server/actors/utils/TabSources");
 var makeDebugger = require("devtools/server/actors/utils/make-debugger");
 const InspectorUtils = require("InspectorUtils");
+const { TargetActorRegistry } = ChromeUtils.import(
+  "resource://devtools/server/actors/targets/target-actor-registry.jsm"
+);
 
 const EXTENSION_CONTENT_JSM = "resource://gre/modules/ExtensionContent.jsm";
 
@@ -44,6 +47,7 @@ const {
 const {
   browsingContextTargetSpec,
 } = require("devtools/shared/specs/targets/browsing-context");
+const Resources = require("devtools/server/actors/resources/index");
 
 loader.lazyRequireGetter(
   this,
@@ -306,6 +310,67 @@ const browsingContextTargetPrototype = {
     this._onWorkerTargetActorListChanged = this._onWorkerTargetActorListChanged.bind(
       this
     );
+
+    TargetActorRegistry.registerTargetActor(this);
+
+    // Record the list of all resource types we are currently effectively listening to.
+    // Resource types are strings.
+    this._watchedResources = new Set();
+  },
+
+  /**
+   * Start watching for a new list of resource types.
+   * This will also emit all already existing resources before resolving.
+   *
+   * This is public interface as this may be called by DevToolsFrameChild.
+   *
+   * @param Array<String> resourceTypes
+   *        List of all type of resource to listen to.
+   */
+  watchTargetResources(resourceTypes) {
+    for (const resourceType of resourceTypes) {
+      // Ignore resources we're already listening to
+      if (this._watchedResources.has(resourceType)) {
+        continue;
+      }
+      this._watchedResources.add(resourceType);
+      this._watchResource(resourceType);
+    }
+  },
+
+  /**
+   * Stop watching for a list of resource types.
+   *
+   * This is public interface as this may be called by DevToolsFrameChild.
+   *
+   * @param Array<String> resourceTypes
+   *        List of all type of resource to stop listening to.
+   */
+  unwatchTargetResources(resourceTypes) {
+    for (const resourceType of resourceTypes) {
+      if (!this._watchedResources.has(resourceType)) {
+        continue;
+      }
+      this._watchedResources.delete(resourceType);
+      this._unwatchResource(resourceType);
+    }
+  },
+
+  _watchResource(resourceType) {
+    if (!(resourceType in Resources.LISTENERS)) {
+      throw new Error(`Unsupported resource type '${resourceType}'`);
+    }
+    const onAvailable = resources => {
+      this.emit("resource-available-form", resources);
+    };
+    Resources.LISTENERS[resourceType].watch(this, { onAvailable });
+  },
+
+  _unwatchResource(resourceType) {
+    if (!(resourceType in Resources.LISTENERS)) {
+      throw new Error(`Unsupported resource type '${resourceType}'`);
+    }
+    Resources.LISTENERS[resourceType].unwatch(this);
   },
 
   traits: null,
@@ -342,7 +407,7 @@ const browsingContextTargetPrototype = {
    * Try to locate the console actor if it exists.
    */
   get _consoleActor() {
-    if (this.exited) {
+    if (this.exited || !this.actorID) {
       return null;
     }
     const form = this.form();
@@ -502,6 +567,22 @@ const browsingContextTargetPrototype = {
     return this._sources;
   },
 
+  _createExtraActors() {
+    // Always use the same ActorPool, so existing actor instances
+    // (created in createExtraActors) are not lost.
+    if (!this._targetScopedActorPool) {
+      this._targetScopedActorPool = new LazyPool(this.conn);
+    }
+
+    // Walk over target-scoped actor factories and make sure they are all
+    // instantiated and added into the ActorPool.
+    return createExtraActors(
+      ActorRegistry.targetScopedActorFactories,
+      this._targetScopedActorPool,
+      this
+    );
+  },
+
   form() {
     assert(!this.exited, "form() shouldn't be called on exited browser actor.");
     assert(this.actorID, "Actor should have an actorID.");
@@ -524,20 +605,7 @@ const browsingContextTargetPrototype = {
       response.outerWindowID = this.outerWindowID;
     }
 
-    // Always use the same ActorPool, so existing actor instances
-    // (created in createExtraActors) are not lost.
-    if (!this._targetScopedActorPool) {
-      this._targetScopedActorPool = new LazyPool(this.conn);
-    }
-
-    // Walk over target-scoped actor factories and make sure they are all
-    // instantiated and added into the ActorPool.
-    const actors = createExtraActors(
-      ActorRegistry.targetScopedActorFactories,
-      this._targetScopedActorPool,
-      this
-    );
-
+    const actors = this._createExtraActors();
     Object.assign(response, actors);
 
     // The thread actor is the only actor manually created by the target actor.
@@ -558,6 +626,10 @@ const browsingContextTargetPrototype = {
   destroy() {
     this.exit();
     Actor.prototype.destroy.call(this);
+    TargetActorRegistry.unregisterTargetActor(this);
+    if (this._watchedResources) {
+      this.unwatchTargetResources([...this._watchedResources]);
+    }
   },
 
   /**
