@@ -512,6 +512,8 @@ class nsNativeThemeCocoa : private nsNativeTheme, public nsITheme {
   void DrawScrollCorner(CGContextRef cgContext, const CGRect& inBoxRect, ScrollbarParams aParams);
   void DrawMultilineTextField(CGContextRef cgContext, const CGRect& inBoxRect, bool aIsFocused);
   void DrawSourceList(CGContextRef cgContext, const CGRect& inBoxRect, bool aIsActive);
+  void DrawSourceListSelection(CGContextRef aContext, const CGRect& aRect, bool aWindowIsActive,
+                               bool aSelectionIsActive);
 
   // Scrollbars
   bool IsParentScrollbarRolledOver(nsIFrame* aFrame);

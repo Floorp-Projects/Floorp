@@ -2664,6 +2664,52 @@ void nsNativeThemeCocoa::DrawSourceList(CGContextRef cgContext, const CGRect& in
   CGColorSpaceRelease(rgb);
 }
 
+#if !defined(MAC_OS_X_VERSION_10_14) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_14
+@interface NSColor (NSColorControlAccentColor)
+@property(class, strong, readonly) NSColor* controlAccentColor NS_AVAILABLE_MAC(10_14);
+@end
+#endif
+
+void nsNativeThemeCocoa::DrawSourceListSelection(CGContextRef aContext, const CGRect& aRect,
+                                                 bool aWindowIsActive, bool aSelectionIsActive) {
+  if (!nsCocoaFeatures::OnYosemiteOrLater()) {
+    // Render with the 10.9 gradient style.
+    RenderWithCoreUI(
+        aRect, aContext,
+        [NSDictionary
+            dictionaryWithObjectsAndKeys:[NSNumber numberWithBool:aSelectionIsActive], @"focus",
+                                         [NSNumber numberWithBool:YES], @"is.flipped",
+                                         @"kCUIVariantGradientSideBarSelection", @"kCUIVariantKey",
+                                         (aWindowIsActive ? @"normal" : @"inactive"), @"state",
+                                         @"gradient", @"widget", nil]);
+    return;
+  }
+
+  NSColor* fillColor;
+  if (aSelectionIsActive) {
+    // Active selection, blue or graphite.
+    if (@available(macOS 10.14, *)) {
+      fillColor = [NSColor controlAccentColor];
+    } else {
+      // Pre-10.14, use hardcoded colors.
+      if ([NSColor currentControlTint] == NSGraphiteControlTint) {
+        fillColor = [NSColor colorWithSRGBRed:0.635 green:0.635 blue:0.655 alpha:1.0];
+      } else {
+        fillColor = [NSColor colorWithSRGBRed:0.247 green:0.584 blue:0.965 alpha:1.0];
+      }
+    }
+  } else {
+    // Inactive selection, gray.
+    if (aWindowIsActive) {
+      fillColor = [NSColor colorWithWhite:0.871 alpha:1.0];
+    } else {
+      fillColor = [NSColor colorWithWhite:0.808 alpha:1.0];
+    }
+  }
+  CGContextSetFillColorWithColor(aContext, [fillColor CGColor]);
+  CGContextFillRect(aContext, aRect);
+}
+
 bool nsNativeThemeCocoa::IsParentScrollbarRolledOver(nsIFrame* aFrame) {
   nsIFrame* scrollbarFrame = GetParentScrollbarFrame(aFrame);
   return nsLookAndFeel::UseOverlayScrollbars()
@@ -3332,16 +3378,8 @@ void nsNativeThemeCocoa::RenderWidget(const WidgetInfo& aWidgetInfo, DrawTarget&
     case Widget::eActiveSourceListSelection:
     case Widget::eInactiveSourceListSelection: {
       bool isInActiveWindow = aWidgetInfo.Params<bool>();
-      BOOL isActiveSelection = aWidgetInfo.Widget() == Widget::eActiveSourceListSelection;
-      RenderWithCoreUI(
-          macRect, cgContext,
-          [NSDictionary dictionaryWithObjectsAndKeys:[NSNumber numberWithBool:isActiveSelection],
-                                                     @"focus", [NSNumber numberWithBool:YES],
-                                                     @"is.flipped",
-                                                     @"kCUIVariantGradientSideBarSelection",
-                                                     @"kCUIVariantKey",
-                                                     (isInActiveWindow ? @"normal" : @"inactive"),
-                                                     @"state", @"gradient", @"widget", nil]);
+      bool isActiveSelection = aWidgetInfo.Widget() == Widget::eActiveSourceListSelection;
+      DrawSourceListSelection(cgContext, macRect, isInActiveWindow, isActiveSelection);
       break;
     }
     case Widget::eTabPanel: {
