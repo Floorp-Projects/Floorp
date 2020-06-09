@@ -2095,6 +2095,12 @@
   value: true
   mirror: always
 
+# Whether the Large-Allocation header is enabled.
+- name: dom.largeAllocationHeader.enabled
+  type: bool
+  value: true
+  mirror: always
+
 - name: dom.largeAllocation.forceEnable
   type: bool
   value: false
@@ -3651,6 +3657,14 @@
 - name: general.aboutConfig.enable
   type: bool
   value: true
+  mirror: always
+
+# Limits the depth of recursive conversion of data when opening
+# a content to view.  This is mostly intended to prevent infinite
+# loops with faulty converters involved.
+- name: general.document_open_conversion_depth_limit
+  type: uint32_t
+  value: 20
   mirror: always
 
 - name: general.smoothScroll

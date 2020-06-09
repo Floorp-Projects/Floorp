@@ -43,6 +43,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/Unused.h"
 #include "mozilla/StaticPrefs_dom.h"
+#include "mozilla/StaticPrefs_general.h"
 #include "nsContentUtils.h"
 
 mozilla::LazyLogModule nsURILoader::mLog("URILoader");
@@ -51,14 +52,6 @@ mozilla::LazyLogModule nsURILoader::mLog("URILoader");
 #define LOG_ERROR(args) \
   MOZ_LOG(nsURILoader::mLog, mozilla::LogLevel::Error, args)
 #define LOG_ENABLED() MOZ_LOG_TEST(nsURILoader::mLog, mozilla::LogLevel::Debug)
-
-static uint32_t sConvertDataLimit = 20;
-
-static bool InitPreferences() {
-  mozilla::Preferences::AddUintVarCache(
-      &sConvertDataLimit, "general.document_open_conversion_depth_limit", 20);
-  return true;
-}
 
 NS_IMPL_ADDREF(nsDocumentOpenInfo)
 NS_IMPL_RELEASE(nsDocumentOpenInfo)
@@ -75,14 +68,16 @@ nsDocumentOpenInfo::nsDocumentOpenInfo(nsIInterfaceRequestor* aWindowContext,
     : m_originalContext(aWindowContext),
       mFlags(aFlags),
       mURILoader(aURILoader),
-      mDataConversionDepthLimit(sConvertDataLimit) {}
+      mDataConversionDepthLimit(
+          StaticPrefs::general_document_open_conversion_depth_limit()) {}
 
 nsDocumentOpenInfo::nsDocumentOpenInfo(uint32_t aFlags,
                                        bool aAllowListenerConversions)
     : m_originalContext(nullptr),
       mFlags(aFlags),
       mURILoader(nullptr),
-      mDataConversionDepthLimit(sConvertDataLimit),
+      mDataConversionDepthLimit(
+          StaticPrefs::general_document_open_conversion_depth_limit()),
       mAllowListenerConversions(aAllowListenerConversions) {}
 
 nsDocumentOpenInfo::~nsDocumentOpenInfo() {}
@@ -134,15 +129,7 @@ NS_IMETHODIMP nsDocumentOpenInfo::OnStartRequest(nsIRequest* request) {
       return NS_BINDING_ABORTED;
     }
 
-    static bool sLargeAllocationHeaderEnabled = false;
-    static bool sCachedLargeAllocationPref = false;
-    if (!sCachedLargeAllocationPref) {
-      sCachedLargeAllocationPref = true;
-      mozilla::Preferences::AddBoolVarCache(
-          &sLargeAllocationHeaderEnabled, "dom.largeAllocationHeader.enabled");
-    }
-
-    if (sLargeAllocationHeaderEnabled) {
+    if (StaticPrefs::dom_largeAllocationHeader_enabled()) {
       if (StaticPrefs::dom_largeAllocation_testing_allHttpLoads()) {
         nsCOMPtr<nsIURI> uri;
         rv = httpChannel->GetURI(getter_AddRefs(uri));
@@ -764,9 +751,6 @@ nsresult nsURILoader::OpenChannel(nsIChannel* channel, uint32_t aFlags,
     uri->GetAsciiSpec(spec);
     LOG(("nsURILoader::OpenChannel for %s", spec.get()));
   }
-
-  static bool once = InitPreferences();
-  mozilla::Unused << once;
 
   // we need to create a DocumentOpenInfo object which will go ahead and open
   // the url and discover the content type....
