@@ -92,14 +92,6 @@ const rootSpecPrototype = {
       },
     },
 
-    // Can be removed when FF77 reach release channel
-    getBrowsingContextDescriptor: {
-      request: {
-        id: Arg(0, "number"),
-      },
-      response: RetVal("processDescriptor"),
-    },
-
     protocolDescription: {
       request: {},
       response: RetVal("json"),
