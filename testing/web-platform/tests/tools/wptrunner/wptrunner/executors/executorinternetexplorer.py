@@ -1,8 +1,8 @@
 from ..webdriver_server import InternetExplorerDriverServer
-from .base import WdspecExecutor, WdspecProtocol
+from .base import WdspecExecutor, WebDriverProtocol
 
 
-class InternetExplorerDriverProtocol(WdspecProtocol):
+class InternetExplorerDriverProtocol(WebDriverProtocol):
     server_cls = InternetExplorerDriverServer
 
 
