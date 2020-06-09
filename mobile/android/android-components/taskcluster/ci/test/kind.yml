@@ -70,6 +70,13 @@ jobs:
                 - ['automation/taskcluster/androidTest/ui-test.sh', 'samples-glean', 'arm', '1']
         treeherder:
             symbol: 'ui-samples-glean'
+    android-feature-containers:
+        description: 'Run unit tests on device for feature containers'
+        run:
+            post-gradlew:
+                - ['automation/taskcluster/androidTest/ui-test.sh', 'feature-containers', 'arm', '1']
+        treeherder:
+            symbol: 'unit-feature-containers'
     android-feature-pwa:
         description: 'Run unit tests on device for feature pwa'
         run:

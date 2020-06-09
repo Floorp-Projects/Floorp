@@ -52,6 +52,10 @@ projects:
     path: components/feature/app-links
     description: 'Component opening URLs in other non-browser apps.'
     publish: true
+  feature-containers:
+    path: components/feature/containers
+    description: 'Feature component for working with contextual identities also known as containers.'
+    publish: true
   feature-contextmenu:
     path: components/feature/contextmenu
     description: 'Component for displaying context menus for web content.'

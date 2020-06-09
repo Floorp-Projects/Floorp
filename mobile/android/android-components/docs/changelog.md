@@ -37,6 +37,10 @@ permalink: /changelog/
 * **feature-session**
   * ⚠️ **This is a breaking change**: `SettingsUseCases` now requires an engine reference, to clear speculative sessions if engine settings change.
 
+* **feature-containers**
+  * Adds a new storage component to store containers (contextual identities) in a Room database and provides the
+    necessary APIs to get, add and remove containers.
+
 # 44.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v43.0.0...v44.0.0)
