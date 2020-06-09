@@ -233,6 +233,9 @@ class nsThread : public nsIThreadInternal,
 
   bool ShuttingDown() const { return mShutdownContext != nullptr; }
 
+  static bool GetLabeledRunnableName(nsIRunnable* aEvent, nsACString& aName,
+                                     mozilla::EventQueuePriority aPriority);
+
   virtual mozilla::PerformanceCounter* GetPerformanceCounter(
       nsIRunnable* aEvent) const;
 
