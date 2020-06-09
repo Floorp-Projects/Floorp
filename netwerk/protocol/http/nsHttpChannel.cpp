@@ -2434,7 +2434,8 @@ void nsHttpChannel::ProcessAltService() {
 
   OriginAttributes originAttributes;
   // Regular principal in case we have a proxy.
-  if (proxyInfo) {
+  if (proxyInfo &&
+      !StaticPrefs::privacy_partition_network_state_connection_with_proxy()) {
     StoragePrincipalHelper::GetOriginAttributes(
         this, originAttributes, StoragePrincipalHelper::eRegularPrincipal);
   } else {
@@ -6769,7 +6770,8 @@ nsresult nsHttpChannel::BeginConnect() {
 
   OriginAttributes originAttributes;
   // Regular principal in case we have a proxy.
-  if (proxyInfo) {
+  if (proxyInfo &&
+      !StaticPrefs::privacy_partition_network_state_connection_with_proxy()) {
     StoragePrincipalHelper::GetOriginAttributes(
         this, originAttributes, StoragePrincipalHelper::eRegularPrincipal);
   } else {
