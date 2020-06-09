@@ -523,6 +523,7 @@ nsresult nsSHistory::AddChildSHEntryHelper(nsISHEntry* aCloneRef,
   uint32_t cloneID = aCloneRef->GetID();
   rv = nsSHistory::CloneAndReplace(currentHE, aBC, cloneID, aNewEntry,
                                    aCloneChildren, aNextEntry);
+
   if (NS_SUCCEEDED(rv)) {
     rv = AddEntry(*aNextEntry, true);
   }

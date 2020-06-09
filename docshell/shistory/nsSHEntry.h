@@ -63,6 +63,7 @@ class nsSHEntry : public nsISHEntry {
   bool mScrollRestorationIsManual;
   bool mLoadedInThisProcess;
   bool mPersist;
+  bool mHasUserInteraction;
 };
 
 #endif /* nsSHEntry_h */

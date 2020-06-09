@@ -83,6 +83,14 @@ interface nsISHEntry : nsISupports
      */
     [infallible] attribute boolean isSubFrame;
 
+    /**
+     * Whether the user interacted with the page while this entry was active.
+     * This includes interactions with subframe documents associated with
+     * child entries that are rooted at this entry.
+     * This field will only be set on top-level entries.
+     */
+    [infallible] attribute boolean hasUserInteraction;
+
     /** Referrer Info*/
     [infallible] attribute nsIReferrerInfo referrerInfo;
 

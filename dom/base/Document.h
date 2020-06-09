@@ -3742,11 +3742,14 @@ class Document : public nsINode,
  private:
   void DoCacheAllKnownLangPrefs();
   void RecomputeLanguageFromCharset();
+  bool GetSHEntryHasUserInteraction();
 
  public:
   void SetMayNeedFontPrefsUpdate() { mMayNeedFontPrefsUpdate = true; }
 
   bool MayNeedFontPrefsUpdate() { return mMayNeedFontPrefsUpdate; }
+
+  void SetSHEntryHasUserInteraction(bool aHasInteraction);
 
   already_AddRefed<nsAtom> GetContentLanguageAsAtomForStyle() const;
   already_AddRefed<nsAtom> GetLanguageForStyle() const;

@@ -131,6 +131,18 @@ SessionHistoryEntry::SetIsSubFrame(bool aIsSubFrame) {
 }
 
 NS_IMETHODIMP
+SessionHistoryEntry::GetHasUserInteraction(bool* aFlag) {
+  MOZ_CRASH("Not needed in the parent process?");
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+SessionHistoryEntry::SetHasUserInteraction(bool aFlag) {
+  MOZ_CRASH("Not needed in the parent process?");
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
 SessionHistoryEntry::GetReferrerInfo(nsIReferrerInfo** aReferrerInfo) {
   nsCOMPtr<nsIReferrerInfo> referrerInfo = mInfo->mReferrerInfo;
   referrerInfo.forget(aReferrerInfo);
