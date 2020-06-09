@@ -735,8 +735,18 @@ nsCORSListenerProxy::AsyncOnChannelRedirect(
       }
     }
 
+    bool rewriteToGET = false;
+    nsCOMPtr<nsIHttpChannel> oldHttpChannel = do_QueryInterface(aOldChannel);
+    if (aOldChannel) {
+      nsAutoCString method;
+      Unused << oldHttpChannel->GetRequestMethod(method);
+      Unused << oldHttpChannel->ShouldStripRequestBodyHeader(method,
+                                                             &rewriteToGET);
+    }
+
     rv = UpdateChannel(aNewChannel, DataURIHandling::Disallow,
-                       UpdateType::Default);
+                       rewriteToGET ? UpdateType::StripRequestBodyHeader
+                                    : UpdateType::Default);
     if (NS_FAILED(rv)) {
       NS_WARNING(
           "nsCORSListenerProxy::AsyncOnChannelRedirect: "
@@ -1016,8 +1026,9 @@ nsresult nsCORSListenerProxy::CheckPreflightNeeded(nsIChannel* aChannel,
     return NS_ERROR_DOM_BAD_URI;
   }
 
-  internal->SetCorsPreflightParameters(headers.IsEmpty() ? loadInfoHeaders
-                                                         : headers);
+  internal->SetCorsPreflightParameters(
+      headers.IsEmpty() ? loadInfoHeaders : headers,
+      aUpdateType == UpdateType::StripRequestBodyHeader);
 
   return NS_OK;
 }

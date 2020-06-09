@@ -3775,7 +3775,7 @@ nsresult HttpBaseChannel::SetupReplacementChannel(nsIURI* newURI,
     httpInternal->SetLastRedirectFlags(redirectFlags);
 
     if (mRequireCORSPreflight) {
-      httpInternal->SetCorsPreflightParameters(mUnsafeHeaders);
+      httpInternal->SetCorsPreflightParameters(mUnsafeHeaders, false);
     }
   }
 
@@ -4540,11 +4540,20 @@ void HttpBaseChannel::EnsureTopLevelOuterContentWindowId() {
 }
 
 void HttpBaseChannel::SetCorsPreflightParameters(
-    const nsTArray<nsCString>& aUnsafeHeaders) {
+    const nsTArray<nsCString>& aUnsafeHeaders,
+    bool aShouldStripRequestBodyHeader) {
   MOZ_RELEASE_ASSERT(!mRequestObserversCalled);
 
   mRequireCORSPreflight = true;
   mUnsafeHeaders = aUnsafeHeaders.Clone();
+  if (aShouldStripRequestBodyHeader) {
+    mUnsafeHeaders.RemoveElementsBy([&](const nsCString& aHeader) {
+      return aHeader.LowerCaseEqualsASCII("content-type") ||
+             aHeader.LowerCaseEqualsASCII("content-encoding") ||
+             aHeader.LowerCaseEqualsASCII("content-language") ||
+             aHeader.LowerCaseEqualsASCII("content-location");
+    });
+  }
 }
 
 void HttpBaseChannel::SetAltDataForChild(bool aIsForChild) {
