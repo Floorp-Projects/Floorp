@@ -27,6 +27,9 @@ class MediaHardwareKeysEventSourceMac final
   void Close() override;
   bool IsOpened() const override;
 
+  // Currently we don't support showing supported keys on the touch bar.
+  void SetSupportedMediaKeys(const MediaKeysArray& aSupportedKeys) override {}
+
  private:
   ~MediaHardwareKeysEventSourceMac() = default;
 

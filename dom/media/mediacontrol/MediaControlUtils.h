@@ -89,6 +89,27 @@ inline const char* ToMediaSessionActionStr(MediaSessionAction aAction) {
   }
 }
 
+inline MediaControlKeysEvent ConvertMediaSessionActionToControlKey(
+    MediaSessionAction aAction) {
+  switch (aAction) {
+    case MediaSessionAction::Play:
+      return MediaControlKeysEvent::ePlay;
+    case MediaSessionAction::Pause:
+      return MediaControlKeysEvent::ePause;
+    case MediaSessionAction::Seekbackward:
+      return MediaControlKeysEvent::eSeekBackward;
+    case MediaSessionAction::Seekforward:
+      return MediaControlKeysEvent::eSeekForward;
+    case MediaSessionAction::Previoustrack:
+      return MediaControlKeysEvent::ePrevTrack;
+    case MediaSessionAction::Nexttrack:
+      return MediaControlKeysEvent::eNextTrack;
+    default:
+      MOZ_ASSERT(aAction == MediaSessionAction::Stop);
+      return MediaControlKeysEvent::eStop;
+  }
+}
+
 inline MediaSessionPlaybackTestState ConvertToMediaSessionPlaybackTestState(
     MediaSessionPlaybackState aState) {
   switch (aState) {
@@ -100,6 +121,11 @@ inline MediaSessionPlaybackTestState ConvertToMediaSessionPlaybackTestState(
       MOZ_ASSERT(aState == MediaSessionPlaybackState::None);
       return MediaSessionPlaybackTestState::Stopped;
   }
+}
+
+inline MediaSessionAction ConvertToMediaSessionAction(uint8_t aActionValue) {
+  MOZ_DIAGNOSTIC_ASSERT(aActionValue < uint8_t(MediaSessionAction::EndGuard_));
+  return static_cast<MediaSessionAction>(aActionValue);
 }
 
 inline const char* ToMediaPlaybackStateStr(MediaPlaybackState aState) {

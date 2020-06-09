@@ -67,6 +67,9 @@ class WindowsSMTCProvider final
   void SetMediaMetadata(
       const mozilla::dom::MediaMetadataBase& aMetadata) override;
 
+  // TODO : modify the virtual control interface based on the supported keys
+  void SetSupportedMediaKeys(const MediaKeysArray& aSupportedKeys) override {}
+
  private:
   ~WindowsSMTCProvider();
   void UnregisterEvents();

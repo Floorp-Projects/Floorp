@@ -104,11 +104,22 @@ class MediaController final
   // then calling any its method won't take any effect.
   void Shutdown();
 
+  // This event would be notified media controller's supported media keys
+  // change.
+  MediaEventSource<nsTArray<MediaControlKeysEvent>>&
+  SupportedKeysChangedEvent() {
+    return mSupportedKeysChangedEvent;
+  }
+
+  CopyableTArray<MediaControlKeysEvent> GetSupportedMediaKeys() const;
+
  private:
   ~MediaController();
   void HandleActualPlaybackStateChanged() override;
   void UpdateMediaControlKeysEventToContentMediaIfNeeded(
       MediaControlKeysEvent aEvent);
+  void HandleSupportedMediaSessionActionsChanged(
+      const nsTArray<MediaSessionAction>& aSupportedAction);
 
   // This would register controller to the media control service that takes a
   // responsibility to manage all active controllers.
@@ -124,6 +135,15 @@ class MediaController final
   bool mIsRegisteredToService = false;
   bool mShutdown = false;
   bool mIsInPictureInPictureMode = false;
+
+  // We would monitor the change of media session actions and convert them to
+  // the media keys, then determine the supported media keys.
+  MediaEventListener mSupportedActionsChangedListener;
+  MediaEventProducer<nsTArray<MediaControlKeysEvent>>
+      mSupportedKeysChangedEvent;
+  // Use copyable array so that we can use the result as a parameter for the
+  // media event.
+  CopyableTArray<MediaControlKeysEvent> mSupportedKeys;
 };
 
 }  // namespace dom

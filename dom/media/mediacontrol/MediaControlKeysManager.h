@@ -41,6 +41,7 @@ class MediaControlKeysManager final : public MediaControlKeysEventSource,
   void ControllerAmountChanged(uint64_t aControllerAmount);
 
   void SetMediaMetadata(const MediaMetadataBase& aMetadata) override;
+  void SetSupportedMediaKeys(const MediaKeysArray& aSupportedKeys) override;
 
  private:
   ~MediaControlKeysManager();
@@ -49,6 +50,7 @@ class MediaControlKeysManager final : public MediaControlKeysEventSource,
   RefPtr<MediaControlKeysEventSource> mEventSource;
   MediaEventListener mControllerAmountChangedListener;
   MediaMetadataBase mMetadata;
+  nsTArray<MediaControlKeysEvent> mSupportedKeys;
 };
 
 }  // namespace dom
