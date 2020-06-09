@@ -27,7 +27,7 @@ _BCJ_OPTIONS = {
 
 
 def repackage_mar(
-    topsrcdir, package, mar, output, arch=None, mar_channel_id=None
+    topsrcdir, package, mar, output, mar_format="lzma", arch=None, mar_channel_id=None
 ):
     if not zipfile.is_zipfile(package) and not tarfile.is_tarfile(package):
         raise Exception("Package file %s is not a valid .zip or .tar file." % package)
@@ -66,6 +66,8 @@ def repackage_mar(
         env['MAR'] = mozpath.normpath(mar)
         if arch:
             env['BCJ_OPTIONS'] = ' '.join(_BCJ_OPTIONS[arch])
+        if mar_format == 'bz2':
+            env['MAR_OLD_FORMAT'] = '1'
         if mar_channel_id:
             env['MAR_CHANNEL_ID'] = mar_channel_id
         # The Windows build systems have xz installed but it isn't in the path

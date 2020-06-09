@@ -1502,6 +1502,9 @@ class Repackage(MachCommandBase):
                      help='Mar binary path')
     @CommandArgument('--output', '-o', type=str, required=True,
                      help='Output filename')
+    @CommandArgument('--format', type=str, default='lzma',
+                     choices=('lzma', 'bz2'),
+                     help='Mar format')
     @CommandArgument('--arch', type=str, required=True,
                      help='The archtecture you are building.')
     @CommandArgument('--mar-channel-id', type=str,
@@ -1513,6 +1516,7 @@ class Repackage(MachCommandBase):
             input,
             mar,
             output,
+            format,
             arch=arch,
             mar_channel_id=mar_channel_id,
         )
