@@ -7,6 +7,11 @@
 var EXPORTED_SYMBOLS = ["BrowserTestUtilsChild"];
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "E10SUtils",
+  "resource://gre/modules/E10SUtils.jsm"
+);
 
 class BrowserTestUtilsChildObserver {
   constructor() {
@@ -321,16 +326,19 @@ class BrowserTestUtilsChild extends JSWindowActorChild {
     }
 
     let result;
-    if (data.event && data.event.wheel) {
-      this.EventUtils.synthesizeWheelAtPoint(left, top, data.event, window);
-    } else {
-      result = this.EventUtils.synthesizeMouseAtPoint(
-        left,
-        top,
-        data.event,
-        window
-      );
-    }
+
+    E10SUtils.wrapHandlingUserInput(window, data.handlingUserInput, () => {
+      if (data.event && data.event.wheel) {
+        this.EventUtils.synthesizeWheelAtPoint(left, top, data.event, window);
+      } else {
+        result = this.EventUtils.synthesizeMouseAtPoint(
+          left,
+          top,
+          data.event,
+          window
+        );
+      }
+    });
 
     return result;
   }
