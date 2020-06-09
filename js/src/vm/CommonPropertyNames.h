@@ -324,6 +324,7 @@
   MACRO(objectRegExp, objectRegExp, "[object RegExp]")                         \
   MACRO(objects, objects, "objects")                                           \
   MACRO(objectString, objectString, "[object String]")                         \
+  MACRO(objectSymbol, objectSymbol, "[object Symbol]")                         \
   MACRO(objectUndefined, objectUndefined, "[object Undefined]")                \
   MACRO(of, of, "of")                                                          \
   MACRO(offset, offset, "offset")                                              \

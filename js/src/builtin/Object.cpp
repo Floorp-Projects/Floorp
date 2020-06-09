@@ -601,26 +601,77 @@ static MOZ_ALWAYS_INLINE JSString* GetBuiltinTagFast(JSObject* obj,
   return nullptr;
 }
 
+// For primitive values we try to avoid allocating the object if we can
+// determine that the prototype it would use does not define Symbol.toStringTag.
+static JSAtom* MaybeObjectToStringPrimitive(JSContext* cx, const Value& v) {
+  JSProtoKey protoKey = js::PrimitiveToProtoKey(cx, v);
+
+  // If prototype doesn't exist yet, just fall through.
+  JSObject* proto = cx->global()->maybeGetPrototype(protoKey);
+  if (!proto) {
+    return nullptr;
+  }
+
+  // If determining this may have side-effects, we must instead create the
+  // object normally since it is the receiver while looking up
+  // Symbol.toStringTag.
+  if (MaybeHasInterestingSymbolProperty(
+          cx, proto, cx->wellKnownSymbols().toStringTag, nullptr)) {
+    return nullptr;
+  }
+
+  // Return the direct result.
+  switch (protoKey) {
+    case JSProto_String:
+      return cx->names().objectString;
+    case JSProto_Number:
+      return cx->names().objectNumber;
+    case JSProto_Boolean:
+      return cx->names().objectBoolean;
+    case JSProto_Symbol:
+      return cx->names().objectSymbol;
+    case JSProto_BigInt:
+      return cx->names().objectBigInt;
+    default:
+      break;
+  }
+
+  return nullptr;
+}
+
 // ES6 19.1.3.6
 bool js::obj_toString(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
+  RootedObject obj(cx);
 
-  // Step 1.
-  if (args.thisv().isUndefined()) {
-    args.rval().setString(cx->names().objectUndefined);
-    return true;
-  }
+  if (args.thisv().isPrimitive()) {
+    // Step 1.
+    if (args.thisv().isUndefined()) {
+      args.rval().setString(cx->names().objectUndefined);
+      return true;
+    }
 
-  // Step 2.
-  if (args.thisv().isNull()) {
-    args.rval().setString(cx->names().objectNull);
-    return true;
-  }
+    // Step 2.
+    if (args.thisv().isNull()) {
+      args.rval().setString(cx->names().objectNull);
+      return true;
+    }
 
-  // Step 3.
-  RootedObject obj(cx, ToObject(cx, args.thisv()));
-  if (!obj) {
-    return false;
+    // Try fast-path for primitives. This is unusual but we encounter code like
+    // this in the wild.
+    JSAtom* result = MaybeObjectToStringPrimitive(cx, args.thisv());
+    if (result) {
+      args.rval().setString(result);
+      return true;
+    }
+
+    // Step 3.
+    obj = ToObject(cx, args.thisv());
+    if (!obj) {
+      return false;
+    }
+  } else {
+    obj = &args.thisv().toObject();
   }
 
   RootedString builtinTag(cx);
