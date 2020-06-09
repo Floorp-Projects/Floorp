@@ -16379,20 +16379,9 @@ StylePrefersColorScheme Document::PrefersColorScheme(
     }
   }
 
-  // If LookAndFeel::eIntID_SystemUsesDarkTheme fails then return 2
-  // (no-preference)
-  switch (LookAndFeel::GetInt(LookAndFeel::eIntID_SystemUsesDarkTheme, 2)) {
-    case 0:
-      return StylePrefersColorScheme::Light;
-    case 1:
-      return StylePrefersColorScheme::Dark;
-    case 2:
-      return StylePrefersColorScheme::NoPreference;
-    default:
-      // This only occurs if the user has set the ui.systemUsesDarkTheme pref to
-      // an invalid value.
-      return StylePrefersColorScheme::Light;
-  }
+  const bool dark =
+      !!LookAndFeel::GetInt(LookAndFeel::eIntID_SystemUsesDarkTheme, 0);
+  return dark ? StylePrefersColorScheme::Dark : StylePrefersColorScheme::Light;
 }
 
 // static
