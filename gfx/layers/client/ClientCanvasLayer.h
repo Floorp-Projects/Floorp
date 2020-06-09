@@ -30,7 +30,7 @@ class ClientCanvasLayer : public CanvasLayer, public ClientLayer {
     MOZ_COUNT_CTOR(ClientCanvasLayer);
   }
 
-  RefPtr<CanvasRenderer> CreateCanvasRendererInternal() override;
+  CanvasRenderer* CreateCanvasRendererInternal() override;
 
  protected:
   virtual ~ClientCanvasLayer();
@@ -59,7 +59,7 @@ class ClientCanvasLayer : public CanvasLayer, public ClientLayer {
   Layer* AsLayer() override { return this; }
   ShadowableLayer* AsShadowableLayer() override { return this; }
 
-  void Disconnect() override { mCanvasRenderer->DisconnectClient(); }
+  void Disconnect() override { mCanvasRenderer->Destroy(); }
 
   CompositableClient* GetCompositableClient() override {
     ClientCanvasRenderer* canvasRenderer =

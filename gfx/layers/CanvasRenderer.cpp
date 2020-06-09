@@ -6,77 +6,38 @@
 
 #include "CanvasRenderer.h"
 
-#include "nsICanvasRenderingContextInternal.h"
+#include "AsyncCanvasRenderer.h"
+#include "GLContext.h"
+#include "OOPCanvasRenderer.h"
 #include "PersistentBufferProvider.h"
-#include "WebGLTypes.h"
 
 namespace mozilla {
 namespace layers {
 
-CanvasRendererData::CanvasRendererData() = default;
-CanvasRendererData::~CanvasRendererData() = default;
+CanvasInitializeData::CanvasInitializeData() = default;
+CanvasInitializeData::~CanvasInitializeData() = default;
 
-// -
-
-BorrowedSourceSurface::BorrowedSourceSurface(
-    PersistentBufferProvider* const returnTo,
-    const RefPtr<gfx::SourceSurface> surf)
-    : mReturnTo(returnTo), mSurf(surf) {}
-
-BorrowedSourceSurface::~BorrowedSourceSurface() {
-  if (mReturnTo) {
-    auto forgettable = mSurf;
-    mReturnTo->ReturnSnapshot(forgettable.forget());
-  }
+CanvasRenderer::CanvasRenderer()
+    : mPreTransCallback(nullptr),
+      mPreTransCallbackData(nullptr),
+      mDidTransCallback(nullptr),
+      mDidTransCallbackData(nullptr),
+      mDirty(false) {
+  MOZ_COUNT_CTOR(CanvasRenderer);
 }
 
-// -
-
-CanvasRenderer::CanvasRenderer() { MOZ_COUNT_CTOR(CanvasRenderer); }
-
 CanvasRenderer::~CanvasRenderer() {
+  Destroy();
   MOZ_COUNT_DTOR(CanvasRenderer);
 }
 
-void CanvasRenderer::Initialize(const CanvasRendererData& aData) {
-  mData = aData;
-}
+void CanvasRenderer::Initialize(const CanvasInitializeData& aData) {
+  mPreTransCallback = aData.mPreTransCallback;
+  mPreTransCallbackData = aData.mPreTransCallbackData;
+  mDidTransCallback = aData.mDidTransCallback;
+  mDidTransCallbackData = aData.mDidTransCallbackData;
 
-bool CanvasRenderer::IsDataValid(const CanvasRendererData& aData) const {
-  return mData.GetContext() == aData.GetContext();
-}
-
-std::shared_ptr<BorrowedSourceSurface> CanvasRenderer::BorrowSnapshot(
-    const bool requireAlphaPremult) const {
-  const auto context = mData.GetContext();
-  if (!context) return nullptr;
-  const auto& provider = context->GetBufferProvider();
-
-  RefPtr<gfx::SourceSurface> ss;
-
-  if (provider) {
-    ss = provider->BorrowSnapshot();
-  }
-  if (!ss) {
-    ss = context->GetFrontBufferSnapshot(requireAlphaPremult);
-  }
-  if (!ss) return nullptr;
-
-  return std::make_shared<BorrowedSourceSurface>(provider, ss);
-}
-
-void CanvasRenderer::FirePreTransactionCallback() const {
-  if (!mData.mDoPaintCallbacks) return;
-  const auto context = mData.GetContext();
-  if (!context) return;
-  context->OnBeforePaintTransaction();
-}
-
-void CanvasRenderer::FireDidTransactionCallback() const {
-  if (!mData.mDoPaintCallbacks) return;
-  const auto context = mData.GetContext();
-  if (!context) return;
-  context->OnDidPaintTransaction();
+  mSize = aData.mSize;
 }
 
 }  // namespace layers

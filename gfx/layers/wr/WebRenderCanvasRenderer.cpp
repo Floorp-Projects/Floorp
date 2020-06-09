@@ -20,14 +20,14 @@ CompositableForwarder* WebRenderCanvasRenderer::GetForwarder() {
   return mManager->WrBridge();
 }
 
-WebRenderCanvasRendererAsync::~WebRenderCanvasRendererAsync() {
-  if (mPipelineId.isSome()) {
-    mManager->RemovePipelineIdForCompositable(mPipelineId.ref());
-    mPipelineId.reset();
-  }
+void WebRenderCanvasRenderer::Initialize(const CanvasInitializeData& aData) {
+  ShareableCanvasRenderer::Initialize(aData);
 }
 
-void WebRenderCanvasRendererAsync::Initialize(const CanvasRendererData& aData) {
+WebRenderCanvasRendererAsync::~WebRenderCanvasRendererAsync() { Destroy(); }
+
+void WebRenderCanvasRendererAsync::Initialize(
+    const CanvasInitializeData& aData) {
   WebRenderCanvasRenderer::Initialize(aData);
 
   ClearCachedResources();
@@ -35,12 +35,25 @@ void WebRenderCanvasRendererAsync::Initialize(const CanvasRendererData& aData) {
 
 bool WebRenderCanvasRendererAsync::CreateCompositable() {
   if (!mCanvasClient) {
-    auto compositableFlags = TextureFlags::NO_FLAGS;
-    if (!mData.mIsAlphaPremult) {
-      // WR needs this flag marked on the compositable, not just the texture.
-      compositableFlags |= TextureFlags::NON_PREMULTIPLIED;
+    TextureFlags flags = TextureFlags::DEFAULT;
+    if (mOriginPos == gl::OriginPos::BottomLeft) {
+      flags |= TextureFlags::ORIGIN_BOTTOM_LEFT;
     }
-    mCanvasClient = new CanvasClient(GetForwarder(), compositableFlags);
+
+    if (IsOpaque()) {
+      flags |= TextureFlags::IS_OPAQUE;
+    }
+
+    if (!mIsAlphaPremultiplied) {
+      flags |= TextureFlags::NON_PREMULTIPLIED;
+    }
+
+    mCanvasClient = CanvasClient::CreateCanvasClient(GetCanvasClientType(),
+                                                     GetForwarder(), flags);
+    if (!mCanvasClient) {
+      return false;
+    }
+
     mCanvasClient->Connect();
   }
 
@@ -56,6 +69,13 @@ bool WebRenderCanvasRendererAsync::CreateCompositable() {
 }
 
 void WebRenderCanvasRendererAsync::ClearCachedResources() {
+  if (mPipelineId.isSome()) {
+    mManager->RemovePipelineIdForCompositable(mPipelineId.ref());
+    mPipelineId.reset();
+  }
+}
+
+void WebRenderCanvasRendererAsync::Destroy() {
   if (mPipelineId.isSome()) {
     mManager->RemovePipelineIdForCompositable(mPipelineId.ref());
     mPipelineId.reset();

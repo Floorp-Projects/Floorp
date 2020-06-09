@@ -61,7 +61,9 @@ class GLBlitTextureImageHelper;
 class GLContext;
 class GLLibraryEGL;
 class GLReadTexImageHelper;
+class GLScreenBuffer;
 class SharedSurface;
+struct SurfaceCaps;
 }  // namespace gl
 
 namespace layers {
@@ -194,8 +196,6 @@ class GLContext : public GenericAtomicRefCounted,
   MOZ_DECLARE_WEAKREFERENCE_TYPENAME(GLContext)
   static MOZ_THREAD_LOCAL(uintptr_t) sCurrentContext;
 
-  const GLContextDesc mDesc;
-
   bool mImplicitMakeCurrent = false;
   bool mUseTLSIsCurrent;
 
@@ -317,6 +317,9 @@ class GLContext : public GenericAtomicRefCounted,
    * Get the default framebuffer for this context.
    */
   virtual GLuint GetDefaultFramebuffer() { return 0; }
+
+ protected:
+  bool mIsOffscreen;
 
   /**
    * mVersion store the OpenGL's version, multiplied by 100. For example, if
@@ -787,6 +790,8 @@ class GLContext : public GenericAtomicRefCounted,
     AFTER_GL_CALL;
   }
 
+  void fBindFramebuffer(GLenum target, GLuint framebuffer);
+
   void fInvalidateFramebuffer(GLenum target, GLsizei numAttachments,
                               const GLenum* attachments) {
     BeforeGLDrawCall();
@@ -1172,7 +1177,7 @@ class GLContext : public GenericAtomicRefCounted,
   }
 
  private:
-  void raw_fGetIntegerv(GLenum pname, GLint* params) const {
+  void raw_fGetIntegerv(GLenum pname, GLint* params) {
     BEFORE_GL_CALL;
     mSymbols.fGetIntegerv(pname, params);
     OnSyncCall();
@@ -1180,28 +1185,28 @@ class GLContext : public GenericAtomicRefCounted,
   }
 
  public:
-  void fGetIntegerv(GLenum pname, GLint* params) const;
+  void fGetIntegerv(GLenum pname, GLint* params);
 
-  void GetUIntegerv(GLenum pname, GLuint* params) const {
+  void GetUIntegerv(GLenum pname, GLuint* params) {
     fGetIntegerv(pname, reinterpret_cast<GLint*>(params));
   }
 
   template <typename T>
-  T GetIntAs(GLenum pname) const {
+  T GetIntAs(GLenum pname) {
     static_assert(sizeof(T) == sizeof(GLint), "Invalid T.");
     T ret = 0;
     fGetIntegerv(pname, (GLint*)&ret);
     return ret;
   }
 
-  void fGetFloatv(GLenum pname, GLfloat* params) const {
+  void fGetFloatv(GLenum pname, GLfloat* params) {
     BEFORE_GL_CALL;
     mSymbols.fGetFloatv(pname, params);
     OnSyncCall();
     AFTER_GL_CALL;
   }
 
-  void fGetBooleanv(GLenum pname, realGLboolean* params) const {
+  void fGetBooleanv(GLenum pname, realGLboolean* params) {
     BEFORE_GL_CALL;
     mSymbols.fGetBooleanv(pname, params);
     OnSyncCall();
@@ -2005,12 +2010,16 @@ class GLContext : public GenericAtomicRefCounted,
     AFTER_GL_CALL;
   }
 
-  void fBindFramebuffer(GLenum target, GLuint framebuffer) {
+ private:
+  friend class SharedSurface;
+
+  void raw_fBindFramebuffer(GLenum target, GLuint framebuffer) {
     BEFORE_GL_CALL;
     mSymbols.fBindFramebuffer(target, framebuffer);
     AFTER_GL_CALL;
   }
 
+ public:
   void fBindRenderbuffer(GLenum target, GLuint renderbuffer) {
     BEFORE_GL_CALL;
     mSymbols.fBindRenderbuffer(target, renderbuffer);
@@ -3299,8 +3308,9 @@ class GLContext : public GenericAtomicRefCounted,
   // -----------------------------------------------------------------------------
   // Constructor
  protected:
-  explicit GLContext(const GLContextDesc&, GLContext* sharedContext = nullptr,
-                     bool canUseTLSIsCurrent = false);
+  explicit GLContext(CreateContextFlags flags, const SurfaceCaps& caps,
+                     GLContext* sharedContext = nullptr,
+                     bool isOffscreen = false, bool canUseTLSIsCurrent = false);
 
   // -----------------------------------------------------------------------------
   // Destructor
@@ -3366,6 +3376,28 @@ class GLContext : public GenericAtomicRefCounted,
 
   virtual Maybe<SymbolLoader> GetSymbolLoader() const = 0;
 
+  // Before reads from offscreen texture
+  void GuaranteeResolve();
+
+  /*
+   * Resize the current offscreen buffer.  Returns true on success.
+   * If it returns false, the context should be treated as unusable
+   * and should be recreated.  After the resize, the viewport is not
+   * changed; glViewport should be called as appropriate.
+   *
+   * Only valid if IsOffscreen() returns true.
+   */
+  bool ResizeOffscreen(const gfx::IntSize& size) {
+    return ResizeScreenBuffer(size);
+  }
+
+  /*
+   * Return size of this offscreen context.
+   *
+   * Only valid if IsOffscreen() returns true.
+   */
+  const gfx::IntSize& OffscreenSize() const;
+
   void BindFB(GLuint fb) {
     fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, fb);
     MOZ_GL_ASSERT(this, !fb || fIsFramebuffer(fb));
@@ -3379,23 +3411,11 @@ class GLContext : public GenericAtomicRefCounted,
     fBindFramebuffer(LOCAL_GL_READ_FRAMEBUFFER_EXT, fb);
   }
 
-  GLuint GetDrawFB() const {
-    return GetIntAs<GLuint>(LOCAL_GL_DRAW_FRAMEBUFFER_BINDING_EXT);
-  }
+  GLuint GetDrawFB();
 
-  GLuint GetReadFB() const {
-    auto bindEnum = LOCAL_GL_READ_FRAMEBUFFER_BINDING_EXT;
-    if (!IsSupported(GLFeature::split_framebuffer)) {
-      bindEnum = LOCAL_GL_FRAMEBUFFER_BINDING;
-    }
-    return GetIntAs<GLuint>(bindEnum);
-  }
+  GLuint GetReadFB();
 
-  GLuint GetFB() const {
-    const auto ret = GetDrawFB();
-    MOZ_ASSERT(ret == GetReadFB());
-    return ret;
-  }
+  GLuint GetFB();
 
  private:
   void GetShaderPrecisionFormatNonES2(GLenum shadertype, GLenum precisiontype,
@@ -3422,6 +3442,9 @@ class GLContext : public GenericAtomicRefCounted,
   }
 
  public:
+  void ForceDirtyScreen();
+  void CleanDirtyScreen();
+
   virtual GLenum GetPreferredARGB32Format() const { return LOCAL_GL_RGBA; }
 
   virtual GLenum GetPreferredEGLImageTextureTarget() const {
@@ -3441,6 +3464,8 @@ class GLContext : public GenericAtomicRefCounted,
                                const char* extension);
 
  public:
+  std::map<GLuint, SharedSurface*> mFBOMapping;
+
   enum {
     DebugFlagEnabled = 1 << 0,
     DebugFlagTrace = 1 << 1,
@@ -3482,6 +3507,31 @@ class GLContext : public GenericAtomicRefCounted,
     return thisShared == otherShared;
   }
 
+  bool InitOffscreen(const gfx::IntSize& size, const SurfaceCaps& caps);
+
+ protected:
+  // Note that it does -not- clear the resized buffers.
+  bool CreateScreenBuffer(const gfx::IntSize& size, const SurfaceCaps& caps) {
+    if (!IsOffscreenSizeAllowed(size)) return false;
+
+    return CreateScreenBufferImpl(size, caps);
+  }
+
+  bool CreateScreenBufferImpl(const gfx::IntSize& size,
+                              const SurfaceCaps& caps);
+
+ public:
+  bool ResizeScreenBuffer(const gfx::IntSize& size);
+
+ protected:
+  SurfaceCaps mCaps;
+
+ public:
+  const SurfaceCaps& Caps() const { return mCaps; }
+
+  // Only varies based on bpp16 and alpha.
+  GLFormats ChooseGLFormats(const SurfaceCaps& caps) const;
+
   bool IsFramebufferComplete(GLuint fb, GLenum* status = nullptr);
 
   // Does not check completeness.
@@ -3495,10 +3545,14 @@ class GLContext : public GenericAtomicRefCounted,
                             GLuint* drawFB, GLuint* readFB);
 
  protected:
+  friend class GLScreenBuffer;
+  UniquePtr<GLScreenBuffer> mScreen;
+
   SharedSurface* mLockedSurface = nullptr;
 
  public:
   void LockSurface(SharedSurface* surf) {
+    MOZ_ASSERT(!mLockedSurface);
     mLockedSurface = surf;
   }
 
@@ -3509,7 +3563,9 @@ class GLContext : public GenericAtomicRefCounted,
 
   SharedSurface* GetLockedSurface() const { return mLockedSurface; }
 
-  bool IsOffscreen() const { return mDesc.isOffscreen; }
+  bool IsOffscreen() const { return mIsOffscreen; }
+
+  GLScreenBuffer* Screen() const { return mScreen.get(); }
 
   bool WorkAroundDriverBugs() const { return mWorkAroundDriverBugs; }
 
@@ -3629,6 +3685,7 @@ class GLContext : public GenericAtomicRefCounted,
   void FlushIfHeavyGLCallsSinceLastFlush();
   static bool ShouldSpew();
   static bool ShouldDumpExts();
+  bool Readback(SharedSurface* src, gfx::DataSourceSurface* dest);
 
   // --
 
@@ -3693,61 +3750,28 @@ void MarkBitfieldByStrings(const std::vector<nsCString>& strList,
   }
 }
 
-// -
-
-class Renderbuffer final {
- public:
-  const WeakPtr<GLContext> weakGl;
-  const GLuint name;
-
- private:
-  static GLuint Create(GLContext& gl) {
-    GLuint ret = 0;
-    gl.fGenRenderbuffers(1, &ret);
-    return ret;
-  }
-
- public:
-  explicit Renderbuffer(GLContext& gl) : weakGl(&gl), name(Create(gl)) {}
-
-  ~Renderbuffer() {
-    const RefPtr<GLContext> gl = weakGl.get();
-    if (!gl->MakeCurrent()) return;
-    gl->fDeleteRenderbuffers(1, &name);
-  }
-};
-
-// -
-
-class Texture final {
- public:
-  const WeakPtr<GLContext> weakGl;
-  const GLuint name;
-
- private:
-  static GLuint Create(GLContext& gl) {
-    GLuint ret = 0;
-    gl.fGenTextures(1, &ret);
-    return ret;
-  }
-
- public:
-  explicit Texture(GLContext& gl) : weakGl(&gl), name(Create(gl)) {}
-
-  ~Texture() {
-    const RefPtr<GLContext> gl = weakGl.get();
-    if (!gl->MakeCurrent()) return;
-    gl->fDeleteTextures(1, &name);
-  }
-};
-
 /**
  * Helper function that creates a 2D texture aSize.width x aSize.height with
  * storage type specified by aFormats. Returns GL texture object id.
  *
  * See mozilla::gl::CreateTexture.
  */
-UniquePtr<Texture> CreateTexture(GLContext&, const gfx::IntSize& size);
+GLuint CreateTextureForOffscreen(GLContext* aGL, const GLFormats& aFormats,
+                                 const gfx::IntSize& aSize);
+
+/**
+ * Helper function that creates a 2D texture aSize.width x aSize.height with
+ * storage type aInternalFormat. Returns GL texture object id.
+ *
+ * Initialize textyre parameters to:
+ *    GL_TEXTURE_MIN_FILTER = GL_LINEAR
+ *    GL_TEXTURE_MAG_FILTER = GL_LINEAR
+ *    GL_TEXTURE_WRAP_S = GL_CLAMP_TO_EDGE
+ *    GL_TEXTURE_WRAP_T = GL_CLAMP_TO_EDGE
+ */
+GLuint CreateTexture(GLContext* aGL, GLenum aInternalFormat, GLenum aFormat,
+                     GLenum aType, const gfx::IntSize& aSize,
+                     bool linear = true);
 
 /**
  * Helper function that calculates the number of bytes required per

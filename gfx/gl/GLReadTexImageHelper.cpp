@@ -424,6 +424,7 @@ already_AddRefed<DataSourceSurface> ReadBackSurface(GLContext* gl,
                                                     bool aYInvert,
                                                     SurfaceFormat aFormat) {
   gl->MakeCurrent();
+  gl->GuaranteeResolve();
   gl->fActiveTexture(LOCAL_GL_TEXTURE0);
   gl->fBindTexture(LOCAL_GL_TEXTURE_2D, aTexture);
 

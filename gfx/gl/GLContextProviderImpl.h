@@ -66,12 +66,12 @@ class GL_CONTEXT_PROVIDER_NAME {
    * @return Context to use for offscreen rendering
    */
   static already_AddRefed<GLContext> CreateOffscreen(
-      const mozilla::gfx::IntSize& size, const GLContextCreateDesc&,
-      nsACString* const out_failureId);
+      const mozilla::gfx::IntSize& size, const SurfaceCaps& minCaps,
+      CreateContextFlags flags, nsACString* const out_failureId);
 
   // Just create a context. We'll add offscreen stuff ourselves.
   static already_AddRefed<GLContext> CreateHeadless(
-      const GLContextCreateDesc&, nsACString* const out_failureId);
+      CreateContextFlags flags, nsACString* const out_failureId);
 
   /**
    * Create wrapping Gecko GLContext for external gl context.
