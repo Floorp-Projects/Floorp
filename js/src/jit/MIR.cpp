@@ -3041,8 +3041,12 @@ MDefinition* MPow::foldsConstantPower(TempAllocator& alloc) {
 }
 
 MDefinition* MPow::foldsTo(TempAllocator& alloc) {
-  if (MDefinition* def = foldsConstant(alloc)) return def;
-  if (MDefinition* def = foldsConstantPower(alloc)) return def;
+  if (MDefinition* def = foldsConstant(alloc)) {
+    return def;
+  }
+  if (MDefinition* def = foldsConstantPower(alloc)) {
+    return def;
+  }
   return this;
 }
 
