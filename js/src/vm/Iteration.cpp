@@ -1505,13 +1505,25 @@ bool js::SuppressDeletedElement(JSContext* cx, HandleObject obj,
   return SuppressDeletedPropertyHelper(cx, obj, str);
 }
 
+static const JSFunctionSpec iterator_methods[] = {
+    JS_SELF_HOSTED_SYM_FN(iterator, "IteratorIdentity", 0, 0), JS_FS_END};
+
 static const JSFunctionSpec iterator_static_methods[] = {
     JS_SELF_HOSTED_FN("from", "IteratorFrom", 1, 0), JS_FS_END};
 
-static const JSFunctionSpec iterator_proto_methods[] = {
-    JS_SELF_HOSTED_SYM_FN(iterator, "IteratorIdentity", 0, 0), JS_FS_END};
+// These methods are only attached to Iterator.prototype when the
+// Iterator Helpers feature is enabled.
+static const JSFunctionSpec iterator_methods_with_helpers[] = {
+    JS_SELF_HOSTED_FN("reduce", "IteratorReduce", 1, 0),
+    JS_SELF_HOSTED_FN("toArray", "IteratorToArray", 0, 0),
+    JS_SELF_HOSTED_FN("forEach", "IteratorForEach", 1, 0),
+    JS_SELF_HOSTED_FN("some", "IteratorSome", 1, 0),
+    JS_SELF_HOSTED_FN("every", "IteratorEvery", 1, 0),
+    JS_SELF_HOSTED_FN("find", "IteratorFind", 1, 0),
+    JS_SELF_HOSTED_SYM_FN(iterator, "IteratorIdentity", 0, 0),
+    JS_FS_END};
 
-static const JSPropertySpec iterator_proto_properties[] = {
+static const JSPropertySpec iterator_properties[] = {
     JS_STRING_SYM_PS(toStringTag, js_Iterator_str, JSPROP_READONLY),
     JS_PS_END,
 };
@@ -1525,8 +1537,8 @@ bool GlobalObject::initIteratorProto(JSContext* cx,
 
   RootedObject proto(
       cx, GlobalObject::createBlankPrototype<PlainObject>(cx, global));
-  if (!proto || !DefinePropertiesAndFunctions(cx, proto, nullptr,
-                                              iterator_proto_methods)) {
+  if (!proto ||
+      !DefinePropertiesAndFunctions(cx, proto, nullptr, iterator_methods)) {
     return false;
   }
 
@@ -1653,8 +1665,8 @@ static const ClassSpec IteratorObjectClassSpec = {
     GenericCreatePrototype<IteratorObject>,
     iterator_static_methods,
     nullptr,
-    iterator_proto_methods,
-    iterator_proto_properties,
+    iterator_methods_with_helpers,
+    iterator_properties,
     nullptr,
 };
 
