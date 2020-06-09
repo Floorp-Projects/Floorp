@@ -452,7 +452,8 @@ struct HelperThreadStats {
   MACRO(_, MallocHeap, stateData)      \
   MACRO(_, MallocHeap, parseTask)      \
   MACRO(_, MallocHeap, ionCompileTask) \
-  MACRO(_, MallocHeap, wasmCompile)
+  MACRO(_, MallocHeap, wasmCompile)    \
+  MACRO(_, MallocHeap, contexts)
 
   HelperThreadStats() = default;
 
