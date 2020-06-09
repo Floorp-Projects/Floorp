@@ -17,6 +17,9 @@ extern mozilla::LazyLogModule gDocumentChannelLog;
 namespace mozilla {
 namespace net {
 
+using RedirectToRealChannelPromise =
+    typename PDocumentChannelParent::RedirectToRealChannelPromise;
+
 NS_IMPL_ISUPPORTS_INHERITED(ParentProcessDocumentChannel, DocumentChannel,
                             nsIAsyncVerifyRedirectCallback, nsIObserver)
 
@@ -33,7 +36,7 @@ ParentProcessDocumentChannel::~ParentProcessDocumentChannel() {
   LOG(("ParentProcessDocumentChannel dtor [this=%p]", this));
 }
 
-RefPtr<PDocumentChannelParent::RedirectToRealChannelPromise>
+RefPtr<RedirectToRealChannelPromise>
 ParentProcessDocumentChannel::RedirectToRealChannel(
     nsTArray<ipc::Endpoint<extensions::PStreamFilterParent>>&&
         aStreamFilterEndpoints,
@@ -56,15 +59,13 @@ ParentProcessDocumentChannel::RedirectToRealChannel(
       msg.Insert(
           "Attempt to load a non-authorised load in the parent process: ", 0);
       NS_ASSERTION(false, msg.get());
-      RemoveObserver();
-      return PDocumentChannelParent::RedirectToRealChannelPromise::
-          CreateAndResolve(NS_ERROR_CONTENT_BLOCKED, __func__);
+      return RedirectToRealChannelPromise::CreateAndResolve(
+          NS_ERROR_CONTENT_BLOCKED, __func__);
     }
   }
   mStreamFilterEndpoints = std::move(aStreamFilterEndpoints);
 
-  RefPtr<PDocumentChannelParent::RedirectToRealChannelPromise> p =
-      mPromise.Ensure(__func__);
+  RefPtr<RedirectToRealChannelPromise> p = mPromise.Ensure(__func__);
 
   nsresult rv =
       gHttpHandler->AsyncOnChannelRedirect(this, channel, aRedirectFlags);
@@ -99,7 +100,9 @@ ParentProcessDocumentChannel::OnRedirectVerifyCallback(nsresult aResult) {
     // Adding the channel to the loadgroup could have triggered a status
     // change with an observer being called destroying the docShell, resulting
     // in the PPDC to be canceled.
-    if (!mCanceled) {
+    if (mCanceled) {
+      aResult = NS_ERROR_ABORT;
+    } else {
       mLoadGroup->RemoveRequest(this, nullptr, NS_BINDING_REDIRECTED);
       for (auto& endpoint : mStreamFilterEndpoints) {
         extensions::StreamFilterParent::Attach(channel, std::move(endpoint));
@@ -116,12 +119,7 @@ ParentProcessDocumentChannel::OnRedirectVerifyCallback(nsresult aResult) {
     }
   }
 
-  mLoadGroup = nullptr;
-  mListener = nullptr;
-  mCallbacks = nullptr;
-  RemoveObserver();
-
-  mPromise.ResolveIfExists(aResult, __func__);
+  mPromise.Resolve(aResult, __func__);
 
   return NS_OK;
 }
@@ -166,30 +164,41 @@ NS_IMETHODIMP ParentProcessDocumentChannel::AsyncOpen(
   }
 
   RefPtr<ParentProcessDocumentChannel> self = this;
-  promise
-      ->Then(
-          GetCurrentThreadSerialEventTarget(), __func__,
-          [self](
-              DocumentLoadListener::OpenPromiseSucceededType&& aResolveValue) {
-            self->mPromiseRequest.Complete();
-            // The DLL is waiting for us to resolve the
-            // PDocumentChannel::RedirectToRealChannelPromise given as
-            // parameter.
-            auto promise = self->RedirectToRealChannel(
-                std::move(aResolveValue.mStreamFilterEndpoints),
-                aResolveValue.mRedirectFlags, aResolveValue.mLoadFlags);
-            // We chain the promise the DLL is waiting on to the one returned by
-            // RedirectToRealChannel. As soon as the promise returned is
-            // resolved or rejected, so will the DLL's promise.
-            promise->ChainTo(aResolveValue.mPromise.forget(), __func__);
-          },
-          [self](DocumentLoadListener::OpenPromiseFailedType&& aRejectValue) {
-            self->mPromiseRequest.Complete();
-            self->DisconnectChildListeners(aRejectValue.mStatus,
-                                           aRejectValue.mLoadGroupStatus);
-            self->RemoveObserver();
-          })
-      ->Track(mPromiseRequest);
+  promise->Then(
+      GetCurrentThreadSerialEventTarget(), __func__,
+      [self](DocumentLoadListener::OpenPromiseSucceededType&& aResolveValue) {
+        // The DLL is waiting for us to resolve the
+        // RedirectToRealChannelPromise given as parameter.
+        RefPtr<RedirectToRealChannelPromise> p =
+            self->RedirectToRealChannel(
+                    std::move(aResolveValue.mStreamFilterEndpoints),
+                    aResolveValue.mRedirectFlags, aResolveValue.mLoadFlags)
+                ->Then(
+                    GetCurrentThreadSerialEventTarget(), __func__,
+                    [self](RedirectToRealChannelPromise::ResolveOrRejectValue&&
+                               aValue) {
+                      MOZ_ASSERT(aValue.IsResolve());
+                      nsresult rv = aValue.ResolveValue();
+                      if (NS_FAILED(rv)) {
+                        self->DisconnectChildListeners(rv, rv);
+                      }
+                      self->mLoadGroup = nullptr;
+                      self->mListener = nullptr;
+                      self->mCallbacks = nullptr;
+                      self->RemoveObserver();
+                      return RedirectToRealChannelPromise::
+                          CreateAndResolveOrReject(std::move(aValue), __func__);
+                    });
+        // We chain the promise the DLL is waiting on to the one returned by
+        // RedirectToRealChannel. As soon as the promise returned is
+        // resolved or rejected, so will the DLL's promise.
+        p->ChainTo(aResolveValue.mPromise.forget(), __func__);
+      },
+      [self](DocumentLoadListener::OpenPromiseFailedType&& aRejectValue) {
+        self->DisconnectChildListeners(aRejectValue.mStatus,
+                                       aRejectValue.mLoadGroupStatus);
+        self->RemoveObserver();
+      });
   return NS_OK;
 }
 
@@ -200,10 +209,10 @@ NS_IMETHODIMP ParentProcessDocumentChannel::Cancel(nsresult aStatus) {
   }
 
   mCanceled = true;
+  // This will force the DocumentListener to abort the promise if there's one
+  // pending.
   mDocumentLoadListener->Cancel(aStatus);
-  if (!mPromiseRequest.Exists()) {
-    DisconnectChildListeners(aStatus, aStatus);
-  }
+
   return NS_OK;
 }
 
