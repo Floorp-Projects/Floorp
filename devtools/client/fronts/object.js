@@ -312,16 +312,23 @@ function getAdHocFrontOrPrimitiveGrip(packet, parentFront) {
   // actorID, unless:
   // - it's a Symbol (See Bug 1600299)
   // - it's a mapEntry (the preview.key and preview.value properties can hold actors)
+  // - or it is already a front (happens when we are using the legacy listeners in the ResourceWatcher)
   const isPacketAnObject = packet && typeof packet === "object";
+  const isFront = !!packet.typeName;
   if (
     !isPacketAnObject ||
     packet.type == "symbol" ||
-    (packet.type !== "mapEntry" && !packet.actor)
+    (packet.type !== "mapEntry" && !packet.actor) ||
+    isFront
   ) {
     return packet;
   }
 
-  const { conn, targetFront } = parentFront;
+  const { conn } = parentFront;
+  // If the parent front is a target, consider it as the target to use for all objects
+  const targetFront = parentFront.isTargetFront
+    ? parentFront
+    : parentFront.targetFront;
 
   // We may have already created a front for this object actor since some actor (e.g. the
   // thread actor) cache the object actors they create.
@@ -341,8 +348,16 @@ function getAdHocFrontOrPrimitiveGrip(packet, parentFront) {
 
   if (type === "mapEntry" && packet.preview) {
     const { key, value } = packet.preview;
-    packet.preview.key = getAdHocFrontOrPrimitiveGrip(key, parentFront);
-    packet.preview.value = getAdHocFrontOrPrimitiveGrip(value, parentFront);
+    packet.preview.key = getAdHocFrontOrPrimitiveGrip(
+      key,
+      parentFront,
+      targetFront
+    );
+    packet.preview.value = getAdHocFrontOrPrimitiveGrip(
+      value,
+      parentFront,
+      targetFront
+    );
     return packet;
   }
 
