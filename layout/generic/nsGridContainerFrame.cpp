@@ -2755,8 +2755,8 @@ struct MOZ_STACK_CLASS nsGridContainerFrame::GridReflowInput {
         aGridContainerFrame->SetProperty(UsedTrackSizes::Prop(), prop);
       }
       prop->mCanResolveLineRangeSize = {true, true};
-      prop->mSizes[eLogicalAxisInline] = mCols.mSizes.Clone();
-      prop->mSizes[eLogicalAxisBlock] = mRows.mSizes.Clone();
+      prop->mSizes[eLogicalAxisInline].Assign(mCols.mSizes);
+      prop->mSizes[eLogicalAxisBlock].Assign(mRows.mSizes);
     }
 
     // Copy item data from each child's first-in-flow data in mSharedGridData.
@@ -3553,7 +3553,7 @@ void nsGridContainerFrame::UsedTrackSizes::ResolveSubgridTrackSizesForAxis(
   state.CalculateTrackSizesForAxis(aAxis, grid, aContentBoxSize,
                                    SizingConstraint::NoConstraint);
   const auto& tracks = aAxis == eLogicalAxisInline ? state.mCols : state.mRows;
-  mSizes[aAxis] = tracks.mSizes.Clone();
+  mSizes[aAxis].Assign(tracks.mSizes);
   mCanResolveLineRangeSize[aAxis] = tracks.mCanResolveLineRangeSize;
   MOZ_ASSERT(mCanResolveLineRangeSize[aAxis]);
 }
@@ -6388,7 +6388,7 @@ void nsGridContainerFrame::Tracks::StretchFlexibleTracks(
     maxSize = mAxis == eLogicalAxisBlock ? ri->ComputedMaxBSize()
                                          : ri->ComputedMaxISize();
   }
-  Maybe<nsTArray<TrackSize>> origSizes;
+  Maybe<CopyableAutoTArray<TrackSize, 32>> origSizes;
   bool applyMinMax = (minSize != 0 || maxSize != NS_UNCONSTRAINEDSIZE) &&
                      aAvailableSize == NS_UNCONSTRAINEDSIZE;
   // We iterate twice at most.  The 2nd time if the grid size changed after
@@ -6403,7 +6403,7 @@ void nsGridContainerFrame::Tracks::StretchFlexibleTracks(
         nscoord& base = mSizes[i].mBase;
         if (flexLength > base) {
           if (applyMinMax && origSizes.isNothing()) {
-            origSizes.emplace(mSizes.Clone());
+            origSizes.emplace(mSizes);
           }
           base = flexLength;
         }

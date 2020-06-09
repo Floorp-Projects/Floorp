@@ -2992,6 +2992,7 @@ struct nsTArray_RelocationStrategy<AutoTArray<E, N>> {
 template <class E, size_t N>
 class CopyableAutoTArray : public AutoTArray<E, N> {
  public:
+  typedef CopyableAutoTArray<E, N> self_type;
   using AutoTArray<E, N>::AutoTArray;
 
   CopyableAutoTArray(const CopyableAutoTArray& aOther) : AutoTArray<E, N>() {
@@ -3025,6 +3026,10 @@ class CopyableAutoTArray : public AutoTArray<E, N> {
     static_cast<AutoTArray<E, N>&>(*this) = std::move(aOther);
     return *this;
   }
+
+  // CopyableTArray exists for cases where an explicit Clone is not possible.
+  // These uses should not be mixed, so we delete Clone() here.
+  self_type Clone() const = delete;
 
   CopyableAutoTArray(CopyableAutoTArray&&) = default;
   CopyableAutoTArray& operator=(CopyableAutoTArray&&) = default;
