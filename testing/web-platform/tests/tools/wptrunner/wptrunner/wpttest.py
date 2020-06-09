@@ -8,7 +8,7 @@ from six import iteritems, string_types
 from .wptmanifest.parser import atoms
 
 atom_reset = atoms["Reset"]
-enabled_tests = {"testharness", "reftest", "wdspec", "crashtest", "print-reftest"}
+enabled_tests = {"testharness", "reftest", "wdspec", "crashtest"}
 
 
 class Result(object):
@@ -462,7 +462,7 @@ class ReftestTest(Test):
                 raise ValueError
 
         self.references = references
-        self.viewport_size = self.get_viewport_size(viewport_size)
+        self.viewport_size = viewport_size
         self.dpi = dpi
         self._fuzzy = fuzzy or {}
 
@@ -555,10 +555,6 @@ class ReftestTest(Test):
             reference.update_metadata(metadata)
         return metadata
 
-    def get_viewport_size(self, override):
-        assert override is None
-        return None
-
     @property
     def id(self):
         return self.url
@@ -594,13 +590,6 @@ class ReftestTest(Test):
         return values
 
 
-class PrintReftestTest(ReftestTest):
-    test_type = "print-reftest"
-
-    def get_viewport_size(self, override):
-        assert override is None
-        return (5*2.54, 3*2.54)
-
 class WdspecTest(Test):
     result_cls = WdspecResult
     subtest_result_cls = WdspecSubtestResult
@@ -616,7 +605,6 @@ class CrashTest(Test):
 
 
 manifest_test_cls = {"reftest": ReftestTest,
-                     "print-reftest": PrintReftestTest,
                      "testharness": TestharnessTest,
                      "manual": ManualTest,
                      "wdspec": WdspecTest,

@@ -1,7 +1,7 @@
 # WebDriver client for Python
 
 This package provides Python bindings
-that conform to the [W3C WebDriver standard](https://w3c.github.io/webdriver/),
+that conform to the [W3C WebDriver standard](https://w3c.github.io/webdriver/webdriver-spec.html),
 which specifies a remote control protocol for web browsers.
 
 These bindings are written with determining

@@ -467,8 +467,6 @@ class StaticHandler(StringHandler):
         :param headers: List of headers to send with responses"""
 
         with open(path) as f:
-            data = f.read()
-            if format_args:
-                data = data % format_args
+            data = f.read() % format_args
 
         return super(StaticHandler, self).__init__(data, content_type, **headers)
