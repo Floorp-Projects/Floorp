@@ -29,7 +29,6 @@
 #include "mozilla/Unused.h"
 #include "mozilla/SchedulerGroup.h"
 #include "mozilla/StaticPrefs_dom.h"
-#include "mozilla/StaticPrefs_fission.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/TelemetryIPC.h"
 #include "mozilla/RemoteDecoderManagerChild.h"
@@ -2546,27 +2545,12 @@ mozilla::ipc::IPCResult ContentChild::RecvAppInfo(
 
 mozilla::ipc::IPCResult ContentChild::RecvRemoteType(
     const nsString& aRemoteType) {
-  if (!DOMStringIsNull(mRemoteType)) {
-    // Preallocated processes are type PREALLOC_REMOTE_TYPE; they can become
-    // anything except a File: process.
-    MOZ_LOG(ContentParent::GetLog(), LogLevel::Debug,
-            ("Changing remoteType of process %d from %s to %s", getpid(),
-             NS_ConvertUTF16toUTF8(mRemoteType).get(),
-             NS_ConvertUTF16toUTF8(aRemoteType).get()));
-    // prealloc->anything (but file) or web->web allowed
-    MOZ_RELEASE_ASSERT(!aRemoteType.EqualsLiteral(FILE_REMOTE_TYPE) &&
-                       (mRemoteType.EqualsLiteral(PREALLOC_REMOTE_TYPE) ||
-                        (mRemoteType.EqualsLiteral(DEFAULT_REMOTE_TYPE) &&
-                         aRemoteType.EqualsLiteral(DEFAULT_REMOTE_TYPE))));
-  } else {
-    // Initial setting of remote type.  Either to 'prealloc' or the actual
-    // final type (if we didn't use a preallocated process)
-    MOZ_LOG(ContentParent::GetLog(), LogLevel::Debug,
-            ("Setting remoteType of process %d to %s", getpid(),
-             NS_ConvertUTF16toUTF8(aRemoteType).get()));
-  }
+  MOZ_ASSERT(DOMStringIsNull(mRemoteType));
 
-  // Update the process name so about:memory's process names are more obvious.
+  mRemoteType.Assign(aRemoteType);
+
+  // For non-default ("web") types, update the process name so about:memory's
+  // process names are more obvious.
   if (aRemoteType.EqualsLiteral(FILE_REMOTE_TYPE)) {
     SetProcessName(NS_LITERAL_STRING("file:// Content"));
   } else if (aRemoteType.EqualsLiteral(EXTENSION_REMOTE_TYPE)) {
@@ -2575,13 +2559,7 @@ mozilla::ipc::IPCResult ContentChild::RecvRemoteType(
     SetProcessName(NS_LITERAL_STRING("Privileged Content"));
   } else if (aRemoteType.EqualsLiteral(LARGE_ALLOCATION_REMOTE_TYPE)) {
     SetProcessName(NS_LITERAL_STRING("Large Allocation Web Content"));
-  } else if (RemoteTypePrefix(aRemoteType)
-                 .EqualsLiteral(FISSION_WEB_REMOTE_TYPE)) {
-    SetProcessName(NS_LITERAL_STRING("Isolated Web Content"));
   }
-  // else "prealloc", "web" or "webCOOP+COEP" type -> "Web Content" already set
-
-  mRemoteType.Assign(aRemoteType);
 
   return IPC_OK();
 }

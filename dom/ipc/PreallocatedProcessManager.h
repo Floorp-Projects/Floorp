@@ -37,30 +37,23 @@ class PreallocatedProcessManager final {
    * background. To avoid that, the PreallocatedProcessManager won't start up
    * any processes while there is a blocker active.
    */
-  static void AddBlocker(const nsAString& aRemoteType, ContentParent* aParent);
-  static void RemoveBlocker(const nsAString& aRemoteType,
-                            ContentParent* aParent);
+  static void AddBlocker(ContentParent* aParent);
+  static void RemoveBlocker(ContentParent* aParent);
 
   /**
-   * Take the preallocated process, if we have one, or a recycled
-   * process cached via Provide().  Currently we only cache
-   * DEFAULT_REMOTE_TYPE ('web') processes and only reuse them for that
-   * type.  If we don't have a process to return (cached or preallocated),
-   * this returns null.
+   * Take the preallocated process, if we have one.  If we don't have one, this
+   * returns null.
    *
-   * If we use a preallocated process, it will schedule the start of
-   * another on Idle (AllocateOnIdle()).
+   * If you call Take() twice in a row, the second call is guaranteed to return
+   * null.
+   *
+   * After you Take() the preallocated process, you need to call one of the
+   * Allocate* functions (or change the dom.ipc.processPrelaunch pref from
+   * false to true) before we'll create a new process.
    */
-  static already_AddRefed<ContentParent> Take(const nsAString& aRemoteType);
+  static already_AddRefed<ContentParent> Take();
 
-  /**
-   * Cache a process (currently only DEFAULT_REMOTE_TYPE) for reuse later
-   * via Take().  Returns true if we cached the process, and false if
-   * another process is already cached (so the caller knows to destroy it).
-   * This takes a reference to the ContentParent if it is cached.
-   */
   static bool Provide(ContentParent* aParent);
-  static void Erase(ContentParent* aParent);
 
  private:
   PreallocatedProcessManager();
