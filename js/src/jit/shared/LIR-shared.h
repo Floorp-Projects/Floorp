@@ -2521,21 +2521,6 @@ class LPowD : public LCallInstructionHelper<1, 2, 1> {
   const LDefinition* temp() { return getTemp(0); }
 };
 
-// Constant of a power of two raised to an integer power.
-class LPowOfTwoI : public LInstructionHelper<1, 1, 0> {
-  uint32_t base_;
-
- public:
-  LIR_HEADER(PowOfTwoI)
-  LPowOfTwoI(uint32_t base, const LAllocation& power)
-      : LInstructionHelper(classOpcode), base_(base) {
-    setOperand(0, power);
-  }
-
-  uint32_t base() const { return base_; }
-  const LAllocation* power() { return getOperand(0); }
-};
-
 // Sign value of an integer.
 class LSignI : public LInstructionHelper<1, 1, 0> {
  public:

@@ -44,8 +44,6 @@ class LIRGeneratorARM64 : public LIRGeneratorShared {
                      MDefinition* lhs, MDefinition* rhs);
   void lowerUrshD(MUrsh* mir);
 
-  void lowerPowOfTwoI(MPow* mir);
-
   void lowerForALU(LInstructionHelper<1, 1, 0>* ins, MDefinition* mir,
                    MDefinition* input);
   void lowerForALU(LInstructionHelper<1, 2, 0>* ins, MDefinition* mir,

@@ -5174,26 +5174,11 @@ class MHypot : public MVariadicInstruction, public AllDoublePolicy::Data {
 };
 
 // Inline implementation of Math.pow().
-//
-// Supports the following three specializations:
-//
-// 1. MPow(FloatingPoint, FloatingPoint) -> Double
-//   - The most general mode, calls js::ecmaPow.
-//   - Never performs a bailout.
-// 2. MPow(FloatingPoint, Int32) -> Double
-//   - Optimization to call js::powi instead of js::ecmaPow.
-//   - Never performs a bailout.
-// 3. MPow(Int32, Int32) -> Int32
-//   - Performs the complete exponentiation operation in assembly code.
-//   - Bails out if the result doesn't fit in Int32.
 class MPow : public MBinaryInstruction, public PowPolicy::Data {
   // If true, convert the power operand to int32 instead of double (this only
   // affects the Double specialization). This exists because we can sometimes
   // get more precise types during MIR building than in type analysis.
-  bool powerIsInt32_ : 1;
-
-  // If true, the result is guaranteed to never be negative zero.
-  bool canBeNegativeZero_ : 1;
+  bool powerIsInt32_;
 
   MPow(MDefinition* input, MDefinition* power, MIRType specialization)
       : MBinaryInstruction(classOpcode, input, power),
@@ -5202,9 +5187,6 @@ class MPow : public MBinaryInstruction, public PowPolicy::Data {
                specialization == MIRType::Double);
     setResultType(specialization);
     setMovable();
-
-    // The result can't be negative zero if the base is an Int32 value.
-    canBeNegativeZero_ = input->type() != MIRType::Int32;
   }
 
   // Helpers for `foldsTo`
@@ -5230,7 +5212,6 @@ class MPow : public MBinaryInstruction, public PowPolicy::Data {
   MOZ_MUST_USE bool writeRecoverData(
       CompactBufferWriter& writer) const override;
   bool canRecoverOnBailout() const override { return true; }
-  bool canBeNegativeZero() const { return canBeNegativeZero_; }
 
   MDefinition* foldsTo(TempAllocator& alloc) override;
 
