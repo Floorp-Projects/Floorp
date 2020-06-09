@@ -508,7 +508,7 @@ bool HttpChannelParent::DoAsyncOpen(
 
   if (aCorsPreflightArgs.isSome()) {
     const CorsPreflightArgs& args = aCorsPreflightArgs.ref();
-    httpChannel->SetCorsPreflightParameters(args.unsafeHeaders());
+    httpChannel->SetCorsPreflightParameters(args.unsafeHeaders(), false);
   }
 
   nsCOMPtr<nsIInputStream> stream = DeserializeIPCStream(uploadStream);
@@ -895,7 +895,8 @@ mozilla::ipc::IPCResult HttpChannelParent::RecvRedirect2Verify(
             do_QueryInterface(newHttpChannel);
         MOZ_RELEASE_ASSERT(newInternalChannel);
         const CorsPreflightArgs& args = aCorsPreflightArgs.ref();
-        newInternalChannel->SetCorsPreflightParameters(args.unsafeHeaders());
+        newInternalChannel->SetCorsPreflightParameters(args.unsafeHeaders(),
+                                                       false);
       }
 
       if (aReferrerInfo) {

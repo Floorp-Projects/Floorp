@@ -577,7 +577,8 @@ ClassifierDummyChannel::GetProxyURI(nsIURI** aProxyURI) {
 }
 
 void ClassifierDummyChannel::SetCorsPreflightParameters(
-    const nsTArray<nsCString>& aUnsafeHeaders) {}
+    const nsTArray<nsCString>& aUnsafeHeaders,
+    bool aShouldStripRequestBodyHeader) {}
 
 void ClassifierDummyChannel::SetAltDataForChild(bool aIsForChild) {}
 void ClassifierDummyChannel::DisableAltDataCache() {}
