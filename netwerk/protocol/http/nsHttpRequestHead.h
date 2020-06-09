@@ -102,6 +102,9 @@ class nsHttpRequestHead {
     kMethod_Trace
   };
 
+  static void ParseMethod(const nsCString& aRawMethod,
+                          ParsedMethodType& aParsedMethod);
+
   ParsedMethodType ParsedMethod();
   bool EqualsMethod(ParsedMethodType aType);
   bool IsGet() { return EqualsMethod(kMethod_Get); }
