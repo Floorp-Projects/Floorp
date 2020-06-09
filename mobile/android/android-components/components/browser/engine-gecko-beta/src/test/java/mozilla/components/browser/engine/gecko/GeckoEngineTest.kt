@@ -137,6 +137,20 @@ class GeckoEngineTest {
     }
 
     @Test
+    fun clearSpeculativeSession() {
+        val engine = GeckoEngine(context, runtime = runtime)
+        assertNull(engine.speculativeSession)
+
+        val mockGeckoSession: GeckoSession = mock()
+        val mockEngineSession: GeckoEngineSession = mock()
+        whenever(mockEngineSession.geckoSession).thenReturn(mockGeckoSession)
+        engine.speculativeSession = mockEngineSession
+        engine.clearSpeculativeSession()
+        verify(mockGeckoSession).close()
+        assertNull(engine.speculativeSession)
+    }
+
+    @Test
     fun `createSession with contextId`() {
         val engine = GeckoEngine(context, runtime = runtime)
 

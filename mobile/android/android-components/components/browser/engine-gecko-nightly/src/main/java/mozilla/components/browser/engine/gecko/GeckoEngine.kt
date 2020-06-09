@@ -179,6 +179,14 @@ class GeckoEngine(
     }
 
     /**
+     * See [Engine.clearSpeculativeSession].
+     */
+    override fun clearSpeculativeSession() {
+        this.speculativeSession?.geckoSession?.close()
+        this.speculativeSession = null
+    }
+
+    /**
      * Opens a speculative connection to the host of [url].
      *
      * This is useful if an app thinks it may be making a request to that host in the near future. If no request

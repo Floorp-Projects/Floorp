@@ -128,6 +128,14 @@ interface Engine : WebExtensionRuntime, DataCleanable {
     fun speculativeCreateSession(private: Boolean = false, contextId: String? = null) = Unit
 
     /**
+     * Removes and closes a speculative session created by [speculativeCreateSession]. This is
+     * useful in case the session should no longer be used e.g. because engine settings have
+     * changed.
+     */
+    @MainThread
+    fun clearSpeculativeSession() = Unit
+
+    /**
      * Registers a [WebNotificationDelegate] to be notified of engine events
      * related to web notifications
      *
