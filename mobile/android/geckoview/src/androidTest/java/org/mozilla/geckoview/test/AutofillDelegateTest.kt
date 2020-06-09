@@ -272,11 +272,12 @@ class AutofillDelegateTest : BaseSessionTest() {
                    countAutofillNodes({ it.focused }), equalTo(1))
         // The focused field, its siblings, its parent, and the root node should
         // be visible.
+        // Hidden elements are ignored.
         // TODO: Is this actually correct? Should the whole focused branch be
         // visible or just the nodes as described above?
         assertThat("Should have seven visible nodes",
                    countAutofillNodes({ node -> node.visible }),
-                   equalTo(7))
+                   equalTo(6))
 
         mainSession.evaluateJS("document.querySelector('#pass2').blur()")
         sessionRule.waitUntilCalled(object : Callbacks.AutofillDelegate {
