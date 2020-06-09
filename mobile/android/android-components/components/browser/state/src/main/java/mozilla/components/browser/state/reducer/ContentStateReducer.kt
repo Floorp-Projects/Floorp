@@ -104,6 +104,9 @@ internal object ContentStateReducer {
             is ContentAction.FullScreenChangedAction -> updateContentState(state, action.sessionId) {
                 it.copy(fullScreen = action.fullScreenEnabled)
             }
+            is ContentAction.PictureInPictureChangedAction -> updateContentState(state, action.sessionId) {
+                it.copy(pictureInPictureEnabled = action.pipEnabled)
+            }
             is ContentAction.ViewportFitChangedAction -> updateContentState(state, action.sessionId) {
                 it.copy(layoutInDisplayCutoutMode = action.layoutInDisplayCutoutMode)
             }

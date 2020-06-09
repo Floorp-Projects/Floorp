@@ -8,8 +8,11 @@ import android.app.Activity
 import android.content.pm.PackageManager
 import android.os.Build
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import mozilla.components.browser.session.Session
-import mozilla.components.browser.session.SessionManager
+import kotlinx.coroutines.runBlocking
+import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.state.SessionState
+import mozilla.components.browser.state.state.createTab
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.support.base.crash.CrashReporting
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
@@ -25,19 +28,13 @@ import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
-import org.mockito.Mockito.verifyNoMoreInteractions
 import org.mockito.Mockito.verifyZeroInteractions
 import org.mockito.verification.VerificationMode
 import org.robolectric.annotation.Config
-import java.lang.IllegalStateException
-
-private interface PipChangedCallback : (Boolean) -> Unit
 
 @RunWith(AndroidJUnit4::class)
 class PictureInPictureFeatureTest {
 
-    private val sessionManager: SessionManager = mock()
-    private val selectedSession: Session = mock()
     private val crashReporting: CrashReporting = mock()
     private val activity: Activity = Mockito.mock(Activity::class.java, Mockito.RETURNS_DEEP_STUBS)
 
@@ -50,14 +47,15 @@ class PictureInPictureFeatureTest {
     @Test
     @Config(sdk = [Build.VERSION_CODES.M])
     fun `on home pressed without system feature on android m and lower`() {
+        val store = mock<BrowserStore>()
         whenever(activity.packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE))
             .thenReturn(false)
 
         val pictureInPictureFeature =
-            spy(PictureInPictureFeature(sessionManager, activity, crashReporting))
+            spy(PictureInPictureFeature(store, activity, crashReporting))
 
         assertFalse(pictureInPictureFeature.onHomePressed())
-        verifyZeroInteractions(sessionManager)
+        verifyZeroInteractions(store)
         verifyZeroInteractions(activity.packageManager)
         verify(pictureInPictureFeature, never()).enterPipModeCompat()
     }
@@ -65,78 +63,88 @@ class PictureInPictureFeatureTest {
     @Test
     @Config(sdk = [Build.VERSION_CODES.N])
     fun `on home pressed without system feature on android n and above`() {
+        val store = mock<BrowserStore>()
         whenever(activity.packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE))
             .thenReturn(false)
 
         val pictureInPictureFeature =
-            spy(PictureInPictureFeature(sessionManager, activity, crashReporting))
+            spy(PictureInPictureFeature(store, activity, crashReporting))
 
         assertFalse(pictureInPictureFeature.onHomePressed())
-        verifyZeroInteractions(sessionManager)
+        verifyZeroInteractions(store)
         verify(activity.packageManager).hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE)
         verify(pictureInPictureFeature, never()).enterPipModeCompat()
     }
 
     @Test
     fun `on home pressed without a selected session`() {
+        val store = BrowserStore()
         val pictureInPictureFeature =
-            spy(PictureInPictureFeature(sessionManager, activity, crashReporting))
+            spy(PictureInPictureFeature(store, activity, crashReporting))
 
         assertFalse(pictureInPictureFeature.onHomePressed())
-        verify(sessionManager).selectedSession
         verify(activity.packageManager).hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE)
         verify(pictureInPictureFeature, never()).enterPipModeCompat()
     }
 
     @Test
     fun `on home pressed with a selected session without a fullscreen mode`() {
+        val selectedSession = createTab("https://mozilla.org").copyWithFullScreen(false)
+        val store = BrowserStore(
+            BrowserState(
+                tabs = listOf(selectedSession),
+                selectedTabId = selectedSession.id
+            )
+        )
         val pictureInPictureFeature =
-            spy(PictureInPictureFeature(sessionManager, activity, crashReporting))
+            spy(PictureInPictureFeature(store, activity, crashReporting))
 
-        whenever(selectedSession.fullScreenMode).thenReturn(false)
-        whenever(sessionManager.selectedSession).thenReturn(selectedSession)
-
+        assertFalse(selectedSession.content.fullScreen)
         assertFalse(pictureInPictureFeature.onHomePressed())
-        verify(sessionManager).selectedSession
-        verify(selectedSession).fullScreenMode
         verify(pictureInPictureFeature, never()).enterPipModeCompat()
     }
 
     @Test
     fun `on home pressed with a selected session in fullscreen and without pip mode`() {
+        val selectedSession = createTab("https://mozilla.org").copyWithFullScreen(true)
+        val store = BrowserStore(
+            BrowserState(
+                tabs = listOf(selectedSession),
+                selectedTabId = selectedSession.id
+            )
+        )
         val pictureInPictureFeature =
-            spy(PictureInPictureFeature(sessionManager, activity, crashReporting))
+            spy(PictureInPictureFeature(store, activity, crashReporting))
 
-        whenever(selectedSession.fullScreenMode).thenReturn(true)
-        whenever(sessionManager.selectedSession).thenReturn(selectedSession)
         doReturn(false).`when`(pictureInPictureFeature).enterPipModeCompat()
 
         assertFalse(pictureInPictureFeature.onHomePressed())
-        verify(sessionManager).selectedSession
-        verify(selectedSession).fullScreenMode
         verify(pictureInPictureFeature).enterPipModeCompat()
     }
 
     @Test
     fun `on home pressed with a selected session in fullscreen and with pip mode`() {
+        val selectedSession = createTab("https://mozilla.org").copyWithFullScreen(true)
+        val store = BrowserStore(
+            BrowserState(
+                tabs = listOf(selectedSession),
+                selectedTabId = selectedSession.id
+            )
+        )
         val pictureInPictureFeature =
-            spy(PictureInPictureFeature(sessionManager, activity, crashReporting))
+            spy(PictureInPictureFeature(store, activity, crashReporting))
 
-        whenever(selectedSession.fullScreenMode).thenReturn(true)
-        whenever(sessionManager.selectedSession).thenReturn(selectedSession)
         doReturn(true).`when`(pictureInPictureFeature).enterPipModeCompat()
 
         assertTrue(pictureInPictureFeature.onHomePressed())
-        verify(sessionManager).selectedSession
-        verify(selectedSession).fullScreenMode
         verify(pictureInPictureFeature).enterPipModeCompat()
     }
 
     @Test
     @Config(sdk = [Build.VERSION_CODES.M])
     fun `enter pip mode compat on android m and below`() {
-        val pictureInPictureFeature =
-            PictureInPictureFeature(sessionManager, activity, crashReporting)
+        val store = mock<BrowserStore>()
+        val pictureInPictureFeature = PictureInPictureFeature(store, activity, crashReporting)
 
         assertFalse(pictureInPictureFeature.enterPipModeCompat())
     }
@@ -148,7 +156,7 @@ class PictureInPictureFeatureTest {
             .thenReturn(false)
 
         val pictureInPictureFeature =
-            PictureInPictureFeature(sessionManager, activity, crashReporting)
+            PictureInPictureFeature(mock(), activity, crashReporting)
 
         assertFalse(pictureInPictureFeature.enterPipModeCompat())
         verify(activity, never()).enterPictureInPictureMode(any())
@@ -158,14 +166,20 @@ class PictureInPictureFeatureTest {
     @Test
     @Config(sdk = [Build.VERSION_CODES.O])
     fun `enter pip mode compat with system feature on android o but entering throws exception`() {
+        val selectedSession = createTab("https://mozilla.org").copyWithFullScreen(true)
+        val store = BrowserStore(
+            BrowserState(
+                tabs = listOf(selectedSession),
+                selectedTabId = selectedSession.id
+            )
+        )
+
         whenever(activity.packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE))
             .thenReturn(true)
         whenever(activity.enterPictureInPictureMode(any())).thenThrow(IllegalStateException())
-        whenever(selectedSession.fullScreenMode).thenReturn(true)
-        whenever(sessionManager.selectedSession).thenReturn(selectedSession)
 
         val pictureInPictureFeature =
-            PictureInPictureFeature(sessionManager, activity, crashReporting)
+            PictureInPictureFeature(store, activity, crashReporting)
         assertFalse(pictureInPictureFeature.onHomePressed())
         verify(crashReporting).submitCaughtException(any<IllegalStateException>())
     }
@@ -174,7 +188,7 @@ class PictureInPictureFeatureTest {
     @Config(sdk = [Build.VERSION_CODES.O])
     fun `enter pip mode compat on android o and above`() {
         val pictureInPictureFeature =
-            PictureInPictureFeature(sessionManager, activity, crashReporting)
+            PictureInPictureFeature(mock(), activity, crashReporting)
 
         whenever(activity.enterPictureInPictureMode(any())).thenReturn(true)
 
@@ -186,39 +200,47 @@ class PictureInPictureFeatureTest {
     @Config(sdk = [Build.VERSION_CODES.N])
     fun `enter pip mode compat on android n and above`() {
         val pictureInPictureFeature =
-            PictureInPictureFeature(sessionManager, activity, crashReporting)
+            PictureInPictureFeature(mock(), activity, crashReporting)
 
         assertTrue(pictureInPictureFeature.enterPipModeCompat())
         verifyDeprecatedPictureInPictureMode(activity)
     }
 
     @Test
-    fun `on pip mode changed`() {
-        val pipChangedCallback: PipChangedCallback = mock()
+    fun `on pip mode changed`() = runBlocking {
+        val selectedSession = createTab("https://mozilla.org").copyWithFullScreen(true)
+        val store = BrowserStore(
+            BrowserState(
+                tabs = listOf(selectedSession),
+                selectedTabId = selectedSession.id
+            )
+        )
         val pipFeature = PictureInPictureFeature(
-            sessionManager,
+            store,
             activity,
             crashReporting,
-            null,
-            pipChangedCallback
+            tabId = null
         )
 
-        pipFeature.onPictureInPictureModeChanged(true)
-        verify(pipChangedCallback).invoke(true)
+        pipFeature.onPictureInPictureModeChanged(true).join()
+        assertTrue(store.state.tabs[0].content.pictureInPictureEnabled)
 
-        pipFeature.onPictureInPictureModeChanged(false)
-        verify(pipChangedCallback).invoke(false)
+        pipFeature.onPictureInPictureModeChanged(false).join()
+        assertFalse(store.state.tabs[0].content.pictureInPictureEnabled)
 
-        verifyNoMoreInteractions(sessionManager)
         verify(activity, never()).enterPictureInPictureMode(any())
         verifyDeprecatedPictureInPictureMode(activity, never())
     }
-}
 
-@Suppress("DEPRECATION")
-private fun verifyDeprecatedPictureInPictureMode(
-    activity: Activity,
-    mode: VerificationMode = times(1)
-) {
-    verify(activity, mode).enterPictureInPictureMode()
+    @Suppress("Deprecation")
+    private fun verifyDeprecatedPictureInPictureMode(
+        activity: Activity,
+        mode: VerificationMode = times(1)
+    ) {
+        verify(activity, mode).enterPictureInPictureMode()
+    }
+
+    @Suppress("Unchecked_Cast")
+    private fun <T : SessionState> T.copyWithFullScreen(fullScreen: Boolean): T =
+        createCopy(content = content.copy(fullScreen = fullScreen)) as T
 }

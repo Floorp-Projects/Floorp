@@ -250,9 +250,14 @@ sealed class ContentAction : BrowserAction() {
     data class ConsumeSearchRequestAction(val sessionId: String) : ContentAction()
 
     /**
-     * Updates the [fullScreenEnabled] with the given [sessionId].
+     * Updates [fullScreenEnabled] with the given [sessionId].
      */
     data class FullScreenChangedAction(val sessionId: String, val fullScreenEnabled: Boolean) : ContentAction()
+
+    /**
+     * Updates [pipEnabled] with the given [sessionId].
+     */
+    data class PictureInPictureChangedAction(val sessionId: String, val pipEnabled: Boolean) : ContentAction()
 
     /**
      * Updates the [layoutInDisplayCutoutMode] with the given [sessionId].

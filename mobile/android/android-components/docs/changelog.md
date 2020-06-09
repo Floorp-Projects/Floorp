@@ -49,6 +49,13 @@ permalink: /changelog/
   * Added `Uri.sameOriginAs` to check if two Uris have the same origin (same host, same port).
   * Added `Uri.isInScope` to check if a Uri is within one of the given scopes.
 
+* **browser-state**
+  * Added `ContentState.pictureInPictureEnabled` to track if Picture in Picture mode is in use.
+
+* **feature-session**
+  * ⚠️ **This is a breaking change**: `PictureInPictureFeature` now takes `BrowserStore` instead of `SessionManager`.
+  * ⚠️ **This is a breaking change**: The `pipChanged` callback has been removed. You should now observe `ContentState.pictureInPictureEnabled` instead.
+
 # 44.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v43.0.0...v44.0.0)
