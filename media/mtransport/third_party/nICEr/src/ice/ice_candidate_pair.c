@@ -425,8 +425,7 @@ static int nr_ice_candidate_copy_for_triggered_check(nr_ice_cand_pair *pair)
     copy->nominated = pair->nominated;
 
     r_log(LOG_ICE,LOG_INFO,"CAND-PAIR(%s): Adding pair to check list and trigger check queue: %s",pair->codeword,pair->as_string);
-    if(r=nr_ice_candidate_pair_insert(&pair->remote->stream->check_list,copy))
-      ABORT(r);
+    nr_ice_candidate_pair_insert(&pair->remote->stream->check_list,copy);
     nr_ice_candidate_pair_trigger_check_append(&pair->remote->stream->trigger_check_queue,copy);
 
     copy->triggered = 1;
@@ -603,7 +602,7 @@ int nr_ice_candidate_pair_trigger_check_append(nr_ice_cand_pair_head *head,nr_ic
     return(0);
   }
 
-int nr_ice_candidate_pair_insert(nr_ice_cand_pair_head *head,nr_ice_cand_pair *pair)
+void nr_ice_candidate_pair_insert(nr_ice_cand_pair_head *head,nr_ice_cand_pair *pair)
   {
     nr_ice_cand_pair *c1;
 
@@ -617,8 +616,6 @@ int nr_ice_candidate_pair_insert(nr_ice_cand_pair_head *head,nr_ice_cand_pair *p
       c1=TAILQ_NEXT(c1,check_queue_entry);
     }
     if(!c1) TAILQ_INSERT_TAIL(head,pair,check_queue_entry);
-
-    return(0);
   }
 
 void nr_ice_candidate_pair_restart_stun_nominated_cb(NR_SOCKET s, int how, void *cb_arg)
