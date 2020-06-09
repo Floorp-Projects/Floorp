@@ -37,6 +37,10 @@ function createOpenSearchEngine(response, engineData) {
   if (engineData.alternativeJSONType) {
     type = "type='application/json' rel='suggestions'";
   }
+  let image = "";
+  if (engineData.image) {
+    image = `<Image width="16" height="16">${engineData.baseURL}${engineData.image}</Image>`;
+  }
 
   let result = `<?xml version='1.0' encoding='utf-8'?>
 <OpenSearchDescription xmlns='http://a9.com/-/spec/opensearch/1.1/'>
@@ -44,6 +48,7 @@ function createOpenSearchEngine(response, engineData) {
   <Description>${engineData.description}</Description>
   <InputEncoding>UTF-8</InputEncoding>
   <LongName>${engineData.name}</LongName>
+  ${image}
   <Url ${type} method='${engineData.method}'
        template='${engineData.baseURL}searchSuggestions.sjs${queryString}'>
     ${params}
