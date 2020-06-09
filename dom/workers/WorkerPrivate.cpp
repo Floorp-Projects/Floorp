@@ -5234,7 +5234,8 @@ bool WorkerPrivate::IsSharedMemoryAllowed() const {
 }
 
 bool WorkerPrivate::CrossOriginIsolated() const {
-  if (!StaticPrefs::dom_postMessage_sharedArrayBuffer_withCOOP_COEP()) {
+  if (!StaticPrefs::
+          dom_postMessage_sharedArrayBuffer_withCOOP_COEP_AtStartup()) {
     return false;
   }
 

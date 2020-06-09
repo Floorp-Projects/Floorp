@@ -2195,13 +2195,13 @@
 # re-SAB: Whether to allow postMessage of a SharedArrayBuffer if various
 # preconditions related to COOP and COEP are met
 - name: dom.postMessage.sharedArrayBuffer.withCOOP_COEP
-  type: RelaxedAtomicBool
+  type: bool
 #if !defined(ANDROID)
   value: @IS_NIGHTLY_BUILD@
 #else
   value: false # Blocked by DocumentChannel, see Bug 1589982.
 #endif
-  mirror: always
+  mirror: once
 
 # Overridden in all.js on RELEASE_OR_BETA in order to add the locked attribute.
 - name: dom.postMessage.sharedArrayBuffer.bypassCOOP_COEP.insecure.enabled
