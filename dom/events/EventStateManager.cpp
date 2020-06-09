@@ -35,9 +35,11 @@
 #include "mozilla/dom/UIEventBinding.h"
 #include "mozilla/dom/UserActivation.h"
 #include "mozilla/dom/WheelEventBinding.h"
+#include "mozilla/StaticPrefs_accessibility.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/StaticPrefs_mousewheel.h"
+#include "mozilla/StaticPrefs_plugin.h"
 #include "mozilla/StaticPrefs_ui.h"
 #include "mozilla/StaticPrefs_zoom.h"
 
@@ -226,9 +228,6 @@ nsCOMPtr<nsIContent> EventStateManager::sDragOverContent = nullptr;
 
 EventStateManager::WheelPrefs* EventStateManager::WheelPrefs::sInstance =
     nullptr;
-bool EventStateManager::WheelPrefs::sWheelEventsEnabledOnPlugins = true;
-bool EventStateManager::WheelPrefs::sIsAutoDirEnabled = false;
-bool EventStateManager::WheelPrefs::sHonoursRootForAutoDir = false;
 EventStateManager::DeltaAccumulator*
     EventStateManager::DeltaAccumulator::sInstance = nullptr;
 
@@ -280,10 +279,6 @@ nsresult EventStateManager::Init() {
 
   observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, true);
 
-  if (sESMInstanceCount == 1) {
-    Prefs::Init();
-  }
-
   return NS_OK;
 }
 
@@ -293,9 +288,14 @@ EventStateManager::~EventStateManager() {
   if (sActiveESM == this) {
     sActiveESM = nullptr;
   }
-  if (Prefs::ClickHoldContextMenu()) KillClickHoldTimer();
 
-  if (mDocument == sMouseOverDocument) sMouseOverDocument = nullptr;
+  if (StaticPrefs::ui_click_hold_context_menus()) {
+    KillClickHoldTimer();
+  }
+
+  if (mDocument == sMouseOverDocument) {
+    sMouseOverDocument = nullptr;
+  }
 
   --sESMInstanceCount;
   if (sESMInstanceCount == 0) {
@@ -601,7 +601,7 @@ nsresult EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
     case eMouseUp: {
       switch (mouseEvent->mButton) {
         case MouseButton::eLeft:
-          if (Prefs::ClickHoldContextMenu()) {
+          if (StaticPrefs::ui_click_hold_context_menus()) {
             KillClickHoldTimer();
           }
           mInTouchDrag = false;
@@ -701,7 +701,7 @@ nsresult EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
       GenerateMouseEnterExit(mouseEvent);
       break;
     case eDragStart:
-      if (Prefs::ClickHoldContextMenu()) {
+      if (StaticPrefs::ui_click_hold_context_menus()) {
         // an external drag gesture event came in, not generated internally
         // by Gecko. Make sure we get rid of the click-hold timer.
         KillClickHoldTimer();
@@ -1056,7 +1056,8 @@ bool EventStateManager::LookForAccessKeyAndExecute(
         if (!aExecute) {
           return true;
         }
-        bool shouldActivate = Prefs::KeyCausesActivation();
+        bool shouldActivate =
+            StaticPrefs::accessibility_accesskeycausesactivation();
 
         if (aIsRepeat && nsContentUtils::IsChromeDoc(element->OwnerDoc())) {
           shouldActivate = false;
@@ -1487,8 +1488,7 @@ void EventStateManager::CreateClickHoldTimer(nsPresContext* inPresContext,
     return;
   }
 
-  int32_t clickHoldDelay =
-      Preferences::GetInt("ui.click_hold_context_menus.delay", 500);
+  int32_t clickHoldDelay = StaticPrefs::ui_click_hold_context_menus_delay();
   NS_NewTimerWithFuncCallback(
       getter_AddRefs(mClickHoldTimer), sClickHoldCallback, this, clickHoldDelay,
       nsITimer::TYPE_ONE_SHOT, "EventStateManager::CreateClickHoldTimer");
@@ -1680,7 +1680,7 @@ void EventStateManager::BeginTrackingDragGesture(nsPresContext* aPresContext,
   mGestureDownButtons = inDownEvent->mButtons;
 
   if (inDownEvent->mMessage != eMouseTouchDrag &&
-      Prefs::ClickHoldContextMenu()) {
+      StaticPrefs::ui_click_hold_context_menus()) {
     // fire off a timer to track click-hold
     CreateClickHoldTimer(aPresContext, inDownFrame, inDownEvent);
   }
@@ -1853,7 +1853,7 @@ void EventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
     return;
   }
 
-  if (Prefs::ClickHoldContextMenu()) {
+  if (StaticPrefs::ui_click_hold_context_menus()) {
     // stop the click-hold before we fire off the drag gesture, in case
     // it takes a long time
     KillClickHoldTimer();
@@ -2469,7 +2469,7 @@ nsIFrame* EventStateManager::ComputeScrollTargetAndMayAdjustWheelEvent(
     nsIFrame* aTargetFrame, double aDirectionX, double aDirectionY,
     WidgetWheelEvent* aEvent, ComputeScrollTargetOptions aOptions) {
   if ((aOptions & INCLUDE_PLUGIN_AS_TARGET) &&
-      !WheelPrefs::WheelEventsEnabledOnPlugins()) {
+      !StaticPrefs::plugin_mousewheel_enabled()) {
     aOptions = RemovePluginFromTarget(aOptions);
   }
 
@@ -5991,12 +5991,6 @@ void EventStateManager::WheelPrefs::OnPrefChanged(const char* aPrefName,
 EventStateManager::WheelPrefs::WheelPrefs() {
   Reset();
   Preferences::RegisterPrefixCallback(OnPrefChanged, "mousewheel.");
-  Preferences::AddBoolVarCache(&sWheelEventsEnabledOnPlugins,
-                               "plugin.mousewheel.enabled", true);
-  Preferences::AddBoolVarCache(&sIsAutoDirEnabled, "mousewheel.autodir.enabled",
-                               true);
-  Preferences::AddBoolVarCache(&sHonoursRootForAutoDir,
-                               "mousewheel.autodir.honourroot", false);
 }
 
 EventStateManager::WheelPrefs::~WheelPrefs() {
@@ -6242,30 +6236,6 @@ void EventStateManager::WheelPrefs::GetUserPrefsForEvent(
 }
 
 // static
-bool EventStateManager::WheelPrefs::WheelEventsEnabledOnPlugins() {
-  if (!sInstance) {
-    GetInstance();  // initializing sWheelEventsEnabledOnPlugins
-  }
-  return sWheelEventsEnabledOnPlugins;
-}
-
-// static
-bool EventStateManager::WheelPrefs::IsAutoDirEnabled() {
-  if (!sInstance) {
-    GetInstance();  // initializing sIsAutoDirEnabled
-  }
-  return sIsAutoDirEnabled;
-}
-
-// static
-bool EventStateManager::WheelPrefs::HonoursRootForAutoDir() {
-  if (!sInstance) {
-    GetInstance();  // initializing sHonoursRootForAutoDir
-  }
-  return sHonoursRootForAutoDir;
-}
-
-// static
 Maybe<layers::APZWheelAction> EventStateManager::APZWheelActionFor(
     const WidgetWheelEvent* aEvent) {
   if (aEvent->mMessage != eWheel) {
@@ -6292,8 +6262,8 @@ WheelDeltaAdjustmentStrategy EventStateManager::GetWheelDeltaAdjustmentStrategy(
   }
   switch (WheelPrefs::GetInstance()->ComputeActionFor(&aEvent)) {
     case WheelPrefs::ACTION_SCROLL:
-      if (WheelPrefs::IsAutoDirEnabled() && 0 == aEvent.mDeltaZ) {
-        if (WheelPrefs::HonoursRootForAutoDir()) {
+      if (StaticPrefs::mousewheel_autodir_enabled() && 0 == aEvent.mDeltaZ) {
+        if (StaticPrefs::mousewheel_autodir_honourroot()) {
           return WheelDeltaAdjustmentStrategy::eAutoDirWithRootHonour;
         }
         return WheelDeltaAdjustmentStrategy::eAutoDir;
@@ -6328,29 +6298,6 @@ bool EventStateManager::WheelPrefs::IsOverOnePageScrollAllowedY(
   Init(index);
   return Abs(mMultiplierY[index]) >=
          MIN_MULTIPLIER_VALUE_ALLOWING_OVER_ONE_PAGE_SCROLL;
-}
-
-/******************************************************************/
-/* mozilla::EventStateManager::Prefs                              */
-/******************************************************************/
-
-bool EventStateManager::Prefs::sKeyCausesActivation = true;
-bool EventStateManager::Prefs::sClickHoldContextMenu = false;
-
-// static
-void EventStateManager::Prefs::Init() {
-  static bool sPrefsAlreadyCached = false;
-  if (sPrefsAlreadyCached) {
-    return;
-  }
-
-  Preferences::AddBoolVarCache(&sKeyCausesActivation,
-                               "accessibility.accesskeycausesactivation",
-                               sKeyCausesActivation);
-  Preferences::AddBoolVarCache(&sClickHoldContextMenu,
-                               "ui.click_hold_context_menus",
-                               sClickHoldContextMenu);
-  sPrefsAlreadyCached = true;
 }
 
 }  // namespace mozilla
