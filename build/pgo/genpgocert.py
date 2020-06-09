@@ -55,8 +55,7 @@ def runUtil(util, args, inputdata=None, outputstream=None):
             env[pathvar] = app_path
     proc = subprocess.Popen([util] + args, env=env,
                             stdin=subprocess.PIPE if inputdata else None,
-                            stdout=outputstream,
-                            universal_newlines=True)
+                            stdout=outputstream)
     proc.communicate(inputdata)
     return proc.returncode
 
@@ -102,7 +101,7 @@ def constructCertDatabase(build, srcDir):
     pykey = os.path.join(build.topsrcdir, "security", "manager", "ssl", "tests",
                          "unit", "pykey.py")
 
-    with NamedTemporaryFile(mode="wt+") as pwfile, TemporaryDirectory() as pemfolder:
+    with NamedTemporaryFile() as pwfile, TemporaryDirectory() as pemfolder:
         pwfile.write("\n")
         pwfile.flush()
 

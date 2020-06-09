@@ -33,6 +33,7 @@ py2commands="
     mochitest
     mozharness
     prettier-format
+    python
     python-test
     raptor
     raptor-test
