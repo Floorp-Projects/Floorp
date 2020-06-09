@@ -198,6 +198,8 @@ class HttpBaseChannel : public nsHashPropertyBag,
   NS_IMETHOD VisitRequestHeaders(nsIHttpHeaderVisitor* visitor) override;
   NS_IMETHOD VisitNonDefaultRequestHeaders(
       nsIHttpHeaderVisitor* visitor) override;
+  NS_IMETHOD ShouldStripRequestBodyHeader(const nsACString& aMethod,
+                                          bool* aResult) override;
   NS_IMETHOD GetResponseHeader(const nsACString& header,
                                nsACString& value) override;
   NS_IMETHOD SetResponseHeader(const nsACString& header,

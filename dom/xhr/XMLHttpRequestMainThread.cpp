@@ -3324,16 +3324,9 @@ nsresult XMLHttpRequestMainThread::OnRedirectVerifyCallback(nsresult result) {
   if (NS_SUCCEEDED(result)) {
     bool rewriteToGET = false;
     nsCOMPtr<nsIHttpChannel> oldHttpChannel = GetCurrentHttpChannel();
-    if (uint32_t responseCode = 0;
-        oldHttpChannel &&
-        NS_SUCCEEDED(oldHttpChannel->GetResponseStatus(&responseCode))) {
-      // Fetch 4.4.11
-      rewriteToGET =
-          ((responseCode == 301 || responseCode == 302) &&
-           mRequestMethod.LowerCaseEqualsASCII("post")) ||
-          (responseCode == 303 && !mRequestMethod.LowerCaseEqualsASCII("get") &&
-           !mRequestMethod.LowerCaseEqualsASCII("head"));
-    }
+    // Fetch 4.4.11
+    Unused << oldHttpChannel->ShouldStripRequestBodyHeader(mRequestMethod,
+                                                           &rewriteToGET);
 
     mChannel = mNewRedirectChannel;
 
