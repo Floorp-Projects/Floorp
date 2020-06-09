@@ -28,7 +28,7 @@
       </popupnotificationcontent>
 
       <popupnotificationcontent id="webRTC-preview" hidden="true">
-        <html:video id="webRTC-previewVideo"/>
+        <html:video id="webRTC-previewVideo" tabindex="-1"/>
         <vbox id="webRTC-previewWarningBox">
           <spacer flex="1"/>
           <description id="webRTC-previewWarning"/>
