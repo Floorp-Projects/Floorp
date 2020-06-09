@@ -50,34 +50,6 @@ const tests = [
       extra: {
         elapsed: val => parseInt(val) > 0,
         numChars: "1",
-        numWords: "1",
-        selIndex: "0",
-        selType: "search",
-      },
-    };
-  },
-
-  async function(win) {
-    info("Type a multi-word query, pres Enter.");
-    win.gURLBar.select();
-    let promise = BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
-    await UrlbarTestUtils.promiseAutocompleteResultPopup({
-      window: win,
-      waitForFocus: SimpleTest.waitForFocus,
-      value: "multi word query ",
-      fireInputEvent: true,
-    });
-    EventUtils.synthesizeKey("VK_RETURN", {}, win);
-    await promise;
-    return {
-      category: "urlbar",
-      method: "engagement",
-      object: "enter",
-      value: "typed",
-      extra: {
-        elapsed: val => parseInt(val) > 0,
-        numChars: "17",
-        numWords: "3",
         selIndex: "0",
         selType: "search",
       },
@@ -104,7 +76,6 @@ const tests = [
       extra: {
         elapsed: val => parseInt(val) > 0,
         numChars: "4",
-        numWords: "1",
         selIndex: "0",
         selType: "search",
       },
@@ -132,7 +103,6 @@ const tests = [
       extra: {
         elapsed: val => parseInt(val) > 0,
         numChars: "3",
-        numWords: "1",
         selIndex: "0",
         selType: "oneoff",
       },
@@ -161,7 +131,6 @@ const tests = [
       extra: {
         elapsed: val => parseInt(val) > 0,
         numChars: "3",
-        numWords: "1",
         selIndex: "0",
         selType: "oneoff",
       },
@@ -185,7 +154,6 @@ const tests = [
       extra: {
         elapsed: val => parseInt(val) > 0,
         numChars: "1",
-        numWords: "1",
         selIndex: "0",
         selType: "search",
       },
@@ -212,7 +180,6 @@ const tests = [
       extra: {
         elapsed: val => parseInt(val) > 0,
         numChars: "7",
-        numWords: "2",
         selIndex: "0",
         selType: "keyword",
       },
@@ -236,7 +203,6 @@ const tests = [
       extra: {
         elapsed: val => parseInt(val) > 0,
         numChars: "1",
-        numWords: "1",
         selIndex: "1",
         selType: "tip",
       },
@@ -263,7 +229,6 @@ const tests = [
       extra: {
         elapsed: val => parseInt(val) > 0,
         numChars: "1",
-        numWords: "1",
         selIndex: "1",
         selType: "tiphelp",
       },
@@ -290,7 +255,6 @@ const tests = [
       extra: {
         elapsed: val => parseInt(val) > 0,
         numChars: "7",
-        numWords: "1",
         selIndex: "0",
         selType: "canonized",
       },
@@ -326,7 +290,6 @@ const tests = [
       extra: {
         elapsed: val => parseInt(val) > 0,
         numChars: "3",
-        numWords: "1",
         selIndex: val => parseInt(val) > 0,
         selType: "bookmark",
       },
@@ -356,7 +319,6 @@ const tests = [
       extra: {
         elapsed: val => parseInt(val) > 0,
         numChars: "3",
-        numWords: "1",
         selIndex: "0",
         selType: "autofill",
       },
@@ -386,7 +348,6 @@ const tests = [
       extra: {
         elapsed: val => parseInt(val) > 0,
         numChars: "3",
-        numWords: "1",
         selIndex: val => parseInt(val) > 0,
         selType: "bookmark",
       },
@@ -416,7 +377,6 @@ const tests = [
       extra: {
         elapsed: val => parseInt(val) > 0,
         numChars: "3",
-        numWords: "1",
         selIndex: val => parseInt(val) > 0,
         selType: "searchsuggestion",
       },
@@ -450,7 +410,6 @@ const tests = [
       extra: {
         elapsed: val => parseInt(val) > 0,
         numChars: "3",
-        numWords: "1",
         selIndex: val => parseInt(val) > 0,
         selType: "formhistory",
       },
@@ -479,7 +438,6 @@ const tests = [
       extra: {
         elapsed: val => parseInt(val) > 0,
         numChars: "1",
-        numWords: "1",
         selIndex: val => parseInt(val) > 0,
         selType: "keywordoffer",
       },
@@ -505,7 +463,6 @@ const tests = [
       extra: {
         elapsed: val => parseInt(val) > 0,
         numChars: "15",
-        numWords: "1",
         selIndex: "-1",
         selType: "none",
       },
@@ -541,7 +498,6 @@ const tests = [
       extra: {
         elapsed: val => parseInt(val) > 0,
         numChars: "15",
-        numWords: "1",
         selIndex: "-1",
         selType: "none",
       },
@@ -574,7 +530,6 @@ const tests = [
       extra: {
         elapsed: val => parseInt(val) > 0,
         numChars: "0",
-        numWords: "0",
         selType: "history",
         selIndex: val => parseInt(val) >= 0,
       },
@@ -604,7 +559,6 @@ const tests = [
       extra: {
         elapsed: val => parseInt(val) > 0,
         numChars: "0",
-        numWords: "0",
         selType: "history",
         selIndex: "0",
       },
@@ -639,7 +593,6 @@ const tests = [
       extra: {
         elapsed: val => parseInt(val) > 0,
         numChars: "0",
-        numWords: "0",
         selType: "history",
         selIndex: val => parseInt(val) >= 0,
       },
@@ -670,7 +623,6 @@ const tests = [
       extra: {
         elapsed: val => parseInt(val) > 0,
         numChars: "0",
-        numWords: "0",
         selType: "history",
         selIndex: "0",
       },
@@ -697,7 +649,6 @@ const tests = [
       extra: {
         elapsed: val => parseInt(val) > 0,
         numChars: "11",
-        numWords: "1",
         selType: "autofill",
         selIndex: "0",
       },
@@ -726,7 +677,6 @@ const tests = [
       extra: {
         elapsed: val => parseInt(val) > 0,
         numChars: "11",
-        numWords: "1",
         selType: "autofill",
         selIndex: "0",
       },
@@ -760,7 +710,6 @@ const tests = [
         extra: {
           elapsed: val => parseInt(val) > 0,
           numChars: "6",
-          numWords: "1",
         },
       },
       {
@@ -771,7 +720,6 @@ const tests = [
         extra: {
           elapsed: val => parseInt(val) > 0,
           numChars: "6",
-          numWords: "1",
           selType: "search",
           selIndex: "0",
         },
@@ -799,7 +747,6 @@ const tests = [
       extra: {
         elapsed: val => parseInt(val) > 0,
         numChars: "1",
-        numWords: "1",
         selIndex: "0",
         selType: "search",
       },
@@ -836,7 +783,6 @@ const tests = [
         extra: {
           elapsed: val => parseInt(val) > 0,
           numChars: "6",
-          numWords: "1",
         },
       },
       {
@@ -847,7 +793,6 @@ const tests = [
         extra: {
           elapsed: val => parseInt(val) > 0,
           numChars: "6",
-          numWords: "1",
           selType: "search",
           selIndex: "0",
         },
@@ -883,7 +828,6 @@ const tests = [
         extra: {
           elapsed: val => parseInt(val) > 0,
           numChars: "6",
-          numWords: "1",
         },
       },
       {
@@ -894,7 +838,6 @@ const tests = [
         extra: {
           elapsed: val => parseInt(val) > 0,
           numChars: "1",
-          numWords: "1",
           selType: "search",
           selIndex: "0",
         },
@@ -922,7 +865,6 @@ const tests = [
       extra: {
         elapsed: val => parseInt(val) > 0,
         numChars: "1",
-        numWords: "1",
         selIndex: "0",
         selType: "search",
       },
@@ -946,7 +888,6 @@ const tests = [
       extra: {
         elapsed: val => parseInt(val) > 0,
         numChars: "1",
-        numWords: "1",
       },
     };
   },
@@ -967,7 +908,6 @@ const tests = [
       extra: {
         elapsed: val => parseInt(val) > 0,
         numChars: "0",
-        numWords: "0",
       },
     };
   },
@@ -987,7 +927,6 @@ const tests = [
       extra: {
         elapsed: val => parseInt(val) > 0,
         numChars: "0",
-        numWords: "0",
       },
     };
   },
@@ -1010,7 +949,6 @@ const tests = [
       extra: {
         elapsed: val => parseInt(val) > 0,
         numChars: "10",
-        numWords: "1",
       },
     };
   },
