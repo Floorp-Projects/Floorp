@@ -1428,7 +1428,8 @@ void GlobalHelperThreadState::addSizeOfIncludingThis(
       compressionPendingList_.sizeOfExcludingThis(mallocSizeOf) +
       compressionWorklist_.sizeOfExcludingThis(mallocSizeOf) +
       compressionFinishedList_.sizeOfExcludingThis(mallocSizeOf) +
-      gcParallelWorklist_.sizeOfExcludingThis(mallocSizeOf);
+      gcParallelWorklist_.sizeOfExcludingThis(mallocSizeOf) +
+      helperContexts_.sizeOfExcludingThis(mallocSizeOf);
 
   // Report ParseTasks on wait lists
   for (auto task : parseWorklist_) {
@@ -1458,6 +1459,17 @@ void GlobalHelperThreadState::addSizeOfIncludingThis(
   }
   for (auto task : wasmWorklist_tier2_) {
     htStats.wasmCompile += task->sizeOfExcludingThis(mallocSizeOf);
+  }
+
+  {
+    // Report memory used by the JSContexts.
+    // We're holding the helper state lock, and the JSContext memory reporter
+    // won't do anything more substantial than traversing data structures and
+    // getting their size, so disable ProtectedData checks.
+    AutoNoteSingleThreadedRegion anstr;
+    for (auto* cx : helperContexts_) {
+      htStats.contexts += cx->sizeOfIncludingThis(mallocSizeOf);
+    }
   }
 
   // Report number of helper threads.
