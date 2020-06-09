@@ -3144,11 +3144,6 @@ class nsContentUtils {
   static uint64_t GenerateTabId();
 
   /**
-   * Compose a browser id with process id and a serial number.
-   */
-  static uint64_t GenerateBrowserId();
-
-  /**
    * Generate an id for a BrowsingContext using a range of serial
    * numbers reserved for the current process.
    */
