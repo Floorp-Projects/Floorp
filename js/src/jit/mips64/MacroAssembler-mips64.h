@@ -622,7 +622,7 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64 {
 
   template <typename S>
   void load16UnalignedSignExtend(const S& src, Register dest) {
-    MOZ_CRASH("NYI");
+    ma_load_unaligned(dest, src, SizeHalfWord, SignExtend);
   }
 
   void load16ZeroExtend(const Address& address, Register dest);
@@ -630,7 +630,7 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64 {
 
   template <typename S>
   void load16UnalignedZeroExtend(const S& src, Register dest) {
-    MOZ_CRASH("NYI");
+    ma_load_unaligned(dest, src, SizeHalfWord, ZeroExtend);
   }
 
   void load32(const Address& address, Register dest);
@@ -640,7 +640,7 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64 {
 
   template <typename S>
   void load32Unaligned(const S& src, Register dest) {
-    MOZ_CRASH("NYI");
+    ma_load_unaligned(dest, src, SizeWord, SignExtend);
   }
 
   void load64(const Address& address, Register64 dest) {
@@ -652,7 +652,7 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64 {
 
   template <typename S>
   void load64Unaligned(const S& src, Register64 dest) {
-    MOZ_CRASH("NYI");
+    ma_load_unaligned(dest.reg, src, SizeDouble, ZeroExtend);
   }
 
   void loadPtr(const Address& address, Register dest);
@@ -679,9 +679,9 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64 {
   void store16(Register src, const BaseIndex& address);
   void store16(Imm32 imm, const BaseIndex& address);
 
-  template <typename S, typename T>
-  void store16Unaligned(const S& src, const T& dest) {
-    MOZ_CRASH("NYI");
+  template <typename T>
+  void store16Unaligned(Register src, const T& dest) {
+    ma_store_unaligned(src, dest, SizeHalfWord);
   }
 
   void store32(Register src, AbsoluteAddress address);
@@ -696,9 +696,9 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64 {
     store32(src, address);
   }
 
-  template <typename S, typename T>
-  void store32Unaligned(const S& src, const T& dest) {
-    MOZ_CRASH("NYI");
+  template <typename T>
+  void store32Unaligned(Register src, const T& dest) {
+    ma_store_unaligned(src, dest, SizeWord);
   }
 
   void store64(Imm64 imm, Address address) {
@@ -713,9 +713,9 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64 {
     storePtr(src.reg, address);
   }
 
-  template <typename S, typename T>
-  void store64Unaligned(const S& src, const T& dest) {
-    MOZ_CRASH("NYI");
+  template <typename T>
+  void store64Unaligned(Register64 src, const T& dest) {
+    ma_store_unaligned(src.reg, dest, SizeDouble);
   }
 
   template <typename T>
