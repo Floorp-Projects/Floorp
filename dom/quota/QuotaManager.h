@@ -297,7 +297,7 @@ class QuotaManager final : public BackgroundThreadObject {
   already_AddRefed<DirectoryLock> OpenDirectory(
       PersistenceType aPersistenceType, const nsACString& aGroup,
       const nsACString& aOrigin, Client::Type aClientType, bool aExclusive,
-      RefPtr<OpenDirectoryListener> aOpenListener);
+      OpenDirectoryListener* aOpenListener);
 
   // XXX RemoveMe once bug 1170279 gets fixed.
   already_AddRefed<DirectoryLock> OpenDirectoryInternal(
@@ -481,18 +481,17 @@ class QuotaManager final : public BackgroundThreadObject {
       const Nullable<PersistenceType>& aPersistenceType,
       const nsACString& aGroup, const OriginScope& aOriginScope,
       const Nullable<Client::Type>& aClientType, bool aExclusive,
-      bool aInternal, RefPtr<OpenDirectoryListener> aOpenListener,
-      bool& aBlockedOut);
+      bool aInternal, OpenDirectoryListener* aOpenListener, bool& aBlockedOut);
 
   already_AddRefed<DirectoryLockImpl> CreateDirectoryLockForEviction(
       PersistenceType aPersistenceType, const nsACString& aGroup,
       const nsACString& aOrigin);
 
-  void RegisterDirectoryLock(DirectoryLockImpl& aLock);
+  void RegisterDirectoryLock(DirectoryLockImpl* aLock);
 
-  void UnregisterDirectoryLock(DirectoryLockImpl& aLock);
+  void UnregisterDirectoryLock(DirectoryLockImpl* aLock);
 
-  void RemovePendingDirectoryLock(DirectoryLockImpl& aLock);
+  void RemovePendingDirectoryLock(DirectoryLockImpl* aLock);
 
   uint64_t LockedCollectOriginsForEviction(
       uint64_t aMinSizeToBeFreed, nsTArray<RefPtr<DirectoryLockImpl>>& aLocks);
