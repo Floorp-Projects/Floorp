@@ -26,18 +26,18 @@ class TestDefaultSkipif(unittest.TestCase):
         parser = ManifestParser(manifests=(default,))
         for test in parser.tests:
             if test['name'] == 'test1':
-                self.assertEqual(test['skip-if'], "(os == 'win' && debug ) || (debug)")
+                self.assertEqual(test['skip-if'], "(os == 'win' && debug) || (debug)")
             elif test['name'] == 'test2':
-                self.assertEqual(test['skip-if'], "(os == 'win' && debug ) || (os == 'linux')")
+                self.assertEqual(test['skip-if'], "(os == 'win' && debug) || (os == 'linux')")
             elif test['name'] == 'test3':
-                self.assertEqual(test['skip-if'], "(os == 'win' && debug ) || (os == 'win')")
+                self.assertEqual(test['skip-if'], "(os == 'win' && debug) || (os == 'win')")
             elif test['name'] == 'test4':
                 self.assertEqual(
-                    test['skip-if'], "(os == 'win' && debug ) || (os == 'win' && debug)")
+                    test['skip-if'], "(os == 'win' && debug) || (os == 'win' && debug)")
             elif test['name'] == 'test5':
-                self.assertEqual(test['skip-if'], "os == 'win' && debug # a pesky comment")
+                self.assertEqual(test['skip-if'], "os == 'win' && debug")
             elif test['name'] == 'test6':
-                self.assertEqual(test['skip-if'], "(os == 'win' && debug ) || (debug )")
+                self.assertEqual(test['skip-if'], "(os == 'win' && debug) || (debug)")
 
 
 class TestDefaultSupportFiles(unittest.TestCase):
@@ -48,9 +48,9 @@ class TestDefaultSupportFiles(unittest.TestCase):
         default = os.path.join(here, 'default-suppfiles.ini')
         parser = ManifestParser(manifests=(default,))
         expected_supp_files = {
-            'test7': 'foo.js # a comment',
-            'test8': 'foo.js  bar.js ',
-            'test9': 'foo.js # a comment',
+            'test7': 'foo.js',
+            'test8': 'foo.js bar.js',
+            'test9': 'foo.js',
         }
         for test in parser.tests:
             expected = expected_supp_files[test['name']]
@@ -66,14 +66,14 @@ class TestOmitDefaults(unittest.TestCase):
                      os.path.join(here, 'default-skipif.ini'))
         parser = ManifestParser(manifests=manifests, handle_defaults=False)
         expected_supp_files = {
-            'test8': 'bar.js # another comment',
+            'test8': 'bar.js',
         }
         expected_skip_ifs = {
             'test1': "debug",
             'test2': "os == 'linux'",
             'test3': "os == 'win'",
             'test4': "os == 'win' && debug",
-            'test6': "debug # a second pesky comment",
+            'test6': "debug",
         }
         for test in parser.tests:
             for field, expectations in (('support-files', expected_supp_files),
@@ -86,10 +86,10 @@ class TestOmitDefaults(unittest.TestCase):
 
         expected_defaults = {
             os.path.join(here, 'default-suppfiles.ini'): {
-                "support-files": "foo.js # a comment",
+                "support-files": "foo.js",
             },
             os.path.join(here, 'default-skipif.ini'): {
-                "skip-if": "os == 'win' && debug # a pesky comment",
+                "skip-if": "os == 'win' && debug",
             },
         }
         for path, defaults in expected_defaults.items():
