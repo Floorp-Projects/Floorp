@@ -2228,10 +2228,12 @@ void EventStateManager::DoScrollHistory(int32_t direction) {
     nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(pcContainer));
     if (webNav) {
       // positive direction to go back one step, nonpositive to go forward
+      // This is doing user-initiated history traversal, hence we want
+      // to require that history entries we navigate to have user interaction.
       if (direction > 0)
-        webNav->GoBack();
+        webNav->GoBack(/* aRequireUserInteraction = */ true);
       else
-        webNav->GoForward();
+        webNav->GoForward(/* aRequireUserInteraction = */ true);
     }
   }
 }

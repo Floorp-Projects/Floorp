@@ -3076,7 +3076,7 @@ nsDocShell::GetCanGoForward(bool* aCanGoForward) {
 }
 
 NS_IMETHODIMP
-nsDocShell::GoBack() {
+nsDocShell::GoBack(bool aRequireUserInteraction) {
   if (!IsNavigationAllowed()) {
     return NS_OK;  // JS may not handle returning of an error code
   }
@@ -3087,12 +3087,12 @@ nsDocShell::GoBack() {
   RefPtr<ChildSHistory> rootSH = GetRootSessionHistory();
   NS_ENSURE_TRUE(rootSH, NS_ERROR_FAILURE);
   ErrorResult rv;
-  rootSH->Go(-1, rv);
+  rootSH->Go(-1, aRequireUserInteraction, rv);
   return rv.StealNSResult();
 }
 
 NS_IMETHODIMP
-nsDocShell::GoForward() {
+nsDocShell::GoForward(bool aRequireUserInteraction) {
   if (!IsNavigationAllowed()) {
     return NS_OK;  // JS may not handle returning of an error code
   }
@@ -3103,7 +3103,7 @@ nsDocShell::GoForward() {
   RefPtr<ChildSHistory> rootSH = GetRootSessionHistory();
   NS_ENSURE_TRUE(rootSH, NS_ERROR_FAILURE);
   ErrorResult rv;
-  rootSH->Go(1, rv);
+  rootSH->Go(1, aRequireUserInteraction, rv);
   return rv.StealNSResult();
 }
 

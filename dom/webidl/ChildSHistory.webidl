@@ -19,8 +19,7 @@ interface ChildSHistory {
   readonly attribute long index;
 
   boolean canGo(long aOffset);
-  [Throws]
-  void go(long aOffset);
+  [Throws] void go(long aOffset, optional boolean aRequireUserInteraction = false);
 
   /**
    * Reload the current entry. The flags which should be passed to this

@@ -46,7 +46,7 @@ class WebNavigationChild extends JSWindowActorChild {
     let wn = this.webNavigation;
     if (wn.canGoBack) {
       this.docShell.setCancelContentJSEpoch(params.cancelContentJSEpoch);
-      this._wrapURIChangeCall(() => wn.goBack());
+      this._wrapURIChangeCall(() => wn.goBack(params.requireUserInteraction));
     }
   }
 
@@ -54,7 +54,9 @@ class WebNavigationChild extends JSWindowActorChild {
     let wn = this.webNavigation;
     if (wn.canGoForward) {
       this.docShell.setCancelContentJSEpoch(params.cancelContentJSEpoch);
-      this._wrapURIChangeCall(() => wn.goForward());
+      this._wrapURIChangeCall(() =>
+        wn.goForward(params.requireUserInteraction)
+      );
     }
   }
 

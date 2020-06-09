@@ -465,17 +465,17 @@ nsWebBrowser::GetCanGoForward(bool* aCanGoForward) {
 }
 
 NS_IMETHODIMP
-nsWebBrowser::GoBack() {
+nsWebBrowser::GoBack(bool aRequireUserInteraction) {
   NS_ENSURE_STATE(mDocShell);
 
-  return mDocShellAsNav->GoBack();
+  return mDocShellAsNav->GoBack(aRequireUserInteraction);
 }
 
 NS_IMETHODIMP
-nsWebBrowser::GoForward() {
+nsWebBrowser::GoForward(bool aRequireUserInteraction) {
   NS_ENSURE_STATE(mDocShell);
 
-  return mDocShellAsNav->GoForward();
+  return mDocShellAsNav->GoForward(aRequireUserInteraction);
 }
 
 nsresult nsWebBrowser::LoadURI(const nsAString& aURI,

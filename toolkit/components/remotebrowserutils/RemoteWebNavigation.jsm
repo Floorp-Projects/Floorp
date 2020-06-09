@@ -38,17 +38,23 @@ class RemoteWebNavigation {
     return epoch;
   }
 
-  goBack() {
+  goBack(requireUserInteraction = false) {
     let cancelContentJSEpoch = this.maybeCancelContentJSExecution(
       Ci.nsIRemoteTab.NAVIGATE_BACK
     );
-    this._sendMessage("WebNavigation:GoBack", { cancelContentJSEpoch });
+    this._sendMessage("WebNavigation:GoBack", {
+      cancelContentJSEpoch,
+      requireUserInteraction,
+    });
   }
-  goForward() {
+  goForward(requireUserInteraction = false) {
     let cancelContentJSEpoch = this.maybeCancelContentJSExecution(
       Ci.nsIRemoteTab.NAVIGATE_FORWARD
     );
-    this._sendMessage("WebNavigation:GoForward", { cancelContentJSEpoch });
+    this._sendMessage("WebNavigation:GoForward", {
+      cancelContentJSEpoch,
+      requireUserInteraction,
+    });
   }
   gotoIndex(aIndex) {
     let cancelContentJSEpoch = this.maybeCancelContentJSExecution(
