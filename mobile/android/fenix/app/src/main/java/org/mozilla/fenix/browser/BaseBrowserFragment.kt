@@ -611,21 +611,15 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
     }
 
     private fun initializeEngineView(toolbarHeight: Int) {
-        if (FeatureFlags.dynamicBottomToolbar) {
-            engineView.setDynamicToolbarMaxHeight(toolbarHeight)
+        engineView.setDynamicToolbarMaxHeight(toolbarHeight)
 
-            val behavior = if (requireContext().settings().shouldUseBottomToolbar) {
-                EngineViewBottomBehavior(context, null)
-            } else {
-                SwipeRefreshScrollingViewBehavior(requireContext(), null, engineView, browserToolbarView)
-            }
-
-            (swipeRefresh.layoutParams as CoordinatorLayout.LayoutParams).behavior = behavior
+        val behavior = if (requireContext().settings().shouldUseBottomToolbar) {
+            EngineViewBottomBehavior(context, null)
         } else {
-            if (!requireContext().settings().shouldUseBottomToolbar) {
-                engineView.setDynamicToolbarMaxHeight(toolbarHeight)
-            }
+            SwipeRefreshScrollingViewBehavior(requireContext(), null, engineView, browserToolbarView)
         }
+
+        (swipeRefresh.layoutParams as CoordinatorLayout.LayoutParams).behavior = behavior
     }
 
     /**
@@ -772,33 +766,10 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
     protected abstract fun navToTrackingProtectionPanel(session: Session)
 
     /**
-     * Returns the top and bottom margins.
-     */
-    private fun getEngineMargins(): Pair<Int, Int> =
-        if (context?.settings()?.shouldUseBottomToolbar == true) {
-            val toolbarSize = resources.getDimensionPixelSize(R.dimen.browser_toolbar_height)
-            0 to toolbarSize
-        } else {
-            0 to 0
-        }
-
-    /**
      * Returns the layout [android.view.Gravity] for the quick settings and ETP dialog.
      */
     protected fun getAppropriateLayoutGravity(): Int =
         if (context?.settings()?.shouldUseBottomToolbar == true) Gravity.BOTTOM else Gravity.TOP
-
-    protected fun updateLayoutMargins(inFullScreen: Boolean) {
-        view?.swipeRefresh?.apply {
-            val (topMargin, bottomMargin) = if (inFullScreen) 0 to 0 else getEngineMargins()
-            (layoutParams as CoordinatorLayout.LayoutParams).setMargins(
-                0,
-                topMargin,
-                0,
-                bottomMargin
-            )
-        }
-    }
 
     /**
      * Updates the site permissions rules based on user settings.
@@ -942,25 +913,18 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
             activity?.enterToImmersiveMode()
             browserToolbarView.view.visibility = View.GONE
 
-            if (FeatureFlags.dynamicBottomToolbar) {
-                engineView.setDynamicToolbarMaxHeight(0)
-                browserToolbarView.expand()
-                // Without this, fullscreen has a margin at the top.
-                engineView.setVerticalClipping(0)
-            }
+            engineView.setDynamicToolbarMaxHeight(0)
+            browserToolbarView.expand()
+            // Without this, fullscreen has a margin at the top.
+            engineView.setVerticalClipping(0)
         } else {
             activity?.exitImmersiveModeIfNeeded()
             (activity as? HomeActivity)?.let { activity ->
                 activity.themeManager.applyStatusBarTheme(activity)
             }
             browserToolbarView.view.visibility = View.VISIBLE
-            if (FeatureFlags.dynamicBottomToolbar) {
-                val toolbarHeight = resources.getDimensionPixelSize(R.dimen.browser_toolbar_height)
-                engineView.setDynamicToolbarMaxHeight(toolbarHeight)
-            }
-        }
-        if (!FeatureFlags.dynamicBottomToolbar) {
-            updateLayoutMargins(inFullScreen)
+            val toolbarHeight = resources.getDimensionPixelSize(R.dimen.browser_toolbar_height)
+            engineView.setDynamicToolbarMaxHeight(toolbarHeight)
         }
     }
 

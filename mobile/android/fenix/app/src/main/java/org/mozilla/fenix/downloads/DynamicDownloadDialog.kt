@@ -12,7 +12,6 @@ import kotlinx.android.synthetic.main.download_dialog_layout.view.*
 import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.feature.downloads.AbstractFetchDownloadService
 import mozilla.components.feature.downloads.toMegabyteString
-import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.metrics
@@ -47,7 +46,7 @@ class DynamicDownloadDialog(
     private fun setupDownloadDialog(view: View) {
         if (downloadState == null) return
         view.apply {
-            if (FeatureFlags.dynamicBottomToolbar && layoutParams is CoordinatorLayout.LayoutParams) {
+            if (layoutParams is CoordinatorLayout.LayoutParams) {
                 (layoutParams as CoordinatorLayout.LayoutParams).apply {
 
                     behavior =
@@ -126,10 +125,8 @@ class DynamicDownloadDialog(
     fun show() {
         view.visibility = View.VISIBLE
 
-        if (FeatureFlags.dynamicBottomToolbar) {
-            (view.layoutParams as CoordinatorLayout.LayoutParams).apply {
-                (behavior as DynamicDownloadDialogBehavior).forceExpand(view)
-            }
+        (view.layoutParams as CoordinatorLayout.LayoutParams).apply {
+            (behavior as DynamicDownloadDialogBehavior).forceExpand(view)
         }
     }
 

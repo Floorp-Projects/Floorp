@@ -34,7 +34,6 @@ import mozilla.components.browser.toolbar.behavior.BrowserToolbarBottomBehavior
 import mozilla.components.browser.toolbar.display.DisplayToolbar
 import mozilla.components.support.ktx.android.util.dpToFloat
 import mozilla.components.support.utils.URLStringUtils
-import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.customtabs.CustomTabToolbarIntegration
@@ -260,7 +259,7 @@ class BrowserToolbarView(
     }
 
     fun expand() {
-        if (settings.shouldUseBottomToolbar && FeatureFlags.dynamicBottomToolbar) {
+        if (settings.shouldUseBottomToolbar) {
             (view.layoutParams as CoordinatorLayout.LayoutParams).apply {
                 (behavior as BrowserToolbarBottomBehavior).forceExpand(view)
             }
@@ -275,7 +274,7 @@ class BrowserToolbarView(
      */
     fun setScrollFlags(shouldDisableScroll: Boolean = false) {
         if (view.context.settings().shouldUseBottomToolbar) {
-            if (FeatureFlags.dynamicBottomToolbar && view.layoutParams is CoordinatorLayout.LayoutParams) {
+            if (view.layoutParams is CoordinatorLayout.LayoutParams) {
                 (view.layoutParams as CoordinatorLayout.LayoutParams).apply {
                     behavior = BrowserToolbarBottomBehavior(view.context, null)
                 }

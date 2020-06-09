@@ -17,7 +17,6 @@ import com.google.android.material.snackbar.BaseTransientBottomBar
 import com.google.android.material.snackbar.ContentViewCallback
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.fenix_snackbar.view.*
-import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.increaseTapArea
 import org.mozilla.fenix.ext.settings
@@ -137,7 +136,7 @@ class FenixSnackbar private constructor(
                         // can't intelligently position the snackbar on the upper most view.
                         // Ideally we should not pass ContentFrameLayout in, but it's the only
                         // way to display snackbars through a fragment transition.
-                        (!FeatureFlags.dynamicBottomToolbar || view is ContentFrameLayout)
+                        view is ContentFrameLayout
                     ) {
                         toolbarHeight
                     } else {

@@ -21,11 +21,6 @@ object FeatureFlags {
     const val asFeatureSyncDisabled = false
 
     /**
-     * Enables dynamic bottom toolbar
-     */
-    val dynamicBottomToolbar = Config.channel.isNightlyOrDebug
-
-    /**
      * Integration of push support provided by `feature-push` component into the Gecko engine.
      *
      * Behind nightly flag until all fatal bugs are resolved.
