@@ -321,50 +321,46 @@ function expectObserverCalledOnClose(
   });
 }
 
-function promiseMessage(
-  aMessage,
-  aAction,
-  aCount = 1,
-  browser = gBrowser.selectedBrowser
-) {
-  let promise = ContentTask.spawn(browser, [aMessage, aCount], async function([
-    expectedMessage,
-    expectedCount,
-  ]) {
-    return new Promise(resolve => {
-      function listenForMessage({ data }) {
-        if (
-          (!expectedMessage || data == expectedMessage) &&
-          --expectedCount == 0
-        ) {
-          content.removeEventListener("message", listenForMessage);
-          resolve(data);
+function promiseMessage(aMessage, aAction, aCount = 1) {
+  let promise = ContentTask.spawn(
+    gBrowser.selectedBrowser,
+    [aMessage, aCount],
+    async function([expectedMessage, expectedCount]) {
+      return new Promise(resolve => {
+        function listenForMessage({ data }) {
+          if (
+            (!expectedMessage || data == expectedMessage) &&
+            --expectedCount == 0
+          ) {
+            content.removeEventListener("message", listenForMessage);
+            resolve(data);
+          }
         }
-      }
-      content.addEventListener("message", listenForMessage);
-    });
-  });
+        content.addEventListener("message", listenForMessage);
+      });
+    }
+  );
   if (aAction) {
     aAction();
   }
   return promise;
 }
 
-function promisePopupNotificationShown(aName, aAction, aWindow = window) {
+function promisePopupNotificationShown(aName, aAction) {
   return new Promise(resolve => {
     // In case the global webrtc indicator has stolen focus (bug 1421724)
-    aWindow.focus();
+    window.focus();
 
-    aWindow.PopupNotifications.panel.addEventListener(
+    PopupNotifications.panel.addEventListener(
       "popupshown",
       function() {
         ok(
-          !!aWindow.PopupNotifications.getNotification(aName),
+          !!PopupNotifications.getNotification(aName),
           aName + " notification shown"
         );
-        ok(aWindow.PopupNotifications.isPanelOpen, "notification panel open");
+        ok(PopupNotifications.isPanelOpen, "notification panel open");
         ok(
-          !!aWindow.PopupNotifications.panel.firstElementChild,
+          !!PopupNotifications.panel.firstElementChild,
           "notification panel populated"
         );
 
@@ -515,17 +511,22 @@ async function getMediaCaptureState() {
 async function stopSharing(
   aType = "camera",
   aShouldKeepSharing = false,
-  aFrameBC,
-  aWindow = window
+  aFrameBC
 ) {
+  // If the observers are listening to other frames, listen for a notification
+  // on the right subframe.
+  let frameBCToObserve;
+  if (gBrowserContextsToObserve.length > 1) {
+    frameBCToObserve = aFrameBC;
+  }
+
   let promiseRecordingEvent = expectObserverCalled(
     "recording-device-events",
     1,
-    aFrameBC
+    frameBCToObserve
   );
-  aWindow.gIdentityHandler._identityBox.click();
-  let doc = aWindow.document;
-  let permissions = doc.getElementById("identity-popup-permission-list");
+  gIdentityHandler._identityBox.click();
+  let permissions = document.getElementById("identity-popup-permission-list");
   let cancelButton = permissions.querySelector(
     ".identity-popup-permission-icon." +
       aType +
@@ -535,7 +536,7 @@ async function stopSharing(
   let observerPromise1 = expectObserverCalled(
     "getUserMedia:revoke",
     1,
-    aFrameBC
+    frameBCToObserve
   );
 
   // If we are stopping screen sharing and expect to still have another stream,
@@ -545,13 +546,12 @@ async function stopSharing(
     observerPromise2 = expectObserverCalled(
       "recording-window-ended",
       1,
-      aFrameBC
+      frameBCToObserve
     );
   }
 
   cancelButton.click();
-  aWindow.gIdentityHandler._identityPopup.hidden = true;
-
+  gIdentityHandler._identityPopup.hidden = true;
   await promiseRecordingEvent;
   await observerPromise1;
   await observerPromise2;
@@ -660,8 +660,7 @@ async function reloadAndAssertClosedStreams() {
   await checkNotSharing();
 }
 
-function checkDeviceSelectors(aAudio, aVideo, aScreen, aWindow = window) {
-  let document = aWindow.document;
+function checkDeviceSelectors(aAudio, aVideo, aScreen) {
   let micSelector = document.getElementById("webRTC-selectMicrophone");
   if (aAudio) {
     ok(!micSelector.hidden, "microphone selector visible");
@@ -890,7 +889,7 @@ async function runTests(tests, options = {}) {
   // Set prefs so that permissions prompts are shown and loopback devices
   // are not used. To test the chrome we want prompts to be shown, and
   // these tests are flakey when using loopback devices (though it would
-  // be desirable to make them work with loopback in future). See bug 1643711.
+  // be desirable to make them work with loopback in future).
   let prefs = [
     [PREF_PERMISSION_FAKE, true],
     [PREF_AUDIO_LOOPBACK, ""],
