@@ -8,7 +8,7 @@ use neqo_http3::Error as Http3Error;
 use neqo_http3::{Http3Client, Http3ClientEvent, Http3State};
 use neqo_qpack::QpackSettings;
 use neqo_transport::Error as TransportError;
-use neqo_transport::{FixedConnectionIdManager, Output};
+use neqo_transport::{FixedConnectionIdManager, Output, QuicVersion};
 use nserror::*;
 use nsstring::*;
 use std::cell::RefCell;
@@ -76,6 +76,7 @@ impl NeqoHttp3Conn {
             local,
             remote,
             qpack_settings,
+            QuicVersion::Draft27,
         ) {
             Ok(c) => c,
             Err(_) => return Err(NS_ERROR_INVALID_ARG),
