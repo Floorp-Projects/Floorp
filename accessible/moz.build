@@ -42,6 +42,7 @@ BROWSER_CHROME_MANIFESTS += [
   'tests/browser/mac/browser.ini',
   'tests/browser/scroll/browser.ini',
   'tests/browser/states/browser.ini',
+  'tests/browser/telemetry/browser.ini',
   'tests/browser/tree/browser.ini'
 ]
 
