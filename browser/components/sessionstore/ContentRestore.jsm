@@ -82,6 +82,11 @@ function ContentRestoreInternal(chromeGlobal) {
   // restoreTabContent.
   this._tabData = null;
 
+  // To make the sessionRestore work with session history living in the parent process,
+  // we divided the restoreHistory() into two parts in bug 1507287.
+  // This is used for the second part to prevent tabData is removed case.
+  this._tabDataForFinishRestoreHistory = null;
+
   // Contains {entry, scrollPositions, formdata}, where entry is a
   // single entry from the tabData.entries array. Set in
   // restoreTabContent and removed in restoreDocument.
@@ -173,24 +178,25 @@ ContentRestoreInternal.prototype = {
       webNavigation.sessionHistory.legacySHistory.addSHistoryListener(listener);
       this._historyListener = listener;
 
+      this._tabDataForFinishRestoreHistory = tabData;
       this.finishRestoreHistory(callbacks);
     }
   },
 
   finishRestoreHistory(callbacks) {
+    let tabData = this._tabDataForFinishRestoreHistory;
+    this._tabDataForFinishRestoreHistory = null;
+
     // Make sure to reset the capabilities and attributes in case this tab gets
     // reused.
     SessionStoreUtils.restoreDocShellCapabilities(
       this.docShell,
-      this._tabData.disallow
+      tabData.disallow
     );
 
-    if (this._tabData.storage && this.docShell instanceof Ci.nsIDocShell) {
-      SessionStoreUtils.restoreSessionStorage(
-        this.docShell,
-        this._tabData.storage
-      );
-      delete this._tabData.storage;
+    if (tabData.storage && this.docShell instanceof Ci.nsIDocShell) {
+      SessionStoreUtils.restoreSessionStorage(this.docShell, tabData.storage);
+      delete tabData.storage;
     }
 
     // Add a progress listener to correctly handle browser.loadURI()
