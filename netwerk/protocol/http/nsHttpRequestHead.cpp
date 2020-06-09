@@ -276,22 +276,29 @@ bool nsHttpRequestHead::IsHTTPS() {
 
 void nsHttpRequestHead::SetMethod(const nsACString& method) {
   RecursiveMutexAutoLock mon(mRecursiveMutex);
-  mParsedMethod = kMethod_Custom;
+
   mMethod = method;
-  if (!strcmp(mMethod.get(), "GET")) {
-    mParsedMethod = kMethod_Get;
-  } else if (!strcmp(mMethod.get(), "POST")) {
-    mParsedMethod = kMethod_Post;
-  } else if (!strcmp(mMethod.get(), "OPTIONS")) {
-    mParsedMethod = kMethod_Options;
-  } else if (!strcmp(mMethod.get(), "CONNECT")) {
-    mParsedMethod = kMethod_Connect;
-  } else if (!strcmp(mMethod.get(), "HEAD")) {
-    mParsedMethod = kMethod_Head;
-  } else if (!strcmp(mMethod.get(), "PUT")) {
-    mParsedMethod = kMethod_Put;
-  } else if (!strcmp(mMethod.get(), "TRACE")) {
-    mParsedMethod = kMethod_Trace;
+  ParseMethod(mMethod, mParsedMethod);
+}
+
+// static
+void nsHttpRequestHead::ParseMethod(const nsCString& aRawMethod,
+                                    ParsedMethodType& aParsedMethod) {
+  aParsedMethod = kMethod_Custom;
+  if (!strcmp(aRawMethod.get(), "GET")) {
+    aParsedMethod = kMethod_Get;
+  } else if (!strcmp(aRawMethod.get(), "POST")) {
+    aParsedMethod = kMethod_Post;
+  } else if (!strcmp(aRawMethod.get(), "OPTIONS")) {
+    aParsedMethod = kMethod_Options;
+  } else if (!strcmp(aRawMethod.get(), "CONNECT")) {
+    aParsedMethod = kMethod_Connect;
+  } else if (!strcmp(aRawMethod.get(), "HEAD")) {
+    aParsedMethod = kMethod_Head;
+  } else if (!strcmp(aRawMethod.get(), "PUT")) {
+    aParsedMethod = kMethod_Put;
+  } else if (!strcmp(aRawMethod.get(), "TRACE")) {
+    aParsedMethod = kMethod_Trace;
   }
 }
 
