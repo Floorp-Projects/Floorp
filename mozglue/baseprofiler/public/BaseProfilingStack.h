@@ -211,6 +211,9 @@ class ProfilingStackFrame {
     // Frame dynamic string does not contain user data.
     NONSENSITIVE = 1 << 9,
 
+    // A JS Baseline Interpreter frame.
+    IS_BLINTERP_FRAME = 1 << 10,
+
     FLAGS_BITCOUNT = 16,
     FLAGS_MASK = (1 << FLAGS_BITCOUNT) - 1
   };
