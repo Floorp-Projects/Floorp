@@ -2591,9 +2591,6 @@ pref("svg.disabled", false);
 // Override default dom.ipc.processCount for some remote content process types.
 pref("dom.ipc.processCount.webLargeAllocation", 10);
 
-// Enable the Large-Allocation header
-pref("dom.largeAllocationHeader.enabled", true);
-
 // Disable e10s for Gecko by default. This is overridden in firefox.js.
 pref("browser.tabs.remote.autostart", false);
 
@@ -4530,11 +4527,6 @@ pref("dom.clients.openwindow_favors_same_process", true);
 #else
   pref("layers.omtp.enabled", false);
 #endif
-
-// Limits the depth of recursive conversion of data when opening
-// a content to view.  This is mostly intended to prevent infinite
-// loops with faulty converters involved.
-pref("general.document_open_conversion_depth_limit", 20);
 
 pref("fission.rebuild_frameloaders_on_remoteness_change", true);
 
