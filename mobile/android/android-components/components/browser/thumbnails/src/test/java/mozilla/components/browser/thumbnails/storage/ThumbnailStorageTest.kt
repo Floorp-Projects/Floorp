@@ -8,6 +8,7 @@ import android.graphics.Bitmap
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.runBlocking
+import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.After
@@ -38,7 +39,7 @@ class ThumbnailStorageTest {
 
         assertNull(thumbnail)
 
-        thumbnailStorage.saveThumbnail(sessionIdOrUrl, bitmap)
+        thumbnailStorage.saveThumbnail(sessionIdOrUrl, bitmap).joinBlocking()
         thumbnail = thumbnailStorage.loadThumbnail(sessionIdOrUrl).await()
         assertNotNull(thumbnail)
     }
