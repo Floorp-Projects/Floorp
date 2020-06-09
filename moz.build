@@ -98,6 +98,9 @@ with Files("**/browser.ini"):
     SCHEDULES.inclusive += ['test-verify', 'test-verify-gpu']
     SCHEDULES.exclusive = ['mochitest-browser-chrome']
 
+with Files("**/test*/**browser_*"):
+    SCHEDULES.exclusive = ['mochitest-browser-chrome']
+
 with Files("**/chrome.ini"):
     SCHEDULES.inclusive += ['test-verify', 'test-verify-gpu']
     SCHEDULES.exclusive = ['mochitest-chrome']
