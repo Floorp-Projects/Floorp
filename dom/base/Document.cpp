@@ -8079,8 +8079,7 @@ void Document::SetDomain(const nsAString& aDomain, ErrorResult& rv) {
     return;
   }
 
-  if (StaticPrefs::
-          dom_postMessage_sharedArrayBuffer_withCOOP_COEP_AtStartup() &&
+  if (StaticPrefs::dom_postMessage_sharedArrayBuffer_withCOOP_COEP() &&
       GetBrowsingContext() && GetBrowsingContext()->CrossOriginIsolated()) {
     WarnOnceAbout(Document::eDocumentSetDomainNotAllowed);
     return;
