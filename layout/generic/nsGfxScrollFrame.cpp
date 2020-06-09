@@ -3589,7 +3589,8 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   nsDisplayListCollection set(aBuilder);
 
   bool willBuildAsyncZoomContainer =
-      aBuilder->ShouldBuildAsyncZoomContainer() && isRootContent;
+      mWillBuildScrollableLayer && aBuilder->ShouldBuildAsyncZoomContainer() &&
+      isRootContent;
 
   nsRect scrollPortClip =
       effectiveScrollPort + aBuilder->ToReferenceFrame(mOuter);
