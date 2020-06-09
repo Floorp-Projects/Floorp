@@ -415,7 +415,7 @@ class MachCommands(MachCommandBase):
 
         # If no tests specified, run all tests in main manifest
         tests = params['test_files']
-        if len(tests) == 0:
+        if not tests:
             tests = [os.path.join(self.distdir, 'cppunittests')]
             manifest_path = os.path.join(
                 self.topsrcdir, 'testing', 'cppunittest.ini')

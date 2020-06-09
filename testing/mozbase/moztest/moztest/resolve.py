@@ -42,7 +42,7 @@ TEST_SUITES = {
     'cppunittest': {
         'aliases': ('cpp',),
         'mach_command': 'cppunittest',
-        'kwargs': {'test_file': None},
+        'kwargs': {'test_files': None},
     },
     'crashtest': {
         'aliases': ('c', 'rc'),
