@@ -10,6 +10,21 @@
     <!-- Accessible description for the font option -->
     <string name="mozac_feature_readerview_serif_font_desc">Γραμματοσειρά Serif</string>
 
+    <!-- Accessible description for decreasing the font size -->
+    <string name="mozac_feature_readerview_font_size_decrease_desc">Σμίκρυνση γραμματοσειράς</string>
+
+    <!-- Accessible description for increasing the font size -->
+    <string name="mozac_feature_readerview_font_size_increase_desc">Μεγέθυνση γραμματοσειράς</string>
+    <!-- Color option for the background -->
+    <string name="mozac_feature_readerview_dark">Σκούρο</string>
+    <!-- Accessible description for the color option -->
+    <string name="mozac_feature_readerview_dark_color_scheme_desc">Σύνολο σκούρων χρωμάτων</string>
     <!-- Color option for the background -->
     <string name="mozac_feature_readerview_sephia">Σέπια</string>
-    </resources>
+    <!-- Accessible description for the color option -->
+    <string name="mozac_feature_readerview_sepia_color_scheme_desc">Σύνολο χρωμάτων σέπια</string>
+    <!-- Color option for the background -->
+    <string name="mozac_feature_readerview_light">Ανοιχτό</string>
+    <!-- Accessible description for the color option -->
+    <string name="mozac_feature_readerview_light_color_scheme_desc">Σύνολο ανοιχτών χρωμάτων</string>
+</resources>

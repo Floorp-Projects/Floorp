@@ -27,6 +27,27 @@
     <!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->
     <string name="mozac_browser_errorpages_security_bad_cert_title">Gire\' koneksiûn dugumî sò\'</string>
 
+    <!-- The error message shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[<ul>
+        <li>Nagi\'iaj chìj sa ruhuât nādūnāt riña servidor, asi huā \'ngō sa ânej ruhuâ natū riña sa huin ruhuât na\'nïnt.</li>
+        <li>Sisī ngà\' gatûj ñùt riña servidor nan nī nitāj nùj gi\'iaj chìj nī ga\'ue sisī man si giyichin\' akuanj, yakāj da\'nga\' gātūt nanâ doj a.</li>
+      </ul>]]></string>
+
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_advanced">Sa tàj ñā doj…</string>
+
+    <!-- The advanced certificate information shown when a website sends has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[<label>Huā sa huin ruhuâ dīga\'ñūn\'unj sò\' sisī huê sitiô nan huin nī da\'uît nānikàj rūkût.</label>
+        <br><br>
+        <label>Ngà sertifikâdo nadigân nej sitio web man\'an nej man. %1$snu yumân ruhuâ aga\' nan ni\'in <b>%2$s</b>dadin\' na\'ue nani\'in ahuin si giri si sērtifikadoj, huā a\'nan\' sertifikado asi nu ga\'nïnj hue\'ê servidor sertifikâdo.</label>]]></string>
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_back">Nānikàj ne\' rūkùu (sa sà\'a huin)</string>
+    <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_accept_temporary">Gārāyino\' si ahī hua man nī gun\'  ne\' ñāan</string>
+
+    <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_title">Giyichin\' ngè kōneksiûn</string>
+
     <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
     <string name="mozac_browser_errorpages_redirect_loop_title">Nitaj si \'iaj redireksionando hue\'ê pajinâ nan</string>
 

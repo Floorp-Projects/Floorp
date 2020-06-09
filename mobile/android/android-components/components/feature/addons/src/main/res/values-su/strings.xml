@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Description for privacy add-on permission. -->
+    <string name="mozac_feature_addons_permissions_privacy_description">Bca jeung ropéa setélan pripasi</string>
+    <!-- Description for all_urls add-on permission. -->
+    <string name="mozac_feature_addons_permissions_all_urls_description">Aksés data anjeun pikeun sakabéh raramatloka</string>
     <!-- Description for tabs add-on permission. -->
     <string name="mozac_feature_addons_permissions_tabs_description">Aksés tab panyungsi</string>
     <!-- Description for navigation permission. -->
@@ -10,6 +14,10 @@
     <string name="mozac_feature_addons_permissions_browser_setting_description">Baca jeung ropéa setélan panyungsi</string>
     <!-- Description for browser_data permission. -->
     <string name="mozac_feature_addons_permissions_browser_data_description">Beresihan jujutan langlangan, réréméh, jeung data nu tumali</string>
+    <!-- Description for downloads permission. -->
+    <string name="mozac_feature_addons_permissions_downloads_description">Undeur berkas sarta baca jeung ropéa jujutan undeur panyungsi</string>
+    <!-- Description for tab_hide permission. -->
+    <string name="mozac_feature_addons_permissions_tab_hide_description">Sumputkeun jeung témbongkeun tab panyungsi</string>
     <!-- The developer website (Homepage) of the add-on. -->
     <string name="mozac_feature_addons_home_page">Tepas</string>
     <!-- This is a button to cancel the add-on installation . -->

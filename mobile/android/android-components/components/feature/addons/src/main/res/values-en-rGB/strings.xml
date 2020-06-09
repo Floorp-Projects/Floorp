@@ -183,5 +183,5 @@
     <!-- Text shown in the dialog when add-on installation is completed. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_installed_dialog_description">Open it in the menu</string>
     <!-- Confirmation button text for the dialog when add-on installation is completed. -->
-    <string name="mozac_feature_addons_installed_dialog_okay_button">Okay, Got It</string>
+    <string name="mozac_feature_addons_installed_dialog_okay_button">Okay, Got it</string>
 </resources>
