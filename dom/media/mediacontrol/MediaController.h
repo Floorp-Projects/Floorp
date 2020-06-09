@@ -20,7 +20,6 @@ namespace mozilla {
 namespace dom {
 
 class BrowsingContext;
-enum class MediaControlKeysEvent : uint32_t;
 
 /**
  * IMediaController is an interface which includes control related methods and
@@ -116,18 +115,16 @@ class MediaController final : public DOMEventTargetHelper,
 
   // This event would be notified media controller's supported media keys
   // change.
-  MediaEventSource<nsTArray<MediaControlKeysEvent>>&
-  SupportedKeysChangedEvent() {
+  MediaEventSource<nsTArray<MediaControlKey>>& SupportedKeysChangedEvent() {
     return mSupportedKeysChangedEvent;
   }
 
-  CopyableTArray<MediaControlKeysEvent> GetSupportedMediaKeys() const;
+  CopyableTArray<MediaControlKey> GetSupportedMediaKeys() const;
 
  private:
   ~MediaController();
   void HandleActualPlaybackStateChanged() override;
-  void UpdateMediaControlKeysEventToContentMediaIfNeeded(
-      MediaControlKeysEvent aEvent);
+  void UpdateMediaControlKeyToContentMediaIfNeeded(MediaControlKey aKey);
   void HandleSupportedMediaSessionActionsChanged(
       const nsTArray<MediaSessionAction>& aSupportedAction);
 
@@ -149,11 +146,10 @@ class MediaController final : public DOMEventTargetHelper,
   // We would monitor the change of media session actions and convert them to
   // the media keys, then determine the supported media keys.
   MediaEventListener mSupportedActionsChangedListener;
-  MediaEventProducer<nsTArray<MediaControlKeysEvent>>
-      mSupportedKeysChangedEvent;
+  MediaEventProducer<nsTArray<MediaControlKey>> mSupportedKeysChangedEvent;
   // Use copyable array so that we can use the result as a parameter for the
   // media event.
-  CopyableTArray<MediaControlKeysEvent> mSupportedKeys;
+  CopyableTArray<MediaControlKey> mSupportedKeys;
 };
 
 }  // namespace dom

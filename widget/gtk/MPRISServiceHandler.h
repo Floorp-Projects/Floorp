@@ -8,7 +8,7 @@
 #define WIDGET_GTK_MPRIS_SERVICE_HANDLER_H_
 
 #include <gio/gio.h>
-#include "mozilla/dom/MediaControlKeysEvent.h"
+#include "mozilla/dom/MediaControlKeySource.h"
 #include "mozilla/Attributes.h"
 #include "nsString.h"
 
@@ -47,7 +47,7 @@ namespace widget {
  * media available for playback?)
  * and thus aren't a constexpr but merely a const method.
  */
-class MPRISServiceHandler final : public dom::MediaControlKeysEventSource {
+class MPRISServiceHandler final : public dom::MediaControlKeySource {
   NS_INLINE_DECL_REFCOUNTING(MPRISServiceHandler, override)
  public:
   // Note that this constructor does NOT initialize the MPRIS Service but only
@@ -161,7 +161,7 @@ class MPRISServiceHandler final : public dom::MediaControlKeysEventSource {
   static void OnBusAcquiredStatic(GDBusConnection* aConnection,
                                   const gchar* aName, gpointer aUserData);
 
-  void EmitEvent(dom::MediaControlKeysEvent event);
+  void EmitEvent(dom::MediaControlKey aKey);
 };
 
 }  // namespace widget

@@ -215,8 +215,8 @@ class ChromeUtils {
   static void PrivateNoteIntentionalCrash(const GlobalObject& aGlobal,
                                           ErrorResult& aError);
 
-  static void GenerateMediaControlKeysTestEvent(
-      const GlobalObject& aGlobal, MediaControlKeysTestEvent aEvent);
+  static void GenerateMediaControlKey(const GlobalObject& aGlobal,
+                                      MediaControlKey aKey);
 
   static nsIContentChild* GetContentChild(const GlobalObject&);
 

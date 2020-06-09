@@ -9,8 +9,8 @@
 
 #include "AudioFocusManager.h"
 #include "MediaController.h"
-#include "MediaControlKeysManager.h"
-#include "MediaEventSource.h"
+#include "MediaControlKeyManager.h"
+#include "mozilla/dom/MediaControllerBinding.h"
 #include "nsDataHashtable.h"
 #include "nsIObserver.h"
 #include "nsTArray.h"
@@ -37,8 +37,8 @@ class MediaControlService final : public nsIObserver {
   static RefPtr<MediaControlService> GetService();
 
   AudioFocusManager& GetAudioFocusManager() { return mAudioFocusManager; }
-  MediaControlKeysEventSource* GetMediaControlKeysEventSource() {
-    return mMediaControlKeysManager;
+  MediaControlKeySource* GetMediaControlKeySource() {
+    return mMediaControlKeyManager;
   }
 
   // Use these functions to register/unresgister controller to/from the active
@@ -71,7 +71,7 @@ class MediaControlService final : public nsIObserver {
    * generate fake media control key events, get the media metadata and playback
    * state from the main controller.
    */
-  void GenerateMediaControlKeysTestEvent(MediaControlKeysEvent aEvent);
+  void GenerateTestMediaControlKey(MediaControlKey aKey);
   MediaMetadataBase GetMainControllerMediaMetadata() const;
   MediaSessionPlaybackState GetMainControllerPlaybackState() const;
 
@@ -100,7 +100,7 @@ class MediaControlService final : public nsIObserver {
     explicit ControllerManager(MediaControlService* aService);
     ~ControllerManager() = default;
 
-    using MediaKeysArray = nsTArray<MediaControlKeysEvent>;
+    using MediaKeysArray = nsTArray<MediaControlKey>;
     using LinkedListControllerPtr = LinkedListElement<RefPtr<MediaController>>*;
     using ConstLinkedListControllerPtr =
         const LinkedListElement<RefPtr<MediaController>>*;
@@ -142,7 +142,7 @@ class MediaControlService final : public nsIObserver {
 
     // These member are use to listen main controller's play state changes and
     // update the playback state to the event source.
-    RefPtr<MediaControlKeysEventSource> mSource;
+    RefPtr<MediaControlKeySource> mSource;
     MediaEventListener mMetadataChangedListener;
     MediaEventListener mSupportedKeysChangedListener;
   };
@@ -151,8 +151,8 @@ class MediaControlService final : public nsIObserver {
   void Shutdown();
 
   AudioFocusManager mAudioFocusManager;
-  RefPtr<MediaControlKeysManager> mMediaControlKeysManager;
-  RefPtr<MediaControlKeysEventListener> mMediaKeysHandler;
+  RefPtr<MediaControlKeyManager> mMediaControlKeyManager;
+  RefPtr<MediaControlKeyListener> mMediaKeysHandler;
   MediaEventProducer<uint64_t> mMediaControllerAmountChangedEvent;
   UniquePtr<ControllerManager> mControllerManager;
 };

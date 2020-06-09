@@ -5,7 +5,7 @@
 #ifndef WIDGET_COCOA_MEDIAHARDWAREKEYSEVENTSOURCEMACMEDIACENTER_H_
 #define WIDGET_COCOA_MEDIAHARDWAREKEYSEVENTSOURCEMACMEDIACENTER_H_
 
-#include "mozilla/dom/MediaControlKeysEvent.h"
+#include "mozilla/dom/MediaControlKeySource.h"
 
 #ifdef __OBJC__
 @class MPRemoteCommandEvent;
@@ -20,7 +20,7 @@ namespace widget {
 typedef MPRemoteCommandHandlerStatus (^MediaCenterEventHandler)(MPRemoteCommandEvent* event);
 
 class MediaHardwareKeysEventSourceMacMediaCenter final
-    : public mozilla::dom::MediaControlKeysEventSource {
+    : public mozilla::dom::MediaControlKeySource {
  public:
   NS_INLINE_DECL_REFCOUNTING(MediaHardwareKeysEventSourceMacMediaCenter, override)
   MediaHardwareKeysEventSourceMacMediaCenter();
@@ -42,7 +42,7 @@ class MediaHardwareKeysEventSourceMacMediaCenter final
   ~MediaHardwareKeysEventSourceMacMediaCenter();
   void BeginListeningForEvents();
   void EndListeningForEvents();
-  void HandleEvent(dom::MediaControlKeysEvent aEvent);
+  void HandleEvent(dom::MediaControlKey aKey);
 
   bool mOpened = false;
 

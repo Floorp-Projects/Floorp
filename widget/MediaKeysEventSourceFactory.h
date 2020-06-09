@@ -7,7 +7,7 @@
 
 namespace mozilla {
 namespace dom {
-class MediaControlKeysEventSource;
+class MediaControlKeySource;
 }  // namespace dom
 }  // namespace mozilla
 
@@ -16,8 +16,7 @@ namespace widget {
 
 // This function declaration is used to create a media keys event source on
 // different platforms, each platform should have their own implementation.
-extern mozilla::dom::MediaControlKeysEventSource*
-CreateMediaControlKeysEventSource();
+extern mozilla::dom::MediaControlKeySource* CreateMediaControlKeySource();
 
 }  // namespace widget
 }  // namespace mozilla

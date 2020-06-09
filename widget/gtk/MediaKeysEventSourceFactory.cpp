@@ -7,7 +7,7 @@
 
 namespace mozilla::widget {
 
-mozilla::dom::MediaControlKeysEventSource* CreateMediaControlKeysEventSource() {
+mozilla::dom::MediaControlKeySource* CreateMediaControlKeySource() {
   return new MPRISServiceHandler();
 }
 

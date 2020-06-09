@@ -20,15 +20,15 @@ add_task(async function testPlayPauseAndStop() {
   await playMedia(tab, testVideoId);
 
   info(`pressing 'pause' key`);
-  await generateMediaControlKeyEvent("pause");
+  await generateMediaControlKey("pause");
   await checkOrWaitUntilMediaStoppedPlaying(tab, testVideoId);
 
   info(`pressing 'play' key`);
-  await generateMediaControlKeyEvent("play");
+  await generateMediaControlKey("play");
   await checkOrWaitUntilMediaStartedPlaying(tab, testVideoId);
 
   info(`pressing 'stop' key`);
-  await generateMediaControlKeyEvent("stop");
+  await generateMediaControlKey("stop");
   await checkOrWaitUntilMediaStoppedPlaying(tab, testVideoId);
 
   info(`remove tab`);
@@ -41,11 +41,11 @@ add_task(async function testPlayPause() {
   await playMedia(tab, testVideoId);
 
   info(`pressing 'playPause' key, media should stop`);
-  await generateMediaControlKeyEvent("playPause");
+  await generateMediaControlKey("playpause");
   await checkOrWaitUntilMediaStoppedPlaying(tab, testVideoId);
 
   info(`pressing 'playPause' key, media should start`);
-  await generateMediaControlKeyEvent("playPause");
+  await generateMediaControlKey("playpause");
   await checkOrWaitUntilMediaStartedPlaying(tab, testVideoId);
 
   info(`remove tab`);
@@ -55,8 +55,8 @@ add_task(async function testPlayPause() {
 /**
  * The following are helper functions.
  */
-function generateMediaControlKeyEvent(event) {
+function generateMediaControlKey(event) {
   const playbackStateChanged = waitUntilDisplayedPlaybackChanged();
-  ChromeUtils.generateMediaControlKeysTestEvent(event);
+  ChromeUtils.generateMediaControlKey(event);
   return playbackStateChanged;
 }
