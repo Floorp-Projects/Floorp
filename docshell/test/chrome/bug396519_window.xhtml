@@ -15,6 +15,8 @@
 
   <script type="application/javascript"><![CDATA[
     const {BrowserTestUtils} = ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
+    const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+    Services.prefs.setBoolPref("browser.navigation.requireUserInteraction", false);
     const LISTEN_EVENTS = ["pageshow"];
 
     var gBrowser;
@@ -155,6 +157,7 @@
       gBrowser.gotoIndex(5);
       yield undefined;
 
+      Services.prefs.clearUserPref("browser.navigation.requireUserInteraction");
       finish();
     }
   ]]></script>

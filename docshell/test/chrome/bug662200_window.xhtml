@@ -13,6 +13,7 @@
   </script>
   <script type="application/javascript" src= "chrome://mochikit/content/chrome-harness.js" />
   <script type="application/javascript"><![CDATA[
+    Services.prefs.setBoolPref("browser.navigation.requireUserInteraction", false);
   
     // Define the generator-iterator for the tests.
     var tests = testIterator();
@@ -112,6 +113,7 @@
       is(TestWindow.getBrowser().canGoForward, true, "Should be able to go forward!");
       is(shistory.requestedIndex, -1, "Requested index should be cleared!");
 
+      Services.prefs.clearUserPref("browser.navigation.requireUserInteraction");
       // Tell the framework the test is finished.
       finish();
     }

@@ -79,6 +79,10 @@ async function checkState(browser) {
 }
 
 add_task(async function test() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.navigation.requireUserInteraction", false]],
+  });
+
   // Tests session restore functionality of history.pushState and
   // history.replaceState().  (Bug 500328)
 

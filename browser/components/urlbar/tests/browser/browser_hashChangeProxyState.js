@@ -8,6 +8,9 @@
  * based links and back or forward navigation updates the URL bar and identity block correctly.
  */
 add_task(async function() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.navigation.requireUserInteraction", false]],
+  });
   let baseURL = `${TEST_BASE_URL}dummy_page.html`;
   let url = baseURL + "#foo";
   await BrowserTestUtils.withNewTab({ gBrowser, url }, async function(browser) {

@@ -6,6 +6,9 @@
  * don't set the URL for the tab to about:blank inbetween the loads.
  */
 add_task(async function() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.navigation.requireUserInteraction", false]],
+  });
   let url = "http://www.example.com/foo.html";
   await BrowserTestUtils.withNewTab({ gBrowser, url }, async function(browser) {
     let wpl = {

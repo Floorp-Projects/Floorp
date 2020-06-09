@@ -15,6 +15,9 @@
 
   <script type="application/javascript"><![CDATA[
     const {BrowserTestUtils} = ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
+    const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+    Services.prefs.setBoolPref("browser.navigation.requireUserInteraction", false);
+
     var imports = [ "SimpleTest", "is", "isnot", "ok"];
     for (var name of imports) {
       window[name] = window.arguments[0][name];
@@ -153,6 +156,7 @@
       var formValue = gBrowser.contentDocument.getElementById("inp").value;
       is(formValue, text, testName + " form value not correctly restored");
       
+      Services.prefs.clearUserPref("browser.navigation.requireUserInteraction");
       finish();
     }
   ]]></script>
