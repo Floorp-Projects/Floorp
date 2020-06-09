@@ -48,9 +48,8 @@ void DrawEventRecorderPrivate::StoreSourceSurfaceRecording(
       dataSurf->GetFormat()));
 }
 
-void DrawEventRecorderPrivate::RecordSourceSurfaceDestruction(
-    SourceSurface* aSurface) {
-  RemoveSourceSurface(aSurface);
+void DrawEventRecorderPrivate::RecordSourceSurfaceDestruction(void* aSurface) {
+  RemoveSourceSurface(static_cast<SourceSurface*>(aSurface));
   RemoveStoredObject(aSurface);
   RecordEvent(RecordedSourceSurfaceDestruction(ReferencePtr(aSurface)));
 }
