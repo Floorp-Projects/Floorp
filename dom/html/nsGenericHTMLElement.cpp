@@ -897,25 +897,24 @@ nsMapRuleToAttributesFunc nsGenericHTMLElement::GetAttributeMappingFunction()
 
 nsIFormControlFrame* nsGenericHTMLElement::GetFormControlFrame(
     bool aFlushFrames) {
-  if (aFlushFrames && IsInComposedDoc()) {
-    // Cause a flush of the frames, so we get up-to-date frame information
-    GetComposedDoc()->FlushPendingNotifications(FlushType::Frames);
+  auto flushType = aFlushFrames ? FlushType::Frames : FlushType::None;
+  nsIFrame* frame = GetPrimaryFrame(flushType);
+  if (!frame) {
+    return nullptr;
   }
-  nsIFrame* frame = GetPrimaryFrame();
-  if (frame) {
-    nsIFormControlFrame* form_frame = do_QueryFrame(frame);
-    if (form_frame) {
-      return form_frame;
-    }
 
-    // If we have generated content, the primary frame will be a
-    // wrapper frame..  out real frame will be in its child list.
-    for (frame = frame->PrincipalChildList().FirstChild(); frame;
-         frame = frame->GetNextSibling()) {
-      form_frame = do_QueryFrame(frame);
-      if (form_frame) {
-        return form_frame;
-      }
+  if (nsIFormControlFrame* f = do_QueryFrame(frame)) {
+    return f;
+  }
+
+  // If we have generated content, the primary frame will be a wrapper frame...
+  // Our real frame will be in its child list.
+  //
+  // FIXME(emilio): I don't think that's true... See bug 155957 for test-cases
+  // though, we should figure out whether this is still needed.
+  for (nsIFrame* kid : frame->PrincipalChildList()) {
+    if (nsIFormControlFrame* f = do_QueryFrame(kid)) {
+      return f;
     }
   }
 
