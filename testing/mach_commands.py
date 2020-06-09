@@ -28,9 +28,7 @@ UNKNOWN_TEST = '''
 I was unable to find tests from the given argument(s).
 
 You should specify a test directory, filename, test suite name, or
-abbreviation. If no arguments are given, there must be local file
-changes and corresponding IMPACTED_TESTS annotations in moz.build
-files relevant to those files.
+abbreviation.
 
 It's possible my little brain doesn't know about the type of test you are
 trying to execute. If you suspect this, please request support by filing
@@ -304,11 +302,6 @@ class Test(MachCommandBase):
         * A directory containing tests
         * A test suite name
         * An alias to a test suite name (codes used on TreeHerder)
-
-        If no input is provided, tests will be run based on files changed in
-        the local tree. Relevant tests, tags, or flavors are determined by
-        IMPACTED_TESTS annotations in moz.build files relevant to the
-        changed files.
 
         When paths or directories are given, they are first resolved to test
         files known to the build system.
