@@ -128,10 +128,10 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
                            base::ProcessId aPid, nsresult* aRv);
 
   // Creates a DocumentLoadListener directly in the parent process without
-  // an associated DocumentChannelBridge.
+  // an associated DocumentChannel.
   // If successful it registers a unique identifier (return in aOutIdent) to
-  // keep it alive until a future bridge can attach to it, or we fail and
-  // clean up.
+  // keep it alive until a future DocumentChannel can attach to it, or we fail
+  // and clean up.
   static bool OpenFromParent(dom::CanonicalBrowsingContext* aBrowsingContext,
                              nsDocShellLoadState* aLoadState,
                              uint64_t aOuterWindowId, uint32_t* aOutIdent);
@@ -207,9 +207,6 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
   }
 
   base::ProcessId OtherPid() const {
-    if (mPendingDocumentChannelBridgeProcess) {
-      return *mPendingDocumentChannelBridgeProcess;
-    }
     return mOtherPid;
   }
 
@@ -224,27 +221,16 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
                              dom::ContentParent* aParent) const;
 
  protected:
-  DocumentLoadListener(dom::CanonicalBrowsingContext* aBrowsingContext,
-                       base::ProcessId aPendingBridgeProcess);
   virtual ~DocumentLoadListener();
 
  private:
   friend class ParentProcessDocumentOpenInfo;
   // Will reject the promise to notify the DLL consumer that we are done.
   void DisconnectListeners(nsresult aStatus, nsresult aLoadGroupStatus);
-  // Called when we were created without a document channel bridge,
-  // and now it has been created and attached.
-  void NotifyBridgeConnected();
 
-  // Called when we were created without a document channel bridge,
-  // and creation has failed, and won't ever be attached.
-  void NotifyBridgeFailed();
-
-  // Returns a promise that resolves with the document channel bridge,
-  // waiting for a pending one if necessary.
-  // If we've failed to create a bridge, or a bridge has already been
-  // detached then rejects.
-  RefPtr<GenericPromise> EnsureBridge();
+  // Called when we were created without a document channel, and creation has
+  // failed, and won't ever be attached.
+  void NotifyDocumentChannelFailed();
 
   // Initiates the switch from DocumentChannel to the real protocol-specific
   // channel, and ensures that RedirectToRealChannelFinished is called when
@@ -390,15 +376,6 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
   // replaces us.
   RefPtr<ParentChannelListener> mParentChannelListener;
 
-  // If we were created without a bridge, then this is set
-  // to Some() with the process id of the content process
-  // that will be creating our bridge soon.
-  Maybe<base::ProcessId> mPendingDocumentChannelBridgeProcess;
-
-  // Holds a promise for callers that want to wait on the document
-  // channel bridge becoming available.
-  MozPromiseHolder<GenericPromise> mBridgePromise;
-
   // The original URI of the current channel. If there are redirects,
   // then the value on the channel gets overwritten with the original
   // URI of the first channel in the redirect chain, so we cache the
@@ -462,12 +439,18 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
   // or 0 initiated from a parent process load.
   base::ProcessId mOtherPid = 0;
 
-  void RejectOpenPromiseIfExists(nsresult aStatus, nsresult aLoadGroupStatus,
-                                 const char* aLocation) {
-    mOpenPromise.RejectIfExists(
-        OpenPromiseFailedType({aStatus, aLoadGroupStatus}), aLocation);
+  void RejectOpenPromise(nsresult aStatus, nsresult aLoadGroupStatus,
+                         const char* aLocation) {
+    // It is possible for mOpenPromise to not be set if AsyncOpen failed and
+    // the DocumentChannel got canceled.
+    if (!mOpenPromiseResolved && mOpenPromise) {
+      mOpenPromise->Reject(OpenPromiseFailedType({aStatus, aLoadGroupStatus}),
+                           aLocation);
+      mOpenPromiseResolved = true;
+    }
   }
-  MozPromiseHolder<OpenPromise> mOpenPromise;
+  RefPtr<OpenPromise::Private> mOpenPromise;
+  bool mOpenPromiseResolved = false;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(DocumentLoadListener, DOCUMENT_LOAD_LISTENER_IID)
