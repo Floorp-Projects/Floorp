@@ -319,6 +319,8 @@ async def generate_partial(from_dir, to_dir, dest_mar, mar_data, tools_dir, arch
     env["MOZ_PRODUCT_VERSION"] = mar_data["version"]
     env["MAR_CHANNEL_ID"] = mar_data["MAR_CHANNEL_ID"]
     env["BRANCH"] = mar_data["branch"]
+    if "MAR_OLD_FORMAT" in env:
+        del env["MAR_OLD_FORMAT"]
 
     make_incremental_update = tools_dir / "make_incremental_update.sh"
     cmd = f"{make_incremental_update} {dest_mar} {from_dir} {to_dir}"
