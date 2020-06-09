@@ -11,9 +11,6 @@ const BROWSERTOOLBOX_FISSION_ENABLED = "devtools.browsertoolbox.fission";
 const CONTENTTOOLBOX_FISSION_ENABLED = "devtools.contenttoolbox.fission";
 
 const {
-  LegacyFramesWatcher,
-} = require("devtools/shared/resources/legacy-target-watchers/legacy-frames-watcher");
-const {
   LegacyProcessesWatcher,
 } = require("devtools/shared/resources/legacy-target-watchers/legacy-processes-watcher");
 const {
@@ -76,11 +73,6 @@ class TargetList {
 
     this.legacyImplementation = {
       process: new LegacyProcessesWatcher(
-        this,
-        this._onTargetAvailable,
-        this._onTargetDestroyed
-      ),
-      frame: new LegacyFramesWatcher(
         this,
         this._onTargetAvailable,
         this._onTargetDestroyed
