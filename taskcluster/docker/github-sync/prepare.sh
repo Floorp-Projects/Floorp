@@ -20,7 +20,7 @@ apt-get install -y \
     git \
     g++ \
     libffi-dev \
-    libgit2-dev/stretch-backports \
+    libgit2-dev \
     libssl-dev \
     python3 \
     python3-dev \
