@@ -1139,13 +1139,13 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult) {
     // Scope for |event| to make sure that its destructor fires while
     // mNestedEventLoopDepth has been incremented, since that destructor can
     // also do work.
+    // This value is only needed, and set, properly when not using
+    // TaskController. This will be removed once TaskController is enabled by
+    // default.
     EventQueuePriority priority = EventQueuePriority::Normal;
     nsCOMPtr<nsIRunnable> event;
     bool usingTaskController = mIsMainThread && UseTaskController();
     if (usingTaskController) {
-      // XXX should set priority?  Maybe we can just grab the "last task"
-      // priority from the TaskController where we currently grab the
-      // "ranIdleTask" state?
       event = TaskController::Get()->GetRunnableForMTTask(reallyWait);
     } else {
       event = mEvents->GetEvent(reallyWait, &priority, &mLastEventDelay);
@@ -1218,14 +1218,13 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult) {
         sMainThreadRunnableName[length] = '\0';
       }
 #endif
-      // Note, with TaskController InputTaskManager handles these updates.
       Maybe<AutoTimeDurationHelper> timeDurationHelper;
-      if (priority == EventQueuePriority::InputHigh) {
-        timeDurationHelper.emplace();
-      }
-
       Maybe<PerformanceCounterState::Snapshot> snapshot;
       if (!usingTaskController) {
+        // Note, with TaskController InputTaskManager handles these updates.
+        if (priority == EventQueuePriority::InputHigh) {
+          timeDurationHelper.emplace();
+        }
         snapshot.emplace(mPerformanceCounterState.RunnableWillRun(
             GetPerformanceCounter(event), now,
             priority == EventQueuePriority::Idle));
