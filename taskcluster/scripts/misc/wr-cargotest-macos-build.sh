@@ -16,7 +16,7 @@ cd "target/${TARGET_TRIPLE}"
 mkdir cargo-test-binaries
 mv debug cargo-test-binaries/
 find cargo-test-binaries -type f -maxdepth 2 -executable -print0 > binaries.lst
-tar cjf cargo-test-binaries.tar.bz2 -T binaries.lst --null
+tar cjf cargo-test-binaries.tar.bz2 --null -T binaries.lst
 mv cargo-test-binaries.tar.bz2 "${UPLOAD_DIR}"
 # Clean the build
 cd "${GECKO_PATH}/gfx/wr"
