@@ -778,6 +778,7 @@ Statistics::Statistics(GCRuntime* gc)
       gcTimerFile(nullptr),
       gcDebugFile(nullptr),
       nonincrementalReason_(gc::AbortReason::None),
+      creationTime_(ReallyNow()),
       allocsSinceMinorGC({0, 0}),
       preTotalHeapBytes(0),
       postTotalHeapBytes(0),
@@ -1601,7 +1602,7 @@ void Statistics::printProfileHeader() {
     return;
   }
 
-  fprintf(stderr, "MajorGC:               Reason States FSNR ");
+  fprintf(stderr, "MajorGC: Timestamp  Reason               States FSNR ");
   fprintf(stderr, " %6s", "budget");
   fprintf(stderr, " %6s", "total");
 #define PRINT_PROFILE_HEADER(name, text, phase) fprintf(stderr, " %6s", text);
@@ -1623,15 +1624,17 @@ void Statistics::printSliceProfile() {
 
   maybePrintProfileHeaders();
 
+  TimeDuration ts = slice.end - creationTime();
+
   bool shrinking = gckind == GC_SHRINK;
   bool reset = slice.resetReason != AbortReason::None;
   bool nonIncremental = nonincrementalReason_ != AbortReason::None;
   bool full = zoneStats.isFullCollection();
 
-  fprintf(stderr, "MajorGC: %20s %1d -> %1d %1s%1s%1s%1s ",
-          ExplainGCReason(slice.reason), int(slice.initialState),
-          int(slice.finalState), full ? "F" : "", shrinking ? "S" : "",
-          nonIncremental ? "N" : "", reset ? "R" : "");
+  fprintf(stderr, "MajorGC: %10.6f %-20.20s %1d -> %1d %1s%1s%1s%1s ",
+          ts.ToSeconds(), ExplainGCReason(slice.reason),
+          int(slice.initialState), int(slice.finalState), full ? "F" : "",
+          shrinking ? "S" : "", nonIncremental ? "N" : "", reset ? "R" : "");
 
   if (!nonIncremental && !slice.budget.isUnlimited() &&
       slice.budget.isTimeBudget()) {
@@ -1656,7 +1659,8 @@ void Statistics::printSliceProfile() {
 
 void Statistics::printTotalProfileTimes() {
   if (enableProfiling_) {
-    fprintf(stderr, "MajorGC TOTALS: %7" PRIu64 " slices:                  ",
+    fprintf(stderr,
+            "MajorGC TOTALS: %7" PRIu64 " slices:                             ",
             sliceCount_);
     printProfileTimes(totalTimes_);
   }
