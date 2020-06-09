@@ -251,29 +251,6 @@ public class WebExtensionController {
     }
 
     /**
-     * @deprecated Use {@link WebExtension#getTabDelegate} and
-     * {@link WebExtension.SessionController#getTabDelegate}.
-     * @return The {@link TabDelegate} instance.
-     */
-    @UiThread
-    @Nullable
-    @Deprecated
-    public TabDelegate getTabDelegate() {
-        return mListener.getTabDelegate();
-    }
-
-    /**
-     * @deprecated Use {@link WebExtension#setTabDelegate} and
-     * {@link WebExtension.SessionController#setTabDelegate}.
-     * @param delegate {@link TabDelegate} instance.
-     */
-    @Deprecated
-    @UiThread
-    public void setTabDelegate(final @Nullable TabDelegate delegate) {
-        mListener.setTabDelegate(delegate);
-    }
-
-    /**
      * This delegate will be called whenever an extension is about to be installed or it needs
      * new permissions, e.g during an update or because it called <code>permissions.request</code>
      */
@@ -1007,22 +984,7 @@ public class WebExtensionController {
         message.callback.sendSuccess(null);
     }
 
-    /* package */ void newTab(final Message message, final WebExtension extension) {
-        newTab(message, null, extension);
-    }
-
-    // TODO: remove Bug 1618987
-    /* package */ void newTab(final GeckoBundle bundle, final EventCallback callback,
-                              final TabDelegate legacyDelegate) {
-        final Message message = new Message("GeckoView:WebExtension:NewTab",
-                bundle, callback, null);
-        extensionFromBundle(bundle).accept(extension ->
-            newTab(message, legacyDelegate, extension)
-        );
-    }
-
-    // TODO: remove legacyDelegate Bug 1618987
-    /* package */ void newTab(final Message message, final TabDelegate legacyDelegate,
+    /* package */ void newTab(final Message message,
                               final WebExtension extension) {
         final GeckoBundle bundle = message.bundle;
 
@@ -1033,8 +995,6 @@ public class WebExtensionController {
         final GeckoResult<GeckoSession> result;
         if (delegate != null) {
             result = delegate.onNewTab(extension, details);
-        } else if (legacyDelegate != null) {
-            result = legacyDelegate.onNewTab(extension, details.url);
         } else {
             mPendingNewTab.add(extension.id, message);
             return;
@@ -1082,34 +1042,14 @@ public class WebExtensionController {
             });
     }
 
-    // TODO: remove Bug 1618987
-    /* package */ void closeTab(final GeckoBundle bundle, final EventCallback callback,
-                                final GeckoSession session,
-                              final TabDelegate legacyDelegate) {
-        final Message message = new Message("GeckoView:WebExtension:NewTab",
-                bundle, callback, null);
-        extensionFromBundle(bundle).accept(extension ->
-                newTab(message, legacyDelegate, extension)
-        );
-    }
-
     /* package */ void closeTab(final Message message,
                                 final WebExtension extension) {
-        closeTab(message, extension, null);
-    }
-
-    // TODO: remove legacyDelegate Bug 1618987
-    /* package */ void closeTab(final Message message,
-                                final WebExtension extension,
-                                final TabDelegate legacyDelegate) {
         final WebExtension.SessionTabDelegate delegate =
                 message.session.getWebExtensionController().getTabDelegate(extension);
 
         final GeckoResult<AllowOrDeny> result;
         if (delegate != null) {
             result = delegate.onCloseTab(extension, message.session);
-        } else if (legacyDelegate != null) {
-            result = legacyDelegate.onCloseTab(extension, message.session);
         } else {
             result = GeckoResult.fromValue(AllowOrDeny.DENY);
         }

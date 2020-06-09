@@ -1652,7 +1652,6 @@ package org.mozilla.geckoview {
     method @AnyThread @NonNull public GeckoResult<WebExtension> disable(@NonNull WebExtension, int);
     method @AnyThread @NonNull public GeckoResult<WebExtension> enable(@NonNull WebExtension, int);
     method @UiThread @Nullable public WebExtensionController.PromptDelegate getPromptDelegate();
-    method @UiThread @Nullable @Deprecated public WebExtensionController.TabDelegate getTabDelegate();
     method @NonNull @AnyThread public GeckoResult<WebExtension> install(@NonNull String);
     method @NonNull @AnyThread public GeckoResult<WebExtension> installBuiltIn(@NonNull String);
     method @AnyThread @NonNull public GeckoResult<List<WebExtension>> list();
@@ -1660,7 +1659,6 @@ package org.mozilla.geckoview {
     method @UiThread public void setDebuggerDelegate(@NonNull WebExtensionController.DebuggerDelegate);
     method @UiThread public void setPromptDelegate(@Nullable WebExtensionController.PromptDelegate);
     method @AnyThread public void setTabActive(@NonNull GeckoSession, boolean);
-    method @Deprecated @UiThread public void setTabDelegate(@Nullable WebExtensionController.TabDelegate);
     method @NonNull @AnyThread public GeckoResult<Void> uninstall(@NonNull WebExtension);
     method @AnyThread @NonNull public GeckoResult<WebExtension> update(@NonNull WebExtension);
   }
