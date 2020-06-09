@@ -34,14 +34,8 @@ struct JSSettings {
     bool operator==(JSGCParamKey k) const { return key == k; }
   };
 
-  // Settings that change based on chrome/content context.
-  struct JSContentChromeSettings {
-    JS::RealmOptions realmOptions;
-    int32_t maxScriptRuntime = 0;
-  };
-
-  JSContentChromeSettings chrome;
-  JSContentChromeSettings content;
+  JS::RealmOptions chromeRealmOptions;
+  JS::RealmOptions contentRealmOptions;
   CopyableTArray<JSGCSetting> gcSettings;
   JS::ContextOptions contextOptions;
 
