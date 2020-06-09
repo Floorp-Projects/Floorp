@@ -185,18 +185,20 @@ class InspectorFront extends FrontClassWithSpec(inspectorSpec) {
     // Get the target for this remote frame element
     const { descriptorFront } = this.targetFront;
 
-    // Starting with FF77, Tab and Process Descriptor exposes a Watcher,
-    // which should be used to fetch the node's target.
+    // Tab and Process Descriptors expose a Watcher, which should be used to
+    // fetch the node's target.
     let target;
     if (descriptorFront && descriptorFront.traits.watcher) {
       const watcher = await descriptorFront.getWatcher();
       target = await watcher.getBrowsingContextTarget(browsingContextId);
     } else {
-      // FF<=76 backward compat code:
-      const descriptor = await this.targetFront.client.mainRoot.getBrowsingContextDescriptor(
-        browsingContextId
+      // For descriptors which don't expose a watcher (e.g. WebExtension)
+      // we used to call RootActor::getBrowsingContextDescriptor, but it was
+      // removed in FF77.
+      // Support for watcher in WebExtension descriptors is Bug 1644341.
+      throw new Error(
+        `Unable to call getNodeActorFromContentDomReference for ${this.targetFront.actorID}`
       );
-      target = await descriptor.getTarget();
     }
     const { walker } = await target.getFront("inspector");
     return walker.getNodeActorFromContentDomReference(contentDomReference);
