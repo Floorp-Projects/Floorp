@@ -188,6 +188,11 @@ class nsTextControlFrame : public nsContainerFrame,
 
   NS_DECL_QUERYFRAME
 
+  // Whether we should scroll only the current selection into view in the inner
+  // scroller, or also ancestors as needed.
+  enum class ScrollAncestors { No, Yes };
+  void ScrollSelectionIntoViewAsync(ScrollAncestors = ScrollAncestors::No);
+
  protected:
   /**
    * Launch the reflow on the child frames - see nsTextControlFrame::Reflow()
@@ -289,8 +294,6 @@ class nsTextControlFrame : public nsContainerFrame,
   mozilla::LogicalSize CalcIntrinsicSize(gfxContext* aRenderingContext,
                                          mozilla::WritingMode aWM,
                                          float aFontSizeInflation) const;
-
-  void ScrollSelectionIntoViewAsync();
 
  private:
   // helper methods
