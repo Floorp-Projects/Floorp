@@ -301,7 +301,8 @@ class HttpBaseChannel : public nsHashPropertyBag,
   NS_IMETHOD SetTopWindowURIIfUnknown(nsIURI* aTopWindowURI) override;
   NS_IMETHOD GetProxyURI(nsIURI** proxyURI) override;
   virtual void SetCorsPreflightParameters(
-      const nsTArray<nsCString>& unsafeHeaders) override;
+      const nsTArray<nsCString>& unsafeHeaders,
+      bool aShouldStripRequestBodyHeader) override;
   virtual void SetAltDataForChild(bool aIsForChild) override;
   virtual void DisableAltDataCache() override { mDisableAltDataCache = true; };
 
