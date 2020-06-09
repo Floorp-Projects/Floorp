@@ -208,8 +208,9 @@ class SessionHistoryListener extends Handler {
   }
 
   OnHistoryNewEntry(newURI, oldIndex) {
-    // We ought to collect the previously current entry as well, see bug 1350567.
-    this.collectFrom(oldIndex);
+    // Collect the current entry as well, to make sure to collect any changes
+    // that were made to the entry while the document was active.
+    this.collectFrom(oldIndex == -1 ? oldIndex : oldIndex - 1);
   }
 
   OnHistoryGotoIndex() {
