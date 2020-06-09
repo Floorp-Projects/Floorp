@@ -420,10 +420,10 @@ class UrlbarInput {
 
     let url;
     let selType = this.controller.engagementEvent.typeFromElement(element);
-    let numChars = this.value.length;
+    let typedValue = this.value;
     if (selectedOneOff) {
       selType = "oneoff";
-      numChars = this._lastSearchString.length;
+      typedValue = this._lastSearchString;
       // If there's a selected one-off button then load a search using
       // the button's engine.
       result = this._resultForCurrentValue;
@@ -460,7 +460,7 @@ class UrlbarInput {
     url = this._maybeCanonizeURL(event, url) || url.trim();
 
     this.controller.engagementEvent.record(event, {
-      numChars,
+      searchString: typedValue,
       selIndex: this.view.selectedRowIndex,
       selType,
     });
@@ -569,7 +569,7 @@ class UrlbarInput {
 
     if (isCanonized) {
       this.controller.engagementEvent.record(event, {
-        numChars: this._lastSearchString.length,
+        searchString: this._lastSearchString,
         selIndex,
         selType: "canonized",
       });
@@ -630,7 +630,7 @@ class UrlbarInput {
         };
 
         this.controller.engagementEvent.record(event, {
-          numChars: this._lastSearchString.length,
+          searchString: this._lastSearchString,
           selIndex,
           selType: "tabswitch",
         });
@@ -653,7 +653,7 @@ class UrlbarInput {
           this.selectionStart = this.selectionEnd = this.value.length;
 
           this.controller.engagementEvent.record(event, {
-            numChars: this._lastSearchString.length,
+            searchString: this._lastSearchString,
             selIndex,
             selType: "keywordoffer",
           });
@@ -737,7 +737,7 @@ class UrlbarInput {
         if (!url) {
           this.handleRevert();
           this.controller.engagementEvent.record(event, {
-            numChars: this._lastSearchString.length,
+            searchString: this._lastSearchString,
             selIndex,
             selType: "tip",
           });
@@ -755,7 +755,7 @@ class UrlbarInput {
       }
       case UrlbarUtils.RESULT_TYPE.OMNIBOX: {
         this.controller.engagementEvent.record(event, {
-          numChars: this._lastSearchString.length,
+          searchString: this._lastSearchString,
           selIndex,
           selType: "extension",
         });
@@ -790,7 +790,7 @@ class UrlbarInput {
     }
 
     this.controller.engagementEvent.record(event, {
-      numChars: this._lastSearchString.length,
+      searchString: this._lastSearchString,
       selIndex,
       selType: this.controller.engagementEvent.typeFromElement(element),
     });
@@ -1946,7 +1946,7 @@ class UrlbarInput {
     // For now we detect that case by discarding the event on command, but we
     // may want to figure out a more robust way to detect abandonment.
     this.controller.engagementEvent.record(event, {
-      numChars: this._lastSearchString.length,
+      searchString: this._lastSearchString,
     });
 
     this.removeAttribute("focused");
