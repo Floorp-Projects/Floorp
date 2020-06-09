@@ -100,3 +100,101 @@ function runCharsetTest(url, check1, charset, check2) {
     });
   }
 }
+
+async function pushState(url, frameId) {
+  info(
+    `Doing a pushState, expecting to load ${url} ${
+      frameId ? "in an iframe" : ""
+    }`
+  );
+  let browser = gBrowser.selectedBrowser;
+  let bc = browser.browsingContext;
+  if (frameId) {
+    bc = await SpecialPowers.spawn(bc, [frameId], function(id) {
+      return content.document.getElementById(id).browsingContext;
+    });
+  }
+  let loaded = BrowserTestUtils.waitForLocationChange(gBrowser, url);
+  await SpecialPowers.spawn(bc, [url], function(url) {
+    content.history.pushState({}, "", url);
+  });
+  await loaded;
+  info(`Loaded ${url} ${frameId ? "in an iframe" : ""}`);
+}
+
+async function loadURI(url) {
+  info(`Doing a top-level loadURI, expecting to load ${url}`);
+  let browser = gBrowser.selectedBrowser;
+  let loaded = BrowserTestUtils.browserLoaded(browser, false, url);
+  BrowserTestUtils.loadURI(browser, url);
+  await loaded;
+  info(`Loaded ${url}`);
+}
+
+async function followLink(url, frameId) {
+  info(
+    `Creating and following a link to ${url} ${frameId ? "in an iframe" : ""}`
+  );
+  let browser = gBrowser.selectedBrowser;
+  let bc = browser.browsingContext;
+  if (frameId) {
+    bc = await SpecialPowers.spawn(bc, [frameId], function(id) {
+      return content.document.getElementById(id).browsingContext;
+    });
+  }
+  let loaded = BrowserTestUtils.browserLoaded(browser, !!frameId, url);
+  await SpecialPowers.spawn(bc, [url], function(url) {
+    let a = content.document.createElement("a");
+    a.href = url;
+    content.document.body.appendChild(a);
+    a.click();
+  });
+  await loaded;
+  info(`Loaded ${url} ${frameId ? "in an iframe" : ""}`);
+}
+
+async function goForward(url, useFrame = false) {
+  info(
+    `Clicking the forward button, expecting to load ${url} ${
+      useFrame ? "in an iframe" : ""
+    }`
+  );
+  let loaded = BrowserTestUtils.waitForLocationChange(gBrowser, url);
+  let forwardButton = document.getElementById("forward-button");
+  forwardButton.click();
+  await loaded;
+  info(`Loaded ${url} ${useFrame ? "in an iframe" : ""}`);
+}
+
+async function goBack(url, useFrame = false) {
+  info(
+    `Clicking the back button, expecting to load ${url} ${
+      useFrame ? "in an iframe" : ""
+    }`
+  );
+  let loaded = BrowserTestUtils.waitForLocationChange(gBrowser, url);
+  let backButton = document.getElementById("back-button");
+  backButton.click();
+  await loaded;
+  info(`Loaded ${url} ${useFrame ? "in an iframe" : ""}`);
+}
+
+function assertBackForwardState(canGoBack, canGoForward) {
+  let backButton = document.getElementById("back-button");
+  let forwardButton = document.getElementById("forward-button");
+
+  is(
+    backButton.disabled,
+    !canGoBack,
+    `${gBrowser.currentURI.spec}: back button is ${
+      canGoBack ? "not" : ""
+    } disabled`
+  );
+  is(
+    forwardButton.disabled,
+    !canGoForward,
+    `${gBrowser.currentURI.spec}: forward button is ${
+      canGoForward ? "not" : ""
+    } disabled`
+  );
+}
