@@ -2555,6 +2555,11 @@ void JSReporter::CollectReports(WindowPaths* windowPaths,
       NS_LITERAL_CSTRING("explicit/js-non-window/helper-thread/wasm-compile"),
       KIND_HEAP, gStats.helperThread.wasmCompile,
       "The memory used by Wasm compilations waiting in HelperThreadState.");
+
+  REPORT_BYTES(
+      NS_LITERAL_CSTRING("explicit/js-non-window/helper-thread/contexts"),
+      KIND_HEAP, gStats.helperThread.contexts,
+      "The memory used by the JSContexts in HelperThreadState.");
 }
 
 static nsresult JSSizeOfTab(JSObject* objArg, size_t* jsObjectsSize,
