@@ -13,8 +13,7 @@ namespace mozilla {
 namespace layers {
 
 class ClientCanvasLayer;
-
-class ClientCanvasRenderer final : public ShareableCanvasRenderer {
+class ClientCanvasRenderer : public ShareableCanvasRenderer {
  public:
   explicit ClientCanvasRenderer(ClientCanvasLayer* aLayer) : mLayer(aLayer) {}
 

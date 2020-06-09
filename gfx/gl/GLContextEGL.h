@@ -22,13 +22,15 @@ class GLContextEGL : public GLContext {
   friend class TextureImageEGL;
 
   static already_AddRefed<GLContextEGL> CreateGLContext(
-      GLLibraryEGL*, const GLContextDesc&, EGLConfig config, EGLSurface surface,
+      GLLibraryEGL*, CreateContextFlags flags, const SurfaceCaps& caps,
+      bool isOffscreen, EGLConfig config, EGLSurface surface,
       const bool useGles, nsACString* const out_failureId);
 
  public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(GLContextEGL, override)
-  GLContextEGL(GLLibraryEGL*, const GLContextDesc&, EGLConfig config,
-               EGLSurface surface, EGLContext context);
+  GLContextEGL(GLLibraryEGL*, CreateContextFlags flags, const SurfaceCaps& caps,
+               bool isOffscreen, EGLConfig config, EGLSurface surface,
+               EGLContext context);
 
   ~GLContextEGL();
 
@@ -89,10 +91,11 @@ class GLContextEGL : public GLContext {
   void Destroy();
 
   static already_AddRefed<GLContextEGL> CreateEGLPBufferOffscreenContext(
-      const GLContextCreateDesc&, const gfx::IntSize& size,
-      nsACString* const out_FailureId);
+      CreateContextFlags flags, const gfx::IntSize& size,
+      const SurfaceCaps& minCaps, nsACString* const out_FailureId);
   static already_AddRefed<GLContextEGL> CreateEGLPBufferOffscreenContextImpl(
-      const GLContextCreateDesc&, const gfx::IntSize& size, bool aUseGles,
+      CreateContextFlags flags, const gfx::IntSize& size,
+      const SurfaceCaps& minCaps, bool aUseGles,
       nsACString* const out_FailureId);
 
 #if defined(MOZ_WAYLAND) || defined(MOZ_WIDGET_ANDROID)

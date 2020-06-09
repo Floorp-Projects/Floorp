@@ -122,6 +122,7 @@ EXPORTS.mozilla.layers += [
     'apz/util/ScrollLinkedEffectDetector.h',
     'apz/util/TouchActionHelper.h',
     'apz/util/TouchCounter.h',
+    'AsyncCanvasRenderer.h',
     'AtomicRefCountedWithFinalize.h',
     'AxisPhysicsModel.h',
     'AxisPhysicsMSDModel.h',
@@ -166,6 +167,7 @@ EXPORTS.mozilla.layers += [
     'CompositionRecorder.h',
     'Compositor.h',
     'CompositorTypes.h',
+    'CopyableCanvasRenderer.h',
     'D3D11ShareHandleImage.h',
     'D3D11YCbCrImage.h',
     'D3D9SurfaceImage.h',
@@ -379,6 +381,7 @@ UNIFIED_SOURCES += [
     'apz/util/ScrollLinkedEffectDetector.cpp',
     'apz/util/TouchActionHelper.cpp',
     'apz/util/TouchCounter.cpp',
+    'AsyncCanvasRenderer.cpp',
     'AxisPhysicsModel.cpp',
     'AxisPhysicsMSDModel.cpp',
     'basic/BasicCanvasLayer.cpp',
@@ -434,6 +437,7 @@ UNIFIED_SOURCES += [
     'composite/TiledContentHost.cpp',
     'CompositionRecorder.cpp',
     'Compositor.cpp',
+    'CopyableCanvasRenderer.cpp',
     'Effects.cpp',
     'FrameMetrics.cpp',
     'GLImages.cpp',
@@ -588,7 +592,6 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
 
 LOCAL_INCLUDES += [
     '/docshell/base',  # for nsDocShell.h
-    '/dom/canvas',     # for intertwined WebGL headers
     '/layout/base',    # for TouchManager.h
     '/layout/generic', # for nsTextFrame.h
     '/media/libyuv/libyuv/include', # for libyuv.h

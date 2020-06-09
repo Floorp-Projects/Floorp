@@ -780,6 +780,42 @@ CanvasShutdownObserver::Observe(nsISupports* aSubject, const char* aTopic,
   return NS_OK;
 }
 
+class CanvasRenderingContext2DUserData : public LayerUserData {
+ public:
+  explicit CanvasRenderingContext2DUserData(CanvasRenderingContext2D* aContext)
+      : mContext(aContext) {
+    aContext->mUserDatas.AppendElement(this);
+  }
+  ~CanvasRenderingContext2DUserData() {
+    if (mContext) {
+      mContext->mUserDatas.RemoveElement(this);
+    }
+  }
+
+  static void PreTransactionCallback(void* aData) {
+    CanvasRenderingContext2D* context =
+        static_cast<CanvasRenderingContext2D*>(aData);
+    if (!context || !context->mTarget) return;
+
+    context->OnStableState();
+  }
+
+  static void DidTransactionCallback(void* aData) {
+    CanvasRenderingContext2D* context =
+        static_cast<CanvasRenderingContext2D*>(aData);
+    if (context) {
+      context->MarkContextClean();
+    }
+  }
+  bool IsForContext(CanvasRenderingContext2D* aContext) {
+    return mContext == aContext;
+  }
+  void Forget() { mContext = nullptr; }
+
+ private:
+  CanvasRenderingContext2D* mContext;
+};
+
 NS_IMPL_CYCLE_COLLECTING_ADDREF(CanvasRenderingContext2D)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(CanvasRenderingContext2D)
 
@@ -943,7 +979,10 @@ CanvasRenderingContext2D::~CanvasRenderingContext2D() {
   RemovePostRefreshObserver();
   RemoveShutdownObserver();
   Reset();
-
+  // Drop references from all CanvasRenderingContext2DUserData to this context
+  for (uint32_t i = 0; i < mUserDatas.Length(); ++i) {
+    mUserDatas[i]->Forget();
+  }
   sNumLivingContexts--;
   if (!sNumLivingContexts) {
     NS_IF_RELEASE(sErrorTarget);
@@ -5307,13 +5346,6 @@ already_AddRefed<ImageData> CanvasRenderingContext2D::CreateImageData(
 
 static uint8_t g2DContextLayerUserData;
 
-void CanvasRenderingContext2D::OnBeforePaintTransaction() {
-  if (!mTarget) return;
-  OnStableState();
-}
-
-void CanvasRenderingContext2D::OnDidPaintTransaction() { MarkContextClean(); }
-
 already_AddRefed<Layer> CanvasRenderingContext2D::GetCanvasLayer(
     nsDisplayListBuilder* aBuilder, Layer* aOldLayer, LayerManager* aManager) {
   if (mOpaque) {
@@ -5334,8 +5366,20 @@ already_AddRefed<Layer> CanvasRenderingContext2D::GetCanvasLayer(
   }
 
   if (!mResetLayer && aOldLayer) {
-    RefPtr<Layer> ret = aOldLayer;
-    return ret.forget();
+    auto userData = static_cast<CanvasRenderingContext2DUserData*>(
+        aOldLayer->GetUserData(&g2DContextLayerUserData));
+
+    CanvasInitializeData data;
+
+    data.mBufferProvider = mBufferProvider;
+
+    if (userData && userData->IsForContext(this) &&
+        static_cast<CanvasLayer*>(aOldLayer)
+            ->CreateOrGetCanvasRenderer()
+            ->IsDataValid(data)) {
+      RefPtr<Layer> ret = aOldLayer;
+      return ret.forget();
+    }
   }
 
   RefPtr<CanvasLayer> canvasLayer = aManager->CreateCanvasLayer();
@@ -5346,8 +5390,22 @@ already_AddRefed<Layer> CanvasRenderingContext2D::GetCanvasLayer(
     MarkContextClean();
     return nullptr;
   }
+  CanvasRenderingContext2DUserData* userData = nullptr;
+  // Make the layer tell us whenever a transaction finishes (including
+  // the current transaction), so we can clear our invalidation state and
+  // start invalidating again. We need to do this for all layers since
+  // callers of DrawWindow may be expecting to receive normal invalidation
+  // notifications after this paint.
 
-  const auto canvasRenderer = canvasLayer->CreateOrGetCanvasRenderer();
+  // The layer will be destroyed when we tear down the presentation
+  // (at the latest), at which time this userData will be destroyed,
+  // releasing the reference to the element.
+  // The userData will receive DidTransactionCallbacks, which flush the
+  // the invalidation state to indicate that the canvas is up to date.
+  userData = new CanvasRenderingContext2DUserData(this);
+  canvasLayer->SetUserData(&g2DContextLayerUserData, userData);
+
+  CanvasRenderer* canvasRenderer = canvasLayer->CreateOrGetCanvasRenderer();
   InitializeCanvasRenderer(aBuilder, canvasRenderer);
   uint32_t flags = mOpaque ? Layer::CONTENT_OPAQUE : 0;
   canvasLayer->SetContentFlags(flags);
@@ -5378,12 +5436,12 @@ bool CanvasRenderingContext2D::UpdateWebRenderCanvasData(
     return false;
   }
 
-  auto renderer = aCanvasData->GetCanvasRenderer();
+  CanvasRenderer* renderer = aCanvasData->GetCanvasRenderer();
 
   if (!mResetLayer && renderer) {
-    CanvasRendererData data;
-    data.mContext = mSharedPtrPtr;
-    data.mSize = GetSize();
+    CanvasInitializeData data;
+
+    data.mBufferProvider = mBufferProvider;
 
     if (renderer->IsDataValid(data)) {
       return true;
@@ -5404,11 +5462,15 @@ bool CanvasRenderingContext2D::UpdateWebRenderCanvasData(
 
 bool CanvasRenderingContext2D::InitializeCanvasRenderer(
     nsDisplayListBuilder* aBuilder, CanvasRenderer* aRenderer) {
-  CanvasRendererData data;
-  data.mContext = mSharedPtrPtr;
+  CanvasInitializeData data;
   data.mSize = GetSize();
-  data.mIsOpaque = mOpaque;
-  data.mDoPaintCallbacks = true;
+  data.mHasAlpha = !mOpaque;
+  data.mPreTransCallback =
+      CanvasRenderingContext2DUserData::PreTransactionCallback;
+  data.mPreTransCallbackData = this;
+  data.mDidTransCallback =
+      CanvasRenderingContext2DUserData::DidTransactionCallback;
+  data.mDidTransCallbackData = this;
 
   if (!mBufferProvider) {
     // Force the creation of a buffer provider.
@@ -5419,6 +5481,8 @@ bool CanvasRenderingContext2D::InitializeCanvasRenderer(
       return false;
     }
   }
+
+  data.mBufferProvider = mBufferProvider;
 
   aRenderer->Initialize(data);
   aRenderer->SetDirty();
