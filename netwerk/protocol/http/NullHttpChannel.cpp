@@ -232,6 +232,12 @@ NullHttpChannel::VisitOriginalResponseHeaders(nsIHttpHeaderVisitor* aVisitor) {
 }
 
 NS_IMETHODIMP
+NullHttpChannel::ShouldStripRequestBodyHeader(const nsACString& aMethod,
+                                              bool* aResult) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 NullHttpChannel::IsNoStoreResponse(bool* _retval) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

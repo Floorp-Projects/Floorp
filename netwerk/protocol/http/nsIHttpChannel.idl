@@ -184,6 +184,12 @@ interface nsIHttpChannel : nsIIdentChannel
     void visitNonDefaultRequestHeaders(in nsIHttpHeaderVisitor aVisitor);
 
     /**
+     * Call this method to see if we need to strip the request body headers
+     * for the new http channel. This should be called during redirection.
+     */
+    [must_use] bool ShouldStripRequestBodyHeader(in ACString aMethod);
+
+    /**
      * This attribute no longer has any effect, it remains for backwards compat
      *
      * @throws NS_ERROR_FAILURE if set after the channel has been opened.
