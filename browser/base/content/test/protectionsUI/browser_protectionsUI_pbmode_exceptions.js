@@ -37,16 +37,10 @@ function clickButton(sel) {
   el.doCommand();
 }
 
-function testTrackingPage(window) {
+function testTrackingPage() {
   info("Tracking content must be blocked");
-  ok(
-    gProtectionsHandler._protectionsPopup.hasAttribute("detected"),
-    "trackers are detected"
-  );
-  ok(
-    !gProtectionsHandler._protectionsPopup.hasAttribute("hasException"),
-    "content shows no exception"
-  );
+  ok(gProtectionsHandler.anyDetected, "trackers are detected");
+  ok(!gProtectionsHandler.hasException, "content shows no exception");
 
   ok(
     BrowserTestUtils.is_visible(gProtectionsHandler.iconBox),
@@ -65,15 +59,9 @@ function testTrackingPage(window) {
 }
 
 function testTrackingPageUnblocked() {
-  info("Tracking content must be white-listed and not blocked");
-  ok(
-    gProtectionsHandler._protectionsPopup.hasAttribute("detected"),
-    "trackers are detected"
-  );
-  ok(
-    gProtectionsHandler._protectionsPopup.hasAttribute("hasException"),
-    "content shows exception"
-  );
+  info("Tracking content must be allowlisted and not blocked");
+  ok(gProtectionsHandler.anyDetected, "trackers are detected");
+  ok(gProtectionsHandler.hasException, "content shows exception");
 
   ok(!gProtectionsHandler.iconBox.hasAttribute("active"), "shield is active");
   ok(

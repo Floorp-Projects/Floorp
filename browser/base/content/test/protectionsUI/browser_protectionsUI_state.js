@@ -60,14 +60,8 @@ function notFound(id) {
 
 function testBenignPage() {
   info("Non-tracking content must not be blocked");
-  ok(
-    !gProtectionsHandler._protectionsPopup.hasAttribute("detected"),
-    "no trackers are detected"
-  );
-  ok(
-    !gProtectionsHandler._protectionsPopup.hasAttribute("hasException"),
-    "content shows no exception"
-  );
+  ok(!gProtectionsHandler.anyDetected, "no trackers are detected");
+  ok(!gProtectionsHandler.hasException, "content shows no exception");
 
   ok(
     !gProtectionsHandler.iconBox.hasAttribute("active"),
@@ -98,14 +92,8 @@ function testBenignPage() {
 
 function testBenignPageWithException() {
   info("Non-tracking content must not be blocked");
-  ok(
-    !gProtectionsHandler._protectionsPopup.hasAttribute("detected"),
-    "no trackers are detected"
-  );
-  ok(
-    gProtectionsHandler._protectionsPopup.hasAttribute("hasException"),
-    "content shows exception"
-  );
+  ok(!gProtectionsHandler.anyDetected, "no trackers are detected");
+  ok(gProtectionsHandler.hasException, "content shows exception");
 
   ok(
     !gProtectionsHandler.iconBox.hasAttribute("active"),
@@ -149,14 +137,8 @@ function areTrackersBlocked(isPrivateBrowsing) {
 
 function testTrackingPage(window) {
   info("Tracking content must be blocked");
-  ok(
-    gProtectionsHandler._protectionsPopup.hasAttribute("detected"),
-    "trackers are detected"
-  );
-  ok(
-    !gProtectionsHandler._protectionsPopup.hasAttribute("hasException"),
-    "content shows no exception"
-  );
+  ok(gProtectionsHandler.anyDetected, "trackers are detected");
+  ok(!gProtectionsHandler.hasException, "content shows no exception");
 
   let isWindowPrivate = PrivateBrowsingUtils.isWindowPrivate(window);
   let blockedByTP = areTrackersBlocked(isWindowPrivate);
@@ -198,14 +180,8 @@ function testTrackingPage(window) {
 
 function testTrackingPageUnblocked(blockedByTP, window) {
   info("Tracking content must be white-listed and not blocked");
-  ok(
-    gProtectionsHandler._protectionsPopup.hasAttribute("detected"),
-    "trackers are detected"
-  );
-  ok(
-    gProtectionsHandler._protectionsPopup.hasAttribute("hasException"),
-    "content shows exception"
-  );
+  ok(gProtectionsHandler.anyDetected, "trackers are detected");
+  ok(gProtectionsHandler.hasException, "content shows exception");
 
   ok(
     !gProtectionsHandler.iconBox.hasAttribute("active"),
