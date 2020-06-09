@@ -11,6 +11,5 @@
      template="https://example.com/suggest">
   <Param name="suggestion" value="{searchTerms}"/>
 </Url>
-
-<SearchForm>https://example.com/</SearchForm>
+<Url type="text/html" method="GET" template="http://engine-rel-searchform.xml/?search" rel="searchform"/>
 </OpenSearchDescription>

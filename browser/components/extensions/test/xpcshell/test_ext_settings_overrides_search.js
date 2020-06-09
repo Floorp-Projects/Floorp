@@ -10,6 +10,7 @@ const { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
 
 let delay = () => new Promise(resolve => setTimeout(resolve, 0));
 
+const kSearchFormURL = "https://example.com/searchform";
 const kSearchEngineURL = "https://example.com/?search={searchTerms}";
 const kSearchSuggestURL = "https://example.com/?suggest={searchTerms}";
 const kSearchTerm = "foo";
@@ -43,6 +44,7 @@ add_task(async function test_extension_adding_engine() {
         search_provider: {
           name: "MozSearch",
           keyword: "MozSearch",
+          search_form: kSearchFormURL,
           search_url: kSearchEngineURL,
           suggest_url: kSearchSuggestURL,
         },
@@ -89,6 +91,7 @@ add_task(async function test_extension_adding_engine() {
     "Suggest URLs should match"
   );
 
+  equal(engine.searchForm, kSearchFormURL, "Search form URLs should match");
   await ext1.unload();
   await delay();
 
