@@ -123,8 +123,12 @@ interface nsIAppStartup : nsISupports
      * @param aMode
      *        This parameter modifies how the app is shutdown, and it is
      *        constructed from the constants defined above.
+     *
+     * @return false if the shutdown was cancelled due to the presence
+     *         of a hidden window or if the user disallowed a window
+     *         to be closed.
      */
-    void quit(in uint32_t aMode);
+    bool quit(in uint32_t aMode);
 
     /**
      * True if the application is in the process of shutting down.
