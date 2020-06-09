@@ -956,6 +956,27 @@ class UrlbarQueryContext {
       this[optionName] = options[optionName];
     }
   }
+
+  /**
+   * Caches and returns fixup info from URIFixup for the current search string.
+   */
+  get fixupInfo() {
+    if (this.searchString && !this._fixupInfo) {
+      let flags =
+        Ci.nsIURIFixup.FIXUP_FLAG_FIX_SCHEME_TYPOS |
+        Ci.nsIURIFixup.FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP;
+      if (this.isPrivate) {
+        flags |= Ci.nsIURIFixup.FIXUP_FLAG_PRIVATE_CONTEXT;
+      }
+
+      this._fixupInfo = Services.uriFixup.getFixupURIInfo(
+        this.searchString.trim(),
+        flags
+      );
+    }
+
+    return this._fixupInfo || null;
+  }
 }
 
 /**
