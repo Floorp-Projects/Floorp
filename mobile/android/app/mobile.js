@@ -159,9 +159,6 @@ pref("browser.formfill.enable", true);
 /* spellcheck */
 pref("layout.spellcheckDefault", 0);
 
-/* new html5 forms */
-pref("dom.forms.datetime.others", true);
-
 /* extension manager and xpinstall */
 pref("xpinstall.whitelist.fileRequest", false);
 pref("xpinstall.whitelist.add", "https://addons.mozilla.org");
