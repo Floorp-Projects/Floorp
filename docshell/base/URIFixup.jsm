@@ -161,8 +161,8 @@ XPCOMUtils.defineLazyGetter(
     /^(?:[a-z+.-]+:\/*(?!\/))?\[(?:[0-9a-f]{0,4}:){0,7}[0-9a-f]{0,4}\]?(?::\d+|\/)?/i
 );
 
-// Cache of known domains.
-XPCOMUtils.defineLazyGetter(this, "knownDomains", () => {
+// Cache of whitelisted domains.
+XPCOMUtils.defineLazyGetter(this, "domainsWhitelist", () => {
   const branch = "browser.fixup.domainwhitelist.";
   let domains = new Set(
     Services.prefs
@@ -189,8 +189,8 @@ XPCOMUtils.defineLazyGetter(this, "knownDomains", () => {
   return domains;
 });
 
-// Cache of known suffixes.
-// This works differently from the known domains, because when we examine a
+// Cache of whitelisted suffixes.
+// This works differently from the domains whitelist, because when we examine a
 // domain we can't tell how many dot-separated parts constitute the suffix.
 // We create a Map keyed by the last dotted part, containing a Set of
 // all the suffixes ending with that part:
@@ -199,7 +199,7 @@ XPCOMUtils.defineLazyGetter(this, "knownDomains", () => {
 // When searching we can restrict the linear scan based on the last part.
 // The ideal structure for this would be a Directed Acyclic Word Graph, but
 // since we expect this list to be small it's not worth the complication.
-XPCOMUtils.defineLazyGetter(this, "knownSuffixes", () => {
+XPCOMUtils.defineLazyGetter(this, "suffixesWhitelist", () => {
   const branch = "browser.fixup.domainsuffixwhitelist.";
   let suffixes = new Map();
   let prefs = Services.prefs
@@ -552,7 +552,7 @@ URIFixup.prototype = {
     return info;
   },
 
-  isDomainKnown,
+  isDomainWhitelisted,
 
   classID: Components.ID("{c6cf88b7-452e-47eb-bdc9-86e3561648ef}"),
   _xpcom_factory: XPCOMUtils.generateSingletonFactory(URIFixup),
@@ -627,16 +627,16 @@ URIFixupInfo.prototype = {
 // Helpers
 
 /**
- * Implementation of isDomainKnown, so we don't have to go through the
+ * Implementation of isDomainWhitelisted, so we don't have to go through the
  * service.
  * @param {string} asciiHost
- * @returns {boolean} whether the domain is known
+ * @returns {boolean} whether the domain is whitelisted
  */
-function isDomainKnown(asciiHost) {
+function isDomainWhitelisted(asciiHost) {
   if (dnsFirstForSingleWords) {
     return true;
   }
-  // Check if this domain is known as an actual
+  // Check if this domain is whitelisted as an actual
   // domain (which will prevent a keyword query)
   // Note that any processing of the host here should stay in sync with
   // code in the front-end(s) that set the pref.
@@ -645,19 +645,19 @@ function isDomainKnown(asciiHost) {
     asciiHost = asciiHost.substring(0, asciiHost.length - 1);
     lastDotIndex = asciiHost.lastIndexOf(".");
   }
-  if (knownDomains.has(asciiHost.toLowerCase())) {
+  if (domainsWhitelist.has(asciiHost.toLowerCase())) {
     return true;
   }
   // If there's no dot or only a leading dot we are done, otherwise we'll check
-  // against the known suffixes.
+  // against the suffixes whitelist.
   if (lastDotIndex <= 0) {
     return false;
   }
-  // Don't use getPublicSuffix here, since the suffix is not in the PSL,
+  // Don't use getPublicSuffix here, since the suffix is not in a known list,
   // thus it couldn't tell if the suffix is made up of one or multiple
   // dot-separated parts.
   let lastPart = asciiHost.substr(lastDotIndex + 1);
-  let suffixes = knownSuffixes.get(lastPart);
+  let suffixes = suffixesWhitelist.get(lastPart);
   if (suffixes) {
     return Array.from(suffixes).some(s => asciiHost.endsWith(s));
   }
@@ -672,7 +672,7 @@ function isDomainKnown(asciiHost) {
  * @returns {object} result The lookup result.
  * @returns {string} result.suffix The public suffix if one can be identified.
  * @returns {boolean} result.hasUnknownSuffix True when the suffix is not in the
- *     Public Suffix List and it's not in knownSuffixes. False in the other cases.
+ *     Public Suffix List and it's not whitelisted. False in the other cases.
  */
 function checkAndFixPublicSuffix(info) {
   let uri = info.fixedURI;
@@ -681,7 +681,7 @@ function checkAndFixPublicSuffix(info) {
     !asciiHost ||
     !asciiHost.includes(".") ||
     asciiHost.endsWith(".") ||
-    isDomainKnown(asciiHost)
+    isDomainWhitelisted(asciiHost)
   ) {
     return { suffix: "", hasUnknownSuffix: false };
   }
@@ -918,12 +918,12 @@ function keywordURIFixup(uriString, fixupInfo, isPrivateContext, postData) {
   // "docshell site:mozilla.org" - has a space in the origin part
   // "?site:mozilla.org - anything that begins with a question mark
   // "mozilla'.org" - Things that have a quote before the first dot/colon
-  // "mozilla/test" - unknown host
+  // "mozilla/test" - non whiteliste host
   // ".mozilla", "mozilla." - starts or ends with a dot ()
 
   // These other strings should not be searched, because they could be URIs:
-  // "www.blah.com" - Domain with a standard or known suffix
-  // "knowndomain" - known domain
+  // "www.blah.com" - Domain with a known or whitelisted suffix
+  // "whitelisted" - Whitelisted domain
   // "nonQualifiedHost:8888?something" - has a port
   // "user@nonQualifiedHost"
   // "blah.com."
@@ -943,14 +943,14 @@ function keywordURIFixup(uriString, fixupInfo, isPrivateContext, postData) {
     return false;
   }
 
-  // Avoid lookup if we can identify a host and it's known, or ends with
+  // Avoid lookup if we can identify a host and it's whitelisted, or ends with
   // a dot and has some path.
-  // Note that if dnsFirstForSingleWords is true isDomainKnown will always
+  // Note that if dnsFirstForSingleWords is true isDomainWhitelisted will always
   // return true, so we can avoid checking dnsFirstForSingleWords after this.
   let asciiHost = fixupInfo.fixedURI?.asciiHost;
   if (
     asciiHost &&
-    (isDomainKnown(asciiHost) ||
+    (isDomainWhitelisted(asciiHost) ||
       (asciiHost.endsWith(".") &&
         asciiHost.indexOf(".") != asciiHost.length - 1))
   ) {
@@ -997,7 +997,7 @@ function keywordURIFixupLegacy(
   // "?mozilla" - anything that begins with a question mark
   // "?site:mozilla.org docshell"
   // Things that have a quote before the first dot/colon
-  // "mozilla" - checked against the knownDomains to see if it's a host or not
+  // "mozilla" - checked against a whitelist to see if it's a host or not
   // ".mozilla", "mozilla." - ditto
 
   // These are not keyword formatted strings
@@ -1027,11 +1027,11 @@ function keywordURIFixupLegacy(
     );
   }
 
-  // Avoid lookup if we can identify a host and it's known.
-  // Note that if dnsFirstForSingleWords is true isDomainKnown will always
+  // Avoid lookup if we can identify a host and it's whitelisted.
+  // Note that if dnsFirstForSingleWords is true isDomainWhitelisted will always
   // return true, so we can avoid checking dnsFirstForSingleWords after this.
   let asciiHost = fixupInfo.fixedURI?.asciiHost;
-  if (asciiHost && isDomainKnown(asciiHost)) {
+  if (asciiHost && isDomainWhitelisted(asciiHost)) {
     return false;
   }
 
