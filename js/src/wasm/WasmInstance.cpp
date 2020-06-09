@@ -1021,7 +1021,7 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
           // This element is a wasm function imported from another
           // instance. To preserve the === function identity required by
           // the JS embedding spec, we must set the element to the
-          // imported function's underlying CodeRange.funcTableEntry and
+          // imported function's underlying CodeRange.funcCheckedCallEntry and
           // Instance so that future Table.get()s produce the same
           // function object as was imported.
           WasmInstanceObject* calleeInstanceObj =
@@ -1031,13 +1031,14 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
           const CodeRange& calleeCodeRange =
               calleeInstanceObj->getExportedFunctionCodeRange(fun, calleeTier);
           void* code = calleeInstance.codeBase(calleeTier) +
-                       calleeCodeRange.funcTableEntry();
+                       calleeCodeRange.funcCheckedCallEntry();
           table.setFuncRef(dstOffset + i, code, &calleeInstance);
           continue;
         }
       }
-      void* code = codeBaseTier +
-                   codeRanges[funcToCodeRange[funcIndex]].funcTableEntry();
+      void* code =
+          codeBaseTier +
+          codeRanges[funcToCodeRange[funcIndex]].funcCheckedCallEntry();
       table.setFuncRef(dstOffset + i, code, this);
     }
   }
@@ -1472,8 +1473,8 @@ bool Instance::init(JSContext* cx, const JSFunctionVector& funcImports,
           calleeInstanceObj->getExportedFunctionCodeRange(f, calleeTier);
       import.tls = calleeInstance.tlsData();
       import.realm = f->realm();
-      import.code =
-          calleeInstance.codeBase(calleeTier) + codeRange.funcNormalEntry();
+      import.code = calleeInstance.codeBase(calleeTier) +
+                    codeRange.funcUncheckedCallEntry();
       import.jitScript = nullptr;
     } else if (void* thunk = MaybeGetBuiltinThunk(f, fi.funcType())) {
       import.tls = tlsData();

@@ -685,7 +685,7 @@ bool LazyStubTier::createMany(const Uint32Vector& funcExportIndices,
         fe.funcType().temporarilyUnsupportedReftypeForEntry();
     numExpectedRanges += (unsupportedType ? 1 : 2);
     void* calleePtr =
-        moduleSegmentBase + metadata.codeRange(fe).funcNormalEntry();
+        moduleSegmentBase + metadata.codeRange(fe).funcUncheckedCallEntry();
     Maybe<ImmPtr> callee;
     callee.emplace(calleePtr, ImmPtr::NoCheckToken());
     if (!GenerateEntryStubs(masm, funcExportIndex, fe, callee,
