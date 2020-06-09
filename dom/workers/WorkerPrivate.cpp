@@ -2202,8 +2202,8 @@ WorkerPrivate::WorkerPrivate(
     RuntimeService::GetDefaultJSSettings(mJSSettings);
 
     {
-      JS::RealmOptions& chromeRealmOptions = mJSSettings.chrome.realmOptions;
-      JS::RealmOptions& contentRealmOptions = mJSSettings.content.realmOptions;
+      JS::RealmOptions& chromeRealmOptions = mJSSettings.chromeRealmOptions;
+      JS::RealmOptions& contentRealmOptions = mJSSettings.contentRealmOptions;
 
       JS::RealmBehaviors& chromeRealmBehaviors = chromeRealmOptions.behaviors();
       JS::RealmBehaviors& contentRealmBehaviors =
