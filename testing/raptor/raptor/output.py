@@ -683,6 +683,7 @@ class RaptorOutput(PerftestOutput):
                 # to reduce the conditions in the if below, i will use this list
                 # to check if we are running an youtube playback perf test
                 youtube_playback_tests = [
+                    "youtube-playbackperf-test",
                     "youtube-playbackperf-sfr-vp9-test",
                     "youtube-playbackperf-sfr-h264-test",
                     "youtube-playbackperf-sfr-av1-test",
@@ -1280,6 +1281,8 @@ class RaptorOutput(PerftestOutput):
 
                 # Remove the not needed "PlaybackPerf." prefix from each test
                 _sub = _sub.split("PlaybackPerf", 1)[-1]
+                if _sub.startswith("."):
+                    _sub = _sub[1:]
 
                 # build a list of subtests and append all related replicates
                 create_subtest_entry(
