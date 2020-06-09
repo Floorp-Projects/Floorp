@@ -441,12 +441,12 @@
       return this.selectedBrowser.canGoForward;
     },
 
-    goBack() {
-      return this.selectedBrowser.goBack();
+    goBack(requireUserInteraction) {
+      return this.selectedBrowser.goBack(requireUserInteraction);
     },
 
-    goForward() {
-      return this.selectedBrowser.goForward();
+    goForward(requireUserInteraction) {
+      return this.selectedBrowser.goForward(requireUserInteraction);
     },
 
     reload() {
