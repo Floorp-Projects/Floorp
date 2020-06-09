@@ -1290,6 +1290,19 @@
   mirror: always
 
 #---------------------------------------------------------------------------
+# Prefs starting with "converter."
+#---------------------------------------------------------------------------
+
+# Whether we include ruby annotation in the text despite whether it
+# is requested. This was true because we didn't explicitly strip out
+# annotations. Set false by default to provide a better behavior, but
+# we want to be able to pref-off it if user doesn't like it.
+- name: converter.html2txt.always_include_ruby
+  type: bool
+  value: false
+  mirror: always
+
+#---------------------------------------------------------------------------
 # Prefs starting with "datareporting."
 #---------------------------------------------------------------------------
 
