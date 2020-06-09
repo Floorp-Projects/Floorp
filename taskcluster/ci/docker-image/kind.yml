@@ -69,10 +69,6 @@ jobs:
         packages:
             - deb8-cmake
             - deb8-ninja
-    deb9-toolchain-build:
-        symbol: I(deb9-toolchain)
-        parent: debian9-base
-        definition: toolchain-build
     deb10-toolchain-build:
         symbol: I(deb10-toolchain)
         parent: debian10-base
@@ -115,32 +111,6 @@ jobs:
         parent: debian8-amd64-build
     lint:
         symbol: I(lnt)
-    # Neither the debian9-raw nor the debian9-packages images can have
-    # packages dependencies.
-    debian9-raw:
-        symbol: I(deb9-raw)
-        definition: debian-raw
-        args:
-            BASE_IMAGE: debian:stretch-20200422
-            DIST: stretch
-            SNAPSHOT: '20200422T205110Z'
-    debian9-packages:
-        symbol: I(deb9-pkg)
-        definition: debian-packages
-        parent: debian9-raw
-    debian9-base:
-        symbol: I(deb9-base)
-        definition: debian-base
-        parent: debian9-raw
-        packages:
-            - deb9-mercurial
-            - deb9-python-zstandard
-    debian9-amd64-build:
-        symbol: I(deb9)
-        parent: debian9-base
-        definition: debian-build
-        args:
-            ARCH: amd64
     # Neither the debian10-raw nor the debian10-packages images can have
     # packages dependencies.
     debian10-raw:

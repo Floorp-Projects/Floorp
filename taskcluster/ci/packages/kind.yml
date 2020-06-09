@@ -111,22 +111,6 @@ jobs:
                              -e "s/__DATE__/$(date --rfc-2822)/" \
                              -e "s/__CODENAME__/jessie/" debian/changelog
 
-    deb9-mercurial:
-        description: "Modern Mercurial for Debian stretch"
-        treeherder:
-            symbol: Deb9(hg)
-        run:
-            using: debian-package
-            dist: stretch
-            tarball:
-                url: https://www.mercurial-scm.org/release/mercurial-4.8.1.tar.gz
-                sha256: 48a45f5cde9104fbc2daf310d710d4ebf286d879b89fa327d24b005434b0fa21
-            pre-build-command: >-
-                cp -r contrib/packaging/debian debian &&
-                sed -i -e "s/__VERSION__/$(awk -F\" '$2 {print $2}' mercurial/__version__.py)-1.deb9moz1/" \
-                             -e "s/__DATE__/$(date --rfc-2822)/" \
-                             -e "s/__CODENAME__/stretch/" debian/changelog
-
     deb10-mercurial:
         description: "Modern Mercurial for Debian buster"
         treeherder:
@@ -238,19 +222,6 @@ jobs:
                 - deb8-dh-python
                 - deb8-python3.6
                 - deb8-python3-defaults
-
-    deb9-python-zstandard:
-        description: "python-zstandard for Debian stretch"
-        treeherder:
-            symbol: Deb9(python-zstandard)
-        run:
-            using: debian-package
-            dist: stretch
-            tarball:
-                url: https://github.com/indygreg/python-zstandard/archive/0.11.1.tar.gz
-                sha256: 2df90698e22f0da49cdd360438479f363e58eb8c3ac6e8bac84d831cf8e7baf4
-            name: python-zstandard
-            pre-build-command: debchange -v 0.11.1-1.deb9moz --distribution stretch "Mozilla backport for stretch"
 
     deb10-python-zstandard:
         description: "python-zstandard for Debian buster"
