@@ -556,91 +556,50 @@ static void GenerateCallableEpilogue(MacroAssembler& masm, unsigned framePushed,
   MOZ_ASSERT_IF(!masm.oom(), PoppedTLSReg == *ret - poppedTlsReg);
 }
 
-static void EnsureOffset(MacroAssembler& masm, uint32_t base,
-                         uint32_t targetOffset) {
-  MOZ_ASSERT(targetOffset % CodeAlignment == 0);
-  MOZ_ASSERT(masm.currentOffset() - base <= targetOffset);
-
-  while (masm.currentOffset() - base < targetOffset) {
-    masm.nopAlign(CodeAlignment);
-    if (masm.currentOffset() - base < targetOffset) {
-      masm.nop();
-    }
-  }
-
-  MOZ_ASSERT(masm.currentOffset() - base == targetOffset);
-}
-
 void wasm::GenerateFunctionPrologue(MacroAssembler& masm,
                                     const FuncTypeIdDesc& funcTypeId,
                                     const Maybe<uint32_t>& tier1FuncIndex,
                                     FuncOffsets* offsets) {
-  // These constants reflect statically-determined offsets
-  // between a function's checked call entry and a tail's entry.
-  static_assert(WasmCheckedCallEntryOffset % CodeAlignment == 0,
-                "code aligned");
-  static_assert(WasmCheckedTailEntryOffset % CodeAlignment == 0,
-                "code aligned");
-
   // Flush pending pools so they do not get dumped between the 'begin' and
-  // 'uncheckedCallEntry' offsets since the difference must be less than
-  // UINT8_MAX to be stored in CodeRange::funcbeginToUncheckedCallEntry_.
+  // 'normalEntry' offsets since the difference must be less than UINT8_MAX
+  // to be stored in CodeRange::funcBeginToNormalEntry_.
   masm.flushBuffer();
   masm.haltingAlign(CodeAlignment);
 
-  // We are going to generate the next code layout:
-  // ---------------------------------------------
-  // checked call entry:    callable prologue
-  // checked tail entry:    check signature
-  //                        jump functionBody
-  // unchecked call entry:  callable prologue
-  //                        functionBody
-  // -----------------------------------------------
-  // checked call entry - used for call_indirect when we have to check the
-  // signature.
-  // checked tail entry - used by trampolines which already had pushed Frame
-  // on the callee’s behalf.
-  // unchecked call entry - used for regular direct same-instance calls.
+  // The table entry falls through into the normal entry after it has checked
+  // the signature.
+  Label normalEntry;
 
-  Label functionBody;
-
-  // Generate checked call entry. The BytecodeOffset of the trap is fixed up to
-  // be the bytecode offset of the callsite by JitActivation::startWasmTrap.
+  // Generate table entry. The BytecodeOffset of the trap is fixed up to be
+  // the bytecode offset of the callsite by JitActivation::startWasmTrap.
   offsets->begin = masm.currentOffset();
-  MOZ_ASSERT(masm.currentOffset() - offsets->begin ==
-             WasmCheckedCallEntryOffset);
-  uint32_t dummy;
-  GenerateCallablePrologue(masm, &dummy);
-
-  EnsureOffset(masm, offsets->begin, WasmCheckedTailEntryOffset);
   switch (funcTypeId.kind()) {
     case FuncTypeIdDescKind::Global: {
       Register scratch = WasmTableCallScratchReg0;
       masm.loadWasmGlobalPtr(funcTypeId.globalDataOffset(), scratch);
       masm.branchPtr(Assembler::Condition::Equal, WasmTableCallSigReg, scratch,
-                     &functionBody);
+                     &normalEntry);
       masm.wasmTrap(Trap::IndirectCallBadSig, BytecodeOffset(0));
       break;
     }
     case FuncTypeIdDescKind::Immediate: {
       masm.branch32(Assembler::Condition::Equal, WasmTableCallSigReg,
-                    Imm32(funcTypeId.immediate()), &functionBody);
+                    Imm32(funcTypeId.immediate()), &normalEntry);
       masm.wasmTrap(Trap::IndirectCallBadSig, BytecodeOffset(0));
       break;
     }
     case FuncTypeIdDescKind::None:
-      masm.jump(&functionBody);
       break;
   }
 
-  // The checked entries might have generated a small constant pool in case of
+  // The table entry might have generated a small constant pool in case of
   // immediate comparison.
   masm.flushBuffer();
 
-  // Generate unchecked call entry:
+  // Generate normal entry:
   masm.nopAlign(CodeAlignment);
-  GenerateCallablePrologue(masm, &offsets->uncheckedCallEntry);
-  masm.bind(&functionBody);
+  masm.bind(&normalEntry);
+  GenerateCallablePrologue(masm, &offsets->normalEntry);
 
   // Tiering works as follows.  The Code owns a jumpTable, which has one
   // pointer-sized element for each function up to the largest funcIndex in
@@ -916,22 +875,6 @@ static void AssertCallerFP(DebugOnly<bool> fpWasTagged, Frame* const fp,
                                        reinterpret_cast<Frame*>(sp)->callerFP);
 }
 
-static bool isSignatureCheckFail(uint32_t offsetInCode,
-                                 const CodeRange* codeRange) {
-  if (!codeRange->isFunction()) {
-    return false;
-  }
-  // checked call entry:    1. push Frame
-  //                        2. set FP
-  //                        3. signature check <--- check if we are here.
-  //                        4. jump 7
-  // unchecked call entry:  5. push Frame
-  //                        6. set FP
-  //                        7. function's code
-  return offsetInCode < codeRange->funcUncheckedCallEntry() &&
-         (offsetInCode - codeRange->funcCheckedCallEntry()) > SetFP;
-}
-
 bool js::wasm::StartUnwinding(const RegisterState& registers,
                               UnwindState* unwindState, bool* unwoundCaller) {
   // Shorthands.
@@ -973,18 +916,17 @@ bool js::wasm::StartUnwinding(const RegisterState& registers,
   MOZ_ASSERT(offsetInCode >= codeRange->begin());
   MOZ_ASSERT(offsetInCode < codeRange->end());
 
-  // Compute the offset of the pc from the (unchecked call) entry of the code
-  // range. The checked call entry and the unchecked call entry have common
-  // prefix, so pc before signature check in the checked call entry is
-  // equivalent to the pc of the unchecked-call-entry. Thus, we can simplify the
-  // below case analysis by redirecting all pc-in-checked-call-entry before
-  // signature check cases to the pc-at-unchecked-call-entry case.
+  // Compute the offset of the pc from the (normal) entry of the code range.
+  // The stack state of the pc for the entire table-entry is equivalent to
+  // that of the first pc of the normal-entry. Thus, we can simplify the below
+  // case analysis by redirecting all pc-in-table-entry cases to the
+  // pc-at-normal-entry case.
   uint32_t offsetFromEntry;
   if (codeRange->isFunction()) {
-    if (offsetInCode < codeRange->funcUncheckedCallEntry()) {
-      offsetFromEntry = offsetInCode - codeRange->funcCheckedCallEntry();
+    if (offsetInCode < codeRange->funcNormalEntry()) {
+      offsetFromEntry = 0;
     } else {
-      offsetFromEntry = offsetInCode - codeRange->funcUncheckedCallEntry();
+      offsetFromEntry = offsetInCode - codeRange->funcNormalEntry();
     }
   } else {
     offsetFromEntry = offsetInCode - codeRange->begin();
@@ -1102,15 +1044,6 @@ bool js::wasm::StartUnwinding(const RegisterState& registers,
             return false;
           }
         }
-
-        if (isSignatureCheckFail(offsetInCode, codeRange)) {
-          // Frame have been pushed and FP has been set.
-          fixedFP = fp->callerFP;
-          fixedPC = fp->returnAddress;
-          AssertMatchesCallSite(fixedPC, fixedFP);
-          break;
-        }
-
         // Not in the prologue/epilogue.
         fixedPC = pc;
         fixedFP = fp;
