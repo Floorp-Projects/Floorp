@@ -179,6 +179,17 @@ class PictureInPictureToggleChild extends JSWindowActorChild {
       return;
     }
 
+    if (gWeakPlayerContent) {
+      try {
+        if (this.contentWindow == gWeakPlayerContent.get()) {
+          // We also don't want events from the player window video itself!
+          return;
+        }
+      } catch (e) {
+        return;
+      }
+    }
+
     switch (event.type) {
       case "UAWidgetSetupOrChange": {
         if (
@@ -1195,6 +1206,11 @@ class PictureInPictureChild extends JSWindowActorChild {
       });
     }
 
+    // We're committed to adding the video to this window now. Ensure we track
+    // the content window before we do so, so that the toggle actor can
+    // distinguish this new video we're creating from web-controlled ones.
+    gWeakPlayerContent = Cu.getWeakReference(this.contentWindow);
+
     let doc = this.document;
     let playerVideo = doc.createElement("video");
 
@@ -1225,8 +1241,6 @@ class PictureInPictureChild extends JSWindowActorChild {
       },
       { once: true }
     );
-
-    gWeakPlayerContent = Cu.getWeakReference(this.contentWindow);
   }
 
   play() {
