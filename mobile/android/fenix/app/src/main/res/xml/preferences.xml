@@ -73,7 +73,7 @@
             android:key="@string/pref_key_language"
             android:title="@string/preferences_language" />
 
-        <androidx.preference.Preference
+        <org.mozilla.fenix.settings.DefaultBrowserPreference
             android:icon="@drawable/ic_internet"
             android:key="@string/pref_key_make_default_browser"
             android:title="@string/preferences_set_as_default_browser" />
@@ -114,12 +114,6 @@
             android:key="@string/pref_key_data_choices"
             android:title="@string/preferences_data_collection" />
 
-        <androidx.preference.SwitchPreference
-            android:defaultValue="false"
-            android:icon="@drawable/ic_app_links"
-            android:key="@string/pref_key_open_links_in_external_app"
-            android:title="@string/preferences_open_links_in_apps" />
-
     </androidx.preference.PreferenceCategory>
 
     <PreferenceCategory
@@ -131,6 +125,12 @@
             android:icon="@drawable/mozac_ic_extensions_black"
             android:key="@string/pref_key_addons"
             android:title="@string/preferences_addons" />
+
+        <androidx.preference.SwitchPreference
+            android:defaultValue="false"
+            android:icon="@drawable/ic_app_links"
+            android:key="@string/pref_key_open_links_in_external_app"
+            android:title="@string/preferences_open_links_in_apps" />
 
         <androidx.preference.SwitchPreference
             android:defaultValue="true"

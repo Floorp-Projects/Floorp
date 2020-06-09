@@ -8,8 +8,10 @@ import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
+import android.provider.Settings
 import android.widget.Toast
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.lifecycle.lifecycleScope
@@ -114,6 +116,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(R.xml.preferences, rootKey)
+        updateMakeDefaultBrowserPreference()
     }
 
     override fun onResume() {
@@ -173,6 +176,8 @@ class SettingsFragment : PreferenceFragmentCompat() {
                 requireComponents.backgroundServices.accountManager.accountProfile()
             )
         }
+
+        updateMakeDefaultBrowserPreference()
     }
 
     @Suppress("ComplexMethod", "LongMethod")
@@ -207,9 +212,6 @@ class SettingsFragment : PreferenceFragmentCompat() {
             resources.getString(R.string.pref_key_addons) -> {
                 requireContext().metrics.track(Event.AddonsOpenInSettings)
                 SettingsFragmentDirections.actionSettingsFragmentToAddonsFragment()
-            }
-            resources.getString(R.string.pref_key_make_default_browser) -> {
-                SettingsFragmentDirections.actionSettingsFragmentToDefaultBrowserSettingsFragment()
             }
             resources.getString(R.string.pref_key_data_choices) -> {
                 SettingsFragmentDirections.actionSettingsFragmentToDataChoicesFragment()
@@ -289,9 +291,11 @@ class SettingsFragment : PreferenceFragmentCompat() {
     private fun setupPreferences() {
         val leakKey = getPreferenceKey(R.string.pref_key_leakcanary)
         val debuggingKey = getPreferenceKey(R.string.pref_key_remote_debugging)
+        val makeDefaultBrowserKey = getPreferenceKey(R.string.pref_key_make_default_browser)
 
         val preferenceLeakCanary = findPreference<Preference>(leakKey)
         val preferenceRemoteDebugging = findPreference<Preference>(debuggingKey)
+        val preferenceMakeDefaultBrowser = findPreference<Preference>(makeDefaultBrowserKey)
 
         if (!Config.channel.isReleased) {
             preferenceLeakCanary?.setOnPreferenceChangeListener { _, newValue ->
@@ -307,6 +311,9 @@ class SettingsFragment : PreferenceFragmentCompat() {
             requireComponents.core.engine.settings.remoteDebuggingEnabled = newValue
             true
         }
+
+        preferenceMakeDefaultBrowser?.onPreferenceClickListener =
+            getClickListenerForMakeDefaultBrowser()
 
         val preferenceFxAOverride =
             findPreference<Preference>(getPreferenceKey(R.string.pref_key_override_fxa_server))
@@ -333,6 +340,33 @@ class SettingsFragment : PreferenceFragmentCompat() {
         findPreference<Preference>(
             getPreferenceKey(R.string.pref_key_debug_settings)
         )?.isVisible = requireContext().settings().showSecretDebugMenuThisSession
+    }
+
+    private fun getClickListenerForMakeDefaultBrowser(): Preference.OnPreferenceClickListener {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            Preference.OnPreferenceClickListener {
+                val intent = Intent(Settings.ACTION_MANAGE_DEFAULT_APPS_SETTINGS)
+                startActivity(intent)
+                true
+            }
+        } else {
+            Preference.OnPreferenceClickListener {
+                (activity as HomeActivity).openToBrowserAndLoad(
+                    searchTermOrURL = SupportUtils.getSumoURLForTopic(
+                        requireContext(),
+                        SupportUtils.SumoTopic.SET_AS_DEFAULT_BROWSER
+                    ),
+                    newTab = true,
+                    from = BrowserDirection.FromSettings
+                )
+                true
+            }
+        }
+    }
+
+    private fun updateMakeDefaultBrowserPreference() {
+        findPreference<DefaultBrowserPreference>(getPreferenceKey(R.string.pref_key_make_default_browser))
+            ?.updateSwitch()
     }
 
     private fun navigateFromSettings(directions: NavDirections) {

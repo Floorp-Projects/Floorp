@@ -447,13 +447,6 @@
             app:popExitAnim="@anim/slide_out_right"
             app:destination="@id/deleteBrowsingDataOnQuitFragment" />
         <action
-            android:id="@+id/action_settingsFragment_to_defaultBrowserSettingsFragment"
-            app:enterAnim="@anim/slide_in_right"
-            app:exitAnim="@anim/slide_out_left"
-            app:popEnterAnim="@anim/slide_in_left"
-            app:popExitAnim="@anim/slide_out_right"
-            app:destination="@id/defaultBrowserSettingsFragment" />
-        <action
             android:id="@+id/action_settingsFragment_to_localeSettingsFragment"
             app:enterAnim="@anim/slide_in_right"
             app:exitAnim="@anim/slide_out_left"
@@ -709,9 +702,6 @@
     <fragment
         android:id="@+id/addNewDeviceFragment"
         android:name="org.mozilla.fenix.share.AddNewDeviceFragment" />
-    <fragment
-        android:id="@+id/defaultBrowserSettingsFragment"
-        android:name="org.mozilla.fenix.settings.DefaultBrowserSettingsFragment"/>
     <fragment
         android:id="@+id/addSearchEngineFragment"
         android:name="org.mozilla.fenix.settings.search.AddSearchEngineFragment" />
