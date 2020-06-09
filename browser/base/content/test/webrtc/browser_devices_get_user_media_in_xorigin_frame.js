@@ -100,7 +100,13 @@ async function promptNoDelegateScreenSharing(aThirdPartyOrgin) {
   // The 'Remember this decision' checkbox is hidden.
   const checkbox = notification.checkbox;
   ok(!!checkbox, "checkbox is present");
-  ok(checkbox.hidden, "checkbox is not visible");
+
+  if (ALLOW_SILENCING_NOTIFICATIONS) {
+    ok(!checkbox.hidden, "Notification silencing checkbox is visible");
+  } else {
+    ok(checkbox.hidden, "checkbox is not visible");
+  }
+
   ok(!checkbox.checked, "checkbox not checked");
 
   // Check the label of the notification should be the first party
@@ -663,7 +669,6 @@ var gTests = [
       await promptNoDelegate("test2.example.com");
     },
   },
-
   {
     desc:
       "Change location, prompt and display both first party and third party origin when sharing screen in unsafe permission delegation",
@@ -675,7 +680,6 @@ var gTests = [
       await promptNoDelegateScreenSharing("test2.example.com");
     },
   },
-
   {
     desc:
       "Prompt and display both first party and third party origin and temporary deny in frame does not change permission scope",
