@@ -29,16 +29,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=467442
     let anchor = document.getElementById("anchor");
 
     panel.addEventListener("popupshown", function onpopupshown() {
-      panel.removeEventListener("popupshown", onpopupshown);
       let panelRect = panel.getBoundingClientRect();
       let anchorRect = anchor.getBoundingClientRect();
       is(panelRect.left, anchorRect.left, "Panel should be anchored to the button");
       panel.addEventListener("popuphidden", function onpopuphidden() {
-        panel.removeEventListener("popuphidden", onpopuphidden);
         SimpleTest.finish();
-      });
+      }, { once: true });
       panel.hidePopup();
-    });
+    }, { once: true });
 
     panel.openPopup(anchor, "after_start", 0, 0, false, false);
   }

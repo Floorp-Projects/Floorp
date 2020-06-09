@@ -78,47 +78,47 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=420499
       ok(!isCaretVisible(), "Caret shouldn't be visible");
       $("text-input").focus();
       ok(isCaretVisible(), "Caret should be visible when input focused");
-      window.addEventListener("popupshown", popupMenuShownHandler, false);
+      window.addEventListener("popupshown", popupMenuShownHandler);
       $("menu").open = true;
     }
     
     function popupMenuShownHandler() {
-      window.removeEventListener("popupshown", popupMenuShownHandler, false);
+      window.removeEventListener("popupshown", popupMenuShownHandler);
       ok(!isCaretVisible(), "Caret shouldn't be visible when menu open");
-      window.addEventListener("popuphidden", ensureParagraphFocused, false);
+      window.addEventListener("popuphidden", ensureParagraphFocused);
       $("menu").open = false;
     }
     
     function ensureParagraphFocused() {
-      window.removeEventListener("popuphidden", ensureParagraphFocused, false);
+      window.removeEventListener("popuphidden", ensureParagraphFocused);
       ok(isCaretVisible(), "Caret should have returned to previous focus");
-      window.addEventListener("popupshown", popupMenuShownHandler2, false);
+      window.addEventListener("popupshown", popupMenuShownHandler2);
       $("contextmenu").openPopup($('text-input'), "topleft" , -1 , -1 , true, true);
     }
 
     function popupMenuShownHandler2() {
-      window.removeEventListener("popupshown", popupMenuShownHandler2, false);
+      window.removeEventListener("popupshown", popupMenuShownHandler2);
       ok(isCaretVisible(), "Caret should be visible when context menu open");
-      window.addEventListener("popuphidden", ensureParagraphFocused2, false);
+      window.addEventListener("popuphidden", ensureParagraphFocused2);
       document.getElementById("contextmenu").hidePopup();
     }
 
     function ensureParagraphFocused2() {
-      window.removeEventListener("popuphidden", ensureParagraphFocused2, false);
+      window.removeEventListener("popuphidden", ensureParagraphFocused2);
       ok(isCaretVisible(), "Caret should still be visible");
-      window.addEventListener("popupshown", tooltipShownHandler, false);
+      window.addEventListener("popupshown", tooltipShownHandler);
       $("tooltip").openPopup($('text-input'), "topleft" , -1 , -1 , false, true);
     }
 
     function tooltipShownHandler() {
-      window.removeEventListener("popupshown", tooltipShownHandler, false);
+      window.removeEventListener("popupshown", tooltipShownHandler);
       ok(isCaretVisible(), "Caret should be visible when tooltip is visible");
-      window.addEventListener("popuphidden", ensureParagraphFocused3, false);
+      window.addEventListener("popuphidden", ensureParagraphFocused3);
       document.getElementById("tooltip").hidePopup();
     }
 
     function ensureParagraphFocused3() {
-      window.removeEventListener("popuphidden", ensureParagraphFocused2, false);
+      window.removeEventListener("popuphidden", ensureParagraphFocused2);
       ok(isCaretVisible(), "Caret should still be visible");
       SimpleTest.finish();
     }

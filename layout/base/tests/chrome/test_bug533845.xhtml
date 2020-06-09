@@ -24,14 +24,12 @@ SimpleTest.waitForExplicitFinish();
 function doTest() {
   let panel = document.getElementById("panel");
   panel.addEventListener("popupshown", function onpopupshown() {
-    panel.removeEventListener("popupshown", onpopupshown);
     continueTest();
     panel.addEventListener("popuphidden", function onpopuphidden() {
-      panel.removeEventListener("popuphidden", onpopuphidden);
       SimpleTest.finish();
-    });
+    }, { once: true });
     panel.hidePopup();
-  });
+  }, { once: true });
   panel.openPopup();
 }
 

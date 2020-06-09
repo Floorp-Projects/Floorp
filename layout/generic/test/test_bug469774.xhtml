@@ -41,7 +41,7 @@ function snapShot() {
 }
 
 function doTest() {
-  window.removeEventListener("focus", doTest, false);
+  window.removeEventListener("focus", doTest);
 
   var before = snapShot();
 
@@ -61,11 +61,11 @@ function doTest() {
 
     popup.hidePopup();
     SimpleTest.finish();
-  }, false);
+  });
 }
 
 SimpleTest.waitForExplicitFinish();
-window.addEventListener("focus", doTest, false);
+window.addEventListener("focus", doTest);
 
 ]]></script>
 
