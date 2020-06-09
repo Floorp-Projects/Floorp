@@ -883,23 +883,4 @@ class TestResolver(MozbuildObject):
             if not tests:
                 print('UNKNOWN TEST: %s' % entry, file=sys.stderr)
 
-        if not what:
-            res = self.get_outgoing_metadata()
-            paths, tags, flavors = (res[key] for key in ('paths', 'tags', 'flavors'))
-
-            # This requires multiple calls to resolve_tests, because the test
-            # resolver returns tests that match every condition, while we want
-            # tests that match any condition. Bug 1210213 tracks implementing
-            # more flexible querying.
-            if tags:
-                run_tests = list(self.resolve_tests(tags=tags))
-            if paths:
-                run_tests += [t for t in self.resolve_tests(paths=paths)
-                              if not (tags & set(t.get('tags', '').split()))]
-            if flavors:
-                run_tests = [
-                    t for t in run_tests if t['flavor'] not in flavors]
-                for flavor in flavors:
-                    run_tests += list(self.resolve_tests(flavor=flavor))
-
         return run_suites, run_tests
