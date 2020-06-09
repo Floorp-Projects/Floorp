@@ -4528,9 +4528,6 @@ pref("dom.clients.openwindow_favors_same_process", true);
   pref("toolkit.crashreporter.include_context_heap", true);
 #endif
 
-// Open noopener links in a new process
-pref("dom.noopener.newprocess.enabled", true);
-
 #if defined(XP_WIN) || defined(XP_MACOSX) || defined(MOZ_WIDGET_GTK)
   pref("layers.omtp.enabled", true);
 #else
