@@ -183,6 +183,7 @@ mochitest-devtools-chrome:
     description: "Mochitest devtools-chrome run"
     suite:
         name: mochitest-devtools-chrome
+    schedules-component: mochitest-browser-chrome
     treeherder-symbol: M(dt)
     loopback-video: true
     tier: default
