@@ -19,6 +19,9 @@
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">آپ کے کھلے ٹیبز یہاں دکھائے جائیں گے۔</string>
 
+    <!-- No Private Tabs Message Description -->
+    <string name="no_private_tabs_description">آپ کے نجی ٹیبز یہاں دکھائے جائیں گے۔</string>
+
     <!-- Private Browsing -->
     <!-- Title for private session option -->
     <string name="private_browsing_title">آپ ایک نجی سیشن میں ہیں</string>
@@ -34,6 +37,8 @@
     <!-- Text for the negative button -->
     <string name="cfr_neg_button_text">نہیں شکریہ</string>
 
+    <!-- Text for the positive button -->
+    <string name="search_widget_cfr_pos_button_text">ویجیٹ شامل کریں</string>
     <!-- Text for the negative button -->
     <string name="search_widget_cfr_neg_button_text">ابھی نہیں</string>
 
@@ -79,6 +84,8 @@
     <string name="browser_menu_add_to_homescreen">ہوم اسکرین میں جوڑے</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
     <string name="browser_menu_install_on_homescreen">تنصیب کریں</string>
+    <!-- Menu option on the toolbar that takes you to synced tabs page-->
+    <string name="synced_tabs">سینک ہو چکے ٹیبز</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">صفحہ میں ڈھونڈیں</string>
     <!-- Browser menu button that creates a private tab -->
@@ -288,6 +295,11 @@
     <!-- Label summary showing never synced -->
     <string name="sync_never_synced_summary">آخری بار سینک کیا گیا: کبھی نہیں</string>
 
+    <!-- Text for displaying the default device name.
+        The first parameter is the application name, the second is the device manufacturer name
+        and the third is the device model. -->
+    <string name="default_device_name_2">%3$s %2$s پر %1$s</string>
+
     <!-- Send Tab -->
     <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="fxa_received_tab_channel_name">موصول شدہ ٹیب</string>
@@ -397,6 +409,8 @@
     <string name="library_desktop_bookmarks_unfiled">دیگر نشانیاں</string>
     <!-- Option in Library to open History page -->
     <string name="library_history">سابقات</string>
+    <!-- Option in Library to open Synced Tabs page -->
+    <string name="library_synced_tabs">سینک ہو چکے ٹیبز</string>
     <!-- Option in Library to open Reading List -->
     <string name="library_reading_list">پڑھنے کی فہرست</string>
     <!-- Menu Item Label for Search in Library -->
@@ -452,6 +466,9 @@
     <string name="collection_open_tabs">ٹیب کھولیں</string>
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">ہٹائیں</string>
+
+    <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
+    <string name="pwa_site_controls_title_private">%1$s (نجی موڈ)</string>
 
     <!-- History -->
     <!-- Text for the button to clear all history -->
@@ -574,6 +591,8 @@
     <!-- Bookmark snackbar message on deletion
      The first parameter is the host part of the URL of the bookmark deleted, if any -->
     <string name="bookmark_deletion_snackbar_message">حذف شدہ %s</string>
+    <!-- Bookmark snackbar message on deleting multiple bookmarks -->
+    <string name="bookmark_deletion_multiple_snackbar_message_2">بکمارک حذف کردی گئی</string>
     <!-- Bookmark undo button for deletion snackbar action -->
     <string name="bookmark_undo_deletion">کالعدم</string>
 
@@ -849,8 +868,14 @@
     <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_header_preview_installed">Firefox Nightly منتقل ہوگیا</string>
 
+    <!-- text for firefox preview moving tip button  -->
+    <string name="tip_firefox_preview_moved_button_preview_installed">نیا Nightly میں سوئچ کریں</string>
+
     <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_header_preview_not_installed">Firefox Nightly منتقل ہوگیا</string>
+
+    <!-- text for firefox preview moving tip button  -->
+    <string name="tip_firefox_preview_moved_button_preview_not_installed">نیا Nightly حاصل کریں</string>
 
     <!-- Onboarding -->
     <!-- Text for onboarding welcome message

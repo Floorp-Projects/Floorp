@@ -1419,4 +1419,9 @@
     <string name="synced_tabs_connect_to_sync_account">Verbinden met een Firefox-account.</string>
     <!-- Text displayed to ask user to connect another device as no devices found with account -->
     <string name="synced_tabs_connect_another_device">Een ander apparaat verbinden.</string>
-    </resources>
+    <!-- Text displayed asking user to re-authenticate -->
+    <string name="synced_tabs_reauth">Gelieve opnieuw te authenticeren.</string>
+    <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->
+    <string name="synced_tabs_enable_tab_syncing">Schakel het synchroniseren van tabbladen in.</string>
+
+</resources>

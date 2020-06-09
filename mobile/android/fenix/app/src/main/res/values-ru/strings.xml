@@ -972,7 +972,7 @@
     <!-- text for the button to manually sign into Firefox account. The word "Firefox" should not be translated -->
     <string name="onboarding_firefox_account_sign_in">Войти в Firefox</string>
     <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
-    <string name="onboarding_firefox_account_stay_signed_out">Запомнить меня</string>
+    <string name="onboarding_firefox_account_stay_signed_out">Не входить</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Началась синхронизация</string>
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
