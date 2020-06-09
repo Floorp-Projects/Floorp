@@ -407,11 +407,6 @@ function InitializeDateTimeFormat(dateTimeFormat, thisValue, locales, options, m
     if (mozExtensions) {
         let pattern = GetOption(options, "pattern", "string", undefined, undefined);
         lazyDateTimeFormatData.patternOption = pattern;
-
-        let dateStyle = GetOption(options, "dateStyle", "string", ["full", "long", "medium", "short"], undefined);
-        lazyDateTimeFormatData.dateStyle = dateStyle;
-        let timeStyle = GetOption(options, "timeStyle", "string", ["full", "long", "medium", "short"], undefined);
-        lazyDateTimeFormatData.timeStyle = timeStyle;
     }
 
     // Step 22.
@@ -449,6 +444,37 @@ function InitializeDateTimeFormat(dateTimeFormat, thisValue, locales, options, m
         GetOption(options, "formatMatcher", "string", ["basic", "best fit"],
                   "best fit");
     void formatMatcher;
+
+    // "DateTimeFormat dateStyle & timeStyle" propsal
+    // https://github.com/tc39/proposal-intl-datetime-style
+    var dateStyle = GetOption(options, "dateStyle", "string", ["full", "long", "medium", "short"],
+                              undefined);
+    lazyDateTimeFormatData.dateStyle = dateStyle;
+
+    var timeStyle = GetOption(options, "timeStyle", "string", ["full", "long", "medium", "short"],
+                              undefined);
+    lazyDateTimeFormatData.timeStyle = timeStyle;
+
+    if (dateStyle !== undefined || timeStyle !== undefined) {
+      var optionsList = [
+          "weekday", "era", "year", "month", "day", "hour", "minute", "second", "timeZoneName",
+      ];
+
+      for (var i = 0; i < optionsList.length; i++) {
+          var option = optionsList[i];
+          if (formatOpt[option] !== undefined) {
+              ThrowTypeError(JSMSG_INVALID_DATETIME_OPTION, option,
+                             dateStyle !== undefined ? "dateStyle" : "timeStyle");
+          }
+      }
+
+#ifdef NIGHTLY_BUILD
+      if (formatOpt.fractionalSecondDigits !== 0) {
+          ThrowTypeError(JSMSG_INVALID_DATETIME_OPTION, "fractionalSecondDigits",
+                         dateStyle !== undefined ? "dateStyle" : "timeStyle");
+      }
+#endif
+    }
 
     // Steps 26-28 provided by ICU, more or less - see comment after this function.
 
@@ -747,6 +773,20 @@ function ToDateTimeOptions(options, required, defaults) {
             needDefaults = false;
 #endif
     }
+
+    // "DateTimeFormat dateStyle & timeStyle" propsal
+    // https://github.com/tc39/proposal-intl-datetime-style
+    var dateStyle = options.dateStyle;
+    var timeStyle = options.timeStyle;
+
+    if (dateStyle !== undefined || timeStyle !== undefined)
+        needDefaults = false;
+
+    if (required === "date" && timeStyle !== undefined)
+        ThrowTypeError(JSMSG_INVALID_DATETIME_STYLE, "timeStyle", "toLocaleDateString");
+
+    if (required === "time" && dateStyle !== undefined)
+        ThrowTypeError(JSMSG_INVALID_DATETIME_STYLE, "dateStyle", "toLocaleTimeString");
 
     // Step 6.
     if (needDefaults && (defaults === "date" || defaults === "all")) {
