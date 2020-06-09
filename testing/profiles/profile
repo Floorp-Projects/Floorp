@@ -264,8 +264,7 @@ def rm(profile, pref_file):
 
 def cli(args=sys.argv[1:]):
     parser = ArgumentParser()
-    subparsers = parser.add_subparsers(dest='func')
-    subparsers.required = True
+    subparsers = parser.add_subparsers()
 
     diff_parser = subparsers.add_parser('diff')
     diff_parser.add_argument('a', metavar='A',
