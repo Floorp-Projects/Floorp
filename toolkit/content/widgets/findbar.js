@@ -548,6 +548,7 @@
       if (highlight !== this._highlightAll) {
         this._highlightAll = highlight;
         if (!fromPrefObserver) {
+          Services.telemetry.scalarAdd("findbar.highlight_all", 1);
           Services.prefs.setBoolPref("findbar.highlightAll", highlight);
         }
       }
@@ -603,6 +604,7 @@
       this._find();
 
       this._dispatchFindEvent("casesensitivitychange");
+      Services.telemetry.scalarAdd("findbar.match_case", 1);
     }
 
     /**
@@ -652,6 +654,8 @@
       this._find();
 
       this._dispatchFindEvent("diacriticmatchingchange");
+
+      Services.telemetry.scalarAdd("findbar.match_diacritics", 1);
     }
 
     /**
@@ -684,6 +688,8 @@
       if (!fromPrefObserver) {
         // Just set the pref; our observer will change the find bar behavior.
         Services.prefs.setBoolPref("findbar.entireword", entireWord);
+
+        Services.telemetry.scalarAdd("findbar.whole_words", 1);
         return;
       }
 
@@ -723,6 +729,7 @@
 
       this._updateFindUI();
       if (this.hidden) {
+        Services.telemetry.scalarAdd("findbar.shown", 1);
         this.removeAttribute("noanim");
         this.hidden = false;
 
@@ -1181,6 +1188,12 @@
      *                               otherwise.
      */
     onFindAgainCommand(findPrevious) {
+      if (findPrevious) {
+        Services.telemetry.scalarAdd("findbar.find_prev", 1);
+      } else {
+        Services.telemetry.scalarAdd("findbar.find_next", 1);
+      }
+
       let findString =
         this._browser.finder.searchString || this._findField.value;
       if (!findString) {
