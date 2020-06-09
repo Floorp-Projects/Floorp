@@ -416,16 +416,6 @@ function updateIndicators(aSubject, aTopic, aData) {
   if (actor) {
     let tabState = getTabStateForContentWindow(contentWindow, false);
     tabState.windowId = getInnerWindowIDForWindow(contentWindow);
-
-    // If we were silencing DOM notifications before, but we've updated
-    // state such that we're no longer sharing one of our displays, then
-    // reset the silencing state.
-    if (actor.suppressNotifications) {
-      if (!tabState.screen && !tabState.window && !tabState.browser) {
-        actor.suppressNotifications = false;
-      }
-    }
-
     tabState.suppressNotifications = actor.suppressNotifications;
 
     actor.sendAsyncMessage("webrtc:UpdateIndicators", tabState);
