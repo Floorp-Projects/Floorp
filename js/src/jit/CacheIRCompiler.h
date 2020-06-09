@@ -331,6 +331,9 @@ class MOZ_RAII CacheRegisterAllocator {
   // The index of the CacheIR instruction we're currently emitting.
   uint32_t currentInstruction_;
 
+  // Whether the stack contains a double spilled by AutoScratchFloatRegister.
+  bool hasAutoScratchFloatRegisterSpill_ = false;
+
   const CacheIRWriter& writer_;
 
   CacheRegisterAllocator(const CacheRegisterAllocator&) = delete;
@@ -412,6 +415,14 @@ class MOZ_RAII CacheRegisterAllocator {
   MOZ_MUST_USE bool setSpilledRegs(const SpilledRegisterVector& regs) {
     spilledRegs_.clear();
     return spilledRegs_.appendAll(regs);
+  }
+
+  bool hasAutoScratchFloatRegisterSpill() const {
+    return hasAutoScratchFloatRegisterSpill_;
+  }
+  void setHasAutoScratchFloatRegisterSpill(bool b) {
+    MOZ_ASSERT(hasAutoScratchFloatRegisterSpill_ != b);
+    hasAutoScratchFloatRegisterSpill_ = b;
   }
 
   void nextOp() {
