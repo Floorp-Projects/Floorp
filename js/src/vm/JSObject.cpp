@@ -3116,6 +3116,25 @@ JSObject* js::PrimitiveToObject(JSContext* cx, const Value& v) {
   return BigIntObject::create(cx, bigInt);
 }
 
+// Like PrimitiveToObject, but returns the JSProtoKey of the prototype that
+// would be used without actually creating the object.
+JSProtoKey js::PrimitiveToProtoKey(JSContext* cx, const Value& v) {
+  if (v.isString()) {
+    return JSProto_String;
+  }
+  if (v.isNumber()) {
+    return JSProto_Number;
+  }
+  if (v.isBoolean()) {
+    return JSProto_Boolean;
+  }
+  if (v.isSymbol()) {
+    return JSProto_Symbol;
+  }
+  MOZ_ASSERT(v.isBigInt());
+  return JSProto_BigInt;
+}
+
 /*
  * Invokes the ES5 ToObject algorithm on vp, returning the result. If vp might
  * already be an object, use ToObject. reportScanStack controls how null and

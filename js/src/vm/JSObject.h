@@ -981,6 +981,7 @@ extern bool IsPrototypeOf(JSContext* cx, HandleObject protoObj, JSObject* obj,
 
 /* Wrap boolean, number or string as Boolean, Number or String object. */
 extern JSObject* PrimitiveToObject(JSContext* cx, const Value& v);
+extern JSProtoKey PrimitiveToProtoKey(JSContext* cx, const Value& v);
 
 } /* namespace js */
 
