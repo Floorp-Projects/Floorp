@@ -959,11 +959,10 @@ static void ReloadPrefsCallback(const char* pref, void* aXpccx) {
   sStreamsEnabled = Preferences::GetBool(JS_OPTIONS_DOT_STR "streams");
   sPropertyErrorMessageFixEnabled =
       Preferences::GetBool(JS_OPTIONS_DOT_STR "property_error_message_fix");
-#ifdef NIGHTLY_BUILD
-  sWeakRefsEnabled =
-      Preferences::GetBool(JS_OPTIONS_DOT_STR "experimental.weakrefs.enabled");
+  sWeakRefsEnabled = Preferences::GetBool(JS_OPTIONS_DOT_STR "weakrefs");
   sWeakRefsExposeCleanupSome = Preferences::GetBool(
       JS_OPTIONS_DOT_STR "experimental.weakrefs.expose_cleanupSome");
+#ifdef NIGHTLY_BUILD
   sIteratorHelpersEnabled =
       Preferences::GetBool(JS_OPTIONS_DOT_STR "experimental.iterator_helpers");
 #endif
