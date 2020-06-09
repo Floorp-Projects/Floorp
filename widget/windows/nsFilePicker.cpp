@@ -32,7 +32,6 @@ using mozilla::mscom::EnsureMTA;
 using namespace mozilla::widget;
 
 char16_t* nsFilePicker::mLastUsedUnicodeDirectory;
-char nsFilePicker::mLastUsedDirectory[MAX_PATH + 1] = {0};
 
 static const unsigned long kDialogTimerTimeout = 300;
 
