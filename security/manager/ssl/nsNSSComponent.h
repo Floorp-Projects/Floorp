@@ -29,7 +29,8 @@
 
 class nsIDOMWindow;
 class nsIPrompt;
-class SmartCardThreadList;
+class nsISerialEventTarget;
+class nsITimer;
 
 namespace mozilla {
 namespace psm {
@@ -107,6 +108,8 @@ class nsNSSComponent final : public nsINSSComponent, public nsIObserver {
 
   bool ShouldEnableEnterpriseRootsForFamilySafety(uint32_t familySafetyMode);
 
+  nsresult MaybeEnableIntermediatePreloadingHealer();
+
   // mLoadableCertsLoadedMonitor protects mLoadableCertsLoaded.
   mozilla::Monitor mLoadableCertsLoadedMonitor;
   bool mLoadableCertsLoaded;
@@ -136,6 +139,13 @@ class nsNSSComponent final : public nsINSSComponent, public nsIObserver {
   // to complete (because it will never complete) so we use this boolean to keep
   // track of if we should wait.
   bool mLoadLoadableCertsTaskDispatched;
+  // If the intermediate preloading healer is enabled, the following timer
+  // periodically dispatches events to the background task queue. Each of these
+  // events scans the NSS certdb for preloaded intermediates that are in
+  // cert_storage and thus can be removed. By default, the interval is 5
+  // minutes.
+  nsCOMPtr<nsISerialEventTarget> mIntermediatePreloadingHealerTaskQueue;
+  nsCOMPtr<nsITimer> mIntermediatePreloadingHealerTimer;
 };
 
 inline nsresult BlockUntilLoadableCertsLoaded() {
