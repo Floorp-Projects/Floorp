@@ -56,5 +56,15 @@ def ftp2shippedLocales(platform):
     return sl_platform_map.get(platform, platform)
 
 
+def shippedLocales2ftp(platform):
+    matches = []
+    try:
+        [matches.append(
+            k) for k, v in six.iteritems(sl_platform_map) if v == platform][0]
+        return matches
+    except IndexError:
+        return [platform]
+
+
 def ftp2infoFile(platform):
     return info_file_platform_map.get(platform, platform)
