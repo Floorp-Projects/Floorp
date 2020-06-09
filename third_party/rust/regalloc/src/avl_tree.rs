@@ -57,7 +57,7 @@ pub struct AVLTree<T> {
 //=============================================================================
 // Storage management functions for AVLTree
 
-impl<T: Copy> AVLTree<T> {
+impl<T: Clone> AVLTree<T> {
     // Create a new tree and its associated storage pool.  This requires knowing
     // the default item value.
     pub fn new(default: T) -> Self {
@@ -78,7 +78,7 @@ impl<T: Copy> AVLTree<T> {
         assert!(index != AVL_NULL);
         assert!(self.pool[index as usize].tag != AVLTag::Free);
         self.pool[index as usize] =
-            AVLNode::new(AVLTag::Free, self.freelist, AVL_NULL, self.default);
+            AVLNode::new(AVLTag::Free, self.freelist, AVL_NULL, self.default.clone());
         self.freelist = index;
     }
 
@@ -90,7 +90,7 @@ impl<T: Copy> AVLTree<T> {
         // slots.
         if self.freelist == AVL_NULL {
             let start = self.pool.len();
-            let fill_item = AVLNode::new(AVLTag::Free, AVL_NULL, AVL_NULL, self.default);
+            let fill_item = AVLNode::new(AVLTag::Free, AVL_NULL, AVL_NULL, self.default.clone());
             // What happens if this OOMs?  At least guard against u32 overflow by
             // doing this:
             if start >= 0x7000_0000 {
@@ -154,7 +154,7 @@ enum AVLRes {
     Balance,
 }
 
-impl<T: Copy + PartialOrd> AVLTree<T> {
+impl<T: Clone + PartialOrd> AVLTree<T> {
     // Private function: rotleft: perform counterclockwise rotation
     // Takes the root of the tree to rotate, returns the new root
     fn rotleft(&mut self, old_root: u32) -> u32 {
@@ -339,8 +339,8 @@ impl<T: Copy + PartialOrd> AVLTree<T> {
             return (root, AVLRes::Balance);
         }
 
-        let cmp_arg_left: T = item;
-        let cmp_arg_right: T = self.pool[root as usize].item;
+        let cmp_arg_left: T = item.clone();
+        let cmp_arg_right: T = self.pool[root as usize].item.clone();
         let cmp_res = match mb_cmp {
             None => cmp_arg_left.partial_cmp(&cmp_arg_right),
             Some(cmp) => cmp(cmp_arg_left, cmp_arg_right),
@@ -348,7 +348,8 @@ impl<T: Copy + PartialOrd> AVLTree<T> {
         match cmp_res {
             None => panic!("AVLTree::insert_wrk: unordered elements"),
             Some(Ordering::Less) => {
-                let (new_left, res) = self.insert_wrk(self.pool[root as usize].left, item, mb_cmp);
+                let (new_left, res) =
+                    self.insert_wrk(self.pool[root as usize].left, item.clone(), mb_cmp);
                 self.pool[root as usize].left = new_left;
                 if res == AVLRes::Balance {
                     return self.leftgrown(root);
@@ -357,7 +358,7 @@ impl<T: Copy + PartialOrd> AVLTree<T> {
             }
             Some(Ordering::Greater) => {
                 let (new_right, res) =
-                    self.insert_wrk(self.pool[root as usize].right, item, mb_cmp);
+                    self.insert_wrk(self.pool[root as usize].right, item.clone(), mb_cmp);
                 self.pool[root as usize].right = new_right;
                 if res == AVLRes::Balance {
                     return self.rightgrown(root);
@@ -560,7 +561,7 @@ impl<T: Copy + PartialOrd> AVLTree<T> {
                 return None;
             }
         }
-        self.pool[target as usize].item = self.pool[n as usize].item;
+        self.pool[target as usize].item = self.pool[n as usize].item.clone();
         let tmp = n;
         n = self.pool[n as usize].left;
         self.free(tmp);
@@ -591,7 +592,7 @@ impl<T: Copy + PartialOrd> AVLTree<T> {
                 return None;
             }
         }
-        self.pool[target as usize].item = self.pool[n as usize].item;
+        self.pool[target as usize].item = self.pool[n as usize].item.clone();
         let tmp = n;
         n = self.pool[n as usize].right;
         self.free(tmp);
@@ -633,8 +634,8 @@ impl<T: Copy + PartialOrd> AVLTree<T> {
             return (root, AVLRes::Error);
         }
 
-        let cmp_arg_left: T = item;
-        let cmp_arg_right: T = self.pool[root as usize].item;
+        let cmp_arg_left: T = item.clone();
+        let cmp_arg_right: T = self.pool[root as usize].item.clone();
         let cmp_res = match mb_cmp {
             None => cmp_arg_left.partial_cmp(&cmp_arg_right),
             Some(cmp) => cmp(cmp_arg_left, cmp_arg_right),
@@ -728,6 +729,7 @@ pub struct AVLTreeIter<'t, 's, T> {
 }
 
 impl<'t, 's, T> AVLTreeIter<'t, 's, T> {
+    #[allow(dead_code)]
     fn new(tree: &'t AVLTree<T>, stack: &'s mut Vec<u32>) -> Self {
         let mut iter = AVLTreeIter { tree, stack };
         if tree.root != AVL_NULL {
@@ -769,7 +771,7 @@ impl<'s, 't, T: Copy> Iterator for AVLTreeIter<'s, 't, T> {
 //=============================================================================
 // Public interface for AVLTree
 
-impl<T: Copy + PartialOrd> AVLTree<T> {
+impl<T: Clone + PartialOrd> AVLTree<T> {
     // The core functions (insert, delete, contains) take a comparator argument
     //
     //   mb_cmp: Option<&F>
@@ -833,8 +835,8 @@ impl<T: Copy + PartialOrd> AVLTree<T> {
                     if n == AVL_NULL {
                         return false;
                     }
-                    let cmp_arg_left: T = item;
-                    let cmp_arg_right: T = self.pool[n as usize].item;
+                    let cmp_arg_left: T = item.clone();
+                    let cmp_arg_right: T = self.pool[n as usize].item.clone();
                     match cmp_arg_left.partial_cmp(&cmp_arg_right) {
                         Some(Ordering::Less) => {
                             n = self.pool[n as usize].left;
@@ -857,8 +859,8 @@ impl<T: Copy + PartialOrd> AVLTree<T> {
                     if n == AVL_NULL {
                         return false;
                     }
-                    let cmp_arg_left: T = item;
-                    let cmp_arg_right: T = self.pool[n as usize].item;
+                    let cmp_arg_left: T = item.clone();
+                    let cmp_arg_right: T = self.pool[n as usize].item.clone();
                     match cmp(cmp_arg_left, cmp_arg_right) {
                         Some(Ordering::Less) => {
                             n = self.pool[n as usize].left;
@@ -892,12 +894,12 @@ impl<T: Copy + PartialOrd> AVLTree<T> {
 
     pub fn to_vec(&self) -> Vec<T> {
         // BEGIN helper fn
-        fn walk<U: Copy>(res: &mut Vec<U>, root: u32, pool: &Vec<AVLNode<U>>) {
+        fn walk<U: Clone>(res: &mut Vec<U>, root: u32, pool: &Vec<AVLNode<U>>) {
             let root_left = pool[root as usize].left;
             if root_left != AVL_NULL {
                 walk(res, root_left, pool);
             }
-            res.push(pool[root as usize].item);
+            res.push(pool[root as usize].item.clone());
             let root_right = pool[root as usize].right;
             if root_right != AVL_NULL {
                 walk(res, root_right, pool);
@@ -912,6 +914,7 @@ impl<T: Copy + PartialOrd> AVLTree<T> {
         res
     }
 
+    #[allow(dead_code)]
     pub fn iter<'t, 's>(&'t self, storage: &'s mut Vec<u32>) -> AVLTreeIter<'t, 's, T> {
         storage.clear();
         AVLTreeIter::new(self, storage)

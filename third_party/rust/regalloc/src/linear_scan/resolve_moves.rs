@@ -1,4 +1,4 @@
-use super::{next_use, Fragments, IntId, Intervals, Location, MentionMap, RegUses};
+use super::{next_use, IntId, Location, RegUses, VirtualInterval};
 use crate::{
     data_structures::{BlockIx, InstPoint, Point},
     inst_stream::{InstToInsert, InstToInsertAndPoint},
@@ -8,28 +8,19 @@ use crate::{
 
 use log::{debug, info, trace};
 use rustc_hash::{FxHashMap as HashMap, FxHashSet as HashSet};
-use std::env;
+use smallvec::SmallVec;
 use std::fmt;
 
-#[inline(never)]
-pub(crate) fn run<F: Function>(
+fn resolve_moves_in_block<F: Function>(
     func: &F,
+    intervals: &Vec<VirtualInterval>,
     reg_uses: &RegUses,
-    mention_map: &HashMap<Reg, MentionMap>,
-    intervals: &Intervals,
-    virtual_intervals: &Vec<IntId>,
-    fragments: &Fragments,
-    liveouts: &TypedIxVec<BlockIx, SparseSet<Reg>>,
-    spill_slot: &mut u32,
     scratches_by_rc: &[Option<RealReg>],
-) -> Vec<InstToInsertAndPoint> {
-    let mut memory_moves = HashMap::default();
-
-    let mut parallel_reloads = HashMap::default();
-    let mut spills = HashMap::default();
-
-    info!("resolve_moves");
-
+    spill_slot: &mut u32,
+    moves_in_blocks: &mut Vec<InstToInsertAndPoint>,
+    tmp_ordered_moves: &mut Vec<MoveOp>,
+    tmp_stack: &mut Vec<MoveOp>,
+) {
     let mut block_ends = HashSet::default();
     let mut block_starts = HashSet::default();
     for bix in func.blocks() {
@@ -38,95 +29,75 @@ pub(crate) fn run<F: Function>(
         block_starts.insert(insts.first());
     }
 
-    for &int_id in virtual_intervals {
-        let (parent_end, parent_loc, loc) = {
-            let interval = intervals.get(int_id);
-            let loc = interval.location;
+    let mut reloads_at_inst = HashMap::default();
+    let mut spills_at_inst = Vec::new();
 
-            let parent_id = match interval.parent {
-                Some(pid) => pid,
-                None => {
-                    // In unreachable code, it's possible that a given interval has no
-                    // parents and is assigned to a stack location for its whole lifetime.
-                    //
-                    // In reachable code, the analysis only create intervals for virtual
-                    // registers with at least one register use, so a parentless interval (=
-                    // hasn't ever been split) can't live in a stack slot.
-                    debug_assert!(
-                        loc.spill().is_none()
-                            || (next_use(
-                                mention_map,
-                                intervals,
-                                int_id,
-                                InstPoint::min_value(),
-                                reg_uses,
-                                fragments
-                            )
-                            .is_none())
-                    );
-                    continue;
-                }
-            };
-
-            let parent = intervals.get(parent_id);
-
-            // If this is a move between blocks, handle it as such.
-            if parent.end.pt == Point::Def
-                && interval.start.pt == Point::Use
-                && block_ends.contains(&parent.end.iix)
-                && block_starts.contains(&interval.start.iix)
-            {
+    for interval in intervals {
+        let parent_id = match interval.parent {
+            Some(pid) => pid,
+            None => {
+                // In unreachable code, it's possible that a given interval has no
+                // parents and is assigned to a stack location for its whole lifetime.
+                //
+                // In reachable code, the analysis only create intervals for virtual
+                // registers with at least one register use, so a parentless interval (=
+                // hasn't ever been split) can't live in a stack slot.
+                #[cfg(debug_assertions)]
+                debug_assert!(
+                    interval.location.spill().is_none()
+                        || (next_use(interval, InstPoint::min_value(), reg_uses,).is_none())
+                );
                 continue;
             }
-
-            (parent.end, parent.location, loc)
         };
 
-        let child_start = intervals.get(int_id).start;
-        let vreg = intervals.vreg(int_id);
+        let parent = &intervals[parent_id.0];
 
-        match loc {
+        // If this is a move between blocks, handle it as such.
+        if parent.end.pt() == Point::Def
+            && interval.start.pt() == Point::Use
+            && block_ends.contains(&parent.end.iix())
+            && block_starts.contains(&interval.start.iix())
+        {
+            continue;
+        }
+
+        let child_start = interval.start;
+        let vreg = interval.vreg;
+
+        match interval.location {
             Location::None => panic!("interval has no location after regalloc!"),
 
             Location::Reg(rreg) => {
                 // Reconnect with the parent location, by adding a move if needed.
-                match next_use(
-                    mention_map,
-                    intervals,
-                    int_id,
-                    child_start,
-                    reg_uses,
-                    fragments,
-                ) {
-                    Some(next_use) => {
-                        // No need to reload before a new definition.
-                        if next_use.pt == Point::Def {
-                            continue;
-                        }
+                if let Some(next_use) = next_use(interval, child_start, reg_uses) {
+                    // No need to reload before a new definition.
+                    if next_use.pt() == Point::Def {
+                        continue;
                     }
-                    None => {}
                 };
 
                 let mut at_inst = child_start;
-                match at_inst.pt {
+                match at_inst.pt() {
                     Point::Use => {
-                        at_inst.pt = Point::Reload;
+                        at_inst.set_pt(Point::Reload);
                     }
                     Point::Def => {
-                        at_inst.pt = Point::Spill;
+                        at_inst.set_pt(Point::Spill);
                     }
                     _ => unreachable!(),
                 }
-                let entry = parallel_reloads.entry(at_inst).or_insert(Vec::new());
 
-                match parent_loc {
+                let entry = reloads_at_inst.entry(at_inst).or_insert_with(|| Vec::new());
+
+                match parent.location {
                     Location::None => unreachable!(),
 
                     Location::Reg(from_rreg) => {
                         if from_rreg != rreg {
                             debug!(
                                 "inblock fixup: {:?} move {:?} -> {:?} at {:?}",
-                                int_id, from_rreg, rreg, at_inst
+                                interval.id, from_rreg, rreg, at_inst
                             );
                             entry.push(MoveOp::new_move(from_rreg, rreg, vreg));
                         }
@@ -135,7 +106,7 @@ pub(crate) fn run<F: Function>(
                     Location::Stack(spill) => {
                         debug!(
                             "inblock fixup: {:?} reload {:?} -> {:?} at {:?}",
-                            int_id, spill, rreg, at_inst
+                            interval.id, spill, rreg, at_inst
                         );
                         entry.push(MoveOp::new_reload(spill, rreg, vreg));
                     }
@@ -143,32 +114,32 @@ pub(crate) fn run<F: Function>(
             }
 
             Location::Stack(spill) => {
-                // This interval has been spilled (i.e. split). Spill after the last def
-                // or before the last use.
-                let mut at_inst = parent_end;
-                at_inst.pt = if at_inst.pt == Point::Use {
+                // This interval has been spilled (i.e. split). Spill after the last def or before
+                // the last use.
+                let mut at_inst = parent.end;
+                at_inst.set_pt(if at_inst.pt() == Point::Use {
                     Point::Reload
                 } else {
-                    debug_assert!(at_inst.pt == Point::Def);
+                    debug_assert!(at_inst.pt() == Point::Def);
                     Point::Spill
-                };
+                });
 
-                match parent_loc {
+                match parent.location {
                     Location::None => unreachable!(),
 
                     Location::Reg(rreg) => {
                         debug!(
                             "inblock fixup: {:?} spill {:?} -> {:?} at {:?}",
-                            int_id, rreg, spill, at_inst
+                            interval.id, rreg, spill, at_inst
                         );
-                        spills
-                            .entry(at_inst)
-                            .or_insert(Vec::new())
-                            .push(InstToInsert::Spill {
+                        spills_at_inst.push(InstToInsertAndPoint::new(
+                            InstToInsert::Spill {
                                 to_slot: spill,
                                 from_reg: rreg,
                                 for_vreg: vreg,
-                            });
+                            },
+                            at_inst,
+                        ));
                     }
 
                     Location::Stack(parent_spill) => {
@@ -184,38 +155,187 @@ pub(crate) fn run<F: Function>(
     // reloads. Reloads may include several moves that must happen in parallel
     // (e.g. if two real regs must be swapped), so process them first. Once all
     // the parallel assignments have been done, push forward all the spills.
-    for (at_inst, mut parallel_moves) in parallel_reloads {
-        let ordered_moves = schedule_moves(&mut parallel_moves);
-        let insts = emit_moves(ordered_moves, spill_slot, scratches_by_rc);
-        memory_moves.insert(at_inst, insts);
-    }
-    for (at_inst, mut spills) in spills {
-        memory_moves
-            .entry(at_inst)
-            .or_insert(Vec::new())
-            .append(&mut spills);
+    for (at_inst, mut pending_moves) in reloads_at_inst {
+        schedule_moves(&mut pending_moves, tmp_ordered_moves, tmp_stack);
+        emit_moves(
+            at_inst,
+            &tmp_ordered_moves,
+            spill_slot,
+            scratches_by_rc,
+            moves_in_blocks,
+        );
     }
 
+    moves_in_blocks.append(&mut spills_at_inst);
+}
+
+#[derive(Clone, Copy)]
+enum BlockPos {
+    Start,
+    End,
+}
+
+#[derive(Default, Clone)]
+struct BlockInfo {
+    start: SmallVec<[(VirtualReg, IntId); 4]>,
+    end: SmallVec<[(VirtualReg, IntId); 4]>,
+}
+
+static UNSORTED_THRESHOLD: usize = 8;
+
+impl BlockInfo {
+    #[inline(never)]
+    fn insert(&mut self, pos: BlockPos, vreg: VirtualReg, id: IntId) {
+        match pos {
+            BlockPos::Start => {
+                #[cfg(debug_assertions)]
+                debug_assert!(self.start.iter().find(|prev| prev.0 == vreg).is_none());
+                self.start.push((vreg, id));
+            }
+            BlockPos::End => {
+                #[cfg(debug_assertions)]
+                debug_assert!(self.end.iter().find(|prev| prev.0 == vreg).is_none());
+                self.end.push((vreg, id));
+            }
+        }
+    }
+
+    #[inline(never)]
+    fn finish(&mut self) {
+        if self.start.len() >= UNSORTED_THRESHOLD {
+            self.start.sort_unstable_by_key(|pair| pair.0);
+        }
+        if self.end.len() >= UNSORTED_THRESHOLD {
+            self.end.sort_unstable_by_key(|pair| pair.0);
+        }
+    }
+
+    #[inline(never)]
+    fn lookup(&self, pos: BlockPos, vreg: &VirtualReg) -> IntId {
+        let array = match pos {
+            BlockPos::Start => &self.start,
+            BlockPos::End => &self.end,
+        };
+        if array.len() >= UNSORTED_THRESHOLD {
+            array[array.binary_search_by_key(vreg, |pair| pair.0).unwrap()].1
+        } else {
+            array
+                .iter()
+                .find(|el| el.0 == *vreg)
+                .expect("should have found target reg")
+                .1
+        }
+    }
+}
+
+/// For each block, collect a mapping of block_{start, end} -> actual location, to make the
+/// across-blocks fixup phase fast.
+#[inline(never)]
+fn collect_block_infos<F: Function>(
+    func: &F,
+    intervals: &Vec<VirtualInterval>,
+    liveins: &TypedIxVec<BlockIx, SparseSet<Reg>>,
+    liveouts: &TypedIxVec<BlockIx, SparseSet<Reg>>,
+) -> Vec<BlockInfo> {
+    // First, collect the first and last instructions of each block.
+    let mut block_start_and_ends = Vec::with_capacity(2 * func.blocks().len());
+    for bix in func.blocks() {
+        let insts = func.block_insns(bix);
+        block_start_and_ends.push((InstPoint::new_use(insts.first()), BlockPos::Start, bix));
+        block_start_and_ends.push((InstPoint::new_def(insts.last()), BlockPos::End, bix));
+    }
+
+    // Sort this array by instruction point, to be able to do binary search later.
+    block_start_and_ends.sort_unstable_by_key(|pair| pair.0);
+
+    // Preallocate the block information, with the final size of each vector.
+    let mut infos = Vec::with_capacity(func.blocks().len());
+    for bix in func.blocks() {
+        infos.push(BlockInfo {
+            start: SmallVec::with_capacity(liveins[bix].card()),
+            end: SmallVec::with_capacity(liveouts[bix].card()),
+        });
+    }
+
+    // For each interval:
+    // - find the first block start or end instruction that's in the interval, with a binary search
+    // on the previous array.
+    // - add an entry for each livein ou liveout variable in the block info.
+    for int in intervals {
+        let mut i = match block_start_and_ends.binary_search_by_key(&int.start, |pair| pair.0) {
+            Ok(i) => i,
+            Err(i) => i,
+        };
+
+        let vreg = int.vreg;
+        let id = int.id;
+
+        while let Some(&(inst, pos, bix)) = block_start_and_ends.get(i) {
+            if inst > int.end {
+                break;
+            }
+
+            #[cfg(debug_assertions)]
+            debug_assert!(int.covers(inst));
+
+            // Skip virtual registers that are not live-in (at start) or live-out (at end).
+            match pos {
+                BlockPos::Start => {
+                    if !liveins[bix].contains(vreg.to_reg()) {
+                        i += 1;
+                        continue;
+                    }
+                }
+                BlockPos::End => {
+                    if !liveouts[bix].contains(vreg.to_reg()) {
+                        i += 1;
+                        continue;
+                    }
+                }
+            }
+
+            infos[bix.get() as usize].insert(pos, vreg, id);
+            i += 1;
+        }
+    }
+
+    for info in infos.iter_mut() {
+        info.finish();
+    }
+
+    infos
+}
+
+/// Figure the sequence of parallel moves to insert at block boundaries:
+/// - for each block
+///  - for each liveout vreg in this block
+///    - for each successor of this block
+///      - if the locations allocated in the block and its successor don't
+///      match, insert a pending move from one location to the other.
+///
+/// Once that's done:
+/// - resolve cycles in the pending moves
+/// - generate real moves from the pending moves.
+#[inline(never)]
+fn resolve_moves_across_blocks<F: Function>(
+    func: &F,
+    liveins: &TypedIxVec<BlockIx, SparseSet<Reg>>,
+    liveouts: &TypedIxVec<BlockIx, SparseSet<Reg>>,
+    intervals: &Vec<VirtualInterval>,
+    scratches_by_rc: &[Option<RealReg>],
+    spill_slot: &mut u32,
+    moves_at_block_starts: &mut Vec<InstToInsertAndPoint>,
+    moves_at_block_ends: &mut Vec<InstToInsertAndPoint>,
+    tmp_ordered_moves: &mut Vec<MoveOp>,
+    tmp_stack: &mut Vec<MoveOp>,
+) {
     let mut parallel_move_map = HashMap::default();
-    enum BlockPos {
-        Start,
-        End,
-    }
 
-    // Figure the sequence of parallel moves to insert at block boundaries:
-    // - for each block
-    //  - for each liveout vreg in this block
-    //    - for each successor of this block
-    //      - if the locations allocated in the block and its successor don't
-    //      match, insert a pending move from one location to the other.
-    //
-    // Once that's done:
-    // - resolve cycles in the pending moves
-    // - generate real moves from the pending moves.
+    let block_info = collect_block_infos(func, intervals, liveins, liveouts);
+
     let mut seen_successors = HashSet::default();
     for block in func.blocks() {
         let successors = func.block_succs(block);
-        seen_successors.clear();
 
         // Where to insert the fixup move, if needed? If there's more than one
         // successor to the current block, inserting in the current block will
@@ -226,84 +346,66 @@ pub(crate) fn run<F: Function>(
         // have at most one predecessor.
         let cur_has_one_succ = successors.len() == 1;
 
-        for succ in successors {
-            if !seen_successors.insert(succ) {
+        for &reg in liveouts[block].iter() {
+            let vreg = if let Some(vreg) = reg.as_virtual_reg() {
+                vreg
+            } else {
                 continue;
-            }
+            };
 
-            for &reg in liveouts[block].iter() {
-                let vreg = if let Some(vreg) = reg.as_virtual_reg() {
-                    vreg
-                } else {
+            seen_successors.clear();
+
+            let cur_id = block_info[block.get() as usize].lookup(BlockPos::End, &vreg);
+            let cur_int = &intervals[cur_id.0];
+            let loc_at_cur_end = cur_int.location;
+
+            for &succ in successors.iter() {
+                if !liveins[succ].contains(reg) {
+                    // This variable isn't live in this block.
                     continue;
-                };
-
-                // Find the interval for this (vreg, inst) pair.
-                let (succ_first_inst, succ_id) = {
-                    let first_inst = InstPoint::new_use(func.block_insns(succ).first());
-                    let found = match find_enclosing_interval(
-                        vreg,
-                        first_inst,
-                        intervals,
-                        &virtual_intervals,
-                    ) {
-                        Some(found) => found,
-                        // The vreg is unused in this successor, no need to update its
-                        // location.
-                        None => continue,
-                    };
-                    (first_inst, found)
-                };
-
-                let (cur_last_inst, cur_id) = {
-                    let last_inst = func.block_insns(block).last();
-                    // see XXX above
-                    let last_inst = InstPoint::new_def(last_inst);
-                    let cur_id =
-                        find_enclosing_interval(vreg, last_inst, intervals, &virtual_intervals)
-                            .expect(&format!(
-                                "no interval for given {:?}:{:?} pair in current {:?}",
-                                vreg, last_inst, block
-                            ));
-                    (last_inst, cur_id)
-                };
-
-                if succ_id == cur_id {
+                }
+                if !seen_successors.insert(succ) {
                     continue;
                 }
 
+                let succ_id = block_info[succ.get() as usize].lookup(BlockPos::Start, &vreg);
+                let succ_int = &intervals[succ_id.0];
+
+                // If the two intervals aren't related to the same virtual range, then the move is
+                // not required.
+                if cur_int.ancestor != succ_int.ancestor {
+                    continue;
+                }
+
+                let loc_at_succ_start = succ_int.location;
+
                 let (at_inst, block_pos) = if cur_has_one_succ {
-                    let mut pos = cur_last_inst;
                     // Before the control flow instruction.
-                    pos.pt = Point::Reload;
+                    let pos = InstPoint::new_reload(func.block_insns(block).last());
                     (pos, BlockPos::End)
                 } else {
-                    let mut pos = succ_first_inst;
-                    pos.pt = Point::Reload;
+                    let pos = InstPoint::new_reload(func.block_insns(succ).first());
                     (pos, BlockPos::Start)
                 };
 
                 let pending_moves = parallel_move_map
                     .entry(at_inst)
-                    .or_insert((Vec::new(), block_pos));
+                    .or_insert_with(|| (Vec::new(), block_pos));
 
-                match (
-                    intervals.get(cur_id).location,
-                    intervals.get(succ_id).location,
-                ) {
+                match (loc_at_cur_end, loc_at_succ_start) {
                     (Location::Reg(cur_rreg), Location::Reg(succ_rreg)) => {
                         if cur_rreg == succ_rreg {
                             continue;
                         }
                         debug!(
-              "boundary fixup: move {:?} -> {:?} at {:?} for {:?} between {:?} and {:?}",
-              cur_rreg,
-              succ_rreg,
-              at_inst,
-              vreg,
-              block,
-              succ
-            );
+                          "boundary fixup: move {:?} -> {:?} at {:?} for {:?} between {:?} and {:?}",
+                          cur_rreg,
+                          succ_rreg,
+                          at_inst,
+                          vreg,
+                          block,
+                          succ
+                        );
                         pending_moves
                             .0
                             .push(MoveOp::new_move(cur_rreg, succ_rreg, vreg));
@@ -311,14 +413,14 @@ pub(crate) fn run<F: Function>(
 
                     (Location::Reg(cur_rreg), Location::Stack(spillslot)) => {
                         debug!(
-              "boundary fixup: spill {:?} -> {:?} at {:?} for {:?} between {:?} and {:?}",
-              cur_rreg,
-              spillslot,
-              at_inst,
-              vreg,
-              block,
-              succ
-            );
+                          "boundary fixup: spill {:?} -> {:?} at {:?} for {:?} between {:?} and {:?}",
+                          cur_rreg,
+                          spillslot,
+                          at_inst,
+                          vreg,
+                          block,
+                          succ
+                        );
                         pending_moves
                             .0
                             .push(MoveOp::new_spill(cur_rreg, spillslot, vreg));
@@ -326,14 +428,14 @@ pub(crate) fn run<F: Function>(
 
                     (Location::Stack(spillslot), Location::Reg(rreg)) => {
                         debug!(
-              "boundary fixup: reload {:?} -> {:?} at {:?} for {:?} between {:?} and {:?}",
-              spillslot,
-              rreg,
-              at_inst,
-              vreg,
-              block,
-              succ
-            );
+                          "boundary fixup: reload {:?} -> {:?} at {:?} for {:?} between {:?} and {:?}",
+                          spillslot,
+                          rreg,
+                          at_inst,
+                          vreg,
+                          block,
+                          succ
+                        );
                         pending_moves
                             .0
                             .push(MoveOp::new_reload(spillslot, rreg, vreg));
@@ -344,9 +446,9 @@ pub(crate) fn run<F: Function>(
                         // same vreg can't be intersecting, so the same stack slot ought to
                         // be reused in this case.
                         debug_assert_eq!(
-              left_spill_slot, right_spill_slot,
-              "Moves from stack to stack only happen on the same vreg, thus the same stack slot"
-            );
+                          left_spill_slot, right_spill_slot,
+                          "Moves from stack to stack only happen on the same vreg, thus the same stack slot"
+                        );
                         continue;
                     }
 
@@ -358,82 +460,93 @@ pub(crate) fn run<F: Function>(
         }
 
         // Flush the memory moves caused by block fixups for this block.
-        for (at_inst, parallel_moves) in parallel_move_map.iter_mut() {
-            let ordered_moves = schedule_moves(&mut parallel_moves.0);
-            let mut insts = emit_moves(ordered_moves, spill_slot, scratches_by_rc);
+        for (at_inst, (move_insts, block_pos)) in parallel_move_map.iter_mut() {
+            schedule_moves(move_insts, tmp_ordered_moves, tmp_stack);
 
-            // If at_inst pointed to a block start, then insert block fixups *before*
-            // inblock fixups;
-            // otherwise it pointed to a block end, then insert block fixups *after*
-            // inblock fixups.
-            let mut entry = memory_moves.entry(*at_inst).or_insert(Vec::new());
-            match parallel_moves.1 {
+            match block_pos {
                 BlockPos::Start => {
-                    insts.append(&mut entry);
-                    *entry = insts;
+                    emit_moves(
+                        *at_inst,
+                        &tmp_ordered_moves,
+                        spill_slot,
+                        scratches_by_rc,
+                        moves_at_block_starts,
+                    );
                 }
                 BlockPos::End => {
-                    entry.append(&mut insts);
+                    emit_moves(
+                        *at_inst,
+                        &tmp_ordered_moves,
+                        spill_slot,
+                        scratches_by_rc,
+                        moves_at_block_ends,
+                    );
                 }
-            }
+            };
         }
+
         parallel_move_map.clear();
     }
+
     debug!("");
-
-    let mut insts_and_points = Vec::<InstToInsertAndPoint>::new();
-    for (at, insts) in memory_moves {
-        for inst in insts {
-            insts_and_points.push(InstToInsertAndPoint::new(inst, at));
-        }
-    }
-
-    insts_and_points
 }
 
 #[inline(never)]
-fn find_enclosing_interval(
-    vreg: VirtualReg,
-    inst: InstPoint,
-    intervals: &Intervals,
-    virtual_intervals: &Vec<IntId>,
-) -> Option<IntId> {
-    // The list of virtual intervals is sorted by vreg; find one interval for this
-    // vreg.
-    let index = virtual_intervals
-        .binary_search_by_key(&vreg, |&int_id| intervals.vreg(int_id))
-        .expect("should find at least one virtual interval for this vreg");
+pub(crate) fn run<F: Function>(
+    func: &F,
+    reg_uses: &RegUses,
+    intervals: &Vec<VirtualInterval>,
+    liveins: &TypedIxVec<BlockIx, SparseSet<Reg>>,
+    liveouts: &TypedIxVec<BlockIx, SparseSet<Reg>>,
+    spill_slot: &mut u32,
+    scratches_by_rc: &[Option<RealReg>],
+) -> Vec<InstToInsertAndPoint> {
+    info!("resolve_moves");
 
-    // Rewind back to the first interval for this vreg, since there might be
-    // several ones.
-    let mut index = index;
-    while index > 0 && intervals.vreg(virtual_intervals[index - 1]) == vreg {
-        index -= 1;
-    }
+    // Keep three lists of moves to insert:
+    // - moves across blocks, that must happen at the start of blocks,
+    // - moves within a given block,
+    // - moves across blocks, that must happen at the end of blocks.
+    //
+    // To maintain the property that these moves are eventually sorted at the end, we'll compute
+    // the final array of moves by concatenating these three arrays. `inst_stream` uses a stable
+    // sort, making sure the at-block-start/within-block/at-block-end will be respected.
+    let mut moves_at_block_starts = Vec::new();
+    let mut moves_at_block_ends = Vec::new();
+    let mut moves_in_blocks = Vec::new();
 
-    // Now iterates on all the intervals for this virtual register, until one
-    // works.
-    let mut int_id = virtual_intervals[index];
-    loop {
-        let int = intervals.get(int_id);
-        if int.start <= inst && inst <= int.end {
-            return Some(int_id);
-        }
-        // TODO reenable this if there are several fragments per interval again.
-        //if intervals.covers(int_id, inst, fragments) {
-        //return Some(int_id);
-        //}
+    let mut tmp_stack = Vec::new();
+    let mut tmp_ordered_moves = Vec::new();
+    resolve_moves_in_block(
+        func,
+        intervals,
+        reg_uses,
+        scratches_by_rc,
+        spill_slot,
+        &mut moves_in_blocks,
+        &mut tmp_ordered_moves,
+        &mut tmp_stack,
+    );
 
-        index += 1;
-        if index == virtual_intervals.len() {
-            return None;
-        }
+    resolve_moves_across_blocks(
+        func,
+        liveins,
+        liveouts,
+        intervals,
+        scratches_by_rc,
+        spill_slot,
+        &mut moves_at_block_starts,
+        &mut moves_at_block_ends,
+        &mut tmp_ordered_moves,
+        &mut tmp_stack,
+    );
 
-        int_id = virtual_intervals[index];
-        if intervals.vreg(int_id) != vreg {
-            return None;
-        }
-    }
+    let mut insts_and_points = moves_at_block_starts;
+    insts_and_points.reserve(moves_in_blocks.len() + moves_at_block_ends.len());
+    insts_and_points.append(&mut moves_in_blocks);
+    insts_and_points.append(&mut moves_at_block_ends);
+
+    insts_and_points
 }
 
 #[derive(PartialEq, Debug)]
@@ -556,57 +669,50 @@ fn find_cycled_move<'a>(
 /// Given a pending list of moves, returns a list of moves ordered in a correct
 /// way, i.e., no move clobbers another one.
 #[inline(never)]
-fn schedule_moves(pending: &mut Vec<MoveOp>) -> Vec<MoveOp> {
-    let mut ordered_moves = Vec::new();
+fn schedule_moves(
+    pending: &mut Vec<MoveOp>,
+    ordered_moves: &mut Vec<MoveOp>,
+    stack: &mut Vec<MoveOp>,
+) {
+    ordered_moves.clear();
 
     let mut num_cycles = 0;
     let mut cur_cycles = 0;
 
-    let show_debug = env::var("MOVES").is_ok();
-    if show_debug {
-        trace!("pending moves: {:#?}", pending);
-    }
+    trace!("pending moves: {:#?}", pending);
 
     while let Some(pm) = pending.pop() {
-        if show_debug {
-            trace!("handling pending move {:?}", pm);
-        }
+        trace!("handling pending move {:?}", pm);
         debug_assert!(
             pm.from != pm.to,
             "spurious moves should not have been inserted"
         );
 
-        let mut stack = vec![pm];
+        stack.clear();
+        stack.push(pm);
 
         while !stack.is_empty() {
             let blocking_pair = find_blocking_move(pending, stack.last().unwrap());
 
             if let Some((blocking_idx, blocking)) = blocking_pair {
-                if show_debug {
-                    trace!("found blocker: {:?}", blocking);
-                }
+                trace!("found blocker: {:?}", blocking);
                 let mut stack_cur = 0;
 
-                let has_cycles = if let Some(mut cycled) =
-                    find_cycled_move(&mut stack, &mut stack_cur, blocking)
-                {
-                    if show_debug {
+                let has_cycles =
+                    if let Some(mut cycled) = find_cycled_move(stack, &mut stack_cur, blocking) {
                         trace!("found cycle: {:?}", cycled);
-                    }
-                    debug_assert!(cycled.cycle_end.is_none());
-                    cycled.cycle_end = Some(cur_cycles);
-                    true
-                } else {
-                    false
-                };
+                        debug_assert!(cycled.cycle_end.is_none());
+                        cycled.cycle_end = Some(cur_cycles);
+                        true
+                    } else {
+                        false
+                    };
 
                 if has_cycles {
                     loop {
-                        match find_cycled_move(&mut stack, &mut stack_cur, blocking) {
+                        match find_cycled_move(stack, &mut stack_cur, blocking) {
                             Some(ref mut cycled) => {
-                                if show_debug {
-                                    trace!("found more cycles ending on blocker: {:?}", cycled);
-                                }
+                                trace!("found more cycles ending on blocker: {:?}", cycled);
                                 debug_assert!(cycled.cycle_end.is_none());
                                 cycled.cycle_end = Some(cur_cycles);
                             }
@@ -635,25 +741,20 @@ fn schedule_moves(pending: &mut Vec<MoveOp>) -> Vec<MoveOp> {
         }
         cur_cycles = 0;
     }
-
-    ordered_moves
 }
 
 #[inline(never)]
 fn emit_moves(
-    ordered_moves: Vec<MoveOp>,
+    at_inst: InstPoint,
+    ordered_moves: &Vec<MoveOp>,
     num_spill_slots: &mut u32,
     scratches_by_rc: &[Option<RealReg>],
-) -> Vec<InstToInsert> {
+    moves_in_blocks: &mut Vec<InstToInsertAndPoint>,
+) {
     let mut spill_slot = None;
     let mut in_cycle = false;
 
-    let mut insts = Vec::new();
-
-    let show_debug = env::var("MOVES").is_ok();
-    if show_debug {
-        trace!("emit_moves");
-    }
+    trace!("emit_moves");
 
     for mov in ordered_moves {
         if let Some(_) = &mov.cycle_end {
@@ -671,14 +772,12 @@ fn emit_moves(
                         from_slot: spill_slot.expect("should have a cycle spill slot"),
                         for_vreg: mov.vreg,
                     };
-                    insts.push(inst);
-                    if show_debug {
-                        trace!(
-                            "finishing cycle: {:?} -> {:?}",
-                            spill_slot.unwrap(),
-                            dst_reg
-                        );
-                    }
+                    moves_in_blocks.push(InstToInsertAndPoint::new(inst, at_inst));
+                    trace!(
+                        "finishing cycle: {:?} -> {:?}",
+                        spill_slot.unwrap(),
+                        dst_reg
+                    );
                 }
                 MoveOperand::Stack(dst_spill) => {
                     let scratch = scratches_by_rc[mov.vreg.get_class() as usize]
@@ -688,21 +787,19 @@ fn emit_moves(
                         from_slot: spill_slot.expect("should have a cycle spill slot"),
                         for_vreg: mov.vreg,
                     };
-                    insts.push(inst);
+                    moves_in_blocks.push(InstToInsertAndPoint::new(inst, at_inst));
                     let inst = InstToInsert::Spill {
                         to_slot: dst_spill,
                         from_reg: scratch,
                         for_vreg: mov.vreg,
                     };
-                    insts.push(inst);
-                    if show_debug {
-                        trace!(
-                            "finishing cycle: {:?} -> {:?} -> {:?}",
-                            spill_slot.unwrap(),
-                            scratch,
-                            dst_spill
-                        );
-                    }
+                    moves_in_blocks.push(InstToInsertAndPoint::new(inst, at_inst));
+                    trace!(
+                        "finishing cycle: {:?} -> {:?} -> {:?}",
+                        spill_slot.unwrap(),
+                        scratch,
+                        dst_spill
+                    );
                 }
             };
 
@@ -733,10 +830,8 @@ fn emit_moves(
                         from_reg: src_reg,
                         for_vreg: mov.vreg,
                     };
-                    insts.push(inst);
-                    if show_debug {
-                        trace!("starting cycle: {:?} -> {:?}", src_reg, spill_slot.unwrap());
-                    }
+                    moves_in_blocks.push(InstToInsertAndPoint::new(inst, at_inst));
+                    trace!("starting cycle: {:?} -> {:?}", src_reg, spill_slot.unwrap());
                 }
                 MoveOperand::Stack(src_spill) => {
                     let scratch = scratches_by_rc[mov.vreg.get_class() as usize]
@@ -746,21 +841,19 @@ fn emit_moves(
                         from_slot: src_spill,
                         for_vreg: mov.vreg,
                     };
-                    insts.push(inst);
+                    moves_in_blocks.push(InstToInsertAndPoint::new(inst, at_inst));
                     let inst = InstToInsert::Spill {
                         to_slot: spill_slot.expect("should have a cycle spill slot"),
                         from_reg: scratch,
                         for_vreg: mov.vreg,
                     };
-                    insts.push(inst);
-                    if show_debug {
-                        trace!(
-                            "starting cycle: {:?} -> {:?} -> {:?}",
-                            src_spill,
-                            scratch,
-                            spill_slot.unwrap()
-                        );
-                    }
+                    moves_in_blocks.push(InstToInsertAndPoint::new(inst, at_inst));
+                    trace!(
+                        "starting cycle: {:?} -> {:?} -> {:?}",
+                        src_spill,
+                        scratch,
+                        spill_slot.unwrap()
+                    );
                 }
             };
 
@@ -768,11 +861,8 @@ fn emit_moves(
         }
 
         // A normal move which is not part of a cycle.
-        insts.push(mov.gen_inst());
-        if show_debug {
-            trace!("moving {:?} -> {:?}", mov.from, mov.to);
-        }
+        let inst = mov.gen_inst();
+        moves_in_blocks.push(InstToInsertAndPoint::new(inst, at_inst));
+        trace!("moving {:?} -> {:?}", mov.from, mov.to);
     }
-
-    insts
 }
