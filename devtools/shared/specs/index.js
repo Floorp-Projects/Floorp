@@ -58,11 +58,6 @@ const Types = (exports.__TypesForTests = [
     front: "devtools/client/fronts/css-properties",
   },
   {
-    types: ["frameDescriptor"],
-    spec: "devtools/shared/specs/descriptors/frame",
-    front: "devtools/client/fronts/descriptors/frame",
-  },
-  {
     types: ["processDescriptor"],
     spec: "devtools/shared/specs/descriptors/process",
     front: "devtools/client/fronts/descriptors/process",

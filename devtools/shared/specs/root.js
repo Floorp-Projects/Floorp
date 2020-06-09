@@ -22,10 +22,6 @@ types.addDictType("root.listServiceWorkerRegistrations", {
 types.addDictType("root.listRemoteFrames", {
   frames: "array:frameDescriptor",
 });
-types.addPolymorphicType("root.browsingContextDescriptor", [
-  "frameDescriptor",
-  "processDescriptor",
-]);
 
 const rootSpecPrototype = {
   typeName: "root",
@@ -115,7 +111,7 @@ const rootSpecPrototype = {
       request: {
         id: Arg(0, "number"),
       },
-      response: RetVal("root.browsingContextDescriptor"),
+      response: RetVal("processDescriptor"),
     },
 
     protocolDescription: {
