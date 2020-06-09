@@ -17,7 +17,6 @@
  */
 
 add_task(async function setup() {
-  do_load_manifest("data/chrome.manifest");
   useHttpServer();
   await AddonTestUtils.promiseStartupManager();
 });
