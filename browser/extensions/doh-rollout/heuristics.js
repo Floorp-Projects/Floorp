@@ -177,11 +177,11 @@ async function providerSteering() {
 }
 
 async function runHeuristics() {
-  // First run enterprise and OS-level parental controls heuristics.
+  let safeSearchChecks = await safeSearch();
   let results = {
-    google: "",
-    youtube: "",
-    zscalerCanary: "",
+    google: safeSearchChecks.google,
+    youtube: safeSearchChecks.youtube,
+    zscalerCanary: await zscalerCanary(),
     canary: await globalCanary(),
     modifiedRoots: await modifiedRoots(),
     browserParent: await browser.experiments.heuristics.checkParentalControls(),
@@ -195,17 +195,7 @@ async function runHeuristics() {
     return results;
   }
 
-  // Check for provider steering, return results immediately if triggered.
+  // Check for provider steering only after the other heuristics have passed.
   results.steeredProvider = (await providerSteering()) || "";
-  if (results.steeredProvider) {
-    return results;
-  }
-
-  // Finally, run safe search checks and zscaler canary.
-  let safeSearchChecks = await safeSearch();
-  results.google = safeSearchChecks.google;
-  results.youtube = safeSearchChecks.youtube;
-  results.zscalerCanary = await zscalerCanary();
-
   return results;
 }
