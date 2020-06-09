@@ -685,6 +685,19 @@ public final class GeckoRuntime implements Parcelable {
         mNotificationDelegate = delegate;
     }
 
+    @WrapForJNI
+    private boolean usesDarkTheme() {
+        switch (getSettings().getPreferredColorScheme()) {
+            case GeckoRuntimeSettings.COLOR_SCHEME_SYSTEM:
+                return GeckoSystemStateListener.getInstance().isNightMode();
+            case GeckoRuntimeSettings.COLOR_SCHEME_DARK:
+                return true;
+            case GeckoRuntimeSettings.COLOR_SCHEME_LIGHT:
+            default:
+                return false;
+        }
+    }
+
     /**
      * Returns the current WebNotificationDelegate, if any
      *
