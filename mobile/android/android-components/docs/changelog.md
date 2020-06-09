@@ -36,6 +36,8 @@ permalink: /changelog/
 
 * **feature-session**
   * ⚠️ **This is a breaking change**: `SettingsUseCases` now requires an engine reference, to clear speculative sessions if engine settings change.
+  * ⚠️ **This is a breaking change**: `PictureInPictureFeature` now takes `BrowserStore` instead of `SessionManager`.
+  * ⚠️ **This is a breaking change**: The `pipChanged` callback has been removed. You should now observe `ContentState.pictureInPictureEnabled` instead.
 
 * **feature-containers**
   * Adds a new storage component to store containers (contextual identities) in a Room database and provides the
@@ -52,9 +54,9 @@ permalink: /changelog/
 * **browser-state**
   * Added `ContentState.pictureInPictureEnabled` to track if Picture in Picture mode is in use.
 
-* **feature-session**
-  * ⚠️ **This is a breaking change**: `PictureInPictureFeature` now takes `BrowserStore` instead of `SessionManager`.
-  * ⚠️ **This is a breaking change**: The `pipChanged` callback has been removed. You should now observe `ContentState.pictureInPictureEnabled` instead.
+* **feature-pwa**
+  * ⚠️ **This is a breaking change**: `WebAppHideToolbarFeature` now takes `BrowserStore` instead of `SessionManager`. `trustedScopes` is now derived from `CustomTabsServiceStore` and `WebAppManifest`.
+  * ⚠️ **This is a breaking change**: `onToolbarVisibilityChange` has been removed. You should now observe `BrowserStore` instead.
 
 # 44.0.0
 

@@ -8,7 +8,7 @@ import android.app.Activity
 import android.content.pm.PackageManager
 import android.os.Build
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.runBlocking
+import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.state.createTab
@@ -207,26 +207,20 @@ class PictureInPictureFeatureTest {
     }
 
     @Test
-    fun `on pip mode changed`() = runBlocking {
-        val selectedSession = createTab("https://mozilla.org").copyWithFullScreen(true)
-        val store = BrowserStore(
-            BrowserState(
-                tabs = listOf(selectedSession),
-                selectedTabId = selectedSession.id
-            )
-        )
+    fun `on pip mode changed`() {
+        val store = mock<BrowserStore>()
         val pipFeature = PictureInPictureFeature(
             store,
             activity,
             crashReporting,
-            tabId = null
+            tabId = "tab-id"
         )
 
-        pipFeature.onPictureInPictureModeChanged(true).join()
-        assertTrue(store.state.tabs[0].content.pictureInPictureEnabled)
+        pipFeature.onPictureInPictureModeChanged(true)
+        verify(store).dispatch(ContentAction.PictureInPictureChangedAction("tab-id", true))
 
-        pipFeature.onPictureInPictureModeChanged(false).join()
-        assertFalse(store.state.tabs[0].content.pictureInPictureEnabled)
+        pipFeature.onPictureInPictureModeChanged(false)
+        verify(store).dispatch(ContentAction.PictureInPictureChangedAction("tab-id", false))
 
         verify(activity, never()).enterPictureInPictureMode(any())
         verifyDeprecatedPictureInPictureMode(activity, never())

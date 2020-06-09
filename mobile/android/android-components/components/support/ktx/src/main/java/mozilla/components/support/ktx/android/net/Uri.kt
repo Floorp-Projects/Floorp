@@ -27,13 +27,17 @@ val Uri.isHttpOrHttps: Boolean
     get() = scheme == "http" || scheme == "https"
 
 /**
- * Checks that the given URL is in scope of the web app specified by [trustedScopes].
+ * Checks that the given URL is in one of the given URL [scopes].
  *
  * https://www.w3.org/TR/appmanifest/#dfn-within-scope
+ *
+ * @param scopes Uris that each represent a scope.
+ * A Uri is within the scope if the origin matches and it starts with the scope's path.
+ * @return True if this Uri is within any of the given scopes.
  */
-fun Uri.isInScope(trustedScopes: Iterable<Uri>): Boolean {
+fun Uri.isInScope(scopes: Iterable<Uri>): Boolean {
     val path = path.orEmpty()
-    return trustedScopes.any { scope ->
+    return scopes.any { scope ->
         sameOriginAs(scope) && path.startsWith(scope.path.orEmpty())
     }
 }

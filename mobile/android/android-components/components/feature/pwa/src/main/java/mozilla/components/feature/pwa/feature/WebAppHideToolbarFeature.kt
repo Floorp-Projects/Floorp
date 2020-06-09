@@ -4,94 +4,120 @@
 
 package mozilla.components.feature.pwa.feature
 
-import android.net.Uri
 import android.view.View
 import androidx.core.net.toUri
 import androidx.core.view.isVisible
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 import mozilla.components.browser.session.Session
-import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.state.selector.findTabOrCustomTabOrSelectedTab
+import mozilla.components.browser.state.state.CustomTabSessionState
+import mozilla.components.browser.state.state.SessionState
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.manifest.WebAppManifest
+import mozilla.components.feature.customtabs.store.CustomTabState
+import mozilla.components.feature.customtabs.store.CustomTabsServiceState
+import mozilla.components.feature.customtabs.store.CustomTabsServiceStore
+import mozilla.components.feature.pwa.ext.getTrustedScope
+import mozilla.components.feature.pwa.ext.trustedOrigins
+import mozilla.components.lib.state.ext.flow
 import mozilla.components.support.base.feature.LifecycleAwareFeature
+import mozilla.components.support.ktx.android.net.isInScope
+import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 
 /**
  * Hides a custom tab toolbar for Progressive Web Apps and Trusted Web Activities.
  *
  * When the [Session] is inside a trusted scope, the toolbar will be hidden.
  * Once the [Session] navigates to another scope, the toolbar will be revealed.
+ * The toolbar is also hidden in fullscreen mode or picture in picture mode.
+ *
+ * In standard custom tabs, no scopes are trusted.
+ * As a result the URL has no impact on toolbar visibility.
  *
  * @param toolbar Toolbar to show or hide.
- * @param sessionId ID of the custom tab session.
- * @param trustedScopes Scopes to hide the toolbar at.
- * Scopes correspond to [WebAppManifest.scope]. They can be a path (PWA) or just an origin (TWA).
- * @param onToolbarVisibilityChange Called when the toolbar is changed to be visible or hidden.
+ * @param store Reference to the browser store where tab state is located.
+ * @param customTabsStore Reference to the store that communicates with the custom tabs service.
+ * @param tabId ID of the tab session, or null if the selected session should be used.
+ * @param manifest Reference to the cached [WebAppManifest] for the current PWA.
+ * Null if this feature is not used in a PWA context.
  */
 class WebAppHideToolbarFeature(
-    private val sessionManager: SessionManager,
     private val toolbar: View,
-    private val sessionId: String,
-    private var trustedScopes: List<Uri>,
-    private val onToolbarVisibilityChange: (visible: Boolean) -> Unit = {}
-) : Session.Observer, LifecycleAwareFeature {
+    private val store: BrowserStore,
+    private val customTabsStore: CustomTabsServiceStore,
+    private val tabId: String? = null,
+    manifest: WebAppManifest? = null
+) : LifecycleAwareFeature {
+
+    private val manifestScope = listOfNotNull(manifest?.getTrustedScope())
+    private var scope: CoroutineScope? = null
 
     init {
         // Hide the toolbar by default to prevent a flash.
-        // If trusted scopes is empty, we're probably a normal custom tab so don't hide the toolbar.
-        setToolbarVisible(trustedScopes.isEmpty())
+        val tab = store.state.findTabOrCustomTabOrSelectedTab(tabId)
+        val customTabState = customTabsStore.state.getCustomTabStateForTab(tab)
+        toolbar.isVisible = shouldToolbarBeVisible(tab, customTabState)
     }
 
-    private fun setToolbarVisible(visible: Boolean) {
-        toolbar.isVisible = visible
-        onToolbarVisibilityChange(visible)
-    }
-
-    /**
-     * Hides or reveals the toolbar when the session navigates to a new URL.
-     */
-    override fun onUrlChanged(session: Session, url: String) {
-        setToolbarVisible(!isInScope(url.toUri(), trustedScopes))
-    }
-
-    /**
-     * Hides or reveals the toolbar when the list of trusted scopes is changed.
-     */
-    fun onTrustedScopesChange(trustedScopes: List<Uri>) {
-        val session = sessionManager.findSessionById(sessionId)
-        this.trustedScopes = trustedScopes
-
-        if (session != null) {
-            setToolbarVisible(!isInScope(session.url.toUri(), trustedScopes))
-        } else {
-            setToolbarVisible(true)
-        }
-    }
-
+    @ExperimentalCoroutinesApi
     override fun start() {
-        sessionManager.findSessionById(sessionId)?.register(this)
+        scope = MainScope().apply {
+            launch {
+                // Since we subscribe to both store and customTabsStore,
+                // we don't extend another non-external-apps feature for hiding the toolbar
+                // as very little code would be shared.
+                val sessionFlow = store.flow()
+                    .map { state -> state.findTabOrCustomTabOrSelectedTab(tabId) }
+                    .ifChanged()
+                val customTabServiceMapFlow = customTabsStore.flow()
+
+                sessionFlow.combine(customTabServiceMapFlow) { tab, customTabServiceState ->
+                    tab to customTabServiceState.getCustomTabStateForTab(tab)
+                }
+                    .map { (tab, customTabState) -> shouldToolbarBeVisible(tab, customTabState) }
+                    .ifChanged()
+                    .collect { toolbarVisible ->
+                        toolbar.isVisible = toolbarVisible
+                    }
+            }
+        }
     }
 
     override fun stop() {
-        sessionManager.findSessionById(sessionId)?.unregister(this)
+        scope?.cancel()
     }
 
-    companion object {
-        /**
-         * Checks that the [target] URL is in scope of the web app.
-         *
-         * https://www.w3.org/TR/appmanifest/#dfn-within-scope
-         */
-        private fun isInScope(target: Uri, trustedScopes: Iterable<Uri>): Boolean {
-            val path = target.path.orEmpty()
-            return trustedScopes.any { scope ->
-                sameOrigin(scope, target) && path.startsWith(scope.path.orEmpty())
-            }
-        }
+    /**
+     * Reports if the toolbar should be shown for the given external app session.
+     * If the URL is in the same scope as the [WebAppManifest]
+     */
+    private fun shouldToolbarBeVisible(
+        session: SessionState?,
+        customTabState: CustomTabState?
+    ): Boolean {
+        val url = session?.content?.url?.toUri() ?: return true
 
-        /**
-         * Checks that [a] and [b] have the same origin.
-         *
-         * https://html.spec.whatwg.org/multipage/origin.html#same-origin
-         */
-        private fun sameOrigin(a: Uri, b: Uri) =
-            a.scheme == b.scheme && a.host == b.host && a.port == b.port
+        val trustedOrigins = customTabState?.trustedOrigins.orEmpty()
+        val inScope = url.isInScope(manifestScope + trustedOrigins)
+
+        return !inScope && !session.content.fullScreen && !session.content.pictureInPictureEnabled
+    }
+
+    /**
+     * Find corresponding custom tab state, if any.
+     */
+    private fun CustomTabsServiceState.getCustomTabStateForTab(
+        tab: SessionState?
+    ): CustomTabState? {
+        return (tab as? CustomTabSessionState)?.config?.sessionToken?.let { sessionToken ->
+            tabs[sessionToken]
+        }
     }
 }

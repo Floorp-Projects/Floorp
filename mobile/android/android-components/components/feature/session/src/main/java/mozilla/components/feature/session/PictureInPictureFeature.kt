@@ -10,7 +10,6 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Build.VERSION.SDK_INT
 import androidx.annotation.RequiresApi
-import kotlinx.coroutines.Job
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.selector.findTabOrCustomTabOrSelectedTab
 import mozilla.components.browser.state.store.BrowserStore
@@ -78,11 +77,11 @@ class PictureInPictureFeature(
     }
 
     /**
-     * Should be called when then system informs you of changes to and from picture-in-picture mode.
+     * Should be called when the system informs you of changes to and from picture-in-picture mode.
      * @param enabled True if the activity is in picture-in-picture mode.
      */
-    fun onPictureInPictureModeChanged(enabled: Boolean): Job {
-        val sessionId = tabId ?: store.state.selectedTabId.orEmpty()
-        return store.dispatch(ContentAction.PictureInPictureChangedAction(sessionId, enabled))
+    fun onPictureInPictureModeChanged(enabled: Boolean) {
+        val sessionId = tabId ?: store.state.selectedTabId ?: return
+        store.dispatch(ContentAction.PictureInPictureChangedAction(sessionId, enabled))
     }
 }
