@@ -160,6 +160,13 @@ def resolver(request, tmpdir, topsrcdir, all_tests, defaults):
         with open(os.path.join(topobjdir, 'test-defaults.pkl'), 'wb') as fh:
             pickle.dump(defaults, fh)
 
+        # The mock data already exists, so prevent BuildBackendLoader from regenerating
+        # the build information from the whole gecko tree...
+        class BuildBackendLoaderNeverOutOfDate(BuildBackendLoader):
+            def backend_out_of_date(self, backend_file):
+                return False
+        loader_cls = BuildBackendLoaderNeverOutOfDate
+
     resolver = TestResolver(topsrcdir, None, None, topobjdir=topobjdir, loader_cls=loader_cls)
     resolver._puppeteer_loaded = True
     resolver._wpt_loaded = True
