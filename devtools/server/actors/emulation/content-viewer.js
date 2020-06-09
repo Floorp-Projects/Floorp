@@ -83,6 +83,10 @@ const ContentViewerActor = protocol.ActorClassWithSpec(contentViewerSpec, {
       case "dark":
         internalColorScheme = Ci.nsIContentViewer.PREFERS_COLOR_SCHEME_DARK;
         break;
+      case "no-preference":
+        internalColorScheme =
+          Ci.nsIContentViewer.PREFERS_COLOR_SCHEME_NO_PREFERENCE;
+        break;
       default:
         internalColorScheme = Ci.nsIContentViewer.PREFERS_COLOR_SCHEME_NONE;
     }
