@@ -28,7 +28,6 @@ use std::{
     rc::Rc,
     slice,
     sync::Arc,
-    sync::atomic::{AtomicUsize, Ordering},
     thread,
     time::Duration,
 };
@@ -42,30 +41,6 @@ use webrender_build::shader::{
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct GpuFrameId(usize);
-
-/// Tracks the total number of GPU bytes allocated across all WebRender instances.
-///
-/// Assuming all WebRender instances run on the same thread, this doesn't need
-/// to be atomic per se, but we make it atomic to satisfy the thread safety
-/// invariants in the type system. We could also put the value in TLS, but that
-/// would be more expensive to access.
-static GPU_BYTES_ALLOCATED: AtomicUsize = AtomicUsize::new(0);
-
-/// Returns the number of GPU bytes currently allocated.
-pub fn total_gpu_bytes_allocated() -> usize {
-    GPU_BYTES_ALLOCATED.load(Ordering::Relaxed)
-}
-
-/// Records an allocation in VRAM.
-fn record_gpu_alloc(num_bytes: usize) {
-    GPU_BYTES_ALLOCATED.fetch_add(num_bytes, Ordering::Relaxed);
-}
-
-/// Records an deallocation in VRAM.
-fn record_gpu_free(num_bytes: usize) {
-    let old = GPU_BYTES_ALLOCATED.fetch_sub(num_bytes, Ordering::Relaxed);
-    assert!(old >= num_bytes, "Freeing {} bytes but only {} allocated", num_bytes, old);
-}
 
 impl GpuFrameId {
     pub fn new(value: usize) -> Self {
@@ -2310,8 +2285,6 @@ impl Device {
             texture.blit_workaround_buffer = Some((rbo, fbo));
         }
 
-        record_gpu_alloc(texture.size_in_bytes());
-
         texture
     }
 
@@ -2502,9 +2475,6 @@ impl Device {
                 refcount: 0,
             }
         });
-        if target.refcount == 0 {
-            record_gpu_alloc(depth_target_size_in_bytes(&dimensions));
-        }
         target.refcount += 1;
         target.rbo_id
     }
@@ -2517,9 +2487,8 @@ impl Device {
         debug_assert!(entry.get().refcount != 0);
         entry.get_mut().refcount -= 1;
         if entry.get().refcount == 0 {
-            let (dimensions, target) = entry.remove_entry();
+            let (_, target) = entry.remove_entry();
             self.gl.delete_renderbuffers(&[target.rbo_id.0]);
-            record_gpu_free(depth_target_size_in_bytes(&dimensions));
         }
     }
 
@@ -2648,7 +2617,6 @@ impl Device {
 
     pub fn delete_texture(&mut self, mut texture: Texture) {
         debug_assert!(self.inside_frame);
-        record_gpu_free(texture.size_in_bytes());
         let had_depth = texture.supports_depth();
         self.deinit_fbos(&mut texture.fbos);
         self.deinit_fbos(&mut texture.fbos_with_depth);
