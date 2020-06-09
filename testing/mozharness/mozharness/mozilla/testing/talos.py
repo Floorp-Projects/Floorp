@@ -8,7 +8,6 @@
 run talos tests in a virtualenv
 """
 
-import argparse
 import io
 import os
 import sys
@@ -129,18 +128,6 @@ class Talos(TestingMixin, MercurialScript, TooltoolMixin,
           "default": None,
           "help": "extra options to talos"
           }],
-        [["--geckoProfile"], {
-            "dest": "gecko_profile",
-            "action": "store_true",
-            "default": False,
-            "help": argparse.SUPPRESS
-        }],
-        [["--geckoProfileInterval"], {
-            "dest": "gecko_profile_interval",
-            "type": "int",
-            "default": 0,
-            "help": argparse.SUPPRESS
-        }],
         [["--gecko-profile"], {
             "dest": "gecko_profile",
             "action": "store_true",
@@ -210,7 +197,6 @@ class Talos(TestingMixin, MercurialScript, TooltoolMixin,
         self.obj_path = self.config.get("obj_path")
         self.tests = None
         self.gecko_profile = self.config.get('gecko_profile') or \
-            "--geckoProfile" in self.config.get("talos_extra_options", []) or \
             "--gecko-profile" in self.config.get("talos_extra_options", [])
         self.gecko_profile_interval = self.config.get('gecko_profile_interval')
         self.pagesets_name = None

@@ -358,8 +358,8 @@ class TestTryOptionSyntax(unittest.TestCase):
         assert parameters["try_task_config"]["env"] == {"VAR1": "value1", "VAR2": "value2"}
 
     def test_profile(self):
-        "--geckoProfile sets profile to true"
-        parameters = parse_message('try: --geckoProfile')
+        "--gecko-profile sets profile to true"
+        parameters = parse_message('try: --gecko-profile')
         assert parameters["try_task_config"]["gecko-profile"] is True
 
     def test_tag(self):
