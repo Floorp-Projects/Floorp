@@ -6,6 +6,7 @@ about-networking-title = About Networking
 about-networking-http = HTTP
 about-networking-sockets = Sockets
 about-networking-dns = DNS
+about-networking-dns-clear-cache-button = Clear DNS Cache
 about-networking-dns-suffix = DNS suffix
 about-networking-websockets = WebSockets
 about-networking-refresh = Refresh

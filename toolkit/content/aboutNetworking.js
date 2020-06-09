@@ -272,6 +272,13 @@ function init() {
     doLookup();
   });
 
+  let clearDNSCache = document.getElementById("clearDNSCache");
+  clearDNSCache.addEventListener("click", function() {
+    Cc["@mozilla.org/network/dns-service;1"]
+      .getService(Ci.nsIDNSService)
+      .clearCache(true);
+  });
+
   let setLogButton = document.getElementById("set-log-file-button");
   setLogButton.addEventListener("click", setLogFile);
 
