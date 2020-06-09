@@ -1019,17 +1019,6 @@ pref("dom.storage.client_validation", true);
 
 pref("dom.send_after_paint_to_content", false);
 
-// Don't use new input types
-pref("dom.experimental_forms", false);
-
-// Enable <input type=color> by default. It will be turned off for remaining
-// platforms which don't have a color picker implemented yet.
-pref("dom.forms.color", true);
-
-// Support for input type=month, type=week and type=datetime-local. By default,
-// disabled.
-pref("dom.forms.datetime.others", false);
-
 // Enable time picker UI. By default, disabled.
 pref("dom.forms.datetime.timepicker", false);
 

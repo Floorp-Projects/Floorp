@@ -1592,24 +1592,6 @@ class HTMLInputElement final : public TextControlElement,
    */
   static bool IsDateTimeTypeSupported(uint8_t aDateTimeInputType);
 
-  /**
-   * Checks preference "dom.experimental_forms" to determine if experimental
-   * implementation of input element should be enabled.
-   */
-  static bool IsExperimentalFormsEnabled();
-
-  /**
-   * Checks preference "dom.forms.datetime.others" to determine if input week,
-   * month and datetime-local should be supported.
-   */
-  static bool IsInputDateTimeOthersEnabled();
-
-  /**
-   * Checks preference "dom.forms.color" to determine if date/time related
-   * types should be supported.
-   */
-  static bool IsInputColorEnabled();
-
   struct nsFilePickerFilter {
     nsFilePickerFilter() : mFilterMask(0) {}
 
