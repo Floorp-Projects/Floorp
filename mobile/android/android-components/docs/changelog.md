@@ -41,6 +41,9 @@ permalink: /changelog/
   * Adds a new storage component to store containers (contextual identities) in a Room database and provides the
     necessary APIs to get, add and remove containers.
 
+* **feature-tabs**
+  * ⚠️ **This is a breaking change**: `TabsFeature` now supports providing custom use case implementations. Therefore, an instance of `SelectTabUseCase` and `RemoveTabUseCase` have to be provided.
+
 # 44.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v43.0.0...v44.0.0)
