@@ -29,9 +29,8 @@ class WebExtensionDescriptorFront extends FrontClassWithSpec(
   form(json) {
     this.actorID = json.actor;
 
-    // Save the full form for Target class usage.
     // Do not use `form` name to avoid colliding with protocol.js's `form` method
-    this.targetForm = json;
+    this._form = json;
     this.traits = json.traits || {};
 
     // We used to manipulate the form rather than the front itself.
