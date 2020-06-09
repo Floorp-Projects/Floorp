@@ -985,17 +985,11 @@ bool BackgroundParentImpl::DeallocPCacheParent(PCacheParent* aActor) {
   return true;
 }
 
-PCacheStreamControlParent*
+already_AddRefed<PCacheStreamControlParent>
 BackgroundParentImpl::AllocPCacheStreamControlParent() {
   MOZ_CRASH(
       "CacheStreamControlParent actor must be provided to PBackground manager");
   return nullptr;
-}
-
-bool BackgroundParentImpl::DeallocPCacheStreamControlParent(
-    PCacheStreamControlParent* aActor) {
-  dom::cache::DeallocPCacheStreamControlParent(aActor);
-  return true;
 }
 
 PMessagePortParent* BackgroundParentImpl::AllocPMessagePortParent(
