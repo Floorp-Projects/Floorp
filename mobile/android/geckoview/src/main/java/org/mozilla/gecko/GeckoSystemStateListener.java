@@ -32,7 +32,7 @@ public class GeckoSystemStateListener
     private ContentObserver mContentObserver;
     private static Context sApplicationContext;
     private InputManager mInputManager;
-    private static boolean sIsNightMode;
+    private boolean mIsNightMode;
 
     public static GeckoSystemStateListener getInstance() {
         return listenerInstance;
@@ -61,7 +61,7 @@ public class GeckoSystemStateListener
         };
         contentResolver.registerContentObserver(animationSetting, false, mContentObserver);
 
-        sIsNightMode = (sApplicationContext.getResources().getConfiguration().uiMode &
+        mIsNightMode = (sApplicationContext.getResources().getConfiguration().uiMode &
             Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES;
 
         mInitialized = true;
@@ -107,28 +107,27 @@ public class GeckoSystemStateListener
                                         1) == 0.0f;
     }
 
-    @WrapForJNI(calledFrom = "gecko")
     /**
      * For prefers-color-scheme media queries feature.
      */
-    private static boolean isNightMode() {
-        return sIsNightMode;
+    public boolean isNightMode() {
+        return mIsNightMode;
     }
 
     public void updateNightMode(final int newUIMode) {
         boolean isNightMode = (newUIMode & Configuration.UI_MODE_NIGHT_MASK)
             == Configuration.UI_MODE_NIGHT_YES;
-        if (isNightMode == sIsNightMode) {
+        if (isNightMode == mIsNightMode) {
             return;
         }
-        sIsNightMode = isNightMode;
+        mIsNightMode = isNightMode;
         onDeviceChanged();
     }
 
     @WrapForJNI(stubName = "OnDeviceChanged", calledFrom = "any", dispatchTo = "gecko")
     private static native void nativeOnDeviceChanged();
 
-    private static void onDeviceChanged() {
+    public static void onDeviceChanged() {
         if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
             nativeOnDeviceChanged();
         } else {
