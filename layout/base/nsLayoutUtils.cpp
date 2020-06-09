@@ -145,6 +145,7 @@
 #include "nsDeckFrame.h"
 #include "mozilla/dom/InspectorFontFace.h"
 #include "ViewportFrame.h"
+#include "MobileViewportManager.h"
 
 #ifdef MOZ_XUL
 #  include "nsXULPopupManager.h"
@@ -10383,4 +10384,31 @@ nsSize nsLayoutUtils::ExpandHeightForViewportUnits(nsPresContext* aPresContext,
                                  aSize.height, vhExpansionRatio));
   return nsSize(aSize.width, NSCoordSaturatingNonnegativeMultiply(
                                  aSize.height, vhExpansionRatio));
+}
+
+template <typename SizeType>
+/* static */ SizeType ExpandHeightForDynamicToolbarImpl(
+    nsPresContext* aPresContext, const SizeType& aSize) {
+  RefPtr<MobileViewportManager> MVM =
+      aPresContext->PresShell()->GetMobileViewportManager();
+  MOZ_ASSERT(MVM);
+  float toolbarHeightRatio =
+      mozilla::ScreenCoord(aPresContext->GetDynamicToolbarMaxHeight()) /
+      mozilla::ViewAs<mozilla::ScreenPixel>(
+          MVM->DisplaySize(),
+          mozilla::PixelCastJustification::LayoutDeviceIsScreenForBounds)
+          .height;
+
+  return SizeType(
+      aSize.width,
+      NSCoordSaturatingAdd(aSize.height, aSize.height * toolbarHeightRatio));
+}
+
+CSSSize nsLayoutUtils::ExpandHeightForDynamicToolbar(
+    nsPresContext* aPresContext, const CSSSize& aSize) {
+  return ExpandHeightForDynamicToolbarImpl(aPresContext, aSize);
+}
+nsSize nsLayoutUtils::ExpandHeightForDynamicToolbar(nsPresContext* aPresContext,
+                                                    const nsSize& aSize) {
+  return ExpandHeightForDynamicToolbarImpl(aPresContext, aSize);
 }
