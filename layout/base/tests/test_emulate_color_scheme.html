@@ -10,6 +10,9 @@
 @media (prefers-color-scheme: dark) {
   #test { color: rgb(0, 2, 0); }
 }
+@media (prefers-color-scheme: no-preference) {
+  #test { color: rgb(0, 3, 0); }
+}
 </style>
 <div id="test"></div>
 <script>
@@ -32,6 +35,9 @@ function colorId() {
 
   cv.emulatePrefersColorScheme(cv.PREFERS_COLOR_SCHEME_DARK);
   is(colorId(), 2, "Dark emulation works");
+
+  cv.emulatePrefersColorScheme(cv.PREFERS_COLOR_SCHEME_NO_PREFERENCE);
+  is(colorId(), 3, "No preference emulation works");
 
   cv.emulatePrefersColorScheme(cv.PREFERS_COLOR_SCHEME_NONE);
   is(colorId(), originalColor, "Clearing the override works");
