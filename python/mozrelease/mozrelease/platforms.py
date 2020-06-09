@@ -4,7 +4,6 @@
 
 from __future__ import absolute_import
 
-# ftp -> update platform map
 update_platform_map = {
     "android": ["Android_arm-eabi-gcc3"],
     "android-api-11": ["Android_arm-eabi-gcc3"],
@@ -52,16 +51,6 @@ def ftp2updatePlatforms(platform):
 
 def ftp2shippedLocales(platform):
     return sl_platform_map.get(platform, platform)
-
-
-def shippedLocales2ftp(platform):
-    matches = []
-    try:
-        [matches.append(
-            k) for k, v in sl_platform_map.iteritems() if v == platform][0]
-        return matches
-    except IndexError:
-        return [platform]
 
 
 def ftp2infoFile(platform):
