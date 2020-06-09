@@ -270,6 +270,6 @@ def run(ancestor, current, new, dest):
 
     if dest != "-":
         with open(dest, "wb") as f:
-            f.write(updated_current_str)
+            f.write(updated_current_str.encode("utf8"))
     else:
         print(updated_current_str)
