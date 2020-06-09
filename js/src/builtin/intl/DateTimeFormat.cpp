@@ -554,51 +554,47 @@ bool js::intl_patternForStyle(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   MOZ_ASSERT(args.length() == 4);
   MOZ_ASSERT(args[0].isString());
+  MOZ_ASSERT(args[1].isString() || args[1].isUndefined());
+  MOZ_ASSERT(args[2].isString() || args[2].isUndefined());
+  MOZ_ASSERT(args[3].isString());
 
   UniqueChars locale = intl::EncodeLocale(cx, args[0].toString());
   if (!locale) {
     return false;
   }
 
-  UDateFormatStyle dateStyle = UDAT_NONE;
-  UDateFormatStyle timeStyle = UDAT_NONE;
+  auto toDateFormatStyle = [](JSLinearString* str) {
+    if (StringEqualsLiteral(str, "full")) {
+      return UDAT_FULL;
+    }
+    if (StringEqualsLiteral(str, "long")) {
+      return UDAT_LONG;
+    }
+    if (StringEqualsLiteral(str, "medium")) {
+      return UDAT_MEDIUM;
+    }
+    MOZ_ASSERT(StringEqualsLiteral(str, "short"));
+    return UDAT_SHORT;
+  };
 
+  UDateFormatStyle dateStyle = UDAT_NONE;
   if (args[1].isString()) {
     JSLinearString* dateStyleStr = args[1].toString()->ensureLinear(cx);
     if (!dateStyleStr) {
       return false;
     }
 
-    if (StringEqualsLiteral(dateStyleStr, "full")) {
-      dateStyle = UDAT_FULL;
-    } else if (StringEqualsLiteral(dateStyleStr, "long")) {
-      dateStyle = UDAT_LONG;
-    } else if (StringEqualsLiteral(dateStyleStr, "medium")) {
-      dateStyle = UDAT_MEDIUM;
-    } else if (StringEqualsLiteral(dateStyleStr, "short")) {
-      dateStyle = UDAT_SHORT;
-    } else {
-      MOZ_ASSERT_UNREACHABLE("unexpected dateStyle");
-    }
+    dateStyle = toDateFormatStyle(dateStyleStr);
   }
 
+  UDateFormatStyle timeStyle = UDAT_NONE;
   if (args[2].isString()) {
     JSLinearString* timeStyleStr = args[2].toString()->ensureLinear(cx);
     if (!timeStyleStr) {
       return false;
     }
 
-    if (StringEqualsLiteral(timeStyleStr, "full")) {
-      timeStyle = UDAT_FULL;
-    } else if (StringEqualsLiteral(timeStyleStr, "long")) {
-      timeStyle = UDAT_LONG;
-    } else if (StringEqualsLiteral(timeStyleStr, "medium")) {
-      timeStyle = UDAT_MEDIUM;
-    } else if (StringEqualsLiteral(timeStyleStr, "short")) {
-      timeStyle = UDAT_SHORT;
-    } else {
-      MOZ_ASSERT_UNREACHABLE("unexpected timeStyle");
-    }
+    timeStyle = toDateFormatStyle(timeStyleStr);
   }
 
   AutoStableStringChars timeZone(cx);
