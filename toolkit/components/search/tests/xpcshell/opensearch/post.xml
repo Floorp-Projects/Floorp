@@ -1,0 +1,6 @@
+<OpenSearchDescription xmlns="http://a9.com/-/spec/opensearch/1.1/">
+  <ShortName>Post</ShortName>
+  <Url type="text/html" method="POST" template="https://example.com/post">
+    <Param name="searchterms" value="{searchTerms}"/>
+  </Url>
+</OpenSearchDescription>

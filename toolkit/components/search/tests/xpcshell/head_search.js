@@ -350,14 +350,16 @@ var gDataUrl;
 /**
  * Initializes the HTTP server and ensures that it is terminated when tests end.
  *
+ * @param {string} dir
+ *   The test sub-directory to use for the engines.
  * @returns {HttpServer}
  *   The HttpServer object in case further customization is needed.
  */
-function useHttpServer() {
+function useHttpServer(dir = "data") {
   let httpServer = new HttpServer();
   httpServer.start(-1);
   httpServer.registerDirectory("/", do_get_cwd());
-  gDataUrl = "http://localhost:" + httpServer.identity.primaryPort + "/data/";
+  gDataUrl = `http://localhost:${httpServer.identity.primaryPort}/${dir}/`;
   registerCleanupFunction(async function cleanup_httpServer() {
     await new Promise(resolve => {
       httpServer.stop(resolve);
