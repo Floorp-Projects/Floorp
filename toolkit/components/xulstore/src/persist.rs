@@ -50,19 +50,17 @@ static PERSIST: Lazy<Mutex<()>> = Lazy::new(|| Mutex::new(()));
 /// called from a background thread, however this can be called from the main
 /// thread in Gecko during shutdown (via flush_writes).
 fn sync_persist() -> XULStoreResult<()> {
-    let db = get_database()?;
-    let mut writer = db.env.write()?;
-
     // Get the map of key/value pairs from the mutex, replacing it
     // with None.  To avoid janking the main thread (if it decides
     // to makes more changes while we're persisting to disk), we only
     // lock the map long enough to move it out of the Mutex.
     let writes = CHANGES.lock()?.take();
 
-    // The Option should be a Some(HashMap) (otherwise the task
-    // shouldn't have been scheduled in the first place).  If it's None,
-    // unexpectedly, then we return an error early.
+    // Return an error early if there's nothing to actually write
     let writes = writes.ok_or(XULStoreError::Unavailable)?;
+
+    let db = get_database()?;
+    let mut writer = db.env.write()?;
 
     for (key, value) in writes.iter() {
         match value {
