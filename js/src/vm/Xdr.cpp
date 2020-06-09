@@ -229,7 +229,7 @@ XDRResult XDRState<mode>::codeModuleObject(MutableHandleModuleObject modp) {
   if (mode == XDR_DECODE) {
     modp.set(nullptr);
   } else {
-    MOZ_ASSERT(modp->status() < MODULE_STATUS_INSTANTIATING);
+    MOZ_ASSERT(modp->status() < MODULE_STATUS_LINKING);
   }
 
   MOZ_TRY(XDRModuleObject(this, modp));
