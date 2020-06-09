@@ -353,8 +353,7 @@ void JSRuntime::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
   }
 
   JSContext* cx = mainContextFromAnyThread();
-  rtSizes->contexts += mallocSizeOf(cx);
-  rtSizes->contexts += cx->sizeOfExcludingThis(mallocSizeOf);
+  rtSizes->contexts += cx->sizeOfIncludingThis(mallocSizeOf);
   rtSizes->temporary += cx->tempLifoAlloc().sizeOfExcludingThis(mallocSizeOf);
   rtSizes->interpreterStack +=
       cx->interpreterStack().sizeOfExcludingThis(mallocSizeOf);

@@ -1139,6 +1139,11 @@ size_t JSContext::sizeOfExcludingThis(
          irregexp::IsolateSizeOfIncludingThis(isolate, mallocSizeOf);
 }
 
+size_t JSContext::sizeOfIncludingThis(
+    mozilla::MallocSizeOf mallocSizeOf) const {
+  return mallocSizeOf(this) + sizeOfExcludingThis(mallocSizeOf);
+}
+
 #ifdef DEBUG
 bool JSContext::inAtomsZone() const { return zone_->isAtomsZone(); }
 #endif
