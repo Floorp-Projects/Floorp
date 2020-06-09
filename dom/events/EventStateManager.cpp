@@ -1824,6 +1824,8 @@ void EventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
     return;
   }
 
+  AutoWeakFrame targetFrameBefore = mCurrentTarget;
+  auto autoRestore = MakeScopeExit([&] { mCurrentTarget = targetFrameBefore; });
   mCurrentTarget = mGestureDownFrameOwner->GetPrimaryFrame();
 
   if (!mCurrentTarget || !mCurrentTarget->GetNearestWidget()) {
@@ -1944,10 +1946,7 @@ void EventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
   // out the ESM and telling it that the current target frame is
   // actually where the mouseDown occurred, otherwise it will use
   // the frame the mouse is currently over which may or may not be
-  // the same. (Note: saari and I have decided that we don't have
-  // to reset |mCurrentTarget| when we're through because no one
-  // else is doing anything more with this event and it will get
-  // reset on the very next event to the correct frame).
+  // the same.
 
   // Hold onto old target content through the event and reset after.
   nsCOMPtr<nsIContent> targetBeforeEvent = mCurrentTargetContent;
