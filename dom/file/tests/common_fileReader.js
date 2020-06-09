@@ -344,7 +344,7 @@ function test_readAsText(blob, text) {
 
     is(r.readyState, FileReader.LOADING, "correct loading text readyState");
     is(onloadHasRun, false, "text loading must be async");
-    is(onloadStartHasRun, false, "text loadstart should fire async");
+    is(onloadStartHasRun, true, "text loadstart should fire sync");
   });
 }
 
@@ -378,7 +378,7 @@ function test_readAsBinaryString(blob, text) {
 
     is(r.readyState, FileReader.LOADING, "correct loading binary readyState");
     is(onloadHasRun, false, "binary loading must be async");
-    is(onloadStartHasRun, false, "binary loadstart should fire async");
+    is(onloadStartHasRun, true, "binary loadstart should fire sync");
   });
 }
 
@@ -419,7 +419,7 @@ function test_readAsArrayBuffer(blob, text) {
       "correct loading arrayBuffer readyState"
     );
     is(onloadHasRun, false, "arrayBuffer loading must be async");
-    is(onloadStartHasRun, false, "arrayBuffer loadstart should fire sync");
+    is(onloadStartHasRun, true, "arrayBuffer loadstart should fire sync");
   });
 }
 
