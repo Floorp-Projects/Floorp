@@ -176,6 +176,13 @@ class MediaStatusManager : public IMediaInfoUpdater {
   ~MediaStatusManager() = default;
   virtual void HandleActualPlaybackStateChanged() = 0;
 
+  // This event would be notified when the active media session changes its
+  // supported actions.
+  MediaEventSource<nsTArray<MediaSessionAction>>&
+  SupportedActionsChangedEvent() {
+    return mSupportedActionsChangedEvent;
+  }
+
   uint64_t mTopLevelBrowsingContextId;
 
   // Within a tab, the Id of the browsing context which has already created a
@@ -193,6 +200,13 @@ class MediaStatusManager : public IMediaInfoUpdater {
   void SetActiveMediaSessionContextId(uint64_t aBrowsingContextId);
   void ClearActiveMediaSessionContextIdIfNeeded();
   void HandleAudioFocusOwnerChanged(Maybe<uint64_t>& aBrowsingContextId);
+
+  void NotifySupportedKeysChangedIfNeeded(uint64_t aBrowsingContextId);
+
+  // Return a copyable array filled with the supported media session actions.
+  // Use copyable array so that we can use the result as a parameter for the
+  // media event.
+  CopyableTArray<MediaSessionAction> GetSupportedActions() const;
 
   // When the amount of playing media changes, we would use this function to
   // update the guessed playback state.
@@ -225,6 +239,8 @@ class MediaStatusManager : public IMediaInfoUpdater {
 
   nsDataHashtable<nsUint64HashKey, MediaSessionInfo> mMediaSessionInfoMap;
   MediaEventProducer<MediaMetadataBase> mMetadataChangedEvent;
+  MediaEventProducer<nsTArray<MediaSessionAction>>
+      mSupportedActionsChangedEvent;
   MediaPlaybackStatus mPlaybackStatusDelegate;
 };
 

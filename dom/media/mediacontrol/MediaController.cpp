@@ -21,11 +21,27 @@
 namespace mozilla {
 namespace dom {
 
+static const MediaControlKeysEvent sDefaultSupportedKeys[] = {
+    MediaControlKeysEvent::eFocus, MediaControlKeysEvent::ePlay,
+    MediaControlKeysEvent::ePause, MediaControlKeysEvent::ePlayPause,
+    MediaControlKeysEvent::eStop,
+};
+
+static void GetDefaultSupportedKeys(nsTArray<MediaControlKeysEvent>& aKeys) {
+  for (const auto& key : sDefaultSupportedKeys) {
+    aKeys.AppendElement(key);
+  }
+}
+
 MediaController::MediaController(uint64_t aBrowsingContextId)
     : MediaStatusManager(aBrowsingContextId) {
   MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess(),
                         "MediaController only runs on Chrome process!");
   LOG("Create controller %" PRId64, Id());
+  GetDefaultSupportedKeys(mSupportedKeys);
+  mSupportedActionsChangedListener = SupportedActionsChangedEvent().Connect(
+      AbstractThread::MainThread(), this,
+      &MediaController::HandleSupportedMediaSessionActionsChanged);
 }
 
 MediaController::~MediaController() {
@@ -120,6 +136,7 @@ void MediaController::Shutdown() {
   // controller from the service.
   Deactivate();
   mShutdown = true;
+  mSupportedActionsChangedListener.DisconnectIfExists();
 }
 
 void MediaController::NotifyMediaPlaybackChanged(uint64_t aBrowsingContextId,
@@ -221,6 +238,33 @@ void MediaController::UpdateActivatedStateIfNeeded() {
   } else if (ShouldDeactivateController()) {
     Deactivate();
   }
+}
+
+void MediaController::HandleSupportedMediaSessionActionsChanged(
+    const nsTArray<MediaSessionAction>& aSupportedAction) {
+  // Convert actions to keys, some of them have been included in the supported
+  // keys, such as "play", "pause" and "stop".
+  nsTArray<MediaControlKeysEvent> newSupportedKeys;
+  GetDefaultSupportedKeys(newSupportedKeys);
+  for (const auto& action : aSupportedAction) {
+    MediaControlKeysEvent key = ConvertMediaSessionActionToControlKey(action);
+    if (!newSupportedKeys.Contains(key)) {
+      newSupportedKeys.AppendElement(key);
+    }
+  }
+  // As the supported key event should only be notified when supported keys
+  // change, so abort following steps if they don't change.
+  if (newSupportedKeys == mSupportedKeys) {
+    return;
+  }
+  LOG("Supported keys changes");
+  mSupportedKeys = newSupportedKeys;
+  mSupportedKeysChangedEvent.Notify(mSupportedKeys);
+}
+
+CopyableTArray<MediaControlKeysEvent> MediaController::GetSupportedMediaKeys()
+    const {
+  return mSupportedKeys;
 }
 
 }  // namespace dom

@@ -134,5 +134,17 @@ void MediaControlKeysManager::SetMediaMetadata(
   }
 }
 
+void MediaControlKeysManager::SetSupportedMediaKeys(
+    const MediaKeysArray& aSupportedKeys) {
+  mSupportedKeys.Clear();
+  for (const auto& key : aSupportedKeys) {
+    LOG_INFO("Supported keys=%s", ToMediaControlKeysEventStr(key));
+    mSupportedKeys.AppendElement(key);
+  }
+  if (mEventSource && mEventSource->IsOpened()) {
+    mEventSource->SetSupportedMediaKeys(mSupportedKeys);
+  }
+}
+
 }  // namespace dom
 }  // namespace mozilla
