@@ -4731,20 +4731,19 @@
   value: @IS_NIGHTLY_OR_DEV_EDITION@
   mirror: always
 
-#ifdef NIGHTLY_BUILD
-  # Experimental support for weak references in JavaScript (WeakRef and
-  # FinalizationRegistry).
-- name: javascript.options.experimental.weakrefs.enabled
+# Support for weak references in JavaScript (WeakRef and FinalizationRegistry).
+- name: javascript.options.weakrefs
   type: RelaxedAtomicBool
-  value: false
+  value: true
   mirror: always
 
-  # Whether to expose the FinalizationRegistry.prototype.cleanupSome method.
+# Whether to expose the FinalizationRegistry.prototype.cleanupSome method.
 - name: javascript.options.experimental.weakrefs.expose_cleanupSome
   type: RelaxedAtomicBool
   value: false
   mirror: always
 
+#ifdef NIGHTLY_BUILD
   # Experimental support for Iterator Helpers in JavaScript.
 - name: javascript.options.experimental.iterator_helpers
   type: RelaxedAtomicBool
