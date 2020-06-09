@@ -527,6 +527,9 @@ auto DocumentLoadListener::Open(
 
   *aRv = NS_OK;
   mOpenPromise = new OpenPromise::Private(__func__);
+  // We make the promise use direct task dispatch in order to reduce the number
+  // of event loops iterations.
+  mOpenPromise->UseDirectTaskDispatch(__func__);
   return mOpenPromise;
 }
 

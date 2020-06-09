@@ -66,6 +66,9 @@ ParentProcessDocumentChannel::RedirectToRealChannel(
   mStreamFilterEndpoints = std::move(aStreamFilterEndpoints);
 
   RefPtr<RedirectToRealChannelPromise> p = mPromise.Ensure(__func__);
+  // We make the promise use direct task dispatch in order to reduce the number
+  // of event loops iterations.
+  mPromise.UseDirectTaskDispatch(__func__);
 
   nsresult rv =
       gHttpHandler->AsyncOnChannelRedirect(this, channel, aRedirectFlags);
@@ -176,7 +179,7 @@ NS_IMETHODIMP ParentProcessDocumentChannel::AsyncOpen(
                 ->Then(
                     GetCurrentThreadSerialEventTarget(), __func__,
                     [self](RedirectToRealChannelPromise::ResolveOrRejectValue&&
-                               aValue) {
+                               aValue) -> RefPtr<RedirectToRealChannelPromise> {
                       MOZ_ASSERT(aValue.IsResolve());
                       nsresult rv = aValue.ResolveValue();
                       if (NS_FAILED(rv)) {
@@ -186,8 +189,12 @@ NS_IMETHODIMP ParentProcessDocumentChannel::AsyncOpen(
                       self->mListener = nullptr;
                       self->mCallbacks = nullptr;
                       self->RemoveObserver();
-                      return RedirectToRealChannelPromise::
-                          CreateAndResolveOrReject(std::move(aValue), __func__);
+                      auto p =
+                          MakeRefPtr<RedirectToRealChannelPromise::Private>(
+                              __func__);
+                      p->UseDirectTaskDispatch(__func__);
+                      p->ResolveOrReject(std::move(aValue), __func__);
+                      return p;
                     });
         // We chain the promise the DLL is waiting on to the one returned by
         // RedirectToRealChannel. As soon as the promise returned is
