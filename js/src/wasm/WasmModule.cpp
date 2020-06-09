@@ -468,7 +468,7 @@ bool Module::extractCode(JSContext* cx, Tier tier,
         return false;
       }
 
-      value.setNumber((uint32_t)p.funcUncheckedCallEntry());
+      value.setNumber((uint32_t)p.funcNormalEntry());
       if (!JS_DefineProperty(cx, segment, "funcBodyBegin", value,
                              JSPROP_ENUMERATE)) {
         return false;
