@@ -83,11 +83,7 @@ const WebExtensionDescriptorActor = protocol.ActorClassWithSpec(
         manifestURL: policy && policy.getURL("manifest.json"),
         name: this.addon.name,
         temporarilyInstalled: this.addon.temporarilyInstalled,
-        traits: {
-          // checked in the front descriptor.
-          // remove when FF70 is on release channel
-          isDescriptor: true,
-        },
+        traits: {},
         type: this.addon.type,
         url: this.addon.sourceURI ? this.addon.sourceURI.spec : undefined,
         warnings: ExtensionParent.DebugUtils.getExtensionManifestWarnings(

@@ -60,13 +60,7 @@ class WebExtensionDescriptorFront extends FrontClassWithSpec(
       // the addon (e.g. when the addon is disabled or uninstalled).
       // To retrieve the target actor instance, we call its "connect" method, (which
       // fetches the target actor targetForm from a WebExtensionTargetActor instance).
-      let form = null;
-      // FF70+ The method is now called getTarget`
-      if (!this.traits.isDescriptor) {
-        form = await super.connect();
-      } else {
-        form = await super.getTarget();
-      }
+      const form = await super.getTarget();
       const front = new BrowsingContextTargetFront(this.conn, null, this);
       front.form(form);
       this.manage(front);
