@@ -41,22 +41,24 @@ already_AddRefed<GLContext> GLContextProviderWayland::CreateForCompositorWidget(
 
 /*static*/
 already_AddRefed<GLContext> GLContextProviderWayland::CreateHeadless(
-    const GLContextCreateDesc& desc, nsACString* const out_failureId) {
+    CreateContextFlags flags, nsACString* const out_failureId) {
   if (GDK_IS_X11_DISPLAY(gdk_display_get_default())) {
-    return sGLContextProviderGLX.CreateHeadless(desc, out_failureId);
+    return sGLContextProviderGLX.CreateHeadless(flags, out_failureId);
   } else {
-    return sGLContextProviderEGL.CreateHeadless(desc, out_failureId);
+    return sGLContextProviderEGL.CreateHeadless(flags, out_failureId);
   }
 }
 
 /*static*/
 already_AddRefed<GLContext> GLContextProviderWayland::CreateOffscreen(
-    const IntSize& size, const GLContextCreateDesc& desc,
+    const IntSize& size, const SurfaceCaps& minCaps, CreateContextFlags flags,
     nsACString* const out_failureId) {
   if (GDK_IS_X11_DISPLAY(gdk_display_get_default())) {
-    return sGLContextProviderGLX.CreateOffscreen(size, desc, out_failureId);
+    return sGLContextProviderGLX.CreateOffscreen(size, minCaps, flags,
+                                                 out_failureId);
   } else {
-    return sGLContextProviderEGL.CreateOffscreen(size, desc, out_failureId);
+    return sGLContextProviderEGL.CreateOffscreen(size, minCaps, flags,
+                                                 out_failureId);
   }
 }
 

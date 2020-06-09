@@ -989,8 +989,6 @@ inline std::string ToString(const nsACString& text) {
   return {text.BeginReading(), text.Length()};
 }
 
-// -
-
 }  // namespace mozilla
 
 #endif

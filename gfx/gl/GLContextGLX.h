@@ -20,8 +20,9 @@ class GLContextGLX : public GLContext {
  public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(GLContextGLX, override)
   static already_AddRefed<GLContextGLX> CreateGLContext(
-      const GLContextDesc&, Display* display, GLXDrawable drawable,
-      GLXFBConfig cfg, bool deleteDrawable, gfxXlibSurface* pixmap);
+      CreateContextFlags flags, const SurfaceCaps& caps, bool isOffscreen,
+      Display* display, GLXDrawable drawable, GLXFBConfig cfg,
+      bool deleteDrawable, gfxXlibSurface* pixmap);
 
   static bool FindVisual(Display* display, int screen, bool useWebRender,
                          bool useAlpha, int* const out_visualId);
@@ -65,7 +66,8 @@ class GLContextGLX : public GLContext {
  private:
   friend class GLContextProviderGLX;
 
-  GLContextGLX(const GLContextDesc&, Display* aDisplay, GLXDrawable aDrawable,
+  GLContextGLX(CreateContextFlags flags, const SurfaceCaps& caps,
+               bool isOffscreen, Display* aDisplay, GLXDrawable aDrawable,
                GLXContext aContext, bool aDeleteDrawable, bool aDoubleBuffered,
                gfxXlibSurface* aPixmap);
 
