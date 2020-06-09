@@ -223,7 +223,7 @@ static bool GenerateCraneliftCode(WasmMacroAssembler& masm,
 
 #ifdef DEBUG
     // Check code offsets.
-    MOZ_ASSERT(offset.value() >= offsets->normalEntry);
+    MOZ_ASSERT(offset.value() >= offsets->uncheckedCallEntry);
     MOZ_ASSERT(offset.value() < offsets->ret);
     MOZ_ASSERT(metadata.module_bytecode_offset != 0);
 
