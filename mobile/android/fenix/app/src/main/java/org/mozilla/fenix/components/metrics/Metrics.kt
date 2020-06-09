@@ -243,7 +243,7 @@ sealed class Event {
     }
 
     data class TrackingProtectionSettingChanged(val setting: Setting) : Event() {
-        enum class Setting { STRICT, STANDARD }
+        enum class Setting { STRICT, STANDARD, CUSTOM }
 
         override val extras: Map<TrackingProtection.etpSettingChangedKeys, String>?
             get() = hashMapOf(TrackingProtection.etpSettingChangedKeys.etpSetting to setting.name)

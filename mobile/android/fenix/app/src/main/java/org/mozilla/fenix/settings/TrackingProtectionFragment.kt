@@ -111,8 +111,9 @@ class TrackingProtectionFragment : PreferenceFragmentCompat() {
                     Event.TrackingProtectionSettingChanged.Setting.STANDARD
                 TrackingProtectionMode.STRICT ->
                     Event.TrackingProtectionSettingChanged.Setting.STRICT
-                TrackingProtectionMode.CUSTOM -> null
-            }?.let { setting ->
+                TrackingProtectionMode.CUSTOM ->
+                    Event.TrackingProtectionSettingChanged.Setting.CUSTOM
+            }.let { setting ->
                 metrics.track(Event.TrackingProtectionSettingChanged(setting))
             }
         }
