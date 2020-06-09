@@ -54,7 +54,6 @@ function run_test() {
     true
   );
 
-  Services.prefs.setBoolPref("dom.testing.ignore_ipc_principal", true);
   Services.prefs.setBoolPref("geo.provider.network.scan", false);
 
   run_test_in_child("test_geolocation_reset_accuracy.js", check_results);

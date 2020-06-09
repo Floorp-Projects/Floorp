@@ -12,6 +12,5 @@ function run_test() {
     "geo.provider.network.url",
     "http://localhost:" + httpserver.identity.primaryPort + "/geo"
   );
-  Services.prefs.setBoolPref("dom.testing.ignore_ipc_principal", true);
   run_test_in_child("./test_geolocation_timeout.js");
 }

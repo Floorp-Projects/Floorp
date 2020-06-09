@@ -68,7 +68,6 @@ function run_test() {
       true
     );
 
-    Services.prefs.setBoolPref("dom.testing.ignore_ipc_principal", true);
     Services.prefs.setBoolPref("geo.provider.network.scan", false);
   }
 

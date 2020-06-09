@@ -34,7 +34,6 @@ function run_test() {
     "geo.provider.network.url",
     "http://localhost:" + httpserver.identity.primaryPort + "/geo"
   );
-  Services.prefs.setBoolPref("dom.testing.ignore_ipc_principal", true);
   Services.prefs.setBoolPref("geo.provider.network.scan", false);
 
   // Setting timeout to a very low value to ensure time out will happen.
