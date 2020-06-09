@@ -57,7 +57,6 @@ nsIFrame* NS_NewTextControlFrame(PresShell* aPresShell, ComputedStyle* aStyle) {
 NS_IMPL_FRAMEARENA_HELPERS(nsTextControlFrame)
 
 NS_QUERYFRAME_HEAD(nsTextControlFrame)
-  NS_QUERYFRAME_ENTRY(nsTextControlFrame)
   NS_QUERYFRAME_ENTRY(nsIFormControlFrame)
   NS_QUERYFRAME_ENTRY(nsIAnonymousContentCreator)
   NS_QUERYFRAME_ENTRY(nsITextControlFrame)
@@ -715,7 +714,26 @@ void nsTextControlFrame::SetFocus(bool aOn, bool aRepaint) {
     return;
   }
 
-  // Tell the caret to use our selection
+  // Scroll the current selection into view
+  Selection* caretSelection = caret->GetSelection();
+  const bool isFocusedRightNow = ourSel == caretSelection;
+  if (!isFocusedRightNow) {
+    // Don't scroll the current selection if we've been focused using the mouse.
+    uint32_t lastFocusMethod = 0;
+    Document* doc = GetContent()->GetComposedDoc();
+    if (doc) {
+      nsIFocusManager* fm = nsFocusManager::GetFocusManager();
+      if (fm) {
+        fm->GetLastFocusMethod(doc->GetWindow(), &lastFocusMethod);
+      }
+    }
+    if (!(lastFocusMethod & nsIFocusManager::FLAG_BYMOUSE)) {
+      // NOTE(emilio): This is asynchronous, so it can't cause havoc.
+      ScrollSelectionIntoViewAsync();
+    }
+  }
+
+  // tell the caret to use our selection
   caret->SetSelection(ourSel);
 
   // mutual-exclusion: the selection is either controlled by the
@@ -825,23 +843,18 @@ nsresult nsTextControlFrame::SetSelectionInternal(
   return NS_OK;
 }
 
-void nsTextControlFrame::ScrollSelectionIntoViewAsync(
-    ScrollAncestors aScrollAncestors) {
+void nsTextControlFrame::ScrollSelectionIntoViewAsync() {
   auto* textControlElement = TextControlElement::FromNode(GetContent());
   MOZ_ASSERT(textControlElement);
   nsISelectionController* selCon = textControlElement->GetSelectionController();
   if (!selCon) {
     return;
   }
-
-  int16_t flags = aScrollAncestors == ScrollAncestors::Yes
-                   ? 0
-                   : nsISelectionController::SCROLL_FIRST_ANCESTOR_ONLY;
-
   // Scroll the selection into view (see bug 231389).
   selCon->ScrollSelectionIntoView(
       nsISelectionController::SELECTION_NORMAL,
-      nsISelectionController::SELECTION_FOCUS_REGION, flags);
+      nsISelectionController::SELECTION_FOCUS_REGION,
+      nsISelectionController::SCROLL_FIRST_ANCESTOR_ONLY);
 }
 
 nsresult nsTextControlFrame::SelectAllOrCollapseToEndOfText(bool aSelect) {
