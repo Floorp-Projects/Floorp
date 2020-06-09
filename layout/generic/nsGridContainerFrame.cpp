@@ -2801,7 +2801,7 @@ struct MOZ_STACK_CLASS nsGridContainerFrame::GridReflowInput {
 
     // Copy in the computed grid info state bit
     if (mSharedGridData->mGenerateComputedGridInfo) {
-      aGridContainerFrame->AddStateBits(NS_STATE_GRID_GENERATE_COMPUTED_VALUES);
+      aGridContainerFrame->SetShouldGenerateComputedInfo(true);
     }
   }
 
@@ -4842,8 +4842,7 @@ void nsGridContainerFrame::Grid::PlaceGridItems(
   }
 
   // Update the line boundaries of the implicit grid areas, if needed.
-  if (mAreas &&
-      aState.mFrame->HasAnyStateBits(NS_STATE_GRID_GENERATE_COMPUTED_VALUES)) {
+  if (mAreas && aState.mFrame->ShouldGenerateComputedInfo()) {
     for (auto iter = mAreas->iter(); !iter.done(); iter.next()) {
       auto& areaInfo = iter.get().value();
 
@@ -8666,7 +8665,7 @@ void nsGridContainerFrame::Reflow(nsPresContext* aPresContext,
                        bp.BStart(wm), bp.BEnd(wm), desiredSize.BSize(wm));
   }
 
-  if (HasAnyStateBits(NS_STATE_GRID_GENERATE_COMPUTED_VALUES)) {
+  if (ShouldGenerateComputedInfo()) {
     // This state bit will never be cleared, since reflow can be called
     // multiple times in fragmented grids, and it's challenging to scope
     // the bit to only that sequence of calls. This is relatively harmless
@@ -8932,8 +8931,7 @@ void nsGridContainerFrame::Reflow(nsPresContext* aPresContext,
       sharedGridData->mAbsPosItems.Clear();
       sharedGridData->mAbsPosItems.SwapElements(gridReflowInput.mAbsPosItems);
 
-      sharedGridData->mGenerateComputedGridInfo =
-          HasAnyStateBits(NS_STATE_GRID_GENERATE_COMPUTED_VALUES);
+      sharedGridData->mGenerateComputedGridInfo = ShouldGenerateComputedInfo();
     } else if (sharedGridData && !GetNextInFlow()) {
       RemoveProperty(SharedGridData::Prop());
     }
@@ -9621,7 +9619,7 @@ nsGridContainerFrame* nsGridContainerFrame::GetGridFrameWithComputedInfo(
   AutoWeakFrame weakFrameRef(gridFrame);
 
   RefPtr<mozilla::PresShell> presShell = gridFrame->PresShell();
-  gridFrame->AddStateBits(NS_STATE_GRID_GENERATE_COMPUTED_VALUES);
+  gridFrame->SetShouldGenerateComputedInfo(true);
   presShell->FrameNeedsReflow(gridFrame, IntrinsicDirty::Resize,
                               NS_FRAME_IS_DIRTY);
   presShell->FlushPendingNotifications(FlushType::Layout);
