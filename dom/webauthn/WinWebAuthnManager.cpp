@@ -10,6 +10,7 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Unused.h"
 #include "nsTextFormatter.h"
+#include "nsWindowsHelpers.h"
 #include "winwebauthn/webauthn.h"
 #include "WinWebAuthnManager.h"
 
@@ -53,7 +54,7 @@ WinWebAuthnManager::WinWebAuthnManager() {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!gWinWebAuthnModule);
 
-  gWinWebAuthnModule = LoadLibrary(L"webauthn.dll");
+  gWinWebAuthnModule = LoadLibrarySystem32(L"webauthn.dll");
 
   if (gWinWebAuthnModule) {
     gWinWebauthnIsUVPAA = reinterpret_cast<decltype(
