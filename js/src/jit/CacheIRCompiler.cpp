@@ -114,6 +114,10 @@ ValueOperand CacheRegisterAllocator::useValueRegister(MacroAssembler& masm,
 void CacheRegisterAllocator::ensureDoubleRegister(MacroAssembler& masm,
                                                   NumberOperandId op,
                                                   FloatRegister dest) {
+  // If AutoScratchFloatRegister is active, we have to add sizeof(double) to
+  // any stack slot offsets below.
+  int32_t stackOffset = hasAutoScratchFloatRegisterSpill() ? sizeof(double) : 0;
+
   OperandLocation& loc = operandLocations_[op.id()];
 
   Label failure, done;
@@ -124,19 +128,21 @@ void CacheRegisterAllocator::ensureDoubleRegister(MacroAssembler& masm,
     }
 
     case OperandLocation::ValueStack: {
-      masm.ensureDouble(valueAddress(masm, &loc), dest, &failure);
+      Address addr = valueAddress(masm, &loc);
+      addr.offset += stackOffset;
+      masm.ensureDouble(addr, dest, &failure);
       break;
     }
 
     case OperandLocation::BaselineFrame: {
       Address addr = addressOf(masm, loc.baselineFrameSlot());
+      addr.offset += stackOffset;
       masm.ensureDouble(addr, dest, &failure);
       break;
     }
 
     case OperandLocation::DoubleReg: {
       masm.moveDouble(loc.doubleReg(), dest);
-      loc.setDoubleReg(dest);
       return;
     }
 
@@ -160,9 +166,9 @@ void CacheRegisterAllocator::ensureDoubleRegister(MacroAssembler& masm,
       MOZ_ASSERT(loc.payloadType() == JSVAL_TYPE_INT32,
                  "Caller must ensure the operand is a number value");
       MOZ_ASSERT(loc.payloadStack() <= stackPushed_);
-      masm.convertInt32ToDouble(
-          Address(masm.getStackPointer(), stackPushed_ - loc.payloadStack()),
-          dest);
+      Address addr(masm.getStackPointer(), stackPushed_ - loc.payloadStack());
+      addr.offset += stackOffset;
+      masm.convertInt32ToDouble(addr, dest);
       return;
     }
 
@@ -227,6 +233,7 @@ ValueOperand CacheRegisterAllocator::useFixedValueRegister(MacroAssembler& masm,
 Register CacheRegisterAllocator::useRegister(MacroAssembler& masm,
                                              TypedOperandId typedId) {
   MOZ_ASSERT(!addedFailurePath_);
+  MOZ_ASSERT(!hasAutoScratchFloatRegisterSpill());
 
   OperandLocation& loc = operandLocations_[typedId.id()];
   switch (loc.kind()) {
@@ -308,6 +315,7 @@ Register CacheRegisterAllocator::useRegister(MacroAssembler& masm,
 ConstantOrRegister CacheRegisterAllocator::useConstantOrRegister(
     MacroAssembler& masm, ValOperandId val) {
   MOZ_ASSERT(!addedFailurePath_);
+  MOZ_ASSERT(!hasAutoScratchFloatRegisterSpill());
 
   OperandLocation& loc = operandLocations_[val.id()];
   switch (loc.kind()) {
@@ -341,6 +349,7 @@ ConstantOrRegister CacheRegisterAllocator::useConstantOrRegister(
 Register CacheRegisterAllocator::defineRegister(MacroAssembler& masm,
                                                 TypedOperandId typedId) {
   MOZ_ASSERT(!addedFailurePath_);
+  MOZ_ASSERT(!hasAutoScratchFloatRegisterSpill());
 
   OperandLocation& loc = operandLocations_[typedId.id()];
   MOZ_ASSERT(loc.kind() == OperandLocation::Uninitialized);
@@ -353,6 +362,7 @@ Register CacheRegisterAllocator::defineRegister(MacroAssembler& masm,
 ValueOperand CacheRegisterAllocator::defineValueRegister(MacroAssembler& masm,
                                                          ValOperandId val) {
   MOZ_ASSERT(!addedFailurePath_);
+  MOZ_ASSERT(!hasAutoScratchFloatRegisterSpill());
 
   OperandLocation& loc = operandLocations_[val.id()];
   MOZ_ASSERT(loc.kind() == OperandLocation::Uninitialized);
@@ -414,6 +424,7 @@ void CacheRegisterAllocator::discardStack(MacroAssembler& masm) {
 
 Register CacheRegisterAllocator::allocateRegister(MacroAssembler& masm) {
   MOZ_ASSERT(!addedFailurePath_);
+  MOZ_ASSERT(!hasAutoScratchFloatRegisterSpill());
 
   if (availableRegs_.empty()) {
     freeDeadOperandLocations(masm);
@@ -468,6 +479,7 @@ Register CacheRegisterAllocator::allocateRegister(MacroAssembler& masm) {
 void CacheRegisterAllocator::allocateFixedRegister(MacroAssembler& masm,
                                                    Register reg) {
   MOZ_ASSERT(!addedFailurePath_);
+  MOZ_ASSERT(!hasAutoScratchFloatRegisterSpill());
 
   // Fixed registers should be allocated first, to ensure they're
   // still available.
@@ -1290,6 +1302,7 @@ bool CacheIRCompiler::addFailurePath(FailurePath** failure) {
 #ifdef DEBUG
   allocator.setAddedFailurePath();
 #endif
+  MOZ_ASSERT(!allocator.hasAutoScratchFloatRegisterSpill());
 
   FailurePath newFailure;
   for (size_t i = 0; i < writer_.numInputOperands(); i++) {
@@ -6234,6 +6247,7 @@ AutoScratchFloatRegister::AutoScratchFloatRegister(CacheIRCompiler* compiler,
   if (!compiler_->isBaseline()) {
     MacroAssembler& masm = compiler_->masm;
     masm.push(FloatReg0);
+    compiler->allocator.setHasAutoScratchFloatRegisterSpill(true);
   }
 
   if (failure_) {
@@ -6249,6 +6263,7 @@ AutoScratchFloatRegister::~AutoScratchFloatRegister() {
   if (!compiler_->isBaseline()) {
     MacroAssembler& masm = compiler_->masm;
     masm.pop(FloatReg0);
+    compiler_->allocator.setHasAutoScratchFloatRegisterSpill(false);
 
     if (failure_) {
       Label done;
