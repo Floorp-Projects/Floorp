@@ -225,10 +225,10 @@ jobs:
         symbol: I(flatpak)
     webrender:
         symbol: I(webrender)
-        parent: debian9-base
+        parent: debian10-base
     wgpu:
         symbol: I(wgpu)
-        parent: debian9-base
+        parent: debian10-base
     condprof:
         symbol: I(condprof)
         parent: ubuntu1804-test
@@ -237,7 +237,7 @@ jobs:
         parent: debian10-base
     github-sync:
         symbol: I(github-sync)
-        parent: debian9-base
+        parent: debian10-base
     system-symbols-mac:
         symbol: I(system-symbols-mac)
     system-symbols-win:
