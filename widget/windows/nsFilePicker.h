@@ -98,7 +98,6 @@ class nsFilePicker : public IFileDialogEvents, public nsBaseWinFilePicker {
   nsString mFilterList;
   int16_t mSelectedType;
   nsCOMArray<nsIFile> mFiles;
-  static char mLastUsedDirectory[];
   nsString mUnicodeFile;
   static char16_t* mLastUsedUnicodeDirectory;
   HWND mDlgWnd;
