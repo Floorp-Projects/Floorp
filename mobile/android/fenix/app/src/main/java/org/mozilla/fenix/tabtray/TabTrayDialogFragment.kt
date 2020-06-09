@@ -122,6 +122,7 @@ class TabTrayDialogFragment : AppCompatDialogFragment(), TabTrayInteractor {
 
     override fun onDestroyView() {
         _tabTrayView = null
+        tabsFeature = null
         super.onDestroyView()
     }
 
@@ -134,7 +135,6 @@ class TabTrayDialogFragment : AppCompatDialogFragment(), TabTrayInteractor {
     override fun onStop() {
         tabsFeature?.stop()
         tabTrayView.tabsTray.unregister(tabTrayView)
-        tabsFeature = null
         super.onStop()
     }
 
