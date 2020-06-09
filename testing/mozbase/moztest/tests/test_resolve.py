@@ -71,6 +71,13 @@ def create_tests(topsrcdir):
             }
             test.update(**defaults)
             test.update(**kwargs)
+
+            # Normalize paths to ensure that the fixture matches reality.
+            for k in ['ancestor_manifest', 'manifest', 'manifest_relpath', 'path', 'relpath']:
+                p = test.get(k)
+                if p:
+                    test[k] = p.replace('/', os.path.sep)
+
             tests[path].append(test)
 
         # dump tests to stdout for easier debugging on failure
@@ -97,6 +104,18 @@ def all_tests(create_tests):
             "firefox-appdir": "browser",
             "flavor": "xpcshell",
             "head": "head_global.js head_helpers.js head_http.js",
+         }),
+        ("carrot/test_included.js", {
+            "ancestor_manifest": "carrot/xpcshell-one.ini",
+            "manifest": "carrot/xpcshell-shared.ini",
+            "flavor": "xpcshell",
+            "stick": "one",
+         }),
+        ("carrot/test_included.js", {
+            "ancestor_manifest": "carrot/xpcshell-two.ini",
+            "manifest": "carrot/xpcshell-shared.ini",
+            "flavor": "xpcshell",
+            "stick": "two",
          }),
         ("dragonfruit/elderberry/test_xpcshell_C.js", {
             "flavor": "xpcshell",
@@ -142,10 +161,21 @@ def all_tests(create_tests):
 
 @pytest.fixture(scope='module')
 def defaults(topsrcdir):
+    def to_abspath(relpath):
+        # test-defaults.pkl uses absolute paths with platform-specific path separators.
+        # Use platform-specific separators if needed to avoid regressing on bug 1644223.
+        return os.path.normpath(os.path.join(topsrcdir, relpath))
+
     return {
-        mozpath.join(topsrcdir, "dragonfruit/elderberry/xpcshell_updater.ini"): {
+        (to_abspath("dragonfruit/elderberry/xpcshell_updater.ini")): {
             "support-files": "\ndata/**\nxpcshell_updater.ini"
-        }
+        },
+        (to_abspath("carrot/xpcshell-one.ini"), to_abspath("carrot/xpcshell-shared.ini")): {
+            "head": "head_one.js",
+        },
+        (to_abspath("carrot/xpcshell-two.ini"), to_abspath("carrot/xpcshell-shared.ini")): {
+            "head": "head_two.js",
+        },
     }
 
 
@@ -178,18 +208,18 @@ def resolver(request, tmpdir, topsrcdir, all_tests, defaults):
 
 
 def test_load(resolver):
-    assert len(resolver.tests_by_path) == 8
+    assert len(resolver.tests_by_path) == 9
 
-    assert len(resolver.tests_by_flavor['xpcshell']) == 3
+    assert len(resolver.tests_by_flavor['xpcshell']) == 4
     assert len(resolver.tests_by_flavor['mochitest-plain']) == 0
 
 
 def test_resolve_all(resolver):
-    assert len(list(resolver._resolve())) == 9
+    assert len(list(resolver._resolve())) == 11
 
 
 def test_resolve_filter_flavor(resolver):
-    assert len(list(resolver._resolve(flavor='xpcshell'))) == 4
+    assert len(list(resolver._resolve(flavor='xpcshell'))) == 6
 
 
 def test_resolve_by_dir(resolver):
@@ -287,7 +317,7 @@ def test_wildcard_patterns(resolver):
         assert t['file_relpath'].startswith('fig')
 
     tests = list(resolver.resolve_tests(paths=['**/**.js', 'apple/**']))
-    assert len(tests) == 7
+    assert len(tests) == 9
     for t in tests:
         path = t['file_relpath']
         assert path.startswith('apple') or path.endswith('.js')
@@ -305,6 +335,26 @@ def test_resolve_metadata(resolver):
         'juniper/browser_chrome.js',
         'kiwi/browser_devtools.js',
     ]
+
+def test_ancestor_manifest_defaults(resolver, topsrcdir, defaults):
+    """Test that defaults from ancestor manifests are found."""
+    tests = list(resolver._resolve(paths=['carrot/test_included.js']))
+    assert len(tests) == 2
+
+    if tests[0]['ancestor_manifest'] == os.path.join('carrot', 'xpcshell-one.ini'):
+        [testOne, testTwo] = tests
+    else:
+        [testTwo, testOne] = tests
+
+    assert testOne['ancestor_manifest'] == os.path.join('carrot', 'xpcshell-one.ini')
+    assert testOne['manifest_relpath'] == os.path.join('carrot', 'xpcshell-shared.ini')
+    assert testOne['head'] == 'head_one.js'
+    assert testOne['stick'] == 'one'
+
+    assert testTwo['ancestor_manifest'] == os.path.join('carrot', 'xpcshell-two.ini')
+    assert testTwo['manifest_relpath'] == os.path.join('carrot', 'xpcshell-shared.ini')
+    assert testTwo['head'] == 'head_two.js'
+    assert testTwo['stick'] == 'two'
 
 
 def test_task_regexes():
