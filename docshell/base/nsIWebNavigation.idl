@@ -50,11 +50,19 @@ interface nsIWebNavigation : nsISupports
    * (if available) and page state (such as form values and scroll position) is
    * restored.
    *
+   * @param {boolean} aRequireUserInteraction
+   *        Tells goBack to skip history items that did not record any user
+   *        interaction on their corresponding document while they were active.
+   *        This means in case of multiple entries mapping to the same document,
+   *        each entry has to have been flagged with user interaction separately.
+   *        If no items have user interaction, the function will fall back
+   *        to the first session history entry.
+   *
    * @throw NS_ERROR_UNEXPECTED
    *        Indicates that the call was unexpected at this time, which implies
    *        that canGoBack is false.
    */
-  void goBack();
+  void goBack([optional] in boolean aRequireUserInteraction);
 
   /**
    * Tells the object to navigate to the next session history item.  When a
@@ -62,11 +70,19 @@ interface nsIWebNavigation : nsISupports
    * (if available) and page state (such as form values and scroll position) is
    * restored.
    *
+   * @param {boolean} aRequireUserInteraction
+   *        Tells goForward to skip history items that did not record any user
+   *        interaction on their corresponding document while they were active.
+   *        This means in case of multiple entries mapping to the same document,
+   *        each entry has to have been flagged with user interaction separately.
+   *        If no items have user interaction, the function will fall back
+   *        to the latest session history entry.
+   *
    * @throw NS_ERROR_UNEXPECTED
    *        Indicates that the call was unexpected at this time, which implies
    *        that canGoForward is false.
    */
-  void goForward();
+  void goForward([optional] in boolean aRequireUserInteraction);
 
   /**
    * Tells the object to navigate to the session history item at a given index.

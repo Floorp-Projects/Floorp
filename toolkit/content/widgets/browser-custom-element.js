@@ -855,17 +855,21 @@
       }
     }
 
-    goBack() {
+    goBack(requireUserInteraction = false) {
       var webNavigation = this.webNavigation;
       if (webNavigation.canGoBack) {
-        this._wrapURIChangeCall(() => webNavigation.goBack());
+        this._wrapURIChangeCall(() =>
+          webNavigation.goBack(requireUserInteraction)
+        );
       }
     }
 
-    goForward() {
+    goForward(requireUserInteraction = false) {
       var webNavigation = this.webNavigation;
       if (webNavigation.canGoForward) {
-        this._wrapURIChangeCall(() => webNavigation.goForward());
+        this._wrapURIChangeCall(() =>
+          webNavigation.goForward(requireUserInteraction)
+        );
       }
     }
 
