@@ -10,22 +10,24 @@ namespace mozilla {
 namespace dom {
 namespace cache {
 
-void StreamControl::AddReadStream(ReadStream::Controllable* aReadStream) {
+void StreamControl::AddReadStream(
+    SafeRefPtr<ReadStream::Controllable> aReadStream) {
   AssertOwningThread();
   MOZ_DIAGNOSTIC_ASSERT(aReadStream);
   MOZ_ASSERT(!mReadStreamList.Contains(aReadStream));
-  mReadStreamList.AppendElement(aReadStream);
+  mReadStreamList.AppendElement(std::move(aReadStream));
 }
 
-void StreamControl::ForgetReadStream(ReadStream::Controllable* aReadStream) {
+void StreamControl::ForgetReadStream(
+    SafeRefPtr<ReadStream::Controllable> aReadStream) {
   AssertOwningThread();
   MOZ_ALWAYS_TRUE(mReadStreamList.RemoveElement(aReadStream));
 }
 
-void StreamControl::NoteClosed(ReadStream::Controllable* aReadStream,
+void StreamControl::NoteClosed(SafeRefPtr<ReadStream::Controllable> aReadStream,
                                const nsID& aId) {
   AssertOwningThread();
-  ForgetReadStream(aReadStream);
+  ForgetReadStream(std::move(aReadStream));
   NoteClosedAfterForget(aId);
 }
 
@@ -42,7 +44,9 @@ void StreamControl::CloseReadStreams(const nsID& aId) {
 
   ReadStreamList::ForwardIterator iter(mReadStreamList);
   while (iter.HasMore()) {
-    RefPtr<ReadStream::Controllable> stream = iter.GetNext();
+    // clonePtr() is necessary here, because closing the stream will cause it to
+    // be removed from mReadStreamList
+    SafeRefPtr<ReadStream::Controllable> stream = iter.GetNext().clonePtr();
     if (stream->MatchId(aId)) {
       stream->CloseStream();
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
@@ -74,7 +78,9 @@ void StreamControl::CloseAllReadStreamsWithoutReporting() {
 
   ReadStreamList::ForwardIterator iter(mReadStreamList);
   while (iter.HasMore()) {
-    RefPtr<ReadStream::Controllable> stream = iter.GetNext();
+    // clonePtr() is necessary here, because closing the stream will cause it to
+    // be removed from mReadStreamList
+    SafeRefPtr<ReadStream::Controllable> stream = iter.GetNext().clonePtr();
     // Note, we cannot trigger IPC traffic here.  So use
     // CloseStreamWithoutReporting().
     stream->CloseStreamWithoutReporting();
