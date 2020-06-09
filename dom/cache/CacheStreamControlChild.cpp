@@ -28,13 +28,8 @@ using mozilla::ipc::FileDescriptorSetChild;
 using mozilla::ipc::PFileDescriptorSetChild;
 
 // declared in ActorUtils.h
-PCacheStreamControlChild* AllocPCacheStreamControlChild() {
-  return new CacheStreamControlChild();
-}
-
-// declared in ActorUtils.h
-void DeallocPCacheStreamControlChild(PCacheStreamControlChild* aActor) {
-  delete aActor;
+already_AddRefed<PCacheStreamControlChild> AllocPCacheStreamControlChild() {
+  return MakeAndAddRef<CacheStreamControlChild>();
 }
 
 CacheStreamControlChild::CacheStreamControlChild()

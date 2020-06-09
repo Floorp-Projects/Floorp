@@ -28,7 +28,6 @@ class CacheStreamControlChild final : public PCacheStreamControlChild,
 
  public:
   CacheStreamControlChild();
-  ~CacheStreamControlChild();
 
   // ActorChild methods
   virtual void StartDestroy() override;
@@ -44,7 +43,10 @@ class CacheStreamControlChild final : public PCacheStreamControlChild,
   virtual void OpenStream(const nsID& aId,
                           InputStreamResolver&& aResolver) override;
 
+  NS_DECL_OWNINGTHREAD
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CacheStreamControlChild, override)
  private:
+  ~CacheStreamControlChild();
   virtual void NoteClosedAfterForget(const nsID& aId) override;
 
 #ifdef DEBUG
@@ -58,8 +60,6 @@ class CacheStreamControlChild final : public PCacheStreamControlChild,
 
   bool mDestroyStarted;
   bool mDestroyDelayed;
-
-  NS_DECL_OWNINGTHREAD
 };
 
 }  // namespace cache

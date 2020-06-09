@@ -29,7 +29,6 @@ class CacheStreamControlParent final : public PCacheStreamControlParent,
 
  public:
   CacheStreamControlParent();
-  ~CacheStreamControlParent();
 
   void SetStreamList(SafeRefPtr<StreamList> aStreamList);
   void Close(const nsID& aId);
@@ -48,6 +47,7 @@ class CacheStreamControlParent final : public PCacheStreamControlParent,
                           InputStreamResolver&& aResolver) override;
 
  private:
+  ~CacheStreamControlParent();
   virtual void NoteClosedAfterForget(const nsID& aId) override;
 
 #ifdef DEBUG
@@ -71,6 +71,7 @@ class CacheStreamControlParent final : public PCacheStreamControlParent,
   SafeRefPtr<StreamList> mStreamList;
 
   NS_DECL_OWNINGTHREAD
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CacheStreamControlParent, override)
 };
 
 }  // namespace cache

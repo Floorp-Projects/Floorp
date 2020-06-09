@@ -35,9 +35,7 @@ void DeallocPCacheChild(PCacheChild* aActor);
 
 void DeallocPCacheParent(PCacheParent* aActor);
 
-PCacheStreamControlChild* AllocPCacheStreamControlChild();
-
-void DeallocPCacheStreamControlChild(PCacheStreamControlChild* aActor);
+already_AddRefed<PCacheStreamControlChild> AllocPCacheStreamControlChild();
 
 void DeallocPCacheStreamControlParent(PCacheStreamControlParent* aActor);
 
