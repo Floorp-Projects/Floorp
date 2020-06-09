@@ -838,6 +838,15 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
   DWORD style = WindowStyle();
   DWORD extendedStyle = WindowExStyle();
 
+  // When window is PiP window on Windows7, WS_EX_COMPOSITED is set to suppress
+  // flickering during resizing with hardware acceleration.
+  bool isPIPWindow = aInitData && aInitData->mPIPWindow;
+  if (isPIPWindow && !IsWin8OrLater() &&
+      gfxConfig::IsEnabled(gfx::Feature::HW_COMPOSITING) &&
+      WidgetTypeSupportsAcceleration()) {
+    extendedStyle |= WS_EX_COMPOSITED;
+  }
+
   if (mWindowType == eWindowType_popup) {
     if (!aParent) {
       parent = nullptr;
