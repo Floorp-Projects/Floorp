@@ -32,9 +32,9 @@
 
 using namespace js;
 
-static_assert(MODULE_STATUS_UNINSTANTIATED < MODULE_STATUS_INSTANTIATING &&
-                  MODULE_STATUS_INSTANTIATING < MODULE_STATUS_INSTANTIATED &&
-                  MODULE_STATUS_INSTANTIATED < MODULE_STATUS_EVALUATED &&
+static_assert(MODULE_STATUS_UNLINKED < MODULE_STATUS_LINKING &&
+                  MODULE_STATUS_LINKING < MODULE_STATUS_LINKED &&
+                  MODULE_STATUS_LINKED < MODULE_STATUS_EVALUATED &&
                   MODULE_STATUS_EVALUATED < MODULE_STATUS_EVALUATED_ERROR,
               "Module statuses are ordered incorrectly");
 
@@ -795,7 +795,7 @@ ModuleEnvironmentObject* ModuleObject::environment() const {
 
   // According to the spec the environment record is created during
   // instantiation, but we create it earlier than that.
-  if (status() < MODULE_STATUS_INSTANTIATED) {
+  if (status() < MODULE_STATUS_LINKED) {
     return nullptr;
   }
 
@@ -848,7 +848,7 @@ void ModuleObject::setInitialEnvironment(
 }
 
 void ModuleObject::initStatusSlot() {
-  initReservedSlot(StatusSlot, Int32Value(MODULE_STATUS_UNINSTANTIATED));
+  initReservedSlot(StatusSlot, Int32Value(MODULE_STATUS_UNLINKED));
 }
 
 void ModuleObject::initImportExportData(HandleArrayObject requestedModules,
@@ -949,7 +949,7 @@ JSScript* ModuleObject::script() const {
 }
 
 static inline void AssertValidModuleStatus(ModuleStatus status) {
-  MOZ_ASSERT(status >= MODULE_STATUS_UNINSTANTIATED &&
+  MOZ_ASSERT(status >= MODULE_STATUS_UNLINKED &&
              status <= MODULE_STATUS_EVALUATED_ERROR);
 }
 
@@ -1016,12 +1016,11 @@ bool ModuleObject::noteFunctionDeclaration(JSContext* cx, HandleAtom name,
 bool ModuleObject::instantiateFunctionDeclarations(JSContext* cx,
                                                    HandleModuleObject self) {
 #ifdef DEBUG
-  MOZ_ASSERT(self->status() == MODULE_STATUS_INSTANTIATING);
+  MOZ_ASSERT(self->status() == MODULE_STATUS_LINKING);
   if (!AssertFrozen(cx, self)) {
     return false;
   }
 #endif
-
   // |self| initially manages this vector.
   FunctionDeclarationVector* funDecls = self->functionDeclarations();
   if (!funDecls) {
@@ -1034,6 +1033,7 @@ bool ModuleObject::instantiateFunctionDeclarations(JSContext* cx,
   RootedObject obj(cx);
   RootedValue value(cx);
   RootedFunction fun(cx);
+
   for (const auto& funDecl : *funDecls) {
     uint32_t funIndex = funDecl.funIndex;
     fun.set(self->script()->getFunction(funIndex));
