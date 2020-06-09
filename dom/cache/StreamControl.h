@@ -42,13 +42,14 @@ class StreamControl {
   // Begin controlling the given ReadStream.  This causes a strong ref to
   // be held by the control.  The ReadStream must call NoteClosed() or
   // ForgetReadStream() to release this ref.
-  void AddReadStream(ReadStream::Controllable* aReadStream);
+  void AddReadStream(SafeRefPtr<ReadStream::Controllable> aReadStream);
 
   // Forget the ReadStream without notifying the actor.
-  void ForgetReadStream(ReadStream::Controllable* aReadStream);
+  void ForgetReadStream(SafeRefPtr<ReadStream::Controllable> aReadStream);
 
   // Forget the ReadStream and then notify the actor the stream is closed.
-  void NoteClosed(ReadStream::Controllable* aReadStream, const nsID& aId);
+  void NoteClosed(SafeRefPtr<ReadStream::Controllable> aReadStream,
+                  const nsID& aId);
 
  protected:
   ~StreamControl();
@@ -73,7 +74,7 @@ class StreamControl {
  private:
   // Hold strong references to ReadStream object.  When the stream is closed
   // it should call NoteClosed() or ForgetReadStream() to release this ref.
-  typedef nsTObserverArray<RefPtr<ReadStream::Controllable>> ReadStreamList;
+  typedef nsTObserverArray<SafeRefPtr<ReadStream::Controllable>> ReadStreamList;
   ReadStreamList mReadStreamList;
 };
 
