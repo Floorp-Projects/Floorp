@@ -341,24 +341,21 @@ FRAME_STATE_BIT(FlexContainer, 20,
 // 'display:-webkit-{inline-}box' or 'display:-moz-{inline-}box' container.
 FRAME_STATE_BIT(FlexContainer, 21, NS_STATE_FLEX_IS_EMULATING_LEGACY_BOX)
 
-// True iff computed flex values should be generated on the next reflow
-FRAME_STATE_BIT(FlexContainer, 22, NS_STATE_FLEX_GENERATE_COMPUTED_VALUES)
-
 // True if the container has no flex items; may lie if there is a pending reflow
-FRAME_STATE_BIT(FlexContainer, 23, NS_STATE_FLEX_SYNTHESIZE_BASELINE)
+FRAME_STATE_BIT(FlexContainer, 22, NS_STATE_FLEX_SYNTHESIZE_BASELINE)
 
 // True if any flex item in the container has a line with a
 // -webkit-line-ellipsis marker.
-FRAME_STATE_BIT(FlexContainer, 24, NS_STATE_FLEX_HAS_LINE_CLAMP_ELLIPSIS)
+FRAME_STATE_BIT(FlexContainer, 23, NS_STATE_FLEX_HAS_LINE_CLAMP_ELLIPSIS)
 
 // True iff some first-in-flow in-flow children were pushed.
 // Note that those child frames may have been removed without this bit
 // being updated for performance reasons, so code shouldn't depend on
 // actually finding any pushed items when this bit is set.
-FRAME_STATE_BIT(FlexContainer, 25, NS_STATE_FLEX_DID_PUSH_ITEMS)
+FRAME_STATE_BIT(FlexContainer, 24, NS_STATE_FLEX_DID_PUSH_ITEMS)
 
 // We've merged some OverflowList children since last reflow.
-FRAME_STATE_BIT(FlexContainer, 26, NS_STATE_FLEX_HAS_CHILD_NIFS)
+FRAME_STATE_BIT(FlexContainer, 25, NS_STATE_FLEX_HAS_CHILD_NIFS)
 
 // == Frame state bits that apply to grid container frames ====================
 
@@ -375,35 +372,32 @@ FRAME_STATE_BIT(GridContainer, 20,
 // actually finding any pushed items when this bit is set.
 FRAME_STATE_BIT(GridContainer, 21, NS_STATE_GRID_DID_PUSH_ITEMS)
 
-// True iff computed grid values should be generated on the next reflow.
-FRAME_STATE_BIT(GridContainer, 22, NS_STATE_GRID_GENERATE_COMPUTED_VALUES)
-
 // True if the container has no grid items; may lie if there is a pending
 // reflow.
-FRAME_STATE_BIT(GridContainer, 23, NS_STATE_GRID_SYNTHESIZE_BASELINE)
+FRAME_STATE_BIT(GridContainer, 22, NS_STATE_GRID_SYNTHESIZE_BASELINE)
 
 // True if the container is a subgrid in its inline axis.
-FRAME_STATE_BIT(GridContainer, 24, NS_STATE_GRID_IS_COL_SUBGRID)
+FRAME_STATE_BIT(GridContainer, 23, NS_STATE_GRID_IS_COL_SUBGRID)
 
 // True if the container is a subgrid in its block axis.
-FRAME_STATE_BIT(GridContainer, 25, NS_STATE_GRID_IS_ROW_SUBGRID)
+FRAME_STATE_BIT(GridContainer, 24, NS_STATE_GRID_IS_ROW_SUBGRID)
 
 // The container contains one or more items subgridded in its inline axis.
-FRAME_STATE_BIT(GridContainer, 26, NS_STATE_GRID_HAS_COL_SUBGRID_ITEM)
+FRAME_STATE_BIT(GridContainer, 25, NS_STATE_GRID_HAS_COL_SUBGRID_ITEM)
 
 // The container contains one or more items subgridded in its block axis.
-FRAME_STATE_BIT(GridContainer, 27, NS_STATE_GRID_HAS_ROW_SUBGRID_ITEM)
+FRAME_STATE_BIT(GridContainer, 26, NS_STATE_GRID_HAS_ROW_SUBGRID_ITEM)
 
 // We've merged some OverflowList children since last reflow.
-FRAME_STATE_BIT(GridContainer, 28, NS_STATE_GRID_HAS_CHILD_NIFS)
+FRAME_STATE_BIT(GridContainer, 27, NS_STATE_GRID_HAS_CHILD_NIFS)
 
 // True if the container has masonry layout in its inline axis.
 // (mutually exclusive with NS_STATE_GRID_IS_ROW_MASONRY)
-FRAME_STATE_BIT(GridContainer, 29, NS_STATE_GRID_IS_COL_MASONRY)
+FRAME_STATE_BIT(GridContainer, 28, NS_STATE_GRID_IS_COL_MASONRY)
 
 // True if the container has masonry layout in its block axis.
 // (mutually exclusive with NS_STATE_GRID_IS_COL_MASONRY)
-FRAME_STATE_BIT(GridContainer, 30, NS_STATE_GRID_IS_ROW_MASONRY)
+FRAME_STATE_BIT(GridContainer, 29, NS_STATE_GRID_IS_ROW_MASONRY)
 
 // == Frame state bits that apply to SVG frames ===============================
 
