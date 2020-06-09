@@ -3477,7 +3477,7 @@ impl<'ctx> StreamOps for AudioUnitStream<'ctx> {
             };
             return Ok(position);
         }
-        Err(Error::error())
+        Ok(frames_played)
     }
     #[cfg(target_os = "ios")]
     fn latency(&mut self) -> Result<u32> {
