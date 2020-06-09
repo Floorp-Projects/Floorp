@@ -969,7 +969,7 @@
         "media.peerconnection.enabled": {
           "type": "boolean"
         },
-        "media.peerconnection.ice.obfuscate_host_addresses.whitelist": {
+        "media.peerconnection.ice.obfuscate_host_addresses.blocklist": {
           "type": "string"
         },
         "network.dns.disableIPv6": {
