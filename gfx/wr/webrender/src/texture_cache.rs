@@ -7,8 +7,8 @@ use api::{DebugFlags, ImageDescriptor};
 use api::units::*;
 #[cfg(test)]
 use api::{DocumentId, IdNamespace};
-use crate::device::{TextureFilter, TextureFormatPair, total_gpu_bytes_allocated};
-use crate::freelist::{FreeList, FreeListHandle, UpsertResult, WeakFreeListHandle};
+use crate::device::{TextureFilter, TextureFormatPair};
+use crate::freelist::{FreeListHandle, WeakFreeListHandle};
 use crate::gpu_cache::{GpuCache, GpuCacheHandle};
 use crate::gpu_types::{ImageSource, UvRectKind};
 use crate::internal_types::{
@@ -16,14 +16,14 @@ use crate::internal_types::{
     TextureUpdateList, TextureUpdateSource, TextureSource,
     TextureCacheAllocInfo, TextureCacheUpdate,
 };
+use crate::lru_cache::LRUCache;
 use crate::profiler::{ResourceProfileCounter, TextureCacheProfileCounters};
-use crate::render_backend::{FrameId, FrameStamp};
+use crate::render_backend::FrameStamp;
 use crate::resource_cache::{CacheItem, CachedImageData};
 use smallvec::SmallVec;
 use std::cell::Cell;
 use std::cmp;
 use std::mem;
-use std::time::{Duration, SystemTime};
 use std::rc::Rc;
 
 /// The size of each region/layer in shared cache texture arrays.
@@ -37,11 +37,6 @@ const PICTURE_TILE_FORMAT: ImageFormat = ImageFormat::RGBA8;
 /// The number of pixels in a region. Derived from the above.
 const TEXTURE_REGION_PIXELS: usize =
     (TEXTURE_REGION_DIMENSIONS as usize) * (TEXTURE_REGION_DIMENSIONS as usize);
-
-/// If the total bytes allocated in shared / standalone cache is less
-/// than this, then allow the cache to grow without forcing an eviction.
-// TODO(gw): In future, it's probably reasonable to make this higher again, perhaps 64-128 MB.
-const CACHE_EVICTION_THRESHOLD_BYTES: usize = 32 * 1024 * 1024;
 
 /// Items in the texture cache can either be standalone textures,
 /// or a sub-rect inside the shared cache.
@@ -77,26 +72,9 @@ impl EntryDetails {
     }
 }
 
-impl EntryDetails {
-    /// Returns the kind associated with the details.
-    fn kind(&self) -> EntryKind {
-        match *self {
-            EntryDetails::Standalone { .. } => EntryKind::Standalone,
-            EntryDetails::Picture { .. } => EntryKind::Picture,
-            EntryDetails::Cache { .. } => EntryKind::Shared,
-        }
-    }
-}
-
-/// Tag identifying standalone-versus-shared, without the details.
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-enum EntryKind {
-    Standalone,
-    Picture,
-    Shared,
-}
-
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 pub enum CacheEntryMarker {}
 
 // Stores information related to a single entry in the texture
@@ -113,6 +91,9 @@ struct CacheEntry {
     /// Arbitrary user data associated with this item.
     user_data: [f32; 3],
     /// The last frame this item was requested for rendering.
+    // TODO(gw): This stamp is only used for picture cache tiles, and some checks
+    //           in the glyph cache eviction code. We could probably remove it
+    //           entirely in future (or move to EntryDetails::Picture).
     last_access: FrameStamp,
     /// Handle to the resource rect in the GPU cache.
     uv_rect_handle: GpuCacheHandle,
@@ -126,8 +107,6 @@ struct CacheEntry {
     eviction_notice: Option<EvictionNotice>,
     /// The type of UV rect this entry specifies.
     uv_rect_kind: UvRectKind,
-    /// If set to `Auto` the cache entry may be evicted if unused for a number of frames.
-    eviction: Eviction,
 }
 
 impl CacheEntry {
@@ -153,7 +132,6 @@ impl CacheEntry {
             uv_rect_handle: GpuCacheHandle::new(),
             eviction_notice: None,
             uv_rect_kind: params.uv_rect_kind,
-            eviction: Eviction::Auto,
         }
     }
 
@@ -451,138 +429,12 @@ impl PictureTextures {
     }
 }
 
-/// Lists of strong handles owned by the texture cache. There is only one strong
-/// handle for each entry, but unlimited weak handles. Consumers receive the weak
-/// handles, and `TextureCache` owns the strong handles internally.
-#[derive(Default, Debug)]
-#[cfg_attr(feature = "capture", derive(Serialize))]
-#[cfg_attr(feature = "replay", derive(Deserialize))]
-struct EntryHandles {
-    /// Handles for each standalone texture cache entry.
-    standalone: Vec<FreeListHandle<CacheEntryMarker>>,
-    /// Handles for each picture cache entry.
-    picture: Vec<FreeListHandle<CacheEntryMarker>>,
-    /// Handles for each shared texture cache entry.
-    shared: Vec<FreeListHandle<CacheEntryMarker>>,
-}
-
-impl EntryHandles {
-    /// Mutably borrows the requested handle list.
-    fn select(&mut self, kind: EntryKind) -> &mut Vec<FreeListHandle<CacheEntryMarker>> {
-        match kind {
-            EntryKind::Standalone => &mut self.standalone,
-            EntryKind::Picture => &mut self.picture,
-            EntryKind::Shared => &mut self.shared,
-        }
-    }
-}
-
 /// Container struct for the various parameters used in cache allocation.
 struct CacheAllocParams {
     descriptor: ImageDescriptor,
     filter: TextureFilter,
     user_data: [f32; 3],
     uv_rect_kind: UvRectKind,
-}
-
-/// Criterion to determine whether a cache entry should be evicted. Generated
-/// with `EvictionThresholdBuilder`.
-///
-/// Our eviction scheme is based on the age of the entry, both in terms of
-/// number of frames and ellapsed time. It does not directly consider the size
-/// of the entry, but may consider overall memory usage by WebRender, by making
-/// eviction increasingly aggressive as overall memory usage increases.
-///
-/// Note that we don't just wrap a `FrameStamp` here, because `FrameStamp`
-/// requires that if the id fields are the same, the time fields will be as
-/// well. The pair of values in our eviction threshold generally do not match
-/// the stamp of any actual frame, and the comparison semantics are also
-/// different - so it's best to use a distinct type.
-#[derive(Clone, Copy)]
-struct EvictionThreshold {
-    id: FrameId,
-    time: SystemTime,
-}
-
-impl EvictionThreshold {
-    /// Returns true if the entry with the given access record should be evicted
-    /// under this threshold.
-    fn should_evict(&self, last_access: FrameStamp) -> bool {
-        last_access.frame_id() < self.id &&
-        last_access.time() < self.time
-    }
-}
-
-/// Helper to generate an `EvictionThreshold` with the desired policy.
-///
-/// Without any constraints, the builder will generate a threshold that evicts
-/// all frames other than the current one. Constraints are additive, i.e. setting
-/// a frame limit and a time limit only evicts frames with an id and time each
-/// less than the respective limits.
-struct EvictionThresholdBuilder {
-    now: FrameStamp,
-    max_frames: Option<usize>,
-    max_time_ms: Option<usize>,
-    scale_by_pressure: bool,
-}
-
-impl EvictionThresholdBuilder {
-    fn new(now: FrameStamp) -> Self {
-        Self {
-            now,
-            max_frames: None,
-            max_time_ms: None,
-            scale_by_pressure: false,
-        }
-    }
-
-    fn max_frames(mut self, frames: usize) -> Self {
-        self.max_frames = Some(frames);
-        self
-    }
-
-    fn max_time_s(mut self, seconds: usize) -> Self {
-        self.max_time_ms = Some(seconds * 1000);
-        self
-    }
-
-    fn scale_by_pressure(mut self) -> Self {
-        self.scale_by_pressure = true;
-        self
-    }
-
-    fn build(self) -> EvictionThreshold {
-        const MAX_MEMORY_PRESSURE_BYTES: f64 = (300 * 512 * 512 * 4) as f64;
-        // Compute the memory pressure factor in the range of [0, 1.0].
-        let pressure_factor = if self.scale_by_pressure {
-            let bytes_allocated = total_gpu_bytes_allocated() as f64;
-            1.0 - (bytes_allocated / MAX_MEMORY_PRESSURE_BYTES).min(0.98)
-        } else {
-            1.0
-        };
-
-        // Compute the maximum period an entry can go unused before eviction.
-        // If a category (frame or time) wasn't specified, we set the
-        // threshold for that category to |now|, which lets the other category
-        // be the deciding factor. If neither category is specified, we'll evict
-        // everything but the current frame.
-        //
-        // Note that we need to clamp the frame id to avoid it going negative or
-        // matching FrameId::INVALID early in execution. We don't need to clamp
-        // the time because it's unix-epoch-relative.
-        let max_frames = self.max_frames
-            .map(|f| (f as f64 * pressure_factor) as usize)
-            .unwrap_or(0)
-            .min(self.now.frame_id().as_usize() - 1);
-        let max_time_ms = self.max_time_ms
-            .map(|f| (f as f64 * pressure_factor) as usize)
-            .unwrap_or(0) as u64;
-
-        EvictionThreshold {
-            id: self.now.frame_id() - max_frames,
-            time: self.now.time() - Duration::from_millis(max_time_ms),
-        }
-    }
 }
 
 /// General-purpose manager for images in GPU memory. This includes images,
@@ -634,15 +486,18 @@ pub struct TextureCache {
     /// The current `FrameStamp`. Used for cache eviction policies.
     now: FrameStamp,
 
-    /// Maintains the list of all current items in the texture cache.
-    entries: FreeList<CacheEntry, CacheEntryMarker>,
+    /// List of picture cache entries. These are maintained separately from regular
+    /// texture cache entries.
+    picture_cache_handles: Vec<FreeListHandle<CacheEntryMarker>>,
 
-    /// The last `FrameStamp` in which we expired the shared cache.
-    last_shared_cache_expiration: FrameStamp,
+    /// Cache of texture cache handles with automatic lifetime management, evicted
+    /// in a least-recently-used order (except those entries with manual eviction enabled).
+    lru_cache: LRUCache<CacheEntry, CacheEntryMarker>,
 
-    /// Strong handles for all entries that this document has allocated
-    /// from the shared FreeList.
-    handles: EntryHandles,
+    /// A list of texture cache handles that have been set to explicitly have manual
+    /// eviction policy enabled. The handles reference cache entries in the lru_cache
+    /// above, but have opted in to manual lifetime management.
+    manual_handles: Vec<FreeListHandle<CacheEntryMarker>>,
 
     /// Estimated memory usage of allocated entries in all of the shared textures. This
     /// is used to decide when to evict old items from the cache.
@@ -651,6 +506,17 @@ pub struct TextureCache {
     /// Number of bytes allocated in standalone textures. Used as an input to deciding
     /// when to run texture cache eviction.
     standalone_bytes_allocated: usize,
+
+    /// If the total bytes allocated in shared / standalone cache is less
+    /// than this, then allow the cache to grow without forcing an eviction.
+    // TODO(gw): In future, it's probably reasonable to make this higher again, perhaps 64-128 MB.
+    eviction_threshold_bytes: usize,
+
+    /// The maximum number of items that will be evicted per frame. This limit helps avoid jank
+    /// on frames where we want to evict a large number of items. Instead, we'd prefer to drop
+    /// the items incrementally over a number of frames, even if that means the total allocated
+    /// size of the cache is above the desired threshold for a small number of frames.
+    max_evictions_per_frame: usize,
 }
 
 impl TextureCache {
@@ -661,6 +527,8 @@ impl TextureCache {
         initial_size: DeviceIntSize,
         color_formats: TextureFormatPair<ImageFormat>,
         swizzle: Option<SwizzleSettings>,
+        eviction_threshold_bytes: usize,
+        max_evictions_per_frame: usize,
     ) -> Self {
         // On MBP integrated Intel GPUs, texture arrays appear to be
         // implemented as a single texture of stacked layers, and that
@@ -709,7 +577,6 @@ impl TextureCache {
                 &mut next_texture_id,
                 &mut pending_updates,
             ),
-            entries: FreeList::new(),
             max_texture_size,
             max_texture_layers,
             swizzle,
@@ -717,10 +584,13 @@ impl TextureCache {
             next_id: next_texture_id,
             pending_updates,
             now: FrameStamp::INVALID,
-            last_shared_cache_expiration: FrameStamp::INVALID,
-            handles: EntryHandles::default(),
+            lru_cache: LRUCache::new(),
             shared_bytes_allocated: 0,
             standalone_bytes_allocated: 0,
+            picture_cache_handles: Vec::new(),
+            manual_handles: Vec::new(),
+            eviction_threshold_bytes,
+            max_evictions_per_frame,
         }
     }
 
@@ -740,6 +610,8 @@ impl TextureCache {
             DeviceIntSize::zero(),
             TextureFormatPair::from(image_format),
             None,
+            64 * 1024 * 1024,
+            32,
         );
         let mut now = FrameStamp::first(DocumentId::new(IdNamespace(1), 1));
         now.advance();
@@ -751,43 +623,37 @@ impl TextureCache {
         self.debug_flags = flags;
     }
 
-    /// Clear all entries of the specified kind.
-    fn clear_kind(&mut self, kind: EntryKind) {
-        let entry_handles = mem::replace(
-            self.handles.select(kind),
+    /// Clear all entries in the texture cache. This is a fairly drastic
+    /// step that should only be called very rarely.
+    pub fn clear_all(&mut self) {
+        // Evict all manual eviction handles
+        let manual_handles = mem::replace(
+            &mut self.manual_handles,
             Vec::new(),
         );
+        for handle in manual_handles {
+            self.evict_impl(handle);
+        }
 
-        for handle in entry_handles {
-            let entry = self.entries.free(handle);
+        // Evict all picture cache handles
+        let picture_handles = mem::replace(
+            &mut self.picture_cache_handles,
+            Vec::new(),
+        );
+        for handle in picture_handles {
+            self.evict_impl(handle);
+        }
+
+        // Evict all auto (LRU) cache handles
+        while let Some(entry) = self.lru_cache.pop_oldest() {
             entry.evict();
             self.free(&entry);
         }
 
-        self.pending_updates.note_clear();
-    }
-
-    fn clear_standalone(&mut self) {
-        debug_assert!(!self.now.is_valid());
-        self.clear_kind(EntryKind::Standalone);
-    }
-
-    fn clear_picture(&mut self) {
-        self.clear_kind(EntryKind::Picture);
+        // Free the picture and shared textures
         self.picture_textures.clear(&mut self.pending_updates);
-    }
-
-    fn clear_shared(&mut self) {
-        self.clear_kind(EntryKind::Shared);
         self.shared_textures.clear(&mut self.pending_updates);
-    }
-
-    /// Clear all entries in the texture cache. This is a fairly drastic
-    /// step that should only be called very rarely.
-    pub fn clear_all(&mut self) {
-        self.clear_standalone();
-        self.clear_picture();
-        self.clear_shared();
+        self.pending_updates.note_clear();
     }
 
     /// Called at the beginning of each frame.
@@ -795,22 +661,19 @@ impl TextureCache {
         debug_assert!(!self.now.is_valid());
         profile_scope!("begin_frame");
         self.now = stamp;
+
+        // Texture cache eviction is done at the start of the frame. This ensures that
+        // we won't evict items that have been requested on this frame.
+        self.evict_items_from_cache_if_required();
     }
 
     pub fn end_frame(&mut self, texture_cache_profile: &mut TextureCacheProfileCounters) {
         debug_assert!(self.now.is_valid());
-        // Expire standalone entries.
-        //
-        // Most of the time, standalone cache entries correspond to images whose
-        // width or height is greater than the region size in the shared cache, i.e.
-        // 512 pixels. Cached render tasks also frequently get standalone entries,
-        // but those use the Eviction::Eager policy (for now). So the tradeoff there
-        // is largely around reducing texture upload jank while keeping memory usage
-        // at an acceptable level.
-        let threshold = self.default_eviction();
-        self.expire_old_entries(EntryKind::Standalone, threshold);
         self.expire_old_picture_cache_tiles();
 
+        // Release of empty shared textures is done at the end of the frame. That way, if the
+        // eviction at the start of the frame frees up a texture, that is then subsequently
+        // used during the frame, we avoid doing a free/alloc for it.
         self.shared_textures.array_alpha8_linear.release_empty_textures(&mut self.pending_updates);
         self.shared_textures.array_alpha16_linear.release_empty_textures(&mut self.pending_updates);
         self.shared_textures.array_color8_linear.release_empty_textures(&mut self.pending_updates);
@@ -826,6 +689,8 @@ impl TextureCache {
             .update_profile(&mut texture_cache_profile.pages_color8_nearest);
         self.picture_textures
             .update_profile(&mut texture_cache_profile.pages_picture);
+        texture_cache_profile.shared_bytes.set(self.shared_bytes_allocated);
+        texture_cache_profile.standalone_bytes.set(self.standalone_bytes_allocated);
 
         self.now = FrameStamp::INVALID;
     }
@@ -839,7 +704,7 @@ impl TextureCache {
     // texture cache (either never uploaded, or has been
     // evicted on a previous frame).
     pub fn request(&mut self, handle: &TextureCacheHandle, gpu_cache: &mut GpuCache) -> bool {
-        match self.entries.get_opt_mut(handle) {
+        match self.lru_cache.touch(handle) {
             // If an image is requested that is already in the cache,
             // refresh the GPU cache data associated with this item.
             Some(entry) => {
@@ -855,7 +720,7 @@ impl TextureCache {
     // texture cache (either never uploaded, or has been
     // evicted on a previous frame).
     pub fn needs_upload(&self, handle: &TextureCacheHandle) -> bool {
-        self.entries.get_opt(handle).is_none()
+        self.lru_cache.get_opt(handle).is_none()
     }
 
     pub fn max_texture_size(&self) -> i32 {
@@ -880,6 +745,16 @@ impl TextureCache {
     #[cfg(feature = "replay")]
     pub fn swizzle_settings(&self) -> Option<SwizzleSettings> {
         self.swizzle
+    }
+
+    #[cfg(feature = "replay")]
+    pub fn eviction_threshold_bytes(&self) -> usize {
+        self.eviction_threshold_bytes
+    }
+
+    #[cfg(feature = "replay")]
+    pub fn max_evictions_per_frame(&self) -> usize {
+        self.max_evictions_per_frame
     }
 
     pub fn pending_updates(&mut self) -> TextureUpdateList {
@@ -908,7 +783,7 @@ impl TextureCache {
         // - Never been in the cache
         // - Has been in the cache but was evicted.
         // - Exists in the cache but dimensions / format have changed.
-        let realloc = match self.entries.get_opt(handle) {
+        let realloc = match self.lru_cache.get_opt(handle) {
             Some(entry) => {
                 entry.size != descriptor.size || (entry.input_format != descriptor.format &&
                     entry.alternative_input_format() != descriptor.format)
@@ -927,7 +802,14 @@ impl TextureCache {
             dirty_rect = DirtyRect::All;
         }
 
-        let entry = self.entries.get_opt_mut(handle)
+        // Update eviction policy (this is a no-op if it hasn't changed)
+        if eviction == Eviction::Manual {
+            if let Some(manual_handle) = self.lru_cache.set_manual_eviction(handle) {
+                self.manual_handles.push(manual_handle);
+            }
+        }
+
+        let entry = self.lru_cache.get_opt_mut(handle)
             .expect("BUG: handle must be valid now");
 
         // Install the new eviction notice for this update, if applicable.
@@ -942,8 +824,6 @@ impl TextureCache {
 
         // Upload the resource rect and texture array layer.
         entry.update_gpu_cache(gpu_cache);
-
-        entry.eviction = eviction;
 
         // Create an update command, which the render thread processes
         // to upload the new image data into the correct location
@@ -970,13 +850,13 @@ impl TextureCache {
     // Check if a given texture handle has a valid allocation
     // in the texture cache.
     pub fn is_allocated(&self, handle: &TextureCacheHandle) -> bool {
-        self.entries.get_opt(handle).is_some()
+        self.lru_cache.get_opt(handle).is_some()
     }
 
     // Check if a given texture handle was last used as recently
     // as the specified number of previous frames.
     pub fn is_recently_used(&self, handle: &TextureCacheHandle, margin: usize) -> bool {
-        self.entries.get_opt(handle).map_or(false, |entry| {
+        self.lru_cache.get_opt(handle).map_or(false, |entry| {
             entry.last_access.frame_id() + margin >= self.now.frame_id()
         })
     }
@@ -984,7 +864,7 @@ impl TextureCache {
     // Return the allocated size of the texture handle's associated data,
     // or otherwise indicate the handle is invalid.
     pub fn get_allocated_size(&self, handle: &TextureCacheHandle) -> Option<usize> {
-        self.entries.get_opt(handle).map(|entry| {
+        self.lru_cache.get_opt(handle).map(|entry| {
             (entry.input_format.bytes_per_pixel() * entry.size.area()) as usize
         })
     }
@@ -1013,7 +893,7 @@ impl TextureCache {
         &self,
         handle: &TextureCacheHandle,
     ) -> (CacheTextureId, LayerIndex, DeviceIntRect, Swizzle, GpuCacheHandle) {
-        let entry = self.entries
+        let entry = self.lru_cache
             .get_opt(handle)
             .expect("BUG: was dropped from cache or not updated!");
         debug_assert_eq!(entry.last_access, self.now);
@@ -1025,44 +905,39 @@ impl TextureCache {
          entry.uv_rect_handle)
     }
 
-    pub fn mark_unused(&mut self, handle: &TextureCacheHandle) {
-        if let Some(entry) = self.entries.get_opt_mut(handle) {
-            // Set last accessed stamp invalid to ensure it gets cleaned up
-            // next time we expire entries.
-            entry.last_access = FrameStamp::INVALID;
-            entry.eviction = Eviction::Auto;
-        }
+    /// Internal helper function to evict a strong texture cache handle
+    fn evict_impl(
+        &mut self,
+        handle: FreeListHandle<CacheEntryMarker>,
+    ) {
+        let entry = self.lru_cache.remove_manual_handle(handle);
+        entry.evict();
+        self.free(&entry);
     }
 
-    /// Returns the default eviction policy.
-    ///
-    /// These parameters come from very rough instrumentation of hits in the
-    /// shared cache, with simple browsing on a few pages. In rough terms, more
-    /// than 99.5% of cache hits occur for entries that were used in the previous
-    /// frame. This is obviously the dominant case, but we still want good behavior
-    /// in long-tail cases (i.e. a large image is scrolled off-screen and on again).
-    /// If we exclude immediately-reused (first frame) entries, 70% of the remaining
-    /// hits happen within the first 200 frames. So we can be relatively agressive
-    /// about eviction without sacrificing much in terms of cache performance.
-    /// The one wrinkle is that animation-heavy pages do tend to extend the
-    /// distribution, presumably because they churn through FrameIds faster than
-    /// their more-static counterparts. As such, we _also_ provide a time floor
-    /// (which was not measured with the same degree of rigour).
-    fn default_eviction(&self) -> EvictionThreshold {
-        EvictionThresholdBuilder::new(self.now)
-            .max_frames(200)
-            .max_time_s(2)
-            .scale_by_pressure()
-            .build()
+    /// Evict a texture cache handle that was previously set to be in manual
+    /// eviction mode.
+    pub fn evict_manual_handle(&mut self, handle: &TextureCacheHandle) {
+        // Find the strong handle that matches this weak handle. If this
+        // ever shows up in profiles, we can make it a hash (but the number
+        // of manual eviction handles is typically small).
+        let index = self.manual_handles.iter().position(|strong_handle| {
+            strong_handle.matches(handle)
+        });
+
+        if let Some(index) = index {
+            let handle = self.manual_handles.swap_remove(index);
+            self.evict_impl(handle);
+        }
     }
 
     /// Expire picture cache tiles that haven't been referenced in the last frame.
     /// The picture cache code manually keeps tiles alive by calling `request` on
     /// them if it wants to retain a tile that is currently not visible.
     fn expire_old_picture_cache_tiles(&mut self) {
-        for i in (0 .. self.handles.picture.len()).rev() {
+        for i in (0 .. self.picture_cache_handles.len()).rev() {
             let evict = {
-                let entry = self.entries.get(&self.handles.picture[i]);
+                let entry = self.lru_cache.get(&self.picture_cache_handles[i]);
 
                 // Texture cache entries can be evicted at the start of
                 // a frame, or at any time during the frame when a cache
@@ -1080,51 +955,34 @@ impl TextureCache {
             };
 
             if evict {
-                let handle = self.handles.picture.swap_remove(i);
-                let entry = self.entries.free(handle);
-                entry.evict();
-                self.free(&entry);
+                let handle = self.picture_cache_handles.swap_remove(i);
+                self.evict_impl(handle);
             }
         }
     }
 
-    /// Shared eviction code for standalone and shared entries.
-    ///
-    /// See `EvictionThreshold` for more details on policy.
-    fn expire_old_entries(&mut self, kind: EntryKind, threshold: EvictionThreshold) {
-        // Should not be used to expire picture tiles. This entire method will be
-        // removed soon, in favor of proper LRU eviction for shared / standalone entries.
-        debug_assert_ne!(kind, EntryKind::Picture);
+    /// Evict old items from the shared and standalone caches, if we're over a
+    /// threshold memory usage value
+    fn evict_items_from_cache_if_required(&mut self) {
+        let mut eviction_count = 0;
 
-        debug_assert!(self.now.is_valid());
-        // Iterate over the entries in reverse order, evicting the ones older than
-        // the frame age threshold. Reverse order avoids iterator invalidation when
-        // removing entries.
-        for i in (0..self.handles.select(kind).len()).rev() {
-            let evict = {
-                let entry = self.entries.get(&self.handles.select(kind)[i]);
-                match entry.eviction {
-                    Eviction::Manual => false,
-                    Eviction::Auto => threshold.should_evict(entry.last_access),
+        // Keep evicting while memory is above the threshold, and we haven't
+        // reached a maximum number of evictions this frame.
+        while self.current_memory_estimate() > self.eviction_threshold_bytes && eviction_count < self.max_evictions_per_frame {
+            match self.lru_cache.pop_oldest() {
+                Some(entry) => {
+                    entry.evict();
+                    self.free(&entry);
+                    eviction_count += 1;
                 }
-            };
-            if evict {
-                let handle = self.handles.select(kind).swap_remove(i);
-                let entry = self.entries.free(handle);
-                entry.evict();
-                self.free(&entry);
+                None => {
+                    // It's possible that we could fail to pop an item from the LRU list to evict, if every
+                    // item in the cache is set to manual eviction mode. In this case, just break out of the
+                    // loop as there's nothing we can do until the calling code manually evicts items to
+                    // reduce the allocated cache size.
+                    break;
+                }
             }
-        }
-    }
-
-    /// Expires old shared entries, if we haven't done so this frame.
-    ///
-    /// Returns true if any entries were expired.
-    fn maybe_expire_old_shared_entries(&mut self, threshold: EvictionThreshold) {
-        debug_assert!(self.now.is_valid());
-        if self.last_shared_cache_expiration.frame_id() < self.now.frame_id() {
-            self.expire_old_entries(EntryKind::Shared, threshold);
-            self.last_shared_cache_expiration = self.now;
         }
     }
 
@@ -1188,21 +1046,6 @@ impl TextureCache {
                 region.free(origin, &mut unit.empty_regions);
             }
         }
-    }
-
-    /// Check if we can allocate this entry without growing any of the texture cache arrays.
-    fn has_space_in_shared_cache(
-        &mut self,
-        params: &CacheAllocParams,
-    ) -> bool {
-        let texture_array = self.shared_textures.select(
-            params.descriptor.format,
-            params.filter,
-        );
-        let slab_size = SlabSize::new(params.descriptor.size);
-        texture_array.units
-            .iter()
-            .any(|unit| unit.can_alloc(slab_size))
     }
 
     /// Allocate a block from the shared cache.
@@ -1364,55 +1207,9 @@ impl TextureCache {
         // If this image doesn't qualify to go in the shared (batching) cache,
         // allocate a standalone entry.
         if self.is_allowed_in_shared_cache(params.filter, &params.descriptor) {
-            if !self.has_space_in_shared_cache(params) &&
-               self.current_memory_estimate() > CACHE_EVICTION_THRESHOLD_BYTES {
-                // If we don't have extra space and haven't GCed this frame, do so.
-                let threshold = self.default_eviction();
-                self.maybe_expire_old_shared_entries(threshold);
-            }
             self.allocate_from_shared_cache(params)
         } else {
             self.allocate_standalone_entry(params)
-        }
-    }
-
-    fn upsert_entry(
-        &mut self,
-        cache_entry: CacheEntry,
-        handle: &mut TextureCacheHandle,
-    ) {
-        let new_kind = cache_entry.details.kind();
-        // If the handle points to a valid cache entry, we want to replace the
-        // cache entry with our newly updated location. We also need to ensure
-        // that the storage (region or standalone) associated with the previous
-        // entry here gets freed.
-        //
-        // If the handle is invalid, we need to insert the data, and append the
-        // result to the corresponding vector.
-        //
-        // This is managed with a database style upsert operation.
-        match self.entries.upsert(handle, cache_entry) {
-            UpsertResult::Updated(old_entry) => {
-                if new_kind != old_entry.details.kind() {
-                    // Handle the rare case than an update moves an entry from
-                    // shared to standalone or vice versa. This involves a linear
-                    // search, but should be rare enough not to matter.
-                    let (from, to) = match new_kind {
-                        EntryKind::Standalone =>
-                            (&mut self.handles.shared, &mut self.handles.standalone),
-                        EntryKind::Picture => unreachable!(),
-                        EntryKind::Shared =>
-                            (&mut self.handles.standalone, &mut self.handles.shared),
-                    };
-                    let idx = from.iter().position(|h| h.weak() == *handle).unwrap();
-                    to.push(from.remove(idx));
-                }
-                self.free(&old_entry);
-            }
-            UpsertResult::Inserted(new_handle) => {
-                *handle = new_handle.weak();
-                self.handles.select(new_kind).push(new_handle);
-            }
         }
     }
 
@@ -1421,7 +1218,18 @@ impl TextureCache {
     fn allocate(&mut self, params: &CacheAllocParams, handle: &mut TextureCacheHandle) {
         debug_assert!(self.now.is_valid());
         let new_cache_entry = self.allocate_cache_entry(params);
-        self.upsert_entry(new_cache_entry, handle)
+
+        // If the handle points to a valid cache entry, we want to replace the
+        // cache entry with our newly updated location. We also need to ensure
+        // that the storage (region or standalone) associated with the previous
+        // entry here gets freed.
+        //
+        // If the handle is invalid, we need to insert the data, and append the
+        // result to the corresponding vector.
+        if let Some(old_entry) = self.lru_cache.replace_or_insert(handle, new_cache_entry) {
+            old_entry.evict();
+            self.free(&old_entry);
+        }
     }
 
     // Update the data stored by a given texture cache handle for picture caching specifically.
@@ -1434,7 +1242,7 @@ impl TextureCache {
         debug_assert!(self.now.is_valid());
         debug_assert!(tile_size.width > 0 && tile_size.height > 0);
 
-        if self.entries.get_opt(handle).is_none() {
+        if self.lru_cache.get_opt(handle).is_none() {
             let cache_entry = self.picture_textures.get_or_allocate_tile(
                 tile_size,
                 self.now,
@@ -1442,11 +1250,19 @@ impl TextureCache {
                 &mut self.pending_updates,
             );
 
-            self.upsert_entry(cache_entry, handle)
+            // Add the cache entry to the LRU cache, then mark it for manual eviction
+            // so that the lifetime is controlled by the texture cache.
+
+            *handle = self.lru_cache.push_new(cache_entry);
+
+            let strong_handle = self.lru_cache
+                .set_manual_eviction(handle)
+                .expect("bug: handle must be valid here");
+            self.picture_cache_handles.push(strong_handle);
         }
 
         // Upload the resource rect and texture array layer.
-        self.entries
+        self.lru_cache
             .get_opt_mut(handle)
             .expect("BUG: handle must be valid now")
             .update_gpu_cache(gpu_cache);
@@ -1757,7 +1573,6 @@ impl TextureArray {
             texture_id: unit.texture_id,
             eviction_notice: None,
             uv_rect_kind: params.uv_rect_kind,
-            eviction: Eviction::Auto,
         }
     }
 }
@@ -1841,7 +1656,6 @@ impl WholeTextureArray {
             texture_id,
             eviction_notice: None,
             uv_rect_kind: UvRectKind::Rect,
-            eviction: Eviction::Auto,
         }
     }
 

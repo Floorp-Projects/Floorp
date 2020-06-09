@@ -2568,6 +2568,8 @@ impl Renderer {
 
         let rb_font_instances = font_instances.clone();
         let enable_multithreading = options.enable_multithreading;
+        let texture_cache_eviction_threshold_bytes = options.texture_cache_eviction_threshold_bytes;
+        let texture_cache_max_evictions_per_frame = options.texture_cache_max_evictions_per_frame;
         thread::Builder::new().name(rb_thread_name.clone()).spawn(move || {
             register_thread_with_profiler(rb_thread_name.clone());
             if let Some(ref thread_listener) = *thread_listener_for_render_backend {
@@ -2585,6 +2587,8 @@ impl Renderer {
                 start_size,
                 color_cache_formats,
                 swizzle_settings,
+                texture_cache_eviction_threshold_bytes,
+                texture_cache_max_evictions_per_frame,
             );
 
             let glyph_cache = GlyphCache::new(max_glyph_cache_size);
@@ -7023,6 +7027,14 @@ pub struct RendererOptions {
     /// If true, panic whenever a GL error occurs. This has a significant
     /// performance impact, so only use when debugging specific problems!
     pub panic_on_gl_error: bool,
+    /// If the total bytes allocated in shared / standalone cache is less
+    /// than this, then allow the cache to grow without forcing an eviction.
+    pub texture_cache_eviction_threshold_bytes: usize,
+    /// The maximum number of items that will be evicted per frame. This limit helps avoid jank
+    /// on frames where we want to evict a large number of items. Instead, we'd prefer to drop
+    /// the items incrementally over a number of frames, even if that means the total allocated
+    /// size of the cache is above the desired threshold for a small number of frames.
+    pub texture_cache_max_evictions_per_frame: usize,
 }
 
 impl Default for RendererOptions {
@@ -7078,6 +7090,8 @@ impl Default for RendererOptions {
             compositor_config: CompositorConfig::default(),
             enable_gpu_markers: true,
             panic_on_gl_error: false,
+            texture_cache_eviction_threshold_bytes: 64 * 1024 * 1024,
+            texture_cache_max_evictions_per_frame: 32,
         }
     }
 }

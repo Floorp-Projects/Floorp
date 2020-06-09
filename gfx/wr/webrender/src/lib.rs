@@ -105,6 +105,7 @@ mod gpu_types;
 mod hit_test;
 mod intern;
 mod internal_types;
+mod lru_cache;
 mod picture;
 mod prim_store;
 mod print_tree;
