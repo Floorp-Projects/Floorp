@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<OpenSearchDescription xmlns="http://a9.com/-/spec/opensearchdescription/1.1/">
+<ShortName>suggestion-alternate</ShortName>
+<Description>A small engine with suggestions</Description>
+<InputEncoding>UTF-8</InputEncoding>
+<Image width="16" height="16">data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVQI12P4//8/AAX+Av7czFnnAAAAAElFTkSuQmCC</Image>
+<Url type="text/html" method="GET" template="https://example.com/search" resultdomain="example.com">
+  <Param name="q" value="{searchTerms}"/>
+</Url>
+<Url type="application/json" rel="suggestions" method="GET"
+     template="https://example.com/suggest">
+  <Param name="suggestion" value="{searchTerms}"/>
+</Url>
+
+<SearchForm>https://example.com/</SearchForm>
+</OpenSearchDescription>

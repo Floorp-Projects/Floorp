@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<SearchPlugin xmlns="http://www.mozilla.org/2006/browser/search/">
+<ShortName>mozilla-ns</ShortName>
+<Description>An engine using mozilla namespace</Description>
+<InputEncoding>UTF-8</InputEncoding>
+<Image width="16" height="16">data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVQI12P4//8/AAX+Av7czFnnAAAAAElFTkSuQmCC</Image>
+<Url type="text/html" method="GET" template="https://example.com/search" resultdomain="example.com">
+  <Param name="q" value="{searchTerms}"/>
+  <MozParam name="channel" condition="purpose" purpose="searchbar" value="test"/>
+</Url>
+<SearchForm>https://example.com/</SearchForm>
+</SearchPlugin>
