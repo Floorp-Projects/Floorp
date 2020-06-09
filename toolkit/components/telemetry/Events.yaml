@@ -454,6 +454,7 @@ urlbar:
     extra_keys:
       elapsed: engagement time in milliseconds.
       numChars: number of input characters.
+      numWords: number of words in the input.
       selIndex: index of the selected result in the urlbar panel, or -1.
       selType: >
         type of the selected result in the urlbar panel. One of:
@@ -479,6 +480,7 @@ urlbar:
     extra_keys:
       elapsed: abandonement time in milliseconds.
       numChars: number of input characters.
+      numWords: number of words in the input.
 
 normandy:
   enroll:
