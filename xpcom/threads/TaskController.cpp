@@ -12,9 +12,11 @@
 #include <initializer_list>
 #include "mozilla/AbstractEventQueue.h"
 #include "mozilla/StaticMutex.h"
+#include "mozilla/SchedulerGroup.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Unused.h"
 #include "nsIThreadInternal.h"
+#include "nsQueryObject.h"
 #include "nsThread.h"
 
 namespace mozilla {
@@ -179,6 +181,31 @@ class RunnableTask : public Task {
       : Task(aMainThread, aPriority), mRunnable(aRunnable) {}
 
   virtual bool Run() override {
+#ifdef MOZ_COLLECTING_RUNNABLE_TELEMETRY
+    MOZ_ASSERT(NS_IsMainThread());
+    // If we're on the main thread, we want to record our current
+    // runnable's name in a static so that BHR can record it.
+    Array<char, nsThread::kRunnableNameBufSize> restoreRunnableName;
+    restoreRunnableName[0] = '\0';
+    auto clear = MakeScopeExit([&] {
+      MOZ_ASSERT(NS_IsMainThread());
+      nsThread::sMainThreadRunnableName = restoreRunnableName;
+    });
+    nsAutoCString name;
+    nsThread::GetLabeledRunnableName(mRunnable, name,
+                                     EventQueuePriority(GetPriority()));
+
+    restoreRunnableName = nsThread::sMainThreadRunnableName;
+
+    // Copy the name into sMainThreadRunnableName's buffer, and append a
+    // terminating null.
+    uint32_t length = std::min((uint32_t)nsThread::kRunnableNameBufSize - 1,
+                               (uint32_t)name.Length());
+    memcpy(nsThread::sMainThreadRunnableName.begin(), name.BeginReading(),
+           length);
+    nsThread::sMainThreadRunnableName[length] = '\0';
+#endif
+
     mRunnable->Run();
     mRunnable = nullptr;
     return true;
