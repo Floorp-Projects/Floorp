@@ -2994,7 +2994,6 @@ MDefinition* MPow::foldsConstantPower(TempAllocator& alloc) {
   MOZ_ASSERT(type() == MIRType::Double || type() == MIRType::Int32);
 
   double pow = power()->toConstant()->numberToDouble();
-  MIRType outputType = type();
 
   // Math.pow(x, 0.5) is a sqrt with edge-case detection.
   if (pow == 0.5) {
@@ -3017,23 +3016,31 @@ MDefinition* MPow::foldsConstantPower(TempAllocator& alloc) {
     return input();
   }
 
+  auto multiply = [this, &alloc](MDefinition* lhs, MDefinition* rhs) {
+    MMul* mul = MMul::New(alloc, lhs, rhs, type());
+
+    // Multiplying the same number can't yield negative zero.
+    mul->setCanBeNegativeZero(lhs != rhs && canBeNegativeZero());
+    return mul;
+  };
+
   // Math.pow(x, 2) == x*x.
   if (pow == 2.0) {
-    return MMul::New(alloc, input(), input(), outputType);
+    return multiply(input(), input());
   }
 
   // Math.pow(x, 3) == x*x*x.
   if (pow == 3.0) {
-    MMul* mul1 = MMul::New(alloc, input(), input(), outputType);
+    MMul* mul1 = multiply(input(), input());
     block()->insertBefore(this, mul1);
-    return MMul::New(alloc, input(), mul1, outputType);
+    return multiply(input(), mul1);
   }
 
   // Math.pow(x, 4) == y*y, where y = x*x.
   if (pow == 4.0) {
-    MMul* y = MMul::New(alloc, input(), input(), outputType);
+    MMul* y = multiply(input(), input());
     block()->insertBefore(this, y);
-    return MMul::New(alloc, y, y, outputType);
+    return multiply(y, y);
   }
 
   // No optimization
