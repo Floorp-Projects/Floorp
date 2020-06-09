@@ -13,6 +13,7 @@ add_task(async function setup() {
   registerCleanupFunction(() => {
     Services.prefs.clearUserPref(kDocChanPref);
   });
+  await Services.search.init();
 });
 
 /*

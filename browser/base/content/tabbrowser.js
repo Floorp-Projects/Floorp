@@ -1846,6 +1846,7 @@
       aBrowser.webProgress.removeProgressListener(filter);
       filter.removeProgressListener(listener);
       let stateFlags = listener.mStateFlags;
+      let requestCount = listener.mRequestCount;
 
       // We'll be creating a new listener, so destroy the old one.
       listener.destroy();
@@ -1931,6 +1932,7 @@
       let expectInitialAboutBlank = !switchingInProgressLoad;
       if (expectInitialAboutBlank) {
         stateFlags = 0;
+        requestCount = 0;
       }
 
       // Create a new tab progress listener for the new browser we just injected,
@@ -1941,7 +1943,8 @@
         aBrowser,
         expectInitialAboutBlank,
         false,
-        stateFlags
+        stateFlags,
+        requestCount
       );
       this._tabListeners.set(tab, listener);
       filter.addProgressListener(listener, Ci.nsIWebProgress.NOTIFY_ALL);
@@ -5804,7 +5807,8 @@
       aBrowser,
       aStartsBlank,
       aWasPreloadedBrowser,
-      aOrigStateFlags
+      aOrigStateFlags,
+      aOrigRequestCount
     ) {
       let stateFlags = aOrigStateFlags || 0;
       // Initialize mStateFlags to non-zero e.g. when creating a progress
@@ -5829,7 +5833,7 @@
       this.mTotalProgress = 0;
 
       // count of open requests (should always be 0 or 1)
-      this.mRequestCount = 0;
+      this.mRequestCount = aOrigRequestCount || 0;
     }
 
     destroy() {
