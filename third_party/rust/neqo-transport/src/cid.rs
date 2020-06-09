@@ -11,6 +11,7 @@ use neqo_crypto::random;
 
 use std::borrow::Borrow;
 use std::cmp::max;
+use std::convert::AsRef;
 
 pub const MAX_CONNECTION_ID_LEN: usize = 20;
 
@@ -33,8 +34,14 @@ impl ConnectionId {
         Self::generate(len)
     }
 
-    pub fn as_ref(&self) -> ConnectionIdRef {
+    pub fn as_cid_ref(&self) -> ConnectionIdRef {
         ConnectionIdRef::from(&self.cid[..])
+    }
+}
+
+impl AsRef<[u8]> for ConnectionId {
+    fn as_ref(&self) -> &[u8] {
+        self.borrow()
     }
 }
 
