@@ -237,7 +237,7 @@ shell = help_shell | shell
 # Python 3
 # ========
 
-option(env='PYTHON3', nargs=1, help='Python 3 interpreter (3.5 or later)')
+option(env='PYTHON3', nargs=1, help='Python 3 interpreter (3.6 or later)')
 
 
 @depends('PYTHON3', check_build_environment, mozconfig, '--help')
@@ -334,20 +334,20 @@ def virtualenv_python3(env_python, build_env, mozconfig, help):
                                   '(%s): %s' % (python, e))
     else:
         # Fall back to the search routine.
-        python, version = find_python3_executable(min_version='3.5.0')
+        python, version = find_python3_executable(min_version='3.6.0')
 
         # The API returns a bytes whereas everything in configure is unicode.
         if python:
             python = ensure_text(python)
 
     if not python:
-        raise FatalCheckError('Python 3.5 or newer is required to build. '
+        raise FatalCheckError('Python 3.6 or newer is required to build. '
                               'Ensure a `python3.x` executable is in your '
                               'PATH or define PYTHON3 to point to a Python '
-                              '3.5 executable.')
+                              '3.6 executable.')
 
-    if version < (3, 5, 0):
-        raise FatalCheckError('Python 3.5 or newer is required to build; '
+    if version < (3, 6, 0):
+        raise FatalCheckError('Python 3.6 or newer is required to build; '
                               '%s is Python %d.%d' % (python, version[0],
                                                       version[1]))
 
