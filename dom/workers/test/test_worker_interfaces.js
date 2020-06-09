@@ -42,6 +42,7 @@ var ecmaGlobals = [
   { name: "Date", insecureContext: true },
   { name: "Error", insecureContext: true },
   { name: "EvalError", insecureContext: true },
+  { name: "FinalizationRegistry", insecureContext: true },
   { name: "Float32Array", insecureContext: true },
   { name: "Float64Array", insecureContext: true },
   { name: "Function", insecureContext: true },
@@ -83,6 +84,7 @@ var ecmaGlobals = [
   { name: "Uint8ClampedArray", insecureContext: true },
   { name: "URIError", insecureContext: true },
   { name: "WeakMap", insecureContext: true },
+  { name: "WeakRef", insecureContext: true },
   { name: "WeakSet", insecureContext: true },
   {
     name: "WebAssembly",

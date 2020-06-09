@@ -36,6 +36,7 @@ var ecmaGlobals = [
   "Date",
   "Error",
   "EvalError",
+  "FinalizationRegistry",
   "Float32Array",
   "Float64Array",
   "Function",
@@ -74,6 +75,7 @@ var ecmaGlobals = [
   "Uint8ClampedArray",
   "URIError",
   "WeakMap",
+  "WeakRef",
   "WeakSet",
   { name: "WebAssembly", optional: true },
 ];
