@@ -198,7 +198,9 @@ class ProviderSearchSuggestions extends UrlbarProvider {
     }
 
     // Disallow remote suggestions if only an origin is typed to avoid
-    // disclosing information about sites the user visits.
+    // disclosing information about sites the user visits. This also catches
+    // partially-typed origins, like mozilla.o, because the URIFixup check
+    // below can't validate those.
     if (
       queryContext.tokens.length == 1 &&
       queryContext.tokens[0].type == UrlbarTokenizer.TYPE.POSSIBLE_ORIGIN
@@ -207,15 +209,10 @@ class ProviderSearchSuggestions extends UrlbarProvider {
     }
 
     // Disallow remote suggestions for strings containing tokens that look like
-    // URLs or non-alphanumeric origins, to avoid disclosing information about
-    // networks or passwords.
+    // URIs, to avoid disclosing information about networks or passwords.
     if (
-      queryContext.tokens.some(
-        t =>
-          t.type == UrlbarTokenizer.TYPE.POSSIBLE_URL ||
-          (t.type == UrlbarTokenizer.TYPE.POSSIBLE_ORIGIN &&
-            !UrlbarTokenizer.REGEXP_SINGLE_WORD_HOST.test(t.value))
-      )
+      queryContext.fixupInfo.fixedURI &&
+      !queryContext.fixupInfo.keywordAsSent
     ) {
       return false;
     }

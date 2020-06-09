@@ -834,6 +834,62 @@ add_task(async function prohibit_suggestions() {
   await cleanUpSuggestions();
 });
 
+add_task(async function uri_like_queries() {
+  Services.prefs.setBoolPref(SUGGEST_PREF, true);
+  Services.prefs.setBoolPref(SUGGEST_ENABLED_PREF, true);
+
+  // We should not fetch any suggestions for an actual URL.
+  let query = "mozilla.org";
+  let context = createContext(query, { isPrivate: false });
+  await check_results({
+    context,
+    matches: [
+      makeVisitResult(context, {
+        title: `http://${query}/`,
+        uri: `http://${query}/`,
+        iconUri: "",
+        heuristic: true,
+      }),
+      makeSearchResult(context, { query, engineName: ENGINE_NAME }),
+    ],
+  });
+
+  // We should also not fetch suggestions for a partially-typed URL.
+  query = "mozilla.o";
+  context = createContext(query, { isPrivate: false });
+  await check_results({
+    context,
+    matches: [
+      makeSearchResult(context, { engineName: ENGINE_NAME, heuristic: true }),
+    ],
+  });
+
+  // Now trying queries that could be confused for URLs. They should return
+  // results.
+  const uriLikeQueries = [
+    "mozilla.org is a great website",
+    "I like mozilla.org",
+    "a/b testing",
+    "he/him",
+    "Google vs.",
+    "5.8 cm",
+  ];
+  for (query of uriLikeQueries) {
+    context = createContext(query, { isPrivate: false });
+    await check_results({
+      context,
+      matches: [
+        makeSearchResult(context, { engineName: ENGINE_NAME, heuristic: true }),
+        ...makeExpectedRemoteSuggestionResults(context, {
+          suggestionPrefix: query,
+        }),
+      ],
+    });
+  }
+
+  await cleanUpSuggestions();
+});
+
 add_task(async function avoid_remote_url_suggestions_1() {
   Services.prefs.setBoolPref(SUGGEST_PREF, true);
   Services.prefs.setIntPref(MAX_FORM_HISTORY_PREF, 1);
