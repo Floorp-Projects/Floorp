@@ -80,7 +80,7 @@ class OnboardingTrackingProtectionViewHolder(view: View) : RecyclerView.ViewHold
                 strictTrackingProtection.performClick()
             }
             val strictTitle =
-                view.context.getString(R.string.onboarding_tracking_protection_strict_button)
+                view.context.getString(R.string.onboarding_tracking_protection_strict_option)
             val strictSummary =
                 view.context.getString(R.string.onboarding_tracking_protection_strict_button_description_2)
             contentDescription = "$strictTitle. $strictSummary"
