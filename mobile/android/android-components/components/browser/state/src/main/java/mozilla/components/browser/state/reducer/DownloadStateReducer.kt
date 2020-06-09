@@ -6,6 +6,7 @@ package mozilla.components.browser.state.reducer
 
 import mozilla.components.browser.state.action.DownloadAction
 import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.state.content.DownloadState
 
 internal object DownloadStateReducer {
 
@@ -14,8 +15,9 @@ internal object DownloadStateReducer {
      */
     fun reduce(state: BrowserState, action: DownloadAction): BrowserState {
         return when (action) {
-            is DownloadAction.QueueDownloadAction -> {
-                state.copy(queuedDownloads = state.queuedDownloads + (action.download.id to action.download))
+            is DownloadAction.QueueDownloadAction -> updateQueuedDownloads(state, action.download)
+            is DownloadAction.UpdateQueuedDownloadAction -> {
+                updateQueuedDownloads(state, action.download)
             }
             is DownloadAction.RemoveQueuedDownloadAction -> {
                 state.copy(queuedDownloads = state.queuedDownloads - action.downloadId)
@@ -25,4 +27,7 @@ internal object DownloadStateReducer {
             }
         }
     }
+
+    private fun updateQueuedDownloads(state: BrowserState, download: DownloadState) =
+            state.copy(queuedDownloads = state.queuedDownloads + (download.id to download))
 }

@@ -577,4 +577,9 @@ sealed class DownloadAction : BrowserAction() {
      * Updates the [BrowserState] to remove all queued downloads.
      */
     object RemoveAllQueuedDownloadsAction : DownloadAction()
+
+    /**
+     * Updates the provided [download] on the [BrowserState].
+     */
+    data class UpdateQueuedDownloadAction(val download: DownloadState) : DownloadAction()
 }
