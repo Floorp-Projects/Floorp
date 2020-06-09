@@ -338,7 +338,7 @@ bool PeerConnectionMedia::GetPrefObfuscateHostAddresses() const {
   obfuscate_host_addresses &=
       !MediaManager::Get()->IsActivelyCapturingOrHasAPermission(winId);
   obfuscate_host_addresses &= !PeerConnectionImpl::HostnameInPref(
-      "media.peerconnection.ice.obfuscate_host_addresses.whitelist",
+      "media.peerconnection.ice.obfuscate_host_addresses.blocklist",
       mParent->GetWindow()->GetDocumentURI());
   obfuscate_host_addresses &= XRE_IsContentProcess();
 

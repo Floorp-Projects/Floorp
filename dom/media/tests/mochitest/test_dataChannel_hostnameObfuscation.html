@@ -8,18 +8,18 @@
 <script type="application/javascript">
   createHTML({
     bug: "1592620",
-    title: "Whitelist to disable hostname obfuscation"
+    title: "Blocklist to disable hostname obfuscation"
   });
 
-  async function testWhitelist(options, whitelistEntry, shouldBeObfuscated) {
+  async function testBlocklist(options, blocklistEntry, shouldBeObfuscated) {
     let test = new PeerConnectionTest(options);
     addInitialDataChannel(test.chain);
 
-    if (whitelistEntry !== null) {
+    if (blocklistEntry !== null) {
       await SpecialPowers.pushPrefEnv({
         set: [
-          ["media.peerconnection.ice.obfuscate_host_addresses.whitelist",
-           whitelistEntry]
+          ["media.peerconnection.ice.obfuscate_host_addresses.blocklist",
+           blocklistEntry]
         ]
       });
     }
@@ -48,12 +48,12 @@
     await SpecialPowers.pushPrefEnv({
       set: [["media.peerconnection.ice.obfuscate_host_addresses", true]]
     });
-    await testWhitelist(options, null, true);
-    await testWhitelist(options, "", true);
-    await testWhitelist(options, "example.com", true);
-    await testWhitelist(options, "mochi.test", false);
-    await testWhitelist(options, "example.com,mochi.test", false);
-    await testWhitelist(options, "*.test", false);
+    await testBlocklist(options, null, true);
+    await testBlocklist(options, "", true);
+    await testBlocklist(options, "example.com", true);
+    await testBlocklist(options, "mochi.test", false);
+    await testBlocklist(options, "example.com,mochi.test", false);
+    await testBlocklist(options, "*.test", false);
 
     networkTestFinished();
   });
