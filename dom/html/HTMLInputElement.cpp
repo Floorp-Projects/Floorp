@@ -437,8 +437,9 @@ void GetDOMFileOrDirectoryPath(const OwningFileOrDirectory& aData,
 
 /* static */
 bool HTMLInputElement::ValueAsDateEnabled(JSContext* cx, JSObject* obj) {
-  return IsExperimentalFormsEnabled() || StaticPrefs::dom_forms_datetime() ||
-         IsInputDateTimeOthersEnabled();
+  return StaticPrefs::dom_experimental_forms() ||
+         StaticPrefs::dom_forms_datetime() ||
+         StaticPrefs::dom_forms_datetime_others();
 }
 
 NS_IMETHODIMP
@@ -5047,49 +5048,11 @@ bool HTMLInputElement::IsDateTimeTypeSupported(uint8_t aDateTimeInputType) {
   return ((aDateTimeInputType == NS_FORM_INPUT_DATE ||
            aDateTimeInputType == NS_FORM_INPUT_TIME) &&
           (StaticPrefs::dom_forms_datetime() ||
-           IsExperimentalFormsEnabled())) ||
+           StaticPrefs::dom_experimental_forms())) ||
          ((aDateTimeInputType == NS_FORM_INPUT_MONTH ||
            aDateTimeInputType == NS_FORM_INPUT_WEEK ||
            aDateTimeInputType == NS_FORM_INPUT_DATETIME_LOCAL) &&
-          IsInputDateTimeOthersEnabled());
-}
-
-/* static */
-bool HTMLInputElement::IsExperimentalFormsEnabled() {
-  static bool sExperimentalFormsEnabled = false;
-  static bool sExperimentalFormsPrefCached = false;
-  if (!sExperimentalFormsPrefCached) {
-    sExperimentalFormsPrefCached = true;
-    Preferences::AddBoolVarCache(&sExperimentalFormsEnabled,
-                                 "dom.experimental_forms", false);
-  }
-
-  return sExperimentalFormsEnabled;
-}
-
-/* static */
-bool HTMLInputElement::IsInputDateTimeOthersEnabled() {
-  static bool sDateTimeOthersEnabled = false;
-  static bool sDateTimeOthersPrefCached = false;
-  if (!sDateTimeOthersPrefCached) {
-    sDateTimeOthersPrefCached = true;
-    Preferences::AddBoolVarCache(&sDateTimeOthersEnabled,
-                                 "dom.forms.datetime.others", false);
-  }
-
-  return sDateTimeOthersEnabled;
-}
-
-/* static */
-bool HTMLInputElement::IsInputColorEnabled() {
-  static bool sInputColorEnabled = false;
-  static bool sInputColorPrefCached = false;
-  if (!sInputColorPrefCached) {
-    sInputColorPrefCached = true;
-    Preferences::AddBoolVarCache(&sInputColorEnabled, "dom.forms.color", false);
-  }
-
-  return sInputColorEnabled;
+          StaticPrefs::dom_forms_datetime_others());
 }
 
 bool HTMLInputElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
@@ -5111,7 +5074,7 @@ bool HTMLInputElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
     if (aAttribute == nsGkAtoms::type) {
       aResult.ParseEnumValue(aValue, kInputTypeTable, false, kInputDefaultType);
       int32_t newType = aResult.GetEnumValue();
-      if ((newType == NS_FORM_INPUT_COLOR && !IsInputColorEnabled()) ||
+      if ((newType == NS_FORM_INPUT_COLOR && !StaticPrefs::dom_forms_color()) ||
           (IsDateTimeInputType(newType) && !IsDateTimeTypeSupported(newType))) {
         // There's no public way to set an nsAttrValue to an enum value, but we
         // can just re-parse with a table that doesn't have any types other than
