@@ -274,6 +274,7 @@ class DebugTargetInfo extends PureComponent {
       {
         className: `iconized-label navigation-button ${detail.className}`,
         onClick: detail.onClick,
+        title: L10N.getStr(detail.l10nId),
       },
       dom.img({
         src: detail.icon,

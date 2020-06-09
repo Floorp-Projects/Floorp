@@ -50,6 +50,7 @@ exports[`DebugTargetInfo component Connection info renders the expected snapshot
     <button
       className="iconized-label navigation-button qa-back-button"
       onClick={[Function]}
+      title="toolbox.debugTargetInfo.back"
     >
       <img
         alt="toolbox.debugTargetInfo.back"
@@ -59,6 +60,7 @@ exports[`DebugTargetInfo component Connection info renders the expected snapshot
     <button
       className="iconized-label navigation-button qa-forward-button"
       onClick={[Function]}
+      title="toolbox.debugTargetInfo.forward"
     >
       <img
         alt="toolbox.debugTargetInfo.forward"
@@ -68,6 +70,7 @@ exports[`DebugTargetInfo component Connection info renders the expected snapshot
     <button
       className="iconized-label navigation-button qa-reload-button"
       onClick={[Function]}
+      title="toolbox.debugTargetInfo.reload"
     >
       <img
         alt="toolbox.debugTargetInfo.reload"
@@ -199,6 +202,7 @@ exports[`DebugTargetInfo component Target icon renders the expected snapshot for
     <button
       className="iconized-label navigation-button qa-back-button"
       onClick={[Function]}
+      title="toolbox.debugTargetInfo.back"
     >
       <img
         alt="toolbox.debugTargetInfo.back"
@@ -208,6 +212,7 @@ exports[`DebugTargetInfo component Target icon renders the expected snapshot for
     <button
       className="iconized-label navigation-button qa-forward-button"
       onClick={[Function]}
+      title="toolbox.debugTargetInfo.forward"
     >
       <img
         alt="toolbox.debugTargetInfo.forward"
@@ -217,6 +222,7 @@ exports[`DebugTargetInfo component Target icon renders the expected snapshot for
     <button
       className="iconized-label navigation-button qa-reload-button"
       onClick={[Function]}
+      title="toolbox.debugTargetInfo.reload"
     >
       <img
         alt="toolbox.debugTargetInfo.reload"
@@ -393,6 +399,7 @@ exports[`DebugTargetInfo component Target title renders the expected snapshot fo
     <button
       className="iconized-label navigation-button qa-back-button"
       onClick={[Function]}
+      title="toolbox.debugTargetInfo.back"
     >
       <img
         alt="toolbox.debugTargetInfo.back"
@@ -402,6 +409,7 @@ exports[`DebugTargetInfo component Target title renders the expected snapshot fo
     <button
       className="iconized-label navigation-button qa-forward-button"
       onClick={[Function]}
+      title="toolbox.debugTargetInfo.forward"
     >
       <img
         alt="toolbox.debugTargetInfo.forward"
@@ -411,6 +419,7 @@ exports[`DebugTargetInfo component Target title renders the expected snapshot fo
     <button
       className="iconized-label navigation-button qa-reload-button"
       onClick={[Function]}
+      title="toolbox.debugTargetInfo.reload"
     >
       <img
         alt="toolbox.debugTargetInfo.reload"
@@ -470,6 +479,7 @@ exports[`DebugTargetInfo component Target title renders the expected snapshot fo
     <button
       className="iconized-label navigation-button qa-back-button"
       onClick={[Function]}
+      title="toolbox.debugTargetInfo.back"
     >
       <img
         alt="toolbox.debugTargetInfo.back"
@@ -479,6 +489,7 @@ exports[`DebugTargetInfo component Target title renders the expected snapshot fo
     <button
       className="iconized-label navigation-button qa-forward-button"
       onClick={[Function]}
+      title="toolbox.debugTargetInfo.forward"
     >
       <img
         alt="toolbox.debugTargetInfo.forward"
@@ -488,6 +499,7 @@ exports[`DebugTargetInfo component Target title renders the expected snapshot fo
     <button
       className="iconized-label navigation-button qa-reload-button"
       onClick={[Function]}
+      title="toolbox.debugTargetInfo.reload"
     >
       <img
         alt="toolbox.debugTargetInfo.reload"
