@@ -54,11 +54,6 @@ class WebExtensionDescriptorFront extends FrontClassWithSpec(
     return this._form.id;
   }
 
-  // Currently unused on the client.
-  get isAPIExtension() {
-    return this._form.isAPIExtension;
-  }
-
   get isSystem() {
     return this._form.isSystem;
   }
@@ -77,11 +72,6 @@ class WebExtensionDescriptorFront extends FrontClassWithSpec(
 
   get temporarilyInstalled() {
     return this._form.temporarilyInstalled;
-  }
-
-  // Currently unused on the client.
-  get type() {
-    return this._form.type;
   }
 
   get url() {
