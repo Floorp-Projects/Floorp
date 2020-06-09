@@ -234,7 +234,7 @@ jobs:
         parent: ubuntu1804-test
     visual-metrics:
         symbol: I(visual-metrics)
-        parent: debian9-base
+        parent: debian10-base
     github-sync:
         symbol: I(github-sync)
         parent: debian9-base
