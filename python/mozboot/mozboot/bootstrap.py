@@ -470,6 +470,7 @@ class Bootstrapper(object):
                                                         state_dir_available,
                                                         have_clone,
                                                         checkout_root)
+            self._output_mozconfig(application)
             sys.exit(0)
 
         self.instance.install_system_packages()
@@ -565,6 +566,9 @@ class Bootstrapper(object):
         if not self.instance.which("moz-phab"):
             print(MOZ_PHAB_ADVERTISE)
 
+        self._output_mozconfig(application)
+
+    def _output_mozconfig(self, application):
         # Like 'generate_browser_mozconfig' or 'generate_mobile_android_mozconfig'.
         mozconfig = getattr(self.instance, 'generate_%s_mozconfig' % application)()
 
