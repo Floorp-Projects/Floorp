@@ -992,8 +992,9 @@ void canary_alarm_handler(int signum) {
   } while (0)
 
 #ifdef MOZ_COLLECTING_RUNNABLE_TELEMETRY
-static bool GetLabeledRunnableName(nsIRunnable* aEvent, nsACString& aName,
-                                   EventQueuePriority aPriority) {
+// static
+bool nsThread::GetLabeledRunnableName(nsIRunnable* aEvent, nsACString& aName,
+                                      EventQueuePriority aPriority) {
   bool labeled = false;
   if (RefPtr<SchedulerGroup::Runnable> groupRunnable = do_QueryObject(aEvent)) {
     labeled = true;
@@ -1198,12 +1199,12 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult) {
       Array<char, kRunnableNameBufSize> restoreRunnableName;
       restoreRunnableName[0] = '\0';
       auto clear = MakeScopeExit([&] {
-        if (mIsMainThread) {
+        if (!usingTaskController && mIsMainThread) {
           MOZ_ASSERT(NS_IsMainThread());
           sMainThreadRunnableName = restoreRunnableName;
         }
       });
-      if (mIsMainThread) {
+      if (!usingTaskController && mIsMainThread) {
         nsAutoCString name;
         GetLabeledRunnableName(event, name, priority);
 
