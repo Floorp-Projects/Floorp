@@ -530,6 +530,9 @@ function EnvironmentAddonBuilder(environment) {
 
   // Set to true once initial load is complete and we're watching for changes.
   this._loaded = false;
+
+  // The state reported by the shutdown blocker if we hang shutdown.
+  this._shutdownState = "Initial";
 }
 EnvironmentAddonBuilder.prototype = {
   /**
@@ -537,27 +540,33 @@ EnvironmentAddonBuilder.prototype = {
    * @returns Promise<void> when the initial load is complete.
    */
   async init() {
-    AddonManager.beforeShutdown.addBlocker("EnvironmentAddonBuilder", () =>
-      this._shutdownBlocker()
+    AddonManager.beforeShutdown.addBlocker(
+      "EnvironmentAddonBuilder",
+      () => this._shutdownBlocker(),
+      { fetchState: () => this._shutdownState }
     );
 
     this._pendingTask = (async () => {
       try {
+        this._shutdownState = "Awaiting _updateAddons";
         // Gather initial addons details
         await this._updateAddons(true);
 
         if (!this._environment._addonsAreFull) {
           // The addon database has not been loaded, wait for it to
           // initialize and gather full data as soon as it does.
+          this._shutdownState = "Awaiting AddonManagerPrivate.databaseReady";
           await AddonManagerPrivate.databaseReady;
 
           // Now gather complete addons details.
+          this._shutdownState = "Awaiting second _updateAddons";
           await this._updateAddons();
         }
       } catch (err) {
         this._environment._log.error("init - Exception in _updateAddons", err);
       } finally {
         this._pendingTask = null;
+        this._shutdownState = "_pendingTask init complete. No longer blocking.";
       }
     })();
 
@@ -630,9 +639,11 @@ EnvironmentAddonBuilder.prototype = {
       return;
     }
 
+    this._shutdownState = "_checkForChanges awaiting _updateAddons";
     this._pendingTask = this._updateAddons().then(
       result => {
         this._pendingTask = null;
+        this._shutdownState = "No longer blocking, _updateAddons resolved";
         if (result.changed) {
           this._environment._onEnvironmentChange(
             changeReason,
@@ -642,6 +653,7 @@ EnvironmentAddonBuilder.prototype = {
       },
       err => {
         this._pendingTask = null;
+        this._shutdownState = "No longer blocking, _updateAddons rejected";
         this._environment._log.error(
           "_checkForChanges: Error collecting addons",
           err
