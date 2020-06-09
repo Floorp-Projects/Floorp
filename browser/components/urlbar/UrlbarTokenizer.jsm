@@ -104,7 +104,7 @@ var UrlbarTokenizer = {
     // having a protocol.
     let slashIndex = token.indexOf("/");
     let prePath = slashIndex != -1 ? token.slice(0, slashIndex) : token;
-    if (!this.looksLikeOrigin(prePath, { ignoreWhitelist: true })) {
+    if (!this.looksLikeOrigin(prePath, { ignoreKnownDomains: true })) {
       return false;
     }
 
@@ -143,7 +143,7 @@ var UrlbarTokenizer = {
     ) {
       return true;
     }
-    if (Services.uriFixup.isDomainWhitelisted(hostPort)) {
+    if (Services.uriFixup.isDomainKnown(hostPort)) {
       return true;
     }
     return false;
@@ -157,15 +157,15 @@ var UrlbarTokenizer = {
    *
    * @param {string} token
    *        The string token to verify
-   * @param {boolean} [ignoreWhitelist] If true, the origin doesn't have to be
-   *        in the whitelist
+   * @param {boolean} [ignoreKnownDomains] If true, the origin doesn't have to be
+   *        in the known domain list
    * @param {boolean} [noIp] If true, the origin cannot be an IP address
    * @param {boolean} [noPort] If true, the origin cannot have a port number
    * @returns {boolean} whether the token looks like an origin.
    */
   looksLikeOrigin(
     token,
-    { ignoreWhitelist = false, noIp = false, noPort = false } = {}
+    { ignoreKnownDomains = false, noIp = false, noPort = false } = {}
   ) {
     if (!token.length) {
       return false;
@@ -202,14 +202,14 @@ var UrlbarTokenizer = {
       return false;
     }
 
-    // If it looks like a single word host, check the whitelist.
+    // If it looks like a single word host, check the known domains.
     if (
-      !ignoreWhitelist &&
+      !ignoreKnownDomains &&
       !userinfo &&
       !hasPort &&
       this.REGEXP_SINGLE_WORD_HOST.test(hostPort)
     ) {
-      return Services.uriFixup.isDomainWhitelisted(hostPort);
+      return Services.uriFixup.isDomainKnown(hostPort);
     }
 
     return true;

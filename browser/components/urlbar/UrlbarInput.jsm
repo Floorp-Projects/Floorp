@@ -670,7 +670,7 @@ class UrlbarInput {
         ) {
           // When fixing a single word to a search, the docShell also checks the
           // DNS and asks the user whether they would rather visit that as a
-          // host. On a positive answer, it adds to the domain whitelist that
+          // host. On a positive answer, it adds to the known domain list that
           // we use to make decisions. Because we are directly asking for a
           // search here, bypassing the docShell, we need invoke the same check
           // ourselves. See also URIFixupChild.jsm and keyword-uri-fixup.
@@ -842,8 +842,8 @@ class UrlbarInput {
         let { value, selectionStart, selectionEnd } = result.autofill;
         this._autofillValue(value, selectionStart, selectionEnd);
       } else {
-        // If the url is trimmed but it's invalid (for example it has a non
-        // whitelisted single word host, or an unknown domain suffix), trimming
+        // If the url is trimmed but it's invalid (for example it has an unknown
+        // single word host, or an unknown domain suffix), trimming
         // it would end up executing a search instead of visiting it.
         let allowTrim = true;
         if (
