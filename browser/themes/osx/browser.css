@@ -71,11 +71,6 @@
   text-shadow: inherit;
 }
 
-:root {
-  -moz-appearance: none;
-  background-color: #eeeeee;
-}
-
 /** Begin titlebar **/
 
 #titlebar {
