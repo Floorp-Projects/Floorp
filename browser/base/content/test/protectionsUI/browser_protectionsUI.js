@@ -48,11 +48,12 @@ add_task(async function testToggleSwitch() {
     TRACKING_PAGE
   );
 
+  await openProtectionsPanel();
+
   await TestUtils.waitForCondition(() => {
     return gProtectionsHandler._protectionsPopup.hasAttribute("blocking");
   });
 
-  await openProtectionsPanel();
   let events = Services.telemetry.snapshotEvents(
     Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS
   ).parent;

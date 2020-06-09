@@ -52,6 +52,8 @@ async function testIdentityState(hasException) {
     await loaded;
   }
 
+  await openProtectionsPanel();
+
   ok(
     !gProtectionsHandler._protectionsPopup.hasAttribute("detected"),
     "fingerprinters are not detected"
