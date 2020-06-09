@@ -4583,6 +4583,13 @@ class nsIFrame : public nsQueryFrame {
     mDescendantMayDependOnItsStaticPosition = aValue;
   }
 
+  bool ShouldGenerateComputedInfo() const {
+    return mShouldGenerateComputedInfo;
+  }
+  void SetShouldGenerateComputedInfo(bool aValue) {
+    mShouldGenerateComputedInfo = aValue;
+  }
+
   /**
    * Returns the hit test area of the frame.
    */
@@ -4829,6 +4836,13 @@ class nsIFrame : public nsQueryFrame {
    * move).
    */
   bool mDescendantMayDependOnItsStaticPosition : 1;
+
+  /**
+   * True if the next reflow of this frame should generate computed info
+   * metrics. These are used by devtools to reveal details of the layout
+   * process.
+   */
+  bool mShouldGenerateComputedInfo : 1;
 
  protected:
   // Helpers
