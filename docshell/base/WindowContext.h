@@ -19,6 +19,16 @@ class WindowGlobalInit;
 class BrowsingContextGroup;
 
 #define MOZ_EACH_WC_FIELD(FIELD)                                       \
+  /* Whether the SHEntry associated with the current top-level         \
+   * window has already seen user interaction.                         \
+   * As such, this will be reset to false when a new SHEntry is        \
+   * created without changing the WC (e.g. when using pushState or     \
+   * sub-frame navigation)                                             \
+   * This flag is set for optimization purposes, to avoid              \
+   * having to get the top SHEntry and update it on every              \
+   * user interaction.                                                 \
+   * This is only meaningful on the top-level WC. */                   \
+  FIELD(SHEntryHasUserInteraction, bool)                               \
   FIELD(CookieBehavior, Maybe<uint32_t>)                               \
   FIELD(IsOnContentBlockingAllowList, bool)                            \
   /* Whether the given window hierarchy is third party. See            \
@@ -147,6 +157,10 @@ class WindowContext : public nsISupports, public nsWrapperCache {
               ContentParent* aSource);
   bool CanSet(FieldIndex<IDX_AutoplayPermission>, const uint32_t& aValue,
               ContentParent* aSource);
+  bool CanSet(FieldIndex<IDX_SHEntryHasUserInteraction>,
+              const bool& aSHEntryHasUserInteraction, ContentParent* aSource) {
+    return true;
+  }
 
   // Overload `DidSet` to get notifications for a particular field being set.
   //
