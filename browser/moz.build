@@ -8,9 +8,6 @@ CONFIGURE_SUBST_FILES += ['installer/Makefile']
 
 SPHINX_TREES['/browser'] = 'docs'
 
-with Files('docs/**'):
-    SCHEDULES.exclusive = ['docs']
-
 EXTRA_COMPONENTS += [
     'l10n-registry.manifest',
 ]
@@ -59,6 +56,10 @@ FINAL_TARGET_FILES.defaults += ['app/permissions']
 
 with Files("**"):
     BUG_COMPONENT = ("Firefox", "General")
+    SCHEDULES.exclusive = ['linux', 'macosx', 'windows']
+
+with Files('docs/**'):
+    SCHEDULES.exclusive = ['docs']
 
 with Files("Makefile.in"):
     BUG_COMPONENT = ("Firefox Build System", "General")
