@@ -77,14 +77,12 @@ const WebExtensionDescriptorActor = protocol.ActorClassWithSpec(
         iconDataURL: this._iconDataURL,
         iconURL: this.addon.iconURL,
         id: this.addonId,
-        isAPIExtension: this.addon.isAPIExtension,
         isSystem: this.addon.isSystem,
         isWebExtension: this.addon.isWebExtension,
         manifestURL: policy && policy.getURL("manifest.json"),
         name: this.addon.name,
         temporarilyInstalled: this.addon.temporarilyInstalled,
         traits: {},
-        type: this.addon.type,
         url: this.addon.sourceURI ? this.addon.sourceURI.spec : undefined,
         warnings: ExtensionParent.DebugUtils.getExtensionManifestWarnings(
           this.addonId
