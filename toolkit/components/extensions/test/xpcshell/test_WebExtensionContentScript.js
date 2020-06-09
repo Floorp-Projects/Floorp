@@ -4,7 +4,7 @@
 
 const { newURI } = Services.io;
 
-const server = createHttpServer();
+const server = createHttpServer({ hosts: ["example.com"] });
 server.registerDirectory("/data/", do_get_file("data"));
 
 let policy = new WebExtensionPolicy({
@@ -55,14 +55,8 @@ add_task(async function test_WebExtensinonContentScript_url_matching() {
   );
 });
 
-async function loadURL(url, { frameCount }) {
-  let windows = new Map();
+async function loadURL(url) {
   let requests = new Map();
-
-  let resolveLoad;
-  let loadPromise = new Promise(resolve => {
-    resolveLoad = resolve;
-  });
 
   function requestObserver(request) {
     request.QueryInterface(Ci.nsIChannel);
@@ -70,34 +64,14 @@ async function loadURL(url, { frameCount }) {
       requests.set(request.name, request);
     }
   }
-  function loadObserver(window) {
-    window.addEventListener(
-      "load",
-      function onLoad() {
-        windows.set(window.location.href, window);
-        if (windows.size == frameCount) {
-          resolveLoad();
-        }
-      },
-      { once: true }
-    );
-  }
 
   Services.obs.addObserver(requestObserver, "http-on-examine-response");
-  Services.obs.addObserver(loadObserver, "content-document-global-created");
 
-  let webNav = Services.appShell.createWindowlessBrowser(false);
-  let loadURIOptions = {
-    triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
-  };
-  webNav.loadURI(url, loadURIOptions);
-
-  await loadPromise;
+  let contentPage = await ExtensionTestUtils.loadContentPage(url);
 
   Services.obs.removeObserver(requestObserver, "http-on-examine-response");
-  Services.obs.removeObserver(loadObserver, "content-document-global-created");
 
-  return { webNav, windows, requests };
+  return { contentPage, requests };
 }
 
 add_task(async function test_WebExtensinonContentScript_frame_matching() {
@@ -106,13 +80,8 @@ add_task(async function test_WebExtensinonContentScript_frame_matching() {
     // infra.
     return;
   }
-  Services.prefs.setBoolPref(
-    "security.turn_off_all_security_so_that_viruses_can_take_over_this_computer",
-    true
-  );
-  Services.prefs.setBoolPref("security.allow_unsafe_parent_loads", true);
 
-  let baseURL = `http://localhost:${server.identity.primaryPort}/data`;
+  let baseURL = `http://example.com/data`;
   let urls = {
     topLevel: `${baseURL}/file_toplevel.html`,
     iframe: `${baseURL}/file_iframe.html`,
@@ -120,15 +89,12 @@ add_task(async function test_WebExtensinonContentScript_frame_matching() {
     aboutBlank: "about:blank",
   };
 
-  let { webNav, windows, requests } = await loadURL(urls.topLevel, {
-    frameCount: 4,
-  });
+  let { contentPage, requests } = await loadURL(urls.topLevel);
 
   let tests = [
     {
-      contentScript: {
-        matches: new MatchPatternSet(["http://localhost/data/*"]),
-      },
+      matches: ["http://example.com/data/*"],
+      contentScript: {},
       topLevel: true,
       iframe: false,
       aboutBlank: false,
@@ -136,8 +102,8 @@ add_task(async function test_WebExtensinonContentScript_frame_matching() {
     },
 
     {
+      matches: ["http://example.com/data/*"],
       contentScript: {
-        matches: new MatchPatternSet(["http://localhost/data/*"]),
         frameID: 0,
       },
       topLevel: true,
@@ -147,8 +113,8 @@ add_task(async function test_WebExtensinonContentScript_frame_matching() {
     },
 
     {
+      matches: ["http://example.com/data/*"],
       contentScript: {
-        matches: new MatchPatternSet(["http://localhost/data/*"]),
         allFrames: true,
       },
       topLevel: true,
@@ -158,8 +124,8 @@ add_task(async function test_WebExtensinonContentScript_frame_matching() {
     },
 
     {
+      matches: ["http://example.com/data/*"],
       contentScript: {
-        matches: new MatchPatternSet(["http://localhost/data/*"]),
         allFrames: true,
         matchAboutBlank: true,
       },
@@ -170,8 +136,8 @@ add_task(async function test_WebExtensinonContentScript_frame_matching() {
     },
 
     {
+      matches: ["http://foo.com/data/*"],
       contentScript: {
-        matches: new MatchPatternSet(["http://foo.com/data/*"]),
         allFrames: true,
         matchAboutBlank: true,
       },
@@ -182,26 +148,55 @@ add_task(async function test_WebExtensinonContentScript_frame_matching() {
     },
   ];
 
-  for (let [i, test] of tests.entries()) {
-    let contentScript = new WebExtensionContentScript(
-      policy,
-      test.contentScript
-    );
+  // matchesWindow tests against content frames
+  await contentPage.spawn({ tests, urls }, args => {
+    this.windows = new Map();
+    this.windows.set(this.content.location.href, this.content);
+    for (let c of Array.from(this.content.frames)) {
+      this.windows.set(c.location.href, c);
+    }
+    this.policy = new WebExtensionPolicy({
+      id: "foo@bar.baz",
+      mozExtensionHostname: "88fb51cd-159f-4859-83db-7065485bc9b2",
+      baseURL: "file:///foo",
 
+      allowedOrigins: new MatchPatternSet([]),
+      localizeCallback() {},
+    });
+
+    let tests = args.tests.map(t => {
+      t.contentScript.matches = new MatchPatternSet(t.matches);
+      t.script = new WebExtensionContentScript(this.policy, t.contentScript);
+      return t;
+    });
+    for (let [i, test] of tests.entries()) {
+      for (let [frame, url] of Object.entries(args.urls)) {
+        let should = test[frame] ? "should" : "should not";
+        Assert.equal(
+          test.script.matchesWindow(this.windows.get(url)),
+          test[frame],
+          `Script ${i} ${should} match the ${frame} frame`
+        );
+      }
+    }
+  });
+
+  // Parent tests against loadInfo
+  tests = tests.map(t => {
+    t.contentScript.matches = new MatchPatternSet(t.matches);
+    t.script = new WebExtensionContentScript(policy, t.contentScript);
+    return t;
+  });
+
+  for (let [i, test] of tests.entries()) {
     for (let [frame, url] of Object.entries(urls)) {
       let should = test[frame] ? "should" : "should not";
-
-      equal(
-        contentScript.matchesWindow(windows.get(url)),
-        test[frame],
-        `Script ${i} ${should} match the ${frame} frame`
-      );
 
       if (url.startsWith("http")) {
         let request = requests.get(url);
 
         equal(
-          contentScript.matchesLoadInfo(request.URI, request.loadInfo),
+          test.script.matchesLoadInfo(request.URI, request.loadInfo),
           test[frame],
           `Script ${i} ${should} match the request LoadInfo for ${frame} frame`
         );
@@ -209,5 +204,5 @@ add_task(async function test_WebExtensinonContentScript_frame_matching() {
     }
   }
 
-  webNav.close();
+  await contentPage.close();
 });
