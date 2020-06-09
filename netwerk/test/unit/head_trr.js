@@ -244,15 +244,15 @@ class TRRServerCode {
 function trrQueryHandler(req, resp, url) {
   let requestBody = Buffer.from("");
   let method = req.headers[global.http2.constants.HTTP2_HEADER_METHOD];
+  let contentLength = req.headers["content-length"];
 
   if (method == "POST") {
-    req
-      .on("data", chunk => {
-        requestBody = Buffer.concat([requestBody, chunk]);
-      })
-      .on("end", () => {
+    req.on("data", chunk => {
+      requestBody = Buffer.concat([requestBody, chunk]);
+      if (requestBody.length == contentLength) {
         return processRequest(req, resp, requestBody);
-      });
+      }
+    });
   } else if (method == "GET") {
     if (!url.query.dns) {
       resp.writeHead(400);
