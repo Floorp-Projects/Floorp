@@ -8,7 +8,6 @@
 
 #include "mozilla/DebugOnly.h"
 #include "mozilla/EndianUtils.h"
-#include "mozilla/MathAlgorithms.h"
 
 #include <type_traits>
 
@@ -1532,16 +1531,6 @@ void LIRGenerator::visitPow(MPow* ins) {
   if (ins->type() == MIRType::Int32) {
     MOZ_ASSERT(input->type() == MIRType::Int32);
     MOZ_ASSERT(power->type() == MIRType::Int32);
-
-    if (input->isConstant()) {
-      // Restrict this optimization to |base <= 256| to avoid generating too
-      // many consecutive shift instructions.
-      int32_t base = input->toConstant()->toInt32();
-      if (2 <= base && base <= 256 && mozilla::IsPowerOfTwo(uint32_t(base))) {
-        lowerPowOfTwoI(ins);
-        return;
-      }
-    }
 
     auto* lir = new (alloc())
         LPowII(useRegister(input), useRegister(power), temp(), temp());

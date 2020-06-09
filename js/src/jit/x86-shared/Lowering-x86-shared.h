@@ -45,7 +45,6 @@ class LIRGeneratorX86Shared : public LIRGeneratorShared {
   void lowerUDiv(MDiv* div);
   void lowerUMod(MMod* mod);
   void lowerUrshD(MUrsh* mir);
-  void lowerPowOfTwoI(MPow* mir);
   void lowerTruncateDToInt32(MTruncateToInt32* ins);
   void lowerTruncateFToInt32(MTruncateToInt32* ins);
   void lowerCompareExchangeTypedArrayElement(
