@@ -860,7 +860,7 @@ void js::Nursery::renderProfileJSON(JSONPrinter& json) const {
 
 // static
 void js::Nursery::printProfileHeader() {
-  fprintf(stderr, "MinorGC:               Reason  PRate Size        ");
+  fprintf(stderr, "MinorGC: Timestamp  Reason               PRate  Size ");
 #define PRINT_HEADER(name, text) fprintf(stderr, " %6s", text);
   FOR_EACH_NURSERY_PROFILE_TIME(PRINT_HEADER)
 #undef PRINT_HEADER
@@ -877,7 +877,8 @@ void js::Nursery::printProfileDurations(const ProfileDurations& times) {
 
 void js::Nursery::printTotalProfileTimes() {
   if (enableProfiling_) {
-    fprintf(stderr, "MinorGC TOTALS: %7" PRIu64 " collections:             ",
+    fprintf(stderr,
+            "MinorGC TOTALS: %7" PRIu64 " collections:                 ",
             gc->minorGCCount());
     printProfileDurations(totalDurations_);
   }
@@ -1068,8 +1069,11 @@ void js::Nursery::printCollectionProfile(JS::GCReason reason,
                                          double promotionRate) {
   stats().maybePrintProfileHeaders();
 
-  fprintf(stderr, "MinorGC: %20s %5.1f%% %5zu       ",
-          JS::ExplainGCReason(reason), promotionRate * 100, capacity() / 1024);
+  TimeDuration ts = startTimes_[ProfileKey::Total] - stats().creationTime();
+
+  fprintf(stderr, "MinorGC: %10.6f %-20.20s %5.1f%% %5zu", ts.ToSeconds(),
+          JS::ExplainGCReason(reason), promotionRate * 100,
+          previousGC.nurseryCapacity / 1024);
 
   printProfileDurations(profileDurations_);
 }
