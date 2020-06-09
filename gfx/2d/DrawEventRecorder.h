@@ -128,7 +128,18 @@ class DrawEventRecorderPrivate : public DrawEventRecorder {
   virtual void StoreSourceSurfaceRecording(SourceSurface* aSurface,
                                            const char* aReason);
 
-  virtual void RecordSourceSurfaceDestruction(SourceSurface* aSurface);
+  /**
+   * This is virtual to allow subclasses to control the recording, if for
+   * example it needs to happen on a specific thread. aSurface is a void*
+   * instead of a SourceSurface* because this is called during the SourceSurface
+   * destructor, so it is partially destructed and should not be accessed. If we
+   * use a SourceSurface* we might, for example, accidentally AddRef/Release the
+   * object by passing it to NewRunnableMethod to submit to a different thread.
+   * We are only using the pointer as a lookup ID to our internal maps and
+   * ReferencePtr to be used on the translation side.
+   * @param aSurface the surface whose destruction is being recorded
+   */
+  virtual void RecordSourceSurfaceDestruction(void* aSurface);
 
   virtual void AddDependentSurface(uint64_t aDependencyId) {
     MOZ_CRASH("GFX: AddDependentSurface");
