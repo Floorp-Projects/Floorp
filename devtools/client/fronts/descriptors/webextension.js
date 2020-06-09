@@ -92,6 +92,13 @@ class WebExtensionDescriptorFront extends FrontClassWithSpec(
     return this._form.warnings;
   }
 
+  _createWebExtensionTarget(form) {
+    const front = new BrowsingContextTargetFront(this.conn, null, this);
+    front.form(form);
+    this.manage(front);
+    return front;
+  }
+
   /**
    * Retrieve the BrowsingContextTargetFront representing a
    * WebExtensionTargetActor if this addon is a webextension.
@@ -106,16 +113,34 @@ class WebExtensionDescriptorFront extends FrontClassWithSpec(
   async getTarget() {
     if (!this.isWebExtension) {
       throw new Error(
-        "Tried to call getTarget() for an addon which is not a webextension: " +
+        "Tried to create a target for an addon which is not a webextension: " +
           this.actorID
       );
     }
 
-    const form = await super.getTarget();
-    const front = new BrowsingContextTargetFront(this.conn, null, this);
-    front.form(form);
-    this.manage(front);
-    return front;
+    if (this._targetFront && this._targetFront.actorID) {
+      return this._targetFront;
+    }
+
+    if (this._targetFrontPromise) {
+      return this._targetFrontPromise;
+    }
+
+    this._targetFrontPromise = (async () => {
+      let targetFront = null;
+      try {
+        const targetForm = await super.getTarget();
+        targetFront = this._createWebExtensionTarget(targetForm);
+      } catch (e) {
+        console.log(
+          `Request to connect to WebExtensionDescriptor "${this.id}" failed: ${e}`
+        );
+      }
+      this._targetFront = targetFront;
+      this._targetFrontPromise = null;
+      return targetFront;
+    })();
+    return this._targetFrontPromise;
   }
 }
 

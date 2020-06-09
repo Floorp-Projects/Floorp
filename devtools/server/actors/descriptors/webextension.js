@@ -92,25 +92,17 @@ const WebExtensionDescriptorActor = protocol.ActorClassWithSpec(
       };
     },
 
-    getTarget() {
-      if (this._childTargetPromise) {
-        return this._childTargetPromise;
-      }
-
-      this._childTargetPromise = (async () => {
-        const form = await this._extensionFrameConnect();
-        // Merge into the child actor form, some addon metadata
-        // (e.g. the addon name shown in the addon debugger window title).
-        return Object.assign(form, {
-          iconURL: this.addon.iconURL,
-          id: this.addon.id,
-          // Set the isOOP attribute on the connected child actor form.
-          isOOP: this.isOOP,
-          name: this.addon.name,
-        });
-      })();
-
-      return this._childTargetPromise;
+    async getTarget() {
+      const form = await this._extensionFrameConnect();
+      // Merge into the child actor form, some addon metadata
+      // (e.g. the addon name shown in the addon debugger window title).
+      return Object.assign(form, {
+        iconURL: this.addon.iconURL,
+        id: this.addon.id,
+        // Set the isOOP attribute on the connected child actor form.
+        isOOP: this.isOOP,
+        name: this.addon.name,
+      });
     },
 
     getChildren() {
@@ -203,12 +195,9 @@ const WebExtensionDescriptorActor = protocol.ActorClassWithSpec(
     },
 
     _extensionFrameDisconnect() {
-      this._childTargetPromise = null;
       AddonManager.removeAddonListener(this);
 
       this.addon = null;
-      this._childTargetPromise = null;
-
       if (this._mm) {
         this._mm.removeMessageListener(
           "debug:webext_child_exit",
