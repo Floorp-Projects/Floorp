@@ -425,6 +425,8 @@ class nsChildView final : public nsBaseWidget {
 
   virtual void CreateCompositor() override;
 
+  virtual bool WidgetPaintsBackground() override { return true; }
+
   virtual bool PreRender(mozilla::widget::WidgetRenderingContext* aContext) override;
   virtual void PostRender(mozilla::widget::WidgetRenderingContext* aContext) override;
   virtual RefPtr<mozilla::layers::NativeLayerRoot> GetNativeLayerRoot() override;
