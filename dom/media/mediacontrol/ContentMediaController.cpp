@@ -52,13 +52,13 @@ GetContentMediaControllerFromBrowsingContext(
 }
 
 /* static */
-ContentControlKeyEventReceiver* ContentControlKeyEventReceiver::Get(
+ContentMediaControlKeyReceiver* ContentMediaControlKeyReceiver::Get(
     BrowsingContext* aBC) {
   MOZ_ASSERT(NS_IsMainThread());
   RefPtr<ContentMediaController> controller =
       GetContentMediaControllerFromBrowsingContext(aBC);
   return controller
-             ? static_cast<ContentControlKeyEventReceiver*>(controller.get())
+             ? static_cast<ContentMediaControlKeyReceiver*>(controller.get())
              : nullptr;
 }
 
@@ -270,13 +270,13 @@ ContentMediaController::ContentMediaController(uint64_t aId)
     : mTopLevelBrowsingContextId(aId) {}
 
 void ContentMediaController::AddReceiver(
-    ContentControlKeyEventReceiver* aListener) {
+    ContentMediaControlKeyReceiver* aListener) {
   MOZ_ASSERT(NS_IsMainThread());
   mReceivers.AppendElement(aListener);
 }
 
 void ContentMediaController::RemoveReceiver(
-    ContentControlKeyEventReceiver* aListener) {
+    ContentMediaControlKeyReceiver* aListener) {
   MOZ_ASSERT(NS_IsMainThread());
   mReceivers.RemoveElement(aListener);
   // No more media needs to be controlled, so we can release this and recreate
@@ -287,12 +287,12 @@ void ContentMediaController::RemoveReceiver(
   }
 }
 
-void ContentMediaController::HandleEvent(MediaControlKeysEvent aEvent) {
+void ContentMediaController::HandleMediaKey(MediaControlKey aKey) {
   MOZ_ASSERT(NS_IsMainThread());
-  LOG("Handle '%s' event, receiver num=%zu", ToMediaControlKeysEventStr(aEvent),
+  LOG("Handle '%s' event, receiver num=%zu", ToMediaControlKeyStr(aKey),
       mReceivers.Length());
   for (auto& receiver : mReceivers) {
-    receiver->HandleEvent(aEvent);
+    receiver->HandleMediaKey(aKey);
   }
 }
 

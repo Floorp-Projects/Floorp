@@ -65,11 +65,11 @@ MediaControlService::MediaControlService() {
 }
 
 void MediaControlService::Init() {
-  mMediaKeysHandler = new MediaControlKeysHandler();
-  mMediaControlKeysManager = new MediaControlKeysManager();
-  mMediaControlKeysManager->Open();
-  MOZ_ASSERT(mMediaControlKeysManager->IsOpened());
-  mMediaControlKeysManager->AddListener(mMediaKeysHandler.get());
+  mMediaKeysHandler = new MediaControlKeyHandler();
+  mMediaControlKeyManager = new MediaControlKeyManager();
+  mMediaControlKeyManager->Open();
+  MOZ_ASSERT(mMediaControlKeyManager->IsOpened());
+  mMediaControlKeyManager->AddListener(mMediaKeysHandler.get());
   mControllerManager = MakeUnique<ControllerManager>(this);
 }
 
@@ -97,7 +97,7 @@ MediaControlService::Observe(nsISupports* aSubject, const char* aTopic,
 
 void MediaControlService::Shutdown() {
   mControllerManager->Shutdown();
-  mMediaControlKeysManager->RemoveListener(mMediaKeysHandler.get());
+  mMediaControlKeyManager->RemoveListener(mMediaKeysHandler.get());
 }
 
 bool MediaControlService::RegisterActiveMediaController(
@@ -191,12 +191,11 @@ MediaController* MediaControlService::GetMainController() const {
   return mControllerManager->GetMainController();
 }
 
-void MediaControlService::GenerateMediaControlKeysTestEvent(
-    MediaControlKeysEvent aEvent) {
+void MediaControlService::GenerateTestMediaControlKey(MediaControlKey aKey) {
   if (!StaticPrefs::media_mediacontrol_testingevents_enabled()) {
     return;
   }
-  mMediaKeysHandler->OnKeyPressed(aEvent);
+  mMediaKeysHandler->OnKeyPressed(aKey);
 }
 
 MediaMetadataBase MediaControlService::GetMainControllerMediaMetadata() const {
@@ -220,7 +219,7 @@ MediaSessionPlaybackState MediaControlService::GetMainControllerPlaybackState()
 // Following functions belong to ControllerManager
 MediaControlService::ControllerManager::ControllerManager(
     MediaControlService* aService)
-    : mSource(aService->GetMediaControlKeysEventSource()) {
+    : mSource(aService->GetMediaControlKeySource()) {
   MOZ_ASSERT(mSource);
 }
 

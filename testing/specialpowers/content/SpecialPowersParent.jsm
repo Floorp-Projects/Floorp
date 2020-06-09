@@ -1195,7 +1195,7 @@ class SpecialPowersParent extends JSWindowActorParent {
       }
 
       case "SPGenerateMediaControlKeyTestEvent": {
-        ChromeUtils.generateMediaControlKeysTestEvent(aMessage.data.event);
+        ChromeUtils.generateMediaControlKey(aMessage.data.event);
         return undefined;
       }
 

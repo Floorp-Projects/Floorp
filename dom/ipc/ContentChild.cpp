@@ -248,7 +248,7 @@
 #endif
 
 #include "mozilla/dom/File.h"
-#include "mozilla/dom/MediaControlKeysEvent.h"
+#include "mozilla/dom/MediaControllerBinding.h"
 #include "mozilla/dom/PPresentationChild.h"
 #include "mozilla/dom/PresentationIPCService.h"
 #include "mozilla/ipc/IPCStreamAlloc.h"
@@ -3482,15 +3482,13 @@ mozilla::ipc::IPCResult ContentChild::RecvStartDelayedAutoplayMediaComponents(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult ContentChild::RecvUpdateMediaControlKeysEvent(
-    const MaybeDiscarded<BrowsingContext>& aContext,
-    MediaControlKeysEvent aEvent) {
+mozilla::ipc::IPCResult ContentChild::RecvUpdateMediaControlKey(
+    const MaybeDiscarded<BrowsingContext>& aContext, MediaControlKey aKey) {
   if (NS_WARN_IF(aContext.IsNullOrDiscarded())) {
     return IPC_OK();
   }
 
-  ContentMediaActionHandler::HandleMediaControlKeysEvent(aContext.get(),
-                                                         aEvent);
+  ContentMediaControlKeyHandler::HandleMediaControlKey(aContext.get(), aKey);
   return IPC_OK();
 }
 

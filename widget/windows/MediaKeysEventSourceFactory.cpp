@@ -8,7 +8,7 @@
 namespace mozilla {
 namespace widget {
 
-mozilla::dom::MediaControlKeysEventSource* CreateMediaControlKeysEventSource() {
+mozilla::dom::MediaControlKeySource* CreateMediaControlKeySource() {
 #ifndef __MINGW32__
   return new WindowsSMTCProvider();
 #else

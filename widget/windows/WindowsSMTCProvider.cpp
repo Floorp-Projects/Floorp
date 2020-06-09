@@ -91,23 +91,23 @@ WindowsSMTCProvider::~WindowsSMTCProvider() {
   }
 }
 
-static inline Maybe<mozilla::dom::MediaControlKeysEvent> TranslateKeycode(
+static inline Maybe<mozilla::dom::MediaControlKey> TranslateKeycode(
     SystemMediaTransportControlsButton keycode) {
   switch (keycode) {
     case SystemMediaTransportControlsButton_Play:
-      return Some(mozilla::dom::MediaControlKeysEvent::ePlay);
+      return Some(mozilla::dom::MediaControlKey::Play);
     case SystemMediaTransportControlsButton_Pause:
-      return Some(mozilla::dom::MediaControlKeysEvent::ePause);
+      return Some(mozilla::dom::MediaControlKey::Pause);
     case SystemMediaTransportControlsButton_Next:
-      return Some(mozilla::dom::MediaControlKeysEvent::eNextTrack);
+      return Some(mozilla::dom::MediaControlKey::Nexttrack);
     case SystemMediaTransportControlsButton_Previous:
-      return Some(mozilla::dom::MediaControlKeysEvent::ePrevTrack);
+      return Some(mozilla::dom::MediaControlKey::Previoustrack);
     case SystemMediaTransportControlsButton_Stop:
-      return Some(mozilla::dom::MediaControlKeysEvent::eStop);
+      return Some(mozilla::dom::MediaControlKey::Stop);
     case SystemMediaTransportControlsButton_FastForward:
-      return Some(mozilla::dom::MediaControlKeysEvent::eSeekForward);
+      return Some(mozilla::dom::MediaControlKey::Seekforward);
     case SystemMediaTransportControlsButton_Rewind:
-      return Some(mozilla::dom::MediaControlKeysEvent::eSeekBackward);
+      return Some(mozilla::dom::MediaControlKey::Seekbackward);
     default:
       return Nothing();  // Not supported Button
   }
@@ -131,8 +131,7 @@ bool WindowsSMTCProvider::RegisterEvents() {
           return S_OK;  // Propagating the error probably wouldn't help.
         }
 
-        Maybe<mozilla::dom::MediaControlKeysEvent> keyCode =
-            TranslateKeycode(btn);
+        Maybe<mozilla::dom::MediaControlKey> keyCode = TranslateKeycode(btn);
         if (keyCode.isSome() && IsOpened()) {
           OnButtonPressed(keyCode.value());
         }
@@ -228,7 +227,7 @@ bool WindowsSMTCProvider::Open() {
 bool WindowsSMTCProvider::IsOpened() const { return mInitialized; }
 
 void WindowsSMTCProvider::Close() {
-  MediaControlKeysEventSource::Close();
+  MediaControlKeySource::Close();
   if (mInitialized) {  // Prevent calling Set methods when init failed
     SetPlaybackState(mozilla::dom::MediaSessionPlaybackState::None);
     SetControlAttributes(SMTCControlAttributes::DisableAll());
@@ -241,7 +240,7 @@ void WindowsSMTCProvider::Close() {
 void WindowsSMTCProvider::SetPlaybackState(
     mozilla::dom::MediaSessionPlaybackState aState) {
   MOZ_ASSERT(mInitialized);
-  MediaControlKeysEventSource::SetPlaybackState(aState);
+  MediaControlKeySource::SetPlaybackState(aState);
 
   HRESULT hr;
 
@@ -400,10 +399,9 @@ void WindowsSMTCProvider::SetMediaMetadata(
   Update();
 }
 
-void WindowsSMTCProvider::OnButtonPressed(
-    mozilla::dom::MediaControlKeysEvent aEvent) {
+void WindowsSMTCProvider::OnButtonPressed(mozilla::dom::MediaControlKey aKey) {
   for (auto& listener : mListeners) {
-    listener->OnKeyPressed(aEvent);
+    listener->OnKeyPressed(aKey);
   }
 }
 

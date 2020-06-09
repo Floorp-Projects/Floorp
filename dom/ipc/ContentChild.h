@@ -14,6 +14,7 @@
 #include "mozilla/dom/BrowserBridgeChild.h"
 #include "mozilla/dom/ProcessActor.h"
 #include "mozilla/dom/JSProcessActorChild.h"
+#include "mozilla/dom/MediaControllerBinding.h"
 #include "mozilla/dom/PContentChild.h"
 #include "mozilla/dom/RemoteBrowser.h"
 #include "mozilla/StaticPtr.h"
@@ -71,7 +72,6 @@ class ClonedMessageData;
 class BrowserChild;
 class GetFilesHelperChild;
 class TabContext;
-enum class MediaControlKeysEvent : uint32_t;
 
 class ContentChild final : public PContentChild,
                            public nsIContentChild,
@@ -631,9 +631,8 @@ class ContentChild final : public PContentChild,
   mozilla::ipc::IPCResult RecvStartDelayedAutoplayMediaComponents(
       const MaybeDiscarded<BrowsingContext>& aContext);
 
-  mozilla::ipc::IPCResult RecvUpdateMediaControlKeysEvent(
-      const MaybeDiscarded<BrowsingContext>& aContext,
-      MediaControlKeysEvent aEvent);
+  mozilla::ipc::IPCResult RecvUpdateMediaControlKey(
+      const MaybeDiscarded<BrowsingContext>& aContext, MediaControlKey aKey);
 
   void HoldBrowsingContextGroup(BrowsingContextGroup* aBCG);
   void ReleaseBrowsingContextGroup(BrowsingContextGroup* aBCG);

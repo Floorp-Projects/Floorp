@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "MediaControlKeysEvent.h"
+#include "MediaControlKeySource.h"
 
 #include "MediaController.h"
 #include "MediaControlUtils.h"
@@ -18,16 +18,16 @@ namespace dom {
 #undef LOG_SOURCE
 #define LOG_SOURCE(msg, ...)                 \
   MOZ_LOG(gMediaControlLog, LogLevel::Debug, \
-          ("MediaControlKeysEventSource=%p, " msg, this, ##__VA_ARGS__))
+          ("MediaControlKeySource=%p, " msg, this, ##__VA_ARGS__))
 
 #undef LOG_KEY
-#define LOG_KEY(msg, key, ...)                       \
-  MOZ_LOG(gMediaControlLog, LogLevel::Debug,         \
-          ("MediaControlKeysHandler=%p, " msg, this, \
-           ToMediaControlKeysEventStr(key), ##__VA_ARGS__));
+#define LOG_KEY(msg, key, ...)                                                 \
+  MOZ_LOG(gMediaControlLog, LogLevel::Debug,                                   \
+          ("MediaControlKeyHandler=%p, " msg, this, ToMediaControlKeyStr(key), \
+           ##__VA_ARGS__));
 
-void MediaControlKeysHandler::OnKeyPressed(MediaControlKeysEvent aKeyEvent) {
-  LOG_KEY("OnKeyPressed '%s'", aKeyEvent);
+void MediaControlKeyHandler::OnKeyPressed(MediaControlKey aKey) {
+  LOG_KEY("OnKeyPressed '%s'", aKey);
 
   RefPtr<MediaControlService> service = MediaControlService::GetService();
   MOZ_ASSERT(service);
@@ -36,17 +36,17 @@ void MediaControlKeysHandler::OnKeyPressed(MediaControlKeysEvent aKeyEvent) {
     return;
   }
 
-  switch (aKeyEvent) {
-    case MediaControlKeysEvent::eFocus:
+  switch (aKey) {
+    case MediaControlKey::Focus:
       controller->Focus();
       return;
-    case MediaControlKeysEvent::ePlay:
+    case MediaControlKey::Play:
       controller->Play();
       return;
-    case MediaControlKeysEvent::ePause:
+    case MediaControlKey::Pause:
       controller->Pause();
       return;
-    case MediaControlKeysEvent::ePlayPause: {
+    case MediaControlKey::Playpause: {
       if (controller->IsPlaying()) {
         controller->Pause();
       } else {
@@ -54,55 +54,52 @@ void MediaControlKeysHandler::OnKeyPressed(MediaControlKeysEvent aKeyEvent) {
       }
       return;
     }
-    case MediaControlKeysEvent::ePrevTrack:
+    case MediaControlKey::Previoustrack:
       controller->PrevTrack();
       return;
-    case MediaControlKeysEvent::eNextTrack:
+    case MediaControlKey::Nexttrack:
       controller->NextTrack();
       return;
-    case MediaControlKeysEvent::eSeekBackward:
+    case MediaControlKey::Seekbackward:
       controller->SeekBackward();
       return;
-    case MediaControlKeysEvent::eSeekForward:
+    case MediaControlKey::Seekforward:
       controller->SeekForward();
       return;
-    case MediaControlKeysEvent::eStop:
+    case MediaControlKey::Stop:
       controller->Stop();
       return;
     default:
-      MOZ_ASSERT_UNREACHABLE("Error : undefined event!");
+      MOZ_ASSERT_UNREACHABLE("Error : undefined media key!");
       return;
   }
 }
 
-MediaControlKeysEventSource::MediaControlKeysEventSource()
+MediaControlKeySource::MediaControlKeySource()
     : mPlaybackState(MediaSessionPlaybackState::None) {}
 
-void MediaControlKeysEventSource::AddListener(
-    MediaControlKeysEventListener* aListener) {
+void MediaControlKeySource::AddListener(MediaControlKeyListener* aListener) {
   MOZ_ASSERT(aListener);
   LOG_SOURCE("Add listener %p", aListener);
   mListeners.AppendElement(aListener);
 }
 
-void MediaControlKeysEventSource::RemoveListener(
-    MediaControlKeysEventListener* aListener) {
+void MediaControlKeySource::RemoveListener(MediaControlKeyListener* aListener) {
   MOZ_ASSERT(aListener);
   LOG_SOURCE("Remove listener %p", aListener);
   mListeners.RemoveElement(aListener);
 }
 
-size_t MediaControlKeysEventSource::GetListenersNum() const {
+size_t MediaControlKeySource::GetListenersNum() const {
   return mListeners.Length();
 }
 
-void MediaControlKeysEventSource::Close() {
+void MediaControlKeySource::Close() {
   LOG_SOURCE("Close source");
   mListeners.Clear();
 }
 
-void MediaControlKeysEventSource::SetPlaybackState(
-    MediaSessionPlaybackState aState) {
+void MediaControlKeySource::SetPlaybackState(MediaSessionPlaybackState aState) {
   if (mPlaybackState == aState) {
     return;
   }
@@ -110,8 +107,7 @@ void MediaControlKeysEventSource::SetPlaybackState(
   mPlaybackState = aState;
 }
 
-MediaSessionPlaybackState MediaControlKeysEventSource::GetPlaybackState()
-    const {
+MediaSessionPlaybackState MediaControlKeySource::GetPlaybackState() const {
   return mPlaybackState;
 }
 
