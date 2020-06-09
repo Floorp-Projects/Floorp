@@ -21,17 +21,6 @@ use crate::{
     WasmMemoryType, WasmModuleResources, WasmTableType, WasmType,
 };
 
-/// Test if `subtype` is a subtype of `supertype`.
-pub(crate) fn is_subtype_supertype(subtype: Type, supertype: Type) -> bool {
-    match supertype {
-        Type::AnyRef => {
-            subtype == Type::AnyRef || subtype == Type::AnyFunc || subtype == Type::NullRef
-        }
-        Type::AnyFunc => subtype == Type::AnyFunc || subtype == Type::NullRef,
-        _ => subtype == supertype,
-    }
-}
-
 #[derive(Debug)]
 struct BlockState {
     start_types: Vec<Type>,
@@ -79,10 +68,7 @@ impl FuncState {
             return true;
         }
         assert!(stack_starts_at + index < self.stack_types.len());
-        is_subtype_supertype(
-            self.stack_types[self.stack_types.len() - 1 - index],
-            expected,
-        )
+        self.stack_types[self.stack_types.len() - 1 - index] == expected
     }
     fn assert_block_stack_len(&self, depth: usize, minimal_len: usize) -> bool {
         assert!(depth < self.blocks.len());
@@ -341,6 +327,7 @@ pub struct OperatorValidatorConfig {
     pub enable_simd: bool,
     pub enable_bulk_memory: bool,
     pub enable_multi_value: bool,
+    pub enable_tail_call: bool,
 
     #[cfg(feature = "deterministic")]
     pub deterministic_only: bool,
@@ -352,7 +339,8 @@ pub(crate) const DEFAULT_OPERATOR_VALIDATOR_CONFIG: OperatorValidatorConfig =
         enable_reference_types: false,
         enable_simd: false,
         enable_bulk_memory: false,
-        enable_multi_value: false,
+        enable_multi_value: true,
+        enable_tail_call: false,
 
         #[cfg(feature = "deterministic")]
         deterministic_only: true,
@@ -364,7 +352,7 @@ pub(crate) fn check_value_type(
 ) -> OperatorValidatorResult<()> {
     match ty {
         Type::I32 | Type::I64 | Type::F32 | Type::F64 => Ok(()),
-        Type::NullRef | Type::AnyFunc | Type::AnyRef => {
+        Type::FuncRef | Type::ExternRef => {
             if !operator_config.enable_reference_types {
                 return Err(OperatorValidatorError::new(
                     "reference types support is not enabled",
@@ -539,6 +527,72 @@ impl OperatorValidator {
         self.check_block_return_types(self.func_state.last_block(), 0)
     }
 
+    fn check_call(
+        &mut self,
+        function_index: u32,
+        resources: impl WasmModuleResources,
+    ) -> OperatorValidatorResult<()> {
+        let type_index = match resources.func_type_id_at(function_index) {
+            Some(i) => i,
+            None => {
+                bail_op_err!(
+                    "unknown function {}: function index out of bounds",
+                    function_index
+                );
+            }
+        };
+        let ty = resources
+            .type_at(type_index)
+            .expect("function type index is out of bounds");
+        self.check_operands(wasm_func_type_inputs(ty).map(WasmType::to_parser_type))?;
+        self.func_state.change_frame_with_types(
+            ty.len_inputs(),
+            wasm_func_type_outputs(ty).map(WasmType::to_parser_type),
+        )?;
+        Ok(())
+    }
+
+    fn check_call_indirect(
+        &mut self,
+        index: u32,
+        table_index: u32,
+        resources: impl WasmModuleResources,
+    ) -> OperatorValidatorResult<()> {
+        if resources.table_at(table_index).is_none() {
+            return Err(OperatorValidatorError::new(
+                "unknown table: table index out of bounds",
+            ));
+        }
+        match resources.type_at(index) {
+            None => {
+                return Err(OperatorValidatorError::new(
+                    "unknown type: type index out of bounds",
+                ))
+            }
+            Some(ty) => {
+                let types = {
+                    let mut types = Vec::with_capacity(ty.len_inputs() + 1);
+                    types.extend(wasm_func_type_inputs(ty).map(WasmType::to_parser_type));
+                    types.push(Type::I32);
+                    types
+                };
+                self.check_operands(types.into_iter())?;
+                self.func_state.change_frame_with_types(
+                    ty.len_inputs() + 1,
+                    wasm_func_type_outputs(ty).map(WasmType::to_parser_type),
+                )?;
+            }
+        }
+        Ok(())
+    }
+
+    fn check_return(&mut self) -> OperatorValidatorResult<()> {
+        let depth = (self.func_state.blocks.len() - 1) as u32;
+        self.check_jump_from_block(depth, 0)?;
+        self.func_state.start_dead_code();
+        Ok(())
+    }
+
     fn check_jump_from_block(
         &self,
         relative_depth: u32,
@@ -641,36 +695,6 @@ impl OperatorValidator {
         Ok(())
     }
 
-    fn check_shared_memory_index<
-        F: WasmFuncType,
-        T: WasmTableType,
-        M: WasmMemoryType,
-        G: WasmGlobalType,
-    >(
-        &self,
-        memory_index: u32,
-        resources: &dyn WasmModuleResources<
-            FuncType = F,
-            TableType = T,
-            MemoryType = M,
-            GlobalType = G,
-        >,
-    ) -> OperatorValidatorResult<()> {
-        match resources.memory_at(memory_index) {
-            Some(memory) if !memory.is_shared() => {
-                return Err(OperatorValidatorError::new(
-                    "atomic accesses require shared memory",
-                ))
-            }
-            None => {
-                return Err(OperatorValidatorError::new(
-                    "no linear memories are present",
-                ))
-            }
-            _ => Ok(()),
-        }
-    }
-
     fn check_memarg<F: WasmFuncType, T: WasmTableType, M: WasmMemoryType, G: WasmGlobalType>(
         &self,
         memarg: MemoryImmediate,
@@ -757,7 +781,7 @@ impl OperatorValidator {
             GlobalType = G,
         >,
     ) -> OperatorValidatorResult<()> {
-        self.check_shared_memory_index(0, resources)?;
+        self.check_memory_index(0, resources)?;
         Ok(())
     }
 
@@ -784,7 +808,7 @@ impl OperatorValidator {
             | TypeOrFuncType::Type(Type::I64)
             | TypeOrFuncType::Type(Type::F32)
             | TypeOrFuncType::Type(Type::F64) => Ok(()),
-            TypeOrFuncType::Type(Type::AnyRef) | TypeOrFuncType::Type(Type::AnyFunc) => {
+            TypeOrFuncType::Type(Type::ExternRef) | TypeOrFuncType::Type(Type::FuncRef) => {
                 self.check_reference_types_enabled()
             }
             TypeOrFuncType::Type(Type::V128) => self.check_simd_enabled(),
@@ -851,7 +875,7 @@ impl OperatorValidator {
         Ok(())
     }
 
-    fn check_select(&self) -> OperatorValidatorResult<Option<Type>> {
+    fn check_select(&self, expected_ty: Option<Type>) -> OperatorValidatorResult<Option<Type>> {
         self.check_frame_size(3)?;
         let func_state = &self.func_state;
         let last_block = func_state.last_block();
@@ -868,20 +892,18 @@ impl OperatorValidator {
                     func_state.stack_types[func_state.stack_types.len() - 2]
                 }
                 _ => {
-                    let ty = func_state.stack_types[func_state.stack_types.len() - 3];
+                    let ty = expected_ty
+                        .unwrap_or(func_state.stack_types[func_state.stack_types.len() - 3]);
                     self.check_operands_2(ty, Type::I32)?;
                     ty
                 }
             }
         } else {
-            let ty = func_state.stack_types[func_state.stack_types.len() - 3];
+            let ty =
+                expected_ty.unwrap_or(func_state.stack_types[func_state.stack_types.len() - 3]);
             self.check_operands_2(ty, Type::I32)?;
             ty
         };
-
-        if !ty.is_valid_for_old_select() {
-            return Err(OperatorValidatorError::new("invalid type for select"));
-        }
 
         Ok(Some(ty))
     }
@@ -973,70 +995,46 @@ impl OperatorValidator {
                 }
                 self.func_state.start_dead_code()
             }
-            Operator::Return => {
-                let depth = (self.func_state.blocks.len() - 1) as u32;
-                self.check_jump_from_block(depth, 0)?;
-                self.func_state.start_dead_code()
-            }
-            Operator::Call { function_index } => match resources.func_type_id_at(function_index) {
-                Some(type_index) => {
-                    let ty = resources
-                        .type_at(type_index)
-                        // Note: This was an out-of-bounds memory access before
-                        //       the change to return `Option` at `type_at`. So
-                        //       I assumed that invalid indices at this point are
-                        //       bugs.
-                        .expect("function type index is out of bounds");
-                    self.check_operands(wasm_func_type_inputs(ty).map(WasmType::to_parser_type))?;
-                    self.func_state.change_frame_with_types(
-                        ty.len_inputs(),
-                        wasm_func_type_outputs(ty).map(WasmType::to_parser_type),
-                    )?;
-                }
-                None => {
-                    bail_op_err!(
-                        "unknown function {}: function index out of bounds",
-                        function_index
-                    );
-                }
-            },
-            Operator::CallIndirect { index, table_index } => {
-                if resources.table_at(table_index).is_none() {
+            Operator::Return => self.check_return()?,
+            Operator::Call { function_index } => self.check_call(function_index, resources)?,
+            Operator::ReturnCall { function_index } => {
+                if !self.config.enable_tail_call {
                     return Err(OperatorValidatorError::new(
-                        "unknown table: table index out of bounds",
+                        "tail calls support is not enabled",
                     ));
                 }
-                match resources.type_at(index) {
-                    None => {
-                        return Err(OperatorValidatorError::new(
-                            "unknown type: type index out of bounds",
-                        ))
-                    }
-                    Some(ty) => {
-                        let types = {
-                            let mut types = Vec::with_capacity(ty.len_inputs() + 1);
-                            types.extend(wasm_func_type_inputs(ty).map(WasmType::to_parser_type));
-                            types.push(Type::I32);
-                            types
-                        };
-                        self.check_operands(types.into_iter())?;
-                        self.func_state.change_frame_with_types(
-                            ty.len_inputs() + 1,
-                            wasm_func_type_outputs(ty).map(WasmType::to_parser_type),
-                        )?;
-                    }
+                self.check_call(function_index, resources)?;
+                self.check_return()?;
+            }
+            Operator::CallIndirect { index, table_index } => {
+                self.check_call_indirect(index, table_index, resources)?
+            }
+            Operator::ReturnCallIndirect { index, table_index } => {
+                if !self.config.enable_tail_call {
+                    return Err(OperatorValidatorError::new(
+                        "tail calls support is not enabled",
+                    ));
                 }
+                self.check_call_indirect(index, table_index, resources)?;
+                self.check_return()?;
             }
             Operator::Drop => {
                 self.check_frame_size(1)?;
                 self.func_state.change_frame(1)?;
             }
             Operator::Select => {
-                let ty = self.check_select()?;
+                let ty = self.check_select(None)?;
+                match ty {
+                    Some(Type::I32) | Some(Type::I64) | Some(Type::F32) | Some(Type::F64) => {}
+                    Some(_) => {
+                        bail_op_err!("type mismatch: only integer types allowed with bare `select`")
+                    }
+                    None => {}
+                }
                 self.func_state.change_frame_after_select(ty)?;
             }
             Operator::TypedSelect { ty } => {
-                self.check_operands_3(Type::I32, ty, ty)?;
+                self.check_select(Some(ty))?;
                 self.func_state.change_frame_after_select(Some(ty))?;
             }
             Operator::LocalGet { local_index } => {
@@ -1608,13 +1606,29 @@ impl OperatorValidator {
                     ));
                 }
             }
-            Operator::RefNull => {
+            Operator::RefNull { ty } => {
                 self.check_reference_types_enabled()?;
-                self.func_state.change_frame_with_type(0, Type::NullRef)?;
+                match ty {
+                    Type::FuncRef | Type::ExternRef => {}
+                    _ => {
+                        return Err(OperatorValidatorError::new(
+                            "invalid reference type in ref.null",
+                        ))
+                    }
+                }
+                self.func_state.change_frame_with_type(0, ty)?;
             }
-            Operator::RefIsNull => {
+            Operator::RefIsNull { ty } => {
                 self.check_reference_types_enabled()?;
-                self.check_operands_1(Type::AnyRef)?;
+                match ty {
+                    Type::FuncRef | Type::ExternRef => {}
+                    _ => {
+                        return Err(OperatorValidatorError::new(
+                            "invalid reference type in ref.is_null",
+                        ))
+                    }
+                }
+                self.check_operands_1(ty)?;
                 self.func_state.change_frame_with_type(1, Type::I32)?;
             }
             Operator::RefFunc { function_index } => {
@@ -1624,7 +1638,10 @@ impl OperatorValidator {
                         "unknown function: function index out of bounds",
                     ));
                 }
-                self.func_state.change_frame_with_type(0, Type::AnyFunc)?;
+                if !resources.is_function_referenced(function_index) {
+                    return Err(OperatorValidatorError::new("undeclared function reference"));
+                }
+                self.func_state.change_frame_with_type(0, Type::FuncRef)?;
             }
             Operator::V128Load { memarg } => {
                 self.check_simd_enabled()?;
@@ -1809,7 +1826,6 @@ impl OperatorValidator {
             | Operator::I8x16Sub
             | Operator::I8x16SubSaturateS
             | Operator::I8x16SubSaturateU
-            | Operator::I8x16Mul
             | Operator::I8x16MinS
             | Operator::I8x16MinU
             | Operator::I8x16MaxS
@@ -1852,23 +1868,22 @@ impl OperatorValidator {
             | Operator::F64x2Neg
             | Operator::F64x2Sqrt
             | Operator::F32x4ConvertI32x4S
-            | Operator::F32x4ConvertI32x4U
-            | Operator::F64x2ConvertI64x2S
-            | Operator::F64x2ConvertI64x2U => {
+            | Operator::F32x4ConvertI32x4U => {
                 self.check_non_deterministic_enabled()?;
                 self.check_simd_enabled()?;
                 self.check_operands_1(Type::V128)?;
                 self.func_state.change_frame_with_type(1, Type::V128)?;
             }
             Operator::V128Not
+            | Operator::I8x16Abs
             | Operator::I8x16Neg
+            | Operator::I16x8Abs
             | Operator::I16x8Neg
+            | Operator::I32x4Abs
             | Operator::I32x4Neg
             | Operator::I64x2Neg
             | Operator::I32x4TruncSatF32x4S
             | Operator::I32x4TruncSatF32x4U
-            | Operator::I64x2TruncSatF64x2S
-            | Operator::I64x2TruncSatF64x2U
             | Operator::I16x8WidenLowI8x16S
             | Operator::I16x8WidenHighI8x16S
             | Operator::I16x8WidenLowI8x16U
@@ -1891,9 +1906,7 @@ impl OperatorValidator {
             | Operator::I16x8AnyTrue
             | Operator::I16x8AllTrue
             | Operator::I32x4AnyTrue
-            | Operator::I32x4AllTrue
-            | Operator::I64x2AnyTrue
-            | Operator::I64x2AllTrue => {
+            | Operator::I32x4AllTrue => {
                 self.check_simd_enabled()?;
                 self.check_operands_1(Type::V128)?;
                 self.func_state.change_frame_with_type(1, Type::I32)?;
@@ -1969,11 +1982,8 @@ impl OperatorValidator {
             }
             Operator::DataDrop { segment } => {
                 self.check_bulk_memory_enabled()?;
-                self.check_memory_index(0, resources)?;
                 if segment >= resources.data_count() {
-                    return Err(OperatorValidatorError::new(
-                        "unknown data segment: segment index out of bounds",
-                    ));
+                    bail_op_err!("unknown data segment {}", segment);
                 }
             }
             Operator::MemoryCopy | Operator::MemoryFill => {
@@ -1987,14 +1997,19 @@ impl OperatorValidator {
                 if table > 0 {
                     self.check_reference_types_enabled()?;
                 }
-                if resources.table_at(table).is_none() {
-                    bail_op_err!("unknown table {}: table index out of bounds", table);
-                }
-                if segment >= resources.element_count() {
-                    bail_op_err!(
-                        "unknown element segment {}: segment index out of bounds",
+                let table = match resources.table_at(table) {
+                    Some(table) => table,
+                    None => bail_op_err!("unknown table {}: table index out of bounds", table),
+                };
+                let segment_ty = match resources.element_type_at(segment) {
+                    Some(ty) => ty,
+                    None => bail_op_err!(
+                        "unknown elem segment {}: segment index out of bounds",
                         segment
-                    );
+                    ),
+                };
+                if segment_ty != table.element_type().to_parser_type() {
+                    return Err(OperatorValidatorError::new("type mismatch"));
                 }
                 self.check_operands_3(Type::I32, Type::I32, Type::I32)?;
                 self.func_state.change_frame(3)?;
@@ -2003,7 +2018,7 @@ impl OperatorValidator {
                 self.check_bulk_memory_enabled()?;
                 if segment >= resources.element_count() {
                     bail_op_err!(
-                        "unknown element segment {}: segment index out of bounds",
+                        "unknown elem segment {}: segment index out of bounds",
                         segment
                     );
                 }
@@ -2016,10 +2031,13 @@ impl OperatorValidator {
                 if src_table > 0 || dst_table > 0 {
                     self.check_reference_types_enabled()?;
                 }
-                if resources.table_at(src_table).is_none()
-                    || resources.table_at(dst_table).is_none()
-                {
-                    return Err(OperatorValidatorError::new("table index out of bounds"));
+                let (src, dst) =
+                    match (resources.table_at(src_table), resources.table_at(dst_table)) {
+                        (Some(a), Some(b)) => (a, b),
+                        _ => return Err(OperatorValidatorError::new("table index out of bounds")),
+                    };
+                if src.element_type().to_parser_type() != dst.element_type().to_parser_type() {
+                    return Err(OperatorValidatorError::new("type mismatch"));
                 }
                 self.check_operands_3(Type::I32, Type::I32, Type::I32)?;
                 self.func_state.change_frame(3)?;

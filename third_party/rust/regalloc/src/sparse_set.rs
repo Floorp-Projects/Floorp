@@ -195,7 +195,7 @@ where
     A: Array + Eq + Ord + Hash + Copy + fmt::Debug,
     A::Item: Eq + Ord + Hash + Copy + fmt::Debug,
 {
-    #[inline(never)]
+    #[inline(always)]
     pub fn empty() -> Self {
         SparseSetU::Small {
             card: 0,

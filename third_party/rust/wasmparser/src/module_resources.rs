@@ -295,11 +295,55 @@ pub trait WasmModuleResources {
     fn global_at(&self, at: u32) -> Option<&Self::GlobalType>;
     /// Returns the function signature ID at given index.
     fn func_type_id_at(&self, at: u32) -> Option<u32>;
+    /// Returns the element type at the given index.
+    fn element_type_at(&self, at: u32) -> Option<crate::Type>;
 
     /// Returns the number of elements.
     fn element_count(&self) -> u32;
     /// Returns the number of bytes in the Wasm data section.
     fn data_count(&self) -> u32;
+    /// Returns whether the function index is referenced in the module anywhere
+    /// outside of the start/function sections.
+    fn is_function_referenced(&self, idx: u32) -> bool;
+}
+
+impl<T> WasmModuleResources for &'_ T
+where
+    T: ?Sized + WasmModuleResources,
+{
+    type FuncType = T::FuncType;
+    type TableType = T::TableType;
+    type MemoryType = T::MemoryType;
+    type GlobalType = T::GlobalType;
+
+    fn type_at(&self, at: u32) -> Option<&Self::FuncType> {
+        T::type_at(self, at)
+    }
+    fn table_at(&self, at: u32) -> Option<&Self::TableType> {
+        T::table_at(self, at)
+    }
+    fn memory_at(&self, at: u32) -> Option<&Self::MemoryType> {
+        T::memory_at(self, at)
+    }
+    fn global_at(&self, at: u32) -> Option<&Self::GlobalType> {
+        T::global_at(self, at)
+    }
+    fn func_type_id_at(&self, at: u32) -> Option<u32> {
+        T::func_type_id_at(self, at)
+    }
+    fn element_type_at(&self, at: u32) -> Option<crate::Type> {
+        T::element_type_at(self, at)
+    }
+
+    fn element_count(&self) -> u32 {
+        T::element_count(self)
+    }
+    fn data_count(&self) -> u32 {
+        T::data_count(self)
+    }
+    fn is_function_referenced(&self, idx: u32) -> bool {
+        T::is_function_referenced(self, idx)
+    }
 }
 
 impl WasmType for crate::Type {

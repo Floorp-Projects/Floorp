@@ -3,6 +3,7 @@ use crate::isa::aarch64::inst::*;
 use crate::isa::test_utils;
 use crate::settings;
 
+use alloc::boxed::Box;
 use alloc::vec::Vec;
 
 #[test]
@@ -1310,38 +1311,68 @@ fn test_aarch64_binemit() {
     insns.push((
         Inst::ULoad64 {
             rd: writable_xreg(1),
-            mem: MemArg::FPOffset(32768),
+            mem: MemArg::FPOffset(32768, I8),
             srcloc: None,
         },
-        "0F0090D2EF011D8BE10140F9",
-        "movz x15, #32768 ; add x15, x15, fp ; ldr x1, [x15]",
+        "100090D2B063308B010240F9",
+        "movz x16, #32768 ; add x16, fp, x16, UXTX ; ldr x1, [x16]",
     ));
     insns.push((
         Inst::ULoad64 {
             rd: writable_xreg(1),
-            mem: MemArg::FPOffset(-32768),
+            mem: MemArg::FPOffset(-32768, I8),
             srcloc: None,
         },
-        "EFFF8F92EF011D8BE10140F9",
-        "movn x15, #32767 ; add x15, x15, fp ; ldr x1, [x15]",
+        "F0FF8F92B063308B010240F9",
+        "movn x16, #32767 ; add x16, fp, x16, UXTX ; ldr x1, [x16]",
     ));
     insns.push((
         Inst::ULoad64 {
             rd: writable_xreg(1),
-            mem: MemArg::FPOffset(1048576), // 2^20
+            mem: MemArg::FPOffset(1048576, I8), // 2^20
             srcloc: None,
         },
-        "0F02A0D2EF011D8BE10140F9",
-        "movz x15, #16, LSL #16 ; add x15, x15, fp ; ldr x1, [x15]",
+        "1002A0D2B063308B010240F9",
+        "movz x16, #16, LSL #16 ; add x16, fp, x16, UXTX ; ldr x1, [x16]",
     ));
     insns.push((
         Inst::ULoad64 {
             rd: writable_xreg(1),
-            mem: MemArg::FPOffset(1048576 + 1), // 2^20 + 1
+            mem: MemArg::FPOffset(1048576 + 1, I8), // 2^20 + 1
             srcloc: None,
         },
-        "2F0080D20F02A0F2EF011D8BE10140F9",
-        "movz x15, #1 ; movk x15, #16, LSL #16 ; add x15, x15, fp ; ldr x1, [x15]",
+        "300080D21002A0F2B063308B010240F9",
+        "movz x16, #1 ; movk x16, #16, LSL #16 ; add x16, fp, x16, UXTX ; ldr x1, [x16]",
+    ));
+
+    insns.push((
+        Inst::ULoad64 {
+            rd: writable_xreg(1),
+            mem: MemArg::RegOffset(xreg(7), 8, I64),
+            srcloc: None,
+        },
+        "E18040F8",
+        "ldur x1, [x7, #8]",
+    ));
+
+    insns.push((
+        Inst::ULoad64 {
+            rd: writable_xreg(1),
+            mem: MemArg::RegOffset(xreg(7), 1024, I64),
+            srcloc: None,
+        },
+        "E10042F9",
+        "ldr x1, [x7, #1024]",
+    ));
+
+    insns.push((
+        Inst::ULoad64 {
+            rd: writable_xreg(1),
+            mem: MemArg::RegOffset(xreg(7), 1048576, I64),
+            srcloc: None,
+        },
+        "1002A0D2F060308B010240F9",
+        "movz x16, #16, LSL #16 ; add x16, x7, x16, UXTX ; ldr x1, [x16]",
     ));
 
     insns.push((
@@ -1801,6 +1832,7 @@ fn test_aarch64_binemit() {
             rn: vreg(22),
             rm: vreg(23),
             alu_op: VecALUOp::UQAddScalar,
+            ty: I64,
         },
         "D50EF77E",
         "uqadd d21, d22, d23",
@@ -1811,6 +1843,7 @@ fn test_aarch64_binemit() {
             rn: vreg(22),
             rm: vreg(23),
             alu_op: VecALUOp::SQAddScalar,
+            ty: I64,
         },
         "D50EF75E",
         "sqadd d21, d22, d23",
@@ -1821,6 +1854,7 @@ fn test_aarch64_binemit() {
             rn: vreg(22),
             rm: vreg(23),
             alu_op: VecALUOp::UQSubScalar,
+            ty: I64,
         },
         "D52EF77E",
         "uqsub d21, d22, d23",
@@ -1831,10 +1865,83 @@ fn test_aarch64_binemit() {
             rn: vreg(22),
             rm: vreg(23),
             alu_op: VecALUOp::SQSubScalar,
+            ty: I64,
         },
         "D52EF75E",
         "sqsub d21, d22, d23",
     ));
+
+    insns.push((
+        Inst::VecRRR {
+            alu_op: VecALUOp::Cmeq,
+            rd: writable_vreg(3),
+            rn: vreg(23),
+            rm: vreg(24),
+            ty: I8X16,
+        },
+        "E38E386E",
+        "cmeq v3.16b, v23.16b, v24.16b",
+    ));
+
+    insns.push((
+        Inst::VecRRR {
+            alu_op: VecALUOp::Cmgt,
+            rd: writable_vreg(3),
+            rn: vreg(23),
+            rm: vreg(24),
+            ty: I8X16,
+        },
+        "E336384E",
+        "cmgt v3.16b, v23.16b, v24.16b",
+    ));
+
+    insns.push((
+        Inst::VecRRR {
+            alu_op: VecALUOp::Cmge,
+            rd: writable_vreg(23),
+            rn: vreg(9),
+            rm: vreg(12),
+            ty: I8X16,
+        },
+        "373D2C4E",
+        "cmge v23.16b, v9.16b, v12.16b",
+    ));
+
+    insns.push((
+        Inst::VecRRR {
+            alu_op: VecALUOp::Cmhi,
+            rd: writable_vreg(5),
+            rn: vreg(1),
+            rm: vreg(1),
+            ty: I8X16,
+        },
+        "2534216E",
+        "cmhi v5.16b, v1.16b, v1.16b",
+    ));
+
+    insns.push((
+        Inst::VecRRR {
+            alu_op: VecALUOp::Cmhs,
+            rd: writable_vreg(8),
+            rn: vreg(2),
+            rm: vreg(15),
+            ty: I8X16,
+        },
+        "483C2F6E",
+        "cmhs v8.16b, v2.16b, v15.16b",
+    ));
+
+    insns.push((
+        Inst::VecMisc {
+            op: VecMisc2::Not,
+            rd: writable_vreg(2),
+            rn: vreg(1),
+            ty: I8X16,
+        },
+        "2258206E",
+        "mvn v2.16b, v1.16b",
+    ));
+
     insns.push((
         Inst::Extend {
             rd: writable_xreg(1),
@@ -1955,7 +2062,7 @@ fn test_aarch64_binemit() {
     ));
 
     insns.push((
-        Inst::CondBrLowered {
+        Inst::OneWayCondBr {
             target: BranchTarget::ResolvedOffset(64),
             kind: CondBrKind::Zero(xreg(8)),
         },
@@ -1963,7 +2070,7 @@ fn test_aarch64_binemit() {
         "cbz x8, 64",
     ));
     insns.push((
-        Inst::CondBrLowered {
+        Inst::OneWayCondBr {
             target: BranchTarget::ResolvedOffset(64),
             kind: CondBrKind::NotZero(xreg(8)),
         },
@@ -1971,7 +2078,7 @@ fn test_aarch64_binemit() {
         "cbnz x8, 64",
     ));
     insns.push((
-        Inst::CondBrLowered {
+        Inst::OneWayCondBr {
             target: BranchTarget::ResolvedOffset(64),
             kind: CondBrKind::Cond(Cond::Eq),
         },
@@ -1979,7 +2086,7 @@ fn test_aarch64_binemit() {
         "b.eq 64",
     ));
     insns.push((
-        Inst::CondBrLowered {
+        Inst::OneWayCondBr {
             target: BranchTarget::ResolvedOffset(64),
             kind: CondBrKind::Cond(Cond::Ne),
         },
@@ -1988,7 +2095,7 @@ fn test_aarch64_binemit() {
     ));
 
     insns.push((
-        Inst::CondBrLowered {
+        Inst::OneWayCondBr {
             target: BranchTarget::ResolvedOffset(64),
             kind: CondBrKind::Cond(Cond::Hs),
         },
@@ -1996,7 +2103,7 @@ fn test_aarch64_binemit() {
         "b.hs 64",
     ));
     insns.push((
-        Inst::CondBrLowered {
+        Inst::OneWayCondBr {
             target: BranchTarget::ResolvedOffset(64),
             kind: CondBrKind::Cond(Cond::Lo),
         },
@@ -2004,7 +2111,7 @@ fn test_aarch64_binemit() {
         "b.lo 64",
     ));
     insns.push((
-        Inst::CondBrLowered {
+        Inst::OneWayCondBr {
             target: BranchTarget::ResolvedOffset(64),
             kind: CondBrKind::Cond(Cond::Mi),
         },
@@ -2012,7 +2119,7 @@ fn test_aarch64_binemit() {
         "b.mi 64",
     ));
     insns.push((
-        Inst::CondBrLowered {
+        Inst::OneWayCondBr {
             target: BranchTarget::ResolvedOffset(64),
             kind: CondBrKind::Cond(Cond::Pl),
         },
@@ -2020,7 +2127,7 @@ fn test_aarch64_binemit() {
         "b.pl 64",
     ));
     insns.push((
-        Inst::CondBrLowered {
+        Inst::OneWayCondBr {
             target: BranchTarget::ResolvedOffset(64),
             kind: CondBrKind::Cond(Cond::Vs),
         },
@@ -2028,7 +2135,7 @@ fn test_aarch64_binemit() {
         "b.vs 64",
     ));
     insns.push((
-        Inst::CondBrLowered {
+        Inst::OneWayCondBr {
             target: BranchTarget::ResolvedOffset(64),
             kind: CondBrKind::Cond(Cond::Vc),
         },
@@ -2036,7 +2143,7 @@ fn test_aarch64_binemit() {
         "b.vc 64",
     ));
     insns.push((
-        Inst::CondBrLowered {
+        Inst::OneWayCondBr {
             target: BranchTarget::ResolvedOffset(64),
             kind: CondBrKind::Cond(Cond::Hi),
         },
@@ -2044,7 +2151,7 @@ fn test_aarch64_binemit() {
         "b.hi 64",
     ));
     insns.push((
-        Inst::CondBrLowered {
+        Inst::OneWayCondBr {
             target: BranchTarget::ResolvedOffset(64),
             kind: CondBrKind::Cond(Cond::Ls),
         },
@@ -2052,7 +2159,7 @@ fn test_aarch64_binemit() {
         "b.ls 64",
     ));
     insns.push((
-        Inst::CondBrLowered {
+        Inst::OneWayCondBr {
             target: BranchTarget::ResolvedOffset(64),
             kind: CondBrKind::Cond(Cond::Ge),
         },
@@ -2060,7 +2167,7 @@ fn test_aarch64_binemit() {
         "b.ge 64",
     ));
     insns.push((
-        Inst::CondBrLowered {
+        Inst::OneWayCondBr {
             target: BranchTarget::ResolvedOffset(64),
             kind: CondBrKind::Cond(Cond::Lt),
         },
@@ -2068,7 +2175,7 @@ fn test_aarch64_binemit() {
         "b.lt 64",
     ));
     insns.push((
-        Inst::CondBrLowered {
+        Inst::OneWayCondBr {
             target: BranchTarget::ResolvedOffset(64),
             kind: CondBrKind::Cond(Cond::Gt),
         },
@@ -2076,7 +2183,7 @@ fn test_aarch64_binemit() {
         "b.gt 64",
     ));
     insns.push((
-        Inst::CondBrLowered {
+        Inst::OneWayCondBr {
             target: BranchTarget::ResolvedOffset(64),
             kind: CondBrKind::Cond(Cond::Le),
         },
@@ -2084,7 +2191,7 @@ fn test_aarch64_binemit() {
         "b.le 64",
     ));
     insns.push((
-        Inst::CondBrLowered {
+        Inst::OneWayCondBr {
             target: BranchTarget::ResolvedOffset(64),
             kind: CondBrKind::Cond(Cond::Al),
         },
@@ -2092,7 +2199,7 @@ fn test_aarch64_binemit() {
         "b.al 64",
     ));
     insns.push((
-        Inst::CondBrLowered {
+        Inst::OneWayCondBr {
             target: BranchTarget::ResolvedOffset(64),
             kind: CondBrKind::Cond(Cond::Nv),
         },
@@ -2101,7 +2208,7 @@ fn test_aarch64_binemit() {
     ));
 
     insns.push((
-        Inst::CondBrLoweredCompound {
+        Inst::CondBr {
             taken: BranchTarget::ResolvedOffset(64),
             not_taken: BranchTarget::ResolvedOffset(128),
             kind: CondBrKind::Cond(Cond::Le),
@@ -2112,11 +2219,13 @@ fn test_aarch64_binemit() {
 
     insns.push((
         Inst::Call {
-            dest: ExternalName::testcase("test0"),
-            uses: Set::empty(),
-            defs: Set::empty(),
-            loc: SourceLoc::default(),
-            opcode: Opcode::Call,
+            info: Box::new(CallInfo {
+                dest: ExternalName::testcase("test0"),
+                uses: Vec::new(),
+                defs: Vec::new(),
+                loc: SourceLoc::default(),
+                opcode: Opcode::Call,
+            }),
         },
         "00000094",
         "bl 0",
@@ -2124,11 +2233,13 @@ fn test_aarch64_binemit() {
 
     insns.push((
         Inst::CallInd {
-            rn: xreg(10),
-            uses: Set::empty(),
-            defs: Set::empty(),
-            loc: SourceLoc::default(),
-            opcode: Opcode::CallIndirect,
+            info: Box::new(CallIndInfo {
+                rn: xreg(10),
+                uses: Vec::new(),
+                defs: Vec::new(),
+                loc: SourceLoc::default(),
+                opcode: Opcode::CallIndirect,
+            }),
         },
         "40013FD6",
         "blr x10",
@@ -2137,7 +2248,7 @@ fn test_aarch64_binemit() {
     insns.push((
         Inst::IndirectBr {
             rn: xreg(3),
-            targets: vec![1, 2, 3],
+            targets: vec![],
         },
         "60001FD6",
         "br x3",
@@ -2148,7 +2259,7 @@ fn test_aarch64_binemit() {
     insns.push((
         Inst::Adr {
             rd: writable_xreg(15),
-            label: MemLabel::PCRel((1 << 20) - 4),
+            off: (1 << 20) - 4,
         },
         "EFFF7F10",
         "adr x15, pc+1048572",
@@ -2161,6 +2272,15 @@ fn test_aarch64_binemit() {
         },
         "881CA40E",
         "mov v8.8b, v4.8b",
+    ));
+
+    insns.push((
+        Inst::FpuMove128 {
+            rd: writable_vreg(17),
+            rn: vreg(26),
+        },
+        "511FBA4E",
+        "mov v17.16b, v26.16b",
     ));
 
     insns.push((
@@ -2397,6 +2517,46 @@ fn test_aarch64_binemit() {
         },
         "CF075F1F",
         "fmadd d15, d30, d31, d1",
+    ));
+
+    insns.push((
+        Inst::FpuRRI {
+            fpu_op: FPUOpRI::UShr32(FPURightShiftImm::maybe_from_u8(32, 32).unwrap()),
+            rd: writable_vreg(2),
+            rn: vreg(5),
+        },
+        "A204202F",
+        "ushr v2.2s, v5.2s, #32",
+    ));
+
+    insns.push((
+        Inst::FpuRRI {
+            fpu_op: FPUOpRI::UShr64(FPURightShiftImm::maybe_from_u8(63, 64).unwrap()),
+            rd: writable_vreg(2),
+            rn: vreg(5),
+        },
+        "A204417F",
+        "ushr d2, d5, #63",
+    ));
+
+    insns.push((
+        Inst::FpuRRI {
+            fpu_op: FPUOpRI::Sli32(FPULeftShiftImm::maybe_from_u8(31, 32).unwrap()),
+            rd: writable_vreg(4),
+            rn: vreg(10),
+        },
+        "44553F2F",
+        "sli v4.2s, v10.2s, #31",
+    ));
+
+    insns.push((
+        Inst::FpuRRI {
+            fpu_op: FPUOpRI::Sli64(FPULeftShiftImm::maybe_from_u8(63, 64).unwrap()),
+            rd: writable_vreg(4),
+            rn: vreg(10),
+        },
+        "44557F7F",
+        "sli d4, d10, #63",
     ));
 
     insns.push((
@@ -2686,6 +2846,15 @@ fn test_aarch64_binemit() {
     ));
 
     insns.push((
+        Inst::LoadFpuConst128 {
+            rd: writable_vreg(5),
+            const_data: 0x0f0e0d0c0b0a09080706050403020100,
+        },
+        "4500009C05000014000102030405060708090A0B0C0D0E0F",
+        "ldr q5, pc+8 ; b 20 ; data.f128 0x0f0e0d0c0b0a09080706050403020100",
+    ));
+
+    insns.push((
         Inst::FpuCSel32 {
             rd: writable_vreg(1),
             rn: vreg(2),
@@ -2791,19 +2960,11 @@ fn test_aarch64_binemit() {
         let actual_printing = insn.show_rru(Some(&rru));
         assert_eq!(expected_printing, actual_printing);
 
-        // Check the encoding is as expected.
-        let text_size = {
-            let mut code_sec = MachSectionSize::new(0);
-            insn.emit(&mut code_sec, &flags);
-            code_sec.size()
-        };
-
         let mut sink = test_utils::TestCodeSink::new();
-        let mut sections = MachSections::new();
-        let code_idx = sections.add_section(0, text_size);
-        let code_sec = sections.get_section(code_idx);
-        insn.emit(code_sec, &flags);
-        sections.emit(&mut sink);
+        let mut buffer = MachBuffer::new();
+        insn.emit(&mut buffer, &flags, &mut Default::default());
+        let buffer = buffer.finish();
+        buffer.emit(&mut sink);
         let actual_encoding = &sink.stringify();
         assert_eq!(expected_encoding, actual_encoding);
     }
