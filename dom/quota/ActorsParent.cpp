@@ -666,8 +666,9 @@ class DirectoryLockImpl final : public DirectoryLock {
   const nsCString mGroup;
   const OriginScope mOriginScope;
   const Nullable<Client::Type> mClientType;
-  // ToDo: Use InitializedOnce for this.
-  RefPtr<OpenDirectoryListener> mOpenListener;
+  LazyInitializedOnceEarlyDestructible<
+      const NotNull<RefPtr<OpenDirectoryListener>>>
+      mOpenListener;
 
   nsTArray<NotNull<DirectoryLockImpl*>> mBlocking;
   nsTArray<NotNull<DirectoryLockImpl*>> mBlockedOn;
@@ -2869,7 +2870,6 @@ DirectoryLockImpl::DirectoryLockImpl(
       mGroup(aGroup),
       mOriginScope(aOriginScope),
       mClientType(aClientType),
-      mOpenListener(std::move(aOpenListener)),
       mId(aId),
       mExclusive(aExclusive),
       mInternal(aInternal),
@@ -2884,7 +2884,11 @@ DirectoryLockImpl::DirectoryLockImpl(
   MOZ_ASSERT_IF(!aInternal, aOriginScope.IsOrigin());
   MOZ_ASSERT_IF(!aInternal, !aClientType.IsNull());
   MOZ_ASSERT_IF(!aInternal, aClientType.Value() < Client::TypeMax());
-  MOZ_ASSERT_IF(!aInternal, mOpenListener);
+  MOZ_ASSERT_IF(!aInternal, aOpenListener);
+
+  if (aOpenListener) {
+    mOpenListener.init(WrapNotNullUnchecked(std::move(aOpenListener)));
+  }
 }
 
 DirectoryLockImpl::~DirectoryLockImpl() {
@@ -2951,15 +2955,14 @@ bool DirectoryLockImpl::MustWaitFor(const DirectoryLockImpl& aLock) const {
 
 void DirectoryLockImpl::NotifyOpenListener() {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(mOpenListener);
 
   if (mInvalidated) {
-    mOpenListener->DirectoryLockFailed();
+    (*mOpenListener)->DirectoryLockFailed();
   } else {
-    mOpenListener->DirectoryLockAcquired(this);
+    (*mOpenListener)->DirectoryLockAcquired(this);
   }
 
-  mOpenListener = nullptr;
+  mOpenListener.destroy();
 
   mQuotaManager->RemovePendingDirectoryLock(this);
 }
