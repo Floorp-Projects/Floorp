@@ -828,6 +828,14 @@ nsViewSourceChannel::VisitNonDefaultRequestHeaders(
 }
 
 NS_IMETHODIMP
+nsViewSourceChannel::ShouldStripRequestBodyHeader(const nsACString& aMethod,
+                                                  bool* aResult) {
+  return !mHttpChannel
+             ? NS_ERROR_NULL_POINTER
+             : mHttpChannel->ShouldStripRequestBodyHeader(aMethod, aResult);
+}
+
+NS_IMETHODIMP
 nsViewSourceChannel::GetAllowPipelining(bool* aAllowPipelining) {
   return !mHttpChannel ? NS_ERROR_NULL_POINTER
                        : mHttpChannel->GetAllowPipelining(aAllowPipelining);
