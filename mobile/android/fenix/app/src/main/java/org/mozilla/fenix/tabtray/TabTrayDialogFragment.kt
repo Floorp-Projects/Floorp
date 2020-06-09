@@ -39,7 +39,7 @@ import org.mozilla.fenix.ext.sessionsOfType
 import org.mozilla.fenix.utils.allowUndo
 import org.mozilla.fenix.components.TabCollectionStorage
 
-@SuppressWarnings("TooManyFunctions")
+@SuppressWarnings("TooManyFunctions", "LargeClass")
 class TabTrayDialogFragment : AppCompatDialogFragment(), TabTrayInteractor {
     private var tabsFeature: TabsFeature? = null
     private var _tabTrayView: TabTrayView? = null

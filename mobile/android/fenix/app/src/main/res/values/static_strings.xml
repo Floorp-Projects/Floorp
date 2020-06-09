@@ -28,22 +28,6 @@
     <!-- Application Services abbreviation used in AboutFragment -->
     <string name="app_services_abbreviation" translatable="false">AS</string>
 
-    <!-- WIP: Tab Tray -->
-    <!-- Text shown as the title of the open tab tray -->
-    <string name="tab_tray_title" translatable="false">Open Tabs</string>
-    <!-- Text shown in the menu for saving tabs to a collection -->
-    <string name="tab_tray_menu_item_save" translatable="false">Save to collection</string>
-    <!-- Text shown in the menu for sharing all tabs -->
-    <string name="tab_tray_menu_item_share" translatable="false">Share all tabs</string>
-    <!-- Text shown in the menu for closing all tabs -->
-    <string name="tab_tray_menu_item_close" translatable="false">Close all tabs</string>
-    <!-- Shortcut action to open new tab -->
-    <string name="tab_tray_menu_open_new_tab" translatable="false">New tab</string>
-    <!-- Shortcut action to open the home screen -->
-    <string name="tab_tray_menu_home" translatable="false">Go home</string>
-    <!-- Shortcut action to toggle private mode -->
-    <string name="tab_tray_menu_toggle" translatable="false">Toggle tab mode</string>
-
     <!-- Label for the secret settings preference -->
     <string name="preferences_debug_settings">Secret Settings</string>
     <string name="preferences_debug_settings_enable_tab_tray">Use New Tab Tray</string>
