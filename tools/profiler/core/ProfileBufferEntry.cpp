@@ -284,6 +284,7 @@ bool UniqueStacks::FrameKey::NormalFrameData::operator==(
     const NormalFrameData& aOther) const {
   return mLocation == aOther.mLocation &&
          mRelevantForJS == aOther.mRelevantForJS &&
+         mBaselineInterp == aOther.mBaselineInterp &&
          mInnerWindowID == aOther.mInnerWindowID && mLine == aOther.mLine &&
          mColumn == aOther.mColumn && mCategoryPair == aOther.mCategoryPair;
 }
@@ -421,6 +422,12 @@ void UniqueStacks::StreamNonJITFrame(const FrameKey& aFrame) {
   // It's okay to convert uint64_t to double here because DOM always creates IDs
   // that are convertible to double.
   writer.DoubleElement(INNER_WINDOW_ID, data.mInnerWindowID);
+
+  // The C++ interpreter is the default implementation so we only emit element
+  // for Baseline Interpreter frames.
+  if (data.mBaselineInterp) {
+    writer.StringElement(IMPLEMENTATION, "blinterp");
+  }
 
   if (data.mLine.isSome()) {
     writer.IntElement(LINE, *data.mLine);
@@ -882,6 +889,9 @@ void ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter,
             bool relevantForJS =
                 frameFlags & uint32_t(FrameFlags::RELEVANT_FOR_JS);
 
+            bool isBaselineInterp =
+                frameFlags & uint32_t(FrameFlags::IS_BLINTERP_FRAME);
+
             // Copy potential dynamic string fragments into dynStrBuf, so that
             // dynStrBuf will then contain the entire dynamic string.
             size_t i = 0;
@@ -949,9 +959,10 @@ void ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter,
             }
 
             stack = aUniqueStacks.AppendFrame(
-                stack, UniqueStacks::FrameKey(std::move(frameLabel),
-                                              relevantForJS, innerWindowID,
-                                              line, column, categoryPair));
+                stack,
+                UniqueStacks::FrameKey(std::move(frameLabel), relevantForJS,
+                                       isBaselineInterp, innerWindowID, line,
+                                       column, categoryPair));
 
           } else if (e.Get().IsJitReturnAddr()) {
             numFrames++;

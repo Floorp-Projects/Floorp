@@ -211,6 +211,9 @@ class ProfilingStackFrame {
     // Frame dynamic string does not contain user data.
     NONSENSITIVE = 1 << 9,
 
+    // A JS Baseline Interpreter frame.
+    IS_BLINTERP_FRAME = 1 << 10,
+
     FLAGS_BITCOUNT = 16,
     FLAGS_MASK = (1 << FLAGS_BITCOUNT) - 1
   };
@@ -236,6 +239,10 @@ class ProfilingStackFrame {
 
   bool isJsFrame() const {
     return uint32_t(flagsAndCategoryPair_) & uint32_t(Flags::IS_JS_FRAME);
+  }
+
+  bool isJsBlinterpFrame() const {
+    return uint32_t(flagsAndCategoryPair_) & uint32_t(Flags::IS_BLINTERP_FRAME);
   }
 
   bool isOSRFrame() const {
@@ -289,6 +296,7 @@ class ProfilingStackFrame {
     MOZ_ASSERT(isSpMarkerFrame());
   }
 
+  template <uint32_t ExtraFlags = 0>
   void initJsFrame(const char* aLabel, const char* aDynamicString,
                    JSScript* aScript, jsbytecode* aPc, uint64_t aRealmID) {
     label_ = aLabel;
@@ -296,9 +304,10 @@ class ProfilingStackFrame {
     spOrScript = aScript;
     pcOffsetIfJS_ = pcToOffset(aScript, aPc);
     realmID_ = aRealmID;
-    flagsAndCategoryPair_ =
-        uint32_t(Flags::IS_JS_FRAME) | (uint32_t(JS::ProfilingCategoryPair::JS)
-                                        << uint32_t(Flags::FLAGS_BITCOUNT));
+    flagsAndCategoryPair_ = uint32_t(ExtraFlags) |
+                            uint32_t(Flags::IS_JS_FRAME) |
+                            (uint32_t(JS::ProfilingCategoryPair::JS)
+                             << uint32_t(Flags::FLAGS_BITCOUNT));
     MOZ_ASSERT(isJsFrame());
   }
 

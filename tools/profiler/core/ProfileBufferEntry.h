@@ -267,15 +267,16 @@ class UniqueStacks {
  public:
   struct FrameKey {
     explicit FrameKey(const char* aLocation)
-        : mData(NormalFrameData{nsCString(aLocation), false, 0,
+        : mData(NormalFrameData{nsCString(aLocation), false, false, 0,
                                 mozilla::Nothing(), mozilla::Nothing()}) {}
 
-    FrameKey(nsCString&& aLocation, bool aRelevantForJS,
+    FrameKey(nsCString&& aLocation, bool aRelevantForJS, bool aBaselineInterp,
              uint64_t aInnerWindowID, const mozilla::Maybe<unsigned>& aLine,
              const mozilla::Maybe<unsigned>& aColumn,
              const mozilla::Maybe<JS::ProfilingCategoryPair>& aCategoryPair)
-        : mData(NormalFrameData{aLocation, aRelevantForJS, aInnerWindowID,
-                                aLine, aColumn, aCategoryPair}) {}
+        : mData(NormalFrameData{aLocation, aRelevantForJS, aBaselineInterp,
+                                aInnerWindowID, aLine, aColumn,
+                                aCategoryPair}) {}
 
     FrameKey(void* aJITAddress, uint32_t aJITDepth, uint32_t aRangeIndex)
         : mData(JITFrameData{aJITAddress, aJITDepth, aRangeIndex}) {}
@@ -292,6 +293,7 @@ class UniqueStacks {
 
       nsCString mLocation;
       bool mRelevantForJS;
+      bool mBaselineInterp;
       uint64_t mInnerWindowID;
       mozilla::Maybe<unsigned> mLine;
       mozilla::Maybe<unsigned> mColumn;
@@ -320,6 +322,7 @@ class UniqueStacks {
                                     mozilla::HashString(data.mLocation.get()));
         }
         hash = mozilla::AddToHash(hash, data.mRelevantForJS);
+        hash = mozilla::AddToHash(hash, data.mBaselineInterp);
         hash = mozilla::AddToHash(hash, data.mInnerWindowID);
         if (data.mLine.isSome()) {
           hash = mozilla::AddToHash(hash, *data.mLine);
@@ -513,7 +516,7 @@ class UniqueStacks {
 //     "data":
 //     [
 //       [ 0 ],               /* { location: '(root)' } */
-//       [ 1, 2 ]             /* { location: 'foo.js',
+//       [ 1, null, null, 2 ] /* { location: 'foo.js',
 //                                 implementation: 'baseline' } */
 //     ]
 //   },
