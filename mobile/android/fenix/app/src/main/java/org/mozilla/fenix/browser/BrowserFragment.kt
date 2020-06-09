@@ -9,6 +9,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.appcompat.content.res.AppCompatResources
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Observer
@@ -76,7 +77,8 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
             val readerModeAction =
                 BrowserToolbar.ToggleButton(
                     image = ContextCompat.getDrawable(requireContext(), R.drawable.ic_readermode)!!,
-                    imageSelected = ContextCompat.getDrawable(requireContext(), R.drawable.ic_readermode_selected)!!,
+                    imageSelected =
+                        AppCompatResources.getDrawable(requireContext(), R.drawable.ic_readermode_selected)!!,
                     contentDescription = requireContext().getString(R.string.browser_menu_read),
                     contentDescriptionSelected = requireContext().getString(R.string.browser_menu_read_close),
                     visible = {
