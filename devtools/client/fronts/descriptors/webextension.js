@@ -45,28 +45,29 @@ class WebExtensionDescriptorFront extends FrontClassWithSpec(
   }
 
   /**
-   * Returns the actual target front for web extensions.
+   * Retrieve the BrowsingContextTargetFront representing a
+   * WebExtensionTargetActor if this addon is a webextension.
    *
-   * Instead, we want to use a WebExtensionTargetActor, which
-   * inherits from BrowsingContextTargetActor. This connect method is used to retrieve
-   * the final target actor to use.
+   * WebExtensionDescriptors will be created for any type of addon type
+   * (webextension, search plugin, themes). Only webextensions can be targets.
+   * This method will throw for other addon types.
+   *
+   * TODO: We should filter out non-webextension & non-debuggable addons on the
+   * server to avoid the isWebExtension check here. See Bug 1644355.
    */
   async getTarget() {
-    if (this.isWebExtension) {
-      // The Webextension form is related to a WebExtensionActor instance,
-      // which isn't a target actor on its own, it is an actor living in the parent
-      // process with access to the extension metadata, it can control the extension (e.g.
-      // reloading it) and listen to the AddonManager events related to the lifecycle of
-      // the addon (e.g. when the addon is disabled or uninstalled).
-      // To retrieve the target actor instance, we call its "connect" method, (which
-      // fetches the target actor targetForm from a WebExtensionTargetActor instance).
-      const form = await super.getTarget();
-      const front = new BrowsingContextTargetFront(this.conn, null, this);
-      front.form(form);
-      this.manage(front);
-      return front;
+    if (!this.isWebExtension) {
+      throw new Error(
+        "Tried to call getTarget() for an addon which is not a webextension: " +
+          this.actorID
+      );
     }
-    return this;
+
+    const form = await super.getTarget();
+    const front = new BrowsingContextTargetFront(this.conn, null, this);
+    front.form(form);
+    this.manage(front);
+    return front;
   }
 }
 
