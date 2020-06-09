@@ -1068,6 +1068,120 @@ sandbox:
     operating_systems:
       - "windows"
 
+findbar:
+  shown:
+    bug_numbers:
+      - 1627688
+    description: >
+      The count of how many times the "Find toolbar" was shown per session.
+    expires: never
+    kind: uint
+    notification_emails:
+      - rtestard@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+      - 'fennec'
+      - 'geckoview'
+    record_in_processes:
+      - 'main'
+  find_prev:
+    bug_numbers:
+      - 1627688
+    description: >
+      The count of how many times the find previous button was used per session.
+    expires: never
+    kind: uint
+    notification_emails:
+      - rtestard@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+      - 'fennec'
+      - 'geckoview'
+    record_in_processes:
+      - 'main'
+  find_next:
+    bug_numbers:
+      - 1627688
+    description: >
+      The count of how many times the find next button was used per session.
+    expires: never
+    kind: uint
+    notification_emails:
+      - rtestard@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+      - 'fennec'
+      - 'geckoview'
+    record_in_processes:
+      - 'main'
+  highlight_all:
+    bug_numbers:
+      - 1627688
+    description: >
+      The count of how many times the "Highlight All" button was used in find toolbar.
+    expires: never
+    kind: uint
+    notification_emails:
+      - rtestard@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+      - 'fennec'
+      - 'geckoview'
+    record_in_processes:
+      - 'main'
+  match_case:
+    bug_numbers:
+      - 1627688
+    description: >
+      The count of how many times the "Match Case" button was used in find toolbar.
+    expires: never
+    kind: uint
+    notification_emails:
+      - rtestard@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+      - 'fennec'
+      - 'geckoview'
+    record_in_processes:
+      - 'main'
+  match_diacritics:
+    bug_numbers:
+      - 1627688
+    description: >
+      The count of how many times the "Match Diacritics" button was used in find toolbar.
+    expires: never
+    kind: uint
+    notification_emails:
+      - rtestard@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+      - 'fennec'
+      - 'geckoview'
+    record_in_processes:
+      - 'main'
+  whole_words:
+    bug_numbers:
+      - 1627688
+    description: >
+      The count of how many times the "Whole Words" button was used in find toolbar.
+    expires: never
+    kind: uint
+    notification_emails:
+      - rtestard@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+      - 'fennec'
+      - 'geckoview'
+    record_in_processes:
+      - 'main'
+
 os.environment:
   is_admin_without_uac:
     bug_numbers:
