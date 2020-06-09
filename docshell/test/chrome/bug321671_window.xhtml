@@ -11,6 +11,7 @@
   <script type="application/javascript" src= "chrome://mochikit/content/chrome-harness.js" />
   <script type="application/javascript" src="docshell_helpers.js" />
   <script type="application/javascript"><![CDATA[
+    Services.prefs.setBoolPref("browser.navigation.requireUserInteraction", false);
   
     // Define the generator-iterator for the tests.
     var tests = testIterator();
@@ -121,6 +122,7 @@
           "Scroll position not restored while going forward!");
       }
       
+      Services.prefs.clearUserPref("browser.navigation.requireUserInteraction");
       // Tell the framework the test is finished.
       finish();
     }

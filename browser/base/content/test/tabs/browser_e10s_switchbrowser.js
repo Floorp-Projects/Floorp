@@ -133,6 +133,10 @@ var forward = async function() {
 // Tests that navigating from a page that should be in the remote process and
 // a page that should be in the main process works and retains history
 add_task(async function test_navigation() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.navigation.requireUserInteraction", false]],
+  });
+
   let expectedRemote = gMultiProcessBrowser;
 
   info("1");
