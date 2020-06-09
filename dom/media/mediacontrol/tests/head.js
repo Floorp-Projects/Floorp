@@ -31,7 +31,7 @@ async function createTabAndLoad(url, inputWindow = null) {
  */
 function generateMediaControlKeyEvent(event) {
   const playbackStateChanged = waitUntilDisplayedPlaybackChanged();
-  ChromeUtils.generateMediaControlKeysTestEvent(event);
+  ChromeUtils.generateMediaControlKey(event);
   return playbackStateChanged;
 }
 

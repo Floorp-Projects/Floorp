@@ -8,14 +8,14 @@
 #import <ApplicationServices/ApplicationServices.h>
 #import <CoreFoundation/CoreFoundation.h>
 
-#include "mozilla/dom/MediaControlKeysEvent.h"
+#include "mozilla/dom/MediaControlKeySource.h"
 #include "nsISupportsImpl.h"
 
 namespace mozilla {
 namespace widget {
 
 class MediaHardwareKeysEventSourceMac final
-    : public mozilla::dom::MediaControlKeysEventSource {
+    : public mozilla::dom::MediaControlKeySource {
  public:
   NS_INLINE_DECL_REFCOUNTING(MediaHardwareKeysEventSourceMac, override)
   MediaHardwareKeysEventSourceMac() = default;

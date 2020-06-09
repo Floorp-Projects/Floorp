@@ -35,12 +35,12 @@ MediaSession* ContentPlaybackController::GetMediaSession() const {
                                              : nullptr;
 }
 
-void ContentPlaybackController::NotifyContentControlKeyEventReceiver(
-    MediaControlKeysEvent aEvent) {
-  if (RefPtr<ContentControlKeyEventReceiver> receiver =
-          ContentControlKeyEventReceiver::Get(mBC)) {
-    LOG("Handle '%s' in default behavior", ToMediaControlKeysEventStr(aEvent));
-    receiver->HandleEvent(aEvent);
+void ContentPlaybackController::NotifyContentMediaControlKeyReceiver(
+    MediaControlKey aKey) {
+  if (RefPtr<ContentMediaControlKeyReceiver> receiver =
+          ContentMediaControlKeyReceiver::Get(mBC)) {
+    LOG("Handle '%s' in default behavior", ToMediaControlKeyStr(aKey));
+    receiver->HandleMediaKey(aKey);
   }
 }
 
@@ -78,7 +78,7 @@ void ContentPlaybackController::Play() {
   if (IsMediaSessionActionSupported(action)) {
     NotifyMediaSession(action);
   } else {
-    NotifyContentControlKeyEventReceiver(MediaControlKeysEvent::ePlay);
+    NotifyContentMediaControlKeyReceiver(MediaControlKey::Play);
   }
 }
 
@@ -87,7 +87,7 @@ void ContentPlaybackController::Pause() {
   if (IsMediaSessionActionSupported(action)) {
     NotifyMediaSession(action);
   } else {
-    NotifyContentControlKeyEventReceiver(MediaControlKeysEvent::ePause);
+    NotifyContentMediaControlKeyReceiver(MediaControlKey::Pause);
   }
 }
 
@@ -118,7 +118,7 @@ void ContentPlaybackController::Stop() {
   if (IsMediaSessionActionSupported(action)) {
     NotifyMediaSession(action);
   } else {
-    NotifyContentControlKeyEventReceiver(MediaControlKeysEvent::eStop);
+    NotifyContentMediaControlKeyReceiver(MediaControlKey::Stop);
   }
 }
 
@@ -128,32 +128,32 @@ void ContentPlaybackController::SeekTo() {
   return;
 }
 
-void ContentMediaActionHandler::HandleMediaControlKeysEvent(
-    BrowsingContext* aContext, MediaControlKeysEvent aEvent) {
+void ContentMediaControlKeyHandler::HandleMediaControlKey(
+    BrowsingContext* aContext, MediaControlKey aKey) {
   ContentPlaybackController controller(aContext);
-  switch (aEvent) {
-    case MediaControlKeysEvent::eFocus:
+  switch (aKey) {
+    case MediaControlKey::Focus:
       controller.Focus();
       return;
-    case MediaControlKeysEvent::ePlay:
+    case MediaControlKey::Play:
       controller.Play();
       return;
-    case MediaControlKeysEvent::ePause:
+    case MediaControlKey::Pause:
       controller.Pause();
       return;
-    case MediaControlKeysEvent::eStop:
+    case MediaControlKey::Stop:
       controller.Stop();
       return;
-    case MediaControlKeysEvent::ePrevTrack:
+    case MediaControlKey::Previoustrack:
       controller.PreviousTrack();
       return;
-    case MediaControlKeysEvent::eNextTrack:
+    case MediaControlKey::Nexttrack:
       controller.NextTrack();
       return;
-    case MediaControlKeysEvent::eSeekBackward:
+    case MediaControlKey::Seekbackward:
       controller.SeekBackward();
       return;
-    case MediaControlKeysEvent::eSeekForward:
+    case MediaControlKey::Seekforward:
       controller.SeekForward();
       return;
     default:

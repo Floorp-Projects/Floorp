@@ -11,7 +11,7 @@
 namespace mozilla {
 namespace widget {
 
-mozilla::dom::MediaControlKeysEventSource* CreateMediaControlKeysEventSource() {
+mozilla::dom::MediaControlKeySource* CreateMediaControlKeySource() {
   if (nsCocoaFeatures::IsAtLeastVersion(10, 12, 2)) {
     return new MediaHardwareKeysEventSourceMacMediaCenter();
   } else {

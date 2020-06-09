@@ -5,7 +5,7 @@
 #ifndef DOM_MEDIA_MEDIACONTROL_MEDIASTATUSMANAGER_H_
 #define DOM_MEDIA_MEDIACONTROL_MEDIASTATUSMANAGER_H_
 
-#include "MediaControlKeysEvent.h"
+#include "MediaControlKeySource.h"
 #include "MediaEventSource.h"
 #include "MediaPlaybackStatus.h"
 #include "mozilla/dom/MediaMetadata.h"

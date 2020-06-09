@@ -21,7 +21,6 @@
 #include "mozilla/StateWatching.h"
 #include "mozilla/WeakPtr.h"
 #include "mozilla/dom/HTMLMediaElementBinding.h"
-#include "mozilla/dom/MediaControlKeysEvent.h"
 #include "mozilla/dom/MediaDebugInfoBinding.h"
 #include "mozilla/dom/MediaKeys.h"
 #include "mozilla/dom/TextTrackManager.h"
@@ -765,7 +764,7 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   class MediaStreamTrackListener;
   class FirstFrameListener;
   class ShutdownObserver;
-  class MediaControlEventListener;
+  class MediaControlKeyListener;
 
   MediaDecoderOwner::NextFrameStatus NextFrameStatus();
 
@@ -1934,11 +1933,11 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   MozPromiseRequestHolder<ResumeDelayedPlaybackAgent::ResumePromise>
       mResumePlaybackRequest;
 
-  // We use MediaControlEventListener to listen media control keys event, which
-  // would play or pause media element according to different events.
-  void StartListeningMediaControlEventIfNeeded();
-  void StopListeningMediaControlEventIfNeeded();
-  RefPtr<MediaControlEventListener> mMediaControlEventListener;
+  // We use MediaControlKeyListener to listen media control key, by which we
+  // would play or pause media element.
+  void StartListeningMediaControlKeyIfNeeded();
+  void StopListeningMediaControlKeyIfNeeded();
+  RefPtr<MediaControlKeyListener> mMediaControlKeyListener;
 
   // Return true if the media element is being used in picture in picture mode.
   bool IsBeingUsedInPictureInPictureMode() const;

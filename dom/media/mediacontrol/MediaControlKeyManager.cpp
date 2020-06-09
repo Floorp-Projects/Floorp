@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "MediaControlKeysManager.h"
+#include "MediaControlKeyManager.h"
 
 #include "MediaControlUtils.h"
 #include "MediaControlService.h"
@@ -15,18 +15,18 @@
 #undef LOG
 #define LOG(msg, ...)                        \
   MOZ_LOG(gMediaControlLog, LogLevel::Debug, \
-          ("MediaControlKeysManager=%p, " msg, this, ##__VA_ARGS__))
+          ("MediaControlKeyManager=%p, " msg, this, ##__VA_ARGS__))
 
 #undef LOG_INFO
 #define LOG_INFO(msg, ...)                  \
   MOZ_LOG(gMediaControlLog, LogLevel::Info, \
-          ("MediaControlKeysManager=%p, " msg, this, ##__VA_ARGS__))
+          ("MediaControlKeyManager=%p, " msg, this, ##__VA_ARGS__))
 
 namespace mozilla {
 namespace dom {
 
-bool MediaControlKeysManager::IsOpened() const {
-  // As MediaControlKeysManager represents a platform-indenpendent event source,
+bool MediaControlKeyManager::IsOpened() const {
+  // As MediaControlKeyManager represents a platform-indenpendent event source,
   // which we can use to add other listeners to moniter media key events, we
   // would always return true even if we fail to open the real media key event
   // source, because we still have chances to open the source again when there
@@ -34,28 +34,28 @@ bool MediaControlKeysManager::IsOpened() const {
   return true;
 }
 
-bool MediaControlKeysManager::Open() {
+bool MediaControlKeyManager::Open() {
   mControllerAmountChangedListener =
       MediaControlService::GetService()
           ->MediaControllerAmountChangedEvent()
           .Connect(AbstractThread::MainThread(), this,
-                   &MediaControlKeysManager::ControllerAmountChanged);
+                   &MediaControlKeyManager::ControllerAmountChanged);
   return true;
 }
 
-MediaControlKeysManager::~MediaControlKeysManager() {
+MediaControlKeyManager::~MediaControlKeyManager() {
   StopMonitoringControlKeys();
   mEventSource = nullptr;
   mControllerAmountChangedListener.DisconnectIfExists();
 }
 
-void MediaControlKeysManager::StartMonitoringControlKeys() {
+void MediaControlKeyManager::StartMonitoringControlKeys() {
   if (!StaticPrefs::media_hardwaremediakeys_enabled()) {
     return;
   }
 
   if (!mEventSource) {
-    mEventSource = widget::CreateMediaControlKeysEventSource();
+    mEventSource = widget::CreateMediaControlKeySource();
   }
 
   // When cross-compiling with MinGW, we cannot use the related WinAPI, thus
@@ -72,14 +72,14 @@ void MediaControlKeysManager::StartMonitoringControlKeys() {
   }
 }
 
-void MediaControlKeysManager::StopMonitoringControlKeys() {
+void MediaControlKeyManager::StopMonitoringControlKeys() {
   if (mEventSource && mEventSource->IsOpened()) {
     LOG_INFO("StopMonitoringControlKeys");
     mEventSource->Close();
   }
 }
 
-void MediaControlKeysManager::ControllerAmountChanged(
+void MediaControlKeyManager::ControllerAmountChanged(
     uint64_t aControllerAmount) {
   LOG("Controller amount changed=%" PRId64, aControllerAmount);
   if (aControllerAmount > 0) {
@@ -89,13 +89,13 @@ void MediaControlKeysManager::ControllerAmountChanged(
   }
 }
 
-void MediaControlKeysManager::OnKeyPressed(MediaControlKeysEvent aKeyEvent) {
+void MediaControlKeyManager::OnKeyPressed(MediaControlKey aKey) {
   for (auto listener : mListeners) {
-    listener->OnKeyPressed(aKeyEvent);
+    listener->OnKeyPressed(aKey);
   }
 }
 
-void MediaControlKeysManager::SetPlaybackState(
+void MediaControlKeyManager::SetPlaybackState(
     MediaSessionPlaybackState aState) {
   if (mEventSource && mEventSource->IsOpened()) {
     mEventSource->SetPlaybackState(aState);
@@ -110,13 +110,13 @@ void MediaControlKeysManager::SetPlaybackState(
   }
 }
 
-MediaSessionPlaybackState MediaControlKeysManager::GetPlaybackState() const {
+MediaSessionPlaybackState MediaControlKeyManager::GetPlaybackState() const {
   return (mEventSource && mEventSource->IsOpened())
              ? mEventSource->GetPlaybackState()
              : mPlaybackState;
 }
 
-void MediaControlKeysManager::SetMediaMetadata(
+void MediaControlKeyManager::SetMediaMetadata(
     const MediaMetadataBase& aMetadata) {
   if (mEventSource && mEventSource->IsOpened()) {
     mEventSource->SetMediaMetadata(aMetadata);
@@ -134,11 +134,11 @@ void MediaControlKeysManager::SetMediaMetadata(
   }
 }
 
-void MediaControlKeysManager::SetSupportedMediaKeys(
+void MediaControlKeyManager::SetSupportedMediaKeys(
     const MediaKeysArray& aSupportedKeys) {
   mSupportedKeys.Clear();
   for (const auto& key : aSupportedKeys) {
-    LOG_INFO("Supported keys=%s", ToMediaControlKeysEventStr(key));
+    LOG_INFO("Supported keys=%s", ToMediaControlKeyStr(key));
     mSupportedKeys.AppendElement(key);
   }
   if (mEventSource && mEventSource->IsOpened()) {

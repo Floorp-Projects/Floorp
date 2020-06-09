@@ -43,18 +43,16 @@ void MediaController::GetSupportedKeys(
     nsTArray<MediaControlKey>& aRetVal) const {
   aRetVal.Clear();
   for (const auto& key : mSupportedKeys) {
-    // TODO : merge `MediaControlKey` and `MediaControlKeysEvent`.
-    aRetVal.AppendElement(ConvertToMediaControlKey(key));
+    aRetVal.AppendElement(key);
   }
 }
 
-static const MediaControlKeysEvent sDefaultSupportedKeys[] = {
-    MediaControlKeysEvent::eFocus, MediaControlKeysEvent::ePlay,
-    MediaControlKeysEvent::ePause, MediaControlKeysEvent::ePlayPause,
-    MediaControlKeysEvent::eStop,
+static const MediaControlKey sDefaultSupportedKeys[] = {
+    MediaControlKey::Focus,     MediaControlKey::Play, MediaControlKey::Pause,
+    MediaControlKey::Playpause, MediaControlKey::Stop,
 };
 
-static void GetDefaultSupportedKeys(nsTArray<MediaControlKeysEvent>& aKeys) {
+static void GetDefaultSupportedKeys(nsTArray<MediaControlKey>& aKeys) {
   for (const auto& key : sDefaultSupportedKeys) {
     aKeys.AppendElement(key);
   }
@@ -80,50 +78,42 @@ MediaController::~MediaController() {
 
 void MediaController::Focus() {
   LOG("Focus");
-  UpdateMediaControlKeysEventToContentMediaIfNeeded(
-      MediaControlKeysEvent::eFocus);
+  UpdateMediaControlKeyToContentMediaIfNeeded(MediaControlKey::Focus);
 }
 
 void MediaController::Play() {
   LOG("Play");
-  UpdateMediaControlKeysEventToContentMediaIfNeeded(
-      MediaControlKeysEvent::ePlay);
+  UpdateMediaControlKeyToContentMediaIfNeeded(MediaControlKey::Play);
 }
 
 void MediaController::Pause() {
   LOG("Pause");
-  UpdateMediaControlKeysEventToContentMediaIfNeeded(
-      MediaControlKeysEvent::ePause);
+  UpdateMediaControlKeyToContentMediaIfNeeded(MediaControlKey::Pause);
 }
 
 void MediaController::PrevTrack() {
   LOG("Prev Track");
-  UpdateMediaControlKeysEventToContentMediaIfNeeded(
-      MediaControlKeysEvent::ePrevTrack);
+  UpdateMediaControlKeyToContentMediaIfNeeded(MediaControlKey::Previoustrack);
 }
 
 void MediaController::NextTrack() {
   LOG("Next Track");
-  UpdateMediaControlKeysEventToContentMediaIfNeeded(
-      MediaControlKeysEvent::eNextTrack);
+  UpdateMediaControlKeyToContentMediaIfNeeded(MediaControlKey::Nexttrack);
 }
 
 void MediaController::SeekBackward() {
   LOG("Seek Backward");
-  UpdateMediaControlKeysEventToContentMediaIfNeeded(
-      MediaControlKeysEvent::eSeekBackward);
+  UpdateMediaControlKeyToContentMediaIfNeeded(MediaControlKey::Seekbackward);
 }
 
 void MediaController::SeekForward() {
   LOG("Seek Forward");
-  UpdateMediaControlKeysEventToContentMediaIfNeeded(
-      MediaControlKeysEvent::eSeekForward);
+  UpdateMediaControlKeyToContentMediaIfNeeded(MediaControlKey::Seekforward);
 }
 
 void MediaController::Stop() {
   LOG("Stop");
-  UpdateMediaControlKeysEventToContentMediaIfNeeded(
-      MediaControlKeysEvent::eStop);
+  UpdateMediaControlKeyToContentMediaIfNeeded(MediaControlKey::Stop);
 }
 
 uint64_t MediaController::Id() const { return mTopLevelBrowsingContextId; }
@@ -132,8 +122,8 @@ bool MediaController::IsAudible() const { return IsMediaAudible(); }
 
 bool MediaController::IsPlaying() const { return IsMediaPlaying(); }
 
-void MediaController::UpdateMediaControlKeysEventToContentMediaIfNeeded(
-    MediaControlKeysEvent aEvent) {
+void MediaController::UpdateMediaControlKeyToContentMediaIfNeeded(
+    MediaControlKey aKey) {
   // There is no controlled media existing or controller has been shutdown, we
   // have no need to update media action to the content process.
   if (!IsAnyMediaBeingControlled() || mShutdown) {
@@ -148,7 +138,7 @@ void MediaController::UpdateMediaControlKeysEventToContentMediaIfNeeded(
           ? BrowsingContext::Get(*mActiveMediaSessionContextId)
           : BrowsingContext::Get(Id());
   if (context && !context->IsDiscarded()) {
-    context->Canonical()->UpdateMediaControlKeysEvent(aEvent);
+    context->Canonical()->UpdateMediaControlKey(aKey);
   }
 }
 
@@ -271,10 +261,10 @@ void MediaController::HandleSupportedMediaSessionActionsChanged(
     const nsTArray<MediaSessionAction>& aSupportedAction) {
   // Convert actions to keys, some of them have been included in the supported
   // keys, such as "play", "pause" and "stop".
-  nsTArray<MediaControlKeysEvent> newSupportedKeys;
+  nsTArray<MediaControlKey> newSupportedKeys;
   GetDefaultSupportedKeys(newSupportedKeys);
   for (const auto& action : aSupportedAction) {
-    MediaControlKeysEvent key = ConvertMediaSessionActionToControlKey(action);
+    MediaControlKey key = ConvertMediaSessionActionToControlKey(action);
     if (!newSupportedKeys.Contains(key)) {
       newSupportedKeys.AppendElement(key);
     }
@@ -293,8 +283,7 @@ void MediaController::HandleSupportedMediaSessionActionsChanged(
   MediaController_Binding::ClearCachedSupportedKeysValue(this);
 }
 
-CopyableTArray<MediaControlKeysEvent> MediaController::GetSupportedMediaKeys()
-    const {
+CopyableTArray<MediaControlKey> MediaController::GetSupportedMediaKeys() const {
   return mSupportedKeys;
 }
 

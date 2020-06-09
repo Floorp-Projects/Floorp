@@ -37,7 +37,7 @@ static const char* ToMediaControlKeyStr(int aKeyCode) {
     case NX_KEYTYPE_REWIND:
       return "Rewind";
     default:
-      MOZ_ASSERT_UNREACHABLE("Invalid action.");
+      MOZ_ASSERT_UNREACHABLE("Invalid key code.");
       return "UNKNOWN";
   }
 }
@@ -52,18 +52,18 @@ static bool IsSupportedKeyCode(int aKeyCode) {
          aKeyCode == NX_KEYTYPE_REWIND;
 }
 
-static MediaControlKeysEvent ToMediaControlKeysEvent(int aKeyCode) {
+static MediaControlKey ToMediaControlKey(int aKeyCode) {
   MOZ_ASSERT(IsSupportedKeyCode(aKeyCode));
   switch (aKeyCode) {
     case NX_KEYTYPE_NEXT:
     case NX_KEYTYPE_FAST:
-      return MediaControlKeysEvent::eNextTrack;
+      return MediaControlKey::Nexttrack;
     case NX_KEYTYPE_PREVIOUS:
     case NX_KEYTYPE_REWIND:
-      return MediaControlKeysEvent::ePrevTrack;
+      return MediaControlKey::Previoustrack;
     default:
       MOZ_ASSERT(aKeyCode == NX_KEYTYPE_PLAY);
-      return MediaControlKeysEvent::ePlayPause;
+      return MediaControlKey::Playpause;
   }
 }
 
@@ -80,7 +80,7 @@ bool MediaHardwareKeysEventSourceMac::Open() {
 void MediaHardwareKeysEventSourceMac::Close() {
   LOG("Close MediaHardwareKeysEventSourceMac");
   StopEventTap();
-  MediaControlKeysEventSource::Close();
+  MediaControlKeySource::Close();
 }
 
 bool MediaHardwareKeysEventSourceMac::StartEventTap() {
@@ -174,7 +174,7 @@ CGEventRef MediaHardwareKeysEventSourceMac::EventTapCallback(CGEventTapProxy pro
 
   LOG2("Get media key %s", source, ToMediaControlKeyStr(keyCode));
   for (auto iter = source->mListeners.begin(); iter != source->mListeners.end(); ++iter) {
-    (*iter)->OnKeyPressed(ToMediaControlKeysEvent(keyCode));
+    (*iter)->OnKeyPressed(ToMediaControlKey(keyCode));
   }
   return event;
 }

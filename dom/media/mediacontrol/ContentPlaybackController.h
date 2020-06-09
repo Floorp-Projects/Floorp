@@ -5,7 +5,7 @@
 #ifndef DOM_MEDIA_MEDIACONTROL_CONTENTPLAYBACKCONTROLLER_H_
 #define DOM_MEDIA_MEDIACONTROL_CONTENTPLAYBACKCONTROLLER_H_
 
-#include "MediaControlKeysEvent.h"
+#include "MediaControlKeySource.h"
 #include "nsPIDOMWindow.h"
 #include "mozilla/dom/BrowsingContext.h"
 
@@ -51,7 +51,7 @@ class MOZ_STACK_CLASS ContentPlaybackController {
   void SeekTo();
 
  private:
-  void NotifyContentControlKeyEventReceiver(MediaControlKeysEvent aEvent);
+  void NotifyContentMediaControlKeyReceiver(MediaControlKey aKey);
   void NotifyMediaSession(MediaSessionAction aAction);
   void NotifyMediaSessionWhenActionIsSupported(MediaSessionAction aAction);
   bool IsMediaSessionActionSupported(MediaSessionAction aAction) const;
@@ -60,10 +60,10 @@ class MOZ_STACK_CLASS ContentPlaybackController {
   RefPtr<BrowsingContext> mBC;
 };
 
-class ContentMediaActionHandler {
+class ContentMediaControlKeyHandler {
  public:
-  static void HandleMediaControlKeysEvent(BrowsingContext* aContext,
-                                          MediaControlKeysEvent aEvent);
+  static void HandleMediaControlKey(BrowsingContext* aContext,
+                                    MediaControlKey aKey);
 };
 
 }  // namespace dom

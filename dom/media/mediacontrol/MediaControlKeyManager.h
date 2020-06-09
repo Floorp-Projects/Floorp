@@ -2,39 +2,39 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef DOM_MEDIA_MEDIACONTROL_MEDIACONTROLKEYSMANAGER_H_
-#define DOM_MEDIA_MEDIACONTROL_MEDIACONTROLKEYSMANAGER_H_
+#ifndef DOM_MEDIA_MEDIACONTROL_MEDIACONTROLKEYMANAGER_H_
+#define DOM_MEDIA_MEDIACONTROL_MEDIACONTROLKEYMANAGER_H_
 
-#include "MediaControlKeysEvent.h"
+#include "MediaControlKeySource.h"
 #include "MediaEventSource.h"
 
 namespace mozilla {
 namespace dom {
 
 /**
- * MediaControlKeysManager is a wrapper of MediaControlKeysEventSource, which
+ * MediaControlKeyManager is a wrapper of MediaControlKeySource, which
  * is used to manage creating and destroying a real media keys event source.
  *
  * It monitors the amount of the media controller in MediaService, and would
  * create the event source when there is any existing controller and destroy it
  * when there is no controller.
  */
-class MediaControlKeysManager final : public MediaControlKeysEventSource,
-                                      public MediaControlKeysEventListener {
+class MediaControlKeyManager final : public MediaControlKeySource,
+                                     public MediaControlKeyListener {
  public:
-  NS_INLINE_DECL_REFCOUNTING(MediaControlKeysManager, override)
+  NS_INLINE_DECL_REFCOUNTING(MediaControlKeyManager, override)
 
-  MediaControlKeysManager() = default;
+  MediaControlKeyManager() = default;
 
-  // MediaControlKeysEventSource methods
+  // MediaControlKeySource methods
   bool Open() override;
   bool IsOpened() const override;
 
   void SetPlaybackState(MediaSessionPlaybackState aState) override;
   MediaSessionPlaybackState GetPlaybackState() const override;
 
-  // MediaControlKeysEventListener methods
-  void OnKeyPressed(MediaControlKeysEvent aKeyEvent) override;
+  // MediaControlKeyListener methods
+  void OnKeyPressed(MediaControlKey aKey) override;
 
   // The callback function for monitoring the media controller amount changed
   // event.
@@ -44,13 +44,13 @@ class MediaControlKeysManager final : public MediaControlKeysEventSource,
   void SetSupportedMediaKeys(const MediaKeysArray& aSupportedKeys) override;
 
  private:
-  ~MediaControlKeysManager();
+  ~MediaControlKeyManager();
   void StartMonitoringControlKeys();
   void StopMonitoringControlKeys();
-  RefPtr<MediaControlKeysEventSource> mEventSource;
+  RefPtr<MediaControlKeySource> mEventSource;
   MediaEventListener mControllerAmountChangedListener;
   MediaMetadataBase mMetadata;
-  nsTArray<MediaControlKeysEvent> mSupportedKeys;
+  nsTArray<MediaControlKey> mSupportedKeys;
 };
 
 }  // namespace dom

@@ -1294,12 +1294,11 @@ void ChromeUtils::PrivateNoteIntentionalCrash(const GlobalObject& aGlobal,
 }
 
 /* static */
-void ChromeUtils::GenerateMediaControlKeysTestEvent(
-    const GlobalObject& aGlobal, MediaControlKeysTestEvent aEvent) {
+void ChromeUtils::GenerateMediaControlKey(const GlobalObject& aGlobal,
+                                          MediaControlKey aKey) {
   RefPtr<MediaControlService> service = MediaControlService::GetService();
   if (service) {
-    service->GenerateMediaControlKeysTestEvent(
-        ConvertMediaControlKeysTestEventToMediaControlKeysEvent(aEvent));
+    service->GenerateTestMediaControlKey(aKey);
   }
 }
 
