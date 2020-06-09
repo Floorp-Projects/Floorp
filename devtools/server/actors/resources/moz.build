@@ -5,12 +5,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
-    'browsing-context.js',
-    'chrome-window.js',
-    'content-process.js',
-    'frame.js',
-    'parent-process.js',
-    'target-actor-registry.jsm',
-    'webextension.js',
-    'worker.js',
+    'console-messages.js',
+    'index.js',
 )
+
+with Files('console-messages.js'):
+    BUG_COMPONENT = ('DevTools', 'Console')

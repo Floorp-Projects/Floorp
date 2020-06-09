@@ -527,7 +527,12 @@ function getDbgWindow(options, dbg, webConsole) {
     return { bindSelf: null, dbgWindow };
   }
 
-  const actor = webConsole.actor(options.selectedObjectActor);
+  // For objects related to console messages, they will be registered under the Target Actor
+  // instead of the WebConsoleActor. That's because console messages are resources and all resources
+  // are emitted by the Target Actor.
+  const actor =
+    webConsole.actor(options.selectedObjectActor) ||
+    webConsole.parentActor.actor(options.selectedObjectActor);
 
   if (!actor) {
     return { bindSelf: null, dbgWindow };

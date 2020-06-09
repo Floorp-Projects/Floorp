@@ -69,6 +69,14 @@ DevToolsServerConnection.prototype = {
     return this._prefix;
   },
 
+  /**
+   * For a DevToolsServerConnection used in content processes,
+   * returns the prefix of the connection it originates from, from the parent process.
+   */
+  get parentPrefix() {
+    this.prefix.replace(/child\d+\//, "");
+  },
+
   _transport: null,
   get transport() {
     return this._transport;

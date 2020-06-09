@@ -11,12 +11,22 @@ const { EventEmitter } = ChromeUtils.import(
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const Loader = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+XPCOMUtils.defineLazyModuleGetters(this, {
+  TargetActorRegistry:
+    "resource://devtools/server/actors/targets/target-actor-registry.jsm",
+});
+
+// Name of the attribute into which we save data in `sharedData` object.
+const SHARED_DATA_KEY_NAME = "DevTools:watchedPerWatcher";
 
 // If true, log info about WindowGlobal's being created.
 const DEBUG = false;
 
 /**
- * Helper function to know if a given WindowGlobal should be exposed via watchTargets(window-global) API
+ * Helper function to know if a given WindowGlobal should be exposed via watchTargets("frame") API
  */
 function shouldNotifyWindowGlobal(windowGlobal, watchedBrowsingContextID) {
   const browsingContext = windowGlobal.browsingContext;
@@ -111,43 +121,59 @@ class DevToolsFrameChild extends JSWindowActorChild {
   constructor() {
     super();
 
-    // The map is indexed by the connection prefix.
+    // The map is indexed by the Watcher Actor ID.
     // The values are objects containing the following properties:
     // - connection: the DevToolsServerConnection itself
     // - actor: the FrameTargetActor instance
     this._connections = new Map();
 
     this._onConnectionChange = this._onConnectionChange.bind(this);
-    this._onSharedDataChanged = this._onSharedDataChanged.bind(this);
     EventEmitter.decorate(this);
   }
 
   instantiate() {
     const { sharedData } = Services.cpmm;
-    const perPrefixMap = sharedData.get("DevTools:watchedPerPrefix");
-    if (!perPrefixMap) {
+    const watchedDataByWatcherActor = sharedData.get(SHARED_DATA_KEY_NAME);
+    if (!watchedDataByWatcherActor) {
       throw new Error(
         "Request to instantiate the target(s) for the BrowsingContext, but `sharedData` is empty about watched targets"
       );
     }
 
     // Create one Target actor for each prefix/client which listen to frames
-    for (const [prefix, { targets, browsingContextID }] of perPrefixMap) {
+    for (const [
+      watcherActorID,
+      { targets, connectionPrefix, browsingContextID, resources },
+    ] of watchedDataByWatcherActor) {
       if (
         targets.has("frame") &&
         shouldNotifyWindowGlobal(this.manager, browsingContextID)
       ) {
-        this._createTargetActor(prefix);
+        this._createTargetActor(watcherActorID, connectionPrefix, resources);
       }
     }
   }
 
-  // Instantiate a new WindowGlobalTarget for the given connection
-  _createTargetActor(parentConnectionPrefix) {
-    if (this._connections.get(parentConnectionPrefix)) {
+  /**
+   * Instantiate a new WindowGlobalTarget for the given connection.
+   *
+   * @param String watcherActorID
+   *        The ID of the WatcherActor who requested to observe and create these target actors.
+   * @param String parentConnectionPrefix
+   *        The prefix of the DevToolsServerConnection of the Watcher Actor.
+   *        This is used to compute a unique ID for the target actor.
+   * @param Set<String> initialWatchedResources
+   *        The list of resources already watched by the watcher actor.
+   */
+  _createTargetActor(
+    watcherActorID,
+    parentConnectionPrefix,
+    initialWatchedResources
+  ) {
+    if (this._connections.get(watcherActorID)) {
       throw new Error(
         "DevToolsFrameChild _createTargetActor was called more than once" +
-          ` for the same connection (prefix: "${parentConnectionPrefix}")`
+          ` for the same Watcher (Actor ID: "${watcherActorID}")`
       );
     }
 
@@ -157,27 +183,25 @@ class DevToolsFrameChild extends JSWindowActorChild {
     // but here, we can't have access to any DevTools connection as we are really early in the content process startup
     // XXX: WindowGlobal's innerWindowId should be unique across processes, I think. So that should be safe?
     // (this.manager == WindowGlobalChild interface)
-    const prefix =
+    const forwardingPrefix =
       parentConnectionPrefix + "windowGlobal" + this.manager.innerWindowId;
 
     logWindowGlobal(
       this.manager,
-      "Instantiate WindowGlobalTarget with prefix: " + prefix
+      "Instantiate WindowGlobalTarget with prefix: " + forwardingPrefix
     );
 
-    const { connection, targetActor } = this._createConnectionAndActor(prefix);
-    this._connections.set(parentConnectionPrefix, {
+    const { connection, targetActor } = this._createConnectionAndActor(
+      forwardingPrefix
+    );
+    this._connections.set(watcherActorID, {
       connection,
       actor: targetActor,
     });
 
-    if (!this._isListeningForChange) {
-      // Watch for disabling in order to destroy this DevToolsClientChild and its WindowGlobalTargets
-      Services.cpmm.sharedData.addEventListener(
-        "change",
-        this._onSharedDataChanged
-      );
-      this._isListeningForChange = true;
+    // Start listening for resources that are already being watched
+    if (initialWatchedResources.size > 0) {
+      targetActor.watchTargetResources([...initialWatchedResources]);
     }
 
     // Immediately queue a message for the parent process,
@@ -190,13 +214,28 @@ class DevToolsFrameChild extends JSWindowActorChild {
     // are emitted during its construction. Instead the frontend will start
     // the communication first.
     this.sendAsyncMessage("DevToolsFrameChild:connectFromContent", {
-      parentConnectionPrefix,
-      prefix,
+      watcherActorID,
+      forwardingPrefix,
       actor: targetActor.form(),
     });
   }
 
-  _createConnectionAndActor(prefix) {
+  _destroyTargetActor(watcherActorID) {
+    const connectionInfo = this._connections.get(watcherActorID);
+    // This connection has already been cleaned?
+    if (!connectionInfo) {
+      throw new Error(
+        `Trying to destroy a target actor that doesn't exists, or has already been destroyed. Watcher Actor ID:${watcherActorID}`
+      );
+    }
+    connectionInfo.connection.close();
+    this._connections.delete(watcherActorID);
+    if (this._connections.size == 0) {
+      this.didDestroy();
+    }
+  }
+
+  _createConnectionAndActor(forwardingPrefix) {
     this.useCustomLoader = this.document.nodePrincipal.isSystemPrincipal;
 
     // When debugging chrome pages, use a new dedicated loader, using a distinct chrome compartment.
@@ -223,7 +262,10 @@ class DevToolsFrameChild extends JSWindowActorChild {
     DevToolsServer.registerActors({ target: true });
     DevToolsServer.on("connectionchange", this._onConnectionChange);
 
-    const connection = DevToolsServer.connectToParentWindowActor(prefix, this);
+    const connection = DevToolsServer.connectToParentWindowActor(
+      this,
+      forwardingPrefix
+    );
 
     // Create the actual target actor.
     const targetActor = new FrameTargetActor(connection, this.docShell, {
@@ -286,25 +328,114 @@ class DevToolsFrameChild extends JSWindowActorChild {
     }
   }
 
-  receiveMessage(data) {
-    switch (data.name) {
-      case "DevToolsFrameParent:instantiate-already-available":
-        const { prefix, browsingContextID } = data.data;
-        // Re-check here, just to ensure that both parent and content processes agree
-        // on what should or should not be watched.
-        if (!shouldNotifyWindowGlobal(this.manager, browsingContextID)) {
-          throw new Error(
-            "Mismatch between DevToolsFrameParent and DevToolsFrameChild shouldNotifyWindowGlobal"
-          );
-        }
-        return this._createTargetActor(prefix);
+  receiveMessage(message) {
+    // All messages but "packet" one pass `browsingContextID` and are expected
+    // to match shouldNotifyWindowGlobal result.
+    if (message.name != "DevToolsFrameParent:packet") {
+      const { browsingContextID } = message.data;
+      // Re-check here, just to ensure that both parent and content processes agree
+      // on what should or should not be watched.
+      if (
+        this.manager.browsingContext.id != browsingContextID &&
+        !shouldNotifyWindowGlobal(this.manager, browsingContextID)
+      ) {
+        throw new Error(
+          "Mismatch between DevToolsFrameParent and DevToolsFrameChild  " +
+            (this.manager.browsingContext.id == browsingContextID
+              ? "window global shouldn't be notified (shouldNotifyWindowGlobal mismatch)"
+              : `expected browsing context with ID ${browsingContextID}, but got ${this.manager.browsingContext.id}`)
+        );
+      }
+    }
+    switch (message.name) {
+      case "DevToolsFrameParent:instantiate-already-available": {
+        const {
+          watcherActorID,
+          connectionPrefix,
+          watchedResources,
+        } = message.data;
+        return this._createTargetActor(
+          watcherActorID,
+          connectionPrefix,
+          watchedResources
+        );
+      }
+      case "DevToolsFrameParent:destroy": {
+        const { watcherActorID } = message.data;
+        return this._destroyTargetActor(watcherActorID);
+      }
+      case "DevToolsFrameParent:watchResources": {
+        const {
+          watcherActorID,
+          browsingContextID,
+          resourceTypes,
+        } = message.data;
+        return this._watchResources(
+          watcherActorID,
+          browsingContextID,
+          resourceTypes
+        );
+      }
+      case "DevToolsFrameParent:unwatchResources": {
+        const {
+          watcherActorID,
+          browsingContextID,
+          resourceTypes,
+        } = message.data;
+        return this._unwatchResources(
+          watcherActorID,
+          browsingContextID,
+          resourceTypes
+        );
+      }
       case "DevToolsFrameParent:packet":
-        return this.emit("packet-received", data);
+        return this.emit("packet-received", message);
       default:
         throw new Error(
-          "Unsupported message in DevToolsFrameParent: " + data.name
+          "Unsupported message in DevToolsFrameParent: " + message.name
         );
     }
+  }
+
+  _getTargetActorForWatcherActorID(watcherActorID, browsingContextID) {
+    const connectionInfo = this._connections.get(watcherActorID);
+    let targetActor = connectionInfo ? connectionInfo.actor : null;
+    // We might not get the target actor created by DevToolsFrameChild.
+    // For the Tab top-level target for content toolbox,
+    // we are still using the "message manager connector",
+    // so that they keep working across navigation.
+    // We will surely remove all of this. "Message manager connector", and
+    // this special codepath once we are ready to make the top level target to
+    // be destroyed on navigations. See bug 1602748 for more context.
+    if (!targetActor && this.manager.browsingContext.id == browsingContextID) {
+      targetActor = TargetActorRegistry.getTargetActor(browsingContextID);
+    }
+    return targetActor;
+  }
+
+  _watchResources(watcherActorID, browsingContextID, resourceTypes) {
+    const targetActor = this._getTargetActorForWatcherActorID(
+      watcherActorID,
+      browsingContextID
+    );
+    if (!targetActor) {
+      throw new Error(
+        `No target actor for this Watcher Actor ID:"${watcherActorID}" / BrowsingContextID:${browsingContextID}`
+      );
+    }
+    return targetActor.watchTargetResources(resourceTypes);
+  }
+
+  _unwatchResources(watcherActorID, browsingContextID, resourceTypes) {
+    const targetActor = this._getTargetActorForWatcherActorID(
+      watcherActorID,
+      browsingContextID
+    );
+    // By the time we are calling unwatchResource, the target may already have been destroyed.
+    if (targetActor) {
+      return targetActor.unwatchTargetResources(resourceTypes);
+    }
+    return null;
   }
 
   handleEvent({ type }) {
@@ -315,42 +446,6 @@ class DevToolsFrameChild extends JSWindowActorChild {
     }
   }
 
-  _onSharedDataChanged({ type, changedKeys }) {
-    if (type == "change") {
-      if (!changedKeys.includes("DevTools:watchedPerPrefix")) {
-        return;
-      }
-      const { sharedData } = Services.cpmm;
-      const perPrefixMap = sharedData.get("DevTools:watchedPerPrefix");
-      if (!perPrefixMap) {
-        this.didDestroy();
-        return;
-      }
-      let isStillWatching = false;
-      // Destroy the JSWindow Actor if we stopped watching frames from all the clients.
-      for (const [prefix, { targets }] of perPrefixMap) {
-        // This one prefix/connection still watches for frame
-        if (targets.has("frame")) {
-          isStillWatching = true;
-          continue;
-        }
-        const connectionInfo = this._connections.get(prefix);
-        // This connection wasn't watching, or at least did not instantiate a target actor
-        if (!connectionInfo) {
-          continue;
-        }
-        connectionInfo.connection.close();
-        this._connections.delete(prefix);
-      }
-      // If all the connections stopped watching, destroy everything
-      if (!isStillWatching) {
-        this.didDestroy();
-      }
-    } else {
-      throw new Error("Unsupported event:" + type + "\n");
-    }
-  }
-
   didDestroy() {
     for (const [, connectionInfo] of this._connections) {
       connectionInfo.connection.close();
@@ -358,12 +453,6 @@ class DevToolsFrameChild extends JSWindowActorChild {
     this._connections.clear();
     if (this.useCustomLoader) {
       this.loader.destroy();
-    }
-    if (this._isListeningForChange) {
-      Services.cpmm.sharedData.removeEventListener(
-        "change",
-        this._onSharedDataChanged
-      );
     }
   }
 }

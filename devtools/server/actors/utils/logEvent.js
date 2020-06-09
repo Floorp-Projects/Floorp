@@ -5,6 +5,11 @@
 "use strict";
 
 const { formatDisplayName } = require("devtools/server/actors/frame");
+loader.lazyRequireGetter(
+  this,
+  "ConsoleMessages",
+  "devtools/server/actors/resources/console-messages"
+);
 
 // Get a string message to display when a frame evaluation throws.
 function getThrownMessage(completion) {
@@ -67,7 +72,8 @@ function logEvent({ threadActor, frame, level, expression, bindings }) {
     level,
   };
 
-  threadActor._parent._consoleActor.onConsoleAPICall(message);
+  const targetActor = threadActor._parent;
+  ConsoleMessages.onLogPoint(targetActor, message);
   return undefined;
 }
 
