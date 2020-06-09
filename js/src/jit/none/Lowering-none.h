@@ -40,7 +40,6 @@ class LIRGeneratorNone : public LIRGeneratorShared {
     MOZ_CRASH();
   }
   void lowerUrshD(MUrsh*) { MOZ_CRASH(); }
-  void lowerPowOfTwoI(MPow*) { MOZ_CRASH(); }
   template <typename T>
   void lowerForALU(T, MDefinition*, MDefinition*, MDefinition* v = nullptr) {
     MOZ_CRASH();

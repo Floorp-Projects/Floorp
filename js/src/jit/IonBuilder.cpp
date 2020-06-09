@@ -3612,7 +3612,6 @@ AbortReasonOr<Ok> IonBuilder::powTrySpecialized(bool* emitted,
   // Cast to the right type
   if (outputType == MIRType::Int32 && output->type() != MIRType::Int32) {
     auto* toInt = MToNumberInt32::New(alloc(), output);
-    toInt->setCanBeNegativeZero(pow->canBeNegativeZero());
     current->add(toInt);
     output = toInt;
   }
