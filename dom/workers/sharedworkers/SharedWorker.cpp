@@ -23,7 +23,6 @@
 #include "mozilla/ipc/BackgroundUtils.h"
 #include "mozilla/ipc/PBackgroundChild.h"
 #include "mozilla/ipc/URIUtils.h"
-#include "mozilla/net/CookieJarSettings.h"
 #include "mozilla/StorageAccess.h"
 #include "nsContentUtils.h"
 #include "nsGlobalWindowInner.h"
@@ -194,15 +193,11 @@ already_AddRefed<SharedWorker> SharedWorker::Constructor(
 
   nsID agentClusterId = nsContentUtils::GenerateUUID();
 
-  net::CookieJarSettingsArgs cjsData;
-  MOZ_ASSERT(loadInfo.mCookieJarSettings);
-  net::CookieJarSettings::Cast(loadInfo.mCookieJarSettings)->Serialize(cjsData);
-
   RemoteWorkerData remoteWorkerData(
       nsString(aScriptURL), baseURL, resolvedScriptURL, name,
       loadingPrincipalInfo, principalInfo, partitionedPrincipalInfo,
       loadInfo.mUseRegularPrincipal,
-      loadInfo.mHasStorageAccessPermissionGranted, cjsData, loadInfo.mDomain,
+      loadInfo.mHasStorageAccessPermissionGranted, loadInfo.mDomain,
       isSecureContext, ipcClientInfo, loadInfo.mReferrerInfo, storageAllowed,
       void_t() /* OptionalServiceWorkerData */, agentClusterId);
 

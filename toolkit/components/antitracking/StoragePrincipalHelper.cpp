@@ -106,29 +106,6 @@ nsresult StoragePrincipalHelper::Create(nsIChannel* aChannel,
 }
 
 // static
-nsresult StoragePrincipalHelper::CreatePartitionedPrincipalForServiceWorker(
-    nsIPrincipal* aPrincipal, nsICookieJarSettings* aCookieJarSettings,
-    nsIPrincipal** aPartitionedPrincipal) {
-  MOZ_ASSERT(aPrincipal);
-  MOZ_ASSERT(aPartitionedPrincipal);
-
-  OriginAttributes attrs = aPrincipal->OriginAttributesRef();
-
-  nsAutoString partitionKey;
-  Unused << aCookieJarSettings->GetPartitionKey(partitionKey);
-
-  if (!partitionKey.IsEmpty()) {
-    attrs.SetPartitionKey(partitionKey);
-  }
-
-  nsCOMPtr<nsIPrincipal> partitionedPrincipal =
-      BasePrincipal::Cast(aPrincipal)->CloneForcingOriginAttributes(attrs);
-
-  partitionedPrincipal.forget(aPartitionedPrincipal);
-  return NS_OK;
-}
-
-// static
 nsresult
 StoragePrincipalHelper::PrepareEffectiveStoragePrincipalOriginAttributes(
     nsIChannel* aChannel, OriginAttributes& aOriginAttributes) {
