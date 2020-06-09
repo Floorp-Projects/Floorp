@@ -10,4 +10,4 @@
 exports.ELEMENT_STYLE = 100;
 
 // An array of the possible color schemes that can be emulated.
-exports.COLOR_SCHEMES = [null, "dark", "light"];
+exports.COLOR_SCHEMES = [null, "dark", "light", "no-preference"];

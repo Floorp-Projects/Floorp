@@ -775,6 +775,10 @@
   fill: #bbb;
 }
 
+#color-scheme-simulation-toggle[state="no-preference"]::before {
+  fill-opacity: 0.5;
+}
+
 .flash-out {
   transition: background 1s;
 }
