@@ -10750,8 +10750,24 @@ nsresult nsDocShell::AddToSessionHistory(
     if (loadedEntryIndex.isSome()) {
       mLoadedEntryIndex = loadedEntryIndex.value();
     }
+
+    // aCloneChildren implies that we are retaining the same document, thus we
+    // need to signal to the top WC that the new SHEntry may receive a fresh
+    // user interaction flag.
+    if (aCloneChildren) {
+      WindowContext* topWc = mBrowsingContext->GetTopWindowContext();
+      if (topWc) {
+        topWc->SetSHEntryHasUserInteraction(false);
+      }
+    }
   } else {
-    // This is a subframe.
+
+    // This is a subframe, make sure that this new SHEntry will be
+    // marked with user interaction.
+    WindowContext* topWc = mBrowsingContext->GetTopWindowContext();
+    if (topWc) {
+      topWc->SetSHEntryHasUserInteraction(false);
+    }
     if (!mOSHE || !LOAD_TYPE_HAS_FLAGS(mLoadType, LOAD_FLAGS_REPLACE_HISTORY)) {
       rv = AddChildSHEntryToParent(entry, mChildOffset, aCloneChildren);
     }

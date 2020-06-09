@@ -276,6 +276,8 @@ var SessionHistoryInternal = {
       );
     }
 
+    entry.hasUserInteraction = shEntry.hasUserInteraction;
+
     if (shEntry.triggeringPrincipal) {
       entry.triggeringPrincipal_base64 = E10SUtils.serializePrincipal(
         shEntry.triggeringPrincipal
@@ -375,10 +377,21 @@ var SessionHistoryInternal = {
         continue;
       }
       let persist = "persist" in entry ? entry.persist : true;
-      history.addEntry(
-        this.deserializeEntry(entry, idMap, docIdentMap, history),
-        persist
-      );
+      let shEntry = this.deserializeEntry(entry, idMap, docIdentMap, history);
+
+      // To enable a smooth migration, we treat values of null/undefined as having
+      // user interaction (because we don't want to hide all session history that was
+      // added before we started recording user interaction).
+      //
+      // This attribute is only set on top-level SH history entries, so we set it
+      // outside of deserializeEntry since that is called recursively.
+      if (entry.hasUserInteraction == undefined) {
+        shEntry.hasUserInteraction = true;
+      } else {
+        shEntry.hasUserInteraction = entry.hasUserInteraction;
+      }
+
+      history.addEntry(shEntry, persist);
     }
 
     // Select the right history entry.
