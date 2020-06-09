@@ -30,9 +30,9 @@
 #include "nsDocShellLoadTypes.h"
 #include "nsExternalHelperAppService.h"
 #include "nsHttpChannel.h"
+#include "nsIHttpChannelInternal.h"
 #include "nsIBrowser.h"
 #include "nsIE10SUtils.h"
-#include "nsIHttpChannelInternal.h"
 #include "nsIStreamConverterService.h"
 #include "nsIViewSourceChannel.h"
 #include "nsImportModule.h"
@@ -218,7 +218,7 @@ class ParentProcessDocumentOpenInfo final : public nsDocumentOpenInfo,
     // reference cycle.
     RefPtr<DocumentLoadListener> doc = do_GetInterface(ToSupports(mListener));
     MOZ_ASSERT(doc);
-    doc->DisconnectListeners(NS_BINDING_RETARGETED, NS_OK);
+    doc->DisconnectChildListeners(NS_BINDING_RETARGETED, NS_OK);
     mListener->SetListenerAfterRedirect(nullptr);
   }
 
@@ -254,10 +254,21 @@ NS_INTERFACE_MAP_BEGIN(DocumentLoadListener)
 NS_INTERFACE_MAP_END
 
 DocumentLoadListener::DocumentLoadListener(
-    CanonicalBrowsingContext* aBrowsingContext) {
+    CanonicalBrowsingContext* aBrowsingContext, ADocumentChannelBridge* aBridge)
+    : mDocumentChannelBridge(aBridge) {
+  MOZ_ASSERT(aBridge);
   LOG(("DocumentLoadListener ctor [this=%p]", this));
   mParentChannelListener = new ParentChannelListener(
       this, aBrowsingContext, aBrowsingContext->UsePrivateBrowsing());
+}
+
+DocumentLoadListener::DocumentLoadListener(
+    CanonicalBrowsingContext* aBrowsingContext,
+    base::ProcessId aPendingBridgeProcess) {
+  LOG(("DocumentLoadListener ctor [this=%p]", this));
+  mParentChannelListener = new ParentChannelListener(
+      this, aBrowsingContext, aBrowsingContext->UsePrivateBrowsing());
+  mPendingDocumentChannelBridgeProcess = Some(aPendingBridgeProcess);
 }
 
 DocumentLoadListener::~DocumentLoadListener() {
@@ -358,13 +369,12 @@ CanonicalBrowsingContext* DocumentLoadListener::GetBrowsingContext() {
   return mParentChannelListener->GetBrowsingContext();
 }
 
-auto DocumentLoadListener::Open(
+bool DocumentLoadListener::Open(
     nsDocShellLoadState* aLoadState, uint32_t aCacheKey,
     const Maybe<uint64_t>& aChannelId, const TimeStamp& aAsyncOpenTime,
     nsDOMNavigationTiming* aTiming, Maybe<ClientInfo>&& aInfo,
     uint64_t aOuterWindowId, bool aHasGesture, Maybe<bool> aUriModified,
-    Maybe<bool> aIsXFOError, base::ProcessId aPid, nsresult* aRv)
-    -> RefPtr<OpenPromise> {
+    Maybe<bool> aIsXFOError, nsresult* aRv) {
   LOG(("DocumentLoadListener Open [this=%p, uri=%s]", this,
        aLoadState->URI()->GetSpecOrDefault().get()));
   RefPtr<CanonicalBrowsingContext> browsingContext =
@@ -390,7 +400,7 @@ auto DocumentLoadListener::Open(
           nullptr, attrs, loadFlags, aCacheKey, *aRv,
           getter_AddRefs(mChannel))) {
     mParentChannelListener = nullptr;
-    return nullptr;
+    return false;
   }
 
   nsCOMPtr<nsIURI> uriBeingLoaded =
@@ -441,7 +451,7 @@ auto DocumentLoadListener::Open(
   // we want the original request so that we get different ones for
   // each part of a multipart channel.
   nsCOMPtr<nsIViewSourceChannel> viewSourceChannel;
-  if (aPid && (viewSourceChannel = do_QueryInterface(mChannel))) {
+  if (OtherPid() && (viewSourceChannel = do_QueryInterface(mChannel))) {
     viewSourceChannel->SetReplaceRequest(false);
   }
 
@@ -487,12 +497,12 @@ auto DocumentLoadListener::Open(
           if (aValue.IsResolve()) {
             bool handled = aValue.ResolveValue();
             if (handled) {
-              self->DisconnectListeners(NS_ERROR_ABORT, NS_ERROR_ABORT);
+              self->DisconnectChildListeners(NS_ERROR_ABORT, NS_ERROR_ABORT);
               mParentChannelListener = nullptr;
             } else {
               nsresult rv = mChannel->AsyncOpen(openInfo);
               if (NS_FAILED(rv)) {
-                self->DisconnectListeners(rv, rv);
+                self->DisconnectChildListeners(rv, rv);
                 mParentChannelListener = nullptr;
               }
             }
@@ -504,11 +514,10 @@ auto DocumentLoadListener::Open(
     *aRv = mChannel->AsyncOpen(openInfo);
     if (NS_FAILED(*aRv)) {
       mParentChannelListener = nullptr;
-      return nullptr;
+      return false;
     }
   }
 
-  mOtherPid = aPid;
   mChannelCreationURI = aLoadState->URI();
   mLoadStateLoadFlags = aLoadState->LoadFlags();
   mLoadStateLoadType = aLoadState->LoadType();
@@ -524,13 +533,7 @@ auto DocumentLoadListener::Open(
   if (auto* ctx = GetBrowsingContext()) {
     ctx->StartDocumentLoad(this);
   }
-
-  *aRv = NS_OK;
-  mOpenPromise = new OpenPromise::Private(__func__);
-  // We make the promise use direct task dispatch in order to reduce the number
-  // of event loops iterations.
-  mOpenPromise->UseDirectTaskDispatch(__func__);
-  return mOpenPromise;
+  return true;
 }
 
 /* static */
@@ -598,16 +601,15 @@ bool DocumentLoadListener::OpenFromParent(
   // not supporting yet.
   Maybe<dom::ClientInfo> initialClientInfo;
 
-  RefPtr<DocumentLoadListener> listener =
-      new DocumentLoadListener(aBrowsingContext);
+  RefPtr<DocumentLoadListener> listener = new DocumentLoadListener(
+      aBrowsingContext, aBrowsingContext->GetContentParent()->OtherPid());
 
   nsresult rv;
-  auto promise = listener->Open(
-      loadState, cacheKey, channelId, TimeStamp::Now(), timing,
-      std::move(initialClientInfo), aOuterWindowId, false, Nothing(), Nothing(),
-      aBrowsingContext->GetContentParent()->OtherPid(), &rv);
-  if (promise) {
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
+  bool result =
+      listener->Open(loadState, cacheKey, channelId, TimeStamp::Now(), timing,
+                     std::move(initialClientInfo), aOuterWindowId, false,
+                     Nothing(), Nothing(), &rv);
+  if (result) {
     // Create an entry in the redirect channel registrar to
     // allocate an identifier for this load.
     nsCOMPtr<nsIRedirectChannelRegistrar> registrar =
@@ -618,7 +620,7 @@ bool DocumentLoadListener::OpenFromParent(
     rv = registrar->LinkChannels(*aOutIdent, listener, nullptr);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
   }
-  return !!promise;
+  return result;
 }
 
 void DocumentLoadListener::CleanupParentLoadAttempt(uint32_t aLoadIdent) {
@@ -632,15 +634,14 @@ void DocumentLoadListener::CleanupParentLoadAttempt(uint32_t aLoadIdent) {
   if (loadListener) {
     // If the load listener is still registered, then we must have failed
     // to connect DocumentChannel into it. Better cancel it!
-    loadListener->NotifyDocumentChannelFailed();
+    loadListener->NotifyBridgeFailed();
   }
 
   registrar->DeregisterChannels(aLoadIdent);
 }
 
-auto DocumentLoadListener::ClaimParentLoad(DocumentLoadListener** aListener,
-                                           uint32_t aLoadIdent)
-    -> RefPtr<OpenPromise> {
+already_AddRefed<DocumentLoadListener> DocumentLoadListener::ClaimParentLoad(
+    uint32_t aLoadIdent, ADocumentChannelBridge* aBridge) {
   nsCOMPtr<nsIRedirectChannelRegistrar> registrar =
       RedirectChannelRegistrar::GetOrCreate();
 
@@ -649,34 +650,46 @@ auto DocumentLoadListener::ClaimParentLoad(DocumentLoadListener** aListener,
   RefPtr<DocumentLoadListener> loadListener = do_QueryObject(parentChannel);
   registrar->DeregisterChannels(aLoadIdent);
 
-  MOZ_ASSERT(loadListener && loadListener->mOpenPromise);
-  loadListener.forget(aListener);
-
-  return (*aListener)->mOpenPromise;
+  MOZ_ASSERT(loadListener);
+  if (loadListener) {
+    loadListener->NotifyBridgeConnected(aBridge);
+  }
+  return loadListener.forget();
 }
 
-void DocumentLoadListener::NotifyDocumentChannelFailed() {
-  LOG(("DocumentLoadListener NotifyDocumentChannelFailed [this=%p]", this));
-  // There's been no calls to ClaimParentLoad, and so no listeners have been
-  // attached to mOpenPromise yet. As such we can run Then() on it.
-  mOpenPromise->Then(
-      GetMainThreadSerialEventTarget(), __func__,
-      [](DocumentLoadListener::OpenPromiseSucceededType&& aResolveValue) {
-        aResolveValue.mPromise->Resolve(NS_BINDING_ABORTED, __func__);
-      },
-      []() {});
+void DocumentLoadListener::NotifyBridgeConnected(
+    ADocumentChannelBridge* aBridge) {
+  LOG(("DocumentLoadListener NotifyBridgeConnected [this=%p]", this));
+  MOZ_ASSERT(!mDocumentChannelBridge);
+  MOZ_ASSERT(mPendingDocumentChannelBridgeProcess);
+  MOZ_ASSERT(aBridge->OtherPid() == *mPendingDocumentChannelBridgeProcess);
+
+  mDocumentChannelBridge = aBridge;
+  mPendingDocumentChannelBridgeProcess.reset();
+  mBridgePromise.ResolveIfExists(aBridge, __func__);
+}
+
+void DocumentLoadListener::NotifyBridgeFailed() {
+  LOG(("DocumentLoadListener NotifyBridgeFailed [this=%p]", this));
+  MOZ_ASSERT(!mDocumentChannelBridge);
+  MOZ_ASSERT(mPendingDocumentChannelBridgeProcess);
+  mPendingDocumentChannelBridgeProcess.reset();
 
   Cancel(NS_BINDING_ABORTED);
+
+  mBridgePromise.RejectIfExists(false, __func__);
 }
 
-void DocumentLoadListener::Disconnect() {
-  LOG(("DocumentLoadListener Disconnect [this=%p]", this));
+void DocumentLoadListener::DocumentChannelBridgeDisconnected() {
+  LOG(("DocumentLoadListener DocumentChannelBridgeDisconnected [this=%p]",
+       this));
   // The nsHttpChannel may have a reference to this parent, release it
   // to avoid circular references.
   RefPtr<nsHttpChannel> httpChannelImpl = do_QueryObject(mChannel);
   if (httpChannelImpl) {
     httpChannelImpl->SetWarningReporter(nullptr);
   }
+  mDocumentChannelBridge = nullptr;
 
   if (auto* ctx = GetBrowsingContext()) {
     ctx->EndDocumentLoad(this);
@@ -701,20 +714,32 @@ void DocumentLoadListener::Cancel(const nsresult& aStatusCode) {
     mChannel->Cancel(aStatusCode);
   }
 
-  DisconnectListeners(aStatusCode, aStatusCode);
+  DisconnectChildListeners(aStatusCode, aStatusCode);
 }
 
-void DocumentLoadListener::DisconnectListeners(nsresult aStatus,
-                                               nsresult aLoadGroupStatus) {
+void DocumentLoadListener::DisconnectChildListeners(nsresult aStatus,
+                                                    nsresult aLoadGroupStatus) {
   LOG(
-      ("DocumentLoadListener DisconnectListener [this=%p, "
+      ("DocumentLoadListener DisconnectChildListener [this=%p, "
        "aStatus=%" PRIx32 " aLoadGroupStatus=%" PRIx32 " ]",
        this, static_cast<uint32_t>(aStatus),
        static_cast<uint32_t>(aLoadGroupStatus)));
-
-  RejectOpenPromise(aStatus, aLoadGroupStatus, __func__);
-
-  Disconnect();
+  RefPtr<DocumentLoadListener> keepAlive(this);
+  if (mDocumentChannelBridge) {
+    // This will drop the bridge's reference to us, so we use keepAlive to
+    // make sure we don't get deleted until we exit the function.
+    mDocumentChannelBridge->DisconnectChildListeners(aStatus, aLoadGroupStatus);
+  } else if (mPendingDocumentChannelBridgeProcess) {
+    EnsureBridge()->Then(
+        GetCurrentThreadSerialEventTarget(), __func__,
+        [keepAlive, aStatus,
+         aLoadGroupStatus](ADocumentChannelBridge* aBridge) {
+          aBridge->DisconnectChildListeners(aStatus, aLoadGroupStatus);
+          keepAlive->mDocumentChannelBridge = nullptr;
+        },
+        [](bool aDummy) {});
+  }
+  DocumentChannelBridgeDisconnected();
 
   // If we're not going to send anything else to the content process, and
   // we haven't yet consumed a stream filter promise, then we're never going
@@ -729,7 +754,6 @@ void DocumentLoadListener::RedirectToRealChannelFinished(nsresult aRv) {
       ("DocumentLoadListener RedirectToRealChannelFinished [this=%p, "
        "aRv=%" PRIx32 " ]",
        this, static_cast<uint32_t>(aRv)));
-
   if (NS_FAILED(aRv) || !mRedirectChannelId) {
     FinishReplacementChannelSetup(aRv);
     return;
@@ -773,25 +797,20 @@ void DocumentLoadListener::FinishReplacementChannelSetup(nsresult aResult) {
        "aResult=%x]",
        this, int(aResult)));
 
-  bool disconnected = false;
   if (mDoingProcessSwitch) {
-    DisconnectListeners(NS_BINDING_ABORTED, NS_BINDING_ABORTED);
-    disconnected = true;
+    DisconnectChildListeners(NS_BINDING_ABORTED, NS_BINDING_ABORTED);
   }
 
   if (!mRedirectChannelId) {
     if (NS_FAILED(aResult)) {
       mChannel->Cancel(aResult);
       mChannel->Resume();
-      if (!disconnected) {
-        DisconnectListeners(aResult, aResult);
-      }
+      DisconnectChildListeners(aResult, aResult);
       return;
     }
     ApplyPendingFunctions(mChannel);
-
-    // The channel has already been resumed by the ParentProcessDocumentChannel
-    // so we can return early.
+    // ResumeSuspendedChannel will be called later as RedirectToRealChannel
+    // continues, so we can return early.
     return;
   }
 
@@ -836,6 +855,7 @@ void DocumentLoadListener::FinishReplacementChannelSetup(nsresult aResult) {
   MOZ_ASSERT(
       !SameCOMIdentity(redirectChannel, static_cast<nsIParentChannel*>(this)));
 
+  Delete();
   redirectChannel->SetParentListener(mParentChannelListener);
 
   ApplyPendingFunctions(redirectChannel);
@@ -1346,7 +1366,7 @@ bool DocumentLoadListener::MaybeTriggerProcessSwitch(
   LOG(("Process Switch: Calling nsIBrowser::PerformProcessSwitch"));
   // We're switching a toplevel BrowsingContext's process. This has to be done
   // using nsIBrowser.
-  RefPtr<dom::Promise> domPromise;
+  RefPtr<Promise> domPromise;
   browser->PerformProcessSwitch(remoteType, mCrossProcessRedirectIdentifier,
                                 isCOOPSwitch, getter_AddRefs(domPromise));
   MOZ_DIAGNOSTIC_ASSERT(domPromise,
@@ -1365,6 +1385,17 @@ bool DocumentLoadListener::MaybeTriggerProcessSwitch(
             self->RedirectToRealChannelFinished(aStatusCode);
           });
   return true;
+}
+
+auto DocumentLoadListener::EnsureBridge() -> RefPtr<EnsureBridgePromise> {
+  MOZ_ASSERT(mDocumentChannelBridge || mPendingDocumentChannelBridgeProcess);
+  if (mDocumentChannelBridge) {
+    MOZ_ASSERT(mBridgePromise.IsEmpty());
+    return EnsureBridgePromise::CreateAndResolve(mDocumentChannelBridge,
+                                                 __func__);
+  }
+
+  return mBridgePromise.Ensure(__func__);
 }
 
 RefPtr<PDocumentChannelParent::RedirectToRealChannelPromise>
@@ -1433,34 +1464,23 @@ DocumentLoadListener::RedirectToRealChannel(
                                         std::move(aStreamFilterEndpoints));
   }
 
-  if (mOpenPromiseResolved) {
-    LOG(
-        ("DocumentLoadListener RedirectToRealChannel [this=%p] "
-         "promise already resolved. Aborting.",
-         this));
-    // The promise has already been resolved or aborted, so we have no way to
-    // return a promise again to the listener which would cancel the operation.
-    // Reject the promise immediately.
-    return PDocumentChannelParent::RedirectToRealChannelPromise::
-        CreateAndResolve(NS_BINDING_ABORTED, __func__);
-  }
-
-  // This promise will be passed on the promise listener which will
-  // resolve this promise for us.
-  auto promise =
-      MakeRefPtr<PDocumentChannelParent::RedirectToRealChannelPromise::Private>(
-          __func__);
-  mOpenPromise->Resolve(
-      OpenPromiseSucceededType({std::move(aStreamFilterEndpoints),
-                                aRedirectFlags, aLoadFlags, promise}),
-      __func__);
-
-  // There is no way we could come back here if the promise had been resolved
-  // previously. But for clarity and to avoid all doubt, we set this boolean to
-  // true.
-  mOpenPromiseResolved = true;
-
-  return promise;
+  return EnsureBridge()->Then(
+      GetCurrentThreadSerialEventTarget(), __func__,
+      [self = RefPtr<DocumentLoadListener>(this),
+       endpoints = std::move(aStreamFilterEndpoints), aRedirectFlags,
+       aLoadFlags](ADocumentChannelBridge* aBridge) mutable {
+        if (self->mCancelled) {
+          return PDocumentChannelParent::RedirectToRealChannelPromise::
+              CreateAndResolve(NS_BINDING_ABORTED, __func__);
+        }
+        return aBridge->RedirectToRealChannel(std::move(endpoints),
+                                              aRedirectFlags, aLoadFlags);
+      },
+      [](bool aDummy) {
+        return PDocumentChannelParent::RedirectToRealChannelPromise::
+            CreateAndReject(ipc::ResponseRejectReason::ActorDestroyed,
+                            __func__);
+      });
 }
 
 void DocumentLoadListener::TriggerRedirectToRealChannel(
@@ -1560,7 +1580,6 @@ void DocumentLoadListener::TriggerRedirectToRealChannel(
 NS_IMETHODIMP
 DocumentLoadListener::OnStartRequest(nsIRequest* aRequest) {
   LOG(("DocumentLoadListener OnStartRequest [this=%p]", this));
-
   nsCOMPtr<nsIMultiPartChannel> multiPartChannel = do_QueryInterface(aRequest);
   if (multiPartChannel) {
     multiPartChannel->GetBaseChannel(getter_AddRefs(mChannel));
@@ -1568,8 +1587,11 @@ DocumentLoadListener::OnStartRequest(nsIRequest* aRequest) {
     mChannel = do_QueryInterface(aRequest);
   }
   MOZ_DIAGNOSTIC_ASSERT(mChannel);
-
   RefPtr<nsHttpChannel> httpChannel = do_QueryObject(mChannel);
+
+  if (!mDocumentChannelBridge && !mPendingDocumentChannelBridgeProcess) {
+    return NS_ERROR_UNEXPECTED;
+  }
 
   // Enforce CSP frame-ancestors and x-frame-options checks which
   // might cancel the channel.
@@ -1584,23 +1606,21 @@ DocumentLoadListener::OnStartRequest(nsIRequest* aRequest) {
   nsresult status = NS_OK;
   aRequest->GetStatus(&status);
   if (status == NS_ERROR_NO_CONTENT) {
-    DisconnectListeners(status, status);
+    DisconnectChildListeners(status, status);
     return NS_OK;
   }
 
   mStreamListenerFunctions.AppendElement(StreamListenerFunction{
       VariantIndex<0>{}, OnStartRequestParams{aRequest}});
 
-  if (mOpenPromiseResolved || mInitiatedRedirectToRealChannel) {
-    // I we have already resolved the promise, there's no point to continue
-    // attempting a process switch or redirecting to the real channel.
-    // We can also have multiple calls to OnStartRequest when dealing with
-    // multi-part content, but only want to redirect once.
+  if (!mInitiatedRedirectToRealChannel) {
+    mChannel->Suspend();
+  } else {
+    // This can be called multiple time if we have a multipart
+    // decoder. Since we've already added the reqest to
+    // mStreamListenerFunctions, we don't need to do anything else.
     return NS_OK;
   }
-
-  mChannel->Suspend();
-
   mInitiatedRedirectToRealChannel = true;
 
   // Determine if a new process needs to be spawned. If it does, this will
@@ -1691,12 +1711,19 @@ DocumentLoadListener::OnAfterLastPart(nsresult aStatus) {
     // channel, then it means we never got OnStartRequest (maybe a problem?)
     // and we retargeted everything.
     LOG(("DocumentLoadListener Disconnecting child"));
-    DisconnectListeners(NS_BINDING_RETARGETED, NS_OK);
+    DisconnectChildListeners(NS_BINDING_RETARGETED, NS_OK);
     return NS_OK;
   }
   mStreamListenerFunctions.AppendElement(StreamListenerFunction{
       VariantIndex<3>{}, OnAfterLastPartParams{aStatus}});
   mIsFinished = true;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+DocumentLoadListener::SetParentListener(
+    mozilla::net::ParentChannelListener* listener) {
+  // We don't need this (do we?)
   return NS_OK;
 }
 
@@ -1710,17 +1737,6 @@ DocumentLoadListener::GetInterface(const nsIID& aIID, void** result) {
   }
 
   return QueryInterface(aIID, result);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// nsIParentChannel
-////////////////////////////////////////////////////////////////////////////////
-
-NS_IMETHODIMP
-DocumentLoadListener::SetParentListener(
-    mozilla::net::ParentChannelListener* listener) {
-  // We don't need this (do we?)
-  return NS_OK;
 }
 
 // Rather than forwarding all these nsIParentChannel functions to the child,
@@ -1771,13 +1787,11 @@ DocumentLoadListener::NotifyClassificationFlags(uint32_t aClassificationFlags,
 
 NS_IMETHODIMP
 DocumentLoadListener::Delete() {
-  MOZ_ASSERT_UNREACHABLE("This method is unused");
+  if (mDocumentChannelBridge) {
+    mDocumentChannelBridge->Delete();
+  }
   return NS_OK;
 }
-
-////////////////////////////////////////////////////////////////////////////////
-// nsIChannelEventSink
-////////////////////////////////////////////////////////////////////////////////
 
 NS_IMETHODIMP
 DocumentLoadListener::AsyncOnChannelRedirect(

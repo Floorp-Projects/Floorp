@@ -125,6 +125,13 @@ IPCResult DocumentChannelChild::RecvDisconnectChildListeners(
   return IPC_OK();
 }
 
+IPCResult DocumentChannelChild::RecvDeleteSelf() {
+  // This calls NeckoChild::DeallocPGenericChannel(), which deletes |this| if
+  // IPDL holds the last reference.  Don't rely on |this| existing after here!
+  Send__delete__(this);
+  return IPC_OK();
+}
+
 IPCResult DocumentChannelChild::RecvRedirectToRealChannel(
     RedirectToRealChannelArgs&& aArgs,
     nsTArray<Endpoint<extensions::PStreamFilterParent>>&& aEndpoints,

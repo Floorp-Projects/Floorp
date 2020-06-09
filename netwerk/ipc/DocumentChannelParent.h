@@ -7,8 +7,8 @@
 #ifndef mozilla_net_DocumentChannelParent_h
 #define mozilla_net_DocumentChannelParent_h
 
-#include "mozilla/net/DocumentLoadListener.h"
 #include "mozilla/net/PDocumentChannelParent.h"
+#include "mozilla/net/DocumentLoadListener.h"
 
 namespace mozilla {
 namespace dom {
@@ -17,10 +17,12 @@ class CanonicalBrowsingContext;
 namespace net {
 
 /**
- * An actor that forwards all changes across to DocumentChannelChild, the
- * nsIChannel implementation owned by a content process docshell.
+ * An implementation of ADocumentChannelBridge that forwards all changes across
+ * to DocumentChannelChild, the nsIChannel implementation owned by a content
+ * process docshell.
  */
-class DocumentChannelParent final : public PDocumentChannelParent {
+class DocumentChannelParent final : public ADocumentChannelBridge,
+                                    public PDocumentChannelParent {
  public:
   NS_INLINE_DECL_REFCOUNTING(DocumentChannelParent, override);
 
@@ -31,27 +33,45 @@ class DocumentChannelParent final : public PDocumentChannelParent {
 
   // PDocumentChannelParent
   bool RecvCancel(const nsresult& aStatus) {
-    if (mDocumentLoadListener) {
-      mDocumentLoadListener->Cancel(aStatus);
+    if (mParent) {
+      mParent->Cancel(aStatus);
     }
     return true;
   }
   void ActorDestroy(ActorDestroyReason aWhy) override {
-    if (mDocumentLoadListener) {
-      mDocumentLoadListener->Cancel(NS_BINDING_ABORTED);
+    if (mParent) {
+      mParent->DocumentChannelBridgeDisconnected();
+      mParent = nullptr;
     }
   }
 
  private:
+  // DocumentChannelListener
+  void DisconnectChildListeners(nsresult aStatus,
+                                nsresult aLoadGroupStatus) override {
+    if (CanSend()) {
+      Unused << SendDisconnectChildListeners(aStatus, aLoadGroupStatus);
+    }
+    mParent = nullptr;
+  }
+
+  void Delete() override {
+    if (CanSend()) {
+      Unused << SendDeleteSelf();
+    }
+  }
+
+  ProcessId OtherPid() const override { return IProtocol::OtherPid(); }
+
   RefPtr<PDocumentChannelParent::RedirectToRealChannelPromise>
   RedirectToRealChannel(
       nsTArray<ipc::Endpoint<extensions::PStreamFilterParent>>&&
           aStreamFilterEndpoints,
-      uint32_t aRedirectFlags, uint32_t aLoadFlags);
+      uint32_t aRedirectFlags, uint32_t aLoadFlags) override;
 
   virtual ~DocumentChannelParent();
 
-  RefPtr<DocumentLoadListener> mDocumentLoadListener;
+  RefPtr<DocumentLoadListener> mParent;
 };
 
 }  // namespace net
