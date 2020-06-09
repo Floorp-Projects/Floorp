@@ -293,8 +293,6 @@ class ContentParent final
     return ContentParentIterator(aPolicy, first);
   }
 
-  static bool IgnoreIPCPrincipal();
-
   static void NotifyUpdatedDictionaries();
 
   static void NotifyUpdatedFonts();

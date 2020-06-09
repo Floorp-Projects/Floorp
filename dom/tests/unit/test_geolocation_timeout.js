@@ -53,7 +53,6 @@ function run_test() {
       "geo.provider.network.url",
       "http://localhost:" + httpserver.identity.primaryPort + "/geo"
     );
-    Services.prefs.setBoolPref("dom.testing.ignore_ipc_principal", true);
   }
 
   geolocation = Cc["@mozilla.org/geolocation;1"].getService(Ci.nsISupports);

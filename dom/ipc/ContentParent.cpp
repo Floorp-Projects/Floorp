@@ -4612,17 +4612,6 @@ bool ContentParent::DeallocPFileDescriptorSetParent(
   return true;
 }
 
-bool ContentParent::IgnoreIPCPrincipal() {
-  static bool sDidAddVarCache = false;
-  static bool sIgnoreIPCPrincipal = false;
-  if (!sDidAddVarCache) {
-    sDidAddVarCache = true;
-    Preferences::AddBoolVarCache(&sIgnoreIPCPrincipal,
-                                 "dom.testing.ignore_ipc_principal", false);
-  }
-  return sIgnoreIPCPrincipal;
-}
-
 void ContentParent::NotifyUpdatedDictionaries() {
   RefPtr<mozSpellChecker> spellChecker(mozSpellChecker::Create());
   MOZ_ASSERT(spellChecker, "No spell checker?");
