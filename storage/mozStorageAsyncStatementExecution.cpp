@@ -212,7 +212,25 @@ bool AsyncExecuteStatements::executeStatement(sqlite3_stmt* aStatement) {
   mMutex.AssertNotCurrentThreadOwns();
   Telemetry::AutoTimer<Telemetry::MOZ_STORAGE_ASYNC_REQUESTS_MS>
       finallySendExecutionDuration(mRequestStartDate);
+
+  bool busyRetry = false;
   while (true) {
+    if (busyRetry) {
+      busyRetry = false;
+
+      // Yield, and try again
+      Unused << PR_Sleep(PR_INTERVAL_NO_WAIT);
+
+      // Check for cancellation before retrying
+      {
+        MutexAutoLock lockedScope(mMutex);
+        if (mCancelRequested) {
+          mState = CANCELED;
+          return false;
+        }
+      }
+    }
+
     // lock the sqlite mutex so sqlite3_errmsg cannot change
     SQLiteMutexAutoLock lockedScope(mDBMutex);
 
@@ -233,13 +251,8 @@ bool AsyncExecuteStatements::executeStatement(sqlite3_stmt* aStatement) {
 
     // Some errors are not fatal, and we can handle them and continue.
     if (rc == SQLITE_BUSY) {
-      {
-        // Don't hold the lock while we call outside our module.
-        SQLiteMutexAutoUnlock unlockedScope(mDBMutex);
-        // Yield, and try again
-        (void)::PR_Sleep(PR_INTERVAL_NO_WAIT);
-      }
       ::sqlite3_reset(aStatement);
+      busyRetry = true;
       continue;
     }
 
