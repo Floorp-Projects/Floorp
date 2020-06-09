@@ -18,9 +18,9 @@ use serde::{Deserialize, Serialize};
 pub struct ValueLocRange {
     /// The ValueLoc containing a ValueLabel during this range.
     pub loc: ValueLoc,
-    /// The start of the range.
+    /// The start of the range. It is an offset in the generated code.
     pub start: u32,
-    /// The end of the range.
+    /// The end of the range. It is an offset in the generated code.
     pub end: u32,
 }
 
@@ -91,6 +91,11 @@ pub fn build_value_labels_ranges<T>(
 where
     T: From<SourceLoc> + Deref<Target = SourceLoc> + Ord + Copy,
 {
+    // FIXME(#1523): New-style backend does not yet have debug info.
+    if isa.get_mach_backend().is_some() {
+        return HashMap::new();
+    }
+
     let values_labels = build_value_labels_index::<T>(func);
 
     let mut blocks = func.layout.blocks().collect::<Vec<_>>();
