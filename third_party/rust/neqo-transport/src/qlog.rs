@@ -16,7 +16,7 @@ use crate::frame::{self, Frame};
 use crate::packet::{DecryptedPacket, PacketNumber, PacketType};
 use crate::path::Path;
 use crate::tparams::{self, TransportParametersHandler};
-use crate::{Res, QUIC_VERSION};
+use crate::{QuicVersion, Res};
 
 pub fn connection_tparams_set(
     qlog: &mut Option<NeqoQlog>,
@@ -31,15 +31,15 @@ pub fn connection_tparams_set(
             None,
             None,
             None,
-            if let Some(ocid) = remote.get_bytes(tparams::ORIGINAL_CONNECTION_ID) {
+            if let Some(ocid) = remote.get_bytes(tparams::ORIGINAL_DESTINATION_CONNECTION_ID) {
                 // Cannot use packet::ConnectionId's Display trait implementation
                 // because it does not include the 0x prefix.
-                Some(hex(&ocid))
+                Some(hex(ocid))
             } else {
                 None
             },
             if let Some(srt) = remote.get_bytes(tparams::STATELESS_RESET_TOKEN) {
-                Some(hex(&srt))
+                Some(hex(srt))
             } else {
                 None
             },
@@ -49,7 +49,7 @@ pub fn connection_tparams_set(
                 None
             },
             Some(remote.get_integer(tparams::IDLE_TIMEOUT)),
-            Some(remote.get_integer(tparams::MAX_PACKET_SIZE)),
+            Some(remote.get_integer(tparams::MAX_UDP_PAYLOAD_SIZE)),
             Some(remote.get_integer(tparams::ACK_DELAY_EXPONENT)),
             Some(remote.get_integer(tparams::MAX_ACK_DELAY)),
             // TODO(hawkinsw@obs.cr): We do not yet handle ACTIVE_CONNECTION_ID_LIMIT in tparams yet.
@@ -163,7 +163,7 @@ fn connection_started(qlog: &mut Option<NeqoQlog>, path: &Path) -> Res<()> {
             Some("QUIC".into()),
             path.local_address().port().into(),
             path.remote_address().port().into(),
-            Some(format!("{:x}", QUIC_VERSION)),
+            Some(format!("{:x}", QuicVersion::default().as_u32())),
             Some(format!("{}", path.local_cid())),
             Some(format!("{}", path.remote_cid())),
         ))?;

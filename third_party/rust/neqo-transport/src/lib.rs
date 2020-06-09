@@ -35,11 +35,8 @@ pub use self::connection::{Connection, FixedConnectionIdManager, Output, State, 
 pub use self::events::{ConnectionEvent, ConnectionEvents};
 pub use self::frame::CloseError;
 pub use self::frame::StreamType;
+pub use self::packet::QuicVersion;
 pub use self::stream_id::StreamId;
-
-/// The supported version of the QUIC protocol.
-pub type Version = u32;
-pub const QUIC_VERSION: Version = 0xff00_0000 + 27;
 
 const LOCAL_IDLE_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(30); // 30 second
 
@@ -89,12 +86,12 @@ pub enum Error {
     PacketNumberOverlap,
     PeerApplicationError(AppError),
     PeerError(TransportError),
+    StatelessReset,
     TooMuchData,
     UnexpectedMessage,
     UnknownFrameType,
     VersionNegotiation,
     WrongRole,
-    KeysDiscarded,
 }
 
 impl Error {

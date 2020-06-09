@@ -25,6 +25,7 @@ pub struct Path {
     remote: SocketAddr,
     local_cids: Vec<ConnectionId>,
     remote_cid: ConnectionId,
+    reset_token: Option<[u8; 16]>,
 }
 
 impl Path {
@@ -40,6 +41,7 @@ impl Path {
             remote,
             local_cids: vec![local_cid],
             remote_cid,
+            reset_token: None,
         }
     }
 
@@ -50,6 +52,7 @@ impl Path {
             remote: d.source(),
             local_cids: Vec::new(),
             remote_cid,
+            reset_token: None,
         }
     }
 
@@ -80,7 +83,7 @@ impl Path {
         self.local_cids.first().as_ref().unwrap()
     }
 
-    /// Set the remote connection ID based on the peer's valid.
+    /// Set the remote connection ID based on the peer's choice.
     pub fn set_remote_cid(&mut self, cid: &ConnectionIdRef) {
         self.remote_cid = ConnectionId::from(cid);
     }
@@ -88,6 +91,16 @@ impl Path {
     /// Access the remote connection ID.
     pub fn remote_cid(&self) -> &ConnectionId {
         &self.remote_cid
+    }
+
+    /// Set the stateless reset token for the connection ID that is currently in use.
+    pub fn set_reset_token(&mut self, token: [u8; 16]) {
+        self.reset_token = Some(token);
+    }
+
+    /// Access the reset token.
+    pub fn reset_token(&self) -> Option<&[u8; 16]> {
+        self.reset_token.as_ref()
     }
 
     /// Make a datagram.
