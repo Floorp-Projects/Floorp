@@ -443,10 +443,6 @@ nsresult nsIOService::LaunchSocketProcess() {
     return NS_OK;
   }
 
-  if (mShutdown) {
-    return NS_OK;
-  }
-
   if (mSocketProcess) {
     return NS_OK;
   }
@@ -479,7 +475,6 @@ nsresult nsIOService::LaunchSocketProcess() {
 }
 
 void nsIOService::DestroySocketProcess() {
-  LOG(("nsIOService::DestroySocketProcess"));
   MOZ_ASSERT(NS_IsMainThread());
 
   if (XRE_GetProcessType() != GeckoProcessType_Default || !mSocketProcess) {
