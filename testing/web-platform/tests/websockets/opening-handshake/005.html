@@ -1,5 +1,5 @@
 <!doctype html>
-<title>WebSockets: response header and close frame in same packet</title>
+<title>WebSockets: proper first line</title>
 <script src=/resources/testharness.js></script>
 <script src=/resources/testharnessreport.js></script>
 <script src=../constants.js?pipe=sub></script>
@@ -13,13 +13,10 @@ async_test(function(t) {
   ws.onopen = t.step_func(function(e) {
     ws.onclose = t.step_func(function(e) {
       assert_equals(e.wasClean, true);
-      assert_equals(e.code, 1001);
-      assert_equals(e.reason, 'PASS');
-      ws.onclose = t.unreached_func('onclose should not be called twice');
+      ws.onclose = t.unreached_func();
       t.step_timeout(() => t.done(), 50);
     })
     ws.close();
   })
-  ws.onclose = t.unreached_func('onclose should not be called before onopen');
 });
 </script>
