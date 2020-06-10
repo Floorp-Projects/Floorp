@@ -171,12 +171,6 @@ ChromeUtils.defineModuleGetter(
 
 XPCOMUtils.defineLazyServiceGetter(
   this,
-  "cryptoSDR",
-  "@mozilla.org/login-manager/crypto/SDR;1",
-  Ci.nsILoginManagerCrypto
-);
-XPCOMUtils.defineLazyServiceGetter(
-  this,
   "gUUIDGenerator",
   "@mozilla.org/uuid-generator;1",
   "nsIUUIDGenerator"
@@ -192,7 +186,7 @@ const PROFILE_JSON_FILE_NAME = "autofill-profiles.json";
 
 const STORAGE_SCHEMA_VERSION = 1;
 const ADDRESS_SCHEMA_VERSION = 1;
-const CREDIT_CARD_SCHEMA_VERSION = 2;
+const CREDIT_CARD_SCHEMA_VERSION = 3;
 
 const VALID_ADDRESS_FIELDS = [
   "given-name",
@@ -1827,43 +1821,34 @@ class CreditCards extends AutofillRecords {
   async _computeMigratedRecord(creditCard) {
     if (creditCard["cc-number-encrypted"]) {
       switch (creditCard.version) {
-        case 1: {
-          if (!cryptoSDR.isLoggedIn) {
-            // We cannot decrypt the data, so silently remove the record for
-            // the user.
-            if (creditCard.deleted) {
-              break;
-            }
-
-            this.log.warn(
-              "Removing version 1 credit card record to migrate to new encryption:",
-              creditCard.guid
-            );
-
-            // Replace the record with a tombstone record here,
-            // regardless of existence of sync metadata.
-            let existingSync = this._getSyncMetaData(creditCard);
-            creditCard = {
-              guid: creditCard.guid,
-              timeLastModified: Date.now(),
-              deleted: true,
-            };
-
-            if (existingSync) {
-              creditCard._sync = existingSync;
-              existingSync.changeCounter++;
-            }
+        case 1:
+        case 2: {
+          // We cannot decrypt the data, so silently remove the record for
+          // the user.
+          if (creditCard.deleted) {
             break;
           }
 
-          creditCard = this._clone(creditCard);
-
-          // Decrypt the cc-number using version 1 encryption.
-          let ccNumber = cryptoSDR.decrypt(creditCard["cc-number-encrypted"]);
-          // Re-encrypt the cc-number with version 2 encryption.
-          creditCard["cc-number-encrypted"] = await OSKeyStore.encrypt(
-            ccNumber
+          this.log.warn(
+            "Removing version",
+            creditCard.version,
+            "credit card record to migrate to new encryption:",
+            creditCard.guid
           );
+
+          // Replace the record with a tombstone record here,
+          // regardless of existence of sync metadata.
+          let existingSync = this._getSyncMetaData(creditCard);
+          creditCard = {
+            guid: creditCard.guid,
+            timeLastModified: Date.now(),
+            deleted: true,
+          };
+
+          if (existingSync) {
+            creditCard._sync = existingSync;
+            existingSync.changeCounter++;
+          }
           break;
         }
 
@@ -1966,14 +1951,22 @@ class CreditCards extends AutofillRecords {
     if (record.version < this.version) {
       switch (record.version) {
         case 1:
+        case 2:
           // The difference between version 1 and 2 is only about the encryption
           // method used for the cc-number-encrypted field.
+          // The difference between version 2 and 3 is the name of the OS
+          // key encryption record.
           // As long as the record is already decrypted, it is safe to bump the
           // version directly.
           if (!record["cc-number-encrypted"]) {
             record.version = this.version;
           } else {
-            throw new Error("Unexpected record migration path.");
+            throw new Error(
+              "Could not migrate record version:",
+              record.version,
+              "->",
+              this.version
+            );
           }
           break;
         default:
