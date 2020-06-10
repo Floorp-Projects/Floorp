@@ -50,12 +50,6 @@ def docker_worker_spidermonkey(config, job, taskdesc):
 
     worker = taskdesc['worker'] = job['worker']
     worker['artifacts'] = []
-    worker.setdefault('caches', []).append({
-        'type': 'persistent',
-        'name': '{}-build-spidermonkey-workspace'.format(config.params['project']),
-        'mount-point': "{workdir}/workspace".format(**run),
-        'skip-untrusted': True,
-    })
 
     docker_worker_add_artifacts(config, job, taskdesc)
 
@@ -65,7 +59,6 @@ def docker_worker_spidermonkey(config, job, taskdesc):
         'SPIDERMONKEY_VARIANT': run.pop('spidermonkey-variant'),
         'MOZ_BUILD_DATE': config.params['moz_build_date'],
         'MOZ_SCM_LEVEL': config.params['level'],
-        'GECKO_PATH': '{}/workspace/build/src'.format(run['workdir'])
     })
     if 'spidermonkey-platform' in run:
         env['SPIDERMONKEY_PLATFORM'] = run.pop('spidermonkey-platform')
@@ -81,7 +74,7 @@ def docker_worker_spidermonkey(config, job, taskdesc):
     run['using'] = 'run-task'
     run['cwd'] = run['workdir']
     run['command'] = [
-        'workspace/build/src/taskcluster/scripts/builder/{script}'.format(
+        './checkouts/gecko/taskcluster/scripts/builder/{script}'.format(
             script=script)
     ]
 
