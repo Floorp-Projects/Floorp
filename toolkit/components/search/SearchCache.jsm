@@ -199,22 +199,10 @@ class SearchCache {
 
     if (gModernConfig) {
       cache.builtInEngineList = this._searchOrder;
-      // For built-in engines we don't want to store all their data in the cache
-      // so just store the relevant metadata.
-      cache.engines = [...this._searchService._engines.values()].map(engine => {
-        if (!engine._isBuiltin) {
-          return engine;
-        }
-        return {
-          _name: engine.name,
-          _isBuiltin: true,
-          _metaData: engine._metaData,
-        };
-      });
     } else {
       cache.visibleDefaultEngines = this._searchService._visibleDefaultEngines;
-      cache.engines = [...this._searchService._engines.values()];
     }
+    cache.engines = [...this._searchService._engines.values()];
     cache.metaData = this._metaData;
 
     try {
