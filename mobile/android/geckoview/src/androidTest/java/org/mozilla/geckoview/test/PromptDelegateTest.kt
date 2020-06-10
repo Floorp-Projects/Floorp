@@ -102,16 +102,20 @@ class PromptDelegateTest : BaseSessionTest() {
         })
     }
 
-    @Test fun authTest() {
-        sessionRule.session.loadTestPath("/basic-auth/foo/bar")
-
-        sessionRule.waitUntilCalled(object : Callbacks.PromptDelegate {
-            @AssertCalled(count = 1)
+    @Test fun dismissAuthTest() {
+        sessionRule.delegateUntilTestEnd(object : Callbacks.PromptDelegate {
+            @AssertCalled(count = 2)
             override fun onAuthPrompt(session: GeckoSession, prompt: PromptDelegate.AuthPrompt): GeckoResult<PromptDelegate.PromptResponse>? {
                 //TODO: Figure out some better testing here.
                 return null
             }
         })
+
+        mainSession.loadTestPath("/basic-auth/foo/bar")
+        mainSession.waitForPageStop()
+
+        mainSession.reload()
+        mainSession.waitForPageStop()
     }
 
     @Test fun buttonTest() {
