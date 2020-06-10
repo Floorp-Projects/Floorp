@@ -990,26 +990,6 @@ inline std::string ToString(const nsACString& text) {
 }
 
 // -
-// ClientWebGLContext exports!
-// (So that you don't need to include the mess that is ClientWebGLContext.h)
-namespace gfx {
-class SourceSurface;
-}  // namespace gfx
-
-namespace layers {
-class KnowsCompositor;
-class SurfaceDescriptor;
-}  // namespace layers
-
-namespace webgl {
-
-void Present(ClientWebGLContext&);
-Maybe<layers::SurfaceDescriptor> GetFrontBuffer(ClientWebGLContext&,
-                                                layers::KnowsCompositor*);
-
-}  // namespace webgl
-
-// -
 
 }  // namespace mozilla
 
