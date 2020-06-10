@@ -13,6 +13,8 @@ mod schema;
 pub mod store;
 mod sync;
 
+pub use migration::MigrationInfo;
+
 // We publish some constants from non-public modules.
 pub use sync::STORAGE_VERSION;
 

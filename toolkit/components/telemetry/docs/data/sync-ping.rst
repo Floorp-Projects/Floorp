@@ -117,6 +117,14 @@ Structure:
                 failureReason: { ... },
               }
             }
+          ],
+          // Information about any storage migrations that have occurred. Omitted if it would be empty.
+          migrations: [
+            // See the section on the `migrations` array for detailed documentation on what may appear here.
+            {
+              type: <string identifier>,
+              // per-type data
+            }
           ]
         }],
         // The "node type" as reported by the token server. This will not change
@@ -211,7 +219,6 @@ syncs.devices
 
 The list of remote devices associated with this account, as reported by the clients collection. The ID of each device is hashed using the same algorithm as the local id.
 
-
 Events in the "sync" ping
 -------------------------
 
@@ -282,3 +289,54 @@ client. This is logically the "other end" of ``sendcommand``.
             for this GUID will be the same as the flowID sent to the client via
             ``sendcommand``.
   - serverTime: (optional) Most recent server timestamp, as described above.
+
+The ``migrations`` Array
+------------------------
+
+The application-services developers are in the process of oxidizing parts of firefox sync and the related data storage code, which typically requires migrating the old storage into a new database and/or format.
+
+When a migration like this occurs, a record is reported in this list the next time the sync ping is submitted.
+
+Because the format of each data store may be drastically different, we are not attempting to come up with a generic representation here, and currently planning on allowing each migration record to vary independently (at least for now). These records will be distinctly identified by their ``"type"`` field.
+
+They should only appear once per migration (that is, we'd rather fail to report a record than report them multiple times).
+
+migrations.type: ``"webext-storage"``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This indicates a migration was performed from the legacy kinto-based extension-storage database into the new webext-storage rust implementation.
+
+It contains the following fields:
+
+- ``type``: Always the string ``"webext-storage"``.
+
+- ``entries``: The number of entries/preferences in the source (legacy) database, including ones we failed to read. See below for information on the distinction between ``entries`` and ``extensions`` in this record.
+
+- ``entriesSuccessful``: The number of entries/preferences (see below) which we have successfully migrated into the destination database..
+
+- ``extensions``: The number of distinct extensions which have at least one preference in the source (legacy) database.
+
+- ``extensionsSuccessful``: The number of distinct extensions which have at least one preference in the destination (migrated) database.
+
+- ``openFailure``: A boolean flag that is true if we hit a read error prior to . This likely indicates complete corruption, or a bug in an underlying library like rusqlite.
+
+
+Note: "entries" vs "extensions"
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The ``webext-storage`` migration record detailed above contains counts for both:
+
+- The number of "entries" detected vs successfully migrated.
+- The number of "extensions" detected vs successfully migrated.
+
+This may seem redundant, but these refer to different (but related) things. The distinction here has to do with the way the two databases store extension-storage data:
+
+* The legacy database stores one row for each (``extension_id``, ``preference_name``, ``preference_value``) triple. These are referred to as ``entries``.
+
+* Conversely, the new database stores one row per extension, which is a pair containing both the ``extension_id``, as well as a dictionary holding all preference data, and so are equivalent to extensions.
+
+(The description above is a somewhat simplified view of things, as it ignores a number values each database stores which is irrelevant for migration)
+
+That is, ``entries`` represent each individual preference setting, and ``extensions`` represent the collected set of preferences for a given extension.
+
+Counts for are *both* of these are present as it's likely that the disparity would point to different kinds of issues with the migration code.

@@ -433,7 +433,8 @@ async function sync_and_validate_telem(
 async function sync_engine_and_validate_telem(
   engine,
   allowErrorPings,
-  onError
+  onError,
+  wantFullPing = false
 ) {
   let telem = get_sync_test_telemetry();
   let caughtError = null;
@@ -500,6 +501,8 @@ async function sync_engine_and_validate_telem(
           onError(ping.syncs[0], ping);
         }
         reject(caughtError);
+      } else if (wantFullPing) {
+        resolve(ping);
       } else {
         resolve(ping.syncs[0]);
       }
