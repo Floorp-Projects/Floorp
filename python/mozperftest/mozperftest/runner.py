@@ -94,53 +94,44 @@ def run_tests(mach_cmd, **kwargs):
         try_options = json.loads(os.environ["PERFTEST_OPTIONS"])
         kwargs.update(try_options)
 
-    from mozperftest.utils import build_test_list
+    from mozperftest.utils import build_test_list, install_package
     from mozperftest import MachEnvironment, Metadata
-    from mozperftest.hooks import Hooks
 
-    hooks = Hooks(mach_cmd, kwargs.pop("hooks", None))
+    flavor = kwargs["flavor"]
+    kwargs["tests"], tmp_dir = build_test_list(
+        kwargs["tests"], randomized=flavor != "doc"
+    )
     verbose = kwargs.get("verbose", False)
     log_level = logging.DEBUG if verbose else logging.INFO
-
-    # If we run through mach, we just  want to set the level
-    # of the existing termminal handler.
-    # Otherwise, we're adding it.
-    if mach_cmd.log_manager.terminal_handler is not None:
-        mach_cmd.log_manager.terminal_handler.level = log_level
-    else:
-        mach_cmd.log_manager.add_terminal_logging(level=log_level)
+    mach_cmd.log_manager.add_terminal_logging(level=log_level)
 
     try:
-        hooks.run("before_iterations", kwargs)
-
-        for iteration in range(kwargs.get("test_iterations", 1)):
-            flavor = kwargs["flavor"]
-            kwargs["tests"], tmp_dir = build_test_list(
-                kwargs["tests"], randomized=flavor != "doc"
+        if flavor == "doc":
+            location = os.path.join(
+                mach_cmd.topsrcdir, "third_party", "python", "esprima"
             )
+            install_package(mach_cmd.virtualenv_manager, location)
+
+            from mozperftest.scriptinfo import ScriptInfo
+
+            for test in kwargs["tests"]:
+                print(ScriptInfo(test))
+            return
+
+        env = MachEnvironment(mach_cmd, **kwargs)
+        try:
+            metadata = Metadata(mach_cmd, env, flavor)
+            env.run_hook("before_runs")
             try:
-                # XXX this doc is specific to browsertime scripts
-                # maybe we want to move it
-                if flavor == "doc":
-                    from mozperftest.test.browsertime.script import ScriptInfo
-
-                    for test in kwargs["tests"]:
-                        print(ScriptInfo(test))
-                    return
-
-                env = MachEnvironment(mach_cmd, hooks=hooks, **kwargs)
-                metadata = Metadata(mach_cmd, env, flavor)
-                hooks.run("before_runs", env)
-                try:
-                    with env.frozen() as e:
-                        e.run(metadata)
-                finally:
-                    hooks.run("after_runs", env)
+                with env.frozen() as e:
+                    e.run(metadata)
             finally:
-                if tmp_dir is not None:
-                    shutil.rmtree(tmp_dir)
+                env.run_hook("after_runs")
+        finally:
+            env.cleanup()
     finally:
-        hooks.cleanup()
+        if tmp_dir is not None:
+            shutil.rmtree(tmp_dir)
 
 
 def main(argv=sys.argv[1:]):

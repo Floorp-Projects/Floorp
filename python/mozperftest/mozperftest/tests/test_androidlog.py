@@ -19,9 +19,6 @@ class FakeDevice:
     def __init__(self, **args):
         self.apps = []
 
-    def uninstall_app(self, apk_name):
-        return True
-
     def install_app(self, apk, replace=True):
         if apk not in self.apps:
             self.apps.append(apk)

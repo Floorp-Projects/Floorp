@@ -17,8 +17,8 @@ class Metadata(MachLogger):
 
     def run_hook(self, name, **kw):
         # this bypasses layer restrictions on args,
-        # which is fine since it's a user script
-        return self._env.hooks.run(name, **kw)
+        # which is fine since it's user script
+        return self._env.run_hook(name, **kw)
 
     def set_output(self, output):
         self._output = output

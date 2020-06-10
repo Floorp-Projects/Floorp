@@ -3,20 +3,23 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import copy
 import contextlib
+import importlib
+from pathlib import Path
+import tempfile
+import shutil
 
 from mozperftest.test import pick_test
 from mozperftest.system import pick_system
 from mozperftest.metrics import pick_metrics
 from mozperftest.layers import Layers, StopRunError
-from mozperftest.utils import MachLogger
-from mozperftest.hooks import Hooks
+from mozperftest.utils import download_file, MachLogger
 
 
 SYSTEM, TEST, METRICS = 0, 1, 2
 
 
 class MachEnvironment(MachLogger):
-    def __init__(self, mach_cmd, flavor="desktop-browser", hooks=None, **kwargs):
+    def __init__(self, mach_cmd, flavor="desktop-browser", **kwargs):
         MachLogger.__init__(self, mach_cmd)
         self._mach_cmd = mach_cmd
         self._mach_args = dict(
@@ -27,10 +30,8 @@ class MachEnvironment(MachLogger):
             raise NotImplementedError(flavor)
         for layer in (pick_system, pick_test, pick_metrics):
             self.add_layer(layer(self, flavor, mach_cmd))
-        if hooks is None:
-            # we just load an empty Hooks instance
-            hooks = Hooks(mach_cmd)
-        self.hooks = hooks
+        self.tmp_dir = tempfile.mkdtemp()
+        self._load_hooks()
 
     @contextlib.contextmanager
     def frozen(self):
@@ -104,3 +105,47 @@ class MachEnvironment(MachLogger):
 
     def __exit__(self, type, value, traceback):
         return
+
+    def cleanup(self):
+        if self.tmp_dir is None:
+            return
+        shutil.rmtree(self.tmp_dir)
+        self.tmp_dir = None
+
+    def _load_hooks(self):
+        self._hooks = None
+        hooks = self.get_arg("hooks")
+        if hooks is None:
+            return
+
+        if hooks.startswith("http"):
+            target = Path(self.tmp_dir, hooks.split("/")[-1])
+            hooks = download_file(hooks, target)
+        else:
+            hooks = Path(hooks)
+
+        if hooks.exists():
+            spec = importlib.util.spec_from_file_location("hooks", str(hooks))
+            hooks = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(hooks)
+            self._hooks = hooks
+        else:
+            raise IOError(str(hooks))
+
+    def has_hook(self, name):
+        if self._hooks is None:
+            return False
+        return hasattr(self._hooks, name)
+
+    def get_hook(self, name):
+        if self._hooks is None:
+            return False
+        return getattr(self._hooks, name)
+
+    def run_hook(self, name, *args, **kw):
+        if self._hooks is None:
+            return
+        if not hasattr(self._hooks, name):
+            return
+        self.debug("Running hook %s" % name)
+        return getattr(self._hooks, name)(self, *args, **kw)

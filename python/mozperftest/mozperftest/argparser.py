@@ -38,11 +38,6 @@ class Options:
             "help": "Test to run. Can be a single test file or URL or a directory"
             " of tests (to run recursively). If omitted, the entire suite is run.",
         },
-        "--test-iterations": {
-            "type": int,
-            "default": 1,
-            "help": "Number of times the whole test is executed",
-        },
         "--output": {
             "type": str,
             "default": "artifacts",
