@@ -7,13 +7,18 @@
 with Files('**'):
     BUG_COMPONENT = ('Firefox', 'Messaging System')
 
-BROWSER_CHROME_MANIFESTS += ['test/browser/specialMessageActions/browser.ini']
+BROWSER_CHROME_MANIFESTS += [
+    'schemas/SpecialMessageActionSchemas/test/browser/browser.ini',
+    'schemas/TriggerActionSchemas/test/browser/browser.ini',
+]
+
+SPHINX_TREES['docs'] = 'schemas'
 
 XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']
 
 TESTING_JS_MODULES += [
-    'schemas/SpecialMessageActionSchemas.js',
-    'schemas/TriggerActionSchemas.js',
+    'schemas/SpecialMessageActionSchemas/SpecialMessageActionSchemas.js',
+    'schemas/TriggerActionSchemas/TriggerActionSchemas.js',
     'test/MSTestUtils.jsm',
 ]
 

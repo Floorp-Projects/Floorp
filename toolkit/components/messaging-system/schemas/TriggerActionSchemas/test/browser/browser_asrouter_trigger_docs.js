@@ -1,5 +1,5 @@
 const TEST_URL =
-  "https://example.com/browser/browser/components/newtab/test/browser/trigger-listeners.md";
+  "https://example.com/browser/toolkit/components/messaging-system/schemas/TriggerActionSchemas/test/browser/TriggerActionSchemas.md";
 
 const { TriggerActionSchemas } = ChromeUtils.import(
   "resource://testing-common/TriggerActionSchemas.js"
