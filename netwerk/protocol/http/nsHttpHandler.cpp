@@ -2770,6 +2770,11 @@ HttpTrafficAnalyzer* nsHttpHandler::GetHttpTrafficAnalyzer() {
 }
 
 bool nsHttpHandler::IsHttp3VersionSupported(const nsACString& version) {
+
+  if (!StaticPrefs::network_http_http3_support_draft28() &&
+      version.EqualsLiteral("h3-28")) {
+    return false;
+  }
   for (uint32_t i = 0; i < kHttp3VersionCount; i++) {
     if (version.Equals(kHttp3Versions[i])) {
       return true;
