@@ -165,8 +165,9 @@ ContentBlocking::AllowAccessFor(
   if (MOZ_LOG_TEST(gAntiTrackingLog, mozilla::LogLevel::Debug)) {
     nsAutoCString origin;
     aPrincipal->GetAsciiOrigin(origin);
-    LOG(("Adding a first-party storage exception for %s...",
-         PromiseFlatCString(origin).get()));
+    LOG(("Adding a first-party storage exception for %s, triggered by %s",
+         PromiseFlatCString(origin).get(),
+         AntiTrackingUtils::GrantedReasonToString(aReason).get()));
   }
 
   RefPtr<dom::WindowContext> parentWindowContext =
@@ -433,6 +434,8 @@ ContentBlocking::CompleteAllowAccessFor(
     trackingPrincipal = aTrackingPrincipal;
     trackingOrigin = aTrackingOrigin;
   }
+
+  LOG(("Tracking origin is %s", PromiseFlatCString(trackingOrigin).get()));
 
   // We hardcode this block reason since the first-party storage access
   // permission is granted for the purpose of blocking trackers.
