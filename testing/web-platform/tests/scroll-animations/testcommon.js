@@ -47,3 +47,11 @@ function createScrollLinkedAnimation(test, timeline) {
     new KeyframeEffect(createDiv(test), KEYFRAMES, DURATION), timeline);
 }
 
+function assert_approx_equals_or_null(actual, expected, tolerance, name){
+  if (actual === null || expected === null){
+    assert_equals(actual, expected, name);
+  }
+  else {
+    assert_approx_equals(actual, expected, tolerance, name);
+  }
+}
