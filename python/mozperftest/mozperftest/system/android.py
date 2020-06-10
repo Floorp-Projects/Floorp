@@ -24,6 +24,9 @@ _PERMALINKS = {
     "fenix_fennec_nightly_arm64_v8a": _ROOT_URL
     + _FENIX_FENNEC_BUILDS
     + "arm64-v8a/geckoNightly/target.apk",
+    # The two following aliases are used for Fenix multi-commit testing in CI
+    "fenix_nightlysim_multicommit_arm64_v8a": None,
+    "fenix_nightlysim_multicommit_armeabi_v7a": None,
     "gve_nightly_aarch64": _ROOT_URL
     + _GV_BUILDS
     + "aarch64-opt/artifacts/public/build/geckoview_example.apk",
@@ -158,8 +161,10 @@ class AndroidDevice(Layer):
         if self.clear_logcat:
             self.device.clear_logcat()
 
-        # install APKs
+        # Install APKs
         for apk in self.get_arg("android-install-apk"):
+            self.info("Uninstalling old version")
+            self.device.uninstall_app(self.get_arg("android-app-name"))
             self.info("Installing %s" % apk)
             if apk in _PERMALINKS:
                 apk = _PERMALINKS[apk]
@@ -169,7 +174,7 @@ class AndroidDevice(Layer):
                     self.info("Downloading %s" % apk)
                     download_file(apk, target)
                     self.info("Installing downloaded APK")
-                    self.device.install_app(str(target), replace=True)
+                    self.device.install_app(str(target))
             else:
                 self.device.install_app(apk, replace=True)
             self.info("Done.")
