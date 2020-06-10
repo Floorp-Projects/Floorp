@@ -10,17 +10,21 @@
 #include "mozilla/InitializedOnce.h"
 #include "nsCOMPtr.h"
 #include "nsIInputStream.h"
+#include "nsISeekableStream.h"
 
 #include "EncryptedBlock.h"
 
 namespace mozilla::dom::quota {
 
-class DecryptingInputStreamBase : public nsIInputStream {
+class DecryptingInputStreamBase : public nsIInputStream,
+                                  public nsISeekableStream {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
   NS_IMETHOD Read(char* aBuf, uint32_t aCount, uint32_t* _retval) final;
   NS_IMETHOD IsNonBlocking(bool* _retval) final;
+
+  NS_IMETHOD SetEOF() final;
 
  protected:
   DecryptingInputStreamBase(MovingNotNull<nsCOMPtr<nsIInputStream>> aBaseStream,
@@ -35,6 +39,7 @@ class DecryptingInputStreamBase : public nsIInputStream {
   size_t EncryptedBufferLength() const;
 
   InitializedOnce<const NotNull<nsCOMPtr<nsIInputStream>>> mBaseStream;
+  LazyInitializedOnce<const NotNull<nsISeekableStream*>> mBaseSeekableStream;
 
   // Number of bytes of plain data in mBuffer.
   size_t mPlainBytes = 0;
@@ -43,6 +48,8 @@ class DecryptingInputStreamBase : public nsIInputStream {
   size_t mNextByte = 0;
 
   const size_t mBlockSize;
+
+  size_t mLastBlockLength = 0;
 };
 
 // Wraps another nsIInputStream which contains data written using
@@ -62,6 +69,10 @@ class DecryptingInputStream final : public DecryptingInputStreamBase {
   NS_IMETHOD Available(uint64_t* _retval) override;
   NS_IMETHOD ReadSegments(nsWriteSegmentFun aWriter, void* aClosure,
                           uint32_t aCount, uint32_t* _retval) override;
+
+  NS_DECL_NSITELLABLESTREAM
+
+  NS_IMETHOD Seek(int32_t aWhence, int64_t aOffset) override;
 
  private:
   ~DecryptingInputStream();

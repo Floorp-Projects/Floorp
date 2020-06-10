@@ -126,6 +126,7 @@ NS_IMETHODIMP DecryptingInputStream<CipherStrategy>::ReadSegments(
 
       if (mNextByte == mPlainBytes) {
         mNextByte = 0;
+        mLastBlockLength = mPlainBytes;
         mPlainBytes = 0;
       }
 
@@ -243,6 +244,167 @@ bool DecryptingInputStream<CipherStrategy>::EnsureBuffers() {
   }
 
   return true;
+}
+
+template <typename CipherStrategy>
+NS_IMETHODIMP DecryptingInputStream<CipherStrategy>::Tell(
+    int64_t* const aRetval) {
+  MOZ_ASSERT(aRetval);
+
+  if (!mBaseStream) {
+    return NS_BASE_STREAM_CLOSED;
+  }
+
+  int64_t basePosition;
+  nsresult rv = (*mBaseSeekableStream)->Tell(&basePosition);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  const auto fullBlocks = basePosition / mBlockSize;
+  MOZ_ASSERT(0 == basePosition % mBlockSize);
+
+  *aRetval = (fullBlocks - ((mPlainBytes || mLastBlockLength) ? 1 : 0)) *
+                 mEncryptedBlock->MaxPayloadLength() +
+             mNextByte + (mNextByte ? 0 : mLastBlockLength);
+  return NS_OK;
+}
+
+template <typename CipherStrategy>
+NS_IMETHODIMP DecryptingInputStream<CipherStrategy>::Seek(const int32_t aWhence,
+                                                          int64_t aOffset) {
+  if (!mBaseStream) {
+    return NS_BASE_STREAM_CLOSED;
+  }
+
+  if (!EnsureBuffers()) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  int64_t baseBlocksOffset;
+  int64_t nextByteOffset;
+  switch (aWhence) {
+    case NS_SEEK_CUR:
+      // XXX Simplify this without using Tell.
+      {
+        int64_t current;
+        nsresult rv = Tell(&current);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
+
+        aOffset += current;
+      }
+      break;
+    case NS_SEEK_SET:
+      break;
+
+    case NS_SEEK_END:
+      // XXX Simplify this without using Seek/Tell.
+      {
+        // XXX The size of the stream could also be queried and stored once
+        // only.
+        nsresult rv = (*mBaseSeekableStream)->Seek(NS_SEEK_SET, 0);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
+
+        uint64_t baseStreamSize;
+        rv = (*mBaseStream)->Available(&baseStreamSize);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
+
+        auto decryptedStreamSizeOrErr = [baseStreamSize,
+                                         this]() -> Result<int64_t, nsresult> {
+          if (!baseStreamSize) {
+            return 0;
+          }
+
+          nsresult rv =
+              (*mBaseSeekableStream)
+                  ->Seek(NS_SEEK_END, -static_cast<int64_t>(mBlockSize));
+          if (NS_WARN_IF(NS_FAILED(rv))) {
+            return Err(rv);
+          }
+
+          uint32_t bytesRead;
+          rv = ParseNextChunk(&bytesRead);
+          if (NS_WARN_IF(NS_FAILED(rv))) {
+            return Err(rv);
+          }
+          MOZ_ASSERT(bytesRead);
+
+          // XXX Shouldn't ParseNextChunk better update mPlainBytes?
+          mPlainBytes = bytesRead;
+
+          mNextByte = bytesRead;
+
+          int64_t current;
+          rv = Tell(&current);
+          if (NS_WARN_IF(NS_FAILED(rv))) {
+            return Err(rv);
+          }
+
+          return current;
+        }();
+
+        if (decryptedStreamSizeOrErr.isErr()) {
+          return decryptedStreamSizeOrErr.unwrapErr();
+        }
+
+        aOffset += decryptedStreamSizeOrErr.unwrap();
+      }
+      break;
+
+    default:
+      return NS_ERROR_ILLEGAL_VALUE;
+  }
+
+  baseBlocksOffset = aOffset / mEncryptedBlock->MaxPayloadLength();
+  nextByteOffset = aOffset % mEncryptedBlock->MaxPayloadLength();
+
+  // XXX If we remain in the same block as before, we can skip this.
+  nsresult rv =
+      (*mBaseSeekableStream)->Seek(NS_SEEK_SET, baseBlocksOffset * mBlockSize);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  mNextByte = 0;
+  mPlainBytes = 0;
+
+  uint32_t readBytes;
+  rv = ParseNextChunk(&readBytes);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    // XXX Do we need to do more here? Restore any previous state?
+    return rv;
+  }
+
+  // We positioned after the last block, we must read that to know its size.
+  // XXX We could know earlier if we positioned us after the last block.
+  if (!readBytes) {
+    if (baseBlocksOffset == 0) {
+      // The stream is empty.
+      return aOffset == 0 ? NS_OK : NS_ERROR_ILLEGAL_VALUE;
+    }
+
+    nsresult rv = (*mBaseSeekableStream)->Seek(NS_SEEK_CUR, -mBlockSize);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = ParseNextChunk(&readBytes);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      // XXX Do we need to do more here? Restore any previous state?
+      return rv;
+    }
+  }
+
+  mPlainBytes = readBytes;
+  mNextByte = nextByteOffset;
+
+  return NS_OK;
 }
 
 }  // namespace mozilla::dom::quota
