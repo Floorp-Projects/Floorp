@@ -448,6 +448,15 @@
   MACRO(uninitialized, uninitialized, "uninitialized")                         \
   MACRO(unknown, unknown, "unknown")                                           \
   MACRO(unregister, unregister, "unregister")                                  \
+  MACRO(UnsafeGetReservedSlot, UnsafeGetReservedSlot, "UnsafeGetReservedSlot") \
+  MACRO(UnsafeGetObjectFromReservedSlot, UnsafeGetObjectFromReservedSlot,      \
+        "UnsafeGetObjectFromReservedSlot")                                     \
+  MACRO(UnsafeGetInt32FromReservedSlot, UnsafeGetInt32FromReservedSlot,        \
+        "UnsafeGetInt32FromReservedSlot")                                      \
+  MACRO(UnsafeGetStringFromReservedSlot, UnsafeGetStringFromReservedSlot,      \
+        "UnsafeGetStringFromReservedSlot")                                     \
+  MACRO(UnsafeGetBooleanFromReservedSlot, UnsafeGetBooleanFromReservedSlot,    \
+        "UnsafeGetBooleanFromReservedSlot")                                    \
   MACRO(unsized, unsized, "unsized")                                           \
   MACRO(unwatch, unwatch, "unwatch")                                           \
   MACRO(url, url, "url")                                                       \

@@ -7253,6 +7253,31 @@ bool BytecodeEmitter::emitSelfHostedToNumeric(BinaryNode* callNode) {
   return emit1(JSOp::ToNumeric);
 }
 
+#ifdef DEBUG
+bool BytecodeEmitter::checkSelfHostedUnsafeGetReservedSlot(
+    BinaryNode* callNode) {
+  ListNode* argsList = &callNode->right()->as<ListNode>();
+
+  if (argsList->count() != 2) {
+    reportNeedMoreArgsError(callNode, "UnsafeGetReservedSlot", "2", "",
+                            argsList);
+    return false;
+  }
+
+  ParseNode* objNode = argsList->head();
+  ParseNode* slotNode = objNode->pn_next;
+
+  // Ensure that the slot argument is fixed, this is required by the JITs.
+  if (!slotNode->isKind(ParseNodeKind::NumberExpr)) {
+    reportError(callNode, JSMSG_UNEXPECTED_TYPE, "slot argument",
+                "not a constant");
+    return false;
+  }
+
+  return true;
+}
+#endif
+
 bool BytecodeEmitter::isRestParameter(ParseNode* expr) {
   if (!sc->isFunctionBox()) {
     return false;
@@ -7729,6 +7754,18 @@ bool BytecodeEmitter::emitCallOrNew(
     if (calleeName == cx->names().ToNumeric) {
       return emitSelfHostedToNumeric(callNode);
     }
+#ifdef DEBUG
+    if (calleeName == cx->names().UnsafeGetReservedSlot ||
+        calleeName == cx->names().UnsafeGetObjectFromReservedSlot ||
+        calleeName == cx->names().UnsafeGetInt32FromReservedSlot ||
+        calleeName == cx->names().UnsafeGetStringFromReservedSlot ||
+        calleeName == cx->names().UnsafeGetBooleanFromReservedSlot) {
+      // Make sure that this call is correct, but don't emit any special code.
+      if (!checkSelfHostedUnsafeGetReservedSlot(callNode)) {
+        return false;
+      }
+    }
+#endif
     // Fall through
   }
 
