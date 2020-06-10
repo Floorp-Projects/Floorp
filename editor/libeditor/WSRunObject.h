@@ -21,12 +21,12 @@
 
 namespace mozilla {
 
-// class WSRunObject represents the entire whitespace situation
+// class WSRunObject represents the entire white-space situation
 // around a given point.  It collects up a list of nodes that contain
-// whitespace and categorizes in up to 3 different WSFragments (detailed
-// below).  Each WSFragment is a collection of whitespace that is
+// white-space and categorizes in up to 3 different WSFragments (detailed
+// below).  Each WSFragment is a collection of white-space that is
 // either all insignificant, or that is significant.  A WSFragment could
-// consist of insignificant whitespace because it is after a block
+// consist of insignificant white-space because it is after a block
 // boundary or after a break.  Or it could be insignificant because it
 // is before a block.  Or it could be significant because it is
 // surrounded by text, or starts and ends with nbsps, etc.
@@ -53,13 +53,13 @@ class MOZ_STACK_CLASS WSScanResult final {
  private:
   enum class WSType : uint8_t {
     NotInitialized,
-    // The run is maybe collapsible white spaces at start of a hard line.
+    // The run is maybe collapsible white-spaces at start of a hard line.
     LeadingWhiteSpaces,
-    // The run is maybe collapsible white spaces at end of a hard line.
+    // The run is maybe collapsible white-spaces at end of a hard line.
     TrailingWhiteSpaces,
-    // Normal (perhaps, meaning visible) white spaces.
+    // Normal (perhaps, meaning visible) white-spaces.
     NormalWhiteSpaces,
-    // Normal text, not white spaces.
+    // Normal text, not white-spaces.
     NormalText,
     // Special content such as `<img>`, etc.
     SpecialContent,
@@ -209,7 +209,7 @@ class MOZ_STACK_CLASS WSScanResult final {
   }
 
   /**
-   * The point is in normal whitespaces or text.
+   * The point is in normal white-spaces or text.
    */
   bool InNormalWhiteSpacesOrText() const {
     return mReason == WSType::NormalWhiteSpaces ||
@@ -217,7 +217,7 @@ class MOZ_STACK_CLASS WSScanResult final {
   }
 
   /**
-   * The point is in normal whitespaces.
+   * The point is in normal white-spaces.
    */
   bool InNormalWhiteSpaces() const {
     return mReason == WSType::NormalWhiteSpaces;
@@ -283,7 +283,7 @@ class MOZ_STACK_CLASS WSRunScanner {
    * The end point is currently used only with InsertText().  Therefore,
    * currently, this assumes that the range does not cross block boundary.
    *
-   * Actually, WSRunScanner scans white space type at mScanStartPoint position
+   * Actually, WSRunScanner scans white-space type at mScanStartPoint position
    * only.
    *
    * If you use aScanEndPoint newly, please test enough.
@@ -340,7 +340,7 @@ class MOZ_STACK_CLASS WSRunScanner {
   /**
    * GetStartReasonContent() and GetEndReasonContent() return a node which
    * was found by scanning from mScanStartPoint backward or mScanEndPoint
-   * forward.  If there was whitespaces or text from the point, returns the
+   * forward.  If there was white-spaces or text from the point, returns the
    * text node.  Otherwise, returns an element which is explained by the
    * following methods.  Note that when the reason is
    * WSType::CurrentBlockBoundary, In most cases, it's current block element
@@ -566,25 +566,25 @@ class MOZ_STACK_CLASS WSRunScanner {
       const EditorDOMPointBase<PT, CT>& aPoint) const;
 
   /**
-   * GetEndOfCollapsibleASCIIWhitespaces() returns the next visible char
-   * (meaning a character except ASCII whitespaces) point or end of last text
-   * node scanning from aPointAtASCIIWhitespace.
+   * GetEndOfCollapsibleASCIIWhiteSpaces() returns the next visible char
+   * (meaning a character except ASCII white-spaces) point or end of last text
+   * node scanning from aPointAtASCIIWhiteSpace.
    * Note that this may return different text node from the container of
-   * aPointAtASCIIWhitespace.
+   * aPointAtASCIIWhiteSpace.
    */
-  EditorDOMPointInText GetEndOfCollapsibleASCIIWhitespaces(
-      const EditorDOMPointInText& aPointAtASCIIWhitespace) const;
+  EditorDOMPointInText GetEndOfCollapsibleASCIIWhiteSpaces(
+      const EditorDOMPointInText& aPointAtASCIIWhiteSpace) const;
 
   /**
-   * GetFirstASCIIWhitespacePointCollapsedTo() returns the first ASCII
-   * whitespace which aPointAtASCIIWhitespace belongs to.  In other words,
-   * the whitespace at aPointAtASCIIWhitespace should be collapsed into
+   * GetFirstASCIIWhiteSpacePointCollapsedTo() returns the first ASCII
+   * white-space which aPointAtASCIIWhiteSpace belongs to.  In other words,
+   * the white-space at aPointAtASCIIWhiteSpace should be collapsed into
    * the result.
    * Note that this may return different text node from the container of
-   * aPointAtASCIIWhitespace.
+   * aPointAtASCIIWhiteSpace.
    */
-  EditorDOMPointInText GetFirstASCIIWhitespacePointCollapsedTo(
-      const EditorDOMPointInText& aPointAtASCIIWhitespace) const;
+  EditorDOMPointInText GetFirstASCIIWhiteSpacePointCollapsedTo(
+      const EditorDOMPointInText& aPointAtASCIIWhiteSpace) const;
 
   nsresult GetWSNodes();
 
@@ -616,7 +616,7 @@ class MOZ_STACK_CLASS WSRunScanner {
   // The editing host when the instance is created.
   RefPtr<dom::Element> mEditingHost;
 
-  // true if we are in preformatted whitespace context.
+  // true if we are in preformatted white-space context.
   bool mPRE;
 
   // Node/offset where ws starts and ends.
@@ -700,15 +700,16 @@ class MOZ_STACK_CLASS WSRunObject final : public WSRunScanner {
                     EditorRawDOMPoint(aScanStartNode, aScanStartOffset)) {}
 
   /**
-   * Scrub() removes any non-visible whitespaces at aPoint.
+   * Scrub() removes any non-visible white-spaces at aPoint.
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT static nsresult Scrub(
       HTMLEditor& aHTMLEditor, const EditorDOMPoint& aPoint);
 
   /**
-   * PrepareToJoinBlocks() fixes up whitespaces at the end of aLeftBlockElement
+   * PrepareToJoinBlocks() fixes up white-spaces at the end of aLeftBlockElement
    * and the start of aRightBlockElement in preperation for them to be joined.
-   * For example, trailing whitespaces in aLeftBlockElement needs to be removed.
+   * For example, trailing white-spaces in aLeftBlockElement needs to be
+   * removed.
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT static nsresult PrepareToJoinBlocks(
       HTMLEditor& aHTMLEditor, dom::Element& aLeftBlockElement,
@@ -740,7 +741,7 @@ class MOZ_STACK_CLASS WSRunObject final : public WSRunScanner {
 
   /**
    * InsertBreak() inserts a <br> node at (before) aPointToInsert and delete
-   * unnecessary whitespaces around there and/or replaces whitespaces with
+   * unnecessary white-spaces around there and/or replaces white-spaces with
    * non-breaking spaces.  Note that if the point is in a text node, the
    * text node will be split and insert new <br> node between the left node
    * and the right node.
@@ -763,10 +764,10 @@ class MOZ_STACK_CLASS WSRunObject final : public WSRunScanner {
 
   /**
    * InsertText() inserts aStringToInsert to mScanStartPoint and makes any
-   * needed adjustments to white spaces around both mScanStartPoint and
-   * mScanEndPoint. E.g., trailing white spaces before mScanStartPoint needs to
+   * needed adjustments to white-spaces around both mScanStartPoint and
+   * mScanEndPoint. E.g., trailing white-spaces before mScanStartPoint needs to
    * be removed.  This calls EditorBase::InsertTextWithTransaction() after
-   * adjusting white spaces.  So, please refer the method's explanation to know
+   * adjusting white-spaces.  So, please refer the method's explanation to know
    * what this method exactly does.
    *
    * @param aDocument       The document of this editor.
@@ -795,36 +796,37 @@ class MOZ_STACK_CLASS WSRunObject final : public WSRunScanner {
   // makes any needed conversion to adjacent ws to retain its significance.
   MOZ_CAN_RUN_SCRIPT nsresult DeleteWSForward();
 
-  // AdjustWhitespace examines the ws object for nbsp's that can
+  // AdjustWhiteSpace examines the ws object for nbsp's that can
   // be safely converted to regular ascii space and converts them.
-  MOZ_CAN_RUN_SCRIPT nsresult AdjustWhitespace();
+  MOZ_CAN_RUN_SCRIPT nsresult AdjustWhiteSpace();
 
  protected:
   MOZ_CAN_RUN_SCRIPT nsresult PrepareToDeleteRangePriv(WSRunObject* aEndObject);
   MOZ_CAN_RUN_SCRIPT nsresult PrepareToSplitAcrossBlocksPriv();
 
   /**
-   * ReplaceASCIIWhitespacesWithOneNBSP() replaces the range between
-   * aAtFirstASCIIWhitespace and aEndOfCollapsibleASCIIWhitespace with
+   * ReplaceASCIIWhiteSpacesWithOneNBSP() replaces the range between
+   * aAtFirstASCIIWhiteSpace and aEndOfCollapsibleASCIIWhiteSpace with
    * one NBSP char.  If they span multiple text nodes, this puts an NBSP
-   * into the text node at aAtFirstASCIIWhitespace.  Then, removes other
-   * ASCII whitespaces in the following text nodes.
+   * into the text node at aAtFirstASCIIWhiteSpace.  Then, removes other
+   * ASCII white-spaces in the following text nodes.
    * Note that this assumes that all characters in the range is ASCII
-   * whitespaces.
+   * white-spaces.
    *
-   * @param aAtFirstASCIIWhitespace             First ASCII whitespace position.
-   * @param aEndOfCollapsibleASCIIWhitespaces   The position after last ASCII
-   *                                            whitespace.
+   * @param aAtFirstASCIIWhiteSpace             First ASCII white-space
+   * position.
+   * @param aEndOfCollapsibleASCIIWhiteSpaces   The position after last ASCII
+   *                                            white-space.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult ReplaceASCIIWhitespacesWithOneNBSP(
-      const EditorDOMPointInText& aAtFirstASCIIWhitespace,
-      const EditorDOMPointInText& aEndOfCollapsibleASCIIWhitespaces);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult ReplaceASCIIWhiteSpacesWithOneNBSP(
+      const EditorDOMPointInText& aAtFirstASCIIWhiteSpace,
+      const EditorDOMPointInText& aEndOfCollapsibleASCIIWhiteSpaces);
 
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
-  NormalizeWhitespacesAtEndOf(const WSFragment& aRun);
+  NormalizeWhiteSpacesAtEndOf(const WSFragment& aRun);
 
   /**
-   * MaybeReplacePreviousNBSPWithASCIIWhitespace() replaces previous character
+   * MaybeReplacePreviousNBSPWithASCIIWhiteSpace() replaces previous character
    * of aPoint if it's a NBSP and it's unnecessary.
    *
    * @param aRun        Current text run.  aPoint must be in this run.
@@ -832,20 +834,20 @@ class MOZ_STACK_CLASS WSRunObject final : public WSRunScanner {
    *                    unnecessary NBSP will be checked.
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
-  MaybeReplacePreviousNBSPWithASCIIWhitespace(const WSFragment& aRun,
+  MaybeReplacePreviousNBSPWithASCIIWhiteSpace(const WSFragment& aRun,
                                               const EditorDOMPoint& aPoint);
 
   /**
-   * MaybeReplaceInclusiveNextNBSPWithASCIIWhitespace() replaces an NBSP at
-   * the point with an ASCII whitespace only when the point is an NBSP and
-   * it's replaceable with an ASCII whitespace.
+   * MaybeReplaceInclusiveNextNBSPWithASCIIWhiteSpace() replaces an NBSP at
+   * the point with an ASCII white-space only when the point is an NBSP and
+   * it's replaceable with an ASCII white-space.
    *
    * @param aPoint      If point in a text node, the character is checked
    *                    whether it's an NBSP or not.  Otherwise, first
    *                    character of next editable text node is checked.
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
-  MaybeReplaceInclusiveNextNBSPWithASCIIWhitespace(
+  MaybeReplaceInclusiveNextNBSPWithASCIIWhiteSpace(
       const WSFragment& aRun, const EditorDOMPoint& aPoint);
 
   MOZ_CAN_RUN_SCRIPT nsresult Scrub();

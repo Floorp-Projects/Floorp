@@ -409,7 +409,7 @@ void TextEditor::HandleNewLinesInStringForSingleLineEditor(
           break;
         }
         uint32_t wsBegin = nextLF;
-        // look backwards for the first non-whitespace char
+        // look backwards for the first non-white-space char
         while (wsBegin > offset && NS_IS_SPACE(aString[wsBegin - 1])) {
           --wsBegin;
         }
@@ -506,7 +506,7 @@ EditActionResult TextEditor::HandleInsertText(
   // 2. replace newlines with spaces
   // 3. strip newlines
   // 4. replace with commas
-  // 5. strip newlines and surrounding whitespace
+  // 5. strip newlines and surrounding white-space
   // So find out what we're expected to do:
   if (IsSingleLineEditor()) {
     // XXX Some callers of TextEditor::InsertTextAsAction()  already make the

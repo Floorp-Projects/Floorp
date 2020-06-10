@@ -2516,7 +2516,7 @@ nsresult EditorBase::InsertTextIntoTextNodeWithTransaction(
   RefPtr<EditTransactionBase> transaction;
   bool isIMETransaction = false;
   // aSuppressIME is used when editor must insert text, yet this text is not
-  // part of the current IME operation. Example: adjusting whitespace around an
+  // part of the current IME operation. Example: adjusting white-space around an
   // IME insertion.
   if (ShouldHandleIMEComposition() && !aSuppressIME) {
     transaction =
@@ -5015,7 +5015,7 @@ NS_IMETHODIMP EditorBase::SetWrapWidth(int32_t aWrapColumn) {
   CutStyle("font-family", styleValue);
 
   // If we have other style left, trim off any existing semicolons
-  // or whitespace, then add a known semicolon-space:
+  // or white-space, then add a known semicolon-space:
   if (!styleValue.IsEmpty()) {
     styleValue.Trim("; \t", false, true);
     styleValue.AppendLiteral("; ");
@@ -5028,7 +5028,7 @@ NS_IMETHODIMP EditorBase::SetWrapWidth(int32_t aWrapColumn) {
     styleValue.AppendLiteral("font-family: -moz-fixed; ");
   }
 
-  // and now we're ready to set the new whitespace/wrapping style.
+  // and now we're ready to set the new white-space/wrapping style.
   if (aWrapColumn > 0) {
     // Wrap to a fixed column.
     styleValue.AppendLiteral("white-space: pre-wrap; width: ");

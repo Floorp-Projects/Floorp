@@ -614,7 +614,7 @@ nsresult HTMLEditor::MaybeCollapseSelectionAtFirstEditableNode(
       break;
     }
 
-    // By definition of WSRunScanner, a block element terminates a whitespace
+    // By definition of WSRunScanner, a block element terminates a white-space
     // run. That is, although we are calling a method that is named
     // "ScanNextVisibleNodeOrBlockBoundary", the node returned might not
     // be visible/editable!
@@ -819,10 +819,10 @@ bool HTMLEditor::IsEmptyInlineNode(nsIContent& aContent) const {
 }
 
 /**
- * IsNextCharInNodeWhitespace() checks the adjacent content in the same node to
- * see if following selection is whitespace or nbsp.
+ * IsNextCharInNodeWhiteSpace() checks the adjacent content in the same node to
+ * see if following selection is white-space or nbsp.
  */
-void HTMLEditor::IsNextCharInNodeWhitespace(nsIContent* aContent,
+void HTMLEditor::IsNextCharInNodeWhiteSpace(nsIContent* aContent,
                                             int32_t aOffset, bool* outIsSpace,
                                             bool* outIsNBSP,
                                             nsIContent** outNode,
@@ -849,10 +849,10 @@ void HTMLEditor::IsNextCharInNodeWhitespace(nsIContent* aContent,
 }
 
 /**
- * IsPrevCharInNodeWhitespace() checks the adjacent content in the same node to
- * see if following selection is whitespace.
+ * IsPrevCharInNodeWhiteSpace() checks the adjacent content in the same node to
+ * see if following selection is white-space.
  */
-void HTMLEditor::IsPrevCharInNodeWhitespace(nsIContent* aContent,
+void HTMLEditor::IsPrevCharInNodeWhiteSpace(nsIContent* aContent,
                                             int32_t aOffset, bool* outIsSpace,
                                             bool* outIsNBSP,
                                             nsIContent** outNode,
@@ -916,7 +916,7 @@ bool HTMLEditor::IsVisibleBRElement(const nsINode* aNode) {
     return true;
   }
 
-  // Sigh.  We have to use expensive whitespace calculation code to
+  // Sigh.  We have to use expensive white-space calculation code to
   // determine what is going on
   EditorRawDOMPoint afterBRElement(EditorRawDOMPoint::After(*aNode));
   if (NS_WARN_IF(!afterBRElement.IsSet())) {
@@ -4956,13 +4956,13 @@ nsresult HTMLEditor::DeleteSelectionAndPrepareToCreateNode() {
 }
 
 nsIContent* HTMLEditor::GetPriorHTMLSibling(nsINode* aNode,
-                                            SkipWhitespace aSkipWS) const {
+                                            SkipWhiteSpace aSkipWS) const {
   MOZ_ASSERT(aNode);
 
   nsIContent* content = aNode->GetPreviousSibling();
   while (content &&
          (!EditorUtils::IsEditableContent(*content, EditorType::HTML) ||
-          SkippableWhitespace(content, aSkipWS))) {
+          SkippableWhiteSpace(content, aSkipWS))) {
     content = content->GetPreviousSibling();
   }
 
@@ -4970,13 +4970,13 @@ nsIContent* HTMLEditor::GetPriorHTMLSibling(nsINode* aNode,
 }
 
 nsIContent* HTMLEditor::GetNextHTMLSibling(nsINode* aNode,
-                                           SkipWhitespace aSkipWS) const {
+                                           SkipWhiteSpace aSkipWS) const {
   MOZ_ASSERT(aNode);
 
   nsIContent* content = aNode->GetNextSibling();
   while (content &&
          (!EditorUtils::IsEditableContent(*content, EditorType::HTML) ||
-          SkippableWhitespace(content, aSkipWS))) {
+          SkippableWhiteSpace(content, aSkipWS))) {
     content = content->GetNextSibling();
   }
 

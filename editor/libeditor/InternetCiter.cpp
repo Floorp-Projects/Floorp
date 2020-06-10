@@ -278,7 +278,7 @@ nsresult InternetCiter::Rewrap(const nsAString& aInString, uint32_t aWrapCol,
       }
 
       nsAutoString sub(Substring(tString, posInString, breakPt));
-      // skip newlines or whitespace at the end of the string
+      // skip newlines or white-space at the end of the string
       int32_t subend = sub.Length();
       while (subend > 0 && IsSpace(sub[subend - 1])) {
         --subend;
@@ -286,7 +286,7 @@ nsresult InternetCiter::Rewrap(const nsAString& aInString, uint32_t aWrapCol,
       sub.Left(sub, subend);
       aOutString += sub;
       outStringCol += sub.Length();
-      // Advance past the whitespace which caused the wrap:
+      // Advance past the white-space which caused the wrap:
       posInString += breakPt;
       while (posInString < length && IsSpace(tString[posInString])) {
         ++posInString;

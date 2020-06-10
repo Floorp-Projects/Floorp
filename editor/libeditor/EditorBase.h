@@ -1415,7 +1415,7 @@ class EditorBase : public nsIEditor,
    * @param aStringToInsert     String to be inserted.
    * @param aPointToInsert      The insertion point.
    * @param aSuppressIME        true if it's not a part of IME composition.
-   *                            E.g., adjusting whitespaces during composition.
+   *                            E.g., adjusting white-spaces during composition.
    *                            false, otherwise.
    */
   MOZ_CAN_RUN_SCRIPT nsresult InsertTextIntoTextNodeWithTransaction(

@@ -376,7 +376,7 @@ bool HTMLEditUtils::SupportsAlignAttr(nsINode& aNode) {
 // p
 #define GROUP_P (1 << 19)
 
-// text, whitespace, newline, comment
+// text, white-space, newline, comment
 #define GROUP_LEAF (1 << 20)
 
 // XXX This is because the editor does sublists illegally.

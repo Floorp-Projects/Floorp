@@ -936,7 +936,7 @@ nsresult CSSEditUtils::GetCSSEquivalentToHTMLInlineStyleSetInternal(
         return rv;
       }
     }
-    // append the value to aValue (possibly with a leading whitespace)
+    // append the value to aValue (possibly with a leading white-space)
     if (index) {
       aValue.Append(char16_t(' '));
     }

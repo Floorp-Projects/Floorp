@@ -588,16 +588,16 @@ class HTMLEditUtils final {
   static EditAction GetEditActionForAlignment(const nsAString& aAlignType);
 
   /**
-   * GetPreviousCharOffsetExceptASCIIWhitespace() returns offset of previous
-   * character which is not ASCII whitespace characters.
+   * GetPreviousCharOffsetExceptASCIIWhiteSpace() returns offset of previous
+   * character which is not ASCII white-space characters.
    */
-  static Maybe<uint32_t> GetPreviousCharOffsetExceptASCIIWhitespaces(
+  static Maybe<uint32_t> GetPreviousCharOffsetExceptASCIIWhiteSpaces(
       const EditorDOMPointInText& aPoint) {
     MOZ_ASSERT(aPoint.IsSetAndValid());
-    return GetPreviousCharOffsetExceptASCIIWhitespaces(
+    return GetPreviousCharOffsetExceptASCIIWhiteSpaces(
         *aPoint.ContainerAsText(), aPoint.Offset());
   }
-  static Maybe<uint32_t> GetPreviousCharOffsetExceptASCIIWhitespaces(
+  static Maybe<uint32_t> GetPreviousCharOffsetExceptASCIIWhiteSpaces(
       const dom::Text& aTextNode, uint32_t aOffset) {
     const nsTextFragment& textFragment = aTextNode.TextFragment();
     MOZ_ASSERT(aOffset <= textFragment.GetLength());
@@ -610,16 +610,16 @@ class HTMLEditUtils final {
   }
 
   /**
-   * GetNextCharOffsetExceptASCIIWhitespace() returns offset of next character
-   * which is not ASCII whitespace characters.
+   * GetNextCharOffsetExceptASCIIWhiteSpace() returns offset of next character
+   * which is not ASCII white-space characters.
    */
-  static Maybe<uint32_t> GetNextCharOffsetExceptASCIIWhitespaces(
+  static Maybe<uint32_t> GetNextCharOffsetExceptASCIIWhiteSpaces(
       const EditorDOMPointInText& aPoint) {
     MOZ_ASSERT(aPoint.IsSetAndValid());
-    return GetNextCharOffsetExceptASCIIWhitespaces(*aPoint.ContainerAsText(),
+    return GetNextCharOffsetExceptASCIIWhiteSpaces(*aPoint.ContainerAsText(),
                                                    aPoint.Offset());
   }
-  static Maybe<uint32_t> GetNextCharOffsetExceptASCIIWhitespaces(
+  static Maybe<uint32_t> GetNextCharOffsetExceptASCIIWhiteSpaces(
       const dom::Text& aTextNode, uint32_t aOffset) {
     const nsTextFragment& textFragment = aTextNode.TextFragment();
     MOZ_ASSERT(aOffset <= textFragment.GetLength());
@@ -632,20 +632,20 @@ class HTMLEditUtils final {
   }
 
   /**
-   * GetFirstASCIIWhitespaceOffsetCollapsedWith() returns first ASCII
-   * whitespace offset which is collapsed with a whitespace at the given
+   * GetFirstASCIIWhiteSpaceOffsetCollapsedWith() returns first ASCII
+   * white-space offset which is collapsed with a white-space at the given
    * position.  I.e., the character at the position must be an ASCII
-   * whitespace.
+   * white-space.
    */
-  static uint32_t GetFirstASCIIWhitespaceOffsetCollapsedWith(
+  static uint32_t GetFirstASCIIWhiteSpaceOffsetCollapsedWith(
       const EditorDOMPointInText& aPoint) {
     MOZ_ASSERT(aPoint.IsSetAndValid());
     MOZ_ASSERT(!aPoint.IsEndOfContainer());
     MOZ_ASSERT(aPoint.IsCharASCIISpace());
-    return GetFirstASCIIWhitespaceOffsetCollapsedWith(*aPoint.ContainerAsText(),
+    return GetFirstASCIIWhiteSpaceOffsetCollapsedWith(*aPoint.ContainerAsText(),
                                                       aPoint.Offset());
   }
-  static uint32_t GetFirstASCIIWhitespaceOffsetCollapsedWith(
+  static uint32_t GetFirstASCIIWhiteSpaceOffsetCollapsedWith(
       const dom::Text& aTextNode, uint32_t aOffset) {
     MOZ_ASSERT(aOffset < aTextNode.TextLength());
     MOZ_ASSERT(nsCRT::IsAsciiSpace(aTextNode.TextFragment().CharAt(aOffset)));
@@ -653,7 +653,7 @@ class HTMLEditUtils final {
       return 0;
     }
     Maybe<uint32_t> previousVisibleCharOffset =
-        GetPreviousCharOffsetExceptASCIIWhitespaces(aTextNode, aOffset);
+        GetPreviousCharOffsetExceptASCIIWhiteSpaces(aTextNode, aOffset);
     return previousVisibleCharOffset.isSome()
                ? previousVisibleCharOffset.value() + 1
                : 0;

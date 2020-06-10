@@ -422,7 +422,7 @@ nsresult HTMLEditor::OnEndHandlingTopLevelEditSubActionInternal() {
       case EditSubAction::eInsertParagraphSeparator:
       case EditSubAction::eDeleteText: {
         // XXX We should investigate whether this is really needed because it
-        //     seems that the following code does not handle the whitespaces.
+        //     seems that the following code does not handle the white-spaces.
         RefPtr<nsRange> extendedChangedRange =
             CreateRangeIncludingAdjuscentWhiteSpaces(
                 *TopLevelEditSubActionDataRef().mChangedRange);
@@ -524,8 +524,8 @@ nsresult HTMLEditor::OnEndHandlingTopLevelEditSubActionInternal() {
       case EditSubAction::eInsertParagraphSeparator:
       case EditSubAction::ePasteHTMLContent:
       case EditSubAction::eInsertHTMLSource: {
-        // TODO: Temporarily, WSRunObject replaces ASCII whitespaces with NPSPs
-        //       and then, we'll replace them with ASCII whitespaces here.  We
+        // TODO: Temporarily, WSRunObject replaces ASCII white-spaces with NPSPs
+        //       and then, we'll replace them with ASCII white-spaces here.  We
         //       should avoid this overwriting things as far as possible because
         //       replacing characters in text nodes causes running mutation
         //       event listeners which are really expensive.
@@ -538,17 +538,17 @@ nsresult HTMLEditor::OnEndHandlingTopLevelEditSubActionInternal() {
             return NS_ERROR_FAILURE;
           }
         }
-        rv = WSRunObject(*this, pointToAdjust).AdjustWhitespace();
+        rv = WSRunObject(*this, pointToAdjust).AdjustWhiteSpace();
         if (NS_WARN_IF(Destroyed())) {
           return NS_ERROR_EDITOR_DESTROYED;
         }
         if (NS_FAILED(rv)) {
-          NS_WARNING("WSRunObject::AdjustWhitespace() failed");
+          NS_WARNING("WSRunObject::AdjustWhiteSpace() failed");
           return rv;
         }
 
         // also do this for original selection endpoints.
-        // XXX Hmm, if `AdjustWhitespace()` runs mutation event listener
+        // XXX Hmm, if `AdjustWhiteSpace()` runs mutation event listener
         //     and that causes changing `mSelectedRange`, what we should do?
         if (NS_WARN_IF(
                 !TopLevelEditSubActionDataRef().mSelectedRange->IsSet())) {
@@ -558,13 +558,13 @@ nsresult HTMLEditor::OnEndHandlingTopLevelEditSubActionInternal() {
             WSRunObject(
                 *this,
                 TopLevelEditSubActionDataRef().mSelectedRange->StartRawPoint())
-                .AdjustWhitespace();
+                .AdjustWhiteSpace();
         if (NS_WARN_IF(Destroyed())) {
           return NS_ERROR_EDITOR_DESTROYED;
         }
         NS_WARNING_ASSERTION(
             NS_SUCCEEDED(rvIgnored),
-            "WSRunObject::AdjustWhitespace() failed, but ignored");
+            "WSRunObject::AdjustWhiteSpace() failed, but ignored");
         // we only need to handle old selection endpoint if it was different
         // from start
         if (TopLevelEditSubActionDataRef().mSelectedRange->IsCollapsed()) {
@@ -572,13 +572,13 @@ nsresult HTMLEditor::OnEndHandlingTopLevelEditSubActionInternal() {
               WSRunObject(
                   *this,
                   TopLevelEditSubActionDataRef().mSelectedRange->EndRawPoint())
-                  .AdjustWhitespace();
+                  .AdjustWhiteSpace();
           if (NS_WARN_IF(Destroyed())) {
             return NS_ERROR_EDITOR_DESTROYED;
           }
           NS_WARNING_ASSERTION(
               NS_SUCCEEDED(rvIgnored),
-              "WSRunObject::AdjustWhitespace() failed, but ignored");
+              "WSRunObject::AdjustWhiteSpace() failed, but ignored");
         }
         break;
       }
@@ -3200,7 +3200,7 @@ EditActionResult HTMLEditor::HandleDeleteNonCollapsedSelection(
   }
 
   // Figure out if the endpoints are in nodes that can be merged.  Adjust
-  // surrounding whitespace in preparation to delete selection.
+  // surrounding white-space in preparation to delete selection.
   if (!IsPlaintextEditor()) {
     AutoTransactionsConserveSelection dontChangeMySelection(*this);
     nsresult rv = WSRunObject::PrepareToDeleteRange(*this, &firstRangeStart,
@@ -3520,7 +3520,7 @@ nsresult HTMLEditor::DeleteUnnecessaryNodesAndCollapseSelection(
     return NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE;
   }
 
-  // We might have left only collapsed whitespace in the start/end nodes
+  // We might have left only collapsed white-space in the start/end nodes
   {
     AutoTrackDOMPoint startTracker(RangeUpdaterRef(), &atCaret);
     AutoTrackDOMPoint endTracker(RangeUpdaterRef(), &selectionEndPoint);
@@ -4171,7 +4171,7 @@ EditActionResult HTMLEditor::TryToJoinBlocksWithTransaction(
   // first li and the p are not true siblings, but we still want to join them
   // if you backspace from li into p.
 
-  // Adjust whitespace at block boundaries
+  // Adjust white-space at block boundaries
   nsresult rv = WSRunObject::PrepareToJoinBlocks(*this, *leftBlockElement,
                                                  *rightBlockElement);
   if (NS_FAILED(rv)) {
@@ -5577,7 +5577,7 @@ nsresult HTMLEditor::IndentListChild(RefPtr<Element>* aCurList,
   // We do this if the next element is a list, and the list is of the
   // same type (li/ol) as aContent was a part it.
   if (nsIContent* nextEditableSibling =
-          GetNextHTMLSibling(&aContent, SkipWhitespace::Yes)) {
+          GetNextHTMLSibling(&aContent, SkipWhiteSpace::Yes)) {
     if (HTMLEditUtils::IsList(nextEditableSibling) &&
         aCurPoint.GetContainer()->NodeInfo()->NameAtom() ==
             nextEditableSibling->NodeInfo()->NameAtom() &&
@@ -5598,7 +5598,7 @@ nsresult HTMLEditor::IndentListChild(RefPtr<Element>* aCurList,
   // We do this if the previous element is a list, and the list is of
   // the same type (li/ol) as aContent was a part of.
   if (nsCOMPtr<nsIContent> previousEditableSibling =
-          GetPriorHTMLSibling(&aContent, SkipWhitespace::Yes)) {
+          GetPriorHTMLSibling(&aContent, SkipWhiteSpace::Yes)) {
     if (HTMLEditUtils::IsList(previousEditableSibling) &&
         aCurPoint.GetContainer()->NodeInfo()->NameAtom() ==
             previousEditableSibling->NodeInfo()->NameAtom() &&
@@ -5618,7 +5618,7 @@ nsresult HTMLEditor::IndentListChild(RefPtr<Element>* aCurList,
   // check to see if aCurList is still appropriate.  Which it is if
   // aContent is still right after it in the same list.
   nsIContent* previousEditableSibling =
-      *aCurList ? GetPriorHTMLSibling(&aContent, SkipWhitespace::Yes) : nullptr;
+      *aCurList ? GetPriorHTMLSibling(&aContent, SkipWhiteSpace::Yes) : nullptr;
   if (!*aCurList ||
       (previousEditableSibling && previousEditableSibling != *aCurList)) {
     nsAtom* containerName = aCurPoint.GetContainer()->NodeInfo()->NameAtom();
@@ -7890,7 +7890,7 @@ nsresult HTMLEditor::MaybeExtendSelectionToHardLineEdgesForBlockEditAction() {
   EditorDOMPoint newStartPoint(startPoint);
   EditorDOMPoint newEndPoint(endPoint);
 
-  // Is there any intervening visible whitespace?  If so we can't push
+  // Is there any intervening visible white-space?  If so we can't push
   // selection past that, it would visibly change meaning of users selection.
   WSRunScanner wsScannerAtEnd(this, endPoint);
   if (wsScannerAtEnd.ScanPreviousVisibleNodeOrBlockBoundaryFrom(endPoint)
@@ -7919,7 +7919,7 @@ nsresult HTMLEditor::MaybeExtendSelectionToHardLineEdgesForBlockEditAction() {
     }
   }
 
-  // Is there any intervening visible whitespace?  If so we can't push
+  // Is there any intervening visible white-space?  If so we can't push
   // selection past that, it would visibly change meaning of users selection.
   WSRunScanner wsScannerAtStart(this, startPoint);
   if (wsScannerAtStart.ScanNextVisibleNodeOrBlockBoundaryFrom(startPoint)
@@ -8009,11 +8009,11 @@ EditorDOMPoint HTMLEditor::GetWhiteSpaceEndPoint(
     int32_t offset = -1;
     nsCOMPtr<nsIContent> content;
     if (aScanDirection == ScanDirection::Backward) {
-      HTMLEditor::IsPrevCharInNodeWhitespace(newContent, newOffset, &isSpace,
+      HTMLEditor::IsPrevCharInNodeWhiteSpace(newContent, newOffset, &isSpace,
                                              &isNBSP, getter_AddRefs(content),
                                              &offset);
     } else {
-      HTMLEditor::IsNextCharInNodeWhitespace(newContent, newOffset, &isSpace,
+      HTMLEditor::IsNextCharInNodeWhiteSpace(newContent, newOffset, &isSpace,
                                              &isNBSP, getter_AddRefs(content),
                                              &offset);
     }
@@ -8303,13 +8303,13 @@ already_AddRefed<nsRange> HTMLEditor::CreateRangeIncludingAdjuscentWhiteSpaces(
   SelectBRElementIfCollapsedInEmptyBlock(startRef, endRef);
 
   // For text actions, we want to look backwards (or forwards, as
-  // appropriate) for additional whitespace or nbsp's.  We may have to act
+  // appropriate) for additional white-space or nbsp's.  We may have to act
   // on these later even though they are outside of the initial selection.
   // Even if they are in another node!
   // XXX Although the comment mentioned that this may scan other text nodes,
   //     GetWhiteSpaceEndPoint() scans only in given container node.
   // XXX Looks like that we should make GetWhiteSpaceEndPoint() be a
-  //     instance method and stop scanning whitespaces when it reaches
+  //     instance method and stop scanning white-spaces when it reaches
   //     active editing host.
   EditorDOMPoint startPoint = HTMLEditor::GetWhiteSpaceEndPoint(
       startRef, HTMLEditor::ScanDirection::Backward);
@@ -9057,7 +9057,7 @@ EditActionResult HTMLEditor::HandleInsertParagraphInParagraph(
   // splitting middle of it because we assume that users don't want to create
   // *same* anchor element across two or more paragraphs in most cases.
   // So, adjust selection start if it's edge of anchor element(s).
-  // XXX We don't support whitespace collapsing in these cases since it needs
+  // XXX We don't support white-space collapsing in these cases since it needs
   //     some additional work with WSRunObject but it's not usual case.
   //     E.g., |<a href="foo"><b>foo []</b> </a>|
   if (atStartOfSelection.IsStartOfContainer()) {
@@ -9081,7 +9081,7 @@ EditActionResult HTMLEditor::HandleInsertParagraphInParagraph(
   }
   // We also need to check if selection is at invisible <br> element at end
   // of an <a href="foo"> element because editor inserts a <br> element when
-  // user types Enter key after a whitespace which is at middle of
+  // user types Enter key after a white-space which is at middle of
   // <a href="foo"> element and when setting selection at end of the element,
   // selection becomes referring the <br> element.  We may need to change this
   // behavior later if it'd be standardized.

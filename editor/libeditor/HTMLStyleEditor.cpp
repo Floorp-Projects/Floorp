@@ -59,7 +59,7 @@ nsresult HTMLEditor::SetInlinePropertyAsAction(nsAtom& aProperty,
   switch (editActionData.GetEditAction()) {
     case EditAction::eSetFontFamilyProperty:
       MOZ_ASSERT(!aValue.IsVoid());
-      // XXX Should we trim unnecessary whitespaces?
+      // XXX Should we trim unnecessary white-spaces?
       editActionData.SetData(aValue);
       break;
     case EditAction::eSetColorProperty:
@@ -167,7 +167,7 @@ NS_IMETHODIMP HTMLEditor::SetInlineProperty(const nsAString& aProperty,
   switch (editActionData.GetEditAction()) {
     case EditAction::eSetFontFamilyProperty:
       MOZ_ASSERT(!aValue.IsVoid());
-      // XXX Should we trim unnecessary whitespaces?
+      // XXX Should we trim unnecessary white-spaces?
       editActionData.SetData(aValue);
       break;
     case EditAction::eSetColorProperty:
