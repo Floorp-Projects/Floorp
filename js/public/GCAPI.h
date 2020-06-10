@@ -323,7 +323,7 @@ typedef enum JSGCParamKey {
   /*
    * The current size of the nursery.
    *
-   * read-only.
+   * This parameter is read-only.
    */
   JSGC_NURSERY_BYTES = 34,
 
@@ -348,6 +348,13 @@ typedef enum JSGCParamKey {
    * Default: IncrementalWeakMarkEnabled
    */
   JSGC_INCREMENTAL_WEAKMAP_ENABLED = 37,
+
+  /**
+   * The chunk size in bytes for this system.
+   *
+   * This parameter is read-only.
+   */
+  JSGC_CHUNK_BYTES = 38,
 } JSGCParamKey;
 
 /*
