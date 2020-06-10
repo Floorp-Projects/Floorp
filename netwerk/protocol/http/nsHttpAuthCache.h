@@ -200,6 +200,9 @@ class nsHttpAuthCache {
   // expire all existing auth list entries including proxy auths.
   void ClearAll();
 
+  // For testing only.
+  void CollectKeys(nsTArray<nsCString>& aValue);
+
  private:
   nsHttpAuthNode* LookupAuthNode(const char* scheme, const char* host,
                                  int32_t port, nsACString const& originSuffix,
