@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <title>HTTP Cache - Partioning by top-level origin</title>
-  <meta name="help" href="https://fetch.spec.whatwg.org/#request">
+  <meta name="help" href="https://fetch.spec.whatwg.org/#http-cache-partitions">
   <script src="/resources/testharness.js"></script>
   <script src="/resources/testharnessreport.js"></script>
   <script src="/common/utils.js"></script>
@@ -63,8 +63,8 @@ function performFullTest(is_same_origin_test) {
     return new Promise(function(resolve, reject) {
       var win = window.open(popupBaseURL + "resources/split-origin-popup.html")
 
-      // Post a message to intisearchte the popup's request and give the necessary
-      // information. Posted researchtedly to account for dropped messages as the
+      // Post a message to initiate the popup's request and give the necessary
+      // information. Posted repeatedly to account for dropped messages as the
       // popup is loading.
       function postMessage(event) {
         var payload = {
