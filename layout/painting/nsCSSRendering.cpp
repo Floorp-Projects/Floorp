@@ -757,10 +757,10 @@ static Float SnapBorderToDevPixels(nscoord aWidth, int32_t aAppUnitsPerPixel) {
 
 static std::array<Float, 4> SnapBorderToDevPixels(const nsMargin& aBorder,
                                                   int32_t aAppUnitsPerPixel) {
-  return {SnapBorderToDevPixels(aBorder.top, aAppUnitsPerPixel),
-          SnapBorderToDevPixels(aBorder.right, aAppUnitsPerPixel),
-          SnapBorderToDevPixels(aBorder.bottom, aAppUnitsPerPixel),
-          SnapBorderToDevPixels(aBorder.left, aAppUnitsPerPixel)};
+  return {{SnapBorderToDevPixels(aBorder.top, aAppUnitsPerPixel),
+           SnapBorderToDevPixels(aBorder.right, aAppUnitsPerPixel),
+           SnapBorderToDevPixels(aBorder.bottom, aAppUnitsPerPixel),
+           SnapBorderToDevPixels(aBorder.left, aAppUnitsPerPixel)}};
 }
 
 static nsCSSBorderRenderer ConstructBorderRenderer(
