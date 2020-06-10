@@ -1542,9 +1542,12 @@ bool GlobalObject::initIteratorProto(JSContext* cx,
 }
 
 /* static */
-bool GlobalObject::initArrayIteratorProto(JSContext* cx,
-                                          Handle<GlobalObject*> global) {
-  if (global->getReservedSlot(ARRAY_ITERATOR_PROTO).isObject()) {
+template <unsigned Slot, const JSClass* ProtoClass,
+          const JSFunctionSpec* Methods>
+bool GlobalObject::initObjectIteratorProto(JSContext* cx,
+                                           Handle<GlobalObject*> global,
+                                           HandleAtom tag) {
+  if (global->getReservedSlot(Slot).isObject()) {
     return true;
   }
 
@@ -1554,72 +1557,46 @@ bool GlobalObject::initArrayIteratorProto(JSContext* cx,
     return false;
   }
 
-  const JSClass* cls = &ArrayIteratorPrototypeClass;
-  RootedObject proto(
-      cx, GlobalObject::createBlankPrototypeInheriting(cx, cls, iteratorProto));
-  if (!proto ||
-      !DefinePropertiesAndFunctions(cx, proto, nullptr,
-                                    array_iterator_methods) ||
-      !DefineToStringTag(cx, proto, cx->names().ArrayIterator)) {
+  RootedObject proto(cx, GlobalObject::createBlankPrototypeInheriting(
+                             cx, ProtoClass, iteratorProto));
+  if (!proto || !DefinePropertiesAndFunctions(cx, proto, nullptr, Methods) ||
+      (tag && !DefineToStringTag(cx, proto, tag))) {
     return false;
   }
 
-  global->setReservedSlot(ARRAY_ITERATOR_PROTO, ObjectValue(*proto));
+  global->setReservedSlot(Slot, ObjectValue(*proto));
   return true;
 }
 
 /* static */
-bool GlobalObject::initStringIteratorProto(JSContext* cx,
-                                           Handle<GlobalObject*> global) {
-  if (global->getReservedSlot(STRING_ITERATOR_PROTO).isObject()) {
-    return true;
-  }
-
-  RootedObject iteratorProto(
-      cx, GlobalObject::getOrCreateIteratorPrototype(cx, global));
-  if (!iteratorProto) {
-    return false;
-  }
-
-  const JSClass* cls = &StringIteratorPrototypeClass;
-  RootedObject proto(
-      cx, GlobalObject::createBlankPrototypeInheriting(cx, cls, iteratorProto));
-  if (!proto ||
-      !DefinePropertiesAndFunctions(cx, proto, nullptr,
-                                    string_iterator_methods) ||
-      !DefineToStringTag(cx, proto, cx->names().StringIterator)) {
-    return false;
-  }
-
-  global->setReservedSlot(STRING_ITERATOR_PROTO, ObjectValue(*proto));
-  return true;
+NativeObject* GlobalObject::getOrCreateArrayIteratorPrototype(
+    JSContext* cx, Handle<GlobalObject*> global) {
+  return MaybeNativeObject(getOrCreateObject(
+      cx, global, ARRAY_ITERATOR_PROTO, cx->names().ArrayIterator.toHandle(),
+      initObjectIteratorProto<ARRAY_ITERATOR_PROTO,
+                              &ArrayIteratorPrototypeClass,
+                              array_iterator_methods>));
 }
 
 /* static */
-bool GlobalObject::initRegExpStringIteratorProto(JSContext* cx,
-                                                 Handle<GlobalObject*> global) {
-  if (global->getReservedSlot(REGEXP_STRING_ITERATOR_PROTO).isObject()) {
-    return true;
-  }
+JSObject* GlobalObject::getOrCreateStringIteratorPrototype(
+    JSContext* cx, Handle<GlobalObject*> global) {
+  return getOrCreateObject(
+      cx, global, STRING_ITERATOR_PROTO, cx->names().StringIterator.toHandle(),
+      initObjectIteratorProto<STRING_ITERATOR_PROTO,
+                              &StringIteratorPrototypeClass,
+                              string_iterator_methods>);
+}
 
-  RootedObject iteratorProto(
-      cx, GlobalObject::getOrCreateIteratorPrototype(cx, global));
-  if (!iteratorProto) {
-    return false;
-  }
-
-  const JSClass* cls = &RegExpStringIteratorPrototypeClass;
-  RootedObject proto(
-      cx, GlobalObject::createBlankPrototypeInheriting(cx, cls, iteratorProto));
-  if (!proto ||
-      !DefinePropertiesAndFunctions(cx, proto, nullptr,
-                                    regexp_string_iterator_methods) ||
-      !DefineToStringTag(cx, proto, cx->names().RegExpStringIterator)) {
-    return false;
-  }
-
-  global->setReservedSlot(REGEXP_STRING_ITERATOR_PROTO, ObjectValue(*proto));
-  return true;
+/* static */
+JSObject* GlobalObject::getOrCreateRegExpStringIteratorPrototype(
+    JSContext* cx, Handle<GlobalObject*> global) {
+  return getOrCreateObject(
+      cx, global, REGEXP_STRING_ITERATOR_PROTO,
+      cx->names().RegExpStringIterator.toHandle(),
+      initObjectIteratorProto<REGEXP_STRING_ITERATOR_PROTO,
+                              &RegExpStringIteratorPrototypeClass,
+                              regexp_string_iterator_methods>);
 }
 
 // Iterator Helper Proposal 2.1.3.1 Iterator()
@@ -1696,28 +1673,13 @@ const JSClass WrapForValidIteratorObject::class_ = {
 };
 
 /* static */
-bool GlobalObject::initWrapForValidIteratorProto(JSContext* cx,
-                                                 Handle<GlobalObject*> global) {
-  if (global->getReservedSlot(WRAP_FOR_VALID_ITERATOR_PROTO).isObject()) {
-    return true;
-  }
-
-  RootedObject iteratorProto(
-      cx, GlobalObject::getOrCreateIteratorPrototype(cx, global));
-  if (!iteratorProto) {
-    return false;
-  }
-
-  const JSClass* cls = &WrapForValidIteratorPrototypeClass;
-  RootedObject proto(
-      cx, GlobalObject::createBlankPrototypeInheriting(cx, cls, iteratorProto));
-  if (!proto || !DefinePropertiesAndFunctions(
-                    cx, proto, nullptr, wrap_for_valid_iterator_methods)) {
-    return false;
-  }
-
-  global->setReservedSlot(WRAP_FOR_VALID_ITERATOR_PROTO, ObjectValue(*proto));
-  return true;
+NativeObject* GlobalObject::getOrCreateWrapForValidIteratorPrototype(
+    JSContext* cx, Handle<GlobalObject*> global) {
+  return MaybeNativeObject(getOrCreateObject(
+      cx, global, WRAP_FOR_VALID_ITERATOR_PROTO, HandleAtom(nullptr),
+      initObjectIteratorProto<WRAP_FOR_VALID_ITERATOR_PROTO,
+                              &WrapForValidIteratorPrototypeClass,
+                              wrap_for_valid_iterator_methods>));
 }
 
 WrapForValidIteratorObject* js::NewWrapForValidIterator(JSContext* cx) {
@@ -1726,6 +1688,5 @@ WrapForValidIteratorObject* js::NewWrapForValidIterator(JSContext* cx) {
   if (!proto) {
     return nullptr;
   }
-
   return NewObjectWithGivenProto<WrapForValidIteratorObject>(cx, proto);
 }

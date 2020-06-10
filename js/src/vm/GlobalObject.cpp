@@ -457,6 +457,22 @@ JSObject* GlobalObject::createObject(JSContext* cx,
   return &global->getSlot(slot).toObject();
 }
 
+JSObject* GlobalObject::createObject(JSContext* cx,
+                                     Handle<GlobalObject*> global,
+                                     unsigned slot, HandleAtom tag,
+                                     ObjectInitWithTagOp init) {
+  if (global->zone()->createdForHelperThread()) {
+    return createOffThreadObject(cx, global, slot);
+  }
+
+  MOZ_ASSERT(!cx->isHelperThreadContext());
+  if (!init(cx, global, tag)) {
+    return nullptr;
+  }
+
+  return &global->getSlot(slot).toObject();
+}
+
 const JSClass GlobalObject::OffThreadPlaceholderObject::class_ = {
     "off-thread-prototype-placeholder", JSCLASS_HAS_RESERVED_SLOTS(1)};
 
