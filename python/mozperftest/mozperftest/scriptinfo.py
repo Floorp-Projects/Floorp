@@ -3,27 +3,32 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 from collections import defaultdict
 import re
+import os
 import textwrap
-from pathlib import Path
 
+# This import will fail if esprima is not installed.
+# The package is vendored in python/third_party and also available at PyPI
+# The mach perftest command will make sure it's installed when --flavor doc
+# is being used.
 import esprima
 
 
-# list of metadata, each item is the name and if the field is mandatory
-METADATA = [
-    ("setUp", False),
-    ("tearDown", False),
-    ("test", True),
-    ("owner", True),
-    ("author", False),
-    ("name", True),
-    ("description", True),
-    ("longDescription", False),
-    ("usage", False),
-    ("supportedBrowsers", False),
-    ("supportedPlatforms", False),
-    ("filename", True),
-]
+METADATA = set(
+    [
+        "setUp",
+        "tearDown",
+        "test",
+        "owner",
+        "author",
+        "name",
+        "description",
+        "longDescription",
+        "usage",
+        "supportedBrowsers",
+        "supportedPlatforms",
+        "filename",
+    ]
+)
 
 
 _INFO = """\
@@ -42,19 +47,18 @@ Description:
 """
 
 
-class MissingFieldError(Exception):
-    pass
+class MetadataDict(defaultdict):
+    def __missing__(self, key):
+        return "N/A"
 
 
-class ScriptInfo(defaultdict):
-    """Loads and parses a Browsertime test script."""
-
-    def __init__(self, path):
+class ScriptInfo(MetadataDict):
+    def __init__(self, script):
         super(ScriptInfo, self).__init__()
-        self.script = Path(path)
-        self["filename"] = str(self.script)
-
-        with self.script.open() as f:
+        filename = os.path.basename(script)
+        self["filename"] = script, filename
+        self.script = script
+        with open(script) as f:
             self.parsed = esprima.parseScript(f.read())
 
         # looking for the exports statement
@@ -62,7 +66,6 @@ class ScriptInfo(defaultdict):
             if (
                 stmt.type != "ExpressionStatement"
                 or stmt.expression.left is None
-                or stmt.expression.left.property is None
                 or stmt.expression.left.property.name != "exports"
                 or stmt.expression.right is None
                 or stmt.expression.right.properties is None
@@ -83,33 +86,21 @@ class ScriptInfo(defaultdict):
                     value = [e.value for e in prop.value.elements]
                 else:
                     raise ValueError(prop.value.type)
+                #  line wrapping
+                if isinstance(value, str):
+                    repr = "\n".join(textwrap.wrap(value, break_on_hyphens=False))
+                elif isinstance(value, list):
+                    repr = ", ".join(value)
 
-                self[prop.key.name] = value
+                self[prop.key.name] = value, repr
 
-        # If the fields found, don't match our known ones, then an error is raised
-        for field, required in METADATA:
-            if not required:
-                continue
-            if field not in self:
-                raise MissingFieldError(field)
+        # If the fields found, don't match our known ones,
+        # then an error is raised
+        assert set(list(self.keys())) - METADATA == set()
 
     def __str__(self):
-        """Used to generate docs."""
-        d = {}
-        for field, value in self.items():
-            if field == "filename":
-                d[field] = self.script.name
-                continue
-
-            # line wrapping
-            if isinstance(value, str):
-                value = "\n".join(textwrap.wrap(value, break_on_hyphens=False))
-            elif isinstance(value, list):
-                value = ", ".join(value)
-            d[field] = value
-
-        d["filename_underline"] = "-" * len(d["filename"])
+        reprs = dict((k, v[1]) for k, v in self.items())
+        d = MetadataDict()
+        d.update(reprs)
+        d.update({"filename_underline": "-" * len(self["filename"])})
         return _INFO % d
-
-    def __missing__(self, key):
-        return "N/A"
