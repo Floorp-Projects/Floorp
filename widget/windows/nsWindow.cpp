@@ -5202,7 +5202,7 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
       break;
 
     case WM_SYSCOLORCHANGE:
-      OnSysColorChanged();
+      NotifyThemeChanged();
       break;
 
     case WM_THEMECHANGED: {
@@ -5265,14 +5265,7 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
       if (lParam) {
         auto lParamString = reinterpret_cast<const wchar_t*>(lParam);
         if (!wcscmp(lParamString, L"ImmersiveColorSet")) {
-          // This might be the Win10 dark mode setting; only way to tell
-          // is to actually force a theme change, since we don't get
-          // WM_THEMECHANGED or WM_SYSCOLORCHANGE when that happens.
-          if (IsWin10OrLater()) {
-            NotifyThemeChanged();
-          }
-          // WM_SYSCOLORCHANGE is not dispatched for accent color changes
-          OnSysColorChanged();
+          NotifyThemeChanged();
           break;
         }
         if (IsWin10OrLater() && mWindowType == eWindowType_invisible) {
@@ -7498,20 +7491,6 @@ bool nsWindow::HasBogusPopupsDropShadowOnMultiMonitor() {
     }
   }
   return !!sHasBogusPopupsDropShadowOnMultiMonitor;
-}
-
-void nsWindow::OnSysColorChanged() {
-  if (mWindowType == eWindowType_invisible) {
-    ::EnumThreadWindows(GetCurrentThreadId(), nsWindow::BroadcastMsg,
-                        WM_SYSCOLORCHANGE);
-  } else {
-    // Note: This is sent for child windows as well as top-level windows.
-    // The Win32 toolkit normally only sends these events to top-level windows.
-    // But we cycle through all of the childwindows and send it to them as well
-    // so all presentations get notified properly.
-    // See nsWindow::GlobalMsgWindowProc.
-    NotifySysColorChanged();
-  }
 }
 
 void nsWindow::OnDPIChanged(int32_t x, int32_t y, int32_t width,
