@@ -609,3 +609,16 @@ bool AntiTrackingUtils::IsThirdPartyWindow(nsPIDOMWindowInner* aWindow,
 
   return thirdParty;
 }
+
+/* static */
+nsCString AntiTrackingUtils::GrantedReasonToString(
+    ContentBlockingNotifier::StorageAccessPermissionGrantedReason aReason) {
+  switch (aReason) {
+    case ContentBlockingNotifier::eOpener:
+      return NS_LITERAL_CSTRING("opener");
+    case ContentBlockingNotifier::eOpenerAfterUserInteraction:
+      return NS_LITERAL_CSTRING("user interaction");
+    default:
+      return NS_LITERAL_CSTRING("stroage access API");
+  }
+}

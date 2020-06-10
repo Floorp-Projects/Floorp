@@ -9,6 +9,7 @@
 
 #include "mozilla/AlreadyAddRefed.h"
 #include "nsStringFwd.h"
+#include "ContentBlockingNotifier.h"
 
 class nsPIDOMWindowInner;
 class nsPIDOMWindowOuter;
@@ -119,6 +120,9 @@ class AntiTrackingUtils final {
   // third-party with respect to the URI. The function returns if it's true.
   // Otherwise, it will continue to check if the window is third-party.
   static bool IsThirdPartyWindow(nsPIDOMWindowInner* aWindow, nsIURI* aURI);
+
+  static nsCString GrantedReasonToString(
+      ContentBlockingNotifier::StorageAccessPermissionGrantedReason aReason);
 };
 
 }  // namespace mozilla
