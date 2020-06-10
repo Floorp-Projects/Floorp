@@ -100,8 +100,6 @@ class OSKeyStore final : public nsIOSKeyStore {
 
   std::unique_ptr<AbstractOSKeyStore> mKs;
   bool mKsIsNSSKeyStore;
-  const nsCString mLabelPrefix =
-      NS_LITERAL_CSTRING("org.mozilla.nss.keystore.");
 };
 
 #endif  // OSKeyStore_h
