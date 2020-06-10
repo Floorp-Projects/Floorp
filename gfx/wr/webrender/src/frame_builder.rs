@@ -4,7 +4,7 @@
 
 use api::{ColorF, DebugFlags, DocumentLayer, FontRenderMode, PremultipliedColorF};
 use api::units::*;
-use crate::batch::{BatchBuilder, AlphaBatchBuilder, AlphaBatchContainer};
+use crate::batch::{BatchBuilder, AlphaBatchBuilder};
 use crate::clip::{ClipStore, ClipChainStack, ClipInstance};
 use crate::spatial_tree::{SpatialTree, ROOT_SPATIAL_NODE_INDEX, SpatialNodeIndex};
 use crate::composite::{CompositorKind, CompositeState};
@@ -28,8 +28,8 @@ use crate::render_task::{RenderTask, RenderTaskLocation, RenderTaskKind};
 use crate::resource_cache::{ResourceCache};
 use crate::scene::{BuiltScene, SceneProperties};
 use crate::segment::SegmentBuilder;
-use std::{f32, mem};
 use crate::util::MaxRect;
+use std::{f32, mem};
 
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -964,15 +964,10 @@ pub fn build_render_pass(
                                 }
                                 _ => unreachable!(),
                             };
-                            let mut batch_containers = Vec::new();
-                            let mut alpha_batch_container = AlphaBatchContainer::new(Some(scissor_rect));
-                            batcher.build(
-                                &mut batch_containers,
-                                &mut alpha_batch_container,
+                            let alpha_batch_container = batcher.build(
                                 target_rect,
-                                None,
+                                Some(scissor_rect),
                             );
-                            debug_assert!(batch_containers.is_empty());
 
                             let target = PictureCacheTarget {
                                 surface: surface.clone(),
