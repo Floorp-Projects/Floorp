@@ -26,6 +26,7 @@ raptor_description_schema = Schema({
     # Raptor specific configs.
     Optional('apps'): optionally_keyed_by(
         'test-platform',
+        'subtest',
         [text_type]
     ),
     Optional('raptor-test'): text_type,
@@ -69,6 +70,7 @@ raptor_description_schema = Schema({
     Optional('tier'): optionally_keyed_by(
         'app',
         'raptor-test',
+        'subtest',
         test_description_schema['tier']
     ),
     Optional('run-visual-metrics'): optionally_keyed_by(
@@ -177,7 +179,11 @@ def split_raptor_subtests(config, tests):
             chunked = deepcopy(test)
             chunked['chunk-number'] = chunk_number
             chunked['subtest'] = subtest
-
+            chunked['subtest-symbol'] = subtest
+            if isinstance(chunked['subtest'], list):
+                chunked['subtest'] = subtest[0]
+                chunked['subtest-symbol'] = subtest[1]
+            chunked = resolve_keyed_by(chunked, 'tier', chunked['subtest'])
             yield chunked
 
 
@@ -238,16 +244,11 @@ def split_page_load_by_url(config, tests):
         # definition for `raptor-subtests`
         chunk_number = test.pop('chunk-number', None)
         subtest = test.pop('subtest', None)
+        subtest_symbol = test.pop('subtest-symbol', None)
 
         if not chunk_number or not subtest:
             yield test
             continue
-
-        if isinstance(subtest, list):
-            subtest, subtest_symbol = subtest
-        else:
-            subtest_symbol = subtest
-            subtest = subtest
 
         if len(subtest_symbol) > 10:
             raise Exception(
@@ -352,4 +353,13 @@ def add_extra_options(config, tests):
                             add_extra_params_option = "--test-url-params={}".format(params_query)
                             extra_options.append(add_extra_params_option)
 
+        yield test
+
+
+@transforms.add
+def apply_tier_optimization(config, tests):
+    for test in tests:
+        test['optimization'] = {'push-interval-10': None}
+        if test['tier'] > 1:
+            test['optimization'] = {'push-interval-25': None}
         yield test
