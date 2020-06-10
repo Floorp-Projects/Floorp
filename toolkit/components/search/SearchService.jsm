@@ -1652,9 +1652,6 @@ SearchService.prototype = {
       SearchUtils.notifyAction(engine, SearchUtils.MODIFIED_TYPE.ADDED);
     }
 
-    // Let the engine know it can start notifying new updates.
-    engine._engineAddedToStore = true;
-
     if (engine._hasUpdates) {
       // Schedule the engine's next update, if it isn't already.
       if (!engine.getAttr("updateexpir")) {
