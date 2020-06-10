@@ -624,11 +624,10 @@ extern "C" fn audiounit_output_callback(
             // need to trim the input buffer
             if prev_frames_written == 0 && buffered_input_frames > input_frames_needed as usize {
                 input_buffer_manager.trim(input_frames_needed * input_channels);
-                let popped_samples =
-                    ((buffered_input_frames - input_frames_needed) * input_channels) as usize;
-                stm.frames_read.fetch_sub(popped_samples, Ordering::SeqCst);
+                let popped_frames = buffered_input_frames - input_frames_needed as usize;
+                stm.frames_read.fetch_sub(popped_frames, Ordering::SeqCst);
 
-                cubeb_log!("Dropping {} frames in input buffer.", popped_samples);
+                cubeb_log!("Dropping {} frames in input buffer.", popped_frames);
             }
 
             let input_frames = if input_frames_needed > buffered_input_frames
@@ -1147,7 +1146,6 @@ fn get_buffer_size(unit: AudioUnit, devtype: DeviceType) -> std::result::Result<
         &mut size,
     );
     if status == NO_ERR {
-        assert_ne!(frames, 0);
         Ok(frames)
     } else {
         Err(status)
@@ -3479,7 +3477,7 @@ impl<'ctx> StreamOps for AudioUnitStream<'ctx> {
             };
             return Ok(position);
         }
-        Err(Error::error())
+        Ok(frames_played)
     }
     #[cfg(target_os = "ios")]
     fn latency(&mut self) -> Result<u32> {

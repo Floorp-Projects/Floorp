@@ -80,7 +80,7 @@ rev = "5e870faf6f95d79d11efc813e56370ad124bbed5"
 [source."https://github.com/ChunMinChang/cubeb-coreaudio-rs"]
 git = "https://github.com/ChunMinChang/cubeb-coreaudio-rs"
 replace-with = "vendored-sources"
-rev = "23cce37c8565708023c869913c0f24c2fda860d8"
+rev = "4cdbceadae88c77dfc77183b7edda183f32cd28c"
 
 [source.crates-io]
 replace-with = "vendored-sources"
