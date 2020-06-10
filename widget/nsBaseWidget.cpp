@@ -1661,15 +1661,6 @@ void nsBaseWidget::NotifySizeMoveDone() {
   }
 }
 
-void nsBaseWidget::NotifySysColorChanged() {
-  if (!mWidgetListener) {
-    return;
-  }
-  if (PresShell* presShell = mWidgetListener->GetPresShell()) {
-    presShell->SysColorChanged();
-  }
-}
-
 void nsBaseWidget::NotifyThemeChanged() {
   if (!mWidgetListener) {
     return;

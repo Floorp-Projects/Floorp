@@ -807,11 +807,6 @@ class nsPresContext : public nsISupports,
    */
   void UIResolutionChangedSync();
 
-  /*
-   * Notify the pres context that a system color has changed
-   */
-  void SysColorChanged();
-
   /** Printing methods below should only be used for Medium() == print **/
   void SetPrintSettings(nsIPrintSettings* aPrintSettings);
 
@@ -1071,7 +1066,6 @@ class nsPresContext : public nsISupports,
  protected:
   friend class nsRunnableMethod<nsPresContext>;
   void ThemeChangedInternal();
-  void SysColorChangedInternal();
   void RefreshSystemMetrics();
 
   // update device context's resolution from the widget
@@ -1280,7 +1274,6 @@ class nsPresContext : public nsISupports,
   unsigned mIsRootPaginatedDocument : 1;
   unsigned mPrefBidiDirection : 1;
   unsigned mPrefScrollbarSide : 2;
-  unsigned mPendingSysColorChanged : 1;
   unsigned mPendingThemeChanged : 1;
   unsigned mPendingUIResolutionChanged : 1;
   unsigned mPrefChangePendingNeedsReflow : 1;
