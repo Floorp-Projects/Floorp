@@ -2805,13 +2805,14 @@ SearchService.prototype = {
       ? "_currentPrivateEngine"
       : "_currentEngine";
     if (!this[currentEngine]) {
-      let name = this._cache.getAttribute(privateMode ? "private" : "current");
+      const attributeName = privateMode ? "private" : "current";
+      let name = this._cache.getAttribute(attributeName);
       let engine = this.getEngineByName(name);
       if (
         engine &&
-        (this._cache.getAttribute(privateMode ? "privateHash" : "hash") ==
-          getVerificationHash(name) ||
-          engine.isAppProvided)
+        (engine.isAppProvided ||
+          this._cache.getAttribute(this._cache.getHashName(attributeName)) ==
+            getVerificationHash(name))
       ) {
         // If the current engine is a default one, we can relax the
         // verification hash check to reduce the annoyance for users who
@@ -2939,10 +2940,9 @@ SearchService.prototype = {
       newName = "";
     }
 
-    this._cache.setAttribute(privateMode ? "private" : "current", newName);
-    this._cache.setAttribute(
-      privateMode ? "privateHash" : "hash",
-      getVerificationHash(newName)
+    this._cache.setVerifiedAttribute(
+      privateMode ? "private" : "current",
+      newName
     );
 
     SearchUtils.notifyAction(
