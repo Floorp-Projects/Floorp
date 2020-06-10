@@ -6,11 +6,11 @@
 
 #include "VRServiceHost.h"
 #include "VRGPUChild.h"
-#include "VRManager.h"
 #include "VRPuppetCommandBuffer.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/gfx/GPUParent.h"
 #include "service/VRService.h"
+#include "VRManager.h"
 
 namespace mozilla {
 namespace gfx {
