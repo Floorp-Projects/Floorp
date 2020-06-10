@@ -59,8 +59,9 @@ function run(opts, loads) {
 
   const loadMgr = new AllocationLoadManager(tests);
   const perf = new FrameHistory(gNumSamples);
+  const sequencer = new LoadCycle(sequence, opts.duration);
 
-  loadMgr.startCycle(sequence);
+  loadMgr.startCycle(sequencer);
   const schedulerCtors = {
     keepup: OptimizeForFrameRate,
     vsync: VsyncScheduler,
@@ -125,6 +126,10 @@ function report_results() {
 }
 
 var argparse = new ArgParser("JS shell microbenchmark runner");
+argparse.add_argument(["--duration", "-d"], {
+  default: gDefaultTestDuration,
+  help: "how long to run mutators for (in seconds)"
+});
 argparse.add_argument("--sched", {
   default: "keepup",
   options: ["keepup", "vsync"],
