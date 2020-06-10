@@ -44,26 +44,66 @@ IMPL_IUNKNOWN_QUERY_TAIL_INHERITED(HyperTextAccessibleWrap)
 STDMETHODIMP
 DocAccessibleWrap::get_accParent(
     /* [retval][out] */ IDispatch __RPC_FAR* __RPC_FAR* ppdispParent) {
+  if (IsDefunct()) {
+    return CO_E_OBJNOTCONNECTED;
+  }
+
   // We might be a top-level document in a content process.
   DocAccessibleChild* ipcDoc = IPCDoc();
-  if (!ipcDoc || static_cast<dom::BrowserChild*>(ipcDoc->Manager())
-                         ->GetTopLevelDocAccessibleChild() != ipcDoc) {
-    return DocAccessible::get_accParent(ppdispParent);
+  if (ipcDoc && static_cast<dom::BrowserChild*>(ipcDoc->Manager())
+                        ->GetTopLevelDocAccessibleChild() == ipcDoc) {
+    // Emulated window proxy is only set for the top level content document when
+    // emulation is enabled.
+    RefPtr<IDispatch> dispParent = ipcDoc->GetEmulatedWindowIAccessible();
+    if (!dispParent) {
+      dispParent = ipcDoc->GetParentIAccessible();
+    }
+
+    if (!dispParent) {
+      return S_FALSE;
+    }
+
+    dispParent.forget(ppdispParent);
+    return S_OK;
   }
 
-  // Emulated window proxy is only set for the top level content document when
+  // In the parent process, return window system accessible object for root
+  // document accessibles, as well as tab document accessibles if window
   // emulation is enabled.
-  RefPtr<IDispatch> dispParent = ipcDoc->GetEmulatedWindowIAccessible();
-  if (!dispParent) {
-    dispParent = ipcDoc->GetParentIAccessible();
+  if (XRE_IsParentProcess() &&
+      (!ParentDocument() || (nsWinUtils::IsWindowEmulationStarted() &&
+                             nsCoreUtils::IsTabDocument(DocumentNode())))) {
+    HWND hwnd = static_cast<HWND>(GetNativeWindow());
+    if (hwnd && !ParentDocument()) {
+      nsIFrame* frame = GetFrame();
+      if (frame) {
+        nsIWidget* widget = frame->GetNearestWidget();
+        if (widget->WindowType() == eWindowType_child && !widget->GetParent()) {
+          // Bug 1427304: Windows opened with popup=yes (such as the WebRTC
+          // sharing indicator) get two HWNDs. The root widget is associated
+          // with the inner HWND, but the outer HWND still answers to
+          // WM_GETOBJECT queries. This means that getting the parent of the
+          // oleacc window accessible for the inner HWND returns this
+          // root accessible. Thus, to avoid a loop, we must never return the
+          // oleacc window accessible for the inner HWND. Instead, we use the
+          // outer HWND here.
+          HWND parentHwnd = ::GetParent(hwnd);
+          if (parentHwnd) {
+            MOZ_ASSERT(::GetWindowLongW(parentHwnd, GWL_STYLE) & WS_POPUP,
+                       "Parent HWND should be a popup!");
+            hwnd = parentHwnd;
+          }
+        }
+      }
+    }
+    if (hwnd &&
+        SUCCEEDED(::AccessibleObjectFromWindow(
+            hwnd, OBJID_WINDOW, IID_IAccessible, (void**)ppdispParent))) {
+      return S_OK;
+    }
   }
 
-  if (!dispParent) {
-    return S_FALSE;
-  }
-
-  dispParent.forget(ppdispParent);
-  return S_OK;
+  return DocAccessible::get_accParent(ppdispParent);
 }
 
 STDMETHODIMP
