@@ -16,7 +16,7 @@ from mozbuild.generated_sources import (
     get_s3_region_and_bucket,
 )
 import os
-from Queue import Queue
+from six.moves.queue import Queue
 import requests
 import sys
 import tarfile
