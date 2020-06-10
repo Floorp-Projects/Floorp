@@ -11,7 +11,7 @@
 <!DOCTYPE window>
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:html="http://www.w3.org/1999/xhtml"
-        csp="default-src chrome: resource:; img-src chrome: resource: data:; object-src 'none'">
+        csp="default-src chrome: resource:; img-src chrome: resource: data:; object-src 'none'" role="application">
   <linkset>
     <html:link rel="localization" href="devtools/client/tooltips.ftl"/>
   </linkset>
@@ -23,7 +23,7 @@
   <script src="chrome://global/content/globalOverlay.js"/>
   <script src="chrome://devtools/content/framework/toolbox-init.js"/>
 
-  <vbox id="toolbox-container" flex="1">
+  <vbox id="toolbox-container" flex="1" role="group">
     <div xmlns="http://www.w3.org/1999/xhtml" id="toolbox-error-mount"/>
     <div xmlns="http://www.w3.org/1999/xhtml" id="toolbox-notificationbox"/>
     <div xmlns="http://www.w3.org/1999/xhtml" id="toolbox-toolbar-mount"
