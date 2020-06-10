@@ -18,6 +18,7 @@
 #include "PrintProgressDialogParent.h"
 #include "PrintSettingsDialogParent.h"
 #include "mozilla/layout/RemotePrintJobParent.h"
+#include "mozilla/StaticPrefs_print.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -142,7 +143,7 @@ nsresult PrintingParent::ShowPrintDialog(PBrowserParent* aParent,
   // If this is for print preview or we are printing silently then we just need
   // to initialize the print settings with anything specific from the printer.
   if (isPrintPreview || printSilently ||
-      Preferences::GetBool("print.always_print_silent", printSilently)) {
+      StaticPrefs::print_always_print_silent()) {
     settings->SetIsInitializedFromPrinter(false);
     mPrintSettingsSvc->InitPrintSettingsFromPrinter(printerName, settings);
   } else {
