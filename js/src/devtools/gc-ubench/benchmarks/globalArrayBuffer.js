@@ -18,8 +18,8 @@ tests.set(
         garbageIndex = 0;
       },
 
-      defaultGarbagePiles: "8K",
       defaultGarbagePerFrame: "4M",
+      defaultGarbagePiles: "8K",
 
       makeGarbage: N => {
         var ab = new ArrayBuffer(N);

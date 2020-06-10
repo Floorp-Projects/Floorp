@@ -20,7 +20,7 @@ tests.set(
       },
 
       defaultGarbagePiles: "8K",
-      defaultGarbagePerFrame: "1M",
+      defaultGarbagePerFrame: "48K",
 
       makeGarbage: N => {
         var arr = [];
