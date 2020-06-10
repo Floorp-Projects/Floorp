@@ -29,7 +29,7 @@ add_task(async function() {
   const displayGrid = { display: "grid" };
 
   info("Enable display:flex and check that justify-content becomes active");
-  checkDeclarationIsInactive(view, 1, justifyContent);
+  await checkDeclarationIsInactive(view, 1, justifyContent);
   await toggleDeclaration(view, 1, displayFlex);
   checkDeclarationIsActive(view, 1, justifyContent);
 
@@ -37,7 +37,7 @@ add_task(async function() {
     "Rename justify-content to justify-items and check that it becomes inactive"
   );
   await updateDeclaration(view, 1, justifyContent, justifyItems);
-  checkDeclarationIsInactive(view, 1, justifyItems);
+  await checkDeclarationIsInactive(view, 1, justifyItems);
 
   info(
     "Rename display:flex to display:grid and check that justify-items becomes active"
