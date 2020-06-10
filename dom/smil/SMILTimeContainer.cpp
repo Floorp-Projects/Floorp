@@ -185,7 +185,7 @@ nsresult SMILTimeContainer::SetParent(SMILTimeContainer* aParent) {
   return rv;
 }
 
-bool SMILTimeContainer::AddMilestone(
+void SMILTimeContainer::AddMilestone(
     const SMILMilestone& aMilestone,
     mozilla::dom::SVGAnimationElement& aElement) {
   // We record the milestone time and store it along with the element but this
@@ -193,7 +193,7 @@ bool SMILTimeContainer::AddMilestone(
   // between samples). If this happens, then we may do an unecessary sample
   // but that's pretty cheap.
   MOZ_ASSERT(!mHoldingEntries);
-  return mMilestoneEntries.Push(MilestoneEntry(aMilestone, aElement));
+  mMilestoneEntries.Push(MilestoneEntry(aMilestone, aElement));
 }
 
 void SMILTimeContainer::ClearMilestones() {

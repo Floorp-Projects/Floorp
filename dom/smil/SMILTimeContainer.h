@@ -168,9 +168,8 @@ class SMILTimeContainer {
    * @param   aMilestone  The milestone to register in container time.
    * @param   aElement    The timebase element that needs a sample at
    *                      aMilestone.
-   * @return  true if the element was successfully added, false otherwise.
    */
-  bool AddMilestone(const SMILMilestone& aMilestone,
+  void AddMilestone(const SMILMilestone& aMilestone,
                     mozilla::dom::SVGAnimationElement& aElement);
 
   /*
