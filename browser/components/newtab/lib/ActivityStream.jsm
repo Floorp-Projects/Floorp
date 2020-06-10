@@ -632,6 +632,7 @@ const FEEDS_DATA = [
         AU: ["en-CA", "en-GB", "en-US"],
         NZ: ["en-CA", "en-GB", "en-US"],
         IN: ["en-CA", "en-GB", "en-US"],
+        IE: ["en-CA", "en-GB", "en-US"],
         ZA: ["en-CA", "en-GB", "en-US"],
         CH: ["de", "fr", "it"],
         BE: ["fr", "de"],
