@@ -9,7 +9,6 @@ import logging
 
 from mach.decorators import (
     CommandArgument,
-    CommandArgumentGroup,
     CommandProvider,
     Command,
     SubCommand,
@@ -23,6 +22,9 @@ from mozbuild.vendor.moz_yaml import load_moz_yaml, MozYamlVerifyError
 class Vendor(MachCommandBase):
     """Vendor third-party dependencies into the source repository."""
 
+    # Fun quirk of ./mach - you can specify a default argument as well as subcommands.
+    # If the default argument matches a subcommand, the subcommand gets called. If it
+    # doesn't, we wind up in the default command.
     @Command(
         "vendor",
         category="misc",
@@ -36,9 +38,8 @@ class Vendor(MachCommandBase):
         default=False,
     )
     @CommandArgument("-r", "--revision", help="Repository tag or commit to update to.")
-    @CommandArgument("library", nargs=1)
-    @CommandArgumentGroup("verify")
-    @CommandArgument("--verify", "-v", action="store_true", help="Verify manifest")
+    @CommandArgument("--verify", "-v", action="store_true", help="(Only) verify the manifest")
+    @CommandArgument("library", nargs=1, help="The moz.yaml file of the library to vendor.")
     def vendor(
         self,
         library,
@@ -48,9 +49,10 @@ class Vendor(MachCommandBase):
         verify=False,
     ):
         """
-        Fun quirk of ./mach - you can specify a default argument as well as subcommands.
-        If the default argument matches a subcommand, the subcommand gets called. If it
-        doesn't, we wind up here to handle it.
+        Vendor third-party dependencies into the source repository.
+
+        Vendoring rust and python can be done with ./mach vendor [rust/python].
+        Vendoring other libraries can be done with ./mach vendor [arguments] path/to/file.yaml
         """
         library = library[0]
         assert library not in ["rust", "python"]
@@ -102,6 +104,8 @@ Please commit or stash these changes before vendoring, or re-run with `--ignore-
             )
             sys.exit(1)
 
+# =====================================================================
+
     @SubCommand(
         "vendor",
         "rust",
@@ -129,50 +133,7 @@ Please commit or stash these changes before vendoring, or re-run with `--ignore-
         vendor_command = self._spawn(VendorRust)
         vendor_command.vendor(**kwargs)
 
-    @SubCommand(
-        "vendor",
-        "aom",
-        description="Vendor av1 video codec reference implementation into the "
-        "source repository.",
-    )
-    @CommandArgument("-r", "--revision", help="Repository tag or commit to update to.")
-    @CommandArgument(
-        "--repo",
-        help="Repository url to pull a snapshot from. "
-        "Supports github and googlesource.",
-    )
-    @CommandArgument(
-        "--ignore-modified",
-        action="store_true",
-        help="Ignore modified files in current checkout",
-        default=False,
-    )
-    def vendor_aom(self, **kwargs):
-        from mozbuild.vendor.vendor_aom import VendorAOM
-
-        vendor_command = self._spawn(VendorAOM)
-        vendor_command.vendor(**kwargs)
-
-    @SubCommand(
-        "vendor",
-        "dav1d",
-        description="Vendor dav1d implementation of AV1 into the source repository.",
-    )
-    @CommandArgument("-r", "--revision", help="Repository tag or commit to update to.")
-    @CommandArgument(
-        "--repo", help="Repository url to pull a snapshot from. Supports gitlab."
-    )
-    @CommandArgument(
-        "--ignore-modified",
-        action="store_true",
-        help="Ignore modified files in current checkout",
-        default=False,
-    )
-    def vendor_dav1d(self, **kwargs):
-        from mozbuild.vendor.vendor_dav1d import VendorDav1d
-
-        vendor_command = self._spawn(VendorDav1d)
-        vendor_command.vendor(**kwargs)
+# =====================================================================
 
     @SubCommand(
         "vendor",
@@ -199,23 +160,3 @@ Please commit or stash these changes before vendoring, or re-run with `--ignore-
 
         vendor_command = self._spawn(VendorPython)
         vendor_command.vendor(**kwargs)
-
-    @SubCommand(
-        "vendor",
-        "manifest",
-        description="Vendor externally hosted repositories into this " "repository.",
-    )
-    @CommandArgument("files", nargs="+", help="Manifest files to work on")
-    @CommandArgumentGroup("verify")
-    @CommandArgument(
-        "--verify",
-        "-v",
-        action="store_true",
-        group="verify",
-        required=True,
-        help="Verify manifest",
-    )
-    def vendor_manifest(self, files, verify):
-        from mozbuild.vendor.vendor_manifest import verify_manifests
-
-        verify_manifests(files)
