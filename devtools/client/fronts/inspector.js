@@ -89,11 +89,27 @@ class InspectorFront extends FrontClassWithSpec(inspectorSpec) {
     this.pageStyle = await super.getPageStyle();
   }
 
+  async getCompatibilityFront() {
+    // DevTools supports a Compatibility actor from version FF79 and above.
+    // This check exists to maintain backwards compatibility with older
+    // backend. This check can be removed once FF79 hits the release channel.
+    if (this._compatibility === undefined) {
+      try {
+        this._compatibility = await super.getCompatibility();
+      } catch (error) {
+        this._compatibility = null;
+      }
+    }
+
+    return this._compatibility;
+  }
+
   async _startChangesFront() {
     await this.targetFront.getFront("changes");
   }
 
   destroy() {
+    this._compatibility = null;
     // Highlighter fronts are managed by InspectorFront and so will be
     // automatically destroyed. But we have to clear the `_highlighters`
     // Map as well as explicitly call `finalize` request on all of them.
