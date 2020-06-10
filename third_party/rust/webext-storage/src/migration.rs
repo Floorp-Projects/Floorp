@@ -3,9 +3,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use crate::error::*;
-use rusqlite::{Connection, OpenFlags, Transaction, NO_PARAMS};
+use rusqlite::{named_params, Connection, OpenFlags, Transaction, NO_PARAMS};
 use serde_json::{Map, Value};
 use sql_support::ConnExt;
+use std::collections::HashSet;
 use std::path::Path;
 
 // Simple migration from the "old" kinto-with-sqlite-backing implementation
@@ -107,12 +108,12 @@ struct Parsed<'a> {
     data: serde_json::Value,
 }
 
-pub fn migrate(tx: &Transaction<'_>, filename: &Path) -> Result<usize> {
+pub fn migrate(tx: &Transaction<'_>, filename: &Path) -> Result<MigrationInfo> {
     // We do the grouping manually, collecting string values as we go.
     let mut last_ext_id = "".to_string();
     let mut curr_values: Vec<(String, serde_json::Value)> = Vec::new();
-    let mut num_extensions = 0;
-    for row in read_rows(filename) {
+    let (rows, mut mi) = read_rows(filename);
+    for row in rows {
         log::trace!("processing '{}' - '{}'", row.col_name, row.record);
         let parsed = match row.parse() {
             Some(p) => p,
@@ -122,8 +123,9 @@ pub fn migrate(tx: &Transaction<'_>, filename: &Path) -> Result<usize> {
         if parsed.ext_id != last_ext_id {
             if last_ext_id != "" && !curr_values.is_empty() {
                 // a different extension id - write what we have to the DB.
-                do_insert(tx, &last_ext_id, curr_values)?;
-                num_extensions += 1;
+                let entries = do_insert(tx, &last_ext_id, curr_values)?;
+                mi.extensions_successful += 1;
+                mi.entries_successful += entries;
             }
             last_ext_id = parsed.ext_id.to_string();
             curr_values = Vec::new();
@@ -141,32 +143,34 @@ pub fn migrate(tx: &Transaction<'_>, filename: &Path) -> Result<usize> {
     // and the last one
     if last_ext_id != "" && !curr_values.is_empty() {
         // a different extension id - write what we have to the DB.
-        do_insert(tx, &last_ext_id, curr_values)?;
-        num_extensions += 1;
+        let entries = do_insert(tx, &last_ext_id, curr_values)?;
+        mi.extensions_successful += 1;
+        mi.entries_successful += entries;
     }
-    log::info!("migrated {} extensions", num_extensions);
-    Ok(num_extensions)
+    log::info!("migrated {} extensions: {:?}", mi.extensions_successful, mi);
+    Ok(mi)
 }
 
-fn read_rows(filename: &Path) -> Vec<LegacyRow> {
+fn read_rows(filename: &Path) -> (Vec<LegacyRow>, MigrationInfo) {
     let flags = OpenFlags::SQLITE_OPEN_NO_MUTEX | OpenFlags::SQLITE_OPEN_READ_ONLY;
     let src_conn = match Connection::open_with_flags(&filename, flags) {
         Ok(conn) => conn,
         Err(e) => {
             log::warn!("Failed to open the source DB: {}", e);
-            return Vec::new();
+            return (Vec::new(), MigrationInfo::open_failure());
         }
     };
     // Failure to prepare the statement probably just means the source DB is
     // damaged.
     let mut stmt = match src_conn.prepare(
         "SELECT collection_name, record FROM collection_data
+         WHERE collection_name != 'default/storage-sync-crypto'
          ORDER BY collection_name",
     ) {
         Ok(stmt) => stmt,
         Err(e) => {
             log::warn!("Failed to prepare the statement: {}", e);
-            return Vec::new();
+            return (Vec::new(), MigrationInfo::open_failure());
         }
     };
     let rows = match stmt.query_and_then(NO_PARAMS, |row| -> Result<LegacyRow> {
@@ -178,18 +182,37 @@ fn read_rows(filename: &Path) -> Vec<LegacyRow> {
         Ok(r) => r,
         Err(e) => {
             log::warn!("Failed to read any rows from the source DB: {}", e);
-            return Vec::new();
+            return (Vec::new(), MigrationInfo::open_failure());
         }
     };
+    let all_rows: Vec<Result<LegacyRow>> = rows.collect();
+    let entries = all_rows.len();
+    let successful_rows: Vec<LegacyRow> = all_rows.into_iter().filter_map(Result::ok).collect();
+    let distinct_extensions: HashSet<_> = successful_rows.iter().map(|c| &c.col_name).collect();
 
-    rows.filter_map(Result::ok).collect()
+    let mi = MigrationInfo {
+        entries,
+        extensions: distinct_extensions.len(),
+        // Populated later.
+        extensions_successful: 0,
+        entries_successful: 0,
+        open_failure: false,
+    };
+
+    (successful_rows, mi)
 }
 
-fn do_insert(tx: &Transaction<'_>, ext_id: &str, vals: Vec<(String, Value)>) -> Result<()> {
+/// Insert the extension and values. If there are multiple values with the same
+/// key (which shouldn't be possible but who knows, database corruption causes
+/// strange things), chooses an arbitrary one. Returns the number of entries
+/// inserted, which could be different from `vals.len()` if multiple entries in
+/// `vals` have the same key.
+fn do_insert(tx: &Transaction<'_>, ext_id: &str, vals: Vec<(String, Value)>) -> Result<usize> {
     let mut map = Map::with_capacity(vals.len());
     for (key, val) in vals {
         map.insert(key, val);
     }
+    let num_entries = map.len();
     tx.execute_named_cached(
         "INSERT OR REPLACE INTO storage_sync_data(ext_id, data, sync_change_counter)
          VALUES (:ext_id, :data, 1)",
@@ -198,9 +221,89 @@ fn do_insert(tx: &Transaction<'_>, ext_id: &str, vals: Vec<(String, Value)>) -> 
             ":data": &Value::Object(map),
         },
     )?;
-    Ok(())
+    Ok(num_entries)
 }
 
+#[derive(Debug, Clone, Default, PartialEq, serde::Serialize, serde::Deserialize)]
+pub struct MigrationInfo {
+    /// The number of entries (rows in the original table) we attempted to
+    /// migrate. Zero if there was some error in computing this number.
+    ///
+    /// Note that for the original table, a single row stores a single
+    /// preference for one extension. That is, if you view the set of
+    /// preferences for a given extension as a HashMap (as we do), it would be a
+    /// single entry/key-value-pair in the map.
+    pub entries: usize,
+    /// The number of records we successfully migrated (equal to `entries` for
+    /// entirely successful migrations).
+    pub entries_successful: usize,
+    /// The number of extensions (distinct extension ids) in the original
+    /// table.
+    pub extensions: usize,
+    /// The number of extensions we successfully migrated
+    pub extensions_successful: usize,
+    /// True iff we failed to open the source DB at all.
+    pub open_failure: bool,
+}
+
+impl MigrationInfo {
+    /// Returns a MigrationInfo indicating that we failed to read any rows due
+    /// to some error case (e.g. the database open failed, or some other very
+    /// early read error).
+    fn open_failure() -> Self {
+        Self {
+            open_failure: true,
+            ..Self::default()
+        }
+    }
+
+    const META_KEY: &'static str = "migration_info";
+
+    /// Store `self` in the provided database under `Self::META_KEY`.
+    pub(crate) fn store(&self, conn: &Connection) -> Result<()> {
+        let json = serde_json::to_string(self)?;
+        conn.execute_named(
+            "INSERT OR REPLACE INTO meta(key, value) VALUES (:k, :v)",
+            named_params! {
+                ":k": Self::META_KEY,
+                ":v": &json
+            },
+        )?;
+        Ok(())
+    }
+
+    /// Get the MigrationInfo stored under `Self::META_KEY` (if any) out of the
+    /// DB, and delete it.
+    pub(crate) fn take(tx: &Transaction<'_>) -> Result<Option<Self>> {
+        let s = tx.try_query_one::<String>(
+            "SELECT value FROM meta WHERE key = :k",
+            named_params! {
+                ":k": Self::META_KEY,
+            },
+            false,
+        )?;
+        tx.execute_named(
+            "DELETE FROM meta WHERE key = :k",
+            named_params! {
+                ":k": Self::META_KEY,
+            },
+        )?;
+        if let Some(s) = s {
+            match serde_json::from_str(&s) {
+                Ok(v) => Ok(Some(v)),
+                Err(e) => {
+                    // Force test failure, but just log an error otherwise so that
+                    // we commit the transaction that wil.
+                    debug_assert!(false, "Failed to read migration JSON: {:?}", e);
+                    log::error!("Failed to read migration JSON: {}", e);
+                    Ok(None)
+                }
+            }
+        } else {
+            Ok(None)
+        }
+    }
+}
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -209,14 +312,7 @@ mod tests {
     use serde_json::json;
     use tempfile::tempdir;
 
-    // Create a test database, populate it via the callback, migrate it, and
-    // return a connection to the new, migrated DB for further checking.
-    fn do_migrate<F>(num_expected: usize, f: F) -> StorageDb
-    where
-        F: FnOnce(&Connection),
-    {
-        let tmpdir = tempdir().unwrap();
-        let path = tmpdir.path().join("source.db");
+    fn init_source_db(path: impl AsRef<Path>, f: impl FnOnce(&Connection)) {
         let flags = OpenFlags::SQLITE_OPEN_NO_MUTEX
             | OpenFlags::SQLITE_OPEN_CREATE
             | OpenFlags::SQLITE_OPEN_READ_WRITE;
@@ -233,14 +329,25 @@ mod tests {
         f(&tx);
         tx.commit().expect("should commit");
         conn.close().expect("close should work");
+    }
+
+    // Create a test database, populate it via the callback, migrate it, and
+    // return a connection to the new, migrated DB for further checking.
+    fn do_migrate<F>(expect_mi: MigrationInfo, f: F) -> StorageDb
+    where
+        F: FnOnce(&Connection),
+    {
+        let tmpdir = tempdir().unwrap();
+        let path = tmpdir.path().join("source.db");
+        init_source_db(&path, f);
 
         // now migrate
         let mut db = new_mem_db();
         let tx = db.transaction().expect("tx should work");
 
-        let num = migrate(&tx, &tmpdir.path().join("source.db")).expect("migrate should work");
+        let mi = migrate(&tx, &tmpdir.path().join("source.db")).expect("migrate should work");
         tx.commit().expect("should work");
-        assert_eq!(num, num_expected);
+        assert_eq!(mi, expect_mi);
         db
     }
 
@@ -251,22 +358,30 @@ mod tests {
         );
     }
 
+    const HAPPY_PATH_SQL: &str = r#"
+        INSERT INTO collection_data(collection_name, record)
+        VALUES
+            ('default/{e7fefcf3-b39c-4f17-5215-ebfe120a7031}', '{"id":"key-userWelcomed","key":"userWelcomed","data":1570659224457,"_status":"synced","last_modified":1579755940527}'),
+            ('default/{e7fefcf3-b39c-4f17-5215-ebfe120a7031}', '{"id":"key-isWho","key":"isWho","data":"4ec8109f","_status":"synced","last_modified":1579755940497}'),
+            ('default/storage-sync-crypto', '{"id":"keys","keys":{"default":["rQ=","lR="],"collections":{"extension@redux.devtools":["Bd=","ju="]}}}'),
+            ('default/https-everywhere@eff.org', '{"id":"key-userRules","key":"userRules","data":[],"_status":"synced","last_modified":1570079920045}'),
+            ('default/https-everywhere@eff.org', '{"id":"key-ruleActiveStates","key":"ruleActiveStates","data":{},"_status":"synced","last_modified":1570079919993}'),
+            ('default/https-everywhere@eff.org', '{"id":"key-migration_5F_version","key":"migration_version","data":2,"_status":"synced","last_modified":1570079919966}')
+    "#;
+    const HAPPY_PATH_MIGRATION_INFO: MigrationInfo = MigrationInfo {
+        entries: 5,
+        entries_successful: 5,
+        extensions: 2,
+        extensions_successful: 2,
+        open_failure: false,
+    };
+
     #[allow(clippy::unreadable_literal)]
     #[test]
     fn test_happy_paths() {
         // some real data.
-        let conn = do_migrate(2, |c| {
-            c.execute_batch(
-                r#"INSERT INTO collection_data(collection_name, record)
-                    VALUES
-                    ('default/{e7fefcf3-b39c-4f17-5215-ebfe120a7031}', '{"id":"key-userWelcomed","key":"userWelcomed","data":1570659224457,"_status":"synced","last_modified":1579755940527}'),
-                    ('default/{e7fefcf3-b39c-4f17-5215-ebfe120a7031}', '{"id":"key-isWho","key":"isWho","data":"4ec8109f","_status":"synced","last_modified":1579755940497}'),
-                    ('default/storage-sync-crypto', '{"id":"keys","keys":{"default":["rQ=","lR="],"collections":{"extension@redux.devtools":["Bd=","ju="]}}}'),
-                    ('default/https-everywhere@eff.org', '{"id":"key-userRules","key":"userRules","data":[],"_status":"synced","last_modified":1570079920045}'),
-                    ('default/https-everywhere@eff.org', '{"id":"key-ruleActiveStates","key":"ruleActiveStates","data":{},"_status":"synced","last_modified":1570079919993}'),
-                    ('default/https-everywhere@eff.org', '{"id":"key-migration_5F_version","key":"migration_version","data":2,"_status":"synced","last_modified":1570079919966}')
-                    "#,
-            ).expect("should popuplate")
+        let conn = do_migrate(HAPPY_PATH_MIGRATION_INFO, |c| {
+            c.execute_batch(HAPPY_PATH_SQL).expect("should populate")
         });
 
         assert_has(
@@ -283,9 +398,17 @@ mod tests {
 
     #[test]
     fn test_sad_paths() {
-        do_migrate(0, |c| {
-            c.execute_batch(
-                r#"INSERT INTO collection_data(collection_name, record)
+        do_migrate(
+            MigrationInfo {
+                entries: 10,
+                entries_successful: 0,
+                extensions: 6,
+                extensions_successful: 0,
+                open_failure: false,
+            },
+            |c| {
+                c.execute_batch(
+                    r#"INSERT INTO collection_data(collection_name, record)
                     VALUES
                     ('default/test', '{"key":2,"data":1}'), -- key not a string
                     ('default/test', '{"key":"","data":1}'), -- key empty string
@@ -298,8 +421,30 @@ mod tests {
                     ('defaultx/test', '{"key":"k","data":1}'), -- bad key format 4
                     ('', '') -- empty strings
                     "#,
-            )
-            .expect("should populate");
+                )
+                .expect("should populate");
+            },
+        );
+    }
+
+    #[test]
+    fn test_migration_info_storage() {
+        let tmpdir = tempdir().unwrap();
+        let path = tmpdir.path().join("source.db");
+        init_source_db(&path, |c| {
+            c.execute_batch(HAPPY_PATH_SQL).expect("should populate")
         });
+
+        // now migrate
+        let db = crate::store::test::new_mem_store();
+        db.migrate(&path).expect("migration should work");
+        let mi = db
+            .take_migration_info()
+            .expect("take failed with info present");
+        assert_eq!(mi, Some(HAPPY_PATH_MIGRATION_INFO));
+        let mi2 = db
+            .take_migration_info()
+            .expect("take failed with info missing");
+        assert_eq!(mi2, None);
     }
 }

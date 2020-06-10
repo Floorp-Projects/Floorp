@@ -212,9 +212,13 @@ fn init_store(config: &LazyStoreConfig) -> Result<Store> {
     let store = Store::new(&config.path)?;
     if should_migrate {
         match store.migrate(&config.kinto_path) {
-            Ok(num) => {
+            // It's likely to be too early for us to stick the MigrationInfo
+            // into the sync telemetry, a separate call to `take_migration_info`
+            // must be made to the store (this is done by telemetry after it's
+            // ready to submit the data).
+            Ok(()) => {
                 // need logging, but for now let's print to stdout.
-                println!("extension-storage: migrated {} records", num);
+                println!("extension-storage: migration complete");
                 Ok(store)
             }
             Err(e) => {

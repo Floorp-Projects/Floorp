@@ -35,6 +35,11 @@
       "minItems": 1,
       "items": { "$ref": "#/definitions/event" }
     },
+    "migrations": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/definitions/migration" }
+    },
     "histograms": {
       "type": "object",
       "additionalProperties": {
@@ -163,6 +168,22 @@
       "type": "array",
       "minItems": 4,
       "maxItems": 6
+    },
+    "migration": {
+      "oneOf": [
+        { "$ref": "#/definitions/webextMigration" }
+      ]
+    },
+    "webextMigration": {
+      "required": ["type"],
+      "properties": {
+        "type": { "enum": ["webext-storage"] },
+        "entries": { "type": "integer" },
+        "entriesSuccessful": { "type": "integer" },
+        "extensions": { "type": "integer" },
+        "extensionsSuccessful": { "type": "integer" },
+        "openFailure": { "type": "boolean" }
+      }
     },
     "error": {
       "oneOf": [

@@ -117,6 +117,7 @@ add_task(async function test_notifyPendingChanges() {
   engine._bridge = {
     QueryInterface: ChromeUtils.generateQI([
       Ci.mozIBridgedSyncEngine,
+      Ci.mozIExtensionStorageArea,
       Ci.mozISyncedExtensionStorageArea,
     ]),
     ensureCurrentSyncId(id, callback) {
@@ -155,6 +156,9 @@ add_task(async function test_notifyPendingChanges() {
     },
     syncFinished(callback) {
       callback.handleSuccess();
+    },
+    takeMigrationInfo(callback) {
+      callback.handleSuccess(null);
     },
   };
 
