@@ -1,4 +1,2 @@
-defaults pref(layout.css.scrollbar-color.enabled,true)
-
 == viewport-scrollbar-color-change.html viewport-scrollbar-color-change-ref.html
 == scrollbar-thin-overflow-change.html scrollbar-thin-overflow-change-ref.html
