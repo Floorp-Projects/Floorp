@@ -29,7 +29,6 @@ var constructorAccesses = [
     // ToDateTimeOptions(options, "any", "date").
     "weekday", "year", "month", "day",
     ...dayPeriod, "hour", "minute", "second", ...fractionalSecondDigits,
-    "dateStyle", "timeStyle",
 
     // InitializeDateTimeFormat
     "localeMatcher", "calendar", "numberingSystem", "hour12", "hourCycle", "timeZone",
@@ -40,7 +39,6 @@ var constructorAccesses = [
     // InitializeDateTimeFormat
     ...fractionalSecondDigits,
     "formatMatcher",
-    "dateStyle", "timeStyle",
 ];
 
 log = [];
@@ -55,7 +53,6 @@ assertEqArray(log, [
     // ToDateTimeOptions(options, "any", "all").
     "weekday", "year", "month", "day",
     ...dayPeriod, "hour", "minute", "second", ...fractionalSecondDigits,
-    "dateStyle", "timeStyle",
 
     ...constructorAccesses
 ]);
@@ -66,7 +63,6 @@ new Date().toLocaleDateString(undefined, proxy);
 assertEqArray(log, [
     // ToDateTimeOptions(options, "date", "date").
     "weekday", "year", "month", "day",
-    "dateStyle", "timeStyle",
 
     ...constructorAccesses
 ]);
@@ -77,7 +73,6 @@ new Date().toLocaleTimeString(undefined, proxy);
 assertEqArray(log, [
     // ToDateTimeOptions(options, "time", "time").
     ...dayPeriod, "hour", "minute", "second", ...fractionalSecondDigits,
-    "dateStyle", "timeStyle",
 
     ...constructorAccesses
 ]);

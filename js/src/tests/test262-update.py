@@ -28,6 +28,7 @@ UNSUPPORTED_FEATURES = set([
     "regexp-match-indices",
     "export-star-as-namespace-from-module",
     "Intl.DateTimeFormat-quarter",
+    "Intl.DateTimeFormat-datetimestyle",
     "Intl.DateTimeFormat-formatRange",
     "Intl.Segmenter",
     "top-level-await",

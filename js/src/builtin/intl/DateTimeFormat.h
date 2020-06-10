@@ -139,7 +139,7 @@ extern MOZ_MUST_USE bool intl_isDefaultTimeZone(JSContext* cx, unsigned argc,
  * best-fit date-time format pattern corresponding to skeleton for the
  * given locale.
  *
- * Usage: pattern = intl_patternForSkeleton(locale, skeleton, hourCycle)
+ * Usage: pattern = intl_patternForSkeleton(locale, skeleton)
  */
 extern MOZ_MUST_USE bool intl_patternForSkeleton(JSContext* cx, unsigned argc,
                                                  JS::Value* vp);
@@ -148,7 +148,7 @@ extern MOZ_MUST_USE bool intl_patternForSkeleton(JSContext* cx, unsigned argc,
  * Return a pattern in the date-time format pattern language of Unicode
  * Technical Standard 35, Unicode Locale Data Markup Language, for the
  * best-fit date-time style for the given locale.
- * The function takes six arguments:
+ * The function takes four arguments:
  *
  *   locale
  *     BCP47 compliant locale string
@@ -158,10 +158,6 @@ extern MOZ_MUST_USE bool intl_patternForSkeleton(JSContext* cx, unsigned argc,
  *     A string with values: full or long or medium or short, or `undefined`
  *   timeZone
  *     IANA time zone name
- *   hour12
- *     A boolean to request hour12 representation, or `undefined`
- *   hourCycle
- *     A string with values: h11, h12, h23, or h24, or `undefined`
  *
  * Date and time style categories map to CLDR time/date standard
  * format patterns.
@@ -172,8 +168,7 @@ extern MOZ_MUST_USE bool intl_patternForSkeleton(JSContext* cx, unsigned argc,
  * If `undefined` is passed to `dateStyle` or `timeStyle`, the respective
  * portions of the pattern will not be included in the result.
  *
- * Usage: pattern = intl_patternForStyle(locale, dateStyle, timeStyle, timeZone,
- *                                       hour12, hourCycle)
+ * Usage: pattern = intl_patternForStyle(locale, dateStyle, timeStyle, timeZone)
  */
 extern MOZ_MUST_USE bool intl_patternForStyle(JSContext* cx, unsigned argc,
                                               JS::Value* vp);
