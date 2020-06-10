@@ -82,6 +82,9 @@ void AltSvcMapping::ProcessHeader(
   ParsedHeaderValueListList parsedAltSvc(buf);
   int32_t numEntriesInHeader = parsedAltSvc.mValues.Length();
 
+  // Only use one http3 version.
+  bool http3Found = false;
+
   for (uint32_t index = 0; index < parsedAltSvc.mValues.Length(); ++index) {
     uint32_t maxage = 86400;  // default
     nsAutoCString hostname;
@@ -146,6 +149,11 @@ void AltSvcMapping::ProcessHeader(
     nsUnescape(npnToken.BeginWriting());
     npnToken.SetLength(strlen(npnToken.BeginReading()));
 
+    if (http3Found && isHttp3) {
+      LOG(("Alt Svc ignore multiple Http3 options (%s)", npnToken.get()));
+      continue;
+    }
+
     uint32_t spdyIndex;
     SpdyInformation* spdyInfo = gHttpHandler->SpdyInfo();
     if (!(NS_SUCCEEDED(spdyInfo->GetNPNIndex(npnToken, &spdyIndex)) &&
@@ -154,6 +162,8 @@ void AltSvcMapping::ProcessHeader(
       LOG(("Alt Svc unknown protocol %s, ignoring", npnToken.get()));
       continue;
     }
+
+    http3Found = true;
 
     RefPtr<AltSvcMapping> mapping = new AltSvcMapping(
         gHttpHandler->AltServiceCache()->GetStoragePtr(),

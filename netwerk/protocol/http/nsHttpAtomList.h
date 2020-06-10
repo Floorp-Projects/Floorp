@@ -99,5 +99,6 @@ HTTP_ATOM(X_Firefox_Spdy, "X-Firefox-Spdy")
 HTTP_ATOM(X_Firefox_Spdy_Proxy, "X-Firefox-Spdy-Proxy")
 HTTP_ATOM(X_Firefox_Early_Data, "X-Firefox-Early-Data")
 HTTP_ATOM(X_Firefox_TCP_Fast_Open, "X-Firefox-TCP-Fast-Open")
+HTTP_ATOM(X_Firefox_Http3, "X-Firefox-Http3")
 
 // methods are case sensitive and do not use atom table

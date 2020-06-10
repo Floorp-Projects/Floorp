@@ -298,6 +298,12 @@ nsresult HttpConnectionUDP::OnHeadersAvailable(nsAHttpTransaction* trans,
   NS_ENSURE_ARG_POINTER(trans);
   MOZ_ASSERT(responseHead, "No response head?");
 
+  if (mHttp3Session) {
+    DebugOnly<nsresult> rv = responseHead->SetHeader(
+        nsHttp::X_Firefox_Http3, mHttp3Session->GetAlpnToken());
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+  }
+
   // deal with 408 Server Timeouts
   uint16_t responseStatus = responseHead->Status();
   static const PRIntervalTime k1000ms = PR_MillisecondsToInterval(1000);
