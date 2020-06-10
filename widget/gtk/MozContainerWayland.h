@@ -9,6 +9,7 @@
 #define __MOZ_CONTAINER_WAYLAND_H__
 
 #include <gtk/gtk.h>
+#include <functional>
 #include <vector>
 #include "mozilla/Mutex.h"
 
