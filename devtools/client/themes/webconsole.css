@@ -269,6 +269,11 @@
   color: var(--theme-graphs-purple);
 }
 
+.message.network-message-blocked > .icon {
+  color: var(--theme-icon-error-color);
+  background-image: url(chrome://devtools/skin/images/blocked.svg);
+}
+
 .message > .message-body-wrapper {
   flex: auto;
   min-width: 0px;
@@ -706,6 +711,12 @@ a.learn-more-link.webconsole-learn-more-link {
 
 /* Network Messages */
 
+.webconsole-app .message.network.network-message-blocked .method,
+.webconsole-app .message.network.network-message-blocked .message-flex-body .message-body .url,
+.webconsole-app .message.network.network-message-blocked .status {
+  color: var(--timing-blocked-color);
+}
+
 .webconsole-app .message.network .method {
   margin-inline-end: 1ch;
 }
@@ -885,7 +896,7 @@ a.learn-more-link.webconsole-learn-more-link {
 }
 
 /* Hide the icon, so that we can use the collapse-button in its place */
-.message.network > .icon,
+.message.network:not(.network-message-blocked) > .icon,
 .message.startGroup > .icon,
 .message.startGroupCollapsed > .icon {
   display: none;
