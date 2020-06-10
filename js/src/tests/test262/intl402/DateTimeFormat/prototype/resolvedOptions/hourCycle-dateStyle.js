@@ -1,4 +1,3 @@
-// |reftest| skip -- Intl.DateTimeFormat-datetimestyle is not supported
 // Copyright 2019 Mozilla Corporation, Igalia S.L. All rights reserved.
 // This code is governed by the license found in the LICENSE file.
 
