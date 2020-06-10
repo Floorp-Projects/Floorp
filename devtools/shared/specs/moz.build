@@ -16,6 +16,7 @@ DevToolsModules(
     'animation.js',
     'array-buffer.js',
     'changes.js',
+    'compatibility.js',
     'content-viewer.js',
     'css-properties.js',
     'device.js',

@@ -48,6 +48,11 @@ const Types = (exports.__TypesForTests = [
     front: "devtools/client/fronts/changes",
   },
   {
+    types: ["compatibility"],
+    spec: "devtools/shared/specs/compatibility",
+    front: "devtools/client/fronts/compatibility",
+  },
+  {
     types: ["contentViewer"],
     spec: "devtools/shared/specs/content-viewer",
     front: "devtools/client/fronts/content-viewer",

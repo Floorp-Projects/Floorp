@@ -104,6 +104,12 @@ loader.lazyRequireGetter(
   "devtools/server/actors/highlighters",
   true
 );
+loader.lazyRequireGetter(
+  this,
+  "CompatibilityActor",
+  "devtools/server/actors/compatibility",
+  true
+);
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
@@ -126,6 +132,7 @@ exports.InspectorActor = protocol.ActorClassWithSpec(inspectorSpec, {
     protocol.Actor.prototype.destroy.call(this);
     this.destroyEyeDropper();
 
+    this._compatibility = null;
     this._highlighterPromise = null;
     this._pageStylePromise = null;
     this._walkerPromise = null;
@@ -179,6 +186,16 @@ exports.InspectorActor = protocol.ActorClassWithSpec(inspectorSpec, {
       return pageStyle;
     });
     return this._pageStylePromise;
+  },
+
+  getCompatibility: function() {
+    if (this._compatibility) {
+      return this._compatibility;
+    }
+
+    this._compatibility = CompatibilityActor(this);
+    this.manage(this._compatibility);
+    return this._compatibility;
   },
 
   /**
