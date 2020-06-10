@@ -63,14 +63,10 @@ argument to automatically accept any license agreements.
    not bundled the native code into embedded libraries so you can amend
    the code.
 -  Say Y to all configuration options
--  Once ``mach bootstrap`` is complete it will tell you to copy and
-   paste some configuration into your ``mozconfig`` file. The
-   ``mozconfig`` file can be found in the root of your ``gecko`` repo -
-   or create a file called ``mozconfig`` if it does not exist. Check
-   that the correct value is associated with the ``--target`` argument
-   as this may not correctly match your setup. Copy the file contents
-   from the ``mach bootstrap`` output into your file and save in the
-   root directory of your project.
+-  Once ``mach bootstrap`` is complete, it will automatically write
+   the configuration into a new ``mozconfig`` file. If you already
+   have a ``mozconfig``, ``mach`` will instead output new configuration
+   that you should append to your existing file.
 
 Build from the command line
 ---------------------------
