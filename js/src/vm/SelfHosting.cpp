@@ -159,6 +159,26 @@ static bool intrinsic_IsCrossRealmArrayConstructor(JSContext* cx, unsigned argc,
   return true;
 }
 
+static bool intrinsic_ToLength(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  MOZ_ASSERT(args.length() == 1);
+
+  // Inline fast path for the common case.
+  if (args[0].isInt32()) {
+    int32_t i = args[0].toInt32();
+    args.rval().setInt32(i < 0 ? 0 : i);
+    return true;
+  }
+
+  uint64_t length = 0;
+  if (!ToLength(cx, args[0], &length)) {
+    return false;
+  }
+
+  args.rval().setNumber(double(length));
+  return true;
+}
+
 static bool intrinsic_ToInteger(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   double result;
@@ -2140,6 +2160,7 @@ static const JSFunctionSpec intrinsic_functions[] = {
                     intrinsic_IsCrossRealmArrayConstructor, 1, 0,
                     IntrinsicIsCrossRealmArrayConstructor),
     JS_INLINABLE_FN("ToInteger", intrinsic_ToInteger, 1, 0, IntrinsicToInteger),
+    JS_FN("ToLength", intrinsic_ToLength, 1, 0),
     JS_INLINABLE_FN("ToString", intrinsic_ToString, 1, 0, IntrinsicToString),
     JS_FN("ToSource", intrinsic_ToSource, 1, 0),
     JS_FN("ToPropertyKey", intrinsic_ToPropertyKey, 1, 0),
