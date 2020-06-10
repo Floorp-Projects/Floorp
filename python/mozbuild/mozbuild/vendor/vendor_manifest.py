@@ -46,7 +46,7 @@ class VendorManifest(MozbuildObject):
             )
             return
         elif check_for_update:
-            self.log(logging.ERROR, "vendor", {}, commit)
+            print("%s" % commit)
             return
 
         self.fetch_and_unpack(commit)
