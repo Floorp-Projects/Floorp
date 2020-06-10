@@ -2430,12 +2430,6 @@ pref("bidi.texttype", 1);
 // 6 = persiannumeralBidi
 pref("bidi.numeral", 0);
 
-// Bidi caret movement style:
-// 0 = logical
-// 1 = visual
-// 2 = visual, but logical during selection
-pref("bidi.edit.caret_movement_style", 2);
-
 // Setting this pref to |true| forces Bidi UI menu items and keyboard shortcuts
 // to be exposed, and enables the directional caret hook. By default, only
 // expose it for bidi-associated system locales.
