@@ -205,9 +205,11 @@ class nsCoreUtils {
   static bool IsContentDocument(Document* aDocument);
 
   /**
-   * Return true if the given document node is for tab document accessible.
+   * Return true if the given document is a top level content document in this
+   * process.
+   * This will be true for tab documents and out-of-process iframe documents.
    */
-  static bool IsTabDocument(Document* aDocumentNode);
+  static bool IsTopLevelContentDocInProcess(Document* aDocumentNode);
 
   /**
    * Return true if the given document is an error page.

@@ -76,7 +76,8 @@ void RootAccessibleWrap::DocumentActivated(DocAccessible* aDocument) {
   // This check will never work with e10s enabled, in other words, as of
   // Firefox 57.
   if (Compatibility::IsDolphin() &&
-      nsCoreUtils::IsTabDocument(aDocument->DocumentNode())) {
+      nsCoreUtils::IsTopLevelContentDocInProcess(aDocument->DocumentNode())) {
+    MOZ_ASSERT(XRE_IsParentProcess());
     uint32_t count = mChildDocuments.Length();
     for (uint32_t idx = 0; idx < count; idx++) {
       DocAccessible* childDoc = mChildDocuments[idx];

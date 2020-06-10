@@ -127,9 +127,10 @@ static void LogDocShellTree(dom::Document* aDocumentNode) {
     treeItem->GetInProcessRootTreeItem(getter_AddRefs(rootTreeItem));
     printf(
         "in-process docshell hierarchy, parent: %p, root: %p, "
-        "is tab document: %s;",
+        "is top level: %s;",
         static_cast<void*>(parentTreeItem), static_cast<void*>(rootTreeItem),
-        (nsCoreUtils::IsTabDocument(aDocumentNode) ? "yes" : "no"));
+        (nsCoreUtils::IsTopLevelContentDocInProcess(aDocumentNode) ? "yes"
+                                                                   : "no"));
   }
 }
 

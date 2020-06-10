@@ -1608,8 +1608,8 @@ void DocAccessible::NotifyOfLoading(bool aIsReloading) {
 }
 
 void DocAccessible::DoInitialUpdate() {
-  if (nsCoreUtils::IsTabDocument(mDocumentNode)) {
-    mDocFlags |= eTabDocument;
+  if (nsCoreUtils::IsTopLevelContentDocInProcess(mDocumentNode)) {
+    mDocFlags |= eTopLevelContentDocInProcess;
     if (IPCAccessibilityActive()) {
       nsIDocShell* docShell = mDocumentNode->GetDocShell();
       if (RefPtr<dom::BrowserChild> browserChild =
