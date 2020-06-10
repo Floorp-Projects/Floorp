@@ -36,6 +36,7 @@ dependencies {
     api project(':support-base')
 
     testImplementation Dependencies.mozilla_rustlog
+    testImplementation project(':support-test')
 
     testImplementation Dependencies.testing_junit
     testImplementation Dependencies.testing_robolectric

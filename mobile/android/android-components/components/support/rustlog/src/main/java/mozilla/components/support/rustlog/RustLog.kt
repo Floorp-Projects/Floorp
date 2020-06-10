@@ -4,6 +4,7 @@
 
 package mozilla.components.support.rustlog
 
+import androidx.annotation.VisibleForTesting
 import mozilla.appservices.rustlog.LogLevelFilter
 import mozilla.appservices.rustlog.RustLogAdapter
 import mozilla.components.support.base.crash.CrashReporting
@@ -39,11 +40,7 @@ object RustLog {
         RustLogAdapter.enable { level, tagStr, msgStr ->
             val priority = levelToPriority(level)
 
-            crashReporter?.let {
-                if (priority == Log.Priority.ERROR) {
-                    it.submitCaughtException(RustErrorException(tagStr, msgStr))
-                }
-            }
+            crashReporter?.let { maybeSendLogToCrashReporter(it, priority, tagStr, msgStr) }
 
             Log.log(priority, tagStr, null, msgStr)
             // Return true to keep open. Eventually we could intercept calls
@@ -94,6 +91,21 @@ object RustLog {
             Log.Priority.ERROR -> LogLevelFilter.ERROR
         }
         RustLogAdapter.setMaxLevel(levelFilter)
+    }
+
+    @VisibleForTesting
+    internal fun maybeSendLogToCrashReporter(crashReporter: CrashReporting, priority: Log.Priority, tag: String?, msg: String) {
+        val ignoredTags = listOf(
+            // Majority of these are likely to be various network issues.
+            "viaduct::backend::ffi"
+        )
+        if (priority != Log.Priority.ERROR) {
+            return
+        }
+        if (ignoredTags.contains(tag)) {
+            return
+        }
+        crashReporter.submitCaughtException(RustErrorException(tag, msg))
     }
 }
 
