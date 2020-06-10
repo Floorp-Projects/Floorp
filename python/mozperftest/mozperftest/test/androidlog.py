@@ -46,7 +46,7 @@ class AndroidLog(Layer):
         options = {
             "first-timestamp": self.get_arg("first-timestamp", first_ts),
             "second-timestamp": self.get_arg("second-timestamp", second_ts),
-            "processor": self.env.get_hook("logcat_processor"),
+            "processor": self.env.hooks.get("logcat_processor"),
             "transform-subtest-name": self.get_arg("subtest-name"),
         }
 
