@@ -10,7 +10,7 @@ tests.set(
     return {
       description: "wm1[k1] = k2; wm2[k2] = k3; wm1[k3] = k4; wm2[k4] = ...",
 
-      defaultGarbagePerFrame: "1K",
+      defaultGarbagePerFrame: "10K",
       defaultGarbagePiles: "1K",
 
       load: N => {

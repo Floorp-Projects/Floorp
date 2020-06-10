@@ -9,6 +9,9 @@ tests.set(
     var garbageIndex = 0;
     return {
       description: "var foo = [[], ....]",
+      defaultGarbagePerFrame: "1M",
+      defaultGarbagePiles: "1K",
+
       load: N => {
         garbage = new Array(N);
       },
