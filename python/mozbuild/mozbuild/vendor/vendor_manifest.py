@@ -14,7 +14,7 @@ def verify_manifests(files):
     for fn in files:
         try:
             moz_yaml.load_moz_yaml(fn)
-            print('%s: OK' % fn)
+            print("%s: OK" % fn)
         except moz_yaml.VerifyError as e:
             success = False
             print(e)
