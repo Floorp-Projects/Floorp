@@ -32,11 +32,26 @@ BrowserElementWebNavigation.prototype = {
   canGoForward: false,
 
   goBack() {
-    this._browser.goBack();
+    const cancelContentJSEpoch = this.maybeCancelContentJSExecution(
+      Ci.nsIRemoteTab.NAVIGATE_BACK
+    );
+    this._sendMessage("WebNavigation:GoBack", { cancelContentJSEpoch });
   },
 
   goForward() {
-    this._browser.goForward();
+    const cancelContentJSEpoch = this.maybeCancelContentJSExecution(
+      Ci.nsIRemoteTab.NAVIGATE_FORWARD
+    );
+    this._sendMessage("WebNavigation:GoForward", { cancelContentJSEpoch });
+  },
+
+  maybeCancelContentJSExecution(navigationType, options = {}) {
+    const epoch = this._cancelContentJSEpoch++;
+    this._browser.frameLoader.remoteTab.maybeCancelContentJSExecution(
+      navigationType,
+      { ...options, epoch }
+    );
+    return epoch;
   },
 
   gotoIndex(index) {
