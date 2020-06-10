@@ -12496,11 +12496,8 @@ bool ConnectionPool::ScheduleTransaction(TransactionInfo* aTransactionInfo,
         return false;
       }
     } else {
-      const uint32_t lastIndex = mIdleThreads.Length() - 1;
-
-      dbInfo->mThreadInfo = std::move(mIdleThreads[lastIndex].mThreadInfo);
-
-      mIdleThreads.RemoveElementAt(lastIndex);
+      dbInfo->mThreadInfo =
+          std::move(mIdleThreads.PopLastElement().mThreadInfo);
 
       AdjustIdleTimer();
     }

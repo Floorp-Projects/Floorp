@@ -969,19 +969,16 @@ void WindowSurfaceWayland::CacheImageSurface(
   WindowImageSurface surf = WindowImageSurface(mImageSurface, aRegion);
 
   if (mDelayedImageCommits.Length()) {
-    int lastSurf = mDelayedImageCommits.Length() - 1;
-    if (surf.OverlapsSurface(mDelayedImageCommits[lastSurf])) {
+    auto lastSurf = mDelayedImageCommits.PopLastElement();
+    if (surf.OverlapsSurface(lastSurf)) {
 #ifdef MOZ_LOGGING
       {
-        gfx::IntRect size = mDelayedImageCommits[lastSurf]
-                                .GetUpdateRegion()
-                                ->GetBounds()
-                                .ToUnknownRect();
+        gfx::IntRect size =
+            lastSurf.GetUpdateRegion()->GetBounds().ToUnknownRect();
         LOGWAYLAND(("    removing [ %d, %d] -> [%d x %d]\n", size.x, size.y,
                     size.width, size.height));
       }
 #endif
-      mDelayedImageCommits.RemoveElementAt(lastSurf);
     }
   }
 

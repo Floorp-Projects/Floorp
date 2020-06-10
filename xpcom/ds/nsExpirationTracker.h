@@ -189,12 +189,13 @@ class ExpirationTrackerImpl {
     MOZ_ASSERT(generation.Length() > index && generation[index] == aObj,
                "Object is lying about its index");
     // Move the last object to fill the hole created by removing aObj
-    uint32_t last = generation.Length() - 1;
-    T* lastObj = generation[last];
-    generation[index] = lastObj;
+    T* lastObj = generation.PopLastElement();
+    // XXX It looks weird that index might point to the element that was just
+    // removed. Is that really correct?
+    if (index < generation.Length()) {
+      generation[index] = lastObj;
+    }
     lastObj->GetExpirationState()->mIndexInGeneration = index;
-    generation.RemoveElementAt(last);
-    MOZ_ASSERT(generation.Length() == last);
     state->mGeneration = nsExpirationState::NOT_TRACKED;
     // We do not check whether we need to stop the timer here. The timer
     // will check that itself next time it fires. Checking here would not
