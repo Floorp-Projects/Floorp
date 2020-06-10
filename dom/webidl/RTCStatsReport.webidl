@@ -173,6 +173,13 @@ dictionary RTCVideoFrameHistoryInternal {
   sequence<RTCVideoFrameHistoryEntryInternal> entries = [];
 };
 
+// This is for tracking the flow of SDP for about:webrtc
+dictionary RTCSdpHistoryEntryInternal {
+  required DOMHighResTimeStamp timestamp;
+  required boolean             isLocal;
+  required DOMString           sdp;
+};
+
 // This is intended to be a list of dictionaries that inherit from RTCStats
 // (with some raw ICE candidates thrown in). Unfortunately, we cannot simply
 // store a sequence<RTCStats> because of slicing. So, we have to have a
@@ -198,6 +205,7 @@ dictionary RTCStatsReportInternal : RTCStatsCollection {
   required DOMString                        pcid;
   DOMString                                 localSdp;
   DOMString                                 remoteSdp;
+  sequence<RTCSdpHistoryEntryInternal>      sdpHistory = [];
   required DOMHighResTimeStamp              timestamp;
   double                                    callDurationMs;
   required unsigned long                    iceRestarts;

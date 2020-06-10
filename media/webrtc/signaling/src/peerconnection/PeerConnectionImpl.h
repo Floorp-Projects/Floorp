@@ -528,7 +528,8 @@ class PeerConnectionImpl final
   // The SDP sent in from JS
   std::string mLocalRequestedSDP;
   std::string mRemoteRequestedSDP;
-
+  // Only accessed from main
+  mozilla::dom::Sequence<mozilla::dom::RTCSdpHistoryEntryInternal> mSdpHistory;
   std::string mPendingLocalDescription;
   std::string mPendingRemoteDescription;
   std::string mCurrentLocalDescription;
