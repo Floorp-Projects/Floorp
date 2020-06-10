@@ -335,8 +335,8 @@ var _text_layer = __w_pdfjs_require__(17);
 
 var _svg = __w_pdfjs_require__(18);
 
-const pdfjsVersion = '2.6.2';
-const pdfjsBuild = '8fc1126b5';
+const pdfjsVersion = '2.6.24';
+const pdfjsBuild = 'a4fa4554d';
 ;
 
 /***/ }),
@@ -1857,7 +1857,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   return worker.messageHandler.sendWithPromise("GetDocRequest", {
     docId,
-    apiVersion: '2.6.2',
+    apiVersion: '2.6.24',
     source: {
       data: source.data,
       url: source.url,
@@ -2040,13 +2040,6 @@ class PDFDocumentProxy {
 
   getOpenAction() {
     return this._transport.getOpenAction();
-  }
-
-  getOpenActionDestination() {
-    (0, _display_utils.deprecated)("getOpenActionDestination, use getOpenAction instead.");
-    return this.getOpenAction().then(function (openAction) {
-      return openAction && openAction.dest ? openAction.dest : null;
-    });
   }
 
   getAttachments() {
@@ -3708,9 +3701,9 @@ const InternalRenderTask = function InternalRenderTaskClosure() {
   return InternalRenderTask;
 }();
 
-const version = '2.6.2';
+const version = '2.6.24';
 exports.version = version;
-const build = '8fc1126b5';
+const build = 'a4fa4554d';
 exports.build = build;
 
 /***/ }),

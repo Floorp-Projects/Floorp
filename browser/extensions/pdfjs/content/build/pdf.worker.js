@@ -135,8 +135,8 @@ Object.defineProperty(exports, "WorkerMessageHandler", {
 
 var _worker = __w_pdfjs_require__(1);
 
-const pdfjsVersion = '2.6.2';
-const pdfjsBuild = '8fc1126b5';
+const pdfjsVersion = '2.6.24';
+const pdfjsBuild = 'a4fa4554d';
 
 /***/ }),
 /* 1 */
@@ -231,7 +231,7 @@ var WorkerMessageHandler = {
     var WorkerTasks = [];
     const verbosity = (0, _util.getVerbosityLevel)();
     const apiVersion = docParams.apiVersion;
-    const workerVersion = '2.6.2';
+    const workerVersion = '2.6.24';
 
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
@@ -1745,24 +1745,24 @@ var Ref = function RefClosure() {
 
 exports.Ref = Ref;
 
-var RefSet = function RefSetClosure() {
-  function RefSet() {
-    this.dict = Object.create(null);
+class RefSet {
+  constructor() {
+    this._set = new Set();
   }
 
-  RefSet.prototype = {
-    has: function RefSet_has(ref) {
-      return ref.toString() in this.dict;
-    },
-    put: function RefSet_put(ref) {
-      this.dict[ref.toString()] = true;
-    },
-    remove: function RefSet_remove(ref) {
-      delete this.dict[ref.toString()];
-    }
-  };
-  return RefSet;
-}();
+  has(ref) {
+    return this._set.has(ref.toString());
+  }
+
+  put(ref) {
+    this._set.add(ref.toString());
+  }
+
+  remove(ref) {
+    this._set.delete(ref.toString());
+  }
+
+}
 
 exports.RefSet = RefSet;
 
@@ -2068,8 +2068,7 @@ class ChunkedStream {
     this.pos = 0;
     this.end = length;
     this.chunkSize = chunkSize;
-    this.loadedChunks = [];
-    this.numChunksLoaded = 0;
+    this._loadedChunks = new Set();
     this.numChunks = Math.ceil(length / chunkSize);
     this.manager = manager;
     this.progressiveDataLength = 0;
@@ -2080,7 +2079,7 @@ class ChunkedStream {
     const chunks = [];
 
     for (let chunk = 0, n = this.numChunks; chunk < n; ++chunk) {
-      if (!this.loadedChunks[chunk]) {
+      if (!this._loadedChunks.has(chunk)) {
         chunks.push(chunk);
       }
     }
@@ -2090,6 +2089,10 @@ class ChunkedStream {
 
   getBaseStreams() {
     return [this];
+  }
+
+  get numChunksLoaded() {
+    return this._loadedChunks.size;
   }
 
   allChunksLoaded() {
@@ -2114,10 +2117,7 @@ class ChunkedStream {
     const endChunk = Math.floor((end - 1) / chunkSize) + 1;
 
     for (let curChunk = beginChunk; curChunk < endChunk; ++curChunk) {
-      if (!this.loadedChunks[curChunk]) {
-        this.loadedChunks[curChunk] = true;
-        ++this.numChunksLoaded;
-      }
+      this._loadedChunks.add(curChunk);
     }
   }
 
@@ -2130,10 +2130,7 @@ class ChunkedStream {
     const endChunk = position >= this.end ? this.numChunks : Math.floor(position / this.chunkSize);
 
     for (let curChunk = beginChunk; curChunk < endChunk; ++curChunk) {
-      if (!this.loadedChunks[curChunk]) {
-        this.loadedChunks[curChunk] = true;
-        ++this.numChunksLoaded;
-      }
+      this._loadedChunks.add(curChunk);
     }
   }
 
@@ -2148,7 +2145,7 @@ class ChunkedStream {
       return;
     }
 
-    if (!this.loadedChunks[chunk]) {
+    if (!this._loadedChunks.has(chunk)) {
       throw new _core_utils.MissingDataException(pos, pos + 1);
     }
 
@@ -2169,7 +2166,7 @@ class ChunkedStream {
     const endChunk = Math.floor((end - 1) / chunkSize) + 1;
 
     for (let chunk = beginChunk; chunk < endChunk; ++chunk) {
-      if (!this.loadedChunks[chunk]) {
+      if (!this._loadedChunks.has(chunk)) {
         throw new _core_utils.MissingDataException(begin, end);
       }
     }
@@ -2181,7 +2178,7 @@ class ChunkedStream {
     for (let i = 0; i < numChunks; ++i) {
       const chunk = (beginChunk + i) % numChunks;
 
-      if (!this.loadedChunks[chunk]) {
+      if (!this._loadedChunks.has(chunk)) {
         return chunk;
       }
     }
@@ -2190,7 +2187,7 @@ class ChunkedStream {
   }
 
   hasChunk(chunk) {
-    return !!this.loadedChunks[chunk];
+    return this._loadedChunks.has(chunk);
   }
 
   get length() {
@@ -2333,7 +2330,7 @@ class ChunkedStream {
       const missingChunks = [];
 
       for (let chunk = beginChunk; chunk < endChunk; ++chunk) {
-        if (!this.loadedChunks[chunk]) {
+        if (!this._loadedChunks.has(chunk)) {
           missingChunks.push(chunk);
         }
       }
@@ -12898,8 +12895,10 @@ var JpegImage = function JpegImageClosure() {
                 component;
 
             for (i = 0; i < selectorsCount; i++) {
-              var componentIndex = frame.componentIds[data[offset++]];
+              const index = data[offset++];
+              var componentIndex = frame.componentIds[index];
               component = frame.components[componentIndex];
+              component.index = index;
               var tableSpec = data[offset++];
               component.huffmanTableDC = huffmanTablesDC[tableSpec >> 4];
               component.huffmanTableAC = huffmanTablesAC[tableSpec & 15];
@@ -12976,6 +12975,7 @@ var JpegImage = function JpegImageClosure() {
         }
 
         this.components.push({
+          index: component.index,
           output: buildComponentData(frame, component),
           scaleX: component.h / frame.maxH,
           scaleY: component.v / frame.maxV,
@@ -13055,6 +13055,8 @@ var JpegImage = function JpegImageClosure() {
 
       if (this.numComponents === 3) {
         if (this._colorTransform === 0) {
+          return false;
+        } else if (this.components[0].index === 0x52 && this.components[1].index === 0x47 && this.components[2].index === 0x42) {
           return false;
         }
 
@@ -17938,6 +17940,10 @@ const CalRGBCS = function CalRGBCSClosure() {
       return adjustToRange(0, 1, 12.92 * color);
     }
 
+    if (color >= 0.99554525) {
+      return 1;
+    }
+
     return adjustToRange(0, 1, (1 + 0.055) * color ** (1 / 2.4) - 0.055);
   }
 
@@ -18010,9 +18016,9 @@ const CalRGBCS = function CalRGBCSClosure() {
     const A = adjustToRange(0, 1, src[srcOffset] * scale);
     const B = adjustToRange(0, 1, src[srcOffset + 1] * scale);
     const C = adjustToRange(0, 1, src[srcOffset + 2] * scale);
-    const AGR = A ** cs.GR;
-    const BGG = B ** cs.GG;
-    const CGB = C ** cs.GB;
+    const AGR = A === 1 ? 1 : A ** cs.GR;
+    const BGG = B === 1 ? 1 : B ** cs.GG;
+    const CGB = C === 1 ? 1 : C ** cs.GB;
     const X = cs.MXA * AGR + cs.MXB * BGG + cs.MXC * CGB;
     const Y = cs.MYA * AGR + cs.MYB * BGG + cs.MYC * CGB;
     const Z = cs.MZA * AGR + cs.MZB * BGG + cs.MZC * CGB;
@@ -18344,11 +18350,11 @@ class GlobalImageCache {
   }
 
   getData(ref, pageIndex) {
-    if (!this._refCache.has(ref)) {
+    const pageIndexSet = this._refCache.get(ref);
+
+    if (!pageIndexSet) {
       return null;
     }
-
-    const pageIndexSet = this._refCache.get(ref);
 
     if (pageIndexSet.size < GlobalImageCache.NUM_PAGES_THRESHOLD) {
       return null;
@@ -20575,6 +20581,20 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
       });
     },
 
+    _sendImgData(objId, imgData, cacheGlobally = false) {
+      const transfers = imgData ? [imgData.data.buffer] : null;
+
+      if (this.parsingType3Font) {
+        return this.handler.sendWithPromise("commonobj", [objId, "FontType3Res", imgData], transfers);
+      }
+
+      if (cacheGlobally) {
+        return this.handler.send("commonobj", [objId, "Image", imgData], transfers);
+      }
+
+      return this.handler.send("obj", [objId, this.pageIndex, "Image", imgData], transfers);
+    },
+
     async buildPaintImageXObject({
       resources,
       image,
@@ -20671,28 +20691,10 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
         pdfFunctionFactory: this.pdfFunctionFactory
       }).then(imageObj => {
         imgData = imageObj.createImageData(false);
-
-        if (this.parsingType3Font) {
-          return this.handler.sendWithPromise("commonobj", [objId, "FontType3Res", imgData], [imgData.data.buffer]);
-        } else if (cacheGlobally) {
-          this.handler.send("commonobj", [objId, "Image", imgData], [imgData.data.buffer]);
-          return undefined;
-        }
-
-        this.handler.send("obj", [objId, this.pageIndex, "Image", imgData], [imgData.data.buffer]);
-        return undefined;
+        return this._sendImgData(objId, imgData, cacheGlobally);
       }).catch(reason => {
         (0, _util.warn)("Unable to decode image: " + reason);
-
-        if (this.parsingType3Font) {
-          return this.handler.sendWithPromise("commonobj", [objId, "FontType3Res", null]);
-        } else if (cacheGlobally) {
-          this.handler.send("commonobj", [objId, "Image", null]);
-          return undefined;
-        }
-
-        this.handler.send("obj", [objId, this.pageIndex, "Image", null]);
-        return undefined;
+        return this._sendImgData(objId, null, cacheGlobally);
       });
 
       if (this.parsingType3Font) {
