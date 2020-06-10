@@ -249,6 +249,7 @@ class WebrtcVideoConduit
   std::vector<uint32_t> GetLocalSSRCs() override;
   bool SetLocalSSRCs(const std::vector<uint32_t>& ssrcs,
                      const std::vector<uint32_t>& rtxSsrcs) override;
+  // Can be called from any thread
   bool GetRemoteSSRC(uint32_t* ssrc) override;
   bool SetRemoteSSRC(uint32_t ssrc, uint32_t rtxSsrc) override;
   bool UnsetRemoteSSRC(uint32_t ssrc) override;
@@ -639,6 +640,9 @@ class WebrtcVideoConduit
   // Accessed during configuration/signaling (main),
   // and when receiving packets (sts).
   Atomic<uint32_t> mRecvSSRC;  // this can change during a stream!
+  // Accessed from both the STS and main thread for a variety of things
+  // Set when receiving packets
+  Atomic<uint32_t> mRemoteSSRC;  // this can change during a stream!
 
   // Accessed only on mStsThread.
   RtpPacketQueue mRtpPacketQueue;
