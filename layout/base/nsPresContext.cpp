@@ -202,7 +202,6 @@ nsPresContext::nsPresContext(dom::Document* aDocument, nsPresContextType aType)
       mIsRootPaginatedDocument(false),
       mPrefBidiDirection(false),
       mPrefScrollbarSide(0),
-      mPendingSysColorChanged(false),
       mPendingThemeChanged(false),
       mPendingUIResolutionChanged(false),
       mPrefChangePendingNeedsReflow(false),
@@ -1365,51 +1364,21 @@ void nsPresContext::ThemeChangedInternal() {
     }
   }
 
-  RefreshSystemMetrics();
-  PreferenceSheet::Refresh();
-}
-
-void nsPresContext::SysColorChanged() {
-  if (!mPendingSysColorChanged) {
-    sLookAndFeelChanged = true;
-    nsCOMPtr<nsIRunnable> ev =
-        NewRunnableMethod("nsPresContext::SysColorChangedInternal", this,
-                          &nsPresContext::SysColorChangedInternal);
-    nsresult rv = Document()->Dispatch(TaskCategory::Other, ev.forget());
-    if (NS_SUCCEEDED(rv)) {
-      mPendingSysColorChanged = true;
-    }
-  }
-}
-
-void nsPresContext::SysColorChangedInternal() {
-  mPendingSysColorChanged = false;
-
-  if (sLookAndFeelChanged) {
-    // Don't use the cached values for the system colors
-    LookAndFeel::Refresh();
-    sLookAndFeelChanged = false;
-  }
-
-  // Invalidate cached '-moz-windows-accent-color-applies' media query:
-  RefreshSystemMetrics();
-
-  // Reset default background and foreground colors for the document since they
-  // may be using system colors
-  PreferenceSheet::Refresh();
-}
-
-void nsPresContext::RefreshSystemMetrics() {
   // This will force the system metrics to be generated the next time they're
   // used.
   nsMediaFeatures::FreeSystemMetrics();
 
-  // Changes to system metrics can change media queries on them.
+  // Reset default background and foreground colors for the document since they
+  // may be using system colors.
+  PreferenceSheet::Refresh();
+
+  // Changes to system metrics and other look and feel values can change media
+  // queries on them.
   //
-  // Changes in theme can change system colors (whose changes are
-  // properly reflected in computed style data), system fonts (whose
-  // changes are not), and -moz-appearance (whose changes likewise are
-  // not), so we need to recascade for the first, and reflow for the rest.
+  // Changes in theme can change system colors (whose changes are properly
+  // reflected in computed style data), system fonts (whose changes are not),
+  // and -moz-appearance (whose changes likewise are not), so we need to
+  // recascade for the first, and reflow for the rest.
   MediaFeatureValuesChangedAllDocuments({
       RestyleHint::RecascadeSubtree(),
       NS_STYLE_HINT_REFLOW,

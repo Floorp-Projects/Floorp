@@ -346,7 +346,6 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
 
   // Should be called by derived implementations to notify on system color and
   // theme changes.
-  void NotifySysColorChanged();
   void NotifyThemeChanged();
   void NotifyUIStateChanged(UIStateChangeType aShowFocusRings);
 
