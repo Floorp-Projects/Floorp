@@ -149,8 +149,9 @@ class EventTargetChainItem {
 
   static void DestroyLast(nsTArray<EventTargetChainItem>& aChain,
                           EventTargetChainItem* aItem) {
-    MOZ_ASSERT(&aChain.LastElement() == aItem);
-    aChain.RemoveLastElement();
+    uint32_t lastIndex = aChain.Length() - 1;
+    MOZ_ASSERT(&aChain[lastIndex] == aItem);
+    aChain.RemoveElementAt(lastIndex);
   }
 
   static EventTargetChainItem* GetFirstCanHandleEventTarget(

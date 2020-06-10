@@ -9035,10 +9035,10 @@ void nsHttpChannel::PushRedirectAsyncFunc(nsContinueRedirectionFunc func) {
 }
 
 void nsHttpChannel::PopRedirectAsyncFunc(nsContinueRedirectionFunc func) {
-  MOZ_ASSERT(func == mRedirectFuncStack.LastElement(),
+  MOZ_ASSERT(func == mRedirectFuncStack[mRedirectFuncStack.Length() - 1],
              "Trying to pop wrong method from redirect async stack!");
 
-  mRedirectFuncStack.RemoveLastElement();
+  mRedirectFuncStack.TruncateLength(mRedirectFuncStack.Length() - 1);
 }
 
 //-----------------------------------------------------------------------------

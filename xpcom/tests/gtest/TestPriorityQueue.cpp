@@ -13,7 +13,7 @@ template <class T, class Compare>
 void CheckPopSequence(const nsTPriorityQueue<T, Compare>& aQueue,
                       const T* aExpectedSequence,
                       const uint32_t aSequenceLength) {
-  nsTPriorityQueue<T, Compare> copy = aQueue.Clone();
+  nsTPriorityQueue<T, Compare> copy(aQueue);
 
   for (uint32_t i = 0; i < aSequenceLength; i++) {
     EXPECT_FALSE(copy.IsEmpty());
@@ -52,7 +52,7 @@ TEST(PriorityQueue, Main)
   // copy ctor is tested by using CheckPopSequence, but check default assignment
   // operator
   nsTPriorityQueue<int> queue2;
-  queue2 = queue.Clone();
+  queue2 = queue;
   CheckPopSequence(queue2, expected, sizeof(expected) / sizeof(expected[0]));
 
   queue.Clear();

@@ -306,7 +306,8 @@ void AutoChildOpArgs::Add(JSContext* aCx, const InternalRequest& aRequest,
 
       if (aRv.Failed()) {
         CleanupChild(pair.request().body(), Delete);
-        args.requestResponseList().RemoveLastElement();
+        args.requestResponseList().RemoveElementAt(
+            args.requestResponseList().Length() - 1);
       }
 
       break;

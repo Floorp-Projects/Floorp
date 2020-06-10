@@ -36,7 +36,8 @@ nsresult CacheIndexIterator::GetNextHash(SHA1Sum::Hash* aHash) {
     return mStatus;
   }
 
-  memcpy(aHash, mRecords.PopLastElement()->mHash, sizeof(SHA1Sum::Hash));
+  memcpy(aHash, mRecords[mRecords.Length() - 1]->mHash, sizeof(SHA1Sum::Hash));
+  mRecords.RemoveLastElement();
 
   return NS_OK;
 }

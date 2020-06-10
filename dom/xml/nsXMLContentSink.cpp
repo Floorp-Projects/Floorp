@@ -798,12 +798,14 @@ nsresult nsXMLContentSink::PushContent(nsIContent* aContent) {
 }
 
 void nsXMLContentSink::PopContent() {
-  if (mContentStack.IsEmpty()) {
+  int32_t count = mContentStack.Length();
+
+  if (count == 0) {
     NS_WARNING("Popping empty stack");
     return;
   }
 
-  mContentStack.RemoveLastElement();
+  mContentStack.RemoveElementAt(count - 1);
 }
 
 bool nsXMLContentSink::HaveNotifiedForCurrentContent() const {

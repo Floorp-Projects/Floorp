@@ -446,7 +446,7 @@ void AppleVTDecoder::OutputFrame(CVPixelBufferRef aImage,
   // Frames come out in DTS order but we need to output them
   // in composition order.
   MonitorAutoLock mon(mMonitor);
-  mReorderQueue.Push(std::move(data));
+  mReorderQueue.Push(data);
   MaybeResolveBufferedFrames();
 
   LOG("%llu decoded frames queued",
