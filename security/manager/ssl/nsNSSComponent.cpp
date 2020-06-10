@@ -57,6 +57,7 @@
 #include "nsXULAppAPI.h"
 #include "nss.h"
 #include "p12plcy.h"
+#include "pk11pub.h"
 #include "mozpkix/pkixnss.h"
 #include "secerr.h"
 #include "secmod.h"
