@@ -505,6 +505,25 @@ SDPStats.prototype = {
     div.appendChild(renderElement("h5", remoteSdpHeading));
     div.appendChild(renderElement("pre", this._report.remoteSdp));
 
+    div.appendChild(renderElement("h4", getString("sdp_history_heading")));
+    for (let history of this._report.sdpHistory) {
+      const historyElem = renderElement("div", null, {
+        className: "sdp-history",
+      });
+      const sdpSide = history.isLocal
+        ? getString("local_sdp_heading")
+        : getString("remote_sdp_heading");
+      historyElem.appendChild(
+        renderElement(
+          "h5",
+          formatString("sdp_set_at_timestamp", [sdpSide, history.timestamp])
+        )
+      );
+      const historyDiv = new FoldableSection(historyElem).render();
+      historyDiv.appendChild(renderElement("pre", history.sdp));
+      historyElem.appendChild(historyDiv);
+      div.appendChild(historyElem);
+    }
     return div;
   },
 };

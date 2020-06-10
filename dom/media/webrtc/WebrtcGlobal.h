@@ -87,6 +87,9 @@ struct ParamTraits<
   }
 };
 
+DEFINE_IPC_SERIALIZER_WITH_FIELDS(mozilla::dom::RTCSdpHistoryEntryInternal,
+                                  mTimestamp, mIsLocal, mSdp);
+
 DEFINE_IPC_SERIALIZER_WITH_FIELDS(
     mozilla::dom::RTCStatsCollection, mIceCandidatePairStats,
     mIceCandidateStats, mInboundRtpStreamStats, mOutboundRtpStreamStats,
@@ -97,8 +100,8 @@ DEFINE_IPC_SERIALIZER_WITH_FIELDS(
 
 DEFINE_IPC_SERIALIZER_WITH_SUPER_CLASS_AND_FIELDS(
     mozilla::dom::RTCStatsReportInternal, mozilla::dom::RTCStatsCollection,
-    mClosed, mLocalSdp, mPcid, mRemoteSdp, mTimestamp, mCallDurationMs,
-    mIceRestarts, mIceRollbacks, mOfferer);
+    mClosed, mLocalSdp, mSdpHistory, mPcid, mRemoteSdp, mTimestamp,
+    mCallDurationMs, mIceRestarts, mIceRollbacks, mOfferer);
 
 typedef mozilla::dom::RTCStats RTCStats;
 
