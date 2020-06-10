@@ -686,6 +686,15 @@
   value: true
   mirror: always
 
+# Bidi caret movement style:
+# 0 = logical
+# 1 = visual
+# 2 = visual, but logical during selection
+- name: bidi.edit.caret_movement_style
+  type: int32_t
+  value: 2
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "browser."
 #---------------------------------------------------------------------------
