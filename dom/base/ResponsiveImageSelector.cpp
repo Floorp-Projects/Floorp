@@ -204,7 +204,7 @@ void ResponsiveImageSelector::SetDefaultSource(const nsAString& aURLString,
   int32_t candidates = mCandidates.Length();
   if (candidates && (mCandidates[candidates - 1].Type() ==
                      ResponsiveImageCandidate::eCandidateType_Default)) {
-    mCandidates.RemoveElementAt(candidates - 1);
+    mCandidates.RemoveLastElement();
   }
 
   mDefaultSourceURL = aURLString;

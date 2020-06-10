@@ -1358,7 +1358,7 @@ bool RuntimeService::ScheduleWorker(WorkerPrivate& aWorkerPrivate) {
   {
     MutexAutoLock lock(mMutex);
     if (!mIdleThreadArray.IsEmpty()) {
-      thread = mIdleThreadArray.PopLastElement().mThread;
+      thread = std::move(mIdleThreadArray.PopLastElement().mThread);
     }
   }
 

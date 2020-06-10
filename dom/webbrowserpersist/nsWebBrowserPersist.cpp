@@ -1696,9 +1696,7 @@ void nsWebBrowserPersist::FinishSaveDocumentInternal(nsIURI* aFile,
   }
 
   if (mWalkStack.Length() > 0) {
-    mozilla::UniquePtr<WalkData> toWalk;
-    mWalkStack.LastElement().swap(toWalk);
-    mWalkStack.TruncateLength(mWalkStack.Length() - 1);
+    mozilla::UniquePtr<WalkData> toWalk = mWalkStack.PopLastElement();
     // Bounce this off the event loop to avoid stack overflow.
     typedef StoreCopyPassByRRef<decltype(toWalk)> WalkStorage;
     auto saveMethod = &nsWebBrowserPersist::SaveDocumentDeferred;
