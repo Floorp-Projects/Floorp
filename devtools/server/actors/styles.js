@@ -1529,7 +1529,7 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
         return decl;
       });
       // Cache parsed declarations so we don't needlessly re-parse authoredText every time
-      // we need need to check previous property names and values when tracking changes.
+      // we need to check previous property names and values when tracking changes.
       this._declarations = declarations;
     }
 
