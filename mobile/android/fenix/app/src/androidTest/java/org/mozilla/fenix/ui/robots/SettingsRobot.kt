@@ -14,6 +14,7 @@ import androidx.test.espresso.contrib.RecyclerViewActions
 import androidx.test.espresso.ViewInteraction
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.intent.Intents.intended
+import androidx.test.espresso.intent.matcher.IntentMatchers
 import androidx.test.espresso.intent.matcher.IntentMatchers.toPackage
 import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.Visibility
@@ -34,6 +35,7 @@ import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestHelper.scrollToElementByText
 import org.mozilla.fenix.helpers.assertIsEnabled
 import org.mozilla.fenix.helpers.click
+import org.mozilla.fenix.ui.robots.SettingsRobot.Companion.DEFAULT_APPS_SETTINGS_ACTION
 
 /**
  * Implementation of Robot Pattern for the settings menu.
@@ -48,6 +50,10 @@ class SettingsRobot {
     fun verifyThemeSelected() = assertThemeSelected()
     fun verifyAccessibilityButton() = assertAccessibilityButton()
     fun verifySetAsDefaultBrowserButton() = assertSetAsDefaultBrowserButton()
+    fun verifyDefaultBrowserItem() = assertDefaultBrowserItem()
+    fun verifyDefaultBrowserIsDisaled() = assertDefaultBrowserIsDisabled()
+    fun clickDefaultBrowserSwitch() = toggleDefaultBrowserSwitch()
+    fun verifyAndroidDefaultAppsMenuAppears() = assertAndroidDefaultAppsMenuAppears()
 
     // PRIVACY SECTION
     fun verifyPrivacyHeading() = assertPrivacyHeading()
@@ -128,15 +134,6 @@ class SettingsRobot {
             return SettingsSubMenuAccessibilityRobot.Transition()
         }
 
-        fun openDefaultBrowserSubMenu(interact: SettingsSubMenuDefaultBrowserRobot.() -> Unit): SettingsSubMenuDefaultBrowserRobot.Transition {
-
-            fun defaultBrowserButton() = onView(withText("Set as default browser"))
-            defaultBrowserButton().click()
-
-            SettingsSubMenuDefaultBrowserRobot().interact()
-            return SettingsSubMenuDefaultBrowserRobot.Transition()
-        }
-
         fun openEnhancedTrackingProtectionSubMenu(interact: SettingsSubMenuEnhancedTrackingProtectionRobot.() -> Unit): SettingsSubMenuEnhancedTrackingProtectionRobot.Transition {
             fun enhancedTrackingProtectionButton() =
                 onView(withText("Enhanced Tracking Protection"))
@@ -208,6 +205,10 @@ class SettingsRobot {
             return SettingsSubMenuDataCollectionRobot.Transition()
         }
     }
+
+    companion object {
+        const val DEFAULT_APPS_SETTINGS_ACTION = "android.settings.MANAGE_DEFAULT_APPS_SETTINGS"
+    }
 }
 
 private fun assertSettingsView() {
@@ -240,6 +241,31 @@ private fun assertAccessibilityButton() = onView(withText("Accessibility"))
 private fun assertSetAsDefaultBrowserButton() =
     onView(withText("Set as default browser"))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+
+private fun assertDefaultBrowserIsDisabled() {
+    onView(withId(R.id.switch_widget))
+        .check(matches(ViewMatchers.isNotChecked()))
+}
+
+private fun toggleDefaultBrowserSwitch() {
+    onView(
+        CoreMatchers.allOf(
+            ViewMatchers.withParent(CoreMatchers.not(withId(R.id.navigationToolbar))),
+            withText("Set as default browser")
+        )
+    )
+        .perform(ViewActions.click())
+}
+
+private fun assertAndroidDefaultAppsMenuAppears() {
+    intended(IntentMatchers.hasAction(DEFAULT_APPS_SETTINGS_ACTION))
+}
+
+private fun assertDefaultBrowserItem() {
+    mDevice.wait(Until.findObject(By.text("Set as default browser")), waitingTime)
+    onView(withText("Set as default browser"))
+        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+}
 
 // PRIVACY SECTION
 private fun assertPrivacyHeading() {

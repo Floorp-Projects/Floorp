@@ -68,6 +68,7 @@ class SettingsBasicsTest {
         }.openSettings {
             verifyBasicsHeading()
             verifySearchEngineButton()
+            verifyDefaultBrowserItem()
             // drill down to submenu
         }.openSearchSubMenu {
             verifyDefaultSearchEngineHeader()
@@ -86,10 +87,6 @@ class SettingsBasicsTest {
             verifyAutomaticFontSizingMenuItems()
         }.goBack {
             // drill down to submenu
-        }.openDefaultBrowserSubMenu {
-            // verify item: set as default browser (duplicates, verify child of recyclerview)
-            // Verify label: Open links in private tab
-        }.goBack {
         }
     }
 
@@ -213,11 +210,9 @@ class SettingsBasicsTest {
         homeScreen {
         }.openThreeDotMenu {
         }.openSettings {
-        }.openDefaultBrowserSubMenu {
-            verifyDefaultBrowserIsDisabled()
+            verifyDefaultBrowserIsDisaled()
             clickDefaultBrowserSwitch()
             verifyAndroidDefaultAppsMenuAppears()
         }
-
     }
 }
