@@ -990,10 +990,12 @@ nsresult PendingLookup::LookupNext() {
   // If a url is in blocklist we should call PendingLookup::OnComplete directly.
   MOZ_ASSERT(mBlocklistCount == 0);
 
+  int index = mAnylistSpecs.Length() - 1;
   nsCString spec;
-  if (!mAnylistSpecs.IsEmpty()) {
+  if (index >= 0) {
     // Check the source URI only.
-    spec = mAnylistSpecs.PopLastElement();
+    spec = mAnylistSpecs[index];
+    mAnylistSpecs.RemoveElementAt(index);
     RefPtr<PendingDBLookup> lookup(new PendingDBLookup(this));
 
     // We don't need to check whitelist if the file is not a binary file.
@@ -1002,9 +1004,11 @@ nsresult PendingLookup::LookupNext() {
     return lookup->LookupSpec(spec, type);
   }
 
-  if (!mBlocklistSpecs.IsEmpty()) {
+  index = mBlocklistSpecs.Length() - 1;
+  if (index >= 0) {
     // Check the referrer and redirect chain.
-    spec = mBlocklistSpecs.PopLastElement();
+    spec = mBlocklistSpecs[index];
+    mBlocklistSpecs.RemoveElementAt(index);
     RefPtr<PendingDBLookup> lookup(new PendingDBLookup(this));
     return lookup->LookupSpec(spec, LookupType::BlocklistOnly);
   }
@@ -1020,9 +1024,11 @@ nsresult PendingLookup::LookupNext() {
   MOZ_ASSERT_IF(!mIsBinaryFile, mAllowlistSpecs.Length() == 0);
 
   // Only binary signatures remain.
-  if (!mAllowlistSpecs.IsEmpty()) {
-    spec = mAllowlistSpecs.PopLastElement();
+  index = mAllowlistSpecs.Length() - 1;
+  if (index >= 0) {
+    spec = mAllowlistSpecs[index];
     LOG(("PendingLookup::LookupNext: checking %s on allowlist", spec.get()));
+    mAllowlistSpecs.RemoveElementAt(index);
     RefPtr<PendingDBLookup> lookup(new PendingDBLookup(this));
     return lookup->LookupSpec(spec, LookupType::AllowlistOnly);
   }

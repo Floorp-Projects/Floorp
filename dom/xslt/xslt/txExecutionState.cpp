@@ -331,8 +331,13 @@ nsresult txExecutionState::pushBool(bool aBool) {
 
 bool txExecutionState::popBool() {
   NS_ASSERTION(mBoolStack.Length(), "popping from empty stack");
+  uint32_t last = mBoolStack.Length() - 1;
+  NS_ENSURE_TRUE(last != (uint32_t)-1, false);
 
-  return mBoolStack.IsEmpty() ? false : mBoolStack.PopLastElement();
+  bool res = mBoolStack.ElementAt(last);
+  mBoolStack.RemoveElementAt(last);
+
+  return res;
 }
 
 nsresult txExecutionState::pushResultHandler(txAXMLEventHandler* aHandler) {

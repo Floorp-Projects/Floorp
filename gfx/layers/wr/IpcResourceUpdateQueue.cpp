@@ -72,9 +72,11 @@ layers::OffsetRange ShmSegmentsWriter::Write(Range<uint8_t> aBytes) {
       if (!AllocChunk()) {
         // Allocation failed, so roll back to the state at the start of this
         // Write() call and abort.
-        while (mSmallAllocs.Length() > currAllocLen) {
-          RefCountedShmem shm = mSmallAllocs.PopLastElement();
+        for (size_t i = mSmallAllocs.Length(); currAllocLen < i; i--) {
+          MOZ_ASSERT(i > 0);
+          RefCountedShmem& shm = mSmallAllocs.ElementAt(i - 1);
           RefCountedShm::Dealloc(mShmAllocator, shm);
+          mSmallAllocs.RemoveElementAt(i - 1);
         }
         MOZ_ASSERT(mSmallAllocs.Length() == currAllocLen);
         return layers::OffsetRange(0, start, 0);
