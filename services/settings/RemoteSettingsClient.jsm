@@ -587,7 +587,7 @@ class RemoteSettingsClient extends EventEmitter {
           // remote collection.
           try {
             console.warn(
-              `Signature verified failed for ${this.identifier}. Retry from scratch`
+              `${this.identifier} Signature verified failed. Retry from scratch`
             );
             syncResult = await this._importChanges(
               localRecords,
@@ -890,6 +890,7 @@ class RemoteSettingsClient extends EventEmitter {
         // during sync, from hijacks of local DBs, we will verify
         // the signature on the data that we had before syncing.
         let localTrustworthy = false;
+        console.debug(`${this.identifier} verify data before sync`);
         try {
           await this._validateCollectionSignature(
             localRecords,
@@ -902,6 +903,7 @@ class RemoteSettingsClient extends EventEmitter {
             // If it fails for other reason, keep original error and give up.
             throw sigerr;
           }
+          console.debug(`${this.identifier} previous data was invalid`);
         }
 
         // Signature failed, clear local DB because it contains
@@ -913,24 +915,25 @@ class RemoteSettingsClient extends EventEmitter {
           // Local data was tampered, throw and it will retry from empty DB.
           console.error(`${this.identifier} local data was corrupted`);
           throw new CorruptedDataError(this.identifier);
-        } else if (localTrustworthy) {
-          // Signature of data before importing changes was good.
-          // If we retry, we will pull and import changes again on top of them.
-          // If we retried already, we will restore the local data before
-          // throwing.
-          await this.db.importBulk(localRecords);
-          await this.db.saveLastModified(localTimestamp);
-          await this.db.saveMetadata(localMetadata);
-        } else if (
-          // The local data was tampered.
-          // We retried and signature failed again.
-          // So restore the dump if available.
-          await Utils.hasLocalDump(this.bucketName, this.collectionName)
-        ) {
-          console.info(`${this.identifier} restore dump`);
-          await this._importJSONDump();
+        } else if (retry) {
+          // We retried already, we will restore the previous local data
+          // before throwing eventually.
+          if (localTrustworthy) {
+            // Signature of data before importing changes was good.
+            console.debug(
+              `${this.identifier} Restore previous data (timestamp=${localTimestamp})`
+            );
+            await this.db.importBulk(localRecords);
+            await this.db.saveLastModified(localTimestamp);
+            await this.db.saveMetadata(localMetadata);
+          } else if (
+            // So restore the dump if available.
+            await Utils.hasLocalDump(this.bucketName, this.collectionName)
+          ) {
+            console.info(`${this.identifier} restore dump`);
+            await this._importJSONDump();
+          }
         }
-
         throw e;
       }
     } else {
