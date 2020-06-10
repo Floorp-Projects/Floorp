@@ -210,6 +210,10 @@ button > hbox > label {
   list-style-image: url("chrome://browser/skin/preferences/sync.svg");
 }
 
+#category-experimental > .category-icon {
+  list-style-image: url("chrome://mozapps/skin/extensions/category-experiments.svg");
+}
+
 /* header */
 .header {
   display: flex;
