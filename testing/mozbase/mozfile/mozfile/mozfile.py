@@ -19,19 +19,21 @@ from contextlib import contextmanager
 from six.moves import urllib
 
 
-__all__ = ['extract_tarball',
-           'extract_zip',
-           'extract',
-           'is_url',
-           'load',
-           'copy_contents',
-           'move',
-           'remove',
-           'rmtree',
-           'tree',
-           'which',
-           'NamedTemporaryFile',
-           'TemporaryDirectory']
+__all__ = [
+    "extract_tarball",
+    "extract_zip",
+    "extract",
+    "is_url",
+    "load",
+    "copy_contents",
+    "move",
+    "remove",
+    "rmtree",
+    "tree",
+    "which",
+    "NamedTemporaryFile",
+    "TemporaryDirectory",
+]
 
 # utilities for extracting archives
 
@@ -103,16 +105,18 @@ def extract(src, dest=None):
     elif zipfile.is_zipfile(src):
         namelist = extract_zip(src, dest)
     else:
-        raise Exception("mozfile.extract: no archive format found for '%s'" %
-                        src)
+        raise Exception("mozfile.extract: no archive format found for '%s'" % src)
 
     # namelist returns paths with forward slashes even in windows
-    top_level_files = [os.path.join(dest, name.rstrip('/')) for name in namelist
-                       if len(name.rstrip('/').split('/')) == 1]
+    top_level_files = [
+        os.path.join(dest, name.rstrip("/"))
+        for name in namelist
+        if len(name.rstrip("/").split("/")) == 1
+    ]
 
     # namelist doesn't include folders, append these to the list
     for name in namelist:
-        index = name.find('/')
+        index = name.find("/")
         if index != -1:
             root = os.path.join(dest, name[:index])
             if root not in top_level_files:
@@ -123,6 +127,7 @@ def extract(src, dest=None):
 
 # utilities for removal of files and directories
 
+
 def rmtree(dir):
     """Deprecated wrapper method to remove a directory tree.
 
@@ -131,8 +136,11 @@ def rmtree(dir):
     :param dir: directory to be removed
     """
 
-    warnings.warn("mozfile.rmtree() is deprecated in favor of mozfile.remove()",
-                  PendingDeprecationWarning, stacklevel=2)
+    warnings.warn(
+        "mozfile.rmtree() is deprecated in favor of mozfile.remove()",
+        PendingDeprecationWarning,
+        stacklevel=2,
+    )
     return remove(dir)
 
 
@@ -159,8 +167,10 @@ def _call_windows_retry(func, args=(), retry_max=5, retry_delay=0.5):
 
             retry_count += 1
 
-            print('%s() failed for "%s". Reason: %s (%s). Retrying...' %
-                  (func.__name__, args, e.strerror, e.errno))
+            print(
+                '%s() failed for "%s". Reason: %s (%s). Retrying...'
+                % (func.__name__, args, e.strerror, e.errno)
+            )
             time.sleep(retry_count * retry_delay)
         else:
             # If no exception has been thrown it should be done
@@ -241,12 +251,12 @@ def copy_contents(srcdir, dstdir):
     If an existing file of the same name exists in dstdir, it will be overwritten.
     """
     import shutil
+
     # dirs_exist_ok was introduced in Python 3.8
     # On earlier versions, or Windows, use the verbose mechanism.
     # We use it on Windows because _call_with_windows_retry doesn't allow
     # named arguments to be passed.
-    if ((sys.version_info.major < 3 or sys.version_info.minor < 8)
-        or (os.name == 'nt')):
+    if (sys.version_info.major < 3 or sys.version_info.minor < 8) or (os.name == "nt"):
         names = os.listdir(srcdir)
         if not os.path.isdir(dstdir):
             os.makedirs(dstdir)
@@ -286,6 +296,7 @@ def move(src, dst):
     a handle on file paths.
     """
     import shutil
+
     _call_windows_retry(shutil.move, (src, dst))
 
 
@@ -304,9 +315,9 @@ def depth(directory):
 
 def tree(directory, sort_key=lambda x: x.lower()):
     """Display tree directory structure for `directory`."""
-    vertical_line = u'│'
-    item_marker = u'├'
-    last_child = u'└'
+    vertical_line = u"│"
+    item_marker = u"├"
+    last_child = u"└"
 
     retval = []
     indent = []
@@ -337,26 +348,36 @@ def tree(directory, sort_key=lambda x: x.lower()):
         if last.get(parent) == os.path.basename(abspath):
             # last directory of parent
             dirpath_mark = last_child
-            indent[-1] = ' '
+            indent[-1] = " "
         elif not indent:
-            dirpath_mark = ''
+            dirpath_mark = ""
         else:
             dirpath_mark = item_marker
 
         # append the directory and piece of tree structure
         # if the top-level entry directory, print as passed
-        retval.append('%s%s%s' % (''.join(indent[:-1]),
-                                  dirpath_mark,
-                                  basename if retval else directory))
+        retval.append(
+            "%s%s%s"
+            % ("".join(indent[:-1]), dirpath_mark, basename if retval else directory)
+        )
         # add the files
         if filenames:
             last_file = filenames[-1]
-            retval.extend([('%s%s%s' % (''.join(indent),
-                                        files_end if filename == last_file else item_marker,
-                                        filename))
-                           for index, filename in enumerate(filenames)])
+            retval.extend(
+                [
+                    (
+                        "%s%s%s"
+                        % (
+                            "".join(indent),
+                            files_end if filename == last_file else item_marker,
+                            filename,
+                        )
+                    )
+                    for index, filename in enumerate(filenames)
+                ]
+            )
 
-    return '\n'.join(retval)
+    return "\n".join(retval)
 
 
 def which(cmd, mode=os.F_OK | os.X_OK, path=None, exts=None):
@@ -401,7 +422,7 @@ def which(cmd, mode=os.F_OK | os.X_OK, path=None, exts=None):
     try:
         path = shutil_which(cmd, mode=mode, path=path)
         if path:
-            return os.path.abspath(path.rstrip('.'))
+            return os.path.abspath(path.rstrip("."))
     finally:
         if oldexts:
             os.environ["PATHEXT"] = oldexts
@@ -414,18 +435,20 @@ def which(cmd, mode=os.F_OK | os.X_OK, path=None, exts=None):
         import winreg
     except ImportError:
         import _winreg as winreg
-    if not cmd.lower().endswith('.exe'):
-        cmd += '.exe'
+    if not cmd.lower().endswith(".exe"):
+        cmd += ".exe"
     try:
         ret = winreg.QueryValue(
             winreg.HKEY_LOCAL_MACHINE,
-            r'SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\%s' % cmd)
+            r"SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\%s" % cmd,
+        )
         return os.path.abspath(ret) if ret else None
     except winreg.error:
         return None
 
 
 # utilities for temporary resources
+
 
 class NamedTemporaryFile(object):
     """
@@ -446,11 +469,13 @@ class NamedTemporaryFile(object):
     see https://bugzilla.mozilla.org/show_bug.cgi?id=821362
     """
 
-    def __init__(self, mode='w+b', bufsize=-1, suffix='', prefix='tmp',
-                 dir=None, delete=True):
+    def __init__(
+        self, mode="w+b", bufsize=-1, suffix="", prefix="tmp", dir=None, delete=True
+    ):
 
         import tempfile
-        fd, path = tempfile.mkstemp(suffix, prefix, dir, 't' in mode)
+
+        fd, path = tempfile.mkstemp(suffix, prefix, dir, "t" in mode)
         os.close(fd)
 
         self.file = open(path, mode)
@@ -459,10 +484,10 @@ class NamedTemporaryFile(object):
         self._unlinked = False
 
     def __getattr__(self, k):
-        return getattr(self.__dict__['file'], k)
+        return getattr(self.__dict__["file"], k)
 
     def __iter__(self):
-        return self.__dict__['file']
+        return self.__dict__["file"]
 
     def __enter__(self):
         self.file.__enter__()
@@ -470,16 +495,16 @@ class NamedTemporaryFile(object):
 
     def __exit__(self, exc, value, tb):
         self.file.__exit__(exc, value, tb)
-        if self.__dict__['_delete']:
-            os.unlink(self.__dict__['_path'])
+        if self.__dict__["_delete"]:
+            os.unlink(self.__dict__["_path"])
             self._unlinked = True
 
     def __del__(self):
-        if self.__dict__['_unlinked']:
+        if self.__dict__["_unlinked"]:
             return
         self.file.__exit__(None, None, None)
-        if self.__dict__['_delete']:
-            os.unlink(self.__dict__['_path'])
+        if self.__dict__["_delete"]:
+            os.unlink(self.__dict__["_path"])
 
 
 @contextmanager
@@ -505,13 +530,14 @@ def TemporaryDirectory():
 
 # utilities dealing with URLs
 
+
 def is_url(thing):
     """
     Return True if thing looks like a URL.
     """
 
     parsed = urllib.parse.urlparse(thing)
-    if 'scheme' in parsed:
+    if "scheme" in parsed:
         return len(parsed.scheme) >= 2
     else:
         return len(parsed[0]) >= 2
@@ -525,8 +551,8 @@ def load(resource):
     """
 
     # handle file URLs separately due to python stdlib limitations
-    if resource.startswith('file://'):
-        resource = resource[len('file://'):]
+    if resource.startswith("file://"):
+        resource = resource[len("file://"):]
 
     if not is_url(resource):
         # if no scheme is given, it is a file path
