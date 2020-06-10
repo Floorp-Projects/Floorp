@@ -35,6 +35,10 @@ function getIconElement(level, type) {
     classnames.push("logpoint");
   }
 
+  if (type && type === "blockedReason") {
+    title = l10n.getStr("blockedrequest.label");
+  }
+
   {
     return dom.span({
       className: classnames.join(" "),

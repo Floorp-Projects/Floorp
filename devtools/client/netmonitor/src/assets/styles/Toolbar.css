@@ -40,7 +40,7 @@
 
 /* Request blocking button */
 .devtools-button.requests-list-blocking-button::before {
-  background-image: url("chrome://devtools/content/netmonitor/src/assets/icons/blocked.svg");
+  background-image: url("chrome://devtools/skin/images/blocked.svg");
 }
 
 .devtools-button.netmonitor-settings-menu-button::before {

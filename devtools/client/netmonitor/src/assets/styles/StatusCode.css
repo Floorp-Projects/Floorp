@@ -54,7 +54,7 @@
 .status-code-blocked-icon {
   height: 12px;
   width: 12px;
-  background-image: url("chrome://devtools/content/netmonitor/src/assets/icons/blocked.svg");
+  background-image: url("chrome://devtools/skin/images/blocked.svg");
   -moz-context-properties: fill;
   fill: currentColor;
 }

@@ -367,6 +367,7 @@ function transformNetworkEventResource(networkEventResource) {
     private: networkEventResource.private,
     securityState: networkEventResource.securityState,
     chromeContext: networkEventResource.chromeContext,
+    blockedReason: networkEventResource.blockedReason,
   });
 }
 
