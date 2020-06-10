@@ -1196,6 +1196,13 @@
   args:
     val: BoolImm
 
+- name: LoadInt32Constant
+  shared: true
+  transpile: true
+  args:
+    val: RawWordField
+    result: Int32Id
+
 - name: LoadConstantStringResult
   shared: false
   transpile: false

@@ -2160,7 +2160,7 @@ static const JSFunctionSpec intrinsic_functions[] = {
                     intrinsic_IsCrossRealmArrayConstructor, 1, 0,
                     IntrinsicIsCrossRealmArrayConstructor),
     JS_INLINABLE_FN("ToInteger", intrinsic_ToInteger, 1, 0, IntrinsicToInteger),
-    JS_FN("ToLength", intrinsic_ToLength, 1, 0),
+    JS_INLINABLE_FN("ToLength", intrinsic_ToLength, 1, 0, IntrinsicToLength),
     JS_INLINABLE_FN("ToString", intrinsic_ToString, 1, 0, IntrinsicToString),
     JS_FN("ToSource", intrinsic_ToSource, 1, 0),
     JS_FN("ToPropertyKey", intrinsic_ToPropertyKey, 1, 0),

@@ -5170,6 +5170,35 @@ AttachDecision CallIRGenerator::tryAttachToInteger(HandleFunction callee) {
   return AttachDecision::Attach;
 }
 
+AttachDecision CallIRGenerator::tryAttachToLength(HandleFunction callee) {
+  // Need a single int32 argument.
+  if (argc_ != 1 || !args_[0].isInt32()) {
+    return AttachDecision::NoAction;
+  }
+
+  // Initialize the input operand.
+  Int32OperandId argcId(writer.setInputOperandId(0));
+
+  // Guard callee is the 'ToLength' intrinsic native function.
+  emitNativeCalleeGuard(callee);
+
+  // ToLength(int32) is equivalent to max(int32, 0).
+  ValOperandId argId = writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
+  Int32OperandId int32ArgId = writer.guardToInt32(argId);
+  Int32OperandId zeroId = writer.loadInt32Constant(0);
+  bool isMax = true;
+  Int32OperandId maxId = writer.int32MinMax(isMax, int32ArgId, zeroId);
+  writer.loadInt32Result(maxId);
+
+  // This stub does not need to be monitored, because it always returns an
+  // int32.
+  writer.returnFromIC();
+  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
+
+  trackAttached("ToLength");
+  return AttachDecision::Attach;
+}
+
 AttachDecision CallIRGenerator::tryAttachIsObject(HandleFunction callee) {
   // Need a single argument.
   if (argc_ != 1) {
@@ -5936,6 +5965,8 @@ AttachDecision CallIRGenerator::tryAttachInlinableNative(
       return tryAttachToObject(callee, native);
     case InlinableNative::IntrinsicToInteger:
       return tryAttachToInteger(callee);
+    case InlinableNative::IntrinsicToLength:
+      return tryAttachToLength(callee);
     case InlinableNative::IntrinsicIsObject:
       return tryAttachIsObject(callee);
     case InlinableNative::IntrinsicIsCallable:
