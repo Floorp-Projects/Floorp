@@ -317,13 +317,6 @@ raptor-youtube-playback-fennec68:
     description: "Raptor YouTube Playback on Fennec68"
     try-name: raptor-youtube-playback-fennec68
     treeherder-symbol: Rap(ytp)
-    run-on-projects:
-        by-test-platform:
-            android-hw-p2.*aarch64.*/pgo: ['mozilla-central']
-            android-hw-p2.*aarch64-shippable/opt: ['mozilla-central']
-            android-hw-g5.*/pgo: ['mozilla-central']
-            android-hw-g5.*-shippable/opt: ['mozilla-central']
-            default: []
     mozharness:
         extra-options:
             - --test=raptor-youtube-playback-fennec68
@@ -334,7 +327,6 @@ raptor-youtube-playback-av1-sfr-fennec68:
     description: "Raptor YouTube Playback AV1 SFR on Fennec68"
     try-name: raptor-youtube-playback-av1-sfr-fennec68
     treeherder-symbol: Rap(ytp-av1-sfr)
-    run-on-projects: []
     mozharness:
         extra-options:
             - --test=raptor-youtube-playback-av1-sfr-fennec68
@@ -345,13 +337,6 @@ raptor-youtube-playback-h264-sfr-fennec68:
     description: "Raptor YouTube Playback H264 SFR on Fennec68"
     try-name: raptor-youtube-playback-h264-sfr-fennec68
     treeherder-symbol: Rap(ytp-h264-sfr)
-    run-on-projects:
-        by-test-platform:
-            android-hw-p2.*aarch64.*/pgo: ['mozilla-central']
-            android-hw-p2.*aarch64-shippable/opt: ['mozilla-central']
-            android-hw-g5.*/pgo: ['mozilla-central']
-            android-hw-g5.*-shippable/opt: ['mozilla-central']
-            default: []
     mozharness:
         extra-options:
             - --test=raptor-youtube-playback-h264-sfr-fennec68
@@ -379,11 +364,6 @@ raptor-youtube-playback-vp9-sfr-fennec68:
     description: "Raptor YouTube Playback VP9 SFR on Fennec68"
     try-name: raptor-youtube-playback-vp9-sfr-fennec68
     treeherder-symbol: Rap(ytp-vp9-sfr)
-    run-on-projects:
-        by-test-platform:
-            android-hw-p2.*aarch64.*/pgo: ['mozilla-central']
-            android-hw-p2.*aarch64-shippable/opt: ['mozilla-central']
-            default: []
     mozharness:
         extra-options:
             - --test=raptor-youtube-playback-vp9-sfr-fennec68
