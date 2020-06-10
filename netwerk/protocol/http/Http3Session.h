@@ -98,6 +98,8 @@ class Http3Session final : public nsAHttpTransaction,
 
   nsresult ProcessOutputAndEvents();
 
+  const nsCString& GetAlpnToken() { return mAlpnToken; }
+
  private:
   ~Http3Session();
 
