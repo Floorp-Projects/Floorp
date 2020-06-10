@@ -6,7 +6,9 @@
 
 load(libdir + "asserts.js");
 
-var testSizesKB = [128, 129, 255, 256, 1023, 1024, 3*1024, 4*1024+1, 16*1024];
+const chunkSizeKB = gcparam('chunkBytes') / 1024;
+
+var testSizesKB = [128, 129, 255, 256, 516, 1023, 1024, 3*1024, 4*1024+1, 16*1024];
 
 // Valid maximum sizes must be >= 1MB.
 var testMaxSizesKB = testSizesKB.filter(x => x >= 1024);
@@ -33,8 +35,8 @@ function setMinMax(min, max) {
   // Set the maximum first so that we don't hit a case where max < min.
   gcparam('maxNurseryBytes', max * 1024);
   gcparam('minNurseryBytes', min * 1024);
-  assertEq(nearestLegalSize(max) * 1024, gcparam('maxNurseryBytes'));
-  assertEq(nearestLegalSize(min) * 1024, gcparam('minNurseryBytes'));
+  assertEq(gcparam('maxNurseryBytes'), nearestLegalSize(max) * 1024);
+  assertEq(gcparam('minNurseryBytes'), nearestLegalSize(min) * 1024);
   allocateSomeThings();
   gc();
 }
@@ -46,11 +48,8 @@ function allocateSomeThings() {
 }
 
 function nearestLegalSize(sizeKB) {
-  if (sizeKB >= 1024) {
-    return round(sizeKB, 1024);
-  }
-
-  return Math.min(round(sizeKB, 4), 1020);
+  let step = sizeKB >= chunkSizeKB ? chunkSizeKB : 4;
+  return round(sizeKB, step);
 }
 
 function round(x, y) {

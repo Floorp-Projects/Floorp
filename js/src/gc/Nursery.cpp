@@ -1543,13 +1543,15 @@ size_t js::Nursery::targetSize(JS::GCReason reason) {
 
 /* static */
 size_t js::Nursery::roundSize(size_t size) {
-  if (size >= ChunkSize) {
-    size = Round(size, ChunkSize);
-  } else {
-    size = std::min(Round(size, SubChunkStep),
-                    RoundDown(NurseryChunkUsableSize, SubChunkStep));
-  }
+  static_assert(SubChunkStep > gc::ChunkTrailerSize,
+                "Don't allow the nursery to overwrite the trailer when using "
+                "less than a chunk");
+
+  size_t step = size >= ChunkSize ? ChunkSize : SubChunkStep;
+  size = Round(size, step);
+
   MOZ_ASSERT(size >= ArenaSize);
+
   return size;
 }
 
