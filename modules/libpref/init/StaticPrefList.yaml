@@ -3462,10 +3462,10 @@
 
 # This pref has no effect within fission windows, it only controls the
 # behaviour within non-fission windows. If true, preserve browsing contexts
-# between process swaps. Should be set to true in bug 1550571.
+# between process swaps.
 - name: fission.preserve_browsing_contexts
   type: bool
-  value: false
+  value: true
   mirror: always
 
 # Store the session history in the parent process, and access it over IPC
