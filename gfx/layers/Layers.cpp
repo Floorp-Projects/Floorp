@@ -28,6 +28,7 @@
 #include "mozilla/gfx/BaseSize.h"  // for BaseSize
 #include "mozilla/gfx/Matrix.h"    // for Matrix4x4
 #include "mozilla/gfx/Polygon.h"   // for Polygon
+#include "mozilla/layers/AsyncCanvasRenderer.h"
 #include "mozilla/layers/BSPTree.h"             // for BSPTree
 #include "mozilla/layers/CompositableClient.h"  // for CompositableClient
 #include "mozilla/layers/Compositor.h"          // for Compositor
@@ -2044,12 +2045,12 @@ void CanvasLayer::DumpPacket(layerscope::LayersPacket* aPacket,
   DumpFilter(layer, mSamplingFilter);
 }
 
-RefPtr<CanvasRenderer> CanvasLayer::CreateOrGetCanvasRenderer() {
+CanvasRenderer* CanvasLayer::CreateOrGetCanvasRenderer() {
   if (!mCanvasRenderer) {
-    mCanvasRenderer = CreateCanvasRendererInternal();
+    mCanvasRenderer.reset(CreateCanvasRendererInternal());
   }
 
-  return mCanvasRenderer;
+  return mCanvasRenderer.get();
 }
 
 void ImageLayer::PrintInfo(std::stringstream& aStream, const char* aPrefix) {

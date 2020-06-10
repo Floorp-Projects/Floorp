@@ -20,17 +20,16 @@ namespace mozilla {
 namespace layers {
 
 SharedSurfaceTextureData::SharedSurfaceTextureData(
-    const SurfaceDescriptor& desc, const gfx::SurfaceFormat format,
-    const gfx::IntSize size)
-    : mDesc(desc), mFormat(format), mSize(size) {}
+    UniquePtr<gl::SharedSurface> surf)
+    : mSurf(std::move(surf)) {}
 
 SharedSurfaceTextureData::~SharedSurfaceTextureData() = default;
 
 void SharedSurfaceTextureData::Deallocate(LayersIPCChannel*) {}
 
 void SharedSurfaceTextureData::FillInfo(TextureData::Info& aInfo) const {
-  aInfo.size = mSize;
-  aInfo.format = mFormat;
+  aInfo.size = mSurf->mSize;
+  aInfo.format = gfx::SurfaceFormat::UNKNOWN;
   aInfo.hasIntermediateBuffer = false;
   aInfo.hasSynchronization = false;
   aInfo.supportsMoz2D = false;
@@ -38,22 +37,26 @@ void SharedSurfaceTextureData::FillInfo(TextureData::Info& aInfo) const {
 }
 
 bool SharedSurfaceTextureData::Serialize(SurfaceDescriptor& aOutDescriptor) {
-  aOutDescriptor = mDesc;
-  return true;
-}
-/*
-static TextureFlags FlagsFrom(const SharedSurfaceDescriptor& desc) {
-  auto flags = TextureFlags::ORIGIN_BOTTOM_LEFT;
-  if (!desc.isPremultAlpha) {
-    flags |= TextureFlags::NON_PREMULTIPLIED;
-  }
-  return flags;
+  return mSurf->ToSurfaceDescriptor(&aOutDescriptor);
 }
 
 SharedSurfaceTextureClient::SharedSurfaceTextureClient(
-    const SharedSurfaceDescriptor& aDesc, LayersIPCChannel* aAllocator)
-    : TextureClient(new SharedSurfaceTextureData(desc), FlagsFrom(desc),
-aAllocator) { mWorkaroundAnnoyingSharedSurfaceLifetimeIssues = true;
+    SharedSurfaceTextureData* aData, TextureFlags aFlags,
+    LayersIPCChannel* aAllocator)
+    : TextureClient(aData, aFlags, aAllocator) {
+  mWorkaroundAnnoyingSharedSurfaceLifetimeIssues = true;
+}
+
+already_AddRefed<SharedSurfaceTextureClient> SharedSurfaceTextureClient::Create(
+    UniquePtr<gl::SharedSurface> surf, gl::SurfaceFactory* factory,
+    LayersIPCChannel* aAllocator, TextureFlags aFlags) {
+  if (!surf) {
+    return nullptr;
+  }
+  TextureFlags flags = aFlags | TextureFlags::RECYCLE | surf->GetTextureFlags();
+  SharedSurfaceTextureData* data =
+      new SharedSurfaceTextureData(std::move(surf));
+  return MakeAndAddRef<SharedSurfaceTextureClient>(data, flags, aAllocator);
 }
 
 SharedSurfaceTextureClient::~SharedSurfaceTextureClient() {
@@ -77,7 +80,6 @@ SharedSurfaceTextureClient::~SharedSurfaceTextureClient() {
     delete data;
   }
 }
-*/
 
 }  // namespace layers
 }  // namespace mozilla

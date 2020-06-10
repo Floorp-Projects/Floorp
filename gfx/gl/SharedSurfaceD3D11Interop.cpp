@@ -8,7 +8,6 @@
 #include <d3d11.h>
 #include <d3d11_1.h>
 #include "GLContext.h"
-#include "MozFramebuffer.h"
 #include "WGLLibrary.h"
 #include "nsPrintfCString.h"
 #include "mozilla/gfx/DeviceManagerDx.h"
@@ -310,34 +309,32 @@ class DXInterop2Device : public RefCounted<DXInterop2Device> {
 
 /*static*/
 UniquePtr<SharedSurface_D3D11Interop> SharedSurface_D3D11Interop::Create(
-    const SharedSurfaceDesc& desc, DXInterop2Device* interop) {
-  const auto& gl = desc.gl;
-  const auto& size = desc.size;
+    DXInterop2Device* interop, GLContext* gl, const gfx::IntSize& size,
+    bool hasAlpha) {
   const auto& d3d = interop->mD3D;
 
-  auto data = Data{interop};
-
   // Create a texture in case we need to readback.
-  const DXGI_FORMAT format = DXGI_FORMAT_B8G8R8A8_UNORM;
-  CD3D11_TEXTURE2D_DESC texDesc(format, size.width, size.height, 1, 1);
-  texDesc.MiscFlags = D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX;
+  DXGI_FORMAT format =
+      hasAlpha ? DXGI_FORMAT_B8G8R8A8_UNORM : DXGI_FORMAT_B8G8R8X8_UNORM;
+  CD3D11_TEXTURE2D_DESC desc(format, size.width, size.height, 1, 1);
+  desc.MiscFlags = D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX;
 
-  auto hr =
-      d3d->CreateTexture2D(&texDesc, nullptr, getter_AddRefs(data.texD3D));
+  RefPtr<ID3D11Texture2D> texD3D;
+  auto hr = d3d->CreateTexture2D(&desc, nullptr, getter_AddRefs(texD3D));
   if (FAILED(hr)) {
     NS_WARNING("Failed to create texture for CanvasLayer!");
     return nullptr;
   }
 
   RefPtr<IDXGIResource> texDXGI;
-  hr = data.texD3D->QueryInterface(__uuidof(IDXGIResource),
-                                   getter_AddRefs(texDXGI));
+  hr = texD3D->QueryInterface(__uuidof(IDXGIResource), getter_AddRefs(texDXGI));
   if (FAILED(hr)) {
     NS_WARNING("Failed to open texture for sharing!");
     return nullptr;
   }
 
-  texDXGI->GetSharedHandle(&data.dxgiHandle);
+  HANDLE dxgiHandle;
+  texDXGI->GetSharedHandle(&dxgiHandle);
 
   ////
 
@@ -346,25 +343,25 @@ UniquePtr<SharedSurface_D3D11Interop> SharedSurface_D3D11Interop::Create(
     return nullptr;
   }
 
-  data.interopRb = MakeUnique<Renderbuffer>(*gl);
-  data.lockHandle = interop->RegisterObject(data.texD3D, data.interopRb->name,
-                                            LOCAL_GL_RENDERBUFFER,
-                                            LOCAL_WGL_ACCESS_WRITE_DISCARD_NV);
-  if (!data.lockHandle) {
+  GLuint interopRB = 0;
+  gl->fGenRenderbuffers(1, &interopRB);
+  const auto lockHandle =
+      interop->RegisterObject(texD3D, interopRB, LOCAL_GL_RENDERBUFFER,
+                              LOCAL_WGL_ACCESS_WRITE_DISCARD_NV);
+  if (!lockHandle) {
     NS_WARNING("Failed to register D3D object with WGL.");
+    gl->fDeleteRenderbuffers(1, &interopRB);
     return nullptr;
   }
 
-  auto fbForDrawing = MozFramebuffer::CreateForBacking(
-      gl, size, 0, false, LOCAL_GL_RENDERBUFFER, data.interopRb->name);
-  if (!fbForDrawing) return nullptr;
+  ////
 
-  // -
-
+  GLuint prodTex = 0;
+  GLuint interopFB = 0;
   {
     GLint samples = 0;
     {
-      const ScopedBindRenderbuffer bindRB(gl, data.interopRb->name);
+      const ScopedBindRenderbuffer bindRB(gl, interopRB);
       gl->fGetRenderbufferParameteriv(LOCAL_GL_RENDERBUFFER,
                                       LOCAL_GL_RENDERBUFFER_SAMPLES, &samples);
     }
@@ -375,71 +372,104 @@ UniquePtr<SharedSurface_D3D11Interop> SharedSurface_D3D11Interop::Create(
       // https://bugzilla.mozilla.org/show_bug.cgi?id=1325835
 
       // Our ShSurf tex or rb must be single-sampled.
-      data.interopFbIfNeedsIndirect = std::move(fbForDrawing);
-      fbForDrawing = MozFramebuffer::Create(gl, size, 0, false);
+      gl->fGenTextures(1, &prodTex);
+      const ScopedBindTexture bindTex(gl, prodTex);
+      gl->TexParams_SetClampNoMips();
+
+      const GLenum format = (hasAlpha ? LOCAL_GL_RGBA : LOCAL_GL_RGB);
+      const ScopedBindPBO nullPBO(gl, LOCAL_GL_PIXEL_UNPACK_BUFFER);
+      gl->fTexImage2D(LOCAL_GL_TEXTURE_2D, 0, format, size.width, size.height,
+                      0, format, LOCAL_GL_UNSIGNED_BYTE, nullptr);
+
+      gl->fGenFramebuffers(1, &interopFB);
+      ScopedBindFramebuffer bindFB(gl, interopFB);
+      gl->fFramebufferRenderbuffer(LOCAL_GL_FRAMEBUFFER,
+                                   LOCAL_GL_COLOR_ATTACHMENT0,
+                                   LOCAL_GL_RENDERBUFFER, interopRB);
+      MOZ_ASSERT(gl->fCheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER) ==
+                 LOCAL_GL_FRAMEBUFFER_COMPLETE);
     }
   }
 
-  // -
+  ////
 
-  return AsUnique(new SharedSurface_D3D11Interop(desc, std::move(fbForDrawing),
-                                                 std::move(data)));
+  typedef SharedSurface_D3D11Interop ptrT;
+  UniquePtr<ptrT> ret(new ptrT(gl, size, hasAlpha, prodTex, interopFB,
+                               interopRB, interop, lockHandle, texD3D,
+                               dxgiHandle));
+  return ret;
 }
 
 SharedSurface_D3D11Interop::SharedSurface_D3D11Interop(
-    const SharedSurfaceDesc& desc, UniquePtr<MozFramebuffer>&& fbForDrawing,
-    Data&& data)
-    : SharedSurface(desc, std::move(fbForDrawing)),
-      mData(std::move(data)),
-      mNeedsFinish(StaticPrefs::webgl_dxgl_needs_finish()) {}
+    GLContext* gl, const gfx::IntSize& size, bool hasAlpha, GLuint prodTex,
+    GLuint interopFB, GLuint interopRB, DXInterop2Device* interop,
+    HANDLE lockHandle, ID3D11Texture2D* texD3D, HANDLE dxgiHandle)
+    : SharedSurface(
+          SharedSurfaceType::DXGLInterop2,
+          prodTex ? AttachmentType::GLTexture : AttachmentType::GLRenderbuffer,
+          gl, size, hasAlpha, true),
+      mProdTex(prodTex),
+      mInteropFB(interopFB),
+      mInteropRB(interopRB),
+      mInterop(interop),
+      mLockHandle(lockHandle),
+      mTexD3D(texD3D),
+      mDXGIHandle(dxgiHandle),
+      mNeedsFinish(StaticPrefs::webgl_dxgl_needs_finish()),
+      mLockedForGL(false) {
+  MOZ_ASSERT(bool(mProdTex) == bool(mInteropFB));
+}
 
 SharedSurface_D3D11Interop::~SharedSurface_D3D11Interop() {
   MOZ_ASSERT(!IsProducerAcquired());
 
-  const auto& gl = mDesc.gl;
-  if (!gl || !gl->MakeCurrent()) return;
+  if (!mGL || !mGL->MakeCurrent()) return;
 
-  if (!mData.interop->UnregisterObject(mData.lockHandle)) {
+  if (!mInterop->UnregisterObject(mLockHandle)) {
     NS_WARNING("Failed to release mLockHandle, possibly leaking it.");
   }
+
+  mGL->fDeleteTextures(1, &mProdTex);
+  mGL->fDeleteFramebuffers(1, &mInteropFB);
+  mGL->fDeleteRenderbuffers(1, &mInteropRB);
 }
 
 void SharedSurface_D3D11Interop::ProducerAcquireImpl() {
   MOZ_ASSERT(!mLockedForGL);
 
   // Now we have the mutex, we can lock for GL.
-  MOZ_ALWAYS_TRUE(mData.interop->LockObject(mData.lockHandle));
+  MOZ_ALWAYS_TRUE(mInterop->LockObject(mLockHandle));
 
   mLockedForGL = true;
 }
 
 void SharedSurface_D3D11Interop::ProducerReleaseImpl() {
-  const auto& gl = mDesc.gl;
   MOZ_ASSERT(mLockedForGL);
 
-  if (mData.interopFbIfNeedsIndirect) {
-    const ScopedBindFramebuffer bindFB(gl, mData.interopFbIfNeedsIndirect->mFB);
-    gl->BlitHelper()->DrawBlitTextureToFramebuffer(mFb->ColorTex(), mDesc.size,
-                                                   mDesc.size);
+  if (mProdTex) {
+    const ScopedBindFramebuffer bindFB(mGL, mInteropFB);
+    mGL->BlitHelper()->DrawBlitTextureToFramebuffer(mProdTex, mSize, mSize);
   }
 
   if (mNeedsFinish) {
-    gl->fFinish();
+    mGL->fFinish();
   } else {
     // We probably don't even need this.
-    gl->fFlush();
+    mGL->fFlush();
   }
-  MOZ_ALWAYS_TRUE(mData.interop->UnlockObject(mData.lockHandle));
+  MOZ_ALWAYS_TRUE(mInterop->UnlockObject(mLockHandle));
 
   mLockedForGL = false;
 }
 
-Maybe<layers::SurfaceDescriptor>
-SharedSurface_D3D11Interop::ToSurfaceDescriptor() {
-  const auto format = gfx::SurfaceFormat::B8G8R8A8;
-  return Some(layers::SurfaceDescriptorD3D10(
-      WindowsHandle(mData.dxgiHandle), format, mDesc.size,
-      gfx::YUVColorSpace::UNKNOWN, gfx::ColorRange::FULL));
+bool SharedSurface_D3D11Interop::ToSurfaceDescriptor(
+    layers::SurfaceDescriptor* const out_descriptor) {
+  const auto format =
+      (mHasAlpha ? gfx::SurfaceFormat::B8G8R8A8 : gfx::SurfaceFormat::B8G8R8X8);
+  *out_descriptor = layers::SurfaceDescriptorD3D10(
+      WindowsHandle(mDXGIHandle), format, mSize, gfx::YUVColorSpace::UNKNOWN,
+      gfx::ColorRange::FULL);
+  return true;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -447,30 +477,30 @@ SharedSurface_D3D11Interop::ToSurfaceDescriptor() {
 
 /*static*/
 UniquePtr<SurfaceFactory_D3D11Interop> SurfaceFactory_D3D11Interop::Create(
-    GLContext& gl) {
+    GLContext* gl, const SurfaceCaps& caps, layers::LayersIPCChannel* allocator,
+    const layers::TextureFlags& flags) {
   WGLLibrary* wgl = &sWGLLib;
   if (!wgl || !wgl->HasDXInterop2()) return nullptr;
 
-  if (XRE_IsContentProcess()) {
-    gfxPlatform::GetPlatform()->EnsureDevicesInitialized();
-  }
-
-  const RefPtr<DXInterop2Device> interop = DXInterop2Device::Open(wgl, &gl);
+  const RefPtr<DXInterop2Device> interop = DXInterop2Device::Open(wgl, gl);
   if (!interop) {
     NS_WARNING("Failed to open D3D device for use by WGL.");
     return nullptr;
   }
 
-  return AsUnique(new SurfaceFactory_D3D11Interop(
-      {&gl, SharedSurfaceType::DXGLInterop2, layers::TextureType::D3D11, true},
-      interop));
+  typedef SurfaceFactory_D3D11Interop ptrT;
+  UniquePtr<ptrT> ret(new ptrT(gl, caps, allocator, flags, interop));
+  return ret;
 }
 
 SurfaceFactory_D3D11Interop::SurfaceFactory_D3D11Interop(
-    const PartialSharedSurfaceDesc& desc, DXInterop2Device* interop)
-    : SurfaceFactory(desc), mInterop(interop) {}
+    GLContext* gl, const SurfaceCaps& caps, layers::LayersIPCChannel* allocator,
+    const layers::TextureFlags& flags, DXInterop2Device* interop)
+    : SurfaceFactory(SharedSurfaceType::DXGLInterop2, gl, caps, allocator,
+                     flags),
+      mInterop(interop) {}
 
-SurfaceFactory_D3D11Interop::~SurfaceFactory_D3D11Interop() = default;
+SurfaceFactory_D3D11Interop::~SurfaceFactory_D3D11Interop() {}
 
 }  // namespace gl
 }  // namespace mozilla
