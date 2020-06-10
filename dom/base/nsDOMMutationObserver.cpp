@@ -911,16 +911,15 @@ void nsDOMMutationObserver::EnterMutationHandling() { ++sMutationLevel; }
 void nsDOMMutationObserver::LeaveMutationHandling() {
   if (sCurrentlyHandlingObservers &&
       sCurrentlyHandlingObservers->Length() == sMutationLevel) {
-    nsTArray<RefPtr<nsDOMMutationObserver>>& obs =
-        sCurrentlyHandlingObservers->ElementAt(sMutationLevel - 1);
+    nsTArray<RefPtr<nsDOMMutationObserver>> obs =
+        sCurrentlyHandlingObservers->PopLastElement();
     for (uint32_t i = 0; i < obs.Length(); ++i) {
       nsDOMMutationObserver* o = static_cast<nsDOMMutationObserver*>(obs[i]);
       if (o->mCurrentMutations.Length() == sMutationLevel) {
         // It is already in pending mutations.
-        o->mCurrentMutations.RemoveElementAt(sMutationLevel - 1);
+        o->mCurrentMutations.RemoveLastElement();
       }
     }
-    sCurrentlyHandlingObservers->RemoveElementAt(sMutationLevel - 1);
   }
   --sMutationLevel;
 }

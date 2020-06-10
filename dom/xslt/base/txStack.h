@@ -44,9 +44,7 @@ class txStack : private nsTArray<void*> {
     void* object = nullptr;
     NS_ASSERTION(!isEmpty(), "popping from empty stack");
     if (!isEmpty()) {
-      const uint32_t count = Length() - 1;
-      object = ElementAt(count);
-      RemoveElementAt(count);
+      object = PopLastElement();
     }
     return object;
   }
