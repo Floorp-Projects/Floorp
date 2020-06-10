@@ -94,7 +94,7 @@ def run_tests(mach_cmd, **kwargs):
         try_options = json.loads(os.environ["PERFTEST_OPTIONS"])
         kwargs.update(try_options)
 
-    from mozperftest.utils import build_test_list, install_package
+    from mozperftest.utils import build_test_list
     from mozperftest import MachEnvironment, Metadata
 
     flavor = kwargs["flavor"]
@@ -106,13 +106,10 @@ def run_tests(mach_cmd, **kwargs):
     mach_cmd.log_manager.add_terminal_logging(level=log_level)
 
     try:
+        # XXX this doc is specific to browsertime scripts
+        # maybe we want to move it
         if flavor == "doc":
-            location = os.path.join(
-                mach_cmd.topsrcdir, "third_party", "python", "esprima"
-            )
-            install_package(mach_cmd.virtualenv_manager, location)
-
-            from mozperftest.scriptinfo import ScriptInfo
+            from mozperftest.test.browsertime.script import ScriptInfo
 
             for test in kwargs["tests"]:
                 print(ScriptInfo(test))
