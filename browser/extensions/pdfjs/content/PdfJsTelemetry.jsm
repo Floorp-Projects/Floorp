@@ -24,10 +24,16 @@ var PdfJsTelemetry = {
   onViewerIsUsed() {
     Services.telemetry.scalarAdd("pdf.viewer.used", 1);
   },
-  onFallback(featureId) {
+  onFallbackShown(featureId) {
     Services.telemetry.scalarAdd("pdf.viewer.fallback_shown", 1);
     let histogram = Services.telemetry.getHistogramById(
       "PDF_VIEWER_FALLBACK_REASON"
+    );
+    histogram.add(featureId ?? "unknown");
+  },
+  onFallbackError(featureId) {
+    let histogram = Services.telemetry.getHistogramById(
+      "PDF_VIEWER_FALLBACK_ERROR"
     );
     histogram.add(featureId ?? "unknown");
   },
