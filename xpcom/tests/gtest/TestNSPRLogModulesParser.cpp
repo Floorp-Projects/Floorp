@@ -145,6 +145,7 @@ TEST(NSPRLogModulesParser, RustModules)
       {"timestamp", mozilla::LogLevel::Error},
       {"crate::mod::file1", mozilla::LogLevel::Error},
       {"crate::mod::file2", mozilla::LogLevel::Verbose},
+      {"crate::mod::*", mozilla::LogLevel::Info},
   };
 
   const size_t kExpectedCount = MOZ_ARRAY_LENGTH(expected);
@@ -153,7 +154,7 @@ TEST(NSPRLogModulesParser, RustModules)
 
   size_t count = 0;
   mozilla::NSPRLogModulesParser(
-      "timestamp,crate::mod::file1, crate::mod::file2:5",
+      "timestamp,crate::mod::file1, crate::mod::file2:5, crate::mod::*:3",
       [&](const char* aName, mozilla::LogLevel aLevel, int32_t) mutable {
         ASSERT_LT(count, kExpectedCount);
         EXPECT_STREQ(currTest->first, aName);
