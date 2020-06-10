@@ -419,7 +419,7 @@ void ClientWebGLContext::EndComposition() {
 
 void ClientWebGLContext::Present(WebGLFramebufferJS* const fb,
                                  const layers::TextureType type) {
-  if (!mIsCanvasDirty) return;
+  if (!mIsCanvasDirty && !fb) return;
   mIsCanvasDirty = false;
   mFrontBufferSnapshot = nullptr;
 
