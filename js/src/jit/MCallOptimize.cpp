@@ -362,6 +362,8 @@ IonBuilder::InliningResult IonBuilder::inlineNativeCall(CallInfo& callInfo,
       return inlineIsCrossRealmArrayConstructor(callInfo);
     case InlinableNative::IntrinsicToInteger:
       return inlineToInteger(callInfo);
+    case InlinableNative::IntrinsicToLength:
+      return inlineToLength(callInfo);
     case InlinableNative::IntrinsicToString:
       return inlineToString(callInfo);
     case InlinableNative::IntrinsicIsConstructing:
@@ -3403,6 +3405,32 @@ IonBuilder::InliningResult IonBuilder::inlineToInteger(CallInfo& callInfo) {
   }
 
   callInfo.setImplicitlyUsedUnchecked();
+  return InliningStatus_Inlined;
+}
+
+IonBuilder::InliningResult IonBuilder::inlineToLength(CallInfo& callInfo) {
+  MOZ_ASSERT(!callInfo.constructing());
+  MOZ_ASSERT(callInfo.argc() == 1);
+
+  MDefinition* input = callInfo.getArg(0);
+
+  // Optimize int32 => number.
+  if (input->type() != MIRType::Int32) {
+    return InliningStatus_NotInlined;
+  }
+  if (!IsNumberType(getInlineReturnType())) {
+    return InliningStatus_NotInlined;
+  }
+
+  callInfo.setImplicitlyUsedUnchecked();
+
+  // ToLength(int32) is equivalent to max(int32, 0).
+  bool isMax = true;
+  MDefinition* constZero = constant(Int32Value(0));
+  MMinMax* max = MMinMax::New(alloc(), input, constZero, MIRType::Int32, isMax);
+  current->add(max);
+  current->push(max);
+
   return InliningStatus_Inlined;
 }
 

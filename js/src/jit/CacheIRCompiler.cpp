@@ -5908,6 +5908,15 @@ bool CacheIRCompiler::emitLoadObject(ObjOperandId resultId,
   return true;
 }
 
+bool CacheIRCompiler::emitLoadInt32Constant(uint32_t valOffset,
+                                            Int32OperandId resultId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+  Register reg = allocator.defineRegister(masm, resultId);
+  StubFieldOffset val(valOffset, StubField::Type::RawWord);
+  emitLoadStubField(val, reg);
+  return true;
+}
+
 bool CacheIRCompiler::emitCallInt32ToString(Int32OperandId inputId,
                                             StringOperandId resultId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
