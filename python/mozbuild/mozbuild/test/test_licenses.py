@@ -4,7 +4,7 @@ import unittest
 
 import mozunit
 
-from mozbuild.vendor_rust import VendorRust
+from mozbuild.vendor.vendor_rust import VendorRust
 
 
 class TestLicenses(unittest.TestCase):

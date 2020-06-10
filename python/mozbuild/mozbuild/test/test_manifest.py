@@ -8,7 +8,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 import unittest
 
 import mozfile
-from mozbuild.moz_yaml import load_moz_yaml, VerifyError
+from mozbuild.vendor.moz_yaml import load_moz_yaml, VerifyError
 from nose.tools import raises
 
 
