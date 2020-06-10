@@ -24,5 +24,9 @@ def on_exception(env, layer, exc):
     return True
 
 
+def logcat_processor():
+    pass
+
+
 def before_runs(env, **kw):
     add_options(env, common_options)
