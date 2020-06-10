@@ -149,18 +149,12 @@ already_AddRefed<PrintTarget> nsDeviceContextSpecGTK::MakePrintTarget() {
   int16_t format;
   mPrintSettings->GetOutputFormat(&format);
 
-  // Determine the real format with some GTK magic
+  // We assume PDF output if asked for native output.
   if (format == nsIPrintSettings::kOutputFormatNative) {
-    if (mIsPPreview) {
-      // There is nothing to detect on Print Preview, use PDF.
-      format = nsIPrintSettings::kOutputFormatPDF;
-    } else {
-      return nullptr;
-    }
+    format = nsIPrintSettings::kOutputFormatPDF;
   }
 
   IntSize size = IntSize::Truncate(width, height);
-
   if (format == nsIPrintSettings::kOutputFormatPDF) {
     return PrintTargetPDF::CreateOrNull(stream, size);
   }
@@ -190,8 +184,6 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::Init(nsIWidget* aWidget,
 
   mPrintSettings = do_QueryInterface(aPS);
   if (!mPrintSettings) return NS_ERROR_NO_INTERFACE;
-
-  mIsPPreview = aIsPrintPreview;
 
   // This is only set by embedders
   bool toFile;
