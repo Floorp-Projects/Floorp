@@ -111,8 +111,10 @@ class BackgroundPage extends HiddenExtensionPage {
 // Responsible for the background.service_worker section of the manifest.
 class BackgroundWorker {
   constructor(extension, options) {
+    this.registrationInfo = null;
     this.extension = extension;
     this.workerScript = options.service_worker;
+
     if (!this.workerScript) {
       throw new Error("Missing mandatory background.service_worker property");
     }
@@ -128,9 +130,10 @@ class BackgroundWorker {
   }
 
   shutdown() {
-    // TODO: ask to the ServiceWorkerManager to terminate any
-    // worker related to the extension principal, because the
-    // extension is shutting down.
+    if (this.registrationInfo) {
+      this.registrationInfo.forceShutdown();
+      this.registrationInfo = null;
+    }
   }
 }
 
