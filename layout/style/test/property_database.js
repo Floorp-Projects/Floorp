@@ -12997,27 +12997,23 @@ if (false) {
   };
 }
 
-if (IsCSSPropertyPrefEnabled("layout.css.scrollbar-color.enabled")) {
-  gCSSProperties["scrollbar-color"] = {
-    domProp: "scrollbarColor",
-    inherited: true,
-    type: CSS_TYPE_LONGHAND,
-    initial_values: ["auto"],
-    other_values: ["red green", "blue yellow", "#ffff00 white"],
-    invalid_values: ["ffff00 red", "auto red", "red auto", "green"],
-  };
-}
+gCSSProperties["scrollbar-color"] = {
+  domProp: "scrollbarColor",
+  inherited: true,
+  type: CSS_TYPE_LONGHAND,
+  initial_values: ["auto"],
+  other_values: ["red green", "blue yellow", "#ffff00 white"],
+  invalid_values: ["ffff00 red", "auto red", "red auto", "green"],
+};
 
-if (IsCSSPropertyPrefEnabled("layout.css.scrollbar-width.enabled")) {
-  gCSSProperties["scrollbar-width"] = {
-    domProp: "scrollbarWidth",
-    inherited: false,
-    type: CSS_TYPE_LONGHAND,
-    initial_values: ["auto"],
-    other_values: ["none", "thin"],
-    invalid_values: ["1px"],
-  };
-}
+gCSSProperties["scrollbar-width"] = {
+  domProp: "scrollbarWidth",
+  inherited: false,
+  type: CSS_TYPE_LONGHAND,
+  initial_values: ["auto"],
+  other_values: ["none", "thin"],
+  invalid_values: ["1px"],
+};
 
 if (IsCSSPropertyPrefEnabled("layout.css.motion-path.enabled")) {
   gCSSProperties["offset"] = {

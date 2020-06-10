@@ -5927,18 +5927,6 @@
   value: 1.0f
   mirror: always
 
-# Is support for scrollbar-color property enabled?
-- name: layout.css.scrollbar-color.enabled
-  type: bool
-  value: true
-  mirror: always
-
-# Is support for scrollbar-width property enabled?
-- name: layout.css.scrollbar-width.enabled
-  type: bool
-  value: true
-  mirror: always
-
 - name: layout.css.supports-selector.enabled
   type: RelaxedAtomicBool
   value: true

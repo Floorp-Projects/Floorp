@@ -10730,10 +10730,6 @@ exports.PREFERENCES = [
     "layout.css.scroll-anchoring.enabled"
   ],
   [
-    "scrollbar-width",
-    "layout.css.scrollbar-width.enabled"
-  ],
-  [
     "text-decoration-skip-ink",
     "layout.css.text-decoration-skip-ink.enabled"
   ],
@@ -10820,10 +10816,6 @@ exports.PREFERENCES = [
   [
     "scale",
     "layout.css.individual-transform.enabled"
-  ],
-  [
-    "scrollbar-color",
-    "layout.css.scrollbar-color.enabled"
   ],
   [
     "text-decoration-thickness",

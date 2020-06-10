@@ -71,31 +71,25 @@ if (outerRect.width == outer.clientWidth &&
     outerRect.height == outer.clientHeight) {
   ok(true, "Using overlay scrollbar, skip this test");
 } else {
-  SimpleTest.waitForExplicitFinish();
-  SpecialPowers.pushPrefEnv({
-    "set": [["layout.css.scrollbar-color.enabled", true]],
-  }, function() {
-    document.querySelector("#style").textContent = `
-      .outer { scrollbar-color: blue cyan; }
-    `;
+  document.querySelector("#style").textContent = `
+    .outer { scrollbar-color: blue cyan; }
+  `;
 
-    let canvas = snapshotRect(window, outerRect);
-    let stats = countPixels(canvas);
-    let references;
-    if (navigator.platform.startsWith("Win")) {
-      references = WIN_REFERENCES;
-    } else if (navigator.platform.startsWith("Mac")) {
-      references = MAC_REFERENCES;
-    } else if (navigator.platform.startsWith("Linux")) {
-      references = LINUX_REFERENCES;
-    } else {
-      ok(false, "Unsupported platform");
-    }
-    for (let [color, count] of references) {
-      let value = stats.get(color);
-      is(value, count, `Pixel count of color ${color}`);
-    }
-    SimpleTest.finish();
-  });
+  let canvas = snapshotRect(window, outerRect);
+  let stats = countPixels(canvas);
+  let references;
+  if (navigator.platform.startsWith("Win")) {
+    references = WIN_REFERENCES;
+  } else if (navigator.platform.startsWith("Mac")) {
+    references = MAC_REFERENCES;
+  } else if (navigator.platform.startsWith("Linux")) {
+    references = LINUX_REFERENCES;
+  } else {
+    ok(false, "Unsupported platform");
+  }
+  for (let [color, count] of references) {
+    let value = stats.get(color);
+    is(value, count, `Pixel count of color ${color}`);
+  }
 }
 </script>
