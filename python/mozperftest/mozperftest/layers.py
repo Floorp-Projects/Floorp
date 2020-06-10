@@ -62,7 +62,7 @@ class Layer(MachLogger):
         self.teardown()
 
     def __call__(self, metadata):
-        has_exc_handler = self.env.has_hook("on_exception")
+        has_exc_handler = self.env.hooks.exists("on_exception")
         self.debug("Running %s:run" % self.name)
         try:
             metadata = self.run(metadata)
@@ -71,7 +71,7 @@ class Layer(MachLogger):
                 self.error("User handled error")
                 for line in traceback.format_exc().splitlines():
                     self.error(line)
-                resume_run = self.env.run_hook("on_exception", self, e)
+                resume_run = self.env.hooks.run("on_exception", self.env, self, e)
                 if resume_run:
                     return metadata
                 raise StopRunError()
