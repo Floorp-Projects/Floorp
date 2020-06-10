@@ -241,23 +241,19 @@ class MOZ_RAII AutoConstructionStackEntry final {
       : mStack(aStack) {
     MOZ_ASSERT(aElement->IsHTMLElement() || aElement->IsXULElement());
 
-#ifdef DEBUG
     mIndex = mStack.Length();
-#endif
     mStack.AppendElement(aElement);
   }
 
   ~AutoConstructionStackEntry() {
     MOZ_ASSERT(mIndex == mStack.Length() - 1,
                "Removed element should be the last element");
-    mStack.RemoveLastElement();
+    mStack.RemoveElementAt(mIndex);
   }
 
  private:
   nsTArray<RefPtr<Element>>& mStack;
-#ifdef DEBUG
   uint32_t mIndex;
-#endif
 };
 
 }  // namespace
@@ -1299,7 +1295,7 @@ void CustomElementReactionsStack::PopAndInvokeElementQueue() {
       lastIndex == mReactionsStack.Length() - 1,
       "reactions created by InvokeReactions() should be consumed and removed");
 
-  mReactionsStack.RemoveLastElement();
+  mReactionsStack.RemoveElementAt(lastIndex);
   mIsElementQueuePushedForCurrentRecursionDepth = false;
 }
 

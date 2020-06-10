@@ -589,11 +589,13 @@ nsresult txStylesheetCompilerState::pushPtr(void* aPtr, enumStackType aType) {
 }
 
 void* txStylesheetCompilerState::popPtr(enumStackType aType) {
-  if (mTypeStack.IsEmpty()) {
+  uint32_t stacklen = mTypeStack.Length();
+  if (stacklen == 0) {
     MOZ_CRASH("Attempt to pop when type stack is empty");
   }
 
-  enumStackType type = mTypeStack.PopLastElement();
+  enumStackType type = mTypeStack.ElementAt(stacklen - 1);
+  mTypeStack.RemoveElementAt(stacklen - 1);
   void* value = mOtherStack.pop();
 
 #ifdef TX_DEBUG_STACK

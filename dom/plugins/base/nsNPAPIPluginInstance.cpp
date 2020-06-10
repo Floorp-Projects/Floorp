@@ -781,7 +781,9 @@ nsresult nsNPAPIPluginInstance::PushPopupsEnabledState(bool aEnabled) {
 }
 
 nsresult nsNPAPIPluginInstance::PopPopupsEnabledState() {
-  if (mPopupStates.IsEmpty()) {
+  int32_t last = mPopupStates.Length() - 1;
+
+  if (last < 0) {
     // Nothing to pop.
     return NS_OK;
   }
@@ -789,7 +791,11 @@ nsresult nsNPAPIPluginInstance::PopPopupsEnabledState() {
   nsCOMPtr<nsPIDOMWindowOuter> window = GetDOMWindow();
   if (!window) return NS_ERROR_FAILURE;
 
-  PopupBlocker::PopPopupControlState(mPopupStates.PopLastElement());
+  PopupBlocker::PopupControlState& oldState = mPopupStates[last];
+
+  PopupBlocker::PopPopupControlState(oldState);
+
+  mPopupStates.RemoveElementAt(last);
 
   return NS_OK;
 }

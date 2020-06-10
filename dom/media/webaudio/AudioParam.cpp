@@ -55,7 +55,9 @@ void AudioParam::DisconnectFromGraphAndDestroyTrack() {
              "mRefCnt.stabilizeForDeletion()");
 
   while (!mInputNodes.IsEmpty()) {
-    RefPtr<AudioNode> input = mInputNodes.PopLastElement().mInputNode;
+    uint32_t i = mInputNodes.Length() - 1;
+    RefPtr<AudioNode> input = mInputNodes[i].mInputNode;
+    mInputNodes.RemoveElementAt(i);
     input->RemoveOutputParam(this);
   }
 
