@@ -556,8 +556,7 @@ class ReftestTest(Test):
         return metadata
 
     def get_viewport_size(self, override):
-        assert override is None
-        return None
+        return override
 
     @property
     def id(self):
