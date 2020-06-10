@@ -439,6 +439,17 @@ void LIRGeneratorX86Shared::lowerUrshD(MUrsh* mir) {
   define(lir, mir);
 }
 
+void LIRGeneratorX86Shared::lowerPowOfTwoI(MPow* mir) {
+  int32_t base = mir->input()->toConstant()->toInt32();
+  MDefinition* power = mir->power();
+
+  // shift operator should be in register ecx;
+  // x86 can't shift a non-ecx register.
+  auto* lir = new (alloc()) LPowOfTwoI(base, useFixed(power, ecx));
+  assignSnapshot(lir, Bailout_PrecisionLoss);
+  define(lir, mir);
+}
+
 void LIRGeneratorX86Shared::lowerTruncateDToInt32(MTruncateToInt32* ins) {
   MDefinition* opd = ins->input();
   MOZ_ASSERT(opd->type() == MIRType::Double);
