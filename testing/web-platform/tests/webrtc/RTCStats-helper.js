@@ -1,4 +1,4 @@
-'use strict';
+R'use strict';
 
 // Test is based on the following editor draft:
 // webrtc-pc 20171130
