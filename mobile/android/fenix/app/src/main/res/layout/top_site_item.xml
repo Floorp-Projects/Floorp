@@ -37,7 +37,7 @@
         android:layout_height="wrap_content"
         android:gravity="center"
         android:singleLine="true"
-        android:textColor="?primaryText"
+        android:textColor="@color/top_site_title_text"
         android:textSize="10sp"
         android:layout_marginTop="8dp"
         app:layout_constraintBottom_toBottomOf="parent"

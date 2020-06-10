@@ -5,6 +5,6 @@
 
 <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
     <corners android:radius="4dp" />
-    <solid android:color="@android:color/white" />
-    <stroke android:width="1dp" android:color="?toolbarDivider" />
+    <solid android:color="@color/top_site_background" />
+    <stroke android:width="1dp" android:color="@color/top_site_border" />
 </shape>
