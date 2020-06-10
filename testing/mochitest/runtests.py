@@ -274,8 +274,8 @@ class MessageLogger(object):
 
         # Error detection also supports "raw" errors (in log messages) because some tests
         # manually dump 'TEST-UNEXPECTED-FAIL'.
-        if ('expected' in message or (message['action'] == 'log' and message[
-                'message'].startswith('TEST-UNEXPECTED'))):
+        if ('expected' in message or (message['action'] == 'log' and message.get(
+                'message', '').startswith('TEST-UNEXPECTED'))):
             self.restore_buffering = self.restore_buffering or self.buffering
             self.buffering = False
             if self.buffered_messages:
@@ -3205,7 +3205,8 @@ toolbar#nav-bar {
 
         def trackLSANLeaks(self, message):
             if self.lsanLeaks and message['action'] in ('log', 'process_output'):
-                line = message['message'] if message['action'] == 'log' else message['data']
+                line = message.get(
+                    'message', '') if message['action'] == 'log' else message['data']
                 self.lsanLeaks.log(line)
             return message
 
