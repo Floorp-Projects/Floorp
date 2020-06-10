@@ -87,3 +87,7 @@ pref("signon.debug", false);
 pref("signon.showAutoCompleteFooter", true);
 pref("security.insecure_field_warning.contextual.enabled", true);
 pref("toolkit.autocomplete.delegate", true);
+
+// Android doesn't support the new sync storage yet, we will have our own in
+// Bug 1625257.
+pref("webextensions.storage.sync.kinto", true);
