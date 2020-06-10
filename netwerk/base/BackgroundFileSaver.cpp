@@ -286,12 +286,20 @@ nsresult BackgroundFileSaver::GetWorkerThreadAttention(
   }
 
   if (!mAsyncCopyContext) {
+    // Background event queues are not shutdown and could be called after
+    // the queue is reset to null.  To match the behavior of nsIThread
+    // return NS_ERROR_UNEXPECTED
+    if (!mBackgroundET) {
+      return NS_ERROR_UNEXPECTED;
+    }
+
     // Copy is not in progress, post an event to handle the change manually.
     rv = mBackgroundET->Dispatch(
         NewRunnableMethod("net::BackgroundFileSaver::ProcessAttention", this,
                           &BackgroundFileSaver::ProcessAttention),
         NS_DISPATCH_EVENT_MAY_BLOCK);
     NS_ENSURE_SUCCESS(rv, rv);
+
   } else if (aShouldInterruptCopy) {
     // Interrupt the copy.  The copy will be resumed, if needed, by the
     // ProcessAttention function, invoked by the AsyncCopyCallback function.
