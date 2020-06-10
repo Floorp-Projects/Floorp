@@ -1204,7 +1204,12 @@ const bool FLAG_regexp_possessive_quantifier = false;
 // example, if a regexp is too long - so we might as well turn these
 // flags on unconditionally.
 const bool FLAG_regexp_optimization = true;
+#if MOZ_BIG_ENDIAN()
+// peephole optimization not supported on big endian
+const bool FLAG_regexp_peephole_optimization = false;
+#else
 const bool FLAG_regexp_peephole_optimization = true;
+#endif
 
 // This is used to control whether regexps tier up from interpreted to
 // compiled. We control this with --no-native-regexp and
