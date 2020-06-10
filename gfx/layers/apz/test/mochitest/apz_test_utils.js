@@ -419,6 +419,9 @@ function runSubtestsSeriallyInFreshWindows(aSubtests) {
         w.is = function(a, b, msg) {
           return is(a, b, aFile + " | " + msg);
         };
+        w.isnot = function(a, b, msg) {
+          return isnot(a, b, aFile + " | " + msg);
+        };
         w.isfuzzy = function(a, b, eps, msg) {
           return isfuzzy(a, b, eps, aFile + " | " + msg);
         };
