@@ -426,11 +426,9 @@ if (IsCSSPropertyPrefEnabled("layout.css.individual-transform.enabled")) {
   supported_properties["translate"] = [ test_translate_transition ];
 }
 
-if (IsCSSPropertyPrefEnabled("layout.css.scrollbar-color.enabled")) {
-  supported_properties["scrollbar-color"] = [
-    test_scrollbar_color_transition,
-  ];
-}
+supported_properties["scrollbar-color"] = [
+  test_scrollbar_color_transition,
+];
 
 // For properties which are well-tested by web-platform-tests, we don't need to
 // test animations/transitions again on them.
