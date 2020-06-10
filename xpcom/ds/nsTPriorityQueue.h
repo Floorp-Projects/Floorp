@@ -93,11 +93,15 @@ class nsTPriorityQueue {
    */
   T Pop() {
     MOZ_ASSERT(!mElements.IsEmpty(), "Empty queue");
-    T pop = mElements[0];
+    T pop = std::move(mElements[0]);
+
+    if (mElements.Length() == 1) {
+      mElements.Clear();
+      return pop;
+    }
 
     // Move last to front
-    mElements[0] = mElements[mElements.Length() - 1];
-    mElements.TruncateLength(mElements.Length() - 1);
+    mElements[0] = mElements.PopLastElement();
 
     // Sift down
     size_type i = 0;

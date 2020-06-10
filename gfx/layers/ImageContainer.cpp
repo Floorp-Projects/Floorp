@@ -84,10 +84,7 @@ UniquePtr<uint8_t[]> BufferRecycleBin::GetBuffer(uint32_t aSize) {
     return UniquePtr<uint8_t[]>(new (fallible) uint8_t[aSize]);
   }
 
-  uint32_t last = mRecycledBuffers.Length() - 1;
-  UniquePtr<uint8_t[]> result = std::move(mRecycledBuffers[last]);
-  mRecycledBuffers.RemoveElementAt(last);
-  return result;
+  return mRecycledBuffers.PopLastElement();
 }
 
 void BufferRecycleBin::ClearRecycledBuffers() {
