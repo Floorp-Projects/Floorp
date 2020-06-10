@@ -10,6 +10,7 @@ var gNumSamples = 500;
 
 loadRelativeToScript("argparse.js");
 loadRelativeToScript("harness.js");
+loadRelativeToScript("sequencer.js");
 loadRelativeToScript("scheduler.js");
 loadRelativeToScript("perf.js");
 loadRelativeToScript("test_list.js");
@@ -61,7 +62,6 @@ function run(opts, loads) {
   const perf = new FrameHistory(gNumSamples);
   const sequencer = new LoadCycle(sequence, opts.duration);
 
-  loadMgr.startCycle(sequencer);
   const schedulerCtors = {
     keepup: OptimizeForFrameRate,
     vsync: VsyncScheduler,
@@ -74,6 +74,7 @@ function run(opts, loads) {
 
   let possible = 0;
   let frames = 0;
+  loadMgr.startSequencer(sequencer);
   while (loadMgr.load_running()) {
     const timestamp = gHost.now();
     const events = scheduler.tick(loadMgr, timestamp);

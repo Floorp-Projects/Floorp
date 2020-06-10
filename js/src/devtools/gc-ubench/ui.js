@@ -411,7 +411,7 @@ function handler(timestamp) {
   const events = gLoadMgr.tick(timestamp);
   if (events & gLoadMgr.LOAD_ENDED) {
     end_test(timestamp, gLoadMgr.lastActive);
-    if (!gLoadMgr.cycleStopped()) {
+    if (!gLoadMgr.stopped()) {
       start_test();
     }
     update_load_display();
@@ -545,7 +545,7 @@ function run_all_tests() {
 function start_test_cycle(tests_to_run) {
   // Convert from an iterable to an array for pop.
   const sequencer = new LoadCycle(tests_to_run, gLoadMgr.testDurationMS / 1000);
-  gLoadMgr.startCycle(sequencer);
+  gLoadMgr.startSequencer(sequencer);
   testState = "running";
   gHistogram.clear();
   reset_draw_state();
@@ -576,7 +576,7 @@ function end_test(timestamp, load) {
   report_test_result(load, gHistogram);
   gHistogram.clear();
   console.log(`Ending test ${load.name}`);
-  if (gLoadMgr.cycleStopped()) {
+  if (gLoadMgr.stopped()) {
     testState = "idle";
   }
   update_load_state_indicator();

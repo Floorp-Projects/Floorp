@@ -139,47 +139,6 @@ var AllocationLoad = class {
   }
 };
 
-var LoadCycle = class {
-  constructor(tests_to_run, duration) {
-    this.queue = [...tests_to_run];
-    this.duration = duration * 1000;
-    this.idx = -1;
-  }
-
-  get current() {
-    return this.queue[this.idx];
-  }
-
-  start(now = performance.now()) {
-    this.idx = 0;
-    this.cycleStart = this.started = now;
-  }
-
-  tick(now = performance.now()) {
-    if (this.currentLoadElapsed(now) < this.duration) {
-      return;
-    }
-
-    this.idx++;
-    this.started = now;
-    if (this.idx >= this.queue.length) {
-      this.idx = -1;
-    }
-  }
-
-  done() {
-    return this.idx == -1;
-  }
-
-  cycleElapsed(now = performance.now()) {
-    return now - this.cycleStart;
-  }
-
-  currentLoadElapsed(now = performance.now()) {
-    return now - this.started;
-  }
-};
-
 var AllocationLoadManager = class {
   constructor(tests) {
     this._loads = new Map();
@@ -191,7 +150,7 @@ var AllocationLoadManager = class {
     this._eventsSinceLastTick = 0;
 
     // Public API
-    this.cycle = null;
+    this.sequencer = null;
     this.testDurationMS = gDefaultTestDuration * 1000;
 
     // Constants
@@ -247,19 +206,17 @@ var AllocationLoadManager = class {
     let events = this._eventsSinceLastTick;
     this._eventsSinceLastTick = 0;
 
-    if (this.cycle) {
-      const prev = this.cycle.current;
-      this.cycle.tick(now);
-      if (this.cycle.current != prev) {
-        if (this.cycle.current) {
-          this.setActiveLoadByName(this.cycle.current);
+    if (this.sequencer) {
+      if (this.sequencer.tick(now)) {
+        if (this.sequencer.current) {
+          this.setActiveLoadByName(this.sequencer.current);
         } else {
           this.deactivateLoad();
         }
         events |= this.LOAD_ENDED;
-        if (this.cycle.done()) {
+        if (this.sequencer.done()) {
           events |= this.CYCLE_STOPPED;
-          this.cycle = null;
+          this.sequencer = null;
         } else {
           events |= this.LOAD_STARTED;
         }
@@ -273,21 +230,27 @@ var AllocationLoadManager = class {
     return events;
   }
 
-  startCycle(sequencer, now = gHost.now()) {
-    this.cycle = sequencer;
-    this.cycle.start(now);
-    this.setActiveLoadByName(this.cycle.current);
+  startSequencer(sequencer, now = gHost.now()) {
+    this.sequencer = sequencer;
+    this.sequencer.start(now);
+    this.setActiveLoadByName(this.sequencer.current);
     this._eventsSinceLastTick = this.CYCLE_STARTED | this.LOAD_STARTED;
   }
 
-  cycleStopped() {
-    return !this.cycle || this.cycle.done();
+  stopped() {
+    return !this.sequencer || this.sequencer.done();
   }
 
   currentLoadRemaining(now = gHost.now()) {
-    return this.cycleStopped()
-      ? 0
-      : this.testDurationMS - this.cycle.currentLoadElapsed(now);
+    if (this.stopped()) {
+      return 0;
+    }
+
+    // TODO: The web UI displays a countdown to the end of the current mutator.
+    // This won't work for potential future things like "run until 3 major GCs
+    // have been seen", so the API will need to be modified to provide
+    // information in that case.
+    return this.testDurationMS - this.sequencer.currentLoadElapsed(now);
   }
 };
 
