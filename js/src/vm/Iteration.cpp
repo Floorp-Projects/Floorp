@@ -1523,11 +1523,6 @@ static const JSFunctionSpec iterator_methods_with_helpers[] = {
     JS_SELF_HOSTED_SYM_FN(iterator, "IteratorIdentity", 0, 0),
     JS_FS_END};
 
-static const JSPropertySpec iterator_properties[] = {
-    JS_STRING_SYM_PS(toStringTag, js_Iterator_str, JSPROP_READONLY),
-    JS_PS_END,
-};
-
 /* static */
 bool GlobalObject::initIteratorProto(JSContext* cx,
                                      Handle<GlobalObject*> global) {
@@ -1666,7 +1661,7 @@ static const ClassSpec IteratorObjectClassSpec = {
     iterator_static_methods,
     nullptr,
     iterator_methods_with_helpers,
-    iterator_properties,
+    nullptr,
     nullptr,
 };
 
