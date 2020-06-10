@@ -36,4 +36,5 @@ origin:
 
 vendoring:
   url: https://code.videolan.org/videolan/dav1d.git
+  source-hosting: gitlab
   vendor-directory: third_party/dav1d
