@@ -275,16 +275,24 @@ class BroadcastConduit extends BaseConduit {
    */
   _raceResponses(promises) {
     return new Promise((resolve, reject) => {
+      let result;
       promises.map(p =>
         p
-          // Ignore responses from child Messengers without any listeners.
-          .then(value => value && resolve(value))
-
+          .then(value => {
+            if (value.response) {
+              // We have an explicit response, resolve immediately.
+              resolve(value);
+            } else if (value.received) {
+              // Message was received, but no response.
+              // Resolve with this only if there is no other explicit response.
+              result = value;
+            }
+          })
           // Ignore errors trying to query child Messengers being destroyed.
           .catch(err => err.result !== Cr.NS_ERROR_NOT_AVAILABLE && reject(err))
       );
-      // Ensure resolveing when there are no (actual) responses.
-      Promise.allSettled(promises).then(() => resolve());
+      // Ensure resolving when there are no responses.
+      Promise.allSettled(promises).then(() => resolve(result));
     });
   }
 

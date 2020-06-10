@@ -329,7 +329,9 @@ const ProxyMessenger = {
     arg.firstResponse = true;
     let kind = await this.normalizeArgs(arg, sender);
     let result = await this.conduit.castRuntimeMessage(kind, arg);
-    return result ? result[0] : Promise.reject({ message: ERROR_NO_RECEIVERS });
+    return result
+      ? result.value
+      : Promise.reject({ message: ERROR_NO_RECEIVERS });
   },
 
   async recvPortConnect(arg, { sender }) {

@@ -171,17 +171,19 @@ class SimpleEventAPI extends EventManager {
 class MessageEvent extends SimpleEventAPI {
   emit(holder, sender) {
     if (!this.fires.size || !this.context.active) {
-      return;
+      return { received: false };
     }
 
     sender = Cu.cloneInto(sender, this.context.cloneScope);
     let message = holder.deserialize(this.context.cloneScope);
 
-    let all = [...this.fires]
+    let responses = [...this.fires]
       .map(fire => this.wrapResponse(fire, message, sender))
       .filter(x => x !== undefined);
 
-    return all.length ? Promise.race(all).then(v => [v]) : [];
+    return !responses.length
+      ? { received: true, response: false }
+      : Promise.race(responses).then(value => ({ response: true, value }));
   }
 
   wrapResponse(fire, message, sender) {
