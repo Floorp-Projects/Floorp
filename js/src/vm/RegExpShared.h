@@ -152,8 +152,7 @@ class RegExpShared : public gc::TenuredCell {
   static bool compileIfNecessary(JSContext* cx, MutableHandleRegExpShared res,
                                  HandleLinearString input, CodeKind code);
 
-  static RegExpRunStatus executeAtom(JSContext* cx,
-                                     MutableHandleRegExpShared re,
+  static RegExpRunStatus executeAtom(MutableHandleRegExpShared re,
                                      HandleLinearString input, size_t start,
                                      VectorMatchPairs* matches);
 
@@ -236,6 +235,10 @@ class RegExpShared : public gc::TenuredCell {
   static size_t offsetOfSource() {
     return offsetof(RegExpShared, headerAndSource) +
            HeaderWithAtom::offsetOfPtr();
+  }
+
+  static size_t offsetOfPatternAtom() {
+    return offsetof(RegExpShared, patternAtom_);
   }
 
   static size_t offsetOfFlags() { return offsetof(RegExpShared, flags); }
@@ -395,6 +398,9 @@ class RegExpRealm {
     return offsetof(RegExpRealm, optimizableRegExpInstanceShape_);
   }
 };
+
+RegExpRunStatus ExecuteRegExpAtomRaw(RegExpShared* re, JSLinearString* input,
+                                     size_t start, MatchPairs* matchPairs);
 
 } /* namespace js */
 
