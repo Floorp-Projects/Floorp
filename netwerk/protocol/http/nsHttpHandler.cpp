@@ -2769,8 +2769,13 @@ HttpTrafficAnalyzer* nsHttpHandler::GetHttpTrafficAnalyzer() {
   return &mHttpTrafficAnalyzer;
 }
 
-bool nsHttpHandler::IsHttp3VersionSupportedHex(const nsACString& version) {
-  return version.LowerCaseEqualsLiteral(kHttp3VersionHEX);
+bool nsHttpHandler::IsHttp3VersionSupported(const nsACString& version) {
+  for (uint32_t i = 0; i < kHttp3VersionCount; i++) {
+    if (version.Equals(kHttp3Versions[i])) {
+      return true;
+    }
+  }
+  return false;
 }
 
 nsresult nsHttpHandler::InitiateTransaction(HttpTransactionShell* aTrans,
