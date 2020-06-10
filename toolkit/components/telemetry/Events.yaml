@@ -10,13 +10,14 @@ top_sites:
       - "firefox"
     record_in_processes: ["main"]
     description: >
-      This is recorded with when a search top site is overridden to a URL instead as part of an experiment.
-    bug_numbers: [1637217]
+      This is recorded when using a search top site that has been overridden to a URL as part of an experiment.
+    bug_numbers: [1637217, 1644442]
     notification_emails:
       - "dao@mozilla.com"
     expiry_version: "80"
     extra_keys:
       searchProvider: Name of the search provider, e.g. "amazon" or "google".
+      source: Which part of the UI request came from, i.e. "newtab" or "urlbar".
 
 activity_stream:
   event:
