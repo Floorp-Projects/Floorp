@@ -208,7 +208,7 @@ RE_SECTION = re.compile(r"^(\S[^:]*):").search
 RE_FIELD = re.compile(r"^\s\s([^:]+):\s+(\S+)$").search
 
 
-class VerifyError(Exception):
+class MozYamlVerifyError(Exception):
     def __init__(self, filename, error):
         self.filename = filename
         self.error = error
@@ -226,28 +226,28 @@ def load_moz_yaml(filename, verify=True, require_license_file=True):
             manifest = yaml.safe_load(f)
     except IOError as e:
         if e.errno == errno.ENOENT:
-            raise VerifyError(filename, "Failed to find manifest: %s" % filename)
+            raise MozYamlVerifyError(filename, "Failed to find manifest: %s" % filename)
         raise
     except MarkedYAMLError as e:
-        raise VerifyError(filename, e)
+        raise MozYamlVerifyError(filename, e)
 
     if not verify:
         return manifest
 
     # Verify schema.
     if "schema" not in manifest:
-        raise VerifyError(filename, 'Missing manifest "schema"')
+        raise MozYamlVerifyError(filename, 'Missing manifest "schema"')
     if manifest["schema"] == 1:
         schema = _schema_1()
         schema_additional = _schema_1_additional
     else:
-        raise VerifyError(filename, "Unsupported manifest schema")
+        raise MozYamlVerifyError(filename, "Unsupported manifest schema")
 
     try:
         schema(manifest)
         schema_additional(filename, manifest, require_license_file=require_license_file)
     except (voluptuous.Error, ValueError) as e:
-        raise VerifyError(filename, e)
+        raise MozYamlVerifyError(filename, e)
 
     return manifest
 
