@@ -551,15 +551,13 @@ HTMLContentSink::~HTMLContentSink() {
     mNotificationTimer->Cancel();
   }
 
-  int32_t numContexts = mContextStack.Length();
-
-  if (mCurrentContext == mHeadContext && numContexts > 0) {
+  if (mCurrentContext == mHeadContext && !mContextStack.IsEmpty()) {
     // Pop off the second html context if it's not done earlier
-    mContextStack.RemoveElementAt(--numContexts);
+    mContextStack.RemoveLastElement();
   }
 
-  int32_t i;
-  for (i = 0; i < numContexts; i++) {
+  for (int32_t i = 0, numContexts = mContextStack.Length(); i < numContexts;
+       i++) {
     SinkContext* sc = mContextStack.ElementAt(i);
     if (sc) {
       sc->End();
@@ -716,11 +714,8 @@ HTMLContentSink::SetParser(nsParserBase* aParser) {
 nsresult HTMLContentSink::CloseHTML() {
   if (mHeadContext) {
     if (mCurrentContext == mHeadContext) {
-      uint32_t numContexts = mContextStack.Length();
-
       // Pop off the second html context if it's not done earlier
-      mCurrentContext = mContextStack.ElementAt(--numContexts);
-      mContextStack.RemoveElementAt(numContexts);
+      mCurrentContext = mContextStack.PopLastElement();
     }
 
     mHeadContext->End();
@@ -842,9 +837,7 @@ void HTMLContentSink::CloseHeadContext() {
   }
 
   if (!mContextStack.IsEmpty()) {
-    uint32_t n = mContextStack.Length() - 1;
-    mCurrentContext = mContextStack.ElementAt(n);
-    mContextStack.RemoveElementAt(n);
+    mCurrentContext = mContextStack.PopLastElement();
   }
 }
 

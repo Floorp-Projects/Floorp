@@ -1389,8 +1389,7 @@ TextControlState::TextControlState(TextControlElement* aOwningElement)
 TextControlState* TextControlState::Construct(
     TextControlElement* aOwningElement) {
   if (sReleasedInstances && !sReleasedInstances->IsEmpty()) {
-    TextControlState* state = sReleasedInstances->LastElement();
-    sReleasedInstances->RemoveLastElement();
+    TextControlState* state = sReleasedInstances->PopLastElement();
     state->mTextCtrlElement = aOwningElement;
     state->mBoundFrame = nullptr;
     state->mSelectionProperties = SelectionProperties();

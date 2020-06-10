@@ -453,7 +453,7 @@ struct MOZ_STACK_CLASS BidiParagraphData {
     MOZ_ASSERT(mEmbeddingStack.Length(), "embedding/override underflow");
     MOZ_ASSERT(aCh == mEmbeddingStack.LastElement());
     AppendPopChar(aCh);
-    mEmbeddingStack.TruncateLength(mEmbeddingStack.Length() - 1);
+    mEmbeddingStack.RemoveLastElement();
   }
 
   void ClearBidiControls() {

@@ -1818,13 +1818,14 @@ void PluginModuleChild::EnteredCall() { mIncallPumpingStack.AppendElement(); }
 
 void PluginModuleChild::ExitedCall() {
   NS_ASSERTION(mIncallPumpingStack.Length(), "mismatched entered/exited");
-  uint32_t len = mIncallPumpingStack.Length();
-  const IncallFrame& f = mIncallPumpingStack[len - 1];
+  const IncallFrame& f = mIncallPumpingStack.LastElement();
   if (f._spinning)
     MessageLoop::current()->SetNestableTasksAllowed(
         f._savedNestableTasksAllowed);
 
-  mIncallPumpingStack.TruncateLength(len - 1);
+  // XXX Is RemoveLastElement intentionally called only after calling
+  // SetNestableTasksAllowed? Otherwise, PopLastElement could be used above.
+  mIncallPumpingStack.RemoveLastElement();
 }
 
 LRESULT CALLBACK PluginModuleChild::CallWindowProcHook(int nCode, WPARAM wParam,

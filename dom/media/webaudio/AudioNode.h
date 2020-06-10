@@ -143,6 +143,10 @@ class AudioNode : public DOMEventTargetHelper, public nsSupportsWeakReference {
   }
 
   struct InputNode final {
+    InputNode() = default;
+    InputNode(const InputNode&) = delete;
+    InputNode(InputNode&&) = default;
+
     ~InputNode() {
       if (mTrackPort) {
         mTrackPort->Destroy();
