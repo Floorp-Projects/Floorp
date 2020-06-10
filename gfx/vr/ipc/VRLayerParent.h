@@ -7,8 +7,6 @@
 #ifndef GFX_VR_LAYERPARENT_H
 #define GFX_VR_LAYERPARENT_H
 
-#include "VRManager.h"
-
 #include "mozilla/RefPtr.h"
 #include "mozilla/gfx/PVRLayerParent.h"
 #include "gfxVR.h"

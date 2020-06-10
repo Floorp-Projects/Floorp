@@ -6,7 +6,6 @@
 
 #include "VRParent.h"
 #include "VRGPUParent.h"
-#include "VRManager.h"
 #include "gfxConfig.h"
 #include "nsDebugImpl.h"
 #include "nsThreadManager.h"
@@ -63,12 +62,6 @@ IPCResult VRParent::RecvInit(nsTArray<GfxVarUpdate>&& vars,
     DeviceManagerDx::Get()->CreateCompositorDevices();
   }
 #endif
-  return IPC_OK();
-}
-
-IPCResult VRParent::RecvNotifyVsync(const TimeStamp& vsyncTimestamp) {
-  VRManager* vm = VRManager::Get();
-  vm->NotifyVsync(vsyncTimestamp);
   return IPC_OK();
 }
 

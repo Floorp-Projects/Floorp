@@ -150,6 +150,7 @@ static const uint32_t kDefaultGlyphCacheSize = -1;
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/TouchEvent.h"
 #include "gfxVR.h"
+#include "VRManager.h"
 #include "VRManagerChild.h"
 #include "mozilla/gfx/GPUParent.h"
 #include "mozilla/layers/MemoryReportingMLGPU.h"
