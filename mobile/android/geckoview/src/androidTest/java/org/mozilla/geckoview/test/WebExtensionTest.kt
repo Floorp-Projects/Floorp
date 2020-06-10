@@ -1619,7 +1619,7 @@ class WebExtensionTest : BaseSessionTest() {
                     : GeckoResult<GeckoSession> {
                 assertThat(details.url, endsWith("options.html"))
                 assertEquals(details.active, true)
-                assertEquals(optionsExtension!!, source)
+                assertEquals(optionsExtension!!.id, source.id)
                 tabsCreateResult.complete(null)
                 return GeckoResult.fromValue(null)
             }
@@ -1648,7 +1648,7 @@ class WebExtensionTest : BaseSessionTest() {
                 assertThat(
                     source.metaData!!.optionsPageUrl,
                     endsWith("options.html"))
-                assertEquals(optionsExtension!!, source)
+                assertEquals(optionsExtension!!.id, source.id)
                 openOptionsPageResult.complete(null)
             }
         }
