@@ -178,19 +178,21 @@ class VendorManifest(MozbuildObject):
             f.write("".join(yaml))
 
     def update_files(self, revision, yaml_file):
-        def get_full_path(file):
-            if "{yaml_dir}" in file:
-                file = file.replace("{yaml_dir}", os.path.dirname(yaml_file))
+        def get_full_path(path, support_cwd=False):
+            if support_cwd and path[0:5] == "{cwd}":
+                path = path.replace("{cwd}", ".")
+            elif "{yaml_dir}" in path:
+                path = path.replace("{yaml_dir}", os.path.dirname(yaml_file))
             else:
-                file = mozpath.join(
-                    self.manifest["vendoring"]["vendor-directory"], file
+                path = mozpath.join(
+                    self.manifest["vendoring"]["vendor-directory"], path
                 )
-            return file
+            return path
 
-        if "file-updates" not in self.manifest["vendoring"]:
+        if "update-actions" not in self.manifest["vendoring"]:
             return
 
-        for update in self.manifest["vendoring"]["file-updates"]:
+        for update in self.manifest["vendoring"]["update-actions"]:
             if update["action"] == "copy-file":
                 src = get_full_path(update["from"])
                 dst = get_full_path(update["to"])
@@ -209,5 +211,11 @@ class VendorManifest(MozbuildObject):
 
                 with open(file, "w") as f:
                     f.write(contents)
+            elif update["action"] == "run-script":
+                script = get_full_path(update["script"], support_cwd=True)
+                run_dir = get_full_path(update["cwd"])
+                self.run_process(
+                    args=[script], cwd=run_dir, log_name=script,
+                )
             else:
                 assert False, "Unknown action supplied (how did this pass validation?)"
