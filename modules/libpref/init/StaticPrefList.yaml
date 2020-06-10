@@ -7698,6 +7698,13 @@
   value: false
   mirror: always
 
+# Include an origin header on non-GET and non-HEAD requests regardless of CORS.
+# 0=never send, 1=send when same-origin only, 2=always send.
+- name: network.http.sendOriginHeader
+  type: uint32_t
+  value: 2
+  mirror: always
+
 # Prefs allowing granular control of referers.
 # 0=don't send any, 1=send only on clicks, 2=send on image requests as well
 - name: network.http.sendRefererHeader
