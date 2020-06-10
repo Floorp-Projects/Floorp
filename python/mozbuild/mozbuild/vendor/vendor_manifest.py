@@ -80,8 +80,15 @@ class VendorManifest(MozbuildObject):
     def get_source_host(self):
         if self.manifest["vendoring"]["source-hosting"] == "gitlab":
             from mozbuild.vendor.host_gitlab import GitLabHost
-
             return GitLabHost(self.manifest)
+        elif self.manifest["vendoring"]["source-hosting"] == "github":
+            from mozbuild.vendor.host_github import GitHubHost
+
+            return GitHubHost(self.manifest)
+        elif self.manifest["vendoring"]["source-hosting"] == "googlesource":
+            from mozbuild.vendor.host_googlesource import GoogleSourceHost
+
+            return GoogleSourceHost(self.manifest)
         else:
             raise Exception(
                 "Unknown source host: " + self.manifest["vendoring"]["source-hosting"]
