@@ -135,6 +135,15 @@ interface nsIServiceWorkerManager : nsISupports
                           in AString aScriptURL);
 
   /**
+   * Register an extension background service worker for a given
+   * extension principal and return a promise that resolves to the
+   * nsIServiceWorkerRegistrationInfo (or rejects if there was one
+   * already registered).
+   */
+  [implicit_jscontext]
+  Promise registerForAddonPrincipal(in nsIPrincipal aPrincipal);
+
+  /**
    * Unregister an existing ServiceWorker registration for `aScope`.
    * It keeps aCallback alive until the operation is concluded.
    */

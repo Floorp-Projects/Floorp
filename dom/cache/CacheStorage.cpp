@@ -27,6 +27,7 @@
 #include "mozilla/ipc/PBackgroundChild.h"
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "mozilla/StaticPrefs_dom.h"
+#include "mozilla/StaticPrefs_extensions.h"
 #include "nsContentUtils.h"
 #include "mozilla/dom/Document.h"
 #include "nsIGlobalObject.h"
@@ -115,6 +116,11 @@ bool IsTrusted(const PrincipalInfo& aPrincipalInfo, bool aTestingPrefEnabled) {
   nsAutoCString scheme(Substring(flatURL, schemePos, schemeLen));
   if (scheme.LowerCaseEqualsLiteral("https") ||
       scheme.LowerCaseEqualsLiteral("file")) {
+    return true;
+  }
+
+  if (StaticPrefs::extensions_backgroundServiceWorker_enabled_AtStartup() &&
+      scheme.LowerCaseEqualsLiteral("moz-extension")) {
     return true;
   }
 

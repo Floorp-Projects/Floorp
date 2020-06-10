@@ -138,6 +138,13 @@
                   }
                 },
                 "additionalProperties": { "$ref": "UnrecognizedProperty" }
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "service_worker": { "$ref": "ExtensionURL" }
+                },
+                "postprocess": "requireBackgroundServiceWorkerEnabled"
               }
             ],
             "optional": true
