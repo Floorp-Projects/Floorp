@@ -32,11 +32,8 @@ class nsTPriorityQueue {
    */
   explicit nsTPriorityQueue(const Compare& aComp) : mCompare(aComp) {}
 
-  /**
-   * Copy constructor
-   */
-  nsTPriorityQueue(const nsTPriorityQueue& aOther)
-      : mElements(aOther.mElements), mCompare(aOther.mCompare) {}
+  nsTPriorityQueue(nsTPriorityQueue&&) = default;
+  nsTPriorityQueue& operator=(nsTPriorityQueue&&) = default;
 
   /**
    * @return True if the queue is empty or false otherwise.
@@ -140,6 +137,12 @@ class nsTPriorityQueue {
    */
   const T* Elements() const { return mElements.Elements(); }
 
+  nsTPriorityQueue Clone() const {
+    auto res = nsTPriorityQueue{mCompare};
+    res.mElements = mElements.Clone();
+    return res;
+  }
+
  protected:
   /**
    * Swaps the elements at the specified indices.
@@ -150,7 +153,7 @@ class nsTPriorityQueue {
     mElements[aIndexB] = temp;
   }
 
-  CopyableTArray<T> mElements;
+  nsTArray<T> mElements;
   Compare mCompare;  // Comparator object
 };
 
