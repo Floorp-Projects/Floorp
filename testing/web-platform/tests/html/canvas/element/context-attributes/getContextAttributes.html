@@ -6,16 +6,19 @@
 var testScenarios = [
     {testDescription: "Test default context creation attributes",
         canvasContextAttributes: {},
-        expectedContextAttributes: {alpha : true, desynchronized: false}},
+        expectedContextAttributes: {alpha: true, desynchronized: false, willReadFrequently: false}},
     {testDescription: "Test context creation attributes alpha: true",
         canvasContextAttributes: {alpha: true},
-        expectedContextAttributes: {alpha : true}},
+        expectedContextAttributes: {alpha: true}},
     {testDescription: "Test context creation attributes alpha: false",
         canvasContextAttributes: {alpha: false},
-        expectedContextAttributes: {alpha : false}},
+        expectedContextAttributes: {alpha: false}},
     {testDescription: "Test context creation attributes desynchronized: false",
         canvasContextAttributes: {desynchronized: false},
-        expectedContextAttributes: {desynchronized : false}},
+        expectedContextAttributes: {desynchronized: false}},
+    {testDescription: "Test context creation attributes willReadFrequently: true",
+        canvasContextAttributes: {willReadFrequently: true},
+        expectedContextAttributes: {willReadFrequently: true}},
 ];
 
 function runTestScenario(testScenario) {
