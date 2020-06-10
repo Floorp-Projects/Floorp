@@ -147,17 +147,10 @@ var AllocationLoadManager = class {
     }
     this._active = undefined;
     this._paused = false;
-    this._eventsSinceLastTick = 0;
 
     // Public API
     this.sequencer = null;
     this.testDurationMS = gDefaultTestDuration * 1000;
-
-    // Constants
-    this.CYCLE_STARTED = 1;
-    this.CYCLE_STOPPED = 2;
-    this.LOAD_ENDED = 4;
-    this.LOAD_STARTED = 8;
   }
 
   getByName(name) {
@@ -211,22 +204,18 @@ var AllocationLoadManager = class {
 
   tick(now = gHost.now()) {
     this.lastActive = this._active;
-    let events = this._eventsSinceLastTick;
-    this._eventsSinceLastTick = 0;
+    let completed = false;
 
     if (this.sequencer) {
       if (this.sequencer.tick(now)) {
+        completed = true;
         if (this.sequencer.current) {
           this.setActiveLoad(this.sequencer.current);
         } else {
           this.deactivateLoad();
         }
-        events |= this.LOAD_ENDED;
         if (this.sequencer.done()) {
-          events |= this.CYCLE_STOPPED;
           this.sequencer = null;
-        } else {
-          events |= this.LOAD_STARTED;
         }
       }
     }
@@ -235,13 +224,12 @@ var AllocationLoadManager = class {
       this._active.tick();
     }
 
-    return events;
+    return completed;
   }
 
   startSequencer(sequencer, now = gHost.now()) {
     this.sequencer = sequencer;
     this.sequencer.start(now);
-    this._eventsSinceLastTick = this.CYCLE_STARTED | this.LOAD_STARTED;
     this.setActiveLoad(this.sequencer.current);
   }
 
