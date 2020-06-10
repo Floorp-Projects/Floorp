@@ -1311,6 +1311,14 @@ PeerConnectionImpl::SetLocalDescription(int32_t aAction, const char* aSDP) {
     mPrivacyRequested = Some(true);
   }
 
+  mozilla::dom::RTCSdpHistoryEntryInternal sdpEntry;
+  sdpEntry.mIsLocal = true;
+  sdpEntry.mTimestamp = mTimestampMaker.GetNow();
+  sdpEntry.mSdp = NS_ConvertASCIItoUTF16(aSDP);
+  if (!mSdpHistory.AppendElement(sdpEntry, fallible)) {
+    mozalloc_handle_oom(0);
+  }
+
   mLocalRequestedSDP = aSDP;
 
   bool wasRestartingIce = mJsepSession->IsIceRestarting();
@@ -1393,6 +1401,14 @@ PeerConnectionImpl::SetRemoteDescription(int32_t action, const char* aSDP) {
   }
 
   STAMP_TIMECARD(mTimeCard, "Set Remote Description");
+
+  mozilla::dom::RTCSdpHistoryEntryInternal sdpEntry;
+  sdpEntry.mIsLocal = false;
+  sdpEntry.mTimestamp = mTimestampMaker.GetNow();
+  sdpEntry.mSdp = NS_ConvertASCIItoUTF16(aSDP);
+  if (!mSdpHistory.AppendElement(sdpEntry, fallible)) {
+    mozalloc_handle_oom(0);
+  }
 
   mRemoteRequestedSDP = aSDP;
   bool wasRestartingIce = mJsepSession->IsIceRestarting();
@@ -2803,6 +2819,9 @@ RefPtr<dom::RTCStatsReportPromise> PeerConnectionImpl::GetStats(
           NS_ConvertASCIItoUTF16(localDescription.c_str()));
       report->mRemoteSdp.Construct(
           NS_ConvertASCIItoUTF16(remoteDescription.c_str()));
+      if (!report->mSdpHistory.AppendElements(mSdpHistory, fallible)) {
+        mozalloc_handle_oom(0);
+      }
       if (mJsepSession->IsPendingOfferer().isSome()) {
         report->mOfferer.Construct(*mJsepSession->IsPendingOfferer());
       } else if (mJsepSession->IsCurrentOfferer().isSome()) {
