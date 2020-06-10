@@ -84,27 +84,34 @@ origin:
   # Generally "version NNN", "tag SSS", "bookmark SSS"
   release: identifier
 
+  # Revision to pull in
+  # Must be a long or short commit SHA (long preferred)
+  revision: sha
+
   # The package's license, where possible using the mnemonic from
   # https://spdx.org/licenses/
   # Multiple licenses can be specified (as a YAML list)
   # A "LICENSE" file must exist containing the full license text
   license: MPL-2.0
 
+  # If the package's license is specified in a particular file,
+  # this is the name of the file.
+  # optional
+  license-file: COPYING
+
 # Configuration for the automated vendoring system.
-# Files are always vendored into a directory structure that matches the source
-# repository, into the same directory as the moz.yaml file
 # optional
 vendoring:
 
   # Repository URL to vendor from
   # eg. https://github.com/kinetiknz/nestegg.git
   # Any repository host can be specified here, however initially we'll only
-  # support automated vendoring from selected sources initiall.
+  # support automated vendoring from selected sources initially.
   url: source url (generally repository clone url)
 
-  # Revision to pull in
-  # Must be a long or short commit SHA (long preferred)
-  revision: sha
+  # Base directory of the location where the source files will live in-tree.
+  # If omitted, will default to the location the moz.yaml file is in.
+  vendor-directory: third_party/directory
 
   # List of patch files to apply after vendoring. Applied in the order
   # specified, and alphabetically if globbing is used. Patches must apply
@@ -230,13 +237,13 @@ def update_moz_yaml(filename, release, revision, verify=True, write=True):
                     if section == "origin" and name == "release":
                         line = "  release: %s\n" % release
                         found_release = True
-                    elif section == "vendoring" and name == "revision":
+                    elif section == "origin" and name == "revision":
                         line = "  revision: %s\n" % revision
                         found_revision = True
             lines.append(line)
 
         if not found_release and found_revision:
-            raise ValueError("Failed to find origin:release and " "vendoring:revision")
+            raise ValueError("Failed to find origin:release and " "origin:revision")
 
     if write:
         with open(filename, "w") as f:
@@ -257,11 +264,13 @@ def _schema_1():
                 Required("description"): All(str, Length(min=1)),
                 Required("url"): FqdnUrl(),
                 Required("license"): Msg(License(), msg="Unsupported License"),
+                "license-file": All(str, Length(min=1)),
                 Required("release"): All(str, Length(min=1)),
+                Required("revision"): Match(r"^[a-fA-F0-9]{12,40}$"),
             },
             "vendoring": {
                 Required("url"): FqdnUrl(),
-                Required("revision"): Match(r"^[a-fA-F0-9]{12,40}$"),
+                "vendor-directory": All(str, Length(min=1)),
                 "patches": Unique([str]),
                 "keep": Unique([str]),
                 "exclude": Unique([str]),
@@ -275,14 +284,17 @@ def _schema_1():
 def _schema_1_additional(filename, manifest, require_license_file=True):
     """Additional schema/validity checks"""
 
+    vendor_directory = os.path.dirname(filename)
+    if "vendoring" in manifest and "vendor-directory" in manifest["vendoring"]:
+        vendor_directory = manifest["vendoring"]["vendor-directory"]
+
     # LICENSE file must exist.
     if require_license_file and "origin" in manifest:
-        files = [
-            f.lower()
-            for f in os.listdir(os.path.dirname(filename))
-            if f.lower().startswith("license")
-        ]
+        files = [f.lower() for f in os.listdir(vendor_directory)]
         if not (
+            "license-file" in manifest["origin"]
+            and manifest["origin"]["license-file"].lower() in files
+        ) and not (
             "license" in files
             or "license.txt" in files
             or "license.rst" in files
