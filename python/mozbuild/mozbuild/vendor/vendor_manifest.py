@@ -211,6 +211,9 @@ class VendorManifest(MozbuildObject):
 
                 with open(file, "w") as f:
                     f.write(contents)
+            elif update["action"] == "delete-path":
+                path = get_full_path(update["path"])
+                mozfile.remove(path)
             elif update["action"] == "run-script":
                 script = get_full_path(update["script"], support_cwd=True)
                 run_dir = get_full_path(update["cwd"])
