@@ -197,7 +197,7 @@ static const uint64_t kCacheInitialized = ((uint64_t)0x1) << 63;
     return actionCount == 0;
   }
 
-  if (selector == @selector(moxSetFocused)) {
+  if (selector == @selector(moxSetFocused:)) {
     return [self stateWithMask:states::FOCUSABLE] == 0;
   }
 
@@ -655,11 +655,7 @@ struct RoleDescrComparator {
 }
 
 - (NSNumber*)moxFocused {
-  if (Accessible* acc = mGeckoAccessible.AsAccessible()) {
-    return FocusMgr()->IsFocused(acc) ? @YES : @NO;
-  }
-
-  return @NO;  // XXX: proxy implementation is needed.
+  return @([self stateWithMask:states::FOCUSED] != 0);
 }
 
 - (NSNumber*)moxSelected {
