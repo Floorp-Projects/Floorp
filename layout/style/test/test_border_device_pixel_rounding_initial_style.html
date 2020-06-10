@@ -15,6 +15,6 @@ SpecialPowers.pushPrefEnv({ "set": [["layout.css.devPixelsPerPx", "1.25"]] },
       is(win.getComputedStyle(doc.querySelector("div")).borderTopWidth, "0.8px", "Shouldn't incorrectly round with 60 app units after getting the initial style");
       SimpleTest.finish();
     });
-    frame.srcdoc = "<div style='border: 1px solid; display: none;'></div>";
+    frame.srcdoc = "<div style='border: 0.2px solid; display: none;'></div>";
   });
 </script>
