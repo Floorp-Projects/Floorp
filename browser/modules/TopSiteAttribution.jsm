@@ -8,13 +8,24 @@ Cu.importGlobalProperties(["fetch"]);
 
 var EXPORTED_SYMBOLS = ["TopSiteAttribution"];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "Services",
+  "resource://gre/modules/Services.jsm"
+);
+
+ChromeUtils.defineModuleGetter(
+  this,
+  "Region",
+  "resource://gre/modules/Region.jsm"
+);
 
 var TopSiteAttribution = {
-  async makeRequest({ searchProvider, siteURL }) {
+  async makeRequest({ searchProvider, siteURL, source }) {
     function record(objectString, value = "") {
       recordTelemetryEvent("search_override_exp", objectString, value, {
         searchProvider,
+        source,
       });
     }
     record("click");
@@ -28,6 +39,8 @@ var TopSiteAttribution = {
       return;
     }
     const request = new Request(attributionUrl);
+    request.headers.set("X-Region", Region.home);
+    request.headers.set("X-Source", source);
     const response = await fetch(request);
 
     if (response.ok) {
