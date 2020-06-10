@@ -948,10 +948,10 @@ class MockRuntime extends EventTarget {
       }
 
       return true;
-    } else if (nativeOriginInformation.$tag == device.mojom.XRNativeOriginInformation.Tags.referenceSpaceCategory) {
+    } else if (nativeOriginInformation.$tag == device.mojom.XRNativeOriginInformation.Tags.referenceSpaceType) {
       // Bounded_floor & unbounded ref spaces are not yet supported for AR:
-      if (nativeOriginInformation.referenceSpaceCategory == device.mojom.XRReferenceSpaceCategory.UNBOUNDED
-       || nativeOriginInformation.referenceSpaceCategory == device.mojom.XRReferenceSpaceCategory.BOUNDED_FLOOR) {
+      if (nativeOriginInformation.referenceSpaceType == device.mojom.XRReferenceSpaceType.kUnbounded
+       || nativeOriginInformation.referenceSpaceType == device.mojom.XRReferenceSpaceType.kBoundedFlor) {
         return false;
       }
 
@@ -1256,25 +1256,25 @@ class MockRuntime extends EventTarget {
         const inputSource = this.input_sources_.get(nativeOriginInformation.inputSourceId);
         return inputSource._getMojoFromInputSource(mojo_from_viewer);
       }
-    } else if (nativeOriginInformation.$tag == device.mojom.XRNativeOriginInformation.Tags.referenceSpaceCategory) {
-      switch (nativeOriginInformation.referenceSpaceCategory) {
-        case device.mojom.XRReferenceSpaceCategory.LOCAL:
+    } else if (nativeOriginInformation.$tag == device.mojom.XRNativeOriginInformation.Tags.referenceSpaceType) {
+      switch (nativeOriginInformation.referenceSpaceType) {
+        case device.mojom.XRReferenceSpaceType.kLocal:
           return XRMathHelper.identity();
-        case device.mojom.XRReferenceSpaceCategory.LOCAL_FLOOR:
+        case device.mojom.XRReferenceSpaceType.kLocalFloor:
           if (this.stageParameters_ == null || this.stageParameters_.standingTransform == null) {
             console.warn("Standing transform not available.");
             return null;
           }
           // this.stageParameters_.standingTransform = floor_from_mojo aka native_origin_from_mojo
           return XRMathHelper.inverse(this.stageParameters_.standingTransform.matrix);
-        case device.mojom.XRReferenceSpaceCategory.VIEWER:
+        case device.mojom.XRReferenceSpaceType.kViewer:
           return mojo_from_viewer;
-        case device.mojom.XRReferenceSpaceCategory.BOUNDED_FLOOR:
+        case device.mojom.XRReferenceSpaceType.kBoundedFlor:
           return null;
-        case device.mojom.XRReferenceSpaceCategory.UNBOUNDED:
+        case device.mojom.XRReferenceSpaceType.kUnbounded:
           return null;
         default:
-          throw new TypeError("Unrecognized XRReferenceSpaceCategory!");
+          throw new TypeError("Unrecognized XRReferenceSpaceType!");
       }
     } else {
       // Anchors & planes are not yet supported for hit test.
