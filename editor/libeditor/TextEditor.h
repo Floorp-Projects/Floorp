@@ -510,7 +510,7 @@ class TextEditor : public EditorBase, public nsITimerCallback, public nsINamed {
    *   nsIEditor::eNewlinesReplaceWithCommas (4, Thunderbird default):
    *     replace newlines with commas.
    *   nsIEditor::eNewlinesStripSurroundingWhitespace (5):
-   *     collapse newlines and surrounding whitespace characters and
+   *     collapse newlines and surrounding white-space characters and
    *     remove them from the string.
    *   nsIEditor::eNewlinesPasteIntact (0):
    *     only remove the leading and trailing newlines.

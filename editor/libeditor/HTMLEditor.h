@@ -828,11 +828,11 @@ class HTMLEditor final : public TextEditor,
    */
   MOZ_CAN_RUN_SCRIPT nsresult DeleteTableCellContentsWithTransaction();
 
-  static void IsNextCharInNodeWhitespace(nsIContent* aContent, int32_t aOffset,
+  static void IsNextCharInNodeWhiteSpace(nsIContent* aContent, int32_t aOffset,
                                          bool* outIsSpace, bool* outIsNBSP,
                                          nsIContent** outNode = nullptr,
                                          int32_t* outOffset = 0);
-  static void IsPrevCharInNodeWhitespace(nsIContent* aContent, int32_t aOffset,
+  static void IsPrevCharInNodeWhiteSpace(nsIContent* aContent, int32_t aOffset,
                                          bool* outIsSpace, bool* outIsNBSP,
                                          nsIContent** outNode = nullptr,
                                          int32_t* outOffset = 0);
@@ -870,7 +870,7 @@ class HTMLEditor final : public TextEditor,
 
   /**
    * IsVisibleTextNode() returns true if aText has visible text.  If it has
-   * only whitespaces and they are collapsed, returns false.
+   * only white-spaces and they are collapsed, returns false.
    */
   bool IsVisibleTextNode(Text& aText) const;
 
@@ -983,23 +983,23 @@ class HTMLEditor final : public TextEditor,
   /**
    * GetPriorHTMLSibling() returns the previous editable sibling, if there is
    * one within the parent, optionally skipping text nodes that are only
-   * whitespace.
+   * white-space.
    */
-  enum class SkipWhitespace { Yes, No };
+  enum class SkipWhiteSpace { Yes, No };
   nsIContent* GetPriorHTMLSibling(nsINode* aNode,
-                                  SkipWhitespace = SkipWhitespace::No) const;
+                                  SkipWhiteSpace = SkipWhiteSpace::No) const;
 
   /**
    * GetNextHTMLSibling() returns the next editable sibling, if there is
    * one within the parent, optionally skipping text nodes that are only
-   * whitespace.
+   * white-space.
    */
   nsIContent* GetNextHTMLSibling(nsINode* aNode,
-                                 SkipWhitespace = SkipWhitespace::No) const;
+                                 SkipWhiteSpace = SkipWhiteSpace::No) const;
 
   // Helper for GetPriorHTMLSibling/GetNextHTMLSibling.
-  static bool SkippableWhitespace(nsINode* aNode, SkipWhitespace aSkipWS) {
-    return aSkipWS == SkipWhitespace::Yes && aNode->IsText() &&
+  static bool SkippableWhiteSpace(nsINode* aNode, SkipWhiteSpace aSkipWS) {
+    return aSkipWS == SkipWhiteSpace::Yes && aNode->IsText() &&
            aNode->AsText()->TextIsOnlyWhitespace();
   }
 
@@ -1448,9 +1448,9 @@ class HTMLEditor final : public TextEditor,
       CollectNonEditableNodes aCollectNonEditableNodes);
 
   /**
-   * GetWhiteSpaceEndPoint() returns point at first or last ASCII whitespace
+   * GetWhiteSpaceEndPoint() returns point at first or last ASCII white-space
    * or non-breakable space starting from aPoint.  I.e., this returns next or
-   * previous point whether the character is neither ASCII whitespace nor
+   * previous point whether the character is neither ASCII white-space nor
    * non-brekable space.
    */
   enum class ScanDirection { Backward, Forward };
@@ -1487,7 +1487,7 @@ class HTMLEditor final : public TextEditor,
   /**
    * CreateRangeIncludingAdjuscentWhiteSpaces() creates an nsRange instance
    * which may be expanded from the given range to include adjuscent
-   * whitespaces.  If this fails handling something, returns nullptr.
+   * white-spaces.  If this fails handling something, returns nullptr.
    */
   already_AddRefed<nsRange> CreateRangeIncludingAdjuscentWhiteSpaces(
       const dom::AbstractRange& aAbstractRange);
@@ -1498,7 +1498,7 @@ class HTMLEditor final : public TextEditor,
 
   /**
    * GetSelectionRangesExtendedToIncludeAdjuscentWhiteSpaces() collects
-   * selection ranges with extending to include adjuscent whitespaces
+   * selection ranges with extending to include adjuscent white-spaces
    * of each range start and end.
    *
    * @param aOutArrayOfRanges   [out] Always appended same number of ranges
@@ -2014,8 +2014,8 @@ class HTMLEditor final : public TextEditor,
       SelectAllOfCurrentList aSelectAllOfCurrentList);
 
   /**
-   * If aContent is a text node that contains only collapsed whitespace or empty
-   * and editable.
+   * If aContent is a text node that contains only collapsed white-space or
+   * empty and editable.
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
   DeleteNodeIfInvisibleAndEditableTextNode(nsIContent& aContent);
@@ -2455,7 +2455,7 @@ class HTMLEditor final : public TextEditor,
 
   /**
    * HandleDeleteCollapsedSelectionAtWhiteSpaces() handles deletion of
-   * collapsed selection at whitespaces in a text node.
+   * collapsed selection at white-spaces in a text node.
    *
    * @param aDirectionAndAmount Direction of the deletion.
    * @param aWSRunObjectAtCaret WSRunObject instance which was initialized with
