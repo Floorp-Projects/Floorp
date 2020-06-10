@@ -18,6 +18,7 @@ import mozilla.components.concept.fetch.Request
 import mozilla.components.concept.fetch.Response
 import mozilla.components.concept.fetch.isSuccess
 import mozilla.components.support.base.log.logger.Logger
+import mozilla.components.support.ktx.kotlin.sanitizeURL
 import org.json.JSONException
 import org.json.JSONObject
 import java.io.IOException
@@ -108,7 +109,7 @@ private fun Context.regionCache(): SharedPreferences {
 
 private fun Client.fetchRegion(regionServiceUrl: String): LocationService.Region? {
     val request = Request(
-        url = regionServiceUrl,
+        url = regionServiceUrl.sanitizeURL(),
         method = Request.Method.POST,
         headers = MutableHeaders(
             Headers.Names.CONTENT_TYPE to Headers.Values.CONTENT_TYPE_APPLICATION_JSON,

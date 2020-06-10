@@ -155,4 +155,10 @@ class StringTest {
         assertFalse("https://mozilla.org".isExtensionUrl())
         assertFalse("http://mozilla.org".isExtensionUrl())
     }
+
+    @Test
+    fun sanitizeURL() {
+        val expectedUrl = "http://mozilla.org"
+        assertEquals(expectedUrl, "\nhttp://mozilla.org\n".sanitizeURL())
+    }
 }

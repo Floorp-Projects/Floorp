@@ -119,3 +119,10 @@ fun String.isSameOriginAs(other: String): Boolean {
     }
     return canonicalizeOrigin(this) == canonicalizeOrigin(other)
 }
+
+/**
+ * Remove any unwanted character in url like spaces at the beginning or end.
+ */
+fun String.sanitizeURL(): String {
+    return this.trim()
+}

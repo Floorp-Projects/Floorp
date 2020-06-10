@@ -17,6 +17,7 @@ import mozilla.components.concept.fetch.Request
 import mozilla.components.concept.fetch.isSuccess
 import mozilla.components.feature.search.SearchUseCases
 import mozilla.components.support.base.log.logger.Logger
+import mozilla.components.support.ktx.kotlin.sanitizeURL
 import java.io.IOException
 import java.util.UUID
 import java.util.concurrent.TimeUnit
@@ -242,7 +243,7 @@ class SearchSuggestionProvider : AwesomeBar.SuggestionProvider {
         private fun fetch(fetchClient: Client, url: String): String? {
             try {
                 val request = Request(
-                        url = url,
+                        url = url.sanitizeURL(),
                         readTimeout = Pair(READ_TIMEOUT_IN_MS, TimeUnit.MILLISECONDS),
                         connectTimeout = Pair(CONNECT_TIMEOUT_IN_MS, TimeUnit.MILLISECONDS)
                 )
