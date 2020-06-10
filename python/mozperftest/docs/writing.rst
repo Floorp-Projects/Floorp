@@ -95,8 +95,6 @@ Hooks
 
 A Python module can be used to run functions during a run lifecycle. Available hooks are:
 
-- **before_iterations(args)** runs before everything is started. Gets the args, which
-  can be changed.
 - **before_runs(env)** runs before the test is launched. Can be used to
   change the running environment.
 - **after_runs(env)** runs after the test is done.

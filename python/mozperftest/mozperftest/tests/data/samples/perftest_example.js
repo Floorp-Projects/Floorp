@@ -6,8 +6,6 @@
 
 var someVar;
 
-someVar = 2;
-
 async function setUp(context) {
   context.log.info("setUp example!");
 }
