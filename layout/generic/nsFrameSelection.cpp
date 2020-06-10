@@ -1135,17 +1135,13 @@ void nsFrameSelection::BidiLevelFromClick(nsIContent* aNode,
   SetCaretBidiLevelAndMaybeSchedulePaint(clickInFrame->GetEmbeddingLevel());
 }
 
-bool nsFrameSelection::MaintainedRange::AdjustNormalSelection(
+void nsFrameSelection::MaintainedRange::AdjustNormalSelection(
     const nsIContent* aContent, const int32_t aOffset,
     Selection& aNormalSelection) const {
   MOZ_ASSERT(aNormalSelection.Type() == SelectionType::eNormal);
 
-  if (!mRange) {
-    return false;
-  }
-
-  if (!aContent) {
-    return false;
+  if (!mRange || !aContent) {
+    return;
   }
 
   nsINode* rangeStartNode = mRange->GetStartContainer();
@@ -1159,7 +1155,7 @@ bool nsFrameSelection::MaintainedRange::AdjustNormalSelection(
     // Potentially handle this properly when Selection across Shadow DOM
     // boundary is implemented
     // (https://bugzilla.mozilla.org/show_bug.cgi?id=1607497).
-    return false;
+    return;
   }
 
   const Maybe<int32_t> relToEnd = nsContentUtils::ComparePoints(
@@ -1168,25 +1164,21 @@ bool nsFrameSelection::MaintainedRange::AdjustNormalSelection(
     // Potentially handle this properly when Selection across Shadow DOM
     // boundary is implemented
     // (https://bugzilla.mozilla.org/show_bug.cgi?id=1607497).
-    return false;
+    return;
   }
 
-  // If aContent/aOffset is inside the maintained selection, or if it is on the
-  // "anchor" side of the maintained selection, we need to do something.
-  if ((*relToStart < 0 && *relToEnd > 0) ||
+  // If aContent/aOffset is inside (or at the edge of) the maintained
+  // selection, or if it is on the "anchor" side of the maintained selection,
+  // we need to do something.
+  if ((*relToStart <= 0 && *relToEnd >= 0) ||
       (*relToStart > 0 && aNormalSelection.GetDirection() == eDirNext) ||
       (*relToEnd < 0 && aNormalSelection.GetDirection() == eDirPrevious)) {
     // Set the current range to the maintained range.
     aNormalSelection.ReplaceAnchorFocusRange(mRange);
-    if (*relToStart < 0 && *relToEnd > 0) {
-      // We're inside the maintained selection, just keep it selected.
-      return true;
-    }
-    // Reverse the direction of the selection so that the anchor will be on the
+    // Set the direction of the selection so that the anchor will be on the
     // far side of the maintained selection, relative to aContent/aOffset.
     aNormalSelection.SetDirection(*relToStart > 0 ? eDirPrevious : eDirNext);
   }
-  return false;
 }
 
 void nsFrameSelection::MaintainedRange::AdjustContentOffsets(
@@ -1277,10 +1269,9 @@ nsresult nsFrameSelection::HandleClick(nsIContent* aNewFocus,
     RefPtr<Selection> selection = mDomSelections[index];
     MOZ_ASSERT(selection);
 
-    if ((aFocusMode == FocusMode::kExtendSelection) &&
-        mMaintainedRange.AdjustNormalSelection(aNewFocus, aContentOffset,
-                                               *selection)) {
-      return NS_OK;  // shift clicked to maintained selection. rejected.
+    if (aFocusMode == FocusMode::kExtendSelection) {
+      mMaintainedRange.AdjustNormalSelection(aNewFocus, aContentOffset,
+                                             *selection);
     }
 
     AutoPrepareFocusRange prep(selection,
@@ -1315,10 +1306,8 @@ void nsFrameSelection::HandleDrag(nsIFrame* aFrame, const nsPoint& aPoint) {
   if (newFrame->IsSelected() && selection) {
     // `MOZ_KnownLive` required because of
     // https://bugzilla.mozilla.org/show_bug.cgi?id=1636889.
-    if (mMaintainedRange.AdjustNormalSelection(MOZ_KnownLive(offsets.content),
-                                               offsets.offset, *selection)) {
-      return;
-    }
+    mMaintainedRange.AdjustNormalSelection(MOZ_KnownLive(offsets.content),
+                                           offsets.offset, *selection);
   }
 
   const bool scrollViewStop = mLimiters.mLimiter != nullptr;
