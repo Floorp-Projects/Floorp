@@ -11,12 +11,14 @@
 enum CustomAttributes {
 #define ATTR(a) a,
 #include "CustomAttributes.inc"
+#include "external/CustomAttributes.inc"
 #undef ATTR
 };
 
 struct CustomAttributesSet {
 #define ATTR(a) bool has_##a : 1;
 #include "CustomAttributes.inc"
+#include "external/CustomAttributes.inc"
 #undef ATTR
 };
 
@@ -31,6 +33,7 @@ extern CustomAttributesSet GetAttributes(const clang::Decl *D);
     return GetAttributes(D).has_##name;                                        \
   }
 #include "CustomAttributes.inc"
+#include "external/CustomAttributes.inc"
 #undef ATTR
 
 extern bool hasCustomAttribute(const clang::Decl *D, CustomAttributes A);
