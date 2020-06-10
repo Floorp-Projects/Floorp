@@ -57,7 +57,7 @@ VALID_LICENSES = [
     "Unicode",  # http://www.unicode.org/copyright.html
 ]
 
-VALID_SOURCE_HOSTS = ["gitlab"]
+VALID_SOURCE_HOSTS = ["gitlab", "googlesource", "github"]
 
 """
 ---
