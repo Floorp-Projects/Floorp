@@ -11,47 +11,47 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
 
 Desktop
 -------
-Tests for page-load performance.
+Tests for page-load performance. (WX: WebExtension, BT: Browsertime, FF: Firefox, CH: Chrome, CU: Chromium)
 
-* Browsertime amazon
-* Browsertime bing-search
-* Browsertime facebook
-* Browsertime google-search
-* Browsertime google-slides
-* raptor-tp6-amazon
-* raptor-tp6-apple
-* raptor-tp6-binast-instagram-firefox
-* raptor-tp6-bing
-* raptor-tp6-docs
-* raptor-tp6-ebay
-* raptor-tp6-facebook
-* raptor-tp6-fandom
-* raptor-tp6-google
-* raptor-tp6-google-mail
-* raptor-tp6-imdb
-* raptor-tp6-imgur
-* raptor-tp6-instagram
-* raptor-tp6-linkedin
-* raptor-tp6-microsoft
-* raptor-tp6-netflix
-* raptor-tp6-office
-* raptor-tp6-outlook
-* raptor-tp6-paypal
-* raptor-tp6-pinterest
-* raptor-tp6-reddit
-* raptor-tp6-sheets
-* raptor-tp6-slides
-* raptor-tp6-tumblr
-* raptor-tp6-twitch
-* raptor-tp6-twitter
-* raptor-tp6-wikipedia
-* raptor-tp6-yahoo-mail
-* raptor-tp6-yahoo-news
-* raptor-tp6-yandex
-* raptor-tp6-youtube
-* Browsertime wikipedia
-* Browsertime yahoo-news
-* Browsertime youtube
+* amazon (BT)
+* bing-search (BT)
+* facebook (BT)
+* google-search (BT)
+* google-slides (BT)
+* raptor-tp6-amazon (WX, FF, CH, CU)
+* raptor-tp6-apple (WX, FF, CH, CU)
+* raptor-tp6-binast-instagram-firefox (WX, FF)
+* raptor-tp6-bing (WX, FF, CH, CU)
+* raptor-tp6-docs (WX, FF, CH, CU)
+* raptor-tp6-ebay (WX, FF, CH, CU)
+* raptor-tp6-facebook (WX, CH, CU)
+* raptor-tp6-fandom (WX, FF, CH, CU)
+* raptor-tp6-google (WX, FF, CH, CU)
+* raptor-tp6-google-mail (WX, FF, CH, CU)
+* raptor-tp6-imdb (WX, FF, CH, CU)
+* raptor-tp6-imgur (WX, FF, CH, CU)
+* raptor-tp6-instagram (WX, FF, CH, CU)
+* raptor-tp6-linkedin (WX, FF, CH, CU)
+* raptor-tp6-microsoft (WX, FF, CH, CU)
+* raptor-tp6-netflix (WX, FF, CH, CU)
+* raptor-tp6-office (WX, FF, CH, CU)
+* raptor-tp6-outlook (WX, FF, CH, CU)
+* raptor-tp6-paypal (WX, FF, CH, CU)
+* raptor-tp6-pinterest (WX, FF, CH, CU)
+* raptor-tp6-reddit (WX, FF, CH, CU)
+* raptor-tp6-sheets (WX, FF, CH, CU)
+* raptor-tp6-slides (WX, FF, CH, CU)
+* raptor-tp6-tumblr (WX, FF, CH, CU)
+* raptor-tp6-twitch (WX, FF, CH, CU)
+* raptor-tp6-twitter (WX, FF, CH, CU)
+* raptor-tp6-wikipedia (WX, FF, CH, CU)
+* raptor-tp6-yahoo-mail (WX, FF, CH, CU)
+* raptor-tp6-yahoo-news (WX, FF, CH, CU)
+* raptor-tp6-yandex (WX, FF, CH, CU)
+* raptor-tp6-youtube (WX, FF, CH, CU)
+* wikipedia (BT)
+* yahoo-news (BT)
+* youtube (BT)
 
 Live
 ----
@@ -60,61 +60,61 @@ A set of test pages that are run as live sites instead of recorded versions. The
 
 Mobile
 ------
-Page-load performance test suite on Android.
+Page-load performance test suite on Android. (WX: WebExtension, BT: Browsertime, GV: Geckoview, RB: Refbrow, FE: Fenix, F68: Fennec68)
 
-* Browsertime allrecipes
-* Browsertime amazon
-* Browsertime amazon-search
-* Browsertime bbc
-* Browsertime bing
-* Browsertime bing-search-restaurants
-* Browsertime booking
-* Browsertime cnn
-* Browsertime cnn-ampstories
-* Browsertime ebay-kleinanzeigen
-* Browsertime ebay-kleinanzeigen-search
-* Browsertime espn
-* Browsertime facebook
-* Browsertime facebook-cristiano
-* Browsertime google
-* Browsertime google-maps
-* Browsertime google-search-restaurants
-* Browsertime imdb
-* Browsertime instagram
-* Browsertime jianshu
-* Browsertime microsoft-support
-* raptor-tp6m-allrecipes
-* raptor-tp6m-amazon
-* raptor-tp6m-amazon-search
-* raptor-tp6m-bbc
-* raptor-tp6m-bing
-* raptor-tp6m-bing-restaurants
-* raptor-tp6m-booking
-* raptor-tp6m-cnn
-* raptor-tp6m-cnn-ampstories
-* raptor-tp6m-ebay-kleinanzeigen
-* raptor-tp6m-espn
-* raptor-tp6m-facebook
-* raptor-tp6m-facebook-cristiano
-* raptor-tp6m-google
-* raptor-tp6m-google-maps
-* raptor-tp6m-google-restaurants
-* raptor-tp6m-imdb
-* raptor-tp6m-instagram
-* raptor-tp6m-jianshu
-* raptor-tp6m-microsoft-support
-* raptor-tp6m-reddit
-* raptor-tp6m-stackoverflow
-* raptor-tp6m-web-de
-* raptor-tp6m-wikipedia
-* raptor-tp6m-youtube
-* raptor-tp6m-youtube-watch
-* Browsertime reddit
-* Browsertime stackoverflow
-* Browsertime web-de
-* Browsertime wikipedia
-* Browsertime youtube
-* Browsertime youtube-watch
+* allrecipes (BT)
+* amazon (BT)
+* amazon-search (BT)
+* bbc (BT)
+* bing (BT)
+* bing-search-restaurants (BT)
+* booking (BT)
+* cnn (BT)
+* cnn-ampstories (BT)
+* ebay-kleinanzeigen (BT)
+* ebay-kleinanzeigen-search (BT)
+* espn (BT)
+* facebook (BT)
+* facebook-cristiano (BT)
+* google (BT)
+* google-maps (BT)
+* google-search-restaurants (BT)
+* imdb (BT)
+* instagram (BT)
+* jianshu (BT)
+* microsoft-support (BT)
+* raptor-tp6m-allrecipes (WX, GV, RB, FE, F68)
+* raptor-tp6m-amazon (WX, GV, RB, FE, F68)
+* raptor-tp6m-amazon-search (WX, GV, RB, FE, F68)
+* raptor-tp6m-bbc (WX, GV, RB, FE, F68)
+* raptor-tp6m-bing (WX, GV, RB, FE, F68)
+* raptor-tp6m-bing-restaurants (WX, GV, RB, FE, F68)
+* raptor-tp6m-booking (WX, GV, RB, FE, F68)
+* raptor-tp6m-cnn (WX, GV, RB, FE, F68)
+* raptor-tp6m-cnn-ampstories (WX, GV, RB, FE, F68)
+* raptor-tp6m-ebay-kleinanzeigen (WX, GV, RB, FE, F68)
+* raptor-tp6m-espn (WX, GV, RB, FE, F68)
+* raptor-tp6m-facebook (WX, GV, RB, FE, F68)
+* raptor-tp6m-facebook-cristiano (WX, GV, RB, FE, F68)
+* raptor-tp6m-google (WX, GV, RB, FE, F68)
+* raptor-tp6m-google-maps (WX, GV, RB, FE, F68)
+* raptor-tp6m-google-restaurants (WX, GV, RB, FE, F68)
+* raptor-tp6m-imdb (WX, GV, RB, FE, F68)
+* raptor-tp6m-instagram (WX, GV, RB, FE, F68)
+* raptor-tp6m-jianshu (WX, GV, RB, FE, F68)
+* raptor-tp6m-microsoft-support (WX, GV, RB, FE, F68)
+* raptor-tp6m-reddit (WX, GV, RB, FE, F68)
+* raptor-tp6m-stackoverflow (WX, GV, RB, FE, F68)
+* raptor-tp6m-web-de (WX, GV, RB, FE, F68)
+* raptor-tp6m-wikipedia (WX, GV, RB, FE, F68)
+* raptor-tp6m-youtube (WX, GV, RB, FE, F68)
+* raptor-tp6m-youtube-watch (WX, GV, RB, FE, F68)
+* reddit (BT)
+* stackoverflow (BT)
+* web-de (BT)
+* wikipedia (BT)
+* youtube (BT)
+* youtube-watch (BT)
 
 Scenario
 --------
