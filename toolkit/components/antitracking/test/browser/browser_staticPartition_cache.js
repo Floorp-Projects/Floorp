@@ -174,15 +174,11 @@ add_task(async function() {
       "worker.request.html",
       "import.js",
       "worker.js",
+      "sharedworker.js",
     ];
 
     info("Query the cache (maybe) partitioned cache");
     await checkCache(maybePartitionedSuffixes, test.originAttributes);
-
-    let notPartitionedSuffixes = ["sharedworker.js"];
-
-    info("Query the cache not partitioned cache");
-    await checkCache(notPartitionedSuffixes, {});
 
     gBrowser.removeCurrentTab();
   }

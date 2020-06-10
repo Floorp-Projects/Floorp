@@ -1712,6 +1712,9 @@ nsresult ServiceWorkerPrivate::SpawnWorkerIfNeeded(WakeUpReason aWhy,
   info.mCookieJarSettings = mozilla::net::CookieJarSettings::Create();
   MOZ_ASSERT(info.mCookieJarSettings);
 
+  net::CookieJarSettings::Cast(info.mCookieJarSettings)
+      ->SetPartitionKey(info.mResolvedScriptURI);
+
   info.mStorageAccess =
       StorageAllowedForServiceWorker(info.mPrincipal, info.mCookieJarSettings);
 

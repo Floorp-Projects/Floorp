@@ -663,6 +663,8 @@ nsresult CompareNetwork::Initialize(nsIPrincipal* aPrincipal,
   nsCOMPtr<nsICookieJarSettings> cookieJarSettings =
       mozilla::net::CookieJarSettings::Create();
 
+  net::CookieJarSettings::Cast(cookieJarSettings)->SetPartitionKey(uri);
+
   // Note that because there is no "serviceworker" RequestContext type, we can
   // use the TYPE_INTERNAL_SCRIPT content policy types when loading a service
   // worker.
