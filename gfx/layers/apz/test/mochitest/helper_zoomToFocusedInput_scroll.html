@@ -10,16 +10,14 @@
 <input id="input1">
 <script type="application/javascript">
 function test() {
-  let SimpleTest = window.opener.SimpleTest;
-
-  SimpleTest.is(0, window.scrollY, "scroll position starts at zero");
+  is(0, window.scrollY, "scroll position starts at zero");
   input1.focus();
-  SimpleTest.isnot(0, window.scrollY, "scroll position isn't top");
+  isnot(0, window.scrollY, "scroll position isn't top");
   window.scrollTo(0, 0);
-  SimpleTest.is(0, window.scrollY, "scroll position is top");
+  is(0, window.scrollY, "scroll position is top");
 
   SpecialPowers.getDOMWindowUtils(window).zoomToFocusedInput();
-  SimpleTest.isnot(0, window.scrollY, "scroll position isn't top");
+  isnot(0, window.scrollY, "scroll position isn't top");
 }
 
 waitUntilApzStable().then(test).then(subtestDone);
