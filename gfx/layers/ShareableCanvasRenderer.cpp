@@ -11,6 +11,7 @@
 #include "mozilla/layers/TextureClientSharedSurface.h"
 #include "mozilla/layers/CompositableForwarder.h"
 
+#include "ClientWebGLContext.h"
 #include "gfxUtils.h"
 #include "GLScreenBuffer.h"
 #include "nsICanvasRenderingContextInternal.h"
@@ -122,7 +123,12 @@ void ShareableCanvasRenderer::UpdateCompositableClient() {
 
     if (!webgl) return nullptr;
     if (!forwarder) return nullptr;
-    const auto desc = webgl::GetFrontBuffer(*webgl, forwarder);
+
+    auto texType = layers::TextureType::Unknown;
+    if (forwarder) {
+      texType = layers::PreferredCanvasTextureType(*forwarder);
+    }
+    const auto desc = webgl->GetFrontBuffer(nullptr, texType);
     if (!desc) return nullptr;
     return GetFrontBufferFromDesc(*desc, flags);
   };
