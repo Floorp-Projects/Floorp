@@ -66,6 +66,11 @@
             app:destination="@id/browserFragment"
             app:exitAnim="@anim/zoom_in_fade"
             app:popEnterAnim="@anim/zoom_out_fade" />
+        <argument
+            android:name="session_to_delete"
+            app:argType="string"
+            app:nullable="true"
+            android:defaultValue="@null" />
     </fragment>
 
     <fragment

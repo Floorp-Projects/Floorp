@@ -25,6 +25,14 @@ class BrowserInteractorTest {
     }
 
     @Test
+    fun onTabCounterMenuItemTapped() {
+        val item: TabCounterMenuItem = mockk()
+
+        interactor.onTabCounterMenuItemTapped(item)
+        verify { browserToolbarController.handleTabCounterItemInteraction(item) }
+    }
+
+    @Test
     fun onBrowserToolbarPaste() {
         val pastedText = "Mozilla"
         interactor.onBrowserToolbarPaste(pastedText)

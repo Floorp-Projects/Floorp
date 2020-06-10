@@ -163,6 +163,7 @@ class TabTrayView(
 
         updateState(view.context.components.core.store.state)
     }
+
     override fun onTabReselected(tab: TabLayout.Tab?) { /*noop*/ }
     override fun onTabUnselected(tab: TabLayout.Tab?) { /*noop*/ }
 

@@ -96,6 +96,7 @@ import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.home.SharedViewModel
 import org.mozilla.fenix.tabtray.TabTrayDialogFragment
 import org.mozilla.fenix.theme.ThemeManager
+import org.mozilla.fenix.utils.allowUndo
 import org.mozilla.fenix.wifi.SitePermissionsWifiIntegration
 import java.lang.ref.WeakReference
 
@@ -218,6 +219,32 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                 sharedViewModel = sharedViewModel,
                 onTabCounterClicked = {
                     TabTrayDialogFragment.show(parentFragmentManager)
+                },
+                onCloseTab = {
+                    val snapshot = sessionManager.createSessionSnapshot(it)
+                    val state = snapshot.engineSession?.saveState()
+                    val isSelected =
+                        it.id == context.components.core.store.state.selectedTabId ?: false
+
+                    val snackbarMessage = if (snapshot.session.private) {
+                        requireContext().getString(R.string.snackbar_private_tab_closed)
+                    } else {
+                        requireContext().getString(R.string.snackbar_tab_closed)
+                    }
+
+                    viewLifecycleOwner.lifecycleScope.allowUndo(
+                        requireView(),
+                        snackbarMessage,
+                        requireContext().getString(R.string.snackbar_deleted_undo),
+                        {
+                            sessionManager.add(
+                                snapshot.session,
+                                isSelected,
+                                engineSessionState = state
+                            )
+                        },
+                        operation = { }
+                    )
                 }
             )
 

@@ -36,6 +36,7 @@ import mozilla.components.concept.engine.EngineView
 import mozilla.components.feature.search.SearchUseCases
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.tab.collections.TabCollection
+import mozilla.components.feature.tabs.TabsUseCases
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
@@ -45,6 +46,9 @@ import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.BrowserAnimator
 import org.mozilla.fenix.browser.BrowserFragmentDirections
+import org.mozilla.fenix.browser.browsingmode.BrowsingMode
+import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
+import org.mozilla.fenix.browser.browsingmode.DefaultBrowsingModeManager
 import org.mozilla.fenix.browser.readermode.ReaderModeController
 import org.mozilla.fenix.collections.SaveCollectionStep
 import org.mozilla.fenix.components.Analytics
@@ -113,7 +117,8 @@ class DefaultBrowserToolbarControllerTest {
             readerModeController = readerModeController,
             sessionManager = mockk(),
             sharedViewModel = mockk(),
-            onTabCounterClicked = { }
+            onTabCounterClicked = { },
+            onCloseTab = {}
         )
 
         mockkStatic(
@@ -207,7 +212,8 @@ class DefaultBrowserToolbarControllerTest {
             readerModeController = mockk(),
             sessionManager = mockk(),
             sharedViewModel = mockk(),
-            onTabCounterClicked = { }
+            onTabCounterClicked = { },
+            onCloseTab = { }
         )
 
         controller.handleBrowserMenuDismissed(itemList)
@@ -371,7 +377,8 @@ class DefaultBrowserToolbarControllerTest {
             readerModeController = mockk(),
             sessionManager = mockk(),
             sharedViewModel = mockk(),
-            onTabCounterClicked = { }
+            onTabCounterClicked = { },
+            onCloseTab = { }
         )
         controller.ioScope = this
 
@@ -496,7 +503,8 @@ class DefaultBrowserToolbarControllerTest {
             readerModeController = mockk(),
             sessionManager = mockk(),
             sharedViewModel = mockk(),
-            onTabCounterClicked = { }
+            onTabCounterClicked = { },
+            onCloseTab = { }
         )
 
         val sessionManager: SessionManager = mockk(relaxed = true)
@@ -536,7 +544,8 @@ class DefaultBrowserToolbarControllerTest {
             readerModeController = mockk(),
             sessionManager = mockk(),
             sharedViewModel = mockk(),
-            onTabCounterClicked = { }
+            onTabCounterClicked = { },
+            onCloseTab = { }
         )
 
         controller.handleToolbarItemInteraction(item)
@@ -555,5 +564,42 @@ class DefaultBrowserToolbarControllerTest {
         every { currentSession.id } returns "reader-active-tab"
         controller.handleToolbarItemInteraction(item)
         verify { readerModeController.hideReaderView() }
+    }
+
+    @Test
+    fun handleToolbarCloseTabPress() {
+        val tabsUseCases: TabsUseCases = mockk(relaxed = true)
+        val removeTabUseCase: TabsUseCases.RemoveTabUseCase = mockk(relaxed = true)
+        val item = TabCounterMenuItem.CloseTab
+
+        every { activity.components.useCases.tabsUseCases } returns tabsUseCases
+        every { tabsUseCases.removeTab } returns removeTabUseCase
+
+        controller.handleTabCounterItemInteraction(item)
+        verify { removeTabUseCase.invoke(currentSession) }
+    }
+
+    @Test
+    fun handleToolbarNewTabPress() {
+        val browsingModeManager: BrowsingModeManager = DefaultBrowsingModeManager(BrowsingMode.Private) {}
+        val item = TabCounterMenuItem.NewTab(false)
+
+        every { activity.browsingModeManager } returns browsingModeManager
+
+        controller.handleTabCounterItemInteraction(item)
+        assertEquals(BrowsingMode.Normal, activity.browsingModeManager.mode)
+        verify { navController.popBackStack(R.id.homeFragment, false) }
+    }
+
+    @Test
+    fun handleToolbarNewPrivateTabPress() {
+        val browsingModeManager: BrowsingModeManager = DefaultBrowsingModeManager(BrowsingMode.Normal) {}
+        val item = TabCounterMenuItem.NewTab(true)
+
+        every { activity.browsingModeManager } returns browsingModeManager
+
+        controller.handleTabCounterItemInteraction(item)
+        assertEquals(BrowsingMode.Private, activity.browsingModeManager.mode)
+        verify { navController.popBackStack(R.id.homeFragment, false) }
     }
 }

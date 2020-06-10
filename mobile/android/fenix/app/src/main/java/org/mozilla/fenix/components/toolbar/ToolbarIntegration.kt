@@ -132,7 +132,10 @@ class DefaultToolbarIntegration(
             )
         }
 
-        val tabsAction = TabCounterToolbarButton(sessionManager, isPrivate) {
+        val onTabCounterMenuItemTapped = { item: TabCounterMenuItem ->
+            interactor.onTabCounterMenuItemTapped(item)
+        }
+        val tabsAction = TabCounterToolbarButton(sessionManager, isPrivate, onTabCounterMenuItemTapped) {
             toolbar.hideKeyboard()
             interactor.onTabCounterClicked()
         }

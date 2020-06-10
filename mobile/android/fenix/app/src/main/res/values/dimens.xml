@@ -156,4 +156,5 @@
     <dimen name="saved_logins_detail_menu_vertical_padding">5dp</dimen>
     <dimen name="saved_logins_end_icon_drawable_padding">16dp</dimen>
 
+
 </resources>

@@ -36,6 +36,7 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_IDLE
@@ -49,6 +50,9 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import mozilla.appservices.places.BookmarkRoot
+import mozilla.components.browser.menu.BrowserMenu
+import mozilla.components.browser.menu.BrowserMenuBuilder
+import mozilla.components.browser.menu.item.BrowserMenuImageText
 import mozilla.components.browser.menu.view.MenuButton
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
@@ -95,6 +99,7 @@ import org.mozilla.fenix.settings.deletebrowsingdata.deleteAndQuit
 import org.mozilla.fenix.tabtray.TabTrayDialogFragment
 import org.mozilla.fenix.theme.ThemeManager
 import org.mozilla.fenix.utils.FragmentPreDrawManager
+import org.mozilla.fenix.utils.allowUndo
 import org.mozilla.fenix.whatsnew.WhatsNew
 import java.lang.ref.WeakReference
 import kotlin.math.abs
@@ -105,6 +110,8 @@ class HomeFragment : Fragment() {
     private val homeViewModel: HomeScreenViewModel by viewModels {
         ViewModelProvider.AndroidViewModelFactory(requireActivity().application)
     }
+
+    private val args by navArgs<HomeFragmentArgs>()
 
     private val snackbarAnchorView: View?
         get() {
@@ -306,6 +313,10 @@ class HomeFragment : Fragment() {
         }
 
         createHomeMenu(requireContext(), WeakReference(view.menuButton))
+        view.tab_button.setOnLongClickListener {
+            createTabCounterMenu(requireContext()).show(view.tab_button)
+            true
+        }
 
         view.menuButton.setColorFilter(
             ContextCompat.getColor(
@@ -453,7 +464,40 @@ class HomeFragment : Fragment() {
         if (browsingModeManager.mode == BrowsingMode.Private) {
             activity?.window?.setBackgroundDrawableResource(R.drawable.private_home_background_gradient)
         }
+
         hideToolbar()
+
+        args.sessionToDelete?.also {
+            sessionManager.findSessionById(it)?.let { session ->
+                val snapshot = sessionManager.createSessionSnapshot(session)
+                val state = snapshot.engineSession?.saveState()
+                val isSelected =
+                    session.id == requireComponents.core.store.state.selectedTabId ?: false
+
+                val snackbarMessage = if (snapshot.session.private) {
+                    requireContext().getString(R.string.snackbar_private_tab_closed)
+                } else {
+                    requireContext().getString(R.string.snackbar_tab_closed)
+                }
+
+                viewLifecycleOwner.lifecycleScope.allowUndo(
+                    requireView(),
+                    snackbarMessage,
+                    requireContext().getString(R.string.snackbar_deleted_undo),
+                    {
+                        sessionManager.add(
+                            snapshot.session,
+                            isSelected,
+                            engineSessionState = state
+                        )
+                        findNavController().navigate(HomeFragmentDirections.actionHomeFragmentToBrowserFragment(null))
+                    },
+                    operation = { },
+                    anchorView = snackbarAnchorView
+                )
+                requireComponents.useCases.tabsUseCases.removeTab.invoke(session)
+            }
+        }
     }
 
     override fun onPause() {
@@ -543,6 +587,31 @@ class HomeFragment : Fragment() {
             newTab = true,
             from = BrowserDirection.FromHome
         )
+    }
+
+    private fun createTabCounterMenu(context: Context): BrowserMenu {
+        val primaryTextColor = ThemeManager.resolveAttribute(R.attr.primaryText, context)
+        val isPrivate = (activity as HomeActivity).browsingModeManager.mode == BrowsingMode.Private
+        val menuItems = listOf(
+            BrowserMenuImageText(
+                label = context.getString(if (isPrivate) {
+                    R.string.browser_menu_new_tab
+                } else {
+                    R.string.home_screen_shortcut_open_new_private_tab_2
+                }),
+                imageResource = if (isPrivate) {
+                    R.drawable.ic_new
+                } else {
+                    R.drawable.ic_private_browsing
+                },
+                iconTintColorResource = primaryTextColor,
+                textColorResource = primaryTextColor
+            ) {
+                (activity as HomeActivity).browsingModeManager.mode =
+                    BrowsingMode.fromBoolean(!isPrivate)
+            }
+        )
+        return BrowserMenuBuilder(menuItems).build(context)
     }
 
     @SuppressWarnings("ComplexMethod", "LongMethod")
