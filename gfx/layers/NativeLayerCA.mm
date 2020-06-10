@@ -263,8 +263,8 @@ void NativeLayerRootCA::Representation::Commit(WhichRepresentation aRepresentati
 
   nsCString failureUnused;
   RefPtr<gl::GLContext> gl =
-      gl::GLContextProvider::CreateHeadless(gl::CreateContextFlags::ALLOW_OFFLINE_RENDERER |
-                                                gl::CreateContextFlags::REQUIRE_COMPAT_PROFILE,
+      gl::GLContextProvider::CreateHeadless({gl::CreateContextFlags::ALLOW_OFFLINE_RENDERER |
+                                             gl::CreateContextFlags::REQUIRE_COMPAT_PROFILE},
                                             &failureUnused);
   if (!gl) {
     return nullptr;
