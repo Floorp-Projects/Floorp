@@ -137,7 +137,8 @@ class CanvasRenderer : public RefCounted<CanvasRenderer> {
     return nullptr;
   }
 
-  std::shared_ptr<BorrowedSourceSurface> BorrowSnapshot() const;
+  std::shared_ptr<BorrowedSourceSurface> BorrowSnapshot(
+      bool requireAlphaPremult = true) const;
 
  protected:
   void FirePreTransactionCallback() const;
