@@ -21,7 +21,18 @@ sys.path.append(os.path.join(lib_path, "pyyaml", "lib"))
 
 import voluptuous
 import yaml
-from voluptuous import All, FqdnUrl, Length, Match, Msg, Required, Schema, Unique, In
+from voluptuous import (
+    All,
+    FqdnUrl,
+    Length,
+    Match,
+    Msg,
+    Required,
+    Schema,
+    Unique,
+    In,
+    Invalid,
+)
 from yaml.error import MarkedYAMLError
 
 # TODO ensure this matches the approved list of licenses
@@ -162,22 +173,30 @@ vendoring:
     - script
     - another script
 
-  # Strings to replace in various files after vendoring.
-  # All subfields are required
-  #   Action must be 'replace-in-file'
-  #   Pattern is what in the file to search for. It is an exact strng match
-  #   With is the string to replace it with. Accepts the special keyword
+  # Actions to take on files after updating. Applied in order.
+  # The action subfield is required. It must be one of 'copy-file', replace-in-file'.
+  # Unless otherwise noted, all subfields of action are required.
+  #
+  # If the action is copy-file:
+  #   from is the source file
+  #   to is the destination
+  #
+  # If the action is replace-in-file:
+  #   pattern is what in the file to search for. It is an exact strng match.
+  #   with is the string to replace it with. Accepts the special keyword
   #     '{revision}' for the commit we are updating to.
-  #   File is the file to replace it in. It is relative to the vendor-directory.
+  #   File is the file to replace it in.
+  #
+  # Unless specified otherwise, all files are relative to the vendor-directory.
   #     If the vendor-directory is different from the directory of the yaml file,
   #     the keyword '{yaml_dir}' may be used to make the path relative to that
   #     directory
+  #
   # optional
   file-updates:
-    - action: replace-in-file
-      pattern: '@VCS_TAG@'
-      with: '{revision}'
-      file: include/vcs_version.h.in
+    - action: copy-file
+      from: include/vcs_version.h.in
+      to: '{yaml_dir}/vcs_version.h'
 
     - action: replace-in-file
       pattern: '@VCS_TAG@'
@@ -300,19 +319,22 @@ def _schema_1():
                 "exclude": Unique([str]),
                 "include": Unique([str]),
                 "run_after": Unique([str]),
-                "file-updates": [
-                    {
-                        Required("action"): All(
-                            In(
-                                ["replace-in-file"],
+                "file-updates": All(
+                    FileUpdate(),
+                    [
+                        {
+                            Required("action"): In(
+                                ["copy-file", "replace-in-file"],
                                 msg="Invalid action specified in file-updates",
-                            )
-                        ),
-                        Required("pattern"): All(str, Length(min=1)),
-                        Required("with"): All(str, Length(min=1)),
-                        Required("file"): All(str, Length(min=1)),
-                    }
-                ],
+                            ),
+                            "from": All(str, Length(min=1)),
+                            "to": All(str, Length(min=1)),
+                            "pattern": All(str, Length(min=1)),
+                            "with": All(str, Length(min=1)),
+                            "file": All(str, Length(min=1)),
+                        }
+                    ],
+                ),
             },
         }
     )
@@ -364,6 +386,40 @@ def _schema_1_additional(filename, manifest, require_license_file=True):
         update_moz_yaml(filename, "", "", verify=False, write=True)
 
 
+class FileUpdate(object):
+    """Voluptuous validator which verifies the license(s) are valid as per our
+    whitelist."""
+
+    def __call__(self, values):
+        for v in values:
+            if "action" not in v:
+                raise Invalid("All file-update entries must specify a valid action")
+            if v["action"] == "copy-file":
+                if "from" not in v or "to" not in v or len(v.keys()) != 3:
+                    raise Invalid(
+                        "copy-file action must (only) specify 'from' and 'to' keys"
+                    )
+            elif v["action"] == "replace-in-file":
+                if (
+                    "pattern" not in v
+                    or "with" not in v
+                    or "file" not in v
+                    or len(v.keys()) != 4
+                ):
+                    raise Invalid(
+                        "replace-in-file action must (only) specify "
+                        + "'pattern', 'with', and 'file' keys"
+                    )
+            else:
+                # This check occurs before the validator above, so the above is
+                # redundant but we leave it to be verbose.
+                raise Invalid("Supplied action " + v["action"] + " is invalid.")
+        return values
+
+    def __repr__(self):
+        return "FileUpdate"
+
+
 class License(object):
     """Voluptuous validator which verifies the license(s) are valid as per our
     whitelist."""
@@ -372,10 +428,10 @@ class License(object):
         if isinstance(values, str):
             values = [values]
         elif not isinstance(values, list):
-            raise ValueError("Must be string or list")
+            raise Invalid("Must be string or list")
         for v in values:
             if v not in VALID_LICENSES:
-                raise ValueError("Bad License")
+                raise Invalid("Bad License")
         return values
 
     def __repr__(self):

@@ -44,10 +44,9 @@ vendoring:
     - build/.gitignore
 
   file-updates:
-    - action: replace-in-file
-      pattern: '@VCS_TAG@'
-      with: '{revision}'
-      file: include/vcs_version.h.in
+    - action: copy-file
+      from: include/vcs_version.h.in
+      to: '{yaml_dir}/vcs_version.h'
     - action: replace-in-file
       pattern: '@VCS_TAG@'
       with: '{revision}'
