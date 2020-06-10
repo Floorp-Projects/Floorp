@@ -641,6 +641,11 @@ bool LMoveGroup::add(LAllocation from, LAllocation to, LDefinition::Type type) {
   }
 
   // Check that SIMD moves are aligned according to ABI requirements.
+#  ifdef ENABLE_WASM_SIMD
+  // Alignment is not currently required for SIMD on x86/x64.  See also
+  // CodeGeneratorShared::CodeGeneratorShared and in general everywhere
+  // SimdMemoryAignment is used.  Likely, alignment requirements will return.
+#    if !defined(JS_CODEGEN_X86) && !defined(JS_CODEGEN_X64)
   if (LDefinition(type).type() == LDefinition::SIMD128) {
     MOZ_ASSERT(from.isMemory() || from.isFloatReg());
     if (from.isMemory()) {
@@ -659,6 +664,8 @@ bool LMoveGroup::add(LAllocation from, LAllocation to, LDefinition::Type type) {
       }
     }
   }
+#    endif
+#  endif
 #endif
   return moves_.append(LMove(from, to, type));
 }
