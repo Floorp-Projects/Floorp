@@ -1138,8 +1138,18 @@ class UrlbarInput {
     ) {
       return;
     }
-    // The Urlbar is unfocused and the view is closed
-    if (this.getAttribute("focused") != "true" && !this.view.isOpen) {
+    // The Urlbar is unfocused or reduce motion is on and the view is closed.
+    // gReduceMotion is accurate in most cases, but it is automatically set to
+    // true when windows are loaded. We check `prefers-reduced-motion: reduce`
+    // to ensure the user actually set prefers-reduced-motion. We check
+    // gReduceMotion first to save work in the common case of having
+    // prefers-reduced-motion disabled.
+    if (
+      !this.view.isOpen &&
+      (this.getAttribute("focused") != "true" ||
+        (this.window.gReduceMotion &&
+          this.window.matchMedia("(prefers-reduced-motion: reduce)").matches))
+    ) {
       return;
     }
 
@@ -1164,10 +1174,15 @@ class UrlbarInput {
   }
 
   endLayoutExtend() {
+    // If reduce motion is enabled, we want to collapse the Urlbar here so the
+    // user sees only sees two states: not expanded, and expanded with the view
+    // open.
     if (
       !this.hasAttribute("breakout-extend") ||
       this.view.isOpen ||
-      this.getAttribute("focused") == "true"
+      (this.getAttribute("focused") == "true" &&
+        (!this.window.gReduceMotion ||
+          !this.window.matchMedia("(prefers-reduced-motion: reduce)").matches))
     ) {
       return;
     }
