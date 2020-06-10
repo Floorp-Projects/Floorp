@@ -86,6 +86,8 @@ const TOPICS = [
   "weave:telemetry:event",
   "weave:telemetry:histogram",
   "fxa:telemetry:event",
+
+  "weave:telemetry:migration",
 ];
 
 const PING_FORMAT_VERSION = 1;
@@ -561,6 +563,7 @@ class SyncTelemetryImpl {
     this.discarded = 0;
     this.events = [];
     this.histograms = {};
+    this.migrations = [];
     this.maxEventsCount = Svc.Prefs.get("telemetry.maxEventsCount", 1000);
     this.maxPayloadCount = Svc.Prefs.get("telemetry.maxPayloadCount");
     this.submissionInterval =
@@ -684,9 +687,29 @@ class SyncTelemetryImpl {
       deviceID,
       sessionStartDate: this.sessionStartDate,
       events: this.events.length == 0 ? undefined : this.events,
+      migrations: this.migrations.length == 0 ? undefined : this.migrations,
       histograms:
         Object.keys(this.histograms).length == 0 ? undefined : this.histograms,
     };
+  }
+
+  _addMigrationRecord(type, info) {
+    log.debug("Saw telemetry migration info", type, info);
+    // Updates to this need to be documented in `sync-ping.rst`
+    switch (type) {
+      case "webext-storage":
+        this.migrations.push({
+          type: "webext-storage",
+          entries: +info.entries,
+          entriesSuccessful: +info.entries_successful,
+          extensions: +info.extensions,
+          extensionsSuccessful: +info.extensions_successful,
+          openFailure: !!info.open_failure,
+        });
+        break;
+      default:
+        throw new Error("Bug: Unknown migration record type " + type);
+    }
   }
 
   finish(reason) {
@@ -696,6 +719,7 @@ class SyncTelemetryImpl {
     this.payloads = [];
     this.discarded = 0;
     this.events = [];
+    this.migrations = [];
     this.histograms = {};
     this.submit(result);
   }
@@ -720,7 +744,8 @@ class SyncTelemetryImpl {
     // We still call submit() with possibly illegal payloads so that tests can
     // know that the ping was built. We don't end up submitting them, however.
     let numEvents = record.events ? record.events.length : 0;
-    if (record.syncs.length || numEvents) {
+    let numMigrations = record.migrations ? record.migrations.length : 0;
+    if (record.syncs.length || numEvents || numMigrations) {
       log.trace(
         `submitting ${record.syncs.length} sync record(s) and ` +
           `${numEvents} event(s) to telemetry`
@@ -1015,6 +1040,10 @@ class SyncTelemetryImpl {
 
       case "weave:telemetry:histogram":
         this._addHistogram(data);
+        break;
+
+      case "weave:telemetry:migration":
+        this._addMigrationRecord(data, subject);
         break;
 
       default:

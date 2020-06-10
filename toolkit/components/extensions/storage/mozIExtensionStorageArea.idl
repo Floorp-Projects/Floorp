@@ -59,6 +59,12 @@ interface mozIExtensionStorageArea : nsISupports {
     void getBytesInUse(in AUTF8String extensionId,
                        in AUTF8String keys,
                        in mozIExtensionStorageCallback callback);
+
+    // Gets and clears the information about the migration from the kinto
+    // database into the rust one. As "and clears" indicates, this will
+    // only produce a non-empty the first time it's called after a
+    // migration (which, hopefully, should only happen once).
+    void takeMigrationInfo(in mozIExtensionStorageCallback callback);
 };
 
 // Implements additional methods for setting up and tearing down the underlying
