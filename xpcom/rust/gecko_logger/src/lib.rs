@@ -34,8 +34,32 @@ extern "C" {
 /// That becomes only a null check. When the pointer is not null, we then
 /// proceed to read the hashmap and see if the module has an appropriate
 /// logging level.
-static LOG_MODULE_MAP: AtomicPtr<Arc<RwLock<HashMap<&str, LevelFilter>>>> =
+static LOG_MODULE_MAP: AtomicPtr<Arc<RwLock<HashMap<&str, (LevelFilter, bool)>>>> =
     AtomicPtr::new(ptr::null_mut());
+
+/// This function searches for the module's name in the hashmap. If that is not
+/// found, it proceeds to search for the parent modules.
+/// It returns a tuple containing the matched string, if the matched module
+/// was a pattern match, and the level we found in the hashmap.
+/// If none is found, it will return the module's name and LevelFilter::Off
+fn get_level_for_module<'a>(
+    map: &HashMap<&str, (LevelFilter, bool)>,
+    key: &'a str,
+) -> (&'a str, bool, LevelFilter) {
+    if let Some((level, is_pattern_match)) = map.get(key) {
+        return (key, *is_pattern_match, level.clone());
+    }
+
+    let mut mod_name = &key[..];
+    while let Some(pos) = mod_name.rfind("::") {
+        mod_name = &mod_name[..pos];
+        if let Some((level, is_pattern_match)) = map.get(mod_name) {
+            return (mod_name, *is_pattern_match, level.clone());
+        }
+    }
+
+    return (key, false, LevelFilter::Off);
+}
 
 /// This function takes a record to maybe log to Gecko.
 /// It returns true if the record was handled by Gecko's logging, and false
@@ -52,14 +76,15 @@ pub fn log_to_gecko(record: &log::Record) -> bool {
         Some(key) => key,
         None => return false,
     };
-    let level = {
+    let (mod_name, is_pattern_match, level) = {
         let arc = Arc::clone(unsafe { &*module_map });
         let map = arc.read().unwrap();
-        match map.get(key) {
-            None => return false, // This module is not being logged.
-            Some(module_level) => module_level.clone(),
-        }
+        get_level_for_module(&map, &key)
     };
+
+    if level == LevelFilter::Off {
+        return false;
+    }
 
     if level < record.metadata().level() {
         return false;
@@ -74,8 +99,18 @@ pub fn log_to_gecko(record: &log::Record) -> bool {
         Level::Trace => 5, // Verbose
     };
 
-    let msg = CString::new(format!("{}", record.args())).unwrap();
-    let tag = CString::new(key).unwrap();
+    // If it was a pattern match, we need to append ::* to the matched string.
+    let (tag, msg) = if is_pattern_match {
+        (
+            CString::new(format!("{}::*", mod_name)).unwrap(),
+            CString::new(format!("[{}] {}", key, record.args())).unwrap(),
+        )
+    } else {
+        (
+            CString::new(key).unwrap(),
+            CString::new(format!("{}", record.args())).unwrap(),
+        )
+    };
 
     unsafe {
         ExternMozLog(tag.as_ptr(), moz_log_level, msg.as_ptr());
@@ -97,15 +132,22 @@ pub extern "C" fn set_rust_log_level(module: *const c_char, level: u8) {
     };
 
     // This is the name of the rust module that we're trying to log in Gecko.
-    let mod_name = unsafe { CStr::from_ptr(module) }.to_str().unwrap();
+    let mod_name_str = unsafe { CStr::from_ptr(module) }.to_str().unwrap();
 
+    // If this is a pattern, remove the last "::*" from it so we can search
+    // it in the hashmap
+    let (mod_name, is_pattern_match) = if mod_name_str.ends_with("::*") {
+        (&mod_name_str[..mod_name_str.len() - 3], true)
+    } else {
+        (&mod_name_str[..], false)
+    };
     // When LOG_MODULE_MAP is null we will replace its value with a new map.
     // If the AtomicPtr has already been initialized, we just drop `new_map`
     // at the end of this function.
     let mut map = HashMap::new();
     // We insert to the map here, in case this is the first module and we can
     // just replace the map pointer and exit without acquiring the write lock.
-    map.insert(mod_name, rust_level);
+    map.insert(mod_name, (rust_level, is_pattern_match));
     let mut new_map = Box::new(Arc::new(RwLock::new(map)));
 
     // We only use the map when the first module is actually logging
@@ -134,10 +176,14 @@ pub extern "C" fn set_rust_log_level(module: *const c_char, level: u8) {
     // Insert the module into the hashmap.
     let arc = Arc::clone(unsafe { &*old_ptr });
     let mut map = arc.write().unwrap();
-    map.insert(mod_name, rust_level);
+    map.insert(mod_name, (rust_level, is_pattern_match));
 
     // Figure out the max level of all the modules.
-    let max = map.values().max().unwrap_or(&LevelFilter::Off);
+    let max = map
+        .values()
+        .map(|(lvl, _)| lvl)
+        .max()
+        .unwrap_or(&LevelFilter::Off);
     log::set_max_level(*max);
 }
 
