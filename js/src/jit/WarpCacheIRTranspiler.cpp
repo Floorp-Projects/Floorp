@@ -502,6 +502,13 @@ bool WarpCacheIRTranspiler::emitLoadBooleanResult(bool val) {
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitLoadInt32Constant(uint32_t valOffset,
+                                                  Int32OperandId resultId) {
+  int32_t val = int32StubField(valOffset);
+  auto* valConst = constant(Int32Value(val));
+  return defineOperand(resultId, valConst);
+}
+
 bool WarpCacheIRTranspiler::emitLoadEnclosingEnvironment(
     ObjOperandId objId, ObjOperandId resultId) {
   MDefinition* env = getOperand(objId);

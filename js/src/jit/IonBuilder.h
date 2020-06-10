@@ -836,6 +836,7 @@ class MOZ_STACK_CLASS IonBuilder {
   InliningResult inlineToObject(CallInfo& callInfo);
   InliningResult inlineIsCrossRealmArrayConstructor(CallInfo& callInfo);
   InliningResult inlineToInteger(CallInfo& callInfo);
+  InliningResult inlineToLength(CallInfo& callInfo);
   InliningResult inlineToString(CallInfo& callInfo);
   InliningResult inlineDump(CallInfo& callInfo);
   InliningResult inlineGuardToClass(CallInfo& callInfo, InlinableNative native);
