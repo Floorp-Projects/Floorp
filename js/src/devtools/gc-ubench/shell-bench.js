@@ -60,7 +60,7 @@ function run(opts, loads) {
 
   const loadMgr = new AllocationLoadManager(tests);
   const perf = new FrameHistory(gNumSamples);
-  const mutators = sequence.map(name => new SingleMutatorSequencer(loadMgr._loads.get(name), opts.duration));
+  const mutators = sequence.map(name => new SingleMutatorSequencer(loadMgr.getByName(name), opts.duration));
   let sequencer = new ChainSequencer(mutators);
 
   const schedulerCtors = {

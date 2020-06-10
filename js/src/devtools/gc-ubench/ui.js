@@ -503,7 +503,7 @@ function onload() {
   }
 
   // Load the initial test.
-  gLoadMgr.setActiveLoadByName("noAllocation");
+  gLoadMgr.setActiveLoad(gLoadMgr.getByName("noAllocation"));
   update_load_display();
   document.getElementById("test-selection").value = "noAllocation";
 
@@ -545,7 +545,7 @@ function run_all_tests() {
 function start_test_cycle(tests_to_run) {
   // Convert from an iterable to an array for pop.
   const duration = gLoadMgr.testDurationMS / 1000;
-  const mutators = tests_to_run.map(name => new SingleMutatorSequencer(gLoadMgr._loads.get(name), duration));
+  const mutators = tests_to_run.map(name => new SingleMutatorSequencer(gLoadMgr.getByName(name), duration));
   const sequencer = new ChainSequencer(mutators);
   gLoadMgr.startSequencer(sequencer);
   testState = "running";
@@ -644,7 +644,7 @@ function duration_changed() {
 function onLoadChange() {
   var select = document.getElementById("test-selection");
   console.log(`Switching to test: ${select.value}`);
-  gLoadMgr.setActiveLoadByName(select.value);
+  gLoadMgr.setActiveLoad(gLoadMgr.getByName(select.value));
   update_load_display();
   gHistogram.clear();
   reset_draw_state();
