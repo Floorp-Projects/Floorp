@@ -45,19 +45,26 @@ function* testPreventDefault(testDriver, aTouchStartToCancel) {
   is(final_resolution, initial_resolution, "The final resolution (" + final_resolution + ") matches the initial resolution");
 }
 
+function transformFailer() {
+  ok(false, "The test fired an unexpected APZ:TransformEnd");
+}
+
 function* test(testDriver) {
   // Register a listener that fails the test if the APZ:TransformEnd event fires,
   // because this test shouldn't actually be triggering any transforms
-  SpecialPowers.Services.obs.addObserver(function() {
-    ok(false, "The test fired an unexpected APZ:TransformEnd");
-  }, "APZ:TransformEnd");
+  SpecialPowers.Services.obs.addObserver(transformFailer, "APZ:TransformEnd");
 
   yield* testPreventDefault(testDriver, 1);
   yield* testPreventDefault(testDriver, 2);
 }
 
+function cleanup() {
+  SpecialPowers.Services.obs.removeObserver(transformFailer, "APZ:TransformEnd");
+}
+
 waitUntilApzStable()
 .then(runContinuation(test))
+.then(cleanup)
 .then(subtestDone);
 
   </script>
