@@ -234,7 +234,7 @@ add_task(async function testFileURL({ client }) {
   is(browser.currentURI.spec, url, "Expected URL loaded");
   const currentFrame = await getCurrentFrame();
   // Bug 1634695 Navigating to file: returns wrong frame id
-  todo(frameId === currentFrame.id, "Page.navigate returns expected frameId");
+  ok(frameId === currentFrame.id, "Page.navigate returns expected frameId");
 });
 
 add_task(async function testAbout({ client }) {
