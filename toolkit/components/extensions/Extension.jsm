@@ -2092,6 +2092,10 @@ class Extension extends ExtensionData {
     return this.manifest.background && this.manifest.background.scripts;
   }
 
+  get backgroundWorkerScript() {
+    return this.manifest.background && this.manifest.background.service_worker;
+  }
+
   get optionalPermissions() {
     return this.manifest.optional_permissions;
   }
@@ -2130,6 +2134,7 @@ class Extension extends ExtensionData {
   serializeExtended() {
     return {
       backgroundScripts: this.backgroundScripts,
+      backgroundWorkerScript: this.backgroundWorkerScript,
       childModules: this.modules && this.modules.child,
       dependencies: this.dependencies,
       schemaURLs: this.schemaURLs,
