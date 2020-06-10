@@ -21,16 +21,7 @@ sys.path.append(os.path.join(lib_path, "pyyaml", "lib"))
 
 import voluptuous
 import yaml
-from voluptuous import (
-    All,
-    FqdnUrl,
-    Length,
-    Match,
-    Msg,
-    Required,
-    Schema,
-    Unique,
-)
+from voluptuous import All, FqdnUrl, Length, Match, Msg, Required, Schema, Unique, In
 from yaml.error import MarkedYAMLError
 
 # TODO ensure this matches the approved list of licenses
@@ -54,6 +45,8 @@ VALID_LICENSES = [
     "Khronos",  # https://www.khronos.org/openmaxdl
     "Unicode",  # http://www.unicode.org/copyright.html
 ]
+
+VALID_SOURCE_HOSTS = ["gitlab"]
 
 """
 ---
@@ -108,6 +101,10 @@ vendoring:
   # Any repository host can be specified here, however initially we'll only
   # support automated vendoring from selected sources initially.
   url: source url (generally repository clone url)
+
+  # Type of hosting for the upstream repository
+  # Valid values are 'gitlab', 'github'
+  source-hosting: gitlab
 
   # Base directory of the location where the source files will live in-tree.
   # If omitted, will default to the location the moz.yaml file is in.
@@ -270,6 +267,11 @@ def _schema_1():
             },
             "vendoring": {
                 Required("url"): FqdnUrl(),
+                Required("source-hosting"): All(
+                    str,
+                    Length(min=1),
+                    In(VALID_SOURCE_HOSTS, msg="Unsupported Source Hosting"),
+                ),
                 "vendor-directory": All(str, Length(min=1)),
                 "patches": Unique([str]),
                 "keep": Unique([str]),
