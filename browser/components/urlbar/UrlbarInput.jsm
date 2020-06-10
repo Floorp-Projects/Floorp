@@ -559,8 +559,11 @@ class UrlbarInput {
     this.controller.recordSelectedResult(event, result);
     if (result.payload.overriddenSearchTopSite) {
       TopSiteAttribution.makeRequest({
-        searchProvider: result.payload.title,
-        siteURL: result.payload.title,
+        searchProvider: result.payload.url.match(
+          /^https?:\/\/(?:www.)?([^.]*)/
+        )[1],
+        siteURL: result.payload.url,
+        source: "urlbar",
       });
     }
 
