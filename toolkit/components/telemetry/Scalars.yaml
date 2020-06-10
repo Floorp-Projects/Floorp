@@ -12,7 +12,7 @@ a11y:
       - 1539212
     description: >
       Boolean tracking if the user has the backplate preference enabled or disabled.
-    expires: "80"
+    expires: never
     kind: boolean
     notification_emails:
       - accessibility@mozilla.com
@@ -73,7 +73,7 @@ a11y:
       The result is split into keys which represent the values of
       browser.display.document_color_use: "default", "always", or "never".
     keyed: true
-    expires: "80"
+    expires: never
     kind: boolean
     notification_emails:
       - accessibility@mozilla.com
