@@ -18,7 +18,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import kotlinx.android.synthetic.main.fragment_add_ons_management.*
 import kotlinx.android.synthetic.main.fragment_add_ons_management.view.*
 import kotlinx.android.synthetic.main.overlay_add_on_progress.view.*
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.launch
@@ -35,6 +34,7 @@ import org.mozilla.fenix.ext.getRootView
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.theme.ThemeManager
+import java.util.concurrent.CancellationException
 
 /**
  * Fragment use for managing add-ons.
@@ -46,7 +46,6 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management),
      * Whether or not an add-on installation is in progress.
      */
     private var isInstallationInProgress = false
-    private var scope: CoroutineScope? = null
     private var adapter: AddonsManagerAdapter? = null
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -244,7 +243,7 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management),
 
         isInstallationInProgress = true
 
-        requireContext().components.addonManager.installAddon(
+        val installOperation = requireContext().components.addonManager.installAddon(
             addon,
             onSuccess = {
                 runIfFragmentIsAttached {
@@ -254,21 +253,33 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management),
                     showInstallationDialog(it)
                 }
             },
-            onError = { _, _ ->
+            onError = { _, e ->
                 this@AddonsManagementFragment.view?.let { view ->
-                    val rootView = activity?.getRootView() ?: view
-                    showSnackBar(
-                        rootView,
-                        getString(
-                            R.string.mozac_feature_addons_failed_to_install,
-                            addon.translatedName
+                    // No need to display an error message if installation was cancelled by the user.
+                    if (e !is CancellationException) {
+                        val rootView = activity?.getRootView() ?: view
+                        showSnackBar(
+                            rootView,
+                            getString(
+                                R.string.mozac_feature_addons_failed_to_install,
+                                addon.translatedName
+                            )
                         )
-                    )
+                    }
                     addonProgressOverlay?.visibility = View.GONE
                     isInstallationInProgress = false
                 }
             }
         )
+
+        addonProgressOverlay.cancel_button.setOnClickListener {
+            lifecycleScope.launch(Dispatchers.Main) {
+                // Hide the installation progress overlay once cancellation is successful.
+                if (installOperation.cancel().await()) {
+                    addonProgressOverlay.visibility = View.GONE
+                }
+            }
+        }
     }
 
     private fun announceForAccessibility(announcementText: CharSequence) {
