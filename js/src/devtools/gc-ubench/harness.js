@@ -142,7 +142,7 @@ var AllocationLoad = class {
 var LoadCycle = class {
   constructor(tests_to_run, duration) {
     this.queue = [...tests_to_run];
-    this.duration = duration;
+    this.duration = duration * 1000;
     this.idx = -1;
   }
 
@@ -273,11 +273,11 @@ var AllocationLoadManager = class {
     return events;
   }
 
-  startCycle(tests_to_run, now = performance.now()) {
-    this.cycle = new LoadCycle(tests_to_run, this.testDurationMS);
+  startCycle(sequencer, now = gHost.now()) {
+    this.cycle = sequencer;
     this.cycle.start(now);
     this.setActiveLoadByName(this.cycle.current);
-    this._eventsSinceLastTick |= this.CYCLE_STARTED | this.LOAD_STARTED;
+    this._eventsSinceLastTick = this.CYCLE_STARTED | this.LOAD_STARTED;
   }
 
   cycleStopped() {

@@ -12,6 +12,7 @@ var numSamples = 500;
 
 var gHistogram = new Map(); // {ms: count}
 var gHistory = new FrameHistory(numSamples);
+var gPerf = new PerfTracker();
 
 var latencyGraph;
 var memoryGraph;
@@ -538,12 +539,13 @@ function run_one_test() {
 }
 
 function run_all_tests() {
-  start_test_cycle(tests.keys());
+  start_test_cycle([...tests.keys()]);
 }
 
 function start_test_cycle(tests_to_run) {
   // Convert from an iterable to an array for pop.
-  gLoadMgr.startCycle(tests_to_run);
+  const sequencer = new LoadCycle(tests_to_run, gLoadMgr.testDurationMS / 1000);
+  gLoadMgr.startCycle(sequencer);
   testState = "running";
   gHistogram.clear();
   reset_draw_state();
