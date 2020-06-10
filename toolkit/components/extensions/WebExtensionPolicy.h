@@ -142,6 +142,14 @@ class WebExtensionPolicy final : public nsISupports,
   void GetReadyPromise(JSContext* aCx, JS::MutableHandleObject aResult) const;
   dom::Promise* ReadyPromise() const { return mReadyPromise; }
 
+  void GetBackgroundWorker(nsString& aScriptURL) const {
+    aScriptURL.Assign(mBackgroundWorkerScript);
+  }
+
+  bool IsManifestBackgroundWorker(const nsAString& aWorkerScriptURL) const {
+    return mBackgroundWorkerScript.Equals(aWorkerScriptURL);
+  }
+
   static void GetActiveExtensions(
       dom::GlobalObject& aGlobal,
       nsTArray<RefPtr<WebExtensionPolicy>>& aResults);
@@ -161,6 +169,7 @@ class WebExtensionPolicy final : public nsISupports,
 
   static bool UseRemoteWebExtensions(dom::GlobalObject& aGlobal);
   static bool IsExtensionProcess(dom::GlobalObject& aGlobal);
+  static bool BackgroundServiceWorkerEnabled(dom::GlobalObject& aGlobal);
 
   nsISupports* GetParentObject() const { return mParent; }
 
@@ -198,6 +207,7 @@ class WebExtensionPolicy final : public nsISupports,
   MatchGlobSet mWebAccessiblePaths;
 
   dom::Nullable<nsTArray<nsString>> mBackgroundScripts;
+  nsString mBackgroundWorkerScript = EmptyString();
 
   nsTArray<RefPtr<WebExtensionContentScript>> mContentScripts;
 

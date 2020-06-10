@@ -19,6 +19,7 @@
 #include "mozilla/ipc/PBackgroundChild.h"
 #include "mozilla/ipc/PFileDescriptorSetChild.h"
 #include "mozilla/ipc/InputStreamUtils.h"
+#include "mozilla/StaticPrefs_extensions.h"
 #include "nsCOMPtr.h"
 #include "nsIIPCSerializableInputStream.h"
 #include "nsQueryObject.h"
@@ -390,8 +391,11 @@ void TypeUtils::ProcessURL(nsACString& aUrl, bool* aSchemeValidOut,
 
   if (aSchemeValidOut) {
     nsAutoCString scheme(Substring(flatURL, schemePos, schemeLen));
-    *aSchemeValidOut = scheme.LowerCaseEqualsLiteral("http") ||
-                       scheme.LowerCaseEqualsLiteral("https");
+    *aSchemeValidOut =
+        scheme.LowerCaseEqualsLiteral("http") ||
+        scheme.LowerCaseEqualsLiteral("https") ||
+        (StaticPrefs::extensions_backgroundServiceWorker_enabled_AtStartup() &&
+         scheme.LowerCaseEqualsLiteral("moz-extension"));
   }
 
   uint32_t queryPos;

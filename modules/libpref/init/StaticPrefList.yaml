@@ -3435,6 +3435,13 @@
   value: false
   mirror: always
 
+# Whether the background.service_worker in the extension manifest.json file
+# is enabled.
+- name: extensions.backgroundServiceWorker.enabled
+  type: bool
+  value: false
+  mirror: once 
+
 # This pref governs whether we enable content script CSP in extensions.
 - name: extensions.content_script_csp.enabled
   type: bool

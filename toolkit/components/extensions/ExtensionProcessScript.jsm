@@ -207,6 +207,11 @@ ExtensionManager = {
         ({ backgroundScripts } = getData(extension, "extendedData") || {});
       }
 
+      let { backgroundWorkerScript } = extension;
+      if (!backgroundWorkerScript && WebExtensionPolicy.isExtensionProcess) {
+        ({ backgroundWorkerScript } = getData(extension, "extendedData") || {});
+      }
+
       policy = new WebExtensionPolicy({
         id: extension.id,
         mozExtensionHostname: extension.uuid,
@@ -224,6 +229,7 @@ ExtensionManager = {
         localizeCallback,
 
         backgroundScripts,
+        backgroundWorkerScript,
 
         contentScripts: extension.contentScripts,
       });
