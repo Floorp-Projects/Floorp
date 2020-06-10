@@ -34,15 +34,6 @@ function tick(loadMgr, timestamp) {
   return events;
 }
 
-function report_events(events, loadMgr) {
-  if (events & loadMgr.LOAD_ENDED) {
-    print(`${loadMgr.lastActive.name} ended`);
-  }
-  if (events & loadMgr.LOAD_STARTED) {
-    print(`${loadMgr.activeLoad().name} starting`);
-  }
-}
-
 function run(opts, loads) {
   const sequence = [];
   for (const mut of loads) {
@@ -60,7 +51,8 @@ function run(opts, loads) {
 
   const loadMgr = new AllocationLoadManager(tests);
   const perf = new FrameHistory(gNumSamples);
-  const mutators = sequence.map(name => new SingleMutatorSequencer(loadMgr.getByName(name), opts.duration));
+
+  const mutators = sequence.map(name => new SingleMutatorSequencer(loadMgr.getByName(name), gPerf, opts.duration));
   let sequencer = new ChainSequencer(mutators);
 
   const schedulerCtors = {
@@ -76,18 +68,23 @@ function run(opts, loads) {
   let possible = 0;
   let frames = 0;
   loadMgr.startSequencer(sequencer);
+  print(`${loadMgr.activeLoad().name} starting`);
   while (loadMgr.load_running()) {
     const timestamp = gHost.now();
-    const events = scheduler.tick(loadMgr, timestamp);
+    const completed = scheduler.tick(loadMgr, timestamp);
     const after_tick = gHost.now();
 
     perf.on_frame(timestamp);
 
-    report_events(events, loadMgr);
+    if (completed) {
+      print(`${loadMgr.lastActive.name} ended`);
+      if (loadMgr.load_running()) {
+        print(`${loadMgr.activeLoad().name} starting`);
+      }
+    }
 
     frames++;
-    gPerf.handle_tick_events(events, loadMgr, timestamp, gHost.now());
-    if (events & loadMgr.LOAD_ENDED) {
+    if (completed) {
       possible += (loadMgr.testDurationMS / 1000) * FPS;
       const elapsed = ((after_tick - t0) / 1000).toFixed(2);
       print(`  observed ${frames} / ${possible} frames in ${elapsed} seconds`);

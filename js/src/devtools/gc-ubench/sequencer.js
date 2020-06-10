@@ -50,9 +50,10 @@ var Sequencer = class {
 };
 
 var SingleMutatorSequencer = class extends Sequencer {
-  constructor(mutator, duration_sec) {
+  constructor(mutator, perf, duration_sec) {
     super();
     this.mutator = mutator;
+    this.perf = perf;
     if (!(duration_sec > 0)) {
       throw new Error(`invalid duration '${duration_sec}'`);
     }
@@ -74,6 +75,7 @@ var SingleMutatorSequencer = class extends Sequencer {
     }
     super.start(now);
     this.state = 'running';
+    this.perf.on_load_start(this.current, now);
   }
 
   do_tick(now) {
@@ -81,6 +83,7 @@ var SingleMutatorSequencer = class extends Sequencer {
       return false;
     }
 
+    this.perf.on_load_end(this.current, now);
     this.state = 'done';
     return true;
   }

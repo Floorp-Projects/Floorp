@@ -182,7 +182,7 @@ var PerfTracker = class {
 
     const mutating_and_gc_fraction = this._mutating_ms / (full_time * 1000);
 
-    this.results.push({
+    const result = {
       load,
       elapsed_time,
       mutating: this._mutating_ms / 1000,
@@ -194,9 +194,13 @@ var PerfTracker = class {
       dropped_60fps_fraction,
       majorGCs: gHost.majorGCCount - this._majorGCs,
       minorGCs: gHost.minorGCCount - this._minorGCs,
-    });
+    };
+    this.results.push(result);
+
     this._currentLoadStart = undefined;
     this._frameCount = 0;
+
+    return result;
   }
 
   after_suspend(wait_sec) {
@@ -208,27 +212,6 @@ var PerfTracker = class {
   }
 
   after_mutator(start_time, end_time = gHost.now()) {
-    // Warning: this is called before on_load_start is called from
-    // handle_tick_events.
-  }
-
-  handle_tick_events(events, loadMgr, tick_start, tick_end) {
-    // When the load manager switches from one load to another, there will be
-    // the tick start, the load is switched, the new load runs for a bit, then
-    // the tick end. Associate the timestamp of the start of the tick with both
-    // the end of the previous load and the beginning of the new one.
-    let load_running = true;
-    if (events & loadMgr.LOAD_ENDED) {
-      this.on_load_end(loadMgr.lastActive, tick_start);
-      load_running = false;
-    }
-    if (events & loadMgr.LOAD_STARTED) {
-      this.on_load_start(loadMgr.active, tick_start);
-      load_running = true;
-    }
-
-    if (load_running) {
-      this._mutating_ms += tick_end - tick_start;
-    }
+    this._mutating_ms += end_time - start_time;
   }
 };

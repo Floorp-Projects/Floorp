@@ -408,8 +408,8 @@ function handler(timestamp) {
     return;
   }
 
-  const events = gLoadMgr.tick(timestamp);
-  if (events & gLoadMgr.LOAD_ENDED) {
+  const completed = gLoadMgr.tick(timestamp);
+  if (completed) {
     end_test(timestamp, gLoadMgr.lastActive);
     if (!gLoadMgr.stopped()) {
       start_test();
@@ -545,7 +545,7 @@ function run_all_tests() {
 function start_test_cycle(tests_to_run) {
   // Convert from an iterable to an array for pop.
   const duration = gLoadMgr.testDurationMS / 1000;
-  const mutators = tests_to_run.map(name => new SingleMutatorSequencer(gLoadMgr.getByName(name), duration));
+  const mutators = tests_to_run.map(name => new SingleMutatorSequencer(gLoadMgr.getByName(name), gPerf, duration));
   const sequencer = new ChainSequencer(mutators);
   gLoadMgr.startSequencer(sequencer);
   testState = "running";
