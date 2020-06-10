@@ -728,6 +728,34 @@ preferences:
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-09-01"
+  open_links_in_app:
+    type: string_list
+    description: >
+      Whether or not the user has the open links in apps feature enabled.
+      default: false
+    send_in_pings:
+      - metrics
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/11118
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/11446
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-09-01"
+  theme:
+    type: string_list
+    description: >
+      The theme the user has enabled. "light," "dark," "system," or "battery"
+      default: "system" for API 28+, else "light"
+    send_in_pings:
+      - metrics
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/11118
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/11446
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-09-01"
 
 search.default_engine:
   code:

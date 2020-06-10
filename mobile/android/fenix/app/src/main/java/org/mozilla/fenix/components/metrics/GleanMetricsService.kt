@@ -590,56 +590,7 @@ class GleanMetricsService(private val context: Context) : MetricsService {
     }
 
     internal fun setStartupMetrics() {
-
-        // We purposefully make all of our preferences the string_list format to make data analysis
-        // simpler. While it makes things like booleans a bit more complicated, it means all our
-        // preferences can be analyzed with the same dashboard and compared.
-        Preferences.apply {
-            showSearchSuggestions.set(context.settings().shouldShowSearchSuggestions.toStringList())
-            remoteDebugging.set(context.settings().isRemoteDebuggingEnabled.toStringList())
-            telemetry.set(context.settings().isTelemetryEnabled.toStringList())
-            searchBookmarks.set(context.settings().shouldShowBookmarkSuggestions.toStringList())
-            showClipboardSuggestions.set(context.settings().shouldShowClipboardSuggestions.toStringList())
-            showSearchShortcuts.set(context.settings().shouldShowSearchShortcuts.toStringList())
-            openLinksInAPrivateTab.set(context.settings().openLinksInAPrivateTab.toStringList())
-            searchSuggestionsPrivate.set(context.settings().shouldShowSearchSuggestionsInPrivate.toStringList())
-
-            val isLoggedIn =
-                context.components.backgroundServices.accountManager.accountProfile() != null
-            sync.set(isLoggedIn.toStringList())
-
-            val syncedItems = SyncEnginesStorage(context).getStatus().entries.filter {
-                it.value
-            }.map { it.key.nativeName }
-
-            syncItems.set(syncedItems)
-
-            val etpSelection =
-                if (!context.settings().shouldUseTrackingProtection) {
-                    ""
-                } else if (context.settings().useStandardTrackingProtection) {
-                    "standard"
-                } else if (context.settings().useStrictTrackingProtection) {
-                    "strict"
-                } else if (context.settings().useCustomTrackingProtection) {
-                    "custom"
-                } else {
-                    ""
-                }
-
-            trackingProtection.set(listOf(etpSelection))
-
-            val accessibilitySelection = mutableListOf<String>()
-
-            if (context.settings().switchServiceIsEnabled) { accessibilitySelection.add("switch") }
-
-            if (context.settings().touchExplorationIsEnabled) {
-                accessibilitySelection.add("touch exploration")
-            }
-
-            accessibilityServices.set(accessibilitySelection.toList())
-        }
-
+        setPreferenceMetrics()
         Metrics.apply {
             defaultBrowser.set(BrowsersCache.all(context).isDefaultBrowser)
             MozillaProductDetector.getMozillaBrowserDefault(context)?.also {
@@ -683,6 +634,85 @@ class GleanMetricsService(private val context: Context) : MetricsService {
 
         activationPing.checkAndSend()
         installationPing.checkAndSend()
+    }
+
+    private fun setPreferenceMetrics() {
+        // We purposefully make all of our preferences the string_list format to make data analysis
+        // simpler. While it makes things like booleans a bit more complicated, it means all our
+        // preferences can be analyzed with the same dashboard and compared.
+        Preferences.apply {
+            showSearchSuggestions.set(context.settings().shouldShowSearchSuggestions.toStringList())
+            remoteDebugging.set(context.settings().isRemoteDebuggingEnabled.toStringList())
+            telemetry.set(context.settings().isTelemetryEnabled.toStringList())
+            searchBookmarks.set(context.settings().shouldShowBookmarkSuggestions.toStringList())
+            showClipboardSuggestions.set(context.settings().shouldShowClipboardSuggestions.toStringList())
+            showSearchShortcuts.set(context.settings().shouldShowSearchShortcuts.toStringList())
+            openLinksInAPrivateTab.set(context.settings().openLinksInAPrivateTab.toStringList())
+            searchSuggestionsPrivate.set(context.settings().shouldShowSearchSuggestionsInPrivate.toStringList())
+            showVoiceSearch.set(context.settings().shouldShowVoiceSearch.toStringList())
+            openLinksInApp.set(context.settings().openLinksInExternalApp.toStringList())
+
+            val isLoggedIn =
+                context.components.backgroundServices.accountManager.accountProfile() != null
+            sync.set(isLoggedIn.toStringList())
+
+            val syncedItems = SyncEnginesStorage(context).getStatus().entries.filter {
+                it.value
+            }.map { it.key.nativeName }
+
+            syncItems.set(syncedItems)
+
+            val toolbarPositionSelection =
+                if (context.settings().shouldUseFixedTopToolbar) {
+                    "fixed_top"
+                } else if (context.settings().shouldUseBottomToolbar) {
+                    "bottom"
+                } else {
+                    "top"
+                }
+
+            toolbarPosition.set(listOf(toolbarPositionSelection))
+
+            val etpSelection =
+                if (!context.settings().shouldUseTrackingProtection) {
+                    ""
+                } else if (context.settings().useStandardTrackingProtection) {
+                    "standard"
+                } else if (context.settings().useStrictTrackingProtection) {
+                    "strict"
+                } else if (context.settings().useCustomTrackingProtection) {
+                    "custom"
+                } else {
+                    ""
+                }
+
+            trackingProtection.set(listOf(etpSelection))
+
+            val accessibilitySelection = mutableListOf<String>()
+
+            if (context.settings().switchServiceIsEnabled) { accessibilitySelection.add("switch") }
+
+            if (context.settings().touchExplorationIsEnabled) {
+                accessibilitySelection.add("touch exploration")
+            }
+
+            accessibilityServices.set(accessibilitySelection.toList())
+
+            val themeSelection =
+                if (context.settings().shouldUseLightTheme) {
+                    "light"
+                } else if (context.settings().shouldUseDarkTheme) {
+                    "dark"
+                } else if (context.settings().shouldFollowDeviceTheme) {
+                    "system"
+                } else if (context.settings().shouldUseAutoBatteryTheme) {
+                    "battery"
+                } else {
+                    ""
+                }
+
+            theme.set(listOf(themeSelection))
+        }
     }
 
     override fun stop() {
