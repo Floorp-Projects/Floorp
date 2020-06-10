@@ -171,6 +171,7 @@ vendoring:
   # The action subfield is required. It must be one of:
   #   - copy-file
   #   - replace-in-file
+  #   - delete-path
   #   - run-script
   # Unless otherwise noted, all subfields of action are required.
   #
@@ -183,6 +184,9 @@ vendoring:
   #   with is the string to replace it with. Accepts the special keyword
   #     '{revision}' for the commit we are updating to.
   #   File is the file to replace it in.
+  #
+  # If the action is delete-path
+  #   path is the file or directory to recursively delete
   #
   # If the action is run-script:
   #   script is the script to run
@@ -205,6 +209,9 @@ vendoring:
       pattern: '@VCS_TAG@'
       with: '{revision}'
       file: '{yaml_dir}/vcs_version.h'
+
+    - action: delete-path
+      path: '{yaml_dir}/config'
 
     - action: run-script
       script: '{cwd}/generate_sources.sh'
@@ -330,7 +337,12 @@ def _schema_1():
                     [
                         {
                             Required("action"): In(
-                                ["copy-file", "replace-in-file", "run-script"],
+                                [
+                                    "copy-file",
+                                    "replace-in-file",
+                                    "run-script",
+                                    "delete-path",
+                                ],
                                 msg="Invalid action specified in update-actions",
                             ),
                             "from": All(str, Length(min=1)),
@@ -340,6 +352,7 @@ def _schema_1():
                             "file": All(str, Length(min=1)),
                             "script": All(str, Length(min=1)),
                             "cwd": All(str, Length(min=1)),
+                            "path": All(str, Length(min=1)),
                         }
                     ],
                 ),
@@ -416,6 +429,11 @@ class UpdateActions(object):
                     raise Invalid(
                         "replace-in-file action must (only) specify "
                         + "'pattern', 'with', and 'file' keys"
+                    )
+            elif v["action"] == "delete-path":
+                if "path" not in v or len(v.keys()) != 2:
+                    raise Invalid(
+                        "delete-path action must (only) specify the 'path' key"
                     )
             elif v["action"] == "run-script":
                 if "script" not in v or "cwd" not in v or len(v.keys()) != 3:
