@@ -6,7 +6,7 @@
 @namespace html "http://www.w3.org/1999/xhtml";
 @namespace xul "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
-*|*:root {
+:root {
   --in-content-page-color: #0c0c0d;
   --in-content-page-background: #f9f9fa;
   --in-content-text-color: var(--grey-90);
@@ -177,7 +177,7 @@ html|h2 {
   line-height: 1.4em;
 }
 
-*|*.main-content {
+.main-content {
   padding: 40px 28px;
   overflow: auto;
 }
@@ -228,7 +228,7 @@ html|button {
 
 /* xul buttons and menulists */
 
-*|button,
+button,
 html|select,
 html|input[type="color"],
 xul|menulist {
@@ -259,7 +259,7 @@ html|input[type="color"]::-moz-focus-inner {
   border: none;
 }
 
-*|button:-moz-focusring,
+button:-moz-focusring,
 html|select:-moz-focusring,
 html|input[type="checkbox"]:-moz-focusring,
 html|input[type="color"]:-moz-focusring,
@@ -323,7 +323,7 @@ xul|menulist[disabled="true"] {
 
 html|button[autofocus],
 html|button[type="submit"],
-*|button.primary {
+button.primary {
   background-color: var(--in-content-primary-button-background);
   color: var(--in-content-selected-text) !important;
 }
@@ -654,7 +654,7 @@ xul|*.radio-label-box {
 
 /* Category List */
 
-*|*#categories {
+#categories {
   -moz-appearance: none;
   background-color: initial; /* override the background-color set on all richlistboxes in common.inc.css */
   margin: 70px 0 0;
@@ -668,7 +668,7 @@ html|*#categories {
   padding: 1px;
 }
 
-*|*#categories > *|*.category {
+#categories > .category {
   min-height: 48px;
   -moz-appearance: none;
   margin-inline-start: 34px;
@@ -695,33 +695,33 @@ html|*#categories > html|*.category:dir(rtl) {
   background-position-x: right 10px;
 }
 
-*|*#categories > *|*.category:hover {
+#categories > .category:hover {
   background-color: var(--in-content-category-background-hover);
   border-radius: 2px;
 }
 
-*|*#categories > *|*.category:hover:active {
+#categories > .category:hover:active {
   background-color: var(--in-content-category-background-active);
 }
 
-*|*#categories > *|*.category[selected],
-*|*#categories > *|*.category.selected {
+#categories > .category[selected],
+#categories > .category.selected {
   color: var(--in-content-category-text-selected) !important;
   background-color: transparent;
 }
 
-*|*#categories > *|*.category[selected]:hover,
-*|*#categories > *|*.category.selected:hover {
+#categories > .category[selected]:hover,
+#categories > .category.selected:hover {
   background-color: var(--in-content-category-background-selected-hover);
 }
 
-*|*#categories > *|*.category[selected]:hover:active,
-*|*#categories > *|*.category.selected:hover:active {
+#categories > .category[selected]:hover:active,
+#categories > .category.selected:hover:active {
   color: var(--in-content-category-text-selected-active) !important;
   background-color: var(--in-content-category-background-selected-active);
 }
 
-*|*#categories[keyboard-navigation="true"]:-moz-focusring > *|*.category[current] {
+#categories[keyboard-navigation="true"]:-moz-focusring > .category[current] {
   outline: var(--in-content-category-outline-focus);
 }
 
@@ -730,7 +730,7 @@ html|*#categories[last-input-type="mouse"] > html|button.category:-moz-focusring
   box-shadow: none;
 }
 
-*|*.category-name {
+.category-name {
   font-size: 1.07em;
   line-height: 1.4em;
   padding-inline-start: 9px;
@@ -738,15 +738,15 @@ html|*#categories[last-input-type="mouse"] > html|button.category:-moz-focusring
   -moz-user-select: none;
 }
 
-*|*.category-icon {
+.category-icon {
   width: 24px;
   height: 24px;
   -moz-context-properties: fill, fill-opacity;
   fill: currentColor;
 }
 
-*|*.category[selected] > *|*.category-icon,
-*|*.category.selected > *|*.category-icon {
+.category[selected] > .category-icon,
+.category.selected > .category-icon {
   fill-opacity: 1;
 }
 
@@ -788,14 +788,14 @@ html|*#categories[last-input-type="mouse"] > html|button.category:-moz-focusring
 
 /* header */
 
-*|*.header {
+.header {
   margin-inline-end: 4px; /* add the 4px end-margin of other elements */
   margin-bottom: 15px;
   padding-bottom: 15px;
   -moz-box-align: baseline;
 }
 
-*|*.header-name {
+.header-name {
   font-size: 1.46em;
   font-weight: 300;
   line-height: 1.3em;
