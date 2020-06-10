@@ -583,9 +583,12 @@ this.downloads = class extends ExtensionAPI {
             }
 
             if (
-              path.components.some(
-                component => component != DownloadPaths.sanitize(component)
-              )
+              path.components.some(component => {
+                let sanitized = DownloadPaths.sanitize(component, {
+                  compressWhitespaces: false,
+                });
+                return component != sanitized;
+              })
             ) {
               return Promise.reject({
                 message: "filename must not contain illegal characters",

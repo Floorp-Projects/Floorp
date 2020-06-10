@@ -5,8 +5,8 @@
  * Tests for the "DownloadPaths.jsm" JavaScript module.
  */
 
-function testSanitize(leafName, expectedLeafName) {
-  Assert.equal(DownloadPaths.sanitize(leafName), expectedLeafName);
+function testSanitize(leafName, expectedLeafName, options = {}) {
+  Assert.equal(DownloadPaths.sanitize(leafName, options), expectedLeafName);
 }
 
 function testSplitBaseNameAndExtension(aLeafName, [aBase, aExt]) {
@@ -82,6 +82,9 @@ add_task(async function test_sanitize() {
 
   // Stripping of colons:
   testSanitize("foo:bar", "foo bar");
+
+  // not compressing whitespaces.
+  testSanitize("foo : bar", "foo   bar", { compressWhitespaces: false });
 });
 
 add_task(async function test_splitBaseNameAndExtension() {

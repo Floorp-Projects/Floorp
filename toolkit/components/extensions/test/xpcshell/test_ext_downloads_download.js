@@ -16,6 +16,7 @@ const WINDOWS = AppConstants.platform == "win";
 
 const BASE = `http://localhost:${gServer.identity.primaryPort}/`;
 const FILE_NAME = "file_download.txt";
+const FILE_NAME_W_SPACES = "file   download.txt";
 const FILE_URL = BASE + "data/" + FILE_NAME;
 const FILE_NAME_UNIQUE = "file_download(1).txt";
 const FILE_LEN = 46;
@@ -338,24 +339,18 @@ add_task(async function test_downloads() {
     );
   });
 
-  // Test illegal characters on Windows.
-  if (WINDOWS) {
-    await download({
-      url: FILE_URL,
-      filename: "like:this",
-    }).then(msg => {
-      equal(
-        msg.status,
-        "error",
-        "downloads.download() fails with illegal chars"
-      );
-      equal(
-        msg.errmsg,
-        "filename must not contain illegal characters",
-        "error message correct"
-      );
-    });
-  }
+  // Test illegal characters.
+  await download({
+    url: FILE_URL,
+    filename: "like:this",
+  }).then(msg => {
+    equal(msg.status, "error", "downloads.download() fails with illegal chars");
+    equal(
+      msg.errmsg,
+      "filename must not contain illegal characters",
+      "error message correct"
+    );
+  });
 
   // Try to download a blob url
   const BLOB_STRING = "Hello, world";
@@ -389,6 +384,28 @@ add_task(async function test_downloads() {
     "download",
     8,
     "normal url with empty filename"
+  );
+
+  // Download a filename with multiple spaces, url is ignored for this test.
+  await testDownload(
+    {
+      url: FILE_URL,
+      filename: "a   file.txt",
+    },
+    "a   file.txt",
+    FILE_LEN,
+    "filename with multiple spaces"
+  );
+
+  // Download a normal URL with a leafname containing multiple spaces.
+  // Note: spaces are compressed by file name normalization.
+  await testDownload(
+    {
+      url: BASE + "data/" + FILE_NAME_W_SPACES,
+    },
+    FILE_NAME_W_SPACES.replace(/\s+/, " "),
+    FILE_LEN,
+    "leafname with multiple spaces"
   );
 
   // Check that the "incognito" property is supported.
