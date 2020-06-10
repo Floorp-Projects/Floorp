@@ -71,8 +71,9 @@ DocAccessibleWrap::get_accParent(
   // document accessibles, as well as tab document accessibles if window
   // emulation is enabled.
   if (XRE_IsParentProcess() &&
-      (!ParentDocument() || (nsWinUtils::IsWindowEmulationStarted() &&
-                             nsCoreUtils::IsTabDocument(DocumentNode())))) {
+      (!ParentDocument() ||
+       (nsWinUtils::IsWindowEmulationStarted() &&
+        nsCoreUtils::IsTopLevelContentDocInProcess(DocumentNode())))) {
     HWND hwnd = static_cast<HWND>(GetNativeWindow());
     if (hwnd && !ParentDocument()) {
       nsIFrame* frame = GetFrame();
@@ -138,7 +139,8 @@ void DocAccessibleWrap::Shutdown() {
   // Do window emulation specific shutdown if emulation was started.
   if (nsWinUtils::IsWindowEmulationStarted()) {
     // Destroy window created for root document.
-    if (mDocFlags & eTabDocument) {
+    if (mDocFlags & eTopLevelContentDocInProcess) {
+      MOZ_ASSERT(XRE_IsParentProcess());
       HWND hWnd = static_cast<HWND>(mHWND);
       ::RemovePropW(hWnd, kPropNameDocAcc);
       ::DestroyWindow(hWnd);
@@ -175,7 +177,8 @@ void DocAccessibleWrap::DoInitialUpdate() {
 
   if (nsWinUtils::IsWindowEmulationStarted()) {
     // Create window for tab document.
-    if (mDocFlags & eTabDocument) {
+    if (mDocFlags & eTopLevelContentDocInProcess) {
+      MOZ_ASSERT(XRE_IsParentProcess());
       a11y::RootAccessible* rootDocument = RootAccessible();
       bool isActive = true;
       nsIntRect rect(CW_USEDEFAULT, CW_USEDEFAULT, 0, 0);

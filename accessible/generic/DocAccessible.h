@@ -606,8 +606,8 @@ class DocAccessible : public HyperTextAccessibleWrap,
    * State and property flags, kept by mDocFlags.
    */
   enum {
-    // Whether the document is a tab document.
-    eTabDocument = 1 << 0
+    // Whether the document is a top level content document in this process.
+    eTopLevelContentDocInProcess = 1 << 0
   };
 
   /**
