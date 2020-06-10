@@ -30,7 +30,12 @@ class Vendor(MachCommandBase):
         category="misc",
         description="Vendor third-party dependencies into the source repository.",
     )
-    @CommandArgument("--check-for-update", action="store_true", default=False)
+    @CommandArgument(
+        "--check-for-update",
+        action="store_true",
+        help="For scripted use, prints the new commit to update to, or nothing if up to date.",
+        default=False,
+    )
     @CommandArgument(
         "--ignore-modified",
         action="store_true",
@@ -38,8 +43,12 @@ class Vendor(MachCommandBase):
         default=False,
     )
     @CommandArgument("-r", "--revision", help="Repository tag or commit to update to.")
-    @CommandArgument("--verify", "-v", action="store_true", help="(Only) verify the manifest")
-    @CommandArgument("library", nargs=1, help="The moz.yaml file of the library to vendor.")
+    @CommandArgument(
+        "--verify", "-v", action="store_true", help="(Only) verify the manifest"
+    )
+    @CommandArgument(
+        "library", nargs=1, help="The moz.yaml file of the library to vendor."
+    )
     def vendor(
         self,
         library,
@@ -59,6 +68,8 @@ class Vendor(MachCommandBase):
 
         self.populate_logger()
         self.log_manager.enable_unstructured()
+        if check_for_update:
+            logging.disable()
 
         try:
             manifest = load_moz_yaml(library)
@@ -69,7 +80,7 @@ class Vendor(MachCommandBase):
             print(e)
             sys.exit(1)
 
-        if not ignore_modified:
+        if not ignore_modified and not check_for_update:
             self.check_modified_files()
         if not revision:
             revision = "master"
@@ -104,7 +115,7 @@ Please commit or stash these changes before vendoring, or re-run with `--ignore-
             )
             sys.exit(1)
 
-# =====================================================================
+    # =====================================================================
 
     @SubCommand(
         "vendor",
@@ -133,7 +144,7 @@ Please commit or stash these changes before vendoring, or re-run with `--ignore-
         vendor_command = self._spawn(VendorRust)
         vendor_command.vendor(**kwargs)
 
-# =====================================================================
+    # =====================================================================
 
     @SubCommand(
         "vendor",
