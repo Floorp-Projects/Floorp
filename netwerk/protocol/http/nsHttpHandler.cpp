@@ -2225,6 +2225,13 @@ nsHttpHandler::GetAltSvcCacheKeys(nsTArray<nsCString>& value) {
   return mAltSvcCache->GetAltSvcCacheKeys(value);
 }
 
+NS_IMETHODIMP
+nsHttpHandler::GetAuthCacheKeys(nsTArray<nsCString>& aValues) {
+  mAuthCache.CollectKeys(aValues);
+  mPrivateAuthCache.CollectKeys(aValues);
+  return NS_OK;
+}
+
 //-----------------------------------------------------------------------------
 // nsHttpHandler::nsIObserver
 //-----------------------------------------------------------------------------

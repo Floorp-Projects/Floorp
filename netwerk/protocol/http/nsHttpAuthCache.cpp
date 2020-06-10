@@ -206,6 +206,12 @@ void nsHttpAuthCache::ClearOriginData(OriginAttributesPattern const& pattern) {
   }
 }
 
+void nsHttpAuthCache::CollectKeys(nsTArray<nsCString>& aValue) {
+  for (auto iter = mDB.Iter(); !iter.Done(); iter.Next()) {
+    aValue.AppendElement(iter.Key());
+  }
+}
+
 //-----------------------------------------------------------------------------
 // nsHttpAuthIdentity
 //-----------------------------------------------------------------------------
