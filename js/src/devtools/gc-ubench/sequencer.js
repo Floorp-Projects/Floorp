@@ -61,7 +61,7 @@ var SingleMutatorSequencer = class extends Sequencer {
   }
 
   get current() {
-    return this.state === 'done' ? undefined : this.mutator.name;
+    return this.state === 'done' ? undefined : this.mutator;
   }
 
   reset() {
