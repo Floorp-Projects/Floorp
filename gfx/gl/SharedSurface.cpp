@@ -136,8 +136,9 @@ UniquePtr<SurfaceFactory> SurfaceFactory::Create(
     case layers::TextureType::Unknown:
     case layers::TextureType::DIB:
     case layers::TextureType::Last:
-      return nullptr;
+      break;
   }
+  return nullptr;
 }
 
 SurfaceFactory::SurfaceFactory(const PartialSharedSurfaceDesc& partialDesc)
