@@ -167,14 +167,11 @@ vendoring:
   # All three file/path parameters ("keep", "exclude", and "include") support
   # filenames, directory names, and globs/wildcards.
 
-  # In-tree scripts to be executed after vendoring but before pushing.
-  # optional
-  run_after:
-    - script
-    - another script
-
-  # Actions to take on files after updating. Applied in order.
-  # The action subfield is required. It must be one of 'copy-file', replace-in-file'.
+  # Actions to take after updating. Applied in order.
+  # The action subfield is required. It must be one of:
+  #   - copy-file
+  #   - replace-in-file
+  #   - run-script
   # Unless otherwise noted, all subfields of action are required.
   #
   # If the action is copy-file:
@@ -187,13 +184,19 @@ vendoring:
   #     '{revision}' for the commit we are updating to.
   #   File is the file to replace it in.
   #
-  # Unless specified otherwise, all files are relative to the vendor-directory.
-  #     If the vendor-directory is different from the directory of the yaml file,
-  #     the keyword '{yaml_dir}' may be used to make the path relative to that
-  #     directory
+  # If the action is run-script:
+  #   script is the script to run
+  #   cwd is the directory the script should run with as its cwd
+  #
+  # Unless specified otherwise, all files/directories are relative to the
+  #     vendor-directory. If the vendor-directory is different from the
+  #     directory of the yaml file, the keyword '{yaml_dir}' may be used
+  #     to make the path relative to that directory.
+  # 'run-script' supports the addictional keyword {cwd} which, if used,
+  #     must only be used at the beginning of the path.
   #
   # optional
-  file-updates:
+  update-actions:
     - action: copy-file
       from: include/vcs_version.h.in
       to: '{yaml_dir}/vcs_version.h'
@@ -202,6 +205,10 @@ vendoring:
       pattern: '@VCS_TAG@'
       with: '{revision}'
       file: '{yaml_dir}/vcs_version.h'
+
+    - action: run-script
+      script: '{cwd}/generate_sources.sh'
+      cwd: '{yaml_dir}'
 """
 
 RE_SECTION = re.compile(r"^(\S[^:]*):").search
@@ -318,20 +325,21 @@ def _schema_1():
                 "keep": Unique([str]),
                 "exclude": Unique([str]),
                 "include": Unique([str]),
-                "run_after": Unique([str]),
-                "file-updates": All(
-                    FileUpdate(),
+                "update-actions": All(
+                    UpdateActions(),
                     [
                         {
                             Required("action"): In(
-                                ["copy-file", "replace-in-file"],
-                                msg="Invalid action specified in file-updates",
+                                ["copy-file", "replace-in-file", "run-script"],
+                                msg="Invalid action specified in update-actions",
                             ),
                             "from": All(str, Length(min=1)),
                             "to": All(str, Length(min=1)),
                             "pattern": All(str, Length(min=1)),
                             "with": All(str, Length(min=1)),
                             "file": All(str, Length(min=1)),
+                            "script": All(str, Length(min=1)),
+                            "cwd": All(str, Length(min=1)),
                         }
                     ],
                 ),
@@ -386,9 +394,8 @@ def _schema_1_additional(filename, manifest, require_license_file=True):
         update_moz_yaml(filename, "", "", verify=False, write=True)
 
 
-class FileUpdate(object):
-    """Voluptuous validator which verifies the license(s) are valid as per our
-    whitelist."""
+class UpdateActions(object):
+    """Voluptuous validator which verifies the update actions(s) are valid."""
 
     def __call__(self, values):
         for v in values:
@@ -410,6 +417,11 @@ class FileUpdate(object):
                         "replace-in-file action must (only) specify "
                         + "'pattern', 'with', and 'file' keys"
                     )
+            elif v["action"] == "run-script":
+                if "script" not in v or "cwd" not in v or len(v.keys()) != 3:
+                    raise Invalid(
+                        "run-script action must (only) specify 'script' and 'cwd' keys"
+                    )
             else:
                 # This check occurs before the validator above, so the above is
                 # redundant but we leave it to be verbose.
@@ -417,7 +429,7 @@ class FileUpdate(object):
         return values
 
     def __repr__(self):
-        return "FileUpdate"
+        return "UpdateActions"
 
 
 class License(object):
