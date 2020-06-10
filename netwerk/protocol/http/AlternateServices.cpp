@@ -106,17 +106,11 @@ void AltSvcMapping::ProcessHeader(
           break;
         }
 
-        // h2=[hostname]:443 or h3=[hostname]:port;quic="ff0000XX"
-        // or h3-xx=[hostname]:port
+        // h2=[hostname]:443 or h3-xx=[hostname]:port
         // XX is current version we support and it is define in nsHttp.h.
-        if (currentName.EqualsLiteral("h3")) {
-          isHttp3 = true;
-        } else if (currentName.Equals(kHttp3Version)) {
-          isHttp3 = true;
-          npnToken = kHttp3Version;
-        } else {
-          npnToken = currentName;
-        }
+        isHttp3 = gHttpHandler->IsHttp3VersionSupported(currentName);
+        npnToken = currentName;
+
         int32_t colonIndex = currentValue.FindChar(':');
         if (colonIndex >= 0) {
           portno =
@@ -127,20 +121,6 @@ void AltSvcMapping::ProcessHeader(
         hostname.Assign(currentValue.BeginReading(), colonIndex);
       } else if (currentName.EqualsLiteral("ma")) {
         maxage = atoi(PromiseFlatCString(currentValue).get());
-      } else if ((currentName.EqualsLiteral("quic")) && isHttp3) {
-        LOG(("Alt Svc versions string: %s", currentValue.BeginReading()));
-        for (const nsACString& ver : currentValue.Split(',')) {
-          LOG(("Alt Svc versions %s", PromiseFlatCString(ver).get()));
-          if (npnToken.IsEmpty()) {
-            nsAutoCString version(ver);
-            version.Trim(" \t");
-            if (gHttpHandler->IsHttp3VersionSupportedHex(version)) {
-              LOG(("Alt Svc found supported version: %s", version.get()));
-              npnToken.Assign(gHttpHandler->Http3Version());
-              break;
-            }
-          }
-        }
       } else {
         LOG(("Alt Svc ignoring parameter %s", currentName.BeginReading()));
       }
@@ -170,7 +150,7 @@ void AltSvcMapping::ProcessHeader(
     SpdyInformation* spdyInfo = gHttpHandler->SpdyInfo();
     if (!(NS_SUCCEEDED(spdyInfo->GetNPNIndex(npnToken, &spdyIndex)) &&
           spdyInfo->ProtocolEnabled(spdyIndex)) &&
-        !(isHttp3 && gHttpHandler->IsHttp3Enabled() && !npnToken.IsEmpty())) {
+        !(isHttp3 && gHttpHandler->IsHttp3Enabled())) {
       LOG(("Alt Svc unknown protocol %s, ignoring", npnToken.get()));
       continue;
     }
@@ -944,8 +924,9 @@ already_AddRefed<AltSvcMapping> AltSvcCache::LookupMapping(
     return nullptr;
   }
 
-  if (rv->IsHttp3() && (!gHttpHandler->IsHttp3Enabled() ||
-                        !rv->NPNToken().Equals(gHttpHandler->Http3Version()))) {
+  if (rv->IsHttp3() &&
+      (!gHttpHandler->IsHttp3Enabled() ||
+       !gHttpHandler->IsHttp3VersionSupported(rv->NPNToken()))) {
     // If Http3 is disabled or the version not supported anymore, remove the
     // mapping.
     mStorage->Remove(

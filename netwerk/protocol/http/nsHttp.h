@@ -37,8 +37,8 @@ enum class HttpVersion {
 
 enum class SpdyVersion { NONE = 0, HTTP_2 = 5 };
 
-extern const nsCString kHttp3Version;
-const char kHttp3VersionHEX[] = "ff0000001b";  // this is draft 27.
+extern const uint32_t kHttp3VersionCount;
+extern const nsCString kHttp3Versions[];
 
 //-----------------------------------------------------------------------------
 // http connection capabilities

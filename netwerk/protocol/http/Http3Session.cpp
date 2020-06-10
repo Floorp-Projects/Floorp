@@ -72,6 +72,7 @@ Http3Session::Http3Session()
 }
 
 nsresult Http3Session::Init(const nsACString& aOrigin,
+                            const nsACString& aAlpnToken,
                             nsISocketTransport* aSocketTransport,
                             HttpConnectionUDP* readerWriter) {
   LOG3(("Http3Session::Init %p", this));
@@ -80,6 +81,7 @@ nsresult Http3Session::Init(const nsACString& aOrigin,
   MOZ_ASSERT(aSocketTransport);
   MOZ_ASSERT(readerWriter);
 
+  mAlpnToken = aAlpnToken;
   mSocketTransport = aSocketTransport;
   mSegmentReaderWriter = readerWriter;
 
@@ -134,12 +136,12 @@ nsresult Http3Session::Init(const nsACString& aOrigin,
   LOG3(
       ("Http3Session::Init origin=%s, alpn=%s, selfAddr=%s, peerAddr=%s,"
        " qpack table size=%u, max blocked streams=%u [this=%p]",
-       PromiseFlatCString(aOrigin).get(),
-       PromiseFlatCString(kHttp3Version).get(), selfAddrStr.get(),
-       peerAddrStr.get(), gHttpHandler->DefaultQpackTableSize(),
+       PromiseFlatCString(aOrigin).get(), PromiseFlatCString(aAlpnToken).get(),
+       selfAddrStr.get(), peerAddrStr.get(),
+       gHttpHandler->DefaultQpackTableSize(),
        gHttpHandler->DefaultHttp3MaxBlockedStreams(), this));
 
-  return NeqoHttp3Conn::Init(aOrigin, kHttp3Version, selfAddrStr, peerAddrStr,
+  return NeqoHttp3Conn::Init(aOrigin, aAlpnToken, selfAddrStr, peerAddrStr,
                              gHttpHandler->DefaultQpackTableSize(),
                              gHttpHandler->DefaultHttp3MaxBlockedStreams(),
                              getter_AddRefs(mHttp3Connection));
@@ -1243,11 +1245,11 @@ bool Http3Session::RealJoinConnection(const nsACString& hostname, int32_t port,
 
   bool joinedReturn = false;
   if (justKidding) {
-    rv = sslSocketControl->TestJoinConnection(kHttp3Version, hostname, port,
+    rv = sslSocketControl->TestJoinConnection(mAlpnToken, hostname, port,
                                               &isJoined);
   } else {
-    rv = sslSocketControl->JoinConnection(kHttp3Version, hostname, port,
-                                          &isJoined);
+    rv =
+        sslSocketControl->JoinConnection(mAlpnToken, hostname, port, &isJoined);
   }
   if (NS_SUCCEEDED(rv) && isJoined) {
     joinedReturn = true;
