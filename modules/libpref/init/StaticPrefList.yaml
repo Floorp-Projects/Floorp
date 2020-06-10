@@ -3013,7 +3013,7 @@
 
 # Oculus device
 - name: dom.vr.oculus.enabled
-  type: bool
+  type: RelaxedAtomicBool
 #if defined(HAVE_64BIT_BUILD) && !defined(ANDROID)
   # We are only enabling WebVR by default on 64-bit builds (Bug 1384459).
   value: true
@@ -3021,7 +3021,7 @@
   # On Android, this pref is irrelevant.
   value: false
 #endif
-  mirror: once
+  mirror: always
 
 # When enabled, Oculus sessions may be created with the ovrInit_Invisible
 # flag if a page is using tracking but not presenting.  When a page
@@ -3049,7 +3049,7 @@
 
 # OpenVR device
 - name: dom.vr.openvr.enabled
-  type: bool
+  type: RelaxedAtomicBool
 #if !defined(HAVE_64BIT_BUILD) && !defined(ANDROID)
   # We are only enabling WebVR by default on 64-bit builds (Bug 1384459).
   value: false
@@ -3060,13 +3060,13 @@
   # See Bug 1310663 (Linux).  On Android, this pref is irrelevant.
   value: false
 #endif
-  mirror: once
+  mirror: always
 
 # OSVR device
 - name: dom.vr.osvr.enabled
-  type: bool
+  type: RelaxedAtomicBool
   value: false
-  mirror: once
+  mirror: always
 
 # Pose prediction reduces latency effects by returning future predicted HMD
 # poses to callers of the WebVR API.  This currently only has an effect for

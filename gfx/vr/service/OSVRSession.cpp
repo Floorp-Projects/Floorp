@@ -210,8 +210,12 @@ OSVRSession::~OSVRSession() { Shutdown(); }
 
 bool OSVRSession::Initialize(mozilla::gfx::VRSystemState& aSystemState,
                              bool aDetectRuntimesOnly) {
+  if (StaticPrefs::dom_vr_puppet_enabled()) {
+    // Ensure that tests using the VR Puppet do not find real hardware
+    return false;
+  }
   if (!StaticPrefs::dom_vr_enabled() ||
-      !StaticPrefs::dom_vr_osvr_enabled_AtStartup()) {
+      !StaticPrefs::dom_vr_osvr_enabled()) {
     return false;
   }
   if (mOSVRInitialized) {
