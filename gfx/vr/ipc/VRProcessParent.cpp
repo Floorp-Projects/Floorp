@@ -17,7 +17,6 @@
 #include "mozilla/Unused.h"
 #include "ProcessUtils.h"
 #include "VRChild.h"
-#include "VRManager.h"
 #include "VRThread.h"
 
 #include "nsAppRunner.h"  // for IToplevelProtocol
