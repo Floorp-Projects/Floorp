@@ -275,6 +275,7 @@ class ChromeActions {
       firstPageInfo: false,
       streamTypesUsed: {},
       fontTypesUsed: {},
+      fallbackErrorsReported: {},
     };
   }
 
@@ -486,6 +487,14 @@ class ChromeActions {
       case "print":
         PdfJsTelemetry.onPrint();
         break;
+      case "unsupportedFeature":
+        if (!this.telemetryState.fallbackErrorsReported[probeInfo.featureId]) {
+          PdfJsTelemetry.onFallbackError(probeInfo.featureId);
+          this.telemetryState.fallbackErrorsReported[
+            probeInfo.featureId
+          ] = true;
+        }
+        break;
     }
   }
 
@@ -504,7 +513,7 @@ class ChromeActions {
     } else {
       message = getLocalizedString(strings, "unsupported_feature");
     }
-    PdfJsTelemetry.onFallback(featureId);
+    PdfJsTelemetry.onFallbackShown(featureId);
 
     // Request the display of a notification warning in the associated window
     // when the renderer isn't sure a pdf displayed correctly.

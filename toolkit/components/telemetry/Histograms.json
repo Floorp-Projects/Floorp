@@ -9289,6 +9289,17 @@
     "labels": ["unknown", "forms", "javaScript", "smask", "shadingPattern", "font", "errorTilingPattern", "errorExtGState", "errorXObject", "errorFontLoadType3", "errorFontState", "errorFontMissing", "errorFontTranslate", "errorColorSpace", "errorOperatorList", "errorFontToUnicode", "errorFontLoadNative", "errorFontGetPath"],
     "description": "The reason the fallback bar was shown."
   },
+  "PDF_VIEWER_FALLBACK_ERROR": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox"],
+    "expires_in_version": "84",
+    "alert_emails": ["bdahl@mozilla.com"],
+    "releaseChannelCollection": "opt-out",
+    "bug_numbers": [1643402],
+    "kind": "categorical",
+    "labels": ["unknown", "forms", "javaScript", "smask", "shadingPattern", "font", "errorTilingPattern", "errorExtGState", "errorXObject", "errorFontLoadType3", "errorFontState", "errorFontMissing", "errorFontTranslate", "errorColorSpace", "errorOperatorList", "errorFontToUnicode", "errorFontLoadNative", "errorFontGetPath"],
+    "description": "All errors that could trigger the fallback bar, even after the bar is shown."
+  },
   "PLUGINS_NOTIFICATION_SHOWN": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec", "geckoview"],
