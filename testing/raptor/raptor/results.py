@@ -30,6 +30,7 @@ class PerftestResultsHandler(object):
         live_sites=False,
         app=None,
         no_conditioned_profile=False,
+        cold=False,
         **kwargs
     ):
         self.gecko_profile = gecko_profile
@@ -48,6 +49,7 @@ class PerftestResultsHandler(object):
         self.browser_version = None
         self.browser_name = None
         self.no_conditioned_profile = no_conditioned_profile
+        self.cold = cold
 
     @abstractmethod
     def add(self, new_result_json):
@@ -600,6 +602,8 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
                         new_result["extra_options"].append("live")
                     if self.gecko_profile:
                         new_result["extra_options"].append("gecko_profile")
+                    if self.cold:
+                        new_result["extra_options"].append("cold")
 
                     return new_result
 
