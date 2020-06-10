@@ -15,36 +15,44 @@ import re
 import sys
 
 HERE = os.path.abspath(os.path.dirname(__file__))
-lib_path = os.path.join(HERE, '..', '..', '..', 'third_party', 'python')
-sys.path.append(os.path.join(lib_path, 'voluptuous'))
-sys.path.append(os.path.join(lib_path, 'pyyaml', 'lib'))
+lib_path = os.path.join(HERE, "..", "..", "..", "third_party", "python")
+sys.path.append(os.path.join(lib_path, "voluptuous"))
+sys.path.append(os.path.join(lib_path, "pyyaml", "lib"))
 
 import voluptuous
 import yaml
-from voluptuous import (All, FqdnUrl, Length, Match, Msg, Required, Schema,
-                        Unique, )
+from voluptuous import (
+    All,
+    FqdnUrl,
+    Length,
+    Match,
+    Msg,
+    Required,
+    Schema,
+    Unique,
+)
 from yaml.error import MarkedYAMLError
 
 # TODO ensure this matches the approved list of licenses
 VALID_LICENSES = [
     # Standard Licenses (as per https://spdx.org/licenses/)
-    'Apache-2.0',
-    'BSD-2-Clause',
-    'BSD-3-Clause-Clear',
-    'GPL-3.0',
-    'ISC',
-    'ICU',
-    'LGPL-2.1',
-    'LGPL-3.0',
-    'MIT',
-    'MPL-1.1',
-    'MPL-2.0',
+    "Apache-2.0",
+    "BSD-2-Clause",
+    "BSD-3-Clause-Clear",
+    "GPL-3.0",
+    "ISC",
+    "ICU",
+    "LGPL-2.1",
+    "LGPL-3.0",
+    "MIT",
+    "MPL-1.1",
+    "MPL-2.0",
     # Unique Licenses
-    'ACE',  # http://www.cs.wustl.edu/~schmidt/ACE-copying.html
-    'Anti-Grain-Geometry',  # http://www.antigrain.com/license/index.html
-    'JPNIC',  # https://www.nic.ad.jp/ja/idn/idnkit/download/index.html
-    'Khronos',  # https://www.khronos.org/openmaxdl
-    'Unicode',  # http://www.unicode.org/copyright.html
+    "ACE",  # http://www.cs.wustl.edu/~schmidt/ACE-copying.html
+    "Anti-Grain-Geometry",  # http://www.antigrain.com/license/index.html
+    "JPNIC",  # https://www.nic.ad.jp/ja/idn/idnkit/download/index.html
+    "Khronos",  # https://www.khronos.org/openmaxdl
+    "Unicode",  # http://www.unicode.org/copyright.html
 ]
 
 """
@@ -151,8 +159,8 @@ vendoring:
     - another script
 """
 
-RE_SECTION = re.compile(r'^(\S[^:]*):').search
-RE_FIELD = re.compile(r'^\s\s([^:]+):\s+(\S+)$').search
+RE_SECTION = re.compile(r"^(\S[^:]*):").search
+RE_FIELD = re.compile(r"^\s\s([^:]+):\s+(\S+)$").search
 
 
 class VerifyError(Exception):
@@ -161,7 +169,7 @@ class VerifyError(Exception):
         self.error = error
 
     def __str__(self):
-        return '%s: %s' % (self.filename, self.error)
+        return "%s: %s" % (self.filename, self.error)
 
 
 def load_moz_yaml(filename, verify=True, require_license_file=True):
@@ -169,12 +177,11 @@ def load_moz_yaml(filename, verify=True, require_license_file=True):
 
     # Load and parse YAML.
     try:
-        with open(filename, 'r') as f:
+        with open(filename, "r") as f:
             manifest = yaml.safe_load(f)
     except IOError as e:
         if e.errno == errno.ENOENT:
-            raise VerifyError(filename,
-                              'Failed to find manifest: %s' % filename)
+            raise VerifyError(filename, "Failed to find manifest: %s" % filename)
         raise
     except MarkedYAMLError as e:
         raise VerifyError(filename, e)
@@ -183,18 +190,17 @@ def load_moz_yaml(filename, verify=True, require_license_file=True):
         return manifest
 
     # Verify schema.
-    if 'schema' not in manifest:
+    if "schema" not in manifest:
         raise VerifyError(filename, 'Missing manifest "schema"')
-    if manifest['schema'] == 1:
+    if manifest["schema"] == 1:
         schema = _schema_1()
         schema_additional = _schema_1_additional
     else:
-        raise VerifyError(filename, 'Unsupported manifest schema')
+        raise VerifyError(filename, "Unsupported manifest schema")
 
     try:
         schema(manifest)
-        schema_additional(filename, manifest,
-                          require_license_file=require_license_file)
+        schema_additional(filename, manifest, require_license_file=require_license_file)
     except (voluptuous.Error, ValueError) as e:
         raise VerifyError(filename, e)
 
@@ -221,86 +227,92 @@ def update_moz_yaml(filename, release, revision, verify=True, write=True):
                 m = RE_FIELD(line)
                 if m:
                     (name, value) = m.groups()
-                    if section == 'origin' and name == 'release':
-                        line = '  release: %s\n' % release
+                    if section == "origin" and name == "release":
+                        line = "  release: %s\n" % release
                         found_release = True
-                    elif section == 'vendoring' and name == 'revision':
-                        line = '  revision: %s\n' % revision
+                    elif section == "vendoring" and name == "revision":
+                        line = "  revision: %s\n" % revision
                         found_revision = True
             lines.append(line)
 
         if not found_release and found_revision:
-            raise ValueError('Failed to find origin:release and '
-                             'vendoring:revision')
+            raise ValueError("Failed to find origin:release and " "vendoring:revision")
 
     if write:
-        with open(filename, 'w') as f:
+        with open(filename, "w") as f:
             f.writelines(lines)
 
 
 def _schema_1():
     """Returns Voluptuous Schema object."""
-    return Schema({
-        Required('schema'): 1,
-        Required('bugzilla'): {
-            Required('product'): All(str, Length(min=1)),
-            Required('component'): All(str, Length(min=1)),
-        },
-        'origin': {
-            Required('name'): All(str, Length(min=1)),
-            Required('description'): All(str, Length(min=1)),
-            Required('url'): FqdnUrl(),
-            Required('license'): Msg(License(), msg='Unsupported License'),
-            Required('release'): All(str, Length(min=1)),
-        },
-        'vendoring': {
-            Required('url'): FqdnUrl(),
-            Required('revision'): Match(r'^[a-fA-F0-9]{12,40}$'),
-            'patches': Unique([str]),
-            'keep': Unique([str]),
-            'exclude': Unique([str]),
-            'include': Unique([str]),
-            'run_after': Unique([str]),
-        },
-    })
+    return Schema(
+        {
+            Required("schema"): 1,
+            Required("bugzilla"): {
+                Required("product"): All(str, Length(min=1)),
+                Required("component"): All(str, Length(min=1)),
+            },
+            "origin": {
+                Required("name"): All(str, Length(min=1)),
+                Required("description"): All(str, Length(min=1)),
+                Required("url"): FqdnUrl(),
+                Required("license"): Msg(License(), msg="Unsupported License"),
+                Required("release"): All(str, Length(min=1)),
+            },
+            "vendoring": {
+                Required("url"): FqdnUrl(),
+                Required("revision"): Match(r"^[a-fA-F0-9]{12,40}$"),
+                "patches": Unique([str]),
+                "keep": Unique([str]),
+                "exclude": Unique([str]),
+                "include": Unique([str]),
+                "run_after": Unique([str]),
+            },
+        }
+    )
 
 
 def _schema_1_additional(filename, manifest, require_license_file=True):
     """Additional schema/validity checks"""
 
     # LICENSE file must exist.
-    if require_license_file and 'origin' in manifest:
-        files = [f.lower() for f in os.listdir(os.path.dirname(filename))
-                 if f.lower().startswith('license')]
-        if not ('license' in files
-                or 'license.txt' in files
-                or 'license.rst' in files
-                or 'license.html' in files
-                or 'license.md' in files):
-            license = manifest['origin']['license']
+    if require_license_file and "origin" in manifest:
+        files = [
+            f.lower()
+            for f in os.listdir(os.path.dirname(filename))
+            if f.lower().startswith("license")
+        ]
+        if not (
+            "license" in files
+            or "license.txt" in files
+            or "license.rst" in files
+            or "license.html" in files
+            or "license.md" in files
+        ):
+            license = manifest["origin"]["license"]
             if isinstance(license, list):
-                license = '/'.join(license)
-            raise ValueError('Failed to find %s LICENSE file' % license)
+                license = "/".join(license)
+            raise ValueError("Failed to find %s LICENSE file" % license)
 
     # Cannot vendor without an origin.
-    if 'vendoring' in manifest and 'origin' not in manifest:
+    if "vendoring" in manifest and "origin" not in manifest:
         raise ValueError('"vendoring" requires an "origin"')
 
     # Check for a simple YAML file
-    with open(filename, 'r') as f:
+    with open(filename, "r") as f:
         has_schema = False
         for line in f.readlines():
             m = RE_SECTION(line)
             if m:
-                if m.group(1) == 'schema':
+                if m.group(1) == "schema":
                     has_schema = True
                     break
         if not has_schema:
-            raise ValueError('Not simple YAML')
+            raise ValueError("Not simple YAML")
 
     # Verify YAML can be updated.
-    if 'vendor' in manifest:
-        update_moz_yaml(filename, '', '', verify=False, write=True)
+    if "vendor" in manifest:
+        update_moz_yaml(filename, "", "", verify=False, write=True)
 
 
 class License(object):
@@ -311,11 +323,11 @@ class License(object):
         if isinstance(values, str):
             values = [values]
         elif not isinstance(values, list):
-            raise ValueError('Must be string or list')
+            raise ValueError("Must be string or list")
         for v in values:
             if v not in VALID_LICENSES:
-                raise ValueError('Bad License')
+                raise ValueError("Bad License")
         return values
 
     def __repr__(self):
-        return 'License'
+        return "License"
