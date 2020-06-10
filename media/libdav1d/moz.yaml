@@ -38,3 +38,17 @@ vendoring:
   url: https://code.videolan.org/videolan/dav1d.git
   source-hosting: gitlab
   vendor-directory: third_party/dav1d
+
+  exclude:
+    - build/.gitattributes
+    - build/.gitignore
+
+  file-updates:
+    - action: replace-in-file
+      pattern: '@VCS_TAG@'
+      with: '{revision}'
+      file: include/vcs_version.h.in
+    - action: replace-in-file
+      pattern: '@VCS_TAG@'
+      with: '{revision}'
+      file: '{yaml_dir}/vcs_version.h'

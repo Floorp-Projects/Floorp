@@ -161,6 +161,28 @@ vendoring:
   run_after:
     - script
     - another script
+
+  # Strings to replace in various files after vendoring.
+  # All subfields are required
+  #   Action must be 'replace-in-file'
+  #   Pattern is what in the file to search for. It is an exact strng match
+  #   With is the string to replace it with. Accepts the special keyword
+  #     '{revision}' for the commit we are updating to.
+  #   File is the file to replace it in. It is relative to the vendor-directory.
+  #     If the vendor-directory is different from the directory of the yaml file,
+  #     the keyword '{yaml_dir}' may be used to make the path relative to that
+  #     directory
+  # optional
+  file-updates:
+    - action: replace-in-file
+      pattern: '@VCS_TAG@'
+      with: '{revision}'
+      file: include/vcs_version.h.in
+
+    - action: replace-in-file
+      pattern: '@VCS_TAG@'
+      with: '{revision}'
+      file: '{yaml_dir}/vcs_version.h'
 """
 
 RE_SECTION = re.compile(r"^(\S[^:]*):").search
@@ -278,6 +300,19 @@ def _schema_1():
                 "exclude": Unique([str]),
                 "include": Unique([str]),
                 "run_after": Unique([str]),
+                "file-updates": [
+                    {
+                        Required("action"): All(
+                            In(
+                                ["replace-in-file"],
+                                msg="Invalid action specified in file-updates",
+                            )
+                        ),
+                        Required("pattern"): All(str, Length(min=1)),
+                        Required("with"): All(str, Length(min=1)),
+                        Required("file"): All(str, Length(min=1)),
+                    }
+                ],
             },
         }
     )
