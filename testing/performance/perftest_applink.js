@@ -5,8 +5,6 @@
 "use strict";
 
 async function test(context, commands) {
-  // This violates all sorts of abstraction boundaries, but I don't see supported APIs for "just
-  // waiting" nor for allowing navigation scripts to produce measurements.
   await commands.measure.start();
   await commands.measure.browser.wait(commands.measure.pageCompleteCheck);
   await commands.measure.stop();
