@@ -7,7 +7,7 @@ source $(dirname $0)/sm-tooltool-config.sh
 mkdir -p $UPLOAD_DIR
 
 # Package up the sources into the release tarball.
-AUTOMATION=1 DIST=$UPLOAD_DIR $SRCDIR/js/src/make-source-package.sh
+AUTOMATION=1 DIST=$UPLOAD_DIR $GECKO_PATH/js/src/make-source-package.sh
 
 # Extract the tarball into a new directory in the workspace.
 
