@@ -102,7 +102,9 @@ function resolveDateTimeFormatInternals(lazyDateTimeFormatData) {
         pattern = intl_patternForStyle(dataLocale,
                                        lazyDateTimeFormatData.dateStyle,
                                        lazyDateTimeFormatData.timeStyle,
-                                       lazyDateTimeFormatData.timeZone);
+                                       lazyDateTimeFormatData.timeZone,
+                                       formatOpt.hour12,
+                                       formatOpt.hourCycle);
 
         internalProps.dateStyle = lazyDateTimeFormatData.dateStyle;
         internalProps.timeStyle = lazyDateTimeFormatData.timeStyle;
@@ -110,57 +112,12 @@ function resolveDateTimeFormatInternals(lazyDateTimeFormatData) {
         pattern = toBestICUPattern(dataLocale, formatOpt);
     }
 
-    // If the hourCycle option was set, adjust the resolved pattern to use the
-    // requested hour cycle representation.
-    if (formatOpt.hourCycle !== undefined)
-        pattern = replaceHourRepresentation(pattern, formatOpt.hourCycle);
-
     // Step 31.
     internalProps.pattern = pattern;
 
     // The caller is responsible for associating |internalProps| with the right
     // object using |setInternalProperties|.
     return internalProps;
-}
-
-/**
- * Replaces all hour pattern characters in |pattern| to use the matching hour
- * representation for |hourCycle|.
- */
-function replaceHourRepresentation(pattern, hourCycle) {
-    var hour;
-    switch (hourCycle) {
-      case "h11":
-        hour = "K";
-        break;
-      case "h12":
-        hour = "h";
-        break;
-      case "h23":
-        hour = "H";
-        break;
-      case "h24":
-        hour = "k";
-        break;
-    }
-    assert(hour !== undefined, "Unexpected hourCycle requested: " + hourCycle);
-
-    // Parse the pattern according to the format specified in
-    // https://unicode.org/reports/tr35/tr35-dates.html#Date_Format_Patterns
-    // and replace all hour symbols with |hour|.
-    var resultPattern = "";
-    var inQuote = false;
-    for (var i = 0; i < pattern.length; i++) {
-        var ch = pattern[i];
-        if (ch === "'") {
-            inQuote = !inQuote;
-        } else if (!inQuote && (ch === "h" || ch === "H" || ch === "k" || ch === "K")) {
-            ch = hour;
-        }
-        resultPattern += ch;
-    }
-
-    return resultPattern;
 }
 
 /**
@@ -718,7 +675,7 @@ function toBestICUPattern(locale, options) {
     }
 
     // Let ICU convert the ICU skeleton to an ICU pattern for the given locale.
-    return intl_patternForSkeleton(locale, skeleton);
+    return intl_patternForSkeleton(locale, skeleton, options.hourCycle);
 }
 /* eslint-enable complexity */
 
