@@ -9,7 +9,7 @@
 #include "mozilla/Tokenizer.h"
 
 const char kDelimiters[] = ", ";
-const char kAdditionalWordChars[] = "_-.";
+const char kAdditionalWordChars[] = "_-.*";
 
 namespace mozilla {
 
