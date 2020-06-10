@@ -3829,14 +3829,13 @@ nsCSSBorderImageRenderer::nsCSSBorderImageRenderer(
 
   // Compute the used values of 'border-image-slice' and 'border-image-width';
   // we do them together because the latter can depend on the former.
-  nsMargin slice;
-  nsMargin border;
+  nscoord oneDevPixel = aForFrame->PresContext()->DevPixelsToAppUnits(1);
   for (const auto s : mozilla::AllPhysicalSides()) {
     const auto& slice = aStyleBorder.mBorderImageSlice.offsets.Get(s);
     int32_t imgDimension =
         SideIsVertical(s) ? mImageSize.width : mImageSize.height;
     nscoord borderDimension = SideIsVertical(s) ? mArea.width : mArea.height;
-    double value;
+    nscoord value;
     if (slice.IsNumber()) {
       value = nsPresContext::CSSPixelsToAppUnits(NS_lround(slice.AsNumber()));
     } else {
@@ -3857,22 +3856,23 @@ nsCSSBorderImageRenderer::nsCSSBorderImageRenderer(
         value =
             std::max(0, width.AsLengthPercentage().Resolve(borderDimension));
         break;
-      case StyleBorderImageSideWidth::Tag::Number:
-        value = width.AsNumber() * borderWidths.Side(s);
+      case StyleBorderImageSideWidth::Tag::Number: {
+        nscoord snappedWidth = borderWidths.Side(s) / oneDevPixel * oneDevPixel;
+        // NSToCoordRoundWithClamp rounds towards infinity, but that's OK
+        // because we expect value to be non-negative.
+        value = NSToCoordRoundWithClamp(width.AsNumber() * snappedWidth);
         break;
+      }
       case StyleBorderImageSideWidth::Tag::Auto:
-        value = mSlice.Side(s);
+        // Re-use `value` from the slice.
         break;
       default:
         MOZ_ASSERT_UNREACHABLE("unexpected CSS unit for border image area");
         value = 0;
         break;
     }
-    // NSToCoordRoundWithClamp rounds towards infinity, but that's OK
-    // because we expect value to be non-negative.
     MOZ_ASSERT(value >= 0);
-    mWidths.Side(s) = NSToCoordRoundWithClamp(value);
-    MOZ_ASSERT(mWidths.Side(s) >= 0);
+    mWidths.Side(s) = value;
   }
 
   // "If two opposite border-image-width offsets are large enough that they

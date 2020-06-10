@@ -34,18 +34,14 @@ pub fn convert_nscolor_to_rgba(color: u32) -> RGBA {
     )
 }
 
-/// Round `width` down to the nearest device pixel, but any non-zero value that
-/// would round down to zero is clamped to 1 device pixel.  Used for storing
-/// computed values of border-*-width and outline-width.
+/// Ensures that `width`, if non-zero, is at least one device pixel. These
+/// widths get floored to device pixels anyhow at rendering time.
 #[inline]
-pub fn round_border_to_device_pixels(width: Au, au_per_device_px: Au) -> Au {
+pub fn round_border_width(width: Au, au_per_device_px: Au) -> Au {
     if width == Au(0) {
         Au(0)
     } else {
-        max(
-            au_per_device_px,
-            Au(width.0 / au_per_device_px.0 * au_per_device_px.0),
-        )
+        max(au_per_device_px, width)
     }
 }
 
