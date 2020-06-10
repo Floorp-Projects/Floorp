@@ -60,7 +60,8 @@ function run(opts, loads) {
 
   const loadMgr = new AllocationLoadManager(tests);
   const perf = new FrameHistory(gNumSamples);
-  const sequencer = new LoadCycle(sequence, opts.duration);
+  const mutators = sequence.map(name => new SingleMutatorSequencer(loadMgr._loads.get(name), opts.duration));
+  let sequencer = new ChainSequencer(mutators);
 
   const schedulerCtors = {
     keepup: OptimizeForFrameRate,

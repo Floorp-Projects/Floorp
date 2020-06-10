@@ -21,6 +21,10 @@ var Sequencer = class {
   // Called by user to handle advancing time. Subclasses will normally
   // override do_tick() instead. Returns whether the mutator load changed.
   tick(now = gHost.now()) {
+    if (this.done()) {
+      throw new Error("tick() called on completed sequencer");
+    }
+
     const advanced = this.do_tick(now);
     if (advanced) {
       this.started = now;
@@ -45,23 +49,31 @@ var Sequencer = class {
   }
 };
 
-// Simple sequencer that takes a list of mutators to run and a duration for how
-// long to run each one.
-var LoadCycle = class extends Sequencer {
-  constructor(tests_to_run, duration_sec) {
+var SingleMutatorSequencer = class extends Sequencer {
+  constructor(mutator, duration_sec) {
     super();
-    this.queue = Array.from(tests_to_run);
+    this.mutator = mutator;
+    if (!(duration_sec > 0)) {
+      throw new Error(`invalid duration '${duration_sec}'`);
+    }
     this.duration = duration_sec * 1000;
-    this.idx = -1;
+    this.state = 'init'; // init -> running -> done
   }
 
   get current() {
-    return this.queue[this.idx];
+    return this.state === 'done' ? undefined : this.mutator.name;
+  }
+
+  reset() {
+    this.state = 'init';
   }
 
   start(now = gHost.now()) {
+    if (this.state !== 'init') {
+      throw new Error("cannot restart a single-mutator sequencer");
+    }
     super.start(now);
-    this.idx = 0;
+    this.state = 'running';
   }
 
   do_tick(now) {
@@ -69,15 +81,62 @@ var LoadCycle = class extends Sequencer {
       return false;
     }
 
+    this.state = 'done';
+    return true;
+  }
+
+  done() {
+    return this.state === 'done';
+  }
+};
+
+var ChainSequencer = class extends Sequencer {
+  constructor(sequencers) {
+    super();
+    this.sequencers = sequencers;
+    this.idx = -1;
+    this.state = sequencers.length ? 'init' : 'done'; // init -> running -> done
+  }
+
+  get current() {
+    return this.idx >= 0 ? this.sequencers[this.idx].current : undefined;
+  }
+
+  reset() {
+    this.state = 'init';
+    this.idx = -1;
+  }
+
+  start(now = gHost.now()) {
+    super.start(now);
+    if (this.sequencers.length === 0) {
+      this.state = 'done';
+      return;
+    }
+
+    this.idx = 0;
+    this.sequencers[0].start(now);
+    this.state = 'running';
+  }
+
+  do_tick(now) {
+    const sequencer = this.sequencers[this.idx];
+    if (!sequencer.do_tick(now)) {
+      return false;
+    }
+
     this.idx++;
-    if (this.idx >= this.queue.length) {
+    if (this.idx < this.sequencers.length) {
+      this.sequencers[this.idx].start();
+    } else {
       this.idx = -1;
+      this.state = 'done';
     }
 
     return true;
   }
 
   done() {
-    return this.idx == -1;
+    return this.state === 'done';
   }
 };
