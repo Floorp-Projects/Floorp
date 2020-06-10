@@ -313,16 +313,7 @@ class CommandAction(argparse.Action):
                 group = extra_groups[group_name]
             group.add_argument(*arg[0], **arg[1])
 
-    def _handle_command_help(self, parser, command, args):
-        handler = self._mach_registrar.command_handlers.get(command)
-
-        if not handler:
-            raise UnknownCommandError(command, 'query')
-
-        if handler.subcommand_handlers:
-            self._handle_subcommand_help(parser, handler, args)
-            return
-
+    def _get_command_arguments_help(self, handler):
         # This code is worth explaining. Because we are doing funky things with
         # argument registration to allow the same option in both global and
         # command arguments, we can't simply put all arguments on the same
@@ -362,6 +353,20 @@ class CommandAction(argparse.Action):
 
         self._populate_command_group(c_parser, handler, group)
 
+        return c_parser
+
+    def _handle_command_help(self, parser, command, args):
+        handler = self._mach_registrar.command_handlers.get(command)
+
+        if not handler:
+            raise UnknownCommandError(command, 'query')
+
+        if handler.subcommand_handlers:
+            self._handle_subcommand_help(parser, handler, args)
+            return
+
+        c_parser = self._get_command_arguments_help(handler)
+
         # Set the long help of the command to the docstring (if present) or
         # the command decorator description argument (if present).
         if handler.docstring:
@@ -398,9 +403,13 @@ class CommandAction(argparse.Action):
         if handler.docstring:
             parser.description = format_docstring(handler.docstring)
 
+        c_parser = self._get_command_arguments_help(handler)
+
         parser.formatter_class = argparse.RawDescriptionHelpFormatter
 
         parser.print_help()
+        print('')
+        c_parser.print_help()
 
     def _handle_subcommand_help(self, parser, handler, args):
         subcommand = set(args).intersection(list(handler.subcommand_handlers.keys()))
