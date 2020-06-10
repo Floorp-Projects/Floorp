@@ -13,6 +13,9 @@ class FakeDevice:
     def __init__(self, **args):
         self.apps = []
 
+    def uninstall_app(self, apk_name):
+        return True
+
     def install_app(self, apk, replace=True):
         if apk not in self.apps:
             self.apps.append(apk)
@@ -62,7 +65,7 @@ def test_android_apk_alias(device):
         "flavor": "mobile-browser",
         "android-install-apk": ["fenix_fennec_nightly_armeabi_v7a"],
         "android": True,
-        "android-app-name": "org.mozilla.fenned_aurora",
+        "android-app-name": "org.mozilla.fennec_aurora",
         "android-capture-adb": "stdout",
     }
 
@@ -71,7 +74,8 @@ def test_android_apk_alias(device):
     with system as android, silence(system):
         android(metadata)
     # XXX really ?
-    assert device.mock_calls[1][1][0].endswith("target.apk")
+    assert device.mock_calls[1][1][0] == "org.mozilla.fennec_aurora"
+    assert device.mock_calls[2][1][0].endswith("target.apk")
 
 
 @mock.patch("mozperftest.utils.requests.get", new=requests_content())
