@@ -12,6 +12,7 @@ from mach.decorators import (
     CommandProvider,
     Command,
 )
+from mozboot.bootstrap import APPLICATIONS
 
 
 @CommandProvider
@@ -23,9 +24,10 @@ class Bootstrap(object):
     @Command('bootstrap', category='devenv',
              description='Install required system packages for building.')
     @CommandArgument('--application-choice',
+                     choices=list(APPLICATIONS.keys()) + list(APPLICATIONS.values()),
                      default=None,
-                     help='Pass in an application choice (see mozboot.bootstrap.APPLICATIONS) '
-                     'instead of using the default interactive prompt.')
+                     help='Pass in an application choice instead of using the default '
+                     'interactive prompt.')
     @CommandArgument('--no-interactive', dest='no_interactive', action='store_true',
                      help='Answer yes to any (Y/n) interactive prompts.')
     @CommandArgument('--no-system-changes', dest='no_system_changes',
