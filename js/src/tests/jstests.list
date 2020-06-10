@@ -726,12 +726,6 @@ skip script test262/intl402/NumberFormat/prototype/toStringTag/prop-desc.js
 skip script test262/intl402/DateTimeFormat/instance-class.js
 skip script test262/intl402/DateTimeFormat/prototype/builtin.js
 
-# Expected property accesses longer match current proposal text.
-skip script test262/intl402/DateTimeFormat/constructor-options-order-timedate-style.js
-
-# Not yet updated to match <https://github.com/tc39/proposal-intl-datetime-style/pull/43>.
-skip script test262/intl402/DateTimeFormat/prototype/resolvedOptions/order-style.js
-
 
 ##############################################
 # Enable Iterator Helpers tests in the shell #
