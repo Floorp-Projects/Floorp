@@ -40,6 +40,12 @@ pub enum Punt {
     /// Fetches all pending Sync change notifications to pass to
     /// `storage.onChanged` listeners.
     FetchPendingSyncChanges,
+    /// Fetch-and-delete (e.g. `take`) information about the migration from the
+    /// kinto-based extension-storage to the rust-based storage.
+    ///
+    /// This data is stored in the database instead of just being returned by
+    /// the call to `migrate`, as we may migrate prior to telemetry being ready.
+    TakeMigrationInfo,
 }
 
 impl Punt {
@@ -53,6 +59,7 @@ impl Punt {
             Punt::Clear { .. } => "webext_storage::clear",
             Punt::GetBytesInUse { .. } => "webext_storage::get_bytes_in_use",
             Punt::FetchPendingSyncChanges => "webext_storage::fetch_pending_sync_changes",
+            Punt::TakeMigrationInfo => "webext_storage::take_migration_info",
         }
     }
 }
@@ -184,6 +191,9 @@ impl PuntTask {
                     })
                     .collect(),
             ),
+            Punt::TakeMigrationInfo => {
+                PuntResult::with_value(self.store()?.get()?.take_migration_info()?)?
+            }
         })
     }
 }
