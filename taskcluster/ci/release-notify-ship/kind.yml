@@ -13,6 +13,7 @@ kind-dependencies:
     - push-apk
     - release-balrog-scheduling
     - release-bouncer-aliases
+    - release-bouncer-aliases-nazgul
     - release-version-bump
     - release-mark-as-shipped
 
