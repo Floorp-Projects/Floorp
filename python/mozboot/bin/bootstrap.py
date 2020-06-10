@@ -159,8 +159,9 @@ def main(args):
                       'content. Like --repo, you should not need to set this.')
 
     parser.add_option('--application-choice', dest='application_choice',
-                      help='Pass in an application choice (see mozboot.bootstrap.APPLICATIONS) '
-                      'instead of using the default interactive prompt.')
+                      help='Pass in an application choice (see "APPLICATIONS" in '
+                      'python/mozboot/mozboot/bootstrap.py) instead of using the '
+                      'default interactive prompt.')
     parser.add_option('--vcs', dest='vcs', default=None,
                       help='VCS (hg or git) to use for downloading the source code, '
                       'instead of using the default interactive prompt.')
