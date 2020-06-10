@@ -1839,6 +1839,16 @@ SearchEngine.prototype = {
    *   An object suitable for serialization as JSON.
    */
   toJSON() {
+    // For built-in engines we don't want to store all their data in the cache
+    // so just store the relevant metadata.
+    if (gModernConfig && this._isBuiltin) {
+      return {
+        _name: this.name,
+        _isBuiltin: true,
+        _metaData: this._metaData,
+      };
+    }
+
     var json = {
       _name: this._name,
       _shortName: this._shortName,
