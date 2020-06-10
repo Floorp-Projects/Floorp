@@ -2182,7 +2182,8 @@ static bool PrepareAndExecuteRegExp(JSContext* cx, MacroAssembler& masm,
   // execution finished successfully.
 
   // Initialize MatchPairs::pairCount to 1. The correct value can only
-  // be determined after loading the RegExpShared.
+  // be determined after loading the RegExpShared. If the RegExpShared
+  // has Kind::Atom, this is the correct pairCount.
   masm.store32(Imm32(1), pairCountAddress);
 
   // Initialize MatchPairs::pairs pointer
@@ -2201,6 +2202,33 @@ static bool PrepareAndExecuteRegExp(JSContext* cx, MacroAssembler& masm,
                                    RegExpObject::PRIVATE_SLOT)),
                regexpReg);
   masm.branchPtr(Assembler::Equal, regexpReg, ImmWord(0), failure);
+
+  // Handle Atom matches
+  Label notAtom, checkSuccess;
+  masm.branchPtr(Assembler::Equal,
+                 Address(regexpReg, RegExpShared::offsetOfPatternAtom()),
+                 ImmWord(0), &notAtom);
+  {
+    LiveGeneralRegisterSet regsToSave(GeneralRegisterSet::Volatile());
+    regsToSave.takeUnchecked(temp1);
+    regsToSave.takeUnchecked(temp2);
+    regsToSave.takeUnchecked(temp3);
+
+    masm.computeEffectiveAddress(matchPairsAddress, temp3);
+
+    masm.PushRegsInMask(regsToSave);
+    masm.setupUnalignedABICall(temp2);
+    masm.passABIArg(regexpReg);
+    masm.passABIArg(input);
+    masm.passABIArg(lastIndex);
+    masm.passABIArg(temp3);
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, ExecuteRegExpAtomRaw));
+    masm.storeCallInt32Result(temp1);
+    masm.PopRegsInMask(regsToSave);
+
+    masm.jump(&checkSuccess);
+  }
+  masm.bind(&notAtom);
 
   // Don't handle regexps with too many capture pairs.
   masm.load32(Address(regexpReg, RegExpShared::offsetOfPairCount()), temp2);
@@ -2296,6 +2324,7 @@ static bool PrepareAndExecuteRegExp(JSContext* cx, MacroAssembler& masm,
 #endif
 
   Label success;
+  masm.bind(&checkSuccess);
   masm.branch32(Assembler::Equal, temp1,
                 Imm32(RegExpRunStatus_Success_NotFound), notFound);
   masm.branch32(Assembler::Equal, temp1, Imm32(RegExpRunStatus_Error), failure);
