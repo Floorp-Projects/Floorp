@@ -1316,7 +1316,6 @@ class MOZ_STACK_CLASS JS_HAZ_ROOTED ModuleValidatorShared {
   PropertyName* importArgumentName_ = nullptr;
   PropertyName* bufferArgumentName_ = nullptr;
   MathNameMap standardLibraryMathNames_;
-  RootedFunction dummyFunction_;
 
   // Validation-internal state:
   LifoAlloc validationLifo_;
@@ -1343,7 +1342,6 @@ class MOZ_STACK_CLASS JS_HAZ_ROOTED ModuleValidatorShared {
         moduleFunctionNode_(moduleFunctionNode),
         moduleFunctionName_(FunctionName(moduleFunctionNode)),
         standardLibraryMathNames_(cx),
-        dummyFunction_(cx),
         validationLifo_(VALIDATION_LIFO_DEFAULT_CHUNK_SIZE),
         funcDefs_(cx),
         tables_(cx),
@@ -1428,18 +1426,6 @@ class MOZ_STACK_CLASS JS_HAZ_ROOTED ModuleValidatorShared {
     return true;
   }
 
-  MOZ_MUST_USE bool initDummyFunction() {
-    // This flows into FunctionBox, so must be tenured.
-    dummyFunction_ = NewScriptedFunction(
-        cx_, 0, FunctionFlags::BASESCRIPT, nullptr,
-        /* proto = */ nullptr, gc::AllocKind::FUNCTION, TenuredObject);
-    if (!dummyFunction_) {
-      return false;
-    }
-
-    return true;
-  }
-
  public:
   JSContext* cx() const { return cx_; }
   PropertyName* moduleFunctionName() const { return moduleFunctionName_; }
@@ -1448,7 +1434,6 @@ class MOZ_STACK_CLASS JS_HAZ_ROOTED ModuleValidatorShared {
   PropertyName* bufferArgumentName() const { return bufferArgumentName_; }
   const ModuleEnvironment& env() { return env_; }
 
-  RootedFunction& dummyFunction() { return dummyFunction_; }
   uint32_t minMemoryLength() const { return env_.minMemoryLength; }
 
   void initModuleFunctionName(PropertyName* name) {
@@ -1950,10 +1935,6 @@ class MOZ_STACK_CLASS JS_HAZ_ROOTED ModuleValidator
     asmJSMetadata_->scriptSource.reset(parser_.ss);
 
     if (!addStandardLibraryMathInfo()) {
-      return false;
-    }
-
-    if (!initDummyFunction()) {
       return false;
     }
 
@@ -6022,19 +6003,16 @@ static bool ParseFunction(ModuleValidator<Unit>& m, FunctionNode** funNodeOut,
     return false;
   }
 
-  RootedFunction& fun = m.dummyFunction();
-  fun->setAtom(name);
-  fun->setArgCount(0);
-
   ParseContext* outerpc = m.parser().pc_;
   Directives directives(outerpc);
+  FunctionFlags flags(FunctionFlags::INTERPRETED_NORMAL);
   FunctionBox* funbox = m.parser().newFunctionBox(
-      funNode, fun, toStringStart, directives, GeneratorKind::NotGenerator,
-      FunctionAsyncKind::SyncFunction);
+      funNode, name, flags, toStringStart, directives,
+      GeneratorKind::NotGenerator, FunctionAsyncKind::SyncFunction);
   if (!funbox) {
     return false;
   }
-  funbox->initWithEnclosingParseContext(outerpc, fun->flags(),
+  funbox->initWithEnclosingParseContext(outerpc, flags,
                                         FunctionSyntaxKind::Statement);
 
   Directives newDirectives = directives;
