@@ -26,8 +26,7 @@ already_AddRefed<gfx::SourceSurface> GLImage::GetAsSourceSurface() {
 
   if (!sSnapshotContext) {
     nsCString discardFailureId;
-    sSnapshotContext = GLContextProvider::CreateHeadless(
-        CreateContextFlags::NONE, &discardFailureId);
+    sSnapshotContext = GLContextProvider::CreateHeadless({}, &discardFailureId);
     if (!sSnapshotContext) {
       NS_WARNING("Failed to create snapshot GLContext");
       return nullptr;
