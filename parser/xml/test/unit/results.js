@@ -49,7 +49,7 @@ var vectors = [
   {
     data: "<video poster=javascript:alert(1)//></video>",
     sanitized:
-      '<html><head></head><body><video poster="javascript:alert(1)//" controls="controls"></video></body></html>',
+      '<html><head></head><body><video controls="controls"></video></body></html>',
   },
   {
     data:
