@@ -160,15 +160,23 @@ var AllocationLoadManager = class {
     this.LOAD_STARTED = 8;
   }
 
+  getByName(name) {
+    const mutator = this._loads.get(name);
+    if (!mutator) {
+      throw new Error(`invalid mutator '${name}'`);
+    }
+    return mutator;
+  }
+
   activeLoad() {
     return this._active;
   }
 
-  setActiveLoadByName(name) {
+  setActiveLoad(mutator) {
     if (this._active) {
       this._active.stop();
     }
-    this._active = this._loads.get(name);
+    this._active = mutator;
     this._active.start();
   }
 
@@ -209,7 +217,7 @@ var AllocationLoadManager = class {
     if (this.sequencer) {
       if (this.sequencer.tick(now)) {
         if (this.sequencer.current) {
-          this.setActiveLoadByName(this.sequencer.current);
+          this.setActiveLoad(this.sequencer.current);
         } else {
           this.deactivateLoad();
         }
@@ -233,8 +241,8 @@ var AllocationLoadManager = class {
   startSequencer(sequencer, now = gHost.now()) {
     this.sequencer = sequencer;
     this.sequencer.start(now);
-    this.setActiveLoadByName(this.sequencer.current);
     this._eventsSinceLastTick = this.CYCLE_STARTED | this.LOAD_STARTED;
+    this.setActiveLoad(this.sequencer.current);
   }
 
   stopped() {
