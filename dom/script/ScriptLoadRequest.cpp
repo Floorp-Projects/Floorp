@@ -59,10 +59,12 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(ScriptLoadRequest)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mFetchOptions, mCacheInfo)
   tmp->mScript = nullptr;
   tmp->DropBytecodeCacheReferences();
+  tmp->MaybeUnblockOnload();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(ScriptLoadRequest)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFetchOptions, mCacheInfo)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFetchOptions, mCacheInfo,
+                                    mLoadBlockedDocument)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(ScriptLoadRequest)
@@ -101,17 +103,21 @@ ScriptLoadRequest::ScriptLoadRequest(ScriptKind aKind, nsIURI* aURI,
 }
 
 ScriptLoadRequest::~ScriptLoadRequest() {
-  // We should always clean up any off-thread script parsing resources.
-  MOZ_ASSERT(!mOffThreadToken);
+  // When speculative parsing is enabled, it is possible to off-main-thread
+  // compile scripts that are never executed.  These should be cleaned up here
+  // if they exist.
+  MOZ_ASSERT_IF(
+      !StaticPrefs::
+          dom_script_loader_external_scripts_speculative_omt_parse_enabled(),
+      !mOffThreadToken);
 
-  // But play it safe in release builds and try to clean them up here
-  // as a fail safe.
   MaybeCancelOffThreadScript();
 
   if (mScript) {
     DropBytecodeCacheReferences();
   }
 
+  MaybeUnblockOnload();
   DropJSObjects(this);
 }
 
