@@ -7,6 +7,7 @@ from pathlib import Path
 
 from mozperftest.metadata import Metadata
 from mozperftest.environment import MachEnvironment
+from mozperftest.hooks import Hooks
 
 
 HERE = Path(__file__).parent
@@ -57,7 +58,8 @@ def get_running_env(**kwargs):
         "browsertime-install-url": None,
     }
     mach_args.update(kwargs)
-    env = MachEnvironment(mach_cmd, **mach_args)
+    hooks = Hooks(mach_cmd, mach_args.pop("hooks", None))
+    env = MachEnvironment(mach_cmd, hooks=hooks, **mach_args)
     metadata = Metadata(mach_cmd, env, "desktop-browser")
     return mach_cmd, metadata, env
 
