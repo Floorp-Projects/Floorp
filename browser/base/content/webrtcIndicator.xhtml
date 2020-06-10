@@ -1,8 +1,7 @@
 <?xml version="1.0"?>
-
-# This Source Code Form is subject to the terms of the Mozilla Public
-# License, v. 2.0. If a copy of the MPL was not distributed with this
-# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/webRTC-indicator.css" type="text/css"?>
@@ -13,17 +12,12 @@
       xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       id="webrtcIndicator"
       windowtype="Browser:WebRTCGlobalIndicator"
-#ifdef XP_MACOSX
-      inwindowmenu="false"
-#endif
       chromemargin="0,0,0,0">
 
   <head>
     <link rel="localization" href="branding/brand.ftl"/>
     <link rel="localization" href="browser/webrtcIndicator.ftl"/>
-#ifndef XP_MACOSX
     <title data-l10n-id="webrtc-indicator-title"></title>
-#endif
     <script src="chrome://browser/content/webrtcIndicator.js"></script>
   </head>
 

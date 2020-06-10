@@ -110,7 +110,7 @@ browser.jar:
 *       content/browser/webrtcLegacyIndicator.xhtml   (content/webrtcLegacyIndicator.xhtml)
         content/browser/webrtcLegacyIndicator.js      (content/webrtcLegacyIndicator.js)
 #endif
-*       content/browser/webrtcIndicator.xhtml         (content/webrtcIndicator.xhtml)
+        content/browser/webrtcIndicator.xhtml         (content/webrtcIndicator.xhtml)
         content/browser/webrtcIndicator.js            (content/webrtcIndicator.js)
 # the following files are browser-specific overrides
 *       content/browser/license.html                  (/toolkit/content/license.html)
