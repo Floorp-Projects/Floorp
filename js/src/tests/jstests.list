@@ -746,7 +746,6 @@ shell-option(--enable-iterator-helpers) script non262/Iterator/constructor.js
 shell-option(--enable-iterator-helpers) script non262/Iterator/constructor-subclassable.js
 shell-option(--enable-iterator-helpers) script non262/Iterator/constructor-throw-when-called-directly.js
 shell-option(--enable-iterator-helpers) script non262/Iterator/constructor-throw-without-new.js
-shell-option(--enable-iterator-helpers) script non262/Iterator/toStringTag.js
 shell-option(--enable-iterator-helpers) script non262/Iterator/from/call-from-with-different-this.js
 shell-option(--enable-iterator-helpers) script non262/Iterator/from/Iterator.from-descriptor.js
 shell-option(--enable-iterator-helpers) script non262/Iterator/from/Iterator.from-length.js
