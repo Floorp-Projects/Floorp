@@ -19,17 +19,14 @@ this.devtools_network = class extends ExtensionAPI {
             context,
             name: "devtools.onNavigated",
             register: fire => {
-              let listener = data => {
-                fire.async(data.url);
+              const listener = url => {
+                fire.async(url);
               };
 
-              let targetPromise = context.getCurrentDevToolsTarget();
-              targetPromise.then(target => {
-                target.on("navigate", listener);
-              });
+              const promise = context.addOnNavigatedListener(listener);
               return () => {
-                targetPromise.then(target => {
-                  target.off("navigate", listener);
+                promise.then(() => {
+                  context.removeOnNavigatedListener(listener);
                 });
               };
             },

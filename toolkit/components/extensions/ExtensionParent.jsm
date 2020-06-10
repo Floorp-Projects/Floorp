@@ -617,7 +617,15 @@ class ExtensionPageContextParent extends ProxyContextParent {
 class DevToolsExtensionPageContextParent extends ExtensionPageContextParent {
   constructor(...params) {
     super(...params);
+
+    // We want to explicitly set `this._devToolsToolbox` as well to `null` here, but the
+    // toolbox is set during the processing of the parent's constructor, so it is currently
+    // not possible to set.
+    this._currentDevToolsTarget = null;
+    this._onNavigatedListeners = null;
+
     this._onTargetAvailable = this._onTargetAvailable.bind(this);
+    this._onResourceAvailable = this._onResourceAvailable.bind(this);
   }
 
   set devToolsToolbox(toolbox) {
@@ -632,6 +640,28 @@ class DevToolsExtensionPageContextParent extends ExtensionPageContextParent {
 
   get devToolsToolbox() {
     return this._devToolsToolbox;
+  }
+
+  async addOnNavigatedListener(listener) {
+    if (!this._onNavigatedListeners) {
+      this._onNavigatedListeners = new Set();
+
+      await this.devToolsToolbox.resourceWatcher.watchResources(
+        [this.devToolsToolbox.resourceWatcher.TYPES.DOCUMENT_EVENT],
+        {
+          onAvailable: this._onResourceAvailable,
+          ignoreExistingResources: true,
+        }
+      );
+    }
+
+    this._onNavigatedListeners.add(listener);
+  }
+
+  removeOnNavigatedListener(listener) {
+    if (this._onNavigatedListeners) {
+      this._onNavigatedListeners.delete(listener);
+    }
   }
 
   /**
@@ -658,9 +688,21 @@ class DevToolsExtensionPageContextParent extends ExtensionPageContextParent {
       this._onTargetAvailable
     );
 
+    if (this._onNavigatedListeners) {
+      this.devToolsToolbox.resourceWatcher.unwatchResources(
+        [this.devToolsToolbox.resourceWatcher.TYPES.DOCUMENT_EVENT],
+        { onAvailable: this._onResourceAvailable }
+      );
+    }
+
     if (this._currentDevToolsTarget) {
       this._currentDevToolsTarget.destroy();
       this._currentDevToolsTarget = null;
+    }
+
+    if (this._onNavigatedListeners) {
+      this._onNavigatedListeners.clear();
+      this._onNavigatedListeners = null;
     }
 
     this._devToolsToolbox = null;
@@ -678,6 +720,15 @@ class DevToolsExtensionPageContextParent extends ExtensionPageContextParent {
     );
     this._currentDevToolsTarget.isDevToolsExtensionContext = true;
     await this._currentDevToolsTarget.attach();
+  }
+
+  async _onResourceAvailable({ targetFront, resource }) {
+    if (targetFront.isTopLevel && resource.name === "dom-complete") {
+      const url = targetFront.localTab.linkedBrowser.currentURI.spec;
+      for (const listener of this._onNavigatedListeners) {
+        listener(url);
+      }
+    }
   }
 }
 
