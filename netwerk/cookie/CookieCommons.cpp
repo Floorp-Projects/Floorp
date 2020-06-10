@@ -351,6 +351,10 @@ already_AddRefed<Cookie> CookieCommons::CreateCookieFromDocument(
     return nullptr;
   }
 
+  if (!CookieCommons::IsSchemeSupported(principalURI)) {
+    return nullptr;
+  }
+
   nsAutoCString baseDomain;
   bool requireHostMatch = false;
   nsresult rv = CookieCommons::GetBaseDomain(aTLDService, principalURI,
@@ -638,6 +642,8 @@ nsICookie::schemeType CookieCommons::PrincipalToSchemeType(
 // static
 nsICookie::schemeType CookieCommons::SchemeToSchemeType(
     const nsACString& aScheme) {
+  MOZ_ASSERT(IsSchemeSupported(aScheme));
+
   if (aScheme.Equals("https")) {
     return nsICookie::SCHEME_HTTPS;
   }
@@ -651,6 +657,38 @@ nsICookie::schemeType CookieCommons::SchemeToSchemeType(
   }
 
   MOZ_CRASH("Unsupported scheme type");
+}
+
+// static
+bool CookieCommons::IsSchemeSupported(nsIPrincipal* aPrincipal) {
+  MOZ_ASSERT(aPrincipal);
+
+  nsAutoCString scheme;
+  nsresult rv = aPrincipal->GetScheme(scheme);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return false;
+  }
+
+  return IsSchemeSupported(scheme);
+}
+
+// static
+bool CookieCommons::IsSchemeSupported(nsIURI* aURI) {
+  MOZ_ASSERT(aURI);
+
+  nsAutoCString scheme;
+  nsresult rv = aURI->GetScheme(scheme);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return false;
+  }
+
+  return IsSchemeSupported(scheme);
+}
+
+// static
+bool CookieCommons::IsSchemeSupported(const nsACString& aScheme) {
+  return aScheme.Equals("https") || aScheme.Equals("http") ||
+         aScheme.Equals("file");
 }
 
 }  // namespace net

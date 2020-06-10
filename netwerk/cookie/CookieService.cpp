@@ -284,6 +284,10 @@ CookieService::GetCookieStringFromDocument(Document* aDocument,
 
   nsCOMPtr<nsIPrincipal> principal = aDocument->EffectiveStoragePrincipal();
 
+  if (!CookieCommons::IsSchemeSupported(principal)) {
+    return NS_OK;
+  }
+
   nsICookie::schemeType schemeType =
       CookieCommons::PrincipalToSchemeType(principal);
 
@@ -404,6 +408,10 @@ CookieService::GetCookieStringFromHttp(nsIURI* aHostURI, nsIChannel* aChannel,
 
   aCookieString.Truncate();
 
+  if (!CookieCommons::IsSchemeSupported(aHostURI)) {
+    return NS_OK;
+  }
+
   uint32_t rejectedReason = 0;
   ThirdPartyAnalysisResult result = mThirdPartyUtil->AnalyzeChannel(
       aChannel, false, aHostURI, nullptr, &rejectedReason);
@@ -491,6 +499,10 @@ CookieService::SetCookieStringFromHttp(nsIURI* aHostURI,
   NS_ENSURE_ARG(aChannel);
 
   if (!IsInitialized()) {
+    return NS_OK;
+  }
+
+  if (!CookieCommons::IsSchemeSupported(aHostURI)) {
     return NS_OK;
   }
 
@@ -1478,10 +1490,12 @@ CookieStatus CookieService::CheckPrefs(nsICookieJarSettings* aCookieJarSettings,
 
   *aRejectedReason = 0;
 
-  // don't let ftp sites get/set cookies (could be a security issue)
-  if (aHostURI->SchemeIs("ftp")) {
+  // don't let unsupported scheme sites get/set cookies (could be a security
+  // issue)
+  if (!CookieCommons::IsSchemeSupported(aHostURI)) {
     COOKIE_LOGFAILURE(aCookieHeader.IsVoid() ? GET_COOKIE : SET_COOKIE,
-                      aHostURI, aCookieHeader, "ftp sites cannot read cookies");
+                      aHostURI, aCookieHeader,
+                      "non http/https sites cannot read cookies");
     return STATUS_REJECTED_WITH_ERROR;
   }
 

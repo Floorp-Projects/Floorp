@@ -506,6 +506,10 @@ CookieServiceChild::SetCookieStringFromHttp(nsIURI* aHostURI,
   NS_ENSURE_ARG(aHostURI);
   NS_ENSURE_ARG(aChannel);
 
+  if (!CookieCommons::IsSchemeSupported(aHostURI)) {
+    return NS_OK;
+  }
+
   // Fast past: don't bother sending IPC messages about nullprincipal'd
   // documents.
   nsAutoCString scheme;

@@ -116,6 +116,10 @@ class CookieCommons final {
   static bool MaybeCompareScheme(Cookie* aCookie,
                                  nsICookie::schemeType aSchemeType);
 
+  static bool IsSchemeSupported(nsIPrincipal* aPrincipal);
+  static bool IsSchemeSupported(nsIURI* aURI);
+  static bool IsSchemeSupported(const nsACString& aScheme);
+
   static nsICookie::schemeType URIToSchemeType(nsIURI* aURI);
 
   static nsICookie::schemeType PrincipalToSchemeType(nsIPrincipal* aPrincipal);
