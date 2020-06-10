@@ -10,13 +10,13 @@ import re
 import shutil
 from pathlib import Path
 
-from mozperftest.scriptinfo import ScriptInfo
 from mozperftest.utils import install_package
 from mozperftest.test.noderunner import NodeRunner
 from mozperftest.test.browsertime.setup import (
     system_prerequisites,
     append_system_env,
 )
+from mozperftest.test.browsertime.script import ScriptInfo
 
 
 BROWSERTIME_SRC_ROOT = Path(__file__).parent
@@ -89,7 +89,7 @@ class BrowsertimeRunner(NodeRunner):
         self._mach_context = mach_cmd._mach_context
         self.virtualenv_manager = mach_cmd.virtualenv_manager
         self._created_dirs = []
-        self._test_info = {}
+        self._test_script = None
         self._setup_helper = None
         self.get_binary_path = mach_cmd.get_binary_path
 
@@ -128,8 +128,13 @@ class BrowsertimeRunner(NodeRunner):
         super(BrowsertimeRunner, self).setup()
         install_url = self.get_arg("install-url")
 
-        if self.get_arg("tests"):
-            self._test_info = ScriptInfo(self.get_arg("tests")[0])
+        tests = self.get_arg("tests", [])
+        if len(tests) != 1:
+            # we don't support auto-discovery (no test passed) or multiple
+            # tests here yet.
+            raise NotImplementedError()
+
+        self._test_script = ScriptInfo(tests[0])
 
         # installing Python deps on the fly
         for dep in ("Pillow==%s" % PILLOW_VERSION, "pyssim==%s" % PYSSIM_VERSION):
@@ -303,7 +308,6 @@ class BrowsertimeRunner(NodeRunner):
 
     def _one_cycle(self, metadata, result_dir):
         profile = self.get_arg("profile-directory")
-        test_script = self.get_arg("tests")[0]
 
         args = [
             "--resultDir",
@@ -312,7 +316,7 @@ class BrowsertimeRunner(NodeRunner):
             profile,
             "--iterations",
             str(self.get_arg("iterations")),
-            test_script,
+            self._test_script["filename"],
         ]
 
         if self.get_arg("verbose"):
@@ -341,10 +345,7 @@ class BrowsertimeRunner(NodeRunner):
             raise NodeException(exit_code)
 
         metadata.add_result(
-            {
-                "results": str(result_dir),
-                "name": self._test_info.get("name", ("browsertime",))[0],
-            }
+            {"results": str(result_dir), "name": self._test_script["name"]}
         )
 
         return metadata
