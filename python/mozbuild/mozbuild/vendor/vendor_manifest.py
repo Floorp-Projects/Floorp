@@ -80,6 +80,7 @@ class VendorManifest(MozbuildObject):
     def get_source_host(self):
         if self.manifest["vendoring"]["source-hosting"] == "gitlab":
             from mozbuild.vendor.host_gitlab import GitLabHost
+
             return GitLabHost(self.manifest)
         elif self.manifest["vendoring"]["source-hosting"] == "github":
             from mozbuild.vendor.host_github import GitHubHost
@@ -204,12 +205,27 @@ class VendorManifest(MozbuildObject):
                 src = get_full_path(update["from"])
                 dst = get_full_path(update["to"])
 
+                self.log(
+                    logging.DEBUG,
+                    "vendor",
+                    {"src": src, "dst": dst},
+                    "Performing copy-file action src: {src} dst: {dst}",
+                )
+
                 with open(src) as f:
                     contents = f.read()
                 with open(dst, "w") as f:
                     f.write(contents)
             elif update["action"] == "replace-in-file":
                 file = get_full_path(update["file"])
+
+                self.log(
+                    logging.DEBUG,
+                    "vendor",
+                    {"file": file},
+                    "Performing replace-in-file action file: {file}",
+                )
+
                 with open(file) as f:
                     contents = f.read()
 
@@ -220,10 +236,22 @@ class VendorManifest(MozbuildObject):
                     f.write(contents)
             elif update["action"] == "delete-path":
                 path = get_full_path(update["path"])
+                self.log(
+                    logging.DEBUG,
+                    "vendor",
+                    {"path": path},
+                    "Performing delete-path action path: {path}",
+                )
                 mozfile.remove(path)
             elif update["action"] == "run-script":
                 script = get_full_path(update["script"], support_cwd=True)
                 run_dir = get_full_path(update["cwd"])
+                self.log(
+                    logging.DEBUG,
+                    "vendor",
+                    {"script": script, "run_dir": run_dir},
+                    "Performing run-script action script: {script} working dir: {run_dir}",
+                )
                 self.run_process(
                     args=[script], cwd=run_dir, log_name=script,
                 )
