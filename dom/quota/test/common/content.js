@@ -29,10 +29,11 @@ function clearAllDatabases(callback) {
 //
 // Our use of (wrapped) SpecialPowers.Cc results in getSimpleDatabase()
 // producing a wrapped nsISDBConnection instance.  The nsISDBResult instances
-// exposed on the (wrapped) nsISDBRequest are also wrapped, so our
-// requestFinished helper wraps the results in helper objects that behave the
-// same as the result, automatically unwrapping the wrapped array/arraybuffer
-// results.
+// exposed on the (wrapped) nsISDBRequest are also wrapped.
+// In particular, the wrapper takes responsibility for automatically cloning
+// the ArrayBuffer returned by nsISDBResult.getAsArrayBuffer into the content
+// compartment (rather than wrapping it) so that constructing a Uint8Array
+// from it will succeed.
 
 function getSimpleDatabase() {
   let connection = SpecialPowers.Cc[
