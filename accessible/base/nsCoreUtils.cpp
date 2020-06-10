@@ -360,19 +360,12 @@ bool nsCoreUtils::IsContentDocument(Document* aDocument) {
 }
 
 bool nsCoreUtils::IsTopLevelContentDocInProcess(Document* aDocumentNode) {
-  nsCOMPtr<nsIDocShellTreeItem> treeItem(aDocumentNode->GetDocShell());
-
-  nsCOMPtr<nsIDocShellTreeItem> parentTreeItem;
-  treeItem->GetInProcessParent(getter_AddRefs(parentTreeItem));
-
-  // Top level content document running in own process doesn't have parent.
-  if (XRE_IsContentProcess()) return !parentTreeItem;
-
-  // Parent of docshell for tab document running in chrome process is root.
-  nsCOMPtr<nsIDocShellTreeItem> rootTreeItem;
-  treeItem->GetInProcessRootTreeItem(getter_AddRefs(rootTreeItem));
-
-  return parentTreeItem == rootTreeItem;
+  BrowsingContext* bc = aDocumentNode->GetBrowsingContext();
+  return bc->IsContent() && (
+                                // Tab document.
+                                bc->IsTop() ||
+                                // Out-of-process iframe.
+                                !bc->GetParent()->IsInProcess());
 }
 
 bool nsCoreUtils::IsErrorPage(Document* aDocument) {
