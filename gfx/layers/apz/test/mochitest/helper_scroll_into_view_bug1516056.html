@@ -36,11 +36,11 @@
       };
     }
     function* test(testDriver) {
-      SimpleTest.is(window.scrollMaxX, 0, "page should have a zero horizontal layout scroll range");
-      SimpleTest.is(window.scrollMaxY, 0, "page should have a zero vertical layout scroll range");
+      is(window.scrollMaxX, 0, "page should have a zero horizontal layout scroll range");
+      is(window.scrollMaxY, 0, "page should have a zero vertical layout scroll range");
       let visualScrollRange = getVisualScrollRange();
-      SimpleTest.ok(visualScrollRange.width > 0, "page should have a nonzero horizontal visual scroll range");
-      SimpleTest.ok(visualScrollRange.height > 0, "page should have a nonzero vertical visual scroll range");
+      ok(visualScrollRange.width > 0, "page should have a nonzero horizontal visual scroll range");
+      ok(visualScrollRange.height > 0, "page should have a nonzero vertical visual scroll range");
       let target = document.getElementById("target");
 
       // Scroll target element into view. Wait until any visual scrolling is done before doing checks.
@@ -50,8 +50,8 @@
       yield waitForApzFlushedRepaints(testDriver);
 
       // Test that scrollIntoView() respected the layout scroll range.
-      SimpleTest.is(window.scrollX, 0, "page should not layout-scroll with a zero layout scroll range");
-      SimpleTest.is(window.scrollY, 0, "page should not layout-scroll with a zero layout scroll range");
+      is(window.scrollX, 0, "page should not layout-scroll with a zero layout scroll range");
+      is(window.scrollY, 0, "page should not layout-scroll with a zero layout scroll range");
 
       // Test that scrollIntoView() did perform visual scrolling.
       let vvRect = getVisualViewportRect();
