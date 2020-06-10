@@ -83,7 +83,7 @@ NS_IMETHODIMP CreateElementTransaction::DoTransaction() {
     return NS_ERROR_FAILURE;
   }
 
-  // Try to insert formatting whitespace for the new node:
+  // Try to insert formatting white-space for the new node:
   OwningNonNull<Element> newElement = *mNewElement;
   nsresult rv = editorBase->MarkElementDirty(newElement);
   if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
