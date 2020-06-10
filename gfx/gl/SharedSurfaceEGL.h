@@ -137,10 +137,6 @@ class SharedSurface_SurfaceTexture : public SharedSurface {
  public:
   virtual ~SharedSurface_SurfaceTexture();
 
-  virtual layers::TextureFlags GetTextureFlags() const override {
-    return layers::TextureFlags::DEALLOCATE_CLIENT;
-  }
-
   virtual void LockProdImpl() override;
   virtual void UnlockProdImpl() override;
 
