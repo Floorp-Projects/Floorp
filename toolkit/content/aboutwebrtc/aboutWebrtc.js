@@ -424,8 +424,10 @@ PeerConnection.prototype = {
     div.appendChild(this.renderDesc());
     div.appendChild(new ICEStats(this._report).render());
     div.appendChild(new SDPStats(this._report).render());
+    for (const frameStats of this._report.videoFrameHistories) {
+      div.appendChild(new FrameRateStats(frameStats).render());
+    }
     div.appendChild(new RTPStats(this._report).render());
-
     pc.appendChild(div);
     return pc;
   },
@@ -504,6 +506,76 @@ SDPStats.prototype = {
     div.appendChild(renderElement("pre", this._report.remoteSdp));
 
     return div;
+  },
+};
+
+function FrameRateStats(frameHistory) {
+  this.remoteSsrc = frameHistory.remoteSsrc;
+  this.trackIdentifier = frameHistory.trackIdentifier;
+  this.stats = frameHistory.entries.map(stat => {
+    stat.elapsed = stat.lastFrameTimestamp - stat.firstFrameTimestamp;
+    if (stat.elapsed < 1) {
+      stat.elapsed = 0;
+    }
+    stat.elapsed = stat.elapsed / 1_000;
+    if (stat.elapsed && stat.consecutiveFrames) {
+      stat.avgFramerate = stat.consecutiveFrames / stat.elapsed;
+    } else {
+      stat.avgFramerate = getString("n_a");
+    }
+    return stat;
+  });
+}
+
+FrameRateStats.prototype = {
+  render() {
+    let div = document.createElement("div");
+    div.appendChild(
+      renderElement(
+        "h4",
+        `${getString("frame_stats_heading")} - MediaStreamTrack Id: ${
+          this.trackIdentifier
+        }`
+      )
+    );
+    div.appendChild(this.renderFrameStatSet());
+
+    return div;
+  },
+
+  renderFrameStatSet() {
+    let caption = "";
+    let tbody = this.stats.map(stat =>
+      [
+        stat.width,
+        stat.height,
+        stat.consecutiveFrames,
+        stat.elapsed,
+        stat.avgFramerate,
+        stat.rotationAngle,
+        stat.lastFrameTimestamp,
+        stat.firstFrameTimestamp,
+        stat.localSsrc,
+        stat.remoteSsrc || "?",
+      ].map(entry => (Object.is(entry, undefined) ? "<<undefined>>" : entry))
+    );
+    let statsTable = new SimpleTable(
+      [
+        "width_px",
+        "height_px",
+        "consecutive_frames",
+        "time_elapsed",
+        "estimated_framerate",
+        "rotation_degrees",
+        "first_frame_timestamp",
+        "last_frame_timestamp",
+        "local_receive_ssrc",
+        "remote_send_ssrc",
+      ].map(columnName => getString(columnName)),
+      tbody,
+      caption
+    ).render();
+    return statsTable;
   },
 };
 
