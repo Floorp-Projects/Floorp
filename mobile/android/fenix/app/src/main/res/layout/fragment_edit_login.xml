@@ -12,7 +12,9 @@
     android:layout_height="wrap_content"
     android:layout_marginStart="72dp"
     android:layout_marginEnd="20dp"
-    android:layout_marginTop="12dp" >
+    android:layout_marginTop="12dp"
+    android:clickable="true"
+    android:focusable="true" >
 
     <TextView
         android:id="@+id/hostnameHeaderText"
@@ -125,7 +127,7 @@
             android:clickable="true"
             android:focusable="true"
             android:cursorVisible="true"
-            android:textCursorDrawable="?primaryText"
+            android:textCursorDrawable="@null"
             app:backgroundTint="?primaryText"
             tools:ignore="Autofill"/>
     </com.google.android.material.textfield.TextInputLayout>
@@ -135,9 +137,9 @@
         android:layout_width="48dp"
         android:layout_height="30dp"
         android:layout_marginBottom="10dp"
-        android:background="?android:attr/selectableItemBackgroundBorderless"
+        android:background="@null"
         android:contentDescription="@string/saved_login_copy_username"
-        app:tint="?android:colorAccent"
+        app:tint="@color/saved_login_clear_edit_text_tint"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toBottomOf="@id/inputLayoutUsername"
         app:srcCompat="@drawable/ic_clear" />
@@ -186,6 +188,7 @@
             android:colorControlActivated="?primaryText"
             android:colorControlHighlight="?primaryText"
             android:cursorVisible="true"
+            android:textCursorDrawable="@null"
             android:ellipsize="end"
             android:focusable="true"
             android:fontFamily="sans-serif"
@@ -195,7 +198,6 @@
             android:maxLines="1"
             android:singleLine="true"
             android:textColor="?primaryText"
-            android:textCursorDrawable="?primaryText"
             android:textSize="16sp"
             android:textStyle="normal"
             app:backgroundTint="?primaryText"
@@ -207,9 +209,9 @@
         android:layout_width="48dp"
         android:layout_height="30dp"
         android:layout_marginTop="3dp"
-        android:background="?android:attr/selectableItemBackgroundBorderless"
+        android:background="@null"
         android:contentDescription="@string/saved_login_reveal_password"
-        app:tint="?android:colorAccent"
+        app:tint="?primaryText"
         app:layout_constraintEnd_toStartOf="@id/clearPasswordTextButton"
         app:layout_constraintTop_toTopOf="@id/inputLayoutPassword"
         app:srcCompat="@drawable/mozac_ic_password_reveal" />
@@ -218,9 +220,9 @@
         android:id="@+id/clearPasswordTextButton"
         android:layout_width="48dp"
         android:layout_height="30dp"
-        android:background="?android:attr/selectableItemBackgroundBorderless"
+        android:background="@null"
         android:contentDescription="@string/saved_logins_copy_password"
-        app:tint="?android:colorAccent"
+        app:tint="@color/saved_login_clear_edit_text_tint"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@id/revealPasswordButton"
         app:srcCompat="@drawable/ic_clear" />

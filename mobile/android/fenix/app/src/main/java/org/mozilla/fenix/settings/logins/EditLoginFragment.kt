@@ -7,30 +7,24 @@ package org.mozilla.fenix.settings.logins
 import android.os.Bundle
 import android.text.Editable
 import android.text.InputType
+import android.text.TextWatcher
 import android.util.Log
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
-import com.google.android.material.snackbar.Snackbar
-import kotlinx.android.synthetic.main.fragment_edit_login.inputLayoutPassword
-import kotlinx.android.synthetic.main.fragment_edit_login.inputLayoutUsername
-import kotlinx.android.synthetic.main.fragment_edit_login.hostnameText
-import kotlinx.android.synthetic.main.fragment_edit_login.usernameText
-import kotlinx.android.synthetic.main.fragment_edit_login.passwordText
-import kotlinx.android.synthetic.main.fragment_edit_login.clearUsernameTextButton
-import kotlinx.android.synthetic.main.fragment_edit_login.clearPasswordTextButton
-import kotlinx.android.synthetic.main.fragment_edit_login.revealPasswordButton
-import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.launch
+import kotlinx.android.synthetic.main.fragment_edit_login.*
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import mozilla.components.concept.storage.Login
 import mozilla.components.service.sync.logins.InvalidRecordException
@@ -38,7 +32,6 @@ import mozilla.components.service.sync.logins.LoginsStorageException
 import mozilla.components.service.sync.logins.NoSuchRecordException
 import mozilla.components.support.ktx.android.view.hideKeyboard
 import org.mozilla.fenix.R
-import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
@@ -55,10 +48,12 @@ class EditLoginFragment : Fragment(R.layout.fragment_edit_login) {
     private lateinit var savedLoginsStore: LoginsFragmentStore
     fun String.toEditable(): Editable = Editable.Factory.getInstance().newEditable(this)
 
+    private lateinit var oldLogin: SavedLogin
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setHasOptionsMenu(true)
-
+        oldLogin = args.savedLoginItem
         savedLoginsStore = StoreProvider.get(this) {
             LoginsFragmentStore(
                 LoginsListState(
@@ -82,12 +77,16 @@ class EditLoginFragment : Fragment(R.layout.fragment_edit_login) {
         hostnameText.isFocusable = false
 
         usernameText.text = args.savedLoginItem.username.toEditable()
-        passwordText.text = args.savedLoginItem.password!!.toEditable()
+        passwordText.text = args.savedLoginItem.password.toEditable()
 
         // TODO: extend PasswordTransformationMethod() to change bullets to asterisks
         passwordText.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
+        passwordText.compoundDrawablePadding =
+            requireContext().resources
+                .getDimensionPixelOffset(R.dimen.saved_logins_end_icon_drawable_padding)
 
         setUpClickListeners()
+        setUpTextListeners()
     }
 
     private fun setUpClickListeners() {
@@ -96,18 +95,100 @@ class EditLoginFragment : Fragment(R.layout.fragment_edit_login) {
             usernameText.isCursorVisible = true
             usernameText.hasFocus()
             inputLayoutUsername.hasFocus()
+            it.isEnabled = false
         }
         clearPasswordTextButton.setOnClickListener {
             passwordText.text?.clear()
             passwordText.isCursorVisible = true
             passwordText.hasFocus()
             inputLayoutPassword.hasFocus()
+            it.isEnabled = false
         }
         revealPasswordButton.setOnClickListener {
             togglePasswordReveal()
         }
+
+        var firstClick = true
         passwordText.setOnClickListener {
-            togglePasswordReveal()
+            if (firstClick) {
+                togglePasswordReveal()
+                firstClick = false
+            }
+        }
+    }
+
+    private fun setUpTextListeners() {
+        val frag = view?.findViewById<View>(R.id.editLoginFragment)
+        frag?.onFocusChangeListener = View.OnFocusChangeListener { _, hasFocus ->
+            if (hasFocus) {
+                view?.hideKeyboard()
+            }
+        }
+
+        editLoginLayout.onFocusChangeListener = View.OnFocusChangeListener { _, hasFocus ->
+            if (!hasFocus) {
+                view?.hideKeyboard()
+            }
+        }
+
+        usernameText.addTextChangedListener(object : TextWatcher {
+            override fun afterTextChanged(u: Editable?) {
+                if (u.toString() == oldLogin.username) {
+                    inputLayoutUsername.error = null
+                    inputLayoutUsername.errorIconDrawable = null
+                } else {
+                    clearUsernameTextButton.isEnabled = true
+                    // setDupeError() TODO in #10173
+                }
+            }
+
+            override fun beforeTextChanged(u: CharSequence?, start: Int, count: Int, after: Int) {
+                // NOOP
+            }
+
+            override fun onTextChanged(u: CharSequence?, start: Int, before: Int, count: Int) {
+                // NOOP
+            }
+        })
+
+        passwordText.addTextChangedListener(object : TextWatcher {
+            override fun afterTextChanged(p: Editable?) {
+                when {
+                    p.toString().isEmpty() -> {
+                        clearPasswordTextButton.isEnabled = false
+                        setPasswordError()
+                    }
+                    p.toString() == oldLogin.password -> {
+                        inputLayoutPassword.error = null
+                        inputLayoutPassword.errorIconDrawable = null
+                        clearPasswordTextButton.isEnabled = true
+                    }
+                    else -> {
+                        inputLayoutPassword.error = null
+                        inputLayoutPassword.errorIconDrawable = null
+                        clearPasswordTextButton.isEnabled = true
+                    }
+                }
+            }
+
+            override fun beforeTextChanged(p: CharSequence?, start: Int, count: Int, after: Int) {
+                // NOOP
+            }
+
+            override fun onTextChanged(p: CharSequence?, start: Int, before: Int, count: Int) {
+                // NOOP
+            }
+        })
+    }
+
+    private fun setPasswordError() {
+        inputLayoutPassword?.let { layout ->
+            layout.error = context?.getString(R.string.saved_login_password_required)
+            layout.setErrorIconDrawable(R.drawable.mozac_ic_warning)
+
+            layout.errorIconDrawable?.setTint(
+                ContextCompat.getColor(requireContext(), R.color.design_default_color_error)
+            )
         }
     }
 
@@ -126,25 +207,25 @@ class EditLoginFragment : Fragment(R.layout.fragment_edit_login) {
     override fun onOptionsItemSelected(item: MenuItem): Boolean = when (item.itemId) {
         R.id.save_login_button -> {
             view?.hideKeyboard()
-            try {
-                if (!passwordText.text.isNullOrBlank()) {
+            if (!passwordText.text.isNullOrBlank()) {
+                try {
                     attemptSaveAndExit()
-                } else {
-                    view?.let {
-                        FenixSnackbar.make(
-                            view = it,
-                            duration = Snackbar.LENGTH_SHORT,
-                            isDisplayedWithBrowserToolbar = false
-                        ).setText(getString(R.string.saved_login_password_required)).show()
+                } catch (loginException: LoginsStorageException) {
+                    when (loginException) {
+                        is NoSuchRecordException,
+                        is InvalidRecordException -> {
+                            Log.e(
+                                "Edit login",
+                                "Failed to save edited login.",
+                                loginException
+                            )
+                        }
+                        else -> Log.e(
+                            "Edit login",
+                            "Failed to save edited login.",
+                            loginException
+                        )
                     }
-                }
-            } catch (loginException: LoginsStorageException) {
-                when (loginException) {
-                    is NoSuchRecordException,
-                    is InvalidRecordException -> {
-                        Log.e("Edit login", "Failed to save edited login.", loginException)
-                    }
-                    else -> Log.e("Edit login", "Failed to save edited login.", loginException)
                 }
             }
             true
@@ -158,9 +239,11 @@ class EditLoginFragment : Fragment(R.layout.fragment_edit_login) {
         var saveLoginJob: Deferred<Unit>? = null
         viewLifecycleOwner.lifecycleScope.launch(IO) {
             saveLoginJob = async {
-                val oldLogin = requireContext().components.core.passwordsStorage.get(args.savedLoginItem.guid)
+                val oldLogin =
+                    requireContext().components.core.passwordsStorage.get(args.savedLoginItem.guid)
 
-                // Update requires a Login type, which needs at least one of httpRealm or formActionOrigin
+                // Update requires a Login type, which needs at least one of
+                // httpRealm or formActionOrigin
                 val loginToSave = Login(
                     guid = oldLogin?.guid,
                     origin = oldLogin?.origin!!,

@@ -24,7 +24,7 @@ data class SavedLogin(
     val guid: String,
     val origin: String,
     val username: String,
-    val password: String?,
+    val password: String,
     val timeLastUsed: Long
 ) : Parcelable
 

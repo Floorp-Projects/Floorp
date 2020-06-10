@@ -154,6 +154,6 @@
     <dimen name="saved_logins_sort_menu_dropdown_chevron_icon_margin_start">10dp</dimen>
     <dimen name="saved_logins_sort_menu_dropdown_chevron_icon_size">12dp</dimen>
     <dimen name="saved_logins_detail_menu_vertical_padding">5dp</dimen>
-
+    <dimen name="saved_logins_end_icon_drawable_padding">16dp</dimen>
 
 </resources>
