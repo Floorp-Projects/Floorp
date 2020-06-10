@@ -8580,13 +8580,6 @@
   value: @IS_NIGHTLY_BUILD@
   mirror: always
 
-# By default, the network state isolation is not active when there is a proxy
-# setting. This pref forces the network isolation even in these scenarios.
-- name: privacy.partition.network_state.connection_with_proxy
-  type: bool
-  value: false
-  mirror: always
-
 #---------------------------------------------------------------------------
 # Prefs starting with "prompts."
 #---------------------------------------------------------------------------
