@@ -6,7 +6,6 @@
 
 UNIFIED_SOURCES = [
     'TestCheckedUnsafePtr.cpp',
-    'TestEncryptedStream.cpp',
     'TestQuotaManager.cpp',
 ]
 
