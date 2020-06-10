@@ -1,5 +1,5 @@
 const TEST_URL =
-  "https://example.com/browser/toolkit/components/messaging-system/test/browser/specialMessageActions/SpecialMessageActionSchemas.md";
+  "https://example.com/browser/toolkit/components/messaging-system/schemas/SpecialMessageActionSchemas/test/browser/SpecialMessageActionSchemas.md";
 
 const { SpecialMessageActionSchemas } = ChromeUtils.import(
   "resource://testing-common/SpecialMessageActionSchemas.js"
