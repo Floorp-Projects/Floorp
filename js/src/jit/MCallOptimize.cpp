@@ -2683,54 +2683,6 @@ IonBuilder::InliningResult IonBuilder::inlineObjectToString(
   return InliningStatus_Inlined;
 }
 
-IonBuilder::InliningResult IonBuilder::inlineHasClass(CallInfo& callInfo,
-                                                      const JSClass* clasp1,
-                                                      const JSClass* clasp2,
-                                                      const JSClass* clasp3,
-                                                      const JSClass* clasp4) {
-  MOZ_ASSERT(!callInfo.constructing());
-  MOZ_ASSERT(callInfo.argc() == 1);
-
-  if (callInfo.getArg(0)->type() != MIRType::Object) {
-    return InliningStatus_NotInlined;
-  }
-  if (getInlineReturnType() != MIRType::Boolean) {
-    return InliningStatus_NotInlined;
-  }
-
-  TemporaryTypeSet* types = callInfo.getArg(0)->resultTypeSet();
-  const JSClass* knownClass =
-      types ? types->getKnownClass(constraints()) : nullptr;
-  if (knownClass) {
-    pushConstant(BooleanValue(knownClass == clasp1 || knownClass == clasp2 ||
-                              knownClass == clasp3 || knownClass == clasp4));
-  } else {
-    MHasClass* hasClass1 = MHasClass::New(alloc(), callInfo.getArg(0), clasp1);
-    current->add(hasClass1);
-
-    if (!clasp2 && !clasp3 && !clasp4) {
-      current->push(hasClass1);
-    } else {
-      const JSClass* remaining[] = {clasp2, clasp3, clasp4};
-      MDefinition* last = hasClass1;
-      for (size_t i = 0; i < ArrayLength(remaining); i++) {
-        MHasClass* hasClass =
-            MHasClass::New(alloc(), callInfo.getArg(0), remaining[i]);
-        current->add(hasClass);
-        MBitOr* either = MBitOr::New(alloc(), last, hasClass, MIRType::Int32);
-        current->add(either);
-        last = either;
-      }
-
-      MDefinition* result = convertToBoolean(last);
-      current->push(result);
-    }
-  }
-
-  callInfo.setImplicitlyUsedUnchecked();
-  return InliningStatus_Inlined;
-}
-
 IonBuilder::InliningResult IonBuilder::inlineGuardToClass(
     CallInfo& callInfo, InlinableNative native) {
   MOZ_ASSERT(!callInfo.constructing());
