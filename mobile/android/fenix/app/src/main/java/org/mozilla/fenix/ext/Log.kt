@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+@file:Suppress("NOTHING_TO_INLINE")
+
 package org.mozilla.fenix.ext
 
 import android.util.Log
@@ -12,7 +14,6 @@ import org.mozilla.fenix.Config
  *
  * Meant to be used for logs that should not be visible in the production app.
  */
-@Suppress("NOTHING_TO_INLINE")
 inline fun logDebug(tag: String, message: String) {
     if (Config.channel.isDebug) Log.d(tag, message)
 }
@@ -22,7 +23,6 @@ inline fun logDebug(tag: String, message: String) {
  *
  * Meant to be used for logs that should not be visible in the production app.
  */
-@Suppress("NOTHING_TO_INLINE")
 inline fun logWarn(tag: String, message: String) {
     if (Config.channel.isDebug) Log.w(tag, message)
 }
@@ -32,7 +32,6 @@ inline fun logWarn(tag: String, message: String) {
  *
  * Meant to be used for logs that should not be visible in the production app.
  */
-@Suppress("NOTHING_TO_INLINE")
 inline fun logWarn(tag: String, message: String, err: Throwable) {
     if (Config.channel.isDebug) Log.w(tag, message, err)
 }
@@ -42,7 +41,6 @@ inline fun logWarn(tag: String, message: String, err: Throwable) {
  *
  * Meant to be used for logs that should not be visible in the production app.
  */
-@Suppress("NOTHING_TO_INLINE")
 inline fun logErr(tag: String, message: String, err: Throwable) {
     if (Config.channel.isDebug) Log.e(tag, message, err)
 }

@@ -5,44 +5,71 @@
 package org.mozilla.fenix.ext
 
 import android.util.Log
+import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import io.mockk.verify
 import org.junit.Before
 import org.junit.Test
+import org.mozilla.fenix.Config
+import org.mozilla.fenix.ReleaseChannel
 
 class LogTest {
 
-    private val numCalls = if (org.mozilla.fenix.Config.channel.isDebug) 1 else 0
+    private val mockThrowable: Throwable = mockk()
 
     @Before
     fun setup() {
         mockkStatic(Log::class)
+        mockkObject(Config)
+
+        every { Log.d(any(), any()) } returns 0
+        every { Log.w(any(), any<String>()) } returns 0
+        every { Log.d(any(), any(), any()) } returns 0
+        every { Log.d(any(), any(), any()) } returns 0
     }
 
     @Test
     fun `Test log debug function`() {
+        every { Config.channel } returns ReleaseChannel.FenixDebug
         logDebug("hi", "hi")
-        verify(exactly = numCalls) { (Log.d("hi", "hi")) }
+        verify { Log.d("hi", "hi") }
     }
 
     @Test
     fun `Test log warn function with tag and message args`() {
+        every { Config.channel } returns ReleaseChannel.FenixDebug
         logWarn("hi", "hi")
-        verify(exactly = numCalls) { (Log.w("hi", "hi")) }
+        verify { Log.w("hi", "hi") }
     }
 
     @Test
     fun `Test log warn function with tag, message, and exception args`() {
-        val mockThrowable: Throwable = mockk(relaxed = true)
+        every { Config.channel } returns ReleaseChannel.FenixDebug
         logWarn("hi", "hi", mockThrowable)
-        verify(exactly = numCalls) { (Log.w("hi", "hi", mockThrowable)) }
+        verify { Log.w("hi", "hi", mockThrowable) }
     }
 
     @Test
     fun `Test log error function with tag, message, and exception args`() {
-        val mockThrowable: Throwable = mockk(relaxed = true)
+        every { Config.channel } returns ReleaseChannel.FenixDebug
         logErr("hi", "hi", mockThrowable)
-        verify(exactly = numCalls) { (Log.e("hi", "hi", mockThrowable)) }
+        verify { Log.e("hi", "hi", mockThrowable) }
+    }
+
+    @Test
+    fun `Test no log in production channel`() {
+        every { Config.channel } returns ReleaseChannel.FenixProduction
+
+        logDebug("hi", "hi")
+        logWarn("hi", "hi")
+        logWarn("hi", "hi", mockThrowable)
+        logErr("hi", "hi", mockThrowable)
+
+        verify(exactly = 0) { Log.d(any(), any()) }
+        verify(exactly = 0) { Log.w(any(), any<String>()) }
+        verify(exactly = 0) { Log.d(any(), any(), any()) }
+        verify(exactly = 0) { Log.d(any(), any(), any()) }
     }
 }

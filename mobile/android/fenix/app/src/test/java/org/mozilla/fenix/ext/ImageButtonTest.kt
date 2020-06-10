@@ -31,4 +31,11 @@ class ImageButtonTest {
         assertTrue(imageButton.isEnabled)
         assertEquals(View.VISIBLE, imageButton.visibility)
     }
+
+    @Test
+    fun `Remove and disable`() {
+        imageButton.removeAndDisable()
+        assertFalse(imageButton.isEnabled)
+        assertEquals(View.GONE, imageButton.visibility)
+    }
 }

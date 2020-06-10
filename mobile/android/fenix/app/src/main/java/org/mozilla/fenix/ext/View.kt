@@ -15,10 +15,7 @@ fun View.increaseTapArea(extraDps: Int) {
     parent.post {
         val touchRect = Rect()
         getHitRect(touchRect)
-        touchRect.top -= dips
-        touchRect.left -= dips
-        touchRect.right += dips
-        touchRect.bottom += dips
+        touchRect.inset(-dips, -dips)
         parent.touchDelegate = TouchDelegate(touchRect, this)
     }
 }

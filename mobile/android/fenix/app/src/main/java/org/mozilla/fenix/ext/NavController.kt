@@ -11,8 +11,12 @@ import androidx.navigation.NavDirections
 import androidx.navigation.NavOptions
 import androidx.navigation.Navigator
 import io.sentry.Sentry
-import org.mozilla.fenix.BuildConfig
+import org.mozilla.fenix.components.isSentryEnabled
 
+/**
+ * Navigate from the fragment with [id] using the given [directions].
+ * If the id doesn't match the current destination, an error is recorded.
+ */
 fun NavController.nav(@IdRes id: Int?, directions: NavDirections, navOptions: NavOptions? = null) {
     if (id == null || this.currentDestination?.id == id) {
         this.navigate(directions, navOptions)
@@ -55,7 +59,7 @@ fun NavController.alreadyOnDestination(@IdRes destId: Int?): Boolean {
 }
 
 fun recordIdException(actual: Int?, expected: Int?) {
-    if (!BuildConfig.SENTRY_TOKEN.isNullOrEmpty()) {
+    if (isSentryEnabled()) {
         Sentry.capture("Fragment id $actual did not match expected $expected")
     }
 }

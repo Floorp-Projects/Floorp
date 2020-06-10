@@ -97,7 +97,7 @@ class Analytics(
     }
 }
 
-private fun isSentryEnabled() = !BuildConfig.SENTRY_TOKEN.isNullOrEmpty()
+fun isSentryEnabled() = !BuildConfig.SENTRY_TOKEN.isNullOrEmpty()
 
 private fun getSentryProjectUrl(): String? {
     val baseUrl = "https://sentry.prod.mozaws.net/operations"
