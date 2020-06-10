@@ -570,7 +570,7 @@ void nsTableFrame::InsertCol(nsTableColFrame& aColFrame, int32_t aColIndex) {
           nsTableColType lastColType = lastCol->GetColType();
           if (eColAnonymousCell == lastColType) {
             // remove the col from the cache
-            mColFrames.RemoveElementAt(numCacheCols - 1);
+            mColFrames.RemoveLastElement();
             // remove the col from the synthetic col group
             nsTableColGroupFrame* lastColGroup =
                 (nsTableColGroupFrame*)mColGroups.LastChild();

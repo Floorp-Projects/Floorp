@@ -49,9 +49,7 @@ struct StorageWithTArray {
       return false;
     }
 
-    uint32_t index = aStorage.Length() - 1;
-    aEntry = aStorage.ElementAt(index);
-    aStorage.RemoveElementAt(index);
+    aEntry = aStorage.PopLastElement();
     return true;
   }
 

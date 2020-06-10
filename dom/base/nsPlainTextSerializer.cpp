@@ -383,13 +383,7 @@ void nsPlainTextSerializer::PushBool(nsTArray<bool>& aStack, bool aValue) {
 }
 
 bool nsPlainTextSerializer::PopBool(nsTArray<bool>& aStack) {
-  bool returnValue = false;
-  uint32_t size = aStack.Length();
-  if (size > 0) {
-    returnValue = aStack.ElementAt(size - 1);
-    aStack.RemoveElementAt(size - 1);
-  }
-  return returnValue;
+  return aStack.Length() ? aStack.PopLastElement() : false;
 }
 
 bool nsPlainTextSerializer::IsIgnorableRubyAnnotation(

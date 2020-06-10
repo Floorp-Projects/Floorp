@@ -27,12 +27,10 @@ template <size_t ArenaSize, typename ObjectId, size_t ObjectIdCount>
 nsPresArena<ArenaSize, ObjectId, ObjectIdCount>::~nsPresArena() {
 #if defined(MOZ_HAVE_MEM_CHECKS)
   for (FreeList* entry = mFreeLists; entry != ArrayEnd(mFreeLists); ++entry) {
-    nsTArray<void*>::index_type len;
-    while ((len = entry->mEntries.Length())) {
-      void* result = entry->mEntries.ElementAt(len - 1);
-      entry->mEntries.RemoveElementAt(len - 1);
+    for (void* result : entry->mEntries) {
       MOZ_MAKE_MEM_UNDEFINED(result, entry->mEntrySize);
     }
+    entry->mEntries.Clear();
   }
 #endif
 }

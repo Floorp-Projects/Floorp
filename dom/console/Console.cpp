@@ -1935,7 +1935,7 @@ static bool ProcessArguments(JSContext* aCx, const Sequence<JS::Value>& aData,
         // If there isn't any output but there's already a style, then
         // discard the previous style and use the next one instead.
         if (output.IsEmpty() && !aStyles.IsEmpty()) {
-          aStyles.TruncateLength(aStyles.Length() - 1);
+          aStyles.RemoveLastElement();
         }
 
         if (NS_WARN_IF(!FlushOutput(aCx, aSequence, output))) {
@@ -2084,9 +2084,7 @@ static bool UnstoreGroupName(nsAString& aName,
     return false;
   }
 
-  uint32_t pos = aGroupStack->Length() - 1;
-  aName = (*aGroupStack)[pos];
-  aGroupStack->RemoveElementAt(pos);
+  aName = aGroupStack->PopLastElement();
   return true;
 }
 
