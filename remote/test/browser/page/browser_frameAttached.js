@@ -35,10 +35,10 @@ add_task(async function noEventAfterPageDomainDisabled({ client }) {
 add_task(async function noEventWhenNavigatingWithNoFrames({ client }) {
   const { Page } = client;
 
-  await Page.enable();
-
   info("Navigate to a page with iframes");
   await loadURL(DOC_IFRAME_MULTI);
+
+  await Page.enable();
 
   await runFrameAttachedTest(client, 0, async () => {
     info("Navigate to a page without an iframe");
