@@ -35,4 +35,5 @@ enum Edge { "start", "end" };
 dictionary ElementBasedOffset {
   Element target;
   Edge edge = "start";
+  double threshold = 0.0;
 };
