@@ -942,32 +942,46 @@ bool WebGLContext::PresentInto(gl::SwapChain& swapChain) {
   return true;
 }
 
-void WebGLContext::Present() {
+void WebGLContext::Present(WebGLFramebuffer* const fb,
+                           const layers::TextureType consumerType) {
   const FuncScope funcScope(*this, "<Present>");
   if (IsContextLost()) return;
 
-  mResolvedDefaultFB = nullptr;
-
-  if (!mSwapChain.mFactory) {
-    NS_WARNING("Failed to make an ideal SurfaceFactory.");
-    mSwapChain.mFactory = MakeUnique<gl::SurfaceFactory_Basic>(*gl);
+  auto swapChain = &mSwapChain;
+  if (fb) {
+    swapChain = &fb->mOpaqueSwapChain;
+  } else {
+    mResolvedDefaultFB = nullptr;
   }
-  MOZ_ASSERT(mSwapChain.mFactory);
 
-  (void)PresentInto(mSwapChain);
+  if (!swapChain->mFactory) {
+    auto typedFactory = gl::SurfaceFactory::Create(gl, consumerType);
+    if (typedFactory) {
+      swapChain->mFactory = std::move(typedFactory);
+    }
+  }
+  if (!swapChain->mFactory) {
+    NS_WARNING("Failed to make an ideal SurfaceFactory.");
+    swapChain->mFactory = MakeUnique<gl::SurfaceFactory_Basic>(*gl);
+  }
+  MOZ_ASSERT(swapChain->mFactory);
+
+  (void)PresentInto(*swapChain);
 }
 
 Maybe<layers::SurfaceDescriptor> WebGLContext::GetFrontBuffer(
-    const layers::TextureType consumerType) {
-  if (mSwapChain.mFactory &&
-      mSwapChain.mFactory->mDesc.consumerType != consumerType) {
-    auto typedFactory = gl::SurfaceFactory::Create(gl, consumerType);
-    if (typedFactory) {
-      mSwapChain.mFactory = std::move(typedFactory);
-    }
+    WebGLFramebuffer* const fb, const layers::TextureType consumerType) {
+  auto swapChain = &mSwapChain;
+  if (fb) {
+    swapChain = &fb->mOpaqueSwapChain;
   }
 
-  const auto& front = mSwapChain.FrontBuffer();
+  if (swapChain->mFactory &&
+      swapChain->mFactory->mDesc.consumerType != consumerType) {
+    swapChain->mFactory = nullptr;  // Better luck next Present.
+  }
+
+  const auto& front = swapChain->FrontBuffer();
   if (!front) return {};
 
   return front->ToSurfaceDescriptor();
