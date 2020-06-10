@@ -49,4 +49,10 @@ function getResult() {
   return credentialQueue.shift();
 }
 
-IsolationTestTools.runTests(FILE_URI, getResult);
+async function doInit(aMode) {
+  await SpecialPowers.pushPrefEnv({
+    set: [["privacy.partition.network_state", false]],
+  });
+}
+
+IsolationTestTools.runTests(FILE_URI, getResult, null, doInit);
