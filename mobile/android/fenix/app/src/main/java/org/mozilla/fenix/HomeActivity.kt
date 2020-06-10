@@ -32,10 +32,13 @@ import mozilla.components.browser.search.SearchEngine
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.state.state.WebExtensionState
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.tabstray.BrowserTabsTray
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.concept.tabstray.TabsTray
-import mozilla.components.feature.contextmenu.ext.DefaultSelectionActionDelegate
+import mozilla.components.feature.contextmenu.DefaultSelectionActionDelegate
+import mozilla.components.feature.search.BrowserStoreSearchAdapter
+import mozilla.components.feature.search.SearchAdapter
 import mozilla.components.service.fxa.sync.SyncReason
 import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.ktx.android.arch.lifecycle.addObservers
@@ -63,6 +66,7 @@ import org.mozilla.fenix.home.HomeFragmentDirections
 import org.mozilla.fenix.home.intent.CrashReporterIntentProcessor
 import org.mozilla.fenix.home.intent.DeepLinkIntentProcessor
 import org.mozilla.fenix.home.intent.OpenBrowserIntentProcessor
+import org.mozilla.fenix.home.intent.OpenSpecificTabIntentProcessor
 import org.mozilla.fenix.home.intent.SpeechProcessingIntentProcessor
 import org.mozilla.fenix.home.intent.StartSearchIntentProcessor
 import org.mozilla.fenix.library.bookmarks.BookmarkFragmentDirections
@@ -83,7 +87,6 @@ import org.mozilla.fenix.theme.DefaultThemeManager
 import org.mozilla.fenix.theme.ThemeManager
 import org.mozilla.fenix.utils.BrowsersCache
 import org.mozilla.fenix.utils.RunWhenReadyQueue
-import org.mozilla.fenix.home.intent.OpenSpecificTabIntentProcessor
 
 /**
  * The main activity of the application. The application is primarily a single Activity (this one)
@@ -226,8 +229,8 @@ open class HomeActivity : LocaleAwareAppCompatActivity() {
     ): View? = when (name) {
         EngineView::class.java.name -> components.core.engine.createView(context, attrs).apply {
             selectionActionDelegate = DefaultSelectionActionDelegate(
-                store = components.core.store,
-                context = context,
+                getSearchAdapter(components.core.store),
+                resources = context.resources,
                 appName = getString(R.string.app_name)
             ) {
                 share(it)
@@ -268,6 +271,9 @@ open class HomeActivity : LocaleAwareAppCompatActivity() {
 
         super.onUserLeaveHint()
     }
+
+    protected open fun getSearchAdapter(store: BrowserStore): SearchAdapter =
+        BrowserStoreSearchAdapter(store)
 
     protected open fun getBreadcrumbMessage(destination: NavDestination): String {
         val fragmentName = resources.getResourceEntryName(destination.id)
