@@ -506,18 +506,24 @@ def target_tasks_fennec_v68(full_task_graph, parameters, graph_config):
     def filter(task):
         platform = task.attributes.get('build_platform')
         test_platform = task.attributes.get('test_platform')
-        attributes = task.attributes
+        try_name = task.attributes.get('raptor_try_name')
 
+        if task.attributes.get('unittest_suite') != 'raptor':
+            return False
         if platform and 'android' not in platform:
             return False
-        if attributes.get('unittest_suite') != 'raptor':
+        if 'shippable' not in test_platform:
             return False
-        if '-fennec68-' in attributes.get('raptor_try_name'):
+        if '-fennec68' in try_name:
             if '-p2' in test_platform and '-arm7' in test_platform:
                 return False
-            if '-youtube-playback-' in attributes.get('raptor_try_name') \
-                    and 'opt' in test_platform:
-                return False
+            if '-youtube-playback' in try_name:
+                # Bug 1627898: VP9 tests don't work on G5
+                if '-g5-' in test_platform and '-vp9-' in try_name:
+                    return False
+                # Bug 1639193: AV1 tests are currently broken
+                if '-av1-' in try_name:
+                    return False
             return True
 
     return [l for l, t in six.iteritems(full_task_graph.tasks) if filter(t)]
