@@ -544,7 +544,9 @@ function run_all_tests() {
 
 function start_test_cycle(tests_to_run) {
   // Convert from an iterable to an array for pop.
-  const sequencer = new LoadCycle(tests_to_run, gLoadMgr.testDurationMS / 1000);
+  const duration = gLoadMgr.testDurationMS / 1000;
+  const mutators = tests_to_run.map(name => new SingleMutatorSequencer(gLoadMgr._loads.get(name), duration));
+  const sequencer = new ChainSequencer(mutators);
   gLoadMgr.startSequencer(sequencer);
   testState = "running";
   gHistogram.clear();
