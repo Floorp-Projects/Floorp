@@ -24,6 +24,7 @@ __all__ = ['extract_tarball',
            'extract',
            'is_url',
            'load',
+           'copy_contents',
            'move',
            'remove',
            'rmtree',
@@ -230,6 +231,50 @@ def remove(path):
             for entry in dirs + files:
                 _update_permissions(os.path.join(root, entry))
         _call_with_windows_retry(shutil.rmtree, (path,))
+
+
+def copy_contents(srcdir, dstdir):
+    """
+    Copy the contents of the srcdir into the dstdir, preserving
+    subdirectories.
+
+    If an existing file of the same name exists in dstdir, it will be overwritten.
+    """
+    import shutil
+    # dirs_exist_ok was introduced in Python 3.8
+    # On earlier versions, or Windows, use the verbose mechanism.
+    # We use it on Windows because _call_with_windows_retry doesn't allow
+    # named arguments to be passed.
+    if ((sys.version_info.major < 3 or sys.version_info.minor < 8)
+        or (os.name == 'nt')):
+        names = os.listdir(srcdir)
+        if not os.path.isdir(dstdir):
+            os.makedirs(dstdir)
+        errors = []
+        for name in names:
+            srcname = os.path.join(srcdir, name)
+            dstname = os.path.join(dstdir, name)
+            try:
+                if os.path.islink(srcname):
+                    linkto = os.readlink(srcname)
+                    os.symlink(linkto, dstname)
+                elif os.path.isdir(srcname):
+                    copy_contents(srcname, dstname)
+                else:
+                    _call_windows_retry(shutil.copy2, (srcname, dstname))
+            except OSError as why:
+                errors.append((srcname, dstname, str(why)))
+            except Exception as err:
+                errors.extend(err)
+        try:
+            _call_windows_retry(shutil.copystat, (srcdir, dstdir))
+        except OSError as why:
+            if why.winerror is None:
+                errors.extend((srcdir, dstdir, str(why)))
+        if errors:
+            raise Exception(errors)
+    else:
+        shutil.copytree(srcdir, dstdir, dirs_exist_ok=True)
 
 
 def move(src, dst):
