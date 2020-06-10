@@ -2,6 +2,10 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
+const server = createHttpServer();
+server.registerDirectory("/data/", do_get_file("data"));
+const BASE_URL = `http://localhost:${server.identity.primaryPort}/data`;
+
 add_task(async function runtimeSendMessageReply() {
   function background() {
     browser.runtime.onMessage.addListener((msg, sender, respond) => {
@@ -307,5 +311,86 @@ add_task(async function sendMessageResponseGC() {
   await extension.awaitMessage("saved-respond");
 
   ok("Long running tasks responded");
+  await extension.unload();
+});
+
+add_task(async function sendMessage_async_response_multiple_contexts() {
+  let extension = ExtensionTestUtils.loadExtension({
+    background() {
+      browser.runtime.onMessage.addListener((msg, _, respond) => {
+        browser.test.log(`Background got request: ${msg}`);
+
+        switch (msg) {
+          case "ask-bg-fast":
+            respond("bg-respond");
+            return true;
+
+          case "ask-bg-slow":
+            return new Promise(r => setTimeout(() => r("bg-promise")), 1000);
+        }
+      });
+      browser.test.sendMessage("bg-ready");
+    },
+
+    manifest: {
+      content_scripts: [
+        {
+          matches: ["http://localhost/*/file_sample.html"],
+          js: ["cs.js"],
+        },
+      ],
+    },
+
+    files: {
+      "page.html":
+        "<!DOCTYPE html><meta charset=utf-8><script src=page.js></script>",
+      "page.js"() {
+        browser.runtime.onMessage.addListener((msg, _, respond) => {
+          browser.test.log(`Page got request: ${msg}`);
+
+          switch (msg) {
+            case "ask-page-fast":
+              respond("page-respond");
+              return true;
+
+            case "ask-page-slow":
+              return new Promise(r => setTimeout(() => r("page-promise")), 500);
+          }
+        });
+        browser.test.sendMessage("page-ready");
+      },
+
+      "cs.js"() {
+        Promise.all([
+          browser.runtime.sendMessage("ask-bg-fast"),
+          browser.runtime.sendMessage("ask-bg-slow"),
+          browser.runtime.sendMessage("ask-page-fast"),
+          browser.runtime.sendMessage("ask-page-slow"),
+        ]).then(responses => {
+          browser.test.assertEq(
+            responses.join(),
+            ["bg-respond", "bg-promise", "page-respond", "page-promise"].join(),
+            "Got all expected responses from correct contexts"
+          );
+          browser.test.notifyPass("cs-done");
+        });
+      },
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitMessage("bg-ready");
+
+  let url = `moz-extension://${extension.uuid}/page.html`;
+  let page = await ExtensionTestUtils.loadContentPage(url, { extension });
+  await extension.awaitMessage("page-ready");
+
+  let content = await ExtensionTestUtils.loadContentPage(
+    BASE_URL + "/file_sample.html"
+  );
+  await extension.awaitFinish("cs-done");
+  await content.close();
+
+  await page.close();
   await extension.unload();
 });
