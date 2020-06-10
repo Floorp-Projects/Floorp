@@ -101,8 +101,7 @@ PreallocatedProcessManagerImpl* PreallocatedProcessManagerImpl::Singleton() {
   if (!sSingleton) {
     sSingleton = new PreallocatedProcessManagerImpl;
     sSingleton->Init();
-    ClearOnShutdown(&sSingleton,
-                    ShutdownPhase::ShutdownPostLastCycleCollection);
+    ClearOnShutdown(&sSingleton);
   }
   return sSingleton;
   //  PreallocatedProcessManagers live until shutdown
