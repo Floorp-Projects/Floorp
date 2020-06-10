@@ -916,6 +916,14 @@
     obj: ObjId
     offset: RawWordField
 
+- name: LoadFixedSlotTypedResult
+  shared: false
+  transpile: false
+  args:
+    obj: ObjId
+    offset: RawWordField
+    type: ValueTypeImm
+
 - name: LoadDynamicSlotResult
   shared: false
   transpile: true

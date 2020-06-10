@@ -4982,6 +4982,60 @@ AttachDecision CallIRGenerator::tryAttachArrayIsArray(HandleFunction callee) {
   return AttachDecision::Attach;
 }
 
+AttachDecision CallIRGenerator::tryAttachUnsafeGetReservedSlot(
+    HandleFunction callee, InlinableNative native) {
+  // Need an object and int32 slot argument.
+  if (argc_ != 2 || !args_[0].isObject() || !args_[1].isInt32()) {
+    return AttachDecision::NoAction;
+  }
+
+  int32_t slot = args_[1].toInt32();
+  if (slot < 0 || uint32_t(slot) >= NativeObject::MAX_FIXED_SLOTS) {
+    return AttachDecision::NoAction;
+  }
+  size_t offset = NativeObject::getFixedSlotOffset(slot);
+
+  // Initialize the input operand.
+  Int32OperandId argcId(writer.setInputOperandId(0));
+
+  // Guard callee is the correct intrinsic native function.
+  emitNativeCalleeGuard(callee);
+
+  // Guard that the first argument is an object.
+  ValOperandId arg0Id = writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
+  ObjOperandId objId = writer.guardToObject(arg0Id);
+
+  // BytecodeEmitter::checkSelfHostedUnsafeGetReservedSlot ensures that the
+  // slot argument is constant. (At least for direct calls)
+
+  switch (native) {
+    case InlinableNative::IntrinsicUnsafeGetReservedSlot:
+      writer.loadFixedSlotResult(objId, offset);
+      break;
+    case InlinableNative::IntrinsicUnsafeGetObjectFromReservedSlot:
+      writer.loadFixedSlotTypedResult(objId, offset, ValueType::Object);
+      break;
+    case InlinableNative::IntrinsicUnsafeGetInt32FromReservedSlot:
+      writer.loadFixedSlotTypedResult(objId, offset, ValueType::Int32);
+      break;
+    case InlinableNative::IntrinsicUnsafeGetStringFromReservedSlot:
+      writer.loadFixedSlotTypedResult(objId, offset, ValueType::String);
+      break;
+    case InlinableNative::IntrinsicUnsafeGetBooleanFromReservedSlot:
+      writer.loadFixedSlotTypedResult(objId, offset, ValueType::Boolean);
+      break;
+    default:
+      MOZ_CRASH("unexpected native");
+  }
+
+  // For simplicity just monitor all stubs.
+  writer.typeMonitorResult();
+  cacheIRStubKind_ = BaselineCacheIRStubKind::Monitored;
+
+  trackAttached("UnsafeGetReservedSlot");
+  return AttachDecision::Attach;
+}
+
 AttachDecision CallIRGenerator::tryAttachIsSuspendedGenerator(
     HandleFunction callee) {
   // The IsSuspendedGenerator intrinsic is only called in
@@ -5864,6 +5918,14 @@ AttachDecision CallIRGenerator::tryAttachInlinableNative(
     case InlinableNative::IntlGuardToPluralRules:
     case InlinableNative::IntlGuardToRelativeTimeFormat:
       return tryAttachGuardToClass(callee, native);
+
+    // Slot intrinsics.
+    case InlinableNative::IntrinsicUnsafeGetReservedSlot:
+    case InlinableNative::IntrinsicUnsafeGetObjectFromReservedSlot:
+    case InlinableNative::IntrinsicUnsafeGetInt32FromReservedSlot:
+    case InlinableNative::IntrinsicUnsafeGetStringFromReservedSlot:
+    case InlinableNative::IntrinsicUnsafeGetBooleanFromReservedSlot:
+      return tryAttachUnsafeGetReservedSlot(callee, native);
 
     // Intrinsics.
     case InlinableNative::IntrinsicIsSuspendedGenerator:

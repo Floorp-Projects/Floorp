@@ -441,6 +441,12 @@ bool BaselineCacheIRCompiler::emitLoadFixedSlotResult(ObjOperandId objId,
   return true;
 }
 
+bool BaselineCacheIRCompiler::emitLoadFixedSlotTypedResult(
+    ObjOperandId objId, uint32_t offsetOffset, ValueType) {
+  // The type is only used by Warp.
+  return emitLoadFixedSlotResult(objId, offsetOffset);
+}
+
 bool BaselineCacheIRCompiler::emitLoadDynamicSlotResult(ObjOperandId objId,
                                                         uint32_t offsetOffset) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
@@ -1497,7 +1503,6 @@ bool BaselineCacheIRCompiler::emitStringFromCharCodeResult(
   Register code = allocator.useRegister(masm, codeId);
 
   allocator.discardStack(masm);
-
 
   // We pre-allocate atoms for the first UNIT_STATIC_LIMIT characters.
   // For code units larger than that, we must do a VM call.
