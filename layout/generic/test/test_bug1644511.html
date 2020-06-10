@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<title>Test for Bug 1644511</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+<style>
+  [contenteditable] {
+    padding: .5em 40%;
+  }
+</style>
+
+<div id="host" contenteditable="" dir="rtl">مرحبا عالم!</div>
+
+<script>
+const caretMovementStyleFlag = "bidi.edit.caret_movement_style";
+
+/**
+ * Can't use synthesizeKey("KEY_Arrow*") as it triggers
+ * nsFrameSelection::PhysicalMove() instead of CharacterMove() and thus
+ * suppresses the flag. See also Bug 1644489.
+ */
+function moveCaret(aRight, aSelect) {
+  const dir = aRight ? "Next" : "Previous";
+  const select = aSelect ? "selectChar" : "char";
+  SpecialPowers.doCommand(window, `cmd_${select}${dir}`);
+}
+
+async function testLogicalMovement() {
+  await SpecialPowers.pushPrefEnv({
+    set: [[caretMovementStyleFlag, 0]]
+  });
+  getSelection().collapse(host);
+  moveCaret(true, true);
+  is(getSelection().anchorOffset, 0, "Shift+ArrowRight should select from right");
+  is(getSelection().focusOffset, 1, "Shift+ArrowRight should select to left");
+  moveCaret(true, false);
+  is(getSelection().anchorOffset, 1, "Collapsing by ArrowRight should put the caret to the left side");
+
+  getSelection().collapse(host);
+  moveCaret(true, true);
+  moveCaret(false, false);
+  is(getSelection().anchorOffset, 0, "Collapsing by ArrowLeft should put the caret to the right side");
+}
+
+async function testVisualMovement() {
+  await SpecialPowers.pushPrefEnv({
+    set: [[caretMovementStyleFlag, 1]]
+  });
+  getSelection().collapse(host);
+  moveCaret(false, true);
+  is(getSelection().anchorOffset, 0, "Shift+ArrowLeft should select from right");
+  is(getSelection().focusOffset, 1, "Shift+ArrowLeft should select to left");
+  moveCaret(false, false);
+  is(getSelection().anchorOffset, 1, "Collapsing by ArrowLeft should put the caret to the left side");
+
+  getSelection().collapse(host);
+  moveCaret(false, true);
+  moveCaret(true, false);
+  is(getSelection().anchorOffset, 0, "Collapsing by ArrowRight should put the caret to the right side");
+}
+
+async function testHybridMovement() {
+  await SpecialPowers.pushPrefEnv({
+    set: [[caretMovementStyleFlag, 2]]
+  });
+  getSelection().collapse(host);
+  moveCaret(true, true);
+  is(getSelection().anchorOffset, 0, "Shift+ArrowRight should select from right");
+  is(getSelection().focusOffset, 1, "Shift+ArrowRight should select to left");
+  moveCaret(false, false);
+  is(getSelection().anchorOffset, 1, "Collapsing by ArrowLeft should put the caret to the left side");
+
+  getSelection().collapse(host);
+  moveCaret(true, true);
+  moveCaret(true, false);
+  is(getSelection().anchorOffset, 0, "Collapsing by ArrowRight should put the caret to the right side");
+}
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.promiseFocus().then(async () => {
+  await testLogicalMovement();
+  await testVisualMovement();
+  await testHybridMovement();
+  SimpleTest.finish();
+});
+</script>
