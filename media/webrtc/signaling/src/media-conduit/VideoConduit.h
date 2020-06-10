@@ -284,6 +284,8 @@ class WebrtcVideoConduit
                            DOMHighResTimeStamp* aRemoteTimestamp) override;
 
   void GetRtpSources(nsTArray<dom::RTCRtpSourceEntry>& outSources) override;
+  bool AddFrameHistory(dom::Sequence<dom::RTCVideoFrameHistoryInternal>*
+                           outHistories) const override;
 
   uint64_t MozVideoLatencyAvg();
 
@@ -667,6 +669,9 @@ class WebrtcVideoConduit
 
   // Accessed from main and mStsThread. Uses locks internally.
   RefPtr<RtpSourceObserver> mRtpSourceObserver;
+  // Tracking the attributes of received frames over time
+  // Accessed only on the mStsThread
+  dom::RTCVideoFrameHistoryInternal mReceivedFrameHistory;
 };
 }  // namespace mozilla
 

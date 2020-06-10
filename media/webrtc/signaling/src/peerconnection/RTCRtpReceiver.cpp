@@ -157,7 +157,8 @@ already_AddRefed<Promise> RTCRtpReceiver::GetStats() {
 }
 
 static UniquePtr<dom::RTCStatsCollection> GetReceiverStats_s(
-    const RefPtr<MediaPipelineReceive>& aPipeline) {
+    const RefPtr<MediaPipelineReceive>& aPipeline,
+    const nsString& aRecvTrackId) {
   UniquePtr<dom::RTCStatsCollection> report(new dom::RTCStatsCollection);
   auto asVideo = aPipeline->Conduit()->AsVideoSessionConduit();
 
@@ -166,16 +167,25 @@ static UniquePtr<dom::RTCStatsCollection> GetReceiverStats_s(
   nsString idstr = kind + NS_LITERAL_STRING("_");
   idstr.AppendInt(static_cast<uint32_t>(aPipeline->Level()));
 
-  // TODO(@@NG):ssrcs handle Conduits having multiple stats at the same level
-  // This is pending spec work
-  // Gather pipeline stats.
-  nsString localId = NS_LITERAL_STRING("inbound_rtp_") + idstr;
-  nsString remoteId;
   Maybe<uint32_t> ssrc;
   unsigned int ssrcval;
   if (aPipeline->Conduit()->GetRemoteSSRC(&ssrcval)) {
     ssrc = Some(ssrcval);
   }
+
+  // Add frame history
+  asVideo.apply([&](const auto& conduit) {
+    if (conduit->AddFrameHistory(&report->mVideoFrameHistories)) {
+      auto& history = report->mVideoFrameHistories.LastElement();
+      history.mTrackIdentifier = aRecvTrackId;
+    }
+  });
+
+  // TODO(@@NG):ssrcs handle Conduits having multiple stats at the same level
+  // This is pending spec work
+  // Gather pipeline stats.
+  nsString localId = NS_LITERAL_STRING("inbound_rtp_") + idstr;
+  nsString remoteId;
 
   // First, fill in remote stat with rtcp sender data, if present.
   uint32_t packetsSent;
@@ -266,10 +276,15 @@ static UniquePtr<dom::RTCStatsCollection> GetReceiverStats_s(
 nsTArray<RefPtr<RTCStatsPromise>> RTCRtpReceiver::GetStatsInternal() {
   nsTArray<RefPtr<RTCStatsPromise>> promises;
   if (mPipeline && mHaveStartedReceiving) {
-    promises.AppendElement(
-        InvokeAsync(mStsThread, __func__, [pipeline = mPipeline]() {
-          return RTCStatsPromise::CreateAndResolve(GetReceiverStats_s(pipeline),
-                                                   __func__);
+    nsString recvTrackId;
+    MOZ_ASSERT(mTrack);
+    if (mTrack) {
+      mTrack->GetId(recvTrackId);
+    }
+    promises.AppendElement(InvokeAsync(
+        mStsThread, __func__, [pipeline = mPipeline, recvTrackId]() {
+          return RTCStatsPromise::CreateAndResolve(
+              GetReceiverStats_s(pipeline, recvTrackId), __func__);
         }));
 
     if (mJsepTransceiver->mTransport.mComponents) {

@@ -2865,7 +2865,9 @@ RefPtr<dom::RTCStatsReportPromise> PeerConnectionImpl::GetStats(
               if (!report->mRawLocalCandidates.AppendElements(
                       stats->mRawLocalCandidates, fallible) ||
                   !report->mRawRemoteCandidates.AppendElements(
-                      stats->mRawRemoteCandidates, fallible)) {
+                      stats->mRawRemoteCandidates, fallible) ||
+                  !report->mVideoFrameHistories.AppendElements(
+                      stats->mVideoFrameHistories, fallible)) {
                 // XXX(Bug 1632090) Instead of extending the array 1-by-1 (which
                 // might involve multiple reallocations) and potentially
                 // crashing here, SetCapacity could be called outside the loop
