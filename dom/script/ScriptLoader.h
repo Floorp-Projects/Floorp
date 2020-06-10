@@ -151,6 +151,16 @@ class ScriptLoader final : public nsISupports {
   }
 
   /**
+   *  Check whether to speculatively OMT parse scripts as soon as
+   *  they are fetched, even if not a parser blocking request.
+   *  Controlled by
+   *  dom.script_loader.external_scripts.speculative_omt_parse_enabled
+   */
+  bool SpeculativeOMTParsingEnabled() const {
+    return mSpeculativeOMTParsingEnabled;
+  }
+
+  /**
    * Add/remove a blocker for parser-blocking scripts (and XSLT
    * scripts). Blockers will stop such scripts from executing, but not from
    * loading.
@@ -555,6 +565,8 @@ class ScriptLoader final : public nsISupports {
   void AddAsyncRequest(ScriptLoadRequest* aRequest);
   bool MaybeRemovedDeferRequests();
 
+  bool ShouldCompileOffThread(ScriptLoadRequest* aRequest);
+
   void MaybeMoveToLoadedList(ScriptLoadRequest* aRequest);
 
   using MaybeSourceText =
@@ -648,6 +660,7 @@ class ScriptLoader final : public nsISupports {
   uint32_t mNumberOfProcessors;
   bool mEnabled;
   bool mDeferEnabled;
+  bool mSpeculativeOMTParsingEnabled;
   bool mDeferCheckpointReached;
   bool mBlockingDOMContentLoaded;
   bool mLoadEventFired;
