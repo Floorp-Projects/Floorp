@@ -136,6 +136,9 @@ class PreloaderBase : public SupportsWeakPtr<PreloaderBase>,
  protected:
   virtual ~PreloaderBase();
 
+  // The loading channel.  This will update when a redirect occurs.
+  nsCOMPtr<nsIChannel> mChannel;
+
  private:
   void NotifyNodeEvent(nsINode* aNode);
 
@@ -172,9 +175,6 @@ class PreloaderBase : public SupportsWeakPtr<PreloaderBase>,
 
   // History of redirects.
   nsTArray<RedirectRecord> mRedirectRecords;
-
-  // The loading channel.  This will update when a redirect occurs.
-  nsCOMPtr<nsIChannel> mChannel;
 
   // The key this preload has been registered under.  We want to remember it to
   // be able to deregister itself from the document's preloads.

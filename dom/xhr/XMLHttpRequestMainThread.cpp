@@ -1803,11 +1803,6 @@ NS_IMETHODIMP
 XMLHttpRequestMainThread::OnStartRequest(nsIRequest* request) {
   AUTO_PROFILER_LABEL("XMLHttpRequestMainThread::OnStartRequest", NETWORK);
 
-  if (mFromPreload && !mChannel) {
-    mChannel = do_QueryInterface(request);
-    EnsureChannelContentType();
-  }
-
   nsresult rv = NS_OK;
   if (!mFirstStartRequestSeen && mRequestObserver) {
     mFirstStartRequestSeen = true;
@@ -2521,9 +2516,8 @@ nsresult XMLHttpRequestMainThread::InitiateFetch(
         // May be null when the preload has already finished, but the XHR code
         // is safe to live with it.
         mChannel = preload->Channel();
-        if (mChannel) {
-          EnsureChannelContentType();
-        }
+        MOZ_ASSERT(mChannel);
+        EnsureChannelContentType();
         return NS_OK;
       }
 

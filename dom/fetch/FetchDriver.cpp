@@ -526,10 +526,8 @@ nsresult FetchDriver::HttpFetch(
       mFromPreload = true;
 
       mChannel = fetchPreload->Channel();
-      if (mChannel) {
-        // Still in progress, monitor redirects.
-        mChannel->SetNotificationCallbacks(this);
-      }
+      MOZ_ASSERT(mChannel);
+      mChannel->SetNotificationCallbacks(this);
 
       // Copied from AsyncOnChannelRedirect.
       for (const auto& redirect : fetchPreload->Redirects()) {
@@ -905,14 +903,9 @@ FetchDriver::OnStartRequest(nsIRequest* aRequest) {
   // In that case we will get a simulated OnStartRequest() and then the real
   // channel will call in with an errored OnStartRequest().
 
-  if (mFromPreload && !mChannel) {
-    if (mAborted) {
-      aRequest->Cancel(NS_BINDING_ABORTED);
-      return NS_BINDING_ABORTED;
-    }
-
-    mChannel = do_QueryInterface(aRequest);
-    UpdateReferrerInfoFromNewChannel(mChannel);
+  if (mFromPreload && mAborted) {
+    aRequest->Cancel(NS_BINDING_ABORTED);
+    return NS_BINDING_ABORTED;
   }
 
   if (!mChannel) {
