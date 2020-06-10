@@ -207,7 +207,7 @@ class nsPipeInputStream final : public nsIAsyncInputStream,
 
   // requires pipe's monitor; usually treat as an opaque token to pass to nsPipe
   nsPipeReadState mReadState;
-  uint32_t mPriority;
+  Atomic<uint32_t, Relaxed> mPriority;
 };
 
 //-----------------------------------------------------------------------------
