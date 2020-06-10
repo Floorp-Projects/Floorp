@@ -155,18 +155,22 @@ LoginManagerAuthPromptFactory.prototype = {
       prompt.channel,
       prompt.authInfo
     );
-    var hasLogins = Services.logins.countLogins(origin, null, httpRealm) > 0;
-    if (
-      !hasLogins &&
-      LoginHelper.schemeUpgrades &&
-      origin.startsWith("https://")
-    ) {
-      let httpOrigin = origin.replace(/^https:\/\//, "http://");
-      hasLogins = Services.logins.countLogins(httpOrigin, null, httpRealm) > 0;
-    }
-    if (hasLogins && Services.logins.uiBusy) {
-      this.log("_doAsyncPrompt:run bypassed, master password UI busy");
-      return;
+
+    if (Services.logins.uiBusy) {
+      let hasLogins = Services.logins.countLogins(origin, null, httpRealm) > 0;
+      if (
+        !hasLogins &&
+        LoginHelper.schemeUpgrades &&
+        origin.startsWith("https://")
+      ) {
+        let httpOrigin = origin.replace(/^https:\/\//, "http://");
+        hasLogins =
+          Services.logins.countLogins(httpOrigin, null, httpRealm) > 0;
+      }
+      if (hasLogins) {
+        this.log("_doAsyncPrompt:run bypassed, master password UI busy");
+        return;
+      }
     }
 
     var self = this;

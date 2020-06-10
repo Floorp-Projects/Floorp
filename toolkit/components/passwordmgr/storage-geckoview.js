@@ -197,6 +197,10 @@ class LoginManagerStorage_geckoview extends LoginManagerStorage_json {
     throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
   }
 
+  countLogins(origin, formActionOrigin, httpRealm) {
+    throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
+  }
+
   get uiBusy() {
     return false;
   }
