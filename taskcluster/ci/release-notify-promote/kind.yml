@@ -13,6 +13,7 @@ kind-dependencies:
     - post-beetmover-dummy
     - release-generate-checksums-beetmover
     - release-bouncer-sub
+    - release-bouncer-sub-nazgul
 
 job-defaults:
     name: notify-release-drivers-promote
