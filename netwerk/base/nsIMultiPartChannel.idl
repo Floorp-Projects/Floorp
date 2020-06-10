@@ -39,7 +39,7 @@ interface nsIMultiPartChannel : nsISupports
  * when the last part of the multi-part channel has finished, and the
  * final OnStopRequest has been sent.
   */
-[uuid(b084959a-4fb9-41a5-88a0-d0f045ce75cf)]
+[scriptable, uuid(b084959a-4fb9-41a5-88a0-d0f045ce75cf)]
 interface nsIMultiPartChannelListener : nsISupports
 {
     /**
