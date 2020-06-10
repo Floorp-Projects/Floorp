@@ -5,7 +5,7 @@
 use crate::api::{self, StorageChanges};
 use crate::db::StorageDb;
 use crate::error::*;
-use crate::migration::migrate;
+use crate::migration::{migrate, MigrationInfo};
 use crate::sync;
 use std::path::Path;
 use std::result;
@@ -128,24 +128,45 @@ impl Store {
     }
 
     /// Migrates data from a database in the format of the "old" kinto
-    /// implementation. Returns the count of webextensions for whom data was
-    /// migrated.
+    /// implementation. Information about how the migration went is stored in
+    /// the database, and can be read using `Self::take_migration_info`.
+    ///
     /// Note that `filename` isn't normalized or canonicalized.
-    pub fn migrate(&self, filename: impl AsRef<Path>) -> Result<usize> {
+    pub fn migrate(&self, filename: impl AsRef<Path>) -> Result<()> {
         let tx = self.db.unchecked_transaction()?;
         let result = migrate(&tx, filename.as_ref())?;
+        tx.commit()?;
+        // Failing to store this information should not cause migration failure.
+        if let Err(e) = result.store(&self.db) {
+            debug_assert!(false, "Migration error: {:?}", e);
+            log::warn!("Failed to record migration telmetry: {}", e);
+        }
+        Ok(())
+    }
+
+    /// Read-and-delete (e.g. `take` in rust parlance, see Option::take)
+    /// operation for any MigrationInfo stored in this database.
+    pub fn take_migration_info(&self) -> Result<Option<MigrationInfo>> {
+        let tx = self.db.unchecked_transaction()?;
+        let result = MigrationInfo::take(&tx)?;
         tx.commit()?;
         Ok(result)
     }
 }
 
 #[cfg(test)]
-mod test {
+pub mod test {
     use super::*;
     #[test]
     fn test_send() {
         fn ensure_send<T: Send>() {}
         // Compile will fail if not send.
         ensure_send::<Store>();
+    }
+
+    pub fn new_mem_store() -> Store {
+        Store {
+            db: crate::db::test::new_mem_db(),
+        }
     }
 }

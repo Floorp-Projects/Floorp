@@ -261,6 +261,14 @@ impl StorageSyncArea {
         }
         Ok(())
     }
+
+    xpcom_method!(takeMigrationInfo => TakeMigrationInfo(callback: *const mozIExtensionStorageCallback));
+
+    /// Fetch-and-delete (e.g. `take`) information about the migration from the
+    /// kinto-based extension-storage to the rust-based storage.
+    fn takeMigrationInfo(&self, callback: &mozIExtensionStorageCallback) -> Result<()> {
+        self.dispatch(Punt::TakeMigrationInfo, callback)
+    }
 }
 
 fn teardown(
