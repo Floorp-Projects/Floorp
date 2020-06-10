@@ -964,10 +964,10 @@ class nsFrameSelection final {
 
   struct MaintainedRange {
     /**
-     * @return true iff the point (aContent, aOffset) is inside and not at the
-     * boundaries of mRange.
+     * Ensure anchor and focus of aNormalSelection are ordered appropriately
+     * relative to the maintained range.
      */
-    MOZ_CAN_RUN_SCRIPT bool AdjustNormalSelection(
+    MOZ_CAN_RUN_SCRIPT void AdjustNormalSelection(
         const nsIContent* aContent, int32_t aOffset,
         mozilla::dom::Selection& aNormalSelection) const;
 
