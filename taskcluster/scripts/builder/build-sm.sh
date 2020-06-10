@@ -8,14 +8,14 @@ source $(dirname $0)/sm-tooltool-config.sh
 
 # Run the script
 export MOZ_UPLOAD_DIR="$(cd "$UPLOAD_DIR"; pwd)"
-AUTOMATION=1 $PYTHON3 $SRCDIR/js/src/devtools/automation/autospider.py ${SPIDERMONKEY_PLATFORM:+--platform=$SPIDERMONKEY_PLATFORM} $SPIDERMONKEY_VARIANT
+AUTOMATION=1 $PYTHON3 $GECKO_PATH/js/src/devtools/automation/autospider.py ${SPIDERMONKEY_PLATFORM:+--platform=$SPIDERMONKEY_PLATFORM} $SPIDERMONKEY_VARIANT
 BUILD_STATUS=$?
 
 # Ensure upload dir exists
 mkdir -p $UPLOAD_DIR
 
 # Copy artifacts for upload by TaskCluster
-cp -rL $SRCDIR/obj-spider/dist/bin/{js,jsapi-tests,js-gdb.py} $UPLOAD_DIR
+cp -rL $GECKO_PATH/obj-spider/dist/bin/{js,jsapi-tests,js-gdb.py} $UPLOAD_DIR
 
 # Fuzzing users want the correct version of llvm-symbolizer available in the
 # same directory as the built output.
