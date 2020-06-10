@@ -1310,4 +1310,24 @@ static bool ReadParams(const Message* aMsg, PickleIterator* aIter,
 
 } /* namespace IPC */
 
+#define DEFINE_IPC_SERIALIZER_WITH_SUPER_CLASS_AND_FIELDS(Type, Super, ...)  \
+  template <>                                                                \
+  struct ParamTraits<Type> {                                                 \
+    typedef Type paramType;                                                  \
+    static void Write(Message* aMsg, const paramType& aParam) {              \
+      WriteParam(aMsg, static_cast<const Super&>(aParam));                   \
+      WriteParams(aMsg, MOZ_FOR_EACH_SEPARATED(ACCESS_PARAM_FIELD, (, ), (), \
+                                               (__VA_ARGS__)));              \
+    }                                                                        \
+                                                                             \
+    static bool Read(const Message* aMsg, PickleIterator* aIter,             \
+                     paramType* aResult) {                                   \
+      paramType& aParam = *aResult;                                          \
+      return ReadParam(aMsg, aIter, static_cast<Super*>(aResult)) &&         \
+             ReadParams(aMsg, aIter,                                         \
+                        MOZ_FOR_EACH_SEPARATED(ACCESS_PARAM_FIELD, (, ), (), \
+                                               (__VA_ARGS__)));              \
+    }                                                                        \
+  };
+
 #endif /* __IPC_GLUE_IPCMESSAGEUTILS_H__ */

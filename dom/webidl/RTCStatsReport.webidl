@@ -80,7 +80,7 @@ dictionary RTCOutboundRtpStreamStats : RTCSentRtpStreamStats {
   double framerateMean; // deprecated, to be removed in Bug 1367562
   double framerateStdDev; // deprecated, to be removed in Bug 1367562
   unsigned long droppedFrames; // non-spec alias for framesDropped
-  							   // to be deprecated in Bug 1225720
+                               // to be deprecated in Bug 1225720
 };
 
 dictionary RTCRemoteOutboundRtpStreamStats : RTCSentRtpStreamStats {
@@ -155,6 +155,24 @@ dictionary RTCIceCandidateStats : RTCStats {
   DOMString proxied;
 };
 
+// This is for tracking the frame rate in about:webrtc
+dictionary RTCVideoFrameHistoryEntryInternal {
+  required unsigned long       width;
+  required unsigned long       height;
+  required unsigned long       rotationAngle;
+  required DOMHighResTimeStamp firstFrameTimestamp;
+  required DOMHighResTimeStamp lastFrameTimestamp;
+  required unsigned long long  consecutiveFrames;
+  required unsigned long       localSsrc;
+  required unsigned long       remoteSsrc;
+};
+
+// Collection over the entries for a single track for about:webrtc
+dictionary RTCVideoFrameHistoryInternal {
+  required DOMString                          trackIdentifier;
+  sequence<RTCVideoFrameHistoryEntryInternal> entries = [];
+};
+
 // This is intended to be a list of dictionaries that inherit from RTCStats
 // (with some raw ICE candidates thrown in). Unfortunately, we cannot simply
 // store a sequence<RTCStats> because of slicing. So, we have to have a
@@ -171,6 +189,7 @@ dictionary RTCStatsCollection {
   sequence<DOMString>                       rawLocalCandidates = [];
   sequence<DOMString>                       rawRemoteCandidates = [];
   sequence<RTCDataChannelStats>             dataChannelStats = [];
+  sequence<RTCVideoFrameHistoryInternal>    videoFrameHistories = [];
 };
 
 // A collection of RTCStats dictionaries, plus some other info. Used by

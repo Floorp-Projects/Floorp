@@ -492,6 +492,9 @@ class VideoSessionConduit : public MediaSessionConduit {
 
   virtual void RecordTelemetry() const = 0;
 
+  virtual bool AddFrameHistory(
+      dom::Sequence<dom::RTCVideoFrameHistoryInternal>* outHistories) const = 0;
+
  protected:
   /* RTCP feedback settings, for unit testing purposes */
   FrameRequestType mFrameRequestMethod;
