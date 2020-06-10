@@ -550,6 +550,8 @@ class GlobalObject : public NativeObject {
 
  private:
   using ObjectInitOp = bool (*)(JSContext*, Handle<GlobalObject*>);
+  using ObjectInitWithTagOp = bool (*)(JSContext*, Handle<GlobalObject*>,
+                                       HandleAtom);
 
   static JSObject* getOrCreateObject(JSContext* cx,
                                      Handle<GlobalObject*> global,
@@ -562,8 +564,23 @@ class GlobalObject : public NativeObject {
     return createObject(cx, global, slot, init);
   }
 
+  static JSObject* getOrCreateObject(JSContext* cx,
+                                     Handle<GlobalObject*> global,
+                                     unsigned slot, HandleAtom tag,
+                                     ObjectInitWithTagOp init) {
+    Value v = global->getSlotRef(slot);
+    if (v.isObject()) {
+      return &v.toObject();
+    }
+
+    return createObject(cx, global, slot, tag, init);
+  }
+
   static JSObject* createObject(JSContext* cx, Handle<GlobalObject*> global,
                                 unsigned slot, ObjectInitOp init);
+  static JSObject* createObject(JSContext* cx, Handle<GlobalObject*> global,
+                                unsigned slot, HandleAtom tag,
+                                ObjectInitWithTagOp init);
 
   static JSObject* createIteratorPrototype(JSContext* cx,
                                            Handle<GlobalObject*> global);
@@ -578,10 +595,7 @@ class GlobalObject : public NativeObject {
   }
 
   static NativeObject* getOrCreateArrayIteratorPrototype(
-      JSContext* cx, Handle<GlobalObject*> global) {
-    return MaybeNativeObject(getOrCreateObject(cx, global, ARRAY_ITERATOR_PROTO,
-                                               initArrayIteratorProto));
-  }
+      JSContext* cx, Handle<GlobalObject*> global);
 
   NativeObject* maybeGetArrayIteratorPrototype() {
     Value v = getSlotRef(ARRAY_ITERATOR_PROTO);
@@ -592,16 +606,10 @@ class GlobalObject : public NativeObject {
   }
 
   static JSObject* getOrCreateStringIteratorPrototype(
-      JSContext* cx, Handle<GlobalObject*> global) {
-    return getOrCreateObject(cx, global, STRING_ITERATOR_PROTO,
-                             initStringIteratorProto);
-  }
+      JSContext* cx, Handle<GlobalObject*> global);
 
   static JSObject* getOrCreateRegExpStringIteratorPrototype(
-      JSContext* cx, Handle<GlobalObject*> global) {
-    return getOrCreateObject(cx, global, REGEXP_STRING_ITERATOR_PROTO,
-                             initRegExpStringIteratorProto);
-  }
+      JSContext* cx, Handle<GlobalObject*> global);
 
   void setGeneratorObjectPrototype(JSObject* obj) {
     setSlot(GENERATOR_OBJECT_PROTO, ObjectValue(*obj));
@@ -723,11 +731,7 @@ class GlobalObject : public NativeObject {
   }
 
   static NativeObject* getOrCreateWrapForValidIteratorPrototype(
-      JSContext* cx, Handle<GlobalObject*> global) {
-    return MaybeNativeObject(getOrCreateObject(cx, global,
-                                               WRAP_FOR_VALID_ITERATOR_PROTO,
-                                               initWrapForValidIteratorProto));
-  }
+      JSContext* cx, Handle<GlobalObject*> global);
 
   static NativeObject* getIntrinsicsHolder(JSContext* cx,
                                            Handle<GlobalObject*> global);
@@ -827,14 +831,11 @@ class GlobalObject : public NativeObject {
 
   // Implemented in vm/Iteration.cpp.
   static bool initIteratorProto(JSContext* cx, Handle<GlobalObject*> global);
-  static bool initArrayIteratorProto(JSContext* cx,
-                                     Handle<GlobalObject*> global);
-  static bool initStringIteratorProto(JSContext* cx,
-                                      Handle<GlobalObject*> global);
-  static bool initRegExpStringIteratorProto(JSContext* cx,
-                                            Handle<GlobalObject*> global);
-  static bool initWrapForValidIteratorProto(JSContext*,
-                                            Handle<GlobalObject*> global);
+  template <unsigned Slot, const JSClass* ProtoClass,
+            const JSFunctionSpec* Methods>
+  static bool initObjectIteratorProto(JSContext* cx,
+                                      Handle<GlobalObject*> global,
+                                      HandleAtom tag);
 
   // Implemented in vm/AsyncIteration.cpp.
   static bool initAsyncIteratorProto(JSContext* cx,
