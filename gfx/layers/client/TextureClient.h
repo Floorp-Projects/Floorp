@@ -335,7 +335,7 @@ class TextureData {
  * lifetime. This means that the lifetime of the underlying shared data
  * matches the lifetime of the TextureClient/Host pair. It also means
  * TextureClient/Host do not implement double buffering, which is the
- * responsibility of the compositable (which would use pairs of Textures).
+ * responsibility of the compositable (which would use two Texture pairs).
  * In order to send several different buffers to the compositor side, use
  * several TextureClients.
  */
@@ -906,8 +906,6 @@ class TKeepAlive : public KeepAlive {
 /// Convenience function to set the content of ycbcr texture.
 bool UpdateYCbCrTextureClient(TextureClient* aTexture,
                               const PlanarYCbCrData& aData);
-
-TextureType PreferredCanvasTextureType(const KnowsCompositor&);
 
 }  // namespace layers
 }  // namespace mozilla

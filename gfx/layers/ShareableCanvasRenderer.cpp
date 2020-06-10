@@ -6,80 +6,185 @@
 
 #include "ShareableCanvasRenderer.h"
 
-#include "mozilla/dom/WebGLTypes.h"
+#include "GLContext.h"        // for GLContext
+#include "GLScreenBuffer.h"   // for GLScreenBuffer
+#include "SharedSurfaceGL.h"  // for SurfaceFactory_GLTexture, etc
+#include "gfxUtils.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/layers/AsyncCanvasRenderer.h"
 #include "mozilla/layers/TextureClientSharedSurface.h"
 #include "mozilla/layers/CompositableForwarder.h"
-
-#include "ClientWebGLContext.h"
-#include "gfxUtils.h"
-#include "GLScreenBuffer.h"
-#include "nsICanvasRenderingContextInternal.h"
-#include "SharedSurfaceGL.h"
 
 using namespace mozilla::gfx;
 
 namespace mozilla {
 namespace layers {
 
-ShareableCanvasRenderer::ShareableCanvasRenderer() {
+ShareableCanvasRenderer::ShareableCanvasRenderer()
+    : mCanvasClient(nullptr),
+      mFactory(nullptr),
+      mFlags(TextureFlags::NO_FLAGS) {
   MOZ_COUNT_CTOR(ShareableCanvasRenderer);
 }
 
 ShareableCanvasRenderer::~ShareableCanvasRenderer() {
   MOZ_COUNT_DTOR(ShareableCanvasRenderer);
 
-  mFrontBufferFromDesc = nullptr;
-  DisconnectClient();
+  Destroy();
 }
 
-void ShareableCanvasRenderer::Initialize(const CanvasRendererData& aData) {
-  CanvasRenderer::Initialize(aData);
+void ShareableCanvasRenderer::Initialize(const CanvasInitializeData& aData) {
+  CopyableCanvasRenderer::Initialize(aData);
+
   mCanvasClient = nullptr;
+
+  if (!mGLContext) return;
+
+  gl::GLScreenBuffer* screen = mGLContext->Screen();
+  MOZ_ASSERT(screen);
+  gl::SurfaceCaps caps = screen->mCaps;
+
+  auto forwarder = GetForwarder();
+
+  mFlags = TextureFlags::ORIGIN_BOTTOM_LEFT;
+  if (!aData.mIsGLAlphaPremult) {
+    mFlags |= TextureFlags::NON_PREMULTIPLIED;
+  }
+
+  if (!aData.mHasAlpha) {
+    mFlags |= TextureFlags::IS_OPAQUE;
+  }
+  UniquePtr<gl::SurfaceFactory> factory =
+      gl::GLScreenBuffer::CreateFactory(mGLContext, caps, forwarder, mFlags);
+  if (factory) {
+    screen->Morph(std::move(factory));
+  }
 }
 
 void ShareableCanvasRenderer::ClearCachedResources() {
-  CanvasRenderer::ClearCachedResources();
+  CopyableCanvasRenderer::ClearCachedResources();
 
   if (mCanvasClient) {
     mCanvasClient->Clear();
   }
 }
 
-void ShareableCanvasRenderer::DisconnectClient() {
+void ShareableCanvasRenderer::Destroy() {
+  CopyableCanvasRenderer::Destroy();
+
   if (mCanvasClient) {
     mCanvasClient->OnDetach();
     mCanvasClient = nullptr;
   }
 }
 
-RefPtr<layers::TextureClient> ShareableCanvasRenderer::GetFrontBufferFromDesc(
-    const layers::SurfaceDescriptor& desc, TextureFlags flags) {
-  if (mFrontBufferFromDesc && mFrontBufferDesc == desc)
-    return mFrontBufferFromDesc;
-  mFrontBufferFromDesc = nullptr;
+bool ShareableCanvasRenderer::UpdateTarget(DrawTarget* aDestTarget) {
+  MOZ_ASSERT(!mOOPRenderer);
 
-  // Test the validity of aAllocator
-  const auto& compositableForwarder = GetForwarder();
-  if (!compositableForwarder) {
-    return nullptr;
+  MOZ_ASSERT(aDestTarget);
+  if (!aDestTarget) {
+    return false;
   }
-  const auto& textureForwarder = compositableForwarder->GetTextureForwarder();
 
-  auto format = gfx::SurfaceFormat::R8G8B8X8;
-  if (!mData.mIsOpaque) {
-    format = gfx::SurfaceFormat::R8G8B8A8;
+  RefPtr<SourceSurface> surface;
 
-    if (!mData.mIsAlphaPremult) {
-      flags |= TextureFlags::NON_PREMULTIPLIED;
+  if (!mGLContext) {
+    AutoReturnSnapshot autoReturn;
+
+    if (mAsyncRenderer) {
+      surface = mAsyncRenderer->GetSurface();
+    } else if (mBufferProvider) {
+      surface = mBufferProvider->BorrowSnapshot();
+      autoReturn.mSnapshot = &surface;
+      autoReturn.mBufferProvider = mBufferProvider;
     }
+
+    MOZ_ASSERT(surface);
+    if (!surface) {
+      return false;
+    }
+
+    aDestTarget->CopySurface(surface, IntRect(0, 0, mSize.width, mSize.height),
+                             IntPoint(0, 0));
+    return true;
   }
 
-  auto data = MakeUnique<SharedSurfaceTextureData>(desc, format, mData.mSize);
-  mFrontBufferDesc = desc;
-  mFrontBufferFromDesc =
-      TextureClient::CreateWithData(data.release(), flags, textureForwarder);
-  return mFrontBufferFromDesc;
+  gl::SharedSurface* frontbuffer = nullptr;
+
+  gl::GLScreenBuffer* screen = mGLContext->Screen();
+  const auto& front = screen->Front();
+  if (front) {
+    frontbuffer = front->Surf();
+  }
+
+  if (!frontbuffer) {
+    NS_WARNING("Null frame received.");
+    return false;
+  }
+
+  IntSize readSize(frontbuffer->mSize);
+  SurfaceFormat format =
+      mOpaque ? SurfaceFormat::B8G8R8X8 : SurfaceFormat::B8G8R8A8;
+  bool needsPremult = frontbuffer->mHasAlpha && !mIsAlphaPremultiplied;
+
+  // Try to read back directly into aDestTarget's output buffer
+  uint8_t* destData;
+  IntSize destSize;
+  int32_t destStride;
+  SurfaceFormat destFormat;
+  if (aDestTarget->LockBits(&destData, &destSize, &destStride, &destFormat)) {
+    if (destSize == readSize && destFormat == format) {
+      RefPtr<DataSourceSurface> data = Factory::CreateWrappingDataSourceSurface(
+          destData, destStride, destSize, destFormat);
+      if (!mGLContext->Readback(frontbuffer, data)) {
+        aDestTarget->ReleaseBits(destData);
+        return false;
+      }
+      if (needsPremult) {
+        gfxUtils::PremultiplyDataSurface(data, data);
+      }
+      aDestTarget->ReleaseBits(destData);
+      return true;
+    }
+    aDestTarget->ReleaseBits(destData);
+  }
+
+  RefPtr<DataSourceSurface> resultSurf = GetTempSurface(readSize, format);
+  // There will already be a warning from inside of GetTempSurface, but
+  // it doesn't hurt to complain:
+  if (NS_WARN_IF(!resultSurf)) {
+    return false;
+  }
+
+  // Readback handles Flush/MarkDirty.
+  if (!mGLContext->Readback(frontbuffer, resultSurf)) {
+    return false;
+  }
+  if (needsPremult) {
+    gfxUtils::PremultiplyDataSurface(resultSurf, resultSurf);
+  }
+
+  aDestTarget->CopySurface(resultSurf,
+                           IntRect(0, 0, readSize.width, readSize.height),
+                           IntPoint(0, 0));
+
+  return true;
+}
+
+CanvasClient::CanvasClientType ShareableCanvasRenderer::GetCanvasClientType() {
+  if (mAsyncRenderer) {
+    return CanvasClient::CanvasClientAsync;
+  }
+
+  if (mGLContext) {
+    return CanvasClient::CanvasClientTypeShSurf;
+  }
+
+  if (mOOPRenderer) {
+    return CanvasClient::CanvasClientTypeOOP;
+  }
+
+  return CanvasClient::CanvasClientSurface;
 }
 
 void ShareableCanvasRenderer::UpdateCompositableClient() {
@@ -87,112 +192,29 @@ void ShareableCanvasRenderer::UpdateCompositableClient() {
     return;
   }
 
+  if (mCanvasClient && mAsyncRenderer) {
+    mCanvasClient->UpdateAsync(mAsyncRenderer);
+  }
+
   if (!IsDirty()) {
     return;
   }
   ResetDirty();
 
-  const auto context = mData.GetContext();
-  if (!context) return;
-  const auto& provider = context->GetBufferProvider();
-  const auto webgl = context->AsWebgl();
-
-  const auto& forwarder = GetForwarder();
-
-  // -
-
-  auto flags = TextureFlags::IMMUTABLE;
-  if (!YIsDown()) {
-    flags |= TextureFlags::ORIGIN_BOTTOM_LEFT;
-  }
-
-  // -
-
-  const auto fnGetExistingTc = [&]() -> RefPtr<TextureClient> {
-    if (provider) {
-      auto tc = provider->GetTextureClient();
-      if (!tc) return nullptr;
-
-      if (!provider->SetKnowsCompositor(forwarder)) {
-        gfxCriticalNote << "BufferProvider::SetForwarder failed";
-        return nullptr;
-      }
-      tc = provider->GetTextureClient();  // Ask again after SetKnowsCompositor
-      return tc;
-    }
-
-    if (!webgl) return nullptr;
-    if (!forwarder) return nullptr;
-
-    auto texType = layers::TextureType::Unknown;
-    if (forwarder) {
-      texType = layers::PreferredCanvasTextureType(*forwarder);
-    }
-    const auto desc = webgl->GetFrontBuffer(nullptr, texType);
-    if (!desc) return nullptr;
-    return GetFrontBufferFromDesc(*desc, flags);
-  };
-
-  // -
-
-  const auto fnMakeTcFromSnapshot = [&]() -> RefPtr<TextureClient> {
-    const auto& size = mData.mSize;
-
-    auto contentType = gfxContentType::COLOR;
-    if (!mData.mIsOpaque) {
-      contentType = gfxContentType::COLOR_ALPHA;
-    }
-    const auto surfaceFormat =
-        gfxPlatform::GetPlatform()->Optimal2DFormatForContent(contentType);
-
-    const auto tc =
-        mCanvasClient->CreateTextureClientForCanvas(surfaceFormat, size, flags);
-    if (!tc) {
-      return nullptr;
-    }
-
-    {
-      TextureClientAutoLock tcLock(tc, OpenMode::OPEN_WRITE_ONLY);
-      if (!tcLock.Succeeded()) {
-        return nullptr;
-      }
-
-      const RefPtr<DrawTarget> dt = tc->BorrowDrawTarget();
-
-      const bool requireAlphaPremult = false;
-      const auto borrowed = BorrowSnapshot(requireAlphaPremult);
-      if (!borrowed) return nullptr;
-
-      dt->CopySurface(borrowed->mSurf, {{0, 0}, size}, {0, 0});
-    }
-
-    return tc;
-  };
-
-  // -
-
-  {
-    FirePreTransactionCallback();
-
-    // First, let's see if we can get a no-copy TextureClient from the canvas.
-    auto tc = fnGetExistingTc();
-    if (!tc) {
-      // Otherwise, snapshot the surface and copy into a TexClient.
-      tc = fnMakeTcFromSnapshot();
-    }
-    if (tc != mFrontBufferFromDesc) {
-      mFrontBufferFromDesc = nullptr;
-    }
-
-    if (!tc) {
-      NS_WARNING("Couldn't make TextureClient for CanvasRenderer.");
+  FirePreTransactionCallback();
+  if (mBufferProvider && mBufferProvider->GetTextureClient()) {
+    if (!mBufferProvider->SetKnowsCompositor(GetForwarder())) {
+      gfxCriticalNote << "BufferProvider::SetForwarder failed";
       return;
     }
-
-    mCanvasClient->UseTexture(tc);
-
-    FireDidTransactionCallback();
+    mCanvasClient->UpdateFromTexture(mBufferProvider->GetTextureClient());
+  } else {
+    mCanvasClient->Update(gfx::IntSize(mSize.width, mSize.height), this);
   }
+
+  FireDidTransactionCallback();
+
+  mCanvasClient->Updated();
 }
 
 }  // namespace layers
