@@ -118,6 +118,8 @@ extern ArrayObject* NewArrayWithGroup(JSContext* cx, uint32_t length,
                                       HandleObjectGroup group,
                                       bool convertDoubleElements);
 
+extern bool ToLength(JSContext* cx, HandleValue v, uint64_t* out);
+
 extern bool GetLengthProperty(JSContext* cx, HandleObject obj,
                               uint32_t* lengthp);
 
