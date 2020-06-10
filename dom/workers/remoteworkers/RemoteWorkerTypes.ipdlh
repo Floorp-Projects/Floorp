@@ -8,6 +8,7 @@ include IPCServiceWorkerRegistrationDescriptor;
 include PBackgroundSharedTypes;
 include URIParams;
 include DOMTypes;
+include NeckoChannelParams;
 include ProtocolTypes;
 
 using struct mozilla::void_t from "ipc/IPCMessageUtils.h";
@@ -53,6 +54,8 @@ struct RemoteWorkerData
 
   bool useRegularPrincipal;
   bool hasStorageAccessPermissionGranted;
+
+  CookieJarSettingsArgs cookieJarSettings;
 
   nsCString domain;
 
