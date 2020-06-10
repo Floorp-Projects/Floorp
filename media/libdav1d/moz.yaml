@@ -22,8 +22,18 @@ origin:
   # Generally "version NNN", "tag SSS", "bookmark SSS"
   release: commit efd9e5518e0ed5114f8b4579debd7ee6dbede21f (2020-03-06T00:16:53.000+01:00).
 
+  # Revision to pull in
+  # Must be a long or short commit SHA (long preferred)
+  revision: efd9e5518e0ed5114f8b4579debd7ee6dbede21f
+
   # The package's license, where possible using the mnemonic from
   # https://spdx.org/licenses/
   # Multiple licenses can be specified (as a YAML list)
   # A "LICENSE" file must exist containing the full license text
   license: BSD-2-Clause
+
+  license-file: COPYING
+
+vendoring:
+  url: https://code.videolan.org/videolan/dav1d.git
+  vendor-directory: third_party/dav1d
