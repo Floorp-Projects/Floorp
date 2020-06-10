@@ -151,7 +151,7 @@ class ContextWrapper(object):
             return getattr(object.__getattribute__(self, '_context'), key)
         except AttributeError as e:
             try:
-                ret = object.__getattribute__(self, '_handler')(self, key)
+                ret = object.__getattribute__(self, '_handler')(key)
             except (AttributeError, TypeError):
                 # TypeError is in case the handler comes from old code not
                 # taking a key argument.
@@ -320,7 +320,8 @@ To see more help for a specific command, run:
         Returns the integer exit code that should be used. 0 means success. All
         other values indicate failure.
         """
-        register_sentry()
+        topsrcdir = self.populate_context_handler('topdir')
+        register_sentry(topsrcdir)
 
         # If no encoding is defined, we default to UTF-8 because without this
         # Python 2.7 will assume the default encoding of ASCII. This will blow
@@ -401,7 +402,6 @@ To see more help for a specific command, run:
                                  commands=Registrar)
 
         if self.populate_context_handler:
-            self.populate_context_handler(context)
             context = ContextWrapper(context, self.populate_context_handler)
 
         parser = self.get_argument_parser(context)
