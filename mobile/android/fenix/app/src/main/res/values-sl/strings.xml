@@ -105,8 +105,6 @@
     <string name="browser_menu_new_tab">Nov zavihek</string>
     <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection_2">Shrani v zbirko</string>
-    <!-- Browser menu button that opens a dialog to report issues with the current site -->
-    <string name="browser_menu_report_issue">Prijavi napako strani</string>
     <!-- Browser menu button that open a share menu to share the current site -->
     <string name="browser_menu_share">Deli</string>
     <!-- Share menu title, displayed when a user is sharing their current site -->
@@ -120,8 +118,10 @@
     <!-- Browser menu text shown in custom tabs to indicate this is a Fenix tab
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="browser_menu_powered_by2">Omogoča: %1$s</string>
-    <!-- Browser menu button to put the the current page in reader mode -->
+    <!-- Browser menu button to put the current page in reader mode -->
     <string name="browser_menu_read">Bralni pogled</string>
+    <!-- Browser menu button content description to close reader mode and return the user to the regular browser -->
+    <string name="browser_menu_read_close">Zapri bralni pogled</string>
     <!-- Browser menu button to open the current page in an external app -->
     <string name="browser_menu_open_app_link">Odpri v aplikaciji</string>
     <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
@@ -454,6 +454,16 @@
     <string name="tabs_header_private_tabs_title">Zasebni zavihki</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_tab">Dodaj zavihek</string>
+    <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
+    <string name="add_private_tab">Dodaj zasebni zavihek</string>
+    <!-- Text shown in the menu for saving tabs to a collection -->
+    <string name="tab_tray_menu_item_save">Shrani v zbirko</string>
+    <!-- Text shown in the menu for sharing all tabs -->
+    <string name="tab_tray_menu_item_share">Deli vse zavihke</string>
+    <!-- Text shown in the menu for closing all tabs -->
+    <string name="tab_tray_menu_item_close">Zapri vse zavihke</string>
+    <!-- Shortcut action to open new tab -->
+    <string name="tab_tray_menu_open_new_tab">Nov zavihek</string>
     <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
     <string name="remove_tab_from_collection">Odstrani zavihek iz zbirke</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
@@ -953,20 +963,13 @@
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
     <string name="onboarding_firefox_account_automatic_signin_failed">Prijava ni uspela</string>
     <!-- text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header">Zaščitite se</string>
-    <!-- text for the tracking protection card description
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_tracking_protection_description1">%s pomaga preprečiti, da bi vam spletne strani sledile na spletu.</string>
-    <!-- text for tracking protection radio button option for standard level of blocking -->
-    <string name="onboarding_tracking_protection_standard_button">Običajno</string>
-    <!-- text for standard blocking option button description -->
-    <string name="onboarding_tracking_protection_standard_button_description">Zavrača manj sledilcev, vendar omogoča normalno nalaganje strani</string>
+    <string name="onboarding_tracking_protection_header_2">Samodejna zasebnost</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">Strogo (priporočljivo)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">Strogo</string>
     <!-- text for strict blocking option button description -->
-    <string name="onboarding_tracking_protection_strict_button_description">Zavrača več sledilcev za večjo zaščito in boljše delovanje, vendar lahko povzroči nedelovanje nekaterih strani</string>
+    <string name="onboarding_tracking_protection_strict_button_description_2">Zavrača več sledilcev, oglasov in pojavnih oken. Strani se nalagajo hitreje, vendar nekatere možnosti morda ne bodo delovale.</string>
     <!-- text for the toolbar position card header
         In English this is an idiom for "choose a side as in an argument or fight"
         but it is ok to make this more literally about "choosing a position in a physical space -->
@@ -1052,32 +1055,18 @@
     <string name="preference_enhanced_tracking_protection_explanation">Obdržite svoje podatke zase. %s vas ščiti pred številnimi najpogostejšimi sledilci, ki sledijo vašemu brskanju po spletu.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Več o tem</string>
-    <!-- Preference for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_option">Običajno</string>
-    <!-- Preference for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard">Običajno (priporočeno)</string>
-    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description">Uravnoteženo za zaščito in učinkovitost delovanja.</string>
-    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_2">Strani se bodo nalagale normalno, vendar bo zavrnjenih manj sledilcev.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Kaj je zavrnjeno s standardno zaščito pred sledenjem</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Strogo</string>
-    <!-- Preference for enhanced tracking protection for the strict protection settings, default setting -->
-    <string name="preference_enhanced_tracking_protection_strict_default">Strogo (privzeto)</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_default_description">Močnejša zaščita pred sledenjem in hitrejše delovanje, nekatere strani morda ne bodo delovale pravilno.</string>
-    <!-- Preference for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_recommended">Strogo (priporočljivo)</string>
-    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description">Močnejša zaščita, ki pa lahko povzroči nedelovanje nekaterih strani ali vsebine.</string>
+    <string name="preference_enhanced_tracking_protection_strict_description_2">Zavrača več sledilcev, oglasov in pojavnih oken. Strani se nalagajo hitreje, vendar nekatere možnosti morda ne bodo delovale.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Kaj je zavrnjeno s strogo zaščito pred sledenjem</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom">Po meri</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_custom_description">Izberite, katere sledilce in skripte želite zavračati</string>
+    <string name="preference_enhanced_tracking_protection_custom_description_2">Izberite, katere sledilce in skripte želite zavračati.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_custom_info_button">Kaj je zavrnjeno z zaščito pred sledenjem po meri</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
@@ -1126,8 +1115,6 @@
     <string name="etp_tracking_content_title">Sledilna vsebina</string>
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_description">Preprečuje nalaganje zunanjih oglasov, videoposnetkov in druge vsebine, ki vsebuje sledilno kodo. Lahko vpliva na delovanje nekaterih spletnih strani.</string>
-    <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="etp_onboarding_message_2">%s zavrača sledilce na tej strani, ko je ščit obarvan vijolično. Tapnite ga in si oglejte, kaj je zavrnjeno.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">Zaščite za to spletno mesto so VKLJUČENE</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->

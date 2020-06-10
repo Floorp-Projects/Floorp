@@ -50,8 +50,6 @@
     <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection_2">Захаваць у калекцыі</string>
 
-    <!-- Browser menu button that opens a dialog to report issues with the current site -->
-    <string name="browser_menu_report_issue">Паведаміць аб праблеме з сайтам</string>
     <!-- Browser menu button that open a share menu to share the current site -->
     <string name="browser_menu_share">Падзяліцца</string>
 
@@ -131,6 +129,20 @@
     <string name="preferences_privacy_link">Паведамленне аб прыватнасці</string>
     <!-- Preference category for developer tools -->
     <string name="developer_tools_category">Прылады распрацоўшчыка</string>
+    <!-- Preference title for switch preference to show search suggestions -->
+    <string name="preferences_show_search_suggestions">Паказваць пошукавыя прапановы</string>
+    <!-- Preference title for switch preference to show voice search button -->
+    <string name="preferences_show_voice_search">Паказваць галасавы пошук</string>
+    <!-- Preference title for switch preference to show search suggestions also in private mode -->
+    <string name="preferences_show_search_suggestions_in_private">Паказаць у прыватных сеансах</string>
+    <!-- Preference title for switch preference to show a clipboard suggestion when searching -->
+    <string name="preferences_show_clipboard_suggestions">Паказваць прапановы з буфера абмену</string>
+    <!-- Preference title for switch preference to suggest browsing history when searching -->
+    <string name="preferences_search_browsing_history">Пошук у гісторыі аглядання</string>
+    <!-- Preference title for switch preference to suggest bookmarks when searching -->
+    <string name="preferences_search_bookmarks">Пошук у закладках</string>
+    <!-- Preference for account settings -->
+    <string name="preferences_account_settings">Налады ўліковага запісу</string>
     <!-- Preference for add_ons -->
     <string name="preferences_addons">Дадаткі</string>
 
@@ -185,6 +197,12 @@
 
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_tab">Дадаць картку</string>
+    <!-- Text shown as the title of the open tab tray -->
+    <string name="tab_tray_title">Адкрытыя карткі</string>
+    <!-- Text shown in the menu for saving tabs to a collection -->
+    <string name="tab_tray_menu_item_save">Захаваць у калекцыі</string>
+    <!-- Text shown in the menu for closing all tabs -->
+    <string name="tab_tray_menu_item_close">Закрыць усе карткі</string>
     <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
     <string name="remove_tab_from_collection">Выдаліць картку з калекцыі</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
@@ -219,5 +237,18 @@
     <string name="collection_open_tabs">Адкрыць карткі</string>
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">Выдаліць</string>
+
+    <!-- History multi select title in app bar
+    The first parameter is the number of bookmarks selected -->
+    <string name="history_multi_select_title">Выбрана: %1$d</string>
+    <!-- Text for the button to clear selected history items. The first parameter
+        is a digit showing the number of items you have selected -->
+    <string name="history_delete_some">Выдаліць %1$d элементаў</string>
+    <!-- Text for the header that groups the history for last 24 hours -->
+    <string name="history_24_hours">Апошнія 24 гадзіны</string>
+    <!-- Text for the header that groups the history the past 7 days -->
+    <string name="history_7_days">Апошнія 7 дзён</string>
+    <!-- Text for the header that groups the history the past 30 days -->
+    <string name="history_30_days">Апошнія 30 дзён</string>
 
     </resources>

@@ -95,7 +95,7 @@
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
     <string name="browser_menu_install_on_homescreen">Install</string>
     <!-- Menu option on the toolbar that takes you to synced tabs page-->
-    <string name="synced_tabs">Synchronised Tabs</string>
+    <string name="synced_tabs">Synchronised tabs</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">Find in page</string>
     <!-- Browser menu button that creates a private tab -->
@@ -425,7 +425,7 @@
     <!-- Option in Library to open History page -->
     <string name="library_history">History</string>
     <!-- Option in Library to open Synced Tabs page -->
-    <string name="library_synced_tabs">Synchronised Tabs</string>
+    <string name="library_synced_tabs">Synchronised tabs</string>
     <!-- Option in Library to open Reading List -->
     <string name="library_reading_list">Reading List</string>
     <!-- Menu Item Label for Search in Library -->

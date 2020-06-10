@@ -97,8 +97,6 @@
     <string name="browser_menu_new_tab">לשונית חדשה</string>
     <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection_2">שמירה לאוסף</string>
-    <!-- Browser menu button that opens a dialog to report issues with the current site -->
-    <string name="browser_menu_report_issue">דיווח על בעיה באתר</string>
     <!-- Browser menu button that open a share menu to share the current site -->
     <string name="browser_menu_share">שיתוף</string>
     <!-- Share menu title, displayed when a user is sharing their current site -->
@@ -112,8 +110,10 @@
     <!-- Browser menu text shown in custom tabs to indicate this is a Fenix tab
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="browser_menu_powered_by2">מופעל באמצעות %1$s</string>
-    <!-- Browser menu button to put the the current page in reader mode -->
+    <!-- Browser menu button to put the current page in reader mode -->
     <string name="browser_menu_read">תצוגת קריאה</string>
+    <!-- Browser menu button content description to close reader mode and return the user to the regular browser -->
+    <string name="browser_menu_read_close">סגירת תצוגת הקריאה</string>
     <!-- Browser menu button to open the current page in an external app -->
     <string name="browser_menu_open_app_link">פתיחה ביישומון</string>
     <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
@@ -436,6 +436,22 @@
     <string name="tabs_header_private_tabs_title">לשוניות פרטיות</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_tab">הוספת לשונית</string>
+    <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
+    <string name="add_private_tab">הוספת לשונית פרטית</string>
+    <!-- Text for the new tab button to indicate adding a new private tab in the tab -->
+    <string name="tab_drawer_fab_content">פרטית</string>
+    <!-- Text shown as the title of the open tab tray -->
+    <string name="tab_tray_title">לשוניות פתוחות</string>
+    <!-- Text shown in the menu for saving tabs to a collection -->
+    <string name="tab_tray_menu_item_save">שמירה לאוסף</string>
+    <!-- Text shown in the menu for sharing all tabs -->
+    <string name="tab_tray_menu_item_share">שיתוף כל הלשוניות</string>
+    <!-- Text shown in the menu for closing all tabs -->
+    <string name="tab_tray_menu_item_close">סגירת כל הלשוניות</string>
+    <!-- Shortcut action to open new tab -->
+    <string name="tab_tray_menu_open_new_tab">לשונית חדשה</string>
+    <!-- Shortcut action to toggle private mode -->
+    <string name="tab_tray_menu_toggle">החלפת מצב לשונית</string>
     <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
     <string name="remove_tab_from_collection">הסרת לשונית מהאוסף</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
@@ -702,6 +718,9 @@
     <!-- Button to save currently selected tabs in the "select tabs" step of the collection creator-->
     <string name="create_collection_save">שמירה</string>
 
+    <!-- Snackbar action to view the collection the user just created or updated -->
+    <string name="create_collection_view">הצגה</string>
+
     <!-- Default name for a new collection in "name new collection" step of the collection creator. %d is a placeholder for the number of collections-->
     <string name="create_collection_default_name">אוסף %d</string>
 
@@ -933,20 +952,20 @@
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
     <string name="onboarding_firefox_account_automatic_signin_failed">ההתחברות נכשלה</string>
     <!-- text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header">הגנת מעקב</string>
+    <string name="onboarding_tracking_protection_header_2">פרטיות אוטומטית</string>
     <!-- text for the tracking protection card description
     The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_tracking_protection_description1">‏%s עוזר למנוע מאתרים לעקוב אחריך ברשת.</string>
+    <string name="onboarding_tracking_protection_description_2">הגדרות פרטיות ואבטחה חוסמות רכיבי מעקב, תוכנות זדוניות וחברות העוקבות אחריך.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
-    <string name="onboarding_tracking_protection_standard_button">רגיל</string>
+    <string name="onboarding_tracking_protection_standard_button_2">רגיל (ברירת מחדל)</string>
     <!-- text for standard blocking option button description -->
-    <string name="onboarding_tracking_protection_standard_button_description">חוסם פחות רכיבי מעקב אך מאפשר לטעון דפים כרגיל</string>
+    <string name="onboarding_tracking_protection_standard_button_description_2">חוסם פחות רכיבי מעקב. דפים ייטענו כרגיל.</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">מחמיר (מומלץ)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">מחמיר</string>
     <!-- text for strict blocking option button description -->
-    <string name="onboarding_tracking_protection_strict_button_description">חוסם יותר רכיבי מעקב לטובת הגנה וביצועים טובים יותר, אך עלול לגרום לאתרים מסויימים שלא לפעול כראוי</string>
+    <string name="onboarding_tracking_protection_strict_button_description_2">חוסם יותר רכיבי מעקב, פרסומות וחלונות קופצים. דפים ייטענו מהר יותר, אך ייתכן שפונקציונליות מסוימת לא תעבוד.</string>
     <!-- text for the toolbar position card header
         In English this is an idiom for "choose a side as in an argument or fight"
         but it is ok to make this more literally about "choosing a position in a physical space -->
@@ -1033,31 +1052,21 @@
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">מידע נוסף</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_option">רגיל</string>
-    <!-- Preference for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard">רגיל (מומלץ)</string>
+    <string name="preference_enhanced_tracking_protection_standard_default_1">רגיל (ברירת מחדל)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description">מאוזן בין הגנה לביצועים.</string>
-    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_2">הדפים ייטענו כרגיל, אך פחות רכיבי מעקב ייחסמו.</string>
+    <string name="preference_enhanced_tracking_protection_standard_description_3">חוסם פחות רכיבי מעקב. דפים ייטענו כרגיל.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">מה נחסם על־ידי הגנת מעקב רגילה</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">מחמיר</string>
-    <!-- Preference for enhanced tracking protection for the strict protection settings, default setting -->
-    <string name="preference_enhanced_tracking_protection_strict_default">מחמיר (ברירת מחדל)</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_default_description">הגנת מעקב חזקה יותר וביצועים מהירים יותר, אך מספר אתרים עשויים שלא לעבוד כראוי.</string>
-    <!-- Preference for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_recommended">מחמיר (מומלץ)</string>
-    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description">הגנה חזקה יותר, אך עשויה לשבש פעילות של אתרים או תוכן.</string>
+    <string name="preference_enhanced_tracking_protection_strict_description_2">חוסם יותר רכיבי מעקב, פרסומות וחלונות קופצים. דפים ייטענו מהר יותר, אך ייתכן שפונקציונליות מסוימת לא תעבוד.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">מה נחסם על־ידי הגנת מעקב מחמירה</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom">התאמה אישית</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_custom_description">בחירה באילו רכיבי מעקב ותסריטים יש לחסום</string>
+    <string name="preference_enhanced_tracking_protection_custom_description_2">בחירה באילו רכיבי מעקב ותסריטים יש לחסום.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_custom_info_button">מה נחסם על־ידי הגנת מעקב מותאמת אישית</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
@@ -1107,7 +1116,7 @@
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_description">עוצר טעינה של פרסומות, סרטונים וכל תוכן חיצוני אחר שמכיל קוד מעקב. עשוי להשפיע על אופן פעילות האתר.</string>
     <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="etp_onboarding_message_2">‏%s חוסם רכיבי מעקב באתר זה כאשר המגן בצבע סגול. יש להקיש עליו כדי לראות מה נחסם.</string>
+    <string name="etp_onboarding_cfr_message">בכל פעם שהמגן בצבע סגול, %s חסם רכיבי מעקב באתר. יש להקיש למידע נוסף.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">ההגנות פעילות עבור אתר זה</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
@@ -1247,6 +1256,8 @@
     <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their logins -->
     <string name="logins_biometric_prompt_message_pin">שחרור נעילת המכשיר שלך</string>
 
+    <!-- Summary for Accessibility Force Enable Zoom Preference -->
+    <string name="preference_accessibility_force_enable_zoom_summary">יש להפעיל כדי לאפשר צביטה והתקרבות, אפילו באתרים שמונעים את תנועות האצבעות האלו.</string>
     <!-- Saved logins sorting strategy menu item -by name- (if selected, it will sort saved logins alphabetically) -->
     <string name="saved_logins_sort_strategy_alphabetically">שם (A-Z)</string>
     <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
@@ -1303,6 +1314,8 @@
 
     <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
     <string name="migration_title">ברוך בואך ל־%s חדש לגמרי</string>
+    <!-- Description text followed by a list of things migrating (e.g. Bookmarks, History). Placeholder replaced with app name-->
+    <string name="migration_description">דפדפן שעוצב מחדש לגמרי ממתין לך, עם ביצועים משופרים ותכונות שיסייעו לך לעשות יותר ברשת.\n\nנא להמתין בזמן שאנו מעדכנים את %s עם הנתונים שלך</string>
     <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
     <string name="migration_updating_app_button_text">בעדכון %s…</string>
     <!-- Text on the enabled button. Placeholder replaced with app name-->

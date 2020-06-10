@@ -106,8 +106,6 @@
     <string name="browser_menu_new_tab">Нова вкладка</string>
     <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection_2">Зберегти до збірки</string>
-    <!-- Browser menu button that opens a dialog to report issues with the current site -->
-    <string name="browser_menu_report_issue">Повідомити про сайт</string>
     <!-- Browser menu button that open a share menu to share the current site -->
     <string name="browser_menu_share">Поділитися</string>
     <!-- Share menu title, displayed when a user is sharing their current site -->
@@ -121,9 +119,11 @@
     <!-- Browser menu text shown in custom tabs to indicate this is a Fenix tab
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="browser_menu_powered_by2">Технологія %1$s</string>
-    <!-- Browser menu button to put the the current page in reader mode -->
+    <!-- Browser menu button to put the current page in reader mode -->
     <string name="browser_menu_read">Режим читання</string>
 
+    <!-- Browser menu button content description to close reader mode and return the user to the regular browser -->
+    <string name="browser_menu_read_close">Закрити режим читача</string>
     <!-- Browser menu button to open the current page in an external app -->
     <string name="browser_menu_open_app_link">Відкрити в програмі</string>
     <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
@@ -458,6 +458,24 @@
     <string name="tabs_header_private_tabs_title">Приватні вкладки</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_tab">Додати вкладку</string>
+    <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
+    <string name="add_private_tab">Додати приватну вкладку</string>
+    <!-- Text for the new tab button to indicate adding a new private tab in the tab -->
+    <string name="tab_drawer_fab_content">Приватно</string>
+    <!-- Text shown as the title of the open tab tray -->
+    <string name="tab_tray_title">Відкриті вкладки</string>
+    <!-- Text shown in the menu for saving tabs to a collection -->
+    <string name="tab_tray_menu_item_save">Зберегти до збірки</string>
+    <!-- Text shown in the menu for sharing all tabs -->
+    <string name="tab_tray_menu_item_share">Поділитися всіма вкладками</string>
+    <!-- Text shown in the menu for closing all tabs -->
+    <string name="tab_tray_menu_item_close">Закрити всі вкладки</string>
+    <!-- Shortcut action to open new tab -->
+    <string name="tab_tray_menu_open_new_tab">Нова вкладка</string>
+    <!-- Shortcut action to open the home screen -->
+    <string name="tab_tray_menu_home">Домівка</string>
+    <!-- Shortcut action to toggle private mode -->
+    <string name="tab_tray_menu_toggle">Перемкнути режим вкладок</string>
     <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
     <string name="remove_tab_from_collection">Видалити вкладку зі збірки</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
@@ -724,6 +742,9 @@
     <!-- Button to save currently selected tabs in the "select tabs" step of the collection creator-->
     <string name="create_collection_save">Зберегти</string>
 
+    <!-- Snackbar action to view the collection the user just created or updated -->
+    <string name="create_collection_view">Переглянути</string>
+
     <!-- Default name for a new collection in "name new collection" step of the collection creator. %d is a placeholder for the number of collections-->
     <string name="create_collection_default_name">Збірка %d</string>
 
@@ -956,22 +977,22 @@
     <string name="onboarding_firefox_account_sync_is_on">Синхронізація увімкнена</string>
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
     <string name="onboarding_firefox_account_automatic_signin_failed">Не вдалося увійти</string>
-    <!-- text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header">Захистіть себе</string>
 
+    <!-- text for the tracking protection onboarding card header -->
+    <string name="onboarding_tracking_protection_header_2">Автоматичний захист приватності</string>
     <!-- text for the tracking protection card description
     The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_tracking_protection_description1">%s допомагає зупинити стеження вебсайтів за вами.</string>
+    <string name="onboarding_tracking_protection_description_2">Налаштування приватності та безпеки блокують елементи стеження, зловмисне програмне забезпечення та стеження компаній за вами.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
-    <string name="onboarding_tracking_protection_standard_button">Стандартний</string>
+    <string name="onboarding_tracking_protection_standard_button_2">Стандартний (типово)</string>
     <!-- text for standard blocking option button description -->
-    <string name="onboarding_tracking_protection_standard_button_description">Блокує менше стеження, але дозволяє нормальне завантаження сторінок</string>
+    <string name="onboarding_tracking_protection_standard_button_description_2">Блокує менше елементів стеження. Сторінки завантажуватимуться нормально.</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">Надійний (рекомендовано)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">Надійний</string>
     <!-- text for strict blocking option button description -->
-    <string name="onboarding_tracking_protection_strict_button_description">Блокує більше стеження для кращого захисту і швидкодії, але може призвести до неправильної роботи деяких сайтів</string>
+    <string name="onboarding_tracking_protection_strict_button_description_2">Блокує більше елементів стеження, реклами та виринаючих вікон. Сторінки завантажуються швидше, але деякі функції можуть не працювати.</string>
     <!-- text for the toolbar position card header
         In English this is an idiom for "choose a side as in an argument or fight"
         but it is ok to make this more literally about "choosing a position in a physical space -->
@@ -1060,31 +1081,21 @@
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Докладніше</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_option">Стандартний</string>
-    <!-- Preference for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard">Стандартний (рекомендовано)</string>
+    <string name="preference_enhanced_tracking_protection_standard_default_1">Стандартний (типово)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description">Збалансований рівень захисту і швидкодії.</string>
-    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_2">Нормальне завантаження сторінок при меншому блокуванні стеження.</string>
+    <string name="preference_enhanced_tracking_protection_standard_description_3">Блокує менше елементів стеження. Сторінки завантажуються нормально.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Що блокується стандартним рівнем захисту від стеження</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Надійний</string>
-    <!-- Preference for enhanced tracking protection for the strict protection settings, default setting -->
-    <string name="preference_enhanced_tracking_protection_strict_default">Надійний (Типово)</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_default_description">Кращий захист від стеження і швидкодія, але деякі сайти можуть працювати неправильно.</string>
-    <!-- Preference for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_recommended">Надійний (рекомендовано)</string>
-    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description">Надійніший захист, але може пошкоджувати деякі сайти чи їх вміст.</string>
+    <string name="preference_enhanced_tracking_protection_strict_description_2">Блокує більше елементів стеження, реклами та виринаючих вікон. Сторінки завантажуються швидше, але деякі функції можуть не працювати.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Що блокується надійним рівнем захисту від стеження</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom">Власний</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_custom_description">Оберіть тип стеження і скриптів для блокування</string>
+    <string name="preference_enhanced_tracking_protection_custom_description_2">Виберіть тип стеження і скриптів для блокування.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_custom_info_button">Що блокується власними налаштуваннями захисту від стеження</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
@@ -1135,7 +1146,7 @@
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_description">Блокує завантаження зовнішньої реклами, відео та іншого вмісту з вбудованим кодом стеження. Може вплинути на функціональність вебсайтів.</string>
     <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="etp_onboarding_message_2">%s блокує стеження на цьому сайті, коли щит має фіолетовий колір. Торкніться його, щоб побачити, що заблоковано.</string>
+    <string name="etp_onboarding_cfr_message">Коли %s блокує стеження на сайті, щит стає фіолетовим. Торкніться, щоб дізнатися більше.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">Захист на цьому сайті увімкнено</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
