@@ -16,34 +16,8 @@ LOCAL_CACHE_DIR=
 # Bug 1437473
 CACHE_THRESHOLD=500000
 
-
-NAMESPACE='releng.releases.partials'
-if [ -e "${HOME}/.dogrc" ]
-then
-    METRIC_CMD="$(command -v dog)"
-else
-    METRIC_CMD="echo"
-fi
-METRIC_PARAMS="--type gauge --no_host"
 S3_CACHE_HITS=0
 S3_CACHE_MISSES=0
-
-if [ -n "${BRANCH}" ]
-then
-    if [ -n "${TAGS}" ]; then TAGS="${TAGS},"; fi
-    TAGS="${TAGS}branch:${BRANCH}"
-fi
-if [ -n "${PLATFORM}" ]
-then
-    if [ -n "${TAGS}" ]; then TAGS="${TAGS},"; fi
-    TAGS="${TAGS}platform:${PLATFORM}"
-fi
-if [ -n "${TAGS}" ]
-then
-    # We want literal quotes
-    # shellcheck disable=SC2089
-    TAGS="--tags='${TAGS}'"
-fi
 
 getsha512(){
     openssl sha512 "${1}" | awk '{print $2}'
@@ -119,9 +93,7 @@ get_patch(){
         BUCKET_PATH="s3://${AWS_BUCKET_NAME}${sha_from}/${sha_to}/${s3_filename}"
         if aws s3 ls "${BUCKET_PATH}"; then
             ((S3_CACHE_HITS++))
-            # shellcheck disable=SC2086,SC2090
-            ${METRIC_CMD} metric post "${NAMESPACE}.s3_cache.hit" "${S3_CACHE_HITS}" ${METRIC_PARAMS} ${TAGS}
-            echo "s3 cache hits now ${S3_CACHE_HITS}"
+            echo "s3 cache hit for ${s3_filename} (${S3_CACHE_HITS} total hits)"
             if aws s3 cp "${BUCKET_PATH}" "${destination_file}"; then
                 echo "Successful retrieved ${destination_file} from s3://${AWS_BUCKET_NAME}"
                 return 0
@@ -132,8 +104,7 @@ get_patch(){
         # Not found, fall through to default error
         else
             ((S3_CACHE_MISSES++))
-            # shellcheck disable=SC2086,SC2090
-            ${METRIC_CMD} metric post "${NAMESPACE}.s3_cache.miss" "${S3_CACHE_MISSES}" ${METRIC_PARAMS} ${TAGS}
+            echo "s3 cache miss for ${s3_filename} (${S3_CACHE_MISSES} total misses)"
         fi
     fi
     return 1
