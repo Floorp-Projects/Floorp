@@ -5,7 +5,7 @@
 import mozunit
 import pytest
 
-from mozperftest.scriptinfo import ScriptInfo, METADATA
+from mozperftest.test.browsertime.script import ScriptInfo, MissingFieldError
 from mozperftest.tests.support import EXAMPLE_TEST, HERE
 
 
@@ -16,13 +16,10 @@ def test_scriptinfo():
     display = str(info)
     assert "The description of the example test." in display
 
-    # Ensure that all known fields are in the script info
-    assert set(list(info.keys())) - METADATA == set()
-
 
 def test_scriptinfo_failure():
     bad_example = HERE / "data" / "failing-samples" / "perftest_doc_failure_example.js"
-    with pytest.raises(AssertionError):
+    with pytest.raises(MissingFieldError):
         ScriptInfo(bad_example)
 
 
