@@ -121,7 +121,7 @@ cfg_if! {
     }
 }
 
-const DEFAULT_BATCH_LOOKBACK_COUNT: usize = 10;
+const DEFAULT_BATCH_LOOKBACK_COUNT: usize = 4;
 const VERTEX_TEXTURE_EXTRA_ROWS: i32 = 10;
 
 /// The size of the array of each type of vertex data texture that
@@ -3082,7 +3082,7 @@ impl Renderer {
                 debug_target.add(
                     debug_server::BatchKind::Opaque,
                     batch.key.kind.debug_name(),
-                    batch.instances.len(),
+                    batch.instance_count(),
                 );
             }
 
@@ -3090,7 +3090,7 @@ impl Renderer {
                 debug_target.add(
                     debug_server::BatchKind::Alpha,
                     batch.key.kind.debug_name(),
-                    batch.instances.len(),
+                    batch.instance_count(),
                 );
             }
         }
@@ -4393,8 +4393,10 @@ impl Renderer {
                         );
 
                     let _timer = self.gpu_profile.start_timer(batch.key.kind.sampler_tag());
+
+                    let stack = &alpha_batch_container.opaque_stacks[batch.stack_index as usize];
                     self.draw_instanced_batch(
-                        &batch.instances,
+                        &stack[&batch.instance_range],
                         VertexArrayKind::Primitive,
                         &batch.key.textures,
                         stats
@@ -4498,7 +4500,7 @@ impl Renderer {
                 if let BatchKind::Brush(BrushBatchKind::MixBlend { task_id, source_id, backdrop_id }) = batch.key.kind {
                     // composites can't be grouped together because
                     // they may overlap and affect each other.
-                    debug_assert_eq!(batch.instances.len(), 1);
+                    debug_assert_eq!(batch.instance_count(), 1);
                     self.handle_readback_composite(
                         draw_target,
                         uses_scissor,
@@ -4515,12 +4517,15 @@ impl Renderer {
                     &mut self.renderer_errors,
                 );
 
-                self.draw_instanced_batch(
-                    &batch.instances,
-                    VertexArrayKind::Primitive,
-                    &batch.key.textures,
-                    stats
-                );
+                {
+                    let stack = &alpha_batch_container.alpha_stacks[batch.stack_index as usize];
+                    self.draw_instanced_batch(
+                        &stack[&batch.instance_range],
+                        VertexArrayKind::Primitive,
+                        &batch.key.textures,
+                        stats
+                    );
+                }
 
                 if batch.key.blend_mode == BlendMode::SubpixelWithBgColor {
                     self.set_blend_mode_subpixel_with_bg_color_pass1(framebuffer_kind);
@@ -4537,7 +4542,7 @@ impl Renderer {
                     // so just issue a draw call here to avoid re-uploading the
                     // instances and re-binding textures etc.
                     self.device
-                        .draw_indexed_triangles_instanced_u16(6, batch.instances.len() as i32);
+                        .draw_indexed_triangles_instanced_u16(6, batch.instance_count() as i32);
 
                     self.set_blend_mode_subpixel_with_bg_color_pass2(framebuffer_kind);
                     // re-binding the shader after the blend mode change
@@ -4549,7 +4554,7 @@ impl Renderer {
                     self.device.switch_mode(ShaderColorMode::SubpixelWithBgColorPass2 as _);
 
                     self.device
-                        .draw_indexed_triangles_instanced_u16(6, batch.instances.len() as i32);
+                        .draw_indexed_triangles_instanced_u16(6, batch.instance_count() as i32);
                 }
 
                 if batch.key.blend_mode == BlendMode::SubpixelWithBgColor {

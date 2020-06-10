@@ -412,12 +412,14 @@ impl RenderTarget for ColorRenderTarget {
                     let alpha_batch_builders = batch_builder.finalize();
 
                     for batcher in alpha_batch_builders {
-                        batcher.build(
-                            &mut self.alpha_batch_containers,
-                            &mut merged_batches,
-                            target_rect,
-                            scissor_rect,
-                        );
+                        if scissor_rect.is_none() {
+                            batcher.build_into(&mut merged_batches, target_rect);
+                        } else {
+                            self.alpha_batch_containers.push(batcher.build(
+                                target_rect,
+                                scissor_rect,
+                            ));
+                        }
                     }
                 }
                 _ => {
