@@ -26,7 +26,7 @@ void ClientCanvasLayer::RenderLayer() {
   ClientManager()->Hold(this);
 }
 
-CanvasRenderer* ClientCanvasLayer::CreateCanvasRendererInternal() {
+RefPtr<CanvasRenderer> ClientCanvasLayer::CreateCanvasRendererInternal() {
   return new ClientCanvasRenderer(this);
 }
 

@@ -333,8 +333,7 @@ bool GLLibraryEGL::ReadbackEGLImage(EGLImage image,
   StaticMutexAutoUnlock lock(sMutex);
   if (!mReadbackGL) {
     nsCString discardFailureId;
-    mReadbackGL = gl::GLContextProvider::CreateHeadless(
-        gl::CreateContextFlags::NONE, &discardFailureId);
+    mReadbackGL = gl::GLContextProvider::CreateHeadless({}, &discardFailureId);
   }
 
   ScopedTexture destTex(mReadbackGL);

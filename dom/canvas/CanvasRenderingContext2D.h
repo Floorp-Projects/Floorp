@@ -56,7 +56,6 @@ template <typename T>
 class Optional;
 
 struct CanvasBidiProcessor;
-class CanvasRenderingContext2DUserData;
 class CanvasDrawObserver;
 class CanvasShutdownObserver;
 
@@ -85,6 +84,12 @@ class CanvasRenderingContext2D final : public nsICanvasRenderingContextInternal,
 
     // corresponds to changes to the old bindings made in bug 745025
     return mCanvasElement->GetOriginalCanvas();
+  }
+
+  void OnBeforePaintTransaction() override;
+  void OnDidPaintTransaction() override;
+  layers::PersistentBufferProvider* GetBufferProvider() override {
+    return mBufferProvider;
   }
 
   void Save() override;
@@ -491,8 +496,6 @@ class CanvasRenderingContext2D final : public nsICanvasRenderingContextInternal,
     }
   }
 
-  friend class CanvasRenderingContext2DUserData;
-
   virtual UniquePtr<uint8_t[]> GetImageBuffer(int32_t* aFormat) override;
 
   // Given a point, return hit region ID if it exists
@@ -719,8 +722,6 @@ class CanvasRenderingContext2D final : public nsICanvasRenderingContextInternal,
   bool mIPC;
 
   bool mHasPendingStableStateCallback;
-
-  nsTArray<CanvasRenderingContext2DUserData*> mUserDatas;
 
   // If mCanvasElement is not provided, then a docshell is
   nsCOMPtr<nsIDocShell> mDocShell;

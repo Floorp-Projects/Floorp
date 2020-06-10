@@ -38,6 +38,9 @@ static bool ShouldDeferAttachment(const WebGLContext* const webgl,
   }
 }
 
+WebGLFBAttachPoint::WebGLFBAttachPoint() = default;
+WebGLFBAttachPoint::WebGLFBAttachPoint(WebGLFBAttachPoint&) = default;
+
 WebGLFBAttachPoint::WebGLFBAttachPoint(const WebGLContext* const webgl,
                                        const GLenum attachmentPoint)
     : mAttachmentPoint(attachmentPoint),
