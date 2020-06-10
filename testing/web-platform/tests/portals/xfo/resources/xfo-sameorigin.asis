@@ -1,6 +1,6 @@
 HTTP/1.1 200 OK
 Content-Type: text/html
-X-Frame-Options: DENY
+X-Frame-Options: SAMEORIGIN
 
 <!DOCTYPE html>
 <script>
