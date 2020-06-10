@@ -17,6 +17,7 @@
 #include "mozilla/HTMLEditor.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/ScrollTypes.h"
+#include "mozilla/StaticPrefs_bidi.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_layout.h"
 
@@ -365,8 +366,6 @@ nsFrameSelection::nsFrameSelection(PresShell* aPresShell, nsIContent* aLimiter,
   mPresShell = aPresShell;
   mDragState = false;
   mLimiters.mLimiter = aLimiter;
-  mCaret.mMovementStyle =
-      Preferences::GetInt("bidi.edit.caret_movement_style", 2);
 
   // This should only ever be initialized on the main thread, so we are OK here.
   MOZ_ASSERT(NS_IsMainThread());
@@ -435,6 +434,14 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(nsFrameSelection, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(nsFrameSelection, Release)
+
+bool nsFrameSelection::Caret::IsVisualMovement(
+    bool aContinueSelection, CaretMovementStyle aMovementStyle) const {
+  int32_t movementFlag = StaticPrefs::bidi_edit_caret_movement_style();
+  return aMovementStyle == eVisual ||
+         (aMovementStyle == eUsePrefStyle &&
+          (movementFlag == 1 || (movementFlag == 2 && !aContinueSelection)));
+}
 
 // Get the x (or y, in vertical writing mode) position requested
 // by the Key Handling for line-up/down

@@ -1015,15 +1015,9 @@ class nsFrameSelection final {
     // next.
     CaretAssociateHint mHint = mozilla::CARET_ASSOCIATE_BEFORE;
     nsBidiLevel mBidiLevel = BIDI_LEVEL_UNDEFINED;
-    int8_t mMovementStyle = 0;
 
     bool IsVisualMovement(bool aContinueSelection,
-                          CaretMovementStyle aMovementStyle) const {
-      return aMovementStyle == eVisual ||
-             (aMovementStyle == eUsePrefStyle &&
-              (mMovementStyle == 1 ||
-               (mMovementStyle == 2 && !aContinueSelection)));
-    }
+                          CaretMovementStyle aMovementStyle) const;
   };
 
   Caret mCaret;
