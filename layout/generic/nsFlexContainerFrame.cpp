@@ -4583,13 +4583,13 @@ void nsFlexContainerFrame::CalculatePackingSpace(
 
 ComputedFlexContainerInfo*
 nsFlexContainerFrame::CreateOrClearFlexContainerInfo() {
-  if (!ShouldGenerateComputedInfo()) {
+  if (!HasAnyStateBits(NS_STATE_FLEX_GENERATE_COMPUTED_VALUES)) {
     return nullptr;
   }
 
-  // The flag that sets ShouldGenerateComputedInfo() will never be cleared.
-  // That's acceptable because it's only set in a Chrome API invoked by
-  // devtools, and won't impact normal browsing.
+  // NS_STATE_FLEX_GENERATE_COMPUTED_VALUES will never be cleared. That's
+  // acceptable because it's only set in a Chrome API invoked by devtools, and
+  // won't impact normal browsing.
 
   // Re-use the ComputedFlexContainerInfo, if it exists.
   ComputedFlexContainerInfo* info = GetProperty(FlexContainerInfo());
@@ -4734,7 +4734,7 @@ nsFlexContainerFrame* nsFlexContainerFrame::GetFlexFrameWithComputedInfo(
       AutoWeakFrame weakFrameRef(aFrame);
 
       RefPtr<mozilla::PresShell> presShell = flexFrame->PresShell();
-      flexFrame->SetShouldGenerateComputedInfo(true);
+      flexFrame->AddStateBits(NS_STATE_FLEX_GENERATE_COMPUTED_VALUES);
       presShell->FrameNeedsReflow(flexFrame, IntrinsicDirty::Resize,
                                   NS_FRAME_IS_DIRTY);
       presShell->FlushPendingNotifications(FlushType::Layout);
@@ -4836,9 +4836,9 @@ void nsFlexContainerFrame::DoFlexLayout(
   // size adjustments). We'll later fix up the line properties,
   // because the correct values aren't available yet.
   if (aContainerInfo) {
-    MOZ_ASSERT(ShouldGenerateComputedInfo(),
+    MOZ_ASSERT(HasAnyStateBits(NS_STATE_FLEX_GENERATE_COMPUTED_VALUES),
                "We should only have the info struct if "
-               "ShouldGenerateComputedInfo() is true!");
+               "NS_STATE_FLEX_GENERATE_COMPUTED_VALUES state bit is set!");
 
     if (!aStruts.IsEmpty()) {
       // We restarted DoFlexLayout, and may have stale mLines to clear:
