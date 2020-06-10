@@ -1364,10 +1364,6 @@ pref("network.http.request.max-start-delay", 10);
 // If a connection is reset, we will retry it max-attempts times.
 pref("network.http.request.max-attempts", 10);
 
-// Include an origin header on non-GET and non-HEAD requests regardless of CORS
-// 0=never send, 1=send when same-origin only, 2=always send
-pref("network.http.sendOriginHeader", 2);
-
 // Maximum number of consecutive redirects before aborting.
 pref("network.http.redirection-limit", 20);
 
