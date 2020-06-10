@@ -9478,7 +9478,7 @@ bool nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
       DiscardDisplayItems(this, [](nsDisplayItemBase* aItem) {
         return aItem->GetType() == DisplayItemType::TYPE_TEXT_OVERFLOW;
       });
-      SchedulePaint(PAINT_DEFAULT, false);
+      SchedulePaint(PAINT_DEFAULT);
     }
   }
   return anyOverflowChanged;
