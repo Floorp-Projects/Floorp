@@ -3527,7 +3527,7 @@ void nsWindow::OnContainerFocusOutEvent(GdkEventFocus* aEvent) {
 
   DispatchDeactivateEvent();
 
-  if (mDrawInTitlebar) {
+  if (IsChromeWindowTitlebar()) {
     // DispatchDeactivateEvent() ultimately results in a call to
     // nsGlobalWindowOuter::ActivateOrDeactivate(), which resets
     // the mIsActive flag.  We call UpdateMozWindowActive() to keep
@@ -3799,7 +3799,8 @@ void nsWindow::OnWindowStateEvent(GtkWidget* aWidget,
 
   // This is a workaround for https://gitlab.gnome.org/GNOME/gtk/issues/1395
   // Gtk+ controls window active appearance by window-state-event signal.
-  if (mDrawInTitlebar && (aEvent->changed_mask & GDK_WINDOW_STATE_FOCUSED)) {
+  if (IsChromeWindowTitlebar() &&
+      (aEvent->changed_mask & GDK_WINDOW_STATE_FOCUSED)) {
     // Emulate what Gtk+ does at gtk_window_state_event().
     // We can't check GTK_STATE_FLAG_BACKDROP directly as it's set by Gtk+
     // *after* this window-state-event handler.
@@ -3871,13 +3872,11 @@ void nsWindow::OnWindowStateEvent(GtkWidget* aWidget,
     }
   }
 
-  if (mDrawInTitlebar) {
-    if (mTransparencyBitmapForTitlebar) {
-      if (mSizeState == nsSizeMode_Normal && !mIsTiled) {
-        UpdateTitlebarTransparencyBitmap();
-      } else {
-        ClearTransparencyBitmap();
-      }
+  if (mDrawInTitlebar && mTransparencyBitmapForTitlebar) {
+    if (mSizeState == nsSizeMode_Normal && !mIsTiled) {
+      UpdateTitlebarTransparencyBitmap();
+    } else {
+      ClearTransparencyBitmap();
     }
   }
 }
@@ -4212,15 +4211,18 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
       mIsAccelerated = ComputeShouldAccelerate();
       bool useWebRender = gfx::gfxVars::UseWebRender() && mIsAccelerated;
 
-      if (mWindowType == eWindowType_toplevel) {
-        // We enable titlebar rendering for toplevel windows only.
-        mCSDSupportLevel = GetSystemCSDSupportLevel(mIsPIPWindow);
+      if (mWindowType == eWindowType_toplevel ||
+          mWindowType == eWindowType_dialog) {
+        bool isPopup = mIsPIPWindow || mWindowType == eWindowType_dialog;
+        mCSDSupportLevel = GetSystemCSDSupportLevel(isPopup);
+      }
 
+      if (mWindowType == eWindowType_toplevel && !mIsPIPWindow) {
         // There's no point to configure transparency
         // on non-composited screens.
         // Also disable transparency for PictureInPicture windows.
         GdkScreen* screen = gdk_screen_get_default();
-        if (gdk_screen_is_composited(screen) && !mIsPIPWindow) {
+        if (gdk_screen_is_composited(screen)) {
           // Some Gtk+ themes use non-rectangular toplevel windows. To fully
           // support such themes we need to make toplevel window transparent
           // with ARGB visual.
@@ -5333,6 +5335,16 @@ void nsWindow::UpdatePopupOpaqueRegion(
   }
 }
 
+bool nsWindow::IsChromeWindowTitlebar() {
+  return mDrawInTitlebar && !mIsPIPWindow &&
+         mWindowType == eWindowType_toplevel;
+}
+
+bool nsWindow::DoDrawTilebarCorners() {
+  return IsChromeWindowTitlebar() && mSizeState == nsSizeMode_Normal &&
+         !mIsTiled;
+}
+
 void nsWindow::UpdateOpaqueRegion(const LayoutDeviceIntRegion& aOpaqueRegion) {
   // Don't set shape mask if we use transparency bitmap.
   if (mTransparencyBitmapForTitlebar) {
@@ -5351,8 +5363,7 @@ void nsWindow::UpdateOpaqueRegion(const LayoutDeviceIntRegion& aOpaqueRegion) {
     // Subtract transparent corners which are used by
     // various Gtk themes for toplevel windows when titlebar
     // is rendered by gecko.
-    bool drawTilebarCorners = (mDrawInTitlebar && !mIsPIPWindow) &&
-                              (mSizeState == nsSizeMode_Normal && !mIsTiled);
+    bool drawTilebarCorners = DoDrawTilebarCorners();
     if (mIsX11Display) {
       UpdateTopLevelOpaqueRegionGtk(drawTilebarCorners);
     }
@@ -7737,8 +7748,7 @@ nsresult nsWindow::SynthesizeNativeTouchPoint(uint32_t aPointerId,
 }
 #endif
 
-nsWindow::CSDSupportLevel nsWindow::GetSystemCSDSupportLevel(
-    bool aIsPIPWindow) {
+nsWindow::CSDSupportLevel nsWindow::GetSystemCSDSupportLevel(bool aIsPopup) {
   if (sCSDSupportLevel != CSD_SUPPORT_UNKNOWN) {
     return sCSDSupportLevel;
   }
@@ -7772,13 +7782,13 @@ nsWindow::CSDSupportLevel nsWindow::GetSystemCSDSupportLevel(
   if (currentDesktop) {
     // GNOME Flashback (fallback)
     if (strstr(currentDesktop, "GNOME-Flashback:GNOME") != nullptr) {
-      sCSDSupportLevel = aIsPIPWindow ? CSD_SUPPORT_CLIENT : CSD_SUPPORT_SYSTEM;
+      sCSDSupportLevel = aIsPopup ? CSD_SUPPORT_CLIENT : CSD_SUPPORT_SYSTEM;
       // Pop Linux Bug 1629198
     } else if (strstr(currentDesktop, "pop:GNOME") != nullptr) {
       sCSDSupportLevel = CSD_SUPPORT_CLIENT;
       // gnome-shell
     } else if (strstr(currentDesktop, "GNOME") != nullptr) {
-      sCSDSupportLevel = aIsPIPWindow ? CSD_SUPPORT_CLIENT : CSD_SUPPORT_SYSTEM;
+      sCSDSupportLevel = aIsPopup ? CSD_SUPPORT_CLIENT : CSD_SUPPORT_SYSTEM;
     } else if (strstr(currentDesktop, "XFCE") != nullptr) {
       sCSDSupportLevel = CSD_SUPPORT_CLIENT;
     } else if (strstr(currentDesktop, "X-Cinnamon") != nullptr) {
