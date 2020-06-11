@@ -206,6 +206,42 @@ add_task(async function test_Multistage_About_Welcome_branches() {
   );
 });
 
+/**
+ * Test navigating back/forward between screens
+ */
+add_task(async function test_Multistage_About_Welcome_navigation() {
+  let browser = await openAboutWelcome();
+
+  await onButtonClick(browser, "button.primary");
+  await BrowserTestUtils.waitForCondition(() => browser.canGoBack);
+  browser.goBack();
+
+  await test_screen_content(
+    browser,
+    "multistage step 1",
+    // Expected selectors:
+    [
+      "div.multistageContainer",
+      "main.AW_STEP1",
+      "div.secondary-cta.top",
+      "button.secondary",
+      "div.indicator.current",
+    ],
+    // Unexpected selectors:
+    ["main.AW_STEP2", "main.AW_STEP3"]
+  );
+
+  await document.getElementById("forward-button").click();
+  await test_screen_content(
+    browser,
+    "multistage step 2",
+    // Expected selectors:
+    ["div.multistageContainer", "main.AW_STEP2", "button.secondary"],
+    // Unexpected selectors:
+    ["main.AW_STEP1", "main.AW_STEP3", "div.secondary-cta.top"]
+  );
+});
+
 async function getAboutWelcomeParent(browser) {
   let windowGlobalParent = browser.browsingContext.currentWindowGlobal;
   return windowGlobalParent.getActor("AboutWelcome");
