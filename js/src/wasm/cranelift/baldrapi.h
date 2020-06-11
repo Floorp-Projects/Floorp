@@ -212,10 +212,7 @@ extern "C" {
 js::wasm::TypeCode env_unpack(BD_ValType type);
 
 bool env_uses_shared_memory(const CraneliftModuleEnvironment* env);
-size_t env_num_types(const CraneliftModuleEnvironment* env);
-const js::wasm::FuncTypeWithId* env_type(const CraneliftModuleEnvironment* env,
-                                         size_t typeIndex);
-const js::wasm::FuncTypeWithId* env_func_sig(
+const js::wasm::FuncTypeWithId* env_function_signature(
     const CraneliftModuleEnvironment* env, size_t funcIndex);
 size_t env_func_import_tls_offset(const CraneliftModuleEnvironment* env,
                                   size_t funcIndex);

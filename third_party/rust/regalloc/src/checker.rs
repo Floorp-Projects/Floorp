@@ -57,11 +57,11 @@
 
 use crate::analysis_data_flow::get_san_reg_sets_for_insn;
 use crate::data_structures::{
-    BlockIx, InstIx, InstPoint, Map, Point, RealReg, RealRegUniverse, Reg, RegSets, SpillSlot,
-    VirtualReg, Writable,
+    BlockIx, InstIx, InstPoint, Map, Point, RealReg, RealRegUniverse, Reg, RegSets, RegUsageMapper,
+    SpillSlot, VirtualReg, Writable,
 };
 use crate::inst_stream::InstToInsertAndPoint;
-use crate::{Function, RegUsageMapper};
+use crate::Function;
 
 use std::collections::VecDeque;
 use std::default::Default;
@@ -348,7 +348,7 @@ impl Checker {
 
         for block in f.blocks() {
             bb_in.insert(block, Default::default());
-            bb_succs.insert(block, f.block_succs(block).to_vec());
+            bb_succs.insert(block, f.block_succs(block));
             bb_insts.insert(block, vec![]);
         }
 
@@ -375,12 +375,12 @@ impl Checker {
     /// registers. The `SanitizedInstRegUses` must be the pre-allocation state;
     /// the `mapper` must be provided to give the virtual -> real mappings at
     /// the program points immediately before and after this instruction.
-    pub(crate) fn add_op<RUM: RegUsageMapper>(
+    pub(crate) fn add_op(
         &mut self,
         block: BlockIx,
         inst_ix: InstIx,
         regsets: &RegSets,
-        mapper: &RUM,
+        mapper: &RegUsageMapper,
     ) -> Result<(), CheckerErrors> {
         debug!(
             "add_op: block {} inst {} regsets {:?}",
@@ -512,17 +512,23 @@ impl CheckerContext {
 
     /// Update the checker with the given instruction and the given pre- and post-maps. Instructions
     /// within a block must be visited in program order.
-    pub(crate) fn handle_insn<F: Function, RUM: RegUsageMapper>(
+    pub(crate) fn handle_insn<F: Function>(
         &mut self,
         ru: &RealRegUniverse,
         func: &F,
         bix: BlockIx,
         iix: InstIx,
-        mapper: &RUM,
+        mapper: &RegUsageMapper,
     ) -> Result<(), CheckerErrors> {
         let empty = vec![];
-        let pre_point = InstPoint::new(iix, Point::Reload);
-        let post_point = InstPoint::new(iix, Point::Spill);
+        let pre_point = InstPoint {
+            iix,
+            pt: Point::Reload,
+        };
+        let post_point = InstPoint {
+            iix,
+            pt: Point::Spill,
+        };
 
         for checker_inst in self.checker_inst_map.get(&pre_point).unwrap_or(&empty) {
             debug!("at inst {:?}: pre checker_inst: {:?}", iix, checker_inst);

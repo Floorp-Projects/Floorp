@@ -69,7 +69,7 @@ fn init_sig_from_wsig(
         sig.params.push(ir::AbiParam::new(arg));
     }
 
-    for ret_type in wsig.results()? {
+    if let Some(ret_type) = wsig.ret_type()? {
         let ret = match ret_type {
             // Spidermonkey requires i32 returns to have their high 32 bits
             // zero so that it can directly box them.
@@ -95,7 +95,7 @@ pub fn init_sig(
     call_conv: CallConv,
     func_index: FuncIndex,
 ) -> WasmResult<ir::Signature> {
-    let wsig = env.func_sig(func_index);
+    let wsig = env.function_signature(func_index);
     init_sig_from_wsig(call_conv, wsig)
 }
 
@@ -858,7 +858,7 @@ impl<'static_env, 'module_env> FuncEnvironment for TransEnv<'static_env, 'module
         let oob = pos
             .ins()
             .icmp(IntCC::UnsignedGreaterThanOrEqual, callee, tlength);
-        pos.ins().trapnz(oob, ir::TrapCode::TableOutOfBounds);
+        pos.ins().trapnz(oob, ir::TrapCode::OutOfBounds);
 
         // 3. Load the wtable base pointer from a global.
         let tbase = pos.ins().global_value(POINTER_TYPE, base_gv);
@@ -1084,11 +1084,11 @@ impl<'static_env, 'module_env> FuncEnvironment for TransEnv<'static_env, 'module
     fn translate_table_grow(
         &mut self,
         mut pos: FuncCursor,
-        table_index: TableIndex,
+        table_index: u32,
         delta: ir::Value,
         init_value: ir::Value,
     ) -> WasmResult<ir::Value> {
-        let table_index = pos.ins().iconst(ir::types::I32, table_index.index() as i64);
+        let table_index = pos.ins().iconst(ir::types::I32, table_index as i64);
         Ok(self
             .instance_call(&mut pos, &FN_TABLE_GROW, &[init_value, delta, table_index])
             .unwrap())
@@ -1097,10 +1097,10 @@ impl<'static_env, 'module_env> FuncEnvironment for TransEnv<'static_env, 'module
     fn translate_table_get(
         &mut self,
         mut pos: FuncCursor,
-        table_index: TableIndex,
+        table_index: u32,
         index: ir::Value,
     ) -> WasmResult<ir::Value> {
-        let table_index = pos.ins().iconst(ir::types::I32, table_index.index() as i64);
+        let table_index = pos.ins().iconst(ir::types::I32, table_index as i64);
         Ok(self
             .instance_call(&mut pos, &FN_TABLE_GET, &[index, table_index])
             .unwrap())
@@ -1109,11 +1109,11 @@ impl<'static_env, 'module_env> FuncEnvironment for TransEnv<'static_env, 'module
     fn translate_table_set(
         &mut self,
         mut pos: FuncCursor,
-        table_index: TableIndex,
+        table_index: u32,
         value: ir::Value,
         index: ir::Value,
     ) -> WasmResult<()> {
-        let table_index = pos.ins().iconst(ir::types::I32, table_index.index() as i64);
+        let table_index = pos.ins().iconst(ir::types::I32, table_index as i64);
         self.instance_call(&mut pos, &FN_TABLE_SET, &[index, value, table_index]);
         Ok(())
     }
@@ -1146,12 +1146,12 @@ impl<'static_env, 'module_env> FuncEnvironment for TransEnv<'static_env, 'module
     fn translate_table_fill(
         &mut self,
         mut pos: FuncCursor,
-        table_index: TableIndex,
+        table_index: u32,
         dst: ir::Value,
         val: ir::Value,
         len: ir::Value,
     ) -> WasmResult<()> {
-        let table_index = pos.ins().iconst(ir::types::I32, table_index.index() as i64);
+        let table_index = pos.ins().iconst(ir::types::I32, table_index as i64);
         self.instance_call(&mut pos, &FN_TABLE_FILL, &[dst, val, len, table_index]);
         Ok(())
     }

@@ -109,7 +109,6 @@ use regalloc::RegUsageCollector;
 use regalloc::{
     RealReg, RealRegUniverse, Reg, RegClass, RegUsageMapper, SpillSlot, VirtualReg, Writable,
 };
-use smallvec::SmallVec;
 use std::string::String;
 use target_lexicon::Triple;
 
@@ -125,8 +124,8 @@ pub mod abi;
 pub use abi::*;
 pub mod pretty_print;
 pub use pretty_print::*;
-pub mod buffer;
-pub use buffer::*;
+pub mod sections;
+pub use sections::*;
 pub mod adapter;
 pub use adapter::*;
 
@@ -138,7 +137,7 @@ pub trait MachInst: Clone + Debug {
 
     /// Map virtual registers to physical registers using the given virt->phys
     /// maps corresponding to the program points prior to, and after, this instruction.
-    fn map_regs<RUM: RegUsageMapper>(&mut self, maps: &RUM);
+    fn map_regs(&mut self, maps: &RegUsageMapper);
 
     /// If this is a simple move, return the (source, destination) tuple of registers.
     fn is_move(&self) -> Option<(Writable<Reg>, Reg)>;
@@ -152,9 +151,6 @@ pub trait MachInst: Clone + Debug {
 
     /// Generate a move.
     fn gen_move(to_reg: Writable<Reg>, from_reg: Reg, ty: Type) -> Self;
-
-    /// Generate a constant into a reg.
-    fn gen_constant(to_reg: Writable<Reg>, value: u64, ty: Type) -> SmallVec<[Self; 4]>;
 
     /// Generate a zero-length no-op.
     fn gen_zero_len_nop() -> Self;
@@ -170,7 +166,7 @@ pub trait MachInst: Clone + Debug {
 
     /// Generate a jump to another target. Used during lowering of
     /// control flow.
-    fn gen_jump(target: MachLabel) -> Self;
+    fn gen_jump(target: BlockIndex) -> Self;
 
     /// Generate a NOP. The `preferred_size` parameter allows the caller to
     /// request a NOP of that size, or as close to it as possible. The machine
@@ -178,6 +174,17 @@ pub trait MachInst: Clone + Debug {
     /// preferred size, but must not return a NOP that is larger. However,
     /// the instruction must have a nonzero size.
     fn gen_nop(preferred_size: usize) -> Self;
+
+    /// Rewrite block targets using the block-target map.
+    fn with_block_rewrites(&mut self, block_target_map: &[BlockIndex]);
+
+    /// Finalize branches once the block order (fallthrough) is known.
+    fn with_fallthrough_block(&mut self, fallthrough_block: Option<BlockIndex>);
+
+    /// Update instruction once block offsets are known.  These offsets are
+    /// relative to the beginning of the function. `targets` is indexed by
+    /// BlockIndex.
+    fn with_block_offsets(&mut self, my_offset: CodeOffset, targets: &[CodeOffset]);
 
     /// Get the register universe for this backend.
     fn reg_universe(flags: &Flags) -> RealRegUniverse;
@@ -187,54 +194,6 @@ pub trait MachInst: Clone + Debug {
     fn align_basic_block(offset: CodeOffset) -> CodeOffset {
         offset
     }
-
-    /// What is the worst-case instruction size emitted by this instruction type?
-    fn worst_case_size() -> CodeOffset;
-
-    /// A label-use kind: a type that describes the types of label references that
-    /// can occur in an instruction.
-    type LabelUse: MachInstLabelUse;
-}
-
-/// A descriptor of a label reference (use) in an instruction set.
-pub trait MachInstLabelUse: Clone + Copy + Debug + Eq {
-    /// Required alignment for any veneer. Usually the required instruction
-    /// alignment (e.g., 4 for a RISC with 32-bit instructions, or 1 for x86).
-    const ALIGN: CodeOffset;
-
-    /// What is the maximum PC-relative range (positive)? E.g., if `1024`, a
-    /// label-reference fixup at offset `x` is valid if the label resolves to `x
-    /// + 1024`.
-    fn max_pos_range(self) -> CodeOffset;
-    /// What is the maximum PC-relative range (negative)? This is the absolute
-    /// value; i.e., if `1024`, then a label-reference fixup at offset `x` is
-    /// valid if the label resolves to `x - 1024`.
-    fn max_neg_range(self) -> CodeOffset;
-    /// What is the size of code-buffer slice this label-use needs to patch in
-    /// the label's value?
-    fn patch_size(self) -> CodeOffset;
-    /// Perform a code-patch, given the offset into the buffer of this label use
-    /// and the offset into the buffer of the label's definition.
-    /// It is guaranteed that, given `delta = offset - label_offset`, we will
-    /// have `offset >= -self.max_neg_range()` and `offset <=
-    /// self.max_pos_range()`.
-    fn patch(self, buffer: &mut [u8], use_offset: CodeOffset, label_offset: CodeOffset);
-    /// Can the label-use be patched to a veneer that supports a longer range?
-    /// Usually valid for jumps (a short-range jump can jump to a longer-range
-    /// jump), but not for e.g. constant pool references, because the constant
-    /// load would require different code (one more level of indirection).
-    fn supports_veneer(self) -> bool;
-    /// How many bytes are needed for a veneer?
-    fn veneer_size(self) -> CodeOffset;
-    /// Generate a veneer. The given code-buffer slice is `self.veneer_size()`
-    /// bytes long at offset `veneer_offset` in the buffer. The original
-    /// label-use will be patched to refer to this veneer's offset.  A new
-    /// (offset, LabelUse) is returned that allows the veneer to use the actual
-    /// label. For veneers to work properly, it is expected that the new veneer
-    /// has a larger range; on most platforms this probably means either a
-    /// "long-range jump" (e.g., on ARM, the 26-bit form), or if already at that
-    /// stage, a jump that supports a full 32-bit range, for example.
-    fn generate_veneer(self, buffer: &mut [u8], veneer_offset: CodeOffset) -> (CodeOffset, Self);
 }
 
 /// Describes a block terminator (not call) in the vcode, when its branches
@@ -246,26 +205,24 @@ pub enum MachTerminator<'a> {
     /// A return instruction.
     Ret,
     /// An unconditional branch to another block.
-    Uncond(MachLabel),
+    Uncond(BlockIndex),
     /// A conditional branch to one of two other blocks.
-    Cond(MachLabel, MachLabel),
+    Cond(BlockIndex, BlockIndex),
     /// An indirect branch with known possible targets.
-    Indirect(&'a [MachLabel]),
+    Indirect(&'a [BlockIndex]),
 }
 
 /// A trait describing the ability to encode a MachInst into binary machine code.
-pub trait MachInstEmit: MachInst {
-    /// Persistent state carried across `emit` invocations.
-    type State: Default + Clone + Debug;
+pub trait MachInstEmit<O: MachSectionOutput> {
     /// Emit the instruction.
-    fn emit(&self, code: &mut MachBuffer<Self>, flags: &Flags, state: &mut Self::State);
+    fn emit(&self, code: &mut O, flags: &Flags);
 }
 
 /// The result of a `MachBackend::compile_function()` call. Contains machine
 /// code (as bytes) and a disassembly, if requested.
 pub struct MachCompileResult {
     /// Machine code.
-    pub buffer: MachBufferFinalized,
+    pub sections: MachSections,
     /// Size of stack frame, in bytes.
     pub frame_size: u32,
     /// Disassembly, if requested.
@@ -275,7 +232,7 @@ pub struct MachCompileResult {
 impl MachCompileResult {
     /// Get a `CodeInfo` describing section sizes from this compilation result.
     pub fn code_info(&self) -> CodeInfo {
-        let code_size = self.buffer.total_size();
+        let code_size = self.sections.total_size();
         CodeInfo {
             code_size,
             jumptables_size: 0,
@@ -305,13 +262,17 @@ pub trait MachBackend {
     fn name(&self) -> &'static str;
 
     /// Return the register universe for this backend.
-    fn reg_universe(&self) -> &RealRegUniverse;
+    fn reg_universe(&self) -> RealRegUniverse;
 
     /// Machine-specific condcode info needed by TargetIsa.
-    /// Condition that will be true when an IaddIfcout overflows.
-    fn unsigned_add_overflow_condition(&self) -> IntCC;
+    fn unsigned_add_overflow_condition(&self) -> IntCC {
+        // TODO: this is what x86 specifies. Is this right for arm64?
+        IntCC::UnsignedLessThan
+    }
 
     /// Machine-specific condcode info needed by TargetIsa.
-    /// Condition that will be true when an IsubIfcout overflows.
-    fn unsigned_sub_overflow_condition(&self) -> IntCC;
+    fn unsigned_sub_overflow_condition(&self) -> IntCC {
+        // TODO: this is what x86 specifies. Is this right for arm64?
+        IntCC::UnsignedLessThan
+    }
 }

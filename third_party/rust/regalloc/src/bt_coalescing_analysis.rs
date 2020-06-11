@@ -1,30 +1,7 @@
-//! Analysis in support of copy coalescing for the backtracking allocator.
-//!
-//! This detects and collects information about all copy coalescing
-//! opportunities in the incoming function.  It does not use that information
-//! at all -- that is for the main allocation loop and the spill slot allocator
-//! to do.
-//!
-//! Coalescing analysis creates 4 pieces of information:
-//!
-//! * a map from `VirtualRangeIx` to a set of `Hint`s (see below) which state a
-//!   preference for which register that range would prefer to be allocated to.
-//!
-//! * equivalence class groupings for the virtual ranges.  Two virtual ranges
-//!   will be assigned the same equivalence class if there is a move instruction
-//!   that transfers a value from one range to the other.  The equivalence
-//!   classes created are the transitive closure of this pairwise relation.
-//!
-//! * a simple mapping from instruction index to bool, indicating those
-//! instructions that are moves between virtual registers, and that have been
-//! used to construct the equivalence classes above.
-//!
-//! * a mapping from virtual registers to virtual ranges.  This is really
-//!   produced as a side-effect of computing the above three elements, but is
-//!   useful in its own right and so is also returned.
-
 #![allow(non_snake_case)]
 #![allow(non_camel_case_types)]
+
+//! Copy-coalescing analysis for the backtracking allocator.
 
 use log::{debug, info, log_enabled, Level};
 use smallvec::{smallvec, SmallVec};
@@ -38,48 +15,12 @@ use crate::union_find::{ToFromU32, UnionFind, UnionFindEquivClasses};
 use crate::Function;
 
 //=============================================================================
+// Analysis in support of copy coalescing.
 //
-// *** Some important comments about the interaction between this coalescing
-// *** analysis, the main allocation loop and the spill slot allocator.
-//
-// The main allocation loop tries to assign the same register to all the
-// VirtualRanges in an equivalence class.  Similarly, the spill slot allocator
-// tries to allocate the same spill slot to all the VirtualRanges in an
-// equivalence class.  In most cases they are successful, and so the moves
-// between those VirtualRanges will later disappear.  However, the complete
-// story is not quite so simple.
-//
-// It is only safe to assign the VirtualRanges in the same equivalence class
-// to a single register or spill slot if those VirtualRanges are
-// non-overlapping.  That is, if their overall collection of RangeFrags is
-// disjoint.  If two such VirtualRanges overlapped, then they could be
-// carrying different values, and so they would need separate registers or
-// spill slots.
-//
-// Most of the time, these equivalence classes are indeed internally
-// non-overlapping.  But that's just luck -- that's how the input VCode mostly
-// is.  The coalescing analysis *doesn't* properly check for overlaps within an
-// equivalence class, so it can be the case that the members of an equivalence
-// class overlap.  The users of that information -- the main allocation loop
-// and the spill slot allocator -- currently check for, and handle, such
-// situations.  So the generated allocation is correct.
-//
-// It does, however, cause imprecision and unnecessary spilling, and, in the
-// main allocation loop, slightly increased evictions.
-//
-// The "proper" fix for all this would be to fix the coalescing analysis so as
-// only to build non-internally-overlapping VirtualRange equivalence classes.
-// However, that sounds expensive.  Instead there is a half-hearted effort
-// made to avoid creating equivalence classes whose elements (VirtualRanges)
-// overlap.  This is done by doing an overlap check on two VirtualRanges
-// connected by a move, and not merging their equivalence classes if they
-// overlap.  That helps, but it doesn't completely avoid the problem because
-// there might be overlaps between other members (VirtualRanges) of the
-// about-to-be-merged equivalence classes.
+// This detects and collects information about all copy coalescing
+// opportunities in the incoming function.  It does not use that information
+// at all -- that is for the main allocation loop to do.
 
-//=============================================================================
-// Coalescing analysis: Hints
-//
 // A coalescing hint for a virtual live range.  The u32 is an arbitrary
 // "weight" value which indicates a relative strength-of-preference for the
 // hint.  It exists because a VLR can have arbitrarily many copy
@@ -206,8 +147,7 @@ pub fn do_coalescing_analysis<F: Function>(
     //  println!("QQQQ rreg r{:?} -> rlrixs {:?}", rreg, rlrixs);
     //}
 
-    // Range end checks for VRegs.  The XX means either "Last use" or "First
-    // def", depending on the boolean parameter.
+    // Range end checks for VRegs
     let doesVRegHaveXXat
     // `xxIsLastUse` is true means "XX is last use"
     // `xxIsLastUse` is false means "XX is first def"
@@ -216,7 +156,9 @@ pub fn do_coalescing_analysis<F: Function>(
       let vreg_no = vreg.get_index();
       let vlrixs = &vreg_to_vlrs_map[vreg_no];
       for vlrix in vlrixs {
-        for frag in &vlr_env[*vlrix].sorted_frags.frags {
+        let frags = &vlr_env[*vlrix].sorted_frags;
+        for fix in &frags.frag_ixs {
+          let frag = &frag_env[*fix];
           if xxIsLastUse {
             // We're checking to see if `vreg` has a last use in this block
             // (well, technically, a fragment end in the block; we don't care if
@@ -238,7 +180,7 @@ pub fn do_coalescing_analysis<F: Function>(
       None
     };
 
-    // Range end checks for RRegs.  XX has same meaning as above.
+    // Range end checks for RRegs
     let doesRRegHaveXXat
     // `xxIsLastUse` is true means "XX is last use"
     // `xxIsLastUse` is false means "XX is first def"
@@ -340,30 +282,25 @@ pub fn do_coalescing_analysis<F: Function>(
                 // Check for a V <- V hint.
                 let rSrcV = rSrc.to_virtual_reg();
                 let rDstV = rDst.to_virtual_reg();
-                let mb_vlrixSrc = doesVRegHaveXXat(/*xxIsLastUse=*/ true, rSrcV, iix);
-                let mb_vlrixDst = doesVRegHaveXXat(/*xxIsLastUse=*/ false, rDstV, iix);
-                if mb_vlrixSrc.is_some() && mb_vlrixDst.is_some() {
-                    let vlrixSrc = mb_vlrixSrc.unwrap();
-                    let vlrixDst = mb_vlrixDst.unwrap();
-                    // Per block comment at top of file, make a half-hearted
-                    // attempt to avoid creating equivalence classes with
-                    // internal overlaps.  Note this can't be completely
-                    // effective as presently implemented.
-                    if !vlr_env[vlrixSrc].overlaps(&vlr_env[vlrixDst]) {
-                        // Add hints for both VLRs, since we don't know which one will
-                        // assign first.  Indeed, a VLR may be assigned and un-assigned
-                        // arbitrarily many times.
-                        hints[vlrixSrc].push(Hint::SameAs(vlrixDst, block_eef));
-                        hints[vlrixDst].push(Hint::SameAs(vlrixSrc, block_eef));
-                        vlrEquivClassesUF.union(vlrixDst, vlrixSrc);
-                        is_vv_boundary_move[iix] = true;
-                        // Reduce the total cost, and hence the spill cost, of
-                        // both `vlrixSrc` and `vlrixDst`.  This is so as to reduce to
-                        // zero, the cost of a VLR whose only instructions are its
-                        // v-v boundary copies.
-                        debug!("QQQQ reduce cost of {:?} and {:?}", vlrixSrc, vlrixDst);
-                        decVLRcosts.push((vlrixSrc, vlrixDst, 1 * block_eef));
-                    }
+                let mb_vlrSrc = doesVRegHaveXXat(/*xxIsLastUse=*/ true, rSrcV, iix);
+                let mb_vlrDst = doesVRegHaveXXat(/*xxIsLastUse=*/ false, rDstV, iix);
+                debug!("QQQQ mb_vlrSrc {:?} mb_vlrDst {:?}", mb_vlrSrc, mb_vlrDst);
+                if mb_vlrSrc.is_some() && mb_vlrDst.is_some() {
+                    let vlrSrc = mb_vlrSrc.unwrap();
+                    let vlrDst = mb_vlrDst.unwrap();
+                    // Add hints for both VLRs, since we don't know which one will
+                    // assign first.  Indeed, a VLR may be assigned and un-assigned
+                    // arbitrarily many times.
+                    hints[vlrSrc].push(Hint::SameAs(vlrDst, block_eef));
+                    hints[vlrDst].push(Hint::SameAs(vlrSrc, block_eef));
+                    vlrEquivClassesUF.union(vlrDst, vlrSrc);
+                    is_vv_boundary_move[iix] = true;
+                    // Reduce the total cost, and hence the spill cost, of
+                    // both `vlrSrc` and `vlrDst`.  This is so as to reduce to
+                    // zero, the cost of a VLR whose only instructions are its
+                    // v-v boundary copies.
+                    debug!("QQQQ reduce cost of {:?} and {:?}", vlrSrc, vlrDst);
+                    decVLRcosts.push((vlrSrc, vlrDst, 1 * block_eef));
                 }
             }
             (true, false) => {

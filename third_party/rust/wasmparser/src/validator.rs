@@ -30,8 +30,8 @@ use crate::primitives::{
 };
 
 use crate::operators_validator::{
-    check_value_type, FunctionEnd, OperatorValidator, OperatorValidatorConfig,
-    OperatorValidatorError, DEFAULT_OPERATOR_VALIDATOR_CONFIG,
+    check_value_type, is_subtype_supertype, FunctionEnd, OperatorValidator,
+    OperatorValidatorConfig, OperatorValidatorError, DEFAULT_OPERATOR_VALIDATOR_CONFIG,
 };
 use crate::parser::{Parser, ParserInput, ParserState, WasmDecoder};
 use crate::{ElemSectionEntryTable, ElementItem};
@@ -99,10 +99,9 @@ struct ValidatingParserResources {
     tables: Vec<TableType>,
     memories: Vec<MemoryType>,
     globals: Vec<GlobalType>,
-    element_types: Vec<Type>,
+    element_count: u32,
     data_count: Option<u32>,
     func_type_indices: Vec<u32>,
-    function_references: HashSet<u32>,
 }
 
 impl<'a> WasmModuleResources for ValidatingParserResources {
@@ -131,20 +130,12 @@ impl<'a> WasmModuleResources for ValidatingParserResources {
         self.func_type_indices.get(at as usize).copied()
     }
 
-    fn element_type_at(&self, at: u32) -> Option<Type> {
-        self.element_types.get(at as usize).cloned()
-    }
-
     fn element_count(&self) -> u32 {
-        self.element_types.len() as u32
+        self.element_count
     }
 
     fn data_count(&self) -> u32 {
         self.data_count.unwrap_or(0)
-    }
-
-    fn is_function_referenced(&self, idx: u32) -> bool {
-        self.function_references.contains(&idx)
     }
 }
 
@@ -175,10 +166,9 @@ impl<'a> ValidatingParser<'a> {
                 tables: Vec::new(),
                 memories: Vec::new(),
                 globals: Vec::new(),
-                element_types: Vec::new(),
+                element_count: 0,
                 data_count: None,
                 func_type_indices: Vec::new(),
-                function_references: HashSet::new(),
             },
             current_func_index: 0,
             func_imports_count: 0,
@@ -242,18 +232,22 @@ impl<'a> ValidatingParser<'a> {
     }
 
     fn check_func_type(&self, func_type: &FuncType) -> ValidatorResult<'a, ()> {
-        self.check_value_types(&*func_type.params)?;
-        self.check_value_types(&*func_type.returns)?;
-        if !self.config.operator_config.enable_multi_value && func_type.returns.len() > 1 {
-            self.create_error("invalid result arity: func type returns multiple values")
+        if let Type::Func = func_type.form {
+            self.check_value_types(&*func_type.params)?;
+            self.check_value_types(&*func_type.returns)?;
+            if !self.config.operator_config.enable_multi_value && func_type.returns.len() > 1 {
+                self.create_error("invalid result arity: func type returns multiple values")
+            } else {
+                Ok(())
+            }
         } else {
-            Ok(())
+            self.create_error("type signature is not a func")
         }
     }
 
     fn check_table_type(&self, table_type: &TableType) -> ValidatorResult<'a, ()> {
         match table_type.element_type {
-            Type::FuncRef => {}
+            Type::AnyFunc => {}
             _ => {
                 if !self.config.operator_config.enable_reference_types {
                     return self.create_error("element is not anyfunc");
@@ -272,14 +266,6 @@ impl<'a> ValidatingParser<'a> {
         let maximum = memory_type.limits.maximum;
         if maximum.is_some() && maximum.unwrap() as usize > MAX_WASM_MEMORY_PAGES {
             return self.create_error("memory size must be at most 65536 pages (4GiB)");
-        }
-        if memory_type.shared {
-            if !self.config.operator_config.enable_threads {
-                return self.create_error("threads must be enabled for shared memories");
-            }
-            if memory_type.limits.maximum.is_none() {
-                return self.create_error("shared memory must have maximum size");
-            }
         }
         Ok(())
     }
@@ -322,23 +308,23 @@ impl<'a> ValidatingParser<'a> {
         }
     }
 
-    fn check_init_expression_operator(&mut self, operator: Operator) -> ValidatorResult<'a, ()> {
+    fn check_init_expression_operator(&self, operator: &Operator) -> ValidatorResult<'a, ()> {
         let state = self.init_expression_state.as_ref().unwrap();
         if state.validated {
             return self.create_error(
                 "constant expression required: type mismatch: only one init_expr operator is expected",
             );
         }
-        let ty = match operator {
+        let ty = match *operator {
             Operator::I32Const { .. } => Type::I32,
             Operator::I64Const { .. } => Type::I64,
             Operator::F32Const { .. } => Type::F32,
             Operator::F64Const { .. } => Type::F64,
-            Operator::RefNull { ty } => {
+            Operator::RefNull => {
                 if !self.config.operator_config.enable_reference_types {
                     return self.create_error("reference types support is not enabled");
                 }
-                ty
+                Type::NullRef
             }
             Operator::V128Const { .. } => {
                 if !self.config.operator_config.enable_simd {
@@ -360,22 +346,21 @@ impl<'a> ValidatingParser<'a> {
                         function_index
                     ));
                 }
-                self.resources.function_references.insert(function_index);
-                Type::FuncRef
+                Type::AnyFunc
             }
             _ => {
                 return self
                     .create_error("constant expression required: invalid init_expr operator")
             }
         };
-        if ty != state.ty {
+        if !is_subtype_supertype(ty, state.ty) {
             return self.create_error("type mismatch: invalid init_expr type");
         }
         Ok(())
     }
 
     fn check_export_entry(
-        &mut self,
+        &self,
         field: &str,
         kind: ExternalKind,
         index: u32,
@@ -389,7 +374,6 @@ impl<'a> ValidatingParser<'a> {
                     return self
                         .create_error("unknown function: exported function index out of bounds");
                 }
-                self.resources.function_references.insert(index);
             }
             ExternalKind::Table => {
                 if index as usize >= self.resources.tables.len() {
@@ -538,7 +522,6 @@ impl<'a> ValidatingParser<'a> {
                 assert!(self.init_expression_state.is_some());
             }
             ParserState::InitExpressionOperator(ref operator) => {
-                let operator = operator.clone();
                 self.validation_error = self.check_init_expression_operator(operator).err();
                 self.init_expression_state.as_mut().unwrap().validated = true;
             }
@@ -559,49 +542,31 @@ impl<'a> ValidatingParser<'a> {
                 self.resources.data_count = Some(count);
             }
             ParserState::BeginElementSectionEntry { table, ty } => {
-                self.resources.element_types.push(ty);
-                match table {
-                    ElemSectionEntryTable::Active(table_index) => {
-                        let table = match self.resources.tables.get(table_index as usize) {
-                            Some(t) => t,
-                            None => {
-                                self.set_validation_error(
-                                    "unknown table: element section table index out of bounds",
-                                );
-                                return;
-                            }
-                        };
-                        if ty != table.element_type {
-                            self.set_validation_error("element_type != table type");
+                self.resources.element_count += 1;
+                if let ElemSectionEntryTable::Active(table_index) = table {
+                    let table = match self.resources.tables.get(table_index as usize) {
+                        Some(t) => t,
+                        None => {
+                            self.set_validation_error(
+                                "unknown table: element section table index out of bounds",
+                            );
                             return;
                         }
-                        self.init_expression_state = Some(InitExpressionState {
-                            ty: Type::I32,
-                            global_count: self.resources.globals.len(),
-                            function_count: self.resources.func_type_indices.len(),
-                            validated: false,
-                        });
-                    }
-                    ElemSectionEntryTable::Passive | ElemSectionEntryTable::Declared => {
-                        if !self.config.operator_config.enable_bulk_memory {
-                            self.set_validation_error("reference types must be enabled");
-                            return;
-                        }
-                    }
-                }
-                match ty {
-                    Type::FuncRef => {}
-                    Type::ExternRef if self.config.operator_config.enable_reference_types => {}
-                    Type::ExternRef => {
-                        self.set_validation_error(
-                            "reference types must be enabled for anyref elem segment",
-                        );
+                    };
+                    if !is_subtype_supertype(ty, table.element_type) {
+                        self.set_validation_error("element_type != table type");
                         return;
                     }
-                    _ => {
-                        self.set_validation_error("invalid reference type");
+                    if !self.config.operator_config.enable_reference_types && ty != Type::AnyFunc {
+                        self.set_validation_error("element_type != anyfunc is not supported yet");
                         return;
                     }
+                    self.init_expression_state = Some(InitExpressionState {
+                        ty: Type::I32,
+                        global_count: self.resources.globals.len(),
+                        function_count: self.resources.func_type_indices.len(),
+                        validated: false,
+                    });
                 }
             }
             ParserState::ElementSectionEntryBody(ref indices) => {
@@ -613,7 +578,6 @@ impl<'a> ValidatingParser<'a> {
                             );
                             break;
                         }
-                        self.resources.function_references.insert(*func_index);
                     }
                 }
             }

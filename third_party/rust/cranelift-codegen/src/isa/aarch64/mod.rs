@@ -1,6 +1,5 @@
 //! ARM 64-bit Instruction Set Architecture.
 
-use crate::ir::condcodes::IntCC;
 use crate::ir::Function;
 use crate::isa::Builder as IsaBuilder;
 use crate::machinst::{
@@ -16,7 +15,7 @@ use target_lexicon::{Aarch64Architecture, Architecture, Triple};
 
 // New backend:
 mod abi;
-pub(crate) mod inst;
+mod inst;
 mod lower;
 mod lower_inst;
 
@@ -26,18 +25,12 @@ use inst::create_reg_universe;
 pub struct AArch64Backend {
     triple: Triple,
     flags: settings::Flags,
-    reg_universe: RealRegUniverse,
 }
 
 impl AArch64Backend {
     /// Create a new AArch64 backend with the given (shared) flags.
     pub fn new_with_flags(triple: Triple, flags: settings::Flags) -> AArch64Backend {
-        let reg_universe = create_reg_universe(&flags);
-        AArch64Backend {
-            triple,
-            flags,
-            reg_universe,
-        }
+        AArch64Backend { triple, flags }
     }
 
     /// This performs lowering to VCode, register-allocates the code, computes block layout and
@@ -47,7 +40,7 @@ impl AArch64Backend {
         func: &Function,
         flags: settings::Flags,
     ) -> CodegenResult<VCode<inst::Inst>> {
-        let abi = Box::new(abi::AArch64ABIBody::new(func, flags)?);
+        let abi = Box::new(abi::AArch64ABIBody::new(func, flags));
         compile::compile::<AArch64Backend>(func, self, abi)
     }
 }
@@ -60,7 +53,7 @@ impl MachBackend for AArch64Backend {
     ) -> CodegenResult<MachCompileResult> {
         let flags = self.flags();
         let vcode = self.compile_vcode(func, flags.clone())?;
-        let buffer = vcode.emit();
+        let sections = vcode.emit();
         let frame_size = vcode.frame_size();
 
         let disasm = if want_disasm {
@@ -69,10 +62,8 @@ impl MachBackend for AArch64Backend {
             None
         };
 
-        let buffer = buffer.finish();
-
         Ok(MachCompileResult {
-            buffer,
+            sections,
             frame_size,
             disasm,
         })
@@ -90,21 +81,8 @@ impl MachBackend for AArch64Backend {
         &self.flags
     }
 
-    fn reg_universe(&self) -> &RealRegUniverse {
-        &self.reg_universe
-    }
-
-    fn unsigned_add_overflow_condition(&self) -> IntCC {
-        // Unsigned `>=`; this corresponds to the carry flag set on aarch64, which happens on
-        // overflow of an add.
-        IntCC::UnsignedGreaterThanOrEqual
-    }
-
-    fn unsigned_sub_overflow_condition(&self) -> IntCC {
-        // unsigned `<`; this corresponds to the carry flag cleared on aarch64, which happens on
-        // underflow of a subtract (aarch64 follows a carry-cleared-on-borrow convention, the
-        // opposite of x86).
-        IntCC::UnsignedLessThan
+    fn reg_universe(&self) -> RealRegUniverse {
+        create_reg_universe(&self.flags)
     }
 }
 
@@ -156,8 +134,8 @@ mod test {
             Triple::from_str("aarch64").unwrap(),
             settings::Flags::new(shared_flags),
         );
-        let buffer = backend.compile_function(&mut func, false).unwrap().buffer;
-        let code = &buffer.data[..];
+        let sections = backend.compile_function(&mut func, false).unwrap().sections;
+        let code = &sections.sections[0].data;
 
         // stp x29, x30, [sp, #-16]!
         // mov x29, sp
@@ -171,7 +149,7 @@ mod test {
             0x01, 0x0b, 0xbf, 0x03, 0x00, 0x91, 0xfd, 0x7b, 0xc1, 0xa8, 0xc0, 0x03, 0x5f, 0xd6,
         ];
 
-        assert_eq!(code, &golden[..]);
+        assert_eq!(code, &golden);
     }
 
     #[test]
@@ -214,32 +192,34 @@ mod test {
         let result = backend
             .compile_function(&mut func, /* want_disasm = */ false)
             .unwrap();
-        let code = &result.buffer.data[..];
+        let code = &result.sections.sections[0].data;
 
         // stp	x29, x30, [sp, #-16]!
         // mov	x29, sp
-        // mov	x1, #0x1234                	// #4660
-        // add	w0, w0, w1
-        // mov	w1, w0
-        // cbnz	x1, 0x28
-        // mov	x1, #0x1234                	// #4660
-        // add	w1, w0, w1
-        // mov	w1, w1
-        // cbnz	x1, 0x18
-        // mov	w1, w0
-        // cbnz	x1, 0x18
-        // mov	x1, #0x1234                	// #4660
-        // sub	w0, w0, w1
+        // mov	x1, x0
+        // mov  x0, #0x1234
+        // add	w1, w1, w0
+        // mov	w2, w1
+        // cbz	x2, ...
+        // mov	w2, w1
+        // cbz	x2, ...
+        // sub	w0, w1, w0
         // mov	sp, x29
         // ldp	x29, x30, [sp], #16
         // ret
+        // add	w2, w1, w0
+        // mov	w2, w2
+        // cbnz	x2, ... <---- compound branch (cond / uncond)
+        // b ...        <----
+
         let golden = vec![
-            253, 123, 191, 169, 253, 3, 0, 145, 129, 70, 130, 210, 0, 0, 1, 11, 225, 3, 0, 42, 161,
-            0, 0, 181, 129, 70, 130, 210, 1, 0, 1, 11, 225, 3, 1, 42, 161, 255, 255, 181, 225, 3,
-            0, 42, 97, 255, 255, 181, 129, 70, 130, 210, 0, 0, 1, 75, 191, 3, 0, 145, 253, 123,
-            193, 168, 192, 3, 95, 214,
+            0xfd, 0x7b, 0xbf, 0xa9, 0xfd, 0x03, 0x00, 0x91, 0xe1, 0x03, 0x00, 0xaa, 0x80, 0x46,
+            0x82, 0xd2, 0x21, 0x00, 0x00, 0x0b, 0xe2, 0x03, 0x01, 0x2a, 0xe2, 0x00, 0x00, 0xb4,
+            0xe2, 0x03, 0x01, 0x2a, 0xa2, 0x00, 0x00, 0xb5, 0x20, 0x00, 0x00, 0x4b, 0xbf, 0x03,
+            0x00, 0x91, 0xfd, 0x7b, 0xc1, 0xa8, 0xc0, 0x03, 0x5f, 0xd6, 0x22, 0x00, 0x00, 0x0b,
+            0xe2, 0x03, 0x02, 0x2a, 0xc2, 0xff, 0xff, 0xb5, 0xf7, 0xff, 0xff, 0x17,
         ];
 
-        assert_eq!(code, &golden[..]);
+        assert_eq!(code, &golden);
     }
 }
