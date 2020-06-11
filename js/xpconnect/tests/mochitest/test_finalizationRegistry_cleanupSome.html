@@ -1,0 +1,13 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Test FinalizationRegistry cleanupSome method is not exposed by default</title>
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+    <script type="application/javascript">
+      let registry = new FinalizationRegistry(x => 1);
+      is(registry.cleanupSome, undefined,
+         "The cleanupSome method should not be exposed by default");
+    </script>
+  </head>
+</html>
