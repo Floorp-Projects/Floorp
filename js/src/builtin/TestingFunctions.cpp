@@ -191,6 +191,15 @@ static bool GetBuildConfiguration(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
+#ifdef EARLY_BETA_OR_EARLIER
+  value = BooleanValue(true);
+#else
+  value = BooleanValue(false);
+#endif
+  if (!JS_SetProperty(cx, info, "early_beta_or_earlier", value)) {
+    return false;
+  }
+
 #ifdef MOZ_CODE_COVERAGE
   value = BooleanValue(true);
 #else
@@ -4554,6 +4563,34 @@ static bool DumpStringRepresentation(JSContext* cx, unsigned argc, Value* vp) {
   args.rval().setUndefined();
   return true;
 }
+
+static bool GetStringRepresentation(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  RootedString str(cx, ToString(cx, args.get(0)));
+  if (!str) {
+    return false;
+  }
+
+  Sprinter out(cx, true);
+  if (!out.init()) {
+    return false;
+  }
+  str->dumpRepresentation(out, 0);
+
+  if (out.hadOutOfMemory()) {
+    return false;
+  }
+
+  JSString* rep = JS_NewStringCopyN(cx, out.string(), out.getOffset());
+  if (!rep) {
+    return false;
+  }
+
+  args.rval().setString(rep);
+  return true;
+}
+
 #endif
 
 static bool SetLazyParsingDisabled(JSContext* cx, unsigned argc, Value* vp) {
@@ -6586,6 +6623,11 @@ gc::ZealModeHelpText),
     JS_FN_HELP("dumpStringRepresentation", DumpStringRepresentation, 1, 0,
 "dumpStringRepresentation(str)",
 "  Print a human-readable description of how the string |str| is represented.\n"),
+
+    JS_FN_HELP("stringRepresentation", GetStringRepresentation, 1, 0,
+"stringRepresentation(str)",
+"  Return a human-readable description of how the string |str| is represented.\n"),
+
 #endif
 
     JS_FN_HELP("setLazyParsingDisabled", SetLazyParsingDisabled, 1, 0,

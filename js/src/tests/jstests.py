@@ -404,6 +404,8 @@ def load_wpt_tests(xul_tester, requested_paths, excluded_paths, update_manifest=
     release_or_beta = xul_tester.test("getBuildConfiguration().release_or_beta")
     run_info["release_or_beta"] = release_or_beta
     run_info["nightly_build"] = not release_or_beta
+    early_beta_or_earlier = xul_tester.test("getBuildConfiguration().early_beta_or_earlier")
+    run_info["early_beta_or_earlier"] = early_beta_or_earlier
 
     path_filter = testloader.TestFilter(test_manifests,
                                         include=requested_paths,

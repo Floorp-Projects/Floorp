@@ -60,16 +60,18 @@
   let bigStringPrefix = bigString.substring(0, 100);
 
   // Generate many copies of two distinctive short strings, "!)(*&" and
-  // "@)(*&".  We'll check that these strings are reported in at least
-  // one of the memory reporters.
+  // "@)(*&". We'll check that these strings are reported in at least one of
+  // the memory reporters. We will create these strings in the tenured heap to
+  // avoid nursery string deduplication.
   let shortStrings = [];
+  let newString = Cu.getJSTestingFunctions().newString;
   for (let i = 0; i < 10000; i++) {
     let str = (Math.random() > 0.5 ? "!" : "@") + ")(*&";
-    shortStrings.push(str);
+    shortStrings.push(newString(str, {tenured: true}));
   }
 
   // Strings in the nursery are not reported, so make sure the above test
-  // strings are tenured.
+  // strings are tenured (not all are created tenured).
   Cu.forceGC();
 
   let mySandbox = Cu.Sandbox(document.nodePrincipal,

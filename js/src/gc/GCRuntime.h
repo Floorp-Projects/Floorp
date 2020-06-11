@@ -569,6 +569,12 @@ class GCRuntime {
   void checkHashTablesAfterMovingGC();
 #endif
 
+#ifdef DEBUG
+  // Crawl the heap to check whether an arbitary pointer is within a cell of
+  // the given kind.
+  bool isPointerWithinTenuredCell(void* ptr, JS::TraceKind traceKind);
+#endif
+
   // Queue memory memory to be freed on a background thread if possible.
   void queueUnusedLifoBlocksForFree(LifoAlloc* lifo);
   void queueAllLifoBlocksForFree(LifoAlloc* lifo);

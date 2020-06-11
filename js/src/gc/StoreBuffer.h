@@ -145,11 +145,15 @@ class StoreBuffer {
 
   struct WholeCellBuffer {
     UniquePtr<LifoAlloc> storage_;
-    ArenaCellSet* head_;
+    ArenaCellSet* stringHead_;
+    ArenaCellSet* nonStringHead_;
     StoreBuffer* owner_;
 
     explicit WholeCellBuffer(StoreBuffer* owner)
-        : storage_(nullptr), head_(nullptr), owner_(owner) {}
+        : storage_(nullptr),
+          stringHead_(nullptr),
+          nonStringHead_(nullptr),
+          owner_(owner) {}
 
     MOZ_MUST_USE bool init();
 
@@ -169,8 +173,9 @@ class StoreBuffer {
     }
 
     bool isEmpty() const {
-      MOZ_ASSERT_IF(!head_, !storage_ || storage_->isEmpty());
-      return !head_;
+      MOZ_ASSERT_IF(!stringHead_ && !nonStringHead_,
+                    !storage_ || storage_->isEmpty());
+      return !stringHead_ && !nonStringHead_;
     }
 
    private:
@@ -442,6 +447,10 @@ class StoreBuffer {
 #endif
 
  public:
+#ifdef DEBUG
+  bool markingNondeduplicatable;
+#endif
+
   explicit StoreBuffer(JSRuntime* rt, const Nursery& nursery);
   MOZ_MUST_USE bool enable();
 
@@ -584,6 +593,8 @@ class ArenaCellSet {
   void check() const;
 
   WordT getWord(size_t wordIndex) const { return bits.getWord(wordIndex); }
+
+  void trace(TenuringTracer& mover);
 
   // Sentinel object used for all empty sets.
   //
