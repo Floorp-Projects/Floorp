@@ -147,15 +147,18 @@ void PerformanceMainThread::AddEntry(nsIHttpChannel* channel,
   if (!performanceTimingData) {
     return;
   }
+  AddRawEntry(std::move(performanceTimingData), initiatorType, entryName);
+}
 
+void PerformanceMainThread::AddRawEntry(UniquePtr<PerformanceTimingData> aData,
+                                        const nsAString& aInitiatorType,
+                                        const nsAString& aEntryName) {
   // The PerformanceResourceTiming object will use the PerformanceTimingData
   // object to get all the required timings.
-  RefPtr<PerformanceResourceTiming> performanceEntry =
-      new PerformanceResourceTiming(std::move(performanceTimingData), this,
-                                    entryName);
-
-  performanceEntry->SetInitiatorType(initiatorType);
-  InsertResourceEntry(performanceEntry);
+  auto entry =
+      MakeRefPtr<PerformanceResourceTiming>(std::move(aData), this, aEntryName);
+  entry->SetInitiatorType(aInitiatorType);
+  InsertResourceEntry(entry);
 }
 
 // To be removed once bug 1124165 lands

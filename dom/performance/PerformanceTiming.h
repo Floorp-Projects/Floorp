@@ -112,6 +112,18 @@ class PerformanceTimingData final {
     return duration.ToMilliseconds() + mZeroTime;
   }
 
+  /**
+   * Initializes the timestamps to represent a synchronous cache hit in an
+   * in-memory cache.
+   *
+   * This is used right now for the shared stylesheet cache, which doesn't
+   * always go through necko and thus there isn't an HTTP channel, etc.
+   *
+   * We fill the values with the current timestamp to represent an "instant"
+   * resource fetch.
+   */
+  void InitializeForMemoryCacheHit();
+
   // The last channel's AsyncOpen time.  This may occur before the FetchStart
   // in some cases.
   DOMHighResTimeStamp AsyncOpenHighRes(Performance* aPerformance);
