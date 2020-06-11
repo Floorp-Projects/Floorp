@@ -50,6 +50,18 @@ interface nsITelemetry : nsISupports
   const unsigned long DATASET_ALL_CHANNELS = 0;
   const unsigned long DATASET_PRERELEASE_CHANNELS = 1;
 
+  /**
+   * Serializes the histogram labels for categorical hitograms.
+   * The returned structure looks like:
+   *   { "histogram1": [ "histogram1_label1", "histogram1_label2", ...],
+   *     "histogram2": [ "histogram2_label1", "histogram2_label2", ...]
+   *     ...
+   *     }
+   *
+   * Note that this function should only be used in tests and about:telemetry.
+   */
+  [implicit_jscontext]
+  jsval getCategoricalLabels();
 
   /**
    * Serializes the histograms from the given store to a JSON-style object.

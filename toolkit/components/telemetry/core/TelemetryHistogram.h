@@ -84,6 +84,9 @@ void AccumulateChildKeyed(
  */
 nsresult GetAllStores(mozilla::Telemetry::Common::StringHashSet& set);
 
+nsresult GetCategoricalHistogramLabels(JSContext* aCx,
+                                       JS::MutableHandle<JS::Value> aResult);
+
 nsresult GetHistogramById(const nsACString& name, JSContext* cx,
                           JS::MutableHandle<JS::Value> ret);
 

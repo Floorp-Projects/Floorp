@@ -269,6 +269,32 @@ add_task(async function test_categorical_histogram() {
   Assert.deepEqual(snapshot.values, { 0: 1, 1: 1, 2: 1, 3: 0 });
 });
 
+add_task(async function test_getCategoricalLabels() {
+  let h = Telemetry.getCategoricalLabels();
+
+  Assert.deepEqual(h.TELEMETRY_TEST_CATEGORICAL, [
+    "CommonLabel",
+    "Label2",
+    "Label3",
+  ]);
+  Assert.deepEqual(h.TELEMETRY_TEST_CATEGORICAL_OPTOUT, [
+    "CommonLabel",
+    "Label4",
+    "Label5",
+    "Label6",
+  ]);
+  Assert.deepEqual(h.TELEMETRY_TEST_CATEGORICAL_NVALUES, [
+    "CommonLabel",
+    "Label7",
+    "Label8",
+  ]);
+  Assert.deepEqual(h.TELEMETRY_TEST_KEYED_CATEGORICAL, [
+    "CommonLabel",
+    "Label2",
+    "Label3",
+  ]);
+});
+
 add_task(async function test_add_error_behaviour() {
   const PLAIN_HISTOGRAMS_TO_TEST = [
     "TELEMETRY_TEST_FLAG",
