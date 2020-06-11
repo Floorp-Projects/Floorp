@@ -384,35 +384,6 @@ add_task(async function testQueryWithoutURLOrTitlePermissions() {
   await extension.unload();
 });
 
-add_task(async function testInvalidUrl() {
-  let extension = ExtensionTestUtils.loadExtension({
-    manifest: {
-      permissions: ["tabs"],
-    },
-    async background() {
-      await browser.test.assertRejects(
-        browser.tabs.query({ url: "http://test1.net" }),
-        "Invalid url pattern: http://test1.net",
-        "Expected url to match pattern"
-      );
-      await browser.test.assertRejects(
-        browser.tabs.query({ url: ["test2"] }),
-        "Invalid url pattern: test2",
-        "Expected an array with an invalid match pattern"
-      );
-      await browser.test.assertRejects(
-        browser.tabs.query({ url: ["http://www.bbc.com/", "test3"] }),
-        "Invalid url pattern: test3",
-        "Expected an array with an invalid match pattern"
-      );
-      browser.test.notifyPass("testInvalidUrl");
-    },
-  });
-  await extension.startup();
-  await extension.awaitFinish("testInvalidUrl");
-  await extension.unload();
-});
-
 add_task(async function test_query_index() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {

@@ -288,23 +288,6 @@ function flushJarCache(jarPath) {
   Services.obs.notifyObservers(null, "flush-cache-entry", jarPath);
 }
 
-function parseMatchPatterns(patterns, options) {
-  try {
-    return new MatchPatternSet(patterns, options);
-  } catch (e) {
-    let pattern;
-    for (pattern of patterns) {
-      try {
-        new MatchPattern(pattern, options);
-      } catch (e) {
-        throw new ExtensionError(`Invalid url pattern: ${pattern}`);
-      }
-    }
-    // Unexpectedly MatchPatternSet threw, but MatchPattern did not.
-    throw e;
-  }
-}
-
 var ExtensionUtils = {
   flushJarCache,
   getInnerWindowID,
@@ -312,7 +295,6 @@ var ExtensionUtils = {
   getUniqueId,
   filterStack,
   getWinUtils,
-  parseMatchPatterns,
   promiseDocumentIdle,
   promiseDocumentLoaded,
   promiseDocumentReady,
