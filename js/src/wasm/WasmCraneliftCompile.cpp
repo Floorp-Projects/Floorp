@@ -387,8 +387,16 @@ bool env_uses_shared_memory(const CraneliftModuleEnvironment* wrapper) {
   return wrapper->env->usesSharedMemory();
 }
 
-const FuncTypeWithId* env_function_signature(
-    const CraneliftModuleEnvironment* wrapper, size_t funcIndex) {
+size_t env_num_types(const CraneliftModuleEnvironment* wrapper) {
+  return wrapper->env->types.length();
+}
+const FuncTypeWithId* env_type(const CraneliftModuleEnvironment* wrapper,
+                               size_t typeIndex) {
+  return &wrapper->env->types[typeIndex].funcType();
+}
+
+const FuncTypeWithId* env_func_sig(const CraneliftModuleEnvironment* wrapper,
+                                   size_t funcIndex) {
   return wrapper->env->funcTypes[funcIndex];
 }
 

@@ -163,15 +163,16 @@ bool wasm::CraneliftDisabledByFeatures(JSContext* cx, bool* isDisabled,
   // no threads, no simd, and on ARM64, no reference types.
   bool debug = cx->realm() && cx->realm()->debuggerObservesAsmJS();
   bool gc = cx->options().wasmGc();
-  bool multiValue = WasmMultiValueFlag(cx);
   bool threads =
       cx->realm() &&
       cx->realm()->creationOptions().getSharedMemoryAndAtomicsEnabled();
 #if defined(JS_CODEGEN_ARM64)
   bool reftypesOnArm64 = cx->options().wasmReftypes();
+  bool multiValue = false;
 #else
   // On other platforms, assume reftypes has been implemented.
   bool reftypesOnArm64 = false;
+  bool multiValue = WasmMultiValueFlag(cx);
 #endif
   bool simd = WasmSimdFlag(cx);
   if (reason) {
@@ -223,8 +224,8 @@ bool wasm::GcTypesAvailable(JSContext* cx) {
 }
 
 bool wasm::MultiValuesAvailable(JSContext* cx) {
-  // Cranelift does not support multi-value.
-  return WasmMultiValueFlag(cx) && (BaselineAvailable(cx) || IonAvailable(cx));
+  return WasmMultiValueFlag(cx) &&
+         (BaselineAvailable(cx) || IonAvailable(cx) || CraneliftAvailable(cx));
 }
 
 bool wasm::SimdAvailable(JSContext* cx) {
