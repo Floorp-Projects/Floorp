@@ -9451,7 +9451,7 @@ nsresult GetOriginUsageOp::DoDirectoryWork(QuotaManager& aQuotaManager) {
       return usageInfoOrErr.unwrapErr();
     }
 
-    usageInfo.Append(usageInfoOrErr.unwrap());
+    usageInfo += usageInfoOrErr.unwrap();
   }
 
   mUsage = usageInfo.TotalUsage().valueOr(0);
