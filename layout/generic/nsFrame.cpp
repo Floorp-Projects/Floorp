@@ -298,17 +298,17 @@ std::ostream& operator<<(std::ostream& aStream, const nsReflowStatus& aStatus) {
 #ifdef DEBUG
 static bool gShowFrameBorders = false;
 
-void nsFrame::ShowFrameBorders(bool aEnable) { gShowFrameBorders = aEnable; }
+void nsIFrame::ShowFrameBorders(bool aEnable) { gShowFrameBorders = aEnable; }
 
-bool nsFrame::GetShowFrameBorders() { return gShowFrameBorders; }
+bool nsIFrame::GetShowFrameBorders() { return gShowFrameBorders; }
 
 static bool gShowEventTargetFrameBorder = false;
 
-void nsFrame::ShowEventTargetFrameBorder(bool aEnable) {
+void nsIFrame::ShowEventTargetFrameBorder(bool aEnable) {
   gShowEventTargetFrameBorder = aEnable;
 }
 
-bool nsFrame::GetShowEventTargetFrameBorder() {
+bool nsIFrame::GetShowEventTargetFrameBorder() {
   return gShowEventTargetFrameBorder;
 }
 
@@ -316,7 +316,7 @@ bool nsFrame::GetShowEventTargetFrameBorder() {
  * Note: the log module is created during library initialization which
  * means that you cannot perform logging before then.
  */
-mozilla::LazyLogModule nsFrame::sFrameLogModule("frame");
+mozilla::LazyLogModule nsIFrame::sFrameLogModule("frame");
 
 #endif
 

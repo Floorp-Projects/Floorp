@@ -5090,6 +5090,18 @@ class nsIFrame : public nsQueryFrame {
   // object. Returns -1 on error or if the frame doesn't have a content object
   static int32_t ContentIndexInContainer(const nsIFrame* aFrame);
 #endif
+
+#ifdef DEBUG
+  static mozilla::LazyLogModule sFrameLogModule;
+
+  // Show frame borders when rendering
+  static void ShowFrameBorders(bool aEnable);
+  static bool GetShowFrameBorders();
+
+  // Show frame border of event target
+  static void ShowEventTargetFrameBorder(bool aEnable);
+  static bool GetShowEventTargetFrameBorder();
+#endif
 };
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(nsIFrame::ReflowChildFlags)
