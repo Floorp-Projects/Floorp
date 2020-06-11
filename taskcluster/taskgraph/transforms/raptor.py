@@ -359,6 +359,10 @@ def add_extra_options(config, tests):
 @transforms.add
 def apply_tier_optimization(config, tests):
     for test in tests:
+        if test['test-platform'].startswith('android-hw'):
+            yield test
+            continue
+
         test['optimization'] = {'push-interval-10': None}
         if test['tier'] > 1:
             test['optimization'] = {'push-interval-25': None}
