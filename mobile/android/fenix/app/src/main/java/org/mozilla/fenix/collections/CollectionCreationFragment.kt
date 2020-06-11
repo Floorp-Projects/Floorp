@@ -74,10 +74,10 @@ class CollectionCreationFragment : DialogFragment() {
             DefaultCollectionCreationController(
                 collectionCreationStore,
                 ::dismiss,
-                requireComponents.analytics,
+                requireComponents.analytics.metrics,
                 requireComponents.core.tabCollectionStorage,
                 requireComponents.core.sessionManager,
-                viewLifecycleOwner.lifecycleScope
+                scope = lifecycleScope
             )
         )
         collectionCreationView = CollectionCreationView(

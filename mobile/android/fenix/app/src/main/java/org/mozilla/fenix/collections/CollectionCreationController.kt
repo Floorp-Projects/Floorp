@@ -8,14 +8,14 @@ package org.mozilla.fenix.collections
 
 import androidx.annotation.VisibleForTesting
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.launch
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.feature.tab.collections.TabCollection
-import org.mozilla.fenix.components.Analytics
 import org.mozilla.fenix.components.TabCollectionStorage
 import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.home.Tab
 
 interface CollectionCreationController {
@@ -65,10 +65,10 @@ fun List<Tab>.toSessionBundle(sessionManager: SessionManager): List<Session> {
 class DefaultCollectionCreationController(
     private val store: CollectionCreationStore,
     private val dismiss: () -> Unit,
-    private val analytics: Analytics,
+    private val metrics: MetricController,
     private val tabCollectionStorage: TabCollectionStorage,
     private val sessionManager: SessionManager,
-    private val viewLifecycleScope: CoroutineScope
+    private val scope: CoroutineScope
 ) : CollectionCreationController {
 
     companion object {
@@ -79,26 +79,31 @@ class DefaultCollectionCreationController(
     override fun saveCollectionName(tabs: List<Tab>, name: String) {
         dismiss()
 
-        val sessionBundle = tabs.toList().toSessionBundle(sessionManager)
-        viewLifecycleScope.launch(Dispatchers.IO) {
+        val sessionBundle = tabs.toSessionBundle(sessionManager)
+        scope.launch(IO) {
             tabCollectionStorage.createCollection(name, sessionBundle)
         }
 
-        analytics.metrics.track(
+        metrics.track(
             Event.CollectionSaved(normalSessionSize(sessionManager), sessionBundle.size)
         )
     }
 
     override fun renameCollection(collection: TabCollection, name: String) {
         dismiss()
-        viewLifecycleScope.launch(Dispatchers.IO) {
+        scope.launch(IO) {
             tabCollectionStorage.renameCollection(collection, name)
-            analytics.metrics.track(Event.CollectionRenamed)
         }
+        metrics.track(Event.CollectionRenamed)
     }
 
     override fun backPressed(fromStep: SaveCollectionStep) {
-        handleBackPress(fromStep)
+        val newStep = stepBack(fromStep)
+        if (newStep != null) {
+            store.dispatch(CollectionCreationAction.StepChanged(newStep))
+        } else {
+            dismiss()
+        }
     }
 
     override fun selectAllTabs() {
@@ -116,12 +121,12 @@ class DefaultCollectionCreationController(
     override fun selectCollection(collection: TabCollection, tabs: List<Tab>) {
         dismiss()
         val sessionBundle = tabs.toList().toSessionBundle(sessionManager)
-        viewLifecycleScope.launch(Dispatchers.IO) {
+        scope.launch(IO) {
             tabCollectionStorage
                 .addTabsToCollection(collection, sessionBundle)
         }
 
-        analytics.metrics.track(
+        metrics.track(
             Event.CollectionTabsAdded(normalSessionSize(sessionManager), sessionBundle.size)
         )
     }
@@ -171,25 +176,15 @@ class DefaultCollectionCreationController(
         store.dispatch(CollectionCreationAction.TabRemoved(tab))
     }
 
-    private fun handleBackPress(backFromStep: SaveCollectionStep) {
-        val newStep = stepBack(backFromStep)
-        if (newStep != null) {
-            store.dispatch(CollectionCreationAction.StepChanged(newStep))
-        } else {
-            dismiss()
-        }
-    }
-
+    /**
+     * Will return the next valid state according to this diagram.
+     *
+     * Name Collection -> Select Collection -> Select Tabs -> (dismiss fragment) <- Rename Collection
+     */
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     fun stepBack(
         backFromStep: SaveCollectionStep
     ): SaveCollectionStep? {
-        /*
-        Will return the next valid state according to this diagram.
-
-        Name Collection -> Select Collection -> Select Tabs -> (dismiss fragment) <- Rename Collection
-         */
-
         val tabCollectionCount = store.state.tabCollections.size
         val tabCount = store.state.tabs.size
 
