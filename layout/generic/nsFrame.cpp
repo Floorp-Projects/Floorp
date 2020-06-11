@@ -7939,11 +7939,11 @@ nsresult nsIFrame::GetChildFrameContainingOffset(int32_t inContentOffset,
 // aOutSideLimit != 0 means ignore aLineStart, instead work from
 // the end (if > 0) or beginning (if < 0).
 //
-nsresult nsFrame::GetNextPrevLineFromeBlockFrame(nsPresContext* aPresContext,
-                                                 nsPeekOffsetStruct* aPos,
-                                                 nsIFrame* aBlockFrame,
-                                                 int32_t aLineStart,
-                                                 int8_t aOutSideLimit) {
+nsresult nsIFrame::GetNextPrevLineFromeBlockFrame(nsPresContext* aPresContext,
+                                                  nsPeekOffsetStruct* aPos,
+                                                  nsIFrame* aBlockFrame,
+                                                  int32_t aLineStart,
+                                                  int8_t aOutSideLimit) {
   // magic numbers aLineStart will be -1 for end of block 0 will be start of
   // block
   if (!aBlockFrame || !aPos) return NS_ERROR_NULL_POINTER;
@@ -8534,7 +8534,7 @@ nsresult nsIFrame::PeekOffset(nsPeekOffsetStruct* aPos) {
         // error.
         nsIFrame* lastFrame = this;
         do {
-          result = nsFrame::GetNextPrevLineFromeBlockFrame(
+          result = nsIFrame::GetNextPrevLineFromeBlockFrame(
               PresContext(), aPos, blockFrame, thisLine,
               edgeCase);  // start from thisLine
 
