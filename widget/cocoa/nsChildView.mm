@@ -2382,6 +2382,13 @@ NSEvent* gLastDragMouseDownEvent = nil;  // [strong]
 
     [self addSubview:mPixelHostingView];
 
+    mRootCALayer = [[CALayer layer] retain];
+    mRootCALayer.position = NSZeroPoint;
+    mRootCALayer.bounds = NSZeroRect;
+    mRootCALayer.anchorPoint = NSZeroPoint;
+    mRootCALayer.contentsGravity = kCAGravityTopLeft;
+    [[mPixelHostingView layer] addSublayer:mRootCALayer];
+
     mLastPressureStage = 0;
   }
 
@@ -2499,6 +2506,7 @@ NSEvent* gLastDragMouseDownEvent = nil;  // [strong]
   [mNonDraggableViewsContainer release];
   [mPixelHostingView removeFromSuperview];
   [mPixelHostingView release];
+  [mRootCALayer release];
 
   if (gLastDragView == self) {
     gLastDragView = nil;
@@ -2647,7 +2655,7 @@ NSEvent* gLastDragMouseDownEvent = nil;  // [strong]
 }
 
 - (CALayer*)rootCALayer {
-  return [mPixelHostingView layer];
+  return mRootCALayer;
 }
 
 // If we've just created a non-native context menu, we need to mark it as

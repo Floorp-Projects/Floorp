@@ -182,6 +182,10 @@ class WidgetRenderingContext;
   // This is a subview of self so that it can be ordered on top of mVibrancyViewsContainer.
   PixelHostingView* mPixelHostingView;
 
+  // The CALayer that wraps Gecko's rendered contents. It's a sublayer of
+  // mPixelHostingView's backing layer. Always non-null.
+  CALayer* mRootCALayer;  // [STRONG]
+
   // Last pressure stage by trackpad's force click
   NSInteger mLastPressureStage;
 }
