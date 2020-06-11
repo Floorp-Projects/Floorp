@@ -219,14 +219,7 @@ class imgFrame {
   uint32_t GetImageBytesPerRow() const;
   uint32_t GetImageDataLength() const;
   void FinalizeSurfaceInternal();
-
-  /**
-   * @param aTemporary  If true, it will assume the caller does not require a
-   *                    wrapping RecycleSourceSurface to protect the underlying
-   *                    surface from recycling. The reference to the surface
-   *                    must be freed before releasing the main thread context.
-   */
-  already_AddRefed<SourceSurface> GetSourceSurfaceInternal(bool aTemporary);
+  already_AddRefed<SourceSurface> GetSourceSurfaceInternal();
 
   struct SurfaceWithFormat {
     RefPtr<gfxDrawable> mDrawable;
@@ -253,7 +246,6 @@ class imgFrame {
  private:  // data
   friend class DrawableFrameRef;
   friend class RawAccessFrameRef;
-  friend class RecyclingSourceSurface;
   friend class UnlockImageDataRunnable;
 
   //////////////////////////////////////////////////////////////////////////////
@@ -288,9 +280,6 @@ class imgFrame {
 
   //! Number of RawAccessFrameRefs currently alive for this imgFrame.
   int16_t mLockCount;
-
-  //! Number of RecyclingSourceSurface's currently alive for this imgFrame.
-  int16_t mRecycleLockCount;
 
   bool mAborted;
   bool mFinished;
