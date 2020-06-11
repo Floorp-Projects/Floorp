@@ -96,7 +96,7 @@ nsCommandLine::RemoveArguments(int32_t aStart, int32_t aEnd) {
   NS_ENSURE_ARG_MIN(aStart, 0);
   NS_ENSURE_ARG_MAX(uint32_t(aEnd) + 1, mArgs.Length());
 
-  mArgs.RemoveElementsAt(mArgs.begin() + aStart, mArgs.begin() + aEnd + 1);
+  mArgs.RemoveElementsRange(mArgs.begin() + aStart, mArgs.begin() + aEnd + 1);
 
   return NS_OK;
 }

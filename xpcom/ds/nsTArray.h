@@ -1762,7 +1762,8 @@ class nsTArray_Impl
   // std::vector::erase.
   // @param first iterator to the first of elements to remove
   // @param last iterator to the last of elements to remove
-  const_iterator RemoveElementsAt(const_iterator first, const_iterator last) {
+  const_iterator RemoveElementsRange(const_iterator first,
+                                     const_iterator last) {
     MOZ_ASSERT(first.GetArray() == this);
     MOZ_ASSERT(last.GetArray() == this);
     MOZ_ASSERT(last.GetIndex() >= first.GetIndex());
