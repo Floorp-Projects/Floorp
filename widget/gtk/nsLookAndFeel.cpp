@@ -837,36 +837,36 @@ static void GetSystemFontInfo(GtkStyleContext* aStyle, nsString* aFontName,
 bool nsLookAndFeel::GetFontImpl(FontID aID, nsString& aFontName,
                                 gfxFontStyle& aFontStyle) {
   switch (aID) {
-    case eFont_Menu:          // css2
-    case eFont_PullDownMenu:  // css3
+    case FontID::Menu:          // css2
+    case FontID::PullDownMenu:  // css3
       aFontName = mMenuFontName;
       aFontStyle = mMenuFontStyle;
       break;
 
-    case eFont_Field:  // css3
-    case eFont_List:   // css3
+    case FontID::Field:  // css3
+    case FontID::List:   // css3
       aFontName = mFieldFontName;
       aFontStyle = mFieldFontStyle;
       break;
 
-    case eFont_Button:  // css3
+    case FontID::Button:  // css3
       aFontName = mButtonFontName;
       aFontStyle = mButtonFontStyle;
       break;
 
-    case eFont_Caption:       // css2
-    case eFont_Icon:          // css2
-    case eFont_MessageBox:    // css2
-    case eFont_SmallCaption:  // css2
-    case eFont_StatusBar:     // css2
-    case eFont_Window:        // css3
-    case eFont_Document:      // css3
-    case eFont_Workspace:     // css3
-    case eFont_Desktop:       // css3
-    case eFont_Info:          // css3
-    case eFont_Dialog:        // css3
-    case eFont_Tooltips:      // moz
-    case eFont_Widget:        // moz
+    case FontID::Caption:       // css2
+    case FontID::Icon:          // css2
+    case FontID::MessageBox:    // css2
+    case FontID::SmallCaption:  // css2
+    case FontID::StatusBar:     // css2
+    case FontID::Window:        // css3
+    case FontID::Document:      // css3
+    case FontID::Workspace:     // css3
+    case FontID::Desktop:       // css3
+    case FontID::Info:          // css3
+    case FontID::Dialog:        // css3
+    case FontID::Tooltips:      // moz
+    case FontID::Widget:        // moz
     default:
       aFontName = mDefaultFontName;
       aFontStyle = mDefaultFontStyle;

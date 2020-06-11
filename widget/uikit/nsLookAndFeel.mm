@@ -376,7 +376,7 @@ nsLookAndFeel::GetFloatImpl(FloatID aID, float& aResult) {
 
 bool nsLookAndFeel::GetFontImpl(FontID aID, nsString& aFontName, gfxFontStyle& aFontStyle) {
   // hack for now
-  if (aID == eFont_Window || aID == eFont_Document) {
+  if (aID == FontID::Window || aID == FontID::Document) {
     aFontStyle.style = FontSlantStyle::Normal();
     aFontStyle.weight = FontWeight::Normal();
     aFontStyle.stretch = FontStretch::Normal();

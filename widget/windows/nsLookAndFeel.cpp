@@ -640,7 +640,7 @@ static bool GetSysFontInfo(HDC aHDC, LookAndFeel::FontID anID,
   // Depending on which stock font we want, there are a couple of
   // places we might have to look it up.
   switch (anID) {
-    case LookAndFeel::eFont_Icon:
+    case LookAndFeel::FontID::Icon:
       if (!::SystemParametersInfoW(SPI_GETICONTITLELOGFONT, sizeof(logFont),
                                    (PVOID)&logFont, 0))
         return false;
@@ -655,25 +655,25 @@ static bool GetSysFontInfo(HDC aHDC, LookAndFeel::FontID anID,
         return false;
 
       switch (anID) {
-        case LookAndFeel::eFont_Menu:
-        case LookAndFeel::eFont_PullDownMenu:
+        case LookAndFeel::FontID::Menu:
+        case LookAndFeel::FontID::PullDownMenu:
           ptrLogFont = &ncm.lfMenuFont;
           break;
-        case LookAndFeel::eFont_Caption:
+        case LookAndFeel::FontID::Caption:
           ptrLogFont = &ncm.lfCaptionFont;
           break;
-        case LookAndFeel::eFont_SmallCaption:
+        case LookAndFeel::FontID::SmallCaption:
           ptrLogFont = &ncm.lfSmCaptionFont;
           break;
-        case LookAndFeel::eFont_StatusBar:
-        case LookAndFeel::eFont_Tooltips:
+        case LookAndFeel::FontID::StatusBar:
+        case LookAndFeel::FontID::Tooltips:
           ptrLogFont = &ncm.lfStatusFont;
           break;
-        case LookAndFeel::eFont_Widget:
-        case LookAndFeel::eFont_Dialog:
-        case LookAndFeel::eFont_Button:
-        case LookAndFeel::eFont_Field:
-        case LookAndFeel::eFont_List:
+        case LookAndFeel::FontID::Widget:
+        case LookAndFeel::FontID::Dialog:
+        case LookAndFeel::FontID::Button:
+        case LookAndFeel::FontID::Field:
+        case LookAndFeel::FontID::List:
           // XXX It's not clear to me whether this is exactly the right
           // set of LookAndFeel values to map to the dialog font; we may
           // want to add or remove cases here after reviewing the visual
@@ -748,7 +748,7 @@ static bool GetSysFontInfo(HDC aHDC, LookAndFeel::FontID anID,
 
 bool nsLookAndFeel::GetFontImpl(FontID anID, nsString& aFontName,
                                 gfxFontStyle& aFontStyle) {
-  CachedSystemFont& cacheSlot = mSystemFontCache[anID];
+  CachedSystemFont& cacheSlot = mSystemFontCache[size_t(anID)];
 
   bool status;
   if (cacheSlot.mCacheValid) {
