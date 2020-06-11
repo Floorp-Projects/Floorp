@@ -22,7 +22,6 @@
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/Tools.h"
 #include "mozilla/gfx/SourceSurfaceRawData.h"
-#include "mozilla/image/RecyclingSourceSurface.h"
 #include "mozilla/layers/SourceSurfaceSharedData.h"
 #include "mozilla/layers/SourceSurfaceVolatileData.h"
 #include "mozilla/Likely.h"
@@ -32,11 +31,28 @@
 #include "nsRefreshDriver.h"
 #include "nsThreadUtils.h"
 
+#include <algorithm>  // for min, max
+
 namespace mozilla {
 
 using namespace gfx;
 
 namespace image {
+
+/**
+ * This class is identical to SourceSurfaceSharedData but returns a different
+ * type so that SharedSurfacesChild is aware imagelib wants to recycle this
+ * surface for future animation frames.
+ */
+class RecyclingSourceSurfaceSharedData final : public SourceSurfaceSharedData {
+ public:
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(RecyclingSourceSurfaceSharedData,
+                                          override)
+
+  SurfaceType GetType() const override {
+    return SurfaceType::DATA_RECYCLING_SHARED;
+  }
+};
 
 static int32_t VolatileSurfaceStride(const IntSize& size,
                                      SurfaceFormat format) {
@@ -48,6 +64,7 @@ static already_AddRefed<DataSourceSurface> CreateLockedSurface(
     DataSourceSurface* aSurface, const IntSize& size, SurfaceFormat format) {
   switch (aSurface->GetType()) {
     case SurfaceType::DATA_SHARED:
+    case SurfaceType::DATA_RECYCLING_SHARED:
     case SurfaceType::DATA_ALIGNED: {
       // Shared memory is never released until the surface itself is released.
       // Similar for aligned/heap surfaces.
@@ -86,19 +103,21 @@ static bool ShouldUseHeap(const IntSize& aSize, int32_t aStride,
   // Lets us avoid too many small images consuming all of the handles. The
   // actual allocation checks for overflow.
   int32_t bufferSize = (aStride * aSize.height) / 1024;
-  if (bufferSize < StaticPrefs::image_mem_volatile_min_threshold_kb()) {
-    return true;
-  }
-
-  return false;
+  return bufferSize < StaticPrefs::image_mem_volatile_min_threshold_kb();
 }
 
 static already_AddRefed<DataSourceSurface> AllocateBufferForImage(
-    const IntSize& size, SurfaceFormat format, bool aIsAnimated = false) {
+    const IntSize& size, SurfaceFormat format, bool aShouldRecycle = false,
+    bool aIsAnimated = false) {
   int32_t stride = VolatileSurfaceStride(size, format);
 
   if (gfxVars::GetUseWebRenderOrDefault() && StaticPrefs::image_mem_shared()) {
-    RefPtr<SourceSurfaceSharedData> newSurf = new SourceSurfaceSharedData();
+    RefPtr<SourceSurfaceSharedData> newSurf;
+    if (aShouldRecycle) {
+      newSurf = new RecyclingSourceSurfaceSharedData();
+    } else {
+      newSurf = new SourceSurfaceSharedData();
+    }
     if (newSurf->Init(size, stride, format)) {
       return newSurf.forget();
     }
@@ -176,7 +195,6 @@ imgFrame::imgFrame()
     : mMonitor("imgFrame"),
       mDecoded(0, 0, 0, 0),
       mLockCount(0),
-      mRecycleLockCount(0),
       mAborted(false),
       mFinished(false),
       mOptimizable(false),
@@ -239,7 +257,8 @@ nsresult imgFrame::InitForDecoder(const nsIntSize& aImageSize,
   MOZ_ASSERT(!mLockedSurface, "Called imgFrame::InitForDecoder() twice?");
 
   bool postFirstFrame = aAnimParams && aAnimParams->mFrameNum > 0;
-  mRawSurface = AllocateBufferForImage(mImageSize, mFormat, postFirstFrame);
+  mRawSurface = AllocateBufferForImage(mImageSize, mFormat, mShouldRecycle,
+                                       postFirstFrame);
   if (!mRawSurface) {
     mAborted = true;
     return NS_ERROR_OUT_OF_MEMORY;
@@ -302,7 +321,16 @@ nsresult imgFrame::InitForDecoderRecycle(const AnimationParams& aAnimParams) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  if (mRecycleLockCount > 0) {
+  // Ensure we account for all internal references to the surface.
+  MozRefCountType internalRefs = 1;
+  if (mRawSurface == mLockedSurface) {
+    ++internalRefs;
+  }
+  if (mOptSurface == mLockedSurface) {
+    ++internalRefs;
+  }
+
+  if (mLockedSurface->refCount() > internalRefs) {
     if (NS_IsMainThread()) {
       // We should never be both decoding and recycling on the main thread. Sync
       // decoding can only be used to produce the first set of frames. Those
@@ -324,23 +352,23 @@ nsresult imgFrame::InitForDecoderRecycle(const AnimationParams& aAnimParams) {
     // outstanding transactions, we are already skipping frames. If the frame
     // is still in use for some other purpose, it won't be returned to the pool
     // and its owner can hold onto it forever without additional impact here.
-    TimeDuration timeout =
-        TimeDuration::FromMilliseconds(nsRefreshDriver::DefaultInterval());
+    int32_t refreshInterval =
+        std::max(std::min(nsRefreshDriver::DefaultInterval(), 20), 4);
+    TimeDuration waitInterval =
+        TimeDuration::FromMilliseconds(refreshInterval >> 2);
+    TimeStamp timeout =
+        TimeStamp::Now() + TimeDuration::FromMilliseconds(refreshInterval);
     while (true) {
-      TimeStamp start = TimeStamp::Now();
-      mMonitor.Wait(timeout);
-      if (mRecycleLockCount == 0) {
+      mMonitor.Wait(waitInterval);
+      if (mLockedSurface->refCount() <= internalRefs) {
         break;
       }
 
-      TimeDuration delta = TimeStamp::Now() - start;
-      if (delta >= timeout) {
+      if (timeout <= TimeStamp::Now()) {
         // We couldn't secure the frame for recycling. It will allocate a new
         // frame instead.
         return NS_ERROR_NOT_AVAILABLE;
       }
-
-      timeout -= delta;
     }
   }
 
@@ -612,8 +640,7 @@ bool imgFrame::Draw(gfxContext* aContext, const ImageRegion& aRegion,
     // advance on the main thread, we know nothing else will try to use it.
     DrawTarget* drawTarget = aContext->GetDrawTarget();
     bool recording = drawTarget->GetBackendType() == BackendType::RECORDING;
-    bool temporary = !drawTarget->IsCaptureDT() && !recording;
-    RefPtr<SourceSurface> surf = GetSourceSurfaceInternal(temporary);
+    RefPtr<SourceSurface> surf = GetSourceSurfaceInternal();
     if (!surf) {
       return false;
     }
@@ -819,54 +846,35 @@ void imgFrame::FinalizeSurfaceInternal() {
     return;
   }
 
-  auto sharedSurf = static_cast<SourceSurfaceSharedData*>(mRawSurface.get());
+  auto* sharedSurf = static_cast<SourceSurfaceSharedData*>(mRawSurface.get());
   sharedSurf->Finalize();
 }
 
 already_AddRefed<SourceSurface> imgFrame::GetSourceSurface() {
   MonitorAutoLock lock(mMonitor);
-  return GetSourceSurfaceInternal(/* aTemporary */ false);
+  return GetSourceSurfaceInternal();
 }
 
-already_AddRefed<SourceSurface> imgFrame::GetSourceSurfaceInternal(
-    bool aTemporary) {
+already_AddRefed<SourceSurface> imgFrame::GetSourceSurfaceInternal() {
   mMonitor.AssertCurrentThreadOwns();
 
   if (mOptSurface) {
     if (mOptSurface->IsValid()) {
       RefPtr<SourceSurface> surf(mOptSurface);
       return surf.forget();
-    } else {
-      mOptSurface = nullptr;
     }
+    mOptSurface = nullptr;
   }
 
   if (mBlankLockedSurface) {
     // We are going to return the blank surface because of the flags.
     // We are including comments here that are copied from below
     // just so that we are on the same page!
-
-    // We don't need to create recycling wrapper for some callers because they
-    // promise to release the surface immediately after.
-    if (!aTemporary && mShouldRecycle) {
-      RefPtr<SourceSurface> surf =
-          new RecyclingSourceSurface(this, mBlankLockedSurface);
-      return surf.forget();
-    }
-
     RefPtr<SourceSurface> surf(mBlankLockedSurface);
     return surf.forget();
   }
 
   if (mLockedSurface) {
-    // We don't need to create recycling wrapper for some callers because they
-    // promise to release the surface immediately after.
-    if (!aTemporary && mShouldRecycle) {
-      RefPtr<SourceSurface> surf =
-          new RecyclingSourceSurface(this, mLockedSurface);
-      return surf.forget();
-    }
-
     RefPtr<SourceSurface> surf(mLockedSurface);
     return surf.forget();
   }
@@ -947,27 +955,6 @@ void imgFrame::AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
   }
 
   aCallback(metadata);
-}
-
-RecyclingSourceSurface::RecyclingSourceSurface(imgFrame* aParent,
-                                               DataSourceSurface* aSurface)
-    : mParent(WrapNotNull(aParent)),
-      mSurface(WrapNotNull(aSurface)),
-      mType(SurfaceType::DATA) {
-  mParent->mMonitor.AssertCurrentThreadOwns();
-  ++mParent->mRecycleLockCount;
-
-  if (aSurface->GetType() == SurfaceType::DATA_SHARED) {
-    mType = SurfaceType::DATA_RECYCLING_SHARED;
-  }
-}
-
-RecyclingSourceSurface::~RecyclingSourceSurface() {
-  MonitorAutoLock lock(mParent->mMonitor);
-  MOZ_ASSERT(mParent->mRecycleLockCount > 0);
-  if (--mParent->mRecycleLockCount == 0) {
-    mParent->mMonitor.NotifyAll();
-  }
 }
 
 }  // namespace image

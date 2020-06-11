@@ -201,7 +201,7 @@ class AnimationImageKeyData final : public SharedSurfacesChild::ImageKeyData {
   AnimationImageKeyData(AnimationImageKeyData&& aOther);
   AnimationImageKeyData& operator=(AnimationImageKeyData&& aOther);
 
-  AutoTArray<RefPtr<gfx::SourceSurface>, 2> mPendingRelease;
+  AutoTArray<RefPtr<gfx::SourceSurfaceSharedData>, 2> mPendingRelease;
 };
 
 /**
@@ -218,29 +218,21 @@ class SharedSurfacesAnimation final {
 
   /**
    * Set the animation to display the given frame.
-   * @param aParentSurface The owning surface of aSurface. This may be the same
-   *                       or it may be a wrapper surface such as
-   *                       RecyclingSourceSurface.
    * @param aSurface    The current frame.
    * @param aDirtyRect  Dirty rect representing the change between the new frame
    *                    and the previous frame. We will request only the delta
    *                    be reuploaded by WebRender.
    */
-  nsresult SetCurrentFrame(gfx::SourceSurface* aParentSurface,
-                           gfx::SourceSurfaceSharedData* aSurface,
+  nsresult SetCurrentFrame(gfx::SourceSurfaceSharedData* aSurface,
                            const gfx::IntRect& aDirtyRect);
 
   /**
    * Generate an ImageKey for the given frame.
-   * @param aParentSurface The owning surface of aSurface. This may be the same
-   *                       or it may be a wrapper surface such as
-   *                       RecyclingSourceSurface.
    * @param aSurface  The current frame. This should match what was cached via
    *                  SetCurrentFrame, but if it does not, it will need to
    *                  regenerate the cached ImageKey.
    */
-  nsresult UpdateKey(gfx::SourceSurface* aParentSurface,
-                     gfx::SourceSurfaceSharedData* aSurface,
+  nsresult UpdateKey(gfx::SourceSurfaceSharedData* aSurface,
                      RenderRootStateManager* aManager,
                      wr::IpcResourceUpdateQueue& aResources,
                      wr::ImageKey& aKey);
@@ -262,7 +254,6 @@ class SharedSurfacesAnimation final {
   ~SharedSurfacesAnimation();
 
   void HoldSurfaceForRecycling(AnimationImageKeyData& aEntry,
-                               gfx::SourceSurface* aParentSurface,
                                gfx::SourceSurfaceSharedData* aSurface);
 
   AutoTArray<AnimationImageKeyData, 1> mKeys;

@@ -61,7 +61,6 @@ EXPORTS.mozilla.image += [
     'encoders/png/nsPNGEncoder.h',
     'ICOFileHeaders.h',
     'ImageMemoryReporter.h',
-    'RecyclingSourceSurface.h',
 ]
 
 UNIFIED_SOURCES += [
