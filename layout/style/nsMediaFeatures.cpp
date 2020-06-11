@@ -220,7 +220,7 @@ nsAtom* Gecko_MediaFeatures_GetOperatingSystemVersion(
 #ifdef XP_WIN
   int32_t metricResult;
   if (NS_SUCCEEDED(LookAndFeel::GetInt(
-          LookAndFeel::eIntID_OperatingSystemVersionIdentifier,
+          LookAndFeel::IntID::OperatingSystemVersionIdentifier,
           &metricResult))) {
     for (const auto& osVersion : kOsVersionStrings) {
       if (metricResult == osVersion.mId) {
@@ -237,7 +237,7 @@ bool Gecko_MediaFeatures_PrefersReducedMotion(const Document* aDocument) {
   if (nsContentUtils::ShouldResistFingerprinting(aDocument)) {
     return false;
   }
-  return LookAndFeel::GetInt(LookAndFeel::eIntID_PrefersReducedMotion, 0) == 1;
+  return LookAndFeel::GetInt(LookAndFeel::IntID::PrefersReducedMotion, 0) == 1;
 }
 
 StylePrefersColorScheme Gecko_MediaFeatures_PrefersColorScheme(
@@ -247,8 +247,8 @@ StylePrefersColorScheme Gecko_MediaFeatures_PrefersColorScheme(
 
 static PointerCapabilities GetPointerCapabilities(const Document* aDocument,
                                                   LookAndFeel::IntID aID) {
-  MOZ_ASSERT(aID == LookAndFeel::eIntID_PrimaryPointerCapabilities ||
-             aID == LookAndFeel::eIntID_AllPointerCapabilities);
+  MOZ_ASSERT(aID == LookAndFeel::IntID::PrimaryPointerCapabilities ||
+             aID == LookAndFeel::IntID::AllPointerCapabilities);
   MOZ_ASSERT(aDocument);
 
   if (nsIDocShell* docShell = aDocument->GetDocShell()) {
@@ -285,13 +285,13 @@ static PointerCapabilities GetPointerCapabilities(const Document* aDocument,
 PointerCapabilities Gecko_MediaFeatures_PrimaryPointerCapabilities(
     const Document* aDocument) {
   return GetPointerCapabilities(aDocument,
-                                LookAndFeel::eIntID_PrimaryPointerCapabilities);
+                                LookAndFeel::IntID::PrimaryPointerCapabilities);
 }
 
 PointerCapabilities Gecko_MediaFeatures_AllPointerCapabilities(
     const Document* aDocument) {
   return GetPointerCapabilities(aDocument,
-                                LookAndFeel::eIntID_AllPointerCapabilities);
+                                LookAndFeel::IntID::AllPointerCapabilities);
 }
 
 /* static */
@@ -307,7 +307,7 @@ void nsMediaFeatures::InitSystemMetrics() {
    ***************************************************************************/
 
   int32_t metricResult =
-      LookAndFeel::GetInt(LookAndFeel::eIntID_ScrollArrowStyle);
+      LookAndFeel::GetInt(LookAndFeel::IntID::ScrollArrowStyle);
   if (metricResult & LookAndFeel::eScrollArrow_StartBackward) {
     sSystemMetrics->AppendElement(
         (nsStaticAtom*)nsGkAtoms::_moz_scrollbar_start_backward);
@@ -325,106 +325,106 @@ void nsMediaFeatures::InitSystemMetrics() {
         (nsStaticAtom*)nsGkAtoms::_moz_scrollbar_end_forward);
   }
 
-  metricResult = LookAndFeel::GetInt(LookAndFeel::eIntID_ScrollSliderStyle);
+  metricResult = LookAndFeel::GetInt(LookAndFeel::IntID::ScrollSliderStyle);
   if (metricResult != LookAndFeel::eScrollThumbStyle_Normal) {
     sSystemMetrics->AppendElement(
         (nsStaticAtom*)nsGkAtoms::_moz_scrollbar_thumb_proportional);
   }
 
-  metricResult = LookAndFeel::GetInt(LookAndFeel::eIntID_UseOverlayScrollbars);
+  metricResult = LookAndFeel::GetInt(LookAndFeel::IntID::UseOverlayScrollbars);
   if (metricResult) {
     sSystemMetrics->AppendElement(
         (nsStaticAtom*)nsGkAtoms::_moz_overlay_scrollbars);
   }
 
-  metricResult = LookAndFeel::GetInt(LookAndFeel::eIntID_MenuBarDrag);
+  metricResult = LookAndFeel::GetInt(LookAndFeel::IntID::MenuBarDrag);
   if (metricResult) {
     sSystemMetrics->AppendElement((nsStaticAtom*)nsGkAtoms::_moz_menubar_drag);
   }
 
-  nsresult rv = LookAndFeel::GetInt(LookAndFeel::eIntID_WindowsDefaultTheme,
+  nsresult rv = LookAndFeel::GetInt(LookAndFeel::IntID::WindowsDefaultTheme,
                                     &metricResult);
   if (NS_SUCCEEDED(rv) && metricResult) {
     sSystemMetrics->AppendElement(
         (nsStaticAtom*)nsGkAtoms::_moz_windows_default_theme);
   }
 
-  rv = LookAndFeel::GetInt(LookAndFeel::eIntID_MacGraphiteTheme, &metricResult);
+  rv = LookAndFeel::GetInt(LookAndFeel::IntID::MacGraphiteTheme, &metricResult);
   if (NS_SUCCEEDED(rv) && metricResult) {
     sSystemMetrics->AppendElement(
         (nsStaticAtom*)nsGkAtoms::_moz_mac_graphite_theme);
   }
 
-  rv = LookAndFeel::GetInt(LookAndFeel::eIntID_MacYosemiteTheme, &metricResult);
+  rv = LookAndFeel::GetInt(LookAndFeel::IntID::MacYosemiteTheme, &metricResult);
   if (NS_SUCCEEDED(rv) && metricResult) {
     sSystemMetrics->AppendElement(
         (nsStaticAtom*)nsGkAtoms::_moz_mac_yosemite_theme);
   }
 
-  rv = LookAndFeel::GetInt(LookAndFeel::eIntID_WindowsAccentColorInTitlebar,
+  rv = LookAndFeel::GetInt(LookAndFeel::IntID::WindowsAccentColorInTitlebar,
                            &metricResult);
   if (NS_SUCCEEDED(rv) && metricResult) {
     sSystemMetrics->AppendElement(
         (nsStaticAtom*)nsGkAtoms::_moz_windows_accent_color_in_titlebar);
   }
 
-  rv = LookAndFeel::GetInt(LookAndFeel::eIntID_DWMCompositor, &metricResult);
+  rv = LookAndFeel::GetInt(LookAndFeel::IntID::DWMCompositor, &metricResult);
   if (NS_SUCCEEDED(rv) && metricResult) {
     sSystemMetrics->AppendElement(
         (nsStaticAtom*)nsGkAtoms::_moz_windows_compositor);
   }
 
-  rv = LookAndFeel::GetInt(LookAndFeel::eIntID_WindowsGlass, &metricResult);
+  rv = LookAndFeel::GetInt(LookAndFeel::IntID::WindowsGlass, &metricResult);
   if (NS_SUCCEEDED(rv) && metricResult) {
     sSystemMetrics->AppendElement((nsStaticAtom*)nsGkAtoms::_moz_windows_glass);
   }
 
-  rv = LookAndFeel::GetInt(LookAndFeel::eIntID_WindowsClassic, &metricResult);
+  rv = LookAndFeel::GetInt(LookAndFeel::IntID::WindowsClassic, &metricResult);
   if (NS_SUCCEEDED(rv) && metricResult) {
     sSystemMetrics->AppendElement(
         (nsStaticAtom*)nsGkAtoms::_moz_windows_classic);
   }
 
-  rv = LookAndFeel::GetInt(LookAndFeel::eIntID_TouchEnabled, &metricResult);
+  rv = LookAndFeel::GetInt(LookAndFeel::IntID::TouchEnabled, &metricResult);
   if (NS_SUCCEEDED(rv) && metricResult) {
     sSystemMetrics->AppendElement((nsStaticAtom*)nsGkAtoms::_moz_touch_enabled);
   }
 
-  rv = LookAndFeel::GetInt(LookAndFeel::eIntID_SwipeAnimationEnabled,
+  rv = LookAndFeel::GetInt(LookAndFeel::IntID::SwipeAnimationEnabled,
                            &metricResult);
   if (NS_SUCCEEDED(rv) && metricResult) {
     sSystemMetrics->AppendElement(
         (nsStaticAtom*)nsGkAtoms::_moz_swipe_animation_enabled);
   }
 
-  rv = LookAndFeel::GetInt(LookAndFeel::eIntID_GTKCSDAvailable, &metricResult);
+  rv = LookAndFeel::GetInt(LookAndFeel::IntID::GTKCSDAvailable, &metricResult);
   if (NS_SUCCEEDED(rv) && metricResult) {
     sSystemMetrics->AppendElement(
         (nsStaticAtom*)nsGkAtoms::_moz_gtk_csd_available);
   }
 
-  rv = LookAndFeel::GetInt(LookAndFeel::eIntID_GTKCSDHideTitlebarByDefault,
+  rv = LookAndFeel::GetInt(LookAndFeel::IntID::GTKCSDHideTitlebarByDefault,
                            &metricResult);
   if (NS_SUCCEEDED(rv) && metricResult) {
     sSystemMetrics->AppendElement(
         (nsStaticAtom*)nsGkAtoms::_moz_gtk_csd_hide_titlebar_by_default);
   }
 
-  rv = LookAndFeel::GetInt(LookAndFeel::eIntID_GTKCSDTransparentBackground,
+  rv = LookAndFeel::GetInt(LookAndFeel::IntID::GTKCSDTransparentBackground,
                            &metricResult);
   if (NS_SUCCEEDED(rv) && metricResult) {
     sSystemMetrics->AppendElement(
         (nsStaticAtom*)nsGkAtoms::_moz_gtk_csd_transparent_background);
   }
 
-  rv = LookAndFeel::GetInt(LookAndFeel::eIntID_GTKCSDMinimizeButton,
+  rv = LookAndFeel::GetInt(LookAndFeel::IntID::GTKCSDMinimizeButton,
                            &metricResult);
   if (NS_SUCCEEDED(rv) && metricResult) {
     sSystemMetrics->AppendElement(
         (nsStaticAtom*)nsGkAtoms::_moz_gtk_csd_minimize_button);
   }
 
-  rv = LookAndFeel::GetInt(LookAndFeel::eIntID_GTKCSDMaximizeButton,
+  rv = LookAndFeel::GetInt(LookAndFeel::IntID::GTKCSDMaximizeButton,
                            &metricResult);
   if (NS_SUCCEEDED(rv) && metricResult) {
     sSystemMetrics->AppendElement(
@@ -432,20 +432,20 @@ void nsMediaFeatures::InitSystemMetrics() {
   }
 
   rv =
-      LookAndFeel::GetInt(LookAndFeel::eIntID_GTKCSDCloseButton, &metricResult);
+      LookAndFeel::GetInt(LookAndFeel::IntID::GTKCSDCloseButton, &metricResult);
   if (NS_SUCCEEDED(rv) && metricResult) {
     sSystemMetrics->AppendElement(
         (nsStaticAtom*)nsGkAtoms::_moz_gtk_csd_close_button);
   }
 
-  rv = LookAndFeel::GetInt(LookAndFeel::eIntID_GTKCSDReversedPlacement,
+  rv = LookAndFeel::GetInt(LookAndFeel::IntID::GTKCSDReversedPlacement,
                            &metricResult);
   if (NS_SUCCEEDED(rv) && metricResult) {
     sSystemMetrics->AppendElement(
         (nsStaticAtom*)nsGkAtoms::_moz_gtk_csd_reversed_placement);
   }
 
-  rv = LookAndFeel::GetInt(LookAndFeel::eIntID_SystemUsesDarkTheme,
+  rv = LookAndFeel::GetInt(LookAndFeel::IntID::SystemUsesDarkTheme,
                            &metricResult);
   if (NS_SUCCEEDED(rv) && metricResult) {
     sSystemMetrics->AppendElement(

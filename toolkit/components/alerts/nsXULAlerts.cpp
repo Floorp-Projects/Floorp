@@ -271,7 +271,7 @@ nsXULAlerts::ShowAlertWithIconURI(nsIAlertNotification* aAlert,
   NS_ENSURE_TRUE(scriptableOrigin, NS_ERROR_FAILURE);
 
   int32_t origin =
-      LookAndFeel::GetInt(LookAndFeel::eIntID_AlertNotificationOrigin);
+      LookAndFeel::GetInt(LookAndFeel::IntID::AlertNotificationOrigin);
   scriptableOrigin->SetData(origin);
 
   rv = argsArray->AppendElement(scriptableOrigin);

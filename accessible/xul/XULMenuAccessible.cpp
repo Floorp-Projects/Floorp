@@ -109,7 +109,7 @@ uint64_t XULMenuitemAccessible::NativeInteractiveState() const {
     if (!menuFrame || !menuFrame->IsOnMenuBar()) {
       skipNavigatingDisabledMenuItem =
           LookAndFeel::GetInt(
-              LookAndFeel::eIntID_SkipNavigatingDisabledMenuItem, 0) != 0;
+              LookAndFeel::IntID::SkipNavigatingDisabledMenuItem, 0) != 0;
     }
 
     if (skipNavigatingDisabledMenuItem) return states::UNAVAILABLE;

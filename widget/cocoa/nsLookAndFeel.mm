@@ -434,141 +434,141 @@ nsresult nsLookAndFeel::GetIntImpl(IntID aID, int32_t& aResult) {
   res = NS_OK;
 
   switch (aID) {
-    case eIntID_CaretBlinkTime:
+    case IntID::CaretBlinkTime:
       aResult = 567;
       break;
-    case eIntID_CaretWidth:
+    case IntID::CaretWidth:
       aResult = 1;
       break;
-    case eIntID_ShowCaretDuringSelection:
+    case IntID::ShowCaretDuringSelection:
       aResult = 0;
       break;
-    case eIntID_SelectTextfieldsOnKeyFocus:
+    case IntID::SelectTextfieldsOnKeyFocus:
       // Select textfield content when focused by kbd
       // used by EventStateManager::sTextfieldSelectModel
       aResult = 1;
       break;
-    case eIntID_SubmenuDelay:
+    case IntID::SubmenuDelay:
       aResult = 200;
       break;
-    case eIntID_TooltipDelay:
+    case IntID::TooltipDelay:
       aResult = 500;
       break;
-    case eIntID_MenusCanOverlapOSBar:
+    case IntID::MenusCanOverlapOSBar:
       // xul popups are not allowed to overlap the menubar.
       aResult = 0;
       break;
-    case eIntID_SkipNavigatingDisabledMenuItem:
+    case IntID::SkipNavigatingDisabledMenuItem:
       aResult = 1;
       break;
-    case eIntID_DragThresholdX:
-    case eIntID_DragThresholdY:
+    case IntID::DragThresholdX:
+    case IntID::DragThresholdY:
       aResult = 4;
       break;
-    case eIntID_ScrollArrowStyle:
+    case IntID::ScrollArrowStyle:
       aResult = eScrollArrow_None;
       break;
-    case eIntID_ScrollSliderStyle:
+    case IntID::ScrollSliderStyle:
       aResult = eScrollThumbStyle_Proportional;
       break;
-    case eIntID_UseOverlayScrollbars:
+    case IntID::UseOverlayScrollbars:
       if (!mUseOverlayScrollbarsCached) {
         mUseOverlayScrollbars = SystemWantsOverlayScrollbars() ? 1 : 0;
         mUseOverlayScrollbarsCached = true;
       }
       aResult = mUseOverlayScrollbars;
       break;
-    case eIntID_AllowOverlayScrollbarsOverlap:
+    case IntID::AllowOverlayScrollbarsOverlap:
       if (!mAllowOverlayScrollbarsOverlapCached) {
         mAllowOverlayScrollbarsOverlap = AllowOverlayScrollbarsOverlap() ? 1 : 0;
         mAllowOverlayScrollbarsOverlapCached = true;
       }
       aResult = mAllowOverlayScrollbarsOverlap;
       break;
-    case eIntID_ScrollbarDisplayOnMouseMove:
+    case IntID::ScrollbarDisplayOnMouseMove:
       aResult = 0;
       break;
-    case eIntID_ScrollbarFadeBeginDelay:
+    case IntID::ScrollbarFadeBeginDelay:
       aResult = 450;
       break;
-    case eIntID_ScrollbarFadeDuration:
+    case IntID::ScrollbarFadeDuration:
       aResult = 200;
       break;
-    case eIntID_TreeOpenDelay:
+    case IntID::TreeOpenDelay:
       aResult = 1000;
       break;
-    case eIntID_TreeCloseDelay:
+    case IntID::TreeCloseDelay:
       aResult = 1000;
       break;
-    case eIntID_TreeLazyScrollDelay:
+    case IntID::TreeLazyScrollDelay:
       aResult = 150;
       break;
-    case eIntID_TreeScrollDelay:
+    case IntID::TreeScrollDelay:
       aResult = 100;
       break;
-    case eIntID_TreeScrollLinesMax:
+    case IntID::TreeScrollLinesMax:
       aResult = 3;
       break;
-    case eIntID_DWMCompositor:
-    case eIntID_WindowsClassic:
-    case eIntID_WindowsDefaultTheme:
-    case eIntID_TouchEnabled:
-    case eIntID_WindowsThemeIdentifier:
-    case eIntID_OperatingSystemVersionIdentifier:
+    case IntID::DWMCompositor:
+    case IntID::WindowsClassic:
+    case IntID::WindowsDefaultTheme:
+    case IntID::TouchEnabled:
+    case IntID::WindowsThemeIdentifier:
+    case IntID::OperatingSystemVersionIdentifier:
       aResult = 0;
       res = NS_ERROR_NOT_IMPLEMENTED;
       break;
-    case eIntID_MacGraphiteTheme:
+    case IntID::MacGraphiteTheme:
       aResult = [NSColor currentControlTint] == NSGraphiteControlTint;
       break;
-    case eIntID_MacYosemiteTheme:
+    case IntID::MacYosemiteTheme:
       aResult = nsCocoaFeatures::OnYosemiteOrLater();
       break;
-    case eIntID_AlertNotificationOrigin:
+    case IntID::AlertNotificationOrigin:
       aResult = NS_ALERT_TOP;
       break;
-    case eIntID_TabFocusModel:
+    case IntID::TabFocusModel:
       aResult = [NSApp isFullKeyboardAccessEnabled] ? nsIContent::eTabFocus_any
                                                     : nsIContent::eTabFocus_textControlsMask;
       break;
-    case eIntID_ScrollToClick: {
+    case IntID::ScrollToClick: {
       aResult = [[NSUserDefaults standardUserDefaults] boolForKey:@"AppleScrollerPagingBehavior"];
     } break;
-    case eIntID_ChosenMenuItemsShouldBlink:
+    case IntID::ChosenMenuItemsShouldBlink:
       aResult = 1;
       break;
-    case eIntID_IMERawInputUnderlineStyle:
-    case eIntID_IMEConvertedTextUnderlineStyle:
-    case eIntID_IMESelectedRawTextUnderlineStyle:
-    case eIntID_IMESelectedConvertedTextUnderline:
+    case IntID::IMERawInputUnderlineStyle:
+    case IntID::IMEConvertedTextUnderlineStyle:
+    case IntID::IMESelectedRawTextUnderlineStyle:
+    case IntID::IMESelectedConvertedTextUnderline:
       aResult = NS_STYLE_TEXT_DECORATION_STYLE_SOLID;
       break;
-    case eIntID_SpellCheckerUnderlineStyle:
+    case IntID::SpellCheckerUnderlineStyle:
       aResult = NS_STYLE_TEXT_DECORATION_STYLE_DOTTED;
       break;
-    case eIntID_ScrollbarButtonAutoRepeatBehavior:
+    case IntID::ScrollbarButtonAutoRepeatBehavior:
       aResult = 0;
       break;
-    case eIntID_SwipeAnimationEnabled:
+    case IntID::SwipeAnimationEnabled:
       aResult = 0;
       if ([NSEvent respondsToSelector:@selector(isSwipeTrackingFromScrollEventsEnabled)]) {
         aResult = [NSEvent isSwipeTrackingFromScrollEventsEnabled] ? 1 : 0;
       }
       break;
-    case eIntID_ContextMenuOffsetVertical:
+    case IntID::ContextMenuOffsetVertical:
       aResult = -6;
       break;
-    case eIntID_ContextMenuOffsetHorizontal:
+    case IntID::ContextMenuOffsetHorizontal:
       aResult = 1;
       break;
-    case eIntID_SystemUsesDarkTheme:
+    case IntID::SystemUsesDarkTheme:
       if (!mSystemUsesDarkThemeCached) {
         mSystemUsesDarkTheme = SystemWantsDarkTheme();
         mSystemUsesDarkThemeCached = true;
       }
       aResult = mSystemUsesDarkTheme;
       break;
-    case eIntID_PrefersReducedMotion:
+    case IntID::PrefersReducedMotion:
       // Without native event loops,
       // NSWorkspace.accessibilityDisplayShouldReduceMotion returns stale
       // information, so we get the information only on the parent processes
@@ -598,10 +598,10 @@ nsresult nsLookAndFeel::GetFloatImpl(FloatID aID, float& aResult) {
   res = NS_OK;
 
   switch (aID) {
-    case eFloatID_IMEUnderlineRelativeSize:
+    case FloatID::IMEUnderlineRelativeSize:
       aResult = 2.0f;
       break;
-    case eFloatID_SpellCheckerUnderlineRelativeSize:
+    case FloatID::SpellCheckerUnderlineRelativeSize:
       aResult = 2.0f;
       break;
     default:
@@ -612,7 +612,7 @@ nsresult nsLookAndFeel::GetFloatImpl(FloatID aID, float& aResult) {
   return res;
 }
 
-bool nsLookAndFeel::UseOverlayScrollbars() { return GetInt(eIntID_UseOverlayScrollbars) != 0; }
+bool nsLookAndFeel::UseOverlayScrollbars() { return GetInt(IntID::UseOverlayScrollbars) != 0; }
 
 bool nsLookAndFeel::SystemWantsOverlayScrollbars() {
   return ([NSScroller respondsToSelector:@selector(preferredScrollerStyle)] &&
@@ -658,23 +658,23 @@ nsTArray<LookAndFeelInt> nsLookAndFeel::GetIntCacheImpl() {
   nsTArray<LookAndFeelInt> lookAndFeelIntCache = nsXPLookAndFeel::GetIntCacheImpl();
 
   LookAndFeelInt useOverlayScrollbars;
-  useOverlayScrollbars.id = eIntID_UseOverlayScrollbars;
-  useOverlayScrollbars.value = GetInt(eIntID_UseOverlayScrollbars);
+  useOverlayScrollbars.id = IntID::UseOverlayScrollbars;
+  useOverlayScrollbars.value = GetInt(IntID::UseOverlayScrollbars);
   lookAndFeelIntCache.AppendElement(useOverlayScrollbars);
 
   LookAndFeelInt allowOverlayScrollbarsOverlap;
-  allowOverlayScrollbarsOverlap.id = eIntID_AllowOverlayScrollbarsOverlap;
-  allowOverlayScrollbarsOverlap.value = GetInt(eIntID_AllowOverlayScrollbarsOverlap);
+  allowOverlayScrollbarsOverlap.id = IntID::AllowOverlayScrollbarsOverlap;
+  allowOverlayScrollbarsOverlap.value = GetInt(IntID::AllowOverlayScrollbarsOverlap);
   lookAndFeelIntCache.AppendElement(allowOverlayScrollbarsOverlap);
 
   LookAndFeelInt prefersReducedMotion;
-  prefersReducedMotion.id = eIntID_PrefersReducedMotion;
-  prefersReducedMotion.value = GetInt(eIntID_PrefersReducedMotion);
+  prefersReducedMotion.id = IntID::PrefersReducedMotion;
+  prefersReducedMotion.value = GetInt(IntID::PrefersReducedMotion);
   lookAndFeelIntCache.AppendElement(prefersReducedMotion);
 
   LookAndFeelInt systemUsesDarkTheme;
-  systemUsesDarkTheme.id = eIntID_SystemUsesDarkTheme;
-  systemUsesDarkTheme.value = GetInt(eIntID_SystemUsesDarkTheme);
+  systemUsesDarkTheme.id = IntID::SystemUsesDarkTheme;
+  systemUsesDarkTheme.value = GetInt(IntID::SystemUsesDarkTheme);
   lookAndFeelIntCache.AppendElement(systemUsesDarkTheme);
 
   return lookAndFeelIntCache;
@@ -683,21 +683,24 @@ nsTArray<LookAndFeelInt> nsLookAndFeel::GetIntCacheImpl() {
 void nsLookAndFeel::SetIntCacheImpl(const nsTArray<LookAndFeelInt>& aLookAndFeelIntCache) {
   for (auto entry : aLookAndFeelIntCache) {
     switch (entry.id) {
-      case eIntID_UseOverlayScrollbars:
+      case IntID::UseOverlayScrollbars:
         mUseOverlayScrollbars = entry.value;
         mUseOverlayScrollbarsCached = true;
         break;
-      case eIntID_AllowOverlayScrollbarsOverlap:
+      case IntID::AllowOverlayScrollbarsOverlap:
         mAllowOverlayScrollbarsOverlap = entry.value;
         mAllowOverlayScrollbarsOverlapCached = true;
         break;
-      case eIntID_SystemUsesDarkTheme:
+      case IntID::SystemUsesDarkTheme:
         mSystemUsesDarkTheme = entry.value;
         mSystemUsesDarkThemeCached = true;
         break;
-      case eIntID_PrefersReducedMotion:
+      case IntID::PrefersReducedMotion:
         mPrefersReducedMotion = entry.value;
         mPrefersReducedMotionCached = true;
+        break;
+      default:
+        MOZ_ASSERT_UNREACHABLE("Bogus Int ID in cache");
         break;
     }
   }

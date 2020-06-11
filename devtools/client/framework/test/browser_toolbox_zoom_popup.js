@@ -76,9 +76,9 @@ add_task(async function() {
       case "native":
         {
           // Allow rounded error and platform offset value.
-          // horizontal : eIntID_ContextMenuOffsetHorizontal of GTK and Windows
+          // horizontal : IntID::ContextMenuOffsetHorizontal of GTK and Windows
           //              uses 2.
-          // vertical: eIntID_ContextMenuOffsetVertical of macOS uses -6.
+          // vertical: IntID::ContextMenuOffsetVertical of macOS uses -6.
           const xDelta = Math.abs(menuBounds.left - buttonBounds.left);
           const yDelta = Math.abs(menuBounds.top - buttonBounds.bottom);
           ok(xDelta < 2, "xDelta is lower than 2: " + xDelta + ". #" + menu.id);

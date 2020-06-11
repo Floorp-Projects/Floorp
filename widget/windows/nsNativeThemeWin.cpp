@@ -2383,7 +2383,7 @@ nsNativeThemeWin::GetMinimumWidgetSize(nsPresContext* aPresContext,
 
     case StyleAppearance::Scrollbar:
     case StyleAppearance::Scrollcorner: {
-      if (nsLookAndFeel::GetInt(nsLookAndFeel::eIntID_UseOverlayScrollbars) !=
+      if (nsLookAndFeel::GetInt(nsLookAndFeel::IntID::UseOverlayScrollbars) !=
           0) {
         aResult->SizeTo(::GetSystemMetrics(SM_CXHSCROLL),
                         ::GetSystemMetrics(SM_CYVSCROLL));

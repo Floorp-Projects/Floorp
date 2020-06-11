@@ -193,7 +193,7 @@ nsRect nsCheckboxRadioFrame::GetUsableScreenRect(nsPresContext* aPresContext) {
 
   nsDeviceContext* context = aPresContext->DeviceContext();
   int32_t dropdownCanOverlapOSBar =
-      LookAndFeel::GetInt(LookAndFeel::eIntID_MenusCanOverlapOSBar, 0);
+      LookAndFeel::GetInt(LookAndFeel::IntID::MenusCanOverlapOSBar, 0);
   if (dropdownCanOverlapOSBar)
     context->GetRect(screen);
   else

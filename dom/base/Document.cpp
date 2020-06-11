@@ -16432,9 +16432,9 @@ StylePrefersColorScheme Document::PrefersColorScheme(
     }
   }
 
-  // If LookAndFeel::eIntID_SystemUsesDarkTheme fails then return 2
+  // If LookAndFeel::IntID::SystemUsesDarkTheme fails then return 2
   // (no-preference)
-  switch (LookAndFeel::GetInt(LookAndFeel::eIntID_SystemUsesDarkTheme, 2)) {
+  switch (LookAndFeel::GetInt(LookAndFeel::IntID::SystemUsesDarkTheme, 2)) {
     case 0:
       return StylePrefersColorScheme::Light;
     case 1:
@@ -16451,7 +16451,7 @@ StylePrefersColorScheme Document::PrefersColorScheme(
 // static
 bool Document::UseOverlayScrollbars(const Document* aDocument) {
   BrowsingContext* bc = aDocument ? aDocument->GetBrowsingContext() : nullptr;
-  return LookAndFeel::GetInt(LookAndFeel::eIntID_UseOverlayScrollbars) ||
+  return LookAndFeel::GetInt(LookAndFeel::IntID::UseOverlayScrollbars) ||
          (bc && bc->InRDMPane());
 }
 

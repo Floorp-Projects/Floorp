@@ -133,170 +133,170 @@ nsresult HeadlessLookAndFeel::GetIntImpl(IntID aID, int32_t& aResult) {
 
   // These values should be sane defaults for headless mode under GTK.
   switch (aID) {
-    case eIntID_CaretBlinkTime:
+    case IntID::CaretBlinkTime:
       aResult = 567;
       break;
-    case eIntID_CaretWidth:
+    case IntID::CaretWidth:
       aResult = 1;
       break;
-    case eIntID_ShowCaretDuringSelection:
+    case IntID::ShowCaretDuringSelection:
       aResult = 0;
       break;
-    case eIntID_SelectTextfieldsOnKeyFocus:
+    case IntID::SelectTextfieldsOnKeyFocus:
       aResult = 1;
       break;
-    case eIntID_SubmenuDelay:
+    case IntID::SubmenuDelay:
       aResult = 200;
       break;
-    case eIntID_MenusCanOverlapOSBar:
+    case IntID::MenusCanOverlapOSBar:
       aResult = 0;
       break;
-    case eIntID_UseOverlayScrollbars:
+    case IntID::UseOverlayScrollbars:
       aResult = 0;
       break;
-    case eIntID_AllowOverlayScrollbarsOverlap:
+    case IntID::AllowOverlayScrollbarsOverlap:
       aResult = 0;
       break;
-    case eIntID_ShowHideScrollbars:
+    case IntID::ShowHideScrollbars:
       aResult = 0;
       break;
-    case eIntID_SkipNavigatingDisabledMenuItem:
+    case IntID::SkipNavigatingDisabledMenuItem:
       aResult = 1;
       break;
-    case eIntID_DragThresholdX:
-    case eIntID_DragThresholdY:
+    case IntID::DragThresholdX:
+    case IntID::DragThresholdY:
       aResult = 4;
       break;
-    case eIntID_UseAccessibilityTheme:
+    case IntID::UseAccessibilityTheme:
       aResult = 0;
       break;
-    case eIntID_ScrollArrowStyle:
+    case IntID::ScrollArrowStyle:
       aResult = eScrollArrow_None;
       break;
-    case eIntID_ScrollSliderStyle:
+    case IntID::ScrollSliderStyle:
       aResult = eScrollThumbStyle_Proportional;
       break;
-    case eIntID_ScrollButtonLeftMouseButtonAction:
+    case IntID::ScrollButtonLeftMouseButtonAction:
       aResult = 0;
       return NS_OK;
-    case eIntID_ScrollButtonMiddleMouseButtonAction:
+    case IntID::ScrollButtonMiddleMouseButtonAction:
       aResult = 3;
       return NS_OK;
-    case eIntID_ScrollButtonRightMouseButtonAction:
+    case IntID::ScrollButtonRightMouseButtonAction:
       aResult = 3;
       return NS_OK;
-    case eIntID_TreeOpenDelay:
+    case IntID::TreeOpenDelay:
       aResult = 1000;
       break;
-    case eIntID_TreeCloseDelay:
+    case IntID::TreeCloseDelay:
       aResult = 1000;
       break;
-    case eIntID_TreeLazyScrollDelay:
+    case IntID::TreeLazyScrollDelay:
       aResult = 150;
       break;
-    case eIntID_TreeScrollDelay:
+    case IntID::TreeScrollDelay:
       aResult = 100;
       break;
-    case eIntID_TreeScrollLinesMax:
+    case IntID::TreeScrollLinesMax:
       aResult = 3;
       break;
-    case eIntID_TabFocusModel:
+    case IntID::TabFocusModel:
       aResult = nsIContent::eTabFocus_textControlsMask;
       break;
-    case eIntID_ChosenMenuItemsShouldBlink:
+    case IntID::ChosenMenuItemsShouldBlink:
       aResult = 1;
       break;
-    case eIntID_WindowsAccentColorInTitlebar:
-    case eIntID_WindowsDefaultTheme:
-    case eIntID_DWMCompositor:
+    case IntID::WindowsAccentColorInTitlebar:
+    case IntID::WindowsDefaultTheme:
+    case IntID::DWMCompositor:
       aResult = 0;
       res = NS_ERROR_NOT_IMPLEMENTED;
       break;
-    case eIntID_WindowsClassic:
-    case eIntID_WindowsGlass:
+    case IntID::WindowsClassic:
+    case IntID::WindowsGlass:
       aResult = 0;
       res = NS_ERROR_FAILURE;
       break;
-    case eIntID_TouchEnabled:
-    case eIntID_MacGraphiteTheme:
-    case eIntID_MacYosemiteTheme:
+    case IntID::TouchEnabled:
+    case IntID::MacGraphiteTheme:
+    case IntID::MacYosemiteTheme:
       aResult = 0;
       res = NS_ERROR_NOT_IMPLEMENTED;
       break;
-    case eIntID_AlertNotificationOrigin:
+    case IntID::AlertNotificationOrigin:
       aResult = NS_ALERT_TOP;
       break;
-    case eIntID_ScrollToClick:
+    case IntID::ScrollToClick:
       aResult = 0;
       break;
-    case eIntID_IMERawInputUnderlineStyle:
-    case eIntID_IMESelectedRawTextUnderlineStyle:
-    case eIntID_IMEConvertedTextUnderlineStyle:
-    case eIntID_IMESelectedConvertedTextUnderline:
+    case IntID::IMERawInputUnderlineStyle:
+    case IntID::IMESelectedRawTextUnderlineStyle:
+    case IntID::IMEConvertedTextUnderlineStyle:
+    case IntID::IMESelectedConvertedTextUnderline:
       aResult = NS_STYLE_TEXT_DECORATION_STYLE_SOLID;
       break;
-    case eIntID_SpellCheckerUnderlineStyle:
+    case IntID::SpellCheckerUnderlineStyle:
       aResult = NS_STYLE_TEXT_DECORATION_STYLE_DOTTED;
       break;
-    case eIntID_MenuBarDrag:
+    case IntID::MenuBarDrag:
       aResult = 0;
       break;
-    case eIntID_WindowsThemeIdentifier:
-    case eIntID_OperatingSystemVersionIdentifier:
+    case IntID::WindowsThemeIdentifier:
+    case IntID::OperatingSystemVersionIdentifier:
       aResult = 0;
       res = NS_ERROR_NOT_IMPLEMENTED;
       break;
-    case eIntID_ScrollbarButtonAutoRepeatBehavior:
+    case IntID::ScrollbarButtonAutoRepeatBehavior:
       aResult = 0;
       break;
-    case eIntID_TooltipDelay:
+    case IntID::TooltipDelay:
       aResult = 500;
       break;
-    case eIntID_SwipeAnimationEnabled:
+    case IntID::SwipeAnimationEnabled:
       aResult = 0;
       break;
-    case eIntID_ScrollbarDisplayOnMouseMove:
+    case IntID::ScrollbarDisplayOnMouseMove:
       aResult = 0;
       break;
-    case eIntID_ScrollbarFadeBeginDelay:
+    case IntID::ScrollbarFadeBeginDelay:
       aResult = 0;
       break;
-    case eIntID_ScrollbarFadeDuration:
+    case IntID::ScrollbarFadeDuration:
       aResult = 0;
       break;
-    case eIntID_ContextMenuOffsetVertical:
+    case IntID::ContextMenuOffsetVertical:
       aResult = -6;
       break;
-    case eIntID_ContextMenuOffsetHorizontal:
+    case IntID::ContextMenuOffsetHorizontal:
       aResult = 1;
       break;
-    case eIntID_GTKCSDAvailable:
-    case eIntID_GTKCSDHideTitlebarByDefault:
-    case eIntID_GTKCSDTransparentBackground:
+    case IntID::GTKCSDAvailable:
+    case IntID::GTKCSDHideTitlebarByDefault:
+    case IntID::GTKCSDTransparentBackground:
       aResult = 0;
       break;
-    case eIntID_GTKCSDMinimizeButton:
+    case IntID::GTKCSDMinimizeButton:
       aResult = 0;
       break;
-    case eIntID_GTKCSDMaximizeButton:
+    case IntID::GTKCSDMaximizeButton:
       aResult = 0;
       break;
-    case eIntID_GTKCSDCloseButton:
+    case IntID::GTKCSDCloseButton:
       aResult = 1;
       break;
-    case eIntID_GTKCSDReversedPlacement:
+    case IntID::GTKCSDReversedPlacement:
       aResult = 0;
       break;
-    case eIntID_SystemUsesDarkTheme:
+    case IntID::SystemUsesDarkTheme:
       aResult = 0;
       break;
-    case eIntID_PrefersReducedMotion:
+    case IntID::PrefersReducedMotion:
       aResult = 0;
       break;
-    case eIntID_PrimaryPointerCapabilities:
+    case IntID::PrimaryPointerCapabilities:
       aResult = 0;
       break;
-    case eIntID_AllPointerCapabilities:
+    case IntID::AllPointerCapabilities:
       aResult = 0;
       break;
     default:
@@ -316,13 +316,13 @@ nsresult HeadlessLookAndFeel::GetFloatImpl(FloatID aID, float& aResult) {
 
   // Hardcoded values for GTK.
   switch (aID) {
-    case eFloatID_IMEUnderlineRelativeSize:
+    case FloatID::IMEUnderlineRelativeSize:
       aResult = 1.0f;
       break;
-    case eFloatID_SpellCheckerUnderlineRelativeSize:
+    case FloatID::SpellCheckerUnderlineRelativeSize:
       aResult = 1.0f;
       break;
-    case eFloatID_CaretAspectRatio:
+    case FloatID::CaretAspectRatio:
       // Intentionally failing to quietly indicate lack of support.
       aResult = -1.0;
       res = NS_ERROR_FAILURE;

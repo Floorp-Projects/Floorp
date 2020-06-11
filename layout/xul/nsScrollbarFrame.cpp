@@ -166,7 +166,7 @@ nsresult nsScrollbarFrame::GetXULMargin(nsMargin& aMargin) {
   aMargin.SizeTo(0, 0, 0, 0);
 
   const bool overlayScrollbars =
-      !!LookAndFeel::GetInt(LookAndFeel::eIntID_UseOverlayScrollbars);
+      !!LookAndFeel::GetInt(LookAndFeel::IntID::UseOverlayScrollbars);
 
   const bool horizontal = IsXULHorizontal();
   bool didSetMargin = false;

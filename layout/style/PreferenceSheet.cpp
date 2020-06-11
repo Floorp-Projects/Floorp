@@ -61,7 +61,7 @@ bool PreferenceSheet::ShouldUseChromePrefs(const Document& aDoc) {
 
 static bool UseAccessibilityTheme(bool aIsChrome) {
   return !aIsChrome &&
-         !!LookAndFeel::GetInt(LookAndFeel::eIntID_UseAccessibilityTheme, 0);
+         !!LookAndFeel::GetInt(LookAndFeel::IntID::UseAccessibilityTheme, 0);
 }
 
 static bool UseDocumentColors(bool aIsChrome, bool aUseAcccessibilityTheme) {
