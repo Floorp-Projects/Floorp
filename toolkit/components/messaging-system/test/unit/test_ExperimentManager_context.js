@@ -16,7 +16,7 @@ add_task(async function test_createTargetingContext() {
   sandbox.stub(manager.store, "getAllActive").returns([recipe]);
 
   let context = manager.createTargetingContext();
-  const activeSlugs = await context.activeExperiments.get();
+  const activeSlugs = await context.activeExperiments;
 
   Assert.ok(!context.isFirstStartup, "should not set the first startup flag");
   Assert.deepEqual(
