@@ -2839,15 +2839,17 @@ extern bool PropertySpecNameToId(JSContext* cx, JSPropertySpec::Name name,
 // JSPropertySpec list, but omit the definition if the preference is off.
 JS_FRIEND_API bool js::ShouldIgnorePropertyDefinition(JSContext* cx,
                                                       JSProtoKey key, jsid id) {
-  if (!cx->realm()->creationOptions().getToSourceEnabled()) {
-    return id == NameToId(cx->names().toSource) ||
-           id == NameToId(cx->names().uneval);
+  if (!cx->realm()->creationOptions().getToSourceEnabled() &&
+      (id == NameToId(cx->names().toSource) ||
+       id == NameToId(cx->names().uneval))) {
+    return true;
   }
 
   if (key == JSProto_FinalizationRegistry &&
       cx->realm()->creationOptions().getWeakRefsEnabled() ==
-          JS::WeakRefSpecifier::EnabledWithoutCleanupSome) {
-    return id == NameToId(cx->names().cleanupSome);
+          JS::WeakRefSpecifier::EnabledWithoutCleanupSome &&
+      id == NameToId(cx->names().cleanupSome)) {
+    return true;
   }
 
   return false;
