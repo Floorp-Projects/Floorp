@@ -1872,7 +1872,8 @@ static bool SetTypeForExposedFunctions(JSContext* cx, FunctionBox* listHead) {
       continue;
     }
 
-    if (!funbox->setTypeForScriptedFunction(cx)) {
+    RootedFunction fun(cx, funbox->function());
+    if (!JSFunction::setTypeForScriptedFunction(cx, fun, funbox->isSingleton)) {
       return false;
     }
   }
