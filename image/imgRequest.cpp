@@ -517,26 +517,53 @@ void imgRequest::UpdateCacheEntrySize() {
 void imgRequest::SetCacheValidation(imgCacheEntry* aCacheEntry,
                                     nsIRequest* aRequest) {
   /* get the expires info */
-  if (!aCacheEntry || aCacheEntry->GetExpiryTime() != 0) {
-    return;
-  }
+  if (aCacheEntry) {
+    // Expiration time defaults to 0. We set the expiration time on our
+    // entry if it hasn't been set yet.
+    if (aCacheEntry->GetExpiryTime() == 0) {
+      uint32_t expiration = 0;
+      nsCOMPtr<nsICacheInfoChannel> cacheChannel(do_QueryInterface(aRequest));
+      if (cacheChannel) {
+        /* get the expiration time from the caching channel's token */
+        cacheChannel->GetCacheTokenExpirationTime(&expiration);
+      }
+      if (expiration == 0) {
+        // If the channel doesn't support caching, then ensure this expires the
+        // next time it is used.
+        expiration = imgCacheEntry::SecondsFromPRTime(PR_Now()) - 1;
+      }
+      aCacheEntry->SetExpiryTime(expiration);
+    }
 
-  auto info = nsContentUtils::GetSubresourceCacheValidationInfo(aRequest);
+    // Determine whether the cache entry must be revalidated when we try to use
+    // it. Currently, only HTTP specifies this information...
+    nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(aRequest));
+    if (httpChannel) {
+      bool bMustRevalidate = false;
 
-  // Expiration time defaults to 0. We set the expiration time on our entry if
-  // it hasn't been set yet.
-  if (!info.mExpirationTime) {
-    // If the channel doesn't support caching, then ensure this expires the
-    // next time it is used.
-    info.mExpirationTime.emplace(nsContentUtils::SecondsFromPRTime(PR_Now()) -
-                                 1);
-  }
-  aCacheEntry->SetExpiryTime(*info.mExpirationTime);
-  // Cache entries default to not needing to validate. We ensure that
-  // multiple calls to this function don't override an earlier decision to
-  // validate by making validation a one-way decision.
-  if (info.mMustRevalidate) {
-    aCacheEntry->SetMustValidate(info.mMustRevalidate);
+      Unused << httpChannel->IsNoStoreResponse(&bMustRevalidate);
+
+      if (!bMustRevalidate) {
+        Unused << httpChannel->IsNoCacheResponse(&bMustRevalidate);
+      }
+
+      if (!bMustRevalidate) {
+        nsAutoCString cacheHeader;
+
+        Unused << httpChannel->GetResponseHeader(
+            NS_LITERAL_CSTRING("Cache-Control"), cacheHeader);
+        if (PL_strcasestr(cacheHeader.get(), "must-revalidate")) {
+          bMustRevalidate = true;
+        }
+      }
+
+      // Cache entries default to not needing to validate. We ensure that
+      // multiple calls to this function don't override an earlier decision to
+      // validate by making validation a one-way decision.
+      if (bMustRevalidate) {
+        aCacheEntry->SetMustValidate(bMustRevalidate);
+      }
+    }
   }
 }
 

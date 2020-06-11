@@ -73,18 +73,6 @@ function compareLists(list1, list2, kind) {
   equal(String(list1), String(list2), `${kind} URLs correct`);
 }
 
-async function openAndCloseContentPage(url) {
-  let contentPage = await ExtensionTestUtils.loadContentPage(URL);
-  // Clear the sheet cache so that it doesn't interact with following tests: A
-  // stylesheet with the same URI loaded from the same origin doesn't otherwise
-  // guarantee that onBeforeRequest and so on happen, because it may not need
-  // to go through necko at all.
-  await contentPage.spawn(null, () =>
-    content.windowUtils.clearSharedStyleSheetCache()
-  );
-  await contentPage.close();
-}
-
 add_task(async function setup() {
   // Disable rcwn to make cache behavior deterministic.
   Services.prefs.setBoolPref("network.http.rcwn.enabled", false);
@@ -103,7 +91,8 @@ add_task(async function filter_urls() {
   ]);
   WebRequest.onResponseStarted.addListener(onResponseStarted, filter);
 
-  await openAndCloseContentPage(URL);
+  let contentPage = await ExtensionTestUtils.loadContentPage(URL);
+  await contentPage.close();
 
   compareLists(requested, expected_urls, "requested");
   compareLists(sendHeaders, expected_urls, "sendHeaders");
@@ -124,7 +113,8 @@ add_task(async function filter_types() {
   ]);
   WebRequest.onResponseStarted.addListener(onResponseStarted, filter);
 
-  await openAndCloseContentPage(URL);
+  let contentPage = await ExtensionTestUtils.loadContentPage(URL);
+  await contentPage.close();
 
   compareLists(requested, expected_urls, "requested");
   compareLists(sendHeaders, expected_urls, "sendHeaders");
@@ -147,7 +137,8 @@ add_task(async function filter_windowId() {
   ]);
   WebRequest.onResponseStarted.addListener(onResponseStarted, filter);
 
-  await openAndCloseContentPage(URL);
+  let contentPage = await ExtensionTestUtils.loadContentPage(URL);
+  await contentPage.close();
 
   compareLists(requested, [], "requested");
   compareLists(sendHeaders, [], "sendHeaders");
@@ -170,7 +161,8 @@ add_task(async function filter_tabId() {
   ]);
   WebRequest.onResponseStarted.addListener(onResponseStarted, filter);
 
-  await openAndCloseContentPage(URL);
+  let contentPage = await ExtensionTestUtils.loadContentPage(URL);
+  await contentPage.close();
 
   compareLists(requested, [], "requested");
   compareLists(sendHeaders, [], "sendHeaders");

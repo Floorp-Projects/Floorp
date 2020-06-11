@@ -10,7 +10,6 @@ with Files("**"):
 EXPORTS.mozilla.dom += [
     'Performance.h',
     'PerformanceEntry.h',
-    'PerformanceMainThread.h',
     'PerformanceMark.h',
     'PerformanceMeasure.h',
     'PerformanceNavigation.h',
