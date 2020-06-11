@@ -366,8 +366,8 @@ function exchangeLoop(ta) {
     return sum;
 }
 
-function adHocExchange() {
-    var a = new Int8Array(new SharedArrayBuffer(16));
+function adHocExchange(SharedOrUnsharedArrayBuffer) {
+    var a = new Int8Array(new SharedOrUnsharedArrayBuffer(16));
     for ( var i=0 ; i < a.length ; i++ )
 	a[i] = 255;
     assertEq(exchangeLoop(a), -100000);
@@ -454,8 +454,8 @@ function testUint8Clamped(sab) {
     assertEq(thrown, true);
 }
 
-function testWeirdIndices() {
-    var a = new Int8Array(new SharedArrayBuffer(16));
+function testWeirdIndices(SharedOrUnsharedArrayBuffer) {
+    var a = new Int8Array(new SharedOrUnsharedArrayBuffer(16));
     a[3] = 10;
     assertEq(Atomics.load(a, "0x03"), 10);
     assertEq(Atomics.load(a, {valueOf: () => 3}), 10);
@@ -470,11 +470,11 @@ function isLittleEndian() {
     return is_little;
 }
 
-function runTests() {
+function runTests(SharedOrUnsharedArrayBuffer) {
     var is_little = isLittleEndian();
 
     // Currently the SharedArrayBuffer needs to be a multiple of 4K bytes in size.
-    var sab = new SharedArrayBuffer(4096);
+    var sab = new SharedOrUnsharedArrayBuffer(4096);
 
     // Test that two arrays created on the same storage alias
     var t1 = new Int8Array(sab);
@@ -550,14 +550,15 @@ function runTests() {
     testUint8Clamped(sab);
 
     // Misc ad-hoc tests
-    adHocExchange();
+    adHocExchange(SharedOrUnsharedArrayBuffer);
 
     // Misc
     testIsLockFree();
     testIsLockFree2();
-    testWeirdIndices();
+    testWeirdIndices(SharedOrUnsharedArrayBuffer);
 
     assertEq(Atomics[Symbol.toStringTag], "Atomics");
 }
 
-runTests();
+runTests(SharedArrayBuffer);
+runTests(ArrayBuffer);
