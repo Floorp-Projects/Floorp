@@ -30,7 +30,8 @@ add_task(async function() {
     await setInputValueForAutocompletion(hud, test.input);
     ok(
       hasExactPopupLabels(autocompletePopup, test.results),
-      "Autocomplete popup shows expected results"
+      "Autocomplete popup shows expected results: " +
+        getAutocompletePopupLabels(autocompletePopup).join("\n")
     );
   }
 });

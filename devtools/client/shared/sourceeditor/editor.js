@@ -421,10 +421,11 @@ Editor.prototype = {
 
     const pipedEvents = [
       "beforeChange",
+      "blur",
       "changes",
       "cursorActivity",
       "focus",
-      "blur",
+      "keyHandled",
       "scroll",
     ];
     for (const eventName of pipedEvents) {
