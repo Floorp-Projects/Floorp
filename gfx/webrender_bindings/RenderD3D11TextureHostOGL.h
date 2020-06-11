@@ -31,6 +31,8 @@ class RenderDXGITextureHostOGL final : public RenderTextureHostOGL {
   gfx::IntSize GetSize(uint8_t aChannelIndex) const override;
   GLuint GetGLHandle(uint8_t aChannelIndex) const override;
 
+  bool SyncObjectNeeded() override { return true; }
+
   RenderDXGITextureHostOGL* AsRenderDXGITextureHostOGL() override {
     return this;
   }
@@ -77,6 +79,8 @@ class RenderDXGIYCbCrTextureHostOGL final : public RenderTextureHostOGL {
 
   gfx::IntSize GetSize(uint8_t aChannelIndex) const override;
   GLuint GetGLHandle(uint8_t aChannelIndex) const override;
+
+  bool SyncObjectNeeded() override { return true; }
 
  private:
   virtual ~RenderDXGIYCbCrTextureHostOGL();
