@@ -1849,10 +1849,15 @@ def build_task(config, tasks):
 
         if task_th:
             # link back to treeherder in description
-            th_push_link = 'https://treeherder.mozilla.org/#/jobs?repo={}&revision={}'.format(
-                config.params['project'], branch_rev)
-            task_def['metadata']['description'] += ' ([Treeherder push]({}))'.format(
-                th_push_link)
+            th_job_link = (
+                'https://treeherder.mozilla.org/#/jobs?repo={}&revision={}&selectedTaskRun=<self>'
+            ).format(config.params['project'], branch_rev)
+            task_def['metadata']['description'] = {
+                'task-reference': '{description} ([Treeherder job]({th_job_link}))'.format(
+                    description=task_def['metadata']['description'],
+                    th_job_link=th_job_link
+                )
+            }
 
         # add the payload and adjust anything else as required (e.g., scopes)
         payload_builders[task['worker']['implementation']].builder(config, task, task_def)
