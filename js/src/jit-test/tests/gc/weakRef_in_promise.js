@@ -1,5 +1,3 @@
-// |jit-test| --enable-weak-refs
-//
 // https://github.com/tc39/proposal-weakrefs/issues/39
 // Weakref should keep the target until the end of current Job, that includes
 // microtask(Promise).

@@ -1,5 +1,3 @@
-// |jit-test| --enable-weak-refs
-
 for (let p of [false, true]) {
   f(p);
 

@@ -1,5 +1,3 @@
-// |jit-test| --enable-weak-refs
-
 gczeal(4);
 let heldValues = [];
 registry = new FinalizationRegistry(value => {

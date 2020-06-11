@@ -1,5 +1,3 @@
-// |jit-test| --enable-weak-refs
-
 function checkPropertyDescriptor(obj, property, writable, enumerable,
                                  configurable) {
   let desc = Object.getOwnPropertyDescriptor(obj, property);

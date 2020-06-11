@@ -1,2 +1,2 @@
-// |jit-test| --enable-weak-refs; skip-if: helperThreadCount() === 0
+// |jit-test| skip-if: helperThreadCount() === 0
 evalInWorker("new WeakRef({});");

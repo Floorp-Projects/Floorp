@@ -1,5 +1,3 @@
-// |jit-test| --enable-weak-refs
-
 // Test that drainJobQueue() drains all jobs, including those queued
 // by FinalizationRegistry callbacks.
 
