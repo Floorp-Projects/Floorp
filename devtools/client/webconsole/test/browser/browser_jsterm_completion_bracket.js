@@ -22,13 +22,19 @@ const TEST_URI = `data:text/html;charset=utf8,<p>test [ completion.
 add_task(async function() {
   await pushPref("devtools.editor.autoclosebrackets", false);
   const hud = await openNewTabAndConsole(TEST_URI);
-
-  await testInputs(hud);
-  await testCompletionTextUpdateOnPopupNavigate(hud);
+  await testInputs(hud, false);
+  await testCompletionTextUpdateOnPopupNavigate(hud, false);
   await testAcceptCompletionExistingClosingBracket(hud);
+
+  info("Test again with autoclosebracket set to true");
+  await pushPref("devtools.editor.autoclosebrackets", true);
+  const hudAutoclose = await openNewTabAndConsole(TEST_URI);
+  await testInputs(hudAutoclose, true);
+  await testCompletionTextUpdateOnPopupNavigate(hudAutoclose, true);
+  await testAcceptCompletionExistingClosingBracket(hudAutoclose);
 });
 
-async function testInputs(hud) {
+async function testInputs(hud, autocloseEnabled) {
   const tests = [
     {
       description: "Check that the popup is opened when typing `[`",
@@ -43,7 +49,7 @@ async function testInputs(hud) {
         `"DAT_\\\\a\\"'\`\${0}\\u0000\\b\\t\\n\\f\\r\\ude80\\ud83d🚀_TEST"`,
         `"DATA-TEST"`,
       ],
-      expectedCompletionText: `"bar"]`,
+      expectedCompletionText: autocloseEnabled ? "" : `"bar"]`,
       expectedInputAfterCompletion: `window.testObject["bar"]`,
     },
     {
@@ -58,7 +64,7 @@ async function testInputs(hud) {
         `"DAT_\\\\a\\"'\`\${0}\\u0000\\b\\t\\n\\f\\r\\ude80\\ud83d🚀_TEST"`,
         `"DATA-TEST"`,
       ],
-      expectedCompletionText: `a'ta'test"]`,
+      expectedCompletionText: autocloseEnabled ? "" : `a'ta'test"]`,
       expectedInputAfterCompletion: `window.testObject["da'ta'test"]`,
     },
     {
@@ -73,7 +79,7 @@ async function testInputs(hud) {
         `"DAT_\\\\a\\"'\`\${0}\\u0000\\b\\t\\n\\f\\r\\ude80\\ud83d🚀_TEST"`,
         `"DATA-TEST"`,
       ],
-      expectedCompletionText: `a'ta'test"]`,
+      expectedCompletionText: autocloseEnabled ? "" : `a'ta'test"]`,
       expectedInputAfterCompletion: `window.testObject["da'ta'test"]`,
     },
     {
@@ -88,7 +94,7 @@ async function testInputs(hud) {
         `'DAT_\\\\a"\\'\`\${0}\\u0000\\b\\t\\n\\f\\r\\ude80\\ud83d🚀_TEST'`,
         `'DATA-TEST'`,
       ],
-      expectedCompletionText: `a"ta"test']`,
+      expectedCompletionText: autocloseEnabled ? "" : `a"ta"test']`,
       expectedInputAfterCompletion: `window.testObject['da"ta"test']`,
     },
     {
@@ -103,14 +109,14 @@ async function testInputs(hud) {
         "`DAT_\\\\a\"'\\`\\${0}\\u0000\\b\\t\\n\\f\\r\\ude80\\ud83d🚀_TEST`",
         "`DATA-TEST`",
       ],
-      expectedCompletionText: "a'ta'test`]",
+      expectedCompletionText: autocloseEnabled ? "" : "a'ta'test`]",
       expectedInputAfterCompletion: "window.testObject[`da'ta'test`]",
     },
     {
       description: "Test that filtering is case insensitive",
       input: "window.testObject[data-t",
       expectedItems: [`"data-test"`, `"DATA-TEST"`],
-      expectedCompletionText: `est"]`,
+      expectedCompletionText: autocloseEnabled ? "" : `est"]`,
       expectedInputAfterCompletion: `window.testObject["data-test"]`,
     },
     {
@@ -118,7 +124,7 @@ async function testInputs(hud) {
         "Test that filtering without quote displays the popup when there's only 1 match",
       input: "window.testObject[DATA-",
       expectedItems: [`"DATA-TEST"`],
-      expectedCompletionText: `TEST"]`,
+      expectedCompletionText: autocloseEnabled ? "" : `TEST"]`,
       expectedInputAfterCompletion: `window.testObject["DATA-TEST"]`,
     },
   ];
@@ -170,7 +176,7 @@ async function testInput(
   setInputValue(hud, "");
 }
 
-async function testCompletionTextUpdateOnPopupNavigate(hud) {
+async function testCompletionTextUpdateOnPopupNavigate(hud, autocloseEnabled) {
   const { jsterm } = hud;
   const { autocompletePopup } = jsterm;
 
@@ -190,13 +196,25 @@ async function testCompletionTextUpdateOnPopupNavigate(hud) {
     ]),
     `popup has expected items, in expected order`
   );
-  checkInputCompletionValue(hud, `-test"]`, `completeNode has expected value`);
+  checkInputCompletionValue(
+    hud,
+    autocloseEnabled ? "" : `-test"]`,
+    `completeNode has expected value`
+  );
 
   EventUtils.synthesizeKey("KEY_ArrowDown");
-  checkInputCompletionValue(hud, `Test"]`, `completeNode has expected value`);
+  checkInputCompletionValue(
+    hud,
+    autocloseEnabled ? "" : `Test"]`,
+    `completeNode has expected value`
+  );
 
   EventUtils.synthesizeKey("KEY_ArrowDown");
-  checkInputCompletionValue(hud, `-TEST"]`, `completeNode has expected value`);
+  checkInputCompletionValue(
+    hud,
+    autocloseEnabled ? "" : `-TEST"]`,
+    `completeNode has expected value`
+  );
 
   const onPopupClose = autocompletePopup.once("popup-closed");
   EventUtils.synthesizeKey("KEY_Tab");
@@ -218,7 +236,7 @@ async function testAcceptCompletionExistingClosingBracket(hud) {
   );
   await setInputValueForAutocompletion(hud, "window.testObject[]", -1);
   const onPopUpOpen = autocompletePopup.once("popup-opened");
-  EventUtils.sendString("b");
+  EventUtils.sendString(`"b`);
   await onPopUpOpen;
   ok(
     hasExactPopupLabels(autocompletePopup, [`"bar"`]),
@@ -230,7 +248,7 @@ async function testAcceptCompletionExistingClosingBracket(hud) {
   await onPopupClose;
   checkInputValueAndCursorPosition(
     hud,
-    `window.testObject["bar"|]`,
+    `window.testObject["bar"]|`,
     `input was completed as expected, without adding a closing bracket`
   );
 }
