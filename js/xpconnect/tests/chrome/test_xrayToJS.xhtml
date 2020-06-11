@@ -252,9 +252,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
       gPrototypeProperties[c] = ["constructor", "name", "message", "stack"];
       gConstructorProperties[c] = constructorProps([]);
   }
-  if (gPrototypeProperties['AggregateError']) {
-      gPrototypeProperties['AggregateError'].push("errors");
-  }
   // toString and toSource only live on the parent proto (Error.prototype).
   gPrototypeProperties['Error'].push('toString');
   gPrototypeProperties['Error'].push('toSource');
@@ -883,9 +880,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
         is(errors[0], 'error 1', "errors[0] has the correct value");
         is(errors[1], 'error 2', "errors[1] has the correct value");
 
-        Object.defineProperty(e.wrappedJSObject, 'errors', {value: 42});
-        is(e.wrappedJSObject.errors, 42, "Set tricky expando");
-        is(e.errors.length, 2, "errors accessor works over Xrays");
+        e.wrappedJSObject.errors = 42;
+        is(e.wrappedJSObject.errors, 42, "errors is a plain data property");
+        is(e.errors, 42, "visible over Xrays");
       }
 
       // Note - an Exception newed via Xrays is going to have an empty stack given the

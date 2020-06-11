@@ -117,6 +117,7 @@ const char* const XPCJSRuntime::mStrings[] = {
     "columnNumber",      // IDX_COLUMNNUMBER
     "stack",             // IDX_STACK
     "message",           // IDX_MESSAGE
+    "errors",            // IDX_ERRORS
     "lastIndex",         // IDX_LASTINDEX
     "then",              // IDX_THEN
     "isInstance",        // IDX_ISINSTANCE
