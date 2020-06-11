@@ -375,11 +375,6 @@ class nsFrame : public nsIFrame {
            aFrame->PresContext()->IsPaginated() && aFrame->IsBlockFrame();
   }
 
- protected:
-  // Fire DOM event. If no aContent argument use frame's mContent.
-  void FireDOMEvent(const nsAString& aDOMEventName,
-                    nsIContent* aContent = nullptr);
-
  private:
   // Returns true if this frame has any kind of CSS animations.
   bool HasCSSAnimations();

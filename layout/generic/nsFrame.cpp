@@ -4461,8 +4461,8 @@ nsresult nsIFrame::GetContentForEvent(WidgetEvent* aEvent,
   return NS_OK;
 }
 
-void nsFrame::FireDOMEvent(const nsAString& aDOMEventName,
-                           nsIContent* aContent) {
+void nsIFrame::FireDOMEvent(const nsAString& aDOMEventName,
+                            nsIContent* aContent) {
   nsIContent* target = aContent ? aContent : GetContent();
 
   if (target) {
