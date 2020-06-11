@@ -29,9 +29,10 @@ async function openAndCloseTab(uri) {
   const tab = await BrowserTestUtils.openNewForegroundTab({
     gBrowser,
     opening: uri,
-    waitForStateStop: true,
   });
-  const innerWindowId = tab.linkedBrowser.innerWindowID;
+
+  const innerWindowId =
+    tab.linkedBrowser.browsingContext.currentWindowGlobal.innerWindowId;
 
   const wgpDestroyed = windowGlobalDestroyed(innerWindowId);
   BrowserTestUtils.removeTab(tab);
