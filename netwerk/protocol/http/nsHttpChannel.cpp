@@ -2427,21 +2427,13 @@ void nsHttpChannel::ProcessAltService() {
   nsCOMPtr<nsProxyInfo> proxyInfo;
   NS_NewNotificationCallbacksAggregation(mCallbacks, mLoadGroup,
                                          getter_AddRefs(callbacks));
-
   if (mProxyInfo) {
     proxyInfo = do_QueryInterface(mProxyInfo);
   }
 
   OriginAttributes originAttributes;
-  // Regular principal in case we have a proxy.
-  if (proxyInfo &&
-      !StaticPrefs::privacy_partition_network_state_connection_with_proxy()) {
-    StoragePrincipalHelper::GetOriginAttributes(
-        this, originAttributes, StoragePrincipalHelper::eRegularPrincipal);
-  } else {
-    StoragePrincipalHelper::GetOriginAttributesForNetworkState(
-        this, originAttributes);
-  }
+  StoragePrincipalHelper::GetOriginAttributes(
+      this, originAttributes, StoragePrincipalHelper::eRegularPrincipal);
 
   AltSvcMapping::ProcessHeader(
       altSvc, scheme, originHost, originPort, mUsername, GetTopWindowOrigin(),
@@ -6769,15 +6761,8 @@ nsresult nsHttpChannel::BeginConnect() {
   SetDoNotTrack();
 
   OriginAttributes originAttributes;
-  // Regular principal in case we have a proxy.
-  if (proxyInfo &&
-      !StaticPrefs::privacy_partition_network_state_connection_with_proxy()) {
-    StoragePrincipalHelper::GetOriginAttributes(
-        this, originAttributes, StoragePrincipalHelper::eRegularPrincipal);
-  } else {
-    StoragePrincipalHelper::GetOriginAttributesForNetworkState(
-        this, originAttributes);
-  }
+  StoragePrincipalHelper::GetOriginAttributes(
+      this, originAttributes, StoragePrincipalHelper::eRegularPrincipal);
 
   RefPtr<nsHttpConnectionInfo> connInfo = new nsHttpConnectionInfo(
       host, port, EmptyCString(), mUsername, GetTopWindowOrigin(), proxyInfo,
