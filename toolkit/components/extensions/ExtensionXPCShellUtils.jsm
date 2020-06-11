@@ -139,6 +139,9 @@ function frameScript() {
 
 let kungFuDeathGrip = new Set();
 function promiseBrowserLoaded(browser, url, redirectUrl) {
+  url = url && Services.io.newURI(url);
+  redirectUrl = redirectUrl && Services.io.newURI(redirectUrl);
+
   return new Promise(resolve => {
     const listener = {
       QueryInterface: ChromeUtils.generateQI([
@@ -149,12 +152,12 @@ function promiseBrowserLoaded(browser, url, redirectUrl) {
       onStateChange(webProgress, request, stateFlags, statusCode) {
         request.QueryInterface(Ci.nsIChannel);
 
-        let requestUrl = request.originalURI
-          ? request.originalURI.spec
-          : webProgress.DOMWindow.location.href;
+        let requestURI =
+          request.originalURI ||
+          webProgress.DOMWindow.document.documentURIObject;
         if (
           webProgress.isTopLevel &&
-          (requestUrl === url || requestUrl === redirectUrl) &&
+          (url?.equals(requestURI) || redirectUrl?.equals(requestURI)) &&
           stateFlags & Ci.nsIWebProgressListener.STATE_STOP
         ) {
           resolve();
