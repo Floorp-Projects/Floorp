@@ -8,6 +8,7 @@ import android.os.Build
 import android.os.StrictMode
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
+import kotlin.collections.HashSet
 
 /**
  * Manages strict mode settings for the application.
@@ -23,7 +24,8 @@ object StrictModeManager {
                 val threadPolicy = StrictMode.ThreadPolicy.Builder()
                     .detectAll()
                     .penaltyLog()
-                if (setPenaltyDialog) {
+                if (setPenaltyDialog &&
+                    !strictModeExceptionList.contains(Build.MANUFACTURER)) {
                     threadPolicy.penaltyDialog()
                 }
                 StrictMode.setThreadPolicy(threadPolicy.build())
@@ -61,4 +63,19 @@ object StrictModeManager {
             }
         }, false)
     }
+
+    /**
+     * There are certain manufacturers that have custom font classes for the OS systems.
+     * These classes violates the [StrictMode] policies on startup. As a workaround, we create
+     * an exception list for these manufacturers so that dialogs do not show up on start up.
+     * To add a new manufacturer to the list, log "Build.MANUFACTURER" from the device to get the
+     * exact name of the manufacturer.
+     */
+    private val strictModeExceptionList = HashSet<String>().also {
+        it.add(MANUFACTURE_HUAWEI)
+        it.add(MANUFACTURE_ONE_PLUS)
+    }
+
+    private const val MANUFACTURE_HUAWEI: String = "HUAWEI"
+    private const val MANUFACTURE_ONE_PLUS: String = "OnePlus"
 }
