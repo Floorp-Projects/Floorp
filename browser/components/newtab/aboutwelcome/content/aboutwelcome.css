@@ -271,7 +271,7 @@ body {
     flex-flow: column nowrap;
     height: 100%; }
   .multistageContainer .brand-logo {
-    background: url("chrome://branding/content/about-logo.png") top center/112px no-repeat;
+    background: url("chrome://branding/content/about-logo.svg") top center/112px no-repeat;
     padding: 112px 0 20px;
     margin-top: 60px; }
     .multistageContainer .brand-logo.cta-top {
