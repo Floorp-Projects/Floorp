@@ -1479,8 +1479,7 @@ current_stream_delay(cubeb_stream * stm)
 
   double cur_pos = static_cast<double>(pos) / freq;
   double max_pos = static_cast<double>(stm->frames_written)  / stm->output_mix_params.rate;
-  double delay = max_pos - cur_pos;
-  XASSERT(delay >= 0);
+  double delay = std::max(max_pos - cur_pos, 0.0);
 
   return delay;
 }

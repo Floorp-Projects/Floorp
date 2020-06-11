@@ -1,0 +1,28 @@
+From e2ffb10843c5456212f480c658edfc29930e4f55 Mon Sep 17 00:00:00 2001
+From: Paul Adenot <paul@paul.cx>
+Date: Tue, 9 Jun 2020 15:46:34 +0200
+Subject: [PATCH] Clamp stream_delay calculation to zero
+
+For the same reasons we do it in other methods: it's possible that we've
+not written enough frames to be greater than the latency.
+---
+ src/cubeb_wasapi.cpp | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/src/cubeb_wasapi.cpp b/src/cubeb_wasapi.cpp
+index 3cde0cc..4b5925f 100644
+--- a/src/cubeb_wasapi.cpp
++++ b/src/cubeb_wasapi.cpp
+@@ -1479,8 +1479,7 @@ current_stream_delay(cubeb_stream * stm)
+ 
+   double cur_pos = static_cast<double>(pos) / freq;
+   double max_pos = static_cast<double>(stm->frames_written)  / stm->output_mix_params.rate;
+-  double delay = max_pos - cur_pos;
+-  XASSERT(delay >= 0);
++  double delay = std::max(max_pos - cur_pos, 0.0);
+ 
+   return delay;
+ }
+-- 
+2.27.0
+
