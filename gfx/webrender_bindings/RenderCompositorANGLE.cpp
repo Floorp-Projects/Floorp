@@ -467,7 +467,7 @@ bool RenderCompositorANGLE::BeginFrame() {
     return false;
   }
 
-  if (mSyncObject) {
+  if (RenderThread::Get()->SyncObjectNeeded() && mSyncObject) {
     if (!mSyncObject->Synchronize(/* aFallible */ true)) {
       // It's timeout or other error. Handle the device-reset here.
       RenderThread::Get()->HandleDeviceReset("SyncObject", /* aNotify */ true);

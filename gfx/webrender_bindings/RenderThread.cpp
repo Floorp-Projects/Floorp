@@ -627,7 +627,11 @@ void RenderThread::RegisterExternalImage(
     return;
   }
   MOZ_ASSERT(mRenderTextures.find(aExternalImageId) == mRenderTextures.end());
-  mRenderTextures.emplace(aExternalImageId, std::move(aTexture));
+  RefPtr<RenderTextureHost> texture = aTexture;
+  if (texture->SyncObjectNeeded()) {
+    mSyncObjectNeededRenderTextures.emplace(aExternalImageId, texture);
+  }
+  mRenderTextures.emplace(aExternalImageId, texture);
 }
 
 void RenderThread::UnregisterExternalImage(uint64_t aExternalImageId) {
@@ -640,6 +644,13 @@ void RenderThread::UnregisterExternalImage(uint64_t aExternalImageId) {
   if (it == mRenderTextures.end()) {
     return;
   }
+
+  auto& texture = it->second;
+  if (texture->SyncObjectNeeded()) {
+    MOZ_RELEASE_ASSERT(
+        mSyncObjectNeededRenderTextures.erase(aExternalImageId) == 1);
+  }
+
   if (!IsInRenderThread()) {
     // The RenderTextureHost should be released in render thread. So, post the
     // deletion task here.
@@ -736,6 +747,12 @@ void RenderThread::HandlePrepareForUse() {
     texture->PrepareForUse();
   }
   mRenderTexturesPrepareForUse.clear();
+}
+
+bool RenderThread::SyncObjectNeeded() {
+  MOZ_ASSERT(IsInRenderThread());
+  MutexAutoLock lock(mRenderTextureMapLock);
+  return !mSyncObjectNeededRenderTextures.empty();
 }
 
 void RenderThread::DeferredRenderTextureHostDestroy() {
