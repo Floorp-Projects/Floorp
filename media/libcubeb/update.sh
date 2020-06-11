@@ -86,3 +86,5 @@ fi
 
 echo "Applying a patch on top of $rev"
 patch -p3 < ./disable-assert.patch
+echo "Applying a patch on top of $rev"
+patch -p1 < ./0001-Clamp-stream_delay-calculation-to-zero.patch
