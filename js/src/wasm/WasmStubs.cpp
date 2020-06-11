@@ -1858,12 +1858,16 @@ static bool GenerateImportFunction(jit::MacroAssembler& masm,
   GenerateFunctionPrologue(masm, funcTypeId, Nothing(), offsets);
 
   MOZ_ASSERT(masm.framePushed() == 0);
+  const unsigned sizeOfTlsSlot = sizeof(void*);
   unsigned framePushed =
       StackDecrementForCall(WasmStackAlignment,
                             sizeof(Frame),  // pushed by prologue
-                            StackArgBytes(fi.funcType()));
+                            StackArgBytes(fi.funcType()) + sizeOfTlsSlot);
   masm.wasmReserveStackChecked(framePushed, BytecodeOffset(0));
   MOZ_ASSERT(masm.framePushed() == framePushed);
+
+  masm.storePtr(WasmTlsReg,
+                Address(masm.getStackPointer(), framePushed - sizeOfTlsSlot));
 
   // The argument register state is already setup by our caller. We just need
   // to be sure not to clobber it before the call.
@@ -1892,7 +1896,8 @@ static bool GenerateImportFunction(jit::MacroAssembler& masm,
   masm.wasmCallImport(desc, CalleeDesc::import(fi.tlsDataOffset()));
 
   // Restore the TLS register and pinned regs, per wasm function ABI.
-  masm.loadWasmTlsRegFromFrame();
+  masm.loadPtr(Address(masm.getStackPointer(), framePushed - sizeOfTlsSlot),
+               WasmTlsReg);
   masm.loadWasmPinnedRegsFromTls();
 
   // Restore cx->realm.
@@ -2134,17 +2139,18 @@ static bool GenerateImportJitExit(MacroAssembler& masm, const FuncImport& fi,
   masm.setFramePushed(0);
 
   // JIT calls use the following stack layout (sp grows to the left):
-  //   | WasmToJSJitFrameLayout | this | arg1..N |
+  //   | WasmToJSJitFrameLayout | this | arg1..N | saved Tls |
   // Unlike most ABIs, the JIT ABI requires that sp be JitStackAlignment-
   // aligned *after* pushing the return address.
   static_assert(WasmStackAlignment >= JitStackAlignment, "subsumes");
+  const unsigned sizeOfTlsSlot = sizeof(void*);
   const unsigned sizeOfRetAddr = sizeof(void*);
   const unsigned sizeOfPreFrame =
       WasmToJSJitFrameLayout::Size() - sizeOfRetAddr;
   const unsigned sizeOfThisAndArgs =
       (1 + fi.funcType().args().length()) * sizeof(Value);
   const unsigned totalJitFrameBytes =
-      sizeOfRetAddr + sizeOfPreFrame + sizeOfThisAndArgs;
+      sizeOfRetAddr + sizeOfPreFrame + sizeOfThisAndArgs + sizeOfTlsSlot;
   const unsigned jitFramePushed =
       StackDecrementForCall(JitStackAlignment,
                             sizeof(Frame),  // pushed by prologue
@@ -2199,6 +2205,10 @@ static bool GenerateImportJitExit(MacroAssembler& masm, const FuncImport& fi,
                            scratch2, scratch3, ToValue(true), throwLabel);
   argOffset += fi.funcType().args().length() * sizeof(Value);
   MOZ_ASSERT(argOffset == sizeOfThisAndArgs + sizeOfPreFrame + frameAlignExtra);
+
+  // Preserve Tls because the JIT callee clobbers it.
+  const size_t savedTlsOffset = argOffset;
+  masm.storePtr(WasmTlsReg, Address(masm.getStackPointer(), savedTlsOffset));
 
   // 2. Callee, part 2 -- now that the register is free, set up the callee.
   Register callee = ABINonArgReturnReg0;  // Live until call
@@ -2260,7 +2270,7 @@ static bool GenerateImportJitExit(MacroAssembler& masm, const FuncImport& fi,
   AssertStackAlignment(masm, JitStackAlignment,
                        sizeOfRetAddr + frameAlignExtra);
 
-  masm.loadWasmTlsRegFromFrame();
+  masm.loadPtr(Address(masm.getStackPointer(), savedTlsOffset), WasmTlsReg);
   masm.moveStackPtrTo(FramePointer);
   masm.addPtr(Imm32(masm.framePushed()), FramePointer);
   offsets->untrustedFPEnd = masm.currentOffset();
