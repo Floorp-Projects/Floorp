@@ -11,6 +11,7 @@ use api::{LineOrientation, LineStyle, NinePatchBorderSource, PipelineId, MixBlen
 use api::{PropertyBinding, ReferenceFrame, ReferenceFrameKind, ScrollFrameDisplayItem, ScrollSensitivity};
 use api::{Shadow, SpaceAndClipInfo, SpatialId, StackingContext, StickyFrameDisplayItem, ImageMask};
 use api::{ClipMode, PrimitiveKeyKind, TransformStyle, YuvColorSpace, ColorRange, YuvData, TempFilterData};
+use api::{ReferenceTransformBinding};
 use api::image_tiling::simplify_repeated_primitive;
 use api::units::*;
 use crate::clip::{ClipChainId, ClipRegion, ClipItemKey, ClipStore, ClipItemKeyKind};
@@ -286,6 +287,7 @@ pub struct SceneBuilder<'a> {
     /// The current recursion depth of iframes encountered. Used to restrict picture
     /// caching slices to only the top-level content frame.
     iframe_depth: usize,
+    iframe_size: Vec<LayoutSize>,
 
     /// The number of picture cache slices that were created for content.
     content_slice_count: usize,
@@ -340,6 +342,7 @@ impl<'a> SceneBuilder<'a> {
             external_scroll_mapper: ScrollOffsetMapper::new(),
             picture_caching_initialized: false,
             iframe_depth: 0,
+            iframe_size: Vec::new(),
             content_slice_count: 0,
             picture_cache_spatial_nodes: FastHashSet::default(),
             quality_settings: view.quality_settings,
@@ -717,12 +720,38 @@ impl<'a> SceneBuilder<'a> {
     ) {
         profile_scope!("build_reference_frame");
         let current_offset = self.current_offset(parent_spatial_node);
+
+        let transform = match reference_frame.transform {
+            ReferenceTransformBinding::Static { binding } => binding,
+            ReferenceTransformBinding::Computed { scale_from, vertical_flip } => {
+                let mut transform = if let Some(scale_from) = scale_from {
+                    let content_size = &self.iframe_size.last().unwrap();
+                    LayoutTransform::create_scale(
+                        content_size.width / scale_from.width,
+                        content_size.height / scale_from.height,
+                        1.0
+                    )
+                } else {
+                    LayoutTransform::identity()
+                };
+
+                if vertical_flip {
+                    let content_size = &self.iframe_size.last().unwrap();
+                    transform = transform
+                        .post_translate(LayoutVector3D::new(0.0, content_size.height, 0.0))
+                        .pre_scale(1.0, -1.0, 1.0);
+                }
+
+                PropertyBinding::Value(transform)
+            },
+        };
+
         self.push_reference_frame(
             reference_frame.id,
             Some(parent_spatial_node),
             pipeline_id,
             reference_frame.transform_style,
-            reference_frame.transform,
+            transform,
             reference_frame.kind,
             current_offset + origin.to_vector(),
         );
@@ -734,7 +763,6 @@ impl<'a> SceneBuilder<'a> {
         );
         self.rf_mapper.pop_scope();
     }
-
 
     fn build_stacking_context(
         &mut self,
@@ -852,11 +880,13 @@ impl<'a> SceneBuilder<'a> {
 
         self.rf_mapper.push_scope();
         self.iframe_depth += 1;
+        self.iframe_size.push(bounds.size);
 
         self.build_items(
             &mut pipeline.display_list.iter(),
             pipeline.pipeline_id,
         );
+        self.iframe_size.pop();
         self.iframe_depth -= 1;
         self.rf_mapper.pop_scope();
 

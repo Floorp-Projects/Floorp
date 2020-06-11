@@ -484,6 +484,13 @@ pub type WrColorProperty = WrAnimationPropertyValue<ColorF>;
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub struct WrWindowId(u64);
 
+#[repr(C)]
+#[derive(Debug)]
+pub struct WrComputedTransformData {
+    pub scale_from: LayoutSize,
+    pub vertical_flip: bool,
+}
+
 fn get_proc_address(glcontext_ptr: *mut c_void, name: &str) -> *const c_void {
     extern "C" {
         fn get_proc_address_from_glcontext(glcontext_ptr: *mut c_void, procname: *const c_char) -> *const c_void;
@@ -2257,6 +2264,7 @@ pub struct WrStackingContextParams {
     pub clip: WrStackingContextClip,
     pub animation: *const WrAnimationProperty,
     pub opacity: *const f32,
+    pub computed_transform: *const WrComputedTransformData,
     pub transform_style: TransformStyle,
     pub reference_frame_kind: WrReferenceFrameKind,
     pub scrolling_relative_to: *const u64,
@@ -2304,6 +2312,7 @@ pub extern "C" fn wr_dp_push_stacking_context(
         None => None,
     };
 
+    let computed_ref = unsafe { params.computed_transform.as_ref() };
     let opacity_ref = unsafe { params.opacity.as_ref() };
     let mut has_opacity_animation = false;
     let anim = unsafe { params.animation.as_ref() };
@@ -2369,6 +2378,17 @@ pub extern "C" fn wr_dp_push_stacking_context(
             params.transform_style,
             transform_binding,
             reference_frame_kind,
+        );
+
+        bounds.origin = LayoutPoint::zero();
+        result.id = wr_spatial_id.0;
+        assert_ne!(wr_spatial_id.0, 0);
+    } else if let Some(data) = computed_ref {
+        wr_spatial_id = state.frame_builder.dl_builder.push_computed_frame(
+            bounds.origin,
+            wr_spatial_id,
+            Some(data.scale_from),
+            data.vertical_flip,
         );
 
         bounds.origin = LayoutPoint::zero();
