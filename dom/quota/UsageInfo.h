@@ -20,11 +20,11 @@ class UsageInfo final {
     mFileUsage += aUsageInfo.mFileUsage;
   }
 
-  void AppendToDatabaseUsage(const Maybe<uint64_t>& aUsage) {
+  void IncrementDatabaseUsage(const Maybe<uint64_t>& aUsage) {
     mDatabaseUsage += aUsage;
   }
 
-  void AppendToFileUsage(const Maybe<uint64_t>& aUsage) {
+  void IncrementFileUsage(const Maybe<uint64_t>& aUsage) {
     mFileUsage += aUsage;
   }
 
