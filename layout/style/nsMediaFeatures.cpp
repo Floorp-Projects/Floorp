@@ -29,19 +29,6 @@ using mozilla::dom::Document;
 
 static nsTArray<const nsStaticAtom*>* sSystemMetrics = nullptr;
 
-#ifdef XP_WIN
-struct OperatingSystemVersionInfo {
-  LookAndFeel::OperatingSystemVersion mId;
-  nsStaticAtom* const mName;
-};
-
-// Os version identities used in the -moz-os-version media query.
-const OperatingSystemVersionInfo kOsVersionStrings[] = {
-    {LookAndFeel::eOperatingSystemVersion_Windows7, nsGkAtoms::windows_win7},
-    {LookAndFeel::eOperatingSystemVersion_Windows8, nsGkAtoms::windows_win8},
-    {LookAndFeel::eOperatingSystemVersion_Windows10, nsGkAtoms::windows_win10}};
-#endif
-
 // A helper for four features below
 static nsSize GetSize(const Document* aDocument) {
   nsPresContext* pc = aDocument->GetPresContext();
@@ -213,24 +200,29 @@ bool Gecko_MediaFeatures_HasSystemMetric(const Document* aDocument,
 
 nsAtom* Gecko_MediaFeatures_GetOperatingSystemVersion(
     const Document* aDocument) {
+  using OperatingSystemVersion = LookAndFeel::OperatingSystemVersion;
+
   if (nsContentUtils::ShouldResistFingerprinting(aDocument)) {
     return nullptr;
   }
 
-#ifdef XP_WIN
   int32_t metricResult;
-  if (NS_SUCCEEDED(LookAndFeel::GetInt(
+  if (NS_FAILED(LookAndFeel::GetInt(
           LookAndFeel::IntID::OperatingSystemVersionIdentifier,
           &metricResult))) {
-    for (const auto& osVersion : kOsVersionStrings) {
-      if (metricResult == osVersion.mId) {
-        return osVersion.mName;
-      }
-    }
+    return nullptr;
   }
-#endif
 
-  return nullptr;
+  switch (OperatingSystemVersion(metricResult)) {
+    case OperatingSystemVersion::Windows7:
+      return nsGkAtoms::windows_win7;
+    case OperatingSystemVersion::Windows8:
+      return nsGkAtoms::windows_win8;
+    case OperatingSystemVersion::Windows10:
+      return nsGkAtoms::windows_win10;
+    default:
+      return nullptr;
+  }
 }
 
 bool Gecko_MediaFeatures_PrefersReducedMotion(const Document* aDocument) {

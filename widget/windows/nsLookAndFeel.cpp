@@ -21,18 +21,18 @@ using namespace mozilla::widget;
 
 // static
 LookAndFeel::OperatingSystemVersion nsLookAndFeel::GetOperatingSystemVersion() {
-  static OperatingSystemVersion version = eOperatingSystemVersion_Unknown;
+  static OperatingSystemVersion version = OperatingSystemVersion::Unknown;
 
-  if (version != eOperatingSystemVersion_Unknown) {
+  if (version != OperatingSystemVersion::Unknown) {
     return version;
   }
 
   if (IsWin10OrLater()) {
-    version = eOperatingSystemVersion_Windows10;
+    version = OperatingSystemVersion::Windows10;
   } else if (IsWin8OrLater()) {
-    version = eOperatingSystemVersion_Windows8;
+    version = OperatingSystemVersion::Windows8;
   } else {
-    version = eOperatingSystemVersion_Windows7;
+    version = OperatingSystemVersion::Windows7;
   }
 
   return version;
@@ -468,7 +468,7 @@ nsresult nsLookAndFeel::GetIntImpl(IntID aID, int32_t& aResult) {
       break;
 
     case IntID::OperatingSystemVersionIdentifier: {
-      aResult = GetOperatingSystemVersion();
+      aResult = int32_t(GetOperatingSystemVersion());
       break;
     }
 
