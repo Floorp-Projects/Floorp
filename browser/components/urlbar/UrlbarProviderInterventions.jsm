@@ -20,7 +20,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   ResetProfile: "resource://gre/modules/ResetProfile.jsm",
   Sanitizer: "resource:///modules/Sanitizer.jsm",
   Services: "resource://gre/modules/Services.jsm",
-  UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
   UrlbarProvider: "resource:///modules/UrlbarUtils.jsm",
   UrlbarResult: "resource:///modules/UrlbarResult.jsm",
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
@@ -495,7 +494,6 @@ class ProviderInterventions extends UrlbarProvider {
    */
   isActive(queryContext) {
     if (
-      !UrlbarPrefs.get("update1.interventions") ||
       !queryContext.searchString ||
       !EN_LOCALE_MATCH.test(Services.locale.appLocaleAsBCP47) ||
       !Services.policies.isAllowed("urlbarinterventions")

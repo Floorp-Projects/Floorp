@@ -149,14 +149,6 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // popular domains will no longer be included in the results.
   ["usepreloadedtopurls.expire_days", 14],
 
-  // If true, we show actionable tips in the Urlbar when the user is searching
-  // for those actions.
-  ["update1.interventions", true],
-
-  // If true, we show new users and those about to start an organic search a tip
-  // encouraging them to use the Urlbar.
-  ["update1.searchTips", true],
-
   // Whether the urlbar displays a permanent search button in design update 2.
   ["update2.searchButton", false],
 ]);

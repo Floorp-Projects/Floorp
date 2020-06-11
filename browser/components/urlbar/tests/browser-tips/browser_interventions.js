@@ -10,9 +10,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 
 add_task(async function init() {
   makeProfileResettable();
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.update1.interventions", true]],
-  });
 });
 
 // Tests the refresh tip.
