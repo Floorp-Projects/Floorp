@@ -354,6 +354,3 @@ StyleFontDisplay nsFontFaceLoader::GetFontDisplay() {
   }
   return mUserFontEntry->GetFontDisplay();
 }
-
-#undef LOG
-#undef LOG_ENABLED

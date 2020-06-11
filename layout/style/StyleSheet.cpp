@@ -1193,7 +1193,7 @@ RefPtr<StyleSheetParsePromise> StyleSheet::ParseSheet(
     RefPtr<RawServoStyleSheetContents> contents =
         Servo_StyleSheet_FromUTF8Bytes(
             &aLoader, this, &aLoadData, &aBytes, mParsingMode, Inner().mURLData,
-            aLoadData.mLineNumber, aLoadData.mCompatMode,
+            aLoadData.mLineNumber, aLoader.GetCompatibilityMode(),
             /* reusable_sheets = */ nullptr, useCounters, allowImportRules,
             StyleSanitizationKind::None,
             /* sanitized_output = */ nullptr)
@@ -1203,7 +1203,7 @@ RefPtr<StyleSheetParsePromise> StyleSheet::ParseSheet(
     auto holder = MakeRefPtr<css::SheetLoadDataHolder>(__func__, &aLoadData);
     Servo_StyleSheet_FromUTF8BytesAsync(
         holder, Inner().mURLData, &aBytes, mParsingMode, aLoadData.mLineNumber,
-        aLoadData.mCompatMode,
+        aLoader.GetCompatibilityMode(),
         /* should_record_use_counters = */ !!useCounters, allowImportRules);
   }
 

@@ -153,7 +153,6 @@
 #include "nsHTMLTags.h"
 #include "nsIAnonymousContentCreator.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
-#include "nsICacheInfoChannel.h"
 #include "nsICategoryManager.h"
 #include "nsIChannelEventSink.h"
 #include "nsIConsoleService.h"
@@ -10357,38 +10356,4 @@ ScreenIntMargin nsContentUtils::GetWindowSafeAreaInsets(
           : 0;
 
   return windowSafeAreaInsets;
-}
-
-/* static */
-nsContentUtils::SubresourceCacheValidationInfo
-nsContentUtils::GetSubresourceCacheValidationInfo(nsIRequest* aRequest) {
-  SubresourceCacheValidationInfo info;
-  if (nsCOMPtr<nsICacheInfoChannel> cache = do_QueryInterface(aRequest)) {
-    uint32_t value = 0;
-    if (NS_SUCCEEDED(cache->GetCacheTokenExpirationTime(&value))) {
-      info.mExpirationTime.emplace(value);
-    }
-  }
-
-  // Determine whether the cache entry must be revalidated when we try to use
-  // it. Currently, only HTTP specifies this information...
-  if (nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aRequest)) {
-    Unused << httpChannel->IsNoStoreResponse(&info.mMustRevalidate);
-
-    if (!info.mMustRevalidate) {
-      Unused << httpChannel->IsNoCacheResponse(&info.mMustRevalidate);
-    }
-
-    // FIXME(bug 1644173): Why this check?
-    if (!info.mMustRevalidate) {
-      nsAutoCString cacheHeader;
-      Unused << httpChannel->GetResponseHeader(
-          NS_LITERAL_CSTRING("Cache-Control"), cacheHeader);
-      if (PL_strcasestr(cacheHeader.get(), "must-revalidate")) {
-        info.mMustRevalidate = true;
-      }
-    }
-  }
-
-  return info;
 }

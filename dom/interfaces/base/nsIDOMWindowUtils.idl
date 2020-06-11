@@ -656,17 +656,6 @@ interface nsIDOMWindowUtils : nsISupports {
   void clearNativeTouchSequence([optional] in nsIObserver aObserver);
 
   /**
-   * Clears the SharedStyleSheetCache.
-   */
-  void clearSharedStyleSheetCache();
-
-  /**
-   * Returns the number of stylesheets that have been parsed on this document.
-   * Useful to test caching.
-   */
-  readonly attribute unsigned long parsedStyleSheets;
-
-  /**
    * See nsIWidget::ActivateNativeMenuItemAt
    *
    * Cannot be accessed from unprivileged context (not content-accessible)
