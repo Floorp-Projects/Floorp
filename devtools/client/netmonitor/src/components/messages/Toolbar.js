@@ -14,6 +14,7 @@ const {
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const Actions = require("devtools/client/netmonitor/src/actions/index");
 const {
+  CHANNEL_TYPE,
   FILTER_SEARCH_DELAY,
 } = require("devtools/client/netmonitor/src/constants");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
@@ -53,6 +54,7 @@ class Toolbar extends Component {
       setMessageFilterText: PropTypes.func.isRequired,
       messageFilterType: PropTypes.string.isRequired,
       showControlFrames: PropTypes.bool.isRequired,
+      channelType: PropTypes.string.isRequired,
     };
   }
 
@@ -116,16 +118,16 @@ class Toolbar extends Component {
   }
 
   render() {
-    const { clearMessages, setMessageFilterText } = this.props;
-
+    const { clearMessages, setMessageFilterText, channelType } = this.props;
+    const isWs = channelType === CHANNEL_TYPE.WEB_SOCKET;
     return div(
       {
         id: "netmonitor-toolbar-container",
         className: "devtools-toolbar devtools-input-toolbar",
       },
       this.renderClearButton(clearMessages),
-      this.renderSeparator(),
-      this.renderMessageFilterMenu(),
+      isWs ? this.renderSeparator() : null,
+      isWs ? this.renderMessageFilterMenu() : null,
       this.renderSeparator(),
       this.renderFilterBox(setMessageFilterText)
     );
@@ -136,6 +138,7 @@ module.exports = connect(
   state => ({
     messageFilterType: state.messages.messageFilterType,
     showControlFrames: state.messages.showControlFrames,
+    channelType: state.messages.currentChannelType,
   }),
   dispatch => ({
     clearMessages: () => dispatch(Actions.clearMessages()),

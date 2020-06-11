@@ -16,25 +16,47 @@ const {
   MSG_TOGGLE_COLUMN,
   MSG_RESET_COLUMNS,
   MSG_CLOSE_CONNECTION,
+  CHANNEL_TYPE,
+  SET_EVENT_STREAM_FLAG,
 } = require("devtools/client/netmonitor/src/constants");
 
 /**
- * The default column state for the MessageListItem component.
+ * The default column states for the MessageListItem component.
  */
 const defaultColumnsState = {
   data: true,
   size: false,
+  time: true,
+};
+
+const defaultWSColumnsState = {
+  ...defaultColumnsState,
   opCode: false,
   maskBit: false,
   finBit: false,
-  time: true,
+};
+
+const defaultSSEColumnsState = {
+  ...defaultColumnsState,
+  eventName: false,
+  lastEventId: false,
+  retry: false,
 };
 
 /**
  * Returns a new object of default cols.
  */
-function getMessageDefaultColumnsState() {
-  return Object.assign({}, defaultColumnsState);
+function getMessageDefaultColumnsState(channelType) {
+  let columnsState = defaultColumnsState;
+  const { EVENT_STREAM, WEB_SOCKET } = CHANNEL_TYPE;
+
+  if (channelType === WEB_SOCKET) {
+    columnsState = defaultWSColumnsState;
+  } else if (channelType === EVENT_STREAM) {
+    columnsState = defaultSSEColumnsState;
+  }
+
+  return Object.assign({}, columnsState);
 }
 
 /**
@@ -52,6 +74,7 @@ function Messages(initialState = {}) {
     selectedMessage: null,
     messageDetailsOpen: false,
     currentChannelId: null,
+    currentChannelType: null,
     closedConnections: new Map(),
     columns: getMessageDefaultColumnsState(),
     ...initialState,
@@ -62,13 +85,39 @@ function Messages(initialState = {}) {
  * When a network request is selected,
  * set the current channelId affiliated with the connection.
  */
-function setChannelId(state, action) {
+function setCurrentChannel(state, action) {
+  if (!action.request) {
+    return state;
+  }
+
+  const { channelId, isEventStream } = action.request;
+  const { EVENT_STREAM, WEB_SOCKET } = CHANNEL_TYPE;
+  const currentChannelType = isEventStream ? EVENT_STREAM : WEB_SOCKET;
+
   return {
     ...state,
-    currentChannelId: action.httpChannelId,
+    columns: getMessageDefaultColumnsState(currentChannelType),
+    currentChannelId: channelId,
+    currentChannelType,
     // Default filter text is empty string for a new connection
     messageFilterText: "",
   };
+}
+
+/**
+ * If the request is already selected and isEventStream flag
+ * is added later, we need to update the current channel.
+ */
+function setEventStreamFlag(state, action) {
+  if (state.currentChannelId === action.channelId) {
+    return setCurrentChannel(state, {
+      request: {
+        channelId: action.channelId,
+        isEventStream: true,
+      },
+    });
+  }
+  return state;
 }
 
 /**
@@ -88,6 +137,7 @@ function addMessage(state, action) {
     newMessage.httpChannelId,
     newMessage
   );
+
   return nextState;
 }
 
@@ -185,7 +235,7 @@ function toggleColumn(state, action) {
 function resetColumns(state) {
   return {
     ...state,
-    columns: getMessageDefaultColumnsState(),
+    columns: getMessageDefaultColumnsState(state.currentChannelType),
   };
 }
 
@@ -222,7 +272,9 @@ function mapSet(map, key, value) {
 function messages(state = Messages(), action) {
   switch (action.type) {
     case SELECT_REQUEST:
-      return setChannelId(state, action);
+      return setCurrentChannel(state, action);
+    case SET_EVENT_STREAM_FLAG:
+      return setEventStreamFlag(state, action);
     case MSG_ADD:
       return addMessage(state, action);
     case MSG_SELECT:
