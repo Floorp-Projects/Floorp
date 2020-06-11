@@ -281,11 +281,6 @@ class nsFrame : public nsIFrame {
    */
   void CreateView();
 
-  // given a frame five me the first/last leaf available
-  // XXX Robert O'Callahan wants to move these elsewhere
-  static void GetLastLeaf(nsPresContext* aPresContext, nsIFrame** aFrame);
-  static void GetFirstLeaf(nsPresContext* aPresContext, nsIFrame** aFrame);
-
  private:
   // Returns true if this frame has any kind of CSS animations.
   bool HasCSSAnimations();

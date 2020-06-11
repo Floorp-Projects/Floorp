@@ -9840,7 +9840,7 @@ ComputedStyle* nsIFrame::DoGetParentComputedStyle(
   return placeholder->GetParentComputedStyleForOutOfFlow(aProviderFrame);
 }
 
-void nsFrame::GetLastLeaf(nsPresContext* aPresContext, nsIFrame** aFrame) {
+void nsIFrame::GetLastLeaf(nsPresContext* aPresContext, nsIFrame** aFrame) {
   if (!aFrame || !*aFrame) return;
   nsIFrame* child = *aFrame;
   // if we are a block frame then go for the last line of 'this'
@@ -9859,7 +9859,7 @@ void nsFrame::GetLastLeaf(nsPresContext* aPresContext, nsIFrame** aFrame) {
   }
 }
 
-void nsFrame::GetFirstLeaf(nsPresContext* aPresContext, nsIFrame** aFrame) {
+void nsIFrame::GetFirstLeaf(nsPresContext* aPresContext, nsIFrame** aFrame) {
   if (!aFrame || !*aFrame) return;
   nsIFrame* child = *aFrame;
   while (1) {

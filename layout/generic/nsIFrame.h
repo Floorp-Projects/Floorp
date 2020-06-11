@@ -3645,6 +3645,11 @@ class nsIFrame : public nsQueryFrame {
    */
   virtual nsresult PeekOffset(nsPeekOffsetStruct* aPos);
 
+  // given a frame five me the first/last leaf available
+  // XXX Robert O'Callahan wants to move these elsewhere
+  static void GetLastLeaf(nsPresContext* aPresContext, nsIFrame** aFrame);
+  static void GetFirstLeaf(nsPresContext* aPresContext, nsIFrame** aFrame);
+
   /**
    * Called to find the previous/next non-anonymous selectable leaf frame.
    *
