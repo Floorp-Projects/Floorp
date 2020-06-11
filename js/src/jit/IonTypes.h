@@ -138,10 +138,6 @@ enum BailoutKind {
   Bailout_NonSymbolInput,
   Bailout_NonBigIntInput,
 
-  // Atomic operations require shared memory, bail out if the typed array
-  // maps unshared memory.
-  Bailout_NonSharedTypedArrayInput,
-
   // We hit a |debugger;| statement.
   Bailout_Debugger,
 
@@ -246,8 +242,6 @@ inline const char* BailoutKindString(BailoutKind kind) {
       return "Bailout_NonSymbolInput";
     case Bailout_NonBigIntInput:
       return "Bailout_NonBigIntInput";
-    case Bailout_NonSharedTypedArrayInput:
-      return "Bailout_NonSharedTypedArrayInput";
     case Bailout_Debugger:
       return "Bailout_Debugger";
     case Bailout_FirstExecution:

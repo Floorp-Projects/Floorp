@@ -12953,12 +12953,6 @@ MInstruction* IonBuilder::addGuardReceiverPolymorphic(
   return guard;
 }
 
-MInstruction* IonBuilder::addSharedTypedArrayGuard(MDefinition* obj) {
-  MGuardSharedTypedArray* guard = MGuardSharedTypedArray::New(alloc(), obj);
-  current->add(guard);
-  return guard;
-}
-
 TemporaryTypeSet* IonBuilder::bytecodeTypes(jsbytecode* pc) {
   return JitScript::BytecodeTypes(script(), pc, bytecodeTypeMap, &typeArrayHint,
                                   typeArray);
