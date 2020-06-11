@@ -15,9 +15,10 @@ BEGIN_QUOTA_NAMESPACE
 
 class UsageInfo final {
  public:
-  void Append(const UsageInfo& aUsageInfo) {
+  UsageInfo& operator+=(const UsageInfo& aUsageInfo) {
     mDatabaseUsage += aUsageInfo.mDatabaseUsage;
     mFileUsage += aUsageInfo.mFileUsage;
+    return *this;
   }
 
   void IncrementDatabaseUsage(const Maybe<uint64_t>& aUsage) {
