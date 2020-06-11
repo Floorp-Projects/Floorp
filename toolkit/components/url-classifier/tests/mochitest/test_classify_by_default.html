@@ -80,6 +80,8 @@ async function runTests() {
   await SpecialPowers.pushPrefEnv({set: [
     [ "privacy.trackingprotection.annotate_channels", true],
   ]});
+  // Ensure we clear the stylesheet cache so that we re-classify.
+  SpecialPowers.DOMWindowUtils.clearSharedStyleSheetCache();
 
   await loadTestWindow(false);
 

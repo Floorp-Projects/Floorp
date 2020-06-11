@@ -172,6 +172,8 @@ async function doTest(aBrowser) {
   };
 
   await SpecialPowers.spawn(aBrowser, [argObj], async function(arg) {
+    content.windowUtils.clearSharedStyleSheetCache();
+
     let videoURL = arg.urlPrefix + "file_thirdPartyChild.video.ogv";
     let audioURL = arg.urlPrefix + "file_thirdPartyChild.audio.ogg";
     let trackURL = arg.urlPrefix + "file_thirdPartyChild.track.vtt";
