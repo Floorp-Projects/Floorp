@@ -17,16 +17,35 @@ CompositableForwarder* ClientCanvasRenderer::GetForwarder() {
 
 bool ClientCanvasRenderer::CreateCompositable() {
   if (!mCanvasClient) {
-    auto compositableFlags = TextureFlags::NO_FLAGS;
-    if (!mData.mIsAlphaPremult) {
-      // WR needs this flag marked on the compositable, not just the texture.
-      compositableFlags |= TextureFlags::NON_PREMULTIPLIED;
+    TextureFlags flags = TextureFlags::DEFAULT;
+    if (mOriginPos == gl::OriginPos::BottomLeft) {
+      flags |= TextureFlags::ORIGIN_BOTTOM_LEFT;
     }
-    mCanvasClient = new CanvasClient(GetForwarder(), compositableFlags);
+
+    if (IsOpaque()) {
+      flags |= TextureFlags::IS_OPAQUE;
+    }
+
+    if (!mIsAlphaPremultiplied) {
+      flags |= TextureFlags::NON_PREMULTIPLIED;
+    }
+
+    mCanvasClient = CanvasClient::CreateCanvasClient(GetCanvasClientType(),
+                                                     GetForwarder(), flags);
+    if (!mCanvasClient) {
+      return false;
+    }
 
     if (mLayer->HasShadow()) {
-      mCanvasClient->Connect();
-      GetForwarder()->AsLayerForwarder()->Attach(mCanvasClient, mLayer);
+      if (mAsyncRenderer) {
+        static_cast<CanvasClientBridge*>(mCanvasClient.get())->SetLayer(mLayer);
+      } else if (mOOPRenderer) {
+        static_cast<CanvasClientOOP*>(mCanvasClient.get())
+            ->SetLayer(mLayer, mOOPRenderer);
+      } else {
+        mCanvasClient->Connect();
+        GetForwarder()->AsLayerForwarder()->Attach(mCanvasClient, mLayer);
+      }
     }
   }
 

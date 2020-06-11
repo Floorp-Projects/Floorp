@@ -1006,7 +1006,7 @@ static already_AddRefed<gl::GLContext> CreateGLContextANGLE() {
   // Create GLContext with dummy EGLSurface, the EGLSurface is not used.
   // Instread we override it with EGLSurface of SwapChain's back buffer.
   RefPtr<gl::GLContext> gl =
-      gl::GLContextProviderEGL::CreateHeadless({flags}, &discardFailureId);
+      gl::GLContextProviderEGL::CreateHeadless(flags, &discardFailureId);
   if (!gl || !gl->IsANGLE()) {
     gfxCriticalNote << "Failed ANGLE GL context creation for WebRender: "
                     << gfx::hexa(gl.get());
@@ -1048,8 +1048,8 @@ static already_AddRefed<gl::GLContext> CreateGLContextEGL() {
 static already_AddRefed<gl::GLContext> CreateGLContextCGL() {
   nsCString failureUnused;
   return gl::GLContextProvider::CreateHeadless(
-      {gl::CreateContextFlags::ALLOW_OFFLINE_RENDERER |
-       gl::CreateContextFlags::FORCE_ENABLE_HARDWARE},
+      gl::CreateContextFlags::ALLOW_OFFLINE_RENDERER |
+          gl::CreateContextFlags::FORCE_ENABLE_HARDWARE,
       &failureUnused);
 }
 #endif

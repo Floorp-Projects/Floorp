@@ -5,11 +5,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "BasicCanvasLayer.h"
+#include "AsyncCanvasRenderer.h"
 #include "basic/BasicLayers.h"      // for BasicLayerManager
 #include "basic/BasicLayersImpl.h"  // for GetEffectiveOperator
-#include "CanvasRenderer.h"
+#include "CopyableCanvasRenderer.h"
 #include "mozilla/mozalloc.h"  // for operator new
-#include "mozilla/Maybe.h"
 #include "nsCOMPtr.h"          // for already_AddRefed
 #include "nsISupportsImpl.h"   // for Layer::AddRef, etc
 #include "gfx2DGlue.h"
@@ -30,19 +30,33 @@ namespace layers {
 void BasicCanvasLayer::Paint(DrawTarget* aDT, const Point& aDeviceOffset,
                              Layer* aMaskLayer) {
   if (IsHidden()) return;
-  // Ignore IsDirty().
 
-  const auto& cr = mCanvasRenderer;
-  MOZ_ASSERT(cr);
-  const auto snapshot = cr->BorrowSnapshot();
-  if (!snapshot) return;
-  const auto& surface = snapshot->mSurf;
+  RefPtr<SourceSurface> surface;
+  CopyableCanvasRenderer* canvasRenderer =
+      mCanvasRenderer->AsCopyableCanvasRenderer();
+  MOZ_ASSERT(canvasRenderer);
+  if (IsDirty()) {
+    Painted();
 
-  Maybe<Matrix> oldTM;
-  if (!cr->YIsDown()) {
-    // y-flip
-    oldTM = Some(aDT->GetTransform());
-    aDT->SetTransform(Matrix(*oldTM)
+    surface = canvasRenderer->ReadbackSurface();
+  }
+
+  bool bufferPoviderSnapshot = false;
+  PersistentBufferProvider* bufferProvider =
+      canvasRenderer->GetBufferProvider();
+  if (!surface && bufferProvider) {
+    surface = bufferProvider->BorrowSnapshot();
+    bufferPoviderSnapshot = !!surface;
+  }
+
+  if (!surface) {
+    return;
+  }
+
+  Matrix oldTM;
+  if (canvasRenderer->NeedsYFlip()) {
+    oldTM = aDT->GetTransform();
+    aDT->SetTransform(Matrix(oldTM)
                           .PreTranslate(0.0f, mBounds.Height())
                           .PreScale(1.0f, -1.0f));
   }
@@ -53,15 +67,17 @@ void BasicCanvasLayer::Paint(DrawTarget* aDT, const Point& aDeviceOffset,
       DrawOptions(GetEffectiveOpacity(), GetEffectiveOperator(this)),
       aMaskLayer);
 
-  if (oldTM) {
-    aDT->SetTransform(*oldTM);
+  if (canvasRenderer->NeedsYFlip()) {
+    aDT->SetTransform(oldTM);
   }
 
-  Painted();
+  if (bufferPoviderSnapshot) {
+    bufferProvider->ReturnSnapshot(surface.forget());
+  }
 }
 
-RefPtr<CanvasRenderer> BasicCanvasLayer::CreateCanvasRendererInternal() {
-  return new CanvasRenderer();
+CanvasRenderer* BasicCanvasLayer::CreateCanvasRendererInternal() {
+  return new CopyableCanvasRenderer();
 }
 
 already_AddRefed<CanvasLayer> BasicLayerManager::CreateCanvasLayer() {
