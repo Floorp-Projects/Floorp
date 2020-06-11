@@ -14,7 +14,6 @@
 #include "nsCURILoader.h"
 #include "nsCExternalHandlerService.h"
 #include "nsIExternalProtocolService.h"
-#include "nsMimeTypes.h"
 #include "mozilla/StaticPtr.h"
 
 static bool sInitializedOurData = false;
@@ -255,25 +254,6 @@ nsMIMEInfoBase::GetAlwaysAskBeforeHandling(bool* aAlwaysAsk) {
 NS_IMETHODIMP
 nsMIMEInfoBase::SetAlwaysAskBeforeHandling(bool aAlwaysAsk) {
   mAlwaysAskBeforeHandling = aAlwaysAsk;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsMIMEInfoBase::IsPdf(bool* isPdf) {
-  if (mSchemeOrType == APPLICATION_PDF) {
-    *isPdf = true;
-    return NS_OK;
-  }
-
-  nsAutoCString fileExt;
-  nsresult rv = GetPrimaryExtension(fileExt);
-
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  *isPdf = fileExt.LowerCaseEqualsASCII("pdf") ||
-           fileExt.LowerCaseEqualsASCII(".pdf");
   return NS_OK;
 }
 
