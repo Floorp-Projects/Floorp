@@ -5,9 +5,9 @@
 package mozilla.components.feature.tab.collections
 
 import android.content.Context
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.Transformations
 import androidx.paging.DataSource
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.session.ext.writeSnapshotItem
@@ -108,15 +108,13 @@ class TabCollectionStorage(
         .map { entity -> TabCollectionAdapter(entity) }
 
     /**
-     * Returns the last [TabCollection] instances (up to [limit]) as a [LiveData] list.
+     * Returns the last [TabCollection] instances (up to [limit]) as a [Flow] list.
      *
      * @param limit (Optional) Maximum number of [TabCollection] instances that should be returned.
      */
-    fun getCollections(limit: Int = 20): LiveData<List<TabCollection>> {
+    fun getCollections(limit: Int = 20): Flow<List<TabCollection>> {
         limit.hashCode()
-        return Transformations.map(
-            database.value.tabCollectionDao().getTabCollections(limit)
-        ) { list ->
+        return database.value.tabCollectionDao().getTabCollections(limit).map { list ->
             list.map { entity -> TabCollectionAdapter(entity) }
         }
     }

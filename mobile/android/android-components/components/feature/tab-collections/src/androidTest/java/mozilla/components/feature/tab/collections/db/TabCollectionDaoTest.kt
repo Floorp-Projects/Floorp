@@ -9,10 +9,10 @@ import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.paging.PagedList
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
-import mozilla.components.support.android.test.awaitValue
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotNull
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -119,7 +119,7 @@ class TabCollectionDaoTest {
     }
 
     @Test
-    fun testGettingCollectionsWithLimit() {
+    fun testGettingCollectionsWithLimit() = runBlocking {
         val collection1 = TabCollectionEntity(title = "Collection One", updatedAt = 10)
         val collection2 = TabCollectionEntity(title = "Collection Two", updatedAt = 50)
 
@@ -128,8 +128,7 @@ class TabCollectionDaoTest {
 
         val data = tabCollectionDao.getTabCollections(4)
 
-        val collections = data.awaitValue()
-        assertNotNull(collections!!)
+        val collections = data.first()
         assertEquals(2, collections.size)
         assertEquals("Collection Two", collections[1].collection.title)
         assertEquals("Collection One", collections[0].collection.title)

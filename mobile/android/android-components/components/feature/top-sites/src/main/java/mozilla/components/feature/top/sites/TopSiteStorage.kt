@@ -5,9 +5,9 @@
 package mozilla.components.feature.top.sites
 
 import android.content.Context
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.Transformations
 import androidx.paging.DataSource
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import mozilla.components.feature.top.sites.adapter.TopSiteAdapter
 import mozilla.components.feature.top.sites.db.TopSiteDatabase
 import mozilla.components.feature.top.sites.db.TopSiteEntity
@@ -40,12 +40,10 @@ class TopSiteStorage(
     }
 
     /**
-     * Returns a [LiveData] list of all the [TopSite] instances.
+     * Returns a [Flow] list of all the [TopSite] instances.
      */
-    fun getTopSites(): LiveData<List<TopSite>> {
-        return Transformations.map(
-            database.value.topSiteDao().getTopSites()
-        ) { list ->
+    fun getTopSites(): Flow<List<TopSite>> {
+        return database.value.topSiteDao().getTopSites().map { list ->
             list.map { entity -> TopSiteAdapter(entity) }
         }
     }

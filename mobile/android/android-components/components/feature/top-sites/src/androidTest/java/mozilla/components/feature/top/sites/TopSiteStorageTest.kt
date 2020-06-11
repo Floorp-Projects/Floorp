@@ -12,9 +12,10 @@ import androidx.room.testing.MigrationTestHelper
 import androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.platform.app.InstrumentationRegistry
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
 import mozilla.components.feature.top.sites.db.Migrations
 import mozilla.components.feature.top.sites.db.TopSiteDatabase
-import mozilla.components.support.android.test.awaitValue
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -97,13 +98,13 @@ class TopSiteStorageTest {
     }
 
     @Test
-    fun testGettingTopSites() {
+    fun testGettingTopSites() = runBlocking {
         storage.addTopSite("Mozilla", "https://www.mozilla.org")
         storage.addTopSite("Firefox", "https://www.firefox.com", isDefault = true)
 
-        val topSites = storage.getTopSites().awaitValue()
+        val topSites = storage.getTopSites().first()
 
-        assertNotNull(topSites!!)
+        assertNotNull(topSites)
         assertEquals(2, topSites.size)
 
         with(topSites[0]) {

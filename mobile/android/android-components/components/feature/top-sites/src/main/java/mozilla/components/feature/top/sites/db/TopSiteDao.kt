@@ -4,13 +4,13 @@
 
 package mozilla.components.feature.top.sites.db
 
-import androidx.lifecycle.LiveData
 import androidx.paging.DataSource
 import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Transaction
+import kotlinx.coroutines.flow.Flow
 
 /**
  * Internal DAO for accessing [TopSiteEntity] instances.
@@ -25,7 +25,7 @@ internal interface TopSiteDao {
 
     @Transaction
     @Query("SELECT * FROM top_sites")
-    fun getTopSites(): LiveData<List<TopSiteEntity>>
+    fun getTopSites(): Flow<List<TopSiteEntity>>
 
     @Transaction
     @Query("SELECT * FROM top_sites")
