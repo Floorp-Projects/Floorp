@@ -1929,29 +1929,6 @@ bool imgLoader::ValidateEntry(
     return false;
   }
 
-  bool requestGotLoad = false;
-  RefPtr<ProgressTracker> tracker;
-  RefPtr<Image> image = request->GetImage();
-  if (image) {
-    tracker = image->GetProgressTracker();
-  } else {
-    tracker = request->GetProgressTracker();
-  }
-  if (tracker) {
-    if ((tracker->GetProgress() & (FLAG_LOAD_COMPLETE | FLAG_HAS_ERROR)) ==
-        FLAG_LOAD_COMPLETE) {
-      requestGotLoad = true;
-    }
-  }
-  // If the original request is still transferring don't kick off a validation
-  // network request because it is a bit silly to issue a validation request if
-  // the original request hasn't even finished yet. So just return true
-  // indicating the caller can create a new proxy for the request and use it as
-  // is.
-  if (!requestGotLoad) {
-    return true;
-  }
-
   if (validateRequest && aCanMakeNewChannel) {
     LOG_SCOPE(gImgLog, "imgLoader::ValidateRequest |cache hit| must validate");
 
