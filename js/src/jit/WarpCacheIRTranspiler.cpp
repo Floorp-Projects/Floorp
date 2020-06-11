@@ -1297,6 +1297,48 @@ bool WarpCacheIRTranspiler::emitHasClassResult(ObjOperandId objId,
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitCallRegExpMatcherResult(
+    ObjOperandId regexpId, StringOperandId inputId,
+    Int32OperandId lastIndexId) {
+  MDefinition* regexp = getOperand(regexpId);
+  MDefinition* input = getOperand(inputId);
+  MDefinition* lastIndex = getOperand(lastIndexId);
+
+  auto* matcher = MRegExpMatcher::New(alloc(), regexp, input, lastIndex);
+  addEffectful(matcher);
+  pushResult(matcher);
+
+  return resumeAfter(matcher);
+}
+
+bool WarpCacheIRTranspiler::emitCallRegExpSearcherResult(
+    ObjOperandId regexpId, StringOperandId inputId,
+    Int32OperandId lastIndexId) {
+  MDefinition* regexp = getOperand(regexpId);
+  MDefinition* input = getOperand(inputId);
+  MDefinition* lastIndex = getOperand(lastIndexId);
+
+  auto* searcher = MRegExpSearcher::New(alloc(), regexp, input, lastIndex);
+  addEffectful(searcher);
+  pushResult(searcher);
+
+  return resumeAfter(searcher);
+}
+
+bool WarpCacheIRTranspiler::emitCallRegExpTesterResult(
+    ObjOperandId regexpId, StringOperandId inputId,
+    Int32OperandId lastIndexId) {
+  MDefinition* regexp = getOperand(regexpId);
+  MDefinition* input = getOperand(inputId);
+  MDefinition* lastIndex = getOperand(lastIndexId);
+
+  auto* tester = MRegExpTester::New(alloc(), regexp, input, lastIndex);
+  addEffectful(tester);
+  pushResult(tester);
+
+  return resumeAfter(tester);
+}
+
 bool WarpCacheIRTranspiler::emitIsArrayResult(ValOperandId inputId) {
   MDefinition* value = getOperand(inputId);
 

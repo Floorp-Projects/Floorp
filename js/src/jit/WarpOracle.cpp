@@ -748,6 +748,28 @@ AbortReasonOr<Ok> WarpOracle::maybeInlineIC(WarpOpSnapshotList& snapshots,
         return Ok();
       }
     }
+
+    // While on the main thread, ensure code stubs exist for ops that require
+    // them.
+    switch (op) {
+      case CacheOp::CallRegExpMatcherResult:
+        if (!cx_->realm()->jitRealm()->ensureRegExpMatcherStubExists(cx_)) {
+          return abort(AbortReason::Error);
+        }
+        break;
+      case CacheOp::CallRegExpSearcherResult:
+        if (!cx_->realm()->jitRealm()->ensureRegExpSearcherStubExists(cx_)) {
+          return abort(AbortReason::Error);
+        }
+        break;
+      case CacheOp::CallRegExpTesterResult:
+        if (!cx_->realm()->jitRealm()->ensureRegExpTesterStubExists(cx_)) {
+          return abort(AbortReason::Error);
+        }
+        break;
+      default:
+        break;
+    }
   }
 
   // Copy the ICStub data to protect against the stub being unlinked or mutated.
