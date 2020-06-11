@@ -8,6 +8,7 @@
 #define mozilla_dom_quota_MemoryOutputStream_h
 
 #include "nsIOutputStream.h"
+#include "nsString.h"
 
 namespace mozilla {
 namespace dom {
