@@ -8,6 +8,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.isVisible
 import kotlinx.android.synthetic.main.fragment_browser.view.*
 import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.feature.customtabs.CustomTabWindowFeature
@@ -51,12 +52,13 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), UserInteractionHandler
 
         hideToolbarFeature.set(
             feature = WebAppHideToolbarFeature(
-                layout.toolbar,
                 components.store,
                 components.customTabsStore,
                 sessionId,
                 manifest
-            ),
+            ) { toolbarVisible ->
+                layout.toolbar.isVisible = toolbarVisible
+            },
             owner = this,
             view = layout.toolbar)
 

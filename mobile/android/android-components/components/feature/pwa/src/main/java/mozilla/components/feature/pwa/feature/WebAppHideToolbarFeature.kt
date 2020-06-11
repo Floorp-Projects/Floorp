@@ -4,9 +4,7 @@
 
 package mozilla.components.feature.pwa.feature
 
-import android.view.View
 import androidx.core.net.toUri
-import androidx.core.view.isVisible
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.MainScope
@@ -41,19 +39,19 @@ import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
  * In standard custom tabs, no scopes are trusted.
  * As a result the URL has no impact on toolbar visibility.
  *
- * @param toolbar Toolbar to show or hide.
  * @param store Reference to the browser store where tab state is located.
  * @param customTabsStore Reference to the store that communicates with the custom tabs service.
  * @param tabId ID of the tab session, or null if the selected session should be used.
  * @param manifest Reference to the cached [WebAppManifest] for the current PWA.
  * Null if this feature is not used in a PWA context.
+ * @param setToolbarVisibility Callback to show or hide the toolbar.
  */
 class WebAppHideToolbarFeature(
-    private val toolbar: View,
     private val store: BrowserStore,
     private val customTabsStore: CustomTabsServiceStore,
     private val tabId: String? = null,
-    manifest: WebAppManifest? = null
+    manifest: WebAppManifest? = null,
+    private val setToolbarVisibility: (Boolean) -> Unit
 ) : LifecycleAwareFeature {
 
     private val manifestScope = listOfNotNull(manifest?.getTrustedScope())
@@ -63,7 +61,7 @@ class WebAppHideToolbarFeature(
         // Hide the toolbar by default to prevent a flash.
         val tab = store.state.findTabOrCustomTabOrSelectedTab(tabId)
         val customTabState = customTabsStore.state.getCustomTabStateForTab(tab)
-        toolbar.isVisible = shouldToolbarBeVisible(tab, customTabState)
+        setToolbarVisibility(shouldToolbarBeVisible(tab, customTabState))
     }
 
     @ExperimentalCoroutinesApi
@@ -84,7 +82,7 @@ class WebAppHideToolbarFeature(
                     .map { (tab, customTabState) -> shouldToolbarBeVisible(tab, customTabState) }
                     .ifChanged()
                     .collect { toolbarVisible ->
-                        toolbar.isVisible = toolbarVisible
+                        setToolbarVisibility(toolbarVisible)
                     }
             }
         }
