@@ -269,6 +269,9 @@ class RenderThread final {
   /// Can only be called from the render thread.
   void HandlePrepareForUse();
 
+  /// Can only be called from the render thread.
+  bool SyncObjectNeeded();
+
   size_t RendererCount();
 
   void SetCompositionRecorderForWindow(
@@ -331,6 +334,8 @@ class RenderThread final {
 
   Mutex mRenderTextureMapLock;
   std::unordered_map<uint64_t, RefPtr<RenderTextureHost>> mRenderTextures;
+  std::unordered_map<uint64_t, RefPtr<RenderTextureHost>>
+      mSyncObjectNeededRenderTextures;
   // Hold RenderTextureHosts that are waiting for handling PrepareForUse().
   // It is for ensuring that PrepareForUse() is called before
   // RenderTextureHost::Lock().

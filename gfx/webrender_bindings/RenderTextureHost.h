@@ -53,6 +53,9 @@ class RenderTextureHost {
   // becomes 0. For now, it is used only for
   // SurfaceTextureHost/RenderAndroidSurfaceTextureHostOGL.
   virtual void NotifyNotUsed() {}
+  // Returns true when RenderTextureHost needs SyncObjectHost::Synchronize()
+  // call, before its usage.
+  virtual bool SyncObjectNeeded() { return false; }
 
   virtual RenderDXGITextureHostOGL* AsRenderDXGITextureHostOGL() {
     return nullptr;
