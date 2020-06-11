@@ -49,7 +49,7 @@ TEST(Intl_Locale_LocaleService, GetAppLocalesAsLangTags)
   ASSERT_FALSE(appLocales.IsEmpty());
 }
 
-TEST(Intl_Locale_LocaleService, GetAppLocalesAsLangTags_lastIsEnUS)
+TEST(Intl_Locale_LocaleService, GetAppLocalesAsLangTags_lastIsPresent)
 {
   nsAutoCString lastFallbackLocale;
   LocaleService::GetInstance()->GetLastFallbackLocale(lastFallbackLocale);
@@ -57,8 +57,7 @@ TEST(Intl_Locale_LocaleService, GetAppLocalesAsLangTags_lastIsEnUS)
   nsTArray<nsCString> appLocales;
   LocaleService::GetInstance()->GetAppLocalesAsLangTags(appLocales);
 
-  int32_t len = appLocales.Length();
-  ASSERT_TRUE(appLocales[len - 1].Equals(lastFallbackLocale));
+  ASSERT_TRUE(appLocales.Contains(lastFallbackLocale));
 }
 
 TEST(Intl_Locale_LocaleService, GetAppLocaleAsLangTag)
