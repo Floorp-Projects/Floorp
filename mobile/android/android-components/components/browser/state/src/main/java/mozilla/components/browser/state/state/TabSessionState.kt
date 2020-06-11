@@ -30,7 +30,8 @@ data class TabSessionState(
     val parentId: String? = null,
     override val extensionState: Map<String, WebExtensionState> = emptyMap(),
     val readerState: ReaderState = ReaderState(),
-    override val contextId: String? = null
+    override val contextId: String? = null,
+    val lastAccess: Long = 0L
 ) : SessionState {
 
     override fun createCopy(
@@ -40,7 +41,7 @@ data class TabSessionState(
         engineState: EngineState,
         extensionState: Map<String, WebExtensionState>,
         contextId: String?
-    ) = copy(
+    ): SessionState = copy(
         id = id,
         content = content,
         trackingProtection = trackingProtection,
@@ -63,7 +64,8 @@ fun createTab(
     readerState: ReaderState = ReaderState(),
     title: String = "",
     thumbnail: Bitmap? = null,
-    contextId: String? = null
+    contextId: String? = null,
+    lastAccess: Long = 0L
 ): TabSessionState {
     return TabSessionState(
         id = id,
@@ -76,6 +78,7 @@ fun createTab(
         parentId = parent?.id,
         extensionState = extensions,
         readerState = readerState,
-        contextId = contextId
+        contextId = contextId,
+        lastAccess = lastAccess
     )
 }

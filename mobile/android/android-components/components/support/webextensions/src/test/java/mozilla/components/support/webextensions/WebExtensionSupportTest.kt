@@ -46,6 +46,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.never
+import org.mockito.Mockito.reset
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
@@ -323,8 +324,9 @@ class WebExtensionSupportTest {
 
         // Verify that we register action and tab handlers for all existing sessions on the extension
         val actionHandlerCaptor = argumentCaptor<ActionHandler>()
-        val actionCaptor = argumentCaptor<WebExtensionAction>()
+        val webExtensionActionCaptor = argumentCaptor<WebExtensionAction>()
         val tabHandlerCaptor = argumentCaptor<TabHandler>()
+        val selectTabActionCaptor = argumentCaptor<TabListAction.SelectTabAction>()
         verify(ext).registerActionHandler(eq(engineSession), actionHandlerCaptor.capture())
         verify(ext).registerTabHandler(eq(engineSession), tabHandlerCaptor.capture())
         whenever(ext.hasActionHandler(engineSession)).thenReturn(true)
@@ -336,11 +338,14 @@ class WebExtensionSupportTest {
         verify(ext, times(1)).registerTabHandler(eq(engineSession), tabHandlerCaptor.capture())
 
         actionHandlerCaptor.value.onBrowserAction(ext, engineSession, mock())
-        verify(store, times(4)).dispatch(actionCaptor.capture())
-        assertEquals(ext.id, (actionCaptor.allValues.last() as WebExtensionAction.UpdateTabBrowserAction).extensionId)
+        verify(store, times(4)).dispatch(webExtensionActionCaptor.capture())
+        assertEquals(ext.id, (webExtensionActionCaptor.allValues.last() as WebExtensionAction.UpdateTabBrowserAction).extensionId)
+
+        reset(store)
 
         tabHandlerCaptor.value.onUpdateTab(ext, engineSession, true, null)
-        verify(store).dispatch(TabListAction.SelectTabAction("1"))
+        verify(store).dispatch(selectTabActionCaptor.capture())
+        assertEquals("1", selectTabActionCaptor.value.tabId)
         tabHandlerCaptor.value.onUpdateTab(ext, engineSession, true, "url")
         verify(engineSession).loadUrl("url")
     }

@@ -75,7 +75,7 @@ sealed class TabListAction : BrowserAction() {
      *
      * @property tabId the ID of the tab to select.
      */
-    data class SelectTabAction(val tabId: String) : TabListAction()
+    data class SelectTabAction(val tabId: String, val timeSelected: Long = System.currentTimeMillis()) : TabListAction()
 
     /**
      * Removes the [TabSessionState] with the given [tabId] from the list of sessions.

@@ -21,6 +21,7 @@ class SelectorsKtTest {
     @Test
     fun `selectedTab extension property`() {
         val store = BrowserStore()
+        val tabLastAccessTimeStamp = 123L
 
         assertNull(store.state.selectedTab)
 
@@ -35,12 +36,12 @@ class SelectorsKtTest {
 
         assertEquals(tab, store.state.selectedTab)
 
-        val otherTab = createTab("https://getpocket.com")
+        val otherTab = createTab("https://getpocket.com", lastAccess = tabLastAccessTimeStamp)
         store.dispatch(TabListAction.AddTabAction(otherTab)).joinBlocking()
 
         assertEquals(tab, store.state.selectedTab)
 
-        store.dispatch(TabListAction.SelectTabAction(otherTab.id)).joinBlocking()
+        store.dispatch(TabListAction.SelectTabAction(otherTab.id, tabLastAccessTimeStamp)).joinBlocking()
 
         assertEquals(otherTab, store.state.selectedTab)
     }

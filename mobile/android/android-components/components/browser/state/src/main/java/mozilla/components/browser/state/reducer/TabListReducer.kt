@@ -62,7 +62,16 @@ internal object TabListReducer {
             }
 
             is TabListAction.SelectTabAction -> {
-                state.copy(selectedTabId = action.tabId)
+
+                val updatedTabsList = state.tabs.map {
+                    if (it.id == action.tabId) {
+                        it.copy(lastAccess = action.timeSelected)
+                    } else {
+                        it
+                    }
+                }
+
+                state.copy(tabs = updatedTabsList, selectedTabId = action.tabId)
             }
 
             is TabListAction.RemoveTabAction -> {
