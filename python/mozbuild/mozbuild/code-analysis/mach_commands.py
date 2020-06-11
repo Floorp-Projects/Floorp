@@ -197,8 +197,9 @@ class StaticAnalysis(MachCommandBase):
         """
         mach = Mach(os.getcwd())
 
-        def populate_context(context, key=None):
-            context.topdir = self.topsrcdir
+        def populate_context(key=None):
+            if key == 'topdir':
+                return self.topsrcdir
 
         mach.populate_context_handler = populate_context
         mach.run(['static-analysis', '--help'])
