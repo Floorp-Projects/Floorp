@@ -1998,7 +1998,6 @@ bool jit::FinishBailoutToBaseline(BaselineBailoutInfo* bailoutInfoArg) {
     case Bailout_NonStringInput:
     case Bailout_NonSymbolInput:
     case Bailout_NonBigIntInput:
-    case Bailout_NonSharedTypedArrayInput:
     case Bailout_Debugger:
     case Bailout_SpecificAtomGuard:
     case Bailout_SpecificSymbolGuard:

@@ -296,7 +296,6 @@ class MOZ_STACK_CLASS IonBuilder {
   MInstruction* addShapeGuard(MDefinition* obj, Shape* const shape);
   MInstruction* addGroupGuard(MDefinition* obj, ObjectGroup* group,
                               BailoutKind bailoutKind);
-  MInstruction* addSharedTypedArrayGuard(MDefinition* obj);
 
   MInstruction* addGuardReceiverPolymorphic(
       MDefinition* obj, const BaselineInspector::ReceiverVector& receivers);
