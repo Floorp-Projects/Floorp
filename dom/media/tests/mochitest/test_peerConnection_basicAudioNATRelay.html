@@ -23,8 +23,7 @@ if (!("mediaDevices" in navigator)) {
         ['media.peerconnection.ice.obfuscate_host_addresses', false],
         ['media.peerconnection.nat_simulator.filtering_type', 'PORT_DEPENDENT'],
         ['media.peerconnection.nat_simulator.mapping_type', 'PORT_DEPENDENT'],
-        ['media.getusermedia.insecure.enabled', true],
-        ['privacy.partition.network_state', false])
+        ['media.getusermedia.insecure.enabled', true]);
     options.expectedLocalCandidateType = "srflx";
     options.expectedRemoteCandidateType = "relay";
     // If both have TURN, it is a toss-up which one will end up using a
