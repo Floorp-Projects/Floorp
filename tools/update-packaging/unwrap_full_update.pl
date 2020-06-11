@@ -13,20 +13,13 @@
 
 use Getopt::Std;
 
-my ($MAR, $XZ, $BZIP2, $MAR_OLD_FORMAT, $archive, @marentries, @marfiles);
+my ($MAR, $XZ, $archive, @marentries, @marfiles);
 
 if (defined($ENV{"MAR"})) {
     $MAR = $ENV{"MAR"};
 }
 else {
     $MAR = "mar";
-}
-
-if (defined($ENV{"BZIP2"})) {
-    $BZIP2 = $ENV{"BZIP2"};
-}
-else {
-    $BZIP2 = "bzip2";
 }
 
 if (defined($ENV{"XZ"})) {
@@ -84,19 +77,6 @@ $? && die("Couldn't run \"$MAR\" -t");
 system($MAR, "-x", $archive) == 0 ||
   die "Couldn't run $MAR -x";
 
-# Try to determine if the mar file contains bzip2 compressed files and if not
-# assume that the mar file contains lzma compressed files. The updatev3.manifest
-# file is checked since a valid mar file must have this file in the root path.
-open(my $testfilename, "updatev3.manifest") or die $!;
-binmode($testfilename);
-read($testfilename, my $bytes, 3);
-if ($bytes eq "BZh") {
-    $MAR_OLD_FORMAT = 1;
-} else {
-    undef $MAR_OLD_FORMAT;
-}
-close $testfilename;
-
 shift @marentries;
 
 foreach (@marentries) {
@@ -105,18 +85,10 @@ foreach (@marentries) {
     my $file = $splits[2];
 
     print "Decompressing: " . $file . "\n";
-    if ($MAR_OLD_FORMAT) {
-      system("mv", $file, "$file.bz2") == 0 ||
-        die "Couldn't mv \"$file\"";
-      system($BZIP2, "-d", "$file.bz2") == 0 ||
-        die "Couldn't decompress \"$file\"";
-    }
-    else {
-      system("mv", $file, "$file.xz") == 0 ||
-        die "Couldn't mv \"$file\"";
-      system($XZ, "-d", "$file.xz") == 0 ||
-        die "Couldn't decompress \"$file\"";
-    }
+    system("mv", $file, "$file.xz") == 0 ||
+      die "Couldn't mv \"$file\"";
+    system($XZ, "-d", "$file.xz") == 0 ||
+      die "Couldn't decompress \"$file\"";
 }
 
 print "Finished\n";
