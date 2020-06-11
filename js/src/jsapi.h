@@ -3026,6 +3026,16 @@ extern JS_PUBLIC_API bool CaptureCurrentStack(
     JSContext* cx, MutableHandleObject stackp,
     StackCapture&& capture = StackCapture(AllFrames()));
 
+/**
+ * Returns true if capturing stack trace data to associate with an asynchronous
+ * operation is currently enabled for the current context realm.
+ *
+ * Users should check this state before capturing a stack that will be passed
+ * back to AutoSetAsyncStackForNewCalls later, in order to avoid capturing a
+ * stack for async use when we don't actually want to capture it.
+ */
+extern JS_PUBLIC_API bool IsAsyncStackCaptureEnabledForRealm(JSContext* cx);
+
 /*
  * This is a utility function for preparing an async stack to be used
  * by some other object.  This may be used when you need to treat a

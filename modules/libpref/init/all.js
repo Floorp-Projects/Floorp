@@ -1115,17 +1115,20 @@ pref("javascript.options.wasm_reftypes",          true);
 pref("javascript.options.native_regexp",    true);
 pref("javascript.options.parallel_parsing", true);
 pref("javascript.options.source_pragmas",    true);
-// Async stacks instrumentation adds overhead that is only
-// advisable for developers, so we limit it to Nightly and DevEdition
+
+pref("javascript.options.asyncstack", true);
+// Broadly capturing async stack data adds overhead that is only advisable for
+// developers, so we limit it to Nightly and DevEdition, unless debugging.
 #if defined(ANDROID) || defined(XP_IOS)
-  pref("javascript.options.asyncstack",       false);
+  pref("javascript.options.asyncstack_capture_debuggee_only", true);
 #else
   #if defined(NIGHTLY_BUILD) || defined(MOZ_DEV_EDITION)
-    pref("javascript.options.asyncstack",       true);
+    pref("javascript.options.asyncstack_capture_debuggee_only", false);
   #else
-    pref("javascript.options.asyncstack",       false);
+    pref("javascript.options.asyncstack_capture_debuggee_only", true);
   #endif
 #endif
+
 pref("javascript.options.throw_on_asmjs_validation_failure", false);
 pref("javascript.options.ion.offthread_compilation", true);
 #ifdef DEBUG
