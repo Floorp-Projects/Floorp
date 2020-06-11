@@ -3340,18 +3340,20 @@ static void AccumulateFrameBounds(nsIFrame* aContainerFrame, nsIFrame* aFrame,
 static bool ComputeNeedToScroll(WhenToScroll aWhenToScroll, nscoord aLineSize,
                                 nscoord aRectMin, nscoord aRectMax,
                                 nscoord aViewMin, nscoord aViewMax) {
-  // See how the rect should be positioned vertically
-  if (WhenToScroll::Always == aWhenToScroll) {
-    // The caller wants the frame as visible as possible
-    return true;
-  } else if (WhenToScroll::IfNotVisible == aWhenToScroll) {
-    // Scroll only if no part of the frame is visible in this view
-    return aRectMax - aLineSize <= aViewMin || aRectMin + aLineSize >= aViewMax;
-  } else if (WhenToScroll::IfNotFullyVisible == aWhenToScroll) {
-    // Scroll only if part of the frame is hidden and more can fit in view
-    return !(aRectMin >= aViewMin && aRectMax <= aViewMax) &&
-           std::min(aViewMax, aRectMax) - std::max(aRectMin, aViewMin) <
-               aViewMax - aViewMin;
+  // See how the rect should be positioned in a given axis.
+  switch (aWhenToScroll) {
+    case WhenToScroll::Always:
+      // The caller wants the frame as visible as possible
+      return true;
+    case WhenToScroll::IfNotVisible:
+      // Scroll only if no part of the frame is visible in this view.
+      return aRectMax - aLineSize <= aViewMin ||
+             aRectMin + aLineSize >= aViewMax;
+    case WhenToScroll::IfNotFullyVisible:
+      // Scroll only if part of the frame is hidden and more can fit in view
+      return !(aRectMin >= aViewMin && aRectMax <= aViewMax) &&
+             std::min(aViewMax, aRectMax) - std::max(aRectMin, aViewMin) <
+                 aViewMax - aViewMin;
   }
   return false;
 }
@@ -3394,7 +3396,20 @@ static void ScrollToShowRect(nsIScrollableFrame* aFrameAsScrollable,
                              const nsRect& aRect, ScrollAxis aVertical,
                              ScrollAxis aHorizontal, ScrollFlags aScrollFlags) {
   nsPoint scrollPt = aFrameAsScrollable->GetVisualViewportOffset();
-  nsRect visibleRect(scrollPt, aFrameAsScrollable->GetVisualViewportSize());
+  const nsPoint originalScrollPt = scrollPt;
+  const nsRect visibleRect(scrollPt,
+                           aFrameAsScrollable->GetVisualViewportSize());
+
+  const nsMargin scrollPadding =
+      (aScrollFlags & ScrollFlags::IgnoreMarginAndPadding)
+      ? nsMargin()
+      : aFrameAsScrollable->GetScrollPadding();
+
+  const nsRect rectToScrollIntoView = [&] {
+    nsRect r(aRect);
+    r.Inflate(scrollPadding);
+    return r.Intersect(aFrameAsScrollable->GetScrolledRect());
+  }();
 
   nsSize lineSize;
   // Don't call GetLineScrollAmount unless we actually need it. Not only
@@ -3408,7 +3423,6 @@ static void ScrollToShowRect(nsIScrollableFrame* aFrameAsScrollable,
   }
   ScrollStyles ss = aFrameAsScrollable->GetScrollStyles();
   nsRect allowedRange(scrollPt, nsSize(0, 0));
-  bool needToScroll = false;
   uint32_t directions = aFrameAsScrollable->GetAvailableScrollingDirections();
 
   if (((aScrollFlags & ScrollFlags::ScrollOverflowHidden) ||
@@ -3416,14 +3430,14 @@ static void ScrollToShowRect(nsIScrollableFrame* aFrameAsScrollable,
       (!aVertical.mOnlyIfPerceivedScrollableDirection ||
        (directions & nsIScrollableFrame::VERTICAL))) {
     if (ComputeNeedToScroll(aVertical.mWhenToScroll, lineSize.height, aRect.y,
-                            aRect.YMost(), visibleRect.y,
-                            visibleRect.YMost())) {
+                            aRect.YMost(), visibleRect.y + scrollPadding.top,
+                            visibleRect.YMost() - scrollPadding.bottom)) {
       nscoord maxHeight;
       scrollPt.y = ComputeWhereToScroll(
-          aVertical.mWhereToScroll, scrollPt.y, aRect.y, aRect.YMost(),
+          aVertical.mWhereToScroll, scrollPt.y, rectToScrollIntoView.y,
+          rectToScrollIntoView.YMost(),
           visibleRect.y, visibleRect.YMost(), &allowedRange.y, &maxHeight);
       allowedRange.height = maxHeight - allowedRange.y;
-      needToScroll = true;
     }
   }
 
@@ -3432,47 +3446,49 @@ static void ScrollToShowRect(nsIScrollableFrame* aFrameAsScrollable,
       (!aHorizontal.mOnlyIfPerceivedScrollableDirection ||
        (directions & nsIScrollableFrame::HORIZONTAL))) {
     if (ComputeNeedToScroll(aHorizontal.mWhenToScroll, lineSize.width, aRect.x,
-                            aRect.XMost(), visibleRect.x,
-                            visibleRect.XMost())) {
+                            aRect.XMost(), visibleRect.x + scrollPadding.left,
+                            visibleRect.XMost() - scrollPadding.right)) {
       nscoord maxWidth;
       scrollPt.x = ComputeWhereToScroll(
-          aHorizontal.mWhereToScroll, scrollPt.x, aRect.x, aRect.XMost(),
-          visibleRect.x, visibleRect.XMost(), &allowedRange.x, &maxWidth);
+          aHorizontal.mWhereToScroll, scrollPt.x, rectToScrollIntoView.x,
+          rectToScrollIntoView.XMost(), visibleRect.x, visibleRect.XMost(),
+          &allowedRange.x, &maxWidth);
       allowedRange.width = maxWidth - allowedRange.x;
-      needToScroll = true;
     }
   }
 
   // If we don't need to scroll, then don't try since it might cancel
   // a current smooth scroll operation.
-  if (needToScroll) {
-    ScrollMode scrollMode = ScrollMode::Instant;
-    bool autoBehaviorIsSmooth = aFrameAsScrollable->IsSmoothScroll();
-    bool smoothScroll = (aScrollFlags & ScrollFlags::ScrollSmooth) ||
-                        ((aScrollFlags & ScrollFlags::ScrollSmoothAuto) &&
-                         autoBehaviorIsSmooth);
-    if (StaticPrefs::layout_css_scroll_behavior_enabled() && smoothScroll) {
-      scrollMode = ScrollMode::SmoothMsd;
-    }
-    nsIFrame* frame = do_QueryFrame(aFrameAsScrollable);
-    AutoWeakFrame weakFrame(frame);
-    aFrameAsScrollable->ScrollTo(scrollPt, scrollMode, &allowedRange,
-                                 aScrollFlags & ScrollFlags::ScrollSnap
-                                     ? nsIScrollbarMediator::ENABLE_SNAP
-                                     : nsIScrollbarMediator::DISABLE_SNAP);
-    if (!weakFrame.IsAlive()) {
-      return;
-    }
+  if (scrollPt == originalScrollPt) {
+    return;
+  }
 
-    // If this is the RCD-RSF, also call ScrollToVisual() since we want to
-    // scroll the rect into view visually, and that may require scrolling
-    // the visual viewport in scenarios where there is not enough layout
-    // scroll range.
-    if (aFrameAsScrollable->IsRootScrollFrameOfDocument() &&
-        frame->PresShell()->GetPresContext()->IsRootContentDocument()) {
-      frame->PresShell()->ScrollToVisual(scrollPt, FrameMetrics::eMainThread,
-                                         scrollMode);
-    }
+  ScrollMode scrollMode = ScrollMode::Instant;
+  bool autoBehaviorIsSmooth = aFrameAsScrollable->IsSmoothScroll();
+  bool smoothScroll = (aScrollFlags & ScrollFlags::ScrollSmooth) ||
+                      ((aScrollFlags & ScrollFlags::ScrollSmoothAuto) &&
+                       autoBehaviorIsSmooth);
+  if (StaticPrefs::layout_css_scroll_behavior_enabled() && smoothScroll) {
+    scrollMode = ScrollMode::SmoothMsd;
+  }
+  nsIFrame* frame = do_QueryFrame(aFrameAsScrollable);
+  AutoWeakFrame weakFrame(frame);
+  aFrameAsScrollable->ScrollTo(scrollPt, scrollMode, &allowedRange,
+                               aScrollFlags & ScrollFlags::ScrollSnap
+                                   ? nsIScrollbarMediator::ENABLE_SNAP
+                                   : nsIScrollbarMediator::DISABLE_SNAP);
+  if (!weakFrame.IsAlive()) {
+    return;
+  }
+
+  // If this is the RCD-RSF, also call ScrollToVisual() since we want to
+  // scroll the rect into view visually, and that may require scrolling
+  // the visual viewport in scenarios where there is not enough layout
+  // scroll range.
+  if (aFrameAsScrollable->IsRootScrollFrameOfDocument() &&
+      frame->PresShell()->GetPresContext()->IsRootContentDocument()) {
+    frame->PresShell()->ScrollToVisual(scrollPt, FrameMetrics::eMainThread,
+                                       scrollMode);
   }
 }
 
@@ -3631,11 +3647,6 @@ bool PresShell::ScrollFrameRectIntoView(nsIFrame* aFrame, const nsRect& aRect,
       }
 
       targetRect -= sf->GetScrolledFrame()->GetPosition();
-      if (!(aScrollFlags & ScrollFlags::IgnoreMarginAndPadding)) {
-        nsMargin scrollPadding = sf->GetScrollPadding();
-        targetRect.Inflate(scrollPadding);
-        targetRect = targetRect.Intersect(sf->GetScrolledRect());
-      }
 
       {
         AutoWeakFrame wf(container);
