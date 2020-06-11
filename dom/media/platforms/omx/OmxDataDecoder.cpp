@@ -921,21 +921,18 @@ already_AddRefed<VideoData> MediaDataHelper::CreateYUV420VideoData(
   b.mPlanes[0].mWidth = width;
   b.mPlanes[0].mHeight = height;
   b.mPlanes[0].mStride = stride;
-  b.mPlanes[0].mOffset = 0;
   b.mPlanes[0].mSkip = 0;
 
   b.mPlanes[1].mData = yuv420p_u;
   b.mPlanes[1].mWidth = (width + 1) / 2;
   b.mPlanes[1].mHeight = (height + 1) / 2;
   b.mPlanes[1].mStride = (stride + 1) / 2;
-  b.mPlanes[1].mOffset = 0;
   b.mPlanes[1].mSkip = 0;
 
   b.mPlanes[2].mData = yuv420p_v;
   b.mPlanes[2].mWidth = (width + 1) / 2;
   b.mPlanes[2].mHeight = (height + 1) / 2;
   b.mPlanes[2].mStride = (stride + 1) / 2;
-  b.mPlanes[2].mOffset = 0;
   b.mPlanes[2].mSkip = 0;
 
   b.mYUVColorSpace =

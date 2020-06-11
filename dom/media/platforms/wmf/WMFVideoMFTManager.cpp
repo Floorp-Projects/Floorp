@@ -868,7 +868,6 @@ WMFVideoMFTManager::CreateBasicVideoFrame(IMFSample* aSample,
   b.mPlanes[0].mStride = stride;
   b.mPlanes[0].mHeight = videoHeight;
   b.mPlanes[0].mWidth = videoWidth;
-  b.mPlanes[0].mOffset = 0;
   b.mPlanes[0].mSkip = 0;
 
   MOZ_DIAGNOSTIC_ASSERT(mDecodedImageSize.height % 16 == 0,
@@ -885,7 +884,6 @@ WMFVideoMFTManager::CreateBasicVideoFrame(IMFSample* aSample,
     b.mPlanes[1].mStride = halfStride;
     b.mPlanes[1].mHeight = halfHeight;
     b.mPlanes[1].mWidth = halfWidth;
-    b.mPlanes[1].mOffset = 0;
     b.mPlanes[1].mSkip = 0;
 
     // V plane (Cr)
@@ -893,7 +891,6 @@ WMFVideoMFTManager::CreateBasicVideoFrame(IMFSample* aSample,
     b.mPlanes[2].mStride = halfStride;
     b.mPlanes[2].mHeight = halfHeight;
     b.mPlanes[2].mWidth = halfWidth;
-    b.mPlanes[2].mOffset = 0;
     b.mPlanes[2].mSkip = 0;
   } else {
     // U plane (Cb)
@@ -901,7 +898,6 @@ WMFVideoMFTManager::CreateBasicVideoFrame(IMFSample* aSample,
     b.mPlanes[1].mStride = stride;
     b.mPlanes[1].mHeight = halfHeight;
     b.mPlanes[1].mWidth = halfWidth;
-    b.mPlanes[1].mOffset = 0;
     b.mPlanes[1].mSkip = 1;
 
     // V plane (Cr)
@@ -909,7 +905,6 @@ WMFVideoMFTManager::CreateBasicVideoFrame(IMFSample* aSample,
     b.mPlanes[2].mStride = stride;
     b.mPlanes[2].mHeight = halfHeight;
     b.mPlanes[2].mWidth = halfWidth;
-    b.mPlanes[2].mOffset = 0;
     b.mPlanes[2].mSkip = 1;
   }
 

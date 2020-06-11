@@ -152,17 +152,14 @@ RefPtr<MediaDataDecoder::DecodePromise> AOMDecoder::ProcessDecode(
     b.mPlanes[0].mStride = img->stride[0];
     b.mPlanes[0].mHeight = img->d_h;
     b.mPlanes[0].mWidth = img->d_w;
-    b.mPlanes[0].mOffset = 0;
     b.mPlanes[0].mSkip = 0;
 
     b.mPlanes[1].mData = img->planes[1];
     b.mPlanes[1].mStride = img->stride[1];
-    b.mPlanes[1].mOffset = 0;
     b.mPlanes[1].mSkip = 0;
 
     b.mPlanes[2].mData = img->planes[2];
     b.mPlanes[2].mStride = img->stride[2];
-    b.mPlanes[2].mOffset = 0;
     b.mPlanes[2].mSkip = 0;
 
     if (img->fmt == AOM_IMG_FMT_I420 || img->fmt == AOM_IMG_FMT_I42016) {

@@ -571,9 +571,9 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::CreateImage(
   b.mPlanes[1].mStride = mFrame->linesize[1];
   b.mPlanes[2].mStride = mFrame->linesize[2];
 
-  b.mPlanes[0].mOffset = b.mPlanes[0].mSkip = 0;
-  b.mPlanes[1].mOffset = b.mPlanes[1].mSkip = 0;
-  b.mPlanes[2].mOffset = b.mPlanes[2].mSkip = 0;
+  b.mPlanes[0].mSkip = 0;
+  b.mPlanes[1].mSkip = 0;
+  b.mPlanes[2].mSkip = 0;
 
   b.mPlanes[0].mWidth = mFrame->width;
   b.mPlanes[0].mHeight = mFrame->height;

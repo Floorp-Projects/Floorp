@@ -820,25 +820,24 @@ already_AddRefed<VideoData> ChromiumCDMParent::CreateVideoFrame(
   VideoData::YCbCrBuffer b;
   MOZ_ASSERT(aData.Length() > 0);
 
-  b.mPlanes[0].mData = aData.Elements();
+  // Since we store each plane separately we can just roll the offset
+  // into our pointer to that plane and store that.
+  b.mPlanes[0].mData = aData.Elements() + aFrame.mYPlane().mPlaneOffset();
   b.mPlanes[0].mWidth = aFrame.mImageWidth();
   b.mPlanes[0].mHeight = aFrame.mImageHeight();
   b.mPlanes[0].mStride = aFrame.mYPlane().mStride();
-  b.mPlanes[0].mOffset = aFrame.mYPlane().mPlaneOffset();
   b.mPlanes[0].mSkip = 0;
 
-  b.mPlanes[1].mData = aData.Elements();
+  b.mPlanes[1].mData = aData.Elements() + aFrame.mUPlane().mPlaneOffset();
   b.mPlanes[1].mWidth = (aFrame.mImageWidth() + 1) / 2;
   b.mPlanes[1].mHeight = (aFrame.mImageHeight() + 1) / 2;
   b.mPlanes[1].mStride = aFrame.mUPlane().mStride();
-  b.mPlanes[1].mOffset = aFrame.mUPlane().mPlaneOffset();
   b.mPlanes[1].mSkip = 0;
 
-  b.mPlanes[2].mData = aData.Elements();
+  b.mPlanes[2].mData = aData.Elements() + aFrame.mVPlane().mPlaneOffset();
   b.mPlanes[2].mWidth = (aFrame.mImageWidth() + 1) / 2;
   b.mPlanes[2].mHeight = (aFrame.mImageHeight() + 1) / 2;
   b.mPlanes[2].mStride = aFrame.mVPlane().mStride();
-  b.mPlanes[2].mOffset = aFrame.mVPlane().mPlaneOffset();
   b.mPlanes[2].mSkip = 0;
 
   // We unfortunately can't know which colorspace the video is using at this

@@ -152,19 +152,19 @@ RefPtr<MediaDataDecoder::DecodePromise> TheoraDecoder::ProcessDecode(
     b.mPlanes[0].mStride = ycbcr[0].stride;
     b.mPlanes[0].mHeight = mTheoraInfo.frame_height;
     b.mPlanes[0].mWidth = mTheoraInfo.frame_width;
-    b.mPlanes[0].mOffset = b.mPlanes[0].mSkip = 0;
+    b.mPlanes[0].mSkip = 0;
 
     b.mPlanes[1].mData = ycbcr[1].data;
     b.mPlanes[1].mStride = ycbcr[1].stride;
     b.mPlanes[1].mHeight = mTheoraInfo.frame_height >> vdec;
     b.mPlanes[1].mWidth = mTheoraInfo.frame_width >> hdec;
-    b.mPlanes[1].mOffset = b.mPlanes[1].mSkip = 0;
+    b.mPlanes[1].mSkip = 0;
 
     b.mPlanes[2].mData = ycbcr[2].data;
     b.mPlanes[2].mStride = ycbcr[2].stride;
     b.mPlanes[2].mHeight = mTheoraInfo.frame_height >> vdec;
     b.mPlanes[2].mWidth = mTheoraInfo.frame_width >> hdec;
-    b.mPlanes[2].mOffset = b.mPlanes[2].mSkip = 0;
+    b.mPlanes[2].mSkip = 0;
 
     b.mYUVColorSpace =
         DefaultColorSpace({mTheoraInfo.frame_width, mTheoraInfo.frame_height});
