@@ -6465,11 +6465,11 @@ void nsFrame::DidReflow(nsPresContext* aPresContext,
   aPresContext->ReflowedFrame();
 }
 
-void nsFrame::FinishReflowWithAbsoluteFrames(nsPresContext* aPresContext,
-                                             ReflowOutput& aDesiredSize,
-                                             const ReflowInput& aReflowInput,
-                                             nsReflowStatus& aStatus,
-                                             bool aConstrainBSize) {
+void nsIFrame::FinishReflowWithAbsoluteFrames(nsPresContext* aPresContext,
+                                              ReflowOutput& aDesiredSize,
+                                              const ReflowInput& aReflowInput,
+                                              nsReflowStatus& aStatus,
+                                              bool aConstrainBSize) {
   ReflowAbsoluteFrames(aPresContext, aDesiredSize, aReflowInput, aStatus,
                        aConstrainBSize);
 
