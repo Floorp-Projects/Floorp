@@ -3338,43 +3338,29 @@ void MediaTrackGraphImpl::RemoveTrack(MediaTrack* aTrack) {
   }
 }
 
-auto MediaTrackGraph::NotifyWhenGraphStarted(MediaTrack* aTrack)
-    -> RefPtr<GraphStartedPromise> {
-  MOZ_ASSERT(NS_IsMainThread());
-  MozPromiseHolder<GraphStartedPromise> h;
-  RefPtr<GraphStartedPromise> p = h.Ensure(__func__);
-  aTrack->GraphImpl()->NotifyWhenGraphStarted(
-      aTrack, move(h), MediaTrackGraphImpl::ProcessingThread::FALLBACK_THREAD);
-  return p;
-}
-
 auto MediaTrackGraph::NotifyWhenDeviceStarted(MediaTrack* aTrack)
     -> RefPtr<GraphStartedPromise> {
   MOZ_ASSERT(NS_IsMainThread());
   MozPromiseHolder<GraphStartedPromise> h;
   RefPtr<GraphStartedPromise> p = h.Ensure(__func__);
-  aTrack->GraphImpl()->NotifyWhenGraphStarted(
-      aTrack, move(h), MediaTrackGraphImpl::ProcessingThread::AUDIO_THREAD);
+  aTrack->GraphImpl()->NotifyWhenGraphStarted(aTrack, move(h));
   return p;
 }
 
 void MediaTrackGraphImpl::NotifyWhenGraphStarted(
-    RefPtr<MediaTrack> aTrack, MozPromiseHolder<GraphStartedPromise>&& aHolder,
-    ProcessingThread aProcessingThread) {
+    RefPtr<MediaTrack> aTrack,
+    MozPromiseHolder<GraphStartedPromise>&& aHolder) {
   class GraphStartedNotificationControlMessage : public ControlMessage {
     RefPtr<MediaTrack> mMediaTrack;
     MozPromiseHolder<GraphStartedPromise> mHolder;
-    ProcessingThread mProcessingThread = ProcessingThread::FALLBACK_THREAD;
 
    public:
     GraphStartedNotificationControlMessage(
         RefPtr<MediaTrack> aTrack,
-        MozPromiseHolder<GraphStartedPromise>&& aHolder,
-        ProcessingThread aProcessingThread)
+        MozPromiseHolder<GraphStartedPromise>&& aHolder)
         : ControlMessage(nullptr),
           mMediaTrack(move(aTrack)),
-          mHolder(move(aHolder)),
-          mProcessingThread(aProcessingThread) {}
+          mHolder(move(aHolder)) {}
     void Run() override {
       // This runs on the graph thread, so when this runs, and the current
       // driver is an AudioCallbackDriver, we know the audio hardware is
@@ -3382,9 +3368,7 @@ void MediaTrackGraphImpl::NotifyWhenGraphStarted(
       // ControlMessage.
       MediaTrackGraphImpl* graphImpl = mMediaTrack->GraphImpl();
       if (graphImpl->CurrentDriver()->AsAudioCallbackDriver() &&
-          (mProcessingThread == ProcessingThread::FALLBACK_THREAD ||
-           (mProcessingThread == ProcessingThread::AUDIO_THREAD &&
-            graphImpl->CurrentDriver()->ThreadRunning()))) {
+          graphImpl->CurrentDriver()->ThreadRunning()) {
         // Avoid Resolve's locking on the graph thread by doing it on main.
         graphImpl->Dispatch(NS_NewRunnableFunction(
             "MediaTrackGraphImpl::NotifyWhenGraphStarted::Resolver",
@@ -3395,11 +3379,10 @@ void MediaTrackGraphImpl::NotifyWhenGraphStarted(
         graphImpl->DispatchToMainThreadStableState(
             NewRunnableMethod<
                 StoreCopyPassByRRef<RefPtr<MediaTrack>>,
-                StoreCopyPassByRRef<MozPromiseHolder<GraphStartedPromise>>,
-                ProcessingThread>(
+                StoreCopyPassByRRef<MozPromiseHolder<GraphStartedPromise>>>(
                 "MediaTrackGraphImpl::NotifyWhenGraphStarted", graphImpl,
                 &MediaTrackGraphImpl::NotifyWhenGraphStarted, move(mMediaTrack),
-                move(mHolder), mProcessingThread));
+                move(mHolder)));
       }
     }
     void RunDuringShutdown() override {
@@ -3414,7 +3397,7 @@ void MediaTrackGraphImpl::NotifyWhenGraphStarted(
 
   MediaTrackGraphImpl* graph = aTrack->GraphImpl();
   graph->AppendMessage(MakeUnique<GraphStartedNotificationControlMessage>(
-      move(aTrack), move(aHolder), aProcessingThread));
+      move(aTrack), move(aHolder)));
 }
 
 void MediaTrackGraphImpl::SuspendOrResumeTracks(
