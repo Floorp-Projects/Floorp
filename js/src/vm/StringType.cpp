@@ -15,6 +15,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/RangedPtr.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/TextUtils.h"
 #include "mozilla/Unused.h"
 #include "mozilla/Utf8.h"
@@ -1319,6 +1320,13 @@ void StaticStrings::trace(JSTracer* trc) {
   }
 }
 
+AutoStableStringChars::~AutoStableStringChars() {
+  if (preventedDeduplication_) {
+    MOZ_ASSERT(s_);
+    s_->clearNonDeduplicatable();
+  }
+}
+
 bool AutoStableStringChars::init(JSContext* cx, JSString* s) {
   RootedLinearString linearString(cx, s->ensureLinear(cx));
   if (!linearString) {
@@ -1326,6 +1334,16 @@ bool AutoStableStringChars::init(JSContext* cx, JSString* s) {
   }
 
   MOZ_ASSERT(state_ == Uninitialized);
+
+  auto _atexit = mozilla::MakeScopeExit([this] {
+    // Mark the string non-deduplicatable if init() succeeds (s_ is not
+    // nullptr). This class can be nested, but only the outermost one for a
+    // given string would do this.
+    if (s_ && !s_->isAtom() && s_->isDeduplicatable()) {
+      s_->setNonDeduplicatable();
+      preventedDeduplication_ = true;
+    }
+  });
 
   // If the chars are inline then we need to copy them since they may be moved
   // by a compacting GC.
@@ -1353,6 +1371,16 @@ bool AutoStableStringChars::initTwoByte(JSContext* cx, JSString* s) {
   }
 
   MOZ_ASSERT(state_ == Uninitialized);
+
+  auto _atexit = mozilla::MakeScopeExit([this] {
+    // Mark the string non-deduplicatable if init() succeeds (s_ is not
+    // nullptr). This class can be nested, but only the outermost one for a
+    // given string would do this.
+    if (s_ && !s_->isAtom() && s_->isDeduplicatable()) {
+      s_->setNonDeduplicatable();
+      preventedDeduplication_ = true;
+    }
+  });
 
   if (linearString->hasLatin1Chars()) {
     return copyAndInflateLatin1Chars(cx, linearString);

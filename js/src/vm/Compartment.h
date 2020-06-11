@@ -250,7 +250,7 @@ class ObjectWrapperMap {
 
 using StringWrapperMap =
     NurseryAwareHashMap<JSString*, JSString*, DefaultHasher<JSString*>,
-                        ZoneAllocPolicy>;
+                        ZoneAllocPolicy, DuplicatesPossible>;
 
 }  // namespace js
 

@@ -61,7 +61,7 @@ using FinalizationRecordVector = GCVector<HeapPtrObject, 1, ZoneAllocPolicy>;
 
 using StringWrapperMap =
     NurseryAwareHashMap<JSString*, JSString*, DefaultHasher<JSString*>,
-                        ZoneAllocPolicy>;
+                        ZoneAllocPolicy, DuplicatesPossible>;
 
 class MOZ_NON_TEMPORARY_CLASS ExternalStringCache {
   static const size_t NumEntries = 4;

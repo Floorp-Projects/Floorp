@@ -34,6 +34,7 @@ class RelocatedCellHeader : public CellHeader {
  * its new location. It's used during generational and compacting GC.
  */
 class RelocationOverlay : public Cell {
+ protected:
   // First word of a Cell has additional requirements from GC. The GC flags
   // determine if a Cell is a normal entry or is a RelocationOverlay.
   //                3         0
