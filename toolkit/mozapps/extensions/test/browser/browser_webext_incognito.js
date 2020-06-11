@@ -8,6 +8,9 @@ const { AddonTestUtils } = ChromeUtils.import(
 const { ExtensionPermissions } = ChromeUtils.import(
   "resource://gre/modules/ExtensionPermissions.jsm"
 );
+const { Management } = ChromeUtils.import(
+  "resource://gre/modules/Extension.jsm"
+);
 
 var gManagerWindow;
 
@@ -53,7 +56,20 @@ function getPrivateBrowsingValue() {
     .value;
 }
 
-async function setPrivateBrowsingValue(value) {
+async function setPrivateBrowsingValue(value, id) {
+  let changePromise = new Promise(resolve => {
+    const listener = (type, { extensionId, added, removed }) => {
+      if (extensionId == id) {
+        // Let's make sure we received the right message
+        let { permissions } = value == "0" ? removed : added;
+        ok(permissions.includes("internal:privateBrowsingAllowed"));
+
+        Management.off("change-permissions", listener);
+        resolve();
+      }
+    };
+    Management.on("change-permissions", listener);
+  });
   let radio = getHtmlElem(
     `input[type="radio"][name="private-browsing"][value="${value}"]`
   );
@@ -62,10 +78,8 @@ async function setPrivateBrowsingValue(value) {
     { clickCount: 1 },
     radio.ownerGlobal
   );
-  return TestUtils.waitForCondition(
-    () => radio.checked,
-    `Waiting for privateBrowsing=${value}`
-  );
+  // Let's make sure we wait until the change has peristed in the database
+  return changePromise;
 }
 
 // Check whether the private browsing inputs are visible in the details view.
@@ -228,7 +242,7 @@ add_task(async function test_badge_and_toggle_incognito() {
       if (definition.incognitoOverride == "spanning") {
         is(getPrivateBrowsingValue(), "1", "Private browsing should be on");
         ok(await hasPrivateAllowed(id), "Private browsing permission set");
-        await setPrivateBrowsingValue("0");
+        await setPrivateBrowsingValue("0", id);
         is(getPrivateBrowsingValue(), "0", "Private browsing should be off");
         ok(
           !(await hasPrivateAllowed(id)),
@@ -240,7 +254,7 @@ add_task(async function test_badge_and_toggle_incognito() {
           !(await hasPrivateAllowed(id)),
           "Private browsing permission not set"
         );
-        await setPrivateBrowsingValue("1");
+        await setPrivateBrowsingValue("1", id);
         is(getPrivateBrowsingValue(), "1", "Private browsing should be on");
         ok(await hasPrivateAllowed(id), "Private browsing permission set");
       }
@@ -373,7 +387,7 @@ add_task(async function test_addon_preferences_button() {
 
       // Get the DOM element we want to click on (to allow or disallow the
       // addon on private browsing windows).
-      await setPrivateBrowsingValue(allowPrivateBrowsing ? "1" : "0");
+      await setPrivateBrowsingValue(allowPrivateBrowsing ? "1" : "0", id);
 
       info(`Waiting for details view of ${id} to be reloaded`);
       await cardUpdatedPromise;
