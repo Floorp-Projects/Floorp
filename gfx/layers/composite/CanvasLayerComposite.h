@@ -52,7 +52,7 @@ class CanvasLayerComposite : public CanvasLayer, public LayerComposite {
   const char* Name() const override { return "CanvasLayerComposite"; }
 
  protected:
-  RefPtr<CanvasRenderer> CreateCanvasRendererInternal() override {
+  CanvasRenderer* CreateCanvasRendererInternal() override {
     MOZ_CRASH("Incompatible surface type");
     return nullptr;
   }

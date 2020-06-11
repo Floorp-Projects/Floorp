@@ -77,6 +77,7 @@ class DrawTarget;
 namespace layers {
 
 class Animation;
+class AsyncCanvasRenderer;
 class AsyncPanZoomController;
 class BasicLayerManager;
 class ClientLayerManager;
@@ -2539,7 +2540,7 @@ class CanvasLayer : public Layer {
 
   const nsIntRect& GetBounds() const { return mBounds; }
 
-  RefPtr<CanvasRenderer> CreateOrGetCanvasRenderer();
+  CanvasRenderer* CreateOrGetCanvasRenderer();
 
  public:
   /**
@@ -2580,9 +2581,9 @@ class CanvasLayer : public Layer {
   void DumpPacket(layerscope::LayersPacket* aPacket,
                   const void* aParent) override;
 
-  virtual RefPtr<CanvasRenderer> CreateCanvasRendererInternal() = 0;
+  virtual CanvasRenderer* CreateCanvasRendererInternal() = 0;
 
-  RefPtr<CanvasRenderer> mCanvasRenderer;
+  UniquePtr<CanvasRenderer> mCanvasRenderer;
   gfx::SamplingFilter mSamplingFilter;
 
   /**

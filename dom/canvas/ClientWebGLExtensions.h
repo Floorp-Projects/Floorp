@@ -317,7 +317,7 @@ class ClientWebGLExtensionExplicitPresent : public ClientWebGLExtensionBase {
       AutoJsWarning("present: Extension is `invalidated`.");
       return;
     }
-    mContext->OnBeforePaintTransaction();
+    mContext->Present();
   }
 };
 

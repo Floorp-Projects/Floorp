@@ -7,7 +7,6 @@
 #ifndef GFX_CANVASRENDERER_H
 #define GFX_CANVASRENDERER_H
 
-#include <memory>            // for weak_ptr
 #include <stdint.h>          // for uint32_t
 #include "GLContextTypes.h"  // for GLContext
 #include "gfxContext.h"      // for gfxContext, etc
@@ -18,61 +17,73 @@
 #include "mozilla/RefPtr.h"       // for RefPtr
 #include "mozilla/gfx/2D.h"       // for DrawTarget
 #include "mozilla/mozalloc.h"     // for operator delete, etc
-#include "mozilla/WeakPtr.h"      // for WeakPtr
 #include "nsISupportsImpl.h"      // for MOZ_COUNT_CTOR, etc
-
-class nsICanvasRenderingContextInternal;
 
 namespace mozilla {
 namespace layers {
 
+class AsyncCanvasRenderer;
 class ClientCanvasRenderer;
+class CopyableCanvasRenderer;
+class OOPCanvasRenderer;
 class PersistentBufferProvider;
 class WebRenderCanvasRendererAsync;
 
-struct CanvasRendererData final {
-  CanvasRendererData();
-  ~CanvasRendererData();
+struct CanvasInitializeData final {
+  CanvasInitializeData();
+  ~CanvasInitializeData();
 
-  std::weak_ptr<nsICanvasRenderingContextInternal* const>
-      mContext;  // weak_ptr to ptr (bug 1635644)
+  // One of these four must be specified for Canvas2D, but never more than one
+  RefPtr<PersistentBufferProvider>
+      mBufferProvider;  // A BufferProvider for the Canvas contents
+  RefPtr<mozilla::gl::GLContext> mGLContext;  // or this, for GL.
+  RefPtr<AsyncCanvasRenderer> mRenderer;      // or this, for OffscreenCanvas
+  RefPtr<OOPCanvasRenderer> mOOPRenderer;  // or this, for WebGL in host process
+
+  typedef void (*TransactionCallback)(void* closureData);
+  TransactionCallback mPreTransCallback = nullptr;
+  void* mPreTransCallbackData = nullptr;
+  TransactionCallback mDidTransCallback = nullptr;
+  void* mDidTransCallbackData = nullptr;
 
   // The size of the canvas content
   gfx::IntSize mSize = {0, 0};
 
-  bool mDoPaintCallbacks = false;
-  bool mIsOpaque = true;
-  bool mIsAlphaPremult = true;
+  // Whether the canvas drawingbuffer has an alpha channel.
+  bool mHasAlpha = false;
 
-  gl::OriginPos mOriginPos = gl::OriginPos::TopLeft;
-
-  nsICanvasRenderingContextInternal* GetContext() const {
-    const auto ptrToPtr = mContext.lock();
-    if (!ptrToPtr) return nullptr;
-    return *ptrToPtr;
-  }
+  // Whether mGLContext contains data that is alpha-premultiplied.
+  bool mIsGLAlphaPremult = true;
 };
 
 // Based class which used for canvas rendering. There are many derived classes
 // for different purposes. such as:
 //
+// CopyableCanvasRenderer provides a utility which readback canvas content to a
+// SourceSurface. BasicCanvasLayer uses CopyableCanvasRenderer.
+//
 // ShareableCanvasRenderer provides IPC capabilities that allow sending canvas
 // content over IPC. This is pure virtual class because the IPC handling is
 // different in different LayerManager. So that we have following classes
-// inherit ShareableCanvasRenderer.
+// inherite ShareableCanvasRenderer.
 //
-// ClientCanvasRenderer inherits ShareableCanvasRenderer and be used in
+// ClientCanvasRenderer inherites ShareableCanvasRenderer and be used in
 // ClientCanvasLayer.
-// WebRenderCanvasRenderer inherits ShareableCanvasRenderer and provides all
+// WebRenderCanvasRenderer inherites ShareableCanvasRenderer and provides all
 // functionality that WebRender uses.
-// WebRenderCanvasRendererAsync inherits WebRenderCanvasRenderer and be used in
+// WebRenderCanvasRendererAsync inherites WebRenderCanvasRenderer and be used in
 // layers-free mode of WebRender.
 //
-// class diagram:
+// class diagram shows below:
 //
 //                       +--------------+
 //                       |CanvasRenderer|
 //                       +-------+------+
+//                               ^
+//                               |
+//                   +----------------------+
+//                   |CopyableCanvasRenderer|
+//                   +----------------------+
 //                               ^
 //                               |
 //                   +-----------+-----------+
@@ -89,60 +100,55 @@ struct CanvasRendererData final {
 //                           +-------------+--------------+
 //                           |WebRenderCanvasRendererAsync|
 //                           +----------------------------+
-
-class BorrowedSourceSurface final {
+class CanvasRenderer {
  public:
-  PersistentBufferProvider* const mReturnTo;
-  const RefPtr<gfx::SourceSurface> mSurf;  /// non-null
-
-  BorrowedSourceSurface(PersistentBufferProvider*, RefPtr<gfx::SourceSurface>);
-  ~BorrowedSourceSurface();
-};
-
-// -
-
-class CanvasRenderer : public RefCounted<CanvasRenderer> {
-  friend class CanvasRendererSourceSurface;
-
- public:
-  MOZ_DECLARE_REFCOUNTED_TYPENAME(CanvasRenderer)
-
- private:
-  bool mDirty = false;
-
- protected:
-  CanvasRendererData mData;
-
- public:
-  explicit CanvasRenderer();
+  CanvasRenderer();
   virtual ~CanvasRenderer();
 
  public:
-  virtual void Initialize(const CanvasRendererData&);
-  virtual bool IsDataValid(const CanvasRendererData&) const;
+  virtual void Initialize(const CanvasInitializeData& aData);
+  virtual bool IsDataValid(const CanvasInitializeData& aData) { return true; }
 
   virtual void ClearCachedResources() {}
-  virtual void DisconnectClient() {}
+  virtual void Destroy() {}
 
-  const gfx::IntSize& GetSize() const { return mData.mSize; }
-  bool IsOpaque() const { return mData.mIsOpaque; }
-  bool YIsDown() const { return mData.mOriginPos == gl::OriginPos::TopLeft; }
+  const gfx::IntSize& GetSize() const { return mSize; }
 
   void SetDirty() { mDirty = true; }
   void ResetDirty() { mDirty = false; }
   bool IsDirty() const { return mDirty; }
 
+  virtual CopyableCanvasRenderer* AsCopyableCanvasRenderer() { return nullptr; }
   virtual ClientCanvasRenderer* AsClientCanvasRenderer() { return nullptr; }
   virtual WebRenderCanvasRendererAsync* AsWebRenderCanvasRendererAsync() {
     return nullptr;
   }
 
-  std::shared_ptr<BorrowedSourceSurface> BorrowSnapshot(
-      bool requireAlphaPremult = true) const;
-
  protected:
-  void FirePreTransactionCallback() const;
-  void FireDidTransactionCallback() const;
+  void FirePreTransactionCallback() {
+    if (mPreTransCallback) {
+      mPreTransCallback(mPreTransCallbackData);
+    }
+  }
+
+  void FireDidTransactionCallback() {
+    if (mDidTransCallback) {
+      mDidTransCallback(mDidTransCallbackData);
+    }
+  }
+
+  typedef void (*TransactionCallback)(void* closureData);
+  TransactionCallback mPreTransCallback;
+  void* mPreTransCallbackData;
+  TransactionCallback mDidTransCallback;
+  void* mDidTransCallbackData;
+  gfx::IntSize mSize;
+
+ private:
+  /**
+   * Set to true in Updated(), cleared during a transaction.
+   */
+  bool mDirty;
 };
 
 }  // namespace layers
