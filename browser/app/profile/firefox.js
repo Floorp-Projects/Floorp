@@ -1666,11 +1666,17 @@ pref("privacy.userContext.extension", "");
 // tab in the default container
 pref("privacy.userContext.newTabContainerOnLeftClick.enabled", false);
 
+#ifdef NIGHTLY_BUILD
 // Set to true to allow the user to silence all notifications when
 // sharing the screen.
-pref("privacy.webrtc.allowSilencingNotifications", false);
+pref("privacy.webrtc.allowSilencingNotifications", true);
 // Set to true to use the legacy WebRTC global indicator
+pref("privacy.webrtc.legacyGlobalIndicator", false);
+#else
+pref("privacy.webrtc.allowSilencingNotifications", false);
 pref("privacy.webrtc.legacyGlobalIndicator", true);
+#endif
+
 // Set to true to enable a warning displayed when attempting
 // to switch tabs in a window that's being shared over WebRTC.
 pref("privacy.webrtc.sharedTabWarning", false);
