@@ -31,6 +31,12 @@ namespace layers {
 void CanvasClient::UseTexture(TextureClient* const aTexture) {
   MOZ_ASSERT(aTexture);
 
+  const auto isClientNonPremult =
+      bool(mTextureFlags & TextureFlags::NON_PREMULTIPLIED);
+  const auto isTextureNonPremult =
+      bool(aTexture->GetFlags() & TextureFlags::NON_PREMULTIPLIED);
+  MOZ_ALWAYS_TRUE(isTextureNonPremult == isClientNonPremult);
+
   bool changed = false;
 
   if (aTexture != mFrontBuffer) {

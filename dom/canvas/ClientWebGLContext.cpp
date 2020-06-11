@@ -421,7 +421,6 @@ void ClientWebGLContext::Present(WebGLFramebufferJS* const fb,
                                  const layers::TextureType type) {
   if (!mIsCanvasDirty && !fb) return;
   mIsCanvasDirty = false;
-  mFrontBufferSnapshot = nullptr;
 
   Run<RPROC(Present)>(fb ? fb->mId : 0, type);
 }
@@ -882,7 +881,8 @@ already_AddRefed<gfx::SourceSurface> ClientWebGLContext::GetSurfaceSnapshot(
   return ret.forget();
 }
 
-RefPtr<gfx::SourceSurface> ClientWebGLContext::GetFrontBufferSnapshot() {
+RefPtr<gfx::SourceSurface> ClientWebGLContext::GetFrontBufferSnapshot(
+    const bool requireAlphaPremult) {
   const FuncScope funcScope(*this, "<GetSurfaceSnapshot>");
   if (IsContextLost()) return nullptr;
   const auto notLost =
@@ -890,20 +890,19 @@ RefPtr<gfx::SourceSurface> ClientWebGLContext::GetFrontBufferSnapshot() {
 
   const auto& options = mNotLost->info.options;
 
-  if (!mFrontBufferSnapshot) {
-    mFrontBufferSnapshot = Run<RPROC(GetFrontBufferSnapshot)>();
-    if (!mFrontBufferSnapshot) return nullptr;
+  auto snapshot = Run<RPROC(GetFrontBufferSnapshot)>();
+  if (!snapshot) return nullptr;
 
-    if (options.alpha && !options.premultipliedAlpha) {
-      const auto nonPremultSurf = mFrontBufferSnapshot;
-      const auto& size = nonPremultSurf->GetSize();
-      const auto format = nonPremultSurf->GetFormat();
-      mFrontBufferSnapshot =
-          gfx::Factory::CreateDataSourceSurface(size, format, /*zero=*/false);
-      gfxUtils::PremultiplyDataSurface(nonPremultSurf, mFrontBufferSnapshot);
-    }
+  if (requireAlphaPremult && options.alpha && !options.premultipliedAlpha) {
+    const auto nonPremultSurf = snapshot;
+    const auto& size = nonPremultSurf->GetSize();
+    const auto format = nonPremultSurf->GetFormat();
+    snapshot =
+        gfx::Factory::CreateDataSourceSurface(size, format, /*zero=*/false);
+    gfxUtils::PremultiplyDataSurface(nonPremultSurf, snapshot);
   }
-  return mFrontBufferSnapshot;
+
+  return snapshot;
 }
 
 RefPtr<gfx::DataSourceSurface> ClientWebGLContext::BackBufferSnapshot() {
