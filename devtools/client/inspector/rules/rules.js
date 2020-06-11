@@ -1085,7 +1085,7 @@ CssRuleView.prototype = {
     twisty.className = "ruleview-expander theme-twisty";
     twisty.setAttribute("open", "true");
     twisty.setAttribute("role", "button");
-    twisty.setAttribute("aria-label", l10n("rules.twistyCollapse.label"));
+    twisty.setAttribute("aria-label", l10n("rule.twistyCollapse.label"));
 
     header.insertBefore(twisty, header.firstChild);
     this.element.appendChild(header);
