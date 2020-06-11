@@ -1,21 +1,36 @@
-// |jit-test| --enable-weak-refs; --no-ti
+// |jit-test| --enable-weak-refs
 
-for (let i = 70; i > 50; i--) {
-  gc();
-  gczeal(10, i);
+for (let p of [false, true]) {
+  f(p);
 
-  f(true, false, false);
-  f(true, false, true);
+  // Run an incremental GC to completion.
+  startgc(1);
+  while (gcstate() !== 'NotActive') {
+    gcslice(10000, { dontStart: true });
+  }
 }
 
 function ccwToObject() {
   return evalcx('({})', newGlobal({newCompartment: true}));
 }
 
-function f(x, y, z) {
-  let registry = new FinalizationRegistry(value => {});
-  let target = x ? ccwToObject() : {};
-  let heldValue = y ? ccwToObject() : {};
-  let token = z ? ccwToObject() : {};
-  registry.register(target, heldValue, token);
+function ccwToRegistry() {
+  return evalcx('new FinalizationRegistry(value => {})',
+                newGlobal({newCompartment: true}));
+}
+
+function f(p) {
+  let registry = ccwToRegistry();
+  let target = ccwToObject();
+  registry.register(target, undefined);
+
+  // Add a CCW from registry to target zone or vice versa to control
+  // the order the zones are swept in.
+  if (p) {
+    registry.ptr = target;
+  } else {
+    target.ptr = registry;
+  }
+
+  gc();
 }
