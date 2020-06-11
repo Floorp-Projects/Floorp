@@ -1089,11 +1089,10 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
 
     // Make sure the username field fillForm will use is the
     // same field as the autocomplete was activated on.
-    let [usernameField, passwordField, ignored] = this._getFormFields(
-      acForm,
-      false,
-      recipes
-    );
+    let {
+      usernameField,
+      newPasswordField: passwordField,
+    } = this._getFormFields(acForm, false, recipes);
     if (usernameField == acInputField && passwordField) {
       this._getLoginDataFromParent(acForm, {
         guid: loginGUID,
@@ -1216,7 +1215,7 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
    * @param {LoginForm} form
    * @param {bool} isSubmission
    * @param {Set} recipes
-   * @return {Array} [usernameField, newPasswordField, oldPasswordField]
+   * @return {Object} {usernameField, newPasswordField, oldPasswordField, confirmPasswordField}
    *
    * usernameField may be null.
    * newPasswordField will always be non-null.
@@ -1231,6 +1230,15 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
    */
   _getFormFields(form, isSubmission, recipes) {
     let usernameField = null;
+    let newPasswordField = null;
+    let oldPasswordField = null;
+    let emptyResult = {
+      usernameField: null,
+      newPasswordField: null,
+      oldPasswordField: null,
+      confirmPasswordField: null,
+    };
+
     let pwFields = null;
     let fieldOverrideRecipe = LoginRecipesContent.getFieldOverrides(
       recipes,
@@ -1274,7 +1282,7 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
     }
 
     if (!pwFields) {
-      return [null, null, null];
+      return emptyResult;
     }
 
     if (!usernameField) {
@@ -1323,11 +1331,15 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
     if (!isSubmission || pwFields.length == 1) {
       let passwordField = pwFields[0].element;
       log("Password field", passwordField, "has name: ", passwordField.name);
-      return [usernameField, passwordField, null];
+      return {
+        ...emptyResult,
+        usernameField,
+        newPasswordField: passwordField,
+        oldPasswordField,
+      };
     }
 
     // Try to figure out what is in the form based on the password values.
-    let oldPasswordField, newPasswordField;
     let pw1 = pwFields[0].element.value;
     let pw2 = pwFields[1].element.value;
     let pw3 = pwFields[2] ? pwFields[2].element.value : null;
@@ -1352,7 +1364,7 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
       } else {
         // We can't tell which of the 3 passwords should be saved.
         log("(form ignored -- all 3 pw fields differ)");
-        return [null, null, null];
+        return emptyResult;
       }
     } else if (pw1 == pw2) {
       // pwFields.length == 2
@@ -1381,7 +1393,12 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
     } else {
       log("Password field (old):", oldPasswordField);
     }
-    return [usernameField, newPasswordField, oldPasswordField];
+    return {
+      ...emptyResult,
+      usernameField,
+      newPasswordField,
+      oldPasswordField,
+    };
   }
 
   /**
@@ -1536,17 +1553,19 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
       let recipes = LoginRecipesContent.getRecipes(this, origin, win);
 
       // Get the appropriate fields from the form.
-      let [
+      let {
         usernameField,
         newPasswordField,
         oldPasswordField,
-      ] = this._getFormFields(form, true, recipes);
+        confirmPasswordField,
+      } = this._getFormFields(form, true, recipes);
 
       // It's possible the field triggering this message isn't one of those found by _getFormFields' heuristics
       if (
         passwordField &&
         passwordField != newPasswordField &&
-        passwordField != oldPasswordField
+        passwordField != oldPasswordField &&
+        passwordField != confirmPasswordField
       ) {
         newPasswordField = passwordField;
       }
@@ -2010,11 +2029,10 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
     // We do this before checking to see if logins are stored,
     // so that the user isn't prompted for a master password
     // without need.
-    let [usernameField, passwordField] = this._getFormFields(
-      form,
-      false,
-      recipes
-    );
+    let {
+      usernameField,
+      newPasswordField: passwordField,
+    } = this._getFormFields(form, false, recipes);
 
     try {
       // Nothing to do if we have no matching (excluding form action
@@ -2476,8 +2494,13 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
       formOrigin,
       doc.defaultView
     );
+    let {
+      usernameField,
+      newPasswordField,
+      oldPasswordField,
+    } = this._getFormFields(form, false, recipes);
 
-    return this._getFormFields(form, false, recipes);
+    return [usernameField, newPasswordField, oldPasswordField];
   }
 
   /**
