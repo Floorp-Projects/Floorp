@@ -17,9 +17,10 @@ import shutil
 import tempfile
 from collections import defaultdict
 
-import pytest
+import manifestupdate
 import mozpack.path as mozpath
 import mozunit
+import pytest
 from mozbuild.base import MozbuildObject
 from mozbuild.frontend.reader import BuildReader
 from mozbuild.test.common import MockConfig
@@ -64,6 +65,7 @@ def create_tests(topsrcdir):
                 'path': mozpath.join(topsrcdir, path),
                 'relpath': relpath,
                 'file_relpath': path,
+                'flavor': 'faketest',
                 'dir_relpath': mozpath.dirname(path),
                 'here': mozpath.dirname(manifest_abspath),
                 'manifest': manifest_abspath,
@@ -179,8 +181,44 @@ def defaults(topsrcdir):
     }
 
 
+class WPTManifestNamespace(object):
+    """Stand-in object for various WPT classes."""
+
+    def __init__(self, *args):
+        self.args = args
+
+    def __hash__(self):
+        return hash(str(self))
+
+    def __eq__(self, other):
+        return self.args == other.args
+
+    def __iter__(self):
+        yield tuple(self.args)
+
+
+def fake_wpt_manifestupdate(topsrcdir, *args, **kwargs):
+    with open(os.path.join(topsrcdir, "wpt_manifest_data.json")) as fh:
+        data = json.load(fh)
+
+    items = {}
+    for tests_root, test_data in data.items():
+        kwargs = {"tests_path": os.path.join(topsrcdir, tests_root)}
+
+        for test_type, tests in test_data.items():
+            for test in tests:
+                obj = WPTManifestNamespace()
+                if "mozilla" in tests_root:
+                    obj.id = "/_mozilla/" + test
+                else:
+                    obj.id = "/" + test
+
+                items[WPTManifestNamespace(test_type, test, {obj})] = kwargs
+    return items
+
+
 @pytest.fixture(params=[BuildBackendLoader, TestManifestLoader])
-def resolver(request, tmpdir, topsrcdir, all_tests, defaults):
+def resolver(request, tmpdir, monkeypatch, topsrcdir, all_tests, defaults):
     topobjdir = tmpdir.mkdir("objdir").strpath
     loader_cls = request.param
 
@@ -197,9 +235,12 @@ def resolver(request, tmpdir, topsrcdir, all_tests, defaults):
                 return False
         loader_cls = BuildBackendLoaderNeverOutOfDate
 
+    # Patch WPT's manifestupdate.run to return tests based on the contents of
+    # 'data/srcdir/wpt_manifest_data.json'.
+    monkeypatch.setattr(manifestupdate, "run", fake_wpt_manifestupdate)
+
     resolver = TestResolver(topsrcdir, None, None, topobjdir=topobjdir, loader_cls=loader_cls)
     resolver._puppeteer_loaded = True
-    resolver._wpt_loaded = True
 
     if loader_cls == TestManifestLoader:
         config = MockConfig(topsrcdir)
@@ -210,12 +251,17 @@ def resolver(request, tmpdir, topsrcdir, all_tests, defaults):
 def test_load(resolver):
     assert len(resolver.tests_by_path) == 9
 
-    assert len(resolver.tests_by_flavor['xpcshell']) == 4
     assert len(resolver.tests_by_flavor['mochitest-plain']) == 0
+    assert len(resolver.tests_by_flavor['xpcshell']) == 4
+    assert len(resolver.tests_by_flavor['web-platform-tests']) == 0
+
+    resolver.add_wpt_manifest_data()
+    assert len(resolver.tests_by_path) == 11
+    assert len(resolver.tests_by_flavor['web-platform-tests']) == 2
 
 
 def test_resolve_all(resolver):
-    assert len(list(resolver._resolve())) == 11
+    assert len(list(resolver._resolve())) == 13
 
 
 def test_resolve_filter_flavor(resolver):
