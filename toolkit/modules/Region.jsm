@@ -265,6 +265,175 @@ class RegionDetector {
   }
 
   /**
+   * Return the users current region using
+   * request that is used for GeoLocation requests.
+   *
+   * @returns {String}
+   *   A 2 character string representing a region.
+   */
+  async _getRegionLocally() {
+    let { location } = await this._getLocation();
+    return this._geoCode(location);
+  }
+
+  // TODO: Stubs for testing
+  async _getPlainMap() {
+    return null;
+  }
+  async _getBufferedMap() {
+    return null;
+  }
+
+  /**
+   * Take a location and return the region code for that location
+   * by looking up the coordinates in geojson map files.
+   * Inspired by https://github.com/mozilla/ichnaea/blob/874e8284f0dfa1868e79aae64e14707eed660efe/ichnaea/geocode.py#L114
+   *
+   * @param {Object} location
+   *   A location object containing lat + lng coordinates.
+   *
+   * @returns {String}
+   *   A 2 character string representing a region.
+   */
+  async _geoCode(location) {
+    let plainMap = await this._getPlainMap();
+    let polygons = this._getPolygonsContainingPoint(location, plainMap);
+    // The plain map doesnt have overlapping regions so return
+    // region straight away.
+    if (polygons.length) {
+      return polygons[0].region;
+    }
+    let bufferedMap = await this._getBufferedMap();
+    polygons = this._getPolygonsContainingPoint(location, bufferedMap);
+    // Only found one matching region, return.
+    if (polygons.length === 1) {
+      return polygons[0].region;
+    }
+    // Matched more than one region, find the longest distance
+    // from a border and return that region.
+    if (polygons.length > 1) {
+      return this._findLargestDistance(location, polygons);
+    }
+    return null;
+  }
+
+  /**
+   * Find all the polygons that contain a single point, return
+   * an array of those polygons along with the region that
+   * they define
+   *
+   * @param {Object} point
+   *   A lat + lng coordinate.
+   * @param {Object} map
+   *   Geojson object that defined seperate regions with a list
+   *   of polygons.
+   *
+   * @returns {Array}
+   *   An array of polygons that contain the point, along with the
+   *   region they define.
+   */
+  _getPolygonsContainingPoint(point, map) {
+    let polygons = [];
+    for (const feature of map.features) {
+      let coords = feature.geometry.coordinates;
+      if (feature.geometry.type === "Polygon") {
+        if (this._polygonInPoint(point, coords[0])) {
+          polygons.push({
+            coords: coords[0],
+            region: feature.properties.alpha2,
+          });
+        }
+      } else if (feature.geometry.type === "MultiPolygon") {
+        for (const innerCoords of coords) {
+          if (this._polygonInPoint(point, innerCoords[0])) {
+            polygons.push({
+              coords: innerCoords[0],
+              region: feature.properties.alpha2,
+            });
+          }
+        }
+      }
+    }
+    return polygons;
+  }
+
+  /**
+   * Find the largest distance between a point and and a border
+   * that contains it.
+   *
+   * @param {Object} location
+   *   A lat + lng coordinate.
+   * @param {Object} polygons
+   *   Array of polygons that define a border.
+   *
+   * @returns {String}
+   *   A 2 character string representing a region.
+   */
+  _findLargestDistance(location, polygons) {
+    let maxDistance = { distance: 0, region: null };
+    for (const polygon of polygons) {
+      for (const [lng, lat] of polygon.coords) {
+        let distance = this._distanceBetween(location, { lng, lat });
+        if (distance > maxDistance.distance) {
+          maxDistance = { distance, region: polygon.region };
+        }
+      }
+    }
+    return maxDistance.region;
+  }
+
+  /**
+   * Check whether a point is contained within a polygon using the
+   * point in polygon algorithm:
+   * https://en.wikipedia.org/wiki/Point_in_polygon
+   * This casts a ray from the point and counts how many times
+   * that ray intersects with the polygons borders, if it is
+   * an odd number of times the point is inside the polygon.
+   *
+   * @param {Object} location
+   *   A lat + lng coordinate.
+   * @param {Object} polygon
+   *   Array of coordinates that define the boundaries of a polygon.
+   *
+   * @returns {boolean}
+   *   Whether the point is within the polygon.
+   */
+  _polygonInPoint({ lng, lat }, poly) {
+    let inside = false;
+    // For each edge of the polygon.
+    for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+      let xi = poly[i][0];
+      let yi = poly[i][1];
+      let xj = poly[j][0];
+      let yj = poly[j][1];
+      // Does a ray cast from the point intersect with this polygon edge.
+      let intersect =
+        yi > lat != yj > lat && lng < ((xj - xi) * (lat - yi)) / (yj - yi) + xi;
+      // If so toggle result, an odd number of intersections
+      // means the point is inside.
+      if (intersect) {
+        inside = !inside;
+      }
+    }
+    return inside;
+  }
+
+  /**
+   * Find the distance between 2 points.
+   *
+   * @param {Object} p1
+   *   A lat + lng coordinate.
+   * @param {Object} p2
+   *   A lat + lng coordinate.
+   *
+   * @returns {int}
+   *   The distance between the 2 points.
+   */
+  _distanceBetween(p1, p2) {
+    return Math.hypot(p2.lng - p1.lng, p2.lat - p1.lat);
+  }
+
+  /**
    * A wrapper around fetch that implements a timeout, will throw
    * a TIMEOUT error if the request is not completed in time.
    *
