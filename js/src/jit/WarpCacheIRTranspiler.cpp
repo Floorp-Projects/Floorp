@@ -495,10 +495,13 @@ bool WarpCacheIRTranspiler::emitLoadSymbolResult(SymbolOperandId symId) {
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitLoadUndefinedResult() {
+  pushResult(constant(UndefinedValue()));
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitLoadBooleanResult(bool val) {
-  auto* constant = MConstant::New(alloc(), BooleanValue(val));
-  add(constant);
-  pushResult(constant);
+  pushResult(constant(BooleanValue(val)));
   return true;
 }
 
