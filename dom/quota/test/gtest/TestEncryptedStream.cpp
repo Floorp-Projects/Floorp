@@ -24,12 +24,14 @@ namespace mozilla::dom::quota {
 // Similar to ArrayBufferInputStream from netwerk/base/ArrayBufferInputStream.h,
 // but this is initialized from a Span on construction, rather than lazily from
 // a JS ArrayBuffer.
-class ArrayBufferInputStream : public nsIInputStream {
+class ArrayBufferInputStream : public nsIInputStream, public nsISeekableStream {
  public:
   explicit ArrayBufferInputStream(mozilla::Span<const uint8_t> aData);
 
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIINPUTSTREAM
+  NS_DECL_NSITELLABLESTREAM
+  NS_DECL_NSISEEKABLESTREAM
 
  private:
   virtual ~ArrayBufferInputStream() = default;
@@ -40,7 +42,14 @@ class ArrayBufferInputStream : public nsIInputStream {
   bool mClosed;
 };
 
-NS_IMPL_ISUPPORTS(ArrayBufferInputStream, nsIInputStream);
+NS_IMPL_ADDREF(ArrayBufferInputStream);
+NS_IMPL_RELEASE(ArrayBufferInputStream);
+
+NS_INTERFACE_MAP_BEGIN(ArrayBufferInputStream)
+  NS_INTERFACE_MAP_ENTRY(nsIInputStream)
+  NS_INTERFACE_MAP_ENTRY(nsISeekableStream)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIInputStream)
+NS_INTERFACE_MAP_END
 
 ArrayBufferInputStream::ArrayBufferInputStream(
     mozilla::Span<const uint8_t> aData)
@@ -125,6 +134,47 @@ ArrayBufferInputStream::IsNonBlocking(bool* aNonBlocking) {
   // assumptions in DecryptingInputStream.
   *aNonBlocking = false;
   return NS_OK;
+}
+
+NS_IMETHODIMP ArrayBufferInputStream::Tell(int64_t* const aRetval) {
+  MOZ_ASSERT(aRetval);
+
+  *aRetval = mPos;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP ArrayBufferInputStream::Seek(const int32_t aWhence,
+                                           const int64_t aOffset) {
+  // XXX This is not safe. it's hard to use CheckedInt here, though. As long as
+  // the class is only used for testing purposes, that's probably fine.
+
+  int32_t newPos = mPos;
+  switch (aWhence) {
+    case NS_SEEK_SET:
+      newPos = aOffset;
+      break;
+    case NS_SEEK_CUR:
+      newPos += aOffset;
+      break;
+    case NS_SEEK_END:
+      newPos = mBufferLength;
+      newPos += aOffset;
+      break;
+    default:
+      return NS_ERROR_ILLEGAL_VALUE;
+  }
+  if (newPos < 0 || static_cast<uint32_t>(newPos) > mBufferLength) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  mPos = newPos;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP ArrayBufferInputStream::SetEOF() {
+  // Truncating is not supported on a read-only stream.
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 }  // namespace mozilla::dom::quota
@@ -273,6 +323,12 @@ static void ReadTestData(
     EXPECT_EQ(currentExpected.Length(), read);
     EXPECT_EQ(currentExpected,
               Span{readData}.First(currentExpected.Length()).AsConst());
+
+    // Check that Tell tells the right position.
+    int64_t pos;
+    EXPECT_EQ(NS_OK, inStream->Tell(&pos));
+    EXPECT_EQ(aExpectedData.Length() - remainder.Length(),
+              static_cast<uint64_t>(pos));
   }
 
   // Expect EOF.
@@ -383,6 +439,147 @@ TEST_P(ParametrizedCryptTest, DummyCipherStrategy_IncompleteBlock) {
                            readData.Length(), &read));
 }
 
+enum struct SeekOffset {
+  Zero,
+  MinusHalfDataSize,
+  PlusHalfDataSize,
+  PlusDataSize,
+  MinusDataSize
+};
+using SeekOp = std::pair<int32_t, SeekOffset>;
+
+using PackedSeekTestParams = std::tuple<size_t, size_t, std::vector<SeekOp>>;
+
+struct SeekTestParams {
+  size_t mDataSize;
+  size_t mBlockSize;
+  std::vector<SeekOp> mSeekOps;
+
+  MOZ_IMPLICIT SeekTestParams(const PackedSeekTestParams& aPackedParams)
+      : mDataSize(std::get<0>(aPackedParams)),
+        mBlockSize(std::get<1>(aPackedParams)),
+        mSeekOps(std::get<2>(aPackedParams)) {}
+};
+
+std::string SeekTestParamToString(
+    const testing::TestParamInfo<PackedSeekTestParams>& aTestParams) {
+  const SeekTestParams& testParams = aTestParams.param;
+
+  static constexpr char kSeparator[] = "_";
+
+  std::stringstream ss;
+  ss << "data" << testParams.mDataSize << kSeparator << "writechunk"
+     << testParams.mBlockSize << kSeparator;
+  for (const auto& seekOp : testParams.mSeekOps) {
+    switch (seekOp.first) {
+      case nsISeekableStream::NS_SEEK_SET:
+        ss << "Set";
+        break;
+      case nsISeekableStream::NS_SEEK_CUR:
+        ss << "Cur";
+        break;
+      case nsISeekableStream::NS_SEEK_END:
+        ss << "End";
+        break;
+    };
+    switch (seekOp.second) {
+      case SeekOffset::Zero:
+        ss << "Zero";
+        break;
+      case SeekOffset::MinusHalfDataSize:
+        ss << "MinusHalfDataSize";
+        break;
+      case SeekOffset::PlusHalfDataSize:
+        ss << "PlusHalfDataSize";
+        break;
+      case SeekOffset::MinusDataSize:
+        ss << "MinusDataSize";
+        break;
+      case SeekOffset::PlusDataSize:
+        ss << "PlusDataSize";
+        break;
+    };
+  }
+  return ss.str();
+}
+
+class ParametrizedSeekCryptTest
+    : public DOM_Quota_EncryptedStream,
+      public testing::WithParamInterface<PackedSeekTestParams> {};
+
+TEST_P(ParametrizedSeekCryptTest, DummyCipherStrategy_Seek) {
+  using CipherStrategy = DummyCipherStrategy;
+  const CipherStrategy cipherStrategy;
+  const SeekTestParams& testParams = GetParam();
+
+  const auto baseOutputStream =
+      WrapNotNull(RefPtr<dom::quota::MemoryOutputStream>{
+          dom::quota::MemoryOutputStream::Create(2048)});
+
+  const auto data = MakeTestData(testParams.mDataSize);
+
+  WriteTestData(nsCOMPtr<nsIOutputStream>{baseOutputStream.get()}, Span{data},
+                testParams.mDataSize, testParams.mBlockSize, cipherStrategy,
+                CipherStrategy::KeyType{}, FlushMode::Never);
+
+  const auto baseInputStream =
+      MakeRefPtr<ArrayBufferInputStream>(baseOutputStream->Data());
+
+  const auto inStream = MakeSafeRefPtr<DecryptingInputStream<CipherStrategy>>(
+      WrapNotNull(nsCOMPtr<nsIInputStream>{baseInputStream}),
+      testParams.mBlockSize, cipherStrategy, CipherStrategy::KeyType{});
+
+  uint32_t accumulatedOffset = 0;
+  for (const auto& seekOp : testParams.mSeekOps) {
+    const auto offset = [offsetKind = seekOp.second,
+                         dataSize = testParams.mDataSize]() -> int64_t {
+      switch (offsetKind) {
+        case SeekOffset::Zero:
+          return 0;
+        case SeekOffset::MinusHalfDataSize:
+          return -static_cast<int64_t>(dataSize) / 2;
+        case SeekOffset::PlusHalfDataSize:
+          return dataSize / 2;
+        case SeekOffset::MinusDataSize:
+          return -static_cast<int64_t>(dataSize);
+        case SeekOffset::PlusDataSize:
+          return dataSize;
+      }
+      MOZ_CRASH("Unknown SeekOffset");
+    }();
+    switch (seekOp.first) {
+      case nsISeekableStream::NS_SEEK_SET:
+        accumulatedOffset = offset;
+        break;
+      case nsISeekableStream::NS_SEEK_CUR:
+        accumulatedOffset += offset;
+        break;
+      case nsISeekableStream::NS_SEEK_END:
+        accumulatedOffset = testParams.mDataSize + offset;
+        break;
+    }
+    EXPECT_EQ(NS_OK, inStream->Seek(seekOp.first, offset));
+  }
+
+  {
+    int64_t actualOffset;
+    EXPECT_EQ(NS_OK, inStream->Tell(&actualOffset));
+
+    EXPECT_EQ(actualOffset, accumulatedOffset);
+  }
+
+  auto readData = nsTArray<uint8_t>();
+  readData.SetLength(data.Length());
+  uint32_t read;
+  EXPECT_EQ(NS_OK, inStream->Read(reinterpret_cast<char*>(readData.Elements()),
+                                  readData.Length(), &read));
+  // XXX Or should 'read' indicate the actual number of bytes read,
+  // including the encryption overhead?
+  EXPECT_EQ(testParams.mDataSize - accumulatedOffset, read);
+  EXPECT_EQ(Span{data}.SplitAt(accumulatedOffset).second,
+            Span{readData}.First(read).AsConst());
+}
+
 INSTANTIATE_TEST_CASE_P(
     DOM_Quota_EncryptedStream_Parametrized, ParametrizedCryptTest,
     testing::Combine(
@@ -397,3 +594,35 @@ INSTANTIATE_TEST_CASE_P(
         /* flushMode */
         testing::Values(FlushMode::Never, FlushMode::AfterEachChunk)),
     TestParamToString);
+
+INSTANTIATE_TEST_CASE_P(
+    DOM_IndexedDB_EncryptedStream_ParametrizedSeek, ParametrizedSeekCryptTest,
+    testing::Combine(
+        /* dataSize */ testing::Values(0u, 16u, 256u, 512u, 513u),
+        /* blockSize */ testing::Values(256u, 1024u /*, 8192u*/),
+        /* seekOperations */
+        testing::Values(/* NS_SEEK_SET only, single ops */
+                        std::vector<SeekOp>{{nsISeekableStream::NS_SEEK_SET,
+                                             SeekOffset::PlusDataSize}},
+                        std::vector<SeekOp>{{nsISeekableStream::NS_SEEK_SET,
+                                             SeekOffset::PlusHalfDataSize}},
+                        /* NS_SEEK_SET only, multiple ops */
+                        std::vector<SeekOp>{
+                            {nsISeekableStream::NS_SEEK_SET,
+                             SeekOffset::PlusHalfDataSize},
+                            {nsISeekableStream::NS_SEEK_SET, SeekOffset::Zero}},
+                        /* NS_SEEK_CUR only, single ops */
+                        std::vector<SeekOp>{
+                            {nsISeekableStream::NS_SEEK_CUR, SeekOffset::Zero}},
+                        std::vector<SeekOp>{{nsISeekableStream::NS_SEEK_CUR,
+                                             SeekOffset::PlusDataSize}},
+                        std::vector<SeekOp>{{nsISeekableStream::NS_SEEK_CUR,
+                                             SeekOffset::PlusHalfDataSize}},
+                        /* NS_SEEK_END only, single ops */
+                        std::vector<SeekOp>{
+                            {nsISeekableStream::NS_SEEK_END, SeekOffset::Zero}},
+                        std::vector<SeekOp>{{nsISeekableStream::NS_SEEK_END,
+                                             SeekOffset::MinusDataSize}},
+                        std::vector<SeekOp>{{nsISeekableStream::NS_SEEK_END,
+                                             SeekOffset::MinusHalfDataSize}})),
+    SeekTestParamToString);
