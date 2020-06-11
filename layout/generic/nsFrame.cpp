@@ -4960,10 +4960,10 @@ nsIFrame::HandleMultiplePress(nsPresContext* aPresContext,
                              (aControlHeld ? SELECT_ACCUMULATE : 0));
 }
 
-nsresult nsFrame::PeekBackwardAndForward(nsSelectionAmount aAmountBack,
-                                         nsSelectionAmount aAmountForward,
-                                         int32_t aStartPos, bool aJumpLines,
-                                         uint32_t aSelectFlags) {
+nsresult nsIFrame::PeekBackwardAndForward(nsSelectionAmount aAmountBack,
+                                          nsSelectionAmount aAmountForward,
+                                          int32_t aStartPos, bool aJumpLines,
+                                          uint32_t aSelectFlags) {
   nsIFrame* baseFrame = this;
   int32_t baseOffset = aStartPos;
   nsresult rv;
