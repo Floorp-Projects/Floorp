@@ -133,12 +133,6 @@ class nsFrame : public nsIFrame {
   void DidReflow(nsPresContext* aPresContext,
                  const ReflowInput* aReflowInput) override;
 
-  void FinishReflowWithAbsoluteFrames(nsPresContext* aPresContext,
-                                      ReflowOutput& aDesiredSize,
-                                      const ReflowInput& aReflowInput,
-                                      nsReflowStatus& aStatus,
-                                      bool aConstrainBSize = true);
-
   //--------------------------------------------------
   // Additional methods
 
