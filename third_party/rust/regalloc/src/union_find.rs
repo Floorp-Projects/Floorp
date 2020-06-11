@@ -97,21 +97,100 @@ impl<T: ToFromU32> UnionFind<T> {
     // Find, with path compression.  Returns the index of tree root for the
     // given element.  This is not for external use.  There's no boundary
     // checking since Rust will do that anyway.
-    /*priv*/
-    fn find(&mut self, elem: u32) -> u32 {
-        let elem_parent_or_size: i32 = self.parent_or_size[elem as usize];
-        if elem_parent_or_size < 0 {
+    //
+    // This was initially implemented using a recursive function.  However,
+    // this function gets called a lot, and the recursion led to significant
+    // expense.  Attempts to replace the recursion with an explicit stack
+    // didn't give much speedup.  Hence the following scheme, which retains
+    // the recursion but unrolls the function.  To avoid performance problems
+    // caused by the interaction of inlining and recursion, it is split into
+    // two functions: `find` and `find_slow`.
+    //
+    // This is the main function.  It is hot, so it is unrolled 4 times.  If
+    // those 4 iterations don't complete the traversal back to the root, it
+    // calls onwards to `find_slow`, which recurses.  The idea is that `find`
+    // handles the majority of the cases and can always be inlined, and we
+    // hand off the remaining cases to `find_slow` which will never be inlined
+    // (and hence will not interfere with the inlining of this function).
+    //
+    // As a reminder of the comments above:
+    //
+    // * A `parent_or_size` value that is negative means that this node is a
+    //   tree root.
+    //
+    // * A `parent_or_size` that is non-negative indicates that this tree is a
+    //   subtree, and its parent has the given index in `parent_or_size`.
+    #[inline(always)]
+    fn find(&mut self, elem0: u32) -> u32 {
+        // Handle up to 4 steps up the tree in-line.
+        let elem0_parent_or_size: i32 = self.parent_or_size[elem0 as usize];
+        if elem0_parent_or_size < 0 {
             // We're at a tree root.
-            return elem;
-        } else {
-            // Recurse up to the root.  On the way back out, make all nodes point
-            // directly at the root index.
-            let elem_parent = elem_parent_or_size as u32;
-            let res = self.find(elem_parent);
-            assert!(res < UF_MAX_SIZE);
-            self.parent_or_size[elem as usize] = res as i32;
-            return res;
+            return elem0;
         }
+
+        let elem1 = elem0_parent_or_size as u32;
+        let elem1_parent_or_size: i32 = self.parent_or_size[elem1 as usize];
+        if elem1_parent_or_size < 0 {
+            self.parent_or_size[elem0 as usize] = elem1 as i32;
+            return elem1;
+        }
+
+        let elem2 = elem1_parent_or_size as u32;
+        let elem2_parent_or_size: i32 = self.parent_or_size[elem2 as usize];
+        if elem2_parent_or_size < 0 {
+            self.parent_or_size[elem1 as usize] = elem2 as i32;
+            self.parent_or_size[elem0 as usize] = elem2 as i32;
+            return elem2;
+        }
+
+        let elem3 = elem2_parent_or_size as u32;
+        let elem3_parent_or_size: i32 = self.parent_or_size[elem3 as usize];
+        if elem3_parent_or_size < 0 {
+            self.parent_or_size[elem2 as usize] = elem3 as i32;
+            self.parent_or_size[elem1 as usize] = elem3 as i32;
+            self.parent_or_size[elem0 as usize] = elem3 as i32;
+            return elem3;
+        }
+
+        // Hand off to `find_slow` to deal with all the remaining steps.
+        let elem4 = elem3_parent_or_size as u32;
+        let root = self.find_slow(elem4);
+        assert!(root < UF_MAX_SIZE);
+        self.parent_or_size[elem3 as usize] = root as i32;
+        self.parent_or_size[elem2 as usize] = root as i32;
+        self.parent_or_size[elem1 as usize] = root as i32;
+        self.parent_or_size[elem0 as usize] = root as i32;
+        return root;
+    }
+
+    // This is the same as `find`, except with unroll factor of 2 rather than
+    // 4, and self-recursive.  Don't call it directly.  It is intended only as
+    // a fallback for `find`.
+    #[inline(never)]
+    fn find_slow(&mut self, elem0: u32) -> u32 {
+        // Recurse up to the root.  On the way back out, make all nodes point
+        // directly at the root index.
+
+        let elem0_parent_or_size: i32 = self.parent_or_size[elem0 as usize];
+        if elem0_parent_or_size < 0 {
+            // We're at a tree root.
+            return elem0;
+        }
+
+        let elem1 = elem0_parent_or_size as u32;
+        let elem1_parent_or_size: i32 = self.parent_or_size[elem1 as usize];
+        if elem1_parent_or_size < 0 {
+            self.parent_or_size[elem0 as usize] = elem1 as i32;
+            return elem1;
+        }
+
+        let elem2 = elem1_parent_or_size as u32;
+        let root = self.find_slow(elem2);
+        assert!(root < UF_MAX_SIZE);
+        self.parent_or_size[elem1 as usize] = root as i32;
+        self.parent_or_size[elem0 as usize] = root as i32;
+        return root;
     }
 
     // Union, by size (weight).  This is publicly visible.
@@ -146,6 +225,9 @@ impl<T: ToFromU32> UnionFind<T> {
         }
     }
 }
+
+//=============================================================================
+// UnionFindEquivClasses
 
 // This is a compact representation for all the equivalence classes in a
 // `UnionFind`, that can be constructed in more-or-less linear time (meaning,
@@ -345,6 +427,32 @@ impl<T: ToFromU32> UnionFind<T> {
     }
 }
 
+impl<T: ToFromU32> UnionFindEquivClasses<T> {
+    // Indicates whether `item1` and `item2` are in the same equivalence
+    // class.  If either falls outside the "universe", returns `None`.
+    pub fn in_same_equivalence_class(&self, item1: T, item2: T) -> Option<bool> {
+        let mut item1num = ToFromU32::to_u32(item1) as usize;
+        let mut item2num = ToFromU32::to_u32(item2) as usize;
+        // If either item is outside our "universe", say we don't know.
+        if item1num >= self.heads.len() || item2num >= self.heads.len() {
+            return None;
+        }
+        // Ensure that `item1num` and `item2num` both point at class leaders.
+        if (self.heads[item1num] & 0x8000_0000) == 0 {
+            item1num = self.heads[item1num] as usize;
+        }
+        if (self.heads[item2num] & 0x8000_0000) == 0 {
+            item2num = self.heads[item2num] as usize;
+        }
+        debug_assert!((self.heads[item1num] & 0x8000_0000) == 0x8000_0000);
+        debug_assert!((self.heads[item2num] & 0x8000_0000) == 0x8000_0000);
+        Some(item1num == item2num)
+    }
+}
+
+//=============================================================================
+// UnionFindEquivClassElemsIter
+
 // We may want to find the equivalence class for some given element, and
 // iterate through its elements.  This iterator provides that.
 
@@ -431,7 +539,8 @@ impl<'a, T: ToFromU32> Iterator for UnionFindEquivClassLeadersIter<'a, T> {
     }
 }
 
-// ====== Testing machinery for UnionFind ======
+//=============================================================================
+// Testing machinery for UnionFind
 
 #[cfg(test)]
 mod union_find_test_utils {
@@ -473,6 +582,16 @@ mod union_find_test_utils {
             univ_expected.push(i);
         }
         assert!(univ_actual == univ_expected);
+    }
+    // Test that `in_same_equivalence_class` produces the expected results.
+    pub fn test_in_same_eclass(
+        eclasses: &UnionFindEquivClasses<u32>,
+        elem1: u32,
+        elem2: u32,
+        expected: Option<bool>,
+    ) {
+        assert!(eclasses.in_same_equivalence_class(elem1, elem2) == expected);
+        assert!(eclasses.in_same_equivalence_class(elem2, elem1) == expected);
     }
 }
 
@@ -526,6 +645,46 @@ fn test_union_find() {
     union_find_test_utils::test_eclass(&uf_eclasses, 6, &vec![6]);
     union_find_test_utils::test_eclass(&uf_eclasses, 7, &vec![7]);
     union_find_test_utils::test_leaders(UNIV_SIZE, &uf_eclasses, &vec![0, 1, 2, 6, 7]);
+    // At this point, also check the "in same equivalence class?" function.
+    union_find_test_utils::test_in_same_eclass(&uf_eclasses, 0, 0, Some(true));
+    union_find_test_utils::test_in_same_eclass(&uf_eclasses, 0, 1, Some(false));
+    union_find_test_utils::test_in_same_eclass(&uf_eclasses, 0, 2, Some(false));
+    union_find_test_utils::test_in_same_eclass(&uf_eclasses, 0, 3, Some(false));
+    union_find_test_utils::test_in_same_eclass(&uf_eclasses, 0, 4, Some(false));
+    union_find_test_utils::test_in_same_eclass(&uf_eclasses, 0, 5, Some(false));
+    union_find_test_utils::test_in_same_eclass(&uf_eclasses, 0, 6, Some(false));
+    union_find_test_utils::test_in_same_eclass(&uf_eclasses, 0, 7, Some(false));
+    union_find_test_utils::test_in_same_eclass(&uf_eclasses, 1, 1, Some(true));
+    union_find_test_utils::test_in_same_eclass(&uf_eclasses, 1, 2, Some(false));
+    union_find_test_utils::test_in_same_eclass(&uf_eclasses, 1, 3, Some(false));
+    union_find_test_utils::test_in_same_eclass(&uf_eclasses, 1, 4, Some(false));
+    union_find_test_utils::test_in_same_eclass(&uf_eclasses, 1, 5, Some(false));
+    union_find_test_utils::test_in_same_eclass(&uf_eclasses, 1, 6, Some(false));
+    union_find_test_utils::test_in_same_eclass(&uf_eclasses, 1, 7, Some(false));
+    union_find_test_utils::test_in_same_eclass(&uf_eclasses, 2, 2, Some(true));
+    union_find_test_utils::test_in_same_eclass(&uf_eclasses, 2, 3, Some(true));
+    union_find_test_utils::test_in_same_eclass(&uf_eclasses, 2, 4, Some(true));
+    union_find_test_utils::test_in_same_eclass(&uf_eclasses, 2, 5, Some(true));
+    union_find_test_utils::test_in_same_eclass(&uf_eclasses, 2, 6, Some(false));
+    union_find_test_utils::test_in_same_eclass(&uf_eclasses, 2, 7, Some(false));
+    union_find_test_utils::test_in_same_eclass(&uf_eclasses, 3, 3, Some(true));
+    union_find_test_utils::test_in_same_eclass(&uf_eclasses, 3, 4, Some(true));
+    union_find_test_utils::test_in_same_eclass(&uf_eclasses, 3, 5, Some(true));
+    union_find_test_utils::test_in_same_eclass(&uf_eclasses, 3, 6, Some(false));
+    union_find_test_utils::test_in_same_eclass(&uf_eclasses, 3, 7, Some(false));
+    union_find_test_utils::test_in_same_eclass(&uf_eclasses, 4, 4, Some(true));
+    union_find_test_utils::test_in_same_eclass(&uf_eclasses, 4, 5, Some(true));
+    union_find_test_utils::test_in_same_eclass(&uf_eclasses, 4, 6, Some(false));
+    union_find_test_utils::test_in_same_eclass(&uf_eclasses, 4, 7, Some(false));
+    union_find_test_utils::test_in_same_eclass(&uf_eclasses, 5, 5, Some(true));
+    union_find_test_utils::test_in_same_eclass(&uf_eclasses, 5, 6, Some(false));
+    union_find_test_utils::test_in_same_eclass(&uf_eclasses, 5, 7, Some(false));
+    union_find_test_utils::test_in_same_eclass(&uf_eclasses, 6, 6, Some(true));
+    union_find_test_utils::test_in_same_eclass(&uf_eclasses, 6, 7, Some(false));
+    union_find_test_utils::test_in_same_eclass(&uf_eclasses, 7, 7, Some(true));
+    union_find_test_utils::test_in_same_eclass(&uf_eclasses, 0, 8, None);
+    union_find_test_utils::test_in_same_eclass(&uf_eclasses, 8, 0, None);
+    union_find_test_utils::test_in_same_eclass(&uf_eclasses, 8, 8, None);
 
     uf.union(7, 1);
     uf_eclasses = uf.get_equiv_classes();

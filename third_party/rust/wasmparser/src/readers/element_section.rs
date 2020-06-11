@@ -45,7 +45,7 @@ pub struct ElementItems<'a> {
 
 #[derive(Debug)]
 pub enum ElementItem {
-    Null,
+    Null(Type),
     Func(u32),
 }
 
@@ -91,7 +91,7 @@ impl<'a> ElementItemsReader<'a> {
         if self.exprs {
             let offset = self.reader.original_position();
             let ret = match self.reader.read_operator()? {
-                Operator::RefNull => ElementItem::Null,
+                Operator::RefNull { ty } => ElementItem::Null(ty),
                 Operator::RefFunc { function_index } => ElementItem::Func(function_index),
                 _ => return Err(BinaryReaderError::new("invalid passive segment", offset)),
             };
@@ -165,10 +165,11 @@ impl<'a> ElementSectionReader<'a> {
     /// Reads content of the element section.
     ///
     /// # Examples
-    /// ```no-run
+    ///
+    /// ```no_run
     /// # let data: &[u8] = &[];
     /// use wasmparser::{ModuleReader, ElementKind};
-    ///use wasmparser::Result;
+    /// use wasmparser::Result;
     /// let mut reader = ModuleReader::new(data).expect("module reader");
     /// let section = reader.read().expect("type section");
     /// let section = reader.read().expect("function section");
@@ -229,7 +230,7 @@ impl<'a> ElementSectionReader<'a> {
                 self.reader.read_type()?
             } else {
                 match self.reader.read_external_kind()? {
-                    ExternalKind::Function => Type::AnyFunc,
+                    ExternalKind::Function => Type::FuncRef,
                     _ => {
                         return Err(BinaryReaderError::new(
                             "only the function external type is supported in elem segment",
@@ -239,7 +240,7 @@ impl<'a> ElementSectionReader<'a> {
                 }
             }
         } else {
-            Type::AnyFunc
+            Type::FuncRef
         };
         let data_start = self.reader.position;
         let items_count = self.reader.read_var_u32()?;
