@@ -882,7 +882,7 @@ class MOZ_STACK_CLASS IonBuilder {
 
   bool atomicsMeetsPreconditions(
       CallInfo& callInfo, Scalar::Type* arrayElementType,
-      bool* requiresDynamicCheck,
+      TemporaryTypeSet::TypedArraySharedness* sharedness,
       AtomicCheckResult checkResult = DoCheckAtomicResult);
   void atomicsCheckBounds(CallInfo& callInfo, MInstruction** elements,
                           MDefinition** index);
