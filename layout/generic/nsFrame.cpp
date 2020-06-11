@@ -5684,7 +5684,7 @@ nsIFrame::ContentOffsets nsIFrame::GetContentOffsetsFromPoint(
   // to the same visual position?
 }
 
-nsIFrame::ContentOffsets nsFrame::CalcContentOffsetsFromFramePoint(
+nsIFrame::ContentOffsets nsIFrame::CalcContentOffsetsFromFramePoint(
     const nsPoint& aPoint) {
   return OffsetsForSingleFrame(this, aPoint);
 }
