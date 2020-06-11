@@ -285,12 +285,8 @@ class EventSourceImpl final : public nsIObserver,
 
   class EventSourceServiceNotifier final {
    public:
-    EventSourceServiceNotifier(EventSourceImpl* aEventSourceImpl,
-                               uint64_t aHttpChannelId, uint64_t aInnerWindowID)
-        : mEventSourceImpl(aEventSourceImpl),
-          mHttpChannelId(aHttpChannelId),
-          mInnerWindowID(aInnerWindowID) {
-      mEventSourceImpl->AssertIsOnTargetThread();
+    EventSourceServiceNotifier(uint64_t aHttpChannelId, uint64_t aInnerWindowID)
+        : mHttpChannelId(aHttpChannelId), mInnerWindowID(aInnerWindowID) {
       mService = EventSourceEventService::GetOrCreate();
       mService->EventSourceConnectionOpened(aHttpChannelId, aInnerWindowID);
     }
@@ -298,13 +294,11 @@ class EventSourceImpl final : public nsIObserver,
     void EventReceived(const nsAString& aEventName,
                        const nsAString& aLastEventID, const nsAString& aData,
                        uint32_t aRetry, DOMHighResTimeStamp aTimeStamp) {
-      mEventSourceImpl->AssertIsOnTargetThread();
       mService->EventReceived(mHttpChannelId, mInnerWindowID, aEventName,
                               aLastEventID, aData, aRetry, aTimeStamp);
     }
 
     ~EventSourceServiceNotifier() {
-      mEventSourceImpl->AssertIsOnTargetThread();
       mService->EventSourceConnectionClosed(mHttpChannelId, mInnerWindowID);
       NS_ReleaseOnMainThread("EventSourceServiceNotifier::mService",
                              mService.forget());
@@ -312,8 +306,6 @@ class EventSourceImpl final : public nsIObserver,
 
    private:
     RefPtr<EventSourceEventService> mService;
-    // Raw pointer is safe because EventSourceImpl keeps the object alive.
-    EventSourceImpl* mEventSourceImpl;
     uint64_t mHttpChannelId;
     uint64_t mInnerWindowID;
   };
@@ -406,6 +398,8 @@ void EventSourceImpl::Close() {
     return;
   }
 
+  mServiceNotifier = nullptr;
+
   SetReadyState(CLOSED);
   CloseInternal();
 }
@@ -413,9 +407,6 @@ void EventSourceImpl::Close() {
 void EventSourceImpl::CloseInternal() {
   AssertIsOnTargetThread();
   MOZ_ASSERT(IsClosed());
-
-  mServiceNotifier = nullptr;
-
   if (IsShutDown()) {
     return;
   }
@@ -704,6 +695,8 @@ EventSourceImpl::OnStartRequest(nsIRequest* aRequest) {
     }
   }
 
+  mServiceNotifier = MakeUnique<EventSourceServiceNotifier>(
+      mHttpChannel->ChannelId(), mInnerWindowID);
   rv = Dispatch(NewRunnableMethod("dom::EventSourceImpl::AnnounceConnection",
                                   this, &EventSourceImpl::AnnounceConnection),
                 NS_DISPATCH_NORMAL);
@@ -801,6 +794,7 @@ EventSourceImpl::OnStopRequest(nsIRequest* aRequest, nsresult aStatusCode) {
       aStatusCode != NS_ERROR_PROXY_CONNECTION_REFUSED &&
       aStatusCode != NS_ERROR_DNS_LOOKUP_QUEUE_FULL) {
     DispatchFailConnection();
+    mServiceNotifier = nullptr;
     return NS_ERROR_ABORT;
   }
 
@@ -1077,11 +1071,6 @@ void EventSourceImpl::AnnounceConnection() {
     return;
   }
 
-  if (mHttpChannel) {
-    mServiceNotifier = MakeUnique<EventSourceServiceNotifier>(
-        this, mHttpChannel->ChannelId(), mInnerWindowID);
-  }
-
   // When a user agent is to announce the connection, the user agent must set
   // the readyState attribute to OPEN and queue a task to fire a simple event
   // named open at the EventSource object.
@@ -1101,6 +1090,7 @@ void EventSourceImpl::AnnounceConnection() {
 
 nsresult EventSourceImpl::ResetConnection() {
   AssertIsOnMainThread();
+  mServiceNotifier = nullptr;
   if (mHttpChannel) {
     mHttpChannel->Cancel(NS_ERROR_ABORT);
     mHttpChannel = nullptr;
@@ -1436,11 +1426,9 @@ void EventSourceImpl::DispatchAllMessageEvents() {
       message->mLastEventID = Some(mLastEventID);
     }
 
-    if (mServiceNotifier) {
-      mServiceNotifier->EventReceived(message->mEventName, mLastEventID,
-                                      message->mData, mReconnectionTime,
-                                      PR_Now());
-    }
+    mServiceNotifier->EventReceived(message->mEventName, mLastEventID,
+                                    message->mData, mReconnectionTime,
+                                    PR_Now());
 
     // Now we can turn our string into a jsval
     JS::Rooted<JS::Value> jsData(cx);
