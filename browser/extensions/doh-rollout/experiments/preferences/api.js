@@ -38,7 +38,7 @@ var preferences = class preferences extends ExtensionAPI {
             return Services.prefs.prefHasUserValue(name);
           },
 
-          onEnabledChanged: new ExtensionCommon.EventManager({
+          onPrefChanged: new ExtensionCommon.EventManager({
             context,
             name: "preferences.onPrefChanged",
             register: fire => {
@@ -46,24 +46,10 @@ var preferences = class preferences extends ExtensionAPI {
                 fire.async();
               };
               Services.prefs.addObserver("doh-rollout.enabled", observer);
+              Services.prefs.addObserver("doh-rollout.debug", observer);
               return () => {
                 Services.prefs.removeObserver("doh-rollout.enabled", observer);
-              };
-            },
-          }).api(),
-
-          onTRRPrefChanged: new ExtensionCommon.EventManager({
-            context,
-            name: "preferences.onPrefChanged",
-            register: fire => {
-              let observer = () => {
-                fire.async();
-              };
-              Services.prefs.addObserver("network.trr.uri", observer);
-              Services.prefs.addObserver("network.trr.mode", observer);
-              return () => {
-                Services.prefs.removeObserver("network.trr.uri", observer);
-                Services.prefs.removeObserver("network.trr.mode", observer);
+                Services.prefs.removeObserver("doh-rollout.debug", observer);
               };
             },
           }).api(),

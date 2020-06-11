@@ -36,16 +36,15 @@ const EXAMPLE_URL = "https://example.com/";
 
 const prefs = {
   DOH_ENABLED_PREF: "doh-rollout.enabled",
-  ROLLOUT_TRR_MODE_PREF: "doh-rollout.mode",
-  NETWORK_TRR_MODE_PREF: "network.trr.mode",
+  TRR_MODE_PREF: "network.trr.mode",
   DOH_SELF_ENABLED_PREF: "doh-rollout.self-enabled",
+  DOH_PREVIOUS_TRR_MODE_PREF: "doh-rollout.previous.trr.mode",
   DOH_DOORHANGER_SHOWN_PREF: "doh-rollout.doorhanger-shown",
   DOH_DOORHANGER_USER_DECISION_PREF: "doh-rollout.doorhanger-decision",
   DOH_DISABLED_PREF: "doh-rollout.disable-heuristics",
   DOH_SKIP_HEURISTICS_PREF: "doh-rollout.skipHeuristicsCheck",
   DOH_DONE_FIRST_RUN_PREF: "doh-rollout.doneFirstRun",
   DOH_BALROG_MIGRATION_PREF: "doh-rollout.balrog-migration-done",
-  DOH_PREVIOUS_TRR_MODE_PREF: "doh-rollout.previous.trr.mode",
   DOH_DEBUG_PREF: "doh-rollout.debug",
   DOH_TRR_SELECT_ENABLED_PREF: "doh-rollout.trr-selection.enabled",
   DOH_TRR_SELECT_URI_PREF: "doh-rollout.uri",
@@ -271,9 +270,9 @@ function simulateNetworkChange() {
 
 async function ensureTRRMode(mode) {
   await BrowserTestUtils.waitForCondition(() => {
-    return Preferences.get(prefs.ROLLOUT_TRR_MODE_PREF) === mode;
+    return Preferences.get(prefs.TRR_MODE_PREF) == mode;
   });
-  is(Preferences.get(prefs.ROLLOUT_TRR_MODE_PREF), mode, `TRR mode is ${mode}`);
+  is(Preferences.get(prefs.TRR_MODE_PREF), mode, `TRR mode is ${mode}`);
 }
 
 async function ensureNoTRRModeChange(mode) {
@@ -281,16 +280,12 @@ async function ensureNoTRRModeChange(mode) {
     // Try and wait for the TRR pref to change... waitForCondition should throw
     // after trying for a while.
     await BrowserTestUtils.waitForCondition(() => {
-      return Preferences.get(prefs.ROLLOUT_TRR_MODE_PREF) !== mode;
+      return Preferences.get(prefs.TRR_MODE_PREF, -1) !== mode;
     });
     // If we reach this, the waitForCondition didn't throw. Fail!
     ok(false, "TRR mode changed when it shouldn't have!");
   } catch (e) {
     // Assert for clarity.
-    is(
-      Preferences.get(prefs.ROLLOUT_TRR_MODE_PREF),
-      mode,
-      "No change in TRR mode"
-    );
+    is(Preferences.get(prefs.TRR_MODE_PREF, -1), mode, "No change in TRR mode");
   }
 }
