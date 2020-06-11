@@ -416,7 +416,7 @@ class nsWindow final : public nsBaseWidget {
    * Get the support of Client Side Decoration by checking
    * the XDG_CURRENT_DESKTOP environment variable.
    */
-  static CSDSupportLevel GetSystemCSDSupportLevel(bool aIsPIPWindow = false);
+  static CSDSupportLevel GetSystemCSDSupportLevel(bool aIsPopup = false);
 
   static bool HideTitlebarByDefault();
   static bool GetTopLevelWindowActiveState(nsIFrame* aFrame);
@@ -683,6 +683,8 @@ class nsWindow final : public nsBaseWidget {
   void UpdateMozWindowActive();
 
   void ForceTitlebarRedraw();
+  bool DoDrawTilebarCorners();
+  bool IsChromeWindowTitlebar();
 
   void SetPopupWindowDecoration(bool aShowOnTaskbar);
 
