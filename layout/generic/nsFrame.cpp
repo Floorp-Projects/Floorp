@@ -7579,7 +7579,7 @@ nsIFrame* nsIFrame::GetContainingBlock(
 
 #ifdef DEBUG_FRAME_DUMP
 
-int32_t nsFrame::ContentIndexInContainer(const nsIFrame* aFrame) {
+int32_t nsIFrame::ContentIndexInContainer(const nsIFrame* aFrame) {
   int32_t result = -1;
 
   nsIContent* content = aFrame->GetContent();
@@ -7774,12 +7774,12 @@ void nsIFrame::ListWithMatchedRules(FILE* out, const char* aPrefix) const {
   ListMatchedRules(out, rulePrefix.get());
 }
 
-nsresult nsFrame::GetFrameName(nsAString& aResult) const {
+nsresult nsIFrame::GetFrameName(nsAString& aResult) const {
   return MakeFrameName(NS_LITERAL_STRING("Frame"), aResult);
 }
 
-nsresult nsFrame::MakeFrameName(const nsAString& aType,
-                                nsAString& aResult) const {
+nsresult nsIFrame::MakeFrameName(const nsAString& aType,
+                                 nsAString& aResult) const {
   aResult = aType;
   if (mContent && !mContent->IsText()) {
     nsAutoString buf;
