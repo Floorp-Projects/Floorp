@@ -35,6 +35,10 @@ class PerformanceMainThread final : public Performance,
   virtual void AddEntry(nsIHttpChannel* channel,
                         nsITimedChannel* timedChannel) override;
 
+  void AddRawEntry(UniquePtr<PerformanceTimingData>,
+                   const nsAString& aInitiatorType,
+                   const nsAString& aEntryName);
+
   TimeStamp CreationTimeStamp() const override;
 
   DOMHighResTimeStamp CreationTime() const override;

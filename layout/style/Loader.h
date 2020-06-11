@@ -358,6 +358,11 @@ class Loader final {
                           nsIURI* aURL, dom::MediaList* aMedia,
                           LoaderReusableStyleSheets* aSavedSheets);
 
+  // If we hit the shared cache and this is the first load for a given resource,
+  // we still post a resource timing entry, because tests expect this, and other
+  // browsers behave like this too.
+  void MaybeNotifyOfResourceTiming(SheetLoadData&);
+
   enum class UseSystemPrincipal { No, Yes };
 
   /**
