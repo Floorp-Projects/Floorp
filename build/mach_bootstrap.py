@@ -376,7 +376,7 @@ def bootstrap(topsrcdir, mozilla_dir=None):
                               state_dir],
                              stdout=devnull, stderr=devnull)
 
-    def populate_context(key=None):
+    def populate_context(context, key=None):
         if key is None:
             return
         if key == 'state_dir':

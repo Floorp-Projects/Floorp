@@ -14,5 +14,3 @@ path:mach
 path:python/
 path:testing/mozbase/
 path:third_party/python/
-# certifi is needed for Sentry
-path:testing/web-platform/tests/tools/third_party/certifi

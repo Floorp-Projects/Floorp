@@ -6,15 +6,10 @@ Build Telemetry
 
 The build system (specifically, all the build tooling hooked
 up to ``./mach``) has been configured to collect metrics data
-points and errors for various build system actions. This data
-helps drive team planning for the build team and ensure that
-resources are applied to build processes that need them most.
-You can opt-in to send telemetry to Mozilla during
-``./mach bootstrap`` or by editing your ``.mozbuild/machrc``
-file.
-
-Telemetry
-=========
+points for various build system actions. This data helps drive
+team planning for the build team and ensure that resources are
+applied to build processes that need them most. You can opt-in
+to send telemetry to Mozilla during `./mach bootstrap`.
 
 The build telemetry schema can be found in-tree under
 ``python/mozbuild/mozbuild/telemetry.py`` in Voluptuous schema
@@ -22,7 +17,12 @@ format. You can use the ``export_telemetry_schema.py`` script in
 that same directory to get the schema in JSON-schema format.
 Details of the schema are specified below:
 
+
+
 .. _telemetry.json#/:
+
+telemetry
+=========
 
 :type: ``object``
 
@@ -351,34 +351,3 @@ Time at which this event happened
 :type: ``string``
 
 :format: ``date-time``
-
-
-Error Reporting
-===============
-
-``./mach`` uses `Sentry <https://sentry.io/welcome/>`_
-to automatically report errors to `our issue-tracking dashboard
-<https://sentry.prod.mozaws.net/operations/mach/>`_.
-
-Information captured
-++++++++++++++++++++
-
-Sentry automatically collects useful information surrounding
-the error to help the build team discover what caused the
-issue and how to reproduce it. This information includes:
-
-* Environmental information, such as the computer name, timestamp, Python runtime and Python module versions
-* Process arguments
-* The stack trace of the error, including contextual information:
-
-    * The data contained in the exception
-    * Functions and their respective source file names, line numbers
-    * Variables in each frame
-* `Sentry "Breadcrumbs" <https://docs.sentry.io/platforms/python/default-integrations/>`_,
-  which are important events that have happened which help contextualize the error, such as:
-
-    * An HTTP request has occurred
-    * A subprocess has been spawned
-    * Logging has occurred
-
-Note that file paths may be captured, which include absolute paths (potentially including usernames).
