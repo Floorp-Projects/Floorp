@@ -310,70 +310,70 @@ nsresult nsLookAndFeel::GetIntImpl(IntID aID, int32_t& aResult) {
   rv = NS_OK;
 
   switch (aID) {
-    case eIntID_CaretBlinkTime:
+    case IntID::CaretBlinkTime:
       aResult = 500;
       break;
 
-    case eIntID_CaretWidth:
+    case IntID::CaretWidth:
       aResult = 1;
       break;
 
-    case eIntID_ShowCaretDuringSelection:
+    case IntID::ShowCaretDuringSelection:
       aResult = 0;
       break;
 
-    case eIntID_SelectTextfieldsOnKeyFocus:
+    case IntID::SelectTextfieldsOnKeyFocus:
       // Select textfield content when focused by kbd
       // used by EventStateManager::sTextfieldSelectModel
       aResult = 1;
       break;
 
-    case eIntID_SubmenuDelay:
+    case IntID::SubmenuDelay:
       aResult = 200;
       break;
 
-    case eIntID_TooltipDelay:
+    case IntID::TooltipDelay:
       aResult = 500;
       break;
 
-    case eIntID_MenusCanOverlapOSBar:
+    case IntID::MenusCanOverlapOSBar:
       // we want XUL popups to be able to overlap the task bar.
       aResult = 1;
       break;
 
-    case eIntID_ScrollArrowStyle:
+    case IntID::ScrollArrowStyle:
       aResult = eScrollArrowStyle_Single;
       break;
 
-    case eIntID_ScrollSliderStyle:
+    case IntID::ScrollSliderStyle:
       aResult = eScrollThumbStyle_Proportional;
       break;
 
-    case eIntID_TouchEnabled:
+    case IntID::TouchEnabled:
       aResult = 1;
       break;
 
-    case eIntID_WindowsDefaultTheme:
-    case eIntID_WindowsThemeIdentifier:
-    case eIntID_OperatingSystemVersionIdentifier:
+    case IntID::WindowsDefaultTheme:
+    case IntID::WindowsThemeIdentifier:
+    case IntID::OperatingSystemVersionIdentifier:
       aResult = 0;
       rv = NS_ERROR_NOT_IMPLEMENTED;
       break;
 
-    case eIntID_SpellCheckerUnderlineStyle:
+    case IntID::SpellCheckerUnderlineStyle:
       aResult = NS_STYLE_TEXT_DECORATION_STYLE_WAVY;
       break;
 
-    case eIntID_ScrollbarButtonAutoRepeatBehavior:
+    case IntID::ScrollbarButtonAutoRepeatBehavior:
       aResult = 0;
       break;
 
-    case eIntID_ContextMenuOffsetVertical:
-    case eIntID_ContextMenuOffsetHorizontal:
+    case IntID::ContextMenuOffsetVertical:
+    case IntID::ContextMenuOffsetHorizontal:
       aResult = 2;
       break;
 
-    case eIntID_PrefersReducedMotion:
+    case IntID::PrefersReducedMotion:
       if (!mPrefersReducedMotionCached && XRE_IsParentProcess()) {
         mPrefersReducedMotion =
             java::GeckoSystemStateListener::PrefersReducedMotion() ? 1 : 0;
@@ -382,14 +382,14 @@ nsresult nsLookAndFeel::GetIntImpl(IntID aID, int32_t& aResult) {
       aResult = mPrefersReducedMotion;
       break;
 
-    case eIntID_PrimaryPointerCapabilities:
+    case IntID::PrimaryPointerCapabilities:
       aResult = java::GeckoAppShell::GetPrimaryPointerCapabilities();
       break;
-    case eIntID_AllPointerCapabilities:
+    case IntID::AllPointerCapabilities:
       aResult = java::GeckoAppShell::GetAllPointerCapabilities();
       break;
 
-    case eIntID_SystemUsesDarkTheme: {
+    case IntID::SystemUsesDarkTheme: {
       // Bail out if AndroidBridge hasn't initialized since we try to query
       // this vailue via nsMediaFeatures::InitSystemMetrics without initializing
       // AndroidBridge on xpcshell tests.
@@ -415,11 +415,11 @@ nsresult nsLookAndFeel::GetFloatImpl(FloatID aID, float& aResult) {
   rv = NS_OK;
 
   switch (aID) {
-    case eFloatID_IMEUnderlineRelativeSize:
+    case FloatID::IMEUnderlineRelativeSize:
       aResult = 1.0f;
       break;
 
-    case eFloatID_SpellCheckerUnderlineRelativeSize:
+    case FloatID::SpellCheckerUnderlineRelativeSize:
       aResult = 1.0f;
       break;
 
@@ -477,7 +477,7 @@ nsTArray<LookAndFeelInt> nsLookAndFeel::GetIntCacheImpl() {
   nsTArray<LookAndFeelInt> lookAndFeelIntCache =
       nsXPLookAndFeel::GetIntCacheImpl();
 
-  const IntID kIdsToCache[] = {eIntID_PrefersReducedMotion};
+  const IntID kIdsToCache[] = {IntID::PrefersReducedMotion};
 
   for (IntID id : kIdsToCache) {
     lookAndFeelIntCache.AppendElement(
@@ -491,9 +491,12 @@ void nsLookAndFeel::SetIntCacheImpl(
     const nsTArray<LookAndFeelInt>& aLookAndFeelIntCache) {
   for (const auto& entry : aLookAndFeelIntCache) {
     switch (entry.id) {
-      case eIntID_PrefersReducedMotion:
+      case IntID::PrefersReducedMotion:
         mPrefersReducedMotion = entry.value;
         mPrefersReducedMotionCached = true;
+        break;
+      default:
+        MOZ_ASSERT_UNREACHABLE("Bogus Int ID in cache");
         break;
     }
   }

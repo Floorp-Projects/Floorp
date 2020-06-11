@@ -474,7 +474,7 @@ nsresult nsMenuFrame::HandleEvent(nsPresContext* aPresContext,
     if (!IsDisabled() && IsMenu() && !IsOpen() && !mOpenTimer &&
         !menuParent->IsMenuBar()) {
       int32_t menuDelay =
-          LookAndFeel::GetInt(LookAndFeel::eIntID_SubmenuDelay, 300);  // ms
+          LookAndFeel::GetInt(LookAndFeel::IntID::SubmenuDelay, 300);  // ms
 
       // We're a menu, we're built, we're closed, and no timer has been kicked
       // off.
@@ -884,7 +884,7 @@ void nsMenuFrame::Execute(WidgetGUIEvent* aEvent) {
 
 bool nsMenuFrame::ShouldBlink() {
   int32_t shouldBlink =
-      LookAndFeel::GetInt(LookAndFeel::eIntID_ChosenMenuItemsShouldBlink, 0);
+      LookAndFeel::GetInt(LookAndFeel::IntID::ChosenMenuItemsShouldBlink, 0);
   if (!shouldBlink) return false;
 
   return true;

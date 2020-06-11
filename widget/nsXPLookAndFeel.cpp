@@ -36,69 +36,69 @@
 using namespace mozilla;
 
 nsLookAndFeelIntPref nsXPLookAndFeel::sIntPrefs[] = {
-    {"ui.caretBlinkTime", eIntID_CaretBlinkTime, false, 0},
-    {"ui.caretWidth", eIntID_CaretWidth, false, 0},
-    {"ui.caretVisibleWithSelection", eIntID_ShowCaretDuringSelection, false, 0},
-    {"ui.submenuDelay", eIntID_SubmenuDelay, false, 0},
-    {"ui.dragThresholdX", eIntID_DragThresholdX, false, 0},
-    {"ui.dragThresholdY", eIntID_DragThresholdY, false, 0},
-    {"ui.useAccessibilityTheme", eIntID_UseAccessibilityTheme, false, 0},
-    {"ui.menusCanOverlapOSBar", eIntID_MenusCanOverlapOSBar, false, 0},
-    {"ui.useOverlayScrollbars", eIntID_UseOverlayScrollbars, false, 0},
-    {"ui.scrollbarDisplayOnMouseMove", eIntID_ScrollbarDisplayOnMouseMove,
+    {"ui.caretBlinkTime", IntID::CaretBlinkTime, false, 0},
+    {"ui.caretWidth", IntID::CaretWidth, false, 0},
+    {"ui.caretVisibleWithSelection", IntID::ShowCaretDuringSelection, false, 0},
+    {"ui.submenuDelay", IntID::SubmenuDelay, false, 0},
+    {"ui.dragThresholdX", IntID::DragThresholdX, false, 0},
+    {"ui.dragThresholdY", IntID::DragThresholdY, false, 0},
+    {"ui.useAccessibilityTheme", IntID::UseAccessibilityTheme, false, 0},
+    {"ui.menusCanOverlapOSBar", IntID::MenusCanOverlapOSBar, false, 0},
+    {"ui.useOverlayScrollbars", IntID::UseOverlayScrollbars, false, 0},
+    {"ui.scrollbarDisplayOnMouseMove", IntID::ScrollbarDisplayOnMouseMove,
      false, 0},
-    {"ui.scrollbarFadeBeginDelay", eIntID_ScrollbarFadeBeginDelay, false, 0},
-    {"ui.scrollbarFadeDuration", eIntID_ScrollbarFadeDuration, false, 0},
-    {"ui.showHideScrollbars", eIntID_ShowHideScrollbars, false, 0},
-    {"ui.skipNavigatingDisabledMenuItem", eIntID_SkipNavigatingDisabledMenuItem,
+    {"ui.scrollbarFadeBeginDelay", IntID::ScrollbarFadeBeginDelay, false, 0},
+    {"ui.scrollbarFadeDuration", IntID::ScrollbarFadeDuration, false, 0},
+    {"ui.showHideScrollbars", IntID::ShowHideScrollbars, false, 0},
+    {"ui.skipNavigatingDisabledMenuItem", IntID::SkipNavigatingDisabledMenuItem,
      false, 0},
-    {"ui.treeOpenDelay", eIntID_TreeOpenDelay, false, 0},
-    {"ui.treeCloseDelay", eIntID_TreeCloseDelay, false, 0},
-    {"ui.treeLazyScrollDelay", eIntID_TreeLazyScrollDelay, false, 0},
-    {"ui.treeScrollDelay", eIntID_TreeScrollDelay, false, 0},
-    {"ui.treeScrollLinesMax", eIntID_TreeScrollLinesMax, false, 0},
-    {"accessibility.tabfocus", eIntID_TabFocusModel, false, 0},
-    {"ui.alertNotificationOrigin", eIntID_AlertNotificationOrigin, false, 0},
-    {"ui.scrollToClick", eIntID_ScrollToClick, false, 0},
-    {"ui.IMERawInputUnderlineStyle", eIntID_IMERawInputUnderlineStyle, false,
+    {"ui.treeOpenDelay", IntID::TreeOpenDelay, false, 0},
+    {"ui.treeCloseDelay", IntID::TreeCloseDelay, false, 0},
+    {"ui.treeLazyScrollDelay", IntID::TreeLazyScrollDelay, false, 0},
+    {"ui.treeScrollDelay", IntID::TreeScrollDelay, false, 0},
+    {"ui.treeScrollLinesMax", IntID::TreeScrollLinesMax, false, 0},
+    {"accessibility.tabfocus", IntID::TabFocusModel, false, 0},
+    {"ui.alertNotificationOrigin", IntID::AlertNotificationOrigin, false, 0},
+    {"ui.scrollToClick", IntID::ScrollToClick, false, 0},
+    {"ui.IMERawInputUnderlineStyle", IntID::IMERawInputUnderlineStyle, false,
      0},
     {"ui.IMESelectedRawTextUnderlineStyle",
-     eIntID_IMESelectedRawTextUnderlineStyle, false, 0},
-    {"ui.IMEConvertedTextUnderlineStyle", eIntID_IMEConvertedTextUnderlineStyle,
+     IntID::IMESelectedRawTextUnderlineStyle, false, 0},
+    {"ui.IMEConvertedTextUnderlineStyle", IntID::IMEConvertedTextUnderlineStyle,
      false, 0},
     {"ui.IMESelectedConvertedTextUnderlineStyle",
-     eIntID_IMESelectedConvertedTextUnderline, false, 0},
-    {"ui.SpellCheckerUnderlineStyle", eIntID_SpellCheckerUnderlineStyle, false,
+     IntID::IMESelectedConvertedTextUnderline, false, 0},
+    {"ui.SpellCheckerUnderlineStyle", IntID::SpellCheckerUnderlineStyle, false,
      0},
     {"ui.scrollbarButtonAutoRepeatBehavior",
-     eIntID_ScrollbarButtonAutoRepeatBehavior, false, 0},
-    {"ui.tooltipDelay", eIntID_TooltipDelay, false, 0},
-    {"ui.contextMenuOffsetVertical", eIntID_ContextMenuOffsetVertical, false,
+     IntID::ScrollbarButtonAutoRepeatBehavior, false, 0},
+    {"ui.tooltipDelay", IntID::TooltipDelay, false, 0},
+    {"ui.contextMenuOffsetVertical", IntID::ContextMenuOffsetVertical, false,
      0},
-    {"ui.contextMenuOffsetHorizontal", eIntID_ContextMenuOffsetHorizontal,
+    {"ui.contextMenuOffsetHorizontal", IntID::ContextMenuOffsetHorizontal,
      false, 0},
-    {"ui.GtkCSDAvailable", eIntID_GTKCSDAvailable, false, 0},
-    {"ui.GtkCSDHideTitlebarByDefault", eIntID_GTKCSDHideTitlebarByDefault,
+    {"ui.GtkCSDAvailable", IntID::GTKCSDAvailable, false, 0},
+    {"ui.GtkCSDHideTitlebarByDefault", IntID::GTKCSDHideTitlebarByDefault,
      false, 0},
-    {"ui.GtkCSDTransparentBackground", eIntID_GTKCSDTransparentBackground,
+    {"ui.GtkCSDTransparentBackground", IntID::GTKCSDTransparentBackground,
      false, 0},
-    {"ui.GtkCSDMinimizeButton", eIntID_GTKCSDMinimizeButton, false, 0},
-    {"ui.GtkCSDMaximizeButton", eIntID_GTKCSDMaximizeButton, false, 0},
-    {"ui.GtkCSDCloseButton", eIntID_GTKCSDCloseButton, false, 0},
-    {"ui.systemUsesDarkTheme", eIntID_SystemUsesDarkTheme, false, 0},
-    {"ui.prefersReducedMotion", eIntID_PrefersReducedMotion, false, 0},
-    {"ui.primaryPointerCapabilities", eIntID_PrimaryPointerCapabilities, false,
+    {"ui.GtkCSDMinimizeButton", IntID::GTKCSDMinimizeButton, false, 0},
+    {"ui.GtkCSDMaximizeButton", IntID::GTKCSDMaximizeButton, false, 0},
+    {"ui.GtkCSDCloseButton", IntID::GTKCSDCloseButton, false, 0},
+    {"ui.systemUsesDarkTheme", IntID::SystemUsesDarkTheme, false, 0},
+    {"ui.prefersReducedMotion", IntID::PrefersReducedMotion, false, 0},
+    {"ui.primaryPointerCapabilities", IntID::PrimaryPointerCapabilities, false,
      6 /* fine and hover-capable pointer, i.e. mouse-type */},
-    {"ui.allPointerCapabilities", eIntID_AllPointerCapabilities, false,
+    {"ui.allPointerCapabilities", IntID::AllPointerCapabilities, false,
      6 /* fine and hover-capable pointer, i.e. mouse-type */},
 };
 
 nsLookAndFeelFloatPref nsXPLookAndFeel::sFloatPrefs[] = {
-    {"ui.IMEUnderlineRelativeSize", eFloatID_IMEUnderlineRelativeSize, false,
+    {"ui.IMEUnderlineRelativeSize", FloatID::IMEUnderlineRelativeSize, false,
      0},
     {"ui.SpellCheckerUnderlineRelativeSize",
-     eFloatID_SpellCheckerUnderlineRelativeSize, false, 0},
-    {"ui.caretAspectRatio", eFloatID_CaretAspectRatio, false, 0},
+     FloatID::SpellCheckerUnderlineRelativeSize, false, 0},
+    {"ui.caretAspectRatio", FloatID::CaretAspectRatio, false, 0},
 };
 
 // This array MUST be kept in the same order as the color list in
@@ -937,13 +937,13 @@ nsresult nsXPLookAndFeel::GetIntImpl(IntID aID, int32_t& aResult) {
   // Set the default values for these prefs. but allow different platforms
   // to override them in their nsLookAndFeel if desired.
   switch (aID) {
-    case eIntID_ScrollButtonLeftMouseButtonAction:
+    case IntID::ScrollButtonLeftMouseButtonAction:
       aResult = 0;
       return NS_OK;
-    case eIntID_ScrollButtonMiddleMouseButtonAction:
+    case IntID::ScrollButtonMiddleMouseButtonAction:
       aResult = 3;
       return NS_OK;
-    case eIntID_ScrollButtonRightMouseButtonAction:
+    case IntID::ScrollButtonRightMouseButtonAction:
       aResult = 3;
       return NS_OK;
     default:
@@ -1009,7 +1009,7 @@ void nsXPLookAndFeel::RecordTelemetry() {
   int32_t i;
   Telemetry::ScalarSet(
       Telemetry::ScalarID::WIDGET_DARK_MODE,
-      NS_SUCCEEDED(GetIntImpl(eIntID_SystemUsesDarkTheme, i)) && i != 0);
+      NS_SUCCEEDED(GetIntImpl(IntID::SystemUsesDarkTheme, i)) && i != 0);
 }
 
 namespace mozilla {

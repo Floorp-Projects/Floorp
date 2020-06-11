@@ -16,7 +16,7 @@ struct ParamTraits<LookAndFeelInt> {
   typedef LookAndFeelInt paramType;
 
   static void Write(Message* aMsg, const paramType& aParam) {
-    WriteParam(aMsg, aParam.id);
+    WriteParam(aMsg, static_cast<int32_t>(aParam.id));
     WriteParam(aMsg, aParam.value);
   }
 
@@ -24,7 +24,7 @@ struct ParamTraits<LookAndFeelInt> {
                    paramType* aResult) {
     int32_t id, value;
     if (ReadParam(aMsg, aIter, &id) && ReadParam(aMsg, aIter, &value)) {
-      aResult->id = id;
+      aResult->id = static_cast<mozilla::LookAndFeel::IntID>(id);
       aResult->value = value;
       return true;
     }

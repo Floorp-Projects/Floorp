@@ -369,48 +369,48 @@ nsresult nsLookAndFeel::GetIntImpl(IntID aID, int32_t& aResult) {
   res = NS_OK;
 
   switch (aID) {
-    case eIntID_CaretBlinkTime:
-      // eIntID_CaretBlinkTime is often called by updating editable text
+    case IntID::CaretBlinkTime:
+      // IntID::CaretBlinkTime is often called by updating editable text
       // that has focus. So it should be cached to improve performance.
       if (mCaretBlinkTime < 0) {
         mCaretBlinkTime = static_cast<int32_t>(::GetCaretBlinkTime());
       }
       aResult = mCaretBlinkTime;
       break;
-    case eIntID_CaretWidth:
+    case IntID::CaretWidth:
       aResult = 1;
       break;
-    case eIntID_ShowCaretDuringSelection:
+    case IntID::ShowCaretDuringSelection:
       aResult = 0;
       break;
-    case eIntID_SelectTextfieldsOnKeyFocus:
+    case IntID::SelectTextfieldsOnKeyFocus:
       // Select textfield content when focused by kbd
       // used by EventStateManager::sTextfieldSelectModel
       aResult = 1;
       break;
-    case eIntID_SubmenuDelay:
+    case IntID::SubmenuDelay:
       // This will default to the Windows' default
       // (400ms) on error.
       aResult = GetSystemParam(SPI_GETMENUSHOWDELAY, 400);
       break;
-    case eIntID_TooltipDelay:
+    case IntID::TooltipDelay:
       aResult = 500;
       break;
-    case eIntID_MenusCanOverlapOSBar:
+    case IntID::MenusCanOverlapOSBar:
       // we want XUL popups to be able to overlap the task bar.
       aResult = 1;
       break;
-    case eIntID_DragThresholdX:
+    case IntID::DragThresholdX:
       // The system metric is the number of pixels at which a drag should
       // start.  Our look and feel metric is the number of pixels you can
       // move before starting a drag, so subtract 1.
 
       aResult = ::GetSystemMetrics(SM_CXDRAG) - 1;
       break;
-    case eIntID_DragThresholdY:
+    case IntID::DragThresholdY:
       aResult = ::GetSystemMetrics(SM_CYDRAG) - 1;
       break;
-    case eIntID_UseAccessibilityTheme:
+    case IntID::UseAccessibilityTheme:
       // High contrast is a misnomer under Win32 -- any theme can be used with
       // it, e.g. normal contrast with large fonts, low contrast, etc. The high
       // contrast flag really means -- use this theme and don't override it.
@@ -425,41 +425,41 @@ nsresult nsLookAndFeel::GetIntImpl(IntID aID, int32_t& aResult) {
         aResult = nsUXThemeData::IsHighContrastOn();
       }
       break;
-    case eIntID_ScrollArrowStyle:
+    case IntID::ScrollArrowStyle:
       aResult = eScrollArrowStyle_Single;
       break;
-    case eIntID_ScrollSliderStyle:
+    case IntID::ScrollSliderStyle:
       aResult = eScrollThumbStyle_Proportional;
       break;
-    case eIntID_TreeOpenDelay:
+    case IntID::TreeOpenDelay:
       aResult = 1000;
       break;
-    case eIntID_TreeCloseDelay:
+    case IntID::TreeCloseDelay:
       aResult = 0;
       break;
-    case eIntID_TreeLazyScrollDelay:
+    case IntID::TreeLazyScrollDelay:
       aResult = 150;
       break;
-    case eIntID_TreeScrollDelay:
+    case IntID::TreeScrollDelay:
       aResult = 100;
       break;
-    case eIntID_TreeScrollLinesMax:
+    case IntID::TreeScrollLinesMax:
       aResult = 3;
       break;
-    case eIntID_WindowsClassic:
+    case IntID::WindowsClassic:
       aResult = !IsAppThemed();
       break;
-    case eIntID_TouchEnabled:
+    case IntID::TouchEnabled:
       aResult = WinUtils::IsTouchDeviceSupportPresent();
       break;
-    case eIntID_WindowsDefaultTheme:
+    case IntID::WindowsDefaultTheme:
       if (XRE_IsContentProcess()) {
         aResult = mUseDefaultTheme;
       } else {
         aResult = nsUXThemeData::IsDefaultWindowTheme();
       }
       break;
-    case eIntID_WindowsThemeIdentifier:
+    case IntID::WindowsThemeIdentifier:
       if (XRE_IsContentProcess()) {
         aResult = mNativeThemeId;
       } else {
@@ -467,19 +467,19 @@ nsresult nsLookAndFeel::GetIntImpl(IntID aID, int32_t& aResult) {
       }
       break;
 
-    case eIntID_OperatingSystemVersionIdentifier: {
+    case IntID::OperatingSystemVersionIdentifier: {
       aResult = GetOperatingSystemVersion();
       break;
     }
 
-    case eIntID_MacGraphiteTheme:
+    case IntID::MacGraphiteTheme:
       aResult = 0;
       res = NS_ERROR_NOT_IMPLEMENTED;
       break;
-    case eIntID_DWMCompositor:
+    case IntID::DWMCompositor:
       aResult = gfxWindowsPlatform::GetPlatform()->DwmCompositionEnabled();
       break;
-    case eIntID_WindowsAccentColorInTitlebar: {
+    case IntID::WindowsAccentColorInTitlebar: {
       nscolor unused;
       if (NS_WARN_IF(NS_FAILED(GetAccentColor(unused)))) {
         aResult = 0;
@@ -506,12 +506,12 @@ nsresult nsLookAndFeel::GetIntImpl(IntID aID, int32_t& aResult) {
 
       mDwmKey->Close();
     } break;
-    case eIntID_WindowsGlass:
+    case IntID::WindowsGlass:
       // Aero Glass is only available prior to Windows 8 when DWM is used.
       aResult = (gfxWindowsPlatform::GetPlatform()->DwmCompositionEnabled() &&
                  !IsWin8OrLater());
       break;
-    case eIntID_AlertNotificationOrigin:
+    case IntID::AlertNotificationOrigin:
       aResult = 0;
       {
         // Get task bar window handle
@@ -546,59 +546,59 @@ nsresult nsLookAndFeel::GetIntImpl(IntID aID, int32_t& aResult) {
         }
       }
       break;
-    case eIntID_IMERawInputUnderlineStyle:
-    case eIntID_IMEConvertedTextUnderlineStyle:
+    case IntID::IMERawInputUnderlineStyle:
+    case IntID::IMEConvertedTextUnderlineStyle:
       aResult = NS_STYLE_TEXT_DECORATION_STYLE_DASHED;
       break;
-    case eIntID_IMESelectedRawTextUnderlineStyle:
-    case eIntID_IMESelectedConvertedTextUnderline:
+    case IntID::IMESelectedRawTextUnderlineStyle:
+    case IntID::IMESelectedConvertedTextUnderline:
       aResult = NS_STYLE_TEXT_DECORATION_STYLE_NONE;
       break;
-    case eIntID_SpellCheckerUnderlineStyle:
+    case IntID::SpellCheckerUnderlineStyle:
       aResult = NS_STYLE_TEXT_DECORATION_STYLE_WAVY;
       break;
-    case eIntID_ScrollbarButtonAutoRepeatBehavior:
+    case IntID::ScrollbarButtonAutoRepeatBehavior:
       aResult = 0;
       break;
-    case eIntID_SwipeAnimationEnabled:
+    case IntID::SwipeAnimationEnabled:
       aResult = 0;
       break;
-    case eIntID_UseOverlayScrollbars:
+    case IntID::UseOverlayScrollbars:
       aResult = false;
       break;
-    case eIntID_AllowOverlayScrollbarsOverlap:
+    case IntID::AllowOverlayScrollbarsOverlap:
       aResult = 0;
       break;
-    case eIntID_ScrollbarDisplayOnMouseMove:
+    case IntID::ScrollbarDisplayOnMouseMove:
       aResult = 1;
       break;
-    case eIntID_ScrollbarFadeBeginDelay:
+    case IntID::ScrollbarFadeBeginDelay:
       aResult = 2500;
       break;
-    case eIntID_ScrollbarFadeDuration:
+    case IntID::ScrollbarFadeDuration:
       aResult = 350;
       break;
-    case eIntID_ContextMenuOffsetVertical:
-    case eIntID_ContextMenuOffsetHorizontal:
+    case IntID::ContextMenuOffsetVertical:
+    case IntID::ContextMenuOffsetHorizontal:
       aResult = 2;
       break;
-    case eIntID_SystemUsesDarkTheme:
+    case IntID::SystemUsesDarkTheme:
       res = SystemWantsDarkTheme(aResult);
       break;
-    case eIntID_PrefersReducedMotion: {
+    case IntID::PrefersReducedMotion: {
       BOOL enableAnimation = TRUE;
       ::SystemParametersInfoW(SPI_GETCLIENTAREAANIMATION, 0, &enableAnimation,
                               0);
       aResult = enableAnimation ? 0 : 1;
       break;
     }
-    case eIntID_PrimaryPointerCapabilities: {
+    case IntID::PrimaryPointerCapabilities: {
       PointerCapabilities caps =
           widget::WinUtils::GetPrimaryPointerCapabilities();
       aResult = static_cast<int32_t>(caps);
       break;
     }
-    case eIntID_AllPointerCapabilities: {
+    case IntID::AllPointerCapabilities: {
       PointerCapabilities caps = widget::WinUtils::GetAllPointerCapabilities();
       aResult = static_cast<int32_t>(caps);
       break;
@@ -616,10 +616,10 @@ nsresult nsLookAndFeel::GetFloatImpl(FloatID aID, float& aResult) {
   res = NS_OK;
 
   switch (aID) {
-    case eFloatID_IMEUnderlineRelativeSize:
+    case FloatID::IMEUnderlineRelativeSize:
       aResult = 1.0f;
       break;
-    case eFloatID_SpellCheckerUnderlineRelativeSize:
+    case FloatID::SpellCheckerUnderlineRelativeSize:
       aResult = 1.0f;
       break;
     default:
@@ -783,16 +783,16 @@ nsTArray<LookAndFeelInt> nsLookAndFeel::GetIntCacheImpl() {
       nsXPLookAndFeel::GetIntCacheImpl();
 
   LookAndFeelInt lafInt;
-  lafInt.id = eIntID_UseAccessibilityTheme;
-  lafInt.value = GetInt(eIntID_UseAccessibilityTheme);
+  lafInt.id = IntID::UseAccessibilityTheme;
+  lafInt.value = GetInt(IntID::UseAccessibilityTheme);
   lookAndFeelIntCache.AppendElement(lafInt);
 
-  lafInt.id = eIntID_WindowsDefaultTheme;
-  lafInt.value = GetInt(eIntID_WindowsDefaultTheme);
+  lafInt.id = IntID::WindowsDefaultTheme;
+  lafInt.value = GetInt(IntID::WindowsDefaultTheme);
   lookAndFeelIntCache.AppendElement(lafInt);
 
-  lafInt.id = eIntID_WindowsThemeIdentifier;
-  lafInt.value = GetInt(eIntID_WindowsThemeIdentifier);
+  lafInt.id = IntID::WindowsThemeIdentifier;
+  lafInt.value = GetInt(IntID::WindowsThemeIdentifier);
   lookAndFeelIntCache.AppendElement(lafInt);
 
   return lookAndFeelIntCache;
@@ -802,14 +802,17 @@ void nsLookAndFeel::SetIntCacheImpl(
     const nsTArray<LookAndFeelInt>& aLookAndFeelIntCache) {
   for (auto entry : aLookAndFeelIntCache) {
     switch (entry.id) {
-      case eIntID_UseAccessibilityTheme:
+      case IntID::UseAccessibilityTheme:
         mUseAccessibilityTheme = entry.value;
         break;
-      case eIntID_WindowsDefaultTheme:
+      case IntID::WindowsDefaultTheme:
         mUseDefaultTheme = entry.value;
         break;
-      case eIntID_WindowsThemeIdentifier:
+      case IntID::WindowsThemeIdentifier:
         mNativeThemeId = entry.value;
+        break;
+      default:
+        MOZ_ASSERT_UNREACHABLE("Bogus Int ID in cache");
         break;
     }
   }

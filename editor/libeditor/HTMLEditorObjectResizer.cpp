@@ -1100,9 +1100,9 @@ nsresult HTMLEditor::OnMouseMove(MouseEvent* aMouseEvent) {
     int32_t clientY = aMouseEvent->ClientY();
 
     int32_t xThreshold =
-        LookAndFeel::GetInt(LookAndFeel::eIntID_DragThresholdX, 1);
+        LookAndFeel::GetInt(LookAndFeel::IntID::DragThresholdX, 1);
     int32_t yThreshold =
-        LookAndFeel::GetInt(LookAndFeel::eIntID_DragThresholdY, 1);
+        LookAndFeel::GetInt(LookAndFeel::IntID::DragThresholdY, 1);
 
     if (DeprecatedAbs(clientX - mOriginalX) * 2 >= xThreshold ||
         DeprecatedAbs(clientY - mOriginalY) * 2 >= yThreshold) {

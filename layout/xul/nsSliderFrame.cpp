@@ -644,7 +644,7 @@ nsresult nsSliderFrame::HandleEvent(nsPresContext* aPresContext,
 // and see the browser change its behavior immediately.
 bool nsSliderFrame::GetScrollToClick() {
   if (GetScrollbar() != this) {
-    return LookAndFeel::GetInt(LookAndFeel::eIntID_ScrollToClick, false);
+    return LookAndFeel::GetInt(LookAndFeel::IntID::ScrollToClick, false);
   }
 
   if (mContent->AsElement()->AttrValueIs(kNameSpaceID_None,
