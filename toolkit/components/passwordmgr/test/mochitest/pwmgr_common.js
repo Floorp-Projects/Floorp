@@ -169,6 +169,26 @@ function getSubmitMessage(aFilterFn = undefined) {
 }
 
 /**
+ * @return {Promise} resolves when a onPasswordEditedOrGenerated message is received at the parent
+ */
+function getPasswordEditedMessage() {
+  info("getPasswordEditedMessage");
+  return new Promise((resolve, reject) => {
+    PWMGR_COMMON_PARENT.addMessageListener(
+      "passwordEditedOrGenerated",
+      function listener(...args) {
+        info("got passwordEditedOrGenerated");
+        PWMGR_COMMON_PARENT.removeMessageListener(
+          "passwordEditedOrGenerated",
+          listener
+        );
+        resolve(args[0]);
+      }
+    );
+  });
+}
+
+/**
  * Check for expected username/password in form.
  * @see `checkForm` below for a similar function.
  */
