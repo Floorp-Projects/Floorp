@@ -96,30 +96,26 @@ nsMIMEInfoWin::LaunchWithFile(nsIFile* aFile) {
   if (mPreferredAction == useSystemDefault) {
     if (mDefaultApplication &&
         StaticPrefs::browser_pdf_launchDefaultEdgeAsApp()) {
-      // Since Edgium is the default PDF handler, if we're using the OS default
-      // and it's Edgium prefer it's app mode so it operates as a PDF viewer
-      // (without browser toolbars). Bug 1632277.
-      bool isPdf;
-      rv = IsPdf(&isPdf);
-      if (NS_SUCCEEDED(rv) && isPdf) {
-        nsAutoCString defaultAppExecutable;
-        rv = mDefaultApplication->GetNativeLeafName(defaultAppExecutable);
-        if (NS_SUCCEEDED(rv) &&
-            defaultAppExecutable.LowerCaseEqualsLiteral("msedge.exe")) {
-          nsAutoString path;
-          rv = aFile->GetPath(path);
-          if (NS_SUCCEEDED(rv)) {
-            // If the --app flag doesn't work we'll want to fallback to a
-            // regular path. Send two args so we call `msedge.exe --app={path}
-            // {path}`.
-            nsAutoString appArg;
-            appArg.AppendLiteral("--app=");
-            appArg.Append(path);
-            const wchar_t* argv[] = {appArg.get(), path.get()};
+      // Since Edgium is the default handler for PDF and other kinds of files,
+      // if we're using the OS default and it's Edgium prefer its app mode so it
+      // operates as a viewer (without browser toolbars). Bug 1632277.
+      nsAutoCString defaultAppExecutable;
+      rv = mDefaultApplication->GetNativeLeafName(defaultAppExecutable);
+      if (NS_SUCCEEDED(rv) &&
+          defaultAppExecutable.LowerCaseEqualsLiteral("msedge.exe")) {
+        nsAutoString path;
+        rv = aFile->GetPath(path);
+        if (NS_SUCCEEDED(rv)) {
+          // If the --app flag doesn't work we'll want to fallback to a
+          // regular path. Send two args so we call `msedge.exe --app={path}
+          // {path}`.
+          nsAutoString appArg;
+          appArg.AppendLiteral("--app=");
+          appArg.Append(path);
+          const wchar_t* argv[] = {appArg.get(), path.get()};
 
-            return ShellExecuteWithIFile(mDefaultApplication,
-                                         mozilla::ArrayLength(argv), argv);
-          }
+          return ShellExecuteWithIFile(mDefaultApplication,
+                                       mozilla::ArrayLength(argv), argv);
         }
       }
     }
