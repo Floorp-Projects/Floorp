@@ -6436,9 +6436,9 @@ nscoord nsIFrame::ComputeISizeValue(gfxContext* aRenderingContext,
   return std::max(0, result);
 }
 
-void nsFrame::DidReflow(nsPresContext* aPresContext,
-                        const ReflowInput* aReflowInput) {
-  NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS, ("nsFrame::DidReflow"));
+void nsIFrame::DidReflow(nsPresContext* aPresContext,
+                         const ReflowInput* aReflowInput) {
+  NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS, ("nsIFrame::DidReflow"));
 
   SVGObserverUtils::InvalidateDirectRenderingObservers(
       this, SVGObserverUtils::INVALIDATE_REFLOW);
