@@ -95,15 +95,15 @@ TEST(TestAudioTrackGraph, SetOutputDeviceID)
   MockCubeb* cubeb = new MockCubeb();
   CubebUtils::ForceSetCubebContext(cubeb->AsCubebContext());
 
+  EXPECT_EQ(cubeb->CurrentStream(), nullptr)
+      << "Cubeb stream has not been initialized yet";
+
   // Set the output device id in GetInstance method confirm that it is the one
   // used in cubeb_stream_init.
   MediaTrackGraph* graph = MediaTrackGraph::GetInstance(
       MediaTrackGraph::AUDIO_THREAD_DRIVER, /*window*/ nullptr,
       MediaTrackGraph::REQUEST_DEFAULT_SAMPLE_RATE,
       /*OutputDeviceID*/ reinterpret_cast<cubeb_devid>(2));
-
-  EXPECT_EQ(cubeb->CurrentStream(), nullptr)
-      << "Cubeb stream has not been initialized yet";
 
   // Dummy track to make graph rolling. Add it and remove it to remove the
   // graph from the global hash table and let it shutdown.
