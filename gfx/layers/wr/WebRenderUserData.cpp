@@ -265,9 +265,9 @@ void WebRenderImageData::CreateAsyncImageWebRenderCommands(
   aBuilder.PushIFrame(r, aIsBackfaceVisible, mPipelineId.ref(),
                       /*ignoreMissingPipelines*/ false);
 
-  WrBridge()->AddWebRenderParentCommand(
-      OpUpdateAsyncImagePipeline(mPipelineId.value(), aSCBounds, aSCTransform,
-                                 aScaleToSize, aFilter, aMixBlendMode));
+  WrBridge()->AddWebRenderParentCommand(OpUpdateAsyncImagePipeline(
+      mPipelineId.value(), aSCBounds, aSCTransform, aScaleToSize, aFilter,
+      aMixBlendMode, LayoutDeviceSize()));
 }
 
 void WebRenderImageData::CreateImageClientIfNeeded() {

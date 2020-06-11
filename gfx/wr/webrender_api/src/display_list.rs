@@ -1534,8 +1534,37 @@ impl DisplayListBuilder {
             origin,
             reference_frame: di::ReferenceFrame {
                 transform_style,
-                transform,
+                transform: di::ReferenceTransformBinding::Static {
+                    binding: transform,
+                },
                 kind,
+                id,
+            },
+        });
+
+        self.push_item(&item);
+        id
+    }
+
+    pub fn push_computed_frame(
+        &mut self,
+        origin: LayoutPoint,
+        parent_spatial_id: di::SpatialId,
+        scale_from: Option<LayoutSize>,
+        vertical_flip: bool,
+    ) -> di::SpatialId {
+        let id = self.generate_spatial_index();
+
+        let item = di::DisplayItem::PushReferenceFrame(di::ReferenceFrameDisplayListItem {
+            parent_spatial_id,
+            origin,
+            reference_frame: di::ReferenceFrame {
+                transform_style: di::TransformStyle::Flat,
+                transform: di::ReferenceTransformBinding::Computed {
+                    scale_from,
+                    vertical_flip
+                },
+                kind: di::ReferenceFrameKind::Transform,
                 id,
             },
         });
