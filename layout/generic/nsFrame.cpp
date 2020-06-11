@@ -8520,7 +8520,7 @@ nsresult nsIFrame::PeekOffset(nsPeekOffsetStruct* aPos) {
       nsIFrame* blockFrame = this;
 
       while (NS_FAILED(result)) {
-        int32_t thisLine = nsFrame::GetLineNumber(
+        int32_t thisLine = nsIFrame::GetLineNumber(
             blockFrame, aPos->mScrollViewStop, &blockFrame);
         if (thisLine < 0) return NS_ERROR_FAILURE;
         iter = blockFrame->GetLineIterator();
@@ -8616,7 +8616,7 @@ nsresult nsIFrame::PeekOffset(nsPeekOffsetStruct* aPos) {
     case eSelectEndLine: {
       // Adjusted so that the caret can't get confused when content changes
       nsIFrame* blockFrame = AdjustFrameForSelectionStyles(this);
-      int32_t thisLine = nsFrame::GetLineNumber(
+      int32_t thisLine = nsIFrame::GetLineNumber(
           blockFrame, aPos->mScrollViewStop, &blockFrame);
       if (thisLine < 0) return NS_ERROR_FAILURE;
       nsAutoLineIterator it = blockFrame->GetLineIterator();
@@ -8788,8 +8788,8 @@ nsresult nsIFrame::CheckVisibility(nsPresContext*, int32_t, int32_t, bool,
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-int32_t nsFrame::GetLineNumber(nsIFrame* aFrame, bool aLockScroll,
-                               nsIFrame** aContainingBlock) {
+int32_t nsIFrame::GetLineNumber(nsIFrame* aFrame, bool aLockScroll,
+                                nsIFrame** aContainingBlock) {
   NS_ASSERTION(aFrame, "null aFrame");
   nsIFrame* blockFrame = aFrame;
   nsIFrame* thisBlock;
@@ -8843,7 +8843,7 @@ nsresult nsIFrame::GetFrameFromDirection(
     nsIFrame* blockFrame;
 
     int32_t thisLine =
-        nsFrame::GetLineNumber(traversedFrame, aScrollViewStop, &blockFrame);
+        nsIFrame::GetLineNumber(traversedFrame, aScrollViewStop, &blockFrame);
     if (thisLine < 0) return NS_ERROR_FAILURE;
 
     nsAutoLineIterator it = blockFrame->GetLineIterator();
