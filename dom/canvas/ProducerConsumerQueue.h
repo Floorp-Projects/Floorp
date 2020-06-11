@@ -13,6 +13,7 @@
 #include <type_traits>
 #include <utility>
 #include <vector>
+#include "mozilla/StaticPtr.h"
 #include "mozilla/WeakPtr.h"
 #include "mozilla/dom/QueueParamTraits.h"
 #include "CrossProcessSemaphore.h"
@@ -54,7 +55,9 @@ class PcqActor : public SupportsWeakPtr<PcqActor> {
   // The IProtocol part of `this`.
   IProtocol* mProtocol;
 
-  inline static std::unordered_map<IProtocol*, PcqActor*> sMap;
+  using PcqActorMap = std::unordered_map<IProtocol*, PcqActor*>;
+  // uses StaticAutoPtr to placate anti-static-ctor static analysis
+  inline static StaticAutoPtr<PcqActorMap> sMap;
 
   static bool IsActorThread() {
     static nsIThread* sActorThread = [] { return NS_GetCurrentThread(); }();
@@ -64,11 +67,18 @@ class PcqActor : public SupportsWeakPtr<PcqActor> {
  protected:
   explicit PcqActor(IProtocol* aProtocol) : mProtocol(aProtocol) {
     MOZ_ASSERT(IsActorThread());
-    sMap.insert({mProtocol, this});
+    if (!sMap) {
+      sMap = new PcqActorMap();
+    }
+    sMap->insert({mProtocol, this});
   }
   ~PcqActor() {
     MOZ_ASSERT(IsActorThread());
-    sMap.erase(mProtocol);
+    sMap->erase(mProtocol);
+    if (sMap->empty()) {
+      delete sMap;
+      sMap = nullptr;
+    }
   }
 
  public:
@@ -87,8 +97,12 @@ class PcqActor : public SupportsWeakPtr<PcqActor> {
 
   static PcqActor* LookupProtocol(IProtocol* aProtocol) {
     MOZ_ASSERT(IsActorThread());
-    auto it = sMap.find(aProtocol);
-    return (it != sMap.end()) ? it->second : nullptr;
+    MOZ_ASSERT(sMap);
+    if (!sMap) {
+      return nullptr;
+    }
+    auto it = sMap->find(aProtocol);
+    return (it != sMap->end()) ? it->second : nullptr;
   }
 };
 
