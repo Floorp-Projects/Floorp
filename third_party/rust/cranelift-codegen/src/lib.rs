@@ -99,12 +99,12 @@ mod iterators;
 mod legalizer;
 mod licm;
 mod nan_canonicalization;
+mod num_uses;
 mod partition_slice;
 mod postopt;
 mod predicates;
 mod redundant_reload_remover;
 mod regalloc;
-mod remove_constant_phis;
 mod result;
 mod scoped_hash_map;
 mod simple_gvn;
@@ -113,9 +113,6 @@ mod stack_layout;
 mod topo_order;
 mod unreachable_code;
 mod value_label;
-
-#[cfg(feature = "enable-peepmatic")]
-mod peepmatic;
 
 pub use crate::result::{CodegenError, CodegenResult};
 
