@@ -50,6 +50,11 @@ jobs:
             gradlew: [detekt]
         treeherder:
             symbol: detekt
+        worker:
+            artifacts:
+                - name: public/reports
+                  path: /builds/worker/checkouts/src/build/reports
+                  type: directory
     ktlint:
         description: 'Running ktlint over all modules'
         run:
@@ -64,3 +69,8 @@ jobs:
             gradlew: ['lintGeckoNightlyDebug']
         treeherder:
             symbol: lint
+        worker:
+            artifacts:
+                - name: public/reports
+                  path: /builds/worker/checkouts/src/app/build/reports
+                  type: directory

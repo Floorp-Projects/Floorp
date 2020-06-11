@@ -56,3 +56,6 @@ jobs:
                 - name: public/reports/index.html
                   path: /builds/worker/checkouts/src/app/build/reports/tests/testGeckoNightlyDebugUnitTest/index.html
                   type: file
+                - name: public/reports/test
+                  path: /builds/worker/checkouts/src/app/build/reports/tests
+                  type: directory
