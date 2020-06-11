@@ -88,6 +88,8 @@ function* test() {
 
   popup.location = "file_bfcache_plus_hash_2.html";
   waitForLoad(2);
+  waitForShow(2);
+  yield undefined;
   yield undefined;
 
   // Now go back 2.  The first page should be retrieved from bfcache.
