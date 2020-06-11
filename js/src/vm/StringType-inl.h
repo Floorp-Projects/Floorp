@@ -27,13 +27,12 @@ namespace js {
 
 // Allocate a thin inline string if possible, and a fat inline string if not.
 template <AllowGC allowGC, typename CharT>
-static MOZ_ALWAYS_INLINE JSInlineString* AllocateInlineString(JSContext* cx,
-                                                              size_t len,
-                                                              CharT** chars) {
+static MOZ_ALWAYS_INLINE JSInlineString* AllocateInlineString(
+    JSContext* cx, size_t len, CharT** chars, js::gc::InitialHeap heap) {
   MOZ_ASSERT(JSInlineString::lengthFits<CharT>(len));
 
   if (JSThinInlineString::lengthFits<CharT>(len)) {
-    JSThinInlineString* str = JSThinInlineString::new_<allowGC>(cx);
+    JSThinInlineString* str = JSThinInlineString::new_<allowGC>(cx, heap);
     if (!str) {
       return nullptr;
     }
@@ -41,7 +40,7 @@ static MOZ_ALWAYS_INLINE JSInlineString* AllocateInlineString(JSContext* cx,
     return str;
   }
 
-  JSFatInlineString* str = JSFatInlineString::new_<allowGC>(cx);
+  JSFatInlineString* str = JSFatInlineString::new_<allowGC>(cx, heap);
   if (!str) {
     return nullptr;
   }
@@ -52,7 +51,8 @@ static MOZ_ALWAYS_INLINE JSInlineString* AllocateInlineString(JSContext* cx,
 // Create a thin inline string if possible, and a fat inline string if not.
 template <AllowGC allowGC, typename CharT>
 static MOZ_ALWAYS_INLINE JSInlineString* NewInlineString(
-    JSContext* cx, mozilla::Range<const CharT> chars) {
+    JSContext* cx, mozilla::Range<const CharT> chars,
+    js::gc::InitialHeap heap = js::gc::DefaultHeap) {
   /*
    * Don't bother trying to find a static atom; measurement shows that not
    * many get here (for one, Atomize is catching them).
@@ -60,7 +60,7 @@ static MOZ_ALWAYS_INLINE JSInlineString* NewInlineString(
 
   size_t len = chars.length();
   CharT* storage;
-  JSInlineString* str = AllocateInlineString<allowGC>(cx, len, &storage);
+  JSInlineString* str = AllocateInlineString<allowGC>(cx, len, &storage, heap);
   if (!str) {
     return nullptr;
   }
@@ -72,11 +72,12 @@ static MOZ_ALWAYS_INLINE JSInlineString* NewInlineString(
 // Create a thin inline string if possible, and a fat inline string if not.
 template <typename CharT>
 static MOZ_ALWAYS_INLINE JSInlineString* NewInlineString(
-    JSContext* cx, HandleLinearString base, size_t start, size_t length) {
+    JSContext* cx, HandleLinearString base, size_t start, size_t length,
+    js::gc::InitialHeap heap) {
   MOZ_ASSERT(JSInlineString::lengthFits<CharT>(length));
 
   CharT* chars;
-  JSInlineString* s = AllocateInlineString<CanGC>(cx, length, &chars);
+  JSInlineString* s = AllocateInlineString<CanGC>(cx, length, &chars, heap);
   if (!s) {
     return nullptr;
   }
@@ -194,7 +195,8 @@ MOZ_ALWAYS_INLINE void JSDependentString::init(JSContext* cx,
 }
 
 MOZ_ALWAYS_INLINE JSLinearString* JSDependentString::new_(
-    JSContext* cx, JSLinearString* baseArg, size_t start, size_t length) {
+    JSContext* cx, JSLinearString* baseArg, size_t start, size_t length,
+    js::gc::InitialHeap heap) {
   /*
    * Try to avoid long chains of dependent strings. We can't avoid these
    * entirely, however, due to how ropes are flattened.
@@ -217,8 +219,9 @@ MOZ_ALWAYS_INLINE JSLinearString* JSDependentString::new_(
   if (useInline) {
     js::RootedLinearString base(cx, baseArg);
     return baseArg->hasLatin1Chars()
-               ? js::NewInlineString<JS::Latin1Char>(cx, base, start, length)
-               : js::NewInlineString<char16_t>(cx, base, start, length);
+               ? js::NewInlineString<JS::Latin1Char>(cx, base, start, length,
+                                                     heap)
+               : js::NewInlineString<char16_t>(cx, base, start, length, heap);
   }
 
   JSDependentString* str =
@@ -256,8 +259,8 @@ MOZ_ALWAYS_INLINE void JSLinearString::init(const JS::Latin1Char* chars,
 
 template <js::AllowGC allowGC, typename CharT>
 MOZ_ALWAYS_INLINE JSLinearString* JSLinearString::new_(
-    JSContext* cx, js::UniquePtr<CharT[], JS::FreePolicy> chars,
-    size_t length) {
+    JSContext* cx, js::UniquePtr<CharT[], JS::FreePolicy> chars, size_t length,
+    js::gc::InitialHeap heap) {
   if (!validateLength(cx, length)) {
     return nullptr;
   }
@@ -266,7 +269,7 @@ MOZ_ALWAYS_INLINE JSLinearString* JSLinearString::new_(
   if (cx->zone()->isAtomsZone()) {
     str = js::Allocate<js::NormalAtom, allowGC>(cx);
   } else {
-    str = js::AllocateString<JSLinearString, allowGC>(cx, js::gc::DefaultHeap);
+    str = js::AllocateString<JSLinearString, allowGC>(cx, heap);
   }
   if (!str) {
     return nullptr;
@@ -310,17 +313,18 @@ inline js::PropertyName* JSLinearString::toPropertyName(JSContext* cx) {
 }
 
 template <js::AllowGC allowGC>
-MOZ_ALWAYS_INLINE JSThinInlineString* JSThinInlineString::new_(JSContext* cx) {
+MOZ_ALWAYS_INLINE JSThinInlineString* JSThinInlineString::new_(
+    JSContext* cx, js::gc::InitialHeap heap) {
   if (cx->zone()->isAtomsZone()) {
     return (JSThinInlineString*)(js::Allocate<js::NormalAtom, allowGC>(cx));
   }
 
-  return js::AllocateString<JSThinInlineString, allowGC>(cx,
-                                                         js::gc::DefaultHeap);
+  return js::AllocateString<JSThinInlineString, allowGC>(cx, heap);
 }
 
 template <js::AllowGC allowGC>
-MOZ_ALWAYS_INLINE JSFatInlineString* JSFatInlineString::new_(JSContext* cx) {
+MOZ_ALWAYS_INLINE JSFatInlineString* JSFatInlineString::new_(
+    JSContext* cx, js::gc::InitialHeap heap) {
   if (cx->zone()->isAtomsZone()) {
     return (JSFatInlineString*)(js::Allocate<js::FatInlineAtom, allowGC>(cx));
   }
@@ -398,7 +402,8 @@ inline JSLinearString* js::StaticStrings::getUnitStringForElement(
   if (c < UNIT_STATIC_LIMIT) {
     return getUnit(c);
   }
-  return js::NewInlineString<CanGC>(cx, mozilla::Range<const char16_t>(&c, 1));
+  return js::NewInlineString<CanGC>(cx, mozilla::Range<const char16_t>(&c, 1),
+                                    js::gc::DefaultHeap);
 }
 
 MOZ_ALWAYS_INLINE void JSString::finalize(JSFreeOp* fop) {
