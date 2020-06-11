@@ -39,9 +39,6 @@ Preferences.addAll([
   { id: "network.trr.uri", type: "string" },
   { id: "network.trr.resolvers", type: "string" },
   { id: "network.trr.custom_uri", type: "string" },
-  { id: "doh-rollout.enabled", type: "bool" },
-  { id: "doh-rollout.disable-heuristics", type: "bool" },
-  { id: "doh-rollout.skipHeuristicsCheck", type: "bool" },
 ]);
 
 window.addEventListener(
@@ -70,13 +67,8 @@ window.addEventListener(
     gConnectionsDialog.uiReady = new Promise(resolve => {
       gConnectionsDialog._areTrrPrefsReady = false;
       gConnectionsDialog._handleTrrPrefsReady = resolve;
-    }).then(async () => {
-      // awaiting this ensures that initDnsOverHttpsUI() is called after
-      // execution has been returned to the caller of _handleTrrPrefsReady,
-      // which is the checkbox value reading path. This ensures the checkbox
-      // gets checked, then initDnsOverHttpsUI() is called, then the uiReady
-      // promise resolves, preventing intermittent failures in tests.
-      await gConnectionsDialog.initDnsOverHttpsUI();
+    }).then(() => {
+      gConnectionsDialog.initDnsOverHttpsUI();
     });
 
     document
@@ -448,19 +440,10 @@ var gConnectionsDialog = {
   },
 
   isDnsOverHttpsEnabled() {
-    // We consider DoH enabled if:
-    // 1. network.trr.mode has a user-set value equal to 2 or 3.
-    // 2. network.trr.mode is 0, and DoH heuristics are enabled
+    // values outside 1:4 are considered falsey/disabled in this context
     let trrPref = Preferences.get("network.trr.mode");
-    if (trrPref.value > 0) {
-      return trrPref.value == 2 || trrPref.value == 3;
-    }
-
-    let rolloutEnabled = Preferences.get("doh-rollout.enabled").value;
-    let heuristicsDisabled =
-      Preferences.get("doh-rollout.disable-heuristics").value ||
-      Preferences.get("doh-rollout.skipHeuristicsCheck").value;
-    return rolloutEnabled && !heuristicsDisabled;
+    let enabled = trrPref.value > 0 && trrPref.value < 5;
+    return enabled;
   },
 
   readDnsOverHttpsMode() {
@@ -483,7 +466,7 @@ var gConnectionsDialog = {
     // called to update pref with user change
     let trrModeCheckbox = document.getElementById("networkDnsOverHttps");
     // we treat checked/enabled as mode 2
-    return trrModeCheckbox.checked ? 2 : 5;
+    return trrModeCheckbox.checked ? 2 : 0;
   },
 
   updateDnsOverHttpsUI() {

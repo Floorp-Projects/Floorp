@@ -18,25 +18,22 @@ async function log() {
 // Gate-keeping pref to run the add-on
 const DOH_ENABLED_PREF = "doh-rollout.enabled";
 
-// Platform TRR mode pref. Can be used to turn DoH off, on with fallback, or
-// on without fallback. Exposed in about:preferences. We turn off our heuristics
-// if we *ever* see a user-set value for this pref.
-const NETWORK_TRR_MODE_PREF = "network.trr.mode";
-
-// Platform TRR uri pref used to set a custom DoH endpoint. Exposed in about:preferences.
-// We turn off heuristics if we *ever* see a user-set value for this pref.
-const NETWORK_TRR_URI_PREF = "network.trr.uri";
-
-// Pref that signals to turn DoH to on/off. It mirrors two possible values of
-// network.trr.mode:
+// Pref that sets DoH to on/off. It has multiple modes:
 // 0: Off (default)
+// 1: null (No setting)
 // 2: Enabled, but will fall back to 0 on DNS lookup failure
-const ROLLOUT_TRR_MODE_PREF = "doh-rollout.mode";
+// 3: Always on.
+// 4: null (No setting)
+// 5: Never on.
+const TRR_MODE_PREF = "network.trr.mode";
 
 // This preference is set to TRUE when DoH has been enabled via the add-on. It will
 // allow the add-on to continue to function without the aid of the Normandy-triggered pref
 // of "doh-rollout.enabled". Note that instead of setting it to false, it is cleared.
 const DOH_SELF_ENABLED_PREF = "doh-rollout.self-enabled";
+
+// This pref is part of a cache mechanism to see if the heuristics dictated a change in the DoH settings
+const DOH_PREVIOUS_TRR_MODE_PREF = "doh-rollout.previous.trr.mode";
 
 // Set after doorhanger has been interacted with by the user
 const DOH_DOORHANGER_SHOWN_PREF = "doh-rollout.doorhanger-shown";
@@ -60,11 +57,6 @@ const DOH_DONE_FIRST_RUN_PREF = "doh-rollout.doneFirstRun";
 // new doh-rollot.X namespace. This applies to both `doneFirstRun` and `skipHeuristicsCheck`.
 const DOH_BALROG_MIGRATION_PREF = "doh-rollout.balrog-migration-done";
 
-// This pref used to be part of a cache mechanism to see if the heuristics
-// dictated a change in the DoH settings. We now clear it in the trr mode
-// migration at startup.
-const DOH_PREVIOUS_TRR_MODE_PREF = "doh-rollout.previous.trr.mode";
-
 // If set to true, debug logging will be enabled.
 const DOH_DEBUG_PREF = "doh-rollout.debug";
 
@@ -76,29 +68,39 @@ const stateManager = {
       case "uninstalled":
         break;
       case "disabled":
-        await rollout.setSetting(ROLLOUT_TRR_MODE_PREF, 0);
+        await rollout.setSetting(TRR_MODE_PREF, 0);
+        break;
+      case "manuallyDisabled":
+        await browser.experiments.preferences.clearUserPref(
+          DOH_SELF_ENABLED_PREF
+        );
         break;
       case "UIOk":
         await rollout.setSetting(DOH_SELF_ENABLED_PREF, true);
         break;
       case "enabled":
-        await rollout.setSetting(ROLLOUT_TRR_MODE_PREF, 2);
+        await rollout.setSetting(TRR_MODE_PREF, 2);
         await rollout.setSetting(DOH_SELF_ENABLED_PREF, true);
         break;
-      case "manuallyDisabled":
       case "UIDisabled":
+        await rollout.setSetting(TRR_MODE_PREF, 5);
         await browser.experiments.preferences.clearUserPref(
           DOH_SELF_ENABLED_PREF
-        );
-      // Fall through.
-      case "rollback":
-        await browser.experiments.preferences.clearUserPref(
-          ROLLOUT_TRR_MODE_PREF
         );
         break;
     }
 
     await browser.experiments.heuristics.sendStatePing(state);
+    await stateManager.rememberTRRMode();
+  },
+
+  async rememberTRRMode() {
+    let curMode = await browser.experiments.preferences.getIntPref(
+      TRR_MODE_PREF,
+      0
+    );
+    log("Saving current trr mode:", curMode);
+    await rollout.setSetting(DOH_PREVIOUS_TRR_MODE_PREF, curMode, true);
   },
 
   async rememberDoorhangerShown() {
@@ -132,7 +134,48 @@ const stateManager = {
       return false;
     }
 
-    return true;
+    let prevMode = await rollout.getSetting(DOH_PREVIOUS_TRR_MODE_PREF, 0);
+
+    let curMode = await browser.experiments.preferences.getIntPref(
+      TRR_MODE_PREF,
+      0
+    );
+
+    log("Comparing previous trr mode to current mode:", prevMode, curMode);
+
+    // Don't run heuristics if:
+    //  1) Previous doesn't mode equals current mode, i.e. user overrode our changes
+    //  2) TRR mode equals 5, i.e. user clicked "No" on doorhanger
+    //  3) TRR mode equals 3, i.e. user enabled "strictly on" for DoH
+    //  4) They've been disabled in the past for the reasons listed above
+    //
+    // In other words, if the user has made their own decision for DoH,
+    // then we want to respect that and never run the heuristics again
+
+    if (prevMode === curMode) {
+      return true;
+    }
+
+    // On Mismatch - run never run again (make init check a function)
+    log("Mismatched, curMode: ", curMode);
+
+    // Cache results for Telemetry send, including setting eval reason
+    let results = await runHeuristics();
+    results.evaluateReason = "userModified";
+    if (curMode === 0 || curMode === 5) {
+      // If user has manually set trr.mode to 0, and it was previously something else.
+      browser.experiments.heuristics.sendHeuristicsPing("disable_doh", results);
+      browser.experiments.preferences.clearUserPref(DOH_SELF_ENABLED_PREF);
+      await stateManager.rememberDisableHeuristics();
+    } else {
+      // Check if trr.mode is not in default value.
+      await rollout.trrModePrefHasUserValue(
+        "shouldRunHeuristics_mismatch",
+        results
+      );
+    }
+
+    return false;
   },
 
   async shouldShowDoorhanger() {
@@ -317,21 +360,39 @@ const rollout = {
     });
   },
 
-  async trrPrefUserModifiedCheck() {
-    let modeHasUserValue = await browser.experiments.preferences.prefHasUserValue(
-      NETWORK_TRR_MODE_PREF
-    );
-    let uriHasUserValue = await browser.experiments.preferences.prefHasUserValue(
-      NETWORK_TRR_URI_PREF
-    );
-    if (modeHasUserValue || uriHasUserValue) {
-      await stateManager.setState("manuallyDisabled");
+  async trrModePrefHasUserValue(event, results) {
+    results.evaluateReason = event;
+
+    // This confirms if a user has modified DoH (via the TRR_MODE_PREF) outside of the addon
+    // This runs only on the FIRST time that add-on is enabled and if the stored pref
+    // mismatches the current pref (Meaning something outside of the add-on has changed it)
+
+    if (await browser.experiments.preferences.prefHasUserValue(TRR_MODE_PREF)) {
+      // Send ping that user had specific trr.mode pref set before add-on study was ran.
+      // Note that this does not include the trr.mode - just that the addon cannot be ran.
+      browser.experiments.heuristics.sendHeuristicsPing(
+        "prefHasUserValue",
+        results
+      );
+
+      browser.experiments.preferences.clearUserPref(DOH_SELF_ENABLED_PREF);
+      await this.setSetting(DOH_SKIP_HEURISTICS_PREF, true);
       await stateManager.rememberDisableHeuristics();
     }
   },
 
   async enterprisePolicyCheck(event, results) {
     results.evaluateReason = event;
+
+    // Check if trrModePrefHasUserValue determined to not enable add-on on first run
+    let skipHeuristicsCheck = await rollout.getSetting(
+      DOH_SKIP_HEURISTICS_PREF,
+      false
+    );
+
+    if (skipHeuristicsCheck) {
+      return;
+    }
 
     // Check for Policies before running the rest of the heuristics
     let policyEnableDoH = await browser.experiments.heuristics.checkEnterprisePolicies();
@@ -373,6 +434,7 @@ const rollout = {
     const legacyLocalStorageKeys = [
       "doneFirstRun",
       "skipHeuristicsCheck",
+      DOH_PREVIOUS_TRR_MODE_PREF,
       DOH_DOORHANGER_SHOWN_PREF,
       DOH_DOORHANGER_USER_DECISION_PREF,
       DOH_DISABLED_PREF,
@@ -404,31 +466,8 @@ const rollout = {
     log("User successfully migrated.");
   },
 
-  // Previous versions of the add-on worked by setting network.trr.mode directly
-  // to turn DoH on/off. This makes sure we clear that value and also the pref
-  // we formerly used to track changes to it.
-  async migrateOldTrrMode() {
-    const needsMigration = await browser.experiments.preferences.getIntPref(
-      DOH_PREVIOUS_TRR_MODE_PREF,
-      -1
-    );
-
-    if (needsMigration === -1) {
-      log("User's TRR mode prefs already migrated");
-      return;
-    }
-
-    await browser.experiments.preferences.clearUserPref(NETWORK_TRR_MODE_PREF);
-    await browser.experiments.preferences.clearUserPref(
-      DOH_PREVIOUS_TRR_MODE_PREF
-    );
-
-    log("TRR mode prefs migrated");
-  },
-
   async init() {
     log("calling init");
-
     // Check if the add-on has run before
     let doneFirstRun = await this.getSetting(DOH_DONE_FIRST_RUN_PREF, false);
 
@@ -441,13 +480,13 @@ const rollout = {
     if (!doneFirstRun) {
       log("first run!");
       await this.setSetting(DOH_DONE_FIRST_RUN_PREF, true);
+      // Check if user has a set a custom pref only on first run, not on each startup
+      await this.trrModePrefHasUserValue("first_run", results);
       await this.enterprisePolicyCheck("first_run", results);
     } else {
       log("not first run!");
       await this.enterprisePolicyCheck("startup", results);
     }
-
-    await this.trrPrefUserModifiedCheck();
 
     if (!(await stateManager.shouldRunHeuristics())) {
       return;
@@ -482,17 +521,6 @@ const rollout = {
     } catch (e) {
       // Captive Portal Service is disabled.
     }
-
-    browser.experiments.preferences.onTRRPrefChanged.addListener(
-      async function listener() {
-        await stateManager.setState("manuallyDisabled");
-        await stateManager.rememberDisableHeuristics();
-        await setup.stop();
-        browser.experiments.preferences.onTRRPrefChanged.removeListener(
-          listener
-        );
-      }
-    );
   },
 
   async onConnectionChanged({ status }) {
@@ -541,6 +569,10 @@ const setup = {
       DOH_DOORHANGER_USER_DECISION_PREF,
       ""
     );
+    const runAddonPreviousTRRMode = await rollout.getSetting(
+      DOH_PREVIOUS_TRR_MODE_PREF,
+      -1
+    );
 
     if (isAddonDisabled) {
       // Regardless of pref, the user has chosen/heuristics dictated that this add-on should be disabled.
@@ -552,40 +584,18 @@ const setup = {
       return;
     }
 
-    if (runAddonBypassPref) {
-      // runAddonBypassPref being set means that this is not first-run, and we
-      // were still running heuristics when we shutdown - so it's safe to
-      // do the TRR mode migration and clear network.trr.mode.
-      rollout.migrateOldTrrMode();
-    }
-
     if (
       runAddonPref ||
       runAddonBypassPref ||
       runAddonDoorhangerDecision === "UIOk" ||
-      runAddonDoorhangerDecision === "enabled"
+      runAddonDoorhangerDecision === "enabled" ||
+      runAddonPreviousTRRMode === 2 ||
+      runAddonPreviousTRRMode === 0
     ) {
       rollout.init();
     } else {
       log("Disabled, aborting!");
     }
-  },
-
-  async stop() {
-    // Remove our listeners.
-    browser.networkStatus.onConnectionChanged.removeListener(
-      rollout.onConnectionChanged
-    );
-
-    try {
-      browser.captivePortal.onStateChange.removeListener(
-        rollout.onCaptiveStateChanged
-      );
-    } catch (e) {
-      // Captive Portal Service is disabled.
-    }
-
-    await browser.experiments.doorhanger.cancel();
   },
 };
 
@@ -599,16 +609,30 @@ const setup = {
   await rollout.migrateLocalStoragePrefs();
 
   log("Watching `doh-rollout.enabled` pref");
-  browser.experiments.preferences.onEnabledChanged.addListener(async () => {
+  browser.experiments.preferences.onPrefChanged.addListener(async () => {
     let enabled = await rollout.getSetting(DOH_ENABLED_PREF, false);
     if (enabled) {
       setup.start();
     } else {
       // Reset the TRR mode if we were running normally with no user-interference.
       if (await stateManager.shouldRunHeuristics()) {
-        await stateManager.setState("rollback");
+        await stateManager.setState("disabled");
       }
-      setup.stop();
+
+      // Remove our listeners.
+      browser.networkStatus.onConnectionChanged.removeListener(
+        rollout.onConnectionChanged
+      );
+
+      try {
+        browser.captivePortal.onStateChange.removeListener(
+          rollout.onCaptiveStateChanged
+        );
+      } catch (e) {
+        // Captive Portal Service is disabled.
+      }
+
+      await browser.experiments.doorhanger.cancel();
     }
   });
 
@@ -620,6 +644,6 @@ const setup = {
   ) {
     // We previously had turned on DoH, and now after a restart we've been
     // rolled back. Reset TRR mode.
-    await stateManager.setState("rollback");
+    await stateManager.setState("disabled");
   }
 })();

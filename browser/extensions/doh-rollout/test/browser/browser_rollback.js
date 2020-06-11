@@ -73,11 +73,11 @@ add_task(async function testRollback() {
   setPassingHeuristics();
   Preferences.reset(prefs.DOH_ENABLED_PREF);
   await waitForStateTelemetry();
-  await ensureTRRMode(undefined);
+  await ensureTRRMode(0);
   ensureNoTRRSelectionTelemetry();
   await ensureNoHeuristicsTelemetry();
   simulateNetworkChange();
-  await ensureNoTRRModeChange(undefined);
+  await ensureNoTRRModeChange(0);
   await ensureNoHeuristicsTelemetry();
 
   // Re-enable.
@@ -96,17 +96,17 @@ add_task(async function testRollback() {
   // Rollback again for good measure! This time with failing heuristics.
   Preferences.reset(prefs.DOH_ENABLED_PREF);
   await waitForStateTelemetry();
-  await ensureTRRMode(undefined);
+  await ensureNoTRRModeChange(0);
   ensureNoTRRSelectionTelemetry();
   await ensureNoHeuristicsTelemetry();
   simulateNetworkChange();
-  await ensureNoTRRModeChange(undefined);
+  await ensureNoTRRModeChange(0);
   await ensureNoHeuristicsTelemetry();
 
   // Re-enable.
   Preferences.set(prefs.DOH_ENABLED_PREF, true);
 
-  await ensureTRRMode(0);
+  await ensureNoTRRModeChange(0);
   ensureNoTRRSelectionTelemetry();
   await checkHeuristicsTelemetry("disable_doh", "startup");
 
@@ -119,11 +119,11 @@ add_task(async function testRollback() {
   // Rollback again, this time with TRR mode set to 2 prior to doing so.
   Preferences.reset(prefs.DOH_ENABLED_PREF);
   await waitForStateTelemetry();
-  await ensureTRRMode(undefined);
+  await ensureTRRMode(0);
   ensureNoTRRSelectionTelemetry();
   await ensureNoHeuristicsTelemetry();
   simulateNetworkChange();
-  await ensureNoTRRModeChange(undefined);
+  await ensureNoTRRModeChange(0);
   await ensureNoHeuristicsTelemetry();
 
   // Re-enable.
@@ -141,10 +141,10 @@ add_task(async function testRollback() {
   await disableAddon();
   Preferences.reset(prefs.DOH_ENABLED_PREF);
   await enableAddon();
-  await ensureTRRMode(undefined);
+  await ensureTRRMode(0);
   ensureNoTRRSelectionTelemetry();
   await ensureNoHeuristicsTelemetry();
   simulateNetworkChange();
-  await ensureNoTRRModeChange(undefined);
+  await ensureNoTRRModeChange(0);
   await ensureNoHeuristicsTelemetry();
 });

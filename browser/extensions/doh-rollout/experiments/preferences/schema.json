@@ -4,15 +4,9 @@
     "description": "A mirror for Services.prefs.",
     "events": [
       {
-        "name": "onEnabledChanged",
+        "name": "onPrefChanged",
         "type": "function",
-        "description": "Fired upon changes to `doh-rollout.enabled`.",
-        "parameters": []
-      },
-      {
-        "name": "onTRRPrefChanged",
-        "type": "function",
-        "description": "Fired upon changes to `network.trr.uri` and `network.trr.mode`.",
+        "description": "Fired upon changes to `doh-rollout.enabled` and `doh-rollout.debug`.",
         "parameters": []
       }
     ],
@@ -40,7 +34,7 @@
         "parameters": [
           {
             "type": "string",
-            "enum": ["doh-rollout.mode"]
+            "enum": ["network.trr.mode", "doh-rollout.previous.trr.mode"]
           },
           {
             "type": "integer",
@@ -120,7 +114,7 @@
         "parameters": [
           {
             "type": "string",
-            "enum": ["doh-rollout.self-enabled", "doh-rollout.mode", "network.trr.mode", "doh-rollout.previous.trr.mode"]
+            "enum": ["doh-rollout.self-enabled"]
           }
         ],
         "async": true
