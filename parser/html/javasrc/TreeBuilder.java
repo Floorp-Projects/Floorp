@@ -4316,21 +4316,21 @@ public abstract class TreeBuilder<T> implements TokenHandler,
 
     private boolean isAlmostStandards(String publicIdentifier,
             String systemIdentifier) {
-        if (Portability.lowerCaseLiteralEqualsIgnoreAsciiCaseString(
-                "-//w3c//dtd xhtml 1.0 transitional//en", publicIdentifier)) {
+        if (Portability.lowerCaseLiteralIsPrefixOfIgnoreAsciiCaseString(
+                "-//w3c//dtd xhtml 1.0 transitional//", publicIdentifier)) {
             return true;
         }
-        if (Portability.lowerCaseLiteralEqualsIgnoreAsciiCaseString(
-                "-//w3c//dtd xhtml 1.0 frameset//en", publicIdentifier)) {
+        if (Portability.lowerCaseLiteralIsPrefixOfIgnoreAsciiCaseString(
+                "-//w3c//dtd xhtml 1.0 frameset//", publicIdentifier)) {
             return true;
         }
         if (systemIdentifier != null) {
-            if (Portability.lowerCaseLiteralEqualsIgnoreAsciiCaseString(
-                    "-//w3c//dtd html 4.01 transitional//en", publicIdentifier)) {
+            if (Portability.lowerCaseLiteralIsPrefixOfIgnoreAsciiCaseString(
+                    "-//w3c//dtd html 4.01 transitional//", publicIdentifier)) {
                 return true;
             }
-            if (Portability.lowerCaseLiteralEqualsIgnoreAsciiCaseString(
-                    "-//w3c//dtd html 4.01 frameset//en", publicIdentifier)) {
+            if (Portability.lowerCaseLiteralIsPrefixOfIgnoreAsciiCaseString(
+                    "-//w3c//dtd html 4.01 frameset//", publicIdentifier)) {
                 return true;
             }
         }
@@ -4363,11 +4363,11 @@ public abstract class TreeBuilder<T> implements TokenHandler,
             }
         }
         if (systemIdentifier == null) {
-            if (Portability.lowerCaseLiteralEqualsIgnoreAsciiCaseString(
-                    "-//w3c//dtd html 4.01 transitional//en", publicIdentifier)) {
+            if (Portability.lowerCaseLiteralIsPrefixOfIgnoreAsciiCaseString(
+                    "-//w3c//dtd html 4.01 transitional//", publicIdentifier)) {
                 return true;
-            } else if (Portability.lowerCaseLiteralEqualsIgnoreAsciiCaseString(
-                    "-//w3c//dtd html 4.01 frameset//en", publicIdentifier)) {
+            } else if (Portability.lowerCaseLiteralIsPrefixOfIgnoreAsciiCaseString(
+                    "-//w3c//dtd html 4.01 frameset//", publicIdentifier)) {
                 return true;
             }
         } else if (Portability.lowerCaseLiteralEqualsIgnoreAsciiCaseString(
