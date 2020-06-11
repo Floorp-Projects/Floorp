@@ -959,8 +959,8 @@ class nsTArray_Impl
   typedef nsTArray_Impl<E, Alloc> self_type;
   typedef nsTArrayElementTraits<E> elem_traits;
   typedef nsTArray_SafeElementAtHelper<E, self_type> safeelementat_helper_type;
-  typedef mozilla::ArrayIterator<elem_type&, nsTArray<E>> iterator;
-  typedef mozilla::ArrayIterator<const elem_type&, nsTArray<E>> const_iterator;
+  typedef mozilla::ArrayIterator<elem_type&, self_type> iterator;
+  typedef mozilla::ArrayIterator<const elem_type&, self_type> const_iterator;
   typedef mozilla::ReverseIterator<iterator> reverse_iterator;
   typedef mozilla::ReverseIterator<const_iterator> const_reverse_iterator;
 
