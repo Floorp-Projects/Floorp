@@ -120,8 +120,7 @@ function matchRequest(channel, filters) {
     // look for it on channel.loadInfo instead.
     if (
       channel.loadInfo &&
-      channel.loadInfo.browsingContext &&
-      channel.loadInfo.browsingContext.id == filters.browsingContextID
+      channel.loadInfo.browsingContextID == filters.browsingContextID
     ) {
       return true;
     }
