@@ -34,6 +34,11 @@ A pagina che ti veu vedde a no peu ese mostrâ perché no l\'é poscibile verifi
 
     <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
     <string name="mozac_browser_errorpages_security_bad_cert_advanced">Avansæ…</string>
+    <!-- The advanced certificate information shown when a website sends has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[¶
+        <label>Porieva ese che quardun o preuva a fâ finta d\'ese o scito e sarieiva megio se no ti væ avanti.</label>¶
+        <br><br>¶
+        <label>I sciti web garantiscian a pròpia identitæ con di certificati. %1$s o no considera o scito <b>%2$s</b> fidou perché l\’autoritæ ch\'a l\'à emisso o certificato a l\'é sconosciua, o certificato o l\'é firmato pe conto seu opûre o server o no à mandou i certificati intermedi che servan.</label>¶]]></string>
     <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
     <string name="mozac_browser_errorpages_security_bad_cert_back">Vanni inderê (Racomandou)</string>
     <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
@@ -42,11 +47,24 @@ A pagina che ti veu vedde a no peu ese mostrâ perché no l\'é poscibile verifi
     <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
     <string name="mozac_browser_errorpages_net_interrupt_title">A conescion a l\'é stæta scancelâ</string>
 
+    <!-- The error message shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_message"><![CDATA[<p>O navegatô o s\'é conesso ben, ma a conescion a l\'é è stæta interotta into trasferimento de informaçioin. Preuva torna. </p>
+	<ul>
+		<li> O scito o porieiva ese tenporaneamente no disponibile ò tròppo indafarou. Preuva torna tra quarche momento. </li>
+		<li> Se no ti riesci a caregâ nisciunn-a pagina, contròlla i dæti do dispoxitivo ò a conescion Wi-Fi.</li>
+	</ul>]]></string>
+
     <!-- The document title and heading of the error page shown when a website takes too long to load. -->
     <string name="mozac_browser_errorpages_net_timeout_title">A conescion a gh\'à misso tròppo tenpo</string>
 
     <!-- The document title and heading of the error page shown when a website could not be reached. -->
     <string name="mozac_browser_errorpages_connection_failure_title">No riescio a conetime</string>
+
+    <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_title">Risposta sbaliâ da-o server</string>
+
+    <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_title">Feua linia</string>
 
     <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
     <string name="mozac_browser_errorpages_port_blocked_title">Acesso a-a pòrta dizabilitou pe raxoin de seguessa</string>
@@ -56,6 +74,9 @@ A pagina che ti veu vedde a no peu ese mostrâ perché no l\'é poscibile verifi
 
     <!-- The document title and heading of the error page shown when a file cannot be loaded because of a detected data corruption. -->
     <string name="mozac_browser_errorpages_corrupted_content_title">Erô contegnuo andæto a mâ</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_content_crashed_title">Contegnuo ciantou</string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_invalid_content_encoding_title">Erô còdifica do contegnuo</string>
