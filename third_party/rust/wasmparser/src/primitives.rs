@@ -100,27 +100,17 @@ pub enum SectionCode<'a> {
 /// Types as defined [here].
 ///
 /// [here]: https://webassembly.github.io/spec/core/syntax/types.html#types
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub enum Type {
     I32,
     I64,
     F32,
     F64,
     V128,
-    AnyFunc,
-    AnyRef,
-    NullRef,
+    FuncRef,
+    ExternRef,
     Func,
     EmptyBlockType,
-}
-
-impl Type {
-    pub(crate) fn is_valid_for_old_select(self) -> bool {
-        match self {
-            Type::I32 | Type::I64 | Type::F32 | Type::F64 => true,
-            _ => false,
-        }
-    }
 }
 
 /// Either a value type or a function type.
@@ -147,9 +137,8 @@ pub enum ExternalKind {
     Global,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub struct FuncType {
-    pub form: Type,
     pub params: Box<[Type]>,
     pub returns: Box<[Type]>,
 }
@@ -284,6 +273,8 @@ pub enum Operator<'a> {
     Return,
     Call { function_index: u32 },
     CallIndirect { index: u32, table_index: u32 },
+    ReturnCall { function_index: u32 },
+    ReturnCallIndirect { index: u32, table_index: u32 },
     Drop,
     Select,
     TypedSelect { ty: Type },
@@ -321,8 +312,8 @@ pub enum Operator<'a> {
     I64Const { value: i64 },
     F32Const { value: Ieee32 },
     F64Const { value: Ieee64 },
-    RefNull,
-    RefIsNull,
+    RefNull { ty: Type },
+    RefIsNull { ty: Type },
     RefFunc { function_index: u32 },
     I32Eqz,
     I32Eq,
@@ -622,6 +613,7 @@ pub enum Operator<'a> {
     V128Or,
     V128Xor,
     V128Bitselect,
+    I8x16Abs,
     I8x16Neg,
     I8x16AnyTrue,
     I8x16AllTrue,
@@ -638,7 +630,7 @@ pub enum Operator<'a> {
     I8x16MinU,
     I8x16MaxS,
     I8x16MaxU,
-    I8x16Mul,
+    I16x8Abs,
     I16x8Neg,
     I16x8AnyTrue,
     I16x8AllTrue,
@@ -656,6 +648,7 @@ pub enum Operator<'a> {
     I16x8MinU,
     I16x8MaxS,
     I16x8MaxU,
+    I32x4Abs,
     I32x4Neg,
     I32x4AnyTrue,
     I32x4AllTrue,
@@ -670,8 +663,6 @@ pub enum Operator<'a> {
     I32x4MaxS,
     I32x4MaxU,
     I64x2Neg,
-    I64x2AnyTrue,
-    I64x2AllTrue,
     I64x2Shl,
     I64x2ShrS,
     I64x2ShrU,
@@ -698,12 +689,8 @@ pub enum Operator<'a> {
     F64x2Max,
     I32x4TruncSatF32x4S,
     I32x4TruncSatF32x4U,
-    I64x2TruncSatF64x2S,
-    I64x2TruncSatF64x2U,
     F32x4ConvertI32x4S,
     F32x4ConvertI32x4U,
-    F64x2ConvertI64x2S,
-    F64x2ConvertI64x2U,
     V8x16Swizzle,
     V8x16Shuffle { lanes: [SIMDLaneIndex; 16] },
     V8x16LoadSplat { memarg: MemoryImmediate },

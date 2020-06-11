@@ -5,11 +5,11 @@ use log::{debug, info};
 use crate::analysis_control_flow::{CFGInfo, InstIxToBlockIxMap};
 use crate::analysis_data_flow::{
     calc_def_and_use, calc_livein_and_liveout, get_range_frags, get_sanitized_reg_uses_for_func,
-    merge_range_frags, set_virtual_range_metrics,
+    merge_range_frags,
 };
 use crate::data_structures::{
-    BlockIx, RangeFrag, RangeFragIx, RealRange, RealRangeIx, RealReg, RealRegUniverse, Reg,
-    RegVecsAndBounds, TypedIxVec, VirtualRange, VirtualRangeIx,
+    BlockIx, RangeFrag, RangeFragIx, RangeFragMetrics, RealRange, RealRangeIx, RealReg,
+    RealRegUniverse, RegVecsAndBounds, TypedIxVec, VirtualRange, VirtualRangeIx,
 };
 use crate::sparse_set::SparseSet;
 use crate::Function;
@@ -72,29 +72,28 @@ impl ToString for AnalysisError {
 //=============================================================================
 // Top level for all analysis activities.
 
+pub struct AnalysisInfo {
+    /// The sanitized per-insn reg-use info
+    pub(crate) reg_vecs_and_bounds: RegVecsAndBounds,
+    /// The real-reg live ranges
+    pub(crate) real_ranges: TypedIxVec<RealRangeIx, RealRange>,
+    /// The virtual-reg live ranges
+    pub(crate) virtual_ranges: TypedIxVec<VirtualRangeIx, VirtualRange>,
+    /// The fragment table
+    pub(crate) range_frags: TypedIxVec<RangeFragIx, RangeFrag>,
+    /// The fragment metrics table
+    pub(crate) range_metrics: TypedIxVec<RangeFragIx, RangeFragMetrics>,
+    /// Estimated execution frequency per block
+    pub(crate) estimated_frequencies: TypedIxVec<BlockIx, u32>,
+    /// Maps InstIxs to BlockIxs
+    pub(crate) inst_to_block_map: InstIxToBlockIxMap,
+}
+
 #[inline(never)]
 pub fn run_analysis<F: Function>(
     func: &F,
     reg_universe: &RealRegUniverse,
-) -> Result<
-    (
-        // The sanitized per-insn reg-use info
-        RegVecsAndBounds,
-        // The real-reg live ranges
-        TypedIxVec<RealRangeIx, RealRange>,
-        // The virtual-reg live ranges
-        TypedIxVec<VirtualRangeIx, VirtualRange>,
-        // The fragment table
-        TypedIxVec<RangeFragIx, RangeFrag>,
-        // Liveouts per block
-        TypedIxVec<BlockIx, SparseSet<Reg>>,
-        // Estimated execution frequency per block
-        TypedIxVec<BlockIx, u32>,
-        // Maps InstIxs to BlockIxs
-        InstIxToBlockIxMap,
-    ),
-    AnalysisError,
-> {
+) -> Result<AnalysisInfo, AnalysisError> {
     info!("run_analysis: begin");
     info!(
         "  run_analysis: {} blocks, {} insns",
@@ -115,10 +114,7 @@ pub fn run_analysis<F: Function>(
     let mut estimated_frequencies = TypedIxVec::new();
     for bix in func.blocks() {
         let mut estimated_frequency = 1;
-        let mut depth = cfg_info.depth_map[bix];
-        if depth > 3 {
-            depth = 3;
-        }
+        let depth = u32::min(cfg_info.depth_map[bix], 3);
         for _ in 0..depth {
             estimated_frequency *= 10;
         }
@@ -192,17 +188,23 @@ pub fn run_analysis<F: Function>(
     // VirtualRanges and RealRanges.
     info!("  run_analysis: begin liveness analysis");
 
-    let (frag_ixs_per_reg, frag_env) = get_range_frags(
+    let (frag_ixs_per_reg, frag_env, frag_metrics_env, vreg_classes) = get_range_frags(
         func,
-        &livein_sets_per_block,
-        &liveout_sets_per_block,
         &reg_vecs_and_bounds,
         &reg_universe,
+        &livein_sets_per_block,
+        &liveout_sets_per_block,
     );
 
-    let (rlr_env, mut vlr_env) = merge_range_frags(&frag_ixs_per_reg, &frag_env, &cfg_info);
-
-    set_virtual_range_metrics(&mut vlr_env, &frag_env, &estimated_frequencies);
+    let (rlr_env, vlr_env) = merge_range_frags(
+        &frag_ixs_per_reg,
+        &frag_env,
+        &frag_metrics_env,
+        &estimated_frequencies,
+        &cfg_info,
+        &reg_universe,
+        &vreg_classes,
+    );
 
     debug_assert!(liveout_sets_per_block.len() == estimated_frequencies.len());
 
@@ -227,13 +229,13 @@ pub fn run_analysis<F: Function>(
     info!("  run_analysis: end liveness analysis");
     info!("run_analysis: end");
 
-    Ok((
+    Ok(AnalysisInfo {
         reg_vecs_and_bounds,
-        rlr_env,
-        vlr_env,
-        frag_env,
-        liveout_sets_per_block,
+        real_ranges: rlr_env,
+        virtual_ranges: vlr_env,
+        range_frags: frag_env,
+        range_metrics: frag_metrics_env,
         estimated_frequencies,
         inst_to_block_map,
-    ))
+    })
 }

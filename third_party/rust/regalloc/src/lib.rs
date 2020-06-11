@@ -25,11 +25,14 @@ mod checker;
 mod data_structures;
 mod inst_stream;
 mod linear_scan;
+mod reg_maps;
+mod snapshot;
 mod sparse_set;
 mod union_find;
 
 use log::{info, log_enabled, Level};
-use std::fmt;
+use std::default;
+use std::{borrow::Cow, fmt};
 
 // Stuff that is defined by the library
 
@@ -147,9 +150,24 @@ pub use crate::data_structures::RegClassInfo;
 
 pub use crate::data_structures::RegUsageCollector;
 
-// A structure for providing mapping results for a given instruction.
+/// A trait for providing mapping results for a given instruction.
+///
+/// This provides virtual to real register mappings for every mention in an instruction: use, mod
+/// or def. The main purpose of this trait is to be used when re-writing the instruction stream
+/// after register allocation happened; see also `Function::map_regs`.
+pub trait RegUsageMapper: fmt::Debug {
+    /// Return the `RealReg` if mapped, or `None`, for `vreg` occuring as a use
+    /// on the current instruction.
+    fn get_use(&self, vreg: VirtualReg) -> Option<RealReg>;
 
-pub use crate::data_structures::RegUsageMapper;
+    /// Return the `RealReg` if mapped, or `None`, for `vreg` occuring as a def
+    /// on the current instruction.
+    fn get_def(&self, vreg: VirtualReg) -> Option<RealReg>;
+
+    /// Return the `RealReg` if mapped, or `None`, for a `vreg` occuring as a
+    /// mod on the current instruction.
+    fn get_mod(&self, vreg: VirtualReg) -> Option<RealReg>;
+}
 
 // TypedIxVector, so that the interface can speak about vectors of blocks and
 // instructions.
@@ -196,7 +214,7 @@ pub trait Function {
     fn block_insns(&self, block: BlockIx) -> Range<InstIx>;
 
     /// Get CFG successors for a given block.
-    fn block_succs(&self, block: BlockIx) -> Vec<BlockIx>;
+    fn block_succs(&self, block: BlockIx) -> Cow<[BlockIx]>;
 
     /// Determine whether an instruction is a return instruction.
     fn is_ret(&self, insn: InstIx) -> bool;
@@ -219,16 +237,15 @@ pub trait Function {
     /// Note that this does not take a `self`, because we want to allow the
     /// regalloc to have a mutable borrow of an insn (which borrows the whole
     /// Function in turn) outstanding while calling this.
-    fn map_regs(insn: &mut Self::Inst, maps: &RegUsageMapper);
+    fn map_regs<RUM: RegUsageMapper>(insn: &mut Self::Inst, maps: &RUM);
 
     /// Allow the regalloc to query whether this is a move. Returns (dst, src).
     fn is_move(&self, insn: &Self::Inst) -> Option<(Writable<Reg>, Reg)>;
 
-    /// Get an estimate of how many `VirtualReg` indices are used, if available, to allow
-    /// preallocating data structures.
-    fn get_vreg_count_estimate(&self) -> Option<usize> {
-        None
-    }
+    /// Get the precise number of `VirtualReg` in use in this function, to allow preallocating data
+    /// structures. This number *must* be a correct lower-bound, otherwise invalid index failures
+    /// may happen; it is of course better if it is exact.
+    fn get_num_vregs(&self) -> usize;
 
     // --------------
     // Spills/reloads
@@ -354,11 +371,9 @@ pub struct RegAllocResult<F: Function> {
 
 /// A choice of register allocation algorithm to run.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum RegAllocAlgorithm {
+pub enum AlgorithmWithDefaults {
     Backtracking,
-    BacktrackingChecked,
     LinearScan,
-    LinearScanChecked,
 }
 
 pub use crate::analysis_main::AnalysisError;
@@ -380,43 +395,125 @@ impl fmt::Display for RegAllocError {
     }
 }
 
-/// Allocate registers for a function's code, given a universe of real
-/// registers that we are allowed to use.
+pub use crate::bt_main::BacktrackingOptions;
+pub use crate::linear_scan::LinearScanOptions;
+
+#[derive(Clone)]
+pub enum Algorithm {
+    LinearScan(LinearScanOptions),
+    Backtracking(BacktrackingOptions),
+}
+
+impl fmt::Debug for Algorithm {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Algorithm::LinearScan(opts) => write!(fmt, "{:?}", opts),
+            Algorithm::Backtracking(opts) => write!(fmt, "{:?}", opts),
+        }
+    }
+}
+
+/// Tweakable options shared by all the allocators.
+#[derive(Clone)]
+pub struct Options {
+    /// Should the register allocator check that its results are valid? This adds runtime to the
+    /// compiler, so this is disabled by default.
+    pub run_checker: bool,
+
+    /// Which algorithm should be used for register allocation? By default, selects backtracking,
+    /// which is slower to compile but creates code of better quality.
+    pub algorithm: Algorithm,
+}
+
+impl default::Default for Options {
+    fn default() -> Self {
+        Self {
+            run_checker: false,
+            algorithm: Algorithm::Backtracking(Default::default()),
+        }
+    }
+}
+
+impl fmt::Debug for Options {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "checker: {:?}, algorithm: {:?}",
+            self.run_checker, self.algorithm
+        )
+    }
+}
+
+/// Allocate registers for a function's code, given a universe of real registers that we are
+/// allowed to use.
 ///
-/// The control flow graph must not contain any critical edges, that is, any
-/// edge coming from a block with multiple successors must not flow into a block
-/// with multiple predecessors. The embedder must have split critical edges
-/// before handing over the function to this function. Otherwise, an error will
-/// be returned.
+/// The control flow graph must not contain any critical edges, that is, any edge coming from a
+/// block with multiple successors must not flow into a block with multiple predecessors. The
+/// embedder must have split critical edges before handing over the function to this function.
+/// Otherwise, an error will be returned.
 ///
-/// Allocate may succeed, returning a `RegAllocResult` with the new instruction
-/// sequence, or it may fail, returning an error.
+/// Allocate may succeed, returning a `RegAllocResult` with the new instruction sequence, or it may
+/// fail, returning an error.
+///
+/// Runtime options can be passed to the allocators, through the use of [Options] for options
+/// common to all the backends. The choice of algorithm is done by passing a given [Algorithm]
+/// instance, with options tailored for each algorithm.
 #[inline(never)]
-pub fn allocate_registers<F: Function>(
+pub fn allocate_registers_with_opts<F: Function>(
     func: &mut F,
-    algorithm: RegAllocAlgorithm,
     rreg_universe: &RealRegUniverse,
-    request_block_annotations: bool,
+    opts: Options,
 ) -> Result<RegAllocResult<F>, RegAllocError> {
     info!("");
     info!("================ regalloc.rs: BEGIN function ================");
     if log_enabled!(Level::Info) {
+        info!("with options: {:?}", opts);
         let strs = rreg_universe.show();
         info!("using RealRegUniverse:");
         for s in strs {
             info!("  {}", s);
         }
     }
-    let res = match algorithm {
-        RegAllocAlgorithm::Backtracking | RegAllocAlgorithm::BacktrackingChecked => {
-            let use_checker = algorithm == RegAllocAlgorithm::BacktrackingChecked;
-            bt_main::alloc_main(func, rreg_universe, use_checker, request_block_annotations)
+    let run_checker = opts.run_checker;
+    let res = match &opts.algorithm {
+        Algorithm::Backtracking(opts) => {
+            bt_main::alloc_main(func, rreg_universe, run_checker, opts)
         }
-        RegAllocAlgorithm::LinearScan | RegAllocAlgorithm::LinearScanChecked => {
-            let use_checker = algorithm == RegAllocAlgorithm::LinearScanChecked;
-            linear_scan::run(func, rreg_universe, use_checker)
-        }
+        Algorithm::LinearScan(opts) => linear_scan::run(func, rreg_universe, run_checker, opts),
     };
     info!("================ regalloc.rs: END function ================");
     res
 }
+
+/// Allocate registers for a function's code, given a universe of real registers that we are
+/// allowed to use.
+///
+/// The control flow graph must not contain any critical edges, that is, any edge coming from a
+/// block with multiple successors must not flow into a block with multiple predecessors. The
+/// embedder must have split critical edges before handing over the function to this function.
+/// Otherwise, an error will be returned.
+///
+/// Allocate may succeed, returning a `RegAllocResult` with the new instruction sequence, or it may
+/// fail, returning an error.
+///
+/// This is a convenient function that uses standard options for the allocator, according to the
+/// selected algorithm.
+#[inline(never)]
+pub fn allocate_registers<F: Function>(
+    func: &mut F,
+    rreg_universe: &RealRegUniverse,
+    algorithm: AlgorithmWithDefaults,
+) -> Result<RegAllocResult<F>, RegAllocError> {
+    let algorithm = match algorithm {
+        AlgorithmWithDefaults::Backtracking => Algorithm::Backtracking(Default::default()),
+        AlgorithmWithDefaults::LinearScan => Algorithm::LinearScan(Default::default()),
+    };
+    let opts = Options {
+        algorithm,
+        ..Default::default()
+    };
+    allocate_registers_with_opts(func, rreg_universe, opts)
+}
+
+// Facilities to snapshot regalloc inputs and reproduce them in regalloc.rs.
+pub use crate::snapshot::IRSnapshot;
