@@ -23,6 +23,12 @@ add_task(async function test_cancelEditCreditCardDialogWithESC() {
 
 add_task(async function test_saveCreditCard() {
   await testDialog(EDIT_CREDIT_CARD_DIALOG_URL, win => {
+    ok(
+      win.document.documentElement
+        .querySelector("title")
+        .textContent.includes("Add"),
+      "Add card dialog title is correct"
+    );
     EventUtils.synthesizeKey("VK_TAB", {}, win);
     EventUtils.synthesizeKey(TEST_CREDIT_CARD_1["cc-number"], {}, win);
     EventUtils.synthesizeKey("VK_TAB", {}, win);
@@ -157,6 +163,12 @@ add_task(async function test_editCreditCard() {
   await testDialog(
     EDIT_CREDIT_CARD_DIALOG_URL,
     win => {
+      ok(
+        win.document.documentElement
+          .querySelector("title")
+          .textContent.includes("Edit"),
+        "Edit card dialog title is correct"
+      );
       EventUtils.synthesizeKey("VK_TAB", {}, win);
       EventUtils.synthesizeKey("VK_TAB", {}, win);
       EventUtils.synthesizeKey("VK_TAB", {}, win);
