@@ -56,9 +56,12 @@ async function testSteps() {
       await requestFinished(request);
 
       ok(false, "Should have thrown");
-    } catch (ex) {
+    } catch (e) {
       ok(true, "Should have thrown");
-      ok(ex === NS_ERROR_FILE_NO_DEVICE_SPACE, "Threw right code");
+      ok(
+        e.resultCode === NS_ERROR_FILE_NO_DEVICE_SPACE,
+        "Threw right result code"
+      );
     }
 
     info("Closing the database and clearing");
