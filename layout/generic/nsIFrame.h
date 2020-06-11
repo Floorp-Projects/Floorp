@@ -518,6 +518,62 @@ static void ReleaseValue(T* aPropertyValue) {
 
 //----------------------------------------------------------------------
 
+/**
+ * nsIFrame logging constants. We redefine the nspr
+ * PRLogModuleInfo.level field to be a bitfield.  Each bit controls a
+ * specific type of logging. Each logging operation has associated
+ * inline methods defined below.
+ *
+ * Due to the redefinition of the level field we cannot use MOZ_LOG directly
+ * as that will cause assertions due to invalid log levels.
+ */
+#define NS_FRAME_TRACE_CALLS 0x1
+#define NS_FRAME_TRACE_PUSH_PULL 0x2
+#define NS_FRAME_TRACE_CHILD_REFLOW 0x4
+#define NS_FRAME_TRACE_NEW_FRAMES 0x8
+
+#define NS_FRAME_LOG_TEST(_lm, _bit) \
+  (int(((mozilla::LogModule*)(_lm))->Level()) & (_bit))
+
+#ifdef DEBUG
+#  define NS_FRAME_LOG(_bit, _args)                          \
+    PR_BEGIN_MACRO                                           \
+    if (NS_FRAME_LOG_TEST(nsFrame::sFrameLogModule, _bit)) { \
+      printf_stderr _args;                                   \
+    }                                                        \
+    PR_END_MACRO
+#else
+#  define NS_FRAME_LOG(_bit, _args)
+#endif
+
+// XXX Need to rework this so that logging is free when it's off
+#ifdef DEBUG
+#  define NS_FRAME_TRACE_IN(_method) Trace(_method, true)
+
+#  define NS_FRAME_TRACE_OUT(_method) Trace(_method, false)
+
+#  define NS_FRAME_TRACE(_bit, _args)                        \
+    PR_BEGIN_MACRO                                           \
+    if (NS_FRAME_LOG_TEST(nsFrame::sFrameLogModule, _bit)) { \
+      TraceMsg _args;                                        \
+    }                                                        \
+    PR_END_MACRO
+
+#  define NS_FRAME_TRACE_REFLOW_IN(_method) Trace(_method, true)
+
+#  define NS_FRAME_TRACE_REFLOW_OUT(_method, _status) \
+    Trace(_method, false, _status)
+
+#else
+#  define NS_FRAME_TRACE(_bits, _args)
+#  define NS_FRAME_TRACE_IN(_method)
+#  define NS_FRAME_TRACE_OUT(_method)
+#  define NS_FRAME_TRACE_REFLOW_IN(_method)
+#  define NS_FRAME_TRACE_REFLOW_OUT(_method, _status)
+#endif
+
+//----------------------------------------------------------------------
+
 // Frame allocation boilerplate macros. Every subclass of nsFrame must
 // either use NS_{DECL,IMPL}_FRAMEARENA_HELPERS pair for allocating
 // memory correctly, or use NS_DECL_ABSTRACT_FRAME to declare a frame
@@ -5182,6 +5238,39 @@ class nsIFrame : public nsQueryFrame {
 #endif
 
 #ifdef DEBUG
+  /**
+   * Tracing method that writes a method enter/exit routine to the
+   * nspr log using the nsIFrame log module. The tracing is only
+   * done when the NS_FRAME_TRACE_CALLS bit is set in the log module's
+   * level field.
+   */
+  void Trace(const char* aMethod, bool aEnter);
+  void Trace(const char* aMethod, bool aEnter, const nsReflowStatus& aStatus);
+  void TraceMsg(const char* aFormatString, ...) MOZ_FORMAT_PRINTF(2, 3);
+
+  // Helper function that verifies that each frame in the list has the
+  // NS_FRAME_IS_DIRTY bit set
+  static void VerifyDirtyBitSet(const nsFrameList& aFrameList);
+
+  // Display Reflow Debugging
+  static void* DisplayReflowEnter(nsPresContext* aPresContext, nsIFrame* aFrame,
+                                  const ReflowInput& aReflowInput);
+  static void* DisplayLayoutEnter(nsIFrame* aFrame);
+  static void* DisplayIntrinsicISizeEnter(nsIFrame* aFrame, const char* aType);
+  static void* DisplayIntrinsicSizeEnter(nsIFrame* aFrame, const char* aType);
+  static void DisplayReflowExit(nsPresContext* aPresContext, nsIFrame* aFrame,
+                                ReflowOutput& aMetrics,
+                                const nsReflowStatus& aStatus,
+                                void* aFrameTreeNode);
+  static void DisplayLayoutExit(nsIFrame* aFrame, void* aFrameTreeNode);
+  static void DisplayIntrinsicISizeExit(nsIFrame* aFrame, const char* aType,
+                                        nscoord aResult, void* aFrameTreeNode);
+  static void DisplayIntrinsicSizeExit(nsIFrame* aFrame, const char* aType,
+                                       nsSize aResult, void* aFrameTreeNode);
+
+  static void DisplayReflowStartup();
+  static void DisplayReflowShutdown();
+
   static mozilla::LazyLogModule sFrameLogModule;
 
   // Show frame borders when rendering
