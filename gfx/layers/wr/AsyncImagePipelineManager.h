@@ -98,7 +98,8 @@ class AsyncImagePipelineManager final {
                                 const gfx::Matrix4x4& aScTransform,
                                 const gfx::MaybeIntSize& aScaleToSize,
                                 const wr::ImageRendering& aFilter,
-                                const wr::MixBlendMode& aMixBlendMode);
+                                const wr::MixBlendMode& aMixBlendMode,
+                                const LayoutDeviceSize& aScaleFromSize);
   void ApplyAsyncImagesOfImageBridge(wr::TransactionBuilder& aSceneBuilderTxn,
                                      wr::TransactionBuilder& aFastTxn);
   void ApplyAsyncImageForPipeline(const wr::PipelineId& aPipelineId,
@@ -176,22 +177,25 @@ class AsyncImagePipelineManager final {
                 const gfx::Matrix4x4& aScTransform,
                 const gfx::MaybeIntSize& aScaleToSize,
                 const wr::ImageRendering& aFilter,
-                const wr::MixBlendMode& aMixBlendMode) {
-      mIsChanged |= !mScBounds.IsEqualEdges(aScBounds) ||
-                    mScTransform != aScTransform ||
-                    mScaleToSize != aScaleToSize || mFilter != aFilter ||
-                    mMixBlendMode != aMixBlendMode;
+                const wr::MixBlendMode& aMixBlendMode,
+                const LayoutDeviceSize& aScaleFromSize) {
+      mIsChanged |=
+          !mScBounds.IsEqualEdges(aScBounds) || mScTransform != aScTransform ||
+          mScaleToSize != aScaleToSize || mFilter != aFilter ||
+          mMixBlendMode != aMixBlendMode || mScaleFromSize != aScaleFromSize;
       mScBounds = aScBounds;
       mScTransform = aScTransform;
       mScaleToSize = aScaleToSize;
       mFilter = aFilter;
       mMixBlendMode = aMixBlendMode;
+      mScaleFromSize = aScaleFromSize;
     }
 
     bool mInitialised;
     bool mIsChanged;
     bool mUseExternalImage;
     LayoutDeviceRect mScBounds;
+    LayoutDeviceSize mScaleFromSize;
     gfx::Matrix4x4 mScTransform;
     gfx::MaybeIntSize mScaleToSize;
     wr::ImageRendering mFilter;

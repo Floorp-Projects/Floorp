@@ -181,7 +181,8 @@ void AsyncImagePipelineManager::RemoveAsyncImagePipeline(
 void AsyncImagePipelineManager::UpdateAsyncImagePipeline(
     const wr::PipelineId& aPipelineId, const LayoutDeviceRect& aScBounds,
     const gfx::Matrix4x4& aScTransform, const gfx::MaybeIntSize& aScaleToSize,
-    const wr::ImageRendering& aFilter, const wr::MixBlendMode& aMixBlendMode) {
+    const wr::ImageRendering& aFilter, const wr::MixBlendMode& aMixBlendMode,
+    const LayoutDeviceSize& aScaleFromSize) {
   if (mDestroyed) {
     return;
   }
@@ -192,7 +193,7 @@ void AsyncImagePipelineManager::UpdateAsyncImagePipeline(
   }
   pipeline->mInitialised = true;
   pipeline->Update(aScBounds, aScTransform, aScaleToSize, aFilter,
-                   aMixBlendMode);
+                   aMixBlendMode, aScaleFromSize);
 }
 
 Maybe<TextureHost::ResourceUpdateOp> AsyncImagePipelineManager::UpdateImageKeys(
@@ -362,10 +363,6 @@ void AsyncImagePipelineManager::ApplyAsyncImageForPipeline(
   aPipeline->mIsChanged = false;
 
   gfx::Matrix4x4 scTransform = aPipeline->mScTransform;
-  if (aPipeline->mCurrentTexture && aPipeline->mCurrentTexture->NeedsYFlip()) {
-    scTransform.PreTranslate(0, aPipeline->mCurrentTexture->GetSize().height, 0)
-        .PreScale(1, -1, 1);
-  }
 
   wr::LayoutSize contentSize{aPipeline->mScBounds.Width(),
                              aPipeline->mScBounds.Height()};
@@ -374,8 +371,24 @@ void AsyncImagePipelineManager::ApplyAsyncImageForPipeline(
   float opacity = 1.0f;
   wr::StackingContextParams params;
   params.opacity = &opacity;
-  params.mTransformPtr = scTransform.IsIdentity() ? nullptr : &scTransform;
   params.mix_blend_mode = aPipeline->mMixBlendMode;
+
+  wr::WrComputedTransformData computedTransform;
+  if (!aPipeline->mScaleFromSize.IsEmpty()) {
+    MOZ_ASSERT(scTransform.IsIdentity());
+    computedTransform.vertical_flip =
+        aPipeline->mCurrentTexture && aPipeline->mCurrentTexture->NeedsYFlip();
+    computedTransform.scale_from = wr::ToLayoutSize(aPipeline->mScaleFromSize);
+    params.computed_transform = &computedTransform;
+  } else {
+    if (aPipeline->mCurrentTexture &&
+        aPipeline->mCurrentTexture->NeedsYFlip()) {
+      scTransform
+          .PreTranslate(0, aPipeline->mCurrentTexture->GetSize().height, 0)
+          .PreScale(1, -1, 1);
+    }
+    params.mTransformPtr = scTransform.IsIdentity() ? nullptr : &scTransform;
+  }
 
   Maybe<wr::WrSpatialId> referenceFrameId = builder.PushStackingContext(
       params, wr::ToLayoutRect(aPipeline->mScBounds),

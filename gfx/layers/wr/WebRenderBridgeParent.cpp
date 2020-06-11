@@ -1371,7 +1371,7 @@ bool WebRenderBridgeParent::ProcessWebRenderParentCommands(
             cmd.get_OpUpdateAsyncImagePipeline();
         mAsyncImageManager->UpdateAsyncImagePipeline(
             op.pipelineId(), op.scBounds(), op.scTransform(), op.scaleToSize(),
-            op.filter(), op.mixBlendMode());
+            op.filter(), op.mixBlendMode(), op.scaleFromSize());
         mAsyncImageManager->ApplyAsyncImageForPipeline(op.pipelineId(), aTxn,
                                                        txnForImageBridge);
         break;
