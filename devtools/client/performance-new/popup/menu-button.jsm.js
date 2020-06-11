@@ -229,6 +229,10 @@ function initialize(toggleProfilerKeyShortcuts) {
         return;
       }
 
+      // This class is needed to show the subview arrow when our button
+      // is in the overflow menu.
+      buttonElement.classList.add("subviewbutton-nav");
+
       function setButtonActive() {
         buttonElement.setAttribute(
           "tooltiptext",
