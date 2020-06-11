@@ -634,7 +634,7 @@ bool nsLookAndFeel::GetFontImpl(FontID aID, nsString& aFontName, gfxFontStyle& a
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 
   // hack for now
-  if (aID == eFont_Window || aID == eFont_Document) {
+  if (aID == FontID::Window || aID == FontID::Document) {
     aFontStyle.style = mozilla::FontSlantStyle::Normal();
     aFontStyle.weight = mozilla::FontWeight::Normal();
     aFontStyle.stretch = mozilla::FontStretch::Normal();

@@ -10200,9 +10200,9 @@ void nsLayoutUtils::ComputeSystemFont(nsFont* aSystemFont,
     // XXXzw Should we even still *have* this code?  It looks to be making
     // old, probably obsolete assumptions.
 
-    if (aFontID == LookAndFeel::eFont_Field ||
-        aFontID == LookAndFeel::eFont_Button ||
-        aFontID == LookAndFeel::eFont_List) {
+    if (aFontID == LookAndFeel::FontID::Field ||
+        aFontID == LookAndFeel::FontID::Button ||
+        aFontID == LookAndFeel::FontID::List) {
       // As far as I can tell the system default fonts and sizes
       // on MS-Windows for Buttons, Listboxes/Comboxes and Text Fields are
       // all pre-determined and cannot be changed by either the control panel

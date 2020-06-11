@@ -115,8 +115,8 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
     gfxFontStyle mFontStyle;
   };
 
-  mozilla::RangedArray<CachedSystemFont, FontID_MINIMUM,
-                       FontID_MAXIMUM + 1 - FontID_MINIMUM>
+  mozilla::RangedArray<CachedSystemFont, size_t(FontID::MINIMUM),
+                       size_t(FontID::MAXIMUM) + 1 - size_t(FontID::MINIMUM)>
       mSystemFontCache;
 
   nsCOMPtr<nsIWindowsRegKey> mDwmKey;

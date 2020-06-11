@@ -395,29 +395,29 @@ class LookAndFeel {
 
   // These constants must be kept in 1:1 correspondence with the
   // NS_STYLE_FONT_* system font constants.
-  enum FontID {
-    eFont_Caption = 1,  // css2
-    FontID_MINIMUM = eFont_Caption,
-    eFont_Icon,
-    eFont_Menu,
-    eFont_MessageBox,
-    eFont_SmallCaption,
-    eFont_StatusBar,
+  enum class FontID {
+    Caption = 1,  // css2
+    MINIMUM = Caption,
+    Icon,
+    Menu,
+    MessageBox,
+    SmallCaption,
+    StatusBar,
 
-    eFont_Window,  // css3
-    eFont_Document,
-    eFont_Workspace,
-    eFont_Desktop,
-    eFont_Info,
-    eFont_Dialog,
-    eFont_Button,
-    eFont_PullDownMenu,
-    eFont_List,
-    eFont_Field,
+    Window,  // css3
+    Document,
+    Workspace,
+    Desktop,
+    Info,
+    Dialog,
+    Button,
+    PullDownMenu,
+    List,
+    Field,
 
-    eFont_Tooltips,  // moz
-    eFont_Widget,
-    FontID_MAXIMUM = eFont_Widget
+    Tooltips,  // moz
+    Widget,
+    MAXIMUM = Widget,
   };
 
   /**
