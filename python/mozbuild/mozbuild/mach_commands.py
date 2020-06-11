@@ -1418,21 +1418,17 @@ class Repackage(MachCommandBase):
                      help='Mar binary path')
     @CommandArgument('--output', '-o', type=str, required=True,
                      help='Output filename')
-    @CommandArgument('--format', type=str, default='lzma',
-                     choices=('lzma', 'bz2'),
-                     help='Mar format')
     @CommandArgument('--arch', type=str, required=True,
                      help='The archtecture you are building.')
     @CommandArgument('--mar-channel-id', type=str,
                      help='Mar channel id')
-    def repackage_mar(self, input, mar, output, format, arch, mar_channel_id):
+    def repackage_mar(self, input, mar, output, arch, mar_channel_id):
         from mozbuild.repackaging.mar import repackage_mar
         repackage_mar(
             self.topsrcdir,
             input,
             mar,
             output,
-            format,
             arch=arch,
             mar_channel_id=mar_channel_id,
         )
