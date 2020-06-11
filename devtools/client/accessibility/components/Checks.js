@@ -36,6 +36,7 @@ function EmptyChecks() {
     {
       className: "checks-empty",
       role: "presentation",
+      tabIndex: "-1",
     },
     L10N.getStr("accessibility.checks.empty2")
   );
@@ -91,6 +92,7 @@ class Checks extends Component {
       {
         className: "checks",
         role: "presentation",
+        tabIndex: "-1",
       },
       List({ items, labelledby })
     );
