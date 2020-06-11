@@ -36,7 +36,7 @@ class MigrationTipProvider(private val context: Context) : TipProvider {
     private fun firefoxPreviewMovedTip(): Tip =
         Tip(
             type = TipType.Button(
-                text = context.getString(R.string.tip_firefox_preview_moved_button),
+                text = context.getString(R.string.tip_firefox_preview_moved_button_2),
                 action = ::getFirefoxMovedButtonAction
             ),
             identifier = getIdentifier(),

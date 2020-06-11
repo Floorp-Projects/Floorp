@@ -69,7 +69,7 @@ class MigrationTipProviderTest {
         val tip = provider.tip!!
         val button = tip.type as TipType.Button
         assertEquals(
-            context.getString(R.string.tip_firefox_preview_moved_button),
+            context.getString(R.string.tip_firefox_preview_moved_button_2),
             button.text
         )
         assertEquals(
