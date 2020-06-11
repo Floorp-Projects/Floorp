@@ -2481,7 +2481,9 @@ class nsDisplayTreeBody final : public nsPaintedDisplayItem {
 
   nsDisplayItemGeometry* AllocateGeometry(
       nsDisplayListBuilder* aBuilder) override {
-    return new nsDisplayItemGenericImageGeometry(this, aBuilder);
+    auto* geometry = new nsDisplayTreeBodyGeometry(this, aBuilder);
+    geometry->mWindowIsActive = IsWindowActive();
+    return geometry;
   }
 
   void Destroy(nsDisplayListBuilder* aBuilder) override {
@@ -2489,14 +2491,20 @@ class nsDisplayTreeBody final : public nsPaintedDisplayItem {
     nsPaintedDisplayItem::Destroy(aBuilder);
   }
 
+  bool IsWindowActive() const {
+    EventStates docState =
+        mFrame->PresContext()->Document()->GetDocumentState();
+    return !docState.HasState(NS_DOCUMENT_STATE_WINDOW_INACTIVE);
+  }
+
   void ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
                                  const nsDisplayItemGeometry* aGeometry,
                                  nsRegion* aInvalidRegion) const override {
-    auto geometry =
-        static_cast<const nsDisplayItemGenericImageGeometry*>(aGeometry);
+    auto geometry = static_cast<const nsDisplayTreeBodyGeometry*>(aGeometry);
 
-    if (aBuilder->ShouldSyncDecodeImages() &&
-        geometry->ShouldInvalidateToSyncDecodeImages()) {
+    if ((aBuilder->ShouldSyncDecodeImages() &&
+         geometry->ShouldInvalidateToSyncDecodeImages()) ||
+        IsWindowActive() != geometry->mWindowIsActive) {
       bool snap;
       aInvalidRegion->Or(*aInvalidRegion, GetBounds(aBuilder, &snap));
     }
