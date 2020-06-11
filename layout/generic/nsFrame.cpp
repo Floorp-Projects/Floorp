@@ -11233,7 +11233,7 @@ void nsAdaptorPrintReason(ReflowInput& aReflowInput) {
 #endif
 
 #ifdef DEBUG
-static void GetTagName(nsFrame* aFrame, nsIContent* aContent, int aResultSize,
+static void GetTagName(nsIFrame* aFrame, nsIContent* aContent, int aResultSize,
                        char* aResult) {
   if (aContent) {
     snprintf(aResult, aResultSize, "%s@%p",
@@ -11243,7 +11243,7 @@ static void GetTagName(nsFrame* aFrame, nsIContent* aContent, int aResultSize,
   }
 }
 
-void nsFrame::Trace(const char* aMethod, bool aEnter) {
+void nsIFrame::Trace(const char* aMethod, bool aEnter) {
   if (NS_FRAME_LOG_TEST(sFrameLogModule, NS_FRAME_TRACE_CALLS)) {
     char tagbuf[40];
     GetTagName(this, mContent, sizeof(tagbuf), tagbuf);
@@ -11251,8 +11251,8 @@ void nsFrame::Trace(const char* aMethod, bool aEnter) {
   }
 }
 
-void nsFrame::Trace(const char* aMethod, bool aEnter,
-                    const nsReflowStatus& aStatus) {
+void nsIFrame::Trace(const char* aMethod, bool aEnter,
+                     const nsReflowStatus& aStatus) {
   if (NS_FRAME_LOG_TEST(sFrameLogModule, NS_FRAME_TRACE_CALLS)) {
     char tagbuf[40];
     GetTagName(this, mContent, sizeof(tagbuf), tagbuf);
@@ -11263,7 +11263,7 @@ void nsFrame::Trace(const char* aMethod, bool aEnter,
   }
 }
 
-void nsFrame::TraceMsg(const char* aFormatString, ...) {
+void nsIFrame::TraceMsg(const char* aFormatString, ...) {
   if (NS_FRAME_LOG_TEST(sFrameLogModule, NS_FRAME_TRACE_CALLS)) {
     // Format arguments into a buffer
     char argbuf[200];
@@ -11278,7 +11278,7 @@ void nsFrame::TraceMsg(const char* aFormatString, ...) {
   }
 }
 
-void nsFrame::VerifyDirtyBitSet(const nsFrameList& aFrameList) {
+void nsIFrame::VerifyDirtyBitSet(const nsFrameList& aFrameList) {
   for (nsFrameList::Enumerator e(aFrameList); !e.AtEnd(); e.Next()) {
     NS_ASSERTION(e.get()->GetStateBits() & NS_FRAME_IS_DIRTY,
                  "dirty bit not set");
@@ -11295,34 +11295,34 @@ DR_cookie::DR_cookie(nsPresContext* aPresContext, nsIFrame* aFrame,
       mMetrics(aMetrics),
       mStatus(aStatus) {
   MOZ_COUNT_CTOR(DR_cookie);
-  mValue = nsFrame::DisplayReflowEnter(aPresContext, mFrame, mReflowInput);
+  mValue = nsIFrame::DisplayReflowEnter(aPresContext, mFrame, mReflowInput);
 }
 
 DR_cookie::~DR_cookie() {
   MOZ_COUNT_DTOR(DR_cookie);
-  nsFrame::DisplayReflowExit(mPresContext, mFrame, mMetrics, mStatus, mValue);
+  nsIFrame::DisplayReflowExit(mPresContext, mFrame, mMetrics, mStatus, mValue);
 }
 
 DR_layout_cookie::DR_layout_cookie(nsIFrame* aFrame) : mFrame(aFrame) {
   MOZ_COUNT_CTOR(DR_layout_cookie);
-  mValue = nsFrame::DisplayLayoutEnter(mFrame);
+  mValue = nsIFrame::DisplayLayoutEnter(mFrame);
 }
 
 DR_layout_cookie::~DR_layout_cookie() {
   MOZ_COUNT_DTOR(DR_layout_cookie);
-  nsFrame::DisplayLayoutExit(mFrame, mValue);
+  nsIFrame::DisplayLayoutExit(mFrame, mValue);
 }
 
 DR_intrinsic_inline_size_cookie::DR_intrinsic_inline_size_cookie(
     nsIFrame* aFrame, const char* aType, nscoord& aResult)
     : mFrame(aFrame), mType(aType), mResult(aResult) {
   MOZ_COUNT_CTOR(DR_intrinsic_inline_size_cookie);
-  mValue = nsFrame::DisplayIntrinsicISizeEnter(mFrame, mType);
+  mValue = nsIFrame::DisplayIntrinsicISizeEnter(mFrame, mType);
 }
 
 DR_intrinsic_inline_size_cookie::~DR_intrinsic_inline_size_cookie() {
   MOZ_COUNT_DTOR(DR_intrinsic_inline_size_cookie);
-  nsFrame::DisplayIntrinsicISizeExit(mFrame, mType, mResult, mValue);
+  nsIFrame::DisplayIntrinsicISizeExit(mFrame, mType, mResult, mValue);
 }
 
 DR_intrinsic_size_cookie::DR_intrinsic_size_cookie(nsIFrame* aFrame,
@@ -11330,12 +11330,12 @@ DR_intrinsic_size_cookie::DR_intrinsic_size_cookie(nsIFrame* aFrame,
                                                    nsSize& aResult)
     : mFrame(aFrame), mType(aType), mResult(aResult) {
   MOZ_COUNT_CTOR(DR_intrinsic_size_cookie);
-  mValue = nsFrame::DisplayIntrinsicSizeEnter(mFrame, mType);
+  mValue = nsIFrame::DisplayIntrinsicSizeEnter(mFrame, mType);
 }
 
 DR_intrinsic_size_cookie::~DR_intrinsic_size_cookie() {
   MOZ_COUNT_DTOR(DR_intrinsic_size_cookie);
-  nsFrame::DisplayIntrinsicSizeExit(mFrame, mType, mResult, mValue);
+  nsIFrame::DisplayIntrinsicSizeExit(mFrame, mType, mResult, mValue);
 }
 
 DR_init_constraints_cookie::DR_init_constraints_cookie(
@@ -12007,8 +12007,9 @@ static void DisplayReflowEnterPrint(nsPresContext* aPresContext,
   }
 }
 
-void* nsFrame::DisplayReflowEnter(nsPresContext* aPresContext, nsIFrame* aFrame,
-                                  const ReflowInput& aReflowInput) {
+void* nsIFrame::DisplayReflowEnter(nsPresContext* aPresContext,
+                                   nsIFrame* aFrame,
+                                   const ReflowInput& aReflowInput) {
   if (!DR_state->mInited) DR_state->Init();
   if (!DR_state->mActive) return nullptr;
 
@@ -12022,7 +12023,7 @@ void* nsFrame::DisplayReflowEnter(nsPresContext* aPresContext, nsIFrame* aFrame,
   return treeNode;
 }
 
-void* nsFrame::DisplayLayoutEnter(nsIFrame* aFrame) {
+void* nsIFrame::DisplayLayoutEnter(nsIFrame* aFrame) {
   if (!DR_state->mInited) DR_state->Init();
   if (!DR_state->mActive) return nullptr;
 
@@ -12036,7 +12037,8 @@ void* nsFrame::DisplayLayoutEnter(nsIFrame* aFrame) {
   return treeNode;
 }
 
-void* nsFrame::DisplayIntrinsicISizeEnter(nsIFrame* aFrame, const char* aType) {
+void* nsIFrame::DisplayIntrinsicISizeEnter(nsIFrame* aFrame,
+                                           const char* aType) {
   if (!DR_state->mInited) DR_state->Init();
   if (!DR_state->mActive) return nullptr;
 
@@ -12050,7 +12052,7 @@ void* nsFrame::DisplayIntrinsicISizeEnter(nsIFrame* aFrame, const char* aType) {
   return treeNode;
 }
 
-void* nsFrame::DisplayIntrinsicSizeEnter(nsIFrame* aFrame, const char* aType) {
+void* nsIFrame::DisplayIntrinsicSizeEnter(nsIFrame* aFrame, const char* aType) {
   if (!DR_state->mInited) DR_state->Init();
   if (!DR_state->mActive) return nullptr;
 
@@ -12064,10 +12066,10 @@ void* nsFrame::DisplayIntrinsicSizeEnter(nsIFrame* aFrame, const char* aType) {
   return treeNode;
 }
 
-void nsFrame::DisplayReflowExit(nsPresContext* aPresContext, nsIFrame* aFrame,
-                                ReflowOutput& aMetrics,
-                                const nsReflowStatus& aStatus,
-                                void* aFrameTreeNode) {
+void nsIFrame::DisplayReflowExit(nsPresContext* aPresContext, nsIFrame* aFrame,
+                                 ReflowOutput& aMetrics,
+                                 const nsReflowStatus& aStatus,
+                                 void* aFrameTreeNode) {
   if (!DR_state->mActive) return;
 
   NS_ASSERTION(aFrame, "DisplayReflowExit - invalid call");
@@ -12125,7 +12127,7 @@ void nsFrame::DisplayReflowExit(nsPresContext* aPresContext, nsIFrame* aFrame,
   DR_state->DeleteTreeNode(*treeNode);
 }
 
-void nsFrame::DisplayLayoutExit(nsIFrame* aFrame, void* aFrameTreeNode) {
+void nsIFrame::DisplayLayoutExit(nsIFrame* aFrame, void* aFrameTreeNode) {
   if (!DR_state->mActive) return;
 
   NS_ASSERTION(aFrame, "non-null frame required");
@@ -12140,8 +12142,9 @@ void nsFrame::DisplayLayoutExit(nsIFrame* aFrame, void* aFrameTreeNode) {
   DR_state->DeleteTreeNode(*treeNode);
 }
 
-void nsFrame::DisplayIntrinsicISizeExit(nsIFrame* aFrame, const char* aType,
-                                        nscoord aResult, void* aFrameTreeNode) {
+void nsIFrame::DisplayIntrinsicISizeExit(nsIFrame* aFrame, const char* aType,
+                                         nscoord aResult,
+                                         void* aFrameTreeNode) {
   if (!DR_state->mActive) return;
 
   NS_ASSERTION(aFrame, "non-null frame required");
@@ -12157,8 +12160,8 @@ void nsFrame::DisplayIntrinsicISizeExit(nsIFrame* aFrame, const char* aType,
   DR_state->DeleteTreeNode(*treeNode);
 }
 
-void nsFrame::DisplayIntrinsicSizeExit(nsIFrame* aFrame, const char* aType,
-                                       nsSize aResult, void* aFrameTreeNode) {
+void nsIFrame::DisplayIntrinsicSizeExit(nsIFrame* aFrame, const char* aType,
+                                        nsSize aResult, void* aFrameTreeNode) {
   if (!DR_state->mActive) return;
 
   NS_ASSERTION(aFrame, "non-null frame required");
@@ -12178,10 +12181,10 @@ void nsFrame::DisplayIntrinsicSizeExit(nsIFrame* aFrame, const char* aType,
 }
 
 /* static */
-void nsFrame::DisplayReflowStartup() { DR_state = new DR_State(); }
+void nsIFrame::DisplayReflowStartup() { DR_state = new DR_State(); }
 
 /* static */
-void nsFrame::DisplayReflowShutdown() {
+void nsIFrame::DisplayReflowShutdown() {
   delete DR_state;
   DR_state = nullptr;
 }
