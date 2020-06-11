@@ -263,7 +263,7 @@ class StaticAnalysis(MachCommandBase):
         if outgoing:
             repo = get_repository_object(self.topsrcdir)
             files = repo.get_outgoing_files()
-            source = map(os.path.abspath, files)
+            source = [os.path.abspath(f) for f in files]
 
         # Split in several chunks to avoid hitting Python's limit of 100 groups in re
         compile_db = json.loads(open(self._compile_db, 'r').read())
@@ -365,7 +365,7 @@ class StaticAnalysis(MachCommandBase):
         if outgoing:
             repo = get_repository_object(self.topsrcdir)
             files = repo.get_outgoing_files()
-            source = map(os.path.abspath, files)
+            source = [os.path.abspath(f) for f in files]
 
         # Verify that we have source files or we are dealing with a full-build
         if len(source) == 0 and not full_build:
@@ -1315,7 +1315,7 @@ class StaticAnalysis(MachCommandBase):
 
     def _create_temp_compilation_db(self, config):
         directory = tempfile.mkdtemp(prefix='cc')
-        with open(mozpath.join(directory, "compile_commands.json"), "wb") as file_handler:
+        with open(mozpath.join(directory, "compile_commands.json"), "w") as file_handler:
             compile_commands = []
             director = mozpath.join(self.topsrcdir, 'tools', 'clang-tidy', 'test')
             for item in config['clang_checkers']:
@@ -1485,13 +1485,19 @@ class StaticAnalysis(MachCommandBase):
                               'Delete local helpers and reset static analysis helper tool cache')
     def clear_cache(self, verbose=False):
         self._set_log_level(verbose)
-        rc = self._get_clang_tools(force=True, download_if_needed=True, skip_cache=True,
-                                   verbose=verbose)
-        if rc == 0:
-            self._get_infer(force=True, download_if_needed=True, skip_cache=True,
-                            verbose=verbose)
+        rc = self._get_clang_tools(
+            force=True, download_if_needed=True, skip_cache=True, verbose=verbose)
+
         if rc != 0:
             return rc
+
+        job, _ = self.platform
+        if job == 'linux64':
+            rc = self._get_infer(
+                force=True, download_if_needed=True, skip_cache=True, verbose=verbose)
+            if rc != 0:
+                return rc
+
         return self._artifact_manager.artifact_clear_cache()
 
     @StaticAnalysisSubCommand('static-analysis', 'print-checks',
@@ -1499,14 +1505,27 @@ class StaticAnalysis(MachCommandBase):
     def print_checks(self, verbose=False):
         self._set_log_level(verbose)
         rc = self._get_clang_tools(verbose=verbose)
-        if rc == 0:
-            rc = self._get_infer(verbose=verbose)
+
         if rc != 0:
             return rc
+
+        if self._clang_tidy_config is None:
+            self._clang_tidy_config = self._get_clang_tidy_config()
+
         args = [self._clang_tidy_path, '-list-checks', '-checks=%s' % self._get_checks()]
-        rc = self._run_command_in_objdir(args=args, pass_thru=True)
+
+        rc = self.run_process(args=args, pass_thru=True)
         if rc != 0:
             return rc
+
+        job, _ = self.platform
+        if job != 'linux64':
+            return 0
+
+        rc = self._get_infer(verbose=verbose)
+        if rc != 0:
+            return rc
+
         checkers, _ = self._get_infer_config()
         print('Infer checks:')
         for checker in checkers:
@@ -1552,7 +1571,6 @@ class StaticAnalysis(MachCommandBase):
                      help='Source files to be compiled checked (regex on path).')
     def check_syntax(self, source, verbose=False):
         self._set_log_level(verbose)
-        self._activate_virtualenv()
         self.log_manager.enable_unstructured()
 
         # Verify that we have a valid `source`

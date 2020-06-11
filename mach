@@ -39,7 +39,6 @@ py2commands="
     reftest
     release
     rusttests
-    static-analysis
     talos-test
     taskcluster-load-image
     taskgraph
