@@ -2911,7 +2911,7 @@ class nsIFrame : public nsQueryFrame {
    * a given reflow?
    */
   virtual void DidReflow(nsPresContext* aPresContext,
-                         const ReflowInput* aReflowInput) = 0;
+                         const ReflowInput* aReflowInput);
 
   void FinishReflowWithAbsoluteFrames(nsPresContext* aPresContext,
                                       ReflowOutput& aDesiredSize,

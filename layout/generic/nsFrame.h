@@ -74,9 +74,6 @@ class nsFrame : public nsIFrame {
   void DestroyFrom(nsIFrame* aDestructRoot,
                    PostDestroyData& aPostDestroyData) override;
 
-  void DidReflow(nsPresContext* aPresContext,
-                 const ReflowInput* aReflowInput) override;
-
   //--------------------------------------------------
   // Additional methods
 
