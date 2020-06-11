@@ -359,11 +359,11 @@ ContentRestoreInternal.prototype = {
    */
   restoreTabContentStarted(finishCallback, removeListenerCallback) {
     // The reload listener is no longer needed.
-    if (!this._shistoryInParent) {
+    if (this._shistoryInParent) {
+      removeListenerCallback();
+    } else if (this._historyListener) {
       this._historyListener.uninstall();
       this._historyListener = null;
-    } else {
-      removeListenerCallback();
     }
 
     // Remove the old progress listener.
