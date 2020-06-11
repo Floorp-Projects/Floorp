@@ -2857,6 +2857,12 @@ class nsIFrame : public nsQueryFrame {
   virtual void DidReflow(nsPresContext* aPresContext,
                          const ReflowInput* aReflowInput) = 0;
 
+  void FinishReflowWithAbsoluteFrames(nsPresContext* aPresContext,
+                                      ReflowOutput& aDesiredSize,
+                                      const ReflowInput& aReflowInput,
+                                      nsReflowStatus& aStatus,
+                                      bool aConstrainBSize = true);
+
   /**
    * Updates the overflow areas of the frame. This can be called if an
    * overflow area of the frame's children has changed without reflowing.
