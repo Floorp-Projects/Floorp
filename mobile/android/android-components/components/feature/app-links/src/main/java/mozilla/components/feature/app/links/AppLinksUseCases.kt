@@ -5,6 +5,7 @@
 package mozilla.components.feature.app.links
 
 import android.content.ActivityNotFoundException
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -192,7 +193,7 @@ class AppLinksUseCases(
             // only target intent for specific app if only one non browser app is found
             if (resolveInfoList?.count() == 1) {
                 resolveInfo?.let {
-                    appIntent.`package` = it.activityInfo?.packageName
+                    appIntent.component = ComponentName(it.activityInfo.packageName, it.activityInfo.name)
                 }
             }
 
