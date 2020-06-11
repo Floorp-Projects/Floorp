@@ -2034,6 +2034,10 @@ class nsIFrame : public nsQueryFrame {
   enum { SELECT_ACCUMULATE = 0x01 };
 
  protected:
+  // Fire DOM event. If no aContent argument use frame's mContent.
+  void FireDOMEvent(const nsAString& aDOMEventName,
+                    nsIContent* aContent = nullptr);
+
   // Selection Methods
 
   NS_IMETHOD HandlePress(nsPresContext* aPresContext,
