@@ -6118,22 +6118,6 @@ class LGuardNoDenseElements : public LInstructionHelper<0, 1, 1> {
   const LDefinition* temp() { return getTemp(0); }
 };
 
-// Guard against the sharedness of a TypedArray's memory.
-class LGuardSharedTypedArray : public LInstructionHelper<0, 1, 1> {
- public:
-  LIR_HEADER(GuardSharedTypedArray)
-
-  LGuardSharedTypedArray(const LAllocation& in, const LDefinition& temp)
-      : LInstructionHelper(classOpcode) {
-    setOperand(0, in);
-    setTemp(0, temp);
-  }
-  const MGuardSharedTypedArray* mir() const {
-    return mir_->toGuardSharedTypedArray();
-  }
-  const LDefinition* tempInt() { return getTemp(0); }
-};
-
 class LInCache : public LInstructionHelper<1, BOX_PIECES + 1, 1> {
  public:
   LIR_HEADER(InCache)
