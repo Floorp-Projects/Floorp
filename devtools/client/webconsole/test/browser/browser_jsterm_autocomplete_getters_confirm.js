@@ -38,8 +38,6 @@ const TEST_URI = `data:text/html;charset=utf-8,
 <body>Autocomplete popup - invoke getter usage test</body>`;
 
 add_task(async function() {
-  await pushPref("devtools.editor.autoclosebrackets", false);
-
   const hud = await openNewTabAndConsole(TEST_URI);
   const { jsterm } = hud;
   const { autocompletePopup } = jsterm;
@@ -102,7 +100,7 @@ add_task(async function() {
     hasExactPopupLabels(autocompletePopup, [`"hello"`, `"world"`]),
     "popup has expected items"
   );
-  checkInputValueAndCursorPosition(hud, "foo.bar.baz[|");
+  checkInputValueAndCursorPosition(hud, "foo.bar.baz[|]");
   is(isConfirmDialogOpened(toolbox), false, "confirm tooltip is now closed");
 
   onPopUpClose = autocompletePopup.once("popup-closed");
