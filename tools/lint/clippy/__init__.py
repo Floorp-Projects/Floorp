@@ -88,23 +88,27 @@ def get_cargo_binary(log):
     return which("cargo")
 
 
-def is_clippy_installed(binary):
+def is_clippy_installed(log, binary):
     """
     Check if we are running the deprecated rustfmt
     """
     try:
         output = subprocess.check_output(
-            [binary, "clippy", "--help"],
+            [binary, "clippy", "--version"],
             stderr=subprocess.STDOUT,
             universal_newlines=True,
         )
-    except subprocess.CalledProcessError as e:
-        output = e.output
+    except subprocess.CalledProcessError:
+        # --version failed, clippy isn't installed.
+        return False
 
-    if "Checks a package" in output:
-        return True
+    log.debug(
+        "Found version: {}".format(
+            output
+        )
+    )
 
-    return False
+    return output.strip().startswith("clippy ")
 
 
 class clippyProcess(ProcessHandler):
@@ -141,7 +145,7 @@ def lint(paths, config, fix=None, **lintargs):
             return 1
         return []
 
-    if not is_clippy_installed(cargo):
+    if not is_clippy_installed(log, cargo):
         print(CLIPPY_NOT_FOUND)
         if 'MOZ_AUTOMATION' in os.environ:
             return 1
