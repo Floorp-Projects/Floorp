@@ -280,4 +280,4 @@ jobs:
       run-on-projects:
           - mozilla-central
       when:
-          - {hour: 12, minute: 00}
+          - {hour: 4, minute: 00}
