@@ -9355,7 +9355,7 @@ void nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
   WritingMode wm = GetWritingMode();
   LogicalSize finalSize(wm);
   finalSize.ISize(wm) =
-      NSToCoordCeil(std::max(gfxFloat(0.0), textMetrics.mAdvanceWidth));
+      NSToCoordCeilClamped(std::max(gfxFloat(0.0), textMetrics.mAdvanceWidth));
 
   if (transformedCharsFit == 0 && !usedHyphenation) {
     aMetrics.SetBlockStartAscent(0);
