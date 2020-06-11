@@ -1685,6 +1685,8 @@ nsDocumentViewer::Destroy() {
     // DisallowBFCaching() after CanSavePresentation() already ran.  Ensure that
     // the SHEntry has no viewer and its state is synced up.  We want to do this
     // via a stack reference, in case those calls mess with our members.
+    MOZ_LOG(gPageCacheLog, LogLevel::Debug,
+            ("BFCache not allowed, dropping SHEntry"));
     nsCOMPtr<nsISHEntry> shEntry = std::move(mSHEntry);
     shEntry->SetContentViewer(nullptr);
     shEntry->SyncPresentationState();
@@ -1742,6 +1744,8 @@ nsDocumentViewer::Destroy() {
     nsCOMPtr<nsISHEntry> shEntry =
         std::move(mSHEntry);  // we'll need this below
 
+    MOZ_LOG(gPageCacheLog, LogLevel::Debug,
+            ("Storing content viewer into cache entry"));
     shEntry->SetContentViewer(this);
 
     // Always sync the presentation state.  That way even if someone screws up
