@@ -69,7 +69,7 @@ fn init_sig_from_wsig(
         sig.params.push(ir::AbiParam::new(arg));
     }
 
-    if let Some(ret_type) = wsig.ret_type()? {
+    for ret_type in wsig.results()? {
         let ret = match ret_type {
             // Spidermonkey requires i32 returns to have their high 32 bits
             // zero so that it can directly box them.
@@ -95,7 +95,7 @@ pub fn init_sig(
     call_conv: CallConv,
     func_index: FuncIndex,
 ) -> WasmResult<ir::Signature> {
-    let wsig = env.function_signature(func_index);
+    let wsig = env.func_sig(func_index);
     init_sig_from_wsig(call_conv, wsig)
 }
 
