@@ -99,3 +99,5 @@ jobs:
             config:
                 - builds/releng_base_android_64_builds.py
                 - taskcluster_nightly.py
+        optimization:
+            push-interval-25: null

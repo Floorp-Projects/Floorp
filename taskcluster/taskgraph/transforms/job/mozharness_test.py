@@ -28,6 +28,7 @@ from taskgraph.transforms.job.common import (
 
 VARIANTS = [
     'shippable',
+    'shippable-qr',
     'devedition',
     'pgo',
     'asan',
@@ -59,10 +60,23 @@ def test_packages_url(taskdesc):
     # for android shippable we need to add 'en-US' to the artifact url
     test = taskdesc['run']['test']
     if 'android' in test['test-platform'] and (
-            get_variant(test['test-platform']) in ('shippable', )):
+            get_variant(test['test-platform']) in ('shippable', 'shippable-qr')):
         head, tail = os.path.split(artifact_url)
         artifact_url = os.path.join(head, 'en-US', tail)
     return artifact_url
+
+
+def installer_url(taskdesc):
+    test = taskdesc['run']['test']
+    mozharness = test['mozharness']
+
+    if 'installer-url' in mozharness:
+        installer_url = mozharness['installer-url']
+    else:
+        upstream_task = '<build-signing>' if mozharness['requires-signed-builds'] else '<build>'
+        installer_url = get_artifact_url(upstream_task, mozharness['build-artifact-name'])
+
+    return installer_url
 
 
 @run_job_using('docker-worker', 'mozharness-test', schema=mozharness_test_run_schema)
@@ -89,10 +103,7 @@ def mozharness_test_on_docker(config, job, taskdesc):
         ("public/test_info/", "{workdir}/workspace/build/blobber_upload_dir/".format(**run)),
     ]
 
-    if 'installer-url' in mozharness:
-        installer_url = mozharness['installer-url']
-    else:
-        installer_url = get_artifact_url('<build>', mozharness['build-artifact-name'])
+    installer = installer_url(taskdesc)
 
     mozharness_url = get_artifact_url('<build>',
                                       get_artifact_path(taskdesc, 'mozharness.zip'))
@@ -107,7 +118,7 @@ def mozharness_test_on_docker(config, job, taskdesc):
     env.update({
         'MOZHARNESS_CONFIG': ' '.join(mozharness['config']),
         'MOZHARNESS_SCRIPT': mozharness['script'],
-        'MOZILLA_BUILD_URL': {'task-reference': installer_url},
+        'MOZILLA_BUILD_URL': {'task-reference': installer},
         'NEED_PULSEAUDIO': 'true',
         'NEED_WINDOW_MANAGER': 'true',
         'ENABLE_E10S': text_type(bool(test.get('e10s'))).lower(),
@@ -157,7 +168,7 @@ def mozharness_test_on_docker(config, job, taskdesc):
         env['MOZHARNESS_URL'] = {'task-reference': mozharness_url}
 
     extra_config = {
-        'installer_url': installer_url,
+        'installer_url': installer,
         'test_packages_url': test_packages_url(taskdesc),
     }
     env['EXTRA_MOZHARNESS_CONFIG'] = {
@@ -243,11 +254,7 @@ def mozharness_test_on_generic_worker(config, job, taskdesc):
             },
         ]
 
-    if 'installer-url' in mozharness:
-        installer_url = mozharness['installer-url']
-    else:
-        upstream_task = '<build-signing>' if mozharness['requires-signed-builds'] else '<build>'
-        installer_url = get_artifact_url(upstream_task, mozharness['build-artifact-name'])
+    installer = installer_url(taskdesc)
 
     worker['os-groups'] = test['os-groups']
 
@@ -288,7 +295,7 @@ def mozharness_test_on_generic_worker(config, job, taskdesc):
             'MOZHARNESS_CONFIG': ' '.join(mozharness['config']),
             'MOZHARNESS_SCRIPT': mozharness['script'],
             'MOZHARNESS_URL': {'artifact-reference': '<build/public/build/mozharness.zip>'},
-            'MOZILLA_BUILD_URL': {'task-reference': installer_url},
+            'MOZILLA_BUILD_URL': {'task-reference': installer},
             "MOZ_NO_REMOTE": '1',
             "NEED_XVFB": "false",
             "XPCOM_DEBUG_BREAK": 'warn',
@@ -299,7 +306,7 @@ def mozharness_test_on_generic_worker(config, job, taskdesc):
         })
 
     extra_config = {
-        'installer_url': installer_url,
+        'installer_url': installer,
         'test_packages_url': test_packages_url(taskdesc),
     }
     env['EXTRA_MOZHARNESS_CONFIG'] = {
@@ -402,10 +409,7 @@ def mozharness_test_on_script_engine_autophone(config, job, taskdesc):
     if worker['os'] != 'linux':
         raise Exception('os: {} not supported on script-engine-autophone'.format(worker['os']))
 
-    if 'installer-url' in mozharness:
-        installer_url = mozharness['installer-url']
-    else:
-        installer_url = get_artifact_url('<build>', mozharness['build-artifact-name'])
+    installer = installer_url(taskdesc)
     mozharness_url = get_artifact_url('<build>',
                                       'public/build/mozharness.zip')
 
@@ -431,7 +435,7 @@ def mozharness_test_on_script_engine_autophone(config, job, taskdesc):
         'MOZHARNESS_CONFIG': ' '.join(mozharness['config']),
         'MOZHARNESS_SCRIPT': mozharness['script'],
         'MOZHARNESS_URL': {'task-reference': mozharness_url},
-        'MOZILLA_BUILD_URL': {'task-reference': installer_url},
+        'MOZILLA_BUILD_URL': {'task-reference': installer},
         "MOZ_NO_REMOTE": '1',
         "XPCOM_DEBUG_BREAK": 'warn',
         "NO_FAIL_ON_TEST_ERRORS": '1',
@@ -452,7 +456,7 @@ def mozharness_test_on_script_engine_autophone(config, job, taskdesc):
         env['NEED_XVFB'] = 'false'
 
     extra_config = {
-        'installer_url': installer_url,
+        'installer_url': installer,
         'test_packages_url': test_packages_url(taskdesc),
     }
     env['EXTRA_MOZHARNESS_CONFIG'] = {
