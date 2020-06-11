@@ -2772,6 +2772,44 @@ nsresult TelemetryHistogram::GetAllStores(StringHashSet& set) {
   return NS_OK;
 }
 
+nsresult TelemetryHistogram::GetCategoricalHistogramLabels(
+    JSContext* aCx, JS::MutableHandle<JS::Value> aResult) {
+  JS::Rooted<JSObject*> root_obj(aCx, JS_NewPlainObject(aCx));
+  if (!root_obj) {
+    return NS_ERROR_FAILURE;
+  }
+  aResult.setObject(*root_obj);
+
+  for (const HistogramInfo& info : gHistogramInfos) {
+    if (info.histogramType != nsITelemetry::HISTOGRAM_CATEGORICAL) {
+      continue;
+    }
+
+    const char* name = info.name();
+    JS::RootedObject labels(aCx, JS::NewArrayObject(aCx, info.label_count));
+    if (!labels) {
+      return NS_ERROR_FAILURE;
+    }
+
+    if (!JS_DefineProperty(aCx, root_obj, name, labels, JSPROP_ENUMERATE)) {
+      return NS_ERROR_FAILURE;
+    }
+
+    for (uint32_t i = 0; i < info.label_count; ++i) {
+      uint32_t string_offset = gHistogramLabelTable[info.label_index + i];
+      const char* const label = &gHistogramStringTable[string_offset];
+      auto clabel = NS_ConvertASCIItoUTF16(label);
+      JS::Rooted<JS::Value> value(aCx);
+      value.setString(ToJSString(aCx, clabel));
+      if (!JS_DefineElement(aCx, labels, i, value, JSPROP_ENUMERATE)) {
+        return NS_ERROR_FAILURE;
+      }
+    }
+  }
+
+  return NS_OK;
+}
+
 nsresult TelemetryHistogram::GetHistogramById(
     const nsACString& name, JSContext* cx, JS::MutableHandle<JS::Value> ret) {
   HistogramID id;

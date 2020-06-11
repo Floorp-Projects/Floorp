@@ -622,6 +622,12 @@ TelemetryImpl::GetSnapshotForKeyedHistograms(const nsACString& aStoreName,
 }
 
 NS_IMETHODIMP
+TelemetryImpl::GetCategoricalLabels(JSContext* aCx,
+                                    JS::MutableHandleValue aResult) {
+  return TelemetryHistogram::GetCategoricalHistogramLabels(aCx, aResult);
+}
+
+NS_IMETHODIMP
 TelemetryImpl::GetSnapshotForScalars(const nsACString& aStoreName,
                                      bool aClearStore, bool aFilterTest,
                                      JSContext* aCx,
