@@ -3650,6 +3650,12 @@ class nsIFrame : public nsQueryFrame {
   static void GetLastLeaf(nsPresContext* aPresContext, nsIFrame** aFrame);
   static void GetFirstLeaf(nsPresContext* aPresContext, nsIFrame** aFrame);
 
+  static nsresult GetNextPrevLineFromeBlockFrame(nsPresContext* aPresContext,
+                                                 nsPeekOffsetStruct* aPos,
+                                                 nsIFrame* aBlockFrame,
+                                                 int32_t aLineStart,
+                                                 int8_t aOutSideLimit);
+
   /**
    * Called to find the previous/next non-anonymous selectable leaf frame.
    *
