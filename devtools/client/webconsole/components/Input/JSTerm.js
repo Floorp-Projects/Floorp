@@ -522,6 +522,19 @@ class JSTerm extends Component {
         }
       });
 
+      this.resizeObserver = new ResizeObserver(() => {
+        // If we don't have the node reference, or if the node isn't connected
+        // anymore, we disconnect the resize observer (componentWillUnmount is never
+        // called on this component, so we have to do it here).
+        if (!this.node || !this.node.isConnected) {
+          this.resizeObserver.disconnect();
+          return;
+        }
+        // Calling `refresh` will update the cursor position, and all the selection blocks.
+        this.editor.codeMirror.refresh();
+      });
+      this.resizeObserver.observe(this.node);
+
       // Update the character width needed for the popup offset calculations.
       this._inputCharWidth = this._getInputCharWidth();
       this.lastInputValue && this._setValue(this.lastInputValue);
@@ -1320,6 +1333,7 @@ class JSTerm extends Component {
     }
 
     if (this.editor) {
+      this.resizeObserver.disconnect();
       this.editor.destroy();
       this.editor = null;
     }
