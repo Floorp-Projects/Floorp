@@ -139,11 +139,6 @@ class nsFrame : public nsIFrame {
                                       nsReflowStatus& aStatus,
                                       bool aConstrainBSize = true);
 
-  nsresult PeekBackwardAndForward(nsSelectionAmount aAmountBack,
-                                  nsSelectionAmount aAmountForward,
-                                  int32_t aStartPos, bool aJumpLines,
-                                  uint32_t aSelectFlags);
-
   //--------------------------------------------------
   // Additional methods
 
