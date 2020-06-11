@@ -5861,6 +5861,15 @@ JS_PUBLIC_API bool JS::CaptureCurrentStack(
   return true;
 }
 
+JS_PUBLIC_API bool JS::IsAsyncStackCaptureEnabledForRealm(JSContext* cx) {
+  if (!cx->options().asyncStack()) {
+    return false;
+  }
+
+  return !cx->options().asyncStackCaptureDebuggeeOnly() ||
+         cx->realm()->isDebuggee();
+}
+
 JS_PUBLIC_API bool JS::CopyAsyncStack(JSContext* cx,
                                       JS::HandleObject asyncStack,
                                       JS::HandleString asyncCause,

@@ -130,6 +130,7 @@ extern bool enableWasmVerbose;
 extern bool enableTestWasmAwaitTier2;
 extern bool enableSourcePragmas;
 extern bool enableAsyncStacks;
+extern bool enableAsyncStackCaptureDebuggeeOnly;
 extern bool enableStreams;
 extern bool enableReadableByteStreams;
 extern bool enableBYOBStreamReaders;
