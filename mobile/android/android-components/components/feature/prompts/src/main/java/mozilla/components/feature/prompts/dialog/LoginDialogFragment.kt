@@ -323,7 +323,7 @@ internal class LoginDialogFragment : PromptDialogFragment() {
     }
 
     companion object {
-        private const val KEYBOARD_HIDING_DELAY = 50L
+        private const val KEYBOARD_HIDING_DELAY = 100L
 
         /**
          * A builder method for creating a [LoginDialogFragment]
