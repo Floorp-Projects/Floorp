@@ -9,6 +9,7 @@
 
 #include "mozilla/DebugOnly.h"
 #include "mozilla/IntegerPrintfMacros.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/Unused.h"
 
 #include <algorithm>
@@ -320,6 +321,7 @@ void js::Nursery::enable() {
 }
 
 void js::Nursery::disable() {
+  stringDeDupSet.reset();
   MOZ_ASSERT(isEmpty());
   if (!isEnabled()) {
     return;
@@ -975,6 +977,10 @@ void js::Nursery::collect(JS::GCReason reason) {
   stats().beginNurseryCollection(reason);
   gcprobes::MinorGCStart();
 
+  stringDeDupSet.emplace();
+  auto guardStringDedupSet =
+      mozilla::MakeScopeExit([&] { stringDeDupSet.reset(); });
+
   maybeClearProfileDurations();
   startProfile(ProfileKey::Total);
 
@@ -1040,6 +1046,7 @@ void js::Nursery::collect(JS::GCReason reason) {
 
   stats().endNurseryCollection(reason);
   gcprobes::MinorGCEnd();
+
   timeInChunkAlloc_ = mozilla::TimeDuration();
 
   if (enableProfiling_ && totalTime >= profileThreshold_) {
@@ -1112,6 +1119,13 @@ js::Nursery::CollectionResult js::Nursery::doCollection(
   }
   endProfile(ProfileKey::CancelIonCompilations);
 
+  // Strings in the whole cell buffer must be traced first, in order to mark
+  // tenured dependent strings' bases as non-deduplicatable. The rest of
+  // nursery collection (whole non-string cells, edges, etc.) can happen later.
+  startProfile(ProfileKey::TraceWholeCells);
+  sb.traceWholeCells(mover);
+  endProfile(ProfileKey::TraceWholeCells);
+
   startProfile(ProfileKey::TraceValues);
   sb.traceValues(mover);
   endProfile(ProfileKey::TraceValues);
@@ -1123,10 +1137,6 @@ js::Nursery::CollectionResult js::Nursery::doCollection(
   startProfile(ProfileKey::TraceSlots);
   sb.traceSlots(mover);
   endProfile(ProfileKey::TraceSlots);
-
-  startProfile(ProfileKey::TraceWholeCells);
-  sb.traceWholeCells(mover);
-  endProfile(ProfileKey::TraceWholeCells);
 
   startProfile(ProfileKey::TraceGenericEntries);
   sb.traceGenericEntries(&mover);

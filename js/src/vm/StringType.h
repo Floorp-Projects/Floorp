@@ -22,6 +22,7 @@
 #include "gc/Cell.h"
 #include "gc/MaybeRooted.h"
 #include "gc/Nursery.h"
+#include "gc/RelocationOverlay.h"
 #include "gc/Rooting.h"
 #include "js/CharacterEncoding.h"
 #include "js/RootingAPI.h"
@@ -293,6 +294,11 @@ class JSString : public js::gc::Cell {
 
   static const uint32_t PINNED_ATOM_BIT = js::Bit(11);
 
+  // NON_DEDUP_BIT is used in string deduplication during tenuring.
+  // Atoms won't be tenured, so overloading PINNED_ATOM_BIT
+  // with NON_DEDUP_BIT works correctly.
+  static const uint32_t NON_DEDUP_BIT = js::Bit(11);
+
   static const uint32_t MAX_LENGTH = js::MaxStringLength;
 
   static const JS::Latin1Char MAX_LATIN1_CHAR = 0xff;
@@ -378,9 +384,6 @@ class JSString : public js::gc::Cell {
   template <typename CharT>
   MOZ_ALWAYS_INLINE void setNonInlineChars(const CharT* chars);
 
-  MOZ_ALWAYS_INLINE
-  uint32_t flags() const { return header_.flagsField(); }
-
   template <typename CharT>
   static MOZ_ALWAYS_INLINE void checkStringCharsArena(const CharT* chars) {
 #ifdef MOZ_DEBUG
@@ -391,6 +394,9 @@ class JSString : public js::gc::Cell {
  public:
   MOZ_ALWAYS_INLINE
   size_t length() const { return header_.lengthField(); }
+
+  MOZ_ALWAYS_INLINE
+  uint32_t flags() const { return header_.flagsField(); }
 
  protected:
   void setFlattenData(uintptr_t data) {
@@ -510,6 +516,15 @@ class JSString : public js::gc::Cell {
     return *(JSAtom*)this;
   }
 
+  MOZ_ALWAYS_INLINE
+  void setNonDeduplicatable() { setFlagBit(NON_DEDUP_BIT); }
+
+  MOZ_ALWAYS_INLINE
+  void clearNonDeduplicatable() { clearFlagBit(NON_DEDUP_BIT); }
+
+  MOZ_ALWAYS_INLINE
+  bool isDeduplicatable() { return !(flags() & NON_DEDUP_BIT); }
+
   // Fills |array| with various strings that represent the different string
   // kinds and character encodings.
   static bool fillWithRepresentatives(JSContext* cx,
@@ -520,6 +535,15 @@ class JSString : public js::gc::Cell {
   inline bool hasBase() const { return isDependent(); }
 
   inline JSLinearString* base() const;
+
+  // The base may be forwarded and becomes a relocation overlay.
+  // The return value can be a relocation overlay when the base is forwarded,
+  // or the return value can be the actual base when it is not forwarded.
+  inline JSLinearString* nurseryBaseOrRelocOverlay() const;
+
+  inline bool canBeRootBase() const;
+
+  inline void setBase(JSLinearString* newBase);
 
   void traceBase(JSTracer* trc);
 
@@ -939,6 +963,11 @@ class JSDependentString : public JSLinearString {
   static inline JSLinearString* new_(JSContext* cx, JSLinearString* base,
                                      size_t start, size_t length,
                                      js::gc::InitialHeap heap);
+
+  template <typename T>
+  void relocateNonInlineChars(T chars, size_t offset) {
+    setNonInlineChars(chars + offset);
+  }
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
   void dumpRepresentation(js::GenericPrinter& out, int indent) const;
@@ -1750,6 +1779,24 @@ inline JSLinearString* JSString::base() const {
   return d.s.u3.base;
 }
 
+inline JSLinearString* JSString::nurseryBaseOrRelocOverlay() const {
+  MOZ_ASSERT(hasBase());
+  return d.s.u3.base;
+}
+
+inline bool JSString::canBeRootBase() const {
+  // A root base is a base that does not have bases (is not a dependent
+  // string). It serves as the owner of the dependent string chars. A base must
+  // be linear and non-inline.
+  return isLinear() && !isInline() && !hasBase();
+}
+
+inline void JSString::setBase(JSLinearString* newBase) {
+  MOZ_ASSERT(hasBase());
+  MOZ_ASSERT(!newBase->isInline());
+  d.s.u3.base = newBase;
+}
+
 template <>
 MOZ_ALWAYS_INLINE const char16_t* JSLinearString::nonInlineChars(
     const JS::AutoRequireNoGC& nogc) const {
@@ -1894,6 +1941,127 @@ inline JSString* TenuredCell::as<JSString>() {
   MOZ_ASSERT(is<JSString>());
   return reinterpret_cast<JSString*>(this);
 }
+
+// StringRelocationOverlay assists with updating the string chars
+// pointers of dependent strings when their base strings are
+// deduplicated. It stores:
+//  - nursery chars of a root base (root base is a non-dependent base), or
+//  - nursery base of a dependent string
+// StringRelocationOverlay exploits the fact that the 3rd word of a JSString's
+// RelocationOverlay is not utilized and can be used to store extra information.
+class StringRelocationOverlay : public RelocationOverlay {
+  union {
+    // nursery chars of a root base
+    const JS::Latin1Char* nurseryCharsLatin1;
+    const char16_t* nurseryCharsTwoByte;
+
+    // The nursery base can be forwarded, which becomes a string relocation
+    // overlay, or it is not yet forwarded and is simply the base.
+    JSLinearString* nurseryBaseOrRelocOverlay;
+  };
+
+ public:
+  inline StringRelocationOverlay(Cell* dst, uintptr_t flags)
+      : RelocationOverlay(dst, flags) {}
+
+  static const StringRelocationOverlay* fromCell(const Cell* cell) {
+    return static_cast<const StringRelocationOverlay*>(cell);
+  }
+
+  static StringRelocationOverlay* fromCell(Cell* cell) {
+    return static_cast<StringRelocationOverlay*>(cell);
+  }
+
+  StringRelocationOverlay*& nextRef() {
+    MOZ_ASSERT(isForwarded());
+    return (StringRelocationOverlay*&)next_;
+  }
+
+  StringRelocationOverlay* next() const {
+    MOZ_ASSERT(isForwarded());
+    return (StringRelocationOverlay*)next_;
+  }
+
+  template <typename CharT>
+  MOZ_ALWAYS_INLINE const CharT* savedNurseryChars() const;
+
+  const MOZ_ALWAYS_INLINE JS::Latin1Char* savedNurseryCharsLatin1() const {
+    return nurseryCharsLatin1;
+  }
+
+  const MOZ_ALWAYS_INLINE char16_t* savedNurseryCharsTwoByte() const {
+    return nurseryCharsTwoByte;
+  }
+
+  JSLinearString* savedNurseryBaseOrRelocOverlay() const {
+    return nurseryBaseOrRelocOverlay;
+  }
+
+  // Transform a nursery string to a StringRelocationOverlay that is forwarded
+  // to a tenured string.
+  inline static StringRelocationOverlay* forwardCell(JSString* src, Cell* dst) {
+    MOZ_ASSERT(!src->isForwarded());
+    MOZ_ASSERT(!dst->isForwarded());
+
+    JS::AutoCheckCannotGC nogc;
+
+    // Preserve old flags because the nursery may check them before checking if
+    // this is a forwarded Cell.
+    //
+    // This is pretty terrible and we should find a better way to implement
+    // Cell::getTraceKind() that doesn't rely on this behavior.
+    //
+    // The copied over flags are only used for nursery Cells. For tenured
+    // cells, these bits are never read and hence may contain any content.
+    StringRelocationOverlay* overlay = nullptr;
+    auto set_overlay = [&] {
+      uintptr_t flags = reinterpret_cast<CellHeader*>(dst)->flags();
+      overlay = new (src) StringRelocationOverlay(dst, flags);
+    };
+
+    // Initialize the overlay, and remember the nursery base string if there is
+    // one, or nursery non-inlined chars if it can be the root base of other
+    // strings.
+    //
+    // The non-inlined chars of a tenured dependent string should point to the
+    // tenured root base's one with an offset. For example, a dependent string
+    // may start from the 3rd char of its root base. During tenuring, offsets
+    // of dependent strings can be computed from the nursery non-inlined chars
+    // remembered in overlays.
+    if (src->hasBase()) {
+      auto nurseryBaseOrRelocOverlay = src->nurseryBaseOrRelocOverlay();
+      set_overlay();
+      overlay->nurseryBaseOrRelocOverlay = nurseryBaseOrRelocOverlay;
+    } else if (src->canBeRootBase()) {
+      if (src->hasTwoByteChars()) {
+        auto nurseryCharsTwoByte = src->asLinear().twoByteChars(nogc);
+        set_overlay();
+        overlay->nurseryCharsTwoByte = nurseryCharsTwoByte;
+      } else {
+        auto nurseryCharsLatin1 = src->asLinear().latin1Chars(nogc);
+        set_overlay();
+        overlay->nurseryCharsLatin1 = nurseryCharsLatin1;
+      }
+    } else {
+      set_overlay();
+    }
+
+    return overlay;
+  }
+};
+
+template <>
+MOZ_ALWAYS_INLINE const JS::Latin1Char*
+StringRelocationOverlay::savedNurseryChars() const {
+  return savedNurseryCharsLatin1();
+}
+
+template <>
+MOZ_ALWAYS_INLINE const char16_t* StringRelocationOverlay::savedNurseryChars()
+    const {
+  return savedNurseryCharsTwoByte();
+}
+
 }  // namespace gc
 }  // namespace js
 
