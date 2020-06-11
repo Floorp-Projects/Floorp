@@ -752,6 +752,17 @@ skip script test262/built-ins/Atomics/add/bigint/nonshared-int-views.js
 skip script test262/built-ins/Atomics/xor/nonshared-int-views.js
 skip script test262/built-ins/Atomics/exchange/nonshared-int-views.js
 
+# Not yet updated to match <https://github.com/tc39/proposal-promise-any/pull/64>.
+skip script test262/built-ins/NativeErrors/AggregateError/prototype/errors/invoked-as-accessor.js
+skip script test262/built-ins/NativeErrors/AggregateError/prototype/errors/invoked-as-func.js
+skip script test262/built-ins/NativeErrors/AggregateError/prototype/errors/length.js
+skip script test262/built-ins/NativeErrors/AggregateError/prototype/errors/name.js
+skip script test262/built-ins/NativeErrors/AggregateError/prototype/errors/prop-desc.js
+skip script test262/built-ins/NativeErrors/AggregateError/prototype/errors/return-from-iterable-errors.js
+skip script test262/built-ins/NativeErrors/AggregateError/prototype/errors/return-new-array-from-list.js
+skip script test262/built-ins/NativeErrors/AggregateError/prototype/errors/this-has-no-typedarrayname-internal.js
+skip script test262/built-ins/NativeErrors/AggregateError/prototype/errors/this-is-not-object.js
+
 
 ##############################################
 # Enable Iterator Helpers tests in the shell #

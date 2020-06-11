@@ -9,14 +9,11 @@ assertEq(Object.getPrototypeOf(AggregateError.prototype), Error.prototype);
 assertEq(AggregateError.prototype.name, "AggregateError");
 assertEq(AggregateError.prototype.message, "");
 
-// AggregateError.prototype isn't an AggregateError instance.
-assertThrowsInstanceOf(() => AggregateError.prototype.errors, TypeError);
-
 // The |errors| argument is mandatory.
 assertThrowsInstanceOf(() => new AggregateError(), TypeError);
 assertThrowsInstanceOf(() => AggregateError(), TypeError);
 
-// The .errors getter returns an array object.
+// The .errors data property is an array object.
 {
   let err = new AggregateError([]);
 
@@ -24,13 +21,15 @@ assertThrowsInstanceOf(() => AggregateError(), TypeError);
   assertEq(Array.isArray(errors), true);
   assertEq(errors.length, 0);
 
-  // A fresh object is returned each time calling the getter.
-  assertEq(errors === err.errors, false);
-
   // The errors object is modifiable.
   errors.push(123);
   assertEq(errors.length, 1);
   assertEq(errors[0], 123);
+  assertEq(err.errors[0], 123);
+
+  // The property is writable.
+  err.errors = undefined;
+  assertEq(err.errors, undefined);
 }
 
 // The errors argument can be any iterable.
@@ -53,29 +52,30 @@ assertThrowsInstanceOf(() => AggregateError(), TypeError);
 }
 
 {
-  const {
-    get: getErrors,
-    set: setErrors,
-  } = Object.getOwnPropertyDescriptor(AggregateError.prototype, "errors");
-  assertEq(typeof getErrors, "function");
-  assertEq(typeof setErrors, "undefined");
+  assertEq("errors" in AggregateError.prototype, false);
 
-  // The |this| argument must be an AggregateError instance.
-  assertThrowsInstanceOf(() => getErrors.call(null), TypeError);
-  assertThrowsInstanceOf(() => getErrors.call({}), TypeError);
-  assertThrowsInstanceOf(() => getErrors.call(new Error), TypeError);
+  const {
+    configurable,
+    enumerable,
+    value,
+    writable
+  } = Object.getOwnPropertyDescriptor(new AggregateError([]), "errors");
+  assertEq(configurable, true);
+  assertEq(enumerable, false);
+  assertEq(writable, true);
+  assertEq(value.length, 0);
 
   const g = newGlobal();
 
   let obj = {};
-  let errors = getErrors.call(new g.AggregateError([obj]));
+  let errors = new g.AggregateError([obj]).errors;
 
   assertEq(errors.length, 1);
   assertEq(errors[0], obj);
 
-  // The prototype is (incorrectly) |g.Array.prototype| in the cross-compartment case.
+  // The prototype is |g.Array.prototype| in the cross-compartment case.
   let proto = Object.getPrototypeOf(errors);
-  assertEq(proto === Array.prototype || proto === g.Array.prototype, true);
+  assertEq(proto === g.Array.prototype, true);
 }
 
 if (typeof reportCompare === "function")
