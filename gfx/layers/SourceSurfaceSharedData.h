@@ -106,7 +106,7 @@ class SourceSurfaceSharedDataWrapper final : public DataSourceSurface {
  * This class is used to wrap shared (as in process) data buffers used by a
  * source surface.
  */
-class SourceSurfaceSharedData final : public DataSourceSurface {
+class SourceSurfaceSharedData : public DataSourceSurface {
   typedef mozilla::ipc::SharedMemoryBasic SharedMemoryBasic;
 
  public:
@@ -130,23 +130,23 @@ class SourceSurfaceSharedData final : public DataSourceSurface {
   bool Init(const IntSize& aSize, int32_t aStride, SurfaceFormat aFormat,
             bool aShare = true);
 
-  uint8_t* GetData() override {
+  uint8_t* GetData() final {
     MutexAutoLock lock(mMutex);
     return GetDataInternal();
   }
 
-  int32_t Stride() override { return mStride; }
+  int32_t Stride() final { return mStride; }
 
   SurfaceType GetType() const override { return SurfaceType::DATA_SHARED; }
-  IntSize GetSize() const override { return mSize; }
-  SurfaceFormat GetFormat() const override { return mFormat; }
+  IntSize GetSize() const final { return mSize; }
+  SurfaceFormat GetFormat() const final { return mFormat; }
 
-  void GuaranteePersistance() override;
+  void GuaranteePersistance() final;
 
   void SizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
-                           SizeOfInfo& aInfo) const override;
+                           SizeOfInfo& aInfo) const final;
 
-  bool OnHeap() const override { return false; }
+  bool OnHeap() const final { return false; }
 
   /**
    * Although Map (and Moz2D in general) isn't normally threadsafe,
@@ -161,7 +161,7 @@ class SourceSurfaceSharedData final : public DataSourceSurface {
    * the same data pointer by retaining the old shared buffer until
    * the last mapping is freed via Unmap.
    */
-  bool Map(MapType, MappedSurface* aMappedSurface) override {
+  bool Map(MapType, MappedSurface* aMappedSurface) final {
     MutexAutoLock lock(mMutex);
     ++mMapCount;
     aMappedSurface->mData = GetDataInternal();
@@ -169,7 +169,7 @@ class SourceSurfaceSharedData final : public DataSourceSurface {
     return true;
   }
 
-  void Unmap() override {
+  void Unmap() final {
     MutexAutoLock lock(mMutex);
     MOZ_ASSERT(mMapCount > 0);
     if (--mMapCount == 0) {
@@ -232,7 +232,7 @@ class SourceSurfaceSharedData final : public DataSourceSurface {
   /**
    * Yields a dirty rect of what has changed since it was last called.
    */
-  Maybe<IntRect> TakeDirtyRect() override {
+  Maybe<IntRect> TakeDirtyRect() final {
     MutexAutoLock lock(mMutex);
     if (mDirtyRect) {
       Maybe<IntRect> ret = std::move(mDirtyRect);
@@ -244,7 +244,7 @@ class SourceSurfaceSharedData final : public DataSourceSurface {
   /**
    * Increment the invalidation counter.
    */
-  void Invalidate(const IntRect& aDirtyRect) override {
+  void Invalidate(const IntRect& aDirtyRect) final {
     MutexAutoLock lock(mMutex);
     if (!aDirtyRect.IsEmpty()) {
       if (mDirtyRect) {
@@ -275,10 +275,11 @@ class SourceSurfaceSharedData final : public DataSourceSurface {
     RefPtr<SourceSurfaceSharedData> mSurface;
   };
 
+ protected:
+  virtual ~SourceSurfaceSharedData() = default;
+
  private:
   friend class SourceSurfaceSharedDataWrapper;
-
-  virtual ~SourceSurfaceSharedData() = default;
 
   void LockHandle() {
     MutexAutoLock lock(mMutex);
