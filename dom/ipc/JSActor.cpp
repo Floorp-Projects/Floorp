@@ -195,7 +195,7 @@ static ipc::StructuredCloneData CloneJSStack(JSContext* aCx,
 
 static ipc::StructuredCloneData CaptureJSStack(JSContext* aCx) {
   JS::Rooted<JSObject*> stack(aCx, nullptr);
-  if (JS::ContextOptionsRef(aCx).asyncStack() &&
+  if (JS::IsAsyncStackCaptureEnabledForRealm(aCx) &&
       !JS::CaptureCurrentStack(aCx, &stack)) {
     JS_ClearPendingException(aCx);
   }
