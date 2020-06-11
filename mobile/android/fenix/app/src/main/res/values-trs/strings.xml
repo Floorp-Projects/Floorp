@@ -109,8 +109,6 @@
     <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection_2">Na\'nïnj sà\' riña màn si yi\'nïnj</string>
 
-    <!-- Browser menu button that opens a dialog to report issues with the current site -->
-    <string name="browser_menu_report_issue">Nātà\' sa \'iaj sun a\'nan\' riña sitiô nan</string>
     <!-- Browser menu button that open a share menu to share the current site -->
     <string name="browser_menu_share">Dūyingô\'</string>
     <!-- Share menu title, displayed when a user is sharing their current site -->
@@ -125,8 +123,10 @@
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="browser_menu_powered_by2">Rugûñu\'ūnj sa gu\'nàj %1$s</string>
 
-    <!-- Browser menu button to put the the current page in reader mode -->
+    <!-- Browser menu button to put the current page in reader mode -->
     <string name="browser_menu_read">Sa ni\'iāj duguî\' ahiaa</string>
+    <!-- Browser menu button content description to close reader mode and return the user to the regular browser -->
+    <string name="browser_menu_read_close">Gāhuī riña a’ue ahiat</string>
     <!-- Browser menu button to open the current page in an external app -->
     <string name="browser_menu_open_app_link">Na\'nīn\' riña aplikasiûn</string>
     <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
@@ -335,11 +335,95 @@
     <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="fxa_received_tab_channel_name">Nej rakïj ñanj nahuin rā\'ât</string>
 
+    <!-- Description of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="fxa_received_tab_channel_description">Si nūguàn\' nej rakïj ñanj nahuin ra\'a riña a\'ngô nej aga\' Firefox.</string>
+    <!--  The body for these is the URL of the tab received  -->
+    <string name="fxa_tab_received_notification_name">Nahuin rā\'a rakïj ñanj</string>
+    <!-- When multiple tabs have been received -->
+    <string name="fxa_tabs_received_notification_name">Nahuin rā\'a nej rakïj ñanj</string>
+    <!-- %s is the device name -->
+    <string name="fxa_tab_received_from_notification_name">Si rakïj ñanj %s</string>
+
+    <!-- Advanced Preferences -->
+    <!-- Preference for tracking protection settings -->
+    <string name="preferences_tracking_protection_settings">Sa narrán riña sa naga\'nāj a</string>
+    <!-- Preference switch for tracking protection -->
+    <string name="preferences_tracking_protection">Sa narrán riña sa naga\'nāj a</string>
+    <!-- Preference switch description for tracking protection -->
+    <string name="preferences_tracking_protection_description">Narrán riña nej nuguan\' nī scripts naga\'nāj sò\' nga aché nunt</string>
+    <!-- Preference for tracking protection exceptions -->
+    <string name="preferences_tracking_protection_exceptions">esepsiûn</string>
+    <!-- Preference description for tracking protection exceptions -->
+    <string name="preferences_tracking_protection_exceptions_description">Nitāj si \'iaj sun sa narrán riña sa naga\'nāj a riña nej sitiô nan</string>
+    <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
+    <string name="preferences_tracking_protection_exceptions_turn_on_for_all">Nāchrūn riña daran\' nej sîtio</string>
+    <!-- Text displayed when there are no exceptions -->
+    <string name="exceptions_empty_message_description">Â\'nïnj nej esepsiûn gūxūnt sa narrán riña sa naga\'nāj riña nej sitiô naguit.</string>
     <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
     <string name="exceptions_empty_message_learn_more_link">Gāhuin chrūn doj</string>
 
+    <!-- Description in Quick Settings that tells user tracking protection is off globally for all sites, and links to Settings to turn it on -->
+    <string name="preferences_tracking_protection_turned_off_globally">Giyichin\' da\' huā ngèj, gūij riña ajuste da\' nāchrūnt man.</string>
+
+    <!-- Preference switch for Telemetry -->
+    <string name="preferences_telemetry">Telemetría</string>
+    <!-- Preference switch for usage and technical data collection -->
+    <string name="preference_usage_data">Dàj gārāsunt nī nej dato tekniko</string>
+
+    <!-- Turn On Sync Preferences -->
+    <!-- Header of the Turn on Sync preference view -->
+    <string name="preferences_sync">Nāchrūn Sync</string>
+    <!-- Preference for account login -->
+    <string name="preferences_sync_sign_in">Gāyi\'ì sēsiûn</string>
+    <!-- Preference for reconnecting to FxA sync -->
+    <string name="preferences_sync_sign_in_to_reconnect">Gāyi\'ì sēsiûn da\' ga\'ue gānātū nûnt</string>
+    <!-- Preference for removing FxA account -->
+    <string name="preferences_sync_remove_account">Gūdure\' kuênta</string>
+
+    <!-- Button to open camera for pairing -->
+    <string name="pair_open_camera">Nā\'nïn riña kâmara</string>
+    <!-- Button to cancel pairing -->
+    <string name="pair_cancel">Dūyichin\'</string>
+
+    <!-- Toolbar Preferences -->
+    <!-- Preference for using top toolbar -->
+    <string name="preference_top_toolbar">Nda raj</string>
+    <!-- Preference for using bottom toolbar -->
+    <string name="preference_bottom_toolbar">Yi\'ij</string>
+
+    <!-- Theme Preferences -->
+    <!-- Preference for using light theme -->
+    <string name="preference_light_theme">Rāngà\' man</string>
+    <!-- Preference for using dark theme -->
+    <string name="preference_dark_theme">Huā rūmin\' man</string>
+    <!-- Preference for using using dark or light theme automatically set by battery -->
+    <string name="preference_auto_battery_theme">Sa nachrûn sa dugumîn batería</string>
+    <!-- Preference for using following device theme -->
+    <string name="preference_follow_device_theme">Gānikò\' si tema aga\' dan</string>
+
+    <!-- Library -->
+    <!-- Option in Library to open Sessions page -->
+    <string name="library_sessions">Nej sēsiûn</string>
+    <!-- Option in Library to open Screenshots page -->
+    <string name="library_screenshots">Sa nari\' riña pantâya</string>
     <!-- Option in Library to open Downloads page -->
     <string name="library_downloads">Sa nadunïnjt</string>
+    <!-- Option in library to open Bookmarks page -->
+    <string name="library_bookmarks">Nej sa râj sun nichrà\'t doj</string>
+    <!-- Option in library to open Desktop Bookmarks root page -->
+    <string name="library_desktop_bookmarks_root">Nej sa râj sun nichrà\'t doj nīkāj Eskritorio</string>
+    <!-- Option in library to open Desktop Bookmarks "menu" page -->
+    <string name="library_desktop_bookmarks_menu">Si menu Nej sa râj sun nichrà\'t doj</string>
+    <!-- Option in library to open Desktop Bookmarks "toolbar" page -->
+    <string name="library_desktop_bookmarks_toolbar">Dukuán nikāj sa gārāsun\' si\'aj Nej sa râj sun nichrà\'t do</string>
+    <!-- Option in library to open Desktop Bookmarks "unfiled" page -->
+    <string name="library_desktop_bookmarks_unfiled">A\'ngô nej sa râj sun nichrà\'t doj</string>
+    <!-- Option in Library to open History page -->
+    <string name="library_history">Sa gahuin</string>
+    <!-- Option in Library to open Synced Tabs page -->
+    <string name="library_synced_tabs">Nej rakïj ñanj nahuin nūguan\'àn</string>
+    <!-- Option in Library to open Reading List -->
+    <string name="library_reading_list">Dukuán nej sa gāhio\'</string>
     <!-- Menu Item Label for Search in Library -->
     <string name="library_search">Nānà\'uì\'</string>
 

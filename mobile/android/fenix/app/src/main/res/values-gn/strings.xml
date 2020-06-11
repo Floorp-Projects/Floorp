@@ -109,8 +109,6 @@
     <string name="browser_menu_new_tab">Tendayke pyahu</string>
     <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection_2">Eñongatu mbyatyhápe</string>
-    <!-- Browser menu button that opens a dialog to report issues with the current site -->
-    <string name="browser_menu_report_issue">Emomarandu tenda jejavy</string>
     <!-- Browser menu button that open a share menu to share the current site -->
     <string name="browser_menu_share">Moherakuã</string>
     <!-- Share menu title, displayed when a user is sharing their current site -->
@@ -124,8 +122,10 @@
     <!-- Browser menu text shown in custom tabs to indicate this is a Fenix tab
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="browser_menu_powered_by2">Omboguatáva %1$s</string>
-    <!-- Browser menu button to put the the current page in reader mode -->
+    <!-- Browser menu button to put the current page in reader mode -->
     <string name="browser_menu_read">Moñe’ẽrã rechaha</string>
+    <!-- Browser menu button content description to close reader mode and return the user to the regular browser -->
+    <string name="browser_menu_read_close">Moñe’ẽrã rechahágui ñesẽ</string>
     <!-- Browser menu button to open the current page in an external app -->
     <string name="browser_menu_open_app_link">Embojuruja tembipuru’i</string>
 
@@ -456,6 +456,24 @@
 
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_tab">Embojuaju tendayke</string>
+    <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
+    <string name="add_private_tab">Embojuaju tendayke ñemigua</string>
+    <!-- Text for the new tab button to indicate adding a new private tab in the tab -->
+    <string name="tab_drawer_fab_content">Ñemigua</string>
+    <!-- Text shown as the title of the open tab tray -->
+    <string name="tab_tray_title">Embojuruja tendayke</string>
+    <!-- Text shown in the menu for saving tabs to a collection -->
+    <string name="tab_tray_menu_item_save">Eñongatu atyhápe</string>
+    <!-- Text shown in the menu for sharing all tabs -->
+    <string name="tab_tray_menu_item_share">Emoherakuã opaite tendayke</string>
+    <!-- Text shown in the menu for closing all tabs -->
+    <string name="tab_tray_menu_item_close">Emboty opaite tendayke</string>
+    <!-- Shortcut action to open new tab -->
+    <string name="tab_tray_menu_open_new_tab">Tendayke pyahu</string>
+    <!-- Shortcut action to open the home screen -->
+    <string name="tab_tray_menu_home">Eho ñepyrũhápe</string>
+    <!-- Shortcut action to toggle private mode -->
+    <string name="tab_tray_menu_toggle">Embojopyru tendayke ayvu</string>
     <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
     <string name="remove_tab_from_collection">Embogue tendayke mbyatypyregua</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
@@ -726,6 +744,9 @@
     <!-- Button to save currently selected tabs in the "select tabs" step of the collection creator-->
     <string name="create_collection_save">Ñongatu</string>
 
+    <!-- Snackbar action to view the collection the user just created or updated -->
+    <string name="create_collection_view">Hecha</string>
+
     <!-- Default name for a new collection in "name new collection" step of the collection creator. %d is a placeholder for the number of collections-->
     <string name="create_collection_default_name">Ñembyatyha %d</string>
 
@@ -961,20 +982,13 @@
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
     <string name="onboarding_firefox_account_automatic_signin_failed">Tembiapo ñepyrũ ojavy</string>
     <!-- text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header">Eñemo’ãke ndetevoi</string>
-    <!-- text for the tracking protection card description
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_tracking_protection_description1">%s nepytyvõ emboyke hag̃ua ñanduti renda nde rapykuehóvo.</string>
+    <string name="onboarding_tracking_protection_header_2">Ñemigua ijeheguíva</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
-    <string name="onboarding_tracking_protection_standard_button">Ypykue</string>
-    <!-- text for standard blocking option button description -->
-    <string name="onboarding_tracking_protection_standard_button_description">Ojoko’ive tapykuehoha hákatu omoneĩ kuatiarogue henyhẽvo hekopete</string>
+    <string name="onboarding_tracking_protection_standard_button_2">Ypyguaite (ijypygua)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">Mbaretépe (jeroviaháva)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">Mbaretépe</string>
-    <!-- text for strict blocking option button description -->
-    <string name="onboarding_tracking_protection_strict_button_description">Ejokove tapykuehoha eñemo’ãve ha apopykuaave hag̃ua, hákatu ikatu avei oimeraẽva tenda nahenyhẽi hekopete</string>
     <!-- text for the toolbar position card header
         In English this is an idiom for "choose a side as in an argument or fight"
         but it is ok to make this more literally about "choosing a position in a physical space -->
@@ -1063,31 +1077,17 @@
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Kuaave</string>
 
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_option">Ypykue</string>
-    <!-- Preference for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard">Ypykue (jeroviaháva)</string>
-    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description">Oñembojoja ñemo’ã ha apopykuaa.</string>
-    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_2">Kuatiarogue henyhẽta tapiaguáicha, hákatu ojoko sa’ivéta tapykuehohápe.</string>
+    <string name="preference_enhanced_tracking_protection_standard_default_1">Ypyguaite (ijypygua)</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Mba’e umi ojokóva tapykuehoha moãha ypyguáva renondépe</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Mbaretépe</string>
-    <!-- Preference for enhanced tracking protection for the strict protection settings, default setting -->
-    <string name="preference_enhanced_tracking_protection_strict_default">Mbaretépe (Ijypykuéva)</string>
-    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_default_description">Ñemo’ã tapykuehoha iporãvéva renondépe ha avei apopykuaave, háhatu ikatu heta tenda nomba’poporãmo’ãi.</string>
-    <!-- Preference for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_recommended">Mbaretépe (jeroviaháva)</string>
-    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description">Ñemo’ãve, hákatu ikatu ndahetái tenda térã tetepy nomba’apovéi.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Mba’e umi ojokóva tapykuehoha mo’ãha imbaretéva</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom">Momba’epyre</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_custom_description">Eiporavo mba’e tapykuehoha ha jehekaha ejokose.</string>
+    <string name="preference_enhanced_tracking_protection_custom_description_2">Eiporavo mba’e tapykuehoha ha jehekaha ejokose.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_custom_info_button">Mba’e umi ojokóva tapykuehoha mo’ãha ñemomba’epyre</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
@@ -1138,8 +1138,6 @@
     <string name="etp_tracking_content_title">Tapykueho retepy</string>
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_description">Ejoko ñemurã ñemyanyhẽ okayguáva, ta’ãngamýi ha tetepy oguerekóva ayvu rapykuehoha. Ikatu ombyai ñanduti renda rembiapoite.</string>
-    <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="etp_onboarding_message_2">Ta’ãnga pytãũvo %s ojokohína tapykuehoha ko tendápe. Eiporavo ehecha hag̃ua mba’etépa ojoko.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">Umi ñemo’ã oñemyandýma ko tendápe g̃uarã</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->

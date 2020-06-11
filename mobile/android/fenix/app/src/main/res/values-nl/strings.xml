@@ -470,6 +470,10 @@
     <string name="tab_tray_menu_item_close">Alle tabbladen sluiten</string>
     <!-- Shortcut action to open new tab -->
     <string name="tab_tray_menu_open_new_tab">Nieuw tabblad</string>
+    <!-- Shortcut action to open the home screen -->
+    <string name="tab_tray_menu_home">Naar startpagina</string>
+    <!-- Shortcut action to toggle private mode -->
+    <string name="tab_tray_menu_toggle">Tabbladmodus wisselen</string>
     <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
     <string name="remove_tab_from_collection">Tabblad uit collectie verwijderen</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
@@ -735,6 +739,9 @@
     <!-- Button to save currently selected tabs in the "select tabs" step of the collection creator-->
     <string name="create_collection_save">Opslaan</string>
 
+    <!-- Snackbar action to view the collection the user just created or updated -->
+    <string name="create_collection_view">Weergeven</string>
+
     <!-- Default name for a new collection in "name new collection" step of the collection creator. %d is a placeholder for the number of collections-->
     <string name="create_collection_default_name">Collectie %d</string>
 
@@ -973,10 +980,14 @@
     <string name="onboarding_tracking_protection_description_2">Privacy- en beveiligingsinstellingen blokkeren trackers, malware en bedrijven die u volgen.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Standaard (standaard)</string>
+    <!-- text for standard blocking option button description -->
+    <string name="onboarding_tracking_protection_standard_button_description_2">Blokkeert minder trackers. Pagina’s worden normaal geladen.</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">Streng (aanbevolen)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">Streng</string>
+    <!-- text for strict blocking option button description -->
+    <string name="onboarding_tracking_protection_strict_button_description_2">Blokkeert meer trackers, advertenties en pop-ups. Pagina’s worden sneller geladen, maar sommige functies werken mogelijk niet.</string>
     <!-- text for the toolbar position card header
         In English this is an idiom for "choose a side as in an argument or fight"
         but it is ok to make this more literally about "choosing a position in a physical space -->
@@ -1066,10 +1077,14 @@
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Meer info</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">Standaard (standaard)</string>
+    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_description_3">Blokkeert minder trackers. Pagina’s worden normaal geladen.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Wat wordt geblokkeerd door standaard bescherming tegen volgen</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Streng</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_description_2">Blokkeert meer trackers, advertenties en pop-ups. Pagina’s worden sneller geladen, maar sommige functies werken mogelijk niet.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Wat wordt geblokkeerd door strenge bescherming tegen volgen</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1124,6 +1139,8 @@
     <string name="etp_tracking_content_title">Volginhoud</string>
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_description">Voorkomt dat externe advertenties, video’s en andere inhoud die volgcode bevat worden geladen. Kan invloed hebben op de functionaliteit van sommige websites.</string>
+    <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="etp_onboarding_cfr_message">Telkens als het schild paars is, heeft %s trackers op een website geblokkeerd. Tik voor meer info.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">Beschermingen voor deze website staan AAN</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->

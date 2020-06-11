@@ -105,8 +105,6 @@
     <string name="browser_menu_new_tab">Új lap</string>
     <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection_2">Gyűjteménybe mentés</string>
-    <!-- Browser menu button that opens a dialog to report issues with the current site -->
-    <string name="browser_menu_report_issue">Hibás webhely bejelentése</string>
     <!-- Browser menu button that open a share menu to share the current site -->
     <string name="browser_menu_share">Megosztás</string>
     <!-- Share menu title, displayed when a user is sharing their current site -->
@@ -122,7 +120,7 @@
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="browser_menu_powered_by2">A motorháztető alatt: %1$s</string>
 
-    <!-- Browser menu button to put the the current page in reader mode -->
+    <!-- Browser menu button to put the current page in reader mode -->
     <string name="browser_menu_read">Olvasó nézet</string>
     <!-- Browser menu button to open the current page in an external app -->
     <string name="browser_menu_open_app_link">Megnyitás alkalmazásban</string>
@@ -953,21 +951,10 @@
     <string name="onboarding_firefox_account_sync_is_on">A Sync be van kapcsolva</string>
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
     <string name="onboarding_firefox_account_automatic_signin_failed">Sikertelen bejelentkezés</string>
-    <!-- text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header">Védje meg magát</string>
-    <!-- text for the tracking protection card description
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_tracking_protection_description1">A %s segít megakadályozni, hogy a webhelyek nyomon kövessék az online tevékenységét.</string>
-    <!-- text for tracking protection radio button option for standard level of blocking -->
-    <string name="onboarding_tracking_protection_standard_button">Szokásos</string>
-    <!-- text for standard blocking option button description -->
-    <string name="onboarding_tracking_protection_standard_button_description">Kevesebb nyomkövetőt blokkol, de lehetővé teszi az oldalak normál betöltését</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">Szigorú (ajánlott)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">Szigorú</string>
-    <!-- text for strict blocking option button description -->
-    <string name="onboarding_tracking_protection_strict_button_description">Több nyomkövetőt blokkol a jobb védelem és teljesítmény érdekében, de előfordulhat, hogy egyes webhelyek nem fognak megfelelően működni</string>
     <!-- text for the toolbar position card header
         In English this is an idiom for "choose a side as in an argument or fight"
         but it is ok to make this more literally about "choosing a position in a physical space -->
@@ -1048,39 +1035,21 @@
     <!-- Link displayed in enhanced tracking protection panel to access tracking protection settings -->
     <string name="etp_settings">Védelmi beállítások</string>
     <!-- Preference title for enhanced tracking protection settings -->
-    <string name="preference_enhanced_tracking_protection">Továbbfejlesztett követés elleni védelem</string>
+    <string name="preference_enhanced_tracking_protection">Fokozott követés elleni védelem</string>
     <!-- Title for the description of enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_title">Böngésszen anélkül, hogy követnék</string>
     <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
     <string name="preference_enhanced_tracking_protection_explanation">Tartsa meg az adatait. A %s megvédi a leggyakoribb nyomkövetőktől, amelyek követik az online tevékenységét.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">További tudnivalók</string>
-    <!-- Preference for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_option">Szokásos</string>
-    <!-- Preference for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard">Szokásos (ajánlott)</string>
-    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description">Kiegyensúlyozott védelem és teljesítmény.</string>
-    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_2">A lapok normálisan betöltenek, de néhány nyomkövető blokkolása.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Mit blokkol a szokásos követésvédelem</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Szigorú</string>
-    <!-- Preference for enhanced tracking protection for the strict protection settings, default setting -->
-    <string name="preference_enhanced_tracking_protection_strict_default">Szigorú (Alapértelmezett)</string>
-    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_default_description">Erősebb követésvédelem és jobb teljesítmény, de előfordulhat, hogy egyes oldalak nem fognak megfelelően működni.</string>
-    <!-- Preference for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_recommended">Szigorú (ajánlott)</string>
-    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description">Erősebb védelem, de egyes webhelyek és tartalmak hibásan működhetnek.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Mit blokkol a szigorú követésvédelem</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom">Egyéni</string>
-    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_custom_description">Válassza ki a blokkolni kívánt nyomkövetőket és parancsfájlokat</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_custom_info_button">Mit blokkol az egyéni követésvédelem</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
@@ -1129,15 +1098,13 @@
     <string name="etp_tracking_content_title">Nyomkövető tartalom</string>
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_description">Megállítja a követési kódokat tartalmazó külső hirdetések, videók és egyéb tartalmak betöltését. Befolyásolhatja az egyes weboldalak funkcióit.</string>
-    <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="etp_onboarding_message_2">A %s követőket blokkol az oldalon, ha a pajzs lila. Koppintson rá, hogy megnézze, mit blokkolt.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">A védelem BE van kapcsolva ezen a webhelyen</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
     <string name="etp_panel_off">A védelem KI van kapcsolva ezen a webhelyen</string>
 
     <!-- Header for exceptions list for which sites enhanced tracking protection is always off -->
-    <string name="enhanced_tracking_protection_exceptions">A továbbfejlesztett követés elleni védelem ki van kapcsolva ezeken a webhelyeken</string>
+    <string name="enhanced_tracking_protection_exceptions">A fokozott követés elleni védelem ki van kapcsolva ezeken a webhelyeken</string>
     <!-- Content description (not visible, for screen readers etc.): Navigate
     back from ETP details (Ex: Tracking content) -->
     <string name="etp_back_button_content_description">Navigálás visszafelé</string>

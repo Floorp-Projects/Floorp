@@ -107,8 +107,6 @@
     <string name="browser_menu_new_tab">新建标签页</string>
     <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection_2">保存到收藏集</string>
-    <!-- Browser menu button that opens a dialog to report issues with the current site -->
-    <string name="browser_menu_report_issue">反馈网站问题</string>
     <!-- Browser menu button that open a share menu to share the current site -->
     <string name="browser_menu_share">分享</string>
 
@@ -126,8 +124,10 @@
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="browser_menu_powered_by2">由 %1$s 提供</string>
 
-    <!-- Browser menu button to put the the current page in reader mode -->
+    <!-- Browser menu button to put the current page in reader mode -->
     <string name="browser_menu_read">阅读模式</string>
+    <!-- Browser menu button content description to close reader mode and return the user to the regular browser -->
+    <string name="browser_menu_read_close">关闭阅读模式</string>
     <!-- Browser menu button to open the current page in an external app -->
     <string name="browser_menu_open_app_link">在应用中打开</string>
     <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
@@ -463,6 +463,24 @@
     <string name="tabs_header_private_tabs_title">隐私标签页</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_tab">添加标签页</string>
+    <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
+    <string name="add_private_tab">新建隐私标签页</string>
+    <!-- Text for the new tab button to indicate adding a new private tab in the tab -->
+    <string name="tab_drawer_fab_content">隐私</string>
+    <!-- Text shown as the title of the open tab tray -->
+    <string name="tab_tray_title">打开的标签页</string>
+    <!-- Text shown in the menu for saving tabs to a collection -->
+    <string name="tab_tray_menu_item_save">保存到收藏集</string>
+    <!-- Text shown in the menu for sharing all tabs -->
+    <string name="tab_tray_menu_item_share">分享所有标签页</string>
+    <!-- Text shown in the menu for closing all tabs -->
+    <string name="tab_tray_menu_item_close">关闭所有标签页</string>
+    <!-- Shortcut action to open new tab -->
+    <string name="tab_tray_menu_open_new_tab">新建标签页</string>
+    <!-- Shortcut action to open the home screen -->
+    <string name="tab_tray_menu_home">前往主页</string>
+    <!-- Shortcut action to toggle private mode -->
+    <string name="tab_tray_menu_toggle">切换标签页模式</string>
     <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
     <string name="remove_tab_from_collection">将标签页从收藏集移除</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
@@ -746,6 +764,9 @@
     <!-- Button to save currently selected tabs in the "select tabs" step of the collection creator-->
     <string name="create_collection_save">保存</string>
 
+    <!-- Snackbar action to view the collection the user just created or updated -->
+    <string name="create_collection_view">查看</string>
+
     <!-- Default name for a new collection in "name new collection" step of the collection creator. %d is a placeholder for the number of collections-->
     <string name="create_collection_default_name">收藏集 %d</string>
 
@@ -984,20 +1005,20 @@
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
     <string name="onboarding_firefox_account_automatic_signin_failed">登录失败</string>
     <!-- text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header">自己权利自己护</string>
+    <string name="onboarding_tracking_protection_header_2">自动保护隐私</string>
     <!-- text for the tracking protection card description
     The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_tracking_protection_description1">%s 可助您避免被网站在线跟踪。</string>
+    <string name="onboarding_tracking_protection_description_2">可通过隐私与安全设置，拦截跟踪器、恶意软件和企业在网上对您的跟踪。</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
-    <string name="onboarding_tracking_protection_standard_button">标准</string>
+    <string name="onboarding_tracking_protection_standard_button_2">标准（默认）</string>
     <!-- text for standard blocking option button description -->
-    <string name="onboarding_tracking_protection_standard_button_description">拦截较少跟踪器，以允许页面正常加载</string>
+    <string name="onboarding_tracking_protection_standard_button_description_2">少拦截一些跟踪器，页面将正可常加载。</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">严格（推荐）</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">严格</string>
     <!-- text for strict blocking option button description -->
-    <string name="onboarding_tracking_protection_strict_button_description">拦截更多跟踪器以获得更好的保护和性能，但可能导致某些网站异常</string>
+    <string name="onboarding_tracking_protection_strict_button_description_2">拦截更多跟踪器、广告和弹窗。页面加载速度更快，但是某些功能可能无法正常工作。</string>
     <!-- text for the toolbar position card header
         In English this is an idiom for "choose a side as in an argument or fight"
         but it is ok to make this more literally about "choosing a position in a physical space -->
@@ -1083,31 +1104,21 @@
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">详细了解</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_option">标准</string>
-    <!-- Preference for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard">标准（推荐）</string>
+    <string name="preference_enhanced_tracking_protection_standard_default_1">标准（默认）</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description">平衡保护和性能。</string>
-    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_2">页面将正常加载，但拦截的跟踪器少一些。</string>
+    <string name="preference_enhanced_tracking_protection_standard_description_3">少拦截一些跟踪器，页面将正可常加载。</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">标准跟踪保护会拦截的内容</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">严格</string>
-    <!-- Preference for enhanced tracking protection for the strict protection settings, default setting -->
-    <string name="preference_enhanced_tracking_protection_strict_default">严格（默认）</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_default_description">更强的跟踪保护与更快的性能，但可导致某些网站的运作不正常。</string>
-    <!-- Preference for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_recommended">严格（推荐）</string>
-    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description">更强的保护，但可能导致某些网站或内容异常。</string>
+    <string name="preference_enhanced_tracking_protection_strict_description_2">拦截更多跟踪器、广告和弹窗。页面加载速度更快，但是某些功能可能无法正常工作。</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">严格跟踪保护会拦截的内容</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom">自定义</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_custom_description">选择要拦截的跟踪器和脚本</string>
+    <string name="preference_enhanced_tracking_protection_custom_description_2">选择要拦截的跟踪器和脚本。</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_custom_info_button">自定义跟踪保护会拦截的内容</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
@@ -1157,7 +1168,7 @@
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_description">停止加载包含跟踪代码的广告、视频和其他内容。可能会影响某些网站功能。</string>
     <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="etp_onboarding_message_2">盾牌变成紫色时，即代表 %s 正在拦截此网站上的跟踪器。点按即可查看已拦截内容。</string>
+    <string name="etp_onboarding_cfr_message">盾牌变成紫色时，代表 %s 拦截了该网站的跟踪器。点按以获取更多信息。</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">对此网站已开启保护</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->

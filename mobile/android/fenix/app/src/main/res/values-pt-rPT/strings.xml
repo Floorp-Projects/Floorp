@@ -19,6 +19,9 @@
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">Os seus separadores abertos serão mostrados aqui.</string>
 
+    <!-- No Private Tabs Message Description -->
+    <string name="no_private_tabs_description">Os seus separadores privados serão mostrados aqui.</string>
+
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s é criado pela Mozilla.</string>
 
@@ -34,13 +37,21 @@
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">Eliminar sessão</string>
 
-    <!-- Private mode shortcut "contextual feature recommender" (CFR) -->
+    <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
     <string name="cfr_message">Adicionar um atalho para abrir separadores privados ao seu ecrã inicial.</string>
     <!-- Text for the positive button -->
     <string name="cfr_pos_button_text">Adicionar atalho</string>
     <!-- Text for the negative button -->
     <string name="cfr_neg_button_text">Não, obrigado</string>
+
+    <!-- Search widget "contextual feature recommendation" (CFR) -->
+    <!-- Text for the main message. 'Firefox' intentionally hardcoded here.-->
+    <string name="search_widget_cfr_message">Aceda ao Firefox mais rapidamente. Adicione um widget ao seu ecrã inicial.</string>
+    <!-- Text for the positive button -->
+    <string name="search_widget_cfr_pos_button_text">Adicionar widget</string>
+    <!-- Text for the negative button -->
+    <string name="search_widget_cfr_neg_button_text">Agora não</string>
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
@@ -84,6 +95,8 @@
     <string name="browser_menu_add_to_homescreen">Adicionar ao ecrã Inicial</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
     <string name="browser_menu_install_on_homescreen">Instalar</string>
+    <!-- Menu option on the toolbar that takes you to synced tabs page-->
+    <string name="synced_tabs">Separadores sincronizados</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">Encontrar na página</string>
     <!-- Browser menu button that creates a private tab -->
@@ -92,8 +105,6 @@
     <string name="browser_menu_new_tab">Novo separador</string>
     <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection_2">Guardar na coleção</string>
-    <!-- Browser menu button that opens a dialog to report issues with the current site -->
-    <string name="browser_menu_report_issue">Reportar problema do site</string>
     <!-- Browser menu button that open a share menu to share the current site -->
     <string name="browser_menu_share">Partilhar</string>
     <!-- Share menu title, displayed when a user is sharing their current site -->
@@ -107,8 +118,10 @@
     <!-- Browser menu text shown in custom tabs to indicate this is a Fenix tab
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="browser_menu_powered_by2">Com tecnologia %1$s</string>
-    <!-- Browser menu button to put the the current page in reader mode -->
+    <!-- Browser menu button to put the current page in reader mode -->
     <string name="browser_menu_read">Vista de leitura</string>
+    <!-- Browser menu button content description to close reader mode and return the user to the regular browser -->
+    <string name="browser_menu_read_close">Fechar vista de leitura</string>
     <!-- Browser menu button to open the current page in an external app -->
     <string name="browser_menu_open_app_link">Abrir na aplicação</string>
     <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
@@ -279,6 +292,8 @@
     <string name="preferences_sync_bookmarks">Marcadores</string>
     <!-- Preference for syncing logins -->
     <string name="preferences_sync_logins">Credenciais</string>
+    <!-- Preference for syncing tabs -->
+    <string name="preferences_sync_tabs">Separadores</string>
     <!-- Preference for signing out -->
     <string name="preferences_sign_out">Terminar sessão</string>
     <!-- Preference displays and allows changing current FxA device name -->
@@ -372,7 +387,7 @@
 
     <!-- Pairing Feature strings -->
     <!-- Instructions on how to access pairing -->
-    <string name="pair_instructions"><![CDATA[Visite <b>firefox.com/pair</b> no Firefox do seu computador para obter um código QR.]]></string>
+    <string name="pair_instructions_2"><![CDATA[Digitalize o código QR mostrado em <b>firefox.com/pair</b>]]></string>
     <!-- Button to open camera for pairing -->
     <string name="pair_open_camera">Abrir câmara</string>
     <!-- Button to cancel pairing -->
@@ -414,6 +429,8 @@
     <string name="library_desktop_bookmarks_unfiled">Outros marcadores</string>
     <!-- Option in Library to open History page -->
     <string name="library_history">Histórico</string>
+    <!-- Option in Library to open Synced Tabs page -->
+    <string name="library_synced_tabs">Separadores sincronizados</string>
     <!-- Option in Library to open Reading List -->
     <string name="library_reading_list">Lista de leitura</string>
     <!-- Menu Item Label for Search in Library -->
@@ -436,6 +453,24 @@
     <string name="tabs_header_private_tabs_title">Separadores privados</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_tab">Adicionar separador</string>
+    <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
+    <string name="add_private_tab">Adicionar separador privado</string>
+    <!-- Text for the new tab button to indicate adding a new private tab in the tab -->
+    <string name="tab_drawer_fab_content">Privado</string>
+    <!-- Text shown as the title of the open tab tray -->
+    <string name="tab_tray_title">Separadores abertos</string>
+    <!-- Text shown in the menu for saving tabs to a collection -->
+    <string name="tab_tray_menu_item_save">Guardar na coleção</string>
+    <!-- Text shown in the menu for sharing all tabs -->
+    <string name="tab_tray_menu_item_share">Partilhar todos os separadores</string>
+    <!-- Text shown in the menu for closing all tabs -->
+    <string name="tab_tray_menu_item_close">Fechar todos os separadores</string>
+    <!-- Shortcut action to open new tab -->
+    <string name="tab_tray_menu_open_new_tab">Novo separador</string>
+    <!-- Shortcut action to open the home screen -->
+    <string name="tab_tray_menu_home">Ir para início</string>
+    <!-- Shortcut action to toggle private mode -->
+    <string name="tab_tray_menu_toggle">Permutar modo de separador</string>
     <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
     <string name="remove_tab_from_collection">Remover separador da coleção</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
@@ -700,6 +735,9 @@
     <!-- Button to save currently selected tabs in the "select tabs" step of the collection creator-->
     <string name="create_collection_save">Guardar</string>
 
+    <!-- Snackbar action to view the collection the user just created or updated -->
+    <string name="create_collection_view">Ver</string>
+
     <!-- Default name for a new collection in "name new collection" step of the collection creator. %d is a placeholder for the number of collections-->
     <string name="create_collection_default_name">Coleção %d</string>
 
@@ -811,14 +849,14 @@
     <string name="preference_accessibility_font_size_title">Tamanho do tipo de letra</string>
 
     <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
-    <string name="preference_accessibility_auto_size">Dimensionamento automático do tipo de letra</string>
+    <string name="preference_accessibility_auto_size_2">Dimensionamento automático do tipo de letra</string>
     <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
     <string name="preference_accessibility_auto_size_summary">O tamanho do tipo de letra irá corresponder às suas configurações do Android. Desative para gerir o tamanho do tipo de letra aqui.</string>
 
     <!-- Title for the Delete browsing data preference -->
     <string name="preferences_delete_browsing_data">Eliminar dados de navegação</string>
     <!-- Title for the tabs item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_tabs_title">Separadores abertos</string>
+    <string name="preferences_delete_browsing_data_tabs_title_2">Separadores abertos</string>
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
     <string name="preferences_delete_browsing_data_tabs_subtitle">%d separador(es)</string>
     <!-- Title for the data and history items in Delete browsing data -->
@@ -931,18 +969,20 @@
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
     <string name="onboarding_firefox_account_automatic_signin_failed">Falha ao iniciar sessão</string>
     <!-- text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header">Proteja-se</string>
+    <string name="onboarding_tracking_protection_header_2">Privacidade automática</string>
     <!-- text for the tracking protection card description
     The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_tracking_protection_description1">%s ajuda-o a impedir que sites o monitorizem na Internet.</string>
+    <string name="onboarding_tracking_protection_description_2">As configurações de privacidade e de segurança bloqueiam rastreadores, software malicioso e empresas que o monitorizam.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
-    <string name="onboarding_tracking_protection_standard_button">Padrão</string>
+    <string name="onboarding_tracking_protection_standard_button_2">Padrão (predefinição)</string>
     <!-- text for standard blocking option button description -->
-    <string name="onboarding_tracking_protection_standard_button_description">Bloqueia menos rastreadores, mas permite que as páginas sejam carregadas normalmente</string>
+    <string name="onboarding_tracking_protection_standard_button_description_2">Bloqueia menos rastreadores. As páginas serão carregadas normalmente.</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">Rigorosa (recomendado)</string>
+    <!-- text for tracking protection radio button option for strict level of blocking -->
+    <string name="onboarding_tracking_protection_strict_option">Rigoroso</string>
     <!-- text for strict blocking option button description -->
-    <string name="onboarding_tracking_protection_strict_button_description">Bloqueia mais rastreadores para uma melhor proteção e desempenho, mas pode fazer com que alguns sites não funcionem corretamente</string>
+    <string name="onboarding_tracking_protection_strict_button_description_2">Bloqueia mais rastreadores, anúncios e pop-ups. As páginas são carregadas mais rapidamente, mas algumas funcionalidades poderão não funcionar.</string>
     <!-- text for the toolbar position card header
         In English this is an idiom for "choose a side as in an argument or fight"
         but it is ok to make this more literally about "choosing a position in a physical space -->
@@ -1028,33 +1068,23 @@
     <string name="preference_enhanced_tracking_protection_explanation">Guarde os seus dados para si. O %s protege-o dos rastreadores mais comuns que monitorizam o que faz na Internet.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Saber mais</string>
-    <!-- Preference for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_option">Padrão</string>
 
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard">Padrão (recomendado)</string>
+    <string name="preference_enhanced_tracking_protection_standard_default_1">Padrão (predefinição)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description">Equilíbrio entre proteção e desempenho.</string>
-    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_2">As páginas serão carregadas normalmente, mas serão bloqueados menos rastreadores.</string>
+    <string name="preference_enhanced_tracking_protection_standard_description_3">Bloqueia menos rastreadores. As páginas serão carregadas normalmente.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">O que é bloqueado pela proteção padrão contra a monitorização</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Rigorosa</string>
-    <!-- Preference for enhanced tracking protection for the strict protection settings, default setting -->
-    <string name="preference_enhanced_tracking_protection_strict_default">Rigorosa (predefinição)</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_default_description">Proteção contra a monitorização mais forte e um desempenho mais rápido, mas alguns sites podem não funcionar corretamente.</string>
-    <!-- Preference for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_recommended">Rigorosa (recomendado)</string>
-    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description">Proteção mais forte, mas pode causar problemas em alguns sites ou conteúdos.</string>
+    <string name="preference_enhanced_tracking_protection_strict_description_2">Bloqueia mais rastreadores, anúncios e pop-ups. As páginas são carregadas mais rapidamente, mas algumas funcionalidades poderão não funcionar.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">O que é bloqueado pela proteção rigorosa contra a monitorização</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom">Personalizada</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_custom_description">Escolha quais os rastreadores e scripts a bloquear</string>
+    <string name="preference_enhanced_tracking_protection_custom_description_2">Escolha quais os rastreadores e scripts a bloquear.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_custom_info_button">O que é bloqueado pela proteção personalizada contra a monitorização</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
@@ -1105,7 +1135,7 @@
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_description">Impede o carregamento de anúncios, vídeos e outros conteúdos externos que contenham códigos de monitorização. Pode afetar algumas funcionalidades dos sites.</string>
     <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="etp_onboarding_message_2">O %s está a bloquear os rastreadores deste site quando o escudo está roxo. Toque para ver o que está a ser bloqueado.</string>
+    <string name="etp_onboarding_cfr_message">Sempre que o escudo estiver roxo, o %s bloqueou rastreadores num site. Toque para mais informações.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">As proteções estão ativadas para este site</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
@@ -1392,4 +1422,15 @@
     <string name="voice_search_content_description">Pesquisa por voz</string>
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
     <string name="voice_search_explainer">Fale agora</string>
+
+    <!-- Synced Tabs -->
+    <!-- Text displayed when user is not logged into a Firefox Account -->
+    <string name="synced_tabs_connect_to_sync_account">Associar uma conta Firefox.</string>
+    <!-- Text displayed to ask user to connect another device as no devices found with account -->
+    <string name="synced_tabs_connect_another_device">Associar outro dispositivo.</string>
+    <!-- Text displayed asking user to re-authenticate -->
+    <string name="synced_tabs_reauth">Por favor, autentique-se novamente.</string>
+    <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->
+    <string name="synced_tabs_enable_tab_syncing">Por favor, ative a sincronização de separadores.</string>
+
 </resources>

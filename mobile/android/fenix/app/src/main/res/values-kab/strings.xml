@@ -105,8 +105,6 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="browser_menu_new_tab">Iccer amaynut</string>
     <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection_2">Sekles ɣer tegrumma</string>
-    <!-- Browser menu button that opens a dialog to report issues with the current site -->
-    <string name="browser_menu_report_issue">Azen ugur ɣef usmel</string>
     <!-- Browser menu button that open a share menu to share the current site -->
     <string name="browser_menu_share">Bḍu</string>
     <!-- Share menu title, displayed when a user is sharing their current site -->
@@ -120,8 +118,10 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Browser menu text shown in custom tabs to indicate this is a Fenix tab
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="browser_menu_powered_by2">Ddaw n leɛnaya n %1$s</string>
-    <!-- Browser menu button to put the the current page in reader mode -->
+    <!-- Browser menu button to put the current page in reader mode -->
     <string name="browser_menu_read">Askar n tɣuṛi</string>
+    <!-- Browser menu button content description to close reader mode and return the user to the regular browser -->
+    <string name="browser_menu_read_close">Mdel timeẓri n tɣuri</string>
     <!-- Browser menu button to open the current page in an external app -->
     <string name="browser_menu_open_app_link">Ldi deg usnas</string>
     <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
@@ -452,6 +452,22 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="tabs_header_private_tabs_title">Iccaren usligen</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_tab">Rnu iccer</string>
+    <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
+    <string name="add_private_tab">Rnu iccer uslig</string>
+    <!-- Text for the new tab button to indicate adding a new private tab in the tab -->
+    <string name="tab_drawer_fab_content">Uslig</string>
+    <!-- Text shown as the title of the open tab tray -->
+    <string name="tab_tray_title">Ldi acarren</string>
+    <!-- Text shown in the menu for saving tabs to a collection -->
+    <string name="tab_tray_menu_item_save">Sekles ɣer tagrumma</string>
+    <!-- Text shown in the menu for sharing all tabs -->
+    <string name="tab_tray_menu_item_share">Bḍu akk accaren</string>
+    <!-- Text shown in the menu for closing all tabs -->
+    <string name="tab_tray_menu_item_close">Mdel akk iccaren</string>
+    <!-- Shortcut action to open new tab -->
+    <string name="tab_tray_menu_open_new_tab">Iccer amaynut</string>
+    <!-- Shortcut action to toggle private mode -->
+    <string name="tab_tray_menu_toggle">Sken/ffer askar n waccaren</string>
     <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
     <string name="remove_tab_from_collection">Kkes iccer seg tegrumma</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
@@ -719,6 +735,9 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Button to save currently selected tabs in the "select tabs" step of the collection creator-->
     <string name="create_collection_save">Sekles</string>
 
+    <!-- Snackbar action to view the collection the user just created or updated -->
+    <string name="create_collection_view">Sken</string>
+
     <!-- Default name for a new collection in "name new collection" step of the collection creator. %d is a placeholder for the number of collections-->
     <string name="create_collection_default_name">Tagrumma %d</string>
 
@@ -950,20 +969,20 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
     <string name="onboarding_firefox_account_automatic_signin_failed">Tuccḍa n tuqqna</string>
     <!-- text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header">Mmesten iman-ik</string>
+    <string name="onboarding_tracking_protection_header_2">Tabaḍnit tawurmant</string>
     <!-- text for the tracking protection card description
     The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_tracking_protection_description1">%s ad ak-d-iffek tallelt ad isewḥel ismal ad ak-ḍefren mi ara teqneḍ.</string>
+    <string name="onboarding_tracking_protection_description_2">Iɣewwaren n tbaḍnit d tɣellist sewḥalen imekaren, yir azeɣzan d tkebbaniyin ara ak-yeṭṭaferen.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
-    <string name="onboarding_tracking_protection_standard_button">Tizeɣt</string>
+    <string name="onboarding_tracking_protection_standard_button_2">Alugan (amezwer)</string>
     <!-- text for standard blocking option button description -->
-    <string name="onboarding_tracking_protection_standard_button_description">Isewḥal ineḍfaren maca ad isireg isebtar ad d-allin s ufus</string>
+    <string name="onboarding_tracking_protection_standard_button_description_2">Drus n yimakaren i isewḥal. Isebtar ad d-alin s wudem amagnu.</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">Uḥriṣ (yelha)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">Uḥris</string>
     <!-- text for strict blocking option button description -->
-    <string name="onboarding_tracking_protection_strict_button_description">Ad isewḥel ugar n ineḍfaren i ugar n taɣlist akked tilḥin iwatan, maca kra n isebtar ur teddun ara akken iwata</string>
+    <string name="onboarding_tracking_protection_strict_button_description_2">Ad isewḥel ugar n yineḍfaren, n udellel d yisfuyla udhimen. Isebtar ad d-ttalin s zzreb, maca kra n tmahilin zemrent ur teddunt ara.</string>
     <!-- text for the toolbar position card header
         In English this is an idiom for "choose a side as in an argument or fight"
         but it is ok to make this more literally about "choosing a position in a physical space -->
@@ -1052,31 +1071,21 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Issin ugar</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_option">Tizeɣt</string>
-    <!-- Preference for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard">Tizeɣt (yelha)</string>
+    <string name="preference_enhanced_tracking_protection_standard_default_1">Alugan (amezwer)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description">Yerked gar ummesten akked tmellit.</string>
-    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_2">Isebtar ad d-alin s wudem amagnu, maca ad sweḥlen drus n yineḍfaren.</string>
+    <string name="preference_enhanced_tracking_protection_standard_description_3">gDrus n yimakaren i isewḥal. Isebtar ad d-alin s wudem amahnu.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Ayen iweḥlen s ummeten n tizeɣt mgal aḍfaṛ</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Uḥriṣ</string>
-    <!-- Preference for enhanced tracking protection for the strict protection settings, default setting -->
-    <string name="preference_enhanced_tracking_protection_strict_default">Uḥriṣ (amezwer)</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_default_description">Ammesten iǧǧehden mgal aḍfaṛ akked tmellit tufrint, maca kra n yismal zemren ur teddun ara akken iwata.</string>
-    <!-- Preference for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_recommended">Uḥriṣ (yelha)</string>
-    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description">Ammesten yettwaseǧhed, maca kra n yismal akked ugbur yemzer ur teddun ara akken iwata.</string>
+    <string name="preference_enhanced_tracking_protection_strict_description_2">Ad isewḥel ugar n yineḍfaren, n udellel d yisfuyla udhimen. Isebtar ad d-ttalin s zzreb, maca kra n tmahilin zemrent ur teddunt ara.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Ayen iweḥlen s ummeten n uḥriṣ mgal aḍfaṛ</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom">Udmawan</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_custom_description">Fren ineḍfaṛen akked iskripten ara tesweḥleḍ.</string>
+    <string name="preference_enhanced_tracking_protection_custom_description_2">Fren ineḍfaren akked yisekripten ara tesweḥleḍ.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_custom_info_button">Ayen iweḥlen s ummeten udmawan mgal aḍfaṛ</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
@@ -1126,8 +1135,6 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="etp_tracking_content_title">Agbur n uḍfaṛ</string>
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_description">Ad isewḥel adellel, tividyutin akked ugbur-nniḍen i d-yekka beṛṛa n usmel, win i igebren tangalt n uḍfaṛ. Izmer ad iḥaz kra n tmahilin n usmel.</string>
-    <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="etp_onboarding_message_2">%s isewḥal ineḍfaṛen deg usmel-a ticki ẓerb d amidadi. Senned fell-as akken ad twaliḍ anwa.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">Ammesten yermed i usmel-a</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->

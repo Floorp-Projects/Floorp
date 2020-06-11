@@ -106,8 +106,6 @@
     <string name="browser_menu_new_tab">Fitxa berria</string>
     <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection_2">Gorde bildumara</string>
-    <!-- Browser menu button that opens a dialog to report issues with the current site -->
-    <string name="browser_menu_report_issue">Jakinarazi gunearen arazoa</string>
 
     <!-- Browser menu button that open a share menu to share the current site -->
     <string name="browser_menu_share">Partekatu</string>
@@ -124,8 +122,10 @@
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="browser_menu_powered_by2">%1$s nabigatzaileak hornitua</string>
 
-    <!-- Browser menu button to put the the current page in reader mode -->
+    <!-- Browser menu button to put the current page in reader mode -->
     <string name="browser_menu_read">Irakurtzeko ikuspegia</string>
+    <!-- Browser menu button content description to close reader mode and return the user to the regular browser -->
+    <string name="browser_menu_read_close">Itxi irakurtzeko ikuspegia</string>
     <!-- Browser menu button to open the current page in an external app -->
     <string name="browser_menu_open_app_link">Ireki aplikazioan</string>
     <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
@@ -458,6 +458,24 @@
     <string name="tabs_header_private_tabs_title">Fitxa pribatuak</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_tab">Gehitu fitxa</string>
+    <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
+    <string name="add_private_tab">Gehitu fitxa pribatua</string>
+    <!-- Text for the new tab button to indicate adding a new private tab in the tab -->
+    <string name="tab_drawer_fab_content">Pribatua</string>
+    <!-- Text shown as the title of the open tab tray -->
+    <string name="tab_tray_title">Irekitako fitxak</string>
+    <!-- Text shown in the menu for saving tabs to a collection -->
+    <string name="tab_tray_menu_item_save">Gorde bildumara</string>
+    <!-- Text shown in the menu for sharing all tabs -->
+    <string name="tab_tray_menu_item_share">Partekatu fitxa guztiak</string>
+    <!-- Text shown in the menu for closing all tabs -->
+    <string name="tab_tray_menu_item_close">Itxi fitxa guztiak</string>
+    <!-- Shortcut action to open new tab -->
+    <string name="tab_tray_menu_open_new_tab">Fitxa berria</string>
+    <!-- Shortcut action to open the home screen -->
+    <string name="tab_tray_menu_home">Joan hasierara</string>
+    <!-- Shortcut action to toggle private mode -->
+    <string name="tab_tray_menu_toggle">Txandakatu fitxen modua</string>
     <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
     <string name="remove_tab_from_collection">Kendu fitxa bildumatik</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
@@ -725,6 +743,9 @@
     <!-- Button to save currently selected tabs in the "select tabs" step of the collection creator-->
     <string name="create_collection_save">Gorde</string>
 
+    <!-- Snackbar action to view the collection the user just created or updated -->
+    <string name="create_collection_view">Ikusi</string>
+
     <!-- Default name for a new collection in "name new collection" step of the collection creator. %d is a placeholder for the number of collections-->
     <string name="create_collection_default_name">%d. bilduma</string>
 
@@ -958,20 +979,20 @@
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
     <string name="onboarding_firefox_account_automatic_signin_failed">Huts egin du saioa hastean</string>
     <!-- text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header">Babestu zure burua</string>
+    <string name="onboarding_tracking_protection_header_2">Pribatutasun automatikoa</string>
     <!-- text for the tracking protection card description
     The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_tracking_protection_description1">Webguneek zure jarraipena ez egiteko laguntza ematen dizu %s(e)k.</string>
+    <string name="onboarding_tracking_protection_description_2">Pribatutasun- eta segurtasun-ezarpenek jarraipen-elementuak, malwarea eta zure jarraipena egiten duten enpresak blokeatzen dituzte.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
-    <string name="onboarding_tracking_protection_standard_button">Oinarrizkoa</string>
+    <string name="onboarding_tracking_protection_standard_button_2">Oinarrizkoa (lehenetsia)</string>
     <!-- text for standard blocking option button description -->
-    <string name="onboarding_tracking_protection_standard_button_description">Jarraipen-elementu gutxiago blokeatzen ditu baina orriak normal kargatzea baimentzen du</string>
+    <string name="onboarding_tracking_protection_standard_button_description_2">Jarraipen-elementu gutxiago blokeatzen ditu. Orriak ohi bezala kargatuko dira.</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">Zorrotza (gomendatua)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">Zorrotza</string>
     <!-- text for strict blocking option button description -->
-    <string name="onboarding_tracking_protection_strict_button_description">Jarraipen-elementu gehiago blokeatzen ditu babes eta errendimendu hoberako baina zenbait gune ondo ez ibiltzea eragin lezake</string>
+    <string name="onboarding_tracking_protection_strict_button_description_2">Jarraipen-elementu, iragarki eta popup gehiago blokeatzen ditu. Orriak azkarrago kargatzen dira baina zenbait eginbide agian ez dira ondo ibiliko.</string>
     <!-- text for the toolbar position card header
         In English this is an idiom for "choose a side as in an argument or fight"
         but it is ok to make this more literally about "choosing a position in a physical space -->
@@ -1058,31 +1079,21 @@
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Argibide gehiago</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_option">Oinarrizkoa</string>
-    <!-- Preference for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard">Oinarrizkoa (gomendatua)</string>
+    <string name="preference_enhanced_tracking_protection_standard_default_1">Oinarrizkoa (lehenetsia)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description">Babeserako eta errendimendurako orekatua.</string>
-    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_2">Orriak ohi bezala kargatuko dira baina jarraipen-elementu gutxiago blokeatuko dira.</string>
+    <string name="preference_enhanced_tracking_protection_standard_description_3">Jarraipen-elementu gutxiago blokeatzen ditu. Orriak ohi bezala kargatuko dira.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Jarraipenaren oinarrizko babesak blokeatzen duena</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Zorrotza</string>
-    <!-- Preference for enhanced tracking protection for the strict protection settings, default setting -->
-    <string name="preference_enhanced_tracking_protection_strict_default">Zorrotza (lehenetsia)</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_default_description">Jarraipenaren babes sendoagoa eta errendimendu hobea baina baliteke zenbait gune ondo ez ibiltzea.</string>
-    <!-- Preference for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_recommended">Zorrotza (gomendatua)</string>
-    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description">Babes sendoagoa baina zenbait gune edo eduki apurtzea eragin lezake.</string>
+    <string name="preference_enhanced_tracking_protection_strict_description_2">Jarraipen-elementu, iragarki eta popup gehiago blokeatzen ditu. Orriak azkarrago kargatzen dira baina zenbait eginbide agian ez dira ondo ibiliko.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Jarraipenaren babes zorrotzak blokeatzen duena</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom">Pertsonalizatua</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_custom_description">Aukeratu blokeatu beharreko jarraipen-elementu eta scriptak</string>
+    <string name="preference_enhanced_tracking_protection_custom_description_2">Aukeratu blokeatu beharreko jarraipen-elementu eta scriptak.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_custom_info_button">Jarraipenaren babes pertsonalizatuak blokeatzen duena</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
@@ -1132,7 +1143,7 @@
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_description">Jarraipenerako kodea izan lezaketen kanpoko iragarkiak, bideoak eta bestelako edukia kargatzea eragozten du. Zenbait webguneren eginbideetan eragina izan lezake.</string>
     <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="etp_onboarding_message_2">%s jarraipen-elementuak blokeatzen ari da babesaren ikonoa morea denean. Saka ezazu zer blokeatzen den ikusteko.</string>
+    <string name="etp_onboarding_cfr_message">Babesaren ikonoa morea denean, %s(e)k jarraipen-elementuak blokeatu ditu gune batean. Sakatu informazio gehiagorako.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">Babesak aktibo daude gune honetarako</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->

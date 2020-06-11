@@ -964,6 +964,10 @@
     <string name="onboarding_firefox_account_automatic_signin_failed">Prijava ni uspela</string>
     <!-- text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header_2">Samodejna zasebnost</string>
+    <!-- text for tracking protection radio button option for standard level of blocking -->
+    <string name="onboarding_tracking_protection_standard_button_2">Običajno (privzeto)</string>
+    <!-- text for standard blocking option button description -->
+    <string name="onboarding_tracking_protection_standard_button_description_2">Zavrača manj sledilcev. Strani se bodo normalno nalagale.</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">Strogo (priporočljivo)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
@@ -1055,6 +1059,10 @@
     <string name="preference_enhanced_tracking_protection_explanation">Obdržite svoje podatke zase. %s vas ščiti pred številnimi najpogostejšimi sledilci, ki sledijo vašemu brskanju po spletu.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Več o tem</string>
+    <!-- Preference for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_default_1">Običajno (privzeto)</string>
+    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_description_3">Zavrača manj sledilcev. Strani se bodo normalno nalagale.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Kaj je zavrnjeno s standardno zaščito pred sledenjem</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
