@@ -2352,10 +2352,6 @@ nsresult Document::Init() {
       static_cast<nsIMutationObserver*>(this));
 
   mOnloadBlocker = new OnloadBlocker();
-  mCSSLoader = new css::Loader(this);
-  // Assume we're not quirky, until we know otherwise
-  mCSSLoader->SetCompatibilityMode(eCompatibility_FullStandards);
-
   mStyleImageLoader = new css::ImageLoader(this);
 
   mNodeInfoManager = new nsNodeInfoManager();
@@ -2369,6 +2365,10 @@ nsresult Document::Init() {
              "Bad NodeType in aNodeInfo");
 
   NS_ASSERTION(OwnerDoc() == this, "Our nodeinfo is busted!");
+
+  mCSSLoader = new css::Loader(this);
+  // Assume we're not quirky, until we know otherwise
+  mCSSLoader->SetCompatibilityMode(eCompatibility_FullStandards);
 
   // If after creation the owner js global is not set for a document
   // we use the default compartment for this document, instead of creating
@@ -3727,8 +3727,13 @@ void Document::SetPrincipals(nsIPrincipal* aNewPrincipal,
       mAllowDNSPrefetch = false;
     }
   }
+
+  mCSSLoader->DeregisterFromSheetCache();
+
   mNodeInfoManager->SetDocumentPrincipal(aNewPrincipal);
   mPartitionedPrincipal = aNewPartitionedPrincipal;
+
+  mCSSLoader->RegisterInSheetCache();
 
   ContentBlockingAllowList::ComputePrincipal(
       aNewPrincipal, getter_AddRefs(mContentBlockingAllowListPrincipal));

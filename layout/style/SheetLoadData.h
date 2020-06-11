@@ -67,12 +67,12 @@ class SheetLoadData final : public nsIRunnable, public nsIThreadObserver {
                 nsIPrincipal* aTriggeringPrincipal,
                 nsIReferrerInfo* aReferrerInfo, nsINode* aRequestingNode);
 
-  nsIReferrerInfo* ReferrerInfo() { return mReferrerInfo; }
+  nsIReferrerInfo* ReferrerInfo() const { return mReferrerInfo; }
 
   void ScheduleLoadEventIfNeeded();
 
-  NotNull<const Encoding*> DetermineNonBOMEncoding(nsACString const& aSegment,
-                                                   nsIChannel* aChannel);
+  NotNull<const Encoding*> DetermineNonBOMEncoding(const nsACString& aSegment,
+                                                   nsIChannel*) const;
 
   // The caller may have the bytes for the stylesheet split across two strings,
   // so aBytes1 and aBytes2 refer to those pieces.
@@ -202,9 +202,11 @@ class SheetLoadData final : public nsIRunnable, public nsIThreadObserver {
   // The node that identifies who started loading us.
   const nsCOMPtr<nsINode> mRequestingNode;
 
-  // The encoding to use for preloading Must be empty if mOwningElement
-  // is non-null.
-  const Encoding* const mPreloadEncoding;
+  // The encoding guessed from attributes and the document character set.
+  const NotNull<const Encoding*> mGuessedEncoding;
+
+  // The quirks mode of the loader at the time the load was triggered.
+  const nsCompatibility mCompatMode;
 
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   // Whether SheetComplete was called.
