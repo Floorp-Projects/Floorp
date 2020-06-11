@@ -668,16 +668,21 @@ class UrlbarInput {
 
         if (
           result.heuristic &&
+          // If we asked the DNS earlier, avoid the post-facto check.
+          !UrlbarPrefs.get("browser.fixup.dns_first_for_single_words") &&
+          // TODO (bug 1642623): for now there is no smart heuristic to skip the
+          // DNS lookup, so any value above 0 will run it.
+          UrlbarPrefs.get("dnsResolveSingleWordsAfterSearch") > 0 &&
           this.window.gKeywordURIFixup &&
           UrlbarUtils.looksLikeSingleWordHost(originalUntrimmedValue)
         ) {
-          // When fixing a single word to a search, the docShell also checks the
-          // DNS and asks the user whether they would rather visit that as a
-          // host. On a positive answer, it adds to the domain whitelist that
-          // we use to make decisions. Because we are directly asking for a
-          // search here, bypassing the docShell, we need invoke the same check
-          // ourselves. See also URIFixupChild.jsm and keyword-uri-fixup.
-          // Don't interrupt the load action in case of errors.
+          // When fixing a single word to a search, the docShell would also
+          // query the DNS and if resolved ask the user whether they would
+          // rather visit that as a host. On a positive answer, it adds the host
+          // the the list that we use to make decisions.
+          // Because we are directly asking for a search here, bypassing the
+          // docShell, we need to do the same ourselves.
+          // See also URIFixupChild.jsm and keyword-uri-fixup.
           let fixupInfo = this._getURIFixupInfo(originalUntrimmedValue.trim());
           if (fixupInfo) {
             this.window.gKeywordURIFixup.check(
