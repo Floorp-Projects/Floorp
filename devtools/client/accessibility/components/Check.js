@@ -133,7 +133,6 @@ class Check extends Component {
     return ReactDOM.div(
       {
         role: "presentation",
-        tabIndex: "-1",
         className: "accessibility-check",
       },
       Localized(
@@ -145,7 +144,6 @@ class Check extends Component {
       ReactDOM.div(
         {
           role: "presentation",
-          tabIndex: "-1",
         },
         Icon({ score }),
         Annotation({ ...getAnnotation(issue) })

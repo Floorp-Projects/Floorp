@@ -192,7 +192,7 @@ class MainFrame extends Component {
     return LocalizationProvider(
       { bundles: fluentBundles },
       div(
-        { className: "mainFrame", role: "presentation", tabIndex: "-1" },
+        { className: "mainFrame", role: "presentation" },
         Toolbar({
           audit,
           disableAccessibility,
@@ -217,7 +217,6 @@ class MainFrame extends Component {
               {
                 className: "main-panel",
                 role: "presentation",
-                tabIndex: "-1",
               },
               AccessibilityTree({
                 toolboxDoc: toolbox.doc,
