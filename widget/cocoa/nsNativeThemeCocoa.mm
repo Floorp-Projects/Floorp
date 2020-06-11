@@ -3074,11 +3074,8 @@ Maybe<nsNativeThemeCocoa::WidgetInfo> nsNativeThemeCocoa::ComputeWidgetInfo(
 
     case StyleAppearance::MozMacSourceListSelection:
     case StyleAppearance::MozMacActiveSourceListSelection: {
-      // If we're in XUL tree, we need to rely on the source list's clear
-      // background display item. If we cleared the background behind the
-      // selections, the source list would not pick up the right font
-      // smoothing background. So, to simplify a bit, we only support vibrancy
-      // if we're in a source list.
+      // We only support vibrancy for source list selections if we're inside
+      // a source list, because we need the background to be transparent.
       if (VibrancyManager::SystemSupportsVibrancy() && IsInSourceList(aFrame)) {
         return Nothing();
       }
@@ -4279,32 +4276,6 @@ bool nsNativeThemeCocoa::IsWindowSheet(nsIFrame* aFrame) {
     return false;
   }
   return (widget->WindowType() == eWindowType_sheet);
-}
-
-bool nsNativeThemeCocoa::NeedToClearBackgroundBehindWidget(nsIFrame* aFrame,
-                                                           StyleAppearance aAppearance) {
-  switch (aAppearance) {
-    case StyleAppearance::MozMacSourceList:
-    // If we're in a XUL tree, we don't want to clear the background behind the
-    // selections below, since that would make our source list to not pick up
-    // the right font smoothing background. But since we don't call this method
-    // in nsTreeBodyFrame::BuildDisplayList, we never get here.
-    case StyleAppearance::MozMacSourceListSelection:
-    case StyleAppearance::MozMacActiveSourceListSelection:
-    case StyleAppearance::MozMacVibrancyLight:
-    case StyleAppearance::MozMacVibrancyDark:
-    case StyleAppearance::MozMacVibrantTitlebarLight:
-    case StyleAppearance::MozMacVibrantTitlebarDark:
-    case StyleAppearance::Tooltip:
-    case StyleAppearance::Menupopup:
-    case StyleAppearance::Menuitem:
-    case StyleAppearance::Checkmenuitem:
-      return true;
-    case StyleAppearance::Dialog:
-      return IsWindowSheet(aFrame);
-    default:
-      return false;
-  }
 }
 
 nsITheme::ThemeGeometryType nsNativeThemeCocoa::ThemeGeometryTypeForWidget(

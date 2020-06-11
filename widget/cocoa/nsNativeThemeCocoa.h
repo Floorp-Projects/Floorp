@@ -416,8 +416,6 @@ class nsNativeThemeCocoa : private nsNativeTheme, public nsITheme {
   bool ThemeDrawsFocusForWidget(StyleAppearance aAppearance) override;
   bool ThemeNeedsComboboxDropmarker() override;
   virtual bool WidgetAppearanceDependsOnWindowFocus(StyleAppearance aAppearance) override;
-  virtual bool NeedToClearBackgroundBehindWidget(nsIFrame* aFrame,
-                                                 StyleAppearance aAppearance) override;
   virtual ThemeGeometryType ThemeGeometryTypeForWidget(nsIFrame* aFrame,
                                                        StyleAppearance aAppearance) override;
   virtual Transparency GetWidgetTransparency(nsIFrame* aFrame,
