@@ -12,6 +12,25 @@ let controller = Cc["@mozilla.org/autocomplete/controller;1"].getService(
   Ci.nsIAutoCompleteController
 );
 
+const ENGINE_NAME = "engine-suggestions.xml";
+const SUGGEST_PREF = "browser.urlbar.suggest.searches";
+const SUGGEST_ENABLED_PREF = "browser.search.suggest.enabled";
+
+async function cleanup() {
+  await PlacesUtils.bookmarks.eraseEverything();
+  await PlacesUtils.history.clear();
+}
+
+add_task(function setup() {
+  Services.prefs.setBoolPref(SUGGEST_PREF, false);
+  Services.prefs.setBoolPref(SUGGEST_ENABLED_PREF, false);
+
+  registerCleanupFunction(async () => {
+    Services.prefs.clearUserPref(SUGGEST_PREF);
+    Services.prefs.clearUserPref(SUGGEST_ENABLED_PREF);
+  });
+});
+
 add_task(async function test_correct_errors_are_thrown() {
   let keyword = "foo";
   let anotherKeyword = "bar";
@@ -407,27 +426,28 @@ add_task(async function test_removes_suggestion_if_its_content_is_typed_in() {
 
   ExtensionSearchHandler.registerKeyword(keyword, mockExtension);
 
-  await check_autocomplete({
-    search: `${keyword} unmatched`,
-    searchParam: "enable-actions",
+  let query = `${keyword} unmatched`;
+  let context = createContext(query, { isPrivate: false });
+  await check_results({
+    context,
     matches: [
-      makeExtensionMatch({
+      makeOmniboxResult(context, {
         heuristic: true,
         keyword,
         description: extensionName,
         content: `${keyword} unmatched`,
       }),
-      makeExtensionMatch({
+      makeOmniboxResult(context, {
         keyword,
         content: `${keyword} foo`,
         description: "first suggestion",
       }),
-      makeExtensionMatch({
+      makeOmniboxResult(context, {
         keyword,
         content: `${keyword} bar`,
         description: "second suggestion",
       }),
-      makeExtensionMatch({
+      makeOmniboxResult(context, {
         keyword,
         content: `${keyword} baz`,
         description: "third suggestion",
@@ -435,22 +455,23 @@ add_task(async function test_removes_suggestion_if_its_content_is_typed_in() {
     ],
   });
 
-  await check_autocomplete({
-    search: `${keyword} foo`,
-    searchParam: "enable-actions",
+  query = `${keyword} foo`;
+  context = createContext(query, { isPrivate: false });
+  await check_results({
+    context,
     matches: [
-      makeExtensionMatch({
+      makeOmniboxResult(context, {
         heuristic: true,
         keyword,
         description: extensionName,
         content: `${keyword} foo`,
       }),
-      makeExtensionMatch({
+      makeOmniboxResult(context, {
         keyword,
         content: `${keyword} bar`,
         description: "second suggestion",
       }),
-      makeExtensionMatch({
+      makeOmniboxResult(context, {
         keyword,
         content: `${keyword} baz`,
         description: "third suggestion",
@@ -458,22 +479,23 @@ add_task(async function test_removes_suggestion_if_its_content_is_typed_in() {
     ],
   });
 
-  await check_autocomplete({
-    search: `${keyword} bar`,
-    searchParam: "enable-actions",
+  query = `${keyword} bar`;
+  context = createContext(query, { isPrivate: false });
+  await check_results({
+    context,
     matches: [
-      makeExtensionMatch({
+      makeOmniboxResult(context, {
         heuristic: true,
         keyword,
         description: extensionName,
         content: `${keyword} bar`,
       }),
-      makeExtensionMatch({
+      makeOmniboxResult(context, {
         keyword,
         content: `${keyword} foo`,
         description: "first suggestion",
       }),
-      makeExtensionMatch({
+      makeOmniboxResult(context, {
         keyword,
         content: `${keyword} baz`,
         description: "third suggestion",
@@ -481,22 +503,23 @@ add_task(async function test_removes_suggestion_if_its_content_is_typed_in() {
     ],
   });
 
-  await check_autocomplete({
-    search: `${keyword} baz`,
-    searchParam: "enable-actions",
+  query = `${keyword} baz`;
+  context = createContext(query, { isPrivate: false });
+  await check_results({
+    context,
     matches: [
-      makeExtensionMatch({
+      makeOmniboxResult(context, {
         heuristic: true,
         keyword,
         description: extensionName,
         content: `${keyword} baz`,
       }),
-      makeExtensionMatch({
+      makeOmniboxResult(context, {
         keyword,
         content: `${keyword} foo`,
         description: "first suggestion",
       }),
-      makeExtensionMatch({
+      makeOmniboxResult(context, {
         keyword,
         content: `${keyword} bar`,
         description: "second suggestion",
@@ -512,7 +535,7 @@ add_task(async function test_extension_results_should_come_first() {
   let keyword = "test";
   let extensionName = "Omnibox Example";
 
-  let uri = NetUtil.newURI(`http://a.com/b`);
+  let uri = Services.io.newURI(`http://a.com/b`);
   await PlacesTestUtils.addVisits([{ uri, title: `${keyword} -` }]);
 
   let mockExtension = {
@@ -525,9 +548,6 @@ add_task(async function test_extension_results_should_come_first() {
           { content: "baz", description: "third suggestion" },
         ]);
       }
-      // Do not stop the search here, of we'd not fetch results after the
-      // extension ones. The timeout in unifiedComplete will let us proceed
-      // after a few seconds.
     },
   };
 
@@ -539,32 +559,36 @@ add_task(async function test_extension_results_should_come_first() {
     () => {}
   );
 
-  await check_autocomplete({
-    search: `${keyword} -`,
-    searchParam: "enable-actions",
+  let query = `${keyword} -`;
+  let context = createContext(query, { isPrivate: false });
+  await check_results({
+    context,
     matches: [
-      makeExtensionMatch({
+      makeOmniboxResult(context, {
         heuristic: true,
         keyword,
         description: extensionName,
         content: `${keyword} -`,
       }),
-      makeExtensionMatch({
+      makeOmniboxResult(context, {
         keyword,
         content: `${keyword} foo`,
         description: "first suggestion",
       }),
-      makeExtensionMatch({
+      makeOmniboxResult(context, {
         keyword,
         content: `${keyword} bar`,
         description: "second suggestion",
       }),
-      makeExtensionMatch({
+      makeOmniboxResult(context, {
         keyword,
         content: `${keyword} baz`,
         description: "third suggestion",
       }),
-      { uri, title: `${keyword} -` },
+      makeVisitResult(context, {
+        uri: `http://a.com/b`,
+        title: `${keyword} -`,
+      }),
     ],
   });
 
@@ -595,16 +619,16 @@ add_task(async function test_setting_the_default_suggestion() {
     description: "hello world",
   });
 
-  let searchString = `${keyword} search query`;
-  await check_autocomplete({
-    search: searchString,
-    searchParam: "enable-actions",
+  let query = `${keyword} search query`;
+  let context = createContext(query, { isPrivate: false });
+  await check_results({
+    context,
     matches: [
-      makeExtensionMatch({
+      makeOmniboxResult(context, {
         heuristic: true,
         keyword,
         description: "hello world",
-        content: searchString,
+        content: query,
       }),
     ],
   });
@@ -613,15 +637,16 @@ add_task(async function test_setting_the_default_suggestion() {
     description: "foo bar",
   });
 
-  await check_autocomplete({
-    search: searchString,
+  context = createContext(query, { isPrivate: false });
+  await check_results({
+    context,
     searchParam: "enable-actions",
     matches: [
-      makeExtensionMatch({
+      makeOmniboxResult(context, {
         heuristic: true,
         keyword,
         description: "foo bar",
-        content: searchString,
+        content: query,
       }),
     ],
   });
@@ -666,37 +691,38 @@ add_task(async function test_maximum_number_of_suggestions_is_enforced() {
     () => {}
   );
 
-  await check_autocomplete({
-    search: `${keyword} #`,
-    searchParam: "enable-actions",
+  let query = `${keyword} #`;
+  let context = createContext(query, { isPrivate: false });
+  await check_results({
+    context,
     matches: [
-      makeExtensionMatch({
+      makeOmniboxResult(context, {
         heuristic: true,
         keyword,
         description: extensionName,
         content: `${keyword} #`,
       }),
-      makeExtensionMatch({
+      makeOmniboxResult(context, {
         keyword,
         content: `${keyword} a`,
         description: "first suggestion",
       }),
-      makeExtensionMatch({
+      makeOmniboxResult(context, {
         keyword,
         content: `${keyword} b`,
         description: "second suggestion",
       }),
-      makeExtensionMatch({
+      makeOmniboxResult(context, {
         keyword,
         content: `${keyword} c`,
         description: "third suggestion",
       }),
-      makeExtensionMatch({
+      makeOmniboxResult(context, {
         keyword,
         content: `${keyword} d`,
         description: "fourth suggestion",
       }),
-      makeExtensionMatch({
+      makeOmniboxResult(context, {
         keyword,
         content: `${keyword} e`,
         description: "fifth suggestion",
@@ -705,5 +731,88 @@ add_task(async function test_maximum_number_of_suggestions_is_enforced() {
   });
 
   ExtensionSearchHandler.unregisterKeyword(keyword);
+  await cleanup();
+});
+
+add_task(async function conflicting_alias() {
+  Services.prefs.setBoolPref(SUGGEST_PREF, true);
+  Services.prefs.setBoolPref(SUGGEST_ENABLED_PREF, true);
+
+  let engine = await addTestSuggestionsEngine();
+  let keyword = "test";
+  engine.alias = keyword;
+  let oldDefaultEngine = await Services.search.getDefault();
+  Services.search.setDefault(engine);
+
+  let extensionName = "Omnibox Example";
+
+  let mockExtension = {
+    name: extensionName,
+    emit(message, text, id) {
+      if (message === ExtensionSearchHandler.MSG_INPUT_CHANGED) {
+        ExtensionSearchHandler.addSuggestions(keyword, id, [
+          { content: "foo", description: "first suggestion" },
+          { content: "bar", description: "second suggestion" },
+          { content: "baz", description: "third suggestion" },
+        ]);
+        // The API doesn't have a way to notify when addition is complete.
+        do_timeout(1000, () => {
+          controller.stopSearch();
+        });
+      }
+    },
+  };
+
+  ExtensionSearchHandler.registerKeyword(keyword, mockExtension);
+  let query = `${keyword} unmatched`;
+  let context = createContext(query, { isPrivate: false });
+  await check_results({
+    context,
+    matches: [
+      makeOmniboxResult(context, {
+        heuristic: true,
+        keyword,
+        description: extensionName,
+        content: `${keyword} unmatched`,
+      }),
+      makeOmniboxResult(context, {
+        keyword,
+        content: `${keyword} foo`,
+        description: "first suggestion",
+      }),
+      makeOmniboxResult(context, {
+        keyword,
+        content: `${keyword} bar`,
+        description: "second suggestion",
+      }),
+      makeOmniboxResult(context, {
+        keyword,
+        content: `${keyword} baz`,
+        description: "third suggestion",
+      }),
+      makeSearchResult(context, {
+        query: "unmatched",
+        engineName: ENGINE_NAME,
+        alias: keyword,
+        suggestion: "unmatched",
+      }),
+      makeSearchResult(context, {
+        query: "unmatched",
+        engineName: ENGINE_NAME,
+        alias: keyword,
+        suggestion: "unmatched foo",
+      }),
+      makeSearchResult(context, {
+        query: "unmatched",
+        engineName: ENGINE_NAME,
+        alias: keyword,
+        suggestion: "unmatched bar",
+      }),
+    ],
+  });
+
+  Services.search.setDefault(oldDefaultEngine);
+  Services.prefs.setBoolPref(SUGGEST_PREF, false);
+  Services.prefs.setBoolPref(SUGGEST_ENABLED_PREF, false);
   await cleanup();
 });

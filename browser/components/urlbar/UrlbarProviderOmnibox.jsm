@@ -1,0 +1,177 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+"use strict";
+
+/**
+ * This module exports a provider class that is used for providers created by
+ * extensions using the `omnibox` API.
+ */
+
+var EXPORTED_SYMBOLS = ["UrlbarProviderOmnibox"];
+
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+XPCOMUtils.defineLazyModuleGetters(this, {
+  Log: "resource://gre/modules/Log.jsm",
+  ExtensionSearchHandler: "resource://gre/modules/ExtensionSearchHandler.jsm",
+  SkippableTimer: "resource:///modules/UrlbarUtils.jsm",
+  UrlbarProvider: "resource:///modules/UrlbarUtils.jsm",
+  UrlbarResult: "resource:///modules/UrlbarResult.jsm",
+  UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
+});
+
+XPCOMUtils.defineLazyGetter(this, "logger", () =>
+  Log.repository.getLogger("Urlbar.Provider.Omnibox")
+);
+
+// After this time, we'll give up waiting for the extension to return matches.
+const MAXIMUM_ALLOWED_EXTENSION_TIME_MS = 3000;
+
+/**
+ * This provider handles results returned by extensions using the WebExtensions
+ * Omnibox API. If the user types a registered keyword, we send subsequent
+ * keystrokes to the extension.
+ */
+class ProviderOmnibox extends UrlbarProvider {
+  constructor() {
+    super();
+    // Maps the running queries by queryContext.
+    this.queries = new Map();
+  }
+
+  /**
+   * Returns the name of this provider.
+   * @returns {string} the name of this provider.
+   */
+  get name() {
+    return "Omnibox";
+  }
+
+  /**
+   * Returns the type of this provider.
+   * @returns {integer} one of the types from UrlbarUtils.PROVIDER_TYPE.*
+   */
+  get type() {
+    return UrlbarUtils.PROVIDER_TYPE.EXTENSION;
+  }
+
+  /**
+   * Whether the provider should be invoked for the given context.  If this
+   * method returns false, the providers manager won't start a query with this
+   * provider, to save on resources.
+   *
+   * @param {UrlbarQueryContext} queryContext
+   *   The query context object.
+   * @returns {boolean}
+   *   Whether this provider should be invoked for the search.
+   */
+  isActive(queryContext) {
+    if (
+      queryContext.tokens[0] &&
+      queryContext.tokens[0].value.length &&
+      ExtensionSearchHandler.isKeywordRegistered(
+        queryContext.tokens[0].value
+      ) &&
+      UrlbarUtils.substringAfter(
+        queryContext.searchString,
+        queryContext.tokens[0].value
+      )
+    ) {
+      return true;
+    }
+
+    // We need to handle cancellation here since isActive is called once per
+    // query but cancelQuery can be called multiple times per query.
+    // The frequent cancels can cause the extension's state to drift from the
+    // provider's state.
+    if (ExtensionSearchHandler.hasActiveInputSession()) {
+      ExtensionSearchHandler.handleInputCancelled();
+    }
+
+    return false;
+  }
+
+  /**
+   * Gets the provider's priority.
+   *
+   * @param {UrlbarQueryContext} queryContext
+   *   The query context object.
+   * @returns {number}
+   *   The provider's priority for the given query.
+   */
+  getPriority(queryContext) {
+    return 0;
+  }
+
+  /**
+   * This method is called by the providers manager when a query starts to fetch
+   * each extension provider's results.  It fires the resultsRequested event.
+   *
+   * @param {UrlbarQueryContext} queryContext
+   *   The query context object.
+   * @param {function} addCallback
+   *   The callback invoked by this method to add each result.
+   */
+  async startQuery(queryContext, addCallback) {
+    logger.info(`Starting query for ${queryContext.searchString}`);
+    let instance = {};
+    this.queries.set(queryContext, instance);
+
+    let data = {
+      keyword: queryContext.tokens[0].value,
+      text: queryContext.searchString,
+      inPrivateWindow: queryContext.isPrivate,
+    };
+    this._resultsPromise = ExtensionSearchHandler.handleSearch(
+      data,
+      suggestions => {
+        for (let suggestion of suggestions) {
+          let content = `${queryContext.tokens[0].value} ${suggestion.content}`;
+          let result = new UrlbarResult(
+            UrlbarUtils.RESULT_TYPE.OMNIBOX,
+            UrlbarUtils.RESULT_SOURCE.OTHER_NETWORK,
+            ...UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
+              title: [suggestion.description, UrlbarUtils.HIGHLIGHT.TYPED],
+              content: [content, UrlbarUtils.HIGHLIGHT.TYPED],
+              keyword: [
+                queryContext.tokens[0].value,
+                UrlbarUtils.HIGHLIGHT.TYPED,
+              ],
+              icon: UrlbarUtils.ICON.EXTENSION,
+            })
+          );
+          addCallback(this, result);
+        }
+      }
+    );
+
+    // Since the extension has no way to signal when it's done pushing results,
+    // we add a timer racing with the addition.
+    let timeoutPromise = new SkippableTimer({
+      name: "ProviderOmnibox",
+      time: MAXIMUM_ALLOWED_EXTENSION_TIME_MS,
+      logger,
+    }).promise;
+    await Promise.race([timeoutPromise, this._resultsPromise]).catch(
+      Cu.reportError
+    );
+
+    this.queries.delete(queryContext);
+  }
+
+  /**
+   * This method is called by the providers manager when an ongoing query is
+   * canceled.  It fires the queryCanceled event.
+   *
+   * @param {UrlbarQueryContext} queryContext
+   *   The query context object.
+   */
+  cancelQuery(queryContext) {
+    this.queries.delete(queryContext);
+  }
+}
+
+var UrlbarProviderOmnibox = new ProviderOmnibox();

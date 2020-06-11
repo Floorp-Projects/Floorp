@@ -36,6 +36,7 @@ var localProviderModules = {
     "resource:///modules/UrlbarProviderUnifiedComplete.jsm",
   UrlbarProviderInterventions:
     "resource:///modules/UrlbarProviderInterventions.jsm",
+  UrlbarProviderOmnibox: "resource:///modules/UrlbarProviderOmnibox.jsm",
   UrlbarProviderPrivateSearch:
     "resource:///modules/UrlbarProviderPrivateSearch.jsm",
   UrlbarProviderSearchTips: "resource:///modules/UrlbarProviderSearchTips.jsm",
@@ -197,7 +198,10 @@ class ProvidersManager {
 
     // Update the behavior of extension providers.
     for (let provider of this.providers) {
-      if (provider.type == UrlbarUtils.PROVIDER_TYPE.EXTENSION) {
+      if (
+        provider.type == UrlbarUtils.PROVIDER_TYPE.EXTENSION &&
+        provider.name != "Omnibox"
+      ) {
         await provider.tryMethod("updateBehavior", queryContext);
       }
     }

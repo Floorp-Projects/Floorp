@@ -100,6 +100,7 @@ var UrlbarUtils = {
   // This defines icon locations that are commonly used in the UI.
   ICON: {
     // DEFAULT is defined lazily so it doesn't eagerly initialize PlacesUtils.
+    EXTENSION: "chrome://browser/content/extension.svg",
     HISTORY: "chrome://browser/skin/history.svg",
     SEARCH_GLASS: "chrome://browser/skin/search-glass.svg",
     TIP: "chrome://browser/skin/tip.svg",
@@ -570,6 +571,38 @@ var UrlbarUtils = {
   looksLikeSingleWordHost(value) {
     let str = value.trim();
     return this.REGEXP_SINGLE_WORD.test(str);
+  },
+
+  /**
+   * Returns the portion of a string starting at the index where another string
+   * begins.
+   *
+   * @param   {string} sourceStr
+   *          The string to search within.
+   * @param   {string} targetStr
+   *          The string to search for.
+   * @returns {string} The substring within sourceStr starting at targetStr, or
+   *          the empty string if targetStr does not occur in sourceStr.
+   */
+  substringAt(sourceStr, targetStr) {
+    let index = sourceStr.indexOf(targetStr);
+    return index < 0 ? "" : sourceStr.substr(index);
+  },
+
+  /**
+   * Returns the portion of a string starting at the index where another string
+   * ends.
+   *
+   * @param   {string} sourceStr
+   *          The string to search within.
+   * @param   {string} targetStr
+   *          The string to search for.
+   * @returns {string} The substring within sourceStr where targetStr ends, or
+   *          the empty string if targetStr does not occur in sourceStr.
+   */
+  substringAfter(sourceStr, targetStr) {
+    let index = sourceStr.indexOf(targetStr);
+    return index < 0 ? "" : sourceStr.substr(index + targetStr.length);
   },
 
   /**
