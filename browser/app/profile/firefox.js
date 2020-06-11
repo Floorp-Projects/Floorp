@@ -191,6 +191,7 @@ pref("browser.uitour.url", "https://www.mozilla.org/%LOCALE%/firefox/%VERSION%/t
 pref("browser.uitour.surveyDuration", 7200);
 
 pref("keyword.enabled", true);
+
 // Fixup whitelists, the urlbar won't try to search for these words, but will
 // instead consider them valid TLDs. Don't check these directly, use
 // Services.uriFixup.isDomainWhitelisted() instead.
@@ -267,6 +268,8 @@ pref("browser.urlbar.ctrlCanonizesURLs", true);
 
 // Control autoFill behavior
 pref("browser.urlbar.autoFill", true);
+
+// Whether to warm up network connections for autofill or search results.
 pref("browser.urlbar.speculativeConnect.enabled", true);
 
 // Whether bookmarklets should be filtered out of Address Bar matches.
@@ -336,6 +339,12 @@ pref("browser.urlbar.update1.searchTips", true);
 pref("browser.urlbar.update2.expandTextOnFocus", false);
 
 pref("browser.urlbar.eventTelemetry.enabled", false);
+
+// Controls when to DNS resolve single word search strings, after they were
+// searched for. If the string is resolved as a valid host, show a
+// "Did you mean to go to 'host'" prompt.
+// 0 - never resolve; 1 - use heuristics (default); 2 - always resolve
+pref("browser.urlbar.dnsResolveSingleWordsAfterSearch", 1);
 
 pref("browser.altClickSave", false);
 
