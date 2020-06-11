@@ -1,0 +1,17 @@
+<style>
+div { border: medium solid blue }
+span { background: #9090ff; }
+span.test::before {
+  white-space: pre;
+  content: "\A";
+}
+</style>
+<p>This document is in <span id="mode"></span> mode.</p>
+<p>This is a test for the line height quirk which is present in limited-quirks mode <b>and</b> quirks mode:</p>
+<div><span style="font-size: 50%">hello<br>hello</span></div>
+<p>This is a test for the hashless hex color quirk which is present in quirks mode <b>only</b>:</p>
+<div style="background-color: 9090ff">test</div>
+
+<script>
+document.getElementById("mode").innerText = document.compatMode;
+</script>
