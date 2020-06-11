@@ -29,7 +29,24 @@ export const MultiStageAboutWelcome = props => {
         );
       }
     });
+
+    // Remember that a new screen has loaded for browser navigation
+    if (index > window.history.state) {
+      window.history.pushState(index, "");
+    }
   }, [index]);
+
+  useEffect(() => {
+    // Switch to the screen tracked in state (null for initial state)
+    const handler = ({ state }) => setScreenIndex(Number(state));
+
+    // Handle page load, e.g., going back to about:welcome from about:home
+    handler(window.history);
+
+    // Watch for browser back/forward button navigation events
+    window.addEventListener("popstate", handler);
+    return () => window.removeEventListener("popstate", handler);
+  }, []);
 
   const [flowParams, setFlowParams] = useState(null);
   const { metricsFlowUri } = props;

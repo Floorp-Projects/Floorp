@@ -289,8 +289,24 @@ const MultiStageAboutWelcome = props => {
       if (index === screen.order) {
         _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_2__["AboutWelcomeUtils"].sendImpressionTelemetry(`${props.message_id}_${screen.id}`);
       }
-    });
+    }); // Remember that a new screen has loaded for browser navigation
+
+    if (index > window.history.state) {
+      window.history.pushState(index, "");
+    }
   }, [index]);
+  Object(react__WEBPACK_IMPORTED_MODULE_0__["useEffect"])(() => {
+    // Switch to the screen tracked in state (null for initial state)
+    const handler = ({
+      state
+    }) => setScreenIndex(Number(state)); // Handle page load, e.g., going back to about:welcome from about:home
+
+
+    handler(window.history); // Watch for browser back/forward button navigation events
+
+    window.addEventListener("popstate", handler);
+    return () => window.removeEventListener("popstate", handler);
+  }, []);
   const [flowParams, setFlowParams] = Object(react__WEBPACK_IMPORTED_MODULE_0__["useState"])(null);
   const {
     metricsFlowUri
