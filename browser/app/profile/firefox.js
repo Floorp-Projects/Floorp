@@ -316,14 +316,6 @@ pref("browser.urlbar.openintab", false);
 // If true, we show tail suggestions when available.
 pref("browser.urlbar.richSuggestions.tail", false);
 
-// If true, we show actionable tips in the Urlbar when the user is searching
-// for those actions.
-pref("browser.urlbar.update1.interventions", true);
-
-// If true, we show new users and those about to start an organic search a tip
-// encouraging them to use the Urlbar.
-pref("browser.urlbar.update1.searchTips", true);
-
 // Whether we expand the font size when when the urlbar is
 // focused in design update 2.
 pref("browser.urlbar.update2.expandTextOnFocus", false);

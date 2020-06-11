@@ -34,9 +34,6 @@ const SEARCH_STRINGS = {
 };
 
 add_task(async function init() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.update1.interventions", true]],
-  });
   registerCleanupFunction(() => {
     // We need to reset the provider's appUpdater.status between tests so that
     // each test doesn't interfere with the next.
