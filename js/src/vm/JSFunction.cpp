@@ -654,9 +654,16 @@ XDRResult js::XDRInterpretedFunction(XDRState<mode>* xdr,
     }
     objp.set(fun);
 
-    bool singleton = (xdrFlags & HasSingletonType);
-    if (!JSFunction::setTypeForScriptedFunction(cx, fun, singleton)) {
-      return xdr->fail(JS::TranscodeResult_Throw);
+    // If this function has an enclosing-scope, it is accesible by script and
+    // should use an updated ObjectGroup. Note that the singleton flag is not
+    // computed correctly until the enclosing-script has been compiled. The
+    // delazification of a script will apply types to inner functions at that
+    // time.
+    if (enclosingScope) {
+      bool singleton = (xdrFlags & HasSingletonType);
+      if (!JSFunction::setTypeForScriptedFunction(cx, fun, singleton)) {
+        return xdr->fail(JS::TranscodeResult_Throw);
+      }
     }
   }
 

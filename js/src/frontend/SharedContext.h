@@ -609,11 +609,6 @@ class FunctionBox : public SharedContext {
 
   size_t nargs() { return nargs_; }
 
-  bool setTypeForScriptedFunction(JSContext* cx) {
-    RootedFunction fun(cx, function());
-    return JSFunction::setTypeForScriptedFunction(cx, fun, isSingleton);
-  }
-
   size_t index() { return funcDataIndex_; }
 
   void trace(JSTracer* trc);
