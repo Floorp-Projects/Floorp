@@ -71,21 +71,34 @@
             app:layout_constraintStart_toEndOf="@+id/recentAppsContainer"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/appsList"
+        <!-- Having the RecyclerView inside a RelativeLayout means
+             the RecyclerView will load all items at once and never recycle.
+             This is a conscious choice since we use HorizontalScrollView to scroll all
+             children horizontally and so prevent scrolling in the RecyclerViews. -->
+        <RelativeLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="@dimen/share_all_apps_list_margin"
-            android:clipToPadding="false"
-            android:minHeight="@dimen/share_list_min_height"
-            android:orientation="horizontal"
-            android:visibility="gone"
-            app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@+id/recentAppsContainer"
-            app:layout_constraintTop_toBottomOf="@id/apps_link_header"
-            app:spanCount="2" />
+            app:layout_constraintTop_toBottomOf="@id/apps_link_header">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/appsList"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/share_all_apps_list_margin"
+                android:clipToPadding="false"
+                android:minHeight="@dimen/share_list_min_height"
+                android:orientation="horizontal"
+                android:visibility="gone"
+                app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:spanCount="2" />
+        </RelativeLayout>
     </androidx.constraintlayout.widget.ConstraintLayout>
 </HorizontalScrollView>
 
