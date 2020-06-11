@@ -559,9 +559,9 @@ fn define_simd_lane_access(
         The lane index, ``Idx``, is an immediate value, not an SSA value. It
         must indicate a valid lane index for the type of ``x``.
         "#,
-            &formats.insert_lane,
+            &formats.ternary_imm8,
         )
-        .operands_in(vec![x, Idx, y])
+        .operands_in(vec![x, y, Idx])
         .operands_out(vec![a]),
     );
 
@@ -579,7 +579,7 @@ fn define_simd_lane_access(
         may or may not be zeroed depending on the ISA but the type system should prevent using
         ``a`` as anything other than the extracted value.
         "#,
-            &formats.extract_lane,
+            &formats.binary_imm8,
         )
         .operands_in(vec![x, Idx])
         .operands_out(vec![a]),
@@ -1174,6 +1174,20 @@ pub(crate) fn define(
 
     ig.push(
         Inst::new(
+            "uload8x8_complex",
+            r#"
+        Load an 8x8 vector (64 bits) from memory at ``sum(args) + Offset`` and zero-extend into an 
+        i16x8 vector.
+        "#,
+            &formats.load_complex,
+        )
+        .operands_in(vec![MemFlags, args, Offset])
+        .operands_out(vec![a])
+        .can_load(true),
+    );
+
+    ig.push(
+        Inst::new(
             "sload8x8",
             r#"
         Load an 8x8 vector (64 bits) from memory at ``p + Offset`` and sign-extend into an i16x8 
@@ -1182,6 +1196,20 @@ pub(crate) fn define(
             &formats.load,
         )
         .operands_in(vec![MemFlags, p, Offset])
+        .operands_out(vec![a])
+        .can_load(true),
+    );
+
+    ig.push(
+        Inst::new(
+            "sload8x8_complex",
+            r#"
+        Load an 8x8 vector (64 bits) from memory at ``sum(args) + Offset`` and sign-extend into an 
+        i16x8 vector.
+        "#,
+            &formats.load_complex,
+        )
+        .operands_in(vec![MemFlags, args, Offset])
         .operands_out(vec![a])
         .can_load(true),
     );
@@ -1201,12 +1229,26 @@ pub(crate) fn define(
         Inst::new(
             "uload16x4",
             r#"
-        Load an 16x4 vector (64 bits) from memory at ``p + Offset`` and zero-extend into an i32x4 
+        Load a 16x4 vector (64 bits) from memory at ``p + Offset`` and zero-extend into an i32x4 
         vector.
         "#,
             &formats.load,
         )
         .operands_in(vec![MemFlags, p, Offset])
+        .operands_out(vec![a])
+        .can_load(true),
+    );
+
+    ig.push(
+        Inst::new(
+            "uload16x4_complex",
+            r#"
+        Load a 16x4 vector (64 bits) from memory at ``sum(args) + Offset`` and zero-extend into an 
+        i32x4 vector.
+        "#,
+            &formats.load_complex,
+        )
+        .operands_in(vec![MemFlags, args, Offset])
         .operands_out(vec![a])
         .can_load(true),
     );
@@ -1221,6 +1263,20 @@ pub(crate) fn define(
             &formats.load,
         )
         .operands_in(vec![MemFlags, p, Offset])
+        .operands_out(vec![a])
+        .can_load(true),
+    );
+
+    ig.push(
+        Inst::new(
+            "sload16x4_complex",
+            r#"
+        Load a 16x4 vector (64 bits) from memory at ``sum(args) + Offset`` and sign-extend into an 
+        i32x4 vector.
+        "#,
+            &formats.load_complex,
+        )
+        .operands_in(vec![MemFlags, args, Offset])
         .operands_out(vec![a])
         .can_load(true),
     );
@@ -1252,6 +1308,20 @@ pub(crate) fn define(
 
     ig.push(
         Inst::new(
+            "uload32x2_complex",
+            r#"
+        Load a 32x2 vector (64 bits) from memory at ``sum(args) + Offset`` and zero-extend into an 
+        i64x2 vector.
+        "#,
+            &formats.load_complex,
+        )
+        .operands_in(vec![MemFlags, args, Offset])
+        .operands_out(vec![a])
+        .can_load(true),
+    );
+
+    ig.push(
+        Inst::new(
             "sload32x2",
             r#"
         Load a 32x2 vector (64 bits) from memory at ``p + Offset`` and sign-extend into an i64x2 
@@ -1260,6 +1330,20 @@ pub(crate) fn define(
             &formats.load,
         )
         .operands_in(vec![MemFlags, p, Offset])
+        .operands_out(vec![a])
+        .can_load(true),
+    );
+
+    ig.push(
+        Inst::new(
+            "sload32x2_complex",
+            r#"
+        Load a 32x2 vector (64 bits) from memory at ``sum(args) + Offset`` and sign-extend into an 
+        i64x2 vector.
+        "#,
+            &formats.load_complex,
+        )
+        .operands_in(vec![MemFlags, args, Offset])
         .operands_out(vec![a])
         .can_load(true),
     );
@@ -2131,7 +2215,7 @@ pub(crate) fn define(
         Like `icmp_imm`, but returns integer CPU flags instead of testing
         a specific condition code.
         "#,
-            &formats.binary_imm,
+            &formats.binary_imm64,
         )
         .operands_in(vec![x, Y])
         .operands_out(vec![f]),
@@ -2181,7 +2265,7 @@ pub(crate) fn define(
         This is similar to `iadd` but the operands are interpreted as signed integers and their
         summed result, instead of wrapping, will be saturated to the lowest or highest
         signed integer for the controlling type (e.g. `0x80` or `0x7F` for i8). For example,
-        since an `iadd_ssat.i8` of `0x70` and `0x70` is greater than `0x7F`, the result will be
+        since an `sadd_sat.i8` of `0x70` and `0x70` is greater than `0x7F`, the result will be
         clamped to `0x7F`.
         "#,
             &formats.binary,
@@ -2376,7 +2460,7 @@ pub(crate) fn define(
         Polymorphic over all scalar integer types, but does not support vector
         types.
         "#,
-            &formats.binary_imm,
+            &formats.binary_imm64,
         )
         .operands_in(vec![x, Y])
         .operands_out(vec![a]),
@@ -2391,7 +2475,7 @@ pub(crate) fn define(
         Polymorphic over all scalar integer types, but does not support vector
         types.
         "#,
-            &formats.binary_imm,
+            &formats.binary_imm64,
         )
         .operands_in(vec![x, Y])
         .operands_out(vec![a]),
@@ -2405,7 +2489,7 @@ pub(crate) fn define(
 
         This operation traps if the divisor is zero.
         "#,
-            &formats.binary_imm,
+            &formats.binary_imm64,
         )
         .operands_in(vec![x, Y])
         .operands_out(vec![a]),
@@ -2421,7 +2505,7 @@ pub(crate) fn define(
         representable in `B` bits two's complement. This only happens
         when `x = -2^{B-1}, Y = -1`.
         "#,
-            &formats.binary_imm,
+            &formats.binary_imm64,
         )
         .operands_in(vec![x, Y])
         .operands_out(vec![a]),
@@ -2435,7 +2519,7 @@ pub(crate) fn define(
 
         This operation traps if the divisor is zero.
         "#,
-            &formats.binary_imm,
+            &formats.binary_imm64,
         )
         .operands_in(vec![x, Y])
         .operands_out(vec![a]),
@@ -2449,7 +2533,7 @@ pub(crate) fn define(
 
         This operation traps if the divisor is zero.
         "#,
-            &formats.binary_imm,
+            &formats.binary_imm64,
         )
         .operands_in(vec![x, Y])
         .operands_out(vec![a]),
@@ -2468,7 +2552,7 @@ pub(crate) fn define(
         Polymorphic over all scalar integer types, but does not support vector
         types.
         "#,
-            &formats.binary_imm,
+            &formats.binary_imm64,
         )
         .operands_in(vec![x, Y])
         .operands_out(vec![a]),
@@ -2868,7 +2952,7 @@ pub(crate) fn define(
         Polymorphic over all scalar integer types, but does not support vector
         types.
         "#,
-            &formats.binary_imm,
+            &formats.binary_imm64,
         )
         .operands_in(vec![x, Y])
         .operands_out(vec![a]),
@@ -2885,7 +2969,7 @@ pub(crate) fn define(
         Polymorphic over all scalar integer types, but does not support vector
         types.
         "#,
-            &formats.binary_imm,
+            &formats.binary_imm64,
         )
         .operands_in(vec![x, Y])
         .operands_out(vec![a]),
@@ -2902,7 +2986,7 @@ pub(crate) fn define(
         Polymorphic over all scalar integer types, but does not support vector
         types.
         "#,
-            &formats.binary_imm,
+            &formats.binary_imm64,
         )
         .operands_in(vec![x, Y])
         .operands_out(vec![a]),
@@ -2947,7 +3031,7 @@ pub(crate) fn define(
             r#"
         Rotate left by immediate.
         "#,
-            &formats.binary_imm,
+            &formats.binary_imm64,
         )
         .operands_in(vec![x, Y])
         .operands_out(vec![a]),
@@ -2959,7 +3043,7 @@ pub(crate) fn define(
             r#"
         Rotate right by immediate.
         "#,
-            &formats.binary_imm,
+            &formats.binary_imm64,
         )
         .operands_in(vec![x, Y])
         .operands_out(vec![a]),
@@ -3034,7 +3118,7 @@ pub(crate) fn define(
 
         The shift amount is masked to the size of ``x``.
         "#,
-            &formats.binary_imm,
+            &formats.binary_imm64,
         )
         .operands_in(vec![x, Y])
         .operands_out(vec![a]),
@@ -3048,7 +3132,7 @@ pub(crate) fn define(
 
         The shift amount is masked to the size of the register.
         "#,
-            &formats.binary_imm,
+            &formats.binary_imm64,
         )
         .operands_in(vec![x, Y])
         .operands_out(vec![a]),
@@ -3062,7 +3146,7 @@ pub(crate) fn define(
 
         The shift amount is masked to the size of the register.
         "#,
-            &formats.binary_imm,
+            &formats.binary_imm64,
         )
         .operands_in(vec![x, Y])
         .operands_out(vec![a]),

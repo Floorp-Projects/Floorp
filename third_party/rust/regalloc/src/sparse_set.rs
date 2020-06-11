@@ -70,6 +70,7 @@ where
             SparseSetU::Small { card, arr } => {
                 assert!(*card == A::size());
                 let mut set = FxHashSet::<A::Item>::default();
+                set.reserve(A::size());
                 // Could this be done faster?
                 let arr_p = arr.as_mut_ptr() as *mut A::Item;
                 for i in 0..*card {
@@ -195,7 +196,7 @@ where
     A: Array + Eq + Ord + Hash + Copy + fmt::Debug,
     A::Item: Eq + Ord + Hash + Copy + fmt::Debug,
 {
-    #[inline(never)]
+    #[inline(always)]
     pub fn empty() -> Self {
         SparseSetU::Small {
             card: 0,
@@ -253,20 +254,11 @@ where
         }
     }
 
-    #[inline(never)]
+    #[inline(always)]
     pub fn contains(&self, item: A::Item) -> bool {
         match self {
             SparseSetU::Large { set } => set.contains(&item),
-            SparseSetU::Small { card, arr } => {
-                assert!(*card <= A::size());
-                let arr_p = arr.as_ptr() as *const A::Item;
-                for i in 0..*card {
-                    if unsafe { read(arr_p.add(i)) } == item {
-                        return true;
-                    }
-                }
-                false
-            }
+            SparseSetU::Small { card, arr } => small_contains(*card, arr, item),
         }
     }
 
