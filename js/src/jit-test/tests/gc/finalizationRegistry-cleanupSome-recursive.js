@@ -1,5 +1,3 @@
-// |jit-test| --enable-weak-refs
-
 // Test trying to call cleanupSome recursively in callback.
 
 // 0: Initial state.

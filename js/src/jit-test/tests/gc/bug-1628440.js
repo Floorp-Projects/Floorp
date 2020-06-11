@@ -6,4 +6,4 @@ let fg = new FinalizationRegistry(cleanup);
 let object = {};
 fg.register(object, {}, key);
 let success = fg.unregister(key);
-throw "x";
+throw new ReferenceError();

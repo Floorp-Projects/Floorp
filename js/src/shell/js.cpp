@@ -10264,7 +10264,7 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
   enableBYOBStreamReaders = op.getBoolOption("enable-byob-stream-readers");
   enableWritableStreams = op.getBoolOption("enable-writable-streams");
   enableReadableStreamPipeTo = op.getBoolOption("enable-readablestream-pipeto");
-  enableWeakRefs = op.getBoolOption("enable-weak-refs");
+  enableWeakRefs = !op.getBoolOption("disable-weak-refs");
   enableToSource = !op.getBoolOption("disable-tosource");
   enablePropertyErrorMessageFix =
       !op.getBoolOption("disable-property-error-message-fix");
@@ -11130,7 +11130,7 @@ int main(int argc, char** argv, char** envp) {
       !op.addBoolOption('\0', "enable-readablestream-pipeto",
                         "Enable support for "
                         "WHATWG ReadableStream.prototype.pipeTo") ||
-      !op.addBoolOption('\0', "enable-weak-refs", "Enable weak references") ||
+      !op.addBoolOption('\0', "disable-weak-refs", "Disable weak references") ||
       !op.addBoolOption('\0', "disable-tosource", "Disable toSource/uneval") ||
       !op.addBoolOption('\0', "disable-property-error-message-fix",
                         "Disable fix for the error message when accessing "

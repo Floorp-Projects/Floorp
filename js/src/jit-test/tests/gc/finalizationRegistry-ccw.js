@@ -1,5 +1,3 @@
-// |jit-test| --enable-weak-refs
-
 // Test combinations of arguments in different compartments.
 
 gczeal(0);
