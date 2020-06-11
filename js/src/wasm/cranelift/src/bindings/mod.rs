@@ -24,7 +24,7 @@ use cranelift_codegen::entity::EntityRef;
 use cranelift_codegen::ir::immediates::{Ieee32, Ieee64};
 use cranelift_codegen::ir::{self, InstBuilder, SourceLoc};
 use cranelift_codegen::isa;
-use cranelift_wasm::{FuncIndex, GlobalIndex, SignatureIndex, TableIndex, WasmError, WasmResult};
+use cranelift_wasm::{FuncIndex, GlobalIndex, SignatureIndex, TableIndex, WasmResult};
 
 use smallvec::SmallVec;
 
@@ -171,17 +171,6 @@ impl FuncTypeWithId {
         }
     }
 
-    pub fn ret_type(self) -> WasmResult<Option<ir::Type>> {
-        match self.results() {
-            Ok(v) => match v.as_slice() {
-                [] => Ok(None),
-                [t] => Ok(Some(*t)),
-                _ => Err(WasmError::Unsupported("multiple values".to_string())),
-            },
-            Err(e) => Err(e),
-        }
-    }
-
     pub fn id_kind(self) -> FuncTypeIdDescKind {
         unsafe { low_level::funcType_idKind(self.0) }
     }
@@ -209,8 +198,14 @@ impl<'a> ModuleEnvironment<'a> {
     pub fn uses_shared_memory(&self) -> bool {
         unsafe { low_level::env_uses_shared_memory(self.env) }
     }
-    pub fn function_signature(&self, func_index: FuncIndex) -> FuncTypeWithId {
-        FuncTypeWithId(unsafe { low_level::env_function_signature(self.env, func_index.index()) })
+    pub fn num_types(&self) -> usize {
+        unsafe { low_level::env_num_types(self.env) }
+    }
+    pub fn type_(&self, index: usize) -> FuncTypeWithId {
+        FuncTypeWithId(unsafe { low_level::env_type(self.env, index) })
+    }
+    pub fn func_sig(&self, func_index: FuncIndex) -> FuncTypeWithId {
+        FuncTypeWithId(unsafe { low_level::env_func_sig(self.env, func_index.index()) })
     }
     pub fn func_import_tls_offset(&self, func_index: FuncIndex) -> usize {
         unsafe { low_level::env_func_import_tls_offset(self.env, func_index.index()) }
