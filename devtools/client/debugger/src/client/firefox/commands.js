@@ -6,6 +6,7 @@
 
 import { prepareSourcePayload, createThread, createFrame } from "./create";
 import { addThreadEventListeners, clientEvents } from "./events";
+import { makePendingLocationId } from "../../utils/breakpoint";
 
 import Reps from "devtools-reps";
 import type { Node } from "devtools-reps";
@@ -219,30 +220,21 @@ async function removeWatchpoint(object: Grip, property: string) {
   }
 }
 
-// Get the string key to use for a breakpoint location.
-// See also duplicate code in breakpoint-actor-map.js :(
-function locationKey(location: BreakpointLocation) {
-  const { sourceUrl, line, column } = location;
-  const sourceId = location.sourceId || "";
-  // $FlowIgnore
-  return `${sourceUrl}:${sourceId}:${line}:${column}`;
-}
-
 function hasBreakpoint(location: BreakpointLocation) {
-  return !!breakpoints[locationKey(location)];
+  return !!breakpoints[makePendingLocationId(location)];
 }
 
 function setBreakpoint(
   location: BreakpointLocation,
   options: BreakpointOptions
 ) {
-  breakpoints[locationKey(location)] = { location, options };
+  breakpoints[makePendingLocationId(location)] = { location, options };
 
   return forEachThread(thread => thread.setBreakpoint(location, options));
 }
 
 function removeBreakpoint(location: PendingLocation) {
-  delete breakpoints[locationKey((location: any))];
+  delete breakpoints[makePendingLocationId((location: any))];
 
   return forEachThread(thread => thread.removeBreakpoint(location));
 }
