@@ -41,6 +41,16 @@ add_task(async function runtimeSendMessageReply() {
       }
     });
 
+    browser.runtime.onMessage.addListener((msg, sender, respond) => {
+      if (msg == "respond-now") {
+        // If a response from another listener is received first, this
+        // exception should be ignored.  Test fails if it is not.
+
+        // All this is of course stupid, but some extensions depend on it.
+        msg.blah.this.throws();
+      }
+    });
+
     let childFrame = document.createElement("iframe");
     childFrame.src = "extensionpage.html";
     document.body.appendChild(childFrame);
