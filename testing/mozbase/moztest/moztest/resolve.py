@@ -530,8 +530,12 @@ class TestResolver(MozbuildObject):
     def tests_by_manifest(self):
         if not self._tests_by_manifest:
             for test in self.tests:
-                relpath = mozpath.relpath(test['path'], mozpath.dirname(test['manifest']))
-                self._tests_by_manifest[test['manifest_relpath']].append(relpath)
+                if test['flavor'] == "web-platform-tests":
+                    # Use test ids instead of paths for WPT.
+                    self._tests_by_manifest[test['manifest']].append(test['name'])
+                else:
+                    relpath = mozpath.relpath(test['path'], mozpath.dirname(test['manifest']))
+                    self._tests_by_manifest[test['manifest_relpath']].append(relpath)
         return self._tests_by_manifest
 
     @property
