@@ -203,6 +203,30 @@
     obj: ObjId
     clasp: RawPointerField
 
+- name: CallRegExpMatcherResult
+  shared: true
+  transpile: true
+  args:
+    regexp: ObjId
+    input: StringId
+    lastIndex: Int32Id
+
+- name: CallRegExpSearcherResult
+  shared: true
+  transpile: true
+  args:
+    regexp: ObjId
+    input: StringId
+    lastIndex: Int32Id
+
+- name: CallRegExpTesterResult
+  shared: true
+  transpile: true
+  args:
+    regexp: ObjId
+    input: StringId
+    lastIndex: Int32Id
+
 # Add a reference to a global in the compartment to keep it alive.
 - name: GuardCompartment
   shared: false

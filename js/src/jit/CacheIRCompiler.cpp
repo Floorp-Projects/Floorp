@@ -6182,6 +6182,75 @@ bool CacheIRCompiler::emitCallGetSparseElementResult(ObjOperandId objId,
   return true;
 }
 
+bool CacheIRCompiler::emitCallRegExpMatcherResult(ObjOperandId regexpId,
+                                                  StringOperandId inputId,
+                                                  Int32OperandId lastIndexId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoCallVM callvm(masm, this, allocator);
+
+  Register regexp = allocator.useRegister(masm, regexpId);
+  Register input = allocator.useRegister(masm, inputId);
+  Register lastIndex = allocator.useRegister(masm, lastIndexId);
+
+  callvm.prepare();
+  masm.Push(ImmWord(0));  // nullptr MatchPairs.
+  masm.Push(lastIndex);
+  masm.Push(input);
+  masm.Push(regexp);
+
+  using Fn = bool (*)(JSContext*, HandleObject regexp, HandleString input,
+                      int32_t lastIndex, MatchPairs * pairs,
+                      MutableHandleValue output);
+  callvm.call<Fn, RegExpMatcherRaw>();
+  return true;
+}
+
+bool CacheIRCompiler::emitCallRegExpSearcherResult(ObjOperandId regexpId,
+                                                   StringOperandId inputId,
+                                                   Int32OperandId lastIndexId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoCallVM callvm(masm, this, allocator);
+
+  Register regexp = allocator.useRegister(masm, regexpId);
+  Register input = allocator.useRegister(masm, inputId);
+  Register lastIndex = allocator.useRegister(masm, lastIndexId);
+
+  callvm.prepare();
+  masm.Push(ImmWord(0));  // nullptr MatchPairs.
+  masm.Push(lastIndex);
+  masm.Push(input);
+  masm.Push(regexp);
+
+  using Fn = bool (*)(JSContext*, HandleObject regexp, HandleString input,
+                      int32_t lastIndex, MatchPairs * pairs, int32_t * result);
+  callvm.call<Fn, RegExpSearcherRaw>();
+  return true;
+}
+
+bool CacheIRCompiler::emitCallRegExpTesterResult(ObjOperandId regexpId,
+                                                 StringOperandId inputId,
+                                                 Int32OperandId lastIndexId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoCallVM callvm(masm, this, allocator);
+
+  Register regexp = allocator.useRegister(masm, regexpId);
+  Register input = allocator.useRegister(masm, inputId);
+  Register lastIndex = allocator.useRegister(masm, lastIndexId);
+
+  callvm.prepare();
+  masm.Push(lastIndex);
+  masm.Push(input);
+  masm.Push(regexp);
+
+  using Fn = bool (*)(JSContext*, HandleObject regexp, HandleString input,
+                      int32_t lastIndex, int32_t * result);
+  callvm.call<Fn, RegExpTesterRaw>();
+  return true;
+}
+
 template <typename Fn, Fn fn>
 void CacheIRCompiler::callVM(MacroAssembler& masm) {
   VMFunctionId id = VMFunctionToId<Fn, fn>::id;
@@ -6318,6 +6387,10 @@ struct ReturnTypeToJSValueType<MutableHandleValue> {
 template <>
 struct ReturnTypeToJSValueType<bool*> {
   static constexpr JSValueType result = JSVAL_TYPE_BOOLEAN;
+};
+template <>
+struct ReturnTypeToJSValueType<int32_t*> {
+  static constexpr JSValueType result = JSVAL_TYPE_INT32;
 };
 template <>
 struct ReturnTypeToJSValueType<JSString*> {

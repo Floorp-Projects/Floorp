@@ -5340,6 +5340,62 @@ AttachDecision CallIRGenerator::tryAttachHasClass(HandleFunction callee,
   return AttachDecision::Attach;
 }
 
+AttachDecision CallIRGenerator::tryAttachRegExpMatcherSearcherTester(
+    HandleFunction callee, InlinableNative native) {
+  // Self-hosted code calls this with (object, string, int32) arguments.
+  if (argc_ != 3) {
+    return AttachDecision::NoAction;
+  }
+  if (!args_[0].isObject() || !args_[1].isString() || !args_[2].isInt32()) {
+    return AttachDecision::NoAction;
+  }
+
+  // Initialize the input operand.
+  Int32OperandId argcId(writer.setInputOperandId(0));
+
+  // Note: we don't need to call emitNativeCalleeGuard for intrinsics.
+
+  // Guard argument types.
+  ValOperandId arg0Id = writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
+  ObjOperandId reId = writer.guardToObject(arg0Id);
+
+  ValOperandId arg1Id = writer.loadArgumentFixedSlot(ArgumentKind::Arg1, argc_);
+  StringOperandId inputId = writer.guardToString(arg1Id);
+
+  ValOperandId arg2Id = writer.loadArgumentFixedSlot(ArgumentKind::Arg2, argc_);
+  Int32OperandId lastIndexId = writer.guardToInt32(arg2Id);
+
+  switch (native) {
+    case InlinableNative::RegExpMatcher:
+      writer.callRegExpMatcherResult(reId, inputId, lastIndexId);
+      writer.typeMonitorResult();
+      cacheIRStubKind_ = BaselineCacheIRStubKind::Monitored;
+      trackAttached("RegExpMatcher");
+      break;
+
+    case InlinableNative::RegExpSearcher:
+      // No type monitoring because this always returns an int32.
+      writer.callRegExpSearcherResult(reId, inputId, lastIndexId);
+      writer.returnFromIC();
+      cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
+      trackAttached("RegExpSearcher");
+      break;
+
+    case InlinableNative::RegExpTester:
+      // No type monitoring because this always returns an int32.
+      writer.callRegExpTesterResult(reId, inputId, lastIndexId);
+      writer.returnFromIC();
+      cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
+      trackAttached("RegExpTester");
+      break;
+
+    default:
+      MOZ_CRASH("Unexpected native");
+  }
+
+  return AttachDecision::Attach;
+}
+
 AttachDecision CallIRGenerator::tryAttachStringChar(HandleFunction callee,
                                                     StringChar kind) {
   // Need one argument.
@@ -6010,6 +6066,10 @@ AttachDecision CallIRGenerator::tryAttachInlinableNative(
     // RegExp natives.
     case InlinableNative::IsRegExpObject:
       return tryAttachHasClass(callee, &RegExpObject::class_);
+    case InlinableNative::RegExpMatcher:
+    case InlinableNative::RegExpSearcher:
+    case InlinableNative::RegExpTester:
+      return tryAttachRegExpMatcherSearcherTester(callee, native);
 
     // String natives.
     case InlinableNative::String:
