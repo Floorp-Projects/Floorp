@@ -319,62 +319,6 @@ class nsFrame : public nsIFrame {
   static int32_t GetLineNumber(nsIFrame* aFrame, bool aLockScroll,
                                nsIFrame** aContainingBlock = nullptr);
 
-  /**
-   * Returns true if aFrame should apply overflow clipping.
-   */
-  static bool ShouldApplyOverflowClipping(const nsIFrame* aFrame,
-                                          const nsStyleDisplay* aDisp) {
-    MOZ_ASSERT(aDisp == aFrame->StyleDisplay(), "Wong display struct");
-    // clip overflow:-moz-hidden-unscrollable, except for nsListControlFrame,
-    // which is an nsHTMLScrollFrame.
-    if (MOZ_UNLIKELY(aDisp->mOverflowX ==
-                         mozilla::StyleOverflow::MozHiddenUnscrollable &&
-                     !aFrame->IsListControlFrame())) {
-      return true;
-    }
-
-    // contain: paint, which we interpret as -moz-hidden-unscrollable
-    // Exception: for scrollframes, we don't need contain:paint to add any
-    // clipping, because the scrollable frame will already clip overflowing
-    // content, and because contain:paint should prevent all means of escaping
-    // that clipping (e.g. because it forms a fixed-pos containing block).
-    if (aDisp->IsContainPaint() && !aFrame->IsScrollFrame() &&
-        aFrame->IsFrameOfType(eSupportsContainLayoutAndPaint)) {
-      return true;
-    }
-
-    // and overflow:hidden that we should interpret as -moz-hidden-unscrollable
-    if (aDisp->mOverflowX == mozilla::StyleOverflow::Hidden &&
-        aDisp->mOverflowY == mozilla::StyleOverflow::Hidden) {
-      // REVIEW: these are the frame types that set up clipping.
-      mozilla::LayoutFrameType type = aFrame->Type();
-      if (type == mozilla::LayoutFrameType::Table ||
-          type == mozilla::LayoutFrameType::TableCell ||
-          type == mozilla::LayoutFrameType::SVGOuterSVG ||
-          type == mozilla::LayoutFrameType::SVGInnerSVG ||
-          type == mozilla::LayoutFrameType::SVGSymbol ||
-          type == mozilla::LayoutFrameType::SVGForeignObject) {
-        return true;
-      }
-      if (aFrame->IsFrameOfType(nsIFrame::eReplacedContainsBlock)) {
-        if (type == mozilla::LayoutFrameType::TextInput) {
-          // It always has an anonymous scroll frame that handles any overflow.
-          return false;
-        }
-        return true;
-      }
-    }
-
-    if ((aFrame->GetStateBits() & NS_FRAME_SVG_LAYOUT)) {
-      return false;
-    }
-
-    // If we're paginated and a block, and have NS_BLOCK_CLIP_PAGINATED_OVERFLOW
-    // set, then we want to clip our overflow.
-    return (aFrame->GetStateBits() & NS_BLOCK_CLIP_PAGINATED_OVERFLOW) != 0 &&
-           aFrame->PresContext()->IsPaginated() && aFrame->IsBlockFrame();
-  }
-
  private:
   // Returns true if this frame has any kind of CSS animations.
   bool HasCSSAnimations();

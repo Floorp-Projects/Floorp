@@ -2839,6 +2839,12 @@ class nsIFrame : public nsQueryFrame {
   virtual void UnionChildOverflow(nsOverflowAreas& aOverflowAreas);
 
   /**
+   * Returns true if aFrame should apply overflow clipping.
+   */
+  static bool ShouldApplyOverflowClipping(const nsIFrame* aFrame,
+                                          const nsStyleDisplay* aDisp);
+
+  /**
    * Helper method used by block reflow to identify runs of text so
    * that proper word-breaking can be done.
    *
