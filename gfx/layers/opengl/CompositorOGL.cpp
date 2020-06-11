@@ -242,13 +242,9 @@ already_AddRefed<mozilla::gl::GLContext> CompositorOGL::CreateContext() {
 
   // Allow to create offscreen GL context for main Layer Manager
   if (!context && gfxEnv::LayersPreferOffscreen()) {
-    SurfaceCaps caps = SurfaceCaps::ForRGB();
-    caps.preserve = false;
-    caps.bpp16 = gfxVars::OffscreenFormat() == SurfaceFormat::R5G6B5_UINT16;
-
     nsCString discardFailureId;
     context = GLContextProvider::CreateOffscreen(
-        mSurfaceSize, caps, CreateContextFlags::REQUIRE_COMPAT_PROFILE,
+        mSurfaceSize, {CreateContextFlags::REQUIRE_COMPAT_PROFILE},
         &discardFailureId);
   }
 

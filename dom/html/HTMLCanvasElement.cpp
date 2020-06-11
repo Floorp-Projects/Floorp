@@ -27,8 +27,7 @@
 #include "mozilla/dom/OffscreenCanvas.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/gfx/Rect.h"
-#include "mozilla/layers/AsyncCanvasRenderer.h"
-#include "mozilla/layers/OOPCanvasRenderer.h"
+#include "mozilla/layers/CanvasRenderer.h"
 #include "mozilla/layers/WebRenderCanvasRenderer.h"
 #include "mozilla/layers/WebRenderUserData.h"
 #include "mozilla/MouseEvents.h"
@@ -382,10 +381,6 @@ HTMLCanvasElement::~HTMLCanvasElement() {
   if (mRequestedFrameRefreshObserver) {
     mRequestedFrameRefreshObserver->DetachFromRefreshDriver();
   }
-
-  if (mAsyncCanvasRenderer) {
-    mAsyncCanvasRenderer->mHTMLCanvasElement = nullptr;
-  }
 }
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(HTMLCanvasElement, nsGenericHTMLElement,
@@ -731,8 +726,7 @@ nsresult HTMLCanvasElement::ExtractData(JSContext* aCx,
   bool usePlaceholder = !CanvasUtils::IsImageExtractionAllowed(
       OwnerDoc(), aCx, aSubjectPrincipal);
   return ImageEncoder::ExtractData(aType, aOptions, GetSize(), usePlaceholder,
-                                   mCurrentContext, mAsyncCanvasRenderer,
-                                   aStream);
+                                   mCurrentContext, mCanvasRenderer, aStream);
 }
 
 nsresult HTMLCanvasElement::ToDataURLImpl(JSContext* aCx,
@@ -831,10 +825,7 @@ OffscreenCanvas* HTMLCanvasElement::TransferControlToOffscreen(
   }
 
   if (!mOffscreenCanvas) {
-    nsIntSize sz = GetWidthHeight();
-    RefPtr<AsyncCanvasRenderer> renderer = GetAsyncCanvasRenderer();
-    renderer->SetWidth(sz.width);
-    renderer->SetHeight(sz.height);
+    MOZ_CRASH("todo");
 
     nsPIDOMWindowInner* win = OwnerDoc()->GetInnerWindow();
     if (!win) {
@@ -842,9 +833,10 @@ OffscreenCanvas* HTMLCanvasElement::TransferControlToOffscreen(
       return nullptr;
     }
 
-    mOffscreenCanvas =
-        new OffscreenCanvas(win->AsGlobal(), sz.width, sz.height,
-                            GetCompositorBackendType(), renderer);
+    // nsIntSize sz = GetWidthHeight();
+    // mOffscreenCanvas =
+    //    new OffscreenCanvas(win->AsGlobal(), sz.width, sz.height,
+    //                        GetCompositorBackendType(), renderer);
     if (mWriteOnly) {
       mOffscreenCanvas->SetWriteOnly();
     }
@@ -1103,80 +1095,17 @@ bool HTMLCanvasElement::GetOpaqueAttr() {
 }
 
 CanvasContextType HTMLCanvasElement::GetCurrentContextType() {
-  if (mAsyncCanvasRenderer) {
-    return mAsyncCanvasRenderer->GetContextType();
-  }
   return mCurrentContextType;
 }
 
 already_AddRefed<Layer> HTMLCanvasElement::GetCanvasLayer(
     nsDisplayListBuilder* aBuilder, Layer* aOldLayer, LayerManager* aManager) {
-  // The address of sOffscreenCanvasLayerUserDataDummy is used as the user
-  // data key for retained LayerManagers managed by FrameLayerBuilder.
-  // We don't much care about what value in it, so just assign a dummy
-  // value for it.
-  static uint8_t sOffscreenCanvasLayerUserDataDummy = 0;
-  static uint8_t sOffscreenImageLayerUserDataDummy = 0;
-
   if (mCurrentContext) {
     return mCurrentContext->GetCanvasLayer(aBuilder, aOldLayer, aManager);
   }
 
   if (mOffscreenCanvas) {
-    CanvasContextType contentType = mAsyncCanvasRenderer->GetContextType();
-    if (contentType == CanvasContextType::NoContext) {
-      // context is not created yet.
-      return nullptr;
-    }
-    if (contentType != CanvasContextType::ImageBitmap) {
-      if (!mResetLayer && aOldLayer &&
-          aOldLayer->HasUserData(&sOffscreenCanvasLayerUserDataDummy)) {
-        RefPtr<Layer> ret = aOldLayer;
-        return ret.forget();
-      }
-
-      RefPtr<CanvasLayer> layer = aManager->CreateCanvasLayer();
-      if (!layer) {
-        NS_WARNING("CreateCanvasLayer failed!");
-        return nullptr;
-      }
-
-      LayerUserData* userData = nullptr;
-      layer->SetUserData(&sOffscreenCanvasLayerUserDataDummy, userData);
-
-      CanvasRenderer* canvasRenderer = layer->CreateOrGetCanvasRenderer();
-
-      if (!InitializeCanvasRenderer(aBuilder, canvasRenderer)) {
-        return nullptr;
-      }
-
-      layer->Updated();
-      mResetLayer = false;
-      return layer.forget();
-    }
-    if (contentType == CanvasContextType::ImageBitmap) {
-      if (!mResetLayer && aOldLayer &&
-          aOldLayer->HasUserData(&sOffscreenImageLayerUserDataDummy)) {
-        RefPtr<Layer> ret = aOldLayer;
-        return ret.forget();
-      }
-
-      RefPtr<ImageLayer> layer = aManager->CreateImageLayer();
-      if (!layer) {
-        NS_WARNING("CreateImageLayer failed!");
-        return nullptr;
-      }
-
-      LayerUserData* userData = nullptr;
-      layer->SetUserData(&sOffscreenImageLayerUserDataDummy, userData);
-
-      RefPtr<ImageContainer> imageContainer =
-          mAsyncCanvasRenderer->GetImageContainer();
-      MOZ_ASSERT(imageContainer);
-      layer->SetContainer(imageContainer);
-      mResetLayer = false;
-      return layer.forget();
-    }
+    MOZ_CRASH("todo");
   }
 
   return nullptr;
@@ -1188,37 +1117,7 @@ bool HTMLCanvasElement::UpdateWebRenderCanvasData(
     return mCurrentContext->UpdateWebRenderCanvasData(aBuilder, aCanvasData);
   }
   if (mOffscreenCanvas) {
-    CanvasContextType contentType = mAsyncCanvasRenderer->GetContextType();
-    if (contentType == CanvasContextType::NoContext) {
-      // context is not created yet.
-      return false;
-    }
-    if (contentType != CanvasContextType::ImageBitmap) {
-      CanvasRenderer* renderer = aCanvasData->GetCanvasRenderer();
-
-      if (!mResetLayer && renderer) {
-        return true;
-      }
-
-      renderer = aCanvasData->CreateCanvasRenderer();
-      if (!InitializeCanvasRenderer(aBuilder, renderer)) {
-        // Clear CanvasRenderer of WebRenderCanvasData
-        aCanvasData->ClearCanvasRenderer();
-        return false;
-      }
-
-      MOZ_ASSERT(renderer);
-      mResetLayer = false;
-      return true;
-    }
-    if (contentType == CanvasContextType::ImageBitmap) {
-      RefPtr<ImageContainer> imageContainer =
-          mAsyncCanvasRenderer->GetImageContainer();
-      MOZ_ASSERT(imageContainer);
-      aCanvasData->SetImageContainer(imageContainer);
-      mResetLayer = false;
-      return true;
-    }
+    MOZ_CRASH("todo");
   }
 
   // Clear CanvasRenderer of WebRenderCanvasData
@@ -1233,11 +1132,7 @@ bool HTMLCanvasElement::InitializeCanvasRenderer(nsDisplayListBuilder* aBuilder,
   }
 
   if (mOffscreenCanvas) {
-    CanvasInitializeData data;
-    data.mRenderer = GetAsyncCanvasRenderer();
-    data.mSize = GetWidthHeight();
-    aRenderer->Initialize(data);
-    return true;
+    MOZ_CRASH("todo");
   }
 
   return false;
@@ -1363,25 +1258,6 @@ already_AddRefed<SourceSurface> HTMLCanvasElement::GetSurfaceSnapshot(
   return mCurrentContext->GetSurfaceSnapshot(aOutAlphaType);
 }
 
-AsyncCanvasRenderer* HTMLCanvasElement::GetAsyncCanvasRenderer() {
-  if (!mAsyncCanvasRenderer) {
-    mAsyncCanvasRenderer = new AsyncCanvasRenderer();
-    mAsyncCanvasRenderer->mHTMLCanvasElement = this;
-  }
-
-  return mAsyncCanvasRenderer;
-}
-
-layers::OOPCanvasRenderer* HTMLCanvasElement::GetOOPCanvasRenderer() {
-  if (!mOOPCanvasRenderer) {
-    const auto context = GetWebGLContext();
-    MOZ_ASSERT(context);
-    mOOPCanvasRenderer = new OOPCanvasRenderer(context);
-  }
-
-  return mOOPCanvasRenderer;
-}
-
 layers::LayersBackend HTMLCanvasElement::GetCompositorBackendType() const {
   nsIWidget* docWidget = nsContentUtils::WidgetForDocument(OwnerDoc());
   if (docWidget) {
@@ -1400,29 +1276,8 @@ void HTMLCanvasElement::OnVisibilityChange() {
   }
 
   if (mOffscreenCanvas) {
-    class Runnable final : public CancelableRunnable {
-     public:
-      explicit Runnable(AsyncCanvasRenderer* aRenderer)
-          : mozilla::CancelableRunnable("Runnable"), mRenderer(aRenderer) {}
-
-      NS_IMETHOD Run() override {
-        if (mRenderer && mRenderer->mContext) {
-          mRenderer->mContext->OnVisibilityChange();
-        }
-
-        return NS_OK;
-      }
-
-     private:
-      RefPtr<AsyncCanvasRenderer> mRenderer;
-    };
-
-    RefPtr<nsIRunnable> runnable = new Runnable(mAsyncCanvasRenderer);
-    nsCOMPtr<nsIEventTarget> activeTarget =
-        mAsyncCanvasRenderer->GetActiveEventTarget();
-    if (activeTarget) {
-      activeTarget->Dispatch(runnable, nsIThread::DISPATCH_NORMAL);
-    }
+    MOZ_CRASH("todo");
+    // Dispatch to GetActiveEventTarget.
     return;
   }
 
@@ -1433,29 +1288,8 @@ void HTMLCanvasElement::OnVisibilityChange() {
 
 void HTMLCanvasElement::OnMemoryPressure() {
   if (mOffscreenCanvas) {
-    class Runnable final : public CancelableRunnable {
-     public:
-      explicit Runnable(AsyncCanvasRenderer* aRenderer)
-          : mozilla::CancelableRunnable("Runnable"), mRenderer(aRenderer) {}
-
-      NS_IMETHOD Run() override {
-        if (mRenderer && mRenderer->mContext) {
-          mRenderer->mContext->OnMemoryPressure();
-        }
-
-        return NS_OK;
-      }
-
-     private:
-      RefPtr<AsyncCanvasRenderer> mRenderer;
-    };
-
-    RefPtr<nsIRunnable> runnable = new Runnable(mAsyncCanvasRenderer);
-    nsCOMPtr<nsIEventTarget> activeTarget =
-        mAsyncCanvasRenderer->GetActiveEventTarget();
-    if (activeTarget) {
-      activeTarget->Dispatch(runnable, nsIThread::DISPATCH_NORMAL);
-    }
+    MOZ_CRASH("todo");
+    // Dispatch to GetActiveEventTarget.
     return;
   }
 
@@ -1468,49 +1302,6 @@ void HTMLCanvasElement::OnDeviceReset() {
   if (!mOffscreenCanvas && mCurrentContext) {
     mCurrentContext->Reset();
   }
-}
-
-/* static */
-void HTMLCanvasElement::SetAttrFromAsyncCanvasRenderer(
-    AsyncCanvasRenderer* aRenderer) {
-  HTMLCanvasElement* element = aRenderer->mHTMLCanvasElement;
-  if (!element) {
-    return;
-  }
-
-  if (element->GetWidthHeight() == aRenderer->GetSize()) {
-    return;
-  }
-
-  gfx::IntSize asyncCanvasSize = aRenderer->GetSize();
-
-  ErrorResult rv;
-  element->SetUnsignedIntAttr(nsGkAtoms::width, asyncCanvasSize.width,
-                              DEFAULT_CANVAS_WIDTH, rv);
-  if (rv.Failed()) {
-    NS_WARNING(
-        "Failed to set width attribute to a canvas element asynchronously.");
-  }
-
-  element->SetUnsignedIntAttr(nsGkAtoms::height, asyncCanvasSize.height,
-                              DEFAULT_CANVAS_HEIGHT, rv);
-  if (rv.Failed()) {
-    NS_WARNING(
-        "Failed to set height attribute to a canvas element asynchronously.");
-  }
-
-  element->mResetLayer = true;
-}
-
-/* static */
-void HTMLCanvasElement::InvalidateFromAsyncCanvasRenderer(
-    AsyncCanvasRenderer* aRenderer) {
-  HTMLCanvasElement* element = aRenderer->mHTMLCanvasElement;
-  if (!element) {
-    return;
-  }
-
-  element->InvalidateCanvasContent(nullptr);
 }
 
 ClientWebGLContext* HTMLCanvasElement::GetWebGLContext() {

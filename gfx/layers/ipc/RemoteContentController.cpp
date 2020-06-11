@@ -6,6 +6,7 @@
 
 #include "mozilla/layers/RemoteContentController.h"
 
+#include "CompositorThread.h"
 #include "MainThreadUtils.h"
 #include "mozilla/dom/BrowserParent.h"
 #include "mozilla/layers/APZCCallbackHelper.h"

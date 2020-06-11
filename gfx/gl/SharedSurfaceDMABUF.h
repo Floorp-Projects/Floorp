@@ -17,22 +17,13 @@ class GLLibraryEGL;
 
 class SharedSurface_DMABUF final : public SharedSurface {
  public:
-  static UniquePtr<SharedSurface_DMABUF> Create(GLContext* prodGL,
-                                                const GLFormats& formats,
-                                                const gfx::IntSize& size,
-                                                bool hasAlpha);
+  const RefPtr<WaylandDMABufSurface> mSurface;
 
-  static SharedSurface_DMABUF* Cast(SharedSurface* surf) {
-    MOZ_ASSERT(surf->mType == SharedSurfaceType::EGLSurfaceDMABUF);
+  static UniquePtr<SharedSurface_DMABUF> Create(const SharedSurfaceDesc&);
 
-    return (SharedSurface_DMABUF*)surf;
-  }
-
- protected:
-  RefPtr<WaylandDMABufSurface> mSurface;
-
-  SharedSurface_DMABUF(GLContext* gl, const gfx::IntSize& size, bool hasAlpha,
-                       RefPtr<WaylandDMABufSurface> aSurface);
+ private:
+  SharedSurface_DMABUF(const SharedSurfaceDesc&, UniquePtr<MozFramebuffer>,
+                       RefPtr<WaylandDMABufSurface>);
 
   void UpdateProdTexture(const MutexAutoLock& curAutoLock);
 
@@ -51,25 +42,17 @@ class SharedSurface_DMABUF final : public SharedSurface {
   virtual void ProducerReadAcquireImpl() override {}
   virtual void ProducerReadReleaseImpl() override {}
 
-  virtual GLuint ProdTexture() override { return mSurface->GetTexture(); }
-
-  virtual bool ToSurfaceDescriptor(
-      layers::SurfaceDescriptor* const out_descriptor) override;
+  Maybe<layers::SurfaceDescriptor> ToSurfaceDescriptor() override;
 };
 
 class SurfaceFactory_DMABUF : public SurfaceFactory {
  public:
-  SurfaceFactory_DMABUF(GLContext* prodGL, const SurfaceCaps& caps,
-                        const RefPtr<layers::LayersIPCChannel>& allocator,
-                        const layers::TextureFlags& flags)
-      : SurfaceFactory(SharedSurfaceType::EGLSurfaceDMABUF, prodGL, caps,
-                       allocator, flags){};
+  explicit SurfaceFactory_DMABUF(GLContext&);
 
  public:
-  virtual UniquePtr<SharedSurface> CreateShared(
-      const gfx::IntSize& size) override {
-    bool hasAlpha = mReadCaps.alpha;
-    return SharedSurface_DMABUF::Create(mGL, mFormats, size, hasAlpha);
+  virtual UniquePtr<SharedSurface> CreateSharedImpl(
+      const SharedSurfaceDesc& desc) override {
+    return SharedSurface_DMABUF::Create(desc);
   }
 };
 
