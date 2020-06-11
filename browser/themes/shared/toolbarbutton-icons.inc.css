@@ -258,11 +258,13 @@ toolbar[brighttext] {
 
 #profiler-button {
   list-style-image: url("chrome://devtools/skin/images/tool-profiler.svg");
+}
+
+#profiler-button:not(.profiler-active) > image {
   transform: scaleX(-1);
 }
 
 #profiler-button.profiler-active {
-  transform: scaleX(1);
   fill: #0060df;
   fill-opacity: 1;
 }
