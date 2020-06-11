@@ -4553,15 +4553,6 @@ void AsyncPanZoomController::NotifyLayersUpdated(
   RepaintUpdateType contentRepaintType = RepaintUpdateType::eNone;
   bool viewportUpdated = false;
 
-  if (Metrics().GetLayoutViewport().Size() !=
-      aLayerMetrics.GetLayoutViewport().Size()) {
-    needContentRepaint = true;
-    viewportUpdated = true;
-  }
-  if (viewportUpdated || scrollOffsetUpdated) {
-    Metrics().SetLayoutViewport(aLayerMetrics.GetLayoutViewport());
-  }
-
   if ((aIsFirstPaint && aThisLayerTreeUpdated) || isDefault) {
     // Initialize our internal state to something sane when the content
     // that was just painted is something we knew nothing about previously
@@ -4589,6 +4580,15 @@ void AsyncPanZoomController::NotifyLayersUpdated(
     // If we're not taking the aLayerMetrics wholesale we still need to pull
     // in some things into our local Metrics() because these things are
     // determined by Gecko and our copy in Metrics() may be stale.
+
+    if (Metrics().GetLayoutViewport().Size() !=
+        aLayerMetrics.GetLayoutViewport().Size()) {
+      needContentRepaint = true;
+      viewportUpdated = true;
+    }
+    if (viewportUpdated || scrollOffsetUpdated) {
+      Metrics().SetLayoutViewport(aLayerMetrics.GetLayoutViewport());
+    }
 
     // TODO: Rely entirely on |aScrollMetadata.IsResolutionUpdated()| to
     //       determine which branch to take, and drop the other conditions.
