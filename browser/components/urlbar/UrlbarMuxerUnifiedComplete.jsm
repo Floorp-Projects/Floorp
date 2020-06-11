@@ -69,13 +69,22 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
     // context.results.find(), filter(), sort(), etc., modify one or both passes
     // instead.
 
+    // Capture information about the heuristic result to dedupe results from the
+    // heuristic more quickly.
     let heuristicResultQuery;
-    if (
-      context.heuristicResult &&
-      context.heuristicResult.type == UrlbarUtils.RESULT_TYPE.SEARCH &&
-      context.heuristicResult.payload.query
-    ) {
-      heuristicResultQuery = context.heuristicResult.payload.query.toLocaleLowerCase();
+    let heuristicResultOmniboxContent;
+    if (context.heuristicResult) {
+      if (
+        context.heuristicResult.type == UrlbarUtils.RESULT_TYPE.SEARCH &&
+        context.heuristicResult.payload.query
+      ) {
+        heuristicResultQuery = context.heuristicResult.payload.query.toLocaleLowerCase();
+      } else if (
+        context.heuristicResult.type == UrlbarUtils.RESULT_TYPE.OMNIBOX &&
+        context.heuristicResult.payload.content
+      ) {
+        heuristicResultOmniboxContent = context.heuristicResult.payload.content.toLocaleLowerCase();
+      }
     }
 
     let canShowPrivateSearch = context.results.length > 1;
@@ -212,6 +221,15 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
             }
           }
         }
+      }
+
+      // Exclude omnibox results that dupe the heuristic.
+      if (
+        !result.heuristic &&
+        result.type == UrlbarUtils.RESULT_TYPE.OMNIBOX &&
+        result.payload.content == heuristicResultOmniboxContent
+      ) {
+        continue;
       }
 
       // Include this result.
