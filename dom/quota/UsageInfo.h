@@ -29,8 +29,6 @@ class UsageInfo final {
     IncrementUsage(mFileUsage, aUsage);
   }
 
-  const Maybe<uint64_t>& DatabaseUsage() const { return mDatabaseUsage; }
-
   const Maybe<uint64_t>& FileUsage() const { return mFileUsage; }
 
   Maybe<uint64_t> TotalUsage() {
