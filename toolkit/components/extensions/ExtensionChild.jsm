@@ -195,7 +195,12 @@ class MessageEvent extends SimpleEventAPI {
       }, this.context.cloneScope);
     });
 
-    let result = fire.raw(message, sender, sendResponse);
+    let result;
+    try {
+      result = fire.raw(message, sender, sendResponse);
+    } catch (e) {
+      return Promise.reject(e);
+    }
     if (
       result &&
       typeof result === "object" &&
