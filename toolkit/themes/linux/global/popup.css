@@ -44,6 +44,10 @@ panel[type="arrow"][side="right"] {
   border-radius: inherit;
 }
 
+:host([orient=vertical]) .panel-arrowcontent {
+  -moz-box-orient: vertical;
+}
+
 panel[type="arrow"].panel-no-padding::part(arrowcontent) {
   padding: 0;
   overflow: hidden; /* Don't let panel content overflow the border */
