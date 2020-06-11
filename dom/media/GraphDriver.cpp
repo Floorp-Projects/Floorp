@@ -306,14 +306,12 @@ AsyncCubebTask::Run() {
       LOG(LogLevel::Debug, ("%p: AsyncCubebOperation::INIT driver=%p",
                             mDriver->Graph(), mDriver.get()));
       mDriver->Init();
-      mDriver->CompleteAudioContextOperations(mOperation);
       break;
     }
     case AsyncCubebOperation::SHUTDOWN: {
       LOG(LogLevel::Debug, ("%p: AsyncCubebOperation::SHUTDOWN driver=%p",
                             mDriver->Graph(), mDriver.get()));
       mDriver->Stop();
-      mDriver->CompleteAudioContextOperations(mOperation);
       mDriver = nullptr;
       mShutdownGrip = nullptr;
       break;
@@ -504,7 +502,6 @@ AudioCallbackDriver::AudioCallbackDriver(
       mStarted(false),
       mInitShutdownThread(
           SharedThreadPool::Get(NS_LITERAL_CSTRING("CubebOperation"), 1)),
-      mPromisesForOperation("AudioCallbackDriver::mPromisesForOperation"),
       mAudioThreadId(std::thread::id()),
       mAudioStreamState(AudioStreamState::None),
       mFallback("AudioCallbackDriver::mFallback") {
@@ -535,12 +532,6 @@ AudioCallbackDriver::AudioCallbackDriver(
 }
 
 AudioCallbackDriver::~AudioCallbackDriver() {
-#ifdef DEBUG
-  {
-    auto promises = mPromisesForOperation.Lock();
-    MOZ_ASSERT(promises->IsEmpty());
-  }
-#endif
 #if defined(XP_WIN)
   if (XRE_IsContentProcess()) {
     audio::AudioNotificationReceiver::Unregister(this);
@@ -1178,51 +1169,6 @@ void AudioCallbackDriver::EnsureNextIteration() {
 }
 
 bool AudioCallbackDriver::IsStarted() { return mStarted; }
-
-void AudioCallbackDriver::EnqueueTrackAndPromiseForOperation(
-    MediaTrack* aTrack, dom::AudioContextOperation aOperation,
-    AbstractThread* aMainThread,
-    MozPromiseHolder<MediaTrackGraph::AudioContextOperationPromise>&& aHolder) {
-  MOZ_ASSERT(InIteration() || !ThreadRunning());
-  auto promises = mPromisesForOperation.Lock();
-  promises->AppendElement(TrackAndPromiseForOperation(
-      aTrack, aOperation, aMainThread, std::move(aHolder)));
-}
-
-void AudioCallbackDriver::CompleteAudioContextOperations(
-    AsyncCubebOperation aOperation) {
-  MOZ_ASSERT(OnCubebOperationThread());
-  auto promises = mPromisesForOperation.Lock();
-  for (uint32_t i = 0; i < promises->Length(); i++) {
-    TrackAndPromiseForOperation& s = promises.ref()[i];
-    if ((aOperation == AsyncCubebOperation::INIT &&
-         s.mOperation == dom::AudioContextOperation::Resume) ||
-        (aOperation == AsyncCubebOperation::SHUTDOWN &&
-         s.mOperation != dom::AudioContextOperation::Resume)) {
-      dom::AudioContextState state;
-      switch (s.mOperation) {
-        case dom::AudioContextOperation::Resume:
-          state = dom::AudioContextState::Running;
-          break;
-        case dom::AudioContextOperation::Suspend:
-          state = dom::AudioContextState::Suspended;
-          break;
-        case dom::AudioContextOperation::Close:
-          state = dom::AudioContextState::Closed;
-          break;
-        default:
-          MOZ_CRASH("Unexpected operation");
-      }
-      s.mMainThread->Dispatch(NS_NewRunnableFunction(
-          "AudioContextOperation::Resolve",
-          [holder = std::move(s.mHolder), state]() mutable {
-            holder.Resolve(state, __func__);
-          }));
-      promises->RemoveElementAt(i);
-      i--;
-    }
-  }
-}
 
 TimeDuration AudioCallbackDriver::AudioOutputLatency() {
   AUTO_PROFILER_LABEL("AudioCallbackDriver::AudioOutputLatency", MEDIA_CUBEB);

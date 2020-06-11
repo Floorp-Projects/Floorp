@@ -322,17 +322,7 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
    * thread.
    */
   void ApplyAudioContextOperationImpl(
-      MediaTrack* aDestinationTrack,
-      const nsTArray<RefPtr<MediaTrack>>& aTracks,
-      dom::AudioContextOperation aOperation,
-      MozPromiseHolder<AudioContextOperationPromise>&& aHolder);
-
-  /*
-   * Move tracks from mTracks to mSuspendedTracks if suspending/closing an
-   * AudioContext, or the inverse when resuming an AudioContext.
-   */
-  void SuspendOrResumeTracks(dom::AudioContextOperation aAudioContextOperation,
-                             const nsTArray<RefPtr<MediaTrack>>& aTrackSet);
+      AudioContextOperationControlMessage* aMessage);
 
   /**
    * Determine if we have any audio tracks, or are about to add any audiotracks.
@@ -797,6 +787,7 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
    public:
     explicit PendingResumeOperation(
         AudioContextOperationControlMessage* aMessage);
+    void Apply(MediaTrackGraphImpl* aGraph);
     MediaTrack* DestinationTrack() const { return mDestinationTrack; }
 
    private:
