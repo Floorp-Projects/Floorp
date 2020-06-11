@@ -1526,14 +1526,14 @@ static bool FinishGC(JSContext* cx, unsigned argc, Value* vp) {
 static bool GCSlice(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
-  if (args.length() > 1) {
+  if (args.length() > 2) {
     RootedObject callee(cx, &args.callee());
     ReportUsageErrorASCII(cx, callee, "Wrong number of arguments");
     return false;
   }
 
   auto budget = SliceBudget::unlimited();
-  if (args.length() == 1) {
+  if (args.length() >= 1) {
     uint32_t work = 0;
     if (!ToUint32(cx, args[0], &work)) {
       return false;
@@ -1541,11 +1541,21 @@ static bool GCSlice(JSContext* cx, unsigned argc, Value* vp) {
     budget = SliceBudget(WorkBudget(work));
   }
 
+  bool dontStart = false;
+  if (args.get(1).isObject()) {
+    RootedObject options(cx, &args[1].toObject());
+    RootedValue v(cx);
+    if (!JS_GetProperty(cx, options, "dontStart", &v)) {
+      return false;
+    }
+    dontStart = ToBoolean(v);
+  }
+
   JSRuntime* rt = cx->runtime();
-  if (!rt->gc.isIncrementalGCInProgress()) {
-    rt->gc.startDebugGC(GC_NORMAL, budget);
-  } else {
+  if (rt->gc.isIncrementalGCInProgress()) {
     rt->gc.debugGCSlice(budget);
+  } else if (!dontStart) {
+    rt->gc.startDebugGC(GC_NORMAL, budget);
   }
 
   args.rval().setUndefined();
@@ -6156,8 +6166,12 @@ gc::ZealModeHelpText),
 "   Finish an in-progress incremental GC, if none is running then do nothing."),
 
     JS_FN_HELP("gcslice", GCSlice, 1, 0,
-"gcslice([n])",
-"  Start or continue an an incremental GC, running a slice that processes about n objects."),
+"gcslice([n [, options]])",
+"  Start or continue an an incremental GC, running a slice that processes\n"
+"  about n objects. Takes an optional options object, which may contain the\n"
+"  following properties:\n"
+"    dontStart: do not start a new incremental GC if one is not already\n"
+"               running"),
 
     JS_FN_HELP("abortgc", AbortGC, 1, 0,
 "abortgc()",
@@ -6512,7 +6526,7 @@ gc::ZealModeHelpText),
     JS_FN_HELP("getBacktrace", GetBacktrace, 1, 0,
 "getBacktrace([options])",
 "  Return the current stack as a string. Takes an optional options object,\n"
-"  which may contain any or all of the boolean properties\n"
+"  which may contain any or all of the boolean properties:\n"
 "    options.args - show arguments to each function\n"
 "    options.locals - show local variables in each frame\n"
 "    options.thisprops - show the properties of the 'this' object of each frame\n"),
