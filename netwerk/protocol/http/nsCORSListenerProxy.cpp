@@ -1401,10 +1401,27 @@ nsresult nsCORSListenerProxy::StartCORSPreflight(
   bool withCredentials =
       originalLoadInfo->GetCookiePolicy() == nsILoadInfo::SEC_COOKIES_INCLUDE;
 
-  nsPreflightCache::CacheEntry* entry =
-      sPreflightCache
-          ? sPreflightCache->GetEntry(uri, principal, withCredentials, false)
-          : nullptr;
+  nsPreflightCache::CacheEntry* entry = nullptr;
+
+  nsLoadFlags loadFlags;
+  rv = httpChannel->GetLoadFlags(&loadFlags);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (sPreflightCache) {
+    nsCOMPtr<nsICacheInfoChannel> cacheInfoChannel =
+        do_QueryInterface(httpChannel);
+    bool preferCacheLoadOverBypass = false;
+    rv = cacheInfoChannel->GetPreferCacheLoadOverBypass(
+        &preferCacheLoadOverBypass);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (!(loadFlags & (nsIRequest::LOAD_BYPASS_CACHE |
+                       nsICachingChannel::LOAD_BYPASS_LOCAL_CACHE)) ||
+        ((loadFlags & nsIRequest::LOAD_FROM_CACHE) &&
+         preferCacheLoadOverBypass)) {
+      entry = sPreflightCache->GetEntry(uri, principal, withCredentials, false);
+    }
+  }
 
   if (entry && entry->CheckRequest(method, aUnsafeHeaders)) {
     aCallback->OnPreflightSucceeded();
@@ -1431,10 +1448,6 @@ nsresult nsCORSListenerProxy::StartCORSPreflight(
   rv = aRequestChannel->GetNotificationCallbacks(getter_AddRefs(callbacks));
   NS_ENSURE_SUCCESS(rv, rv);
   nsCOMPtr<nsILoadContext> loadContext = do_GetInterface(callbacks);
-
-  nsLoadFlags loadFlags;
-  rv = aRequestChannel->GetLoadFlags(&loadFlags);
-  NS_ENSURE_SUCCESS(rv, rv);
 
   // Preflight requests should never be intercepted by service workers and
   // are always anonymous.
