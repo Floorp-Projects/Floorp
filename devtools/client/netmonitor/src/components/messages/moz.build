@@ -9,9 +9,12 @@ DIRS += [
 DevToolsModules(
     'cbor.js',
     'ColumnData.js',
+    'ColumnEventName.js',
     'ColumnFinBit.js',
+    'ColumnLastEventId.js',
     'ColumnMaskBit.js',
     'ColumnOpCode.js',
+    'ColumnRetry.js',
     'ColumnSize.js',
     'ColumnTime.js',
     'MessageFilterMenu.js',

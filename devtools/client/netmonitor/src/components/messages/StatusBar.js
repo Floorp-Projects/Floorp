@@ -23,6 +23,8 @@ const {
   propertiesEqual,
 } = require("devtools/client/netmonitor/src/utils/request-utils.js");
 
+const { CHANNEL_TYPE } = require("devtools/client/netmonitor/src/constants");
+
 const { div, footer } = dom;
 
 const MESSAGE_COUNT_EMPTY = L10N.getStr(
@@ -46,21 +48,21 @@ const UPDATED_MSG_SUMMARY_PROPS = ["count", "totalMs", "totalSize"];
 class StatusBar extends Component {
   static get propTypes() {
     return {
+      channelType: PropTypes.string.isRequired,
       summary: PropTypes.object.isRequired,
     };
   }
 
   shouldComponentUpdate(nextProps) {
-    const { summary } = this.props;
-    return !propertiesEqual(
-      UPDATED_MSG_SUMMARY_PROPS,
-      summary,
-      nextProps.summary
+    const { summary, channelType } = this.props;
+    return (
+      channelType !== nextProps.channelType ||
+      !propertiesEqual(UPDATED_MSG_SUMMARY_PROPS, summary, nextProps.summary)
     );
   }
 
   render() {
-    const { summary } = this.props;
+    const { summary, channelType } = this.props;
     const { count, totalMs, sentSize, receivedSize, totalSize } = summary;
 
     const countText =
@@ -74,6 +76,16 @@ class StatusBar extends Component {
     const sentSizeText = getFormattedSize(sentSize);
     const receivedText = getFormattedSize(receivedSize);
     const totalMillisText = getFormattedTime(totalMs);
+
+    const summaryText =
+      channelType === CHANNEL_TYPE.EVENT_STREAM
+        ? `${totalSizeText} total`
+        : L10N.getFormatStr(
+            "networkMenu.ws.summary.label.framesTranferredSize",
+            totalSizeText,
+            sentSizeText,
+            receivedText
+          );
 
     return footer(
       { className: "devtools-toolbar devtools-toolbar-bottom" },
@@ -90,12 +102,7 @@ class StatusBar extends Component {
             className: "status-bar-label message-network-summary-total-size",
             title: TOOLTIP_MESSAGE_TOTAL_SIZE,
           },
-          L10N.getFormatStr(
-            "networkMenu.ws.summary.label.framesTranferredSize",
-            totalSizeText,
-            sentSizeText,
-            receivedText
-          )
+          summaryText
         ),
       count !== 0 &&
         div(
@@ -110,5 +117,6 @@ class StatusBar extends Component {
 }
 
 module.exports = connect(state => ({
+  channelType: state.messages.currentChannelType,
   summary: getDisplayedMessagesSummary(state),
 }))(StatusBar);

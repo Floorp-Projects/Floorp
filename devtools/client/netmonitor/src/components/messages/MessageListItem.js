@@ -11,19 +11,24 @@ const {
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
-loader.lazyGetter(this, "ColumnSize", function() {
-  return createFactory(
-    require("devtools/client/netmonitor/src/components/messages/ColumnSize")
-  );
-});
 loader.lazyGetter(this, "ColumnData", function() {
   return createFactory(
     require("devtools/client/netmonitor/src/components/messages/ColumnData")
   );
 });
-loader.lazyGetter(this, "ColumnOpCode", function() {
+loader.lazyGetter(this, "ColumnEventName", function() {
   return createFactory(
-    require("devtools/client/netmonitor/src/components/messages/ColumnOpCode")
+    require("devtools/client/netmonitor/src/components/messages/ColumnEventName")
+  );
+});
+loader.lazyGetter(this, "ColumnFinBit", function() {
+  return createFactory(
+    require("devtools/client/netmonitor/src/components/messages/ColumnFinBit")
+  );
+});
+loader.lazyGetter(this, "ColumnLastEventId", function() {
+  return createFactory(
+    require("devtools/client/netmonitor/src/components/messages/ColumnLastEventId")
   );
 });
 loader.lazyGetter(this, "ColumnMaskBit", function() {
@@ -31,9 +36,19 @@ loader.lazyGetter(this, "ColumnMaskBit", function() {
     require("devtools/client/netmonitor/src/components/messages/ColumnMaskBit")
   );
 });
-loader.lazyGetter(this, "ColumnFinBit", function() {
+loader.lazyGetter(this, "ColumnOpCode", function() {
   return createFactory(
-    require("devtools/client/netmonitor/src/components/messages/ColumnFinBit")
+    require("devtools/client/netmonitor/src/components/messages/ColumnOpCode")
+  );
+});
+loader.lazyGetter(this, "ColumnRetry", function() {
+  return createFactory(
+    require("devtools/client/netmonitor/src/components/messages/ColumnRetry")
+  );
+});
+loader.lazyGetter(this, "ColumnSize", function() {
+  return createFactory(
+    require("devtools/client/netmonitor/src/components/messages/ColumnSize")
   );
 });
 loader.lazyGetter(this, "ColumnTime", function() {
@@ -43,12 +58,15 @@ loader.lazyGetter(this, "ColumnTime", function() {
 });
 
 const COLUMN_COMPONENT_MAP = {
-  time: ColumnTime,
   data: ColumnData,
-  size: ColumnSize,
-  opCode: ColumnOpCode,
-  maskBit: ColumnMaskBit,
+  eventName: ColumnEventName,
   finBit: ColumnFinBit,
+  lastEventId: ColumnLastEventId,
+  maskBit: ColumnMaskBit,
+  opCode: ColumnOpCode,
+  retry: ColumnRetry,
+  size: ColumnSize,
+  time: ColumnTime,
 };
 
 /**

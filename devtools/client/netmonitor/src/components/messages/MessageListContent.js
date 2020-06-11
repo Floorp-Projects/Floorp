@@ -281,6 +281,14 @@ class MessageListContent extends Component {
       displayedMessages = messages;
     }
 
+    let connectionClosedMsg = CONNECTION_CLOSED_TEXT;
+    if (
+      closedConnectionDetails &&
+      closedConnectionDetails.code !== undefined &&
+      closedConnectionDetails.reason !== undefined
+    ) {
+      connectionClosedMsg += `: ${closedConnectionDetails.code} ${closedConnectionDetails.reason}`;
+    }
     return div(
       {},
       table(
@@ -356,7 +364,7 @@ class MessageListContent extends Component {
           {
             className: "msg-connection-closed-message",
           },
-          `${CONNECTION_CLOSED_TEXT}: ${closedConnectionDetails.code} ${closedConnectionDetails.reason}`
+          connectionClosedMsg
         ),
       hr({
         ref: "scrollAnchor",
