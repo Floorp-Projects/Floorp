@@ -16,37 +16,29 @@ class DXInterop2Device;
 class GLContext;
 class WGLLibrary;
 
-class SharedSurface_D3D11Interop : public SharedSurface {
+class SharedSurface_D3D11Interop final : public SharedSurface {
  public:
-  const GLuint mProdTex;
-  const GLuint mInteropFB;
-  const GLuint mInteropRB;
-  const RefPtr<DXInterop2Device> mInterop;
-  const HANDLE mLockHandle;
-  const RefPtr<ID3D11Texture2D> mTexD3D;
-  const HANDLE mDXGIHandle;
+  struct Data final {
+    const RefPtr<DXInterop2Device> interop;
+    HANDLE lockHandle;
+    RefPtr<ID3D11Texture2D> texD3D;
+    HANDLE dxgiHandle;
+    UniquePtr<Renderbuffer> interopRb;
+    UniquePtr<MozFramebuffer> interopFbIfNeedsIndirect;
+  };
+  const Data mData;
   const bool mNeedsFinish;
 
- protected:
-  bool mLockedForGL;
+ private:
+  bool mLockedForGL = false;
 
  public:
-  static UniquePtr<SharedSurface_D3D11Interop> Create(DXInterop2Device* interop,
-                                                      GLContext* gl,
-                                                      const gfx::IntSize& size,
-                                                      bool hasAlpha);
+  static UniquePtr<SharedSurface_D3D11Interop> Create(const SharedSurfaceDesc&,
+                                                      DXInterop2Device*);
 
-  static SharedSurface_D3D11Interop* Cast(SharedSurface* surf) {
-    MOZ_ASSERT(surf->mType == SharedSurfaceType::DXGLInterop2);
-    return (SharedSurface_D3D11Interop*)surf;
-  }
-
- protected:
-  SharedSurface_D3D11Interop(GLContext* gl, const gfx::IntSize& size,
-                             bool hasAlpha, GLuint prodTex, GLuint interopFB,
-                             GLuint interopRB, DXInterop2Device* interop,
-                             HANDLE lockHandle, ID3D11Texture2D* texD3D,
-                             HANDLE dxgiHandle);
+ private:
+  SharedSurface_D3D11Interop(const SharedSurfaceDesc&,
+                             UniquePtr<MozFramebuffer>&& fbForDrawing, Data&&);
 
  public:
   virtual ~SharedSurface_D3D11Interop();
@@ -57,41 +49,26 @@ class SharedSurface_D3D11Interop : public SharedSurface {
   void ProducerAcquireImpl() override;
   void ProducerReleaseImpl() override;
 
-  GLuint ProdRenderbuffer() override {
-    MOZ_ASSERT(!mProdTex);
-    return mInteropRB;
-  }
-
-  GLuint ProdTexture() override {
-    MOZ_ASSERT(mProdTex);
-    return mProdTex;
-  }
-
-  bool ToSurfaceDescriptor(
-      layers::SurfaceDescriptor* const out_descriptor) override;
+  Maybe<layers::SurfaceDescriptor> ToSurfaceDescriptor() override;
 };
 
 class SurfaceFactory_D3D11Interop : public SurfaceFactory {
  public:
   const RefPtr<DXInterop2Device> mInterop;
 
-  static UniquePtr<SurfaceFactory_D3D11Interop> Create(
-      GLContext* gl, const SurfaceCaps& caps,
-      layers::LayersIPCChannel* allocator, const layers::TextureFlags& flags);
+  static UniquePtr<SurfaceFactory_D3D11Interop> Create(GLContext& gl);
 
  protected:
-  SurfaceFactory_D3D11Interop(GLContext* gl, const SurfaceCaps& caps,
-                              layers::LayersIPCChannel* allocator,
-                              const layers::TextureFlags& flags,
+  SurfaceFactory_D3D11Interop(const PartialSharedSurfaceDesc&,
                               DXInterop2Device* interop);
 
  public:
   virtual ~SurfaceFactory_D3D11Interop();
 
  protected:
-  UniquePtr<SharedSurface> CreateShared(const gfx::IntSize& size) override {
-    bool hasAlpha = mReadCaps.alpha;
-    return SharedSurface_D3D11Interop::Create(mInterop, mGL, size, hasAlpha);
+  UniquePtr<SharedSurface> CreateSharedImpl(
+      const SharedSurfaceDesc& desc) override {
+    return SharedSurface_D3D11Interop::Create(desc, mInterop);
   }
 };
 

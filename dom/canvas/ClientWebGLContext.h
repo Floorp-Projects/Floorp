@@ -45,10 +45,6 @@ namespace dom {
 class WebGLChild;
 }
 
-namespace layers {
-class SharedSurfaceTextureClient;
-}
-
 namespace webgl {
 class TexUnpackBlob;
 class TexUnpackBytes;
@@ -698,7 +694,6 @@ struct TexImageSourceAdapter final : public TexImageSource {
 class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
                                  public nsWrapperCache,
                                  public SupportsWeakPtr<ClientWebGLContext> {
-  friend class WebGLContextUserData;
   friend class webgl::ObjectJS;
   friend class webgl::ProgramKeepAlive;
   friend class webgl::ShaderKeepAlive;
@@ -724,6 +719,13 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
  public:
   const bool mIsWebGL2;
 
+ private:
+  bool mIsCanvasDirty = false;
+  uvec2 mRequestedSize = {};
+
+  RefPtr<gfx::DataSourceSurface> mFrontBufferSnapshot;
+
+ public:
   explicit ClientWebGLContext(bool webgl2);
 
  private:
@@ -768,7 +770,12 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
   void ThrowEvent_WebGLContextCreationError(const std::string&) const;
 
  public:
-  void MarkCanvasDirty() { Invalidate(); }
+  void MarkCanvasDirty();
+
+  void MarkContextClean() override {}
+
+  void OnBeforePaintTransaction() override;
+  ClientWebGLContext* AsWebgl() override { return this; }
 
   mozilla::dom::WebGLChild* GetChild() const {
     if (!mNotLost) return nullptr;
@@ -905,7 +912,6 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
   bool IsContextCleanForFrameCapture() override {
     return !mCapturedFrameInvalidated;
   }
-  void MarkContextClean() override { mInvalidated = false; }
   void MarkContextCleanForFrameCapture() override {
     mCapturedFrameInvalidated = false;
   }
@@ -964,13 +970,11 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
 
   // ------
 
-  void Invalidate();
-
  protected:
   layers::LayersBackend GetCompositorBackendType() const;
 
-  bool mInvalidated = false;
   bool mCapturedFrameInvalidated = false;
+  UniquePtr<layers::SurfaceDescriptor> mFrontBufferDesc;
 
   // -------------------------------------------------------------------------
   // WebGLRenderingContext Basic Properties and Methods
@@ -992,22 +996,19 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
   void GetContextAttributes(dom::Nullable<dom::WebGLContextAttributes>& retval);
 
   void Present();
-
-  RefPtr<layers::SharedSurfaceTextureClient> GetVRFrame(
-      const WebGLFramebufferJS*) const;
-  void ClearVRFrame() const;
+  Maybe<layers::SurfaceDescriptor> GetFrontBuffer(layers::TextureType);
+  RefPtr<gfx::SourceSurface> GetFrontBufferSnapshot() override;
 
  private:
+  RefPtr<gfx::DataSourceSurface> BackBufferSnapshot();
+  void DoReadPixels(const webgl::ReadPixelsDesc&, Range<uint8_t>) const;
   uvec2 DrawingBufferSize();
-
-  ICRData mSurfaceInfo;
 
   void AfterDrawCall() {
     if (!mNotLost) return;
     const auto& state = State();
-    const bool isBackbuffer = !state.mBoundDrawFb;
-    if (isBackbuffer) {
-      Invalidate();
+    if (!state.mBoundDrawFb) {
+      MarkCanvasDirty();
     }
   }
 
@@ -1699,7 +1700,6 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
                   unpackType, anySrc, out_error);
   }
 
-  // =========================================================================
   // ------------------------ Uniforms and attributes ------------------------
  public:
   void GetVertexAttrib(JSContext* cx, GLuint index, GLenum pname,
