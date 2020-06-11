@@ -54,9 +54,6 @@ pub enum ValueConversion {
 
     /// Unsigned zero-extend value to the required type.
     Uext(Type),
-
-    /// Pass value by pointer of given integer type.
-    Pointer(Type),
 }
 
 impl ValueConversion {
@@ -66,7 +63,7 @@ impl ValueConversion {
             Self::IntSplit => ty.half_width().expect("Integer type too small to split"),
             Self::VectorSplit => ty.half_vector().expect("Not a vector"),
             Self::IntBits => Type::int(ty.bits()).expect("Bad integer size"),
-            Self::Sext(nty) | Self::Uext(nty) | Self::Pointer(nty) => nty,
+            Self::Sext(nty) | Self::Uext(nty) => nty,
         }
     }
 
@@ -76,11 +73,6 @@ impl ValueConversion {
             Self::IntSplit | Self::VectorSplit => true,
             _ => false,
         }
-    }
-
-    /// Is this a conversion to pointer?
-    pub fn is_pointer(self) -> bool {
-        matches!(self, Self::Pointer(_))
     }
 }
 
@@ -118,16 +110,10 @@ pub fn legalize_args<AA: ArgAssigner>(args: &[AbiParam], aa: &mut AA) -> Option<
             }
             // Split this argument into two smaller ones. Then revisit both.
             ArgAction::Convert(conv) => {
-                debug_assert!(
-                    !arg.legalized_to_pointer,
-                    "No more conversions allowed after conversion to pointer"
-                );
                 let value_type = conv.apply(arg.value_type);
+                let new_arg = AbiParam { value_type, ..arg };
                 args.to_mut()[argno].value_type = value_type;
-                if conv.is_pointer() {
-                    args.to_mut()[argno].legalized_to_pointer = true;
-                } else if conv.is_split() {
-                    let new_arg = AbiParam { value_type, ..arg };
+                if conv.is_split() {
                     args.to_mut().insert(argno + 1, new_arg);
                 }
             }
@@ -165,10 +151,6 @@ pub fn legalize_args<AA: ArgAssigner>(args: &[AbiParam], aa: &mut AA) -> Option<
 pub fn legalize_abi_value(have: Type, arg: &AbiParam) -> ValueConversion {
     let have_bits = have.bits();
     let arg_bits = arg.value_type.bits();
-
-    if arg.legalized_to_pointer {
-        return ValueConversion::Pointer(arg.value_type);
-    }
 
     match have_bits.cmp(&arg_bits) {
         // We have fewer bits than the ABI argument.
@@ -243,13 +225,6 @@ mod tests {
         assert_eq!(
             legalize_abi_value(types::F64, &arg),
             ValueConversion::IntBits
-        );
-
-        // Value is passed by reference
-        arg.legalized_to_pointer = true;
-        assert_eq!(
-            legalize_abi_value(types::F64, &arg),
-            ValueConversion::Pointer(types::I32)
         );
     }
 }

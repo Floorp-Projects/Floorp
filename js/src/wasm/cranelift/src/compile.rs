@@ -28,7 +28,7 @@ use cranelift_codegen::binemit::{
 use cranelift_codegen::entity::EntityRef;
 use cranelift_codegen::ir::{
     self, constant::ConstantOffset, stackslot::StackSize, ExternalName, JumpTable, SourceLoc,
-    TrapCode, Type,
+    TrapCode,
 };
 use cranelift_codegen::isa::TargetIsa;
 use cranelift_codegen::CodegenResult;
@@ -91,14 +91,12 @@ impl CompiledFunc {
 pub struct BatchCompiler<'static_env, 'module_env> {
     // Attributes that are constant accross multiple compilations.
     static_environ: &'static_env bindings::StaticEnvironment,
-
     environ: bindings::ModuleEnvironment<'module_env>,
-    module_state: ModuleTranslationState,
-
     isa: Box<dyn TargetIsa>,
 
     // Stateless attributes.
     func_translator: FuncTranslator,
+    dummy_module_state: ModuleTranslationState,
 
     // Mutable attributes.
     /// Cranelift overall context.
@@ -126,7 +124,8 @@ impl<'static_env, 'module_env> BatchCompiler<'static_env, 'module_env> {
             environ,
             isa,
             func_translator: FuncTranslator::new(),
-            module_state: create_module_translation_state(&environ)?,
+            // TODO for Cranelift to support multi-value, feed it the real type section here.
+            dummy_module_state: ModuleTranslationState::new(),
             context: Context::new(),
             trap_relocs: Traps::new(),
             trans_env,
@@ -159,7 +158,7 @@ impl<'static_env, 'module_env> BatchCompiler<'static_env, 'module_env> {
         self.context.func.name = wasm_function_name(index);
 
         self.func_translator.translate(
-            &self.module_state,
+            &self.dummy_module_state,
             func.bytecode(),
             func.offset_in_module as usize,
             &mut self.context.func,
@@ -299,27 +298,6 @@ impl<'static_env, 'module_env> fmt::Display for BatchCompiler<'static_env, 'modu
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.context.func.display(self.isa.as_ref()))
     }
-}
-
-fn create_module_translation_state(
-    env: &bindings::ModuleEnvironment,
-) -> WasmResult<ModuleTranslationState> {
-    let num_sig = env.num_types();
-
-    let mut arg_vecs = vec![];
-    let mut result_vecs = vec![];
-    for i in 0..num_sig {
-        let sig = env.type_(i);
-        arg_vecs.push(sig.args()?);
-        result_vecs.push(sig.results()?);
-    }
-    let types: Vec<(&[Type], &[Type])> = arg_vecs
-        .iter()
-        .zip(result_vecs.iter())
-        .map(|(args, results)| (&args[..], &results[..]))
-        .collect();
-
-    ModuleTranslationState::from_func_sigs(&types[..])
 }
 
 /// Create a Cranelift function name representing a WebAssembly function with `index`.
@@ -538,7 +516,7 @@ impl TrapSink for Traps {
                 // entries, so we don't have to.
                 return;
             }
-            HeapOutOfBounds | TableOutOfBounds => bindings::Trap::OutOfBounds,
+            HeapOutOfBounds | OutOfBounds | TableOutOfBounds => bindings::Trap::OutOfBounds,
             IndirectCallToNull => bindings::Trap::IndirectCallToNull,
             BadSignature => bindings::Trap::IndirectCallBadSig,
             IntegerOverflow => bindings::Trap::IntegerOverflow,

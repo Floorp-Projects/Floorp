@@ -1,10 +1,10 @@
 use crate::checker::Inst as CheckerInst;
 use crate::checker::{CheckerContext, CheckerErrors};
 use crate::data_structures::{
-    BlockIx, InstIx, InstPoint, RangeFrag, RealReg, RealRegUniverse, SpillSlot, TypedIxVec,
-    VirtualReg, Writable,
+    BlockIx, InstIx, InstPoint, RangeFrag, RangeFragIx, RealReg, RealRegUniverse, RegUsageMapper,
+    SpillSlot, TypedIxVec, VirtualReg, Writable,
 };
-use crate::{reg_maps::VrangeRegUsageMapper, Function, RegAllocError};
+use crate::{Function, RegAllocError};
 use log::trace;
 
 use std::result::Result;
@@ -95,7 +95,8 @@ impl InstToInsertAndPoint {
 #[inline(never)]
 fn map_vregs_to_rregs<F: Function>(
     func: &mut F,
-    frag_map: Vec<(RangeFrag, VirtualReg, RealReg)>,
+    frag_map: Vec<(RangeFragIx, VirtualReg, RealReg)>,
+    frag_env: &TypedIxVec<RangeFragIx, RangeFrag>,
     insts_to_add: &Vec<InstToInsertAndPoint>,
     iixs_to_nop_out: &Vec<InstIx>,
     reg_universe: &RealRegUniverse,
@@ -126,15 +127,20 @@ fn map_vregs_to_rregs<F: Function>(
     let mut frag_maps_by_end = frag_map;
 
     // -------- Edit the instruction stream --------
-    frag_maps_by_start.sort_unstable_by(|(frag, _, _), (other_frag, _, _)| {
-        frag.first
-            .iix()
-            .partial_cmp(&other_frag.first.iix())
+    frag_maps_by_start.sort_unstable_by(|(frag_ix, _, _), (other_frag_ix, _, _)| {
+        frag_env[*frag_ix]
+            .first
+            .iix
+            .partial_cmp(&frag_env[*other_frag_ix].first.iix)
             .unwrap()
     });
 
-    frag_maps_by_end.sort_unstable_by(|(frag, _, _), (other_frag, _, _)| {
-        frag.last.iix().partial_cmp(&other_frag.last.iix()).unwrap()
+    frag_maps_by_end.sort_unstable_by(|(frag_ix, _, _), (other_frag_ix, _, _)| {
+        frag_env[*frag_ix]
+            .last
+            .iix
+            .partial_cmp(&frag_env[*other_frag_ix].last.iix)
+            .unwrap()
     });
 
     let mut cursor_starts = 0;
@@ -146,37 +152,28 @@ fn map_vregs_to_rregs<F: Function>(
 
     // Allocate the "mapper" data structure that we update incrementally and
     // pass to instruction reg-mapping routines to query.
-    let mut mapper = VrangeRegUsageMapper::new(vreg_estimate);
+    let mut mapper = RegUsageMapper::new(vreg_estimate);
 
     fn is_sane(frag: &RangeFrag) -> bool {
         // "Normal" frag (unrelated to spilling).  No normal frag may start or
         // end at a .s or a .r point.
-        if frag.first.pt().is_use_or_def()
-            && frag.last.pt().is_use_or_def()
-            && frag.first.iix() <= frag.last.iix()
+        if frag.first.pt.is_use_or_def()
+            && frag.last.pt.is_use_or_def()
+            && frag.first.iix <= frag.last.iix
         {
             return true;
         }
         // A spill-related ("bridge") frag.  There are three possibilities,
         // and they correspond exactly to `BridgeKind`.
-        if frag.first.pt().is_reload()
-            && frag.last.pt().is_use()
-            && frag.last.iix() == frag.first.iix()
-        {
+        if frag.first.pt.is_reload() && frag.last.pt.is_use() && frag.last.iix == frag.first.iix {
             // BridgeKind::RtoU
             return true;
         }
-        if frag.first.pt().is_reload()
-            && frag.last.pt().is_spill()
-            && frag.last.iix() == frag.first.iix()
-        {
+        if frag.first.pt.is_reload() && frag.last.pt.is_spill() && frag.last.iix == frag.first.iix {
             // BridgeKind::RtoS
             return true;
         }
-        if frag.first.pt().is_def()
-            && frag.last.pt().is_spill()
-            && frag.last.iix() == frag.first.iix()
-        {
+        if frag.first.pt.is_def() && frag.last.pt.is_spill() && frag.last.iix == frag.first.iix {
             // BridgeKind::DtoS
             return true;
         }
@@ -192,26 +189,32 @@ fn map_vregs_to_rregs<F: Function>(
 
         // advance [cursorStarts, +num_starts) to the group for insn_ix
         while cursor_starts < frag_maps_by_start.len()
-            && frag_maps_by_start[cursor_starts].0.first.iix() < insn_ix
+            && frag_env[frag_maps_by_start[cursor_starts].0].first.iix < insn_ix
         {
             cursor_starts += 1;
         }
         let mut num_starts = 0;
         while cursor_starts + num_starts < frag_maps_by_start.len()
-            && frag_maps_by_start[cursor_starts + num_starts].0.first.iix() == insn_ix
+            && frag_env[frag_maps_by_start[cursor_starts + num_starts].0]
+                .first
+                .iix
+                == insn_ix
         {
             num_starts += 1;
         }
 
         // advance [cursorEnds, +num_ends) to the group for insn_ix
         while cursor_ends < frag_maps_by_end.len()
-            && frag_maps_by_end[cursor_ends].0.last.iix() < insn_ix
+            && frag_env[frag_maps_by_end[cursor_ends].0].last.iix < insn_ix
         {
             cursor_ends += 1;
         }
         let mut num_ends = 0;
         while cursor_ends + num_ends < frag_maps_by_end.len()
-            && frag_maps_by_end[cursor_ends + num_ends].0.last.iix() == insn_ix
+            && frag_env[frag_maps_by_end[cursor_ends + num_ends].0]
+                .last
+                .iix
+                == insn_ix
         {
             num_ends += 1;
         }
@@ -232,15 +235,15 @@ fn map_vregs_to_rregs<F: Function>(
         // Sanity check all frags.  In particular, reload and spill frags are
         // heavily constrained.  No functional effect.
         for j in cursor_starts..cursor_starts + num_starts {
-            let frag = &frag_maps_by_start[j].0;
+            let frag = &frag_env[frag_maps_by_start[j].0];
             // "It really starts here, as claimed."
-            debug_assert!(frag.first.iix() == insn_ix);
+            debug_assert!(frag.first.iix == insn_ix);
             debug_assert!(is_sane(&frag));
         }
         for j in cursor_ends..cursor_ends + num_ends {
-            let frag = &frag_maps_by_end[j].0;
+            let frag = &frag_env[frag_maps_by_end[j].0];
             // "It really ends here, as claimed."
-            debug_assert!(frag.last.iix() == insn_ix);
+            debug_assert!(frag.last.iix == insn_ix);
             debug_assert!(is_sane(frag));
         }
 
@@ -281,8 +284,8 @@ fn map_vregs_to_rregs<F: Function>(
         //   add frags starting at I.r
         //   no frags should end at I.r (it's a reload insn)
         for j in cursor_starts..cursor_starts + num_starts {
-            let frag = &frag_maps_by_start[j].0;
-            if frag.first.pt().is_reload() {
+            let frag = &frag_env[frag_maps_by_start[j].0];
+            if frag.first.pt.is_reload() {
                 //////// STARTS at I.r
                 mapper.set_direct(frag_maps_by_start[j].1, Some(frag_maps_by_start[j].2));
             }
@@ -293,15 +296,15 @@ fn map_vregs_to_rregs<F: Function>(
         //   map_uses := map
         //   remove frags ending at I.u
         for j in cursor_starts..cursor_starts + num_starts {
-            let frag = &frag_maps_by_start[j].0;
-            if frag.first.pt().is_use() {
+            let frag = &frag_env[frag_maps_by_start[j].0];
+            if frag.first.pt.is_use() {
                 //////// STARTS at I.u
                 mapper.set_direct(frag_maps_by_start[j].1, Some(frag_maps_by_start[j].2));
             }
         }
         for j in cursor_ends..cursor_ends + num_ends {
-            let frag = &frag_maps_by_end[j].0;
-            if frag.last.pt().is_use() {
+            let frag = &frag_env[frag_maps_by_end[j].0];
+            if frag.last.pt.is_use() {
                 //////// ENDS at I.U
                 mapper.set_overlay(frag_maps_by_end[j].1, None);
             }
@@ -314,8 +317,8 @@ fn map_vregs_to_rregs<F: Function>(
         //   map_defs := map
         //   remove frags ending at I.d
         for j in cursor_starts..cursor_starts + num_starts {
-            let frag = &frag_maps_by_start[j].0;
-            if frag.first.pt().is_def() {
+            let frag = &frag_env[frag_maps_by_start[j].0];
+            if frag.first.pt.is_def() {
                 //////// STARTS at I.d
                 mapper.set_overlay(frag_maps_by_start[j].1, Some(frag_maps_by_start[j].2));
             }
@@ -354,8 +357,8 @@ fn map_vregs_to_rregs<F: Function>(
 
         mapper.merge_overlay();
         for j in cursor_ends..cursor_ends + num_ends {
-            let frag = &frag_maps_by_end[j].0;
-            if frag.last.pt().is_def() {
+            let frag = &frag_env[frag_maps_by_end[j].0];
+            if frag.last.pt.is_def() {
                 //////// ENDS at I.d
                 mapper.set_direct(frag_maps_by_end[j].1, None);
             }
@@ -365,8 +368,8 @@ fn map_vregs_to_rregs<F: Function>(
         //   no frags should start at I.s (it's a spill insn)
         //   remove frags ending at I.s
         for j in cursor_ends..cursor_ends + num_ends {
-            let frag = &frag_maps_by_end[j].0;
-            if frag.last.pt().is_spill() {
+            let frag = &frag_env[frag_maps_by_end[j].0];
+            if frag.last.pt.is_spill() {
                 //////// ENDS at I.s
                 mapper.set_direct(frag_maps_by_end[j].1, None);
             }
@@ -392,7 +395,7 @@ fn map_vregs_to_rregs<F: Function>(
 // algorithm has asked us to add.
 
 #[inline(never)]
-pub(crate) fn add_spills_reloads_and_moves<F: Function>(
+fn add_spills_reloads_and_moves<F: Function>(
     func: &mut F,
     mut insts_to_add: Vec<InstToInsertAndPoint>,
 ) -> Result<
@@ -409,10 +412,6 @@ pub(crate) fn add_spills_reloads_and_moves<F: Function>(
     //
     // We also need to examine and update Func::blocks.  This is assumed to
     // be arranged in ascending order of the Block::start fields.
-    //
-    // Linear scan relies on the sort being stable here, so make sure to not
-    // use an unstable sort. See the comment in `resolve_moves_across blocks`
-    // in linear scan's code.
 
     insts_to_add.sort_by_key(|mem_move| mem_move.point);
 
@@ -479,7 +478,8 @@ pub(crate) fn edit_inst_stream<F: Function>(
     func: &mut F,
     insts_to_add: Vec<InstToInsertAndPoint>,
     iixs_to_nop_out: &Vec<InstIx>,
-    frag_map: Vec<(RangeFrag, VirtualReg, RealReg)>,
+    frag_map: Vec<(RangeFragIx, VirtualReg, RealReg)>,
+    frag_env: &TypedIxVec<RangeFragIx, RangeFrag>,
     reg_universe: &RealRegUniverse,
     use_checker: bool,
 ) -> Result<
@@ -493,6 +493,7 @@ pub(crate) fn edit_inst_stream<F: Function>(
     map_vregs_to_rregs(
         func,
         frag_map,
+        frag_env,
         &insts_to_add,
         iixs_to_nop_out,
         reg_universe,

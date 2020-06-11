@@ -147,9 +147,6 @@ impl<T: ToFromU32> UnionFind<T> {
     }
 }
 
-//=============================================================================
-// UnionFindEquivClasses
-
 // This is a compact representation for all the equivalence classes in a
 // `UnionFind`, that can be constructed in more-or-less linear time (meaning,
 // O(universe size), and allows iteration over the elements of each
@@ -348,32 +345,6 @@ impl<T: ToFromU32> UnionFind<T> {
     }
 }
 
-impl<T: ToFromU32> UnionFindEquivClasses<T> {
-    // Indicates whether `item1` and `item2` are in the same equivalence
-    // class.  If either falls outside the "universe", returns `None`.
-    pub fn in_same_equivalence_class(&self, item1: T, item2: T) -> Option<bool> {
-        let mut item1num = ToFromU32::to_u32(item1) as usize;
-        let mut item2num = ToFromU32::to_u32(item2) as usize;
-        // If either item is outside our "universe", say we don't know.
-        if item1num >= self.heads.len() || item2num >= self.heads.len() {
-            return None;
-        }
-        // Ensure that `item1num` and `item2num` both point at class leaders.
-        if (self.heads[item1num] & 0x8000_0000) == 0 {
-            item1num = self.heads[item1num] as usize;
-        }
-        if (self.heads[item2num] & 0x8000_0000) == 0 {
-            item2num = self.heads[item2num] as usize;
-        }
-        debug_assert!((self.heads[item1num] & 0x8000_0000) == 0x8000_0000);
-        debug_assert!((self.heads[item2num] & 0x8000_0000) == 0x8000_0000);
-        Some(item1num == item2num)
-    }
-}
-
-//=============================================================================
-// UnionFindEquivClassElemsIter
-
 // We may want to find the equivalence class for some given element, and
 // iterate through its elements.  This iterator provides that.
 
@@ -460,8 +431,7 @@ impl<'a, T: ToFromU32> Iterator for UnionFindEquivClassLeadersIter<'a, T> {
     }
 }
 
-//=============================================================================
-// Testing machinery for UnionFind
+// ====== Testing machinery for UnionFind ======
 
 #[cfg(test)]
 mod union_find_test_utils {
@@ -503,16 +473,6 @@ mod union_find_test_utils {
             univ_expected.push(i);
         }
         assert!(univ_actual == univ_expected);
-    }
-    // Test that `in_same_equivalence_class` produces the expected results.
-    pub fn test_in_same_eclass(
-        eclasses: &UnionFindEquivClasses<u32>,
-        elem1: u32,
-        elem2: u32,
-        expected: Option<bool>,
-    ) {
-        assert!(eclasses.in_same_equivalence_class(elem1, elem2) == expected);
-        assert!(eclasses.in_same_equivalence_class(elem2, elem1) == expected);
     }
 }
 
@@ -566,46 +526,6 @@ fn test_union_find() {
     union_find_test_utils::test_eclass(&uf_eclasses, 6, &vec![6]);
     union_find_test_utils::test_eclass(&uf_eclasses, 7, &vec![7]);
     union_find_test_utils::test_leaders(UNIV_SIZE, &uf_eclasses, &vec![0, 1, 2, 6, 7]);
-    // At this point, also check the "in same equivalence class?" function.
-    union_find_test_utils::test_in_same_eclass(&uf_eclasses, 0, 0, Some(true));
-    union_find_test_utils::test_in_same_eclass(&uf_eclasses, 0, 1, Some(false));
-    union_find_test_utils::test_in_same_eclass(&uf_eclasses, 0, 2, Some(false));
-    union_find_test_utils::test_in_same_eclass(&uf_eclasses, 0, 3, Some(false));
-    union_find_test_utils::test_in_same_eclass(&uf_eclasses, 0, 4, Some(false));
-    union_find_test_utils::test_in_same_eclass(&uf_eclasses, 0, 5, Some(false));
-    union_find_test_utils::test_in_same_eclass(&uf_eclasses, 0, 6, Some(false));
-    union_find_test_utils::test_in_same_eclass(&uf_eclasses, 0, 7, Some(false));
-    union_find_test_utils::test_in_same_eclass(&uf_eclasses, 1, 1, Some(true));
-    union_find_test_utils::test_in_same_eclass(&uf_eclasses, 1, 2, Some(false));
-    union_find_test_utils::test_in_same_eclass(&uf_eclasses, 1, 3, Some(false));
-    union_find_test_utils::test_in_same_eclass(&uf_eclasses, 1, 4, Some(false));
-    union_find_test_utils::test_in_same_eclass(&uf_eclasses, 1, 5, Some(false));
-    union_find_test_utils::test_in_same_eclass(&uf_eclasses, 1, 6, Some(false));
-    union_find_test_utils::test_in_same_eclass(&uf_eclasses, 1, 7, Some(false));
-    union_find_test_utils::test_in_same_eclass(&uf_eclasses, 2, 2, Some(true));
-    union_find_test_utils::test_in_same_eclass(&uf_eclasses, 2, 3, Some(true));
-    union_find_test_utils::test_in_same_eclass(&uf_eclasses, 2, 4, Some(true));
-    union_find_test_utils::test_in_same_eclass(&uf_eclasses, 2, 5, Some(true));
-    union_find_test_utils::test_in_same_eclass(&uf_eclasses, 2, 6, Some(false));
-    union_find_test_utils::test_in_same_eclass(&uf_eclasses, 2, 7, Some(false));
-    union_find_test_utils::test_in_same_eclass(&uf_eclasses, 3, 3, Some(true));
-    union_find_test_utils::test_in_same_eclass(&uf_eclasses, 3, 4, Some(true));
-    union_find_test_utils::test_in_same_eclass(&uf_eclasses, 3, 5, Some(true));
-    union_find_test_utils::test_in_same_eclass(&uf_eclasses, 3, 6, Some(false));
-    union_find_test_utils::test_in_same_eclass(&uf_eclasses, 3, 7, Some(false));
-    union_find_test_utils::test_in_same_eclass(&uf_eclasses, 4, 4, Some(true));
-    union_find_test_utils::test_in_same_eclass(&uf_eclasses, 4, 5, Some(true));
-    union_find_test_utils::test_in_same_eclass(&uf_eclasses, 4, 6, Some(false));
-    union_find_test_utils::test_in_same_eclass(&uf_eclasses, 4, 7, Some(false));
-    union_find_test_utils::test_in_same_eclass(&uf_eclasses, 5, 5, Some(true));
-    union_find_test_utils::test_in_same_eclass(&uf_eclasses, 5, 6, Some(false));
-    union_find_test_utils::test_in_same_eclass(&uf_eclasses, 5, 7, Some(false));
-    union_find_test_utils::test_in_same_eclass(&uf_eclasses, 6, 6, Some(true));
-    union_find_test_utils::test_in_same_eclass(&uf_eclasses, 6, 7, Some(false));
-    union_find_test_utils::test_in_same_eclass(&uf_eclasses, 7, 7, Some(true));
-    union_find_test_utils::test_in_same_eclass(&uf_eclasses, 0, 8, None);
-    union_find_test_utils::test_in_same_eclass(&uf_eclasses, 8, 0, None);
-    union_find_test_utils::test_in_same_eclass(&uf_eclasses, 8, 8, None);
 
     uf.union(7, 1);
     uf_eclasses = uf.get_equiv_classes();

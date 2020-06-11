@@ -6,8 +6,7 @@
 //! [Wasmtime]: https://github.com/bytecodealliance/wasmtime
 
 use crate::environ::{
-    FuncEnvironment, GlobalVariable, ModuleEnvironment, ReturnMode, TargetEnvironment,
-    WasmFuncType, WasmResult,
+    FuncEnvironment, GlobalVariable, ModuleEnvironment, ReturnMode, TargetEnvironment, WasmResult,
 };
 use crate::func_translator::FuncTranslator;
 use crate::state::ModuleTranslationState;
@@ -434,7 +433,7 @@ impl<'dummy_environment> FuncEnvironment for DummyFuncEnvironment<'dummy_environ
     fn translate_table_grow(
         &mut self,
         mut pos: FuncCursor,
-        _table_index: TableIndex,
+        _table_index: u32,
         _delta: ir::Value,
         _init_value: ir::Value,
     ) -> WasmResult<ir::Value> {
@@ -444,7 +443,7 @@ impl<'dummy_environment> FuncEnvironment for DummyFuncEnvironment<'dummy_environ
     fn translate_table_get(
         &mut self,
         mut pos: FuncCursor,
-        _table_index: TableIndex,
+        _table_index: u32,
         _index: ir::Value,
     ) -> WasmResult<ir::Value> {
         Ok(pos.ins().null(self.reference_type()))
@@ -453,7 +452,7 @@ impl<'dummy_environment> FuncEnvironment for DummyFuncEnvironment<'dummy_environ
     fn translate_table_set(
         &mut self,
         _pos: FuncCursor,
-        _table_index: TableIndex,
+        _table_index: u32,
         _value: ir::Value,
         _index: ir::Value,
     ) -> WasmResult<()> {
@@ -477,7 +476,7 @@ impl<'dummy_environment> FuncEnvironment for DummyFuncEnvironment<'dummy_environ
     fn translate_table_fill(
         &mut self,
         _pos: FuncCursor,
-        _table_index: TableIndex,
+        _table_index: u32,
         _dst: ir::Value,
         _val: ir::Value,
         _len: ir::Value,
@@ -535,7 +534,7 @@ impl TargetEnvironment for DummyEnvironment {
 }
 
 impl<'data> ModuleEnvironment<'data> for DummyEnvironment {
-    fn declare_signature(&mut self, _wasm: &WasmFuncType, sig: ir::Signature) -> WasmResult<()> {
+    fn declare_signature(&mut self, sig: ir::Signature) -> WasmResult<()> {
         self.info.signatures.push(sig);
         Ok(())
     }

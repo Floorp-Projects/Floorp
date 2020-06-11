@@ -117,8 +117,9 @@ fn calc_preds_and_succs<F: Function>(
     // miss any edges.
     let mut succ_map = TypedIxVec::<BlockIx, SparseSetU<[BlockIx; 4]>>::new();
     for b in func.blocks() {
+        let succs = func.block_succs(b);
         let mut bix_set = SparseSetU::<[BlockIx; 4]>::empty();
-        for bix in func.block_succs(b).iter() {
+        for bix in succs.iter() {
             bix_set.insert(*bix);
         }
         succ_map.push(bix_set);
