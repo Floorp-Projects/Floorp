@@ -56,8 +56,7 @@ class _ExperimentManager {
   /**
    * Creates a targeting context with following filters:
    *
-   *   * `activeExperiments`: an object with an async function `get` which returns
-   *      an array of slugs of all the active experiments
+   *   * `activeExperiments`: an array of slugs of all the active experiments
    *   * `isFirstStartup`: a boolean indicating whether or not the current enrollment
    *      is performed during the first startup
    *
@@ -65,15 +64,16 @@ class _ExperimentManager {
    * @memberof _ExperimentManager
    */
   createTargetingContext() {
-    return {
+    let context = {
       isFirstStartup: FirstStartup.state === FirstStartup.IN_PROGRESS,
-      activeExperiments: {
-        get: async () => {
-          await this.store.ready();
-          return this.store.getAllActive().map(exp => exp.slug);
-        },
-      },
     };
+    Object.defineProperty(context, "activeExperiments", {
+      get: async () => {
+        await this.store.ready();
+        return this.store.getAllActive().map(exp => exp.slug);
+      },
+    });
+    return context;
   }
 
   /**
