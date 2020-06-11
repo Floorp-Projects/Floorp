@@ -11,11 +11,6 @@
     static get markup() {
       return `
       <html:link rel="stylesheet" href="chrome://global/skin/global.css"/>
-      <html:style>
-        :host([orient=vertical]) .panel-arrowcontent {
-          -moz-box-orient: vertical;
-        }
-      </html:style>
       <vbox class="panel-arrowcontainer" flex="1">
         <box class="panel-arrowbox" part="arrowbox">
           <image class="panel-arrow" part="arrow"/>
