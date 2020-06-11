@@ -45,7 +45,16 @@ class BoxModelInfo extends PureComponent {
     }
 
     return dom.div(
-      { className: "boxmodel-info" },
+      {
+        className: "boxmodel-info",
+        role: "region",
+        "aria-label": SHARED_L10N.getFormatStr(
+          "boxModelInfo.accessibleLabel",
+          width,
+          height,
+          position
+        ),
+      },
       dom.span(
         { className: "boxmodel-element-size" },
         SHARED_L10N.getFormatStr("dimensions", width, height)
