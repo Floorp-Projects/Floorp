@@ -894,7 +894,8 @@ static void GenerateJitEntryThrow(MacroAssembler& masm, unsigned frameSize) {
 // Helper function for allocating a BigInt and initializing it from an I64
 // in GenerateJitEntry and GenerateImportInterpExit. The return result is
 // written to scratch.
-static void GenerateBigIntInitialization(MacroAssembler& masm, unsigned offset,
+static void GenerateBigIntInitialization(MacroAssembler& masm,
+                                         unsigned bytesPushedByPrologue,
                                          Register64 input, Register scratch,
                                          const FuncExport* fe, Label* fail) {
 #if JS_BITS_PER_WORD == 32
@@ -909,8 +910,8 @@ static void GenerateBigIntInitialization(MacroAssembler& masm, unsigned offset,
   LiveRegisterSet save(regs.asLiveSet());
   masm.PushRegsInMask(save);
 
-  unsigned frameSize =
-      StackDecrementForCall(ABIStackAlignment, masm.framePushed() + offset, 0);
+  unsigned frameSize = StackDecrementForCall(
+      ABIStackAlignment, masm.framePushed() + bytesPushedByPrologue, 0);
   masm.reserveStack(frameSize);
   masm.assertStackAlignment(ABIStackAlignment);
 
@@ -1660,7 +1661,7 @@ using ToValue = bool;
 static void FillArgumentArrayForExit(
     MacroAssembler& masm, Register tls, unsigned funcImportIndex,
     const FuncType& funcType, unsigned argOffset,
-    unsigned offsetToCallerStackArgs, Register scratch, Register scratch2,
+    unsigned offsetFromFPToCallerStackArgs, Register scratch, Register scratch2,
     Register scratch3, ToValue toValue, Label* throwLabel) {
   MOZ_ASSERT(scratch != scratch2);
   MOZ_ASSERT(scratch != scratch3);
@@ -1692,7 +1693,7 @@ static void FillArgumentArrayForExit(
           GenPrintI64(DebugChannel::Import, masm, i->gpr64());
 
           if (toValue) {
-            GenerateBigIntInitialization(masm, offsetToCallerStackArgs,
+            GenerateBigIntInitialization(masm, offsetFromFPToCallerStackArgs,
                                          i->gpr64(), scratch, nullptr,
                                          throwLabel);
             masm.storeValue(JSVAL_TYPE_BIGINT, scratch, dst);
@@ -1723,7 +1724,7 @@ static void FillArgumentArrayForExit(
           GenPrintI64(DebugChannel::Import, masm, i->gpr64());
 
           if (toValue) {
-            GenerateBigIntInitialization(masm, offsetToCallerStackArgs,
+            GenerateBigIntInitialization(masm, offsetFromFPToCallerStackArgs,
                                          i->gpr64(), scratch, nullptr,
                                          throwLabel);
             masm.storeValue(JSVAL_TYPE_BIGINT, scratch, dst);
@@ -1781,8 +1782,8 @@ static void FillArgumentArrayForExit(
         break;
       }
       case ABIArg::Stack: {
-        Address src(masm.getStackPointer(),
-                    offsetToCallerStackArgs + i->offsetFromArgBase());
+        Address src(FramePointer,
+                    offsetFromFPToCallerStackArgs + i->offsetFromArgBase());
         if (toValue) {
           if (type == MIRType::Int32) {
             masm.load32(src, scratch);
@@ -1796,7 +1797,7 @@ static void FillArgumentArrayForExit(
 #endif
             masm.load64(src, scratch64);
             GenPrintI64(DebugChannel::Import, masm, scratch64);
-            GenerateBigIntInitialization(masm, offsetToCallerStackArgs,
+            GenerateBigIntInitialization(masm, offsetFromFPToCallerStackArgs,
                                          scratch64, scratch, nullptr,
                                          throwLabel);
             masm.storeValue(JSVAL_TYPE_BIGINT, scratch, dst);
@@ -1874,15 +1875,15 @@ static bool GenerateImportFunction(jit::MacroAssembler& masm,
   Register scratch = ABINonArgReg0;
 
   // Copy our frame's stack arguments to the callee frame's stack argument.
-  unsigned offsetToCallerStackArgs = sizeof(Frame) + masm.framePushed();
+  unsigned offsetFromFPToCallerStackArgs = sizeof(Frame);
   ArgTypeVector args(fi.funcType());
   for (ABIArgIter i(args); !i.done(); i++) {
     if (i->kind() != ABIArg::Stack) {
       continue;
     }
 
-    Address src(masm.getStackPointer(),
-                offsetToCallerStackArgs + i->offsetFromArgBase());
+    Address src(FramePointer,
+                offsetFromFPToCallerStackArgs + i->offsetFromArgBase());
     Address dst(masm.getStackPointer(), i->offsetFromArgBase());
     GenPrintf(DebugChannel::Import, masm,
               "calling exotic import function with arguments: ");
@@ -1974,14 +1975,14 @@ static bool GenerateImportInterpExit(MacroAssembler& masm, const FuncImport& fi,
                        offsets);
 
   // Fill the argument array.
-  unsigned offsetToCallerStackArgs = sizeof(Frame) + masm.framePushed();
+  unsigned offsetFromFPToCallerStackArgs = sizeof(Frame);
   Register scratch = ABINonArgReturnReg0;
   Register scratch2 = ABINonArgReturnReg1;
   // The scratch3 reg does not need to be non-volatile, but has to be
   // distinct from scratch & scratch2.
   Register scratch3 = ABINonVolatileReg;
   FillArgumentArrayForExit(masm, WasmTlsReg, funcImportIndex, fi.funcType(),
-                           argOffset, offsetToCallerStackArgs, scratch,
+                           argOffset, offsetFromFPToCallerStackArgs, scratch,
                            scratch2, scratch3, ToValue(false), throwLabel);
 
   // Prepare the arguments for the call to Instance::callImport_*.
@@ -2193,15 +2194,14 @@ static bool GenerateImportJitExit(MacroAssembler& masm, const FuncImport& fi,
   argOffset += sizeof(Value);
 
   // 5. Fill the arguments.
-  unsigned offsetToCallerStackArgs =
-      jitFramePushed + sizeof(Frame) + frameAlignExtra;
+  const uint32_t offsetFromFPToCallerStackArgs = sizeof(Frame);
   Register scratch = ABINonArgReturnReg1;   // Repeatedly clobbered
   Register scratch2 = ABINonArgReturnReg0;  // Reused as callee below
   // The scratch3 reg does not need to be non-volatile, but has to be
   // distinct from scratch & scratch2.
   Register scratch3 = ABINonVolatileReg;
   FillArgumentArrayForExit(masm, WasmTlsReg, funcImportIndex, fi.funcType(),
-                           argOffset, offsetToCallerStackArgs, scratch,
+                           argOffset, offsetFromFPToCallerStackArgs, scratch,
                            scratch2, scratch3, ToValue(true), throwLabel);
   argOffset += fi.funcType().args().length() * sizeof(Value);
   MOZ_ASSERT(argOffset == sizeOfThisAndArgs + sizeOfPreFrame + frameAlignExtra);
@@ -2504,7 +2504,7 @@ bool wasm::GenerateBuiltinThunk(MacroAssembler& masm, ABIFunctionType abiType,
   GenerateExitPrologue(masm, framePushed, exitReason, offsets);
 
   // Copy out and convert caller arguments, if needed.
-  unsigned offsetToCallerStackArgs = sizeof(Frame) + masm.framePushed();
+  unsigned offsetFromFPToCallerStackArgs = sizeof(Frame);
   Register scratch = ABINonArgReturnReg0;
   for (ABIArgIter<ABIFunctionArgs> i(args); !i.done(); i++) {
     if (i->argInRegister()) {
@@ -2524,8 +2524,8 @@ bool wasm::GenerateBuiltinThunk(MacroAssembler& masm, ABIFunctionType abiType,
       continue;
     }
 
-    Address src(masm.getStackPointer(),
-                offsetToCallerStackArgs + i->offsetFromArgBase());
+    Address src(FramePointer,
+                offsetFromFPToCallerStackArgs + i->offsetFromArgBase());
     Address dst(masm.getStackPointer(), i->offsetFromArgBase());
     StackCopy(masm, i.mirType(), scratch, src, dst);
   }
