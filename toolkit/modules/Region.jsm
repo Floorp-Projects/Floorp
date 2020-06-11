@@ -28,7 +28,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
 
 XPCOMUtils.defineLazyPreferenceGetter(
   this,
-  "regionFetchTimeout",
+  "networkTimeout",
   "browser.region.timeout",
   5000
 );
@@ -55,9 +55,6 @@ const REGION_PREF = "browser.search.region";
 class RegionDetector {
   // Keep track of the wifi data across listener events.
   wifiDataPromise = null;
-  // Store the AbortController for the geolocation requests so we
-  // can abort the request on timeout.
-  fetchController = null;
   // Topic for Observer events fired by Region.jsm.
   REGION_TOPIC = "browser-region";
   // Verb for event fired when we update the region.
@@ -104,10 +101,7 @@ class RegionDetector {
     let result = null;
 
     try {
-      result = await Promise.race([
-        this._getRegion(),
-        timeout(regionFetchTimeout),
-      ]);
+      result = await this._getRegion();
     } catch (err) {
       telemetryResult = this.TELEMETRY[err.message] || this.TELEMETRY.ERROR;
       log.error("Failed to fetch region", err);
@@ -221,11 +215,9 @@ class RegionDetector {
    */
   async _getRegion() {
     log.info("_getRegion called");
-    this.fetchController = new AbortController();
     let fetchOpts = {
       headers: { "Content-Type": "application/json" },
       credentials: "omit",
-      signal: this.fetchController.signal,
     };
     if (wifiScanningEnabled) {
       let wifiData = await this._fetchWifiData();
@@ -244,9 +236,8 @@ class RegionDetector {
     }
 
     try {
-      let req = await fetch(url, fetchOpts);
+      let req = await this._fetchTimeout(url, fetchOpts, networkTimeout);
       let res = await req.json();
-      this.fetchController = null;
       log.info("_getRegion returning ", res.country_code);
       return res.country_code;
     } catch (err) {
@@ -256,14 +247,55 @@ class RegionDetector {
   }
 
   /**
-   * Implement the timeout for region requests. This will be run for
-   * all region requests, but the error will only be returned if it
-   * completes first.
+   * Gets the users current location using the same reverse IP
+   * request that is used for GeoLocation requests.
+   *
+   * @returns {Object} location
+   *   Object representing the user location, with a location key
+   *   that contains the lat / lng coordinates.
    */
-  async _timeout() {
-    await timeout(regionFetchTimeout);
-    if (this.fetchController) {
-      this.fetchController.abort();
+  async _getLocation() {
+    log.info("_getLocation called");
+    let fetchOpts = { headers: { "Content-Type": "application/json" } };
+    let url = Services.urlFormatter.formatURLPref("geo.provider.network.url");
+    let req = await this._fetchTimeout(url, fetchOpts, networkTimeout);
+    let result = await req.json();
+    log.info("_getLocation returning", result);
+    return result;
+  }
+
+  /**
+   * A wrapper around fetch that implements a timeout, will throw
+   * a TIMEOUT error if the request is not completed in time.
+   *
+   * @param {String} url
+   *   The time url to fetch.
+   * @param {Object} opts
+   *   The options object passed to the call to fetch.
+   * @param {int} timeout
+   *   The time in ms to wait for the request to complete.
+   */
+  async _fetchTimeout(url, opts, timeout) {
+    let controller = new AbortController();
+    opts.signal = controller.signal;
+    return Promise.race([fetch(url, opts), this._timeout(timeout, controller)]);
+  }
+
+  /**
+   * Implement the timeout for network requests. This will be run for
+   * all network requests, but the error will only be returned if it
+   * completes first.
+   *
+   * @param {int} timeout
+   *   The time in ms to wait for the request to complete.
+   * @param {Object} controller
+   *   The AbortController passed to the fetch request that
+   *   allows us to abort the request.
+   */
+  async _timeout(timeout, controller) {
+    await new Promise(resolve => setTimeout(resolve, timeout));
+    if (controller) {
+      controller.abort();
     }
     throw new Error("TIMEOUT");
   }
@@ -301,10 +333,6 @@ class RegionDetector {
 
 let Region = new RegionDetector();
 Region.init();
-
-function timeout(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
 
 // A method that tries to determine if this user is in a US geography.
 function isUSTimezone() {
