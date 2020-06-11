@@ -16,49 +16,54 @@ BEGIN_QUOTA_NAMESPACE
 class UsageInfo final {
  public:
   void Append(const UsageInfo& aUsageInfo) {
-    IncrementUsage(mDatabaseUsage, aUsageInfo.mDatabaseUsage);
-    IncrementUsage(mFileUsage, aUsageInfo.mFileUsage);
+    mDatabaseUsage += aUsageInfo.mDatabaseUsage;
+    mFileUsage += aUsageInfo.mFileUsage;
   }
 
   void AppendToDatabaseUsage(const Maybe<uint64_t>& aUsage) {
-    IncrementUsage(mDatabaseUsage, aUsage);
+    mDatabaseUsage += aUsage;
   }
 
   void AppendToFileUsage(const Maybe<uint64_t>& aUsage) {
-    IncrementUsage(mFileUsage, aUsage);
+    mFileUsage += aUsage;
   }
 
-  const Maybe<uint64_t>& FileUsage() const { return mFileUsage; }
+  Maybe<uint64_t> FileUsage() const { return mFileUsage.GetValue(); }
 
-  Maybe<uint64_t> TotalUsage() {
-    Maybe<uint64_t> totalUsage;
+  Maybe<uint64_t> TotalUsage() const { return mDatabaseUsage + mFileUsage; }
 
-    IncrementUsage(totalUsage, mDatabaseUsage);
-    IncrementUsage(totalUsage, mFileUsage);
+  struct Usage {
+    MOZ_IMPLICIT Usage(Maybe<uint64_t> aValue = Nothing{}) : mValue(aValue) {}
 
-    return totalUsage;
-  }
+    MOZ_IMPLICIT operator Maybe<uint64_t>() const { return mValue; }
 
-  static void IncrementUsage(Maybe<uint64_t>& aUsage,
-                             const Maybe<uint64_t>& aDelta) {
-    if (aDelta.isNothing()) {
-      return;
+    Maybe<uint64_t> GetValue() const { return mValue; }
+
+    Usage& operator+=(const Usage aDelta) {
+      if (aDelta.mValue.isSome()) {
+        CheckedUint64 value = mValue.valueOr(0);
+
+        value += aDelta.mValue.value();
+
+        mValue = Some(value.isValid() ? value.value() : UINT64_MAX);
+      }
+
+      return *this;
     }
 
-    CheckedUint64 value = aUsage.valueOr(0);
-
-    value += aDelta.value();
-
-    if (value.isValid()) {
-      aUsage = Some(value.value());
-    } else {
-      aUsage = Some(UINT64_MAX);
+    Usage operator+(const Usage aDelta) const {
+      Usage res = *this;
+      res += aDelta;
+      return res;
     }
-  }
+
+   private:
+    Maybe<uint64_t> mValue;
+  };
 
  private:
-  Maybe<uint64_t> mDatabaseUsage;
-  Maybe<uint64_t> mFileUsage;
+  Usage mDatabaseUsage;
+  Usage mFileUsage;
 };
 
 END_QUOTA_NAMESPACE

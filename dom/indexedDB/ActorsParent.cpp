@@ -16841,7 +16841,7 @@ nsresult FileManager::GetUsage(nsIFile* aDirectory, Maybe<uint64_t>& aUsage) {
     return rv;
   }
 
-  Maybe<uint64_t> usage;
+  UsageInfo::Usage usage;
 
   nsCOMPtr<nsIFile> file;
   while (NS_SUCCEEDED((rv = entries->GetNextFile(getter_AddRefs(file)))) &&
@@ -16864,7 +16864,7 @@ nsresult FileManager::GetUsage(nsIFile* aDirectory, Maybe<uint64_t>& aUsage) {
         return rv;
       }
 
-      UsageInfo::IncrementUsage(usage, Some(uint64_t(fileSize)));
+      usage += Some(uint64_t(fileSize));
 
       continue;
     }
