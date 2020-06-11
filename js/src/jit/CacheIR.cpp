@@ -5314,6 +5314,32 @@ AttachDecision CallIRGenerator::tryAttachGuardToClass(HandleFunction callee,
   return AttachDecision::Attach;
 }
 
+AttachDecision CallIRGenerator::tryAttachHasClass(HandleFunction callee,
+                                                  const JSClass* clasp) {
+  // Need a single object argument.
+  if (argc_ != 1 || !args_[0].isObject()) {
+    return AttachDecision::NoAction;
+  }
+
+  // Initialize the input operand.
+  Int32OperandId argcId(writer.setInputOperandId(0));
+
+  // Guard callee is the 'IsXXXObject' native function.
+  emitNativeCalleeGuard(callee);
+
+  // Perform the Class check.
+  ValOperandId argId = writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
+  ObjOperandId objId = writer.guardToObject(argId);
+  writer.hasClassResult(objId, clasp);
+
+  // Return without type monitoring, because this always returns a boolean.
+  writer.returnFromIC();
+  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
+
+  trackAttached("HasClass");
+  return AttachDecision::Attach;
+}
+
 AttachDecision CallIRGenerator::tryAttachStringChar(HandleFunction callee,
                                                     StringChar kind) {
   // Need one argument.
@@ -5980,6 +6006,10 @@ AttachDecision CallIRGenerator::tryAttachInlinableNative(
     case InlinableNative::IntrinsicGuardToRegExpStringIterator:
     case InlinableNative::IntrinsicGuardToWrapForValidIterator:
       return tryAttachGuardToClass(callee, native);
+
+    // RegExp natives.
+    case InlinableNative::IsRegExpObject:
+      return tryAttachHasClass(callee, &RegExpObject::class_);
 
     // String natives.
     case InlinableNative::String:

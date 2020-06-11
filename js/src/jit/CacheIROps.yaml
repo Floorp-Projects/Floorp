@@ -196,6 +196,13 @@
     obj: ObjId
     clasp: RawPointerField
 
+- name: HasClassResult
+  shared: false
+  transpile: true
+  args:
+    obj: ObjId
+    clasp: RawPointerField
+
 # Add a reference to a global in the compartment to keep it alive.
 - name: GuardCompartment
   shared: false
