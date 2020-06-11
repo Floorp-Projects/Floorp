@@ -64,6 +64,11 @@ permalink: /changelog/
 * **feature-top-sites**:
   * ⚠️ **This is a breaking change**: `TopSiteStorage.getTopSites` now returns `Flow` instead of `LiveData`. Use `Flow.asLiveData` to convert the result into a `LiveData` again.
 
+* **service-glean**
+  * Glean was updated to v31.1.1
+    * Smaller binary library after a big dependency was dropped
+    * Limit the number of upload retries in all implementations
+
 # 44.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v43.0.0...v44.0.0)
