@@ -67,12 +67,12 @@ class SheetLoadData final : public nsIRunnable, public nsIThreadObserver {
                 nsIPrincipal* aTriggeringPrincipal,
                 nsIReferrerInfo* aReferrerInfo, nsINode* aRequestingNode);
 
-  nsIReferrerInfo* ReferrerInfo() const { return mReferrerInfo; }
+  nsIReferrerInfo* ReferrerInfo() { return mReferrerInfo; }
 
   void ScheduleLoadEventIfNeeded();
 
-  NotNull<const Encoding*> DetermineNonBOMEncoding(const nsACString& aSegment,
-                                                   nsIChannel*) const;
+  NotNull<const Encoding*> DetermineNonBOMEncoding(nsACString const& aSegment,
+                                                   nsIChannel* aChannel);
 
   // The caller may have the bytes for the stylesheet split across two strings,
   // so aBytes1 and aBytes2 refer to those pieces.
@@ -110,10 +110,6 @@ class SheetLoadData final : public nsIRunnable, public nsIThreadObserver {
   // Load data for the sheet that @import-ed us if we were @import-ed
   // during the parse
   const RefPtr<SheetLoadData> mParentData;
-
-  // The expiration time of the channel that has loaded this data, if
-  // applicable.
-  uint32_t mExpirationTime = 0;
 
   // Number of sheets we @import-ed that are still loading
   uint32_t mPendingChildren;
@@ -206,11 +202,9 @@ class SheetLoadData final : public nsIRunnable, public nsIThreadObserver {
   // The node that identifies who started loading us.
   const nsCOMPtr<nsINode> mRequestingNode;
 
-  // The encoding guessed from attributes and the document character set.
-  const NotNull<const Encoding*> mGuessedEncoding;
-
-  // The quirks mode of the loader at the time the load was triggered.
-  const nsCompatibility mCompatMode;
+  // The encoding to use for preloading Must be empty if mOwningElement
+  // is non-null.
+  const Encoding* const mPreloadEncoding;
 
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   // Whether SheetComplete was called.

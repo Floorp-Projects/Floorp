@@ -78,7 +78,6 @@ function reset() {
 // This test has to come before testPositiveCache to ensure gethash server doesn't
 // contain completions.
 function testNegativeCache() {
-  SpecialPowers.DOMWindowUtils.clearSharedStyleSheetCache();
   shouldLoad = true;
 
   async function setup() {
@@ -107,7 +106,6 @@ function testNegativeCache() {
 }
 
 function testPositiveCache() {
-  SpecialPowers.DOMWindowUtils.clearSharedStyleSheetCache();
   shouldLoad = false;
 
   async function setup() {
