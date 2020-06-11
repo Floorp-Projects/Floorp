@@ -1033,13 +1033,6 @@ pref("dom.ipc.shims.enabledWarnings", false);
   // SetSecurityLevelForGPUProcess() in
   // security/sandbox/win/src/sandboxbroker/sandboxBroker.cpp
   pref("security.sandbox.gpu.level", 0);
-
-  // Controls whether we disable win32k for the processes.
-  // true means that win32k system calls are not permitted.
-  pref("security.sandbox.rdd.win32k-disable", true);
-  // Note: win32k is currently _not_ disabled for GMP due to intermittent test
-  // failures, where the GMP process fails very early. See bug 1449348.
-  pref("security.sandbox.gmp.win32k-disable", false);
 #endif
 
 #if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
