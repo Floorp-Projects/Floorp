@@ -732,6 +732,26 @@ skip script test262/intl402/DateTimeFormat/constructor-options-order-timedate-st
 # Not yet updated to match <https://github.com/tc39/proposal-intl-datetime-style/pull/43>.
 skip script test262/intl402/DateTimeFormat/prototype/resolvedOptions/order-style.js
 
+# https://github.com/tc39/test262/issues/2561
+skip script test262/built-ins/Atomics/compareExchange/nonshared-int-views.js
+skip script test262/built-ins/Atomics/compareExchange/bigint/nonshared-int-views.js
+skip script test262/built-ins/Atomics/store/nonshared-int-views.js
+skip script test262/built-ins/Atomics/store/bigint/nonshared-int-views.js
+skip script test262/built-ins/Atomics/load/nonshared-int-views.js
+skip script test262/built-ins/Atomics/load/bigint/nonshared-int-views.js
+skip script test262/built-ins/Atomics/sub/nonshared-int-views.js
+skip script test262/built-ins/Atomics/sub/bigint/nonshared-int-views.js
+skip script test262/built-ins/Atomics/and/nonshared-int-views.js
+skip script test262/built-ins/Atomics/and/bigint/nonshared-int-views.js
+skip script test262/built-ins/Atomics/or/nonshared-int-views.js
+skip script test262/built-ins/Atomics/or/bigint/nonshared-int-views.js
+skip script test262/built-ins/Atomics/notify/non-shared-bufferdata-throws.js
+skip script test262/built-ins/Atomics/notify/bigint/non-shared-bufferdata-throws.js
+skip script test262/built-ins/Atomics/add/nonshared-int-views.js
+skip script test262/built-ins/Atomics/add/bigint/nonshared-int-views.js
+skip script test262/built-ins/Atomics/xor/nonshared-int-views.js
+skip script test262/built-ins/Atomics/exchange/nonshared-int-views.js
+
 
 ##############################################
 # Enable Iterator Helpers tests in the shell #
