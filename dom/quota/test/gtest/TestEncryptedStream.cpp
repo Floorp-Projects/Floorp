@@ -1,0 +1,399 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "gtest/gtest.h"
+
+#include "mozilla/dom/SafeRefPtr.h"
+#include "mozilla/dom/quota/DecryptingInputStream_impl.h"
+#include "mozilla/dom/quota/DummyCipherStrategy.h"
+#include "mozilla/dom/quota/EncryptingOutputStream_impl.h"
+#include "mozilla/dom/quota/MemoryOutputStream.h"
+#include "mozilla/Scoped.h"
+#include "nsCOMPtr.h"
+#include "nsIOutputStream.h"
+#include "nsTArray.h"
+#include "mozilla/UniquePtr.h"
+
+#include <numeric>
+
+namespace mozilla::dom::quota {
+
+// Similar to ArrayBufferInputStream from netwerk/base/ArrayBufferInputStream.h,
+// but this is initialized from a Span on construction, rather than lazily from
+// a JS ArrayBuffer.
+class ArrayBufferInputStream : public nsIInputStream {
+ public:
+  explicit ArrayBufferInputStream(mozilla::Span<const uint8_t> aData);
+
+  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_NSIINPUTSTREAM
+
+ private:
+  virtual ~ArrayBufferInputStream() = default;
+
+  mozilla::UniquePtr<char[]> mArrayBuffer;
+  uint32_t mBufferLength;
+  uint32_t mPos;
+  bool mClosed;
+};
+
+NS_IMPL_ISUPPORTS(ArrayBufferInputStream, nsIInputStream);
+
+ArrayBufferInputStream::ArrayBufferInputStream(
+    mozilla::Span<const uint8_t> aData)
+    : mArrayBuffer(MakeUnique<char[]>(aData.Length())),
+      mBufferLength(aData.Length()),
+      mPos(0),
+      mClosed(false) {
+  std::copy(aData.cbegin(), aData.cend(), mArrayBuffer.get());
+}
+
+NS_IMETHODIMP
+ArrayBufferInputStream::Close() {
+  mClosed = true;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+ArrayBufferInputStream::Available(uint64_t* aCount) {
+  if (mClosed) {
+    return NS_BASE_STREAM_CLOSED;
+  }
+
+  if (mArrayBuffer) {
+    *aCount = mBufferLength ? mBufferLength - mPos : 0;
+  } else {
+    *aCount = 0;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+ArrayBufferInputStream::Read(char* aBuf, uint32_t aCount,
+                             uint32_t* aReadCount) {
+  return ReadSegments(NS_CopySegmentToBuffer, aBuf, aCount, aReadCount);
+}
+
+NS_IMETHODIMP
+ArrayBufferInputStream::ReadSegments(nsWriteSegmentFun writer, void* closure,
+                                     uint32_t aCount, uint32_t* result) {
+  MOZ_ASSERT(result, "null ptr");
+  MOZ_ASSERT(mBufferLength >= mPos, "bad stream state");
+
+  if (mClosed) {
+    return NS_BASE_STREAM_CLOSED;
+  }
+
+  MOZ_ASSERT(mArrayBuffer || (mPos == mBufferLength),
+             "stream inited incorrectly");
+
+  *result = 0;
+  while (mPos < mBufferLength) {
+    uint32_t remaining = mBufferLength - mPos;
+    MOZ_ASSERT(mArrayBuffer);
+
+    uint32_t count = std::min(aCount, remaining);
+    if (count == 0) {
+      break;
+    }
+
+    uint32_t written;
+    nsresult rv = writer(this, closure, &mArrayBuffer[0] + mPos, *result, count,
+                         &written);
+    if (NS_FAILED(rv)) {
+      // InputStreams do not propagate errors to caller.
+      return NS_OK;
+    }
+
+    MOZ_ASSERT(written <= count,
+               "writer should not write more than we asked it to write");
+    mPos += written;
+    *result += written;
+    aCount -= written;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+ArrayBufferInputStream::IsNonBlocking(bool* aNonBlocking) {
+  // Actually, the stream never blocks, but we lie about it because of the
+  // assumptions in DecryptingInputStream.
+  *aNonBlocking = false;
+  return NS_OK;
+}
+
+}  // namespace mozilla::dom::quota
+
+using namespace mozilla;
+using namespace mozilla::dom::quota;
+
+class DOM_Quota_EncryptedStream : public ::testing::Test {
+ public:
+};
+
+enum struct FlushMode { AfterEachChunk, Never };
+enum struct ChunkSize { SingleByte, Unaligned, DataSize };
+
+using PackedTestParams =
+    std::tuple<size_t, ChunkSize, ChunkSize, size_t, FlushMode>;
+
+static size_t EffectiveChunkSize(const ChunkSize aChunkSize,
+                                 const size_t aDataSize) {
+  switch (aChunkSize) {
+    case ChunkSize::SingleByte:
+      return 1;
+    case ChunkSize::Unaligned:
+      return 17;
+    case ChunkSize::DataSize:
+      return aDataSize;
+  }
+  MOZ_CRASH("Unknown ChunkSize");
+}
+
+struct TestParams {
+  MOZ_IMPLICIT constexpr TestParams(const PackedTestParams& aPackedParams)
+      : mDataSize(std::get<0>(aPackedParams)),
+        mWriteChunkSize(std::get<1>(aPackedParams)),
+        mReadChunkSize(std::get<2>(aPackedParams)),
+        mBlockSize(std::get<3>(aPackedParams)),
+        mFlushMode(std::get<4>(aPackedParams)) {}
+
+  constexpr size_t DataSize() const { return mDataSize; }
+
+  size_t EffectiveWriteChunkSize() const {
+    return EffectiveChunkSize(mWriteChunkSize, mDataSize);
+  }
+
+  size_t EffectiveReadChunkSize() const {
+    return EffectiveChunkSize(mReadChunkSize, mDataSize);
+  }
+
+  constexpr size_t BlockSize() const { return mBlockSize; }
+
+  constexpr enum FlushMode FlushMode() const { return mFlushMode; }
+
+ private:
+  size_t mDataSize;
+
+  ChunkSize mWriteChunkSize;
+  ChunkSize mReadChunkSize;
+
+  size_t mBlockSize;
+  enum FlushMode mFlushMode;
+};
+
+std::string TestParamToString(
+    const testing::TestParamInfo<PackedTestParams>& aTestParams) {
+  const TestParams& testParams = aTestParams.param;
+
+  static constexpr char kSeparator[] = "_";
+
+  std::stringstream ss;
+  ss << "data" << testParams.DataSize() << kSeparator << "writechunk"
+     << testParams.EffectiveWriteChunkSize() << kSeparator << "readchunk"
+     << testParams.EffectiveReadChunkSize() << kSeparator << "block"
+     << testParams.BlockSize() << kSeparator;
+  switch (testParams.FlushMode()) {
+    case FlushMode::Never:
+      ss << "FlushNever";
+      break;
+    case FlushMode::AfterEachChunk:
+      ss << "FlushAfterEachChunk";
+      break;
+  };
+  return ss.str();
+}
+
+class ParametrizedCryptTest
+    : public DOM_Quota_EncryptedStream,
+      public testing::WithParamInterface<PackedTestParams> {};
+
+static auto MakeTestData(const size_t aDataSize) {
+  auto data = nsTArray<uint8_t>();
+  data.SetLength(aDataSize);
+  std::iota(data.begin(), data.end(), 0);
+  return data;
+}
+
+template <typename CipherStrategy>
+static void WriteTestData(nsCOMPtr<nsIOutputStream>&& aBaseOutputStream,
+                          const Span<const uint8_t> aData,
+                          const size_t aWriteChunkSize, const size_t aBlockSize,
+                          const CipherStrategy& aCipherStrategy,
+                          const typename CipherStrategy::KeyType& aKey,
+                          const FlushMode aFlushMode) {
+  auto outStream = MakeSafeRefPtr<EncryptingOutputStream<CipherStrategy>>(
+      std::move(aBaseOutputStream), aBlockSize, aCipherStrategy, aKey);
+
+  for (auto remaining = aData; !remaining.IsEmpty();) {
+    auto [currentChunk, newRemaining] =
+        remaining.SplitAt(std::min(aWriteChunkSize, remaining.Length()));
+    remaining = newRemaining;
+
+    uint32_t written;
+    EXPECT_EQ(NS_OK, outStream->Write(
+                         reinterpret_cast<const char*>(currentChunk.Elements()),
+                         currentChunk.Length(), &written));
+    EXPECT_EQ(currentChunk.Length(), written);
+
+    if (aFlushMode == FlushMode::AfterEachChunk) {
+      outStream->Flush();
+    }
+  }
+
+  // Close explicitly so we can check the result.
+  EXPECT_EQ(NS_OK, outStream->Close());
+}
+
+template <typename CipherStrategy>
+static void ReadTestData(
+    MovingNotNull<nsCOMPtr<nsIInputStream>>&& aBaseInputStream,
+    const Span<const uint8_t> aExpectedData, const size_t aReadChunkSize,
+    const size_t aBlockSize, const CipherStrategy& aCipherStrategy,
+    const typename CipherStrategy::KeyType& aKey) {
+  auto inStream = MakeSafeRefPtr<DecryptingInputStream<CipherStrategy>>(
+      std::move(aBaseInputStream), aBlockSize, aCipherStrategy, aKey);
+
+  auto readData = nsTArray<uint8_t>();
+  readData.SetLength(aReadChunkSize);
+  for (auto remainder = aExpectedData; !remainder.IsEmpty();) {
+    auto [currentExpected, newExpectedRemainder] =
+        remainder.SplitAt(std::min(aReadChunkSize, remainder.Length()));
+    remainder = newExpectedRemainder;
+
+    uint32_t read;
+    EXPECT_EQ(NS_OK,
+              inStream->Read(reinterpret_cast<char*>(readData.Elements()),
+                             currentExpected.Length(), &read));
+    EXPECT_EQ(currentExpected.Length(), read);
+    EXPECT_EQ(currentExpected,
+              Span{readData}.First(currentExpected.Length()).AsConst());
+  }
+
+  // Expect EOF.
+  uint32_t read;
+  EXPECT_EQ(NS_OK, inStream->Read(reinterpret_cast<char*>(readData.Elements()),
+                                  readData.Length(), &read));
+  EXPECT_EQ(0u, read);
+}
+
+// XXX Change to return the buffer instead.
+template <typename CipherStrategy>
+static RefPtr<dom::quota::MemoryOutputStream> DoRoundtripTest(
+    const size_t aDataSize, const size_t aWriteChunkSize,
+    const size_t aReadChunkSize, const size_t aBlockSize,
+    const CipherStrategy& aCipherStrategy,
+    const typename CipherStrategy::KeyType& aKey, const FlushMode aFlushMode) {
+  // XXX Add deduction guide for RefPtr from already_AddRefed
+  const auto baseOutputStream =
+      WrapNotNull(RefPtr<dom::quota::MemoryOutputStream>{
+          dom::quota::MemoryOutputStream::Create(2048)});
+
+  const auto data = MakeTestData(aDataSize);
+
+  WriteTestData(nsCOMPtr<nsIOutputStream>{baseOutputStream.get()}, Span{data},
+                aWriteChunkSize, aBlockSize, aCipherStrategy, aKey, aFlushMode);
+
+  const auto baseInputStream =
+      MakeRefPtr<ArrayBufferInputStream>(baseOutputStream->Data());
+
+  ReadTestData(WrapNotNull(nsCOMPtr<nsIInputStream>{baseInputStream}),
+               Span{data}, aReadChunkSize, aBlockSize, aCipherStrategy, aKey);
+
+  return baseOutputStream;
+}
+
+TEST_P(ParametrizedCryptTest, DummyCipherStrategy) {
+  using CipherStrategy = DummyCipherStrategy;
+  const CipherStrategy cipherStrategy;
+  const TestParams& testParams = GetParam();
+
+  const auto encryptedDataStream = DoRoundtripTest(
+      testParams.DataSize(), testParams.EffectiveWriteChunkSize(),
+      testParams.EffectiveReadChunkSize(), testParams.BlockSize(),
+      cipherStrategy, CipherStrategy::KeyType{}, testParams.FlushMode());
+
+  if (HasFailure()) {
+    return;
+  }
+
+  const auto encryptedDataSpan = AsBytes(MakeSpan(encryptedDataStream->Data()));
+
+  const auto plainTestData = MakeTestData(testParams.DataSize());
+  auto encryptedBlock = EncryptedBlock<DummyCipherStrategy::BlockPrefixLength,
+                                       DummyCipherStrategy::BasicBlockSize>{
+      testParams.BlockSize(),
+  };
+  for (auto [encryptedRemainder, plainRemainder] =
+           std::pair(encryptedDataSpan, MakeSpan(plainTestData));
+       !encryptedRemainder.IsEmpty();) {
+    const auto [currentBlock, newEncryptedRemainder] =
+        encryptedRemainder.SplitAt(testParams.BlockSize());
+    encryptedRemainder = newEncryptedRemainder;
+
+    std::copy(currentBlock.cbegin(), currentBlock.cend(),
+              encryptedBlock.MutableWholeBlock().begin());
+
+    ASSERT_FALSE(plainRemainder.IsEmpty());
+    const auto [currentPlain, newPlainRemainder] =
+        plainRemainder.SplitAt(encryptedBlock.ActualPayloadLength());
+    plainRemainder = newPlainRemainder;
+
+    const auto pseudoIV = encryptedBlock.CipherPrefix();
+    const auto payload = encryptedBlock.Payload();
+
+    EXPECT_EQ(Span(DummyCipherStrategy::MakeBlockPrefix()), pseudoIV);
+
+    auto untransformedPayload = nsTArray<uint8_t>();
+    untransformedPayload.SetLength(testParams.BlockSize());
+    DummyCipherStrategy::DummyTransform(payload, untransformedPayload);
+
+    EXPECT_EQ(
+        currentPlain,
+        Span(untransformedPayload).AsConst().First(currentPlain.Length()));
+  }
+}
+
+// XXX This test is actually only parametrized on the block size.
+TEST_P(ParametrizedCryptTest, DummyCipherStrategy_IncompleteBlock) {
+  using CipherStrategy = DummyCipherStrategy;
+  const CipherStrategy cipherStrategy;
+  const TestParams& testParams = GetParam();
+
+  // Provide half a block, content doesn't matter.
+  nsTArray<uint8_t> data;
+  data.SetLength(testParams.BlockSize() / 2);
+
+  const auto baseInputStream = MakeRefPtr<ArrayBufferInputStream>(data);
+
+  const auto inStream = MakeSafeRefPtr<DecryptingInputStream<CipherStrategy>>(
+      WrapNotNull(nsCOMPtr<nsIInputStream>{baseInputStream}),
+      testParams.BlockSize(), cipherStrategy, CipherStrategy::KeyType{});
+
+  nsTArray<uint8_t> readData;
+  readData.SetLength(testParams.BlockSize());
+  uint32_t read;
+  EXPECT_EQ(NS_ERROR_CORRUPTED_CONTENT,
+            inStream->Read(reinterpret_cast<char*>(readData.Elements()),
+                           readData.Length(), &read));
+}
+
+INSTANTIATE_TEST_CASE_P(
+    DOM_Quota_EncryptedStream_Parametrized, ParametrizedCryptTest,
+    testing::Combine(
+        /* dataSize */ testing::Values(0u, 16u, 256u, 512u, 513u),
+        /* writeChunkSize */
+        testing::Values(ChunkSize::SingleByte, ChunkSize::Unaligned,
+                        ChunkSize::DataSize),
+        /* readChunkSize */
+        testing::Values(ChunkSize::SingleByte, ChunkSize::Unaligned,
+                        ChunkSize::DataSize),
+        /* blockSize */ testing::Values(256u, 1024u /*, 8192u*/),
+        /* flushMode */
+        testing::Values(FlushMode::Never, FlushMode::AfterEachChunk)),
+    TestParamToString);
