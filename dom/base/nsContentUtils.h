@@ -48,6 +48,7 @@
 #include "mozilla/dom/Document.h"
 #include "nsPIDOMWindow.h"
 #include "nsRFPService.h"
+#include "prtime.h"
 
 #if defined(XP_WIN)
 // Undefine LoadImage to prevent naming conflict with Windows.
@@ -3245,6 +3246,23 @@ class nsContentUtils {
   static mozilla::ScreenIntMargin GetWindowSafeAreaInsets(
       nsIScreen* aScreen, const mozilla::ScreenIntMargin& aSafeareaInsets,
       const mozilla::LayoutDeviceIntRect& aWindowRect);
+
+  struct SubresourceCacheValidationInfo {
+    // The expiration time, in seconds, if known.
+    Maybe<uint32_t> mExpirationTime;
+    bool mMustRevalidate = false;
+  };
+
+  /**
+   * Gets cache validation info for subresources such as images or CSS
+   * stylesheets.
+   */
+  static SubresourceCacheValidationInfo GetSubresourceCacheValidationInfo(
+      nsIRequest*);
+
+  static uint32_t SecondsFromPRTime(PRTime aTime) {
+    return uint32_t(int64_t(aTime) / int64_t(PR_USEC_PER_SEC));
+  }
 
  private:
   static bool InitializeEventTable();

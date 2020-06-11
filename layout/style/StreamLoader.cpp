@@ -8,6 +8,7 @@
 
 #include "mozilla/Encoding.h"
 #include "mozilla/ScopeExit.h"
+#include "nsContentUtils.h"
 #include "nsIChannel.h"
 #include "nsIInputStream.h"
 #include "nsISupportsPriority.h"
@@ -131,6 +132,15 @@ StreamLoader::OnStopRequest(nsIRequest* aRequest, nsresult aStatus) {
       NS_ENSURE_SUCCESS(rv, rv);
     }
   }  // run destructor for `bytes`
+
+  auto info = nsContentUtils::GetSubresourceCacheValidationInfo(aRequest);
+
+  // For now, we never cache entries that we have to revalidate.
+  if (!info.mExpirationTime || info.mMustRevalidate) {
+    info.mExpirationTime =
+        Some(nsContentUtils::SecondsFromPRTime(PR_Now()) - 1);
+  }
+  mSheetLoadData->mExpirationTime = *info.mExpirationTime;
 
   // For reasons I don't understand, factoring the below lines into
   // a method on SheetLoadData resulted in a linker error. Hence,

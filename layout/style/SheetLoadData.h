@@ -111,6 +111,10 @@ class SheetLoadData final : public nsIRunnable, public nsIThreadObserver {
   // during the parse
   const RefPtr<SheetLoadData> mParentData;
 
+  // The expiration time of the channel that has loaded this data, if
+  // applicable.
+  uint32_t mExpirationTime = 0;
+
   // Number of sheets we @import-ed that are still loading
   uint32_t mPendingChildren;
 
