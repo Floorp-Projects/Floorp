@@ -686,7 +686,7 @@ security:
       - 1553550
     description: >
       Number of intermediate certificates pre-loaded.
-    expires: "80"
+    expires: "86"
     kind: uint
     notification_emails:
       - seceng-telemetry@mozilla.com
@@ -702,7 +702,7 @@ security:
       - 1553550
     description: >
       Number of intermediate certificates pending pre-load.
-    expires: "80"
+    expires: "86"
     kind: uint
     notification_emails:
       - seceng-telemetry@mozilla.com
