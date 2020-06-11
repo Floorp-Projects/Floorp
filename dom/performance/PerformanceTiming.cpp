@@ -205,14 +205,6 @@ PerformanceTimingData::PerformanceTimingData(nsITimedChannel* aChannel,
   }
 }
 
-void PerformanceTimingData::InitializeForMemoryCacheHit() {
-  auto now = TimeStamp::Now();
-  mInitialized = true;
-  mAsyncOpen = mRequestStart = mResponseStart = mResponseEnd =
-      mDomainLookupStart = mDomainLookupEnd = mConnectStart = mConnectEnd =
-          mCacheReadStart = mCacheReadEnd = now;
-}
-
 void PerformanceTimingData::SetPropertiesFromHttpChannel(
     nsIHttpChannel* aHttpChannel, nsITimedChannel* aChannel) {
   MOZ_ASSERT(aHttpChannel);
