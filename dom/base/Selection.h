@@ -224,9 +224,9 @@ class Selection final : public nsSupportsWeakReference,
 
   void AdjustAnchorFocusForMultiRange(nsDirection aDirection);
 
-  nsresult GetPrimaryFrameForAnchorNode(nsIFrame** aReturnFrame);
-  nsresult GetPrimaryFrameForFocusNode(nsIFrame** aReturnFrame,
-                                       int32_t* aOffset, bool aVisual);
+  nsIFrame* GetPrimaryFrameForAnchorNode() const;
+  nsIFrame* GetPrimaryFrameForFocusNode(bool aVisual,
+                                        int32_t* aOffsetUsed = nullptr) const;
 
   UniquePtr<SelectionDetails> LookUpSelection(
       nsIContent* aContent, int32_t aContentOffset, int32_t aContentLength,
