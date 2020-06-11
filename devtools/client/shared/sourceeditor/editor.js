@@ -424,6 +424,7 @@ Editor.prototype = {
       "changes",
       "cursorActivity",
       "focus",
+      "blur",
       "scroll",
     ];
     for (const eventName of pipedEvents) {

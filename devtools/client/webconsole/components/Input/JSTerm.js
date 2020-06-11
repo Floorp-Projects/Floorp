@@ -497,6 +497,7 @@ class JSTerm extends Component {
 
       this.editor.on("changes", this._onEditorChanges);
       this.editor.on("beforeChange", this._onEditorBeforeChange);
+      this.editor.on("blur", this._onEditorBlur);
       this.editor.appendToLocalElement(this.node);
       const cm = this.editor.codeMirror;
       cm.on("paste", (_, event) => this.props.onPaste(event));
@@ -814,6 +815,18 @@ class JSTerm extends Component {
           item.preLabel += addedText;
         }
       });
+    }
+  }
+
+  /**
+   * Even handler for the "blur" event fired by codeMirror.
+   */
+  _onEditorBlur(cm) {
+    if (cm.somethingSelected()) {
+      // If there's a selection when the input is blurred, then we remove it by setting
+      // the cursor at the position that matches the start of the first selection.
+      const [{ head }] = cm.listSelections();
+      cm.setCursor(head, { scroll: false });
     }
   }
 
