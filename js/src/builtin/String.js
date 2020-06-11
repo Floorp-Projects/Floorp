@@ -536,6 +536,41 @@ function String_substr(start, length) {
     return SubstringKernel(str, intStart | 0, resultLength | 0);
 }
 
+// ES2021 draft rev 12a546b92275a0e2f834017db2727bb9c6f6c8fd
+// 21.1.3.4 String.prototype.concat ( ...args )
+// Note: String.prototype.concat.length is 1.
+function String_concat(arg1) {
+    // Steps 1-2.
+    RequireObjectCoercible(this);
+    var str = ToString(this);
+
+    // Specialize for the most common number of arguments for better inlining.
+    if (arguments.length === 0) {
+        return str;
+    }
+    if (arguments.length === 1) {
+        return str + ToString(arguments[0]);
+    }
+    if (arguments.length === 2) {
+        return str + ToString(arguments[0]) + ToString(arguments[1]);
+    }
+
+    // Step 3. (implicit)
+    // Step 4.
+    var result = str;
+
+    // Step 5.
+    for (var i = 0; i < arguments.length; i++) {
+        // Steps 5.a-b.
+        var nextString = ToString(arguments[i]);
+        // Step 5.c.
+        result += nextString;
+    }
+
+    // Step 6.
+    return result;
+}
+
 // ES2020 draft rev dc1e21c454bd316810be1c0e7af0131a2d7f38e9
 // 21.1.3.19 String.prototype.slice ( start, end )
 function String_slice(start, end) {

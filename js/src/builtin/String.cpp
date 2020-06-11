@@ -3568,43 +3568,6 @@ ArrayObject* js::StringSplitString(JSContext* cx, HandleObjectGroup group,
   return SplitHelper(cx, linearStr, limit, linearSep, group);
 }
 
-/*
- * Python-esque sequence operations.
- */
-static bool str_concat(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  JSString* str = ToStringForStringFunction(cx, args.thisv());
-  if (!str) {
-    return false;
-  }
-
-  for (unsigned i = 0; i < args.length(); i++) {
-    JSString* argStr = ToString<NoGC>(cx, args[i]);
-    if (!argStr) {
-      RootedString strRoot(cx, str);
-      argStr = ToString<CanGC>(cx, args[i]);
-      if (!argStr) {
-        return false;
-      }
-      str = strRoot;
-    }
-
-    JSString* next = ConcatStrings<NoGC>(cx, str, argStr);
-    if (next) {
-      str = next;
-    } else {
-      RootedString strRoot(cx, str), argStrRoot(cx, argStr);
-      str = ConcatStrings<CanGC>(cx, strRoot, argStrRoot);
-      if (!str) {
-        return false;
-      }
-    }
-  }
-
-  args.rval().setString(str);
-  return true;
-}
-
 static const JSFunctionSpec string_methods[] = {
     JS_FN(js_toSource_str, str_toSource, 0, 0),
 
@@ -3649,7 +3612,7 @@ static const JSFunctionSpec string_methods[] = {
     JS_SELF_HOSTED_FN("substr", "String_substr", 2, 0),
 
     /* Python-esque sequence methods. */
-    JS_FN("concat", str_concat, 1, 0),
+    JS_SELF_HOSTED_FN("concat", "String_concat", 1, 0),
     JS_SELF_HOSTED_FN("slice", "String_slice", 2, 0),
 
     /* HTML string methods. */
