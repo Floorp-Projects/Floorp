@@ -219,6 +219,22 @@ class nsDisplayThemedBackgroundGeometry : public nsDisplayItemGeometry {
   bool mWindowIsActive;
 };
 
+class nsDisplayTreeBodyGeometry
+    : public nsDisplayItemGeometry,
+      public nsImageGeometryMixin<nsDisplayTreeBodyGeometry> {
+ public:
+  nsDisplayTreeBodyGeometry(nsDisplayItem* aItem,
+                            nsDisplayListBuilder* aBuilder)
+      : nsDisplayItemGeometry(aItem, aBuilder),
+        nsImageGeometryMixin(aItem, aBuilder) {}
+
+  bool InvalidateForSyncDecodeImages() const override {
+    return ShouldInvalidateToSyncDecodeImages();
+  }
+
+  bool mWindowIsActive = false;
+};
+
 class nsDisplayBoxShadowInnerGeometry : public nsDisplayItemGeometry {
  public:
   nsDisplayBoxShadowInnerGeometry(nsDisplayItem* aItem,
