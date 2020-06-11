@@ -922,6 +922,7 @@ class MochitestDesktop(object):
         self._active_tests = None
         self.currentTests = None
         self._locations = None
+        self.browserEnv = None
 
         self.marionette = None
         self.start_script = None
