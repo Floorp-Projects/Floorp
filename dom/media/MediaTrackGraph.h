@@ -1070,17 +1070,15 @@ class MediaTrackGraph {
    */
   void AddTrack(MediaTrack* aTrack);
 
-  /* From the main thread, ask the MTG to tell us when the graph
-   * thread is running, and audio is being processed, by resolving the returned
-   * promise. The promise is rejected with NS_ERROR_NOT_AVAILABLE if aTrack
+  /* From the main thread, ask the MTG to resolve the returned promise when
+   * the device has started.
+   * The promise is rejected with NS_ERROR_NOT_AVAILABLE if aTrack
    * is destroyed, or NS_ERROR_ILLEGAL_DURING_SHUTDOWN if the graph is shut
-   * down, before the promise could be resolved. */
+   * down, before the promise could be resolved.
+   * (Audio is initially processed in the FallbackDriver's thread while the
+   * device is starting up.)
+   */
   using GraphStartedPromise = GenericPromise;
-  RefPtr<GraphStartedPromise> NotifyWhenGraphStarted(MediaTrack* aTrack);
-  /* Same as above but the promise is resolved when the devices has started.
-   * Audio is initially processed in the FallbackDriver's thread during the
-   * device is start up. In a newly created graph, the promise from this method
-   * will be resolved later than the promise of the method above.*/
   RefPtr<GraphStartedPromise> NotifyWhenDeviceStarted(MediaTrack* aTrack);
 
   /* From the main thread, suspend, resume or close an AudioContext.  Calls
