@@ -21,7 +21,7 @@ object Versions {
     const val androidx_legacy = "1.0.0"
     const val androidx_annotation = "1.1.0"
     const val androidx_lifecycle = "2.2.0"
-    const val androidx_fragment = "1.2.4"
+    const val androidx_fragment = "1.2.5"
     const val androidx_navigation = "2.2.1"
     const val androidx_recyclerview = "1.1.0"
     const val androidx_core = "1.2.0"
