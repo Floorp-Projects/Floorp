@@ -47,6 +47,16 @@ def parse_issues(log, config, issues, path, onlyIn):
                         log.debug("File = {} / Detail = {}".format(p, detail))
                         continue
                     # We are in a clippy warning
+                    if len(detail["spans"]) == 0:
+                        # For some reason, at the end of the summary, we can
+                        # get the following line
+                        # {'rendered': 'warning: 5 warnings emitted\n\n', 'children':
+                        # [], 'code': None, 'level': 'warning', 'message':
+                        # '5 warnings emitted', 'spans': []}
+                        # if this is the case, skip it
+                        log.debug("Skipping the summary line {} for file {}".format(detail, p))
+                        continue
+
                     l = detail["spans"][0]
                     if onlyIn and onlyIn not in p:
                         # Case when we have a .rs in the include list in the yaml file
