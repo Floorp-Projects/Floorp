@@ -54,12 +54,6 @@ open class BrowserActivity : AppCompatActivity(), ComponentCallbacks2 {
         lifecycle.addObserver(webExtensionPopupFeature)
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-
-        components.historyStorage.cleanup()
-    }
-
     override fun onBackPressed() {
         supportFragmentManager.fragments.forEach {
             if (it is UserInteractionHandler && it.onBackPressed()) {
