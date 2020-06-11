@@ -132,6 +132,10 @@ class Perfherder(Layer):
             else:
                 all_perfherder_data["suites"].extend(perfherder_data["suites"])
 
+        if prefix:
+            # If a prefix was given, store it in the perfherder data as well
+            all_perfherder_data["prefix"] = prefix
+
         # Validate the final perfherder data blob
         with pathlib.Path(metadata._mach_cmd.topsrcdir, PERFHERDER_SCHEMA).open() as f:
             schema = json.load(f)
