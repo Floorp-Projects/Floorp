@@ -252,13 +252,6 @@ class nsFrame : public nsIFrame {
       : nsFrame(aStyle, aPresContext, ClassID::nsFrame_id) {}
   virtual ~nsFrame();
 
- public:
-  /**
-   * Helper method to create a view for a frame.  Only used by a few sub-classes
-   * that need a view.
-   */
-  void CreateView();
-
  private:
   // Returns true if this frame has any kind of CSS animations.
   bool HasCSSAnimations();

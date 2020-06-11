@@ -1612,7 +1612,7 @@ void nsIFrame::SyncFrameViewProperties(nsView* aView) {
   vm->SetViewZIndex(aView, autoZIndex, zIndex);
 }
 
-void nsFrame::CreateView() {
+void nsIFrame::CreateView() {
   MOZ_ASSERT(!HasView());
 
   nsView* parentView = GetParent()->GetClosestView();

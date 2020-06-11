@@ -2961,6 +2961,12 @@ class nsIFrame : public nsQueryFrame {
   //
   bool HasView() const { return !!(mState & NS_FRAME_HAS_VIEW); }
 
+  /**
+   * Helper method to create a view for a frame.  Only used by a few sub-classes
+   * that need a view.
+   */
+  void CreateView();
+
  protected:
   virtual nsView* GetViewInternal() const {
     MOZ_ASSERT_UNREACHABLE("method should have been overridden by subclass");
