@@ -139,6 +139,7 @@
   MACRO(era, era, "era")                                                       \
   MACRO(ErrorToStringWithTrailingNewline, ErrorToStringWithTrailingNewline,    \
         "ErrorToStringWithTrailingNewline")                                    \
+  MACRO(errors, errors, "errors")                                              \
   MACRO(escape, escape, "escape")                                              \
   MACRO(eval, eval, "eval")                                                    \
   MACRO(exec, exec, "exec")                                                    \

@@ -665,6 +665,11 @@ bool JSXrayTraits::resolveOwnProperty(JSContext* cx, HandleObject wrapper,
         }
         return true;
       }
+
+      if (key == JSProto_AggregateError &&
+          id == GetJSIDByIndex(cx, XPCJSContext::IDX_ERRORS)) {
+        return getOwnPropertyFromWrapperIfSafe(cx, wrapper, id, desc);
+      }
     } else if (key == JSProto_RegExp) {
       if (id == GetJSIDByIndex(cx, XPCJSContext::IDX_LASTINDEX)) {
         return getOwnPropertyFromWrapperIfSafe(cx, wrapper, id, desc);
