@@ -18,20 +18,32 @@ const TESTCASES = [
   {
     description: "1 password field outside of a <form>",
     document: `<input id="pw1" type=password>`,
-    returnedFieldIDs: [null, "pw1", null],
+    returnedFieldIDs: {
+      usernameField: null,
+      newPasswordField: "pw1",
+      oldPasswordField: null,
+    },
     skipEmptyFields: undefined,
   },
   {
     description: "1 text field outside of a <form> without a password field",
     document: `<input id="un1">`,
-    returnedFieldIDs: [null, null, null],
+    returnedFieldIDs: {
+      usernameField: null,
+      newPasswordField: null,
+      oldPasswordField: null,
+    },
     skipEmptyFields: undefined,
   },
   {
     description: "1 username & password field outside of a <form>",
     document: `<input id="un1">
       <input id="pw1" type=password>`,
-    returnedFieldIDs: ["un1", "pw1", null],
+    returnedFieldIDs: {
+      usernameField: "un1",
+      newPasswordField: "pw1",
+      oldPasswordField: null,
+    },
     skipEmptyFields: undefined,
   },
   {
@@ -47,7 +59,11 @@ const TESTCASES = [
     description: "1 username & password field outside of a <form>, un1 removed",
     document: `<input id="un1">
       <input id="pw1" type=password>`,
-    returnedFieldIDs: [null, "pw1", null],
+    returnedFieldIDs: {
+      usernameField: null,
+      newPasswordField: "pw1",
+      oldPasswordField: null,
+    },
     skipEmptyFields: undefined,
   },
   {
@@ -56,7 +72,11 @@ const TESTCASES = [
       <input id="un1">
       <input id="pw1" type=password>
       </form>`,
-    returnedFieldIDs: ["un1", "pw1", null],
+    returnedFieldIDs: {
+      usernameField: "un1",
+      newPasswordField: "pw1",
+      oldPasswordField: null,
+    },
     skipEmptyFields: undefined,
   },
   {
@@ -66,7 +86,11 @@ const TESTCASES = [
       <input id="pw3" type=password>
       <input id="pw4" type=password>
       <input id="pw5" type=password>`,
-    returnedFieldIDs: [null, "pw1", null],
+    returnedFieldIDs: {
+      usernameField: null,
+      newPasswordField: "pw1",
+      oldPasswordField: null,
+    },
     skipEmptyFields: undefined,
   },
   {
@@ -77,7 +101,11 @@ const TESTCASES = [
       <input id="pw4" type=password>
       <input id="pw5" type=password>
       <input id="pw6" type=password>`,
-    returnedFieldIDs: [null, null, null],
+    returnedFieldIDs: {
+      usernameField: null,
+      newPasswordField: null,
+      oldPasswordField: null,
+    },
     skipEmptyFields: undefined,
   },
   {
@@ -87,39 +115,63 @@ const TESTCASES = [
       <input id="pw2" type=password value="pass2">
       <input id="pw3" type=password value="pass3">
       <input id="pw4" type=password value="pass4">`,
-    returnedFieldIDs: [null, null, null],
+    returnedFieldIDs: {
+      usernameField: null,
+      newPasswordField: null,
+      oldPasswordField: null,
+    },
     skipEmptyFields: true,
   },
   {
     description: "Form with 1 password field",
     document: `<form><input id="pw1" type=password></form>`,
-    returnedFieldIDs: [null, "pw1", null],
+    returnedFieldIDs: {
+      usernameField: null,
+      newPasswordField: "pw1",
+      oldPasswordField: null,
+    },
     skipEmptyFields: undefined,
   },
   {
     description: "Form with 2 password fields",
     document: `<form><input id="pw1" type=password><input id='pw2' type=password></form>`,
-    returnedFieldIDs: [null, "pw1", null],
+    returnedFieldIDs: {
+      usernameField: null,
+      newPasswordField: "pw1",
+      oldPasswordField: null,
+    },
     skipEmptyFields: undefined,
   },
   {
     description: "1 password field in a form, 1 outside (not processed)",
     document: `<form><input id="pw1" type=password></form><input id="pw2" type=password>`,
-    returnedFieldIDs: [null, "pw1", null],
+    returnedFieldIDs: {
+      usernameField: null,
+      newPasswordField: "pw1",
+      oldPasswordField: null,
+    },
     skipEmptyFields: undefined,
   },
   {
     description:
       "1 password field in a form, 1 text field outside (not processed)",
     document: `<form><input id="pw1" type=password></form><input>`,
-    returnedFieldIDs: [null, "pw1", null],
+    returnedFieldIDs: {
+      usernameField: null,
+      newPasswordField: "pw1",
+      oldPasswordField: null,
+    },
     skipEmptyFields: undefined,
   },
   {
     description:
       "1 text field in a form, 1 password field outside (not processed)",
     document: `<form><input></form><input id="pw1" type=password>`,
-    returnedFieldIDs: [null, null, null],
+    returnedFieldIDs: {
+      usernameField: null,
+      newPasswordField: null,
+      oldPasswordField: null,
+    },
     skipEmptyFields: undefined,
   },
   {
@@ -127,7 +179,11 @@ const TESTCASES = [
       "2 password fields outside of a <form> with 1 linked via @form",
     document: `<input id="pw1" type=password><input id="pw2" type=password form='form1'>
       <form id="form1"></form>`,
-    returnedFieldIDs: [null, "pw1", null],
+    returnedFieldIDs: {
+      usernameField: null,
+      newPasswordField: "pw1",
+      oldPasswordField: null,
+    },
     skipEmptyFields: undefined,
   },
   {
@@ -135,7 +191,11 @@ const TESTCASES = [
       "2 password fields outside of a <form> with 1 linked via @form + skipEmpty",
     document: `<input id="pw1" type=password><input id="pw2" type=password form="form1">
       <form id="form1"></form>`,
-    returnedFieldIDs: [null, null, null],
+    returnedFieldIDs: {
+      usernameField: null,
+      newPasswordField: null,
+      oldPasswordField: null,
+    },
     skipEmptyFields: true,
   },
   {
@@ -143,7 +203,11 @@ const TESTCASES = [
       "2 password fields outside of a <form> with 1 linked via @form + skipEmpty with 1 empty",
     document: `<input id="pw1" type=password value="pass1"><input id="pw2" type=password form="form1">
       <form id="form1"></form>`,
-    returnedFieldIDs: [null, "pw1", null],
+    returnedFieldIDs: {
+      usernameField: null,
+      newPasswordField: "pw1",
+      oldPasswordField: null,
+    },
     skipEmptyFields: true,
   },
 ];
@@ -179,25 +243,30 @@ for (let tc of TESTCASES) {
         new Set()
       );
 
-      Assert.strictEqual(
-        testcase.returnedFieldIDs.length,
-        3,
-        "_getFormFields returns 3 elements"
-      );
-
-      for (let i = 0; i < testcase.returnedFieldIDs.length; i++) {
-        let expectedID = testcase.returnedFieldIDs[i];
+      [
+        "usernameField",
+        "newPasswordField",
+        "oldPasswordField",
+        "confirmPasswordField",
+      ].forEach(fieldName => {
+        Assert.ok(
+          fieldName in actual,
+          "_getFormFields return value includes " + fieldName
+        );
+      });
+      for (let key of Object.keys(testcase.returnedFieldIDs)) {
+        let expectedID = testcase.returnedFieldIDs[key];
         if (expectedID === null) {
           Assert.strictEqual(
-            actual[i],
+            actual[key],
             expectedID,
-            "Check returned field " + i + " is null"
+            "Check returned field " + key + " is null"
           );
         } else {
           Assert.strictEqual(
-            actual[i].id,
+            actual[key].id,
             expectedID,
-            "Check returned field " + i + " ID"
+            "Check returned field " + key + " ID"
           );
         }
       }
