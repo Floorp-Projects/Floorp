@@ -139,7 +139,8 @@ yellow = submarine"""  # noqa
         bar_path = os.path.join(here, 'include', 'bar.ini')
         foo_path = os.path.join(here, 'include', 'foo.ini')
 
-        parser = ManifestParser(manifests=(include_example, noinclude_example))
+        parser = ManifestParser(manifests=(include_example, noinclude_example),
+                                rootdir=here)
 
         # Standalone manifests must be appear as-is.
         self.assertTrue(include_example in parser.manifest_defaults)
@@ -149,8 +150,9 @@ yellow = submarine"""  # noqa
         # that included the manifest.
         self.assertFalse(bar_path in parser.manifest_defaults)
         self.assertFalse(foo_path in parser.manifest_defaults)
-        self.assertTrue((include_example, bar_path) in parser.manifest_defaults)
-        self.assertTrue((include_example, foo_path) in parser.manifest_defaults)
+        ancestor_ini = os.path.relpath(include_example, parser.rootdir)
+        self.assertTrue((ancestor_ini, bar_path) in parser.manifest_defaults)
+        self.assertTrue((ancestor_ini, foo_path) in parser.manifest_defaults)
 
         # manifests() must only return file paths (strings).
         manifests = parser.manifests()
@@ -168,17 +170,19 @@ yellow = submarine"""  # noqa
         manifest = os.path.join(here, 'include-example.ini')
         foo_path = os.path.join(here, 'include', 'foo.ini')
 
-        parser = ManifestParser(manifests=(manifest,), handle_defaults=False)
+        parser = ManifestParser(manifests=(manifest,), handle_defaults=False,
+                                rootdir=here)
+        ancestor_ini = os.path.relpath(manifest, parser.rootdir)
 
         self.assertIn(manifest, parser.manifest_defaults)
         self.assertNotIn(foo_path, parser.manifest_defaults)
-        self.assertIn((manifest, foo_path), parser.manifest_defaults)
+        self.assertIn((ancestor_ini, foo_path), parser.manifest_defaults)
         self.assertEqual(parser.manifest_defaults[manifest],
                          {
                              'foo': 'bar',
                              'here': here,
                          })
-        self.assertEqual(parser.manifest_defaults[(manifest, foo_path)],
+        self.assertEqual(parser.manifest_defaults[(ancestor_ini, foo_path)],
                          {
                              'here': os.path.join(here, 'include'),
                              'red': 'roses',
@@ -247,7 +251,8 @@ yellow = submarine
                               expected_output):
         include_example = os.path.join(here, 'include-example.ini')
         included_foo = os.path.join(here, 'include', 'foo.ini')
-        manifest_default_key = (include_example, included_foo)
+        ancestor_ini = os.path.relpath(include_example, parser.rootdir)
+        manifest_default_key = (ancestor_ini, included_foo)
 
         self.assertFalse('ancestor_manifest' in isolated_test)
         self.assertEqual(included_test['ancestor_manifest'], 'include-example.ini')
