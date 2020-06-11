@@ -138,7 +138,6 @@ browsertime-tp6m:
                                 by-test-platform:
                                     android-hw-p2-.*-api-16/(?!opt).*: []
                                     android-hw-p2-.*-api-16-shippable/opt: []
-                                    android-hw-p2-.*?(?<!-aarch64-shippable)/opt.*: []
                                     android-hw(?!-p2).*(?<!-api-16-shippable)/opt.*: []
                                     default: ['mozilla-central']
                     default:
@@ -162,7 +161,6 @@ browsertime-tp6m:
                                 by-test-platform:
                                     android-hw-p2-.*-api-16/(?!opt).*: []
                                     android-hw-p2-.*-api-16-shippable/opt: []
-                                    android-hw-p2-.*?(?<!-aarch64-shippable)/opt.*: []
                                     android-hw(?!-p2).*(?<!-api-16-shippable)/opt.*: []
                                     default: ['mozilla-central']
                     default:
@@ -187,7 +185,6 @@ browsertime-tp6m:
                                 by-test-platform:
                                     android-hw-p2-.*-api-16/(?!opt).*: []
                                     android-hw-p2-.*-api-16-shippable/opt: []
-                                    android-hw-p2-.*?(?<!-aarch64-shippable)/opt.*: []
                                     android-hw(?!-p2).*(?<!-api-16-shippable)/opt.*: []
                                     default: ['mozilla-central']
                             default: []

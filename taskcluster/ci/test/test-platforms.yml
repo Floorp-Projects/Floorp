@@ -382,8 +382,8 @@ macosx1014-64-ccov/opt:
 #
 # android-em test platforms execute on android emulators.
 
-android-em-7.0-x86_64/opt:
-    build-platform: android-x86_64/opt
+android-em-7.0-x86_64-shippable/opt:
+    build-platform: android-x86_64-shippable/opt
     test-sets:
         - android-x86_64-tests
 
@@ -392,8 +392,8 @@ android-em-7.0-x86_64/debug:
     test-sets:
         - android-x86_64-tests
 
-android-em-7.0-x86_64-qr/opt:
-    build-platform: android-x86_64/opt
+android-em-7.0-x86_64-shippable-qr/opt:
+    build-platform: android-x86_64-shippable/opt
     test-sets:
         - android-x86_64-qr-tests
 
@@ -405,16 +405,6 @@ android-em-7.0-x86_64-qr/debug:
 # android-hw test platforms execute on real devices attached to Autophone hosts.
 
 # android-hw-g5-7-0 Motorola Moto G5 Android 7.0
-
-android-hw-g5-7-0-arm7-api-16/opt:
-    build-platform: android-api-16/opt
-    test-sets:
-        - android-hw-arm7-browsertime
-        - android-hw-arm7-raptor
-        - android-hw-arm7-raptor-power
-        - android-hw-arm7-raptor-cpu-memory
-        - android-hw-arm7-raptor-cpu-memory-power
-        - raptor-fetch-geckoview
 
 android-hw-g5-7-0-arm7-api-16-shippable/opt:
     build-platform: android-api-16-shippable/opt
@@ -431,12 +421,8 @@ android-hw-g5-7-0-arm7-api-16-shippable/opt:
 android-hw-p2-8-0-arm7-api-16-shippable/opt:
     build-platform: android-api-16-shippable/opt
     test-sets:
-        - android-hw-arm7-pgo-unittests
-
-android-hw-p2-8-0-arm7-api-16/opt:
-    build-platform: android-api-16/opt
-    test-sets:
         - android-hw-arm7-browsertime
+        - android-hw-arm7-pgo-unittests
         - android-hw-arm7-raptor
         - android-hw-arm7-raptor-power
         - android-hw-arm7-raptor-cpu-memory
@@ -448,8 +434,8 @@ android-hw-p2-8-0-arm7-api-16/debug:
     test-sets:
         - android-hw-arm7-debug-unittests
 
-android-hw-p2-8-0-android-aarch64-qr/opt:
-    build-platform: android-api-16/opt
+android-hw-p2-8-0-android-aarch64-shippable-qr/opt:
+    build-platform: android-api-16-shippable/opt
     test-sets:
         - android-hw-aarch64-qr
 
