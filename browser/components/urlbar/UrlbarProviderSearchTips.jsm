@@ -150,11 +150,7 @@ class ProviderSearchTips extends UrlbarProvider {
    * @returns {boolean} Whether this provider should be invoked for the search.
    */
   isActive(queryContext) {
-    return (
-      UrlbarPrefs.get("update1.searchTips") &&
-      this.currentTip &&
-      cfrFeaturesUserPref
-    );
+    return this.currentTip && cfrFeaturesUserPref;
   }
 
   /**
@@ -300,7 +296,6 @@ class ProviderSearchTips extends UrlbarProvider {
 
     // Check if we are supposed to show a tip for the current session.
     if (
-      !UrlbarPrefs.get("update1.searchTips") ||
       !cfrFeaturesUserPref ||
       (this.disableTipsForCurrentSession &&
         !UrlbarPrefs.get("searchTips.test.ignoreShowLimits"))
