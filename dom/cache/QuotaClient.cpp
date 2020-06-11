@@ -82,7 +82,7 @@ static nsresult GetBodyUsage(nsIFile* aMorgueDir, const Atomic<bool>& aCanceled,
         return rv;
       }
       MOZ_DIAGNOSTIC_ASSERT(fileSize >= 0);
-      aUsageInfo->AppendToFileUsage(Some(fileSize));
+      aUsageInfo->IncrementFileUsage(Some(fileSize));
 
       fileDeleted = false;
 
@@ -395,13 +395,13 @@ nsresult CacheQuotaClient::GetUsageForOriginInternal(
     uint64_t usage;
     if (qm->GetUsageForClient(PERSISTENCE_TYPE_DEFAULT, aGroup, aOrigin,
                               Client::DOMCACHE, usage)) {
-      aUsageInfo->AppendToDatabaseUsage(Some(usage));
+      aUsageInfo->IncrementDatabaseUsage(Some(usage));
     }
 
     return NS_OK;
   }
 
-  aUsageInfo->AppendToFileUsage(Some(paddingSize));
+  aUsageInfo->IncrementFileUsage(Some(paddingSize));
 
   nsCOMPtr<nsIDirectoryEnumerator> entries;
   rv = dir->GetDirectoryEntries(getter_AddRefs(entries));
@@ -471,7 +471,7 @@ nsresult CacheQuotaClient::GetUsageForOriginInternal(
       }
       MOZ_DIAGNOSTIC_ASSERT(fileSize >= 0);
 
-      aUsageInfo->AppendToDatabaseUsage(Some(fileSize));
+      aUsageInfo->IncrementDatabaseUsage(Some(fileSize));
       continue;
     }
 
