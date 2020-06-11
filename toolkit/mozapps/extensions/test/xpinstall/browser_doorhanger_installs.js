@@ -123,11 +123,14 @@ async function waitForProgressNotification(
 
 function acceptAppMenuNotificationWhenShown(
   id,
-  { dismiss = false, checkIncognito = false, incognitoChecked = false } = {}
+  {
+    dismiss = false,
+    checkIncognito = false,
+    incognitoChecked = false,
+    global = window,
+  } = {}
 ) {
-  const { AppMenuNotifications } = ChromeUtils.import(
-    "resource://gre/modules/AppMenuNotifications.jsm"
-  );
+  const { AppMenuNotifications, PanelUI, document } = global;
   return new Promise(resolve => {
     function appMenuPopupHidden() {
       PanelUI.panel.removeEventListener("popuphidden", appMenuPopupHidden);
@@ -1067,38 +1070,11 @@ var TESTS = [
     let panel = win.PopupNotifications.panel;
     let installDialog = panel.childNodes[0];
 
-    let notificationPromise = new Promise(resolve => {
-      function popupshown() {
-        let notification = win.AppMenuNotifications.activeNotification;
-        if (!notification) {
-          return;
-        }
-
-        ok(win.PanelUI.isNotificationPanelOpen, "notification panel open");
-
-        win.PanelUI.notificationPanel.removeEventListener(
-          "popupshown",
-          popupshown
-        );
-
-        let checkbox = win.document.getElementById("addon-incognito-checkbox");
-        ok(!checkbox.hidden, "checkbox visibility is correct");
-        ok(checkbox.checked, "checkbox is marked as expected");
-        checkbox.checked = false;
-
-        // Dismiss the panel by clicking the primary button.
-        let popupnotificationID = win.PanelUI._getPopupId(notification);
-        let popupnotification = win.document.getElementById(
-          popupnotificationID
-        );
-        popupnotification.button.click();
-        resolve();
-      }
-      win.document.addEventListener("popupshown", popupshown);
-    });
-
-    installDialog.button.click();
-
+    let notificationPromise = acceptAppMenuNotificationWhenShown(
+      "addon-installed",
+      { incognitoChecked: true, global: win }
+    );
+    acceptInstallDialog(installDialog);
     await notificationPromise;
 
     let installs = await AddonManager.getAllInstalls();
