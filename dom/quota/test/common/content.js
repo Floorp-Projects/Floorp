@@ -47,16 +47,14 @@ function getSimpleDatabase() {
   return connection;
 }
 
-async function requestFinished(request) {
-  await new Promise(function(resolve) {
-    request.callback = SpecialPowers.wrapCallback(function() {
-      resolve();
+function requestFinished(request) {
+  return new Promise(function(resolve, reject) {
+    request.callback = SpecialPowers.wrapCallback(function(req) {
+      if (req.resultCode === SpecialPowers.Cr.NS_OK) {
+        resolve(req.result);
+      } else {
+        reject(req.resultCode);
+      }
     });
   });
-
-  if (request.resultCode != SpecialPowers.Cr.NS_OK) {
-    throw new RequestError(request.resultCode, request.resultName);
-  }
-
-  return request.result;
 }
