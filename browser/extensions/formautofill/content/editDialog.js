@@ -159,7 +159,7 @@ class EditAddressDialog extends AutofillEditDialog {
   }
 
   localizeDocument() {
-    if (this._record) {
+    if (this._record?.guid) {
       this._elements.title.dataset.localization = "editAddressTitle";
     }
   }
@@ -180,7 +180,7 @@ class EditCreditCardDialog extends AutofillEditDialog {
   }
 
   localizeDocument() {
-    if (this._record) {
+    if (this._record?.guid) {
       this._elements.title.dataset.localization = "editCreditCardTitle";
     }
   }
