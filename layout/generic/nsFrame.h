@@ -233,18 +233,6 @@ class nsFrame : public nsIFrame {
   void DisplayOutsetBoxShadow(nsDisplayListBuilder* aBuilder,
                               nsDisplayList* aList);
 
-  /**
-   * Adjust the given parent frame to the right ComputedStyle parent frame for
-   * the child, given the pseudo-type of the prospective child.  This handles
-   * things like walking out of table pseudos and so forth.
-   *
-   * @param aProspectiveParent what GetParent() on the child returns.
-   *                           Must not be null.
-   * @param aChildPseudo the child's pseudo type, if any.
-   */
-  static nsIFrame* CorrectStyleParentFrame(
-      nsIFrame* aProspectiveParent, mozilla::PseudoStyleType aChildPseudo);
-
  protected:
   // Protected constructor and destructor
   nsFrame(ComputedStyle* aStyle, nsPresContext* aPresContext, ClassID aID);

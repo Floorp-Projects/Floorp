@@ -9699,8 +9699,8 @@ static nsIFrame* GetCorrectedParent(const nsIFrame* aFrame) {
 }
 
 /* static */
-nsIFrame* nsFrame::CorrectStyleParentFrame(nsIFrame* aProspectiveParent,
-                                           PseudoStyleType aChildPseudo) {
+nsIFrame* nsIFrame::CorrectStyleParentFrame(nsIFrame* aProspectiveParent,
+                                            PseudoStyleType aChildPseudo) {
   MOZ_ASSERT(aProspectiveParent, "Must have a prospective parent");
 
   if (aChildPseudo != PseudoStyleType::NotPseudo) {
