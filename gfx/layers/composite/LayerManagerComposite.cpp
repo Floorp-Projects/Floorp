@@ -1184,11 +1184,7 @@ bool LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion,
       // opaque parts of the window are covered by different layers and we can
       // update those parts separately.
       IntRegion opaqueRegion;
-#ifdef XP_MACOSX
-      opaqueRegion =
-          mCompositor->GetWidget()->GetOpaqueWidgetRegion().ToUnknownRegion();
-#endif
-      opaqueRegion.AndWith(mRenderBounds);
+      opaqueRegion.And(aOpaqueRegion, mRenderBounds);
 
       // Limit the complexity of these regions. Usually, opaqueRegion should be
       // only one or two rects, so this SimplifyInward call will not change the
