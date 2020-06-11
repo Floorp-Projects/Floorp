@@ -52,7 +52,6 @@ void GMPVideoDecoder::Decoded(GMPVideoi420Frame* aDecodedFrame) {
       b.mPlanes[i].mWidth = (decodedFrame->Width() + 1) / 2;
       b.mPlanes[i].mHeight = (decodedFrame->Height() + 1) / 2;
     }
-    b.mPlanes[i].mOffset = 0;
     b.mPlanes[i].mSkip = 0;
   }
 

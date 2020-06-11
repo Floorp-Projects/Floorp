@@ -210,17 +210,14 @@ already_AddRefed<VideoData> DAV1DDecoder::ConstructImage(
   b.mPlanes[0].mStride = aPicture.stride[0];
   b.mPlanes[0].mHeight = aPicture.p.h;
   b.mPlanes[0].mWidth = aPicture.p.w;
-  b.mPlanes[0].mOffset = 0;
   b.mPlanes[0].mSkip = 0;
 
   b.mPlanes[1].mData = static_cast<uint8_t*>(aPicture.data[1]);
   b.mPlanes[1].mStride = aPicture.stride[1];
-  b.mPlanes[1].mOffset = 0;
   b.mPlanes[1].mSkip = 0;
 
   b.mPlanes[2].mData = static_cast<uint8_t*>(aPicture.data[2]);
   b.mPlanes[2].mStride = aPicture.stride[1];
-  b.mPlanes[2].mOffset = 0;
   b.mPlanes[2].mSkip = 0;
 
   // https://code.videolan.org/videolan/dav1d/blob/master/tools/output/yuv.c#L67

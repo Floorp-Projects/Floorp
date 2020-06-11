@@ -51,7 +51,6 @@ already_AddRefed<MediaData> BlankVideoDataCreator::Create(
   buffer.mPlanes[0].mStride = mFrameWidth;
   buffer.mPlanes[0].mHeight = mFrameHeight;
   buffer.mPlanes[0].mWidth = mFrameWidth;
-  buffer.mPlanes[0].mOffset = 0;
   buffer.mPlanes[0].mSkip = 0;
 
   // Cb plane.
@@ -59,7 +58,6 @@ already_AddRefed<MediaData> BlankVideoDataCreator::Create(
   buffer.mPlanes[1].mStride = (mFrameWidth + 1) / 2;
   buffer.mPlanes[1].mHeight = (mFrameHeight + 1) / 2;
   buffer.mPlanes[1].mWidth = (mFrameWidth + 1) / 2;
-  buffer.mPlanes[1].mOffset = 0;
   buffer.mPlanes[1].mSkip = 0;
 
   // Cr plane.
@@ -67,7 +65,6 @@ already_AddRefed<MediaData> BlankVideoDataCreator::Create(
   buffer.mPlanes[2].mStride = (mFrameWidth + 1) / 2;
   buffer.mPlanes[2].mHeight = (mFrameHeight + 1) / 2;
   buffer.mPlanes[2].mWidth = (mFrameWidth + 1) / 2;
-  buffer.mPlanes[2].mOffset = 0;
   buffer.mPlanes[2].mSkip = 0;
 
   buffer.mYUVColorSpace = gfx::YUVColorSpace::BT601;

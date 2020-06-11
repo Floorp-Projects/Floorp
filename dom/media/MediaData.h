@@ -441,7 +441,6 @@ class VideoData : public MediaData {
       uint32_t mWidth;
       uint32_t mHeight;
       uint32_t mStride;
-      uint32_t mOffset;
       uint32_t mSkip;
     };
 
