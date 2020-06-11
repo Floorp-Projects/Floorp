@@ -1,4 +1,5 @@
-var ia = new Int32Array(new SharedArrayBuffer(4));
+function test(SharedOrUnsharedArrayBuffer) {
+var ia = new Int32Array(new SharedOrUnsharedArrayBuffer(4));
 
 // Atomics.store() returns the input value converted to integer as if
 // by ToInteger.
@@ -37,3 +38,7 @@ function f() {
 
 for ( var i=0 ; i < 10 ; i++ )
     f();
+}
+
+test(SharedArrayBuffer);
+test(ArrayBuffer);
