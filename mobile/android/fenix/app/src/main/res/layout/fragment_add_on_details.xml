@@ -3,14 +3,14 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_marginTop="6dp"
     android:layout_marginBottom="6dp">
 
-    <RelativeLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
@@ -21,115 +21,137 @@
             android:id="@+id/details"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="20dp"
             android:textColor="?primaryText"
             android:textColorLink="?aboutLink"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
             tools:text="@tools:sample/lorem/random" />
 
         <TextView
             android:id="@+id/author_label"
+            style="@style/AboutHeaderContentText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_below="@+id/details"
-            style="@style/AboutHeaderContentText"
-            android:text="@string/mozac_feature_addons_authors" />
+            android:layout_marginTop="20dp"
+            android:text="@string/mozac_feature_addons_authors"
+            app:layout_constraintEnd_toStartOf="@+id/author_text"
+            app:layout_constraintHorizontal_chainStyle="spread_inside"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/details" />
 
         <TextView
             android:id="@+id/author_text"
+            style="@style/AboutHeaderContentText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_below="@+id/details"
             android:layout_alignParentEnd="true"
-            style="@style/AboutHeaderContentText"
+            android:layout_marginTop="20dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/author_label"
+            app:layout_constraintTop_toBottomOf="@+id/details"
             tools:text="@tools:sample/full_names" />
 
         <View
             android:id="@+id/author_divider"
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:layout_below="@+id/author_text"
             android:layout_marginTop="10dp"
-            android:layout_marginBottom="10dp"
             android:background="?android:attr/listDivider"
-            android:importantForAccessibility="no" />
+            android:importantForAccessibility="no"
+            app:layout_constraintTop_toBottomOf="@id/author_text"
+            tools:layout_editor_absoluteX="16dp" />
 
         <TextView
             android:id="@+id/version_label"
+            style="@style/AboutHeaderContentText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_below="@+id/author_divider"
-            style="@style/AboutHeaderContentText"
-            android:text="@string/mozac_feature_addons_version" />
+            android:layout_marginTop="10dp"
+            android:text="@string/mozac_feature_addons_version"
+            app:layout_constraintEnd_toStartOf="@+id/version_text"
+            app:layout_constraintHorizontal_chainStyle="spread_inside"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/author_divider"
+            tools:layout_editor_absoluteY="52dp" />
 
         <TextView
             android:id="@+id/version_text"
+            style="@style/AboutHeaderContentText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_below="@+id/author_divider"
-            android:layout_alignParentEnd="true"
-            style="@style/AboutHeaderContentText"
+            android:layout_marginTop="10dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/version_label"
+            app:layout_constraintTop_toBottomOf="@+id/author_divider"
             tools:text="1.2.3" />
 
         <View
             android:id="@+id/version_divider"
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:layout_below="@+id/version_text"
             android:layout_marginTop="10dp"
             android:layout_marginBottom="10dp"
             android:background="?android:attr/listDivider"
-            android:importantForAccessibility="no" />
+            android:importantForAccessibility="no"
+            app:layout_constraintTop_toBottomOf="@+id/version_text" />
 
         <TextView
             android:id="@+id/last_updated_label"
+            style="@style/AboutHeaderContentText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_below="@+id/version_divider"
-            style="@style/AboutHeaderContentText"
-            android:text="@string/mozac_feature_addons_last_updated" />
+            android:layout_marginTop="10dp"
+            android:text="@string/mozac_feature_addons_last_updated"
+            app:layout_constraintEnd_toStartOf="@+id/last_updated_text"
+            app:layout_constraintHorizontal_chainStyle="spread_inside"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/version_divider" />
 
         <TextView
             android:id="@+id/last_updated_text"
+            style="@style/AboutHeaderContentText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_below="@+id/version_divider"
-            android:layout_alignParentEnd="true"
-            style="@style/AboutHeaderContentText"
+            android:layout_marginTop="10dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/last_updated_label"
+            app:layout_constraintTop_toBottomOf="@+id/version_divider"
             tools:text="Oct 16, 2019" />
 
         <View
             android:id="@+id/last_updated_divider"
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:layout_below="@+id/last_updated_text"
             android:layout_marginTop="10dp"
-            android:layout_marginBottom="10dp"
             android:background="?android:attr/listDivider"
-            android:importantForAccessibility="no" />
+            android:importantForAccessibility="no"
+            app:layout_constraintTop_toBottomOf="@+id/last_updated_text" />
 
         <TextView
             android:id="@+id/home_page_label"
+            style="@style/AboutHeaderContentText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_below="@+id/last_updated_divider"
-            style="@style/AboutHeaderContentText"
+            android:layout_marginTop="10dp"
+            android:text="@string/mozac_feature_addons_home_page"
             android:textColor="?aboutLink"
-            android:text="@string/mozac_feature_addons_home_page" />
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/last_updated_divider" />
 
         <View
             android:id="@+id/home_page_divider"
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:layout_below="@+id/home_page_label"
             android:layout_marginTop="10dp"
-            android:layout_marginBottom="10dp"
             android:background="?android:attr/listDivider"
-            android:importantForAccessibility="no" />
+            android:importantForAccessibility="no"
+            app:layout_constraintTop_toBottomOf="@+id/home_page_label" />
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_below="@+id/home_page_divider">
+            android:layout_marginTop="10dp"
+            app:layout_constraintTop_toBottomOf="@+id/home_page_divider">
 
             <TextView
                 android:id="@+id/rating_label"
@@ -171,5 +193,5 @@
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 
-    </RelativeLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 </ScrollView>
