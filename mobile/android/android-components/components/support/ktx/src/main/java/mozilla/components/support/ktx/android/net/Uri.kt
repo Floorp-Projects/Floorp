@@ -25,3 +25,31 @@ val Uri.hostWithoutCommonPrefixes: String?
  */
 val Uri.isHttpOrHttps: Boolean
     get() = scheme == "http" || scheme == "https"
+
+/**
+ * Checks that the given URL is in one of the given URL [scopes].
+ *
+ * https://www.w3.org/TR/appmanifest/#dfn-within-scope
+ *
+ * @param scopes Uris that each represent a scope.
+ * A Uri is within the scope if the origin matches and it starts with the scope's path.
+ * @return True if this Uri is within any of the given scopes.
+ */
+fun Uri.isInScope(scopes: Iterable<Uri>): Boolean {
+    val path = path.orEmpty()
+    return scopes.any { scope ->
+        sameOriginAs(scope) && path.startsWith(scope.path.orEmpty())
+    }
+}
+
+/**
+ * Checks that Uri has the same scheme and host as [other].
+ */
+fun Uri.sameSchemeAndHostAs(other: Uri) = scheme == other.scheme && host == other.host
+
+/**
+ * Checks that Uri has the same origin as [other].
+ *
+ * https://html.spec.whatwg.org/multipage/origin.html#same-origin
+ */
+fun Uri.sameOriginAs(other: Uri) = sameSchemeAndHostAs(other) && port == other.port

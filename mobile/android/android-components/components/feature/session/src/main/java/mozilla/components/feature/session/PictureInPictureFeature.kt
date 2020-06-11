@@ -8,32 +8,32 @@ import android.app.Activity
 import android.app.PictureInPictureParams
 import android.content.pm.PackageManager
 import android.os.Build
+import android.os.Build.VERSION.SDK_INT
 import androidx.annotation.RequiresApi
-import mozilla.components.browser.session.SessionManager
-import mozilla.components.browser.session.runWithSessionIdOrSelected
+import mozilla.components.browser.state.action.ContentAction
+import mozilla.components.browser.state.selector.findTabOrCustomTabOrSelectedTab
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.support.base.crash.CrashReporting
 import mozilla.components.support.base.log.logger.Logger
 
 /**
  * A simple implementation of Picture-in-picture mode if on a supported platform.
  *
- * @param sessionManager Session Manager for observing the selected session's fullscreen mode changes.
+ * @param store Browser Store for observing the selected session's fullscreen mode changes.
  * @param activity the activity with the EngineView for calling PIP mode when required; the AndroidX Fragment
  * doesn't support this.
  * @param crashReporting Instance of `CrashReporting` to record unexpected caught exceptions
- * @param customTabSessionId ID of custom tab session.
- * @param pipChanged a change listener that allows the calling app to perform changes based on PIP mode.
+ * @param tabId ID of tab or custom tab session.
  */
 class PictureInPictureFeature(
-    private val sessionManager: SessionManager,
+    private val store: BrowserStore,
     private val activity: Activity,
     private val crashReporting: CrashReporting? = null,
-    private val customTabSessionId: String? = null,
-    private val pipChanged: ((Boolean) -> Unit?)? = null
+    private val tabId: String? = null
 ) {
     internal val logger = Logger("PictureInPictureFeature")
 
-    private val hasSystemFeature = Build.VERSION.SDK_INT >= Build.VERSION_CODES.N &&
+    private val hasSystemFeature = SDK_INT >= Build.VERSION_CODES.N &&
             activity.packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE)
 
     fun onHomePressed(): Boolean {
@@ -41,10 +41,8 @@ class PictureInPictureFeature(
             return false
         }
 
-        val fullScreenMode =
-            sessionManager.runWithSessionIdOrSelected(customTabSessionId) { session ->
-                session.fullScreenMode
-            }
+        val session = store.state.findTabOrCustomTabOrSelectedTab(tabId)
+        val fullScreenMode = session?.content?.fullScreen == true
         return fullScreenMode && try {
             enterPipModeCompat()
         } catch (e: IllegalStateException) {
@@ -57,12 +55,13 @@ class PictureInPictureFeature(
         }
     }
 
+    /**
+     * Enter Picture-in-Picture mode.
+     */
     fun enterPipModeCompat() = when {
         !hasSystemFeature -> false
-        Build.VERSION.SDK_INT >= Build.VERSION_CODES.O ->
-            enterPipModeForO()
-        Build.VERSION.SDK_INT >= Build.VERSION_CODES.N ->
-            enterPipModeForN()
+        SDK_INT >= Build.VERSION_CODES.O -> enterPipModeForO()
+        SDK_INT >= Build.VERSION_CODES.N -> enterPipModeForN()
         else -> false
     }
 
@@ -70,12 +69,19 @@ class PictureInPictureFeature(
     private fun enterPipModeForO() =
         activity.enterPictureInPictureMode(PictureInPictureParams.Builder().build())
 
-    @Suppress("DEPRECATION")
+    @Suppress("Deprecation")
     @RequiresApi(Build.VERSION_CODES.N)
     private fun enterPipModeForN() = run {
         activity.enterPictureInPictureMode()
         true
     }
 
-    fun onPictureInPictureModeChanged(enabled: Boolean) = pipChanged?.invoke(enabled)
+    /**
+     * Should be called when the system informs you of changes to and from picture-in-picture mode.
+     * @param enabled True if the activity is in picture-in-picture mode.
+     */
+    fun onPictureInPictureModeChanged(enabled: Boolean) {
+        val sessionId = tabId ?: store.state.selectedTabId ?: return
+        store.dispatch(ContentAction.PictureInPictureChangedAction(sessionId, enabled))
+    }
 }

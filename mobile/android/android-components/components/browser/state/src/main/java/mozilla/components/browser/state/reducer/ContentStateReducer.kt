@@ -10,6 +10,7 @@ import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.ContentState
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.state.content.HistoryState
+import mozilla.components.support.ktx.android.net.sameSchemeAndHostAs
 
 internal object ContentStateReducer {
     /**
@@ -103,6 +104,9 @@ internal object ContentStateReducer {
             is ContentAction.FullScreenChangedAction -> updateContentState(state, action.sessionId) {
                 it.copy(fullScreen = action.fullScreenEnabled)
             }
+            is ContentAction.PictureInPictureChangedAction -> updateContentState(state, action.sessionId) {
+                it.copy(pictureInPictureEnabled = action.pipEnabled)
+            }
             is ContentAction.ViewportFitChangedAction -> updateContentState(state, action.sessionId) {
                 it.copy(layoutInDisplayCutoutMode = action.layoutInDisplayCutoutMode)
             }
@@ -142,5 +146,5 @@ private fun isHostEquals(sessionUrl: String, newUrl: String): Boolean {
     val sessionUri = Uri.parse(sessionUrl)
     val newUri = Uri.parse(newUrl)
 
-    return sessionUri.scheme == newUri.scheme && sessionUri.host == newUri.host
+    return sessionUri.sameSchemeAndHostAs(newUri)
 }

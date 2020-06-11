@@ -9,20 +9,15 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import kotlinx.android.synthetic.main.fragment_browser.view.*
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.ObsoleteCoroutinesApi
 import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.feature.customtabs.CustomTabWindowFeature
 import mozilla.components.feature.customtabs.CustomTabsToolbarFeature
-import mozilla.components.feature.pwa.ext.getTrustedScope
 import mozilla.components.feature.pwa.ext.getWebAppManifest
 import mozilla.components.feature.pwa.ext.putWebAppManifest
-import mozilla.components.feature.pwa.ext.trustedOrigins
 import mozilla.components.feature.pwa.feature.ManifestUpdateFeature
 import mozilla.components.feature.pwa.feature.WebAppActivityFeature
 import mozilla.components.feature.pwa.feature.WebAppHideToolbarFeature
 import mozilla.components.feature.pwa.feature.WebAppSiteControlsFeature
-import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.ktx.android.arch.lifecycle.addObservers
@@ -56,10 +51,11 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), UserInteractionHandler
 
         hideToolbarFeature.set(
             feature = WebAppHideToolbarFeature(
-                components.sessionManager,
                 layout.toolbar,
-                sessionId!!,
-                listOfNotNull(manifest?.getTrustedScope())
+                components.store,
+                components.customTabsStore,
+                sessionId,
+                manifest
             ),
             owner = this,
             view = layout.toolbar)
@@ -101,26 +97,6 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), UserInteractionHandler
         }
 
         return layout
-    }
-
-    @ObsoleteCoroutinesApi
-    @ExperimentalCoroutinesApi
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-
-        val scope = listOfNotNull(manifest?.getTrustedScope())
-
-        consumeFrom(components.customTabsStore) { state ->
-            sessionId
-                ?.let { components.sessionManager.findSessionById(it) }
-                ?.let { session -> session.customTabConfig?.sessionToken }
-                ?.let { token -> state.tabs[token] }
-                ?.let { tabState ->
-                    hideToolbarFeature.withFeature {
-                        it.onTrustedScopesChange(scope + tabState.trustedOrigins)
-                    }
-                }
-        }
     }
 
     /**

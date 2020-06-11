@@ -5,158 +5,309 @@
 package mozilla.components.feature.pwa.feature
 
 import android.view.View
+import androidx.browser.customtabs.CustomTabsService.RELATION_HANDLE_ALL_URLS
+import androidx.browser.customtabs.CustomTabsSessionToken
 import androidx.core.net.toUri
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import mozilla.components.browser.session.Session
-import mozilla.components.browser.session.SessionManager
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.TestCoroutineDispatcher
+import mozilla.components.browser.state.action.ContentAction
+import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.state.ContentState
+import mozilla.components.browser.state.state.CustomTabConfig
+import mozilla.components.browser.state.state.CustomTabSessionState
+import mozilla.components.browser.state.state.TabSessionState
+import mozilla.components.browser.state.state.createCustomTab
+import mozilla.components.browser.state.state.createTab
+import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.concept.engine.manifest.WebAppManifest
+import mozilla.components.feature.customtabs.store.CustomTabState
+import mozilla.components.feature.customtabs.store.CustomTabsServiceState
+import mozilla.components.feature.customtabs.store.CustomTabsServiceStore
+import mozilla.components.feature.customtabs.store.OriginRelationPair
+import mozilla.components.feature.customtabs.store.ValidateRelationshipAction
+import mozilla.components.feature.customtabs.store.VerificationStatus
+import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
+import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito.`when`
-import org.mockito.Mockito.doReturn
-import org.mockito.Mockito.verify
 
+@ExperimentalCoroutinesApi
 @RunWith(AndroidJUnit4::class)
 class WebAppHideToolbarFeatureTest {
 
+    private val customTabId = "custom-id"
+    private val testDispatcher = TestCoroutineDispatcher()
+    private val toolbar = View(testContext)
+
+    @get:Rule
+    val coroutinesTestRule = MainCoroutineRule(testDispatcher)
+
     @Test
-    fun `hides toolbar immediately`() {
-        val toolbar: View = mock()
-        var changeResult = true
+    fun `hides toolbar immediately based on PWA manifest`() {
+        val tab = CustomTabSessionState(
+            id = customTabId,
+            content = ContentState("https://mozilla.org"),
+            config = CustomTabConfig()
+        )
+        val store = BrowserStore(BrowserState(customTabs = listOf(tab)))
 
-        WebAppHideToolbarFeature(mock(), toolbar, "id", listOf(mock())) { changeResult = it }
-        verify(toolbar).visibility = View.GONE
-        assertFalse(changeResult)
-
-        WebAppHideToolbarFeature(mock(), toolbar, "id", emptyList()) { changeResult = it }
-        verify(toolbar).visibility = View.VISIBLE
-        assertTrue(changeResult)
+        val feature = WebAppHideToolbarFeature(
+            toolbar,
+            store,
+            CustomTabsServiceStore(),
+            tabId = tab.id,
+            manifest = mockManifest("https://mozilla.org")
+        )
+        feature.start()
+        assertEquals(View.GONE, toolbar.visibility)
     }
 
     @Test
-    fun `registers session observer`() {
-        val sessionManager: SessionManager = mock()
-        val session: Session = mock()
-        `when`(sessionManager.findSessionById("id")).thenReturn(session)
+    fun `hides toolbar immediately based on trusted origins`() {
+        val token = mock<CustomTabsSessionToken>()
+        val tab = CustomTabSessionState(
+            id = customTabId,
+            content = ContentState("https://mozilla.org"),
+            config = CustomTabConfig(sessionToken = token)
+        )
+        val store = BrowserStore(BrowserState(customTabs = listOf(tab)))
+        val customTabsStore = CustomTabsServiceStore(CustomTabsServiceState(
+            tabs = mapOf(token to mockCustomTabState("https://firefox.com", "https://mozilla.org"))
+        ))
 
-        val feature = WebAppHideToolbarFeature(sessionManager, mock(), "id", listOf(mock()))
-
+        val feature = WebAppHideToolbarFeature(
+            toolbar,
+            store,
+            customTabsStore,
+            tabId = tab.id
+        )
         feature.start()
-        verify(session).register(feature)
+        assertEquals(View.GONE, toolbar.visibility)
+    }
 
-        feature.stop()
-        verify(session).unregister(feature)
+    @Test
+    fun `does not hide toolbar for a normal tab`() {
+        val tab = createTab("https://mozilla.org")
+        val store = BrowserStore(BrowserState(tabs = listOf(tab)))
+
+        val feature = WebAppHideToolbarFeature(toolbar, store, CustomTabsServiceStore(), tabId = tab.id)
+        feature.start()
+        assertEquals(View.VISIBLE, toolbar.visibility)
+    }
+
+    @Test
+    fun `does not hide toolbar for an invalid tab`() {
+        val store = BrowserStore()
+
+        val feature = WebAppHideToolbarFeature(toolbar, store, CustomTabsServiceStore())
+        feature.start()
+        assertEquals(View.VISIBLE, toolbar.visibility)
+    }
+
+    @Test
+    fun `does hide toolbar for a normal tab in fullscreen`() {
+        val tab = TabSessionState(
+            content = ContentState(
+                url = "https://mozilla.org",
+                fullScreen = true
+            )
+        )
+        val store = BrowserStore(BrowserState(tabs = listOf(tab)))
+
+        val feature = WebAppHideToolbarFeature(toolbar, store, CustomTabsServiceStore(), tabId = tab.id)
+        feature.start()
+        assertEquals(View.GONE, toolbar.visibility)
+    }
+
+    @Test
+    fun `does hide toolbar for a normal tab in PIP`() {
+        val tab = TabSessionState(
+            content = ContentState(
+                url = "https://mozilla.org",
+                pictureInPictureEnabled = true
+            )
+        )
+        val store = BrowserStore(BrowserState(tabs = listOf(tab)))
+
+        val feature = WebAppHideToolbarFeature(toolbar, store, CustomTabsServiceStore(), tabId = tab.id)
+        feature.start()
+        assertEquals(View.GONE, toolbar.visibility)
+    }
+
+    @Test
+    fun `does not hide toolbar if origin is not trusted`() {
+        val token = mock<CustomTabsSessionToken>()
+        val tab = createCustomTab(
+            id = customTabId,
+            url = "https://firefox.com",
+            config = CustomTabConfig(sessionToken = token)
+        )
+        val store = BrowserStore(BrowserState(customTabs = listOf(tab)))
+        val customTabsStore = CustomTabsServiceStore(CustomTabsServiceState(
+            tabs = mapOf(token to mockCustomTabState("https://mozilla.org"))
+        ))
+
+        val feature = WebAppHideToolbarFeature(
+            toolbar,
+            store,
+            customTabsStore,
+            tabId = tab.id
+        )
+        feature.start()
+        assertEquals(View.VISIBLE, toolbar.visibility)
     }
 
     @Test
     fun `onUrlChanged hides toolbar if URL is in origin`() {
-        val trusted = listOf("https://mozilla.com".toUri(), "https://m.mozilla.com".toUri())
-        val toolbar = View(testContext)
-        val feature = WebAppHideToolbarFeature(mock(), toolbar, "id", trusted)
+        val token = mock<CustomTabsSessionToken>()
+        val tab = createCustomTab(
+            id = customTabId,
+            url = "https://mozilla.org",
+            config = CustomTabConfig(sessionToken = token)
+        )
+        val store = BrowserStore(BrowserState(customTabs = listOf(tab)))
+        val customTabsStore = CustomTabsServiceStore(CustomTabsServiceState(
+            tabs = mapOf(token to mockCustomTabState("https://mozilla.com", "https://m.mozilla.com"))
+        ))
+        val feature = WebAppHideToolbarFeature(
+            toolbar,
+            store,
+            customTabsStore,
+            tabId = customTabId
+        )
+        feature.start()
 
-        feature.onUrlChanged(mock(), "https://mozilla.com/example-page")
+        store.dispatch(
+            ContentAction.UpdateUrlAction(customTabId, "https://mozilla.com/example-page")
+        ).joinBlocking()
         assertEquals(View.GONE, toolbar.visibility)
 
-        feature.onUrlChanged(mock(), "https://firefox.com/out-of-scope")
+        store.dispatch(
+            ContentAction.UpdateUrlAction(customTabId, "https://firefox.com/out-of-scope")
+        ).joinBlocking()
         assertEquals(View.VISIBLE, toolbar.visibility)
 
-        feature.onUrlChanged(mock(), "https://mozilla.com/back-in-scope")
+        store.dispatch(
+            ContentAction.UpdateUrlAction(customTabId, "https://mozilla.com/back-in-scope")
+        ).joinBlocking()
         assertEquals(View.GONE, toolbar.visibility)
 
-        feature.onUrlChanged(mock(), "https://m.mozilla.com/second-origin")
+        store.dispatch(
+            ContentAction.UpdateUrlAction(customTabId, "https://m.mozilla.com/second-origin")
+        ).joinBlocking()
         assertEquals(View.GONE, toolbar.visibility)
     }
 
     @Test
     fun `onUrlChanged hides toolbar if URL is in scope`() {
-        val trusted = listOf("https://mozilla.github.io/my-app/".toUri())
-        val toolbar = View(testContext)
-        val feature = WebAppHideToolbarFeature(mock(), toolbar, "id", trusted)
+        val tab = createCustomTab(id = customTabId, url = "https://mozilla.org")
+        val store = BrowserStore(BrowserState(customTabs = listOf(tab)))
+        val feature = WebAppHideToolbarFeature(
+            toolbar,
+            store,
+            CustomTabsServiceStore(),
+            tabId = customTabId,
+            manifest = mockManifest("https://mozilla.github.io/my-app/")
+        )
+        feature.start()
 
-        feature.onUrlChanged(mock(), "https://mozilla.github.io/my-app/")
+        store.dispatch(
+            ContentAction.UpdateUrlAction(customTabId, "https://mozilla.github.io/my-app/")
+        ).joinBlocking()
         assertEquals(View.GONE, toolbar.visibility)
 
-        feature.onUrlChanged(mock(), "https://firefox.com/out-of-scope")
+        store.dispatch(
+            ContentAction.UpdateUrlAction(customTabId, "https://firefox.com/out-of-scope")
+        ).joinBlocking()
         assertEquals(View.VISIBLE, toolbar.visibility)
 
-        feature.onUrlChanged(mock(), "https://mozilla.github.io/my-app-almost-in-scope")
+        store.dispatch(
+            ContentAction.UpdateUrlAction(customTabId, "https://mozilla.github.io/my-app-almost-in-scope")
+        ).joinBlocking()
         assertEquals(View.VISIBLE, toolbar.visibility)
 
-        feature.onUrlChanged(mock(), "https://mozilla.github.io/my-app/sub-page")
+        store.dispatch(
+            ContentAction.UpdateUrlAction(customTabId, "https://mozilla.github.io/my-app/sub-page")
+        ).joinBlocking()
         assertEquals(View.GONE, toolbar.visibility)
     }
 
     @Test
     fun `onUrlChanged hides toolbar if URL is in ambiguous scope`() {
-        val trusted = listOf("https://mozilla.github.io/prefix".toUri())
-        val toolbar = View(testContext)
-        val feature = WebAppHideToolbarFeature(mock(), toolbar, "id", trusted)
+        val tab = createCustomTab(id = customTabId, url = "https://mozilla.org")
+        val store = BrowserStore(BrowserState(customTabs = listOf(tab)))
+        val feature = WebAppHideToolbarFeature(
+            toolbar,
+            store,
+            CustomTabsServiceStore(),
+            tabId = customTabId,
+            manifest = mockManifest("https://mozilla.github.io/prefix")
+        )
+        feature.start()
 
-        feature.onUrlChanged(mock(), "https://mozilla.github.io/prefix/")
+        store.dispatch(
+            ContentAction.UpdateUrlAction(customTabId, "https://mozilla.github.io/prefix/")
+        ).joinBlocking()
         assertEquals(View.GONE, toolbar.visibility)
 
-        feature.onUrlChanged(mock(), "https://mozilla.github.io/prefix-of/resource.html")
+        store.dispatch(
+            ContentAction.UpdateUrlAction(customTabId, "https://mozilla.github.io/prefix-of/resource.html")
+        ).joinBlocking()
         assertEquals(View.GONE, toolbar.visibility)
     }
 
     @Test
     fun `onTrustedScopesChange hides toolbar if URL is in origin`() {
-        val sessionManager: SessionManager = mock()
-        val session: Session = mock()
-        val trusted = listOf("https://mozilla.com".toUri(), "https://m.mozilla.com".toUri())
-        val toolbar = View(testContext)
-        val feature = WebAppHideToolbarFeature(sessionManager, toolbar, "id", trusted)
+        val token = mock<CustomTabsSessionToken>()
+        val tab = createCustomTab(
+            id = customTabId,
+            url = "https://mozilla.com/example-page",
+            config = CustomTabConfig(sessionToken = token)
+        )
+        val store = BrowserStore(BrowserState(customTabs = listOf(tab)))
+        val customTabsStore = CustomTabsServiceStore(CustomTabsServiceState(
+            tabs = mapOf(token to mockCustomTabState())
+        ))
+        val feature = WebAppHideToolbarFeature(
+            toolbar,
+            store,
+            customTabsStore,
+            tabId = customTabId
+        )
+        feature.start()
 
-        doReturn(session).`when`(sessionManager).findSessionById("id")
-        doReturn("https://mozilla.com/example-page").`when`(session).url
-
-        feature.onTrustedScopesChange(listOf("https://m.mozilla.com".toUri()))
+        customTabsStore.dispatch(ValidateRelationshipAction(
+            token,
+            RELATION_HANDLE_ALL_URLS,
+            "https://m.mozilla.com".toUri(),
+            VerificationStatus.PENDING
+        )).joinBlocking()
         assertEquals(View.VISIBLE, toolbar.visibility)
 
-        feature.onTrustedScopesChange(listOf("https://mozilla.com".toUri()))
+        customTabsStore.dispatch(ValidateRelationshipAction(
+            token,
+            RELATION_HANDLE_ALL_URLS,
+            "https://mozilla.com".toUri(),
+            VerificationStatus.PENDING
+        )).joinBlocking()
         assertEquals(View.GONE, toolbar.visibility)
     }
 
-    @Test
-    fun `onTrustedScopesChange hides toolbar if URL is in scope`() {
-        val sessionManager: SessionManager = mock()
-        val session: Session = mock()
-        val trusted = listOf("https://mozilla.github.io/my-app/".toUri())
-        val toolbar = View(testContext)
-        val feature = WebAppHideToolbarFeature(sessionManager, toolbar, "id", trusted)
+    private fun mockCustomTabState(vararg origins: String) = CustomTabState(
+        relationships = origins.map { origin ->
+            OriginRelationPair(origin.toUri(), RELATION_HANDLE_ALL_URLS) to VerificationStatus.PENDING
+        }.toMap()
+    )
 
-        doReturn(session).`when`(sessionManager).findSessionById("id")
-        doReturn("https://mozilla.github.io/my-app/").`when`(session).url
-
-        feature.onTrustedScopesChange(listOf("https://mozilla.github.io/my-app/".toUri()))
-        assertEquals(View.GONE, toolbar.visibility)
-
-        feature.onTrustedScopesChange(listOf("https://firefox.com/out-of-scope/".toUri()))
-        assertEquals(View.VISIBLE, toolbar.visibility)
-
-        feature.onTrustedScopesChange(listOf("https://mozilla.github.io/my-app-almost-in-scope".toUri()))
-        assertEquals(View.VISIBLE, toolbar.visibility)
-    }
-
-    @Test
-    fun `onTrustedScopesChange hides toolbar if URL is in ambiguous scope`() {
-        val sessionManager: SessionManager = mock()
-        val session: Session = mock()
-        val trusted = listOf("https://mozilla.github.io/prefix".toUri())
-        val toolbar = View(testContext)
-        val feature = WebAppHideToolbarFeature(sessionManager, toolbar, "id", trusted)
-
-        doReturn(session).`when`(sessionManager).findSessionById("id")
-        doReturn("https://mozilla.github.io/prefix-of/resource.html").`when`(session).url
-
-        feature.onTrustedScopesChange(listOf("https://mozilla.github.io/prefix".toUri()))
-        assertEquals(View.GONE, toolbar.visibility)
-
-        feature.onTrustedScopesChange(listOf("https://mozilla.github.io/prefix-of/".toUri()))
-        assertEquals(View.GONE, toolbar.visibility)
-    }
+    private fun mockManifest(scope: String) = WebAppManifest(
+        name = "Mock",
+        startUrl = scope,
+        scope = scope,
+        display = WebAppManifest.DisplayMode.STANDALONE
+    )
 }
