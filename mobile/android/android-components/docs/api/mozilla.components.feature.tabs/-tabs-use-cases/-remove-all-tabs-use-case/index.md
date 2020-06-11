@@ -2,7 +2,7 @@
 
 # RemoveAllTabsUseCase
 
-`class RemoveAllTabsUseCase` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/tabs/src/main/java/mozilla/components/feature/tabs/TabsUseCases.kt#L184)
+`class RemoveAllTabsUseCase` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/tabs/src/main/java/mozilla/components/feature/tabs/TabsUseCases.kt#L208)
 
 ### Functions
 

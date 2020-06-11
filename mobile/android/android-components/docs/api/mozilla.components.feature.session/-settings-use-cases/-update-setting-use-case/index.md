@@ -7,12 +7,6 @@
 Use case to update a setting and then change all
 active browsing sessions to use the new setting.
 
-### Parameters
-
-`engineSettings` - the engine's [Settings](../../../mozilla.components.concept.engine/-settings/index.md). The first settings object that is updated.
-
-`sessionManager` - the application's [SessionManager](../../../mozilla.components.browser.session/-session-manager/index.md). Used to query the active sessions.
-
 ### Functions
 
 | Name | Summary |

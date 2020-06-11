@@ -2,7 +2,7 @@
 
 # ThumbnailStorage
 
-`class ThumbnailStorage` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/thumbnails/src/main/java/mozilla/components/browser/thumbnails/storage/ThumbnailStorage.kt#L32)
+`class ThumbnailStorage` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/thumbnails/src/main/java/mozilla/components/browser/thumbnails/storage/ThumbnailStorage.kt#L34)
 
 Thumbnail storage layer which handles saving and loading the thumbnail from the disk cache.
 
@@ -18,7 +18,7 @@ Thumbnail storage layer which handles saving and loading the thumbnail from the 
 | Name | Summary |
 |---|---|
 | [loadThumbnail](load-thumbnail.md) | `fun loadThumbnail(sessionIdOrUrl: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): Deferred<<ERROR CLASS>?>`<br>Asynchronously loads a thumbnail [Bitmap](#) for the given session ID or url. |
-| [saveThumbnail](save-thumbnail.md) | `fun saveThumbnail(sessionIdOrUrl: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, bitmap: <ERROR CLASS>): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Stores the given thumbnail [Bitmap](#) into the disk cache with the provided session ID or url as its key. |
+| [saveThumbnail](save-thumbnail.md) | `fun saveThumbnail(sessionIdOrUrl: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, bitmap: <ERROR CLASS>): Job`<br>Stores the given thumbnail [Bitmap](#) into the disk cache with the provided session ID or url as its key. |
 
 ### Extension Functions
 

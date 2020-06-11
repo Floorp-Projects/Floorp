@@ -58,6 +58,7 @@ $dokka.location:mozilla.components.support.ktx.kotlin$isPhone(kotlin.String)moz
 $dokka.location:mozilla.components.support.ktx.kotlin$isSameOriginAs(kotlin.String, kotlin.String)mozilla.components.support.ktx.kotlin/kotlin.-string/is-same-origin-as.md
 $dokka.location:mozilla.components.support.ktx.kotlin$isUrl(kotlin.String)mozilla.components.support.ktx.kotlin/kotlin.-string/is-url.md
 $dokka.location:mozilla.components.support.ktx.kotlin$pkcs7unpad(kotlin.ByteArray)mozilla.components.support.ktx.kotlin/kotlin.-byte-array/pkcs7unpad.md
+$dokka.location:mozilla.components.support.ktx.kotlin$sanitizeURL(kotlin.String)mozilla.components.support.ktx.kotlin/kotlin.-string/sanitize-u-r-l.md
 $dokka.location:mozilla.components.support.ktx.kotlin$sha1(kotlin.String)mozilla.components.support.ktx.kotlin/kotlin.-string/sha1.md
 $dokka.location:mozilla.components.support.ktx.kotlin$toBitmap(kotlin.ByteArray, )mozilla.components.support.ktx.kotlin/kotlin.-byte-array/to-bitmap.md
 $dokka.location:mozilla.components.support.ktx.kotlin$toBitmap(kotlin.ByteArray, kotlin.Int, kotlin.Int, )mozilla.components.support.ktx.kotlin/kotlin.-byte-array/to-bitmap.md
@@ -180,6 +181,7 @@ mozilla.components.feature.addons.update
 mozilla.components.feature.app.links
 mozilla.components.feature.awesomebar
 mozilla.components.feature.awesomebar.provider
+mozilla.components.feature.containers
 mozilla.components.feature.contextmenu
 mozilla.components.feature.contextmenu.ext
 mozilla.components.feature.contextmenu.facts

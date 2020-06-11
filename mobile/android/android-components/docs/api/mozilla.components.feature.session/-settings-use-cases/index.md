@@ -2,15 +2,15 @@
 
 # SettingsUseCases
 
-`class SettingsUseCases` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/session/src/main/java/mozilla/components/feature/session/SettingsUseCases.kt#L18)
+`class SettingsUseCases` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/session/src/main/java/mozilla/components/feature/session/SettingsUseCases.kt#L19)
 
-Contains use cases related to user settings.
+Contains use cases related to engine [Settings](../../mozilla.components.concept.engine/-settings/index.md).
 
 ### Parameters
 
-`engineSettings` - the engine's [Settings](../../mozilla.components.concept.engine/-settings/index.md).
+`engine` - reference to the application's browser [Engine](../../mozilla.components.concept.engine/-engine/index.md).
 
-`sessionManager` - the application's [SessionManager](../../mozilla.components.browser.session/-session-manager/index.md).
+`sessionManager` - the application's [SessionManager](../../mozilla.components.browser.session/-session-manager/index.md).*
 
 ### Types
 
@@ -23,7 +23,7 @@ Contains use cases related to user settings.
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `SettingsUseCases(engineSettings: `[`Settings`](../../mozilla.components.concept.engine/-settings/index.md)`, sessionManager: `[`SessionManager`](../../mozilla.components.browser.session/-session-manager/index.md)`)`<br>Contains use cases related to user settings. |
+| [&lt;init&gt;](-init-.md) | `SettingsUseCases(engine: `[`Engine`](../../mozilla.components.concept.engine/-engine/index.md)`, sessionManager: `[`SessionManager`](../../mozilla.components.browser.session/-session-manager/index.md)`)`<br>Contains use cases related to engine [Settings](../../mozilla.components.concept.engine/-settings/index.md). |
 
 ### Properties
 

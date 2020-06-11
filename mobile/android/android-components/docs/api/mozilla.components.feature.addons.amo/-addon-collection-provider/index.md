@@ -2,7 +2,7 @@
 
 # AddonCollectionProvider
 
-`class AddonCollectionProvider : `[`AddonsProvider`](../../mozilla.components.feature.addons/-addons-provider/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/addons/src/main/java/mozilla/components/feature/addons/amo/AddonCollectionProvider.kt#L48)
+`class AddonCollectionProvider : `[`AddonsProvider`](../../mozilla.components.feature.addons/-addons-provider/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/addons/src/main/java/mozilla/components/feature/addons/amo/AddonCollectionProvider.kt#L49)
 
 Provide access to the collections AMO API.
 https://addons-server.readthedocs.io/en/latest/topics/api/collections.html
