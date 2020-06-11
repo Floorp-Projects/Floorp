@@ -1,0 +1,12 @@
+{
+    "loganberry/web-platform/tests": {
+        "testharness": [
+            "html/test_wpt.html"
+        ]
+    },
+    "loganberry/web-platform/mozilla/tests": {
+        "testharness": [
+            "html/test_wpt.html"
+        ]
+    }
+}

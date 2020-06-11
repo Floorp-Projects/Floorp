@@ -736,6 +736,7 @@ class TestResolver(MozbuildObject):
 
         for manifest, data in six.iteritems(manifests):
             tests_root = data["tests_path"]  # full path on disk until web-platform tests directory
+
             for test_type, path, tests in manifest:
                 full_path = mozpath.join(tests_root, path)
                 src_path = mozpath.relpath(full_path, self.topsrcdir)
