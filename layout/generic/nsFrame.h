@@ -381,19 +381,6 @@ class nsFrame : public nsIFrame {
 
   // Returns true if this frame has any kind of CSS transitions.
   bool HasCSSTransitions();
-
- public:
-#ifdef DEBUG
-  static mozilla::LazyLogModule sFrameLogModule;
-
-  // Show frame borders when rendering
-  static void ShowFrameBorders(bool aEnable);
-  static bool GetShowFrameBorders();
-
-  // Show frame border of event target
-  static void ShowEventTargetFrameBorder(bool aEnable);
-  static bool GetShowEventTargetFrameBorder();
-#endif
 };
 
 #endif /* nsFrame_h___ */
