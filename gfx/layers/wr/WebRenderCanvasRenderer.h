@@ -19,15 +19,13 @@ class WebRenderCanvasRenderer : public ShareableCanvasRenderer {
   explicit WebRenderCanvasRenderer(RenderRootStateManager* aManager)
       : mManager(aManager) {}
 
-  void Initialize(const CanvasInitializeData& aData) override;
-
   CompositableForwarder* GetForwarder() override;
 
  protected:
   RenderRootStateManager* mManager;
 };
 
-class WebRenderCanvasRendererAsync : public WebRenderCanvasRenderer {
+class WebRenderCanvasRendererAsync final : public WebRenderCanvasRenderer {
  public:
   explicit WebRenderCanvasRendererAsync(RenderRootStateManager* aManager)
       : WebRenderCanvasRenderer(aManager) {}
@@ -37,11 +35,10 @@ class WebRenderCanvasRendererAsync : public WebRenderCanvasRenderer {
     return this;
   }
 
-  void Initialize(const CanvasInitializeData& aData) override;
+  void Initialize(const CanvasRendererData& aData) override;
   bool CreateCompositable() override;
 
   void ClearCachedResources() override;
-  void Destroy() override;
 
   void UpdateCompositableClientForEmptyTransaction();
 

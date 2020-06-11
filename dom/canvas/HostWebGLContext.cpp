@@ -7,7 +7,7 @@
 
 #include "CompositableHost.h"
 #include "mozilla/layers/LayerTransactionChild.h"
-#include "mozilla/layers/TextureClientSharedSurface.h"
+#include "mozilla/layers/LayersSurfaces.h"
 
 #include "MozFramebuffer.h"
 #include "TexUnpackBlob.h"
@@ -106,9 +106,9 @@ void HostWebGLContext::JsWarning(const std::string& text) const {
   (void)mOwnerData.outOfProcess->mParent.SendJsWarning(text);
 }
 
-RefPtr<layers::SharedSurfaceTextureClient> HostWebGLContext::GetVRFrame(
-    ObjectId id) const {
-  return mContext->GetVRFrame(AutoResolve(id));
+Maybe<layers::SurfaceDescriptor> HostWebGLContext::GetFrontBuffer(
+    const layers::TextureType t) const {
+  return mContext->GetFrontBuffer(t);
 }
 
 //////////////////////////////////////////////

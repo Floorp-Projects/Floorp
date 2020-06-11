@@ -35,7 +35,7 @@ class BasicCanvasLayer : public CanvasLayer, public BasicImplData {
     return static_cast<BasicLayerManager*>(mManager);
   }
 
-  CanvasRenderer* CreateCanvasRendererInternal() override;
+  RefPtr<CanvasRenderer> CreateCanvasRendererInternal() override;
 };
 
 }  // namespace layers
