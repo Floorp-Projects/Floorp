@@ -5080,7 +5080,15 @@ class nsIFrame : public nsQueryFrame {
   void DumpFrameTreeLimited() const;
   void DumpFrameTreeLimitedInCSSPixels() const;
 
-  virtual nsresult GetFrameName(nsAString& aResult) const = 0;
+  /**
+   * Get a printable from of the name of the frame type.
+   * XXX This should be eliminated and we use GetType() instead...
+   */
+  virtual nsresult GetFrameName(nsAString& aResult) const;
+  nsresult MakeFrameName(const nsAString& aType, nsAString& aResult) const;
+  // Helper function to return the index in parent of the frame's content
+  // object. Returns -1 on error or if the frame doesn't have a content object
+  static int32_t ContentIndexInContainer(const nsIFrame* aFrame);
 #endif
 };
 

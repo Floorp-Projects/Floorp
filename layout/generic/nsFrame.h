@@ -383,18 +383,6 @@ class nsFrame : public nsIFrame {
   bool HasCSSTransitions();
 
  public:
-#ifdef DEBUG_FRAME_DUMP
-  /**
-   * Get a printable from of the name of the frame type.
-   * XXX This should be eliminated and we use GetType() instead...
-   */
-  nsresult GetFrameName(nsAString& aResult) const override;
-  nsresult MakeFrameName(const nsAString& aKind, nsAString& aResult) const;
-  // Helper function to return the index in parent of the frame's content
-  // object. Returns -1 on error or if the frame doesn't have a content object
-  static int32_t ContentIndexInContainer(const nsIFrame* aFrame);
-#endif
-
 #ifdef DEBUG
   static mozilla::LazyLogModule sFrameLogModule;
 
