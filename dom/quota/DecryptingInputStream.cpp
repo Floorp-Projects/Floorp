@@ -9,11 +9,24 @@
 
 namespace mozilla::dom::quota {
 
-NS_IMPL_ISUPPORTS(DecryptingInputStreamBase, nsIInputStream);
+NS_IMPL_ADDREF(DecryptingInputStreamBase);
+NS_IMPL_RELEASE(DecryptingInputStreamBase);
+
+NS_INTERFACE_MAP_BEGIN(DecryptingInputStreamBase)
+  NS_INTERFACE_MAP_ENTRY(nsIInputStream)
+  NS_INTERFACE_MAP_ENTRY(nsISeekableStream)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIInputStream)
+NS_INTERFACE_MAP_END
 
 DecryptingInputStreamBase::DecryptingInputStreamBase(
     MovingNotNull<nsCOMPtr<nsIInputStream>> aBaseStream, size_t aBlockSize)
-    : mBaseStream(std::move(aBaseStream)), mBlockSize(aBlockSize) {}
+    : mBaseStream(std::move(aBaseStream)), mBlockSize(aBlockSize) {
+  const nsCOMPtr<nsISeekableStream> seekableStream =
+      do_QueryInterface(mBaseStream->get());
+  MOZ_ASSERT(seekableStream &&
+             SameCOMIdentity(mBaseStream->get(), seekableStream));
+  mBaseSeekableStream.init(WrapNotNullUnchecked(seekableStream));
+}
 
 NS_IMETHODIMP DecryptingInputStreamBase::Read(char* aBuf, uint32_t aCount,
                                               uint32_t* aBytesReadOut) {
@@ -23,6 +36,12 @@ NS_IMETHODIMP DecryptingInputStreamBase::Read(char* aBuf, uint32_t aCount,
 NS_IMETHODIMP DecryptingInputStreamBase::IsNonBlocking(bool* aNonBlockingOut) {
   *aNonBlockingOut = false;
   return NS_OK;
+}
+
+NS_IMETHODIMP DecryptingInputStreamBase::SetEOF() {
+  // Cannot truncate a read-only stream.
+
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 size_t DecryptingInputStreamBase::PlainLength() const {
