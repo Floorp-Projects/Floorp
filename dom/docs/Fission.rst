@@ -309,8 +309,8 @@ In the old model, framescript were loaded and executed as soon as possible by th
 
 1. They're instantiated explicitly by calling ``getActor`` on a ``WindowGlobal``, and passing in the name of the Actor.
 2. A message is sent to them.
-3. A pre-defined ``nsIObserver`` observer notification fires
-4. A pre-defined content Event fires
+3. A pre-defined ``nsIObserver`` observer notification fires with the subject of the notification corresponding to an inner or outer window.
+4. A pre-defined content Event fires.
 
 Making the Actors lazy like this saves on processing time to get a frame ready to load web pages, as well as the overhead of loading the Actor into memory.
 
@@ -498,9 +498,12 @@ We're similarly declaring where the ``PluginChild`` subclassing ``JSWindowActorC
 Next, we declare the content events, if fired in a BrowsingContext, will cause the JSWindowActor pair to instantiate if it doesn't already exist, and then have ``handleEvent`` called on the ``PluginChild`` instance. For each event name, an Object of event listener options can be passed. You can use the same event listener options as accepted by ``addEventListener``.
 
 .. note::
-  Content events make sense for JSWindowActor (which *have* a content) but are ignored for JSProcessActor (which don't).
+  Content events make sense for ``JSWindowActorChild`` (which *have* a content) but are ignored for ``JSProcessActorChild`` (which don't).
 
-Next, we declare that ``PluginChild`` should observe the ``decoder-doctor-notification`` ``nsIObserver`` notification. When that observer notification fires, the ``PluginChild`` will be instantiated for all ``BrowsingContext``'s, and the ``observe`` method on the ``PluginChild`` implementation will be called.
+Next, we declare that ``PluginChild`` should observe the ``decoder-doctor-notification`` ``nsIObserver`` notification. When that observer notification fires, the ``PluginChild`` actor will be instantiated for the ``BrowsingContext`` corresponding to the inner or outer window that is the subject argument of the observer notification, and the ``observe`` method on that ``PluginChild`` implementation will be called. If you need this functionality to work with other subjects, please file a bug.
+
+.. note::
+  Unlike ``JSWindowActorChild`` subclasses, observer topics specified for ``JSProcessActorChild`` subclasses will cause those child actor instances to be created and invoke their ``observe`` method no matter what the subject argument of the observer is.
 
 Finally, we say that the ``PluginChild`` actor should apply to ``allFrames``. This means that the ``PluginChild`` is allowed to be loaded in any subframe. If ``allFrames`` is set to false (the default), the actor will only ever load in the top-level frame.
 
