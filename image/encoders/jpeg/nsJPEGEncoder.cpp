@@ -8,6 +8,7 @@
 #include "nsString.h"
 #include "nsStreamUtils.h"
 #include "gfxColor.h"
+#include "mozilla/CheckedInt.h"
 
 extern "C" {
 #include "jpeglib.h"
@@ -443,10 +444,14 @@ boolean nsJPEGEncoderInternal::emptyOutputBuffer(jpeg_compress_struct* cinfo) {
   that->mImageBufferUsed = that->mImageBufferSize;
 
   // expand buffer, just double size each time
-  that->mImageBufferSize *= 2;
+  uint8_t* newBuf = nullptr;
+  CheckedInt<uint32_t> bufSize =
+      CheckedInt<uint32_t>(that->mImageBufferSize) * 2;
+  if (bufSize.isValid()) {
+    that->mImageBufferSize = bufSize.value();
+    newBuf = (uint8_t*)realloc(that->mImageBuffer, that->mImageBufferSize);
+  }
 
-  uint8_t* newBuf =
-      (uint8_t*)realloc(that->mImageBuffer, that->mImageBufferSize);
   if (!newBuf) {
     // can't resize, just zero (this will keep us from writing more)
     free(that->mImageBuffer);
