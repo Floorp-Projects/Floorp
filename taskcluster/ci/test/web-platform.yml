@@ -37,6 +37,7 @@ job-defaults:
                     - remove_executables.py
     target:
         by-test-platform:
+            android-em-7.0-x86_64-shippable/opt: geckoview-androidTest.apk
             android-em-7.0-x86_64/opt: geckoview-androidTest.apk
             android-em-7.0-x86_64/debug: geckoview-androidTest.apk
             default: null

@@ -854,18 +854,17 @@ def set_treeherder_machine_platform(config, tasks):
             platform_new = task['test-platform'].replace('-pgo/opt', '/pgo')
             task['treeherder-machine-platform'] = platform_new
         elif 'android-em-7.0-x86_64-qr' in task['test-platform']:
-            opt = task['test-platform'].split('/')[1]
-            task['treeherder-machine-platform'] = 'android-em-7-0-x86_64-qr/'+opt
+            task['treeherder-machine-platform'] = task['test-platform'].replace('.', '-')
+        elif 'android-em-7.0-x86_64-shippable-qr' in task['test-platform']:
+            task['treeherder-machine-platform'] = task['test-platform'].replace('.', '-')
         elif '-qr' in task['test-platform']:
             task['treeherder-machine-platform'] = task['test-platform']
         elif 'android-hw' in task['test-platform']:
             task['treeherder-machine-platform'] = task['test-platform']
         elif 'android-em-7.0-x86_64' in task['test-platform']:
-            opt = task['test-platform'].split('/')[1]
-            task['treeherder-machine-platform'] = 'android-em-7-0-x86_64/'+opt
+            task['treeherder-machine-platform'] = task['test-platform'].replace('.', '-')
         elif 'android-em-7.0-x86' in task['test-platform']:
-            opt = task['test-platform'].split('/')[1]
-            task['treeherder-machine-platform'] = 'android-em-7-0-x86/'+opt
+            task['treeherder-machine-platform'] = task['test-platform'].replace('.', '-')
         # Bug 1602863 - must separately define linux64/asan and linux1804-64/asan
         # otherwise causes an exception during taskgraph generation about
         # duplicate treeherder platform/symbol.
