@@ -263,12 +263,12 @@ PlanarYCbCrData ConstructPlanarYCbCrData(const VideoInfo& aInfo,
   const VideoData::YCbCrBuffer::Plane& Cr = aBuffer.mPlanes[2];
 
   PlanarYCbCrData data;
-  data.mYChannel = Y.mData + Y.mOffset;
+  data.mYChannel = Y.mData;
   data.mYSize = IntSize(Y.mWidth, Y.mHeight);
   data.mYStride = Y.mStride;
   data.mYSkip = Y.mSkip;
-  data.mCbChannel = Cb.mData + Cb.mOffset;
-  data.mCrChannel = Cr.mData + Cr.mOffset;
+  data.mCbChannel = Cb.mData;
+  data.mCrChannel = Cr.mData;
   data.mCbCrSize = IntSize(Cb.mWidth, Cb.mHeight);
   data.mCbCrStride = Cb.mStride;
   data.mCbSkip = Cb.mSkip;
