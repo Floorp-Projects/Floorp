@@ -34,14 +34,9 @@ class ComputedProperty extends PureComponent {
   constructor(props) {
     super(props);
 
-    this.onFocus = this.onFocus.bind(this);
     this.renderReferenceElementPreview = this.renderReferenceElementPreview.bind(
       this
     );
-  }
-
-  onFocus() {
-    this.container.focus();
   }
 
   renderReferenceElementPreview() {
@@ -62,6 +57,7 @@ class ComputedProperty extends PureComponent {
       dom.span(
         {
           className: "reference-element-type",
+          role: "button",
           title: BOXMODEL_L10N.getStr("boxmodel.offsetParent.title"),
         },
         referenceElementType
@@ -82,32 +78,36 @@ class ComputedProperty extends PureComponent {
     return dom.div(
       {
         className: "computed-property-view",
+        role: "row",
         "data-property-name": name,
-        tabIndex: "0",
         ref: container => {
           this.container = container;
         },
       },
       dom.div(
-        { className: "computed-property-name-container" },
+        {
+          className: "computed-property-name-container",
+          role: "presentation",
+        },
         dom.div(
           {
             className: "computed-property-name theme-fg-color3",
-            tabIndex: "",
+            role: "cell",
             title: name,
-            onClick: this.onFocus,
           },
           name
         )
       ),
       dom.div(
-        { className: "computed-property-value-container" },
+        {
+          className: "computed-property-value-container",
+          role: "presentation",
+        },
         dom.div(
           {
             className: "computed-property-value theme-fg-color1",
             dir: "ltr",
-            tabIndex: "",
-            onClick: this.onFocus,
+            role: "cell",
           },
           value
         ),
