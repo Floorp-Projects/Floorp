@@ -4,7 +4,9 @@
 
 package mozilla.components.support.rustlog
 
+import androidx.annotation.VisibleForTesting
 import mozilla.appservices.rustlog.LogLevelFilter
+import mozilla.appservices.rustlog.OnLog
 import mozilla.appservices.rustlog.RustLogAdapter
 import mozilla.components.support.base.crash.CrashReporting
 import mozilla.components.support.base.log.Log
@@ -36,23 +38,7 @@ object RustLog {
      * @param crashReporter [CrashReporting] instance used for reporting 'error' log messages.
      */
     fun enable(crashReporter: CrashReporting? = null) {
-        RustLogAdapter.enable { level, tagStr, msgStr ->
-            val priority = levelToPriority(level)
-
-            crashReporter?.let {
-                if (priority == Log.Priority.ERROR) {
-                    it.submitCaughtException(RustErrorException(tagStr, msgStr))
-                }
-            }
-
-            Log.log(priority, tagStr, null, msgStr)
-            // Return true to keep open. Eventually we could intercept calls
-            // to disable that happen as the direct result of the above call
-            // (e.g. on this thread, before this function returns) and return
-            // false if any happen, but for now this is fine. (Exceptions thrown
-            // by a log sink will also close us)
-            true
-        }
+        RustLogAdapter.enable(CrashReporterOnLog(crashReporter))
     }
 
     /**
@@ -81,23 +67,63 @@ object RustLog {
      *     debug logs to contain PII.
      */
     fun setMaxLevel(level: Log.Priority, includePII: Boolean = false) {
-        val levelFilter = when (level) {
-            Log.Priority.DEBUG -> {
-                if (includePII) {
-                    LogLevelFilter.TRACE
-                } else {
-                    LogLevelFilter.DEBUG
-                }
-            }
-            Log.Priority.INFO -> LogLevelFilter.INFO
-            Log.Priority.WARN -> LogLevelFilter.WARN
-            Log.Priority.ERROR -> LogLevelFilter.ERROR
-        }
-        RustLogAdapter.setMaxLevel(levelFilter)
+        RustLogAdapter.setMaxLevel(level.asLevelFilter(includePII))
     }
 }
 
-internal fun levelToPriority(level: Int): Log.Priority {
+@VisibleForTesting
+internal class CrashReporterOnLog(private val crashReporter: CrashReporting? = null) : OnLog {
+    override fun invoke(level: Int, tag: String?, msg: String): Boolean {
+        val priority = levelToPriority(level)
+
+        crashReporter?.let { maybeSendLogToCrashReporter(it, priority, tag, msg) }
+
+        Log.log(priority, tag, null, msg)
+        // Return true to keep open. Eventually we could intercept calls
+        // to disable that happen as the direct result of the above call
+        // (e.g. on this thread, before this function returns) and return
+        // false if any happen, but for now this is fine. (Exceptions thrown
+        // by a log sink will also close us)
+        return true
+    }
+
+    private fun maybeSendLogToCrashReporter(
+        crashReporter: CrashReporting,
+        priority: Log.Priority,
+        tag: String?,
+        msg: String
+    ) {
+        val ignoredTags = listOf(
+            // Majority of these are likely to be various network issues.
+            "viaduct::backend::ffi"
+        )
+        if (priority != Log.Priority.ERROR) {
+            return
+        }
+        if (ignoredTags.contains(tag)) {
+            return
+        }
+        crashReporter.submitCaughtException(RustErrorException(tag, msg))
+    }
+}
+
+@VisibleForTesting
+internal fun Log.Priority.asLevelFilter(includePII: Boolean): LogLevelFilter {
+    return when (this) {
+        Log.Priority.DEBUG -> {
+            if (includePII) {
+                LogLevelFilter.TRACE
+            } else {
+                LogLevelFilter.DEBUG
+            }
+        }
+        Log.Priority.INFO -> LogLevelFilter.INFO
+        Log.Priority.WARN -> LogLevelFilter.WARN
+        Log.Priority.ERROR -> LogLevelFilter.ERROR
+    }
+}
+
+private fun levelToPriority(level: Int): Log.Priority {
     return when {
         level <= android.util.Log.DEBUG -> Log.Priority.DEBUG
         level == android.util.Log.INFO -> Log.Priority.INFO
