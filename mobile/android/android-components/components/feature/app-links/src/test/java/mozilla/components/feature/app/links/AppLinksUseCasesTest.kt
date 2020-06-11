@@ -50,6 +50,9 @@ class AppLinksUseCasesTest {
     private val aboutUrl = "about:config"
     private val javascriptUrl = "javascript:'hello, world'"
     private val fileType = "audio/mpeg"
+    private val layerUrl = "https://exmaple.com"
+    private val layerPackage = "com.example.app"
+    private val layerActivity = "com.example2.app.intentActivity"
 
     @Before
     fun setup() {
@@ -57,16 +60,17 @@ class AppLinksUseCasesTest {
         AppLinksUseCases.browserNamesCache = null
     }
 
-    private fun createContext(vararg urlToPackages: Pair<String, String>, default: Boolean = false): Context {
+    private fun createContext(vararg urlToPackages: Triple<String, String, String>, default: Boolean = false): Context {
 
         val pm = testContext.packageManager
         val packageManager = shadowOf(pm)
 
-        urlToPackages.forEach { (urlString, pkgName) ->
+        urlToPackages.forEach { (urlString, pkgName, className) ->
             val intent = Intent.parseUri(urlString, 0).addCategory(Intent.CATEGORY_BROWSABLE)
 
             val info = ActivityInfo().apply {
                 packageName = pkgName
+                name = className
                 icon = android.R.drawable.btn_default
             }
 
@@ -96,6 +100,17 @@ class AppLinksUseCasesTest {
     }
 
     @Test
+    fun `A URL that matches app with activity is an app link with correct component`() {
+        val context = createContext(Triple(layerUrl, layerPackage, layerActivity))
+        val subject = AppLinksUseCases(context, { true })
+
+        val redirect = subject.interceptedAppLinkRedirect(layerUrl)
+        assertTrue(redirect.isRedirect())
+        assertEquals(redirect.appIntent?.component?.packageName, layerPackage)
+        assertEquals(redirect.appIntent?.component?.className, layerActivity)
+    }
+
+    @Test
     fun `A URL that matches zero apps is not an app link`() {
         val context = createContext()
         val subject = AppLinksUseCases(context, { true })
@@ -106,7 +121,7 @@ class AppLinksUseCasesTest {
 
     @Test
     fun `A web URL that matches more than zero apps is an app link`() {
-        val context = createContext(appUrl to appPackage)
+        val context = createContext(Triple(appUrl, appPackage, ""))
         val subject = AppLinksUseCases(context, { true })
 
         // We will redirect to it if browser option set to true.
@@ -116,7 +131,7 @@ class AppLinksUseCasesTest {
 
     @Test
     fun `A file is not an app link`() {
-        val context = createContext(filePath to appPackage)
+        val context = createContext(Triple(filePath, appPackage, ""))
         val subject = AppLinksUseCases(context, { true })
 
         // We will redirect to it if browser option set to true.
@@ -126,7 +141,7 @@ class AppLinksUseCasesTest {
 
     @Test
     fun `A data url is not an app link`() {
-        val context = createContext(dataUrl to appPackage)
+        val context = createContext(Triple(dataUrl, appPackage, ""))
         val subject = AppLinksUseCases(context, { true })
 
         val redirect = subject.interceptedAppLinkRedirect(dataUrl)
@@ -135,7 +150,7 @@ class AppLinksUseCasesTest {
 
     @Test
     fun `A javascript url is not an app link`() {
-        val context = createContext(javascriptUrl to appPackage)
+        val context = createContext(Triple(javascriptUrl, appPackage, ""))
         val subject = AppLinksUseCases(context, { true })
 
         val redirect = subject.interceptedAppLinkRedirect(javascriptUrl)
@@ -144,7 +159,7 @@ class AppLinksUseCasesTest {
 
     @Test
     fun `An about url is not an app link`() {
-        val context = createContext(aboutUrl to appPackage)
+        val context = createContext(Triple(aboutUrl, appPackage, ""))
         val subject = AppLinksUseCases(context, { true })
 
         val redirect = subject.interceptedAppLinkRedirect(aboutUrl)
@@ -153,7 +168,7 @@ class AppLinksUseCasesTest {
 
     @Test
     fun `Will not redirect app link if browser option set to false and scheme is supported`() {
-        val context = createContext(appUrl to appPackage)
+        val context = createContext(Triple(appUrl, appPackage, ""))
         val subject = AppLinksUseCases(context, { false })
 
         val redirect = subject.interceptedAppLinkRedirect(appUrl)
@@ -165,7 +180,7 @@ class AppLinksUseCasesTest {
 
     @Test
     fun `Will redirect app link if browser option set to false and scheme is not supported`() {
-        val context = createContext(appIntent to appPackage)
+        val context = createContext(Triple(appIntent, appPackage, ""))
         val subject = AppLinksUseCases(context, { false })
 
         val redirect = subject.interceptedAppLinkRedirect(appIntent)
@@ -177,7 +192,7 @@ class AppLinksUseCasesTest {
 
     @Test
     fun `A URL that matches only excluded packages is not an app link`() {
-        val context = createContext(appUrl to browserPackage, browserUrl to browserPackage)
+        val context = createContext(Triple(appUrl, browserPackage, ""), Triple(browserUrl, browserPackage, ""))
         val subject = AppLinksUseCases(context, { true }, unguessableWebUrl = browserUrl)
 
         val redirect = subject.interceptedAppLinkRedirect(appUrl)
@@ -189,7 +204,7 @@ class AppLinksUseCasesTest {
 
     @Test
     fun `A URL that also matches excluded packages is an app link`() {
-        val context = createContext(appUrl to appPackage, appUrl to browserPackage, browserUrl to browserPackage)
+        val context = createContext(Triple(appUrl, appPackage, ""), Triple(appUrl, browserPackage, ""), Triple(browserUrl, browserPackage, ""))
         val subject = AppLinksUseCases(context, { true }, unguessableWebUrl = browserUrl)
 
         val redirect = subject.interceptedAppLinkRedirect(appUrl)
@@ -202,7 +217,7 @@ class AppLinksUseCasesTest {
 
     @Test
     fun `A URL that only matches default activity is not an app link`() {
-        val context = createContext(appUrl to appPackage, default = true)
+        val context = createContext(Triple(appUrl, appPackage, ""), default = true)
         val subject = AppLinksUseCases(context, { true })
 
         val menuRedirect = subject.appLinkRedirect(appUrl)
@@ -212,7 +227,7 @@ class AppLinksUseCasesTest {
     @Test
     fun `A list of browser package names can be generated if not supplied`() {
         val unguessable = "https://unguessable-test-url.com"
-        val context = createContext(unguessable to browserPackage)
+        val context = createContext(Triple(unguessable, browserPackage, ""))
         val subject = AppLinksUseCases(context, unguessableWebUrl = unguessable)
 
         subject.appLinkRedirect(unguessable)
@@ -222,7 +237,7 @@ class AppLinksUseCasesTest {
     @Test
     fun `A intent scheme uri with an installed app is an app link`() {
         val uri = "intent://scan/#Intent;scheme=zxing;package=com.google.zxing.client.android;end"
-        val context = createContext(uri to appPackage)
+        val context = createContext(Triple(uri, appPackage, ""))
         val subject = AppLinksUseCases(context, { true })
 
         val redirect = subject.interceptedAppLinkRedirect(uri)
@@ -236,7 +251,7 @@ class AppLinksUseCasesTest {
     @Test
     fun `A market scheme uri with no installed app is an install link`() {
         val uri = "intent://details/#Intent;scheme=market;package=com.google.play;end"
-        val context = createContext(uri to appPackage)
+        val context = createContext(Triple(uri, appPackage, ""))
         val subject = AppLinksUseCases(context, { true })
 
         val redirect = subject.interceptedAppLinkRedirect.invoke(uri)
@@ -276,7 +291,7 @@ class AppLinksUseCasesTest {
     @Test
     fun `A intent scheme denied should return no app intent`() {
         val uri = "intent://details/#Intent"
-        val context = createContext(uri to appPackage)
+        val context = createContext(Triple(uri, appPackage, ""))
         val subject = AppLinksUseCases(context, { true }, alwaysDeniedSchemes = setOf("intent"))
 
         val redirect = subject.interceptedAppLinkRedirect.invoke(uri)
@@ -317,7 +332,7 @@ class AppLinksUseCasesTest {
     fun `AppLinksUsecases uses cache`() {
         val testDispatcher = TestCoroutineDispatcher()
         TestCoroutineScope(testDispatcher).launch {
-            val context = createContext(appUrl to appPackage)
+            val context = createContext(Triple(appUrl, appPackage, ""))
 
             var subject = AppLinksUseCases(context, { true })
             var redirect = subject.interceptedAppLinkRedirect(appUrl)
@@ -342,7 +357,7 @@ class AppLinksUseCasesTest {
     fun `AppLinksUsecases uses browser names cache`() {
         val testDispatcher = TestCoroutineDispatcher()
         TestCoroutineScope(testDispatcher).launch {
-            val context = createContext(appUrl to appPackage)
+            val context = createContext(Triple(appUrl, appPackage, ""))
 
             var subject = AppLinksUseCases(context, { true })
             whenever(subject.findExcludedPackages(any())).thenReturn(emptySet())
@@ -439,7 +454,7 @@ class AppLinksUseCasesTest {
 
     @Test
     fun `A app scheme uri will redirect regardless user preference`() {
-        val context = createContext(appSchemeIntent to appPackage)
+        val context = createContext(Triple(appSchemeIntent, appPackage, ""))
 
         var subject = AppLinksUseCases(context, { false })
         var redirect = subject.interceptedAppLinkRedirect(appSchemeIntent)
@@ -460,7 +475,7 @@ class AppLinksUseCasesTest {
 
     @Test
     fun `A app intent uri will redirect regardless user preference`() {
-        val context = createContext(appIntent to appPackage)
+        val context = createContext(Triple(appIntent, appPackage, ""))
 
         var subject = AppLinksUseCases(context, { false })
         var redirect = subject.interceptedAppLinkRedirect(appIntent)
