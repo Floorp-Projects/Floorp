@@ -1115,14 +1115,14 @@ bool js::RegExpMatcher(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 /*
- * Separate interface for use by IonMonkey.
- * This code cannot re-enter Ion code.
+ * Separate interface for use by the JITs.
+ * This code cannot re-enter JIT code.
  */
 bool js::RegExpMatcherRaw(JSContext* cx, HandleObject regexp,
                           HandleString input, int32_t maybeLastIndex,
                           MatchPairs* maybeMatches, MutableHandleValue output) {
-  // The MatchPairs will always be passed in, but RegExp execution was
-  // successful only if the pairs have actually been filled in.
+  // RegExp execution was successful only if the pairs have actually been
+  // filled in. Note that IC code always passes a nullptr maybeMatches.
   if (maybeMatches && maybeMatches->pairsRaw()[0] > MatchPair::NoMatch) {
     Handle<RegExpObject*> reobj = regexp.as<RegExpObject>();
     RootedRegExpShared shared(cx, RegExpObject::getShared(cx, reobj));
@@ -1193,16 +1193,16 @@ bool js::RegExpSearcher(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 /*
- * Separate interface for use by IonMonkey.
- * This code cannot re-enter Ion code.
+ * Separate interface for use by the JITs.
+ * This code cannot re-enter JIT code.
  */
 bool js::RegExpSearcherRaw(JSContext* cx, HandleObject regexp,
                            HandleString input, int32_t lastIndex,
                            MatchPairs* maybeMatches, int32_t* result) {
   MOZ_ASSERT(lastIndex >= 0);
 
-  // The MatchPairs will always be passed in, but RegExp execution was
-  // successful only if the pairs have actually been filled in.
+  // RegExp execution was successful only if the pairs have actually been
+  // filled in. Note that IC code always passes a nullptr maybeMatches.
   if (maybeMatches && maybeMatches->pairsRaw()[0] > MatchPair::NoMatch) {
     *result = CreateRegExpSearchResult(*maybeMatches);
     return true;
@@ -1246,8 +1246,8 @@ bool js::RegExpTester(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 /*
- * Separate interface for use by IonMonkey.
- * This code cannot re-enter Ion code.
+ * Separate interface for use by the JITs.
+ * This code cannot re-enter JIT code.
  */
 bool js::RegExpTesterRaw(JSContext* cx, HandleObject regexp, HandleString input,
                          int32_t lastIndex, int32_t* endIndex) {
