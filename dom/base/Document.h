@@ -1792,6 +1792,13 @@ class Document : public nsINode,
                             : nullptr;
   }
 
+  /**
+   * Return WindowContext associated with the inner window.
+   */
+  WindowContext* GetWindowContext() {
+    return GetInnerWindow() ? GetInnerWindow()->GetWindowContext() : nullptr;
+  }
+
   bool IsTopLevelWindowInactive() const;
 
   /**
