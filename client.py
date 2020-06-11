@@ -151,7 +151,7 @@ def warn_if_patch_exists(path):
         print("You must manually re-apply all patches")
         print("after this script has completed!")
         print("========================================")
-        raw_input("Press Enter to continue...")
+        input("Press Enter to continue...")
         return
 
 
@@ -178,7 +178,7 @@ except IndexError:
     sys.exit(2)
 
 if action in ('checkout', 'co'):
-    print >>sys.stderr, "Warning: client.py checkout is obsolete."
+    print("Warning: client.py checkout is obsolete.", file=sys.stderr)
     pass
 elif action in ('update_nspr'):
     tag, = args[1:]
