@@ -16,6 +16,15 @@ add_task(async function() {
   info("Focus after console is opened");
   ok(isInputFocused(hud), "input node is focused after console is opened");
 
+  info("Set the input value and select the first line");
+  const expression = `x = 10;x;
+    x = 20;x;`;
+  setInputValue(hud, expression);
+  hud.ui.jsterm.editor.setSelection(
+    { line: 0, ch: 0 },
+    { line: 0, ch: expression.split("\n")[0].length }
+  );
+
   await clearOutput(hud);
   ok(isInputFocused(hud), "input node is focused after output is cleared");
 
@@ -26,10 +35,23 @@ add_task(async function() {
   const msg = await waitFor(() => findMessage(hud, "console message 2"));
   ok(isInputFocused(hud), "input node is focused, first time");
 
+  // Checking that there's still a selection in the input
+  is(
+    hud.ui.jsterm.editor.getSelection(),
+    "x = 10;x;",
+    "editor has the expected selection"
+  );
+
   info("Focus after clicking in the output area");
   await waitForBlurredInput(hud);
   EventUtils.sendMouseEvent({ type: "click" }, msg);
   ok(isInputFocused(hud), "input node is focused, second time");
+
+  is(
+    hud.ui.jsterm.editor.getSelection(),
+    "",
+    "input selection was removed when the input was blurred"
+  );
 
   info("Setting a text selection and making sure a click does not re-focus");
   await waitForBlurredInput(hud);
