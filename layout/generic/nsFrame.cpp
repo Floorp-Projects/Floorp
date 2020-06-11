@@ -2558,8 +2558,8 @@ bool nsIFrame::CanBeDynamicReflowRoot() const {
  * Refreshes each content's frame
  *********************************************************/
 
-void nsFrame::DisplayOutlineUnconditional(nsDisplayListBuilder* aBuilder,
-                                          const nsDisplayListSet& aLists) {
+void nsIFrame::DisplayOutlineUnconditional(nsDisplayListBuilder* aBuilder,
+                                           const nsDisplayListSet& aLists) {
   // Per https://drafts.csswg.org/css-tables-3/#global-style-overrides:
   // "All css properties of table-column and table-column-group boxes are
   // ignored, except when explicitly specified by this specification."
@@ -2597,15 +2597,15 @@ void nsFrame::DisplayOutlineUnconditional(nsDisplayListBuilder* aBuilder,
   aLists.Outlines()->AppendNewToTop<nsDisplayOutline>(aBuilder, this);
 }
 
-void nsFrame::DisplayOutline(nsDisplayListBuilder* aBuilder,
-                             const nsDisplayListSet& aLists) {
+void nsIFrame::DisplayOutline(nsDisplayListBuilder* aBuilder,
+                              const nsDisplayListSet& aLists) {
   if (!IsVisibleForPainting()) return;
 
   DisplayOutlineUnconditional(aBuilder, aLists);
 }
 
-void nsFrame::DisplayInsetBoxShadowUnconditional(nsDisplayListBuilder* aBuilder,
-                                                 nsDisplayList* aList) {
+void nsIFrame::DisplayInsetBoxShadowUnconditional(
+    nsDisplayListBuilder* aBuilder, nsDisplayList* aList) {
   // XXXbz should box-shadow for rows/rowgroups/columns/colgroups get painted
   // just because we're visible?  Or should it depend on the cell visibility
   // when we're not the whole table?
@@ -2615,14 +2615,14 @@ void nsFrame::DisplayInsetBoxShadowUnconditional(nsDisplayListBuilder* aBuilder,
   }
 }
 
-void nsFrame::DisplayInsetBoxShadow(nsDisplayListBuilder* aBuilder,
-                                    nsDisplayList* aList) {
+void nsIFrame::DisplayInsetBoxShadow(nsDisplayListBuilder* aBuilder,
+                                     nsDisplayList* aList) {
   if (!IsVisibleForPainting()) return;
 
   DisplayInsetBoxShadowUnconditional(aBuilder, aList);
 }
 
-void nsFrame::DisplayOutsetBoxShadowUnconditional(
+void nsIFrame::DisplayOutsetBoxShadowUnconditional(
     nsDisplayListBuilder* aBuilder, nsDisplayList* aList) {
   // XXXbz should box-shadow for rows/rowgroups/columns/colgroups get painted
   // just because we're visible?  Or should it depend on the cell visibility
@@ -2633,8 +2633,8 @@ void nsFrame::DisplayOutsetBoxShadowUnconditional(
   }
 }
 
-void nsFrame::DisplayOutsetBoxShadow(nsDisplayListBuilder* aBuilder,
-                                     nsDisplayList* aList) {
+void nsIFrame::DisplayOutsetBoxShadow(nsDisplayListBuilder* aBuilder,
+                                      nsDisplayList* aList) {
   if (!IsVisibleForPainting()) return;
 
   DisplayOutsetBoxShadowUnconditional(aBuilder, aList);
@@ -2651,9 +2651,9 @@ nscolor nsIFrame::GetCaretColorAt(int32_t aOffset) {
   return nsLayoutUtils::GetColor(this, &nsStyleUI::mCaretColor);
 }
 
-bool nsFrame::DisplayBackgroundUnconditional(nsDisplayListBuilder* aBuilder,
-                                             const nsDisplayListSet& aLists,
-                                             bool aForceBackground) {
+bool nsIFrame::DisplayBackgroundUnconditional(nsDisplayListBuilder* aBuilder,
+                                              const nsDisplayListSet& aLists,
+                                              bool aForceBackground) {
   const bool hitTesting = aBuilder->IsForEventDelivery();
   if (hitTesting && !aBuilder->HitTestIsForVisibility()) {
     // For hit-testing, we generally just need a light-weight data structure
@@ -2680,9 +2680,9 @@ bool nsFrame::DisplayBackgroundUnconditional(nsDisplayListBuilder* aBuilder,
   return false;
 }
 
-void nsFrame::DisplayBorderBackgroundOutline(nsDisplayListBuilder* aBuilder,
-                                             const nsDisplayListSet& aLists,
-                                             bool aForceBackground) {
+void nsIFrame::DisplayBorderBackgroundOutline(nsDisplayListBuilder* aBuilder,
+                                              const nsDisplayListSet& aLists,
+                                              bool aForceBackground) {
   // The visibility check belongs here since child elements have the
   // opportunity to override the visibility property and display even if
   // their parent is hidden.
