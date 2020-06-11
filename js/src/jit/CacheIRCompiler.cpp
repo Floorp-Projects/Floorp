@@ -6049,10 +6049,12 @@ bool CacheIRCompiler::emitCallStringConcatResult(StringOperandId lhsId,
 
   callvm.prepare();
 
+  masm.Push(static_cast<js::jit::Imm32>(js::gc::DefaultHeap));
   masm.Push(rhs);
   masm.Push(lhs);
 
-  using Fn = JSString* (*)(JSContext*, HandleString, HandleString);
+  using Fn = JSString* (*)(JSContext*, HandleString, HandleString,
+                           js::gc::InitialHeap);
   callvm.call<Fn, ConcatStrings<CanGC>>();
 
   return true;
