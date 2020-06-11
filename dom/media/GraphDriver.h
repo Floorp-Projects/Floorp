@@ -618,14 +618,6 @@ class AudioCallbackDriver : public GraphDriver,
     return AudioInputType::Unknown;
   }
 
-  /* Enqueue a promise that is going to be resolved on the given main thread
-   * when a specific operation occurs on the cubeb stream. */
-  void EnqueueTrackAndPromiseForOperation(
-      MediaTrack* aTrack, dom::AudioContextOperation aOperation,
-      AbstractThread* aMainThread,
-      MozPromiseHolder<MediaTrackGraph::AudioContextOperationPromise>&&
-          aHolder);
-
   std::thread::id ThreadId() { return mAudioThreadId.load(); }
 
   bool OnThread() override {
@@ -641,8 +633,6 @@ class AudioCallbackDriver : public GraphDriver,
   /* Whether the underlying cubeb stream has been started. See comment for
    * mStarted for details. */
   bool IsStarted();
-
-  void CompleteAudioContextOperations(AsyncCubebOperation aOperation);
 
   // Returns the output latency for the current audio output stream.
   TimeDuration AudioOutputLatency();
@@ -736,7 +726,6 @@ class AudioCallbackDriver : public GraphDriver,
   /* Shared thread pool with up to one thread for off-main-thread
    * initialization and shutdown of the audio stream via AsyncCubebTask. */
   const RefPtr<SharedThreadPool> mInitShutdownThread;
-  DataMutex<AutoTArray<TrackAndPromiseForOperation, 1>> mPromisesForOperation;
   cubeb_device_pref mInputDevicePreference;
   /* The mixer that the graph mixes into during an iteration. Audio thread only.
    */
