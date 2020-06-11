@@ -1916,7 +1916,7 @@ bool nsIFrame::Extend3DContext(const nsStyleDisplay* aStyleDisplay,
     return false;
   }
 
-  return !nsFrame::ShouldApplyOverflowClipping(this, disp) &&
+  return !nsIFrame::ShouldApplyOverflowClipping(this, disp) &&
          !GetClipPropClipRect(disp, effects, GetSize()) &&
          !nsSVGIntegrationUtils::UsingEffectsForFrame(this);
 }
@@ -9121,7 +9121,7 @@ static nsRect UnionBorderBoxes(
   }
   const nsStyleDisplay* disp = aFrame->StyleDisplay();
   LayoutFrameType fType = aFrame->Type();
-  if (nsFrame::ShouldApplyOverflowClipping(aFrame, disp) ||
+  if (nsIFrame::ShouldApplyOverflowClipping(aFrame, disp) ||
       fType == LayoutFrameType::Scroll ||
       fType == LayoutFrameType::ListControl ||
       fType == LayoutFrameType::SVGOuterSVG) {
@@ -11129,6 +11129,58 @@ void nsIFrame::UpdateVisibleDescendantsState() {
   } else {
     mAllDescendantsAreInvisible = HasNoVisibleDescendants(this);
   }
+}
+
+bool nsIFrame::ShouldApplyOverflowClipping(const nsIFrame* aFrame,
+                                           const nsStyleDisplay* aDisp) {
+  MOZ_ASSERT(aDisp == aFrame->StyleDisplay(), "Wong display struct");
+  // clip overflow:-moz-hidden-unscrollable, except for nsListControlFrame,
+  // which is an nsHTMLScrollFrame.
+  if (MOZ_UNLIKELY(aDisp->mOverflowX == StyleOverflow::MozHiddenUnscrollable &&
+                   !aFrame->IsListControlFrame())) {
+    return true;
+  }
+
+  // contain: paint, which we interpret as -moz-hidden-unscrollable
+  // Exception: for scrollframes, we don't need contain:paint to add any
+  // clipping, because the scrollable frame will already clip overflowing
+  // content, and because contain:paint should prevent all means of escaping
+  // that clipping (e.g. because it forms a fixed-pos containing block).
+  if (aDisp->IsContainPaint() && !aFrame->IsScrollFrame() &&
+      aFrame->IsFrameOfType(eSupportsContainLayoutAndPaint)) {
+    return true;
+  }
+
+  // and overflow:hidden that we should interpret as -moz-hidden-unscrollable
+  if (aDisp->mOverflowX == StyleOverflow::Hidden &&
+      aDisp->mOverflowY == StyleOverflow::Hidden) {
+    // REVIEW: these are the frame types that set up clipping.
+    LayoutFrameType type = aFrame->Type();
+    switch (type) {
+      case LayoutFrameType::Table:
+      case LayoutFrameType::TableCell:
+      case LayoutFrameType::SVGOuterSVG:
+      case LayoutFrameType::SVGInnerSVG:
+      case LayoutFrameType::SVGSymbol:
+      case LayoutFrameType::SVGForeignObject:
+        return true;
+      default:
+        if (aFrame->IsFrameOfType(nsIFrame::eReplacedContainsBlock)) {
+          // It has an anonymous scroll frame that handles any overflow
+          // except TextInput.
+          return type != LayoutFrameType::TextInput;
+        }
+    }
+  }
+
+  if ((aFrame->GetStateBits() & NS_FRAME_SVG_LAYOUT)) {
+    return false;
+  }
+
+  // If we're paginated and a block, and have NS_BLOCK_CLIP_PAGINATED_OVERFLOW
+  // set, then we want to clip our overflow.
+  return (aFrame->GetStateBits() & NS_BLOCK_CLIP_PAGINATED_OVERFLOW) != 0 &&
+         aFrame->PresContext()->IsPaginated() && aFrame->IsBlockFrame();
 }
 
 // Box layout debugging
