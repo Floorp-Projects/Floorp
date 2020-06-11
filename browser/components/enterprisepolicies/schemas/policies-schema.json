@@ -884,6 +884,10 @@
         "browser.fixup.dns_first_for_single_words": {
           "type": "boolean"
         },
+        "browser.urlbar.dnsResolveSingleWordsAfterSearch": {
+          "type": "number",
+          "enum": [0, 1, 2]
+        },
         "browser.newtabpage.activity-stream.default.sites": {
           "type": "string"
         },
