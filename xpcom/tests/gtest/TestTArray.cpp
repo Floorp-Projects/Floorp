@@ -800,11 +800,11 @@ TEST(TArray, RemoveElementAt_ByIterator)
   ASSERT_EQ(expected, array);
 }
 
-TEST(TArray, RemoveElementsAt_ByIterator)
+TEST(TArray, RemoveElementsRange_ByIterator)
 {
   nsTArray<int> array{1, 2, 3, 4};
   const auto it = std::find(array.begin(), array.end(), 3);
-  const auto itAfter = array.RemoveElementsAt(it, array.end());
+  const auto itAfter = array.RemoveElementsRange(it, array.end());
 
   // Based on the implementation of the iterator, we could compare it and
   // itAfter, but we should not rely on such implementation details.

@@ -12630,7 +12630,7 @@ void ConnectionPool::ScheduleQueuedTransactions(ThreadInfo aThreadInfo) {
                                        /* aFromQueuedTransactions */ true);
       });
 
-  mQueuedTransactions.RemoveElementsAt(mQueuedTransactions.begin(), foundIt);
+  mQueuedTransactions.RemoveElementsRange(mQueuedTransactions.begin(), foundIt);
 
   AdjustIdleTimer();
 }
