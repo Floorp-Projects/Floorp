@@ -80,6 +80,7 @@ let isRounded = (x, expectedPrecision) => {
 let setupTest = async function(
   resistFingerprinting,
   reduceTimerPrecision,
+  crossOriginIsolated,
   expectedPrecision,
   runTests,
   workerCall
@@ -92,14 +93,19 @@ let setupTest = async function(
         "privacy.resistFingerprinting.reduceTimerPrecision.microseconds",
         expectedPrecision * 1000,
       ],
+      ["browser.tabs.remote.useCrossOriginOpenerPolicy", crossOriginIsolated],
+      ["browser.tabs.remote.useCrossOriginEmbedderPolicy", crossOriginIsolated],
+      ["browser.tabs.documentchannel", crossOriginIsolated],
     ],
   });
 
+  let url = crossOriginIsolated
+    ? `https://example.com/browser/browser/components/resistfingerprinting` +
+      `/test/browser/coop_header.sjs?crossOriginIsolated=${crossOriginIsolated}`
+    : TEST_PATH + "file_dummy.html";
+
   let win = await BrowserTestUtils.openNewBrowserWindow();
-  let tab = await BrowserTestUtils.openNewForegroundTab(
-    win.gBrowser,
-    TEST_PATH + "file_dummy.html"
-  );
+  let tab = await BrowserTestUtils.openNewForegroundTab(win.gBrowser, url);
 
   // No matter what we set the precision to, if we're in ResistFingerprinting mode
   // we use the larger of the precision pref and the constant 100ms
@@ -118,6 +124,15 @@ let setupTest = async function(
     ],
     runTests
   );
+
+  if (crossOriginIsolated) {
+    let remoteType = tab.linkedBrowser.remoteType;
+    ok(
+      remoteType.startsWith(E10SUtils.WEB_REMOTE_COOP_COEP_TYPE_PREFIX),
+      `${remoteType} expected to be coop+coep`
+    );
+  }
+
   await BrowserTestUtils.closeWindow(win);
 };
 // ================================================================================================
@@ -181,10 +196,13 @@ add_task(async function runRPTests() {
     );
   };
 
-  await setupTest(true, true, 200, runTests);
-  await setupTest(true, true, 100, runTests);
-  await setupTest(true, false, 13, runTests);
-  await setupTest(true, false, 0.13, runTests);
+  await setupTest(true, true, false, 200, runTests);
+  await setupTest(true, true, false, 100, runTests);
+  await setupTest(true, false, false, 13, runTests);
+  await setupTest(true, false, false, 0.13, runTests);
+  await setupTest(true, true, true, 100, runTests);
+  await setupTest(true, false, true, 13, runTests);
+  await setupTest(true, false, true, 0.13, runTests);
 });
 
 // ================================================================================================
@@ -264,9 +282,10 @@ add_task(async function runRTPTests() {
     content.performance.clearResourceTimings();
   };
 
-  await setupTest(false, true, 100, runTests);
-  await setupTest(false, true, 13, runTests);
-  await setupTest(false, true, 0.13, runTests);
+  await setupTest(false, true, false, 100, runTests);
+  await setupTest(false, true, false, 13, runTests);
+  await setupTest(false, true, false, 0.13, runTests);
+  await setupTest(false, true, true, 0.005, runTests);
 });
 
 // ================================================================================================
@@ -293,13 +312,13 @@ let runWorkerTest = async function(data) {
 };
 
 add_task(async function runRPTestsForWorker() {
-  await setupTest(true, true, 100, runWorkerTest, "runRPTests");
-  await setupTest(true, false, 13, runWorkerTest, "runRPTests");
-  await setupTest(true, true, 0.13, runWorkerTest, "runRPTests");
+  await setupTest(true, true, false, 100, runWorkerTest, "runRPTests");
+  await setupTest(true, false, false, 13, runWorkerTest, "runRPTests");
+  await setupTest(true, true, false, 0.13, runWorkerTest, "runRPTests");
 });
 
 add_task(async function runRTPTestsForWorker() {
-  await setupTest(false, true, 100, runWorkerTest, "runRTPTests");
-  await setupTest(false, true, 13, runWorkerTest, "runRTPTests");
-  await setupTest(false, true, 0.13, runWorkerTest, "runRTPTests");
+  await setupTest(false, true, false, 100, runWorkerTest, "runRTPTests");
+  await setupTest(false, true, false, 13, runWorkerTest, "runRTPTests");
+  await setupTest(false, true, false, 0.13, runWorkerTest, "runRTPTests");
 });
