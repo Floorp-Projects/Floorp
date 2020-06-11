@@ -753,6 +753,7 @@ function checkInputValueAndCursorPosition(
 
   const inputValue = expectedStringWithCursor.replace("|", "");
   const { jsterm } = hud;
+
   is(getInputValue(hud), inputValue, "console input has expected value");
   const lines = expectedStringWithCursor.split("\n");
   const lineWithCursor = lines.findIndex(line => line.includes("|"));
