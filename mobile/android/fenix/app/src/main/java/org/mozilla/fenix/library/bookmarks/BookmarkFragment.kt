@@ -18,6 +18,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavDirections
 import androidx.navigation.fragment.findNavController
+import kotlinx.android.synthetic.main.component_bookmark.view.*
 import kotlinx.android.synthetic.main.fragment_bookmark.view.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.IO
@@ -57,7 +58,6 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), UserInteractionHan
 
     private lateinit var bookmarkStore: BookmarkFragmentStore
     private lateinit var bookmarkView: BookmarkView
-    private lateinit var signInView: SignInView
     private var _bookmarkInteractor: BookmarkFragmentInteractor? = null
     protected val bookmarkInteractor: BookmarkFragmentInteractor
         get() = _bookmarkInteractor!!
@@ -97,9 +97,8 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), UserInteractionHan
             metrics = metrics!!
         )
 
-        bookmarkView = BookmarkView(view.bookmarkLayout, bookmarkInteractor)
-        signInView = SignInView(view.bookmarkLayout, findNavController())
-        signInView.view.visibility = View.GONE
+        bookmarkView = BookmarkView(view.bookmarkLayout, bookmarkInteractor, findNavController())
+        bookmarkView.view.bookmark_folders_sign_in.visibility = View.GONE
 
         viewLifecycleOwner.lifecycle.addObserver(
             BookmarkDeselectNavigationListener(
@@ -150,9 +149,9 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), UserInteractionHan
         if (currentGuid == BookmarkRoot.Root.id &&
             requireComponents.backgroundServices.accountManager.authenticatedAccount() == null
         ) {
-            signInView.view.visibility = View.VISIBLE
+            bookmarkView.view.bookmark_folders_sign_in.visibility = View.VISIBLE
         } else {
-            signInView.view.visibility = View.GONE
+            bookmarkView.view.bookmark_folders_sign_in.visibility = View.GONE
         }
 
         initialJob = loadInitialBookmarkFolder(currentGuid)
