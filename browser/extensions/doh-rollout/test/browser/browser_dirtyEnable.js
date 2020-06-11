@@ -7,7 +7,7 @@ add_task(async function testDirtyEnable() {
   // when the add-on is enabled, it doesn't do anything - DoH remains turned on.
   setFailingHeuristics();
   let prefPromise = TestUtils.waitForPrefChange(prefs.DOH_DISABLED_PREF);
-  Preferences.set(prefs.NETWORK_TRR_MODE_PREF, 2);
+  Preferences.set(prefs.TRR_MODE_PREF, 2);
   Preferences.set(prefs.DOH_ENABLED_PREF, true);
   await prefPromise;
   is(
@@ -25,27 +25,23 @@ add_task(async function testDirtyEnable() {
     undefined,
     "TRR selection not performed."
   );
-  is(Preferences.get(prefs.NETWORK_TRR_MODE_PREF), 2, "TRR mode preserved.");
   ensureNoTRRSelectionTelemetry();
-  await ensureNoTRRModeChange(undefined);
-  ensureNoHeuristicsTelemetry();
+  await ensureNoTRRModeChange(2);
+  checkHeuristicsTelemetry("prefHasUserValue", "first_run");
 
   // Simulate a network change.
   simulateNetworkChange();
-  await ensureNoTRRModeChange(undefined);
+  await ensureNoTRRModeChange(2);
   ensureNoHeuristicsTelemetry();
-  is(Preferences.get(prefs.NETWORK_TRR_MODE_PREF), 2, "TRR mode preserved.");
 
   // Restart for good measure.
   await restartAddon();
-  await ensureNoTRRModeChange(undefined);
   ensureNoTRRSelectionTelemetry();
+  await ensureNoTRRModeChange(2);
   ensureNoHeuristicsTelemetry();
-  is(Preferences.get(prefs.NETWORK_TRR_MODE_PREF), 2, "TRR mode preserved.");
 
   // Simulate a network change.
   simulateNetworkChange();
-  await ensureNoTRRModeChange(undefined);
-  is(Preferences.get(prefs.NETWORK_TRR_MODE_PREF), 2, "TRR mode preserved.");
+  await ensureNoTRRModeChange(2);
   ensureNoHeuristicsTelemetry();
 });
