@@ -74,6 +74,18 @@ RequestBase::GetResultCode(nsresult* aResultCode) {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+RequestBase::GetResultName(nsACString& aResultName) {
+  AssertIsOnOwningThread();
+
+  if (!mHaveResultOrErrorCode) {
+    return NS_ERROR_FAILURE;
+  }
+
+  mozilla::GetErrorName(mResultCode, aResultName);
+  return NS_OK;
+}
+
 UsageRequest::UsageRequest(nsIQuotaUsageCallback* aCallback)
     : mCallback(aCallback), mBackgroundActor(nullptr), mCanceled(false) {
   AssertIsOnOwningThread();
