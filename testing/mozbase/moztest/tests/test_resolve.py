@@ -255,9 +255,14 @@ def test_load(resolver):
     assert len(resolver.tests_by_flavor['xpcshell']) == 4
     assert len(resolver.tests_by_flavor['web-platform-tests']) == 0
 
+    assert len(resolver.tests_by_manifest) == 9
+
     resolver.add_wpt_manifest_data()
     assert len(resolver.tests_by_path) == 11
     assert len(resolver.tests_by_flavor['web-platform-tests']) == 2
+    assert len(resolver.tests_by_manifest) == 11
+    assert "/html" in resolver.tests_by_manifest
+    assert "/_mozilla/html" in resolver.tests_by_manifest
 
 
 def test_resolve_all(resolver):
