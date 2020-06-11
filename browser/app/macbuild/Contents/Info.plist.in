@@ -237,7 +237,7 @@
 	<key>LSFileQuarantineEnabled</key>
 	<true/>
 	<key>LSMinimumSystemVersion</key>
-	<string>10.9.0</string>
+	<string>10.12.0</string>
   <key>NSSupportsAutomaticGraphicsSwitching</key>
   <true/>
   <key>NSRequiresAquaSystemAppearance</key>
