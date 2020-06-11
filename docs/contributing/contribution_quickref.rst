@@ -49,15 +49,13 @@ Windows dependencies
 
         $ c:\mozilla-build\
 
-#. Before moving on to the next steps, make sure to fulfill the `Windows prerequisites <https://developer.mozilla.org/docs/Mozilla/Developer_guide/Build_Instructions/Windows_Prerequisites>`__
+#. Before moving on to the next steps, make sure to fulfill the :ref:`Windows prerequisites <Building Firefox On Windows>`
 
 .. note::
 
     All the commands of this tutorial must be run in the shell provided with the MozillaBuild Package (start-shell.bat)
 
-`More
-information <https://developer.mozilla.org/docs/Mozilla/Developer_guide/Build_Instructions/Windows_Prerequisites>`__
-
+:ref:`More information <Building Firefox On Windows>`
 
 To build & run
 --------------
