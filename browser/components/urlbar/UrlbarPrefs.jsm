@@ -61,6 +61,12 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // but this would mean flushing layout.)
   ["disableExtendForTests", false],
 
+  // Controls when to DNS resolve single word search strings, after they were
+  // searched for. If the string is resolved as a valid host, show a
+  // "Did you mean to go to 'host'" prompt.
+  // 0 - never resolve; 1 - use heuristics (default); 2 - always resolve
+  ["dnsResolveSingleWordsAfterSearch", 1],
+
   // Whether telemetry events should be recorded.
   ["eventTelemetry.enabled", false],
 
