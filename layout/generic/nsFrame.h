@@ -312,13 +312,6 @@ class nsFrame : public nsIFrame {
   static void GetLastLeaf(nsPresContext* aPresContext, nsIFrame** aFrame);
   static void GetFirstLeaf(nsPresContext* aPresContext, nsIFrame** aFrame);
 
-  // Return the line number of the aFrame, and (optionally) the containing block
-  // frame.
-  // If aScrollLock is true, don't break outside scrollframes when looking for a
-  // containing block frame.
-  static int32_t GetLineNumber(nsIFrame* aFrame, bool aLockScroll,
-                               nsIFrame** aContainingBlock = nullptr);
-
  private:
   // Returns true if this frame has any kind of CSS animations.
   bool HasCSSAnimations();
