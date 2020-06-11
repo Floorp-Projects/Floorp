@@ -11,6 +11,7 @@
 
 #include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/StaticPrefs_security.h"
 #include "mozilla/sandboxing/loggingTypes.h"
 #include "nsContentUtils.h"
 
@@ -23,8 +24,6 @@ static LazyLogModule sSandboxTargetLog("SandboxTarget");
 #define LOG_D(...) MOZ_LOG(sSandboxTargetLog, LogLevel::Debug, (__VA_ARGS__))
 
 namespace sandboxing {
-
-static uint32_t sStackTraceDepth = 0;
 
 // NS_WalkStackCallback to write a formatted stack frame to an ostringstream.
 static void
@@ -54,14 +53,19 @@ Log(const char* aMessageType,
     msgStream << " for : " << aContext;
   }
 
-  if (aShouldLogStackTrace) {
-    if (sStackTraceDepth) {
+#if defined(MOZ_SANDBOX)
+  // We can only log the stack trace on process types where we know that the
+  // sandbox won't prevent it.
+  if (XRE_IsContentProcess() && aShouldLogStackTrace) {
+    auto stackTraceDepth =
+        StaticPrefs::security_sandbox_windows_log_stackTraceDepth();
+    if (stackTraceDepth) {
       msgStream << std::endl << "Stack Trace:";
-      MozStackWalk(StackFrameToOStringStream, aFramesToSkip, sStackTraceDepth,
+      MozStackWalk(StackFrameToOStringStream, aFramesToSkip, stackTraceDepth,
                    &msgStream);
     }
   }
-
+#endif
   std::string msg = msgStream.str();
 #if defined(DEBUG)
   // Use NS_DebugBreak directly as we want child process prefix, but not source
@@ -88,15 +92,6 @@ InitLoggingIfRequired(ProvideLogFunctionCb aProvideLogFunctionCb)
   if (Preferences::GetBool("security.sandbox.logging.enabled") ||
       PR_GetEnv("MOZ_SANDBOX_LOGGING")) {
     aProvideLogFunctionCb(Log);
-
-#if defined(MOZ_SANDBOX)
-    // We can only log the stack trace on process types where we know that the
-    // sandbox won't prevent it.
-    if (XRE_IsContentProcess()) {
-      Preferences::AddUintVarCache(&sStackTraceDepth,
-        "security.sandbox.windows.log.stackTraceDepth");
-    }
-#endif
   }
 }
 

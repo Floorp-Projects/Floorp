@@ -8779,6 +8779,15 @@
     type: RelaxedAtomicBool
     value: true
     mirror: always
+
+  # This controls the depth of stack trace that is logged when Windows sandbox
+  # logging is turned on. This is only currently available for the content
+  # process because the only other sandbox (for GMP) has too strict a policy to
+  # allow stack tracing. This does not require a restart to take effect.
+-   name: security.sandbox.windows.log.stackTraceDepth
+    type: RelaxedAtomicUint32
+    value: 0
+    mirror: always
 #endif
 
 # When comparing schemes, if this pref is set, view-source URIs are reachable
