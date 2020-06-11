@@ -620,6 +620,7 @@ template <typename Unit>
 JSFunction* frontend::StandaloneFunctionCompiler<Unit>::compile(
     CompilationInfo& compilationInfo, FunctionNode* parsedFunction) {
   FunctionBox* funbox = parsedFunction->funbox();
+
   if (funbox->isInterpreted()) {
     MOZ_ASSERT(funbox->function() == nullptr);
 
@@ -643,15 +644,21 @@ JSFunction* frontend::StandaloneFunctionCompiler<Unit>::compile(
     if (!emitter->emitFunctionScript(parsedFunction, TopLevelFunction::Yes)) {
       return nullptr;
     }
-
-    if (!compilationInfo.instantiateStencils()) {
-      return nullptr;
-    }
-
-    MOZ_ASSERT(compilationInfo.script);
   } else {
-    MOZ_ASSERT(IsAsmJSModule(funbox->function()));
+    // The asm.js module was created by parser. Instantiation below will
+    // allocate the JSFunction that wraps it.
+    MOZ_ASSERT(funbox->isAsmJSModule());
+    MOZ_ASSERT(compilationInfo.asmJS.has(FunctionIndex(funbox->index())));
+
+    compilationInfo.topLevelAsmJS = true;
   }
+
+  if (!compilationInfo.instantiateStencils()) {
+    return nullptr;
+  }
+
+  MOZ_ASSERT(funbox->function()->hasBytecode() ||
+             IsAsmJSModule(funbox->function()));
 
   // Enqueue an off-thread source compression task after finishing parsing.
   if (!compilationInfo.sourceObject->source()->tryCompressOffThread(

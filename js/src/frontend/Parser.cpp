@@ -1924,6 +1924,12 @@ static bool InstantiateScriptStencils(JSContext* cx,
 static bool InstantiateTopLevel(JSContext* cx,
                                 CompilationInfo& compilationInfo) {
   ScriptStencil& stencil = compilationInfo.topLevel.get();
+
+  // Top-level asm.js does not generate a JSScript.
+  if (compilationInfo.topLevelAsmJS) {
+    return true;
+  }
+
   MOZ_ASSERT(stencil.immutableScriptData);
 
   if (compilationInfo.lazy) {

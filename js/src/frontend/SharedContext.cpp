@@ -6,12 +6,15 @@
 
 #include "frontend/SharedContext.h"
 
+#include "mozilla/RefPtr.h"
+
 #include "frontend/AbstractScopePtr.h"
 #include "frontend/FunctionSyntaxKind.h"  // FunctionSyntaxKind
 #include "frontend/ModuleSharedContext.h"
 #include "vm/FunctionFlags.h"          // js::FunctionFlags
 #include "vm/GeneratorAndAsyncKind.h"  // js::GeneratorKind, js::FunctionAsyncKind
 #include "wasm/AsmJS.h"
+#include "wasm/WasmModule.h"
 
 #include "frontend/ParseContext-inl.h"
 #include "vm/EnvironmentObject-inl.h"
@@ -247,8 +250,29 @@ JSFunction* FunctionBox::createFunction(JSContext* cx) {
                                 ? gc::AllocKind::FUNCTION_EXTENDED
                                 : gc::AllocKind::FUNCTION;
 
-  return NewFunctionWithProto(cx, nullptr, nargs_, flags_, nullptr, atom, proto,
-                              allocKind, TenuredObject);
+  JSNative maybeNative = isAsmJSModule() ? InstantiateAsmJS : nullptr;
+
+  RootedFunction fun(
+      cx, NewFunctionWithProto(cx, maybeNative, nargs_, flags_, nullptr, atom,
+                               proto, allocKind, TenuredObject));
+  if (!fun) {
+    return nullptr;
+  }
+
+  if (isAsmJSModule()) {
+    RefPtr<const JS::WasmModule> asmJS =
+        compilationInfo_.asmJS.lookup(FunctionIndex(index()))->value();
+
+    JSObject* moduleObj = asmJS->createObjectForAsmJS(cx);
+    if (!moduleObj) {
+      return nullptr;
+    }
+
+    fun->setExtendedSlot(FunctionExtended::ASMJS_MODULE_SLOT,
+                         ObjectValue(*moduleObj));
+  }
+
+  return fun;
 }
 
 bool FunctionBox::hasFunction() const {
@@ -361,10 +385,18 @@ void FunctionBox::setEnclosingScopeForInnerLazyFunction(
   enclosingScope_ = enclosingScope;
 }
 
-void FunctionBox::setAsmJSModule(JSFunction* function) {
-  MOZ_ASSERT(IsAsmJSModule(function));
+bool FunctionBox::setAsmJSModule(const JS::WasmModule* module) {
   isAsmJSModule_ = true;
-  clobberFunction(function);
+
+  MOZ_ASSERT(!hasFunction());
+  MOZ_ASSERT(flags_.kind() == FunctionFlags::NormalFunction);
+
+  // Update flags we will use to allocate the JSFunction.
+  flags_.clearBaseScript();
+  flags_.setIsExtended();
+  flags_.setKind(FunctionFlags::AsmJS);
+
+  return compilationInfo_.asmJS.putNew(FunctionIndex(index()), module);
 }
 
 void FunctionBox::finish() {
