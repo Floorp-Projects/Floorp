@@ -66,7 +66,6 @@ class nsMIMEInfoBase : public nsIMIMEInfo {
       bool* aAlwaysAskBeforeHandling) override;
   NS_IMETHOD SetAlwaysAskBeforeHandling(bool aAlwaysAskBeforeHandling) override;
   NS_IMETHOD GetPossibleLocalHandlers(nsIArray** _retval) override;
-  NS_IMETHOD IsPdf(bool* isPdf);
 
   enum HandlerClass { eMIMEInfo, eProtocolInfo };
 
