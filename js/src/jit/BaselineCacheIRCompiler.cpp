@@ -1552,6 +1552,21 @@ bool BaselineCacheIRCompiler::emitMathRandomResult(uint32_t rngOffset) {
   return true;
 }
 
+bool BaselineCacheIRCompiler::emitHasClassResult(ObjOperandId objId,
+                                                 uint32_t claspOffset) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoOutputRegister output(*this);
+  Register obj = allocator.useRegister(masm, objId);
+  AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
+
+  Address claspAddr(stubAddress(claspOffset));
+  masm.loadObjClassUnsafe(obj, scratch);
+  masm.cmpPtrSet(Assembler::Equal, claspAddr, scratch.get(), scratch);
+  masm.tagValue(JSVAL_TYPE_BOOLEAN, scratch, output.valueReg());
+  return true;
+}
+
 bool BaselineCacheIRCompiler::emitCallNativeSetter(ObjOperandId objId,
                                                    uint32_t setterOffset,
                                                    ValOperandId rhsId) {

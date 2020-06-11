@@ -985,6 +985,7 @@ class MOZ_RAII AutoScratchRegisterMaybeOutput {
     }
   }
 
+  Register get() const { return scratchReg_; }
   operator Register() const { return scratchReg_; }
 };
 

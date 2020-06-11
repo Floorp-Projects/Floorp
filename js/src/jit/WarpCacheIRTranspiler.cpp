@@ -1285,6 +1285,18 @@ bool WarpCacheIRTranspiler::emitArrayPush(ObjOperandId objId,
   return resumeAfter(ins);
 }
 
+bool WarpCacheIRTranspiler::emitHasClassResult(ObjOperandId objId,
+                                               uint32_t claspOffset) {
+  MDefinition* obj = getOperand(objId);
+  const JSClass* clasp = classStubField(claspOffset);
+
+  auto* hasClass = MHasClass::New(alloc(), obj, clasp);
+  add(hasClass);
+
+  pushResult(hasClass);
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitIsArrayResult(ValOperandId inputId) {
   MDefinition* value = getOperand(inputId);
 
