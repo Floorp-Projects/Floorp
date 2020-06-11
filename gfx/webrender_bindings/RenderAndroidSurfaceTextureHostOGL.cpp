@@ -33,7 +33,7 @@ RenderAndroidSurfaceTextureHostOGL::~RenderAndroidSurfaceTextureHostOGL() {
   MOZ_ASSERT(RenderThread::IsInRenderThread());
   MOZ_COUNT_DTOR_INHERITED(RenderAndroidSurfaceTextureHostOGL,
                            RenderTextureHostOGL);
-  DeleteTextureHandle();
+  // The SurfaceTexture gets destroyed when its use count reaches zero.
   if (mSurfTex) {
     mSurfTex->DecrementUse();
   }
@@ -99,10 +99,6 @@ wr::WrExternalImage RenderAndroidSurfaceTextureHostOGL::Lock(
 }
 
 void RenderAndroidSurfaceTextureHostOGL::Unlock() {}
-
-void RenderAndroidSurfaceTextureHostOGL::DeleteTextureHandle() {
-  NotifyNotUsed();
-}
 
 bool RenderAndroidSurfaceTextureHostOGL::EnsureAttachedToGLContext() {
   // During handling WebRenderError, GeckoSurfaceTexture should not be attached
