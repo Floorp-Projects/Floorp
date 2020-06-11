@@ -18,7 +18,6 @@ import traceback
 import uuid
 from collections import Iterable
 
-from mach.sentry import register_sentry, report_exception
 from six import string_types
 
 from .base import (
@@ -151,7 +150,7 @@ class ContextWrapper(object):
             return getattr(object.__getattribute__(self, '_context'), key)
         except AttributeError as e:
             try:
-                ret = object.__getattribute__(self, '_handler')(key)
+                ret = object.__getattribute__(self, '_handler')(self, key)
             except (AttributeError, TypeError):
                 # TypeError is in case the handler comes from old code not
                 # taking a key argument.
@@ -320,8 +319,6 @@ To see more help for a specific command, run:
         Returns the integer exit code that should be used. 0 means success. All
         other values indicate failure.
         """
-        topsrcdir = self.populate_context_handler('topdir')
-        register_sentry(topsrcdir)
 
         # If no encoding is defined, we default to UTF-8 because without this
         # Python 2.7 will assume the default encoding of ASCII. This will blow
@@ -378,7 +375,6 @@ To see more help for a specific command, run:
             stack = traceback.extract_tb(exc_tb)
 
             self._print_exception(sys.stdout, exc_type, exc_value, stack)
-            report_exception(exc_value)
 
             return 1
 
@@ -402,6 +398,7 @@ To see more help for a specific command, run:
                                  commands=Registrar)
 
         if self.populate_context_handler:
+            self.populate_context_handler(context)
             context = ContextWrapper(context, self.populate_context_handler)
 
         parser = self.get_argument_parser(context)
@@ -483,7 +480,6 @@ To see more help for a specific command, run:
             return e.exit_code
         except Exception:
             exc_type, exc_value, exc_tb = sys.exc_info()
-            report_exception(exc_value)
 
             # The first two frames are us and are never used.
             stack = traceback.extract_tb(exc_tb)[2:]
