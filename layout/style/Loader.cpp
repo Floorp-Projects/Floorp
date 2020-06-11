@@ -22,6 +22,7 @@
 #include "mozilla/URLPreloader.h"
 #include "nsIRunnable.h"
 #include "nsITimedChannel.h"
+#include "nsICachingChannel.h"
 #include "nsSyncLoadService.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
@@ -900,7 +901,7 @@ std::tuple<RefPtr<StyleSheet>, Loader::SheetState> Loader::CreateSheet(
         GetFallbackEncoding(*this, aLinkingContent,
                             aPreloadOrParentDataEncoding),
         aCORSMode, aParsingMode, mCompatMode, sriMetadata, aIsPreload);
-    auto cacheResult = mSheets->Lookup(key, aSyncLoad);
+    auto cacheResult = mSheets->Lookup(*this, key, aSyncLoad);
     if (const auto& [styleSheet, sheetState] = cacheResult; styleSheet) {
       LOG(("  Hit cache with state: %s", gStateStrings[size_t(sheetState)]));
       return cacheResult;
@@ -1410,6 +1411,9 @@ Loader::Completed Loader::ParseSheet(const nsACString& aBytes,
                                      SheetLoadData& aLoadData,
                                      AllowAsyncParse aAllowAsync) {
   LOG(("css::Loader::ParseSheet"));
+  if (aLoadData.mURI) {
+    LOG_URI("  Load succeeded for URI: '%s', parsing", aLoadData.mURI);
+  }
   AUTO_PROFILER_LABEL("css::Loader::ParseSheet", LAYOUT_CSSParsing);
 
   ++mParsedSheetCount;
@@ -2141,6 +2145,22 @@ nsIPrincipal* Loader::LoaderPrincipal() const {
   }
   // Loaders without a document do system loads.
   return nsContentUtils::GetSystemPrincipal();
+}
+
+bool Loader::ShouldBypassCache() const {
+  if (!mDocument) {
+    return false;
+  }
+  RefPtr<nsILoadGroup> lg = mDocument->GetDocumentLoadGroup();
+  if (!lg) {
+    return false;
+  }
+  nsLoadFlags flags;
+  if (NS_FAILED(lg->GetLoadFlags(&flags))) {
+    return false;
+  }
+  return flags & (nsIRequest::LOAD_BYPASS_CACHE |
+                  nsICachingChannel::LOAD_BYPASS_LOCAL_CACHE);
 }
 
 void Loader::BlockOnload() {

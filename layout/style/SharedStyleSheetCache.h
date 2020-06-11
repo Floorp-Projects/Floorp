@@ -55,7 +55,7 @@ class SharedStyleSheetCache final : public nsIMemoryReporter {
 
   // A cache hit or miss. It is a miss if the `StyleSheet` is null.
   using CacheResult = std::tuple<RefPtr<StyleSheet>, css::Loader::SheetState>;
-  CacheResult Lookup(SheetLoadDataHashKey&, bool aSyncLoad);
+  CacheResult Lookup(css::Loader&, const SheetLoadDataHashKey&, bool aSyncLoad);
 
   // Tries to coalesce with an already existing load. The sheet state must be
   // the one that Lookup returned, if it returned a sheet.
@@ -112,7 +112,14 @@ class SharedStyleSheetCache final : public nsIMemoryReporter {
 
   ~SharedStyleSheetCache();
 
-  nsRefPtrHashtable<SheetLoadDataHashKey, StyleSheet> mCompleteSheets;
+  struct CompleteSheet {
+    uint32_t mExpirationTime = 0;
+    RefPtr<StyleSheet> mSheet;
+
+    bool Expired() const;
+  };
+
+  nsDataHashtable<SheetLoadDataHashKey, CompleteSheet> mCompleteSheets;
   nsRefPtrHashtable<SheetLoadDataHashKey, css::SheetLoadData> mPendingDatas;
   // The SheetLoadData pointers in mLoadingDatas below are weak references.
   //
