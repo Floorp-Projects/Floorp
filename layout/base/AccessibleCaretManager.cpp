@@ -1358,8 +1358,7 @@ void AccessibleCaretManager::StartSelectionAutoScrollTimer(
   Selection* selection = GetSelection();
   MOZ_ASSERT(selection);
 
-  nsIFrame* anchorFrame = nullptr;
-  selection->GetPrimaryFrameForAnchorNode(&anchorFrame);
+  nsIFrame* anchorFrame = selection->GetPrimaryFrameForAnchorNode();
   if (!anchorFrame) {
     return;
   }

@@ -761,13 +761,7 @@ nsresult nsFrameSelection::MoveCaret(nsDirection aDirection,
 
   bool visualMovement =
       mCaret.IsVisualMovement(aContinueSelection, aMovementStyle);
-  nsIFrame* frame;
-  int32_t offsetused = 0;
-  nsresult rv =
-      sel->GetPrimaryFrameForFocusNode(&frame, &offsetused, visualMovement);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
+  nsIFrame* frame = sel->GetPrimaryFrameForFocusNode(visualMovement);
   if (!frame) {
     return NS_ERROR_FAILURE;
   }
@@ -808,6 +802,7 @@ nsresult nsFrameSelection::MoveCaret(nsDirection aDirection,
 
   Result<nsPeekOffsetStruct, nsresult> result = PeekOffsetForCaretMove(
       direction, aContinueSelection, aAmount, aMovementStyle, desiredPos);
+  nsresult rv;
   if (result.isOk() && result.inspect().mResultContent) {
     const nsPeekOffsetStruct& pos = result.inspect();
     nsIFrame* theFrame;
@@ -910,12 +905,11 @@ Result<nsPeekOffsetStruct, nsresult> nsFrameSelection::PeekOffsetForCaretMove(
   const bool visualMovement =
       mCaret.IsVisualMovement(aContinueSelection, aMovementStyle);
 
-  nsIFrame* frame = nullptr;
   int32_t offsetused = 0;
-  nsresult rv = selection->GetPrimaryFrameForFocusNode(&frame, &offsetused,
-                                                       visualMovement);
-  if (NS_FAILED(rv) || !frame) {
-    return Err(NS_FAILED(rv) ? rv : NS_ERROR_FAILURE);
+  nsIFrame* frame =
+      selection->GetPrimaryFrameForFocusNode(visualMovement, &offsetused);
+  if (!frame) {
+    return Err(NS_ERROR_FAILURE);
   }
 
   const auto kForceEditableRegion =
@@ -929,7 +923,8 @@ Result<nsPeekOffsetStruct, nsresult> nsFrameSelection::PeekOffsetForCaretMove(
   nsPeekOffsetStruct pos(aAmount, aDirection, offsetused, aDesiredCaretPos,
                          true, !!mLimiters.mLimiter, true, visualMovement,
                          aContinueSelection, kForceEditableRegion);
-  if (NS_FAILED(rv = frame->PeekOffset(&pos))) {
+  nsresult rv = frame->PeekOffset(&pos);
+  if (NS_FAILED(rv)) {
     return Err(rv);
   }
   return pos;
@@ -2017,23 +2012,19 @@ nsresult nsFrameSelection::PhysicalMove(int16_t aDirection, int16_t aAmount,
       {eDirNext, blockNextAmount}};
 
   WritingMode wm;
-  nsIFrame* frame = nullptr;
-  int32_t offsetused = 0;
-  if (NS_SUCCEEDED(
-          sel->GetPrimaryFrameForFocusNode(&frame, &offsetused, true))) {
-    if (frame) {
-      if (!frame->Style()->IsTextCombined()) {
-        wm = frame->GetWritingMode();
-      } else {
-        // Using different direction for horizontal-in-vertical would
-        // make it hard to navigate via keyboard. Inherit the moving
-        // direction from its parent.
-        MOZ_ASSERT(frame->IsTextFrame());
-        wm = frame->GetParent()->GetWritingMode();
-        MOZ_ASSERT(wm.IsVertical(),
-                   "Text combined "
-                   "can only appear in vertical text");
-      }
+  nsIFrame* frame = sel->GetPrimaryFrameForFocusNode(true);
+  if (frame) {
+    if (!frame->Style()->IsTextCombined()) {
+      wm = frame->GetWritingMode();
+    } else {
+      // Using different direction for horizontal-in-vertical would
+      // make it hard to navigate via keyboard. Inherit the moving
+      // direction from its parent.
+      MOZ_ASSERT(frame->IsTextFrame());
+      wm = frame->GetParent()->GetWritingMode();
+      MOZ_ASSERT(wm.IsVertical(),
+                 "Text combined "
+                 "can only appear in vertical text");
     }
   }
 

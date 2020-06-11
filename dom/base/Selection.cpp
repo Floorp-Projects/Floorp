@@ -1276,33 +1276,23 @@ nsresult Selection::StyledRanges::GetIndicesForInterval(
   return NS_OK;
 }
 
-nsresult Selection::GetPrimaryFrameForAnchorNode(nsIFrame** aReturnFrame) {
+nsIFrame* Selection::GetPrimaryFrameForAnchorNode() const {
   MOZ_ASSERT(mSelectionType == SelectionType::eNormal);
 
-  if (!aReturnFrame) return NS_ERROR_NULL_POINTER;
-
   int32_t frameOffset = 0;
-  *aReturnFrame = 0;
   nsCOMPtr<nsIContent> content = do_QueryInterface(GetAnchorNode());
   if (content && mFrameSelection) {
-    *aReturnFrame = nsFrameSelection::GetFrameForNodeOffset(
+    return nsFrameSelection::GetFrameForNodeOffset(
         content, AnchorOffset(), mFrameSelection->GetHint(), &frameOffset);
-    if (*aReturnFrame) return NS_OK;
   }
-  return NS_ERROR_FAILURE;
+  return nullptr;
 }
 
-nsresult Selection::GetPrimaryFrameForFocusNode(nsIFrame** aReturnFrame,
-                                                int32_t* aOffsetUsed,
-                                                bool aVisual) {
-  if (!aReturnFrame) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  *aReturnFrame = nullptr;
+nsIFrame* Selection::GetPrimaryFrameForFocusNode(bool aVisual,
+                                                 int32_t* aOffsetUsed) const {
   nsINode* focusNode = GetFocusNode();
   if (!focusNode || !focusNode->IsContent() || !mFrameSelection) {
-    return NS_ERROR_FAILURE;
+    return nullptr;
   }
 
   nsCOMPtr<nsIContent> content = focusNode->AsContent();
@@ -1311,27 +1301,29 @@ nsresult Selection::GetPrimaryFrameForFocusNode(nsIFrame** aReturnFrame,
     aOffsetUsed = &frameOffset;
   }
 
+  nsIFrame* returnFrame;
   nsresult rv = GetPrimaryOrCaretFrameForNodeOffset(
-      content, FocusOffset(), aReturnFrame, aOffsetUsed, aVisual);
+      content, FocusOffset(), &returnFrame, aOffsetUsed, aVisual);
   if (NS_SUCCEEDED(rv)) {
-    return rv;
+    return returnFrame;
   }
 
   // If content is whitespace only, we promote focus node to parent because
   // whitespace only node might have no frame.
 
   if (!content->TextIsOnlyWhitespace()) {
-    return NS_ERROR_FAILURE;
+    return nullptr;
   }
 
   nsCOMPtr<nsIContent> parent = content->GetParent();
   if (NS_WARN_IF(!parent)) {
-    return NS_ERROR_FAILURE;
+    return nullptr;
   }
   int32_t offset = parent->ComputeIndexOf(content);
 
-  return GetPrimaryOrCaretFrameForNodeOffset(parent, offset, aReturnFrame,
-                                             aOffsetUsed, aVisual);
+  GetPrimaryOrCaretFrameForNodeOffset(parent, offset, &returnFrame, aOffsetUsed,
+                                      aVisual);
+  return returnFrame;  // nullptr if failed
 }
 
 nsresult Selection::GetPrimaryOrCaretFrameForNodeOffset(nsIContent* aContent,
@@ -3296,10 +3288,8 @@ void Selection::Modify(const nsAString& aAlter, const nsAString& aDirection,
 
   // If the paragraph direction of the focused frame is right-to-left,
   // we may have to swap the direction of movement.
-  nsIFrame* frame;
-  int32_t offset;
-  rv = GetPrimaryFrameForFocusNode(&frame, &offset, visual);
-  if (NS_SUCCEEDED(rv) && frame) {
+  nsIFrame* frame = GetPrimaryFrameForFocusNode(visual);
+  if (frame) {
     nsBidiDirection paraDir = nsBidiPresUtils::ParagraphDirection(frame);
 
     if (paraDir == NSBIDI_RTL && visual) {
@@ -3463,13 +3453,7 @@ nsresult Selection::SelectionLanguageChange(bool aLangRTL) {
 
   frameSelection->mKbdBidiLevel = kbdBidiLevel;
 
-  nsresult result;
-  nsIFrame* focusFrame = 0;
-
-  result = GetPrimaryFrameForFocusNode(&focusFrame, nullptr, false);
-  if (NS_FAILED(result)) {
-    return result;
-  }
+  nsIFrame* focusFrame = GetPrimaryFrameForFocusNode(false);
   if (!focusFrame) {
     return NS_ERROR_FAILURE;
   }
