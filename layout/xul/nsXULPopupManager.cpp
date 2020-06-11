@@ -1097,7 +1097,7 @@ void nsXULPopupManager::HidePopupAfterDelay(nsMenuPopupFrame* aPopup) {
   KillMenuTimer();
 
   int32_t menuDelay =
-      LookAndFeel::GetInt(LookAndFeel::eIntID_SubmenuDelay, 300);  // ms
+      LookAndFeel::GetInt(LookAndFeel::IntID::SubmenuDelay, 300);  // ms
 
   // Kick off the timer.
   nsIEventTarget* target = nullptr;
@@ -2419,7 +2419,7 @@ bool nsXULPopupManager::IsValidMenuItem(nsIContent* aContent, bool aOnPopup) {
   bool skipNavigatingDisabledMenuItem = true;
   if (aOnPopup && (!menuFrame || !menuFrame->IsParentMenuList())) {
     skipNavigatingDisabledMenuItem =
-        LookAndFeel::GetInt(LookAndFeel::eIntID_SkipNavigatingDisabledMenuItem,
+        LookAndFeel::GetInt(LookAndFeel::IntID::SkipNavigatingDisabledMenuItem,
                             0) != 0;
   }
 

@@ -3503,7 +3503,7 @@ static bool SelectTextFieldOnFocus() {
   if (!gSelectTextFieldOnFocus) {
     int32_t selectTextfieldsOnKeyFocus = -1;
     nsresult rv =
-        LookAndFeel::GetInt(LookAndFeel::eIntID_SelectTextfieldsOnKeyFocus,
+        LookAndFeel::GetInt(LookAndFeel::IntID::SelectTextfieldsOnKeyFocus,
                             &selectTextfieldsOnKeyFocus);
     if (NS_FAILED(rv)) {
       gSelectTextFieldOnFocus = -1;

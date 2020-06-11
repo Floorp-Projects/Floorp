@@ -125,7 +125,7 @@ nsresult nsCaret::Init(PresShell* aPresShell) {
   NS_ASSERTION(mPresShell, "Hey, pres shell should support weak refs");
 
   mShowDuringSelection =
-      LookAndFeel::GetInt(LookAndFeel::eIntID_ShowCaretDuringSelection,
+      LookAndFeel::GetInt(LookAndFeel::IntID::ShowCaretDuringSelection,
                           mShowDuringSelection ? 1 : 0) != 0;
 
   RefPtr<Selection> selection =
@@ -154,9 +154,9 @@ nsCaret::Metrics nsCaret::ComputeMetrics(nsIFrame* aFrame, int32_t aOffset,
   // Compute nominal sizes in appunits
   nscoord caretWidth =
       (aCaretHeight *
-       LookAndFeel::GetFloat(LookAndFeel::eFloatID_CaretAspectRatio, 0.0f)) +
+       LookAndFeel::GetFloat(LookAndFeel::FloatID::CaretAspectRatio, 0.0f)) +
       nsPresContext::CSSPixelsToAppUnits(
-          LookAndFeel::GetInt(LookAndFeel::eIntID_CaretWidth, 1));
+          LookAndFeel::GetInt(LookAndFeel::IntID::CaretWidth, 1));
 
   if (DrawCJKCaret(aFrame, aOffset)) {
     caretWidth += nsPresContext::CSSPixelsToAppUnits(1);
@@ -571,7 +571,7 @@ void nsCaret::ResetBlinking() {
   }
 
   uint32_t blinkRate = static_cast<uint32_t>(LookAndFeel::GetInt(
-      LookAndFeel::eIntID_CaretBlinkTime, kDefaultCaretBlinkRate));
+      LookAndFeel::IntID::CaretBlinkTime, kDefaultCaretBlinkRate));
   if (mBlinkRate == blinkRate) {
     // If the rate hasn't changed, then there is nothing to do.
     return;

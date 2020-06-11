@@ -1797,9 +1797,9 @@ bool EventStateManager::IsEventOutsideDragThreshold(
 
   if (!sPixelThresholdX) {
     sPixelThresholdX =
-        LookAndFeel::GetInt(LookAndFeel::eIntID_DragThresholdX, 0);
+        LookAndFeel::GetInt(LookAndFeel::IntID::DragThresholdX, 0);
     sPixelThresholdY =
-        LookAndFeel::GetInt(LookAndFeel::eIntID_DragThresholdY, 0);
+        LookAndFeel::GetInt(LookAndFeel::IntID::DragThresholdY, 0);
     if (!sPixelThresholdX) sPixelThresholdX = 5;
     if (!sPixelThresholdY) sPixelThresholdY = 5;
   }

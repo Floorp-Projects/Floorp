@@ -1516,7 +1516,7 @@ bool KeyframeEffect::CanThrottleOverflowChangesInScrollable(
 
   // If we don't show scrollbars and have no intersection observers, we don't
   // care about overflow.
-  if (LookAndFeel::GetInt(LookAndFeel::eIntID_ShowHideScrollbars) == 0 &&
+  if (LookAndFeel::GetInt(LookAndFeel::IntID::ShowHideScrollbars) == 0 &&
       !hasIntersectionObservers) {
     return true;
   }

@@ -1138,7 +1138,7 @@ nsresult ChromeTooltipListener::MouseMove(Event* aMouseEvent) {
     if (mPossibleTooltipNode) {
       nsresult rv = NS_NewTimerWithFuncCallback(
           getter_AddRefs(mTooltipTimer), sTooltipCallback, this,
-          LookAndFeel::GetInt(LookAndFeel::eIntID_TooltipDelay, 500),
+          LookAndFeel::GetInt(LookAndFeel::IntID::TooltipDelay, 500),
           nsITimer::TYPE_ONE_SHOT, "ChromeTooltipListener::MouseMove", target);
       if (NS_FAILED(rv)) {
         mPossibleTooltipNode = nullptr;

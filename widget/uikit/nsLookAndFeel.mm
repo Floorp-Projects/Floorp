@@ -265,85 +265,85 @@ nsLookAndFeel::GetIntImpl(IntID aID, int32_t& aResult) {
   res = NS_OK;
 
   switch (aID) {
-    case eIntID_CaretBlinkTime:
+    case IntID::CaretBlinkTime:
       aResult = 567;
       break;
-    case eIntID_CaretWidth:
+    case IntID::CaretWidth:
       aResult = 1;
       break;
-    case eIntID_ShowCaretDuringSelection:
+    case IntID::ShowCaretDuringSelection:
       aResult = 0;
       break;
-    case eIntID_SelectTextfieldsOnKeyFocus:
+    case IntID::SelectTextfieldsOnKeyFocus:
       // Select textfield content when focused by kbd
       // used by nsEventStateManager::sTextfieldSelectModel
       aResult = 1;
       break;
-    case eIntID_SubmenuDelay:
+    case IntID::SubmenuDelay:
       aResult = 200;
       break;
-    case eIntID_MenusCanOverlapOSBar:
+    case IntID::MenusCanOverlapOSBar:
       // xul popups are not allowed to overlap the menubar.
       aResult = 0;
       break;
-    case eIntID_SkipNavigatingDisabledMenuItem:
+    case IntID::SkipNavigatingDisabledMenuItem:
       aResult = 1;
       break;
-    case eIntID_DragThresholdX:
-    case eIntID_DragThresholdY:
+    case IntID::DragThresholdX:
+    case IntID::DragThresholdY:
       aResult = 4;
       break;
-    case eIntID_ScrollArrowStyle:
+    case IntID::ScrollArrowStyle:
       aResult = eScrollArrow_None;
       break;
-    case eIntID_ScrollSliderStyle:
+    case IntID::ScrollSliderStyle:
       aResult = eScrollThumbStyle_Proportional;
       break;
-    case eIntID_TreeOpenDelay:
+    case IntID::TreeOpenDelay:
       aResult = 1000;
       break;
-    case eIntID_TreeCloseDelay:
+    case IntID::TreeCloseDelay:
       aResult = 1000;
       break;
-    case eIntID_TreeLazyScrollDelay:
+    case IntID::TreeLazyScrollDelay:
       aResult = 150;
       break;
-    case eIntID_TreeScrollDelay:
+    case IntID::TreeScrollDelay:
       aResult = 100;
       break;
-    case eIntID_TreeScrollLinesMax:
+    case IntID::TreeScrollLinesMax:
       aResult = 3;
       break;
-    case eIntID_DWMCompositor:
-    case eIntID_WindowsClassic:
-    case eIntID_WindowsDefaultTheme:
-    case eIntID_TouchEnabled:
+    case IntID::DWMCompositor:
+    case IntID::WindowsClassic:
+    case IntID::WindowsDefaultTheme:
+    case IntID::TouchEnabled:
       aResult = 0;
       res = NS_ERROR_NOT_IMPLEMENTED;
       break;
-    case eIntID_MacGraphiteTheme:
+    case IntID::MacGraphiteTheme:
       aResult = 0;
       break;
-    case eIntID_TabFocusModel:
+    case IntID::TabFocusModel:
       aResult = 1;  // default to just textboxes
       break;
-    case eIntID_ScrollToClick:
+    case IntID::ScrollToClick:
       aResult = 0;
       break;
-    case eIntID_ChosenMenuItemsShouldBlink:
+    case IntID::ChosenMenuItemsShouldBlink:
       aResult = 1;
       break;
-    case eIntID_IMERawInputUnderlineStyle:
-    case eIntID_IMEConvertedTextUnderlineStyle:
-    case eIntID_IMESelectedRawTextUnderlineStyle:
-    case eIntID_IMESelectedConvertedTextUnderline:
+    case IntID::IMERawInputUnderlineStyle:
+    case IntID::IMEConvertedTextUnderlineStyle:
+    case IntID::IMESelectedRawTextUnderlineStyle:
+    case IntID::IMESelectedConvertedTextUnderline:
       aResult = NS_STYLE_TEXT_DECORATION_STYLE_SOLID;
       break;
-    case eIntID_SpellCheckerUnderlineStyle:
+    case IntID::SpellCheckerUnderlineStyle:
       aResult = NS_STYLE_TEXT_DECORATION_STYLE_DOTTED;
       break;
-    case eIntID_ContextMenuOffsetVertical:
-    case eIntID_ContextMenuOffsetHorizontal:
+    case IntID::ContextMenuOffsetVertical:
+    case IntID::ContextMenuOffsetHorizontal:
       aResult = 2;
       break;
     default:
@@ -360,10 +360,10 @@ nsLookAndFeel::GetFloatImpl(FloatID aID, float& aResult) {
   res = NS_OK;
 
   switch (aID) {
-    case eFloatID_IMEUnderlineRelativeSize:
+    case FloatID::IMEUnderlineRelativeSize:
       aResult = 2.0f;
       break;
-    case eFloatID_SpellCheckerUnderlineRelativeSize:
+    case FloatID::SpellCheckerUnderlineRelativeSize:
       aResult = 2.0f;
       break;
     default:

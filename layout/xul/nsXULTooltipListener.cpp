@@ -201,7 +201,7 @@ void nsXULTooltipListener::MouseMove(Event* aEvent) {
     if (mTargetNode) {
       nsresult rv = NS_NewTimerWithFuncCallback(
           getter_AddRefs(mTooltipTimer), sTooltipCallback, this,
-          LookAndFeel::GetInt(LookAndFeel::eIntID_TooltipDelay, 500),
+          LookAndFeel::GetInt(LookAndFeel::IntID::TooltipDelay, 500),
           nsITimer::TYPE_ONE_SHOT, "sTooltipCallback",
           sourceContent->OwnerDoc()->EventTargetFor(TaskCategory::Other));
       if (NS_FAILED(rv)) {
