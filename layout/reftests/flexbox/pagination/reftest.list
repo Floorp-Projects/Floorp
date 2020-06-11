@@ -71,3 +71,7 @@ fuzzy-if(Android&&webrender,0-128,0-10) == flexbox-empty-2d.html flexbox-empty-2
 == flexbox-single-row-3a.html flexbox-single-row-3-ref.html
 == flexbox-single-row-3b.html flexbox-single-row-3-ref.html
 == flexbox-single-row-4.html flexbox-single-row-4-ref.html
+
+# Tests for how we fragment flex items in a multi-line row flex container.
+== flexbox-multi-row-1a.html flexbox-multi-row-1-ref.html
+== flexbox-multi-row-1b.html flexbox-multi-row-1-ref.html
