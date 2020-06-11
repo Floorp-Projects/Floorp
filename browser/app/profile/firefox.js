@@ -1021,12 +1021,6 @@ pref("dom.ipc.shims.enabledWarnings", false);
   // SetSecurityLevelForContentProcess() for what the different settings mean.
   pref("security.sandbox.content.level", 6);
 
-  // This controls the depth of stack trace that is logged when Windows sandbox
-  // logging is turned on.  This is only currently available for the content
-  // process because the only other sandbox (for GMP) has too strict a policy to
-  // allow stack tracing.  This does not require a restart to take effect.
-  pref("security.sandbox.windows.log.stackTraceDepth", 0);
-
   // This controls the strength of the Windows GPU process sandbox.  Changes
   // will require restart.
   // For information on what the level number means, see
