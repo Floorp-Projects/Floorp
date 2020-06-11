@@ -235,18 +235,18 @@ assertEq(byteSize(rope16),                                              s(Nurser
 // cases. Also note that on Windows mozmalloc's smallest allocation size is
 // two words compared to one word on other platforms.
 if (config['windows']) {
-  assertEq(byteSize(newExternalString("")),                             s(EN+8, EN+16));
-  assertEq(byteSize(newExternalString("1")),                            s(EN+8, EN+16));
-  assertEq(byteSize(newExternalString("12")),                           s(EN+8, EN+16));
-  assertEq(byteSize(newExternalString("123")),                          s(EN+8, EN+16));
-  assertEq(byteSize(newExternalString("1234")),                         s(EN+8, EN+16));
+  assertEq(byteSize(newString("", {external: true})),                        s(EN+8, EN+16));
+  assertEq(byteSize(newString("1", {external: true})),                       s(EN+8, EN+16));
+  assertEq(byteSize(newString("12", {external: true})),                      s(EN+8, EN+16));
+  assertEq(byteSize(newString("123", {external: true})),                     s(EN+8, EN+16));
+  assertEq(byteSize(newString("1234", {external: true})),                    s(EN+8, EN+16));
 } else {
-  assertEq(byteSize(newExternalString("")),                             s(EN+4, EN+8));
-  assertEq(byteSize(newExternalString("1")),                            s(EN+4, EN+8));
-  assertEq(byteSize(newExternalString("12")),                           s(EN+4, EN+8));
-  assertEq(byteSize(newExternalString("123")),                          s(EN+8, EN+8));
-  assertEq(byteSize(newExternalString("1234")),                         s(EN+8, EN+8));
+  assertEq(byteSize(newString("", {external: true})),                        s(EN+4, EN+8));
+  assertEq(byteSize(newString("1", {external: true})),                       s(EN+4, EN+8));
+  assertEq(byteSize(newString("12", {external: true})),                      s(EN+4, EN+8));
+  assertEq(byteSize(newString("123", {external: true})),                     s(EN+8, EN+8));
+  assertEq(byteSize(newString("1234", {external: true})),                    s(EN+8, EN+8));
 }
-assertEq(byteSize(newExternalString("12345")),                          s(EN+16, EN+16));
-assertEq(byteSize(newExternalString("123456789.123456789.1234")),       s(EN+48, EN+48));
-assertEq(byteSize(newExternalString("123456789.123456789.12345")),      s(EN+64, EN+64));
+assertEq(byteSize(newString("12345", {external: true})),                     s(EN+16, EN+16));
+assertEq(byteSize(newString("123456789.123456789.1234", {external: true})),  s(EN+48, EN+48));
+assertEq(byteSize(newString("123456789.123456789.12345", {external: true})), s(EN+64, EN+64));
