@@ -6980,28 +6980,6 @@ bool js::InstantiateAsmJS(JSContext* cx, unsigned argc, JS::Value* vp) {
   return true;
 }
 
-static JSFunction* NewAsmJSModuleFunction(JSContext* cx,
-                                          FunctionBox* origFunbox,
-                                          HandleObject moduleObj) {
-  RootedAtom name(cx, origFunbox->explicitName());
-
-  FunctionFlags flags = origFunbox->isLambda()
-                            ? FunctionFlags::ASMJS_LAMBDA_CTOR
-                            : FunctionFlags::ASMJS_CTOR;
-  JSFunction* moduleFun = NewNativeConstructor(
-      cx, InstantiateAsmJS, origFunbox->nargs(), name,
-      gc::AllocKind::FUNCTION_EXTENDED, TenuredObject, flags);
-  if (!moduleFun) {
-    return nullptr;
-  }
-
-  moduleFun->setExtendedSlot(FunctionExtended::ASMJS_MODULE_SLOT,
-                             ObjectValue(*moduleObj));
-
-  MOZ_ASSERT(IsAsmJSModule(moduleFun));
-  return moduleFun;
-}
-
 /*****************************************************************************/
 // Top-level js::CompileAsmJS
 
@@ -7098,28 +7076,13 @@ static bool DoCompileAsmJS(JSContext* cx, AsmJSParser<Unit>& parser,
     return NoExceptionPending(cx);
   }
 
-  // Hand over ownership to a GC object wrapper which can then be referenced
-  // from the module function.
-  RootedObject moduleObj(cx, module->createObjectForAsmJS(cx));
-  if (!moduleObj) {
-    return false;
-  }
-
-  // The module function dynamically links the AsmJSModule when called and
-  // generates a set of functions wrapping all the exports.
+  // Finished! Save the ref-counted module on the FunctionBox. When JSFunctions
+  // are eventually allocated we will create an asm.js constructor for it.
   FunctionBox* funbox = parser.pc_->functionBox();
-
-  RootedFunction moduleFun(cx, NewAsmJSModuleFunction(cx, funbox, moduleObj));
-  if (!moduleFun) {
-    return false;
-  }
-
-  // Finished! Clobber the default function created by the parser with the new
-  // asm.js module function. Special cases in the bytecode emitter avoid
-  // generating bytecode for asm.js functions, allowing this asm.js module
-  // function to be the finished result.
   MOZ_ASSERT(funbox->isInterpreted());
-  funbox->setAsmJSModule(moduleFun);
+  if (!funbox->setAsmJSModule(module)) {
+    return NoExceptionPending(cx);
+  }
 
   // Success! Write to the console with a "warning" message indicating
   // total compilation time.
