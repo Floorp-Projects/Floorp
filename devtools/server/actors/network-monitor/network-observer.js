@@ -114,12 +114,15 @@ function matchRequest(channel, filters) {
     // topFrame is typically null for some chrome requests like favicons
     if (topFrame && topFrame.browsingContext.id == filters.browsingContextID) {
       return true;
-    } else if (
+    }
+
+    // If we couldn't get the top frame BrowsingContext from the loadContext,
+    // look for it on channel.loadInfo instead.
+    if (
       channel.loadInfo &&
+      channel.loadInfo.browsingContext &&
       channel.loadInfo.browsingContext.id == filters.browsingContextID
     ) {
-      // If we couldn't get the top frame BrowsingContext from the loadContext,
-      // look for it on channel.loadInfo instead.
       return true;
     }
   }
