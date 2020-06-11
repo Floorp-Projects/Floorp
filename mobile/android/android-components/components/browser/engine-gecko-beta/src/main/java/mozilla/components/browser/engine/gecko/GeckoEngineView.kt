@@ -189,10 +189,9 @@ class GeckoEngineView @JvmOverloads constructor(
         currentGeckoView.setDynamicToolbarMaxHeight(height)
     }
 
+    @Suppress("TooGenericExceptionCaught")
     override fun captureThumbnail(onFinish: (Bitmap?) -> Unit) {
-        // Do not capture pixels if no content has been rendered for this session yet. GeckoView
-        // might otherwise throw an IllegalStateException if the compositor isn't ready.
-        if (currentSession?.firstContentfulPaint == true) {
+        try {
             val geckoResult = currentGeckoView.capturePixels()
             geckoResult.then({ bitmap ->
                 onFinish(bitmap)
@@ -201,7 +200,13 @@ class GeckoEngineView @JvmOverloads constructor(
                 onFinish(null)
                 GeckoResult<Void>()
             })
-        } else {
+        } catch (e: Exception) {
+            // There's currently no reliable way for consumers of GeckoView to
+            // know whether or not the compositor is ready. So we have to add
+            // a catch-all here. In the future, GeckoView will invoke our error
+            // callback instead and this block can be removed:
+            // https://bugzilla.mozilla.org/show_bug.cgi?id=1645114
+            // https://github.com/mozilla-mobile/android-components/issues/6680
             onFinish(null)
         }
     }

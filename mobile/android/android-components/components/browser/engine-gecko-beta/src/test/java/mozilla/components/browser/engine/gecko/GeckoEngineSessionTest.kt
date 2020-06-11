@@ -1915,6 +1915,25 @@ class GeckoEngineSessionTest {
     }
 
     @Test
+    fun `onFirstContentfulPaint notifies observers`() {
+        val engineSession = GeckoEngineSession(mock(),
+            geckoSessionProvider = geckoSessionProvider)
+
+        captureDelegates()
+
+        var observed = false
+
+        engineSession.register(object : EngineSession.Observer {
+            override fun onFirstContentfulPaint() {
+                observed = true
+            }
+        })
+
+        contentDelegate.value.onFirstContentfulPaint(mock())
+        assertTrue(observed)
+    }
+
+    @Test
     fun `onCrash notifies observers about crash`() {
         val engineSession = GeckoEngineSession(mock(),
             geckoSessionProvider = geckoSessionProvider)
@@ -2388,21 +2407,6 @@ class GeckoEngineSessionTest {
         assertNotNull(receivedWindowRequest)
         assertSame(engineSession, receivedWindowRequest!!.prepare())
         assertEquals(WindowRequest.Type.CLOSE, receivedWindowRequest!!.type)
-    }
-
-    @Test
-    fun managesStateOfFirstContentfulPaint() {
-        val engineSession = GeckoEngineSession(mock(),
-                geckoSessionProvider = geckoSessionProvider)
-
-        captureDelegates()
-
-        assertFalse(engineSession.firstContentfulPaint)
-        contentDelegate.value.onFirstContentfulPaint(geckoSession)
-        assertTrue(engineSession.firstContentfulPaint)
-
-        engineSession.close()
-        assertFalse(engineSession.firstContentfulPaint)
     }
 
     class MockSecurityInformation(
