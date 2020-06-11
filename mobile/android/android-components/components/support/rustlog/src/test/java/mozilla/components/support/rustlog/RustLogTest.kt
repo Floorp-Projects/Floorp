@@ -4,7 +4,10 @@
 
 package mozilla.components.support.rustlog
 
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.Job
+import mozilla.appservices.rustlog.LogAdapterCannotEnable
+import mozilla.appservices.rustlog.LogLevelFilter
 import mozilla.components.support.base.crash.Breadcrumb
 import mozilla.components.support.base.crash.CrashReporting
 import mozilla.components.support.base.log.Log
@@ -13,33 +16,68 @@ import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
+import org.junit.runner.RunWith
 import org.mockito.Mockito.verifyZeroInteractions
 
+@RunWith(AndroidJUnit4::class)
 class RustLogTest {
+    @Test
+    fun `basic RustLog interactions do not blow up`() {
+        RustLog.enable()
+
+        try {
+            RustLog.enable()
+            fail("can't enable RustLog more than once")
+        } catch (e: LogAdapterCannotEnable) {}
+
+        try {
+            RustLog.enable(mock())
+            fail("can't enable RustLog more than once")
+        } catch (e: LogAdapterCannotEnable) {}
+
+        RustLog.setMaxLevel(Log.Priority.DEBUG, false)
+        RustLog.setMaxLevel(Log.Priority.DEBUG, true)
+        RustLog.setMaxLevel(Log.Priority.INFO, false)
+        RustLog.setMaxLevel(Log.Priority.INFO, true)
+        RustLog.setMaxLevel(Log.Priority.WARN, false)
+        RustLog.setMaxLevel(Log.Priority.WARN, true)
+        RustLog.setMaxLevel(Log.Priority.ERROR, false)
+        RustLog.setMaxLevel(Log.Priority.ERROR, true)
+
+        RustLog.disable()
+        RustLog.enable(mock())
+    }
+
     @Test
     fun `maybeSendLogToCrashReporter log processing ignores low priority stuff`() {
         val crashReporter = mock<CrashReporting>()
+        val onLog = CrashReporterOnLog(crashReporter)
 
-        RustLog.maybeSendLogToCrashReporter(crashReporter, Log.Priority.DEBUG, "sync15:multiple", "Stuff broke")
+        onLog(android.util.Log.VERBOSE, "sync15:multiple", "Stuff broke")
         verifyZeroInteractions(crashReporter)
 
-        RustLog.maybeSendLogToCrashReporter(crashReporter, Log.Priority.INFO, "sync15:multiple", "Stuff broke")
+        onLog(android.util.Log.DEBUG, "sync15:multiple", "Stuff broke")
         verifyZeroInteractions(crashReporter)
 
-        RustLog.maybeSendLogToCrashReporter(crashReporter, Log.Priority.WARN, "sync15:multiple", "Stuff broke")
+        onLog(android.util.Log.INFO, "sync15:multiple", "Stuff broke")
         verifyZeroInteractions(crashReporter)
 
-        RustLog.maybeSendLogToCrashReporter(crashReporter, Log.Priority.WARN, null, "Stuff broke")
+        onLog(android.util.Log.WARN, "sync15:multiple", "Stuff broke")
+        verifyZeroInteractions(crashReporter)
+
+        onLog(android.util.Log.WARN, null, "Stuff broke")
         verifyZeroInteractions(crashReporter)
     }
 
     @Test
     fun `maybeSendLogToCrashReporter log processing reports error level stuff`() {
         val crashReporter = TestCrashReporter()
-        RustLog.maybeSendLogToCrashReporter(crashReporter, Log.Priority.ERROR, "sync15:multiple", "Stuff broke")
+        val onLog = CrashReporterOnLog(crashReporter)
+
+        onLog(android.util.Log.ERROR, "sync15:multiple", "Stuff broke")
         crashReporter.assertLastException(1, "sync15:multiple - Stuff broke")
 
-        RustLog.maybeSendLogToCrashReporter(crashReporter, Log.Priority.ERROR, null, "Something maybe broke")
+        onLog(android.util.Log.ERROR, null, "Something maybe broke")
         crashReporter.assertLastException(2, "null - Something maybe broke")
     }
 
@@ -47,25 +85,41 @@ class RustLogTest {
     fun `maybeSendLogToCrashReporter log processing ignores certain tags`() {
         val expectedIgnoredTags = listOf("viaduct::backend::ffi")
         val crashReporter = TestCrashReporter()
+        val onLog = CrashReporterOnLog(crashReporter)
 
         expectedIgnoredTags.forEach { tag ->
-            RustLog.maybeSendLogToCrashReporter(crashReporter, Log.Priority.ERROR, tag, "Stuff broke")
+            onLog(android.util.Log.ERROR, tag, "Stuff broke")
             assertTrue(crashReporter.exceptions.isEmpty())
         }
 
         // null tags are fine
-        RustLog.maybeSendLogToCrashReporter(crashReporter, Log.Priority.ERROR, null, "Stuff broke")
+        onLog(android.util.Log.ERROR, null, "Stuff broke")
         crashReporter.assertLastException(1, "null - Stuff broke")
 
         // subsequent non-null and non-ignored are fine
-        RustLog.maybeSendLogToCrashReporter(crashReporter, Log.Priority.ERROR, "sync15:places", "DB stuff broke")
+        onLog(android.util.Log.ERROR, "sync15:places", "DB stuff broke")
         crashReporter.assertLastException(2, "sync15:places - DB stuff broke")
 
         // ignored are still ignored
         expectedIgnoredTags.forEach { tag ->
-            RustLog.maybeSendLogToCrashReporter(crashReporter, Log.Priority.ERROR, tag, "Stuff broke")
+            onLog(android.util.Log.ERROR, tag, "Stuff broke")
             assertEquals(2, crashReporter.exceptions.size)
         }
+    }
+
+    @Test
+    fun `log priority to level filter`() {
+        assertEquals(LogLevelFilter.DEBUG, Log.Priority.DEBUG.asLevelFilter(false))
+        assertEquals(LogLevelFilter.TRACE, Log.Priority.DEBUG.asLevelFilter(true))
+
+        assertEquals(LogLevelFilter.INFO, Log.Priority.INFO.asLevelFilter(false))
+        assertEquals(LogLevelFilter.INFO, Log.Priority.INFO.asLevelFilter(true))
+
+        assertEquals(LogLevelFilter.WARN, Log.Priority.WARN.asLevelFilter(false))
+        assertEquals(LogLevelFilter.WARN, Log.Priority.WARN.asLevelFilter(true))
+
+        assertEquals(LogLevelFilter.ERROR, Log.Priority.ERROR.asLevelFilter(false))
+        assertEquals(LogLevelFilter.ERROR, Log.Priority.ERROR.asLevelFilter(true))
     }
 
     private class TestCrashReporter : CrashReporting {
