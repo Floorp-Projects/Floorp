@@ -21,9 +21,6 @@ const QUERYTYPE_ADAPTIVE = 3;
 // The default frecency value used when inserting matches with unknown frecency.
 const FRECENCY_DEFAULT = 1000;
 
-// After this time, we'll give up waiting for the extension to return matches.
-const MAXIMUM_ALLOWED_EXTENSION_TIME_MS = 3000;
-
 // By default we add remote tabs that have been used less than this time ago.
 // Any remaining remote tabs are added in queue if no other results are found.
 const RECENT_REMOTE_TAB_THRESHOLD_MS = 259200000; // 72 hours.
@@ -1046,22 +1043,6 @@ Search.prototype = {
       }
     }
 
-    // Only add extension suggestions if the first token is a registered keyword
-    // and the search string has characters after the first token.
-    let extensionsCompletePromise = Promise.resolve();
-    if (
-      this._heuristicToken &&
-      ExtensionSearchHandler.isKeywordRegistered(this._heuristicToken) &&
-      substringAfter(this._originalSearchString, this._heuristicToken) &&
-      !this._searchEngineAliasMatch
-    ) {
-      // Do not await on this, since extensions cannot notify when they are done
-      // adding results, it may take too long.
-      extensionsCompletePromise = this._matchExtensionSuggestions();
-    } else if (ExtensionSearchHandler.hasActiveInputSession()) {
-      ExtensionSearchHandler.handleInputCancelled();
-    }
-
     // Run the adaptive query first.
     await conn.executeCached(
       this._adaptiveQuery[0],
@@ -1136,9 +1117,6 @@ Search.prototype = {
     }
 
     this._matchPreloadedSites();
-
-    // Ensure to fill any remaining space.
-    await extensionsCompletePromise;
   },
 
   _shouldMatchAboutPages() {
@@ -1621,13 +1599,6 @@ Search.prototype = {
   },
 
   _addExtensionMatch(content, comment) {
-    let count =
-      this._counts[UrlbarUtils.RESULT_GROUP.EXTENSION] +
-      this._counts[UrlbarUtils.RESULT_GROUP.HEURISTIC];
-    if (count >= UrlbarUtils.MAXIMUM_ALLOWED_EXTENSION_MATCHES) {
-      return;
-    }
-
     this._addMatch({
       value: makeActionUrl("extension", {
         content,
@@ -1688,30 +1659,6 @@ Search.prototype = {
 
     match.value = makeActionUrl("searchengine", actionURLParams);
     this._addMatch(match);
-  },
-
-  _matchExtensionSuggestions() {
-    let data = {
-      keyword: this._heuristicToken,
-      text: this._originalSearchString,
-      inPrivateWindow: this._inPrivateWindow,
-    };
-    let promise = ExtensionSearchHandler.handleSearch(data, suggestions => {
-      for (let suggestion of suggestions) {
-        let content = `${this._heuristicToken} ${suggestion.content}`;
-        this._addExtensionMatch(content, suggestion.description);
-      }
-    });
-
-    // Since the extension has no way to signal when it's done pushing
-    // results, we add a timeout racing with the addition.
-    let timeoutPromise = new Promise(resolve => {
-      let timer = setTimeout(resolve, MAXIMUM_ALLOWED_EXTENSION_TIME_MS);
-      // TODO Bug 1531268: Figure out why this cancel helps makes the tests
-      // stable.
-      promise.then(timer.cancel);
-    });
-    return Promise.race([timeoutPromise, promise]).catch(Cu.reportError);
   },
 
   async _matchRemoteTabs() {

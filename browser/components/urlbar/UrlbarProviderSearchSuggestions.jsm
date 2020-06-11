@@ -51,38 +51,6 @@ function looksLikeUrl(str, ignoreAlphanumericHosts = false) {
 }
 
 /**
- * Returns the portion of a string starting at the index where another string
- * begins.
- *
- * @param   {string} sourceStr
- *          The string to search within.
- * @param   {string} targetStr
- *          The string to search for.
- * @returns {string} The substring within sourceStr starting at targetStr, or
- *          the empty string if targetStr does not occur in sourceStr.
- */
-function substringAt(sourceStr, targetStr) {
-  let index = sourceStr.indexOf(targetStr);
-  return index < 0 ? "" : sourceStr.substr(index);
-}
-
-/**
- * Returns the portion of a string starting at the index where another string
- * ends.
- *
- * @param   {string} sourceStr
- *          The string to search within.
- * @param   {string} targetStr
- *          The string to search for.
- * @returns {string} The substring within sourceStr where targetStr ends, or the
- *          empty string if targetStr does not occur in sourceStr.
- */
-function substringAfter(sourceStr, targetStr) {
-  let index = sourceStr.indexOf(targetStr);
-  return index < 0 ? "" : sourceStr.substr(index + targetStr.length);
-}
-
-/**
  * Class used to create the provider.
  */
 class ProviderSearchSuggestions extends UrlbarProvider {
@@ -250,7 +218,10 @@ class ProviderSearchSuggestions extends UrlbarProvider {
 
     let query = aliasEngine
       ? aliasEngine.query
-      : substringAt(queryContext.searchString, queryContext.tokens[0].value);
+      : UrlbarUtils.substringAt(
+          queryContext.searchString,
+          queryContext.tokens[0].value
+        );
     if (!query) {
       return;
     }
@@ -286,7 +257,7 @@ class ProviderSearchSuggestions extends UrlbarProvider {
     // other restriction chars, so that it's possible to search for things
     // including one of those (e.g. "c#").
     if (leadingRestrictionToken === UrlbarTokenizer.RESTRICT.SEARCH) {
-      query = substringAfter(query, leadingRestrictionToken).trim();
+      query = UrlbarUtils.substringAfter(query, leadingRestrictionToken).trim();
     }
 
     // Find our search engine. It may have already been set with an alias.
@@ -539,7 +510,10 @@ class ProviderSearchSuggestions extends UrlbarProvider {
       return {
         engine: engineMatch,
         alias: possibleAlias,
-        query: substringAfter(queryContext.searchString, possibleAlias).trim(),
+        query: UrlbarUtils.substringAfter(
+          queryContext.searchString,
+          possibleAlias
+        ).trim(),
         isTokenAlias: possibleAlias.startsWith("@"),
       };
     }
@@ -555,7 +529,7 @@ class ProviderSearchSuggestions extends UrlbarProvider {
         return {
           engine,
           alias: possibleAlias,
-          query: substringAfter(
+          query: UrlbarUtils.substringAfter(
             queryContext.searchString,
             possibleAlias
           ).trim(),
