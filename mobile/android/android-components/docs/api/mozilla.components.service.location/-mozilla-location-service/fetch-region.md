@@ -2,7 +2,7 @@
 
 # fetchRegion
 
-`suspend fun fetchRegion(readFromCache: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`): `[`Region`](../-location-service/-region/index.md)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/location/src/main/java/mozilla/components/service/location/MozillaLocationService.kt#L65)
+`suspend fun fetchRegion(readFromCache: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`): `[`Region`](../-location-service/-region/index.md)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/location/src/main/java/mozilla/components/service/location/MozillaLocationService.kt#L66)
 
 Overrides [LocationService.fetchRegion](../-location-service/fetch-region.md)
 

@@ -105,6 +105,7 @@
 | [mozilla.components.feature.app.links](mozilla.components.feature.app.links/index.md) |  |
 | [mozilla.components.feature.awesomebar](mozilla.components.feature.awesomebar/index.md) |  |
 | [mozilla.components.feature.awesomebar.provider](mozilla.components.feature.awesomebar.provider/index.md) |  |
+| [mozilla.components.feature.containers](mozilla.components.feature.containers/index.md) |  |
 | [mozilla.components.feature.contextmenu](mozilla.components.feature.contextmenu/index.md) |  |
 | [mozilla.components.feature.contextmenu.ext](mozilla.components.feature.contextmenu.ext/index.md) |  |
 | [mozilla.components.feature.contextmenu.facts](mozilla.components.feature.contextmenu.facts/index.md) |  |

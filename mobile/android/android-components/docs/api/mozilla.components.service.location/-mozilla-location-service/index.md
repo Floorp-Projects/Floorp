@@ -2,7 +2,7 @@
 
 # MozillaLocationService
 
-`class MozillaLocationService : `[`LocationService`](../-location-service/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/location/src/main/java/mozilla/components/service/location/MozillaLocationService.kt#L49)
+`class MozillaLocationService : `[`LocationService`](../-location-service/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/location/src/main/java/mozilla/components/service/location/MozillaLocationService.kt#L50)
 
 The Mozilla Location Service (MLS) is an open service which lets devices determine their location
 based on network infrastructure like Bluetooth beacons, cell towers and WiFi access points.

@@ -2,7 +2,7 @@
 
 # AddNewTabUseCase
 
-`class AddNewTabUseCase : `[`LoadUrlUseCase`](../../../mozilla.components.feature.session/-session-use-cases/-load-url-use-case/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/tabs/src/main/java/mozilla/components/feature/tabs/TabsUseCases.kt#L86)
+`class AddNewTabUseCase : `[`LoadUrlUseCase`](../../../mozilla.components.feature.session/-session-use-cases/-load-url-use-case/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/tabs/src/main/java/mozilla/components/feature/tabs/TabsUseCases.kt#L110)
 
 ### Functions
 

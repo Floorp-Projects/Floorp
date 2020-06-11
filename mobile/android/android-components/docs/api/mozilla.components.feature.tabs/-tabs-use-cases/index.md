@@ -12,10 +12,11 @@ Contains use cases related to the tabs feature.
 |---|---|
 | [AddNewPrivateTabUseCase](-add-new-private-tab-use-case/index.md) | `class AddNewPrivateTabUseCase : `[`LoadUrlUseCase`](../../mozilla.components.feature.session/-session-use-cases/-load-url-use-case/index.md) |
 | [AddNewTabUseCase](-add-new-tab-use-case/index.md) | `class AddNewTabUseCase : `[`LoadUrlUseCase`](../../mozilla.components.feature.session/-session-use-cases/-load-url-use-case/index.md) |
+| [DefaultRemoveTabUseCase](-default-remove-tab-use-case/index.md) | `class DefaultRemoveTabUseCase : `[`RemoveTabUseCase`](-remove-tab-use-case/index.md)<br>Default implementation of [RemoveTabUseCase](-remove-tab-use-case/index.md), interacting with [SessionManager](../../mozilla.components.browser.session/-session-manager/index.md). |
 | [DefaultSelectTabUseCase](-default-select-tab-use-case/index.md) | `class DefaultSelectTabUseCase : `[`SelectTabUseCase`](-select-tab-use-case/index.md) |
 | [RemoveAllTabsOfTypeUseCase](-remove-all-tabs-of-type-use-case/index.md) | `class RemoveAllTabsOfTypeUseCase` |
 | [RemoveAllTabsUseCase](-remove-all-tabs-use-case/index.md) | `class RemoveAllTabsUseCase` |
-| [RemoveTabUseCase](-remove-tab-use-case/index.md) | `class RemoveTabUseCase` |
+| [RemoveTabUseCase](-remove-tab-use-case/index.md) | `interface RemoveTabUseCase`<br>Contract for use cases that remove a tab. |
 | [SelectTabUseCase](-select-tab-use-case/index.md) | `interface SelectTabUseCase`<br>Contract for use cases that select a tab. |
 
 ### Constructors

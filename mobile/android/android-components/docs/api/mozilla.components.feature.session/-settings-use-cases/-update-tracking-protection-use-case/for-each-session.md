@@ -2,7 +2,7 @@
 
 # forEachSession
 
-`protected fun forEachSession(session: `[`EngineSession`](../../../mozilla.components.concept.engine/-engine-session/index.md)`, value: `[`TrackingProtectionPolicy`](../../../mozilla.components.concept.engine/-engine-session/-tracking-protection-policy/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/session/src/main/java/mozilla/components/feature/session/SettingsUseCases.kt#L75)
+`protected fun forEachSession(session: `[`EngineSession`](../../../mozilla.components.concept.engine/-engine-session/index.md)`, value: `[`TrackingProtectionPolicy`](../../../mozilla.components.concept.engine/-engine-session/-tracking-protection-policy/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/session/src/main/java/mozilla/components/feature/session/SettingsUseCases.kt#L76)
 
 Overrides [UpdateSettingUseCase.forEachSession](../-update-setting-use-case/for-each-session.md)
 

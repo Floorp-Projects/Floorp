@@ -2,7 +2,7 @@
 
 # RustLog
 
-`object RustLog` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/rustlog/src/main/java/mozilla/components/support/rustlog/RustLog.kt#L14)
+`object RustLog` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/rustlog/src/main/java/mozilla/components/support/rustlog/RustLog.kt#L16)
 
 ### Functions
 

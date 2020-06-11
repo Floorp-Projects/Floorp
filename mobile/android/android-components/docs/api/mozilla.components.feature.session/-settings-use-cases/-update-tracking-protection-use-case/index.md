@@ -2,7 +2,7 @@
 
 # UpdateTrackingProtectionUseCase
 
-`class UpdateTrackingProtectionUseCase : `[`UpdateSettingUseCase`](../-update-setting-use-case/index.md)`<`[`TrackingProtectionPolicy`](../../../mozilla.components.concept.engine/-engine-session/-tracking-protection-policy/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/session/src/main/java/mozilla/components/feature/session/SettingsUseCases.kt#L66)
+`class UpdateTrackingProtectionUseCase : `[`UpdateSettingUseCase`](../-update-setting-use-case/index.md)`<`[`TrackingProtectionPolicy`](../../../mozilla.components.concept.engine/-engine-session/-tracking-protection-policy/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/session/src/main/java/mozilla/components/feature/session/SettingsUseCases.kt#L67)
 
 Updates the tracking protection policy to the given policy value when invoked.
 All active sessions are automatically updated with the new policy.

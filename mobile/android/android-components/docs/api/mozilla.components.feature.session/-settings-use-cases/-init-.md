@@ -2,12 +2,12 @@
 
 # &lt;init&gt;
 
-`SettingsUseCases(engineSettings: `[`Settings`](../../mozilla.components.concept.engine/-settings/index.md)`, sessionManager: `[`SessionManager`](../../mozilla.components.browser.session/-session-manager/index.md)`)`
+`SettingsUseCases(engine: `[`Engine`](../../mozilla.components.concept.engine/-engine/index.md)`, sessionManager: `[`SessionManager`](../../mozilla.components.browser.session/-session-manager/index.md)`)`
 
-Contains use cases related to user settings.
+Contains use cases related to engine [Settings](../../mozilla.components.concept.engine/-settings/index.md).
 
 ### Parameters
 
-`engineSettings` - the engine's [Settings](../../mozilla.components.concept.engine/-settings/index.md).
+`engine` - reference to the application's browser [Engine](../../mozilla.components.concept.engine/-engine/index.md).
 
-`sessionManager` - the application's [SessionManager](../../mozilla.components.browser.session/-session-manager/index.md).
+`sessionManager` - the application's [SessionManager](../../mozilla.components.browser.session/-session-manager/index.md).*
