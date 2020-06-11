@@ -131,6 +131,7 @@ class JSTerm extends Component {
 
     this._onEditorChanges = this._onEditorChanges.bind(this);
     this._onEditorBeforeChange = this._onEditorBeforeChange.bind(this);
+    this._onEditorKeyHandled = this._onEditorKeyHandled.bind(this);
     this.onContextMenu = this.onContextMenu.bind(this);
     this.imperativeUpdate = this.imperativeUpdate.bind(this);
 
@@ -498,6 +499,8 @@ class JSTerm extends Component {
       this.editor.on("changes", this._onEditorChanges);
       this.editor.on("beforeChange", this._onEditorBeforeChange);
       this.editor.on("blur", this._onEditorBlur);
+      this.editor.on("keyHandled", this._onEditorKeyHandled);
+
       this.editor.appendToLocalElement(this.node);
       const cm = this.editor.codeMirror;
       cm.on("paste", (_, event) => this.props.onPaste(event));
@@ -840,6 +843,29 @@ class JSTerm extends Component {
       // the cursor at the position that matches the start of the first selection.
       const [{ head }] = cm.listSelections();
       cm.setCursor(head, { scroll: false });
+    }
+  }
+
+  /**
+   * Fired after a key is handled through a key map.
+   *
+   * @param {CodeMirror} cm: codeMirror instance
+   * @param {String} key: The key that was handled
+   * @param {Event} e: The keypress event
+   */
+  _onEditorKeyHandled(cm, key, e) {
+    // The autocloseBracket addon handle closing brackets keys when they're typed, but
+    // there's already an existing closing bracket.
+    // ex:
+    //  1. input is `foo(x|)` (where | represents the cursor)
+    //  2. user types `)`
+    //  3. input is now `foo(x)|` (i.e. the typed character wasn't inserted)
+    // In such case, _onEditorBeforeChange isn't triggered, so we need to hide the popup
+    // here. We can do that because this function won't be called when codeMirror _do_
+    // insert the closing char.
+    const closingKeys = [`']'`, `')'`, "'}'"];
+    if (this.autocompletePopup.isOpen && closingKeys.includes(key)) {
+      this.clearCompletion();
     }
   }
 

@@ -16,6 +16,7 @@ const TEST_URI = `data:text/html;charset=utf-8,
   <script>
     window.testBugAA = "hello world";
     window.testBugBB = "hello world 2";
+    window.x = "hello world 3";
   </script>
 </head>
 <body>bug 812618 - test completion inside text</body>`;
@@ -140,6 +141,23 @@ add_task(async function() {
   is(getInputValue(hud), "9t9luftballons", "jsterm has expected value");
   is(popup.isOpen, false, "popup is not open");
   ok(!getInputCompletionValue(hud), "there is no completion text");
+
+  info("Check that typing the closing paren closes the autocomplete window");
+  await setInputValueForAutocompletion(hud, "dump()", -1);
+  const onPopupOpen = popup.once("popup-opened");
+  EventUtils.sendString("x");
+  await onPopupOpen;
+
+  onPopupClose = popup.once("popup-closed");
+  // Since the paren is already here, it won't add any new character
+  EventUtils.sendString(")");
+  checkInputValueAndCursorPosition(
+    hud,
+    "dump(x)|",
+    "the input is the expected one after typing the closing paren"
+  );
+  await onPopupClose;
+  ok(true, "popup was closed when typing the closing paren");
 });
 
 async function setInitialState(hud) {
