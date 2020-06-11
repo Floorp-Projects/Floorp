@@ -3,15 +3,6 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-class RequestError extends Error {
-  constructor(resultCode, resultName) {
-    super(`Request failed (code: ${resultCode}, name: ${resultName})`);
-    this.name = "RequestError";
-    this.resultCode = resultCode;
-    this.resultName = resultName;
-  }
-}
-
 function openDBRequestUpgradeNeeded(request) {
   return new Promise(function(resolve, reject) {
     request.onerror = function(event) {
