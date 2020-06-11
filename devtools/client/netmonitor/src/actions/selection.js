@@ -15,11 +15,11 @@ const PAGE_SIZE_ITEM_COUNT_RATIO = 5;
 /**
  * Select request with a given id.
  */
-function selectRequest(id, httpChannelId) {
+function selectRequest(id, request) {
   return {
     type: SELECT_REQUEST,
     id,
-    httpChannelId,
+    request,
   };
 }
 
@@ -67,7 +67,7 @@ function selectDelta(delta) {
       requests.length - 1
     );
     const newItem = requests[newIndex];
-    dispatch(selectRequest(newItem.id, newItem.channelId));
+    dispatch(selectRequest(newItem.id, newItem));
   };
 }
 

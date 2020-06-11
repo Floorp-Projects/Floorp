@@ -6,6 +6,7 @@
 
 const actionTypes = {
   ADD_REQUEST: "ADD_REQUEST",
+  SET_EVENT_STREAM_FLAG: "SET_EVENT_STREAM_FLAG",
   ADD_TIMING_MARKER: "ADD_TIMING_MARKER",
   ADD_BLOCKED_URL: "ADD_BLOCKED_URL",
   BATCH_ACTIONS: "BATCH_ACTIONS",
@@ -76,6 +77,11 @@ const SEARCH_STATUS = {
   CANCELED: "CANCELED",
   DONE: "DONE",
   ERROR: "ERROR",
+};
+
+const CHANNEL_TYPE = {
+  WEB_SOCKET: "WEB_SOCKET",
+  EVENT_STREAM: "EVENT_STREAM",
 };
 
 // Descriptions for what this frontend is currently doing.
@@ -408,7 +414,19 @@ const MESSAGE_HEADERS = [
   },
   {
     name: "time",
-    width: "22%",
+    width: "20%",
+  },
+  {
+    name: "eventName",
+    width: "9%",
+  },
+  {
+    name: "lastEventId",
+    width: "9%",
+  },
+  {
+    name: "retry",
+    width: "9%",
   },
 ];
 
@@ -560,6 +578,7 @@ const general = {
   SEARCH_STATUS,
   AUTO_EXPAND_MAX_LEVEL: 7,
   AUTO_EXPAND_MAX_NODES: 50,
+  CHANNEL_TYPE,
 };
 
 // flatten constants

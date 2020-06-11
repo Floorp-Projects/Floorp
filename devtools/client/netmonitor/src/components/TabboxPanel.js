@@ -116,12 +116,18 @@ class TabboxPanel extends Component {
       return null;
     }
 
-    const showMessagesPanel =
+    const isWs =
       request.cause.type === "websocket" &&
-      Services.prefs.getBoolPref("devtools.netmonitor.features.webSockets") &&
-      showMessagesTab === undefined
-        ? true
-        : showMessagesTab;
+      Services.prefs.getBoolPref("devtools.netmonitor.features.webSockets");
+
+    const isSse =
+      request.isEventStream &&
+      Services.prefs.getBoolPref(
+        "devtools.netmonitor.features.serverSentEvents"
+      );
+
+    const showMessagesPanel =
+      (isWs || isSse) && showMessagesTab === undefined ? true : showMessagesTab;
 
     return Tabbar(
       {

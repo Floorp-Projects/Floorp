@@ -802,18 +802,17 @@ class FirefoxDataProvider {
   async onEventSourceConnectionOpened(httpChannelId) {
     // By default, an EventSource connection doesn't immediately get its mimeType, or
     // any info which could help us identify a connection is an SSE channel.
-    // We can update the request's mimeType through this event.
-    if (this.actionsEnabled && this.actions.updateMimeType) {
-      // TODO: Implement action updateMimeType.
-      await this.actions.updateMimeType(
-        httpChannelId,
-        "text/event-stream",
-        true
-      );
+    // We add a new flag "isEventStream" on the request to identify an SSE channel.
+    if (this.actionsEnabled && this.actions.setEventStreamFlag) {
+      await this.actions.setEventStreamFlag(httpChannelId);
     }
   }
 
-  async onEventSourceConnectionClosed(httpChannelId) {}
+  async onEventSourceConnectionClosed(httpChannelId) {
+    if (this.actionsEnabled && this.actions.closeConnection) {
+      await this.actions.closeConnection(httpChannelId);
+    }
+  }
 
   async onEventReceived(httpChannelId, data) {
     // Dispatch the same action used by websocket inspector.

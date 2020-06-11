@@ -175,14 +175,14 @@ function selectMessageDelta(delta) {
 
 module.exports = {
   addMessage,
-  selectMessage,
-  openMessageDetails,
   clearMessages,
-  toggleMessageFilterType,
-  toggleControlFrames,
-  setMessageFilterText,
-  resetMessageColumns,
   closeConnection,
-  toggleMessageColumn,
+  openMessageDetails,
+  resetMessageColumns,
+  selectMessage,
   selectMessageDelta,
+  setMessageFilterText,
+  toggleControlFrames,
+  toggleMessageColumn,
+  toggleMessageFilterType,
 };

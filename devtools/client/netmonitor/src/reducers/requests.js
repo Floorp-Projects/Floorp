@@ -10,6 +10,7 @@ const {
 } = require("devtools/client/netmonitor/src/utils/request-utils");
 const {
   ADD_REQUEST,
+  SET_EVENT_STREAM_FLAG,
   CLEAR_REQUESTS,
   CLONE_REQUEST,
   CLONE_SELECTED_REQUEST,
@@ -56,6 +57,11 @@ function requestsReducer(state = Requests(), action) {
     // Update an existing request (with received data).
     case UPDATE_REQUEST: {
       return updateRequest(state, action);
+    }
+
+    // Add isEventStream flag to a request.
+    case SET_EVENT_STREAM_FLAG: {
+      return setEventStreamFlag(state, action);
     }
 
     // Remove all requests in the list. Create fresh new state
@@ -197,6 +203,29 @@ function updateRequest(state, action) {
     ...state,
     requests: nextRequests,
     lastEndedMs: requestEndTime > lastEndedMs ? requestEndTime : lastEndedMs,
+  };
+}
+
+function setEventStreamFlag(state, action) {
+  const { requests } = state;
+  const { channelId } = action;
+  const index = requests.findIndex(needle => needle.channelId === channelId);
+  if (index === -1) {
+    return state;
+  }
+
+  const request = requests[index];
+
+  const nextRequest = {
+    ...request,
+    isEventStream: true,
+  };
+
+  const nextRequests = [...requests];
+  nextRequests[index] = nextRequest;
+  return {
+    ...state,
+    requests: nextRequests,
   };
 }
 
