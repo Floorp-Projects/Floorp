@@ -42,23 +42,23 @@ add_task(async function testPolicyOverride() {
     "TRR selection not performed."
   );
   ensureNoTRRSelectionTelemetry();
-  await ensureNoTRRModeChange(0);
+  await ensureNoTRRModeChange(undefined);
   await checkHeuristicsTelemetry("policy_without_doh", "first_run");
 
   // Simulate a network change.
   simulateNetworkChange();
-  await ensureNoTRRModeChange(0);
+  await ensureNoTRRModeChange(undefined);
   ensureNoHeuristicsTelemetry();
 
   // Restart for good measure.
   await restartAddon();
   ensureNoTRRSelectionTelemetry();
-  await ensureNoTRRModeChange(0);
+  await ensureNoTRRModeChange(undefined);
   ensureNoHeuristicsTelemetry();
 
   // Simulate a network change.
   simulateNetworkChange();
-  await ensureNoTRRModeChange(0);
+  await ensureNoTRRModeChange(undefined);
   ensureNoHeuristicsTelemetry();
 
   // Clean up.
