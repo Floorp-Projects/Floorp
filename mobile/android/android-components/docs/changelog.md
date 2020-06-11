@@ -55,7 +55,7 @@ permalink: /changelog/
   * Added `ContentState.pictureInPictureEnabled` to track if Picture in Picture mode is in use.
 
 * **feature-pwa**
-  * ⚠️ **This is a breaking change**: `WebAppHideToolbarFeature` now takes `BrowserStore` instead of `SessionManager`. `trustedScopes` is now derived from `CustomTabsServiceStore` and `WebAppManifest`.
+  * ⚠️ **This is a breaking change**: `WebAppHideToolbarFeature` now takes `BrowserStore` instead of `SessionManager`. `trustedScopes` is now derived from `CustomTabsServiceStore` and `WebAppManifest`. `setToolbarVisibility` should now be used set the visibility of the toolbar.
   * ⚠️ **This is a breaking change**: `onToolbarVisibilityChange` has been removed. You should now observe `BrowserStore` instead.
 
 # 44.0.0
