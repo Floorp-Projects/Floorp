@@ -55,7 +55,6 @@ describe("TelemetryFeed", () => {
     PREF_IMPRESSION_ID,
     TELEMETRY_PREF,
     EVENTS_TELEMETRY_PREF,
-    STRUCTURED_INGESTION_TELEMETRY_PREF,
     STRUCTURED_INGESTION_ENDPOINT_PREF,
   } = injector({
     "lib/UTEventReporting.jsm": { UTEventReporting },
@@ -206,29 +205,6 @@ describe("TelemetryFeed", () => {
         instance._prefs.set(EVENTS_TELEMETRY_PREF, true);
 
         assert.propertyVal(instance, "eventTelemetryEnabled", true);
-      });
-    });
-    describe("Structured Ingestion telemetry pref changes from false to true", () => {
-      beforeEach(() => {
-        FakePrefs.prototype.prefs = {};
-        FakePrefs.prototype.prefs[STRUCTURED_INGESTION_TELEMETRY_PREF] = false;
-        instance = new TelemetryFeed();
-
-        assert.propertyVal(
-          instance,
-          "structuredIngestionTelemetryEnabled",
-          false
-        );
-      });
-
-      it("should set the enabled property to true", () => {
-        instance._prefs.set(STRUCTURED_INGESTION_TELEMETRY_PREF, true);
-
-        assert.propertyVal(
-          instance,
-          "structuredIngestionTelemetryEnabled",
-          true
-        );
       });
     });
     it("should set a scalar for deletion-request", () => {
@@ -1220,7 +1196,6 @@ describe("TelemetryFeed", () => {
   describe("#sendEvent", () => {
     it("should call sendEventPing on activity_stream_user_event", () => {
       FakePrefs.prototype.prefs.telemetry = true;
-      FakePrefs.prototype.prefs[STRUCTURED_INGESTION_TELEMETRY_PREF] = true;
       const event = { action: "activity_stream_user_event" };
       instance = new TelemetryFeed();
       sandbox.spy(instance, "sendEventPing");
@@ -1231,7 +1206,6 @@ describe("TelemetryFeed", () => {
     });
     it("should call sendSessionPing on activity_stream_session", () => {
       FakePrefs.prototype.prefs.telemetry = true;
-      FakePrefs.prototype.prefs[STRUCTURED_INGESTION_TELEMETRY_PREF] = true;
       const event = { action: "activity_stream_session" };
       instance = new TelemetryFeed();
       sandbox.spy(instance, "sendSessionPing");
@@ -1257,7 +1231,6 @@ describe("TelemetryFeed", () => {
   describe("#sendStructuredIngestionEvent", () => {
     it("should call PingCentre sendStructuredIngestionPing", async () => {
       FakePrefs.prototype.prefs[TELEMETRY_PREF] = true;
-      FakePrefs.prototype.prefs[STRUCTURED_INGESTION_TELEMETRY_PREF] = true;
       const event = {};
       instance = new TelemetryFeed();
       sandbox.stub(instance.pingCentre, "sendStructuredIngestionPing");
