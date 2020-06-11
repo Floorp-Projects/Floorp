@@ -151,7 +151,7 @@ class ContextWrapper(object):
             return getattr(object.__getattribute__(self, '_context'), key)
         except AttributeError as e:
             try:
-                ret = object.__getattribute__(self, '_handler')(self, key)
+                ret = object.__getattribute__(self, '_handler')(key)
             except (AttributeError, TypeError):
                 # TypeError is in case the handler comes from old code not
                 # taking a key argument.
@@ -175,14 +175,11 @@ class Mach(object):
 
         populate_context_handler -- If defined, it must be a callable. The
             callable signature is the following:
-                populate_context_handler(context, key=None)
+                populate_context_handler(key=None)
             It acts as a fallback getter for the mach.base.CommandContext
             instance.
             This allows to augment the context instance with arbitrary data
             for use in command handlers.
-            For backwards compatibility, it is also called before command
-            dispatch without a key, allowing the context handler to add
-            attributes to the context instance.
 
         require_conditions -- If True, commands that do not have any condition
             functions applied will be skipped. Defaults to False.
@@ -320,7 +317,11 @@ To see more help for a specific command, run:
         Returns the integer exit code that should be used. 0 means success. All
         other values indicate failure.
         """
-        register_sentry()
+        if self.populate_context_handler:
+            topsrcdir = self.populate_context_handler('topdir')
+            register_sentry(topsrcdir)
+        else:
+            register_sentry()
 
         # If no encoding is defined, we default to UTF-8 because without this
         # Python 2.7 will assume the default encoding of ASCII. This will blow
@@ -401,7 +402,6 @@ To see more help for a specific command, run:
                                  commands=Registrar)
 
         if self.populate_context_handler:
-            self.populate_context_handler(context)
             context = ContextWrapper(context, self.populate_context_handler)
 
         parser = self.get_argument_parser(context)
