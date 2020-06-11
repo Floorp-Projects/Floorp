@@ -1,4 +1,3 @@
-// |jit-test| --enable-weak-refs
 newGlobal();
 nukeAllCCWs();
 var g28 = newGlobal({

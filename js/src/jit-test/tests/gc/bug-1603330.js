@@ -1,5 +1,3 @@
-// |jit-test| --enable-weak-refs
-
 // Allocate the object in the function to prevent marked as a singleton so the
 // object won't be kept alive by IC stub.
 function allocObj() { return {}; }

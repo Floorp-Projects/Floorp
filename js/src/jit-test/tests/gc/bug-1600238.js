@@ -1,5 +1,3 @@
-// |jit-test| --enable-weak-refs
-
 gczeal(0);
 newGlobal();
 nukeAllCCWs();

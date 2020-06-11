@@ -310,9 +310,6 @@ def convertTestFile(test262parser, testSource, testName, includeSet, strictTests
                                       "&&getBuildConfiguration()['arm64-simulator'])",
                                       "ARM64 Simulator cannot emulate atomics"))
 
-            if "WeakRef" in testRec["features"] or "FinalizationRegistry" in testRec["features"]:
-                refTestOptions.append("shell-option(--enable-weak-refs)")
-
     # Includes for every test file in a directory is collected in a single
     # shell.js file per directory level. This is done to avoid adding all
     # test harness files to the top level shell.js file.

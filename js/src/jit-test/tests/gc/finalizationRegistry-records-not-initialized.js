@@ -1,4 +1,3 @@
-// |jit-test| --enable-weak-refs
 enableShellAllocationMetadataBuilder();
 evaluate(`
   var registry = new FinalizationRegistry(x => 0);
