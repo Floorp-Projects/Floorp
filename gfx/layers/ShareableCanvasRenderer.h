@@ -8,7 +8,7 @@
 #define GFX_SHAREABLECANVASRENDERER_H
 
 #include "CompositorTypes.h"
-#include "CanvasRenderer.h"
+#include "CopyableCanvasRenderer.h"
 #include "mozilla/layers/CanvasClient.h"
 
 namespace mozilla {
@@ -22,38 +22,42 @@ class DrawTarget;
 
 namespace layers {
 
-class ShareableCanvasRenderer : public CanvasRenderer {
-  friend class CanvasClient2D;
-  friend class CanvasClientSharedSurface;
-
- protected:
-  RefPtr<CanvasClient> mCanvasClient;
-
- private:
-  layers::SurfaceDescriptor mFrontBufferDesc;
-  RefPtr<TextureClient> mFrontBufferFromDesc;
+class ShareableCanvasRenderer : public CopyableCanvasRenderer {
+  typedef CanvasClient::CanvasClientType CanvasClientType;
 
  public:
   ShareableCanvasRenderer();
   virtual ~ShareableCanvasRenderer();
 
  public:
-  void Initialize(const CanvasRendererData&) override;
+  void Initialize(const CanvasInitializeData& aData) override;
 
   virtual CompositableForwarder* GetForwarder() = 0;
 
   virtual bool CreateCompositable() = 0;
 
   void ClearCachedResources() override;
-  void DisconnectClient() override;
+  void Destroy() override;
 
   void UpdateCompositableClient();
 
+  const TextureFlags& Flags() const { return mFlags; }
+
   CanvasClient* GetCanvasClient() { return mCanvasClient; }
 
- private:
-  RefPtr<TextureClient> GetFrontBufferFromDesc(const layers::SurfaceDescriptor&,
-                                               TextureFlags);
+ protected:
+  bool UpdateTarget(gfx::DrawTarget* aDestTarget);
+
+  CanvasClientType GetCanvasClientType();
+
+  RefPtr<CanvasClient> mCanvasClient;
+
+  UniquePtr<gl::SurfaceFactory> mFactory;
+
+  TextureFlags mFlags;
+
+  friend class CanvasClient2D;
+  friend class CanvasClientSharedSurface;
 };
 
 }  // namespace layers

@@ -385,21 +385,21 @@ class GLLibraryEGL final {
     return mIsWARP;
   }
 
-  bool HasKHRImageBase() const {
+  bool HasKHRImageBase() {
     return IsExtensionSupported(KHR_image) ||
            IsExtensionSupported(KHR_image_base);
   }
 
-  bool HasKHRImagePixmap() const {
+  bool HasKHRImagePixmap() {
     return IsExtensionSupported(KHR_image) ||
            IsExtensionSupported(KHR_image_pixmap);
   }
 
-  bool HasKHRImageTexture2D() const {
+  bool HasKHRImageTexture2D() {
     return IsExtensionSupported(KHR_gl_texture_2D_image);
   }
 
-  bool HasANGLESurfaceD3DTexture2DShareHandle() const {
+  bool HasANGLESurfaceD3DTexture2DShareHandle() {
     return IsExtensionSupported(ANGLE_surface_d3d_texture_2d_share_handle);
   }
 
