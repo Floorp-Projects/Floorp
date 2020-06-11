@@ -17360,12 +17360,12 @@ nsresult QuotaClient::GetUsageForOriginInternal(
 
       MOZ_ASSERT(fileSize >= 0);
 
-      aUsageInfo->AppendToDatabaseUsage(Some(uint64_t(fileSize)));
+      aUsageInfo->IncrementDatabaseUsage(Some(uint64_t(fileSize)));
 
       rv = walFile->GetFileSize(&fileSize);
       if (NS_SUCCEEDED(rv)) {
         MOZ_ASSERT(fileSize >= 0);
-        aUsageInfo->AppendToDatabaseUsage(Some(uint64_t(fileSize)));
+        aUsageInfo->IncrementDatabaseUsage(Some(uint64_t(fileSize)));
       } else if (NS_WARN_IF(rv != NS_ERROR_FILE_NOT_FOUND &&
                             rv != NS_ERROR_FILE_TARGET_DOES_NOT_EXIST)) {
         REPORT_TELEMETRY_INIT_ERR(kQuotaExternalError, IDB_GetWalFileSize);
@@ -17379,7 +17379,7 @@ nsresult QuotaClient::GetUsageForOriginInternal(
         return rv;
       }
 
-      aUsageInfo->AppendToFileUsage(usage);
+      aUsageInfo->IncrementFileUsage(usage);
     }
   }
 

@@ -1701,7 +1701,7 @@ nsresult QuotaClient::GetUsageForOrigin(PersistenceType aPersistenceType,
 
       MOZ_ASSERT(fileSize >= 0);
 
-      aUsageInfo->AppendToDatabaseUsage(Some(uint64_t(fileSize)));
+      aUsageInfo->IncrementDatabaseUsage(Some(uint64_t(fileSize)));
 
       continue;
     }
