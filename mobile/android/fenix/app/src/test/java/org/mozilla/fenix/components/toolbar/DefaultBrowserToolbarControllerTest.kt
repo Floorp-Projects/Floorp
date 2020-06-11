@@ -75,6 +75,7 @@ class DefaultBrowserToolbarControllerTest {
     private var analytics: Analytics = mockk(relaxed = true)
     private var navController: NavController = mockk(relaxed = true)
     private var findInPageLauncher: () -> Unit = mockk(relaxed = true)
+    private val sessionManager: SessionManager = mockk(relaxed = true)
     private val engineView: EngineView = mockk(relaxed = true)
     private val currentSession: Session = mockk(relaxed = true)
     private val openInFenixIntent: Intent = mockk(relaxed = true)
@@ -115,7 +116,7 @@ class DefaultBrowserToolbarControllerTest {
             topSiteStorage = topSiteStorage,
             bookmarkTapped = mockk(),
             readerModeController = readerModeController,
-            sessionManager = mockk(),
+            sessionManager = sessionManager,
             sharedViewModel = mockk(),
             onTabCounterClicked = { },
             onCloseTab = {}
@@ -135,8 +136,9 @@ class DefaultBrowserToolbarControllerTest {
         every { analytics.metrics } returns metrics
         every { activity.components.useCases.sessionUseCases } returns sessionUseCases
         every { activity.components.useCases.searchUseCases } returns searchUseCases
-        every { activity.components.core.sessionManager.selectedSession } returns currentSession
+        every { activity.components.core.sessionManager } returns sessionManager
         every { activity.components.core.store } returns store
+        every { sessionManager.selectedSession } returns currentSession
 
         val onComplete = slot<() -> Unit>()
         every { browserAnimator.captureEngineViewAndDrawStatically(capture(onComplete)) } answers { onComplete.captured.invoke() }
@@ -375,7 +377,7 @@ class DefaultBrowserToolbarControllerTest {
             topSiteStorage = topSiteStorage,
             bookmarkTapped = mockk(),
             readerModeController = mockk(),
-            sessionManager = mockk(),
+            sessionManager = sessionManager,
             sharedViewModel = mockk(),
             onTabCounterClicked = { },
             onCloseTab = { }
@@ -501,16 +503,14 @@ class DefaultBrowserToolbarControllerTest {
             topSiteStorage = topSiteStorage,
             bookmarkTapped = mockk(),
             readerModeController = mockk(),
-            sessionManager = mockk(),
+            sessionManager = sessionManager,
             sharedViewModel = mockk(),
             onTabCounterClicked = { },
             onCloseTab = { }
         )
 
-        val sessionManager: SessionManager = mockk(relaxed = true)
         val item = ToolbarMenu.Item.OpenInFenix
 
-        every { activity.components.core.sessionManager } returns sessionManager
         every { currentSession.customTabConfig } returns mockk()
         every { activity.startActivity(any()) } just Runs
 
@@ -542,7 +542,7 @@ class DefaultBrowserToolbarControllerTest {
             topSiteStorage = topSiteStorage,
             bookmarkTapped = mockk(),
             readerModeController = mockk(),
-            sessionManager = mockk(),
+            sessionManager = sessionManager,
             sharedViewModel = mockk(),
             onTabCounterClicked = { },
             onCloseTab = { }
@@ -567,11 +567,34 @@ class DefaultBrowserToolbarControllerTest {
     }
 
     @Test
+    fun handleToolbarCloseTabPressWithLastPrivateSession() {
+        every { currentSession.id } returns "1"
+        val browsingModeManager = object : BrowsingModeManager {
+            override var mode = BrowsingMode.Private
+        }
+        val item = TabCounterMenuItem.CloseTab
+        val sessions = listOf(
+            mockk<Session> {
+                every { private } returns true
+            }
+        )
+
+        every { currentSession.private } returns true
+        every { sessionManager.sessions } returns sessions
+        every { activity.browsingModeManager } returns browsingModeManager
+
+        controller.handleTabCounterItemInteraction(item)
+        verify { navController.navigate(BrowserFragmentDirections.actionGlobalHome("1")) }
+        assertEquals(BrowsingMode.Normal, browsingModeManager.mode)
+    }
+
+    @Test
     fun handleToolbarCloseTabPress() {
         val tabsUseCases: TabsUseCases = mockk(relaxed = true)
         val removeTabUseCase: TabsUseCases.RemoveTabUseCase = mockk(relaxed = true)
         val item = TabCounterMenuItem.CloseTab
 
+        every { sessionManager.sessions } returns emptyList()
         every { activity.components.useCases.tabsUseCases } returns tabsUseCases
         every { tabsUseCases.removeTab } returns removeTabUseCase
 

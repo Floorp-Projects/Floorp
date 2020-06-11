@@ -103,12 +103,12 @@ class DefaultBrowserToolbarController(
 
     override fun handleToolbarPasteAndGo(text: String) {
         if (text.isUrl()) {
-            activity.components.core.sessionManager.selectedSession?.searchTerms = ""
+            sessionManager.selectedSession?.searchTerms = ""
             activity.components.useCases.sessionUseCases.loadUrl.invoke(text)
             return
         }
 
-        activity.components.core.sessionManager.selectedSession?.searchTerms = text
+        sessionManager.selectedSession?.searchTerms = text
         activity.components.useCases.searchUseCases.defaultSearch.invoke(text)
     }
 
@@ -139,20 +139,17 @@ class DefaultBrowserToolbarController(
     }
 
     override fun handleTabCounterItemInteraction(item: TabCounterMenuItem) {
-        val tabUseCases = activity.components.useCases.tabsUseCases
         when (item) {
             is TabCounterMenuItem.CloseTab -> {
-                activity.components.core.sessionManager.selectedSession?.let {
+                sessionManager.selectedSession?.let {
                     // When closing the last tab we must show the undo snackbar in the home fragment
-                    if (activity.components.core.sessionManager.sessionsOfType(it.private)
-                            .count() == 1
-                    ) {
+                    if (sessionManager.sessionsOfType(it.private).count() == 1) {
                         // The tab tray always returns to normal mode so do that here too
                         (activity as HomeActivity).browsingModeManager.mode = BrowsingMode.Normal
                         navController.navigate(BrowserFragmentDirections.actionGlobalHome(it.id))
                     } else {
                         onCloseTab.invoke(it)
-                        tabUseCases.removeTab.invoke(it)
+                        activity.components.useCases.tabsUseCases.removeTab.invoke(it)
                     }
                 }
             }
@@ -285,7 +282,7 @@ class DefaultBrowserToolbarController(
 
                 // Strip the CustomTabConfig to turn this Session into a regular tab and then select it
                 customTabSession!!.customTabConfig = null
-                activity.components.core.sessionManager.select(customTabSession)
+                sessionManager.select(customTabSession)
 
                 // Switch to the actual browser which should now display our new selected session
                 activity.startActivity(openInFenixIntent)
