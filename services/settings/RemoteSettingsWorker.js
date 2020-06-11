@@ -67,7 +67,11 @@ const Agent = {
    * @returns {int} Number of records loaded from dump or -1 if no dump found.
    */
   async importJSONDump(bucket, collection) {
-    const { data: records } = await loadJSONDump(bucket, collection);
+    // When using the preview bucket, we still want to load the main dump.
+    // But we store it locally in the preview bucket.
+    const jsonBucket = bucket.replace("-preview", "");
+
+    const { data: records } = await loadJSONDump(jsonBucket, collection);
     if (records === null) {
       // Return -1 if file is missing.
       return -1;

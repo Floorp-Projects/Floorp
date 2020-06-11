@@ -92,7 +92,7 @@ class Worker {
     }
     let identifier = method + "-";
     // Include the collection details in the importJSONDump case.
-    if (identifier == "importJSONDump") {
+    if (identifier == "importJSONDump-") {
       identifier += `${args[0]}-${args[1]}-`;
     }
     return new Promise((resolve, reject) => {
