@@ -1238,6 +1238,7 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
     let usernameField = null;
     let newPasswordField = null;
     let oldPasswordField = null;
+    let confirmPasswordField = null;
     let emptyResult = {
       usernameField: null,
       newPasswordField: null,
@@ -1331,6 +1332,33 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
         acFieldName
       );
     }
+
+    let { generatedPasswordFields } = this.stateForDocument(form.ownerDocument);
+    let pwGeneratedFields = pwFields.filter(pwField =>
+      generatedPasswordFields.has(pwField.element)
+    );
+    if (pwGeneratedFields.length) {
+      // we have at least the newPasswordField
+      [newPasswordField, confirmPasswordField] = pwGeneratedFields.map(
+        pwField => pwField.element
+      );
+      // if the user filled a field with a generated password,
+      // a field immediately previous to that is most likely the old password field
+      let idx = pwFields.findIndex(
+        pwField => pwField.element === newPasswordField
+      );
+      if (idx > 0) {
+        oldPasswordField = pwFields[idx - 1].element;
+      }
+      return {
+        ...emptyResult,
+        usernameField,
+        newPasswordField,
+        oldPasswordField: oldPasswordField || null,
+        confirmPasswordField: confirmPasswordField || null,
+      };
+    }
+
     // If we're not submitting a form (it's a page load), there are no
     // password field values for us to use for identifying fields. So,
     // just assume the first password field is the one to be filled in.
@@ -1341,13 +1369,14 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
         ...emptyResult,
         usernameField,
         newPasswordField: passwordField,
-        oldPasswordField,
+        oldPasswordField: null,
       };
     }
 
+    // We're looking for both new and old password field
     // Try to figure out what is in the form based on the password values.
     let pw1 = pwFields[0].element.value;
-    let pw2 = pwFields[1].element.value;
+    let pw2 = pwFields[1] ? pwFields[1].element.value : null;
     let pw3 = pwFields[2] ? pwFields[2].element.value : null;
 
     if (pwFields.length == 3) {

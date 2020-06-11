@@ -14,6 +14,13 @@ const LMCBackstagePass = ChromeUtils.import(
   null
 );
 const { LoginManagerChild } = LMCBackstagePass;
+
+const TESTENVIRONMENTS = {
+  filledPW1WithGeneratedPassword: {
+    generatedPWFieldSelectors: ["#pw1"],
+  },
+};
+
 const TESTCASES = [
   {
     description: "1 password field outside of a <form>",
@@ -24,6 +31,7 @@ const TESTCASES = [
       oldPasswordField: null,
     },
     skipEmptyFields: undefined,
+    extraTestEnvironments: [TESTENVIRONMENTS.filledPW1WithGeneratedPassword],
   },
   {
     description: "1 text field outside of a <form> without a password field",
@@ -34,6 +42,8 @@ const TESTCASES = [
       oldPasswordField: null,
     },
     skipEmptyFields: undefined,
+    // there is no password field to fill, so no sense testing with gen. passwords
+    extraTestEnvironments: [],
   },
   {
     description: "1 username & password field outside of a <form>",
@@ -45,6 +55,7 @@ const TESTCASES = [
       oldPasswordField: null,
     },
     skipEmptyFields: undefined,
+    extraTestEnvironments: [TESTENVIRONMENTS.filledPW1WithGeneratedPassword],
   },
   {
     beforeGetFunction(doc, formLike) {
@@ -65,6 +76,7 @@ const TESTCASES = [
       oldPasswordField: null,
     },
     skipEmptyFields: undefined,
+    extraTestEnvironments: [TESTENVIRONMENTS.filledPW1WithGeneratedPassword],
   },
   {
     description: "1 username & password field in a <form>",
@@ -78,6 +90,7 @@ const TESTCASES = [
       oldPasswordField: null,
     },
     skipEmptyFields: undefined,
+    extraTestEnvironments: [TESTENVIRONMENTS.filledPW1WithGeneratedPassword],
   },
   {
     description: "5 empty password fields outside of a <form>",
@@ -92,6 +105,7 @@ const TESTCASES = [
       oldPasswordField: null,
     },
     skipEmptyFields: undefined,
+    extraTestEnvironments: [TESTENVIRONMENTS.filledPW1WithGeneratedPassword],
   },
   {
     description: "6 empty password fields outside of a <form>",
@@ -107,6 +121,7 @@ const TESTCASES = [
       oldPasswordField: null,
     },
     skipEmptyFields: undefined,
+    extraTestEnvironments: [TESTENVIRONMENTS.filledPW1WithGeneratedPassword],
   },
   {
     description:
@@ -121,6 +136,8 @@ const TESTCASES = [
       oldPasswordField: null,
     },
     skipEmptyFields: true,
+    // This test assumes that pw1 has not been filled, so don't test prefilling it
+    extraTestEnvironments: [],
   },
   {
     description: "Form with 1 password field",
@@ -131,6 +148,7 @@ const TESTCASES = [
       oldPasswordField: null,
     },
     skipEmptyFields: undefined,
+    extraTestEnvironments: [TESTENVIRONMENTS.filledPW1WithGeneratedPassword],
   },
   {
     description: "Form with 2 password fields",
@@ -141,6 +159,7 @@ const TESTCASES = [
       oldPasswordField: null,
     },
     skipEmptyFields: undefined,
+    extraTestEnvironments: [TESTENVIRONMENTS.filledPW1WithGeneratedPassword],
   },
   {
     description: "1 password field in a form, 1 outside (not processed)",
@@ -151,6 +170,7 @@ const TESTCASES = [
       oldPasswordField: null,
     },
     skipEmptyFields: undefined,
+    extraTestEnvironments: [TESTENVIRONMENTS.filledPW1WithGeneratedPassword],
   },
   {
     description:
@@ -162,6 +182,7 @@ const TESTCASES = [
       oldPasswordField: null,
     },
     skipEmptyFields: undefined,
+    extraTestEnvironments: [TESTENVIRONMENTS.filledPW1WithGeneratedPassword],
   },
   {
     description:
@@ -173,6 +194,7 @@ const TESTCASES = [
       oldPasswordField: null,
     },
     skipEmptyFields: undefined,
+    extraTestEnvironments: [TESTENVIRONMENTS.filledPW1WithGeneratedPassword],
   },
   {
     description:
@@ -185,6 +207,7 @@ const TESTCASES = [
       oldPasswordField: null,
     },
     skipEmptyFields: undefined,
+    extraTestEnvironments: [TESTENVIRONMENTS.filledPW1WithGeneratedPassword],
   },
   {
     description:
@@ -197,6 +220,7 @@ const TESTCASES = [
       oldPasswordField: null,
     },
     skipEmptyFields: true,
+    extraTestEnvironments: [TESTENVIRONMENTS.filledPW1WithGeneratedPassword],
   },
   {
     description:
@@ -209,16 +233,47 @@ const TESTCASES = [
       oldPasswordField: null,
     },
     skipEmptyFields: true,
+    extraTestEnvironments: [TESTENVIRONMENTS.filledPW1WithGeneratedPassword],
+  },
+  {
+    description:
+      "3 password fields, 2nd and 3rd are filled with generated passwords",
+    document: `<input id="pw1" type=password>
+      <input id="pw2" type=password value="pass2">
+      <input id="pw3" type=password value="pass3">`,
+    returnedFieldIDs: {
+      usernameField: null,
+      newPasswordField: "pw2",
+      confirmPasswordField: "pw3",
+      oldPasswordField: "pw1",
+    },
+    skipEmptyFields: undefined,
+    generatedPWFieldSelectors: ["#pw2", "#pw3"],
+    // this test doesn't make sense to run with different filled generated password values
+    extraTestEnvironments: [],
   },
 ];
 
-for (let tc of TESTCASES) {
+const TEST_ENVIRONMENT_CASES = TESTCASES.flatMap(tc => {
+  let arr = [tc];
+  // also run this test case with this different state
+  for (let env of tc.extraTestEnvironments) {
+    arr.push({
+      ...tc,
+      ...env,
+    });
+  }
+  return arr;
+});
+
+for (let tc of TEST_ENVIRONMENT_CASES) {
   info("Sanity checking the testcase: " + tc.description);
 
   (function() {
     let testcase = tc;
     add_task(async function() {
       info("Starting testcase: " + testcase.description);
+      info("Document string: " + testcase.document);
       let document = MockDocument.createTestDocument(
         "http://localhost:8080/test/",
         testcase.document
@@ -237,7 +292,14 @@ for (let tc of TESTCASES) {
         await testcase.beforeGetFunction(document, formLike);
       }
 
-      let actual = new LoginManagerChild()._getFormFields(
+      let lmc = new LoginManagerChild();
+      let loginFormState = lmc.stateForDocument(formLike.ownerDocument);
+      loginFormState.generatedPasswordFields = _generateDocStateFromTestCase(
+        testcase,
+        document
+      );
+
+      let actual = lmc._getFormFields(
         formLike,
         testcase.skipEmptyFields,
         new Set()
@@ -272,4 +334,26 @@ for (let tc of TESTCASES) {
       }
     });
   })();
+}
+
+function _generateDocStateFromTestCase(stateProperties, document) {
+  // prepopulate the document form state LMC holds with
+  // any generated password fields defined in this testcase
+  let generatedPasswordFields = new Set();
+  info(
+    "stateProperties has generatedPWFieldSelectors: " +
+      stateProperties.generatedPWFieldSelectors?.join(", ")
+  );
+
+  if (stateProperties.generatedPWFieldSelectors?.length) {
+    stateProperties.generatedPWFieldSelectors.forEach(sel => {
+      let field = document.querySelector(sel);
+      if (field) {
+        generatedPasswordFields.add(field);
+      } else {
+        info(`No password field: ${sel} found in this document`);
+      }
+    });
+  }
+  return generatedPasswordFields;
 }
