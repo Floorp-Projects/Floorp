@@ -34,7 +34,6 @@ class RenderAndroidSurfaceTextureHostOGL final : public RenderTextureHostOGL {
 
  private:
   virtual ~RenderAndroidSurfaceTextureHostOGL();
-  void DeleteTextureHandle();
   bool EnsureAttachedToGLContext();
 
   enum PrepareStatus {
