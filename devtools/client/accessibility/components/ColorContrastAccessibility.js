@@ -112,7 +112,6 @@ class ColorContrastAccessibilityClass extends Component {
       return div(
         {
           role: "presentation",
-          tabIndex: "-1",
           className: "accessibility-color-contrast",
         },
         ...children
@@ -131,7 +130,6 @@ class ColorContrastAccessibilityClass extends Component {
         }),
         div({
           role: "presentation",
-          tabIndex: "-1",
           className: "accessibility-color-contrast-separator",
         }),
         ContrastValue({
