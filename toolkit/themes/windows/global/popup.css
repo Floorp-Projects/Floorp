@@ -57,6 +57,10 @@ panel[type="arrow"][side="right"] {
   border-radius: inherit;
 }
 
+:host([orient=vertical]) .panel-arrowcontent {
+  -moz-box-orient: vertical;
+}
+
 %ifdef XP_WIN
 @media (-moz-os-version: windows-win7) {
 %endif
