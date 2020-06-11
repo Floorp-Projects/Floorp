@@ -2162,6 +2162,11 @@ class nsIFrame : public nsQueryFrame {
     return GetContentOffsetsFromPoint(aPoint, aFlags);
   }
 
+  // Helper for GetContentAndOffsetsFromPoint; calculation of content offsets
+  // in this function assumes there is no child frame that can be targeted.
+  virtual ContentOffsets CalcContentOffsetsFromFramePoint(
+      const nsPoint& aPoint);
+
   /**
    * Ensure that `this` gets notifed when `aImage`s underlying image request
    * loads or animates.

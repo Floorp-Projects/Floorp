@@ -144,11 +144,6 @@ class nsFrame : public nsIFrame {
                                   int32_t aStartPos, bool aJumpLines,
                                   uint32_t aSelectFlags);
 
-  // Helper for GetContentAndOffsetsFromPoint; calculation of content offsets
-  // in this function assumes there is no child frame that can be targeted.
-  virtual ContentOffsets CalcContentOffsetsFromFramePoint(
-      const nsPoint& aPoint);
-
   //--------------------------------------------------
   // Additional methods
 
