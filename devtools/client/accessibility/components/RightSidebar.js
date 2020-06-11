@@ -27,6 +27,7 @@ function RightSidebar({ highlightAccessible, unhighlightAccessible, toolbox }) {
     {
       className: "right-sidebar",
       role: "presentation",
+      tabIndex: "-1",
     },
     Accordion({
       items: [
