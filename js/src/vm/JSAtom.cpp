@@ -876,14 +876,14 @@ struct AtomizeUTF8OrWTF8CharsWrapper {
 template <typename CharT>
 static MOZ_ALWAYS_INLINE JSLinearString* MakeLinearStringForAtomization(
     JSContext* cx, const CharT* chars, size_t length) {
-  return NewStringCopyN<NoGC>(cx, chars, length);
+  return NewStringCopyN<NoGC>(cx, chars, length, gc::TenuredHeap);
 }
 
 // MakeLinearStringForAtomization has one further variant -- a non-template
 // overload accepting LittleEndianChars.
 static MOZ_ALWAYS_INLINE JSLinearString* MakeLinearStringForAtomization(
     JSContext* cx, LittleEndianChars chars, size_t length) {
-  return NewStringFromLittleEndianNoGC(cx, chars, length);
+  return NewStringFromLittleEndianNoGC(cx, chars, length, gc::TenuredHeap);
 }
 
 template <typename CharT, typename WrapperT>
@@ -891,7 +891,8 @@ static MOZ_ALWAYS_INLINE JSLinearString* MakeUTF8AtomHelper(
     JSContext* cx, const WrapperT* chars, size_t length) {
   if (JSInlineString::lengthFits<CharT>(length)) {
     CharT* storage;
-    JSInlineString* str = AllocateInlineString<NoGC>(cx, length, &storage);
+    JSInlineString* str =
+        AllocateInlineString<NoGC>(cx, length, &storage, gc::TenuredHeap);
     if (!str) {
       return nullptr;
     }
@@ -914,7 +915,8 @@ static MOZ_ALWAYS_INLINE JSLinearString* MakeUTF8AtomHelper(
   InflateUTF8CharsToBufferAndTerminate(chars->utf8, newStr.get(), length,
                                        chars->encoding);
 
-  return JSLinearString::new_<NoGC>(cx, std::move(newStr), length);
+  return JSLinearString::new_<NoGC>(cx, std::move(newStr), length,
+                                    gc::TenuredHeap);
 }
 
 // Another 2 variants of MakeLinearStringForAtomization.

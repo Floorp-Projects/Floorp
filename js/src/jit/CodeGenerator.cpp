@@ -9008,9 +9008,11 @@ void CodeGenerator::visitSameValueVM(LSameValueVM* lir) {
 
 void CodeGenerator::emitConcat(LInstruction* lir, Register lhs, Register rhs,
                                Register output) {
-  using Fn = JSString* (*)(JSContext*, HandleString, HandleString);
+  using Fn = JSString* (*)(JSContext*, HandleString, HandleString,
+                           js::gc::InitialHeap);
   OutOfLineCode* ool = oolCallVM<Fn, ConcatStrings<CanGC>>(
-      lir, ArgList(lhs, rhs), StoreRegisterTo(output));
+      lir, ArgList(lhs, rhs, static_cast<Imm32>(gc::DefaultHeap)),
+      StoreRegisterTo(output));
 
   const JitRealm* jitRealm = gen->realm->jitRealm();
   JitCode* stringConcatStub =

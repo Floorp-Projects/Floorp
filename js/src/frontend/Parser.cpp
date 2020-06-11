@@ -2384,7 +2384,8 @@ JSAtom* ParserBase::prefixAccessorName(PropertyType propType,
     prefix = cx_->names().getPrefix;
   }
 
-  RootedString str(cx_, ConcatStrings<CanGC>(cx_, prefix, propAtom));
+  RootedString str(
+      cx_, ConcatStrings<CanGC>(cx_, prefix, propAtom, js::gc::TenuredHeap));
   if (!str) {
     return nullptr;
   }
