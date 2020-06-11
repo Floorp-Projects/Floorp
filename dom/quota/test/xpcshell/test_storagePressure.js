@@ -84,12 +84,9 @@ async function testSteps() {
     await requestFinished(request);
 
     ok(false, "Should have thrown");
-  } catch (e) {
+  } catch (ex) {
     ok(true, "Should have thrown");
-    ok(
-      e.resultCode === NS_ERROR_FILE_NO_DEVICE_SPACE,
-      "Threw right result code"
-    );
+    ok(ex === NS_ERROR_FILE_NO_DEVICE_SPACE, "Threw right code");
   }
 
   info("Checking the storage pressure event");

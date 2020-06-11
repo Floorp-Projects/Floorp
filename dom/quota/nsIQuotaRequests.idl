@@ -17,8 +17,6 @@ interface nsIQuotaRequestBase : nsISupports
   readonly attribute nsIPrincipal principal;
 
   [must_use] readonly attribute nsresult resultCode;
-
-  [must_use] readonly attribute ACString resultName;
 };
 
 [scriptable, uuid(166e28e6-cf6d-4927-a6d7-b51bca9d3469)]
