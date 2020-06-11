@@ -9,7 +9,6 @@
 
 #include "mozilla/dom/quota/QuotaCommon.h"
 
-#include "mozilla/Atomics.h"
 #include "mozilla/CheckedInt.h"
 
 BEGIN_QUOTA_NAMESPACE
