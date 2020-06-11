@@ -28,6 +28,7 @@ import org.mockito.Mockito.verify
 import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoSession
 import org.robolectric.Robolectric.buildActivity
+import java.lang.IllegalStateException
 
 @RunWith(AndroidJUnit4::class)
 class GeckoEngineViewTest {
@@ -55,7 +56,6 @@ class GeckoEngineViewTest {
 
     @Test
     fun captureThumbnail() {
-        val geckoSession: GeckoEngineSession = mock()
         val engineView = GeckoEngineView(context)
         val mockGeckoView = mock<NestedGeckoView>()
         var thumbnail: Bitmap? = null
@@ -64,18 +64,7 @@ class GeckoEngineViewTest {
         whenever(mockGeckoView.capturePixels()).thenReturn(geckoResult)
         engineView.currentGeckoView = mockGeckoView
 
-        engineView.captureThumbnail {
-            thumbnail = it
-        }
-        verify(mockGeckoView, never()).capturePixels()
-
-        engineView.currentSession = geckoSession
-        engineView.captureThumbnail {
-            thumbnail = it
-        }
-        verify(mockGeckoView, never()).capturePixels()
-
-        whenever(geckoSession.firstContentfulPaint).thenReturn(true)
+        // Test GeckoResult resolves successfuly
         engineView.captureThumbnail {
             thumbnail = it
         }
@@ -86,24 +75,20 @@ class GeckoEngineViewTest {
         geckoResult = GeckoResult()
         whenever(mockGeckoView.capturePixels()).thenReturn(geckoResult)
 
+        // Test GeckoResult resolves in error
         engineView.captureThumbnail {
             thumbnail = it
         }
-
         geckoResult.completeExceptionally(mock())
         assertNull(thumbnail)
 
-        // Verify that with `firstContentfulPaint` set to false, capturePixels returns a null bitmap
-        geckoResult = GeckoResult()
+        // Test GeckoView throwing an exception
+        whenever(mockGeckoView.capturePixels()).thenThrow(IllegalStateException("Compositor not ready"))
 
         thumbnail = mock()
-        whenever(geckoSession.firstContentfulPaint).thenReturn(false)
         engineView.captureThumbnail {
             thumbnail = it
         }
-        // capturePixels should not have been called again because `firstContentfulPaint` is false
-        verify(mockGeckoView, times(2)).capturePixels()
-        geckoResult.complete(mock())
         assertNull(thumbnail)
     }
 
