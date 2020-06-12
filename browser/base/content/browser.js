@@ -5501,22 +5501,6 @@ var XULBrowserWindow = {
     }
     this.onStatusChange(gBrowser.webProgress, null, 0, aMessage);
   },
-
-  navigateAndRestoreByIndex: function XWB_navigateAndRestoreByIndex(
-    aBrowser,
-    aIndex
-  ) {
-    let tab = gBrowser.getTabForBrowser(aBrowser);
-    if (tab) {
-      SessionStore.navigateAndRestore(tab, {}, aIndex);
-      return;
-    }
-
-    throw new Error(
-      "Trying to navigateAndRestore a browser which was " +
-        "not attached to this tabbrowser is unsupported"
-    );
-  },
 };
 
 var LinkTargetDisplay = {
