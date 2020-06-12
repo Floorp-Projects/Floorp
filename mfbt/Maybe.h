@@ -265,11 +265,6 @@ struct MaybeStorage<T, false> {
   explicit MaybeStorage(const T& aVal) : mStorage{aVal}, mIsSome{true} {}
   explicit MaybeStorage(T&& aVal) : mStorage{std::move(aVal)}, mIsSome{true} {}
 
-  template <typename... Args>
-  explicit MaybeStorage(Args&&... aArgs) : mIsSome{true} {
-    ::new (KnownNotNull, &mStorage.val) T(std::forward<Args>(aArgs)...);
-  }
-
   // Copy and move operations are no-ops, since copying is moving is implemented
   // by Maybe_CopyMove_Enabler.
 
@@ -304,14 +299,6 @@ struct MaybeStorage<T, true> {
       : mStorage{aVal}, mIsSome{true} {}
   constexpr explicit MaybeStorage(T&& aVal)
       : mStorage{std::move(aVal)}, mIsSome{true} {}
-
-  // XXX This should be constexpr, but then we can't use placement new.
-  // Delegating this to a Union constructor with the same signature doesn't
-  // build out of the box.
-  template <typename... Args>
-  explicit MaybeStorage(Args&&... aArgs) : mIsSome{true} {
-    ::new (KnownNotNull, &mStorage.val) T(std::forward<Args>(aArgs)...);
-  }
 };
 
 }  // namespace detail
@@ -363,6 +350,9 @@ constexpr Maybe<U> Some(T&& aValue);
  * Boost. The most important differences between Maybe and std::optional are:
  *
  *   - std::optional<T> may be compared with T. We deliberately forbid that.
+ *   - std::optional allows in-place construction without a separate call to
+ *     |emplace()| by using a dummy |in_place_t| value to tag the appropriate
+ *     constructor.
  *   - std::optional has |valueOr()|, equivalent to Maybe's |valueOr()|, but
  *     lacks corresponding methods for |refOr()| and |ptrOr()|.
  *   - std::optional lacks |map()| and |apply()|, making it less suitable for
@@ -398,10 +388,6 @@ class MOZ_INHERIT_TYPE_ANNOTATIONS_FROM_TEMPLATE_ARGS Maybe
   MOZ_ALLOW_TEMPORARY constexpr Maybe() = default;
 
   MOZ_ALLOW_TEMPORARY MOZ_IMPLICIT constexpr Maybe(Nothing) : Maybe{} {}
-
-  template <typename... Args>
-  constexpr explicit Maybe(std::in_place_t, Args&&... aArgs)
-      : detail::MaybeStorage<T>(std::forward<Args>(aArgs)...) {}
 
   /**
    * Maybe<T> can be copy-constructed from a Maybe<U> if T is constructible from
