@@ -78,6 +78,8 @@ TaskQueue::~TaskQueue() {
   // pending as all Runner hold a reference to this TaskQueue.
 }
 
+NS_IMPL_ISUPPORTS_INHERITED(TaskQueue, AbstractThread, nsIDirectTaskDispatcher);
+
 TaskDispatcher& TaskQueue::TailDispatcher() {
   MOZ_ASSERT(IsCurrentThreadIn());
   MOZ_ASSERT(mTailDispatcher);
@@ -251,6 +253,36 @@ nsresult TaskQueue::Runner::Run() {
     mon.NotifyAll();
   }
 
+  return NS_OK;
+}
+
+//-----------------------------------------------------------------------------
+// nsIDirectTaskDispatcher
+//-----------------------------------------------------------------------------
+
+NS_IMETHODIMP
+TaskQueue::DispatchDirectTask(already_AddRefed<nsIRunnable> aEvent) {
+  if (!IsCurrentThreadIn()) {
+    return NS_ERROR_FAILURE;
+  }
+  mDirectTasks.AddTask(std::move(aEvent));
+  return NS_OK;
+}
+
+NS_IMETHODIMP TaskQueue::DrainDirectTasks() {
+  if (!IsCurrentThreadIn()) {
+    return NS_ERROR_FAILURE;
+  }
+  mDirectTasks.DrainTasks();
+  return NS_OK;
+}
+
+NS_IMETHODIMP TaskQueue::HaveDirectTasks(bool* aValue) {
+  if (!IsCurrentThreadIn()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  *aValue = mDirectTasks.HaveTasks();
   return NS_OK;
 }
 
