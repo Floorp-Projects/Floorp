@@ -1946,8 +1946,29 @@
       return origins;
     }
 
-    get canPerformProcessSwitch() {
-      return this.getTabBrowser() != null;
+    get processSwitchBehavior() {
+      // If a `remotenessChangeHandler` is attached to this browser, it supports
+      // having its toplevel process switched dynamically in response to
+      // navigations.
+      if (this.hasAttribute("maychangeremoteness")) {
+        return Ci.nsIBrowser.PROCESS_BEHAVIOR_STANDARD;
+      }
+
+      // When loaded in a TabBrowser, use the custom behavior from
+      // `performProcessSwitch`.
+      if (this.getTabBrowser() != null) {
+        return Ci.nsIBrowser.PROCESS_BEHAVIOR_CUSTOM;
+      }
+
+      // For backwards compatibility, we need to mark remote, but
+      // non-`allowremote`, frames as `PROCESS_BEHAVIOR_SUBFRAME_ONLY`, as some
+      // tests rely on it.
+      // FIXME: Remove this?
+      if (this.isRemoteBrowser) {
+        return Ci.nsIBrowser.PROCESS_BEHAVIOR_SUBFRAME_ONLY;
+      }
+      // Otherwise, don't allow gecko-initiated toplevel process switches.
+      return Ci.nsIBrowser.PROCESS_BEHAVIOR_DISABLED;
     }
 
     performProcessSwitch(
