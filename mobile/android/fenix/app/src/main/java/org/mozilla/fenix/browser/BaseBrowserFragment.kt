@@ -357,9 +357,13 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                     downloadJobStatus == AbstractFetchDownloadService.DownloadJobStatus.FAILED
                 ) {
 
-                    saveDownloadDialogState(session, downloadState, downloadJobStatus)
+                    saveDownloadDialogState(
+                        downloadState.sessionId,
+                        downloadState,
+                        downloadJobStatus
+                    )
 
-                    DynamicDownloadDialog(
+                    val dynamicDownloadDialog = DynamicDownloadDialog(
                         container = view.browserLayout,
                         downloadState = downloadState,
                         didFail = downloadJobStatus == AbstractFetchDownloadService.DownloadJobStatus.FAILED,
@@ -375,19 +379,25 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                         },
                         view = view.viewDynamicDownloadDialog,
                         toolbarHeight = toolbarHeight,
-                        onDismiss = { sharedViewModel.downloadDialogState.remove(session.id) }
-                    ).show()
-                    browserToolbarView.expand()
+                        onDismiss = { sharedViewModel.downloadDialogState.remove(downloadState.sessionId) }
+                    )
+
+                    // Don't show the dialog if we aren't in the tab that started the download
+                    if (downloadState.sessionId == sessionManager.selectedSession?.id) {
+                        dynamicDownloadDialog.show()
+                        browserToolbarView.expand()
+                    }
                 }
             }
+
+            resumeDownloadDialogState(sessionManager.selectedSession?.id,
+                store, view, context, toolbarHeight)
 
             downloadsFeature.set(
                 downloadFeature,
                 owner = this,
                 view = view
             )
-
-            resumeDownloadDialogState(session, store, view, context, toolbarHeight)
 
             pipFeature = PictureInPictureFeature(
                 store = store,
@@ -531,6 +541,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                 override fun onSessionSelected(session: Session) {
                     fullScreenChanged(false)
                     browserToolbarView.expand()
+                    resumeDownloadDialogState(session.id, store, view, context, toolbarHeight)
                 }
             }, owner = viewLifecycleOwner)
 
@@ -583,14 +594,16 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
      * other fragments navigation.
      * */
     private fun saveDownloadDialogState(
-        session: Session,
+        sessionId: String?,
         downloadState: DownloadState,
         downloadJobStatus: AbstractFetchDownloadService.DownloadJobStatus
     ) {
-        sharedViewModel.downloadDialogState[session.id] = Pair(
-            downloadState,
-            downloadJobStatus == AbstractFetchDownloadService.DownloadJobStatus.FAILED
-        )
+        sessionId?.let { id ->
+            sharedViewModel.downloadDialogState[id] = Pair(
+                downloadState,
+                downloadJobStatus == AbstractFetchDownloadService.DownloadJobStatus.FAILED
+            )
+        }
     }
 
     /**
@@ -600,20 +613,25 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
      * download, because [DownloadsFeature] clears any queued downloads onStop.
      * */
     private fun resumeDownloadDialogState(
-        session: Session,
+        sessionId: String?,
         store: BrowserStore,
         view: View,
         context: Context,
         toolbarHeight: Int
     ) {
         val savedDownloadState =
-            sharedViewModel.downloadDialogState[session.id] ?: return
+            sharedViewModel.downloadDialogState[sessionId]
+
+        if (savedDownloadState == null || sessionId == null) {
+            view.viewDynamicDownloadDialog.visibility = View.GONE
+            return
+        }
 
         val onTryAgain: (Long) -> Unit = {
             savedDownloadState.first?.let { dlState ->
                 store.dispatch(
                     ContentAction.UpdateDownloadAction(
-                        session.id, dlState.copy(skipConfirmation = true)
+                        sessionId, dlState.copy(skipConfirmation = true)
                     )
                 )
             }
@@ -630,7 +648,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
         }
 
         val onDismiss: () -> Unit =
-            { sharedViewModel.downloadDialogState.remove(session.id) }
+            { sharedViewModel.downloadDialogState.remove(sessionId) }
 
         DynamicDownloadDialog(
             container = view.browserLayout,
