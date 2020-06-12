@@ -152,6 +152,13 @@ class ThreadFront extends FrontClassWithSpec(threadSpec) {
   }
 
   /**
+   * Restart selected frame.
+   */
+  restart(frameActorID) {
+    return this._doResume({ type: "restart" }, frameActorID);
+  }
+
+  /**
    * Immediately interrupt a running thread.
    */
   interrupt() {

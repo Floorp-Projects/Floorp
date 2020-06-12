@@ -194,6 +194,7 @@ function makeMockFrame(
     index,
     asyncCause: null,
     state: "on-stack",
+    type: "call",
   };
 }
 

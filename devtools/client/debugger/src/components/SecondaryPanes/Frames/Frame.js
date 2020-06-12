@@ -79,6 +79,7 @@ type FrameComponentProps = {
   getFrameTitle?: string => string,
   disableContextMenu: boolean,
   panel: "debugger" | "webconsole",
+  restart: typeof actions.restart,
 };
 
 export default class FrameComponent extends Component<FrameComponentProps> {
@@ -104,11 +105,12 @@ export default class FrameComponent extends Component<FrameComponentProps> {
       toggleBlackBox,
       frameworkGroupingOn,
       cx,
+      restart,
     } = this.props;
     FrameMenu(
       frame,
       frameworkGroupingOn,
-      { copyStackTrace, toggleFrameworkGrouping, toggleBlackBox },
+      { copyStackTrace, toggleFrameworkGrouping, toggleBlackBox, restart },
       event,
       cx
     );

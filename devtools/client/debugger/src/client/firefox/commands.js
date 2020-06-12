@@ -171,6 +171,10 @@ function stepOut(thread: string, frameId: ?FrameId): Promise<*> {
   return lookupThreadFront(thread).stepOut(frameId);
 }
 
+function restart(thread: string, frameId: FrameId): Promise<*> {
+  return lookupThreadFront(thread).restart(frameId);
+}
+
 function breakOnNext(thread: string): Promise<*> {
   return lookupThreadFront(thread).breakOnNext();
 }
@@ -564,6 +568,7 @@ const clientCommands = {
   stepIn,
   stepOut,
   stepOver,
+  restart,
   breakOnNext,
   sourceContents,
   getSourceForActor,

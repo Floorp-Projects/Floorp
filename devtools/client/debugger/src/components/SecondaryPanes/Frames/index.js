@@ -48,6 +48,7 @@ type Props = {
   displayFullUrl: boolean,
   getFrameTitle?: string => string,
   panel: "debugger" | "webconsole",
+  restart: typeof actions.restart,
 };
 
 type State = {
@@ -128,6 +129,7 @@ class Frames extends Component<Props, State> {
       getFrameTitle,
       disableContextMenu,
       panel,
+      restart,
     } = this.props;
 
     const framesOrGroups = this.truncateFrames(this.collapseFrames(frames));
@@ -155,6 +157,7 @@ class Frames extends Component<Props, State> {
               getFrameTitle={getFrameTitle}
               disableContextMenu={disableContextMenu}
               panel={panel}
+              restart={restart}
             />
           ) : (
             <Group
@@ -172,6 +175,7 @@ class Frames extends Component<Props, State> {
               getFrameTitle={getFrameTitle}
               disableContextMenu={disableContextMenu}
               panel={panel}
+              restart={restart}
             />
           )
         )}
@@ -238,6 +242,7 @@ export default connect<Props, OwnProps, _, _, _, _>(mapStateToProps, {
   selectLocation: actions.selectLocation,
   toggleBlackBox: actions.toggleBlackBox,
   toggleFrameworkGrouping: actions.toggleFrameworkGrouping,
+  restart: actions.restart,
 })(Frames);
 
 // Export the non-connected component in order to use it outside of the debugger

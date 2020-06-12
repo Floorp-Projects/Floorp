@@ -4,3 +4,16 @@ function simple() {
   const result = func();
   return result;
 }
+
+function nestedA() {
+  nestedB();
+}
+
+function nestedB() {
+  nestedC();
+}
+
+function nestedC() {
+  debugger;
+  return 1;
+}

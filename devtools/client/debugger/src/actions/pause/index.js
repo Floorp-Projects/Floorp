@@ -9,7 +9,14 @@
  * @module actions/pause
  */
 
-export { selectThread, stepIn, stepOver, stepOut, resume } from "./commands";
+export {
+  selectThread,
+  stepIn,
+  stepOver,
+  stepOut,
+  resume,
+  restart,
+} from "./commands";
 export { fetchFrames } from "./fetchFrames";
 export { fetchScopes } from "./fetchScopes";
 export { paused } from "./paused";

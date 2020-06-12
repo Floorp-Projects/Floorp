@@ -31,6 +31,7 @@ function render(overrides = {}) {
     disableContextMenu: false,
     displayFullUrl: false,
     panel: "webconsole",
+    restart: jest.fn(),
   };
 
   const props = { ...defaultProps, ...overrides };

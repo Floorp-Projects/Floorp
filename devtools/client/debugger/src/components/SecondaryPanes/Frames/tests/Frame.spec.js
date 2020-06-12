@@ -30,6 +30,7 @@ function frameProperties(frame, selectedFrame: any, overrides = {}) {
     frameworkGroupingOn: false,
     panel: "webconsole",
     toggleFrameworkGrouping: null,
+    restart: jest.fn(),
     ...overrides,
   };
 }
@@ -134,6 +135,7 @@ describe("Frame", () => {
         toggleFrameworkGrouping,
         toggleBlackBox,
         cx,
+        restart,
       } = props;
       const mockEvent = "mockEvent";
       component.simulate("contextmenu", mockEvent);
@@ -145,6 +147,7 @@ describe("Frame", () => {
           copyStackTrace,
           toggleFrameworkGrouping,
           toggleBlackBox,
+          restart,
         },
         mockEvent,
         cx

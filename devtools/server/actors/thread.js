@@ -144,6 +144,7 @@ const getAsyncParentFrame = frame => {
   }
   return null;
 };
+const RESTARTED_FRAMES = new WeakSet();
 
 /**
  * JSD2 actors.
@@ -894,6 +895,10 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       reportException("TA__pauseAndRespond", e);
     }
 
+    if (this._requestedFrameRestart) {
+      return null;
+    }
+
     // If the parent actor has been closed, terminate the debuggee script
     // instead of continuing. Executing JS after the content window is gone is
     // a bad idea.
@@ -902,6 +907,10 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
 
   _makeOnEnterFrame: function({ pauseAndRespond }) {
     return frame => {
+      if (this._requestedFrameRestart) {
+        return null;
+      }
+
       // Continue forward until we get to a valid step target.
       const { onStep, onPop } = this._makeSteppingHooks({
         steppingType: "next",
@@ -920,6 +929,10 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
   _makeOnPop: function({ pauseAndRespond, steppingType }) {
     const thread = this;
     return function(completion) {
+      if (thread._requestedFrameRestart === this) {
+        return thread.restartFrame(this);
+      }
+
       // onPop is called when we temporarily leave an async/generator
       if (steppingType != "finish" && (completion.await || completion.yield)) {
         thread.suspendedFrame = this;
@@ -936,14 +949,40 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       thread.suspendedFrame = this;
 
       if (steppingType != "finish" && !thread.sources.isFrameBlackBoxed(this)) {
-        return pauseAndRespond(this, packet =>
+        const pauseAndRespValue = pauseAndRespond(this, packet =>
           thread.createCompletionGrip(packet, completion)
         );
+
+        // If the requested frame to restart differs from this frame, we don't
+        // need to restart it at this point.
+        if (thread._requestedFrameRestart === this) {
+          return thread.restartFrame(this);
+        }
+
+        return pauseAndRespValue;
       }
 
       thread._attachSteppingHooks(this, "next", completion);
       return undefined;
     };
+  },
+
+  restartFrame: function(frame) {
+    this._requestedFrameRestart = null;
+    this._priorPause = null;
+
+    if (
+      frame.type !== "call" ||
+      frame.script.isGeneratorFunction ||
+      frame.script.isAsyncFunction
+    ) {
+      return undefined;
+    }
+    RESTARTED_FRAMES.add(frame);
+
+    const completion = frame.callee.apply(frame.this, frame.arguments);
+
+    return completion;
   },
 
   hasMoved: function(frame, newType) {
@@ -1065,7 +1104,9 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
    */
   _handleResumeLimit: async function({ resumeLimit, frameActorID }) {
     const steppingType = resumeLimit.type;
-    if (!["break", "step", "next", "finish"].includes(steppingType)) {
+    if (
+      !["break", "step", "next", "finish", "restart"].includes(steppingType)
+    ) {
       return Promise.reject({
         error: "badParameterType",
         message: "Unknown resumeLimit type",
@@ -1079,6 +1120,17 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       if (!frame) {
         throw new Error("Frame should exist in the frames pool.");
       }
+    }
+
+    if (steppingType === "restart") {
+      if (
+        frame.type !== "call" ||
+        frame.script.isGeneratorFunction ||
+        frame.script.isAsyncFunction
+      ) {
+        return undefined;
+      }
+      this._requestedFrameRestart = frame;
     }
 
     return this._attachSteppingHooks(frame, steppingType, undefined);
@@ -1104,7 +1156,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       startFrame: frame,
     });
 
-    if (steppingType === "step") {
+    if (steppingType === "step" || steppingType === "restart") {
       this.dbg.onEnterFrame = onEnterFrame;
     }
 
@@ -1121,6 +1173,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
         // Fall through.
         case "finish":
           stepFrame.onStep = createStepForReactionTracking(stepFrame.onStep);
+        case "restart":
           stepFrame.onPop = onPop;
           break;
       }
@@ -1281,6 +1334,12 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     if (!stepFrame || !stepFrame.script) {
       return null;
     }
+
+    // Skips a frame that has been restarted.
+    if (RESTARTED_FRAMES.has(stepFrame)) {
+      return this._getNextStepFrame(stepFrame.older);
+    }
+
     return stepFrame;
   },
 
@@ -1345,6 +1404,11 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
           continue;
         }
       }
+
+      if (RESTARTED_FRAMES.has(frame)) {
+        continue;
+      }
+
       const frameActor = this._createFrameActor(frame, i);
       frames.push(frameActor);
     }
@@ -1503,6 +1567,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     // Clear stepping hooks.
     this.dbg.onEnterFrame = undefined;
     this.dbg.onExceptionUnwind = undefined;
+    this._requestedFrameRestart = null;
     this._clearSteppingHooks();
 
     // Create the actor pool that will hold the pause actor and its
