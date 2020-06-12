@@ -1102,7 +1102,7 @@ class MediaTrackGraph {
   using AudioContextOperationPromise =
       MozPromise<dom::AudioContextState, bool, true>;
   RefPtr<AudioContextOperationPromise> ApplyAudioContextOperation(
-      MediaTrack* aDestinationTrack, const nsTArray<MediaTrack*>& aTracks,
+      MediaTrack* aDestinationTrack, nsTArray<RefPtr<MediaTrack>> aTracks,
       dom::AudioContextOperation aOperation);
 
   bool IsNonRealtime() const;

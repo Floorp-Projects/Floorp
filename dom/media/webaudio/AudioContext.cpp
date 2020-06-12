@@ -891,8 +891,8 @@ void AudioContext::OnStateChanged(void* aPromise, AudioContextState aNewState) {
   mAudioContextState = aNewState;
 }
 
-nsTArray<mozilla::MediaTrack*> AudioContext::GetAllTracks() const {
-  nsTArray<mozilla::MediaTrack*> tracks;
+nsTArray<RefPtr<mozilla::MediaTrack>> AudioContext::GetAllTracks() const {
+  nsTArray<RefPtr<mozilla::MediaTrack>> tracks;
   for (auto iter = mAllNodes.ConstIter(); !iter.Done(); iter.Next()) {
     AudioNode* node = iter.Get()->GetKey();
     mozilla::MediaTrack* t = node->GetTrack();
@@ -952,7 +952,7 @@ void AudioContext::SuspendInternal(void* aPromise,
   MOZ_ASSERT(NS_IsMainThread());
   Destination()->Suspend();
 
-  nsTArray<mozilla::MediaTrack*> tracks;
+  nsTArray<RefPtr<mozilla::MediaTrack>> tracks;
   // If mSuspendCalled is true then we already suspended all our tracks,
   // so don't suspend them again (since suspend(); suspend(); resume(); should
   // cancel both suspends). But we still need to do ApplyAudioContextOperation
@@ -961,7 +961,7 @@ void AudioContext::SuspendInternal(void* aPromise,
     tracks = GetAllTracks();
   }
   auto promise = Graph()->ApplyAudioContextOperation(
-      DestinationTrack(), tracks, AudioContextOperation::Suspend);
+      DestinationTrack(), move(tracks), AudioContextOperation::Suspend);
   if ((aFlags & AudioContextOperationFlags::SendStateChange)) {
     promise->Then(
         GetMainThread(), "AudioContext::OnStateChanged",
@@ -1025,7 +1025,7 @@ void AudioContext::ResumeInternal(AudioContextOperationFlags aFlags) {
 
   Destination()->Resume();
 
-  nsTArray<mozilla::MediaTrack*> tracks;
+  nsTArray<RefPtr<mozilla::MediaTrack>> tracks;
   // If mSuspendCalled is false then we already resumed all our tracks,
   // so don't resume them again (since suspend(); resume(); resume(); should
   // be OK). But we still need to do ApplyAudioContextOperation
@@ -1034,7 +1034,7 @@ void AudioContext::ResumeInternal(AudioContextOperationFlags aFlags) {
     tracks = GetAllTracks();
   }
   auto promise = Graph()->ApplyAudioContextOperation(
-      DestinationTrack(), tracks, AudioContextOperation::Resume);
+      DestinationTrack(), move(tracks), AudioContextOperation::Resume);
   if (aFlags & AudioContextOperationFlags::SendStateChange) {
     promise->Then(
         GetMainThread(), "AudioContext::OnStateChanged",
@@ -1159,7 +1159,7 @@ void AudioContext::CloseInternal(void* aPromise,
   if (ds && !mIsOffline) {
     Destination()->DestroyAudioChannelAgent();
 
-    nsTArray<mozilla::MediaTrack*> tracks;
+    nsTArray<RefPtr<mozilla::MediaTrack>> tracks;
     // If mSuspendCalled or mCloseCalled are true then we already suspended
     // all our tracks, so don't suspend them again. But we still need to do
     // ApplyAudioContextOperation to ensure our new promise is resolved.
@@ -1167,7 +1167,7 @@ void AudioContext::CloseInternal(void* aPromise,
       tracks = GetAllTracks();
     }
     auto promise = Graph()->ApplyAudioContextOperation(
-        ds, tracks, AudioContextOperation::Close);
+        ds, move(tracks), AudioContextOperation::Close);
     if ((aFlags & AudioContextOperationFlags::SendStateChange)) {
       promise->Then(
           GetMainThread(), "AudioContext::OnStateChanged",
