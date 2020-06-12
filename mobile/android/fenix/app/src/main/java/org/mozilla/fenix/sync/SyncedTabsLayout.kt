@@ -45,6 +45,7 @@ class SyncedTabsLayout @JvmOverloads constructor(
 
         synced_tabs_list.visibility = View.GONE
         sync_tabs_status.visibility = View.VISIBLE
+        synced_tabs_pull_to_refresh.isEnabled = false
     }
 
     override fun displaySyncedTabs(syncedTabs: List<SyncedDeviceTabs>) {
