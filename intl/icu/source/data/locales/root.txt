@@ -215,6 +215,7 @@ root{
             NoonMarkerNarrow:alias{"/LOCALE/calendar/gregorian/NoonMarkerNarrow"}
             appendItems{
                 Day{"{0} ({2}: {1})"}
+                DayPeriod{"{0} ({2}: {1})"}
                 Day-Of-Week{"{0} {1}"}
                 Era{"{1} {0}"}
                 Hour{"{0} ({2}: {1})"}
@@ -222,6 +223,7 @@ root{
                 Month{"{0} ({2}: {1})"}
                 Quarter{"{0} ({2}: {1})"}
                 Second{"{0} ({2}: {1})"}
+                FractionalSecond{"{0} ({2}: {1})"}
                 Timezone{"{0} {1}"}
                 Week{"{0} ({2}: {1})"}
                 Year{"{1} {0}"}
@@ -751,6 +753,7 @@ root{
             NoonMarkerNarrow:alias{"/LOCALE/calendar/gregorian/NoonMarkerNarrow"}
             appendItems{
                 Day{"{0} ({2}: {1})"}
+                DayPeriod{"{0} ({2}: {1})"}
                 Day-Of-Week{"{0} {1}"}
                 Era{"{1} {0}"}
                 Hour{"{0} ({2}: {1})"}
@@ -758,6 +761,7 @@ root{
                 Month{"{0} ({2}: {1})"}
                 Quarter{"{0} ({2}: {1})"}
                 Second{"{0} ({2}: {1})"}
+                FractionalSecond{"{0} ({2}: {1})"}
                 Timezone{"{0} {1}"}
                 Week{"{0} ({2}: {1})"}
                 Year{"{1} {0}"}
@@ -1020,6 +1024,7 @@ root{
             }
             appendItems{
                 Day{"{0} ({2}: {1})"}
+                DayPeriod{"{0} ({2}: {1})"}
                 Day-Of-Week{"{0} {1}"}
                 Era{"{1} {0}"}
                 Hour{"{0} ({2}: {1})"}
@@ -1027,6 +1032,7 @@ root{
                 Month{"{0} ({2}: {1})"}
                 Quarter{"{0} ({2}: {1})"}
                 Second{"{0} ({2}: {1})"}
+                FractionalSecond{"{0} ({2}: {1})"}
                 Timezone{"{0} {1}"}
                 Week{"{0} ({2}: {1})"}
                 Year{"{1} {0}"}
@@ -2529,6 +2535,11 @@ root{
         }
         zone-narrow:alias{"/LOCALE/fields/zone-short"}
         zone-short:alias{"/LOCALE/fields/zone"}
+        fractionalSecond{
+            dn{"Fractional Second"}
+        }
+        fractionalSecond-narrow:alias{"/LOCALE/fields/fractionalSecond-short"}
+        fractionalSecond-short:alias{"/LOCALE/fields/fractionalSecond"}
     }
     layout{
         characters{"left-to-right"}

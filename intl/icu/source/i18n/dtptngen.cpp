@@ -259,14 +259,14 @@ static const dtTypeElem dtTypes[] = {
 
 static const char* const CLDR_FIELD_APPEND[] = {
     "Era", "Year", "Quarter", "Month", "Week", "*", "Day-Of-Week",
-    "*", "*", "Day", "*", // The UDATPG_x_FIELD constants and these fields have a different order than in ICU4J
-    "Hour", "Minute", "Second", "*", "Timezone"
+    "*", "*", "Day", "DayPeriod", // The UDATPG_x_FIELD constants and these fields have a different order than in ICU4J
+    "Hour", "Minute", "Second", "FractionalSecond", "Timezone"
 };
 
 static const char* const CLDR_FIELD_NAME[UDATPG_FIELD_COUNT] = {
     "era", "year", "quarter", "month", "week", "weekOfMonth", "weekday",
     "dayOfYear", "weekdayOfMonth", "day", "dayperiod", // The UDATPG_x_FIELD constants and these fields have a different order than in ICU4J
-    "hour", "minute", "second", "*", "zone"
+    "hour", "minute", "second", "fractionalSecond", "zone"
 };
 
 static const char* const CLDR_FIELD_WIDTH[] = { // [UDATPG_WIDTH_COUNT]
@@ -961,6 +961,15 @@ struct DateTimePatternGenerator::AppendItemNamesSink : public ResourceSink {
             UDateTimePGDisplayWidth width;
             UDateTimePatternField field = dtpg.getFieldAndWidthIndices(key, &width);
             if (field == UDATPG_FIELD_COUNT) { continue; }
+
+            UResType type = value.getType();
+            U_ASSERT(type == URES_TABLE || type == URES_ALIAS);
+
+            // TODO: Implement support for alias types.
+            if (type == URES_ALIAS) {
+                continue;
+            }
+
             ResourceTable detailsTable = value.getTable(errorCode);
             if (U_FAILURE(errorCode)) { return; }
             for (int32_t j = 0; detailsTable.getKeyAndValue(j, key, value); ++j) {
