@@ -769,7 +769,7 @@ class AudioCallbackDriver : public GraphDriver,
        may iterate the graph. */
     Stopped,
   };
-  Atomic<FallbackDriverState> mFallbackDriverState;
+  Atomic<FallbackDriverState> mFallbackDriverState{FallbackDriverState::None};
   /* SystemClockDriver used as fallback if this AudioCallbackDriver fails to
    * init or start. */
   DataMutex<RefPtr<FallbackWrapper>> mFallback;
