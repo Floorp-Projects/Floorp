@@ -64,5 +64,21 @@ add_task(async function() {
         expectedLabelValues[index]
     );
   });
+
+  const lastItem = document.querySelector(
+    "#cookies-panel .properties-view tr.treeRow:last-child"
+  );
+  lastItem.scrollIntoView();
+
+  info("Checking for unwanted scrollbars appearing in the tree view");
+  const view = document.querySelector(
+    "#cookies-panel .properties-view .treeTable"
+  );
+  is(scrolledToBottom(view), true, "The view is not scrollable");
+
   await teardown(monitor);
+
+  function scrolledToBottom(element) {
+    return element.scrollTop + element.clientHeight >= element.scrollHeight;
+  }
 });
