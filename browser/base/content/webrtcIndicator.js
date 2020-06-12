@@ -45,10 +45,6 @@ function updateIndicatorState() {
  * Main control object for the WebRTC global indicator
  */
 const WebRTCIndicator = {
-  // This is the vertical offset from the bottom of the primary display where the
-  // indicator will first appear.
-  VERTICAL_OFFSET_PX: 80,
-
   init(event) {
     addEventListener("load", this);
     addEventListener("unload", this);
@@ -185,10 +181,7 @@ const WebRTCIndicator = {
     //
     // To put the window at the bottom of the screen, just above any OS UI,
     // we subtract the window height from the available height.
-    window.moveTo(
-      (screenWidth - windowWidth) / 2,
-      availHeight - windowHeight - this.VERTICAL_OFFSET_PX
-    );
+    window.moveTo((screenWidth - windowWidth) / 2, availHeight - windowHeight);
   },
 
   handleEvent(event) {
