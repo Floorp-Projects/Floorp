@@ -169,6 +169,7 @@ EXPORTS += [
     'MediaTrackList.h',
     'MediaTrackListener.h',
     'MemoryBlockCache.h',
+    'MPSCQueue.h',
     'nsIDocumentActivity.h',
     'PrincipalChangeObserver.h',
     'PrincipalHandle.h',
