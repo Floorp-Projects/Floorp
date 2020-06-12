@@ -9,6 +9,7 @@ job-defaults:
     run-on-projects:
         by-app:
             refbrow: []
+            fennec: []
             default:
                 by-test-platform:
                     android-hw-p2-.*aarch64.*/pgo: ["mozilla-central", "try"]
@@ -28,10 +29,10 @@ job-defaults:
             fennec:
                 by-test-platform:
                     android-hw-p2-8-0-android-aarch64.*:
-                        index: gecko.v2.mozilla-esr68.latest.mobile.android-aarch64-opt
+                        index: gecko.v2.mozilla-esr68.signed-nightly.nightly.latest.mobile.android-aarch64-release-opt
                         name: build/target.apk
                     default:
-                        index: gecko.v2.mozilla-esr68.latest.mobile.android-api-16-opt
+                        index: gecko.v2.mozilla-esr68.signed-nightly.nightly.latest.mobile.android-api-16-release-opt
                         name: build/target.apk
             refbrow:
                 by-test-platform:
@@ -55,7 +56,7 @@ job-defaults:
         by-app:
             fenix: org.mozilla.fenix.nightly
             geckoview: org.mozilla.geckoview_example
-            fennec: org.mozilla.fennec_aurora
+            fennec: org.mozilla.firefox
             refbrow: org.mozilla.reference.browser.raptor
             default: None
     mozharness:
@@ -72,9 +73,6 @@ browsertime-tp6m:
     raptor-test: tp6m
     raptor-subtests:
         by-app:
-            fennec:
-                - amazon
-                - youtube
             chrome-m:
                 - amazon
                 - youtube
@@ -114,11 +112,13 @@ browsertime-tp6m:
                     fenix: 1
                     geckoview: 1
                     refbrow: 2
+                    fennec: 2
                     default: 3
             default:
                 by-app:
                     geckoview: 1
                     refbrow: 2
+                    fennec: 2
                     default: 3
     run-on-projects:
         by-raptor-test:
@@ -126,6 +126,7 @@ browsertime-tp6m:
                 by-app:
                     fenix: []
                     chrome-m: []
+                    fennec: []
                     geckoview:
                         by-pageload:
                             cold:
@@ -149,6 +150,7 @@ browsertime-tp6m:
                     fenix: []
                     chrome-m: []
                     refbrow: []
+                    fennec: []
                     geckoview:
                         by-pageload:
                             cold:
@@ -192,12 +194,10 @@ browsertime-tp6m:
         by-app:
             fenix: both
             geckoview: both
-            refrbow: both
+            refbrow: both
+            fennec: both
             default: cold
-    run-visual-metrics:
-        by-app:
-            fennec: false
-            default: true
+    run-visual-metrics: true
     treeherder-symbol: Btime(tp6m)
 
 browsertime-tp6m-live:

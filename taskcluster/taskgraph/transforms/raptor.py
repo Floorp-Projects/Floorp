@@ -298,6 +298,10 @@ def add_extra_options(config, tests):
             extra_options.append('--browsertime-video')
             test['attributes']['run-visual-metrics'] = True
 
+        if test.get('app', '') == "fennec" and test['test-name'].startswith("browsertime"):
+            # Bug 1645181: Conditioned profiles cause problems
+            extra_options.append('--no-conditioned-profile')
+
         if 'app' in test:
             extra_options.append('--app={}'.format(test.pop('app')))
 

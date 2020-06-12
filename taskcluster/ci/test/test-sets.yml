@@ -532,29 +532,6 @@ android-hw-arm7-raptor:
     - raptor-youtube-playback-widevine-hfr-fennec68
     - raptor-youtube-playback-widevine-h264-sfr-fennec68
     - raptor-youtube-playback-widevine-vp9-sfr-fennec68
-    - raptor-tp6m-1-fennec68
-    - raptor-tp6m-2-fennec68
-    - raptor-tp6m-3-fennec68
-    - raptor-tp6m-4-fennec68
-    - raptor-tp6m-5-fennec68
-    - raptor-tp6m-6-fennec68
-    - raptor-tp6m-7-fennec68
-    - raptor-tp6m-8-fennec68
-    - raptor-tp6m-9-fennec68
-    - raptor-tp6m-1-fennec68-cold
-    - raptor-tp6m-2-fennec68-cold
-    - raptor-tp6m-3-fennec68-cold
-    - raptor-tp6m-4-fennec68-cold
-    - raptor-tp6m-5-fennec68-cold
-    - raptor-tp6m-6-fennec68-cold
-    - raptor-tp6m-7-fennec68-cold
-    - raptor-tp6m-8-fennec68-cold
-    - raptor-tp6m-9-fennec68-cold
-    - raptor-tp6m-10-fennec68-cold
-    - raptor-tp6m-11-fennec68-cold
-    - raptor-tp6m-12-fennec68-cold
-    - raptor-tp6m-13-fennec68-cold
-    - raptor-tp6m-14-fennec68-cold
 
 android-hw-aarch64-raptor:
     - raptor-speedometer-geckoview
@@ -585,29 +562,6 @@ android-hw-aarch64-raptor:
     - raptor-youtube-playback-widevine-hfr-fennec68
     - raptor-youtube-playback-widevine-h264-sfr-fennec68
     - raptor-youtube-playback-widevine-vp9-sfr-fennec68
-    - raptor-tp6m-1-fennec68
-    - raptor-tp6m-2-fennec68
-    - raptor-tp6m-3-fennec68
-    - raptor-tp6m-4-fennec68
-    - raptor-tp6m-5-fennec68
-    - raptor-tp6m-6-fennec68
-    - raptor-tp6m-7-fennec68
-    - raptor-tp6m-8-fennec68
-    - raptor-tp6m-9-fennec68
-    - raptor-tp6m-1-fennec68-cold
-    - raptor-tp6m-2-fennec68-cold
-    - raptor-tp6m-3-fennec68-cold
-    - raptor-tp6m-4-fennec68-cold
-    - raptor-tp6m-5-fennec68-cold
-    - raptor-tp6m-6-fennec68-cold
-    - raptor-tp6m-7-fennec68-cold
-    - raptor-tp6m-8-fennec68-cold
-    - raptor-tp6m-9-fennec68-cold
-    - raptor-tp6m-10-fennec68-cold
-    - raptor-tp6m-11-fennec68-cold
-    - raptor-tp6m-12-fennec68-cold
-    - raptor-tp6m-13-fennec68-cold
-    - raptor-tp6m-14-fennec68-cold
 
 android-hw-arm7-raptor-power:
     - raptor-speedometer-geckoview-power
