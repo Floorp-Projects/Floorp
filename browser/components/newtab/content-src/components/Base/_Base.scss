@@ -118,8 +118,8 @@ main {
   button {
     background-color: transparent;
     border: 0;
+    border-radius: 2px;
     cursor: pointer;
-    fill: var(--newtab-icon-primary-color);
     inset-inline-end: 15px;
     padding: 15px;
     position: fixed;
