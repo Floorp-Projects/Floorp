@@ -40,20 +40,18 @@ nf = create("ARAB");
 assertEq(nf.resolvedOptions().locale, defaultLocale);
 assertEq(nf.resolvedOptions().numberingSystem, "arab");
 
-const numberingSystems = [
-  "arab", "arabext", "bali", "beng", "deva",
-  "fullwide", "gujr", "guru", "hanidec", "khmr",
-  "knda", "laoo", "latn", "limb", "mlym",
-  "mong", "mymr", "orya", "tamldec", "telu",
-  "thai", "tibt",
-];
-
-for (let numberingSystem of numberingSystems) {
+for (let [numberingSystem, {algorithmic}] of Object.entries(numberingSystems)) {
   let nf1 = new Intl.NumberFormat(`${defaultLocale}-u-nu-${numberingSystem}`);
   let nf2 = new Intl.NumberFormat(defaultLocale, {numberingSystem});
 
-  assertEq(nf1.resolvedOptions().numberingSystem, numberingSystem);
-  assertEq(nf2.resolvedOptions().numberingSystem, numberingSystem);
+  if (!algorithmic) {
+    assertEq(nf1.resolvedOptions().numberingSystem, numberingSystem);
+    assertEq(nf2.resolvedOptions().numberingSystem, numberingSystem);
+  } else {
+    // We don't yet support algorithmic numbering systems.
+    assertEq(nf1.resolvedOptions().numberingSystem, defaultNumberingSystem);
+    assertEq(nf2.resolvedOptions().numberingSystem, defaultNumberingSystem);
+  }
 
   assertEq(nf2.format(0), nf1.format(0));
 }
