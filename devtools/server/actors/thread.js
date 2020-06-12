@@ -189,7 +189,6 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     this._watchpointsMap = new WatchpointMap(this);
 
     this._options = {
-      autoBlackBox: false,
       skipBreakpoints: false,
     };
 
@@ -429,7 +428,6 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     this._debuggerSourcesSeen = new WeakSet();
 
     this._options = { ...this._options, ...options };
-    this.sources.setOptions(this._options);
     this.sources.on("newSource", this.onNewSourceEvent);
 
     // Initialize an event loop stack. This can't be done in the constructor,
@@ -746,9 +744,6 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     }
 
     this._options = { ...this._options, ...options };
-
-    // Update the global source store
-    this.sources.setOptions(options);
 
     return {};
   },
