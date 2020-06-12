@@ -69,6 +69,13 @@ permalink: /changelog/
     * Smaller binary library after a big dependency was dropped
     * Limit the number of upload retries in all implementations
 
+* **support-images**:
+  * Added `ImageLoader` API for loading images directly into an `ImageView`.
+
+* **browser-tabstray**:
+  * ⚠️ **This is a breaking change**: `TabsAdapter` and `DefaultTabViewHolder` take an optional `ImageLoader` for loading browser thumbnails.
+  * Fixed a bug in `TabsThumbnailView` where the `scaleFactor` was not applied all the time when expected.
+
 # 44.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v43.0.0...v44.0.0)
