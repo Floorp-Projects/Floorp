@@ -52,4 +52,13 @@ class LoginDetailViewTest {
         assertEquals("admin", view.usernameText.text)
         assertEquals("password", view.passwordText.text)
     }
+
+    @Test
+    fun `bind null currentItem`() {
+        detailView.update(state.copy(currentItem = null))
+
+        assertEquals("", view.webAddressText.text)
+        assertEquals("", view.usernameText.text)
+        assertEquals("", view.passwordText.text)
+    }
 }
