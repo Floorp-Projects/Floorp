@@ -20,16 +20,15 @@
  * Test 2 |                             | "upgrade-insecure-requests" | http
  *
  * Test 1:
- * We load an iframe which uses 'upgrade-insecure-requests' which then
- * opens an "http" window which uses the header "Large-Allocation".
- * We observe that the initial request as well as the "Large-Allocation"
- * request get upgraded to use "https://test1.example.com".
+ * We load an iframe which uses 'upgrade-insecure-requests' which then opens an
+ * "http" window which uses the header "Large-Allocation". We observe that the
+ * request gets upgraded to use "https://test1.example.com".
  *
  * Test 2:
  * We load an iframe which does not use any CSP and opens an "http" window
  * which uses the header "Large-Allocation" as well as a CSP of
- * "upgrade-insecure-requests". We observe that both requests do
- * not get upgraded to https but still use "http://test2.example.com".
+ * "upgrade-insecure-requests". We observe that the request does not get
+ * upgraded to https but still uses "http://test2.example.com".
  */
 
 SimpleTest.waitForExplicitFinish();
@@ -38,7 +37,7 @@ let httpsCounter = 0;
 let httpCounter = 0;
 
 function checkTestComplete() {
-  if (httpsCounter == 2 && httpCounter == 2) {
+  if (httpsCounter == 1 && httpCounter == 1) {
     ok(true, "Frame with CSP caused upgrade; Frame with no CSP caused no upgrade");
     window.URLExaminer.remove();
     SimpleTest.finish();
