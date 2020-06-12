@@ -290,14 +290,23 @@ struct LocalFaceRec {
    * The InitData struct needs to record the family name rather than index,
    * as we may be collecting these records at the same time as building the
    * family list, so we don't yet know the final family index.
+   * Likewise, in some cases we don't know the final face index because the
+   * faces may be re-sorted to fit into predefined positions in a "simple"
+   * family (if we're reading names before the family has been fully set up).
+   * In that case, we'll store uint32_t(-1) as mFaceIndex, and record the
+   * string descriptor instead.
    * When actually recorded in the FontList's mLocalFaces array, the family
-   * will be stored as a simple index into the mFamilies array.
+   * will be stored as a simple index into the mFamilies array, and the face
+   * as an index into the family's mFaces.
    */
   struct InitData {
     nsCString mFamilyName;
-    uint32_t mFaceIndex;
-    InitData(const nsACString& aFamily, uint32_t aFace)
-        : mFamilyName(aFamily), mFaceIndex(aFace) {}
+    nsCString mFaceDescriptor;
+    uint32_t mFaceIndex = uint32_t(-1);
+    InitData(const nsACString& aFamily, const nsACString& aFace)
+        : mFamilyName(aFamily), mFaceDescriptor(aFace) {}
+    InitData(const nsACString& aFamily, uint32_t aFaceIndex)
+        : mFamilyName(aFamily), mFaceIndex(aFaceIndex) {}
     InitData() = default;
   };
   String mKey;

@@ -604,7 +604,6 @@ void gfxFT2FontList::CollectInitData(const FontListEntry& aFLE,
     mFamilyInitData.AppendElement(
         fontlist::Family::InitData{key, aFLE.familyName()});
   }
-  uint32_t faceIndex = faceList->Length();
   faceList->AppendElement(
       fontlist::Face::InitData{aFLE.filepath(), aFLE.index(), false,
                                WeightRange::FromScalar(aFLE.weightRange()),
@@ -614,13 +613,13 @@ void gfxFT2FontList::CollectInitData(const FontListEntry& aFLE,
   if (!psname.IsEmpty()) {
     ToLowerCase(psname);
     mLocalNameTable.Put(psname,
-                        fontlist::LocalFaceRec::InitData(key, faceIndex));
+                        fontlist::LocalFaceRec::InitData(key, aFLE.filepath()));
   }
   if (!fullname.IsEmpty()) {
     ToLowerCase(fullname);
     if (fullname != psname) {
-      mLocalNameTable.Put(fullname,
-                          fontlist::LocalFaceRec::InitData(key, faceIndex));
+      mLocalNameTable.Put(
+          fullname, fontlist::LocalFaceRec::InitData(key, aFLE.filepath()));
     }
   }
 }
