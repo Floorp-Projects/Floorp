@@ -4159,3 +4159,57 @@ exportKeyingMaterials(PRFileDesc *fd,
 
     return SECSuccess;
 }
+
+SECStatus
+readPSK(const char *arg, SECItem *psk, SECItem *label)
+{
+    SECStatus rv = SECFailure;
+    char *str = PORT_Strdup(arg);
+    if (!str) {
+        goto cleanup;
+    }
+
+    char *pskBytes = strtok(str, ":");
+    if (!pskBytes) {
+        goto cleanup;
+    }
+    if (PORT_Strncasecmp(pskBytes, "0x", 2) != 0) {
+        goto cleanup;
+    }
+
+    psk = SECU_HexString2SECItem(NULL, psk, &pskBytes[2]);
+    if (!psk || !psk->data || psk->len != strlen(&str[2]) / 2) {
+        goto cleanup;
+    }
+
+    SECItem labelItem = { siBuffer, NULL, 0 };
+    char *inLabel = strtok(NULL, ":");
+    if (inLabel) {
+        labelItem.data = (unsigned char *)PORT_Strdup(inLabel);
+        if (!labelItem.data) {
+            goto cleanup;
+        }
+        labelItem.len = strlen(inLabel);
+
+        if (PORT_Strncasecmp(inLabel, "0x", 2) == 0) {
+            rv = SECU_SECItemHexStringToBinary(&labelItem);
+            if (rv != SECSuccess) {
+                SECITEM_FreeItem(&labelItem, PR_FALSE);
+                goto cleanup;
+            }
+        }
+        rv = SECSuccess;
+    } else {
+        PRUint8 defaultLabel[] = { 'C', 'l', 'i', 'e', 'n', 't', '_',
+                                   'i', 'd', 'e', 'n', 't', 'i', 't', 'y' };
+        SECItem src = { siBuffer, defaultLabel, sizeof(defaultLabel) };
+        rv = SECITEM_CopyItem(NULL, &labelItem, &src);
+    }
+    if (rv == SECSuccess) {
+        *label = labelItem;
+    }
+
+cleanup:
+    PORT_Free(str);
+    return rv;
+}

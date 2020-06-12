@@ -131,8 +131,7 @@
         }],
       ],
     }],
-    ['have_int128_support==1 and \
-      (target_arch=="x64" or target_arch=="arm64" or target_arch=="aarch64")', {
+    ['have_int128_support==1', {
       'sources': [
         # All intel x64 and 64-bit ARM architectures get the 64 bit version.
         'ecl/curve25519_64.c',

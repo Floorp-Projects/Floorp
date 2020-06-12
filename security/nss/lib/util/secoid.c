@@ -2058,7 +2058,7 @@ SECOID_Init(void)
 {
     PLHashEntry *entry;
     const SECOidData *oid;
-    int i;
+    SECOidTag i;
     char *envVal;
 
 #define NSS_VERSION_VARIABLE __nss_util_version

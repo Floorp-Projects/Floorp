@@ -1384,7 +1384,14 @@ tls13_CanResume(sslSocket *ss, const sslSessionID *sid)
         return PR_FALSE;
     }
 
+#ifdef UNSAFE_FUZZER_MODE
+    /* When fuzzing, sid could contain garbage that will crash tls13_GetHashForCipherSuite.
+     * Do a direct comparison of cipher suites.  This makes us refuse to resume when the
+     * protocol allows it, but resumption is discretionary anyway. */
+    if (sid->u.ssl3.cipherSuite != ss->ssl3.hs.cipher_suite) {
+#else
     if (tls13_GetHashForCipherSuite(sid->u.ssl3.cipherSuite) != tls13_GetHashForCipherSuite(ss->ssl3.hs.cipher_suite)) {
+#endif
         return PR_FALSE;
     }
 

@@ -6,6 +6,8 @@
  * Interfaces.
  */
 
+#include <stddef.h>
+
 #include "seccomon.h"
 #include "secmod.h"
 #include "nssilock.h"
@@ -401,15 +403,19 @@ void
 PK11_SetWrapKey(PK11SlotInfo *slot, int wrap, PK11SymKey *wrapKey)
 {
     PK11_EnterSlotMonitor(slot);
-    if (wrap < PR_ARRAY_SIZE(slot->refKeys) &&
-        slot->refKeys[wrap] == CK_INVALID_HANDLE) {
-        /* save the handle and mechanism for the wrapping key */
-        /* mark the key and session as not owned by us so they don't get freed
-         * when the key goes way... that lets us reuse the key later */
-        slot->refKeys[wrap] = wrapKey->objectID;
-        wrapKey->owner = PR_FALSE;
-        wrapKey->sessionOwner = PR_FALSE;
-        slot->wrapMechanism = wrapKey->type;
+    if (wrap >= 0) {
+        size_t uwrap = (size_t)wrap;
+        if (uwrap < PR_ARRAY_SIZE(slot->refKeys) &&
+            slot->refKeys[uwrap] == CK_INVALID_HANDLE) {
+            /* save the handle and mechanism for the wrapping key */
+            /* mark the key and session as not owned by us so they don't get
+             * freed when the key goes way... that lets us reuse the key
+             * later */
+            slot->refKeys[uwrap] = wrapKey->objectID;
+            wrapKey->owner = PR_FALSE;
+            wrapKey->sessionOwner = PR_FALSE;
+            slot->wrapMechanism = wrapKey->type;
+        }
     }
     PK11_ExitSlotMonitor(slot);
 }
@@ -564,7 +570,7 @@ PK11_FindFixedKey(PK11SlotInfo *slot, CK_MECHANISM_TYPE type, SECItem *keyID,
     CK_ATTRIBUTE *attrs;
     CK_BBOOL ckTrue = CK_TRUE;
     CK_OBJECT_CLASS keyclass = CKO_SECRET_KEY;
-    int tsize = 0;
+    size_t tsize = 0;
     CK_OBJECT_HANDLE key_id;
 
     attrs = findTemp;
@@ -2374,7 +2380,7 @@ pk11_PubDeriveECKeyWithKDF(
                     key_size = SHA512_LENGTH;
                     break;
                 default:
-                    PORT_Assert(!"Invalid CKD");
+                    PORT_AssertNotReached("Invalid CKD");
                     PORT_SetError(SEC_ERROR_INVALID_ALGORITHM);
                     return NULL;
             }

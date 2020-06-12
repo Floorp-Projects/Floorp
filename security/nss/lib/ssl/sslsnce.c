@@ -703,7 +703,7 @@ ServerSessionIDLookup(PRTime sslNow, const PRIPv6Addr *addr,
                 /* what the ??.  Didn't get the cert cache lock.
                 ** Don't invalidate the SID cache entry, but don't find it.
                 */
-                PORT_Assert(!("Didn't get cert Cache Lock!"));
+                PORT_AssertNotReached("Didn't get cert Cache Lock!");
                 psce = 0;
                 pcce = 0;
             }
@@ -730,7 +730,7 @@ ServerSessionIDLookup(PRTime sslNow, const PRIPv6Addr *addr,
                 /* what the ??.  Didn't get the cert cache lock.
                 ** Don't invalidate the SID cache entry, but don't find it.
                 */
-                PORT_Assert(!("Didn't get name Cache Lock!"));
+                PORT_AssertNotReached("Didn't get name Cache Lock!");
                 psce = 0;
                 psnce = 0;
             }
