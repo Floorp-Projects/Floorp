@@ -12,6 +12,8 @@
     "ms-vscode.cpptools",
     // Rust language support.
     "rust-lang.rust",
+    // Provides support for rust-analyzer: novel LSP server for the Rust programming language.
+    "matklad.rust-analyzer",
     // CSS support for HTML documents.
     "ecmel.vscode-html-css",
     // Web app and extension debugging.
