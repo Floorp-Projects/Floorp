@@ -31,20 +31,37 @@ static const int sYosemiteThemeColors[][2] = {
     {0xB3, 0xD1},  // bottom separator line
 };
 
-__attribute__((unused)) static int NativeGreyColorAsInt(ColorName name, BOOL isMain) {
+inline int NativeGreyColorAsInt(ColorName name, BOOL isMain) {
   if (nsCocoaFeatures::OnYosemiteOrLater()) return sYosemiteThemeColors[name][isMain ? 0 : 1];
   return sLionThemeColors[name][isMain ? 0 : 1];
 }
 
-__attribute__((unused)) static float NativeGreyColorAsFloat(ColorName name, BOOL isMain) {
+inline float NativeGreyColorAsFloat(ColorName name, BOOL isMain) {
   return NativeGreyColorAsInt(name, isMain) / 255.0f;
 }
 
-__attribute__((unused)) static void DrawNativeGreyColorInRect(CGContextRef context, ColorName name,
-                                                              CGRect rect, BOOL isMain) {
+inline void DrawNativeGreyColorInRect(CGContextRef context, ColorName name, CGRect rect,
+                                      BOOL isMain) {
   float grey = NativeGreyColorAsFloat(name, isMain);
   CGContextSetRGBFillColor(context, grey, grey, grey, 1.0f);
   CGContextFillRect(context, rect);
+}
+
+#if !defined(MAC_OS_X_VERSION_10_14) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_14
+@interface NSColor (NSColorControlAccentColor)
+@property(class, strong, readonly) NSColor* controlAccentColor NS_AVAILABLE_MAC(10_14);
+@end
+#endif
+
+inline NSColor* ControlAccentColor() {
+  if (@available(macOS 10.14, *)) {
+    return [NSColor controlAccentColor];
+  }
+
+  // Pre-10.14, use hardcoded colors.
+  return [NSColor currentControlTint] == NSGraphiteControlTint
+             ? [NSColor colorWithSRGBRed:0.635 green:0.635 blue:0.655 alpha:1.0]
+             : [NSColor colorWithSRGBRed:0.247 green:0.584 blue:0.965 alpha:1.0];
 }
 
 #endif  // nsNativeThemeColors_h_
