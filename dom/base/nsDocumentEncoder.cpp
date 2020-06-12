@@ -366,6 +366,10 @@ class nsDocumentEncoder : public nsIDocumentEncoder {
     nsresult SerializeNodeEnd(nsINode& aOriginalNode,
                               nsINode* aFixupNode = nullptr) const;
 
+    [[nodiscard]] nsresult SerializeTextNode(nsINode& aNode,
+                                             int32_t aStartOffset,
+                                             int32_t aEndOffset) const;
+
     nsresult SerializeToStringIterative(nsINode* aNode) const;
 
    private:
@@ -963,6 +967,17 @@ nsresult nsDocumentEncoder::NodeSerializer::SerializeToStringIterative(
 
 static bool IsTextNode(nsINode* aNode) { return aNode && aNode->IsText(); }
 
+nsresult nsDocumentEncoder::NodeSerializer::SerializeTextNode(
+    nsINode& aNode, int32_t aStartOffset, int32_t aEndOffset) const {
+  MOZ_ASSERT(IsTextNode(&aNode));
+
+  nsresult rv = SerializeNodeStart(aNode, aStartOffset, aEndOffset);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = SerializeNodeEnd(aNode);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return rv;
+}
+
 nsresult nsDocumentEncoder::RangeSerializer::SerializeRangeNodes(
     const nsRange* const aRange, nsINode* const aNode, const int32_t aDepth) {
   nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
@@ -1002,16 +1017,10 @@ nsresult nsDocumentEncoder::RangeSerializer::SerializeRangeNodes(
     // end of range.  We would have handled that case without getting here.
     // XXXsmaug What does this all mean?
     if (IsTextNode(aNode)) {
-      if (startNode == content) {
-        int32_t startOffset = aRange->StartOffset();
-        rv = mNodeSerializer.SerializeNodeStart(*aNode, startOffset, -1);
-        NS_ENSURE_SUCCESS(rv, rv);
-      } else {
-        int32_t endOffset = aRange->EndOffset();
-        rv = mNodeSerializer.SerializeNodeStart(*aNode, 0, endOffset);
-        NS_ENSURE_SUCCESS(rv, rv);
-      }
-      rv = mNodeSerializer.SerializeNodeEnd(*aNode);
+      const int32_t startOffset =
+          (startNode == content) ? aRange->StartOffset() : 0;
+      const int32_t endOffset = (endNode == content) ? aRange->EndOffset() : -1;
+      rv = mNodeSerializer.SerializeTextNode(*aNode, startOffset, endOffset);
       NS_ENSURE_SUCCESS(rv, rv);
     } else {
       if (aNode != mClosestCommonInclusiveAncestorOfRange) {
@@ -1223,10 +1232,8 @@ nsresult nsDocumentEncoder::RangeSerializer::SerializeRangeToString(
     if (HasInvisibleParentAndShouldBeSkipped(*startContainer)) {
       return NS_OK;
     }
-    rv = mNodeSerializer.SerializeNodeStart(*startContainer, startOffset,
-                                            endOffset);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = mNodeSerializer.SerializeNodeEnd(*startContainer);
+    rv = mNodeSerializer.SerializeTextNode(*startContainer, startOffset,
+                                           endOffset);
     NS_ENSURE_SUCCESS(rv, rv);
   } else {
     rv = SerializeRangeNodes(aRange, mClosestCommonInclusiveAncestorOfRange, 0);
