@@ -18,7 +18,6 @@ import kotlinx.coroutines.launch
 import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
-import mozilla.components.browser.state.selector.findTab
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.concept.engine.prompt.ShareData
 import mozilla.components.support.ktx.kotlin.isUrl
@@ -133,8 +132,10 @@ class DefaultBrowserToolbarController(
     override fun handleReaderModePressed(enabled: Boolean) {
         if (enabled) {
             readerModeController.showReaderView()
+            activity.components.analytics.metrics.track(Event.ReaderModeOpened)
         } else {
             readerModeController.hideReaderView()
+            activity.components.analytics.metrics.track(Event.ReaderModeClosed)
         }
     }
 
@@ -165,7 +166,6 @@ class DefaultBrowserToolbarController(
         lowPrioHighlightItems.forEach {
             when (it) {
                 ToolbarMenu.Item.AddToHomeScreen -> activity.settings().installPwaOpened = true
-                is ToolbarMenu.Item.ReaderMode -> activity.settings().readerModeOpened = true
                 ToolbarMenu.Item.OpenInApp -> activity.settings().openInAppOpened = true
                 else -> {
                 }
@@ -305,21 +305,9 @@ class DefaultBrowserToolbarController(
 
                 deleteAndQuit(activity, scope, snackbar)
             }
-            is ToolbarMenu.Item.ReaderMode -> {
-                activity.settings().readerModeOpened = true
-
-                val enabled = currentSession?.let {
-                    activity.components.core.store.state.findTab(it.id)?.readerState?.active
-                } ?: false
-
-                if (enabled) {
-                    readerModeController.hideReaderView()
-                } else {
-                    readerModeController.showReaderView()
-                }
-            }
             ToolbarMenu.Item.ReaderModeAppearance -> {
                 readerModeController.showControls()
+                activity.components.analytics.metrics.track(Event.ReaderModeAppearanceOpened)
             }
             ToolbarMenu.Item.OpenInApp -> {
                 activity.settings().openInAppOpened = true
@@ -385,12 +373,6 @@ class DefaultBrowserToolbarController(
             ToolbarMenu.Item.SyncedTabs -> Event.BrowserMenuItemTapped.Item.SYNC_TABS
             ToolbarMenu.Item.InstallToHomeScreen -> Event.BrowserMenuItemTapped.Item.ADD_TO_HOMESCREEN
             ToolbarMenu.Item.Quit -> Event.BrowserMenuItemTapped.Item.QUIT
-            is ToolbarMenu.Item.ReaderMode ->
-                if (item.isChecked) {
-                    Event.BrowserMenuItemTapped.Item.READER_MODE_ON
-                } else {
-                    Event.BrowserMenuItemTapped.Item.READER_MODE_OFF
-                }
             ToolbarMenu.Item.ReaderModeAppearance ->
                 Event.BrowserMenuItemTapped.Item.READER_MODE_APPEARANCE
             ToolbarMenu.Item.OpenInApp -> Event.BrowserMenuItemTapped.Item.OPEN_IN_APP

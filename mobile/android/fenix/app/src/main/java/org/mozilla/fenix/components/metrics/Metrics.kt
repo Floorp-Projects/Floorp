@@ -99,6 +99,7 @@ sealed class Event {
     object HistoryAllItemsRemoved : Event()
     object ReaderModeAvailable : Event()
     object ReaderModeOpened : Event()
+    object ReaderModeClosed : Event()
     object ReaderModeAppearanceOpened : Event()
     object CollectionRenamed : Event()
     object CollectionTabRestored : Event()

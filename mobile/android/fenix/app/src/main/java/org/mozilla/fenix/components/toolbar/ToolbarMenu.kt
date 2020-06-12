@@ -25,7 +25,6 @@ interface ToolbarMenu {
         object SyncedTabs : Item()
         object AddonsManager : Item()
         object Quit : Item()
-        data class ReaderMode(val isChecked: Boolean) : Item()
         object OpenInApp : Item()
         object Bookmark : Item()
         object ReaderModeAppearance : Item()

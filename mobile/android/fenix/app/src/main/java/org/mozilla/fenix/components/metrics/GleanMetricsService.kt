@@ -129,9 +129,6 @@ private val Event.wrapper: EventWrapper<*>?
             { SearchShortcuts.selected.record(it) },
             { SearchShortcuts.selectedKeys.valueOf(it) }
         )
-        is Event.ReaderModeAvailable -> EventWrapper<NoExtraKeys>(
-            { ReaderMode.available.record(it) }
-        )
         is Event.FindInPageOpened -> EventWrapper<NoExtraKeys>(
             { FindInPage.opened.record(it) }
         )
@@ -311,8 +308,14 @@ private val Event.wrapper: EventWrapper<*>?
         is Event.CollectionTabSelectOpened -> EventWrapper<NoExtraKeys>(
             { Collections.tabSelectOpened.record(it) }
         )
+        is Event.ReaderModeAvailable -> EventWrapper<NoExtraKeys>(
+            { ReaderMode.available.record(it) }
+        )
         is Event.ReaderModeOpened -> EventWrapper<NoExtraKeys>(
             { ReaderMode.opened.record(it) }
+        )
+        is Event.ReaderModeClosed -> EventWrapper<NoExtraKeys>(
+            { ReaderMode.closed.record(it) }
         )
         is Event.ReaderModeAppearanceOpened -> EventWrapper<NoExtraKeys>(
             { ReaderMode.appearance.record(it) }
