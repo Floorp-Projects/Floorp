@@ -1614,10 +1614,18 @@ void DocAccessible::DoInitialUpdate() {
       nsIDocShell* docShell = mDocumentNode->GetDocShell();
       if (RefPtr<dom::BrowserChild> browserChild =
               dom::BrowserChild::GetFrom(docShell)) {
+        // In content processes, top level content documents are always
+        // RootAccessibles.
+        MOZ_ASSERT(IsRoot());
         DocAccessibleChild* ipcDoc = IPCDoc();
-        if (!ipcDoc) {
+        if (ipcDoc) {
+          browserChild->SetTopLevelDocAccessibleChild(ipcDoc);
+        } else {
           ipcDoc = new DocAccessibleChild(this, browserChild);
           SetIPCDoc(ipcDoc);
+          // Subsequent initialization might depend on being able to get the
+          // top level DocAccessibleChild, so set that as early as possible.
+          browserChild->SetTopLevelDocAccessibleChild(ipcDoc);
 
 #if defined(XP_WIN)
           IAccessibleHolder holder(
@@ -1632,10 +1640,6 @@ void DocAccessible::DoInitialUpdate() {
 #if !defined(XP_WIN)
           ipcDoc->SendPDocAccessiblePlatformExtConstructor();
 #endif
-        }
-
-        if (IsRoot()) {
-          browserChild->SetTopLevelDocAccessibleChild(ipcDoc);
         }
       }
     }
