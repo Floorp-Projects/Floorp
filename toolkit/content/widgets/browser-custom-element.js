@@ -68,27 +68,6 @@
       return ["remote"];
     }
 
-    attributeChangedCallback(name, oldValue, newValue) {
-      // When we have already been set up via connectedCallback and the
-      // and the [remote] value changes, we need to start over. This used
-      // to happen due to a XBL binding change.
-      //
-      // Only do this when the rebuild frameloaders pref is off. This update isn't
-      // required when we rebuild the frameloaders in the backend.
-      let rebuildFrameLoaders =
-        LazyModules.E10SUtils.rebuildFrameloadersOnRemotenessChange ||
-        this.ownerGlobal.docShell.nsILoadContext.useRemoteSubframes;
-      if (
-        !rebuildFrameLoaders &&
-        name === "remote" &&
-        oldValue != newValue &&
-        this.isConnectedAndReady
-      ) {
-        this.destroy();
-        this.construct();
-      }
-    }
-
     constructor() {
       super();
 
