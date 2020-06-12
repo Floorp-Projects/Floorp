@@ -11,23 +11,21 @@ const {
 var seenMessages = 0;
 var seenTypes = 0;
 
-var callback = {
-  onConsoleAPICall: function(message) {
-    if (message.consoleID && message.consoleID == "addon/foo") {
-      Assert.equal(message.level, "warn");
-      Assert.equal(message.arguments[0], "Warning from foo");
-      seenTypes |= 1;
-    } else if (message.addonId == "bar") {
-      Assert.equal(message.level, "error");
-      Assert.equal(message.arguments[0], "Error from bar");
-      seenTypes |= 2;
-    } else {
-      Assert.equal(message.level, "log");
-      Assert.equal(message.arguments[0], "Hello from default console");
-      seenTypes |= 4;
-    }
-    seenMessages++;
-  },
+var onConsoleAPICall = function(message) {
+  if (message.consoleID && message.consoleID == "addon/foo") {
+    Assert.equal(message.level, "warn");
+    Assert.equal(message.arguments[0], "Warning from foo");
+    seenTypes |= 1;
+  } else if (message.addonId == "bar") {
+    Assert.equal(message.level, "error");
+    Assert.equal(message.arguments[0], "Error from bar");
+    seenTypes |= 2;
+  } else {
+    Assert.equal(message.level, "log");
+    Assert.equal(message.arguments[0], "Hello from default console");
+    seenTypes |= 4;
+  }
+  seenMessages++;
 };
 
 let policy;
@@ -92,13 +90,13 @@ function run_test() {
   console1.warn("Warning from foo");
   console2.error("Error from bar");
 
-  let listener = new ConsoleAPIListener(null, callback);
+  let listener = new ConsoleAPIListener(null, onConsoleAPICall);
   listener.init();
   let messages = listener.getCachedMessages();
 
   seenTypes = 0;
   seenMessages = 0;
-  messages.forEach(callback.onConsoleAPICall);
+  messages.forEach(onConsoleAPICall);
   Assert.equal(seenMessages, 3);
   Assert.equal(seenTypes, 7);
 
@@ -112,13 +110,13 @@ function run_test() {
 
   listener.destroy();
 
-  listener = new ConsoleAPIListener(null, callback, { addonId: "foo" });
+  listener = new ConsoleAPIListener(null, onConsoleAPICall, { addonId: "foo" });
   listener.init();
   messages = listener.getCachedMessages();
 
   seenTypes = 0;
   seenMessages = 0;
-  messages.forEach(callback.onConsoleAPICall);
+  messages.forEach(onConsoleAPICall);
   Assert.equal(seenMessages, 2);
   Assert.equal(seenTypes, 1);
 
@@ -132,13 +130,13 @@ function run_test() {
 
   listener.destroy();
 
-  listener = new ConsoleAPIListener(null, callback, { addonId: "bar" });
+  listener = new ConsoleAPIListener(null, onConsoleAPICall, { addonId: "bar" });
   listener.init();
   messages = listener.getCachedMessages();
 
   seenTypes = 0;
   seenMessages = 0;
-  messages.forEach(callback.onConsoleAPICall);
+  messages.forEach(onConsoleAPICall);
   Assert.equal(seenMessages, 3);
   Assert.equal(seenTypes, 2);
 

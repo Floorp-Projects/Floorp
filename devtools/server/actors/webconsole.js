@@ -197,6 +197,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
       this
     );
     this.onConsoleServiceMessage = this.onConsoleServiceMessage.bind(this);
+    this.onConsoleAPICall = this.onConsoleAPICall.bind(this);
 
     EventEmitter.on(
       this.parentActor,
@@ -659,7 +660,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
             // (and apply the filtering options defined in the parent actor).
             this.consoleAPIListener = new ConsoleAPIListener(
               window,
-              this,
+              this.onConsoleAPICall,
               this.parentActor.consoleAPIListenerOptions
             );
             this.consoleAPIListener.init();

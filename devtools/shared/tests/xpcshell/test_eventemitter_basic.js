@@ -73,15 +73,13 @@ const TESTS = {
 
   testThrowingExceptionInListener(done) {
     const emitter = getEventEmitter();
-    const listener = new ConsoleAPIListener(null, {
-      onConsoleAPICall(message) {
-        equal(message.level, "error");
-        const [arg] = message.arguments;
-        equal(arg.message, "foo");
-        equal(arg.stack, "bar");
-        listener.destroy();
-        done();
-      },
+    const listener = new ConsoleAPIListener(null, message => {
+      equal(message.level, "error");
+      const [arg] = message.arguments;
+      equal(arg.message, "foo");
+      equal(arg.stack, "bar");
+      listener.destroy();
+      done();
     });
 
     listener.init();
