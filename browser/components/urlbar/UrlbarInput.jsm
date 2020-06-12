@@ -940,7 +940,10 @@ class UrlbarInput {
       this._setValue(this.window.gBrowser.userTypedValue, false);
     }
 
-    if (firstResult.heuristic) {
+    // Heuristic tip results do not set the Urlbar value.
+    if (firstResult.type == UrlbarUtils.RESULT_TYPE.TIP) {
+      this._resultForCurrentValue = null;
+    } else if (firstResult.heuristic) {
       this._resultForCurrentValue = firstResult;
     }
   }
