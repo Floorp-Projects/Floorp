@@ -109,6 +109,8 @@ SSLNamedGroup *enabledGroups = NULL;
 unsigned int enabledGroupsCount = 0;
 const SSLSignatureScheme *enabledSigSchemes = NULL;
 unsigned int enabledSigSchemeCount = 0;
+SECItem psk = { siBuffer, NULL, 0 };
+SECItem pskLabel = { siBuffer, NULL, 0 };
 
 const char *
 signatureSchemeName(SSLSignatureScheme scheme)
@@ -229,7 +231,7 @@ PrintUsageHeader()
             "  [-r N] [-w passwd] [-W pwfile] [-q [-t seconds]]\n"
             "  [-I groups] [-J signatureschemes]\n"
             "  [-A requestfile] [-L totalconnections] [-P {client,server}]\n"
-            "  [-N encryptedSniKeys] [-Q]\n"
+            "  [-N encryptedSniKeys] [-Q] [-z externalPsk]\n"
             "\n",
             progName);
 }
@@ -325,6 +327,12 @@ PrintParameterUsage()
                     "%-20s a hex string if it is preceded by \"0x\"; OUTPUT-LENGTH\n"
                     "%-20s is a decimal integer.\n",
             "-x", "", "", "", "", "");
+    fprintf(stderr,
+            "%-20s Configure a TLS 1.3 External PSK with the given hex string for a key\n"
+            "%-20s To specify a label, use ':' as a delimiter. For example\n"
+            "%-20s 0xAAAABBBBCCCCDDDD:mylabel. Otherwise, the default label of\n"
+            "%-20s 'Client_identity' will be used.\n",
+            "-z externalPsk", "", "", "");
 }
 
 static void
@@ -1230,6 +1238,31 @@ connectToServer(PRFileDesc *s, PRPollDesc *pollset)
     return SECSuccess;
 }
 
+static SECStatus
+importPsk(PRFileDesc *s)
+{
+    SECU_PrintAsHex(stdout, &psk, "Using External PSK", 0);
+    PK11SlotInfo *slot = NULL;
+    PK11SymKey *symKey = NULL;
+    slot = PK11_GetInternalSlot();
+    if (!slot) {
+        SECU_PrintError(progName, "PK11_GetInternalSlot failed");
+        return SECFailure;
+    }
+    symKey = PK11_ImportSymKey(slot, CKM_HKDF_KEY_GEN, PK11_OriginUnwrap,
+                               CKA_DERIVE, &psk, NULL);
+    PK11_FreeSlot(slot);
+    if (!symKey) {
+        SECU_PrintError(progName, "PK11_ImportSymKey failed");
+        return SECFailure;
+    }
+
+    SECStatus rv = SSL_AddExternalPsk(s, symKey, (const PRUint8 *)pskLabel.data,
+                                      pskLabel.len, ssl_hash_sha256);
+    PK11_FreeSymKey(symKey);
+    return rv;
+}
+
 static int
 run()
 {
@@ -1498,6 +1531,15 @@ run()
         }
     }
 
+    if (psk.data) {
+        rv = importPsk(s);
+        if (rv != SECSuccess) {
+            SECU_PrintError(progName, "importPsk failed");
+            error = 1;
+            goto done;
+        }
+    }
+
     serverCertAuth.dbHandle = CERT_GetDefaultCertDB();
 
     SSL_AuthCertificateHook(s, ownAuthCertificate, &serverCertAuth);
@@ -1752,11 +1794,8 @@ main(int argc, char **argv)
         }
     }
 
-    /* Note: 'z' was removed in 3.39
-     * Please leave some time before reusing these.
-     */
     optstate = PL_CreateOptState(argc, argv,
-                                 "46A:BCDEFGHI:J:KL:M:N:OP:QR:STUV:W:X:YZa:bc:d:fgh:m:n:op:qr:st:uvw:x:");
+                                 "46A:BCDEFGHI:J:KL:M:N:OP:QR:STUV:W:X:YZa:bc:d:fgh:m:n:op:qr:st:uvw:x:z:");
     while ((optstatus = PL_GetNextOpt(optstate)) == PL_OPT_OK) {
         switch (optstate->option) {
             case '?':
@@ -2015,6 +2054,15 @@ main(int argc, char **argv)
                     Usage();
                 }
                 break;
+
+            case 'z':
+                rv = readPSK(optstate->value, &psk, &pskLabel);
+                if (rv != SECSuccess) {
+                    PL_DestroyOptState(optstate);
+                    fprintf(stderr, "Bad PSK specified.\n");
+                    Usage();
+                }
+                break;
         }
     }
     PL_DestroyOptState(optstate);
@@ -2210,6 +2258,8 @@ done:
     PORT_Free(host);
     PORT_Free(zeroRttData);
     PORT_Free(encryptedSNIKeys);
+    SECITEM_ZfreeItem(&psk, PR_FALSE);
+    SECITEM_ZfreeItem(&pskLabel, PR_FALSE);
 
     if (enabledGroups) {
         PORT_Free(enabledGroups);

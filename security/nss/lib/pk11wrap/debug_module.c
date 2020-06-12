@@ -392,7 +392,7 @@ log_state(CK_STATE state)
 }
 
 static void
-log_handle(int level, const char *format, CK_ULONG handle)
+log_handle(PRLogModuleLevel level, const char *format, CK_ULONG handle)
 {
     char fmtBuf[80];
     if (handle)

@@ -654,7 +654,9 @@
           'MP_IS_LITTLE_ENDIAN',
          ],
       }],
-      [ 'have_int128_support==1', {
+      # MSVC has no __int128 type. Use emulated int128 and leave
+      # have_int128_support as-is for Curve25519 impl. selection.
+      [ 'have_int128_support==1 and (OS!="win" or cc_is_clang==1 or cc_is_gcc==1)', {
         'defines': [
           # The Makefile does version-tests on GCC, but we're not doing that here.
           'HAVE_INT128_SUPPORT',
@@ -722,14 +724,8 @@
   'variables': {
     'module': 'nss',
     'conditions': [
-      [ 'OS!="win"', {
-        'conditions': [
-          [ 'target_arch=="x64" or target_arch=="arm64" or target_arch=="aarch64"', {
-            'have_int128_support%': 1,
-          }, {
-            'have_int128_support%': 0,
-          }],
-        ],
+      [ 'target_arch=="x64" or target_arch=="arm64" or target_arch=="aarch64"', {
+        'have_int128_support%': 1,
       }, {
         'have_int128_support%': 0,
       }],
