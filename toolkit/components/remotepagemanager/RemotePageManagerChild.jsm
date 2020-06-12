@@ -13,10 +13,10 @@ const { MessagePort } = ChromeUtils.import(
 
 // The content side of a message port
 class ChildMessagePort extends MessagePort {
-  constructor(actor, window) {
+  constructor(window) {
     let portID =
       Services.appinfo.processID + ":" + ChildMessagePort.nextPortID++;
-    super(actor, portID);
+    super(window.docShell.messageManager, portID);
 
     this.window = window;
 
