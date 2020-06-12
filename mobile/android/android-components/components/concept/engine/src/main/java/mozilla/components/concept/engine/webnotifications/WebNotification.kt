@@ -10,6 +10,7 @@ package mozilla.components.concept.engine.webnotifications
  * @property title Title of the notification to be displayed in the first row.
  * @property tag Tag used to identify the notification.
  * @property body Body of the notification to be displayed in the second row.
+ * @property sourceUrl The URL of the page or Service Worker that generated the notification.
  * @property iconUrl Large icon url to display in the notification.
  * Corresponds to [android.app.Notification.Builder.setLargeIcon].
  * @property direction Preference for text direction.
@@ -21,6 +22,7 @@ data class WebNotification(
     val title: String?,
     val tag: String,
     val body: String?,
+    val sourceUrl: String,
     val iconUrl: String?,
     val direction: String?,
     val lang: String?,

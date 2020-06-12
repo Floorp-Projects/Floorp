@@ -20,6 +20,7 @@ import mozilla.components.browser.icons.Icon.Source
 import mozilla.components.browser.icons.IconRequest
 import mozilla.components.browser.icons.IconRequest.Size
 import mozilla.components.concept.engine.webnotifications.WebNotification
+import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
 
 internal class NativeNotificationBridge(
     private val icons: BrowserIcons,
@@ -59,6 +60,7 @@ internal class NativeNotificationBridge(
             }
 
             builder.setSmallIcon(smallIcon)
+                .setSubText(sourceUrl.tryGetHostFromUrl())
                 .setContentTitle(title)
                 .setContentText(body)
                 .setShowWhen(true)
