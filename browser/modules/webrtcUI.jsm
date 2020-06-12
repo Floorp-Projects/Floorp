@@ -98,7 +98,11 @@ var webrtcUI = {
 
   get showGlobalIndicator() {
     for (let [, indicators] of this.perTabIndicators) {
-      if (indicators.showGlobalIndicator) {
+      if (
+        indicators.showCameraIndicator ||
+        indicators.showMicrophoneIndicator ||
+        indicators.showScreenSharingIndicator
+      ) {
         return true;
       }
     }
@@ -489,7 +493,6 @@ var webrtcUI = {
       this.perTabIndicators.set(aTopBrowsingContext, indicators);
     }
 
-    indicators.showGlobalIndicator = !!webrtcUI._streams.length;
     indicators.showCameraIndicator = tabState.showCameraIndicator;
     indicators.showMicrophoneIndicator = tabState.showMicrophoneIndicator;
     indicators.showScreenSharingIndicator = tabState.showScreenSharingIndicator;
