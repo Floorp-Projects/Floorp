@@ -1317,6 +1317,16 @@ class MozPromiseHolderBase {
     }
   }
 
+  void UseSynchronousTaskDispatch(const char* aSite) {
+    MOZ_ASSERT(mPromise);
+    mPromise->UseSynchronousTaskDispatch(aSite);
+  }
+
+  void UseDirectTaskDispatch(const char* aSite) {
+    MOZ_ASSERT(mPromise);
+    mPromise->UseDirectTaskDispatch(aSite);
+  }
+
  private:
   RefPtr<typename PromiseType::Private> mPromise;
 };
