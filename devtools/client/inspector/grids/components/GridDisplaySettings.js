@@ -59,7 +59,13 @@ class GridDisplaySettings extends PureComponent {
 
     return dom.div(
       { className: "grid-container" },
-      dom.span({}, getStr("layout.gridDisplaySettings")),
+      dom.span(
+        {
+          role: "heading",
+          "aria-level": "3",
+        },
+        getStr("layout.gridDisplaySettings")
+      ),
       dom.ul(
         {},
         dom.li(
