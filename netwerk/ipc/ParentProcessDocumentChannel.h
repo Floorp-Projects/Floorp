@@ -36,9 +36,6 @@ class ParentProcessDocumentChannel : public DocumentChannel,
       nsTArray<ipc::Endpoint<extensions::PStreamFilterParent>>&&
           aStreamFilterEndpoints,
       uint32_t aRedirectFlags, uint32_t aLoadFlags);
-  void DeleteIPDL() override {
-    mPromise.ResolveIfExists(NS_BINDING_ABORTED, __func__);
-  }
 
  private:
   virtual ~ParentProcessDocumentChannel();
@@ -49,7 +46,6 @@ class ParentProcessDocumentChannel : public DocumentChannel,
       mStreamFilterEndpoints;
   MozPromiseHolder<PDocumentChannelParent::RedirectToRealChannelPromise>
       mPromise;
-  MozPromiseRequestHolder<DocumentLoadListener::OpenPromise> mPromiseRequest;
   bool mRequestObserversCalled = false;
 };
 
