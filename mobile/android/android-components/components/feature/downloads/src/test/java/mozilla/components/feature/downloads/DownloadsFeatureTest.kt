@@ -76,6 +76,8 @@ class DownloadsFeatureTest {
     fun `Adding a download object will request permissions if needed`() {
         val fragmentManager: FragmentManager = mock()
 
+        val download = DownloadState(url = "https://www.mozilla.org", sessionId = "test-tab")
+
         var requestedPermissions = false
 
         val feature = DownloadsFeature(
@@ -90,7 +92,7 @@ class DownloadsFeatureTest {
 
         assertFalse(requestedPermissions)
 
-        store.dispatch(ContentAction.UpdateDownloadAction("test-tab", download = mock()))
+        store.dispatch(ContentAction.UpdateDownloadAction("test-tab", download))
             .joinBlocking()
 
         testDispatcher.advanceUntilIdle()
@@ -115,8 +117,9 @@ class DownloadsFeatureTest {
         feature.start()
 
         verify(fragmentManager, never()).beginTransaction()
+        val download = DownloadState(url = "https://www.mozilla.org", sessionId = "test-tab")
 
-        store.dispatch(ContentAction.UpdateDownloadAction("test-tab", download = mock()))
+        store.dispatch(ContentAction.UpdateDownloadAction("test-tab", download))
             .joinBlocking()
 
         testDispatcher.advanceUntilIdle()
@@ -166,7 +169,7 @@ class DownloadsFeatureTest {
 
         verify(downloadManager, never()).download(any(), anyString())
 
-        val download = DownloadState(url = "https://www.mozilla.org")
+        val download = DownloadState(url = "https://www.mozilla.org", sessionId = "test-tab")
         store.dispatch(ContentAction.UpdateDownloadAction("test-tab", download))
             .joinBlocking()
 
@@ -200,7 +203,8 @@ class DownloadsFeatureTest {
 
         val download = DownloadState(
             url = "https://www.mozilla.org",
-            skipConfirmation = true
+            skipConfirmation = true,
+            sessionId = "test-tab"
         )
 
         store.dispatch(ContentAction.UpdateDownloadAction("test-tab", download))
@@ -218,7 +222,8 @@ class DownloadsFeatureTest {
     fun `When starting the feature will reattach to already existing dialog`() {
         grantPermissions()
 
-        store.dispatch(ContentAction.UpdateDownloadAction("test-tab", download = mock()))
+        val download = DownloadState(url = "https://www.mozilla.org", sessionId = "test-tab")
+        store.dispatch(ContentAction.UpdateDownloadAction("test-tab", download))
             .joinBlocking()
 
         val dialogFragment: DownloadDialogFragment = mock()
@@ -249,7 +254,7 @@ class DownloadsFeatureTest {
 
     @Test
     fun `onPermissionsResult will start download if permissions were granted`() {
-        val download = DownloadState(url = "https://www.mozilla.org")
+        val download = DownloadState(url = "https://www.mozilla.org", sessionId = "test-tab")
         store.dispatch(ContentAction.UpdateDownloadAction("test-tab", download = download))
             .joinBlocking()
 
@@ -273,7 +278,11 @@ class DownloadsFeatureTest {
 
         feature.onPermissionsResult(
             arrayOf(INTERNET, WRITE_EXTERNAL_STORAGE),
-            arrayOf(PackageManager.PERMISSION_GRANTED, PackageManager.PERMISSION_GRANTED).toIntArray())
+            arrayOf(
+                PackageManager.PERMISSION_GRANTED,
+                PackageManager.PERMISSION_GRANTED
+            ).toIntArray()
+        )
 
         verify(downloadManager).download(download)
     }
@@ -364,7 +373,7 @@ class DownloadsFeatureTest {
         verify(downloadManager, never()).download(any(), anyString())
         verify(feature, never()).showDownloadNotSupportedError()
 
-        val download = DownloadState(url = "https://www.mozilla.org")
+        val download = DownloadState(url = "https://www.mozilla.org", sessionId = "test-tab")
         store.dispatch(ContentAction.UpdateDownloadAction("test-tab", download))
             .joinBlocking()
 

@@ -61,7 +61,7 @@ internal object ContentStateReducer {
                 it.copy(thumbnail = action.thumbnail)
             }
             is ContentAction.UpdateDownloadAction -> updateContentState(state, action.sessionId) {
-                it.copy(download = action.download)
+                it.copy(download = action.download.copy(sessionId = action.sessionId))
             }
             is ContentAction.ConsumeDownloadAction -> updateContentState(state, action.sessionId) {
                 if (it.download != null && it.download.id == action.downloadId) {

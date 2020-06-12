@@ -93,9 +93,8 @@ class DownloadsFeature(
             flow.mapNotNull { state -> state.findTabOrCustomTabOrSelectedTab(tabId) }
                 .ifChanged { it.content.download }
                 .collect { state ->
-                    val download = state.content.download
-                    if (download != null) {
-                        processDownload(state, download)
+                    state.content.download?.let { downloadState ->
+                        processDownload(state, downloadState)
                     }
                 }
         }

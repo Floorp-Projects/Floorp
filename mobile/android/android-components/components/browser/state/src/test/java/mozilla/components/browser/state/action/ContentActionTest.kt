@@ -32,7 +32,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.spy
 
 @RunWith(AndroidJUnit4::class)
@@ -324,27 +323,35 @@ class ContentActionTest {
     fun `UpdateDownloadAction updates download`() {
         assertNull(tab.content.download)
 
-        val download1: DownloadState = mock()
+        val download1 = DownloadState(
+            url = "https://www.mozilla.org", sessionId = tab.id
+        )
 
         store.dispatch(
             ContentAction.UpdateDownloadAction(tab.id, download1)
         ).joinBlocking()
 
-        assertEquals(download1, tab.content.download)
+        assertEquals(download1.url, tab.content.download?.url)
+        assertEquals(download1.sessionId, tab.content.download?.sessionId)
 
-        val download2: DownloadState = mock()
+        val download2 = DownloadState(
+            url = "https://www.wikipedia.org", sessionId = tab.id
+        )
 
         store.dispatch(
             ContentAction.UpdateDownloadAction(tab.id, download2)
         ).joinBlocking()
 
-        assertEquals(download2, tab.content.download)
+        assertEquals(download2.url, tab.content.download?.url)
+        assertEquals(download2.sessionId, tab.content.download?.sessionId)
     }
 
     @Test
     fun `ConsumeDownloadAction removes download`() {
-        val download: DownloadState = mock()
-        doReturn(1337L).`when`(download).id
+        val download = DownloadState(
+            id = 1337L,
+            url = "https://www.mozilla.org", sessionId = tab.id
+        )
 
         store.dispatch(
             ContentAction.UpdateDownloadAction(tab.id, download)
@@ -361,8 +368,10 @@ class ContentActionTest {
 
     @Test
     fun `ConsumeDownloadAction does not remove download with different id`() {
-        val download: DownloadState = mock()
-        doReturn(1337L).`when`(download).id
+        val download = DownloadState(
+            id = 1337L,
+            url = "https://www.mozilla.org", sessionId = tab.id
+        )
 
         store.dispatch(
             ContentAction.UpdateDownloadAction(tab.id, download)
