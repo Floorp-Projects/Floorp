@@ -7,6 +7,7 @@ const HTML_DATA = `
   </head>
   <body>
   <p>Dummy test page</p>
+  <div id="testDiv">test</div>
   </body>
   </html>
   `;
