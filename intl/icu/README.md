@@ -188,16 +188,14 @@ These decisions vary over time: as countries change[^soviet-union], as customs c
 
 [^soviet-union]: For just one relevant example, the breakup of the Soviet Union is the cause of numerous entries in the language tag registry.  `ru-SU`, Russian as used in the Soviet Union, is now expressed as `ru-RU`, Russian as used in Russia; `ab-SU`, Abkhazian as used in the Soviet Union, is now expressed as `ab-GE`, Abkhazian as used in Georgia; and so on for all the other satellite states.
 
-Use `make_intl_data.py`'s `langtags` mode to update language tag information to the same CLDR version used by ICU[^cldr-version]:
+Use `make_intl_data.py`'s `langtags` mode to update language tag information to the same CLDR version used by ICU:
 
 ```bash
 $ cd "$topsrcdir/js/src/builtin/intl"
 $ # make_intl_data.py requires yaml.
 $ export PYTHONPATH="$topsrcdir/third_party/python/pyyaml/lib3/"
-$ python3 ./make_intl_data.py langtags --version <CLDR version to use>
+$ python3 ./make_intl_data.py langtags
 ```
-
-[^cldr-version]: The version of CLDR used by imported ICU may be determined by examining [`misc/supplementalData.txt`](https://searchfox.org/mozilla-central/search?q=cldrVersion&path=intl%2Ficu%2Fsource%2Fdata%2Fmisc%2FsupplementalData.txt&case=true&regexp=false).   We hope to eventually automate this process.
 
 The CLDR version used will be printed in the header of CLDR-sensitive generated files.  For example, `js/src/builtin/intl/LanguageTagGenerated.cpp` currently begins with:
 
