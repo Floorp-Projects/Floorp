@@ -903,6 +903,10 @@ SearchEngine.prototype = {
   _orderHint: null,
   // The telemetry id from the configuration (if any).
   _telemetryId: null,
+  // Set to true once the engine has been added to the store, and the initial
+  // notification sent. This allows to skip sending notifications during
+  // initialization.
+  _engineAddedToStore: false,
 
   /**
    * Retrieves the data from the engine's file asynchronously.
@@ -1299,7 +1303,9 @@ SearchEngine.prototype = {
       case "data":
         if (!this._hasPreferredIcon || isPreferred) {
           this._iconURI = uri;
-          SearchUtils.notifyAction(this, SearchUtils.MODIFIED_TYPE.CHANGED);
+          if (this._engineAddedToStore) {
+            SearchUtils.notifyAction(this, SearchUtils.MODIFIED_TYPE.CHANGED);
+          }
           this._hasPreferredIcon = isPreferred;
         }
 
@@ -1360,7 +1366,9 @@ SearchEngine.prototype = {
             engine._addIconToMap(width, height, dataURL);
           }
 
-          SearchUtils.notifyAction(engine, SearchUtils.MODIFIED_TYPE.CHANGED);
+          if (engine._engineAddedToStore) {
+            SearchUtils.notifyAction(engine, SearchUtils.MODIFIED_TYPE.CHANGED);
+          }
           engine._hasPreferredIcon = isPreferred;
         };
 
