@@ -107,6 +107,7 @@ namespace baseprofiler {
   BEGIN_CATEGORY(MEDIA, "Media", "orange")                                     \
     SUBCATEGORY(MEDIA, MEDIA_CUBEB, "Cubeb")                                   \
     SUBCATEGORY(MEDIA, MEDIA_PLAYBACK, "Playback")                             \
+    SUBCATEGORY(MEDIA, MEDIA_RT, "Real-time processing")                       \
   END_CATEGORY
 
 // An enum that lists all possible category pairs in one list.
