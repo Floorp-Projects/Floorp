@@ -13,7 +13,6 @@ class nsISerialEventTarget;
 class nsIThread;
 
 namespace mozilla {
-class AbstractThread;
 namespace layers {
 
 class CompositorThreadHolder final {
@@ -48,8 +47,7 @@ class CompositorThreadHolder final {
  private:
   ~CompositorThreadHolder();
 
-  const nsCOMPtr<nsIThread> mCompositorThread;
-  const RefPtr<AbstractThread> mCompositorAbstractThread;
+  nsCOMPtr<nsIThread> mCompositorThread;
 
   static already_AddRefed<nsIThread> CreateCompositorThread();
 
