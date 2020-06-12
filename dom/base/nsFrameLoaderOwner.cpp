@@ -224,14 +224,22 @@ void nsFrameLoaderOwner::ChangeRemotenessWithBridge(BrowserBridgeChild* aBridge,
 }
 
 void nsFrameLoaderOwner::ChangeRemotenessToProcess(
-    ContentParent* aContentParent, uint64_t aPendingSwitchId,
-    bool aReplaceBrowsingContext, mozilla::ErrorResult& rv) {
+    ContentParent* aContentParent, bool aReplaceBrowsingContext,
+    mozilla::ErrorResult& rv) {
   MOZ_ASSERT(XRE_IsParentProcess());
 
   std::function<void()> frameLoaderInit = [&] {
     mFrameLoader->ConfigRemoteProcess(aContentParent->GetRemoteType(),
                                       aContentParent);
-    mFrameLoader->ResumeLoad(aPendingSwitchId);
+
+    // FIXME(bug 1644779): We'd like to stop triggering a load here, as this
+    // reads the attributes, such as `src`, on the <browser> element, and could
+    // start another load which will be clobbered shortly.
+    //
+    // This is OK for now, as we're mimicing the existing process switching
+    // behaviour, and <browser> elements created by tabbrowser don't have the
+    // `src` attribute specified.
+    mFrameLoader->LoadFrame(false);
   };
 
   auto shouldPreserve = ShouldPreserveBrowsingContext(

@@ -2058,8 +2058,14 @@
       // doesn't keep the window alive.
       b.permanentKey = new (Cu.getGlobalForObject(Services).Object)();
 
+      // Ensure that SessionStore has flushed any session history state from the
+      // content process before we this browser's remoteness.
+      b.prepareToChangeRemoteness = () =>
+        SessionStore.prepareToChangeRemoteness(b);
+
       const defaultBrowserAttributes = {
         contextmenu: "contentAreaContextMenu",
+        maychangeremoteness: "true",
         message: "true",
         messagemanagergroup: "browsers",
         selectmenulist: "ContentSelectDropdown",
@@ -2704,6 +2710,9 @@
               gFissionBrowser,
               preferredRemoteType
             );
+        if (sameProcessAsFrameLoader) {
+          remoteType = sameProcessAsFrameLoader.messageManager.remoteType;
+        }
 
         // If we open a new tab with the newtab URL in the default
         // userContext, check if there is a preloaded browser ready.
@@ -5716,6 +5725,138 @@
       );
       this.tabContainer.addEventListener("mouseover", tabContextFTLInserter);
       this.tabContainer.addEventListener("focus", tabContextFTLInserter, true);
+
+      // Fired when Gecko has decided a <browser> element will change
+      // remoteness. This allows persisting some state on this element across
+      // process switches.
+      this.addEventListener("WillChangeBrowserRemoteness", event => {
+        let browser = event.originalTarget;
+        let tab = this.getTabForBrowser(browser);
+        if (!tab) {
+          return;
+        }
+
+        // Dispatch the `BeforeTabRemotenessChange` event, allowing other code
+        // to react to this tab's process switch.
+        let evt = document.createEvent("Events");
+        evt.initEvent("BeforeTabRemotenessChange", true, false);
+        tab.dispatchEvent(evt);
+
+        let wasActive = document.activeElement == browser;
+
+        // Unmap the old outerWindowId
+        this._outerWindowIDBrowserMap.delete(browser.outerWindowID);
+
+        // Unhook our progress listener.
+        let filter = this._tabFilters.get(tab);
+        let oldListener = this._tabListeners.get(tab);
+        browser.webProgress.removeProgressListener(filter);
+        filter.removeProgressListener(oldListener);
+        let stateFlags = oldListener.mStateFlags;
+        let requestCount = oldListener.mRequestCount;
+
+        // We'll be creating a new listener, so destroy the old one.
+        oldListener.destroy();
+
+        let oldDroppedLinkHandler = browser.droppedLinkHandler;
+        let oldUserTypedValue = browser.userTypedValue;
+        let hadStartedLoad = browser.didStartLoadSinceLastUserTyping();
+
+        let didChange = didChangeEvent => {
+          browser.userTypedValue = oldUserTypedValue;
+          if (hadStartedLoad) {
+            browser.urlbarChangeTracker.startedLoad();
+          }
+
+          browser.droppedLinkHandler = oldDroppedLinkHandler;
+
+          // Switching a browser's remoteness will create a new frameLoader.
+          // As frameLoaders start out with an active docShell we have to
+          // deactivate it if this is not the selected tab's browser or the
+          // browser window is minimized.
+          browser.docShellIsActive = this.shouldActivateDocShell(browser);
+
+          // Create a new tab progress listener for the new browser we just
+          // injected, since tab progress listeners have logic for handling the
+          // initial about:blank load
+          let listener = new TabProgressListener(
+            tab,
+            browser,
+            false,
+            false,
+            stateFlags,
+            requestCount
+          );
+          this._tabListeners.set(tab, listener);
+          filter.addProgressListener(listener, Ci.nsIWebProgress.NOTIFY_ALL);
+
+          // Restore the progress listener.
+          browser.webProgress.addProgressListener(
+            filter,
+            Ci.nsIWebProgress.NOTIFY_ALL
+          );
+
+          // Restore the securityUI state.
+          let securityUI = browser.securityUI;
+          let state = securityUI
+            ? securityUI.state
+            : Ci.nsIWebProgressListener.STATE_IS_INSECURE;
+          this._callProgressListeners(
+            browser,
+            "onSecurityChange",
+            [browser.webProgress, null, state],
+            true,
+            false
+          );
+          let cbEvent = browser.getContentBlockingEvents();
+          // Include the true final argument to indicate that this event is
+          // simulated (instead of being observed by the webProgressListener).
+          this._callProgressListeners(
+            browser,
+            "onContentBlockingEvent",
+            [browser.webProgress, null, cbEvent, true],
+            true,
+            false
+          );
+
+          if (browser.isRemoteBrowser) {
+            // Switching the browser to be remote will connect to a new child
+            // process so the browser can no longer be considered to be
+            // crashed.
+            tab.removeAttribute("crashed");
+          } else {
+            browser.sendMessageToActor(
+              "Browser:AppTab",
+              { isAppTab: tab.pinned },
+              "BrowserTab"
+            );
+
+            // Register the new outerWindowID.
+            this._outerWindowIDBrowserMap.set(browser.outerWindowID, browser);
+          }
+
+          if (wasActive) {
+            browser.focus();
+          }
+
+          if (this.isFindBarInitialized(tab)) {
+            this.getCachedFindBar(tab).browser = browser;
+          }
+
+          browser.sendMessageToActor(
+            "Browser:HasSiblings",
+            this.tabs.length > 1,
+            "BrowserTab"
+          );
+
+          evt = document.createEvent("Events");
+          evt.initEvent("TabRemotenessChange", true, false);
+          tab.dispatchEvent(evt);
+        };
+        browser.addEventListener("DidChangeBrowserRemoteness", didChange, {
+          once: true,
+        });
+      });
     },
 
     setSuccessor(aTab, successorTab) {
@@ -5795,6 +5936,11 @@
       let remoteTab = aBrowser.frameLoader.remoteTab;
       E10SUtils.log().debug(`new tabID: ${remoteTab.tabId}`);
       return remoteTab.contentProcessId;
+    },
+
+    finishBrowserRemotenessChange(aBrowser, aSwitchId) {
+      let tab = this.getTabForBrowser(aBrowser);
+      SessionStore.finishTabRemotenessChange(tab, aSwitchId);
     },
   };
 
