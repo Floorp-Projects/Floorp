@@ -43,6 +43,7 @@ class nsFrameLoaderOwner : public nsISupports {
   void SetFrameLoader(nsFrameLoader* aNewFrameLoader);
 
   mozilla::dom::BrowsingContext* GetBrowsingContext();
+  mozilla::dom::BrowsingContext* GetExtantBrowsingContext();
 
   // Destroy (if it exists) and recreate our frameloader, based on new
   // remoteness requirements. This should follow the same path as

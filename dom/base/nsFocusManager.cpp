@@ -311,7 +311,10 @@ Element* nsFocusManager::GetFocusedDescendant(
     window = GetContentWindow(currentElement);
     if (!window) {
       if (RefPtr<nsFrameLoaderOwner> flo = do_QueryObject(currentElement)) {
-        if (BrowsingContext* bc = flo->GetBrowsingContext()) {
+        // Only look at pre-existing browsing contexts. If this function is
+        // called during reflow, calling GetBrowsingContext() could cause frame
+        // loader initialization at a time when it isn't safe.
+        if (BrowsingContext* bc = flo->GetExtantBrowsingContext()) {
           if (!bc->IsInProcess()) {
             *aFocusIsOutOfProcess = true;
           }
