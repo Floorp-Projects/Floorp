@@ -1416,12 +1416,6 @@ already_AddRefed<RemoteBrowser> ContentParent::CreateBrowser(
 
   windowParent->Init();
 
-  if (remoteType.EqualsLiteral(LARGE_ALLOCATION_REMOTE_TYPE)) {
-    // Tell the BrowserChild object that it was created due to a
-    // Large-Allocation request.
-    Unused << browserParent->SendAwaitLargeAlloc();
-  }
-
   RefPtr<BrowserHost> browserHost = new BrowserHost(browserParent);
   browserParent->SetOwnerElement(aFrameElement);
   return browserHost.forget();
