@@ -4300,13 +4300,6 @@ pub struct PrimitiveCluster {
     pub cache_scroll_root: Option<SpatialNodeIndex>,
 }
 
-/// Where to insert a prim instance in a primitive list.
-#[derive(Debug, Copy, Clone)]
-enum PrimitiveListPosition {
-    Begin,
-    End,
-}
-
 impl PrimitiveCluster {
     /// Construct a new primitive cluster for a given positioning node.
     fn new(
@@ -4374,14 +4367,13 @@ impl PrimitiveList {
         }
     }
 
-    /// Add a primitive instance to this list, at the start or end
-    fn push(
+    /// Add a primitive instance to the end of the list
+    pub fn add_prim(
         &mut self,
         prim_instance: PrimitiveInstance,
         prim_rect: LayoutRect,
         spatial_node_index: SpatialNodeIndex,
         prim_flags: PrimitiveFlags,
-        insert_position: PrimitiveListPosition,
     ) {
         let mut flags = ClusterFlags::empty();
 
@@ -4412,66 +4404,19 @@ impl PrimitiveList {
             flags.insert(ClusterFlags::PREFER_COMPOSITOR_SURFACE);
         }
 
-        // Insert the primitive into the first or last cluster as required
-        match insert_position {
-            PrimitiveListPosition::Begin => {
-                let mut cluster = PrimitiveCluster::new(
-                    spatial_node_index,
-                    flags,
-                );
+        if let Some(cluster) = self.clusters.last_mut() {
+            if cluster.is_compatible(spatial_node_index, flags) {
                 cluster.push(prim_instance, prim_rect);
-                self.clusters.insert(0, cluster);
-            }
-            PrimitiveListPosition::End => {
-                if let Some(cluster) = self.clusters.last_mut() {
-                    if cluster.is_compatible(spatial_node_index, flags) {
-                        cluster.push(prim_instance, prim_rect);
-                        return;
-                    }
-                }
-
-                let mut cluster = PrimitiveCluster::new(
-                    spatial_node_index,
-                    flags,
-                );
-                cluster.push(prim_instance, prim_rect);
-                self.clusters.push(cluster);
+                return;
             }
         }
-    }
 
-    /// Add a primitive instance to the start of the list
-    pub fn add_prim_to_start(
-        &mut self,
-        prim_instance: PrimitiveInstance,
-        prim_rect: LayoutRect,
-        spatial_node_index: SpatialNodeIndex,
-        flags: PrimitiveFlags,
-    ) {
-        self.push(
-            prim_instance,
-            prim_rect,
+        let mut cluster = PrimitiveCluster::new(
             spatial_node_index,
             flags,
-            PrimitiveListPosition::Begin,
-        )
-    }
-
-    /// Add a primitive instance to the end of the list
-    pub fn add_prim(
-        &mut self,
-        prim_instance: PrimitiveInstance,
-        prim_rect: LayoutRect,
-        spatial_node_index: SpatialNodeIndex,
-        flags: PrimitiveFlags,
-    ) {
-        self.push(
-            prim_instance,
-            prim_rect,
-            spatial_node_index,
-            flags,
-            PrimitiveListPosition::End,
-        )
+        );
+        cluster.push(prim_instance, prim_rect);
+        self.clusters.push(cluster);
     }
 
     /// Returns true if there are no clusters (and thus primitives)
