@@ -647,6 +647,7 @@ class GleanMetricsService(private val context: Context) : MetricsService {
             showSearchSuggestions.set(context.settings().shouldShowSearchSuggestions.toStringList())
             remoteDebugging.set(context.settings().isRemoteDebuggingEnabled.toStringList())
             telemetry.set(context.settings().isTelemetryEnabled.toStringList())
+            searchBrowsingHistory.set(context.settings().shouldShowHistorySuggestions.toStringList())
             searchBookmarks.set(context.settings().shouldShowBookmarkSuggestions.toStringList())
             showClipboardSuggestions.set(context.settings().shouldShowClipboardSuggestions.toStringList())
             showSearchShortcuts.set(context.settings().shouldShowSearchShortcuts.toStringList())
