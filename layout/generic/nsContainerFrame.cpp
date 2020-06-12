@@ -1798,10 +1798,16 @@ void nsContainerFrame::NormalizeChildLists() {
       }
       MergeSortedOverflow(continuations);
 
-      // Move trailing OC next-in-flows into our excess overflow containers
+      // Move prev-in-flow's excess overflow containers list into our own
+      // overflow containers list. If we already have an excess overflow
+      // containers list, any child in that list which doesn't have a
+      // prev-in-flow in this frame is also merged into our overflow container
       // list.
       nsFrameList* overflowContainers =
-          GetPropTableFrames(OverflowContainersProperty());
+          DrainExcessOverflowContainersList(MergeSortedFrameListsFor);
+
+      // Move trailing OC next-in-flows into our excess overflow containers
+      // list.
       if (overflowContainers) {
         nsFrameList moveToEOC;
         for (nsIFrame* f = overflowContainers->FirstChild(); f;) {
