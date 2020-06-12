@@ -65,7 +65,6 @@ MediaTrackGraphImpl::~MediaTrackGraphImpl() {
   MOZ_ASSERT(mTracks.IsEmpty() && mSuspendedTracks.IsEmpty(),
              "All tracks should have been destroyed by messages from the main "
              "thread");
-  MOZ_ASSERT(mPendingResumeOperations.IsEmpty());
   LOG(LogLevel::Debug, ("MediaTrackGraph %p destroyed", this));
   LOG(LogLevel::Debug, ("MediaTrackGraphImpl::~MediaTrackGraphImpl"));
   StopAudioCallbackTracing();
@@ -1563,6 +1562,11 @@ class MediaTrackGraphShutDownRunnable : public Runnable {
       MOZ_ASSERT(!mGraph->mDriver->AsAudioCallbackDriver()->InCallback());
     }
 #endif
+
+    for (MediaTrackGraphImpl::PendingResumeOperation& op :
+         mGraph->mPendingResumeOperations) {
+      op.Abort();
+    }
 
     if (mGraph->mGraphRunner) {
       RefPtr<GraphRunner>(mGraph->mGraphRunner)->Shutdown();
@@ -3510,6 +3514,14 @@ void MediaTrackGraphImpl::PendingResumeOperation::Apply(
       "PendingResumeOperation::Apply", [holder = move(mHolder)]() mutable {
         holder.Resolve(AudioContextState::Running, __func__);
       }));
+}
+
+void MediaTrackGraphImpl::PendingResumeOperation::Abort() {
+  // The graph is shutting down before the operation completed.
+  MOZ_ASSERT(!mDestinationTrack->GraphImpl() ||
+             mDestinationTrack->GraphImpl()->mLifecycleState ==
+                 MediaTrackGraphImpl::LIFECYCLE_WAITING_FOR_THREAD_SHUTDOWN);
+  mHolder.Reject(false, __func__);
 }
 
 auto MediaTrackGraph::ApplyAudioContextOperation(
