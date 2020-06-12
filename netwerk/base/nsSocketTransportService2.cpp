@@ -15,7 +15,6 @@
 #include "prerror.h"
 #include "nsServiceManagerUtils.h"
 #include "nsIObserverService.h"
-#include "mozilla/AbstractThread.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/Services.h"
 #include "mozilla/Likely.h"
@@ -794,7 +793,6 @@ nsresult nsSocketTransportService::ShutdownThread() {
     MutexAutoLock lock(mLock);
     // Drop our reference to mThread and make sure that any concurrent
     // readers are excluded
-    mAbstractThread = nullptr;
     mThread = nullptr;
   }
 
@@ -1044,8 +1042,6 @@ nsSocketTransportService::Run() {
   }
 
   mRawThread = NS_GetCurrentThread();
-  mAbstractThread = AbstractThread::CreateXPCOMThreadWrapper(
-      mRawThread, false /* require taildispatch */);
 
   // hook ourselves up to observe event processing for this thread
   nsCOMPtr<nsIThreadInternal> threadInt = do_QueryInterface(mRawThread);
