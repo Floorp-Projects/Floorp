@@ -12,28 +12,27 @@ const CONTENT_PROCESS_SCRIPT =
 
 /**
  * Forward console message calls from content processes to the parent process.
- * Used by Browser console and toolbox to see messages from all processes.
+ * Used by non-multiprocess Browser Console and Browser Toolbox Console to see messages
+ * from all processes.
  *
  * @constructor
- * @param object owner
- *        The listener owner which needs to implement:
- *        - onConsoleAPICall(message)
+ * @param Function handler
+ *        This function is invoked with one argument, the message that was forwarded from
+ *        the content process to the parent process.
  */
-function ContentProcessListener(listener) {
-  this.listener = listener;
+class ContentProcessListener {
+  constructor(handler) {
+    this.handler = handler;
 
-  Services.ppmm.addMessageListener("Console:Log", this);
-  Services.ppmm.loadProcessScript(CONTENT_PROCESS_SCRIPT, true);
-}
+    Services.ppmm.addMessageListener("Console:Log", this);
+    Services.ppmm.loadProcessScript(CONTENT_PROCESS_SCRIPT, true);
+  }
 
-exports.ContentProcessListener = ContentProcessListener;
-
-ContentProcessListener.prototype = {
   receiveMessage(message) {
     const logMsg = message.data;
     logMsg.wrappedJSObject = logMsg;
-    this.listener.onConsoleAPICall(logMsg);
-  },
+    this.handler(logMsg);
+  }
 
   destroy() {
     // Tell the content processes to stop listening and forwarding messages
@@ -44,6 +43,8 @@ ContentProcessListener.prototype = {
     Services.ppmm.removeMessageListener("Console:Log", this);
     Services.ppmm.removeDelayedProcessScript(CONTENT_PROCESS_SCRIPT);
 
-    this.listener = null;
-  },
-};
+    this.handler = null;
+  }
+}
+
+exports.ContentProcessListener = ContentProcessListener;
