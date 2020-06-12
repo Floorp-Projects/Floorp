@@ -181,8 +181,6 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
   already_AddRefed<nsIWebProgressListener> GetRemoteWebProgressListener(
       nsIWebProgress** aWebProgress, nsIRequest** aRequest);
 
-  uint32_t GetRedirectChannelId() const { return mRedirectChannelId; }
-
   nsresult ReportSecurityMessage(const nsAString& aMessageTag,
                                  const nsAString& aMessageCategory) override {
     ReportSecurityMessageParams params;
@@ -216,7 +214,9 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
     return NS_OK;
   }
 
-  base::ProcessId OtherPid() const { return mOtherPid; }
+  base::ProcessId OtherPid() const {
+    return mOtherPid;
+  }
 
   [[nodiscard]] RefPtr<ChildEndpointPromise> AttachStreamFilter(
       base::ProcessId aChildProcessId);
@@ -282,7 +282,7 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
 
   void AddURIVisit(nsIChannel* aChannel, uint32_t aLoadFlags);
   bool HasCrossOriginOpenerPolicyMismatch() const;
-  void ApplyPendingFunctions(nsIParentChannel* aChannel) const;
+  void ApplyPendingFunctions(nsISupports* aChannel) const;
 
   void Disconnect();
 
