@@ -10,7 +10,6 @@
 #  include <type_traits>
 #  include <utility>
 
-#  include "mozilla/AbstractThread.h"
 #  include "mozilla/Logging.h"
 #  include "mozilla/Maybe.h"
 #  include "mozilla/Monitor.h"
@@ -19,6 +18,7 @@
 #  include "mozilla/Tuple.h"
 #  include "mozilla/UniquePtr.h"
 #  include "mozilla/Variant.h"
+#  include "nsIDirectTaskDispatcher.h"
 #  include "nsISerialEventTarget.h"
 #  include "nsTArray.h"
 #  include "nsThreadUtils.h"
@@ -476,22 +476,20 @@ class MozPromise : public MozPromiseBase {
         PROMISE_LOG(
             "ThenValue::Dispatch dispatch task via direct task queue [this=%p]",
             this);
-#  if DEBUG
-        if (!AbstractThread::GetCurrent() ||
-            !AbstractThread::GetCurrent()->IsTailDispatcherAvailable()) {
+        nsCOMPtr<nsIDirectTaskDispatcher> dispatcher =
+            do_QueryInterface(mResponseTarget);
+        if (!dispatcher) {
           NS_WARNING(
               nsPrintfCString(
                   "Direct Task dispatching not available for thread \"%s\"",
                   PR_GetThreadName(PR_GetCurrentThread()))
                   .get());
+          MOZ_DIAGNOSTIC_ASSERT(
+              false,
+              "mResponseTarget must implement nsIDirectTaskDispatcher for "
+              "direct task dispatching");
         }
-#  endif
-        MOZ_DIAGNOSTIC_ASSERT(
-            AbstractThread::GetCurrent() &&
-                AbstractThread::GetCurrent()->IsTailDispatcherAvailable(),
-            "An AbstractThread must exist for the current thread with a tail "
-            "dispatcher available");
-        AbstractThread::DispatchDirectTask(r.forget());
+        dispatcher->DispatchDirectTask(r.forget());
         return;
       }
 
