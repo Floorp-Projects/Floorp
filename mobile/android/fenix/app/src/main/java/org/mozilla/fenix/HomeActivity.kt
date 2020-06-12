@@ -101,12 +101,11 @@ open class HomeActivity : LocaleAwareAppCompatActivity() {
     private var webExtScope: CoroutineScope? = null
     lateinit var themeManager: ThemeManager
     lateinit var browsingModeManager: BrowsingModeManager
+    private lateinit var sessionObserver: SessionManager.Observer
 
     private var isVisuallyComplete = false
 
     private var visualCompletenessQueue: RunWhenReadyQueue? = null
-
-    private var sessionObserver: SessionManager.Observer? = null
 
     private var isToolbarInflated = false
 
@@ -151,6 +150,8 @@ open class HomeActivity : LocaleAwareAppCompatActivity() {
                 }, delay)
             }
         }
+
+        sessionObserver = UriOpenedObserver(this)
 
         externalSourceIntentProcessors.any { it.process(intent, navHost.navController, this.intent) }
 
@@ -351,10 +352,6 @@ open class HomeActivity : LocaleAwareAppCompatActivity() {
     }
 
     fun openToBrowser(from: BrowserDirection, customTabSessionId: String? = null) {
-        if (sessionObserver == null) {
-            sessionObserver = UriOpenedObserver(this)
-        }
-
         if (navHost.navController.alreadyOnDestination(R.id.browserFragment)) return
         @IdRes val fragmentId = if (from.fragmentId != 0) from.fragmentId else null
         val directions = getNavDirections(from, customTabSessionId)
