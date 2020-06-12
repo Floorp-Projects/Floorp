@@ -8,9 +8,9 @@
 
 #include <inttypes.h>
 
-#include "mozilla/TimeStamp.h"
-
 using namespace mozilla;
+
+using TracingPhase = mozilla::AsyncLogger::TracingPhase;
 
 mozilla::AsyncLogger gAudioCallbackTraceLogger("AudioCallbackTracing");
 static std::atomic<int> gTracingStarted(0);
@@ -21,7 +21,6 @@ void StartAudioCallbackTracing() {
   if (cnt == 0) {
     // This is a noop if the logger has not been enabled.
     gAudioCallbackTraceLogger.Start();
-    gAudioCallbackTraceLogger.Log("[");
   }
 #endif
 }
@@ -36,35 +35,18 @@ void StopAudioCallbackTracing() {
 #endif
 }
 
-uint64_t AutoTracer::NowInUs() {
-  static TimeStamp base = TimeStamp::Now();
-  return (TimeStamp::Now() - base).ToMicroseconds();
-}
-
 void AutoTracer::PrintEvent(const char* aName, const char* aCategory,
                             const char* aComment, TracingPhase aPhase,
-                            uint64_t aTime, uint64_t aPID, uint64_t aThread) {
-  mLogger.Log(
-      "{\"name\": \"%s\", \"cat\": \"%s\", \"ph\": \"%c\","
-      "\"ts\": %" PRIu64 ", \"pid\": %" PRIu64
-      ", \"tid\":"
-      " %" PRIu64 ", \"args\": { \"comment\": \"%s\"}},",
-      aName, aCategory, TRACING_PHASE_STRINGS[static_cast<int>(aPhase)], aTime,
-      aPID, aThread, aComment);
+                            uint64_t aPID, uint64_t aThread) {
+  mLogger.Log(aName, aCategory, aComment, aPhase, aPID, aThread);
 }
 
 void AutoTracer::PrintBudget(const char* aName, const char* aCategory,
                              uint64_t aDuration, uint64_t aPID,
                              uint64_t aThread, uint64_t aFrames,
                              uint64_t aSampleRate) {
-  mLogger.Log(
-      "{\"name\": \"%s\", \"cat\": \"%s\", \"ph\": \"X\","
-      "\"ts\": %" PRIu64 ", \"dur\": %" PRIu64 ", \"pid\": %" PRIu64
-      ","
-      "\"tid\": %" PRIu64 ", \"args\": { \"comment\": \"%" PRIu64 "/%" PRIu64
-      "\"}},",
-      aName, aCategory, NowInUs(), aDuration, aPID, aThread, aFrames,
-      aSampleRate);
+  mLogger.LogDuration(aName, aCategory, aDuration, aPID, aThread, aFrames,
+                      aSampleRate);
 }
 
 AutoTracer::AutoTracer(AsyncLogger& aLogger, const char* aLocation,
@@ -96,7 +78,7 @@ AutoTracer::AutoTracer(AsyncLogger& aLogger, const char* aLocation,
       mTID(aTID) {
   MOZ_ASSERT(aEventType == EventType::DURATION);
   if (aLogger.Enabled()) {
-    PrintEvent(aLocation, "perf", mComment, TracingPhase::BEGIN, NowInUs(),
+    PrintEvent(aLocation, "perf", mComment, AsyncLogger::TracingPhase::BEGIN,
                aPID, aTID);
   }
 }
@@ -104,7 +86,7 @@ AutoTracer::AutoTracer(AsyncLogger& aLogger, const char* aLocation,
 AutoTracer::~AutoTracer() {
   if (mEventType == EventType::DURATION) {
     if (mLogger.Enabled()) {
-      PrintEvent(mLocation, "perf", mComment, TracingPhase::END, NowInUs(),
+      PrintEvent(mLocation, "perf", mComment, AsyncLogger::TracingPhase::END,
                  mPID, mTID);
     }
   }
