@@ -7,14 +7,14 @@
 #ifndef TaskQueue_h_
 #define TaskQueue_h_
 
+#include <queue>
+
 #include "mozilla/Monitor.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/TaskDispatcher.h"
 #include "mozilla/Unused.h"
-
-#include <queue>
-
+#include "nsIDirectTaskDispatcher.h"
 #include "nsThreadUtils.h"
 
 class nsIEventTarget;
@@ -49,7 +49,7 @@ typedef MozPromise<bool, bool, false> ShutdownPromise;
 // A TaskQueue does not require explicit shutdown, however it provides a
 // BeginShutdown() method that places TaskQueue in a shut down state and returns
 // a promise that gets resolved once all pending tasks have completed
-class TaskQueue : public AbstractThread {
+class TaskQueue : public AbstractThread, public nsIDirectTaskDispatcher {
   class EventTargetWrapper;
 
  public:
@@ -59,6 +59,9 @@ class TaskQueue : public AbstractThread {
 
   TaskQueue(already_AddRefed<nsIEventTarget> aTarget, const char* aName,
             bool aSupportsTailDispatch = false, bool aRetainFlags = false);
+
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_NSIDIRECTTASKDISPATCHER
 
   TaskDispatcher& TailDispatcher() override;
 
@@ -150,7 +153,8 @@ class TaskQueue : public AbstractThread {
   class AutoTaskGuard : public AutoTaskDispatcher {
    public:
     explicit AutoTaskGuard(TaskQueue* aQueue)
-        : AutoTaskDispatcher(/* aIsTailDispatcher = */ true),
+        : AutoTaskDispatcher(aQueue,
+                             /* aIsTailDispatcher = */ true),
           mQueue(aQueue),
           mLastCurrentThread(nullptr) {
       // NB: We don't hold the lock to aQueue here. Don't do anything that
@@ -197,6 +201,8 @@ class TaskQueue : public AbstractThread {
 
   // The name of this TaskQueue. Useful when debugging dispatch failures.
   const char* const mName;
+
+  SimpleTaskQueue mDirectTasks;
 
   class Runner : public Runnable {
    public:

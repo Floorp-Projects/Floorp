@@ -197,6 +197,7 @@ NS_INTERFACE_MAP_BEGIN(nsThread)
   NS_INTERFACE_MAP_ENTRY(nsIEventTarget)
   NS_INTERFACE_MAP_ENTRY(nsISerialEventTarget)
   NS_INTERFACE_MAP_ENTRY(nsISupportsPriority)
+  NS_INTERFACE_MAP_ENTRY(nsIDirectTaskDispatcher)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIThread)
   if (aIID.Equals(NS_GET_IID(nsIClassInfo))) {
     static nsThreadClassInfo sThreadClassInfo;
@@ -204,7 +205,8 @@ NS_INTERFACE_MAP_BEGIN(nsThread)
   } else
 NS_INTERFACE_MAP_END
 NS_IMPL_CI_INTERFACE_GETTER(nsThread, nsIThread, nsIThreadInternal,
-                            nsIEventTarget, nsISupportsPriority)
+                            nsIEventTarget, nsISerialEventTarget,
+                            nsISupportsPriority)
 
 //-----------------------------------------------------------------------------
 
@@ -1253,12 +1255,18 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult) {
     }
   }
 
+  DrainDirectTasks();
+
   NOTIFY_EVENT_OBSERVERS(EventQueue()->EventObservers(), AfterProcessNextEvent,
                          (this, *aResult));
 
   if (obs) {
     obs->AfterProcessNextEvent(this, *aResult);
   }
+
+  // In case some EventObserver dispatched some direct tasks; process them
+  // now.
+  DrainDirectTasks();
 
   if (callScriptObserver) {
     if (mScriptObserver) {
@@ -1424,6 +1432,35 @@ NS_IMETHODIMP
 nsThread::GetEventTarget(nsIEventTarget** aEventTarget) {
   nsCOMPtr<nsIEventTarget> target = this;
   target.forget(aEventTarget);
+  return NS_OK;
+}
+
+//-----------------------------------------------------------------------------
+// nsIDirectTaskDispatcher
+
+NS_IMETHODIMP
+nsThread::DispatchDirectTask(already_AddRefed<nsIRunnable> aEvent) {
+  if (!IsOnCurrentThread()) {
+    return NS_ERROR_FAILURE;
+  }
+  mDirectTasks.AddTask(std::move(aEvent));
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsThread::DrainDirectTasks() {
+  if (!IsOnCurrentThread()) {
+    return NS_ERROR_FAILURE;
+  }
+  mDirectTasks.DrainTasks();
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsThread::HaveDirectTasks(bool* aValue) {
+  if (!IsOnCurrentThread()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  *aValue = mDirectTasks.HaveTasks();
   return NS_OK;
 }
 

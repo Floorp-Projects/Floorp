@@ -7,16 +7,16 @@
 #if !defined(TaskDispatcher_h_)
 #  define TaskDispatcher_h_
 
+#  include <queue>
+
 #  include "mozilla/AbstractThread.h"
 #  include "mozilla/Maybe.h"
 #  include "mozilla/UniquePtr.h"
 #  include "mozilla/Unused.h"
-
+#  include "nsIDirectTaskDispatcher.h"
 #  include "nsISupportsImpl.h"
 #  include "nsTArray.h"
 #  include "nsThreadUtils.h"
-
-#  include <queue>
 
 namespace mozilla {
 
@@ -101,8 +101,10 @@ class TaskDispatcher {
  */
 class AutoTaskDispatcher : public TaskDispatcher {
  public:
-  explicit AutoTaskDispatcher(bool aIsTailDispatcher = false)
-      : mIsTailDispatcher(aIsTailDispatcher) {}
+  explicit AutoTaskDispatcher(nsIDirectTaskDispatcher* aDirectTaskDispatcher,
+                              bool aIsTailDispatcher = false)
+      : mDirectTaskDispatcher(aDirectTaskDispatcher),
+        mIsTailDispatcher(aIsTailDispatcher) {}
 
   ~AutoTaskDispatcher() {
     // Given that direct tasks may trigger other code that uses the tail
@@ -121,12 +123,19 @@ class AutoTaskDispatcher : public TaskDispatcher {
     }
   }
 
-  bool HaveDirectTasks() const { return mDirectTasks.HaveTasks(); }
+  bool HaveDirectTasks() {
+    return mDirectTaskDispatcher && mDirectTaskDispatcher->HaveDirectTasks();
+  }
 
-  void DrainDirectTasks() override { mDirectTasks.DrainTasks(); }
+  void DrainDirectTasks() override {
+    if (mDirectTaskDispatcher) {
+      mDirectTaskDispatcher->DrainDirectTasks();
+    }
+  }
 
   void AddDirectTask(already_AddRefed<nsIRunnable> aRunnable) override {
-    mDirectTasks.AddTask(std::move(aRunnable));
+    MOZ_ASSERT(mDirectTaskDispatcher);
+    mDirectTaskDispatcher->DispatchDirectTask(std::move(aRunnable));
   }
 
   void AddStateChangeTask(AbstractThread* aThread,
@@ -267,11 +276,10 @@ class AutoTaskDispatcher : public TaskDispatcher {
     return thread->Dispatch(r.forget(), reason);
   }
 
-  SimpleTaskQueue mDirectTasks;
-
   // Task groups, organized by thread.
   nsTArray<UniquePtr<PerThreadTaskGroup>> mTaskGroups;
 
+  nsCOMPtr<nsIDirectTaskDispatcher> mDirectTaskDispatcher;
   // True if this TaskDispatcher represents the tail dispatcher for the thread
   // upon which it runs.
   const bool mIsTailDispatcher;
