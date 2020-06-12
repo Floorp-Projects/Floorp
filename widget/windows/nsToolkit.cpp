@@ -46,7 +46,6 @@ nsToolkit::~nsToolkit() { MOZ_COUNT_DTOR(nsToolkit); }
 void nsToolkit::Startup(HMODULE hModule) {
   nsToolkit::mDllInstance = hModule;
   WinUtils::Initialize();
-  nsUXThemeData::Initialize();
 }
 
 void nsToolkit::Shutdown() {
