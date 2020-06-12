@@ -13,26 +13,24 @@ const TEST_URI =
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
 
-  const messages = ["console.log('foo', 'bar');", "foo bar", "undefined"];
-  const onMessages = waitForMessages({
+  const evaluationResultMessage = await executeAndWaitForMessage(
     hud,
-    messages: messages.map(text => ({ text })),
-  });
-
-  execute(hud, "console.log('foo', 'bar');");
-
-  const [fncallNode, consoleMessageNode, resultNode] = (await onMessages).map(
-    msg => msg.node
+    "console.log('foo', 'bar')",
+    "undefined",
+    ".result"
   );
+  const commandMessage = findMessage(hud, "console.log");
+  const logMessage = findMessage(hud, "foo bar");
 
   is(
-    fncallNode.nextElementSibling,
-    consoleMessageNode,
+    commandMessage.nextElementSibling,
+    logMessage,
     "console.log() is followed by 'foo' 'bar'"
   );
+
   is(
-    consoleMessageNode.nextElementSibling,
-    resultNode,
-    "'foo' 'bar' is followed by undefined"
+    logMessage.nextElementSibling,
+    evaluationResultMessage.node,
+    "'foo bar' is followed by undefined"
   );
 });
