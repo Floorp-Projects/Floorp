@@ -4,6 +4,7 @@
 
 package mozilla.components.feature.webnotifications
 
+import android.app.Notification.EXTRA_SUB_TEXT
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -18,6 +19,7 @@ import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -27,12 +29,13 @@ import org.mockito.Mockito.verify
 private const val TEST_TITLE = "test title"
 private const val TEST_TAG = "test tag"
 private const val TEST_TEXT = "test text"
+private const val TEST_URL = "mozilla.org"
 private const val TEST_CHANNEL = "testChannel"
 
 @RunWith(AndroidJUnit4::class)
 @ExperimentalCoroutinesApi
 class NativeNotificationBridgeTest {
-    private val blankNotification = WebNotification(TEST_TITLE, TEST_TAG, TEST_TEXT, null, null,
+    private val blankNotification = WebNotification(TEST_TITLE, TEST_TAG, TEST_TEXT, TEST_URL, null, null,
             null, true, 0)
 
     private lateinit var icons: BrowserIcons
@@ -62,6 +65,7 @@ class NativeNotificationBridgeTest {
         assertEquals(0, notification.`when`)
         assertNotNull(notification.smallIcon)
         assertNull(notification.getLargeIcon())
+        assertTrue(notification.extras.containsKey(EXTRA_SUB_TEXT))
     }
 
     @Test

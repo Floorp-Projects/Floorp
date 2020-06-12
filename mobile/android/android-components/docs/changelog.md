@@ -43,6 +43,9 @@ permalink: /changelog/
   * Adds a new storage component to store containers (contextual identities) in a Room database and provides the
     necessary APIs to get, add and remove containers.
 
+* **feature-webnotifications**
+  * Adds support for displaying the `source` URL the WebNotification originated from.
+
 * **feature-tabs**
   * ⚠️ **This is a breaking change**: `TabsFeature` now supports providing custom use case implementations. Therefore, an instance of `SelectTabUseCase` and `RemoveTabUseCase` have to be provided.
 
@@ -131,6 +134,7 @@ permalink: /changelog/
 
 * **feature-downloads**
   * ⚠️ **This is a breaking change**: DownloadManager and DownloadService are now using the browser store to keep track of queued downloads. Therefore, an instance of the store needs to be provided when constructing manager and service. There's also a new DownloadMiddleware which needs to be provided to the store.
+
   ```kotlin
    val store by lazy {
         BrowserStore(middleware = listOf(
@@ -165,6 +169,7 @@ permalink: /changelog/
     override val store: BrowserStore by lazy { components.core.store } // Store needs to be provided now
   }
   ```
+
   * Fixed issue [#6893](https://github.com/mozilla-mobile/android-components/issues/6893).
   * Add notification grouping to downloads Fenix issue [#4910](https://github.com/mozilla-mobile/android-components/issues/4910).
 
