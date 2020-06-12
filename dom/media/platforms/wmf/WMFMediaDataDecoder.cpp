@@ -103,6 +103,7 @@ RefPtr<MediaDataDecoder::DecodePromise> WMFMediaDataDecoder::ProcessError(
 
 RefPtr<MediaDataDecoder::DecodePromise> WMFMediaDataDecoder::ProcessDecode(
     MediaRawData* aSample) {
+
   DecodedData results;
   HRESULT hr = mMFTManager->Input(aSample);
   if (hr == MF_E_NOTACCEPTING) {
@@ -122,6 +123,7 @@ RefPtr<MediaDataDecoder::DecodePromise> WMFMediaDataDecoder::ProcessDecode(
     mLastTime = Some(aSample->mTime);
     mLastDuration = aSample->mDuration;
   }
+
   mSamplesCount++;
   mDrainStatus = DrainStatus::DRAINABLE;
   mLastStreamOffset = aSample->mOffset;
@@ -201,6 +203,20 @@ RefPtr<MediaDataDecoder::DecodePromise> WMFMediaDataDecoder::ProcessDrain() {
         // set the duration of the last sample as it was input.
         data->mDuration = mLastDuration;
       }
+    } else if (results.Length() == 1 &&
+               results.LastElement()->mType == MediaData::Type::AUDIO_DATA) {
+      // When we drain the audio decoder and one frame was queued (such as with
+      // AAC) the MFT will re-calculate the starting time rather than use the
+      // value set on the IMF Sample.
+      // This is normally an okay thing to do; however when dealing with poorly
+      // muxed content that has incorrect start time, it could lead to broken
+      // A/V sync. So we ensure that we use the compressed sample's time
+      // instead. Additionally, this is what all other audio decoders are doing
+      // anyway.
+      MOZ_ASSERT(mLastTime,
+                 "We must have attempted to decode at least one frame to get "
+                 "one decoded output");
+      results.LastElement()->mTime = *mLastTime;
     }
     return DecodePromise::CreateAndResolve(std::move(results), __func__);
   }
