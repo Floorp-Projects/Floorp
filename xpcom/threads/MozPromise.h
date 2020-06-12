@@ -478,19 +478,19 @@ class MozPromise : public MozPromiseBase {
             this);
         nsCOMPtr<nsIDirectTaskDispatcher> dispatcher =
             do_QueryInterface(mResponseTarget);
-        if (!dispatcher) {
-          NS_WARNING(
-              nsPrintfCString(
-                  "Direct Task dispatching not available for thread \"%s\"",
-                  PR_GetThreadName(PR_GetCurrentThread()))
-                  .get());
-          MOZ_DIAGNOSTIC_ASSERT(
-              false,
-              "mResponseTarget must implement nsIDirectTaskDispatcher for "
-              "direct task dispatching");
+        if (dispatcher) {
+          dispatcher->DispatchDirectTask(r.forget());
+          return;
         }
-        dispatcher->DispatchDirectTask(r.forget());
-        return;
+        NS_WARNING(
+            nsPrintfCString(
+                "Direct Task dispatching not available for thread \"%s\"",
+                PR_GetThreadName(PR_GetCurrentThread()))
+                .get());
+        MOZ_DIAGNOSTIC_ASSERT(
+            false,
+            "mResponseTarget must implement nsIDirectTaskDispatcher for direct "
+            "task dispatching");
       }
 
       // Promise consumers are allowed to disconnect the Request object and
