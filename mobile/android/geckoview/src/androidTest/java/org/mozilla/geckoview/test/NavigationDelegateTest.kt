@@ -719,24 +719,6 @@ class NavigationDelegateTest : BaseSessionTest() {
                 innerWidth, closeTo(mobileInnerWidth, 0.1))
     }
 
-    @Suppress("deprecation")
-    @Ignore // This test needs to set RuntimeSettings, TODO: Bug 1572245
-    @Test fun telemetrySnapshots() {
-        sessionRule.session.loadTestPath(HELLO_HTML_PATH)
-        sessionRule.waitForPageStop()
-
-        val telemetry = sessionRule.runtime.telemetry
-        val result = sessionRule.waitForResult(telemetry.getSnapshots(false))
-
-        assertThat("Snapshots should not be null",
-                   result?.get("parent"), notNullValue())
-
-        if (sessionRule.env.isMultiprocess) {
-            assertThat("Snapshots should not be null",
-                       result?.get("content"), notNullValue())
-        }
-    }
-
     @Test fun load() {
         sessionRule.session.loadUri("$TEST_ENDPOINT$HELLO_HTML_PATH")
         sessionRule.waitForPageStop()
