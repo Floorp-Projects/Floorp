@@ -10,9 +10,6 @@
 #include "mozilla/StaticPrefs_extensions.h"
 #include "nsDocShell.h"
 #include "nsIObserverService.h"
-#include "nsIClassifiedChannel.h"
-#include "nsIRedirectChannelRegistrar.h"
-#include "mozilla/net/UrlClassifierCommon.h"
 
 extern mozilla::LazyLogModule gDocumentChannelLog;
 #define LOG(fmt) MOZ_LOG(gDocumentChannelLog, mozilla::LogLevel::Verbose, fmt)
@@ -22,25 +19,6 @@ namespace net {
 
 using RedirectToRealChannelPromise =
     typename PDocumentChannelParent::RedirectToRealChannelPromise;
-
-class ParentChannelWrapper : public nsIParentChannel {
- public:
-  ParentChannelWrapper(nsIChannel* aChannel, nsIStreamListener* aListener)
-      : mChannel(aChannel), mListener(aListener) {}
-
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIPARENTCHANNEL
-  NS_FORWARD_NSISTREAMLISTENER(mListener->)
-  NS_FORWARD_NSIREQUESTOBSERVER(mListener->)
-
- private:
-  virtual ~ParentChannelWrapper() = default;
-  const nsCOMPtr<nsIChannel> mChannel;
-  const nsCOMPtr<nsIStreamListener> mListener;
-};
-
-NS_IMPL_ISUPPORTS(ParentChannelWrapper, nsIParentChannel, nsIStreamListener,
-                  nsIRequestObserver);
 
 NS_IMPL_ISUPPORTS_INHERITED(ParentProcessDocumentChannel, DocumentChannel,
                             nsIAsyncVerifyRedirectCallback, nsIObserver)
@@ -132,17 +110,15 @@ ParentProcessDocumentChannel::OnRedirectVerifyCallback(nsresult aResult) {
       for (auto& endpoint : mStreamFilterEndpoints) {
         extensions::StreamFilterParent::Attach(channel, std::move(endpoint));
       }
-
-      RefPtr<ParentChannelWrapper> wrapper =
-          new ParentChannelWrapper(channel, mListener);
-
-      nsCOMPtr<nsIRedirectChannelRegistrar> registrar =
-          RedirectChannelRegistrar::GetOrCreate();
-      nsCOMPtr<nsIChannel> dummy;
-      MOZ_ALWAYS_SUCCEEDS(
-          NS_LinkRedirectChannels(mDocumentLoadListener->GetRedirectChannelId(),
-                                  wrapper, getter_AddRefs(dummy)));
-      MOZ_ASSERT(dummy == channel);
+      if (!mDocumentLoadListener->ResumeSuspendedChannel(mListener)) {
+        // We added ourselves to the load group, but attempting
+        // to resume has notified us that the channel is already
+        // finished. Better remove ourselves from the loadgroup
+        // again.
+        nsresult status = NS_OK;
+        channel->GetStatus(&status);
+        mLoadGroup->RemoveRequest(channel, nullptr, status);
+      }
     }
   }
 
@@ -283,69 +259,6 @@ ParentProcessDocumentChannel::Observe(nsISupports* aSubject, const char* aTopic,
 
   return NS_OK;
 }
-
-////////////////////////////////////////////////////////////////////////////////
-// nsIParentChannel
-////////////////////////////////////////////////////////////////////////////////
-
-NS_IMETHODIMP
-ParentChannelWrapper::SetParentListener(
-    mozilla::net::ParentChannelListener* listener) {
-  // We don't need this (do we?)
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-ParentChannelWrapper::NotifyFlashPluginStateChanged(
-    nsIHttpChannel::FlashPluginState aState) {
-  // For now, only HttpChannel use this attribute.
-  RefPtr<HttpBaseChannel> httpChannel = do_QueryObject(mChannel.get());
-  if (httpChannel) {
-    httpChannel->SetFlashPluginState(aState);
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-ParentChannelWrapper::SetClassifierMatchedInfo(const nsACString& aList,
-                                               const nsACString& aProvider,
-                                               const nsACString& aFullHash) {
-  nsCOMPtr<nsIClassifiedChannel> classifiedChannel =
-      do_QueryInterface(mChannel);
-  if (classifiedChannel) {
-    classifiedChannel->SetMatchedInfo(aList, aProvider, aFullHash);
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-ParentChannelWrapper::SetClassifierMatchedTrackingInfo(
-    const nsACString& aLists, const nsACString& aFullHash) {
-  nsCOMPtr<nsIClassifiedChannel> classifiedChannel =
-      do_QueryInterface(mChannel);
-  if (classifiedChannel) {
-    nsTArray<nsCString> lists, fullhashes;
-    for (const nsACString& token : aLists.Split(',')) {
-      lists.AppendElement(token);
-    }
-    for (const nsACString& token : aFullHash.Split(',')) {
-      fullhashes.AppendElement(token);
-    }
-    classifiedChannel->SetMatchedTrackingInfo(lists, fullhashes);
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-ParentChannelWrapper::NotifyClassificationFlags(uint32_t aClassificationFlags,
-                                                bool aIsThirdParty) {
-  UrlClassifierCommon::SetClassificationFlagsHelper(
-      mChannel, aClassificationFlags, aIsThirdParty);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-ParentChannelWrapper::Delete() { return NS_OK; }
 
 }  // namespace net
 }  // namespace mozilla
