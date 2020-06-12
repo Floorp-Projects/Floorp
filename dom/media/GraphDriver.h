@@ -625,7 +625,7 @@ class AudioCallbackDriver : public GraphDriver,
   void OnThreadIdChanged();
   /* Called at the beginning of the audio callback to check if the thread id has
    * changed. */
-  void CheckThreadIdChanged();
+  bool CheckThreadIdChanged();
 
   bool OnThread() override {
     return mAudioThreadIdInCb.load() == std::this_thread::get_id();
@@ -794,6 +794,7 @@ class AudioCallbackDriver : public GraphDriver,
   WavDumper mOutputStreamFile;
 
   virtual ~AudioCallbackDriver();
+  const bool mSandboxed = false;
 };
 
 class AsyncCubebTask : public Runnable {
