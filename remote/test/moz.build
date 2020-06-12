@@ -15,6 +15,3 @@ BROWSER_CHROME_MANIFESTS += [
     "browser/security/browser.ini",
     "browser/target/browser.ini",
 ]
-
-with Files("puppeteer/test/**/*.spec.js"):
-    IMPACTED_TESTS.flavors += ["puppeteer"]
