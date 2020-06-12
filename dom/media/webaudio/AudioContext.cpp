@@ -1047,7 +1047,7 @@ void AudioContext::ResumeInternal(AudioContextOperationFlags aFlags) {
         [self = RefPtr<AudioContext>(this)](AudioContextState aNewState) {
           self->OnStateChanged(nullptr, aNewState);
         },
-        [] { MOZ_CRASH("Unexpected rejection"); });
+        [] {});  // Promise may be rejected after graph shutdown.
   }
   mSuspendCalled = false;
 }
