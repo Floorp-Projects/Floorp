@@ -9,6 +9,7 @@
 
 #include <queue>
 
+#include "mozilla/Maybe.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/RefPtr.h"
@@ -150,17 +151,16 @@ class TaskQueue : public AbstractThread, public nsIDirectTaskDispatcher {
   Atomic<PRThread*> mRunningThread;
 
   // RAII class that gets instantiated for each dispatched task.
-  class AutoTaskGuard : public AutoTaskDispatcher {
+  class AutoTaskGuard {
    public:
     explicit AutoTaskGuard(TaskQueue* aQueue)
-        : AutoTaskDispatcher(aQueue,
-                             /* aIsTailDispatcher = */ true),
-          mQueue(aQueue),
-          mLastCurrentThread(nullptr) {
+        : mQueue(aQueue), mLastCurrentThread(nullptr) {
       // NB: We don't hold the lock to aQueue here. Don't do anything that
       // might require it.
       MOZ_ASSERT(!mQueue->mTailDispatcher);
-      mQueue->mTailDispatcher = this;
+      mTaskDispatcher.emplace(aQueue,
+                              /* aIsTailDispatcher = */ true);
+      mQueue->mTailDispatcher = mTaskDispatcher.ptr();
 
       mLastCurrentThread = sCurrentThreadTLS.get();
       sCurrentThreadTLS.set(aQueue);
@@ -170,7 +170,8 @@ class TaskQueue : public AbstractThread, public nsIDirectTaskDispatcher {
     }
 
     ~AutoTaskGuard() {
-      DrainDirectTasks();
+      mTaskDispatcher->DrainDirectTasks();
+      mTaskDispatcher.reset();
 
       MOZ_ASSERT(mQueue->mRunningThread == PR_GetCurrentThread());
       mQueue->mRunningThread = nullptr;
@@ -180,6 +181,7 @@ class TaskQueue : public AbstractThread, public nsIDirectTaskDispatcher {
     }
 
    private:
+    Maybe<AutoTaskDispatcher> mTaskDispatcher;
     TaskQueue* mQueue;
     AbstractThread* mLastCurrentThread;
   };
