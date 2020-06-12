@@ -5294,11 +5294,21 @@ void PresShell::UpdateCanvasBackground() {
     // style frame but we don't have access to the canvasframe here. It isn't
     // a problem because only a few frames can return something other than true
     // and none of them would be a canvas frame or root element style frame.
-    bool drawBackgroundImage;
-    bool drawBackgroundColor;
-    mCanvasBackgroundColor = nsCSSRendering::DetermineBackgroundColor(
-        mPresContext, bgStyle, rootStyleFrame, drawBackgroundImage,
-        drawBackgroundColor);
+    bool drawBackgroundImage = false;
+    bool drawBackgroundColor = false;
+    const nsStyleDisplay* disp = rootStyleFrame->StyleDisplay();
+    if (rootStyleFrame->IsThemed(disp) &&
+        disp->mAppearance != StyleAppearance::MozWinGlass &&
+        disp->mAppearance != StyleAppearance::MozWinBorderlessGlass) {
+      // Ignore the CSS background-color if -moz-appearance is used and it is
+      // not one of the glass values. (Windows 7 Glass has traditionally not
+      // overridden background colors, so we preserve that behavior for now.)
+      mCanvasBackgroundColor = NS_RGBA(0, 0, 0, 0);
+    } else {
+      mCanvasBackgroundColor = nsCSSRendering::DetermineBackgroundColor(
+          mPresContext, bgStyle, rootStyleFrame, drawBackgroundImage,
+          drawBackgroundColor);
+    }
     mHasCSSBackgroundColor = drawBackgroundColor;
     if (mPresContext->IsRootContentDocumentCrossProcess() &&
         !IsTransparentContainerElement(mPresContext)) {
