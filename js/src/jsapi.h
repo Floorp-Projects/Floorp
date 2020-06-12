@@ -27,7 +27,6 @@
 #include "jspubtd.h"
 
 #include "js/AllocPolicy.h"
-#include "js/BinASTFormat.h"  // JS::BinASTFormat
 #include "js/CallArgs.h"
 #include "js/CharacterEncoding.h"
 #include "js/Class.h"
@@ -1797,20 +1796,6 @@ using ScriptPrivateReferenceHook = void (*)(const JS::Value&);
 extern JS_PUBLIC_API void SetScriptPrivateReferenceHooks(
     JSRuntime* rt, ScriptPrivateReferenceHook addRefHook,
     ScriptPrivateReferenceHook releaseHook);
-
-} /* namespace JS */
-
-namespace JS {
-
-// This throws an exception if built without JS_BUILD_BINAST.
-extern JS_PUBLIC_API JSScript* DecodeBinAST(
-    JSContext* cx, const ReadOnlyCompileOptions& options, FILE* file,
-    JS::BinASTFormat format);
-
-// This throws an exception if built without JS_BUILD_BINAST.
-extern JS_PUBLIC_API JSScript* DecodeBinAST(
-    JSContext* cx, const ReadOnlyCompileOptions& options, const uint8_t* buf,
-    size_t length, JS::BinASTFormat format);
 
 } /* namespace JS */
 
