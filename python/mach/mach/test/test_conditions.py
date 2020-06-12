@@ -15,14 +15,19 @@ from mach.test.common import TestBase
 from mozunit import main
 
 
-def _populate_context(context, key=None):
+def _populate_context(key=None):
     if key is None:
         return
-    if key == 'foo':
-        return True
-    if key == 'bar':
-        return False
-    raise AttributeError(key)
+
+    attributes = {
+        'foo': True,
+        'bar': False,
+        'topdir': '',
+    }
+    try:
+        return attributes[key]
+    except KeyError:
+        raise AttributeError(key)
 
 
 class TestConditions(TestBase):
