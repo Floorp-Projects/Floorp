@@ -422,8 +422,6 @@ class nsDocumentEncoder : public nsIDocumentEncoder {
 
     nsresult SerializeRangeToString(const nsRange* aRange);
 
-    RangeBoundariesInclusiveAncestorsAndOffsets
-        mRangeBoundariesInclusiveAncestorsAndOffsets;
     /**
      * https://dom.spec.whatwg.org/#concept-tree-inclusive-ancestor.
      */
@@ -434,10 +432,14 @@ class nsDocumentEncoder : public nsIDocumentEncoder {
      */
     AutoTArray<nsINode*, 8> mCommonInclusiveAncestors;
 
+    ContextInfoDepth mContextInfoDepth;
+
+   private:
+    RangeBoundariesInclusiveAncestorsAndOffsets
+        mRangeBoundariesInclusiveAncestorsAndOffsets;
     int32_t mStartRootIndex;
     int32_t mEndRootIndex;
     bool mHaltRangeHint;
-    ContextInfoDepth mContextInfoDepth;
 
     // Multiple of the flags defined in nsIDocumentEncoder.idl.
     const uint32_t& mFlags;
