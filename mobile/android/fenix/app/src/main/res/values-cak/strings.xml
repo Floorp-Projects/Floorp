@@ -479,6 +479,8 @@
     <string name="tab_tray_menu_open_new_tab">K\'ak\'a\' ruwi\'</string>
     <!-- Shortcut action to open the home screen -->
     <string name="tab_tray_menu_home">Tib\'e pa tikirib\'äl</string>
+    <!-- Shortcut action to toggle private mode -->
+    <string name="tab_tray_menu_toggle">Tik\'ex rik\'in ruwi\' rub\'anikil</string>
     <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
     <string name="remove_tab_from_collection">Tiyuj ruwi\' pa molb\'äl</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
@@ -992,12 +994,19 @@
 
     <!-- text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header_2">Ichinanem pa ruyonil</string>
+    <!-- text for the tracking protection card description
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_tracking_protection_description_2">Ri runuk\'ulem ichinanem chuqa\' jikomal yekiq\'ät ri ojqanela\', itzel taq kema\' chuqa\' ri ajk\'aymoloj yatkojqaj.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Junaman (k\'o wi)</string>
+    <!-- text for standard blocking option button description -->
+    <string name="onboarding_tracking_protection_standard_button_description_2">Yeruq\'ät jub\'a\' ojqanela\'. Ütz xkesamajïx ri taq ruxaq.</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">K\'atzinel (chilab\'en)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">Nimaläj</string>
+    <!-- text for strict blocking option button description -->
+    <string name="onboarding_tracking_protection_strict_button_description_2">Ke\'aq\'ata\' k\'ïy ojqanela\', taq rutzijol chuqa\' elenel taq tzuwäch. Anin xkesamajitäj ri taq ruxaq, xa xe chi yatikïr ye\'asäch jujun taq rusamajib\'al.</string>
     <!-- text for the toolbar position card header
         In English this is an idiom for "choose a side as in an argument or fight"
         but it is ok to make this more literally about "choosing a position in a physical space -->
@@ -1087,11 +1096,15 @@
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Tetamäx ch\'aqa\' chik</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">Junaman (k\'o wi)</string>
+    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_description_3">Yeruq\'ät jub\'a\' ojqanela\'. Ütz xkesamajïx ri taq ruxaq.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Achike ri q\'aton ruma ri relik ruchajixik ojqanem</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Nimaläj</string>
 
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_description_2">Ke\'aq\'ata\' k\'ïy ojqanela\', taq rutzijol chuqa\' elenel taq tzuwäch. Anin xkesamajitäj ri taq ruxaq, xa xe chi yatikïr ye\'asäch jujun taq rusamajib\'al.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Achike ri q\'aton ruma ri ruchajixik ojqanem k\'o</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1148,6 +1161,8 @@
     <string name="etp_tracking_content_title">Rupam Ojqanem</string>
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_description">Ke\'aq\'ata\' ri taq eltzijol man e k\'o ta chupam, taq silowäch chuqa\' taq rupam kik\'wan taq rub\'itz\'ib\' ojqanem. Nitikïr yerutz\'ila\' jujun taq rusamaj ajk\'amaya\'l ruxaq.</string>
+    <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="etp_onboarding_cfr_message">Toq xtatz\'ët ri tuq\' pokob\', %s xeruq\'ät ojqanela\' pa jun ruxaq k\'amaya\'l. Tapitz\'a\' richin ch\'aqa\' chik retamab\'al.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">TZIJÏL ri chajinïk pa re ruxaq re\'</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->

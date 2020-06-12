@@ -370,9 +370,29 @@
     <!-- Preference switch for usage and technical data collection -->
     <string name="preference_usage_data">Dàj gārāsunt nī nej dato tekniko</string>
 
+    <!-- Preference description for usage and technical data collection -->
+    <string name="preferences_usage_data_description">Gānatà\' dàj \'iaj sunj, dàj arâj sunt, aga\' nīka nī doj nej sa nīkāj sa nana\'uî\'t gu\'nàj Mozilla da\' ga\'ue nāgi\'iaj sà\' si doj man %1$s</string>
+    <!-- Preference switch for marketing data collection -->
+    <string name="preferences_marketing_data">Sa huā rayi\'î Marketin</string>
+    <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
+    <string name="preferences_marketing_data_description">Gānatà\' dàj  \'iaj sun sa arâj sunt riña %1$s ngà Leanplum, sa du\'uêj marketin guendâ nej aga\' sikà\' rà ātô\'.</string>
+    <!-- Title for experiments preferences -->
+    <string name="preference_experiments">Nej sa arâ huè si</string>
+    <!-- Summary for experiments preferences -->
+    <string name="preference_experiments_summary">A\'nïn riña Mozilla da\' gà\'nïn nī nāran\'anj nuguan\' gini\'ñānj da\' nāgi\'iaj sà\' nej si sa huāa</string>
+    <!-- Preference switch for crash reporter -->
+    <string name="preferences_crash_reporter">Sa nata\' dàj gire\' man</string>
+
+    <!-- Preference switch for Mozilla location service -->
+    <string name="preferences_mozilla_location_service">Sun rugûñu\'ūnj da\' nāchrūn\' sinūgùn\'</string>
+    <!-- Preference switch for app health report. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="preferences_fenix_health_report">Sa nata\' dàj \'iaj sun %s</string>
+
     <!-- Turn On Sync Preferences -->
     <!-- Header of the Turn on Sync preference view -->
     <string name="preferences_sync">Nāchrūn Sync</string>
+    <!-- Preference for pairing -->
+    <string name="preferences_sync_pair">Nāna\'uì\' da\'nga\' nagi\'iaj nūguan\'àn sa huā riña eskritôrio nīkāj Firefox</string>
     <!-- Preference for account login -->
     <string name="preferences_sync_sign_in">Gāyi\'ì sēsiûn</string>
     <!-- Preference for reconnecting to FxA sync -->
@@ -380,6 +400,9 @@
     <!-- Preference for removing FxA account -->
     <string name="preferences_sync_remove_account">Gūdure\' kuênta</string>
 
+    <!-- Pairing Feature strings -->
+    <!-- Instructions on how to access pairing -->
+    <string name="pair_instructions_2"><![CDATA[Nārī ñadu\'ua da\'nga\' QR rugui\' riña b>firefox.com/pair</b>]]></string>
     <!-- Button to open camera for pairing -->
     <string name="pair_open_camera">Nā\'nïn riña kâmara</string>
     <!-- Button to cancel pairing -->
@@ -427,16 +450,106 @@
     <!-- Menu Item Label for Search in Library -->
     <string name="library_search">Nānà\'uì\'</string>
 
+    <!-- Settings Page Title -->
+    <string name="settings_title">Nāgi\'iô\'</string>
+    <!-- Content description (not visible, for screen readers etc.): "Menu icon for items on a history item" -->
+    <string name="content_description_history_menu">Menú si\'iaj nej sa gini\'io\'</string>
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">Nārán</string>
 
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
     <string name="tab_header_label">Nej Rakïj ñanj huā nî\'nïnj ïn</string>
+    <!-- Title for the list of tabs in the current private session -->
+    <string name="tabs_header_private_title">Sēsiûn huìi</string>
+    <!-- Title for the list of tabs in the current private session -->
+    <string name="tabs_header_private_tabs_title">Rakïj ñanj huìi</string>
+    <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
+    <string name="add_tab">Nūtà\' a\'ngô rakïj ñanj</string>
+    <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
+    <string name="add_private_tab">Nūtà\' a\'ngô rakïj ñanj huìi</string>
+    <!-- Text for the new tab button to indicate adding a new private tab in the tab -->
+    <string name="tab_drawer_fab_content">Sa huìi</string>
+    <!-- Text shown as the title of the open tab tray -->
+    <string name="tab_tray_title">Nej Rakïj ñanj huā nî\'nïnj ïn</string>
+    <!-- Text shown in the menu for saving tabs to a collection -->
+    <string name="tab_tray_menu_item_save">Na\'nïnj sà\' riña màn si yi\'nïnj</string>
+    <!-- Text shown in the menu for sharing all tabs -->
+    <string name="tab_tray_menu_item_share">Dūyinga\' daran\' nej rakïj ñanj</string>
+    <!-- Text shown in the menu for closing all tabs -->
+    <string name="tab_tray_menu_item_close">Nārrán riña daran\' nej rakïj ñanj</string>
+    <!-- Shortcut action to open new tab -->
+    <string name="tab_tray_menu_open_new_tab">Rakïj ñanj nakàa</string>
+    <!-- Shortcut action to open the home screen -->
+    <string name="tab_tray_menu_home">Gūhuij riña ayì\'ij</string>
+    <!-- Shortcut action to toggle private mode -->
+    <string name="tab_tray_menu_toggle">Nādūnā riña ginù rakïj ñanj</string>
+    <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
+    <string name="remove_tab_from_collection">Nādure\' rakïj ñanj riña màn yì\'nïnj</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
     <string name="close_tab">Nārán rakïj ñanj</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab <title> button. First parameter is tab title  -->
     <string name="close_tab_title">Nārán rakij ñanj %s</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Opens the open tabs menu when pressed -->
+    <string name="open_tabs_menu">Nā\'nïn si menú rakïj ñanj</string>
+    <!-- Open tabs menu item to close all tabs -->
+    <string name="tabs_menu_close_all_tabs">Nārrán riña nej rakïj ñanj</string>
+    <!-- Open tabs menu item to share all tabs -->
+    <string name="tabs_menu_share_tabs">Dūyinga\' nej rakïj ñanj</string>
+    <!-- Open tabs menu item to save tabs to collection -->
+    <string name="tabs_menu_save_to_collection">Na\'nïnj sà\' riña màn si yi\'nïnj</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
+    <string name="tab_menu">Si menû rakïj ñanj</string>
+    <!-- Tab menu item to share the tab -->
+    <string name="tab_share">Dūyinga\' rakïj ñanj</string>
+    <!-- Button in the current session menu. Deletes the session when pressed -->
+    <string name="current_session_delete">Nādūre\'</string>
+    <!-- Button in the current session menu. Saves the session when pressed -->
+    <string name="current_session_save">Nā\'nïnj sà\'</string>
+    <!-- Button in the current session menu. Opens the share menu when pressed -->
+    <string name="current_session_share">Dūyingô\'</string>
+    <!-- Content description (not visible, for screen readers etc.): Title icon for current session menu -->
+    <string name="current_session_image">Dàj hua ñadu\'ua sēsiûn arâj sunt akuan\' nïn</string>
+    <!-- Button to save the current set of tabs into a collection -->
+    <string name="save_to_collection">Na\'nïnj sà\' riña màn si yi\'nïnj</string>
+    <!-- Text for the menu button to delete a collection -->
+    <string name="collection_delete">Nādūre\' da\' huā ngè yi\'nïn\'ïn</string>
+    <!-- Text for the menu button to rename a collection -->
+    <string name="collection_rename">Nādūnā si yugui yi\'nïn\'ïn</string>
+    <!-- Text for the button to open tabs of the selected collection -->
+    <string name="collection_open_tabs">Nej Rakïj ñanj huā nî\'nïnj ïn</string>
+    <!-- Text for the menu button to remove a top site -->
+    <string name="remove_top_site">Nādure\'</string>
+    <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
+    <string name="pwa_site_controls_title_private">%1$s (Riña Huìi)</string>
+
+    <!-- History -->
+    <!-- Text for the button to clear all history -->
+    <string name="history_delete_all">Nādūre\' sa gini\'iājt</string>
+    <!-- Text for the dialog to confirm clearing all history -->
+    <string name="history_delete_all_dialog">Ruhuâ yāngà\'t nādure\' sa gini\'iāj raj</string>
+    <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
+    <string name="history_delete_multiple_items_snackbar">Ngà nare\' nej sa gini\'iājt</string>
+    <!-- Text for the snackbar to confirm that a single browsing history item has been deleted. The first parameter is the shortened URL of the deleted history item. -->
+    <string name="history_delete_single_item_snackbar">Ngà nare\' %1$s</string>
+    <!-- Text for positive action to delete history in deleting history dialog -->
+    <string name="history_clear_dialog">Nā\'nïn\'</string>
+    <!-- History overflow menu copy button -->
+    <string name="history_menu_copy_button">Gūxūn nī nāchrūnt a\'ngô hiūj u</string>
+    <!-- History overflow menu share button -->
+    <string name="history_menu_share_button">Dūyingô\'</string>
+
+    <!-- History overflow menu open in new tab button -->
+    <string name="history_menu_open_in_new_tab_button">Nā\'nïn riña rakïj ñanj nakàa</string>
+    <!-- History overflow menu open in private tab button -->
+    <string name="history_menu_open_in_private_tab_button">Nā\'nïn riña rakïj ñanj huìi</string>
+    <!-- Text for the button to delete a single history item -->
+    <string name="history_delete_item">Nādūre\'</string>
+    <!-- History multi select title in app bar
+    The first parameter is the number of bookmarks selected -->
+    <string name="history_multi_select_title">%1$d sa naguij</string>
 
     <!-- Bookmark overflow menu share button -->
     <string name="bookmark_menu_share_button">Dūyingô\'</string>

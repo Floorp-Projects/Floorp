@@ -466,6 +466,8 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="tab_tray_menu_item_close">Mdel akk iccaren</string>
     <!-- Shortcut action to open new tab -->
     <string name="tab_tray_menu_open_new_tab">Iccer amaynut</string>
+    <!-- Shortcut action to open the home screen -->
+    <string name="tab_tray_menu_home">Uɣal s axxam</string>
     <!-- Shortcut action to toggle private mode -->
     <string name="tab_tray_menu_toggle">Sken/ffer askar n waccaren</string>
     <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->

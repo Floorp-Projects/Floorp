@@ -105,8 +105,6 @@
     <string name="browser_menu_new_tab">Nowa karta</string>
     <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection_2">Zachowaj w kolekcji</string>
-    <!-- Browser menu button that opens a dialog to report issues with the current site -->
-    <string name="browser_menu_report_issue">Zgłoś problem ze stroną</string>
     <!-- Browser menu button that open a share menu to share the current site -->
     <string name="browser_menu_share">Udostępnij</string>
     <!-- Share menu title, displayed when a user is sharing their current site -->
@@ -122,8 +120,10 @@
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="browser_menu_powered_by2">Funkcja przeglądarki %1$s</string>
 
-    <!-- Browser menu button to put the the current page in reader mode -->
+    <!-- Browser menu button to put the current page in reader mode -->
     <string name="browser_menu_read">Popraw czytelność</string>
+    <!-- Browser menu button content description to close reader mode and return the user to the regular browser -->
+    <string name="browser_menu_read_close">Wygląd oryginalny</string>
     <!-- Browser menu button to open the current page in an external app -->
     <string name="browser_menu_open_app_link">Otwórz w aplikacji</string>
     <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
@@ -452,6 +452,24 @@
     <string name="tabs_header_private_tabs_title">Prywatne karty</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_tab">Otwórz nową kartę</string>
+    <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
+    <string name="add_private_tab">Otwórz prywatną kartę</string>
+    <!-- Text for the new tab button to indicate adding a new private tab in the tab -->
+    <string name="tab_drawer_fab_content">Prywatna</string>
+    <!-- Text shown as the title of the open tab tray -->
+    <string name="tab_tray_title">Otwarte karty</string>
+    <!-- Text shown in the menu for saving tabs to a collection -->
+    <string name="tab_tray_menu_item_save">Zachowaj w kolekcji</string>
+    <!-- Text shown in the menu for sharing all tabs -->
+    <string name="tab_tray_menu_item_share">Udostępnij wszystkie karty</string>
+    <!-- Text shown in the menu for closing all tabs -->
+    <string name="tab_tray_menu_item_close">Zamknij wszystkie karty</string>
+    <!-- Shortcut action to open new tab -->
+    <string name="tab_tray_menu_open_new_tab">Nowa karta</string>
+    <!-- Shortcut action to open the home screen -->
+    <string name="tab_tray_menu_home">Przejdź na stronę startową</string>
+    <!-- Shortcut action to toggle private mode -->
+    <string name="tab_tray_menu_toggle">Przełącz tryb kart</string>
     <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
     <string name="remove_tab_from_collection">Usuń kartę z kolekcji</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
@@ -718,6 +736,9 @@
     <!-- Button to save currently selected tabs in the "select tabs" step of the collection creator-->
     <string name="create_collection_save">Zachowaj</string>
 
+    <!-- Snackbar action to view the collection the user just created or updated -->
+    <string name="create_collection_view">Wyświetl</string>
+
     <!-- Default name for a new collection in "name new collection" step of the collection creator. %d is a placeholder for the number of collections-->
     <string name="create_collection_default_name">Kolekcja %d</string>
 
@@ -951,20 +972,20 @@
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
     <string name="onboarding_firefox_account_automatic_signin_failed">Logowanie się nie powiodło</string>
     <!-- text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header">Chroń się</string>
+    <string name="onboarding_tracking_protection_header_2">Automatyczna prywatność</string>
     <!-- text for the tracking protection card description
     The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_tracking_protection_description1">%s pomaga uniemożliwić stronom śledzenie Cię w Internecie.</string>
+    <string name="onboarding_tracking_protection_description_2">Ustawienia prywatności i bezpieczeństwa blokują elementy śledzące, złośliwe oprogramowanie oraz firmy chcące Cię śledzić.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
-    <string name="onboarding_tracking_protection_standard_button">Standardowa</string>
+    <string name="onboarding_tracking_protection_standard_button_2">Standardowa (domyślna)</string>
     <!-- text for standard blocking option button description -->
-    <string name="onboarding_tracking_protection_standard_button_description">Blokuje mniej elementów śledzących, ale strony będą działać bez problemów</string>
+    <string name="onboarding_tracking_protection_standard_button_description_2">Blokuje mniej elementów śledzących. Strony będą działać bez problemów.</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">Ścisła (zalecana)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">Ścisła</string>
     <!-- text for strict blocking option button description -->
-    <string name="onboarding_tracking_protection_strict_button_description">Blokuje więcej elementów śledzących, zapewniając lepszą ochronę i większą wydajność, ale niektóre strony mogą nie działać poprawnie</string>
+    <string name="onboarding_tracking_protection_strict_button_description_2">Blokuje więcej elementów śledzących, reklam i wyskakujących okien. Strony wczytują się szybciej, ale część funkcji może nie działać.</string>
     <!-- text for the toolbar position card header
         In English this is an idiom for "choose a side as in an argument or fight"
         but it is ok to make this more literally about "choosing a position in a physical space -->
@@ -1052,31 +1073,21 @@
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Więcej informacji</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_option">Standardowa</string>
-    <!-- Preference for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard">Standardowa (zalecana)</string>
+    <string name="preference_enhanced_tracking_protection_standard_default_1">Standardowa (domyślna)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description">Równowaga między bezpieczeństwem a szybkością wczytywania stron.</string>
-    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_2">Strony będą działać bez problemów, ale blokowane będzie mniej elementów śledzących.</string>
+    <string name="preference_enhanced_tracking_protection_standard_description_3">Blokuje mniej elementów śledzących. Strony będą działać bez problemów.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Co jest blokowane przez standardową ochronę przed śledzeniem</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Ścisła</string>
-    <!-- Preference for enhanced tracking protection for the strict protection settings, default setting -->
-    <string name="preference_enhanced_tracking_protection_strict_default">Ścisła (domyślna)</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_default_description">Silniejsza ochrona przed śledzeniem i większa wydajność, ale niektóre strony mogą nie działać poprawnie.</string>
-    <!-- Preference for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_recommended">Ścisła (zalecana)</string>
-    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description">Silniejsza ochrona, ale może powodować niepoprawne działanie niektórych stron.</string>
+    <string name="preference_enhanced_tracking_protection_strict_description_2">Blokuje więcej elementów śledzących, reklam i wyskakujących okien. Strony wczytują się szybciej, ale część funkcji może nie działać.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Co jest blokowane przez ścisłą ochronę przed śledzeniem</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom">Własna</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_custom_description">Wybierz, które elementy śledzące i skrypty blokować</string>
+    <string name="preference_enhanced_tracking_protection_custom_description_2">Wybierz, które elementy śledzące i skrypty blokować.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_custom_info_button">Co jest blokowane przez własną ochronę przed śledzeniem</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
@@ -1126,7 +1137,7 @@
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_description">Zatrzymuje wczytywanie zewnętrznych reklam, filmów i innych treści zawierających elementy śledzące. Może powodować niepoprawne działanie niektórych stron.</string>
     <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="etp_onboarding_message_2">Kiedy tarcza zmienia kolory, %s blokuje elementy śledzące na stronie. Stuknij ją, aby wyświetlić, co jest blokowane.</string>
+    <string name="etp_onboarding_cfr_message">Kiedy tarcza jest fioletowa, %s blokuje elementy śledzące na stronie. Stuknij ją, aby wyświetlić więcej informacji.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">Ochrona jest włączona na tej witrynie</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->

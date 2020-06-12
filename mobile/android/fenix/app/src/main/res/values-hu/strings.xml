@@ -122,6 +122,8 @@
 
     <!-- Browser menu button to put the current page in reader mode -->
     <string name="browser_menu_read">Olvasó nézet</string>
+    <!-- Browser menu button content description to close reader mode and return the user to the regular browser -->
+    <string name="browser_menu_read_close">Olvasó nézet bezárása</string>
     <!-- Browser menu button to open the current page in an external app -->
     <string name="browser_menu_open_app_link">Megnyitás alkalmazásban</string>
     <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
@@ -451,6 +453,24 @@
     <string name="tabs_header_private_tabs_title">Privát lapok</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_tab">Lap hozzáadása</string>
+    <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
+    <string name="add_private_tab">Privát lap hozzáadása</string>
+    <!-- Text for the new tab button to indicate adding a new private tab in the tab -->
+    <string name="tab_drawer_fab_content">Privát</string>
+    <!-- Text shown as the title of the open tab tray -->
+    <string name="tab_tray_title">Nyitott lapok</string>
+    <!-- Text shown in the menu for saving tabs to a collection -->
+    <string name="tab_tray_menu_item_save">Gyűjteménybe mentés</string>
+    <!-- Text shown in the menu for sharing all tabs -->
+    <string name="tab_tray_menu_item_share">Az összes lap megosztása</string>
+    <!-- Text shown in the menu for closing all tabs -->
+    <string name="tab_tray_menu_item_close">Az összes lap bezárása</string>
+    <!-- Shortcut action to open new tab -->
+    <string name="tab_tray_menu_open_new_tab">Új lap</string>
+    <!-- Shortcut action to open the home screen -->
+    <string name="tab_tray_menu_home">Ugrás a kezdőlapra</string>
+    <!-- Shortcut action to toggle private mode -->
+    <string name="tab_tray_menu_toggle">Lapmód váltása</string>
     <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
     <string name="remove_tab_from_collection">Lap eltávolítása a gyűjteményből</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
@@ -717,6 +737,9 @@
     <!-- Button to save currently selected tabs in the "select tabs" step of the collection creator-->
     <string name="create_collection_save">Mentés</string>
 
+    <!-- Snackbar action to view the collection the user just created or updated -->
+    <string name="create_collection_view">Nézet</string>
+
     <!-- Default name for a new collection in "name new collection" step of the collection creator. %d is a placeholder for the number of collections-->
     <string name="create_collection_default_name">%d. gyűjtemény</string>
 
@@ -951,10 +974,21 @@
     <string name="onboarding_firefox_account_sync_is_on">A Sync be van kapcsolva</string>
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
     <string name="onboarding_firefox_account_automatic_signin_failed">Sikertelen bejelentkezés</string>
+    <!-- text for the tracking protection onboarding card header -->
+    <string name="onboarding_tracking_protection_header_2">Automatikus adatvédelem</string>
+    <!-- text for the tracking protection card description
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_tracking_protection_description_2">Az adatvédelmi és biztonsági beállítások blokkolják a követőket, kártékony programokat és az Önt követő vállalatokat.</string>
+    <!-- text for tracking protection radio button option for standard level of blocking -->
+    <string name="onboarding_tracking_protection_standard_button_2">Normál (alapértelmezett)</string>
+    <!-- text for standard blocking option button description -->
+    <string name="onboarding_tracking_protection_standard_button_description_2">Kevesebb nyomkövetőt blokkol. Az oldalak normálisan lesznek betöltve.</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">Szigorú (ajánlott)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">Szigorú</string>
+    <!-- text for strict blocking option button description -->
+    <string name="onboarding_tracking_protection_strict_button_description_2">Több nyomkövetőt, reklámot és felugró ablakot blokkol. Az oldalak gyorsabban töltődnek be, de egyes funkciók lehet, hogy nem fognak működni.</string>
     <!-- text for the toolbar position card header
         In English this is an idiom for "choose a side as in an argument or fight"
         but it is ok to make this more literally about "choosing a position in a physical space -->
@@ -1042,14 +1076,22 @@
     <string name="preference_enhanced_tracking_protection_explanation">Tartsa meg az adatait. A %s megvédi a leggyakoribb nyomkövetőktől, amelyek követik az online tevékenységét.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">További tudnivalók</string>
+    <!-- Preference for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_default_1">Normál (alapértelmezett)</string>
+    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_description_3">Kevesebb nyomkövetőt blokkol. Az oldalak normálisan lesznek betöltve.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Mit blokkol a szokásos követésvédelem</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Szigorú</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_description_2">Több nyomkövetőt, reklámot és felugró ablakot blokkol. Az oldalak gyorsabban töltődnek be, de egyes funkciók lehet, hogy nem fognak működni.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Mit blokkol a szigorú követésvédelem</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom">Egyéni</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_description_2">Válassza ki a blokkolni kívánt nyomkövetőket és parancsfájlokat.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_custom_info_button">Mit blokkol az egyéni követésvédelem</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
@@ -1098,6 +1140,8 @@
     <string name="etp_tracking_content_title">Nyomkövető tartalom</string>
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_description">Megállítja a követési kódokat tartalmazó külső hirdetések, videók és egyéb tartalmak betöltését. Befolyásolhatja az egyes weboldalak funkcióit.</string>
+    <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="etp_onboarding_cfr_message">Ha a pajzs lila, akkor a %s követőket blokkolt az oldalon. Koppintson a további információkért.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">A védelem BE van kapcsolva ezen a webhelyen</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
