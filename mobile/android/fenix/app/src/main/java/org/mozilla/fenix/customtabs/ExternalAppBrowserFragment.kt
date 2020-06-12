@@ -7,6 +7,7 @@ package org.mozilla.fenix.customtabs
 import android.content.Context
 import android.content.Intent
 import android.view.View
+import androidx.core.view.isVisible
 import androidx.navigation.fragment.navArgs
 import kotlinx.android.synthetic.main.component_browser_top_toolbar.*
 import kotlinx.android.synthetic.main.fragment_browser.*
@@ -17,15 +18,12 @@ import mozilla.components.concept.engine.manifest.WebAppManifestParser
 import mozilla.components.concept.engine.manifest.getOrNull
 import mozilla.components.feature.contextmenu.ContextMenuCandidate
 import mozilla.components.feature.customtabs.CustomTabWindowFeature
-import mozilla.components.feature.pwa.ext.getTrustedScope
-import mozilla.components.feature.pwa.ext.trustedOrigins
 import mozilla.components.feature.pwa.feature.ManifestUpdateFeature
 import mozilla.components.feature.pwa.feature.WebAppActivityFeature
 import mozilla.components.feature.pwa.feature.WebAppHideToolbarFeature
 import mozilla.components.feature.pwa.feature.WebAppSiteControlsFeature
 import mozilla.components.feature.session.TrackingProtectionUseCases
 import mozilla.components.feature.sitepermissions.SitePermissions
-import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.ktx.android.arch.lifecycle.addObservers
@@ -60,7 +58,6 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), UserInteractionHandler
             val manifest = args.webAppManifest?.let { json ->
                 WebAppManifestParser().parse(json).getOrNull()
             }
-            val trustedScopes = listOfNotNull(manifest?.getTrustedScope())
 
             customTabSessionId?.let { customTabSessionId ->
                 customTabsIntegration.set(
@@ -99,11 +96,13 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), UserInteractionHandler
 
                 hideToolbarFeature.set(
                     feature = WebAppHideToolbarFeature(
-                        requireComponents.core.sessionManager,
-                        toolbar,
-                        customTabSessionId,
-                        trustedScopes
+                        store = requireComponents.core.store,
+                        customTabsStore = requireComponents.core.customTabsStore,
+                        tabId = customTabSessionId,
+                        manifest = manifest
                     ) { toolbarVisible ->
+                        browserToolbarView.view.isVisible = toolbarVisible
+                        webAppToolbarShouldBeVisible = toolbarVisible
                         if (!toolbarVisible) { engineView.setDynamicToolbarMaxHeight(0) }
                     },
                     owner = this,
@@ -150,17 +149,6 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), UserInteractionHandler
                         )
                     )
                 }
-            }
-
-            consumeFrom(components.core.customTabsStore) { state ->
-                getSessionById()
-                    ?.let { session -> session.customTabConfig?.sessionToken }
-                    ?.let { token -> state.tabs[token] }
-                    ?.let { tabState ->
-                        hideToolbarFeature.withFeature {
-                            it.onTrustedScopesChange(tabState.trustedOrigins)
-                        }
-                    }
             }
         }
     }

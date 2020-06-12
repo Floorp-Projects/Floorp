@@ -15,6 +15,7 @@ import android.view.ViewGroup
 import androidx.annotation.CallSuper
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.net.toUri
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
@@ -24,15 +25,19 @@ import kotlinx.android.synthetic.main.fragment_browser.*
 import kotlinx.android.synthetic.main.fragment_browser.view.*
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
-import mozilla.components.browser.session.runWithSessionIdOrSelected
 import mozilla.components.browser.state.action.ContentAction
+import mozilla.components.browser.state.selector.findTabOrCustomTabOrSelectedTab
+import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.thumbnails.BrowserThumbnails
@@ -59,12 +64,14 @@ import mozilla.components.feature.session.behavior.EngineViewBottomBehavior
 import mozilla.components.feature.sitepermissions.SitePermissions
 import mozilla.components.feature.sitepermissions.SitePermissionsFeature
 import mozilla.components.feature.sitepermissions.SitePermissionsRules
+import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.service.sync.logins.DefaultLoginValidationDelegate
 import mozilla.components.support.base.feature.PermissionsFeature
 import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.ktx.android.view.exitImmersiveModeIfNeeded
 import mozilla.components.support.ktx.android.view.hideKeyboard
+import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.IntentReceiverActivity
@@ -105,6 +112,7 @@ import java.lang.ref.WeakReference
  * This class only contains shared code focused on the main browsing content.
  * UI code specific to the app or to custom tabs can be found in the subclasses.
  */
+@ExperimentalCoroutinesApi
 @Suppress("TooManyFunctions", "LargeClass")
 abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, SessionManager.Observer {
     protected lateinit var browserFragmentStore: BrowserFragmentStore
@@ -143,7 +151,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
 
     private var browserInitialized: Boolean = false
     private var initUIJob: Job? = null
-    private var enteredPip = false
+    protected var webAppToolbarShouldBeVisible = true
 
     private val sharedViewModel: SharedViewModel by activityViewModels()
 
@@ -383,11 +391,10 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
             resumeDownloadDialogState(session, store, view, context, toolbarHeight)
 
             pipFeature = PictureInPictureFeature(
-                requireComponents.core.sessionManager,
-                requireActivity(),
-                requireComponents.analytics.crashReporter,
-                customTabSessionId,
-                ::pipModeChanged
+                store = store,
+                activity = requireActivity(),
+                crashReporting = context.components.analytics.crashReporter,
+                tabId = customTabSessionId
             )
 
             appLinksFeature.set(
@@ -527,6 +534,12 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                     browserToolbarView.expand()
                 }
             }, owner = viewLifecycleOwner)
+
+            store.flowScoped(viewLifecycleOwner) { flow ->
+                flow.mapNotNull { state -> state.findTabOrCustomTabOrSelectedTab(customTabSessionId) }
+                    .ifChanged { tab -> tab.content.pictureInPictureEnabled }
+                    .collect { tab -> pipModeChanged(tab) }
+            }
 
             @Suppress("ConstantConditionIf")
             if (FeatureFlags.pullToRefreshEnabled) {
@@ -694,11 +707,11 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
     @CallSuper
     final override fun onPause() {
         super.onPause()
+        val session = requireComponents.core.store.state.findTabOrCustomTabOrSelectedTab(customTabSessionId)
         // If we didn't enter PiP, exit full screen on pause
-        if (!enteredPip && fullScreenFeature.onBackPressed()) {
+        if (session?.content?.pictureInPictureEnabled == false && fullScreenFeature.onBackPressed()) {
             fullScreenChanged(false)
         }
-        enteredPip = false
         if (findNavController().currentDestination?.id != R.id.searchFragment) {
             view?.hideKeyboard()
         }
@@ -894,21 +907,13 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
         }
     }
 
-    override fun onHomePressed(): Boolean {
-        if (pipFeature?.onHomePressed() == true) {
-            enteredPip = true
-            return true
-        }
-        return false
-    }
+    override fun onHomePressed() = pipFeature?.onHomePressed() ?: false
 
-    private fun pipModeChanged(enabled: Boolean) {
-        val fullScreenMode =
-            requireComponents.core.sessionManager.runWithSessionIdOrSelected(customTabSessionId) { session ->
-                session.fullScreenMode
-            }
-        // If we're exiting PIP mode and we're in fullscreen mode, then we should exit fullscreen mode as well.
-        if (!enabled && fullScreenMode) {
+    /**
+     * Exit fullscreen mode when exiting PIP mode
+     */
+    private fun pipModeChanged(session: SessionState) {
+        if (!session.content.pictureInPictureEnabled && session.content.fullScreen) {
             onBackPressed()
             fullScreenChanged(false)
         }
@@ -938,7 +943,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                 .setText(getString(R.string.full_screen_notification))
                 .show()
             activity?.enterToImmersiveMode()
-            browserToolbarView.view.visibility = View.GONE
+            browserToolbarView.view.isVisible = false
 
             engineView.setDynamicToolbarMaxHeight(0)
             browserToolbarView.expand()
@@ -949,17 +954,12 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
             (activity as? HomeActivity)?.let { activity ->
                 activity.themeManager.applyStatusBarTheme(activity)
             }
-            browserToolbarView.view.visibility = View.VISIBLE
-            val toolbarHeight = resources.getDimensionPixelSize(R.dimen.browser_toolbar_height)
-            engineView.setDynamicToolbarMaxHeight(toolbarHeight)
+            if (webAppToolbarShouldBeVisible) {
+                browserToolbarView.view.isVisible = true
+                val toolbarHeight = resources.getDimensionPixelSize(R.dimen.browser_toolbar_height)
+                engineView.setDynamicToolbarMaxHeight(toolbarHeight)
+            }
         }
-    }
-
-    private fun getListOfSessions(
-        private: Boolean = (activity as HomeActivity).browsingModeManager.mode.isPrivate
-    ): List<Session> {
-        return requireComponents.core.sessionManager.sessionsOfType(private = private)
-            .toList()
     }
 
     /*
