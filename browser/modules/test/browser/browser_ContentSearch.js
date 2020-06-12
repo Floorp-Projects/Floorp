@@ -212,7 +212,7 @@ add_task(async function badImage() {
   // If the bad image URI caused an exception to be thrown within ContentSearch,
   // then we'll hang waiting for the CurrentState responses triggered by the new
   // engine.  That's what we're testing, and obviously it shouldn't happen.
-  let vals = await waitForNewEngine(browser, "contentSearchBadImage.xml", 1);
+  let vals = await waitForNewEngine(browser, "contentSearchBadImage.xml");
   let engine = vals[0];
   let finalCurrentStateMsg = vals[vals.length - 1];
   let expectedCurrentState = await currentStateObj();
@@ -242,11 +242,7 @@ add_task(
     let { browser } = await addTab();
 
     // Add the test engine that provides suggestions.
-    let vals = await waitForNewEngine(
-      browser,
-      "contentSearchSuggestions.xml",
-      0
-    );
+    let vals = await waitForNewEngine(browser, "contentSearchSuggestions.xml");
     let engine = vals[0];
 
     let searchStr = "browser_ContentSearch.js-suggestions-";
@@ -435,18 +431,12 @@ async function waitForTestMsg(browser, type, count = 1) {
   return { donePromise };
 }
 
-async function waitForNewEngine(browser, basename, numImages) {
+async function waitForNewEngine(browser, basename) {
   info("Waiting for engine to be added: " + basename);
 
   // Wait for the search events triggered by adding the new engine.
-  // engine-added engine-loaded
-  let count = 2;
-  // engine-changed for each of the images
-  for (let i = 0; i < numImages; i++) {
-    count++;
-  }
-
-  let statePromise = await waitForTestMsg(browser, "CurrentState", count);
+  // There are two events triggerd by engine-added and engine-loaded
+  let statePromise = await waitForTestMsg(browser, "CurrentState", 2);
 
   // Wait for addEngine().
   let url = getRootDirectory(gTestPath) + basename;

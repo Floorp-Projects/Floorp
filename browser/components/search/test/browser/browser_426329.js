@@ -99,7 +99,6 @@ function promiseSetEngine() {
           searchBar = BrowserSearch.searchBar;
           searchButton = searchBar.querySelector(".search-go-button");
           ok(searchButton, "got search-go-button");
-          searchBar.value = "test";
 
           Services.obs.removeObserver(
             observer,
@@ -166,6 +165,7 @@ add_task(async function testSetup() {
 
 add_task(async function testSetupEngine() {
   await promiseSetEngine();
+  searchBar.value = "test";
 });
 
 add_task(async function testReturn() {
