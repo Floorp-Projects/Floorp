@@ -6,7 +6,6 @@
 
 #include "mozilla/dom/cache/Manager.h"
 
-#include "mozilla/AbstractThread.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/StaticMutex.h"
@@ -26,7 +25,7 @@
 #include "nsIInputStream.h"
 #include "nsID.h"
 #include "nsIFile.h"
-#include "nsISerialEventTarget.h"
+#include "nsIThread.h"
 #include "nsThreadUtils.h"
 #include "nsTObserverArray.h"
 #include "QuotaClientImpl.h"
@@ -252,11 +251,8 @@ class Manager::Factory {
         return Err(rv);
       }
 
-      ref = MakeSafeRefPtr<Manager>(
-          aManagerId.clonePtr(),
-          AbstractThread::CreateXPCOMThreadWrapper(
-              ioThread, false /* aRequireTailDispatch */),
-          ConstructorGuard{});
+      ref = MakeSafeRefPtr<Manager>(aManagerId.clonePtr(), ioThread,
+                                    ConstructorGuard{});
 
       // There may be an old manager for this origin in the process of
       // cleaning up.  We need to tell the new manager about this so
@@ -1891,8 +1887,7 @@ void Manager::ExecutePutAll(
   pinnedContext->Dispatch(action);
 }
 
-Manager::Manager(SafeRefPtr<ManagerId> aManagerId,
-                 already_AddRefed<nsISerialEventTarget> aIOThread,
+Manager::Manager(SafeRefPtr<ManagerId> aManagerId, nsIThread* aIOThread,
                  const ConstructorGuard&)
     : mManagerId(std::move(aManagerId)),
       mIOThread(aIOThread),
@@ -1907,6 +1902,14 @@ Manager::~Manager() {
   NS_ASSERT_OWNINGTHREAD(Manager);
   MOZ_DIAGNOSTIC_ASSERT(mState == Closing);
   MOZ_DIAGNOSTIC_ASSERT(!mContext);
+
+  nsCOMPtr<nsIThread> ioThread;
+  mIOThread.swap(ioThread);
+
+  // Don't spin the event loop in the destructor waiting for the thread to
+  // shutdown.  Defer this to the main thread, instead.
+  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(NewRunnableMethod(
+      "nsIThread::AsyncShutdown", ioThread, &nsIThread::AsyncShutdown)));
 }
 
 void Manager::Init(Maybe<Manager&> aOldManager) {
@@ -1917,7 +1920,7 @@ void Manager::Init(Maybe<Manager&> aOldManager) {
   // Context goes away.
   RefPtr<Action> setupAction = new SetupAction();
   SafeRefPtr<Context> ref = Context::Create(
-      SafeRefPtrFromThis(), mIOThread, setupAction,
+      SafeRefPtrFromThis(), mIOThread->SerialEventTarget(), setupAction,
       aOldManager ? SomeRef(*aOldManager->mContext) : Nothing());
   mContext = ref.unsafeGetRawPtr();
 }
