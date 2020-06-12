@@ -1342,6 +1342,19 @@ bool WarpCacheIRTranspiler::emitCallRegExpTesterResult(
   return resumeAfter(tester);
 }
 
+bool WarpCacheIRTranspiler::emitCallSubstringKernelResult(
+    StringOperandId strId, Int32OperandId beginId, Int32OperandId lengthId) {
+  MDefinition* str = getOperand(strId);
+  MDefinition* begin = getOperand(beginId);
+  MDefinition* length = getOperand(lengthId);
+
+  auto* substr = MSubstr::New(alloc(), str, begin, length);
+  add(substr);
+
+  pushResult(substr);
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitIsArrayResult(ValOperandId inputId) {
   MDefinition* value = getOperand(inputId);
 

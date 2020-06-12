@@ -5396,6 +5396,38 @@ AttachDecision CallIRGenerator::tryAttachRegExpMatcherSearcherTester(
   return AttachDecision::Attach;
 }
 
+AttachDecision CallIRGenerator::tryAttachSubstringKernel(
+    HandleFunction callee) {
+  // Self-hosted code calls this with (string, int32, int32) arguments.
+  MOZ_ASSERT(argc_ == 3);
+  MOZ_ASSERT(args_[0].isString());
+  MOZ_ASSERT(args_[1].isInt32());
+  MOZ_ASSERT(args_[2].isInt32());
+
+  // Initialize the input operand.
+  Int32OperandId argcId(writer.setInputOperandId(0));
+
+  // Note: we don't need to call emitNativeCalleeGuard for intrinsics.
+
+  ValOperandId arg0Id = writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
+  StringOperandId strId = writer.guardToString(arg0Id);
+
+  ValOperandId arg1Id = writer.loadArgumentFixedSlot(ArgumentKind::Arg1, argc_);
+  Int32OperandId beginId = writer.guardToInt32(arg1Id);
+
+  ValOperandId arg2Id = writer.loadArgumentFixedSlot(ArgumentKind::Arg2, argc_);
+  Int32OperandId lengthId = writer.guardToInt32(arg2Id);
+
+  writer.callSubstringKernelResult(strId, beginId, lengthId);
+
+  // No type monitoring because this always returns a string.
+  writer.returnFromIC();
+  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
+
+  trackAttached("SubstringKernel");
+  return AttachDecision::Attach;
+}
+
 AttachDecision CallIRGenerator::tryAttachStringChar(HandleFunction callee,
                                                     StringChar kind) {
   // Need one argument.
@@ -6062,6 +6094,8 @@ AttachDecision CallIRGenerator::tryAttachInlinableNative(
     case InlinableNative::IntrinsicGuardToRegExpStringIterator:
     case InlinableNative::IntrinsicGuardToWrapForValidIterator:
       return tryAttachGuardToClass(callee, native);
+    case InlinableNative::IntrinsicSubstringKernel:
+      return tryAttachSubstringKernel(callee);
 
     // RegExp natives.
     case InlinableNative::IsRegExpObject:
