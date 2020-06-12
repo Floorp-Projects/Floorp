@@ -26,6 +26,7 @@ class AccessibilityProxy {
   constructor(toolbox) {
     this.toolbox = toolbox;
 
+    this._accessibilityWalkerFronts = new Set();
     this.lifecycleEvents = new Map();
     this.accessibilityEvents = new Map();
     this.supports = {};
@@ -55,7 +56,20 @@ class AccessibilityProxy {
     );
     this.highlightAccessible = this.highlightAccessible.bind(this);
     this.unhighlightAccessible = this.unhighlightAccessible.bind(this);
-    this._onTargetAvailable = this._onTargetAvailable.bind(this);
+    this.onTargetAvailable = this.onTargetAvailable.bind(this);
+    this.onTargetDestroyed = this.onTargetDestroyed.bind(this);
+    this.onAccessibilityFrontAvailable = this.onAccessibilityFrontAvailable.bind(
+      this
+    );
+    this.onAccessibilityFrontDestroyed = this.onAccessibilityFrontDestroyed.bind(
+      this
+    );
+    this.onAccessibleWalkerFrontAvailable = this.onAccessibleWalkerFrontAvailable.bind(
+      this
+    );
+    this.onAccessibleWalkerFrontDestroyed = this.onAccessibleWalkerFrontDestroyed.bind(
+      this
+    );
   }
 
   get enabled() {
@@ -147,7 +161,7 @@ class AccessibilityProxy {
    *         Topmost accessibility walker.
    */
   getAccessibilityTreeRoot() {
-    return this.accessibleWalkerFront;
+    return this.accessibilityFront.accessibleWalkerFront;
   }
 
   /**
@@ -195,10 +209,15 @@ class AccessibilityProxy {
     return this.withAllAccessibilityWalkerFronts(
       async accessibleWalkerFront => {
         this.startListening(accessibleWalkerFront, {
-          "picker-accessible-hovered": onHovered,
-          "picker-accessible-picked": onPicked,
-          "picker-accessible-previewed": onPreviewed,
-          "picker-accessible-canceled": onCanceled,
+          events: {
+            "picker-accessible-hovered": onHovered,
+            "picker-accessible-picked": onPicked,
+            "picker-accessible-previewed": onPreviewed,
+            "picker-accessible-canceled": onCanceled,
+          },
+          // Only register listeners once (for top level), no need to register
+          // them for all walkers again and again.
+          register: accessibleWalkerFront.targetFront.isTopLevel,
         });
         await accessibleWalkerFront.pick(
           // Only pass doFocus to the top level accessibility walker front.
@@ -216,10 +235,15 @@ class AccessibilityProxy {
       async accessibleWalkerFront => {
         await accessibleWalkerFront.cancelPick();
         this.stopListening(accessibleWalkerFront, {
-          "picker-accessible-hovered": onHovered,
-          "picker-accessible-picked": onPicked,
-          "picker-accessible-previewed": onPreviewed,
-          "picker-accessible-canceled": onCanceled,
+          events: {
+            "picker-accessible-hovered": onHovered,
+            "picker-accessible-picked": onPicked,
+            "picker-accessible-previewed": onPreviewed,
+            "picker-accessible-canceled": onCanceled,
+          },
+          // Only unregister listeners once (for top level), no need to
+          // unregister them for all walkers again and again.
+          unregister: accessibleWalkerFront.targetFront.isTopLevel,
         });
       }
     );
@@ -232,44 +256,66 @@ class AccessibilityProxy {
     return { enabled, canBeDisabled, canBeEnabled };
   }
 
-  startListening(front, events) {
+  startListening(front, { events, register = false } = {}) {
     for (const [type, listener] of Object.entries(events)) {
-      this._on(front, type, listener);
+      front.on(type, listener);
+      if (register) {
+        this.registerEvent(front, type, listener);
+      }
     }
   }
 
-  stopListening(front, events) {
+  stopListening(front, { events, unregister = false } = {}) {
     for (const [type, listener] of Object.entries(events)) {
-      this._off(front, type, listener);
+      front.off(type, listener);
+      if (unregister) {
+        this.unregisterEvent(front, type, listener);
+      }
     }
   }
 
   startListeningForAccessibilityEvents(events) {
-    this.startListening(this.accessibleWalkerFront, events);
+    for (const accessibleWalkerFront of this._accessibilityWalkerFronts.values()) {
+      this.startListening(accessibleWalkerFront, {
+        events,
+        // Only register listeners once (for top level), no need to register
+        // them for all walkers again and again.
+        register: accessibleWalkerFront.targetFront.isTopLevel,
+      });
+    }
   }
 
   stopListeningForAccessibilityEvents(events) {
-    this.stopListening(this.accessibleWalkerFront, events);
+    for (const accessibleWalkerFront of this._accessibilityWalkerFronts.values()) {
+      this.stopListening(accessibleWalkerFront, {
+        events,
+        // Only unregister listeners once (for top level), no need to unregister
+        // them for all walkers again and again.
+        unregister: accessibleWalkerFront.targetFront.isTopLevel,
+      });
+    }
   }
 
   startListeningForLifecycleEvents(events) {
-    this.startListening(this.accessibilityFront, events);
+    this.startListening(this.accessibilityFront, { events, register: true });
   }
 
   stopListeningForLifecycleEvents(events) {
-    this.stopListening(this.accessibilityFront, events);
+    this.stopListening(this.accessibilityFront, { events, unregister: true });
   }
 
   startListeningForParentLifecycleEvents(events) {
-    for (const [type, listener] of Object.entries(events)) {
-      this.parentAccessibilityFront.on(type, listener);
-    }
+    this.startListening(this.parentAccessibilityFront, {
+      events,
+      register: false,
+    });
   }
 
   stopListeningForParentLifecycleEvents(events) {
-    for (const [type, listener] of Object.entries(events)) {
-      this.parentAccessibilityFront.off(type, listener);
-    }
+    this.stopListening(this.parentAccessibilityFront, {
+      events,
+      unregister: false,
+    });
   }
 
   highlightAccessible(accessibleFront, options) {
@@ -318,7 +364,7 @@ class AccessibilityProxy {
    * target becomes available.
    */
   async initializeProxyForPanel(targetFront) {
-    await this._updateTarget(targetFront);
+    await this.onTargetAvailable({ targetFront });
 
     // No need to retrieve parent accessibility front since root front does not
     // change.
@@ -328,22 +374,18 @@ class AccessibilityProxy {
       );
     }
 
-    this.accessibleWalkerFront = this.accessibilityFront.accessibleWalkerFront;
     this.simulatorFront = this.accessibilityFront.simulatorFront;
     if (this.simulatorFront) {
       this.simulate = types => this.simulatorFront.simulate({ types });
+    } else {
+      this.simulate = null;
     }
 
-    // Move front listeners to new front.
+    // Move accessibility front lifecycle event listeners to a new top level
+    // front.
     for (const [type, listeners] of this.lifecycleEvents.entries()) {
       for (const listener of listeners.values()) {
         this.accessibilityFront.on(type, listener);
-      }
-    }
-
-    for (const [type, listeners] of this.accessibilityEvents.entries()) {
-      for (const listener of listeners.values()) {
-        this.accessibleWalkerFront.on(type, listener);
       }
     }
   }
@@ -352,7 +394,8 @@ class AccessibilityProxy {
     try {
       await this.toolbox.targetList.watchTargets(
         [this.toolbox.targetList.TYPES.FRAME],
-        this._onTargetAvailable
+        this.onTargetAvailable,
+        this.onTargetDestroyed
       );
       // Bug 1602075: auto init feature definition is used for an experiment to
       // determine if we can automatically enable accessibility panel when it
@@ -372,34 +415,27 @@ class AccessibilityProxy {
   destroy() {
     this.toolbox.targetList.unwatchTargets(
       [this.toolbox.targetList.TYPES.FRAME],
-      this._onTargetAvailable
+      this.onTargetAvailable,
+      this.onTargetDestroyed
     );
 
-    this.lifecycleEvents = null;
-    this.accessibilityEvents = null;
+    this.lifecycleEvents.clear();
+    this.accessibilityEvents.clear();
 
     this.accessibilityFront = null;
     this.parentAccessibilityFront = null;
-    this.accessibleWalkerFront = null;
     this.simulatorFront = null;
     this.simulate = null;
     this.toolbox = null;
   }
 
   _getEvents(front) {
-    return front === this.accessibleWalkerFront
+    return front.typeName === "accessiblewalker"
       ? this.accessibilityEvents
       : this.lifecycleEvents;
   }
 
-  async _onTargetAvailable({ targetFront }) {
-    if (targetFront.isTopLevel) {
-      await this._updateTarget(targetFront);
-    }
-  }
-
-  _on(front, type, listener) {
-    front.on(type, listener);
+  registerEvent(front, type, listener) {
     const events = this._getEvents(front);
     if (events.has(type)) {
       events.get(type).add(listener);
@@ -408,8 +444,7 @@ class AccessibilityProxy {
     }
   }
 
-  _off(front, type, listener) {
-    front.off(type, listener);
+  unregisterEvent(front, type, listener) {
     const events = this._getEvents(front);
     if (!events.has(type)) {
       return;
@@ -425,12 +460,61 @@ class AccessibilityProxy {
     }
   }
 
-  async _updateTarget(targetFront) {
+  onAccessibilityFrontAvailable(accessibilityFront) {
+    accessibilityFront.watchFronts(
+      "accessiblewalker",
+      this.onAccessibleWalkerFrontAvailable,
+      this.onAccessibleWalkerFrontDestroyed
+    );
+  }
+
+  onAccessibilityFrontDestroyed(accessibilityFront) {
+    accessibilityFront.unwatchFronts(
+      "accessiblewalker",
+      this.onAccessibleWalkerFrontAvailable,
+      this.onAccessibleWalkerFrontDestroyed
+    );
+  }
+
+  onAccessibleWalkerFrontAvailable(accessibleWalkerFront) {
+    this._accessibilityWalkerFronts.add(accessibleWalkerFront);
+    // Apply all existing accessible walker front event listeners to the new
+    // front.
+    for (const [type, listeners] of this.accessibilityEvents.entries()) {
+      for (const listener of listeners) {
+        accessibleWalkerFront.on(type, listener);
+      }
+    }
+  }
+
+  onAccessibleWalkerFrontDestroyed(accessibleWalkerFront) {
+    this._accessibilityWalkerFronts.delete(accessibleWalkerFront);
+    // Remove all existing accessible walker front event listeners from the
+    // destroyed front.
+    for (const [type, listeners] of this.accessibilityEvents.entries()) {
+      for (const listener of listeners) {
+        accessibleWalkerFront.off(type, listener);
+      }
+    }
+  }
+
+  async onTargetAvailable({ targetFront }) {
+    targetFront.watchFronts(
+      "accessibility",
+      this.onAccessibilityFrontAvailable,
+      this.onAccessibilityFrontDestroyed
+    );
+
+    if (!targetFront.isTopLevel) {
+      return null;
+    }
+
     if (this._updatePromise && this._currentTarget === targetFront) {
       return this._updatePromise;
     }
 
     this._currentTarget = targetFront;
+    this._accessibilityWalkerFronts.clear();
 
     this._updatePromise = (async () => {
       this.accessibilityFront = await this._currentTarget.getFront(
@@ -449,6 +533,14 @@ class AccessibilityProxy {
     })();
 
     return this._updatePromise;
+  }
+
+  async onTargetDestroyed({ targetFront }) {
+    targetFront.unwatchFronts(
+      "accessibility",
+      this.onAccessibilityFrontAvailable,
+      this.onAccessibilityFrontDestroyed
+    );
   }
 }
 
