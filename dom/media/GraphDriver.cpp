@@ -503,6 +503,7 @@ AudioCallbackDriver::AudioCallbackDriver(
       mInitShutdownThread(
           SharedThreadPool::Get(NS_LITERAL_CSTRING("CubebOperation"), 1)),
       mAudioThreadId(std::thread::id()),
+      mAudioThreadIdInCb(std::thread::id()),
       mAudioStreamState(AudioStreamState::None),
       mFallback("AudioCallbackDriver::mFallback") {
   LOG(LogLevel::Debug, ("%p: AudioCallbackDriver ctor", Graph()));
@@ -844,18 +845,34 @@ void AudioCallbackDriver::DeviceChangedCallback_s(void* aUser) {
 AudioCallbackDriver::AutoInCallback::AutoInCallback(
     AudioCallbackDriver* aDriver)
     : mDriver(aDriver) {
-  MOZ_ASSERT(mDriver->mAudioThreadId == std::thread::id());
-  mDriver->mAudioThreadId = std::this_thread::get_id();
+  MOZ_ASSERT(mDriver->mAudioThreadIdInCb == std::thread::id());
+  mDriver->mAudioThreadIdInCb = std::this_thread::get_id();
 }
 
 AudioCallbackDriver::AutoInCallback::~AutoInCallback() {
-  MOZ_ASSERT(mDriver->mAudioThreadId == std::this_thread::get_id());
-  mDriver->mAudioThreadId = std::thread::id();
+  MOZ_ASSERT(mDriver->mAudioThreadIdInCb == std::this_thread::get_id());
+  mDriver->mAudioThreadIdInCb = std::thread::id();
+}
+
+void AudioCallbackDriver::OnThreadIdChanged() {
+  char stack;
+  profiler_ensure_thread_registered("NativeAudioCallback", &stack);
+}
+
+void AudioCallbackDriver::CheckThreadIdChanged() {
+  auto id = std::this_thread::get_id();
+  if (id != mAudioThreadId) {
+    if (id != std::thread::id()) {
+      OnThreadIdChanged();
+    }
+    mAudioThreadId = id;
+  }
 }
 
 long AudioCallbackDriver::DataCallback(const AudioDataValue* aInputBuffer,
                                        AudioDataValue* aOutputBuffer,
                                        long aFrames) {
+  CheckThreadIdChanged();
   FallbackDriverState fallbackState = mFallbackDriverState;
   if (MOZ_UNLIKELY(fallbackState == FallbackDriverState::Running)) {
     // Wait for the fallback driver to stop. Wake it up so it can stop if it's

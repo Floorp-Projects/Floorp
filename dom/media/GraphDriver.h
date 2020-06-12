@@ -618,10 +618,17 @@ class AudioCallbackDriver : public GraphDriver,
     return AudioInputType::Unknown;
   }
 
-  std::thread::id ThreadId() { return mAudioThreadId.load(); }
+  std::thread::id ThreadId() { return mAudioThreadIdInCb.load(); }
+
+  /* Called when the thread servicing the callback has changed. This can be
+   * fairly expensive */
+  void OnThreadIdChanged();
+  /* Called at the beginning of the audio callback to check if the thread id has
+   * changed. */
+  void CheckThreadIdChanged();
 
   bool OnThread() override {
-    return mAudioThreadId.load() == std::this_thread::get_id();
+    return mAudioThreadIdInCb.load() == std::this_thread::get_id();
   }
 
   /* Returns true if this audio callback driver has successfully started and not
@@ -730,9 +737,14 @@ class AudioCallbackDriver : public GraphDriver,
   /* The mixer that the graph mixes into during an iteration. Audio thread only.
    */
   AudioMixer mMixer;
-  /* Contains the id of the audio thread for as long as the callback
-   * is taking place, after that it is reseted to an invalid value. */
+  /* Contains the id of the audio thread id. When this changed,
+   * OnAudioThreadChanged is called. */
   std::atomic<std::thread::id> mAudioThreadId;
+
+  /* This allows implementing AutoInCallback. This is equal to the current
+   * thread id when in an audio callback, and is an invalid thread id otherwise.
+   */
+  std::atomic<std::thread::id> mAudioThreadIdInCb;
   /* State of the audio stream, see inline comments. */
   enum class AudioStreamState {
     /* There is no AudioStream and no pending AsyncCubebTask to INIT one. */
