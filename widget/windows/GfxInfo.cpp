@@ -1740,7 +1740,7 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
         DRIVER_LESS_THAN, GfxDriverInfo::allDriverVersions,
         "FEATURE_UNQUALIFIED_WEBRENDER_NVIDIA_BLOCKED");
 
-#ifndef NIGHTLY_BUILD
+#ifndef EARLY_BETA_OR_EARLIER
     // Block all Windows versions other than Windows 10.
     APPEND_TO_DRIVER_BLOCKLIST2(
         OperatingSystem::Windows7, DeviceFamily::All,
