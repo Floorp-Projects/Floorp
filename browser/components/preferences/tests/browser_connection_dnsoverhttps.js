@@ -6,6 +6,9 @@ const TRR_MODE_PREF = "network.trr.mode";
 const TRR_URI_PREF = "network.trr.uri";
 const TRR_RESOLVERS_PREF = "network.trr.resolvers";
 const TRR_CUSTOM_URI_PREF = "network.trr.custom_uri";
+const ROLLOUT_ENABLED_PREF = "doh-rollout.enabled";
+const ROLLOUT_SELF_ENABLED_PREF = "doh-rollout.self-enabled";
+const HEURISTICS_DISABLED_PREF = "doh-rollout.disable-heuristics";
 const DEFAULT_RESOLVER_VALUE = "https://mozilla.cloudflare-dns.com/dns-query";
 const NEXTDNS_RESOLVER_VALUE = "https://trr.dns.nextdns.io/";
 
@@ -27,6 +30,9 @@ function resetPrefs() {
   Services.prefs.clearUserPref(TRR_URI_PREF);
   Services.prefs.clearUserPref(TRR_RESOLVERS_PREF);
   Services.prefs.clearUserPref(TRR_CUSTOM_URI_PREF);
+  Services.prefs.clearUserPref(ROLLOUT_ENABLED_PREF);
+  Services.prefs.clearUserPref(ROLLOUT_SELF_ENABLED_PREF);
+  Services.prefs.clearUserPref(HEURISTICS_DISABLED_PREF);
 }
 
 let preferencesOpen = new Promise(res => open_preferences(res));
@@ -67,8 +73,20 @@ async function testWithProperties(props, startTime) {
       ": testWithProperties: testing with " +
       JSON.stringify(props)
   );
+  let rolloutReadyPref = ROLLOUT_SELF_ENABLED_PREF;
   if (props.hasOwnProperty(TRR_MODE_PREF)) {
     Services.prefs.setIntPref(TRR_MODE_PREF, props[TRR_MODE_PREF]);
+    if ([2, 3, 5].includes(props[TRR_MODE_PREF])) {
+      rolloutReadyPref = HEURISTICS_DISABLED_PREF;
+    }
+  }
+  if (props.hasOwnProperty(ROLLOUT_ENABLED_PREF)) {
+    let prefPromise = waitForPrefObserver(rolloutReadyPref);
+    Services.prefs.setBoolPref(
+      ROLLOUT_ENABLED_PREF,
+      props[ROLLOUT_ENABLED_PREF]
+    );
+    await prefPromise;
   }
   if (props.hasOwnProperty(TRR_CUSTOM_URI_PREF)) {
     Services.prefs.setStringPref(
@@ -101,8 +119,12 @@ async function testWithProperties(props, startTime) {
   let resolverMenulist = doc.querySelector(resolverMenulistSelector);
   let uriPrefChangedPromise;
   let modePrefChangedPromise;
+  let disableHeuristicsPrefChangedPromise;
 
   if (props.hasOwnProperty("expectedModeChecked")) {
+    await TestUtils.waitForCondition(
+      () => modeCheckbox.checked === props.expectedModeChecked
+    );
     is(
       modeCheckbox.checked,
       props.expectedModeChecked,
@@ -110,6 +132,9 @@ async function testWithProperties(props, startTime) {
     );
   }
   if (props.hasOwnProperty("expectedUriValue")) {
+    await TestUtils.waitForCondition(
+      () => uriTextbox.value === props.expectedUriValue
+    );
     is(
       uriTextbox.value,
       props.expectedUriValue,
@@ -117,6 +142,9 @@ async function testWithProperties(props, startTime) {
     );
   }
   if (props.hasOwnProperty("expectedResolverListValue")) {
+    await TestUtils.waitForCondition(
+      () => resolverMenulist.value === props.expectedResolverListValue
+    );
     is(
       resolverMenulist.value,
       props.expectedResolverListValue,
@@ -130,6 +158,11 @@ async function testWithProperties(props, startTime) {
         ": testWithProperties: clickMode, waiting for the pref observer"
     );
     modePrefChangedPromise = waitForPrefObserver(TRR_MODE_PREF);
+    if (props.hasOwnProperty("expectedDisabledHeuristics")) {
+      disableHeuristicsPrefChangedPromise = waitForPrefObserver(
+        HEURISTICS_DISABLED_PREF
+      );
+    }
     info(
       Date.now() - startTime + ": testWithProperties: clickMode, pref changed"
     );
@@ -197,7 +230,11 @@ async function testWithProperties(props, startTime) {
       startTime +
       ": testWithProperties: waiting for any of uri and mode prefs to change"
   );
-  await Promise.all([uriPrefChangedPromise, modePrefChangedPromise]);
+  await Promise.all([
+    uriPrefChangedPromise,
+    modePrefChangedPromise,
+    disableHeuristicsPrefChangedPromise,
+  ]);
   info(Date.now() - startTime + ": testWithProperties: prefs changed");
 
   if (props.hasOwnProperty("expectedFinalUriPref")) {
@@ -215,6 +252,17 @@ async function testWithProperties(props, startTime) {
       modePref,
       props.expectedModePref,
       "mode pref ended up with the expected value"
+    );
+  }
+
+  if (props.hasOwnProperty("expectedDisabledHeuristics")) {
+    let disabledHeuristicsPref = Services.prefs.getBoolPref(
+      HEURISTICS_DISABLED_PREF
+    );
+    is(
+      disabledHeuristicsPref,
+      props.expectedDisabledHeuristics,
+      "disable-heuristics pref ended up with the expected value"
     );
   }
 
@@ -260,7 +308,7 @@ let testVariations = [
   {
     name: "mode 1",
     [TRR_MODE_PREF]: 1,
-    expectedModeChecked: true,
+    expectedModeChecked: false,
     expectedFinalUriPref: DEFAULT_RESOLVER_VALUE,
   },
   {
@@ -278,7 +326,7 @@ let testVariations = [
   {
     name: "mode 4",
     [TRR_MODE_PREF]: 4,
-    expectedModeChecked: true,
+    expectedModeChecked: false,
     expectedFinalUriPref: DEFAULT_RESOLVER_VALUE,
   },
   { name: "mode 5", [TRR_MODE_PREF]: 5, expectedModeChecked: false },
@@ -287,6 +335,32 @@ let testVariations = [
     name: "mode out-of-bounds",
     [TRR_MODE_PREF]: 77,
     expectedModeChecked: false,
+  },
+
+  // verify automatic heuristics states
+  {
+    name: "heuristics on and mode unset",
+    [TRR_MODE_PREF]: 0,
+    [ROLLOUT_ENABLED_PREF]: true,
+    expectedModeChecked: true,
+  },
+  {
+    name: "heuristics on and mode set to 2",
+    [TRR_MODE_PREF]: 2,
+    [ROLLOUT_ENABLED_PREF]: true,
+    expectedModeChecked: true,
+  },
+  {
+    name: "heuristics on but disabled, mode unset",
+    [TRR_MODE_PREF]: 5,
+    [ROLLOUT_ENABLED_PREF]: true,
+    expectedModeChecked: false,
+  },
+  {
+    name: "heuristics on but disabled, mode set to 2",
+    [TRR_MODE_PREF]: 2,
+    [ROLLOUT_ENABLED_PREF]: true,
+    expectedModeChecked: true,
   },
 
   // verify toggling the checkbox gives the right outcomes
@@ -299,10 +373,19 @@ let testVariations = [
   },
   {
     name: "toggle mode off",
-    [TRR_MODE_PREF]: 4,
+    [TRR_MODE_PREF]: 2,
     expectedModeChecked: true,
     clickMode: true,
-    expectedModePref: 0,
+    expectedModePref: 5,
+  },
+  {
+    name: "toggle mode off when on due to heuristics",
+    [TRR_MODE_PREF]: 0,
+    [ROLLOUT_ENABLED_PREF]: true,
+    expectedModeChecked: true,
+    clickMode: true,
+    expectedModePref: 5,
+    expectedDisabledHeuristics: true,
   },
   // Test selecting non-default, non-custom TRR provider, NextDNS.
   {
