@@ -22,6 +22,8 @@ pub struct Cookie {
     pub http_only: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub expiry: Option<Date>,
+    #[serde(skip_serializing_if = "Option::is_none", rename = "sameSite")]
+    pub same_site: Option<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]

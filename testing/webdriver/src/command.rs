@@ -398,6 +398,7 @@ pub struct AddCookieParameters {
     pub httpOnly: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub expiry: Option<Date>,
+    pub sameSite: Option<String>,
 }
 
 impl<'de> Deserialize<'de> for AddCookieParameters {
@@ -808,6 +809,7 @@ mod tests {
             "expiry": 123,
             "secure": true,
             "httpOnly": false,
+            "sameSite": "Lax",
         }});
         let cookie = AddCookieParameters {
             name: "foo".into(),
@@ -817,6 +819,7 @@ mod tests {
             expiry: Some(Date(123)),
             secure: true,
             httpOnly: false,
+            sameSite: Some("Lax".into()),
         };
 
         assert_de(&cookie, json);
@@ -832,6 +835,7 @@ mod tests {
             "expiry": null,
             "secure": true,
             "httpOnly": false,
+            "sameSite": null,
         }});
         let cookie = AddCookieParameters {
             name: "foo".into(),
@@ -841,6 +845,7 @@ mod tests {
             expiry: None,
             secure: true,
             httpOnly: false,
+            sameSite: None,
         };
 
         assert_de(&cookie, json);
@@ -862,6 +867,7 @@ mod tests {
             expiry: None,
             secure: true,
             httpOnly: false,
+            sameSite: None,
         };
 
         assert_de(&cookie, json);
@@ -889,6 +895,7 @@ mod tests {
             expiry: None,
             secure: true,
             httpOnly: false,
+            sameSite: None,
         };
 
         assert_de(&cookie, json);

@@ -27,6 +27,8 @@ pub struct Cookie {
     pub http_only: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub expiry: Option<Date>,
+    #[serde(skip_serializing_if = "Option::is_none", rename = "sameSite")]
+    pub same_site: Option<String>,
 }
 
 pub fn to_cookie<T, S>(data: T, serializer: S) -> Result<S::Ok, S::Error>
@@ -177,6 +179,7 @@ mod tests {
             secure: false,
             http_only: false,
             expiry: None,
+            same_site: None,
         };
         assert_de(&data, json!({"name":"hello", "value":"world"}));
     }

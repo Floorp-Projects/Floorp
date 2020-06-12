@@ -1624,6 +1624,7 @@ impl ToMarionette<MarionetteCookie> for AddCookieParameters {
                 Some(date) => Some(date.to_marionette()?),
                 None => None,
             },
+            same_site: self.sameSite.clone(),
         })
     }
 }
