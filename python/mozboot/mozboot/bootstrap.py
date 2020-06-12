@@ -188,7 +188,7 @@ DEBIAN_DISTROS = (
     'pop',
 )
 
-ADD_GIT_TOOLS_PATH = '''
+ADD_GIT_CINNABAR_PATH = '''
 To add git-cinnabar to the PATH, edit your shell initialization script, which
 may be called ~/.bashrc or ~/.bash_profile or ~/.profile, and add the following
 lines:
@@ -527,8 +527,9 @@ class Bootstrapper(object):
                 should_configure_git = self.hg_configure
 
             if should_configure_git:
-                configure_git(self.instance.which('git'), state_dir,
-                              checkout_root)
+                configure_git(self.instance.which('git'),
+                              self.instance.which('git-cinnabar'),
+                              state_dir, checkout_root)
 
         # Offer to clone if we're not inside a clone.
         have_clone = False
@@ -805,11 +806,12 @@ def update_git_repo(git, url, dest):
         print('=' * 80)
 
 
-def configure_git(git, root_state_dir, top_src_dir):
+def configure_git(git, cinnabar, root_state_dir, top_src_dir):
     """Run the Git configuration steps."""
     cinnabar_dir = update_git_tools(git, root_state_dir, top_src_dir)
 
-    print(ADD_GIT_TOOLS_PATH.format(cinnabar_dir))
+    if not cinnabar:
+        print(ADD_GIT_CINNABAR_PATH.format(cinnabar_dir))
 
 
 def git_clone_firefox(git, dest, watchman=None):
