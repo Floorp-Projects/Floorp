@@ -407,12 +407,10 @@ class nsDocumentEncoder : public nsIDocumentEncoder {
     // @param aFlags multiple of the flags defined in nsIDocumentEncoder.idl.
     RangeSerializer(const uint32_t& aFlags,
                     const NodeSerializer& aNodeSerializer,
-                    const RangeNodeContext& aRangeNodeContext,
                     RangeContextSerializer& aRangeContextSerializer)
         : mStartRootIndex{0},
           mEndRootIndex{0},
           mHaltRangeHint{false},
-          mRangeNodeContext{aRangeNodeContext},
           mFlags{aFlags},
           mNodeSerializer{aNodeSerializer},
           mRangeContextSerializer{aRangeContextSerializer} {}
@@ -440,8 +438,6 @@ class nsDocumentEncoder : public nsIDocumentEncoder {
     int32_t mEndRootIndex;
     bool mHaltRangeHint;
     ContextInfoDepth mContextInfoDepth;
-
-    const RangeNodeContext& mRangeNodeContext;
 
     // Multiple of the flags defined in nsIDocumentEncoder.idl.
     const uint32_t& mFlags;
@@ -485,8 +481,7 @@ nsDocumentEncoder::nsDocumentEncoder(
                       mTextStreamer),
       mRangeNodeContext(std::move(aRangeNodeContext)),
       mRangeContextSerializer(*mRangeNodeContext, mNodeSerializer),
-      mRangeSerializer(mFlags, mNodeSerializer, *mRangeNodeContext,
-                       mRangeContextSerializer) {
+      mRangeSerializer(mFlags, mNodeSerializer, mRangeContextSerializer) {
   MOZ_ASSERT(mRangeNodeContext);
 
   Initialize();
@@ -1014,7 +1009,7 @@ nsresult nsDocumentEncoder::RangeSerializer::SerializeRangeNodes(
       NS_ENSURE_SUCCESS(rv, rv);
     } else {
       if (aNode != mClosestCommonInclusiveAncestorOfRange) {
-        if (mRangeNodeContext.IncludeInContext(aNode)) {
+        if (mRangeContextSerializer.mRangeNodeContext.IncludeInContext(aNode)) {
           // halt the incrementing of mContextInfoDepth.  This
           // is so paste client will include this node in paste.
           mHaltRangeHint = true;
