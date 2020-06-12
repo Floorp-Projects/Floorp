@@ -459,10 +459,6 @@ class ContentChild final : public PContentChild,
   mozilla::ipc::IPCResult RecvNotifyPushSubscriptionModifiedObservers(
       const nsCString& aScope, const IPC::Principal& aPrincipal);
 
-  mozilla::ipc::IPCResult RecvActivate(PBrowserChild* aTab);
-
-  mozilla::ipc::IPCResult RecvDeactivate(PBrowserChild* aTab);
-
   mozilla::ipc::IPCResult RecvRefreshScreens(
       nsTArray<ScreenDetails>&& aScreens);
 

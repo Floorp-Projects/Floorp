@@ -1143,7 +1143,7 @@ void BrowserParent::Activate() {
   LOGBROWSERFOCUS(("Activate %p", this));
   if (!mIsDestroyed) {
     SetTopLevelWebFocus(this);  // Intentionally inside "if"
-    Unused << Manager()->SendActivate(this);
+    Unused << SendActivate();
   }
 }
 
@@ -1153,7 +1153,7 @@ void BrowserParent::Deactivate(bool aWindowLowering) {
     UnsetTopLevelWebFocus(this);  // Intentionally outside the next "if"
   }
   if (!mIsDestroyed) {
-    Unused << Manager()->SendDeactivate(this);
+    Unused << SendDeactivate();
   }
 }
 
