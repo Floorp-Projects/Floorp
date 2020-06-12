@@ -14,27 +14,6 @@ XPCSHELL_TESTS_MANIFESTS += [
     'unit_ipc/xpcshell.ini',
 ]
 
-FINAL_LIBRARY = 'xul-gtest'
-UNIFIED_SOURCES += [
-    'TestBind.cpp',
-    'TestCookie.cpp',
-    'TestUDPSocket.cpp',
-]
-
-LOCAL_INCLUDES += [
-    '/netwerk/cookie',
-]
-
-if CONFIG['OS_TARGET'] == 'WINNT':
-    UNIFIED_SOURCES += [
-        'TestNamedPipeService.cpp',
-    ]
-
-include('/ipc/chromium/chromium-config.mozbuild')
-
-if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
-    CXXFLAGS += ['-Wno-shadow']
-
 if CONFIG['FUZZING_INTERFACES']:
     TEST_DIRS += [
         'fuzz'
