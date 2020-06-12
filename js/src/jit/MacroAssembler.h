@@ -1063,6 +1063,11 @@ class MacroAssembler : public MacroAssemblerSpecific {
   void pow32(Register base, Register power, Register dest, Register temp1,
              Register temp2, Label* onOver);
 
+  void branchIfNotRegExpPrototypeOptimizable(Register proto, Register temp,
+                                             Label* label);
+  void branchIfNotRegExpInstanceOptimizable(Register regexp, Register temp,
+                                            Label* label);
+
   // ===============================================================
   // Shift functions
 

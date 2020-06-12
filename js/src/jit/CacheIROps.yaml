@@ -235,6 +235,19 @@
     begin: Int32Id
     length: Int32Id
 
+- name: RegExpPrototypeOptimizableResult
+  shared: true
+  transpile: true
+  args:
+    proto: ObjId
+
+- name: RegExpInstanceOptimizableResult
+  shared: true
+  transpile: true
+  args:
+    regexp: ObjId
+    proto: ObjId
+
 # Add a reference to a global in the compartment to keep it alive.
 - name: GuardCompartment
   shared: false
