@@ -44,6 +44,7 @@
 #include "nsLayoutUtils.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/ScopeExit.h"
+#include "mozilla/UniquePtr.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -208,9 +209,29 @@ struct ContextInfoDepth {
 };
 
 class nsDocumentEncoder : public nsIDocumentEncoder {
+ protected:
+  class RangeNodeContext {
+   public:
+    virtual ~RangeNodeContext() = default;
+
+    virtual bool IncludeInContext(nsINode* aNode) const { return false; }
+
+    virtual int32_t GetImmediateContextCount(
+        const nsTArray<nsINode*>& aAncestorArray) const {
+      return -1;
+    }
+  };
+
  public:
   nsDocumentEncoder();
 
+ protected:
+  /**
+   * @param aRangeNodeContext has to be non-null.
+   */
+  explicit nsDocumentEncoder(UniquePtr<RangeNodeContext> aRangeNodeContext);
+
+ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS(nsDocumentEncoder)
   NS_DECL_NSIDOCUMENTENCODER
@@ -242,11 +263,6 @@ class nsDocumentEncoder : public nsIDocumentEncoder {
                                int32_t aDepth);
   nsresult SerializeRangeContextStart(const nsTArray<nsINode*>& aAncestorArray);
   nsresult SerializeRangeContextEnd();
-
-  virtual int32_t GetImmediateContextCount(
-      const nsTArray<nsINode*>& aAncestorArray) {
-    return -1;
-  }
 
   /**
    * @param aFlags multiple of the flags defined in nsIDocumentEncoder.idl.o
@@ -293,8 +309,6 @@ class nsDocumentEncoder : public nsIDocumentEncoder {
     }
     return false;
   }
-
-  virtual bool IncludeInContext(nsINode* aNode);
 
   void ReleaseDocumentReferenceAndInitialize(bool aClearCachedSerializer);
 
@@ -380,13 +394,17 @@ class nsDocumentEncoder : public nsIDocumentEncoder {
 
   NodeSerializer mNodeSerializer;
 
+  const UniquePtr<RangeNodeContext> mRangeNodeContext;
+
   struct RangeSerializer {
     // @param aFlags multiple of the flags defined in nsIDocumentEncoder.idl.
     RangeSerializer(const uint32_t& aFlags,
-                    const NodeSerializer& aNodeSerializer)
+                    const NodeSerializer& aNodeSerializer,
+                    const RangeNodeContext& aRangeNodeContext)
         : mStartRootIndex{0},
           mEndRootIndex{0},
           mHaltRangeHint{false},
+          mRangeNodeContext{aRangeNodeContext},
           mFlags{aFlags},
           mNodeSerializer{aNodeSerializer} {}
 
@@ -401,6 +419,8 @@ class nsDocumentEncoder : public nsIDocumentEncoder {
     int32_t mEndRootIndex;
     bool mHaltRangeHint;
     ContextInfoDepth mContextInfoDepth;
+
+    const RangeNodeContext& mRangeNodeContext;
 
     // Multiple of the flags defined in nsIDocumentEncoder.idl.
     const uint32_t& mFlags;
@@ -425,16 +445,23 @@ NS_IMPL_CYCLE_COLLECTION(
     mEncodingScope.mRange, mEncodingScope.mNode, mSerializer,
     mRangeSerializer.mClosestCommonInclusiveAncestorOfRange)
 
-nsDocumentEncoder::nsDocumentEncoder()
+nsDocumentEncoder::nsDocumentEncoder(
+    UniquePtr<RangeNodeContext> aRangeNodeContext)
     : mEncoding(nullptr),
       mIsCopying(false),
       mCachedBuffer(nullptr),
       mNodeSerializer(mNeedsPreformatScanning, mSerializer, mFlags, mNodeFixup,
                       mTextStreamer),
-      mRangeSerializer(mFlags, mNodeSerializer) {
+      mRangeNodeContext(std::move(aRangeNodeContext)),
+      mRangeSerializer(mFlags, mNodeSerializer, *mRangeNodeContext) {
+  MOZ_ASSERT(mRangeNodeContext);
+
   Initialize();
   mMimeType.AssignLiteral("text/plain");
 }
+
+nsDocumentEncoder::nsDocumentEncoder()
+    : nsDocumentEncoder(MakeUnique<RangeNodeContext>()) {}
 
 void nsDocumentEncoder::Initialize(bool aClearCachedSerializer) {
   mFlags = 0;
@@ -672,8 +699,6 @@ nsDocumentEncoder::GetMimeType(nsAString& aMimeType) {
   aMimeType = mMimeType;
   return NS_OK;
 }
-
-bool nsDocumentEncoder::IncludeInContext(nsINode* aNode) { return false; }
 
 class FixupNodeDeterminer {
  public:
@@ -961,7 +986,7 @@ nsresult nsDocumentEncoder::SerializeRangeNodes(const nsRange* const aRange,
       NS_ENSURE_SUCCESS(rv, rv);
     } else {
       if (aNode != mRangeSerializer.mClosestCommonInclusiveAncestorOfRange) {
-        if (IncludeInContext(aNode)) {
+        if (mRangeSerializer.mRangeNodeContext.IncludeInContext(aNode)) {
           // halt the incrementing of mRangeSerializer.mContextInfoDepth.  This
           // is so paste client will include this node in paste.
           mRangeSerializer.mHaltRangeHint = true;
@@ -1060,14 +1085,15 @@ nsresult nsDocumentEncoder::SerializeRangeContextStart(
   nsresult rv = NS_OK;
 
   // currently only for table-related elements; see Bug 137450
-  j = GetImmediateContextCount(aAncestorArray);
+  j = mRangeSerializer.mRangeNodeContext.GetImmediateContextCount(
+      aAncestorArray);
 
   while (i > 0) {
     nsINode* node = aAncestorArray.ElementAt(--i);
     if (!node) break;
 
     // Either a general inclusion or as immediate context
-    if (IncludeInContext(node) || i < j) {
+    if (mRangeSerializer.mRangeNodeContext.IncludeInContext(node) || i < j) {
       rv = mNodeSerializer.SerializeNodeStart(*node, 0, -1);
       serializedContext->AppendElement(node);
       if (NS_FAILED(rv)) break;
@@ -1332,9 +1358,17 @@ already_AddRefed<nsIDocumentEncoder> do_createDocumentEncoder(
 }
 
 class nsHTMLCopyEncoder : public nsDocumentEncoder {
+ private:
+  class RangeNodeContext final : public nsDocumentEncoder::RangeNodeContext {
+    bool IncludeInContext(nsINode* aNode) const final;
+
+    int32_t GetImmediateContextCount(
+        const nsTArray<nsINode*>& aAncestorArray) const final;
+  };
+
  public:
   nsHTMLCopyEncoder();
-  virtual ~nsHTMLCopyEncoder();
+  ~nsHTMLCopyEncoder();
 
   NS_IMETHOD Init(Document* aDocument, const nsAString& aMimeType,
                   uint32_t aFlags) override;
@@ -1364,14 +1398,14 @@ class nsHTMLCopyEncoder : public nsDocumentEncoder {
   bool IsRoot(nsINode* aNode);
   static bool IsFirstNode(nsINode* aNode);
   static bool IsLastNode(nsINode* aNode);
-  virtual bool IncludeInContext(nsINode* aNode) override;
-  virtual int32_t GetImmediateContextCount(
-      const nsTArray<nsINode*>& aAncestorArray) override;
 
   bool mIsTextWidget;
 };
 
-nsHTMLCopyEncoder::nsHTMLCopyEncoder() { mIsTextWidget = false; }
+nsHTMLCopyEncoder::nsHTMLCopyEncoder()
+    : nsDocumentEncoder{MakeUnique<nsHTMLCopyEncoder::RangeNodeContext>()} {
+  mIsTextWidget = false;
+}
 
 nsHTMLCopyEncoder::~nsHTMLCopyEncoder() = default;
 
@@ -1565,7 +1599,8 @@ nsHTMLCopyEncoder::EncodeToStringWithContext(nsAString& aContextString,
   return rv;
 }
 
-bool nsHTMLCopyEncoder::IncludeInContext(nsINode* aNode) {
+bool nsHTMLCopyEncoder::RangeNodeContext::IncludeInContext(
+    nsINode* aNode) const {
   nsCOMPtr<nsIContent> content(do_QueryInterface(aNode));
 
   if (!content) return false;
@@ -1919,8 +1954,8 @@ already_AddRefed<nsIDocumentEncoder> do_createHTMLCopyEncoder() {
   return do_AddRef(new nsHTMLCopyEncoder);
 }
 
-int32_t nsHTMLCopyEncoder::GetImmediateContextCount(
-    const nsTArray<nsINode*>& aAncestorArray) {
+int32_t nsHTMLCopyEncoder::RangeNodeContext::GetImmediateContextCount(
+    const nsTArray<nsINode*>& aAncestorArray) const {
   int32_t i = aAncestorArray.Length(), j = 0;
   while (j < i) {
     nsINode* node = aAncestorArray.ElementAt(j);
