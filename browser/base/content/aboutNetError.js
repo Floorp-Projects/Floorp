@@ -291,6 +291,10 @@ function initPage() {
     document.getElementById("netErrorButtonContainer").style.display = "none";
   }
 
+  let learnMoreLink = document.getElementById("learnMoreLink");
+  let baseURL = RPMGetFormatURLPref("app.support.baseURL");
+  learnMoreLink.setAttribute("href", baseURL + "connection-not-secure");
+
   if (err == "cspBlocked" || err == "xfoBlocked") {
     // Remove the "Try again" button for XFO and CSP violations,
     // since it's almost certainly useless. (Bug 553180)
@@ -312,12 +316,13 @@ function initPage() {
       "openInNewWindowButton"
     );
     openInNewWindowButton.href = document.location.href;
+
+    // Add a learn more link
+    document.getElementById("learnMoreContainer").style.display = "block";
+    learnMoreLink.setAttribute("href", baseURL + "xframe-neterror-page");
   }
 
   setNetErrorMessageFromCode();
-  let learnMoreLink = document.getElementById("learnMoreLink");
-  let baseURL = RPMGetFormatURLPref("app.support.baseURL");
-  learnMoreLink.setAttribute("href", baseURL + "connection-not-secure");
 
   // Pinning errors are of type nssFailure2
   if (err == "nssFailure2") {
