@@ -1113,6 +1113,7 @@ void gfxDWriteFontList::GetFacesInitDataForFamily(
             exists) {
           gfxFontUtils::ReadCanonicalName(
               data, size, gfxFontUtils::NAME_ID_POSTSCRIPT, name);
+          dwFontFace->ReleaseFontTable(context);
         }
       }
     }
@@ -1185,6 +1186,7 @@ bool gfxDWriteFontList::ReadFaceNames(fontlist::Family* aFamily,
         result = SUCCEEDED(ps) && !aPSName.IsEmpty();
       }
     }
+    dwFontFace->ReleaseFontTable(context);
     return result;
   }
   return true;
@@ -2092,7 +2094,7 @@ void DirectWriteFontInfo::LoadFontFamilyData(const nsACString& aFamilyName) {
       hr = dwFontFace->TryGetFontTable(kCMAP, (const void**)&cmapData,
                                        &cmapSize, &ctx, &exists);
 
-      if (SUCCEEDED(hr)) {
+      if (SUCCEEDED(hr) && exists) {
         bool cmapLoaded = false;
         RefPtr<gfxCharacterMap> charmap = new gfxCharacterMap();
         uint32_t offset;
