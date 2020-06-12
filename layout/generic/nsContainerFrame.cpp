@@ -1828,6 +1828,34 @@ void nsContainerFrame::NormalizeChildLists() {
     }
   }
 
+  // Pull up item's next-in-flow (if any) into aItems, and reparent it to our
+  // next-in-flow, unless its parent is already our next-in-flow (to avoid
+  // leaving a hole there).
+  auto PullItemsNextInFlow = [this](const nsFrameList& aItems) {
+    auto* firstNIF = static_cast<nsContainerFrame*>(GetNextInFlow());
+    if (!firstNIF) {
+      return;
+    }
+    nsFrameList childNIFs;
+    nsFrameList childOCNIFs;
+    for (auto* child : aItems) {
+      auto* childNIF = child->GetNextInFlow();
+      if (childNIF && childNIF->GetParent() != firstNIF) {
+        auto* parent = childNIF->GetParent();
+        parent->StealFrame(childNIF);
+        ReparentFrame(childNIF, parent, firstNIF);
+        if (childNIF->HasAnyStateBits(NS_FRAME_IS_OVERFLOW_CONTAINER)) {
+          childOCNIFs.AppendFrame(nullptr, childNIF);
+        } else {
+          childNIFs.AppendFrame(nullptr, childNIF);
+        }
+      }
+    }
+    // Merge aItems' NIFs into our NIF's respective overflow child lists.
+    firstNIF->MergeSortedOverflow(childNIFs);
+    firstNIF->MergeSortedExcessOverflowContainers(childOCNIFs);
+  };
+
   // Merge our own overflow frames into our principal child list,
   // except those that are a next-in-flow for one of our items.
   DebugOnly<bool> foundOwnPushedChild = false;
@@ -1847,6 +1875,10 @@ void nsContainerFrame::NormalizeChildLists() {
           }
         }
         f = next;
+      }
+
+      if (items.NotEmpty()) {
+        PullItemsNextInFlow(items);
       }
       MergeSortedFrameLists(mFrames, items, GetContent());
       if (ourOverflow->IsEmpty()) {
@@ -1885,7 +1917,6 @@ void nsContainerFrame::NormalizeChildLists() {
     RemoveStateBits(didPushItemsBit);
     nsFrameList items;
     auto* nif = static_cast<nsContainerFrame*>(GetNextInFlow());
-    auto* firstNIF = nif;
     DebugOnly<bool> nifNeedPushedItem = false;
     while (nif) {
       nsFrameList nifItems;
@@ -1929,26 +1960,7 @@ void nsContainerFrame::NormalizeChildLists() {
     }
 
     if (!items.IsEmpty()) {
-      // Pull up the first next-in-flow of the pulled up items too, unless its
-      // parent is our nif (to avoid leaving a hole there).
-      nsFrameList childNIFs;
-      nsFrameList childOCNIFs;
-      for (auto* child : items) {
-        auto* childNIF = child->GetNextInFlow();
-        if (childNIF && childNIF->GetParent() != firstNIF) {
-          auto* parent = childNIF->GetParent();
-          parent->StealFrame(childNIF);
-          ReparentFrame(childNIF, parent, firstNIF);
-          if ((childNIF->GetStateBits() & NS_FRAME_IS_OVERFLOW_CONTAINER)) {
-            childOCNIFs.AppendFrame(nullptr, childNIF);
-          } else {
-            childNIFs.AppendFrame(nullptr, childNIF);
-          }
-        }
-      }
-      // Merge items' NIFs into our NIF's respective overflow child lists.
-      firstNIF->MergeSortedOverflow(childNIFs);
-      firstNIF->MergeSortedExcessOverflowContainers(childOCNIFs);
+      PullItemsNextInFlow(items);
     }
 
     MOZ_ASSERT(
