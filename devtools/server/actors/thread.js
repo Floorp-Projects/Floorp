@@ -1170,9 +1170,10 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
               stepFrame.onStep = onStep;
             }
           }
-        // Fall through.
+        // eslint-disable no-fallthrough
         case "finish":
           stepFrame.onStep = createStepForReactionTracking(stepFrame.onStep);
+        // eslint-disable no-fallthrough
         case "restart":
           stepFrame.onPop = onPop;
           break;
