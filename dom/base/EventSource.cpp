@@ -270,8 +270,8 @@ class EventSourceImpl final : public nsIObserver,
   // EventSourceImpl internal states.
   // WorkerRef to keep the worker alive. (accessed on worker thread only)
   RefPtr<ThreadSafeWorkerRef> mWorkerRef;
-  // This mutex protects mFrozen and mEventSource->mReadyState that are used in
-  // different threads.
+  // This mutex protects mServiceNotifier, mFrozen and mEventSource->mReadyState
+  // that are used in different threads.
   mozilla::Mutex mMutex;
   // Whether the window is frozen. May be set on main thread and read on target
   // thread. Use mMutex to protect it before accessing it.
@@ -285,29 +285,49 @@ class EventSourceImpl final : public nsIObserver,
 
   class EventSourceServiceNotifier final {
    public:
-    EventSourceServiceNotifier(uint64_t aHttpChannelId, uint64_t aInnerWindowID)
-        : mHttpChannelId(aHttpChannelId), mInnerWindowID(aInnerWindowID) {
+    EventSourceServiceNotifier(EventSourceImpl* aEventSourceImpl,
+                               uint64_t aHttpChannelId, uint64_t aInnerWindowID)
+        : mEventSourceImpl(aEventSourceImpl),
+          mHttpChannelId(aHttpChannelId),
+          mInnerWindowID(aInnerWindowID),
+          mConnectionOpened(false) {
+      AssertIsOnMainThread();
       mService = EventSourceEventService::GetOrCreate();
-      mService->EventSourceConnectionOpened(aHttpChannelId, aInnerWindowID);
+    }
+
+    void ConnectionOpened() {
+      mEventSourceImpl->AssertIsOnTargetThread();
+      mService->EventSourceConnectionOpened(mHttpChannelId, mInnerWindowID);
+      mConnectionOpened = true;
     }
 
     void EventReceived(const nsAString& aEventName,
                        const nsAString& aLastEventID, const nsAString& aData,
                        uint32_t aRetry, DOMHighResTimeStamp aTimeStamp) {
+      mEventSourceImpl->AssertIsOnTargetThread();
       mService->EventReceived(mHttpChannelId, mInnerWindowID, aEventName,
                               aLastEventID, aData, aRetry, aTimeStamp);
     }
 
     ~EventSourceServiceNotifier() {
-      mService->EventSourceConnectionClosed(mHttpChannelId, mInnerWindowID);
+      mEventSourceImpl->AssertIsOnTargetThread();
+      if (mConnectionOpened) {
+        // We want to notify about connection being closed only if we told
+        // it was ever opened. The check is needed if OnStartRequest is called
+        // on the main thread while close() is called on a worker thread.
+        mService->EventSourceConnectionClosed(mHttpChannelId, mInnerWindowID);
+      }
       NS_ReleaseOnMainThread("EventSourceServiceNotifier::mService",
                              mService.forget());
     }
 
    private:
     RefPtr<EventSourceEventService> mService;
+    // Raw pointer is safe because EventSourceImpl keeps the object alive.
+    EventSourceImpl* mEventSourceImpl;
     uint64_t mHttpChannelId;
     uint64_t mInnerWindowID;
+    bool mConnectionOpened;
   };
 
   UniquePtr<EventSourceServiceNotifier> mServiceNotifier;
@@ -398,8 +418,6 @@ void EventSourceImpl::Close() {
     return;
   }
 
-  mServiceNotifier = nullptr;
-
   SetReadyState(CLOSED);
   CloseInternal();
 }
@@ -407,6 +425,12 @@ void EventSourceImpl::Close() {
 void EventSourceImpl::CloseInternal() {
   AssertIsOnTargetThread();
   MOZ_ASSERT(IsClosed());
+
+  {
+    MutexAutoLock lock(mMutex);
+    mServiceNotifier = nullptr;
+  }
+
   if (IsShutDown()) {
     return;
   }
@@ -695,8 +719,11 @@ EventSourceImpl::OnStartRequest(nsIRequest* aRequest) {
     }
   }
 
-  mServiceNotifier = MakeUnique<EventSourceServiceNotifier>(
-      mHttpChannel->ChannelId(), mInnerWindowID);
+  {
+    MutexAutoLock lock(mMutex);
+    mServiceNotifier = MakeUnique<EventSourceServiceNotifier>(
+        this, mHttpChannel->ChannelId(), mInnerWindowID);
+  }
   rv = Dispatch(NewRunnableMethod("dom::EventSourceImpl::AnnounceConnection",
                                   this, &EventSourceImpl::AnnounceConnection),
                 NS_DISPATCH_NORMAL);
@@ -794,7 +821,6 @@ EventSourceImpl::OnStopRequest(nsIRequest* aRequest, nsresult aStatusCode) {
       aStatusCode != NS_ERROR_PROXY_CONNECTION_REFUSED &&
       aStatusCode != NS_ERROR_DNS_LOOKUP_QUEUE_FULL) {
     DispatchFailConnection();
-    mServiceNotifier = nullptr;
     return NS_ERROR_ABORT;
   }
 
@@ -1071,6 +1097,13 @@ void EventSourceImpl::AnnounceConnection() {
     return;
   }
 
+  {
+    MutexAutoLock lock(mMutex);
+    if (mServiceNotifier) {
+      mServiceNotifier->ConnectionOpened();
+    }
+  }
+
   // When a user agent is to announce the connection, the user agent must set
   // the readyState attribute to OPEN and queue a task to fire a simple event
   // named open at the EventSource object.
@@ -1090,7 +1123,6 @@ void EventSourceImpl::AnnounceConnection() {
 
 nsresult EventSourceImpl::ResetConnection() {
   AssertIsOnMainThread();
-  mServiceNotifier = nullptr;
   if (mHttpChannel) {
     mHttpChannel->Cancel(NS_ERROR_ABORT);
     mHttpChannel = nullptr;
@@ -1426,9 +1458,14 @@ void EventSourceImpl::DispatchAllMessageEvents() {
       message->mLastEventID = Some(mLastEventID);
     }
 
-    mServiceNotifier->EventReceived(message->mEventName, mLastEventID,
-                                    message->mData, mReconnectionTime,
-                                    PR_Now());
+    {
+      MutexAutoLock lock(mMutex);
+      if (mServiceNotifier) {
+        mServiceNotifier->EventReceived(message->mEventName, mLastEventID,
+                                        message->mData, mReconnectionTime,
+                                        PR_Now());
+      }
+    }
 
     // Now we can turn our string into a jsval
     JS::Rooted<JS::Value> jsData(cx);
