@@ -24,8 +24,6 @@ bool nsUXThemeData::sCommandButtonMetricsInitialized = false;
 SIZE nsUXThemeData::sCommandButtonBoxMetrics;
 bool nsUXThemeData::sCommandButtonBoxMetricsInitialized = false;
 
-bool nsUXThemeData::sFlatMenus = false;
-
 bool nsUXThemeData::sTitlebarInfoPopulatedAero = false;
 bool nsUXThemeData::sTitlebarInfoPopulatedThemed = false;
 
@@ -52,17 +50,10 @@ nsUXThemeData::ThemeHandle::operator HANDLE() {
   return mHandle.isSome() ? mHandle.value() : nullptr;
 }
 
-void nsUXThemeData::Teardown() { Invalidate(); }
-
-void nsUXThemeData::Initialize() { Invalidate(); }
-
 void nsUXThemeData::Invalidate() {
   for (auto& theme : sThemes) {
     theme.Close();
   }
-  BOOL useFlat = FALSE;
-  sFlatMenus =
-      ::SystemParametersInfo(SPI_GETFLATMENU, 0, &useFlat, 0) ? useFlat : false;
 }
 
 HANDLE
@@ -396,4 +387,11 @@ void nsUXThemeData::UpdateNativeThemeInfo() {
       NS_WARNING("unhandled theme color.");
       return;
   }
+}
+
+// static
+bool nsUXThemeData::AreFlatMenusEnabled() {
+  BOOL useFlat = FALSE;
+  return !!::SystemParametersInfo(SPI_GETFLATMENU, 0, &useFlat, 0) ? useFlat
+                                                                   : false;
 }

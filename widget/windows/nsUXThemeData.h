@@ -100,15 +100,12 @@ class nsUXThemeData {
   static void EnsureCommandButtonBoxMetrics();
 
  public:
-  static bool sFlatMenus;
   static bool sTitlebarInfoPopulatedAero;
   static bool sTitlebarInfoPopulatedThemed;
   static mozilla::LookAndFeel::WindowsTheme sThemeId;
   static bool sIsDefaultWindowsTheme;
   static bool sIsHighContrastOn;
 
-  static void Initialize();
-  static void Teardown();
   static void Invalidate();
   static HANDLE GetTheme(nsUXThemeClass cls);
   static HMODULE GetThemeDLL();
@@ -128,5 +125,7 @@ class nsUXThemeData {
   static mozilla::LookAndFeel::WindowsTheme GetNativeThemeId();
   static bool IsDefaultWindowTheme();
   static bool IsHighContrastOn();
+
+  static bool AreFlatMenusEnabled();
 };
 #endif  // __UXThemeData_h__

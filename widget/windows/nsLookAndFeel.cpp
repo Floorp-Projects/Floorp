@@ -228,7 +228,8 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, nscolor& aColor) {
       break;
     case ColorID::MozMenubarhovertext:
       if (!IsAppThemed()) {
-        idx = nsUXThemeData::sFlatMenus ? COLOR_HIGHLIGHTTEXT : COLOR_MENUTEXT;
+        idx = nsUXThemeData::AreFlatMenusEnabled() ? COLOR_HIGHLIGHTTEXT
+                                                   : COLOR_MENUTEXT;
         break;
       }
       // Fall through
