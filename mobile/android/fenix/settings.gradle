@@ -46,7 +46,21 @@ if (localProperties != null) {
     if (appServicesLocalPath != null) {
         log("Enabling automatic publication of application-services from: $appServicesLocalPath")
         def publishAppServicesCmd = ["./automation/publish_to_maven_local_if_modified.py"]
-        runCmd(publishAppServicesCmd, appServicesLocalPath, "Published application-services for local development.", false)
+        // Application-services doesn't build on native Windows. However, it still makes sense to
+        // enable these workflows on Windows, even if it isn't quote as automatic as elsewhere -
+        // specifically, you must run the build command on WSL, but after that you can happily build
+        // and debug directly from within Android Studio on native Windows - but only after following
+        // https://github.com/mozilla/application-services/blob/master/docs/howtos/setup-android-build-environment.md#using-windows
+        // So rather than fail we make noise...
+        if (System.properties['os.name'].toLowerCase().contains('windows')) {
+            log('NOTE: The autoPublish workflows do not work on native windows.');
+            log('You must manually ensure that the following command has completed successfully in WSL:');
+            log("> $publishAppServicesCmd");
+            log("(from the '$appServicesLocalPath' directory)");
+            log('Then restart the build');
+        } else {
+            runCmd(publishAppServicesCmd, appServicesLocalPath, "Published application-services for local development.", false)
+        }
     } else {
         log("Disabled auto-publication of application-services. Enable it by settings '$settingAppServicesPath' in local.properties")
     }
@@ -54,8 +68,15 @@ if (localProperties != null) {
     String androidComponentsLocalPath = localProperties.getProperty(settingAndroidComponentsPath)
 
     if (androidComponentsLocalPath != null) {
+        // android-components does build on native windows, so it doesn't get the special Windows treatment above.
+        // But it doesn't like executing .py files directly. We assume a "manually installed" python,
+        // which comes with a "py" launcher and respects the shebang line to specify the version.
         log("Enabling automatic publication of android-components from: $androidComponentsLocalPath")
-        def publishAcCmd = ["./automation/publish_to_maven_local_if_modified.py"]
+        def publishAcCmd = [];
+        if (System.properties['os.name'].toLowerCase().contains('windows')) {
+            publishAcCmd << "py";
+        }
+        publishAcCmd << "./automation/publish_to_maven_local_if_modified.py";
         runCmd(publishAcCmd, androidComponentsLocalPath, "Published android-components for local development.", false)
     } else {
         log("Disabled auto-publication of android-components. Enable it by settings '$settingAndroidComponentsPath' in local.properties")
