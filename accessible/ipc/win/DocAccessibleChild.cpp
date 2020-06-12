@@ -89,9 +89,8 @@ HWND DocAccessibleChild::GetNativeWindowHandle() const {
   // Iframe documents use the same window handle as their top level document.
   auto topDoc = static_cast<DocAccessibleChild*>(
       browser->GetTopLevelDocAccessibleChild());
-  // Note that topDoc can be null if we're still initializing the top level
-  // document.
-  if (topDoc && topDoc != this && topDoc->mEmulatedWindowHandle) {
+  MOZ_ASSERT(topDoc);
+  if (topDoc != this && topDoc->mEmulatedWindowHandle) {
     return topDoc->mEmulatedWindowHandle;
   }
 
