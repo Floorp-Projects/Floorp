@@ -1,3 +1,0 @@
-EXTRA_JS_MODULES += [
-  'module.jsm',
-]
