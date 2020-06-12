@@ -128,6 +128,7 @@ const presets = {
       "MediaPDecoder",
       "MediaPlayback",
       "MediaTimer",
+      "NativeAudioCallback",
       "RenderBackend",
       "Renderer",
     ],
