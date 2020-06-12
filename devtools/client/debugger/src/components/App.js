@@ -56,7 +56,6 @@ import WelcomeBox from "./WelcomeBox";
 import EditorTabs from "./Editor/Tabs";
 import EditorFooter from "./Editor/Footer";
 import QuickOpenModal from "./QuickOpenModal";
-import WhyPaused from "./SecondaryPanes/WhyPaused";
 
 type OwnProps = {|
   toolboxDoc: Object,
@@ -235,7 +234,6 @@ class App extends Component<Props, State> {
             horizontal={horizontal}
           />
           <Editor startPanelSize={startPanelSize} endPanelSize={endPanelSize} />
-          {this.props.endPanelCollapsed ? <WhyPaused /> : null}
           {!this.props.selectedSource ? (
             <WelcomeBox
               horizontal={horizontal}
