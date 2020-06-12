@@ -2458,6 +2458,11 @@ nsresult nsGlobalWindowOuter::SetNewDocument(Document* aDocument,
 
   PreloadLocalStorage();
 
+  // If we have a recorded interesting Large-Allocation header status, report it
+  // to the newly attached document.
+  ReportLargeAllocStatus();
+  mLargeAllocStatus = LargeAllocStatus::NONE;
+
   mStorageAccessPermissionGranted =
       CheckStorageAccessPermission(aDocument, newInnerWindow);
 
@@ -7470,12 +7475,49 @@ int16_t nsGlobalWindowOuter::Orientation(CallerType aCallerType) const {
 }
 #endif
 
+void nsPIDOMWindowOuter::SetLargeAllocStatus(LargeAllocStatus aStatus) {
+  MOZ_ASSERT(mLargeAllocStatus == LargeAllocStatus::NONE);
+  mLargeAllocStatus = aStatus;
+}
+
 bool nsPIDOMWindowOuter::IsTopLevelWindow() {
   return nsGlobalWindowOuter::Cast(this)->IsTopLevelWindow();
 }
 
 bool nsPIDOMWindowOuter::HadOriginalOpener() const {
   return nsGlobalWindowOuter::Cast(this)->HadOriginalOpener();
+}
+
+void nsGlobalWindowOuter::ReportLargeAllocStatus() {
+  uint32_t errorFlags = nsIScriptError::warningFlag;
+  const char* message = nullptr;
+
+  switch (mLargeAllocStatus) {
+    case LargeAllocStatus::SUCCESS:
+      // Override the error flags such that the success message isn't reported
+      // as a warning.
+      errorFlags = nsIScriptError::infoFlag;
+      message = "LargeAllocationSuccess";
+      break;
+    case LargeAllocStatus::NON_WIN32:
+      errorFlags = nsIScriptError::infoFlag;
+      message = "LargeAllocationNonWin32";
+      break;
+    case LargeAllocStatus::NON_GET:
+      message = "LargeAllocationNonGetRequest";
+      break;
+    case LargeAllocStatus::NON_E10S:
+      message = "LargeAllocationNonE10S";
+      break;
+    case LargeAllocStatus::NOT_ONLY_TOPLEVEL_IN_TABGROUP:
+      message = "LargeAllocationNotOnlyToplevelInTabGroup";
+      break;
+    default:   // LargeAllocStatus::NONE
+      return;  // Don't report a message to the console
+  }
+
+  nsContentUtils::ReportToConsole(errorFlags, NS_LITERAL_CSTRING("DOM"), mDoc,
+                                  nsContentUtils::eDOM_PROPERTIES, message);
 }
 
 #if defined(_WINDOWS_) && !defined(MOZ_WRAPPED_WINDOWS_H)
@@ -7619,6 +7661,7 @@ nsPIDOMWindowOuter::nsPIDOMWindowOuter(uint64_t aWindowID)
       mInnerWindow(nullptr),
       mWindowID(aWindowID),
       mMarkedCCGeneration(0),
-      mServiceWorkersTestingEnabled(false) {}
+      mServiceWorkersTestingEnabled(false),
+      mLargeAllocStatus(LargeAllocStatus::NONE) {}
 
 nsPIDOMWindowOuter::~nsPIDOMWindowOuter() = default;

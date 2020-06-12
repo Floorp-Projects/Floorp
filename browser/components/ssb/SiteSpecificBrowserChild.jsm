@@ -174,4 +174,27 @@ class WebBrowserChrome {
   shouldLoadURIInThisProcess(uri) {
     return this.ssb.canLoad(uri);
   }
+
+  /**
+   * Instructs us to start a fresh process to load this URI. Usually used for
+   * large allocation sites. SSB does not support this.
+   *
+   * @param {nsIDocShell}     docShell            the current docshell.
+   * @param {nsIURI}          uri                 the URI that will be loaded.
+   * @param {nsIReferrerInfo} referrerInfo        the referrer info.
+   * @param {nsIPrincipal}    triggeringPrincipal the triggering principal.
+   * @param {Number}          loadFlags           the load flags.
+   * @param {nsIContentSecurityPolicy} csp the content security policy.
+   * @return {boolean} whether the load should proceed or not.
+   */
+  reloadInFreshProcess(
+    docShell,
+    uri,
+    referrerInfo,
+    triggeringPrincipal,
+    loadFlags,
+    csp
+  ) {
+    return false;
+  }
 }

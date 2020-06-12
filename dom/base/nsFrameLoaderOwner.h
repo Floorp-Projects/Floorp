@@ -45,36 +45,23 @@ class nsFrameLoaderOwner : public nsISupports {
   mozilla::dom::BrowsingContext* GetBrowsingContext();
 
   // Destroy (if it exists) and recreate our frameloader, based on new
-  // remoteness requirements.
-  //
-  // This method is called by frontend code when it wants to perform a
-  // remoteness update, and allows for behaviour such as preserving
-  // BrowsingContexts across process switches during navigation.
-  //
-  // See the WebIDL definition for more details.
+  // remoteness requirements. This should follow the same path as
+  // tabbrowser.js's updateBrowserRemoteness, including running the same logic
+  // and firing the same events as unbinding a XULBrowserElement from the tree.
+  // However, this method is available from backend and does not manipulate the
+  // DOM.
   void ChangeRemoteness(const mozilla::dom::RemotenessOptions& aOptions,
                         mozilla::ErrorResult& rv);
 
-  // Like `ChangeRemoteness` but switches to an already-created
-  // `BrowserBridgeChild`. This method is used when performing remote subframe
-  // process switches.
   void ChangeRemotenessWithBridge(mozilla::dom::BrowserBridgeChild* aBridge,
                                   mozilla::ErrorResult& rv);
-
-  // Like `ChangeRemoteness`, but switches into an already-created
-  // `ContentParent`. This method is used when performing toplevel process
-  // switches. If `aContentParent` is nullptr, switches into the parent process.
-  //
-  // If `aReplaceBrowsingContext` is set, BrowsingContext preservation will be
-  // disabled for this process switch.
-  void ChangeRemotenessToProcess(mozilla::dom::ContentParent* aContentParent,
-                                 bool aReplaceBrowsingContext,
-                                 mozilla::ErrorResult& rv);
 
   void SubframeCrashed();
 
  private:
   bool UseRemoteSubframes();
+  bool ShouldPreserveBrowsingContext(
+      const mozilla::dom::RemotenessOptions& aOptions);
 
   // The enum class for determine how to handle previous BrowsingContext during
   // the change remoteness. It could be followings
@@ -90,11 +77,9 @@ class nsFrameLoaderOwner : public nsISupports {
     DONT_PRESERVE_BUT_PROPAGATE = 1,
     PRESERVE = 2,
   };
-  ChangeRemotenessContextType ShouldPreserveBrowsingContext(
-      bool aIsRemote, bool aReplaceBrowsingContext);
-
   void ChangeRemotenessCommon(const ChangeRemotenessContextType& aContextType,
-                              bool aSwitchingInProgressLoad, bool aIsRemote,
+                              bool aSwitchingInProgressLoad,
+                              const nsAString& aRemoteType,
                               std::function<void()>& aFrameLoaderInit,
                               mozilla::ErrorResult& aRv);
 
