@@ -18,7 +18,6 @@
 class nsIRunnable;
 
 namespace mozilla {
-class AbstractThread;
 namespace dom {
 
 class WorkerRunnable;
@@ -57,12 +56,6 @@ class WorkerThread final : public nsThread {
   // Protected by nsThread::mLock and waited on with mWorkerPrivateCondVar.
   uint32_t mOtherThreadsDispatchingViaEventTarget;
 
-  // We create an AbstractThread for this current nsThread instance in order to
-  // support direct task dispatching. Direct tasks work in a similar fashion to
-  // microtasks and allow an IPDL MozPromise to behave like JS promise.
-  // An AbstractThread only need to exist on the current thread for Direct Task
-  // dispatch to be available.
-  RefPtr<AbstractThread> mAbstractThread;
 #ifdef DEBUG
   // Protected by nsThread::mLock.
   bool mAcceptingNonWorkerRunnables;
@@ -89,8 +82,6 @@ class WorkerThread final : public nsThread {
   uint32_t RecursionDepth(const WorkerThreadFriendKey& aKey) const;
 
   PerformanceCounter* GetPerformanceCounter(nsIRunnable* aEvent) const override;
-
-  NS_IMETHODIMP Shutdown() override;
 
   NS_INLINE_DECL_REFCOUNTING_INHERITED(WorkerThread, nsThread)
 
