@@ -62,8 +62,7 @@ void StopAudioCallbackTracing();
 
 class MOZ_RAII AutoTracer {
  public:
-  static const int32_t BUFFER_SIZE =
-      mozilla::AsyncLogger::MAX_MESSAGE_LENGTH / 2;
+  static const int32_t BUFFER_SIZE = 256;
 
   enum class EventType { DURATION, BUDGET };
 
