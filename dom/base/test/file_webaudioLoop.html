@@ -1,35 +1,19 @@
 <!DOCTYPE html>
 <script>
 var ac = new AudioContext();
-var runningPromise = new Promise(resolve => {
-  ac.onstatechange = event => {
-    if (ac.state == "running") {
-      resolve();
-    }
-  };
-});
-
 var osc = ac.createOscillator();
 osc.connect(ac.destination);
 osc.start(0);
 
-var suspendPromise;
 function suspendAC() {
-  runningPromise.then(() => {
-    suspendPromise = ac.suspend();
-  });
+  ac.suspend();
 }
 
-var resumePromise;
 function resumeAC() {
-  suspendPromise.then(() => {
-    resumePromise = ac.resume();
-  });
+  ac.resume();
 }
 
 function closeAC() {
-  resumePromise.then(() => {
-    ac.close();
-  });
+  ac.close();
 }
 </script>
