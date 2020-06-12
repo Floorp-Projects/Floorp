@@ -2330,6 +2330,7 @@ var gBrowserInit = {
               "resource:///modules/DownloadsMacFinderProgress.jsm"
             ).DownloadsMacFinderProgress.register();
           }
+          Services.telemetry.setEventRecordingEnabled("downloads", true);
         } catch (ex) {
           Cu.reportError(ex);
         }
