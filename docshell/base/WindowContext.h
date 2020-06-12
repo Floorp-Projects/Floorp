@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_WindowContext_h
 #define mozilla_dom_WindowContext_h
 
+#include "mozilla/PermissionDelegateHandler.h"
 #include "mozilla/Span.h"
 #include "mozilla/dom/MaybeDiscarded.h"
 #include "mozilla/dom/SyncedContext.h"
@@ -45,7 +46,11 @@ class BrowsingContextGroup;
    * mixed content loads to happen */                                  \
   FIELD(AllowMixedContent, bool)                                       \
   FIELD(EmbedderPolicy, nsILoadInfo::CrossOriginEmbedderPolicy)        \
-  FIELD(AutoplayPermission, uint32_t)
+  FIELD(AutoplayPermission, uint32_t)                                  \
+  FIELD(DelegatedPermissions,                                          \
+        PermissionDelegateHandler::DelegatedPermissionList)            \
+  FIELD(DelegatedExactHostMatchPermissions,                            \
+        PermissionDelegateHandler::DelegatedPermissionList)
 
 class WindowContext : public nsISupports, public nsWrapperCache {
   MOZ_DECL_SYNCED_CONTEXT(WindowContext, MOZ_EACH_WC_FIELD)
@@ -161,6 +166,12 @@ class WindowContext : public nsISupports, public nsWrapperCache {
               const bool& aSHEntryHasUserInteraction, ContentParent* aSource) {
     return true;
   }
+  bool CanSet(FieldIndex<IDX_DelegatedPermissions>,
+              const PermissionDelegateHandler::DelegatedPermissionList& aValue,
+              ContentParent* aSource);
+  bool CanSet(FieldIndex<IDX_DelegatedExactHostMatchPermissions>,
+              const PermissionDelegateHandler::DelegatedPermissionList& aValue,
+              ContentParent* aSource);
 
   // Overload `DidSet` to get notifications for a particular field being set.
   //

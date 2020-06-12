@@ -26,6 +26,7 @@
 #ifndef mozilla_PermissionDelegateHandler_h
 #define mozilla_PermissionDelegateHandler_h
 
+#include "mozilla/Array.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsISupports.h"
 #include "nsIPermissionDelegateHandler.h"
@@ -38,7 +39,8 @@ class nsIContentPermissionRequest;
 namespace mozilla {
 namespace dom {
 class Document;
-}
+class WindowContext;
+}  // namespace dom
 
 class PermissionDelegateHandler final : public nsIPermissionDelegateHandler {
  public:
@@ -49,6 +51,16 @@ class PermissionDelegateHandler final : public nsIPermissionDelegateHandler {
 
   explicit PermissionDelegateHandler() = default;
   explicit PermissionDelegateHandler(mozilla::dom::Document* aDocument);
+
+  static constexpr size_t DELEGATED_PERMISSION_COUNT = 11;
+
+  typedef struct DelegatedPermissionList {
+    Array<uint32_t, DELEGATED_PERMISSION_COUNT> mPermissions;
+
+    bool operator==(const DelegatedPermissionList& aOther) const {
+      return mPermissions == aOther.mPermissions;
+    }
+  } DelegatedPermissionList;
 
   bool Initialize();
 
@@ -144,6 +156,18 @@ class PermissionDelegateHandler final : public nsIPermissionDelegateHandler {
                                        nsIContentPermissionRequest* aRequest,
                                        nsIPrincipal** aResult);
 
+  /**
+   * Populate all delegated permissions to the WindowContext of the associated
+   * document. We only populate the permissions for the top-level content.
+   */
+  void PopulateAllDelegatedPermissions();
+
+  /**
+   * Update the given delegated permission to the WindowContext. We only
+   * update it for the top-level content.
+   */
+  void UpdateDelegatedPermission(const nsACString& aType);
+
  private:
   ~PermissionDelegateHandler() = default;
 
@@ -155,6 +179,17 @@ class PermissionDelegateHandler final : public nsIPermissionDelegateHandler {
    * attribute.
    */
   bool HasFeaturePolicyAllowed(const PermissionDelegateInfo* info) const;
+
+  /**
+   * A helper function to test the permission and set the result to the given
+   * list. It will return true if the permission is changed, otherwise false.
+   */
+  bool UpdateDelegatePermissionInternal(
+      PermissionDelegateHandler::DelegatedPermissionList& aList,
+      const nsACString& aType, size_t aIdx,
+      nsresult (NS_STDCALL nsIPermissionManager::*aTestFunc)(nsIPrincipal*,
+                                                             const nsACString&,
+                                                             uint32_t*));
 
   // A weak pointer to our document. Nulled out by DropDocumentReference.
   mozilla::dom::Document* mDocument;
