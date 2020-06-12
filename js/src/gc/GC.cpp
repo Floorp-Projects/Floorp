@@ -2678,13 +2678,16 @@ ArenaLists::ArenaLists(Zone* zone)
     : zone_(zone),
       freeLists_(zone),
       arenaLists_(zone),
+      newArenasInMarkPhase_(zone),
       arenasToSweep_(),
       incrementalSweptArenaKind(zone, AllocKind::LIMIT),
       incrementalSweptArenas(zone),
       gcShapeArenasToUpdate(zone, nullptr),
       gcAccessorShapeArenasToUpdate(zone, nullptr),
       gcScriptArenasToUpdate(zone, nullptr),
+      gcNewScriptArenasToUpdate(zone, nullptr),
       gcObjectGroupArenasToUpdate(zone, nullptr),
+      gcNewObjectGroupArenasToUpdate(zone, nullptr),
       savedEmptyArenas(zone, nullptr) {
   for (auto i : AllAllocKinds()) {
     concurrentUse(i) = ConcurrentUse::None;
@@ -2743,18 +2746,18 @@ void ArenaLists::queueForBackgroundSweep(JSFreeOp* fop,
 
 inline void ArenaLists::queueForBackgroundSweep(AllocKind thingKind) {
   MOZ_ASSERT(IsBackgroundFinalized(thingKind));
-
-  ArenaList* al = &arenaList(thingKind);
-  if (al->isEmpty()) {
-    MOZ_ASSERT(concurrentUse(thingKind) == ConcurrentUse::None);
-    return;
-  }
-
   MOZ_ASSERT(concurrentUse(thingKind) == ConcurrentUse::None);
 
+  ArenaList* al = &arenaList(thingKind);
   arenasToSweep(thingKind) = al->head();
-  al->clear();
-  concurrentUse(thingKind) = ConcurrentUse::BackgroundFinalize;
+  arenaList(thingKind).clear();
+
+  if (arenasToSweep(thingKind)) {
+    concurrentUse(thingKind) = ConcurrentUse::BackgroundFinalize;
+  } else {
+    arenaList(thingKind) = newArenasInMarkPhase(thingKind);
+    newArenasInMarkPhase(thingKind).clear();
+  }
 }
 
 /*static*/
@@ -2780,7 +2783,7 @@ void ArenaLists::backgroundFinalize(JSFreeOp* fop, Arena* listHead,
   // allocated before background finalization finishes; now that finalization is
   // complete, we want to merge these lists back together.
   ArenaLists* lists = &zone->arenas;
-  ArenaList* al = &lists->arenaList(thingKind);
+  ArenaList& al = lists->arenaList(thingKind);
 
   // Flatten |finalizedSorted| into a regular ArenaList.
   ArenaList finalized = finalizedSorted.toArenaList();
@@ -2796,8 +2799,12 @@ void ArenaLists::backgroundFinalize(JSFreeOp* fop, Arena* listHead,
                ConcurrentUse::BackgroundFinalize);
 
     // Join |al| and |finalized| into a single list.
-    *al = finalized.insertListWithCursorAtEnd(*al);
+    ArenaList allocatedDuringSweep = al;
+    al = finalized;
+    al.insertListWithCursorAtEnd(lists->newArenasInMarkPhase(thingKind));
+    al.insertListWithCursorAtEnd(allocatedDuringSweep);
 
+    lists->newArenasInMarkPhase(thingKind).clear();
     lists->arenasToSweep(thingKind) = nullptr;
   }
 
@@ -2814,11 +2821,23 @@ void ArenaLists::queueForegroundThingsForSweep() {
   gcShapeArenasToUpdate = arenasToSweep(AllocKind::SHAPE);
   gcAccessorShapeArenasToUpdate = arenasToSweep(AllocKind::ACCESSOR_SHAPE);
   gcObjectGroupArenasToUpdate = arenasToSweep(AllocKind::OBJECT_GROUP);
+  gcNewObjectGroupArenasToUpdate =
+      newArenasInMarkPhase(AllocKind::OBJECT_GROUP).head();
   gcScriptArenasToUpdate = arenasToSweep(AllocKind::SCRIPT);
+  gcNewScriptArenasToUpdate = newArenasInMarkPhase(AllocKind::SCRIPT).head();
+}
+
+void ArenaLists::checkGCStateNotInUse() {
+  // Called before and after collection to check the state is as expected.
+#ifdef DEBUG
+  checkSweepStateNotInUse();
+  for (auto i : AllAllocKinds()) {
+    MOZ_ASSERT(newArenasInMarkPhase(i).isEmpty());
+  }
+#endif
 }
 
 void ArenaLists::checkSweepStateNotInUse() {
-  // Called before and after sweeping to check the sweep state is as expected.
 #ifdef DEBUG
   checkNoArenasToUpdate();
   MOZ_ASSERT(incrementalSweptArenaKind == AllocKind::LIMIT);
@@ -2835,7 +2854,9 @@ void ArenaLists::checkNoArenasToUpdate() {
   MOZ_ASSERT(!gcShapeArenasToUpdate);
   MOZ_ASSERT(!gcAccessorShapeArenasToUpdate);
   MOZ_ASSERT(!gcScriptArenasToUpdate);
+  MOZ_ASSERT(!gcNewScriptArenasToUpdate);
   MOZ_ASSERT(!gcObjectGroupArenasToUpdate);
+  MOZ_ASSERT(!gcNewObjectGroupArenasToUpdate);
 }
 
 void ArenaLists::checkNoArenasToUpdateForKind(AllocKind kind) {
@@ -2849,9 +2870,11 @@ void ArenaLists::checkNoArenasToUpdateForKind(AllocKind kind) {
       break;
     case AllocKind::SCRIPT:
       MOZ_ASSERT(!gcScriptArenasToUpdate);
+      MOZ_ASSERT(!gcNewScriptArenasToUpdate);
       break;
     case AllocKind::OBJECT_GROUP:
       MOZ_ASSERT(!gcObjectGroupArenasToUpdate);
+      MOZ_ASSERT(!gcNewObjectGroupArenasToUpdate);
       break;
     default:
       break;
@@ -4110,6 +4133,7 @@ bool GCRuntime::beginMarkPhase(JS::GCReason reason, AutoGCSession& session) {
    */
   for (GCZonesIter zone(this); !zone.done(); zone.next()) {
     zone->arenas.clearFreeLists();
+    zone->arenas.checkGCStateNotInUse();
   }
 
   marker.start();
@@ -4586,6 +4610,7 @@ void GCRuntime::getNextSweepGroup() {
       zone->setNeedsIncrementalBarrier(false);
       zone->changeGCState(Zone::MarkBlackOnly, Zone::NoGC);
       zone->arenas.unmarkPreMarkedFreeCells();
+      zone->arenas.mergeNewArenasInMarkPhase();
       zone->gcGrayRoots().Clear();
       zone->clearGCSliceThresholds();
     }
@@ -5516,10 +5541,6 @@ bool ArenaLists::foregroundFinalize(JSFreeOp* fop, AllocKind thingKind,
                                     SortedArenaList& sweepList) {
   checkNoArenasToUpdateForKind(thingKind);
 
-  if (!arenasToSweep(thingKind) && incrementalSweptArenas.ref().isEmpty()) {
-    return true;
-  }
-
   // Arenas are released for use for new allocations as soon as the finalizers
   // for that allocation kind have run. This means that a cell's finalizer can
   // safely use IsAboutToBeFinalized to check other cells of the same alloc
@@ -5540,9 +5561,13 @@ bool ArenaLists::foregroundFinalize(JSFreeOp* fop, AllocKind thingKind,
 
   sweepList.extractEmpty(&savedEmptyArenas.ref());
 
-  ArenaList finalized = sweepList.toArenaList();
-  arenaList(thingKind) =
-      finalized.insertListWithCursorAtEnd(arenaList(thingKind));
+  ArenaList& al = arenaList(thingKind);
+  ArenaList allocatedDuringSweep = al;
+  al = sweepList.toArenaList();
+  al.insertListWithCursorAtEnd(newArenasInMarkPhase(thingKind));
+  al.insertListWithCursorAtEnd(allocatedDuringSweep);
+
+  newArenasInMarkPhase(thingKind).clear();
 
   return true;
 }
@@ -5642,8 +5667,18 @@ IncrementalProgress GCRuntime::sweepTypeInformation(JSFreeOp* fop,
     return NotFinished;
   }
 
+  if (!SweepArenaList<BaseScript>(fop, &al.gcNewScriptArenasToUpdate.ref(),
+                                  budget)) {
+    return NotFinished;
+  }
+
   if (!SweepArenaList<ObjectGroup>(fop, &al.gcObjectGroupArenasToUpdate.ref(),
                                    budget)) {
+    return NotFinished;
+  }
+
+  if (!SweepArenaList<ObjectGroup>(
+          fop, &al.gcNewObjectGroupArenasToUpdate.ref(), budget)) {
     return NotFinished;
   }
 
@@ -6344,7 +6379,7 @@ void GCRuntime::finishCollection() {
       zone->clearGCSliceThresholds();
       zone->notifyObservingDebuggers();
       zone->updateGCStartThresholds(*this, invocationKind, lock);
-      zone->arenas.checkSweepStateNotInUse();
+      zone->arenas.checkGCStateNotInUse();
     }
   }
 
@@ -6437,6 +6472,7 @@ GCRuntime::IncrementalResult GCRuntime::resetIncrementalGC(
         zone->changeGCState(Zone::MarkBlackOnly, Zone::NoGC);
         zone->clearGCSliceThresholds();
         zone->arenas.unmarkPreMarkedFreeCells();
+        zone->arenas.mergeNewArenasInMarkPhase();
       }
 
       {

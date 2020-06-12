@@ -23,43 +23,32 @@ namespace gc {
 class AutoAssertEmptyNursery;
 
 class ArenaIter {
-  Arena* arena;
-  Arena* unsweptArena;
-  Arena* sweptArena;
-  mozilla::DebugOnly<bool> initialized;
+  static constexpr size_t SourceCount = 4;
+
+  Arena* arena = nullptr;
+  Arena* sources[SourceCount] = {nullptr};
+  size_t index = 0;
+  mozilla::DebugOnly<bool> initialized = false;
 
  public:
-  ArenaIter()
-      : arena(nullptr),
-        unsweptArena(nullptr),
-        sweptArena(nullptr),
-        initialized(false) {}
+  ArenaIter() = default;
 
-  ArenaIter(JS::Zone* zone, AllocKind kind) : initialized(false) {
-    init(zone, kind);
-  }
+  ArenaIter(JS::Zone* zone, AllocKind kind) { init(zone, kind); }
 
   void init(JS::Zone* zone, AllocKind kind) {
     MOZ_ASSERT(!initialized);
     MOZ_ASSERT(zone);
+    sources[0] = zone->arenas.getFirstArena(kind);
+    sources[1] = zone->arenas.getFirstArenaToSweep(kind);
+    sources[2] = zone->arenas.getFirstSweptArena(kind);
+    sources[3] = zone->arenas.getFirstNewArenaInMarkPhase(kind);
     initialized = true;
-    arena = zone->arenas.getFirstArena(kind);
-    unsweptArena = zone->arenas.getFirstArenaToSweep(kind);
-    sweptArena = zone->arenas.getFirstSweptArena(kind);
-    if (!unsweptArena) {
-      unsweptArena = sweptArena;
-      sweptArena = nullptr;
-    }
-    if (!arena) {
-      arena = unsweptArena;
-      unsweptArena = sweptArena;
-      sweptArena = nullptr;
-    }
+    settle();
   }
 
   bool done() const {
     MOZ_ASSERT(initialized);
-    return !arena;
+    return index == SourceCount;
   }
 
   Arena* get() const {
@@ -71,9 +60,19 @@ class ArenaIter {
     MOZ_ASSERT(!done());
     arena = arena->next;
     if (!arena) {
-      arena = unsweptArena;
-      unsweptArena = sweptArena;
-      sweptArena = nullptr;
+      index++;
+      settle();
+    }
+  }
+
+ private:
+  void settle() {
+    while (index < SourceCount) {
+      arena = sources[index];
+      if (arena) {
+        break;
+      }
+      index++;
     }
   }
 };
