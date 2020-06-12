@@ -39,5 +39,6 @@ class WaitForCondition final : public nsIRunnable {
 
   uint32_t mPending = 0;
 };
+NS_IMPL_ISUPPORTS(WaitForCondition, nsIRunnable)
 
 #endif
