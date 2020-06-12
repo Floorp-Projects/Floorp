@@ -674,7 +674,9 @@
       // This is implemented so that when textbox.value is set directly (e.g.,
       // by tests), the one-off query is updated.
       this.textbox.onBeforeValueSet = aValue => {
-        this.textbox.popup.oneOffButtons.query = aValue;
+        if (this.textbox.popup._oneOffButtons) {
+          this.textbox.popup.oneOffButtons.query = aValue;
+        }
         return aValue;
       };
 
