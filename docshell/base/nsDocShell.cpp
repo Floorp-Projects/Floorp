@@ -346,6 +346,7 @@ nsDocShell::nsDocShell(BrowsingContext* aBrowsingContext,
       mHistoryID(aBrowsingContext->GetHistoryID()),
       mContentWindowID(aContentWindowID),
       mBrowsingContext(aBrowsingContext),
+      mLoadingEntryId(PR_UINT64_MAX),
       mForcedCharset(nullptr),
       mParentCharset(nullptr),
       mTreeOwner(nullptr),
@@ -12540,4 +12541,10 @@ bool nsDocShell::GetIsAttemptingToNavigate() {
   }
 
   return false;
+}
+
+void nsDocShell::SetLoadingSessionHistoryInfoAndId(
+    const mozilla::dom::SessionHistoryInfoAndId& aInfoAndId) {
+  mLoadingEntry = MakeUnique<SessionHistoryInfo>(*aInfoAndId.mInfo);
+  mLoadingEntryId = aInfoAndId.mId;
 }
