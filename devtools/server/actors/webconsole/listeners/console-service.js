@@ -20,38 +20,36 @@ const { WebConsoleUtils } = require("devtools/server/actors/webconsole/utils");
  * @param nsIDOMWindow [window]
  *        Optional - the window object for which we are created. This is used
  *        for filtering out messages that belong to other windows.
- * @param object listener
- *        The listener object must have one method:
- *        - onConsoleServiceMessage(). This method is invoked with one argument,
- *        the nsIConsoleMessage, whenever a relevant message is received.
+ * @param Function handler
+ *        This function is invoked with one argument, the nsIConsoleMessage, whenever a
+ *        relevant message is received.
  */
-function ConsoleServiceListener(window, listener) {
-  this.window = window;
-  this.listener = listener;
-}
-exports.ConsoleServiceListener = ConsoleServiceListener;
+class ConsoleServiceListener {
+  constructor(window, handler) {
+    this.window = window;
+    this.handler = handler;
+  }
 
-ConsoleServiceListener.prototype = {
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIConsoleListener]),
+  QueryInterface = ChromeUtils.generateQI([Ci.nsIConsoleListener]);
 
   /**
    * The content window for which we listen to page errors.
    * @type nsIDOMWindow
    */
-  window: null,
+  window = null;
 
   /**
-   * The listener object which is notified of messages from the console service.
-   * @type object
+   * The function which is notified of messages from the console service.
+   * @type function
    */
-  listener: null,
+  handler = null;
 
   /**
    * Initialize the nsIConsoleService listener.
    */
-  init: function() {
+  init() {
     Services.console.registerListener(this);
-  },
+  }
 
   /**
    * The nsIConsoleService observer. This method takes all the script error
@@ -61,8 +59,8 @@ ConsoleServiceListener.prototype = {
    * @param nsIConsoleMessage message
    *        The message object coming from the nsIConsoleService.
    */
-  observe: function(message) {
-    if (!this.listener) {
+  observe(message) {
+    if (!this.handler) {
       return;
     }
 
@@ -87,9 +85,8 @@ ConsoleServiceListener.prototype = {
     if (message.sourceName === "debugger eager eval code") {
       return;
     }
-
-    this.listener.onConsoleServiceMessage(message);
-  },
+    this.handler(message);
+  }
 
   /**
    * Check if the given message category is allowed to be tracked or not.
@@ -100,7 +97,7 @@ ConsoleServiceListener.prototype = {
    * @return boolean
    *         True if the category is allowed to be logged, false otherwise.
    */
-  isCategoryAllowed: function(category) {
+  isCategoryAllowed(category) {
     if (!category) {
       return false;
     }
@@ -114,7 +111,7 @@ ConsoleServiceListener.prototype = {
     }
 
     return true;
-  },
+  }
 
   /**
    * Get the cached page errors for the current inner window and its (i)frames.
@@ -126,7 +123,7 @@ ConsoleServiceListener.prototype = {
    *         The array of cached messages. Each element is an nsIScriptError or
    *         an nsIConsoleMessage
    */
-  getCachedMessages: function(includePrivate = false) {
+  getCachedMessages(includePrivate = false) {
     const errors = Services.console.getMessageArray() || [];
 
     // if !this.window, we're in a browser console. Still need to filter
@@ -165,9 +162,9 @@ ConsoleServiceListener.prototype = {
 
       return true;
     });
-  },
+  }
 
-  clearCachedMessages: function() {
+  clearCachedMessages() {
     // if !this.window, we're in a browser console. Still need to filter
     // private messages.
     if (!this.window) {
@@ -177,13 +174,15 @@ ConsoleServiceListener.prototype = {
         Services.console.resetWindow(id)
       );
     }
-  },
+  }
 
   /**
    * Remove the nsIConsoleService listener.
    */
-  destroy: function() {
+  destroy() {
     Services.console.unregisterListener(this);
-    this.listener = this.window = null;
-  },
-};
+    this.handler = this.window = null;
+  }
+}
+
+exports.ConsoleServiceListener = ConsoleServiceListener;

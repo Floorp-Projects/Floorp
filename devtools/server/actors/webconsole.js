@@ -196,6 +196,8 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
     this._onChangedToplevelDocument = this._onChangedToplevelDocument.bind(
       this
     );
+    this.onConsoleServiceMessage = this.onConsoleServiceMessage.bind(this);
+
     EventEmitter.on(
       this.parentActor,
       "changed-toplevel-document",
@@ -645,7 +647,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
           if (!this.consoleServiceListener) {
             this.consoleServiceListener = new ConsoleServiceListener(
               window,
-              this
+              this.onConsoleServiceMessage
             );
             this.consoleServiceListener.init();
           }

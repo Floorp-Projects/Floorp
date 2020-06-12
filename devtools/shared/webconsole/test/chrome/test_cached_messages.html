@@ -176,7 +176,7 @@ function onCachedConsoleAPI(state, response) {
   is(expectedConsoleCalls.length, 0, "all expected messages have been found");
 
   closeDebugger(state, function() {
-    consoleServiceListener = new ConsoleServiceListener(null, handlers);
+    consoleServiceListener = new ConsoleServiceListener(null, handlers.onConsoleServiceMessage);
     consoleServiceListener.init();
     doPageErrors();
   });
