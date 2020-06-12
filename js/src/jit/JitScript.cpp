@@ -661,15 +661,17 @@ void JitScript::setIonScriptImpl(JSFreeOp* fop, JSScript* script,
   script->updateJitCodeRaw(fop->runtime());
 }
 
-#ifdef JS_STRUCTURED_SPEW
-static bool GetStubEnteredCount(ICStub* stub, uint32_t* count) {
+#if defined(JS_STRUCTURED_SPEW) || defined(JS_CACHEIR_SPEW)
+bool jit::GetStubEnteredCount(ICStub* stub, uint32_t* count) {
   if (ICStub::IsCacheIRKind(stub->kind())) {
     *count = stub->getEnteredCount();
     return true;
   }
   return false;
 }
+#endif  // JS_STRUCTURED_SPEW || JS_CACHEIR_SPEW
 
+#ifdef JS_STRUCTURED_SPEW
 static bool HasEnteredCounters(ICEntry& entry) {
   ICStub* stub = entry.firstStub();
   while (stub && !stub->isFallback()) {

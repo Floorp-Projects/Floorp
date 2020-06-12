@@ -91,6 +91,7 @@
 #ifdef JS_SIMULATOR_MIPS64
 #  include "jit/mips64/Simulator-mips64.h"
 #endif
+#include "jit/CacheIRHealth.h"
 #include "jit/InlinableNatives.h"
 #include "jit/Ion.h"
 #include "jit/JitcodeMap.h"
@@ -3667,6 +3668,42 @@ static bool DisassWithSrc(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 #endif /* defined(DEBUG) || defined(JS_JITSPEW) */
+
+#ifdef JS_CACHEIR_SPEW
+static bool RateMyCacheIR(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  RootedScript script(cx);
+  if (!argc) {
+    /* If no function is specified we rate current script. */
+    script = GetTopScript(cx);
+  } else {
+    RootedValue value(cx, args.get(0));
+    if (value.isObject() && value.toObject().is<ModuleObject>()) {
+      script = value.toObject().as<ModuleObject>().maybeScript();
+    } else {
+      script = TestingFunctionArgumentToScript(cx, args.get(0));
+    }
+  }
+
+  if (!script) {
+    return false;
+  }
+
+  js::jit::CacheIRHealth cih(cx);
+
+  if (!cih.init()) {
+    return false;
+  }
+
+  if (!cih.rateMyCacheIR(script)) {
+    return false;
+  }
+
+  args.rval().setUndefined();
+  return true;
+}
+#endif /* JS_CACHEIR_SPEW */
 
 /* Pretend we can always preserve wrappers for dummy DOM objects. */
 static bool DummyPreserveWrapperCallback(JSContext* cx, HandleObject obj) {
@@ -8614,6 +8651,13 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 "  Similar to the DumpJSStack() function in the browser."),
 
 #endif
+
+#ifdef JS_CACHEIR_SPEW
+JS_FN_HELP("rateMyCacheIR", RateMyCacheIR, 0, 0,
+"rateMyCacheIR()",
+"  Show health rating of CacheIR stubs."),
+#endif
+
     JS_FN_HELP("intern", Intern, 1, 0,
 "intern(str)",
 "  Internalize str in the atom table."),

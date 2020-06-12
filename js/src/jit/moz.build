@@ -37,6 +37,7 @@ UNIFIED_SOURCES += [
     'BytecodeAnalysis.cpp',
     'CacheIR.cpp',
     'CacheIRCompiler.cpp',
+    'CacheIRHealth.cpp',
     'CacheIRSpewer.cpp',
     'CodeGenerator.cpp',
     'CompileWrappers.cpp',

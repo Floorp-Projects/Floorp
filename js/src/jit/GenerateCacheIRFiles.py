@@ -402,6 +402,10 @@ def generate_cacheirops_header(c_out, yaml_path):
         transpile = op['transpile']
         assert isinstance(transpile, bool)
 
+        # Unscored Ops default to UINT32_MAX
+        cost_estimate = op.get('cost_estimate', int(0xffffffff))
+        assert isinstance(cost_estimate, int)
+
         custom_writer = op.get('custom_writer', False)
         assert isinstance(custom_writer, bool)
 
@@ -409,7 +413,8 @@ def generate_cacheirops_header(c_out, yaml_path):
             args_length = ' + '.join([str(arg_length[v]) for v in args.values()])
         else:
             args_length = '0'
-        ops_items.append('_({}, {})'.format(name, args_length))
+
+        ops_items.append('_({}, {}, {})'.format(name, args_length, cost_estimate))
 
         writer_methods.append(gen_writer_method(name, args, custom_writer))
 
