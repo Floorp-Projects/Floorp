@@ -6733,6 +6733,8 @@ void nsGlobalWindowInner::CancelDocumentFlushedResolvers() {
 }
 
 void nsGlobalWindowInner::DidRefresh() {
+  RefPtr<nsGlobalWindowInner> kungFuDeathGrip(this);
+
   auto rejectionGuard = MakeScopeExit([&] {
     CancelDocumentFlushedResolvers();
     mObservingDidRefresh = false;
