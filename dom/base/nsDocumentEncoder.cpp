@@ -437,6 +437,8 @@ class nsDocumentEncoder : public nsIDocumentEncoder {
     ContextInfoDepth mContextInfoDepth;
 
    private:
+    bool HasInvisibleParentAndShouldBeSkipped(nsINode& aNode) const;
+
     RangeBoundariesInclusiveAncestorsAndOffsets
         mRangeBoundariesInclusiveAncestorsAndOffsets;
     int32_t mStartRootIndex;
@@ -1146,6 +1148,23 @@ nsresult nsDocumentEncoder::RangeContextSerializer::SerializeRangeContextEnd() {
   return rv;
 }
 
+bool nsDocumentEncoder::RangeSerializer::HasInvisibleParentAndShouldBeSkipped(
+    nsINode& aNode) const {
+  if (!(mFlags & SkipInvisibleContent)) {
+    return false;
+  }
+
+  // Check that the parent is visible if we don't a frame.
+  // IsInvisibleNodeAndShouldBeSkipped() will do it when there's a frame.
+  nsCOMPtr<nsIContent> content = nsIContent::FromNode(aNode);
+  if (content && !content->GetPrimaryFrame()) {
+    nsIContent* parent = content->GetParent();
+    return !parent || IsInvisibleNodeAndShouldBeSkipped(*parent, mFlags);
+  }
+
+  return false;
+}
+
 nsresult nsDocumentEncoder::RangeSerializer::SerializeRangeToString(
     const nsRange* aRange) {
   if (!aRange || aRange->Collapsed()) return NS_OK;
@@ -1201,16 +1220,8 @@ nsresult nsDocumentEncoder::RangeSerializer::SerializeRangeToString(
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (startContainer == endContainer && IsTextNode(startContainer)) {
-    if (mFlags & SkipInvisibleContent) {
-      // Check that the parent is visible if we don't a frame.
-      // IsInvisibleNodeAndShouldBeSkipped() will do it when there's a frame.
-      nsCOMPtr<nsIContent> content = do_QueryInterface(startContainer);
-      if (content && !content->GetPrimaryFrame()) {
-        nsIContent* parent = content->GetParent();
-        if (!parent || IsInvisibleNodeAndShouldBeSkipped(*parent, mFlags)) {
-          return NS_OK;
-        }
-      }
+    if (HasInvisibleParentAndShouldBeSkipped(*startContainer)) {
+      return NS_OK;
     }
     rv = mNodeSerializer.SerializeNodeStart(*startContainer, startOffset,
                                             endOffset);
