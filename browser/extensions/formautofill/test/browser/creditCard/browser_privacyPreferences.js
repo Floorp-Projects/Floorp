@@ -72,8 +72,8 @@ add_task(async function test_aboutPreferencesPrivacy() {
         ok(
           content.document
             .querySelector(selectors.creditCardAutofillLearnMore)
-            .href.includes("autofill-card-address"),
-          "Autofill credit cards learn more link should contain autofill-card-address"
+            .href.includes("credit-card-autofill"),
+          "Autofill credit cards learn more link should contain credit-card-autofill"
         );
       });
     }

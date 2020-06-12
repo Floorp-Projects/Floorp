@@ -76,9 +76,12 @@ FormAutofillPreferences.prototype = {
    * @param  {HTMLDocument} document
    */
   createPreferenceGroup(document) {
-    let learnMoreURL =
+    let addressLearnMoreURL =
       Services.urlFormatter.formatURLPref("app.support.baseURL") +
       "autofill-card-address";
+    let creditCardLearnMoreURL =
+      Services.urlFormatter.formatURLPref("app.support.baseURL") +
+      "credit-card-autofill";
     let formAutofillFragment = document.createDocumentFragment();
     let formAutofillGroupBoxLabel = document.createXULElement("label");
     let formAutofillGroupBoxLabelHeading = document.createElementNS(
@@ -127,7 +130,7 @@ FormAutofillPreferences.prototype = {
     // when addressAutofillCheckboxGroup's height is changed by a longer l10n string
     savedAddressesBtnWrapper.setAttribute("align", "start");
 
-    addressAutofillLearnMore.setAttribute("href", learnMoreURL);
+    addressAutofillLearnMore.setAttribute("href", addressLearnMoreURL);
 
     // Add preferences search support
     savedAddressesBtn.setAttribute(
@@ -198,7 +201,7 @@ FormAutofillPreferences.prototype = {
       // when creditCardAutofillCheckboxGroup's height is changed by a longer l10n string
       savedCreditCardsBtnWrapper.setAttribute("align", "start");
 
-      creditCardAutofillLearnMore.setAttribute("href", learnMoreURL);
+      creditCardAutofillLearnMore.setAttribute("href", creditCardLearnMoreURL);
 
       // Add preferences search support
       savedCreditCardsBtn.setAttribute(
