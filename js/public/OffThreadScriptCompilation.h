@@ -19,7 +19,6 @@
 
 #include "jstypes.h"  // JS_PUBLIC_API
 
-#include "js/BinASTFormat.h"    // JS::BinASTFormat
 #include "js/CompileOptions.h"  // JS::ReadOnlyCompileOptions
 #include "js/GCVector.h"        // JS::GCVector
 #include "js/Transcoding.h"     // JS::TranscodeSource
@@ -130,20 +129,6 @@ extern JS_PUBLIC_API bool FinishMultiOffThreadScriptsDecoder(
     MutableHandle<GCVector<JSScript*>> scripts);
 
 extern JS_PUBLIC_API void CancelMultiOffThreadScriptsDecoder(
-    JSContext* cx, OffThreadToken* token);
-
-// This returns false if built without JS_BUILD_BINAST.
-extern JS_PUBLIC_API bool CanDecodeBinASTOffThread(
-    JSContext* cx, const ReadOnlyCompileOptions& options, size_t length);
-
-// This throws an exception if built without JS_BUILD_BINAST.
-extern JS_PUBLIC_API bool DecodeBinASTOffThread(
-    JSContext* cx, const ReadOnlyCompileOptions& options, const uint8_t* buf,
-    size_t length, JS::BinASTFormat format, OffThreadCompileCallback callback,
-    void* callbackData);
-
-// This throws an exception if built without JS_BUILD_BINAST.
-extern JS_PUBLIC_API JSScript* FinishOffThreadBinASTDecode(
     JSContext* cx, OffThreadToken* token);
 
 }  // namespace JS
