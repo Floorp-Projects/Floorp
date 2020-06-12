@@ -16,11 +16,11 @@
 #include "nsTArray.h"
 #include "nsTHashtable.h"
 #include "nsHashKeys.h"
-#include "nsISecureBrowserUI.h"
 
 class nsISHistory;
-class nsSecureBrowserUI;
+#include "nsISecureBrowserUI.h"
 
+class nsSecureBrowserUI;
 namespace mozilla {
 namespace net {
 class DocumentLoadListener;
@@ -131,15 +131,9 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   void LoadURI(const nsAString& aURI, const LoadURIOptions& aOptions,
                ErrorResult& aError);
 
-  // Internal method to change which process a BrowsingContext is being loaded
-  // in. The returned promise will resolve when the process switch is completed.
-  //
-  // A VoidString() aRemoteType argument will perform a process switch into the
-  // parent process, and the method will resolve with a null BrowserParent.
   using RemotenessPromise = MozPromise<RefPtr<BrowserParent>, nsresult, false>;
-  RefPtr<RemotenessPromise> ChangeRemoteness(const nsAString& aRemoteType,
-                                             uint64_t aPendingSwitchId,
-                                             bool aReplaceBrowsingContext);
+  RefPtr<RemotenessPromise> ChangeFrameRemoteness(const nsAString& aRemoteType,
+                                                  uint64_t aPendingSwitchId);
 
   // Return a media controller from the top-level browsing context that can
   // control all media belonging to this browsing context tree. Return nullptr
@@ -181,25 +175,22 @@ class CanonicalBrowsingContext final : public BrowsingContext {
 
     PendingRemotenessChange(CanonicalBrowsingContext* aTarget,
                             RemotenessPromise::Private* aPromise,
-                            uint64_t aPendingSwitchId,
-                            bool aReplaceBrowsingContext);
+                            uint64_t aPendingSwitchId)
+        : mTarget(aTarget),
+          mPromise(aPromise),
+          mPendingSwitchId(aPendingSwitchId) {}
 
     void Cancel(nsresult aRv);
+    void Complete(ContentParent* aContentParent);
 
    private:
-    friend class CanonicalBrowsingContext;
-
     ~PendingRemotenessChange();
-    void ProcessReady(ContentParent* aContentParent);
-    void Finish(ContentParent* aContentParent);
     void Clear();
 
     RefPtr<CanonicalBrowsingContext> mTarget;
     RefPtr<RemotenessPromise::Private> mPromise;
-    RefPtr<GenericPromise> mPrepareToChangePromise;
 
     uint64_t mPendingSwitchId;
-    bool mReplaceBrowsingContext;
   };
 
   friend class net::DocumentLoadListener;

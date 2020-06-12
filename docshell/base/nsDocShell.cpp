@@ -12382,6 +12382,19 @@ nsCommandManager* nsDocShell::GetCommandManager() {
   return mCommandManager;
 }
 
+NS_IMETHODIMP
+nsDocShell::GetAwaitingLargeAlloc(bool* aResult) {
+  MOZ_ASSERT(aResult);
+  nsCOMPtr<nsIBrowserChild> browserChild = GetBrowserChild();
+  if (!browserChild) {
+    *aResult = false;
+    return NS_OK;
+  }
+  *aResult =
+      static_cast<BrowserChild*>(browserChild.get())->IsAwaitingLargeAlloc();
+  return NS_OK;
+}
+
 NS_IMETHODIMP_(void)
 nsDocShell::GetOriginAttributes(mozilla::OriginAttributes& aAttrs) {
   mBrowsingContext->GetOriginAttributes(aAttrs);
