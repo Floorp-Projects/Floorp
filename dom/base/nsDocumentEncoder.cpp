@@ -398,6 +398,8 @@ class nsDocumentEncoder : public nsIDocumentEncoder {
     AutoTArray<AutoTArray<nsINode*, 8>, 8> mRangeContexts;
 
     const RangeNodeContext& mRangeNodeContext;
+
+   private:
     const NodeSerializer& mNodeSerializer;
   };
 
