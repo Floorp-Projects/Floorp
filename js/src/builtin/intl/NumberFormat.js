@@ -567,23 +567,78 @@ function getNumberingSystems(locale) {
     // can be used with any locale. Supporting a decimal numbering system
     // (where only the digits are replaced) is easy, so we offer them all here.
     // Algorithmic numbering systems are typically tied to one locale, so for
-    // lack of information we don't offer them. To increase chances that
-    // other software will process output correctly, we further restrict to
-    // those decimal numbering systems explicitly listed in table 3 of
-    // the ECMAScript Internationalization API Specification, 11.1.6, which
-    // in turn are those with full specifications in version 21 of Unicode
-    // Technical Standard #35 using digits that were defined in Unicode 5.0,
-    // the Unicode version supported in Windows Vista.
+    // lack of information we don't offer them.
     // The one thing we can find out from ICU is the default numbering system
     // for a locale.
     var defaultNumberingSystem = intl_numberingSystem(locale);
     return [
         defaultNumberingSystem,
-        "arab", "arabext", "bali", "beng", "deva",
-        "fullwide", "gujr", "guru", "hanidec", "khmr",
-        "knda", "laoo", "latn", "limb", "mlym",
-        "mong", "mymr", "orya", "tamldec", "telu",
-        "thai", "tibt",
+        "adlm",
+        "ahom",
+        "arab",
+        "arabext",
+        "bali",
+        "beng",
+        "bhks",
+        "brah",
+        "cakm",
+        "cham",
+        "deva",
+        "diak",
+        "fullwide",
+        "gong",
+        "gonm",
+        "gujr",
+        "guru",
+        "hanidec",
+        "hmng",
+        "hmnp",
+        "java",
+        "kali",
+        "khmr",
+        "knda",
+        "lana",
+        "lanatham",
+        "laoo",
+        "latn",
+        "lepc",
+        "limb",
+        "mathbold",
+        "mathdbl",
+        "mathmono",
+        "mathsanb",
+        "mathsans",
+        "mlym",
+        "modi",
+        "mong",
+        "mroo",
+        "mtei",
+        "mymr",
+        "mymrshan",
+        "mymrtlng",
+        "newa",
+        "nkoo",
+        "olck",
+        "orya",
+        "osma",
+        "rohg",
+        "saur",
+        "segment",
+        "shrd",
+        "sind",
+        "sinh",
+        "sora",
+        "sund",
+        "takr",
+        "talu",
+        "tamldec",
+        "telu",
+        "thai",
+        "tibt",
+        "tirh",
+        "vaii",
+        "wara",
+        "wcho",
     ];
 }
 
