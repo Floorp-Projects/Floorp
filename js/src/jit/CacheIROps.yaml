@@ -227,6 +227,14 @@
     input: StringId
     lastIndex: Int32Id
 
+- name: CallSubstringKernelResult
+  shared: true
+  transpile: true
+  args:
+    str: StringId
+    begin: Int32Id
+    length: Int32Id
+
 # Add a reference to a global in the compartment to keep it alive.
 - name: GuardCompartment
   shared: false

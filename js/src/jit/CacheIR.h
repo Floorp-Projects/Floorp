@@ -1551,6 +1551,7 @@ class MOZ_RAII CallIRGenerator : public IRGenerator {
   AttachDecision tryAttachHasClass(HandleFunction callee, const JSClass* clasp);
   AttachDecision tryAttachRegExpMatcherSearcherTester(HandleFunction callee,
                                                       InlinableNative native);
+  AttachDecision tryAttachSubstringKernel(HandleFunction callee);
   AttachDecision tryAttachStringChar(HandleFunction callee, StringChar kind);
   AttachDecision tryAttachStringCharCodeAt(HandleFunction callee);
   AttachDecision tryAttachStringCharAt(HandleFunction callee);
