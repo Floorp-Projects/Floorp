@@ -1161,8 +1161,8 @@ void nsCocoaWindow::ConstrainPosition(bool aAllowSlop, int32_t* aX, int32_t* aY)
 void nsCocoaWindow::SetSizeConstraints(const SizeConstraints& aConstraints) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  // Popups can be smaller than (32, 32)
-  NSRect rect = (mWindowType == eWindowType_popup) ? NSZeroRect : NSMakeRect(0.0, 0.0, 32, 32);
+  // Popups can be smaller than (60, 60)
+  NSRect rect = (mWindowType == eWindowType_popup) ? NSZeroRect : NSMakeRect(0.0, 0.0, 60, 60);
   rect = [mWindow frameRectForChildViewRect:rect];
 
   CGFloat scaleFactor = BackingScaleFactor();

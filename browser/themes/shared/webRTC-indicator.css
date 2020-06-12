@@ -7,40 +7,23 @@
   background: transparent;
   border: 0;
   border-radius: 5px;
-  --indicator-height: 32px;
+  --indicator-height: 60px;
   --indicator-background-color: rgb(249,249,250);
-  --indicator-border-color: hsla(0,0%,0%,.32);
   --indicator-icon-fill: rgba(12,12,13,0.8);
   --indicator-item-separator: 1px solid hsla(210,4%,10%,.14);
   --indicator-stop-button-background-color: rgb(0,96,223);
   --indicator-stop-button-hover-background-color: rgb(0,62,170);
   --indicator-stop-button-color: rgb(255,255,255);
-  --minimize-button-background-color: hsla(240,5%,5%,.1);
-  --minimize-button-hover-background-color: hsla(240,5%,5%,.15);
-  --minimize-button-active-background-color: hsla(240,5%,5%,.2);
-  --device-button-hover-background-color: hsla(0,0%,70%,.4);
-  --device-button-active-background-color: hsla(0,0%,70%,.6);
-  max-height: var(--indicator-height);
+  --control-icon-hover-background-color: rgb(215,215,219);
 }
 
 body {
   display: inline-flex;
   background-color: var(--indicator-background-color);
+  max-height: var(--indicator-height);
   margin: 0;
   user-select: none;
   -moz-window-dragging: drag;
-  /**
-   * On macOS, for windows with small enough dimensions, we seem to get
-   * vertical scrollbars on the body, even when the contents initially
-   * fit the window. We sidestep this by making sure we never display
-   * scrollbars.
-   */
-  overflow: hidden;
-  cursor: move;
-  border: 1px solid;
-  border-color: var(--indicator-border-color);
-  /* max-height = indicator height minus top and bottom border */
-  max-height: calc(var(--indicator-height) - 2px);
 }
 
 button {
@@ -56,18 +39,14 @@ button {
 .row-item {
   display: flex;
   align-items: center;
-  min-width: 30px;
-  margin: 5px 5px 5px 0px;
+  min-width: 50px;
+  height: var(--indicator-height);
+  padding: 5px;
   box-sizing: border-box;
-  padding: 0px 5px;
 }
 
-.separator {
+.row-item:not(:last-child) {
   border-right: var(--indicator-item-separator);
-  min-width: 1px;
-  padding: 0;
-  inline-margin-start: 0px;
-  inline-margin-end: 0px;
 }
 
 /**
@@ -87,20 +66,18 @@ button {
  * hide the entire display sharing section.
  */
 :root:not(:-moz-any([sharingscreen],[sharingwindow])) > body > #display-share,
-:root:not(:-moz-any([sharingscreen],[sharingwindow])) > body > #display-share + .separator,
-:root:not([sharingvideo]) > body > #device-share > #camera-button,
-:root:not([sharingaudio]) > body > #device-share > #microphone-button,
-:root:not(:-moz-any([sharingvideo],[sharingaudio])) > body > #device-share,
-:root:not(:-moz-any([sharingvideo],[sharingaudio])) > body > #device-share + .separator {
+:root:not([sharingvideo]) > body > #camera-button,
+:root:not([sharingaudio]) > body > #microphone-button {
   display:none;
 }
 
 .control-icon {
-  background-position: center;
+  background-position: center center;
   background-size: 16px;
-  background-color: transparent;
-  height: 16px;
-  padding: 10px 20px;
+}
+
+.control-icon:hover {
+  background-color: var(--control-icon-hover-background-color);
 }
 
 #display-share-icon {
@@ -108,23 +85,7 @@ button {
   width: 16px;
   height: 16px;
   margin-inline-start: 5px;
-  margin-inline-end: 10px;
-}
-
-#device-share {
-  border-radius: 5px;
-}
-
-/**
- * For now, since the camera and microphone control buttons effectively do the
- * same thing, we'll make them seem like a single button when hovering.
- */
-#device-share:hover {
-  background-color: var(--device-button-hover-background-color);
-}
-
-#device-share:active {
-  background-color: var(--device-button-active-background-color);
+  margin-inline-end: 15px;
 }
 
 #camera-button {
@@ -139,7 +100,7 @@ button {
   background-color: var(--indicator-stop-button-background-color);
   color: var(--indicator-stop-button-color);
   border-radius: 5px;
-  padding: 3px 5px;
+  padding: 10px;
   margin-inline-start: 15px;
 }
 
@@ -150,33 +111,13 @@ button {
 #window-controls {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: self-end;
 }
 
 #minimize {
   padding: 10px;
   min-width: unset;
   background-image: url("chrome://browser/skin/notification-icons/minimize.svg");
-  background-color: var(--minimize-button-background-color);
-}
-
-#minimize:hover {
-  background-color: var(--minimize-button-hover-background-color);
-}
-
-#minimize:active {
-  background-color: var(--minimize-button-active-background-color);
-}
-
-#drag-indicator {
-  background-image: url("chrome://browser/skin/notification-icons/drag-indicator.svg");
-  background-repeat: no-repeat;
-  background-position: center;
-  width: 5px;
-  -moz-context-properties: fill, fill-opacity;
-  fill: var(--indicator-icon-fill);
-  fill-opacity: 0.4;
-  margin: 5px;
 }
 
 :-moz-any(#microphone-button, #camera-button, .stop-button):-moz-focusring {
