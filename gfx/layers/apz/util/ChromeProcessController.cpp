@@ -226,8 +226,14 @@ void ChromeProcessController::NotifyPinchGesture(
   }
 
   if (mWidget) {
-    APZCCallbackHelper::NotifyPinchGesture(aType, aSpanChange, aModifiers,
-                                           mWidget.get());
+    // Dispatch the call to APZCCallbackHelper::NotifyPinchGesture to the main
+    // thread so that it runs asynchronously from the current call. This is
+    // because the call can run arbitrary JS code, which can also spin the event
+    // loop and cause undesirable re-entrancy in APZ.
+    mUIThread->Dispatch(NewRunnableFunction(
+        "layers::ChromeProcessController::NotifyPinchGestureAsync",
+        &APZCCallbackHelper::NotifyPinchGesture, aType, aSpanChange, aModifiers,
+        mWidget));
   }
 }
 
