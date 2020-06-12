@@ -6,24 +6,25 @@
 #ifndef nsSocketTransportService2_h__
 #define nsSocketTransportService2_h__
 
-#include "nsPISocketTransportService.h"
-#include "nsIThreadInternal.h"
-#include "nsIRunnable.h"
-#include "nsCOMPtr.h"
-#include "prinrval.h"
-#include "mozilla/Logging.h"
-#include "prinit.h"
-#include "nsIObserver.h"
+#include "PollableEvent.h"
+#include "mozilla/Atomics.h"
 #include "mozilla/LinkedList.h"
+#include "mozilla/Logging.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Mutex.h"
-#include "mozilla/net/DashboardTypes.h"
-#include "mozilla/Atomics.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Tuple.h"
-#include "nsITimer.h"
 #include "mozilla/UniquePtr.h"
-#include "PollableEvent.h"
+#include "mozilla/net/DashboardTypes.h"
+#include "nsCOMPtr.h"
+#include "nsIDirectTaskDispatcher.h"
+#include "nsIObserver.h"
+#include "nsIRunnable.h"
+#include "nsIThreadInternal.h"
+#include "nsITimer.h"
+#include "nsPISocketTransportService.h"
+#include "prinit.h"
+#include "prinrval.h"
 
 class nsASocketHandler;
 struct PRPollDesc;
@@ -86,7 +87,8 @@ class nsSocketTransportService final : public nsPISocketTransportService,
                                        public nsISerialEventTarget,
                                        public nsIThreadObserver,
                                        public nsIRunnable,
-                                       public nsIObserver {
+                                       public nsIObserver,
+                                       public nsIDirectTaskDispatcher {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSPISOCKETTRANSPORTSERVICE
@@ -96,6 +98,7 @@ class nsSocketTransportService final : public nsPISocketTransportService,
   NS_DECL_NSITHREADOBSERVER
   NS_DECL_NSIRUNNABLE
   NS_DECL_NSIOBSERVER
+  NS_DECL_NSIDIRECTTASKDISPATCHER
 
   nsSocketTransportService();
 
@@ -143,10 +146,16 @@ class nsSocketTransportService final : public nsPISocketTransportService,
   //-------------------------------------------------------------------------
 
   nsCOMPtr<nsIThread> mThread;  // protected by mLock
+  // We store a pointer to mThread as a direct task dispatcher to avoid having
+  // to do do_QueryInterface whenever we need to access the interface.
+  nsCOMPtr<nsIDirectTaskDispatcher>
+      mDirectTaskDispatcher;  // protected by mLock
   UniquePtr<PollableEvent> mPollableEvent;
 
   // Returns mThread, protecting the get-and-addref with mLock
   already_AddRefed<nsIThread> GetThreadSafely();
+  // Same as above, but return mThread as a nsIDirectTaskDispatcher
+  already_AddRefed<nsIDirectTaskDispatcher> GetDirectTaskDispatcherSafely();
 
   //-------------------------------------------------------------------------
   // initialization and shutdown (any thread)
