@@ -5396,6 +5396,58 @@ AttachDecision CallIRGenerator::tryAttachRegExpMatcherSearcherTester(
   return AttachDecision::Attach;
 }
 
+AttachDecision CallIRGenerator::tryAttachRegExpPrototypeOptimizable(
+    HandleFunction callee) {
+  // Self-hosted code calls this with a single object argument.
+  MOZ_ASSERT(argc_ == 1);
+  MOZ_ASSERT(args_[0].isObject());
+
+  // Initialize the input operand.
+  Int32OperandId argcId(writer.setInputOperandId(0));
+
+  // Note: we don't need to call emitNativeCalleeGuard for intrinsics.
+
+  ValOperandId arg0Id = writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
+  ObjOperandId protoId = writer.guardToObject(arg0Id);
+
+  writer.regExpPrototypeOptimizableResult(protoId);
+
+  // No type monitoring because this always returns a boolean.
+  writer.returnFromIC();
+  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
+
+  trackAttached("RegExpPrototypeOptimizable");
+  return AttachDecision::Attach;
+}
+
+AttachDecision CallIRGenerator::tryAttachRegExpInstanceOptimizable(
+    HandleFunction callee) {
+  // Self-hosted code calls this with two object arguments.
+  MOZ_ASSERT(argc_ == 2);
+  MOZ_ASSERT(args_[0].isObject());
+  MOZ_ASSERT(args_[1].isObject());
+
+  // Initialize the input operand.
+  Int32OperandId argcId(writer.setInputOperandId(0));
+
+  // Note: we don't need to call emitNativeCalleeGuard for intrinsics.
+
+  ValOperandId arg0Id = writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
+  ObjOperandId regexpId = writer.guardToObject(arg0Id);
+
+  ValOperandId arg1Id = writer.loadArgumentFixedSlot(ArgumentKind::Arg1, argc_);
+  ObjOperandId protoId = writer.guardToObject(arg1Id);
+
+  writer.regExpInstanceOptimizableResult(regexpId, protoId);
+
+  // No type monitoring because this always returns a boolean.
+  writer.returnFromIC();
+  cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
+
+  trackAttached("RegExpInstanceOptimizable");
+  return AttachDecision::Attach;
+}
+
 AttachDecision CallIRGenerator::tryAttachSubstringKernel(
     HandleFunction callee) {
   // Self-hosted code calls this with (string, int32, int32) arguments.
@@ -6104,6 +6156,10 @@ AttachDecision CallIRGenerator::tryAttachInlinableNative(
     case InlinableNative::RegExpSearcher:
     case InlinableNative::RegExpTester:
       return tryAttachRegExpMatcherSearcherTester(callee, native);
+    case InlinableNative::RegExpPrototypeOptimizable:
+      return tryAttachRegExpPrototypeOptimizable(callee);
+    case InlinableNative::RegExpInstanceOptimizable:
+      return tryAttachRegExpInstanceOptimizable(callee);
 
     // String natives.
     case InlinableNative::String:

@@ -3113,6 +3113,28 @@ void MacroAssembler::randomDouble(Register rng, FloatRegister dest,
   mulDoublePtr(ImmPtr(&ScaleInv), s0Reg.scratchReg(), dest);
 }
 
+void MacroAssembler::branchIfNotRegExpPrototypeOptimizable(Register proto,
+                                                           Register temp,
+                                                           Label* fail) {
+  loadJSContext(temp);
+  loadPtr(Address(temp, JSContext::offsetOfRealm()), temp);
+  size_t offset = Realm::offsetOfRegExps() +
+                  RegExpRealm::offsetOfOptimizableRegExpPrototypeShape();
+  loadPtr(Address(temp, offset), temp);
+  branchTestObjShapeUnsafe(Assembler::NotEqual, proto, temp, fail);
+}
+
+void MacroAssembler::branchIfNotRegExpInstanceOptimizable(Register regexp,
+                                                          Register temp,
+                                                          Label* label) {
+  loadJSContext(temp);
+  loadPtr(Address(temp, JSContext::offsetOfRealm()), temp);
+  size_t offset = Realm::offsetOfRegExps() +
+                  RegExpRealm::offsetOfOptimizableRegExpInstanceShape();
+  loadPtr(Address(temp, offset), temp);
+  branchTestObjShapeUnsafe(Assembler::NotEqual, regexp, temp, label);
+}
+
 // ===============================================================
 // Branch functions
 
