@@ -3419,7 +3419,7 @@ void MediaTrackGraphImpl::NotifyWhenGraphStarted(
 
 void MediaTrackGraphImpl::SuspendOrResumeTracks(
     AudioContextOperation aAudioContextOperation,
-    const nsTArray<MediaTrack*>& aTrackSet) {
+    const nsTArray<RefPtr<MediaTrack>>& aTrackSet) {
   MOZ_ASSERT(OnGraphThreadOrNotRunning());
   // For our purpose, Suspend and Close are equivalent: we want to remove the
   // tracks from the set of tracks that are going to be processed.
@@ -3446,7 +3446,7 @@ void MediaTrackGraphImpl::SuspendOrResumeTracks(
 }
 
 void MediaTrackGraphImpl::ApplyAudioContextOperationImpl(
-    MediaTrack* aDestinationTrack, const nsTArray<MediaTrack*>& aTracks,
+    MediaTrack* aDestinationTrack, const nsTArray<RefPtr<MediaTrack>>& aTracks,
     AudioContextOperation aOperation,
     MozPromiseHolder<AudioContextOperationPromise>&& aHolder) {
   MOZ_ASSERT(OnGraphThread());
@@ -3562,11 +3562,11 @@ class AudioContextOperationControlMessage : public ControlMessage {
 
  public:
   AudioContextOperationControlMessage(
-      MediaTrack* aDestinationTrack, const nsTArray<MediaTrack*>& aTracks,
+      MediaTrack* aDestinationTrack, nsTArray<RefPtr<MediaTrack>> aTracks,
       AudioContextOperation aOperation,
       MozPromiseHolder<AudioContextOperationPromise>&& aHolder)
       : ControlMessage(aDestinationTrack),
-        mTracks(aTracks.Clone()),
+        mTracks(move(aTracks)),
         mAudioContextOperation(aOperation),
         mHolder(move(aHolder)) {}
   void Run() override {
@@ -3580,21 +3580,19 @@ class AudioContextOperationControlMessage : public ControlMessage {
   }
 
  private:
-  // We don't need strong references here for the same reason ControlMessage
-  // doesn't.
-  nsTArray<MediaTrack*> mTracks;
+  nsTArray<RefPtr<MediaTrack>> mTracks;
   AudioContextOperation mAudioContextOperation;
   MozPromiseHolder<AudioContextOperationPromise> mHolder;
 };
 
 auto MediaTrackGraph::ApplyAudioContextOperation(
-    MediaTrack* aDestinationTrack, const nsTArray<MediaTrack*>& aTracks,
+    MediaTrack* aDestinationTrack, nsTArray<RefPtr<MediaTrack>> aTracks,
     AudioContextOperation aOperation) -> RefPtr<AudioContextOperationPromise> {
   MozPromiseHolder<AudioContextOperationPromise> holder;
   RefPtr<AudioContextOperationPromise> p = holder.Ensure(__func__);
   MediaTrackGraphImpl* graphImpl = static_cast<MediaTrackGraphImpl*>(this);
   graphImpl->AppendMessage(MakeUnique<AudioContextOperationControlMessage>(
-      aDestinationTrack, aTracks, aOperation, move(holder)));
+      aDestinationTrack, move(aTracks), aOperation, move(holder)));
   return p;
 }
 
