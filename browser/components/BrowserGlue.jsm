@@ -801,30 +801,6 @@ const listeners = {
     // PLEASE KEEP THIS LIST IN SYNC WITH THE LISTENERS ADDED IN AsyncPrefs.init
   },
 
-  mm: {
-    "AboutLogins:CreateLogin": ["AboutLoginsParent"],
-    "AboutLogins:DeleteLogin": ["AboutLoginsParent"],
-    "AboutLogins:DismissBreachAlert": ["AboutLoginsParent"],
-    "AboutLogins:HideFooter": ["AboutLoginsParent"],
-    "AboutLogins:Import": ["AboutLoginsParent"],
-    "AboutLogins:MasterPasswordRequest": ["AboutLoginsParent"],
-    "AboutLogins:OpenFAQ": ["AboutLoginsParent"],
-    "AboutLogins:GetHelp": ["AboutLoginsParent"],
-    "AboutLogins:OpenPreferences": ["AboutLoginsParent"],
-    "AboutLogins:OpenMobileAndroid": ["AboutLoginsParent"],
-    "AboutLogins:OpenMobileIos": ["AboutLoginsParent"],
-    "AboutLogins:OpenSite": ["AboutLoginsParent"],
-    "AboutLogins:SortChanged": ["AboutLoginsParent"],
-    "AboutLogins:Subscribe": ["AboutLoginsParent"],
-    "AboutLogins:SyncEnable": ["AboutLoginsParent"],
-    "AboutLogins:SyncOptions": ["AboutLoginsParent"],
-    "AboutLogins:TestOnlyResetOSAuth": ["AboutLoginsParent"],
-    "AboutLogins:UpdateLogin": ["AboutLoginsParent"],
-    "AboutLogins:VulnerableLogins": ["AboutLoginsParent"],
-    "Reader:FaviconRequest": ["ReaderParent"],
-    "Reader:UpdateReaderButton": ["ReaderParent"],
-  },
-
   observe(subject, topic, data) {
     for (let module of this.observers[topic]) {
       try {
@@ -850,11 +826,6 @@ const listeners = {
   init() {
     for (let observer of Object.keys(this.observers)) {
       Services.obs.addObserver(this, observer);
-    }
-
-    let receiveMessageMM = this.receiveMessage.bind(this, this.mm);
-    for (let message of Object.keys(this.mm)) {
-      Services.mm.addMessageListener(message, receiveMessageMM);
     }
 
     let receiveMessagePPMM = this.receiveMessage.bind(this, this.ppmm);
