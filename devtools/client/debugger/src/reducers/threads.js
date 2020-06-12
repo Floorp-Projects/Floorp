@@ -12,8 +12,6 @@
 import { sortBy } from "lodash";
 import { createSelector } from "reselect";
 
-import { features } from "../utils/prefs";
-
 import type { Selector, State } from "./types";
 import type { Thread, ThreadList, Worker } from "../types";
 import type { Action } from "../actions/types";
@@ -106,10 +104,6 @@ export const getAllThreads: Selector<Thread[]> = createSelector(
 
 export function getThread(state: State, threadActor: string) {
   return getAllThreads(state).find(thread => thread.actor === threadActor);
-}
-
-export function supportsWasm(state: State): boolean {
-  return features.wasm && state.threads.traits.wasmBinarySource;
 }
 
 // checks if a path begins with a thread actor

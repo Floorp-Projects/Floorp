@@ -12,7 +12,6 @@ add_task(
   threadFrontTest(async ({ threadFront, debuggee }) => {
     await threadFront.reconfigure({
       observeAsmJS: true,
-      wasmBinarySource: true,
     });
 
     await executeOnNextTickAndWaitForPause(

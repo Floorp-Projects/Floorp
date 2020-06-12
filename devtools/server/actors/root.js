@@ -129,8 +129,6 @@ exports.RootActor = protocol.ActorClassWithSpec(rootSpec, {
       networkMonitor: true,
       // Whether the storage inspector actor to inspect cookies, etc.
       storageInspector: true,
-      // Whether the server can return wasm binary source
-      wasmBinarySource: true,
       bulk: true,
       // Whether root actor exposes chrome target actors and access to any window.
       // If allowChromeProcess is true, you can:
