@@ -26,8 +26,8 @@ class AccessibilityProxy {
   constructor(toolbox) {
     this.toolbox = toolbox;
 
-    this.accessibilityEventsMap = new Map();
-    this.accessibleWalkerEventsMap = new Map();
+    this.lifecycleEvents = new Map();
+    this.accessibilityEvents = new Map();
     this.supports = {};
 
     this.audit = this.audit.bind(this);
@@ -194,18 +194,12 @@ class AccessibilityProxy {
   pick(doFocus, onHovered, onPicked, onPreviewed, onCanceled) {
     return this.withAllAccessibilityWalkerFronts(
       async accessibleWalkerFront => {
-        this._on(accessibleWalkerFront, "picker-accessible-hovered", onHovered);
-        this._on(accessibleWalkerFront, "picker-accessible-picked", onPicked);
-        this._on(
-          accessibleWalkerFront,
-          "picker-accessible-previewed",
-          onPreviewed
-        );
-        this._on(
-          accessibleWalkerFront,
-          "picker-accessible-canceled",
-          onCanceled
-        );
+        this.startListening(accessibleWalkerFront, {
+          "picker-accessible-hovered": onHovered,
+          "picker-accessible-picked": onPicked,
+          "picker-accessible-previewed": onPreviewed,
+          "picker-accessible-canceled": onCanceled,
+        });
         await accessibleWalkerFront.pick(
           // Only pass doFocus to the top level accessibility walker front.
           doFocus && accessibleWalkerFront.targetFront.isTopLevel
@@ -221,22 +215,12 @@ class AccessibilityProxy {
     return this.withAllAccessibilityWalkerFronts(
       async accessibleWalkerFront => {
         await accessibleWalkerFront.cancelPick();
-        this._off(
-          accessibleWalkerFront,
-          "picker-accessible-hovered",
-          onHovered
-        );
-        this._off(accessibleWalkerFront, "picker-accessible-picked", onPicked);
-        this._off(
-          accessibleWalkerFront,
-          "picker-accessible-previewed",
-          onPreviewed
-        );
-        this._off(
-          accessibleWalkerFront,
-          "picker-accessible-canceled",
-          onCanceled
-        );
+        this.stopListening(accessibleWalkerFront, {
+          "picker-accessible-hovered": onHovered,
+          "picker-accessible-picked": onPicked,
+          "picker-accessible-previewed": onPreviewed,
+          "picker-accessible-canceled": onCanceled,
+        });
       }
     );
   }
@@ -248,38 +232,42 @@ class AccessibilityProxy {
     return { enabled, canBeDisabled, canBeEnabled };
   }
 
-  startListeningForAccessibilityEvents(eventMap) {
-    for (const [type, listener] of Object.entries(eventMap)) {
-      this._on(this.accessibleWalkerFront, type, listener);
+  startListening(front, events) {
+    for (const [type, listener] of Object.entries(events)) {
+      this._on(front, type, listener);
     }
   }
 
-  stopListeningForAccessibilityEvents(eventMap) {
-    for (const [type, listener] of Object.entries(eventMap)) {
-      this._off(this.accessibleWalkerFront, type, listener);
+  stopListening(front, events) {
+    for (const [type, listener] of Object.entries(events)) {
+      this._off(front, type, listener);
     }
   }
 
-  startListeningForLifecycleEvents(eventMap) {
-    for (const [type, listeners] of Object.entries(eventMap)) {
-      this._on(this.accessibilityFront, type, listeners);
-    }
+  startListeningForAccessibilityEvents(events) {
+    this.startListening(this.accessibleWalkerFront, events);
   }
 
-  stopListeningForLifecycleEvents(eventMap) {
-    for (const [type, listeners] of Object.entries(eventMap)) {
-      this._off(this.accessibilityFront, type, listeners);
-    }
+  stopListeningForAccessibilityEvents(events) {
+    this.stopListening(this.accessibleWalkerFront, events);
   }
 
-  startListeningForParentLifecycleEvents(eventMap) {
-    for (const [type, listener] of Object.entries(eventMap)) {
+  startListeningForLifecycleEvents(events) {
+    this.startListening(this.accessibilityFront, events);
+  }
+
+  stopListeningForLifecycleEvents(events) {
+    this.stopListening(this.accessibilityFront, events);
+  }
+
+  startListeningForParentLifecycleEvents(events) {
+    for (const [type, listener] of Object.entries(events)) {
       this.parentAccessibilityFront.on(type, listener);
     }
   }
 
-  stopListeningForParentLifecycleEvents(eventMap) {
-    for (const [type, listener] of Object.entries(eventMap)) {
+  stopListeningForParentLifecycleEvents(events) {
+    for (const [type, listener] of Object.entries(events)) {
       this.parentAccessibilityFront.off(type, listener);
     }
   }
@@ -347,14 +335,14 @@ class AccessibilityProxy {
     }
 
     // Move front listeners to new front.
-    for (const [type, listeners] of this.accessibilityEventsMap.entries()) {
-      for (const listener of listeners) {
+    for (const [type, listeners] of this.lifecycleEvents.entries()) {
+      for (const listener of listeners.values()) {
         this.accessibilityFront.on(type, listener);
       }
     }
 
-    for (const [type, listeners] of this.accessibleWalkerEventsMap.entries()) {
-      for (const listener of listeners) {
+    for (const [type, listeners] of this.accessibilityEvents.entries()) {
+      for (const listener of listeners.values()) {
         this.accessibleWalkerFront.on(type, listener);
       }
     }
@@ -387,8 +375,8 @@ class AccessibilityProxy {
       this._onTargetAvailable
     );
 
-    this.accessibilityEventsMap = null;
-    this.accessibleWalkerEventsMap = null;
+    this.lifecycleEvents = null;
+    this.accessibilityEvents = null;
 
     this.accessibilityFront = null;
     this.parentAccessibilityFront = null;
@@ -398,10 +386,10 @@ class AccessibilityProxy {
     this.toolbox = null;
   }
 
-  _getEventsMap(front) {
+  _getEvents(front) {
     return front === this.accessibleWalkerFront
-      ? this.accessibleWalkerEventsMap
-      : this.accessibilityEventsMap;
+      ? this.accessibilityEvents
+      : this.lifecycleEvents;
   }
 
   async _onTargetAvailable({ targetFront }) {
@@ -410,39 +398,30 @@ class AccessibilityProxy {
     }
   }
 
-  _on(front, type, listeners) {
-    listeners = Array.isArray(listeners) ? listeners : [listeners];
-
-    for (const listener of listeners) {
-      front.on(type, listener);
+  _on(front, type, listener) {
+    front.on(type, listener);
+    const events = this._getEvents(front);
+    if (events.has(type)) {
+      events.get(type).add(listener);
+    } else {
+      events.set(type, new Set([listener]));
     }
-
-    const eventsMap = this._getEventsMap(front);
-    const eventsMapListeners = eventsMap.has(type)
-      ? [...eventsMap.get(type), ...listeners]
-      : listeners;
-    eventsMap.set(type, eventsMapListeners);
   }
 
-  _off(front, type, listeners) {
-    listeners = Array.isArray(listeners) ? listeners : [listeners];
-
-    for (const listener of listeners) {
-      front.off(type, listener);
-    }
-
-    const eventsMap = this._getEventsMap(front);
-    if (!eventsMap.has(type)) {
+  _off(front, type, listener) {
+    front.off(type, listener);
+    const events = this._getEvents(front);
+    if (!events.has(type)) {
       return;
     }
 
-    const eventsMapListeners = eventsMap
-      .get(type)
-      .filter(l => !listeners.includes(l));
-    if (eventsMapListeners.length) {
-      eventsMap.set(type, eventsMapListeners);
-    } else {
-      eventsMap.delete(type);
+    const listeners = events.get(type);
+    if (listeners.has(listener)) {
+      listeners.delete(listener);
+    }
+
+    if (!listeners.size) {
+      events.delete(type);
     }
   }
 

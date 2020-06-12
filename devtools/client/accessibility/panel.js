@@ -52,6 +52,7 @@ function AccessibilityPanel(iframeWindow, toolbox, startup) {
     this
   );
   this.forceUpdatePickerButton = this.forceUpdatePickerButton.bind(this);
+  this.onLifecycleEvent = this.onLifecycleEvent.bind(this);
 
   EventEmitter.decorate(this);
 }
@@ -111,11 +112,8 @@ AccessibilityPanel.prototype = {
 
     this.updateA11YServiceDurationTimer();
     this.accessibilityProxy.startListeningForLifecycleEvents({
-      init: [this.updateA11YServiceDurationTimer, this.forceUpdatePickerButton],
-      shutdown: [
-        this.updateA11YServiceDurationTimer,
-        this.forceUpdatePickerButton,
-      ],
+      init: this.onLifecycleEvent,
+      shutdown: this.onLifecycleEvent,
     });
 
     this.isReady = true;
@@ -142,6 +140,11 @@ AccessibilityPanel.prototype = {
     }
 
     return contexts;
+  },
+
+  onLifecycleEvent() {
+    this.updateA11YServiceDurationTimer();
+    this.forceUpdatePickerButton();
   },
 
   onNewAccessibleFrontSelected(selected) {
@@ -340,11 +343,8 @@ AccessibilityPanel.prototype = {
     }
 
     this.accessibilityProxy.stopListeningForLifecycleEvents({
-      init: [this.updateA11YServiceDurationTimer, this.forceUpdatePickerButton],
-      shutdown: [
-        this.updateA11YServiceDurationTimer,
-        this.forceUpdatePickerButton,
-      ],
+      init: this.onLifecycleEvent,
+      shutdown: this.onLifecycleEvent,
     });
 
     this._telemetry = null;
