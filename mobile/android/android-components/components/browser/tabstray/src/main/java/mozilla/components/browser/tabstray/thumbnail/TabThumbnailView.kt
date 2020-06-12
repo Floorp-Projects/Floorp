@@ -17,13 +17,17 @@ class TabThumbnailView(context: Context, attrs: AttributeSet) : AppCompatImageVi
 
     @VisibleForTesting
     public override fun setFrame(l: Int, t: Int, r: Int, b: Int): Boolean {
-        val changed = super.setFrame(l, t, r, b)
-        if (changed) {
-            val matrix = imageMatrix
-            val scaleFactor = width / drawable.intrinsicWidth.toFloat()
-            matrix.setScale(scaleFactor, scaleFactor, 0f, 0f)
-            imageMatrix = matrix
+        val result = super.setFrame(l, t, r, b)
+
+        val matrix = imageMatrix
+        val scaleFactor = if (drawable != null) {
+            width / drawable.intrinsicWidth.toFloat()
+        } else {
+            1F
         }
-        return changed
+        matrix.setScale(scaleFactor, scaleFactor, 0f, 0f)
+        imageMatrix = matrix
+
+        return result
     }
 }

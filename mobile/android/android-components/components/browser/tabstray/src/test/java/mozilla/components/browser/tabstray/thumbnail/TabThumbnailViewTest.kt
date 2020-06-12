@@ -4,6 +4,7 @@
 
 package mozilla.components.browser.tabstray.thumbnail
 
+import android.graphics.Matrix
 import android.graphics.drawable.Drawable
 import android.widget.ImageView
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -14,6 +15,8 @@ import org.junit.Assert.assertNotEquals
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.`when`
+import org.mockito.Mockito.spy
+import org.mockito.Mockito.verify
 import org.robolectric.Robolectric.buildAttributeSet
 
 @RunWith(AndroidJUnit4::class)
@@ -60,6 +63,18 @@ class TabThumbnailViewTest {
         val matrix2 = view.imageMatrix
 
         assertEquals(matrix, matrix2)
+    }
+
+    @Test
+    fun `view scaleFactor does not change if there is no drawable`() {
+        val view = spy(TabThumbnailView(testContext, emptyAttributeSet()))
+        val matrix: Matrix = spy(Matrix())
+
+        `when`(view.imageMatrix).thenReturn(matrix)
+
+        view.setFrame(5, 5, 5, 5)
+
+        verify(matrix).setScale(1f, 1f, 0f, 0f)
     }
 }
 
