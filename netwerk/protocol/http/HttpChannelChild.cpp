@@ -1972,11 +1972,6 @@ bool HttpChannelChild::Redirect3Complete(OverrideRunnable* aRunnable) {
   return false;
 }
 
-mozilla::ipc::IPCResult HttpChannelChild::RecvCancelRedirected() {
-  CleanupRedirectingChannel(NS_BINDING_REDIRECTED);
-  return IPC_OK();
-}
-
 void HttpChannelChild::CleanupRedirectingChannel(nsresult rv) {
   // Redirecting to new channel: shut this down and init new channel
   if (mLoadGroup) mLoadGroup->RemoveRequest(this, nullptr, NS_BINDING_ABORTED);

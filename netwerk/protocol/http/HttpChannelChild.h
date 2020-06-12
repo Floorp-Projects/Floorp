@@ -173,8 +173,6 @@ class HttpChannelChild final : public PHttpChannelChild,
 
   mozilla::ipc::IPCResult RecvCancelDiversion() override;
 
-  mozilla::ipc::IPCResult RecvCancelRedirected() override;
-
   mozilla::ipc::IPCResult RecvOriginalCacheInputStreamAvailable(
       const Maybe<IPCStream>& aStream) override;
 
