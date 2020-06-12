@@ -7,7 +7,7 @@
   background: transparent;
   border: 0;
   border-radius: 5px;
-  --indicator-height: 60px;
+  --indicator-height: 32px;
   --indicator-background-color: rgb(249,249,250);
   --indicator-icon-fill: rgba(12,12,13,0.8);
   --indicator-item-separator: 1px solid hsla(210,4%,10%,.14);
@@ -24,6 +24,13 @@ body {
   margin: 0;
   user-select: none;
   -moz-window-dragging: drag;
+  /**
+   * On macOS, for windows with small enough dimensions, we seem to get
+   * vertical scrollbars on the body, even when the contents initially
+   * fit the window. We sidestep this by making sure we never display
+   * scrollbars.
+   */
+  overflow: hidden;
 }
 
 button {
@@ -100,7 +107,7 @@ button {
   background-color: var(--indicator-stop-button-background-color);
   color: var(--indicator-stop-button-color);
   border-radius: 5px;
-  padding: 10px;
+  padding: 5px;
   margin-inline-start: 15px;
 }
 
