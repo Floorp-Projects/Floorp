@@ -1832,7 +1832,15 @@ static void FillArgumentArrayForExit(
                 "FillArgumentArrayForExit, ABIArg::Stack: unexpected type");
           }
         } else {
-          StackCopy(masm, type, scratch, src, dst);
+          if (type == MIRType::Simd128) {
+            // As above.  StackCopy does not know this trick.
+            ScratchDoubleScope dscratch(masm);
+            masm.loadConstantDouble(0, dscratch);
+            GenPrintF64(DebugChannel::Import, masm, dscratch);
+            masm.storeDouble(dscratch, dst);
+          } else {
+            StackCopy(masm, type, scratch, src, dst);
+          }
         }
         break;
       }
