@@ -826,44 +826,12 @@ void AudioContext::Dispatch(already_AddRefed<nsIRunnable>&& aRunnable) {
 void AudioContext::OnStateChanged(void* aPromise, AudioContextState aNewState) {
   MOZ_ASSERT(NS_IsMainThread());
 
-  // This can happen if close() was called right after creating the
-  // AudioContext, before the context has switched to "running".
-  if (mAudioContextState == AudioContextState::Closed &&
-      aNewState == AudioContextState::Running && !aPromise) {
-    return;
-  }
-
-  // This can happen if this is called in reaction to a
-  // MediaTrackGraph shutdown, and a AudioContext was being
-  // suspended at the same time, for example if a page was being
-  // closed.
-  if (mAudioContextState == AudioContextState::Closed &&
-      aNewState == AudioContextState::Suspended) {
-    return;
-  }
-
-#ifndef WIN32  // Bug 1170547
-#  ifndef XP_MACOSX
-#    ifdef DEBUG
-
-  if (!((mAudioContextState == AudioContextState::Suspended &&
-         aNewState == AudioContextState::Running) ||
-        (mAudioContextState == AudioContextState::Running &&
-         aNewState == AudioContextState::Suspended) ||
-        (mAudioContextState == AudioContextState::Running &&
-         aNewState == AudioContextState::Closed) ||
-        (mAudioContextState == AudioContextState::Suspended &&
-         aNewState == AudioContextState::Closed) ||
-        (mAudioContextState == aNewState))) {
+  if (mAudioContextState == AudioContextState::Closed) {
     fprintf(stderr,
             "Invalid transition: mAudioContextState: %d -> aNewState %d\n",
             static_cast<int>(mAudioContextState), static_cast<int>(aNewState));
     MOZ_ASSERT(false);
   }
-
-#    endif  // DEBUG
-#  endif    // XP_MACOSX
-#endif      // WIN32
 
   if (aPromise) {
     Promise* promise = reinterpret_cast<Promise*>(aPromise);
@@ -1181,7 +1149,7 @@ void AudioContext::CloseInternal(void* aPromise,
            aPromise](AudioContextState aNewState) {
             self->OnStateChanged(aPromise, aNewState);
           },
-          [] { MOZ_CRASH("Unexpected rejection"); });
+          [] {});  // Promise may be rejected after graph shutdown.
     }
   }
   mCloseCalled = true;

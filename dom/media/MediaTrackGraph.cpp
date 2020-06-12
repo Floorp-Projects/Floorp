@@ -3433,7 +3433,7 @@ class AudioContextOperationControlMessage : public ControlMessage {
   void RunDuringShutdown() override {
     MOZ_ASSERT(mAudioContextOperation == AudioContextOperation::Close,
                "We should be reviving the graph?");
-    mHolder.Resolve(AudioContextState::Closed, __func__);
+    mHolder.Reject(false, __func__);
   }
 
   nsTArray<RefPtr<MediaTrack>> mTracks;
