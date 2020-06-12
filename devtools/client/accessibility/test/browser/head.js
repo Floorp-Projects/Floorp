@@ -669,7 +669,9 @@ async function findAccessibleFor(
   {
     toolbox: { target },
     panel: {
-      accessibilityProxy: { accessibleWalkerFront },
+      accessibilityProxy: {
+        accessibilityFront: { accessibleWalkerFront },
+      },
     },
   },
   selector
