@@ -8,7 +8,6 @@
 #define mozilla_net_ParentProcessDocumentChannel_h
 
 #include "ProtocolUtils.h"
-#include "mozilla/net/ADocumentChannelBridge.h"
 #include "mozilla/net/DocumentChannel.h"
 #include "mozilla/net/DocumentLoadListener.h"
 #include "nsIObserver.h"
@@ -18,8 +17,7 @@ namespace net {
 
 class ParentProcessDocumentChannel : public DocumentChannel,
                                      public nsIAsyncVerifyRedirectCallback,
-                                     public nsIObserver,
-                                     public ADocumentChannelBridge {
+                                     public nsIObserver {
  public:
   ParentProcessDocumentChannel(nsDocShellLoadState* aLoadState,
                                class LoadInfo* aLoadInfo,
@@ -37,23 +35,13 @@ class ParentProcessDocumentChannel : public DocumentChannel,
   RedirectToRealChannel(
       nsTArray<ipc::Endpoint<extensions::PStreamFilterParent>>&&
           aStreamFilterEndpoints,
-      uint32_t aRedirectFlags, uint32_t aLoadFlags) override;
-
-  void DisconnectChildListeners(nsresult aStatus,
-                                nsresult aLoadGroupStatus) override {
-    DocumentChannel::DisconnectChildListeners(aStatus, aLoadGroupStatus);
-    RemoveObserver();
-    mDocumentLoadListener = nullptr;
-  }
-  void Delete() override {}
+      uint32_t aRedirectFlags, uint32_t aLoadFlags);
   void DeleteIPDL() override {
     mPromise.ResolveIfExists(NS_BINDING_ABORTED, __func__);
   }
-  base::ProcessId OtherPid() const override { return 0; }
 
  private:
   virtual ~ParentProcessDocumentChannel();
-  void DisconnectDocumentLoadListener();
   void RemoveObserver();
 
   RefPtr<DocumentLoadListener> mDocumentLoadListener;
@@ -61,6 +49,7 @@ class ParentProcessDocumentChannel : public DocumentChannel,
       mStreamFilterEndpoints;
   MozPromiseHolder<PDocumentChannelParent::RedirectToRealChannelPromise>
       mPromise;
+  MozPromiseRequestHolder<DocumentLoadListener::OpenPromise> mPromiseRequest;
   bool mRequestObserversCalled = false;
 };
 
