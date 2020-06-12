@@ -1937,6 +1937,11 @@ panelview:not([mainview]) #PanelUI-whatsNew-title {
   background: var(--panel-separator-color);
 }
 
+#PanelUI-whatsNew .has-icon::before {
+  /* the width of the icon + the grid margin */
+  width: calc(104% + 40px);
+}
+
 #PanelUI-whatsNew .whatsNew-message-date + .whatsNew-message-body::before {
   display: none;
 }
@@ -1968,33 +1973,35 @@ panelview:not([mainview]) #PanelUI-whatsNew-title {
 }
 
 #PanelUI-whatsNew .whatsNew-message-body.has-icon {
-  position: relative;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: auto 32px;
+  grid-template-rows: 0;
+  grid-gap: 0 8px;
 }
 
 #PanelUI-whatsNew .whatsNew-message-icon {
-  inset-inline-end: 6px;
   height: 32px;
-  position: absolute;
-  top: 24px;
   width: 32px;
+  margin: 14px auto;
+  display: grid;
+  grid-column-start: 2; 
 }
 
 #PanelUI-whatsNew .whatsNew-message-title,
 #protections-popup-message .whatsNew-message-title {
-  display: block;
-  padding-inline-end: 46px;
+  display: grid;
   font-size: 1.3em;
   font-weight: 600;
   line-height: 1.4em;
   margin: 14px 0 0;
+  grid-column-start: 1; 
 }
 
 #PanelUI-whatsNew .whatsNew-message-title-large {
   font-size: 2.1em;
   margin: 2px 0;
   font-weight: 300;
+  grid-column-start: 1;
 }
 
 #PanelUI-whatsNew .whatsNew-message-subtitle {
@@ -2002,11 +2009,13 @@ panelview:not([mainview]) #PanelUI-whatsNew-title {
   font-size: .8em;
   color: #949494;
   font-weight: normal;
+  grid-column-start: 1;
 }
 
 #PanelUI-whatsNew .whatsNew-message-content {
-  display: block;
+  display: grid;
   margin: 5px 0 10px;
+  grid-column-start: 1;
 }
 
 #PanelUI-whatsNew .text-link {
@@ -2015,6 +2024,7 @@ panelview:not([mainview]) #PanelUI-whatsNew-title {
   color: #45a1ff;
   cursor: pointer;
   font-size: .9em;
+  grid-column-start: 1;
 }
 
 #protections-popup-message .text-link {
