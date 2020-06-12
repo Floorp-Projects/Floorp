@@ -67,13 +67,9 @@ async function onTargetAvailable({
   targetFront.on("will-navigate", actions.willNavigate);
   targetFront.on("navigate", actions.navigated);
 
-  const wasmBinarySource =
-    features.wasm && !!targetFront.client.mainRoot.traits.wasmBinarySource;
-
   await threadFront.reconfigure({
     observeAsmJS: true,
     pauseWorkersUntilAttach: true,
-    wasmBinarySource,
     skipBreakpoints: prefs.skipPausing,
     logEventBreakpoints: prefs.logEventBreakpoints,
   });
