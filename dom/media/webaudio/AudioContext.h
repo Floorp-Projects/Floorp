@@ -353,7 +353,7 @@ class AudioContext final : public DOMEventTargetHelper,
 
   friend struct ::mozilla::WebAudioDecodeJob;
 
-  nsTArray<mozilla::MediaTrack*> GetAllTracks() const;
+  nsTArray<RefPtr<mozilla::MediaTrack>> GetAllTracks() const;
 
   void ResumeInternal(AudioContextOperationFlags aFlags);
   void SuspendInternal(void* aPromise, AudioContextOperationFlags aFlags);

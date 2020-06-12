@@ -325,7 +325,8 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
    * thread.
    */
   void ApplyAudioContextOperationImpl(
-      MediaTrack* aDestinationTrack, const nsTArray<MediaTrack*>& aTracks,
+      MediaTrack* aDestinationTrack,
+      const nsTArray<RefPtr<MediaTrack>>& aTracks,
       dom::AudioContextOperation aOperation,
       MozPromiseHolder<AudioContextOperationPromise>&& aHolder);
 
@@ -334,7 +335,7 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
    * AudioContext, or the inverse when resuming an AudioContext.
    */
   void SuspendOrResumeTracks(dom::AudioContextOperation aAudioContextOperation,
-                             const nsTArray<MediaTrack*>& aTrackSet);
+                             const nsTArray<RefPtr<MediaTrack>>& aTrackSet);
 
   /**
    * Determine if we have any audio tracks, or are about to add any audiotracks.
