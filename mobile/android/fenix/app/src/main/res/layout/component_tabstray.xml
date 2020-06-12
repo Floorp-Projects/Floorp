@@ -71,6 +71,18 @@
     </com.google.android.material.tabs.TabLayout>
 
     <ImageButton
+        android:id="@+id/tab_tray_new_tab"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:visibility="gone"
+        android:background="?android:attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/add_tab"
+        app:srcCompat="@drawable/ic_new"
+        app:layout_constraintTop_toTopOf="@id/tab_layout"
+        app:layout_constraintEnd_toStartOf="@id/tab_tray_overflow"
+        app:layout_constraintBottom_toBottomOf="@id/tab_layout" />
+
+    <ImageButton
         android:id="@+id/tab_tray_overflow"
         android:layout_width="48dp"
         android:layout_height="48dp"

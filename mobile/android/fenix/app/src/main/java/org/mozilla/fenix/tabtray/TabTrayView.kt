@@ -25,6 +25,7 @@ import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.tabstray.BrowserTabsTray
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.settings
 
 interface TabTrayInteractor {
     fun onNewTabTapped(private: Boolean)
@@ -61,14 +62,18 @@ class TabTrayView(
         get() = container
 
     init {
+        val hasAccessibilityEnabled = view.context.settings().accessibilityServicesEnabled
+
         toggleFabText(isPrivate)
 
         behavior.addBottomSheetCallback(object : BottomSheetBehavior.BottomSheetCallback() {
             override fun onSlide(bottomSheet: View, slideOffset: Float) {
-                if (slideOffset >= SLIDE_OFFSET) {
-                    fabView.new_tab_button.show()
-                } else {
-                    fabView.new_tab_button.hide()
+                if (!hasAccessibilityEnabled) {
+                    if (slideOffset >= SLIDE_OFFSET) {
+                        fabView.new_tab_button.show()
+                    } else {
+                        fabView.new_tab_button.hide()
+                    }
                 }
             }
 
@@ -142,8 +147,18 @@ class TabTrayView(
                 }
         }
 
-        fabView.new_tab_button.setOnClickListener {
-            interactor.onNewTabTapped(isPrivateModeSelected)
+        view.tab_tray_new_tab.apply {
+            isVisible = hasAccessibilityEnabled
+            setOnClickListener {
+                interactor.onNewTabTapped(isPrivateModeSelected)
+            }
+        }
+
+        fabView.new_tab_button.apply {
+            isVisible = !hasAccessibilityEnabled
+            setOnClickListener {
+                interactor.onNewTabTapped(isPrivateModeSelected)
+            }
         }
     }
 
