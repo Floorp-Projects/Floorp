@@ -148,13 +148,29 @@ bool PermissionDelegateHandler::Initialize() {
   }
 
   mPrincipal = mDocument->NodePrincipal();
-  nsPIDOMWindowInner* window = mDocument->GetInnerWindow();
-  nsGlobalWindowInner* innerWindow = nsGlobalWindowInner::Cast(window);
-  if (innerWindow) {
-    mTopLevelPrincipal = innerWindow->GetTopLevelAntiTrackingPrincipal();
+  return true;
+}
+
+static bool IsCrossOriginContentToTop(Document* aDocument) {
+  MOZ_ASSERT(aDocument);
+
+  BrowsingContext* topBrowsingContext = aDocument->GetBrowsingContext()->Top();
+
+  // In Fission, we can know if it is cross-origin by checking whether both
+  // contexts in the same process. So, If they are not in the same process, we
+  // can say that it's cross-origin.
+  if (!topBrowsingContext->IsInProcess()) {
+    return true;
   }
 
-  return true;
+  RefPtr<Document> topDoc = topBrowsingContext->GetDocument();
+  if (!topDoc) {
+    return true;
+  }
+
+  nsCOMPtr<nsIPrincipal> topLevelPrincipal = topDoc->NodePrincipal();
+
+  return !aDocument->NodePrincipal()->Subsumes(topLevelPrincipal);
 }
 
 bool PermissionDelegateHandler::HasFeaturePolicyAllowed(
@@ -189,7 +205,7 @@ bool PermissionDelegateHandler::HasPermissionDelegated(
 
   if (info->mPolicy == DelegatePolicy::ePersistDeniedCrossOrigin &&
       !mDocument->IsTopLevelContentDocument() &&
-      !mPrincipal->Subsumes(mTopLevelPrincipal)) {
+      IsCrossOriginContentToTop(mDocument)) {
     return false;
   }
 
@@ -225,17 +241,16 @@ nsresult PermissionDelegateHandler::GetPermission(const nsACString& aType,
 
   if (info->mPolicy == DelegatePolicy::ePersistDeniedCrossOrigin &&
       !mDocument->IsTopLevelContentDocument() &&
-      !mPrincipal->Subsumes(mTopLevelPrincipal)) {
+      IsCrossOriginContentToTop(mDocument)) {
     *aPermission = nsIPermissionManager::DENY_ACTION;
     return NS_OK;
   }
 
   nsIPrincipal* principal = mPrincipal;
-  if (mTopLevelPrincipal &&
-      (info->mPolicy == DelegatePolicy::eDelegateUseTopOrigin ||
+  if ((info->mPolicy == DelegatePolicy::eDelegateUseTopOrigin ||
        (info->mPolicy == DelegatePolicy::eDelegateUseFeaturePolicy &&
         StaticPrefs::dom_security_featurePolicy_enabled()))) {
-    principal = mTopLevelPrincipal;
+    // TODO: This will be changed in the next patch.
   }
 
   return (mPermissionManager->*testPermission)(principal, aType, aPermission);
