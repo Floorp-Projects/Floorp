@@ -147,12 +147,12 @@ class WhyPaused extends PureComponent<Props, State> {
     return (
       <div className="pane why-paused">
         <div>
+          <div className="info icon">
+            <AccessibleImage className="info" />
+          </div>
           <div className="pause reason">
             {L10N.getStr(reason)}
             {this.renderMessage(why)}
-          </div>
-          <div className="info icon">
-            <AccessibleImage className="info" />
           </div>
         </div>
       </div>
