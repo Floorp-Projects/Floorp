@@ -211,8 +211,9 @@ class AsyncLogger {
     }
   }
 
+  // Log something that has a beginning and an end
   void Log(const char* aName, const char* aCategory, const char* aComment,
-           TracingPhase aPhase, uint64_t aPID, uint64_t aThread) {
+           TracingPhase aPhase) {
     if (Enabled()) {
       auto* msg = new detail::MPSCQueue<MAX_MESSAGE_LENGTH>::Message();
       va_list args;
@@ -223,30 +224,32 @@ class AsyncLogger {
       if (mMode == AsyncLogger::AsyncLoggerOutputMode::MOZLOG) {
         LogMozLog(
             "{\"name\": \"%s\", \"cat\": \"%s\", \"ph\": \"%c\","
-            "\"ts\": %" PRIu64 ", \"pid\": %" PRIu64
-            ", \"tid\":"
-            " %" PRIu64 ", \"args\": { \"comment\": \"%s\"}},",
+            "\"ts\": %" PRIu64
+            ", \"pid\": %d, \"tid\":"
+            " %zu, \"args\": { \"comment\": \"%s\"}},",
             aName, aCategory, TRACING_PHASE_STRINGS[static_cast<int>(aPhase)],
-            NowInUs(), aPID, aThread, aComment);
+            NowInUs(), getpid(),
+            std::hash<std::thread::id>{}(std::this_thread::get_id()), aComment);
       } else {
         // todo
       }
     }
   }
 
+  // Log something that has a beginning and a duration
   void LogDuration(const char* aName, const char* aCategory, uint64_t aDuration,
-                   uint64_t aPID, uint64_t aThread, uint64_t aFrames,
-                   uint64_t aSampleRate) {
+                   uint64_t aFrames, uint64_t aSampleRate) {
     if (Enabled()) {
       if (mMode == AsyncLogger::AsyncLoggerOutputMode::MOZLOG) {
         LogMozLog(
             "{\"name\": \"%s\", \"cat\": \"%s\", \"ph\": \"X\","
-            "\"ts\": %" PRIu64 ", \"dur\": %" PRIu64 ", \"pid\": %" PRIu64
-            ","
-            "\"tid\": %" PRIu64 ", \"args\": { \"comment\": \"%" PRIu64
-            "/%" PRIu64 "\"}},",
-            aName, aCategory, NowInUs(), aDuration, aPID, aThread, aFrames,
-            aSampleRate);
+            "\"ts\": %" PRIu64 ", \"dur\": %" PRIu64
+            ", \"pid\": %d,"
+            "\"tid\": %zu, \"args\": { \"comment\": \"%" PRIu64 "/%" PRIu64
+            "\"}},",
+            aName, aCategory, NowInUs(), aDuration,
+            getpid(), std::hash<std::thread::id>{}(std::this_thread::get_id()),
+            aFrames, aSampleRate);
       } else {
       }
     }
