@@ -10253,9 +10253,9 @@ void Document::Sanitize() {
 
   length = nodes->Length(true);
   for (uint32_t i = 0; i < length; ++i) {
-    NS_ASSERTION(nodes->Item(i), "null item in nodelist");
-
-    HTMLFormElement* form = HTMLFormElement::FromNode(nodes->Item(i));
+    // Reset() may change the list dynamically.
+    RefPtr<HTMLFormElement> form =
+        HTMLFormElement::FromNodeOrNull(nodes->Item(i));
     if (!form) continue;
 
     form->GetAttr(kNameSpaceID_None, nsGkAtoms::autocomplete, value);
