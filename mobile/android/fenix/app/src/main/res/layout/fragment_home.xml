@@ -48,7 +48,7 @@
                 android:layout_height="40dp"
                 android:layout_marginStart="28dp"
                 android:layout_marginTop="56dp"
-                android:layout_marginBottom="40dp"
+                android:layout_marginBottom="32dp"
                 android:adjustViewBounds="true"
                 android:clickable="false"
                 android:contentDescription="@string/app_name"
