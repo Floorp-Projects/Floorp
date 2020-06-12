@@ -434,11 +434,6 @@ static bool GetBuildConfiguration(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  value = BooleanValue(false);
-  if (!JS_SetProperty(cx, info, "binast", value)) {
-    return false;
-  }
-
   value.setInt32(sizeof(void*));
   if (!JS_SetProperty(cx, info, "pointer-byte-size", value)) {
     return false;
