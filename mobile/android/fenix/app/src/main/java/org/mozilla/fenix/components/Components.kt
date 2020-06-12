@@ -88,7 +88,7 @@ class Components(private val context: Context) {
 
     @Suppress("MagicNumber")
     val supportedAddonsChecker by lazy {
-        DefaultSupportedAddonsChecker(context, SupportedAddonsChecker.Frequency(16, TimeUnit.MINUTES),
+        DefaultSupportedAddonsChecker(context, SupportedAddonsChecker.Frequency(12, TimeUnit.HOURS),
             onNotificationClickIntent = Intent(context, HomeActivity::class.java).apply {
                 action = Intent.ACTION_VIEW
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
