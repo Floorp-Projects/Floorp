@@ -46,6 +46,7 @@ footer button:not(.close) img {
 
 footer .app-store img {
   height: 40px;
+  padding: 10px;
 }
 
 footer .play-store img {
