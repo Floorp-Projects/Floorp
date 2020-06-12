@@ -6024,13 +6024,6 @@ bool ScrollFrameHelper::ReflowFinished() {
     }
   }
 
-  nsRect scrolledContentRect = GetScrolledRect();
-  nsSize scrollClampingScrollPort = GetVisualViewportSize();
-  nscoord minX = scrolledContentRect.x;
-  nscoord maxX = scrolledContentRect.XMost() - scrollClampingScrollPort.width;
-  nscoord minY = scrolledContentRect.y;
-  nscoord maxY = scrolledContentRect.YMost() - scrollClampingScrollPort.height;
-
   // Suppress handling of the curpos attribute changes we make here.
   NS_ASSERTION(!mFrameIsUpdatingScrollbar, "We shouldn't be reentering here");
   mFrameIsUpdatingScrollbar = true;
@@ -6045,6 +6038,9 @@ bool ScrollFrameHelper::ReflowFinished() {
   // for scrollbars. XXXmats is this still true now that we have a script
   // blocker in this scope? (if not, remove the weak frame checks below).
   if (vScroll || hScroll) {
+    nsSize visualViewportSize = GetVisualViewportSize();
+    nsRect scrollRange = GetVisualScrollRange();
+
     AutoWeakFrame weakFrame(mOuter);
     nsPoint scrollPos = GetScrollPosition();
     nsSize lineScrollAmount = GetLineScrollAmount();
@@ -6053,20 +6049,19 @@ bool ScrollFrameHelper::ReflowFinished() {
           Preferences::GetInt("toolkit.scrollbox.verticalScrollDistance",
                               NS_DEFAULT_VERTICAL_SCROLL_DISTANCE);
       nscoord increment = lineScrollAmount.height * kScrollMultiplier;
-      // We normally use (scrollArea.height - increment) for height
-      // of page scrolling.  However, it is too small when
-      // increment is very large. (If increment is larger than
-      // scrollArea.height, direction of scrolling will be opposite).
-      // To avoid it, we use (float(scrollArea.height) * 0.8) as
-      // lower bound value of height of page scrolling. (bug 383267)
+      // We normally use (visualViewportSize.height - increment) for height of
+      // page scrolling.  However, it is too small when increment is very large.
+      // (If increment is larger than visualViewportSize.height, direction of
+      // scrolling will be opposite). To avoid it, we use
+      // (float(visualViewportSize.height) * 0.8) as lower bound value of height
+      // of page scrolling. (bug 383267)
       // XXX shouldn't we use GetPageScrollAmount here?
-      nscoord pageincrement =
-          nscoord(scrollClampingScrollPort.height - increment);
+      nscoord pageincrement = nscoord(visualViewportSize.height - increment);
       nscoord pageincrementMin =
-          nscoord(float(scrollClampingScrollPort.height) * 0.8);
-      FinishReflowForScrollbar(vScroll, minY, maxY, scrollPos.y,
-                               std::max(pageincrement, pageincrementMin),
-                               increment);
+          nscoord(float(visualViewportSize.height) * 0.8);
+      FinishReflowForScrollbar(
+          vScroll, scrollRange.y, scrollRange.YMost(), scrollPos.y,
+          std::max(pageincrement, pageincrementMin), increment);
     }
     if (hScroll) {
       const double kScrollMultiplier =
@@ -6074,8 +6069,8 @@ bool ScrollFrameHelper::ReflowFinished() {
                               NS_DEFAULT_HORIZONTAL_SCROLL_DISTANCE);
       nscoord increment = lineScrollAmount.width * kScrollMultiplier;
       FinishReflowForScrollbar(
-          hScroll, minX, maxX, scrollPos.x,
-          nscoord(float(scrollClampingScrollPort.width) * 0.8), increment);
+          hScroll, scrollRange.x, scrollRange.XMost(), scrollPos.x,
+          nscoord(float(visualViewportSize.width) * 0.8), increment);
     }
     NS_ENSURE_TRUE(weakFrame.IsAlive(), false);
   }
