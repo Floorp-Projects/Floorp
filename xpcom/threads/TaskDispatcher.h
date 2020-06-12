@@ -20,6 +20,39 @@
 
 namespace mozilla {
 
+class SimpleTaskQueue {
+ public:
+  SimpleTaskQueue() = default;
+  virtual ~SimpleTaskQueue() = default;
+
+  void AddTask(already_AddRefed<nsIRunnable> aRunnable) {
+    if (!mTasks) {
+      mTasks.emplace();
+    }
+    mTasks->push(std::move(aRunnable));
+  }
+
+  void DrainTasks() {
+    if (!mTasks) {
+      return;
+    }
+    auto& queue = mTasks.ref();
+    while (!queue.empty()) {
+      nsCOMPtr<nsIRunnable> r = std::move(queue.front());
+      queue.pop();
+      r->Run();
+    }
+  }
+
+  bool HaveTasks() const { return mTasks && !mTasks->empty(); }
+
+ private:
+  // We use a Maybe<> because (a) when used for DirectTasks it often doesn't get
+  // anything put into it, and (b) the std::queue implementation in GNU
+  // libstdc++ does two largish heap allocations when creating a new std::queue.
+  Maybe<std::queue<nsCOMPtr<nsIRunnable>>> mTasks;
+};
+
 /*
  * A classic approach to cross-thread communication is to dispatch asynchronous
  * runnables to perform updates on other threads. This generally works well, but
@@ -88,23 +121,12 @@ class AutoTaskDispatcher : public TaskDispatcher {
     }
   }
 
-  bool HaveDirectTasks() const {
-    return mDirectTasks.isSome() && !mDirectTasks->empty();
-  }
+  bool HaveDirectTasks() const { return mDirectTasks.HaveTasks(); }
 
-  void DrainDirectTasks() override {
-    while (HaveDirectTasks()) {
-      nsCOMPtr<nsIRunnable> r = mDirectTasks->front();
-      mDirectTasks->pop();
-      r->Run();
-    }
-  }
+  void DrainDirectTasks() override { mDirectTasks.DrainTasks(); }
 
   void AddDirectTask(already_AddRefed<nsIRunnable> aRunnable) override {
-    if (mDirectTasks.isNothing()) {
-      mDirectTasks.emplace();
-    }
-    mDirectTasks->push(std::move(aRunnable));
+    mDirectTasks.AddTask(std::move(aRunnable));
   }
 
   void AddStateChangeTask(AbstractThread* aThread,
@@ -245,11 +267,7 @@ class AutoTaskDispatcher : public TaskDispatcher {
     return thread->Dispatch(r.forget(), reason);
   }
 
-  // Direct tasks. We use a Maybe<> because (a) this class is hot, (b)
-  // mDirectTasks often doesn't get anything put into it, and (c) the
-  // std::queue implementation in GNU libstdc++ does two largish heap
-  // allocations when creating a new std::queue.
-  mozilla::Maybe<std::queue<nsCOMPtr<nsIRunnable>>> mDirectTasks;
+  SimpleTaskQueue mDirectTasks;
 
   // Task groups, organized by thread.
   nsTArray<UniquePtr<PerThreadTaskGroup>> mTaskGroups;
