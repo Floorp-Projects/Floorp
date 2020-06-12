@@ -92,7 +92,7 @@ addA11YPanelTask(
       headerSelector,
       toolbox.getPanel("inspector")
     );
-    const expectedSelected = await panel.accessibilityProxy.accessibleWalkerFront.getAccessibleFor(
+    const expectedSelected = await panel.accessibilityProxy.accessibilityFront.accessibleWalkerFront.getAccessibleFor(
       expectedSelectedNode
     );
     is(
