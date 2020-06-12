@@ -79,6 +79,7 @@
 #include "nsSystemInfo.h"
 #include "nsThreadUtils.h"
 #include "nsXULAppAPI.h"
+#include "Tracing.h"
 #include "prdtoa.h"
 #include "prtime.h"
 
@@ -3787,6 +3788,7 @@ void profiler_init(void* aStackTop) {
       LOG("- MOZ_PROFILER_STARTUP_FILTERS = %s", startupFilters);
     }
 
+    StartAudioCallbackTracing();
     locked_profiler_start(lock, capacity, interval, features, filters.begin(),
                           filters.length(), 0, duration);
   }
@@ -3836,6 +3838,7 @@ void profiler_shutdown(IsFastShutdown aIsFastShutdown) {
         return;
       }
 
+      StopAudioCallbackTracing();
       samplerThread = locked_profiler_stop(lock);
     } else if (aIsFastShutdown == IsFastShutdown::Yes) {
       return;
@@ -4326,9 +4329,11 @@ void profiler_start(PowerOfTwo32 aCapacity, double aInterval,
 
     // Reset the current state if the profiler is running.
     if (ActivePS::Exists(lock)) {
+      StopAudioCallbackTracing();
       samplerThread = locked_profiler_stop(lock);
     }
 
+    StartAudioCallbackTracing();
     locked_profiler_start(lock, aCapacity, aInterval, aFeatures, aFilters,
                           aFilterCount, aActiveBrowsingContextID, aDuration);
   }
@@ -4374,7 +4379,9 @@ void profiler_ensure_started(PowerOfTwo32 aCapacity, double aInterval,
       if (!ActivePS::Equals(lock, aCapacity, aDuration, aInterval, aFeatures,
                             aFilters, aFilterCount, aActiveBrowsingContextID)) {
         // Stop and restart with different settings.
+        StopAudioCallbackTracing();
         samplerThread = locked_profiler_stop(lock);
+        StartAudioCallbackTracing();
         locked_profiler_start(lock, aCapacity, aInterval, aFeatures, aFilters,
                               aFilterCount, aActiveBrowsingContextID,
                               aDuration);
@@ -4382,6 +4389,7 @@ void profiler_ensure_started(PowerOfTwo32 aCapacity, double aInterval,
       }
     } else {
       // The profiler is stopped.
+      StartAudioCallbackTracing();
       locked_profiler_start(lock, aCapacity, aInterval, aFeatures, aFilters,
                             aFilterCount, aActiveBrowsingContextID, aDuration);
       startedProfiler = true;
@@ -4483,6 +4491,7 @@ void profiler_stop() {
     if (!ActivePS::Exists(lock)) {
       return;
     }
+    StopAudioCallbackTracing();
 
     samplerThread = locked_profiler_stop(lock);
   }
