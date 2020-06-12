@@ -1330,42 +1330,13 @@ bool DocumentLoadListener::MaybeTriggerProcessSwitch(
   mCrossProcessRedirectIdentifier = ++sNextCrossProcessRedirectIdentifier;
   mDoingProcessSwitch = true;
 
-  RefPtr<DocumentLoadListener> self = this;
-
-  // If <browser> has custom process switching behaviour, use that.
-  if (processBehavior == nsIBrowser::PROCESS_BEHAVIOR_CUSTOM &&
-      browsingContext->IsTop()) {
-    LOG(("Process Switch: Calling nsIBrowser::PerformProcessSwitch"));
-    // We're switching a toplevel BrowsingContext's process. This has to be done
-    // using nsIBrowser.
-    RefPtr<dom::Promise> domPromise;
-    browser->PerformProcessSwitch(remoteType, mCrossProcessRedirectIdentifier,
-                                  isCOOPSwitch, getter_AddRefs(domPromise));
-    MOZ_DIAGNOSTIC_ASSERT(domPromise,
-                          "PerformProcessSwitch didn't return a promise");
-
-    MozPromise<uint64_t, nsresult, true>::FromDomPromise(domPromise)
-        ->Then(
-            GetMainThreadSerialEventTarget(), __func__,
-            [self](uint64_t aCpId) {
-              MOZ_ASSERT(self->mChannel,
-                         "Something went wrong, channel got cancelled");
-              self->TriggerRedirectToRealChannel(Some(aCpId));
-            },
-            [self](nsresult aStatusCode) {
-              MOZ_ASSERT(NS_FAILED(aStatusCode), "Status should be error");
-              self->RedirectToRealChannelFinished(aStatusCode);
-            });
-    return true;
-  }
-
   LOG(("Process Switch: Calling ChangeRemoteness"));
   browsingContext
       ->ChangeRemoteness(remoteType, mCrossProcessRedirectIdentifier,
                          isCOOPSwitch)
       ->Then(
           GetMainThreadSerialEventTarget(), __func__,
-          [self](BrowserParent* aBrowserParent) {
+          [self = RefPtr{this}](BrowserParent* aBrowserParent) {
             MOZ_DIAGNOSTIC_ASSERT(
                 aBrowserParent,
                 "Shouldn't have switched into the parent process, as we check "
@@ -1375,7 +1346,7 @@ bool DocumentLoadListener::MaybeTriggerProcessSwitch(
             self->TriggerRedirectToRealChannel(
                 Some(aBrowserParent->Manager()->ChildID()));
           },
-          [self](nsresult aStatusCode) {
+          [self = RefPtr{this}](nsresult aStatusCode) {
             MOZ_ASSERT(NS_FAILED(aStatusCode), "Status should be error");
             self->RedirectToRealChannelFinished(aStatusCode);
           });
