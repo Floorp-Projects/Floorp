@@ -6,6 +6,8 @@
  * etc).
  */
 
+#include <stddef.h>
+
 #include "secport.h"
 #include "seccomon.h"
 #include "secmod.h"
@@ -552,7 +554,7 @@ PK11_FindSMimeProfile(PK11SlotInfo **slot, char *emailAddr,
         { CKA_VALUE, NULL, 0 },
     };
     /* if you change the array, change the variable below as well */
-    int tsize = sizeof(theTemplate) / sizeof(theTemplate[0]);
+    const size_t tsize = sizeof(theTemplate) / sizeof(theTemplate[0]);
     CK_OBJECT_HANDLE smimeh = CK_INVALID_HANDLE;
     CK_ATTRIBUTE *attrs = theTemplate;
     CK_RV crv;

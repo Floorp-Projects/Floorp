@@ -145,6 +145,8 @@ PRBool SSLInt_ExtensionNegotiated(PRFileDesc *fd, PRUint16 ext) {
   return (PRBool)(ss && ssl3_ExtensionNegotiated(ss, ext));
 }
 
+// Tests should not use this function directly, because the keys may
+// still be in cache. Instead, use TlsConnectTestBase::ClearServerCache.
 void SSLInt_ClearSelfEncryptKey() { ssl_ResetSelfEncryptKeys(); }
 
 sslSelfEncryptKeys *ssl_GetSelfEncryptKeysInt();

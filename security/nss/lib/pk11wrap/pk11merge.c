@@ -464,7 +464,7 @@ pk11_mergeSecretKey(PK11SlotInfo *targetSlot, PK11SlotInfo *sourceSlot,
         { CKA_ID, NULL, 0 },
         { CKA_CLASS, NULL, 0 }
     };
-    CK_ULONG symTemplateCount = sizeof(symTemplate) / sizeof(symTemplate[0]);
+    const CK_ULONG symTemplateCount = sizeof(symTemplate) / sizeof(symTemplate[0]);
     CK_ATTRIBUTE symCopyTemplate[] = {
         { CKA_LABEL, NULL, 0 }
     };

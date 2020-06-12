@@ -130,7 +130,7 @@ tls13_CopyPsk(sslPsk *opsk)
      * are derived during the handshake.  */
     PORT_Assert(opsk->type == ssl_psk_external);
     PORT_Assert(opsk->key);
-    PORT_Assert(opsk->binderKey);
+    PORT_Assert(!opsk->binderKey);
     psk->hash = opsk->hash;
     psk->type = opsk->type;
     psk->key = opsk->key ? PK11_ReferenceSymKey(opsk->key) : NULL;

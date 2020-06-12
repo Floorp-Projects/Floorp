@@ -6,6 +6,8 @@
  * Interfaces.
  */
 
+#include <stddef.h>
+
 #include "seccomon.h"
 #include "secmod.h"
 #include "nssilock.h"
@@ -29,7 +31,7 @@ pk11_FindRSAPubKey(PK11SlotInfo *slot)
     CK_KEY_TYPE key_type = CKK_RSA;
     CK_OBJECT_CLASS class_type = CKO_PUBLIC_KEY;
     CK_ATTRIBUTE theTemplate[2];
-    int template_count = sizeof(theTemplate) / sizeof(theTemplate[0]);
+    size_t template_count = sizeof(theTemplate) / sizeof(theTemplate[0]);
     CK_ATTRIBUTE *attrs = theTemplate;
 
     PK11_SETATTRS(attrs, CKA_CLASS, &class_type, sizeof(class_type));

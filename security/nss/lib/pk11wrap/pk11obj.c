@@ -5,6 +5,7 @@
  * This file manages object type indepentent functions.
  */
 #include <limits.h>
+#include <stddef.h>
 
 #include "seccomon.h"
 #include "secmod.h"
@@ -1807,7 +1808,7 @@ PK11_ReadRawAttributes(PLArenaPool *arena, PK11ObjectType objType, void *objSpec
  * return the object handle that matches the template
  */
 CK_OBJECT_HANDLE
-pk11_FindObjectByTemplate(PK11SlotInfo *slot, CK_ATTRIBUTE *theTemplate, int tsize)
+pk11_FindObjectByTemplate(PK11SlotInfo *slot, CK_ATTRIBUTE *theTemplate, size_t tsize)
 {
     CK_OBJECT_HANDLE object;
     CK_RV crv = CKR_SESSION_HANDLE_INVALID;
@@ -1846,7 +1847,7 @@ pk11_FindObjectByTemplate(PK11SlotInfo *slot, CK_ATTRIBUTE *theTemplate, int tsi
  */
 CK_OBJECT_HANDLE *
 pk11_FindObjectsByTemplate(PK11SlotInfo *slot, CK_ATTRIBUTE *findTemplate,
-                           int templCount, int *object_count)
+                           size_t templCount, int *object_count)
 {
     CK_OBJECT_HANDLE *objID = NULL;
     CK_ULONG returned_count = 0;
@@ -1941,7 +1942,7 @@ PK11_FindRawCertsWithSubject(PK11SlotInfo *slot, SECItem *derSubject,
         { CKA_CLASS, &cko_certificate, sizeof(cko_certificate) },
         { CKA_SUBJECT, derSubject->data, derSubject->len },
     };
-    int templateCount = sizeof(subjectTemplate) / sizeof(subjectTemplate[0]);
+    const size_t templateCount = sizeof(subjectTemplate) / sizeof(subjectTemplate[0]);
     int handleCount = 0;
     CK_OBJECT_HANDLE *handles =
         pk11_FindObjectsByTemplate(slot, subjectTemplate, templateCount,
@@ -2021,7 +2022,7 @@ PK11_MatchItem(PK11SlotInfo *slot, CK_OBJECT_HANDLE searchID,
     };
     /* if you change the array, change the variable below as well */
     CK_ATTRIBUTE *keyclass = &theTemplate[1];
-    int tsize = sizeof(theTemplate) / sizeof(theTemplate[0]);
+    const size_t tsize = sizeof(theTemplate) / sizeof(theTemplate[0]);
     /* if you change the array, change the variable below as well */
     CK_OBJECT_HANDLE peerID;
     PORTCheapArenaPool tmpArena;
@@ -2175,7 +2176,7 @@ PK11_FindObjectsFromNickname(char *nickname, PK11SlotInfo **slotptr,
         { CKA_LABEL, NULL, 0 },
         { CKA_CLASS, NULL, 0 },
     };
-    int findCount = sizeof(findTemplate) / sizeof(findTemplate[0]);
+    const size_t findCount = sizeof(findTemplate) / sizeof(findTemplate[0]);
     SECStatus rv;
     PK11_SETATTRS(&findTemplate[1], CKA_CLASS, &objclass, sizeof(objclass));
 

@@ -126,6 +126,9 @@ SEC_END_PROTOS
  * ignored. See more details in Bug 1588015. */
 #define PORT_AssertArg PR_ASSERT_ARG
 
+/* Assert the current location can't be reached, passing a reason-string. */
+#define PORT_AssertNotReached(reasonStr) PR_NOT_REACHED(reasonStr)
+
 /* macros to handle endian based byte conversion */
 #define PORT_GET_BYTE_BE(value, offset, len) \
     ((unsigned char)(((len) - (offset)-1) >= sizeof(value) ? 0 : (((value) >> (((len) - (offset)-1) * PR_BITS_PER_BYTE)) & 0xff)))

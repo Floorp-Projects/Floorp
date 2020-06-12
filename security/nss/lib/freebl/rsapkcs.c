@@ -116,7 +116,7 @@ rsa_FormatOneBlock(unsigned modulusLen,
     unsigned char *block;
     unsigned char *bp;
     unsigned int padLen;
-    int i, j;
+    unsigned int i, j;
     SECStatus rv;
 
     block = (unsigned char *)PORT_Alloc(modulusLen);

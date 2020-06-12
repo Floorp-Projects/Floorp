@@ -837,7 +837,7 @@ TEST_F(TlsConnectTest, TestTls13ResumptionDuplicateNST) {
   Connect();
 
   // Clear the session ticket keys to invalidate the old ticket.
-  SSLInt_ClearSelfEncryptKey();
+  ClearServerCache();
   EXPECT_EQ(SECSuccess, SSL_SendSessionTicket(server_->ssl_fd(), NULL, 0));
 
   SendReceive();  // Need to read so that we absorb the session tickets.
@@ -885,7 +885,7 @@ TEST_F(TlsConnectTest, TestTls13ResumptionDuplicateNSTWithToken) {
   Connect();
 
   // Clear the session ticket keys to invalidate the old ticket.
-  SSLInt_ClearSelfEncryptKey();
+  ClearServerCache();
   nst_capture->Reset();
   uint8_t token[] = {0x20, 0x20, 0xff, 0x00};
   EXPECT_EQ(SECSuccess,
@@ -967,7 +967,7 @@ TEST_F(TlsConnectTest, SendTicketAfterResumption) {
   nst_capture->EnableDecryption();
   Connect();
 
-  SSLInt_ClearSelfEncryptKey();
+  ClearServerCache();
   EXPECT_EQ(SECSuccess, SSL_SendSessionTicket(server_->ssl_fd(), NULL, 0));
   SendReceive();
 

@@ -741,7 +741,6 @@ SECU_HexString2SECItem(PLArenaPool *arena, SECItem *item, const char *str)
     int byteval = 0;
     int tmp = PORT_Strlen(str);
 
-    PORT_Assert(arena);
     PORT_Assert(item);
 
     if ((tmp % 2) != 0) {
@@ -762,7 +761,9 @@ SECU_HexString2SECItem(PLArenaPool *arena, SECItem *item, const char *str)
         } else if ((str[i] >= 'A') && (str[i] <= 'F')) {
             tmp = str[i] - 'A' + 10;
         } else {
-            /* item is in arena and gets freed by the caller */
+            if (!arena) {
+                SECITEM_FreeItem(item, PR_FALSE);
+            }
             return NULL;
         }
 
