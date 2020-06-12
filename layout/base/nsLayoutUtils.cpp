@@ -845,64 +845,36 @@ static nsRect GetDisplayPortFromMarginsData(
   //   screen resolution; since this is what Layout does most of the time,
   //   this is a good approximation. A proper solution would involve moving
   //   the choosing of the resolution to display-list building time.
-  // We separate the alignment of the position and size of the displayport in
-  // order to allow moving by large increments with WebRender without enlarging
-  // the displayport.
-  ScreenSize posAlignment;
-  ScreenSize sizeAlignment;
+  ScreenSize alignment;
 
   PresShell* presShell = presContext->PresShell();
   MOZ_ASSERT(presShell);
 
-  bool useWebRender = gfxVars::UseWebRender();
-
   if (presShell->IsDisplayportSuppressed()) {
-    posAlignment = ScreenSize(1, 1);
-    sizeAlignment = ScreenSize(1, 1);
-  } else if (useWebRender) {
-    // With WebRender we benefit from updating the displaylist and scene less often.
-    // For this we need to move the displayport less often which we achieve by using
-    // larger alignments for the displayport's position. We move the DP roughly by a
-    // screenful.
-    posAlignment.width = fmax(128.0, 512.0 * floor(screenRect.width / 512.0));
-    posAlignment.height = fmax(128.0, 512.0 * floor(screenRect.height / 512.0));
-    // tscrollx is very sensitive to the size of the displayport. We could just accept
-    // the regression and change it to something larger if need be, however smaller
-    // displayports also means less CPU work for most stages in webrender so we generally
-    // want to avoid very large displayports.
-    sizeAlignment = ScreenSize(128, 128);
+    alignment = ScreenSize(1, 1);
   } else if (StaticPrefs::layers_enable_tiles_AtStartup()) {
     // Don't align to tiles if they are too large, because we could expand
     // the displayport by a lot which can take more paint time. It's a tradeoff
     // though because if we don't align to tiles we have more waste on upload.
     IntSize tileSize = gfxVars::TileSize();
-    posAlignment = ScreenSize(std::min(256, tileSize.width),
-                              std::min(256, tileSize.height));
-    sizeAlignment = posAlignment;
+    alignment = ScreenSize(std::min(256, tileSize.width),
+                           std::min(256, tileSize.height));
   } else {
     // If we're not drawing with tiles then we need to be careful about not
     // hitting the max texture size and we only need 1 draw call per layer
     // so we can align to a smaller multiple.
-    posAlignment = ScreenSize(128, 128);
-    sizeAlignment = ScreenSize(128, 128);
+    alignment = ScreenSize(128, 128);
   }
 
   // Avoid division by zero.
-  if (posAlignment.width == 0) {
-    posAlignment.width = 128;
+  if (alignment.width == 0) {
+    alignment.width = 128;
   }
-  if (posAlignment.height == 0) {
-    posAlignment.height = 128;
-  }
-
-  if (sizeAlignment.width == 0) {
-    sizeAlignment.width = 128;
-  }
-  if (sizeAlignment.height == 0) {
-    sizeAlignment.height = 128;
+  if (alignment.height == 0) {
+    alignment.height = 128;
   }
 
-  if (StaticPrefs::layers_enable_tiles_AtStartup() || useWebRender) {
+  if (StaticPrefs::layers_enable_tiles_AtStartup()) {
     // Expand the rect by the margins
     screenRect.Inflate(aMarginsData->mMargins);
   } else {
@@ -919,9 +891,9 @@ static nsRect GetDisplayPortFromMarginsData(
     // Find the maximum size in screen pixels.
     int32_t maxSizeDevPx = presContext->AppUnitsToDevPixels(maxSizeAppUnits);
     int32_t maxWidthScreenPx = floor(double(maxSizeDevPx) * res.xScale) -
-                               MAX_ALIGN_ROUNDING * sizeAlignment.width;
+                               MAX_ALIGN_ROUNDING * alignment.width;
     int32_t maxHeightScreenPx = floor(double(maxSizeDevPx) * res.yScale) -
-                                MAX_ALIGN_ROUNDING * sizeAlignment.height;
+                                MAX_ALIGN_ROUNDING * alignment.height;
 
     // For each axis, inflate the margins up to the maximum size.
     const ScreenMargin& margins = aMarginsData->mMargins;
@@ -956,10 +928,10 @@ static nsRect GetDisplayPortFromMarginsData(
 
   // Round-out the display port to the nearest alignment (tiles)
   screenRect += scrollPosScreen;
-  float x = posAlignment.width * floor(screenRect.x / posAlignment.width);
-  float y = posAlignment.height * floor(screenRect.y / posAlignment.height);
-  float w = sizeAlignment.width * ceil(screenRect.width / sizeAlignment.width + 1);
-  float h = sizeAlignment.height * ceil(screenRect.height / sizeAlignment.height + 1);
+  float x = alignment.width * floor(screenRect.x / alignment.width);
+  float y = alignment.height * floor(screenRect.y / alignment.height);
+  float w = alignment.width * ceil(screenRect.width / alignment.width + 1);
+  float h = alignment.height * ceil(screenRect.height / alignment.height + 1);
   screenRect = ScreenRect(x, y, w, h);
   screenRect -= scrollPosScreen;
 
