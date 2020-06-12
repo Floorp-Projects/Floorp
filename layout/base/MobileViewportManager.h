@@ -31,8 +31,19 @@ class MobileViewportManager final : public nsIDOMEventListener,
   NS_DECL_NSIDOMEVENTLISTENER
   NS_DECL_NSIOBSERVER
 
-  explicit MobileViewportManager(mozilla::MVMContext* aContext);
+  /* The MobileViewportManager might be required to handle meta-viewport tags
+   * and changes, or it might not (e.g. if we are in a desktop-zooming setup).
+   * This enum indicates which mode the manager is in. It might make sense to
+   * split these two "modes" into two separate classes but for now they have a
+   * bunch of shared code and it's uncertain if that shared set will expand or
+   * contract. */
+  enum class ManagerType { VisualAndMetaViewport, VisualViewportOnly };
+
+  explicit MobileViewportManager(mozilla::MVMContext* aContext,
+                                 ManagerType aType);
   void Destroy();
+
+  ManagerType GetManagerType() { return mManagerType; }
 
   /* Provide a resolution to use during the first paint instead of the default
    * resolution computed from the viewport info metadata. This is in the same
@@ -162,6 +173,7 @@ class MobileViewportManager final : public nsIDOMEventListener,
   mozilla::CSSToScreenScale GetZoom() const;
 
   RefPtr<mozilla::MVMContext> mContext;
+  ManagerType mManagerType;
   bool mIsFirstPaint;
   bool mPainted;
   mozilla::LayoutDeviceIntSize mDisplaySize;
