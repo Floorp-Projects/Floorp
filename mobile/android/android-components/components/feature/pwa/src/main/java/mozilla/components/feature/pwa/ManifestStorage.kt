@@ -19,10 +19,12 @@ import mozilla.components.feature.pwa.db.ManifestEntity
  * @param activeThresholdMs a timeout in milliseconds after which the storage will consider a manifest
  *                      as unused. By default this is [ACTIVE_THRESHOLD_MS].
  */
+@Suppress("TooManyFunctions")
 class ManifestStorage(context: Context, private val activeThresholdMs: Long = ACTIVE_THRESHOLD_MS) {
 
     @VisibleForTesting
     internal var manifestDao = lazy { ManifestDatabase.get(context).manifestDao() }
+    internal var installedScopes: MutableMap<String, String>? = null
 
     /**
      * Load a Web App Manifest for the given URL from disk.
@@ -71,6 +73,34 @@ class ManifestStorage(context: Context, private val activeThresholdMs: Long = AC
     }
 
     /**
+     * Returns the cached scope for an url if the url falls into a web app scope that has been installed by the user.
+     *
+     * @param url the url to match against installed web app scopes.
+     */
+    fun getInstalledScope(url: String) = installedScopes?.keys?.sortedDescending()?.find { url.startsWith(it) }
+
+    /**
+     * Returns a cached start url for an installed web app scope.
+     *
+     * @param scope the scope url to look up.
+     */
+    fun getStartUrlForInstalledScope(scope: String) = installedScopes?.get(scope)
+
+    /**
+     * Populates a cache of currently installed web app scopes and their start urls.
+     *
+     * @param currentTime the current time is used to determine which web apps are still installed.
+     */
+    suspend fun warmUpScopes(currentTime: Long) = withContext(IO) {
+        installedScopes = manifestDao.value
+            .getInstalledScopes(currentTime - activeThresholdMs)
+            .map { manifest -> manifest.scope?.let { scope -> Pair(scope, manifest.startUrl) } }
+            .filterNotNull()
+            .toMap()
+            .toMutableMap()
+    }
+
+    /**
      * Save a Web App Manifest to disk.
      */
     suspend fun saveManifest(manifest: WebAppManifest) = withContext(IO) {
@@ -101,6 +131,12 @@ class ManifestStorage(context: Context, private val activeThresholdMs: Long = AC
         manifestDao.value.getManifest(manifest.startUrl)?.let { existing ->
             val update = existing.copy(usedAt = System.currentTimeMillis())
             manifestDao.value.updateManifest(update)
+
+            existing.scope?.let { scope ->
+                installedScopes?.put(scope, existing.startUrl)
+            }
+
+            return@let
         }
     }
 

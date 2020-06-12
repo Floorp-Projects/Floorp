@@ -53,6 +53,7 @@ import mozilla.components.feature.intent.processing.TabIntentProcessor
 import mozilla.components.feature.media.RecordingDevicesNotificationFeature
 import mozilla.components.feature.media.middleware.MediaMiddleware
 import mozilla.components.feature.pwa.ManifestStorage
+import mozilla.components.feature.pwa.WebAppInterceptor
 import mozilla.components.feature.pwa.WebAppShortcutManager
 import mozilla.components.feature.pwa.WebAppUseCases
 import mozilla.components.feature.pwa.intent.TrustedWebActivityIntentProcessor
@@ -206,6 +207,13 @@ open class DefaultComponents(private val applicationContext: Context) {
                 applicationContext.components.preferences.getBoolean(PREF_LAUNCH_EXTERNAL_APP, false)
             },
             launchFromInterceptor = true
+        )
+    }
+
+    val webAppInterceptor by lazy {
+        WebAppInterceptor(
+            applicationContext,
+            webAppManifestStorage
         )
     }
 

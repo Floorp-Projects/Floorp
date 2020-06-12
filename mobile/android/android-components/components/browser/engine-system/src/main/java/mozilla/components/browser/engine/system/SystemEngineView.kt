@@ -269,6 +269,8 @@ class SystemEngineView @JvmOverloads constructor(
 
                                 super.shouldInterceptRequest(view, request)
                             }
+
+                            is InterceptionResponse.Deny -> super.shouldInterceptRequest(view, request)
                         }
                     }
                 }

@@ -26,6 +26,11 @@ interface RequestInterceptor {
         data class Url(val url: String) : InterceptionResponse()
 
         data class AppIntent(val appIntent: Intent, val url: String) : InterceptionResponse()
+
+        /**
+         * Deny request without further action.
+         */
+        object Deny : InterceptionResponse()
     }
 
     /**
