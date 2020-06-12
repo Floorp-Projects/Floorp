@@ -268,8 +268,26 @@ class AccessibleFront extends FrontClassWithSpec(accessibleSpec) {
 }
 
 class AccessibleWalkerFront extends FrontClassWithSpec(accessibleWalkerSpec) {
+  constructor(client, targetFront, parentFront) {
+    super(client, targetFront, parentFront);
+
+    this.documentReady = this.documentReady.bind(this);
+    this.on("document-ready", this.documentReady);
+  }
+
+  destroy() {
+    this.off("document-ready", this.documentReady);
+    super.destroy();
+  }
+
   form(json) {
     this.actorID = json.actor;
+  }
+
+  documentReady() {
+    if (this.targetFront.isTopLevel) {
+      this.emit("top-level-document-ready");
+    }
   }
 
   pick(doFocus) {
