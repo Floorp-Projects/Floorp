@@ -211,6 +211,14 @@ IPCResult DocumentChannelChild::RecvRedirectToRealChannel(
         *aArgs.contentDispositionFilename());
   }
 
+  nsDocShell* docShell = GetDocShell();
+  if (docShell && aArgs.sessionHistoryInfo().isSome()) {
+    SessionHistoryInfoAndId& infoAndId = aArgs.sessionHistoryInfo().ref();
+    if (infoAndId.mId != 0) {
+      docShell->SetLoadingSessionHistoryInfoAndId(infoAndId);
+    }
+  }
+
   // transfer any properties. This appears to be entirely a content-side
   // interface and isn't copied across to the parent. Copying the values
   // for this from this into the new actor will work, since the parent
