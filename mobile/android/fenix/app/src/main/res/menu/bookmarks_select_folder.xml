@@ -8,6 +8,6 @@
             android:id="@+id/add_folder_button"
             android:icon="@drawable/ic_new"
             app:iconTint="?primaryText"
-            android:title="@string/bookmark_select_folder"
+            android:title="@string/bookmark_add_folder"
             app:showAsAction="ifRoom" />
 </menu>
