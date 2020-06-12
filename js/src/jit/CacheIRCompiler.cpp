@@ -6251,6 +6251,28 @@ bool CacheIRCompiler::emitCallRegExpTesterResult(ObjOperandId regexpId,
   return true;
 }
 
+bool CacheIRCompiler::emitCallSubstringKernelResult(StringOperandId strId,
+                                                    Int32OperandId beginId,
+                                                    Int32OperandId lengthId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoCallVM callvm(masm, this, allocator);
+
+  Register str = allocator.useRegister(masm, strId);
+  Register begin = allocator.useRegister(masm, beginId);
+  Register length = allocator.useRegister(masm, lengthId);
+
+  callvm.prepare();
+  masm.Push(length);
+  masm.Push(begin);
+  masm.Push(str);
+
+  using Fn = JSString* (*)(JSContext * cx, HandleString str, int32_t begin,
+                           int32_t len);
+  callvm.call<Fn, SubstringKernel>();
+  return true;
+}
+
 template <typename Fn, Fn fn>
 void CacheIRCompiler::callVM(MacroAssembler& masm) {
   VMFunctionId id = VMFunctionToId<Fn, fn>::id;
