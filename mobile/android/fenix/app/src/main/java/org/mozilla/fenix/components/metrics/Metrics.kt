@@ -431,6 +431,15 @@ sealed class Event {
             get() = mapOf(Events.browserMenuActionKeys.item to item.toString().toLowerCase(Locale.ROOT))
     }
 
+    data class TabCounterMenuItemTapped(val item: Item) : Event() {
+        enum class Item {
+            NEW_TAB, NEW_PRIVATE_TAB, CLOSE_TAB
+        }
+
+        override val extras: Map<Events.tabCounterMenuActionKeys, String>?
+            get() = mapOf(Events.tabCounterMenuActionKeys.item to item.toString().toLowerCase(Locale.ROOT))
+    }
+
     sealed class Search
 
     internal open val extras: Map<*, String>?

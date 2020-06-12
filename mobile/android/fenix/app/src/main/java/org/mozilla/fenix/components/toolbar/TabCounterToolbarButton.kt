@@ -16,6 +16,8 @@ import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.toolbar.Toolbar
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.sessionsOfType
 import org.mozilla.fenix.theme.ThemeManager
 import java.lang.ref.WeakReference
@@ -77,6 +79,7 @@ class TabCounterToolbarButton(
 
     private fun getTabContextMenu(context: Context): BrowserMenu {
         val primaryTextColor = ThemeManager.resolveAttribute(R.attr.primaryText, context)
+        val metrics = context.components.analytics.metrics
         val menuItems = listOf(
             BrowserMenuImageText(
                 label = context.getString(R.string.close_tab),
@@ -84,6 +87,7 @@ class TabCounterToolbarButton(
                 iconTintColorResource = primaryTextColor,
                 textColorResource = primaryTextColor
             ) {
+                metrics.track(Event.TabCounterMenuItemTapped(Event.TabCounterMenuItemTapped.Item.CLOSE_TAB))
                 onItemTapped(TabCounterMenuItem.CloseTab)
             },
             BrowserMenuDivider(),
@@ -93,6 +97,7 @@ class TabCounterToolbarButton(
                 iconTintColorResource = primaryTextColor,
                 textColorResource = primaryTextColor
             ) {
+                metrics.track(Event.TabCounterMenuItemTapped(Event.TabCounterMenuItemTapped.Item.NEW_TAB))
                 onItemTapped(TabCounterMenuItem.NewTab(false))
             },
             BrowserMenuImageText(
@@ -101,6 +106,7 @@ class TabCounterToolbarButton(
                 iconTintColorResource = primaryTextColor,
                 textColorResource = primaryTextColor
             ) {
+                metrics.track(Event.TabCounterMenuItemTapped(Event.TabCounterMenuItemTapped.Item.NEW_PRIVATE_TAB))
                 onItemTapped(TabCounterMenuItem.NewTab(true))
             }
         )

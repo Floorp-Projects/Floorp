@@ -186,6 +186,24 @@ events:
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-09-01"
+  tab_counter_menu_action:
+    type: event
+    description:
+      A tab counter menu item was tapped
+    extra_keys:
+      item:
+        description: |
+          A string containing the name of the item the user tapped. These items
+          are:
+
+            New tab, New private tab, Close tab
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/11442
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/11533
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-09-01"
 
 search_shortcuts:
   selected:
