@@ -256,6 +256,11 @@ js::gc::Arena* js::gc::ArenaLists::getFirstSweptArena(
   return incrementalSweptArenas.ref().head();
 }
 
+js::gc::Arena* js::gc::ArenaLists::getFirstNewArenaInMarkPhase(
+    AllocKind thingKind) const {
+  return newArenasInMarkPhase(thingKind).head();
+}
+
 js::gc::Arena* js::gc::ArenaLists::getArenaAfterCursor(
     AllocKind thingKind) const {
   return arenaList(thingKind).arenaAfterCursor();
@@ -305,6 +310,13 @@ MOZ_ALWAYS_INLINE js::gc::TenuredCell* js::gc::ArenaLists::allocateFromFreeList(
 void js::gc::ArenaLists::unmarkPreMarkedFreeCells() {
   for (auto i : AllAllocKinds()) {
     freeLists().unmarkPreMarkedFreeCells(i);
+  }
+}
+
+void js::gc::ArenaLists::mergeNewArenasInMarkPhase() {
+  for (auto i : AllAllocKinds()) {
+    arenaList(i).insertListWithCursorAtEnd(newArenasInMarkPhase(i));
+    newArenasInMarkPhase(i).clear();
   }
 }
 
