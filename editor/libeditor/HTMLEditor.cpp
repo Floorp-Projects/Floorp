@@ -243,6 +243,16 @@ nsresult HTMLEditor::Init(Document& aDoc, Element* aRoot,
   // init the type-in state
   mTypeInState = new TypeInState();
 
+  if (!IsInteractionAllowed()) {
+    nsCOMPtr<nsIURI> uaURI;
+    rv = NS_NewURI(getter_AddRefs(uaURI),
+                   "resource://gre/res/EditorOverride.css");
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = document->LoadAdditionalStyleSheet(Document::eAgentSheet, uaURI);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
   // XXX `eNotEditing` is a lie since InitEditorContentAndSelection() may
   //     insert padding `<br>`.
   AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
@@ -280,6 +290,15 @@ void HTMLEditor::PreDestroy(bool aDestroyingFrames) {
   RefPtr<Document> document = GetDocument();
   if (document) {
     document->RemoveMutationObserver(this);
+
+    if (!IsInteractionAllowed()) {
+      nsCOMPtr<nsIURI> uaURI;
+      nsresult rv = NS_NewURI(getter_AddRefs(uaURI),
+                              "resource://gre/res/EditorOverride.css");
+      if (NS_SUCCEEDED(rv)) {
+        document->RemoveAdditionalStyleSheet(Document::eAgentSheet, uaURI);
+      }
+    }
   }
 
   // Clean up after our anonymous content -- we don't want these nodes to

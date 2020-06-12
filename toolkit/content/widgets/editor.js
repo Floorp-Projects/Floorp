@@ -177,17 +177,12 @@
 
     makeEditable(editortype, waitForUrlLoad) {
       let win = this.contentWindow;
-      let winUtils = win.windowUtils;
       this.editingSession.makeWindowEditable(
         win,
         editortype,
         waitForUrlLoad,
         true,
         false
-      );
-      winUtils.loadSheetUsingURIString(
-        "resource://gre/res/EditorOverride.css",
-        winUtils.AGENT_SHEET
       );
       this.setAttribute("editortype", editortype);
 
