@@ -10878,7 +10878,8 @@ bool UseMobileViewportManager(PresShell* aPresShell, Document* aDocument) {
       }
     }
   }
-  return nsLayoutUtils::ShouldHandleMetaViewport(aDocument) ||
+  return StaticPrefs::apz_mvm_force_enabled() ||
+         nsLayoutUtils::ShouldHandleMetaViewport(aDocument) ||
          nsLayoutUtils::AllowZoomingForDocument(aDocument);
 }
 
