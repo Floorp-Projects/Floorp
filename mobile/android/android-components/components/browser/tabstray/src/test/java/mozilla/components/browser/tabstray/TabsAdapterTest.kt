@@ -40,7 +40,7 @@ class TabsAdapterTest {
 
     @Test
     fun `onCreateViewHolder will create whatever TabViewHolder is provided`() {
-        val adapter = TabsAdapter { _, _ -> TestTabViewHolder(View(testContext)) }
+        val adapter = TabsAdapter(viewHolderProvider = { _, _ -> TestTabViewHolder(View(testContext)) })
         adapter.tabsTray = mock()
 
         val type = adapter.onCreateViewHolder(FrameLayout(testContext), 0)

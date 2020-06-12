@@ -14,6 +14,7 @@ import mozilla.components.browser.tabstray.thumbnail.TabThumbnailView
 import mozilla.components.concept.tabstray.Tab
 import mozilla.components.concept.tabstray.TabsTray
 import mozilla.components.support.base.observer.Observable
+import mozilla.components.support.images.loader.ImageLoader
 import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
 
 /**
@@ -36,7 +37,8 @@ abstract class TabViewHolder(view: View) : RecyclerView.ViewHolder(view) {
  */
 class DefaultTabViewHolder(
     itemView: View,
-    private val tabsTray: BrowserTabsTray
+    private val tabsTray: BrowserTabsTray,
+    private val thumbnailLoader: ImageLoader? = null
 ) : TabViewHolder(itemView) {
     private val iconView: ImageView? = itemView.findViewById(R.id.mozac_browser_tabstray_icon)
     private val titleView: TextView = itemView.findViewById(R.id.mozac_browser_tabstray_title)
@@ -79,7 +81,12 @@ class DefaultTabViewHolder(
             closeView.imageTintList = ColorStateList.valueOf(tabsTray.styling.itemTextColor)
         }
 
-        thumbnailView.setImageBitmap(tab.thumbnail)
+        // In the final else case, we have no cache or fresh screenshot; do nothing instead of clearing the image.
+        if (thumbnailLoader != null && tab.thumbnail == null) {
+            thumbnailLoader.loadIntoView(thumbnailView, tab.id)
+        } else if (tab.thumbnail != null) {
+            thumbnailView.setImageBitmap(tab.thumbnail)
+        }
 
         iconView?.setImageBitmap(tab.icon)
     }

@@ -45,16 +45,6 @@ class TabsTrayPresenter(
 
     private suspend fun collect(flow: Flow<BrowserState>) {
         flow.map { it.toTabs(tabsFilter) }
-            .map { tabs ->
-                if (thumbnailsUseCases != null) {
-                    // Load the tab thumbnail from the memory or disk caches.
-                    tabs.copy(list = tabs.list.map { tab ->
-                        tab.copy(thumbnail = thumbnailsUseCases.loadThumbnail(tab.id))
-                    })
-                } else {
-                    tabs
-                }
-            }
             .ifChanged()
             .collect { tabs ->
                 // Do not invoke the callback on start if this is the initial state.

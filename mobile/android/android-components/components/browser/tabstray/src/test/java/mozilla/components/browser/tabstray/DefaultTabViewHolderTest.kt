@@ -13,17 +13,22 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.concept.tabstray.Tab
 import mozilla.components.concept.tabstray.TabsTray
 import mozilla.components.support.base.observer.ObserverRegistry
+import mozilla.components.support.images.loader.ImageLoader
+import mozilla.components.support.test.any
+import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
+import mozilla.components.support.test.nullable
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.doReturn
+import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
 
 @RunWith(AndroidJUnit4::class)
-class TabViewHolderTest {
+class DefaultTabViewHolderTest {
 
     @Test
     fun `URL from session is assigned to view`() {
@@ -144,6 +149,38 @@ class TabViewHolderTest {
 
         holder.bind(session, isSelected = false, observable = mock())
         assertTrue(thumbnailView.drawable != null)
+    }
+
+    @Test
+    fun `thumbnail is set from loader`() {
+        val view = LayoutInflater.from(testContext).inflate(R.layout.mozac_browser_tabstray_item, null)
+        val loader: ImageLoader = mock()
+        val viewHolder = DefaultTabViewHolder(view, mockTabsTrayWithStyles(), loader)
+        val tabWithThumbnail = Tab("123", "https://example.com", thumbnail = mock())
+        val tab = Tab("123", "https://example.com")
+
+        viewHolder.bind(tabWithThumbnail, false, mock())
+
+        verify(loader, never()).loadIntoView(any(), eq("123"), nullable(), nullable())
+
+        viewHolder.bind(tab, false, mock())
+
+        verify(loader).loadIntoView(any(), eq("123"), nullable(), nullable())
+    }
+
+    @Test
+    fun `thumbnailView does not change when there is no cache or new thumbnail`() {
+        val view = LayoutInflater.from(testContext).inflate(R.layout.mozac_browser_tabstray_item, null)
+        val viewHolder = DefaultTabViewHolder(view, mockTabsTrayWithStyles())
+        val tab = Tab("123", "https://example.com")
+        val thumbnailView = view.findViewById<ImageView>(R.id.mozac_browser_tabstray_thumbnail)
+
+        thumbnailView.setImageBitmap(mock())
+        val drawable = thumbnailView.drawable
+
+        viewHolder.bind(tab, false, mock())
+
+        assertEquals(drawable, thumbnailView.drawable)
     }
 
     companion object {

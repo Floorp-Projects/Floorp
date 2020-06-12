@@ -7,6 +7,7 @@ package mozilla.components.browser.tabstray
 import android.view.LayoutInflater
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import mozilla.components.browser.tabstray.DefaultTabViewHolderTest.Companion.mockTabsTrayWithStyles
 import mozilla.components.concept.tabstray.TabsTray
 import mozilla.components.support.base.observer.Observable
 import mozilla.components.support.base.observer.ObserverRegistry
@@ -48,7 +49,7 @@ class TabTouchCallbackTest {
     @Test
     fun `onChildDraw alters alpha of ViewHolder on swipe gesture`() {
         val view = LayoutInflater.from(testContext).inflate(R.layout.mozac_browser_tabstray_item, null)
-        val holder = DefaultTabViewHolder(view, TabViewHolderTest.mockTabsTrayWithStyles())
+        val holder = DefaultTabViewHolder(view, mockTabsTrayWithStyles())
         val callback = TabTouchCallback(mock())
 
         holder.itemView.alpha = 0f
