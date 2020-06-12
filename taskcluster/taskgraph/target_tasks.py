@@ -514,9 +514,14 @@ def target_tasks_fennec_v68(full_task_graph, parameters, graph_config):
             return False
         if 'shippable' not in test_platform:
             return False
-        if '-fennec68' in try_name:
-            if '-p2' in test_platform and '-arm7' in test_platform:
-                return False
+        if '-p2' in test_platform and '-arm7' in test_platform:
+            return False
+        if '-fennec' in try_name:
+            if 'browsertime' in try_name:
+                if 'tp6m' in try_name:
+                    return True
+                else:
+                    return False
             if '-youtube-playback' in try_name:
                 # Bug 1627898: VP9 tests don't work on G5
                 if '-g5-' in test_platform and '-vp9-' in try_name:
