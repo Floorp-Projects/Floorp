@@ -61,9 +61,9 @@
  *
  * ParseContext.h: class ParseContext: Extremely complex class that serves a lot
  * of purposes, but it's a single class - essentially no derived classes - so
- * it's a little easier to comprehend all at once. (SourceParseContext and
- * BinASTParseContext do derive from ParseContext, but they do nothing except
- * adjust the constructor's arguments).
+ * it's a little easier to comprehend all at once. (SourceParseContext does
+ * derive from ParseContext, but they does nothing except adjust the
+ * constructor's arguments).
  * Note it uses a thing called Nestable, which implements a stack of objects:
  * you can push (and pop) instances to a stack (linked list) as you parse
  * further into the parse tree. You may push to this stack via calling the

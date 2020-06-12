@@ -1440,8 +1440,6 @@ enum FileKind {
   FileScript,       // UTF-8, directly parsed as such
   FileScriptUtf16,  // FileScript, but inflate to UTF-16 before parsing
   FileModule,
-  FileBinASTMultipart,
-  FileBinASTContext,
 };
 
 static void ReportCantOpenErrorUnknownEncoding(JSContext* cx,
@@ -9915,12 +9913,9 @@ static MOZ_MUST_USE bool ProcessArgs(JSContext* cx, OptionParser* op) {
   MultiStringRange utf16FilePaths = op->getMultiStringOption('u');
   MultiStringRange codeChunks = op->getMultiStringOption('e');
   MultiStringRange modulePaths = op->getMultiStringOption('m');
-  MultiStringRange binASTPaths(nullptr, nullptr);
-  FileKind binASTFileKind = FileBinASTMultipart;
 
   if (filePaths.empty() && utf16FilePaths.empty() && codeChunks.empty() &&
-      modulePaths.empty() && binASTPaths.empty() &&
-      !op->getStringArg("script")) {
+      modulePaths.empty() && !op->getStringArg("script")) {
     // Always use the interactive shell when -i is used. Without -i we let
     // Process figure it out based on isatty.
     bool forceTTY = op->getBoolOption('i');
@@ -9950,16 +9945,14 @@ static MOZ_MUST_USE bool ProcessArgs(JSContext* cx, OptionParser* op) {
   }
 
   while (!filePaths.empty() || !utf16FilePaths.empty() || !codeChunks.empty() ||
-         !modulePaths.empty() || !binASTPaths.empty()) {
+         !modulePaths.empty()) {
     size_t fpArgno = filePaths.empty() ? SIZE_MAX : filePaths.argno();
     size_t ufpArgno =
         utf16FilePaths.empty() ? SIZE_MAX : utf16FilePaths.argno();
     size_t ccArgno = codeChunks.empty() ? SIZE_MAX : codeChunks.argno();
     size_t mpArgno = modulePaths.empty() ? SIZE_MAX : modulePaths.argno();
-    size_t baArgno = binASTPaths.empty() ? SIZE_MAX : binASTPaths.argno();
 
-    if (fpArgno < ufpArgno && fpArgno < ccArgno && fpArgno < mpArgno &&
-        fpArgno < baArgno) {
+    if (fpArgno < ufpArgno && fpArgno < ccArgno && fpArgno < mpArgno) {
       char* path = filePaths.front();
       if (!Process(cx, path, false, FileScript)) {
         return false;
@@ -9969,8 +9962,7 @@ static MOZ_MUST_USE bool ProcessArgs(JSContext* cx, OptionParser* op) {
       continue;
     }
 
-    if (ufpArgno < fpArgno && ufpArgno < ccArgno && ufpArgno < mpArgno &&
-        ufpArgno < baArgno) {
+    if (ufpArgno < fpArgno && ufpArgno < ccArgno && ufpArgno < mpArgno) {
       char* path = utf16FilePaths.front();
       if (!Process(cx, path, false, FileScriptUtf16)) {
         return false;
@@ -9980,8 +9972,7 @@ static MOZ_MUST_USE bool ProcessArgs(JSContext* cx, OptionParser* op) {
       continue;
     }
 
-    if (ccArgno < fpArgno && ccArgno < ufpArgno && ccArgno < mpArgno &&
-        ccArgno < baArgno) {
+    if (ccArgno < fpArgno && ccArgno < ufpArgno && ccArgno < mpArgno) {
       const char* code = codeChunks.front();
 
       JS::CompileOptions opts(cx);
@@ -10005,19 +9996,7 @@ static MOZ_MUST_USE bool ProcessArgs(JSContext* cx, OptionParser* op) {
       continue;
     }
 
-    if (baArgno < fpArgno && baArgno < ufpArgno && baArgno < ccArgno &&
-        baArgno < mpArgno) {
-      char* path = binASTPaths.front();
-      if (!Process(cx, path, false, binASTFileKind)) {
-        return false;
-      }
-
-      binASTPaths.popFront();
-      continue;
-    }
-
-    MOZ_ASSERT(mpArgno < fpArgno && mpArgno < ufpArgno && mpArgno < ccArgno &&
-               mpArgno < baArgno);
+    MOZ_ASSERT(mpArgno < fpArgno && mpArgno < ufpArgno && mpArgno < ccArgno);
 
     char* path = modulePaths.front();
     if (!Process(cx, path, false, FileModule)) {

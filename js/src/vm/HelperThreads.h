@@ -52,13 +52,7 @@ namespace wasm {
 struct Tier2GeneratorTask;
 }  // namespace wasm
 
-enum class ParseTaskKind {
-  Script,
-  Module,
-  ScriptDecode,
-  BinAST,
-  MultiScriptsDecode
-};
+enum class ParseTaskKind { Script, Module, ScriptDecode, MultiScriptsDecode };
 
 namespace wasm {
 
