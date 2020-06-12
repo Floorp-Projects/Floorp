@@ -788,6 +788,7 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
     explicit PendingResumeOperation(
         AudioContextOperationControlMessage* aMessage);
     void Apply(MediaTrackGraphImpl* aGraph);
+    void Abort();
     MediaTrack* DestinationTrack() const { return mDestinationTrack; }
 
    private:
