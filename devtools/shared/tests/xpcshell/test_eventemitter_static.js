@@ -190,18 +190,16 @@ const TESTS = {
   },
 
   testUnhandledExceptions(done) {
-    const listener = new ConsoleAPIListener(null, {
-      onConsoleAPICall(message) {
-        equal(message.level, "error", "Got the first exception");
-        equal(
-          message.arguments[0].message,
-          "Boom!",
-          "unhandled exception is logged"
-        );
+    const listener = new ConsoleAPIListener(null, message => {
+      equal(message.level, "error", "Got the first exception");
+      equal(
+        message.arguments[0].message,
+        "Boom!",
+        "unhandled exception is logged"
+      );
 
-        listener.destroy();
-        done();
-      },
+      listener.destroy();
+      done();
     });
 
     listener.init();

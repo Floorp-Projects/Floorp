@@ -107,41 +107,39 @@ let consoleAPIListener, consoleServiceListener;
 let consoleAPICalls = 0;
 let pageErrors = 0;
 
-const handlers = {
-  onConsoleAPICall: async function onConsoleAPICall(message) {
-    for (const msg of expectedConsoleCalls) {
-      if (msg.functionName == message.functionName &&
-          msg.filename.test(message.filename)) {
-        consoleAPICalls++;
-        break;
-      }
+async function onConsoleAPICall(message) {
+  for (const msg of expectedConsoleCalls) {
+    if (msg.functionName == message.functionName &&
+        msg.filename.test(message.filename)) {
+      consoleAPICalls++;
+      break;
     }
-    if (consoleAPICalls == expectedConsoleCalls.length) {
-      await checkConsoleAPICache();
-    }
-  },
+  }
+  if (consoleAPICalls == expectedConsoleCalls.length) {
+    await checkConsoleAPICache();
+  }
+}
 
-  onConsoleServiceMessage: async function onConsoleServiceMessage(message) {
-    if (!(message instanceof Ci.nsIScriptError)) {
-      return;
+async function onConsoleServiceMessage(message) {
+  if (!(message instanceof Ci.nsIScriptError)) {
+    return;
+  }
+  for (const msg of expectedPageErrors) {
+    if (msg.category == message.category &&
+        msg.errorMessage.test(message.errorMessage)) {
+      pageErrors++;
+      break;
     }
-    for (const msg of expectedPageErrors) {
-      if (msg.category == message.category &&
-          msg.errorMessage.test(message.errorMessage)) {
-        pageErrors++;
-        break;
-      }
-    }
-    if (pageErrors == expectedPageErrors.length) {
-      await testPageErrors();
-    }
-  },
-};
+  }
+  if (pageErrors == expectedPageErrors.length) {
+    await testPageErrors();
+  }
+}
 
 function startTest() {
   removeEventListener("load", startTest);
 
-  consoleAPIListener = new ConsoleAPIListener(top, handlers);
+  consoleAPIListener = new ConsoleAPIListener(top, onConsoleAPICall);
   consoleAPIListener.init();
 
   doConsoleCalls();
@@ -176,7 +174,7 @@ function onCachedConsoleAPI(state, response) {
   is(expectedConsoleCalls.length, 0, "all expected messages have been found");
 
   closeDebugger(state, function() {
-    consoleServiceListener = new ConsoleServiceListener(null, handlers.onConsoleServiceMessage);
+    consoleServiceListener = new ConsoleServiceListener(null, onConsoleServiceMessage);
     consoleServiceListener.init();
     doPageErrors();
   });

@@ -52,24 +52,21 @@ function watch(targetActor, { onAvailable }) {
   // probably review this and only instantiate the actor instead of attaching the target.
   targetActor.attach();
 
-  // Bug 1642297: we could probably make owner be just a function?
-  // Or may be merge ConsoleAPI Listener into this module?
-  const owner = {
-    onConsoleAPICall: message => {
-      onAvailable([
-        {
-          resourceType: CONSOLE_MESSAGE,
-          message: prepareConsoleMessageForRemote(targetActor, message),
-        },
-      ]);
-    },
+  // Bug 1642297: Maybe we could merge ConsoleAPI Listener into this module?
+  const onConsoleAPICall = message => {
+    onAvailable([
+      {
+        resourceType: CONSOLE_MESSAGE,
+        message: prepareConsoleMessageForRemote(targetActor, message),
+      },
+    ]);
   };
 
   // Create the consoleAPIListener
   // (and apply the filtering options defined in the target actor).
   const listener = new ConsoleAPIListener(
     targetActor.window,
-    owner,
+    onConsoleAPICall,
     targetActor.consoleAPIListenerOptions
   );
   listener.init();
@@ -125,7 +122,7 @@ function onLogPoint(targetActor, message) {
     // And we can then throw if no listener is found:
     // throw new Error("This target actor isn't listening to console messages");
   }
-  listener.owner.onConsoleAPICall(message);
+  listener.handler(message);
 }
 
 module.exports = {
