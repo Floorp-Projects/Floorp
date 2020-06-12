@@ -79,9 +79,16 @@ static void AssertIncompleteSheetMatches(const SheetLoadData& aData,
              "CSSOM shouldn't allow access to incomplete sheets");
 }
 
-auto SharedStyleSheetCache::Lookup(SheetLoadDataHashKey& aKey, bool aSyncLoad)
-    -> CacheResult {
+bool SharedStyleSheetCache::CompleteSheet::Expired() const {
+  return mExpirationTime &&
+         mExpirationTime <= nsContentUtils::SecondsFromPRTime(PR_Now());
+}
+
+SharedStyleSheetCache::CacheResult SharedStyleSheetCache::Lookup(
+    css::Loader& aLoader, const SheetLoadDataHashKey& aKey, bool aSyncLoad) {
   nsIURI* uri = aKey.URI();
+  LOG(("SharedStyleSheetCache::Lookup(%s)", uri->GetSpecOrDefault().get()));
+
   // Try to find first in the XUL prototype cache.
   if (dom::IsChromeURI(uri)) {
     nsXULPrototypeCache* cache = nsXULPrototypeCache::GetInstance();
@@ -100,28 +107,35 @@ auto SharedStyleSheetCache::Lookup(SheetLoadDataHashKey& aKey, bool aSyncLoad)
           return {CloneSheet(*sheet), SheetState::Complete};
         }
 
-        LOG(
-            ("    Not cloning due to forced unique inner or mismatched "
-             "parsing mode"));
+        LOG(("    Not cloning due to mismatched parsing mode"));
       }
     }
   }
 
   // Now complete sheets.
   if (auto lookup = mCompleteSheets.Lookup(aKey)) {
-    LOG(("  From completed: %p", lookup.Data().get()));
-    AssertComplete(*lookup.Data());
-    MOZ_ASSERT(lookup.Data()->ParsingMode() == aKey.ParsingMode());
+    const CompleteSheet& completeSheet = lookup.Data();
     // We can assert the stylesheet has not been modified, as we clone it on
     // insertion.
-    StyleSheet* cachedSheet = lookup.Data();
-    MOZ_ASSERT(!cachedSheet->HasForcedUniqueInner());
-    MOZ_ASSERT(!cachedSheet->HasModifiedRules());
+    StyleSheet& cachedSheet = *completeSheet.mSheet;
+    LOG(("  From completed: %p", &cachedSheet));
 
-    RefPtr<StyleSheet> clone = CloneSheet(*cachedSheet);
-    MOZ_ASSERT(!clone->HasForcedUniqueInner());
-    MOZ_ASSERT(!clone->HasModifiedRules());
-    return {std::move(clone), SheetState::Complete};
+    if ((!aLoader.ShouldBypassCache() && !completeSheet.Expired()) ||
+        aLoader.mLoadsPerformed.Contains(aKey)) {
+      LOG(
+          ("    Not expired yet, or previously loaded already in "
+           "that document"));
+
+      AssertComplete(cachedSheet);
+      MOZ_ASSERT(cachedSheet.ParsingMode() == aKey.ParsingMode());
+      MOZ_ASSERT(!cachedSheet.HasForcedUniqueInner());
+      MOZ_ASSERT(!cachedSheet.HasModifiedRules());
+
+      RefPtr<StyleSheet> clone = CloneSheet(cachedSheet);
+      MOZ_ASSERT(!clone->HasForcedUniqueInner());
+      MOZ_ASSERT(!clone->HasModifiedRules());
+      return {std::move(clone), SheetState::Complete};
+    }
   }
 
   if (aSyncLoad) {
@@ -189,7 +203,7 @@ size_t SharedStyleSheetCache::SizeOfIncludingThis(
 
   n += mCompleteSheets.ShallowSizeOfExcludingThis(aMallocSizeOf);
   for (auto iter = mCompleteSheets.ConstIter(); !iter.Done(); iter.Next()) {
-    n += iter.UserData()->SizeOfIncludingThis(aMallocSizeOf);
+    n += iter.UserData().mSheet->SizeOfIncludingThis(aMallocSizeOf);
   }
 
   // Measurement of the following members may be added later if DMD finds it is
@@ -312,19 +326,30 @@ void SharedStyleSheetCache::InsertIntoCompleteCacheIfNeeded(
     SheetLoadData& aData) {
   MOZ_ASSERT(aData.mLoader->GetDocument(),
              "We only cache document-associated sheets");
+  LOG(("SharedStyleSheetCache::InsertIntoCompleteCacheIfNeeded"));
   // If we ever start doing this for failed loads, we'll need to adjust the
   // PostLoadEvent code that thinks anything already complete must have loaded
   // succesfully.
   if (aData.mLoadFailed) {
+    LOG(("  Load failed, bailing"));
+    return;
+  }
+
+  // If this sheet came from the cache already, there's no need to override
+  // anything.
+  if (aData.mSheetAlreadyComplete) {
+    LOG(("  Sheet came from the cache, bailing"));
     return;
   }
 
   if (!aData.mURI) {
+    LOG(("  Inline style sheet, bailing"));
     // Inline sheet caching happens in Loader::mInlineSheets.
     return;
   }
 
   if (aData.mSheet->IsConstructed()) {
+    LOG(("  Constructable style sheet, bailing"));
     // Constructable sheets are not worth caching, they're always unique.
     return;
   }
@@ -352,18 +377,25 @@ void SharedStyleSheetCache::InsertIntoCompleteCacheIfNeeded(
       }
     }
   } else {
+    LOG(("  Putting style sheet in shared cache: %s",
+         aData.mURI->GetSpecOrDefault().get()));
     SheetLoadDataHashKey key(aData);
     MOZ_ASSERT(sheet->IsComplete(), "Should only be caching complete sheets");
 
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
     for (const auto& entry : mCompleteSheets) {
-      MOZ_DIAGNOSTIC_ASSERT(
-          entry.GetData() != sheet || key.KeyEquals(entry.GetKey()),
-          "Same sheet, different keys?");
+      if (!key.KeyEquals(entry.GetKey())) {
+        MOZ_DIAGNOSTIC_ASSERT(entry.GetData().mSheet != sheet,
+                              "Same sheet, different keys?");
+      } else {
+        MOZ_DIAGNOSTIC_ASSERT(
+            entry.GetData().Expired() || aData.mLoader->ShouldBypassCache(),
+            "Overriding existing complete entry?");
+      }
     }
 #endif
 
-    mCompleteSheets.Put(key, std::move(sheet));
+    mCompleteSheets.Put(key, {aData.mExpirationTime, std::move(sheet)});
   }
 }
 
