@@ -1630,7 +1630,6 @@ void gfxFcPlatformFontList::InitSharedFontListForPlatform() {
     nsAutoCString keyName(aFamilyName);
     ToLowerCase(keyName);
     auto faceList = faces.Get(keyName);
-    uint32_t faceIndex = faceList->Length();
     faceList->AppendElement(
         fontlist::Face::InitData{descriptor, 0, false, weight, stretch, style});
     // map the psname, fullname ==> font family for local font lookups
@@ -1638,14 +1637,14 @@ void gfxFcPlatformFontList::InitSharedFontListForPlatform() {
     GetFaceNames(aPattern, aFamilyName, psname, fullname);
     if (!psname.IsEmpty()) {
       ToLowerCase(psname);
-      mLocalNameTable.Put(psname,
-                          fontlist::LocalFaceRec::InitData(keyName, faceIndex));
+      mLocalNameTable.Put(
+          psname, fontlist::LocalFaceRec::InitData(keyName, descriptor));
     }
     if (!fullname.IsEmpty()) {
       ToLowerCase(fullname);
       if (fullname != psname) {
         mLocalNameTable.Put(
-            fullname, fontlist::LocalFaceRec::InitData(keyName, faceIndex));
+            fullname, fontlist::LocalFaceRec::InitData(keyName, descriptor));
       }
     }
   };
