@@ -408,6 +408,8 @@ class nsDocumentEncoder : public nsIDocumentEncoder {
           mFlags{aFlags},
           mNodeSerializer{aNodeSerializer} {}
 
+    void Initialize();
+
     RangeBoundariesInclusiveAncestorsAndOffsets
         mRangeBoundariesInclusiveAncestorsAndOffsets;
     /**
@@ -430,6 +432,15 @@ class nsDocumentEncoder : public nsIDocumentEncoder {
 
   RangeSerializer mRangeSerializer;
 };
+
+void nsDocumentEncoder::RangeSerializer::Initialize() {
+  mContextInfoDepth = {};
+  mStartRootIndex = 0;
+  mEndRootIndex = 0;
+  mHaltRangeHint = false;
+  mClosestCommonInclusiveAncestorOfRange = nullptr;
+  mRangeBoundariesInclusiveAncestorsAndOffsets = {};
+}
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsDocumentEncoder)
 NS_IMPL_CYCLE_COLLECTING_RELEASE_WITH_LAST_RELEASE(
@@ -466,16 +477,11 @@ nsDocumentEncoder::nsDocumentEncoder()
 void nsDocumentEncoder::Initialize(bool aClearCachedSerializer) {
   mFlags = 0;
   mWrapColumn = 72;
-  mRangeSerializer.mContextInfoDepth = {};
-  mRangeSerializer.mStartRootIndex = 0;
-  mRangeSerializer.mEndRootIndex = 0;
+  mRangeSerializer.Initialize();
   mNeedsPreformatScanning = false;
-  mRangeSerializer.mHaltRangeHint = false;
   mDisableContextSerialize = false;
   mEncodingScope = {};
-  mRangeSerializer.mClosestCommonInclusiveAncestorOfRange = nullptr;
   mNodeFixup = nullptr;
-  mRangeSerializer.mRangeBoundariesInclusiveAncestorsAndOffsets = {};
   if (aClearCachedSerializer) {
     mSerializer = nullptr;
   }
