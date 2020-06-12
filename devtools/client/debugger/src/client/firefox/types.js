@@ -87,6 +87,7 @@ export type FrameFront = {
   this: any,
   asyncCause: null | string,
   state: "on-stack" | "suspended" | "dead",
+  type: "call" | "eval" | "global" | "module" | "wasmcall" | "debugger",
 };
 
 /**
@@ -376,6 +377,7 @@ export type ThreadFront = {
   stepIn: Function => Promise<*>,
   stepOver: Function => Promise<*>,
   stepOut: Function => Promise<*>,
+  restart: Function => Promise<*>,
   breakOnNext: () => Promise<*>,
   // FIXME: unclear if SourceId or ActorId here
   source: ({ actor: SourceId }) => SourceClient,

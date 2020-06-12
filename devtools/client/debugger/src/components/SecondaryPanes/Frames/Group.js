@@ -53,6 +53,7 @@ type Props = {
   getFrameTitle?: string => string,
   disableContextMenu: boolean,
   panel: "debugger" | "webconsole",
+  restart: typeof actions.restart,
 };
 
 type State = {
@@ -110,6 +111,7 @@ export default class Group extends Component<Props, State> {
       getFrameTitle,
       disableContextMenu,
       panel,
+      restart,
     } = this.props;
 
     const { expanded } = this.state;
@@ -141,6 +143,7 @@ export default class Group extends Component<Props, State> {
               getFrameTitle={getFrameTitle}
               disableContextMenu={disableContextMenu}
               panel={panel}
+              restart={restart}
             />
           );
         }, [])}

@@ -43,6 +43,7 @@ describe("FrameMenu", () => {
       toggleFrameworkGrouping,
       toggleBlackbox: jest.fn(),
       copyToTheClipboard,
+      restart: jest.fn(),
     };
     emptyFrame = {};
   });
@@ -52,6 +53,7 @@ describe("FrameMenu", () => {
   });
 
   it("sends three element in menuOpts to showMenu if source is present", () => {
+    const restartFrameId = generateMockId("restartFrame");
     const sourceId = generateMockId("copySourceUri2");
     const stacktraceId = generateMockId("copyStackTrace");
     const frameworkGroupingId = generateMockId("framework.enableGrouping");
@@ -69,6 +71,7 @@ describe("FrameMenu", () => {
     expect(showMenu).toHaveBeenCalledWith(mockEvent, receivedArray);
     const receivedArrayIds = receivedArray.map(item => item.id);
     expect(receivedArrayIds).toEqual([
+      restartFrameId,
       frameworkGroupingId,
       sourceId,
       blackBoxId,
