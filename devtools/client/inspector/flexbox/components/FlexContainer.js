@@ -103,6 +103,7 @@ class FlexContainer extends PureComponent {
         dom.div(
           {
             className: "inspector-badge",
+            role: "figure",
             title: `flex-direction: ${properties["flex-direction"]}`,
           },
           properties["flex-direction"]
@@ -110,6 +111,7 @@ class FlexContainer extends PureComponent {
         dom.div(
           {
             className: "inspector-badge",
+            role: "figure",
             title: `flex-wrap: ${properties["flex-wrap"]}`,
           },
           properties["flex-wrap"]
