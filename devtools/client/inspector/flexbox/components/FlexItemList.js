@@ -41,7 +41,11 @@ class FlexItemList extends PureComponent {
     return dom.div(
       { className: "flex-item-list" },
       dom.div(
-        { className: "flex-item-list-header" },
+        {
+          className: "flex-item-list-header",
+          role: "heading",
+          "aria-level": "3",
+        },
         !flexItems.length
           ? getStr("flexbox.noFlexItems")
           : getStr("flexbox.flexItems")
