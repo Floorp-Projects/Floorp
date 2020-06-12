@@ -262,10 +262,22 @@ impl AlphaBatchList {
             }
 
             if selected_batch_index.is_none() {
-                let new_batch = PrimitiveBatch::new(key);
+                // Text runs tend to have a lot of instances per batch, causing a lot of reallocation
+                // churn as items are added one by one, so we give it a head start. Ideally we'd start
+                // with a larger number, closer to 1k but in some bad cases with lots of batch break
+                // we would be wasting a lot of memory.
+                // Generally it is safe to preallocate small-ish values for other batch kinds because
+                // the items are small and there are no zero-sized batches so there will always be
+                // at least one allocation.
+                let prealloc = match key.kind {
+                    BatchKind::TextRun(..) => 128,
+                    _ => 16,
+                };
+                let mut new_batch = PrimitiveBatch::new(key);
+                new_batch.instances.reserve(prealloc);
                 selected_batch_index = Some(self.batches.len());
                 self.batches.push(new_batch);
-                self.item_rects.push(Vec::new());
+                self.item_rects.push(Vec::with_capacity(prealloc));
             }
 
             self.current_batch_index = selected_batch_index.unwrap();
@@ -1116,6 +1128,7 @@ impl BatchBuilder {
                                     z_id,
                                 );
 
+                                batch.reserve(glyphs.len());
                                 for glyph in glyphs {
                                     batch.push(base_instance.build(
                                         render_task_address,
