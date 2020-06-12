@@ -1,0 +1,57 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et cindent: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIRunnable.idl"
+
+%{C++
+#include "mozilla/AlreadyAddRefed.h"
+%}
+
+native alreadyAddRefed_nsIRunnable(already_AddRefed<nsIRunnable>);
+
+/*
+ * The primary use of this interface is to allow any nsISerialEventTarget to
+ * provide Direct Task dispatching which is similar (but not identical to) the
+ * microtask semantics of JS promises.
+ * New direct task may be dispatched when a current direct task is running. In
+ * which case they will be run in FIFO order.
+ */
+[builtinclass, uuid(e05bf0fe-94b7-4e28-8462-a8368da9c136)]
+interface nsIDirectTaskDispatcher : nsISupports
+{
+  /**
+   * Dispatch an event for the nsISerialEventTarget, using the direct task
+   * queue.
+   *
+   * This function must be called from the same nsISerialEventTarget
+   * implementing direct task dispatching.
+   *
+   * @param event
+   *   The alreadyAddRefed<> event to dispatch.
+   *
+   */
+  [noscript] void dispatchDirectTask(in alreadyAddRefed_nsIRunnable event);
+
+  /**
+   * Synchronously run any pending direct tasks queued.
+   */
+  [noscript] void drainDirectTasks();
+
+  /**
+   * Returns true if any direct tasks are pending.
+   */
+  [noscript] bool haveDirectTasks();
+
+  %{C++
+  // Infallible version of the above. Will assert that it is successful.
+  bool HaveDirectTasks() {
+    bool value = false;
+    MOZ_ALWAYS_SUCCEEDS(HaveDirectTasks(&value));
+    return value;
+  }
+  %}
+
+};
