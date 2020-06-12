@@ -92,6 +92,8 @@ async function setupPage(htmlPageName, blockedPage) {
   await SpecialPowers.spawn(frameContext, [], async function() {
     let doc = content.document;
     let textLongDescription = doc.getElementById("errorLongDesc").textContent;
+    let learnMoreLinkLocation = doc.getElementById("learnMoreLink").href;
+
     Assert.ok(
       textLongDescription.includes(
         "To see this page, you need to open it in a new window."
@@ -104,6 +106,12 @@ async function setupPage(htmlPageName, blockedPage) {
       button.textContent.includes("Open Site in New Window"),
       "We see the correct button to open the site in a new window"
     );
+
+    Assert.ok(
+      learnMoreLinkLocation.includes("xframe-neterror-page"),
+      "Correct Learn More URL for XFO error page"
+    );
+
     // We click on the button
     await EventUtils.synthesizeMouseAtCenter(button, {}, content);
   });
