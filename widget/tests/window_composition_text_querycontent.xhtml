@@ -5357,6 +5357,43 @@ async function runBug1584901Test()
      "runBug1584901Test: space must not be removed by composition change");
 }
 
+function runBug1636747Test()
+{
+  contenteditable.focus();
+  contenteditable.innerHTML = "";
+
+  // Last white space might be &nbsp; if last child is no <br>
+  // Actually, our implementation will insert <br> element at last child, so
+  // white space will be ASCII space.
+
+  synthesizeCompositionChange({
+    composition: {string: "a", clauses: [{length: 1, attr: COMPOSITION_ATTR_RAW_CLAUSE}]},
+  });
+  synthesizeComposition({type: "compositioncommit", data: "a"});
+  synthesizeKey(" ");
+
+  is(contenteditable.textContent, "a ",
+     "runBug1636747Test: last single space should be kept");
+
+  synthesizeCompositionChange({
+    composition: {string: "b", clauses: [{length: 1, attr: COMPOSITION_ATTR_RAW_CLAUSE}]},
+  });
+  synthesizeComposition({type: "compositioncommit", data: "b"});
+  synthesizeKey(" ");
+
+  is(contenteditable.textContent, "a b ",
+     "runBug1636747Test: inserting composition shouldn't remove last single space.");
+
+  synthesizeCompositionChange({
+    composition: {string: "c", clauses: [{length: 1, attr: COMPOSITION_ATTR_RAW_CLAUSE}]},
+  });
+  synthesizeComposition({type: "compositioncommit", data: "c"});
+  synthesizeKey(" ");
+
+  is(contenteditable.textContent, "a b c ",
+     "runBug1636747Test: inserting composition shouldn't remove last single space.");
+}
+
 function runCSSTransformTest()
 {
   textarea.focus();
@@ -9521,6 +9558,7 @@ async function runTest()
   runBug1375825Test();
   runBug1530649Test();
   runBug1571375Test();
+  runBug1636747Test();
   runForceCommitTest();
   runNestedSettingValue();
   runBug811755Test();
