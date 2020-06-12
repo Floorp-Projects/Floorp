@@ -3718,10 +3718,10 @@ bool GeneralParser<ParseHandler, Unit>::maybeParseDirective(
       // had "use strict";
       pc_->sc()->setExplicitUseStrict();
       if (!pc_->sc()->strict()) {
-        // We keep track of the one possible strict violation that could
-        // occur in the directive prologue -- octal escapes -- and
+        // We keep track of the possible strict violations that could occur in
+        // the directive prologue -- deprecated octal syntax -- and
         // complain now.
-        if (anyChars.sawOctalEscape()) {
+        if (anyChars.sawDeprecatedOctal()) {
           error(JSMSG_DEPRECATED_OCTAL);
           return false;
         }
@@ -3751,7 +3751,7 @@ GeneralParser<ParseHandler, Unit>::statementList(YieldHandling yieldHandling) {
 
   bool canHaveDirectives = pc_->atBodyLevel();
   if (canHaveDirectives) {
-    anyChars.clearSawOctalEscape();
+    anyChars.clearSawDeprecatedOctal();
   }
 
   bool canHaveHashbangComment = pc_->atTopLevel();

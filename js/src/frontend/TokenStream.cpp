@@ -2925,6 +2925,7 @@ MOZ_MUST_USE bool TokenStreamSpecific<Unit, AnyCharsAccess>::getTokenInternal(
         if (!strictModeError(JSMSG_DEPRECATED_OCTAL)) {
           return badToken();
         }
+        anyCharsAccess().flags.sawDeprecatedOctal = true;
 
         radix = 8;
         // one past the '0'
@@ -3603,7 +3604,7 @@ bool TokenStreamSpecific<Unit, AnyCharsAccess>::getStringOrTemplateToken(
             if (!strictModeError(JSMSG_DEPRECATED_OCTAL)) {
               return false;
             }
-            anyChars.flags.sawOctalEscape = true;
+            anyChars.flags.sawDeprecatedOctal = true;
           }
 
           if (IsAsciiOctal(unit)) {
