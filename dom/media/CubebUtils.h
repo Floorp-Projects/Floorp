@@ -28,6 +28,8 @@ void InitLibrary();
 // library after using it.
 void ShutdownLibrary();
 
+bool SandboxEnabled();
+
 // Returns the maximum number of channels supported by the audio hardware.
 uint32_t MaxNumberOfChannels();
 

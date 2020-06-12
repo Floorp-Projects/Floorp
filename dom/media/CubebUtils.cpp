@@ -650,6 +650,11 @@ void ShutdownLibrary() {
 #endif
 }
 
+bool SandboxEnabled() {
+  StaticMutexAutoLock lock(sMutex);
+  return !!sCubebSandbox;
+}
+
 uint32_t MaxNumberOfChannels() {
   cubeb* cubebContext = GetCubebContext();
   uint32_t maxNumberOfChannels;
