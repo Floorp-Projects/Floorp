@@ -460,7 +460,15 @@ void ExtensionPolicyService::CheckDocument(Document* aDocument) {
   if (win) {
     nsIDocShell* docShell = win->GetDocShell();
     RefPtr<ContentFrameMessageManager> mm = docShell->GetMessageManager();
-    if (!mm || !mMessageManagers.Contains(mm)) {
+    nsString group = win->GetBrowsingContext()->Top()->GetMessageManagerGroup();
+
+    // Currently, we use frame scripts to select specific kinds of browsers
+    // where we want to run content scripts.
+    if ((!mm || !mMessageManagers.Contains(mm)) &&
+        // With Fission, OOP iframes don't have a frame message manager, so we
+        // use the browser's MessageManagerGroup attribute to decide if content
+        // scripts should run.  The "browsers" group includes iframes from tabs.
+        !group.EqualsLiteral("browsers")) {
       return;
     }
 

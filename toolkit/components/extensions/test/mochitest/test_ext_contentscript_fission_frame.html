@@ -1,0 +1,77 @@
+<!doctype html>
+<head>
+  <title>Test content script in cross-origin frame</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script src="head.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+</head>
+<script>
+"use strict";
+
+add_task(async function test_content_script_cross_origin_frame() {
+
+  const extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      content_scripts: [{
+        matches: ["http://example.net/*/file_sample.html"],
+        all_frames: true,
+        js: ["cs.js"],
+      }],
+    },
+
+    background() {
+      browser.runtime.onConnect.addListener(port => {
+        port.onMessage.addListener(async num => {
+          let { tab, url, frameId } = port.sender;
+
+          browser.test.assertTrue(frameId > 0, "sender frameId is ok");
+          browser.test.assertTrue(url.endsWith("file_sample.html"), "url is ok");
+
+          let result = await browser.tabs.sendMessage(tab.id, num);
+          port.postMessage(result);
+          port.disconnect();
+        });
+      });
+    },
+
+    files: {
+      "cs.js"() {
+        let text = document.body.innerText;
+        browser.test.assertEq(text, "Sample text", "CS can access page DOM");
+
+        let manifest = browser.runtime.getManifest();
+        browser.test.assertEq(manifest.version, "1.0");
+        browser.test.assertEq(manifest.name, "Generated extension");
+
+        browser.runtime.onMessage.addListener(async num => {
+          browser.test.log("content script received tabs.sendMessage");
+          return num * 3;
+        })
+
+        let response;
+        let port = browser.runtime.connect();
+        port.onMessage.addListener(num => {
+          response = num;
+        });
+        port.onDisconnect.addListener(() => {
+          browser.test.assertEq(response, 21, "Got correct response");
+          browser.test.notifyPass();
+        });
+        port.postMessage(7);
+      },
+    },
+  });
+
+  await extension.startup();
+
+  let base = "http://example.org/tests/toolkit/components/extensions/test";
+  let win = window.open(`${base}/mochitest/file_with_xorigin_frame.html`);
+
+  await extension.awaitFinish();
+  win.close();
+
+  await extension.unload();
+});
+
+</script>
