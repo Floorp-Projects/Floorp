@@ -142,7 +142,8 @@ body {
   background-size: 16px;
   -moz-context-properties: fill;
   display: inline-block;
-  fill: var(--newtab-icon-primary-color);
+  color: var(--newtab-icon-primary-color);
+  fill: currentColor;
   height: 16px;
   vertical-align: middle;
   width: 16px; }
@@ -440,8 +441,8 @@ main {
 .prefs-button button {
   background-color: transparent;
   border: 0;
+  border-radius: 2px;
   cursor: pointer;
-  fill: var(--newtab-icon-primary-color);
   inset-inline-end: 15px;
   padding: 15px;
   position: fixed;

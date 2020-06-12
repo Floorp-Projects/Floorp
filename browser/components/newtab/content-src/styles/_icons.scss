@@ -4,7 +4,8 @@
   background-size: $icon-size;
   -moz-context-properties: fill;
   display: inline-block;
-  fill: var(--newtab-icon-primary-color);
+  color: var(--newtab-icon-primary-color);
+  fill: currentColor;
   height: $icon-size;
   vertical-align: middle;
   width: $icon-size;
