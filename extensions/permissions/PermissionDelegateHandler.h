@@ -195,7 +195,6 @@ class PermissionDelegateHandler final : public nsIPermissionDelegateHandler {
   mozilla::dom::Document* mDocument;
 
   nsCOMPtr<nsIPrincipal> mPrincipal;
-  nsCOMPtr<nsIPrincipal> mTopLevelPrincipal;
   RefPtr<nsIPermissionManager> mPermissionManager;
 };
 
