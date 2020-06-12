@@ -45,8 +45,6 @@ class ChangesView {
     this.store.injectReducer("changes", changesReducer);
 
     this.onAddChange = this.onAddChange.bind(this);
-    this.onChangesFrontAvailable = this.onChangesFrontAvailable.bind(this);
-    this.onChangesFrontDestroyed = this.onChangesFrontDestroyed.bind(this);
     this.onContextMenu = this.onContextMenu.bind(this);
     this.onCopy = this.onCopy.bind(this);
     this.onCopyAllChanges = this.copyAllChanges.bind(this);
@@ -54,8 +52,7 @@ class ChangesView {
     this.onCopyRule = this.copyRule.bind(this);
     this.onClearChanges = this.onClearChanges.bind(this);
     this.onSelectAll = this.onSelectAll.bind(this);
-    this.onTargetAvailable = this.onTargetAvailable.bind(this);
-    this.onTargetDestroyed = this.onTargetDestroyed.bind(this);
+    this.onResourceAvailable = this.onResourceAvailable.bind(this);
 
     this.destroy = this.destroy.bind(this);
 
@@ -78,6 +75,10 @@ class ChangesView {
     return this._contextMenu;
   }
 
+  get resourceWatcher() {
+    return this.inspector.toolbox.resourceWatcher;
+  }
+
   init() {
     const changesApp = ChangesApp({
       onContextMenu: this.onContextMenu,
@@ -96,57 +97,29 @@ class ChangesView {
       changesApp
     );
 
-    this.inspector.toolbox.targetList.watchTargets(
-      [this.inspector.toolbox.targetList.TYPES.FRAME],
-      this.onTargetAvailable,
-      this.onTargetDestroyed
+    this.resourceWatcher.watchResources(
+      [
+        this.resourceWatcher.TYPES.CSS_CHANGE,
+        this.resourceWatcher.TYPES.DOCUMENT_EVENT,
+      ],
+      { onAvailable: this.onResourceAvailable }
     );
   }
 
-  async onChangesFrontAvailable(changesFront) {
-    changesFront.on("add-change", this.onAddChange);
-    changesFront.on("clear-changes", this.onClearChanges);
-    try {
-      // Get all changes collected up to this point by the ChangesActor on the server,
-      // then push them to the Redux store here on the client.
-      const changes = await changesFront.allChanges();
-      changes.forEach(change => {
-        this.onAddChange(change);
-      });
-    } catch (e) {
-      // The connection to the server may have been cut, for
-      // example during test
-      // teardown. Here we just catch the error and silently
-      // ignore it.
+  onResourceAvailable({ resource }) {
+    if (resource.resourceType === this.resourceWatcher.TYPES.CSS_CHANGE) {
+      this.onAddChange(resource);
+      return;
     }
-  }
 
-  async onChangesFrontDestroyed(changesFront) {
-    changesFront.off("add-change", this.onAddChange);
-    changesFront.off("clear-changes", this.onClearChanges);
-  }
-
-  async onTargetAvailable({ targetFront }) {
-    targetFront.watchFronts(
-      "changes",
-      this.onChangesFrontAvailable,
-      this.onChangesFrontDestroyed
-    );
-
-    if (targetFront.isTopLevel) {
-      targetFront.on("will-navigate", this.onClearChanges);
-    }
-  }
-
-  async onTargetDestroyed({ targetFront }) {
-    targetFront.unwatchFronts(
-      "changes",
-      this.onChangesFrontAvailable,
-      this.onChangesFrontDestroyed
-    );
-
-    if (targetFront.isTopLevel) {
-      targetFront.off("will-navigate", this.onClearChanges);
+    if (resource.name === "dom-loading" && resource.targetFront.isTopLevel) {
+      // will-navigate doesn't work when we navigate to a new process,
+      // and for now, onTargetAvailable/onTargetDestroyed doesn't fire on navigation and
+      // only when navigating to another process.
+      // So we fallback on DOCUMENT_EVENTS to be notified when we navigates. When we
+      // navigate within the same process as well as when we navigate to a new process.
+      // (We would probably revisit that in bug 1632141)
+      this.onClearChanges();
     }
   }
 
@@ -268,6 +241,14 @@ class ChangesView {
    * Destruction function called when the inspector is destroyed.
    */
   destroy() {
+    this.resourceWatcher.unwatchResources(
+      [
+        this.resourceWatcher.TYPES.CSS_CHANGE,
+        this.resourceWatcher.TYPES.DOCUMENT_EVENT,
+      ],
+      { onAvailable: this.onResourceAvailable }
+    );
+
     this.store.dispatch(resetChanges());
 
     this.document = null;
