@@ -10,6 +10,10 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { editableItem } = require("devtools/client/shared/inplace-editor");
 
+const { LocalizationHelper } = require("devtools/shared/l10n");
+const SHARED_STRINGS_URI = "devtools/client/locales/shared.properties";
+const SHARED_L10N = new LocalizationHelper(SHARED_STRINGS_URI);
+
 const LONG_TEXT_ROTATE_LIMIT = 3;
 const HIGHLIGHT_RULE_PREF = Services.prefs.getBoolPref(
   "devtools.layout.boxmodel.highlightProperty"
@@ -81,10 +85,16 @@ class BoxModelEditable extends PureComponent {
                           : "boxmodel-" + property
                       }
                       ${rotate ? " boxmodel-rotate" : ""}`,
+        id: property + "-id",
       },
       dom.span(
         {
           className: "boxmodel-editable",
+          "aria-label": SHARED_L10N.getFormatStr(
+            "boxModelEditable.accessibleLabel",
+            property,
+            textContent
+          ),
           "data-box": box,
           tabIndex: box === level && focusable ? 0 : -1,
           title: property,
