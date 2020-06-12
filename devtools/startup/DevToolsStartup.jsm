@@ -1261,15 +1261,6 @@ const JsonView = {
     }
     this.initialized = true;
 
-    // Load JSON converter module. This converter is responsible
-    // for handling 'application/json' documents and converting
-    // them into a simple web-app that allows easy inspection
-    // of the JSON data.
-    Services.ppmm.loadProcessScript(
-      "resource://devtools/client/jsonview/converter-observer.js",
-      true
-    );
-
     // Register for messages coming from the child process.
     // This is never removed as there is no particular need to unregister
     // it during shutdown.

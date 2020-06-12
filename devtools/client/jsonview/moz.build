@@ -12,10 +12,15 @@ DIRS += [
 
 DevToolsModules(
     'converter-child.js',
-    'converter-observer.js',
+    'Converter.jsm',
     'json-viewer.js',
+    'Sniffer.jsm',
     'viewer-config.js'
 )
+
+XPCOM_MANIFESTS += [
+    'components.conf',
+]
 
 BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
 
