@@ -36,58 +36,47 @@ void StopAudioCallbackTracing() {
 }
 
 void AutoTracer::PrintEvent(const char* aName, const char* aCategory,
-                            const char* aComment, TracingPhase aPhase,
-                            uint64_t aPID, uint64_t aThread) {
-  mLogger.Log(aName, aCategory, aComment, aPhase, aPID, aThread);
+                            const char* aComment, TracingPhase aPhase) {
+  mLogger.Log(aName, aCategory, aComment, aPhase);
 }
 
 void AutoTracer::PrintBudget(const char* aName, const char* aCategory,
-                             uint64_t aDuration, uint64_t aPID,
-                             uint64_t aThread, uint64_t aFrames,
+                             uint64_t aDuration, uint64_t aFrames,
                              uint64_t aSampleRate) {
-  mLogger.LogDuration(aName, aCategory, aDuration, aPID, aThread, aFrames,
-                      aSampleRate);
+  mLogger.LogDuration(aName, aCategory, aDuration, aFrames, aSampleRate);
 }
 
 AutoTracer::AutoTracer(AsyncLogger& aLogger, const char* aLocation,
-                       uint64_t aPID, uint64_t aTID, EventType aEventType,
-                       uint64_t aFrames, uint64_t aSampleRate)
+                       EventType aEventType, uint64_t aFrames,
+                       uint64_t aSampleRate)
     : mLogger(aLogger),
       mLocation(aLocation),
       mComment(nullptr),
-      mEventType(aEventType),
-      mPID(aPID),
-      mTID(aTID) {
+      mEventType(aEventType) {
   MOZ_ASSERT(aEventType == EventType::BUDGET);
 
   if (aLogger.Enabled()) {
     float durationUS = (static_cast<float>(aFrames) / aSampleRate) * 1e6;
-    PrintBudget(aLocation, "perf", durationUS, mPID, mTID, aFrames,
-                aSampleRate);
+    PrintBudget(aLocation, "perf", durationUS, aFrames, aSampleRate);
   }
 }
 
 AutoTracer::AutoTracer(AsyncLogger& aLogger, const char* aLocation,
-                       uint64_t aPID, uint64_t aTID, EventType aEventType,
-                       const char* aComment)
+                       EventType aEventType, const char* aComment)
     : mLogger(aLogger),
       mLocation(aLocation),
       mComment(aComment),
-      mEventType(aEventType),
-      mPID(aPID),
-      mTID(aTID) {
+      mEventType(aEventType) {
   MOZ_ASSERT(aEventType == EventType::DURATION);
   if (aLogger.Enabled()) {
-    PrintEvent(aLocation, "perf", mComment, AsyncLogger::TracingPhase::BEGIN,
-               aPID, aTID);
+    PrintEvent(aLocation, "perf", mComment, AsyncLogger::TracingPhase::BEGIN);
   }
 }
 
 AutoTracer::~AutoTracer() {
   if (mEventType == EventType::DURATION) {
     if (mLogger.Enabled()) {
-      PrintEvent(mLocation, "perf", mComment, AsyncLogger::TracingPhase::END,
-                 mPID, mTID);
+      PrintEvent(mLocation, "perf", mComment, AsyncLogger::TracingPhase::END);
     }
   }
 }
