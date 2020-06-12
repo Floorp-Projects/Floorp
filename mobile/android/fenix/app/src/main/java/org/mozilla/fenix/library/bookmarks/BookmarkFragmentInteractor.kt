@@ -22,14 +22,12 @@ import org.mozilla.fenix.utils.Do
  */
 @SuppressWarnings("TooManyFunctions")
 class BookmarkFragmentInteractor(
-    private val bookmarkStore: BookmarkFragmentStore,
-    private val viewModel: BookmarksSharedViewModel,
     private val bookmarksController: BookmarkController,
     private val metrics: MetricController
 ) : BookmarkViewInteractor {
 
     override fun onBookmarksChanged(node: BookmarkNode) {
-        bookmarkStore.dispatch(BookmarkFragmentAction.Change(node))
+        bookmarksController.handleBookmarkChanged(node)
     }
 
     override fun onSelectionModeSwitch(mode: BookmarkFragmentState.Mode) {
@@ -41,7 +39,7 @@ class BookmarkFragmentInteractor(
     }
 
     override fun onAllBookmarksDeselected() {
-        bookmarkStore.dispatch(BookmarkFragmentAction.DeselectAll)
+        bookmarksController.handleAllBookmarksDeselected()
     }
 
     /**
@@ -112,13 +110,14 @@ class BookmarkFragmentInteractor(
     }
 
     override fun select(item: BookmarkNode) {
-        when (item.inRoots()) {
-            true -> bookmarksController.handleBookmarkSelected(item)
-            false -> bookmarkStore.dispatch(BookmarkFragmentAction.Select(item))
-        }
+        bookmarksController.handleBookmarkSelected(item)
     }
 
     override fun deselect(item: BookmarkNode) {
-        bookmarkStore.dispatch(BookmarkFragmentAction.Deselect(item))
+        bookmarksController.handleBookmarkDeselected(item)
+    }
+
+    override fun onRequestSync() {
+        bookmarksController.handleRequestSync()
     }
 }

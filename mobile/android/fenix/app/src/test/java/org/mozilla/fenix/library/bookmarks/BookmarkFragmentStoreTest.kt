@@ -42,6 +42,30 @@ class BookmarkFragmentStoreTest {
     }
 
     @Test
+    fun `changing the tree of bookmarks adds the tree to the visited nodes`() = runBlocking {
+        val initialState = BookmarkFragmentState(null)
+        val store = BookmarkFragmentStore(initialState)
+
+        store.dispatch(BookmarkFragmentAction.Change(tree)).join()
+        store.dispatch(BookmarkFragmentAction.Change(subfolder)).join()
+
+        assertEquals(listOf(tree.guid, subfolder.guid), store.state.guidBackstack)
+    }
+
+    @Test
+    fun `changing to a node that is in the backstack removes backstack items after that node`() = runBlocking {
+        val initialState = BookmarkFragmentState(
+            null,
+            guidBackstack = listOf(tree.guid, subfolder.guid, item.guid)
+        )
+        val store = BookmarkFragmentStore(initialState)
+
+        store.dispatch(BookmarkFragmentAction.Change(tree)).join()
+
+        assertEquals(listOf(tree.guid), store.state.guidBackstack)
+    }
+
+    @Test
     fun `change the tree of bookmarks to the same value`() = runBlocking {
         val initialState = BookmarkFragmentState(tree)
         val store = BookmarkFragmentStore(initialState)
@@ -175,6 +199,19 @@ class BookmarkFragmentStoreTest {
 
         assertEquals(store.state.tree, rootFolder)
         assertEquals(store.state.mode, BookmarkFragmentState.Mode.Normal(false))
+    }
+
+    @Test
+    fun `changing the tree or deselecting in Syncing mode should stay in Syncing mode`() = runBlocking {
+        val initialState = BookmarkFragmentState(tree)
+        val store = BookmarkFragmentStore(initialState)
+
+        store.dispatch(BookmarkFragmentAction.StartSync).join()
+        store.dispatch(BookmarkFragmentAction.Change(childItem))
+        assertEquals(BookmarkFragmentState.Mode.Syncing, store.state.mode)
+
+        store.dispatch(BookmarkFragmentAction.DeselectAll).join()
+        assertEquals(BookmarkFragmentState.Mode.Syncing, store.state.mode)
     }
 
     private val item = BookmarkNode(BookmarkNodeType.ITEM, "456", "123", 0, "Mozilla", "http://mozilla.org", null)

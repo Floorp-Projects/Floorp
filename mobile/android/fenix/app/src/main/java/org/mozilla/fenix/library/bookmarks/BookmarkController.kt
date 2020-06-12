@@ -11,13 +11,19 @@ import android.content.res.Resources
 import androidx.core.content.getSystemService
 import androidx.navigation.NavController
 import androidx.navigation.NavDirections
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
+import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.concept.engine.prompt.ShareData
 import mozilla.components.concept.storage.BookmarkNode
+import mozilla.components.service.fxa.sync.SyncReason
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.ext.bookmarkStorage
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.nav
 
 /**
@@ -26,16 +32,20 @@ import org.mozilla.fenix.ext.nav
  */
 @SuppressWarnings("TooManyFunctions")
 interface BookmarkController {
+    fun handleBookmarkChanged(item: BookmarkNode)
     fun handleBookmarkTapped(item: BookmarkNode)
     fun handleBookmarkExpand(folder: BookmarkNode)
     fun handleSelectionModeSwitch()
     fun handleBookmarkEdit(node: BookmarkNode)
     fun handleBookmarkSelected(node: BookmarkNode)
+    fun handleBookmarkDeselected(node: BookmarkNode)
+    fun handleAllBookmarksDeselected()
     fun handleCopyUrl(item: BookmarkNode)
     fun handleBookmarkSharing(item: BookmarkNode)
     fun handleOpeningBookmark(item: BookmarkNode, mode: BrowsingMode)
     fun handleBookmarkDeletion(nodes: Set<BookmarkNode>, eventType: Event)
     fun handleBookmarkFolderDeletion(node: BookmarkNode)
+    fun handleRequestSync()
     fun handleBackPressed()
 }
 
@@ -43,6 +53,10 @@ interface BookmarkController {
 class DefaultBookmarkController(
     private val context: Context,
     private val navController: NavController,
+    private val scope: CoroutineScope,
+    private val store: BookmarkFragmentStore,
+    private val sharedViewModel: BookmarksSharedViewModel,
+    private val loadBookmarkNode: suspend (String) -> BookmarkNode?,
     private val showSnackbar: (String) -> Unit,
     private val deleteBookmarkNodes: (Set<BookmarkNode>, Event) -> Unit,
     private val deleteBookmarkFolder: (BookmarkNode) -> Unit,
@@ -52,12 +66,23 @@ class DefaultBookmarkController(
     private val activity: HomeActivity = context as HomeActivity
     private val resources: Resources = context.resources
 
+    override fun handleBookmarkChanged(item: BookmarkNode) {
+        sharedViewModel.selectedFolder = item
+        store.dispatch(BookmarkFragmentAction.Change(item))
+    }
+
     override fun handleBookmarkTapped(item: BookmarkNode) {
         openInNewTab(item.url!!, true, BrowserDirection.FromBookmarks, activity.browsingModeManager.mode)
     }
 
     override fun handleBookmarkExpand(folder: BookmarkNode) {
-        navigate(BookmarkFragmentDirections.actionBookmarkFragmentSelf(folder.guid))
+        handleAllBookmarksDeselected()
+        invokePendingDeletion.invoke()
+        scope.launch {
+            val node = loadBookmarkNode.invoke(folder.guid) ?: return@launch
+            sharedViewModel.selectedFolder = node
+            store.dispatch(BookmarkFragmentAction.Change(node))
+        }
     }
 
     override fun handleSelectionModeSwitch() {
@@ -69,7 +94,23 @@ class DefaultBookmarkController(
     }
 
     override fun handleBookmarkSelected(node: BookmarkNode) {
-        showSnackbar(resources.getString(R.string.bookmark_cannot_edit_root))
+        if (store.state.mode is BookmarkFragmentState.Mode.Syncing) {
+            return
+        }
+
+        if (node.inRoots()) {
+            showSnackbar(resources.getString(R.string.bookmark_cannot_edit_root))
+        } else {
+            store.dispatch(BookmarkFragmentAction.Select(node))
+        }
+    }
+
+    override fun handleBookmarkDeselected(node: BookmarkNode) {
+        store.dispatch(BookmarkFragmentAction.Deselect(node))
+    }
+
+    override fun handleAllBookmarksDeselected() {
+        store.dispatch(BookmarkFragmentAction.DeselectAll)
     }
 
     override fun handleCopyUrl(item: BookmarkNode) {
@@ -98,9 +139,36 @@ class DefaultBookmarkController(
         deleteBookmarkFolder(node)
     }
 
+    override fun handleRequestSync() {
+        scope.launch {
+            store.dispatch(BookmarkFragmentAction.StartSync)
+            invokePendingDeletion()
+            context.components.backgroundServices.accountManager.syncNowAsync(SyncReason.User).await()
+            // The current bookmark node we are viewing may be made invalid after syncing so we
+            // check if the current node is valid and if it isn't we find the nearest valid ancestor
+            // and open it
+            val validAncestorGuid = store.state.guidBackstack.findLast { guid ->
+                context.bookmarkStorage.getBookmark(guid) != null
+            } ?: BookmarkRoot.Mobile.id
+            val node = context.bookmarkStorage.getBookmark(validAncestorGuid)!!
+            handleBookmarkExpand(node)
+            store.dispatch(BookmarkFragmentAction.FinishSync)
+        }
+    }
+
     override fun handleBackPressed() {
         invokePendingDeletion.invoke()
-        navController.popBackStack()
+        scope.launch {
+            val parentGuid = store.state.guidBackstack.findLast { guid ->
+                store.state.tree?.guid != guid && context.bookmarkStorage.getBookmark(guid) != null
+            }
+            if (parentGuid == null) {
+                navController.popBackStack()
+            } else {
+                val parent = context.bookmarkStorage.getBookmark(parentGuid)!!
+                handleBookmarkExpand(parent)
+            }
+        }
     }
 
     private fun openInNewTab(

@@ -93,6 +93,12 @@ interface BookmarkViewInteractor : SelectionInteractor<BookmarkNode> {
      *
      */
     fun onBackPressed()
+
+    /**
+     * Handles user requested sync of bookmarks.
+     *
+     */
+    fun onRequestSync()
 }
 
 class BookmarkView(
@@ -106,7 +112,6 @@ class BookmarkView(
 
     private var mode: BookmarkFragmentState.Mode = BookmarkFragmentState.Mode.Normal()
     private var tree: BookmarkNode? = null
-    private var canGoBack = false
 
     private val bookmarkAdapter: BookmarkAdapter
 
@@ -118,14 +123,18 @@ class BookmarkView(
         view.bookmark_folders_sign_in.setOnClickListener {
             navController.navigate(NavGraphDirections.actionGlobalTurnOnSync())
         }
+        view.swipe_refresh.setOnRefreshListener {
+            interactor.onRequestSync()
+        }
     }
 
     fun update(state: BookmarkFragmentState) {
-        canGoBack = BookmarkRoot.Root.matches(state.tree)
         tree = state.tree
         if (state.mode != mode) {
             mode = state.mode
-            interactor.onSelectionModeSwitch(mode)
+            if (mode is BookmarkFragmentState.Mode.Normal || mode is BookmarkFragmentState.Mode.Selecting) {
+                interactor.onSelectionModeSwitch(mode)
+            }
         }
 
         bookmarkAdapter.updateData(state.tree, mode)
@@ -151,19 +160,21 @@ class BookmarkView(
             }
         }
         view.bookmarks_progress_bar.isVisible = state.isLoading
+        view.swipe_refresh.isEnabled =
+            state.mode is BookmarkFragmentState.Mode.Normal || state.mode is BookmarkFragmentState.Mode.Syncing
+        view.swipe_refresh.isRefreshing = state.mode is BookmarkFragmentState.Mode.Syncing
     }
 
     override fun onBackPressed(): Boolean {
-        return when {
-            mode is BookmarkFragmentState.Mode.Selecting -> {
+        return when (mode) {
+            is BookmarkFragmentState.Mode.Selecting -> {
                 interactor.onAllBookmarksDeselected()
                 true
             }
-            canGoBack -> {
+            else -> {
                 interactor.onBackPressed()
                 true
             }
-            else -> false
         }
     }
 

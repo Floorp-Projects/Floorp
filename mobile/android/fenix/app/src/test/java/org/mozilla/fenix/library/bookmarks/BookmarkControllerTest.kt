@@ -12,16 +12,24 @@ import androidx.navigation.NavController
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDirections
 import io.mockk.Runs
+import io.mockk.called
+import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.mockkStatic
+import io.mockk.runs
 import io.mockk.slot
+import io.mockk.spyk
 import io.mockk.verify
 import io.mockk.verifyOrder
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.TestCoroutineScope
 import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarkNodeType
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
@@ -31,15 +39,21 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.components.Services
 import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.ext.bookmarkStorage
 import org.mozilla.fenix.ext.components
 
 @SuppressWarnings("TooManyFunctions", "LargeClass")
+@ExperimentalCoroutinesApi
 class BookmarkControllerTest {
 
     private lateinit var controller: BookmarkController
 
+    private val bookmarkStore = spyk(BookmarkFragmentStore(BookmarkFragmentState(null)))
     private val context: Context = mockk(relaxed = true)
+    private val scope = TestCoroutineScope()
     private val navController: NavController = mockk(relaxed = true)
+    private val sharedViewModel: BookmarksSharedViewModel = mockk()
+    private val loadBookmarkNode: suspend (String) -> BookmarkNode? = mockk(relaxed = true)
     private val showSnackbar: (String) -> Unit = mockk(relaxed = true)
     private val deleteBookmarkNodes: (Set<BookmarkNode>, Event) -> Unit = mockk(relaxed = true)
     private val deleteBookmarkFolder: (BookmarkNode) -> Unit = mockk(relaxed = true)
@@ -87,15 +101,36 @@ class BookmarkControllerTest {
         every { navController.currentDestination } returns NavDestination("").apply {
             id = R.id.bookmarkFragment
         }
+        every { bookmarkStore.dispatch(any()) } returns mockk()
+        every { sharedViewModel.selectedFolder = any() } just runs
 
         controller = DefaultBookmarkController(
             context = homeActivity,
             navController = navController,
+            scope = scope,
+            store = bookmarkStore,
+            sharedViewModel = sharedViewModel,
+            loadBookmarkNode = loadBookmarkNode,
             showSnackbar = showSnackbar,
             deleteBookmarkNodes = deleteBookmarkNodes,
             deleteBookmarkFolder = deleteBookmarkFolder,
             invokePendingDeletion = invokePendingDeletion
         )
+    }
+
+    @After
+    fun cleanUp() {
+        scope.cleanupTestCoroutines()
+    }
+
+    @Test
+    fun `handleBookmarkChanged updates the selected bookmark node`() {
+        controller.handleBookmarkChanged(tree)
+
+        verify {
+            sharedViewModel.selectedFolder = tree
+            bookmarkStore.dispatch(BookmarkFragmentAction.Change(tree))
+        }
     }
 
     @Test
@@ -124,15 +159,27 @@ class BookmarkControllerTest {
     }
 
     @Test
-    fun `handleBookmarkExpand should navigate to the 'Bookmark' fragment`() {
+    fun `handleBookmarkExpand clears selection and invokes pending deletions`() {
+        coEvery { loadBookmarkNode.invoke(any()) } returns tree
+
         controller.handleBookmarkExpand(tree)
 
         verify {
             invokePendingDeletion.invoke()
-            navController.navigate(
-                BookmarkFragmentDirections.actionBookmarkFragmentSelf(tree.guid),
-                null
-            )
+            controller.handleAllBookmarksDeselected()
+        }
+    }
+
+    @Test
+    fun `handleBookmarkExpand should refresh and change the active bookmark node`() {
+        coEvery { loadBookmarkNode.invoke(any()) } returns tree
+
+        controller.handleBookmarkExpand(tree)
+
+        coVerify {
+            loadBookmarkNode.invoke(tree.guid)
+            sharedViewModel.selectedFolder = tree
+            bookmarkStore.dispatch(BookmarkFragmentAction.Change(tree))
         }
     }
 
@@ -161,13 +208,40 @@ class BookmarkControllerTest {
     }
 
     @Test
-    fun `handleBookmarkSelected should show a toast when selecting a folder`() {
+    fun `handleBookmarkSelected dispatches Select action when selecting a non-root folder`() {
+        controller.handleBookmarkSelected(item)
+
+        verify {
+            bookmarkStore.dispatch(BookmarkFragmentAction.Select(item))
+        }
+    }
+
+    @Test
+    fun `handleBookmarkSelected should show a toast when selecting a root folder`() {
         val errorMessage = context.getString(R.string.bookmark_cannot_edit_root)
 
         controller.handleBookmarkSelected(root)
 
         verify {
             showSnackbar(errorMessage)
+        }
+    }
+
+    @Test
+    fun `handleBookmarkSelected does not select in Syncing mode`() {
+        every { bookmarkStore.state.mode } returns BookmarkFragmentState.Mode.Syncing
+
+        controller.handleBookmarkSelected(item)
+
+        verify { bookmarkStore.dispatch(BookmarkFragmentAction.Select(item)) wasNot called }
+    }
+
+    @Test
+    fun `handleBookmarkDeselected dispatches Deselect action`() {
+        controller.handleBookmarkDeselected(item)
+
+        verify {
+            bookmarkStore.dispatch(BookmarkFragmentAction.Deselect(item))
         }
     }
 
@@ -248,7 +322,24 @@ class BookmarkControllerTest {
     }
 
     @Test
-    fun `handleBackPressed should trigger handleBackPressed in NavController`() {
+    fun `handleRequestSync dispatches actions in the correct order`() {
+        every { homeActivity.components.backgroundServices.accountManager } returns mockk(relaxed = true)
+        coEvery { homeActivity.bookmarkStorage.getBookmark(any()) } returns tree
+        coEvery { loadBookmarkNode.invoke(any()) } returns tree
+
+        controller.handleRequestSync()
+
+        verifyOrder {
+            bookmarkStore.dispatch(BookmarkFragmentAction.StartSync)
+            bookmarkStore.dispatch(BookmarkFragmentAction.FinishSync)
+        }
+    }
+
+    @Test
+    fun `handleBackPressed with one item in backstack should trigger handleBackPressed in NavController`() {
+        every { bookmarkStore.state.guidBackstack } returns listOf(tree.guid)
+        every { bookmarkStore.state.tree } returns tree
+
         controller.handleBackPressed()
 
         verify {

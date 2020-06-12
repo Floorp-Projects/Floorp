@@ -20,10 +20,14 @@ class BookmarkFragmentStore(
  * The complete state of the bookmarks tree and multi-selection mode
  * @property tree The current tree of bookmarks, if one is loaded
  * @property mode The current bookmark multi-selection mode
+ * @property guidBackstack A set of guids for bookmark nodes we have visited. Used to traverse back
+ *                  up the tree after a sync.
+ * @property isLoading true if bookmarks are still being loaded from disk
  */
 data class BookmarkFragmentState(
     val tree: BookmarkNode?,
     val mode: Mode = Mode.Normal(),
+    val guidBackstack: List<String> = emptyList(),
     val isLoading: Boolean = true
 ) : State {
     sealed class Mode {
@@ -31,6 +35,7 @@ data class BookmarkFragmentState(
 
         data class Normal(val showMenu: Boolean = true) : Mode()
         data class Selecting(override val selectedItems: Set<BookmarkNode>) : Mode()
+        object Syncing : Mode()
     }
 }
 
@@ -42,6 +47,8 @@ sealed class BookmarkFragmentAction : Action {
     data class Select(val item: BookmarkNode) : BookmarkFragmentAction()
     data class Deselect(val item: BookmarkNode) : BookmarkFragmentAction()
     object DeselectAll : BookmarkFragmentAction()
+    object StartSync : BookmarkFragmentAction()
+    object FinishSync : BookmarkFragmentAction()
 }
 
 /**
@@ -56,16 +63,26 @@ private fun bookmarkFragmentStateReducer(
 ): BookmarkFragmentState {
     return when (action) {
         is BookmarkFragmentAction.Change -> {
+            // If we change to a node we have already visited, we pop the backstack until the node
+            // is the last item. If we haven't visited the node yet, we just add it to the end of the
+            // backstack
+            val backstack = state.guidBackstack.takeWhile { guid ->
+                guid != action.tree.guid
+            } + action.tree.guid
+
             val items = state.mode.selectedItems.filter { it in action.tree }
             state.copy(
                 tree = action.tree,
-                mode = if (BookmarkRoot.Root.id == action.tree.guid) {
-                    BookmarkFragmentState.Mode.Normal(false)
-                } else if (items.isEmpty()) {
-                    BookmarkFragmentState.Mode.Normal()
-                } else {
-                    BookmarkFragmentState.Mode.Selecting(items.toSet())
+                mode = when {
+                    state.mode is BookmarkFragmentState.Mode.Syncing -> {
+                        BookmarkFragmentState.Mode.Syncing
+                    }
+                    items.isEmpty() -> {
+                        BookmarkFragmentState.Mode.Normal(shouldShowMenu(action.tree.guid))
+                    }
+                    else -> BookmarkFragmentState.Mode.Selecting(items.toSet())
                 },
+                guidBackstack = backstack,
                 isLoading = false
             )
         }
@@ -81,10 +98,29 @@ private fun bookmarkFragmentStateReducer(
                 }
             )
         }
-        BookmarkFragmentAction.DeselectAll ->
-            state.copy(mode = BookmarkFragmentState.Mode.Normal())
+        is BookmarkFragmentAction.DeselectAll ->
+            state.copy(
+                mode = if (state.mode is BookmarkFragmentState.Mode.Syncing) {
+                    BookmarkFragmentState.Mode.Syncing
+                } else {
+                    BookmarkFragmentState.Mode.Normal()
+                }
+            )
+        is BookmarkFragmentAction.StartSync ->
+            state.copy(
+                mode = BookmarkFragmentState.Mode.Syncing
+            )
+        is BookmarkFragmentAction.FinishSync ->
+            state.copy(
+                mode = BookmarkFragmentState.Mode.Normal(
+                    showMenu = shouldShowMenu(state.tree?.guid)
+                )
+            )
     }
 }
+
+private fun shouldShowMenu(currentGuid: String?): Boolean =
+    BookmarkRoot.Root.id != currentGuid
 
 operator fun BookmarkNode.contains(item: BookmarkNode): Boolean {
     return children?.contains(item) ?: false

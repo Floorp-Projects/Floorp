@@ -13,18 +13,19 @@ import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AlertDialog
+import androidx.core.view.isVisible
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavDirections
 import androidx.navigation.fragment.findNavController
+import androidx.navigation.fragment.navArgs
 import kotlinx.android.synthetic.main.component_bookmark.view.*
 import kotlinx.android.synthetic.main.fragment_bookmark.view.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.isActive
@@ -59,7 +60,7 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), UserInteractionHan
     private lateinit var bookmarkStore: BookmarkFragmentStore
     private lateinit var bookmarkView: BookmarkView
     private var _bookmarkInteractor: BookmarkFragmentInteractor? = null
-    protected val bookmarkInteractor: BookmarkFragmentInteractor
+    private val bookmarkInteractor: BookmarkFragmentInteractor
         get() = _bookmarkInteractor!!
 
     private val sharedViewModel: BookmarksSharedViewModel by activityViewModels {
@@ -67,7 +68,6 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), UserInteractionHan
     }
     private val desktopFolders by lazy { DesktopFolders(requireContext(), showMobileRoot = false) }
 
-    lateinit var initialJob: Job
     private var pendingBookmarkDeletionJob: (suspend () -> Unit)? = null
     private var pendingBookmarksToDelete: MutableSet<BookmarkNode> = mutableSetOf()
 
@@ -84,11 +84,13 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), UserInteractionHan
         }
 
         _bookmarkInteractor = BookmarkFragmentInteractor(
-            bookmarkStore = bookmarkStore,
-            viewModel = sharedViewModel,
             bookmarksController = DefaultBookmarkController(
                 context = requireContext(),
                 navController = findNavController(),
+                scope = viewLifecycleOwner.lifecycleScope,
+                store = bookmarkStore,
+                sharedViewModel = sharedViewModel,
+                loadBookmarkNode = ::loadBookmarkNode,
                 showSnackbar = ::showSnackBarWithText,
                 deleteBookmarkNodes = ::deleteMulti,
                 deleteBookmarkFolder = ::showRemoveFolderDialog,
@@ -124,8 +126,16 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), UserInteractionHan
     @ExperimentalCoroutinesApi
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        val accountManager = requireComponents.backgroundServices.accountManager
         consumeFrom(bookmarkStore) {
             bookmarkView.update(it)
+
+            // Only display the sign-in prompt if we're inside of the virtual "Desktop Bookmarks" node.
+            // Don't want to pester user too much with it, and if there are lots of bookmarks present,
+            // it'll just get visually lost. Inside of the "Desktop Bookmarks" node, it'll nicely stand-out,
+            // since there are always only three other items in there. It's also the right place contextually.
+            bookmarkView.view.bookmark_folders_sign_in.isVisible =
+                it.tree?.guid == BookmarkRoot.Root.id && accountManager.authenticatedAccount() == null
         }
     }
 
@@ -138,36 +148,24 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), UserInteractionHan
         super.onResume()
 
         (activity as HomeActivity).getSupportActionBarAndInflateIfNecessary().show()
-        val currentGuid = BookmarkFragmentArgs.fromBundle(requireArguments()).currentRoot.ifEmpty {
-            BookmarkRoot.Mobile.id
-        }
 
-        // Only display the sign-in prompt if we're inside of the virtual "Desktop Bookmarks" node.
-        // Don't want to pester user too much with it, and if there are lots of bookmarks present,
-        // it'll just get visually lost. Inside of the "Desktop Bookmarks" node, it'll nicely stand-out,
-        // since there are always only three other items in there. It's also the right place contextually.
-        if (currentGuid == BookmarkRoot.Root.id &&
-            requireComponents.backgroundServices.accountManager.authenticatedAccount() == null
-        ) {
-            bookmarkView.view.bookmark_folders_sign_in.visibility = View.VISIBLE
-        } else {
-            bookmarkView.view.bookmark_folders_sign_in.visibility = View.GONE
-        }
-
-        initialJob = loadInitialBookmarkFolder(currentGuid)
+        // Reload bookmarks when returning to this fragment in case they have been edited
+        val args by navArgs<BookmarkFragmentArgs>()
+        val currentGuid = bookmarkStore.state.tree?.guid
+            ?: if (args.currentRoot.isNotEmpty()) {
+                args.currentRoot
+            } else {
+                BookmarkRoot.Mobile.id
+            }
+        loadInitialBookmarkFolder(currentGuid)
     }
 
-    private fun loadInitialBookmarkFolder(currentGuid: String): Job {
-        return viewLifecycleOwner.lifecycleScope.launch(Main) {
-            val currentRoot = withContext(IO) {
-                requireContext().bookmarkStorage
-                    .getTree(currentGuid)
-                    ?.let { desktopFolders.withOptionalDesktopFolders(it) }!!
-            }
+    private fun loadInitialBookmarkFolder(currentGuid: String) {
+        viewLifecycleOwner.lifecycleScope.launch(Main) {
+            val currentRoot = loadBookmarkNode(currentGuid)
 
-            if (isActive) {
+            if (isActive && currentRoot != null) {
                 bookmarkInteractor.onBookmarksChanged(currentRoot)
-                sharedViewModel.selectedFolder = currentRoot
             }
         }
     }
@@ -249,14 +247,18 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), UserInteractionHan
         return bookmarkView.onBackPressed()
     }
 
+    private suspend fun loadBookmarkNode(guid: String): BookmarkNode? = withContext(IO) {
+        requireContext().bookmarkStorage
+            .getTree(guid, false)
+            ?.let { desktopFolders.withOptionalDesktopFolders(it) }
+    }
+
     private suspend fun refreshBookmarks() {
         // The bookmark tree in our 'state' can be null - meaning, no bookmark tree has been selected.
         // If that's the case, we don't know what node to refresh, and so we bail out.
         // See https://github.com/mozilla-mobile/fenix/issues/4671
         val currentGuid = bookmarkStore.state.tree?.guid ?: return
-        context?.bookmarkStorage
-            ?.getTree(currentGuid, false)
-            ?.let { desktopFolders.withOptionalDesktopFolders(it) }
+        loadBookmarkNode(currentGuid)
             ?.let { node ->
                 val rootNode = node - pendingBookmarksToDelete
                 bookmarkInteractor.onBookmarksChanged(rootNode)

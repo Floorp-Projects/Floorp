@@ -4,10 +4,7 @@
 
 package org.mozilla.fenix.library.bookmarks
 
-import io.mockk.called
-import io.mockk.every
 import io.mockk.mockk
-import io.mockk.spyk
 import io.mockk.verify
 import io.mockk.verifyOrder
 import mozilla.appservices.places.BookmarkRoot
@@ -24,8 +21,6 @@ class BookmarkFragmentInteractorTest {
 
     private lateinit var interactor: BookmarkFragmentInteractor
 
-    private val bookmarkStore = spyk(BookmarkFragmentStore(BookmarkFragmentState(null)))
-    private val sharedViewModel: BookmarksSharedViewModel = mockk(relaxed = true)
     private val bookmarkController: DefaultBookmarkController = mockk(relaxed = true)
     private val metrics: MetricController = mockk(relaxed = true)
 
@@ -41,12 +36,8 @@ class BookmarkFragmentInteractorTest {
 
     @Before
     fun setup() {
-        every { bookmarkStore.dispatch(any()) } returns mockk()
-
         interactor =
             BookmarkFragmentInteractor(
-                bookmarkStore = bookmarkStore,
-                viewModel = sharedViewModel,
                 bookmarksController = bookmarkController,
                 metrics = metrics
             )
@@ -57,7 +48,7 @@ class BookmarkFragmentInteractorTest {
         interactor.onBookmarksChanged(tree)
 
         verify {
-            bookmarkStore.dispatch(BookmarkFragmentAction.Change(tree))
+            bookmarkController.handleBookmarkChanged(tree)
         }
     }
 
@@ -108,7 +99,7 @@ class BookmarkFragmentInteractorTest {
         interactor.select(item)
 
         verify {
-            bookmarkStore.dispatch(BookmarkFragmentAction.Select(item))
+            bookmarkController.handleBookmarkSelected(item)
         }
     }
 
@@ -117,7 +108,7 @@ class BookmarkFragmentInteractorTest {
         interactor.deselect(item)
 
         verify {
-            bookmarkStore.dispatch(BookmarkFragmentAction.Deselect(item))
+            bookmarkController.handleBookmarkDeselected(item)
         }
     }
 
@@ -126,15 +117,8 @@ class BookmarkFragmentInteractorTest {
         interactor.onAllBookmarksDeselected()
 
         verify {
-            bookmarkStore.dispatch(BookmarkFragmentAction.DeselectAll)
+            bookmarkController.handleAllBookmarksDeselected()
         }
-    }
-
-    @Test
-    fun `cannot select bookmark roots`() {
-        interactor.select(root)
-
-        verify { bookmarkStore wasNot called }
     }
 
     @Test
@@ -215,6 +199,15 @@ class BookmarkFragmentInteractorTest {
 
         verify {
             bookmarkController.handleBackPressed()
+        }
+    }
+
+    @Test
+    fun `request a sync`() {
+        interactor.onRequestSync()
+
+        verify {
+            bookmarkController.handleRequestSync()
         }
     }
 }
