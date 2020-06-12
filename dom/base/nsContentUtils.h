@@ -3041,6 +3041,8 @@ class nsContentUtils {
           nullptr,
       mozilla::dom::CustomElementDefinition* aDefinition = nullptr);
 
+  static bool AttemptLargeAllocationLoad(nsIHttpChannel* aChannel);
+
   /**
    * Appends all "document level" native anonymous content subtree roots for
    * aDocument to aElements.  Document level NAC subtrees are those created

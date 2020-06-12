@@ -811,6 +811,10 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
                        const nsAString& aPopupWindowName,
                        const nsAString& aPopupWindowFeatures);
 
+ private:
+  void ReportLargeAllocStatus();
+
+ public:
   void FlushPendingNotifications(mozilla::FlushType aType);
 
   // Outer windows only.

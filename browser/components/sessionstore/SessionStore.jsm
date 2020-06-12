@@ -511,18 +511,6 @@ var SessionStore = {
       }
     }
   },
-
-  /**
-   * Prepares to change the remoteness of the given browser, by ensuring that
-   * the local instance of session history is up-to-date.
-   */
-  async prepareToChangeRemoteness(aTab) {
-    await SessionStoreInternal.prepareToChangeRemoteness(aTab);
-  },
-
-  finishTabRemotenessChange(aTab, aSwitchId) {
-    SessionStoreInternal.finishTabRemotenessChange(aTab, aSwitchId);
-  },
 };
 
 // Freeze the SessionStore object. We don't want anyone to modify it.
@@ -3882,9 +3870,13 @@ var SessionStoreInternal = {
     let permanentKey = tab.linkedBrowser.permanentKey;
     let browser = tab.linkedBrowser;
 
+    browser.messageManager.sendAsyncMessage(
+      "SessionStore:prepareForProcessChange"
+    );
+
     // NOTE: This is currently the only async operation used, but this is likely
     // to change in the future.
-    await this.prepareToChangeRemoteness(browser);
+    await TabStateFlusher.flush(browser);
 
     // Now that we have flushed state, our loadArguments, etc. may have been
     // overwritten by multiple calls to navigateAndRestore. Load the most
@@ -3913,9 +3905,11 @@ var SessionStoreInternal = {
       // the loadArguments.
       newFrameloader: loadArguments.newFrameloader,
       remoteType: loadArguments.remoteType,
+      replaceBrowsingContext: loadArguments.replaceBrowsingContext,
       // Make sure that SessionStore knows that this restoration is due
       // to a navigation, as opposed to us restoring a closed window or tab.
       restoreContentReason: RESTORE_TAB_CONTENT_REASON.NAVIGATE_AND_RESTORE,
+      redirectLoadSwitchId: loadArguments.redirectLoadSwitchId,
     };
 
     if (historyIndex >= 0) {
@@ -3926,6 +3920,14 @@ var SessionStoreInternal = {
       );
     } else {
       options.loadArguments = loadArguments;
+
+      // If we're resuming a load which has been redirected from another
+      // process, record the history index which is currently being requested.
+      // It has to be offset by 1 to get back to native history indices from
+      // SessionStore history indicies.
+      if (loadArguments.redirectLoadSwitchId) {
+        loadArguments.redirectHistoryIndex = tabState.requestedIndex - 1;
+      }
     }
 
     // Need to reset restoring tabs.
@@ -4661,7 +4663,6 @@ var SessionStoreInternal = {
     let window = tab.ownerGlobal;
     let tabbrowser = window.gBrowser;
     let forceOnDemand = options.forceOnDemand;
-    let isRemotenessUpdate = options.isRemotenessUpdate;
 
     let willRestoreImmediately =
       options.restoreImmediately || tabbrowser.selectedBrowser == browser;
@@ -4791,12 +4792,7 @@ var SessionStoreInternal = {
       // restoreTab will get called again when the browser is instantiated.
       TAB_STATE_FOR_BROWSER.set(browser, TAB_STATE_NEEDS_RESTORE);
 
-      this._sendRestoreHistory(browser, {
-        tabData,
-        epoch,
-        loadArguments,
-        isRemotenessUpdate,
-      });
+      this._sendRestoreHistory(browser, { tabData, epoch, loadArguments });
 
       // This could cause us to ignore MAX_CONCURRENT_TAB_RESTORES a bit, but
       // it ensures each window will have its selected tab loaded.
@@ -4878,42 +4874,44 @@ var SessionStoreInternal = {
 
     this.markTabAsRestoring(aTab);
 
-    // If we aren't already updating the browser's remoteness, check if it's
-    // necessary.
-    let isRemotenessUpdate = aOptions.isRemotenessUpdate;
-    if (!isRemotenessUpdate) {
-      let newFrameloader = aOptions.newFrameloader;
-      if (aOptions.remoteType !== undefined) {
-        // We already have a selected remote type so we update to that.
-        isRemotenessUpdate = tabbrowser.updateBrowserRemoteness(browser, {
-          remoteType: aOptions.remoteType,
+    let newFrameloader = aOptions.newFrameloader;
+    let replaceBrowsingContext = aOptions.replaceBrowsingContext;
+    let redirectLoadSwitchId = aOptions.redirectLoadSwitchId;
+    let isRemotenessUpdate;
+    if (aOptions.remoteType !== undefined) {
+      // We already have a selected remote type so we update to that.
+      isRemotenessUpdate = tabbrowser.updateBrowserRemoteness(browser, {
+        remoteType: aOptions.remoteType,
+        newFrameloader,
+        replaceBrowsingContext,
+        redirectLoadSwitchId,
+      });
+    } else {
+      isRemotenessUpdate = tabbrowser.updateBrowserRemotenessByURL(
+        browser,
+        uri,
+        {
           newFrameloader,
-        });
-      } else {
-        isRemotenessUpdate = tabbrowser.updateBrowserRemotenessByURL(
-          browser,
-          uri,
-          {
-            newFrameloader,
-          }
-        );
-      }
+          replaceBrowsingContext,
+          redirectLoadSwitchId,
+        }
+      );
+    }
 
-      if (isRemotenessUpdate) {
-        // We updated the remoteness, so we need to send the history down again.
-        //
-        // Start a new epoch to discard all frame script messages relating to a
-        // previous epoch. All async messages that are still on their way to chrome
-        // will be ignored and don't override any tab data set when restoring.
-        let epoch = this.startNextEpoch(browser);
+    if (isRemotenessUpdate) {
+      // We updated the remoteness, so we need to send the history down again.
+      //
+      // Start a new epoch to discard all frame script messages relating to a
+      // previous epoch. All async messages that are still on their way to chrome
+      // will be ignored and don't override any tab data set when restoring.
+      let epoch = this.startNextEpoch(browser);
 
-        this._sendRestoreHistory(browser, {
-          tabData,
-          epoch,
-          loadArguments,
-          isRemotenessUpdate,
-        });
-      }
+      this._sendRestoreHistory(browser, {
+        tabData,
+        epoch,
+        loadArguments,
+        isRemotenessUpdate,
+      });
     }
 
     browser.messageManager.sendAsyncMessage("SessionStore:restoreTabContent", {
@@ -6016,55 +6014,6 @@ var SessionStoreInternal = {
     if (browser && browser.frameLoader) {
       browser.frameLoader.requestEpochUpdate(options.epoch);
     }
-  },
-
-  // Flush out session history state so that it can be used to restore the state
-  // into a new process in `finishTabRemotenessChange`.
-  //
-  // NOTE: This codepath is temporary while the Fission Session History rewrite
-  // is in process, and will be removed & replaced once that rewrite is
-  // complete. (bug 1645062)
-  async prepareToChangeRemoteness(aBrowser) {
-    aBrowser.messageManager.sendAsyncMessage(
-      "SessionStore:prepareForProcessChange"
-    );
-    await TabStateFlusher.flush(aBrowser);
-  },
-
-  // Handle finishing the remoteness change for a tab by restoring session
-  // history state into it, and resuming the ongoing network load.
-  //
-  // NOTE: This codepath is temporary while the Fission Session History rewrite
-  // is in process, and will be removed & replaced once that rewrite is
-  // complete. (bug 1645062)
-  finishTabRemotenessChange(aTab, aSwitchId) {
-    let window = aTab.ownerGlobal;
-    if (!window || !window.__SSi || window.closed) {
-      return;
-    }
-
-    let tabState = TabState.clone(aTab, TAB_CUSTOM_VALUES.get(aTab));
-    let options = {
-      restoreImmediately: true,
-      restoreContentReason: RESTORE_TAB_CONTENT_REASON.NAVIGATE_AND_RESTORE,
-      isRemotenessUpdate: true,
-      loadArguments: {
-        redirectLoadSwitchId: aSwitchId,
-        // As we're resuming a load which has been redirected from another
-        // process, record the history index which is currently being requested.
-        // It has to be offset by 1 to get back to native history indices from
-        // SessionStore history indicies.
-        redirectHistoryIndex: tabState.requestedIndex - 1,
-      },
-    };
-
-    // Need to reset restoring tabs.
-    if (TAB_STATE_FOR_BROWSER.has(aTab.linkedBrowser)) {
-      this._resetLocalTabRestoringState(aTab);
-    }
-
-    // Restore the state into the tab.
-    this.restoreTab(aTab, tabState, options);
   },
 };
 

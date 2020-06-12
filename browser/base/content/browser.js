@@ -1643,6 +1643,21 @@ function RedirectLoad(browser, data) {
     data.loadOptions.newFrameloader = true;
   }
 
+  if (data.loadOptions.reloadInFreshProcess) {
+    // Convert the fresh process load option into a large allocation remote type
+    // to use common processing from this point.
+    data.loadOptions.remoteType = E10SUtils.LARGE_ALLOCATION_REMOTE_TYPE;
+    data.loadOptions.newFrameloader = true;
+  } else if (browser.remoteType == E10SUtils.LARGE_ALLOCATION_REMOTE_TYPE) {
+    // If we're in a Large-Allocation process, we prefer switching back into a
+    // normal content process, as that way we can clean up the L-A process.
+    data.loadOptions.remoteType = E10SUtils.getRemoteTypeForURI(
+      data.loadOptions.uri,
+      gMultiProcessBrowser,
+      gFissionBrowser
+    );
+  }
+
   // We should only start the redirection if the browser window has finished
   // starting up. Otherwise, we should wait until the startup is done.
   if (gBrowserInit.delayedStartupFinished) {
@@ -5106,6 +5121,7 @@ var XULBrowserWindow = {
         aURI,
         aReferrerInfo,
         aTriggeringPrincipal,
+        false,
         null,
         aCsp
       );
@@ -5484,6 +5500,22 @@ var XULBrowserWindow = {
       return;
     }
     this.onStatusChange(gBrowser.webProgress, null, 0, aMessage);
+  },
+
+  navigateAndRestoreByIndex: function XWB_navigateAndRestoreByIndex(
+    aBrowser,
+    aIndex
+  ) {
+    let tab = gBrowser.getTabForBrowser(aBrowser);
+    if (tab) {
+      SessionStore.navigateAndRestore(tab, {}, aIndex);
+      return;
+    }
+
+    throw new Error(
+      "Trying to navigateAndRestore a browser which was " +
+        "not attached to this tabbrowser is unsupported"
+    );
   },
 };
 

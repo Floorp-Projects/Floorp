@@ -110,7 +110,7 @@ class nsFrameLoader final : public nsStubMutationObserver,
   // FrameLoaders.
   static already_AddRefed<nsFrameLoader> Recreate(Element* aOwner,
                                                   BrowsingContext* aContext,
-                                                  bool aIsRemote,
+                                                  const nsAString& aRemoteType,
                                                   bool aNetworkCreated,
                                                   bool aPreserveContext);
 
@@ -391,14 +391,6 @@ class nsFrameLoader final : public nsStubMutationObserver,
 
   void SetWillChangeProcess();
 
-  // Configure which remote process should be used to host the remote browser
-  // created in `TryRemoteBrowser`. This method _must_ be called before
-  // `TryRemoteBrowser`, and a script blocker must be on the stack.
-  //
-  // |aContentParent|, if set, must have the remote type |aRemoteType|.
-  void ConfigRemoteProcess(const nsAString& aRemoteType,
-                           mozilla::dom::ContentParent* aContentParent);
-
   void MaybeNotifyCrashed(mozilla::dom::BrowsingContext* aBrowsingContext,
                           mozilla::ipc::MessageChannel* aChannel);
 
@@ -406,8 +398,8 @@ class nsFrameLoader final : public nsStubMutationObserver,
 
  private:
   nsFrameLoader(mozilla::dom::Element* aOwner,
-                mozilla::dom::BrowsingContext* aBrowsingContext, bool aIsRemote,
-                bool aNetworkCreated);
+                mozilla::dom::BrowsingContext* aBrowsingContext,
+                const nsAString& aRemoteType, bool aNetworkCreated);
   ~nsFrameLoader();
 
   void SetOwnerContent(mozilla::dom::Element* aContent);

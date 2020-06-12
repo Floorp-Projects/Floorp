@@ -893,6 +893,12 @@ interface nsIDocShell : nsIDocShellTreeItem
   [infallible] attribute nsIDocShell_MetaViewportOverride metaViewportOverride;
 
   /**
+   * Returns `true` if this docshell was created due to a Large-Allocation
+   * header, and has not seen the initiating load yet.
+   */
+  [infallible] readonly attribute boolean awaitingLargeAlloc;
+
+  /**
    * Attribute that determines whether tracking protection is enabled.
    */
   attribute boolean useTrackingProtection;

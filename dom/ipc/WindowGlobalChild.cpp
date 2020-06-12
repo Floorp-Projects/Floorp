@@ -368,7 +368,6 @@ mozilla::ipc::IPCResult WindowGlobalChild::RecvMakeFrameLocal(
   RemotenessOptions options;
   options.mRemoteType.Assign(VoidString());
   options.mPendingSwitchID.Construct(aPendingSwitchId);
-  options.mSwitchingInProgressLoad = true;
   flo->ChangeRemoteness(options, IgnoreErrors());
   return IPC_OK();
 }

@@ -913,6 +913,25 @@ var E10SUtils = {
       return false;
     }
 
+    // If we are in a Large-Allocation process, and it wouldn't be content visible
+    // to change processes, we want to load into a new process so that we can throw
+    // this one out. We don't want to move into a new process if we have post data,
+    // because we would accidentally throw out that data.
+    let isOnlyToplevelBrowsingContext =
+      !aDocShell.browsingContext.parent &&
+      aDocShell.browsingContext.group.getToplevels().length == 1;
+    if (
+      !aHasPostData &&
+      remoteType == LARGE_ALLOCATION_REMOTE_TYPE &&
+      !aDocShell.awaitingLargeAlloc &&
+      isOnlyToplevelBrowsingContext
+    ) {
+      this.log().info(
+        "returning false to throw away large allocation process\n"
+      );
+      return false;
+    }
+
     // Allow history load if loaded in this process before.
     let requestedIndex = sessionHistory.legacySHistory.requestedIndex;
     if (requestedIndex >= 0) {
@@ -942,6 +961,7 @@ var E10SUtils = {
     aURI,
     aReferrerInfo,
     aTriggeringPrincipal,
+    aFreshProcess,
     aFlags,
     aCsp
   ) {
@@ -961,6 +981,7 @@ var E10SUtils = {
             Services.scriptSecurityManager.createNullPrincipal({})
         ),
         csp: aCsp ? this.serializeCSP(aCsp) : null,
+        reloadInFreshProcess: !!aFreshProcess,
       },
       historyIndex: sessionHistory.legacySHistory.requestedIndex,
     });
@@ -1068,4 +1089,10 @@ XPCOMUtils.defineLazyGetter(
       Services.scriptSecurityManager.getSystemPrincipal()
     );
   }
+);
+XPCOMUtils.defineLazyPreferenceGetter(
+  E10SUtils,
+  "rebuildFrameloadersOnRemotenessChange",
+  "fission.rebuild_frameloaders_on_remoteness_change",
+  false
 );
