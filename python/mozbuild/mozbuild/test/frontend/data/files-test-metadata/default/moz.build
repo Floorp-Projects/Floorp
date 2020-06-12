@@ -1,6 +1,0 @@
-XPCSHELL_TESTS_MANIFESTS += ['tests/xpcshell/xpcshell.ini']
-REFTEST_MANIFESTS += ['tests/reftests/reftest.list']
-
-EXTRA_JS_MODULES += [
-    'module.js',
-]

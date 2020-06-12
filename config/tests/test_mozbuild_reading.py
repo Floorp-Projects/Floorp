@@ -104,13 +104,6 @@ class TestMozbuildReading(unittest.TestCase):
                               "'%s' corresponds to no files in the tree.\n"
                               "Please update this entry." %
                               (p, ctx.main_path))
-            test_files = ctx['IMPACTED_TESTS'].files
-            for p in test_files:
-                if not pattern_exists(os.path.relpath(p.full_path, config.topsrcdir)):
-                    self.fail("The pattern '%s' in a dependent tests entry "
-                              "in '%s' corresponds to no files in the tree.\n"
-                              "Please update this entry." %
-                              (p, ctx.main_path))
 
 
 if __name__ == '__main__':
