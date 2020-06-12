@@ -157,11 +157,6 @@ child:
   // channel.
   async ReportSecurityMessage(nsString messageTag, nsString messageCategory);
 
-  // This message is sent to a child that has been redirected to another process.
-  // As a consequence, it should cleanup the channel listeners and remove the
-  // request from the loadGroup.
-  async CancelRedirected();
-
   // Tell child to delete channel (all IPDL deletes must be done from child to
   // avoid races: see bug 591708).
   async DeleteSelf();
