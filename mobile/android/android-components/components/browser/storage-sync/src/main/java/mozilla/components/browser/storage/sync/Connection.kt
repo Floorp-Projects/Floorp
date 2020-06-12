@@ -61,6 +61,7 @@ internal interface Connection : Closeable {
 /**
  * A singleton implementation of the [Connection] interface backed by the Rust Places library.
  */
+@Suppress("TooManyFunctions")
 internal object RustPlacesConnection : Connection {
     @GuardedBy("this")
     private var api: PlacesApi? = null
@@ -82,8 +83,9 @@ internal object RustPlacesConnection : Connection {
     }
 
     override fun getHandle(): Long {
+        val api = safeGetApi()
         check(api != null) { "must call init first" }
-        return api!!.getHandle()
+        return api.getHandle()
     }
 
     override fun reader(): PlacesReaderConnection = synchronized(this) {
@@ -92,40 +94,50 @@ internal object RustPlacesConnection : Connection {
     }
 
     override fun writer(): PlacesWriterConnection {
+        val api = safeGetApi()
         check(api != null) { "must call init first" }
-        return api!!.getWriter()
+        return api.getWriter()
     }
 
     override fun syncHistory(syncInfo: SyncAuthInfo) {
+        val api = safeGetApi()
         check(api != null) { "must call init first" }
-        val ping = api!!.syncHistory(syncInfo.into())
+        val ping = api.syncHistory(syncInfo.into())
         SyncTelemetry.processHistoryPing(ping)
     }
 
     override fun syncBookmarks(syncInfo: SyncAuthInfo) {
+        val api = safeGetApi()
         check(api != null) { "must call init first" }
-        val ping = api!!.syncBookmarks(syncInfo.into())
+        val ping = api.syncBookmarks(syncInfo.into())
         SyncTelemetry.processBookmarksPing(ping)
     }
 
     override fun importVisitsFromFennec(dbPath: String): JSONObject {
+        val api = safeGetApi()
         check(api != null) { "must call init first" }
-        return api!!.importVisitsFromFennec(dbPath)
+        return api.importVisitsFromFennec(dbPath)
     }
 
     override fun importBookmarksFromFennec(dbPath: String): JSONObject {
+        val api = safeGetApi()
         check(api != null) { "must call init first" }
-        return api!!.importBookmarksFromFennec(dbPath)
+        return api.importBookmarksFromFennec(dbPath)
     }
 
     override fun readPinnedSitesFromFennec(dbPath: String): List<BookmarkNode> {
+        val api = safeGetApi()
         check(api != null) { "must call init first" }
-        return api!!.importPinnedSitesFromFennec(dbPath).map { it.asBookmarkNode() }
+        return api.importPinnedSitesFromFennec(dbPath).map { it.asBookmarkNode() }
     }
 
     override fun close() = synchronized(this) {
         check(api != null) { "must call init first" }
         api!!.close()
         api = null
+    }
+
+    private fun safeGetApi(): PlacesApi? = synchronized(this) {
+        return this.api
     }
 }
