@@ -7,6 +7,7 @@
 #include "nsIOService.h"
 #include "nsInputStreamPump.h"
 #include "nsIStreamTransportService.h"
+#include "nsITransport.h"
 #include "nsIThreadRetargetableStreamListener.h"
 #include "nsThreadUtils.h"
 #include "nsCOMPtr.h"
@@ -319,14 +320,50 @@ nsInputStreamPump::AsyncRead(nsIStreamListener* listener, nsISupports* ctxt) {
              "nsInputStreamPump should be read from the "
              "main thread only.");
 
-  nsresult rv = NS_MakeAsyncNonBlockingInputStream(
-      mStream.forget(), getter_AddRefs(mAsyncStream), mCloseWhenDone, mSegSize,
-      mSegCount);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  //
+  // OK, we need to use the stream transport service if
+  //
+  // (1) the stream is blocking
+  // (2) the stream does not support nsIAsyncInputStream
+  //
+
+  bool nonBlocking;
+  nsresult rv = mStream->IsNonBlocking(&nonBlocking);
+  if (NS_FAILED(rv)) return rv;
+
+  if (nonBlocking) {
+    mAsyncStream = do_QueryInterface(mStream);
+    if (!mAsyncStream) {
+      rv = NonBlockingAsyncInputStream::Create(mStream.forget(),
+                                               getter_AddRefs(mAsyncStream));
+      if (NS_WARN_IF(NS_FAILED(rv))) return rv;
+    }
+    MOZ_ASSERT(mAsyncStream);
   }
 
-  MOZ_ASSERT(mAsyncStream);
+  if (!mAsyncStream) {
+    // ok, let's use the stream transport service to read this stream.
+    nsCOMPtr<nsIStreamTransportService> sts =
+        do_GetService(kStreamTransportServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsITransport> transport;
+    rv = sts->CreateInputTransport(mStream, mCloseWhenDone,
+                                   getter_AddRefs(transport));
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsIInputStream> wrapper;
+    rv = transport->OpenInputStream(0, mSegSize, mSegCount,
+                                    getter_AddRefs(wrapper));
+    if (NS_FAILED(rv)) return rv;
+
+    mAsyncStream = do_QueryInterface(wrapper, &rv);
+    if (NS_FAILED(rv)) return rv;
+  }
+
+  // release our reference to the original stream.  from this point forward,
+  // we only reference the "stream" via mAsyncStream.
+  mStream = nullptr;
 
   // mStreamOffset now holds the number of bytes currently read.
   mStreamOffset = 0;

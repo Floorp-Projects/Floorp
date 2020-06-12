@@ -306,15 +306,9 @@ extern nsresult NS_CloneInputStream(nsIInputStream* aSource,
  * The last step is to use nsIStreamTransportService and create a pipe in order
  * to expose a non-blocking async inputStream and read |aSource| data from
  * a separate thread.
- *
- * In case we need to create a pipe, |aCloseWhenDone| will be used to create the
- * inputTransport, |aFlags|, |aSegmentSize|, |asegmentCount| will be used to
- * open the inputStream. If true, the input stream will be closed after it has
- * been read. Read more in nsITransport.idl.
  */
 extern nsresult NS_MakeAsyncNonBlockingInputStream(
     already_AddRefed<nsIInputStream> aSource,
-    nsIAsyncInputStream** aAsyncInputStream, bool aCloseWhenDone = true,
-    uint32_t aFlags = 0, uint32_t aSegmentSize = 0, uint32_t aSegmentCount = 0);
+    nsIAsyncInputStream** aAsyncInputStream);
 
 #endif  // !nsStreamUtils_h__
