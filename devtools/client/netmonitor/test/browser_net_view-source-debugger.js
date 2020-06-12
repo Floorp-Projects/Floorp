@@ -18,6 +18,9 @@ add_task(async function() {
   // Set a higher panel height in order to get full CodeMirror content
   await pushPref("devtools.toolbox.footer.height", 400);
 
+  // Async stacks aren't on by default in all builds
+  await pushPref("javascript.options.asyncstack", true);
+
   const { tab, monitor, toolbox } = await initNetMonitor(POST_DATA_URL, {
     requestCount: 1,
   });
