@@ -52,10 +52,8 @@
       }
 
       let messageManager = window.getGroupMessageManager("browsers");
-      window.messageManager.addMessageListener("contextmenu", this);
 
       if (gMultiProcessBrowser) {
-        messageManager.addMessageListener("DOMWindowClose", this);
         messageManager.addMessageListener("Browser:Init", this);
       } else {
         this._outerWindowIDBrowserMap.set(
@@ -5217,10 +5215,6 @@
       let browser = aMessage.target;
 
       switch (aMessage.name) {
-        case "contextmenu": {
-          openContextMenu(aMessage);
-          break;
-        }
         case "Browser:Init": {
           let tab = this.getTabForBrowser(browser);
           if (!tab) {
@@ -5371,8 +5365,6 @@
       window.removeEventListener("framefocusrequested", this);
 
       if (gMultiProcessBrowser) {
-        window.messageManager.removeMessageListener("contextmenu", this);
-
         if (this._switcher) {
           this._switcher.destroy();
         }
