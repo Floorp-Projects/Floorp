@@ -386,6 +386,10 @@ namespace {
 mozilla::Atomic<uint64_t> gIDGenerator(0);
 }  // namespace
 
+static MOZ_ALWAYS_INLINE bool ShouldCaptureDebugInfo(JSContext* cx) {
+  return cx->options().asyncStack() || cx->realm()->isDebuggee();
+}
+
 class PromiseDebugInfo : public NativeObject {
  private:
   enum Slots {
@@ -475,7 +479,7 @@ class PromiseDebugInfo : public NativeObject {
     MOZ_ASSERT_IF(unwrappedRejectionStack,
                   promise->state() == JS::PromiseState::Rejected);
 
-    if (!JS::IsAsyncStackCaptureEnabledForRealm(cx)) {
+    if (!ShouldCaptureDebugInfo(cx)) {
       return;
     }
 
@@ -2251,7 +2255,7 @@ CreatePromiseObjectInternal(JSContext* cx, HandleObject proto /* = nullptr */,
   // Step 7.
   // Implicit, the handled flag is unset by default.
 
-  if (MOZ_LIKELY(!JS::IsAsyncStackCaptureEnabledForRealm(cx))) {
+  if (MOZ_LIKELY(!ShouldCaptureDebugInfo(cx))) {
     return promise;
   }
 
@@ -5156,6 +5160,8 @@ static MOZ_ALWAYS_INLINE bool IsPromiseThenOrCatchRetValImplicitlyUsed(
   // used explicitly in the script, the stack info is observable in devtools
   // and profilers.  We shouldn't apply the optimization not to allocate the
   // returned Promise object if the it's implicitly used by them.
+  //
+  // FIXME: Once bug 1280819 gets fixed, we can use ShouldCaptureDebugInfo.
   if (!cx->options().asyncStack()) {
     return false;
   }
