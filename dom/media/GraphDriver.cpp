@@ -858,7 +858,7 @@ AudioCallbackDriver::AutoInCallback::~AutoInCallback() {
 bool AudioCallbackDriver::CheckThreadIdChanged() {
   auto id = std::this_thread::get_id();
   if (id != mAudioThreadId) {
-    if (id != std::thread::id()) {
+    if (mAudioThreadId != std::thread::id()) {
       mAudioThreadId = id;
       return true;
     }
