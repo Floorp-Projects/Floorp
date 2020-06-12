@@ -10868,74 +10868,89 @@ RefPtr<MobileViewportManager> PresShell::GetMobileViewportManager() const {
   return mMobileViewportManager;
 }
 
-bool UseMobileViewportManager(PresShell* aPresShell, Document* aDocument) {
+Maybe<MobileViewportManager::ManagerType> UseMobileViewportManager(
+    PresShell* aPresShell, Document* aDocument) {
   // If we're not using APZ, we won't be able to zoom, so there is no
   // point in having an MVM.
   if (nsPresContext* presContext = aPresShell->GetPresContext()) {
     if (nsIWidget* widget = presContext->GetNearestWidget()) {
       if (!widget->AsyncPanZoomEnabled()) {
-        return false;
+        return Nothing();
       }
     }
   }
-  return StaticPrefs::apz_mvm_force_enabled() ||
-         nsLayoutUtils::ShouldHandleMetaViewport(aDocument) ||
-         nsLayoutUtils::AllowZoomingForDocument(aDocument);
+  if (nsLayoutUtils::ShouldHandleMetaViewport(aDocument)) {
+    return Some(MobileViewportManager::ManagerType::VisualAndMetaViewport);
+  }
+  if (StaticPrefs::apz_mvm_force_enabled() ||
+      nsLayoutUtils::AllowZoomingForDocument(aDocument)) {
+    return Some(MobileViewportManager::ManagerType::VisualViewportOnly);
+  }
+  return Nothing();
 }
 
 void PresShell::UpdateViewportOverridden(bool aAfterInitialization) {
-  // Determine if we require a MobileViewportManager. We need one any
-  // time we allow resolution zooming for a document, and any time we
-  // want to obey <meta name="viewport"> tags for it.
-  bool needMVM = UseMobileViewportManager(this, mDocument);
+  // Determine if we require a MobileViewportManager, and what kind if so. We
+  // need one any time we allow resolution zooming for a document, and any time
+  // we want to obey <meta name="viewport"> tags for it.
+  Maybe<MobileViewportManager::ManagerType> mvmType =
+      UseMobileViewportManager(this, mDocument);
 
-  if (needMVM == !!mMobileViewportManager) {
-    // Either we've need one and we've already got it, or we don't need one
-    // and don't have it. Either way, we're done.
+  if (mvmType.isNothing() && !mMobileViewportManager) {
+    // We don't need one and don't have it. So we're done.
     return;
   }
+  if (mvmType && mMobileViewportManager &&
+      *mvmType == mMobileViewportManager->GetManagerType()) {
+    // We need one and we have one of the correct type, so we're done.
+  }
 
-  if (needMVM) {
+  if (mMobileViewportManager) {
+    // We have one, but we need to either destroy it completely to replace it
+    // with another one of the correct type. So either way, let's destroy the
+    // one we have.
+    mMobileViewportManager->Destroy();
+    mMobileViewportManager = nullptr;
+    mMVMContext = nullptr;
+
+    ResetVisualViewportSize();
+
+    // After we clear out the MVM and the MVMContext, also reset the
+    // resolution to its pre-MVM value.
+    SetResolutionAndScaleTo(mDocument->GetSavedResolutionBeforeMVM(),
+                            ResolutionChangeOrigin::MainThreadRestore);
+
+    if (aAfterInitialization) {
+      // Force a reflow to our correct size by going back to the docShell
+      // and asking it to reassert its size. This is necessary because
+      // everything underneath the docShell, like the ViewManager, has been
+      // altered by the MobileViewportManager in an irreversible way.
+      nsDocShell* docShell =
+          static_cast<nsDocShell*>(GetPresContext()->GetDocShell());
+      int32_t width, height;
+      docShell->GetSize(&width, &height);
+      docShell->SetSize(width, height, false);
+    }
+  }
+
+  if (mvmType) {
+    // Let's create the MVM of the type that we need. At this point we shouldn't
+    // have one.
+    MOZ_ASSERT(!mMobileViewportManager);
+
     if (mPresContext->IsRootContentDocumentCrossProcess()) {
       // Store the resolution so we can restore to this resolution when
       // the MVM is destroyed.
       mDocument->SetSavedResolutionBeforeMVM(mResolution.valueOr(1.0f));
 
       mMVMContext = new GeckoMVMContext(mDocument, this);
-      mMobileViewportManager = new MobileViewportManager(mMVMContext);
+      mMobileViewportManager = new MobileViewportManager(mMVMContext, *mvmType);
 
       if (aAfterInitialization) {
         // Setting the initial viewport will trigger a reflow.
         mMobileViewportManager->SetInitialViewport();
       }
     }
-    return;
-  }
-
-  MOZ_ASSERT(mMobileViewportManager,
-             "Shouldn't reach this without a MobileViewportManager.");
-
-  mMobileViewportManager->Destroy();
-  mMobileViewportManager = nullptr;
-  mMVMContext = nullptr;
-
-  ResetVisualViewportSize();
-
-  // After we clear out the MVM and the MVMContext, also reset the
-  // resolution to its pre-MVM value.
-  SetResolutionAndScaleTo(mDocument->GetSavedResolutionBeforeMVM(),
-                          ResolutionChangeOrigin::MainThreadRestore);
-
-  if (aAfterInitialization) {
-    // Force a reflow to our correct size by going back to the docShell
-    // and asking it to reassert its size. This is necessary because
-    // everything underneath the docShell, like the ViewManager, has been
-    // altered by the MobileViewportManager in an irreversible way.
-    nsDocShell* docShell =
-        static_cast<nsDocShell*>(GetPresContext()->GetDocShell());
-    int32_t width, height;
-    docShell->GetSize(&width, &height);
-    docShell->SetSize(width, height, false);
   }
 }
 
