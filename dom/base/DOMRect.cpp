@@ -138,7 +138,16 @@ JSObject* DOMRectList::WrapObject(JSContext* cx,
   return mozilla::dom::DOMRectList_Binding::Wrap(cx, this, aGivenProto);
 }
 
+static double RoundFloat(double aValue) { return floor(aValue + 0.5); }
+
 void DOMRect::SetLayoutRect(const nsRect& aLayoutRect) {
-  auto pixelRect = CSSPixel::FromAppUnits(aLayoutRect);
-  SetRect(pixelRect.x, pixelRect.y, pixelRect.width, pixelRect.height);
+  double scale = 65536.0;
+  // Round to the nearest 1/scale units. We choose scale so it can be
+  // represented exactly by machine floating point.
+  double scaleInv = 1 / scale;
+  double t2pScaled = scale / AppUnitsPerCSSPixel();
+  double x = RoundFloat(aLayoutRect.x * t2pScaled) * scaleInv;
+  double y = RoundFloat(aLayoutRect.y * t2pScaled) * scaleInv;
+  SetRect(x, y, RoundFloat(aLayoutRect.XMost() * t2pScaled) * scaleInv - x,
+          RoundFloat(aLayoutRect.YMost() * t2pScaled) * scaleInv - y);
 }
