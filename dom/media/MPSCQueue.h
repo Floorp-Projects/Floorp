@@ -43,9 +43,11 @@ class MPSCQueue {
   // making it cheap and, more importantly, lock-free enough. This has been
   // measured to be cheap and reliable enough, but will be replaced in the
   // longer run.
+#if !defined(XP_WIN) && !defined(MOZ_WIDGET_ANDROID)
   static_assert(IsPowerOfTwo(sizeof(MPSCQueue<T>::Message)),
                 "MPSCQueue internal allocations must have a size that is a"
                 "power of two ");
+#endif
 
   // Creates a new MPSCQueue. Initially, the queue has a single sentinel node,
   // pointed to by both mHead and mTail.
