@@ -8,6 +8,7 @@
 #include "nsComponentManagerUtils.h"
 #include "nsMacDockSupport.h"
 #include "nsObjCExceptions.h"
+#include "nsNativeThemeColors.h"
 
 NS_IMPL_ISUPPORTS(nsMacDockSupport, nsIMacDockSupport, nsITaskbarProgress)
 
@@ -44,12 +45,12 @@ NS_IMPL_ISUPPORTS(nsMacDockSupport, nsIMacDockSupport, nsITaskbarProgress)
   [[NSColor colorWithDeviceWhite:0 alpha:0.1] setFill];
   [path fill];
 
-  // Draw a blue or gray fill (depending on graphite or not) for the progress part.
+  // Draw a fill in the control accent color for the progress part.
   NSRect progressFillRect = self.bounds;
   progressFillRect.size.width *= mFractionValue;
   [NSGraphicsContext saveGraphicsState];
   [NSBezierPath clipRect:progressFillRect];
-  [[NSColor keyboardFocusIndicatorColor] setFill];
+  [ControlAccentColor() setFill];
   [path fill];
   [NSGraphicsContext restoreGraphicsState];
 
