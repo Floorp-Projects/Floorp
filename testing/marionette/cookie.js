@@ -16,6 +16,12 @@ this.EXPORTED_SYMBOLS = ["cookie"];
 
 const IPV4_PORT_EXPR = /:\d+$/;
 
+const SAMESITE_MAP = new Map([
+  ["None", Ci.nsICookie.SAMESITE_NONE],
+  ["Lax", Ci.nsICookie.SAMESITE_LAX],
+  ["Strict", Ci.nsICookie.SAMESITE_STRICT],
+]);
+
 /** @namespace */
 this.cookie = {
   manager: Services.cookies,
@@ -83,6 +89,13 @@ cookie.fromJSON = function(json) {
       "Cookie expiry must be a positive integer"
     );
   }
+  if (typeof json.sameSite != "undefined") {
+    newCookie.sameSite = assert.in(
+      json.sameSite,
+      Array.from(SAMESITE_MAP.keys()),
+      "Cookie sameSite flag must be one of None, Lax, or Strict"
+    );
+  }
 
   return newCookie;
 };
@@ -140,6 +153,7 @@ cookie.add = function(
   } else {
     newCookie.session = false;
   }
+  newCookie.sameSite = SAMESITE_MAP.get(newCookie.sameSite || "None");
 
   let isIpAddress = false;
   try {
@@ -202,7 +216,7 @@ cookie.add = function(
       newCookie.session,
       newCookie.expiry,
       {} /* origin attributes */,
-      Ci.nsICookie.SAMESITE_NONE,
+      newCookie.sameSite,
       schemeType
     );
   } catch (e) {
@@ -266,6 +280,10 @@ cookie.iter = function*(host, currentPath = "/") {
         if (!cookie.isSession) {
           data.expiry = cookie.expiry;
         }
+
+        data.sameSite = [...SAMESITE_MAP].find(
+          ([, value]) => cookie.sameSite === value
+        )[0];
 
         yield data;
       }
