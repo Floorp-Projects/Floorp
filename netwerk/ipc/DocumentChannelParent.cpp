@@ -79,8 +79,7 @@ bool DocumentChannelParent::Init(dom::CanonicalBrowsingContext* aContext,
         self->mDocumentLoadListener = nullptr;
       },
       [self](DocumentLoadListener::OpenPromiseFailedType&& aRejectValue) {
-        if (aRejectValue.mStatus == NS_ERROR_DOCSHELL_DYING) {
-          Unused << self->SendDeleteSelf();
+        if (!self->CanSend()) {
           return;
         }
         Unused << self->SendDisconnectChildListeners(
