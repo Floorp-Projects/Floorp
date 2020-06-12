@@ -245,7 +245,7 @@ class AutoInParametersOfAsyncFunction;
 
 class MOZ_STACK_CLASS ParserSharedBase : public JS::CustomAutoRooter {
  public:
-  enum class Kind { Parser, BinASTParser };
+  enum class Kind { Parser };
 
   ParserSharedBase(JSContext* cx, CompilationInfo& compilationInfo, Kind kind);
   ~ParserSharedBase();

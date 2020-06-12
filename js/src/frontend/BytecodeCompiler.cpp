@@ -799,7 +799,6 @@ static bool CompileLazyFunctionImpl(JSContext* cx, Handle<BaseScript*> lazy,
   // compiled, because compilation requires full information about the
   // function's immediately enclosing scope.
   MOZ_ASSERT(lazy->isReadyForDelazification());
-  MOZ_ASSERT(!lazy->isBinAST());
 
   AutoAssertReportedException assertException(cx);
   Rooted<JSFunction*> fun(cx, lazy->function());
