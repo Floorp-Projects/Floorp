@@ -6305,18 +6305,14 @@ bool CallIRGenerator::getTemplateObjectForScripted(HandleFunction calleeFunc,
     }
   }
 
-  JSObject* thisObject =
+  PlainObject* thisObject =
       CreateThisForFunction(cx_, calleeFunc, newTarget, TenuredObject);
   if (!thisObject) {
     return false;
   }
 
   MOZ_ASSERT(thisObject->nonCCWRealm() == calleeFunc->realm());
-
-  if (thisObject->is<PlainObject>()) {
-    result.set(thisObject);
-  }
-
+  result.set(thisObject);
   return true;
 }
 
