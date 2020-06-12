@@ -21,6 +21,9 @@ exclude: true
   or Service Worker that created the notification.
 - Removed deprecated `WebExtensionController.setTabDelegate` and `WebExtensionController.getTabDelegate`
   APIs ([bug 1618987]({{bugzilla}}1618987)).
+- ⚠️  [`RuntimeTelemetry#getSnapshots`][68.10] is removed after deprecation.
+  Use Glean to handle Gecko telemetry.
+  ([bug 1644447]({{bugzilla}}1644447))
 
 [79.1]: {{javadoc_uri}}/WebExtension.TabDelegate.html#onOpenOptionsPage-org.mozilla.geckoview.WebExtension-
 [79.2]: {{javadoc_uri}}/WebNotification.html#source
@@ -724,4 +727,4 @@ exclude: true
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: f395ea7c21fe233e4e95d28f255910bcde75dc91
+[api-version]: 31b623383bf4311efa4e1cbb5f2a2b4bf7ce5c50

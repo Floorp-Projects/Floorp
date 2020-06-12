@@ -516,7 +516,6 @@ package org.mozilla.geckoview {
     method @UiThread @Nullable public File getProfileDir();
     method @AnyThread @NonNull public GeckoRuntimeSettings getSettings();
     method @UiThread @NonNull public StorageController getStorageController();
-    method @UiThread @NonNull public RuntimeTelemetry getTelemetry();
     method @UiThread @NonNull public WebExtensionController getWebExtensionController();
     method @UiThread @Nullable public WebNotificationDelegate getWebNotificationDelegate();
     method @UiThread @NonNull public WebPushController getWebPushController();
@@ -1375,7 +1374,7 @@ package org.mozilla.geckoview {
   }
 
   public final class RuntimeTelemetry {
-    method @Deprecated @AnyThread @NonNull public GeckoResult<JSONObject> getSnapshots(boolean);
+    ctor protected RuntimeTelemetry();
   }
 
   public static interface RuntimeTelemetry.Delegate {
