@@ -31,8 +31,12 @@ using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::layers;
 
-MobileViewportManager::MobileViewportManager(MVMContext* aContext)
-    : mContext(aContext), mIsFirstPaint(false), mPainted(false) {
+MobileViewportManager::MobileViewportManager(MVMContext* aContext,
+                                             ManagerType aType)
+    : mContext(aContext),
+      mManagerType(aType),
+      mIsFirstPaint(false),
+      mPainted(false) {
   MOZ_ASSERT(mContext);
 
   MVM_LOG("%p: creating with context %p\n", this, mContext.get());

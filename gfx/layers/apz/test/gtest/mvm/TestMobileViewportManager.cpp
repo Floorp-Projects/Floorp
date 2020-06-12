@@ -137,7 +137,9 @@ class MVMTester : public ::testing::Test {
  public:
   MVMTester()
       : mMVMContext(new MockMVMContext()),
-        mMVM(new MobileViewportManager(mMVMContext)) {
+        mMVM(new MobileViewportManager(
+            mMVMContext,
+            MobileViewportManager::ManagerType::VisualAndMetaViewport)) {
     mMVMContext->SetMVM(mMVM.get());
   }
 
