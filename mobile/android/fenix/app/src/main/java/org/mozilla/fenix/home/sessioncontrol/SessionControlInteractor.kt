@@ -88,6 +88,11 @@ interface CollectionInteractor {
      * @param expand True if the given tab collection should be expanded or collapse if false.
      */
     fun onToggleCollectionExpanded(collection: TabCollection, expand: Boolean)
+
+    /**
+     * Opens the collection creator
+     */
+    fun onAddTabsToCollectionTapped()
 }
 
 /**
@@ -217,6 +222,10 @@ class SessionControlInteractor(
 
     override fun onToggleCollectionExpanded(collection: TabCollection, expand: Boolean) {
         controller.handleToggleCollectionExpanded(collection, expand)
+    }
+
+    override fun onAddTabsToCollectionTapped() {
+        controller.handleCreateCollection()
     }
 
     override fun onCloseTip(tip: Tip) {

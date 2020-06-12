@@ -8,7 +8,6 @@ import android.content.Context
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.annotation.LayoutRes
-import androidx.annotation.StringRes
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
@@ -19,7 +18,7 @@ import org.mozilla.fenix.home.OnboardingState
 import org.mozilla.fenix.home.Tab
 import org.mozilla.fenix.home.sessioncontrol.viewholders.CollectionHeaderViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.CollectionViewHolder
-import org.mozilla.fenix.home.sessioncontrol.viewholders.NoContentMessageViewHolder
+import org.mozilla.fenix.home.sessioncontrol.viewholders.NoCollectionsMessageViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.PrivateBrowsingDescriptionViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.TabInCollectionViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.TopSiteViewHolder
@@ -42,10 +41,7 @@ sealed class AdapterItem(@LayoutRes val viewType: Int) {
         ButtonTipViewHolder.LAYOUT_ID)
     data class TopSiteList(val topSites: List<TopSite>) : AdapterItem(TopSiteViewHolder.LAYOUT_ID)
     object PrivateBrowsingDescription : AdapterItem(PrivateBrowsingDescriptionViewHolder.LAYOUT_ID)
-    data class NoContentMessage(
-        @StringRes val header: Int,
-        @StringRes val description: Int
-    ) : AdapterItem(NoContentMessageViewHolder.LAYOUT_ID)
+    object NoCollectionsMessage : AdapterItem(NoCollectionsMessageViewHolder.LAYOUT_ID)
 
     object CollectionHeader : AdapterItem(CollectionHeaderViewHolder.LAYOUT_ID)
     data class CollectionItem(
@@ -123,7 +119,7 @@ class SessionControlAdapter(
             ButtonTipViewHolder.LAYOUT_ID -> ButtonTipViewHolder(view, interactor)
             TopSiteViewHolder.LAYOUT_ID -> TopSiteViewHolder(view, interactor)
             PrivateBrowsingDescriptionViewHolder.LAYOUT_ID -> PrivateBrowsingDescriptionViewHolder(view, interactor)
-            NoContentMessageViewHolder.LAYOUT_ID -> NoContentMessageViewHolder(view)
+            NoCollectionsMessageViewHolder.LAYOUT_ID -> NoCollectionsMessageViewHolder(view, interactor)
             CollectionHeaderViewHolder.LAYOUT_ID -> CollectionHeaderViewHolder(view)
             CollectionViewHolder.LAYOUT_ID -> CollectionViewHolder(view, interactor)
             TabInCollectionViewHolder.LAYOUT_ID -> TabInCollectionViewHolder(view, interactor, differentLastItem = true)
@@ -154,10 +150,6 @@ class SessionControlAdapter(
             }
             is TopSiteViewHolder -> {
                 holder.bind((item as AdapterItem.TopSiteList).topSites)
-            }
-            is NoContentMessageViewHolder -> {
-                val (header, description) = item as AdapterItem.NoContentMessage
-                holder.bind(header, description)
             }
             is CollectionViewHolder -> {
                 val (collection, expanded) = item as AdapterItem.CollectionItem

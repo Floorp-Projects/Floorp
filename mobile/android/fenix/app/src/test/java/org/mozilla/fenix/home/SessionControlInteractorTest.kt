@@ -92,4 +92,10 @@ class SessionControlInteractorTest {
         interactor.onToggleCollectionExpanded(collection, true)
         verify { controller.handleToggleCollectionExpanded(collection, true) }
     }
+
+    @Test
+    fun onAddTabsToCollection() {
+        interactor.onAddTabsToCollectionTapped()
+        verify { controller.handleCreateCollection() }
+    }
 }

@@ -120,6 +120,11 @@ interface SessionControlController {
     fun handleToggleCollectionExpanded(collection: TabCollection, expand: Boolean)
 
     fun handleCloseTip(tip: Tip)
+
+    /**
+     * @see [CollectionInteractor.onAddTabsToCollectionTapped]
+     */
+    fun handleCreateCollection()
 }
 
 @SuppressWarnings("TooManyFunctions", "LargeClass")
@@ -299,6 +304,10 @@ class DefaultSessionControlController(
             selectedTabCollectionId = selectedTabCollectionId ?: -1
         )
         navController.nav(R.id.homeFragment, directions)
+    }
+
+    override fun handleCreateCollection() {
+        showCollectionCreationFragment(step = SaveCollectionStep.SelectTabs)
     }
 
     private fun showShareFragment(data: List<ShareData>) {

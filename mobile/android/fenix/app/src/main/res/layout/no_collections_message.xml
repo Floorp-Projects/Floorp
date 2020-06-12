@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/no_collections_wrapper"
+    android:background="@drawable/empty_session_control_background"
+    android:layout_marginBottom="12dp"
+    android:padding="16dp"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <TextView
+        android:id="@+id/no_collections_header"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/no_collections_header1"
+        tools:drawableEnd="@drawable/ic_tab_collection"
+        android:textAppearance="@style/HeaderTextStyle"
+        android:textSize="16sp"
+        app:fontFamily="@font/metropolis_semibold" />
+
+    <TextView
+        android:id="@+id/no_collections_description"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:text="@string/no_collections_description1"
+        android:textColor="?primaryText"
+        android:textSize="14sp"
+        android:textAlignment="viewStart"
+        app:fontFamily="@font/metropolis_medium" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/add_tabs_to_collections_button"
+        style="@style/PositiveButton"
+        app:icon="@drawable/ic_tab_collection"
+        android:text="@string/tabs_menu_save_to_collection1"
+        android:layout_marginTop="8dp"/>
+</LinearLayout>

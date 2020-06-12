@@ -19,11 +19,6 @@ import org.mozilla.fenix.home.Mode
 import org.mozilla.fenix.home.OnboardingState
 import org.mozilla.fenix.components.tips.Tip
 
-val noCollectionMessage = AdapterItem.NoContentMessage(
-    R.string.no_collections_header1,
-    R.string.no_collections_description1
-)
-
 // This method got a little complex with the addition of the tab tray feature flag
 // When we remove the tabs from the home screen this will get much simpler again.
 @SuppressWarnings("LongParameterList", "ComplexMethod")
@@ -43,7 +38,7 @@ private fun normalModeAdapterItems(
 
     if (collections.isEmpty()) {
         items.add(AdapterItem.CollectionHeader)
-        items.add(noCollectionMessage)
+        items.add(AdapterItem.NoCollectionsMessage)
     } else {
         showCollections(collections, expandedCollections, items)
     }

@@ -24,10 +24,13 @@ import org.junit.Before
 import org.junit.Test
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
+import org.mozilla.fenix.R
+import org.mozilla.fenix.collections.SaveCollectionStep
 import org.mozilla.fenix.components.TabCollectionStorage
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.home.sessioncontrol.DefaultSessionControlController
 import org.mozilla.fenix.settings.SupportUtils
 import mozilla.components.feature.tab.collections.Tab as ComponentTab
@@ -203,5 +206,12 @@ class DefaultSessionControlControllerTest {
         val collection: TabCollection = mockk(relaxed = true)
         controller.handleToggleCollectionExpanded(collection, true)
         verify { fragmentStore.dispatch(HomeFragmentAction.CollectionExpanded(collection, true)) }
+    }
+
+    @Test
+    fun handleCreateCollection() {
+        controller.handleCreateCollection()
+        val directions = HomeFragmentDirections.actionGlobalCollectionCreationFragment(saveCollectionStep = SaveCollectionStep.SelectTabs)
+        verify { navController.nav(R.id.homeFragment, directions) }
     }
 }
