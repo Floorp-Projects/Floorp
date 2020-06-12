@@ -747,13 +747,6 @@ child:
     async GMPsChanged(GMPCapabilityData[] capabilities);
 
 
-    /**
-     * Sending an activate message moves focus to the child.
-     */
-    async Activate(PBrowser aTab);
-
-    async Deactivate(PBrowser aTab);
-
     async PParentToChildStream();
 
     async ProvideAnonymousTemporaryFile(uint64_t aID, FileDescOrError aFD);

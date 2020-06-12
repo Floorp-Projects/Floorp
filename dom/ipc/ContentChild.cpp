@@ -3240,16 +3240,6 @@ bool ContentChild::DeallocPSessionStorageObserverChild(
   return true;
 }
 
-mozilla::ipc::IPCResult ContentChild::RecvActivate(PBrowserChild* aTab) {
-  BrowserChild* tab = static_cast<BrowserChild*>(aTab);
-  return tab->RecvActivate();
-}
-
-mozilla::ipc::IPCResult ContentChild::RecvDeactivate(PBrowserChild* aTab) {
-  BrowserChild* tab = static_cast<BrowserChild*>(aTab);
-  return tab->RecvDeactivate();
-}
-
 mozilla::ipc::IPCResult ContentChild::RecvProvideAnonymousTemporaryFile(
     const uint64_t& aID, const FileDescOrError& aFDOrError) {
   mozilla::UniquePtr<AnonymousTemporaryFileCallback> callback;
