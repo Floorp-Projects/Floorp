@@ -54,6 +54,9 @@ for patch in \
  suppress-warnings.diff \
  bug-1198952-workaround-make-3.82-bug.diff \
  bug-1433303-minimize-subtags.diff \
+ bug-1636984-alias-append-items-sink.diff \
+ bug-1636984-display-name-fractional-seconds.diff \
+ bug-1636984-append-item-dayperiod-fractional-seconds.diff \
 ; do
   echo "Applying local patch $patch"
   patch -d ${icu_dir}/../../ -p1 --no-backup-if-mismatch < ${icu_dir}/../icu-patches/$patch
