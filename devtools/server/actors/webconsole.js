@@ -778,7 +778,9 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
             break;
           }
           if (!this.contentProcessListener) {
-            this.contentProcessListener = new ContentProcessListener(this);
+            this.contentProcessListener = new ContentProcessListener(
+              this.onConsoleAPICall
+            );
           }
           startedListeners.push(event);
           break;
