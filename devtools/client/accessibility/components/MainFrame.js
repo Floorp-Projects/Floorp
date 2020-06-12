@@ -100,7 +100,7 @@ class MainFrame extends Component {
       "can-be-disabled-change": this.onCanBeDisabledChange,
     });
     this.props.startListeningForAccessibilityEvents({
-      "document-ready": this.resetAccessibility,
+      "top-level-document-ready": this.resetAccessibility,
     });
     window.addEventListener("resize", this.onPanelWindowResize, true);
   }
@@ -115,7 +115,7 @@ class MainFrame extends Component {
       "can-be-disabled-change": this.onCanBeDisabledChange,
     });
     this.props.stopListeningForAccessibilityEvents({
-      "document-ready": this.resetAccessibility,
+      "top-level-document-ready": this.resetAccessibility,
     });
     window.removeEventListener("resize", this.onPanelWindowResize, true);
   }
