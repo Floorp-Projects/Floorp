@@ -29,8 +29,6 @@
 #include "nsIContent.h"
 #include "nsIContentInlines.h"
 #include "mozilla/dom/Document.h"
-#include "mozilla/dom/PerformanceTiming.h"
-#include "mozilla/dom/PerformanceMainThread.h"
 #include "nsIURI.h"
 #include "nsNetUtil.h"
 #include "nsContentUtils.h"
@@ -824,48 +822,10 @@ nsresult Loader::CheckContentPolicy(nsIPrincipal* aLoadingPrincipal,
   return NS_OK;
 }
 
-void Loader::MaybeNotifyOfResourceTiming(SheetLoadData& aData) {
-  SheetLoadDataHashKey key(aData);
-  if (!mLoadsPerformed.EnsureInserted(key)) {
-    // We've already reported this subresource load.
-    return;
-  }
-
-  if (!mDocument) {
-    // No document means no performance object to report to.
-    return;
-  }
-
-  nsPIDOMWindowInner* win = mDocument->GetInnerWindow();
-  if (!win) {
-    return;
-  }
-
-  auto* perf = static_cast<dom::PerformanceMainThread*>(win->GetPerformance());
-  if (!perf) {
-    return;
-  }
-
-  // If any ancestor is cross-origin, then we don't report it, see
-  // mIsCrossOriginNoCORS and so.
-  for (auto* parent = aData.mSheet->GetParentSheet(); parent;
-       parent = parent->GetParentSheet()) {
-    if (parent->GetCORSMode() == CORS_NONE &&
-        !aData.mTriggeringPrincipal->Subsumes(parent->Principal())) {
-      return;
-    }
-  }
-
-  nsLiteralString initiatorType = aData.mSheet->GetParentSheet()
-                                      ? NS_LITERAL_STRING("css")
-                                      : NS_LITERAL_STRING("link");
-  nsAutoCString entryName;
-  aData.mSheet->GetOriginalURI()->GetSpec(entryName);
-  auto data = MakeUnique<dom::PerformanceTimingData>(nullptr, nullptr, 0);
-  data->InitializeForMemoryCacheHit();
-  perf->AddRawEntry(std::move(data), initiatorType,
-                    NS_ConvertUTF8toUTF16(entryName));
+void Loader::DidHitCompleteSheetCache(SheetLoadData& aData) {
+  mLoadsPerformed.PutEntry(SheetLoadDataHashKey(aData));
 }
+
 /**
  * CreateSheet() creates a StyleSheet object for the given URI.
  *
@@ -1345,9 +1305,6 @@ nsresult Loader::LoadSheet(SheetLoadData& aLoadData, SheetState aSheetState) {
         // mBlockResourceTiming.  If that is set then we too are such a
         // sub-resource and so we set the flag on ourself too to propagate it
         // on down.
-        //
-        // If you add more conditions here make sure to add them to
-        // MaybeNotifyResourceTiming too.
         if (aLoadData.mParentData->mIsCrossOriginNoCORS ||
             aLoadData.mParentData->mBlockResourceTiming) {
           // Set a flag so any other stylesheet triggered by this one will
@@ -1729,7 +1686,7 @@ Result<Loader::LoadSheetResult, nsresult> Loader::LoadStyleLink(
       aInfo.mReferrerInfo, context);
   if (state == SheetState::Complete) {
     LOG(("  Sheet already complete: 0x%p", sheet.get()));
-    MaybeNotifyOfResourceTiming(*data);
+    DidHitCompleteSheetCache(*data);
     if (aObserver || !mObservers.IsEmpty() || aInfo.mContent) {
       rv = PostLoadEvent(std::move(data));
       if (NS_FAILED(rv)) {
@@ -1885,7 +1842,7 @@ nsresult Loader::LoadChildSheet(StyleSheet& aParentSheet,
 
   if (state == SheetState::Complete) {
     LOG(("  Sheet already complete"));
-    MaybeNotifyOfResourceTiming(*data);
+    DidHitCompleteSheetCache(*data);
     // We're completely done.  No need to notify, even, since the
     // @import rule addition/modification will trigger the right style
     // changes automatically.
@@ -1975,7 +1932,7 @@ Result<RefPtr<StyleSheet>, nsresult> Loader::InternalLoadNonDocumentSheet(
       mDocument);
   if (state == SheetState::Complete) {
     LOG(("  Sheet already complete"));
-    MaybeNotifyOfResourceTiming(*data);
+    DidHitCompleteSheetCache(*data);
     if (aObserver || !mObservers.IsEmpty()) {
       rv = PostLoadEvent(std::move(data));
       if (NS_FAILED(rv)) {
