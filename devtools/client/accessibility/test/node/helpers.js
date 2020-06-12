@@ -103,6 +103,7 @@ function testCheck(wrapper, props) {
   const container = wrapper.childAt(0);
   expect(container.hasClass("accessibility-check")).toBe(true);
   expect(container.prop("role")).toBe("presentation");
+  expect(container.prop("tabIndex")).toBe("-1");
   expect(wrapper.props()).toMatchObject(props);
 
   const localized = wrapper.find(FluentReact.Localized);

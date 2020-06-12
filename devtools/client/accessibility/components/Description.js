@@ -106,15 +106,15 @@ class Description extends Component {
     }
 
     return div(
-      { className: "description", role: "presentation" },
+      { className: "description", role: "presentation", tabIndex: "-1" },
       div(
-        { className: "general", role: "presentation" },
+        { className: "general", role: "presentation", tabIndex: "-1" },
         img({
           src: "chrome://devtools/skin/images/accessibility.svg",
           alt: L10N.getStr("accessibility.logo"),
         }),
         div(
-          { role: "presentation" },
+          { role: "presentation", tabIndex: "-1" },
           LearnMoreLink({
             href:
               A11Y_LEARN_MORE_LINK +
