@@ -17,7 +17,7 @@ import mozilla.components.lib.state.Store
  * @property origin Site of the saved login
  * @property username Username that's saved for this site
  * @property password Password that's saved for this site
- *  @property timeLastUsed Time of last use in milliseconds from the unix epoch.
+ * @property timeLastUsed Time of last use in milliseconds from the unix epoch.
  */
 @Parcelize
 data class SavedLogin(
