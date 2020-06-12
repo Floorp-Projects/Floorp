@@ -259,8 +259,6 @@ class nsDocumentEncoder : public nsIDocumentEncoder {
 
   // This serializes the content of aNode.
   nsresult SerializeRangeToString(const nsRange* aRange);
-  nsresult SerializeRangeNodes(const nsRange* aRange, nsINode* aNode,
-                               int32_t aDepth);
   nsresult SerializeRangeContextStart(const nsTArray<nsINode*>& aAncestorArray);
   nsresult SerializeRangeContextEnd();
 
@@ -376,7 +374,7 @@ class nsDocumentEncoder : public nsIDocumentEncoder {
                                 nsINode* aFixupNode = nullptr) const;
 
     nsresult SerializeToStringRecursive(nsINode* aNode, bool aDontSerializeRoot,
-                                        uint32_t aMaxLength = 0);
+                                        uint32_t aMaxLength = 0) const;
 
     nsresult SerializeNodeEnd(nsINode& aOriginalNode,
                               nsINode* aFixupNode = nullptr) const;
@@ -409,6 +407,9 @@ class nsDocumentEncoder : public nsIDocumentEncoder {
           mNodeSerializer{aNodeSerializer} {}
 
     void Initialize();
+
+    nsresult SerializeRangeNodes(const nsRange* aRange, nsINode* aNode,
+                                 int32_t aDepth);
 
     RangeBoundariesInclusiveAncestorsAndOffsets
         mRangeBoundariesInclusiveAncestorsAndOffsets;
@@ -840,7 +841,7 @@ nsresult nsDocumentEncoder::NodeSerializer::SerializeNodeEnd(
 }
 
 nsresult nsDocumentEncoder::NodeSerializer::SerializeToStringRecursive(
-    nsINode* aNode, bool aDontSerializeRoot, uint32_t aMaxLength) {
+    nsINode* aNode, bool aDontSerializeRoot, uint32_t aMaxLength) const {
   uint32_t outputLength{0};
   nsresult rv = mSerializer->GetOutputLength(outputLength);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -937,9 +938,8 @@ nsresult nsDocumentEncoder::NodeSerializer::SerializeToStringIterative(
 
 static bool IsTextNode(nsINode* aNode) { return aNode && aNode->IsText(); }
 
-nsresult nsDocumentEncoder::SerializeRangeNodes(const nsRange* const aRange,
-                                                nsINode* const aNode,
-                                                const int32_t aDepth) {
+nsresult nsDocumentEncoder::RangeSerializer::SerializeRangeNodes(
+    const nsRange* const aRange, nsINode* const aNode, const int32_t aDepth) {
   nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
   NS_ENSURE_TRUE(content, NS_ERROR_FAILURE);
 
@@ -953,17 +953,15 @@ nsresult nsDocumentEncoder::SerializeRangeNodes(const nsRange* const aRange,
   nsCOMPtr<nsIContent> startNode, endNode;
   {
     auto& inclusiveAncestorsOfStart =
-        mRangeSerializer.mRangeBoundariesInclusiveAncestorsAndOffsets
-            .mInclusiveAncestorsOfStart;
+        mRangeBoundariesInclusiveAncestorsAndOffsets.mInclusiveAncestorsOfStart;
     auto& inclusiveAncestorsOfEnd =
-        mRangeSerializer.mRangeBoundariesInclusiveAncestorsAndOffsets
-            .mInclusiveAncestorsOfEnd;
-    int32_t start = mRangeSerializer.mStartRootIndex - aDepth;
+        mRangeBoundariesInclusiveAncestorsAndOffsets.mInclusiveAncestorsOfEnd;
+    int32_t start = mStartRootIndex - aDepth;
     if (start >= 0 && (uint32_t)start <= inclusiveAncestorsOfStart.Length()) {
       startNode = inclusiveAncestorsOfStart[start];
     }
 
-    int32_t end = mRangeSerializer.mEndRootIndex - aDepth;
+    int32_t end = mEndRootIndex - aDepth;
     if (end >= 0 && (uint32_t)end <= inclusiveAncestorsOfEnd.Length()) {
       endNode = inclusiveAncestorsOfEnd[end];
     }
@@ -991,17 +989,17 @@ nsresult nsDocumentEncoder::SerializeRangeNodes(const nsRange* const aRange,
       rv = mNodeSerializer.SerializeNodeEnd(*aNode);
       NS_ENSURE_SUCCESS(rv, rv);
     } else {
-      if (aNode != mRangeSerializer.mClosestCommonInclusiveAncestorOfRange) {
-        if (mRangeSerializer.mRangeNodeContext.IncludeInContext(aNode)) {
-          // halt the incrementing of mRangeSerializer.mContextInfoDepth.  This
+      if (aNode != mClosestCommonInclusiveAncestorOfRange) {
+        if (mRangeNodeContext.IncludeInContext(aNode)) {
+          // halt the incrementing of mContextInfoDepth.  This
           // is so paste client will include this node in paste.
-          mRangeSerializer.mHaltRangeHint = true;
+          mHaltRangeHint = true;
         }
-        if ((startNode == content) && !mRangeSerializer.mHaltRangeHint) {
-          ++mRangeSerializer.mContextInfoDepth.mStart;
+        if ((startNode == content) && !mHaltRangeHint) {
+          ++mContextInfoDepth.mStart;
         }
-        if ((endNode == content) && !mRangeSerializer.mHaltRangeHint) {
-          ++mRangeSerializer.mContextInfoDepth.mEnd;
+        if ((endNode == content) && !mHaltRangeHint) {
+          ++mContextInfoDepth.mEnd;
         }
 
         // serialize the start of this node
@@ -1010,23 +1008,20 @@ nsresult nsDocumentEncoder::SerializeRangeNodes(const nsRange* const aRange,
       }
 
       const auto& inclusiveAncestorsOffsetsOfStart =
-          mRangeSerializer.mRangeBoundariesInclusiveAncestorsAndOffsets
+          mRangeBoundariesInclusiveAncestorsAndOffsets
               .mInclusiveAncestorsOffsetsOfStart;
       const auto& inclusiveAncestorsOffsetsOfEnd =
-          mRangeSerializer.mRangeBoundariesInclusiveAncestorsAndOffsets
+          mRangeBoundariesInclusiveAncestorsAndOffsets
               .mInclusiveAncestorsOffsetsOfEnd;
       // do some calculations that will tell us which children of this
       // node are in the range.
       int32_t startOffset = 0, endOffset = -1;
-      if (startNode == content && mRangeSerializer.mStartRootIndex >= aDepth) {
+      if (startNode == content && mStartRootIndex >= aDepth) {
         startOffset =
-            inclusiveAncestorsOffsetsOfStart[mRangeSerializer.mStartRootIndex -
-                                             aDepth];
+            inclusiveAncestorsOffsetsOfStart[mStartRootIndex - aDepth];
       }
-      if (endNode == content && mRangeSerializer.mEndRootIndex >= aDepth) {
-        endOffset =
-            inclusiveAncestorsOffsetsOfEnd[mRangeSerializer.mEndRootIndex -
-                                           aDepth];
+      if (endNode == content && mEndRootIndex >= aDepth) {
+        endOffset = inclusiveAncestorsOffsetsOfEnd[mEndRootIndex - aDepth];
       }
       // generated content will cause offset values of -1 to be returned.
       uint32_t childCount = content->GetChildCount();
@@ -1070,7 +1065,7 @@ nsresult nsDocumentEncoder::SerializeRangeNodes(const nsRange* const aRange,
       }
 
       // serialize the end of this node
-      if (aNode != mRangeSerializer.mClosestCommonInclusiveAncestorOfRange) {
+      if (aNode != mClosestCommonInclusiveAncestorOfRange) {
         rv = mNodeSerializer.SerializeNodeEnd(*aNode);
         NS_ENSURE_SUCCESS(rv, rv);
       }
@@ -1204,7 +1199,7 @@ nsresult nsDocumentEncoder::SerializeRangeToString(const nsRange* aRange) {
     rv = mNodeSerializer.SerializeNodeEnd(*startContainer);
     NS_ENSURE_SUCCESS(rv, rv);
   } else {
-    rv = SerializeRangeNodes(
+    rv = mRangeSerializer.SerializeRangeNodes(
         aRange, mRangeSerializer.mClosestCommonInclusiveAncestorOfRange, 0);
     NS_ENSURE_SUCCESS(rv, rv);
   }
