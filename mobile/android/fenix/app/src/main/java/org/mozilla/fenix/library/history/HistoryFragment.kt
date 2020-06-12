@@ -183,7 +183,7 @@ class HistoryFragment : LibraryPageFragment<HistoryItem>(), UserInteractionHandl
 
             nav(
                 R.id.historyFragment,
-                HistoryFragmentDirections.actionGlobalHome()
+                HistoryFragmentDirections.actionGlobalTabTrayDialogFragment()
             )
             true
         }
@@ -199,7 +199,7 @@ class HistoryFragment : LibraryPageFragment<HistoryItem>(), UserInteractionHandl
             }
             nav(
                 R.id.historyFragment,
-                HistoryFragmentDirections.actionGlobalHome()
+                HistoryFragmentDirections.actionGlobalTabTrayDialogFragment()
             )
             true
         }

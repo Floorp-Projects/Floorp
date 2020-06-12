@@ -340,7 +340,7 @@ class BookmarksTest {
         }
 
         multipleSelectionToolbar {
-        }.clickOpenNewTab { }.openTabDrawer {
+        }.clickOpenNewTab {
             verifyNormalModeSelected()
             verifyExistingTabList()
         }
@@ -363,7 +363,7 @@ class BookmarksTest {
         }
 
         multipleSelectionToolbar {
-        }.clickOpenPrivateTab { }.openTabDrawer {
+        }.clickOpenPrivateTab {
             verifyPrivateModeSelected()
             verifyExistingTabList()
         }

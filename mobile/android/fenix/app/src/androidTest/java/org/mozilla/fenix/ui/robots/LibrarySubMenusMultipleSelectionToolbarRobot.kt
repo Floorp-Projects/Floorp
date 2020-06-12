@@ -85,23 +85,26 @@ class LibrarySubMenusMultipleSelectionToolbarRobot {
             return BookmarksRobot.Transition()
         }
 
-        fun clickOpenNewTab(interact: HomeScreenRobot.() -> Unit): HomeScreenRobot.Transition {
+        fun clickOpenNewTab(interact: TabDrawerRobot.() -> Unit): TabDrawerRobot.Transition {
             openInNewTabButton().click()
-            mDevice.waitNotNull(Until.findObject(By.text("Collections")), waitingTime)
-
-            HomeScreenRobot().interact()
-            return HomeScreenRobot.Transition()
-        }
-
-        fun clickOpenPrivateTab(interact: HomeScreenRobot.() -> Unit): HomeScreenRobot.Transition {
-            openInPrivateTabButton().click()
             mDevice.waitNotNull(
-                Until.findObject(By.text(PRIVATE_SESSION_MESSAGE)),
+                Until.findObject(By.res("org.mozilla.fenix.debug:id/tab_layout")),
                 waitingTime
             )
 
-            HomeScreenRobot().interact()
-            return HomeScreenRobot.Transition()
+            TabDrawerRobot().interact()
+            return TabDrawerRobot.Transition()
+        }
+
+        fun clickOpenPrivateTab(interact: TabDrawerRobot.() -> Unit): TabDrawerRobot.Transition {
+            openInPrivateTabButton().click()
+            mDevice.waitNotNull(
+                Until.findObject(By.res("org.mozilla.fenix.debug:id/tab_layout")),
+                waitingTime
+            )
+
+            TabDrawerRobot().interact()
+            return TabDrawerRobot.Transition()
         }
     }
 }

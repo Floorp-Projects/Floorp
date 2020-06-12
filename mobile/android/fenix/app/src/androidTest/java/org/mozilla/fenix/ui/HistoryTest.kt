@@ -216,7 +216,7 @@ class HistoryTest {
         }
 
         multipleSelectionToolbar {
-        }.clickOpenNewTab { }.openTabDrawer {
+        }.clickOpenNewTab {
             verifyExistingTabList()
             verifyNormalModeSelected()
         }
@@ -236,7 +236,7 @@ class HistoryTest {
         }
 
         multipleSelectionToolbar {
-        }.clickOpenPrivateTab { }.openTabDrawer {
+        }.clickOpenPrivateTab {
             verifyPrivateModeSelected()
             verifyExistingTabList()
         }

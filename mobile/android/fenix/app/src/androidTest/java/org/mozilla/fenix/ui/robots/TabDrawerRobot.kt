@@ -26,6 +26,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.By.text
 import androidx.test.uiautomator.UiDevice
+import androidx.test.uiautomator.Until
 import androidx.test.uiautomator.Until.findObject
 import org.hamcrest.CoreMatchers.allOf
 import org.mozilla.fenix.R
@@ -102,6 +103,20 @@ class TabDrawerRobot {
             Espresso.openActionBarOverflowOrOptionsMenu(ApplicationProvider.getApplicationContext<Context>())
             ThreeDotMenuMainRobot().interact()
             return ThreeDotMenuMainRobot.Transition()
+        }
+
+        fun openTabDrawer(interact: TabDrawerRobot.() -> Unit): TabDrawerRobot.Transition {
+            org.mozilla.fenix.ui.robots.mDevice.waitForIdle()
+
+            tabsCounter().click()
+
+            org.mozilla.fenix.ui.robots.mDevice.waitNotNull(
+                Until.findObject(By.res("org.mozilla.fenix.debug:id/tab_layout")),
+                waitingTime
+            )
+
+            TabDrawerRobot().interact()
+            return TabDrawerRobot.Transition()
         }
 
         fun openHomeScreen(interact: HomeScreenRobot.() -> Unit): HomeScreenRobot.Transition {
@@ -196,3 +211,5 @@ private fun tab(title: String) =
             withText(title)
         )
     )
+
+private fun tabsCounter() = onView(withId(R.id.tab_button))

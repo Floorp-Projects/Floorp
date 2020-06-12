@@ -204,14 +204,14 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), UserInteractionHan
             R.id.open_bookmarks_in_new_tabs_multi_select -> {
                 openItemsInNewTab { node -> node.url }
 
-                navigate(BookmarkFragmentDirections.actionGlobalHome())
+                navigate(BookmarkFragmentDirections.actionGlobalTabTrayDialogFragment())
                 metrics?.track(Event.OpenedBookmarksInNewTabs)
                 true
             }
             R.id.open_bookmarks_in_private_tabs_multi_select -> {
                 openItemsInNewTab(private = true) { node -> node.url }
 
-                navigate(BookmarkFragmentDirections.actionGlobalHome())
+                navigate(BookmarkFragmentDirections.actionGlobalTabTrayDialogFragment())
                 metrics?.track(Event.OpenedBookmarksInPrivateTabs)
                 true
             }
