@@ -18,6 +18,13 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   UrlbarTestUtils: "resource://testing-common/UrlbarTestUtils.jsm",
 });
 
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "clipboardHelper",
+  "@mozilla.org/widget/clipboardhelper;1",
+  "nsIClipboardHelper"
+);
+
 // These should match the same consts in UrlbarProviderSearchTips.jsm.
 const MAX_SHOWN_COUNT = 4;
 const LAST_UPDATE_THRESHOLD_MS = 24 * 60 * 60 * 1000;
@@ -528,6 +535,41 @@ add_task(async function ignoreEndsEngagement() {
       );
     });
   });
+  resetSearchTipsProvider();
+});
+
+add_task(async function pasteAndGo() {
+  UrlbarProviderSearchTips.disableTipsForCurrentSession = false;
+  let tab = await BrowserTestUtils.openNewForegroundTab({
+    gBrowser,
+    url: "about:newtab",
+    waitForLoad: false,
+  });
+  await checkTip(window, UrlbarProviderSearchTips.TIP_TYPE.ONBOARD, false);
+
+  const url = "http://example.com/";
+  await SimpleTest.promiseClipboardChange(url, () => {
+    clipboardHelper.copyString(url);
+  });
+
+  let textBox = gURLBar.querySelector("moz-input-box");
+  let cxmenu = textBox.menupopup;
+  let cxmenuPromise = BrowserTestUtils.waitForEvent(cxmenu, "popupshown");
+  EventUtils.synthesizeMouseAtCenter(gURLBar.inputField, {
+    type: "contextmenu",
+    button: 2,
+  });
+  await cxmenuPromise;
+  let menuitem = textBox.getMenuItem("paste-and-go");
+
+  let browserLoadedPromise = BrowserTestUtils.browserLoaded(
+    gBrowser.selectedBrowser,
+    false,
+    url
+  );
+  EventUtils.synthesizeMouseAtCenter(menuitem, {});
+  await browserLoadedPromise;
+  BrowserTestUtils.removeTab(tab);
   resetSearchTipsProvider();
 });
 
