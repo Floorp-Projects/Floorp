@@ -342,14 +342,10 @@ class nsDocumentEncoder : public nsIDocumentEncoder {
    * https://dom.spec.whatwg.org/#concept-tree-inclusive-ancestor.
    */
   AutoTArray<nsINode*, 8> mCommonInclusiveAncestors;
-  AutoTArray<AutoTArray<nsINode*, 8>, 8> mRangeContexts;
   // Whether the serializer cares about being notified to scan elements to
   // keep track of whether they are preformatted.  This stores the out
   // argument of nsIContentSerializer::Init().
   bool mNeedsPreformatScanning;
-  // Used when context has already been serialized for
-  // table cell selections (where parent is <tr>)
-  bool mDisableContextSerialize;
   bool mIsCopying;  // Set to true only while copying
   nsStringBuffer* mCachedBuffer;
 
@@ -393,6 +389,24 @@ class nsDocumentEncoder : public nsIDocumentEncoder {
   NodeSerializer mNodeSerializer;
 
   const UniquePtr<RangeNodeContext> mRangeNodeContext;
+
+  struct RangeContextSerializer final {
+    RangeContextSerializer(const RangeNodeContext& aRangeNodeContext,
+                           const NodeSerializer& aNodeSerializer)
+        : mDisableContextSerialize{false},
+          mRangeNodeContext{aRangeNodeContext},
+          mNodeSerializer{aNodeSerializer} {}
+
+    // Used when context has already been serialized for
+    // table cell selections (where parent is <tr>)
+    bool mDisableContextSerialize;
+    AutoTArray<AutoTArray<nsINode*, 8>, 8> mRangeContexts;
+
+    const RangeNodeContext& mRangeNodeContext;
+    const NodeSerializer& mNodeSerializer;
+  };
+
+  RangeContextSerializer mRangeContextSerializer;
 
   struct RangeSerializer {
     // @param aFlags multiple of the flags defined in nsIDocumentEncoder.idl.
@@ -465,6 +479,7 @@ nsDocumentEncoder::nsDocumentEncoder(
       mNodeSerializer(mNeedsPreformatScanning, mSerializer, mFlags, mNodeFixup,
                       mTextStreamer),
       mRangeNodeContext(std::move(aRangeNodeContext)),
+      mRangeContextSerializer(*mRangeNodeContext, mNodeSerializer),
       mRangeSerializer(mFlags, mNodeSerializer, *mRangeNodeContext) {
   MOZ_ASSERT(mRangeNodeContext);
 
@@ -480,7 +495,7 @@ void nsDocumentEncoder::Initialize(bool aClearCachedSerializer) {
   mWrapColumn = 72;
   mRangeSerializer.Initialize();
   mNeedsPreformatScanning = false;
-  mDisableContextSerialize = false;
+  mRangeContextSerializer.mDisableContextSerialize = false;
   mEncodingScope = {};
   mNodeFixup = nullptr;
   if (aClearCachedSerializer) {
@@ -551,7 +566,7 @@ nsresult nsDocumentEncoder::SerializeSelection() {
           rv = SerializeRangeContextStart(mCommonInclusiveAncestors);
           NS_ENSURE_SUCCESS(rv, rv);
           // Don't let SerializeRangeToString serialize the context again
-          mDisableContextSerialize = true;
+          mRangeContextSerializer.mDisableContextSerialize = true;
         }
 
         rv = mNodeSerializer.SerializeNodeStart(*node, 0, -1);
@@ -559,7 +574,7 @@ nsresult nsDocumentEncoder::SerializeSelection() {
         prevNode = node;
       } else if (prevNode) {
         // Went from a <tr> to a non-<tr>
-        mDisableContextSerialize = false;
+        mRangeContextSerializer.mDisableContextSerialize = false;
 
         // `mCommonInclusiveAncestors` is used in `EncodeToStringWithContext`
         // too. Update it here to mimic the old behavior.
@@ -584,7 +599,7 @@ nsresult nsDocumentEncoder::SerializeSelection() {
   if (prevNode) {
     rv = mNodeSerializer.SerializeNodeEnd(*prevNode);
     NS_ENSURE_SUCCESS(rv, rv);
-    mDisableContextSerialize = false;
+    mRangeContextSerializer.mDisableContextSerialize = false;
 
     // `mCommonInclusiveAncestors` is used in `EncodeToStringWithContext`
     // too. Update it here to mimic the old behavior.
@@ -597,7 +612,7 @@ nsresult nsDocumentEncoder::SerializeSelection() {
   }
 
   // Just to be safe
-  mDisableContextSerialize = false;
+  mRangeContextSerializer.mDisableContextSerialize = false;
 
   return rv;
 }
@@ -1076,11 +1091,12 @@ nsresult nsDocumentEncoder::RangeSerializer::SerializeRangeNodes(
 
 nsresult nsDocumentEncoder::SerializeRangeContextStart(
     const nsTArray<nsINode*>& aAncestorArray) {
-  if (mDisableContextSerialize) {
+  if (mRangeContextSerializer.mDisableContextSerialize) {
     return NS_OK;
   }
 
-  AutoTArray<nsINode*, 8>* serializedContext = mRangeContexts.AppendElement();
+  AutoTArray<nsINode*, 8>* serializedContext =
+      mRangeContextSerializer.mRangeContexts.AppendElement();
 
   int32_t i = aAncestorArray.Length(), j;
   nsresult rv = NS_OK;
@@ -1105,13 +1121,14 @@ nsresult nsDocumentEncoder::SerializeRangeContextStart(
 }
 
 nsresult nsDocumentEncoder::SerializeRangeContextEnd() {
-  if (mDisableContextSerialize) {
+  if (mRangeContextSerializer.mDisableContextSerialize) {
     return NS_OK;
   }
 
-  MOZ_RELEASE_ASSERT(!mRangeContexts.IsEmpty(),
+  MOZ_RELEASE_ASSERT(!mRangeContextSerializer.mRangeContexts.IsEmpty(),
                      "Tried to end context without starting one.");
-  AutoTArray<nsINode*, 8>& serializedContext = mRangeContexts.LastElement();
+  AutoTArray<nsINode*, 8>& serializedContext =
+      mRangeContextSerializer.mRangeContexts.LastElement();
 
   nsresult rv = NS_OK;
   for (nsINode* node : Reversed(serializedContext)) {
@@ -1120,7 +1137,7 @@ nsresult nsDocumentEncoder::SerializeRangeContextEnd() {
     if (NS_FAILED(rv)) break;
   }
 
-  mRangeContexts.RemoveLastElement();
+  mRangeContextSerializer.mRangeContexts.RemoveLastElement();
   return rv;
 }
 
@@ -1224,8 +1241,10 @@ nsDocumentEncoder::EncodeToString(nsAString& aOutputString) {
 NS_IMETHODIMP
 nsDocumentEncoder::EncodeToStringWithMaxLength(uint32_t aMaxLength,
                                                nsAString& aOutputString) {
-  MOZ_ASSERT(mRangeContexts.IsEmpty(), "Re-entrant call to nsDocumentEncoder.");
-  auto rangeContextGuard = MakeScopeExit([&] { mRangeContexts.Clear(); });
+  MOZ_ASSERT(mRangeContextSerializer.mRangeContexts.IsEmpty(),
+             "Re-entrant call to nsDocumentEncoder.");
+  auto rangeContextGuard =
+      MakeScopeExit([&] { mRangeContextSerializer.mRangeContexts.Clear(); });
 
   if (!mDocument) return NS_ERROR_NOT_INITIALIZED;
 
@@ -1298,8 +1317,10 @@ nsDocumentEncoder::EncodeToStringWithMaxLength(uint32_t aMaxLength,
 
 NS_IMETHODIMP
 nsDocumentEncoder::EncodeToStream(nsIOutputStream* aStream) {
-  MOZ_ASSERT(mRangeContexts.IsEmpty(), "Re-entrant call to nsDocumentEncoder.");
-  auto rangeContextGuard = MakeScopeExit([&] { mRangeContexts.Clear(); });
+  MOZ_ASSERT(mRangeContextSerializer.mRangeContexts.IsEmpty(),
+             "Re-entrant call to nsDocumentEncoder.");
+  auto rangeContextGuard =
+      MakeScopeExit([&] { mRangeContextSerializer.mRangeContexts.Clear(); });
   NS_ENSURE_ARG_POINTER(aStream);
 
   nsresult rv = NS_OK;
