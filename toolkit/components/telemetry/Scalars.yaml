@@ -1046,6 +1046,38 @@ datasanitization:
     record_in_processes:
       - main
 
+downloads:
+  panel_shown:
+    bug_numbers:
+      - 1627676
+    description: >
+      The count of how many times the downloads panel was shown per session.
+    expires: never
+    kind: uint
+    notification_emails:
+      - rtestard@mozilla.com
+      - emalysz@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+  file_opened:
+    bug_numbers:
+      - 1627676
+    description: >
+      The count of how many times files were opened from the download panel.
+    expires: never
+    kind: uint
+    notification_emails:
+      - rtestard@mozilla.com
+      - emalysz@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+
 sandbox:
   no_job:
     bug_numbers:

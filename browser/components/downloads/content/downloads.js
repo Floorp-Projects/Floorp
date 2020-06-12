@@ -208,6 +208,7 @@ var DownloadsPanel = {
    * only when data is ready.
    */
   showPanel() {
+    Services.telemetry.scalarAdd("downloads.panel_shown", 1);
     DownloadsCommon.log("Opening the downloads panel.");
 
     if (this.isPanelShowing) {
@@ -819,6 +820,7 @@ var DownloadsView = {
       while (target.nodeName != "richlistitem") {
         target = target.parentNode;
       }
+      Services.telemetry.scalarAdd("downloads.file_opened", 1);
       let download = DownloadsView.itemForElement(target).download;
       let command = "downloadsCmd_open";
       if (download.hasBlockedData) {

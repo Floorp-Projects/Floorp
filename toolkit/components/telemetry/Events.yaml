@@ -319,6 +319,20 @@ exp_import:
     record_in_processes: ["content"]
     release_channel_collection: opt-out
 
+downloads:
+  added:
+    description: >
+      Sent when downloading a new file. Possible values are in contained in DownloadsCommon::kFileExtensions. 
+      All other downloads not in the listare marked as other.
+    objects: ["fileExtension"]
+    bug_numbers: [1627676]
+    notification_emails: ["rtestard@mozilla.com", "emalysz@mozilla.com"]
+    products:
+      - "firefox"
+    record_in_processes: ["main"]
+    release_channel_collection: opt-out
+    expiry_version: never
+
 form_autocomplete:
   show:
     objects: ["logins"]
