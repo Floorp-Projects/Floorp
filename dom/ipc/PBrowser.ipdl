@@ -689,6 +689,13 @@ child:
      */
     async Show(ParentShowInfo parentInfo, OwnerShowInfo childInfo);
 
+    /**
+     * Sending an activate message moves focus to the child.
+     */
+    async Activate();
+
+    async Deactivate();
+
     async ScrollbarPreferenceChanged(ScrollbarPreference pref);
 
     async InitRendering(TextureFactoryIdentifier textureFactoryIdentifier,
