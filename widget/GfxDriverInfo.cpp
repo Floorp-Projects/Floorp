@@ -518,6 +518,17 @@ const GfxDeviceFamily* GfxDriverInfo::GetDeviceFamily(DeviceFamily id) {
       APPEND_DEVICE(0x0d26);
       APPEND_DEVICE(0x0d2b);
       APPEND_DEVICE(0x0d2e);
+
+      // gen7 gt2
+      APPEND_DEVICE(0x0162);
+      APPEND_DEVICE(0x0166);
+      APPEND_DEVICE(0x016a);
+
+      // gen6 gt2
+      APPEND_DEVICE(0x0112);
+      APPEND_DEVICE(0x0116);
+      APPEND_DEVICE(0x0122);
+      APPEND_DEVICE(0x0126);
 #endif
 
 #if defined(MOZ_WIDGET_GTK) || defined(NIGHTLY_BUILD)
@@ -548,17 +559,6 @@ const GfxDeviceFamily* GfxDriverInfo::GetDeviceFamily(DeviceFamily id) {
       APPEND_DEVICE(0x0152);
       APPEND_DEVICE(0x0156);
       APPEND_DEVICE(0x015a);
-
-      // gen7 gt2
-      APPEND_DEVICE(0x0162);
-      APPEND_DEVICE(0x0166);
-      APPEND_DEVICE(0x016a);
-
-      // gen6 gt2
-      APPEND_DEVICE(0x0112);
-      APPEND_DEVICE(0x0116);
-      APPEND_DEVICE(0x0122);
-      APPEND_DEVICE(0x0126);
 #endif
       [[fallthrough]];
     case DeviceFamily::IntelModernRolloutWebRender:
