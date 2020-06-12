@@ -3562,11 +3562,18 @@ class AudioContextOperationControlMessage : public ControlMessage {
     mHolder.Resolve(AudioContextState::Closed, __func__);
   }
 
- private:
   nsTArray<RefPtr<MediaTrack>> mTracks;
   AudioContextOperation mAudioContextOperation;
   MozPromiseHolder<AudioContextOperationPromise> mHolder;
 };
+
+MediaTrackGraphImpl::PendingResumeOperation::PendingResumeOperation(
+    AudioContextOperationControlMessage* aMessage)
+    : mDestinationTrack(aMessage->GetTrack()),
+      mTracks(move(aMessage->mTracks)),
+      mHolder(move(aMessage->mHolder)) {
+  MOZ_ASSERT(aMessage->mAudioContextOperation == AudioContextOperation::Resume);
+}
 
 auto MediaTrackGraph::ApplyAudioContextOperation(
     MediaTrack* aDestinationTrack, nsTArray<RefPtr<MediaTrack>> aTracks,
