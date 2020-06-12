@@ -176,15 +176,24 @@ class MPSCQueue {
 // If logging is disabled, all the calls are no-op.
 class AsyncLogger {
  public:
-  static const uint32_t MAX_MESSAGE_LENGTH =
-      512 - detail::MPSCQueue<sizeof(void*)>::MESSAGE_PADDING;
+  enum class TracingPhase : uint8_t { BEGIN, END, COMPLETE };
+
+  const char TRACING_PHASE_STRINGS[3] = {'B', 'E', 'X'};
+
+  enum AsyncLoggerOutputMode { MOZLOG, PROFILER };
+  typedef char TextPayload[504];
 
   // aLogModuleName is the name of the MOZ_LOG module.
-  explicit AsyncLogger(const char* aLogModuleName)
+  explicit AsyncLogger(const char* aLogModuleName,
+                       AsyncLogger::AsyncLoggerOutputMode aMode =
+                           AsyncLogger::AsyncLoggerOutputMode::PROFILER)
       : mThread(nullptr), mLogModule(aLogModuleName), mRunning(false) {}
 
   void Start() {
     MOZ_ASSERT(!mRunning, "Double calls to AsyncLogger::Start");
+    if (mMode == AsyncLogger::AsyncLoggerOutputMode::MOZLOG) {
+      LogMozLog("[");
+    }
     if (Enabled()) {
       mRunning = true;
       Run();
@@ -202,7 +211,8 @@ class AsyncLogger {
     }
   }
 
-  void Log(const char* format, ...) MOZ_FORMAT_PRINTF(2, 3) {
+  void Log(const char* aName, const char* aCategory, const char* aComment,
+           TracingPhase aPhase, uint64_t aPID, uint64_t aThread) {
     if (Enabled()) {
       auto* msg = new detail::MPSCQueue<MAX_MESSAGE_LENGTH>::Message();
       va_list args;
@@ -210,7 +220,44 @@ class AsyncLogger {
       VsprintfLiteral(msg->data, format, args);
       va_end(args);
       mMessageQueue.Push(msg);
+      if (mMode == AsyncLogger::AsyncLoggerOutputMode::MOZLOG) {
+        LogMozLog(
+            "{\"name\": \"%s\", \"cat\": \"%s\", \"ph\": \"%c\","
+            "\"ts\": %" PRIu64 ", \"pid\": %" PRIu64
+            ", \"tid\":"
+            " %" PRIu64 ", \"args\": { \"comment\": \"%s\"}},",
+            aName, aCategory, TRACING_PHASE_STRINGS[static_cast<int>(aPhase)],
+            NowInUs(), aPID, aThread, aComment);
+      } else {
+        // todo
+      }
     }
+  }
+
+  void LogDuration(const char* aName, const char* aCategory, uint64_t aDuration,
+                   uint64_t aPID, uint64_t aThread, uint64_t aFrames,
+                   uint64_t aSampleRate) {
+    if (Enabled()) {
+      if (mMode == AsyncLogger::AsyncLoggerOutputMode::MOZLOG) {
+        LogMozLog(
+            "{\"name\": \"%s\", \"cat\": \"%s\", \"ph\": \"X\","
+            "\"ts\": %" PRIu64 ", \"dur\": %" PRIu64 ", \"pid\": %" PRIu64
+            ","
+            "\"tid\": %" PRIu64 ", \"args\": { \"comment\": \"%" PRIu64
+            "/%" PRIu64 "\"}},",
+            aName, aCategory, NowInUs(), aDuration, aPID, aThread, aFrames,
+            aSampleRate);
+      } else {
+      }
+    }
+  }
+  void LogMozLog(const char* format, ...) MOZ_FORMAT_PRINTF(2, 3) {
+    auto* msg = new MPSCQueue<TextPayload>::Message();
+    va_list args;
+    va_start(args, format);
+    VsprintfLiteral(msg->data, format, args);
+    va_end(args);
+    mMessageQueue.Push(msg);
   }
 
   bool Enabled() {
@@ -231,12 +278,18 @@ class AsyncLogger {
     }));
   }
 
+  uint64_t NowInUs() {
+    static TimeStamp base = TimeStamp::NowUnfuzzed();
+    return (TimeStamp::NowUnfuzzed() - base).ToMicroseconds();
+  }
+
   void Sleep() { std::this_thread::sleep_for(std::chrono::milliseconds(10)); }
 
   std::unique_ptr<std::thread> mThread;
   mozilla::LazyLogModule mLogModule;
   detail::MPSCQueue<MAX_MESSAGE_LENGTH> mMessageQueue;
   std::atomic<bool> mRunning;
+  std::atomic<AsyncLoggerOutputMode> mMode;
 };
 
 }  // end namespace mozilla
