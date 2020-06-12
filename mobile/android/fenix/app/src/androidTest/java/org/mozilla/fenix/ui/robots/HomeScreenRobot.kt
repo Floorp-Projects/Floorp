@@ -514,13 +514,13 @@ private fun assertCollectionsHeader() =
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
 private fun assertNoCollectionsHeader() =
-    onView(allOf(withText("No collections")))
+    onView(allOf(withText("Collect the things that matter to you")))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
 private fun assertNoCollectionsText() =
     onView(
         allOf(
-            withText("Collect the things that matter to you. To start, save open tabs to a new collection.")
+            withText("Group together similar searches, sites, and tabs for quick access later.")
         )
     )
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))

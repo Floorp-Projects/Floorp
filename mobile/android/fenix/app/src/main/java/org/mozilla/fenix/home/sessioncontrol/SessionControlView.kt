@@ -21,8 +21,8 @@ import org.mozilla.fenix.home.OnboardingState
 import org.mozilla.fenix.components.tips.Tip
 
 val noCollectionMessage = AdapterItem.NoContentMessage(
-    R.string.no_collections_header,
-    R.string.collections_description
+    R.string.no_collections_header1,
+    R.string.no_collections_description1
 )
 
 // This method got a little complex with the addition of the tab tray feature flag
