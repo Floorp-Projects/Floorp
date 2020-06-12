@@ -17,7 +17,7 @@ A storage implementation for organizing top sites.
 | Name | Summary |
 |---|---|
 | [addTopSite](add-top-site.md) | `fun addTopSite(title: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, url: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, isDefault: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = false): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Adds a new [TopSite](../-top-site/index.md). |
-| [getTopSites](get-top-sites.md) | `fun getTopSites(): LiveData<`[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`TopSite`](../-top-site/index.md)`>>`<br>Returns a [LiveData](#) list of all the [TopSite](../-top-site/index.md) instances. |
+| [getTopSites](get-top-sites.md) | `fun getTopSites(): Flow<`[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`TopSite`](../-top-site/index.md)`>>`<br>Returns a [Flow](#) list of all the [TopSite](../-top-site/index.md) instances. |
 | [getTopSitesPaged](get-top-sites-paged.md) | `fun getTopSitesPaged(): Factory<`[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`, `[`TopSite`](../-top-site/index.md)`>`<br>Returns all [TopSite](../-top-site/index.md)s as a [DataSource.Factory](#). |
 | [removeTopSite](remove-top-site.md) | `fun removeTopSite(site: `[`TopSite`](../-top-site/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Removes the given [TopSite](../-top-site/index.md). |
 

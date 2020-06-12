@@ -2,7 +2,7 @@
 
 # UpdateReaderableAction
 
-`data class UpdateReaderableAction : `[`ReaderAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L452)
+`data class UpdateReaderableAction : `[`ReaderAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L457)
 
 Updates the [ReaderState.readerable](../../../mozilla.components.browser.state.state/-reader-state/readerable.md) flag.
 

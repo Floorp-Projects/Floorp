@@ -2,7 +2,7 @@
 
 # searchRequest
 
-`val searchRequest: `[`SearchRequest`](../../mozilla.components.concept.engine.search/-search-request/index.md)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/ContentState.kt#L60)
+`val searchRequest: `[`SearchRequest`](../../mozilla.components.concept.engine.search/-search-request/index.md)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/ContentState.kt#L61)
 
 the last received [SearchRequest](../../mozilla.components.concept.engine.search/-search-request/index.md)
 

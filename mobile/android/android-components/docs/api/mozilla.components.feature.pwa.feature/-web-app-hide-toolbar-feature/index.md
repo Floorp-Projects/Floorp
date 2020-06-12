@@ -2,66 +2,42 @@
 
 # WebAppHideToolbarFeature
 
-`class WebAppHideToolbarFeature : `[`Observer`](../../mozilla.components.browser.session/-session/-observer/index.md)`, `[`LifecycleAwareFeature`](../../mozilla.components.support.base.feature/-lifecycle-aware-feature/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/pwa/src/main/java/mozilla/components/feature/pwa/feature/WebAppHideToolbarFeature.kt#L28)
+`class WebAppHideToolbarFeature : `[`LifecycleAwareFeature`](../../mozilla.components.support.base.feature/-lifecycle-aware-feature/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/pwa/src/main/java/mozilla/components/feature/pwa/feature/WebAppHideToolbarFeature.kt#L49)
 
 Hides a custom tab toolbar for Progressive Web Apps and Trusted Web Activities.
 
 When the [Session](../../mozilla.components.browser.session/-session/index.md) is inside a trusted scope, the toolbar will be hidden.
 Once the [Session](../../mozilla.components.browser.session/-session/index.md) navigates to another scope, the toolbar will be revealed.
+The toolbar is also hidden in fullscreen mode or picture in picture mode.
+
+In standard custom tabs, no scopes are trusted.
+As a result the URL has no impact on toolbar visibility.
 
 ### Parameters
 
-`toolbar` - Toolbar to show or hide.
+`store` - Reference to the browser store where tab state is located.
 
-`sessionId` - ID of the custom tab session.
+`customTabsStore` - Reference to the store that communicates with the custom tabs service.
 
-`trustedScopes` - Scopes to hide the toolbar at.
-Scopes correspond to [WebAppManifest.scope](../../mozilla.components.concept.engine.manifest/-web-app-manifest/scope.md). They can be a path (PWA) or just an origin (TWA).
+`tabId` - ID of the tab session, or null if the selected session should be used.
 
-`onToolbarVisibilityChange` - Called when the toolbar is changed to be visible or hidden.
+`manifest` - Reference to the cached [WebAppManifest](../../mozilla.components.concept.engine.manifest/-web-app-manifest/index.md) for the current PWA.
+Null if this feature is not used in a PWA context.
+
+`setToolbarVisibility` - Callback to show or hide the toolbar.
 
 ### Constructors
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `WebAppHideToolbarFeature(sessionManager: `[`SessionManager`](../../mozilla.components.browser.session/-session-manager/index.md)`, toolbar: <ERROR CLASS>, sessionId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, trustedScopes: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<<ERROR CLASS>>, onToolbarVisibilityChange: (visible: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`) -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)` = {})`<br>Hides a custom tab toolbar for Progressive Web Apps and Trusted Web Activities. |
+| [&lt;init&gt;](-init-.md) | `WebAppHideToolbarFeature(store: `[`BrowserStore`](../../mozilla.components.browser.state.store/-browser-store/index.md)`, customTabsStore: `[`CustomTabsServiceStore`](../../mozilla.components.feature.customtabs.store/-custom-tabs-service-store/index.md)`, tabId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`? = null, manifest: `[`WebAppManifest`](../../mozilla.components.concept.engine.manifest/-web-app-manifest/index.md)`? = null, setToolbarVisibility: (`[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`) -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`)`<br>Hides a custom tab toolbar for Progressive Web Apps and Trusted Web Activities. |
 
 ### Functions
 
 | Name | Summary |
 |---|---|
-| [onTrustedScopesChange](on-trusted-scopes-change.md) | `fun onTrustedScopesChange(trustedScopes: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<<ERROR CLASS>>): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Hides or reveals the toolbar when the list of trusted scopes is changed. |
-| [onUrlChanged](on-url-changed.md) | `fun onUrlChanged(session: `[`Session`](../../mozilla.components.browser.session/-session/index.md)`, url: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Hides or reveals the toolbar when the session navigates to a new URL. |
 | [start](start.md) | `fun start(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 | [stop](stop.md) | `fun stop(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
-
-### Inherited Functions
-
-| Name | Summary |
-|---|---|
-| [onAppPermissionRequested](../../mozilla.components.browser.session/-session/-observer/on-app-permission-requested.md) | `open fun onAppPermissionRequested(session: `[`Session`](../../mozilla.components.browser.session/-session/index.md)`, permissionRequest: `[`PermissionRequest`](../../mozilla.components.concept.engine.permission/-permission-request/index.md)`): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) |
-| [onContentPermissionRequested](../../mozilla.components.browser.session/-session/-observer/on-content-permission-requested.md) | `open fun onContentPermissionRequested(session: `[`Session`](../../mozilla.components.browser.session/-session/index.md)`, permissionRequest: `[`PermissionRequest`](../../mozilla.components.concept.engine.permission/-permission-request/index.md)`): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) |
-| [onCrashStateChanged](../../mozilla.components.browser.session/-session/-observer/on-crash-state-changed.md) | `open fun onCrashStateChanged(session: `[`Session`](../../mozilla.components.browser.session/-session/index.md)`, crashed: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
-| [onCustomTabConfigChanged](../../mozilla.components.browser.session/-session/-observer/on-custom-tab-config-changed.md) | `open fun onCustomTabConfigChanged(session: `[`Session`](../../mozilla.components.browser.session/-session/index.md)`, customTabConfig: `[`CustomTabConfig`](../../mozilla.components.browser.state.state/-custom-tab-config/index.md)`?): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
-| [onDesktopModeChanged](../../mozilla.components.browser.session/-session/-observer/on-desktop-mode-changed.md) | `open fun onDesktopModeChanged(session: `[`Session`](../../mozilla.components.browser.session/-session/index.md)`, enabled: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
-| [onFindResult](../../mozilla.components.browser.session/-session/-observer/on-find-result.md) | `open fun onFindResult(session: `[`Session`](../../mozilla.components.browser.session/-session/index.md)`, result: `[`FindResult`](../../mozilla.components.browser.session/-session/-find-result/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
-| [onFullScreenChanged](../../mozilla.components.browser.session/-session/-observer/on-full-screen-changed.md) | `open fun onFullScreenChanged(session: `[`Session`](../../mozilla.components.browser.session/-session/index.md)`, enabled: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
-| [onLaunchIntentRequest](../../mozilla.components.browser.session/-session/-observer/on-launch-intent-request.md) | `open fun onLaunchIntentRequest(session: `[`Session`](../../mozilla.components.browser.session/-session/index.md)`, url: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, appIntent: <ERROR CLASS>?): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
-| [onLoadRequest](../../mozilla.components.browser.session/-session/-observer/on-load-request.md) | `open fun onLoadRequest(session: `[`Session`](../../mozilla.components.browser.session/-session/index.md)`, url: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, triggeredByRedirect: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`, triggeredByWebContent: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
-| [onLoadingStateChanged](../../mozilla.components.browser.session/-session/-observer/on-loading-state-changed.md) | `open fun onLoadingStateChanged(session: `[`Session`](../../mozilla.components.browser.session/-session/index.md)`, loading: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
-| [onLongPress](../../mozilla.components.browser.session/-session/-observer/on-long-press.md) | `open fun onLongPress(session: `[`Session`](../../mozilla.components.browser.session/-session/index.md)`, hitResult: `[`HitResult`](../../mozilla.components.concept.engine/-hit-result/index.md)`): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) |
-| [onMetaViewportFitChanged](../../mozilla.components.browser.session/-session/-observer/on-meta-viewport-fit-changed.md) | `open fun onMetaViewportFitChanged(session: `[`Session`](../../mozilla.components.browser.session/-session/index.md)`, layoutInDisplayCutoutMode: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
-| [onNavigationStateChanged](../../mozilla.components.browser.session/-session/-observer/on-navigation-state-changed.md) | `open fun onNavigationStateChanged(session: `[`Session`](../../mozilla.components.browser.session/-session/index.md)`, canGoBack: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`, canGoForward: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
-| [onProgress](../../mozilla.components.browser.session/-session/-observer/on-progress.md) | `open fun onProgress(session: `[`Session`](../../mozilla.components.browser.session/-session/index.md)`, progress: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
-| [onRecordingDevicesChanged](../../mozilla.components.browser.session/-session/-observer/on-recording-devices-changed.md) | `open fun onRecordingDevicesChanged(session: `[`Session`](../../mozilla.components.browser.session/-session/index.md)`, devices: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`RecordingDevice`](../../mozilla.components.concept.engine.media/-recording-device/index.md)`>): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
-| [onSearch](../../mozilla.components.browser.session/-session/-observer/on-search.md) | `open fun onSearch(session: `[`Session`](../../mozilla.components.browser.session/-session/index.md)`, searchTerms: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
-| [onSecurityChanged](../../mozilla.components.browser.session/-session/-observer/on-security-changed.md) | `open fun onSecurityChanged(session: `[`Session`](../../mozilla.components.browser.session/-session/index.md)`, securityInfo: `[`SecurityInfo`](../../mozilla.components.browser.session/-session/-security-info/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
-| [onThumbnailChanged](../../mozilla.components.browser.session/-session/-observer/on-thumbnail-changed.md) | `open fun onThumbnailChanged(session: `[`Session`](../../mozilla.components.browser.session/-session/index.md)`, bitmap: <ERROR CLASS>?): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
-| [onTitleChanged](../../mozilla.components.browser.session/-session/-observer/on-title-changed.md) | `open fun onTitleChanged(session: `[`Session`](../../mozilla.components.browser.session/-session/index.md)`, title: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
-| [onTrackerBlocked](../../mozilla.components.browser.session/-session/-observer/on-tracker-blocked.md) | `open fun onTrackerBlocked(session: `[`Session`](../../mozilla.components.browser.session/-session/index.md)`, tracker: `[`Tracker`](../../mozilla.components.concept.engine.content.blocking/-tracker/index.md)`, all: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`Tracker`](../../mozilla.components.concept.engine.content.blocking/-tracker/index.md)`>): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
-| [onTrackerBlockingEnabledChanged](../../mozilla.components.browser.session/-session/-observer/on-tracker-blocking-enabled-changed.md) | `open fun onTrackerBlockingEnabledChanged(session: `[`Session`](../../mozilla.components.browser.session/-session/index.md)`, blockingEnabled: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
-| [onTrackerLoaded](../../mozilla.components.browser.session/-session/-observer/on-tracker-loaded.md) | `open fun onTrackerLoaded(session: `[`Session`](../../mozilla.components.browser.session/-session/index.md)`, tracker: `[`Tracker`](../../mozilla.components.concept.engine.content.blocking/-tracker/index.md)`, all: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`Tracker`](../../mozilla.components.concept.engine.content.blocking/-tracker/index.md)`>): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
-| [onWebAppManifestChanged](../../mozilla.components.browser.session/-session/-observer/on-web-app-manifest-changed.md) | `open fun onWebAppManifestChanged(session: `[`Session`](../../mozilla.components.browser.session/-session/index.md)`, manifest: `[`WebAppManifest`](../../mozilla.components.concept.engine.manifest/-web-app-manifest/index.md)`?): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 
 ### Extension Functions
 

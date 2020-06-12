@@ -2,7 +2,7 @@
 
 # promptRequest
 
-`val promptRequest: `[`PromptRequest`](../../mozilla.components.concept.engine.prompt/-prompt-request/index.md)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/ContentState.kt#L57)
+`val promptRequest: `[`PromptRequest`](../../mozilla.components.concept.engine.prompt/-prompt-request/index.md)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/ContentState.kt#L58)
 
 the last received [PromptRequest](../../mozilla.components.concept.engine.prompt/-prompt-request/index.md).
 

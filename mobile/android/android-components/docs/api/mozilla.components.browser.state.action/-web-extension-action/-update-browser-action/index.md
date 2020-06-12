@@ -2,7 +2,7 @@
 
 # UpdateBrowserAction
 
-`data class UpdateBrowserAction : `[`WebExtensionAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L376)
+`data class UpdateBrowserAction : `[`WebExtensionAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L381)
 
 Updates a browser action of a given [extensionId](extension-id.md).
 
