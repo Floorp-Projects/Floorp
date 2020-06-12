@@ -13,7 +13,7 @@ import mozilla.components.support.base.log.logger.Logger
 object WebCompatFeature {
     private val logger = Logger("mozac-webcompat")
 
-    internal const val WEBCOMPAT_EXTENSION_ID = "webcompat@mozilla.com"
+    internal const val WEBCOMPAT_EXTENSION_ID = "webcompat@mozilla.org"
     internal const val WEBCOMPAT_EXTENSION_URL = "resource://android/assets/extensions/webcompat/"
 
     /**
