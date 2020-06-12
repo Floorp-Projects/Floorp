@@ -383,21 +383,6 @@ TestArray.addTest(
 
 // -----------------------------------------------------------------------------
 TestArray.addTest(
-  "Fail generating an AES key of wrong length",
-  function() {
-    var that = this;
-    var alg = { name: "AES-CBC", length: 64 };
-    crypto.subtle.generateKey(alg, false, ["encrypt"]).then(
-      error(that),
-      complete(that, function(e) {
-        return e.name == "OperationError";
-      })
-    );
-  }
-);
-
-// -----------------------------------------------------------------------------
-TestArray.addTest(
   "Generate a 1024-bit RSA key",
   function() {
     var that = this;
