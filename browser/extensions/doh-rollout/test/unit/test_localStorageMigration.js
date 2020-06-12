@@ -88,7 +88,6 @@ add_task(async function testLocalStorageMigration() {
   const legacyEntries = {
     doneFirstRun: true,
     skipHeuristicsCheck: true,
-    "doh-rollout.previous.trr.mode": 2,
     "doh-rollout.doorhanger-shown": true,
     "doh-rollout.doorhanger-decision": "UIOk",
     "doh-rollout.disable-heuristics": true,

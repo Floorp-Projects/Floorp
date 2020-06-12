@@ -39,13 +39,13 @@ const HEURISTICS_TELEMETRY_EVENTS = {
   state: {
     methods: ["state"],
     objects: [
-      "loaded",
       "enabled",
       "disabled",
       "manuallyDisabled",
       "uninstalled",
       "UIOk",
       "UIDisabled",
+      "rollback",
     ],
     extra_keys: [],
     record_on_release: true,
