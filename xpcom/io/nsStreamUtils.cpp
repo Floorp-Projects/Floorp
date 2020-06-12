@@ -890,8 +890,7 @@ nsresult NS_CloneInputStream(nsIInputStream* aSource,
 
 nsresult NS_MakeAsyncNonBlockingInputStream(
     already_AddRefed<nsIInputStream> aSource,
-    nsIAsyncInputStream** aAsyncInputStream, bool aCloseWhenDone,
-    uint32_t aFlags, uint32_t aSegmentSize, uint32_t aSegmentCount) {
+    nsIAsyncInputStream** aAsyncInputStream) {
   nsCOMPtr<nsIInputStream> source = std::move(aSource);
   if (NS_WARN_IF(!aAsyncInputStream)) {
     return NS_ERROR_FAILURE;
@@ -924,14 +923,17 @@ nsresult NS_MakeAsyncNonBlockingInputStream(
   }
 
   nsCOMPtr<nsITransport> transport;
-  rv = sts->CreateInputTransport(source, aCloseWhenDone,
+  rv = sts->CreateInputTransport(source,
+                                 /* aCloseWhenDone */ true,
                                  getter_AddRefs(transport));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   nsCOMPtr<nsIInputStream> wrapper;
-  rv = transport->OpenInputStream(aFlags, aSegmentSize, aSegmentCount,
+  rv = transport->OpenInputStream(/* aFlags */ 0,
+                                  /* aSegmentSize */ 0,
+                                  /* aSegmentCount */ 0,
                                   getter_AddRefs(wrapper));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
