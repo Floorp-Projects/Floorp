@@ -8,6 +8,7 @@ window._snapshots = {
     type: "div",
     props: {
       role: "presentation",
+      tabIndex: "-1",
       className: "accessibility-check",
     },
     children: [
@@ -22,6 +23,7 @@ window._snapshots = {
         type: "div",
         props: {
           role: "presentation",
+          tabIndex: "-1",
           className: "accessibility-color-contrast",
         },
         children: [
@@ -41,6 +43,7 @@ window._snapshots = {
     type: "div",
     props: {
       role: "presentation",
+      tabIndex: "-1",
       className: "accessibility-check",
     },
     children: [
@@ -55,6 +58,7 @@ window._snapshots = {
         type: "div",
         props: {
           role: "presentation",
+          tabIndex: "-1",
           className: "accessibility-color-contrast",
         },
         children: [
@@ -102,6 +106,7 @@ window._snapshots = {
     type: "div",
     props: {
       role: "presentation",
+      tabIndex: "-1",
       className: "accessibility-check",
     },
     children: [
@@ -116,6 +121,7 @@ window._snapshots = {
         type: "div",
         props: {
           role: "presentation",
+          tabIndex: "-1",
           className: "accessibility-color-contrast",
         },
         children: [
@@ -135,6 +141,7 @@ window._snapshots = {
             type: "div",
             props: {
               role: "presentation",
+              tabIndex: "-1",
               className: "accessibility-color-contrast-separator",
             },
             children: null,
@@ -183,6 +190,7 @@ window._snapshots = {
     type: "div",
     props: {
       role: "presentation",
+      tabIndex: "-1",
       className: "accessibility-check",
     },
     children: [
@@ -197,6 +205,7 @@ window._snapshots = {
         type: "div",
         props: {
           role: "presentation",
+          tabIndex: "-1",
           className: "accessibility-color-contrast",
         },
         children: [
