@@ -195,6 +195,20 @@ class TracingMarkerPayload : public ProfilerMarkerPayload {
         mCategory(aCategory),
         mKind(aKind) {}
 
+  TracingMarkerPayload(const char* aCategory, TracingKind aKind,
+                       const mozilla::TimeStamp& aTime)
+
+      : ProfilerMarkerPayload(aTime, aTime, mozilla::Nothing(), nullptr),
+        mCategory(aCategory),
+        mKind(aKind) {}
+
+  TracingMarkerPayload(const char* aCategory, const mozilla::TimeStamp& aStart,
+                       const mozilla::TimeStamp& aEnd)
+
+      : ProfilerMarkerPayload(aStart, aEnd, mozilla::Nothing(), nullptr),
+        mCategory(aCategory),
+        mKind(TRACING_EVENT) {}
+
   DECL_STREAM_PAYLOAD
 
  protected:
