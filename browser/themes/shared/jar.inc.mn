@@ -75,6 +75,7 @@
   skin/classic/browser/notification-icons/default-info.svg                  (../shared/notification-icons/default-info.svg)
   skin/classic/browser/notification-icons/desktop-notification-blocked.svg  (../shared/notification-icons/desktop-notification-blocked.svg)
   skin/classic/browser/notification-icons/desktop-notification.svg          (../shared/notification-icons/desktop-notification.svg)
+  skin/classic/browser/notification-icons/drag-indicator.svg                (../shared/notification-icons/drag-indicator.svg)
   skin/classic/browser/notification-icons/focus-tab-by-prompt.svg           (../shared/notification-icons/focus-tab-by-prompt.svg)
   skin/classic/browser/notification-icons/indexedDB.svg                     (../shared/notification-icons/indexedDB.svg)
   skin/classic/browser/notification-icons/microphone-blocked.svg            (../shared/notification-icons/microphone-blocked.svg)
@@ -298,4 +299,3 @@
   skin/classic/browser/privatebrowsing/private-browsing.svg    (../shared/privatebrowsing/private-browsing.svg)
   skin/classic/browser/install-ssb.svg                         (../shared/install-ssb.svg)
   skin/classic/browser/critical.svg                            (../shared/icons/critical.svg)
-  skin/classic/browser/webRTC-indicator.css                    (../shared/webRTC-indicator.css)
