@@ -1366,6 +1366,10 @@ bool DocumentLoadListener::MaybeTriggerProcessSwitch(
       ->Then(
           GetMainThreadSerialEventTarget(), __func__,
           [self](BrowserParent* aBrowserParent) {
+            MOZ_DIAGNOSTIC_ASSERT(
+                aBrowserParent,
+                "Shouldn't have switched into the parent process, as we check "
+                "!remoteType.IsEmpty() earlier in MaybeTriggerProcessSwitch");
             MOZ_ASSERT(self->mChannel,
                        "Something went wrong, channel got cancelled");
             self->TriggerRedirectToRealChannel(

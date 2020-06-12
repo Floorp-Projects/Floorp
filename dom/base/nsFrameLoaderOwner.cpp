@@ -227,10 +227,13 @@ void nsFrameLoaderOwner::ChangeRemotenessToProcess(
     ContentParent* aContentParent, bool aReplaceBrowsingContext,
     mozilla::ErrorResult& rv) {
   MOZ_ASSERT(XRE_IsParentProcess());
+  bool isRemote = aContentParent != nullptr;
 
   std::function<void()> frameLoaderInit = [&] {
-    mFrameLoader->ConfigRemoteProcess(aContentParent->GetRemoteType(),
-                                      aContentParent);
+    if (isRemote) {
+      mFrameLoader->ConfigRemoteProcess(aContentParent->GetRemoteType(),
+                                        aContentParent);
+    }
 
     // FIXME(bug 1644779): We'd like to stop triggering a load here, as this
     // reads the attributes, such as `src`, on the <browser> element, and could
@@ -242,10 +245,10 @@ void nsFrameLoaderOwner::ChangeRemotenessToProcess(
     mFrameLoader->LoadFrame(false);
   };
 
-  auto shouldPreserve = ShouldPreserveBrowsingContext(
-      /* isRemote */ true, aReplaceBrowsingContext);
-  ChangeRemotenessCommon(shouldPreserve, /* inProgress */ true,
-                         /* isRemote */ true, frameLoaderInit, rv);
+  auto shouldPreserve =
+      ShouldPreserveBrowsingContext(isRemote, aReplaceBrowsingContext);
+  ChangeRemotenessCommon(shouldPreserve, /* inProgress */ true, isRemote,
+                         frameLoaderInit, rv);
 }
 
 void nsFrameLoaderOwner::SubframeCrashed() {
