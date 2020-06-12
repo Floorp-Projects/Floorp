@@ -32,11 +32,24 @@ class CompatibilityView {
     this._onPanelSelected = this._onPanelSelected.bind(this);
     this._onSelectedNodeChanged = this._onSelectedNodeChanged.bind(this);
     this._onTopLevelTargetChanged = this._onTopLevelTargetChanged.bind(this);
+    this._onResourceAvailable = this._onResourceAvailable.bind(this);
 
     this._init();
   }
 
   destroy() {
+    try {
+      this.resourceWatcher.unwatchResources(
+        [this.resourceWatcher.TYPES.CSS_CHANGE],
+        {
+          onAvailable: this._onResourceAvailable,
+        }
+      );
+    } catch (e) {
+      // If unwatchResources is called before finishing process of watchResources,
+      // unwatchResources throws an error during stopping listener.
+    }
+
     this.inspector.off("new-root", this._onTopLevelTargetChanged);
     this.inspector.selection.off("new-node-front", this._onSelectedNodeChanged);
     this.inspector.sidebar.off(
@@ -44,14 +57,11 @@ class CompatibilityView {
       this._onPanelSelected
     );
 
-    const changesFront = this.inspector.toolbox.target.getCachedFront(
-      "changes"
-    );
-    if (changesFront) {
-      changesFront.off("add-change", this._onChangeAdded);
-    }
-
     this.inspector = null;
+  }
+
+  get resourceWatcher() {
+    return this.inspector.toolbox.resourceWatcher;
   }
 
   _init() {
@@ -85,6 +95,16 @@ class CompatibilityView {
     this.inspector.sidebar.on(
       "compatibilityview-selected",
       this._onPanelSelected
+    );
+
+    this.resourceWatcher.watchResources(
+      [this.resourceWatcher.TYPES.CSS_CHANGE],
+      {
+        onAvailable: this._onResourceAvailable,
+        // CSS changes made before opening Compatibility View are already applied to
+        // corresponding DOM at this point, so existing resources can be ignored here.
+        ignoreExistingResources: true,
+      }
     );
   }
 
@@ -157,7 +177,11 @@ class CompatibilityView {
     );
   }
 
-  async _onTopLevelTargetChanged() {
+  _onResourceAvailable({ resource }) {
+    this._onChangeAdded(resource);
+  }
+
+  _onTopLevelTargetChanged() {
     if (!this._isAvailable()) {
       return;
     }
@@ -165,20 +189,6 @@ class CompatibilityView {
     this.inspector.store.dispatch(
       updateTopLevelTarget(this.inspector.toolbox.target)
     );
-
-    const changesFront = await this.inspector.toolbox.target.getFront(
-      "changes"
-    );
-
-    try {
-      // Call allChanges() in order to get the add-change qevent.
-      await changesFront.allChanges();
-    } catch (e) {
-      // The connection to the server may have been cut, for example during test teardown.
-      // Here we just catch the error and silently ignore it.
-    }
-
-    changesFront.on("add-change", this._onChangeAdded);
   }
 }
 
