@@ -147,7 +147,7 @@ class DefaultBrowserToolbarController(
                     if (sessionManager.sessionsOfType(it.private).count() == 1) {
                         // The tab tray always returns to normal mode so do that here too
                         (activity as HomeActivity).browsingModeManager.mode = BrowsingMode.Normal
-                        navController.navigate(BrowserFragmentDirections.actionGlobalHome(it.id))
+                        navController.navigate(BrowserFragmentDirections.actionGlobalHome(sessionToDelete = it.id))
                     } else {
                         onCloseTab.invoke(it)
                         activity.components.useCases.tabsUseCases.removeTab.invoke(it)

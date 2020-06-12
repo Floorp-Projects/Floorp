@@ -15,6 +15,7 @@ import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.accessibility.AccessibilityEvent
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.PopupWindow
@@ -107,11 +108,11 @@ import kotlin.math.min
 
 @SuppressWarnings("TooManyFunctions", "LargeClass")
 class HomeFragment : Fragment() {
+    private val args by navArgs<HomeFragmentArgs>()
+
     private val homeViewModel: HomeScreenViewModel by viewModels {
         ViewModelProvider.AndroidViewModelFactory(requireActivity().application)
     }
-
-    private val args by navArgs<HomeFragmentArgs>()
 
     private val snackbarAnchorView: View?
         get() {
@@ -357,6 +358,15 @@ class HomeFragment : Fragment() {
         view.toolbar_wrapper.doOnLayout {
             if (!browsingModeManager.mode.isPrivate) {
                 SearchWidgetCFR(view.context) { view.toolbar_wrapper }.displayIfNecessary()
+            }
+        }
+
+        if (view.context.settings().accessibilityServicesEnabled && args.focusOnAddressBar) {
+            // We cannot put this in the fragment_home.xml file as it breaks tests
+            view.toolbar_wrapper.isFocusableInTouchMode = true
+            viewLifecycleOwner.lifecycleScope.launch {
+                view.toolbar_wrapper?.requestFocus()
+                view.toolbar_wrapper?.sendAccessibilityEvent(AccessibilityEvent.TYPE_VIEW_FOCUSED)
             }
         }
     }

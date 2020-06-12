@@ -196,7 +196,7 @@ class TabTrayDialogFragment : AppCompatDialogFragment(), TabTrayInteractor {
 
     override fun onNewTabTapped(private: Boolean) {
         (activity as HomeActivity).browsingModeManager.mode = BrowsingMode.fromBoolean(private)
-        findNavController().popBackStack(R.id.homeFragment, false)
+        findNavController().navigate(TabTrayDialogFragmentDirections.actionGlobalHome(focusOnAddressBar = true))
         dismissAllowingStateLoss()
     }
 
@@ -311,7 +311,9 @@ class TabTrayDialogFragment : AppCompatDialogFragment(), TabTrayInteractor {
                 .setText(requireContext().getString(R.string.create_collection_tabs_saved))
                 .setAction(requireContext().getString(R.string.create_collection_view)) {
                     dismissAllowingStateLoss()
-                    findNavController().navigate(TabTrayDialogFragmentDirections.actionGlobalHome())
+                    findNavController().navigate(
+                        TabTrayDialogFragmentDirections.actionGlobalHome(focusOnAddressBar = false)
+                    )
                 }
 
             snackbar.view.elevation = ELEVATION

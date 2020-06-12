@@ -569,7 +569,7 @@ class DefaultBrowserToolbarControllerTest {
         every { activity.browsingModeManager } returns browsingModeManager
 
         controller.handleTabCounterItemInteraction(item)
-        verify { navController.navigate(BrowserFragmentDirections.actionGlobalHome("1")) }
+        verify { navController.navigate(BrowserFragmentDirections.actionGlobalHome(sessionToDelete = "1")) }
         assertEquals(BrowsingMode.Normal, browsingModeManager.mode)
     }
 
