@@ -105,12 +105,6 @@ class MainFrame extends Component {
     window.addEventListener("resize", this.onPanelWindowResize, true);
   }
 
-  componentWillReceiveProps({ enabled }) {
-    if (this.props.enabled && !enabled) {
-      this.resetAccessibility();
-    }
-  }
-
   componentWillUnmount() {
     this.props.stopListeningForLifecycleEvents({
       init: this.resetAccessibility,
