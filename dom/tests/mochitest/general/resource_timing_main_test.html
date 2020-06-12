@@ -45,7 +45,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+	<link rel="stylesheet" href="/tests/SimpleTest/test.css?resource-timing-main-test"/>
 	<script type="application/javascript">
 
 var mainWindowTestsDone = false;
@@ -67,7 +67,7 @@ var bufferFullCounter = 0;
 const expectedBufferFullEvents = 1;
 
 var allResources = {
-  "http://mochi.test:8888/tests/SimpleTest/test.css": "link",
+  "http://mochi.test:8888/tests/SimpleTest/test.css?resource-timing-main-test": "link",
   "http://mochi.test:8888/tests/image/test/mochitest/blue.png" : "img",
   "http://mochi.test:8888/tests/image/test/mochitest/red.png" : "object",
   "http://mochi.test:8888/tests/image/test/mochitest/big.png" : "embed",
