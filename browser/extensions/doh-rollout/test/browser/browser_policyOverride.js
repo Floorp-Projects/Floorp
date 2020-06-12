@@ -54,7 +54,7 @@ add_task(async function testPolicyOverride() {
   await restartAddon();
   ensureNoTRRSelectionTelemetry();
   await ensureNoTRRModeChange(0);
-  ensureNoHeuristicsTelemetry();
+  await checkHeuristicsTelemetry("policy_without_doh", "startup");
 
   // Simulate a network change.
   simulateNetworkChange();
