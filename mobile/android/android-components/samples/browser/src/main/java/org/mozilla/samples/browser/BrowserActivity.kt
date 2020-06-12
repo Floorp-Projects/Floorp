@@ -9,11 +9,16 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.util.AttributeSet
+import android.view.LayoutInflater
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import mozilla.components.browser.state.state.WebExtensionState
 import mozilla.components.browser.tabstray.BrowserTabsTray
+import mozilla.components.browser.tabstray.DefaultTabViewHolder
+import mozilla.components.browser.tabstray.TabsAdapter
+import mozilla.components.browser.tabstray.ViewHolderProvider
+import mozilla.components.browser.thumbnails.loader.ThumbnailLoader
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.concept.tabstray.TabsTray
 import mozilla.components.feature.intent.ext.getSessionId
@@ -75,7 +80,7 @@ open class BrowserActivity : AppCompatActivity(), ComponentCallbacks2 {
                     share(it)
                 }
             }.asView()
-            TabsTray::class.java.name -> BrowserTabsTray(context, attrs)
+            TabsTray::class.java.name -> createTabsTray(context, attrs)
             else -> super.onCreateView(parent, name, context, attrs)
         }
 
@@ -85,5 +90,24 @@ open class BrowserActivity : AppCompatActivity(), ComponentCallbacks2 {
         intent.putExtra("web_extension_name", webExtensionState.name)
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
         startActivity(intent)
+    }
+
+    private fun createTabsTray(context: Context, attrs: AttributeSet): BrowserTabsTray {
+        val thumbnailLoader = ThumbnailLoader(components.thumbnailStorage)
+        val viewHolderProvider: ViewHolderProvider = { viewGroup, tabsTray ->
+            DefaultTabViewHolder(
+                LayoutInflater.from(viewGroup.context).inflate(
+                    R.layout.mozac_browser_tabstray_item,
+                    viewGroup,
+                    false
+                ),
+                tabsTray,
+                thumbnailLoader
+            )
+        }
+
+        val adapter = TabsAdapter(thumbnailLoader, viewHolderProvider)
+
+        return BrowserTabsTray(context, attrs, 0, adapter)
     }
 }

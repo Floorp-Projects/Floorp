@@ -112,6 +112,7 @@ dependencies {
 
     implementation project(':support-utils')
     implementation project(':feature-downloads')
+    implementation project(':support-images')
     implementation project(':support-ktx')
     implementation project(':support-webextensions')
     implementation project(':support-rustlog')

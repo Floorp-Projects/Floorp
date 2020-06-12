@@ -24,17 +24,4 @@ data class Tab(
     val icon: Bitmap? = null,
     val thumbnail: Bitmap? = null,
     val mediaState: Media.State? = null
-) {
-    override fun equals(other: Any?): Boolean {
-        if (javaClass != other?.javaClass) return false
-
-        other as Tab
-
-        return id == other.id &&
-            url == other.url &&
-            title == other.title &&
-            icon?.generationId == other.icon?.generationId &&
-            thumbnail?.generationId == other.thumbnail?.generationId &&
-            mediaState == other.mediaState
-    }
-}
+)

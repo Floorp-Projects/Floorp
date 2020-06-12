@@ -114,7 +114,7 @@ open class DefaultComponents(private val applicationContext: Context) {
 
     private val sessionStorage by lazy { SessionStorage(applicationContext, engine) }
 
-    private val thumbnailStorage by lazy { ThumbnailStorage(applicationContext) }
+    val thumbnailStorage by lazy { ThumbnailStorage(applicationContext) }
 
     val store by lazy {
         BrowserStore(middleware = listOf(

@@ -40,7 +40,7 @@ import mozilla.components.browser.icons.preparer.TippyTopIconPreparer
 import mozilla.components.browser.icons.processor.DiskIconProcessor
 import mozilla.components.browser.icons.processor.IconProcessor
 import mozilla.components.browser.icons.processor.MemoryIconProcessor
-import mozilla.components.browser.icons.utils.CancelOnDetach
+import mozilla.components.support.images.CancelOnDetach
 import mozilla.components.browser.icons.utils.IconDiskCache
 import mozilla.components.browser.icons.utils.IconMemoryCache
 import mozilla.components.browser.state.state.BrowserState

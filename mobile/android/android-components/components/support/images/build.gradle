@@ -39,6 +39,7 @@ dependencies {
 
     implementation Dependencies.androidx_annotation
     implementation Dependencies.kotlin_stdlib
+    implementation Dependencies.kotlin_coroutines
 
     testImplementation project(':support-test')
 
