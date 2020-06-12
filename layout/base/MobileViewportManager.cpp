@@ -601,7 +601,8 @@ void MobileViewportManager::RefreshViewportSize(bool aForceAdjustResolution) {
   MVM_LOG("%p: Updating properties because %d || %d\n", this, mIsFirstPaint,
           mMobileViewportSize != viewport);
 
-  if (aForceAdjustResolution || mContext->AllowZoomingForDocument()) {
+  if (mManagerType == ManagerType::VisualAndMetaViewport &&
+      (aForceAdjustResolution || mContext->AllowZoomingForDocument())) {
     UpdateResolution(viewportInfo, displaySize, viewport,
                      displayWidthChangeRatio, UpdateType::ViewportSize);
   } else {
@@ -615,6 +616,10 @@ void MobileViewportManager::RefreshViewportSize(bool aForceAdjustResolution) {
 
   // Update internal state.
   mMobileViewportSize = viewport;
+
+  if (mManagerType == ManagerType::VisualViewportOnly) {
+    return;
+  }
 
   RefPtr<MobileViewportManager> strongThis(this);
 
@@ -631,6 +636,10 @@ void MobileViewportManager::RefreshViewportSize(bool aForceAdjustResolution) {
 void MobileViewportManager::ShrinkToDisplaySizeIfNeeded(
     nsViewportInfo& aViewportInfo, const ScreenIntSize& aDisplaySize) {
   if (!mContext) {
+    return;
+  }
+
+  if (mManagerType == ManagerType::VisualViewportOnly) {
     return;
   }
 
