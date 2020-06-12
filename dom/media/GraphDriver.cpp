@@ -505,7 +505,8 @@ AudioCallbackDriver::AudioCallbackDriver(
       mAudioThreadId(std::thread::id()),
       mAudioThreadIdInCb(std::thread::id()),
       mAudioStreamState(AudioStreamState::None),
-      mFallback("AudioCallbackDriver::mFallback") {
+      mFallback("AudioCallbackDriver::mFallback"),
+      mSandboxed(CubebUtils::SandboxEnabled()) {
   LOG(LogLevel::Debug, ("%p: AudioCallbackDriver ctor", Graph()));
 
   NS_WARNING_ASSERTION(mOutputChannelCount != 0,
@@ -854,25 +855,23 @@ AudioCallbackDriver::AutoInCallback::~AutoInCallback() {
   mDriver->mAudioThreadIdInCb = std::thread::id();
 }
 
-void AudioCallbackDriver::OnThreadIdChanged() {
-  char stack;
-  profiler_ensure_thread_registered("NativeAudioCallback", &stack);
-}
-
-void AudioCallbackDriver::CheckThreadIdChanged() {
+bool AudioCallbackDriver::CheckThreadIdChanged() {
   auto id = std::this_thread::get_id();
   if (id != mAudioThreadId) {
     if (id != std::thread::id()) {
-      OnThreadIdChanged();
+      mAudioThreadId = id;
+      return true;
     }
-    mAudioThreadId = id;
   }
+  return false;
 }
 
 long AudioCallbackDriver::DataCallback(const AudioDataValue* aInputBuffer,
                                        AudioDataValue* aOutputBuffer,
                                        long aFrames) {
-  CheckThreadIdChanged();
+  if (!mSandboxed && CheckThreadIdChanged()) {
+    PROFILER_REGISTER_THREAD("NativeAudioCallback");
+  }
   FallbackDriverState fallbackState = mFallbackDriverState;
   if (MOZ_UNLIKELY(fallbackState == FallbackDriverState::Running)) {
     // Wait for the fallback driver to stop. Wake it up so it can stop if it's
@@ -1015,6 +1014,9 @@ long AudioCallbackDriver::DataCallback(const AudioDataValue* aInputBuffer,
     result.Stopped();
     // Update the flag before handing over the graph and going to drain.
     mAudioStreamState = AudioStreamState::Stopping;
+    if (!mSandboxed) {
+      PROFILER_UNREGISTER_THREAD();
+    }
     return aFrames - 1;
   }
 
@@ -1026,6 +1028,9 @@ long AudioCallbackDriver::DataCallback(const AudioDataValue* aInputBuffer,
     mAudioStreamState = AudioStreamState::Stopping;
     nextDriver->SetState(mIterationStart, mIterationEnd, mStateComputedTime);
     nextDriver->Start();
+    if (!mSandboxed) {
+      PROFILER_UNREGISTER_THREAD();
+    }
     // Returning less than aFrames starts the draining and eventually stops the
     // audio thread. This function will never get called again.
     return aFrames - 1;
