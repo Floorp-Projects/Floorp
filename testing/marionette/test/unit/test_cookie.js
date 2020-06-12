@@ -18,7 +18,8 @@ cookie.manager = {
     httpOnly,
     session,
     expiry,
-    originAttributes
+    originAttributes,
+    sameSite
   ) {
     if (name === "fail") {
       throw new Error("An error occurred while adding cookie");
@@ -33,6 +34,7 @@ cookie.manager = {
       isSession: session,
       expiry,
       originAttributes,
+      sameSite,
     };
     cookie.manager.cookies.push(newCookie);
   },
@@ -158,11 +160,31 @@ add_test(function test_fromJSON() {
     );
   }
 
+  // sameSite
+  for (let invalidType of ["foo", 42, [], {}, null]) {
+    const sameSiteTest = {
+      name: "foo",
+      value: "bar",
+      sameSite: invalidType,
+    };
+    Assert.throws(
+      () => cookie.fromJSON(sameSiteTest),
+      /Cookie sameSite flag must be one of None, Lax, or Strict/
+    );
+  }
+
   // bare requirements
   let bare = cookie.fromJSON({ name: "name", value: "value" });
   equal("name", bare.name);
   equal("value", bare.value);
-  for (let missing of ["path", "secure", "httpOnly", "session", "expiry"]) {
+  for (let missing of [
+    "path",
+    "secure",
+    "httpOnly",
+    "session",
+    "expiry",
+    "sameSite",
+  ]) {
     ok(!bare.hasOwnProperty(missing));
   }
 
@@ -175,6 +197,7 @@ add_test(function test_fromJSON() {
     secure: true,
     httpOnly: true,
     expiry: 42,
+    sameSite: "Lax",
   });
   equal("name", full.name);
   equal("value", full.value);
@@ -183,6 +206,7 @@ add_test(function test_fromJSON() {
   equal(true, full.secure);
   equal(true, full.httpOnly);
   equal(42, full.expiry);
+  equal("Lax", full.sameSite);
 
   run_next_test();
 });
@@ -251,6 +275,22 @@ add_test(function test_add() {
   });
   equal(".domain", cookie.manager.cookies[4].host);
 
+  const sameSiteMap = new Map([
+    ["None", Ci.nsICookie.SAMESITE_NONE],
+    ["Lax", Ci.nsICookie.SAMESITE_LAX],
+    ["Strict", Ci.nsICookie.SAMESITE_STRICT],
+  ]);
+
+  Array.from(sameSiteMap.keys()).forEach((entry, index) => {
+    cookie.add({
+      name: "name" + index,
+      value: "value",
+      domain: ".domain",
+      sameSite: entry,
+    });
+    equal(sameSiteMap.get(entry), cookie.manager.cookies[5 + index].sameSite);
+  });
+
   Assert.throws(() => {
     cookie.add({ name: "fail", value: "value6", domain: "domain6" });
   }, /UnableToSetCookieError/);
@@ -312,6 +352,17 @@ add_test(function test_iter() {
   equal(1, sessionCookies.length);
   equal("aSessionCookie", sessionCookies[0].name);
   equal(false, sessionCookies[0].hasOwnProperty("expiry"));
+
+  cookie.add({
+    name: "2",
+    value: "",
+    domain: "samesite.example.com",
+    sameSite: "Lax",
+  });
+
+  let sameSiteCookies = [...cookie.iter("samesite.example.com")];
+  equal(1, sameSiteCookies.length);
+  equal("Lax", sameSiteCookies[0].sameSite);
 
   run_next_test();
 });

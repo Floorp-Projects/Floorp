@@ -411,20 +411,26 @@ assert.object = function(obj, msg = "") {
  * Asserts that <var>prop</var> is in <var>obj</var>.
  *
  * @param {?} prop
- *     Own property to test if is in <var>obj</var>.
+ *     An array element or own property to test if is in <var>obj</var>.
  * @param {?} obj
- *     Object.
+ *     An array or an Object that is being tested.
  * @param {string=} msg
  *     Custom error message.
  *
  * @return {?}
- *     Value of <var>obj</var>'s own property <var>prop</var>.
+ *     The array element, or the value of <var>obj</var>'s own property
+ *     <var>prop</var>.
  *
  * @throws {InvalidArgumentError}
- *     If <var>prop</var> is not in <var>obj</var>, or <var>obj</var>
+ *     If the <var>obj</var> was an array and did not contain <var>prop</var>.
+ *     Otherwise if <var>prop</var> is not in <var>obj</var>, or <var>obj</var>
  *     is not an object.
  */
 assert.in = function(prop, obj, msg = "") {
+  if (Array.isArray(obj)) {
+    assert.that(p => obj.includes(p), msg)(prop);
+    return prop;
+  }
   assert.object(obj, msg);
   msg = msg || pprint`Expected ${prop} in ${obj}`;
   assert.that(p => obj.hasOwnProperty(p), msg)(prop);
