@@ -50,6 +50,7 @@ exports[`Frames Blackboxed Frames filters blackboxed frames 1`] = `
           "state": "on-stack",
           "this": Object {},
           "thread": "FakeThread",
+          "type": "call",
         }
       }
       frameworkGroupingOn={false}
@@ -96,6 +97,7 @@ exports[`Frames Blackboxed Frames filters blackboxed frames 1`] = `
           "state": "on-stack",
           "this": Object {},
           "thread": "FakeThread",
+          "type": "call",
         }
       }
       shouldMapDisplayName={true}
@@ -145,6 +147,7 @@ exports[`Frames Blackboxed Frames filters blackboxed frames 1`] = `
           "state": "on-stack",
           "this": Object {},
           "thread": "FakeThread",
+          "type": "call",
         }
       }
       frameworkGroupingOn={false}
@@ -191,6 +194,7 @@ exports[`Frames Blackboxed Frames filters blackboxed frames 1`] = `
           "state": "on-stack",
           "this": Object {},
           "thread": "FakeThread",
+          "type": "call",
         }
       }
       shouldMapDisplayName={true}

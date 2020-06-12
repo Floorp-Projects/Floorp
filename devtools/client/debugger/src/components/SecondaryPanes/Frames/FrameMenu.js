@@ -57,6 +57,23 @@ function blackBoxSource(cx, source, toggleBlackBox) {
   );
 }
 
+function restartFrame(cx, frame, restart) {
+  return formatMenuElement("restartFrame", () => restart(cx, frame));
+}
+
+function isValidRestartFrame(frame: Frame, callbacks: Object) {
+  // Hides 'Restart Frame' item for call stack groups context menu,
+  // otherwise can be misleading for the user which frame gets restarted.
+  if (!callbacks.restart) {
+    return false;
+  }
+
+  // Any frame state than 'on-stack' is either dismissed by the server
+  // or can potentially cause unexpected errors.
+  // Global frame has frame.callee equal to null and can't be restarted.
+  return frame.type === "call" && frame.state === "on-stack";
+}
+
 export default function FrameMenu(
   frame: Frame,
   frameworkGroupingOn: boolean,
@@ -68,6 +85,11 @@ export default function FrameMenu(
   event.preventDefault();
 
   const menuOptions = [];
+
+  if (isValidRestartFrame(frame, callbacks)) {
+    const restartFrameItem = restartFrame(cx, frame, callbacks.restart);
+    menuOptions.push(restartFrameItem);
+  }
 
   const toggleFrameworkElement = toggleFrameworkGroupingElement(
     callbacks.toggleFrameworkGrouping,

@@ -659,6 +659,20 @@ async function stepOut(threadFront, frameActor) {
 }
 
 /**
+ * Restart specific frame and wait for the pause after the restart
+ * has been taken.
+ *
+ * @param DevToolsClient client
+ * @param ThreadFront threadFront
+ * @returns Promise
+ */
+async function restartFrame(threadFront, frameActor) {
+  dumpn("Restarting frame.");
+  await threadFront.restart(frameActor);
+  return waitForPause(threadFront);
+}
+
+/**
  * Get the list of `count` frames currently on stack, starting at the index
  * `first` for the specified thread.
  *

@@ -73,6 +73,7 @@ export function createFrame(
     index,
     asyncCause: frame.asyncCause,
     state: frame.state,
+    type: frame.type,
   };
 }
 

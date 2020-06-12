@@ -57,6 +57,7 @@ exports[`Group displays a group 1`] = `
           "state": "on-stack",
           "this": Object {},
           "thread": "FakeThread",
+          "type": "call",
         }
       }
     />
@@ -132,6 +133,7 @@ exports[`Group passes the getFrameTitle prop to the Frame components 1`] = `
           "state": "on-stack",
           "this": Object {},
           "thread": "FakeThread",
+          "type": "call",
         }
       }
     />
@@ -206,6 +208,7 @@ exports[`Group passes the getFrameTitle prop to the Frame components 1`] = `
           "state": "on-stack",
           "this": Object {},
           "thread": "FakeThread",
+          "type": "call",
         }
       }
       frameworkGroupingOn={true}
@@ -213,6 +216,7 @@ exports[`Group passes the getFrameTitle prop to the Frame components 1`] = `
       hideLocation={true}
       key="1"
       panel="webconsole"
+      restart={[MockFunction]}
       selectFrame={[MockFunction]}
       selectLocation={[MockFunction]}
       selectedFrame={
@@ -256,6 +260,7 @@ exports[`Group passes the getFrameTitle prop to the Frame components 1`] = `
           "state": "on-stack",
           "this": Object {},
           "thread": "FakeThread",
+          "type": "call",
         }
       }
       shouldMapDisplayName={false}
@@ -318,6 +323,7 @@ exports[`Group passes the getFrameTitle prop to the Frame components 1`] = `
           "state": "on-stack",
           "this": Object {},
           "thread": "FakeThread",
+          "type": "call",
         }
       }
       frameworkGroupingOn={true}
@@ -325,6 +331,7 @@ exports[`Group passes the getFrameTitle prop to the Frame components 1`] = `
       hideLocation={true}
       key="2"
       panel="webconsole"
+      restart={[MockFunction]}
       selectFrame={[MockFunction]}
       selectLocation={[MockFunction]}
       selectedFrame={
@@ -368,6 +375,7 @@ exports[`Group passes the getFrameTitle prop to the Frame components 1`] = `
           "state": "on-stack",
           "this": Object {},
           "thread": "FakeThread",
+          "type": "call",
         }
       }
       shouldMapDisplayName={false}
@@ -430,6 +438,7 @@ exports[`Group passes the getFrameTitle prop to the Frame components 1`] = `
           "state": "on-stack",
           "this": Object {},
           "thread": "FakeThread",
+          "type": "call",
         }
       }
       frameworkGroupingOn={true}
@@ -437,6 +446,7 @@ exports[`Group passes the getFrameTitle prop to the Frame components 1`] = `
       hideLocation={true}
       key="3"
       panel="webconsole"
+      restart={[MockFunction]}
       selectFrame={[MockFunction]}
       selectLocation={[MockFunction]}
       selectedFrame={
@@ -480,6 +490,7 @@ exports[`Group passes the getFrameTitle prop to the Frame components 1`] = `
           "state": "on-stack",
           "this": Object {},
           "thread": "FakeThread",
+          "type": "call",
         }
       }
       shouldMapDisplayName={false}
@@ -547,6 +558,7 @@ exports[`Group renders group with anonymous functions 1`] = `
           "state": "on-stack",
           "this": Object {},
           "thread": "FakeThread",
+          "type": "call",
         }
       }
     />
@@ -622,6 +634,7 @@ exports[`Group renders group with anonymous functions 2`] = `
           "state": "on-stack",
           "this": Object {},
           "thread": "FakeThread",
+          "type": "call",
         }
       }
     />
@@ -696,12 +709,14 @@ exports[`Group renders group with anonymous functions 2`] = `
           "state": "on-stack",
           "this": Object {},
           "thread": "FakeThread",
+          "type": "call",
         }
       }
       frameworkGroupingOn={true}
       hideLocation={true}
       key="1"
       panel="webconsole"
+      restart={[MockFunction]}
       selectFrame={[MockFunction]}
       selectLocation={[MockFunction]}
       selectedFrame={
@@ -745,6 +760,7 @@ exports[`Group renders group with anonymous functions 2`] = `
           "state": "on-stack",
           "this": Object {},
           "thread": "FakeThread",
+          "type": "call",
         }
       }
       shouldMapDisplayName={false}
@@ -807,12 +823,14 @@ exports[`Group renders group with anonymous functions 2`] = `
           "state": "on-stack",
           "this": Object {},
           "thread": "FakeThread",
+          "type": "call",
         }
       }
       frameworkGroupingOn={true}
       hideLocation={true}
       key="2"
       panel="webconsole"
+      restart={[MockFunction]}
       selectFrame={[MockFunction]}
       selectLocation={[MockFunction]}
       selectedFrame={
@@ -856,6 +874,7 @@ exports[`Group renders group with anonymous functions 2`] = `
           "state": "on-stack",
           "this": Object {},
           "thread": "FakeThread",
+          "type": "call",
         }
       }
       shouldMapDisplayName={false}
@@ -918,12 +937,14 @@ exports[`Group renders group with anonymous functions 2`] = `
           "state": "on-stack",
           "this": Object {},
           "thread": "FakeThread",
+          "type": "call",
         }
       }
       frameworkGroupingOn={true}
       hideLocation={true}
       key="3"
       panel="webconsole"
+      restart={[MockFunction]}
       selectFrame={[MockFunction]}
       selectLocation={[MockFunction]}
       selectedFrame={
@@ -967,6 +988,7 @@ exports[`Group renders group with anonymous functions 2`] = `
           "state": "on-stack",
           "this": Object {},
           "thread": "FakeThread",
+          "type": "call",
         }
       }
       shouldMapDisplayName={false}
