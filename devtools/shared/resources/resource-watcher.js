@@ -421,7 +421,6 @@ class ResourceWatcher {
 
 ResourceWatcher.TYPES = ResourceWatcher.prototype.TYPES = {
   CONSOLE_MESSAGE: "console-message",
-  CSS_CHANGE: "css-change",
   ERROR_MESSAGE: "error-message",
   PLATFORM_MESSAGE: "platform-message",
   DOCUMENT_EVENT: "document-event",
@@ -435,8 +434,6 @@ module.exports = { ResourceWatcher };
 const LegacyListeners = {
   [ResourceWatcher.TYPES
     .CONSOLE_MESSAGE]: require("devtools/shared/resources/legacy-listeners/console-messages"),
-  [ResourceWatcher.TYPES
-    .CSS_CHANGE]: require("devtools/shared/resources/legacy-listeners/css-changes"),
   [ResourceWatcher.TYPES
     .ERROR_MESSAGE]: require("devtools/shared/resources/legacy-listeners/error-messages"),
   [ResourceWatcher.TYPES
