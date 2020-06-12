@@ -6,6 +6,7 @@ package org.mozilla.fenix.components
 
 import android.content.Context
 import androidx.lifecycle.LiveData
+import androidx.lifecycle.asLiveData
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -41,7 +42,7 @@ class TopSiteStorage(private val context: Context) {
      * Returns a [LiveData] list of all the [TopSite] instances.
      */
     fun getTopSites(): LiveData<List<TopSite>> {
-        return storage.getTopSites()
+        return storage.getTopSites().asLiveData()
     }
 
     /**

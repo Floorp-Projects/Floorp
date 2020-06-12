@@ -7,6 +7,7 @@ package org.mozilla.fenix.components
 import android.content.Context
 import android.os.StrictMode
 import androidx.lifecycle.LiveData
+import androidx.lifecycle.asLiveData
 import androidx.paging.DataSource
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
@@ -71,7 +72,7 @@ class TabCollectionStorage(
     }
 
     fun getCollections(limit: Int = 20): LiveData<List<TabCollection>> {
-        return collectionStorage.getCollections(limit)
+        return collectionStorage.getCollections(limit).asLiveData()
     }
 
     fun getCollectionsPaged(): DataSource.Factory<Int, TabCollection> {
