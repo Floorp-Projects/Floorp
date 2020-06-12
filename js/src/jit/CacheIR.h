@@ -197,6 +197,7 @@ enum class CacheOp {
 
 extern const char* const CacheIROpNames[];
 extern const uint32_t CacheIROpArgLengths[];
+extern const uint32_t CacheIROpHealth[];
 
 class StubField {
  public:
