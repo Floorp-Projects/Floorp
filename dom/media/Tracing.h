@@ -92,8 +92,8 @@ class MOZ_RAII AutoTracer {
       int32_t size = snprintf(mBuffer, BUFFER_SIZE, aFormat, aArgs...);
       size = std::min(size, BUFFER_SIZE - 1);
       mBuffer[size] = 0;
-      PrintEvent(aLocation, "perf", mComment, TracingPhase::BEGIN, NowInUs(),
-                 aPID, aTID);
+      PrintEvent(aLocation, "perf", mComment,
+                 mozilla::AsyncLogger::TracingPhase::BEGIN, aPID, aTID);
     }
   }
 
@@ -104,15 +104,10 @@ class MOZ_RAII AutoTracer {
   ~AutoTracer();
 
  private:
-  uint64_t NowInUs();
-
-  enum class TracingPhase { BEGIN, END, COMPLETE };
-
-  const char TRACING_PHASE_STRINGS[3] = {'B', 'E', 'X'};
-
   void PrintEvent(const char* aName, const char* aCategory,
-                  const char* aComment, TracingPhase aPhase, uint64_t aTime,
-                  uint64_t aPID, uint64_t aThread);
+                  const char* aComment,
+                  mozilla::AsyncLogger::TracingPhase aPhase, uint64_t aPID,
+                  uint64_t aThread);
 
   void PrintBudget(const char* aName, const char* aCategory, uint64_t aDuration,
                    uint64_t aPID, uint64_t aThread, uint64_t aFrames,
