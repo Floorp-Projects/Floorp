@@ -216,6 +216,7 @@ nsresult PermissionDelegateHandler::GetPermission(const nsACString& aType,
                                                   uint32_t* aPermission,
                                                   bool aExactHostMatch) {
   MOZ_ASSERT(mDocument);
+  MOZ_ASSERT(mPrincipal);
 
   if (mPrincipal->IsSystemPrincipal()) {
     *aPermission = nsIPermissionManager::ALLOW_ACTION;
@@ -250,7 +251,32 @@ nsresult PermissionDelegateHandler::GetPermission(const nsACString& aType,
   if ((info->mPolicy == DelegatePolicy::eDelegateUseTopOrigin ||
        (info->mPolicy == DelegatePolicy::eDelegateUseFeaturePolicy &&
         StaticPrefs::dom_security_featurePolicy_enabled()))) {
-    // TODO: This will be changed in the next patch.
+    RefPtr<WindowContext> topWC =
+        mDocument->GetWindowContext()->TopWindowContext();
+
+    if (topWC->IsInProcess()) {
+      // If the top-level window context is in the same process, we directly get
+      // the node principal from the top-level document to test the permission.
+      // We cannot check the lists in the window context in this case since the
+      // 'perm-changed' could be notified in the iframe before the top-level in
+      // certain cases, for example, request permissions in first-party iframes.
+      // In this case, the list in window context hasn't gotten updated, so it
+      // would has an out-dated value until the top-level window get the
+      // observer. So, we have to test permission manager directly if we can.
+      RefPtr<Document> topDoc = topWC->GetBrowsingContext()->GetDocument();
+
+      if (topDoc) {
+        principal = topDoc->NodePrincipal();
+      }
+    } else {
+      // Get the delegated permissions from the top-level window context.
+      DelegatedPermissionList list =
+          aExactHostMatch ? topWC->GetDelegatedExactHostMatchPermissions()
+                          : topWC->GetDelegatedPermissions();
+      size_t idx = std::distance(sPermissionsMap, info);
+      *aPermission = list.mPermissions[idx];
+      return NS_OK;
+    }
   }
 
   return (mPermissionManager->*testPermission)(principal, aType, aPermission);
