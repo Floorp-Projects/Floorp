@@ -54,25 +54,20 @@ import-from-360se =
 
 no-migration-sources = No programs that contain bookmarks, history or password data could be found.
 
-import-source =
-    .label = Import Settings and Data
-import-items-title =
-    .label = Items to Import
+import-source-page-title = Import Settings and Data
+import-items-page-title = Items to Import
 
 import-items-description = Select which items to import:
 
-import-migrating-title =
-    .label = Importing…
+import-migrating-page-title = Importing…
 
 import-migrating-description = The following items are currently being imported…
 
-import-select-profile-title =
-    .label = Select Profile
+import-select-profile-page-title = Select Profile
 
 import-select-profile-description = The following profiles are available to import from:
 
-import-done-title =
-    .label = Import Complete
+import-done-page-title = Import Complete
 
 import-done-description = The following items were successfully imported:
 
