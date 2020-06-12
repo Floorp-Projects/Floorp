@@ -596,6 +596,10 @@ class MOZ_RAII AutoKeepJitScripts {
 // during GC.
 void MarkActiveJitScripts(Zone* zone);
 
+#if defined(JS_STRUCTURED_SPEW) || defined(JS_CACHEIR_SPEW)
+bool GetStubEnteredCount(ICStub* stub, uint32_t* count);
+#endif
+
 #ifdef JS_STRUCTURED_SPEW
 void JitSpewBaselineICStats(JSScript* script, const char* dumpReason);
 #endif
