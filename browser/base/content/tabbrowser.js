@@ -1772,17 +1772,7 @@
       }
     },
 
-    updateBrowserRemoteness(
-      aBrowser,
-      {
-        newFrameloader,
-        opener,
-        remoteType,
-        sameProcessAsFrameLoader,
-        replaceBrowsingContext,
-        redirectLoadSwitchId,
-      } = {}
-    ) {
+    updateBrowserRemoteness(aBrowser, { newFrameloader, remoteType } = {}) {
       let isRemote = aBrowser.getAttribute("remote") == "true";
 
       // We have to be careful with this here, as the "no remote type" is null,
@@ -1799,22 +1789,6 @@
           "Cannot switch to remote browser in a window " +
             "without the remote tabs load context."
         );
-      }
-
-      // If we are passed an opener, we must be making the browser non-remote, and
-      // if the browser is _currently_ non-remote, we need the openers to match,
-      // because it is already too late to change it.
-      if (opener) {
-        if (shouldBeRemote) {
-          throw new Error(
-            "Cannot set an opener on a browser which should be remote!"
-          );
-        }
-        if (!isRemote && aBrowser.contentWindow.opener != opener) {
-          throw new Error(
-            "Cannot change opener on an already non-remote browser!"
-          );
-        }
       }
 
       // Abort if we're not going to change anything
@@ -1845,8 +1819,6 @@
       let listener = this._tabListeners.get(tab);
       aBrowser.webProgress.removeProgressListener(filter);
       filter.removeProgressListener(listener);
-      let stateFlags = listener.mStateFlags;
-      let requestCount = listener.mRequestCount;
 
       // We'll be creating a new listener, so destroy the old one.
       listener.destroy();
@@ -1871,10 +1843,7 @@
 
       // NB: This works with the hack in the browser constructor that
       // turns this normal property into a field.
-      if (sameProcessAsFrameLoader) {
-        // Always set sameProcessAsFrameLoader when passed in explicitly.
-        aBrowser.sameProcessAsFrameLoader = sameProcessAsFrameLoader;
-      } else if (!shouldBeRemote || oldRemoteType == remoteType) {
+      if (!shouldBeRemote || oldRemoteType == remoteType) {
         // Only copy existing sameProcessAsFrameLoader when not switching
         // remote type otherwise it would stop the switch.
         aBrowser.sameProcessAsFrameLoader = oldSameProcessAsFrameLoader;
@@ -1894,7 +1863,6 @@
         aBrowser.removeAttribute("remoteType");
       }
 
-      let switchingInProgressLoad = !!redirectLoadSwitchId;
       if (!rebuildFrameLoaders) {
         parent.appendChild(aBrowser);
       } else {
@@ -1903,8 +1871,6 @@
         // state set up completely first.
         aBrowser.changeRemoteness({
           remoteType,
-          replaceBrowsingContext,
-          switchingInProgressLoad,
         });
         // Once we have new frameloaders, this call sets the browser back up.
         //
@@ -1926,26 +1892,10 @@
       // browser window is minimized.
       aBrowser.docShellIsActive = this.shouldActivateDocShell(aBrowser);
 
-      // If we're switching an in-progress load, then we shouldn't expect
-      // notification for a new initial about:blank and we should preserve
-      // the existing stateFlags on the TabProgressListener.
-      let expectInitialAboutBlank = !switchingInProgressLoad;
-      if (expectInitialAboutBlank) {
-        stateFlags = 0;
-        requestCount = 0;
-      }
-
       // Create a new tab progress listener for the new browser we just injected,
       // since tab progress listeners have logic for handling the initial about:blank
       // load
-      listener = new TabProgressListener(
-        tab,
-        aBrowser,
-        expectInitialAboutBlank,
-        false,
-        stateFlags,
-        requestCount
-      );
+      listener = new TabProgressListener(tab, aBrowser, true, false);
       this._tabListeners.set(tab, listener);
       filter.addProgressListener(listener, Ci.nsIWebProgress.NOTIFY_ALL);
 

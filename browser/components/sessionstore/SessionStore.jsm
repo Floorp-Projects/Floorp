@@ -3913,11 +3913,9 @@ var SessionStoreInternal = {
       // the loadArguments.
       newFrameloader: loadArguments.newFrameloader,
       remoteType: loadArguments.remoteType,
-      replaceBrowsingContext: loadArguments.replaceBrowsingContext,
       // Make sure that SessionStore knows that this restoration is due
       // to a navigation, as opposed to us restoring a closed window or tab.
       restoreContentReason: RESTORE_TAB_CONTENT_REASON.NAVIGATE_AND_RESTORE,
-      redirectLoadSwitchId: loadArguments.redirectLoadSwitchId,
     };
 
     if (historyIndex >= 0) {
@@ -3928,14 +3926,6 @@ var SessionStoreInternal = {
       );
     } else {
       options.loadArguments = loadArguments;
-
-      // If we're resuming a load which has been redirected from another
-      // process, record the history index which is currently being requested.
-      // It has to be offset by 1 to get back to native history indices from
-      // SessionStore history indicies.
-      if (loadArguments.redirectLoadSwitchId) {
-        loadArguments.redirectHistoryIndex = tabState.requestedIndex - 1;
-      }
     }
 
     // Need to reset restoring tabs.
@@ -4893,15 +4883,11 @@ var SessionStoreInternal = {
     let isRemotenessUpdate = aOptions.isRemotenessUpdate;
     if (!isRemotenessUpdate) {
       let newFrameloader = aOptions.newFrameloader;
-      let replaceBrowsingContext = aOptions.replaceBrowsingContext;
-      let redirectLoadSwitchId = aOptions.redirectLoadSwitchId;
       if (aOptions.remoteType !== undefined) {
         // We already have a selected remote type so we update to that.
         isRemotenessUpdate = tabbrowser.updateBrowserRemoteness(browser, {
           remoteType: aOptions.remoteType,
           newFrameloader,
-          replaceBrowsingContext,
-          redirectLoadSwitchId,
         });
       } else {
         isRemotenessUpdate = tabbrowser.updateBrowserRemotenessByURL(
@@ -4909,8 +4895,6 @@ var SessionStoreInternal = {
           uri,
           {
             newFrameloader,
-            replaceBrowsingContext,
-            redirectLoadSwitchId,
           }
         );
       }
