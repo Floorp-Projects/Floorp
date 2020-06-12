@@ -1945,12 +1945,13 @@ nsresult PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight,
     // the ZCC to update itself.
     mZoomConstraintsClient->ScreenSizeChanged();
   }
-  if (mMobileViewportManager) {
-    // If we have a mobile viewport manager, request a reflow from it. It can
-    // recompute the final CSS viewport and trigger a call to
+  if (UsesMobileViewportSizing()) {
+    // If we are using mobile viewport sizing, request a reflow from the MVM.
+    // It can recompute the final CSS viewport and trigger a call to
     // ResizeReflowIgnoreOverride if it changed. We don't force adjusting
     // of resolution, because that is only necessary when we are destroying
     // the MVM.
+    MOZ_ASSERT(mMobileViewportManager);
     mMobileViewportManager->RequestReflow(false);
     return NS_OK;
   }
