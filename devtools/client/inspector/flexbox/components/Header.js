@@ -122,6 +122,7 @@ class Header extends PureComponent {
       flexItemShown
         ? dom.button({
             className: "flex-header-button-prev devtools-button",
+            "aria-label": getStr("flexbox.backButtonLabel"),
             onClick: e => {
               e.stopPropagation();
               setSelectedNode(nodeFront);
