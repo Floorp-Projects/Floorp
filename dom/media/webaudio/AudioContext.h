@@ -151,7 +151,7 @@ class AudioContext final : public DOMEventTargetHelper,
 
   virtual void DisconnectFromOwner() override;
 
-  void Shutdown();  // idempotent
+  void OnWindowDestroy();  // idempotent
 
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
