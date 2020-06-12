@@ -27,6 +27,7 @@
 #include "nsNetUtil.h"
 #include "nsSHistory.h"
 #include "nsSecureBrowserUI.h"
+#include "nsQueryObject.h"
 
 using namespace mozilla::ipc;
 
@@ -383,7 +384,7 @@ void CanonicalBrowsingContext::LoadURI(const nsAString& aURI,
   LoadURI(loadState, true);
 }
 
-void CanonicalBrowsingContext::PendingRemotenessChange::Complete(
+void CanonicalBrowsingContext::PendingRemotenessChange::ProcessReady(
     ContentParent* aContentParent) {
   if (!mPromise) {
     return;
@@ -392,6 +393,42 @@ void CanonicalBrowsingContext::PendingRemotenessChange::Complete(
   RefPtr<CanonicalBrowsingContext> target(mTarget);
   if (target->IsDiscarded()) {
     Cancel(NS_ERROR_FAILURE);
+    return;
+  }
+
+  // If this BrowsingContext is embedded within the parent process, perform the
+  // process switch directly.
+  if (Element* browserElement = target->GetEmbedderElement()) {
+    MOZ_DIAGNOSTIC_ASSERT(target->IsTop(),
+                          "We shouldn't be trying to change the remoteness of "
+                          "non-remote iframes");
+
+    RefPtr<nsFrameLoaderOwner> frameLoaderOwner =
+        do_QueryObject(browserElement);
+    MOZ_RELEASE_ASSERT(frameLoaderOwner,
+                       "embedder browser must be nsFrameLoaderOwner");
+
+    // The process has been created, hand off to nsFrameLoaderOwner to finish
+    // the process switch.
+    ErrorResult error;
+    frameLoaderOwner->ChangeRemotenessToProcess(
+        aContentParent, mPendingSwitchId, mReplaceBrowsingContext, error);
+    if (error.Failed()) {
+      Cancel(error.StealNSResult());
+      return;
+    }
+
+    // We did it! The process switch is complete.
+    RefPtr<nsFrameLoader> frameLoader = frameLoaderOwner->GetFrameLoader();
+    if (RefPtr<BrowserParent> newBrowser = frameLoader->GetBrowserParent()) {
+      mPromise->Resolve(newBrowser, __func__);
+      Clear();
+      return;
+    }
+
+    // Failed to create the BrowserParent somehow! Abort the process switch
+    // attempt.
+    Cancel(NS_ERROR_UNEXPECTED);
     return;
   }
 
@@ -450,6 +487,7 @@ void CanonicalBrowsingContext::PendingRemotenessChange::Complete(
     oldBrowser->Destroy();
   }
 
+  MOZ_ASSERT(!mReplaceBrowsingContext, "Cannot replace BC for subframe");
   nsCOMPtr<nsIPrincipal> initialPrincipal =
       NullPrincipal::CreateWithInheritedAttributes(
           target->OriginAttributesRef(),
@@ -517,14 +555,27 @@ void CanonicalBrowsingContext::PendingRemotenessChange::Clear() {
   mTarget = nullptr;
 }
 
+CanonicalBrowsingContext::PendingRemotenessChange::PendingRemotenessChange(
+    CanonicalBrowsingContext* aTarget, RemotenessPromise::Private* aPromise,
+    uint64_t aPendingSwitchId, bool aReplaceBrowsingContext)
+    : mTarget(aTarget),
+      mPromise(aPromise),
+      mPendingSwitchId(aPendingSwitchId),
+      mReplaceBrowsingContext(aReplaceBrowsingContext) {}
+
 CanonicalBrowsingContext::PendingRemotenessChange::~PendingRemotenessChange() {
   MOZ_ASSERT(!mPromise && !mTarget,
              "should've already been Cancel() or Complete()-ed");
 }
 
 RefPtr<CanonicalBrowsingContext::RemotenessPromise>
-CanonicalBrowsingContext::ChangeFrameRemoteness(const nsAString& aRemoteType,
-                                                uint64_t aPendingSwitchId) {
+CanonicalBrowsingContext::ChangeRemoteness(const nsAString& aRemoteType,
+                                           uint64_t aPendingSwitchId,
+                                           bool aReplaceBrowsingContext) {
+  MOZ_DIAGNOSTIC_ASSERT(
+      !aReplaceBrowsingContext || (IsEmbeddedInProcess(0) && IsTopContent()),
+      "Cannot replace BrowsingContext for subframes");
+
   // Ensure our embedder hasn't been destroyed already.
   RefPtr<WindowGlobalParent> embedderWindowGlobal = GetEmbedderWindowGlobal();
   if (!embedderWindowGlobal) {
@@ -544,7 +595,8 @@ CanonicalBrowsingContext::ChangeFrameRemoteness(const nsAString& aRemoteType,
                                               __func__);
   }
 
-  if (aRemoteType.Equals(oldContent->GetRemoteType())) {
+  if (!aReplaceBrowsingContext &&
+      aRemoteType.Equals(oldContent->GetRemoteType())) {
     NS_WARNING("Already in the correct process");
     return RemotenessPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
   }
@@ -557,10 +609,9 @@ CanonicalBrowsingContext::ChangeFrameRemoteness(const nsAString& aRemoteType,
 
   RefPtr<BrowserParent> embedderBrowser =
       embedderWindowGlobal->GetBrowserParent();
-  MOZ_ASSERT(embedderBrowser);
-
   // Switching to local. No new process, so perform switch sync.
-  if (aRemoteType.Equals(embedderBrowser->Manager()->GetRemoteType())) {
+  if (embedderBrowser &&
+      aRemoteType.Equals(embedderBrowser->Manager()->GetRemoteType())) {
     if (GetCurrentWindowGlobal()) {
       MOZ_DIAGNOSTIC_ASSERT(GetCurrentWindowGlobal()->IsProcessRoot());
       RefPtr<BrowserParent> oldBrowser =
@@ -576,6 +627,7 @@ CanonicalBrowsingContext::ChangeFrameRemoteness(const nsAString& aRemoteType,
       oldBrowser->Destroy();
     }
 
+    MOZ_ASSERT(!aReplaceBrowsingContext);
     SetOwnerProcessId(embedderBrowser->Manager()->ChildID());
     Unused << embedderWindowGlobal->SendMakeFrameLocal(this, aPendingSwitchId);
     return RemotenessPromise::CreateAndResolve(embedderBrowser, __func__);
@@ -583,8 +635,8 @@ CanonicalBrowsingContext::ChangeFrameRemoteness(const nsAString& aRemoteType,
 
   // Switching to remote. Wait for new process to launch before switch.
   auto promise = MakeRefPtr<RemotenessPromise::Private>(__func__);
-  RefPtr<PendingRemotenessChange> change =
-      new PendingRemotenessChange(this, promise, aPendingSwitchId);
+  RefPtr<PendingRemotenessChange> change = new PendingRemotenessChange(
+      this, promise, aPendingSwitchId, aReplaceBrowsingContext);
   mPendingRemotenessChange = change;
 
   ContentParent::GetNewOrUsedBrowserProcessAsync(
@@ -596,7 +648,7 @@ CanonicalBrowsingContext::ChangeFrameRemoteness(const nsAString& aRemoteType,
       ->Then(
           GetMainThreadSerialEventTarget(), __func__,
           [change](ContentParent* aContentParent) {
-            change->Complete(aContentParent);
+            change->ProcessReady(aContentParent);
           },
           [change](LaunchError aError) { change->Cancel(NS_ERROR_FAILURE); });
   return promise.forget();
