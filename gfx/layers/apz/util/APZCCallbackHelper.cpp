@@ -872,7 +872,7 @@ void APZCCallbackHelper::CancelAutoscroll(
 /* static */
 void APZCCallbackHelper::NotifyPinchGesture(
     PinchGestureInput::PinchGestureType aType, LayoutDeviceCoord aSpanChange,
-    Modifiers aModifiers, nsIWidget* aWidget) {
+    Modifiers aModifiers, const nsCOMPtr<nsIWidget>& aWidget) {
   EventMessage msg;
   switch (aType) {
     case PinchGestureInput::PINCHGESTURE_START:
@@ -887,7 +887,7 @@ void APZCCallbackHelper::NotifyPinchGesture(
       break;
   }
 
-  WidgetSimpleGestureEvent event(true, msg, aWidget);
+  WidgetSimpleGestureEvent event(true, msg, aWidget.get());
   // XXX mDelta for the eMagnifyGesture event is supposed to be the
   // cumulative magnification over the entire gesture (per docs in
   // SimpleGestureEvent.webidl) but currently APZ just sends us a zero

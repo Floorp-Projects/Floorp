@@ -191,7 +191,8 @@ class APZCCallbackHelper {
    */
   static void NotifyPinchGesture(PinchGestureInput::PinchGestureType aType,
                                  LayoutDeviceCoord aSpanChange,
-                                 Modifiers aModifiers, nsIWidget* aWidget);
+                                 Modifiers aModifiers,
+                                 const nsCOMPtr<nsIWidget>& aWidget);
 
  private:
   static uint64_t sLastTargetAPZCNotificationInputBlock;
