@@ -651,8 +651,12 @@ void ShutdownLibrary() {
 }
 
 bool SandboxEnabled() {
+#ifdef MOZ_CUBEB_REMOTING
   StaticMutexAutoLock lock(sMutex);
   return !!sCubebSandbox;
+#else
+  return false;
+#endif
 }
 
 uint32_t MaxNumberOfChannels() {
