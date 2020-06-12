@@ -122,13 +122,13 @@
         android:key="@string/pref_key_advanced"
         android:layout="@layout/preference_cat_style">
         <androidx.preference.Preference
-            android:icon="@drawable/mozac_ic_extensions_black"
+            android:icon="@drawable/ic_addons_extensions"
             android:key="@string/pref_key_addons"
             android:title="@string/preferences_addons" />
 
         <androidx.preference.SwitchPreference
             android:defaultValue="false"
-            android:icon="@drawable/ic_app_links"
+            android:icon="@drawable/ic_open_in_app"
             android:key="@string/pref_key_open_links_in_external_app"
             android:title="@string/preferences_open_links_in_apps" />
 

@@ -139,7 +139,7 @@ class CustomTabToolbarMenu(
 
     private val openInApp = BrowserMenuHighlightableItem(
         label = context.getString(R.string.browser_menu_open_app_link),
-        startImageResource = R.drawable.ic_app_links,
+        startImageResource = R.drawable.ic_open_in_app,
         iconTintColorResource = primaryTextColor(),
         highlight = BrowserMenuHighlight.LowPriority(
             label = context.getString(R.string.browser_menu_open_app_link),

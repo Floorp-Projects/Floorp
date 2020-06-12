@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+  <path
+      android:pathData="m5.5,16c1.3807,0 2.5,1.1193 2.5,2.5s-1.1193,2.5 -2.5,2.5 -2.5,-1.1193 -2.5,-2.5 1.1193,-2.5 2.5,-2.5zM18.5,16c1.3807,0 2.5,1.1193 2.5,2.5s-1.1193,2.5 -2.5,2.5 -2.5,-1.1193 -2.5,-2.5 1.1193,-2.5 2.5,-2.5zM12,16c1.3807,0 2.5,1.1193 2.5,2.5s-1.1193,2.5 -2.5,2.5 -2.5,-1.1193 -2.5,-2.5 1.1193,-2.5 2.5,-2.5zM5.5,9.5c1.3807,0 2.5,1.1193 2.5,2.5s-1.1193,2.5 -2.5,2.5 -2.5,-1.1193 -2.5,-2.5 1.1193,-2.5 2.5,-2.5zM18.5,9.5c1.3807,0 2.5,1.1193 2.5,2.5s-1.1193,2.5 -2.5,2.5 -2.5,-1.1193 -2.5,-2.5 1.1193,-2.5 2.5,-2.5zM12,9.5c1.3807,0 2.5,1.1193 2.5,2.5s-1.1193,2.5 -2.5,2.5 -2.5,-1.1193 -2.5,-2.5 1.1193,-2.5 2.5,-2.5zM5.5,3c1.3807,0 2.5,1.1193 2.5,2.5s-1.1193,2.5 -2.5,2.5 -2.5,-1.1193 -2.5,-2.5 1.1193,-2.5 2.5,-2.5zM18.5,3c1.3807,0 2.5,1.1193 2.5,2.5s-1.1193,2.5 -2.5,2.5 -2.5,-1.1193 -2.5,-2.5 1.1193,-2.5 2.5,-2.5zM12,3c1.3807,0 2.5,1.1193 2.5,2.5s-1.1193,2.5 -2.5,2.5 -2.5,-1.1193 -2.5,-2.5 1.1193,-2.5 2.5,-2.5z"
+      android:fillColor="?primaryText"
+      tools:ignore="VectorPath" />
+</vector>
