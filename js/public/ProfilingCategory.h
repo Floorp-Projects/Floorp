@@ -96,6 +96,7 @@
   BEGIN_CATEGORY(MEDIA, "Media", "orange")                                    \
     SUBCATEGORY(MEDIA, MEDIA_CUBEB, "Cubeb")                                  \
     SUBCATEGORY(MEDIA, MEDIA_PLAYBACK, "Playback")                            \
+    SUBCATEGORY(MEDIA, MEDIA_RT, "Real-time rendering")                       \
   END_CATEGORY
 
 namespace JS {
