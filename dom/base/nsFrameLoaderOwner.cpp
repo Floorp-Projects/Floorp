@@ -40,6 +40,13 @@ mozilla::dom::BrowsingContext* nsFrameLoaderOwner::GetBrowsingContext() {
   return nullptr;
 }
 
+mozilla::dom::BrowsingContext* nsFrameLoaderOwner::GetExtantBrowsingContext() {
+  if (mFrameLoader) {
+    return mFrameLoader->GetExtantBrowsingContext();
+  }
+  return nullptr;
+}
+
 bool nsFrameLoaderOwner::UseRemoteSubframes() {
   RefPtr<Element> owner = do_QueryObject(this);
 
