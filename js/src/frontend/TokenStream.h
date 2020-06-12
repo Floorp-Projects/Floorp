@@ -234,13 +234,20 @@ extern const char* ReservedWordToCharZ(PropertyName* str);
 extern const char* ReservedWordToCharZ(TokenKind tt);
 
 struct TokenStreamFlags {
-  bool isEOF : 1;           // Hit end of file.
-  bool isDirtyLine : 1;     // Non-whitespace since start of line.
-  bool sawOctalEscape : 1;  // Saw an octal character escape.
-  bool hadError : 1;        // Hit a syntax error, at start or during a
-                            // token.
+  // Hit end of file.
+  bool isEOF : 1;
+  // Non-whitespace since start of line.
+  bool isDirtyLine : 1;
+  // Saw an octal character escape or a 0-prefixed octal literal.
+  bool sawDeprecatedOctal : 1;
+  // Hit a syntax error, at start or during a token.
+  bool hadError : 1;
 
-  TokenStreamFlags() : isEOF(), isDirtyLine(), sawOctalEscape(), hadError() {}
+  TokenStreamFlags()
+      : isEOF(false),
+        isDirtyLine(false),
+        sawDeprecatedOctal(false),
+        hadError(false) {}
 };
 
 template <typename Unit>
@@ -753,9 +760,9 @@ class TokenStreamAnyChars : public TokenStreamShared {
 
   // Flag methods.
   bool isEOF() const { return flags.isEOF; }
-  bool sawOctalEscape() const { return flags.sawOctalEscape; }
+  bool sawDeprecatedOctal() const { return flags.sawDeprecatedOctal; }
   bool hadError() const { return flags.hadError; }
-  void clearSawOctalEscape() { flags.sawOctalEscape = false; }
+  void clearSawDeprecatedOctal() { flags.sawDeprecatedOctal = false; }
 
   bool hasInvalidTemplateEscape() const {
     return invalidTemplateEscapeType != InvalidEscapeType::None;
