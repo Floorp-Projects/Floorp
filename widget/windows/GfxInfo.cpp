@@ -1759,46 +1759,16 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
         "FEATURE_UNQUALIFIED_WEBRENDER_WINDOWS_8_1");
 #endif
 
-    // Bug 1525084 - Window jumps with certain Intel drivers
-    // On nightly, we use a more conversative range of drivers that we have
-    // confirmed the issue occurs with. On beta/release, we block everything
-    // earlier to minimize the probability of missing a particular driver.
-#ifdef EARLY_BETA_OR_EARLIER
-#  ifndef NIGHTLY_BUILD
-    APPEND_TO_DRIVER_BLOCKLIST_RANGE(
-        OperatingSystem::Windows, DeviceFamily::IntelAll,
-        nsIGfxInfo::FEATURE_WEBRENDER,
-        nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION, DRIVER_BETWEEN_INCLUSIVE,
-        V(10, 18, 15, 4256), V(10, 18, 15, 4281),
-        // clang-format off
-        "FEATURE_FAILURE_WEBRENDER_WINDOW_JUMP_INTEL_10.18.15.4256_10.18.15.4281",
-        // clang-format on
-        "Intel driver >= 21.20.16.4590");
-    APPEND_TO_DRIVER_BLOCKLIST_RANGE(
-        OperatingSystem::Windows, DeviceFamily::IntelAll,
-        nsIGfxInfo::FEATURE_WEBRENDER,
-        nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION, DRIVER_BETWEEN_INCLUSIVE,
-        V(20, 19, 15, 4285), V(20, 19, 15, 4835),
-        // clang-format off
-        "FEATURE_FAILURE_WEBRENDER_WINDOW_JUMP_INTEL_20.19.15.4285_20.19.15.4835",
-        // clang-format on
-        "Intel driver >= 21.20.16.4590");
-    APPEND_TO_DRIVER_BLOCKLIST_RANGE(
-        OperatingSystem::Windows, DeviceFamily::IntelAll,
-        nsIGfxInfo::FEATURE_WEBRENDER,
-        nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION, DRIVER_BETWEEN_INCLUSIVE,
-        V(21, 20, 16, 4471), V(21, 20, 16, 4565),
-        // clang-format off
-        "FEATURE_FAILURE_WEBRENDER_WINDOW_JUMP_INTEL_21.20.16.4471_21.20.16.4565",
-        // clang-format on
-        "Intel driver >= 21.20.16.4590");
-#  endif
-#else
+    // Previously we had window jumping with certain Intel drivers
+    // which caused us to conservatively block drivers older than
+    // 21.20.16.4590. We're keeping that blocking for now, just to minimize
+    // risk.
+#ifndef EARLY_BETA_OR_EARLIER
     APPEND_TO_DRIVER_BLOCKLIST2(
         OperatingSystem::Windows, DeviceFamily::IntelAll,
         nsIGfxInfo::FEATURE_WEBRENDER,
         nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION, DRIVER_LESS_THAN,
-        V(21, 20, 16, 4590), "FEATURE_FAILURE_WEBRENDER_WINDOW_JUMP_INTEL");
+        V(21, 20, 16, 4590), "FEATURE_FAILURE_INTEL_WR_OLD_DRIVERS");
 #endif
 
     // Bug 1615421 / 1607860 - Playing videos appear to crash with WebRender
