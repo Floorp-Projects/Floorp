@@ -44,7 +44,13 @@ class GridList extends PureComponent {
 
     return dom.div(
       { className: "grid-container" },
-      dom.span({}, getStr("layout.overlayGrid")),
+      dom.span(
+        {
+          role: "heading",
+          "aria-level": "3",
+        },
+        getStr("layout.overlayGrid")
+      ),
       dom.ul(
         {
           id: "grid-list",
