@@ -119,8 +119,7 @@ void nsSocketTransportService::SocketContext::MaybeResetEpoch() {
 // ctor/dtor (called on the main/UI thread by the service manager)
 
 nsSocketTransportService::nsSocketTransportService()
-    : mThread(nullptr),
-      mLock("nsSocketTransportService::mLock"),
+    : mLock("nsSocketTransportService::mLock"),
       mInitialized(false),
       mShuttingDown(false),
       mOffline(false),
@@ -340,6 +339,45 @@ nsSocketTransportService::IsOnCurrentThreadInfallible() {
   nsCOMPtr<nsIThread> thread = GetThreadSafely();
   NS_ENSURE_TRUE(thread, false);
   return thread->IsOnCurrentThread();
+}
+
+//-----------------------------------------------------------------------------
+// nsIDirectTaskDispatcher
+
+already_AddRefed<nsIDirectTaskDispatcher>
+nsSocketTransportService::GetDirectTaskDispatcherSafely() {
+  MutexAutoLock lock(mLock);
+  nsCOMPtr<nsIDirectTaskDispatcher> result = mDirectTaskDispatcher;
+  return result.forget();
+}
+
+NS_IMETHODIMP
+nsSocketTransportService::DispatchDirectTask(
+    already_AddRefed<nsIRunnable> aEvent) {
+  nsCOMPtr<nsIDirectTaskDispatcher> dispatcher =
+      GetDirectTaskDispatcherSafely();
+  NS_ENSURE_TRUE(dispatcher, NS_ERROR_NOT_INITIALIZED);
+  return dispatcher->DispatchDirectTask(std::move(aEvent));
+}
+
+NS_IMETHODIMP nsSocketTransportService::DrainDirectTasks() {
+  nsCOMPtr<nsIDirectTaskDispatcher> dispatcher =
+      GetDirectTaskDispatcherSafely();
+  if (!dispatcher) {
+    // nothing to drain.
+    return NS_OK;
+  }
+  return dispatcher->DrainDirectTasks();
+}
+
+NS_IMETHODIMP nsSocketTransportService::HaveDirectTasks(bool* aValue) {
+  nsCOMPtr<nsIDirectTaskDispatcher> dispatcher =
+      GetDirectTaskDispatcherSafely();
+  if (!dispatcher) {
+    *aValue = false;
+    return NS_OK;
+  }
+  return dispatcher->HaveDirectTasks(aValue);
 }
 
 //-----------------------------------------------------------------------------
@@ -689,7 +727,8 @@ int32_t nsSocketTransportService::Poll(TimeDuration* pollDuration,
 NS_IMPL_ISUPPORTS(nsSocketTransportService, nsISocketTransportService,
                   nsIRoutedSocketTransportService, nsIEventTarget,
                   nsISerialEventTarget, nsIThreadObserver, nsIRunnable,
-                  nsPISocketTransportService, nsIObserver)
+                  nsPISocketTransportService, nsIObserver,
+                  nsIDirectTaskDispatcher)
 
 static const char* gCallbackPrefs[] = {
     SEND_BUFFER_PREF,
@@ -732,6 +771,7 @@ nsSocketTransportService::Init() {
     MutexAutoLock lock(mLock);
     // Install our mThread, protecting against concurrent readers
     thread.swap(mThread);
+    mDirectTaskDispatcher = do_QueryInterface(mThread);
   }
 
   Preferences::RegisterCallbacks(UpdatePrefs, gCallbackPrefs, this);
@@ -794,6 +834,7 @@ nsresult nsSocketTransportService::ShutdownThread() {
     // Drop our reference to mThread and make sure that any concurrent
     // readers are excluded
     mThread = nullptr;
+    mDirectTaskDispatcher = nullptr;
   }
 
   Preferences::UnregisterCallbacks(UpdatePrefs, gCallbackPrefs, this);
