@@ -613,7 +613,7 @@ class nsContainerFrame : public nsSplittableFrame {
 
   /**
    * This is intended to be used as a ChildFrameMerger argument for
-   * ReflowOverflowContainerChildren().
+   * ReflowOverflowContainerChildren() and DrainExcessOverflowContainersList().
    */
   static inline void MergeSortedFrameListsFor(nsFrameList& aDest,
                                               nsFrameList& aSrc,
