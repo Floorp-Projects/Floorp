@@ -8,17 +8,20 @@ import android.content.Context
 import android.view.LayoutInflater
 import mozilla.components.browser.tabstray.TabsAdapter
 import mozilla.components.concept.tabstray.Tabs
+import mozilla.components.support.images.loader.ImageLoader
 import org.mozilla.fenix.R
 
 class FenixTabsAdapter(
-    context: Context
+    context: Context,
+    imageLoader: ImageLoader
 ) : TabsAdapter(
     viewHolderProvider = { parentView, _ ->
         TabTrayViewHolder(
             LayoutInflater.from(context).inflate(
                 R.layout.tab_tray_item,
                 parentView,
-                false)
+                false),
+            imageLoader
         )
     }
 ) {

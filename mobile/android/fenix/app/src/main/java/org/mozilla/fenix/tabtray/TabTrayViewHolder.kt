@@ -6,7 +6,6 @@ package org.mozilla.fenix.tabtray
 
 import android.view.View
 import android.widget.ImageButton
-import android.widget.ImageView
 import android.widget.TextView
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.widget.AppCompatImageButton
@@ -20,6 +19,7 @@ import mozilla.components.concept.tabstray.TabsTray
 import mozilla.components.feature.media.ext.pauseIfPlaying
 import mozilla.components.feature.media.ext.playIfPaused
 import mozilla.components.support.base.observer.Observable
+import mozilla.components.support.images.loader.ImageLoader
 import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
@@ -35,9 +35,9 @@ import org.mozilla.fenix.ext.toTab
  */
 class TabTrayViewHolder(
     itemView: View,
+    private val imageLoader: ImageLoader,
     val getSelectedTabId: () -> String? = { itemView.context.components.core.store.state.selectedTabId }
 ) : TabViewHolder(itemView) {
-    private val iconView: ImageView? = itemView.findViewById(R.id.mozac_browser_tabstray_icon)
     private val titleView: TextView = itemView.findViewById(R.id.mozac_browser_tabstray_title)
     private val closeView: AppCompatImageButton =
         itemView.findViewById(R.id.mozac_browser_tabstray_close)
@@ -69,13 +69,8 @@ class TabTrayViewHolder(
 
         if (tab.thumbnail != null) {
             thumbnailView.setImageBitmap(tab.thumbnail)
-            thumbnailView.visibility = View.VISIBLE
-            iconView?.visibility = View.INVISIBLE
         } else {
-            thumbnailView.setImageBitmap(null)
-            iconView?.setImageBitmap(tab.icon)
-            thumbnailView.visibility = View.INVISIBLE
-            iconView?.visibility = View.VISIBLE
+            imageLoader.loadIntoView(thumbnailView, tab.id)
         }
 
         // Media state

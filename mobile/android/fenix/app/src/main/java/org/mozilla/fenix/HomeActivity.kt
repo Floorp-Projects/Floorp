@@ -34,6 +34,7 @@ import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.state.state.WebExtensionState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.tabstray.BrowserTabsTray
+import mozilla.components.browser.thumbnails.loader.ThumbnailLoader
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.concept.tabstray.TabsTray
 import mozilla.components.feature.contextmenu.DefaultSelectionActionDelegate
@@ -242,13 +243,10 @@ open class HomeActivity : LocaleAwareAppCompatActivity() {
                 stackFromEnd = true
             }
 
-            val adapter = FenixTabsAdapter(context)
-            BrowserTabsTray(
-                context,
-                attrs,
-                tabsAdapter = adapter,
-                layout = layout
-            )
+            val thumbnailLoader = ThumbnailLoader(components.core.thumbnailStorage)
+            val adapter = FenixTabsAdapter(context, thumbnailLoader)
+
+            BrowserTabsTray(context, attrs, 0, adapter, layout)
         }
         else -> super.onCreateView(parent, name, context, attrs)
     }

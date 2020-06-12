@@ -509,6 +509,7 @@ dependencies {
     implementation Deps.mozilla_service_location
 
     implementation Deps.mozilla_support_base
+    implementation Deps.mozilla_support_images
     implementation Deps.mozilla_support_ktx
     implementation Deps.mozilla_support_rustlog
     implementation Deps.mozilla_support_utils
