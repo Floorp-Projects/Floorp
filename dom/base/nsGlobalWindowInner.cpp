@@ -1137,7 +1137,7 @@ void nsGlobalWindowInner::FreeInnerObjects() {
   NotifyWindowIDDestroyed("inner-window-destroyed");
 
   for (uint32_t i = 0; i < mAudioContexts.Length(); ++i) {
-    mAudioContexts[i]->Shutdown();
+    mAudioContexts[i]->OnWindowDestroy();
   }
   mAudioContexts.Clear();
 

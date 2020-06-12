@@ -488,10 +488,7 @@ void AudioDestinationNode::OfflineShutdown() {
   MOZ_ASSERT(Context() && Context()->IsOffline(),
              "Should only be called on a valid OfflineAudioContext");
 
-  if (mTrack) {
-    mTrack->Graph()->MediaTrackGraph::ForceShutDown();
-    mOfflineRenderingRef.Drop(this);
-  }
+  mOfflineRenderingRef.Drop(this);
 }
 
 JSObject* AudioDestinationNode::WrapObject(JSContext* aCx,
