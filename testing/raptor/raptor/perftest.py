@@ -161,6 +161,12 @@ either Raptor or browsertime."""
         if self.config["app"] == "fennec":
             self.config["e10s"] = False
 
+        # To differentiate between chrome/firefox failures, we
+        # set an app variable in the logger which prefixes messages
+        # with the app name
+        if self.config["app"] in ("chrome", "chrome-m", "chromium"):
+            LOG.set_app(self.config["app"])
+
         self.browser_name = None
         self.browser_version = None
 

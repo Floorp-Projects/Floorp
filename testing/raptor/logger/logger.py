@@ -10,9 +10,14 @@ from mozlog.proxy import ProxyLogger
 
 
 class RaptorLogger():
+    app = ""
 
     def __init__(self, component=None):
         self.logger = ProxyLogger(component)
+
+    def set_app(self, app_name):
+        """Sets the app name to prefix messages with."""
+        RaptorLogger.app = " [" + app_name + "]"
 
     def exception(self, message, **kwargs):
         self.critical(message, **kwargs)
@@ -24,13 +29,13 @@ class RaptorLogger():
         return self.logger.info("Info: {}".format(message), **kwargs)
 
     def warning(self, message, **kwargs):
-        return self.logger.warning("Warning: {}".format(message), **kwargs)
+        return self.logger.warning("Warning:{} {}".format(RaptorLogger.app, message), **kwargs)
 
     def error(self, message, **kwargs):
-        return self.logger.error("Error: {}".format(message), **kwargs)
+        return self.logger.error("Error:{} {}".format(RaptorLogger.app, message), **kwargs)
 
     def critical(self, message, **kwargs):
-        return self.logger.critical("Critical: {}".format(message), **kwargs)
+        return self.logger.critical("Critical:{} {}".format(RaptorLogger.app, message), **kwargs)
 
     def log_raw(self, message, **kwargs):
         return self.logger.log_raw(message, **kwargs)
