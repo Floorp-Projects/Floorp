@@ -22,7 +22,6 @@ using namespace gfx;
 
 // Only modified on the main-thread
 StaticRefPtr<nsIThread> sRemoteDecoderManagerChildThread;
-StaticRefPtr<AbstractThread> sRemoteDecoderManagerChildAbstractThread;
 
 // Only accessed from sRemoteDecoderManagerChildThread
 static StaticRefPtr<RemoteDecoderManagerChild>
@@ -38,19 +37,7 @@ void RemoteDecoderManagerChild::InitializeThread() {
 
   if (!sRemoteDecoderManagerChildThread) {
     RefPtr<nsIThread> childThread;
-    nsresult rv = NS_NewNamedThread(
-        "RemVidChild", getter_AddRefs(childThread),
-        NS_NewRunnableFunction(
-            "RemoteDecoderManagerChild::InitializeThread::AbstractThread",
-            []() {
-              // We create an AbstractThread for this thread so that we can
-              // use direct task
-              // dispatching with MozPromise, which is similar (but not
-              // identical to) the microtask semantics of JS promises.
-              sRemoteDecoderManagerChildAbstractThread =
-                  AbstractThread::CreateXPCOMThreadWrapper(
-                      NS_GetCurrentThread(), false /* require tail dispatch */);
-            }));
+    nsresult rv = NS_NewNamedThread("RemVidChild", getter_AddRefs(childThread));
     NS_ENSURE_SUCCESS_VOID(rv);
     sRemoteDecoderManagerChildThread = childThread;
 
@@ -101,7 +88,6 @@ void RemoteDecoderManagerChild::Shutdown() {
         NS_DISPATCH_NORMAL);
 
     sRemoteDecoderManagerChildThread->Shutdown();
-    sRemoteDecoderManagerChildAbstractThread = nullptr;
     sRemoteDecoderManagerChildThread = nullptr;
 
     sRecreateTasks = nullptr;
