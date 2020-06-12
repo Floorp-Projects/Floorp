@@ -40,20 +40,18 @@ dtf = create("ARAB");
 assertEq(dtf.resolvedOptions().locale, defaultLocale);
 assertEq(dtf.resolvedOptions().numberingSystem, "arab");
 
-const numberingSystems = [
-  "arab", "arabext", "bali", "beng", "deva",
-  "fullwide", "gujr", "guru", "hanidec", "khmr",
-  "knda", "laoo", "latn", "limb", "mlym",
-  "mong", "mymr", "orya", "tamldec", "telu",
-  "thai", "tibt",
-];
-
-for (let numberingSystem of numberingSystems) {
+for (let [numberingSystem, {algorithmic}] of Object.entries(numberingSystems)) {
   let dtf1 = new Intl.DateTimeFormat(`${defaultLocale}-u-nu-${numberingSystem}`);
   let dtf2 = new Intl.DateTimeFormat(defaultLocale, {numberingSystem});
 
-  assertEq(dtf1.resolvedOptions().numberingSystem, numberingSystem);
-  assertEq(dtf2.resolvedOptions().numberingSystem, numberingSystem);
+  if (!algorithmic) {
+    assertEq(dtf1.resolvedOptions().numberingSystem, numberingSystem);
+    assertEq(dtf2.resolvedOptions().numberingSystem, numberingSystem);
+  } else {
+    // We don't yet support algorithmic numbering systems.
+    assertEq(dtf1.resolvedOptions().numberingSystem, defaultNumberingSystem);
+    assertEq(dtf2.resolvedOptions().numberingSystem, defaultNumberingSystem);
+  }
 
   assertEq(dtf2.format(0), dtf1.format(0));
 }
