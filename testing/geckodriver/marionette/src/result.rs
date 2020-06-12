@@ -114,10 +114,11 @@ mod tests {
             secure: false,
             http_only: false,
             expiry: None,
+            same_site: Some("Strict".into()),
         });
         assert_ser_de(
             &MarionetteResult::Cookies(data),
-            json!([{"name":"foo","value":"bar","path":"/common","domain":"web-platform.test","secure":false,"httpOnly":false}]),
+            json!([{"name":"foo","value":"bar","path":"/common","domain":"web-platform.test","secure":false,"httpOnly":false,"sameSite":"Strict"}]),
         );
     }
 

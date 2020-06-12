@@ -171,6 +171,7 @@ mod tests {
             "secure": true,
             "httpOnly": false,
             "expiry": 123,
+            "sameSite": "Strict",
         }});
         let response = WebDriverResponse::Cookie(CookieResponse(Cookie {
             name: "foo".into(),
@@ -180,6 +181,7 @@ mod tests {
             expiry: Some(Date(123)),
             secure: true,
             http_only: false,
+            same_site: Some("Strict".into()),
         }));
 
         assert_ser(&response, json);
@@ -203,6 +205,7 @@ mod tests {
             expiry: None,
             secure: true,
             http_only: false,
+            same_site: None,
         }));
 
         assert_ser(&response, json);
@@ -217,6 +220,7 @@ mod tests {
             "domain": null,
             "secure": true,
             "httpOnly": false,
+            "sameSite": "None",
         }]});
         let response = WebDriverResponse::Cookies(CookiesResponse(vec![Cookie {
             name: "name".into(),
@@ -226,6 +230,7 @@ mod tests {
             expiry: None,
             secure: true,
             http_only: false,
+            same_site: Some("None".into()),
         }]));
 
         assert_ser(&response, json);

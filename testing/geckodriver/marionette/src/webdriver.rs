@@ -389,6 +389,7 @@ mod tests {
             secure: false,
             http_only: false,
             expiry: Some(Date(1564488092)),
+            same_site: None,
         };
         let json = json!({"WebDriver:AddCookie": {"cookie": {"name": "hello", "value": "world", "secure": false, "httpOnly": false, "expiry": 1564488092}}});
         assert_ser_de(&Command::AddCookie(cookie), json);
