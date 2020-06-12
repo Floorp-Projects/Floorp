@@ -18,9 +18,6 @@ let ProcessObserver = {
   init() {
     Services.obs.addObserver(this, "chrome-document-global-created");
     Services.obs.addObserver(this, "content-document-global-created");
-    if (Services.appinfo.processType == Ci.nsIXULRuntime.PROCESS_TYPE_CONTENT) {
-      Services.obs.addObserver(this, "inner-window-destroyed");
-    }
   },
 
   observe(subject, topic, data) {
@@ -43,15 +40,6 @@ let ProcessObserver = {
         }
         break;
       }
-      case "inner-window-destroyed":
-        // Forward inner-window-destroyed notifications with the
-        // inner window ID, so that code in the parent that should
-        // do something when content windows go away can do it
-        Services.cpmm.sendAsyncMessage(
-          "Toolkit:inner-window-destroyed",
-          subject.nsISupportsPRUint64.data
-        );
-        break;
     }
   },
 };

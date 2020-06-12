@@ -49,16 +49,6 @@ const PREF_LOAD_BOOKMARKS_IN_TABS = "browser.tabs.loadBookmarksInTabs";
 
 let InternalFaviconLoader = {
   /**
-   * This gets called for every inner window that is destroyed.
-   * In the parent process, we process the destruction ourselves. In the child process,
-   * we notify the parent which will then process it based on that message.
-   */
-  observe(subject, topic, data) {
-    let innerWindowID = subject.QueryInterface(Ci.nsISupportsPRUint64).data;
-    this.removeRequestsForInner(innerWindowID);
-  },
-
-  /**
    * Actually cancel the request, and clear the timeout for cancelling it.
    */
   _cancelRequest({ uri, innerWindowID, timerID, callback }, reason) {
@@ -176,10 +166,9 @@ let InternalFaviconLoader = {
     }
     this._initialized = true;
 
-    Services.obs.addObserver(this, "inner-window-destroyed");
-    Services.ppmm.addMessageListener("Toolkit:inner-window-destroyed", msg => {
-      this.removeRequestsForInner(msg.data);
-    });
+    Services.obs.addObserver(windowGlobal => {
+      this.removeRequestsForInner(windowGlobal.innerWindowId);
+    }, "window-global-destroyed");
   },
 
   loadFavicon(browser, principal, pageURI, uri, expiration, iconURI) {
