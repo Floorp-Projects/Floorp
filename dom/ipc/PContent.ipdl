@@ -125,6 +125,7 @@ using mozilla::ContentBlockingNotifier::BlockingDecision from "mozilla/ContentBl
 using mozilla::ContentBlocking::StorageAccessPromptChoices from "mozilla/ContentBlocking.h";
 using JSActorMessageKind from "mozilla/dom/JSActor.h";
 using JSActorMessageMeta from "mozilla/dom/PWindowGlobal.h";
+using mozilla::PermissionDelegateHandler::DelegatedPermissionList from "mozilla/PermissionDelegateIPCUtils.h";
 
 union ChromeRegistryItem
 {

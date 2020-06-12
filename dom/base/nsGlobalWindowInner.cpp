@@ -1581,6 +1581,13 @@ void nsGlobalWindowInner::InitDocumentDependentState(JSContext* aCx) {
 
   UpdateAutoplayPermission();
 
+  RefPtr<PermissionDelegateHandler> permDelegateHandler =
+      mDoc->GetPermissionDelegateHandler();
+
+  if (permDelegateHandler) {
+    permDelegateHandler->PopulateAllDelegatedPermissions();
+  }
+
   if (mWindowGlobalChild && GetBrowsingContext()) {
     GetBrowsingContext()->NotifyResetUserGestureActivation();
   }
@@ -4964,6 +4971,14 @@ nsresult nsGlobalWindowInner::Observe(nsISupports* aSubject, const char* aTopic,
     if (type == NS_LITERAL_CSTRING("autoplay-media")) {
       UpdateAutoplayPermission();
     }
+
+    RefPtr<PermissionDelegateHandler> permDelegateHandler =
+        mDoc->GetPermissionDelegateHandler();
+
+    if (permDelegateHandler) {
+      permDelegateHandler->UpdateDelegatedPermission(type);
+    }
+
     return NS_OK;
   }
 

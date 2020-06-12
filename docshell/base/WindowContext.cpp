@@ -166,6 +166,20 @@ bool WindowContext::CanSet(FieldIndex<IDX_AutoplayPermission>,
   return CheckOnlyOwningProcessCanSet(aSource);
 }
 
+bool WindowContext::CanSet(
+    FieldIndex<IDX_DelegatedPermissions>,
+    const PermissionDelegateHandler::DelegatedPermissionList& aValue,
+    ContentParent* aSource) {
+  return CheckOnlyOwningProcessCanSet(aSource);
+}
+
+bool WindowContext::CanSet(
+    FieldIndex<IDX_DelegatedExactHostMatchPermissions>,
+    const PermissionDelegateHandler::DelegatedPermissionList& aValue,
+    ContentParent* aSource) {
+  return CheckOnlyOwningProcessCanSet(aSource);
+}
+
 void WindowContext::CreateFromIPC(IPCInitializer&& aInit) {
   MOZ_RELEASE_ASSERT(XRE_IsContentProcess(),
                      "Should be a WindowGlobalParent in the parent");
