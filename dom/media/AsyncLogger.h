@@ -9,22 +9,35 @@
 
 #include <atomic>
 #include <thread>
-#include "mozilla/Logging.h"
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/Logging.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Sprintf.h"
+#include "GeckoProfiler.h"
+#ifdef MOZ_GECKO_PROFILER
+#  include "ProfilerMarkerPayload.h"
+#endif
+#include "MPSCQueue.h"
+
+#if defined(_WIN32)
+#  include <process.h>
+#  define getpid() _getpid()
+#else
+#  include <unistd.h>
+#endif
 
 namespace mozilla {
 
+const size_t PAYLOAD_TOTAL_SIZE = 2 << 9;
+
 // This class implements a lock-free asynchronous logger, that outputs to
-// MOZ_LOG.
+// MOZ_LOG or adds profiler markers (the default).
 // Any thread can use this logger without external synchronization and without
 // being blocked. This log is suitable for use in real-time audio threads.
-// Log formatting is best done externally, this class implements the output
-// mechanism only.
 // This class uses a thread internally, and must be started and stopped
 // manually.
-// If logging is disabled, all the calls are no-op.
+// If logging/profiling is disabled, all the calls are no-op and cheap.
 class AsyncLogger {
  public:
   enum class TracingPhase : uint8_t { BEGIN, END, COMPLETE };
@@ -32,33 +45,54 @@ class AsyncLogger {
   const char TRACING_PHASE_STRINGS[3] = {'B', 'E', 'X'};
 
   enum AsyncLoggerOutputMode { MOZLOG, PROFILER };
-  typedef char TextPayload[504];
 
+  struct TextPayload {
+    char mPayload[PAYLOAD_TOTAL_SIZE - MPSC_MSG_RESERVERD];
+  };
+
+  // The order of the fields is important here to minimize padding.
+  struct TracePayload {
+    // The thread on which this tracepoint was gathered.
+    int mTID;
+    // If this marker is of phase X (COMPLETE), this holds the duration of the
+    // event in microseconds. Else, the value is not used.
+    uint32_t mDurationUs;
+    // If this marker is of phase B or E (begin or end), this is the time at
+    // which it was captured.
+    TimeStamp mTimestamp;
+    // An arbitrary string, usually containing a function signature or a
+    // recognizable tag of some sort, to be displayed when analyzing the
+    // profile.
+    char mName[PAYLOAD_TOTAL_SIZE - sizeof(TracingPhase) - sizeof(int) -
+               sizeof(uint32_t) - sizeof(TimeStamp) - MPSC_MSG_RESERVERD];
+    // A trace payload can be either:
+    // - Begin - this marks the beginning of a temporal region
+    // - End - this marks the end of a temporal region
+    // - Complete - this is a timestamp and a length, forming complete a
+    // temporal region
+    TracingPhase mPhase;
+  };
   // aLogModuleName is the name of the MOZ_LOG module.
   explicit AsyncLogger(const char* aLogModuleName,
                        AsyncLogger::AsyncLoggerOutputMode aMode =
                            AsyncLogger::AsyncLoggerOutputMode::PROFILER)
-      : mThread(nullptr), mLogModule(aLogModuleName), mRunning(false) {}
+      : mThread(nullptr),
+        mLogModule(aLogModuleName),
+        mRunning(false),
+        mMode(aMode) {}
 
   void Start() {
     MOZ_ASSERT(!mRunning, "Double calls to AsyncLogger::Start");
+    mRunning = true;
     if (mMode == AsyncLogger::AsyncLoggerOutputMode::MOZLOG) {
       LogMozLog("[");
     }
-    if (Enabled()) {
-      mRunning = true;
-      Run();
-    }
+    Run();
   }
 
   void Stop() {
-    if (Enabled()) {
-      if (mRunning) {
-        mRunning = false;
-        mThread->join();
-      }
-    } else {
-      MOZ_ASSERT(!mRunning && !mThread);
+    if (mRunning) {
+      mRunning = false;
     }
   }
 
@@ -66,12 +100,6 @@ class AsyncLogger {
   void Log(const char* aName, const char* aCategory, const char* aComment,
            TracingPhase aPhase) {
     if (Enabled()) {
-      auto* msg = new detail::MPSCQueue<MAX_MESSAGE_LENGTH>::Message();
-      va_list args;
-      va_start(args, format);
-      VsprintfLiteral(msg->data, format, args);
-      va_end(args);
-      mMessageQueue.Push(msg);
       if (mMode == AsyncLogger::AsyncLoggerOutputMode::MOZLOG) {
         LogMozLog(
             "{\"name\": \"%s\", \"cat\": \"%s\", \"ph\": \"%c\","
@@ -82,7 +110,17 @@ class AsyncLogger {
             NowInUs(), getpid(),
             std::hash<std::thread::id>{}(std::this_thread::get_id()), aComment);
       } else {
-        // todo
+#ifdef MOZ_GECKO_PROFILER
+        auto* msg = new MPSCQueue<TracePayload>::Message();
+        msg->data.mTID = profiler_current_thread_id();
+        msg->data.mPhase = aPhase;
+        msg->data.mTimestamp = TimeStamp::NowUnfuzzed();
+        msg->data.mDurationUs = 0;  // unused, duration is end - begin
+        size_t len = std::min(strlen(aName), ArrayLength(msg->data.mName));
+        memcpy(msg->data.mName, aName, len);
+        msg->data.mName[len] = 0;
+        mMessageQueueProfiler.Push(msg);
+#endif
       }
     }
   }
@@ -98,10 +136,22 @@ class AsyncLogger {
             ", \"pid\": %d,"
             "\"tid\": %zu, \"args\": { \"comment\": \"%" PRIu64 "/%" PRIu64
             "\"}},",
-            aName, aCategory, NowInUs(), aDuration,
-            getpid(), std::hash<std::thread::id>{}(std::this_thread::get_id()),
-            aFrames, aSampleRate);
+            aName, aCategory, NowInUs(), aDuration, getpid(),
+            std::hash<std::thread::id>{}(std::this_thread::get_id()), aFrames,
+            aSampleRate);
       } else {
+#ifdef MOZ_GECKO_PROFILER
+        auto* msg = new MPSCQueue<TracePayload>::Message();
+        msg->data.mTID = profiler_current_thread_id();
+        msg->data.mPhase = TracingPhase::COMPLETE;
+        msg->data.mTimestamp = TimeStamp::NowUnfuzzed();
+        msg->data.mDurationUs =
+            (static_cast<double>(aFrames) / aSampleRate) * 1e6;
+        size_t len = std::min(strlen(aName), ArrayLength(msg->data.mName));
+        memcpy(msg->data.mName, aName, len);
+        msg->data.mName[len] = 0;
+        mMessageQueueProfiler.Push(msg);
+#endif
       }
     }
   }
@@ -109,27 +159,71 @@ class AsyncLogger {
     auto* msg = new MPSCQueue<TextPayload>::Message();
     va_list args;
     va_start(args, format);
-    VsprintfLiteral(msg->data, format, args);
+    VsprintfLiteral(msg->data.mPayload, format, args);
     va_end(args);
-    mMessageQueue.Push(msg);
+    mMessageQueueLog.Push(msg);
   }
 
   bool Enabled() {
-    return MOZ_LOG_TEST(mLogModule, mozilla::LogLevel::Verbose);
+    return (mMode == AsyncLoggerOutputMode::MOZLOG &&
+            MOZ_LOG_TEST(mLogModule, mozilla::LogLevel::Verbose))
+#ifdef MOZ_GECKO_PROFILER
+           || (mMode == AsyncLoggerOutputMode::PROFILER && profiler_is_active())
+#endif
+        ;
   }
 
  private:
   void Run() {
-    MOZ_ASSERT(Enabled());
     mThread.reset(new std::thread([this]() {
+      PROFILER_REGISTER_THREAD("AsyncLogger");
       while (mRunning) {
-        char message[MAX_MESSAGE_LENGTH];
-        while (mMessageQueue.Pop(message) && mRunning) {
-          MOZ_LOG(mLogModule, mozilla::LogLevel::Verbose, ("%s", message));
+        {
+          TextPayload message;
+          while (mMessageQueueLog.Pop(&message) && mRunning) {
+            MOZ_LOG(mLogModule, mozilla::LogLevel::Verbose,
+                    ("%s", message.mPayload));
+          }
         }
+#ifdef MOZ_GECKO_PROFILER
+        {
+          TracePayload message;
+          while (mMessageQueueProfiler.Pop(&message) && mRunning) {
+            if (message.mPhase != TracingPhase::COMPLETE) {
+              TracingKind kind = message.mPhase == TracingPhase::BEGIN
+                                     ? TracingKind::TRACING_INTERVAL_START
+                                     : TracingKind::TRACING_INTERVAL_END;
+              TracingMarkerPayload payload("media", kind, message.mTimestamp);
+              profiler_add_marker_for_thread(
+                  message.mTID, JS::ProfilingCategoryPair::MEDIA_RT,
+                  message.mName, payload);
+            } else {
+              // 0.9 is a hack to work around floating point precision issues
+              // in the profiler frontend.
+              mozilla::TimeStamp end =
+                  message.mTimestamp +
+                  TimeDuration::FromMicroseconds(message.mDurationUs * 0.9);
+              TracingMarkerPayload payload0("media",
+                                            TracingKind::TRACING_INTERVAL_START,
+                                            message.mTimestamp);
+              TracingMarkerPayload payload1(
+                  "media", TracingKind::TRACING_INTERVAL_END, end);
+              profiler_add_marker_for_thread(
+                  message.mTID, JS::ProfilingCategoryPair::MEDIA_RT,
+                  message.mName, payload0);
+              profiler_add_marker_for_thread(
+                  message.mTID, JS::ProfilingCategoryPair::MEDIA_RT,
+                  message.mName, payload1);
+            }
+          }
+        }
+#endif
         Sleep();
       }
+      PROFILER_UNREGISTER_THREAD();
     }));
+    // cleanup is done via mRunning
+    mThread->detach();
   }
 
   uint64_t NowInUs() {
@@ -141,11 +235,18 @@ class AsyncLogger {
 
   std::unique_ptr<std::thread> mThread;
   mozilla::LazyLogModule mLogModule;
-  detail::MPSCQueue<MAX_MESSAGE_LENGTH> mMessageQueue;
+  MPSCQueue<TextPayload> mMessageQueueLog;
+#ifdef MOZ_GECKO_PROFILER
+  MPSCQueue<TracePayload> mMessageQueueProfiler;
+#endif
   std::atomic<bool> mRunning;
   std::atomic<AsyncLoggerOutputMode> mMode;
 };
 
 }  // end namespace mozilla
+
+#if defined(_WIN32)
+#  undef getpid
+#endif
 
 #endif  // mozilla_dom_AsyncLogger_h
