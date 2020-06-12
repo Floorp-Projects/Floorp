@@ -13,6 +13,7 @@ TESTING_JS_MODULES += [
 EXPORTS.mozilla += [
     'Permission.h',
     'PermissionDelegateHandler.h',
+    'PermissionDelegateIPCUtils.h',
     'PermissionManager.h',
 ]
 
