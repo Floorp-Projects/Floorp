@@ -6,6 +6,13 @@ exports[`WhyPaused should pause reason with message 1`] = `
 >
   <div>
     <div
+      className="info icon"
+    >
+      <AccessibleImage
+        className="info"
+      />
+    </div>
+    <div
       className="pause reason"
     >
       Paused on breakpoint
@@ -14,13 +21,6 @@ exports[`WhyPaused should pause reason with message 1`] = `
       >
         bla is hit
       </div>
-    </div>
-    <div
-      className="info icon"
-    >
-      <AccessibleImage
-        className="info"
-      />
     </div>
   </div>
 </div>
@@ -38,6 +38,13 @@ exports[`WhyPaused should show pause reason with exception details 1`] = `
 >
   <div>
     <div
+      className="info icon"
+    >
+      <AccessibleImage
+        className="info"
+      />
+    </div>
+    <div
       className="pause reason"
     >
       Paused on exception
@@ -46,13 +53,6 @@ exports[`WhyPaused should show pause reason with exception details 1`] = `
       >
         ReferenceError: o is not defined
       </div>
-    </div>
-    <div
-      className="info icon"
-    >
-      <AccessibleImage
-        className="info"
-      />
     </div>
   </div>
 </div>
@@ -64,6 +64,13 @@ exports[`WhyPaused should show pause reason with exception string 1`] = `
 >
   <div>
     <div
+      className="info icon"
+    >
+      <AccessibleImage
+        className="info"
+      />
+    </div>
+    <div
       className="pause reason"
     >
       Paused on exception
@@ -72,13 +79,6 @@ exports[`WhyPaused should show pause reason with exception string 1`] = `
       >
         Not Available
       </div>
-    </div>
-    <div
-      className="info icon"
-    >
-      <AccessibleImage
-        className="info"
-      />
     </div>
   </div>
 </div>

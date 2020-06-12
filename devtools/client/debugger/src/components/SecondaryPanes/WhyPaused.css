@@ -12,7 +12,7 @@
   font-size: 12px;
   cursor: default;
   min-height: 44px;
-  padding: 4px;
+  padding: 6px;
   white-space: normal;
   font-weight: bold;
 }
@@ -20,18 +20,19 @@
 .why-paused > div {
   display: flex;
   flex-direction: row;
-  justify-content: space-between;
+  align-items: center;
 }
 
 .why-paused .info.icon {
   align-self: center;
-  padding: 0px 4px;
+  padding-right: 4px;
+  margin-inline-start: 14px;
+  margin-inline-end: 3px;
 }
 
 .why-paused .pause.reason {
   display: flex;
   flex-direction: column;
-  padding-left: 16px;
   padding-right: 4px;
 }
 
