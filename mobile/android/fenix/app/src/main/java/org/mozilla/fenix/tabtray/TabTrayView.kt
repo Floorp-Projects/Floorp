@@ -8,14 +8,19 @@ import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.accessibility.AccessibilityEvent
 import androidx.cardview.widget.CardView
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
+import androidx.lifecycle.LifecycleCoroutineScope
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.tabs.TabLayout
 import kotlinx.android.extensions.LayoutContainer
 import kotlinx.android.synthetic.main.component_tabstray.view.*
 import kotlinx.android.synthetic.main.component_tabstray_fab.view.*
+import kotlinx.coroutines.Dispatchers.Main
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
 import mozilla.components.browser.state.selector.normalTabs
@@ -37,11 +42,13 @@ interface TabTrayInteractor {
 /**
  * View that contains and configures the BrowserAwesomeBar
  */
+@Suppress("LongParameterList")
 class TabTrayView(
     private val container: ViewGroup,
     private val interactor: TabTrayInteractor,
     isPrivate: Boolean,
     startingInLandscape: Boolean,
+    lifecycleScope: LifecycleCoroutineScope,
     private val filterTabs: ((TabSessionState) -> Boolean) -> Unit
 ) : LayoutContainer, TabLayout.OnTabSelectedListener {
     val fabView = LayoutInflater.from(container.context)
@@ -118,6 +125,19 @@ class TabTrayView(
                     if (!hasLoaded) {
                         hasLoaded = true
                         tray.layoutManager?.scrollToPosition(selectedBrowserTabIndex)
+                        if (view.context.settings().accessibilityServicesEnabled) {
+                            lifecycleScope.launch {
+                                delay(SELECTION_DELAY.toLong())
+                                lifecycleScope.launch(Main) {
+                                    tray.layoutManager?.findViewByPosition(selectedBrowserTabIndex)
+                                        ?.requestFocus()
+                                    tray.layoutManager?.findViewByPosition(selectedBrowserTabIndex)
+                                        ?.sendAccessibilityEvent(
+                                            AccessibilityEvent.TYPE_VIEW_FOCUSED
+                                        )
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -229,6 +249,7 @@ class TabTrayView(
         private const val PRIVATE_TAB_ID = 1
         private const val EXPAND_AT_SIZE = 3
         private const val SLIDE_OFFSET = 0
+        private const val SELECTION_DELAY = 500
     }
 }
 

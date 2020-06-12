@@ -110,7 +110,8 @@ class TabTrayDialogFragment : AppCompatDialogFragment(), TabTrayInteractor {
             view.tabLayout,
             this,
             isPrivate,
-            requireContext().resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+            requireContext().resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE,
+            viewLifecycleOwner.lifecycleScope
         ) { tabsFeature.get()?.filterTabs(it) }
 
         tabsFeature.set(
