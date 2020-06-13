@@ -1476,11 +1476,7 @@ void Gecko_StyleSheet_FinishAsyncParse(
                  counters = std::move(useCounters)]() mutable {
         MOZ_ASSERT(NS_IsMainThread());
         SheetLoadData* data = d->get();
-        if (Document* doc = data->mLoader->GetDocument()) {
-          if (const auto* docCounters = doc->GetStyleUseCounters()) {
-            Servo_UseCounters_Merge(docCounters, counters.get());
-          }
-        }
+        data->mUseCounters = std::move(counters);
         data->mSheet->FinishAsyncParse(contents.forget());
       }));
 }

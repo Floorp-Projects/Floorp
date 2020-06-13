@@ -119,8 +119,7 @@ class StyleSheet final : public nsICSSLoaderObserver, public nsWrapperCache {
 
   // Common code that needs to be called after servo finishes parsing. This is
   // shared between the parallel and sequential paths.
-  void FinishAsyncParse(
-      already_AddRefed<RawServoStyleSheetContents> aSheetContents);
+  void FinishAsyncParse(already_AddRefed<RawServoStyleSheetContents>);
 
   // Similar to `ParseSheet`, but guarantees that
   // parsing will be performed synchronously.
