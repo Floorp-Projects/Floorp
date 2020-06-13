@@ -1798,10 +1798,77 @@ void nsWindow::SetSizeMode(nsSizeMode aMode) {
   mSizeState = mSizeMode;
 }
 
+static bool GetWindowManagerName(GdkWindow* gdk_window, nsACString& wmName) {
+  if (!gfxPlatformGtk::GetPlatform()->IsX11Display()) {
+    return false;
+  }
+
+  Display* xdisplay = gdk_x11_get_default_xdisplay();
+  GdkScreen* screen = gdk_window_get_screen(gdk_window);
+  Window root_win = GDK_WINDOW_XID(gdk_screen_get_root_window(screen));
+
+  int actual_format_return;
+  Atom actual_type_return;
+  unsigned long nitems_return;
+  unsigned long bytes_after_return;
+  unsigned char* prop_return = nullptr;
+  auto releaseXProperty = MakeScopeExit([&] {
+    if (prop_return) {
+      XFree(prop_return);
+    }
+  });
+
+  Atom property = XInternAtom(xdisplay, "_NET_SUPPORTING_WM_CHECK", true);
+  Atom req_type = XInternAtom(xdisplay, "WINDOW", true);
+  int result =
+      XGetWindowProperty(xdisplay, root_win, property,
+                         0L,                  // offset
+                         sizeof(Window) / 4,  // length
+                         false,               // delete
+                         req_type, &actual_type_return, &actual_format_return,
+                         &nitems_return, &bytes_after_return, &prop_return);
+
+  if (result != Success || bytes_after_return != 0 || nitems_return != 1) {
+    return false;
+  }
+
+  Window wmWindow = reinterpret_cast<Window*>(prop_return)[0];
+  XFree(prop_return);
+  prop_return = nullptr;
+
+  property = XInternAtom(xdisplay, "_NET_WM_NAME", true);
+  req_type = XInternAtom(xdisplay, "UTF8_STRING", true);
+  result =
+      XGetWindowProperty(xdisplay, wmWindow, property,
+                         0L,         // offset
+                         INT32_MAX,  // length
+                         false,      // delete
+                         req_type, &actual_type_return, &actual_format_return,
+                         &nitems_return, &bytes_after_return, &prop_return);
+
+  if (result != Success || bytes_after_return != 0) {
+    return false;
+  }
+
+  wmName = reinterpret_cast<const char*>(prop_return);
+  return true;
+}
+
 #define kDesktopMutterSchema "org.gnome.mutter"
 #define kDesktopDynamicWorkspacesKey "dynamic-workspaces"
 
-static bool DesktopUsesDynamicWorkspaces() {
+static bool DesktopUsesDynamicWorkspaces(GdkWindow* gdk_window) {
+  nsAutoCString wmName;
+  if (GetWindowManagerName(gdk_window, wmName)) {
+    if (wmName.EqualsLiteral("bspwm")) {
+      return true;
+    }
+
+    if (wmName.EqualsLiteral("i3")) {
+      return true;
+    }
+  }
+
   static const char* currentDesktop = getenv("XDG_CURRENT_DESKTOP");
   if (!currentDesktop || !strstr(currentDesktop, "GNOME")) {
     return false;
@@ -1822,6 +1889,7 @@ static bool DesktopUsesDynamicWorkspaces() {
       }
     }
   }
+
   return false;
 }
 
@@ -1837,7 +1905,7 @@ void nsWindow::GetWorkspaceID(nsAString& workspaceID) {
     return;
   }
 
-  if (DesktopUsesDynamicWorkspaces()) {
+  if (DesktopUsesDynamicWorkspaces(gdk_window)) {
     return;
   }
 
