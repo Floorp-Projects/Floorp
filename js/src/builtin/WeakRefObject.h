@@ -16,7 +16,8 @@ class WeakRefObject : public NativeObject {
   static const JSClass class_;
   static const JSClass protoClass_;
 
-  JSObject* target();
+  JSObject* target() { return static_cast<JSObject*>(getPrivate()); }
+
   void setTarget(JSObject* target);
 
  private:
