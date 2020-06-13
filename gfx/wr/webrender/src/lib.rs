@@ -212,7 +212,7 @@ pub use crate::renderer::{
     AsyncPropertySampler, CpuProfile, DebugFlags, GpuProfile, GraphicsApi,
     GraphicsApiInfo, PipelineInfo, Renderer, RendererError, RendererOptions, RenderResults,
     RendererStats, SceneBuilderHooks, ThreadListener, ShaderPrecacheFlags,
-    MAX_VERTEX_TEXTURE_WIDTH,
+    MAX_VERTEX_TEXTURE_WIDTH, ONE_TIME_USAGE_HINT,
 };
 pub use crate::hit_test::SharedHitTester;
 pub use crate::internal_types::FastHashMap;

@@ -37,7 +37,8 @@ use webrender::{
     api::units::*, api::*, set_profiler_hooks, AsyncPropertySampler, AsyncScreenshotHandle, Compositor,
     CompositorCapabilities, CompositorConfig, DebugFlags, Device, FastHashMap, NativeSurfaceId, NativeSurfaceInfo,
     NativeTileId, PipelineInfo, ProfilerHooks, RecordedFrameHandle, Renderer, RendererOptions, RendererStats,
-    SceneBuilderHooks, ShaderPrecacheFlags, Shaders, ThreadListener, UploadMethod, VertexUsageHint, WrShaders,
+    SceneBuilderHooks, ShaderPrecacheFlags, Shaders, ThreadListener, UploadMethod, WrShaders,
+    ONE_TIME_USAGE_HINT,
 };
 
 #[cfg(target_os = "macos")]
@@ -1136,7 +1137,7 @@ fn wr_device_new(gl_context: *mut c_void, pc: Option<&mut WrProgramCache>) -> De
     let upload_method = if unsafe { is_glcontext_angle(gl_context) } {
         UploadMethod::Immediate
     } else {
-        UploadMethod::PixelBuffer(VertexUsageHint::Dynamic)
+        UploadMethod::PixelBuffer(ONE_TIME_USAGE_HINT)
     };
 
     let resource_override_path = unsafe {
@@ -1365,7 +1366,7 @@ pub extern "C" fn wr_window_new(
     let upload_method = if unsafe { is_glcontext_angle(gl_context) } {
         UploadMethod::Immediate
     } else {
-        UploadMethod::PixelBuffer(VertexUsageHint::Dynamic)
+        UploadMethod::PixelBuffer(ONE_TIME_USAGE_HINT)
     };
 
     let precache_flags = if env_var_to_bool("MOZ_WR_PRECACHE_SHADERS") {
