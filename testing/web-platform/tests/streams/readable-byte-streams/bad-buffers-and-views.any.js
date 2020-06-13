@@ -48,15 +48,35 @@ promise_test(() => {
 }, 'ReadableStream with byte source: read()ing from a stream with queued chunks still transfers the buffer');
 
 test(() => {
-  const stream = new ReadableStream({
+  new ReadableStream({
     start(c) {
       const view = new Uint8Array([1, 2, 3]);
       c.enqueue(view);
-      assert_throws_js(TypeError, () => c.enqueue(view), 'enqueuing an already-detached buffer must throw');
+      assert_throws_js(TypeError, () => c.enqueue(view));
     },
     type: 'bytes'
   });
 }, 'ReadableStream with byte source: enqueuing an already-detached buffer throws');
+
+test(() => {
+  new ReadableStream({
+    start(c) {
+      const view = new Uint8Array([]);
+      assert_throws_js(TypeError, () => c.enqueue(view));
+    },
+    type: 'bytes'
+  });
+}, 'ReadableStream with byte source: enqueuing a zero-length buffer throws');
+
+test(() => {
+  new ReadableStream({
+    start(c) {
+      const view = new Uint8Array(new ArrayBuffer(10), 0, 0);
+      assert_throws_js(TypeError, () => c.enqueue(view));
+    },
+    type: 'bytes'
+  });
+}, 'ReadableStream with byte source: enqueuing a zero-length view on a non-zero-length buffer throws');
 
 promise_test(t => {
   const stream = new ReadableStream({
@@ -70,10 +90,35 @@ promise_test(t => {
   const view = new Uint8Array([4, 5, 6]);
   return reader.read(view).then(() => {
     // view is now detached
-    return promise_rejects_js(t, TypeError, reader.read(view),
-      'read(view) must reject when given an already-detached buffer');
+    return promise_rejects_js(t, TypeError, reader.read(view));
   });
 }, 'ReadableStream with byte source: reading into an already-detached buffer rejects');
+
+promise_test(t => {
+  const stream = new ReadableStream({
+    start(c) {
+      c.enqueue(new Uint8Array([1, 2, 3]));
+    },
+    type: 'bytes'
+  });
+  const reader = stream.getReader({ mode: 'byob' });
+
+  const view = new Uint8Array();
+  return promise_rejects_js(t, TypeError, reader.read(view));
+}, 'ReadableStream with byte source: reading into a zero-length buffer rejects');
+
+promise_test(t => {
+  const stream = new ReadableStream({
+    start(c) {
+      c.enqueue(new Uint8Array([1, 2, 3]));
+    },
+    type: 'bytes'
+  });
+  const reader = stream.getReader({ mode: 'byob' });
+
+  const view = new Uint8Array(new ArrayBuffer(10), 0, 0);
+  return promise_rejects_js(t, TypeError, reader.read(view));
+}, 'ReadableStream with byte source: reading into a zero-length view on a non-zero-length buffer rejects');
 
 async_test(t => {
   const stream = new ReadableStream({
@@ -118,8 +163,7 @@ async_test(t => {
       const view = new Uint8Array([1, 2, 3]);
       reader.read(view);
 
-      assert_throws_js(TypeError, () => c.byobRequest.respondWithNewView(view),
-        'respondWithNewView() must throw if passed a detached view');
+      assert_throws_js(TypeError, () => c.byobRequest.respondWithNewView(view));
     }),
     type: 'bytes'
   });
@@ -132,6 +176,36 @@ async_test(t => {
 async_test(t => {
   const stream = new ReadableStream({
     pull: t.step_func_done(c => {
+      const view = new Uint8Array();
+
+      assert_throws_js(TypeError, () => c.byobRequest.respondWithNewView(view));
+    }),
+    type: 'bytes'
+  });
+  const reader = stream.getReader({ mode: 'byob' });
+
+  reader.read(new Uint8Array([4, 5, 6]));
+}, 'ReadableStream with byte source: respondWithNewView() throws if the supplied view\'s buffer is zero-length ' +
+    '(in the readable state)');
+
+async_test(t => {
+  const stream = new ReadableStream({
+    pull: t.step_func_done(c => {
+      const view = new Uint8Array(new ArrayBuffer(10), 0, 0);
+
+      assert_throws_js(TypeError, () => c.byobRequest.respondWithNewView(view));
+    }),
+    type: 'bytes'
+  });
+  const reader = stream.getReader({ mode: 'byob' });
+
+  reader.read(new Uint8Array([4, 5, 6]));
+}, 'ReadableStream with byte source: respondWithNewView() throws if the supplied view is zero-length on a ' +
+    'non-zero-length buffer (in the readable state)');
+
+async_test(t => {
+  const stream = new ReadableStream({
+    pull: t.step_func_done(c => {
       // Detach it by reading into it
       const view = new Uint8Array([1, 2, 3]);
       reader.read(view);
@@ -139,8 +213,7 @@ async_test(t => {
       c.close();
 
       const zeroLengthView = new Uint8Array(view.buffer, 0, 0);
-      assert_throws_js(TypeError, () => c.byobRequest.respondWithNewView(zeroLengthView),
-        'respondWithNewView() must throw if passed a (zero-length) view whose buffer has been detached');
+      assert_throws_js(TypeError, () => c.byobRequest.respondWithNewView(zeroLengthView));
     }),
     type: 'bytes'
   });
@@ -149,3 +222,37 @@ async_test(t => {
   reader.read(new Uint8Array([4, 5, 6]));
 }, 'ReadableStream with byte source: respondWithNewView() throws if the supplied view\'s buffer has been detached ' +
    '(in the closed state)');
+
+async_test(t => {
+  const stream = new ReadableStream({
+    pull: t.step_func_done(c => {
+      const view = new Uint8Array();
+
+      c.close();
+
+      assert_throws_js(TypeError, () => c.byobRequest.respondWithNewView(view));
+    }),
+    type: 'bytes'
+  });
+  const reader = stream.getReader({ mode: 'byob' });
+
+  reader.read(new Uint8Array([4, 5, 6]));
+}, 'ReadableStream with byte source: respondWithNewView() throws if the supplied view\'s buffer is zero-length ' +
+   '(in the closed state)');
+
+async_test(t => {
+  const stream = new ReadableStream({
+    pull: t.step_func_done(c => {
+      const view = new Uint8Array(new ArrayBuffer(10), 0, 0);
+
+      c.close();
+
+      assert_throws_js(TypeError, () => c.byobRequest.respondWithNewView(view));
+    }),
+    type: 'bytes'
+  });
+  const reader = stream.getReader({ mode: 'byob' });
+
+  reader.read(new Uint8Array([4, 5, 6]));
+}, 'ReadableStream with byte source: respondWithNewView() throws if the supplied view is zero-length on a ' +
+    'non-zero-length buffer (in the closed state)');
