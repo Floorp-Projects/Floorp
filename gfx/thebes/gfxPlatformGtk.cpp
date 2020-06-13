@@ -725,9 +725,6 @@ already_AddRefed<gfx::VsyncSource> gfxPlatformGtk::CreateHardwareVsyncSource() {
 bool gfxPlatformGtk::UseWaylandDMABufTextures() {
   return IsWaylandDisplay() && nsWaylandDisplay::IsDMABufTexturesEnabled();
 }
-bool gfxPlatformGtk::UseWaylandDMABufVideoTextures() {
-  return IsWaylandDisplay() && nsWaylandDisplay::IsDMABufVideoTexturesEnabled();
-}
 bool gfxPlatformGtk::UseWaylandDMABufWebGL() {
   return IsWaylandDisplay() && nsWaylandDisplay::IsDMABufWebGLEnabled();
 }

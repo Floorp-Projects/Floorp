@@ -498,7 +498,6 @@ bool nsWaylandDisplay::IsDMABufEnabled() {
       !StaticPrefs::widget_wayland_dmabuf_basic_compositor_enabled() &&
       !StaticPrefs::widget_wayland_dmabuf_textures_enabled() &&
 #endif
-      !StaticPrefs::widget_wayland_dmabuf_video_textures_enabled() &&
       !StaticPrefs::widget_wayland_dmabuf_webgl_enabled() &&
       !StaticPrefs::widget_wayland_dmabuf_vaapi_enabled()) {
     // Disabled by user, just quit.
@@ -536,10 +535,6 @@ bool nsWaylandDisplay::IsDMABufTexturesEnabled() {
 bool nsWaylandDisplay::IsDMABufBasicEnabled() { return false; }
 bool nsWaylandDisplay::IsDMABufTexturesEnabled() { return false; }
 #endif
-bool nsWaylandDisplay::IsDMABufVideoTexturesEnabled() {
-  return IsDMABufEnabled() &&
-         StaticPrefs::widget_wayland_dmabuf_video_textures_enabled();
-}
 bool nsWaylandDisplay::IsDMABufWebGLEnabled() {
   return IsDMABufEnabled() &&
          StaticPrefs::widget_wayland_dmabuf_webgl_enabled();
