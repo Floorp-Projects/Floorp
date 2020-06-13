@@ -280,7 +280,7 @@ class TryOptionSyntax(object):
             return None
         self.jobs = self.parse_jobs(options['jobs'])
         self.build_types = self.parse_build_types(options['build_types'], full_task_graph)
-        self.platforms = self.parse_platforms(options['platforms'], full_task_graph)
+        self.platforms = self.parse_platforms(options, full_task_graph)
         self.unittests = self.parse_test_option(
             "unittest_try_name", options['unittests'], full_task_graph)
         self.talos = self.parse_test_option("talos_try_name", options['talos'], full_task_graph)
@@ -335,17 +335,28 @@ class TryOptionSyntax(object):
 
         return build_types
 
-    def parse_platforms(self, platform_arg, full_task_graph):
+    def parse_platforms(self, options, full_task_graph):
+        platform_arg = options['platforms']
         if platform_arg == 'all':
             return None
 
         RIDEALONG_BUILDS = self.graph_config['try']['ridealong-builds']
         results = []
         for build in platform_arg.split(','):
-            results.append(build)
             if build in ('macosx64',):
-                results.append('macosx64-shippable')
-                logger.info("adding macosx64-shippable for try syntax using macosx64.")
+                # Regular opt builds are faster than shippable ones, but we don't run
+                # tests against them.
+                # We want to choose them (and only them) if no tests were requested.
+                if options['unittests'] == 'none' and options['talos'] == 'none' and \
+                  options['raptor'] == 'none':
+                    results.append('macosx64')
+                    logger.info("adding macosx64 for try syntax using macosx64.")
+                # Otherwise, use _just_ the shippable builds.
+                else:
+                    results.append('macosx64-shippable')
+                    logger.info("adding macosx64-shippable for try syntax using macosx64.")
+            else:
+                results.append(build)
             if build in RIDEALONG_BUILDS:
                 results.extend(RIDEALONG_BUILDS[build])
                 logger.info("platform %s triggers ridealong builds %s" %
