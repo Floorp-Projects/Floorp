@@ -36,7 +36,7 @@ The default options are recommended.
 If you're not planning to write C++ or Rust code, select :ref:`Artifact Mode <Artifact builds>`
 and follow the instructions at the end of the bootstrap for creating a mozconfig file.
 
-:ref:`More information <Building Firefox On Linux>`
+More information :ref:`for Linux <Building Firefox On Linux>` and :ref:`for MacOS <Building Firefox On MacOS>`
 
 Windows dependencies
 --------------------
