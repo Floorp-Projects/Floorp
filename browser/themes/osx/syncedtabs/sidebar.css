@@ -6,9 +6,9 @@
 
 /* These styles are intended to mimic XUL trees and the XUL search box. */
 
-body:not([lwt-sidebar]) .content-container {
-  -moz-appearance: -moz-mac-source-list;
-  -moz-font-smoothing-background-color: -moz-mac-source-list;
+body {
+   /* let the -moz-appearance of the sidebar shine through */
+  background-color: transparent;
 }
 
 .item-title-container {
