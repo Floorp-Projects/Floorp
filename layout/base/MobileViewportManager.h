@@ -74,12 +74,6 @@ class MobileViewportManager final : public nsIDOMEventListener,
   void SetRestoreResolution(float aResolution);
 
  public:
-  /* Notify the MobileViewportManager that a resize-reflow is about to happen,
-   * possibly indicating a change in the display size or some other quantity
-   * that the visual viewport depends on.
-   */
-  void NotifyResizeReflow();
-
   /* Notify the MobileViewportManager that a reflow was requested in the
    * presShell.*/
   void RequestReflow(bool aForceAdjustResolution);
