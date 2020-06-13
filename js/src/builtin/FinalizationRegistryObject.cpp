@@ -61,6 +61,8 @@ FinalizationRecordObject* FinalizationRecordObject::create(
 
 FinalizationRegistryObject* FinalizationRecordObject::registryDuringGC(
     gc::GCRuntime* gc) const {
+  MOZ_ASSERT(JS::RuntimeHeapIsMajorCollecting());
+
   FinalizationRegistryObject* registry = registryUnbarriered();
 
   // Perform a manual read barrier. This is the only place where the GC itself
@@ -680,28 +682,39 @@ bool FinalizationRegistryObject::unregister(JSContext* cx, unsigned argc,
   //       i. Remove cell from finalizationRegistry.[[Cells]].
   //       ii. Set removed to true.
 
-  FinalizationRecordSet* activeRecords = registry->activeRecords();
   RootedObject obj(cx, registry->registrations()->lookup(unregisterToken));
   if (obj) {
     auto* records = obj->as<FinalizationRegistrationsObject>().records();
     MOZ_ASSERT(records);
     MOZ_ASSERT(!records->empty());
     for (FinalizationRecordObject* record : *records) {
-      if (record->isActive()) {
-        // Clear the fields of this record; it will be removed from the target's
-        // list when it is next swept.
-        activeRecords->remove(record);
-        record->clear();
+      if (unregisterRecord(record)) {
         removed = true;
       }
-
-      MOZ_ASSERT(!activeRecords->has(record));
+      MOZ_ASSERT(!registry->activeRecords()->has(record));
     }
     registry->registrations()->remove(unregisterToken);
   }
 
   // 7. Return removed.
   args.rval().setBoolean(removed);
+  return true;
+}
+
+/* static */
+bool FinalizationRegistryObject::unregisterRecord(
+    FinalizationRecordObject* record) {
+  if (!record->isActive()) {
+    return false;
+  }
+
+  FinalizationRegistryObject* registry = record->registryUnbarriered();
+  MOZ_ASSERT(registry);
+
+  // Clear the fields of this record; it will be removed from the target's
+  // list when it is next swept.
+  registry->activeRecords()->remove(record);
+  record->clear();
   return true;
 }
 

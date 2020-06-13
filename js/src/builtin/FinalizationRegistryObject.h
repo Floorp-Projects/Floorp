@@ -118,6 +118,8 @@ class FinalizationRecordObject : public NativeObject {
   // Read weak registry pointer and perform read barrier during GC.
   FinalizationRegistryObject* registryDuringGC(gc::GCRuntime* gc) const;
 
+  FinalizationRegistryObject* registryUnbarriered() const;
+
   Value heldValue() const;
   bool isActive() const;
   void clear();
@@ -127,8 +129,6 @@ class FinalizationRecordObject : public NativeObject {
   static const JSClassOps classOps_;
 
   static void trace(JSTracer* trc, JSObject* obj);
-
-  FinalizationRegistryObject* registryUnbarriered() const;
 };
 
 // A vector of weakly-held FinalizationRecordObjects.
@@ -198,6 +198,8 @@ class FinalizationRegistryObject : public NativeObject {
   void setQueuedForCleanup(bool value);
 
   void sweep();
+
+  static bool unregisterRecord(FinalizationRecordObject* record);
 
   static bool cleanupQueuedRecords(JSContext* cx,
                                    HandleFinalizationRegistryObject registry,
