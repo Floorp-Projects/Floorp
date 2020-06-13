@@ -12,12 +12,26 @@
 #include "SimpleMap.h"
 #ifdef MOZ_WAYLAND_USE_VAAPI
 #  include "mozilla/widget/WaylandDMABufSurface.h"
-#  include <list>
+#  include "mozilla/LinkedList.h"
 #endif
 
 namespace mozilla {
 
 #ifdef MOZ_WAYLAND_USE_VAAPI
+// DMABufSurface holds a reference to GPU data with a video frame.
+//
+// Actual GPU pixel data are stored at WaylandDMABufSurface and
+// WaylandDMABufSurfaces is passed to gecko GL rendering pipeline via.
+// WaylandDMABUFSurfaceImage.
+//
+// DMABufSurface can optionally hold VA-API ffmpeg related data to keep
+// GPU data locked untill we need them.
+//
+// DMABufSurface is used for both HW accelerated video decoding (VA-API)
+// and ffmpeg SW decoding.
+//
+// VA-API scenario
+//
 // When VA-API decoding is running, ffmpeg allocates AVHWFramesContext - a pool
 // of "hardware" frames. Every "hardware" frame (VASurface) is backed
 // by actual piece of GPU memory which holds the decoded image data.
@@ -33,20 +47,37 @@ namespace mozilla {
 // Unfortunately there isn't any obvious way how to mark particular VASurface
 // as used. The best we can do is to hold a reference to particular AVBuffer
 // from decoded AVFrame and AVHWFramesContext which owns the AVBuffer.
-
-class VAAPIFrameHolder final {
+//
+// FFmpeg SW decoding scenario
+//
+// When SW ffmpeg decoding is running, DMABufSurface contains only
+// a WaylandDMABufSurface reference and VA-API related members are null.
+// We own the WaylandDMABufSurface underlying GPU data and we use it for
+// repeated rendering of video frames.
+//
+class DMABufSurface final {
  public:
-  VAAPIFrameHolder(FFmpegLibWrapper* aLib, WaylandDMABufSurface* aSurface,
-                   AVCodecContext* aAVCodecContext, AVFrame* aAVFrame);
-  ~VAAPIFrameHolder();
+  DMABufSurface(WaylandDMABufSurface* aSurface, FFmpegLibWrapper* aLib);
+  ~DMABufSurface();
+
+  // Lock VAAPI related data
+  void LockVAAPIData(AVCodecContext* aAVCodecContext, AVFrame* aAVFrame);
+
+  // Release VAAPI related data, DMABufSurface can be reused
+  // for another frame.
+  void ReleaseVAAPIData();
 
   // Check if WaylandDMABufSurface is used by any gecko rendering process
   // (WebRender or GL compositor) or by WaylandDMABUFSurfaceImage/VideoData.
   bool IsUsed() const { return mSurface->IsGlobalRefSet(); }
 
+  const RefPtr<WaylandDMABufSurfaceNV12> GetWaylandDMABufSurface() {
+    return mSurface->GetAsWaylandDMABufSurfaceNV12();
+  }
+
  private:
-  const FFmpegLibWrapper* mLib;
   const RefPtr<WaylandDMABufSurface> mSurface;
+  const FFmpegLibWrapper* mLib;
   AVBufferRef* mAVHWFramesContext;
   AVBufferRef* mHWAVBuffer;
 };
@@ -118,11 +149,15 @@ class FFmpegVideoDecoder<LIBAV_VER>
   void InitVAAPICodecContext();
   AVCodec* FindVAAPICodec();
   bool IsHardwareAccelerated(nsACString& aFailureReason) const override;
+  bool GetVAAPISurfaceDescriptor(VADRMPRIMESurfaceDescriptor& aVaDesc);
 
-  MediaResult CreateImageVAAPI(int64_t aOffset, int64_t aPts, int64_t aDuration,
-                               MediaDataDecoder::DecodedData& aResults);
+  MediaResult CreateImageDMABuf(int64_t aOffset, int64_t aPts,
+                                int64_t aDuration,
+                                MediaDataDecoder::DecodedData& aResults);
+
   void ReleaseUnusedVAAPIFrames();
-  void ReleaseAllVAAPIFrames();
+  DMABufSurface* GetUnusedDMABufSurface();
+  void ReleaseDMABufSurfaces();
 #endif
 
   /**
@@ -138,7 +173,8 @@ class FFmpegVideoDecoder<LIBAV_VER>
   AVBufferRef* mVAAPIDeviceContext;
   const bool mDisableHardwareDecoding;
   VADisplay mDisplay;
-  std::list<UniquePtr<VAAPIFrameHolder>> mFrameHolders;
+  bool mUseDMABufSurfaces;
+  nsTArray<DMABufSurface> mDMABufSurfaces;
 #endif
   RefPtr<KnowsCompositor> mImageAllocator;
   RefPtr<ImageContainer> mImageContainer;
