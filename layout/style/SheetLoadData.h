@@ -11,6 +11,7 @@
 #include "mozilla/css/SheetParsingMode.h"
 #include "mozilla/Encoding.h"
 #include "mozilla/NotNull.h"
+#include "mozilla/UniquePtr.h"
 #include "nsIThreadInternal.h"
 #include "nsProxyRelease.h"
 
@@ -22,6 +23,7 @@ class nsINode;
 class nsIPrincipal;
 class nsIURI;
 class nsIReferrerInfo;
+struct StyleUseCounters;
 
 namespace mozilla {
 namespace css {
@@ -208,6 +210,10 @@ class SheetLoadData final : public nsIRunnable, public nsIThreadObserver {
 
   // The encoding guessed from attributes and the document character set.
   const NotNull<const Encoding*> mGuessedEncoding;
+
+  // If we've parsed the stylesheet, the use counters for the properties parsed
+  // in this styleshetet.
+  UniquePtr<StyleUseCounters> mUseCounters;
 
   // The quirks mode of the loader at the time the load was triggered.
   const nsCompatibility mCompatMode;

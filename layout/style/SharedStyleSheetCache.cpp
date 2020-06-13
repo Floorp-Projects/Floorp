@@ -9,6 +9,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/StyleSheet.h"
 #include "mozilla/css/SheetLoadData.h"
+#include "mozilla/ServoBindings.h"
 #include "nsXULPrototypeCache.h"
 
 extern mozilla::LazyLogModule sCssLoaderLog;
@@ -104,6 +105,7 @@ SharedStyleSheetCache::CacheResult SharedStyleSheetCache::Lookup(
         // We need to check the parsing mode manually because the XUL cache only
         // keys off the URI. But we should fix that!
         if (sheet->ParsingMode() == aKey.ParsingMode()) {
+          aLoader.DidHitCompleteSheetCache(aKey, nullptr);
           return {CloneSheet(*sheet), SheetState::Complete};
         }
 
@@ -135,6 +137,8 @@ SharedStyleSheetCache::CacheResult SharedStyleSheetCache::Lookup(
       RefPtr<StyleSheet> clone = CloneSheet(cachedSheet);
       MOZ_ASSERT(!clone->HasForcedUniqueInner());
       MOZ_ASSERT(!clone->HasModifiedRules());
+
+      aLoader.DidHitCompleteSheetCache(aKey, completeSheet.mUseCounters.get());
       return {std::move(clone), SheetState::Complete};
     }
   }
@@ -204,7 +208,8 @@ size_t SharedStyleSheetCache::SizeOfIncludingThis(
 
   n += mCompleteSheets.ShallowSizeOfExcludingThis(aMallocSizeOf);
   for (auto iter = mCompleteSheets.ConstIter(); !iter.Done(); iter.Next()) {
-    n += iter.UserData().mSheet->SizeOfIncludingThis(aMallocSizeOf);
+    n += iter.Data().mSheet->SizeOfIncludingThis(aMallocSizeOf);
+    n += aMallocSizeOf(iter.Data().mUseCounters.get());
   }
 
   // Measurement of the following members may be added later if DMD finds it is
@@ -396,7 +401,15 @@ void SharedStyleSheetCache::InsertIntoCompleteCacheIfNeeded(
     }
 #endif
 
-    mCompleteSheets.Put(key, {aData.mExpirationTime, std::move(sheet)});
+    UniquePtr<StyleUseCounters> counters;
+    if (aData.mUseCounters) {
+      // TODO(emilio): Servo_UseCounters_Clone() or something?
+      counters = Servo_UseCounters_Create().Consume();
+      Servo_UseCounters_Merge(counters.get(), aData.mUseCounters.get());
+    }
+
+    mCompleteSheets.Put(
+        key, {aData.mExpirationTime, std::move(counters), std::move(sheet)});
   }
 }
 
@@ -405,7 +418,7 @@ void SharedStyleSheetCache::StartDeferredLoadsForLoader(
   LoadDataArray arr;
   for (auto iter = mPendingDatas.Iter(); !iter.Done(); iter.Next()) {
     bool startIt = false;
-    SheetLoadData* data = iter.UserData();
+    SheetLoadData* data = iter.Data();
     do {
       if (data->mLoader == &aLoader) {
         // Note that we don't want to affect what the selected style set is, so
@@ -434,7 +447,7 @@ void SharedStyleSheetCache::CancelDeferredLoadsForLoader(css::Loader& aLoader) {
   for (auto iter = mPendingDatas.Iter(); !iter.Done(); iter.Next()) {
     RefPtr<SheetLoadData>& first = iter.Data();
     SheetLoadData* prev = nullptr;
-    SheetLoadData* current = iter.UserData();
+    SheetLoadData* current = iter.Data();
     do {
       if (current->mLoader != &aLoader) {
         prev = current;
@@ -473,7 +486,7 @@ void SharedStyleSheetCache::CancelLoadsForLoader(css::Loader& aLoader) {
   // We can't stop in-progress loads because some other loader may care about
   // them.
   for (auto iter = mLoadingDatas.Iter(); !iter.Done(); iter.Next()) {
-    SheetLoadData* data = iter.UserData();
+    SheetLoadData* data = iter.Data();
     do {
       if (data->mLoader == &aLoader) {
         data->mIsCancelled = true;

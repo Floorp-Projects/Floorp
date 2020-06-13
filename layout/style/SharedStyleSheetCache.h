@@ -114,6 +114,7 @@ class SharedStyleSheetCache final : public nsIMemoryReporter {
 
   struct CompleteSheet {
     uint32_t mExpirationTime = 0;
+    UniquePtr<StyleUseCounters> mUseCounters;
     RefPtr<StyleSheet> mSheet;
 
     bool Expired() const;
