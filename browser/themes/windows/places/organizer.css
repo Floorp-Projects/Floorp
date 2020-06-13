@@ -179,8 +179,22 @@
     border-bottom: 1px solid var(--organizer-background-color-content);
     color: var(--organizer-text-primary-color);
   }
+  #placesToolbar > toolbarbutton {
+    -moz-appearance: none;
+    padding-block: 6px;
+    padding-inline: 7px;
+  }
+  #placesToolbar > toolbarbutton:not([disabled="true"]):hover {
+    background-color: var(--organizer-background-color-content);
+  }
   #placesMenu > menu {
+    -moz-appearance: none;
     color: var(--organizer-text-primary-color);
+  }
+  #placesMenu > menu:hover, 
+  #placesMenu > menu[_moz-menuactive="true"] {
+    border-color: var(--organizer-background-color-content);
+    background-color: var(--organizer-background-color-content);
   }
   #placesMenu > menu > image {
     filter: invert(100%);
