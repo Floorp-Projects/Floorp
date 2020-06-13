@@ -514,8 +514,15 @@ ConnectionData.prototype = Object.freeze({
       markAsClosed();
     } else {
       this._log.debug("Calling asyncClose().");
-      this._dbConn.asyncClose(markAsClosed);
-      this._dbConn = null;
+      try {
+        this._dbConn.asyncClose(markAsClosed);
+      } catch (ex) {
+        // If for any reason asyncClose fails, we must still remove the
+        // shutdown blockers and resolve _deferredClose.
+        markAsClosed();
+      } finally {
+        this._dbConn = null;
+      }
     }
     return this._deferredClose.promise;
   },
