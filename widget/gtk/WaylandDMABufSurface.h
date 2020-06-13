@@ -39,6 +39,7 @@ typedef enum {
 } WaylandDMABufSurfaceFlags;
 
 class WaylandDMABufSurfaceRGBA;
+class WaylandDMABufSurfaceNV12;
 
 class WaylandDMABufSurface {
  public:
@@ -74,7 +75,13 @@ class WaylandDMABufSurface {
   SurfaceType GetSurfaceType() { return mSurfaceType; };
   virtual uint32_t GetTextureCount() = 0;
 
+  bool IsMapped(int aPlane = 0) { return (mMappedRegion[aPlane] != nullptr); };
+  void Unmap(int aPlane = 0);
+
   virtual WaylandDMABufSurfaceRGBA* GetAsWaylandDMABufSurfaceRGBA() {
+    return nullptr;
+  }
+  virtual WaylandDMABufSurfaceNV12* GetAsWaylandDMABufSurfaceNV12() {
     return nullptr;
   }
 
@@ -116,15 +123,22 @@ class WaylandDMABufSurface {
   void GlobalRefAdd();
   void GlobalRefRelease();
 
+  // Release all underlying data.
+  virtual void ReleaseSurface() = 0;
+
   WaylandDMABufSurface(SurfaceType aSurfaceType);
 
  protected:
   virtual bool Create(const mozilla::layers::SurfaceDescriptor& aDesc) = 0;
-  virtual void ReleaseSurface() = 0;
   bool FenceCreate(int aFd);
 
   void GlobalRefCountImport(int aFd);
   void GlobalRefCountDelete();
+
+  void ReleaseDMABuf();
+
+  void* MapInternal(uint32_t aX, uint32_t aY, uint32_t aWidth, uint32_t aHeight,
+                    uint32_t* aStride, int aGbmFlags, int aPlane = 0);
 
   virtual ~WaylandDMABufSurface();
 
@@ -136,6 +150,11 @@ class WaylandDMABufSurface {
   uint32_t mDrmFormats[DMABUF_BUFFER_PLANES];
   uint32_t mStrides[DMABUF_BUFFER_PLANES];
   uint32_t mOffsets[DMABUF_BUFFER_PLANES];
+
+  struct gbm_bo* mGbmBufferObject[DMABUF_BUFFER_PLANES];
+  void* mMappedRegion[DMABUF_BUFFER_PLANES];
+  void* mMappedRegionData[DMABUF_BUFFER_PLANES];
+  uint32_t mMappedRegionStride[DMABUF_BUFFER_PLANES];
 
   EGLSyncKHR mSync;
   RefPtr<mozilla::gl::GLContext> mGL;
@@ -156,6 +175,8 @@ class WaylandDMABufSurfaceRGBA : public WaylandDMABufSurface {
   bool Resize(int aWidth, int aHeight);
   void Clear();
 
+  void ReleaseSurface();
+
   bool CopyFrom(class WaylandDMABufSurface* aSourceSurface);
 
   int GetWidth(int aPlane = 0) { return mWidth; };
@@ -170,10 +191,10 @@ class WaylandDMABufSurfaceRGBA : public WaylandDMABufSurface {
   void* Map(uint32_t aX, uint32_t aY, uint32_t aWidth, uint32_t aHeight,
             uint32_t* aStride = nullptr);
   void* Map(uint32_t* aStride = nullptr);
-  void* GetMappedRegion() { return mMappedRegion; };
-  uint32_t GetMappedRegionStride() { return mMappedRegionStride; };
-  bool IsMapped() { return (mMappedRegion != nullptr); };
-  void Unmap();
+  void* GetMappedRegion(int aPlane = 0) { return mMappedRegion[aPlane]; };
+  uint32_t GetMappedRegionStride(int aPlane = 0) {
+    return mMappedRegionStride[aPlane];
+  };
 
   bool CreateTexture(mozilla::gl::GLContext* aGLContext, int aPlane = 0);
   void ReleaseTextures();
@@ -195,13 +216,9 @@ class WaylandDMABufSurfaceRGBA : public WaylandDMABufSurface {
 
   bool Create(int aWidth, int aHeight, int aWaylandDMABufSurfaceFlags);
   bool Create(const mozilla::layers::SurfaceDescriptor& aDesc);
-  void ReleaseSurface();
 
   bool CreateWLBuffer();
   void ImportSurfaceDescriptor(const mozilla::layers::SurfaceDescriptor& aDesc);
-
-  void* MapInternal(uint32_t aX, uint32_t aY, uint32_t aWidth, uint32_t aHeight,
-                    uint32_t* aStride, int aGbmFlags);
 
  private:
   int mSurfaceFlags;
@@ -211,15 +228,9 @@ class WaylandDMABufSurfaceRGBA : public WaylandDMABufSurface {
   mozilla::widget::GbmFormat* mGmbFormat;
 
   wl_buffer* mWLBuffer;
-  void* mMappedRegion;
-  void* mMappedRegionData;
-  uint32_t mMappedRegionStride;
-
-  struct gbm_bo* mGbmBufferObject;
-  uint32_t mGbmBufferFlags;
-
   EGLImageKHR mEGLImage;
   GLuint mTexture;
+  uint32_t mGbmBufferFlags;
 
   bool mWLBufferAttached;
   bool mFastWLBufferCreation;
@@ -228,11 +239,15 @@ class WaylandDMABufSurfaceRGBA : public WaylandDMABufSurface {
 class WaylandDMABufSurfaceNV12 : public WaylandDMABufSurface {
  public:
   static already_AddRefed<WaylandDMABufSurfaceNV12> CreateNV12Surface(
+      int aWidth, int aHeight, void** aPixelData = nullptr,
+      int* aLineSizes = nullptr);
+
+  static already_AddRefed<WaylandDMABufSurfaceNV12> CreateNV12Surface(
       const VADRMPRIMESurfaceDescriptor& aDesc);
 
-  bool Create(const VADRMPRIMESurfaceDescriptor& aDesc);
-
   bool Serialize(mozilla::layers::SurfaceDescriptor& aOutDescriptor);
+
+  WaylandDMABufSurfaceNV12* GetAsWaylandDMABufSurfaceNV12() { return this; };
 
   int GetWidth(int aPlane = 0) { return mWidth[aPlane]; }
   int GetHeight(int aPlane = 0) { return mHeight[aPlane]; }
@@ -241,6 +256,9 @@ class WaylandDMABufSurfaceNV12 : public WaylandDMABufSurface {
 
   bool CreateTexture(mozilla::gl::GLContext* aGLContext, int aPlane = 0);
   void ReleaseTextures();
+
+  void ReleaseSurface();
+
   GLuint GetTexture(int aPlane = 0) { return mTexture[aPlane]; };
   EGLImageKHR GetEGLImage(int aPlane = 0) { return mEGLImage[aPlane]; };
 
@@ -255,11 +273,16 @@ class WaylandDMABufSurfaceNV12 : public WaylandDMABufSurface {
 
   WaylandDMABufSurfaceNV12();
 
+  bool UpdateNV12Data(void** aPixelData, int* aLineSizes);
+  bool UpdateNV12Data(const VADRMPRIMESurfaceDescriptor& aDesc);
+
  private:
   ~WaylandDMABufSurfaceNV12();
 
   bool Create(const mozilla::layers::SurfaceDescriptor& aDesc);
-  void ReleaseSurface();
+  bool Create(int aWidth, int aHeight, void** aPixelData, int* aLineSizes);
+  bool CreateNV12Plane(mozilla::widget::nsWaylandDisplay* display, int aPlane,
+                       int aWidth, int aHeight, int aDrmFormat);
 
   void ImportSurfaceDescriptor(
       const mozilla::layers::SurfaceDescriptorDMABuf& aDesc);
