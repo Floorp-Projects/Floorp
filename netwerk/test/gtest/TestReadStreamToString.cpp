@@ -1,7 +1,9 @@
 #include "gtest/gtest.h"
 
+#include "Helpers.h"
 #include "nsCOMPtr.h"
 #include "nsNetUtil.h"
+#include "nsStringStream.h"
 
 // Here we test the reading a pre-allocated size
 TEST(TestReadStreamToString, SyncStreamPreAllocatedSize)

@@ -12,6 +12,7 @@ UNIFIED_SOURCES += [
     'TestHeaders.cpp',
     'TestHttpAuthUtils.cpp',
     'TestHttpResponseHead.cpp',
+    'TestInputStreamTransport.cpp',
     'TestIsValidIp.cpp',
     'TestMIMEInputStream.cpp',
     'TestMozURL.cpp',
