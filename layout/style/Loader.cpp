@@ -822,8 +822,25 @@ nsresult Loader::CheckContentPolicy(nsIPrincipal* aLoadingPrincipal,
   return NS_OK;
 }
 
-void Loader::DidHitCompleteSheetCache(SheetLoadData& aData) {
-  mLoadsPerformed.PutEntry(SheetLoadDataHashKey(aData));
+static void RecordUseCountersIfNeeded(Document* aDoc,
+                                      const StyleUseCounters* aCounters) {
+  if (!aDoc || !aCounters) {
+    return;
+  }
+  const StyleUseCounters* docCounters = aDoc->GetStyleUseCounters();
+  if (!docCounters) {
+    return;
+  }
+  Servo_UseCounters_Merge(docCounters, aCounters);
+  aDoc->MaybeWarnAboutZoom();
+}
+
+void Loader::DidHitCompleteSheetCache(const SheetLoadDataHashKey& aKey,
+                                      const StyleUseCounters* aCounters) {
+  MOZ_ASSERT(mDocument);
+  if (mLoadsPerformed.EnsureInserted(aKey)) {
+    RecordUseCountersIfNeeded(mDocument, aCounters);
+  }
 }
 
 /**
@@ -1414,6 +1431,8 @@ Loader::Completed Loader::ParseSheet(const nsACString& aBytes,
 }
 
 void Loader::NotifyObservers(SheetLoadData& aData, nsresult aStatus) {
+  RecordUseCountersIfNeeded(mDocument, aData.mUseCounters.get());
+
   // Constructable sheets do get here via StyleSheet::Replace, but they don't
   // count like a regular sheet load.
   //
@@ -1460,11 +1479,6 @@ void Loader::NotifyObservers(SheetLoadData& aData, nsresult aStatus) {
 void Loader::SheetComplete(SheetLoadData& aLoadData, nsresult aStatus) {
   LOG(("css::Loader::SheetComplete, status: 0x%" PRIx32,
        static_cast<uint32_t>(aStatus)));
-
-  if (mDocument) {
-    mDocument->MaybeWarnAboutZoom();
-  }
-
   SharedStyleSheetCache::LoadCompleted(mSheets.get(), aLoadData, aStatus);
 }
 
@@ -1686,7 +1700,6 @@ Result<Loader::LoadSheetResult, nsresult> Loader::LoadStyleLink(
       aInfo.mReferrerInfo, context);
   if (state == SheetState::Complete) {
     LOG(("  Sheet already complete: 0x%p", sheet.get()));
-    DidHitCompleteSheetCache(*data);
     if (aObserver || !mObservers.IsEmpty() || aInfo.mContent) {
       rv = PostLoadEvent(std::move(data));
       if (NS_FAILED(rv)) {
@@ -1842,7 +1855,6 @@ nsresult Loader::LoadChildSheet(StyleSheet& aParentSheet,
 
   if (state == SheetState::Complete) {
     LOG(("  Sheet already complete"));
-    DidHitCompleteSheetCache(*data);
     // We're completely done.  No need to notify, even, since the
     // @import rule addition/modification will trigger the right style
     // changes automatically.
@@ -1932,7 +1944,6 @@ Result<RefPtr<StyleSheet>, nsresult> Loader::InternalLoadNonDocumentSheet(
       mDocument);
   if (state == SheetState::Complete) {
     LOG(("  Sheet already complete"));
-    DidHitCompleteSheetCache(*data);
     if (aObserver || !mObservers.IsEmpty()) {
       rv = PostLoadEvent(std::move(data));
       if (NS_FAILED(rv)) {
