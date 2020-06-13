@@ -1955,9 +1955,6 @@ nsresult PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight,
     mMobileViewportManager->RequestReflow(false);
     return NS_OK;
   }
-  if (mMobileViewportManager) {
-    mMobileViewportManager->NotifyResizeReflow();
-  }
 
   return ResizeReflowIgnoreOverride(aWidth, aHeight, aOptions);
 }
