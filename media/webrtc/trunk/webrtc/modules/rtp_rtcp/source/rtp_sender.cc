@@ -1281,6 +1281,14 @@ std::unique_ptr<RtpPacketToSend> RTPSender::BuildRtxPacket(
         rtx_packet->SetExtension<RepairedRtpStreamId>(rid);
       }
     }
+
+    // Copy mid from packet
+    if (rtp_header_extension_map_.IsRegistered(kRtpExtensionMid)) {
+      std::string mid;
+      if (packet.GetExtension<RtpMid>(&mid)) {
+        rtx_packet->SetExtension<RtpMid>(mid);
+      }
+    }
   }
   uint8_t* rtx_payload =
       rtx_packet->AllocatePayload(packet.payload_size() + kRtxHeaderSize);
