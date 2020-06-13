@@ -134,11 +134,31 @@
     border-bottom: 1px solid var(--organizer-background-color-content);
     color: var(--organizer-text-primary-color);
   }
+  #placesToolbar > toolbarbutton {
+    -moz-appearance: none;
+    border-radius: 2px;
+    padding-block: 6px;
+    padding-inline: 7px;
+  }
+  #placesToolbar > toolbarbutton:not([disabled="true"]):hover {
+    background-color: var(--organizer-background-color-selected);
+  }
   #placesMenu > menu {
+    -moz-appearance: none;
+    border-radius: 2px;
+    padding: 4px;
     color: var(--organizer-text-primary-color);
   }
-  #placesMenu > menu > image {
-    filter: invert(100%);
+  #placesMenu > menu::after {
+    -moz-appearance: none;
+    -moz-context-properties: fill;
+    content: url("chrome://global/skin/icons/arrow-dropdown-12.svg");
+    fill: currentColor;
+  }
+  #placesMenu > menu:hover,
+  #placesMenu > menu[_moz-menuactive="true"] {
+    color: var(--organizer-text-primary-color);
+    background-color: var(--organizer-background-color-selected);
   }
   #searchFilter {
     -moz-appearance: none;
