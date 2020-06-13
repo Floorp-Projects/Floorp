@@ -4376,6 +4376,7 @@ void nsFlexContainerFrame::Reflow(nsPresContext* aPresContext,
     }
   } else {
     auto* data = FirstInFlow()->GetProperty(SharedFlexData::Prop());
+    MOZ_ASSERT(data, "SharedFlexData should be set by our first-in-flow!");
 
     GenerateFlexLines(*data, lines);
     contentBoxMainSize = data->mContentBoxMainSize;
