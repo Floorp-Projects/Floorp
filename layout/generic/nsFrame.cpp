@@ -2552,6 +2552,13 @@ bool nsIFrame::CanBeDynamicReflowRoot() const {
     }
   }
 
+  // If we are split, we can't be a dynamic reflow root. Our reflow status may
+  // change after reflow, and our parent is responsible to create or delete our
+  // next-in-flow.
+  if (GetPrevContinuation() || GetNextContinuation()) {
+    return false;
+  }
+
   return true;
 }
 
