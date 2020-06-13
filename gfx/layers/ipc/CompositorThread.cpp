@@ -20,7 +20,7 @@ namespace mozilla {
 namespace layers {
 
 static StaticRefPtr<CompositorThreadHolder> sCompositorThreadHolder;
-static bool sFinishedCompositorShutDown = false;
+static Atomic<bool> sFinishedCompositorShutDown(false);
 static mozilla::BackgroundHangMonitor* sBackgroundHangMonitor;
 
 nsISerialEventTarget* CompositorThread() {
@@ -39,7 +39,6 @@ CompositorThreadHolder::CompositorThreadHolder()
 }
 
 CompositorThreadHolder::~CompositorThreadHolder() {
-  MOZ_ASSERT(NS_IsMainThread());
   sFinishedCompositorShutDown = true;
 }
 
@@ -116,7 +115,9 @@ void CompositorThreadHolder::Shutdown() {
   // thread and may continue to dispatch tasks on it as the system shuts down.
   CompositorThread()->Dispatch(NS_NewRunnableFunction(
       "CompositorThreadHolder::Shutdown",
-      [backgroundHangMonitor = UniquePtr<mozilla::BackgroundHangMonitor>(
+      [compositorThreadHolder =
+           RefPtr<CompositorThreadHolder>(sCompositorThreadHolder),
+       backgroundHangMonitor = UniquePtr<mozilla::BackgroundHangMonitor>(
            sBackgroundHangMonitor)]() {
         nsCOMPtr<nsIThread> thread = NS_GetCurrentThread();
         static_cast<nsThread*>(thread.get())->SetUseHangMonitor(false);
@@ -125,10 +126,16 @@ void CompositorThreadHolder::Shutdown() {
   sCompositorThreadHolder = nullptr;
   sBackgroundHangMonitor = nullptr;
 
-  // No locking is needed around sFinishedCompositorShutDown because it is only
-  // ever accessed on the main thread.
-  SpinEventLoopUntil([&]() { return sFinishedCompositorShutDown; });
+  SpinEventLoopUntil([&]() {
+    bool finished = sFinishedCompositorShutDown;
+    return finished;
+  });
 
+// At this point, the CompositorThreadHolder instance will have been destroyed,
+// but the compositor thread itself may still be running due to APZ/Canvas code
+// holding a reference to the underlying nsIThread/nsISerialEventTarget. Any
+// tasks scheduled to run on the compositor thread earlier in this function will
+// have been run to completion.
   CompositorBridgeParent::FinishShutdown();
 }
 
