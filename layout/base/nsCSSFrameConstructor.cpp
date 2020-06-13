@@ -8048,6 +8048,9 @@ nsIFrame* nsCSSFrameConstructor::CreateContinuingFrame(
     newFrame->SetNextContinuation(nextContinuation);
   }
 
+  // aFrame cannot be a dynamic reflow root because it has a continuation now.
+  aFrame->RemoveStateBits(NS_FRAME_DYNAMIC_REFLOW_ROOT);
+
   MOZ_ASSERT(!newFrame->GetNextSibling(), "unexpected sibling");
   return newFrame;
 }
