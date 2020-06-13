@@ -91,7 +91,6 @@ class nsWaylandDisplay {
   static bool IsDMABufEnabled();
   static bool IsDMABufBasicEnabled();
   static bool IsDMABufTexturesEnabled();
-  static bool IsDMABufVideoTexturesEnabled();
   static bool IsDMABufWebGLEnabled();
   static bool IsDMABufVAAPIEnabled();
 
