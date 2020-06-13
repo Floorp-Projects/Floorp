@@ -1929,6 +1929,54 @@ bool imgLoader::ValidateEntry(
     return false;
   }
 
+  // If the original request is still transferring don't kick off a validation
+  // network request because it is a bit silly to issue a validation request if
+  // the original request hasn't even finished yet. So just return true
+  // indicating the caller can create a new proxy for the request and use it as
+  // is.
+  // This is an optimization but it's also required for correctness. If we don't
+  // do this then when firing the load complete notification for the original
+  // request that can unblock load for the document and then spin the event loop
+  // (see the stack in bug 1641682) which then the OnStartRequest for the
+  // validation request can fire which can call UpdateProxies and can sync
+  // notify on the progress tracker about all existing state, which includes
+  // load complete, so we fire a second load complete notification for the
+  // image.
+  // In addition, we want to validate if the original request encountered
+  // an error for two reasons. The first being if the error was a network error
+  // then trying to re-fetch the image might succeed. The second is more
+  // complicated. We decide if we should fire the load or error event for img
+  // elements depending on if the image has error in its status at the time when
+  // the load complete notification is received, and we set error status on an
+  // image if it encounters a network error or a decode error with no real way
+  // to tell them apart. So if we load an image that will produce a decode error
+  // the first time we will usually fire the load event, and then decode enough
+  // to encounter the decode error and set the error status on the image. The
+  // next time we reference the image in the same document the load complete
+  // notification is replayed and this time the error status from the decode is
+  // already present so we fire the error event instead of the load event. This
+  // is a bug (bug 1645576) that we should fix. In order to avoid that bug in
+  // some cases (specifically the cases when we hit this code and try to
+  // validate the request) we make sure to validate. This avoids the bug because
+  // when the load complete notification arrives the proxy is marked as
+  // validating so it lies about its status and returns nothing.
+  bool requestComplete = false;
+  RefPtr<ProgressTracker> tracker;
+  RefPtr<mozilla::image::Image> image = request->GetImage();
+  if (image) {
+    tracker = image->GetProgressTracker();
+  } else {
+    tracker = request->GetProgressTracker();
+  }
+  if (tracker) {
+    if (tracker->GetProgress() & (FLAG_LOAD_COMPLETE | FLAG_HAS_ERROR)) {
+      requestComplete = true;
+    }
+  }
+  if (!requestComplete) {
+    return true;
+  }
+
   if (validateRequest && aCanMakeNewChannel) {
     LOG_SCOPE(gImgLog, "imgLoader::ValidateRequest |cache hit| must validate");
 
