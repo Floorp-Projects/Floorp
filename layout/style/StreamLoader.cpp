@@ -135,7 +135,20 @@ StreamLoader::OnStopRequest(nsIRequest* aRequest, nsresult aStatus) {
 
   auto info = nsContentUtils::GetSubresourceCacheValidationInfo(aRequest);
 
-  // For now, we never cache entries that we have to revalidate.
+  // data: URIs are safe to cache across documents under any circumstance, so we
+  // special-case them here even though the channel itself doesn't have any
+  // caching policy.
+  //
+  // TODO(emilio): Figure out which other schemes that don't have caching
+  // policies are safe to cache. Blobs should be...
+  if (mSheetLoadData->mURI->SchemeIs("data")) {
+    MOZ_ASSERT(!info.mExpirationTime);
+    MOZ_ASSERT(!info.mMustRevalidate);
+    info.mExpirationTime = Some(0);  // 0 means "doesn't expire".
+  }
+
+  // For now, we never cache entries that we have to revalidate, or whose
+  // channel don't support caching.
   if (!info.mExpirationTime || info.mMustRevalidate) {
     info.mExpirationTime =
         Some(nsContentUtils::SecondsFromPRTime(PR_Now()) - 1);
