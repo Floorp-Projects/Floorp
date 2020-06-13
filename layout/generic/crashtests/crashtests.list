@@ -772,3 +772,4 @@ load 1633828.html
 load 1640028.html
 load 1640051.html
 load 1640275.html
+pref(layout.accessiblecaret.enabled,true) load 1644819.html
