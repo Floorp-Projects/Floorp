@@ -118,7 +118,8 @@ SharedStyleSheetCache::CacheResult SharedStyleSheetCache::Lookup(
     // We can assert the stylesheet has not been modified, as we clone it on
     // insertion.
     StyleSheet& cachedSheet = *completeSheet.mSheet;
-    LOG(("  From completed: %p", &cachedSheet));
+    LOG(("  From completed: %p, bypass: %d, expired: %d", &cachedSheet,
+         aLoader.ShouldBypassCache(), completeSheet.Expired()));
 
     if ((!aLoader.ShouldBypassCache() && !completeSheet.Expired()) ||
         aLoader.mLoadsPerformed.Contains(aKey)) {
