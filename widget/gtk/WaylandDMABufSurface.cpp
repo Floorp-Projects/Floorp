@@ -107,11 +107,26 @@ void WaylandDMABufSurface::GlobalRefCountImport(int aFd) {
 }
 
 void WaylandDMABufSurface::GlobalRefCountDelete() {
-  MOZ_ASSERT(mGlobalRefCountFd);
   if (mGlobalRefCountFd) {
     GlobalRefRelease();
     close(mGlobalRefCountFd);
     mGlobalRefCountFd = 0;
+  }
+}
+
+void WaylandDMABufSurface::ReleaseDMABuf() {
+  for (int i = 0; i < mBufferPlaneCount; i++) {
+    Unmap(i);
+
+    if (mDmabufFds[i] >= 0) {
+      close(mDmabufFds[i]);
+      mDmabufFds[i] = -1;
+    }
+  }
+
+  if (mGbmBufferObject[0]) {
+    nsGbmLib::Destroy(mGbmBufferObject[0]);
+    mGbmBufferObject[0] = nullptr;
   }
 }
 
@@ -122,6 +137,9 @@ WaylandDMABufSurface::WaylandDMABufSurface(SurfaceType aSurfaceType)
       mDrmFormats(),
       mStrides(),
       mOffsets(),
+      mGbmBufferObject(),
+      mMappedRegion(),
+      mMappedRegionStride(),
       mSync(0),
       mGlobalRefCountFd(0),
       mUID(0) {
@@ -267,12 +285,9 @@ WaylandDMABufSurfaceRGBA::WaylandDMABufSurfaceRGBA()
       mHeight(0),
       mGmbFormat(nullptr),
       mWLBuffer(nullptr),
-      mMappedRegion(nullptr),
-      mMappedRegionStride(0),
-      mGbmBufferObject(nullptr),
-      mGbmBufferFlags(0),
       mEGLImage(LOCAL_EGL_NO_IMAGE),
       mTexture(0),
+      mGbmBufferFlags(0),
       mWLBufferAttached(false),
       mFastWLBufferCreation(true) {}
 
@@ -280,14 +295,16 @@ WaylandDMABufSurfaceRGBA::~WaylandDMABufSurfaceRGBA() { ReleaseSurface(); }
 
 bool WaylandDMABufSurfaceRGBA::Create(int aWidth, int aHeight,
                                       int aWaylandDMABufSurfaceFlags) {
-  MOZ_RELEASE_ASSERT(WaylandDisplayGet());
-  MOZ_ASSERT(mGbmBufferObject == nullptr, "Already created?");
+  nsWaylandDisplay* display = WaylandDisplayGet();
+  if (!display) {
+    return false;
+  }
+  MOZ_ASSERT(mGbmBufferObject[0] == nullptr, "Already created?");
 
   mSurfaceFlags = aWaylandDMABufSurfaceFlags;
   mWidth = aWidth;
   mHeight = aHeight;
 
-  nsWaylandDisplay* display = WaylandDisplayGet();
   mGmbFormat = display->GetGbmFormat(mSurfaceFlags & DMABUF_ALPHA);
   if (!mGmbFormat) {
     // Requested DRM format is not supported.
@@ -297,16 +314,16 @@ bool WaylandDMABufSurfaceRGBA::Create(int aWidth, int aHeight,
   bool useModifiers = (aWaylandDMABufSurfaceFlags & DMABUF_USE_MODIFIERS) &&
                       mGmbFormat->mModifiersCount > 0;
   if (useModifiers) {
-    mGbmBufferObject = nsGbmLib::CreateWithModifiers(
+    mGbmBufferObject[0] = nsGbmLib::CreateWithModifiers(
         display->GetGbmDevice(), mWidth, mHeight, mGmbFormat->mFormat,
         mGmbFormat->mModifiers, mGmbFormat->mModifiersCount);
-    if (mGbmBufferObject) {
-      mBufferModifier = nsGbmLib::GetModifier(mGbmBufferObject);
+    if (mGbmBufferObject[0]) {
+      mBufferModifier = nsGbmLib::GetModifier(mGbmBufferObject[0]);
     }
   }
 
   // Create without modifiers - use plain/linear format.
-  if (!mGbmBufferObject) {
+  if (!mGbmBufferObject[0]) {
     mGbmBufferFlags = (GBM_BO_USE_SCANOUT | GBM_BO_USE_LINEAR);
     if (mSurfaceFlags & DMABUF_CREATE_WL_BUFFER) {
       mGbmBufferFlags |= GBM_BO_USE_RENDERING;
@@ -319,19 +336,19 @@ bool WaylandDMABufSurfaceRGBA::Create(int aWidth, int aHeight,
       mGbmBufferFlags &= ~GBM_BO_USE_SCANOUT;
     }
 
-    mGbmBufferObject =
+    mGbmBufferObject[0] =
         nsGbmLib::Create(display->GetGbmDevice(), mWidth, mHeight,
                          mGmbFormat->mFormat, mGbmBufferFlags);
 
     mBufferModifier = DRM_FORMAT_MOD_INVALID;
   }
 
-  if (!mGbmBufferObject) {
+  if (!mGbmBufferObject[0]) {
     return false;
   }
 
   if (mBufferModifier != DRM_FORMAT_MOD_INVALID) {
-    mBufferPlaneCount = nsGbmLib::GetPlaneCount(mGbmBufferObject);
+    mBufferPlaneCount = nsGbmLib::GetPlaneCount(mGbmBufferObject[0]);
     if (mBufferPlaneCount > DMABUF_BUFFER_PLANES) {
       NS_WARNING("There's too many dmabuf planes!");
       ReleaseSurface();
@@ -339,20 +356,20 @@ bool WaylandDMABufSurfaceRGBA::Create(int aWidth, int aHeight,
     }
 
     for (int i = 0; i < mBufferPlaneCount; i++) {
-      uint32_t handle = nsGbmLib::GetHandleForPlane(mGbmBufferObject, i).u32;
+      uint32_t handle = nsGbmLib::GetHandleForPlane(mGbmBufferObject[0], i).u32;
       int ret = nsGbmLib::DrmPrimeHandleToFD(display->GetGbmDeviceFd(), handle,
                                              0, &mDmabufFds[i]);
       if (ret < 0 || mDmabufFds[i] < 0) {
         ReleaseSurface();
         return false;
       }
-      mStrides[i] = nsGbmLib::GetStrideForPlane(mGbmBufferObject, i);
-      mOffsets[i] = nsGbmLib::GetOffset(mGbmBufferObject, i);
+      mStrides[i] = nsGbmLib::GetStrideForPlane(mGbmBufferObject[0], i);
+      mOffsets[i] = nsGbmLib::GetOffset(mGbmBufferObject[0], i);
     }
   } else {
     mBufferPlaneCount = 1;
-    mStrides[0] = nsGbmLib::GetStride(mGbmBufferObject);
-    mDmabufFds[0] = nsGbmLib::GetFd(mGbmBufferObject);
+    mStrides[0] = nsGbmLib::GetStride(mGbmBufferObject[0]);
+    mDmabufFds[0] = nsGbmLib::GetFd(mGbmBufferObject[0]);
     if (mDmabufFds[0] < 0) {
       ReleaseSurface();
       return false;
@@ -567,41 +584,29 @@ void WaylandDMABufSurfaceRGBA::ReleaseSurface() {
     mWLBuffer = nullptr;
   }
 
-  for (int i = 0; i < mBufferPlaneCount; i++) {
-    if (mDmabufFds[i] >= 0) {
-      close(mDmabufFds[i]);
-      mDmabufFds[i] = 0;
-    }
-  }
-
-  if (mGbmBufferObject) {
-    nsGbmLib::Destroy(mGbmBufferObject);
-    mGbmBufferObject = nullptr;
-  }
+  ReleaseDMABuf();
 }
 
-void* WaylandDMABufSurfaceRGBA::MapInternal(uint32_t aX, uint32_t aY,
-                                            uint32_t aWidth, uint32_t aHeight,
-                                            uint32_t* aStride, int aGbmFlags) {
-  NS_ASSERTION(!IsMapped(), "Already mapped!");
-  if (!mGbmBufferObject) {
+void* WaylandDMABufSurface::MapInternal(uint32_t aX, uint32_t aY,
+                                        uint32_t aWidth, uint32_t aHeight,
+                                        uint32_t* aStride, int aGbmFlags,
+                                        int aPlane) {
+  NS_ASSERTION(!IsMapped(aPlane), "Already mapped!");
+  if (!mGbmBufferObject[aPlane]) {
     NS_WARNING(
         "We can't map WaylandDMABufSurfaceRGBA without mGbmBufferObject");
     return nullptr;
   }
 
-  if (mSurfaceFlags & DMABUF_USE_MODIFIERS) {
-    NS_WARNING("We should not map dmabuf surfaces with modifiers!");
-  }
-
-  mMappedRegionStride = 0;
-  mMappedRegion =
-      nsGbmLib::Map(mGbmBufferObject, aX, aY, aWidth, aHeight, aGbmFlags,
-                    &mMappedRegionStride, &mMappedRegionData);
+  mMappedRegionStride[aPlane] = 0;
+  mMappedRegionData[aPlane] = nullptr;
+  mMappedRegion[aPlane] = nsGbmLib::Map(
+      mGbmBufferObject[aPlane], aX, aY, aWidth, aHeight, aGbmFlags,
+      &mMappedRegionStride[aPlane], &mMappedRegionData[aPlane]);
   if (aStride) {
-    *aStride = mMappedRegionStride;
+    *aStride = mMappedRegionStride[aPlane];
   }
-  return mMappedRegion;
+  return mMappedRegion[aPlane];
 }
 
 void* WaylandDMABufSurfaceRGBA::MapReadOnly(uint32_t aX, uint32_t aY,
@@ -625,12 +630,12 @@ void* WaylandDMABufSurfaceRGBA::Map(uint32_t* aStride) {
                      GBM_BO_TRANSFER_READ_WRITE);
 }
 
-void WaylandDMABufSurfaceRGBA::Unmap() {
-  if (mMappedRegion) {
-    nsGbmLib::Unmap(mGbmBufferObject, mMappedRegionData);
-    mMappedRegion = nullptr;
-    mMappedRegionData = nullptr;
-    mMappedRegionStride = 0;
+void WaylandDMABufSurface::Unmap(int aPlane) {
+  if (mMappedRegion[aPlane]) {
+    nsGbmLib::Unmap(mGbmBufferObject[aPlane], mMappedRegionData[aPlane]);
+    mMappedRegion[aPlane] = nullptr;
+    mMappedRegionData[aPlane] = nullptr;
+    mMappedRegionStride[aPlane] = 0;
   }
 }
 
@@ -707,7 +712,18 @@ already_AddRefed<WaylandDMABufSurfaceNV12>
 WaylandDMABufSurfaceNV12::CreateNV12Surface(
     const VADRMPRIMESurfaceDescriptor& aDesc) {
   RefPtr<WaylandDMABufSurfaceNV12> surf = new WaylandDMABufSurfaceNV12();
-  if (!surf->Create(aDesc)) {
+  if (!surf->UpdateNV12Data(aDesc)) {
+    return nullptr;
+  }
+  return surf.forget();
+}
+
+already_AddRefed<WaylandDMABufSurfaceNV12>
+WaylandDMABufSurfaceNV12::CreateNV12Surface(int aWidth, int aHeight,
+                                            void** aPixelData,
+                                            int* aLineSizes) {
+  RefPtr<WaylandDMABufSurfaceNV12> surf = new WaylandDMABufSurfaceNV12();
+  if (!surf->Create(aWidth, aHeight, aPixelData, aLineSizes)) {
     return nullptr;
   }
   return surf.forget();
@@ -727,7 +743,7 @@ WaylandDMABufSurfaceNV12::WaylandDMABufSurfaceNV12()
 
 WaylandDMABufSurfaceNV12::~WaylandDMABufSurfaceNV12() { ReleaseSurface(); }
 
-bool WaylandDMABufSurfaceNV12::Create(
+bool WaylandDMABufSurfaceNV12::UpdateNV12Data(
     const VADRMPRIMESurfaceDescriptor& aDesc) {
   if (aDesc.fourcc != VA_FOURCC_NV12) {
     return false;
@@ -735,6 +751,9 @@ bool WaylandDMABufSurfaceNV12::Create(
   if (aDesc.num_layers > DMABUF_BUFFER_PLANES ||
       aDesc.num_objects > DMABUF_BUFFER_PLANES) {
     return false;
+  }
+  if (mDmabufFds[0] >= 0) {
+    ReleaseSurface();
   }
 
   mSurfaceFormat = gfx::SurfaceFormat::NV12;
@@ -756,6 +775,89 @@ bool WaylandDMABufSurfaceNV12::Create(
   }
 
   return true;
+}
+
+bool WaylandDMABufSurfaceNV12::CreateNV12Plane(nsWaylandDisplay* display,
+                                               int aPlane, int aWidth,
+                                               int aHeight, int aDrmFormat) {
+  mWidth[aPlane] = aWidth;
+  mHeight[aPlane] = aHeight;
+  mDrmFormats[aPlane] = aDrmFormat;
+
+  mGbmBufferObject[aPlane] =
+      nsGbmLib::Create(display->GetGbmDevice(), aWidth, aHeight, aDrmFormat,
+                       GBM_BO_USE_LINEAR | GBM_BO_USE_TEXTURING);
+  if (!mGbmBufferObject[aPlane]) {
+    return false;
+  }
+
+  mStrides[aPlane] = nsGbmLib::GetStride(mGbmBufferObject[aPlane]);
+  mDmabufFds[aPlane] = nsGbmLib::GetFd(mGbmBufferObject[aPlane]);
+
+  return true;
+}
+
+bool WaylandDMABufSurfaceNV12::UpdateNV12Data(void** aPixelData,
+                                              int* aLineSizes) {
+  if (aLineSizes[0] != mWidth[0] || aLineSizes[1] != mWidth[1] ||
+      aLineSizes[2] != mWidth[1]) {
+    NS_WARNING("WaylandDMABufSurfaceNV12 size does not match!");
+    return false;
+  }
+
+  auto unmapBuffers = MakeScopeExit([&] {
+    Unmap(0);
+    Unmap(1);
+  });
+
+  char* yData = (char*)MapInternal(0, 0, mWidth[0], mHeight[0], nullptr,
+                                   GBM_BO_TRANSFER_READ, 0);
+  if (!yData || mMappedRegionStride[0] != mWidth[0]) {
+    NS_WARNING("WaylandDMABufSurfaceNV12 plane 1 size stride does not match!");
+    return false;
+  }
+  char* nvData = (char*)MapInternal(0, 0, mWidth[1], mHeight[1], nullptr,
+                                    GBM_BO_TRANSFER_READ, 1);
+  if (!nvData || mMappedRegionStride[1] != mWidth[1] * 2) {
+    NS_WARNING("WaylandDMABufSurfaceNV12 plane 2 size stride does not match!");
+    return false;
+  }
+
+  // Copy Y plane
+  memcpy(yData, aPixelData[0], aLineSizes[0] * mHeight[0]);
+
+  // Copy NV planes
+  char* nSrcPixels = (char*)aPixelData[1];
+  char* vSrcPixels = (char*)aPixelData[2];
+  int bufferLen = (aLineSizes[1] + aLineSizes[2]) * (mHeight[1]);
+  for (int i = 0; i < bufferLen; i += 2) {
+    *nvData++ = *nSrcPixels++;
+    *nvData++ = *vSrcPixels++;
+  }
+
+  return true;
+}
+
+bool WaylandDMABufSurfaceNV12::Create(int aWidth, int aHeight,
+                                      void** aPixelData, int* aLineSizes) {
+  nsWaylandDisplay* display = WaylandDisplayGet();
+  if (!display) {
+    return false;
+  }
+
+  mBufferPlaneCount = 2;
+
+  if (!CreateNV12Plane(display, 0, aWidth, aHeight, GBM_FORMAT_R8)) {
+    return false;
+  }
+  if (!CreateNV12Plane(display, 1, aWidth >> 1, aHeight >> 1,
+                       GBM_FORMAT_GR88)) {
+    return false;
+  }
+
+  return aPixelData != nullptr && aLineSizes != nullptr
+             ? UpdateNV12Data(aPixelData, aLineSizes)
+             : true;
 }
 
 bool WaylandDMABufSurfaceNV12::Create(const SurfaceDescriptor& aDesc) {
@@ -935,11 +1037,5 @@ gfx::SurfaceFormat WaylandDMABufSurfaceNV12::GetFormatGL() {
 
 void WaylandDMABufSurfaceNV12::ReleaseSurface() {
   ReleaseTextures();
-
-  for (int i = 0; i < mBufferPlaneCount; i++) {
-    if (mDmabufFds[i] >= 0) {
-      close(mDmabufFds[i]);
-      mDmabufFds[i] = 0;
-    }
-  }
+  ReleaseDMABuf();
 }
