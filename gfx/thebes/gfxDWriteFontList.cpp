@@ -1154,6 +1154,8 @@ bool gfxDWriteFontList::ReadFaceNames(fontlist::Family* aFamily,
     // Note that on older Win7 systems, GetDirectWriteFaceName may "succeed"
     // but return an empty string, so we have to check for non-empty strings
     // to be sure we actually got a usable name.
+
+    // Initialize result to true if either name was already found.
     bool result = (SUCCEEDED(ps) && !aPSName.IsEmpty()) ||
                   (SUCCEEDED(full) && !aFullName.IsEmpty());
     RefPtr<IDWriteFontFace> dwFontFace;
@@ -1172,18 +1174,22 @@ bool gfxDWriteFontList::ReadFaceNames(fontlist::Family* aFamily,
       NS_WARNING("failed to get name table");
       return result;
     }
+    // Try to read the name table entries, and ensure result is true if either
+    // one succeeds.
     if (FAILED(ps) || aPSName.IsEmpty()) {
-      if (NS_FAILED(gfxFontUtils::ReadCanonicalName(
+      if (NS_SUCCEEDED(gfxFontUtils::ReadCanonicalName(
               data, size, gfxFontUtils::NAME_ID_POSTSCRIPT, aPSName))) {
+        result = true;
+      } else {
         NS_WARNING("failed to read psname");
-        result = SUCCEEDED(full) && !aFullName.IsEmpty();
       }
     }
     if (FAILED(full) || aFullName.IsEmpty()) {
-      if (NS_FAILED(gfxFontUtils::ReadCanonicalName(
+      if (NS_SUCCEEDED(gfxFontUtils::ReadCanonicalName(
               data, size, gfxFontUtils::NAME_ID_FULL, aFullName))) {
+        result = true;
+      } else {
         NS_WARNING("failed to read fullname");
-        result = SUCCEEDED(ps) && !aPSName.IsEmpty();
       }
     }
     dwFontFace->ReleaseFontTable(context);
