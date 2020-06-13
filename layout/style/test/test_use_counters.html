@@ -4,17 +4,20 @@
 <script src="/tests/SimpleTest/SimpleTest.js"></script>
 <body>
 <iframe id="iframe"></iframe>
+<iframe id="second-iframe"></iframe>
 <script>
+const iframe = document.getElementById("iframe");
 
-function iframe_reload() {
+function iframe_reload(frame = iframe) {
   return new Promise(resolve => {
-    iframe.addEventListener("load", _ => resolve());
-    iframe.contentWindow.location.reload();
+    frame.addEventListener("load", _ => resolve());
+    frame.contentWindow.location.reload();
   });
 }
 
 function assert_recorded(win, recorded, properties, desc) {
   const utils = SpecialPowers.getDOMWindowUtils(win);
+  isnot(properties.length, 0, "Sanity check");
   for (const prop of properties) {
     try {
       is(utils.isCssPropertyRecordedInUseCounter(prop), recorded,
@@ -35,63 +38,47 @@ add_task(async () => {
       ["layout.css.use-counters-unimplemented.enabled", true]
     ]
   });
-
-  await iframe_reload();
 });
 
-// Test implemented properties (i.e. non custom properties).
-add_task(async () => {
-  let iframe = document.getElementById("iframe");
-
-  const style = document.createElement('style');
-  style.textContent = `
+// TODO(emilio): Make work (and test) inline style and maybe even CSSOM and
+// such?
+//
+// Make sure that something on the lines of the following passes:
+//
+//   element.style.webkitTransform = "rotate(1deg)"
+//   assert_recorded(true, ["-webkit-transform"]);
+//   assert_recorded(false, ["transform"]);
+//
+const IMPLEMENTED_PROPERTIES = {
+  description: "unimplemented properties",
+  css: `
     * {
       grid-gap: 1px; /* shorthand alias */
       -webkit-background-size: 100px 100px; /* longhand alias */
       transform-origin: top left; /* longhand */
       background: green; /* shorthand */
     }
-  `;
-
-  iframe.contentDocument.body.appendChild(style);
-
-  const win = iframe.contentWindow;
-  assert_recorded(win, true, [
+  `,
+  recorded: [
     "grid-gap",
     "-webkit-background-size",
     "transform-origin",
-    "background"
-  ], "Test non-custom properties");
-
+    "background",
+  ],
   // Should only record the aliases, not the non-aliased property.
   // Should only record shorthands, not the longhands it expands to.
-  assert_recorded(win, false, [
+  not_recorded: [
     "gap",
     "background-size",
     "-moz-transform-origin",
     "-webkit-transform-origin",
     "background-color",
-  ], "Test non-custom properties");
+  ],
+};
 
-  // TODO(emilio): Make work (and test) inline style and maybe even CSSOM and
-  // such?
-  //
-  // Make sure that something on the lines of the following passes:
-  //
-  //   element.style.webkitTransform = "rotate(1deg)"
-  //   assert_recorded(true, ["-webkit-transform"]);
-  //   assert_recorded(false, ["transform"]);
-  //
-  style.remove();
-  await SpecialPowers.flushPrefEnv();
-});
-
-// Test unimplemented properties.
-add_task(async () => {
-  let iframe = document.getElementById("iframe");
-
-  const style = document.createElement('style');
-  style.textContent = `
+const UNIMPLEMENTED_PROPERTIES = {
+  description: "unimplemented properties",
+  css: `
     * {
       grid-gap: 1px; /* shorthand alias */
       -webkit-background-size: 100px 100px; /* longhand alias */
@@ -100,33 +87,38 @@ add_task(async () => {
       -webkit-font-smoothing: auto; /* counted unknown */
       zoom: 0.5; /* counted unknown */
     }
-  `;
-
-  iframe.contentDocument.body.appendChild(style);
-
-  const win = iframe.contentWindow;
-  assert_recorded(win, true, [
+  `,
+  recorded: [
     "grid-gap",
     "-webkit-background-size",
     "transform-origin",
     "background",
     "-webkit-font-smoothing",
     "zoom",
-  ], "Test unimplemented properties");
-
-  // Shouldn't record counted unknown properties which don't show up.
-  assert_recorded(win, false, [
+  ],
+  not_recorded: [
     "size",
     "speak",
-  ], "Test unimplemented properties");
+  ],
+};
 
-  // TODO: Make work (and test) inline style and CSSOM.
-  style.remove();
-  await SpecialPowers.flushPrefEnv();
+// Test on regular <style> elements.
+add_task(async () => {
+  for (let test of [IMPLEMENTED_PROPERTIES, UNIMPLEMENTED_PROPERTIES]) {
+    await iframe_reload();
+
+    const win = iframe.contentWindow;
+    const style = document.createElement('style');
+    style.textContent = test.css;
+
+    iframe.contentDocument.body.appendChild(style);
+
+    assert_recorded(win, true, test.recorded, `Test ${test.description} in <style> elements`);
+    assert_recorded(win, false, test.not_recorded, `Test ${test.description} in <style> elements`);
+  }
 });
 
-// Test implemented properties (i.e. non custom properties)
-// for constructed stylesheets.
+// Test on constructable stylesheets.
 add_task(async () => {
   await SpecialPowers.pushPrefEnv({
     "set": [
@@ -134,80 +126,41 @@ add_task(async () => {
     ]
   });
 
-  await iframe_reload();
-  let iframe = document.getElementById("iframe");
-  const win = iframe.contentWindow;
+  for (let test of [IMPLEMENTED_PROPERTIES, UNIMPLEMENTED_PROPERTIES]) {
+    for (let method of ["replace", "replaceSync"]) {
+      await iframe_reload();
+      const win = iframe.contentWindow;
 
-  const sheet = new win.CSSStyleSheet();
-  sheet.replaceSync(`
-    * {
-      content: "";
-      grid-gap: 1px; /* shorthand alias */
-      -webkit-background-size: 100px 100px; /* longhand alias */
-      transform-origin: top left; /* longhand */
-      background: green; /* shorthand */
+      const sheet = new win.CSSStyleSheet();
+      await sheet[method](test.css);
+
+      assert_recorded(win, true, test.recorded, `Test ${test.description} in constructed sheet`);
+      assert_recorded(win, false, test.not_recorded, `Test ${test.description} in constructed sheet`);
     }
-  `);
-
-  assert_recorded(win, true, [
-    "content",
-    "grid-gap",
-    "-webkit-background-size",
-    "transform-origin",
-    "background"
-  ], "Test non-custom properties for constructed stylesheets");
-
-  // Should only record the aliases, not the non-aliased property.
-  // Should only record shorthands, not the longhands it expands to.
-  assert_recorded(win, false, [
-    "gap",
-    "background-size",
-    "-moz-transform-origin",
-    "-webkit-transform-origin",
-    "background-color",
-  ], "Test non-custom properties for constructed stylesheets");
+  }
 });
 
-// Test unimplemented properties for constructed stylesheets.
 add_task(async () => {
-  await SpecialPowers.pushPrefEnv({
-    "set": [
-      ["layout.css.constructable-stylesheets.enabled", true]
-    ]
-  });
+  // Test for <link rel="stylesheet">. One iteration for the uncached version, one for the cached one.
+  for (let test of [IMPLEMENTED_PROPERTIES, UNIMPLEMENTED_PROPERTIES]) {
+    const uri = "data:text/css," + encodeURIComponent(test.css);
+    for (let frame of [iframe, document.getElementById("second-iframe")]) {
+      await iframe_reload(frame);
+      const win = frame.contentWindow;
+      const doc = frame.contentDocument;
 
-  await iframe_reload();
-  let iframe = document.getElementById("iframe");
-  const win = iframe.contentWindow;
-
-  const sheet = new win.CSSStyleSheet();
-  sheet.replaceSync(`
-    * {
-      content: "";
-      grid-gap: 1px; /* shorthand alias */
-      -webkit-background-size: 100px 100px; /* longhand alias */
-      transform-origin: top left; /* longhand */
-      background: green; /* shorthand */
-      -webkit-font-smoothing: auto; /* counted unknown */
-      zoom: 0.5; /* counted unknown */
+      const link = doc.createElement("link");
+      link.rel = "stylesheet";
+      const linkLoaded = new Promise(resolve => {
+        link.onload = resolve;
+      });
+      link.href = uri;
+      doc.body.appendChild(link);
+      await linkLoaded;
+      assert_recorded(win, true, test.recorded, `Test ${test.description} in <link> ${frame.id}`);
+      assert_recorded(win, false, test.not_recorded, `Test ${test.description} in <link> ${frame.id}`);
     }
-  `);
-
-  assert_recorded(win, true, [
-    "content",
-    "grid-gap",
-    "-webkit-background-size",
-    "transform-origin",
-    "background",
-    "-webkit-font-smoothing",
-    "zoom",
-  ], "Test unimplemented properties for constructed stylesheets");
-
-  // Shouldn't record counted unknown properties which don't show up.
-  assert_recorded(win, false, [
-    "size",
-    "speak",
-  ], "Test unimplemented properties for constructed stylesheets");
+  }
 });
 
 </script>
