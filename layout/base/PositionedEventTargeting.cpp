@@ -431,10 +431,10 @@ nsIFrame* FindFrameTargetedByInputEvent(
       aRootFrame, aPointRelativeToRootFrame, options);
   PET_LOG(
       "Found initial target %p for event class %s message %s point %s "
-      "relative to root frame %p\n",
+      "relative to root frame %s\n",
       target, ToChar(aEvent->mClass), ToChar(aEvent->mMessage),
       mozilla::layers::Stringify(aPointRelativeToRootFrame).c_str(),
-      aRootFrame.mFrame);
+      ToString(aRootFrame).c_str());
 
   const EventRadiusPrefs* prefs = GetPrefsFor(aEvent->mClass);
   if (!prefs || !prefs->mEnabled || EventRetargetSuppression::IsActive()) {
