@@ -2532,6 +2532,19 @@ class nsDisplayTreeBody final : public nsPaintedDisplayItem {
   }
 };
 
+#ifdef XP_MACOSX
+static bool IsInSourceList(nsIFrame* aFrame) {
+  for (nsIFrame* frame = aFrame; frame;
+       frame = nsLayoutUtils::GetCrossDocParentFrame(frame)) {
+    if (frame->StyleDisplay()->mAppearance ==
+        StyleAppearance::MozMacSourceList) {
+      return true;
+    }
+  }
+  return false;
+}
+#endif
+
 // Painting routines
 void nsTreeBodyFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                        const nsDisplayListSet& aLists) {
@@ -2560,10 +2573,8 @@ void nsTreeBodyFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   // On Mac, we support native theming of selected rows. On 10.10 and higher,
   // this means applying vibrancy which require us to register the theme
   // geometrics for the row. In order to make the vibrancy effect to work
-  // properly, we also need the tree to be themed as a source list.
-  if (selection && treeFrame && theme &&
-      treeFrame->StyleDisplay()->mAppearance ==
-          StyleAppearance::MozMacSourceList) {
+  // properly, we also need an ancestor frame to be themed as a source list.
+  if (selection && theme && IsInSourceList(treeFrame)) {
     // Loop through our onscreen rows. If the row is selected and a
     // -moz-appearance is provided, RegisterThemeGeometry might be necessary.
     const auto end = std::min(mRowCount, LastVisibleRow() + 1);
