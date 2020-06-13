@@ -6974,9 +6974,13 @@ nsIFrame* PresShell::EventHandler::GetFrameToHandleNonTouchEvent(
   MOZ_ASSERT(aGUIEvent->mClass != eTouchEventClass);
 
   ViewportType viewportType = ViewportType::Layout;
-  if (aRootFrameToHandleEvent->Type() == LayoutFrameType::Viewport &&
-      aRootFrameToHandleEvent->PresContext()->IsRootContentDocument()) {
-    viewportType = ViewportTypeForInputEventsRelativeToRoot();
+  if (aRootFrameToHandleEvent->Type() == LayoutFrameType::Viewport) {
+    nsPresContext* pc = aRootFrameToHandleEvent->PresContext();
+    if (pc->IsChrome()) {
+      viewportType = ViewportType::Visual;
+    } else if (pc->IsRootContentDocument()) {
+      viewportType = ViewportTypeForInputEventsRelativeToRoot();
+    }
   }
   RelativeTo relativeTo{aRootFrameToHandleEvent, viewportType};
   nsPoint eventPoint =
