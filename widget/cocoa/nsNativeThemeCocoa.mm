@@ -424,7 +424,8 @@ static BOOL IsActive(nsIFrame* aFrame, BOOL aIsToolbarControl) {
 }
 
 static bool IsInSourceList(nsIFrame* aFrame) {
-  for (nsIFrame* frame = aFrame->GetParent(); frame; frame = frame->GetParent()) {
+  for (nsIFrame* frame = aFrame->GetParent(); frame;
+       frame = nsLayoutUtils::GetCrossDocParentFrame(frame)) {
     if (frame->StyleDisplay()->mAppearance == StyleAppearance::MozMacSourceList) {
       return true;
     }
