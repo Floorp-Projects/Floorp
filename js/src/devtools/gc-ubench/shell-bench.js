@@ -53,7 +53,13 @@ function run(opts, loads) {
   const perf = new FrameHistory(gNumSamples);
 
   const mutators = sequence.map(name => new SingleMutatorSequencer(loadMgr.getByName(name), gPerf, opts.duration));
-  let sequencer = new ChainSequencer(mutators);
+  let sequencer;
+  if (opts.sequencer == 'cycle') {
+    sequencer = new ChainSequencer(mutators);
+  } else if (opts.sequencer == 'find50') {
+    const seekers = mutators.map(s => new Find50Sequencer(s, loadMgr));
+    sequencer = new ChainSequencer(seekers);
+  }
 
   const schedulerCtors = {
     keepup: OptimizeForFrameRate,
@@ -133,4 +139,9 @@ argparse.add_argument("--sched", {
   default: "keepup",
   options: ["keepup", "vsync"],
   help: "frame scheduler"
+});
+argparse.add_argument("--sequencer", {
+  default: "cycle",
+  options: ["cycle", "find50"],
+  help: "mutator sequencer"
 });
