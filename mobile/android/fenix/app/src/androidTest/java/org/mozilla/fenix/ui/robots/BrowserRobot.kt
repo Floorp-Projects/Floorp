@@ -10,6 +10,7 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.Espresso.pressBack
 import androidx.test.espresso.action.ViewActions
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.intent.Intents
@@ -17,6 +18,7 @@ import androidx.test.espresso.intent.matcher.BundleMatchers
 import androidx.test.espresso.intent.matcher.IntentMatchers
 import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.isCompletelyDisplayed
+import androidx.test.espresso.matcher.ViewMatchers.Visibility
 import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
@@ -134,6 +136,32 @@ class BrowserRobot {
         )
     }
 
+    fun verifyNavURLBar() = assertNavURLBar()
+
+    fun verifySecureConnectionLockIcon() = assertSecureConnectionLockIcon()
+
+    fun verifyEnhancedTrackingProtectionSwitch() = assertEnhancedTrackingProtectionSwitch()
+
+    fun verifyProtectionSettingsButton() = assertProtectionSettingsButton()
+
+    fun verifyEnhancedTrackingOptions() {
+        clickEnhancedTrackingProtectionPanel()
+        verifyEnhancedTrackingProtectionSwitch()
+        verifyProtectionSettingsButton()
+    }
+
+    fun verifyMenuButton() = assertMenuButton()
+
+    fun verifyNavURLBarItems() {
+        verifyEnhancedTrackingOptions()
+        pressBack()
+        waitingTime
+        verifySecureConnectionLockIcon()
+        verifyTabCounter("1")
+        verifyNavURLBar()
+        verifyMenuButton()
+    }
+
     fun verifyNoLinkImageContextMenuItems(containsTitle: String) {
         val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
         mDevice.waitNotNull(Until.findObject(By.textContains(containsTitle)))
@@ -146,6 +174,8 @@ class BrowserRobot {
             Until.findObject(text("Copy image location")), waitingTime
         )
     }
+
+    fun clickEnhancedTrackingProtectionPanel() = enhancedTrackingProtectionPanel().click()
 
     fun clickContextOpenLinkInNewTab() {
         val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
@@ -336,8 +366,7 @@ class BrowserRobot {
         }
 
         fun openTabDrawer(interact: TabDrawerRobot.() -> Unit): TabDrawerRobot.Transition {
-            mDevice.waitForIdle()
-
+            mDevice.waitForIdle(waitingTime)
             tabsCounter().click()
 
             mDevice.waitNotNull(
@@ -372,7 +401,34 @@ fun dismissTrackingOnboarding() {
 
 fun navURLBar() = onView(withId(R.id.mozac_browser_toolbar_url_view))
 
-private fun tabsCounter() = onView(withId(R.id.mozac_browser_toolbar_browser_actions))
+private fun assertNavURLBar() = navURLBar()
+    .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+
+fun enhancedTrackingProtectionPanel() = onView(withId(R.id.mozac_browser_toolbar_tracking_protection_indicator))
+
+private fun assertEnhancedTrackingProtectionSwitch() {
+    withText(R.id.trackingProtectionSwitch)
+        .matches(withEffectiveVisibility(Visibility.VISIBLE))
+}
+
+private fun assertProtectionSettingsButton() {
+    onView(withId(R.id.protection_settings))
+        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+}
+
+private fun assertSecureConnectionLockIcon() {
+    onView(withId(R.id.mozac_browser_toolbar_security_indicator))
+        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+}
+
+private fun menuButton() = onView(withId(R.id.icon))
+
+private fun assertMenuButton() {
+    menuButton()
+        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+}
+
+private fun tabsCounter() = onView(withId(R.id.counter_box))
 
 private fun mediaPlayerPlayButton() =
     mDevice.findObject(
