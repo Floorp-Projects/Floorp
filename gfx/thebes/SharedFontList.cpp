@@ -770,6 +770,10 @@ void FontList::SetLocalNames(
     const auto& rec = aLocalNameTable.Get(faceArray[i]);
     faces[i].mKey.Assign(faceArray[i], this);
     const auto* family = FindFamily(rec.mFamilyName);
+    if (!family) {
+      // Skip this record if family was excluded by the font whitelist pref.
+      continue;
+    }
     faces[i].mFamilyIndex = family - families;
     if (rec.mFaceIndex == uint32_t(-1)) {
       // The InitData record contains an mFaceDescriptor rather than an index,
