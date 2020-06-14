@@ -4,5 +4,5 @@
 
 `FullScreenChangedAction(sessionId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, fullScreenEnabled: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`)`
 
-Updates the [fullScreenEnabled](full-screen-enabled.md) with the given [sessionId](session-id.md).
+Updates [fullScreenEnabled](full-screen-enabled.md) with the given [sessionId](session-id.md).
 

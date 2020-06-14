@@ -7,9 +7,3 @@
 | Name | Summary |
 |---|---|
 | [Matchers](-matchers/index.md) | `object Matchers`<br>A collection of non-domain specific [Matcher](#)s. |
-
-### Extensions for External Classes
-
-| Name | Summary |
-|---|---|
-| [androidx.lifecycle.LiveData](androidx.lifecycle.-live-data/index.md) |  |
