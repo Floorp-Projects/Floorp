@@ -34,6 +34,9 @@ permalink: /changelog/
 * **feature-push**
   * Fixed a bug where we do not verify subscriptions on first attempt.
 
+* **feature-prompts**
+  * Select a regular tab first if that exists before checking custom tabs.
+
 * **feature-session**
   * ⚠️ **This is a breaking change**: `SettingsUseCases` now requires an engine reference, to clear speculative sessions if engine settings change.
   * ⚠️ **This is a breaking change**: `PictureInPictureFeature` now takes `BrowserStore` instead of `SessionManager`.

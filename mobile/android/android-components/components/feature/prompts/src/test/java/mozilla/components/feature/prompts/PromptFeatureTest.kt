@@ -134,6 +134,23 @@ class PromptFeatureTest {
     }
 
     @Test
+    fun `PromptFeature acts on the selected session if there is no custom tab ID`() {
+        val feature = spy(
+            PromptFeature(
+                fragment = mock(),
+                store = store,
+                customTabId = tabId,
+                fragmentManager = fragmentManager) { }
+        )
+
+        val promptRequest = SingleChoice(arrayOf()) {}
+        store.dispatch(ContentAction.UpdatePromptRequestAction(tabId, promptRequest)).joinBlocking()
+        testDispatcher.advanceUntilIdle()
+        feature.start()
+        verify(feature).onPromptRequested(store.state.tabs.first())
+    }
+
+    @Test
     fun `New promptRequests for selected session will cause fragment transaction`() {
         val feature = PromptFeature(fragment = mock(), store = store, fragmentManager = fragmentManager) { }
         feature.start()

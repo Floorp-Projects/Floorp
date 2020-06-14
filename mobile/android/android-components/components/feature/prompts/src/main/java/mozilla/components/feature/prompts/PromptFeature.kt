@@ -17,8 +17,8 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
 import mozilla.components.browser.state.action.ContentAction
-import mozilla.components.browser.state.selector.findCustomTabOrSelectedTab
 import mozilla.components.browser.state.selector.findTabOrCustomTab
+import mozilla.components.browser.state.selector.findTabOrCustomTabOrSelectedTab
 import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.store.BrowserStore
@@ -205,7 +205,7 @@ class PromptFeature private constructor(
         promptAbuserDetector.resetJSAlertAbuseState()
 
         handlePromptScope = store.flowScoped { flow ->
-            flow.map { state -> state.findCustomTabOrSelectedTab(customTabId) }
+            flow.map { state -> state.findTabOrCustomTabOrSelectedTab(customTabId) }
                 .ifAnyChanged {
                     arrayOf(it?.content?.promptRequest, it?.content?.loading)
                 }
@@ -224,7 +224,7 @@ class PromptFeature private constructor(
         // Dismiss all prompts when page loads are nearly finished. This prevents prompts from the
         // previous page from covering content. See Fenix#5326
         dismissPromptScope = store.flowScoped { flow ->
-            flow.mapNotNull { state -> state.findCustomTabOrSelectedTab(customTabId) }
+            flow.mapNotNull { state -> state.findTabOrCustomTabOrSelectedTab(customTabId) }
                 .ifChanged { it.content.progress }
                 .filter { it.content.progress >= PROGRESS_ALMOST_COMPLETE }
                 .collect {
@@ -616,7 +616,7 @@ internal fun BrowserStore.consumePromptFrom(
     if (sessionId == null) {
         state.selectedTab
     } else {
-        state.findTabOrCustomTab(sessionId)
+        state.findTabOrCustomTabOrSelectedTab(sessionId)
     }?.let { tab ->
         activePrompt?.clear()
         tab.content.promptRequest?.let {
