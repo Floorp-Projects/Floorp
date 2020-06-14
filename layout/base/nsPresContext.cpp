@@ -2342,17 +2342,17 @@ void nsPresContext::NotifyNonBlankPaint() {
 
 void nsPresContext::NotifyContentfulPaint() {
   if (!mHadContentfulPaint) {
+#if defined(MOZ_WIDGET_ANDROID)
+    (new AsyncEventDispatcher(mDocument,
+                              NS_LITERAL_STRING("MozFirstContentfulPaint"),
+                              CanBubble::eYes, ChromeOnlyDispatch::eYes))
+        ->PostDOMEvent();
+#endif
     mHadContentfulPaint = true;
     if (IsRootContentDocument()) {
       if (nsRootPresContext* rootPresContext = GetRootPresContext()) {
         mFirstContentfulPaintTransactionId =
             Some(rootPresContext->mRefreshDriver->LastTransactionId().Next());
-#if defined(MOZ_WIDGET_ANDROID)
-        (new AsyncEventDispatcher(mDocument,
-                                  NS_LITERAL_STRING("MozFirstContentfulPaint"),
-                                  CanBubble::eYes, ChromeOnlyDispatch::eYes))
-            ->PostDOMEvent();
-#endif
       }
     }
   }
