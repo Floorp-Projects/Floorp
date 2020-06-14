@@ -329,8 +329,9 @@ already_AddRefed<DOMSVGTransform> DOMSVGTransformList::RemoveItem(
 }
 
 already_AddRefed<DOMSVGTransform>
-DOMSVGTransformList::CreateSVGTransformFromMatrix(dom::SVGMatrix& matrix) {
-  RefPtr<DOMSVGTransform> result = new DOMSVGTransform(matrix.GetMatrix());
+DOMSVGTransformList::CreateSVGTransformFromMatrix(const DOMMatrix2DInit& matrix,
+                                                  ErrorResult& rv) {
+  RefPtr<DOMSVGTransform> result = new DOMSVGTransform(matrix, rv);
   return result.forget();
 }
 
