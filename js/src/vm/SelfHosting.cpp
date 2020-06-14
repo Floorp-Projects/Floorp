@@ -2123,7 +2123,7 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_INLINABLE_FN("std_Math_min", math_min, 2, 0, MathMin),
     JS_INLINABLE_FN("std_Math_abs", math_abs, 1, 0, MathAbs),
 
-    JS_FN("std_Map_iterator", MapObject::entries, 0, 0),
+    JS_FN("std_Map_entries", MapObject::entries, 0, 0),
 
     JS_FN("std_Number_valueOf", num_valueOf, 0, 0),
 
@@ -2137,7 +2137,7 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("std_Reflect_isExtensible", Reflect_isExtensible, 1, 0),
     JS_FN("std_Reflect_ownKeys", Reflect_ownKeys, 1, 0),
 
-    JS_FN("std_Set_iterator", SetObject::values, 0, 0),
+    JS_FN("std_Set_values", SetObject::values, 0, 0),
 
     JS_INLINABLE_FN("std_String_fromCharCode", str_fromCharCode, 1, 0,
                     StringFromCharCode),

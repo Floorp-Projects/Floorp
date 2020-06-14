@@ -147,6 +147,9 @@ class MapObject : public NativeObject {
   static const JSPropertySpec properties[];
   static const JSFunctionSpec methods[];
   static const JSPropertySpec staticProperties[];
+
+  static bool finishInit(JSContext* cx, HandleObject ctor, HandleObject proto);
+
   ValueMap* getData() { return static_cast<ValueMap*>(getPrivate()); }
   static ValueMap& extract(HandleObject o);
   static ValueMap& extract(const CallArgs& args);
@@ -267,6 +270,8 @@ class SetObject : public NativeObject {
   static const JSPropertySpec properties[];
   static const JSFunctionSpec methods[];
   static const JSPropertySpec staticProperties[];
+
+  static bool finishInit(JSContext* cx, HandleObject ctor, HandleObject proto);
 
   ValueSet* getData() { return static_cast<ValueSet*>(getPrivate()); }
   static ValueSet& extract(HandleObject o);

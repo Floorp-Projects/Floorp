@@ -34,7 +34,7 @@ function SetForEach(callbackfn, thisArg = undefined) {
         ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(0, callbackfn));
 
     // Steps 5-8.
-    var values = callFunction(std_Set_iterator, S);
+    var values = callFunction(std_Set_values, S);
 
     // Inlined: SetIteratorNext
     var setIterationResult = setIteratorTemp.setIterationResult;
@@ -53,14 +53,9 @@ function SetForEach(callbackfn, thisArg = undefined) {
     }
 }
 
+// ES6 final draft 23.2.2.2.
 // Uncloned functions with `$` prefix are allocated as extended function
 // to store the original name in `_SetCanonicalName`.
-function $SetValues() {
-    return callFunction(std_Set_iterator, this);
-}
-_SetCanonicalName($SetValues, "values");
-
-// ES6 final draft 23.2.2.2.
 function $SetSpecies() {
     // Step 1.
     return this;
