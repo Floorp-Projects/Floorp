@@ -134,6 +134,8 @@
     <string name="mozac_feature_addons_supported_checker_notification_content_more_than_two">उन्हें %1$s में जोड़ें</string>
     <!-- This is the caption for not yet supported screen caption -->
     <string name="mozac_feature_addons_not_yet_supported_caption">Firefox का ऐड-ऑन तकनीक आधुनिक बन रहा है। ये ऐड-ऑन ऐसे फ्रेमवर्क का उपयोग करते हैं जो Firefox 75 और उसके बाद के संस्करण के साथ संगत नहीं है।</string>
+    <!-- This is the caption for not yet supported screen caption -->
+    <string name="mozac_feature_addons_not_yet_supported_caption2">हम फिलहाल अनुसंशित एक्सटेंशंस की प्रारंभिक चयन के लिए समर्थन तैयार कर रहे हैं।</string>
     <!-- This is the caption for the add-on installation progress overlay -->
     <string name="mozac_add_on_install_progress_caption">ऐड-ऑन को डाउनलोड और सत्यापित किया जा रहा है...</string>
     <!-- Error shown when something unexpected happened while trying to get the add-on list from the server -->
@@ -182,4 +184,6 @@
     <string name="mozac_feature_addons_installed_dialog_title">%1$s को %2$s में जोड़ दिया गया है।</string>
     <!-- Text shown in the dialog when add-on installation is completed. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_installed_dialog_description">इसे मेन्यू में खोलें</string>
-    </resources>
+    <!-- Confirmation button text for the dialog when add-on installation is completed. -->
+    <string name="mozac_feature_addons_installed_dialog_okay_button">ठीक है, समझ गया।</string>
+</resources>
