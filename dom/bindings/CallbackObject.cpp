@@ -100,7 +100,7 @@ void CallbackObject::FinishSlowJSInitIfMoreThanOneOwner(JSContext* aCx) {
   MOZ_ASSERT(mRefCnt.get() > 0);
   if (mRefCnt.get() > 1) {
     mozilla::HoldJSObjects(this);
-    if (JS::ContextOptionsRef(aCx).asyncStack()) {
+    if (JS::IsAsyncStackCaptureEnabledForRealm(aCx)) {
       JS::RootedObject stack(aCx);
       if (!JS::CaptureCurrentStack(aCx, &stack)) {
         JS_ClearPendingException(aCx);

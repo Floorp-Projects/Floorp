@@ -97,7 +97,11 @@ var TESTS = [
   },
 ];
 
-if (Services.prefs.getBoolPref("javascript.options.asyncstack")) {
+if (
+  !Services.prefs.getBoolPref(
+    "javascript.options.asyncstack_capture_debuggee_only"
+  )
+) {
   TESTS.push({
     desc: "Async stack trace on Promise",
     searchFor: "ConsoleTime",
