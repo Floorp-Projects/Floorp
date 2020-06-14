@@ -220,6 +220,28 @@ bool WarpCacheIRTranspiler::emitGuardShape(ObjOperandId objId,
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitGuardFunctionPrototype(ObjOperandId objId,
+                                                       ObjOperandId protoId,
+                                                       uint32_t slotOffset) {
+  size_t slotIndex = int32StubField(slotOffset);
+  MDefinition* obj = getOperand(objId);
+  MDefinition* proto = getOperand(protoId);
+
+  auto* slots = MSlots::New(alloc(), obj);
+  add(slots);
+
+  auto* load = MLoadDynamicSlot::New(alloc(), slots, slotIndex);
+  add(load);
+
+  auto* unbox = MUnbox::New(alloc(), load, MIRType::Object, MUnbox::Fallible);
+  add(unbox);
+
+  auto* guard = MGuardObjectIdentity::New(alloc(), unbox, proto,
+                                          /* bailOnEquality = */ false);
+  add(guard);
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitGuardSpecificAtom(StringOperandId strId,
                                                   uint32_t expectedOffset) {
   MDefinition* str = getOperand(strId);
