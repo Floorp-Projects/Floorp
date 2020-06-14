@@ -1165,7 +1165,7 @@ const menuTracker = {
 
     if (menu.id === "placesContext") {
       const trigger = menu.triggerNode;
-      if (!trigger._placesNode) {
+      if (!trigger._placesNode?.bookmarkGuid) {
         return;
       }
 
