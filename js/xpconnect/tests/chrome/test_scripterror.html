@@ -43,8 +43,9 @@ function hasExpectedProperties(message, exception) {
 }
 
 add_task(async () => {
-  await SpecialPowers.pushPrefEnv({"set": [["javascript.options.asyncstack",
-                                            true]]});
+  await SpecialPowers.pushPrefEnv({"set": [
+    ["javascript.options.asyncstack_capture_debuggee_only", false],
+  ]});
 
   const TESTS = [
     "abc",

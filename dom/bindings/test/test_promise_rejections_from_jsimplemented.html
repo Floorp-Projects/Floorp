@@ -39,7 +39,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1107592
     var t = new TestInterfaceJS();
 
 
-    var asyncStack = SpecialPowers.getBoolPref("javascript.options.asyncstack");
+    var asyncStack = !SpecialPowers.getBoolPref("javascript.options.asyncstack_capture_debuggee_only");
     var ourFile = location.href;
     var unwrapError = "Promise rejection value is a non-unwrappable cross-compartment wrapper.";
     var parentFrame = asyncStack ? `Async*@${ourFile}:130:17
