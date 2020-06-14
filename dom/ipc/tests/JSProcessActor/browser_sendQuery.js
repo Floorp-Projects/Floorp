@@ -3,7 +3,11 @@
 "use strict";
 
 function maybeAsyncStack(offset, column) {
-  if (!Services.prefs.getBoolPref("javascript.options.asyncstack")) {
+  if (
+    Services.prefs.getBoolPref(
+      "javascript.options.asyncstack_capture_debuggee_only"
+    )
+  ) {
     return "";
   }
 

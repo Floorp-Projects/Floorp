@@ -53,7 +53,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1142577
   }
 
   SpecialPowers.pushPrefEnv(
-    {"set": [['javascript.options.asyncstack', true]]},
+    {"set": [['javascript.options.asyncstack_capture_debuggee_only', false]]},
     a);
   </script>
 </body>

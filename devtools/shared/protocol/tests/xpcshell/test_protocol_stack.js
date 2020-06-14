@@ -58,11 +58,6 @@ class RootFront extends protocol.FrontClassWithSpec(rootSpec) {
 protocol.registerFront(RootFront);
 
 function run_test() {
-  if (!Services.prefs.getBoolPref("javascript.options.asyncstack")) {
-    info("Async stacks are disabled.");
-    return;
-  }
-
   DevToolsServer.createRootActor = RootActor;
   DevToolsServer.init();
 

@@ -947,6 +947,8 @@ static void ReloadPrefsCallback(const char* pref, void* aXpccx) {
   bool useSourcePragmas =
       Preferences::GetBool(JS_OPTIONS_DOT_STR "source_pragmas");
   bool useAsyncStack = Preferences::GetBool(JS_OPTIONS_DOT_STR "asyncstack");
+  bool useAsyncStackCaptureDebuggeeOnly = Preferences::GetBool(
+      JS_OPTIONS_DOT_STR "asyncstack_capture_debuggee_only");
 
   bool throwOnDebuggeeWouldRun =
       Preferences::GetBool(JS_OPTIONS_DOT_STR "throw_on_debuggee_would_run");
@@ -1006,6 +1008,7 @@ static void ReloadPrefsCallback(const char* pref, void* aXpccx) {
       .setThrowOnAsmJSValidationFailure(throwOnAsmJSValidationFailure)
       .setSourcePragmas(useSourcePragmas)
       .setAsyncStack(useAsyncStack)
+      .setAsyncStackCaptureDebuggeeOnly(useAsyncStackCaptureDebuggeeOnly)
       .setThrowOnDebuggeeWouldRun(throwOnDebuggeeWouldRun)
       .setDumpStackOnDebuggeeWouldRun(dumpStackOnDebuggeeWouldRun);
 

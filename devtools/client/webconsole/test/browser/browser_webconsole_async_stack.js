@@ -25,7 +25,7 @@ promiseThen(onPromiseThen);
 </script>`;
 
 add_task(async function() {
-  await pushPref("javascript.options.asyncstack", true);
+  await pushPref("javascript.options.asyncstack_capture_debuggee_only", false);
   const hud = await openNewTabAndConsole(TEST_URI);
 
   // Cached messages stacktrace are missing "promise callback" frames, so we reload

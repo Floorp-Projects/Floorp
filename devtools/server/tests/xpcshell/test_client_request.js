@@ -64,11 +64,6 @@ function init() {
 }
 
 function checkStack(expectedName) {
-  if (!Services.prefs.getBoolPref("javascript.options.asyncstack")) {
-    info("Async stacks are disabled.");
-    return;
-  }
-
   let stack = Components.stack;
   while (stack) {
     info(stack.name);
