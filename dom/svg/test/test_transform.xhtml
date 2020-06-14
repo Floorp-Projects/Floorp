@@ -5,6 +5,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=512636
 <head>
   <title>Test SVGTransform behavior</title>
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="matrixUtils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
@@ -24,9 +25,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=512636
 SimpleTest.waitForExplicitFinish();
 
 function run() {
-  var g, svg, t, m, m2;
+  var g, t, m, m2;
 
-  svg = $("svg");
   g = $("g");
 
   t = g.transform.baseVal.getItem(0);
@@ -34,9 +34,7 @@ function run() {
 
   // test that the SVGTransform correctly reflects the translate()
   checkTransform(t, SVGTransform.SVG_TRANSFORM_TRANSLATE,
-                 1, 0,
-                 0, 1,
-                 10, 20,
+                 {a: 1, b: 0, c: 0, d: 1, e: 10, f: 20},
                  0, "translate");
 
   // set the SVGTransform to be a scale()
@@ -44,19 +42,11 @@ function run() {
 
   // test that the matrix is live and now reflects the scale()
   checkTransform(t, SVGTransform.SVG_TRANSFORM_SCALE,
-                 2, 0,
-                 0, 3,
-                 0, 0,
+                 {a: 2, b: 0, c: 0, d: 3, e: 0, f: 0},
                  0, "scale");
 
   // set the SVGTransform to be a matrix()
-  m2 = svg.createSVGMatrix();
-  m2.a = 1;
-  m2.b = 2;
-  m2.c = 3;
-  m2.d = 4;
-  m2.e = 5;
-  m2.f = 6;
+  m2 = createMatrix(1, 2, 3, 4, 5, 6);
   t.setMatrix(m2);
 
   // check that setMatrix() took a copy of m
@@ -64,9 +54,13 @@ function run() {
 
   // test that the SVGTransform now reflects the matrix value
   checkTransform(t, SVGTransform.SVG_TRANSFORM_MATRIX,
-                 1, 2,
-                 3, 4,
-                 5, 6,
+                 {a: 1, b: 2, c: 3, d: 4, e: 5, f: 6},
+                 0, "matrix");
+
+  m2 = {m11: 6, m12: 5, m21: 4, m22: 3, m41: 2, m42: 1};
+  t.setMatrix(m2);
+  checkTransform(t, SVGTransform.SVG_TRANSFORM_MATRIX,
+                 {a: 6, b: 5, c: 4, d: 3, e: 2, f: 1},
                  0, "matrix");
 
   // set the SVGTransform to be a translate() then convert to a matrix
@@ -75,9 +69,7 @@ function run() {
 
   // test that the SVGTransform now reflects the matrix value
   checkTransform(t, SVGTransform.SVG_TRANSFORM_MATRIX,
-                 2, 0,
-                 0, 1,
-                 0, 10,
+                 {a: 2, b: 0, c: 0, d: 1, e: 0, f: 10},
                  0, "matrix");
 
   // If ty is not supplied it is assumed to be zero
@@ -85,9 +77,7 @@ function run() {
 
   // test that the SVGTransform now reflects the matrix value
   checkTransform(t, SVGTransform.SVG_TRANSFORM_TRANSLATE,
-                 1, 0,
-                 0, 1,
-                 5, 0,
+                 {a: 1, b: 0, c: 0, d: 1, e: 5, f: 0},
                  0, "transform");
 
   // set the SVGTransform to be a rotate()
@@ -95,9 +85,9 @@ function run() {
 
   // test that the SVGTransform now reflects the matrix value
   checkTransform(t, SVGTransform.SVG_TRANSFORM_ROTATE,
-                 Math.cos(Math.PI / 2), Math.sin(Math.PI / 2),
-                 -Math.sin(Math.PI / 2), Math.cos(Math.PI / 2),
-                 0, 0,
+                 {a: Math.cos(Math.PI / 2), b: Math.sin(Math.PI / 2),
+                  c: -Math.sin(Math.PI / 2), d: Math.cos(Math.PI / 2),
+                  e: 0, f: 0},
                  90, "rotate");
 
   // set the SVGTransform to be a skewX()
@@ -105,9 +95,9 @@ function run() {
 
   // test that the SVGTransform now reflects the matrix value
   checkTransform(t, SVGTransform.SVG_TRANSFORM_SKEWX,
-                 1, 0,
-                 Math.tan(Math.PI / 4), Math.tan(Math.PI / 4),
-                 0, 0,
+                 {a: 1, b: 0,
+                  c: Math.tan(Math.PI / 4), d: Math.tan(Math.PI / 4),
+                  e: 0, f: 0},
                  45, "skewX");
 
   // set the SVGTransform to be a skewY()
@@ -115,9 +105,9 @@ function run() {
 
   // test that the SVGTransform now reflects the matrix value
   checkTransform(t, SVGTransform.SVG_TRANSFORM_SKEWY,
-                 Math.tan(Math.PI / 4), Math.tan(Math.PI / 4),
-                 0, 1,
-                 0, 0,
+                 {a: Math.tan(Math.PI / 4), b: Math.tan(Math.PI / 4),
+                  c: 0, d: 1,
+                  e: 0, f: 0},
                  45, "skewY");
 
   // check angle is reset after changing type
@@ -145,44 +135,27 @@ function run() {
 }
 
 function testCreateTransform() {
-  var svg = $("svg");
-  var t = svg.createSVGTransform();
+  let svg = $("svg");
+  let t = svg.createSVGTransform();
   ok(t != svg.createSVGTransform(),
      "Got identical objects when creating new transform");
   checkTransform(t, SVGTransform.SVG_TRANSFORM_MATRIX,
-                 1, 0, 0, 1, 0, 0, 0, "createSVGTransform");
+                 createMatrix(1, 0, 0, 1, 0, 0), 0, "createSVGTransform");
 
-  var m = svg.createSVGMatrix();
-  m.a = 1;
-  m.b = 2;
-  m.c = 3;
-  m.d = 4;
-  m.e = 5;
-  m.f = 6;
+  let m = createMatrix(1, 2, 3, 4, 5, 6);
   t = svg.createSVGTransformFromMatrix(m);
   ok(t.matrix != m,
      "createSVGTransformFromMatrix should copy matrix not adopt it");
   m.a = 7; // Just to be sure, changing m should not affect t
   checkTransform(t, SVGTransform.SVG_TRANSFORM_MATRIX,
-                 1, 2, 3, 4, 5, 6, 0, "createSVGTransformFromMatrix");
+                 {a: 1, b: 2, c: 3, d: 4, e: 5, f: 6},
+                 0, "createSVGTransformFromMatrix");
 }
 
-function checkTransform(transform, type, a, b, c, d, e, f, angle, forWhat) {
-  var m = transform.matrix;
-  is(transform.type, type, "transform.type for " + forWhat);
-  roughlyEqual(m.a, a, "matrix.a for " + forWhat);
-  roughlyEqual(m.b, b, "matrix.b for " + forWhat);
-  roughlyEqual(m.c, c, "matrix.c for " + forWhat);
-  roughlyEqual(m.d, d, "matrix.d for " + forWhat);
-  roughlyEqual(m.e, e, "matrix.e for " + forWhat);
-  roughlyEqual(m.f, f, "matrix.f for " + forWhat);
-  is(transform.angle, angle, "transform.angle for " + forWhat);
-}
-
-function roughlyEqual(value, expected, msg) {
-  const tolerance = 1 / 65535;
-  ok(Math.abs(value - expected) < tolerance,
-     msg + " - got " + value + ", expected " + expected);
+function checkTransform(transform, type, matrix, angle, forWhat) {
+  roughCmpMatrix(transform.matrix, matrix, forWhat);
+  is(transform.type, type, `transform.type for ${forWhat}`);
+  is(transform.angle, angle, `transform.angle for ${forWhat}`);
 }
 
 window.addEventListener("load", run);

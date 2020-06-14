@@ -18,9 +18,10 @@
 namespace mozilla {
 
 namespace dom {
+struct DOMMatrix2DInit;
+class DOMSVGTransform;
 class SVGElement;
 class SVGMatrix;
-class DOMSVGTransform;
 
 /**
  * Class DOMSVGTransformList
@@ -113,7 +114,7 @@ class DOMSVGTransformList final : public nsISupports, public nsWrapperCache {
     return InsertItemBefore(newItem, LengthNoFlush(), error);
   }
   already_AddRefed<dom::DOMSVGTransform> CreateSVGTransformFromMatrix(
-      dom::SVGMatrix& matrix);
+      const DOMMatrix2DInit& aMatrix, ErrorResult& aRv);
   already_AddRefed<dom::DOMSVGTransform> Consolidate(ErrorResult& error);
   uint32_t Length() const { return NumberOfItems(); }
 

@@ -28,7 +28,7 @@ interface SVGTransform {
   readonly attribute float angle;
 
   [Throws]
-  void setMatrix(SVGMatrix matrix);
+  void setMatrix(optional DOMMatrix2DInit matrix = {});
   [Throws]
   void setTranslate(float tx, float ty);
   [Throws]

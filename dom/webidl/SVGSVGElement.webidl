@@ -63,8 +63,8 @@ interface SVGSVGElement : SVGGraphicsElement {
   SVGRect createSVGRect();
   [NewObject]
   SVGTransform createSVGTransform();
-  [NewObject]
-  SVGTransform createSVGTransformFromMatrix(SVGMatrix matrix);
+  [NewObject, Throws]
+  SVGTransform createSVGTransformFromMatrix(optional DOMMatrix2DInit matrix = {});
   [UseCounter]
   Element? getElementById(DOMString elementId);
 };

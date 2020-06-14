@@ -7,6 +7,8 @@
 #include "DOMSVGTransform.h"
 
 #include "mozAutoDocUpdate.h"
+#include "mozilla/dom/DOMMatrix.h"
+#include "mozilla/dom/DOMMatrixBinding.h"
 #include "mozilla/dom/SVGMatrix.h"
 #include "mozilla/dom/SVGTransformBinding.h"
 #include "mozilla/DebugOnly.h"
@@ -133,6 +135,15 @@ DOMSVGTransform::DOMSVGTransform(const gfxMatrix& aMatrix)
       mIsAnimValItem(false),
       mTransform(new SVGTransform(aMatrix)) {}
 
+DOMSVGTransform::DOMSVGTransform(const DOMMatrix2DInit& aMatrix,
+                                 ErrorResult& rv)
+    : mList(nullptr),
+      mListIndex(0),
+      mIsAnimValItem(false),
+      mTransform(new SVGTransform()) {
+  SetMatrix(aMatrix, rv);
+}
+
 DOMSVGTransform::DOMSVGTransform(const SVGTransform& aTransform)
     : mList(nullptr),
       mListIndex(0),
@@ -166,12 +177,23 @@ SVGMatrix* DOMSVGTransform::GetMatrix() {
 
 float DOMSVGTransform::Angle() const { return Transform().Angle(); }
 
-void DOMSVGTransform::SetMatrix(SVGMatrix& aMatrix, ErrorResult& rv) {
+void DOMSVGTransform::SetMatrix(const DOMMatrix2DInit& aMatrix,
+                                ErrorResult& aRv) {
   if (mIsAnimValItem) {
-    rv.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
+    aRv.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
     return;
   }
-  SetMatrix(aMatrix.GetMatrix());
+  RefPtr<DOMMatrixReadOnly> matrix =
+      DOMMatrixReadOnly::FromMatrix(GetParentObject(), aMatrix, aRv);
+  if (aRv.Failed()) {
+    return;
+  }
+  const gfxMatrix* matrix2D = matrix->GetInternal2D();
+  if (!matrix2D->IsFinite()) {
+    aRv.ThrowTypeError<MSG_NOT_FINITE>("Matrix setter");
+    return;
+  }
+  SetMatrix(*matrix2D);
 }
 
 void DOMSVGTransform::SetTranslate(float tx, float ty, ErrorResult& rv) {
