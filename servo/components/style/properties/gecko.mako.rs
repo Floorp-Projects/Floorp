@@ -30,6 +30,7 @@ use crate::gecko_bindings::structs;
 use crate::gecko_bindings::structs::nsCSSPropertyID;
 use crate::gecko_bindings::structs::mozilla::PseudoStyleType;
 use crate::gecko::data::PerDocumentStyleData;
+use crate::gecko::values::round_border_to_device_pixels;
 use crate::logical_geometry::WritingMode;
 use crate::media_queries::Device;
 use crate::properties::longhands;
@@ -394,7 +395,7 @@ def set_gecko_property(ffi_name, expr):
         let value = {
             % if round_to_pixels:
             let au_per_device_px = Au(self.gecko.mTwipsPerPixel);
-            crate::gecko::values::round_border_width(Au::from(v), au_per_device_px).0
+            round_border_to_device_pixels(Au::from(v), au_per_device_px).0
             % else:
             v.0.to_i32_au()
             % endif

@@ -4497,10 +4497,7 @@ static void GetColorAndStyle(const nsIFrame* aFrame, WritingMode aTableWM,
 
   if (aWidth) {
     nscoord width = styleData->GetComputedBorderWidth(physicalSide);
-
-    // Note that this floors to dev pixels.
-    nscoord oneDevPixel = aFrame->PresContext()->DevPixelsToAppUnits(1);
-    *aWidth = width / oneDevPixel;
+    *aWidth = aFrame->PresContext()->AppUnitsToDevPixels(width);
   }
 }
 
