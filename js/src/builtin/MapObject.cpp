@@ -397,7 +397,7 @@ const ClassSpec MapObject::classSpec_ = {
     MapObject::staticProperties,
     MapObject::methods,
     MapObject::properties,
-};
+    MapObject::finishInit};
 
 const JSClass MapObject::class_ = {
     "Map",
@@ -414,18 +414,44 @@ const JSPropertySpec MapObject::properties[] = {
     JS_PSG("size", size, 0),
     JS_STRING_SYM_PS(toStringTag, "Map", JSPROP_READONLY), JS_PS_END};
 
+// clang-format off
 const JSFunctionSpec MapObject::methods[] = {
-    JS_FN("get", get, 1, 0), JS_FN("has", has, 1, 0), JS_FN("set", set, 2, 0),
-    JS_FN("delete", delete_, 1, 0), JS_FN("keys", keys, 0, 0),
-    JS_FN("values", values, 0, 0), JS_FN("clear", clear, 0, 0),
+    JS_FN("get", get, 1, 0),
+    JS_FN("has", has, 1, 0),
+    JS_FN("set", set, 2, 0),
+    JS_FN("delete", delete_, 1, 0),
+    JS_FN("keys", keys, 0, 0),
+    JS_FN("values", values, 0, 0),
+    JS_FN("clear", clear, 0, 0),
     JS_SELF_HOSTED_FN("forEach", "MapForEach", 2, 0),
-    // MapEntries only exists to preseve the equal identity of
-    // entries and @@iterator.
-    JS_SELF_HOSTED_FN("entries", "$MapEntries", 0, 0),
-    JS_SELF_HOSTED_SYM_FN(iterator, "$MapEntries", 0, 0), JS_FS_END};
+    JS_FN("entries", entries, 0, 0),
+    // @@iterator is re-defined in finishInit so that it has the
+    // same identity as |entries|.
+    JS_SYM_FN(iterator, entries, 0, 0),
+    JS_FS_END
+};
+// clang-format on
 
 const JSPropertySpec MapObject::staticProperties[] = {
     JS_SELF_HOSTED_SYM_GET(species, "$MapSpecies", 0), JS_PS_END};
+
+/* static */ bool MapObject::finishInit(JSContext* cx, HandleObject ctor,
+                                        HandleObject proto) {
+  HandleNativeObject nativeProto = proto.as<NativeObject>();
+
+  RootedValue entriesFn(cx);
+  RootedId entriesId(cx, NameToId(cx->names().entries));
+  if (!NativeGetProperty(cx, nativeProto, entriesId, &entriesFn)) {
+    return false;
+  }
+
+  // 23.1.3.12 Map.prototype[@@iterator]()
+  // The initial value of the @@iterator property is the same function object
+  // as the initial value of the "entries" property.
+  RootedId iteratorId(
+      cx, SYMBOL_TO_JSID(JS::GetWellKnownSymbol(cx, JS::SymbolCode::iterator)));
+  return NativeDefineDataProperty(cx, nativeProto, iteratorId, entriesFn, 0);
+}
 
 template <class Range>
 static void TraceKey(Range& r, const HashableValue& key, JSTracer* trc) {
@@ -1149,7 +1175,7 @@ const ClassSpec SetObject::classSpec_ = {
     SetObject::staticProperties,
     SetObject::methods,
     SetObject::properties,
-};
+    SetObject::finishInit};
 
 const JSClass SetObject::class_ = {
     "Set",
@@ -1168,19 +1194,50 @@ const JSPropertySpec SetObject::properties[] = {
     JS_PSG("size", size, 0),
     JS_STRING_SYM_PS(toStringTag, "Set", JSPROP_READONLY), JS_PS_END};
 
+// clang-format off
 const JSFunctionSpec SetObject::methods[] = {
-    JS_FN("has", has, 1, 0), JS_FN("add", add, 1, 0),
-    JS_FN("delete", delete_, 1, 0), JS_FN("entries", entries, 0, 0),
+    JS_FN("has", has, 1, 0),
+    JS_FN("add", add, 1, 0),
+    JS_FN("delete", delete_, 1, 0),
+    JS_FN("entries", entries, 0, 0),
     JS_FN("clear", clear, 0, 0),
     JS_SELF_HOSTED_FN("forEach", "SetForEach", 2, 0),
-    // SetValues only exists to preseve the equal identity of
-    // values, keys and @@iterator.
-    JS_SELF_HOSTED_FN("values", "$SetValues", 0, 0),
-    JS_SELF_HOSTED_FN("keys", "$SetValues", 0, 0),
-    JS_SELF_HOSTED_SYM_FN(iterator, "$SetValues", 0, 0), JS_FS_END};
+    JS_FN("values", values, 0, 0),
+    // @@iterator and |keys| re-defined in finishInit so that they have the
+    // same identity as |values|.
+    JS_FN("keys", values, 0, 0),
+    JS_SYM_FN(iterator, values, 0, 0),
+    JS_FS_END
+};
+// clang-format on
 
 const JSPropertySpec SetObject::staticProperties[] = {
     JS_SELF_HOSTED_SYM_GET(species, "$SetSpecies", 0), JS_PS_END};
+
+/* static */ bool SetObject::finishInit(JSContext* cx, HandleObject ctor,
+                                        HandleObject proto) {
+  HandleNativeObject nativeProto = proto.as<NativeObject>();
+
+  RootedValue valuesFn(cx);
+  RootedId valuesId(cx, NameToId(cx->names().values));
+  if (!NativeGetProperty(cx, nativeProto, valuesId, &valuesFn)) {
+    return false;
+  }
+
+  // 23.2.3.8 Set.prototype.keys()
+  // The initial value of the "keys" property is the same function object
+  // as the initial value of the "values" property.
+  RootedId keysId(cx, NameToId(cx->names().keys));
+  if (!NativeDefineDataProperty(cx, nativeProto, keysId, valuesFn, 0)) {
+    return false;
+  }
+
+  // 23.2.3.11 Set.prototype[@@iterator]()
+  // See above.
+  RootedId iteratorId(
+      cx, SYMBOL_TO_JSID(JS::GetWellKnownSymbol(cx, JS::SymbolCode::iterator)));
+  return NativeDefineDataProperty(cx, nativeProto, iteratorId, valuesFn, 0);
+}
 
 bool SetObject::keys(JSContext* cx, HandleObject obj,
                      JS::MutableHandle<GCVector<JS::Value>> keys) {
