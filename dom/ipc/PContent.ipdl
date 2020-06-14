@@ -172,6 +172,16 @@ struct SystemFontListEntry {
 };
 #endif
 
+union SystemParameterValue {
+  bool;
+  float;
+};
+
+struct SystemParameterKVPair {
+  uint8_t id;
+  SystemParameterValue value;
+};
+
 struct ClipboardCapabilities {
   bool supportsSelectionClipboard;
   bool supportsFindClipboard;
@@ -301,6 +311,7 @@ struct XPCOMInitData
     nsCString[] appLocales;
     nsCString[] requestedLocales;
     DynamicScalarDefinition[] dynamicScalarDefs;
+    SystemParameterKVPair[] systemParameters;
 };
 
 struct VisitedQueryResult
