@@ -137,6 +137,7 @@ mozilla.components.browser.storage.sync
 mozilla.components.browser.tabstray
 mozilla.components.browser.tabstray.thumbnail
 mozilla.components.browser.thumbnails
+mozilla.components.browser.thumbnails.loader
 mozilla.components.browser.thumbnails.storage
 mozilla.components.browser.thumbnails.utils
 mozilla.components.browser.toolbar
@@ -307,6 +308,7 @@ mozilla.components.support.base.observer
 mozilla.components.support.base.utils
 mozilla.components.support.images
 mozilla.components.support.images.decoder
+mozilla.components.support.images.loader
 mozilla.components.support.ktx.android.arch.lifecycle
 mozilla.components.support.ktx.android.content
 mozilla.components.support.ktx.android.content.res

@@ -2,15 +2,16 @@
 
 # &lt;init&gt;
 
-`TabsAdapter(delegate: `[`Observable`](../../mozilla.components.support.base.observer/-observable/index.md)`<`[`Observer`](../../mozilla.components.concept.tabstray/-tabs-tray/-observer/index.md)`> = ObserverRegistry(), viewHolderProvider: `[`ViewHolderProvider`](../-view-holder-provider.md)` = { parent, tabsTray ->
+`TabsAdapter(thumbnailLoader: `[`ImageLoader`](../../mozilla.components.support.images.loader/-image-loader/index.md)`? = null, viewHolderProvider: `[`ViewHolderProvider`](../-view-holder-provider.md)` = { parent, tabsTray ->
         DefaultTabViewHolder(
                 LayoutInflater.from(parent.context).inflate(
                         R.layout.mozac_browser_tabstray_item,
                         parent,
                         false),
-                tabsTray
+                tabsTray,
+                thumbnailLoader
         )
-    })`
+    }, delegate: `[`Observable`](../../mozilla.components.support.base.observer/-observable/index.md)`<`[`Observer`](../../mozilla.components.concept.tabstray/-tabs-tray/-observer/index.md)`> = ObserverRegistry())`
 
 RecyclerView adapter implementation to display a list/grid of tabs.
 
