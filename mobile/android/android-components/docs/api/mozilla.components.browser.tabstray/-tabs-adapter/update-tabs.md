@@ -2,7 +2,7 @@
 
 # updateTabs
 
-`open fun updateTabs(tabs: `[`Tabs`](../../mozilla.components.concept.tabstray/-tabs/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/tabstray/src/main/java/mozilla/components/browser/tabstray/TabsAdapter.kt#L57)
+`open fun updateTabs(tabs: `[`Tabs`](../../mozilla.components.concept.tabstray/-tabs/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/tabstray/src/main/java/mozilla/components/browser/tabstray/TabsAdapter.kt#L60)
 
 Overrides [TabsTray.updateTabs](../../mozilla.components.concept.tabstray/-tabs-tray/update-tabs.md)
 

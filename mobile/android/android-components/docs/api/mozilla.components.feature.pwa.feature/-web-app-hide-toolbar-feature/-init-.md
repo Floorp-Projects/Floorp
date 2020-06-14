@@ -2,20 +2,26 @@
 
 # &lt;init&gt;
 
-`WebAppHideToolbarFeature(sessionManager: `[`SessionManager`](../../mozilla.components.browser.session/-session-manager/index.md)`, toolbar: <ERROR CLASS>, sessionId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, trustedScopes: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<<ERROR CLASS>>, onToolbarVisibilityChange: (visible: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`) -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)` = {})`
+`WebAppHideToolbarFeature(store: `[`BrowserStore`](../../mozilla.components.browser.state.store/-browser-store/index.md)`, customTabsStore: `[`CustomTabsServiceStore`](../../mozilla.components.feature.customtabs.store/-custom-tabs-service-store/index.md)`, tabId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`? = null, manifest: `[`WebAppManifest`](../../mozilla.components.concept.engine.manifest/-web-app-manifest/index.md)`? = null, setToolbarVisibility: (`[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`) -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`)`
 
 Hides a custom tab toolbar for Progressive Web Apps and Trusted Web Activities.
 
 When the [Session](../../mozilla.components.browser.session/-session/index.md) is inside a trusted scope, the toolbar will be hidden.
 Once the [Session](../../mozilla.components.browser.session/-session/index.md) navigates to another scope, the toolbar will be revealed.
+The toolbar is also hidden in fullscreen mode or picture in picture mode.
+
+In standard custom tabs, no scopes are trusted.
+As a result the URL has no impact on toolbar visibility.
 
 ### Parameters
 
-`toolbar` - Toolbar to show or hide.
+`store` - Reference to the browser store where tab state is located.
 
-`sessionId` - ID of the custom tab session.
+`customTabsStore` - Reference to the store that communicates with the custom tabs service.
 
-`trustedScopes` - Scopes to hide the toolbar at.
-Scopes correspond to [WebAppManifest.scope](../../mozilla.components.concept.engine.manifest/-web-app-manifest/scope.md). They can be a path (PWA) or just an origin (TWA).
+`tabId` - ID of the tab session, or null if the selected session should be used.
 
-`onToolbarVisibilityChange` - Called when the toolbar is changed to be visible or hidden.
+`manifest` - Reference to the cached [WebAppManifest](../../mozilla.components.concept.engine.manifest/-web-app-manifest/index.md) for the current PWA.
+Null if this feature is not used in a PWA context.
+
+`setToolbarVisibility` - Callback to show or hide the toolbar.

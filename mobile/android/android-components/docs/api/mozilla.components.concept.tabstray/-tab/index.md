@@ -23,12 +23,6 @@ Data class representing a tab to be displayed in a [TabsTray](../-tabs-tray/inde
 | [title](title.md) | `val title: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Current title of the tab (or an empty [String](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)]). |
 | [url](url.md) | `val url: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Current URL of the tab. |
 
-### Functions
-
-| Name | Summary |
-|---|---|
-| [equals](equals.md) | `fun equals(other: `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`?): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) |
-
 ### Extension Functions
 
 | Name | Summary |

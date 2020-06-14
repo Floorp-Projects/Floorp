@@ -2,4 +2,4 @@
 
 # tab
 
-`abstract var tab: `[`Tab`](../../mozilla.components.concept.tabstray/-tab/index.md)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/tabstray/src/main/java/mozilla/components/browser/tabstray/TabViewHolder.kt#L23)
+`abstract var tab: `[`Tab`](../../mozilla.components.concept.tabstray/-tab/index.md)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/tabstray/src/main/java/mozilla/components/browser/tabstray/TabViewHolder.kt#L24)

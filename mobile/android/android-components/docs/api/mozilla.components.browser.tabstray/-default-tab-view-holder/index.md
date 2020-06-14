@@ -2,7 +2,7 @@
 
 # DefaultTabViewHolder
 
-`class DefaultTabViewHolder : `[`TabViewHolder`](../-tab-view-holder/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/tabstray/src/main/java/mozilla/components/browser/tabstray/TabViewHolder.kt#L37)
+`class DefaultTabViewHolder : `[`TabViewHolder`](../-tab-view-holder/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/tabstray/src/main/java/mozilla/components/browser/tabstray/TabViewHolder.kt#L38)
 
 The default implementation of `TabViewHolder`
 
@@ -10,7 +10,7 @@ The default implementation of `TabViewHolder`
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `DefaultTabViewHolder(itemView: <ERROR CLASS>, tabsTray: `[`BrowserTabsTray`](../-browser-tabs-tray/index.md)`)`<br>The default implementation of `TabViewHolder` |
+| [&lt;init&gt;](-init-.md) | `DefaultTabViewHolder(itemView: <ERROR CLASS>, tabsTray: `[`BrowserTabsTray`](../-browser-tabs-tray/index.md)`, thumbnailLoader: `[`ImageLoader`](../../mozilla.components.support.images.loader/-image-loader/index.md)`? = null)`<br>The default implementation of `TabViewHolder` |
 
 ### Properties
 

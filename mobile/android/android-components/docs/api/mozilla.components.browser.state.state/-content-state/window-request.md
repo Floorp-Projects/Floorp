@@ -2,7 +2,7 @@
 
 # windowRequest
 
-`val windowRequest: `[`WindowRequest`](../../mozilla.components.concept.engine.window/-window-request/index.md)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/ContentState.kt#L59)
+`val windowRequest: `[`WindowRequest`](../../mozilla.components.concept.engine.window/-window-request/index.md)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/ContentState.kt#L60)
 
 the last received [WindowRequest](../../mozilla.components.concept.engine.window/-window-request/index.md).
 

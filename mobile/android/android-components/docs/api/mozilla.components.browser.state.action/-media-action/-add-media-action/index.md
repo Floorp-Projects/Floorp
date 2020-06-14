@@ -2,7 +2,7 @@
 
 # AddMediaAction
 
-`data class AddMediaAction : `[`MediaAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L492)
+`data class AddMediaAction : `[`MediaAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L497)
 
 Adds [media](media.md) to the list of [MediaState.Element](../../../mozilla.components.browser.state.state/-media-state/-element/index.md) for the tab with id [tabId](tab-id.md).
 

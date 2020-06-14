@@ -2,7 +2,7 @@
 
 # securityInfo
 
-`val securityInfo: `[`SecurityInfoState`](../-security-info-state/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/ContentState.kt#L52)
+`val securityInfo: `[`SecurityInfoState`](../-security-info-state/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/ContentState.kt#L53)
 
 the security information as [SecurityInfoState](../-security-info-state/index.md),
 describing whether or not the this session is for a secure URL, as well
