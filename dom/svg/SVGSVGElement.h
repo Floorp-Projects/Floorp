@@ -21,6 +21,7 @@ class SVGFragmentIdentifier;
 class EventChainPreVisitor;
 
 namespace dom {
+struct DOMMatrix2DInit;
 class DOMSVGAngle;
 class DOMSVGLength;
 class DOMSVGNumber;
@@ -140,7 +141,7 @@ class SVGSVGElement final : public SVGSVGElementBase {
   already_AddRefed<SVGRect> CreateSVGRect();
   already_AddRefed<DOMSVGTransform> CreateSVGTransform();
   already_AddRefed<DOMSVGTransform> CreateSVGTransformFromMatrix(
-      SVGMatrix& matrix);
+      const DOMMatrix2DInit& matrix, ErrorResult& rv);
   using nsINode::GetElementById;  // This does what we want
   uint16_t ZoomAndPan();
   void SetZoomAndPan(uint16_t aZoomAndPan, ErrorResult& rv);

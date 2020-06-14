@@ -278,8 +278,8 @@ already_AddRefed<DOMSVGTransform> SVGSVGElement::CreateSVGTransform() {
 }
 
 already_AddRefed<DOMSVGTransform> SVGSVGElement::CreateSVGTransformFromMatrix(
-    SVGMatrix& matrix) {
-  return do_AddRef(new DOMSVGTransform(matrix.GetMatrix()));
+    const DOMMatrix2DInit& matrix, ErrorResult& rv) {
+  return do_AddRef(new DOMSVGTransform(matrix, rv));
 }
 
 //----------------------------------------------------------------------
