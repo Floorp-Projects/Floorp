@@ -4,6 +4,8 @@
     <string name="mozac_feature_prompt_password_hint">Пароль</string>
     <!-- Positive confirmation that we should save the updated login -->
     <string name="mozac_feature_prompt_update_confirmation">Абнавіць</string>
+    <!-- Title of a color picker dialog, this text is shown above a color picker. -->
+    <string name="mozac_feature_prompts_choose_a_color">Выберыце колер</string>
     <!-- Text of a confirm button in dialog requesting to open a new window. -->
     <string name="mozac_feature_prompts_allow">Дазволіць</string>
     <!-- Text of a negative button in dialog requesting to open a new window. -->
