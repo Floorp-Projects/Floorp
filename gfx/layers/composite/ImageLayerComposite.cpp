@@ -69,6 +69,9 @@ void ImageLayerComposite::SetLayerManager(HostLayerManager* aManager) {
   mManager = aManager;
   if (mImageHost) {
     mImageHost->SetTextureSourceProvider(mCompositor);
+    if (aManager && mImageHost->GetAsyncRef()) {
+      mImageHost->SetCompositorBridgeID(aManager->GetCompositorBridgeID());
+    }
   }
 }
 
