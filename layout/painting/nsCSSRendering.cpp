@@ -6,7 +6,6 @@
 
 /* utility functions for drawing borders and backgrounds */
 
-#include <array>
 #include <ctime>
 
 #include "gfx2DGlue.h"
@@ -748,21 +747,6 @@ ImgDrawResult nsCSSRendering::CreateWebRenderCommandsForBorderWithStyleBorder(
                                       aSc, aManager, aDisplayListBuilder);
 }
 
-// NOTE(emilio): Intentionally using integer division here to achieve flooring
-// to device pixels. Note that non-zero border widths have been made at least
-// one device pixel wide already at computed value time by round_border_width.
-static Float SnapBorderToDevPixels(nscoord aWidth, int32_t aAppUnitsPerPixel) {
-  return Float(aWidth / aAppUnitsPerPixel);
-}
-
-static std::array<Float, 4> SnapBorderToDevPixels(const nsMargin& aBorder,
-                                                  int32_t aAppUnitsPerPixel) {
-  return {{SnapBorderToDevPixels(aBorder.top, aAppUnitsPerPixel),
-           SnapBorderToDevPixels(aBorder.right, aAppUnitsPerPixel),
-           SnapBorderToDevPixels(aBorder.bottom, aAppUnitsPerPixel),
-           SnapBorderToDevPixels(aBorder.left, aAppUnitsPerPixel)}};
-}
-
 static nsCSSBorderRenderer ConstructBorderRenderer(
     nsPresContext* aPresContext, ComputedStyle* aStyle, DrawTarget* aDrawTarget,
     nsIFrame* aForFrame, const nsRect& aDirtyRect, const nsRect& aBorderArea,
@@ -806,11 +790,11 @@ static nsCSSBorderRenderer ConstructBorderRenderer(
   }
 
   // Convert to dev pixels.
-  auto oneDevPixel = aPresContext->AppUnitsPerDevPixel();
+  nscoord oneDevPixel = aPresContext->DevPixelsToAppUnits(1);
   Rect joinedBorderAreaPx = NSRectToRect(joinedBorderArea, oneDevPixel);
-
-  std::array<Float, 4> borderWidths =
-      SnapBorderToDevPixels(border, oneDevPixel);
+  Float borderWidths[4] = {
+      Float(border.top) / oneDevPixel, Float(border.right) / oneDevPixel,
+      Float(border.bottom) / oneDevPixel, Float(border.left) / oneDevPixel};
   Rect dirtyRect = NSRectToRect(aDirtyRect, oneDevPixel);
 
   StyleBorderStyle borderStyles[4];
@@ -835,7 +819,7 @@ static nsCSSBorderRenderer ConstructBorderRenderer(
 
   return nsCSSBorderRenderer(
       aPresContext, document, aDrawTarget, dirtyRect, joinedBorderAreaPx,
-      borderStyles, borderWidths.data(), bgRadii, borderColors,
+      borderStyles, borderWidths, bgRadii, borderColors,
       !aForFrame->BackfaceIsHidden(),
       *aNeedsClip ? Some(NSRectToRect(aBorderArea, oneDevPixel)) : Nothing());
 }
@@ -1023,12 +1007,13 @@ Maybe<nsCSSBorderRenderer> nsCSSRendering::CreateBorderRendererForOutline(
                                outerRect.Size(), Sides(), twipsRadii);
 
   // Get our conversion values
-  auto oneDevPixel = aPresContext->AppUnitsPerDevPixel();
+  nscoord oneDevPixel = aPresContext->DevPixelsToAppUnits(1);
 
   // get the outer rectangles
   Rect oRect(NSRectToRect(outerRect, oneDevPixel));
 
   // convert the radii
+  nsMargin outlineMargin(width, width, width, width);
   RectCornerRadii outlineRadii;
   ComputePixelRadii(twipsRadii, oneDevPixel, &outlineRadii);
 
@@ -1065,8 +1050,9 @@ Maybe<nsCSSBorderRenderer> nsCSSRendering::CreateBorderRendererForOutline(
                               outlineColor};
 
   // convert the border widths
-  std::array<Float, 4> outlineWidths =
-      SnapBorderToDevPixels(nsMargin(width, width, width, width), oneDevPixel);
+  Float outlineWidths[4] = {
+      Float(width) / oneDevPixel, Float(width) / oneDevPixel,
+      Float(width) / oneDevPixel, Float(width) / oneDevPixel};
   Rect dirtyRect = NSRectToRect(aDirtyRect, oneDevPixel);
 
   Document* document = nullptr;
@@ -1078,7 +1064,7 @@ Maybe<nsCSSBorderRenderer> nsCSSRendering::CreateBorderRendererForOutline(
   DrawTarget* dt =
       aRenderingContext ? aRenderingContext->GetDrawTarget() : nullptr;
   nsCSSBorderRenderer br(aPresContext, document, dt, dirtyRect, oRect,
-                         outlineStyles, outlineWidths.data(), outlineRadii,
+                         outlineStyles, outlineWidths, outlineRadii,
                          outlineColors, !aForFrame->BackfaceIsHidden(),
                          Nothing());
 
@@ -1107,7 +1093,7 @@ void nsCSSRendering::PaintFocus(nsPresContext* aPresContext,
                                 DrawTarget* aDrawTarget,
                                 const nsRect& aFocusRect, nscolor aColor) {
   nscoord oneCSSPixel = nsPresContext::CSSPixelsToAppUnits(1);
-  auto oneDevPixel = aPresContext->AppUnitsPerDevPixel();
+  nscoord oneDevPixel = aPresContext->DevPixelsToAppUnits(1);
 
   Rect focusRect(NSRectToRect(aFocusRect, oneDevPixel));
 
@@ -1116,9 +1102,9 @@ void nsCSSRendering::PaintFocus(nsPresContext* aPresContext,
     nscoord twipsRadii[8] = {0, 0, 0, 0, 0, 0, 0, 0};
     ComputePixelRadii(twipsRadii, oneDevPixel, &focusRadii);
   }
-  std::array<Float, 4> focusWidths = SnapBorderToDevPixels(
-      nsMargin(oneCSSPixel, oneCSSPixel, oneCSSPixel, oneCSSPixel),
-      oneDevPixel);
+  Float focusWidths[4] = {
+      Float(oneCSSPixel) / oneDevPixel, Float(oneCSSPixel) / oneDevPixel,
+      Float(oneCSSPixel) / oneDevPixel, Float(oneCSSPixel) / oneDevPixel};
 
   StyleBorderStyle focusStyles[4] = {
       StyleBorderStyle::Dotted, StyleBorderStyle::Dotted,
@@ -1135,7 +1121,7 @@ void nsCSSRendering::PaintFocus(nsPresContext* aPresContext,
   // WebRender layers-free mode don't use PaintFocus function. Just assign
   // the backface-visibility to true for this case.
   nsCSSBorderRenderer br(aPresContext, nullptr, aDrawTarget, focusRect,
-                         focusRect, focusStyles, focusWidths.data(), focusRadii,
+                         focusRect, focusStyles, focusWidths, focusRadii,
                          focusColors, true, Nothing());
   br.DrawBorders();
 
@@ -1408,7 +1394,7 @@ nsRect nsCSSRendering::GetShadowRect(const nsRect& aFrameArea,
 bool nsCSSRendering::GetBorderRadii(const nsRect& aFrameRect,
                                     const nsRect& aBorderRect, nsIFrame* aFrame,
                                     RectCornerRadii& aOutRadii) {
-  const auto oneDevPixel = aFrame->PresContext()->AppUnitsPerDevPixel();
+  const nscoord oneDevPixel = aFrame->PresContext()->DevPixelsToAppUnits(1);
   nscoord twipsRadii[8];
   NS_ASSERTION(
       aBorderRect.Size() == aFrame->VisualBorderRectRelativeToSelf().Size(),
@@ -1444,7 +1430,7 @@ void nsCSSRendering::PaintBoxShadowOuter(nsPresContext* aPresContext,
   // Get any border radius, since box-shadow must also have rounded corners if
   // the frame does.
   RectCornerRadii borderRadii;
-  const auto oneDevPixel = aPresContext->AppUnitsPerDevPixel();
+  const nscoord oneDevPixel = aPresContext->DevPixelsToAppUnits(1);
   if (hasBorderRadius) {
     nscoord twipsRadii[8];
     NS_ASSERTION(
@@ -1671,7 +1657,7 @@ bool nsCSSRendering::GetShadowInnerRadii(nsIFrame* aFrame,
   nsSize sz = frameRect.Size();
   nsMargin border = aFrame->GetUsedBorder();
   aFrame->GetBorderRadii(sz, sz, Sides(), twipsRadii);
-  const auto oneDevPixel = aFrame->PresContext()->AppUnitsPerDevPixel();
+  const nscoord oneDevPixel = aFrame->PresContext()->DevPixelsToAppUnits(1);
 
   RectCornerRadii borderRadii;
 
@@ -1681,9 +1667,10 @@ bool nsCSSRendering::GetShadowInnerRadii(nsIFrame* aFrame,
   if (hasBorderRadius) {
     ComputePixelRadii(twipsRadii, oneDevPixel, &borderRadii);
 
-    std::array<Float, 4> borderSizes =
-        SnapBorderToDevPixels(border, oneDevPixel);
-    nsCSSBorderRenderer::ComputeInnerRadii(borderRadii, borderSizes.data(),
+    Float borderSizes[4] = {
+        Float(border.top) / oneDevPixel, Float(border.right) / oneDevPixel,
+        Float(border.bottom) / oneDevPixel, Float(border.left) / oneDevPixel};
+    nsCSSBorderRenderer::ComputeInnerRadii(borderRadii, borderSizes,
                                            &aOutInnerRadii);
   }
 
@@ -1709,7 +1696,8 @@ void nsCSSRendering::PaintBoxShadowInner(nsPresContext* aPresContext,
   RectCornerRadii innerRadii;
   bool hasBorderRadius = GetShadowInnerRadii(aForFrame, aFrameArea, innerRadii);
 
-  const auto oneDevPixel = aPresContext->AppUnitsPerDevPixel();
+  const nscoord oneDevPixel = aPresContext->DevPixelsToAppUnits(1);
+
   for (const StyleBoxShadow& shadow : Reversed(shadows)) {
     if (!shadow.inset) {
       continue;

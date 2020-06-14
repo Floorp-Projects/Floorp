@@ -34,8 +34,12 @@
 
 != border-base-ref.html border-height-10-ref.html
 == border-height-4.html border-base-ref.html
+== border-height-5.html border-height-10-ref.html
+== border-height-6.html border-height-10-ref.html
 != border-base-ref.html border-width-10-ref.html
 == border-width-4.html border-base-ref.html
+== border-width-5.html border-width-10-ref.html
+== border-width-6.html border-width-10-ref.html
 != border-base-ref.html border-left-10-ref.html
 == border-left-4.html border-base-ref.html
 == border-left-5.html border-left-10-ref.html
@@ -170,6 +174,8 @@ fuzzy-if(skiaContent,0-1,0-145) == rounded-background-color-width-left-6.html ro
 == background-image-tiling.html background-image-tiling-ref.html
 
 != border-image-width-0.html border-image-width-10.html
+== border-image-width-4.html border-image-width-0.html
+== border-image-width-9.html border-image-width-0.html
 
 == iframe-1.html iframe-1-ref.html
 
