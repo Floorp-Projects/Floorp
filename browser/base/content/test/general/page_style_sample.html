@@ -3,9 +3,12 @@
     <title>Test for page style menu</title>
     <!-- data-state values:
       0:      should not appear in the page style menu
-      0-todo: should not appear in the page style menu, but does
       1:      should appear in the page style menu
       2:      should appear in the page style menu as the selected stylesheet -->
+    <style data-state="0">
+      /* Some default styles to ensure that disabling styles works */
+      :root { color: lime }
+    </style>
     <link data-state="1" href="404.css" title="1" rel="alternate stylesheet">
     <link data-state="0"                title="2" rel="alternate stylesheet">
     <link data-state="0" href="404.css"           rel="alternate stylesheet">
@@ -35,7 +38,8 @@
     <link data-state="1" href="404.css" title="25" rel="alternate stylesheet" media="only screen">
     <link data-state="1" href="404.css" title="26" rel="alternate stylesheet" media="screen and (min-device-width: 1px)">
     <link data-state="0" href="404.css" title="27" rel="alternate stylesheet" media="screen and (max-device-width: 1px)">
-    <style data-state="1" title="28">/* some more styles */</style>
+    <!-- It's important that this is the last one for the purposes of the test. -->
+    <style data-state="1" title="28">:root { color: blue }</style>
   </head>
   <body></body>
 </html>
