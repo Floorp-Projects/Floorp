@@ -9,6 +9,7 @@
 
 #include <atomic>
 #include <thread>
+#include <cinttypes>
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Logging.h"
