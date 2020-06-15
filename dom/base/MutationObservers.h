@@ -121,9 +121,9 @@ class MutationObservers {
   static inline void NotifyParentChainChanged(nsIContent* aContent) {
     nsINode::nsSlots* slots = aContent->GetExistingSlots();
     if (slots && !slots->mMutationObservers.IsEmpty()) {
-      NS_OBSERVER_AUTO_ARRAY_NOTIFY_OBSERVERS(slots->mMutationObservers,
-                                              nsIMutationObserver, 1,
-                                              ParentChainChanged, (aContent));
+      NS_OBSERVER_ARRAY_NOTIFY_OBSERVERS(slots->mMutationObservers,
+                                         nsIMutationObserver,
+                                         ParentChainChanged, (aContent));
     }
   }
 

@@ -980,17 +980,13 @@ void canary_alarm_handler(int signum) {
 
 #endif
 
-#define NOTIFY_EVENT_OBSERVERS(observers_, func_, params_)                  \
-  do {                                                                      \
-    if (!observers_.IsEmpty()) {                                            \
-      nsTObserverArray<nsCOMPtr<nsIThreadObserver>>::ForwardIterator iter_( \
-          observers_);                                                      \
-      nsCOMPtr<nsIThreadObserver> obs_;                                     \
-      while (iter_.HasMore()) {                                             \
-        obs_ = iter_.GetNext();                                             \
-        obs_->func_ params_;                                                \
-      }                                                                     \
-    }                                                                       \
+#define NOTIFY_EVENT_OBSERVERS(observers_, func_, params_)                 \
+  do {                                                                     \
+    if (!observers_.IsEmpty()) {                                           \
+      for (nsCOMPtr<nsIThreadObserver> obs_ : observers_.ForwardRange()) { \
+        obs_->func_ params_;                                               \
+      }                                                                    \
+    }                                                                      \
   } while (0)
 
 #ifdef MOZ_COLLECTING_RUNNABLE_TELEMETRY
