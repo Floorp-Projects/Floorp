@@ -1141,6 +1141,17 @@ class nsIWidget : public nsISupports {
    */
   virtual void SetShowsToolbarButton(bool aShow) = 0;
 
+  /*
+   * On macOS, this method determines whether we tell cocoa that the window
+   * supports native full screen. If we do so, and another window is in
+   * native full screen, this window will also appear in native full screen.
+   *
+   * We generally only want to do this for primary application windows.
+   *
+   * Ignored on child widgets and on non-Mac platforms.
+   */
+  virtual void SetSupportsNativeFullscreen(bool aSupportsNativeFullscreen) = 0;
+
   enum WindowAnimationType {
     eGenericWindowAnimation,
     eDocumentWindowAnimation
