@@ -3,14 +3,10 @@
 var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 var gExpectedCharset;
-var gOldPref;
-var gDetectorList;
-var gTestIndex;
 var gLocalDir;
 
-function CharsetDetectionTests(aTestFile, aExpectedCharset, aDetectorList) {
+function CharsetDetectionTests(aTestFile, aExpectedCharset) {
   gExpectedCharset = aExpectedCharset;
-  gDetectorList = aDetectorList;
 
   InitDetectorTests();
 
@@ -21,21 +17,10 @@ function CharsetDetectionTests(aTestFile, aExpectedCharset, aDetectorList) {
 }
 
 function InitDetectorTests() {
-  var prefService = Services.prefs;
   var loader = Services.scriptloader;
   var ioService = Services.io;
   loader.loadSubScript("chrome://mochikit/content/chrome-harness.js");
 
-  try {
-    gOldPref = prefService.getComplexValue(
-      "intl.charset.detector",
-      Ci.nsIPrefLocalizedString
-    ).data;
-  } catch (e) {
-    gOldPref = "";
-  }
-  SetDetectorPref(gDetectorList[0]);
-  gTestIndex = 0;
   $("testframe").onload = DoDetectionTest;
 
   if (gExpectedCharset == "default") {
@@ -54,37 +39,11 @@ function InitDetectorTests() {
   gLocalDir = ioService.newFileURI(dir).spec;
 }
 
-function SetDetectorPref(aPrefValue) {
-  var fallback = "";
-  if (aPrefValue == "ja_parallel_state_machine") {
-    fallback = "Shift_JIS";
-  } else if (aPrefValue == "ruprob" || aPrefValue == "ukprob") {
-    fallback = "windows-1251";
-  }
-  var prefService = Services.prefs;
-  prefService.setStringPref("intl.charset.detector", aPrefValue);
-  prefService.setStringPref("intl.charset.fallback.override", fallback);
-}
-
 function DoDetectionTest() {
   var iframeDoc = $("testframe").contentDocument;
   var charset = iframeDoc.characterSet;
 
-  is(
-    charset,
-    gExpectedCharset,
-    "decoded as " + gExpectedCharset + " by " + gDetectorList[gTestIndex]
-  );
+  is(charset, gExpectedCharset, "decoded as " + gExpectedCharset);
 
-  if (++gTestIndex < gDetectorList.length) {
-    SetDetectorPref(gDetectorList[gTestIndex]);
-    iframeDoc.location.reload();
-  } else {
-    CleanUpDetectionTests();
-  }
-}
-
-function CleanUpDetectionTests() {
-  SetDetectorPref(gOldPref);
   SimpleTest.finish();
 }

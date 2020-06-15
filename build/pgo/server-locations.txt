@@ -284,6 +284,8 @@ http://example.tw:80                privileged
 http://example.cn:80                privileged
 http://example.co.jp:80             privileged
 http://example.fi:80                privileged
+http://example.in:80                privileged
+http://example.lk:80                privileged
 
 # Host for HPKP
 https://include-subdomains.pinning-dynamic.example.com:443        privileged,cert=dynamicPinningGood

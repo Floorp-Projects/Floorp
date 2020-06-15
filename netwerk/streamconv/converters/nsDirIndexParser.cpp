@@ -8,7 +8,6 @@
 #include "nsDirIndexParser.h"
 
 #include "mozilla/ArrayUtils.h"
-#include "mozilla/dom/FallbackEncoding.h"
 #include "mozilla/Encoding.h"
 #include "prprf.h"
 #include "nsCRT.h"
@@ -18,8 +17,68 @@
 #include "nsIInputStream.h"
 #include "nsITextToSubURI.h"
 #include "nsServiceManagerUtils.h"
+#include "mozilla/intl/LocaleService.h"
 
 using namespace mozilla;
+
+struct EncodingProp {
+  const char* const mKey;
+  NotNull<const Encoding*> mValue;
+};
+
+static const EncodingProp localesFallbacks[] = {
+    {"ar", WINDOWS_1256_ENCODING}, {"ba", WINDOWS_1251_ENCODING},
+    {"be", WINDOWS_1251_ENCODING}, {"bg", WINDOWS_1251_ENCODING},
+    {"cs", WINDOWS_1250_ENCODING}, {"el", ISO_8859_7_ENCODING},
+    {"et", WINDOWS_1257_ENCODING}, {"fa", WINDOWS_1256_ENCODING},
+    {"he", WINDOWS_1255_ENCODING}, {"hr", WINDOWS_1250_ENCODING},
+    {"hu", ISO_8859_2_ENCODING},   {"ja", SHIFT_JIS_ENCODING},
+    {"kk", WINDOWS_1251_ENCODING}, {"ko", EUC_KR_ENCODING},
+    {"ku", WINDOWS_1254_ENCODING}, {"ky", WINDOWS_1251_ENCODING},
+    {"lt", WINDOWS_1257_ENCODING}, {"lv", WINDOWS_1257_ENCODING},
+    {"mk", WINDOWS_1251_ENCODING}, {"pl", ISO_8859_2_ENCODING},
+    {"ru", WINDOWS_1251_ENCODING}, {"sah", WINDOWS_1251_ENCODING},
+    {"sk", WINDOWS_1250_ENCODING}, {"sl", ISO_8859_2_ENCODING},
+    {"sr", WINDOWS_1251_ENCODING}, {"tg", WINDOWS_1251_ENCODING},
+    {"th", WINDOWS_874_ENCODING},  {"tr", WINDOWS_1254_ENCODING},
+    {"tt", WINDOWS_1251_ENCODING}, {"uk", WINDOWS_1251_ENCODING},
+    {"vi", WINDOWS_1258_ENCODING}, {"zh", GBK_ENCODING}};
+
+static NotNull<const Encoding*>
+GetFTPFallbackEncodingDoNotAddNewCallersToThisFunction() {
+  nsAutoCString locale;
+  mozilla::intl::LocaleService::GetInstance()->GetAppLocaleAsBCP47(locale);
+
+  // Let's lower case the string just in case unofficial language packs
+  // don't stick to conventions.
+  ToLowerCase(locale);  // ASCII lowercasing with CString input!
+
+  // Special case Traditional Chinese before throwing away stuff after the
+  // language itself. Today we only ship zh-TW, but be defensive about
+  // possible future values.
+  if (locale.EqualsLiteral("zh-tw") || locale.EqualsLiteral("zh-hk") ||
+      locale.EqualsLiteral("zh-mo") || locale.EqualsLiteral("zh-hant")) {
+    return BIG5_ENCODING;
+  }
+
+  // Throw away regions and other variants to accommodate weird stuff seen
+  // in telemetry--apparently unofficial language packs.
+  int32_t hyphenIndex = locale.FindChar('-');
+  if (hyphenIndex >= 0) {
+    locale.Truncate(hyphenIndex);
+  }
+
+  size_t index;
+  if (BinarySearchIf(
+          localesFallbacks, 0, ArrayLength(localesFallbacks),
+          [&locale](const EncodingProp& aProperty) {
+            return locale.Compare(aProperty.mKey);
+          },
+          &index)) {
+    return localesFallbacks[index].mValue;
+  }
+  return WINDOWS_1252_ENCODING;
+}
 
 NS_IMPL_ISUPPORTS(nsDirIndexParser, nsIRequestObserver, nsIStreamListener,
                   nsIDirIndexParser)
@@ -30,7 +89,7 @@ nsresult nsDirIndexParser::Init() {
   mLineStart = 0;
   mHasDescription = false;
   mFormat[0] = -1;
-  auto encoding = mozilla::dom::FallbackEncoding::FromLocale();
+  auto encoding = GetFTPFallbackEncodingDoNotAddNewCallersToThisFunction();
   encoding->Name(mEncoding);
 
   nsresult rv;

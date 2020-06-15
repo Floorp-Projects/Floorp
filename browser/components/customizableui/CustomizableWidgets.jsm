@@ -28,11 +28,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   SyncedTabs: "resource://services-sync/SyncedTabs.jsm",
 });
 
-XPCOMUtils.defineLazyGetter(this, "CharsetBundle", function() {
-  const kCharsetBundle = "chrome://global/locale/charsetMenu.properties";
-  return Services.strings.createBundle(kCharsetBundle);
-});
-
 const kPrefCustomizationDebug = "browser.uiCustomization.debug";
 
 XPCOMUtils.defineLazyGetter(this, "log", () => {
@@ -439,29 +434,6 @@ const CustomizableWidgets = [
 
       this._updateElements(elements, currentCharset);
     },
-    updateCurrentDetector(aDocument) {
-      let detectorContainer = aDocument.getElementById(
-        "PanelUI-characterEncodingView-autodetect"
-      );
-      let currentDetector;
-      try {
-        currentDetector = Services.prefs.getComplexValue(
-          "intl.charset.detector",
-          Ci.nsIPrefLocalizedString
-        ).data;
-      } catch (e) {}
-
-      this._updateElements(detectorContainer.children, currentDetector);
-      let hideDetector = Services.prefs.getBoolPref(
-        "intl.charset.detector.ng.enabled"
-      );
-      aDocument.getElementById(
-        "PanelUI-characterEncodingView-autodetect-container"
-      ).hidden = hideDetector;
-      aDocument.getElementById(
-        "PanelUI-characterEncodingView-autodetect-separator"
-      ).hidden = hideDetector;
-    },
     _updateElements(aElements, aCurrentItem) {
       if (!aElements.length) {
         return;
@@ -486,11 +458,10 @@ const CustomizableWidgets = [
       }
       let document = aEvent.target.ownerDocument;
 
-      let autoDetectLabelId = "PanelUI-characterEncodingView-autodetect-label";
-      let autoDetectLabel = document.getElementById(autoDetectLabelId);
-      if (!autoDetectLabel.hasAttribute("value")) {
-        let label = CharsetBundle.GetStringFromName("charsetMenuAutodet");
-        autoDetectLabel.setAttribute("value", label);
+      if (
+        !document.getElementById("PanelUI-characterEncodingView-pinned")
+          .firstChild
+      ) {
         this.populateList(
           document,
           "PanelUI-characterEncodingView-pinned",
@@ -501,13 +472,8 @@ const CustomizableWidgets = [
           "PanelUI-characterEncodingView-charsets",
           "otherCharsets"
         );
-        this.populateList(
-          document,
-          "PanelUI-characterEncodingView-autodetect",
-          "detectors"
-        );
       }
-      this.updateCurrentDetector(document);
+
       this.updateCurrentCharset(document);
     },
     onCommand(aEvent) {
@@ -517,23 +483,9 @@ const CustomizableWidgets = [
       }
 
       let window = node.ownerGlobal;
-      let section = node.section;
       let value = node.value;
 
-      // The behavior as implemented here is directly based off of the
-      // `MultiplexHandler()` method in browser.js.
-      if (section != "detectors") {
-        window.BrowserSetForcedCharacterSet(value);
-      } else {
-        // Set the detector pref.
-        try {
-          Services.prefs.setStringPref("intl.charset.detector", value);
-        } catch (e) {
-          Cu.reportError("Failed to set the intl.charset.detector preference.");
-        }
-        // Prepare a browser page reload with a changed charset.
-        window.BrowserCharsetReload();
-      }
+      window.BrowserSetForcedCharacterSet(value);
     },
     onCreated(aNode) {
       let document = aNode.ownerDocument;

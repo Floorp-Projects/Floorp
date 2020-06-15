@@ -59,7 +59,6 @@
 // AHMED 12-2
 #include "nsBidiUtils.h"
 
-#include "mozilla/dom/FallbackEncoding.h"
 #include "mozilla/Encoding.h"
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/IdentifierMapEntry.h"
@@ -317,73 +316,6 @@ void nsHTMLDocument::TryParentCharset(nsIDocShell* aDocShell,
   }
 }
 
-void nsHTMLDocument::TryTLD(int32_t& aCharsetSource,
-                            NotNull<const Encoding*>& aEncoding) {
-  if (aCharsetSource >= kCharsetFromTopLevelDomain) {
-    return;
-  }
-  if (!StaticPrefs::intl_charset_fallback_tld()) {
-    return;
-  }
-  if (!mDocumentURI) {
-    return;
-  }
-  nsAutoCString host;
-  mDocumentURI->GetAsciiHost(host);
-  if (host.IsEmpty()) {
-    return;
-  }
-  // First let's see if the host is DNS-absolute and ends with a dot and
-  // get rid of that one.
-  if (host.Last() == '.') {
-    host.SetLength(host.Length() - 1);
-    if (host.IsEmpty()) {
-      return;
-    }
-  }
-  // If we still have a dot, the host is weird, so let's continue only
-  // if we have something other than a dot now.
-  if (host.Last() == '.') {
-    return;
-  }
-  int32_t index = host.RFindChar('.');
-  if (index == kNotFound) {
-    // We have an intranet host, Gecko-internal URL or an IPv6 address.
-    return;
-  }
-  // Since the string didn't end with a dot and we found a dot,
-  // there is at least one character between the dot and the end of
-  // the string, so taking the substring below is safe.
-  nsAutoCString tld;
-  ToLowerCase(Substring(host, index + 1, host.Length() - (index + 1)), tld);
-  // Reject generic TLDs and country TLDs that need more research
-  if (!FallbackEncoding::IsParticipatingTopLevelDomain(tld)) {
-    return;
-  }
-  // Check if we have an IPv4 address
-  bool seenNonDigit = false;
-  for (size_t i = 0; i < tld.Length(); ++i) {
-    char c = tld.CharAt(i);
-    if (c < '0' || c > '9') {
-      seenNonDigit = true;
-      break;
-    }
-  }
-  if (!seenNonDigit) {
-    return;
-  }
-  aCharsetSource = kCharsetFromTopLevelDomain;
-  aEncoding = FallbackEncoding::FromTopLevelDomain(tld);
-}
-
-void nsHTMLDocument::TryFallback(int32_t& aCharsetSource,
-                                 NotNull<const Encoding*>& aEncoding) {
-  if (kCharsetFromFallback <= aCharsetSource) return;
-
-  aCharsetSource = kCharsetFromFallback;
-  aEncoding = FallbackEncoding::FromLocale();
-}
-
 // Using a prototype document is only allowed with chrome privilege.
 bool ShouldUsePrototypeDocument(nsIChannel* aChannel, Document* aDoc) {
   if (!aChannel || !aDoc ||
@@ -555,6 +487,8 @@ nsresult nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     NS_ASSERTION(docShell, "Unexpected null value");
 
     charsetSource = kCharsetUninitialized;
+    // Used for .in and .lk TLDs. .jp is handled in the parser.
+    encoding = WINDOWS_1252_ENCODING;
 
     // The following will try to get the character encoding from various
     // sources. Each Try* function will return early if the source is already
@@ -580,9 +514,6 @@ nsresult nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     if (cachingChan && !urlSpec.IsEmpty()) {
       TryCacheCharset(cachingChan, charsetSource, encoding);
     }
-
-    TryTLD(charsetSource, encoding);
-    TryFallback(charsetSource, encoding);
   }
 
   SetDocumentCharacterSetSource(charsetSource);

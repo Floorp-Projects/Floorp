@@ -27,12 +27,7 @@ window.addEventListener("load", () => gFontsDialog.onLoad());
 Preferences.addAll([
   { id: "font.language.group", type: "wstring" },
   { id: "browser.display.use_document_fonts", type: "int" },
-  { id: "intl.charset.fallback.override", type: "string" },
 ]);
-
-document.getElementById("FallbackGroupbox").hidden = Services.prefs.getBoolPref(
-  "intl.charset.detector.ng.enabled"
-);
 
 var gFontsDialog = {
   _selectLanguageGroupPromise: Promise.resolve(),

@@ -695,7 +695,6 @@ NS_CycleCollectorSuspect3
 ?GetDefaultStreamPrefs@CubebUtils@mozilla@@YA?AW4cubeb_stream_prefs@@XZ
 ?InitializeStatics@nsHtml5Module@@SAXXZ
 ??1nsHtml5AtomTable@@QEAA@XZ
-?Initialize@FallbackEncoding@dom@mozilla@@SAXXZ
 ?RegisterPrefChangeCallbacks@nsComputedDOMStyle@@SAXXZ
 ??1?$nsTArray_Impl@DUnsTArrayInfallibleAllocator@@@@QEAA@XZ
 ?InitializeStatics@PointerEventHandler@mozilla@@SAXXZ
@@ -6516,7 +6515,6 @@ XPCOMService_GetThirdPartyUtil
 ?GetContentCharset@HttpBaseChannel@net@mozilla@@UEAA?AW4nsresult@@AEAV?$nsTSubstring@D@@@Z
 ?ContentCharset@nsHttpResponseHead@net@mozilla@@QEAAXAEAV?$nsTSubstring@D@@@Z
 ?Last@?$nsTStringRepr@D@detail@mozilla@@QEBADXZ
-?Get@FallbackEncoding@dom@mozilla@@AEAA?AV?$NotNull@PEBVEncoding@mozilla@@@3@XZ
 ?Release@nsFontFaceLoader@@UEAAKXZ
 ?Init@nsContentSink@@IEAA?AW4nsresult@@PEAVDocument@dom@mozilla@@PEAVnsIURI@@PEAVnsISupports@@PEAVnsIChannel@@@Z
 ?SetViewSourceTitle@nsHtml5StreamParser@@QEAAXPEAVnsIURI@@@Z

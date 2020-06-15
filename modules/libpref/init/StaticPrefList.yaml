@@ -4752,19 +4752,6 @@
 # Prefs starting with "intl."
 #---------------------------------------------------------------------------
 
-# Whether ISO-2022-JP is a permitted content-based encoding detection
-# outcome in the JapaneseDetector.
-- name: intl.charset.detector.iso2022jp.allowed
-  type: bool
-  value: true
-  mirror: always
-
-# Whether the new encoding detector is enabled (except for Japan's ccTLDs).
-- name: intl.charset.detector.ng.enabled
-  type: bool
-  value: true
-  mirror: always
-
 # Whether the new encoding detector is enabled for the .jp TLD.
 - name: intl.charset.detector.ng.jp.enabled
   type: bool
@@ -4781,12 +4768,6 @@
 - name: intl.charset.detector.ng.lk.enabled
   type: bool
   value: false
-  mirror: always
-
-# Whether the TLD is considered if the new encoding detector is disabled.
-- name: intl.charset.fallback.tld
-  type: bool
-  value: true
   mirror: always
 
 # If true, dispatch the keydown and keyup events on any web apps even during
