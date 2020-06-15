@@ -1,13 +1,31 @@
 "use strict";
 
-const PAGE =
-  "http://example.com/browser/browser/base/content/test/general/page_style_sample.html";
+function fillPopupAndGetItems() {
+  let menupopup = document.getElementById("pageStyleMenu").menupopup;
+  gPageStyleMenu.fillPopup(menupopup);
+  return Array.from(menupopup.querySelectorAll("menuseparator ~ menuitem"));
+}
+
+function getRootColor() {
+  return SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+    return content.document.defaultView.getComputedStyle(
+      content.document.documentElement
+    ).color;
+  });
+}
+
+const RED = "rgb(255, 0, 0)";
+const LIME = "rgb(0, 255, 0)";
+const BLUE = "rgb(0, 0, 255)";
 
 /*
  * Test that the right stylesheets do (and others don't) show up
  * in the page style menu.
  */
-add_task(async function() {
+add_task(async function test_menu() {
+  const PAGE =
+    "http://example.com/browser/browser/base/content/test/general/page_style_sample.html";
+
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
     "about:blank",
@@ -17,16 +35,7 @@ add_task(async function() {
   await BrowserTestUtils.loadURI(browser, PAGE);
   await promiseStylesheetsLoaded(tab, 17);
 
-  let menupopup = document.getElementById("pageStyleMenu").menupopup;
-  gPageStyleMenu.fillPopup(menupopup);
-
-  let menuitems = [];
-  let current = menupopup.querySelector("menuseparator");
-  while (current.nextElementSibling) {
-    current = current.nextElementSibling;
-    menuitems.push(current);
-  }
-
+  let menuitems = fillPopupAndGetItems();
   let items = menuitems.map(el => ({
     label: el.getAttribute("label"),
     checked: el.getAttribute("checked") == "true",
@@ -81,13 +90,7 @@ add_task(async function() {
   ok(menuitems.length, "At least one item in the menu");
   is(menuitems.length, validLinks, "all valid links found");
 
-  function getRootColor() {
-    return SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
-      return content.document.defaultView.getComputedStyle(content.document.documentElement).color;
-    });
-  }
-
-  is(await getRootColor(), "rgb(0, 255, 0)", "Root should be lime (styles should apply)");
+  is(await getRootColor(), LIME, "Root should be lime (styles should apply)");
 
   let disableStyles = document.getElementById("menu_pageStyleNoStyle");
   let defaultStyles = document.getElementById("menu_pageStylePersistentOnly");
@@ -98,14 +101,14 @@ add_task(async function() {
 
   await TestUtils.waitForCondition(async function() {
     let color = await getRootColor();
-    return color != "rgb(0, 255, 0)" && color != "rgb(0, 0, 255)";
+    return color != LIME && color != BLUE;
   }, "ensuring disabled styles work");
 
   otherStyles.click();
 
   await TestUtils.waitForCondition(async function() {
     let color = await getRootColor();
-    return color == "rgb(0, 0, 255)";
+    return color == BLUE;
   }, "ensuring alternate styles work. clicking on: " + otherStyles.label);
 
   defaultStyles.click();
@@ -113,8 +116,43 @@ add_task(async function() {
   info("ensuring default styles work");
   await TestUtils.waitForCondition(async function() {
     let color = await getRootColor();
-    return color == "rgb(0, 255, 0)";
+    return color == LIME;
   }, "ensuring default styles work");
 
   BrowserTestUtils.removeTab(tab);
+});
+
+add_task(async function test_default_style_with_no_sheets() {
+  const PAGE =
+    "http://example.com/browser/browser/base/content/test/general/page_style_only_alternates.html";
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: PAGE,
+      waitForLoad: true,
+    },
+    async function(browser) {
+      await promiseStylesheetsLoaded(browser, 2);
+
+      let menuitems = fillPopupAndGetItems();
+      is(menuitems.length, 2, "Should've found two style sets");
+      is(
+        await getRootColor(),
+        BLUE,
+        "First found style should become the preferred one and apply"
+      );
+
+      // Reset the styles.
+      document.getElementById("menu_pageStylePersistentOnly").click();
+      await TestUtils.waitForCondition(async function() {
+        let color = await getRootColor();
+        return color != BLUE && color != RED;
+      });
+
+      ok(
+        true,
+        "Should reset the style properly even if there are no non-alternate stylesheets"
+      );
+    }
+  );
 });
