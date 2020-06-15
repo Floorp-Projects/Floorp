@@ -210,6 +210,12 @@ EXPORTS.js += [
     '../public/Wrapper.h',
 ]
 
+# This lives in mozglue/baseprofiler but we re-publish ourselves to support
+# standalone SpiderMonkey configurations.
+EXPORTS.js += [
+    '../../mozglue/baseprofiler/public/ProfilingCategoryList.h',
+]
+
 EXPORTS.js.experimental += [
     '../public/experimental/SourceHook.h',
 ]

@@ -67,6 +67,7 @@ included_inclnames_to_ignore = set([
     'jit/CacheIROpsGenerated.h',         # generated in $OBJDIR
     'jit/LOpcodesGenerated.h',           # generated in $OBJDIR
     'jit/MOpcodesGenerated.h',           # generated in $OBJDIR
+    'js/ProfilingCategoryList.h',        # comes from mozglue/baseprofiler
     'jscustomallocator.h',      # provided by embedders;  allowed to be missing
     'js-config.h',              # generated in $OBJDIR
     'fdlibm.h',                 # fdlibm

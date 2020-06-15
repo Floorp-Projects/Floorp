@@ -17,6 +17,7 @@ if CONFIG['MOZ_GECKO_PROFILER']:
         'public/BaseProfilerSharedLibraries.h',
         'public/BaseProfilingCategory.h',
         'public/BaseProfilingStack.h',
+        'public/ProfilingCategoryList.h',
     ]
     UNIFIED_SOURCES += [
         'core/PageInformation.cpp',
