@@ -55,10 +55,12 @@ async function test1(gTestBrowser) {
   });
 
   await SpecialPowers.spawn(gTestBrowser, [], function() {
-    var x = content.document
-      .getElementsByTagName("iframe")[0]
-      .contentDocument.getElementById("mixedContentContainer");
-    is(x, null, "Mixed Content is NOT to be found in Test1");
+    let iframe = content.document.getElementsByTagName("iframe")[0];
+
+    SpecialPowers.spawn(iframe, [], () => {
+      let container = content.document.getElementById("mixedContentContainer");
+      is(container, null, "Mixed Content is NOT to be found in Test1");
+    });
   });
 
   // Disable Mixed Content Protection for the page (and reload)
@@ -73,10 +75,12 @@ async function test2(gTestBrowser) {
   });
 
   await SpecialPowers.spawn(gTestBrowser, [], function() {
-    var x = content.document
-      .getElementsByTagName("iframe")[0]
-      .contentDocument.getElementById("mixedContentContainer");
-    isnot(x, null, "Mixed Content is to be found in Test2");
+    let iframe = content.document.getElementsByTagName("iframe")[0];
+
+    SpecialPowers.spawn(iframe, [], () => {
+      let container = content.document.getElementById("mixedContentContainer");
+      isnot(container, null, "Mixed Content is to be found in Test2");
+    });
   });
 
   // Re-enable Mixed Content Protection for the page (and reload)
@@ -91,9 +95,11 @@ async function test3(gTestBrowser) {
   });
 
   await SpecialPowers.spawn(gTestBrowser, [], function() {
-    var x = content.document
-      .getElementsByTagName("iframe")[0]
-      .contentDocument.getElementById("mixedContentContainer");
-    is(x, null, "Mixed Content is NOT to be found in Test3");
+    let iframe = content.document.getElementsByTagName("iframe")[0];
+
+    SpecialPowers.spawn(iframe, [], () => {
+      let container = content.document.getElementById("mixedContentContainer");
+      is(container, null, "Mixed Content is NOT to be found in Test3");
+    });
   });
 }
