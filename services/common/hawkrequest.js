@@ -160,8 +160,6 @@ function Intl() {
   // We won't actually query the pref until the first time we need it
   this._accepted = "";
   this._everRead = false;
-  this._log = Log.repository.getLogger("Services.Common.RESTRequest");
-  this._log.level = Log.Level[Prefs.get("log.logger.rest.request")];
   this.init();
 }
 
@@ -186,7 +184,8 @@ this.Intl.prototype = {
         Ci.nsIPrefLocalizedString
       ).data;
     } catch (err) {
-      this._log.error("Error reading intl.accept_languages pref", err);
+      let log = Log.repository.getLogger("Services.Common.RESTRequest");
+      log.error("Error reading intl.accept_languages pref", err);
     }
   },
 
