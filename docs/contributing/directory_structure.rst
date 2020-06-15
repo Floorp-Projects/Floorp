@@ -573,9 +573,3 @@ xpfe/components
 
 Components used by the Mozilla frontend, as well as implementations of
 interfaces that other parts of mozilla expect.
-
-
-More documentation about Firefox Source Code Directory Structure
-----------------------------------------------------------------
-
-https://developer.mozilla.org/docs/Mozilla/Developer_guide/Source_Code/Directory_structure
