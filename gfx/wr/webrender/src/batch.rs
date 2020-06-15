@@ -173,9 +173,48 @@ fn textures_compatible(t1: TextureSource, t2: TextureSource) -> bool {
     t1 == TextureSource::Invalid || t2 == TextureSource::Invalid || t1 == t2
 }
 
+pub struct BatchRects {
+    /// Union of all of the batch's item rects.
+    ///
+    /// Very often we can skip iterating over item rects by testing against
+    /// this one first.
+    batch: PictureRect,
+    /// Rectangle of each item in the batch.
+    ///
+    /// TODO: in some cases the batch rect is a good enough approximation and
+    /// isn't worth storing all of these. We could only start storing per
+    /// item rects when the the union of the batch rect and a new rect is
+    /// larger than the sum of the two.
+    items: Vec<PictureRect>,
+}
+
+impl BatchRects {
+    #[inline]
+    fn add_rect(&mut self, rect: &PictureRect) {
+        self.batch = self.batch.union(rect);
+        self.items.push(*rect);
+    }
+
+    #[inline]
+    fn intersects(&mut self, rect: &PictureRect) -> bool {
+        if !self.batch.intersects(rect) {
+            return false;
+        }
+
+        for item_rect in &self.items {
+            if item_rect.intersects(rect) {
+                return true;
+            }
+        }
+
+        false
+    }
+}
+
+
 pub struct AlphaBatchList {
     pub batches: Vec<PrimitiveBatch>,
-    pub item_rects: Vec<Vec<PictureRect>>,
+    pub batch_rects: Vec<BatchRects>,
     current_batch_index: usize,
     current_z_id: ZBufferId,
     break_advanced_blend_batches: bool,
@@ -186,7 +225,7 @@ impl AlphaBatchList {
     fn new(break_advanced_blend_batches: bool, lookback_count: usize) -> Self {
         AlphaBatchList {
             batches: Vec::new(),
-            item_rects: Vec::new(),
+            batch_rects: Vec::new(),
             current_z_id: ZBufferId::invalid(),
             current_batch_index: usize::MAX,
             break_advanced_blend_batches,
@@ -201,7 +240,7 @@ impl AlphaBatchList {
         self.current_batch_index = usize::MAX;
         self.current_z_id = ZBufferId::invalid();
         self.batches.clear();
-        self.item_rects.clear();
+        self.batch_rects.clear();
     }
 
     pub fn set_params_and_get_batch(
@@ -221,14 +260,12 @@ impl AlphaBatchList {
 
             match key.blend_mode {
                 BlendMode::SubpixelWithBgColor => {
-                    'outer_multipass: for (batch_index, batch) in self.batches.iter().enumerate().rev().take(self.lookback_count) {
+                    for (batch_index, batch) in self.batches.iter().enumerate().rev().take(self.lookback_count) {
                         // Some subpixel batches are drawn in two passes. Because of this, we need
                         // to check for overlaps with every batch (which is a bit different
                         // than the normal batching below).
-                        for item_rect in &self.item_rects[batch_index] {
-                            if item_rect.intersects(z_bounding_rect) {
-                                break 'outer_multipass;
-                            }
+                        if self.batch_rects[batch_index].intersects(z_bounding_rect) {
+                            break;
                         }
 
                         if batch.key.is_compatible_with(&key) {
@@ -241,7 +278,7 @@ impl AlphaBatchList {
                     // don't try to find a batch
                 }
                 _ => {
-                    'outer_default: for (batch_index, batch) in self.batches.iter().enumerate().rev().take(self.lookback_count) {
+                    for (batch_index, batch) in self.batches.iter().enumerate().rev().take(self.lookback_count) {
                         // For normal batches, we only need to check for overlaps for batches
                         // other than the first batch we consider. If the first batch
                         // is compatible, then we know there isn't any potential overlap
@@ -252,10 +289,8 @@ impl AlphaBatchList {
                         }
 
                         // check for intersections
-                        for item_rect in &self.item_rects[batch_index] {
-                            if item_rect.intersects(z_bounding_rect) {
-                                break 'outer_default;
-                            }
+                        if self.batch_rects[batch_index].intersects(z_bounding_rect) {
+                            break;
                         }
                     }
                 }
@@ -277,16 +312,19 @@ impl AlphaBatchList {
                 new_batch.instances.reserve(prealloc);
                 selected_batch_index = Some(self.batches.len());
                 self.batches.push(new_batch);
-                self.item_rects.push(Vec::with_capacity(prealloc));
+                self.batch_rects.push(BatchRects {
+                    batch: *z_bounding_rect,
+                    items: Vec::with_capacity(prealloc),
+                });
             }
 
             self.current_batch_index = selected_batch_index.unwrap();
-            self.item_rects[self.current_batch_index].push(*z_bounding_rect);
+            self.batch_rects[self.current_batch_index].add_rect(z_bounding_rect);
             self.current_z_id = z_id;
         } else if cfg!(debug_assertions) {
             // If it's a different segment of the same (larger) primitive, we expect the bounding box
             // to be the same - coming from the primitive itself, not the segment.
-            assert_eq!(self.item_rects[self.current_batch_index].last(), Some(z_bounding_rect));
+            assert_eq!(self.batch_rects[self.current_batch_index].items.last(), Some(z_bounding_rect));
         }
 
         let batch = &mut self.batches[self.current_batch_index];
