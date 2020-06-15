@@ -241,7 +241,6 @@ class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidM
                 "--symbols-path=%s" % self.symbols_path,
                 "--stackwalk-binary=%s" % self.query_minidump_stackwalk(),
                 "--stackfix-dir=%s" % os.path.join(dirs["abs_test_install_dir"], "bin"),
-                "--run-by-dir=%i" % (3 if not mozinfo.info["asan"] else 0),
                 "--no-pause-after-test",
                 "--instrument-to-file=%s" % os.path.join(dirs["abs_blob_upload_dir"],
                                                          "wpt_instruments.txt")]
@@ -285,9 +284,15 @@ class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidM
         if not (self.verify_enabled or self.per_test_coverage):
             mozharness_test_paths = json.loads(os.environ.get('MOZHARNESS_TEST_PATHS', '""'))
             if mozharness_test_paths:
-                keys = (['web-platform-tests-%s' % test_type for test_type in test_types] +
-                        ['web-platform-tests'])
-                for key in keys:
+                path = os.path.join(
+                    dirs["abs_fetches_dir"], 'wpt_tests_by_group.json')
+
+                if not os.path.exists(path):
+                    self.critical('Unable to locate web-platform-test groups file.')
+
+                cmd.append("--test-groups={}".format(path))
+
+                for key in mozharness_test_paths.keys():
                     paths = mozharness_test_paths.get(key, [])
                     for path in paths:
                         if not path.startswith("/"):
@@ -298,6 +303,9 @@ class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidM
                             path = os.path.join(dirs["abs_wpttest_dir"], path)
                         test_paths.add(path)
             else:
+                # As per WPT harness, the --run-by-dir flag is incompatible with
+                # the --test-groups flag.
+                cmd.append("--run-by-dir=%i" % (3 if not mozinfo.info["asan"] else 0))
                 for opt in ["total_chunks", "this_chunk"]:
                     val = c.get(opt)
                     if val:
