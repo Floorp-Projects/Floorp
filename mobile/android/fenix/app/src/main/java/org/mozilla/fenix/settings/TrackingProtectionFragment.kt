@@ -16,7 +16,6 @@ import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
@@ -56,11 +55,10 @@ class TrackingProtectionFragment : PreferenceFragmentCompat() {
         showToolbar(getString(R.string.preference_enhanced_tracking_protection))
 
         // Tracking Protection Switch
-        val trackingProtectionKey = getPreferenceKey(R.string.pref_key_tracking_protection)
-        val preferenceTP = findPreference<SwitchPreference>(trackingProtectionKey)
+        val preferenceTP = requirePreference<SwitchPreference>(R.string.pref_key_tracking_protection)
 
-        preferenceTP?.isChecked = requireContext().settings().shouldUseTrackingProtection
-        preferenceTP?.setOnPreferenceChangeListener<Boolean> { preference, trackingProtectionOn ->
+        preferenceTP.isChecked = requireContext().settings().shouldUseTrackingProtection
+        preferenceTP.setOnPreferenceChangeListener<Boolean> { preference, trackingProtectionOn ->
             preference.context.settings().shouldUseTrackingProtection =
                 trackingProtectionOn
             with(preference.context.components) {
@@ -72,10 +70,8 @@ class TrackingProtectionFragment : PreferenceFragmentCompat() {
             true
         }
 
-        val trackingProtectionLearnMore =
-            requireContext().getPreferenceKey(R.string.pref_key_etp_learn_more)
-        val learnMorePreference = findPreference<Preference>(trackingProtectionLearnMore)
-        learnMorePreference?.setOnPreferenceClickListener {
+        val learnMorePreference = requirePreference<Preference>(R.string.pref_key_etp_learn_more)
+        learnMorePreference.setOnPreferenceClickListener {
             (activity as HomeActivity).openToBrowserAndLoad(
                 searchTermOrURL = SupportUtils.getGenericSumoURLForTopic
                     (SupportUtils.SumoTopic.TRACKING_PROTECTION),
@@ -84,22 +80,19 @@ class TrackingProtectionFragment : PreferenceFragmentCompat() {
             )
             true
         }
-        learnMorePreference?.summary = getString(
+        learnMorePreference.summary = getString(
             R.string.preference_enhanced_tracking_protection_explanation,
             getString(R.string.app_name)
         )
 
-        val exceptions = getPreferenceKey(R.string.pref_key_tracking_protection_exceptions)
-        val preferenceExceptions = findPreference<Preference>(exceptions)
-        preferenceExceptions?.onPreferenceClickListener = exceptionsClickListener
+        val preferenceExceptions = requirePreference<Preference>(R.string.pref_key_tracking_protection_exceptions)
+        preferenceExceptions.onPreferenceClickListener = exceptionsClickListener
     }
 
     private fun bindTrackingProtectionRadio(
         mode: TrackingProtectionMode
     ): RadioButtonInfoPreference {
-        val radio = requireNotNull(findPreference<RadioButtonInfoPreference>(
-            getPreferenceKey(mode.preferenceKey)
-        ))
+        val radio = requirePreference<RadioButtonInfoPreference>(mode.preferenceKey)
         radio.contentDescription = getString(mode.contentDescriptionRes)
 
         val metrics = requireComponents.analytics.metrics
@@ -132,37 +125,23 @@ class TrackingProtectionFragment : PreferenceFragmentCompat() {
     private fun bindCustom(): RadioButtonInfoPreference {
         val radio = bindTrackingProtectionRadio(TrackingProtectionMode.CUSTOM)
 
-        customCookies = requireNotNull(
-            findPreference(
-                getString(R.string.pref_key_tracking_protection_custom_cookies)
-            )
-        )
+        customCookies =
+            requirePreference(R.string.pref_key_tracking_protection_custom_cookies)
 
-        customCookiesSelect = requireNotNull(
-            findPreference(
-                getString(R.string.pref_key_tracking_protection_custom_cookies_select)
-            )
-        )
-        customTracking = requireNotNull(
-            findPreference(
-                getString(R.string.pref_key_tracking_protection_custom_tracking_content)
-            )
-        )
-        customTrackingSelect = requireNotNull(
-            findPreference(
-                getString(R.string.pref_key_tracking_protection_custom_tracking_content_select)
-            )
-        )
-        customCryptominers = requireNotNull(
-            findPreference(
-                getString(R.string.pref_key_tracking_protection_custom_cryptominers)
-            )
-        )
-        customFingerprinters = requireNotNull(
-            findPreference(
-                getString(R.string.pref_key_tracking_protection_custom_fingerprinters)
-            )
-        )
+        customCookiesSelect =
+            requirePreference(R.string.pref_key_tracking_protection_custom_cookies_select)
+
+        customTracking =
+            requirePreference(R.string.pref_key_tracking_protection_custom_tracking_content)
+
+        customTrackingSelect =
+            requirePreference(R.string.pref_key_tracking_protection_custom_tracking_content_select)
+
+        customCryptominers =
+            requirePreference(R.string.pref_key_tracking_protection_custom_cryptominers)
+
+        customFingerprinters =
+            requirePreference(R.string.pref_key_tracking_protection_custom_fingerprinters)
 
         customCookies.onPreferenceChangeListener = object : SharedPreferenceUpdater() {
             override fun onPreferenceChange(preference: Preference, newValue: Any?): Boolean {

@@ -18,13 +18,13 @@ import kotlinx.coroutines.withContext
 import mozilla.components.feature.sitepermissions.SitePermissions
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.settings.PhoneFeature
 import org.mozilla.fenix.settings.PhoneFeature.CAMERA
 import org.mozilla.fenix.settings.PhoneFeature.LOCATION
 import org.mozilla.fenix.settings.PhoneFeature.MICROPHONE
 import org.mozilla.fenix.settings.PhoneFeature.NOTIFICATION
+import org.mozilla.fenix.settings.requirePreference
 
 class SitePermissionsDetailsExceptionsFragment : PreferenceFragmentCompat() {
     private lateinit var sitePermissions: SitePermissions
@@ -75,8 +75,7 @@ class SitePermissionsDetailsExceptionsFragment : PreferenceFragmentCompat() {
     }
 
     private fun bindClearPermissionsButton() {
-        val keyPreference = getPreferenceKey(R.string.pref_key_exceptions_clear_site_permissions)
-        val button: Preference = requireNotNull(findPreference(keyPreference))
+        val button: Preference = requirePreference(R.string.pref_key_exceptions_clear_site_permissions)
 
         button.onPreferenceClickListener = Preference.OnPreferenceClickListener {
             AlertDialog.Builder(requireContext()).apply {

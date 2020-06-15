@@ -14,6 +14,7 @@ import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.settings.RadioButtonPreference
 import org.mozilla.fenix.settings.SharedPreferenceUpdater
+import org.mozilla.fenix.settings.requirePreference
 
 class SavedLoginsSettingFragment : PreferenceFragmentCompat() {
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
@@ -29,9 +30,8 @@ class SavedLoginsSettingFragment : PreferenceFragmentCompat() {
     }
 
     private fun bindSave(): RadioButtonPreference {
-        val keySave = getString(R.string.pref_key_save_logins)
-        val preferenceSave = findPreference<RadioButtonPreference>(keySave)
-        preferenceSave?.onPreferenceChangeListener = object : SharedPreferenceUpdater() {
+        val preferenceSave = requirePreference<RadioButtonPreference>(R.string.pref_key_save_logins)
+        preferenceSave.onPreferenceChangeListener = object : SharedPreferenceUpdater() {
             override fun onPreferenceChange(preference: Preference, newValue: Any?): Boolean {
                 if (newValue == true) {
                     context?.metrics?.track(
@@ -45,13 +45,12 @@ class SavedLoginsSettingFragment : PreferenceFragmentCompat() {
                 return super.onPreferenceChange(preference, newValue)
             }
         }
-        return requireNotNull(preferenceSave)
+        return preferenceSave
     }
 
     private fun bindNeverSave(): RadioButtonPreference {
-        val keyNeverSave = getString(R.string.pref_key_never_save_logins)
-        val preferenceNeverSave = findPreference<RadioButtonPreference>(keyNeverSave)
-        preferenceNeverSave?.onPreferenceChangeListener = object : SharedPreferenceUpdater() {
+        val preferenceNeverSave = requirePreference<RadioButtonPreference>(R.string.pref_key_never_save_logins)
+        preferenceNeverSave.onPreferenceChangeListener = object : SharedPreferenceUpdater() {
             override fun onPreferenceChange(preference: Preference, newValue: Any?): Boolean {
                 if (newValue == true) {
                     context?.metrics?.track(
@@ -65,7 +64,7 @@ class SavedLoginsSettingFragment : PreferenceFragmentCompat() {
                 return super.onPreferenceChange(preference, newValue)
             }
         }
-        return requireNotNull(preferenceNeverSave)
+        return preferenceNeverSave
     }
 
     private fun setupRadioGroups(

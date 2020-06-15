@@ -13,7 +13,6 @@ import androidx.preference.PreferenceFragmentCompat
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
@@ -69,8 +68,7 @@ class CustomizationFragment : PreferenceFragmentCompat() {
     }
 
     private fun bindLightTheme() {
-        val keyLightTheme = getPreferenceKey(R.string.pref_key_light_theme)
-        radioLightTheme = requireNotNull(findPreference(keyLightTheme))
+        radioLightTheme = requirePreference(R.string.pref_key_light_theme)
         radioLightTheme.onClickListener {
             setNewTheme(AppCompatDelegate.MODE_NIGHT_NO)
         }
@@ -79,16 +77,14 @@ class CustomizationFragment : PreferenceFragmentCompat() {
     @SuppressLint("WrongConstant")
     // Suppressing erroneous lint warning about using MODE_NIGHT_AUTO_BATTERY, a likely library bug
     private fun bindAutoBatteryTheme() {
-        val keyBatteryTheme = getPreferenceKey(R.string.pref_key_auto_battery_theme)
-        radioAutoBatteryTheme = requireNotNull(findPreference(keyBatteryTheme))
+        radioAutoBatteryTheme = requirePreference(R.string.pref_key_auto_battery_theme)
         radioAutoBatteryTheme.onClickListener {
             setNewTheme(AppCompatDelegate.MODE_NIGHT_AUTO_BATTERY)
         }
     }
 
     private fun bindDarkTheme() {
-        val keyDarkTheme = getPreferenceKey(R.string.pref_key_dark_theme)
-        radioDarkTheme = requireNotNull(findPreference(keyDarkTheme))
+        radioDarkTheme = requirePreference(R.string.pref_key_dark_theme)
         radioDarkTheme.onClickListener {
             requireContext().components.analytics.metrics.track(
                 Event.DarkThemeSelected(
@@ -100,8 +96,7 @@ class CustomizationFragment : PreferenceFragmentCompat() {
     }
 
     private fun bindFollowDeviceTheme() {
-        val keyDeviceTheme = getPreferenceKey(R.string.pref_key_follow_device_theme)
-        radioFollowDeviceTheme = requireNotNull(findPreference(keyDeviceTheme))
+        radioFollowDeviceTheme = requirePreference(R.string.pref_key_follow_device_theme)
         if (SDK_INT >= Build.VERSION_CODES.P) {
             radioFollowDeviceTheme.onClickListener {
                 setNewTheme(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
@@ -120,16 +115,14 @@ class CustomizationFragment : PreferenceFragmentCompat() {
     }
 
     private fun setupToolbarCategory() {
-        val keyToolbarTop = getPreferenceKey(R.string.pref_key_toolbar_top)
-        val topPreference = requireNotNull(findPreference<RadioButtonPreference>(keyToolbarTop))
+        val topPreference = requirePreference<RadioButtonPreference>(R.string.pref_key_toolbar_top)
         topPreference.onClickListener {
             requireContext().components.analytics.metrics.track(Event.ToolbarPositionChanged(
                 Event.ToolbarPositionChanged.Position.TOP
             ))
         }
 
-        val keyToolbarBottom = getPreferenceKey(R.string.pref_key_toolbar_bottom)
-        val bottomPreference = requireNotNull(findPreference<RadioButtonPreference>(keyToolbarBottom))
+        val bottomPreference = requirePreference<RadioButtonPreference>(R.string.pref_key_toolbar_top)
         bottomPreference.onClickListener {
             requireContext().components.analytics.metrics.track(Event.ToolbarPositionChanged(
                 Event.ToolbarPositionChanged.Position.BOTTOM
