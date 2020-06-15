@@ -11,6 +11,7 @@
 #include "mozilla/MouseEvents.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/StaticPrefs_ui.h"
 #include "mozilla/dom/MouseEventBinding.h"
 #include "nsFrameList.h"  // for DEBUG_FRAME_DUMP
 #include "nsHTMLParts.h"
@@ -80,62 +81,49 @@ namespace mozilla {
  */
 
 struct EventRadiusPrefs {
+  bool mEnabled;            // other fields are valid iff this field is true
   uint32_t mVisitedWeight;  // in percent, i.e. default is 100
-  uint32_t mSideRadii[4];   // TRBL order, in millimetres
-  bool mEnabled;
-  bool mRegistered;
+  uint32_t mRadiusTopmm;
+  uint32_t mRadiusRightmm;
+  uint32_t mRadiusBottommm;
+  uint32_t mRadiusLeftmm;
   bool mTouchOnly;
-  bool mRepositionEventCoords;
-};
+  bool mReposition;
 
-static EventRadiusPrefs sMouseEventRadiusPrefs;
-static EventRadiusPrefs sTouchEventRadiusPrefs;
+  explicit EventRadiusPrefs(EventClassID aEventClassID) {
+    if (aEventClassID == eTouchEventClass) {
+      mEnabled = StaticPrefs::ui_touch_radius_enabled();
+      mVisitedWeight = StaticPrefs::ui_touch_radius_visitedWeight();
+      mRadiusTopmm = StaticPrefs::ui_touch_radius_topmm();
+      mRadiusRightmm = StaticPrefs::ui_touch_radius_rightmm();
+      mRadiusBottommm = StaticPrefs::ui_touch_radius_bottommm();
+      mRadiusLeftmm = StaticPrefs::ui_touch_radius_leftmm();
+      mTouchOnly = false;   // Always false, unlike mouse events.
+      mReposition = false;  // Always false, unlike mouse events.
 
-static const EventRadiusPrefs* GetPrefsFor(EventClassID aEventClassID) {
-  EventRadiusPrefs* prefs = nullptr;
-  const char* prefBranch = nullptr;
-  if (aEventClassID == eTouchEventClass) {
-    prefBranch = "touch";
-    prefs = &sTouchEventRadiusPrefs;
-  } else if (aEventClassID == eMouseEventClass) {
-    // Mostly for testing purposes
-    prefBranch = "mouse";
-    prefs = &sMouseEventRadiusPrefs;
-  } else {
-    return nullptr;
-  }
+    } else if (aEventClassID == eMouseEventClass) {
+      // Mostly for testing purposes
+      mEnabled = StaticPrefs::ui_mouse_radius_enabled();
+      mVisitedWeight = StaticPrefs::ui_mouse_radius_visitedWeight();
+      mRadiusTopmm = StaticPrefs::ui_mouse_radius_topmm();
+      mRadiusRightmm = StaticPrefs::ui_mouse_radius_rightmm();
+      mRadiusBottommm = StaticPrefs::ui_mouse_radius_bottommm();
+      mRadiusLeftmm = StaticPrefs::ui_mouse_radius_leftmm();
+      mTouchOnly = StaticPrefs::ui_mouse_radius_inputSource_touchOnly();
+      mReposition = StaticPrefs::ui_mouse_radius_reposition();
 
-  if (!prefs->mRegistered) {
-    prefs->mRegistered = true;
-
-    nsPrintfCString enabledPref("ui.%s.radius.enabled", prefBranch);
-    Preferences::AddBoolVarCache(&prefs->mEnabled, enabledPref, false);
-
-    nsPrintfCString visitedWeightPref("ui.%s.radius.visitedWeight", prefBranch);
-    Preferences::AddUintVarCache(&prefs->mVisitedWeight, visitedWeightPref,
-                                 100);
-
-    static const char prefNames[4][9] = {"topmm", "rightmm", "bottommm",
-                                         "leftmm"};
-    for (int32_t i = 0; i < 4; ++i) {
-      nsPrintfCString radiusPref("ui.%s.radius.%s", prefBranch, prefNames[i]);
-      Preferences::AddUintVarCache(&prefs->mSideRadii[i], radiusPref, 0);
-    }
-
-    if (aEventClassID == eMouseEventClass) {
-      Preferences::AddBoolVarCache(
-          &prefs->mTouchOnly, "ui.mouse.radius.inputSource.touchOnly", true);
     } else {
-      prefs->mTouchOnly = false;
+      mEnabled = false;
+      mVisitedWeight = 0;
+      mRadiusTopmm = 0;
+      mRadiusRightmm = 0;
+      mRadiusBottommm = 0;
+      mRadiusLeftmm = 0;
+      mTouchOnly = false;
+      mReposition = false;
     }
-
-    nsPrintfCString repositionPref("ui.%s.radius.reposition", prefBranch);
-    Preferences::AddBoolVarCache(&prefs->mRepositionEventCoords, repositionPref,
-                                 false);
   }
-
-  return prefs;
-}
+};
 
 static bool HasMouseListener(nsIContent* aContent) {
   if (EventListenerManager* elm = aContent->GetExistingListenerManager()) {
@@ -286,11 +274,11 @@ static nsRect ClipToFrame(RelativeTo aRootFrame, const nsIFrame* aFrame,
 static nsRect GetTargetRect(RelativeTo aRootFrame,
                             const nsPoint& aPointRelativeToRootFrame,
                             const nsIFrame* aRestrictToDescendants,
-                            const EventRadiusPrefs* aPrefs, uint32_t aFlags) {
-  nsMargin m(AppUnitsFromMM(aRootFrame, aPrefs->mSideRadii[0]),
-             AppUnitsFromMM(aRootFrame, aPrefs->mSideRadii[1]),
-             AppUnitsFromMM(aRootFrame, aPrefs->mSideRadii[2]),
-             AppUnitsFromMM(aRootFrame, aPrefs->mSideRadii[3]));
+                            const EventRadiusPrefs& aPrefs, uint32_t aFlags) {
+  nsMargin m(AppUnitsFromMM(aRootFrame, aPrefs.mRadiusTopmm),
+             AppUnitsFromMM(aRootFrame, aPrefs.mRadiusRightmm),
+             AppUnitsFromMM(aRootFrame, aPrefs.mRadiusBottommm),
+             AppUnitsFromMM(aRootFrame, aPrefs.mRadiusLeftmm));
   nsRect r(aPointRelativeToRootFrame, nsSize(0, 0));
   r.Inflate(m);
   if (!(aFlags & INPUT_IGNORE_ROOT_SCROLL_FRAME)) {
@@ -329,7 +317,9 @@ static float ComputeDistanceFromRegion(const nsPoint& aPoint,
 // exposed region get too complex or removes a big chunk of the exposed region.
 static void SubtractFromExposedRegion(nsRegion* aExposedRegion,
                                       const nsRegion& aRegion) {
-  if (aRegion.IsEmpty()) return;
+  if (aRegion.IsEmpty()) {
+    return;
+  }
 
   nsRegion tmp;
   tmp.Sub(*aExposedRegion, aRegion);
@@ -344,7 +334,7 @@ static void SubtractFromExposedRegion(nsRegion* aExposedRegion,
 static nsIFrame* GetClosest(RelativeTo aRoot,
                             const nsPoint& aPointRelativeToRootFrame,
                             const nsRect& aTargetRect,
-                            const EventRadiusPrefs* aPrefs,
+                            const EventRadiusPrefs& aPrefs,
                             const nsIFrame* aRestrictToDescendants,
                             nsIContent* aClickableAncestor,
                             nsTArray<nsIFrame*>& aCandidates) {
@@ -408,7 +398,7 @@ static nsIFrame* GetClosest(RelativeTo aRoot,
     if (content && content->IsElement() &&
         content->AsElement()->State().HasState(
             EventStates(NS_EVENT_STATE_VISITED))) {
-      distance *= aPrefs->mVisitedWeight / 100.0f;
+      distance *= aPrefs.mVisitedWeight / 100.0f;
     }
     if (distance < bestDistance) {
       PET_LOG("  candidate %p is the new best\n", f);
@@ -436,8 +426,8 @@ nsIFrame* FindFrameTargetedByInputEvent(
       mozilla::layers::Stringify(aPointRelativeToRootFrame).c_str(),
       ToString(aRootFrame).c_str());
 
-  const EventRadiusPrefs* prefs = GetPrefsFor(aEvent->mClass);
-  if (!prefs || !prefs->mEnabled || EventRetargetSuppression::IsActive()) {
+  EventRadiusPrefs prefs(aEvent->mClass);
+  if (!prefs.mEnabled || EventRetargetSuppression::IsActive()) {
     PET_LOG("Retargeting disabled\n");
     return target;
   }
@@ -456,7 +446,7 @@ nsIFrame* FindFrameTargetedByInputEvent(
 
   // Do not modify targeting for actual mouse hardware; only for mouse
   // events generated by touch-screen hardware.
-  if (aEvent->mClass == eMouseEventClass && prefs->mTouchOnly &&
+  if (aEvent->mClass == eMouseEventClass && prefs.mTouchOnly &&
       aEvent->AsMouseEvent()->mInputSource !=
           MouseEvent_Binding::MOZ_SOURCE_TOUCH) {
     PET_LOG("Mouse input event is not from a touch source\n");
@@ -499,7 +489,7 @@ nsIFrame* FindFrameTargetedByInputEvent(
   }
 #endif
 
-  if (!target || !prefs->mRepositionEventCoords) {
+  if (!target || !prefs.mReposition) {
     // No repositioning required for this event
     return target;
   }
