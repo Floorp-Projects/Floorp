@@ -493,9 +493,9 @@ sonatype-nexus:
     description: Sonatype Nexus Maven repository service
     fetch:
         type: static-url
-        url: https://download.sonatype.com/nexus/oss/nexus-2.12.0-01-bundle.tar.gz
-        sha256: bf3c02ef9cdea0e854e0feba85d74f79215db04b692aebbaea37e4caf83c7fcc
-        size: 71971402
+        url: https://download.sonatype.com/nexus/oss/nexus-2.14.18-01-bundle.tar.gz
+        sha256: 350af8b270bec7fda5861a15b8a5b7870fd8903d0b9a210754113d5a966ce6a6
+        size: 83493896
         artifact-name: sonatype-nexus.tar.zst
         strip-components: 1
         add-prefix: sonatype-nexus/
