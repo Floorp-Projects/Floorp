@@ -81,6 +81,11 @@ permalink: /changelog/
 * **browser-tabstray**:
   * ⚠️ **This is a breaking change**: `TabsAdapter` and `DefaultTabViewHolder` take an optional `ImageLoader` for loading browser thumbnails.
   * Fixed a bug in `TabsThumbnailView` where the `scaleFactor` was not applied all the time when expected.
+  
+* **browser-menu**:
+  * DynamicWidthRecyclerView will still be able to have a dynamic width between xml set minWidth and maxWidth attributes but we'll now enforce the following:
+    - minimum width 112 dp
+    - maximum width - screen width minus a 48dp tappable “exit area”
 
 # 44.0.0
 
