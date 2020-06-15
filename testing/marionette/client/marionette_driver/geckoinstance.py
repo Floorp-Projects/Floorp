@@ -89,6 +89,10 @@ class GeckoInstance(object):
         # Do not scan Wifi
         "geo.wifi.scan": False,
 
+        # Disable idle-daily notifications to avoid expensive operations
+        # that may cause unexpected test timeouts.
+        "idle.lastDailyNotification": -1,
+
         "javascript.options.showInConsole": True,
 
         # (deprecated and can be removed when Firefox 60 ships)
@@ -198,7 +202,7 @@ class GeckoInstance(object):
         self._update_profile(value)
 
     def _update_profile(self, profile=None, profile_name=None):
-        """Check if the profile has to be created, or replaced
+        """Check if the profile has to be created, or replaced.
 
         :param profile: A Profile instance to be used.
         :param name: Profile name to be used in the path.
