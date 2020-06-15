@@ -119,9 +119,9 @@ def chunk_manifests(suite, platform, chunks, manifests):
         that run in that chunk.
     """
     manifests = set(manifests)
+    runtimes = {k: v for k, v in get_runtimes(platform, suite).items() if k in manifests}
 
     if "web-platform-tests" not in suite:
-        runtimes = {k: v for k, v in get_runtimes(platform, suite).items() if k in manifests}
         return [
             c[1] for c in chunk_by_runtime(
                 None,
@@ -130,19 +130,52 @@ def chunk_manifests(suite, platform, chunks, manifests):
             ).get_chunked_manifests(manifests)
         ]
 
+    paths = {k: v for k, v in wpt_group_translation.items() if k in manifests}
+
+    # Python2 does not support native dictionary sorting, so use an OrderedDict
+    # instead, appending in order of highest to lowest runtime.
+    runtimes = OrderedDict(sorted(runtimes.items(), key=lambda x: x[1], reverse=True))
+
     # Keep track of test paths for each chunk, and the runtime information.
-    chunked_manifests = [[] for _ in range(chunks)]
+    chunked_manifests = [[[], 0] for _ in range(chunks)]
 
-    # Spread out the test manifests evenly across all chunks.
-    for index, key in enumerate(sorted(manifests)):
-        chunked_manifests[index % chunks].append(key)
+    # Begin chunking the test paths in order from highest running time to lowest.
+    # The keys of runtimes dictionary should match the keys of the test paths
+    # dictionary.
+    for key, rt in runtimes.items():
+        # Sort the chunks from fastest to slowest, based on runtime info
+        # at x[1], then the number of test paths.
+        chunked_manifests.sort(key=lambda x: (x[1], len(x[0])))
 
-    # One last sort by the number of manifests. Chunk size should be more or less
-    # equal in size.
-    chunked_manifests.sort(key=lambda x: len(x))
+        # Look up if there are any test paths under the key in the paths dict.
+        test_paths = paths[key]
+
+        if test_paths:
+            # Add the full set of paths that live under the key and increase the
+            # total runtime counter by the value reported in runtimes.
+            chunked_manifests[0][0].extend(test_paths)
+            # chunked_manifests[0][0].append(key)
+            chunked_manifests[0][1] += rt
+            # Remove the key and test_paths since it has been scheduled.
+            paths.pop(key)
+            # Same goes for the value in runtimes dict.
+            runtimes.pop(key)
+
+    # Sort again prior to the next step.
+    chunked_manifests.sort(key=lambda x: (x[1], len(x[0])))
+
+    # Spread out the remaining test paths that were not scheduled in the previous
+    # step. Such paths did not have runtime information associated, likely due to
+    # implementation status.
+    for index, key in enumerate(paths.keys()):
+        # Append both the key and value in case the value is empty.
+        chunked_manifests[index % chunks][0].append(key)
+
+    # One last sort by the runtime, then number of test paths.
+    chunked_manifests.sort(key=lambda x: (x[1], len(x[0])))
 
     # Return just the chunked test paths.
-    return chunked_manifests
+    return [c[0] for c in chunked_manifests]
 
 
 @six.add_metaclass(ABCMeta)
@@ -177,6 +210,29 @@ class BaseManifestLoader(object):
 class DefaultLoader(BaseManifestLoader):
     """Load manifests using metadata from the TestResolver."""
 
+    @classmethod
+    def get_wpt_group(cls, test):
+        """Get the group for a web-platform-test that matches those created by the
+        WPT harness.
+
+        Args:
+            test (dict): The test object to compute the group for.
+
+        Returns:
+            str: Label representing the group name.
+        """
+        depth = 3
+
+        path = os.path.dirname(test['name'])
+        # Remove path elements beyond depth of 3, because WPT harness uses
+        # --run-by-dir=3 by convention in Mozilla CI.
+        # Note, this means /_mozilla tests retain an effective depth of 2 due to
+        # the extra prefix element.
+        while path.count('/') >= depth + 1:
+            path = os.path.dirname(path)
+
+        return path
+
     @memoize
     def get_tests(self, suite):
         suite_definition = TEST_SUITES[suite]
@@ -194,7 +250,10 @@ class DefaultLoader(BaseManifestLoader):
         if "web-platform-tests" in suite:
             manifests = set()
             for t in tests:
+                group = self.get_wpt_group(t)
+                wpt_group_translation[t['manifest']].add(group)
                 manifests.add(t['manifest'])
+
             return {"active": list(manifests), "skipped": []}
 
         manifests = set(chunk_by_runtime.get_manifest(t) for t in tests)
