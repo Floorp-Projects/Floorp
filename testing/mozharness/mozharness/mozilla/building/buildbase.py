@@ -835,6 +835,10 @@ items from that key's value."
             self.info("Not a nightly build, skipping multi l10n.")
             return
 
+        if os.environ.get('USE_ARTIFACT'):
+            self.info("Artifact build, skipping multi l10n.")
+            return
+
         dirs = self.query_abs_dirs()
         base_work_dir = dirs['base_work_dir']
         work_dir = dirs['abs_work_dir']
