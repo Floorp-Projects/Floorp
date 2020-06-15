@@ -20,14 +20,14 @@ add_task(async function() {
   let menupopup = document.getElementById("pageStyleMenu").menupopup;
   gPageStyleMenu.fillPopup(menupopup);
 
-  var items = [];
-  var current = menupopup.getElementsByTagName("menuseparator")[0];
+  let menuitems = [];
+  let current = menupopup.querySelector("menuseparator");
   while (current.nextElementSibling) {
     current = current.nextElementSibling;
-    items.push(current);
+    menuitems.push(current);
   }
 
-  items = items.map(el => ({
+  let items = menuitems.map(el => ({
     label: el.getAttribute("label"),
     checked: el.getAttribute("checked") == "true",
   }));
@@ -37,57 +37,84 @@ add_task(async function() {
     [items],
     function(contentItems) {
       let contentValidLinks = 0;
-      Array.prototype.forEach.call(
-        content.document.querySelectorAll("link, style"),
-        function(el) {
-          var title = el.getAttribute("title");
-          var rel = el.getAttribute("rel");
-          var media = el.getAttribute("media");
-          var idstring =
-            el.nodeName +
-            " " +
-            (title ? title : "without title and") +
-            ' with rel="' +
-            rel +
-            '"' +
-            (media ? ' and media="' + media + '"' : "");
+      for (let el of content.document.querySelectorAll("link, style")) {
+        var title = el.getAttribute("title");
+        var rel = el.getAttribute("rel");
+        var media = el.getAttribute("media");
+        var idstring =
+          el.nodeName +
+          " " +
+          (title ? title : "without title and") +
+          ' with rel="' +
+          rel +
+          '"' +
+          (media ? ' and media="' + media + '"' : "");
 
-          var item = contentItems.filter(aItem => aItem.label == title);
-          var found = item.length == 1;
-          var checked = found && item[0].checked;
+        var item = contentItems.filter(aItem => aItem.label == title);
+        var found = item.length == 1;
+        var checked = found && item[0].checked;
 
-          switch (el.getAttribute("data-state")) {
-            case "0":
-              ok(!found, idstring + " should not show up in page style menu");
-              break;
-            case "0-todo":
-              contentValidLinks++;
-              todo(!found, idstring + " should not show up in page style menu");
-              ok(!checked, idstring + " should not be selected");
-              break;
-            case "1":
-              contentValidLinks++;
-              ok(found, idstring + " should show up in page style menu");
-              ok(!checked, idstring + " should not be selected");
-              break;
-            case "2":
-              contentValidLinks++;
-              ok(found, idstring + " should show up in page style menu");
-              ok(checked, idstring + " should be selected");
-              break;
-            default:
-              throw new Error(
-                "data-state attribute is missing or has invalid value"
-              );
-          }
+        switch (el.getAttribute("data-state")) {
+          case "0":
+            ok(!found, idstring + " should not show up in page style menu");
+            break;
+          case "1":
+            contentValidLinks++;
+            ok(found, idstring + " should show up in page style menu");
+            ok(!checked, idstring + " should not be selected");
+            break;
+          case "2":
+            contentValidLinks++;
+            ok(found, idstring + " should show up in page style menu");
+            ok(checked, idstring + " should be selected");
+            break;
+          default:
+            throw new Error(
+              "data-state attribute is missing or has invalid value"
+            );
         }
-      );
+      }
       return contentValidLinks;
     }
   );
 
-  ok(items.length, "At least one item in the menu");
-  is(items.length, validLinks, "all valid links found");
+  ok(menuitems.length, "At least one item in the menu");
+  is(menuitems.length, validLinks, "all valid links found");
+
+  function getRootColor() {
+    return SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+      return content.document.defaultView.getComputedStyle(content.document.documentElement).color;
+    });
+  }
+
+  is(await getRootColor(), "rgb(0, 255, 0)", "Root should be lime (styles should apply)");
+
+  let disableStyles = document.getElementById("menu_pageStyleNoStyle");
+  let defaultStyles = document.getElementById("menu_pageStylePersistentOnly");
+  let otherStyles = menuitems[menuitems.length - 1];
+
+  // Assert that the menu works as expected.
+  disableStyles.click();
+
+  await TestUtils.waitForCondition(async function() {
+    let color = await getRootColor();
+    return color != "rgb(0, 255, 0)" && color != "rgb(0, 0, 255)";
+  }, "ensuring disabled styles work");
+
+  otherStyles.click();
+
+  await TestUtils.waitForCondition(async function() {
+    let color = await getRootColor();
+    return color == "rgb(0, 0, 255)";
+  }, "ensuring alternate styles work. clicking on: " + otherStyles.label);
+
+  defaultStyles.click();
+
+  info("ensuring default styles work");
+  await TestUtils.waitForCondition(async function() {
+    let color = await getRootColor();
+    return color == "rgb(0, 255, 0)";
+  }, "ensuring default styles work");
 
   BrowserTestUtils.removeTab(tab);
 });
