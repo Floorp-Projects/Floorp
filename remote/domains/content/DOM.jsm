@@ -78,6 +78,11 @@ class DOM extends ContentProcessDomain {
       }
     }
 
+    let context = this.docShell.browsingContext;
+    if (unsafeObj instanceof HTMLIFrameElement) {
+      context = unsafeObj.contentWindow.docShell.browsingContext;
+    }
+
     const node = {
       nodeId: debuggerObj.nodeId,
       backendNodeId: debuggerObj.nodeId,
@@ -87,7 +92,7 @@ class DOM extends ContentProcessDomain {
       nodeValue: unsafeObj.nodeValue ? unsafeObj.nodeValue.toString() : "",
       childNodeCount: unsafeObj.childElementCount,
       attributes: attributes.length > 0 ? attributes : undefined,
-      frameId: this.docShell.browsingContext.id.toString(),
+      frameId: context.id.toString(),
     };
 
     return { node };
