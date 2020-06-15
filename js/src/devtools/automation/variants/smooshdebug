@@ -3,7 +3,7 @@
     "debug": true,
     "compiler": "clang",
     "env": {
-        "JSTESTS_EXTRA_ARGS": "--args='--smoosh' --jitflags=debug",
+        "JSTESTS_EXTRA_ARGS": "--args='--smoosh' --jitflags=debug --exclude-file={DIR}/smoosh-jstests-slow.txt",
         "JITTEST_EXTRA_ARGS": "--args='--smoosh'"
     },
     "conditional-configure-args": {
