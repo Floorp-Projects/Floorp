@@ -375,10 +375,13 @@ class AbsoluteSymlinkFile(File):
 
         # Handle the simple case where symlinks are definitely not supported by
         # falling back to file copy.
-        # Python 3 supports symlinks on Windows, but for some reason, this has
-        # weird consequences on automation (but not in a local build). Exclude
-        # Windows for now until we figure out what the cause is.
-        if not hasattr(os, 'symlink') or platform.system() == 'Windows':
+        # Python 3 supports symlinks on Windows, but for some reason, some JS
+        # files fail to be loaded with permission errors only when they are
+        # symlinks as of May 2020 update. Exclude them for now until we figure
+        # out the cause.
+        js_on_windows = platform.system() == 'Windows' and \
+            self.path.endswith((".js", ".jsm"))
+        if not hasattr(os, 'symlink') or js_on_windows:
             return File.copy(self, dest, skip_if_older=skip_if_older)
 
         # Always verify the symlink target path exists.
