@@ -22,21 +22,8 @@ class AppRequestInterceptor(private val context: Context) : RequestInterceptor {
         hasUserGesture: Boolean,
         isSameDomain: Boolean
     ): RequestInterceptor.InterceptionResponse? {
-        var result: RequestInterceptor.InterceptionResponse? = null
-
-        // WebChannel-driven authentication does not require a separate redirect interceptor.
-        @Suppress("ConstantConditionIf")
-        if (FeatureFlags.asFeatureWebChannelsDisabled) {
-            result = context.components.services.accountsAuthFeature.interceptor.onLoadRequest(
-                    engineSession, uri, hasUserGesture, isSameDomain)
-        }
-
-        if (result == null) {
-            result = context.components.services.appLinksInterceptor.onLoadRequest(
-                engineSession, uri, hasUserGesture, isSameDomain)
-        }
-
-        return result
+        return context.components.services.appLinksInterceptor
+            .onLoadRequest(engineSession, uri, hasUserGesture, isSameDomain)
     }
 
     override fun onErrorRequest(

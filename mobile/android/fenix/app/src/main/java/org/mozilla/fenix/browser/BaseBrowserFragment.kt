@@ -560,22 +560,19 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                 view.swipeRefresh.setOnChildScrollUpCallback { _, _ -> true }
             }
 
-            @Suppress("ConstantConditionIf")
-            if (!FeatureFlags.asFeatureWebChannelsDisabled) {
-                webchannelIntegration.set(
-                    feature = FxaWebChannelFeature(
-                        requireContext(),
-                        customTabSessionId,
-                        requireComponents.core.engine,
-                        requireComponents.core.store,
-                        requireComponents.backgroundServices.accountManager,
-                        requireComponents.backgroundServices.serverConfig,
-                        setOf(FxaCapability.CHOOSE_WHAT_TO_SYNC)
-                    ),
-                    owner = this,
-                    view = view
-                )
-            }
+            webchannelIntegration.set(
+                feature = FxaWebChannelFeature(
+                    requireContext(),
+                    customTabSessionId,
+                    requireComponents.core.engine,
+                    requireComponents.core.store,
+                    requireComponents.backgroundServices.accountManager,
+                    requireComponents.backgroundServices.serverConfig,
+                    setOf(FxaCapability.CHOOSE_WHAT_TO_SYNC)
+                ),
+                owner = this,
+                view = view
+            )
 
             initializeEngineView(toolbarHeight)
         }

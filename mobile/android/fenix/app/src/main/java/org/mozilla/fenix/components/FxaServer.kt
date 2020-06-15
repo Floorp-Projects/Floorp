@@ -6,7 +6,6 @@ package org.mozilla.fenix.components
 import android.content.Context
 import mozilla.components.service.fxa.ServerConfig
 import mozilla.components.service.fxa.ServerConfig.Server
-import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.ext.settings
 
 /**
@@ -14,22 +13,16 @@ import org.mozilla.fenix.ext.settings
  */
 
 object FxaServer {
-    const val CLIENT_ID = "a2270f727f45f648"
-    const val REDIRECT_URL = "https://accounts.firefox.com/oauth/success/$CLIENT_ID"
+    private const val CLIENT_ID = "a2270f727f45f648"
 
-    @Suppress("ConstantConditionIf", "UNUSED_PARAMETER")
-    fun redirectUrl(context: Context) = if (FeatureFlags.asFeatureWebChannelsDisabled) {
-        REDIRECT_URL
-    } else {
-        "urn:ietf:wg:oauth:2.0:oob:oauth-redirect-webchannel"
-    }
+    fun redirectUrl() = "urn:ietf:wg:oauth:2.0:oob:oauth-redirect-webchannel"
 
     fun config(context: Context): ServerConfig {
         val serverOverride = context.settings().overrideFxAServer
         val tokenServerOverride = context.settings().overrideSyncTokenServer.ifEmpty { null }
         if (serverOverride.isEmpty()) {
-            return ServerConfig(Server.RELEASE, CLIENT_ID, redirectUrl(context), tokenServerOverride)
+            return ServerConfig(Server.RELEASE, CLIENT_ID, redirectUrl(), tokenServerOverride)
         }
-        return ServerConfig(serverOverride, CLIENT_ID, redirectUrl(context), tokenServerOverride)
+        return ServerConfig(serverOverride, CLIENT_ID, redirectUrl(), tokenServerOverride)
     }
 }

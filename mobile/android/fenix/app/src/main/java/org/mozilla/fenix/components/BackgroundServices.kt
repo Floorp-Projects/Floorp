@@ -84,20 +84,12 @@ class BackgroundServices(
     // If sync has been turned off on the server then disable syncing.
     @Suppress("ConstantConditionIf")
     @VisibleForTesting(otherwise = PRIVATE)
-    val syncConfig = if (FeatureFlags.asFeatureSyncDisabled) {
-        null
+    val supportedEngines = if (FeatureFlags.syncedTabs) {
+        setOf(SyncEngine.History, SyncEngine.Bookmarks, SyncEngine.Passwords, SyncEngine.Tabs)
     } else {
-
-        val supportedEngines = if (FeatureFlags.syncedTabs) {
-            setOf(SyncEngine.History, SyncEngine.Bookmarks, SyncEngine.Passwords, SyncEngine.Tabs)
-        } else {
-            setOf(SyncEngine.History, SyncEngine.Bookmarks, SyncEngine.Passwords)
-        }
-
-        SyncConfig(
-            supportedEngines,
-            syncPeriodInMinutes = 240L) // four hours
+        setOf(SyncEngine.History, SyncEngine.Bookmarks, SyncEngine.Passwords)
     }
+    private val syncConfig = SyncConfig(supportedEngines, syncPeriodInMinutes = 240L) // four hours
 
     init {
         /* Make the "history", "bookmark", "passwords", and "tabs" stores accessible to workers
