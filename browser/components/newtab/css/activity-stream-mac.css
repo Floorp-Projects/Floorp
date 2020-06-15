@@ -2052,7 +2052,7 @@ main {
     grid-template-columns: auto; }
 
 .ds-dismiss.ds-dismiss-ds-collection .ds-dismiss-button {
-  margin: 26px 0 0;
+  margin: 15px 0 0;
   inset-inline-end: 25px; }
 
 .ds-dismiss.ds-dismiss-ds-collection.hovering {
@@ -2064,7 +2064,8 @@ main {
   .ds-collection-card-grid .story-footer {
     display: none; }
   .ds-collection-card-grid .ds-header {
-    padding: 0 40px 0 0; }
+    padding: 0 40px 0 0;
+    margin-bottom: 12px; }
     .ds-collection-card-grid .ds-header .title {
       color: #0C0C0D;
       font-weight: 600;
