@@ -207,4 +207,22 @@ interface nsIBrowser : nsISupports
   Promise performProcessSwitch(in AString aRemoteType,
                                in uint64_t aPendingSwitchId,
                                in boolean aReplaceBrowsingContext);
+
+  /**
+   * Called to perform any async tasks which must be completed before changing
+   * remoteness. Gecko will wait for the returned promise to resolve before
+   * performing the process switch.
+   */
+  Promise prepareToChangeRemoteness();
+
+  /** Called immediately before changing remoteness */
+  void beforeChangeRemoteness();
+
+  /**
+   * Called immediately after changing remoteness.
+   *
+   * If this method returns `true`, Gecko will assume frontend handled resuming
+   * the load, and will not attempt to resume the load itself.
+   */
+  bool finishChangeRemoteness(in uint64_t aPendingSwitchId);
 };

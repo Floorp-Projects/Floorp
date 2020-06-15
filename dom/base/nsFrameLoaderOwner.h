@@ -69,7 +69,6 @@ class nsFrameLoaderOwner : public nsISupports {
   // If `aReplaceBrowsingContext` is set, BrowsingContext preservation will be
   // disabled for this process switch.
   void ChangeRemotenessToProcess(mozilla::dom::ContentParent* aContentParent,
-                                 uint64_t aPendingSwitchId,
                                  bool aReplaceBrowsingContext,
                                  mozilla::ErrorResult& rv);
 
