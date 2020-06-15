@@ -623,9 +623,9 @@ void nsINode::LastRelease() {
   nsINode::nsSlots* slots = GetExistingSlots();
   if (slots) {
     if (!slots->mMutationObservers.IsEmpty()) {
-      NS_OBSERVER_AUTO_ARRAY_NOTIFY_OBSERVERS(slots->mMutationObservers,
-                                              nsIMutationObserver, 1,
-                                              NodeWillBeDestroyed, (this));
+      NS_OBSERVER_ARRAY_NOTIFY_OBSERVERS(slots->mMutationObservers,
+                                         nsIMutationObserver,
+                                         NodeWillBeDestroyed, (this));
     }
 
     delete slots;
