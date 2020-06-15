@@ -131,9 +131,15 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   void LoadURI(const nsAString& aURI, const LoadURIOptions& aOptions,
                ErrorResult& aError);
 
+  // Internal method to change which process a BrowsingContext is being loaded
+  // in. The returned promise will resolve when the process switch is completed.
+  //
+  // A VoidString() aRemoteType argument will perform a process switch into the
+  // parent process, and the method will resolve with a null BrowserParent.
   using RemotenessPromise = MozPromise<RefPtr<BrowserParent>, nsresult, false>;
-  RefPtr<RemotenessPromise> ChangeFrameRemoteness(const nsAString& aRemoteType,
-                                                  uint64_t aPendingSwitchId);
+  RefPtr<RemotenessPromise> ChangeRemoteness(const nsAString& aRemoteType,
+                                             uint64_t aPendingSwitchId,
+                                             bool aReplaceBrowsingContext);
 
   // Return a media controller from the top-level browsing context that can
   // control all media belonging to this browsing context tree. Return nullptr
@@ -175,13 +181,11 @@ class CanonicalBrowsingContext final : public BrowsingContext {
 
     PendingRemotenessChange(CanonicalBrowsingContext* aTarget,
                             RemotenessPromise::Private* aPromise,
-                            uint64_t aPendingSwitchId)
-        : mTarget(aTarget),
-          mPromise(aPromise),
-          mPendingSwitchId(aPendingSwitchId) {}
+                            uint64_t aPendingSwitchId,
+                            bool aReplaceBrowsingContext);
 
     void Cancel(nsresult aRv);
-    void Complete(ContentParent* aContentParent);
+    void ProcessReady(ContentParent* aContentParent);
 
    private:
     ~PendingRemotenessChange();
@@ -191,6 +195,7 @@ class CanonicalBrowsingContext final : public BrowsingContext {
     RefPtr<RemotenessPromise::Private> mPromise;
 
     uint64_t mPendingSwitchId;
+    bool mReplaceBrowsingContext;
   };
 
   friend class net::DocumentLoadListener;
