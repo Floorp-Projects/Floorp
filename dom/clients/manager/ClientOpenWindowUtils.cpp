@@ -236,26 +236,51 @@ void WaitForLoad(const ClientOpenWindowArgsParsed& aArgsValidated,
   MOZ_DIAGNOSTIC_ASSERT(aBrowsingContext);
 
   RefPtr<ClientOpPromise::Private> promise = aPromise;
-  // We can get a WebProgress off of
-  // the BrowsingContext for the <xul:browser> to listen for content
-  // events. Note that this WebProgress filters out events which don't have
-  // STATE_IS_NETWORK or STATE_IS_REDIRECTED_DOCUMENT set on them, and so this
-  // listener will only see some web progress events.
-  nsCOMPtr<nsIWebProgress> webProgress =
-      aBrowsingContext->Canonical()->GetWebProgress();
-  if (NS_WARN_IF(!webProgress)) {
-    CopyableErrorResult result;
-    result.ThrowInvalidStateError("Unable to watch window for navigation");
-    promise->Reject(result, __func__);
-    return;
+  nsresult rv;
+  nsCOMPtr<nsIWebProgress> webProgress;
+  if (nsIDocShell* docShell = aBrowsingContext->GetDocShell()) {
+    // We're dealing with a non-remote frame. We have access to an nsDocShell,
+    // so we can just pull the nsIWebProgress off of that.
+    webProgress = nsDocShell::Cast(docShell);
+    nsFocusManager::FocusWindow(aBrowsingContext->GetDOMWindow(),
+                                CallerType::NonSystem);
+  } else {
+    // We're dealing with a remote frame. We can get a RemoteWebProgress off of
+    // the <xul:browser> that embeds |aBrowsingContext| to listen for content
+    // events. Note that RemoteWebProgress filters out events which don't have
+    // STATE_IS_NETWORK or STATE_IS_REDIRECTED_DOCUMENT set on them, and so this
+    // listener will only see some web progress events.
+    nsCOMPtr<Element> element = aBrowsingContext->GetEmbedderElement();
+    if (NS_WARN_IF(!element)) {
+      CopyableErrorResult result;
+      result.ThrowInvalidStateError("Unable to watch window for navigation");
+      promise->Reject(result, __func__);
+      return;
+    }
+
+    nsCOMPtr<nsIBrowser> browser = element->AsBrowser();
+    if (NS_WARN_IF(!browser)) {
+      CopyableErrorResult result;
+      result.ThrowInvalidStateError("Unable to watch window for navigation");
+      promise->Reject(result, __func__);
+      return;
+    }
+
+    rv = browser->GetRemoteWebProgressManager(getter_AddRefs(webProgress));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      CopyableErrorResult result;
+      result.ThrowInvalidStateError("Unable to watch window for navigation");
+      promise->Reject(result, __func__);
+      return;
+    }
   }
 
   // Add a progress listener before we start the load of the service worker URI
   RefPtr<WebProgressListener> listener = new WebProgressListener(
       aBrowsingContext, aArgsValidated.baseURI, do_AddRef(promise));
 
-  nsresult rv = webProgress->AddProgressListener(
-      listener, nsIWebProgress::NOTIFY_STATE_WINDOW);
+  rv = webProgress->AddProgressListener(listener,
+                                        nsIWebProgress::NOTIFY_STATE_WINDOW);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     CopyableErrorResult result;
     // XXXbz Can we throw something better here?

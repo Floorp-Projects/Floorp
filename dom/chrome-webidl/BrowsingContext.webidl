@@ -5,7 +5,6 @@
 
 interface nsIDocShell;
 interface nsISecureBrowserUI;
-interface nsIWebProgress;
 
 interface mixin LoadContextMixin {
   readonly attribute WindowProxy? associatedWindow;
@@ -128,15 +127,6 @@ interface CanonicalBrowsingContext : BrowsingContext {
   void notifyMediaMutedChanged(boolean muted);
 
   readonly attribute nsISecureBrowserUI? secureBrowserUI;
-
-  /**
-   * Returns an nsIWebProgress object for this BrowsingContext, if this
-   * is a top-level content BC.
-   *
-   * Progress listeners attached to this will get notifications filtered by
-   * nsBrowserStatusFilter, and don't get any notifications from sub frames.
-   */
-  readonly attribute nsIWebProgress? webProgress;
 
   static unsigned long countSiteOrigins(sequence<BrowsingContext> roots);
 
