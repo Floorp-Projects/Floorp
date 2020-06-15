@@ -271,14 +271,12 @@ uint8_t GLContext::ChooseDebugFlags(const CreateContextFlags createFlags) {
   return debugFlags;
 }
 
-GLContext::GLContext(CreateContextFlags flags, const SurfaceCaps& caps,
-                     GLContext* sharedContext, bool isOffscreen,
+GLContext::GLContext(const GLContextDesc& desc, GLContext* sharedContext,
                      bool useTLSIsCurrent)
-    : mUseTLSIsCurrent(ShouldUseTLSIsCurrent(useTLSIsCurrent)),
-      mIsOffscreen(isOffscreen),
-      mDebugFlags(ChooseDebugFlags(flags)),
+    : mDesc(desc),
+      mUseTLSIsCurrent(ShouldUseTLSIsCurrent(useTLSIsCurrent)),
+      mDebugFlags(ChooseDebugFlags(mDesc.flags)),
       mSharedContext(sharedContext),
-      mCaps(caps),
       mWorkAroundDriverBugs(
           StaticPrefs::gfx_work_around_driver_bugs_AtStartup()) {
   mOwningThreadId = PlatformThread::CurrentId();
@@ -921,14 +919,6 @@ bool GLContext::InitImpl() {
 
   // We're ready for final setup.
   fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, 0);
-
-  // TODO: Remove SurfaceCaps::any.
-  if (mCaps.any) {
-    mCaps.any = false;
-    mCaps.color = true;
-    mCaps.alpha = false;
-  }
-
   MOZ_GL_ASSERT(this, IsCurrent());
 
   if (ShouldSpew() && IsExtensionSupported(KHR_debug)) {
@@ -1710,71 +1700,6 @@ bool GLContext::ListHasExtension(const GLubyte* extensions,
   return false;
 }
 
-GLFormats GLContext::ChooseGLFormats(const SurfaceCaps& caps) const {
-  GLFormats formats;
-
-  // If we're on ES2 hardware and we have an explicit request for 16 bits of
-  // color or less OR we don't support full 8-bit color, return a 4444 or 565
-  // format.
-  bool bpp16 = caps.bpp16;
-  if (IsGLES()) {
-    if (!IsExtensionSupported(OES_rgb8_rgba8)) bpp16 = true;
-  } else {
-    // RGB565 is uncommon on desktop, requiring ARB_ES2_compatibility.
-    // Since it's also vanishingly useless there, let's not support it.
-    bpp16 = false;
-  }
-
-  if (bpp16) {
-    MOZ_ASSERT(IsGLES());
-    if (caps.alpha) {
-      formats.color_texInternalFormat = LOCAL_GL_RGBA;
-      formats.color_texFormat = LOCAL_GL_RGBA;
-      formats.color_texType = LOCAL_GL_UNSIGNED_SHORT_4_4_4_4;
-      formats.color_rbFormat = LOCAL_GL_RGBA4;
-    } else {
-      formats.color_texInternalFormat = LOCAL_GL_RGB;
-      formats.color_texFormat = LOCAL_GL_RGB;
-      formats.color_texType = LOCAL_GL_UNSIGNED_SHORT_5_6_5;
-      formats.color_rbFormat = LOCAL_GL_RGB565;
-    }
-  } else {
-    formats.color_texType = LOCAL_GL_UNSIGNED_BYTE;
-
-    if (caps.alpha) {
-      formats.color_texInternalFormat =
-          IsGLES() ? LOCAL_GL_RGBA : LOCAL_GL_RGBA8;
-      formats.color_texFormat = LOCAL_GL_RGBA;
-      formats.color_rbFormat = LOCAL_GL_RGBA8;
-    } else {
-      formats.color_texInternalFormat = IsGLES() ? LOCAL_GL_RGB : LOCAL_GL_RGB8;
-      formats.color_texFormat = LOCAL_GL_RGB;
-      formats.color_rbFormat = LOCAL_GL_RGB8;
-    }
-  }
-
-  // Be clear that these are 0 if unavailable.
-  formats.depthStencil = 0;
-  if (IsSupported(GLFeature::packed_depth_stencil)) {
-    formats.depthStencil = LOCAL_GL_DEPTH24_STENCIL8;
-  }
-
-  formats.depth = 0;
-  if (IsGLES()) {
-    if (IsExtensionSupported(OES_depth24)) {
-      formats.depth = LOCAL_GL_DEPTH_COMPONENT24;
-    } else {
-      formats.depth = LOCAL_GL_DEPTH_COMPONENT16;
-    }
-  } else {
-    formats.depth = LOCAL_GL_DEPTH_COMPONENT24;
-  }
-
-  formats.stencil = LOCAL_GL_STENCIL_INDEX8;
-
-  return formats;
-}
-
 bool GLContext::IsFramebufferComplete(GLuint fb, GLenum* pStatus) {
   MOZ_ASSERT(fb);
 
@@ -1861,7 +1786,7 @@ bool GLContext::AssembleOffscreenFBs(const GLuint colorMSRB,
   } else {
     drawFB = readFB;
   }
-  MOZ_ASSERT(GetFB() == drawFB);
+  MOZ_ASSERT(GetIntAs<GLuint>(LOCAL_GL_FRAMEBUFFER_BINDING) == drawFB);
 
   if (depthRB) {
     fFramebufferRenderbuffer(LOCAL_GL_FRAMEBUFFER, LOCAL_GL_DEPTH_ATTACHMENT,
@@ -1919,7 +1844,6 @@ void GLContext::MarkDestroyed() {
 
   // Null these before they're naturally nulled after dtor, as we want GLContext
   // to still be alive in *their* dtors.
-  mScreen = nullptr;
   mBlitHelper = nullptr;
   mReadTexImageHelper = nullptr;
 
@@ -2109,54 +2033,6 @@ void GLContext::ReportOutstandingNames() {
 
 #endif /* DEBUG */
 
-void GLContext::GuaranteeResolve() { fFinish(); }
-
-const gfx::IntSize& GLContext::OffscreenSize() const {
-  MOZ_ASSERT(IsOffscreen());
-  return mScreen->Size();
-}
-
-bool GLContext::CreateScreenBufferImpl(const IntSize& size,
-                                       const SurfaceCaps& caps) {
-  UniquePtr<GLScreenBuffer> newScreen =
-      GLScreenBuffer::Create(this, size, caps);
-  if (!newScreen) return false;
-
-  if (!newScreen->Resize(size)) {
-    return false;
-  }
-
-  // This will rebind to 0 (Screen) if needed when
-  // it falls out of scope.
-  ScopedBindFramebuffer autoFB(this);
-
-  mScreen = std::move(newScreen);
-
-  return true;
-}
-
-bool GLContext::ResizeScreenBuffer(const IntSize& size) {
-  if (!IsOffscreenSizeAllowed(size)) return false;
-
-  return mScreen->Resize(size);
-}
-
-void GLContext::ForceDirtyScreen() {
-  ScopedBindFramebuffer autoFB(0);
-
-  BeforeGLDrawCall();
-  // no-op; just pretend we did something
-  AfterGLDrawCall();
-}
-
-void GLContext::CleanDirtyScreen() {
-  ScopedBindFramebuffer autoFB(0);
-
-  BeforeGLReadCall();
-  // no-op; we just want to make sure the Read FBO is updated if it needs to be
-  AfterGLReadCall();
-}
-
 bool GLContext::IsOffscreenSizeAllowed(const IntSize& aSize) const {
   int32_t biggerDimension = std::max(aSize.width, aSize.height);
   int32_t maxAllowed = std::min(mMaxRenderbufferSize, mMaxTextureSize);
@@ -2234,119 +2110,6 @@ void SplitByChar(const nsACString& str, const char delim,
   out->push_back(nsCString(substr));
 }
 
-bool GLContext::Readback(SharedSurface* src, gfx::DataSourceSurface* dest) {
-  MOZ_ASSERT(src && dest);
-  MOZ_ASSERT(dest->GetSize() == src->mSize);
-
-  if (!MakeCurrent()) {
-    return false;
-  }
-
-  SharedSurface* prev = GetLockedSurface();
-
-  const bool needsSwap = src != prev;
-  if (needsSwap) {
-    if (prev) prev->UnlockProd();
-    src->LockProd();
-  }
-
-  GLuint tempFB = 0;
-  GLuint tempTex = 0;
-
-  {
-    ScopedBindFramebuffer autoFB(this);
-
-    // We're consuming from the producer side, so which do we use?
-    // Really, we just want a read-only lock, so ConsumerAcquire is the best
-    // match.
-    src->ProducerReadAcquire();
-
-    if (src->mAttachType == AttachmentType::Screen) {
-      fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, 0);
-    } else {
-      fGenFramebuffers(1, &tempFB);
-      fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, tempFB);
-
-      switch (src->mAttachType) {
-        case AttachmentType::GLTexture:
-          fFramebufferTexture2D(
-              LOCAL_GL_FRAMEBUFFER, LOCAL_GL_COLOR_ATTACHMENT0,
-              src->ProdTextureTarget(), src->ProdTexture(), 0);
-          break;
-        case AttachmentType::GLRenderbuffer:
-          fFramebufferRenderbuffer(
-              LOCAL_GL_FRAMEBUFFER, LOCAL_GL_COLOR_ATTACHMENT0,
-              LOCAL_GL_RENDERBUFFER, src->ProdRenderbuffer());
-          break;
-        default:
-          MOZ_CRASH("GFX: bad `src->mAttachType`.");
-      }
-
-      DebugOnly<GLenum> status = fCheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER);
-      MOZ_GL_ASSERT(this, status == LOCAL_GL_FRAMEBUFFER_COMPLETE);
-    }
-
-    if (src->NeedsIndirectReads()) {
-      fGenTextures(1, &tempTex);
-      {
-        ScopedBindTexture autoTex(this, tempTex);
-
-        GLenum format = src->mHasAlpha ? LOCAL_GL_RGBA : LOCAL_GL_RGB;
-        auto width = src->mSize.width;
-        auto height = src->mSize.height;
-        fCopyTexImage2D(LOCAL_GL_TEXTURE_2D, 0, format, 0, 0, width, height, 0);
-      }
-
-      fFramebufferTexture2D(LOCAL_GL_FRAMEBUFFER, LOCAL_GL_COLOR_ATTACHMENT0,
-                            LOCAL_GL_TEXTURE_2D, tempTex, 0);
-    }
-
-    ReadPixelsIntoDataSurface(this, dest);
-
-    src->ProducerReadRelease();
-  }
-
-  if (tempFB) fDeleteFramebuffers(1, &tempFB);
-
-  if (tempTex) {
-    fDeleteTextures(1, &tempTex);
-  }
-
-  if (needsSwap) {
-    src->UnlockProd();
-    if (prev) prev->LockProd();
-  }
-
-  return true;
-}
-
-void GLContext::fBindFramebuffer(GLenum target, GLuint framebuffer) {
-  if (!mScreen) {
-    raw_fBindFramebuffer(target, framebuffer);
-    return;
-  }
-
-  switch (target) {
-    case LOCAL_GL_DRAW_FRAMEBUFFER_EXT:
-      mScreen->BindDrawFB(framebuffer);
-      return;
-
-    case LOCAL_GL_READ_FRAMEBUFFER_EXT:
-      mScreen->BindReadFB(framebuffer);
-      return;
-
-    case LOCAL_GL_FRAMEBUFFER:
-      mScreen->BindFB(framebuffer);
-      return;
-
-    default:
-      // Nothing we care about, likely an error.
-      break;
-  }
-
-  raw_fBindFramebuffer(target, framebuffer);
-}
-
 void GLContext::fCopyTexImage2D(GLenum target, GLint level,
                                 GLenum internalformat, GLint x, GLint y,
                                 GLsizei width, GLsizei height, GLint border) {
@@ -2360,40 +2123,13 @@ void GLContext::fCopyTexImage2D(GLenum target, GLint level,
   }
 
   BeforeGLReadCall();
-  bool didCopyTexImage2D = false;
-  if (mScreen) {
-    didCopyTexImage2D = mScreen->CopyTexImage2D(target, level, internalformat,
-                                                x, y, width, height, border);
-  }
-
-  if (!didCopyTexImage2D) {
-    raw_fCopyTexImage2D(target, level, internalformat, x, y, width, height,
-                        border);
-  }
+  raw_fCopyTexImage2D(target, level, internalformat, x, y, width, height,
+                      border);
   AfterGLReadCall();
 }
 
-void GLContext::fGetIntegerv(GLenum pname, GLint* params) {
+void GLContext::fGetIntegerv(GLenum pname, GLint* params) const {
   switch (pname) {
-    // LOCAL_GL_FRAMEBUFFER_BINDING is equal to
-    // LOCAL_GL_DRAW_FRAMEBUFFER_BINDING_EXT,
-    // so we don't need two cases.
-    case LOCAL_GL_DRAW_FRAMEBUFFER_BINDING_EXT:
-      if (mScreen) {
-        *params = mScreen->GetDrawFB();
-      } else {
-        raw_fGetIntegerv(pname, params);
-      }
-      break;
-
-    case LOCAL_GL_READ_FRAMEBUFFER_BINDING_EXT:
-      if (mScreen) {
-        *params = mScreen->GetReadFB();
-      } else {
-        raw_fGetIntegerv(pname, params);
-      }
-      break;
-
     case LOCAL_GL_MAX_TEXTURE_SIZE:
       MOZ_ASSERT(mMaxTextureSize > 0);
       *params = mMaxTextureSize;
@@ -2430,17 +2166,7 @@ void GLContext::fGetIntegerv(GLenum pname, GLint* params) {
 void GLContext::fReadPixels(GLint x, GLint y, GLsizei width, GLsizei height,
                             GLenum format, GLenum type, GLvoid* pixels) {
   BeforeGLReadCall();
-
-  bool didReadPixels = false;
-  if (mScreen) {
-    didReadPixels =
-        mScreen->ReadPixels(x, y, width, height, format, type, pixels);
-  }
-
-  if (!didReadPixels) {
-    raw_fReadPixels(x, y, width, height, format, type, pixels);
-  }
-
+  raw_fReadPixels(x, y, width, height, format, type, pixels);
   AfterGLReadCall();
 
   // Check if GL is giving back 1.0 alpha for
@@ -2471,14 +2197,6 @@ void GLContext::fReadPixels(GLint x, GLint y, GLsizei width, GLsizei height,
 }
 
 void GLContext::fDeleteFramebuffers(GLsizei n, const GLuint* names) {
-  if (mScreen) {
-    // Notify mScreen which framebuffers we're deleting.
-    // Otherwise, we will get framebuffer binding mispredictions.
-    for (int i = 0; i < n; i++) {
-      mScreen->DeletingFB(names[i]);
-    }
-  }
-
   // Avoid crash by flushing before glDeleteFramebuffers. See bug 1194923.
   if (mNeedsFlushBeforeDeleteFB) {
     fFlush();
@@ -2540,95 +2258,22 @@ void GLContext::fTexImage2D(GLenum target, GLint level, GLint internalformat,
                   type, pixels);
 }
 
-GLuint GLContext::GetDrawFB() {
-  if (mScreen) return mScreen->GetDrawFB();
+UniquePtr<Texture> CreateTexture(GLContext& gl, const gfx::IntSize& size) {
+  const GLenum target = LOCAL_GL_TEXTURE_2D;
+  const GLenum format = LOCAL_GL_RGBA;
 
-  GLuint ret = 0;
-  GetUIntegerv(LOCAL_GL_DRAW_FRAMEBUFFER_BINDING_EXT, &ret);
-  return ret;
-}
+  auto tex = MakeUnique<Texture>(gl);
+  ScopedBindTexture autoTex(&gl, tex->name, target);
 
-GLuint GLContext::GetReadFB() {
-  if (mScreen) return mScreen->GetReadFB();
+  gl.fTexParameteri(target, LOCAL_GL_TEXTURE_MIN_FILTER, LOCAL_GL_LINEAR);
+  gl.fTexParameteri(target, LOCAL_GL_TEXTURE_MAG_FILTER, LOCAL_GL_LINEAR);
+  gl.fTexParameteri(target, LOCAL_GL_TEXTURE_WRAP_S, LOCAL_GL_CLAMP_TO_EDGE);
+  gl.fTexParameteri(target, LOCAL_GL_TEXTURE_WRAP_T, LOCAL_GL_CLAMP_TO_EDGE);
 
-  GLenum bindEnum = IsSupported(GLFeature::split_framebuffer)
-                        ? LOCAL_GL_READ_FRAMEBUFFER_BINDING_EXT
-                        : LOCAL_GL_FRAMEBUFFER_BINDING;
-
-  GLuint ret = 0;
-  GetUIntegerv(bindEnum, &ret);
-  return ret;
-}
-
-GLuint GLContext::GetFB() {
-  if (mScreen) {
-    // This has a very important extra assert that checks that we're
-    // not accidentally ignoring a situation where the draw and read
-    // FBs differ.
-    return mScreen->GetFB();
-  }
-
-  GLuint ret = 0;
-  GetUIntegerv(LOCAL_GL_FRAMEBUFFER_BINDING, &ret);
-  return ret;
-}
-
-bool GLContext::InitOffscreen(const gfx::IntSize& size,
-                              const SurfaceCaps& caps) {
-  if (!CreateScreenBuffer(size, caps)) return false;
-
-  if (!MakeCurrent()) {
-    return false;
-  }
-  fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, 0);
-  fScissor(0, 0, size.width, size.height);
-  fViewport(0, 0, size.width, size.height);
-
-  mCaps = mScreen->mCaps;
-  MOZ_ASSERT(!mCaps.any);
-
-  return true;
-}
-
-GLuint CreateTexture(GLContext* aGL, GLenum aInternalFormat, GLenum aFormat,
-                     GLenum aType, const gfx::IntSize& aSize, bool linear) {
-  GLuint tex = 0;
-  aGL->fGenTextures(1, &tex);
-  ScopedBindTexture autoTex(aGL, tex);
-
-  aGL->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MIN_FILTER,
-                      linear ? LOCAL_GL_LINEAR : LOCAL_GL_NEAREST);
-  aGL->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MAG_FILTER,
-                      linear ? LOCAL_GL_LINEAR : LOCAL_GL_NEAREST);
-  aGL->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_S,
-                      LOCAL_GL_CLAMP_TO_EDGE);
-  aGL->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_T,
-                      LOCAL_GL_CLAMP_TO_EDGE);
-
-  aGL->fTexImage2D(LOCAL_GL_TEXTURE_2D, 0, aInternalFormat, aSize.width,
-                   aSize.height, 0, aFormat, aType, nullptr);
+  gl.fTexImage2D(target, 0, format, size.width, size.height, 0, format,
+                 LOCAL_GL_UNSIGNED_BYTE, nullptr);
 
   return tex;
-}
-
-GLuint CreateTextureForOffscreen(GLContext* aGL, const GLFormats& aFormats,
-                                 const gfx::IntSize& aSize) {
-  MOZ_ASSERT(aFormats.color_texInternalFormat);
-  MOZ_ASSERT(aFormats.color_texFormat);
-  MOZ_ASSERT(aFormats.color_texType);
-
-  GLenum internalFormat = aFormats.color_texInternalFormat;
-  GLenum unpackFormat = aFormats.color_texFormat;
-  GLenum unpackType = aFormats.color_texType;
-  if (aGL->IsANGLE()) {
-    MOZ_ASSERT(internalFormat == LOCAL_GL_RGBA);
-    MOZ_ASSERT(unpackFormat == LOCAL_GL_RGBA);
-    MOZ_ASSERT(unpackType == LOCAL_GL_UNSIGNED_BYTE);
-    internalFormat = LOCAL_GL_BGRA_EXT;
-    unpackFormat = LOCAL_GL_BGRA_EXT;
-  }
-
-  return CreateTexture(aGL, internalFormat, unpackFormat, unpackType, aSize);
 }
 
 uint32_t GetBytesPerTexel(GLenum format, GLenum type) {
@@ -2871,15 +2516,6 @@ void GLContext::OnImplicitMakeCurrentFailure(const char* const funcName) {
   gfxCriticalError() << "Ignoring call to " << funcName << " with failed"
                      << " mImplicitMakeCurrent.";
 }
-
-// -
-
-// These are defined out of line so that we don't need to include
-// ISurfaceAllocator.h in SurfaceTypes.h.
-SurfaceCaps::SurfaceCaps() = default;
-SurfaceCaps::SurfaceCaps(const SurfaceCaps& other) = default;
-SurfaceCaps& SurfaceCaps::operator=(const SurfaceCaps& other) = default;
-SurfaceCaps::~SurfaceCaps() = default;
 
 } /* namespace gl */
 } /* namespace mozilla */

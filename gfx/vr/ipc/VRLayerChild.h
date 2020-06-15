@@ -50,7 +50,7 @@ class VRLayerChild : public PVRLayerChild {
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
   RefPtr<dom::HTMLCanvasElement> mCanvasElement;
-  bool mIPCOpen;
+  bool mIPCOpen = false;
 
   // AddIPDLReference and ReleaseIPDLReference are only to be called by
   // CreateIPDLActor and DestroyIPDLActor, respectively. We intentionally make
@@ -64,10 +64,10 @@ class VRLayerChild : public PVRLayerChild {
   gfx::Rect mRightEyeRect;
   RefPtr<WebGLFramebufferJS> mFramebuffer;
 
-  RefPtr<layers::SharedSurfaceTextureClient> mThisFrameTexture;
-  RefPtr<layers::SharedSurfaceTextureClient> mLastFrameTexture;
+  Maybe<layers::SurfaceDescriptor> mThisFrameTextureDesc;
+  Maybe<layers::SurfaceDescriptor> mLastFrameTextureDesc;
 
-  uint64_t mLastSubmittedFrameId;
+  uint64_t mLastSubmittedFrameId = 0;
 };
 
 }  // namespace gfx
