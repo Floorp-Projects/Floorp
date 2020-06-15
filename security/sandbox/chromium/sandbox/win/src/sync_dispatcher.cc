@@ -22,28 +22,27 @@ namespace sandbox {
 SyncDispatcher::SyncDispatcher(PolicyBase* policy_base)
     : policy_base_(policy_base) {
   static const IPCCall create_params = {
-      {IpcTag::CREATEEVENT, {WCHAR_TYPE, UINT32_TYPE, UINT32_TYPE}},
+      {IPC_CREATEEVENT_TAG, {WCHAR_TYPE, UINT32_TYPE, UINT32_TYPE}},
       reinterpret_cast<CallbackGeneric>(&SyncDispatcher::CreateEvent)};
 
   static const IPCCall open_params = {
-      {IpcTag::OPENEVENT, {WCHAR_TYPE, UINT32_TYPE}},
+      {IPC_OPENEVENT_TAG, {WCHAR_TYPE, UINT32_TYPE}},
       reinterpret_cast<CallbackGeneric>(&SyncDispatcher::OpenEvent)};
 
   ipc_calls_.push_back(create_params);
   ipc_calls_.push_back(open_params);
 }
 
-bool SyncDispatcher::SetupService(InterceptionManager* manager,
-                                  IpcTag service) {
-  if (service == IpcTag::CREATEEVENT) {
+bool SyncDispatcher::SetupService(InterceptionManager* manager, int service) {
+  if (service == IPC_CREATEEVENT_TAG) {
     return INTERCEPT_NT(manager, NtCreateEvent, CREATE_EVENT_ID, 24);
   }
-  return (service == IpcTag::OPENEVENT) &&
+  return (service == IPC_OPENEVENT_TAG) &&
          INTERCEPT_NT(manager, NtOpenEvent, OPEN_EVENT_ID, 16);
 }
 
 bool SyncDispatcher::CreateEvent(IPCInfo* ipc,
-                                 std::wstring* name,
+                                 base::string16* name,
                                  uint32_t event_type,
                                  uint32_t initial_state) {
   const wchar_t* event_name = name->c_str();
@@ -51,7 +50,7 @@ bool SyncDispatcher::CreateEvent(IPCInfo* ipc,
   params[NameBased::NAME] = ParamPickerMake(event_name);
 
   EvalResult result =
-      policy_base_->EvalPolicy(IpcTag::CREATEEVENT, params.GetBase());
+      policy_base_->EvalPolicy(IPC_CREATEEVENT_TAG, params.GetBase());
   HANDLE handle = nullptr;
   // Return operation status on the IPC.
   ipc->return_info.nt_status = SyncPolicy::CreateEventAction(
@@ -61,7 +60,7 @@ bool SyncDispatcher::CreateEvent(IPCInfo* ipc,
 }
 
 bool SyncDispatcher::OpenEvent(IPCInfo* ipc,
-                               std::wstring* name,
+                               base::string16* name,
                                uint32_t desired_access) {
   const wchar_t* event_name = name->c_str();
 
@@ -70,7 +69,7 @@ bool SyncDispatcher::OpenEvent(IPCInfo* ipc,
   params[OpenEventParams::ACCESS] = ParamPickerMake(desired_access);
 
   EvalResult result =
-      policy_base_->EvalPolicy(IpcTag::OPENEVENT, params.GetBase());
+      policy_base_->EvalPolicy(IPC_OPENEVENT_TAG, params.GetBase());
   HANDLE handle = nullptr;
   // Return operation status on the IPC.
   ipc->return_info.nt_status = SyncPolicy::OpenEventAction(

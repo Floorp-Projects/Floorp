@@ -8,11 +8,12 @@
 #include <windows.h>
 #include <string>
 
+#include "base/strings/string16.h"
 #include "sandbox/win/src/nt_internals.h"
 
 namespace sandbox {
 
-void InitObjectAttribs(const std::wstring& name,
+void InitObjectAttribs(const base::string16& name,
                        ULONG attributes,
                        HANDLE root,
                        OBJECT_ATTRIBUTES* obj_attr,

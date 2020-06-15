@@ -33,12 +33,12 @@ class BASE_EXPORT ScopedTimeClockOverrides {
   // Restores the platform default Now() functions.
   ~ScopedTimeClockOverrides();
 
-  static bool overrides_active() { return overrides_active_; }
-
  private:
+#if DCHECK_IS_ON()
   static bool overrides_active_;
+#endif
 
-  DISALLOW_COPY_AND_ASSIGN(ScopedTimeClockOverrides);
+  DISALLOW_IMPLICIT_CONSTRUCTORS(ScopedTimeClockOverrides);
 };
 
 // These methods return the platform default Time::Now / TimeTicks::Now /

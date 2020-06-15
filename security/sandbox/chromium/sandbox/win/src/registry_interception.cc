@@ -91,7 +91,7 @@ NTSTATUS WINAPI TargetNtCreateKey(NtCreateKeyFunction orig_CreateKey,
         params[OpenKey::NAME] = ParamPickerMake(name_ptr);
       }
 
-      query_broker = QueryBroker(IpcTag::NTCREATEKEY, params.GetBase());
+      query_broker = QueryBroker(IPC_NTCREATEKEY_TAG, params.GetBase());
     }
 
     if (!query_broker)
@@ -100,7 +100,7 @@ NTSTATUS WINAPI TargetNtCreateKey(NtCreateKeyFunction orig_CreateKey,
     SharedMemIPCClient ipc(memory);
     CrossCallReturn answer = {0};
 
-    ResultCode code = CrossCall(ipc, IpcTag::NTCREATEKEY, name.get(),
+    ResultCode code = CrossCall(ipc, IPC_NTCREATEKEY_TAG, name.get(),
                                 attributes, root_directory, desired_access,
                                 title_index, create_options, &answer);
 
@@ -179,7 +179,7 @@ NTSTATUS WINAPI CommonNtOpenKey(NTSTATUS status,
         params[OpenKey::NAME] = ParamPickerMake(name_ptr);
       }
 
-      query_broker = QueryBroker(IpcTag::NTOPENKEY, params.GetBase());
+      query_broker = QueryBroker(IPC_NTOPENKEY_TAG, params.GetBase());
     }
 
     if (!query_broker)
@@ -187,7 +187,7 @@ NTSTATUS WINAPI CommonNtOpenKey(NTSTATUS status,
 
     SharedMemIPCClient ipc(memory);
     CrossCallReturn answer = {0};
-    ResultCode code = CrossCall(ipc, IpcTag::NTOPENKEY, name.get(), attributes,
+    ResultCode code = CrossCall(ipc, IPC_NTOPENKEY_TAG, name.get(), attributes,
                                 root_directory, desired_access, &answer);
 
     if (SBOX_ALL_OK != code)

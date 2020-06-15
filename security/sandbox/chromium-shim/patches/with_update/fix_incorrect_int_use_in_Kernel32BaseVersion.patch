@@ -1,0 +1,40 @@
+# HG changeset patch
+# User Bob Owen <bobowencode@gmail.com>
+# Date 1549903491 0
+#      Mon Feb 11 16:44:51 2019 +0000
+# Node ID 3bb3e5a6275db53530d50549b7b329cc1248d450
+# Parent  fc9d5e40028058abeb06f8bdc2f75fc868fbe14b
+
+Fix incorrect int use in Kernel32BaseVersion in windows_version.cc. r=aklotz
+
+diff --git a/security/sandbox/chromium/base/win/windows_version.cc b/security/sandbox/chromium/base/win/windows_version.cc
+--- a/security/sandbox/chromium/base/win/windows_version.cc
++++ b/security/sandbox/chromium/base/win/windows_version.cc
+@@ -236,23 +236,23 @@ Version OSInfo::Kernel32Version() const 
+ // kernel32 will still be the "real" version.
+ base::Version OSInfo::Kernel32BaseVersion() const {
+   static const base::NoDestructor<base::Version> version([] {
+     std::unique_ptr<FileVersionInfoWin> file_version_info(
+         static_cast<FileVersionInfoWin*>(
+             FileVersionInfoWin::CreateFileVersionInfo(
+                 base::FilePath(FILE_PATH_LITERAL("kernel32.dll")))));
+     DCHECK(file_version_info);
+-    const int major =
++    const uint32_t major =
+         HIWORD(file_version_info->fixed_file_info()->dwFileVersionMS);
+-    const int minor =
++    const uint32_t minor =
+         LOWORD(file_version_info->fixed_file_info()->dwFileVersionMS);
+-    const int build =
++    const uint32_t build =
+         HIWORD(file_version_info->fixed_file_info()->dwFileVersionLS);
+-    const int patch =
++    const uint32_t patch =
+         LOWORD(file_version_info->fixed_file_info()->dwFileVersionLS);
+     return base::Version(std::vector<uint32_t>{major, minor, build, patch});
+   }());
+   return *version;
+ }
+ 
+ std::string OSInfo::processor_model_name() {
+   if (processor_model_name_.empty()) {

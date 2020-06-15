@@ -140,13 +140,11 @@ void CheckLpacToken(HANDLE process) {
 class AppContainerProfileTest : public ::testing::Test {
  public:
   void SetUp() override {
-    if (base::win::GetVersion() < base::win::Version::WIN8)
+    if (base::win::GetVersion() < base::win::VERSION_WIN8)
       return;
     package_name_ = GenerateRandomPackageName();
     broker_services_ = GetBroker();
     policy_ = broker_services_->CreatePolicy();
-    ASSERT_EQ(SBOX_ALL_OK,
-              policy_->SetProcessMitigations(MITIGATION_HEAP_TERMINATE));
     ASSERT_EQ(SBOX_ALL_OK,
               policy_->AddAppContainerProfile(package_name_.c_str(), true));
     // For testing purposes we known the base class so cast directly.
@@ -188,7 +186,7 @@ class AppContainerProfileTest : public ::testing::Test {
 
 
 TEST(AppContainerTest, DenyOpenEventForLowBox) {
-  if (base::win::GetVersion() < base::win::Version::WIN8)
+  if (base::win::GetVersion() < base::win::VERSION_WIN8)
     return;
 
   TestRunner runner(JOB_UNPROTECTED, USER_UNPROTECTED, USER_UNPROTECTED);
@@ -214,20 +212,7 @@ TEST_F(AppContainerProfileTest, CheckIncompatibleOptions) {
   EXPECT_EQ(SBOX_ERROR_BAD_PARAMS,
             policy_->SetIntegrityLevel(INTEGRITY_LEVEL_UNTRUSTED));
   EXPECT_EQ(SBOX_ERROR_BAD_PARAMS, policy_->SetLowBox(kAppContainerSid));
-
-  MitigationFlags expected_mitigations = 0;
-  MitigationFlags expected_delayed = MITIGATION_HEAP_TERMINATE;
-  sandbox::ResultCode expected_result = SBOX_ERROR_BAD_PARAMS;
-
-  if (base::win::GetVersion() >= base::win::Version::WIN10_RS5) {
-    expected_mitigations = MITIGATION_HEAP_TERMINATE;
-    expected_delayed = 0;
-    expected_result = SBOX_ALL_OK;
-  }
-
-  EXPECT_EQ(expected_mitigations, policy_->GetProcessMitigations());
-  EXPECT_EQ(expected_delayed, policy_->GetDelayedProcessMitigations());
-  EXPECT_EQ(expected_result,
+  EXPECT_EQ(SBOX_ERROR_BAD_PARAMS,
             policy_->SetProcessMitigations(MITIGATION_HEAP_TERMINATE));
 }
 
@@ -322,7 +307,7 @@ TEST_F(AppContainerProfileTest, WithImpersonationCapabilities) {
 }
 
 TEST_F(AppContainerProfileTest, NoCapabilitiesLPAC) {
-  if (base::win::GetVersion() < base::win::Version::WIN10_RS1)
+  if (base::win::GetVersion() < base::win::VERSION_WIN10_RS1)
     return;
 
   profile_->SetEnableLowPrivilegeAppContainer(true);

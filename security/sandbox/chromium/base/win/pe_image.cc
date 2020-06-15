@@ -5,14 +5,9 @@
 // This file implements PEImage, a generic class to manipulate PE files.
 // This file was adapted from GreenBorder's Code.
 
-#include "base/win/pe_image.h"
-
 #include <stddef.h>
-#include <set>
-#include <string>
 
-#include "base/no_destructor.h"
-#include "base/win/current_module.h"
+#include "base/win/pe_image.h"
 
 namespace base {
 namespace win {
@@ -50,19 +45,12 @@ struct PdbInfo {
   char PdbFileName[1];
 };
 
-#define LDR_IS_DATAFILE(handle) (((ULONG_PTR)(handle)) & (ULONG_PTR)1)
-#define LDR_IS_IMAGEMAPPING(handle) (((ULONG_PTR)(handle)) & (ULONG_PTR)2)
-#define LDR_IS_RESOURCE(handle) \
-  (LDR_IS_IMAGEMAPPING(handle) || LDR_IS_DATAFILE(handle))
-
 }  // namespace
 
 // Callback used to enumerate imports. See EnumImportChunksFunction.
-bool ProcessImportChunk(const PEImage& image,
-                        LPCSTR module,
+bool ProcessImportChunk(const PEImage &image, LPCSTR module,
                         PIMAGE_THUNK_DATA name_table,
-                        PIMAGE_THUNK_DATA iat,
-                        PVOID cookie) {
+                        PIMAGE_THUNK_DATA iat, PVOID cookie) {
   EnumAllImportsStorage& storage =
       *reinterpret_cast<EnumAllImportsStorage*>(cookie);
 
@@ -106,7 +94,7 @@ PIMAGE_SECTION_HEADER PEImage::GetSectionHeader(UINT section) const {
   if (section < nt_headers->FileHeader.NumberOfSections)
     return first_section + section;
   else
-    return nullptr;
+    return NULL;
 }
 
 WORD PEImage::GetNumSections() const {
@@ -127,10 +115,10 @@ PIMAGE_SECTION_HEADER PEImage::GetImageSectionFromAddr(PVOID address) const {
   PBYTE target = reinterpret_cast<PBYTE>(address);
   PIMAGE_SECTION_HEADER section;
 
-  for (UINT i = 0; nullptr != (section = GetSectionHeader(i)); i++) {
+  for (UINT i = 0; NULL != (section = GetSectionHeader(i)); i++) {
     // Don't use the virtual RVAToAddr.
-    PBYTE start =
-        reinterpret_cast<PBYTE>(PEImage::RVAToAddr(section->VirtualAddress));
+    PBYTE start = reinterpret_cast<PBYTE>(
+                      PEImage::RVAToAddr(section->VirtualAddress));
 
     DWORD size = section->Misc.VirtualSize;
 
@@ -138,21 +126,21 @@ PIMAGE_SECTION_HEADER PEImage::GetImageSectionFromAddr(PVOID address) const {
       return section;
   }
 
-  return nullptr;
+  return NULL;
 }
 
 PIMAGE_SECTION_HEADER PEImage::GetImageSectionHeaderByName(
     LPCSTR section_name) const {
-  if (nullptr == section_name)
-    return nullptr;
+  if (NULL == section_name)
+    return NULL;
 
-  PIMAGE_SECTION_HEADER ret = nullptr;
+  PIMAGE_SECTION_HEADER ret = NULL;
   int num_sections = GetNumSections();
 
   for (int i = 0; i < num_sections; i++) {
     PIMAGE_SECTION_HEADER section = GetSectionHeader(i);
-    if (_strnicmp(reinterpret_cast<LPCSTR>(section->Name), section_name,
-                  sizeof(section->Name)) == 0) {
+    if (0 == _strnicmp(reinterpret_cast<LPCSTR>(section->Name), section_name,
+                       sizeof(section->Name))) {
       ret = section;
       break;
     }
@@ -169,7 +157,7 @@ bool PEImage::GetDebugId(LPGUID guid,
       GetImageDirectoryEntrySize(IMAGE_DIRECTORY_ENTRY_DEBUG);
   PIMAGE_DEBUG_DIRECTORY debug_directory =
       reinterpret_cast<PIMAGE_DEBUG_DIRECTORY>(
-          GetImageDirectoryEntryAddr(IMAGE_DIRECTORY_ENTRY_DEBUG));
+      GetImageDirectoryEntryAddr(IMAGE_DIRECTORY_ENTRY_DEBUG));
   if (!debug_directory)
     return false;
 
@@ -209,23 +197,23 @@ bool PEImage::GetDebugId(LPGUID guid,
 PDWORD PEImage::GetExportEntry(LPCSTR name) const {
   PIMAGE_EXPORT_DIRECTORY exports = GetExportDirectory();
 
-  if (nullptr == exports)
-    return nullptr;
+  if (NULL == exports)
+    return NULL;
 
   WORD ordinal = 0;
   if (!GetProcOrdinal(name, &ordinal))
-    return nullptr;
+    return NULL;
 
-  PDWORD functions =
-      reinterpret_cast<PDWORD>(RVAToAddr(exports->AddressOfFunctions));
+  PDWORD functions = reinterpret_cast<PDWORD>(
+                         RVAToAddr(exports->AddressOfFunctions));
 
   return functions + ordinal - exports->Base;
 }
 
 FARPROC PEImage::GetProcAddress(LPCSTR function_name) const {
   PDWORD export_entry = GetExportEntry(function_name);
-  if (nullptr == export_entry)
-    return nullptr;
+  if (NULL == export_entry)
+    return NULL;
 
   PBYTE function = reinterpret_cast<PBYTE>(RVAToAddr(*export_entry));
 
@@ -233,7 +221,7 @@ FARPROC PEImage::GetProcAddress(LPCSTR function_name) const {
       GetImageDirectoryEntryAddr(IMAGE_DIRECTORY_ENTRY_EXPORT));
   DWORD size = GetImageDirectoryEntrySize(IMAGE_DIRECTORY_ENTRY_EXPORT);
   if (!exports || !size)
-    return nullptr;
+    return NULL;
 
   // Check for forwarded exports as a special case.
   if (exports <= function && exports + size > function)
@@ -242,13 +230,13 @@ FARPROC PEImage::GetProcAddress(LPCSTR function_name) const {
   return reinterpret_cast<FARPROC>(function);
 }
 
-bool PEImage::GetProcOrdinal(LPCSTR function_name, WORD* ordinal) const {
-  if (nullptr == ordinal)
+bool PEImage::GetProcOrdinal(LPCSTR function_name, WORD *ordinal) const {
+  if (NULL == ordinal)
     return false;
 
   PIMAGE_EXPORT_DIRECTORY exports = GetExportDirectory();
 
-  if (nullptr == exports)
+  if (NULL == exports)
     return false;
 
   if (IsOrdinal(function_name)) {
@@ -282,8 +270,9 @@ bool PEImage::GetProcOrdinal(LPCSTR function_name, WORD* ordinal) const {
     if (cmp != 0)
       return false;
 
-    PWORD ordinals =
-        reinterpret_cast<PWORD>(RVAToAddr(exports->AddressOfNameOrdinals));
+
+    PWORD ordinals = reinterpret_cast<PWORD>(
+                         RVAToAddr(exports->AddressOfNameOrdinals));
 
     *ordinal = ordinals[lower - names] + static_cast<WORD>(exports->Base);
   }
@@ -315,24 +304,24 @@ bool PEImage::EnumExports(EnumExportsFunction callback, PVOID cookie) const {
   if (!directory || !size)
     return true;
 
-  PIMAGE_EXPORT_DIRECTORY exports =
-      reinterpret_cast<PIMAGE_EXPORT_DIRECTORY>(directory);
+  PIMAGE_EXPORT_DIRECTORY exports = reinterpret_cast<PIMAGE_EXPORT_DIRECTORY>(
+                                        directory);
   UINT ordinal_base = exports->Base;
   UINT num_funcs = exports->NumberOfFunctions;
   UINT num_names = exports->NumberOfNames;
-  PDWORD functions =
-      reinterpret_cast<PDWORD>(RVAToAddr(exports->AddressOfFunctions));
+  PDWORD functions  = reinterpret_cast<PDWORD>(RVAToAddr(
+                          exports->AddressOfFunctions));
   PDWORD names = reinterpret_cast<PDWORD>(RVAToAddr(exports->AddressOfNames));
-  PWORD ordinals =
-      reinterpret_cast<PWORD>(RVAToAddr(exports->AddressOfNameOrdinals));
+  PWORD ordinals = reinterpret_cast<PWORD>(RVAToAddr(
+                       exports->AddressOfNameOrdinals));
 
   for (UINT count = 0; count < num_funcs; count++) {
     PVOID func = RVAToAddr(functions[count]);
-    if (nullptr == func)
+    if (NULL == func)
       continue;
 
     // Check for a name.
-    LPCSTR name = nullptr;
+    LPCSTR name = NULL;
     UINT hint;
     for (hint = 0; hint < num_names; hint++) {
       if (ordinals[hint] == count) {
@@ -341,16 +330,16 @@ bool PEImage::EnumExports(EnumExportsFunction callback, PVOID cookie) const {
       }
     }
 
-    if (name == nullptr)
+    if (name == NULL)
       hint = 0;
 
     // Check for forwarded exports.
-    LPCSTR forward = nullptr;
+    LPCSTR forward = NULL;
     if (reinterpret_cast<char*>(func) >= reinterpret_cast<char*>(directory) &&
-        reinterpret_cast<char*>(func) <=
-            reinterpret_cast<char*>(directory) + size) {
+        reinterpret_cast<char*>(func) <= reinterpret_cast<char*>(directory) +
+            size) {
       forward = reinterpret_cast<LPCSTR>(func);
-      func = nullptr;
+      func = 0;
     }
 
     if (!callback(*this, ordinal_base + count, hint, name, func, forward,
@@ -373,8 +362,8 @@ bool PEImage::EnumRelocs(EnumRelocsFunction callback, PVOID cookie) const {
   while (size >= sizeof(IMAGE_BASE_RELOCATION) && base->SizeOfBlock &&
          size >= base->SizeOfBlock) {
     PWORD reloc = reinterpret_cast<PWORD>(base + 1);
-    UINT num_relocs =
-        (base->SizeOfBlock - sizeof(IMAGE_BASE_RELOCATION)) / sizeof(WORD);
+    UINT num_relocs = (base->SizeOfBlock - sizeof(IMAGE_BASE_RELOCATION)) /
+        sizeof(WORD);
 
     for (UINT i = 0; i < num_relocs; i++, reloc++) {
       WORD type = *reloc >> 12;
@@ -386,33 +375,29 @@ bool PEImage::EnumRelocs(EnumRelocsFunction callback, PVOID cookie) const {
 
     size -= base->SizeOfBlock;
     base = reinterpret_cast<PIMAGE_BASE_RELOCATION>(
-        reinterpret_cast<char*>(base) + base->SizeOfBlock);
+               reinterpret_cast<char*>(base) + base->SizeOfBlock);
   }
 
   return true;
 }
 
 bool PEImage::EnumImportChunks(EnumImportChunksFunction callback,
-                               PVOID cookie,
-                               LPCSTR target_module_name) const {
+                               PVOID cookie) const {
   DWORD size = GetImageDirectoryEntrySize(IMAGE_DIRECTORY_ENTRY_IMPORT);
   PIMAGE_IMPORT_DESCRIPTOR import = GetFirstImportChunk();
 
-  if (import == nullptr || size < sizeof(IMAGE_IMPORT_DESCRIPTOR))
+  if (import == NULL || size < sizeof(IMAGE_IMPORT_DESCRIPTOR))
     return true;
 
   for (; import->FirstThunk; import++) {
     LPCSTR module_name = reinterpret_cast<LPCSTR>(RVAToAddr(import->Name));
     PIMAGE_THUNK_DATA name_table = reinterpret_cast<PIMAGE_THUNK_DATA>(
-        RVAToAddr(import->OriginalFirstThunk));
-    PIMAGE_THUNK_DATA iat =
-        reinterpret_cast<PIMAGE_THUNK_DATA>(RVAToAddr(import->FirstThunk));
+                                       RVAToAddr(import->OriginalFirstThunk));
+    PIMAGE_THUNK_DATA iat = reinterpret_cast<PIMAGE_THUNK_DATA>(
+                                RVAToAddr(import->FirstThunk));
 
-    if (target_module_name == nullptr ||
-        (lstrcmpiA(module_name, target_module_name) == 0)) {
-      if (!callback(*this, module_name, name_table, iat, cookie))
-        return false;
-    }
+    if (!callback(*this, module_name, name_table, iat, cookie))
+      return false;
   }
 
   return true;
@@ -421,13 +406,12 @@ bool PEImage::EnumImportChunks(EnumImportChunksFunction callback,
 bool PEImage::EnumOneImportChunk(EnumImportsFunction callback,
                                  LPCSTR module_name,
                                  PIMAGE_THUNK_DATA name_table,
-                                 PIMAGE_THUNK_DATA iat,
-                                 PVOID cookie) const {
-  if (nullptr == name_table)
+                                 PIMAGE_THUNK_DATA iat, PVOID cookie) const {
+  if (NULL == name_table)
     return false;
 
   for (; name_table && name_table->u1.Ordinal; name_table++, iat++) {
-    LPCSTR name = nullptr;
+    LPCSTR name = NULL;
     WORD ordinal = 0;
     WORD hint = 0;
 
@@ -448,18 +432,15 @@ bool PEImage::EnumOneImportChunk(EnumImportsFunction callback,
   return true;
 }
 
-bool PEImage::EnumAllImports(EnumImportsFunction callback,
-                             PVOID cookie,
-                             LPCSTR target_module_name) const {
-  EnumAllImportsStorage temp = {callback, cookie};
-  return EnumImportChunks(ProcessImportChunk, &temp, target_module_name);
+bool PEImage::EnumAllImports(EnumImportsFunction callback, PVOID cookie) const {
+  EnumAllImportsStorage temp = { callback, cookie };
+  return EnumImportChunks(ProcessImportChunk, &temp);
 }
 
 bool PEImage::EnumDelayImportChunks(EnumDelayImportChunksFunction callback,
-                                    PVOID cookie,
-                                    LPCSTR target_module_name) const {
-  PVOID directory =
-      GetImageDirectoryEntryAddr(IMAGE_DIRECTORY_ENTRY_DELAY_IMPORT);
+                                    PVOID cookie) const {
+  PVOID directory = GetImageDirectoryEntryAddr(
+                        IMAGE_DIRECTORY_ENTRY_DELAY_IMPORT);
   DWORD size = GetImageDirectoryEntrySize(IMAGE_DIRECTORY_ENTRY_DELAY_IMPORT);
 
   if (!directory || !size)
@@ -493,28 +474,9 @@ bool PEImage::EnumDelayImportChunks(EnumDelayImportChunksFunction callback,
           static_cast<uintptr_t>(delay_descriptor->rvaIAT));
     }
 
-    if (target_module_name == nullptr ||
-        (lstrcmpiA(module_name, target_module_name) == 0)) {
-      if (target_module_name) {
-        // Ensure all imports are properly loaded for the target module so that
-        // the callback is operating on a fully-realized set of imports.
-        // This call only loads the imports for the module where this code is
-        // executing, so it is only helpful or meaningful to do this if the
-        // current module is the module whose IAT we are enumerating.
-        // Use the module_name as retrieved from the IAT because this method
-        // is case sensitive.
-        if (module_ == CURRENT_MODULE() && !LDR_IS_RESOURCE(module_)) {
-          static base::NoDestructor<std::set<std::string>> loaded_dlls;
-          // pair.second is true if this is a new element
-          if (loaded_dlls.get()->emplace(module_name).second)
-            ::__HrLoadAllImportsForDll(module_name);
-        }
-      }
-
-      if (!callback(*this, delay_descriptor, module_name, name_table, iat,
-                    cookie))
-        return false;
-    }
+    if (!callback(*this, delay_descriptor, module_name, name_table, iat,
+                  cookie))
+      return false;
   }
 
   return true;
@@ -527,7 +489,7 @@ bool PEImage::EnumOneDelayImportChunk(EnumImportsFunction callback,
                                       PIMAGE_THUNK_DATA iat,
                                       PVOID cookie) const {
   for (; name_table->u1.Ordinal; name_table++, iat++) {
-    LPCSTR name = nullptr;
+    LPCSTR name = NULL;
     WORD ordinal = 0;
     WORD hint = 0;
 
@@ -539,10 +501,10 @@ bool PEImage::EnumOneDelayImportChunk(EnumImportsFunction callback,
 
       if (rvas) {
         import = reinterpret_cast<PIMAGE_IMPORT_BY_NAME>(
-            RVAToAddr(name_table->u1.ForwarderString));
+                     RVAToAddr(name_table->u1.ForwarderString));
       } else {
         import = reinterpret_cast<PIMAGE_IMPORT_BY_NAME>(
-            name_table->u1.ForwarderString);
+                     name_table->u1.ForwarderString);
       }
 
       hint = import->Hint;
@@ -557,11 +519,9 @@ bool PEImage::EnumOneDelayImportChunk(EnumImportsFunction callback,
 }
 
 bool PEImage::EnumAllDelayImports(EnumImportsFunction callback,
-                                  PVOID cookie,
-                                  LPCSTR target_module_name) const {
-  EnumAllImportsStorage temp = {callback, cookie};
-  return EnumDelayImportChunks(ProcessDelayImportChunk, &temp,
-                               target_module_name);
+                                  PVOID cookie) const {
+  EnumAllImportsStorage temp = { callback, cookie };
+  return EnumDelayImportChunks(ProcessDelayImportChunk, &temp);
 }
 
 bool PEImage::VerifyMagic() const {
@@ -593,12 +553,12 @@ bool PEImage::ImageRVAToOnDiskOffset(uintptr_t rva,
 
 bool PEImage::ImageAddrToOnDiskOffset(LPVOID address,
                                       DWORD* on_disk_offset) const {
-  if (nullptr == address)
+  if (NULL == address)
     return false;
 
   // Get the section that this address belongs to.
   PIMAGE_SECTION_HEADER section_header = GetImageSectionFromAddr(address);
-  if (nullptr == section_header)
+  if (NULL == section_header)
     return false;
 
   // Don't follow the virtual RVAToAddr, use the one on the base.
@@ -613,7 +573,7 @@ bool PEImage::ImageAddrToOnDiskOffset(LPVOID address,
 
 PVOID PEImage::RVAToAddr(uintptr_t rva) const {
   if (rva == 0)
-    return nullptr;
+    return NULL;
 
   return reinterpret_cast<char*>(module_) + rva;
 }
@@ -637,13 +597,13 @@ const IMAGE_DATA_DIRECTORY* PEImage::GetDataDirectory(UINT directory) const {
 
 PVOID PEImageAsData::RVAToAddr(uintptr_t rva) const {
   if (rva == 0)
-    return nullptr;
+    return NULL;
 
   PVOID in_memory = PEImage::RVAToAddr(rva);
   DWORD disk_offset;
 
   if (!ImageAddrToOnDiskOffset(in_memory, &disk_offset))
-    return nullptr;
+    return NULL;
 
   return PEImage::RVAToAddr(disk_offset);
 }

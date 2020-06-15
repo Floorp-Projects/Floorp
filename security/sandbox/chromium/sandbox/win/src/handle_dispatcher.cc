@@ -22,7 +22,7 @@ namespace sandbox {
 HandleDispatcher::HandleDispatcher(PolicyBase* policy_base)
     : policy_base_(policy_base) {
   static const IPCCall duplicate_handle_proxy = {
-      {IpcTag::DUPLICATEHANDLEPROXY,
+      {IPC_DUPLICATEHANDLEPROXY_TAG,
        {VOIDPTR_TYPE, UINT32_TYPE, UINT32_TYPE, UINT32_TYPE}},
       reinterpret_cast<CallbackGeneric>(
           &HandleDispatcher::DuplicateHandleProxy)};
@@ -31,15 +31,14 @@ HandleDispatcher::HandleDispatcher(PolicyBase* policy_base)
 }
 
 bool HandleDispatcher::SetupService(InterceptionManager* manager,
-                                    IpcTag service) {
+                                    int service) {
   // We perform no interceptions for handles right now.
   switch (service) {
-    case IpcTag::DUPLICATEHANDLEPROXY:
-      return true;
-
-    default:
-      return false;
+    case IPC_DUPLICATEHANDLEPROXY_TAG:
+    return true;
   }
+
+  return false;
 }
 
 bool HandleDispatcher::DuplicateHandleProxy(IPCInfo* ipc,
@@ -79,7 +78,7 @@ bool HandleDispatcher::DuplicateHandleProxy(IPCInfo* ipc,
   params[HandleTarget::NAME] = ParamPickerMake(type_info->Name.Buffer);
   params[HandleTarget::TARGET] = ParamPickerMake(target_process_id);
 
-  EvalResult eval = policy_base_->EvalPolicy(IpcTag::DUPLICATEHANDLEPROXY,
+  EvalResult eval = policy_base_->EvalPolicy(IPC_DUPLICATEHANDLEPROXY_TAG,
                                              params.GetBase());
   ipc->return_info.win32_result =
       HandlePolicy::DuplicateHandleProxyAction(eval, handle.Get(),

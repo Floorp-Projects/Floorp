@@ -7,12 +7,10 @@
 
 #include <map>
 #include <string>
-#include <vector>
 
 #include "base/base_export.h"
 #include "base/callback.h"
 #include "base/macros.h"
-#include "base/observer_list.h"
 #include "base/synchronization/lock.h"
 #include "base/threading/platform_thread.h"
 
@@ -27,24 +25,14 @@ class BASE_EXPORT ThreadIdNameManager {
 
   static const char* GetDefaultInternedString();
 
-  class BASE_EXPORT Observer {
-   public:
-    virtual ~Observer();
-
-    // Called on the thread whose name is changing, immediately after the name
-    // is set. |name| is a pointer to a C string that is guaranteed to remain
-    // valid for the duration of the process.
-    //
-    // NOTE: Will be called while ThreadIdNameManager's lock is held, so don't
-    // call back into it.
-    virtual void OnThreadNameChanged(const char* name) = 0;
-  };
-
   // Register the mapping between a thread |id| and |handle|.
   void RegisterThread(PlatformThreadHandle::Handle handle, PlatformThreadId id);
 
-  void AddObserver(Observer*);
-  void RemoveObserver(Observer*);
+  // The callback is called on the thread, immediately after the name is set.
+  // |name| is a pointer to a C string that is guaranteed to remain valid for
+  // the duration of the process.
+  using SetNameCallback = base::RepeatingCallback<void(const char* name)>;
+  void InstallSetNameCallback(SetNameCallback callback);
 
   // Set the name for the current thread.
   void SetName(const std::string& name);
@@ -82,9 +70,7 @@ class BASE_EXPORT ThreadIdNameManager {
   std::string* main_process_name_;
   PlatformThreadId main_process_id_;
 
-  // There's no point using a base::ObserverList behind a lock, so we just use
-  // an std::vector instead.
-  std::vector<Observer*> observers_;
+  SetNameCallback set_name_callback_;
 
   DISALLOW_COPY_AND_ASSIGN(ThreadIdNameManager);
 };
