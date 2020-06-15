@@ -12,7 +12,6 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.components.PrivateShortcutCreateManager
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.checkAndUpdateScreenshotPermission
-import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
@@ -32,7 +31,7 @@ class PrivateBrowsingFragment : PreferenceFragmentCompat() {
     }
 
     private fun updatePreferences() {
-        findPreference<Preference>(getPreferenceKey(R.string.pref_key_add_private_browsing_shortcut))?.apply {
+        requirePreference<Preference>(R.string.pref_key_add_private_browsing_shortcut).apply {
             setOnPreferenceClickListener {
                 requireContext().metrics.track(Event.PrivateBrowsingCreateShortcut)
                 PrivateShortcutCreateManager.createPrivateShortcut(requireContext())
@@ -40,13 +39,12 @@ class PrivateBrowsingFragment : PreferenceFragmentCompat() {
             }
         }
 
-        findPreference<SwitchPreference>(getPreferenceKey(R.string.pref_key_open_links_in_a_private_tab))?.apply {
+        requirePreference<SwitchPreference>(R.string.pref_key_open_links_in_a_private_tab).apply {
             onPreferenceChangeListener = SharedPreferenceUpdater()
             isChecked = context.settings().openLinksInAPrivateTab
         }
 
-        findPreference<SwitchPreference>(getPreferenceKey
-            (R.string.pref_key_allow_screenshots_in_private_mode))?.apply {
+        requirePreference<SwitchPreference>(R.string.pref_key_allow_screenshots_in_private_mode).apply {
             onPreferenceChangeListener = object : SharedPreferenceUpdater() {
                 override fun onPreferenceChange(preference: Preference, newValue: Any?): Boolean {
                     return super.onPreferenceChange(preference, newValue).also {

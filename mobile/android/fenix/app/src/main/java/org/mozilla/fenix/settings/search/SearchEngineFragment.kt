@@ -15,6 +15,7 @@ import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.settings.SharedPreferenceUpdater
+import org.mozilla.fenix.settings.requirePreference
 
 class SearchEngineFragment : PreferenceFragmentCompat() {
 
@@ -27,57 +28,56 @@ class SearchEngineFragment : PreferenceFragmentCompat() {
         showToolbar(getString(R.string.preferences_search))
 
         val searchSuggestionsPreference =
-            findPreference<SwitchPreference>(getPreferenceKey(R.string.pref_key_show_search_suggestions))?.apply {
+            requirePreference<SwitchPreference>(R.string.pref_key_show_search_suggestions).apply {
                 isChecked = context.settings().shouldShowSearchSuggestions
             }
 
         val searchSuggestionsInPrivatePreference =
-            findPreference<CheckBoxPreference>(getPreferenceKey(R.string.pref_key_show_search_suggestions_in_private))
-                ?.apply {
+            requirePreference<CheckBoxPreference>(R.string.pref_key_show_search_suggestions_in_private).apply {
                 isChecked = context.settings().shouldShowSearchSuggestionsInPrivate
             }
 
         val showSearchShortcuts =
-            findPreference<SwitchPreference>(getPreferenceKey(R.string.pref_key_show_search_shortcuts))?.apply {
+            requirePreference<SwitchPreference>(R.string.pref_key_show_search_shortcuts).apply {
                 isChecked = context.settings().shouldShowSearchShortcuts
             }
 
         val showHistorySuggestions =
-            findPreference<SwitchPreference>(getPreferenceKey(R.string.pref_key_search_browsing_history))?.apply {
+            requirePreference<SwitchPreference>(R.string.pref_key_search_browsing_history).apply {
                 isChecked = context.settings().shouldShowHistorySuggestions
             }
 
         val showBookmarkSuggestions =
-            findPreference<SwitchPreference>(getPreferenceKey(R.string.pref_key_search_bookmarks))?.apply {
+            requirePreference<SwitchPreference>(R.string.pref_key_search_bookmarks).apply {
                 isChecked = context.settings().shouldShowBookmarkSuggestions
             }
 
         val showClipboardSuggestions =
-            findPreference<SwitchPreference>(getPreferenceKey(R.string.pref_key_show_clipboard_suggestions))?.apply {
+            requirePreference<SwitchPreference>(R.string.pref_key_show_clipboard_suggestions).apply {
                 isChecked = context.settings().shouldShowClipboardSuggestions
             }
 
         val searchEngineListPreference =
-            findPreference<SearchEngineListPreference>(getPreferenceKey(R.string.pref_key_search_engine_list))
+            requirePreference<SearchEngineListPreference>(R.string.pref_key_search_engine_list)
 
         val showVoiceSearchPreference =
-            findPreference<SwitchPreference>(getPreferenceKey(R.string.pref_key_show_voice_search))?.apply {
+            requirePreference<SwitchPreference>(R.string.pref_key_show_voice_search).apply {
                 isChecked = context.settings().shouldShowVoiceSearch
             }
 
-        searchEngineListPreference?.reload(requireContext())
-        searchSuggestionsPreference?.onPreferenceChangeListener = SharedPreferenceUpdater()
-        showSearchShortcuts?.onPreferenceChangeListener = SharedPreferenceUpdater()
-        showHistorySuggestions?.onPreferenceChangeListener = SharedPreferenceUpdater()
-        showBookmarkSuggestions?.onPreferenceChangeListener = SharedPreferenceUpdater()
-        showClipboardSuggestions?.onPreferenceChangeListener = SharedPreferenceUpdater()
-        searchSuggestionsInPrivatePreference?.onPreferenceChangeListener = SharedPreferenceUpdater()
-        showVoiceSearchPreference?.onPreferenceChangeListener = SharedPreferenceUpdater()
+        searchEngineListPreference.reload(requireContext())
+        searchSuggestionsPreference.onPreferenceChangeListener = SharedPreferenceUpdater()
+        showSearchShortcuts.onPreferenceChangeListener = SharedPreferenceUpdater()
+        showHistorySuggestions.onPreferenceChangeListener = SharedPreferenceUpdater()
+        showBookmarkSuggestions.onPreferenceChangeListener = SharedPreferenceUpdater()
+        showClipboardSuggestions.onPreferenceChangeListener = SharedPreferenceUpdater()
+        searchSuggestionsInPrivatePreference.onPreferenceChangeListener = SharedPreferenceUpdater()
+        showVoiceSearchPreference.onPreferenceChangeListener = SharedPreferenceUpdater()
 
-        searchSuggestionsPreference?.setOnPreferenceClickListener {
+        searchSuggestionsPreference.setOnPreferenceClickListener {
             if (!searchSuggestionsPreference.isChecked) {
-                searchSuggestionsInPrivatePreference?.isChecked = false
-                searchSuggestionsInPrivatePreference?.callChangeListener(false)
+                searchSuggestionsInPrivatePreference.isChecked = false
+                searchSuggestionsInPrivatePreference.callChangeListener(false)
             }
             true
         }

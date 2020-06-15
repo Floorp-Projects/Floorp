@@ -17,7 +17,6 @@ import androidx.appcompat.content.res.AppCompatResources
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavDirections
 import androidx.navigation.findNavController
-import androidx.navigation.fragment.findNavController
 import androidx.preference.Preference
 import androidx.preference.PreferenceCategory
 import androidx.preference.PreferenceFragmentCompat
@@ -137,8 +136,8 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
     private fun update(shouldUpdateAccountUIState: Boolean) {
         val trackingProtectionPreference =
-            findPreference<Preference>(getPreferenceKey(R.string.pref_key_tracking_protection_settings))
-        trackingProtectionPreference?.summary = context?.let {
+            requirePreference<Preference>(R.string.pref_key_tracking_protection_settings)
+        trackingProtectionPreference.summary = context?.let {
             if (it.settings().shouldUseTrackingProtection) {
                 getString(R.string.tracking_protection_on)
             } else {
@@ -146,21 +145,13 @@ class SettingsFragment : PreferenceFragmentCompat() {
             }
         }
 
-        val toolbarPreference =
-            findPreference<Preference>(getPreferenceKey(R.string.pref_key_toolbar))
-        toolbarPreference?.summary = context?.settings()?.toolbarSettingString
-
-        val aboutPreference = findPreference<Preference>(getPreferenceKey(R.string.pref_key_about))
+        val aboutPreference = requirePreference<Preference>(R.string.pref_key_about)
         val appName = getString(R.string.app_name)
-        aboutPreference?.title = getString(R.string.preferences_about, appName)
+        aboutPreference.title = getString(R.string.preferences_about, appName)
 
         val deleteBrowsingDataPreference =
-            findPreference<Preference>(
-                getPreferenceKey(
-                    R.string.pref_key_delete_browsing_data_on_quit_preference
-                )
-            )
-        deleteBrowsingDataPreference?.summary = context?.let {
+            requirePreference<Preference>(R.string.pref_key_delete_browsing_data_on_quit_preference)
+        deleteBrowsingDataPreference.summary = context?.let {
             if (it.settings().shouldDeleteBrowsingDataOnQuit) {
                 getString(R.string.delete_browsing_data_quit_on)
             } else {
@@ -291,11 +282,10 @@ class SettingsFragment : PreferenceFragmentCompat() {
     private fun setupPreferences() {
         val leakKey = getPreferenceKey(R.string.pref_key_leakcanary)
         val debuggingKey = getPreferenceKey(R.string.pref_key_remote_debugging)
-        val makeDefaultBrowserKey = getPreferenceKey(R.string.pref_key_make_default_browser)
 
         val preferenceLeakCanary = findPreference<Preference>(leakKey)
         val preferenceRemoteDebugging = findPreference<Preference>(debuggingKey)
-        val preferenceMakeDefaultBrowser = findPreference<Preference>(makeDefaultBrowserKey)
+        val preferenceMakeDefaultBrowser = requirePreference<Preference>(R.string.pref_key_make_default_browser)
 
         if (!Config.channel.isReleased) {
             preferenceLeakCanary?.setOnPreferenceChangeListener { _, newValue ->
@@ -312,7 +302,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
             true
         }
 
-        preferenceMakeDefaultBrowser?.onPreferenceClickListener =
+        preferenceMakeDefaultBrowser.onPreferenceClickListener =
             getClickListenerForMakeDefaultBrowser()
 
         val preferenceFxAOverride =
@@ -365,8 +355,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
     }
 
     private fun updateMakeDefaultBrowserPreference() {
-        findPreference<DefaultBrowserPreference>(getPreferenceKey(R.string.pref_key_make_default_browser))
-            ?.updateSwitch()
+        requirePreference<DefaultBrowserPreference>(R.string.pref_key_make_default_browser).updateSwitch()
     }
 
     private fun navigateFromSettings(directions: NavDirections) {
@@ -395,17 +384,13 @@ class SettingsFragment : PreferenceFragmentCompat() {
      */
     private fun updateAccountUIState(context: Context, profile: Profile?) {
         val preferenceSignIn =
-            findPreference<Preference>(context.getPreferenceKey(R.string.pref_key_sign_in))
+            requirePreference<Preference>(R.string.pref_key_sign_in)
         val preferenceFirefoxAccount =
-            findPreference<AccountPreference>(context.getPreferenceKey(R.string.pref_key_account))
+            requirePreference<AccountPreference>(R.string.pref_key_account)
         val preferenceFirefoxAccountAuthError =
-            findPreference<AccountAuthErrorPreference>(
-                context.getPreferenceKey(
-                    R.string.pref_key_account_auth_error
-                )
-            )
+            requirePreference<AccountAuthErrorPreference>(R.string.pref_key_account_auth_error)
         val accountPreferenceCategory =
-            findPreference<PreferenceCategory>(context.getPreferenceKey(R.string.pref_key_account_category))
+            requirePreference<PreferenceCategory>(R.string.pref_key_account_category)
 
         val accountManager = requireComponents.backgroundServices.accountManager
         val account = accountManager.authenticatedAccount()
@@ -414,44 +399,44 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
         // Signed-in, no problems.
         if (account != null && !accountManager.accountNeedsReauth()) {
-            preferenceSignIn?.isVisible = false
+            preferenceSignIn.isVisible = false
 
             profile?.avatar?.url?.let { avatarUrl ->
                 lifecycleScope.launch(Main) {
                     val roundedDrawable =
                         avatarUrl.toRoundedDrawable(context, requireComponents.core.client)
-                    preferenceFirefoxAccount?.icon =
+                    preferenceFirefoxAccount.icon =
                         roundedDrawable ?: AppCompatResources.getDrawable(
                             context,
                             R.drawable.ic_account
                         )
                 }
             }
-            preferenceSignIn?.onPreferenceClickListener = null
-            preferenceFirefoxAccountAuthError?.isVisible = false
-            preferenceFirefoxAccount?.isVisible = true
-            accountPreferenceCategory?.isVisible = true
+            preferenceSignIn.onPreferenceClickListener = null
+            preferenceFirefoxAccountAuthError.isVisible = false
+            preferenceFirefoxAccount.isVisible = true
+            accountPreferenceCategory.isVisible = true
 
-            preferenceFirefoxAccount?.displayName = profile?.displayName
-            preferenceFirefoxAccount?.email = profile?.email
+            preferenceFirefoxAccount.displayName = profile?.displayName
+            preferenceFirefoxAccount.email = profile?.email
 
             // Signed-in, need to re-authenticate.
         } else if (account != null && accountManager.accountNeedsReauth()) {
-            preferenceFirefoxAccount?.isVisible = false
-            preferenceFirefoxAccountAuthError?.isVisible = true
-            accountPreferenceCategory?.isVisible = true
+            preferenceFirefoxAccount.isVisible = false
+            preferenceFirefoxAccountAuthError.isVisible = true
+            accountPreferenceCategory.isVisible = true
 
-            preferenceSignIn?.isVisible = false
-            preferenceSignIn?.onPreferenceClickListener = null
+            preferenceSignIn.isVisible = false
+            preferenceSignIn.onPreferenceClickListener = null
 
-            preferenceFirefoxAccountAuthError?.email = profile?.email
+            preferenceFirefoxAccountAuthError.email = profile?.email
 
             // Signed-out.
         } else {
-            preferenceSignIn?.isVisible = true
-            preferenceFirefoxAccount?.isVisible = false
-            preferenceFirefoxAccountAuthError?.isVisible = false
-            accountPreferenceCategory?.isVisible = false
+            preferenceSignIn.isVisible = true
+            preferenceFirefoxAccount.isVisible = false
+            preferenceFirefoxAccountAuthError.isVisible = false
+            accountPreferenceCategory.isVisible = false
         }
     }
 

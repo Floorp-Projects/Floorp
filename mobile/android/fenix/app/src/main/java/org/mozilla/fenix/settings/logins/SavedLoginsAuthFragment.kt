@@ -34,12 +34,12 @@ import org.mozilla.fenix.Config
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.secure
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.settings.SharedPreferenceUpdater
+import org.mozilla.fenix.settings.requirePreference
 import java.util.concurrent.Executors
 
 @Suppress("TooManyFunctions", "LargeClass")
@@ -98,8 +98,7 @@ class SavedLoginsAuthFragment : PreferenceFragmentCompat(), AccountObserver {
         super.onResume()
         showToolbar(getString(R.string.preferences_passwords_logins_and_passwords))
 
-        val saveLoginsSettingKey = getPreferenceKey(R.string.pref_key_save_logins_settings)
-        findPreference<Preference>(saveLoginsSettingKey)?.apply {
+        requirePreference<Preference>(R.string.pref_key_save_logins_settings).apply {
             summary = getString(
                 if (context.settings().shouldPromptToSaveLogins)
                     R.string.preferences_passwords_save_logins_ask_to_save else
@@ -111,8 +110,7 @@ class SavedLoginsAuthFragment : PreferenceFragmentCompat(), AccountObserver {
             }
         }
 
-        val autofillPreferenceKey = getPreferenceKey(R.string.pref_key_autofill_logins)
-        findPreference<SwitchPreference>(autofillPreferenceKey)?.apply {
+        requirePreference<SwitchPreference>(R.string.pref_key_autofill_logins).apply {
             // The ability to toggle autofill on the engine is only available in Nightly currently
             // See https://github.com/mozilla-mobile/fenix/issues/11320
             isVisible = Config.channel.isNightlyOrDebug
@@ -126,8 +124,7 @@ class SavedLoginsAuthFragment : PreferenceFragmentCompat(), AccountObserver {
             }
         }
 
-        val savedLoginsKey = getPreferenceKey(R.string.pref_key_saved_logins)
-        findPreference<Preference>(savedLoginsKey)?.setOnPreferenceClickListener {
+        requirePreference<Preference>(R.string.pref_key_saved_logins).setOnPreferenceClickListener {
             if (Build.VERSION.SDK_INT >= M && isHardwareAvailable && hasBiometricEnrolled) {
                 biometricPrompt.authenticate(promptInfo)
             } else {
@@ -181,8 +178,7 @@ class SavedLoginsAuthFragment : PreferenceFragmentCompat(), AccountObserver {
     }
 
     private fun updateSyncPreferenceStatus() {
-        val syncLogins = getPreferenceKey(R.string.pref_key_password_sync_logins)
-        findPreference<Preference>(syncLogins)?.apply {
+        requirePreference<Preference>(R.string.pref_key_password_sync_logins).apply {
             val syncEnginesStatus = SyncEnginesStorage(requireContext()).getStatus()
             val loginsSyncStatus = syncEnginesStatus.getOrElse(SyncEngine.Passwords) { false }
             summary = getString(
@@ -197,8 +193,7 @@ class SavedLoginsAuthFragment : PreferenceFragmentCompat(), AccountObserver {
     }
 
     private fun updateSyncPreferenceNeedsLogin() {
-        val syncLogins = getPreferenceKey(R.string.pref_key_password_sync_logins)
-        findPreference<Preference>(syncLogins)?.apply {
+        requirePreference<Preference>(R.string.pref_key_password_sync_logins).apply {
             summary = getString(R.string.preferences_passwords_sync_logins_sign_in)
             setOnPreferenceClickListener {
                 navigateToTurnOnSyncFragment()
@@ -208,8 +203,7 @@ class SavedLoginsAuthFragment : PreferenceFragmentCompat(), AccountObserver {
     }
 
     private fun updateSyncPreferenceNeedsReauth() {
-        val syncLogins = getPreferenceKey(R.string.pref_key_password_sync_logins)
-        findPreference<Preference>(syncLogins)?.apply {
+        requirePreference<Preference>(R.string.pref_key_password_sync_logins).apply {
             summary = getString(R.string.preferences_passwords_sync_logins_reconnect)
             setOnPreferenceClickListener {
                 navigateToAccountProblemFragment()

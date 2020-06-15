@@ -50,7 +50,7 @@ class DataChoicesFragment : PreferenceFragmentCompat() {
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(R.xml.data_choices_preferences, rootKey)
 
-        findPreference<SwitchPreference>(getPreferenceKey(R.string.pref_key_telemetry))?.apply {
+        requirePreference<SwitchPreference>(R.string.pref_key_telemetry).apply {
             isChecked = context.settings().isTelemetryEnabled
 
             val appName = context.getString(R.string.app_name)
@@ -59,7 +59,7 @@ class DataChoicesFragment : PreferenceFragmentCompat() {
             onPreferenceChangeListener = SharedPreferenceUpdater()
         }
 
-        findPreference<SwitchPreference>(getPreferenceKey(R.string.pref_key_marketing_telemetry))?.apply {
+        requirePreference<SwitchPreference>(R.string.pref_key_marketing_telemetry).apply {
             isChecked = context.settings().isMarketingTelemetryEnabled
 
             val appName = context.getString(R.string.app_name)
@@ -68,7 +68,7 @@ class DataChoicesFragment : PreferenceFragmentCompat() {
             onPreferenceChangeListener = SharedPreferenceUpdater()
         }
 
-        findPreference<SwitchPreference>(getPreferenceKey(R.string.pref_key_experimentation))?.apply {
+        requirePreference<SwitchPreference>(R.string.pref_key_experimentation).apply {
             isChecked = context.settings().isExperimentationEnabled
             isVisible = Config.channel.isReleaseOrBeta
             onPreferenceChangeListener = SharedPreferenceUpdater()

@@ -9,7 +9,6 @@ import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SwitchPreference
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
 
@@ -24,11 +23,11 @@ class AccessibilityFragment : PreferenceFragmentCompat() {
         super.onResume()
         showToolbar(getString(R.string.preferences_accessibility))
 
-        val forceZoomPreference = findPreference<SwitchPreference>(
-            getPreferenceKey(R.string.pref_key_accessibility_force_enable_zoom)
+        val forceZoomPreference = requirePreference<SwitchPreference>(
+            R.string.pref_key_accessibility_force_enable_zoom
         )
 
-        forceZoomPreference?.setOnPreferenceChangeListener<Boolean> { preference, shouldForce ->
+        forceZoomPreference.setOnPreferenceChangeListener<Boolean> { preference, shouldForce ->
             val settings = preference.context.settings()
             val components = preference.context.components
 
@@ -38,10 +37,10 @@ class AccessibilityFragment : PreferenceFragmentCompat() {
             true
         }
 
-        val textSizePreference = findPreference<TextPercentageSeekBarPreference>(
-            getPreferenceKey(R.string.pref_key_accessibility_font_scale)
+        val textSizePreference = requirePreference<TextPercentageSeekBarPreference>(
+            R.string.pref_key_accessibility_font_scale
         )
-        textSizePreference?.setOnPreferenceChangeListener<Int> { preference, newTextSize ->
+        textSizePreference.setOnPreferenceChangeListener<Int> { preference, newTextSize ->
             val settings = preference.context.settings()
             val components = preference.context.components
 
@@ -56,11 +55,11 @@ class AccessibilityFragment : PreferenceFragmentCompat() {
             components.useCases.sessionUseCases.reload()
             true
         }
-        textSizePreference?.isVisible = !requireContext().settings().shouldUseAutoSize
+        textSizePreference.isVisible = !requireContext().settings().shouldUseAutoSize
 
         val useAutoSizePreference =
-            findPreference<SwitchPreference>(getPreferenceKey(R.string.pref_key_accessibility_auto_size))
-        useAutoSizePreference?.setOnPreferenceChangeListener<Boolean> { preference, useAutoSize ->
+            requirePreference<SwitchPreference>(R.string.pref_key_accessibility_auto_size)
+        useAutoSizePreference.setOnPreferenceChangeListener<Boolean> { preference, useAutoSize ->
             val settings = preference.context.settings()
             val components = preference.context.components
 
@@ -74,7 +73,7 @@ class AccessibilityFragment : PreferenceFragmentCompat() {
                 components.core.engine.settings.fontSizeFactor = settings.fontSizeFactor
             }
             // Show the manual sizing controls if automatic sizing is turned off.
-            textSizePreference?.isVisible = !useAutoSize
+            textSizePreference.isVisible = !useAutoSize
 
             // Reload the current session to reflect the new text scale
             components.useCases.sessionUseCases.reload()
