@@ -706,11 +706,6 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
     @CallSuper
     final override fun onPause() {
         super.onPause()
-        val session = requireComponents.core.store.state.findTabOrCustomTabOrSelectedTab(customTabSessionId)
-        // If we didn't enter PiP, exit full screen on pause
-        if (session?.content?.pictureInPictureEnabled == false && fullScreenFeature.onBackPressed()) {
-            fullScreenChanged(false)
-        }
         if (findNavController().currentDestination?.id != R.id.searchFragment) {
             view?.hideKeyboard()
         }
@@ -720,6 +715,13 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
     override fun onStop() {
         super.onStop()
         initUIJob?.cancel()
+
+        requireComponents.core.store.state.findTabOrCustomTabOrSelectedTab(customTabSessionId)?.let { session ->
+            // If we didn't enter PiP, exit full screen on stop
+            if (!session.content.pictureInPictureEnabled && fullScreenFeature.onBackPressed()) {
+                fullScreenChanged(false)
+            }
+        }
     }
 
     @CallSuper
