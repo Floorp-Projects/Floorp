@@ -9,6 +9,18 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
+ChromeUtils.defineModuleGetter(
+  this,
+  "Services",
+  "resource://gre/modules/Services.jsm"
+);
+
+ChromeUtils.defineModuleGetter(
+  this,
+  "Deprecated",
+  "resource://gre/modules/Deprecated.jsm"
+);
+
 XPCOMUtils.defineLazyServiceGetter(
   this,
   "gDirService",
@@ -65,6 +77,13 @@ var FileUtils = {
     }
 
     if (shouldCreate) {
+      if (Services.startup.startingUp || Services.startup.shuttingDown) {
+        Deprecated.warning(
+          "Calling FileUtils.getDir(..., ..., true) causes main thread I/O and should be avoided especially during startup/shutdown",
+          "https://bugzilla.mozilla.org/show_bug.cgi?id=921157"
+        );
+      }
+
       try {
         dir.create(Ci.nsIFile.DIRECTORY_TYPE, this.PERMS_DIRECTORY);
       } catch (ex) {
