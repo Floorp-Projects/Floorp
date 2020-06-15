@@ -216,20 +216,32 @@ async function test_background_page_storage(testAreaName) {
     // Regression test for https://bugzilla.mozilla.org/show_bug.cgi?id=1645598
     async function testNonExistingKeys(storage, storageAreaDesc) {
       let data = await storage.get({ test6: 6 });
-      browser.test.assertEq(`{"test6":6}`, JSON.stringify(data),
-          `Use default value when not stored for ${storageAreaDesc}`);
+      browser.test.assertEq(
+        `{"test6":6}`,
+        JSON.stringify(data),
+        `Use default value when not stored for ${storageAreaDesc}`
+      );
 
       data = await storage.get({ test6: null });
-      browser.test.assertEq(`{"test6":null}`, JSON.stringify(data),
-          `Use default value, even if null for ${storageAreaDesc}`);
+      browser.test.assertEq(
+        `{"test6":null}`,
+        JSON.stringify(data),
+        `Use default value, even if null for ${storageAreaDesc}`
+      );
 
       data = await storage.get("test6");
-      browser.test.assertEq(`{}`, JSON.stringify(data),
-          `Empty result if key is not found for ${storageAreaDesc}`);
+      browser.test.assertEq(
+        `{}`,
+        JSON.stringify(data),
+        `Empty result if key is not found for ${storageAreaDesc}`
+      );
 
       data = await storage.get(["test6", "test7"]);
-      browser.test.assertEq(`{}`, JSON.stringify(data),
-          `Empty result if list of keys is not found for ${storageAreaDesc}`);
+      browser.test.assertEq(
+        `{}`,
+        JSON.stringify(data),
+        `Empty result if list of keys is not found for ${storageAreaDesc}`
+      );
     }
 
     async function testFalseyValues(areaName) {
