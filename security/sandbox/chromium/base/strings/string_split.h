@@ -12,6 +12,7 @@
 #include "base/base_export.h"
 #include "base/strings/string16.h"
 #include "base/strings/string_piece.h"
+#include "build/build_config.h"
 
 namespace base {
 
@@ -39,25 +40,30 @@ enum SplitResult {
 // Split the given string on ANY of the given separators, returning copies of
 // the result.
 //
+// Note this is inverse of JoinString() defined in string_util.h.
+//
 // To split on either commas or semicolons, keeping all whitespace:
 //
 //   std::vector<std::string> tokens = base::SplitString(
-//       input, ",;", base::KEEP_WHITESPACE, base::SPLIT_WANT_ALL);
-BASE_EXPORT std::vector<std::string> SplitString(
-    StringPiece input,
-    StringPiece separators,
-    WhitespaceHandling whitespace,
-    SplitResult result_type);
-BASE_EXPORT std::vector<string16> SplitString(
-    StringPiece16 input,
-    StringPiece16 separators,
-    WhitespaceHandling whitespace,
-    SplitResult result_type);
+//       input, ", WARN_UNUSED_RESULT;", base::KEEP_WHITESPACE,
+//       base::SPLIT_WANT_ALL) WARN_UNUSED_RESULT;
+BASE_EXPORT std::vector<std::string> SplitString(StringPiece input,
+                                                 StringPiece separators,
+                                                 WhitespaceHandling whitespace,
+                                                 SplitResult result_type)
+    WARN_UNUSED_RESULT;
+BASE_EXPORT std::vector<string16> SplitString(StringPiece16 input,
+                                              StringPiece16 separators,
+                                              WhitespaceHandling whitespace,
+                                              SplitResult result_type)
+    WARN_UNUSED_RESULT;
 
 // Like SplitString above except it returns a vector of StringPieces which
 // reference the original buffer without copying. Although you have to be
 // careful to keep the original string unmodified, this provides an efficient
 // way to iterate through tokens in a string.
+//
+// Note this is inverse of JoinString() defined in string_util.h.
 //
 // To iterate through all whitespace-separated tokens in an input string:
 //
@@ -70,12 +76,12 @@ BASE_EXPORT std::vector<StringPiece> SplitStringPiece(
     StringPiece input,
     StringPiece separators,
     WhitespaceHandling whitespace,
-    SplitResult result_type);
+    SplitResult result_type) WARN_UNUSED_RESULT;
 BASE_EXPORT std::vector<StringPiece16> SplitStringPiece(
     StringPiece16 input,
     StringPiece16 separators,
     WhitespaceHandling whitespace,
-    SplitResult result_type);
+    SplitResult result_type) WARN_UNUSED_RESULT;
 
 using StringPairs = std::vector<std::pair<std::string, std::string>>;
 
@@ -102,12 +108,12 @@ BASE_EXPORT std::vector<string16> SplitStringUsingSubstr(
     StringPiece16 input,
     StringPiece16 delimiter,
     WhitespaceHandling whitespace,
-    SplitResult result_type);
+    SplitResult result_type) WARN_UNUSED_RESULT;
 BASE_EXPORT std::vector<std::string> SplitStringUsingSubstr(
     StringPiece input,
     StringPiece delimiter,
     WhitespaceHandling whitespace,
-    SplitResult result_type);
+    SplitResult result_type) WARN_UNUSED_RESULT;
 
 // Like SplitStringUsingSubstr above except it returns a vector of StringPieces
 // which reference the original buffer without copying. Although you have to be
@@ -125,12 +131,38 @@ BASE_EXPORT std::vector<StringPiece16> SplitStringPieceUsingSubstr(
     StringPiece16 input,
     StringPiece16 delimiter,
     WhitespaceHandling whitespace,
-    SplitResult result_type);
+    SplitResult result_type) WARN_UNUSED_RESULT;
 BASE_EXPORT std::vector<StringPiece> SplitStringPieceUsingSubstr(
     StringPiece input,
     StringPiece delimiter,
     WhitespaceHandling whitespace,
-    SplitResult result_type);
+    SplitResult result_type) WARN_UNUSED_RESULT;
+
+#if defined(OS_WIN) && defined(BASE_STRING16_IS_STD_U16STRING)
+BASE_EXPORT std::vector<std::wstring> SplitString(WStringPiece input,
+                                                  WStringPiece separators,
+                                                  WhitespaceHandling whitespace,
+                                                  SplitResult result_type)
+    WARN_UNUSED_RESULT;
+
+BASE_EXPORT std::vector<WStringPiece> SplitStringPiece(
+    WStringPiece input,
+    WStringPiece separators,
+    WhitespaceHandling whitespace,
+    SplitResult result_type) WARN_UNUSED_RESULT;
+
+BASE_EXPORT std::vector<std::wstring> SplitStringUsingSubstr(
+    WStringPiece input,
+    WStringPiece delimiter,
+    WhitespaceHandling whitespace,
+    SplitResult result_type) WARN_UNUSED_RESULT;
+
+BASE_EXPORT std::vector<WStringPiece> SplitStringPieceUsingSubstr(
+    WStringPiece input,
+    WStringPiece delimiter,
+    WhitespaceHandling whitespace,
+    SplitResult result_type) WARN_UNUSED_RESULT;
+#endif
 
 }  // namespace base
 

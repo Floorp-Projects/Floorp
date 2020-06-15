@@ -11,7 +11,6 @@
 #ifndef BASE_METRICS_HISTOGRAM_MACROS_H_
 #define BASE_METRICS_HISTOGRAM_MACROS_H_
 
-#define UMA_HISTOGRAM_ENUMERATION(name, sample, enum_max) do { } while (0)
-#define SCOPED_UMA_HISTOGRAM_TIMER(name) do { } while (0)
+#define UMA_HISTOGRAM_ENUMERATION(name, sample) do { } while (0)
 
 #endif  // BASE_METRICS_HISTOGRAM_MACROS_H_

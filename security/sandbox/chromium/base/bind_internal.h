@@ -104,15 +104,16 @@ struct IgnoreResultHelper {
   T functor_;
 };
 
-template <typename T>
+template <typename T, typename Deleter = std::default_delete<T>>
 class OwnedWrapper {
  public:
   explicit OwnedWrapper(T* o) : ptr_(o) {}
-  explicit OwnedWrapper(std::unique_ptr<T>&& ptr) : ptr_(std::move(ptr)) {}
+  explicit OwnedWrapper(std::unique_ptr<T, Deleter>&& ptr)
+      : ptr_(std::move(ptr)) {}
   T* get() const { return ptr_.get(); }
 
  private:
-  std::unique_ptr<T> ptr_;
+  std::unique_ptr<T, Deleter> ptr_;
 };
 
 // PassedWrapper is a copyable adapter for a scoper that ignores const.
@@ -354,10 +355,9 @@ template <typename Functor, typename SFINAE>
 struct FunctorTraits;
 
 // For empty callable types.
-// This specialization is intended to allow binding captureless lambdas by
-// base::Bind(), based on the fact that captureless lambdas are empty while
-// capturing lambdas are not. This also allows any functors as far as it's an
-// empty class.
+// This specialization is intended to allow binding captureless lambdas, based
+// on the fact that captureless lambdas are empty while capturing lambdas are
+// not. This also allows any functors as far as it's an empty class.
 // Example:
 //
 //   // Captureless lambdas are allowed.
@@ -791,10 +791,10 @@ BanUnconstructedRefCountedReceiver(const Receiver& receiver, Unused&&...) {
   //
   //   scoped_refptr<Foo> oo = Foo::Create();
   DCHECK(receiver->HasAtLeastOneRef())
-      << "base::Bind() refuses to create the first reference to ref-counted "
-         "objects. That is typically happens around PostTask() in their "
-         "constructor, and such objects can be destroyed before `new` returns "
-         "if the task resolves fast enough.";
+      << "base::Bind{Once,Repeating}() refuses to create the first reference "
+         "to ref-counted objects. That typically happens around PostTask() in "
+         "their constructor, and such objects can be destroyed before `new` "
+         "returns if the task resolves fast enough.";
 }
 
 // BindState<>
@@ -917,7 +917,7 @@ using MakeBindStateType =
 //   };
 //
 //   WeakPtr<Foo> oo = nullptr;
-//   base::Bind(&Foo::bar, oo).Run();
+//   base::BindOnce(&Foo::bar, oo).Run();
 template <typename T>
 struct IsWeakReceiver : std::false_type {};
 
@@ -953,9 +953,11 @@ struct BindUnwrapTraits<internal::RetainedRefWrapper<T>> {
   static T* Unwrap(const internal::RetainedRefWrapper<T>& o) { return o.get(); }
 };
 
-template <typename T>
-struct BindUnwrapTraits<internal::OwnedWrapper<T>> {
-  static T* Unwrap(const internal::OwnedWrapper<T>& o) { return o.get(); }
+template <typename T, typename Deleter>
+struct BindUnwrapTraits<internal::OwnedWrapper<T, Deleter>> {
+  static T* Unwrap(const internal::OwnedWrapper<T, Deleter>& o) {
+    return o.get();
+  }
 };
 
 template <typename T>

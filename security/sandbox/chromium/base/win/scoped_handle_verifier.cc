@@ -4,8 +4,9 @@
 
 #include "base/win/scoped_handle_verifier.h"
 
-#include <stddef.h>
 #include <windows.h>
+
+#include <stddef.h>
 
 #include <unordered_map>
 
@@ -25,13 +26,13 @@ void* GetHandleVerifier() {
 
 namespace {
 
-base::win::internal::ScopedHandleVerifier* g_active_verifier = NULL;
-typedef void* (*GetHandleVerifierFn)();
-typedef std::unordered_map<HANDLE,
-                           base::win::internal::ScopedHandleVerifierInfo,
-                           base::win::internal::HandleHash>
-    HandleMap;
-typedef base::internal::LockImpl NativeLock;
+base::win::internal::ScopedHandleVerifier* g_active_verifier = nullptr;
+using GetHandleVerifierFn = void* (*)();
+using HandleMap =
+    std::unordered_map<HANDLE,
+                       base::win::internal::ScopedHandleVerifierInfo,
+                       base::win::internal::HandleHash>;
+using NativeLock = base::internal::LockImpl;
 
 NativeLock* GetLock() {
   static auto* native_lock = new NativeLock();
@@ -70,13 +71,7 @@ ScopedHandleVerifier* ScopedHandleVerifier::Get() {
 
 bool CloseHandleWrapper(HANDLE handle) {
   if (!::CloseHandle(handle))
-    // Making this DCHECK on non-Nighly as we are hitting this frequently,
-    // looks like we are closing handles twice somehow. See bug 1564899.
-#if defined(NIGHTLY_BUILD)
     CHECK(false);  // CloseHandle failed.
-#else
-    DCHECK(false);  // CloseHandle failed.
-#endif
   return true;
 }
 

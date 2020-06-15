@@ -117,6 +117,58 @@ class BasicAutoUnlock {
   DISALLOW_COPY_AND_ASSIGN(BasicAutoUnlock);
 };
 
+// This is an implementation used for AutoLockMaybe templated on the lock type.
+template <class LockType>
+class SCOPED_LOCKABLE BasicAutoLockMaybe {
+ public:
+  explicit BasicAutoLockMaybe(LockType* lock) EXCLUSIVE_LOCK_FUNCTION(lock)
+      : lock_(lock) {
+    if (lock_)
+      lock_->Acquire();
+  }
+
+  ~BasicAutoLockMaybe() UNLOCK_FUNCTION() {
+    if (lock_) {
+      lock_->AssertAcquired();
+      lock_->Release();
+    }
+  }
+
+ private:
+  LockType* const lock_;
+  DISALLOW_COPY_AND_ASSIGN(BasicAutoLockMaybe);
+};
+
+// This is an implementation used for ReleasableAutoLock templated on the lock
+// type.
+template <class LockType>
+class SCOPED_LOCKABLE BasicReleasableAutoLock {
+ public:
+  explicit BasicReleasableAutoLock(LockType* lock) EXCLUSIVE_LOCK_FUNCTION(lock)
+      : lock_(lock) {
+    DCHECK(lock_);
+    lock_->Acquire();
+  }
+
+  ~BasicReleasableAutoLock() UNLOCK_FUNCTION() {
+    if (lock_) {
+      lock_->AssertAcquired();
+      lock_->Release();
+    }
+  }
+
+  void Release() UNLOCK_FUNCTION() {
+    DCHECK(lock_);
+    lock_->AssertAcquired();
+    lock_->Release();
+    lock_ = nullptr;
+  }
+
+ private:
+  LockType* lock_;
+  DISALLOW_COPY_AND_ASSIGN(BasicReleasableAutoLock);
+};
+
 }  // namespace internal
 }  // namespace base
 

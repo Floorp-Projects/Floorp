@@ -152,6 +152,19 @@ class BASE_EXPORT SequencedTaskRunner : public TaskRunner {
                                 object.release());
   }
 
+  // Returns true iff tasks posted to this TaskRunner are sequenced
+  // with this call.
+  //
+  // In particular:
+  // - Returns true if this is a SequencedTaskRunner to which the
+  //   current task was posted.
+  // - Returns true if this is a SequencedTaskRunner bound to the
+  //   same sequence as the SequencedTaskRunner to which the current
+  //   task was posted.
+  // - Returns true if this is a SingleThreadTaskRunner bound to
+  //   the current thread.
+  virtual bool RunsTasksInCurrentSequence() const = 0;
+
  protected:
   ~SequencedTaskRunner() override = default;
 
