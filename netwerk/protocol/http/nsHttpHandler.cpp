@@ -329,11 +329,14 @@ nsHttpHandler::nsHttpHandler()
   if (runtime) {
     runtime->GetProcessID(&mProcessId);
   }
-  SetFastOpenOSSupport();
+
+  mFastOpenSupported = false;
+  if (XRE_IsParentProcess()) {
+    SetFastOpenOSSupport();
+  }
 }
 
 void nsHttpHandler::SetFastOpenOSSupport() {
-  mFastOpenSupported = false;
 #if !defined(XP_WIN) && !defined(XP_LINUX) && !defined(ANDROID) && \
     !defined(HAS_CONNECTX)
   return;
@@ -624,7 +627,15 @@ nsresult nsHttpHandler::InitConnectionMgr() {
       HttpConnectionMgrParent* parent =
           self->mConnMgr->AsHttpConnectionMgrParent();
       Unused << SocketProcessParent::GetSingleton()
-                    ->SendPHttpConnectionMgrConstructor(parent);
+                    ->SendPHttpConnectionMgrConstructor(
+                        parent,
+                        HttpHandlerInitArgs(
+                            self->mFastOpenSupported, self->mLegacyAppName,
+                            self->mLegacyAppVersion, self->mPlatform,
+                            self->mOscpu, self->mMisc, self->mProduct,
+                            self->mProductSub, self->mAppName,
+                            self->mAppVersion, self->mCompatFirefox,
+                            self->mCompatDevice, self->mDeviceModelId));
     };
     gIOService->CallOrWaitForSocketProcess(std::move(task));
   } else {
@@ -952,6 +963,13 @@ void nsHttpHandler::BuildUserAgent() {
 #endif
 
 void nsHttpHandler::InitUserAgentComponents() {
+  // Don't build user agent components in socket process, since the system info
+  // is not available.
+  if (XRE_IsSocketProcess()) {
+    mUserAgentIsDirty = true;
+    return;
+  }
+
 #ifndef MOZ_UA_OS_AGNOSTIC
   // Gather platform.
   mPlatform.AssignLiteral(
@@ -1157,7 +1175,13 @@ void nsHttpHandler::PrefsChanged(const char* pref) {
   // general.useragent.use_device
   if (PREF_CHANGED(UA_PREF("use_device"))) {
     if (Preferences::GetBool(UA_PREF("use_device"), false)) {
-      mDeviceModelId = mozilla::net::GetDeviceModelId();
+      if (!XRE_IsSocketProcess()) {
+        mDeviceModelId = mozilla::net::GetDeviceModelId();
+        if (gIOService->SocketProcessReady()) {
+          Unused << SocketProcessParent::GetSingleton()
+                        ->SendUpdateDeviceModelId(mDeviceModelId);
+        }
+      }
     } else {
       mDeviceModelId = EmptyCString();
     }
@@ -2859,6 +2883,28 @@ void nsHttpHandler::ClearHostMapping(nsHttpConnectionInfo* aConnInfo) {
   }
 
   AltServiceCache()->ClearHostMapping(aConnInfo);
+}
+
+void nsHttpHandler::SetHttpHandlerInitArgs(const HttpHandlerInitArgs& aArgs) {
+  MOZ_ASSERT(XRE_IsSocketProcess());
+  mFastOpenSupported = aArgs.mFastOpenSupported();
+  mLegacyAppName = aArgs.mLegacyAppName();
+  mLegacyAppVersion = aArgs.mLegacyAppVersion();
+  mPlatform = aArgs.mPlatform();
+  mOscpu = aArgs.mOscpu();
+  mMisc = aArgs.mMisc();
+  mProduct = aArgs.mProduct();
+  mProductSub = aArgs.mProductSub();
+  mAppName = aArgs.mAppName();
+  mAppVersion = aArgs.mAppVersion();
+  mCompatFirefox = aArgs.mCompatFirefox();
+  mCompatDevice = aArgs.mCompatDevice();
+  mDeviceModelId = aArgs.mDeviceModelId();
+}
+
+void nsHttpHandler::SetDeviceModelId(const nsCString& aModelId) {
+  MOZ_ASSERT(XRE_IsSocketProcess());
+  mDeviceModelId = aModelId;
 }
 
 }  // namespace mozilla::net

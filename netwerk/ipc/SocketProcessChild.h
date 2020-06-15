@@ -74,8 +74,9 @@ class SocketProcessChild final
       PChildToParentStreamChild* aActor) override;
   PFileDescriptorSetChild* SendPFileDescriptorSetConstructor(
       const FileDescriptor& aFD) override;
-  already_AddRefed<PHttpConnectionMgrChild> AllocPHttpConnectionMgrChild();
-
+  already_AddRefed<PHttpConnectionMgrChild> AllocPHttpConnectionMgrChild(
+      const HttpHandlerInitArgs& aArgs);
+  mozilla::ipc::IPCResult RecvUpdateDeviceModelId(const nsCString& aModelId);
   mozilla::ipc::IPCResult RecvOnHttpActivityDistributorActivated(
       const bool& aIsActivated);
 
