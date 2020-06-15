@@ -551,6 +551,7 @@ impl RenderTask {
                         .expect("bug: no cache key set")
                         .clone();
                     let blur_radius_dp = cache_key.blur_radius_dp as f32;
+                    let device_pixel_scale = DevicePixelScale::new(cache_key.device_pixel_scale.to_f32_px());
                     let clip_data_address = gpu_cache.get_address(&source.clip_data_handle);
 
                     // Request a cacheable render task with a blurred, minimal
