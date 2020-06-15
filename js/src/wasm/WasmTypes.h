@@ -613,7 +613,7 @@ struct V128 {
   V128() { memset(bytes, 0, sizeof(bytes)); }
 
   template <typename T>
-  T extractLane(int lane) {
+  T extractLane(unsigned lane) const {
     T result;
     MOZ_ASSERT(lane < 16 / sizeof(T));
     memcpy(&result, bytes + sizeof(T) * lane, sizeof(T));
@@ -621,7 +621,7 @@ struct V128 {
   }
 
   template <typename T>
-  void insertLane(int lane, T value) {
+  void insertLane(unsigned lane, T value) {
     MOZ_ASSERT(lane < 16 / sizeof(T));
     memcpy(bytes + sizeof(T) * lane, &value, sizeof(T));
   }

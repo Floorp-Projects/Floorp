@@ -242,6 +242,25 @@ static bool ToJSValue_f64(JSContext* cx, double src, MutableHandleValue dst) {
   Debug::print(src);
   return true;
 }
+#ifdef ENABLE_WASM_SIMD
+template <typename Debug = NoDebug>
+static bool ToJSValue_v128(JSContext* cx, const V128& src,
+                           MutableHandleValue dst) {
+  // Conversion to v128 happens only in the context of the debugger, all other
+  // execution paths are blocked from running this conversion.
+  //
+  // v128 does not have a convenient representation in JS, nor a convenient way
+  // of printing it -- after all, what's the intended interpretation?  For the
+  // time being, we transform it to a single i32 that represents lane 0 of an
+  // int32x4, and we print it as an int32x4 -- at least this shows the bit
+  // representation.
+  dst.set(Int32Value(src.extractLane<int32_t>(0)));
+  for (unsigned i = 0; i < 4; i++) {
+    Debug::print(src.extractLane<int32_t>(i));
+  }
+  return true;
+}
+#endif
 template <typename Debug = NoDebug>
 static bool ToJSValue_funcref(JSContext* cx, void* src,
                               MutableHandleValue dst) {
@@ -280,7 +299,12 @@ static bool ToJSValue(JSContext* cx, const void* src, ValType type,
       return ToJSValue_f64<Debug>(cx, *reinterpret_cast<const double*>(src),
                                   dst);
     case ValType::V128:
-      MOZ_CRASH("unhandled type in ToJSValue");
+#ifdef ENABLE_WASM_SIMD
+      return ToJSValue_v128<Debug>(cx, *reinterpret_cast<const V128*>(src),
+                                   dst);
+#else
+      break;
+#endif
     case ValType::Ref:
       switch (type.refTypeKind()) {
         case RefType::Func:
