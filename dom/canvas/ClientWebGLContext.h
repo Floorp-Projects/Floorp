@@ -723,8 +723,6 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
   bool mIsCanvasDirty = false;
   uvec2 mRequestedSize = {};
 
-  RefPtr<gfx::DataSourceSurface> mFrontBufferSnapshot;
-
  public:
   explicit ClientWebGLContext(bool webgl2);
 
@@ -997,7 +995,8 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
   void Present(WebGLFramebufferJS*, layers::TextureType);
   Maybe<layers::SurfaceDescriptor> GetFrontBuffer(WebGLFramebufferJS*,
                                                   layers::TextureType);
-  RefPtr<gfx::SourceSurface> GetFrontBufferSnapshot() override;
+  RefPtr<gfx::SourceSurface> GetFrontBufferSnapshot(
+      bool requireAlphaPremult = true) override;
 
  private:
   RefPtr<gfx::DataSourceSurface> BackBufferSnapshot();

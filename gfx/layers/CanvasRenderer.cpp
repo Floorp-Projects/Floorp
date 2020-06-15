@@ -46,7 +46,8 @@ bool CanvasRenderer::IsDataValid(const CanvasRendererData& aData) const {
   return mData.GetContext() == aData.GetContext();
 }
 
-std::shared_ptr<BorrowedSourceSurface> CanvasRenderer::BorrowSnapshot() const {
+std::shared_ptr<BorrowedSourceSurface> CanvasRenderer::BorrowSnapshot(
+    const bool requireAlphaPremult) const {
   const auto context = mData.GetContext();
   if (!context) return nullptr;
   const auto& provider = context->GetBufferProvider();
@@ -57,7 +58,7 @@ std::shared_ptr<BorrowedSourceSurface> CanvasRenderer::BorrowSnapshot() const {
     ss = provider->BorrowSnapshot();
   }
   if (!ss) {
-    ss = context->GetFrontBufferSnapshot();
+    ss = context->GetFrontBufferSnapshot(requireAlphaPremult);
   }
   if (!ss) return nullptr;
 
