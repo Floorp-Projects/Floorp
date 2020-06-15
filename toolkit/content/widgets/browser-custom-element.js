@@ -640,7 +640,12 @@
     }
 
     get webProgress() {
-      return this.browsingContext?.webProgress;
+      return this.isRemoteBrowser
+        ? this._remoteWebProgress
+        : this.docShell &&
+            this.docShell
+              .QueryInterface(Ci.nsIInterfaceRequestor)
+              .getInterface(Ci.nsIWebProgress);
     }
 
     get sessionHistory() {
