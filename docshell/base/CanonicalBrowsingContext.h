@@ -16,11 +16,11 @@
 #include "nsTArray.h"
 #include "nsTHashtable.h"
 #include "nsHashKeys.h"
-
-class nsISHistory;
 #include "nsISecureBrowserUI.h"
 
+class nsISHistory;
 class nsSecureBrowserUI;
+
 namespace mozilla {
 namespace net {
 class DocumentLoadListener;
@@ -185,14 +185,18 @@ class CanonicalBrowsingContext final : public BrowsingContext {
                             bool aReplaceBrowsingContext);
 
     void Cancel(nsresult aRv);
-    void ProcessReady(ContentParent* aContentParent);
 
    private:
+    friend class CanonicalBrowsingContext;
+
     ~PendingRemotenessChange();
+    void ProcessReady(ContentParent* aContentParent);
+    void Finish(ContentParent* aContentParent);
     void Clear();
 
     RefPtr<CanonicalBrowsingContext> mTarget;
     RefPtr<RemotenessPromise::Private> mPromise;
+    RefPtr<GenericPromise> mPrepareToChangePromise;
 
     uint64_t mPendingSwitchId;
     bool mReplaceBrowsingContext;
