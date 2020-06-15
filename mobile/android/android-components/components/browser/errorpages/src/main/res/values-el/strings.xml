@@ -91,6 +91,9 @@
     <string name="mozac_browser_errorpages_proxy_connection_refused_title">Άρνηση σύνδεσης διαμεσολαβητή</string>
 
     <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_proxy_host_title">Δεν βρέθηκε διακομιστής μεσολάβησης</string>
+
+    <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">Ζήτημα κακόβουλης ιστοσελίδας</string>
 
     <!-- The %1$s will be replaced by the malicious website URL-->
