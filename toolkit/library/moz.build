@@ -90,12 +90,12 @@ def Libxul(name, output_category=None):
 
     # Generate GDB pretty printer-autoload files only on Linux. OSX's GDB is
     # too old to support Python pretty-printers; if this changes, we could
-    # make this 'ifdef __GNUC__'.
+    # make this 'ifdef GNU_CC'.
     if CONFIG['OS_ARCH'] == 'Linux':
         # Create a GDB Python auto-load file alongside the libxul shared library
         # in the build directory.
         DEFINES['topsrcdir'] = TOPSRCDIR
-        OBJDIR_FILES.toolkit.library.build += ['../libxul.so-gdb.py']
+        OBJDIR_PP_FILES.toolkit.library.gtest += ['../libxul.so-gdb.py.in']
 
 
 # The real libxul definition is in ./build/moz.build, but we define a
@@ -372,3 +372,4 @@ else:
         CONFIG['DLL_PREFIX'], CONFIG['DLL_SUFFIX'].lstrip('.').replace('.','_'))
 GeneratedFile('buildid.cpp', script = 'gen_buildid.py',
               inputs=['!build/%s.list' % libxul_list])
+
