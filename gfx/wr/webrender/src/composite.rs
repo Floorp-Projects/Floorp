@@ -340,7 +340,7 @@ impl CompositeDescriptor {
     /// Construct an empty descriptor.
     pub fn empty() -> Self {
         CompositeDescriptor {
-            surfaces: Vec::new(),
+            surfaces: Vec::with_capacity(8),
         }
     }
 }
@@ -400,15 +400,15 @@ impl CompositeState {
         }
 
         CompositeState {
-            opaque_tiles: Vec::new(),
-            alpha_tiles: Vec::new(),
+            opaque_tiles: Vec::with_capacity(40),
+            alpha_tiles: Vec::with_capacity(16),
             clear_tiles: Vec::new(),
             z_generator: ZBufferIdGenerator::new(0, max_depth_ids),
             dirty_rects_are_valid: true,
             compositor_kind,
             picture_caching_is_enabled,
             global_device_pixel_scale,
-            occluders: Vec::new(),
+            occluders: Vec::with_capacity(16),
             descriptor: CompositeDescriptor::empty(),
             external_surfaces: Vec::new(),
         }
