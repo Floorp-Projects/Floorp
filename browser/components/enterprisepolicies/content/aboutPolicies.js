@@ -403,7 +403,7 @@ function show(button) {
   button.setAttribute("selected", "true");
 
   let title = document.getElementById("sectionTitle");
-  title.textContent = button.children[1].textContent;
+  title.textContent = button.textContent;
   location.hash = category;
   restoreScrollPosition(category);
 }
