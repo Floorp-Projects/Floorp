@@ -1954,12 +1954,6 @@
         return Ci.nsIBrowser.PROCESS_BEHAVIOR_STANDARD;
       }
 
-      // When loaded in a TabBrowser, use the custom behavior from
-      // `performProcessSwitch`.
-      if (this.getTabBrowser() != null) {
-        return Ci.nsIBrowser.PROCESS_BEHAVIOR_CUSTOM;
-      }
-
       // For backwards compatibility, we need to mark remote, but
       // non-`allowremote`, frames as `PROCESS_BEHAVIOR_SUBFRAME_ONLY`, as some
       // tests rely on it.
@@ -1969,19 +1963,6 @@
       }
       // Otherwise, don't allow gecko-initiated toplevel process switches.
       return Ci.nsIBrowser.PROCESS_BEHAVIOR_DISABLED;
-    }
-
-    performProcessSwitch(
-      remoteType,
-      redirectLoadSwitchId,
-      replaceBrowsingContext
-    ) {
-      return this.getTabBrowser().performProcessSwitch(
-        this,
-        remoteType,
-        redirectLoadSwitchId,
-        replaceBrowsingContext
-      );
     }
 
     // This method is replaced by frontend code in order to delay performing the
