@@ -330,20 +330,6 @@ class ArtifactJob(object):
             destpath = mozpath.join('host/bin', orig_basename)
             writer.add(destpath.encode('utf-8'), open(filename, 'rb'))
 
-    @staticmethod
-    def transform_job(job, tree):
-        # PGO builds are now known as "shippable" for all platforms but Android.
-        # For macOS and linux32 shippable builds are equivalent to opt builds and
-        # replace them on some trees. Additionally, we no longer produce win64
-        # opt builds on integration branches.
-        if job.endswith('-pgo') or job in ('macosx64-opt', 'linux-opt',
-                                           'win64-opt'):
-            tree += '.shippable'
-        if job.endswith('-pgo'):
-            job = job.replace('-pgo', '-opt')
-
-        return job, tree
-
 
 class AndroidArtifactJob(ArtifactJob):
     package_re = r'public/build/geckoview_example\.apk'
@@ -403,10 +389,6 @@ class AndroidArtifactJob(ArtifactJob):
                          '{destpath} to processed archive')
                 writer.add(destpath.encode('utf-8'),
                            gzip.GzipFile(fileobj=reader[filename].uncompressed_data))
-
-    @staticmethod
-    def transform_job(job, tree):
-        return job, tree
 
 
 class LinuxArtifactJob(ArtifactJob):
@@ -634,10 +616,6 @@ class ThunderbirdMixin(object):
     ]
     try_tree = 'try-comm-central'
 
-    @staticmethod
-    def transform_job(job, tree):
-        return job, tree
-
 
 class LinuxThunderbirdArtifactJob(ThunderbirdMixin, LinuxArtifactJob):
     pass
@@ -820,7 +798,8 @@ class TaskCache(CacheManager):
         # 'autoland'
         tree = tree.split('/')[1] if '/' in tree else tree
 
-        job, tree = artifact_job_class.transform_job(job, tree)
+        if job.endswith('-opt'):
+            tree += '.shippable'
 
         namespace = '{trust_domain}.v2.{tree}.revision.{rev}.{product}.{job}'.format(
             trust_domain=artifact_job_class.trust_domain,
@@ -906,8 +885,6 @@ class Artifacts(object):
         # if MOZ_DEBUG is enabled.
         if self._substs.get('MOZ_DEBUG'):
             target_suffix = '-debug'
-        elif self._substs.get('MOZ_PGO'):
-            target_suffix = '-pgo'
         else:
             target_suffix = '-opt'
 
