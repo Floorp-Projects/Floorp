@@ -310,12 +310,6 @@ already_AddRefed<GLContext> GLContextProviderCGL::CreateHeadless(const GLContext
   return gl.forget();
 }
 
-already_AddRefed<GLContext> GLContextProviderCGL::CreateOffscreen(const IntSize& size,
-                                                                  const GLContextCreateDesc& desc,
-                                                                  nsACString* const out_failureId) {
-  return CreateHeadless(desc, out_failureId);
-}
-
 static RefPtr<GLContext> gGlobalContext;
 
 GLContext* GLContextProviderCGL::GetGlobalContext() {

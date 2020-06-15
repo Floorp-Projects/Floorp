@@ -33,6 +33,7 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/ThreadLocal.h"
 
+#include "MozFramebuffer.h"
 #include "nsTArray.h"
 #include "GLDefs.h"
 #include "GLLibraryLoader.h"
@@ -316,7 +317,16 @@ class GLContext : public GenericAtomicRefCounted,
   /**
    * Get the default framebuffer for this context.
    */
-  virtual GLuint GetDefaultFramebuffer() { return 0; }
+  UniquePtr<MozFramebuffer> mOffscreenDefaultFb;
+
+  bool CreateOffscreenDefaultFb(const gfx::IntSize& size);
+
+  virtual GLuint GetDefaultFramebuffer() {
+    if (mOffscreenDefaultFb) {
+      return mOffscreenDefaultFb->mFB;
+    }
+    return 0;
+  }
 
   /**
    * mVersion store the OpenGL's version, multiplied by 100. For example, if
@@ -338,7 +348,7 @@ class GLContext : public GenericAtomicRefCounted,
    * have full compatibility with context version and profiles (especialy the
    * core that officialy don't bring any extensions).
    */
- public:
+
   /**
    * Known GL extensions that can be queried by
    * IsExtensionSupported.  The results of this are cached, and as

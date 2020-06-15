@@ -516,14 +516,6 @@ already_AddRefed<GLContext> GLContextProviderWGL::CreateHeadless(
 }
 
 /*static*/
-already_AddRefed<GLContext> GLContextProviderWGL::CreateOffscreen(
-    const IntSize& size, const GLContextCreateDesc& desc,
-    nsACString* const out_failureId) {
-  *out_failureId = NS_LITERAL_CSTRING("FEATURE_FAILURE_WGL_INIT");
-  return CreateHeadless(desc, out_failureId);
-}
-
-/*static*/
 GLContext* GLContextProviderWGL::GetGlobalContext() { return nullptr; }
 
 /*static*/
