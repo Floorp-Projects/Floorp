@@ -1983,6 +1983,50 @@
         replaceBrowsingContext
       );
     }
+
+    // This method is replaced by frontend code in order to delay performing the
+    // process switch until some async operatin is completed.
+    //
+    // This is used by tabbrowser to flush SessionStore before a process switch.
+    async prepareToChangeRemoteness() {
+      /* no-op unless replaced */
+    }
+
+    // Called by Gecko before the remoteness change happens, allowing for
+    // listeners, etc. to be stashed before the process switch.
+    beforeChangeRemoteness() {
+      // Fire the `WillChangeBrowserRemoteness` event, which may be hooked by
+      // frontend code for custom behaviour.
+      let event = document.createEvent("Events");
+      event.initEvent("WillChangeBrowserRemoteness", true, false);
+      this.dispatchEvent(event);
+
+      // Destroy ourselves to unregister from observer notifications
+      // FIXME: Can we get away with something less destructive here?
+      this.destroy();
+    }
+
+    finishChangeRemoteness(redirectLoadSwitchId) {
+      // Re-construct ourselves after the destroy in `beforeChangeRemoteness`.
+      this.construct();
+
+      // Fire the `DidChangeBrowserRemoteness` event, which may be hooked by
+      // frontend code for custom behaviour.
+      let event = document.createEvent("Events");
+      event.initEvent("DidChangeBrowserRemoteness", true, false);
+      this.dispatchEvent(event);
+
+      // If we have a tabbrowser, we need to let it handle restoring session
+      // history, and performing the `resumeRedirectedLoad`, in order to get
+      // sesssion state set up correctly.
+      // FIXME: This probably needs to be hookable by GeckoView.
+      let tabbrowser = this.getTabBrowser();
+      if (tabbrowser) {
+        tabbrowser.finishBrowserRemotenessChange(this, redirectLoadSwitchId);
+        return true;
+      }
+      return false;
+    }
   }
 
   MozXULElement.implementCustomInterface(MozBrowser, [Ci.nsIBrowser]);
