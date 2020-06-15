@@ -1725,7 +1725,8 @@ static void MergeStacks(uint32_t aFeatures, bool aIsSynchronous,
         js::ProfilingStackFrame stackFrame;
         constexpr uint32_t ExtraFlags =
             uint32_t(js::ProfilingStackFrame::Flags::IS_BLINTERP_FRAME);
-        stackFrame.initJsFrame<ExtraFlags>("", jsFrame.label, script, pc,
+        stackFrame.initJsFrame<JS::ProfilingCategoryPair::JS_BaselineInterpret,
+                               ExtraFlags>("", jsFrame.label, script, pc,
                                            jsFrame.realmID);
         aCollector.CollectProfilingStackFrame(stackFrame);
       } else {
