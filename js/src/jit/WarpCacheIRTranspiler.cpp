@@ -1555,27 +1555,37 @@ bool WarpCacheIRTranspiler::emitCallFunction(ObjOperandId calleeId,
   if (callInfo_->constructing()) {
     MOZ_ASSERT(flags.isConstructing());
 
-    callInfo_->thisArg()->setImplicitlyUsedUnchecked();
+    MDefinition* thisArg = callInfo_->thisArg();
 
     if (kind == CallKind::Native) {
-      // We know we are constructing a native function even if we don't know the
-      // actual target.
-
-      // Magic value passed to natives to indicate construction.
-      callInfo_->setThis(constant(MagicValue(JS_IS_CONSTRUCTING)));
-
-      needsThisCheck = false;
+      // Native functions keep the is-constructing MagicValue as |this|.
+      // If one of the arguments uses spread syntax this can be a loop phi with
+      // MIRType::Value.
+      MOZ_ASSERT_IF(!thisArg->isPhi(),
+                    thisArg->type() == MIRType::MagicIsConstructing);
     } else {
       MOZ_ASSERT(kind == CallKind::Scripted);
 
-      // TODO: Optimize |this| creation based on CacheIR.
-      MDefinition* newTarget = callInfo_->getNewTarget();
-      auto* createThis = MCreateThis::New(alloc(), callee, newTarget);
-      add(createThis);
-      callInfo_->setThis(createThis);
+      // TODO: if wrappedTarget->constructorNeedsUninitializedThis(), use an
+      // uninitialized-lexical constant as |this|. To do this we need to either
+      // store a new flag in the GuardSpecificFunction CacheIR/MIR instructions
+      // or we could add a new op similar to MetaTwoByte.
 
-      wrappedTarget = nullptr;
-      needsThisCheck = true;
+      if (!thisArg->isCreateThisWithTemplate()) {
+        // Note: guard against Value loop phis similar to the Native case above.
+        MOZ_ASSERT_IF(!thisArg->isPhi(),
+                      thisArg->type() == MIRType::MagicIsConstructing);
+
+        MDefinition* newTarget = callInfo_->getNewTarget();
+        auto* createThis = MCreateThis::New(alloc(), callee, newTarget);
+        add(createThis);
+
+        thisArg->setImplicitlyUsedUnchecked();
+        callInfo_->setThis(createThis);
+
+        wrappedTarget = nullptr;
+        needsThisCheck = true;
+      }
     }
   }
 
@@ -1617,9 +1627,26 @@ bool WarpCacheIRTranspiler::emitCallScriptedFunction(ObjOperandId calleeId,
   return emitCallFunction(calleeId, argcId, flags, CallKind::Scripted);
 }
 
+// TODO: rename the MetaTwoByte op when IonBuilder is gone.
 bool WarpCacheIRTranspiler::emitMetaTwoByte(MetaTwoByteKind kind,
                                             uint32_t functionObjectOffset,
                                             uint32_t templateObjectOffset) {
+  if (kind != MetaTwoByteKind::ScriptedTemplateObject) {
+    return true;
+  }
+
+  JSObject* templateObj = objectStubField(templateObjectOffset);
+  MConstant* templateConst = constant(ObjectValue(*templateObj));
+
+  // TODO: support pre-tenuring.
+  gc::InitialHeap heap = gc::DefaultHeap;
+
+  auto* createThis = MCreateThisWithTemplate::New(
+      alloc(), /* constraints = */ nullptr, templateConst, heap);
+  add(createThis);
+
+  callInfo_->thisArg()->setImplicitlyUsedUnchecked();
+  callInfo_->setThis(createThis);
   return true;
 }
 

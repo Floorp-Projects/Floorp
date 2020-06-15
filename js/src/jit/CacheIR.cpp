@@ -6281,10 +6281,16 @@ bool CallIRGenerator::getTemplateObjectForScripted(HandleFunction calleeFunc,
     return true;
   }
 
-  // Only attach a stub if the function already has a prototype and
-  // we can look it up without causing side effects.
+  // Only attach a stub if the newTarget is a function that already has a
+  // prototype and we can look it up without causing side effects.
   RootedValue protov(cx_);
   RootedObject newTarget(cx_, &newTarget_.toObject());
+  if (!newTarget->is<JSFunction>() ||
+      !newTarget->as<JSFunction>().hasNonConfigurablePrototypeDataProperty()) {
+    trackAttached(IRGenerator::NotAttached);
+    *skipAttach = true;
+    return true;
+  }
   if (!GetPropertyPure(cx_, newTarget, NameToId(cx_->names().prototype),
                        protov.address())) {
     // Can't purely lookup function prototype
@@ -6384,6 +6390,28 @@ AttachDecision CallIRGenerator::tryAttachCallScripted(
   if (isSpecialized) {
     // Ensure callee matches this stub's callee
     writer.guardSpecificFunction(calleeObjId, calleeFunc);
+    if (templateObj) {
+      // Call metaScriptedTemplateObject before emitting the call, so that Warp
+      // can use this template object before transpiling the call.
+      if (JitOptions.warpBuilder) {
+        // Emit guards to ensure the newTarget's .prototype property is what we
+        // expect. Note that getTemplateObjectForScripted checked newTarget is a
+        // function with a non-configurable .prototype data property.
+        JSFunction* newTarget = &newTarget_.toObject().as<JSFunction>();
+        Shape* shape = newTarget->lookupPure(cx_->names().prototype);
+        MOZ_ASSERT(shape);
+        uint32_t slot = shape->slot();
+        JSObject* prototypeObject = &newTarget->getSlot(slot).toObject();
+
+        ValOperandId newTargetValId = writer.loadArgumentDynamicSlot(
+            ArgumentKind::NewTarget, argcId, flags);
+        ObjOperandId newTargetObjId = writer.guardToObject(newTargetValId);
+        writer.guardShape(newTargetObjId, newTarget->lastProperty());
+        ObjOperandId protoId = writer.loadObject(prototypeObject);
+        writer.guardFunctionPrototype(newTargetObjId, protoId, slot);
+      }
+      writer.metaScriptedTemplateObject(calleeFunc, templateObj);
+    }
   } else {
     // Guard that object is a scripted function
     writer.guardClass(calleeObjId, GuardClassKind::JSFunction);
@@ -6400,11 +6428,6 @@ AttachDecision CallIRGenerator::tryAttachCallScripted(
 
   writer.callScriptedFunction(calleeObjId, argcId, flags);
   writer.typeMonitorResult();
-
-  if (templateObj) {
-    MOZ_ASSERT(isSpecialized);
-    writer.metaScriptedTemplateObject(calleeFunc, templateObj);
-  }
 
   cacheIRStubKind_ = BaselineCacheIRStubKind::Monitored;
   if (isSpecialized) {
