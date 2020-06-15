@@ -3683,6 +3683,7 @@ static bool PromiseAllSettledElementFunction(JSContext* cx, unsigned argc,
   return true;
 }
 
+#ifdef NIGHTLY_BUILD
 // Promise.any (Stage 3 proposal)
 // https://tc39.es/proposal-promise-any/
 //
@@ -3691,6 +3692,7 @@ static bool Promise_static_any(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   return CommonPromiseCombinator(cx, args, CombinatorKind::Any);
 }
+#endif
 
 // Promise.any (Stage 3 proposal)
 // https://tc39.es/proposal-promise-any/
@@ -5852,7 +5854,9 @@ static const JSPropertySpec promise_properties[] = {
 static const JSFunctionSpec promise_static_methods[] = {
     JS_FN("all", Promise_static_all, 1, 0),
     JS_FN("allSettled", Promise_static_allSettled, 1, 0),
+#ifdef NIGHTLY_BUILD
     JS_FN("any", Promise_static_any, 1, 0),
+#endif
     JS_FN("race", Promise_static_race, 1, 0),
     JS_FN("reject", Promise_reject, 1, 0),
     JS_FN("resolve", js::Promise_static_resolve, 1, 0),
