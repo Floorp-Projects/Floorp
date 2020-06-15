@@ -145,6 +145,8 @@ nsresult Http3Stream::OnReadSegment(const char* buf, uint32_t count,
   LOG(("Http3Stream::OnReadSegment count=%u state=%d [this=%p]", count, mState,
        this));
 
+  nsresult rv = NS_OK;
+
   switch (mState) {
     case PREPARING_HEADERS:
       if (mActivatingFailed) {
@@ -164,7 +166,7 @@ nsresult Http3Stream::OnReadSegment(const char* buf, uint32_t count,
 
       MOZ_ASSERT(!mRequestStarted, "We should be in one of the next states.");
       if (mRequestHeadersDone && !mRequestStarted) {
-        nsresult rv = TryActivating();
+        rv = TryActivating();
         if (rv == NS_BASE_STREAM_WOULD_BLOCK) {
           LOG3(("Http3Stream::OnReadSegment %p cannot activate now. queued.\n",
                 this));
@@ -174,13 +176,14 @@ nsresult Http3Stream::OnReadSegment(const char* buf, uint32_t count,
             --*countRead;
             mActivatingFailed = true;
           }
-          return *countRead ? NS_OK : NS_BASE_STREAM_WOULD_BLOCK;
+          rv = *countRead ? NS_OK : NS_BASE_STREAM_WOULD_BLOCK;
+          break;
         }
         if (NS_FAILED(rv)) {
           LOG3(("Http3Stream::OnReadSegment %p cannot activate error=0x%" PRIx32
                 ".",
                 this, static_cast<uint32_t>(rv)));
-          return rv;
+          break;
         }
 
         mTransaction->OnTransportStatus(mSocketTransport,
@@ -199,7 +202,7 @@ nsresult Http3Stream::OnReadSegment(const char* buf, uint32_t count,
       }
       break;
     case SENDING_BODY: {
-      nsresult rv = mSession->SendRequestBody(mStreamId, buf, count, countRead);
+      rv = mSession->SendRequestBody(mStreamId, buf, count, countRead);
       MOZ_ASSERT(mRequestBodyLenRemaining >= *countRead,
                  "We cannot send more that than we promised.");
       if (mRequestBodyLenRemaining < *countRead) {
@@ -210,7 +213,7 @@ nsresult Http3Stream::OnReadSegment(const char* buf, uint32_t count,
             ("Http3Stream::OnReadSegment %p sending body returns "
              "error=0x%" PRIx32 ".",
              this, static_cast<uint32_t>(rv)));
-        return rv;
+        break;
       }
 
       mRequestBodyLenRemaining -= *countRead;
@@ -235,7 +238,11 @@ nsresult Http3Stream::OnReadSegment(const char* buf, uint32_t count,
       MOZ_ASSERT(false, "We are done sending this request!");
       break;
   }
-  return NS_OK;
+
+  if (rv == NS_BASE_STREAM_WOULD_BLOCK) {
+    mRequestBlockedOnRead = true;
+  }
+  return rv;
 }
 
 void Http3Stream::SetResponseHeaders(nsTArray<uint8_t>& aResponseHeaders,
@@ -329,6 +336,12 @@ nsresult Http3Stream::ReadSegments(nsAHttpSegmentReader* reader, uint32_t count,
 
       if (rv == NS_BASE_STREAM_WOULD_BLOCK) {
         mRequestBlockedOnRead = true;
+      }
+      if (NS_SUCCEEDED(rv) && mRequestBlockedOnRead) {
+        // We've got NS_BASE_STREAM_WOULD_BLOCK in Http3Stream::OnReadSegment()
+        // but the error code was lost in nsBufferedInputStream::ReadSegments().
+        // Restore it here.
+        rv = NS_BASE_STREAM_WOULD_BLOCK;
       }
     } break;
     default:
