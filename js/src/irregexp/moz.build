@@ -21,7 +21,6 @@ UNIFIED_SOURCES += [
     'imported/regexp-bytecode-peephole.cc',
     'imported/regexp-bytecodes.cc',
     'imported/regexp-compiler-tonode.cc',
-    'imported/regexp-compiler.cc',
     'imported/regexp-dotprinter.cc',
     'imported/regexp-interpreter.cc',
     'imported/regexp-macro-assembler-tracer.cc',
@@ -33,6 +32,7 @@ UNIFIED_SOURCES += [
     'util/UnicodeShim.cpp'
 ]
 SOURCES += [
+    'imported/regexp-compiler.cc',     # Bug 1643693
     'RegExpNativeMacroAssembler.cpp'
 ]
 
