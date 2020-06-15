@@ -598,6 +598,11 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
     const items = spocs.items || spocs;
     const title = spocs.title || "";
     const context = spocs.context || "";
+    const sponsor = spocs.sponsor || "";
+    // We do not stub sponsored_by_override with an empty string. It is an override, and an empty string
+    // explicitly means to override the client to display an empty string.
+    // An empty string is not an no op in this case. Undefined is the proper no op here.
+    const { sponsored_by_override } = spocs;
     // Undefined is fine here. It's optional and only used by collections.
     // If we leave it out, you get a collection that cannot be dismissed.
     const { flight_id } = spocs;
@@ -605,6 +610,8 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
       items,
       title,
       context,
+      sponsor,
+      sponsored_by_override,
       ...(flight_id ? { flight_id } : {}),
     };
   }
@@ -669,6 +676,8 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
                 items: normalizedSpocsItems,
                 title,
                 context,
+                sponsor,
+                sponsored_by_override,
               } = this.normalizeSpocsItems(freshSpocs);
 
               if (!normalizedSpocsItems || !normalizedSpocsItems.length) {
@@ -723,6 +732,8 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
                 [placement.name]: {
                   title,
                   context,
+                  sponsor,
+                  sponsored_by_override,
                   items: dupesResult,
                 },
               };
