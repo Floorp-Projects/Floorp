@@ -37,10 +37,10 @@ You can still see the raw form of a value with 'print/r':
 You can also use GDB's 'disable pretty-printer' command to turn off
 individual pretty-printers; try 'info pretty-printer' first.
 
-GDB should pick these extensions up automatically when you debug the shell, by
-auto-loading the 'js-gdb.py' file that js/src/shell/Makefile.in places in the
-same directory as the 'js' executable. You may need to add a command like the
-following to your '$HOME/.gdbinit' file:
+GDB should pick these extensions up automatically when you debug the shell or
+the browser, by auto-loading the 'js-gdb.py' file that the build system
+installs alongside the 'js' executable (or 'libxul.so-gdb.py' for the browser).
+You may need to add a command like the following to your '$HOME/.gdbinit' file:
 
     # Tell GDB to trust auto-load files found under ~/moz.
     add-auto-load-safe-path ~/moz
