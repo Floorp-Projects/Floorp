@@ -11,6 +11,7 @@
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/MathAlgorithms.h"
+#include "mozilla/ScopeExit.h"
 
 #include "jslibmath.h"
 #include "jsmath.h"
@@ -4952,6 +4953,11 @@ bool MWasmLoadGlobalCell::congruentTo(const MDefinition* ins) const {
 
 #ifdef ENABLE_WASM_SIMD
 MDefinition* MWasmScalarToSimd128::foldsTo(TempAllocator& alloc) {
+#  ifdef DEBUG
+  auto logging = mozilla::MakeScopeExit([&] {
+    js::wasm::ReportSimdAnalysis("scalar-to-simd128 -> constant folded");
+  });
+#  endif
   if (input()->isConstant()) {
     MConstant* c = input()->toConstant();
     switch (simdOp()) {
@@ -4968,6 +4974,9 @@ MDefinition* MWasmScalarToSimd128::foldsTo(TempAllocator& alloc) {
         return MWasmFloatConstant::NewSimd128(
             alloc, SimdConstant::SplatX2(c->toInt64()));
       default:
+#  ifdef DEBUG
+        logging.release();
+#  endif
         return this;
     }
   }
@@ -4981,9 +4990,15 @@ MDefinition* MWasmScalarToSimd128::foldsTo(TempAllocator& alloc) {
         return MWasmFloatConstant::NewSimd128(
             alloc, SimdConstant::SplatX2(c->toDouble()));
       default:
+#  ifdef DEBUG
+        logging.release();
+#  endif
         return this;
     }
   }
+#  ifdef DEBUG
+  logging.release();
+#  endif
   return this;
 }
 
@@ -5011,6 +5026,11 @@ static int32_t Bitmask(const T& v) {
 }
 
 MDefinition* MWasmReduceSimd128::foldsTo(TempAllocator& alloc) {
+#  ifdef DEBUG
+  auto logging = mozilla::MakeScopeExit([&] {
+    js::wasm::ReportSimdAnalysis("simd128-to-scalar -> constant folded");
+  });
+#  endif
   if (input()->isWasmFloatConstant()) {
     SimdConstant c = input()->toWasmFloatConstant()->toSimd128();
     int32_t i32Result = 0;
@@ -5079,10 +5099,16 @@ MDefinition* MWasmReduceSimd128::foldsTo(TempAllocator& alloc) {
             alloc, SimdConstant::CreateSimd128((double*)c.bytes())
                        .asFloat64x2()[imm()]);
       default:
+#  ifdef DEBUG
+        logging.release();
+#  endif
         return this;
     }
     return MConstant::New(alloc, Int32Value(i32Result), MIRType::Int32);
   }
+#  ifdef DEBUG
+  logging.release();
+#  endif
   return this;
 }
 #endif  // ENABLE_WASM_SIMD
