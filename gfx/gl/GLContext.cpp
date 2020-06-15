@@ -2517,5 +2517,10 @@ void GLContext::OnImplicitMakeCurrentFailure(const char* const funcName) {
                      << " mImplicitMakeCurrent.";
 }
 
+bool GLContext::CreateOffscreenDefaultFb(const gfx::IntSize& size) {
+  mOffscreenDefaultFb = MozFramebuffer::Create(this, size, 0, true);
+  return bool(mOffscreenDefaultFb);
+}
+
 } /* namespace gl */
 } /* namespace mozilla */

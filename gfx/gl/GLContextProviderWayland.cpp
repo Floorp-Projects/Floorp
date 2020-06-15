@@ -50,17 +50,6 @@ already_AddRefed<GLContext> GLContextProviderWayland::CreateHeadless(
 }
 
 /*static*/
-already_AddRefed<GLContext> GLContextProviderWayland::CreateOffscreen(
-    const IntSize& size, const GLContextCreateDesc& desc,
-    nsACString* const out_failureId) {
-  if (GDK_IS_X11_DISPLAY(gdk_display_get_default())) {
-    return sGLContextProviderGLX.CreateOffscreen(size, desc, out_failureId);
-  } else {
-    return sGLContextProviderEGL.CreateOffscreen(size, desc, out_failureId);
-  }
-}
-
-/*static*/
 GLContext* GLContextProviderWayland::GetGlobalContext() {
   if (GDK_IS_X11_DISPLAY(gdk_display_get_default())) {
     return sGLContextProviderGLX.GetGlobalContext();
