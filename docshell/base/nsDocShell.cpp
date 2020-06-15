@@ -1503,7 +1503,7 @@ void nsDocShell::NotifyPrivateBrowsingChanged() {
     nsWeakPtr ref = iter.GetNext();
     nsCOMPtr<nsIPrivacyTransitionObserver> obs = do_QueryReferent(ref);
     if (!obs) {
-      mPrivacyObservers.RemoveElement(ref);
+      iter.Remove();
     } else {
       obs->PrivateModeChanged(UsePrivateBrowsing());
     }
@@ -1616,7 +1616,7 @@ nsDocShell::NotifyReflowObservers(bool aInterruptible,
     nsWeakPtr ref = iter.GetNext();
     nsCOMPtr<nsIReflowObserver> obs = do_QueryReferent(ref);
     if (!obs) {
-      mReflowObservers.RemoveElement(ref);
+      iter.Remove();
     } else if (aInterruptible) {
       obs->ReflowInterruptible(aStart, aEnd);
     } else {
@@ -2094,7 +2094,7 @@ void nsDocShell::NotifyAsyncPanZoomStarted() {
     if (obs) {
       obs->AsyncPanZoomStarted();
     } else {
-      mScrollObservers.RemoveElement(ref);
+      iter.Remove();
     }
   }
 }
@@ -2107,7 +2107,7 @@ void nsDocShell::NotifyAsyncPanZoomStopped() {
     if (obs) {
       obs->AsyncPanZoomStopped();
     } else {
-      mScrollObservers.RemoveElement(ref);
+      iter.Remove();
     }
   }
 }
@@ -2121,7 +2121,7 @@ nsDocShell::NotifyScrollObservers() {
     if (obs) {
       obs->ScrollPositionChanged();
     } else {
-      mScrollObservers.RemoveElement(ref);
+      iter.Remove();
     }
   }
   return NS_OK;
