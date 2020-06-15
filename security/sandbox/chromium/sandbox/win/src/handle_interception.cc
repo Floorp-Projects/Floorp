@@ -10,7 +10,6 @@
 #include "sandbox/win/src/sandbox_nt_util.h"
 #include "sandbox/win/src/sharedmem_ipc_client.h"
 #include "sandbox/win/src/target_services.h"
-#include "mozilla/sandboxing/sandboxLogging.h"
 
 namespace sandbox {
 
@@ -27,7 +26,7 @@ ResultCode DuplicateHandleProxy(HANDLE source_handle,
 
   SharedMemIPCClient ipc(memory);
   CrossCallReturn answer = {0};
-  ResultCode code = CrossCall(ipc, IPC_DUPLICATEHANDLEPROXY_TAG,
+  ResultCode code = CrossCall(ipc, IpcTag::DUPLICATEHANDLEPROXY,
                               source_handle, target_process_id,
                               desired_access, options, &answer);
   if (SBOX_ALL_OK != code)
@@ -35,12 +34,10 @@ ResultCode DuplicateHandleProxy(HANDLE source_handle,
 
   if (answer.win32_result) {
     ::SetLastError(answer.win32_result);
-    mozilla::sandboxing::LogBlocked("DuplicateHandle");
     return SBOX_ERROR_GENERIC;
   }
 
   *target_handle = answer.handle;
-  mozilla::sandboxing::LogAllowed("DuplicateHandle");
   return SBOX_ALL_OK;
 }
 

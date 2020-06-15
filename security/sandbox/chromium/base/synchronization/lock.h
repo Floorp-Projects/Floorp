@@ -26,8 +26,8 @@ class LOCKABLE BASE_EXPORT Lock {
   ~Lock() {}
 
   // TODO(lukasza): https://crbug.com/831825: Add EXCLUSIVE_LOCK_FUNCTION
-  // annotation to Acquire method and similar annotations to Release, Try and
-  // AssertAcquired methods (here and in the #else branch).
+  // annotation to Acquire method and similar annotations to Release and Try
+  // methods (here and in the #else branch).
   void Acquire() { lock_.Lock(); }
   void Release() { lock_.Unlock(); }
 
@@ -38,7 +38,7 @@ class LOCKABLE BASE_EXPORT Lock {
   bool Try() { return lock_.Try(); }
 
   // Null implementation if not debug.
-  void AssertAcquired() const {}
+  void AssertAcquired() const ASSERT_EXCLUSIVE_LOCK() {}
 #else
   Lock();
   ~Lock();
@@ -63,7 +63,7 @@ class LOCKABLE BASE_EXPORT Lock {
     return rv;
   }
 
-  void AssertAcquired() const;
+  void AssertAcquired() const ASSERT_EXCLUSIVE_LOCK();
 #endif  // DCHECK_IS_ON()
 
   // Whether Lock mitigates priority inversion when used from different thread
@@ -115,6 +115,18 @@ using AutoLock = internal::BasicAutoLock<Lock>;
 // AutoUnlock is a helper that will Release() the |lock| argument in the
 // constructor, and re-Acquire() it in the destructor.
 using AutoUnlock = internal::BasicAutoUnlock<Lock>;
+
+// Like AutoLock but is a no-op when the provided Lock* is null. Inspired from
+// absl::MutexLockMaybe. Use this instead of base::Optional<base::AutoLock> to
+// get around -Wthread-safety-analysis warnings for conditional locking.
+using AutoLockMaybe = internal::BasicAutoLockMaybe<Lock>;
+
+// Like AutoLock but permits Release() of its mutex before destruction.
+// Release() may be called at most once. Inspired from
+// absl::ReleasableMutexLock. Use this instead of base::Optional<base::AutoLock>
+// to get around -Wthread-safety-analysis warnings for AutoLocks that are
+// explicitly released early (prefer proper scoping to this).
+using ReleasableAutoLock = internal::BasicReleasableAutoLock<Lock>;
 
 }  // namespace base
 

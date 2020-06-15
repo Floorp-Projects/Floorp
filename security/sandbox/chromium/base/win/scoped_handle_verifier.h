@@ -11,7 +11,7 @@
 
 #include "base/base_export.h"
 #include "base/debug/stack_trace.h"
-#include "base/hash.h"
+#include "base/hash/hash.h"
 #include "base/synchronization/lock_impl.h"
 #include "base/threading/thread_local.h"
 
@@ -21,9 +21,7 @@ namespace internal {
 
 struct HandleHash {
   size_t operator()(const HANDLE& handle) const {
-    char buffer[sizeof(handle)];
-    memcpy(buffer, &handle, sizeof(handle));
-    return base::Hash(buffer, sizeof(buffer));
+    return base::FastHash(as_bytes(make_span(&handle, 1)));
   }
 };
 

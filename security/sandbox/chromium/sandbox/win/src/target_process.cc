@@ -14,6 +14,7 @@
 #include "base/macros.h"
 #include "base/memory/free_deleter.h"
 #include "base/numerics/safe_conversions.h"
+#include "base/process/environment_internal.h"
 #include "base/win/startup_information.h"
 #include "base/win/windows_version.h"
 #include "sandbox/win/src/crosscall_client.h"
@@ -156,7 +157,7 @@ ResultCode TargetProcess::Create(
   if (startup_info.has_extended_startup_info())
     flags |= EXTENDED_STARTUPINFO_PRESENT;
 
-  if (job_ && base::win::GetVersion() < base::win::VERSION_WIN8) {
+  if (job_ && base::win::GetVersion() < base::win::Version::WIN8) {
     // Windows 8 implements nested jobs, but for older systems we need to
     // break out of any job we're in to enforce our restrictions.
     flags |= CREATE_BREAKAWAY_FROM_JOB;
@@ -164,7 +165,7 @@ ResultCode TargetProcess::Create(
 
   LPTCH original_environment = GetEnvironmentStrings();
   base::NativeEnvironmentString new_environment =
-    base::AlterEnvironment(original_environment, env_changes);
+    base::internal::AlterEnvironment(original_environment, env_changes);
   // Ignore return value? What can we do?
   FreeEnvironmentStrings(original_environment);
   LPVOID new_env_ptr = (void*)new_environment.data();
@@ -242,13 +243,13 @@ ResultCode TargetProcess::TransferVariable(const char* name,
 #if SANDBOX_EXPORTS
   HMODULE module = ::LoadLibrary(exe_name_.get());
   if (!module)
-    return SBOX_ERROR_GENERIC;
+    return SBOX_ERROR_CANNOT_LOADLIBRARY_EXECUTABLE;
 
   child_var = reinterpret_cast<void*>(::GetProcAddress(module, name));
   ::FreeLibrary(module);
 
   if (!child_var)
-    return SBOX_ERROR_GENERIC;
+    return SBOX_ERROR_CANNOT_FIND_VARIABLE_ADDRESS;
 
   size_t offset =
       reinterpret_cast<char*>(child_var) - reinterpret_cast<char*>(module);
@@ -258,10 +259,10 @@ ResultCode TargetProcess::TransferVariable(const char* name,
   SIZE_T written;
   if (!::WriteProcessMemory(sandbox_process_info_.process_handle(), child_var,
                             address, size, &written))
-    return SBOX_ERROR_GENERIC;
+    return SBOX_ERROR_CANNOT_WRITE_VARIABLE_VALUE;
 
   if (written != size)
-    return SBOX_ERROR_GENERIC;
+    return SBOX_ERROR_INVALID_WRITE_VARIABLE_SIZE;
 
   return SBOX_ALL_OK;
 }
@@ -290,6 +291,15 @@ ResultCode TargetProcess::Init(Dispatcher* ipc_dispatcher,
     return SBOX_ERROR_CREATE_FILE_MAPPING;
   }
 
+  DWORD access = FILE_MAP_READ | FILE_MAP_WRITE | SECTION_QUERY;
+  HANDLE target_shared_section;
+  if (!::DuplicateHandle(::GetCurrentProcess(), shared_section_.Get(),
+                         sandbox_process_info_.process_handle(),
+                         &target_shared_section, access, false, 0)) {
+    *win_error = ::GetLastError();
+    return SBOX_ERROR_DUPLICATE_SHARED_SECTION;
+  }
+
   void* shared_memory = ::MapViewOfFile(
       shared_section_.Get(), FILE_MAP_WRITE | FILE_MAP_READ, 0, 0, 0);
   if (!shared_memory) {
@@ -302,6 +312,14 @@ ResultCode TargetProcess::Init(Dispatcher* ipc_dispatcher,
 
   ResultCode ret;
   // Set the global variables in the target. These are not used on the broker.
+  g_shared_section = target_shared_section;
+  ret = TransferVariable("g_shared_section", &g_shared_section,
+                         sizeof(g_shared_section));
+  g_shared_section = nullptr;
+  if (SBOX_ALL_OK != ret) {
+    *win_error = ::GetLastError();
+    return ret;
+  }
   g_shared_IPC_size = shared_IPC_size;
   ret = TransferVariable("g_shared_IPC_size", &g_shared_IPC_size,
                          sizeof(g_shared_IPC_size));
@@ -325,24 +343,6 @@ ResultCode TargetProcess::Init(Dispatcher* ipc_dispatcher,
 
   if (!ipc_server_->Init(shared_memory, shared_IPC_size, kIPCChannelSize))
     return SBOX_ERROR_NO_SPACE;
-
-  DWORD access = FILE_MAP_READ | FILE_MAP_WRITE | SECTION_QUERY;
-  HANDLE target_shared_section;
-  if (!::DuplicateHandle(::GetCurrentProcess(), shared_section_.Get(),
-                         sandbox_process_info_.process_handle(),
-                         &target_shared_section, access, false, 0)) {
-    *win_error = ::GetLastError();
-    return SBOX_ERROR_DUPLICATE_SHARED_SECTION;
-  }
-
-  g_shared_section = target_shared_section;
-  ret = TransferVariable("g_shared_section", &g_shared_section,
-                         sizeof(g_shared_section));
-  g_shared_section = nullptr;
-  if (SBOX_ALL_OK != ret) {
-    *win_error = ::GetLastError();
-    return ret;
-  }
 
   // After this point we cannot use this handle anymore.
   ::CloseHandle(sandbox_process_info_.TakeThreadHandle());
