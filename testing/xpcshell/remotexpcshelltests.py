@@ -10,7 +10,6 @@ from argparse import Namespace
 import os
 import posixpath
 import shutil
-import subprocess
 import sys
 import runxpcshelltests as xpcshell
 import tempfile
@@ -479,9 +478,6 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
                 raise Exception("unable to install gre: no APK and not b2g")
 
     def pushLibs(self):
-        elfhack = os.path.join(self.localBin, 'elfhack')
-        if not os.path.exists(elfhack):
-            elfhack = None
         pushed_libs_count = 0
         try:
             dir = tempfile.mkdtemp()
@@ -492,17 +488,6 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
                                                 os.path.basename(info.filename))
                     self.localAPKContents.extract(info, dir)
                     localFile = os.path.join(dir, info.filename)
-                    with open(localFile) as f:
-                        # Decompress xz-compressed file.
-                        if f.read(5)[1:] == '7zXZ':
-                            cmd = ['xz', '-df', '--suffix', '.so', localFile]
-                            subprocess.check_output(cmd)
-                            # xz strips the ".so" file suffix.
-                            os.rename(localFile[:-3], localFile)
-                            # elfhack -r should provide better crash reports
-                            if elfhack:
-                                cmd = [elfhack, '-r', localFile]
-                                subprocess.check_output(cmd)
                     self.device.push(localFile, remoteFile)
                     pushed_libs_count += 1
                     self.device.chmod(remoteFile, root=True)
