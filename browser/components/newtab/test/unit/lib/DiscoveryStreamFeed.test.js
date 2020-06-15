@@ -82,6 +82,8 @@ describe("DiscoveryStreamFeed", () => {
           "discoverystream.enabled": true,
           "feeds.section.topstories": true,
           "feeds.system.topstories": true,
+          "discoverystream.spocs.personalized": true,
+          "discoverystream.recs.personalized": true,
         },
       },
     });
@@ -2659,6 +2661,12 @@ describe("DiscoveryStreamFeed", () => {
       sandbox.spy(feed.store, "dispatch");
       sandbox.stub(feed, "_sendSpocsFill").returns();
       const fakeDiscoveryStream = {
+        Prefs: {
+          values: {
+            "discoverystream.spocs.personalized": true,
+            "discoverystream.recs.personalized": false,
+          },
+        },
         DiscoveryStream: {
           spocs: {
             placements: [
@@ -2763,6 +2771,12 @@ describe("DiscoveryStreamFeed", () => {
   describe("#scoreContent", () => {
     it("should call scoreFeeds and scoreSpocs if loaded", async () => {
       const fakeDiscoveryStream = {
+        Prefs: {
+          values: {
+            "discoverystream.spocs.personalized": true,
+            "discoverystream.recs.personalized": true,
+          },
+        },
         DiscoveryStream: {
           feeds: { loaded: false },
           spocs: { loaded: false },
@@ -2966,7 +2980,7 @@ describe("DiscoveryStreamFeed", () => {
       feed.providerSwitcher.calculateItemRelevanceScore = sandbox
         .stub()
         .returns();
-      await feed.scoreItem(item);
+      await feed.scoreItem(item, true);
       assert.calledOnce(feed.providerSwitcher.calculateItemRelevanceScore);
     });
     it("should use item_score score without affinity provider score", async () => {
