@@ -578,7 +578,9 @@ ContentBlocking::CompleteAllowAccessFor(
   // Let's inform the parent window.
   nsCOMPtr<nsPIDOMWindowInner> parentInner =
       AntiTrackingUtils::GetInnerWindow(aParentContext);
-  MOZ_ASSERT(parentInner);
+  if (NS_WARN_IF(!parentInner)) {
+    return;
+  }
 
   Document* doc = parentInner->GetExtantDoc();
   if (NS_WARN_IF(!doc)) {
