@@ -27,8 +27,11 @@ namespace mozilla {
 namespace layers {
 
 class ClientCanvasRenderer;
+class KnowsCompositor;
 class PersistentBufferProvider;
 class WebRenderCanvasRendererAsync;
+
+TextureType TexTypeForWebgl(KnowsCompositor*);
 
 struct CanvasRendererData final {
   CanvasRendererData();

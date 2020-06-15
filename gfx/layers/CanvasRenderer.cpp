@@ -6,6 +6,9 @@
 
 #include "CanvasRenderer.h"
 
+#include "BuildConstants.h"
+#include "ipc/KnowsCompositor.h"
+#include "mozilla/StaticPrefs_webgl.h"
 #include "nsICanvasRenderingContextInternal.h"
 #include "PersistentBufferProvider.h"
 #include "WebGLTypes.h"
@@ -77,6 +80,53 @@ void CanvasRenderer::FireDidTransactionCallback() const {
   const auto context = mData.GetContext();
   if (!context) return;
   context->OnDidPaintTransaction();
+}
+
+TextureType TexTypeForWebgl(KnowsCompositor* const knowsCompositor) {
+  if (!knowsCompositor) return TextureType::Unknown;
+  const auto layersBackend = knowsCompositor->GetCompositorBackendType();
+
+  switch (layersBackend) {
+    case LayersBackend::LAYERS_NONE:
+      MOZ_CRASH("Unexpected LayersBackend::LAYERS_NONE");
+    case LayersBackend::LAYERS_CLIENT:
+      MOZ_CRASH("Unexpected LayersBackend::LAYERS_CLIENT");
+    case LayersBackend::LAYERS_LAST:
+      MOZ_CRASH("Unexpected LayersBackend::LAYERS_LAST");
+
+    case LayersBackend::LAYERS_BASIC:
+      return TextureType::Unknown;
+
+    case LayersBackend::LAYERS_D3D11:
+    case LayersBackend::LAYERS_OPENGL:
+    case LayersBackend::LAYERS_WR:
+      break;
+  }
+
+  if (kIsWindows) {
+    if (knowsCompositor->SupportsD3D11()) {
+      return TextureType::D3D11;
+    }
+    return TextureType::Unknown;
+  }
+  if (kIsMacOS) {
+    return TextureType::MacIOSurface;
+  }
+  if (kIsX11) {
+    return TextureType::X11;
+  }
+  if (kIsWayland) {
+    if (gfxPlatform::GetPlatform()->UseWaylandDMABufWebGL()) {
+      return TextureType::WaylandDMABUF;
+    }
+  }
+  if (kIsAndroid) {
+    if (StaticPrefs::webgl_enable_surface_texture()) {
+      return TextureType::AndroidNativeWindow;
+    }
+  }
+
+  return TextureType::Unknown;
 }
 
 }  // namespace layers

@@ -993,8 +993,7 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
   void GetContextAttributes(dom::Nullable<dom::WebGLContextAttributes>& retval);
 
   void Present(WebGLFramebufferJS*, layers::TextureType);
-  Maybe<layers::SurfaceDescriptor> GetFrontBuffer(WebGLFramebufferJS*,
-                                                  layers::TextureType);
+  Maybe<layers::SurfaceDescriptor> GetFrontBuffer(WebGLFramebufferJS*);
   RefPtr<gfx::SourceSurface> GetFrontBufferSnapshot(
       bool requireAlphaPremult = true) override;
 

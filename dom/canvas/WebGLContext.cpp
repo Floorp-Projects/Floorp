@@ -1006,17 +1006,11 @@ void WebGLContext::Present(WebGLFramebuffer* const fb,
 }
 
 Maybe<layers::SurfaceDescriptor> WebGLContext::GetFrontBuffer(
-    WebGLFramebuffer* const fb, const layers::TextureType consumerType) {
+    WebGLFramebuffer* const fb) {
   auto swapChain = &mSwapChain;
   if (fb) {
     swapChain = &fb->mOpaqueSwapChain;
   }
-
-  if (swapChain->mFactory &&
-      swapChain->mFactory->mDesc.consumerType != consumerType) {
-    swapChain->mFactory = nullptr;  // Better luck next Present.
-  }
-
   const auto& front = swapChain->FrontBuffer();
   if (!front) return {};
 

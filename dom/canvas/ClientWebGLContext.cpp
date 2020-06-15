@@ -402,11 +402,7 @@ void ClientWebGLContext::OnBeforePaintTransaction() {
   const RefPtr<layers::ImageBridgeChild> imageBridge =
       layers::ImageBridgeChild::GetSingleton();
 
-  auto texType = layers::TextureType::Unknown;
-  if (imageBridge) {
-    texType = layers::PreferredCanvasTextureType(*imageBridge);
-  }
-
+  const auto texType = layers::TexTypeForWebgl(imageBridge);
   Present(nullptr, texType);
 }
 
@@ -426,8 +422,8 @@ void ClientWebGLContext::Present(WebGLFramebufferJS* const fb,
 }
 
 Maybe<layers::SurfaceDescriptor> ClientWebGLContext::GetFrontBuffer(
-    WebGLFramebufferJS* const fb, const layers::TextureType type) {
-  return Run<RPROC(GetFrontBuffer)>(fb ? fb->mId : 0, type);
+    WebGLFramebufferJS* const fb) {
+  return Run<RPROC(GetFrontBuffer)>(fb ? fb->mId : 0);
 }
 
 // -

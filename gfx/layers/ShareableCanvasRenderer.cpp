@@ -122,13 +122,8 @@ void ShareableCanvasRenderer::UpdateCompositableClient() {
     }
 
     if (!webgl) return nullptr;
-    if (!forwarder) return nullptr;
 
-    auto texType = layers::TextureType::Unknown;
-    if (forwarder) {
-      texType = layers::PreferredCanvasTextureType(*forwarder);
-    }
-    const auto desc = webgl->GetFrontBuffer(nullptr, texType);
+    const auto desc = webgl->GetFrontBuffer(nullptr);
     if (!desc) return nullptr;
     return GetFrontBufferFromDesc(*desc, flags);
   };
