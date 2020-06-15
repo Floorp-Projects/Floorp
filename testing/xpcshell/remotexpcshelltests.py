@@ -318,6 +318,7 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
             'remoteModulesDir': self.remoteModulesDir,
             'options': self.options,
             'remoteDebugger': self.remoteDebugger,
+            'remoteDebuggerArgs': self.remoteDebuggerArgs,
             'pathMapping': self.pathMapping,
             'profileDir': self.profileDir,
             'remoteTmpDir': self.remoteTmpDir,
