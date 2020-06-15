@@ -8,11 +8,13 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/RangeBoundary.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Text.h"
 #include "nsAtom.h"
 #include "nsCOMPtr.h"
+#include "nsContentUtils.h"
 #include "nsCRT.h"
 #include "nsGkAtoms.h"
 #include "nsIContent.h"
@@ -335,6 +337,10 @@ class EditorDOMPointBase final {
     return nsCRT::IsAsciiSpace(Char());
   }
   MOZ_NEVER_INLINE_DEBUG bool IsCharNBSP() const { return Char() == 0x00A0; }
+  MOZ_NEVER_INLINE_DEBUG bool IsCharASCIISpaceOrNBSP() const {
+    char16_t ch = Char();
+    return nsCRT::IsAsciiSpace(ch) || ch == 0x00A0;
+  }
 
   MOZ_NEVER_INLINE_DEBUG char16_t PreviousChar() const {
     MOZ_ASSERT(IsSetAndValid());
@@ -347,6 +353,10 @@ class EditorDOMPointBase final {
   MOZ_NEVER_INLINE_DEBUG bool IsPreviousCharNBSP() const {
     return PreviousChar() == 0x00A0;
   }
+  MOZ_NEVER_INLINE_DEBUG bool IsPreviousCharASCIISpaceOrNBSP() const {
+    char16_t ch = PreviousChar();
+    return nsCRT::IsAsciiSpace(ch) || ch == 0x00A0;
+  }
 
   MOZ_NEVER_INLINE_DEBUG char16_t NextChar() const {
     MOZ_ASSERT(IsSetAndValid());
@@ -358,6 +368,10 @@ class EditorDOMPointBase final {
   }
   MOZ_NEVER_INLINE_DEBUG bool IsNextCharNBSP() const {
     return NextChar() == 0x00A0;
+  }
+  MOZ_NEVER_INLINE_DEBUG bool IsNextCharASCIISpaceOrNBSP() const {
+    char16_t ch = NextChar();
+    return nsCRT::IsAsciiSpace(ch) || ch == 0x00A0;
   }
 
   uint32_t Offset() const {
@@ -891,6 +905,26 @@ class EditorDOMPointBase final {
       return RawRangeBoundary(mParent, mChild->GetPreviousSibling());
     }
     return RawRangeBoundary(mParent, mParent->GetLastChild());
+  }
+
+  template <typename A, typename B>
+  bool IsBefore(const EditorDOMPointBase<A, B>& aOther) const {
+    if (!IsSetAndValid() || !aOther.IsSetAndValid()) {
+      return false;
+    }
+    Maybe<int32_t> comp = nsContentUtils::ComparePoints(
+        ToRawRangeBoundary(), aOther.ToRawRangeBoundary());
+    return comp.isSome() && comp.value() == -1;
+  }
+
+  template <typename A, typename B>
+  bool EqualsOrIsBefore(const EditorDOMPointBase<A, B>& aOther) const {
+    if (!IsSetAndValid() || !aOther.IsSetAndValid()) {
+      return false;
+    }
+    Maybe<int32_t> comp = nsContentUtils::ComparePoints(
+        ToRawRangeBoundary(), aOther.ToRawRangeBoundary());
+    return comp.isSome() && comp.value() <= 0;
   }
 
  private:

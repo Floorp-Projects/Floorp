@@ -338,6 +338,38 @@ class MOZ_STACK_CLASS WSRunScanner {
   }
 
   /**
+   * GetInclusiveNextEditableCharPoint() returns a point in a text node which
+   * is at current editable character or next editable character if aPoint
+   * does not points an editable character.
+   */
+  template <typename PT, typename CT>
+  static EditorDOMPointInText GetInclusiveNextEditableCharPoint(
+      const HTMLEditor& aHTMLEditor, const EditorDOMPointBase<PT, CT>& aPoint) {
+    if (aPoint.IsInTextNode() && !aPoint.IsEndOfContainer() &&
+        HTMLEditUtils::IsSimplyEditableNode(*aPoint.ContainerAsText())) {
+      return EditorDOMPointInText(aPoint.ContainerAsText(), aPoint.Offset());
+    }
+    WSRunScanner scanner(&aHTMLEditor, aPoint);
+    return scanner.GetInclusiveNextEditableCharPoint(aPoint);
+  }
+
+  /**
+   * GetPreviousEditableCharPoint() returns a point in a text node which
+   * is at previous editable character.
+   */
+  template <typename PT, typename CT>
+  static EditorDOMPointInText GetPreviousEditableCharPoint(
+      const HTMLEditor& aHTMLEditor, const EditorDOMPointBase<PT, CT>& aPoint) {
+    if (aPoint.IsInTextNode() && !aPoint.IsStartOfContainer() &&
+        HTMLEditUtils::IsSimplyEditableNode(*aPoint.ContainerAsText())) {
+      return EditorDOMPointInText(aPoint.ContainerAsText(),
+                                  aPoint.Offset() - 1);
+    }
+    WSRunScanner scanner(&aHTMLEditor, aPoint);
+    return scanner.GetPreviousEditableCharPoint(aPoint);
+  }
+
+  /**
    * GetStartReasonContent() and GetEndReasonContent() return a node which
    * was found by scanning from mScanStartPoint backward or mScanEndPoint
    * forward.  If there was white-spaces or text from the point, returns the
