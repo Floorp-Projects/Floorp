@@ -11,7 +11,6 @@ dictionary RemotenessOptions {
   // it will be used rather than the `src` & `srcdoc` attributes on the
   // frameloader to control the load behaviour.
   unsigned long long pendingSwitchID;
-  boolean replaceBrowsingContext = false;
 
   // True if we have an existing channel that we will resume in the
   // target process, either via pendingSwitchID or using messageManager.
