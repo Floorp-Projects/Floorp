@@ -45,9 +45,13 @@
   END_CATEGORY \
   BEGIN_CATEGORY(JS, "JavaScript", "yellow") \
     SUBCATEGORY(JS, JS, "Other") \
-    SUBCATEGORY(JS, JS_Parsing, "JS Parsing") \
-    SUBCATEGORY(JS, JS_IonCompilation, "Ion JIT Compilation") \
-    SUBCATEGORY(JS, JS_BaselineCompilation, "Baseline JIT Compilation") \
+    SUBCATEGORY(JS, JS_Parsing, "Parsing") \
+    SUBCATEGORY(JS, JS_BaselineCompilation, "JIT Compile (baseline)") \
+    SUBCATEGORY(JS, JS_IonCompilation, "JIT Compile (ion)") \
+    SUBCATEGORY(JS, JS_Interpreter, "Interpreter") \
+    SUBCATEGORY(JS, JS_BaselineInterpret, "JIT (baseline-interpreter)") \
+    SUBCATEGORY(JS, JS_Baseline, "JIT (baseline)") \
+    SUBCATEGORY(JS, JS_IonMonkey, "JIT (ion)") \
   END_CATEGORY \
   BEGIN_CATEGORY(GCCC, "GC / CC", "orange") \
     SUBCATEGORY(GCCC, GCCC, "Other") \
