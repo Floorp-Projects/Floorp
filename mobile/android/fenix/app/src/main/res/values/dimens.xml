@@ -7,7 +7,7 @@
     <dimen name="crash_reporter_close_tab_button_bottom_margin">24dp</dimen>
     <dimen name="glyph_button_height">48dp</dimen>
     <dimen name="glyph_button_width">48dp</dimen>
-    <dimen name="mozac_browser_menu_width_min" tools:ignore="UnusedResources">250dp</dimen>
+    <dimen name="mozac_browser_menu_width_min" tools:ignore="UnusedResources">112dp</dimen>
     <dimen name="mozac_browser_menu_width_max" tools:ignore="UnusedResources">314dp</dimen>
     <dimen name="mozac_browser_menu_corner_radius">8dp</dimen>
     <dimen name="toolbar_elevation">7dp</dimen>
