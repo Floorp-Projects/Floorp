@@ -331,10 +331,21 @@ PFileDescriptorSetChild* SocketProcessChild::SendPFileDescriptorSetConstructor(
 }
 
 already_AddRefed<PHttpConnectionMgrChild>
-SocketProcessChild::AllocPHttpConnectionMgrChild() {
+SocketProcessChild::AllocPHttpConnectionMgrChild(
+    const HttpHandlerInitArgs& aArgs) {
   LOG(("SocketProcessChild::AllocPHttpConnectionMgrChild \n"));
+  MOZ_ASSERT(gHttpHandler);
+  gHttpHandler->SetHttpHandlerInitArgs(aArgs);
+
   RefPtr<HttpConnectionMgrChild> actor = new HttpConnectionMgrChild();
   return actor.forget();
+}
+
+mozilla::ipc::IPCResult SocketProcessChild::RecvUpdateDeviceModelId(
+    const nsCString& aModelId) {
+  MOZ_ASSERT(gHttpHandler);
+  gHttpHandler->SetDeviceModelId(aModelId);
+  return IPC_OK();
 }
 
 mozilla::ipc::IPCResult

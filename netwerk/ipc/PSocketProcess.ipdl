@@ -41,6 +41,22 @@ using refcounted class nsIURI from "mozilla/ipc/URIUtils.h";
 namespace mozilla {
 namespace net {
 
+struct HttpHandlerInitArgs {
+  bool mFastOpenSupported;
+  nsCString mLegacyAppName;
+  nsCString mLegacyAppVersion;
+  nsCString mPlatform;
+  nsCString mOscpu;
+  nsCString mMisc;
+  nsCString mProduct;
+  nsCString mProductSub;
+  nsCString mAppName;
+  nsCString mAppVersion;
+  nsCString mCompatFirefox;
+  nsCString mCompatDevice;
+  nsCString mDeviceModelId;
+};
+
 sync protocol PSocketProcess
 {
   manages PDNSRequest;
@@ -110,7 +126,8 @@ child:
 
   async PHttpTransaction();
   async PParentToChildStream();
-  async PHttpConnectionMgr();
+  async PHttpConnectionMgr(HttpHandlerInitArgs aArgs);
+  async UpdateDeviceModelId(nsCString aModelId);
 
   async OnHttpActivityDistributorActivated(bool aIsActivated);
   async PInputChannelThrottleQueue(uint32_t meanBytesPerSecond,
