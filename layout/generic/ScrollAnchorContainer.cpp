@@ -20,19 +20,22 @@
 
 using namespace mozilla::dom;
 
-#define ANCHOR_LOG(...)
+static mozilla::LazyLogModule sAnchorLog("scrollanchor");
 
-/*
-#define ANCHOR_LOG(fmt, ...)                            \
-  printf_stderr("ANCHOR(%p, %s, root: %d): " fmt, this, \
-                Frame()                                 \
-                    ->PresContext()                     \
-                    ->Document()                        \
-                    ->GetDocumentURI()                  \
-                    ->GetSpecOrDefault()                \
-                    .get(),                             \
-                mScrollFrame->mIsRoot, ##__VA_ARGS__)
-*/
+#ifdef DEBUG
+#  define ANCHOR_LOG(fmt, ...)                       \
+    MOZ_LOG(sAnchorLog, LogLevel::Debug,             \
+            ("ANCHOR(%p, %s, root: %d): " fmt, this, \
+             Frame()                                 \
+                 ->PresContext()                     \
+                 ->Document()                        \
+                 ->GetDocumentURI()                  \
+                 ->GetSpecOrDefault()                \
+                 .get(),                             \
+             mScrollFrame->mIsRoot, ##__VA_ARGS__));
+#else
+#  define ANCHOR_LOG(...)
+#endif
 
 namespace mozilla {
 namespace layout {
