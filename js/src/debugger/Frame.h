@@ -195,13 +195,15 @@ class DebuggerFrame : public NativeObject {
   // Like isOnStack, but works even in the midst of a relocating GC.
   bool isOnStackMaybeForwarded() const;
 
+  bool isSuspended() const;
+
   OnStepHandler* onStepHandler() const;
   OnPopHandler* onPopHandler() const;
   void setOnPopHandler(JSContext* cx, OnPopHandler* handler);
 
-  inline bool hasGenerator() const;
+  inline bool hasGeneratorInfo() const;
 
-  // If hasGenerator(), return an direct cross-compartment reference to this
+  // If hasGeneratorInfo(), return an direct cross-compartment reference to this
   // Debugger.Frame's generator object.
   AbstractGeneratorObject& unwrappedGenerator() const;
 
@@ -226,8 +228,8 @@ class DebuggerFrame : public NativeObject {
    * association while the call is on the stack, and the relationships are easy
    * to discern.
    */
-  MOZ_MUST_USE bool setGenerator(JSContext* cx,
-                                 Handle<AbstractGeneratorObject*> genObj);
+  MOZ_MUST_USE bool setGeneratorInfo(JSContext* cx,
+                                     Handle<AbstractGeneratorObject*> genObj);
 
   /*
    * Undo the effects of a prior call to setGenerator.
@@ -244,8 +246,8 @@ class DebuggerFrame : public NativeObject {
    * function will not otherwise disturb generatorFrames. Passing the enum
    * allows this function to be used while iterating over generatorFrames.
    */
-  void clearGenerator(JSFreeOp* fop);
-  void clearGenerator(
+  void clearGeneratorInfo(JSFreeOp* fop);
+  void clearGeneratorInfo(
       JSFreeOp* fop, Debugger* owner,
       Debugger::GeneratorWeakMap::Enum* maybeGeneratorFramesEnum = nullptr);
 
