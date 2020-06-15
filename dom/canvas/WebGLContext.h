@@ -488,8 +488,7 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr<WebGLContext> {
  public:
   void Present(WebGLFramebuffer*, layers::TextureType);
   RefPtr<gfx::DataSourceSurface> GetFrontBufferSnapshot();
-  Maybe<layers::SurfaceDescriptor> GetFrontBuffer(WebGLFramebuffer*,
-                                                  layers::TextureType);
+  Maybe<layers::SurfaceDescriptor> GetFrontBuffer(WebGLFramebuffer*);
 
   void RunContextLossTimer();
   void CheckForContextLoss();
