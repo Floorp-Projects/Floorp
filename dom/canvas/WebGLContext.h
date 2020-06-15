@@ -100,6 +100,7 @@ class MozFramebuffer;
 
 namespace layers {
 class CompositableHost;
+class SurfaceDescriptor;
 }
 
 namespace webgl {
@@ -484,9 +485,10 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr<WebGLContext> {
   bool PresentInto(gl::SwapChain& swapChain);
 
  public:
-  void Present();
+  void Present(WebGLFramebuffer*, layers::TextureType);
   RefPtr<gfx::DataSourceSurface> GetFrontBufferSnapshot();
-  Maybe<layers::SurfaceDescriptor> GetFrontBuffer(layers::TextureType);
+  Maybe<layers::SurfaceDescriptor> GetFrontBuffer(WebGLFramebuffer*,
+                                                  layers::TextureType);
 
   void RunContextLossTimer();
   void CheckForContextLoss();
