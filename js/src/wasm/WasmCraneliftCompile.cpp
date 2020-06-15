@@ -152,7 +152,7 @@ static bool GenerateCraneliftCode(WasmMacroAssembler& masm,
 
   // Copy the machine code; handle jump tables and other read-only data below.
   uint32_t funcBase = masm.currentOffset();
-  if (!masm.appendRawCode(func.code, func.code_size)) {
+  if (func.code_size && !masm.appendRawCode(func.code, func.code_size)) {
     return false;
   }
 #if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86)
