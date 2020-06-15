@@ -6,13 +6,13 @@ use std::sync::RwLock;
 
 use glean_core::metrics::MetricType;
 
-use super::{BooleanMetric, CommonMetricData, ErrorType, StringMetric};
+use super::{BooleanMetric, CommonMetricData, CounterMetric, ErrorType, StringMetric};
 
 /// Sealed traits protect against downstream implementations.
 ///
 /// We wrap it in a private module that is inaccessible outside of this module.
 mod private {
-    use super::{BooleanMetric, CommonMetricData, StringMetric};
+    use super::{BooleanMetric, CommonMetricData, CounterMetric, StringMetric};
 
     /// The sealed trait.
     ///
@@ -55,6 +55,21 @@ mod private {
 
         fn new_inner(meta: CommonMetricData) -> Self::Inner {
             glean_core::metrics::StringMetric::new(meta)
+        }
+    }
+
+    // `LabeledMetric<CounterMetric>` is possible.
+    //
+    // See [Labeled Counters](https://mozilla.github.io/glean/book/user/metrics/labeled_counters.html).
+    impl Sealed for CounterMetric {
+        type Inner = glean_core::metrics::CounterMetric;
+
+        fn from_inner(metric: Self::Inner) -> Self {
+            CounterMetric(metric)
+        }
+
+        fn new_inner(meta: CommonMetricData) -> Self::Inner {
+            glean_core::metrics::CounterMetric::new(meta)
         }
     }
 }
