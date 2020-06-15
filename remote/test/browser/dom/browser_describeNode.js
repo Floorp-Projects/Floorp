@@ -4,6 +4,7 @@
 "use strict";
 
 const DOC = toDataURL("<div id='content'><p>foo</p><p>bar</p></div>");
+const DOC_FRAME = toDataURL(`<iframe src="${DOC}"></iframe>`);
 
 add_task(async function objectIdInvalidTypes({ client }) {
   const { DOM } = client;
@@ -145,4 +146,30 @@ add_task(async function objectIdDoesNotChangeForTheSameNode({ client }) {
   for (const prop in node1) {
     is(node1[prop], node2[prop], `Values of ${prop} are equal`);
   }
+});
+
+add_task(async function frameIdForFrameElement({ client }) {
+  const { DOM, Page, Runtime } = client;
+
+  await Page.enable();
+
+  const frameAttached = Page.frameAttached();
+  await loadURL(DOC_FRAME);
+  const { frameId, parentFrameId } = await frameAttached;
+
+  await Runtime.enable();
+
+  const { result: frameObj } = await Runtime.evaluate({
+    expression: "document.getElementsByTagName('iframe')[0]",
+  });
+  const { node: frame } = await DOM.describeNode({
+    objectId: frameObj.objectId,
+  });
+
+  is(frame.frameId, frameId, "Reported frameId is from the frame itself");
+  isnot(
+    frame.frameId,
+    parentFrameId,
+    "Reported frameId is not the parentFrameId"
+  );
 });
