@@ -78,6 +78,7 @@ void nsLookAndFeel::RefreshImpl() {
   mInitializedSystemColors = false;
   mInitializedShowPassword = false;
   mPrefersReducedMotionCached = false;
+  mSystemUsesDarkThemeCached = false;
 }
 
 nsresult nsLookAndFeel::NativeGetColor(ColorID aID, nscolor& aColor) {
@@ -376,7 +377,7 @@ nsresult nsLookAndFeel::GetIntImpl(IntID aID, int32_t& aResult) {
     case IntID::PrefersReducedMotion:
       if (!mPrefersReducedMotionCached && XRE_IsParentProcess()) {
         mPrefersReducedMotion =
-            java::GeckoSystemStateListener::PrefersReducedMotion() ? 1 : 0;
+            java::GeckoSystemStateListener::PrefersReducedMotion();
         mPrefersReducedMotionCached = true;
       }
       aResult = mPrefersReducedMotion;
@@ -390,14 +391,21 @@ nsresult nsLookAndFeel::GetIntImpl(IntID aID, int32_t& aResult) {
       break;
 
     case IntID::SystemUsesDarkTheme: {
-      // Bail out if AndroidBridge hasn't initialized since we try to query
-      // this vailue via nsMediaFeatures::InitSystemMetrics without initializing
-      // AndroidBridge on xpcshell tests.
-      if (!jni::IsAvailable()) {
-        return NS_ERROR_FAILURE;
+      if (!mSystemUsesDarkThemeCached && XRE_IsParentProcess()) {
+        // Bail out if AndroidBridge hasn't initialized since we try to query
+        // this value via nsMediaFeatures::InitSystemMetrics without
+        // initializing AndroidBridge on xpcshell tests.
+        if (!jni::IsAvailable()) {
+          return NS_ERROR_FAILURE;
+        }
+
+        java::GeckoRuntime::LocalRef runtime =
+            java::GeckoRuntime::GetInstance();
+        mSystemUsesDarkTheme = runtime && runtime->UsesDarkTheme();
+        mSystemUsesDarkThemeCached = true;
       }
-      java::GeckoRuntime::LocalRef runtime = java::GeckoRuntime::GetInstance();
-      aResult = runtime && runtime->UsesDarkTheme();
+
+      aResult = mSystemUsesDarkTheme;
       break;
     }
 
@@ -477,7 +485,8 @@ nsTArray<LookAndFeelInt> nsLookAndFeel::GetIntCacheImpl() {
   nsTArray<LookAndFeelInt> lookAndFeelIntCache =
       nsXPLookAndFeel::GetIntCacheImpl();
 
-  const IntID kIdsToCache[] = {IntID::PrefersReducedMotion};
+  const IntID kIdsToCache[] = {IntID::PrefersReducedMotion,
+                               IntID::SystemUsesDarkTheme};
 
   for (IntID id : kIdsToCache) {
     lookAndFeelIntCache.AppendElement(
@@ -494,6 +503,10 @@ void nsLookAndFeel::SetIntCacheImpl(
       case IntID::PrefersReducedMotion:
         mPrefersReducedMotion = entry.value;
         mPrefersReducedMotionCached = true;
+        break;
+      case IntID::SystemUsesDarkTheme:
+        mSystemUsesDarkTheme = !!entry.value;
+        mSystemUsesDarkThemeCached = true;
         break;
       default:
         MOZ_ASSERT_UNREACHABLE("Bogus Int ID in cache");
