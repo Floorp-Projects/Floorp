@@ -69,7 +69,7 @@ class SmooshScriptStencil : public ScriptStencil {
 
     const JS::ReadOnlyCompileOptions& options = compilationInfo_.options;
 
-    immutableFlags = result_.immutable_flags;
+    immutableFlags = result_.top_level_script.immutable_flags;
 
     // FIXME: The following flags should be set in jsparagus.
     immutableFlags.setFlag(ImmutableFlags::SelfHosted, options.selfHostingMode);
@@ -125,13 +125,13 @@ class SmooshScriptStencil : public ScriptStencil {
   }
 
   bool createGCThings(JSContext* cx) {
-    size_t ngcthings = result_.gcthings.len;
+    size_t ngcthings = result_.top_level_script.gcthings.len;
     if (!gcThings.reserve(ngcthings)) {
       return false;
     }
 
     for (size_t i = 0; i < ngcthings; i++) {
-      SmooshGCThing& item = result_.gcthings.data[i];
+      SmooshGCThing& item = result_.top_level_script.gcthings.data[i];
 
       switch (item.kind) {
         case SmooshGCThingKind::AtomIndex: {
@@ -376,35 +376,32 @@ JSScript* Smoosh::compileGlobalScript(CompilationInfo& compilationInfo,
 
   *unimplemented = false;
 
+  auto& smooshScript = smoosh.top_level_script;
+  auto& smooshScriptData =
+      smoosh.script_data_list.data[smooshScript.immutable_script_data];
+
   Vector<ScopeNote, 0, SystemAllocPolicy> scopeNotes;
-  if (!scopeNotes.resize(smoosh.scope_notes.len)) {
+  if (!scopeNotes.resize(smooshScriptData.scope_notes.len)) {
     return nullptr;
   }
-  for (size_t i = 0; i < smoosh.scope_notes.len; i++) {
-    SmooshScopeNote& scopeNote = smoosh.scope_notes.data[i];
+  for (size_t i = 0; i < smooshScriptData.scope_notes.len; i++) {
+    SmooshScopeNote& scopeNote = smooshScriptData.scope_notes.data[i];
     scopeNotes[i].index = scopeNote.index;
     scopeNotes[i].start = scopeNote.start;
     scopeNotes[i].length = scopeNote.length;
     scopeNotes[i].parent = scopeNote.parent;
   }
 
-  uint32_t nfixed = smoosh.max_fixed_slots;
-  uint64_t nslots64 =
-      nfixed + static_cast<uint64_t>(smoosh.maximum_stack_depth);
-  if (nslots64 > UINT32_MAX) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_NEED_DIET,
-                              js_script_str);
-    return nullptr;
-  }
-
   bool isFunction = false;
 
   int funLength = 0;  // Smoosh support for functions isn't complete yet.
   auto immutableScriptData = ImmutableScriptData::new_(
-      cx, smoosh.main_offset, nfixed, uint32_t(nslots64),
-      smoosh.body_scope_index, smoosh.num_ic_entries, smoosh.num_type_sets,
+      cx, smooshScriptData.main_offset, smooshScriptData.nfixed,
+      smooshScriptData.nslots, smooshScriptData.body_scope_index,
+      smooshScriptData.num_ic_entries, smooshScriptData.num_bytecode_type_sets,
       isFunction, funLength,
-      mozilla::MakeSpan(smoosh.bytecode.data, smoosh.bytecode.len),
+      mozilla::MakeSpan(smooshScriptData.bytecode.data,
+                        smooshScriptData.bytecode.len),
       mozilla::Span<const SrcNote>(), mozilla::Span<const uint32_t>(),
       scopeNotes, mozilla::Span<const TryNote>());
   if (!immutableScriptData) {

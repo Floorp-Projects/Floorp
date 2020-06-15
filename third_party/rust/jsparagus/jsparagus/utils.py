@@ -20,6 +20,22 @@ def keep_until(
             return
 
 
+def split(
+        iterable: typing.Iterable[T],
+        pred: typing.Callable[[T], bool]
+) -> typing.Tuple[typing.List[T], typing.List[T]]:
+    """Given a predicate, split the input iterator into a tuple of 2 list. A first
+    list which satisfy the predicate and a second list which does not."""
+    yes = []
+    no = []
+    for e in iterable:
+        if pred(e):
+            yes.append(e)
+        else:
+            no.append(e)
+    return yes, no
+
+
 def consume(iterator: typing.Iterable[T], progress: bool) -> None:
     """Drain the iterator. If progress is true, print dots on stdout."""
     i = 0

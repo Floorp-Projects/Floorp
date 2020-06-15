@@ -50,8 +50,10 @@ pub fn emit_program<'alloc>(
         compilation_info.atoms.into(),
         compilation_info.slices.into(),
         compilation_info.scope_data_map.into(),
+        compilation_info.regexps.into(),
         script,
         compilation_info.functions.into(),
+        compilation_info.script_data_list.into(),
     ))
 }
 
@@ -106,30 +108,48 @@ impl<'alloc, 'opt> AstEmitter<'alloc, 'opt> {
         }
         .emit(&mut self)?;
 
-        Ok(self.emit.into())
+        let script = self
+            .emit
+            .into_stencil(&mut self.compilation_info.script_data_list)?;
+
+        Ok(script)
     }
 
     fn emit_top_level_function_declaration(&mut self, fun: &Function) -> Result<(), EmitError> {
+        if fun.is_generator {
+            return Err(EmitError::NotImplemented("TODO: Generator"));
+        }
+        if fun.is_async {
+            return Err(EmitError::NotImplemented("TODO: Async function"));
+        }
+
         let stencil_index = *self
             .compilation_info
             .function_stencil_indices
             .get(fun)
-            .expect("FunctionStencil should be created");
+            .expect("ScriptStencil should be created");
         let fun_index = LazyFunctionEmitter { stencil_index }.emit(self);
 
         TopLevelFunctionDeclarationEmitter { fun_index }.emit(self);
 
         Err(EmitError::NotImplemented(
-            "TODO: Populate FunctionStencil fields",
+            "TODO: Populate ScriptStencil fields",
         ))
     }
 
     fn emit_non_top_level_function_declaration(&mut self, fun: &Function) -> Result<(), EmitError> {
+        if fun.is_generator {
+            return Err(EmitError::NotImplemented("TODO: Generator"));
+        }
+        if fun.is_async {
+            return Err(EmitError::NotImplemented("TODO: Async function"));
+        }
+
         let stencil_index = *self
             .compilation_info
             .function_stencil_indices
             .get(fun)
-            .expect("FunctionStencil should be created");
+            .expect("ScriptStencil should be created");
 
         let is_annex_b = self
             .compilation_info
@@ -142,7 +162,7 @@ impl<'alloc, 'opt> AstEmitter<'alloc, 'opt> {
             .compilation_info
             .functions
             .get(stencil_index)
-            .name()
+            .fun_name()
             .expect("Function declaration should have name");
 
         if is_annex_b {
@@ -152,7 +172,7 @@ impl<'alloc, 'opt> AstEmitter<'alloc, 'opt> {
         }
 
         Err(EmitError::NotImplemented(
-            "TODO: Populate FunctionStencil fields",
+            "TODO: Populate ScriptStencil fields",
         ))
     }
 
@@ -200,7 +220,7 @@ impl<'alloc, 'opt> AstEmitter<'alloc, 'opt> {
                 .emit(self);
             }
             Statement::DebuggerStatement { .. } => {
-                return Err(EmitError::NotImplemented("TODO: DebuggerStatement"));
+                self.emit.debugger();
             }
             Statement::DoWhileStatement { block, test, .. } => {
                 DoWhileEmitter {
@@ -426,7 +446,8 @@ impl<'alloc, 'opt> AstEmitter<'alloc, 'opt> {
                     sticky: *sticky,
                     unicode: *unicode,
                 };
-                let index = self.emit.get_regexp_gcthing_index(item);
+                let regexp_index = self.compilation_info.regexps.push(item);
+                let index = self.emit.get_regexp_gcthing_index(regexp_index);
                 self.emit.reg_exp(index);
             }
 

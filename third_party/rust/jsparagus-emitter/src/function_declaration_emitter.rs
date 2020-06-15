@@ -2,11 +2,11 @@ use crate::ast_emitter::AstEmitter;
 use crate::emitter::EmitError;
 use crate::reference_op_emitter::{AssignmentEmitter, DeclarationEmitter, NameReferenceEmitter};
 use ast::source_atom_set::SourceAtomSetIndex;
-use stencil::function::FunctionStencilIndex;
 use stencil::gcthings::GCThingIndex;
+use stencil::script::ScriptStencilIndex;
 
 pub struct LazyFunctionEmitter {
-    pub stencil_index: FunctionStencilIndex,
+    pub stencil_index: ScriptStencilIndex,
 }
 
 impl LazyFunctionEmitter {

@@ -5,7 +5,7 @@ import typing
 from dataclasses import dataclass
 from .grammar import Nt
 from .lr0 import ShiftedTerm, Term
-from .actions import Action, Reduce
+from .actions import Action
 
 # Avoid circular reference between this module and parse_table.py
 if typing.TYPE_CHECKING:
@@ -43,10 +43,9 @@ def reduce_path(pt: ParseTable, shifted: Path) -> typing.Iterator[Path]:
     action = shifted[-1].term
     assert isinstance(action, Action)
     assert action.update_stack()
-    reducer = action.reduce_with()
-    assert isinstance(reducer, Reduce)
-    nt = reducer.nt
-    depth = reducer.pop + reducer.replay
+    stack_diff = action.update_stack_with()
+    nt = stack_diff.nt
+    depth = stack_diff.pop + stack_diff.replay
     if depth > 0:
         # We are reducing at least one element from the stack.
         stacked = [i for i, e in enumerate(shifted) if pt.term_is_stacked(e.term)]
@@ -221,14 +220,19 @@ class APS:
                     # we might loop on Optional rules. Which would not match
                     # the expected behaviour of the parser.
                     continue
-                reducer = a.reduce_with()
+                # TODO: When unwinding, do not add the reduced_path back to the
+                # shifted state, but add the non-terminal to the list of terms
+                # to be replayed. This is more accruate with the actual inner
+                # working of the parser and allow to extract the Unwind part of
+                # the Reduce action. This also imply that we might have an
+                # action state which is independent of the stack top.
+                assert not a.follow_edge()  # Not supported yet.
+                stack_diff = a.update_stack_with()
                 for path in reduce_path(pt, prev_sh):
-                    # The reduced path contains the chains of state shifted,
-                    # including epsilon transitions, such that it consume as
-                    # many shifted terms as is expected to be replayed and
-                    # popped by the Reduce action. However, it is not guarantee
-                    # that the path will come back to an edge which can consume
-                    # the non-terminal.
+                    # path contains the chains of state shifted, including
+                    # epsilon transitions. The head of the path should be able
+                    # to shift the reduced nonterminal or any state reachable
+                    # through an epsilon state after it.
 
                     # print(
                     #     "Compare shifted path, with reduced path:\n"
@@ -271,8 +275,10 @@ class APS:
                     # pushed on the stack as our lookahead. These terms are
                     # computed here such that we can traverse the graph from
                     # `to` state, using the replayed terms.
-                    replay = reducer.replay
-                    new_rp: typing.List[ShiftedTerm] = [reducer.nt]
+                    replay = stack_diff.replay
+                    nt = stack_diff.nt
+                    assert nt is not None
+                    new_rp: typing.List[ShiftedTerm] = [nt]
                     if replay > 0:
                         stacked_terms = [
                             typing.cast(ShiftedTerm, edge.term)
