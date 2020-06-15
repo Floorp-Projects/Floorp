@@ -107,8 +107,8 @@ void HostWebGLContext::JsWarning(const std::string& text) const {
 }
 
 Maybe<layers::SurfaceDescriptor> HostWebGLContext::GetFrontBuffer(
-    const ObjectId fb, const layers::TextureType t) const {
-  return mContext->GetFrontBuffer(AutoResolve(fb), t);
+    const ObjectId fb) const {
+  return mContext->GetFrontBuffer(AutoResolve(fb));
 }
 
 //////////////////////////////////////////////

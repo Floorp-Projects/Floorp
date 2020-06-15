@@ -93,7 +93,7 @@ void VRLayerChild::SubmitFrame(const VRDisplayInfo& aDisplayInfo) {
     }
 
     webgl->Present(mFramebuffer, texType);
-    mThisFrameTextureDesc = webgl->GetFrontBuffer(mFramebuffer, texType);
+    mThisFrameTextureDesc = webgl->GetFrontBuffer(mFramebuffer);
   }
 
   mLastSubmittedFrameId = frameId;
