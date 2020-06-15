@@ -368,16 +368,13 @@ bool DebuggerFrame::setGeneratorInfo(JSContext* cx,
   //    DebuggerFrame.
   //
   // 3) The generator's script's observer count must be bumped.
-  UniquePtr<GeneratorInfo> info;
-  RootedScript script(cx);
-  if (!genObj->isClosed()) {
-    script = genObj->callee().nonLazyScript();
-    info.reset(cx->new_<GeneratorInfo>(genObj, script));
-    if (!info) {
-      ReportOutOfMemory(cx);
-      return false;
-    }
+  RootedScript script(cx, genObj->callee().nonLazyScript());
+  auto* info = cx->new_<GeneratorInfo>(genObj, script);
+  if (!info) {
+    ReportOutOfMemory(cx);
+    return false;
   }
+  auto infoGuard = MakeScopeExit([&] { js_delete(info); });
 
   if (!owner()->generatorFrames.relookupOrAdd(p, genObj, this)) {
     ReportOutOfMemory(cx);
@@ -386,7 +383,7 @@ bool DebuggerFrame::setGeneratorInfo(JSContext* cx,
   auto generatorFramesGuard =
       MakeScopeExit([&] { owner()->generatorFrames.remove(genObj); });
 
-  if (script) {
+  {
     AutoRealm ar(cx, script);
 
     // All frames running a debuggee script must themselves be marked as
@@ -402,13 +399,11 @@ bool DebuggerFrame::setGeneratorInfo(JSContext* cx,
     }
   }
 
-  if (info) {
-    InitReservedSlot(this, GENERATOR_INFO_SLOT, info.release(),
-                     MemoryUse::DebuggerFrameGeneratorInfo);
-  } else {
-    setReservedSlot(GENERATOR_INFO_SLOT, UndefinedValue());
-  }
+  InitReservedSlot(this, GENERATOR_INFO_SLOT, info,
+                   MemoryUse::DebuggerFrameGeneratorInfo);
+
   generatorFramesGuard.release();
+  infoGuard.release();
 
   return true;
 }
