@@ -1334,7 +1334,7 @@ pub(crate) fn lower_insn_to_regs<C: LowerCtx<I = Inst>>(
             ctx.emit(Inst::Brk);
         }
 
-        Opcode::Trap => {
+        Opcode::Trap | Opcode::ResumableTrap => {
             let trap_info = (ctx.srcloc(insn), inst_trapcode(ctx.data(insn)).unwrap());
             ctx.emit(Inst::Udf { trap_info })
         }
@@ -1385,12 +1385,8 @@ pub(crate) fn lower_insn_to_regs<C: LowerCtx<I = Inst>>(
             panic!("safepoint support not implemented!");
         }
 
-        Opcode::Trapz | Opcode::Trapnz => {
-            panic!("trapz / trapnz should have been removed by legalization!");
-        }
-
-        Opcode::ResumableTrap => {
-            panic!("Resumable traps not supported");
+        Opcode::Trapz | Opcode::Trapnz | Opcode::ResumableTrapnz => {
+            panic!("trapz / trapnz / resumable_trapnz should have been removed by legalization!");
         }
 
         Opcode::FuncAddr => {
@@ -2046,6 +2042,7 @@ pub(crate) fn lower_insn_to_regs<C: LowerCtx<I = Inst>>(
         | Opcode::X86Pop
         | Opcode::X86Bsr
         | Opcode::X86Bsf
+        | Opcode::X86Pblendw
         | Opcode::X86Pshufd
         | Opcode::X86Pshufb
         | Opcode::X86Pextr
@@ -2066,6 +2063,7 @@ pub(crate) fn lower_insn_to_regs<C: LowerCtx<I = Inst>>(
         | Opcode::X86Packss
         | Opcode::X86Punpckh
         | Opcode::X86Punpckl
+        | Opcode::X86Vcvtudq2ps
         | Opcode::X86ElfTlsGetAddr
         | Opcode::X86MachoTlsGetAddr => {
             panic!("x86-specific opcode in supposedly arch-neutral IR!");
@@ -2275,6 +2273,7 @@ pub(crate) fn lower_branch<C: LowerCtx<I = Inst>>(
                     dest: BranchTarget::Label(targets[0]),
                 });
             }
+
             Opcode::BrTable => {
                 // Expand `br_table index, default, JT` to:
                 //
