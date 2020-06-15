@@ -1171,41 +1171,6 @@ already_AddRefed<GLContext> GLContextProviderEGL::CreateHeadless(
                                                         out_failureId);
 }
 
-// Under EGL, on Android, pbuffers are supported fine, though
-// often without the ability to texture from them directly.
-/*static*/
-already_AddRefed<GLContext> GLContextProviderEGL::CreateOffscreen(
-    const mozilla::gfx::IntSize& size, const GLContextCreateDesc& desc,
-    nsACString* const out_failureId) {
-  bool forceEnableHardware =
-      bool(desc.flags & CreateContextFlags::FORCE_ENABLE_HARDWARE);
-  if (!GLLibraryEGL::EnsureInitialized(
-          forceEnableHardware, out_failureId)) {  // Needed for IsANGLE().
-    return nullptr;
-  }
-
-  auto* egl = gl::GLLibraryEGL::Get();
-  bool canOffscreenUseHeadless = true;
-  if (egl->IsANGLE()) {
-    // ANGLE needs to use PBuffers.
-    canOffscreenUseHeadless = false;
-  }
-
-#if defined(MOZ_WIDGET_ANDROID)
-  // Using a headless context loses the depth and/or stencil
-  canOffscreenUseHeadless = false;
-#endif  //  defined(MOZ_WIDGET_ANDROID)
-
-  RefPtr<GLContext> gl;
-  if (canOffscreenUseHeadless) {
-    gl = CreateHeadless(desc, out_failureId);
-  } else {
-    gl = GLContextEGL::CreateEGLPBufferOffscreenContext(desc, size,
-                                                        out_failureId);
-  }
-  return gl.forget();
-}
-
 // Don't want a global context on Android as 1) share groups across 2 threads
 // fail on many Tegra drivers (bug 759225) and 2) some mobile devices have a
 // very strict limit on global number of GL contexts (bug 754257) and 3) each

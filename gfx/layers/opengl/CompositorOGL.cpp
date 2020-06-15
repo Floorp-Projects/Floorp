@@ -243,9 +243,11 @@ already_AddRefed<mozilla::gl::GLContext> CompositorOGL::CreateContext() {
   // Allow to create offscreen GL context for main Layer Manager
   if (!context && gfxEnv::LayersPreferOffscreen()) {
     nsCString discardFailureId;
-    context = GLContextProvider::CreateOffscreen(
-        mSurfaceSize, {CreateContextFlags::REQUIRE_COMPAT_PROFILE},
-        &discardFailureId);
+    context = GLContextProvider::CreateHeadless(
+        {CreateContextFlags::REQUIRE_COMPAT_PROFILE}, &discardFailureId);
+    if (!context->CreateOffscreenDefaultFb(mSurfaceSize)) {
+      context = nullptr;
+    }
   }
 
   if (!context) {

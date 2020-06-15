@@ -34,9 +34,14 @@ class MockWidget : public nsBaseWidget {
   void* GetNativeData(uint32_t aDataType) override {
     if (aDataType == NS_NATIVE_OPENGL_CONTEXT) {
       nsCString discardFailureId;
-      RefPtr<GLContext> context = GLContextProvider::CreateOffscreen(
-          {mCompWidth, mCompHeight},
+      RefPtr<GLContext> context = GLContextProvider::CreateHeadless(
           {CreateContextFlags::REQUIRE_COMPAT_PROFILE}, &discardFailureId);
+      if (!context) {
+        return nullptr;
+      }
+      if (!context->CreateOffscreenDefaultFb({mCompWidth, mCompHeight})) {
+        return nullptr;
+      }
       return context.forget().take();
     }
     return nullptr;

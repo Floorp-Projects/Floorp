@@ -190,12 +190,6 @@ already_AddRefed<GLContext> GLContextProviderEAGL::CreateHeadless(
   return CreateEAGLContext(desc, GetGlobalContextEAGL()).forget();
 }
 
-already_AddRefed<GLContext> GLContextProviderEAGL::CreateOffscreen(
-    const mozilla::gfx::IntSize& size, const GLContextCreateDesc& desc,
-    nsACString* const out_failureId) {
-  return CreateHeadless(desc, out_failureId);
-}
-
 static RefPtr<GLContext> gGlobalContext;
 
 GLContext* GLContextProviderEAGL::GetGlobalContext() {
