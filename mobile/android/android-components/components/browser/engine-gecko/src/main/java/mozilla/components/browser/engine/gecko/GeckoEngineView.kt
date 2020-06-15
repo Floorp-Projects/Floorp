@@ -169,7 +169,7 @@ class GeckoEngineView @JvmOverloads constructor(
         release()
     }
 
-    override fun canClearSelection() = currentSelection?.selection != null
+    override fun canClearSelection() = !currentSelection?.selection?.text.isNullOrEmpty()
 
     override fun canScrollVerticallyUp() = currentSession?.let { it.scrollY > 0 } != false
 

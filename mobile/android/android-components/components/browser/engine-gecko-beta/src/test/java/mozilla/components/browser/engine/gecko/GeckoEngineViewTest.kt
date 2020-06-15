@@ -16,6 +16,7 @@ import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -25,8 +26,10 @@ import org.mockito.Mockito.never
 import org.mockito.Mockito.reset
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
+import org.mozilla.gecko.util.GeckoBundle
 import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoSession
+import org.mozilla.geckoview.MockSelection
 import org.robolectric.Robolectric.buildActivity
 import java.lang.IllegalStateException
 
@@ -274,5 +277,29 @@ class GeckoEngineViewTest {
 
         engineView.visibility = View.GONE
         verify(engineView.currentGeckoView)?.visibility = View.GONE
+    }
+
+    @Test
+    fun `canClearSelection should return false for null selection, null and empty selection text`() {
+        val engineView = GeckoEngineView(context)
+        engineView.currentGeckoView = mock()
+        engineView.currentSelection = mock()
+
+        // null selection returns false
+        whenever(engineView.currentSelection?.selection).thenReturn(null)
+        assertFalse(engineView.canClearSelection())
+
+        // selection with null text returns false
+        val selectionWthNullText: GeckoSession.SelectionActionDelegate.Selection = mock()
+        whenever(engineView.currentSelection?.selection).thenReturn(selectionWthNullText)
+        assertFalse(engineView.canClearSelection())
+
+        // selection with empty text returns false
+        val bundle = GeckoBundle()
+        bundle.putString("selection", "")
+        val selectionWthEmptyText: GeckoSession.SelectionActionDelegate.Selection =
+            MockSelection(bundle)
+        whenever(engineView.currentSelection?.selection).thenReturn(selectionWthEmptyText)
+        assertFalse(engineView.canClearSelection())
     }
 }
