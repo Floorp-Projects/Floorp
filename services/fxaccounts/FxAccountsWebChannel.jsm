@@ -117,7 +117,11 @@ const EXTRA_ENGINES = ["addresses", "creditcards"];
  * doesn't have a stack trace.
  */
 function getErrorDetails(error) {
-  let details = { message: String(error), stack: null };
+  // Replace anything that looks like it might be a filepath on Windows or Unix
+  let cleanMessage = String(error)
+    .replace(/\\.*\\/gm, "[REDACTED]")
+    .replace(/\/.*\//gm, "[REDACTED]");
+  let details = { message: cleanMessage, stack: null };
 
   // Adapted from Console.jsm.
   if (error.stack) {

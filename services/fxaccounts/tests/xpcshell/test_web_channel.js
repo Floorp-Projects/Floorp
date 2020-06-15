@@ -150,6 +150,71 @@ add_test(function test_exception_reporting() {
   channel._channelCallback(WEBCHANNEL_ID, mockMessage, mockSendingContext);
 });
 
+add_test(function test_error_message_remove_profile_path() {
+  const errors = {
+    windows: {
+      err: new Error(
+        "Win error 183 during operation rename on file C:\\Users\\Some Computer\\AppData\\Roaming\\" +
+          "Mozilla\\Firefox\\Profiles\\dbzjmzxa.default\\signedInUser.json (Cannot create a file)"
+      ),
+      expected:
+        "Error: Win error 183 during operation rename on file C:[REDACTED]signedInUser.json (Cannot create a file)",
+    },
+    unix: {
+      err: new Error(
+        "Unix error 28 during operation write on file /Users/someuser/Library/Application Support/" +
+          "Firefox/Profiles/dbzjmzxa.default-release-7/signedInUser.json (No space left on device)"
+      ),
+      expected:
+        "Error: Unix error 28 during operation write on file [REDACTED]signedInUser.json (No space left on device)",
+    },
+    netpath: {
+      err: new Error(
+        "Win error 32 during operation rename on file \\\\SVC.LOC\\HOMEDIRS$\\USERNAME\\Mozilla\\" +
+          "Firefox\\Profiles\\dbzjmzxa.default-release-7\\signedInUser.json (No space left on device)"
+      ),
+      expected:
+        "Error: Win error 32 during operation rename on file [REDACTED]signedInUser.json (No space left on device)",
+    },
+    mount: {
+      err: new Error(
+        "Win error 649 during operation rename on file C:\\SnapVolumes\\MountPoints\\" +
+          "{9e399ec5-0000-0000-0000-100000000000}\\SVROOT\\Users\\username\\AppData\\Roaming\\Mozilla\\Firefox\\" +
+          "Profiles\\dbzjmzxa.default-release\\signedInUser.json (The create operation failed)"
+      ),
+      expected:
+        "Error: Win error 649 during operation rename on file C:[REDACTED]signedInUser.json " +
+        "(The create operation failed)",
+    },
+  };
+  const mockMessage = {
+    command: "fxaccounts:sync_preferences",
+    messageId: "1234",
+  };
+  const channel = new FxAccountsWebChannel({
+    channel_id: WEBCHANNEL_ID,
+    content_uri: URL_STRING,
+  });
+
+  let testNum = 0;
+  const toTest = Object.keys(errors).length;
+  for (const key in errors) {
+    let error = errors[key];
+    channel._channel.send = (message, context) => {
+      equal(
+        message.data.error.message,
+        error.expected,
+        "Should remove the profile path from the error message"
+      );
+      testNum++;
+      if (testNum === toTest) {
+        run_next_test();
+      }
+    };
+    channel._sendError(error.err, mockMessage, mockSendingContext);
+  }
+});
+
 add_test(function test_profile_image_change_message() {
   var mockMessage = {
     command: "profile:change",
