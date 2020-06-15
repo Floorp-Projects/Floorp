@@ -530,3 +530,23 @@ TEST(ObserverArray, RangeBasedFor_NonConstReference_EndLimited_NonEmpty)
   EXPECT_EQ(2u, iterations);
   EXPECT_EQ(7, sum);
 }
+
+TEST(ObserverArray, RangeBasedFor_Reference_NonObserving_NonEmpty)
+{
+  const auto arr = [] {
+    nsTObserverArray<UniquePtr<int>> arr;
+    arr.AppendElement(MakeUnique<int>(3));
+    arr.AppendElement(MakeUnique<int>(4));
+    return arr;
+  }();
+
+  size_t iterations = 0;
+  int sum = 0;
+  for (const UniquePtr<int>& element : arr.NonObservingRange()) {
+    sum += *element;
+    ++iterations;
+  }
+
+  EXPECT_EQ(2u, iterations);
+  EXPECT_EQ(7, sum);
+}
