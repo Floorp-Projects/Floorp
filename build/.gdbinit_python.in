@@ -1,0 +1,6 @@
+#filter substitution
+python
+import sys
+sys.path.append('@topsrcdir@/python/gdbpp')
+import gdbpp
+end

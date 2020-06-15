@@ -129,7 +129,3 @@ per-file-ignores =
     testing/mochitest/**: F821
     testing/xpcshell/**: F633, F821
     xpcom/idl-parser/xpidl/**: F633, F821
-
-builtins =
-    # For GDB extensions
-    gdb
