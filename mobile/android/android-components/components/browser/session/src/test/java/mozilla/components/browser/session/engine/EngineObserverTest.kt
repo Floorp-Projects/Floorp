@@ -13,6 +13,7 @@ import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.session.engine.request.LoadRequestOption
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.TrackingProtectionAction
+import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSessionState
@@ -613,6 +614,56 @@ class EngineObserverTest {
 
         assertNull(store.state.media.elements["test-tab"])
         verify(media2).unregister(any())
+    }
+
+    @Test
+    fun `onExternalResource will update the store`() {
+        val store = BrowserStore()
+
+        val sessionManager = SessionManager(engine = mock(), store = store)
+
+        val session = Session("https://www.mozilla.org", id = "test-tab").also {
+            sessionManager.add(it)
+        }
+
+        val observer = EngineObserver(session, store)
+
+        observer.onExternalResource(
+                url = "mozilla.org/file.txt",
+                fileName = "file.txt",
+                userAgent = "userAgent",
+                contentType = "text/plain",
+                contentLength = 100L)
+
+        store.waitUntilIdle()
+
+        val tab = store.state.findTab("test-tab")!!
+
+        assertEquals("mozilla.org/file.txt", tab.content.download?.url)
+        assertEquals("file.txt", tab.content.download?.fileName)
+        assertEquals("userAgent", tab.content.download?.userAgent)
+        assertEquals("text/plain", tab.content.download?.contentType)
+        assertEquals(100L, tab.content.download?.contentLength)
+    }
+
+    @Test
+    fun `onExternalResource with negative contentLength`() {
+        val store = BrowserStore()
+
+        val sessionManager = SessionManager(engine = mock(), store = store)
+
+        val session = Session("https://www.mozilla.org", id = "test-tab").also {
+            sessionManager.add(it)
+        }
+        val observer = EngineObserver(session, store)
+
+        observer.onExternalResource(url = "mozilla.org/file.txt", contentLength = -1)
+
+        store.waitUntilIdle()
+
+        val tab = store.state.findTab("test-tab")!!
+
+        assertNull(tab.content.download?.contentLength)
     }
 
     @Test
