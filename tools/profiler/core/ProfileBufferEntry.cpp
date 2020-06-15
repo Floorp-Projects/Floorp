@@ -475,8 +475,10 @@ static void StreamJITFrame(JSContext* aContext, SpliceableJSONWriter& aWriter,
       IMPLEMENTATION,
       frameKind == JS::ProfilingFrameIterator::Frame_Ion ? "ion" : "baseline");
 
-  const JS::ProfilingCategoryPairInfo& info =
-      JS::GetProfilingCategoryPairInfo(JS::ProfilingCategoryPair::JS);
+  const JS::ProfilingCategoryPairInfo& info = JS::GetProfilingCategoryPairInfo(
+      frameKind == JS::ProfilingFrameIterator::Frame_Ion
+          ? JS::ProfilingCategoryPair::JS_IonMonkey
+          : JS::ProfilingCategoryPair::JS_Baseline);
   writer.IntElement(CATEGORY, uint32_t(info.mCategory));
   writer.IntElement(SUBCATEGORY, info.mSubcategoryIndex);
 }

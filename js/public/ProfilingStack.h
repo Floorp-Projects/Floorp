@@ -296,7 +296,7 @@ class ProfilingStackFrame {
     MOZ_ASSERT(isSpMarkerFrame());
   }
 
-  template <uint32_t ExtraFlags = 0>
+  template <JS::ProfilingCategoryPair Category, uint32_t ExtraFlags = 0>
   void initJsFrame(const char* aLabel, const char* aDynamicString,
                    JSScript* aScript, jsbytecode* aPc, uint64_t aRealmID) {
     label_ = aLabel;
@@ -304,10 +304,9 @@ class ProfilingStackFrame {
     spOrScript = aScript;
     pcOffsetIfJS_ = pcToOffset(aScript, aPc);
     realmID_ = aRealmID;
-    flagsAndCategoryPair_ = uint32_t(ExtraFlags) |
-                            uint32_t(Flags::IS_JS_FRAME) |
-                            (uint32_t(JS::ProfilingCategoryPair::JS)
-                             << uint32_t(Flags::FLAGS_BITCOUNT));
+    flagsAndCategoryPair_ =
+        (uint32_t(Category) << uint32_t(Flags::FLAGS_BITCOUNT)) |
+        uint32_t(Flags::IS_JS_FRAME) | ExtraFlags;
     MOZ_ASSERT(isJsFrame());
   }
 
@@ -449,8 +448,9 @@ class JS_FRIEND_API ProfilingStack final {
     if (MOZ_UNLIKELY(oldStackPointer >= capacity)) {
       ensureCapacitySlow();
     }
-    frames[oldStackPointer].initJsFrame(label, dynamicString, script, pc,
-                                        aRealmID);
+    frames[oldStackPointer]
+        .initJsFrame<JS::ProfilingCategoryPair::JS_Interpreter>(
+            label, dynamicString, script, pc, aRealmID);
 
     // This must happen at the end, see the comment in pushLabelFrame.
     stackPointer = stackPointer + 1;
