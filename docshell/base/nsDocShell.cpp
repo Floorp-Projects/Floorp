@@ -9034,11 +9034,19 @@ nsIPrincipal* nsDocShell::GetInheritedPrincipal(
   // If the HTTPS-Only mode is enabled, every insecure request gets upgraded to
   // HTTPS by default. This behavior can be disabled through the loadinfo flag
   // HTTPS_ONLY_EXEMPT.
-  if (aLoadState->IsHttpsOnlyModeUpgradeExempt() &&
-      mozilla::StaticPrefs::dom_security_https_only_mode()) {
-    uint32_t httpsOnlyStatus = aLoadInfo->GetHttpsOnlyStatus();
-    httpsOnlyStatus |= nsILoadInfo::HTTPS_ONLY_EXEMPT;
-    aLoadInfo->SetHttpsOnlyStatus(httpsOnlyStatus);
+  if (mozilla::StaticPrefs::dom_security_https_only_mode()) {
+    // Let's create a new content principal based on the URI for the
+    // PermissionManager
+    nsCOMPtr<nsIPrincipal> permissionPrincipal =
+        BasePrincipal::CreateContentPrincipal(aLoadState->URI(), attrs);
+
+    if (nsContentUtils::IsExactSitePermAllow(
+            permissionPrincipal,
+            NS_LITERAL_CSTRING("https-only-mode-exception"))) {
+      uint32_t httpsOnlyStatus = aLoadInfo->GetHttpsOnlyStatus();
+      httpsOnlyStatus |= nsILoadInfo::HTTPS_ONLY_EXEMPT;
+      aLoadInfo->SetHttpsOnlyStatus(httpsOnlyStatus);
+    }
   }
 
   nsCOMPtr<nsIChannel> channel;

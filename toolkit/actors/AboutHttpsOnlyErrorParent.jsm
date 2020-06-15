@@ -26,7 +26,7 @@ class AboutHttpsOnlyErrorParent extends JSWindowActorParent {
         this.goBackFromErrorPage(this.browser.ownerGlobal);
         break;
       case "openInsecure":
-        this.openWebsiteInsecure(this.browser.ownerGlobal);
+        this.openWebsiteInsecure(this.browser);
         break;
     }
   }
@@ -50,15 +50,47 @@ class AboutHttpsOnlyErrorParent extends JSWindowActorParent {
     }
   }
 
-  openWebsiteInsecure(aWindow) {
+  openWebsiteInsecure(aBrowser) {
     // HTTPS-Only Mode does an internal redirect from HTTP to HTTPS and
     // displays the error page if the request fails. So if we want to load the
     // page with the exception, we need to replace http:// with https://
-    const currentURI = aWindow.gBrowser.currentURI;
-    const uriString = currentURI.displaySpec.replace("https://", "http://");
-    aWindow.gBrowser.loadURI(uriString, {
+    const currentURI = aBrowser.currentURI;
+    const isViewSource = currentURI.schemeIs("view-source");
+
+    let innerURI = isViewSource
+      ? currentURI.QueryInterface(Ci.nsINestedURI).innerURI
+      : currentURI;
+
+    if (!innerURI.schemeIs("https") && !innerURI.schemeIs("http")) {
+      // This should never happen
+      throw new Error(
+        "Exceptions can only be created for http or https sites."
+      );
+    }
+
+    let newURI = innerURI
+      .mutate()
+      .setScheme("http")
+      .finalize();
+
+    let principal = Services.scriptSecurityManager.createContentPrincipal(
+      newURI,
+      aBrowser.contentPrincipal.originAttributes
+    );
+
+    // Create exception for this website that expires with the session.
+    Services.perms.addFromPrincipal(
+      principal,
+      "https-only-mode-exception",
+      Ci.nsIPermissionManager.ALLOW_ACTION,
+      Ci.nsIPermissionManager.EXPIRE_SESSION
+    );
+
+    const insecureSpec = isViewSource
+      ? `view-source:${newURI.spec}`
+      : newURI.spec;
+    aBrowser.loadURI(insecureSpec, {
       triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
-      isHttpsOnlyModeUpgradeExempt: true,
     });
   }
 

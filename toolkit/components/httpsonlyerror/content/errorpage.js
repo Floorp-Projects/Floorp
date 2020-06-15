@@ -16,20 +16,24 @@ function initPage() {
   const explanation1 = document.getElementById(
     "insecure-explanation-unavailable"
   );
+
+  const pageUrl = new URL(window.location.href.replace(/^view-source:/, ""));
+
   document.l10n.setAttributes(
     explanation1,
     "about-httpsonly-insecure-explanation-unavailable",
-    { websiteUrl: window.location.hostname }
+    { websiteUrl: pageUrl.host }
   );
 
   document
     .getElementById("openInsecure")
     .addEventListener("click", onOpenInsecureButtonClick);
-  addAutofocus("#goBack", "beforeend");
+
   if (window.top == window) {
     document
       .getElementById("goBack")
       .addEventListener("click", onReturnButtonClick);
+    addAutofocus("#goBack", "beforeend");
   } else {
     document.getElementById("goBack").remove();
   }

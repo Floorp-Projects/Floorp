@@ -92,7 +92,6 @@ nsDocShellLoadState::nsDocShellLoadState(nsIURI* aURI)
       mHasValidUserGestureActivation(false),
       mTypeHint(VoidCString()),
       mFileName(VoidString()),
-      mIsHttpsOnlyModeUpgradeExempt(false),
       mIsFromProcessingFrameAttributes(false),
       mLoadIdentifier(0) {
   MOZ_ASSERT(aURI, "Cannot create a LoadState with a null URI!");
@@ -117,7 +116,6 @@ nsDocShellLoadState::nsDocShellLoadState(
   mHasValidUserGestureActivation = aLoadState.HasValidUserGestureActivation();
   mTypeHint = aLoadState.TypeHint();
   mFileName = aLoadState.FileName();
-  mIsHttpsOnlyModeUpgradeExempt = aLoadState.IsHttpsOnlyModeUpgradeExempt();
   mIsFromProcessingFrameAttributes =
       aLoadState.IsFromProcessingFrameAttributes();
   mReferrerInfo = aLoadState.ReferrerInfo();
@@ -167,7 +165,6 @@ nsDocShellLoadState::nsDocShellLoadState(const nsDocShellLoadState& aOther)
       mHasValidUserGestureActivation(aOther.mHasValidUserGestureActivation),
       mTypeHint(aOther.mTypeHint),
       mFileName(aOther.mFileName),
-      mIsHttpsOnlyModeUpgradeExempt(aOther.mIsHttpsOnlyModeUpgradeExempt),
       mIsFromProcessingFrameAttributes(aOther.mIsFromProcessingFrameAttributes),
       mPendingRedirectedChannel(aOther.mPendingRedirectedChannel),
       mOriginalURIString(aOther.mOriginalURIString),
@@ -352,8 +349,6 @@ nsresult nsDocShellLoadState::CreateFromLoadURIOptions(
   if (aLoadURIOptions.mCancelContentJSEpoch) {
     loadState->SetCancelContentJSEpoch(aLoadURIOptions.mCancelContentJSEpoch);
   }
-  loadState->SetIsHttpsOnlyModeUpgradeExempt(
-      aLoadURIOptions.mIsHttpsOnlyModeUpgradeExempt);
 
   if (fixupInfo) {
     nsAutoString searchProvider, keyword;
@@ -604,14 +599,6 @@ const nsString& nsDocShellLoadState::FileName() const { return mFileName; }
 
 void nsDocShellLoadState::SetFileName(const nsAString& aFileName) {
   mFileName = aFileName;
-}
-
-bool nsDocShellLoadState::IsHttpsOnlyModeUpgradeExempt() const {
-  return mIsHttpsOnlyModeUpgradeExempt;
-}
-
-void nsDocShellLoadState::SetIsHttpsOnlyModeUpgradeExempt(bool aIsExempt) {
-  mIsHttpsOnlyModeUpgradeExempt = aIsExempt;
 }
 
 nsresult nsDocShellLoadState::SetupInheritingPrincipal(
@@ -876,7 +863,6 @@ DocShellLoadStateInit nsDocShellLoadState::Serialize() {
   loadState.HasValidUserGestureActivation() = mHasValidUserGestureActivation;
   loadState.TypeHint() = mTypeHint;
   loadState.FileName() = mFileName;
-  loadState.IsHttpsOnlyModeUpgradeExempt() = mIsHttpsOnlyModeUpgradeExempt;
   loadState.IsFromProcessingFrameAttributes() =
       mIsFromProcessingFrameAttributes;
   loadState.URI() = mURI;

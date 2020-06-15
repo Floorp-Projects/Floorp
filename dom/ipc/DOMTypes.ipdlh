@@ -253,7 +253,6 @@ struct DocShellLoadStateInit
   bool HasValidUserGestureActivation;
   nsCString TypeHint;
   nsString FileName;
-  bool IsHttpsOnlyModeUpgradeExempt;
   bool IsFromProcessingFrameAttributes;
   // The Content Security Policy of the load, that is, the CSP of the entity
   // responsible for causing the load to occur. Most likely this is the CSP

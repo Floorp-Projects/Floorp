@@ -1746,6 +1746,34 @@ DocumentLoadListener::AsyncOnChannelRedirect(
     mHasCrossOriginOpenerPolicyMismatch |= isCOOPMismatch;
   }
 
+  // If HTTPS-Only mode is enabled, we need to check whether the exception-flag
+  // needs to be removed or set, by asking the PermissionManager.
+  RefPtr<CanonicalBrowsingContext> bc =
+      mParentChannelListener->GetBrowsingContext();
+  if (mozilla::StaticPrefs::dom_security_https_only_mode() && bc &&
+      bc->IsTop()) {
+    bool isHttpsOnlyExempt = false;
+    if (httpChannel) {
+      nsCOMPtr<nsIPrincipal> resultPrincipal;
+      nsresult rv =
+          nsContentUtils::GetSecurityManager()->GetChannelResultPrincipal(
+              mChannel, getter_AddRefs(resultPrincipal));
+      if (NS_SUCCEEDED(rv)) {
+        isHttpsOnlyExempt = nsContentUtils::IsExactSitePermAllow(
+            resultPrincipal, NS_LITERAL_CSTRING("https-only-mode-exception"));
+      }
+    }
+
+    nsCOMPtr<nsILoadInfo> channelLoadInfo = mChannel->LoadInfo();
+    uint32_t httpsOnlyStatus = channelLoadInfo->GetHttpsOnlyStatus();
+    if (isHttpsOnlyExempt) {
+      httpsOnlyStatus |= nsILoadInfo::HTTPS_ONLY_EXEMPT;
+    } else {
+      httpsOnlyStatus &= ~nsILoadInfo::HTTPS_ONLY_EXEMPT;
+    }
+    channelLoadInfo->SetHttpsOnlyStatus(httpsOnlyStatus);
+  }
+
   // We don't need to confirm internal redirects or record any
   // history for them, so just immediately verify and return.
   if (aFlags & nsIChannelEventSink::REDIRECT_INTERNAL) {
@@ -1802,8 +1830,6 @@ DocumentLoadListener::AsyncOnChannelRedirect(
 #ifdef ANDROID
   nsCOMPtr<nsIURI> uriBeingLoaded =
       AntiTrackingUtils::MaybeGetDocumentURIBeingLoaded(mChannel);
-  RefPtr<CanonicalBrowsingContext> bc =
-      mParentChannelListener->GetBrowsingContext();
 
   RefPtr<MozPromise<bool, bool, false>> promise;
   nsCOMPtr<nsIWidget> widget = bc->GetParentProcessWidgetContaining();

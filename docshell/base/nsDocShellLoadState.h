@@ -199,10 +199,6 @@ class nsDocShellLoadState final {
 
   void SetFileName(const nsAString& aFileName);
 
-  bool IsHttpsOnlyModeUpgradeExempt() const;
-
-  void SetIsHttpsOnlyModeUpgradeExempt(bool aIsExempt);
-
   // Give the type of DocShell we're loading into (chrome/content/etc) and
   // origin attributes for the URI we're loading, figure out if we should
   // inherit our principal from the document the load was requested from, or
@@ -397,10 +393,6 @@ class nsDocShellLoadState final {
   // specified, but link should still trigger a download. If not a download,
   // mFileName.IsVoid() should return true.
   nsString mFileName;
-
-  // If the HTTPS-Only mode is enabled, every insecure request gets upgraded to
-  // HTTPS by default. The load is exempt from that if this flag is set to true.
-  bool mIsHttpsOnlyModeUpgradeExempt;
 
   // This will be true if this load is triggered by attribute changes.
   // See nsILoadInfo.isFromProcessingFrameAttributes

@@ -32,7 +32,11 @@ async function injectErrorPageFrame(tab, src, sandboxed) {
   await loadedPromise;
 }
 
-async function openErrorPage(src, useFrame, sandboxed) {
+async function openErrorPage(src, useFrame, privateWindow, sandboxed) {
+  let gb = gBrowser;
+  if (privateWindow) {
+    gb = privateWindow.gBrowser;
+  }
   let dummyPage =
     getRootDirectory(gTestPath).replace(
       "chrome://mochitests/content",
@@ -42,15 +46,15 @@ async function openErrorPage(src, useFrame, sandboxed) {
   let tab;
   if (useFrame) {
     info("Loading error page in an iframe");
-    tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, dummyPage);
+    tab = await BrowserTestUtils.openNewForegroundTab(gb, dummyPage);
     await injectErrorPageFrame(tab, src, sandboxed);
   } else {
     let ErrorPageLoaded;
     tab = await BrowserTestUtils.openNewForegroundTab(
-      gBrowser,
+      gb,
       () => {
-        gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, src);
-        let browser = gBrowser.selectedBrowser;
+        gb.selectedTab = BrowserTestUtils.addTab(gb, src);
+        let browser = gb.selectedBrowser;
         ErrorPageLoaded = BrowserTestUtils.waitForErrorPage(browser);
       },
       false
