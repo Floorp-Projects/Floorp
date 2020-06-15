@@ -12,8 +12,8 @@
 #include "nsCOMPtr.h"
 #include "nsError.h"
 #include "SVGPoint.h"
+#include "mozilla/dom/DOMMatrix.h"
 #include "mozilla/dom/SVGElement.h"
-#include "mozilla/dom/SVGMatrix.h"
 
 // See the architecture comment in DOMSVGPointList.h.
 
@@ -103,12 +103,19 @@ void DOMSVGPoint::SetY(float aY, ErrorResult& rv) {
 }
 
 already_AddRefed<nsISVGPoint> DOMSVGPoint::MatrixTransform(
-    dom::SVGMatrix& matrix) {
-  float x = HasOwner() ? InternalItem().mX : mPt.mX;
-  float y = HasOwner() ? InternalItem().mY : mPt.mY;
-
-  Point pt = ToMatrix(matrix.GetMatrix()).TransformPoint(Point(x, y));
-  nsCOMPtr<nsISVGPoint> newPoint = new DOMSVGPoint(pt);
+    const DOMMatrix2DInit& aMatrix, ErrorResult& aRv) {
+  RefPtr<DOMMatrixReadOnly> matrix =
+      DOMMatrixReadOnly::FromMatrix(GetParentObject(), aMatrix, aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+  const auto* matrix2D = matrix->GetInternal2D();
+  if (!matrix2D->IsFinite()) {
+    aRv.ThrowTypeError<MSG_NOT_FINITE>("MatrixTransform matrix");
+    return nullptr;
+  }
+  auto pt = matrix2D->TransformPoint(HasOwner() ? InternalItem() : mPt);
+  nsCOMPtr<nsISVGPoint> newPoint = new DOMSVGPoint(ToPoint(pt));
   return newPoint.forget();
 }
 

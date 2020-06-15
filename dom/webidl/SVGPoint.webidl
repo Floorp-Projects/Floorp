@@ -18,7 +18,7 @@ interface SVGPoint {
   [SetterThrows]
   attribute float y;
 
-  [NewObject]
-  SVGPoint matrixTransform(SVGMatrix matrix);
+  [NewObject, Throws]
+  SVGPoint matrixTransform(optional DOMMatrix2DInit matrix = {});
 };
 
