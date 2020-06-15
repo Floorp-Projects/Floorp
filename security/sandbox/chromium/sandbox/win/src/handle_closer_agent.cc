@@ -8,7 +8,6 @@
 #include <stddef.h>
 
 #include "base/logging.h"
-#include "base/win/static_constants.h"
 #include "sandbox/win/src/nt_internals.h"
 #include "sandbox/win/src/win_utils.h"
 
@@ -54,7 +53,7 @@ HandleCloserAgent::~HandleCloserAgent() {}
 // generating EXCEPTION_INVALID_HANDLE on shutdown, but nothing else. For now
 // the only supported |type| is Event or File.
 bool HandleCloserAgent::AttemptToStuffHandleSlot(HANDLE closed_handle,
-                                                 const std::wstring& type) {
+                                                 const base::string16& type) {
   // Only attempt to stuff Files and Events at the moment.
   if (type != L"Event" && type != L"File") {
     return true;
@@ -67,61 +66,24 @@ bool HandleCloserAgent::AttemptToStuffHandleSlot(HANDLE closed_handle,
   DCHECK(dummy_handle_.Get() != closed_handle);
 
   std::vector<HANDLE> to_close;
-
-  const DWORD original_proc_num = GetCurrentProcessorNumber();
-  DWORD proc_num = original_proc_num;
-  DWORD_PTR original_affinity_mask =
-      SetThreadAffinityMask(GetCurrentThread(), DWORD_PTR{1} << proc_num);
-  bool found_handle = false;
-  BOOL result = FALSE;
-
-  // There is per-processor based free list of handles entries. The free handle
-  // from current processor's freelist is preferred for reusing, so cycling
-  // through all possible processors to find closed_handle.
-  // Start searching from current processor which covers usual cases.
+  HANDLE dup_dummy = nullptr;
+  size_t count = 16;
 
   do {
-    DWORD_PTR current_mask = DWORD_PTR{1} << proc_num;
-
-    if (original_affinity_mask & current_mask) {
-      if (proc_num != original_proc_num) {
-        SetThreadAffinityMask(GetCurrentThread(), current_mask);
-      }
-
-      HANDLE dup_dummy = nullptr;
-      size_t count = 16;
-
-      do {
-        result =
-            ::DuplicateHandle(::GetCurrentProcess(), dummy_handle_.Get(),
-                              ::GetCurrentProcess(), &dup_dummy, 0, false, 0);
-        if (!result) {
-          break;
-        }
-        if (dup_dummy != closed_handle) {
-          to_close.push_back(dup_dummy);
-        } else {
-          found_handle = true;
-        }
-      } while (count-- && reinterpret_cast<uintptr_t>(dup_dummy) <
-                              reinterpret_cast<uintptr_t>(closed_handle));
-    }
-
-    proc_num++;
-    if (proc_num == sizeof(DWORD_PTR) * 8) {
-      proc_num = 0;
-    }
-    if (proc_num == original_proc_num) {
+    if (!::DuplicateHandle(::GetCurrentProcess(), dummy_handle_.Get(),
+                           ::GetCurrentProcess(), &dup_dummy, 0, false, 0))
       break;
-    }
-  } while (result && !found_handle);
-
-  SetThreadAffinityMask(GetCurrentThread(), original_affinity_mask);
+    if (dup_dummy != closed_handle)
+      to_close.push_back(dup_dummy);
+  } while (count-- && reinterpret_cast<uintptr_t>(dup_dummy) <
+                          reinterpret_cast<uintptr_t>(closed_handle));
 
   for (HANDLE h : to_close)
     ::CloseHandle(h);
 
-  return found_handle;
+  // TODO(wfh): Investigate why stuffing handles sometimes fails.
+  // http://crbug.com/649904
+  return dup_dummy == closed_handle;
 }
 
 // Reads g_handles_to_close and creates the lookup map.
@@ -135,13 +97,13 @@ void HandleCloserAgent::InitializeHandlesToClose(bool* is_csrss_connected) {
   HandleListEntry* entry = g_handles_to_close->handle_entries;
   for (size_t i = 0; i < g_handles_to_close->num_handle_types; ++i) {
     // Set the type name.
-    wchar_t* input = entry->handle_type;
+    base::char16* input = entry->handle_type;
     if (!wcscmp(input, L"ALPC Port")) {
       *is_csrss_connected = false;
     }
     HandleMap::mapped_type& handle_names = handles_to_close_[input];
-    input = reinterpret_cast<wchar_t*>(reinterpret_cast<char*>(entry) +
-                                       entry->offset_to_names);
+    input = reinterpret_cast<base::char16*>(reinterpret_cast<char*>(entry) +
+                                            entry->offset_to_names);
     // Grab all the handle names.
     for (size_t j = 0; j < entry->name_count; ++j) {
       std::pair<HandleMap::mapped_type::iterator, bool> name =
@@ -154,9 +116,9 @@ void HandleCloserAgent::InitializeHandlesToClose(bool* is_csrss_connected) {
     entry = reinterpret_cast<HandleListEntry*>(reinterpret_cast<char*>(entry) +
                                                entry->record_bytes);
 
-    DCHECK(reinterpret_cast<wchar_t*>(entry) >= input);
-    DCHECK(reinterpret_cast<wchar_t*>(entry) - input <
-           static_cast<ptrdiff_t>(sizeof(size_t) / sizeof(wchar_t)));
+    DCHECK(reinterpret_cast<base::char16*>(entry) >= input);
+    DCHECK(reinterpret_cast<base::char16*>(entry) - input <
+           static_cast<ptrdiff_t>(sizeof(size_t) / sizeof(base::char16)));
   }
 
   // Clean up the memory we copied over.
@@ -174,7 +136,7 @@ bool HandleCloserAgent::CloseHandles() {
 
   // Skip closing these handles when Application Verifier is in use in order to
   // avoid invalid-handle exceptions.
-  if (GetModuleHandleA(base::win::kApplicationVerifierDllName))
+  if (GetModuleHandleW(L"vrfcore.dll"))
     return true;
 
   // Set up buffers for the type info and the name.
@@ -182,7 +144,7 @@ bool HandleCloserAgent::CloseHandles() {
                                      32 * sizeof(wchar_t));
   OBJECT_TYPE_INFORMATION* type_info =
       reinterpret_cast<OBJECT_TYPE_INFORMATION*>(&(type_info_buffer[0]));
-  std::wstring handle_name;
+  base::string16 handle_name;
   HANDLE handle = nullptr;
   int invalid_count = 0;
 

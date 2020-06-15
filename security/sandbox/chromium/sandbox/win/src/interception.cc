@@ -11,10 +11,10 @@
 
 #include <memory>
 #include <set>
-#include <string>
 
 #include "base/logging.h"
 #include "base/scoped_native_library.h"
+#include "base/strings/string16.h"
 #include "base/win/pe_image.h"
 #include "base/win/windows_version.h"
 #include "sandbox/win/src/interception_internal.h"
@@ -142,12 +142,14 @@ ResultCode InterceptionManager::InitializeInterceptions() {
     return SBOX_ERROR_CANNOT_SETUP_INTERCEPTION_CONFIG_BUFFER;
 
   void* remote_buffer;
-  if (!CopyToChildMemory(child_->Process(), local_buffer.get(), buffer_bytes,
-                         &remote_buffer))
-    return SBOX_ERROR_CANNOT_COPY_DATA_TO_CHILD;
+  ResultCode rc =
+      CopyDataToChild(local_buffer.get(), buffer_bytes, &remote_buffer);
+
+  if (rc != SBOX_ALL_OK)
+    return rc;
 
   bool hot_patch_needed = (0 != buffer_bytes);
-  ResultCode rc = PatchNtdll(hot_patch_needed);
+  rc = PatchNtdll(hot_patch_needed);
 
   if (rc != SBOX_ALL_OK)
     return rc;
@@ -159,7 +161,7 @@ ResultCode InterceptionManager::InitializeInterceptions() {
 }
 
 size_t InterceptionManager::GetBufferSize() const {
-  std::set<std::wstring> dlls;
+  std::set<base::string16> dlls;
   size_t buffer_bytes = 0;
 
   for (const auto& interception : interceptions_) {
@@ -221,7 +223,7 @@ bool InterceptionManager::SetupConfigBuffer(void* buffer, size_t buffer_bytes) {
       continue;
     }
 
-    const std::wstring dll = it->dll;
+    const base::string16 dll = it->dll;
     if (!SetupDllInfo(*it, &buffer, &buffer_bytes))
       return false;
 
@@ -331,6 +333,36 @@ bool InterceptionManager::SetupInterceptionInfo(const InterceptionData& data,
   return true;
 }
 
+ResultCode InterceptionManager::CopyDataToChild(const void* local_buffer,
+                                                size_t buffer_bytes,
+                                                void** remote_buffer) const {
+  DCHECK(remote_buffer);
+  if (0 == buffer_bytes) {
+    *remote_buffer = nullptr;
+    return SBOX_ALL_OK;
+  }
+
+  HANDLE child = child_->Process();
+
+  // Allocate memory on the target process without specifying the address
+  void* remote_data = ::VirtualAllocEx(child, nullptr, buffer_bytes, MEM_COMMIT,
+                                       PAGE_READWRITE);
+  if (!remote_data)
+    return SBOX_ERROR_NO_SPACE;
+
+  SIZE_T bytes_written;
+  bool success = ::WriteProcessMemory(child, remote_data, local_buffer,
+                                      buffer_bytes, &bytes_written);
+  if (!success || bytes_written != buffer_bytes) {
+    ::VirtualFreeEx(child, remote_data, 0, MEM_RELEASE);
+    return SBOX_ERROR_CANNOT_COPY_DATA_TO_CHILD;
+  }
+
+  *remote_buffer = remote_data;
+
+  return SBOX_ALL_OK;
+}
+
 // Only return true if the child should be able to perform this interception.
 bool InterceptionManager::IsInterceptionPerformedByChild(
     const InterceptionData& data) const {
@@ -343,7 +375,7 @@ bool InterceptionManager::IsInterceptionPerformedByChild(
   if (data.type >= INTERCEPTION_LAST)
     return false;
 
-  std::wstring ntdll(kNtdllName);
+  base::string16 ntdll(kNtdllName);
   if (ntdll == data.dll)
     return false;  // ntdll has to be intercepted from the parent
 
@@ -449,14 +481,15 @@ ResultCode InterceptionManager::PatchClientFunctions(
   thunk.reset(new ServiceResolverThunk(child_->Process(), relaxed_));
 #else
   base::win::OSInfo* os_info = base::win::OSInfo::GetInstance();
+  base::win::Version real_os_version = os_info->Kernel32Version();
   if (os_info->wow64_status() == base::win::OSInfo::WOW64_ENABLED) {
-    if (os_info->version() >= base::win::Version::WIN10)
+    if (real_os_version >= base::win::VERSION_WIN10)
       thunk.reset(new Wow64W10ResolverThunk(child_->Process(), relaxed_));
-    else if (os_info->version() >= base::win::Version::WIN8)
+    else if (real_os_version >= base::win::VERSION_WIN8)
       thunk.reset(new Wow64W8ResolverThunk(child_->Process(), relaxed_));
     else
       thunk.reset(new Wow64ResolverThunk(child_->Process(), relaxed_));
-  } else if (os_info->version() >= base::win::Version::WIN8) {
+  } else if (real_os_version >= base::win::VERSION_WIN8) {
     thunk.reset(new Win8ResolverThunk(child_->Process(), relaxed_));
   } else {
     thunk.reset(new ServiceResolverThunk(child_->Process(), relaxed_));
@@ -464,7 +497,7 @@ ResultCode InterceptionManager::PatchClientFunctions(
 #endif
 
   for (auto interception : interceptions_) {
-    const std::wstring ntdll(kNtdllName);
+    const base::string16 ntdll(kNtdllName);
     if (interception.dll != ntdll)
       return SBOX_ERROR_BAD_PARAMS;
 

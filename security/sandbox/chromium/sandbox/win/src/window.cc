@@ -9,7 +9,6 @@
 #include <memory>
 
 #include "base/logging.h"
-#include "base/win/win_util.h"
 #include "sandbox/win/src/acl.h"
 #include "sandbox/win/src/sid.h"
 
@@ -64,7 +63,7 @@ ResultCode CreateAltWindowStation(HWINSTA* winsta) {
 }
 
 ResultCode CreateAltDesktop(HWINSTA winsta, HDESK* desktop) {
-  std::wstring desktop_name = L"sbox_alternate_desktop_";
+  base::string16 desktop_name = L"sbox_alternate_desktop_";
 
   if (!winsta) {
     desktop_name += L"local_winstation_";
@@ -128,19 +127,42 @@ ResultCode CreateAltDesktop(HWINSTA winsta, HDESK* desktop) {
   return SBOX_ERROR_CANNOT_CREATE_DESKTOP;
 }
 
-std::wstring GetFullDesktopName(HWINSTA winsta, HDESK desktop) {
-  if (!desktop) {
+base::string16 GetWindowObjectName(HANDLE handle) {
+  // Get the size of the name.
+  DWORD size = 0;
+  ::GetUserObjectInformation(handle, UOI_NAME, nullptr, 0, &size);
+
+  if (!size) {
     NOTREACHED();
-    return std::wstring();
+    return base::string16();
   }
 
-  std::wstring name;
+  // Create the buffer that will hold the name.
+  std::unique_ptr<wchar_t[]> name_buffer(new wchar_t[size]);
+
+  // Query the name of the object.
+  if (!::GetUserObjectInformation(handle, UOI_NAME, name_buffer.get(), size,
+                                  &size)) {
+    NOTREACHED();
+    return base::string16();
+  }
+
+  return base::string16(name_buffer.get());
+}
+
+base::string16 GetFullDesktopName(HWINSTA winsta, HDESK desktop) {
+  if (!desktop) {
+    NOTREACHED();
+    return base::string16();
+  }
+
+  base::string16 name;
   if (winsta) {
-    name = base::win::GetWindowObjectName(winsta);
+    name = GetWindowObjectName(winsta);
     name += L'\\';
   }
 
-  name += base::win::GetWindowObjectName(desktop);
+  name += GetWindowObjectName(desktop);
   return name;
 }
 
