@@ -9,6 +9,7 @@
 
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/MediaControllerBinding.h"
+#include "mozilla/dom/BrowsingContextWebProgress.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/MozPromise.h"
 #include "nsCycleCollectionParticipant.h"
@@ -16,11 +17,12 @@
 #include "nsTArray.h"
 #include "nsTHashtable.h"
 #include "nsHashKeys.h"
-
-class nsISHistory;
 #include "nsISecureBrowserUI.h"
 
+class nsISHistory;
+class nsBrowserStatusFilter;
 class nsSecureBrowserUI;
+
 namespace mozilla {
 namespace net {
 class DocumentLoadListener;
@@ -146,11 +148,22 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   // Get or create a secure browser UI for this BrowsingContext
   nsISecureBrowserUI* GetSecureBrowserUI();
 
+  BrowsingContextWebProgress* GetWebProgress() { return mWebProgress; }
+
   // Called when the current URI changes (from an
   // nsIWebProgressListener::OnLocationChange event, so that we
   // can update our security UI for the new location, or when the
   // mixed content state for our current window is changed.
   void UpdateSecurityStateForLocationOrMixedContentChange();
+
+  void MaybeAddAsProgressListener(nsIWebProgress* aWebProgress);
+
+  // Called when a navigation forces us to recreate our browsing
+  // context (for example, when switching in or out of the parent
+  // process).
+  // aNewContext is the newly created BrowsingContext that is replacing
+  // us.
+  void ReplacedBy(CanonicalBrowsingContext* aNewContext);
 
  protected:
   // Called when the browsing context is being discarded.
@@ -229,6 +242,8 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   RefPtr<SessionHistoryEntry> mActiveEntry;
 
   RefPtr<nsSecureBrowserUI> mSecureBrowserUI;
+  RefPtr<BrowsingContextWebProgress> mWebProgress;
+  RefPtr<nsBrowserStatusFilter> mStatusFilter;
 };
 
 }  // namespace dom
