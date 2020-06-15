@@ -18,7 +18,7 @@ const { AppConstants } = require("resource://gre/modules/AppConstants.jsm");
 const EXPECTED_MESSAGES = [
   {
     text: `This page uses the non standard property “zoom”`,
-    count: isFissionEnabled() ? 2 : 4,
+    count: isFissionEnabled() ? 1 : 2,
     visibleWhenFissionEnabled: true,
   },
   {
