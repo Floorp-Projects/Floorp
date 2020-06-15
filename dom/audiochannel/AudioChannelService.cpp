@@ -321,9 +321,8 @@ AudioChannelService::Observe(nsISupports* aSubject, const char* aTopic,
       while (iter.HasMore()) {
         auto& next = iter.GetNext();
         if (next->mWindowID == outerID) {
-          uint32_t pos = mWindows.IndexOf(next);
           winData = std::move(next);
-          mWindows.RemoveElementAt(pos);
+          iter.Remove();
           break;
         }
       }
