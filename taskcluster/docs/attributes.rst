@@ -400,3 +400,12 @@ local-toolchain
 ===============
 This toolchain is used for local development, so should be built on trunk, even
 if it does not have any in-graph consumers.
+
+artifact-build
+==============
+
+This build is an artifact build.
+
+This deliberately excludes builds that are implemented using the artifact build
+machinery, but are not primarily intended to short-circuit build time. In
+particular the Windows aarch64 builds are not marked this way.
