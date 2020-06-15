@@ -9,7 +9,7 @@
 #include "mozilla/dom/OffscreenCanvasBinding.h"
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/WorkerScope.h"
-#include "mozilla/layers/AsyncCanvasRenderer.h"
+#include "mozilla/layers/CanvasRenderer.h"
 #include "mozilla/layers/CanvasClient.h"
 #include "mozilla/layers/ImageBridgeChild.h"
 #include "mozilla/Telemetry.h"
@@ -22,7 +22,7 @@ namespace mozilla {
 namespace dom {
 
 OffscreenCanvasCloneData::OffscreenCanvasCloneData(
-    layers::AsyncCanvasRenderer* aRenderer, uint32_t aWidth, uint32_t aHeight,
+    layers::CanvasRenderer* aRenderer, uint32_t aWidth, uint32_t aHeight,
     layers::LayersBackend aCompositorBackend, bool aNeutered, bool aIsWriteOnly)
     : mRenderer(aRenderer),
       mWidth(aWidth),
@@ -36,7 +36,7 @@ OffscreenCanvasCloneData::~OffscreenCanvasCloneData() = default;
 OffscreenCanvas::OffscreenCanvas(nsIGlobalObject* aGlobal, uint32_t aWidth,
                                  uint32_t aHeight,
                                  layers::LayersBackend aCompositorBackend,
-                                 layers::AsyncCanvasRenderer* aRenderer)
+                                 layers::CanvasRenderer* aRenderer)
     : DOMEventTargetHelper(aGlobal),
       mAttrDirty(false),
       mNeutered(false),
@@ -66,19 +66,20 @@ void OffscreenCanvas::ClearResources() {
   if (mCanvasClient) {
     mCanvasClient->Clear();
 
-    if (mCanvasRenderer) {
-      nsCOMPtr<nsISerialEventTarget> activeTarget =
-          mCanvasRenderer->GetActiveEventTarget();
-      MOZ_RELEASE_ASSERT(activeTarget,
-                         "GFX: failed to get active event target.");
-      bool current;
-      activeTarget->IsOnCurrentThread(&current);
-      MOZ_RELEASE_ASSERT(current, "GFX: active thread is not current thread.");
-      mCanvasRenderer->SetCanvasClient(nullptr);
-      mCanvasRenderer->mContext = nullptr;
-      mCanvasRenderer->mGLContext = nullptr;
-      mCanvasRenderer->ResetActiveEventTarget();
-    }
+    MOZ_CRASH("todo");
+    // if (mCanvasRenderer) {
+    //  nsCOMPtr<nsISerialEventTarget> activeTarget =
+    //      mCanvasRenderer->GetActiveEventTarget();
+    //  MOZ_RELEASE_ASSERT(activeTarget,
+    //                     "GFX: failed to get active event target.");
+    //  bool current;
+    //  activeTarget->IsOnCurrentThread(&current);
+    //  MOZ_RELEASE_ASSERT(current, "GFX: active thread is not current
+    //  thread."); mCanvasRenderer->SetCanvasClient(nullptr);
+    //  mCanvasRenderer->mContext = nullptr;
+    //  mCanvasRenderer->mGLContext = nullptr;
+    //  mCanvasRenderer->ResetActiveEventTarget();
+    //}
 
     mCanvasClient = nullptr;
   }
@@ -115,7 +116,7 @@ already_AddRefed<nsISupports> OffscreenCanvas::GetContext(
   }
 
   if (mCanvasRenderer) {
-    mCanvasRenderer->SetContextType(contextType);
+    // mCanvasRenderer->SetContextType(contextType);
     if (contextType == CanvasContextType::WebGL1 ||
         contextType == CanvasContextType::WebGL2) {
       MOZ_ASSERT_UNREACHABLE("WebGL OffscreenCanvas not yet supported.");
@@ -134,7 +135,8 @@ ImageContainer* OffscreenCanvas::GetImageContainer() {
   if (!mCanvasRenderer) {
     return nullptr;
   }
-  return mCanvasRenderer->GetImageContainer();
+  // return mCanvasRenderer->GetImageContainer();
+  MOZ_CRASH("todo");
 }
 
 already_AddRefed<nsICanvasRenderingContextInternal>
@@ -152,34 +154,36 @@ void OffscreenCanvas::CommitFrameToCompositor() {
     // So, just bail out.
     return;
   }
+  MOZ_CRASH("todo");
 
   // The attributes has changed, we have to notify main
   // thread to change canvas size.
   if (mAttrDirty) {
-    if (mCanvasRenderer) {
-      mCanvasRenderer->SetWidth(mWidth);
-      mCanvasRenderer->SetHeight(mHeight);
-      mCanvasRenderer->NotifyElementAboutAttributesChanged();
-    }
+    MOZ_CRASH("todo");
+    // if (mCanvasRenderer) {
+    //  mCanvasRenderer->SetWidth(mWidth);
+    //  mCanvasRenderer->SetHeight(mHeight);
+    //  mCanvasRenderer->NotifyElementAboutAttributesChanged();
+    //}
     mAttrDirty = false;
   }
 
-  CanvasContextType contentType = mCanvasRenderer->GetContextType();
-  if (mCurrentContext && (contentType == CanvasContextType::WebGL1 ||
-                          contentType == CanvasContextType::WebGL2)) {
-    MOZ_ASSERT_UNREACHABLE("WebGL OffscreenCanvas not yet supported.");
-    return;
-  }
-  if (mCurrentContext && (contentType == CanvasContextType::WebGPU)) {
-    MOZ_ASSERT_UNREACHABLE("WebGPU OffscreenCanvas not yet supported.");
-    return;
-  }
+  // CanvasContextType contentType = mCanvasRenderer->GetContextType();
+  // if (mCurrentContext && (contentType == CanvasContextType::WebGL1 ||
+  //                        contentType == CanvasContextType::WebGL2)) {
+  //  MOZ_ASSERT_UNREACHABLE("WebGL OffscreenCanvas not yet supported.");
+  //  return;
+  //}
+  // if (mCurrentContext && (contentType == CanvasContextType::WebGPU)) {
+  //  MOZ_ASSERT_UNREACHABLE("WebGPU OffscreenCanvas not yet supported.");
+  //  return;
+  //}
 
-  if (mCanvasRenderer && mCanvasRenderer->mGLContext) {
-    mCanvasRenderer->NotifyElementAboutInvalidation();
-    ImageBridgeChild::GetSingleton()->UpdateAsyncCanvasRenderer(
-        mCanvasRenderer);
-  }
+  // if (mCanvasRenderer && mCanvasRenderer->mGLContext) {
+  //  mCanvasRenderer->NotifyElementAboutInvalidation();
+  //  ImageBridgeChild::GetSingleton()->UpdateAsyncCanvasRenderer(
+  //      mCanvasRenderer);
+  //}
 }
 
 OffscreenCanvasCloneData* OffscreenCanvas::ToCloneData() {

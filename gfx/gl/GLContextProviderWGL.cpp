@@ -265,20 +265,18 @@ void WGLLibrary::Reset() {
   }
 }
 
-GLContextWGL::GLContextWGL(CreateContextFlags flags, const SurfaceCaps& caps,
-                           bool isOffscreen, HDC aDC, HGLRC aContext,
+GLContextWGL::GLContextWGL(const GLContextDesc& desc, HDC aDC, HGLRC aContext,
                            HWND aWindow)
-    : GLContext(flags, caps, nullptr, isOffscreen),
+    : GLContext(desc, nullptr, false),
       mDC(aDC),
       mContext(aContext),
       mWnd(aWindow),
       mPBuffer(nullptr),
       mPixelFormat(0) {}
 
-GLContextWGL::GLContextWGL(CreateContextFlags flags, const SurfaceCaps& caps,
-                           bool isOffscreen, HANDLE aPbuffer, HDC aDC,
+GLContextWGL::GLContextWGL(const GLContextDesc& desc, HANDLE aPbuffer, HDC aDC,
                            HGLRC aContext, int aPixelFormat)
-    : GLContext(flags, caps, nullptr, isOffscreen),
+    : GLContext(desc, nullptr, false),
       mDC(aDC),
       mContext(aContext),
       mWnd(nullptr),
@@ -441,9 +439,7 @@ static RefPtr<GLContext> CreateForWidget(const HWND window,
   const auto context = sWGLLib.CreateContextWithFallback(dc, false);
   if (!context) return nullptr;
 
-  SurfaceCaps caps = SurfaceCaps::ForRGBA();
-  const RefPtr<GLContextWGL> gl = new GLContextWGL(
-      CreateContextFlags::NONE, SurfaceCaps::ForRGBA(), false, dc, context);
+  const RefPtr<GLContextWGL> gl = new GLContextWGL({}, dc, context);
   cleanupDc.release();
   gl->mIsDoubleBuffered = true;
   if (!gl->Init()) return nullptr;
@@ -465,7 +461,7 @@ already_AddRefed<GLContext> GLContextProviderWGL::CreateForCompositorWidget(
 
 /*static*/
 already_AddRefed<GLContext> GLContextProviderWGL::CreateHeadless(
-    const CreateContextFlags flags, nsACString* const out_failureId) {
+    const GLContextCreateDesc& desc, nsACString* const out_failureId) {
   auto& wgl = sWGLLib;
   if (!wgl.EnsureInitialized()) return nullptr;
 
@@ -509,10 +505,9 @@ already_AddRefed<GLContext> GLContextProviderWGL::CreateHeadless(
   const auto context = wgl.CreateContextWithFallback(dc, true);
   if (!context) return nullptr;
 
-  const bool isOffscreen = true;
+  const auto fullDesc = GLContextDesc{desc, true};
   const RefPtr<GLContextWGL> gl =
-      new GLContextWGL(flags, SurfaceCaps::Any(), isOffscreen, pbuffer, dc,
-                       context, chosenFormat);
+      new GLContextWGL(fullDesc, pbuffer, dc, context, chosenFormat);
   cleanupPbuffer.release();
   cleanupDc.release();
   if (!gl->Init()) return nullptr;
@@ -522,16 +517,10 @@ already_AddRefed<GLContext> GLContextProviderWGL::CreateHeadless(
 
 /*static*/
 already_AddRefed<GLContext> GLContextProviderWGL::CreateOffscreen(
-    const IntSize& size, const SurfaceCaps& minCaps, CreateContextFlags flags,
+    const IntSize& size, const GLContextCreateDesc& desc,
     nsACString* const out_failureId) {
   *out_failureId = NS_LITERAL_CSTRING("FEATURE_FAILURE_WGL_INIT");
-
-  RefPtr<GLContext> gl = CreateHeadless(flags, out_failureId);
-  if (!gl) return nullptr;
-
-  if (!gl->InitOffscreen(size, minCaps)) return nullptr;
-
-  return gl.forget();
+  return CreateHeadless(desc, out_failureId);
 }
 
 /*static*/
