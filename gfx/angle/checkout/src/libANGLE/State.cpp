@@ -527,7 +527,7 @@ ANGLE_INLINE void State::updateActiveTextureState(const Context *context,
                                                   const Sampler *sampler,
                                                   Texture *texture)
 {
-    if (!texture->isSamplerComplete(context, sampler))
+    if (!texture || !texture->isSamplerComplete(context, sampler))
     {
         mActiveTexturesCache[textureIndex] = nullptr;
     }
@@ -546,7 +546,7 @@ ANGLE_INLINE void State::updateActiveTextureState(const Context *context,
         }
     }
 
-    if (mProgram)
+    if (texture && mProgram)
     {
         const SamplerState &samplerState =
             sampler ? sampler->getSamplerState() : texture->getSamplerState();
@@ -2818,11 +2818,10 @@ void State::onActiveTextureChange(const Context *context, size_t textureUnit)
     if (mProgram)
     {
         TextureType type = mProgram->getActiveSamplerTypes()[textureUnit];
-        if (type != TextureType::InvalidEnum)
-        {
-            Texture *activeTexture = mSamplerTextures[type][textureUnit].get();
-            updateActiveTexture(context, textureUnit, activeTexture);
-        }
+        Texture *activeTexture = (type != TextureType::InvalidEnum)
+                                     ? mSamplerTextures[type][textureUnit].get()
+                                     : nullptr;
+        updateActiveTexture(context, textureUnit, activeTexture);
     }
 }
 
@@ -2831,12 +2830,12 @@ void State::onActiveTextureStateChange(const Context *context, size_t textureUni
     if (mProgram)
     {
         TextureType type = mProgram->getActiveSamplerTypes()[textureUnit];
-        if (type != TextureType::InvalidEnum)
-        {
-            Texture *activeTexture = mSamplerTextures[type][textureUnit].get();
-            const Sampler *sampler = mSamplers[textureUnit].get();
-            updateActiveTextureState(context, textureUnit, sampler, activeTexture);
-        }
+
+        Texture *activeTexture = (type != TextureType::InvalidEnum)
+                                     ? mSamplerTextures[type][textureUnit].get()
+                                     : nullptr;
+        const Sampler *sampler = mSamplers[textureUnit].get();
+        updateActiveTextureState(context, textureUnit, sampler, activeTexture);
     }
 }
 
