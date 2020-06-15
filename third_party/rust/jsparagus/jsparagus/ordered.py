@@ -94,6 +94,12 @@ class OrderedSet(Generic[T], MutableSet[T]):
                 self.remove(v)
         return self
 
+    def is_disjoint(self, other: AbstractSet[T]) -> bool:
+        for v in self:
+            if v in other:
+                return False
+        return True
+
 
 class OrderedFrozenSet(Generic[T_co], AbstractSet[T_co]):
     """Like frozenset(), but iteration order is insertion order.
@@ -143,3 +149,9 @@ class OrderedFrozenSet(Generic[T_co], AbstractSet[T_co]):
 
     def __sub__(self, other: AbstractSet[T_co]) -> OrderedFrozenSet[T_co]:
         return OrderedFrozenSet(v for v in self._data if v not in other)
+
+    def is_disjoint(self, other: AbstractSet[T_co]) -> bool:
+        for v in self:
+            if v in other:
+                return False
+        return True

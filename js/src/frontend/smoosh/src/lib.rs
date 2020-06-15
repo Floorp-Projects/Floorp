@@ -27,6 +27,7 @@ use jsparagus::stencil::regexp::RegExpItem;
 use jsparagus::stencil::result::EmitResult;
 use jsparagus::stencil::scope::{BindingName, ScopeData};
 use jsparagus::stencil::scope_notes::ScopeNote;
+use jsparagus::stencil::script::{ImmutableScriptData, ScriptStencil, SourceExtent};
 use std::boxed::Box;
 use std::cell::RefCell;
 use std::os::raw::{c_char, c_void};
@@ -214,44 +215,50 @@ impl From<RegExpItem> for SmooshRegExpItem {
 }
 
 #[repr(C)]
+pub struct SmooshImmutableScriptData {
+    pub main_offset: u32,
+    pub nfixed: u32,
+    pub nslots: u32,
+    pub body_scope_index: u32,
+    pub num_ic_entries: u32,
+    pub fun_length: u16,
+    pub num_bytecode_type_sets: u32,
+    pub bytecode: CVec<u8>,
+    pub scope_notes: CVec<SmooshScopeNote>,
+}
+
+#[repr(C)]
+pub struct SmooshSourceExtent {
+    pub source_start: u32,
+    pub source_end: u32,
+    pub to_string_start: u32,
+    pub to_string_end: u32,
+    pub lineno: u32,
+    pub column: u32,
+}
+
+#[repr(C)]
+pub struct SmooshScriptStencil {
+    pub immutable_flags: u32,
+    pub gcthings: CVec<SmooshGCThing>,
+    pub immutable_script_data: usize,
+    pub extent: SmooshSourceExtent,
+    pub fun_name: usize,
+    pub fun_nargs: u16,
+    pub fun_flags: u16,
+}
+
+#[repr(C)]
 pub struct SmooshResult {
     unimplemented: bool,
     error: CVec<u8>,
-    bytecode: CVec<u8>,
-    gcthings: CVec<SmooshGCThing>,
+
     scopes: CVec<SmooshScopeData>,
-    scope_notes: CVec<SmooshScopeNote>,
     regexps: CVec<SmooshRegExpItem>,
 
-    /// Line and column numbers for the first character of source.
-    lineno: usize,
-    column: usize,
-
-    /// Offset of main entry point from code, after predef'ing prologue.
-    main_offset: usize,
-
-    /// Fixed frame slots.
-    max_fixed_slots: u32,
-
-    /// Maximum stack depth before any instruction.
-    ///
-    /// This value is a function of `bytecode`: there's only one correct value
-    /// for a given script.
-    maximum_stack_depth: u32,
-
-    /// Index into the gcthings array of the body scope.
-    body_scope_index: u32,
-
-    /// Number of instructions in this script that have IC entries.
-    ///
-    /// A function of `bytecode`. See `JOF_IC`.
-    num_ic_entries: u32,
-
-    /// Number of instructions in this script that have JOF_TYPESET.
-    num_type_sets: u32,
-
-    /// `See BaseScript::ImmutableFlags`.
-    immutable_flags: u32,
+    top_level_script: SmooshScriptStencil,
+    functions: CVec<SmooshScriptStencil>,
+    script_data_list: CVec<SmooshImmutableScriptData>,
 
     all_atoms: *mut c_void,
     all_atoms_len: usize,
@@ -274,20 +281,28 @@ impl SmooshResult {
         Self {
             unimplemented,
             error,
-            bytecode: CVec::empty(),
-            gcthings: CVec::empty(),
+
             scopes: CVec::empty(),
-            scope_notes: CVec::empty(),
             regexps: CVec::empty(),
-            lineno: 0,
-            column: 0,
-            main_offset: 0,
-            max_fixed_slots: 0,
-            maximum_stack_depth: 0,
-            body_scope_index: 0,
-            num_ic_entries: 0,
-            num_type_sets: 0,
-            immutable_flags: 0,
+
+            top_level_script: SmooshScriptStencil {
+                immutable_flags: 0,
+                gcthings: CVec::empty(),
+                immutable_script_data: std::usize::MAX,
+                extent: SmooshSourceExtent {
+                    source_start: 0,
+                    source_end: 0,
+                    to_string_start: 0,
+                    to_string_end: 0,
+                    lineno: 0,
+                    column: 0,
+                },
+                fun_name: std::usize::MAX,
+                fun_nargs: 0,
+                fun_flags: 0,
+            },
+            functions: CVec::empty(),
+            script_data_list: CVec::empty(),
 
             all_atoms: std::ptr::null_mut(),
             all_atoms_len: 0,
@@ -317,6 +332,79 @@ pub unsafe extern "C" fn smoosh_init() {
     }
 }
 
+fn convert_extent(extent: SourceExtent) -> SmooshSourceExtent {
+    SmooshSourceExtent {
+        source_start: extent.source_start,
+        source_end: extent.source_end,
+        to_string_start: extent.to_string_start,
+        to_string_end: extent.to_string_end,
+        lineno: extent.lineno,
+        column: extent.column,
+    }
+}
+
+fn convert_script(script: ScriptStencil) -> SmooshScriptStencil {
+    let immutable_flags = script.immutable_flags.into();
+
+    let gcthings = CVec::from(script.gcthings.into_iter().map(|x| x.into()).collect());
+
+    let immutable_script_data: usize = match script.immutable_script_data {
+        Some(n) => n.into(),
+        None => std::usize::MAX,
+    };
+
+    let extent = convert_extent(script.extent);
+
+    let fun_name: usize = match script.fun_name {
+        Some(n) => n.into(),
+        None => std::usize::MAX,
+    };
+    let fun_nargs = script.fun_nargs;
+    let fun_flags = script.fun_flags.into();
+
+    SmooshScriptStencil {
+        immutable_flags,
+        gcthings,
+        immutable_script_data,
+        extent,
+        fun_name,
+        fun_nargs,
+        fun_flags,
+    }
+}
+
+fn convert_script_data(script_data: ImmutableScriptData) -> SmooshImmutableScriptData {
+    let main_offset = script_data.main_offset;
+    let nfixed = script_data.nfixed.into();
+    let nslots = script_data.nslots;
+    let body_scope_index = script_data.body_scope_index;
+    let num_ic_entries = script_data.num_ic_entries;
+    let fun_length = script_data.fun_length;
+    let num_bytecode_type_sets = script_data.num_bytecode_type_sets;
+
+    let bytecode = CVec::from(script_data.bytecode);
+
+    let scope_notes = CVec::from(
+        script_data
+            .scope_notes
+            .into_iter()
+            .map(|x| x.into())
+            .collect(),
+    );
+
+    SmooshImmutableScriptData {
+        main_offset,
+        nfixed,
+        nslots,
+        body_scope_index,
+        num_ic_entries,
+        fun_length,
+        num_bytecode_type_sets,
+        bytecode,
+        scope_notes,
+    }
+}
+
 #[no_mangle]
 pub unsafe extern "C" fn smoosh_run(
     text: *const u8,
@@ -327,44 +415,20 @@ pub unsafe extern "C" fn smoosh_run(
     let allocator = Box::new(bumpalo::Bump::new());
     match smoosh(&allocator, text, options) {
         Ok(result) => {
-            let bytecode = CVec::from(result.script.bytecode);
-            let gcthings = CVec::from(
-                result
-                    .script
-                    .base
-                    .gcthings
-                    .into_iter()
-                    .map(|x| x.into())
-                    .collect(),
-            );
             let scopes = CVec::from(result.scopes.into_iter().map(|x| x.into()).collect());
-            let scope_notes = CVec::from(
+            let regexps = CVec::from(result.regexps.into_iter().map(|x| x.into()).collect());
+
+            let top_level_script = convert_script(result.top_level_script);
+
+            let functions = CVec::from(result.functions.into_iter().map(convert_script).collect());
+
+            let script_data_list = CVec::from(
                 result
-                    .script
-                    .scope_notes
+                    .script_data_list
                     .into_iter()
-                    .map(|x| x.into())
+                    .map(convert_script_data)
                     .collect(),
             );
-            let regexps = CVec::from(
-                result
-                    .script
-                    .regexps
-                    .into_iter()
-                    .map(|x| x.into())
-                    .collect(),
-            );
-
-            let lineno = result.script.lineno;
-            let column = result.script.column;
-            let main_offset = result.script.main_offset;
-            let max_fixed_slots = result.script.max_fixed_slots.into();
-            let maximum_stack_depth = result.script.maximum_stack_depth;
-            let body_scope_index = result.script.body_scope_index;
-            let num_ic_entries = result.script.num_ic_entries;
-            let num_type_sets = result.script.num_type_sets;
-
-            let immutable_flags = result.script.base.immutable_flags.into();
 
             let all_atoms_len = result.atoms.len();
             let all_atoms = Box::new(result.atoms);
@@ -382,20 +446,13 @@ pub unsafe extern "C" fn smoosh_run(
             SmooshResult {
                 unimplemented: false,
                 error: CVec::empty(),
-                bytecode,
-                gcthings,
+
                 scopes,
-                scope_notes,
                 regexps,
-                lineno,
-                column,
-                main_offset,
-                max_fixed_slots,
-                maximum_stack_depth,
-                body_scope_index,
-                num_ic_entries,
-                num_type_sets,
-                immutable_flags,
+
+                top_level_script,
+                functions,
+                script_data_list,
 
                 all_atoms: opaque_all_atoms,
                 all_atoms_len,
@@ -527,15 +584,31 @@ pub unsafe extern "C" fn smoosh_get_slice_len_at(result: SmooshResult, index: us
     slice.len()
 }
 
+unsafe fn free_script(script: SmooshScriptStencil) {
+    let _ = script.gcthings.into();
+}
+
+unsafe fn free_script_data(script_data: SmooshImmutableScriptData) {
+    let _ = script_data.bytecode.into();
+    let _ = script_data.scope_notes.into();
+}
+
 #[no_mangle]
 pub unsafe extern "C" fn smoosh_free(result: SmooshResult) {
     let _ = result.error.into();
-    let _ = result.bytecode.into();
-    let _ = result.gcthings.into();
+
     let _ = result.scopes.into();
-    let _ = result.scope_notes.into();
     let _ = result.regexps.into();
-    //Vec::from_raw_parts(bytecode.data, bytecode.len, bytecode.capacity);
+
+    free_script(result.top_level_script);
+
+    for fun in result.functions.into() {
+        free_script(fun);
+    }
+
+    for script_data in result.script_data_list.into() {
+        free_script_data(script_data);
+    }
 
     if !result.all_atoms.is_null() {
         let _ = Box::from_raw(result.all_atoms as *mut Vec<&str>);

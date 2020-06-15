@@ -8,7 +8,7 @@ import pickle
 import typing
 
 from . import types
-from .utils import consume, keep_until
+from .utils import consume, keep_until, split
 from .ordered import OrderedSet, OrderedFrozenSet
 from .actions import Action, FilterFlag
 from .grammar import End, ErrorSymbol, InitNt, Nt
@@ -420,7 +420,6 @@ class ParseTable:
 
     def remove_state(self, s: StateId, maybe_unreachable_set: OrderedSet[StateId]) -> None:
         state = self.states[s]
-        # print("Remove state {}".format(state))
         self.clear_edges(state, maybe_unreachable_set)
         del self.state_cache[state]
 
@@ -455,6 +454,7 @@ class ParseTable:
     ) -> None:
         self.states[dest].backedges.remove(Edge(src.index, term))
         maybe_unreachable_set.add(dest)
+        self.assert_state_invariants(src)
 
     def replace_edge(
             self,
@@ -463,10 +463,10 @@ class ParseTable:
             dest: StateId,
             maybe_unreachable_set: OrderedSet[StateId]
     ) -> None:
-        assert isinstance(src, StateAndTransitions)
         assert isinstance(dest, int) and dest < len(self.states)
 
-        if term in src:
+        edge_existed = term in src
+        if edge_existed:
             old_dest = src[term]
             self.remove_backedge(src, term, old_dest, maybe_unreachable_set)
 
@@ -480,6 +480,34 @@ class ParseTable:
         else:
             src.terminals[term] = dest
         self.states[dest].backedges.add(Edge(src.index, term))
+
+        self.assert_state_invariants(src)
+        self.assert_state_invariants(dest)
+        if edge_existed:
+            self.assert_state_invariants(old_dest)
+
+    def remove_edge(
+            self,
+            src: StateAndTransitions,
+            term: Term,
+            maybe_unreachable_set: OrderedSet[StateId]
+    ) -> None:
+        edge_existed = term in src
+        if edge_existed:
+            old_dest = src[term]
+            self.remove_backedge(src, term, old_dest, maybe_unreachable_set)
+        if isinstance(term, Action):
+            src.epsilon = [(t, d) for t, d in src.epsilon if t != term]
+        elif isinstance(term, Nt):
+            del src.nonterminals[term]
+        elif isinstance(term, ErrorSymbol):
+            del src.errors[term]
+        else:
+            del src.terminals[term]
+
+        self.assert_state_invariants(src)
+        if edge_existed:
+            self.assert_state_invariants(old_dest)
 
     def clear_edges(
             self,
@@ -495,6 +523,18 @@ class ParseTable:
         src.nonterminals = {}
         src.errors = {}
         src.epsilon = []
+
+    def assert_state_invariants(self, src: typing.Union[StateId, StateAndTransitions]) -> None:
+        if not self.debug_info:
+            return
+        if isinstance(src, int):
+            src = self.states[src]
+        assert isinstance(src, StateAndTransitions)
+        for term, dest in src.edges():
+            assert Edge(src.index, term) in self.states[dest].backedges
+        for e in src.backedges:
+            assert e.term is not None
+            assert self.states[e.src][e.term] == src.index
 
     def remove_unreachable_states(
             self,
@@ -656,28 +696,6 @@ class ParseTable:
             if not cont:
                 continue
             todo.extend(aps.shift_next(self))
-
-    def lanes(self, state: StateId) -> typing.List[APS]:
-        """Compute the lanes from the amount of lookahead available. Only consider
-        context when reduce states are encountered."""
-        record = []
-
-        def visit(aps: APS) -> bool:
-            has_shift_loop = len(aps.shift) != 1 + len(set(zip(aps.shift, aps.shift[1:])))
-            has_stack_loop = len(aps.stack) != 1 + len(set(zip(aps.stack, aps.stack[1:])))
-            has_lookahead = len(aps.lookahead) >= 1
-            stop = has_shift_loop or has_stack_loop or has_lookahead
-            # print("\t{} = {} or {} or {}".format(
-            #     stop, has_shift_loop, has_stack_loop, has_lookahead))
-            # print(aps.string("\tvisitor"))
-            if stop:
-                print("lanes_visit stop:")
-                print(aps.string("\trecord"))
-                record.append(aps)
-            return not stop
-
-        self.aps_visitor(APS.start(state), visit)
-        return record
 
     def context_lanes(self, state: StateId) -> typing.Tuple[bool, typing.List[APS]]:
         """Compute lanes, such that each reduce action can have set of unique stack to
@@ -949,7 +967,7 @@ class ParseTable:
     #             if flag_in is not None:
     #                 maybe_id_edges.add(Id(edge))
     #         edge = aps.stack[-1]
-    #         nt = edge.term.reduce_with().nt
+    #         nt = edge.term.update_stack_with().nt
     #         rule = Eq(nt, edge, None)
     #         rules, free_vars = unify_with(rule, rules, free_vars)
     #         nts.add(nt)
@@ -1347,11 +1365,14 @@ class ParseTable:
         consume(visit_table(), progress)
 
     def group_epsilon_states(self, verbose: bool, progress: bool) -> None:
-        shift_states = [s for s in self.states if len(s.epsilon) == 0]
-        action_states = [s for s in self.states if len(s.epsilon) > 0]
+        def all_action_inedges(s: StateAndTransitions) -> bool:
+            return all(isinstance(e.term, Action) for e in s.backedges)
+        shift_states, action_states = split(self.states, lambda s: len(s.epsilon) == 0)
+        from_act_action_states, from_shf_action_states = split(action_states, all_action_inedges)
         self.states = []
         self.states.extend(shift_states)
-        self.states.extend(action_states)
+        self.states.extend(from_shf_action_states)
+        self.states.extend(from_act_action_states)
         self.rewrite_reordered_state_indexes()
 
     def count_shift_states(self) -> int:
@@ -1359,6 +1380,12 @@ class ParseTable:
 
     def count_action_states(self) -> int:
         return sum(1 for s in self.states if s is not None and len(s.epsilon) > 0)
+
+    def count_action_from_shift_states(self) -> int:
+        def from_shift_states(s: StateAndTransitions) -> bool:
+            return any(not isinstance(e.term, Action) for e in s.backedges)
+
+        return sum(1 for s in self.states if len(s.epsilon) > 0 and from_shift_states(s))
 
     def prepare_debug_context(self) -> DebugInfo:
         """To better filter out the traversal of the grammar in debug context, we
@@ -1398,20 +1425,20 @@ class ParseTable:
             if aps.history == []:
                 return True
             last = aps.history[-1].term
-            is_reduce = not self.term_is_shifted(last)
+            is_unwind = isinstance(last, Action) and last.update_stack()
             has_shift_loop = len(aps.shift) != 1 + len(set(zip(aps.shift, aps.shift[1:])))
             can_reduce_later = True
             try:
                 can_reduce_later = debug_info[aps.shift[-1].src] >= len(aps.shift)
             except KeyError:
                 can_reduce_later = False
-            stop = is_reduce or has_shift_loop or not can_reduce_later
+            stop = is_unwind or has_shift_loop or not can_reduce_later
             # Record state which are reducing at most all the shifted states.
             save = stop and len(aps.shift) == 1
-            save = save and is_reduce
+            save = save and is_unwind
             if save:
                 assert isinstance(last, Action)
-                save = last.reduce_with().nt in self.states[aps.shift[0].src]
+                save = last.update_stack_with().nt in self.states[aps.shift[0].src]
             if save:
                 record.append(aps)
             return not stop
@@ -1424,8 +1451,8 @@ class ParseTable:
             action = aps.history[-1].term
             assert isinstance(action, Action)
             assert action.update_stack()
-            reducer = action.reduce_with()
-            replay = reducer.replay
+            stack_diff = action.update_stack_with()
+            replay = stack_diff.replay
             before = [repr(e.term) for e in aps.stack[:-1]]
             after = [repr(e.term) for e in aps.history[:-1]]
             prod = before + ["\N{MIDDLE DOT}"] + after
@@ -1436,11 +1463,7 @@ class ParseTable:
                 replay += 1
             if replay > 0:
                 prod = prod[:-replay] + ["[lookahead:"] + prod[-replay:] + ["]"]
-            txt = "{}{} ::= {}".format(
-                prefix,
-                repr(action.reduce_with().nt),
-                " ".join(prod)
-            )
+            txt = "{}{} ::= {}".format(prefix, repr(stack_diff.nt), " ".join(prod))
             context.add(txt)
 
         if split_txt is None:

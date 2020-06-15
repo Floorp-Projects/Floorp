@@ -1,7 +1,3 @@
-use crate::gcthings::GCThing;
-use crate::script::{ScriptStencil, ScriptStencilBase};
-use ast::source_atom_set::SourceAtomSetIndex;
-
 #[derive(Debug)]
 pub struct FunctionFlags {
     flags: u16,
@@ -191,6 +187,11 @@ impl FunctionFlags {
         Self { flags }
     }
 
+    /// Returns empty flag that is used for top level script
+    pub fn empty() -> Self {
+        Self { flags: 0 }
+    }
+
     pub fn interpreted(syntax_kind: FunctionSyntaxKind) -> Self {
         let kind_flag = (syntax_kind.kind as u16) << FUNCTION_KIND_SHIFT;
         let mut flags = BASESCRIPT | kind_flag;
@@ -212,189 +213,15 @@ impl FunctionFlags {
         }
         Self::new(flags)
     }
-}
 
-#[derive(Debug)]
-pub struct NonLazyFunctionScript {
-    script: ScriptStencil,
-}
-
-#[derive(Debug)]
-pub struct LazyFunctionScript {
-    script: ScriptStencilBase,
-}
-
-#[derive(Debug)]
-pub enum FunctionScript {
-    NonLazy(NonLazyFunctionScript),
-    Lazy(LazyFunctionScript),
-}
-
-#[derive(Debug)]
-pub struct SourceExtent {
-    pub source_start: u32,
-    pub source_end: u32,
-    pub to_string_start: u32,
-    pub to_string_end: u32,
-
-    pub lineno: u32,
-    pub column: u32,
-}
-
-/// Maps to JSFunction in m-c/js/src/vm/JSFunction.h, and BaseScript/JSScript
-/// in m-c/js/src/vm/JSScript.h, linked from it.
-#[derive(Debug)]
-pub struct FunctionStencil {
-    name: Option<SourceAtomSetIndex>,
-    script: FunctionScript,
-    flags: FunctionFlags,
-    extent: SourceExtent,
-    // FIXME: add more fields
-}
-
-impl FunctionStencil {
-    pub fn non_lazy(
-        name: Option<SourceAtomSetIndex>,
-        script: ScriptStencil,
-        flags: FunctionFlags,
-        extent: SourceExtent,
-    ) -> Self {
-        Self {
-            name,
-            script: FunctionScript::NonLazy(NonLazyFunctionScript { script }),
-            flags,
-            extent,
-        }
-    }
-
-    pub fn lazy(
-        name: Option<SourceAtomSetIndex>,
-        script: ScriptStencilBase,
-        flags: FunctionFlags,
-        extent: SourceExtent,
-    ) -> Self {
-        Self {
-            name,
-            script: FunctionScript::Lazy(LazyFunctionScript { script }),
-            flags,
-            extent,
-        }
-    }
-
-    pub fn is_non_lazy(&self) -> bool {
-        match self.script {
-            FunctionScript::NonLazy(_) => true,
-            FunctionScript::Lazy(_) => false,
-        }
-    }
-
-    pub fn is_lazy(&self) -> bool {
-        match self.script {
-            FunctionScript::NonLazy(_) => false,
-            FunctionScript::Lazy(_) => true,
-        }
-    }
-
-    pub fn non_lazy_script<'a>(&'a self) -> &'a ScriptStencil {
-        match &self.script {
-            FunctionScript::NonLazy(nonlazy) => &nonlazy.script,
-            FunctionScript::Lazy(_) => panic!("unexpeceted function type"),
-        }
-    }
-
-    pub fn lazy_script<'a>(&'a self) -> &'a ScriptStencilBase {
-        match &self.script {
-            FunctionScript::NonLazy(_) => panic!("unexpeceted function type"),
-            FunctionScript::Lazy(lazy) => &lazy.script,
-        }
-    }
-
-    pub fn lazy_script_mut<'a>(&'a mut self) -> &'a mut ScriptStencilBase {
-        match &mut self.script {
-            FunctionScript::NonLazy(_) => panic!("unexpeceted function type"),
-            FunctionScript::Lazy(lazy) => &mut lazy.script,
-        }
-    }
-
-    pub fn set_name(&mut self, name: SourceAtomSetIndex) {
-        self.name = Some(name);
-    }
-
-    pub fn name<'a>(&'a self) -> &'a Option<SourceAtomSetIndex> {
-        &self.name
-    }
-
-    pub fn set_has_rest(&mut self) {
-        self.lazy_script_mut().set_has_rest();
-    }
-
-    pub fn set_to_string_starts(&mut self, to_string_start: usize) {
-        self.extent.to_string_start = to_string_start as u32;
-    }
-
-    pub fn set_to_string_end(&mut self, to_string_end: usize) {
-        self.extent.to_string_end = to_string_end as u32;
-    }
-
-    pub fn set_source_end(&mut self, source_end: usize) {
-        self.extent.source_end = source_end as u32;
-    }
-
-    pub fn push_inner_function(&mut self, fun: FunctionStencilIndex) {
-        self.lazy_script_mut().gcthings.push(GCThing::Function(fun));
-    }
-
-    pub fn push_closed_over_bindings(&mut self, name: SourceAtomSetIndex) {
-        self.lazy_script_mut().gcthings.push(GCThing::Atom(name));
+    pub fn is_arrow(&self) -> bool {
+        let kind_num = (self.flags >> FUNCTION_KIND_SHIFT) & FUNCTION_KIND_MASK;
+        kind_num == FunctionKind::Arrow as u16
     }
 }
 
-/// Index into FunctionStencilList.items.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct FunctionStencilIndex {
-    index: usize,
-}
-
-impl FunctionStencilIndex {
-    fn new(index: usize) -> Self {
-        Self { index }
-    }
-}
-
-impl From<FunctionStencilIndex> for usize {
-    fn from(index: FunctionStencilIndex) -> usize {
-        index.index
-    }
-}
-
-/// List of FunctionStencil.
-#[derive(Debug)]
-pub struct FunctionStencilList {
-    items: Vec<FunctionStencil>,
-}
-
-impl FunctionStencilList {
-    pub fn new() -> Self {
-        Self { items: Vec::new() }
-    }
-
-    pub fn push(&mut self, fun_data: FunctionStencil) -> FunctionStencilIndex {
-        let index = self.items.len();
-        self.items.push(fun_data);
-        FunctionStencilIndex::new(index)
-    }
-
-    pub fn get<'a>(&'a self, index: FunctionStencilIndex) -> &'a FunctionStencil {
-        &self.items[usize::from(index)]
-    }
-
-    pub fn get_mut<'a>(&'a mut self, index: FunctionStencilIndex) -> &'a mut FunctionStencil {
-        &mut self.items[usize::from(index)]
-    }
-}
-
-impl From<FunctionStencilList> for Vec<FunctionStencil> {
-    fn from(list: FunctionStencilList) -> Vec<FunctionStencil> {
-        list.items
+impl From<FunctionFlags> for u16 {
+    fn from(flags: FunctionFlags) -> u16 {
+        flags.flags
     }
 }
