@@ -12,7 +12,6 @@
 #include "sandbox/win/src/sandbox_nt_util.h"
 #include "sandbox/win/src/sharedmem_ipc_client.h"
 #include "sandbox/win/src/target_services.h"
-#include "mozilla/sandboxing/sandboxLogging.h"
 
 namespace sandbox {
 
@@ -32,8 +31,6 @@ TargetCreateNamedPipeW(CreateNamedPipeWFunction orig_CreateNamedPipeW,
   if (INVALID_HANDLE_VALUE != pipe)
     return pipe;
 
-  mozilla::sandboxing::LogBlocked("CreateNamedPipeW", pipe_name);
-
   // We don't trust that the IPC can work this early.
   if (!SandboxFactory::GetTargetServices()->GetState()->InitCalled())
     return INVALID_HANDLE_VALUE;
@@ -52,13 +49,13 @@ TargetCreateNamedPipeW(CreateNamedPipeWFunction orig_CreateNamedPipeW,
     CountedParameterSet<NameBased> params;
     params[NameBased::NAME] = ParamPickerMake(pipe_name);
 
-    if (!QueryBroker(IPC_CREATENAMEDPIPEW_TAG, params.GetBase()))
+    if (!QueryBroker(IpcTag::CREATENAMEDPIPEW, params.GetBase()))
       break;
 
     SharedMemIPCClient ipc(memory);
     CrossCallReturn answer = {0};
     ResultCode code =
-        CrossCall(ipc, IPC_CREATENAMEDPIPEW_TAG, pipe_name, open_mode,
+        CrossCall(ipc, IpcTag::CREATENAMEDPIPEW, pipe_name, open_mode,
                   pipe_mode, max_instance, out_buffer_size, in_buffer_size,
                   default_timeout, &answer);
     if (SBOX_ALL_OK != code)
@@ -69,7 +66,6 @@ TargetCreateNamedPipeW(CreateNamedPipeWFunction orig_CreateNamedPipeW,
     if (ERROR_SUCCESS != answer.win32_result)
       return INVALID_HANDLE_VALUE;
 
-    mozilla::sandboxing::LogAllowed("CreateNamedPipeW", pipe_name);
     return answer.handle;
   } while (false);
 

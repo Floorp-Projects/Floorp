@@ -19,10 +19,9 @@ bool CheckAndDuplicateHandle(HANDLE source, ScopedHandle* target) {
   if (!source)
     return true;
 
-  HANDLE temp = NULL;
-  if (!::DuplicateHandle(::GetCurrentProcess(), source,
-                         ::GetCurrentProcess(), &temp, 0, FALSE,
-                         DUPLICATE_SAME_ACCESS)) {
+  HANDLE temp = nullptr;
+  if (!::DuplicateHandle(::GetCurrentProcess(), source, ::GetCurrentProcess(),
+                         &temp, 0, FALSE, DUPLICATE_SAME_ACCESS)) {
     DWORD last_error = ::GetLastError();
     DPLOG(ERROR) << "Failed to duplicate a handle " << last_error;
     ::SetLastError(last_error);
@@ -34,12 +33,10 @@ bool CheckAndDuplicateHandle(HANDLE source, ScopedHandle* target) {
 
 }  // namespace
 
-ScopedProcessInformation::ScopedProcessInformation()
-    : process_id_(0), thread_id_(0) {
-}
+ScopedProcessInformation::ScopedProcessInformation() = default;
 
 ScopedProcessInformation::ScopedProcessInformation(
-    const PROCESS_INFORMATION& process_info) : process_id_(0), thread_id_(0) {
+    const PROCESS_INFORMATION& process_info) {
   Set(process_info);
 }
 
@@ -48,8 +45,8 @@ ScopedProcessInformation::~ScopedProcessInformation() {
 }
 
 bool ScopedProcessInformation::IsValid() const {
-  return process_id_ || process_handle_.Get() ||
-         thread_id_ || thread_handle_.Get();
+  return process_id_ || process_handle_.Get() || thread_id_ ||
+         thread_handle_.Get();
 }
 
 void ScopedProcessInformation::Close() {

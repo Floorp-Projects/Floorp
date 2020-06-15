@@ -17,16 +17,19 @@
 namespace base {
 
 inline bool IsValidCodepoint(uint32_t code_point) {
-  // Excludes the surrogate code points ([0xD800, 0xDFFF]) and
-  // codepoints larger than 0x10FFFF (the highest codepoint allowed).
-  // Non-characters and unassigned codepoints are allowed.
+  // Excludes code points that are not Unicode scalar values, i.e.
+  // surrogate code points ([0xD800, 0xDFFF]). Additionally, excludes
+  // code points larger than 0x10FFFF (the highest codepoint allowed).
+  // Non-characters and unassigned code points are allowed.
+  // https://unicode.org/glossary/#unicode_scalar_value
   return code_point < 0xD800u ||
          (code_point >= 0xE000u && code_point <= 0x10FFFFu);
 }
 
 inline bool IsValidCharacter(uint32_t code_point) {
-  // Excludes non-characters (U+FDD0..U+FDEF, and all codepoints ending in
-  // 0xFFFE or 0xFFFF) from the set of valid code points.
+  // Excludes non-characters (U+FDD0..U+FDEF, and all code points
+  // ending in 0xFFFE or 0xFFFF) from the set of valid code points.
+  // https://unicode.org/faq/private_use.html#nonchar1
   return code_point < 0xD800u || (code_point >= 0xE000u &&
       code_point < 0xFDD0u) || (code_point > 0xFDEFu &&
       code_point <= 0x10FFFFu && (code_point & 0xFFFEu) != 0xFFFEu);
