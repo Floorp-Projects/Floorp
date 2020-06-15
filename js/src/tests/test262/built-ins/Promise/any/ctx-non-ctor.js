@@ -1,3 +1,4 @@
+// |reftest| skip-if(release_or_beta) -- Promise.any is not released yet
 // Copyright (C) 2019 Sergey Rubanov. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 

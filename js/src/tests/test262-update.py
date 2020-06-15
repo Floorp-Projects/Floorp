@@ -41,6 +41,7 @@ FEATURE_CHECK_NEEDED = {
 RELEASE_OR_BETA = set([
     "Intl.DateTimeFormat-fractionalSecondDigits",
     "Intl.DateTimeFormat-dayPeriod",
+    "Promise.any",
     "AggregateError",
 ])
 
