@@ -4,7 +4,6 @@
 
 package org.mozilla.fenix.components.toolbar
 
-import android.app.Activity
 import android.content.Intent
 import androidx.annotation.VisibleForTesting
 import androidx.navigation.NavController
@@ -40,7 +39,6 @@ import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.navigateSafe
 import org.mozilla.fenix.ext.sessionsOfType
 import org.mozilla.fenix.ext.settings
-import org.mozilla.fenix.home.SharedViewModel
 import org.mozilla.fenix.settings.deletebrowsingdata.deleteAndQuit
 import org.mozilla.fenix.utils.Do
 
@@ -59,9 +57,9 @@ interface BrowserToolbarController {
     fun handleReaderModePressed(enabled: Boolean)
 }
 
-@SuppressWarnings("LargeClass", "TooManyFunctions")
+@Suppress("LargeClass", "TooManyFunctions")
 class DefaultBrowserToolbarController(
-    private val activity: Activity,
+    private val activity: HomeActivity,
     private val navController: NavController,
     private val readerModeController: ReaderModeController,
     private val sessionManager: SessionManager,
@@ -75,7 +73,6 @@ class DefaultBrowserToolbarController(
     private val scope: CoroutineScope,
     private val tabCollectionStorage: TabCollectionStorage,
     private val topSiteStorage: TopSiteStorage,
-    private val sharedViewModel: SharedViewModel,
     private val onTabCounterClicked: () -> Unit,
     private val onCloseTab: (Session) -> Unit
 ) : BrowserToolbarController {
@@ -146,7 +143,7 @@ class DefaultBrowserToolbarController(
                     // When closing the last tab we must show the undo snackbar in the home fragment
                     if (sessionManager.sessionsOfType(it.private).count() == 1) {
                         // The tab tray always returns to normal mode so do that here too
-                        (activity as HomeActivity).browsingModeManager.mode = BrowsingMode.Normal
+                        activity.browsingModeManager.mode = BrowsingMode.Normal
                         navController.navigate(BrowserFragmentDirections.actionGlobalHome(sessionToDelete = it.id))
                     } else {
                         onCloseTab.invoke(it)
@@ -155,20 +152,18 @@ class DefaultBrowserToolbarController(
                 }
             }
             is TabCounterMenuItem.NewTab -> {
-                (activity as HomeActivity).browsingModeManager.mode =
-                    BrowsingMode.fromBoolean(item.isPrivate)
+                activity.browsingModeManager.mode = BrowsingMode.fromBoolean(item.isPrivate)
                 navController.popBackStack(R.id.homeFragment, false)
             }
         }
     }
 
     override fun handleBrowserMenuDismissed(lowPrioHighlightItems: List<ToolbarMenu.Item>) {
+        val settings = activity.settings()
         lowPrioHighlightItems.forEach {
             when (it) {
-                ToolbarMenu.Item.AddToHomeScreen -> activity.settings().installPwaOpened = true
-                ToolbarMenu.Item.OpenInApp -> activity.settings().openInAppOpened = true
-                else -> {
-                }
+                ToolbarMenu.Item.AddToHomeScreen -> settings.installPwaOpened = true
+                ToolbarMenu.Item.OpenInApp -> settings.openInAppOpened = true
             }
         }
     }
@@ -178,7 +173,7 @@ class DefaultBrowserToolbarController(
     }
 
     @ExperimentalCoroutinesApi
-    @SuppressWarnings("ComplexMethod", "LongMethod")
+    @Suppress("ComplexMethod", "LongMethod")
     override fun handleToolbarItemInteraction(item: ToolbarMenu.Item) {
         val sessionUseCases = activity.components.useCases.sessionUseCases
         trackToolbarItemInteraction(item)
@@ -203,21 +198,22 @@ class DefaultBrowserToolbarController(
                 currentSession
             )
             ToolbarMenu.Item.AddToTopSites -> {
-                ioScope.launch {
-                    currentSession?.let {
-                        topSiteStorage.addTopSite(it.title, it.url)
-                    }
-                    MainScope().launch {
-                        FenixSnackbar.make(
-                            view = swipeRefresh,
-                            duration = Snackbar.LENGTH_SHORT,
-                            isDisplayedWithBrowserToolbar = true
+                scope.launch {
+                    ioScope.launch {
+                        currentSession?.let {
+                            topSiteStorage.addTopSite(it.title, it.url)
+                        }
+                    }.join()
+
+                    FenixSnackbar.make(
+                        view = swipeRefresh,
+                        duration = Snackbar.LENGTH_SHORT,
+                        isDisplayedWithBrowserToolbar = true
+                    )
+                        .setText(
+                            swipeRefresh.context.getString(R.string.snackbar_added_to_top_sites)
                         )
-                            .setText(
-                                swipeRefresh.context.getString(R.string.snackbar_added_to_top_sites)
-                            )
-                            .show()
-                    }
+                        .show()
                 }
             }
             ToolbarMenu.Item.AddToHomeScreen, ToolbarMenu.Item.InstallToHomeScreen -> {
@@ -341,15 +337,7 @@ class DefaultBrowserToolbarController(
         }
     }
 
-    private fun reportSiteIssue(reportUrl: String, private: Boolean) {
-        if (private) {
-            activity.components.useCases.tabsUseCases.addPrivateTab.invoke(reportUrl)
-        } else {
-            activity.components.useCases.tabsUseCases.addTab.invoke(reportUrl)
-        }
-    }
-
-    @SuppressWarnings("ComplexMethod")
+    @Suppress("ComplexMethod")
     private fun trackToolbarItemInteraction(item: ToolbarMenu.Item) {
         val eventItem = when (item) {
             ToolbarMenu.Item.Back -> Event.BrowserMenuItemTapped.Item.BACK
@@ -386,7 +374,6 @@ class DefaultBrowserToolbarController(
     }
 
     companion object {
-        const val ANIMATION_DELAY = 50L
         internal const val TELEMETRY_BROWSER_IDENTIFIER = "browserMenu"
     }
 }

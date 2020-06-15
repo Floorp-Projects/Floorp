@@ -203,7 +203,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
 
         return getSessionById()?.also { session ->
             val browserToolbarController = DefaultBrowserToolbarController(
-                activity = requireActivity(),
+                activity = requireActivity() as HomeActivity,
                 navController = findNavController(),
                 readerModeController = DefaultReaderModeController(
                     readerViewFeature,
@@ -224,7 +224,6 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                 scope = viewLifecycleOwner.lifecycleScope,
                 tabCollectionStorage = requireComponents.core.tabCollectionStorage,
                 topSiteStorage = requireComponents.core.topSiteStorage,
-                sharedViewModel = sharedViewModel,
                 onTabCounterClicked = {
                     TabTrayDialogFragment.show(parentFragmentManager)
                 },
