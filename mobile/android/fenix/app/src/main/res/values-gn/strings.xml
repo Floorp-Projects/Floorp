@@ -983,12 +983,19 @@
     <string name="onboarding_firefox_account_automatic_signin_failed">Tembiapo ñepyrũ ojavy</string>
     <!-- text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header_2">Ñemigua ijeheguíva</string>
+    <!-- text for the tracking protection card description
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_tracking_protection_description_2">Ñemboheko ñemigua ha tekorosã ojoko tapykuehoha, rembiaporapevai ha atyguasu nderapykuehóva.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Ypyguaite (ijypygua)</string>
+    <!-- text for standard blocking option button description -->
+    <string name="onboarding_tracking_protection_standard_button_description_2">Ojoko’ive tapykuehohápe. Umi kuatiarogue henyhẽporãta.</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">Mbaretépe (jeroviaháva)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">Mbaretépe</string>
+    <!-- text for strict blocking option button description -->
+    <string name="onboarding_tracking_protection_strict_button_description_2">Ojokove tapykuehoha, ñemurã ha ovetã apysẽ. Kuatiarogue henyhẽpya’evéta, hákatu tembiapoite sa’ivekuaa.</string>
     <!-- text for the toolbar position card header
         In English this is an idiom for "choose a side as in an argument or fight"
         but it is ok to make this more literally about "choosing a position in a physical space -->
@@ -1078,10 +1085,14 @@
 
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">Ypyguaite (ijypygua)</string>
+    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_description_3">Ojoko’ive tapykuehohápe. Umi kuatiarogue henyhẽporãta.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Mba’e umi ojokóva tapykuehoha moãha ypyguáva renondépe</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Mbaretépe</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_description_2">Ojokove tapykuehoha, ñemurã ha ovetã apysẽ. Kuatiarogue henyhẽpya’evéta, hákatu tembiapoite sa’ivekuaa.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Mba’e umi ojokóva tapykuehoha mo’ãha imbaretéva</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1138,6 +1149,8 @@
     <string name="etp_tracking_content_title">Tapykueho retepy</string>
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_description">Ejoko ñemurã ñemyanyhẽ okayguáva, ta’ãngamýi ha tetepy oguerekóva ayvu rapykuehoha. Ikatu ombyai ñanduti renda rembiapoite.</string>
+    <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="etp_onboarding_cfr_message">Ehechajeývo jokoha pytaũva, %s ojoko tapykuehoha peteĩ tendápe. Eikutu eikuaave hag̃ua.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">Umi ñemo’ã oñemyandýma ko tendápe g̃uarã</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->

@@ -17,13 +17,16 @@
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="search_hint">搜尋或輸入網址</string>
 
-    <!-- No Open Tabs Message Header -->
-    <string name="no_open_tabs_header_2">無已開啟的分頁</string>
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">您開啟的分頁將顯示於此處。</string>
 
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">您開啟的隱私瀏覽分頁將顯示於此處。</string>
+
+    <!-- Message announced to the user when tab tray is selected with 1 tab -->
+    <string name="open_tab_tray_single">開啟了 1 個分頁，點擊即可切換分頁。</string>
+    <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
+    <string name="open_tab_tray_plural">開啟了 %1$s 個分頁，點擊即可切換分頁。</string>
 
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s 是由 Mozilla 所打造。</string>
@@ -300,7 +303,7 @@
     <!-- Preference for syncing logins -->
     <string name="preferences_sync_logins">登入資訊</string>
     <!-- Preference for syncing tabs -->
-    <string name="preferences_sync_tabs">分頁</string>
+    <string name="preferences_sync_tabs_2">開啟分頁</string>
     <!-- Preference for signing out -->
     <string name="preferences_sign_out">登出</string>
     <!-- Preference displays and allows changing current FxA device name -->
@@ -489,7 +492,7 @@
     <!-- Open tabs menu item to share all tabs -->
     <string name="tabs_menu_share_tabs">分享分頁</string>
     <!-- Open tabs menu item to save tabs to collection -->
-    <string name="tabs_menu_save_to_collection">儲存至收藏集</string>
+    <string name="tabs_menu_save_to_collection1">將分頁儲存至收藏集</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
     <string name="tab_menu">分頁選單</string>
     <!-- Tab menu item to share the tab -->
@@ -706,17 +709,15 @@
     <string name="delete_browsing_data_quit_off">關閉</string>
 
     <!-- Collections -->
-    <!-- Label to describe what collections are to a new user without any collections -->
-    <string name="collections_description">收集對您來說重要的東西。首先請將開啟的分頁，儲存進新的收藏集。</string>
     <!-- Collections header on home fragment -->
     <string name="collections_header">收藏集</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
     <string name="collection_menu_button_content_description">收藏集選單</string>
-    <!-- No Open Tabs Message Header -->
-    <string name="no_collections_header">沒有收藏集</string>
-    <!-- No Open Tabs Message Description -->
-    <string name="no_collections_description">您的收藏集將顯示於此處。</string>
 
+    <!-- No Open Tabs Message Header -->
+    <string name="no_collections_header1">收集對您而言重要的東西</string>
+    <!-- Label to describe what collections are to a new user without any collections -->
+    <string name="no_collections_description1">將類似的搜尋、網站、分頁放在一起，方便之後快速使用。</string>
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">選擇分頁</string>
 
@@ -942,8 +943,9 @@
     <string name="tip_firefox_preview_moved_header">Firefox Nightly 已被 Firefox Preview 取代</string>
     <!-- text for firefox preview moving tip description -->
     <string name="tip_firefox_preview_moved_description">Firefox Nightly 每天都會更新一次，當中包含實驗中的新功能，然而這些新功能可能會較不穩定。若須有較穩定的使用體驗，請下載我們的 Beta 測試版。</string>
-    <!-- text for firefox preview moving tip button. "Mozilla Firefox Browser" is intentionally hardcoded -->
-    <string name="tip_firefox_preview_moved_button">下載 Mozilla Firefox Browser</string>
+
+    <!-- text for firefox preview moving tip button. "Firefox for Android Beta" is intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_button_2">下載 Firefox for Android Beta 測試版</string>
 
     <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_header_preview_installed">Firefox Nightly 版本更新</string>
@@ -1442,6 +1444,9 @@
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
     <string name="voice_search_explainer">現在說話</string>
 
+    <!--  The error message in edit login view when a duplicate username exists. -->
+    <string name="saved_login_duplicate">已有該使用者名稱的登入資訊</string>
+
     <!-- Synced Tabs -->
     <!-- Text displayed when user is not logged into a Firefox Account -->
     <string name="synced_tabs_connect_to_sync_account">連結 Firefox 帳號。</string>
@@ -1451,5 +1456,19 @@
     <string name="synced_tabs_reauth">請重新登入。</string>
     <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->
     <string name="synced_tabs_enable_tab_syncing">請開啟分頁同步。</string>
+    <!-- Text displayed when user has no tabs that have been synced -->
+    <string name="synced_tabs_no_tabs">您其他裝置上的 Firefox 沒有任何開啟的分頁。</string>
+    <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
+    <string name="synced_tabs_sign_in_message">檢視您其他裝置中的分頁清單。</string>
+    <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
+    <string name="synced_tabs_sign_in_button">登入至 Sync</string>
+
+    <!-- Top Sites -->
+    <!-- Title text displayed in the dialog when top sites limit is reached. -->
+    <string name="top_sites_max_limit_title">超出熱門網站限制</string>
+    <!-- Content description text displayed in the dialog when top sites limit is reached. -->
+    <string name="top_sites_max_limit_content">請先移除現有的熱門網站才能再新增。請按住網站，然後選擇移除。</string>
+    <!-- Confirmation dialog button text when top sites limit is reached. -->
+    <string name="top_sites_max_limit_confirmation_button">好，知道了！</string>
 
 </resources>

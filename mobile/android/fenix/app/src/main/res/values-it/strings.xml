@@ -16,13 +16,16 @@
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="search_hint">Cerca o scrivi un indirizzo</string>
 
-    <!-- No Open Tabs Message Header -->
-    <string name="no_open_tabs_header_2">Nessuna scheda aperta</string>
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">Le schede aperte verranno mostrate qui.</string>
 
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">Le schede anonime verranno mostrate qui.</string>
+
+    <!-- Message announced to the user when tab tray is selected with 1 tab -->
+    <string name="open_tab_tray_single">Aperta 1 scheda. Tocca per cambiare scheda.</string>
+    <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
+    <string name="open_tab_tray_plural">Aperte %1$s schede. Tocca per cambiare scheda.</string>
 
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s è sviluppato da Mozilla.</string>
@@ -302,7 +305,7 @@
     <!-- Preference for syncing logins -->
     <string name="preferences_sync_logins">Credenziali</string>
     <!-- Preference for syncing tabs -->
-    <string name="preferences_sync_tabs">Schede</string>
+    <string name="preferences_sync_tabs_2">Schede aperte</string>
     <!-- Preference for signing out -->
     <string name="preferences_sign_out">Disconnetti</string>
     <!-- Preference displays and allows changing current FxA device name -->
@@ -493,7 +496,7 @@
     <!-- Open tabs menu item to share all tabs -->
     <string name="tabs_menu_share_tabs">Condividi schede</string>
     <!-- Open tabs menu item to save tabs to collection -->
-    <string name="tabs_menu_save_to_collection">Salva in una raccolta</string>
+    <string name="tabs_menu_save_to_collection1">Salva schede in una raccolta</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
     <string name="tab_menu">Menu scheda</string>
     <!-- Tab menu item to share the tab -->
@@ -710,17 +713,15 @@
     <string name="delete_browsing_data_quit_off">Disattivato</string>
 
     <!-- Collections -->
-    <!-- Label to describe what collections are to a new user without any collections -->
-    <string name="collections_description">Raggruppa i contenuti che ritieni importanti. Per iniziare, salva le schede aperte in una nuova raccolta.</string>
     <!-- Collections header on home fragment -->
     <string name="collections_header">Raccolte</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
     <string name="collection_menu_button_content_description">Menu raccolta</string>
-    <!-- No Open Tabs Message Header -->
-    <string name="no_collections_header">Nessuna raccolta</string>
-    <!-- No Open Tabs Message Description -->
-    <string name="no_collections_description">Le raccolte verranno mostrate qui.</string>
 
+    <!-- No Open Tabs Message Header -->
+    <string name="no_collections_header1">Raggruppa i tuoi interessi</string>
+    <!-- Label to describe what collections are to a new user without any collections -->
+    <string name="no_collections_description1">Raggruppa ricerche, siti e schede simili tra loro per potervi accedere più rapidamente in un secondo tempo.</string>
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">Seleziona schede</string>
 
@@ -947,8 +948,9 @@
     <!-- text for firefox preview moving tip description -->
     <string name="tip_firefox_preview_moved_description">Firefox Nightly viene aggiornato ogni notte con nuove funzionalità sperimentali.
  Tuttavia, potrebbe essere meno stabile. Per un’esperienza più stabile, scarica il nostro browser beta.</string>
-    <!-- text for firefox preview moving tip button. "Mozilla Firefox Browser" is intentionally hardcoded -->
-    <string name="tip_firefox_preview_moved_button">Installa il browser Mozilla Firefox</string>
+
+    <!-- text for firefox preview moving tip button. "Firefox for Android Beta" is intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_button_2">Ottieni Firefox per Android Beta</string>
 
     <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_header_preview_installed">Firefox Nightly si è spostato</string>
@@ -1451,6 +1453,9 @@
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
     <string name="voice_search_explainer">Parla ora</string>
 
+    <!--  The error message in edit login view when a duplicate username exists. -->
+    <string name="saved_login_duplicate">Esistono già credenziali con questo nome utente</string>
+
     <!-- Synced Tabs -->
     <!-- Text displayed when user is not logged into a Firefox Account -->
     <string name="synced_tabs_connect_to_sync_account">Connetti un account Firefox.</string>
@@ -1460,5 +1465,20 @@
     <string name="synced_tabs_reauth">Esegui nuovamente l’accesso.</string>
     <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->
     <string name="synced_tabs_enable_tab_syncing">Attiva la sincronizzazione delle schede.</string>
+
+    <!-- Text displayed when user has no tabs that have been synced -->
+    <string name="synced_tabs_no_tabs">Non risulta alcuna scheda aperta in Firefox negli altri dispositivi.</string>
+    <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
+    <string name="synced_tabs_sign_in_message">Visualizza un elenco delle schede aperte in altri dispositivi.</string>
+    <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
+    <string name="synced_tabs_sign_in_button">Accedi per sincronizzare</string>
+
+    <!-- Top Sites -->
+    <!-- Title text displayed in the dialog when top sites limit is reached. -->
+    <string name="top_sites_max_limit_title">Raggiunto limite per i siti principali</string>
+    <!-- Content description text displayed in the dialog when top sites limit is reached. -->
+    <string name="top_sites_max_limit_content">Per aggiungere un nuovo sito principale è necessario rimuoverne uno esistente. Per rimuoverlo, tenere premuto a lungo e selezionare “Rimuovi”.</string>
+    <!-- Confirmation dialog button text when top sites limit is reached. -->
+    <string name="top_sites_max_limit_confirmation_button">OK, tutto chiaro</string>
 
 </resources>

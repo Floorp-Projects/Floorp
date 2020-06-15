@@ -10,8 +10,6 @@
     <string name="content_description_disable_private_browsing_button">निजी ब्राउज़िंग अक्षम करें</string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="search_hint">खोजें या पता दर्ज करें</string>
-    <!-- No Open Tabs Message Header -->
-    <string name="no_open_tabs_header_2">कोई खुला टैब नहीं</string>
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">आपके खुले टैब यहां दिखाए जाएंगे।</string>
 
@@ -275,7 +273,7 @@
     <!-- Preference for syncing logins -->
     <string name="preferences_sync_logins">लॉगिन</string>
     <!-- Preference for syncing tabs -->
-    <string name="preferences_sync_tabs">टैब</string>
+    <string name="preferences_sync_tabs_2">टैब खोलें</string>
     <!-- Preference for signing out -->
     <string name="preferences_sign_out">साइन आउट करें</string>
     <!-- Preference displays and allows changing current FxA device name -->
@@ -405,6 +403,8 @@
     <string name="library_desktop_bookmarks_unfiled">अन्य बुकमार्क</string>
     <!-- Option in Library to open History page -->
     <string name="library_history">इतिहास</string>
+    <!-- Option in Library to open Synced Tabs page -->
+    <string name="library_synced_tabs">सिंक हुए टैब</string>
     <!-- Option in Library to open Reading List -->
     <string name="library_reading_list">पठन सूची</string>
     <!-- Menu Item Label for Search in Library -->
@@ -428,6 +428,8 @@
     <string name="add_tab">टैब जोड़ें</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_private_tab">निजी टैब जोड़ें</string>
+    <!-- Text shown as the title of the open tab tray -->
+    <string name="tab_tray_title">टैब खोलें</string>
     <!-- Text shown in the menu for sharing all tabs -->
     <string name="tab_tray_menu_item_share">सभी टैब साझा करें</string>
     <!-- Text shown in the menu for closing all tabs -->
@@ -447,8 +449,6 @@
     <string name="tabs_menu_close_all_tabs">सभी टैब बंद करें</string>
     <!-- Open tabs menu item to share all tabs -->
     <string name="tabs_menu_share_tabs">टैब साझा करें</string>
-    <!-- Open tabs menu item to save tabs to collection -->
-    <string name="tabs_menu_save_to_collection">संग्रहण में सहेजें</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
     <string name="tab_menu">टैब मेन्यू</string>
     <!-- Tab menu item to share the tab -->
@@ -657,16 +657,10 @@
     <string name="delete_browsing_data_quit_off">बंद करें</string>
 
     <!-- Collections -->
-    <!-- Label to describe what collections are to a new user without any collections -->
-    <string name="collections_description">आपके लिए जो चीजें मायने रखती हैं, उन्हें इकट्ठा करें। शुरू करने के लिए, खुले टैब को एक नए संग्रह में सहेजें।</string>
     <!-- Collections header on home fragment -->
     <string name="collections_header">संग्रह</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
     <string name="collection_menu_button_content_description">संग्रह मेन्यू</string>
-    <!-- No Open Tabs Message Header -->
-    <string name="no_collections_header">कोई संग्रह नहीं</string>
-    <!-- No Open Tabs Message Description -->
-    <string name="no_collections_description">आपके संग्रह यहां दिखाए जाएंगे।</string>
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">टैब चुने</string>
     <!-- Title for the "select collection" step of the collection creator -->
@@ -855,8 +849,6 @@
     <!-- Tips -->
     <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_header">Firefox Preview अब Firefox Nightly है</string>
-    <!-- text for firefox preview moving tip button. "Mozilla Firefox Browser" is intentionally hardcoded -->
-    <string name="tip_firefox_preview_moved_button">Mozilla Firefox ब्राउज़र प्राप्त करें</string>
 
     <!-- Onboarding -->
     <!-- Text for onboarding welcome message
@@ -1167,5 +1159,8 @@
 
     <!--  The page title for editing a saved login. -->
     <string name="edit">संपादित करें</string>
+
+    <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
+    <string name="synced_tabs_sign_in_button">सिंक करने के लिए साइन इन करें</string>
 
     </resources>

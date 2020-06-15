@@ -16,13 +16,16 @@
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="search_hint">Suche oder Adresse</string>
 
-    <!-- No Open Tabs Message Header -->
-    <string name="no_open_tabs_header_2">Keine offenen Tabs</string>
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">Offene Tabs werden hier angezeigt.</string>
 
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">Ihre privaten Tabs werden hier angezeigt.</string>
+
+    <!-- Message announced to the user when tab tray is selected with 1 tab -->
+    <string name="open_tab_tray_single">1 offener Tab. Antippen, um  Tabs zu wechseln.</string>
+    <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
+    <string name="open_tab_tray_plural">%1$s offene Tabs. Antippen, um  Tabs zu wechseln.</string>
 
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s wird von Mozilla hergestellt.</string>
@@ -178,7 +181,7 @@
     <string name="search_widget_text_long">Das Web durchsuchen</string>
 
     <!-- Content description (not visible, for screen readers etc.): Voice search -->
-    <string name="search_widget_voice">Gesprochene Suche</string>
+    <string name="search_widget_voice">Sprachsuche</string>
 
     <!-- Preferences -->
     <!-- Title for the settings page-->
@@ -270,7 +273,7 @@
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">Suchvorschläge anzeigen</string>
     <!-- Preference title for switch preference to show voice search button -->
-    <string name="preferences_show_voice_search">Gesprochene Suche anzeigen</string>
+    <string name="preferences_show_voice_search">Sprachsuche anzeigen</string>
     <!-- Preference title for switch preference to show search suggestions also in private mode -->
     <string name="preferences_show_search_suggestions_in_private">In privaten Sitzungen anzeigen</string>
     <!-- Preference title for switch preference to show a clipboard suggestion when searching -->
@@ -301,7 +304,7 @@
     <!-- Preference for syncing logins -->
     <string name="preferences_sync_logins">Zugangsdaten</string>
     <!-- Preference for syncing tabs -->
-    <string name="preferences_sync_tabs">Tabs</string>
+    <string name="preferences_sync_tabs_2">Offene Tabs</string>
     <!-- Preference for signing out -->
     <string name="preferences_sign_out">Abmelden</string>
     <!-- Preference displays and allows changing current FxA device name -->
@@ -490,7 +493,7 @@
     <!-- Open tabs menu item to share all tabs -->
     <string name="tabs_menu_share_tabs">Tabs teilen</string>
     <!-- Open tabs menu item to save tabs to collection -->
-    <string name="tabs_menu_save_to_collection">In Sammlung speichern</string>
+    <string name="tabs_menu_save_to_collection1">Tabs in Sammlung speichern</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
     <string name="tab_menu">Tab-Menü</string>
     <!-- Tab menu item to share the tab -->
@@ -709,17 +712,15 @@
     <string name="delete_browsing_data_quit_off">Aus</string>
 
     <!-- Collections -->
-    <!-- Label to describe what collections are to a new user without any collections -->
-    <string name="collections_description">Sammeln Sie die Inhalte, die Ihnen wichtig sind. Speichern Sie für den Anfang geöffnete Tabs in einer neuen Sammlung.</string>
     <!-- Collections header on home fragment -->
     <string name="collections_header">Sammlungen</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
     <string name="collection_menu_button_content_description">Sammlungen-Menü</string>
-    <!-- No Open Tabs Message Header -->
-    <string name="no_collections_header">Keine Sammlungen</string>
-    <!-- No Open Tabs Message Description -->
-    <string name="no_collections_description">Ihre Sammlungen werden hier angezeigt.</string>
 
+    <!-- No Open Tabs Message Header -->
+    <string name="no_collections_header1">Sammeln Sie die Dinge, die Ihnen wichtig sind</string>
+    <!-- Label to describe what collections are to a new user without any collections -->
+    <string name="no_collections_description1">Gruppieren Sie ähnliche Suchanfragen, Websites und Tabs, um später schnell darauf zugreifen zu können.</string>
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">Tabs auswählen</string>
 
@@ -944,8 +945,9 @@
     <!-- text for firefox preview moving tip description -->
     <string name="tip_firefox_preview_moved_description">Firefox Nightly wird jede Nacht aktualisiert und verfügt über experimentelle neue Funktionen.
         Es kann jedoch weniger stabil sein. Unsere Beta-Version bietet Ihnen ein stabileres Erlebnis.</string>
-    <!-- text for firefox preview moving tip button. "Mozilla Firefox Browser" is intentionally hardcoded -->
-    <string name="tip_firefox_preview_moved_button">Holen Sie sich den Internet-Browser Mozilla Firefox</string>
+
+    <!-- text for firefox preview moving tip button. "Firefox for Android Beta" is intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_button_2">Holen Sie sich Firefox für Android Beta</string>
 
     <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_header_preview_installed">Firefox Nightly ist umgezogen</string>
@@ -1444,9 +1446,12 @@
     <!--  The error message in edit login view when password field is blank. -->
     <string name="saved_login_password_required">Passwort erforderlich</string>
     <!-- Voice search button content description  -->
-    <string name="voice_search_content_description">Gesprochene Suche</string>
+    <string name="voice_search_content_description">Sprachsuche</string>
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
     <string name="voice_search_explainer">Sprechen Sie jetzt</string>
+
+    <!--  The error message in edit login view when a duplicate username exists. -->
+    <string name="saved_login_duplicate">Es existieren bereits Zugangsdaten mit diesem Benutzernamen</string>
 
     <!-- Synced Tabs -->
     <!-- Text displayed when user is not logged into a Firefox Account -->
@@ -1457,5 +1462,19 @@
     <string name="synced_tabs_reauth">Bitte erneut authentifizieren.</string>
     <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->
     <string name="synced_tabs_enable_tab_syncing">Bitte aktivieren Sie die Tab-Synchronisierung.</string>
+    <!-- Text displayed when user has no tabs that have been synced -->
+    <string name="synced_tabs_no_tabs">Sie haben keine offenen Tabs in Firefox auf Ihren anderen Geräten.</string>
+    <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
+    <string name="synced_tabs_sign_in_message">Zeigt eine Liste der Tabs von Ihren anderen Geräten an.</string>
+    <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
+    <string name="synced_tabs_sign_in_button">Zum Synchronisieren anmelden</string>
+
+    <!-- Top Sites -->
+    <!-- Title text displayed in the dialog when top sites limit is reached. -->
+    <string name="top_sites_max_limit_title">Obergrenze für wichtige Seiten erreicht</string>
+    <!-- Content description text displayed in the dialog when top sites limit is reached. -->
+    <string name="top_sites_max_limit_content">Entfernen Sie eine der wichtigen Seiten, um eine neue hinzuzufügen. Tippen Sie lange auf die Seite und wählen Sie „Entfernen“.</string>
+    <!-- Confirmation dialog button text when top sites limit is reached. -->
+    <string name="top_sites_max_limit_confirmation_button">Ok, verstanden</string>
 
 </resources>

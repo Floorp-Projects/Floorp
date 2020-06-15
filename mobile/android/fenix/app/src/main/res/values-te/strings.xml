@@ -1,0 +1,295 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="app_name_private_5">అంతరంగిక %s</string>
+    <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="app_name_private_4">%s (అంతరంగికం)</string>
+    <!-- Home Fragment -->
+    <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
+    <string name="content_description_menu">మరిన్ని ఎంపికలు</string>
+
+    <!-- Placeholder text shown in the search bar before a user enters text -->
+    <string name="search_hint">వెతకండి లేదా చిరునామా ఇవ్వండి</string>
+    <!-- No Open Tabs Message Description -->
+    <string name="no_open_tabs_description">తెరిచివున్న ట్యాబులు ఇక్కడ కనిపిస్తాయి.</string>
+    <!-- No Private Tabs Message Description -->
+    <string name="no_private_tabs_description">మీ అంతరంగిక ట్యాబులు ఇక్కడ కనిపిస్తాయి.</string>
+
+    <!-- Text for the negative button -->
+    <string name="search_widget_cfr_neg_button_text">ఇప్పుడు కాదు</string>
+
+    <!-- Home screen icons - Long press shortcuts -->
+    <!-- Shortcut action to open new tab -->
+    <string name="home_screen_shortcut_open_new_tab_2">కొత్త ట్యాబు</string>
+    <!-- Heading for the Top Sites block -->
+    <string name="home_screen_top_sites_heading">మేటి సైట్లు</string>
+
+    <!-- Browser Fragment -->
+    <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
+    <string name="browser_tabs_button">తెరిచివున్న ట్యాబులు</string>
+    <!-- Content description (not visible, for screen readers etc.): Navigate backward (browsing history) -->
+    <string name="browser_menu_back">వెనుకకు</string>
+    <!-- Browser menu button that sends a user to help articles -->
+    <string name="browser_menu_help">సహాయం</string>
+    <!-- Browser menu button that sends a to a the what's new article -->
+    <string name="browser_menu_whats_new">కొత్తవి ఏమిటి</string>
+    <!-- Browser menu button that opens the settings menu -->
+    <string name="browser_menu_settings">అమరికలు</string>
+    <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
+    <string name="browser_menu_install_on_homescreen">స్థాపించు</string>
+    <!-- Browser menu button that creates a new tab -->
+    <string name="browser_menu_new_tab">కొత్త ట్యాబు</string>
+    <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
+    <string name="browser_menu_read_appearance">రూపురేఖలు</string>
+
+    <!-- Locale Settings Fragment -->
+    <!-- Content description for tick mark on selected language -->
+    <string name="a11y_selected_locale_content_description">ఎంచుకున్న భాష</string>
+
+    <!-- Button in the search suggestions onboarding that allows search suggestions in private sessions -->
+    <string name="search_suggestions_onboarding_allow_button">అనుమతించు</string>
+    <!-- Button in the search suggestions onboarding that does not allow search suggestions in private sessions -->
+    <string name="search_suggestions_onboarding_do_not_allow_button">అనుమతించవద్దు</string>
+    <!-- Search suggestion onboarding hint Learn more link text -->
+    <string name="search_suggestions_onboarding_learn_more_link">ఇంకా తెలుసుకోండి</string>
+
+    <!-- Preferences -->
+    <!-- Title for the settings page-->
+    <string name="settings">అమరికలు</string>
+    <!-- Preference category for basic settings -->
+    <string name="preferences_category_basics">ప్రాథమికాలు</string>
+    <!-- Preference category for general settings -->
+    <string name="preferences_category_general">సాధారణం</string>
+    <!-- Preference category for all links about Fenix -->
+    <string name="preferences_category_about">గురించి</string>
+    <!-- Preference for settings related to Search -->
+    <string name="preferences_search">వెతకడం</string>
+    <!-- Preference for settings related to Search address bar -->
+    <string name="preferences_search_address_bar">చిరునామా పట్టీ</string>
+    <!-- Preference linking to help about Fenix -->
+    <string name="preferences_help">సహాయం</string>
+    <!-- Preference linking to about page for Fenix
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="preferences_about">%1$s గురించి</string>
+    <!-- Preference linking to the your rights SUMO page -->
+    <string name="preferences_your_rights">మీ హక్కులు</string>
+    <!-- Preference for settings related to saved passwords -->
+    <string name="preferences_passwords">సంకేతపదాలు</string>
+    <!-- Preference for settings related to saved credit cards and addresses -->
+    <string name="preferences_credit_cards_addresses">క్రెడిట్ కార్డులు, చిరునామాలు</string>
+    <!-- Preference category for advanced settings -->
+    <string name="preferences_category_advanced">ఉన్నతం</string>
+    <!-- Preference category for privacy settings -->
+    <string name="preferences_category_privacy">అంతరంగికత</string>
+    <!-- Preference category for privacy and security settings -->
+    <string name="preferences_category_privacy_security">అంతరంగికత, భద్రత</string>
+    <!-- Preference for advanced site permissions -->
+    <string name="preferences_site_permissions">సైటు అనుమతులు</string>
+    <!-- Preference for private browsing options -->
+    <string name="preferences_private_browsing_options">అంతరంగిక విహారణ</string>
+    <!-- Preference category for account information -->
+    <string name="preferences_category_account">ఖాతా</string>
+    <!-- Preference for changing default theme to dark or light mode -->
+    <string name="preferences_theme">అలంకారం</string>
+    <!-- Preference for language -->
+    <string name="preferences_language">భాష</string>
+
+    <!-- Preference for data choices -->
+    <string name="preferences_data_choices">డేటా ఎంపికలు</string>
+    <!-- Preference for data collection -->
+    <string name="preferences_data_collection"></string>
+
+    <!-- Preference for syncing history -->
+    <string name="preferences_sync_history">చరిత్ర</string>
+    <!-- Preference for syncing bookmarks -->
+    <string name="preferences_sync_bookmarks">ఇష్టాంశాలు</string>
+    <!-- Preference for syncing logins -->
+    <string name="preferences_sync_logins">ప్రవేశాలు</string>
+    <!-- Preference for syncing tabs -->
+    <string name="preferences_sync_tabs_2">తెరిచివున్న ట్యాబులు</string>
+    <!-- Preference for signing out -->
+    <string name="preferences_sign_out">నిష్క్రమించు</string>
+    <!-- Preference displays and allows changing current FxA device name -->
+    <string name="preferences_sync_device_name">పరికరం పేరు</string>
+
+    <!-- Send Tab -->
+    <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="fxa_received_tab_channel_name">అందుకన్న ట్యాబులు</string>
+
+    <!-- Preference for tracking protection exceptions -->
+    <string name="preferences_tracking_protection_exceptions">మినహాయింపులు</string>
+    <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
+    <string name="exceptions_empty_message_learn_more_link">ఇంకా తెలుసుకోండి</string>
+
+    <!-- Title for experiments preferences -->
+    <string name="preference_experiments">ప్రయోగాలు</string>
+
+    <!-- Button to cancel pairing -->
+    <string name="pair_cancel">రద్దుచేయి</string>
+
+    <!-- Toolbar Preferences -->
+    <!-- Preference for using top toolbar -->
+    <string name="preference_top_toolbar">పైన</string>
+    <!-- Preference for using bottom toolbar -->
+    <string name="preference_bottom_toolbar">క్రింద</string>
+
+    <!-- Theme Preferences -->
+    <!-- Preference for using light theme -->
+    <string name="preference_light_theme">లేత</string>
+    <!-- Preference for using dark theme -->
+    <string name="preference_dark_theme">చీకటి</string>
+
+    <!-- Option in Library to open Screenshots page -->
+    <string name="library_screenshots">తెరపట్లు</string>
+    <!-- Option in Library to open Downloads page -->
+    <string name="library_downloads">దింపుకోళ్ళు</string>
+    <!-- Option in library to open Bookmarks page -->
+    <string name="library_bookmarks">ఇష్టాంశాలు</string>
+    <!-- Option in library to open Desktop Bookmarks root page -->
+    <string name="library_desktop_bookmarks_root">డెస్క్‌టాప్ ఇష్టాంశాలు</string>
+    <!-- Option in library to open Desktop Bookmarks "unfiled" page -->
+    <string name="library_desktop_bookmarks_unfiled">ఇతర ఇష్టాంశాలు</string>
+    <!-- Option in Library to open History page -->
+    <string name="library_history">చరిత్ర</string>
+
+    <!-- Settings Page Title -->
+    <string name="settings_title">అమరికలు</string>
+    <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
+    <string name="content_description_close_button">మూసివేయి</string>
+
+    <!-- Sessions -->
+    <!-- Title for the list of tabs -->
+    <string name="tab_header_label">తెరిచివున్న ట్యాబులు</string>
+    <!-- Text shown as the title of the open tab tray -->
+    <string name="tab_tray_title">తెరిచివున్న ట్యాబులు</string>
+    <!-- Text shown in the menu for closing all tabs -->
+    <string name="tab_tray_menu_item_close">ట్యాబులన్నీ మూసివేయి</string>
+    <!-- Shortcut action to open new tab -->
+    <string name="tab_tray_menu_open_new_tab">కొత్త ట్యాబు</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
+    <string name="close_tab">ట్యాబును మూసివేయి</string>
+    <!-- Content description (not visible, for screen readers etc.): Close tab <title> button. First parameter is tab title  -->
+    <string name="close_tab_title">%s ట్యాబును మూసివేయి</string>
+    <!-- Open tabs menu item to close all tabs -->
+    <string name="tabs_menu_close_all_tabs">ట్యాబులన్నీ మూసివేయి</string>
+    <!-- Button in the current session menu. Deletes the session when pressed -->
+    <string name="current_session_delete">తొలగించు</string>
+    <!-- Button in the current session menu. Saves the session when pressed -->
+    <string name="current_session_save">భద్రపరుచు</string>
+
+    <!-- Text for the menu button to remove a top site -->
+    <string name="remove_top_site">తీసివేయి</string>
+
+    <!-- History -->
+    <!-- Text for the button to clear all history -->
+    <string name="history_delete_all">చరిత్రను తొలగించు</string>
+    <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
+    <string name="history_delete_multiple_items_snackbar">చరిత్ర తొలగించబడింది</string>
+    <!-- Text for the button to delete a single history item -->
+    <string name="history_delete_item">తొలగించు</string>
+
+    <!-- Text for the button to clear selected history items. The first parameter
+        is a digit showing the number of items you have selected -->
+    <string name="history_delete_some">%1$d అంశాలను తొలగించు</string>
+
+    <!-- Close tab button text on the tab crash page -->
+    <string name="tab_crash_close">ట్యాబును మూసివేయి</string>
+
+    <!-- Bookmark overflow menu delete button -->
+    <string name="bookmark_menu_delete_button">తొలగించు</string>
+    <!--Bookmark overflow menu save button -->
+    <string name="bookmark_menu_save_button">భద్రపరుచు</string>
+    <!-- Bookmark FOLDER editing field label -->
+    <string name="bookmark_folder_label">సంచయం</string>
+    <!-- Bookmark NAME editing field label -->
+    <string name="bookmark_name_label">పేరు</string>
+
+    <!-- Site Permissions -->
+    <!-- Site permissions preferences header -->
+    <string name="permissions_header">అనుమతులు</string>
+
+    <!-- Preference for altering the location access for all websites -->
+    <string name="preference_phone_feature_location">స్థానం</string>
+    <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
+    <string name="preference_exceptions">మినహాయింపులు</string>
+
+    <!-- Collections -->
+    <!-- Collections header on home fragment -->
+    <string name="collections_header">సేకరణలు</string>
+    <!-- Content description (not visible, for screen readers etc.): button to close the collection creator -->
+    <string name="create_collection_close">మూసివేయి</string>
+
+    <!-- Button to save currently selected tabs in the "select tabs" step of the collection creator-->
+    <string name="create_collection_save">భద్రపరుచు</string>
+    <!-- Snackbar action to view the collection the user just created or updated -->
+    <string name="create_collection_view">చూడండి</string>
+
+    <!-- Notification action to open Fenix and resume the current browsing session. -->
+    <string name="notification_pbm_action_open">తెరువు</string>
+    <!-- QR code scanner prompt dialog positive option to allow navigation to scanned link -->
+    <string name="qr_scanner_dialog_positive">అనుమతించు</string>
+    <!-- Tab collection deletion prompt dialog option to delete the collection -->
+    <string name="tab_collection_dialog_positive">తొలగించు</string>
+    <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
+    <string name="tab_collection_dialog_negative">రద్దుచేయి</string>
+
+    <!-- Title for the tabs item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_tabs_title_2">తెరిచివున్న ట్యాబులు</string>
+    <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
+    <string name="preferences_delete_browsing_data_tabs_subtitle">%d ట్యాబులు</string>
+
+    <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
+        number of history items the user has -->
+    <string name="preferences_delete_browsing_data_browsing_data_subtitle">%d చిరునామాలు</string>
+    <!-- Title for history items in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_browsing_history_title">చరిత్ర</string>
+    <!-- Subtitle for the history items in delete browsing data, parameter will be replaced with the
+        number of history pages the user has -->
+    <string name="preferences_delete_browsing_data_browsing_history_subtitle">%d పేజీలు</string>
+    <!-- Title for the cookies item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cookies">కుకీలు</string>
+
+    <!-- Text for the cancel button for the data deletion dialog -->
+    <string name="delete_browsing_data_prompt_cancel">రద్దుచేయి</string>
+
+    <!-- Text for the allow button for the data deletion dialog -->
+    <string name="delete_browsing_data_prompt_allow">తొలగించు</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
+    <string name="onboarding_close">మూసివేయి</string>
+
+    <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->
+    <string name="sign_out_cancel">రద్దుచేయి</string>
+
+    <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
+    <!-- Preference for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies">కుకీలు</string>
+
+    <!-- About page link text to open support link -->
+    <string name="about_support">తోడ్పాటు</string>
+    <!-- About page link text to open know your rights link -->
+    <string name="about_know_your_rights">మీ హక్కులు తెలుసుకోండి</string>
+    <!-- About page link text to open licensing information link -->
+    <string name="about_licensing_information">లైసెన్సింగ్ సమాచారం</string>
+
+    <!-- Content description of the tab counter toolbar button when one tab is open -->
+    <string name="tab_counter_content_description_one_tab">1 ట్యాబు</string>
+    <!-- Content description of the tab counter toolbar button when multiple tabs are open. First parameter will be replaced with the number of tabs (always more than one) -->
+    <string name="tab_counter_content_description_multi_tab">%d ట్యాబులు</string>
+
+    <!-- Cancel button text for the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_cancel">రద్దుచేయి</string>
+
+    <!-- Text for the menu button to delete a search engine -->
+    <string name="search_engine_delete">తొలగించు</string>
+
+    <!-- Login overflow menu delete button -->
+    <string name="login_menu_delete_button">తొలగించు</string>
+    <!-- Positive action of a dialog asking to delete  -->
+    <string name="dialog_delete_positive">తొలగించు</string>
+
+    <!-- Confirmation dialog button text when top sites limit is reached. -->
+    <string name="top_sites_max_limit_confirmation_button">సరే, అర్థమయ్యింది</string>
+
+</resources>

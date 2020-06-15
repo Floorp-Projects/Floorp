@@ -16,8 +16,6 @@
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="search_hint">Buscar o escribir dirección</string>
 
-    <!-- No Open Tabs Message Header -->
-    <string name="no_open_tabs_header_2">No hay pestañas abiertas</string>
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">Tus pestañas abiertas aparecerán aquí.</string>
 
@@ -106,8 +104,6 @@
     <string name="browser_menu_new_tab">Nueva pestaña</string>
     <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection_2">Guardar en la colección</string>
-    <!-- Browser menu button that opens a dialog to report issues with the current site -->
-    <string name="browser_menu_report_issue">Informar sobre este sitio</string>
     <!-- Browser menu button that open a share menu to share the current site -->
     <string name="browser_menu_share">Compartir</string>
     <!-- Share menu title, displayed when a user is sharing their current site -->
@@ -123,8 +119,10 @@
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="browser_menu_powered_by2">Desarrollado por %1$s</string>
 
-    <!-- Browser menu button to put the the current page in reader mode -->
+    <!-- Browser menu button to put the current page in reader mode -->
     <string name="browser_menu_read">Vista de lectura</string>
+    <!-- Browser menu button content description to close reader mode and return the user to the regular browser -->
+    <string name="browser_menu_read_close">Cerrar la vista de lectura</string>
     <!-- Browser menu button to open the current page in an external app -->
     <string name="browser_menu_open_app_link">Abrir en aplicación</string>
     <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
@@ -299,7 +297,7 @@
     <!-- Preference for syncing logins -->
     <string name="preferences_sync_logins">Inicios de sesión</string>
     <!-- Preference for syncing tabs -->
-    <string name="preferences_sync_tabs">Pestañas</string>
+    <string name="preferences_sync_tabs_2">Pestañas abiertas</string>
     <!-- Preference for signing out -->
     <string name="preferences_sign_out">Cerrar sesión</string>
     <!-- Preference displays and allows changing current FxA device name -->
@@ -459,6 +457,24 @@
     <string name="tabs_header_private_tabs_title">Pestañas privadas</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_tab">Agregar pestaña</string>
+    <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
+    <string name="add_private_tab">Añadir pestaña privada</string>
+    <!-- Text for the new tab button to indicate adding a new private tab in the tab -->
+    <string name="tab_drawer_fab_content">Privada</string>
+    <!-- Text shown as the title of the open tab tray -->
+    <string name="tab_tray_title">Pestañas abiertas</string>
+    <!-- Text shown in the menu for saving tabs to a collection -->
+    <string name="tab_tray_menu_item_save">Guardar en la colección</string>
+    <!-- Text shown in the menu for sharing all tabs -->
+    <string name="tab_tray_menu_item_share">Compartir todas las pestañas</string>
+    <!-- Text shown in the menu for closing all tabs -->
+    <string name="tab_tray_menu_item_close">Cerrar todas las pestañas</string>
+    <!-- Shortcut action to open new tab -->
+    <string name="tab_tray_menu_open_new_tab">Nueva pestaña</string>
+    <!-- Shortcut action to open the home screen -->
+    <string name="tab_tray_menu_home">Ir al inicio</string>
+    <!-- Shortcut action to toggle private mode -->
+    <string name="tab_tray_menu_toggle">Alternar modo de pestaña</string>
     <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
     <string name="remove_tab_from_collection">Eliminar pestaña de la colección</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
@@ -472,7 +488,7 @@
     <!-- Open tabs menu item to share all tabs -->
     <string name="tabs_menu_share_tabs">Compartir pestañas</string>
     <!-- Open tabs menu item to save tabs to collection -->
-    <string name="tabs_menu_save_to_collection">Guardar en colección</string>
+    <string name="tabs_menu_save_to_collection1">Guardar pestañas en la colección</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
     <string name="tab_menu">Menú de pestaña</string>
     <!-- Tab menu item to share the tab -->
@@ -689,17 +705,15 @@
     <string name="delete_browsing_data_quit_off">Desactivado</string>
 
     <!-- Collections -->
-    <!-- Label to describe what collections are to a new user without any collections -->
-    <string name="collections_description">Guarda las cosas que te importan. Para empezar, guarda las pestañas abiertas en una nueva colección.</string>
     <!-- Collections header on home fragment -->
     <string name="collections_header">Colecciones</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
     <string name="collection_menu_button_content_description">Menú de la colección</string>
-    <!-- No Open Tabs Message Header -->
-    <string name="no_collections_header">No hay colecciones</string>
-    <!-- No Open Tabs Message Description -->
-    <string name="no_collections_description">Tus colecciones te aparecerán aquí.</string>
 
+    <!-- No Open Tabs Message Header -->
+    <string name="no_collections_header1">Colecciona las cosas que te importan</string>
+    <!-- Label to describe what collections are to a new user without any collections -->
+    <string name="no_collections_description1">Agrupa búsquedas, sitios y pestañas similares para un acceso rápido más tarde.</string>
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">Seleccionar pestañas</string>
 
@@ -738,6 +752,9 @@
 
     <!-- Button to save currently selected tabs in the "select tabs" step of the collection creator-->
     <string name="create_collection_save">Guardar</string>
+
+    <!-- Snackbar action to view the collection the user just created or updated -->
+    <string name="create_collection_view">Ver</string>
 
     <!-- Default name for a new collection in "name new collection" step of the collection creator. %d is a placeholder for the number of collections-->
     <string name="create_collection_default_name">Colección %d</string>
@@ -922,8 +939,9 @@
     <!-- text for firefox preview moving tip description -->
     <string name="tip_firefox_preview_moved_description">Firefox Nightly se actualiza todas las noches y tiene nuevas funciones experimentales.
         Sin embargo, puede ser menos estable. Descarga nuestro navegador beta para una experiencia más estable.</string>
-    <!-- text for firefox preview moving tip button. "Mozilla Firefox Browser" is intentionally hardcoded -->
-    <string name="tip_firefox_preview_moved_button">Obtén el navegador Mozilla Firefox</string>
+
+    <!-- text for firefox preview moving tip button. "Firefox for Android Beta" is intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_button_2">Consigue Beta de Firefox para Android</string>
 
     <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_header_preview_installed">Firefox Nightly se ha trasladado</string>
@@ -978,20 +996,20 @@
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
     <string name="onboarding_firefox_account_automatic_signin_failed">Error al iniciar sesión</string>
     <!-- text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header">Protégete</string>
+    <string name="onboarding_tracking_protection_header_2">Privacidad automática</string>
     <!-- text for the tracking protection card description
     The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_tracking_protection_description1">%s ayuda a evitar que los sitios web te rastreen en línea.</string>
+    <string name="onboarding_tracking_protection_description_2">La configuración de privacidad y seguridad bloquea los rastreadores, los programas maliciosos y las compañías que te siguen.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
-    <string name="onboarding_tracking_protection_standard_button">Estándar</string>
+    <string name="onboarding_tracking_protection_standard_button_2">Estándar (predeterminado)</string>
     <!-- text for standard blocking option button description -->
-    <string name="onboarding_tracking_protection_standard_button_description">Bloquea menos rastreadores pero permite que las páginas carguen con normalidad</string>
+    <string name="onboarding_tracking_protection_standard_button_description_2">Bloquea menos rastreadores. Las páginas se cargarán con normalidad.</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">Estricta (recomendada)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">Estricto</string>
     <!-- text for strict blocking option button description -->
-    <string name="onboarding_tracking_protection_strict_button_description">Bloquea más rastreadores para una mejor protección y rendimiento, pero puede hacer que algunos sitios no funcionen correctamente</string>
+    <string name="onboarding_tracking_protection_strict_button_description_2">Bloquea más rastreadores, anuncios y ventanas emergentes. Las páginas se cargan más rápido, pero se puede perder cierta funcionalidad.</string>
     <!-- text for the toolbar position card header
         In English this is an idiom for "choose a side as in an argument or fight"
         but it is ok to make this more literally about "choosing a position in a physical space -->
@@ -1078,31 +1096,21 @@
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Leer más</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_option">Estándar</string>
-    <!-- Preference for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard">Estándar (recomendado)</string>
+    <string name="preference_enhanced_tracking_protection_standard_default_1">Estándar (predeterminado)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description">Equilibrio entre protección y rendimiento.</string>
-    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_2">Las páginas se cargarán como siempre, pero bloquearán menos rastreadores.</string>
+    <string name="preference_enhanced_tracking_protection_standard_description_3">Bloquea menos rastreadores. Las páginas se cargarán con normalidad.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Qué es lo que está bloqueado por la protección estándar contra el rastreo</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Estricto</string>
-    <!-- Preference for enhanced tracking protection for the strict protection settings, default setting -->
-    <string name="preference_enhanced_tracking_protection_strict_default">Estricto (predeterminado)</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_default_description">Protección contra rastreo mejorada y mayor rendimiento, pero puede que algunos sitios no funcionen correctamente.</string>
-    <!-- Preference for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_recommended">Estricto (recomendado)</string>
-    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description">Protege más, pero también puede provocar que algunos sitios o contenido dejen de funcionar.</string>
+    <string name="preference_enhanced_tracking_protection_strict_description_2">Bloquea más rastreadores, anuncios y ventanas emergentes. Las páginas se cargan más rápido, pero se puede perder cierta funcionalidad.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Qué es lo que está bloqueado por la protección estricta contra el rastreo </string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom">Personalizado</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_custom_description">Elige qué rastreadores y secuencias de comandos bloquear</string>
+    <string name="preference_enhanced_tracking_protection_custom_description_2">Elige qué rastreadores y secuencias de comandos bloquear.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_custom_info_button">Esto es lo que está bloqueado por la protección de rastreo estándar</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
@@ -1153,7 +1161,7 @@
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_description">Bloquea la carga de anuncios externos, vídeos y contenido que contenga código de rastreo. Puede afectar a la funcionalidad del sitio web.</string>
     <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="etp_onboarding_message_2">Cuando el escudo es morado, %s está bloqueando rastreadores en ese sitio. Toca para ver qué ha sido bloqueado.</string>
+    <string name="etp_onboarding_cfr_message">Cada vez que el escudo está de color morado, %s ha bloqueado rastreadores en un sitio. Toca para más información.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">Las protecciones están activadas para este sitio</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
@@ -1441,6 +1449,9 @@
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
     <string name="voice_search_explainer">Habla ahora</string>
 
+    <!--  The error message in edit login view when a duplicate username exists. -->
+    <string name="saved_login_duplicate">Ya existe un inicio de sesión con ese nombre de usuario</string>
+
     <!-- Synced Tabs -->
     <!-- Text displayed when user is not logged into a Firefox Account -->
     <string name="synced_tabs_connect_to_sync_account">Conectarse con una cuenta de Firefox.</string>
@@ -1450,5 +1461,15 @@
     <string name="synced_tabs_reauth">Por favor, vuelve a autentificarte.</string>
     <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->
     <string name="synced_tabs_enable_tab_syncing">Por favor, activa la sincronización de pestañas.</string>
+
+    <!-- Text displayed when user has no tabs that have been synced -->
+    <string name="synced_tabs_no_tabs">No tienes ninguna pestaña abierta en Firefox en tus otros dispositivos.</string>
+    <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
+    <string name="synced_tabs_sign_in_message">Ver una lista de pestañas de tus otros dispositivos.</string>
+    <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
+    <string name="synced_tabs_sign_in_button">Inicia sesión para sincronizar</string>
+
+    <!-- Confirmation dialog button text when top sites limit is reached. -->
+    <string name="top_sites_max_limit_confirmation_button">Vale, entendido</string>
 
 </resources>

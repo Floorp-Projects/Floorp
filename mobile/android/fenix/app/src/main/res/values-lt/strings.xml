@@ -14,13 +14,16 @@
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="search_hint">Ieškokite arba įveskite adresą</string>
 
-    <!-- No Open Tabs Message Header -->
-    <string name="no_open_tabs_header_2">Nėra atvertų kortelių</string>
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">Čia bus rodomos jūsų atvertos kortelės.</string>
 
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">Čia bus rodomos jūsų privačiosios kortelės.</string>
+
+    <!-- Message announced to the user when tab tray is selected with 1 tab -->
+    <string name="open_tab_tray_single">1 atverta kortelė. Bakstelėkite, norėdami pereiti tarp kortelių.</string>
+    <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
+    <string name="open_tab_tray_plural">%1$s atvertos kortelės. Bakstelėkite, norėdami pereiti tarp kortelių.</string>
 
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">„%1$s“ kūrėjai yra „Mozilla“.</string>
@@ -105,8 +108,6 @@
     <string name="browser_menu_new_tab">Nauja kortelė</string>
     <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection_2">Įtraukti į rinkinį</string>
-    <!-- Browser menu button that opens a dialog to report issues with the current site -->
-    <string name="browser_menu_report_issue">Pranešti apie svetainės problemą</string>
     <!-- Browser menu button that open a share menu to share the current site -->
     <string name="browser_menu_share">Dalintis</string>
     <!-- Share menu title, displayed when a user is sharing their current site -->
@@ -120,8 +121,10 @@
     <!-- Browser menu text shown in custom tabs to indicate this is a Fenix tab
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="browser_menu_powered_by2">Veikia su „%1$s“</string>
-    <!-- Browser menu button to put the the current page in reader mode -->
+    <!-- Browser menu button to put the current page in reader mode -->
     <string name="browser_menu_read">Skaitymo rodinys</string>
+    <!-- Browser menu button content description to close reader mode and return the user to the regular browser -->
+    <string name="browser_menu_read_close">Išjungti skaitymo rodinį</string>
     <!-- Browser menu button to open the current page in an external app -->
     <string name="browser_menu_open_app_link">Atverti programoje</string>
     <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
@@ -295,7 +298,7 @@
     <!-- Preference for syncing logins -->
     <string name="preferences_sync_logins">Prisijungimai</string>
     <!-- Preference for syncing tabs -->
-    <string name="preferences_sync_tabs">Kortelės</string>
+    <string name="preferences_sync_tabs_2">Atvertos kortelės</string>
     <!-- Preference for signing out -->
     <string name="preferences_sign_out">Atsijungti</string>
     <!-- Preference displays and allows changing current FxA device name -->
@@ -453,6 +456,24 @@
     <string name="tabs_header_private_tabs_title">Privačios kortelės</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_tab">Pridėti kortelę</string>
+    <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
+    <string name="add_private_tab">Pridėti privačiąją kortelę</string>
+    <!-- Text for the new tab button to indicate adding a new private tab in the tab -->
+    <string name="tab_drawer_fab_content">Privačioji</string>
+    <!-- Text shown as the title of the open tab tray -->
+    <string name="tab_tray_title">Atvertos kortelės</string>
+    <!-- Text shown in the menu for saving tabs to a collection -->
+    <string name="tab_tray_menu_item_save">Įtraukti į rinkinį</string>
+    <!-- Text shown in the menu for sharing all tabs -->
+    <string name="tab_tray_menu_item_share">Dalintis visomis kortelėmis</string>
+    <!-- Text shown in the menu for closing all tabs -->
+    <string name="tab_tray_menu_item_close">Užverti visas korteles</string>
+    <!-- Shortcut action to open new tab -->
+    <string name="tab_tray_menu_open_new_tab">Nauja kortelė</string>
+    <!-- Shortcut action to open the home screen -->
+    <string name="tab_tray_menu_home">Eiti į pradžią</string>
+    <!-- Shortcut action to toggle private mode -->
+    <string name="tab_tray_menu_toggle">Keisti kortelių veikseną</string>
     <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
     <string name="remove_tab_from_collection">Pašalinti kortelę iš rinkinio</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
@@ -466,7 +487,7 @@
     <!-- Open tabs menu item to share all tabs -->
     <string name="tabs_menu_share_tabs">Dalintis kortelėmis</string>
     <!-- Open tabs menu item to save tabs to collection -->
-    <string name="tabs_menu_save_to_collection">Įtraukti į rinkinį</string>
+    <string name="tabs_menu_save_to_collection1">Įtraukti korteles į rinkinį</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
     <string name="tab_menu">Kortelės meniu</string>
     <!-- Tab menu item to share the tab -->
@@ -680,16 +701,14 @@
     <string name="delete_browsing_data_quit_off">Išjungta</string>
 
     <!-- Collections -->
-    <!-- Label to describe what collections are to a new user without any collections -->
-    <string name="collections_description">Išsaugokite jums svarbius dalykus. Norėdami pradėti, įtraukite atvertas korteles į naują rinkinį.</string>
     <!-- Collections header on home fragment -->
     <string name="collections_header">Rinkiniai</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
     <string name="collection_menu_button_content_description">Rinkinių meniu</string>
     <!-- No Open Tabs Message Header -->
-    <string name="no_collections_header">Rinkinių nėra</string>
-    <!-- No Open Tabs Message Description -->
-    <string name="no_collections_description">Čia bus rodomi jūsų rinkiniai.</string>
+    <string name="no_collections_header1">Kaupkite jums svarbius dalykus</string>
+    <!-- Label to describe what collections are to a new user without any collections -->
+    <string name="no_collections_description1">Sugrupuokite panašias paieškas, svetaines, ir korteles patogesniam pasiekimui.</string>
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">Pasirinkite korteles</string>
     <!-- Title for the "select collection" step of the collection creator -->
@@ -719,6 +738,9 @@
     <string name="create_collection_close">Užverti</string>
     <!-- Button to save currently selected tabs in the "select tabs" step of the collection creator-->
     <string name="create_collection_save">Įrašyti</string>
+
+    <!-- Snackbar action to view the collection the user just created or updated -->
+    <string name="create_collection_view">Peržiūrėti</string>
 
     <!-- Default name for a new collection in "name new collection" step of the collection creator. %d is a placeholder for the number of collections-->
     <string name="create_collection_default_name">Rinkinys %d</string>
@@ -896,8 +918,9 @@
     <!-- text for firefox preview moving tip description -->
     <string name="tip_firefox_preview_moved_description">„Firefox Nightly“ yra atnaujinama kiekvieną naktį ir turi naujų bandomųjų funkcijų.
         Dėl to ji gali būti mažiau stabili. Atsisiųskite mūsų „beta“ naršyklę, jeigu norite stabilesnio veikimo.</string>
-    <!-- text for firefox preview moving tip button. "Mozilla Firefox Browser" is intentionally hardcoded -->
-    <string name="tip_firefox_preview_moved_button">Atsisiųsti „Mozilla Firefox“ naršyklę</string>
+
+    <!-- text for firefox preview moving tip button. "Firefox for Android Beta" is intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_button_2">Gaukite „Firefox Beta“, skirtą „Android“</string>
 
     <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_header_preview_installed">„Firefox Nightly“ pasikeitė</string>
@@ -951,22 +974,22 @@
     <string name="onboarding_firefox_account_sync_is_on">„Sync“ įjungta</string>
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
     <string name="onboarding_firefox_account_automatic_signin_failed">Nepavyko prisijungti</string>
+
     <!-- text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header">Apsaugokite save</string>
+    <string name="onboarding_tracking_protection_header_2">Automatinis privatumas</string>
     <!-- text for the tracking protection card description
     The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_tracking_protection_description1">„%s“ padeda neleisti svetainėms sekti jūsų naršymo.</string>
-
+    <string name="onboarding_tracking_protection_description_2">Privatumo ir saugumo nuostatos blokuoja stebėjimo elementus, kenkėjiškas programas, ir jus sekančias kompanijas.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
-    <string name="onboarding_tracking_protection_standard_button">Įprastinė</string>
+    <string name="onboarding_tracking_protection_standard_button_2">Standartinė (numatytoji)</string>
     <!-- text for standard blocking option button description -->
-    <string name="onboarding_tracking_protection_standard_button_description">Blokuoja mažiau stebėjimo elementų, tačiau leidžia įprastai įkelti tinklalapius</string>
+    <string name="onboarding_tracking_protection_standard_button_description_2">Blokuoja mažiau stebėjimo elementų. Tinklalapiai bus įkeliami įprastai.</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">Griežta (rekomenduojama)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">Griežta</string>
     <!-- text for strict blocking option button description -->
-    <string name="onboarding_tracking_protection_strict_button_description">Blokuoja daugiau stebėjimo elementų dėl geresnės apsaugos ir našumo, tačiau gali sutrikti kai kurių svetainių veikimas</string>
+    <string name="onboarding_tracking_protection_strict_button_description_2">Blokuoja daugiau stebėjimo elementų, reklamų, ir iššokančių langų. Tinklalapiai bus įkeliami sparčiau, tačiau gali sutrikti jų veikimas.</string>
     <!-- text for the toolbar position card header
         In English this is an idiom for "choose a side as in an argument or fight"
         but it is ok to make this more literally about "choosing a position in a physical space -->
@@ -1054,31 +1077,21 @@
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Sužinoti daugiau</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_option">Įprastinė</string>
-    <!-- Preference for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard">Įprastinė (rekomenduojama)</string>
+    <string name="preference_enhanced_tracking_protection_standard_default_1">Standartinė (numatytoji)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description">Subalansuota apsauga ir našumas.</string>
-    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_2">Tinklalapiai bus įkeliami įprastai, tačiau bus blokuojama mažiau stebėjimo elementų.</string>
+    <string name="preference_enhanced_tracking_protection_standard_description_3">Blokuoja mažiau stebėjimo elementų. Tinklalapiai bus įkeliami įprastai.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Ką blokuoja numatytoji apsauga nuo stebėjimo</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Griežta</string>
-    <!-- Preference for enhanced tracking protection for the strict protection settings, default setting -->
-    <string name="preference_enhanced_tracking_protection_strict_default">Griežta (numatytoji)</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_default_description">Stipresnė apsauga nuo stebėjimo ir spartesnis našumas, tačiau gali sutrikti kai kurių svetainių veikimas.</string>
-    <!-- Preference for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_recommended">Griežta (rekomenduojama)</string>
-    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description">Stipresnė apsauga, tačiau gali sutrikti kai kurių svetainių veikimas.</string>
+    <string name="preference_enhanced_tracking_protection_strict_description_2">Blokuoja daugiau stebėjimo elementų, reklamų, ir iššokančių langų. Tinklalapiai bus įkeliami sparčiau, tačiau gali sutrikti jų veikimas.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Ką blokuoja griežta apsauga nuo stebėjimo</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom">Kita</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_custom_description">Pasirinkite, kurie stebėjimo elementai ir scenarijai bus blokuojami</string>
+    <string name="preference_enhanced_tracking_protection_custom_description_2">Pasirinkite, kurios stebėjimo elementus ir scenarijus norite blokuoti.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_custom_info_button">Ką blokuoja pasirinktinė apsauga nuo stebėjimo</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
@@ -1129,7 +1142,7 @@
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_description">Blokuoja išorinių reklamų, vaizdų, ir kito stebėjimui skirto turinio įkėlimą. Gali sutrikti svetainių funkcionalumas.</string>
     <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="etp_onboarding_message_2">„%s“ šioje svetainėje stebėjimo elementus blokuoja tada, kai skydas yra violetinis. Bakstelėję jį pamatysite, kas blokuojama.</string>
+    <string name="etp_onboarding_cfr_message">Kai matote violetinį skydą, „%s“ svetainėje blokuoja stebėjimo elementus. Spustelėkite, norėdami sužinoti daugiau.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">Apsaugos šioje svetainėje ĮJUNGTOS</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
@@ -1420,6 +1433,9 @@
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
     <string name="voice_search_explainer">Kalbėkite dabar</string>
 
+    <!--  The error message in edit login view when a duplicate username exists. -->
+    <string name="saved_login_duplicate">Prisijungimas su tokiu naudotojo vardu jau yra</string>
+
     <!-- Synced Tabs -->
     <!-- Text displayed when user is not logged into a Firefox Account -->
     <string name="synced_tabs_connect_to_sync_account">Prisijunkite su „Firefox“ paskyra.</string>
@@ -1429,5 +1445,20 @@
     <string name="synced_tabs_reauth">Prisijunkite iš naujo.</string>
     <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->
     <string name="synced_tabs_enable_tab_syncing">Įjunkite kortelių sinchronizavimą.</string>
+
+    <!-- Text displayed when user has no tabs that have been synced -->
+    <string name="synced_tabs_no_tabs">Kituose savo įrenginiuose su „Firefox“ neturite atvertų kortelių.</string>
+    <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
+    <string name="synced_tabs_sign_in_message">Peržiūrėkite kituose įrenginiuose esančias korteles.</string>
+    <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
+    <string name="synced_tabs_sign_in_button">Prisijungti prie „Sync“</string>
+
+    <!-- Top Sites -->
+    <!-- Title text displayed in the dialog when top sites limit is reached. -->
+    <string name="top_sites_max_limit_title">Pasiekta lankomiausių svetainių riba</string>
+    <!-- Content description text displayed in the dialog when top sites limit is reached. -->
+    <string name="top_sites_max_limit_content">Norėdami pridėti naują lankomą svetainę, pašalinkite esamą. Palaikykite nuspaudę ant svetainės, ir pasirinkite „pašalinti“.</string>
+    <!-- Confirmation dialog button text when top sites limit is reached. -->
+    <string name="top_sites_max_limit_confirmation_button">Gerai, supratau</string>
 
 </resources>

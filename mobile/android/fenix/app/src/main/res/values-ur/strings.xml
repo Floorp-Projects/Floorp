@@ -22,6 +22,9 @@
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">آپ کے نجی ٹیبز یہاں دکھائے جائیں گے۔</string>
 
+    <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
+    <string name="about_content">%1$s ءMozilla کے ذریعہ تیار کیا گیا ہے۔</string>
+
     <!-- Private Browsing -->
     <!-- Title for private session option -->
     <string name="private_browsing_title">آپ ایک نجی سیشن میں ہیں</string>
@@ -37,6 +40,9 @@
     <!-- Text for the negative button -->
     <string name="cfr_neg_button_text">نہیں شکریہ</string>
 
+    <!-- Search widget "contextual feature recommendation" (CFR) -->
+    <!-- Text for the main message. 'Firefox' intentionally hardcoded here.-->
+    <string name="search_widget_cfr_message">Firefox تیزی سے کھولیں۔ اپنے ہوم اسکرین پر ایک ویجیٹ جوڑیں۔</string>
     <!-- Text for the positive button -->
     <string name="search_widget_cfr_pos_button_text">ویجیٹ شامل کریں</string>
     <!-- Text for the negative button -->
@@ -110,11 +116,17 @@
     <string name="browser_menu_powered_by2">ان کے ذریعہ %1$s</string>
     <!-- Browser menu button to put the current page in reader mode -->
     <string name="browser_menu_read">مطالعہ موڈ</string>
+    <!-- Browser menu button content description to close reader mode and return the user to the regular browser -->
+    <string name="browser_menu_read_close">ریڈر ویو بند کریں</string>
     <!-- Browser menu button to open the current page in an external app -->
     <string name="browser_menu_open_app_link">ایپ میں کھولیں</string>
 
     <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
     <string name="browser_menu_read_appearance">ظاہرى شکل</string>
+
+    <!-- Error message to show when the user tries to access a scheme not
+        handled by the app (Ex: blob, tel etc) -->
+    <string name="unknown_scheme_error_message">رابطہ قائم کرنے میں ناکام رہا۔ ناقابل شناخت URL اسکیم۔</string>
 
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
@@ -212,6 +224,10 @@
     <string name="preferences_accessibility">رسائی پزیری</string>
     <!-- Preference to override the Firefox Account server -->
     <string name="preferences_override_fxa_server">مخصوص Firefox Account سرور</string>
+    <!-- Preference to override the Sync token server -->
+    <string name="preferences_override_sync_tokenserver">منپسند سنک سرور</string>
+    <!-- Toast shown after updating the FxA/Sync server override preferences -->
+    <string name="toast_override_fxa_sync_server_done">Firefox Account/Sync سرور بدل دیا گیا۔ تبدیلیاں لاگو کرنے کے لیے ایپلیکیشن کو بند کیا جا رہا ہے…</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">اکائونٹ</string>
     <!-- Preference shown on banner to sign into account -->
@@ -244,6 +260,8 @@
     <string name="preferences_show_search_shortcuts">تلاش کے شارٹکٹس دکھائیں</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">تلاش تجاویز دکھائیں</string>
+    <!-- Preference title for switch preference to show voice search button -->
+    <string name="preferences_show_voice_search">آواز سے تلاش دکھائیں</string>
     <!-- Preference title for switch preference to show search suggestions also in private mode -->
     <string name="preferences_show_search_suggestions_in_private">نجی سیشن میں دکھائیں</string>
     <!-- Preference title for switch preference to show a clipboard suggestion when searching -->
@@ -429,6 +447,8 @@
     <string name="tabs_header_private_tabs_title">نجی ٹیبس</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_tab">ٹيب کا اضافہ کريں</string>
+    <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
+    <string name="add_private_tab">نجی ٹیب شامل کریں</string>
     <!-- Text for the new tab button to indicate adding a new private tab in the tab -->
     <string name="tab_drawer_fab_content">نجی</string>
     <!-- Text shown as the title of the open tab tray -->
@@ -441,6 +461,12 @@
     <string name="tab_tray_menu_item_close">تمام ٹیب بند کریں</string>
     <!-- Shortcut action to open new tab -->
     <string name="tab_tray_menu_open_new_tab">نیا ٹیب</string>
+    <!-- Shortcut action to open the home screen -->
+    <string name="tab_tray_menu_home">ہوم پے جائیں</string>
+    <!-- Shortcut action to toggle private mode -->
+    <string name="tab_tray_menu_toggle">ٹیب موڈ ٹوگل کریں</string>
+    <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
+    <string name="remove_tab_from_collection">مجموعہ سے ٹیب کو ہٹا دیں</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
     <string name="close_tab">ٹیب بند کر دیں</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab <title> button. First parameter is tab title  -->
@@ -708,6 +734,9 @@
     <!-- Button to save currently selected tabs in the "select tabs" step of the collection creator-->
     <string name="create_collection_save">محفوظ کریں</string>
 
+    <!-- Snackbar action to view the collection the user just created or updated -->
+    <string name="create_collection_view">‏‏دکھائیں</string>
+
     <!-- Default name for a new collection in "name new collection" step of the collection creator. %d is a placeholder for the number of collections-->
     <string name="create_collection_default_name">%d کا مجموعہ</string>
 
@@ -915,6 +944,8 @@
     <string name="onboarding_firefox_account_sync_is_on">Sync چالو ہے</string>
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
     <string name="onboarding_firefox_account_automatic_signin_failed">سائن ان کرنے میں ناکام</string>
+    <!-- text for tracking protection radio button option for standard level of blocking -->
+    <string name="onboarding_tracking_protection_standard_button_2">معیاری (پہلے سے طے شدہ)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">سخت (سفارش شدا)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
@@ -986,6 +1017,8 @@
     <string name="preference_enhanced_tracking_protection_explanation_title">بغیر پیروی کیے براؤز کریں</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">مزید سیکھیں</string>
+    <!-- Preference for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_default_1">معیاری (پہلے سے طے شدہ)</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">معیاری سراغ کاری تحفظ کے ذریعہ کیا مسدود ہے</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
@@ -1195,6 +1228,9 @@
     <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
     <string name="saved_logins_sort_strategy_last_used">آخری استعمال</string>
 
+    <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description">لاگ ان مینو کو ترتیب دیں</string>
+
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">تلاش انجن شامل کریں</string>
     <!-- Title of the Edit search engine screen -->
@@ -1311,4 +1347,7 @@
     <string name="synced_tabs_connect_another_device">ایک اور آلہ جوڑیں۔</string>
     <!-- Text displayed asking user to re-authenticate -->
     <string name="synced_tabs_reauth">برائے مہربانی دوبارہ توثیق کریں۔</string>
-    </resources>
+    <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->
+    <string name="synced_tabs_enable_tab_syncing">براہ کرم ٹیب sync کو فعال کریں۔</string>
+
+</resources>

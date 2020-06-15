@@ -14,13 +14,16 @@
     <string name="content_description_disable_private_browsing_button">Tắt duyệt web riêng tư</string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="search_hint">Tìm kiếm hoặc nhập địa chỉ</string>
-    <!-- No Open Tabs Message Header -->
-    <string name="no_open_tabs_header_2">Không có thẻ đang mở</string>
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">Các thẻ đang mở của bạn sẽ được hiển thị ở đây.</string>
 
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">Các thẻ riêng tư của bạn sẽ được hiển thị ở đây.</string>
+
+    <!-- Message announced to the user when tab tray is selected with 1 tab -->
+    <string name="open_tab_tray_single">1 thẻ đang mở. Chạm để chuyển thẻ.</string>
+    <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
+    <string name="open_tab_tray_plural">%1$s thẻ đang mở. Chạm để chuyển thẻ.</string>
 
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s được sản xuất bởi Mozilla.</string>
@@ -106,8 +109,6 @@
     <string name="browser_menu_new_tab">Thẻ mới</string>
     <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection_2">Lưu vào bộ sưu tập</string>
-    <!-- Browser menu button that opens a dialog to report issues with the current site -->
-    <string name="browser_menu_report_issue">Báo cáo vấn đề về trang</string>
     <!-- Browser menu button that open a share menu to share the current site -->
     <string name="browser_menu_share">Chia sẻ</string>
     <!-- Share menu title, displayed when a user is sharing their current site -->
@@ -121,8 +122,10 @@
     <!-- Browser menu text shown in custom tabs to indicate this is a Fenix tab
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="browser_menu_powered_by2">Được hỗ trợ bởi %1$s</string>
-    <!-- Browser menu button to put the the current page in reader mode -->
+    <!-- Browser menu button to put the current page in reader mode -->
     <string name="browser_menu_read">Chế độ đọc sách</string>
+    <!-- Browser menu button content description to close reader mode and return the user to the regular browser -->
+    <string name="browser_menu_read_close">Đóng chế độ đọc sách</string>
     <!-- Browser menu button to open the current page in an external app -->
     <string name="browser_menu_open_app_link">Mở trong ứng dụng</string>
     <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
@@ -293,7 +296,7 @@
     <!-- Preference for syncing logins -->
     <string name="preferences_sync_logins">Đăng nhập</string>
     <!-- Preference for syncing tabs -->
-    <string name="preferences_sync_tabs">Thẻ</string>
+    <string name="preferences_sync_tabs_2">Các thẻ đang mở</string>
     <!-- Preference for signing out -->
     <string name="preferences_sign_out">Đăng xuất</string>
     <!-- Preference displays and allows changing current FxA device name -->
@@ -448,6 +451,24 @@
     <string name="tabs_header_private_tabs_title">Các thẻ riêng tư</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_tab">Thêm thẻ</string>
+    <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
+    <string name="add_private_tab">Thêm thẻ riêng tư</string>
+    <!-- Text for the new tab button to indicate adding a new private tab in the tab -->
+    <string name="tab_drawer_fab_content">Riêng tư</string>
+    <!-- Text shown as the title of the open tab tray -->
+    <string name="tab_tray_title">Các thẻ đang mở</string>
+    <!-- Text shown in the menu for saving tabs to a collection -->
+    <string name="tab_tray_menu_item_save">Lưu vào bộ sưu tập</string>
+    <!-- Text shown in the menu for sharing all tabs -->
+    <string name="tab_tray_menu_item_share">Chia sẻ tất cả các thẻ</string>
+    <!-- Text shown in the menu for closing all tabs -->
+    <string name="tab_tray_menu_item_close">Đóng tất cả các thẻ</string>
+    <!-- Shortcut action to open new tab -->
+    <string name="tab_tray_menu_open_new_tab">Thẻ mới</string>
+    <!-- Shortcut action to open the home screen -->
+    <string name="tab_tray_menu_home">Đi đến trang chủ</string>
+    <!-- Shortcut action to toggle private mode -->
+    <string name="tab_tray_menu_toggle">Chuyển đổi chế độ thẻ</string>
     <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
     <string name="remove_tab_from_collection">Xóa thẻ khỏi bộ sưu tập</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
@@ -461,7 +482,7 @@
     <!-- Open tabs menu item to share all tabs -->
     <string name="tabs_menu_share_tabs">Chia sẻ các thẻ</string>
     <!-- Open tabs menu item to save tabs to collection -->
-    <string name="tabs_menu_save_to_collection">Lưu vào bộ sưu tập</string>
+    <string name="tabs_menu_save_to_collection1">Lưu các thẻ vào bộ sưu tập</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
     <string name="tab_menu">Menu thẻ</string>
     <!-- Tab menu item to share the tab -->
@@ -673,16 +694,14 @@
     <string name="delete_browsing_data_quit_off">Tắt</string>
 
     <!-- Collections -->
-    <!-- Label to describe what collections are to a new user without any collections -->
-    <string name="collections_description">Thu thập những thứ quan trọng với bạn. Để bắt đầu, lưu các thẻ đang mở vào một bộ sưu tập mới.</string>
     <!-- Collections header on home fragment -->
     <string name="collections_header">Bộ sưu tập</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
     <string name="collection_menu_button_content_description">Menu bộ sưu tập</string>
     <!-- No Open Tabs Message Header -->
-    <string name="no_collections_header">Không có bộ sưu tập</string>
-    <!-- No Open Tabs Message Description -->
-    <string name="no_collections_description">Bộ sưu tập của bạn sẽ được hiển thị ở đây.</string>
+    <string name="no_collections_header1">Thu thập những thứ quan trọng với bạn</string>
+    <!-- Label to describe what collections are to a new user without any collections -->
+    <string name="no_collections_description1">Nhóm các tìm kiếm, trang web và thẻ tương tự để truy cập nhanh sau này.</string>
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">Chọn các thẻ</string>
     <!-- Title for the "select collection" step of the collection creator -->
@@ -711,6 +730,9 @@
     <string name="create_collection_close">Đóng</string>
     <!-- Button to save currently selected tabs in the "select tabs" step of the collection creator-->
     <string name="create_collection_save">Lưu</string>
+
+    <!-- Snackbar action to view the collection the user just created or updated -->
+    <string name="create_collection_view">Xem</string>
 
     <!-- Default name for a new collection in "name new collection" step of the collection creator. %d is a placeholder for the number of collections-->
     <string name="create_collection_default_name">Bộ sưu tập %d</string>
@@ -884,8 +906,9 @@
     <!-- text for firefox preview moving tip description -->
     <string name="tip_firefox_preview_moved_description">Firefox Nightly được cập nhật mỗi đêm và có các tính năng mới thử nghiệm.
         Tuy nhiên, nó có thể kém ổn định hơn. Tải xuống trình duyệt beta của chúng tôi để có trải nghiệm ổn định hơn.</string>
-    <!-- text for firefox preview moving tip button. "Mozilla Firefox Browser" is intentionally hardcoded -->
-    <string name="tip_firefox_preview_moved_button">Tải trình duyệt Mozilla Firefox</string>
+
+    <!-- text for firefox preview moving tip button. "Firefox for Android Beta" is intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_button_2">Tải Firefox Beta dành cho Android</string>
 
     <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_header_preview_installed">Firefox Nightly đã di chuyển</string>
@@ -939,20 +962,20 @@
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
     <string name="onboarding_firefox_account_automatic_signin_failed">Không thể đăng nhập</string>
     <!-- text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header">Tự bảo vệ mình</string>
+    <string name="onboarding_tracking_protection_header_2">Bảo mật tự động</string>
     <!-- text for the tracking protection card description
     The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_tracking_protection_description1">%s giúp ngăn các trang web theo dõi bạn trực tuyến.</string>
+    <string name="onboarding_tracking_protection_description_2">Cài đặt riêng tư và bảo mật chặn trình theo dõi, phần mềm độc hại và các công ty theo dõi bạn.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
-    <string name="onboarding_tracking_protection_standard_button">Tiêu chuẩn</string>
+    <string name="onboarding_tracking_protection_standard_button_2">Tiêu chuẩn (mặc định)</string>
     <!-- text for standard blocking option button description -->
-    <string name="onboarding_tracking_protection_standard_button_description">Chặn ít trình theo dõi hơn nhưng cho phép các trang tải bình thường</string>
+    <string name="onboarding_tracking_protection_standard_button_description_2">Chặn trình theo dõi ít hơn. Các trang sẽ tải bình thường.</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">Nghiêm ngặt (được khuyến nghị)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">Nghiêm ngặt</string>
     <!-- text for strict blocking option button description -->
-    <string name="onboarding_tracking_protection_strict_button_description">Chặn nhiều trình theo dõi hơn để bảo vệ và hiệu suất tốt hơn, nhưng có thể khiến một số trang web không hoạt động đúng</string>
+    <string name="onboarding_tracking_protection_strict_button_description_2">Chặn nhiều trình theo dõi, quảng cáo và cửa sổ bật lên. Các trang tải nhanh hơn, nhưng một số chức năng có thể không hoạt động.</string>
     <!-- text for the toolbar position card header
         In English this is an idiom for "choose a side as in an argument or fight"
         but it is ok to make this more literally about "choosing a position in a physical space -->
@@ -1040,31 +1063,21 @@
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Tìm hiểu thêm</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_option">Tiêu chuẩn</string>
-    <!-- Preference for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard">Tiêu chuẩn (được khuyến nghị)</string>
+    <string name="preference_enhanced_tracking_protection_standard_default_1">Tiêu chuẩn (mặc định)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description">Cân bằng để bảo vệ và hiệu suất.</string>
-    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_2">Các trang sẽ tải bình thường, nhưng chặn ít trình theo dõi hơn.</string>
+    <string name="preference_enhanced_tracking_protection_standard_description_3">Chặn trình theo dõi ít hơn. Các trang sẽ tải bình thường.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Những gì bị chặn bởi trình chống theo dõi tiêu chuẩn</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Nghiêm ngặt</string>
-    <!-- Preference for enhanced tracking protection for the strict protection settings, default setting -->
-    <string name="preference_enhanced_tracking_protection_strict_default">Nghiêm ngặt (Mặc định)</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_default_description">Trình chống theo dõi mạnh mẽ hơn và hiệu suất nhanh hơn, nhưng một số trang web có thể không hoạt động đúng.</string>
-    <!-- Preference for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_recommended">Nghiêm ngặt (được khuyến nghị)</string>
-    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description">Bảo vệ mạnh mẽ hơn, nhưng có thể khiến một số trang web và nội dung bị phá vỡ.</string>
+    <string name="preference_enhanced_tracking_protection_strict_description_2">Chặn nhiều trình theo dõi, quảng cáo và cửa sổ bật lên. Các trang tải nhanh hơn, nhưng một số chức năng có thể không hoạt động.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Những gì bị chặn bởi trình chống theo dõi nghiêm ngặt</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom">Tùy chỉnh</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_custom_description">Chọn trình theo dõi và tập lệnh để chặn</string>
+    <string name="preference_enhanced_tracking_protection_custom_description_2">Chọn trình theo dõi và tập lệnh để chặn.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_custom_info_button">Những gì bị chặn bởi trình chống theo dõi tùy chỉnh</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
@@ -1114,7 +1127,7 @@
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_description">Dừng quảng cáo bên ngoài, video và nội dung khác từ tải có chứa mã theo dõi. Có thể ảnh hưởng đến một số chức năng trang web.</string>
     <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="etp_onboarding_message_2">%s đang chặn trình theo dõi trên trang web này khi lá chắn có màu tím. Chạm vào đó để xem những gì bị chặn.</string>
+    <string name="etp_onboarding_cfr_message">Mỗi khi tấm khiên có màu tím, %s đã chặn trình theo dõi trên một trang web. Chạm để biết thêm.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">Bảo vệ đã BẬT cho trang web này</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
@@ -1397,6 +1410,9 @@
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
     <string name="voice_search_explainer">Nói bây giờ</string>
 
+    <!--  The error message in edit login view when a duplicate username exists. -->
+    <string name="saved_login_duplicate">Một thông tin đăng nhập với tên người dùng đó đã tồn tại</string>
+
     <!-- Synced Tabs -->
     <!-- Text displayed when user is not logged into a Firefox Account -->
     <string name="synced_tabs_connect_to_sync_account">Kết nối với tài khoản Firefox.</string>
@@ -1406,5 +1422,14 @@
     <string name="synced_tabs_reauth">Vui lòng xác thực lại.</string>
     <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->
     <string name="synced_tabs_enable_tab_syncing">Vui lòng kích hoạt đồng bộ hóa thẻ.</string>
+    <!-- Text displayed when user has no tabs that have been synced -->
+    <string name="synced_tabs_no_tabs">Bạn không có bất kỳ thẻ nào mở trong Firefox trên các thiết bị khác của bạn.</string>
+    <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
+    <string name="synced_tabs_sign_in_message">Xem danh sách các thẻ từ các thiết bị khác của bạn.</string>
+    <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
+    <string name="synced_tabs_sign_in_button">Đăng nhập vào đồng bộ hóa</string>
 
-</resources>
+    <!-- Top Sites -->
+    <!-- Title text displayed in the dialog when top sites limit is reached. -->
+    <string name="top_sites_max_limit_title">Đã đạt đến giới hạn trang web hàng đầu</string>
+    </resources>

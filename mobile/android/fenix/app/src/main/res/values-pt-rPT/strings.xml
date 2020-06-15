@@ -14,13 +14,16 @@
     <string name="content_description_disable_private_browsing_button">Desativar navegação privada</string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="search_hint">Pesquise ou insira o endereço</string>
-    <!-- No Open Tabs Message Header -->
-    <string name="no_open_tabs_header_2">Sem separadores abertos</string>
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">Os seus separadores abertos serão mostrados aqui.</string>
 
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">Os seus separadores privados serão mostrados aqui.</string>
+
+    <!-- Message announced to the user when tab tray is selected with 1 tab -->
+    <string name="open_tab_tray_single">1 separador aberto. Toque para mudar de separador.</string>
+    <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
+    <string name="open_tab_tray_plural">%1$s separadores abertos. Toque para mudar de separador.</string>
 
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s é criado pela Mozilla.</string>
@@ -293,7 +296,7 @@
     <!-- Preference for syncing logins -->
     <string name="preferences_sync_logins">Credenciais</string>
     <!-- Preference for syncing tabs -->
-    <string name="preferences_sync_tabs">Separadores</string>
+    <string name="preferences_sync_tabs_2">Separadores abertos</string>
     <!-- Preference for signing out -->
     <string name="preferences_sign_out">Terminar sessão</string>
     <!-- Preference displays and allows changing current FxA device name -->
@@ -484,7 +487,7 @@
     <!-- Open tabs menu item to share all tabs -->
     <string name="tabs_menu_share_tabs">Partilhar separadores</string>
     <!-- Open tabs menu item to save tabs to collection -->
-    <string name="tabs_menu_save_to_collection">Guardar na coleção</string>
+    <string name="tabs_menu_save_to_collection1">Guardar separadores na coleção</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
     <string name="tab_menu">Menu do separador</string>
     <!-- Tab menu item to share the tab -->
@@ -696,16 +699,14 @@
     <string name="delete_browsing_data_quit_off">Desativado</string>
 
     <!-- Collections -->
-    <!-- Label to describe what collections are to a new user without any collections -->
-    <string name="collections_description">Colecione as coisas mais importantes para si. Para começar, guarde os separadores abertos numa nova coleção.</string>
     <!-- Collections header on home fragment -->
     <string name="collections_header">Coleções</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
     <string name="collection_menu_button_content_description">Menu de coleções</string>
     <!-- No Open Tabs Message Header -->
-    <string name="no_collections_header">Sem coleções</string>
-    <!-- No Open Tabs Message Description -->
-    <string name="no_collections_description">As suas coleções serão apresentadas aqui.</string>
+    <string name="no_collections_header1">Colecione as coisas que são importantes para si</string>
+    <!-- Label to describe what collections are to a new user without any collections -->
+    <string name="no_collections_description1">Agrupe pesquisas, sites e separadores semelhantes para acesso rápido mais tarde.</string>
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">Selecione os separadores</string>
     <!-- Title for the "select collection" step of the collection creator -->
@@ -912,8 +913,9 @@
     <!-- text for firefox preview moving tip description -->
     <string name="tip_firefox_preview_moved_description">Firefox Nightly é atualizado todas as noites e possui novas funcionalidades experimentais.
         No entanto, pode ser menos estável. Transfira o nosso navegador beta para uma experiência mais estável.</string>
-    <!-- text for firefox preview moving tip button. "Mozilla Firefox Browser" is intentionally hardcoded -->
-    <string name="tip_firefox_preview_moved_button">Obter o Navegador Mozilla Firefox</string>
+
+    <!-- text for firefox preview moving tip button. "Firefox for Android Beta" is intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_button_2">Obter o Firefox Beta para o Android</string>
 
     <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_header_preview_installed">Firefox Nightly mudou-se</string>
@@ -1423,6 +1425,9 @@
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
     <string name="voice_search_explainer">Fale agora</string>
 
+    <!--  The error message in edit login view when a duplicate username exists. -->
+    <string name="saved_login_duplicate">Já existe uma credencial com este nome.</string>
+
     <!-- Synced Tabs -->
     <!-- Text displayed when user is not logged into a Firefox Account -->
     <string name="synced_tabs_connect_to_sync_account">Associar uma conta Firefox.</string>
@@ -1432,5 +1437,19 @@
     <string name="synced_tabs_reauth">Por favor, autentique-se novamente.</string>
     <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->
     <string name="synced_tabs_enable_tab_syncing">Por favor, ative a sincronização de separadores.</string>
+    <!-- Text displayed when user has no tabs that have been synced -->
+    <string name="synced_tabs_no_tabs">Não tem quaisquer separadores abertos no Firefox dos seus outros dispositivos.</string>
+    <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
+    <string name="synced_tabs_sign_in_message">Ver uma lista de separadores dos seus outros dispositivos.</string>
+    <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
+    <string name="synced_tabs_sign_in_button">Iniciar sessão para sincronizar</string>
+
+    <!-- Top Sites -->
+    <!-- Title text displayed in the dialog when top sites limit is reached. -->
+    <string name="top_sites_max_limit_title">Atingido o limite dos sites principais</string>
+    <!-- Content description text displayed in the dialog when top sites limit is reached. -->
+    <string name="top_sites_max_limit_content">Para poder adicionar um novo site principal, remova outro. Pressione e aguarde sob o site pretendido e selecione remover.</string>
+    <!-- Confirmation dialog button text when top sites limit is reached. -->
+    <string name="top_sites_max_limit_confirmation_button">OK, percebi</string>
 
 </resources>

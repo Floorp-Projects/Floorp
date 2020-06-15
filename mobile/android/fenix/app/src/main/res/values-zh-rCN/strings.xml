@@ -17,13 +17,16 @@
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="search_hint">搜索或输入网址</string>
 
-    <!-- No Open Tabs Message Header -->
-    <string name="no_open_tabs_header_2">没有打开的标签页</string>
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">您打开的标签页将显示于此。</string>
 
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">您的隐私标签页将显示于此。</string>
+
+    <!-- Message announced to the user when tab tray is selected with 1 tab -->
+    <string name="open_tab_tray_single">打开了 1 个标签页，点击即可切换。</string>
+    <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
+    <string name="open_tab_tray_plural">打开了 %1$s 个标签页，点击即可切换。</string>
 
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s —— Mozilla 荣誉出品</string>
@@ -303,7 +306,7 @@
     <!-- Preference for syncing logins -->
     <string name="preferences_sync_logins">登录信息</string>
     <!-- Preference for syncing tabs -->
-    <string name="preferences_sync_tabs">标签页</string>
+    <string name="preferences_sync_tabs_2">打开的标签页</string>
     <!-- Preference for signing out -->
     <string name="preferences_sign_out">退出登录</string>
     <!-- Preference displays and allows changing current FxA device name -->
@@ -494,7 +497,7 @@
     <!-- Open tabs menu item to share all tabs -->
     <string name="tabs_menu_share_tabs">分享标签页</string>
     <!-- Open tabs menu item to save tabs to collection -->
-    <string name="tabs_menu_save_to_collection">保存到收藏集</string>
+    <string name="tabs_menu_save_to_collection1">将标签页保存至收藏集</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
     <string name="tab_menu">标签页菜单</string>
     <!-- Tab menu item to share the tab -->
@@ -713,17 +716,15 @@
     <string name="delete_browsing_data_quit_off">关闭</string>
 
     <!-- Collections -->
-    <!-- Label to describe what collections are to a new user without any collections -->
-    <string name="collections_description">收集你想留下的东西。作为上手第一步，将打开的标签页保存到新收藏集。</string>
     <!-- Collections header on home fragment -->
     <string name="collections_header">收藏集</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
     <string name="collection_menu_button_content_description">收藏集菜单</string>
-    <!-- No Open Tabs Message Header -->
-    <string name="no_collections_header">尚无收藏集</string>
-    <!-- No Open Tabs Message Description -->
-    <string name="no_collections_description">您的收藏集将显示于此。</string>
 
+    <!-- No Open Tabs Message Header -->
+    <string name="no_collections_header1">收藏对您而言重要的东西</string>
+    <!-- Label to describe what collections are to a new user without any collections -->
+    <string name="no_collections_description1">将相似的搜索、网站和标签页分组归并，方便以后快速访问。</string>
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">选取标签页</string>
 
@@ -950,8 +951,9 @@
     <!-- text for firefox preview moving tip description -->
     <string name="tip_firefox_preview_moved_description">Firefox Nightly 每日获得更新，包含实验性的新功能。
 但可能不够稳定，您可以下载我们的 Beta 版浏览器以获得更稳定的体验。</string>
-    <!-- text for firefox preview moving tip button. "Mozilla Firefox Browser" is intentionally hardcoded -->
-    <string name="tip_firefox_preview_moved_button">下载 Mozilla Firefox 浏览器</string>
+
+    <!-- text for firefox preview moving tip button. "Firefox for Android Beta" is intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_button_2">下载适用于 Android 的 Firefox Beta</string>
 
     <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_header_preview_installed">Firefox Nightly 版本更新</string>
@@ -1452,6 +1454,9 @@
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
     <string name="voice_search_explainer">现在请说</string>
 
+    <!--  The error message in edit login view when a duplicate username exists. -->
+    <string name="saved_login_duplicate">已有同用户名的登录信息存在</string>
+
     <!-- Synced Tabs -->
     <!-- Text displayed when user is not logged into a Firefox Account -->
     <string name="synced_tabs_connect_to_sync_account">绑定 Firefox 账户</string>
@@ -1461,5 +1466,19 @@
     <string name="synced_tabs_reauth">请重新验证。</string>
     <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->
     <string name="synced_tabs_enable_tab_syncing">请启用标签页同步。</string>
+    <!-- Text displayed when user has no tabs that have been synced -->
+    <string name="synced_tabs_no_tabs">您其他设备上的 Firefox 中没有打开任何标签页。</string>
+    <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
+    <string name="synced_tabs_sign_in_message">查看您其他设备上的标签页列表。</string>
+    <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
+    <string name="synced_tabs_sign_in_button">登录同步服务</string>
+
+    <!-- Top Sites -->
+    <!-- Title text displayed in the dialog when top sites limit is reached. -->
+    <string name="top_sites_max_limit_title">超出常用网站限制</string>
+    <!-- Content description text displayed in the dialog when top sites limit is reached. -->
+    <string name="top_sites_max_limit_content">若要添加新的常用站点，需先移除一个。请长按网站，然后选择移除。</string>
+    <!-- Confirmation dialog button text when top sites limit is reached. -->
+    <string name="top_sites_max_limit_confirmation_button">我知道了</string>
 
 </resources>

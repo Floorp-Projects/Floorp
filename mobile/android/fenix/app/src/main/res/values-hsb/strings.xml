@@ -13,13 +13,16 @@
     <string name="content_description_disable_private_browsing_button">Priwatny modus znjemóžnić</string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="search_hint">Pytać abo adresu zapodać</string>
-    <!-- No Open Tabs Message Header -->
-    <string name="no_open_tabs_header_2">Žane wočinjene rajtarki</string>
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">Waše wočinjene rajtarki so tu wočinja.</string>
 
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">Waše priwatne rajtarki so tu wočinja.</string>
+
+    <!-- Message announced to the user when tab tray is selected with 1 tab -->
+    <string name="open_tab_tray_single">Wočinjene rajtarki: %1$s. Podótkńće so, zo byšće rajtarki přepinał.</string>
+    <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
+    <string name="open_tab_tray_plural">Wočinjene rajtarki: %1$s. Podótkńće so, zo byšće rajtarki přepinał.</string>
 
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s so přez Mozilla zhotowja.</string>
@@ -294,7 +297,7 @@
     <!-- Preference for syncing logins -->
     <string name="preferences_sync_logins">Přizjewjenja</string>
     <!-- Preference for syncing tabs -->
-    <string name="preferences_sync_tabs">Rajtarki</string>
+    <string name="preferences_sync_tabs_2">Wočinjene rajtarki</string>
     <!-- Preference for signing out -->
     <string name="preferences_sign_out">Wotzjewić</string>
     <!-- Preference displays and allows changing current FxA device name -->
@@ -481,7 +484,7 @@
     <!-- Open tabs menu item to share all tabs -->
     <string name="tabs_menu_share_tabs">Rajtarki dźělić</string>
     <!-- Open tabs menu item to save tabs to collection -->
-    <string name="tabs_menu_save_to_collection">Do zběrki składować</string>
+    <string name="tabs_menu_save_to_collection1">Rajtarki do zběrki składować</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
     <string name="tab_menu">Rajtarkowy meni</string>
     <!-- Tab menu item to share the tab -->
@@ -694,16 +697,14 @@
     <string name="delete_browsing_data_quit_off">Wupinjeny</string>
 
     <!-- Collections -->
-    <!-- Label to describe what collections are to a new user without any collections -->
-    <string name="collections_description">Zběrajće wěcy, kotrež su wam wažne. Zo byšće započał, składujće wočinjene rajtarki do noweje zběrki.</string>
     <!-- Collections header on home fragment -->
     <string name="collections_header">Zběrki</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
     <string name="collection_menu_button_content_description">Meni zběrkow</string>
     <!-- No Open Tabs Message Header -->
-    <string name="no_collections_header">Žane zběrki</string>
-    <!-- No Open Tabs Message Description -->
-    <string name="no_collections_description">Waše zběrki so tu pokazaja.</string>
+    <string name="no_collections_header1">Zběrajće wěcy, kotrež su wam wažne</string>
+    <!-- Label to describe what collections are to a new user without any collections -->
+    <string name="no_collections_description1">Zeskupće podobne pytanja, sydła a rajtarki za pozdźiši spěšny přistup.</string>
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">Rajtarki wubrać</string>
     <!-- Title for the "select collection" step of the collection creator -->
@@ -910,8 +911,9 @@
     <!-- text for firefox preview moving tip description -->
     <string name="tip_firefox_preview_moved_description">Firefox Nightly so kóždu nóc aktualizuje a ma eksperimentelne nowe funkcije.
         Móže mjenje stabilny być. Sćehńće naš betawobhladowak za stabilniše dožiwjenje.</string>
-    <!-- text for firefox preview moving tip button. "Mozilla Firefox Browser" is intentionally hardcoded -->
-    <string name="tip_firefox_preview_moved_button">Wobstarajće sej Mozilla Firefox Browser</string>
+
+    <!-- text for firefox preview moving tip button. "Firefox for Android Beta" is intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_button_2">Wobstarajće sej Firefox za Android Beta</string>
 
     <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_header_preview_installed">Firefox Nightly je přećehnjeny</string>
@@ -1418,6 +1420,9 @@
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
     <string name="voice_search_explainer">Nětko rěčeć</string>
 
+    <!--  The error message in edit login view when a duplicate username exists. -->
+    <string name="saved_login_duplicate">Přizjewjenje z tym wužiwarskim mjenom hižo eksistuje.</string>
+
     <!-- Synced Tabs -->
     <!-- Text displayed when user is not logged into a Firefox Account -->
     <string name="synced_tabs_connect_to_sync_account">Z kontom Firefox zwjazać.</string>
@@ -1427,5 +1432,19 @@
     <string name="synced_tabs_reauth">Prošu awtentifikujće znowa.</string>
     <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->
     <string name="synced_tabs_enable_tab_syncing">Prošu zmóžńće synchronizowanje rajtarkow.</string>
+    <!-- Text displayed when user has no tabs that have been synced -->
+    <string name="synced_tabs_no_tabs">Nimaće žane wočinjene rajtarki w Firefox na swojich druhich gratach.</string>
+    <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
+    <string name="synced_tabs_sign_in_message">Wobhladajće sej lisćinu rajtarkow ze swojich gratow.</string>
+    <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
+    <string name="synced_tabs_sign_in_button">Pola Sync přizjewić</string>
+
+    <!-- Top Sites -->
+    <!-- Title text displayed in the dialog when top sites limit is reached. -->
+    <string name="top_sites_max_limit_title">Limit za wažne sydła docpěty</string>
+    <!-- Content description text displayed in the dialog when top sites limit is reached. -->
+    <string name="top_sites_max_limit_content">Zo byšće nowe wažne sydło přidał, wotstrońće jedne z nich. Tłóčće dołho na sydło a wubjerće „Wotstronić“.</string>
+    <!-- Confirmation dialog button text when top sites limit is reached. -->
+    <string name="top_sites_max_limit_confirmation_button">W porjadku, sym zrozumił</string>
 
 </resources>

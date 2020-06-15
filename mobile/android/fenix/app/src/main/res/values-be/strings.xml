@@ -1,6 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+    <!-- Delete session button to erase your history in a private session -->
+    <string name="private_browsing_delete_session">Выдаліць сеанс</string>
+
+    <!-- Text for the negative button -->
+    <string name="cfr_neg_button_text">Не, дзякуй</string>
+
     <!-- Text for the negative button -->
     <string name="search_widget_cfr_neg_button_text">Не зараз</string>
 
@@ -53,6 +59,39 @@
     <!-- Browser menu button that open a share menu to share the current site -->
     <string name="browser_menu_share">Падзяліцца</string>
 
+    <!-- Share menu title, displayed when a user is sharing their current site -->
+    <string name="menu_share_with">Падзяліцца з…</string>
+    <!-- Browser menu button shown in custom tabs that opens the current tab in Fenix
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="browser_menu_open_in_fenix">Адкрыць у %1$s</string>
+    <!-- Browser menu button to put the current page in reader mode -->
+    <string name="browser_menu_read">Рэжым чытання</string>
+    <!-- Browser menu button content description to close reader mode and return the user to the regular browser -->
+    <string name="browser_menu_read_close">Закрыць Рэжым чытання</string>
+    <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
+    <string name="browser_menu_read_appearance">Выгляд</string>
+
+    <!-- Locale Settings Fragment -->
+    <!-- Content description for tick mark on selected language -->
+    <string name="a11y_selected_locale_content_description">Абраная мова</string>
+    <!-- Content description for search icon -->
+    <string name="a11y_search_icon_content_description">Пошук</string>
+    <!-- Placeholder text shown in the search bar before a user enters text -->
+    <string name="locale_search_hint">Пошук мовы</string>
+
+    <!-- Search Fragment -->
+    <!-- Button in the search view that lets a user search by scanning a QR code -->
+    <string name="search_scan_button">Сканаваць</string>
+    <!-- Header displayed when selecting a shortcut search engine -->
+    <string name="search_shortcuts_search_with_2">Гэтым разам шукаць у:</string>
+    <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
+    <string name="awesomebar_clipboard_title">Уставіць спасылку з буфера абмену</string>
+    <!-- Button in the search suggestions onboarding that allows search suggestions in private sessions -->
+    <string name="search_suggestions_onboarding_allow_button">Дазволіць</string>
+    <!-- Button in the search suggestions onboarding that does not allow search suggestions in private sessions -->
+    <string name="search_suggestions_onboarding_do_not_allow_button">Не дазваляць</string>
+    <!-- Search suggestion onboarding hint title text -->
+    <string name="search_suggestions_onboarding_title">Паказваць пошукавыя прапановы ў прыватных сеансах?</string>
     <!-- Search suggestion onboarding hint Learn more link text -->
     <string name="search_suggestions_onboarding_learn_more_link">Даведацца больш</string>
 
@@ -81,6 +120,8 @@
     <string name="preferences_search_address_bar">Адрасны радок</string>
     <!-- Preference linking to help about Fenix -->
     <string name="preferences_help">Даведка</string>
+    <!-- Preference for giving feedback about Fenix -->
+    <string name="preferences_feedback">Даць водгук</string>
     <!-- Preference linking to about page for Fenix
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="preferences_about">Пра %1$s</string>
@@ -104,6 +145,10 @@
     <string name="preferences_private_browsing_options">Прыватнае агляданне</string>
     <!-- Preference for opening links in a private tab-->
     <string name="preferences_open_links_in_a_private_tab">Адкрываць спасылкі ў прыватнай картцы</string>
+    <!-- Preference for accessibility -->
+    <string name="preferences_accessibility">Даступнасць</string>
+    <!-- Preference category for account information -->
+    <string name="preferences_category_account">Уліковы запіс</string>
     <!-- Preference shown on banner to sign into account -->
     <string name="preferences_sign_in">Увайсці</string>
     <!-- Preference for changing where the toolbar is positioned -->
@@ -157,13 +202,45 @@
     <string name="preferences_sync_bookmarks">Закладкі</string>
     <!-- Preference for syncing logins -->
     <string name="preferences_sync_logins">Лагіны</string>
-    <!-- Preference for syncing tabs -->
-    <string name="preferences_sync_tabs">Карткі</string>
     <!-- Preference for signing out -->
     <string name="preferences_sign_out">Выйсці</string>
     <!-- Preference displays and allows changing current FxA device name -->
     <string name="preferences_sync_device_name">Назва прылады</string>
 
+    <!-- Send Tab -->
+    <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="fxa_received_tab_channel_name">Атрыманыя карткі</string>
+    <!--  The body for these is the URL of the tab received  -->
+    <string name="fxa_tab_received_notification_name">Атрыманая картка</string>
+    <!-- When multiple tabs have been received -->
+    <string name="fxa_tabs_received_notification_name">Атрыманыя карткі</string>
+    <!-- %s is the device name -->
+    <string name="fxa_tab_received_from_notification_name">Картка з %s</string>
+
+    <!-- Advanced Preferences -->
+    <!-- Preference for tracking protection settings -->
+    <string name="preferences_tracking_protection_settings">Ахова ад сачэння</string>
+    <!-- Preference switch for tracking protection -->
+    <string name="preferences_tracking_protection">Ахова ад сачэння</string>
+    <!-- Preference for tracking protection exceptions -->
+    <string name="preferences_tracking_protection_exceptions">Выключэнні</string>
+    <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
+    <string name="exceptions_empty_message_learn_more_link">Даведацца больш</string>
+
+    <!-- Preference switch for Telemetry -->
+    <string name="preferences_telemetry">Тэлеметрыя</string>
+    <!-- Title for experiments preferences -->
+    <string name="preference_experiments">Доследы</string>
+
+    <!-- Preference for account login -->
+    <string name="preferences_sync_sign_in">Увайсці</string>
+
+    <!-- Button to open camera for pairing -->
+    <string name="pair_open_camera">Адкрыць камеру</string>
+
+    <!-- Library -->
+    <!-- Option in Library to open Sessions page -->
+    <string name="library_sessions">Сеансы</string>
     <!-- Option in library to open Bookmarks page -->
     <string name="library_bookmarks">Закладкі</string>
     <!-- Option in library to open Desktop Bookmarks "menu" page -->
@@ -197,12 +274,20 @@
 
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_tab">Дадаць картку</string>
+    <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
+    <string name="add_private_tab">Дадаць прыватную картку</string>
+    <!-- Text for the new tab button to indicate adding a new private tab in the tab -->
+    <string name="tab_drawer_fab_content">Прыватная</string>
     <!-- Text shown as the title of the open tab tray -->
     <string name="tab_tray_title">Адкрытыя карткі</string>
     <!-- Text shown in the menu for saving tabs to a collection -->
     <string name="tab_tray_menu_item_save">Захаваць у калекцыі</string>
+    <!-- Text shown in the menu for sharing all tabs -->
+    <string name="tab_tray_menu_item_share">Падзяліцца ўсімі карткамі</string>
     <!-- Text shown in the menu for closing all tabs -->
     <string name="tab_tray_menu_item_close">Закрыць усе карткі</string>
+    <!-- Shortcut action to open new tab -->
+    <string name="tab_tray_menu_open_new_tab">Новая картка</string>
     <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
     <string name="remove_tab_from_collection">Выдаліць картку з калекцыі</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
@@ -213,8 +298,6 @@
     <string name="tabs_menu_close_all_tabs">Закрыць усе карткі</string>
     <!-- Open tabs menu item to share all tabs -->
     <string name="tabs_menu_share_tabs">Падзяліцца карткамі</string>
-    <!-- Open tabs menu item to save tabs to collection -->
-    <string name="tabs_menu_save_to_collection">Захаваць у калекцыі</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
     <string name="tab_menu">Меню картак</string>
     <!-- Tab menu item to share the tab -->
@@ -238,6 +321,8 @@
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">Выдаліць</string>
 
+    <!-- History overflow menu share button -->
+    <string name="history_menu_share_button">Падзяліцца</string>
     <!-- History multi select title in app bar
     The first parameter is the number of bookmarks selected -->
     <string name="history_multi_select_title">Выбрана: %1$d</string>
@@ -250,5 +335,155 @@
     <string name="history_7_days">Апошнія 7 дзён</string>
     <!-- Text for the header that groups the history the past 30 days -->
     <string name="history_30_days">Апошнія 30 дзён</string>
+
+    <!-- Close tab button text on the tab crash page -->
+    <string name="tab_crash_close">Закрыць картку</string>
+    <!-- Restore tab button text on the tab crash page -->
+    <string name="tab_crash_restore">Аднавіць картку</string>
+
+    <!-- Content Description for session item menu button -->
+    <string name="content_description_session_menu">Налады сеанса</string>
+
+    <!-- Content Description for session item share button -->
+    <string name="content_description_session_share">Падзяліцца сеансам</string>
+
+    <!-- Bookmarks -->
+    <!-- Content description for bookmarks library menu -->
+    <string name="bookmark_menu_content_description">Меню закладак</string>
+    <!-- deprecated: Snackbar title shown after a bookmark has been created. -->
+    <string name="bookmark_created_snackbar">Закладка створана.</string>
+    <!-- Snackbar title shown after a bookmark has been created. -->
+    <string name="bookmark_saved_snackbar">Закладка захавана!</string>
+    <!-- Bookmark overflow menu share button -->
+    <string name="bookmark_menu_share_button">Падзяліцца</string>
+
+    <!-- Bookmark editing screen title -->
+    <string name="edit_bookmark_fragment_title">Рэдагаваць закладку</string>
+    <!-- Bookmark screen message for empty bookmarks folder -->
+    <string name="bookmarks_empty_message">Няма закладак</string>
+
+    <!-- Site Permissions -->
+    <!-- Site permissions preferences header -->
+    <string name="permissions_header">Дазволы</string>
+    <!-- Button label that take the user to the Android App setting -->
+    <string name="phone_feature_go_to_settings">Перайсці ў налады</string>
+    <!-- Preference for altering the camera access for all websites -->
+    <string name="preference_phone_feature_camera">Камера</string>
+
+    <!-- Preference for altering the microphone access for all websites -->
+    <string name="preference_phone_feature_microphone">Мікрафон</string>
+
+    <!-- Collections -->
+    <!-- Collections header on home fragment -->
+    <string name="collections_header">Калекцыі</string>
+    <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
+    <string name="collection_menu_button_content_description">Меню калекцыі</string>
+    <!-- No Open Tabs Message Header -->
+    <string name="no_collections_header1">Збірайце важныя для вас рэчы</string>
+    <!-- Title for the "select tabs" step of the collection creator -->
+    <string name="create_collection_select_tabs">Выберыце карткі</string>
+    <!-- Title for the "select collection" step of the collection creator -->
+    <string name="create_collection_select_collection">Выберыце калекцыю</string>
+    <!-- Button to add new collection for the "select collection" step of the collection creator -->
+    <string name="create_collection_add_new_collection">Дадаць новую калекцыю</string>
+    <!-- Button to select all tabs in the "select tabs" step of the collection creator -->
+    <string name="create_collection_select_all">Вылучыць усе</string>
+    <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
+    <string name="create_collection_tabs_saved">Карткі захаваны!</string>
+    <!-- Text shown in snackbar when one tab has been saved in a collection -->
+    <string name="create_collection_tab_saved">Картка захавана!</string>
+    <!-- Content description (not visible, for screen readers etc.): button to close the collection creator -->
+    <string name="create_collection_close">Закрыць</string>
+    <!-- Button to save currently selected tabs in the "select tabs" step of the collection creator-->
+    <string name="create_collection_save">Захаваць</string>
+
+    <!-- Snackbar action to view the collection the user just created or updated -->
+    <string name="create_collection_view">Паглядзець</string>
+
+    <!-- Default name for a new collection in "name new collection" step of the collection creator. %d is a placeholder for the number of collections-->
+    <string name="create_collection_default_name">Калекцыя %d</string>
+
+    <!-- Share -->
+    <!-- Share screen header -->
+    <string name="share_header">Адправіць і падзяліцца</string>
+    <!-- Share screen header -->
+    <string name="share_header_2">Падзяліцца</string>
+    <!-- Content description (not visible, for screen readers etc.):
+        "Share" button. Opens the share menu when pressed. -->
+    <string name="share_button_content_description">Падзяліцца</string>
+    <!-- Sub-header in the dialog to share a link to another app -->
+    <string name="share_link_subheader">Падзяліцца спасылкай</string>
+    <!-- Sub-header in the dialog to share a link to another sync device -->
+    <string name="share_device_subheader">Даслаць на прыладу</string>
+    <!-- Sub-header in the dialog to share a link to an app from the full list -->
+    <string name="share_link_all_apps_subheader">Усе дзеянні</string>
+    <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
+    <string name="share_link_recent_apps_subheader">Нядаўна выкарыстаныя</string>
+    <!-- An option from the share dialog to sign into sync -->
+    <string name="sync_sign_in">Увайсці ў сінхранізацыю</string>
+    <!-- An option from the share dialog to send link to all other sync devices -->
+    <string name="sync_send_to_all">Даслаць на ўсе прылады</string>
+    <!-- An option from the share dialog to reconnect to sync -->
+    <string name="sync_reconnect">Злучыцца зноў з сінхранізацыяй</string>
+
+    <!-- Text displayed when sync is offline and cannot be accessed -->
+    <string name="sync_offline">Па-за сеткай</string>
+    <!-- Confirmation dialog button -->
+    <string name="sync_confirmation_button">Зразумела</string>
+
+    <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
+    <string name="notification_pbm_delete_text">Выдаліць прыватныя карткі</string>
+    <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
+    <string name="notification_pbm_delete_text_2">Закрыць прыватныя карткі</string>
+    <!-- Notification action to open Fenix and resume the current browsing session. -->
+    <string name="notification_pbm_action_open">Адкрыць</string>
+
+    <!-- Notification action to delete all current private browsing sessions AND switch to Fenix (bring it to the foreground) -->
+    <string name="notification_pbm_action_delete_and_open">Выдаліць і адкрыць</string>
+    <!-- Text shown in snackbar when user deletes a collection -->
+    <string name="snackbar_collection_deleted">Калекцыя выдалена</string>
+    <!-- Text shown in snackbar when user renames a collection -->
+    <string name="snackbar_collection_renamed">Калекцыя перайменавана</string>
+    <!-- Text shown in snackbar when user deletes a tab -->
+    <string name="snackbar_tab_deleted">Картка выдалена</string>
+    <!-- Text shown in snackbar when user deletes all tabs -->
+    <string name="snackbar_tabs_deleted">Карткі выдалены</string>
+
+    <!-- Text shown in snackbar when user closes a tab -->
+    <string name="snackbar_tab_closed">Картка закрыта</string>
+    <!-- Text shown in snackbar when user closes all tabs -->
+    <string name="snackbar_tabs_closed">Карткі закрыты</string>
+
+    <!-- Action item in menu for the Delete browsing data on quit feature -->
+    <string name="delete_browsing_data_on_quit_action">Выйсці</string>
+
+    <!-- text for the private browsing onbording card button, that launches settings -->
+    <string name="onboarding_private_browsing_button">Адкрыць налады</string>
+    <!-- text for the privacy notice onboarding card header -->
+    <string name="onboarding_privacy_notice_header">Ваша прыватнасць</string>
+    <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
+    <string name="onboarding_close">Закрыць</string>
+
+    <!-- text for the button to finish onboarding -->
+    <string name="onboarding_finish">Пачаць агляданне</string>
+
+    <!-- Onboarding theme -->
+    <!-- text for the theme picker onboarding card header -->
+    <string name="onboarding_theme_picker_header">Выберыце тэму</string>
+    <!-- Automatic theme setting (will follow device setting) -->
+    <string name="onboarding_theme_automatic_title">Аўтаматычна</string>
+
+    <!-- About page link text to open support link -->
+    <string name="about_support">Падтрымка</string>
+    <!-- About page link text to list of past crashes (like about:crashes on desktop) -->
+    <string name="about_crashes">Крахі</string>
+    <!-- About page link text to open privacy notice link -->
+    <string name="about_privacy_notice">Паведамленне аб прыватнасці</string>
+
+    <!-- Paste the text in the clipboard -->
+    <string name="browser_toolbar_long_press_popup_paste">Уставіць</string>
+
+    <!-- Add button text for the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_add">Дадаць</string>
 
     </resources>

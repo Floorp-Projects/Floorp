@@ -13,13 +13,16 @@
     <string name="content_description_disable_private_browsing_button">השבתת גלישה פרטית</string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="search_hint">חיפוש או הכנסת כתובת</string>
-    <!-- No Open Tabs Message Header -->
-    <string name="no_open_tabs_header_2">אין לשוניות פתוחות</string>
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">הלשוניות הפתוחות שלך יופיעו כאן.</string>
 
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">הלשוניות הפרטיות שלך יופיעו כאן.</string>
+
+    <!-- Message announced to the user when tab tray is selected with 1 tab -->
+    <string name="open_tab_tray_single">לשונית אחת פתוחה. יש להקיש כדי להחליף לשוניות.</string>
+    <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
+    <string name="open_tab_tray_plural">%1$s לשוניות פתוחות. יש להקיש כדי להחליף לשוניות.</string>
 
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">‏%1$s נוצר על־ידי Mozilla.</string>
@@ -283,7 +286,7 @@
     <!-- Preference for syncing logins -->
     <string name="preferences_sync_logins">כניסות</string>
     <!-- Preference for syncing tabs -->
-    <string name="preferences_sync_tabs">לשוניות</string>
+    <string name="preferences_sync_tabs_2">לשוניות פתוחות</string>
     <!-- Preference for signing out -->
     <string name="preferences_sign_out">התנתקות</string>
     <!-- Preference displays and allows changing current FxA device name -->
@@ -465,7 +468,7 @@
     <!-- Open tabs menu item to share all tabs -->
     <string name="tabs_menu_share_tabs">שיתוף לשוניות</string>
     <!-- Open tabs menu item to save tabs to collection -->
-    <string name="tabs_menu_save_to_collection">שמירה לאוסף</string>
+    <string name="tabs_menu_save_to_collection1">שמירת לשוניות לאוסף</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
     <string name="tab_menu">תפריט לשוניות</string>
     <!-- Tab menu item to share the tab -->
@@ -679,16 +682,10 @@
     <string name="delete_browsing_data_quit_off">כבוי</string>
 
     <!-- Collections -->
-    <!-- Label to describe what collections are to a new user without any collections -->
-    <string name="collections_description">לאסוף את הדברים שחשובים לך. כדי להתחיל, ניתן לשמור את הלשוניות הפתוחות לכדי אוסף חדש.</string>
     <!-- Collections header on home fragment -->
     <string name="collections_header">אוספים</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
     <string name="collection_menu_button_content_description">תפריט אוסף</string>
-    <!-- No Open Tabs Message Header -->
-    <string name="no_collections_header">אין אוספים</string>
-    <!-- No Open Tabs Message Description -->
-    <string name="no_collections_description">האוספים שלך יופיעו כאן.</string>
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">בחירת לשוניות</string>
     <!-- Title for the "select collection" step of the collection creator -->
@@ -897,8 +894,9 @@
     <!-- text for firefox preview moving tip description -->
     <string name="tip_firefox_preview_moved_description">‏Firefox Nightly מתעדכן כל לילה ויש לו תכונות ניסיוניות חדשות.
         עם זאת, יתכן שיהיה פחות יציב. ניתן להוריד את הדפדפן במהדורת beta לחוויה יציבה יותר.</string>
-    <!-- text for firefox preview moving tip button. "Mozilla Firefox Browser" is intentionally hardcoded -->
-    <string name="tip_firefox_preview_moved_button">קבלת הדפדפן Mozilla Firefox</string>
+
+    <!-- text for firefox preview moving tip button. "Firefox for Android Beta" is intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_button_2">קבלת Firefox עבור Android בטא</string>
 
     <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_header_preview_installed">‏Firefox Nightly עבר</string>
@@ -1385,6 +1383,9 @@
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
     <string name="voice_search_explainer">נא לדבר כעת</string>
 
+    <!--  The error message in edit login view when a duplicate username exists. -->
+    <string name="saved_login_duplicate">כבר קיימת כניסה עם שם משתמש זה</string>
+
     <!-- Synced Tabs -->
     <!-- Text displayed when user is not logged into a Firefox Account -->
     <string name="synced_tabs_connect_to_sync_account">נא להתחבר עם חשבון Firefox.</string>
@@ -1392,5 +1393,17 @@
     <string name="synced_tabs_connect_another_device">נא לחבר מכשיר נוסף.</string>
     <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->
     <string name="synced_tabs_enable_tab_syncing">נא להפעיל סנכרון לשוניות.</string>
+    <!-- Text displayed when user has no tabs that have been synced -->
+    <string name="synced_tabs_no_tabs">אין לך לשוניות פתוחות ב־Firefox בשאר המכשירים שלך.</string>
+    <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
+    <string name="synced_tabs_sign_in_message">הצגת רשימת הלשוניות מהמכשירים האחרים שלך.</string>
+
+    <!-- Top Sites -->
+    <!-- Title text displayed in the dialog when top sites limit is reached. -->
+    <string name="top_sites_max_limit_title">הגעת למכסת האתרים המובילים</string>
+    <!-- Content description text displayed in the dialog when top sites limit is reached. -->
+    <string name="top_sites_max_limit_content">כדי להוסיף אתר מוביל חדש, יש להסיר אחד אחר. יש ללחוץ לחיצה ארוכה על האתר ולבחור ב״הסרה״.</string>
+    <!-- Confirmation dialog button text when top sites limit is reached. -->
+    <string name="top_sites_max_limit_confirmation_button">בסדר, הבנתי</string>
 
 </resources>
