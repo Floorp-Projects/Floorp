@@ -16,7 +16,7 @@
 using namespace mozilla;
 using namespace mozilla::widget;
 
-Maybe<std::unique_ptr<WinThemeData>> nsUXThemeData::sThemes[eUXNumClasses];
+nsUXThemeData::ThemeHandle nsUXThemeData::sThemes[eUXNumClasses];
 
 const int NUM_COMMAND_BUTTONS = 3;
 SIZE nsUXThemeData::sCommandButtonMetrics[NUM_COMMAND_BUTTONS];
@@ -27,28 +27,40 @@ bool nsUXThemeData::sCommandButtonBoxMetricsInitialized = false;
 bool nsUXThemeData::sTitlebarInfoPopulatedAero = false;
 bool nsUXThemeData::sTitlebarInfoPopulatedThemed = false;
 
+nsUXThemeData::ThemeHandle::~ThemeHandle() { Close(); }
+
+void nsUXThemeData::ThemeHandle::OpenOnce(HWND aWindow, LPCWSTR aClassList) {
+  if (mHandle.isSome()) {
+    return;
+  }
+
+  mHandle = Some(OpenThemeData(aWindow, aClassList));
+}
+
+void nsUXThemeData::ThemeHandle::Close() {
+  if (mHandle.isNothing() || !mHandle.value()) {
+    return;
+  }
+
+  CloseThemeData(mHandle.value());
+  mHandle = Nothing();
+}
+
+nsUXThemeData::ThemeHandle::operator HANDLE() {
+  return mHandle.isSome() ? mHandle.value() : nullptr;
+}
+
 void nsUXThemeData::Invalidate() {
   for (auto& theme : sThemes) {
-    theme = Nothing();
+    theme.Close();
   }
 }
 
-WinThemeDataPtr nsUXThemeData::GetTheme(nsUXThemeClass cls) {
+HANDLE
+nsUXThemeData::GetTheme(nsUXThemeClass cls) {
   NS_ASSERTION(cls < eUXNumClasses, "Invalid theme class!");
-
-  // This check makes sure we don't attempt to open a theme if the previous
-  // loading attempt has failed because OpenThemeData is a heavy task and
-  // it's unlikely that the API returns a different result.
-  if (sThemes[cls].isNothing()) {
-    auto winThemeData = std::make_unique<WinThemeData>();
-    if (!winThemeData->Init(GetClassName(cls))) {
-      winThemeData.reset();
-    }
-    sThemes[cls] = Some(std::move(winThemeData));
-  }
-
-  MOZ_ASSERT(sThemes[cls].isSome());
-  return WinThemeDataPtr(sThemes[cls].ref().get());
+  sThemes[cls].OpenOnce(nullptr, GetClassName(cls));
+  return sThemes[cls];
 }
 
 const wchar_t* nsUXThemeData::GetClassName(nsUXThemeClass cls) {

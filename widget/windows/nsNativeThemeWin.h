@@ -19,7 +19,6 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/TimeStamp.h"
 #include "nsSize.h"
-#include "WinThemeData.h"
 
 class nsNativeThemeWin : private nsNativeTheme, public nsITheme {
   virtual ~nsNativeThemeWin();
@@ -84,7 +83,7 @@ class nsNativeThemeWin : private nsNativeTheme, public nsITheme {
 
  protected:
   mozilla::Maybe<nsUXThemeClass> GetThemeClass(StyleAppearance aAppearance);
-  mozilla::widget::WinThemeDataPtr GetTheme(StyleAppearance aAppearance);
+  HANDLE GetTheme(StyleAppearance aAppearance);
   nsresult GetThemePartAndState(nsIFrame* aFrame, StyleAppearance aAppearance,
                                 int32_t& aPart, int32_t& aState);
   nsresult ClassicGetThemePartAndState(nsIFrame* aFrame,
@@ -119,21 +118,21 @@ class nsNativeThemeWin : private nsNativeTheme, public nsITheme {
                                     bool aIsVertical, bool aIsIndeterminate,
                                     bool aIsClassic);
   void DrawThemedProgressMeter(nsIFrame* aFrame, StyleAppearance aAppearance,
-                               WinThemeDataPtr aTheme, HDC aHdc, int aPart,
-                               int aState, RECT* aWidgetRect, RECT* aClipRect);
+                               HANDLE aTheme, HDC aHdc, int aPart, int aState,
+                               RECT* aWidgetRect, RECT* aClipRect);
 
   [[nodiscard]] LayoutDeviceIntMargin GetCachedWidgetBorder(
-      WinThemeDataPtr aTheme, nsUXThemeClass aThemeClass,
-      StyleAppearance aAppearance, int32_t aPart, int32_t aState);
+      HANDLE aTheme, nsUXThemeClass aThemeClass, StyleAppearance aAppearance,
+      int32_t aPart, int32_t aState);
 
-  nsresult GetCachedMinimumWidgetSize(nsIFrame* aFrame, WinThemeDataPtr aTheme,
+  nsresult GetCachedMinimumWidgetSize(nsIFrame* aFrame, HANDLE aTheme,
                                       nsUXThemeClass aThemeClass,
                                       StyleAppearance aAppearance,
                                       int32_t aPart, int32_t aState,
                                       THEMESIZE aSizeReq,
                                       mozilla::LayoutDeviceIntSize* aResult);
 
-  SIZE GetCachedGutterSize(WinThemeDataPtr theme);
+  SIZE GetCachedGutterSize(HANDLE theme);
 
  private:
   TimeStamp mProgressDeterminateTimeStamp;

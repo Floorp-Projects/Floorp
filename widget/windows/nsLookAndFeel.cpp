@@ -42,8 +42,9 @@ static nsresult GetColorFromTheme(nsUXThemeClass cls, int32_t aPart,
                                   int32_t aState, int32_t aPropId,
                                   nscolor& aColor) {
   COLORREF color;
-  if (nsUXThemeData::GetTheme(cls)->GetThemeColor(aPart, aState, aPropId,
-                                                  &color)) {
+  HRESULT hr = GetThemeColor(nsUXThemeData::GetTheme(cls), aPart, aState,
+                             aPropId, &color);
+  if (hr == S_OK) {
     aColor = COLOREF_2_NSRGB(color);
     return NS_OK;
   }
