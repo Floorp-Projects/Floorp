@@ -385,7 +385,7 @@ JSScript* Smoosh::compileGlobalScript(CompilationInfo& compilationInfo,
 
   auto& smooshScript = smoosh.top_level_script;
   auto& smooshScriptData =
-      smoosh.script_data_list.data[smooshScript.immutable_script_data];
+      smoosh.script_data_list.data[smooshScript.immutable_script_data.AsSome()];
 
   Vector<ScopeNote, 0, SystemAllocPolicy> scopeNotes;
   if (!scopeNotes.resize(smooshScriptData.scope_notes.len)) {
