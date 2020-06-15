@@ -69,18 +69,6 @@ dictionary LoadURIOptions {
   boolean hasValidUserGestureActivation = false;
 
   /**
-   * If the HTTPS-Only mode is enabled, every insecure request gets
-   * upgraded to HTTPS by default. This behavior can be disabled through
-   * the loadinfo flag HTTPS_ONLY_EXEMPT. The flag gets carried over to
-   * the next loadinfo through the loadstate as long as it's a same-origin
-   * request or if the triggering principal is a system principal.
-   *
-   * This flag should only ever be true if coming from the HTTPS-Only Mode
-   * error page.
-   */
-  boolean isHttpsOnlyModeUpgradeExempt = false;
-
-  /**
    * If non-0, a value to pass to nsIDocShell::setCancelContentJSEpoch
    * when initiating the load.
    */
