@@ -199,6 +199,7 @@ bool ResolveRegistryName(std::wstring name, std::wstring* resolved_name) {
 //    \??\c:\some\foo\bar
 //    \Device\HarddiskVolume0\some\foo\bar
 //    \??\HarddiskVolume0\some\foo\bar
+//    \??\UNC\SERVER\Share\some\foo\bar
 DWORD IsReparsePoint(const std::wstring& full_path) {
   // Check if it's a pipe. We can't query the attributes of a pipe.
   if (IsPipe(full_path))
@@ -212,28 +213,33 @@ DWORD IsReparsePoint(const std::wstring& full_path) {
   if (!has_drive && !is_device_path && !nt_path)
     return ERROR_INVALID_NAME;
 
-  bool added_implied_device = false;
   if (!has_drive) {
-    path = std::wstring(kNTDotPrefix) + path;
-    added_implied_device = true;
+    // Add Win32 device namespace prefix, required for some Windows APIs.
+    path.insert(0, kNTDotPrefix);
   }
 
-  std::wstring::size_type last_pos = std::wstring::npos;
-  bool passed_once = false;
+  // Ensure that volume path matches start of path.
+  wchar_t vol_path[MAX_PATH];
+  if (!::GetVolumePathNameW(path.c_str(), vol_path, MAX_PATH)) {
+    // This will fail if this is a device that isn't volume related, which can't
+    // then be a reparse point.
+    return is_device_path ? ERROR_NOT_A_REPARSE_POINT : ERROR_INVALID_NAME;
+  }
+
+  // vol_path includes a trailing slash, so reduce size for path and loop check.
+  size_t vol_path_len = wcslen(vol_path) - 1;
+  if (!EqualPath(path, vol_path, vol_path_len)) {
+    return ERROR_INVALID_NAME;
+  }
 
   do {
-    path = path.substr(0, last_pos);
-
     DWORD attributes = ::GetFileAttributes(path.c_str());
     if (INVALID_FILE_ATTRIBUTES == attributes) {
       DWORD error = ::GetLastError();
       if (error != ERROR_FILE_NOT_FOUND && error != ERROR_PATH_NOT_FOUND &&
+          error != ERROR_INVALID_FUNCTION &&
           error != ERROR_INVALID_NAME) {
         // Unexpected error.
-        if (passed_once && added_implied_device &&
-            (path.rfind(L'\\') == kNTDotPrefixLen - 1)) {
-          break;
-        }
         return error;
       }
     } else if (FILE_ATTRIBUTE_REPARSE_POINT & attributes) {
@@ -241,9 +247,8 @@ DWORD IsReparsePoint(const std::wstring& full_path) {
       return ERROR_SUCCESS;
     }
 
-    passed_once = true;
-    last_pos = path.rfind(L'\\');
-  } while (last_pos > 2);  // Skip root dir.
+    path.resize(path.rfind(L'\\'));
+  } while (path.size() > vol_path_len);  // Skip root dir.
 
   return ERROR_NOT_A_REPARSE_POINT;
 }
@@ -263,11 +268,11 @@ bool SameObject(HANDLE handle, const wchar_t* full_path) {
   DCHECK_NT(!path.empty());
 
   // This may end with a backslash.
-  const wchar_t kBackslash = '\\';
-  if (path.back() == kBackslash)
-    path = path.substr(0, path.length() - 1);
+  if (path.back() == L'\\') {
+    path.pop_back();
+  }
 
-  // Perfect match (case-insesitive check).
+  // Perfect match (case-insensitive check).
   if (EqualPath(actual_path, path))
     return true;
 
@@ -276,40 +281,44 @@ bool SameObject(HANDLE handle, const wchar_t* full_path) {
 
   if (!has_drive && nt_path) {
     std::wstring simple_actual_path;
-    if (!IsDevicePath(actual_path, &simple_actual_path))
-      return false;
-
-    // Perfect match (case-insesitive check).
-    return (EqualPath(simple_actual_path, path));
+    if (IsDevicePath(path, &path)) {
+      if (IsDevicePath(actual_path, &simple_actual_path)) {
+        // Perfect match (case-insensitive check).
+        return (EqualPath(simple_actual_path, path));
+      } else {
+        return false;
+      }
+    } else {
+      // Add Win32 device namespace for GetVolumePathName.
+      path.insert(0, kNTDotPrefix);
+    }
   }
 
-  if (!has_drive)
+  // Get the volume path in the same format as actual_path.
+  wchar_t vol_path[MAX_PATH];
+  if (!::GetVolumePathName(path.c_str(), vol_path, MAX_PATH)) {
     return false;
-
-  // We only need 3 chars, but let's alloc a buffer for four.
-  wchar_t drive[4] = {0};
-  wchar_t vol_name[MAX_PATH];
-  memcpy(drive, &path[0], 2 * sizeof(*drive));
-
-  // We'll get a double null terminated string.
-  DWORD vol_length = ::QueryDosDeviceW(drive, vol_name, MAX_PATH);
-  if (vol_length < 2 || vol_length == MAX_PATH)
+  }
+  size_t vol_path_len = wcslen(vol_path);
+  base::string16 nt_vol;
+  if (!GetNtPathFromWin32Path(vol_path, &nt_vol)) {
     return false;
-
-  // Ignore the nulls at the end.
-  vol_length = static_cast<DWORD>(wcslen(vol_name));
+  }
 
   // The two paths should be the same length.
-  if (vol_length + path.size() - 2 != actual_path.size())
+  if (nt_vol.size() + path.size() - vol_path_len != actual_path.size()) {
     return false;
+  }
 
-  // Check up to the drive letter.
-  if (!EqualPath(actual_path, vol_name, vol_length))
+  // Check the volume matches.
+  if (!EqualPath(actual_path, nt_vol.c_str(), nt_vol.size())) {
     return false;
+  }
 
-  // Check the path after the drive letter.
-  if (!EqualPath(actual_path, vol_length, path, 2))
+  // Check the path after the volume matches.
+  if (!EqualPath(actual_path, nt_vol.size(), path, vol_path_len)) {
     return false;
+  }
 
   return true;
 }
@@ -452,10 +461,11 @@ bool GetNtPathFromWin32Path(const std::wstring& path, std::wstring* nt_path) {
 bool WriteProtectedChildMemory(HANDLE child_process,
                                void* address,
                                const void* buffer,
-                               size_t length) {
+                               size_t length,
+                               DWORD writeProtection) {
   // First, remove the protections.
   DWORD old_protection;
-  if (!::VirtualProtectEx(child_process, address, length, PAGE_WRITECOPY,
+  if (!::VirtualProtectEx(child_process, address, length, writeProtection,
                           &old_protection))
     return false;
 
@@ -539,6 +549,30 @@ void* GetProcessBaseAddress(HANDLE process) {
 
   if (magic[0] != 'M' || magic[1] != 'Z')
     return nullptr;
+
+#if defined(_M_ARM64)
+  // Windows 10 on ARM64 has multi-threaded DLL loading that does not work with
+  // the sandbox. (On x86 this gets disabled by hook detection code that was not
+  // ported to ARM64). This overwrites the LoaderThreads value in the process
+  // parameters part of the PEB, if it is set to the default of 0 (which
+  // actually means it defaults to 4 loading threads). This is an undocumented
+  // field so there is a, probably small, risk that it might change or move in
+  // the future. In order to slightly guard against that we only update if the
+  // value is currently 0.
+  uint8_t* processParameters = static_cast<uint8_t*>(peb.ProcessParameters);
+  const uint32_t loaderThreadsOffset = 0x40c;
+  uint32_t maxLoaderThreads = 0;
+  BOOL memoryRead = ::ReadProcessMemory(
+      process, processParameters + loaderThreadsOffset, &maxLoaderThreads,
+      sizeof(maxLoaderThreads), &bytes_read);
+  if (memoryRead && (sizeof(maxLoaderThreads) == bytes_read) &&
+      (maxLoaderThreads == 0)) {
+    maxLoaderThreads = 1;
+    WriteProtectedChildMemory(process, processParameters + loaderThreadsOffset,
+                              &maxLoaderThreads, sizeof(maxLoaderThreads),
+                              PAGE_READWRITE);
+  }
+#endif
 
   return base_address;
 }

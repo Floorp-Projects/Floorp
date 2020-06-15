@@ -14,6 +14,7 @@
 #include "sandbox/win/src/sandbox_nt_util.h"
 #include "sandbox/win/src/sharedmem_ipc_client.h"
 #include "sandbox/win/src/target_services.h"
+#include "mozilla/sandboxing/sandboxLogging.h"
 
 namespace sandbox {
 
@@ -41,6 +42,8 @@ TargetNtCreateSection(NtCreateSectionFunction orig_CreateSection,
       break;
     if (allocation_attributes != SEC_IMAGE)
       break;
+
+    mozilla::sandboxing::LogBlocked("NtCreateSection");
 
     // IPC must be fully started.
     void* memory = GetGlobalIPCMemory();
@@ -78,6 +81,7 @@ TargetNtCreateSection(NtCreateSectionFunction orig_CreateSection,
 
     __try {
       *section_handle = answer.handle;
+      mozilla::sandboxing::LogAllowed("NtCreateSection");
       return answer.nt_status;
     } __except (EXCEPTION_EXECUTE_HANDLER) {
       break;
