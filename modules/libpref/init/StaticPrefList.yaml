@@ -9607,7 +9607,7 @@
 # Use DMABuf for video textures.
 - name: widget.wayland-dmabuf-video-textures.enabled
   type: RelaxedAtomicBool
-  value: true
+  value: false
   mirror: always
 
 # Use smooth rendering for basic compositor.
