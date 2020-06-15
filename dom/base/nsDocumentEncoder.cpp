@@ -986,6 +986,8 @@ nsresult nsDocumentEncoder::NodeSerializer::SerializeTextNode(
 
 nsresult nsDocumentEncoder::RangeSerializer::SerializeRangeNodes(
     const nsRange* const aRange, nsINode* const aNode, const int32_t aDepth) {
+  MOZ_ASSERT(aDepth >= 0);
+
   nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
   NS_ENSURE_TRUE(content, NS_ERROR_FAILURE);
 
