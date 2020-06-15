@@ -156,7 +156,7 @@ struct UncopyableUnmovableValue {
 
   ~UncopyableUnmovableValue() { --sUndestroyedObjects; }
 
-  Status GetStatus() { return mStatus; }
+  Status GetStatus() const { return mStatus; }
 
  private:
   UncopyableUnmovableValue(const UncopyableUnmovableValue& aOther) = delete;
@@ -184,6 +184,10 @@ static_assert(Some(43) == [] {
   return val;
 }());
 static_assert(Some(43) == Some(42).map([](int val) { return val + 1; }));
+static_assert(Maybe<int>(std::in_place, 43) ==
+              Maybe<int>(std::in_place, 42).map([](int val) {
+                return val + 1;
+              }));
 
 struct TriviallyDestructible {
   TriviallyDestructible() {  // not trivially constructible
@@ -260,6 +264,14 @@ static bool TestBasicFeatures() {
   MOZ_RELEASE_ASSERT(mayValue->GetTag() == 1);
   mayValue.reset();
   MOZ_RELEASE_ASSERT(!mayValue);
+
+  {
+    // Check that Maybe(std::in_place, T1) calls the correct constructor.
+    const auto mayValueConstructed = Maybe<BasicValue>(std::in_place, 1);
+    MOZ_RELEASE_ASSERT(mayValueConstructed);
+    MOZ_RELEASE_ASSERT(mayValueConstructed->GetStatus() == eWasConstructed);
+    MOZ_RELEASE_ASSERT(mayValueConstructed->GetTag() == 1);
+  }
 
   // Check that Some() and Nothing() work.
   mayValue = Some(BasicValue(2));
@@ -497,6 +509,13 @@ static bool TestCopyAndMove() {
   MOZ_RELEASE_ASSERT(0 == sUndestroyedObjects);
 
   {  // Check that types that support neither moves or copies work.
+    {
+      const auto mayUncopyableUnmovableValueConstructed =
+          Maybe<UncopyableUnmovableValue>{std::in_place};
+      MOZ_RELEASE_ASSERT(mayUncopyableUnmovableValueConstructed->GetStatus() ==
+                         eWasDefaultConstructed);
+    }
+
     Maybe<UncopyableUnmovableValue> mayUncopyableUnmovableValue;
     mayUncopyableUnmovableValue.emplace();
     MOZ_RELEASE_ASSERT(mayUncopyableUnmovableValue->GetStatus() ==
