@@ -1,8 +1,0 @@
-""" GDB Python customization auto-loader for libxul """
-#filter substitution
-
-import os.path
-sys.path[0:0] = [os.path.join('@topsrcdir@', 'js', 'src', 'gdb')]
-
-import mozilla.autoload
-mozilla.autoload.register(gdb.current_objfile())

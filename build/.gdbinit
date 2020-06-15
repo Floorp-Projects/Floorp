@@ -1,10 +1,8 @@
-# .gdbinit file for debugging Mozilla
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# You may need to put an 'add-auto-load-safe-path' command in your
-# $HOME/.gdbinit file to get GDB to trust this file. If your builds are
-# generally in $HOME/moz, then you can say:
-#
-#  add-auto-load-safe-path ~/moz
+# This file is loaded by .gdbinit
 
 # Don't stop for the SIG32/33/etc signals that Flash produces
 handle SIG32 noprint nostop pass
@@ -171,7 +169,7 @@ end
 
 document ptarray
         Prints nsTArray information.
-        Syntax: ptarray   
+        Syntax: ptarray
         Note: idx, idx1 and idx2 must be in acceptable range [0...size()-1].
         Examples:
         ptarray a - Prints tarray content, size, capacity and T typedef
@@ -198,5 +196,3 @@ end
 define ftlp
   call $arg0->DumpFrameTreeLimitedInCSSPixels()
 end
-
-source .gdbinit_python
