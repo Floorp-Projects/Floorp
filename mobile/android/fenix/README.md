@@ -67,6 +67,8 @@ Note: Both Android SDK and NDK are required.
   ```
 
   Use app:assembleGeckoNightlyDebug to build with the Gecko Nightly version instead.
+  If this errors out, make sure that you have an `ANDROID_SDK_ROOT` environment
+  variable pointing to the right path.
 
 3. Make sure to select the correct build variant in Android Studio. See the next section.
 
