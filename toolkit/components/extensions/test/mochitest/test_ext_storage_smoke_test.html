@@ -73,6 +73,17 @@ add_task(async function test_storage_smoke_test() {
         browser.test.assertEq("test-value2", data.test2,
             `Data can be removed for ${storageArea}`);
 
+        data = await storage.get({
+          test1: 1,
+          test2: 2,
+        });
+        browser.test.assertEq(2, Object.keys(data).length,
+            `Expected a key-value pair for every property for ${storageArea}`);
+        browser.test.assertEq(1, data.test1,
+            `Use default value if key was deleted for ${storageArea}`);
+        browser.test.assertEq("test-value2", data.test2,
+            `Use stored value if found for ${storageArea}`);
+
         await storage.clear();
         data = await storage.get();
         browser.test.assertEq(0, Object.keys(data).length,
