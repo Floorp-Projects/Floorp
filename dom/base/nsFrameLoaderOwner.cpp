@@ -204,8 +204,8 @@ void nsFrameLoaderOwner::ChangeRemoteness(
     }
   };
 
-  auto shouldPreserve =
-      ShouldPreserveBrowsingContext(isRemote, aOptions.mReplaceBrowsingContext);
+  auto shouldPreserve = ShouldPreserveBrowsingContext(
+      isRemote, /* replaceBrowsingContext */ false);
   ChangeRemotenessCommon(shouldPreserve, aOptions.mSwitchingInProgressLoad,
                          isRemote, frameLoaderInit, rv);
 }
