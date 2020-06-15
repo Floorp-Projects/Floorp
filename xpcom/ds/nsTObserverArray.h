@@ -541,34 +541,31 @@ inline void ImplCycleCollectionTraverse(
   }
 }
 
-// XXXbz I wish I didn't have to pass in the observer type, but I
-// don't see a way to get it out of array_.
 // Note that this macro only works if the array holds pointers to XPCOM objects.
-#define NS_OBSERVER_ARRAY_NOTIFY_XPCOM_OBSERVERS(array_, obstype_, func_, \
-                                                 params_)                 \
-  do {                                                                    \
-    for (RefPtr<obstype_> obs_ : array_.ForwardRange()) {                 \
-      obs_->func_ params_;                                                \
-    }                                                                     \
+#define NS_OBSERVER_ARRAY_NOTIFY_XPCOM_OBSERVERS(array_, func_, params_) \
+  do {                                                                   \
+    for (RefPtr obs_ : array_.ForwardRange()) {                          \
+      obs_->func_ params_;                                               \
+    }                                                                    \
   } while (0)
 
 // Note that this macro only works if the array holds pointers to XPCOM objects.
-#define NS_OBSERVER_ARRAY_NOTIFY_OBSERVERS(array_, obstype_, func_, params_) \
-  do {                                                                       \
-    for (obstype_ * obs_ : array_.ForwardRange()) {                          \
-      obs_->func_ params_;                                                   \
-    }                                                                        \
+#define NS_OBSERVER_ARRAY_NOTIFY_OBSERVERS(array_, func_, params_) \
+  do {                                                             \
+    for (auto* obs_ : array_.ForwardRange()) {                     \
+      obs_->func_ params_;                                         \
+    }                                                              \
   } while (0)
 
-#define NS_OBSERVER_ARRAY_NOTIFY_OBSERVERS_WITH_QI(array_, basetype_,        \
-                                                   obstype_, func_, params_) \
-  do {                                                                       \
-    for (basetype_ * obsbase_ : array_.ForwardRange()) {                     \
-      nsCOMPtr<obstype_> obs_ = do_QueryInterface(obsbase_);                 \
-      if (obs_) {                                                            \
-        obs_->func_ params_;                                                 \
-      }                                                                      \
-    }                                                                        \
+#define NS_OBSERVER_ARRAY_NOTIFY_OBSERVERS_WITH_QI(array_, obstype_, func_, \
+                                                   params_)                 \
+  do {                                                                      \
+    for (auto* obsbase_ : array_.ForwardRange()) {                          \
+      nsCOMPtr<obstype_> obs_ = do_QueryInterface(obsbase_);                \
+      if (obs_) {                                                           \
+        obs_->func_ params_;                                                \
+      }                                                                     \
+    }                                                                       \
   } while (0)
 
 #endif  // nsTObserverArray_h___
