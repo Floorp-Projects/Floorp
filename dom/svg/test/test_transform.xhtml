@@ -130,8 +130,31 @@ function run() {
      "Got different matrix objects after manipulation");
 
   testCreateTransform();
+  testMatrixTransform();
 
   SimpleTest.finish();
+}
+
+function testMatrixTransform() {
+  let svg = $("svg");
+  const epsilon = 1 / 65536;
+
+  let point = svg.createSVGPoint();
+  point.x = 5;
+  point.y = 4;
+  let matrix = createMatrix(2, 0, 0, 2, 10, 10);
+  let result = point.matrixTransform(matrix);
+  let expected = DOMPoint.fromPoint(point).matrixTransform(matrix);
+  isfuzzy(result.x, expected.x, epsilon, "matrix transformation x");
+  isfuzzy(result.y, expected.y, epsilon, "matrix transformation y");
+
+  svg.currentTranslate.x = 5;
+  svg.currentTranslate.y = 4;
+  result = svg.currentTranslate.matrixTransform(matrix);
+  isfuzzy(result.x, expected.x, epsilon, "svg matrix transformation x");
+  isfuzzy(result.y, expected.y, epsilon, "svg matrix transformation y");
+  svg.currentTranslate.x = 0;
+  svg.currentTranslate.y = 0;
 }
 
 function testCreateTransform() {
