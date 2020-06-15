@@ -37,8 +37,10 @@ function do_register_cleanup() {
 }
 
 function run_test() {
-  Log.repository.getLogger("Services.Common.RESTRequest").level =
-    Log.Level.Trace;
+  Services.prefs.setStringPref(
+    "services.common.log.logger.rest.request",
+    "Trace"
+  );
   initTestLogging("Trace");
 
   run_next_test();
