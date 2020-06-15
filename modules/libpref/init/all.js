@@ -1068,7 +1068,7 @@ pref("privacy.popups.maxReported", 100);
 // Purging first-party tracking cookies.
 #ifdef EARLY_BETA_OR_EARLIER
   pref("privacy.purge_trackers.enabled", true);
-  pref("privacy.purge_trackers.logging.level", "All");
+  pref("privacy.purge_trackers.logging.level", "Warn");
 #else
   pref("privacy.purge_trackers.enabled", false);
   pref("privacy.purge_trackers.logging.level", "Error");
@@ -1076,6 +1076,12 @@ pref("privacy.popups.maxReported", 100);
 
 // Allowable amount of cookies to purge in a batch.
 pref("privacy.purge_trackers.max_purge_count", 100);
+
+// Whether purging should not clear data from domains
+// that are associated with other domains which have
+// user interaction (even if they don't have user
+// interaction directly).
+pref("privacy.purge_trackers.consider_entity_list", false);
 
 pref("dom.event.contextmenu.enabled",       true);
 pref("dom.event.coalesce_mouse_move",       true);
