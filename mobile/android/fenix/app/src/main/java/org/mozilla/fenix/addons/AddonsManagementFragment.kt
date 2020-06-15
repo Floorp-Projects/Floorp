@@ -13,7 +13,7 @@ import androidx.core.content.res.ResourcesCompat
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
-import androidx.navigation.Navigation
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import kotlinx.android.synthetic.main.fragment_add_ons_management.*
 import kotlinx.android.synthetic.main.fragment_add_ons_management.view.*
@@ -23,10 +23,10 @@ import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.launch
 import mozilla.components.feature.addons.Addon
 import mozilla.components.feature.addons.AddonManagerException
+import mozilla.components.feature.addons.ui.AddonInstallationDialogFragment
 import mozilla.components.feature.addons.ui.AddonsManagerAdapter
 import mozilla.components.feature.addons.ui.AddonsManagerAdapterDelegate
 import mozilla.components.feature.addons.ui.PermissionsDialogFragment
-import mozilla.components.feature.addons.ui.AddonInstallationDialogFragment
 import mozilla.components.feature.addons.ui.translatedName
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
@@ -140,7 +140,7 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management),
             AddonsManagementFragmentDirections.actionAddonsManagementFragmentToInstalledAddonDetails(
                 addon
             )
-        Navigation.findNavController(requireView()).navigate(directions)
+        findNavController().navigate(directions)
     }
 
     private fun showDetailsFragment(addon: Addon) {
@@ -148,7 +148,7 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management),
             AddonsManagementFragmentDirections.actionAddonsManagementFragmentToAddonDetailsFragment(
                 addon
             )
-        Navigation.findNavController(requireView()).navigate(directions)
+        findNavController().navigate(directions)
     }
 
     private fun showNotYetSupportedAddonFragment(unsupportedAddons: ArrayList<Addon>) {
@@ -156,7 +156,7 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management),
             AddonsManagementFragmentDirections.actionAddonsManagementFragmentToNotYetSupportedAddonFragment(
                 unsupportedAddons.toTypedArray()
             )
-        Navigation.findNavController(requireView()).navigate(directions)
+        findNavController().navigate(directions)
     }
 
     private fun findPreviousDialogFragment(): PermissionsDialogFragment? {

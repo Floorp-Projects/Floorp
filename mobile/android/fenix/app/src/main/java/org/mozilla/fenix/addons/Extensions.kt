@@ -7,17 +7,6 @@ package org.mozilla.fenix.addons
 import android.view.View
 import androidx.fragment.app.Fragment
 import org.mozilla.fenix.components.FenixSnackbar
-import java.text.NumberFormat
-import java.util.Locale
-
-/**
- * Get the formatted number amount for the current default locale.
- *
- * @param amount The number of addons to be formatted for the current default locale..
- */
-internal fun getFormattedAmount(amount: Int): String {
-    return NumberFormat.getNumberInstance(Locale.getDefault()).format(amount)
-}
 
 /**
  * Shows the Fenix Snackbar in the given view along with the provided text.
