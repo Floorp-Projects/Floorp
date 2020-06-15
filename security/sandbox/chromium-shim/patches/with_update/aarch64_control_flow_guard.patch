@@ -17,11 +17,11 @@ Differential Revision: https://phabricator.services.mozilla.com/D29474
 diff --git a/security/sandbox/chromium/sandbox/win/src/process_mitigations.cc b/security/sandbox/chromium/sandbox/win/src/process_mitigations.cc
 --- a/security/sandbox/chromium/sandbox/win/src/process_mitigations.cc
 +++ b/security/sandbox/chromium/sandbox/win/src/process_mitigations.cc
-@@ -400,16 +400,21 @@ void ConvertProcessMitigationsToPolicy(M
+@@ -431,16 +431,21 @@ void ConvertProcessMitigationsToPolicy(M
  
    // Mitigations >= Win8.1:
    //----------------------------------------------------------------------------
-   if (version >= base::win::VERSION_WIN8_1) {
+   if (version >= base::win::Version::WIN8_1) {
      if (flags & MITIGATION_DYNAMIC_CODE_DISABLE) {
        *policy_value_1 |=
            PROCESS_CREATION_MITIGATION_POLICY_PROHIBIT_DYNAMIC_CODE_ALWAYS_ON;
@@ -35,14 +35,14 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/process_mitigations.cc b/
  
    // Mitigations >= Win10:
    //----------------------------------------------------------------------------
-   if (version >= base::win::VERSION_WIN10) {
+   if (version >= base::win::Version::WIN10) {
      if (flags & MITIGATION_NONSYSTEM_FONT_DISABLE) {
        *policy_value_1 |=
            PROCESS_CREATION_MITIGATION_POLICY_FONT_DISABLE_ALWAYS_ON;
 diff --git a/security/sandbox/chromium/sandbox/win/src/security_level.h b/security/sandbox/chromium/sandbox/win/src/security_level.h
 --- a/security/sandbox/chromium/sandbox/win/src/security_level.h
 +++ b/security/sandbox/chromium/sandbox/win/src/security_level.h
-@@ -273,11 +273,20 @@ const MitigationFlags MITIGATION_IMAGE_L
+@@ -282,11 +282,20 @@ const MitigationFlags MITIGATION_IMAGE_L
  const MitigationFlags MITIGATION_IMAGE_LOAD_PREFER_SYS32 = 0x00100000;
  
  // Prevents hyperthreads from interfering with indirect branch predictions.

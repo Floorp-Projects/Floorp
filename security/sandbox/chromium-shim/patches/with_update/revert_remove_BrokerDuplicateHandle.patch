@@ -1,18 +1,22 @@
 # HG changeset patch
-# User Bob Owen <bobowencode@gmail.com>
-# Date 1485985575 0
-#      Wed Feb 01 21:46:15 2017 +0000
-# Node ID 9328428e5f863472f3702057b01d472b46b7b6a2
-# Parent  4c1880ac25a66dec6455dc88ba693096d65df704
-Reinstate sandbox::TargetServices::BrokerDuplicateHandle. r=aklotz
+# User Toshihito Kikuchi <tkikuchi@mozilla.com>
+# Date 1589671733 25200
+#      Sat May 16 16:28:53 2020 -0700
+# Node ID 91bb5c3807cfe657cc24c9a3c217dd1f57db6d5c
+# Parent  22eb0bf7180801edf775be44cf299a50e01eb7bf
+Reinstate sandbox::TargetServices::BrokerDuplicateHandle. r=bobowen
 
-This basically reverts chromium commit 569193665184525ca366e65d0735f5c851106e43.
+This patch reverts the commit removing sandbox::TargetServices::BrokerDuplicateHandle
+and applies the new IpcTag type.
+
+https://chromium.googlesource.com/chromium/src.git/+/569193665184525ca366e65d0735f5c851106e43
+https://chromium.googlesource.com/chromium/src.git/+/c8cff7f9663ce6d1ef35e5c717f43c867c3906eb
 
 diff --git a/security/sandbox/chromium/sandbox/win/src/handle_dispatcher.cc b/security/sandbox/chromium/sandbox/win/src/handle_dispatcher.cc
 new file mode 100644
 --- /dev/null
 +++ b/security/sandbox/chromium/sandbox/win/src/handle_dispatcher.cc
-@@ -0,0 +1,92 @@
+@@ -0,0 +1,93 @@
 +// Copyright (c) 2012 The Chromium Authors. All rights reserved.
 +// Use of this source code is governed by a BSD-style license that can be
 +// found in the LICENSE file.
@@ -37,7 +41,7 @@ new file mode 100644
 +HandleDispatcher::HandleDispatcher(PolicyBase* policy_base)
 +    : policy_base_(policy_base) {
 +  static const IPCCall duplicate_handle_proxy = {
-+      {IPC_DUPLICATEHANDLEPROXY_TAG,
++      {IpcTag::DUPLICATEHANDLEPROXY,
 +       {VOIDPTR_TYPE, UINT32_TYPE, UINT32_TYPE, UINT32_TYPE}},
 +      reinterpret_cast<CallbackGeneric>(
 +          &HandleDispatcher::DuplicateHandleProxy)};
@@ -46,14 +50,15 @@ new file mode 100644
 +}
 +
 +bool HandleDispatcher::SetupService(InterceptionManager* manager,
-+                                    int service) {
++                                    IpcTag service) {
 +  // We perform no interceptions for handles right now.
 +  switch (service) {
-+    case IPC_DUPLICATEHANDLEPROXY_TAG:
-+    return true;
-+  }
++    case IpcTag::DUPLICATEHANDLEPROXY:
++      return true;
 +
-+  return false;
++    default:
++      return false;
++  }
 +}
 +
 +bool HandleDispatcher::DuplicateHandleProxy(IPCInfo* ipc,
@@ -93,7 +98,7 @@ new file mode 100644
 +  params[HandleTarget::NAME] = ParamPickerMake(type_info->Name.Buffer);
 +  params[HandleTarget::TARGET] = ParamPickerMake(target_process_id);
 +
-+  EvalResult eval = policy_base_->EvalPolicy(IPC_DUPLICATEHANDLEPROXY_TAG,
++  EvalResult eval = policy_base_->EvalPolicy(IpcTag::DUPLICATEHANDLEPROXY,
 +                                             params.GetBase());
 +  ipc->return_info.win32_result =
 +      HandlePolicy::DuplicateHandleProxyAction(eval, handle.Get(),
@@ -132,7 +137,7 @@ new file mode 100644
 +  ~HandleDispatcher() override {}
 +
 +  // Dispatcher interface.
-+  bool SetupService(InterceptionManager* manager, int service) override;
++  bool SetupService(InterceptionManager* manager, IpcTag service) override;
 +
 + private:
 +  // Processes IPC requests coming from calls to
@@ -184,7 +189,7 @@ new file mode 100644
 +
 +  SharedMemIPCClient ipc(memory);
 +  CrossCallReturn answer = {0};
-+  ResultCode code = CrossCall(ipc, IPC_DUPLICATEHANDLEPROXY_TAG,
++  ResultCode code = CrossCall(ipc, IpcTag::DUPLICATEHANDLEPROXY,
 +                              source_handle, target_process_id,
 +                              desired_access, options, &answer);
 +  if (SBOX_ALL_OK != code)
@@ -234,7 +239,7 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/handle_policy.cc b/securi
 new file mode 100644
 --- /dev/null
 +++ b/security/sandbox/chromium/sandbox/win/src/handle_policy.cc
-@@ -0,0 +1,92 @@
+@@ -0,0 +1,93 @@
 +// Copyright (c) 2012 The Chromium Authors. All rights reserved.
 +// Use of this source code is governed by a BSD-style license that can be
 +// found in the LICENSE file.
@@ -282,7 +287,7 @@ new file mode 100644
 +                                     CASE_INSENSITIVE)) {
 +    return false;
 +  }
-+  if (!policy->AddRule(IPC_DUPLICATEHANDLEPROXY_TAG, &duplicate_rule)) {
++  if (!policy->AddRule(IpcTag::DUPLICATEHANDLEPROXY, &duplicate_rule)) {
 +    return false;
 +  }
 +  return true;
@@ -302,7 +307,8 @@ new file mode 100644
 +  base::win::ScopedHandle remote_target_process;
 +  if (target_process_id != ::GetCurrentProcessId()) {
 +    // Sandboxed children are dynamic, so we check that manually.
-+    if (!BrokerServicesBase::GetInstance()->IsActiveTarget(target_process_id)) {
++    if (!BrokerServicesBase::GetInstance()->IsSafeDuplicationTarget(
++            target_process_id)) {
 +      return ERROR_ACCESS_DENIED;
 +    }
 +
@@ -493,29 +499,28 @@ new file mode 100644
 diff --git a/security/sandbox/chromium/sandbox/win/src/ipc_tags.h b/security/sandbox/chromium/sandbox/win/src/ipc_tags.h
 --- a/security/sandbox/chromium/sandbox/win/src/ipc_tags.h
 +++ b/security/sandbox/chromium/sandbox/win/src/ipc_tags.h
-@@ -23,16 +23,17 @@ enum {
-   IPC_NTOPENPROCESS_TAG,
-   IPC_NTOPENPROCESSTOKEN_TAG,
-   IPC_NTOPENPROCESSTOKENEX_TAG,
-   IPC_CREATEPROCESSW_TAG,
-   IPC_CREATEEVENT_TAG,
-   IPC_OPENEVENT_TAG,
-   IPC_NTCREATEKEY_TAG,
-   IPC_NTOPENKEY_TAG,
-+  IPC_DUPLICATEHANDLEPROXY_TAG,
-   IPC_GDI_GDIDLLINITIALIZE_TAG,
-   IPC_GDI_GETSTOCKOBJECT_TAG,
-   IPC_USER_REGISTERCLASSW_TAG,
-   IPC_CREATETHREAD_TAG,
-   IPC_USER_ENUMDISPLAYMONITORS_TAG,
-   IPC_USER_ENUMDISPLAYDEVICES_TAG,
-   IPC_USER_GETMONITORINFO_TAG,
-   IPC_GDI_CREATEOPMPROTECTEDOUTPUTS_TAG,
+@@ -23,16 +23,17 @@ enum class IpcTag {
+   NTOPENPROCESS,
+   NTOPENPROCESSTOKEN,
+   NTOPENPROCESSTOKENEX,
+   CREATEPROCESSW,
+   CREATEEVENT,
+   OPENEVENT,
+   NTCREATEKEY,
+   NTOPENKEY,
++  DUPLICATEHANDLEPROXY,
+   GDI_GDIDLLINITIALIZE,
+   GDI_GETSTOCKOBJECT,
+   USER_REGISTERCLASSW,
+   CREATETHREAD,
+   USER_ENUMDISPLAYMONITORS,
+   USER_ENUMDISPLAYDEVICES,
+   USER_GETMONITORINFO,
+   GDI_CREATEOPMPROTECTEDOUTPUTS,
 diff --git a/security/sandbox/chromium/sandbox/win/src/sandbox.h b/security/sandbox/chromium/sandbox/win/src/sandbox.h
 --- a/security/sandbox/chromium/sandbox/win/src/sandbox.h
 +++ b/security/sandbox/chromium/sandbox/win/src/sandbox.h
-@@ -136,16 +136,30 @@ class TargetServices {
-   // processing any untrusted data or running third-party code. If this call
+@@ -161,16 +161,30 @@ class TargetServices {
    // fails the current process could be terminated immediately.
    virtual void LowerToken() = 0;
  
@@ -523,7 +528,7 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/sandbox.h b/security/sand
    // information about the current state of the process, such as whether
    // LowerToken has been called or not.
    virtual ProcessState* GetState() = 0;
-+
+ 
 +  // Requests the broker to duplicate the supplied handle into the target
 +  // process. The target process must be an active sandbox child process
 +  // and the source process must have a corresponding policy allowing
@@ -537,28 +542,30 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/sandbox.h b/security/sand
 +                                     HANDLE* target_handle,
 +                                     DWORD desired_access,
 +                                     DWORD options) = 0;
- 
++
   protected:
    ~TargetServices() {}
  };
  
- }  // namespace sandbox
- 
- 
+ class PolicyInfo {
+  public:
+   // Returns a JSON representation of the policy snapshot.
+   // This pointer has the same lifetime as this PolicyInfo object.
 diff --git a/security/sandbox/chromium/sandbox/win/src/sandbox_policy.h b/security/sandbox/chromium/sandbox/win/src/sandbox_policy.h
 --- a/security/sandbox/chromium/sandbox/win/src/sandbox_policy.h
 +++ b/security/sandbox/chromium/sandbox/win/src/sandbox_policy.h
-@@ -24,27 +24,31 @@ class TargetPolicy {
+@@ -25,28 +25,32 @@ class TargetPolicy {
    // exactly like the CreateProcess API does. See the comment at the top of
    // process_thread_dispatcher.cc for more details.
    enum SubSystem {
-     SUBSYS_FILES,           // Creation and opening of files and pipes.
-     SUBSYS_NAMED_PIPES,     // Creation of named pipes.
-     SUBSYS_PROCESS,         // Creation of child processes.
-     SUBSYS_REGISTRY,        // Creation and opening of registry keys.
-     SUBSYS_SYNC,            // Creation of named sync objects.
-+    SUBSYS_HANDLES,         // Duplication of handles to other processes.
-     SUBSYS_WIN32K_LOCKDOWN  // Win32K Lockdown related policy.
+     SUBSYS_FILES,            // Creation and opening of files and pipes.
+     SUBSYS_NAMED_PIPES,      // Creation of named pipes.
+     SUBSYS_PROCESS,          // Creation of child processes.
+     SUBSYS_REGISTRY,         // Creation and opening of registry keys.
+     SUBSYS_SYNC,             // Creation of named sync objects.
++    SUBSYS_HANDLES,          // Duplication of handles to other processes.
+     SUBSYS_WIN32K_LOCKDOWN,  // Win32K Lockdown related policy.
+     SUBSYS_SIGNED_BINARY     // Signed binary policy.
    };
  
    // Allowable semantics when a rule is matched.
@@ -583,14 +590,14 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/sandbox_policy.h b/securi
 diff --git a/security/sandbox/chromium/sandbox/win/src/sandbox_policy_base.cc b/security/sandbox/chromium/sandbox/win/src/sandbox_policy_base.cc
 --- a/security/sandbox/chromium/sandbox/win/src/sandbox_policy_base.cc
 +++ b/security/sandbox/chromium/sandbox/win/src/sandbox_policy_base.cc
-@@ -10,16 +10,17 @@
- 
- #include "base/callback.h"
+@@ -12,16 +12,17 @@
  #include "base/logging.h"
  #include "base/macros.h"
  #include "base/stl_util.h"
  #include "base/strings/stringprintf.h"
+ #include "base/win/win_util.h"
  #include "base/win/windows_version.h"
+ #include "sandbox/win/src/acl.h"
  #include "sandbox/win/src/filesystem_policy.h"
 +#include "sandbox/win/src/handle_policy.h"
  #include "sandbox/win/src/interception.h"
@@ -601,7 +608,7 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/sandbox_policy_base.cc b/
  #include "sandbox/win/src/policy_low_level.h"
  #include "sandbox/win/src/process_mitigations.h"
  #include "sandbox/win/src/process_mitigations_win32k_policy.h"
-@@ -733,16 +734,24 @@ ResultCode PolicyBase::AddRuleInternal(S
+@@ -754,16 +755,24 @@ ResultCode PolicyBase::AddRuleInternal(S
      }
      case SUBSYS_REGISTRY: {
        if (!RegistryPolicy::GenerateRules(pattern, semantics, policy_maker_)) {
@@ -619,13 +626,13 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/sandbox_policy_base.cc b/
 +    }
 +
      case SUBSYS_WIN32K_LOCKDOWN: {
-       if (!ProcessMitigationsWin32KLockdownPolicy::GenerateRules(
-               pattern, semantics, policy_maker_)) {
-         NOTREACHED();
-         return SBOX_ERROR_BAD_PARAMS;
-       }
-       break;
-     }
+       // Win32k intercept rules only supported on Windows 8 and above. This must
+       // match the version checks in process_mitigations.cc for consistency.
+       if (base::win::GetVersion() >= base::win::Version::WIN8) {
+         DCHECK_EQ(MITIGATION_WIN32K_DISABLE,
+                   mitigations_ & MITIGATION_WIN32K_DISABLE)
+             << "Enable MITIGATION_WIN32K_DISABLE before adding win32k policy "
+                "rules.";
 diff --git a/security/sandbox/chromium/sandbox/win/src/target_services.cc b/security/sandbox/chromium/sandbox/win/src/target_services.cc
 --- a/security/sandbox/chromium/sandbox/win/src/target_services.cc
 +++ b/security/sandbox/chromium/sandbox/win/src/target_services.cc
@@ -647,9 +654,9 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/target_services.cc b/secu
  #include "sandbox/win/src/sandbox_nt_util.h"
  #include "sandbox/win/src/sandbox_types.h"
  #include "sandbox/win/src/sharedmem_ipc_client.h"
-@@ -259,9 +260,19 @@ void ProcessState::SetRevertedToSelf() {
-   if (process_state_ < 3)
-     process_state_ = 3;
+@@ -239,9 +240,19 @@ void ProcessState::SetRevertedToSelf() {
+   if (process_state_ < ProcessStateInternal::REVERTED_TO_SELF)
+     process_state_ = ProcessStateInternal::REVERTED_TO_SELF;
  }
  
  void ProcessState::SetCsrssConnected(bool csrss_connected) {
@@ -670,7 +677,7 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/target_services.cc b/secu
 diff --git a/security/sandbox/chromium/sandbox/win/src/target_services.h b/security/sandbox/chromium/sandbox/win/src/target_services.h
 --- a/security/sandbox/chromium/sandbox/win/src/target_services.h
 +++ b/security/sandbox/chromium/sandbox/win/src/target_services.h
-@@ -41,16 +41,21 @@ class ProcessState {
+@@ -40,16 +40,21 @@ class ProcessState {
  class TargetServicesBase : public TargetServices {
   public:
    TargetServicesBase();
@@ -713,24 +720,24 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/top_level_dispatcher.cc b
  #include "sandbox/win/src/process_thread_dispatcher.h"
  #include "sandbox/win/src/registry_dispatcher.h"
  #include "sandbox/win/src/sandbox_policy_base.h"
-@@ -53,16 +54,20 @@ TopLevelDispatcher::TopLevelDispatcher(P
-   ipc_targets_[IPC_OPENEVENT_TAG] = dispatcher;
+@@ -55,16 +56,20 @@ TopLevelDispatcher::TopLevelDispatcher(P
+   ipc_targets_[static_cast<size_t>(IpcTag::OPENEVENT)] = dispatcher;
    sync_dispatcher_.reset(dispatcher);
  
    dispatcher = new RegistryDispatcher(policy_);
-   ipc_targets_[IPC_NTCREATEKEY_TAG] = dispatcher;
-   ipc_targets_[IPC_NTOPENKEY_TAG] = dispatcher;
+   ipc_targets_[static_cast<size_t>(IpcTag::NTCREATEKEY)] = dispatcher;
+   ipc_targets_[static_cast<size_t>(IpcTag::NTOPENKEY)] = dispatcher;
    registry_dispatcher_.reset(dispatcher);
  
 +  dispatcher = new HandleDispatcher(policy_);
-+  ipc_targets_[IPC_DUPLICATEHANDLEPROXY_TAG] = dispatcher;
++  ipc_targets_[static_cast<size_t>(IpcTag::DUPLICATEHANDLEPROXY)] = dispatcher;
 +  handle_dispatcher_.reset(dispatcher);
 +
    dispatcher = new ProcessMitigationsWin32KDispatcher(policy_);
-   ipc_targets_[IPC_GDI_GDIDLLINITIALIZE_TAG] = dispatcher;
-   ipc_targets_[IPC_GDI_GETSTOCKOBJECT_TAG] = dispatcher;
-   ipc_targets_[IPC_USER_REGISTERCLASSW_TAG] = dispatcher;
-   ipc_targets_[IPC_USER_ENUMDISPLAYMONITORS_TAG] = dispatcher;
-   ipc_targets_[IPC_USER_ENUMDISPLAYDEVICES_TAG] = dispatcher;
-   ipc_targets_[IPC_USER_GETMONITORINFO_TAG] = dispatcher;
-   ipc_targets_[IPC_GDI_CREATEOPMPROTECTEDOUTPUTS_TAG] = dispatcher;
+   ipc_targets_[static_cast<size_t>(IpcTag::GDI_GDIDLLINITIALIZE)] = dispatcher;
+   ipc_targets_[static_cast<size_t>(IpcTag::GDI_GETSTOCKOBJECT)] = dispatcher;
+   ipc_targets_[static_cast<size_t>(IpcTag::USER_REGISTERCLASSW)] = dispatcher;
+   ipc_targets_[static_cast<size_t>(IpcTag::USER_ENUMDISPLAYMONITORS)] =
+       dispatcher;
+   ipc_targets_[static_cast<size_t>(IpcTag::USER_ENUMDISPLAYDEVICES)] =
+       dispatcher;

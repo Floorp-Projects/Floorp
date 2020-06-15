@@ -12,7 +12,7 @@ https://hg.mozilla.org/mozilla-central/rev/14374cd9497a
 diff --git a/security/sandbox/chromium/sandbox/win/src/restricted_token_utils.cc b/security/sandbox/chromium/sandbox/win/src/restricted_token_utils.cc
 --- a/security/sandbox/chromium/sandbox/win/src/restricted_token_utils.cc
 +++ b/security/sandbox/chromium/sandbox/win/src/restricted_token_utils.cc
-@@ -51,16 +51,17 @@
+@@ -51,16 +51,17 @@ DWORD GetObjectSecurityDescriptor(HANDLE
  
  }  // namespace
  
@@ -28,9 +28,9 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/restricted_token_utils.cc
    if (lockdown_default_dacl)
      restricted_token.SetLockdownDefaultDacl();
  
-   std::vector<base::string16> privilege_exceptions;
+   std::vector<std::wstring> privilege_exceptions;
    std::vector<Sid> sid_exceptions;
-@@ -68,19 +69,22 @@ DWORD CreateRestrictedToken(TokenLevel s
+@@ -73,19 +74,22 @@ DWORD CreateRestrictedToken(HANDLE effec
        deny_sids = false;
        remove_privileges = false;
        break;
@@ -56,7 +56,7 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/restricted_token_utils.cc
        sid_exceptions.push_back(WinWorldSid);
        sid_exceptions.push_back(WinInteractiveSid);
        sid_exceptions.push_back(WinAuthenticatedUserSid);
-@@ -93,49 +97,57 @@ DWORD CreateRestrictedToken(TokenLevel s
+@@ -108,49 +112,57 @@ DWORD CreateRestrictedToken(HANDLE effec
        break;
      }
      case USER_INTERACTIVE: {
@@ -133,7 +133,7 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/restricted_token_utils.cc
 diff --git a/security/sandbox/chromium/sandbox/win/src/restricted_token_utils.h b/security/sandbox/chromium/sandbox/win/src/restricted_token_utils.h
 --- a/security/sandbox/chromium/sandbox/win/src/restricted_token_utils.h
 +++ b/security/sandbox/chromium/sandbox/win/src/restricted_token_utils.h
-@@ -33,16 +33,17 @@ enum TokenType {
+@@ -33,16 +33,17 @@ enum TokenType { IMPERSONATION = 0, PRIM
  // If the function succeeds, the return value is ERROR_SUCCESS. If the
  // function fails, the return value is the win32 error code corresponding to
  // the error.
@@ -154,7 +154,7 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/restricted_token_utils.h 
 diff --git a/security/sandbox/chromium/sandbox/win/src/sandbox_policy.h b/security/sandbox/chromium/sandbox/win/src/sandbox_policy.h
 --- a/security/sandbox/chromium/sandbox/win/src/sandbox_policy.h
 +++ b/security/sandbox/chromium/sandbox/win/src/sandbox_policy.h
-@@ -95,16 +95,21 @@ class TargetPolicy {
+@@ -101,16 +101,21 @@ class TargetPolicy {
    virtual ResultCode SetTokenLevel(TokenLevel initial, TokenLevel lockdown) = 0;
  
    // Returns the initial token level.
@@ -179,7 +179,7 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/sandbox_policy.h b/securi
 diff --git a/security/sandbox/chromium/sandbox/win/src/sandbox_policy_base.cc b/security/sandbox/chromium/sandbox/win/src/sandbox_policy_base.cc
 --- a/security/sandbox/chromium/sandbox/win/src/sandbox_policy_base.cc
 +++ b/security/sandbox/chromium/sandbox/win/src/sandbox_policy_base.cc
-@@ -149,16 +149,20 @@ ResultCode PolicyBase::SetTokenLevel(Tok
+@@ -152,16 +152,20 @@ ResultCode PolicyBase::SetTokenLevel(Tok
  TokenLevel PolicyBase::GetInitialTokenLevel() const {
    return initial_level_;
  }
@@ -200,7 +200,7 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/sandbox_policy_base.cc b/
    ui_exceptions_ = ui_exceptions;
    return SBOX_ALL_OK;
  }
-@@ -402,17 +406,18 @@ ResultCode PolicyBase::MakeJobObject(bas
+@@ -413,17 +417,18 @@ ResultCode PolicyBase::MakeJobObject(bas
  
  ResultCode PolicyBase::MakeTokens(base::win::ScopedHandle* initial,
                                    base::win::ScopedHandle* lockdown,
@@ -213,14 +213,14 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/sandbox_policy_base.cc b/
 +                            PRIMARY, lockdown_default_dacl_,
 +                            use_restricting_sids_, lockdown);
    if (ERROR_SUCCESS != result)
-     return SBOX_ERROR_GENERIC;
+     return SBOX_ERROR_CANNOT_CREATE_RESTRICTED_TOKEN;
  
    // If we're launching on the alternate desktop we need to make sure the
    // integrity label on the object is no higher than the sandboxed process's
    // integrity level. So, we lower the label on the desktop process if it's
    // not already low enough for our process.
    if (use_alternate_desktop_ && integrity_level_ != INTEGRITY_LEVEL_LAST) {
-@@ -466,17 +471,18 @@ ResultCode PolicyBase::MakeTokens(base::
+@@ -482,17 +487,18 @@ ResultCode PolicyBase::MakeTokens(base::
      }
    }
  
@@ -233,7 +233,7 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/sandbox_policy_base.cc b/
 +                            IMPERSONATION, lockdown_default_dacl_,
 +                            use_restricting_sids_, initial);
    if (ERROR_SUCCESS != result)
-     return SBOX_ERROR_GENERIC;
+     return SBOX_ERROR_CANNOT_CREATE_RESTRICTED_IMP_TOKEN;
  
    return SBOX_ALL_OK;
  }
@@ -243,7 +243,7 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/sandbox_policy_base.cc b/
 diff --git a/security/sandbox/chromium/sandbox/win/src/sandbox_policy_base.h b/security/sandbox/chromium/sandbox/win/src/sandbox_policy_base.h
 --- a/security/sandbox/chromium/sandbox/win/src/sandbox_policy_base.h
 +++ b/security/sandbox/chromium/sandbox/win/src/sandbox_policy_base.h
-@@ -37,16 +37,17 @@ class PolicyBase final : public TargetPo
+@@ -41,16 +41,17 @@ class PolicyBase final : public TargetPo
    PolicyBase();
  
    // TargetPolicy:
@@ -257,11 +257,11 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/sandbox_policy_base.h b/s
    JobLevel GetJobLevel() const override;
    ResultCode SetJobMemoryLimit(size_t memory_limit) override;
    ResultCode SetAlternateDesktop(bool alternate_winstation) override;
-   base::string16 GetAlternateDesktop() const override;
+   std::wstring GetAlternateDesktop() const override;
    ResultCode CreateAlternateDesktop(bool alternate_winstation) override;
    void DestroyAlternateDesktop() override;
    ResultCode SetIntegrityLevel(IntegrityLevel integrity_level) override;
-@@ -122,16 +123,17 @@ class PolicyBase final : public TargetPo
+@@ -134,16 +135,17 @@ class PolicyBase final : public TargetPo
    // The policy takes ownership of them.
    typedef std::list<TargetProcess*> TargetSet;
    TargetSet targets_;

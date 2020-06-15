@@ -12,7 +12,7 @@ https://hg.mozilla.org/mozilla-central/rev/c70d06fa5302
 diff --git a/security/sandbox/chromium/sandbox/win/src/win_utils.cc b/security/sandbox/chromium/sandbox/win/src/win_utils.cc
 --- a/security/sandbox/chromium/sandbox/win/src/win_utils.cc
 +++ b/security/sandbox/chromium/sandbox/win/src/win_utils.cc
-@@ -190,62 +190,67 @@ bool ResolveRegistryName(base::string16 
+@@ -194,61 +194,66 @@ bool ResolveRegistryName(std::wstring na
  
    return false;
  }
@@ -22,12 +22,12 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/win_utils.cc b/security/s
  //    \Device\HarddiskVolume0\some\foo\bar
  //    \??\HarddiskVolume0\some\foo\bar
 +//    \??\UNC\SERVER\Share\some\foo\bar
- DWORD IsReparsePoint(const base::string16& full_path) {
+ DWORD IsReparsePoint(const std::wstring& full_path) {
    // Check if it's a pipe. We can't query the attributes of a pipe.
    if (IsPipe(full_path))
      return ERROR_NOT_A_REPARSE_POINT;
  
-   base::string16 path;
+   std::wstring path;
    bool nt_path = IsNTPath(full_path, &path);
    bool has_drive = StartsWithDriveLetter(path);
    bool is_device_path = IsDevicePath(path, &path);
@@ -37,13 +37,13 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/win_utils.cc b/security/s
  
 -  bool added_implied_device = false;
    if (!has_drive) {
--    path = base::string16(kNTDotPrefix) + path;
+-    path = std::wstring(kNTDotPrefix) + path;
 -    added_implied_device = true;
 +    // Add Win32 device namespace prefix, required for some Windows APIs.
 +    path.insert(0, kNTDotPrefix);
    }
  
--  base::string16::size_type last_pos = base::string16::npos;
+-  std::wstring::size_type last_pos = std::wstring::npos;
 -  bool passed_once = false;
 +  // Ensure that volume path matches start of path.
 +  wchar_t vol_path[MAX_PATH];
@@ -73,7 +73,6 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/win_utils.cc b/security/s
 -            (path.rfind(L'\\') == kNTDotPrefixLen - 1)) {
 -          break;
 -        }
-         NOTREACHED_NT();
          return error;
        }
      } else if (FILE_ATTRIBUTE_REPARSE_POINT & attributes) {
@@ -94,12 +93,12 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/win_utils.cc b/security/s
  // we'll get from |handle| will be \device\harddiskvolume1\some\foo\bar.
  bool SameObject(HANDLE handle, const wchar_t* full_path) {
    // Check if it's a pipe.
-@@ -256,63 +261,67 @@ bool SameObject(HANDLE handle, const wch
-   base::string16 actual_path;
+@@ -258,63 +263,67 @@ bool SameObject(HANDLE handle, const wch
+   std::wstring actual_path;
    if (!GetPathFromHandle(handle, &actual_path))
      return false;
  
-   base::string16 path(full_path);
+   std::wstring path(full_path);
    DCHECK_NT(!path.empty());
  
    // This may end with a backslash.
@@ -119,7 +118,7 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/win_utils.cc b/security/s
    bool has_drive = StartsWithDriveLetter(path);
  
    if (!has_drive && nt_path) {
-     base::string16 simple_actual_path;
+     std::wstring simple_actual_path;
 -    if (!IsDevicePath(actual_path, &simple_actual_path))
 -      return false;
 -
@@ -187,5 +186,5 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/win_utils.cc b/security/s
  
  // Just make a best effort here.  There are lots of corner cases that we're
  // not expecting - and will fail to make long.
- bool ConvertToLongPath(base::string16* native_path,
-                        const base::string16* drive_letter) {
+ bool ConvertToLongPath(std::wstring* native_path,
+                        const std::wstring* drive_letter) {

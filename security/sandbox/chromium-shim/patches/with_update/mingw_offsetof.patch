@@ -11,7 +11,7 @@ MozReview-Commit-ID: D7REZiAIMpN
 diff --git a/security/sandbox/chromium/sandbox/win/src/crosscall_params.h b/security/sandbox/chromium/sandbox/win/src/crosscall_params.h
 --- a/security/sandbox/chromium/sandbox/win/src/crosscall_params.h
 +++ b/security/sandbox/chromium/sandbox/win/src/crosscall_params.h
-@@ -61,16 +61,17 @@ union MultiType {
+@@ -78,16 +78,17 @@ union MultiType {
    ULONG_PTR ulong_ptr;
  };
  
@@ -29,9 +29,9 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/crosscall_params.h b/secu
    uint32_t offset_;
    uint32_t size_;
  };
-@@ -271,16 +272,18 @@ class ActualCallParams : public CrossCal
+@@ -287,16 +288,18 @@ class ActualCallParams : public CrossCal
   protected:
-   ActualCallParams() : CrossCallParams(0, NUMBER_PARAMS) { }
+   ActualCallParams() : CrossCallParams(IpcTag::UNUSED, NUMBER_PARAMS) {}
  
   private:
    ParamInfo param_info_[NUMBER_PARAMS + 1];
@@ -167,7 +167,7 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/crosscall_server.cc b/sec
      // Avoid compiler optimizations across this point. Any value stored in
      // memory should be stored for real, and values previously read from memory
      // should be actually read.
-     base::subtle::MemoryBarrier();
+     std::atomic_thread_fence(std::memory_order_seq_cst);
  
 -    min_declared_size =
 -        sizeof(CrossCallParams) + ((param_count + 1) * sizeof(ParamInfo));
