@@ -111,7 +111,7 @@
 #include "wasm/WasmTypes.h"           // for WasmInstanceObjectVector
 
 #include "debugger/DebugAPI-inl.h"
-#include "debugger/Frame-inl.h"    // for DebuggerFrame::hasGenerator
+#include "debugger/Frame-inl.h"    // for DebuggerFrame::hasGeneratorInfo
 #include "debugger/Script-inl.h"   // for DebuggerScript::getReferent
 #include "gc/GC-inl.h"             // for ZoneCellIter
 #include "gc/Marking-inl.h"        // for MaybeForwarded
@@ -681,7 +681,7 @@ bool Debugger::getFrame(JSContext* cx, const FrameIter& iter,
 
     if (!frames.add(p, referent, frame)) {
       frame->freeFrameIterData(cx->defaultFreeOp());
-      frame->clearGenerator(cx->runtime()->defaultFreeOp(), this);
+      frame->clearGeneratorInfo(cx->runtime()->defaultFreeOp(), this);
       ReportOutOfMemory(cx);
       return false;
     }
@@ -1204,7 +1204,7 @@ bool DebugAPI::slowPathOnNewGenerator(JSContext* cx, AbstractFramePtr frame,
     {
       AutoRealm ar(cx, frameObj);
 
-      if (!frameObj->setGenerator(cx, genObj)) {
+      if (!frameObj->setGeneratorInfo(cx, genObj)) {
         ReportOutOfMemory(cx);
 
         // This leaves `genObj` and `frameObj` unassociated. It's OK
@@ -3833,7 +3833,7 @@ void DebugAPI::sweepAll(JSFreeOp* fop) {
            e.popFront()) {
         DebuggerFrame* frameObj = e.front().value();
         if (IsAboutToBeFinalizedUnbarriered(&frameObj)) {
-          frameObj->clearGenerator(fop, dbg, &e);
+          frameObj->clearGeneratorInfo(fop, dbg, &e);
         }
       }
     }
@@ -4732,7 +4732,7 @@ void Debugger::removeDebuggeeGlobal(JSFreeOp* fop, GlobalObject* global,
       AbstractGeneratorObject& genObj = *e.front().key();
       DebuggerFrame& frameObj = *e.front().value();
       if (genObj.isClosed() || &genObj.callee().global() == global) {
-        frameObj.clearGenerator(fop, this, &e);
+        frameObj.clearGeneratorInfo(fop, this, &e);
       }
     }
   }
@@ -6002,7 +6002,7 @@ bool Debugger::CallData::adoptFrame() {
     if (!dbg->getFrame(cx, iter, &adoptedFrame)) {
       return false;
     }
-  } else if (frameObj->hasGenerator()) {
+  } else if (frameObj->isSuspended()) {
     Rooted<AbstractGeneratorObject*> gen(cx, &frameObj->unwrappedGenerator());
     if (!dbg->observesGlobal(&gen->global())) {
       JS_ReportErrorASCII(cx, "Debugger.Frame's global is not a debuggee");
@@ -6351,7 +6351,7 @@ void Debugger::removeFromFrameMapsAndClearBreakpointsIn(JSContext* cx,
     Debugger* dbg = Debugger::fromChildJSObject(frameobj);
     dbg->frames.remove(frame);
 
-    if (frameobj->hasGenerator()) {
+    if (frameobj->hasGeneratorInfo()) {
       // If this is a generator's final pop, remove its entry from
       // generatorFrames. Such an entry exists if and only if the
       // Debugger.Frame's generator has been set.
@@ -6363,7 +6363,7 @@ void Debugger::removeFromFrameMapsAndClearBreakpointsIn(JSContext* cx,
         MOZ_ASSERT(p);
         MOZ_ASSERT(p->value() == frameobj);
 #endif
-        frameobj->clearGenerator(fop, dbg);
+        frameobj->clearGeneratorInfo(fop, dbg);
       }
     } else {
       frameobj->maybeDecrementStepperCounter(fop, frame);
