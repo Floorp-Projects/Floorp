@@ -9,7 +9,7 @@ use super::CommonMetricData;
 /// Used to count things.
 /// The value can only be incremented, not decremented.
 #[derive(Clone, Debug)]
-pub struct CounterMetric(glean_core::metrics::CounterMetric);
+pub struct CounterMetric(pub(crate) glean_core::metrics::CounterMetric);
 
 impl CounterMetric {
     /// Create a new counter metric.

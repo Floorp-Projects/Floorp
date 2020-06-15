@@ -8,7 +8,8 @@ use common::*;
 use once_cell::sync::Lazy;
 
 use glean::metrics::{
-    BooleanMetric, CommonMetricData, ErrorType, LabeledMetric, Lifetime, StringMetric,
+    BooleanMetric, CommonMetricData, CounterMetric, ErrorType, LabeledMetric, Lifetime,
+    StringMetric,
 };
 
 // Smoke test for what should be the generated code.
@@ -86,6 +87,30 @@ fn sets_labeled_string_metrics() {
         "Glean",
         metric.get("upload").test_get_value("store1").unwrap()
     );
+    assert_eq!(None, metric.get("download").test_get_value("store1"));
+}
+
+#[test]
+fn sets_labeled_counter_metrics() {
+    let _lock = lock_test();
+    let _t = setup_glean(None);
+    let store_names: Vec<String> = vec!["store1".into()];
+
+    let metric: LabeledMetric<CounterMetric> = LabeledMetric::new(
+        CommonMetricData {
+            name: "counter".into(),
+            category: "labeled".into(),
+            send_in_pings: store_names,
+            disabled: false,
+            lifetime: Lifetime::Ping,
+            ..Default::default()
+        },
+        None,
+    );
+
+    metric.get("upload").add(10);
+
+    assert_eq!(10, metric.get("upload").test_get_value("store1").unwrap());
     assert_eq!(None, metric.get("download").test_get_value("store1"));
 }
 
