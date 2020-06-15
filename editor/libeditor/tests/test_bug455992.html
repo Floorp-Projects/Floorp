@@ -53,7 +53,7 @@ function runTest() {
     sendKey("right");
     sendChar(" ");
     is(e.parentNode.childNodes[2].nodeValue, before, msg + " with id=" + e.id);
-    is(e.innerHTML, "X" + (e.tagName == "SPAN" ? "&nbsp;" : " <br>"), msg + " with id=" + e.id);
+    is(e.innerHTML, "X&nbsp;", msg + " with id=" + e.id);
   }
 
   test_begin_bs(select("t1"));

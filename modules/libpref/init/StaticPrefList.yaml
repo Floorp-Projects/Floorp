@@ -3402,12 +3402,19 @@
 # * 2: Replace newlines with spaces (default of Firefox).
 # * 3: Remove newlines from the string.
 # * 4: Replace newlines with commas (default of Thunderbird).
-# * 5: Collapse newlines and surrounding whitespace characters and
+# * 5: Collapse newlines and surrounding white space characters and
 #      remove them from the string.
 # Other values are treated as 1.
 - name: editor.singleLine.pasteNewlines
   type: int32_t
   value: 2
+  mirror: always
+
+# Whether enabling blink compatible white-space normalizer or keep using
+# Gecko's traditional white-space normalizer.
+- name: editor.white_space_normalization.blink_compatible
+  type: bool
+  value: false
   mirror: always
 
 #---------------------------------------------------------------------------

@@ -1829,9 +1829,10 @@ class HTMLEditor final : public TextEditor,
    * line is empty) and the line ends with block boundary, inserts a `<br>`
    * element.
    */
+  template <typename EditorDOMPointType>
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
   InsertBRElementIfHardLineIsEmptyAndEndsWithBlockBoundary(
-      const EditorDOMPoint& aPointToInsert);
+      const EditorDOMPointType& aPointToInsert);
 
   /**
    * Insert a `<br>` element if aElement is a block element and empty.
@@ -2452,6 +2453,173 @@ class HTMLEditor final : public TextEditor,
    */
   already_AddRefed<dom::StaticRange> GetRangeExtendedToIncludeInvisibleNodes(
       const dom::AbstractRange& aAbstractRange);
+
+  /**
+   * DeleteTextAndNormalizeSurroundingWhiteSpaces() deletes text between
+   * aStartToDelete and immediately before aEndToDelete.  If surrounding
+   * characters are white-spaces, this normalize them too.  Finally, inserts
+   * `<br>` element if it's required.
+   * Note that if you wants only normalizing white-spaces, you can set same
+   * point to both aStartToDelete and aEndToDelete.  Then, this tries to
+   * normalize white-space sequence containing previous character of
+   * aStartToDelete.
+   */
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
+  DeleteTextAndNormalizeSurroundingWhiteSpaces(
+      const EditorDOMPointInText& aStartToDelete,
+      const EditorDOMPointInText& aEndToDelete);
+
+  /**
+   * ExtendRangeToDeleteWithNormalizingWhiteSpaces() is a helper method of
+   * DeleteTextAndNormalizeSurroundingWhiteSpaces().  This expands
+   * aStartToDelete and/or aEndToDelete if there are white-spaces which need
+   * normalizing.
+   *
+   * @param aStartToDelete      [In/Out] Start to delete.  If this point
+   *                            follows white-spaces, this may be modified.
+   * @param aEndToDelete        [In/Out] Next point of last content to be
+   *                            deleted.  If this point is a white-space,
+   *                            this may be modified.
+   * @param aNormalizedWhiteSpacesInStartNode
+   *                            [Out] If container text node of aStartToDelete
+   *                            should be modified, this offers new string
+   *                            in the range in the text node.
+   * @param aNormalizedWhiteSpacesInEndNode
+   *                            [Out] If container text node of aEndToDelete
+   *                            is different from the container of
+   *                            aStartToDelete and it should be modified, this
+   *                            offers new string in the range in the text node.
+   */
+  void ExtendRangeToDeleteWithNormalizingWhiteSpaces(
+      EditorDOMPointInText& aStartToDelete, EditorDOMPointInText& aEndToDelete,
+      nsAString& aNormalizedWhiteSpacesInStartNode,
+      nsAString& aNormalizedWhiteSpacesInEndNode) const;
+
+  /**
+   * CharPointType let the following helper methods of
+   * ExtendRangeToDeleteWithNormalizingWhiteSpaces() know what type of
+   * character will be previous or next char point after deletion.
+   */
+  enum class CharPointType {
+    TextEnd,  // Start or end of the text (hardline break or replaced inline
+              // element)
+    ASCIIWhiteSpace,   // One of ASCII white-spaces (collapsible white-space)
+    NoBreakingSpace,   // NBSP
+    VisibleChar,       // Non-white-space characters
+    PreformattedChar,  // Any character (including white-space) in preformatted
+                       // element
+  };
+
+  /**
+   * GetPreviousCharPointType() and GetCharPointType() get type of
+   * previous/current char point from current DOM tree.  In other words, if the
+   * point will be deleted, you cannot use these methods.
+   */
+  template <typename EditorDOMPointType>
+  static CharPointType GetPreviousCharPointType(
+      const EditorDOMPointType& aPoint) {
+    MOZ_ASSERT(aPoint.IsInTextNode());
+    if (aPoint.IsStartOfContainer()) {
+      return CharPointType::TextEnd;
+    }
+    if (EditorUtils::IsContentPreformatted(*aPoint.ContainerAsText())) {
+      return CharPointType::PreformattedChar;
+    }
+    if (aPoint.IsPreviousCharASCIISpace()) {
+      return CharPointType::ASCIIWhiteSpace;
+    }
+    return aPoint.IsPreviousCharNBSP() ? CharPointType::NoBreakingSpace
+                                       : CharPointType::VisibleChar;
+  }
+  template <typename EditorDOMPointType>
+  static CharPointType GetCharPointType(const EditorDOMPointType& aPoint) {
+    MOZ_ASSERT(aPoint.IsInTextNode());
+    if (aPoint.IsEndOfContainer()) {
+      return CharPointType::TextEnd;
+    }
+    if (EditorUtils::IsContentPreformatted(*aPoint.ContainerAsText())) {
+      return CharPointType::PreformattedChar;
+    }
+    if (aPoint.IsCharASCIISpace()) {
+      return CharPointType::ASCIIWhiteSpace;
+    }
+    return aPoint.IsCharNBSP() ? CharPointType::NoBreakingSpace
+                               : CharPointType::VisibleChar;
+  }
+
+  /**
+   * CharPointData let the following helper methods of
+   * ExtendRangeToDeleteWithNormalizingWhiteSpaces() know what type of
+   * character will be previous or next char point and the point is
+   * in same or different text node after deletion.
+   */
+  class MOZ_STACK_CLASS CharPointData final {
+   public:
+    static CharPointData InDifferentTextNode(CharPointType aCharPointType) {
+      CharPointData result;
+      result.mIsInDifferentTextNode = true;
+      result.mType = aCharPointType;
+      return result;
+    }
+    static CharPointData InSameTextNode(CharPointType aCharPointType) {
+      CharPointData result;
+      // Let's mark this as in different text node if given one indicates
+      // that there is end of text because it means that adjacent content
+      // from point of text node view is another element.
+      result.mIsInDifferentTextNode = aCharPointType == CharPointType::TextEnd;
+      result.mType = aCharPointType;
+      return result;
+    }
+
+    bool AcrossTextNodeBoundary() const { return mIsInDifferentTextNode; }
+    bool IsWhiteSpace() const {
+      return mType == CharPointType::ASCIIWhiteSpace ||
+             mType == CharPointType::NoBreakingSpace;
+    }
+    CharPointType Type() const { return mType; }
+
+   private:
+    CharPointData() = default;
+
+    CharPointType mType;
+    bool mIsInDifferentTextNode;
+  };
+
+  /**
+   * GetPreviousCharPointDataForNormalizingWhiteSpaces() and
+   * GetInclusiveNextCharPointDataForNormalizingWhiteSpaces() is helper methods
+   * of ExtendRangeToDeleteWithNormalizingWhiteSpaces().  This retrieves
+   * previous or inclusive next editable char point and returns its data.
+   */
+  CharPointData GetPreviousCharPointDataForNormalizingWhiteSpaces(
+      const EditorDOMPointInText& aPoint) const;
+  CharPointData GetInclusiveNextCharPointDataForNormalizingWhiteSpaces(
+      const EditorDOMPointInText& aPoint) const;
+
+  /**
+   * GenerateWhiteSpaceSequence() generates white-space sequence which won't
+   * be collapsed.
+   *
+   * @param aResult             [out] White space sequence which won't be
+   *                            collapsed, but wrapable.
+   * @param aLength             Length of generating white-space sequence.
+   *                            Must be 1 or larger.
+   * @param aPreviousCharPointData
+   *                            Specify the previous char point where it'll be
+   *                            inserted.  Currently, for keepin this method
+   *                            simple, does not support to generate a part
+   *                            of white-space sequence in a text node.  So,
+   *                            if the type is white-space, it must indicate
+   *                            different text nodes white-space.
+   * @param aNextCharPointData  Specify the next char point where it'll be
+   *                            inserted.  Same as aPreviousCharPointData,
+   *                            this must node indidate white-space in same
+   *                            text node.
+   */
+  static void GenerateWhiteSpaceSequence(
+      nsAString& aResult, uint32_t aLength,
+      const CharPointData& aPreviousCharPointData,
+      const CharPointData& aNextCharPointData);
 
   /**
    * HandleDeleteCollapsedSelectionAtWhiteSpaces() handles deletion of
