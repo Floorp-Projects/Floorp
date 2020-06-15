@@ -274,7 +274,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
   gPrototypeProperties['Promise'] =
     ["constructor", "catch", "then", "finally", Symbol.toStringTag];
   gConstructorProperties['Promise'] =
-    constructorProps(["resolve", "reject", "all", "allSettled", "race", Symbol.species]);
+    constructorProps(["resolve", "reject", "all", "allSettled", "any", "race", Symbol.species]);
   if (isNightlyBuild) {
     gConstructorProperties['Promise'].push("any");
   }
