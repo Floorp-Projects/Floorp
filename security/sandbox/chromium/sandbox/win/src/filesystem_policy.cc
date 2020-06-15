@@ -77,7 +77,7 @@ namespace sandbox {
 bool FileSystemPolicy::GenerateRules(const wchar_t* name,
                                      TargetPolicy::Semantics semantics,
                                      LowLevelPolicy* policy) {
-  std::wstring mod_name(name);
+  base::string16 mod_name(name);
   if (mod_name.empty()) {
     return false;
   }
@@ -158,31 +158,31 @@ bool FileSystemPolicy::GenerateRules(const wchar_t* name,
 
   if ((rule_to_add & kCallNtCreateFile) &&
       (!create.AddStringMatch(IF, OpenFile::NAME, name, CASE_INSENSITIVE) ||
-       !policy->AddRule(IpcTag::NTCREATEFILE, &create))) {
+       !policy->AddRule(IPC_NTCREATEFILE_TAG, &create))) {
     return false;
   }
 
   if ((rule_to_add & kCallNtOpenFile) &&
       (!open.AddStringMatch(IF, OpenFile::NAME, name, CASE_INSENSITIVE) ||
-       !policy->AddRule(IpcTag::NTOPENFILE, &open))) {
+       !policy->AddRule(IPC_NTOPENFILE_TAG, &open))) {
     return false;
   }
 
   if ((rule_to_add & kCallNtQueryAttributesFile) &&
       (!query.AddStringMatch(IF, FileName::NAME, name, CASE_INSENSITIVE) ||
-       !policy->AddRule(IpcTag::NTQUERYATTRIBUTESFILE, &query))) {
+       !policy->AddRule(IPC_NTQUERYATTRIBUTESFILE_TAG, &query))) {
     return false;
   }
 
   if ((rule_to_add & kCallNtQueryFullAttributesFile) &&
       (!query_full.AddStringMatch(IF, FileName::NAME, name, CASE_INSENSITIVE) ||
-       !policy->AddRule(IpcTag::NTQUERYFULLATTRIBUTESFILE, &query_full))) {
+       !policy->AddRule(IPC_NTQUERYFULLATTRIBUTESFILE_TAG, &query_full))) {
     return false;
   }
 
   if ((rule_to_add & kCallNtSetInfoRename) &&
       (!rename.AddStringMatch(IF, FileName::NAME, name, CASE_INSENSITIVE) ||
-       !policy->AddRule(IpcTag::NTSETINFO_RENAME, &rename))) {
+       !policy->AddRule(IPC_NTSETINFO_RENAME_TAG, &rename))) {
     return false;
   }
 
@@ -210,34 +210,34 @@ bool FileSystemPolicy::SetInitialRules(LowLevelPolicy* policy) {
   rv &= short_name.AddNumberMatch(IF_NOT, FileName::BROKER, BROKER_TRUE, AND);
   rv &= short_name.AddStringMatch(IF, FileName::NAME, L"*~*", CASE_SENSITIVE);
 
-  if (!rv || !policy->AddRule(IpcTag::NTCREATEFILE, &format))
+  if (!rv || !policy->AddRule(IPC_NTCREATEFILE_TAG, &format))
     return false;
 
-  if (!policy->AddRule(IpcTag::NTCREATEFILE, &short_name))
+  if (!policy->AddRule(IPC_NTCREATEFILE_TAG, &short_name))
     return false;
 
-  if (!policy->AddRule(IpcTag::NTOPENFILE, &format))
+  if (!policy->AddRule(IPC_NTOPENFILE_TAG, &format))
     return false;
 
-  if (!policy->AddRule(IpcTag::NTOPENFILE, &short_name))
+  if (!policy->AddRule(IPC_NTOPENFILE_TAG, &short_name))
     return false;
 
-  if (!policy->AddRule(IpcTag::NTQUERYATTRIBUTESFILE, &format))
+  if (!policy->AddRule(IPC_NTQUERYATTRIBUTESFILE_TAG, &format))
     return false;
 
-  if (!policy->AddRule(IpcTag::NTQUERYATTRIBUTESFILE, &short_name))
+  if (!policy->AddRule(IPC_NTQUERYATTRIBUTESFILE_TAG, &short_name))
     return false;
 
-  if (!policy->AddRule(IpcTag::NTQUERYFULLATTRIBUTESFILE, &format))
+  if (!policy->AddRule(IPC_NTQUERYFULLATTRIBUTESFILE_TAG, &format))
     return false;
 
-  if (!policy->AddRule(IpcTag::NTQUERYFULLATTRIBUTESFILE, &short_name))
+  if (!policy->AddRule(IPC_NTQUERYFULLATTRIBUTESFILE_TAG, &short_name))
     return false;
 
-  if (!policy->AddRule(IpcTag::NTSETINFO_RENAME, &format))
+  if (!policy->AddRule(IPC_NTSETINFO_RENAME_TAG, &format))
     return false;
 
-  if (!policy->AddRule(IpcTag::NTSETINFO_RENAME, &short_name))
+  if (!policy->AddRule(IPC_NTSETINFO_RENAME_TAG, &short_name))
     return false;
 
   return true;
@@ -245,7 +245,7 @@ bool FileSystemPolicy::SetInitialRules(LowLevelPolicy* policy) {
 
 bool FileSystemPolicy::CreateFileAction(EvalResult eval_result,
                                         const ClientInfo& client_info,
-                                        const std::wstring& file,
+                                        const base::string16& file,
                                         uint32_t attributes,
                                         uint32_t desired_access,
                                         uint32_t file_attributes,
@@ -280,7 +280,7 @@ bool FileSystemPolicy::CreateFileAction(EvalResult eval_result,
 
 bool FileSystemPolicy::OpenFileAction(EvalResult eval_result,
                                       const ClientInfo& client_info,
-                                      const std::wstring& file,
+                                      const base::string16& file,
                                       uint32_t attributes,
                                       uint32_t desired_access,
                                       uint32_t share_access,
@@ -315,7 +315,7 @@ bool FileSystemPolicy::OpenFileAction(EvalResult eval_result,
 bool FileSystemPolicy::QueryAttributesFileAction(
     EvalResult eval_result,
     const ClientInfo& client_info,
-    const std::wstring& file,
+    const base::string16& file,
     uint32_t attributes,
     FILE_BASIC_INFORMATION* file_info,
     NTSTATUS* nt_status) {
@@ -343,7 +343,7 @@ bool FileSystemPolicy::QueryAttributesFileAction(
 bool FileSystemPolicy::QueryFullAttributesFileAction(
     EvalResult eval_result,
     const ClientInfo& client_info,
-    const std::wstring& file,
+    const base::string16& file,
     uint32_t attributes,
     FILE_NETWORK_OPEN_INFORMATION* file_info,
     NTSTATUS* nt_status) {
@@ -404,7 +404,7 @@ bool FileSystemPolicy::SetInformationFileAction(EvalResult eval_result,
   return true;
 }
 
-bool PreProcessName(std::wstring* path) {
+bool PreProcessName(base::string16* path) {
   ConvertToLongPath(path);
 
   if (ERROR_NOT_A_REPARSE_POINT == IsReparsePoint(*path))
@@ -414,8 +414,8 @@ bool PreProcessName(std::wstring* path) {
   return false;
 }
 
-std::wstring FixNTPrefixForMatch(const std::wstring& name) {
-  std::wstring mod_name = name;
+base::string16 FixNTPrefixForMatch(const base::string16& name) {
+  base::string16 mod_name = name;
 
   // NT prefix escaped for rule matcher
   const wchar_t kNTPrefixEscaped[] = L"\\/?/?\\";

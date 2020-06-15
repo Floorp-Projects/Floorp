@@ -19,23 +19,29 @@
 #endif  // defined(OS_WIN)
 
 // TODO(peria): Enable profiling on Windows.
-#if BUILDFLAG(ENABLE_PROFILING) && BUILDFLAG(USE_TCMALLOC) && !defined(OS_WIN)
+#if BUILDFLAG(ENABLE_PROFILING) && !defined(NO_TCMALLOC) && !defined(OS_WIN)
+
+#if BUILDFLAG(USE_NEW_TCMALLOC)
 #include "third_party/tcmalloc/chromium/src/gperftools/profiler.h"
+#else
+#include "third_party/tcmalloc/gperftools-2.0/chromium/src/gperftools/profiler.h"
+#endif
+
 #endif
 
 namespace base {
 namespace debug {
 
 // TODO(peria): Enable profiling on Windows.
-#if BUILDFLAG(ENABLE_PROFILING) && BUILDFLAG(USE_TCMALLOC) && !defined(OS_WIN)
+#if BUILDFLAG(ENABLE_PROFILING) && !defined(NO_TCMALLOC) && !defined(OS_WIN)
 
 static int profile_count = 0;
 
 void StartProfiling(const std::string& name) {
   ++profile_count;
   std::string full_name(name);
-  std::string pid = NumberToString(GetCurrentProcId());
-  std::string count = NumberToString(profile_count);
+  std::string pid = IntToString(GetCurrentProcId());
+  std::string count = IntToString(profile_count);
   ReplaceSubstringsAfterOffset(&full_name, 0, "{pid}", pid);
   ReplaceSubstringsAfterOffset(&full_name, 0, "{count}", count);
   ProfilerStart(full_name.c_str());
@@ -152,7 +158,7 @@ FunctionType FindFunctionInImports(const char* function_name) {
   base::win::PEImage image(CURRENT_MODULE());
 
   FunctionSearchContext ctx = { function_name, NULL };
-  image.EnumImportChunks(FindResolutionFunctionInImports, &ctx, nullptr);
+  image.EnumImportChunks(FindResolutionFunctionInImports, &ctx);
 
   return reinterpret_cast<FunctionType>(ctx.function);
 }
