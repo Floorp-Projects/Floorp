@@ -128,29 +128,6 @@ NS_IMETHODIMP nsDocumentOpenInfo::OnStartRequest(nsIRequest* request) {
     if (204 == responseCode || 205 == responseCode) {
       return NS_BINDING_ABORTED;
     }
-
-    if (StaticPrefs::dom_largeAllocationHeader_enabled()) {
-      if (StaticPrefs::dom_largeAllocation_testing_allHttpLoads()) {
-        nsCOMPtr<nsIURI> uri;
-        rv = httpChannel->GetURI(getter_AddRefs(uri));
-        if (NS_SUCCEEDED(rv) && uri) {
-          if ((uri->SchemeIs("http") || uri->SchemeIs("https")) &&
-              nsContentUtils::AttemptLargeAllocationLoad(httpChannel)) {
-            return NS_BINDING_ABORTED;
-          }
-        }
-      }
-
-      // If we have a Large-Allocation header, let's check if we should perform
-      // a process switch.
-      nsAutoCString largeAllocationHeader;
-      rv = httpChannel->GetResponseHeader(
-          NS_LITERAL_CSTRING("Large-Allocation"), largeAllocationHeader);
-      if (NS_SUCCEEDED(rv) &&
-          nsContentUtils::AttemptLargeAllocationLoad(httpChannel)) {
-        return NS_BINDING_ABORTED;
-      }
-    }
   }
 
   //
