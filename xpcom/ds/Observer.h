@@ -62,9 +62,7 @@ class ObserverList {
    * Call Notify() on each item in the list.
    */
   void Broadcast(const T& aParam) {
-    typename nsTObserverArray<Observer<T>*>::ForwardIterator iter(mObservers);
-    while (iter.HasMore()) {
-      Observer<T>* obs = iter.GetNext();
+    for (Observer<T>* obs : mObservers.ForwardRange()) {
       obs->Notify(aParam);
     }
   }

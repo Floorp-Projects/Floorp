@@ -547,10 +547,7 @@ inline void ImplCycleCollectionTraverse(
 #define NS_OBSERVER_ARRAY_NOTIFY_XPCOM_OBSERVERS(array_, obstype_, func_, \
                                                  params_)                 \
   do {                                                                    \
-    nsTObserverArray<obstype_*>::ForwardIterator iter_(array_);           \
-    RefPtr<obstype_> obs_;                                                \
-    while (iter_.HasMore()) {                                             \
-      obs_ = iter_.GetNext();                                             \
+    for (RefPtr<obstype_> obs_ : array_.ForwardRange()) {                 \
       obs_->func_ params_;                                                \
     }                                                                     \
   } while (0)
@@ -558,33 +555,15 @@ inline void ImplCycleCollectionTraverse(
 // Note that this macro only works if the array holds pointers to XPCOM objects.
 #define NS_OBSERVER_ARRAY_NOTIFY_OBSERVERS(array_, obstype_, func_, params_) \
   do {                                                                       \
-    nsTObserverArray<obstype_*>::ForwardIterator iter_(array_);              \
-    obstype_* obs_;                                                          \
-    while (iter_.HasMore()) {                                                \
-      obs_ = iter_.GetNext();                                                \
+    for (obstype_ * obs_ : array_.ForwardRange()) {                          \
       obs_->func_ params_;                                                   \
     }                                                                        \
-  } while (0)
-
-// Note that this macro only works if the array holds pointers to XPCOM objects.
-#define NS_OBSERVER_AUTO_ARRAY_NOTIFY_OBSERVERS(array_, obstype_, num_, func_, \
-                                                params_)                       \
-  do {                                                                         \
-    nsAutoTObserverArray<obstype_*, num_>::ForwardIterator iter_(array_);      \
-    obstype_* obs_;                                                            \
-    while (iter_.HasMore()) {                                                  \
-      obs_ = iter_.GetNext();                                                  \
-      obs_->func_ params_;                                                     \
-    }                                                                          \
   } while (0)
 
 #define NS_OBSERVER_ARRAY_NOTIFY_OBSERVERS_WITH_QI(array_, basetype_,        \
                                                    obstype_, func_, params_) \
   do {                                                                       \
-    nsTObserverArray<basetype_*>::ForwardIterator iter_(array_);             \
-    basetype_* obsbase_;                                                     \
-    while (iter_.HasMore()) {                                                \
-      obsbase_ = iter_.GetNext();                                            \
+    for (basetype_ * obsbase_ : array_.ForwardRange()) {                     \
       nsCOMPtr<obstype_> obs_ = do_QueryInterface(obsbase_);                 \
       if (obs_) {                                                            \
         obs_->func_ params_;                                                 \
@@ -592,17 +571,4 @@ inline void ImplCycleCollectionTraverse(
     }                                                                        \
   } while (0)
 
-#define NS_OBSERVER_AUTO_ARRAY_NOTIFY_OBSERVERS_WITH_QI(                   \
-    array_, basetype_, num_, obstype_, func_, params_)                     \
-  do {                                                                     \
-    nsAutoTObserverArray<basetype_*, num_>::ForwardIterator iter_(array_); \
-    basetype_* obsbase_;                                                   \
-    while (iter_.HasMore()) {                                              \
-      obsbase_ = iter_.GetNext();                                          \
-      nsCOMPtr<obstype_> obs_ = do_QueryInterface(obsbase_);               \
-      if (obs_) {                                                          \
-        obs_->func_ params_;                                               \
-      }                                                                    \
-    }                                                                      \
-  } while (0)
 #endif  // nsTObserverArray_h___
