@@ -32,7 +32,11 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
   mozilla::AndroidSystemColors mSystemColors;
   bool mInitializedShowPassword = false;
   bool mShowPassword = false;
-  int32_t mPrefersReducedMotion = -1;
+
+  bool mSystemUsesDarkTheme = false;
+  bool mSystemUsesDarkThemeCached = false;
+
+  bool mPrefersReducedMotion = false;
   bool mPrefersReducedMotionCached = false;
 
   nsresult GetSystemColors();
