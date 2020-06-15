@@ -26,6 +26,23 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsIStorageActivityService"
 );
 
+XPCOMUtils.defineLazyGetter(this, "gClassifierFeature", () => {
+  return gClassifier.getFeatureByName("tracking-annotation");
+});
+
+XPCOMUtils.defineLazyGetter(this, "logger", () => {
+  return console.createInstance({
+    prefix: "*** PurgeTrackerService:",
+    maxLogLevelPref: "privacy.purge_trackers.logging.level",
+  });
+});
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "gConsiderEntityList",
+  "privacy.purge_trackers.consider_entity_list"
+);
+
 this.PurgeTrackerService = function() {};
 
 PurgeTrackerService.prototype = {
@@ -61,7 +78,7 @@ PurgeTrackerService.prototype = {
     }
   },
 
-  async isTracker(principal, feature) {
+  async isTracker(principal) {
     if (principal.isNullPrincipal || principal.isSystemPrincipal) {
       return false;
     }
@@ -81,7 +98,7 @@ PurgeTrackerService.prototype = {
         try {
           gClassifier.asyncClassifyLocalWithFeatures(
             principal.URI,
-            [feature],
+            [gClassifierFeature],
             Ci.nsIUrlClassifierFeature.blacklist,
             list => {
               if (list.length) {
@@ -99,6 +116,116 @@ PurgeTrackerService.prototype = {
     }
 
     return this._trackingState.get(host);
+  },
+
+  isAllowedThirdParty(firstPartyOrigin, thirdPartyHost) {
+    let uri = Services.io.newURI(
+      `${firstPartyOrigin}/?resource=${thirdPartyHost}`
+    );
+    logger.debug(`Checking entity list state for`, uri.spec);
+    return new Promise(resolve => {
+      try {
+        gClassifier.asyncClassifyLocalWithFeatures(
+          uri,
+          [gClassifierFeature],
+          Ci.nsIUrlClassifierFeature.whitelist,
+          list => {
+            let sameList = !!list.length;
+            logger.debug(`Is ${uri.spec} on the entity list?`, sameList);
+            resolve(sameList);
+          }
+        );
+      } catch {
+        resolve(false);
+      }
+    });
+  },
+
+  async maybePurgePrincipal(principal) {
+    let origin = principal.origin;
+    logger.debug(`Maybe purging ${origin}.`);
+
+    // First, check if any site with that base domain had received
+    // user interaction in the last N days.
+    let hasInteraction = this._baseDomainsWithInteraction.has(
+      principal.baseDomain
+    );
+    // Exit early unless we want to see if we're dealing with a tracker,
+    // for telemetry.
+    if (hasInteraction && !Services.telemetry.canRecordPrereleaseData) {
+      logger.debug(`${origin} has user interaction, exiting.`);
+      return;
+    }
+
+    // Second, confirm that we're looking at a tracker.
+    let isTracker = await this.isTracker(principal);
+    if (!isTracker) {
+      logger.debug(`${origin} is not a tracker, exiting.`);
+      return;
+    }
+
+    if (hasInteraction) {
+      let expireTimeMs = this._baseDomainsWithInteraction.get(
+        principal.baseDomain
+      );
+
+      // Collect how much longer the user interaction will be valid for, in hours.
+      let timeRemaining = Math.floor(
+        (expireTimeMs - Date.now()) / 1000 / 60 / 60 / 24
+      );
+      let permissionAgeHistogram = Services.telemetry.getHistogramById(
+        "COOKIE_PURGING_TRACKERS_USER_INTERACTION_REMAINING_DAYS"
+      );
+      permissionAgeHistogram.add(timeRemaining);
+
+      this._telemetryData.notPurged++;
+
+      logger.debug(`${origin} is a tracker with interaction, exiting.`);
+      return;
+    }
+
+    let isAllowedThirdParty = false;
+    if (gConsiderEntityList || Services.telemetry.canRecordPrereleaseData) {
+      for (let firstPartyPrincipal of this._principalsWithInteraction) {
+        if (
+          await this.isAllowedThirdParty(
+            firstPartyPrincipal.origin,
+            principal.asciiHost
+          )
+        ) {
+          isAllowedThirdParty = true;
+          break;
+        }
+      }
+    }
+
+    if (isAllowedThirdParty && gConsiderEntityList) {
+      logger.debug(`${origin} has interaction on the entity list, exiting.`);
+      return;
+    }
+
+    logger.log("Deleting data from:", origin);
+
+    await new Promise(resolve => {
+      Services.clearData.deleteDataFromPrincipal(
+        principal,
+        false,
+        Ci.nsIClearDataService.CLEAR_ALL_CACHES |
+          Ci.nsIClearDataService.CLEAR_COOKIES |
+          Ci.nsIClearDataService.CLEAR_DOM_STORAGES |
+          Ci.nsIClearDataService.CLEAR_SECURITY_SETTINGS |
+          Ci.nsIClearDataService.CLEAR_EME |
+          Ci.nsIClearDataService.CLEAR_PLUGIN_DATA |
+          Ci.nsIClearDataService.CLEAR_MEDIA_DEVICES |
+          Ci.nsIClearDataService.CLEAR_STORAGE_ACCESS |
+          Ci.nsIClearDataService.CLEAR_AUTH_TOKENS |
+          Ci.nsIClearDataService.CLEAR_AUTH_CACHE,
+        resolve
+      );
+    });
+    logger.log(`Data deleted from:`, origin);
+
+    this._telemetryData.numPurged++;
   },
 
   resetPurgeList() {
@@ -169,13 +296,13 @@ PurgeTrackerService.prototype = {
         Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN;
 
     if (!etpActive || !purgeEnabled) {
-      LOG(
+      logger.log(
         `returning early, etpActive: ${etpActive}, purgeEnabled: ${purgeEnabled}`
       );
       this.resetPurgeList();
       return;
     }
-    LOG("Purging trackers enabled, beginning batch.");
+    logger.log("Purging trackers enabled, beginning batch.");
     // How many cookies to loop through in each batch before we quit
     const MAX_PURGE_COUNT = Services.prefs.getIntPref(
       "privacy.purge_trackers.max_purge_count",
@@ -188,6 +315,18 @@ PurgeTrackerService.prototype = {
         numPurged: 0,
         notPurged: 0,
       };
+
+      this._baseDomainsWithInteraction = new Map();
+      this._principalsWithInteraction = [];
+      for (let perm of Services.perms.getAllWithTypePrefix(
+        "storageAccessAPI"
+      )) {
+        this._baseDomainsWithInteraction.set(
+          perm.principal.baseDomain,
+          perm.expireTime
+        );
+        this._principalsWithInteraction.push(perm.principal);
+      }
     }
 
     // Record how long this iteration took for telemetry.
@@ -256,76 +395,8 @@ PurgeTrackerService.prototype = {
       }
     }
 
-    let feature = gClassifier.getFeatureByName("tracking-annotation");
-    if (!feature) {
-      LOG("returning early, feature undefined.");
-      this.resetPurgeList();
-      return;
-    }
-
-    let baseDomainsWithInteraction = new Map();
-    for (let perm of Services.perms.getAllWithTypePrefix("storageAccessAPI")) {
-      baseDomainsWithInteraction.set(
-        perm.principal.baseDomain,
-        perm.expireTime
-      );
-    }
-
-    let permissionAgeHistogram = Services.telemetry.getHistogramById(
-      "COOKIE_PURGING_TRACKERS_USER_INTERACTION_REMAINING_DAYS"
-    );
-
     for (let principal of maybeClearPrincipals.values()) {
-      // Either the interaction permission was never granted or it expired.
-      if (!baseDomainsWithInteraction.has(principal.baseDomain)) {
-        // We purge if we also find it is a tracker.
-        let isTracker = await this.isTracker(principal, feature);
-        if (isTracker) {
-          LOG(
-            "tracking cookie found with no interaction permission, deleting related data.",
-            principal.origin
-          );
-
-          await new Promise(resolve => {
-            Services.clearData.deleteDataFromPrincipal(
-              principal,
-              false,
-              Ci.nsIClearDataService.CLEAR_ALL_CACHES |
-                Ci.nsIClearDataService.CLEAR_COOKIES |
-                Ci.nsIClearDataService.CLEAR_DOM_STORAGES |
-                Ci.nsIClearDataService.CLEAR_SECURITY_SETTINGS |
-                Ci.nsIClearDataService.CLEAR_EME |
-                Ci.nsIClearDataService.CLEAR_PLUGIN_DATA |
-                Ci.nsIClearDataService.CLEAR_MEDIA_DEVICES |
-                Ci.nsIClearDataService.CLEAR_STORAGE_ACCESS |
-                Ci.nsIClearDataService.CLEAR_AUTH_TOKENS |
-                Ci.nsIClearDataService.CLEAR_AUTH_CACHE,
-              resolve
-            );
-          });
-          this._telemetryData.numPurged++;
-          LOG(`Data deleted from: `, principal.origin);
-        }
-      } else if (Services.telemetry.canRecordPrereleaseData) {
-        // We want to avoid doing the extra classification work unless we're
-        // actually recording the data, which is currently only in pre-release.
-        // If this probe is ever extended to release, that condition needs
-        // to be removed (we also have tests that should ensure this).
-        let isTracker = await this.isTracker(principal, feature);
-        if (isTracker) {
-          let expireTimeMs = baseDomainsWithInteraction.get(
-            principal.baseDomain
-          );
-
-          // Collect how much longer the user interaction will be valid for, in hours.
-          let timeRemaining = Math.floor(
-            (expireTimeMs - Date.now()) / 1000 / 60 / 60 / 24
-          );
-          permissionAgeHistogram.add(timeRemaining);
-
-          this._telemetryData.notPurged++;
-        }
-      }
+      await this.maybePurgePrincipal(principal);
     }
 
     Services.prefs.setStringPref(
@@ -338,33 +409,17 @@ PurgeTrackerService.prototype = {
 
     // We've reached the end, no need to repeat again until next idle-daily.
     if (!cookies.length || cookies.length < 100) {
-      LOG("All cookie purging finished, resetting list until tomorrow.");
+      logger.log("All cookie purging finished, resetting list until tomorrow.");
       this.resetPurgeList();
       this.submitTelemetry();
       this._firstIteration = true;
       return;
     }
 
-    LOG("Batch finished, queueing next batch.");
+    logger.log("Batch finished, queueing next batch.");
     this._firstIteration = false;
     Services.tm.idleDispatchToMainThread(() => {
       this.purgeTrackingCookieJars();
     });
   },
 };
-
-/**
- * Outputs the message to the JavaScript console as well as to stdout.
- *
- * @param {...string} args The message to output.
- */
-var logConsole;
-function LOG(...args) {
-  if (!logConsole) {
-    logConsole = console.createInstance({
-      prefix: "*** PurgeTrackerService:",
-      maxLogLevelPref: "privacy.purge_trackers.logging.level",
-    });
-  }
-  logConsole.log(...args);
-}

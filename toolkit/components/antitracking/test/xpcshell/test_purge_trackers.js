@@ -29,6 +29,7 @@ add_task(async function setup() {
     Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER
   );
   Services.prefs.setBoolPref("privacy.purge_trackers.enabled", true);
+  Services.prefs.setCharPref("privacy.purge_trackers.logging.level", "Debug");
   Services.prefs.setStringPref(
     "urlclassifier.trackingAnnotationTable.testEntries",
     "tracking.example.org"
@@ -89,7 +90,7 @@ add_task(async function() {
   );
   ok(
     !SiteDataTestUtils.hasLocalStorage(TRACKING_PAGE),
-    "localStorage should not have been removed while storage access permission exists."
+    "localStorage should have been removed"
   );
   Assert.equal(
     await SiteDataTestUtils.getQuotaUsage(TRACKING_PAGE),
@@ -149,6 +150,70 @@ add_task(async function() {
     await SiteDataTestUtils.clear();
   }
 
+  UrlClassifierTestUtils.cleanupTestTrackers();
+});
+
+/**
+ * Test that trackers are not cleared if they are associated
+ * with an entry on the entity list that has user interaction.
+ */
+add_task(async function() {
+  Services.prefs.setBoolPref(
+    "privacy.purge_trackers.consider_entity_list",
+    true
+  );
+  // The test URL for the entity list for annotation is
+  // itisatrap.org/?resource=example.org, so we need to
+  // add example.org as a tracker.
+  Services.prefs.setCharPref(
+    "urlclassifier.trackingAnnotationTable.testEntries",
+    "example.org"
+  );
+  await UrlClassifierTestUtils.addTestTrackers();
+
+  // These are hard coded test values on the entity list.
+  const OWNER_PAGE = "https://itisatrap.org";
+  const RESOURCE_PAGE = "https://example.org";
+
+  PermissionTestUtils.add(
+    OWNER_PAGE,
+    "storageAccessAPI",
+    Services.perms.ALLOW_ACTION
+  );
+
+  SiteDataTestUtils.addToCookies(RESOURCE_PAGE);
+
+  // Add another tracker to verify we're actually purging.
+  SiteDataTestUtils.addToCookies("https://another-tracking.example.net");
+
+  await PurgeTrackerService.purgeTrackingCookieJars();
+
+  ok(
+    SiteDataTestUtils.hasCookies(RESOURCE_PAGE),
+    `${RESOURCE_PAGE} should have retained its cookies when permission is set for ${OWNER_PAGE}.`
+  );
+
+  ok(
+    !SiteDataTestUtils.hasCookies("https://another-tracking.example.net"),
+    "cookie is removed after purge with no storage access permission."
+  );
+
+  Services.prefs.setBoolPref(
+    "privacy.purge_trackers.consider_entity_list",
+    false
+  );
+
+  await PurgeTrackerService.purgeTrackingCookieJars();
+
+  ok(
+    !SiteDataTestUtils.hasCookies(RESOURCE_PAGE),
+    `${RESOURCE_PAGE} should not have retained its cookies when permission is set for ${OWNER_PAGE} and the entity list pref is off.`
+  );
+
+  PermissionTestUtils.remove(OWNER_PAGE, "storageAccessAPI");
+  await SiteDataTestUtils.clear();
+
+  Services.prefs.clearUserPref("privacy.purge_trackers.consider_entity_list");
   UrlClassifierTestUtils.cleanupTestTrackers();
 });
 
