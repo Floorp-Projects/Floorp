@@ -46,7 +46,7 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/app_container_profile_bas
            GetModuleHandle(L"userenv"), "GetAppContainerFolderPath"));
    if (!get_app_container_folder_path)
      return false;
-   base::string16 sddl_str;
+   std::wstring sddl_str;
    if (!package_sid_.ToSddlString(&sddl_str))
      return false;
    base::win::ScopedCoMem<wchar_t> path_str;
@@ -62,7 +62,7 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/app_container_profile_bas
 +#if defined(MOZ_SANDBOX)
 +  IMMEDIATE_CRASH();
 +#else
-   base::string16 sddl_str;
+   std::wstring sddl_str;
    if (!package_sid_.ToSddlString(&sddl_str))
      return false;
    *pipe_path = base::FilePath(base::StringPrintf(L"\\\\.\\pipe\\%ls\\%ls",

@@ -9,7 +9,7 @@ Bug 1297740.
 diff --git a/security/sandbox/chromium/sandbox/win/src/broker_services.cc b/security/sandbox/chromium/sandbox/win/src/broker_services.cc
 --- a/security/sandbox/chromium/sandbox/win/src/broker_services.cc
 +++ b/security/sandbox/chromium/sandbox/win/src/broker_services.cc
-@@ -301,16 +301,17 @@ DWORD WINAPI BrokerServicesBase::TargetE
+@@ -414,16 +414,17 @@ DWORD WINAPI BrokerServicesBase::TargetE
    NOTREACHED();
    return 0;
  }
@@ -27,7 +27,7 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/broker_services.cc b/secu
      return SBOX_ERROR_BAD_PARAMS;
  
    if (!policy)
-@@ -486,17 +487,17 @@ ResultCode BrokerServicesBase::SpawnTarg
+@@ -609,17 +610,17 @@ ResultCode BrokerServicesBase::SpawnTarg
    // Brokerservices does not own the target object. It is owned by the Policy.
    base::win::ScopedProcessInformation process_info;
    TargetProcess* target = new TargetProcess(
@@ -65,9 +65,9 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/broker_services.h b/secur
  #include "sandbox/win/src/crosscall_server.h"
  #include "sandbox/win/src/job.h"
  #include "sandbox/win/src/sandbox.h"
+ #include "sandbox/win/src/sandbox_policy_base.h"
  #include "sandbox/win/src/sharedmem_ipc_server.h"
- #include "sandbox/win/src/win2k_threadpool.h"
-@@ -45,16 +46,17 @@ class BrokerServicesBase final : public 
+@@ -39,16 +40,17 @@ class BrokerServicesBase final : public 
  
    ~BrokerServicesBase();
  
@@ -88,7 +88,7 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/broker_services.h b/secur
 diff --git a/security/sandbox/chromium/sandbox/win/src/sandbox.h b/security/sandbox/chromium/sandbox/win/src/sandbox.h
 --- a/security/sandbox/chromium/sandbox/win/src/sandbox.h
 +++ b/security/sandbox/chromium/sandbox/win/src/sandbox.h
-@@ -79,16 +79,17 @@ class BrokerServices {
+@@ -84,16 +84,17 @@ class BrokerServices {
    //   parameter will hold the last Win32 error value.
    //   target: returns the resulting target process information such as process
    //   handle and PID just as if CreateProcess() had been called. The caller is
@@ -109,7 +109,25 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/sandbox.h b/security/sand
 diff --git a/security/sandbox/chromium/sandbox/win/src/target_process.cc b/security/sandbox/chromium/sandbox/win/src/target_process.cc
 --- a/security/sandbox/chromium/sandbox/win/src/target_process.cc
 +++ b/security/sandbox/chromium/sandbox/win/src/target_process.cc
-@@ -137,16 +137,17 @@ TargetProcess::~TargetProcess() {
+@@ -9,16 +9,17 @@
+ 
+ #include <memory>
+ #include <utility>
+ #include <vector>
+ 
+ #include "base/macros.h"
+ #include "base/memory/free_deleter.h"
+ #include "base/numerics/safe_conversions.h"
++#include "base/process/environment_internal.h"
+ #include "base/win/startup_information.h"
+ #include "base/win/windows_version.h"
+ #include "sandbox/win/src/crosscall_client.h"
+ #include "sandbox/win/src/crosscall_server.h"
+ #include "sandbox/win/src/policy_low_level.h"
+ #include "sandbox/win/src/restricted_token_utils.h"
+ #include "sandbox/win/src/sandbox_types.h"
+ #include "sandbox/win/src/security_capabilities.h"
+@@ -137,16 +138,17 @@ TargetProcess::~TargetProcess() {
  // Creates the target (child) process suspended and assigns it to the job
  // object.
  ResultCode TargetProcess::Create(
@@ -127,10 +145,10 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/target_process.cc b/secur
  
    // Start the target process suspended.
    DWORD flags =
-@@ -156,22 +157,29 @@ ResultCode TargetProcess::Create(
+@@ -156,22 +158,29 @@ ResultCode TargetProcess::Create(
      flags |= EXTENDED_STARTUPINFO_PRESENT;
  
-   if (job_ && base::win::GetVersion() < base::win::VERSION_WIN8) {
+   if (job_ && base::win::GetVersion() < base::win::Version::WIN8) {
      // Windows 8 implements nested jobs, but for older systems we need to
      // break out of any job we're in to enforce our restrictions.
      flags |= CREATE_BREAKAWAY_FROM_JOB;
@@ -138,7 +156,7 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/target_process.cc b/secur
  
 +  LPTCH original_environment = GetEnvironmentStrings();
 +  base::NativeEnvironmentString new_environment =
-+    base::AlterEnvironment(original_environment, env_changes);
++    base::internal::AlterEnvironment(original_environment, env_changes);
 +  // Ignore return value? What can we do?
 +  FreeEnvironmentStrings(original_environment);
 +  LPVOID new_env_ptr = (void*)new_environment.data();
