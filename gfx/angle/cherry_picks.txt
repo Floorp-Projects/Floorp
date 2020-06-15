@@ -1,3 +1,25 @@
+commit 6c72b64f910d0b0f81456bec26ca295c865c04da
+Author: Geoff Lang <geofflang@chromium.org>
+Date:   Wed May 13 18:50:51 2020 -0400
+
+    Unset the ActiveTextureCache entry if the program does not reference it
+    
+    When changing uniforms of a program, State::onActiveTextureChange is
+    called to update the ActiveTextureCache. If the sampler uniform type
+    changes to TextureType::InvalidEnum, the entry in ActiveTextureCache was
+    not cleared. This causes stale entries in ActiveTextureCache because the
+    cache no longer matches what textures are bound and the cache does not
+    add references to the textures in it.
+    
+    BUG=chromium:1078375
+    BUG=chromium:1072406
+    BUG=chromium:1078866
+    
+    Change-Id: If9719dcd4fc865b2301db450eb8115e7cfe46c4a
+    Reviewed-on: https://chromium-review.googlesource.com/c/angle/angle/+/2199654
+    Reviewed-by: Tim Van Patten <timvp@google.com>
+    Commit-Queue: Geoff Lang <geofflang@chromium.org>
+
 commit eabf2a79aac36223b5ab5c5b0810d5522095f0bc
 Author: Jeff Muizelaar <jrmuizel@gmail.com>
 Date:   Mon May 11 13:01:46 2020 -0400
