@@ -41,70 +41,89 @@ const INSECURE_ROOT_PATH = ROOT_PATH.replace(
 //                 with HTTP or not (eg.: img-ok, xhr-ok, iframe-error, ...)
 
 add_task(async function() {
-  // Call sjs-file with setup query-string and store promise
-  let expectedQueries = new Set([
-    "content",
-    "img",
-    "iframe",
-    "xhr",
-    "nestedimg",
-  ]);
+  const openPrivateTab = [false, true];
+  for (let i = 0; i < openPrivateTab.length; i++) {
+    // Call sjs-file with setup query-string and store promise
+    let expectedQueries = new Set([
+      "content",
+      "img",
+      "iframe",
+      "xhr",
+      "nestedimg",
+    ]);
 
-  const filesLoaded = setupFileServer();
-  // Since we don't know when the server has saved all it's variables,
-  // let's wait a bit before reloading the page.
-  await new Promise(resolve => executeSoon(resolve));
+    const filesLoaded = setupFileServer();
+    // Since we don't know when the server has saved all it's variables,
+    // let's wait a bit before reloading the page.
+    await new Promise(resolve => executeSoon(resolve));
 
-  // Create new tab with sjs-file requesting content.
-  // "supports-insecure.expired.example.com" responds to http and https but
-  // with an expired certificate
-  let tab = await openErrorPage(
-    `${EXPIRED_ROOT_PATH}file_upgrade_insecure_server.sjs?content`,
-    false /*use frame*/
-  );
-  let browser = tab.linkedBrowser;
+    // Create a new private window but reuse the normal one.
+    let privateWindow = false;
+    if (openPrivateTab[i]) {
+      privateWindow = await BrowserTestUtils.openNewBrowserWindow({
+        private: true,
+      });
+    }
 
-  let pageShownPromise = BrowserTestUtils.waitForContentEvent(
-    browser,
-    "pageshow",
-    true
-  );
-
-  // click on exception-button and wait for page to load
-  await SpecialPowers.spawn(browser, [], async function() {
-    let openInsecureButton = content.document.getElementById("openInsecure");
-    ok(openInsecureButton != null, "openInsecureButton should exist.");
-    openInsecureButton.click();
-  });
-
-  await pageShownPromise;
-
-  // Check if the original page got loaded with http this time
-  await SpecialPowers.spawn(browser, [], async function() {
-    let doc = content.document;
-    ok(
-      !doc.documentURI.startsWith("http://expired.example.com"),
-      "Page should load normally after exception button was clicked."
+    // Create new tab with sjs-file requesting content.
+    // "supports-insecure.expired.example.com" responds to http and https but
+    // with an expired certificate
+    let tab = await openErrorPage(
+      `${EXPIRED_ROOT_PATH}file_upgrade_insecure_server.sjs?content`,
+      false,
+      privateWindow
     );
-  });
+    let browser = tab.linkedBrowser;
 
-  // Wait for initial sjs request to resolve
-  let results = await filesLoaded;
+    let pageShownPromise = BrowserTestUtils.waitForContentEvent(
+      browser,
+      "pageshow",
+      true
+    );
 
-  for (let resultIndex in results) {
-    const response = results[resultIndex];
-    // A response looks either like this "iframe-ok" or "[key]-[result]"
-    const [key, result] = response.split("-", 2);
-    // try to find the expected result within the results array
-    if (expectedQueries.has(key)) {
-      expectedQueries.delete(key);
-      is(result, "ok", `Request '${key}' should be loaded with HTTP.'`);
+    // click on exception-button and wait for page to load
+    await SpecialPowers.spawn(browser, [], async function() {
+      let openInsecureButton = content.document.getElementById("openInsecure");
+      ok(openInsecureButton != null, "openInsecureButton should exist.");
+      openInsecureButton.click();
+    });
+
+    await pageShownPromise;
+
+    // Check if the original page got loaded with http this time
+    await SpecialPowers.spawn(browser, [], async function() {
+      let doc = content.document;
+      ok(
+        !doc.documentURI.startsWith("http://expired.example.com"),
+        "Page should load normally after exception button was clicked."
+      );
+    });
+
+    // Wait for initial sjs request to resolve
+    let results = await filesLoaded;
+
+    for (let resultIndex in results) {
+      const response = results[resultIndex];
+      // A response looks either like this "iframe-ok" or "[key]-[result]"
+      const [key, result] = response.split("-", 2);
+      // try to find the expected result within the results array
+      if (expectedQueries.has(key)) {
+        expectedQueries.delete(key);
+        is(result, "ok", `Request '${key}' should be loaded with HTTP.'`);
+      } else {
+        ok(false, `Unexpected response from server (${response})`);
+      }
+    }
+
+    // Clean up permissions and tab
+    Services.perms.removeAll();
+
+    if (privateWindow) {
+      await BrowserTestUtils.closeWindow(privateWindow);
     } else {
-      ok(false, `Unexpected response from server (${response})`);
+      gBrowser.removeCurrentTab();
     }
   }
-
-  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
 function setupFileServer() {

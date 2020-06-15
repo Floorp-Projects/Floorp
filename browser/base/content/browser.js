@@ -1511,14 +1511,8 @@ function _loadURI(browser, uri, params = {}) {
     uri = "about:blank";
   }
 
-  let {
-    triggeringPrincipal,
-    referrerInfo,
-    postData,
-    userContextId,
-    csp,
-    isHttpsOnlyModeUpgradeExempt,
-  } = params || {};
+  let { triggeringPrincipal, referrerInfo, postData, userContextId, csp } =
+    params || {};
   let loadFlags =
     params.loadFlags || params.flags || Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
   let hasValidUserGestureActivation =
@@ -1565,7 +1559,6 @@ function _loadURI(browser, uri, params = {}) {
     referrerInfo,
     postData,
     hasValidUserGestureActivation,
-    isHttpsOnlyModeUpgradeExempt,
   };
   try {
     if (!mustChangeProcess) {
