@@ -57,11 +57,13 @@ class PageStyleChild extends JSWindowActorChild {
     // Does this doc contain a stylesheet with this title?
     // If not, it's a subframe's stylesheet that's being changed,
     // so no need to disable stylesheets here.
-    let docContainsStyleSheet = false;
-    for (let docStyleSheet of docStyleSheets) {
-      if (docStyleSheet.title === title) {
-        docContainsStyleSheet = true;
-        break;
+    let docContainsStyleSheet = !title;
+    if (title) {
+      for (let docStyleSheet of docStyleSheets) {
+        if (docStyleSheet.title === title) {
+          docContainsStyleSheet = true;
+          break;
+        }
       }
     }
 
