@@ -79,6 +79,10 @@ impl FreeNameTracker {
         self.def_names.insert(atom);
     }
 
+    pub fn is_used_or_closed_over(&self, atom: SourceAtomSetIndex) -> bool {
+        self.used_names.contains(&atom) || self.closed_over_names.contains(&atom)
+    }
+
     /// Names closed over in inner script-scopes, that's not yet defined.
     pub fn closed_over_freevars(&self) -> Difference<'_, SourceAtomSetIndex, RandomState> {
         self.closed_over_names.difference(&self.def_names)

@@ -1,6 +1,6 @@
-use crate::function::FunctionStencilIndex;
 use crate::regexp::RegExpIndex;
 use crate::scope::ScopeIndex;
+use crate::script::ScriptStencilIndex;
 use ast::source_atom_set::SourceAtomSetIndex;
 
 /// Corresponds to js::frontend::GCThingList::ListType
@@ -8,7 +8,7 @@ use ast::source_atom_set::SourceAtomSetIndex;
 #[derive(Debug)]
 pub enum GCThing {
     Atom(SourceAtomSetIndex),
-    Function(FunctionStencilIndex),
+    Function(ScriptStencilIndex),
     RegExp(RegExpIndex),
     Scope(ScopeIndex),
 }
@@ -50,7 +50,7 @@ impl GCThingList {
         GCThingIndex::new(index)
     }
 
-    pub fn push_function(&mut self, fun_index: FunctionStencilIndex) -> GCThingIndex {
+    pub fn push_function(&mut self, fun_index: ScriptStencilIndex) -> GCThingIndex {
         let index = self.things.len();
         self.things.push(GCThing::Function(fun_index));
         GCThingIndex::new(index)

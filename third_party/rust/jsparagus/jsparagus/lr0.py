@@ -12,7 +12,7 @@ from dataclasses import dataclass
 import typing
 
 from .actions import (Accept, Action, CheckNotOnNewLine, FunCall, Lookahead,
-                      OutputExpr, Reduce, Seq)
+                      OutputExpr, Unwind, Reduce, Seq)
 from .ordered import OrderedFrozenSet
 from .grammar import (CallMethod, Element, End, ErrorSymbol, Grammar,
                       LookaheadRule, NoLineTerminatorHere, Nt, ReduceExpr,
@@ -348,7 +348,7 @@ class LR0Generator:
             # parse table. (TODO: this supposed that the canonical form did not
             # move the reduce action to be part of the production)
             pop = sum(1 for e in prod.rhs if on_stack(self.grammar.grammar, e))
-            term = Reduce(prod.nt, pop)
+            term = Reduce(Unwind(prod.nt, pop))
             expr = prod.reducer
             if expr is not None:
                 funcalls = []

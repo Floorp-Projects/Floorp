@@ -85,7 +85,13 @@ mod tests {
         )
         .expect("Should work!");
 
-        let bytecode = &result.script.bytecode;
+        let script_data_index: usize = result
+            .top_level_script
+            .immutable_script_data
+            .expect("Top level script should have ImmutableScriptData")
+            .into();
+        let script_data = &result.script_data_list[script_data_index];
+        let bytecode = &script_data.bytecode;
 
         println!("{}", dis(&bytecode));
         bytecode.to_vec()

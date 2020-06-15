@@ -7,22 +7,22 @@
 //! but the goal is to do this analysis as part of the parse phase, even when
 //! no AST is built. So we try to keep AST use separate from the analysis code.
 
-use crate::builder::{ScopeDataMapAndFunctionStencilList, ScopeDataMapBuilder};
+use crate::builder::{ScopeDataMapAndScriptStencilList, ScopeDataMapBuilder};
 use crate::data::FunctionDeclarationPropertyMap;
 use ast::arena;
 use ast::associated_data::AssociatedData;
 use ast::{types::*, visit::Pass};
 use std::collections::HashMap;
-use stencil::function::{FunctionStencilIndex, FunctionStencilList};
 use stencil::scope::ScopeDataMap;
+use stencil::script::{ScriptStencilIndex, ScriptStencilList};
 
 /// The result of scope analysis.
 pub struct ScopePassResult<'alloc> {
     pub scope_data_map: ScopeDataMap,
-    pub function_declarations: HashMap<FunctionStencilIndex, &'alloc Function<'alloc>>,
-    pub function_stencil_indices: AssociatedData<FunctionStencilIndex>,
+    pub function_declarations: HashMap<ScriptStencilIndex, &'alloc Function<'alloc>>,
+    pub function_stencil_indices: AssociatedData<ScriptStencilIndex>,
     pub function_declaration_properties: FunctionDeclarationPropertyMap,
-    pub functions: FunctionStencilList,
+    pub functions: ScriptStencilList,
 }
 
 /// The top-level struct responsible for extracting the necessary information
@@ -33,7 +33,7 @@ pub struct ScopePassResult<'alloc> {
 #[derive(Debug)]
 pub struct ScopePass<'alloc> {
     builder: ScopeDataMapBuilder,
-    function_declarations: HashMap<FunctionStencilIndex, &'alloc Function<'alloc>>,
+    function_declarations: HashMap<ScriptStencilIndex, &'alloc Function<'alloc>>,
 }
 
 impl<'alloc> ScopePass<'alloc> {
@@ -47,7 +47,7 @@ impl<'alloc> ScopePass<'alloc> {
 
 impl<'alloc> From<ScopePass<'alloc>> for ScopePassResult<'alloc> {
     fn from(pass: ScopePass<'alloc>) -> ScopePassResult<'alloc> {
-        let ScopeDataMapAndFunctionStencilList {
+        let ScopeDataMapAndScriptStencilList {
             scope_data_map,
             function_stencil_indices,
             function_declaration_properties,

@@ -79,8 +79,9 @@ class RustActionWriter:
     """Write epsilon state transitions for a given action function."""
     ast_builder = types.Type("AstBuilderDelegate", (types.Lifetime("alloc"),))
 
-    def __init__(self, writer, traits, indent):
+    def __init__(self, writer, mode, traits, indent):
         self.writer = writer
+        self.mode = mode
         self.traits = traits
         self.indent = indent
         self.has_ast_builder = self.ast_builder in traits
@@ -153,10 +154,10 @@ class RustActionWriter:
     def write_epsilon_transition(self, dest):
         self.write("// --> {}", dest)
         if dest >= self.writer.shift_count:
-            self.write("state = {}", dest)
+            self.write("{}_{}(parser)", self.mode, dest)
         else:
             self.write("parser.epsilon({});", dest)
-            self.write("return Ok(false)")
+            self.write("Ok(false)")
 
     def write_condition(self, state, first_act):
         "Write code to test a conditions, and dispatch to the matching destination"
@@ -189,25 +190,25 @@ class RustActionWriter:
         assert isinstance(act, Action)
         assert not act.is_condition()
         is_packed = {}
-        if isinstance(act, Seq):
-            # Do not pop any of the stack elements if the reduce action has
-            # an accept function call. Ideally we should be returning the
-            # result instead of keeping it on the parser stack.
-            if act.update_stack() and not act.contains_accept():
-                assert not act.contains_accept()
-                reducer = act.reduce_with()
-                start = 0
-                depth = reducer.pop
-                if reducer.replay > 0:
-                    self.write("parser.rewind({});", reducer.replay)
-                    start = reducer.replay
-                    depth += start
-                for i in range(start, depth):
-                    name = 's'
-                    if i + 1 not in self.used_variables:
-                        name = '_s'
-                    self.write("let {}{} = parser.pop();", name, i + 1)
 
+        # Do not pop any of the stack elements if the reduce action has an
+        # accept function call. Ideally we should be returning the result
+        # instead of keeping it on the parser stack.
+        if act.update_stack() and not act.contains_accept():
+            stack_diff = act.update_stack_with()
+            start = 0
+            depth = stack_diff.pop
+            if stack_diff.replay > 0:
+                self.write("parser.rewind({});", stack_diff.replay)
+                start = stack_diff.replay
+                depth += start
+            for i in range(start, depth):
+                name = 's'
+                if i + 1 not in self.used_variables:
+                    name = '_s'
+                self.write("let {}{} = parser.pop();", name, i + 1)
+
+        if isinstance(act, Seq):
             for a in act.actions:
                 self.write_single_action(a, is_packed)
                 if a.contains_accept():
@@ -217,7 +218,7 @@ class RustActionWriter:
 
         # If we fallthrough the execution of the action, then generate an
         # epsilon transition.
-        if not act.update_stack() and not act.contains_accept():
+        if act.follow_edge() and not act.contains_accept():
             assert 0 <= dest < self.writer.shift_count + self.writer.action_count
             self.write_epsilon_transition(dest)
 
@@ -254,8 +255,9 @@ class RustActionWriter:
             # Convert into a StackValue (when no ast-builder)
             value = "value"
 
+        stack_diff = act.update_stack_with()
         self.write("let term = NonterminalId::{}.into();",
-                   self.writer.nonterminal_to_camel(act.nt))
+                   self.writer.nonterminal_to_camel(stack_diff.nt))
         if value != "value":
             self.write("let value = {};", value)
         self.write("parser.replay(TermValue { term, value });")
@@ -348,6 +350,7 @@ class RustParserWriter:
         self.states = pt.states
         self.shift_count = pt.count_shift_states()
         self.action_count = pt.count_action_states()
+        self.action_from_shift_count = pt.count_action_from_shift_states()
         self.init_state_map = pt.named_goals
         self.terminals = list(OrderedSet(pt.terminals))
         # This extra terminal is used to represent any ErrorySymbol transition,
@@ -362,7 +365,6 @@ class RustParserWriter:
         self.shift()
         self.error_codes()
         self.check_camel_case()
-        self.parser_trait()
         self.actions()
         self.entry()
 
@@ -378,6 +380,7 @@ class RustParserWriter:
         self.write(0, "")
         self.write(0, "use crate::ast_builder::AstBuilderDelegate;")
         self.write(0, "use crate::stack_value_generated::{StackValue, TryIntoStack};")
+        self.write(0, "use crate::traits::{TermValue, ParserTrait};")
         self.write(0, "use crate::error::Result;")
         traits = OrderedSet()
         for mode_traits in self.parse_table.exec_modes.values():
@@ -644,60 +647,62 @@ class RustParserWriter:
         else:
             return rty
 
-    def parser_trait(self):
-        self.write(0, "#[derive(Debug)]")
-        self.write(0, "pub struct TermValue<Value> {")
-        self.write(1, "pub term: Term,")
-        self.write(1, "pub value: Value,")
-        self.write(0, "}")
-        self.write(0, "")
-        self.write(0, "pub trait ParserTrait<'alloc, Value> {")
-        self.write(1, "fn shift(&mut self, tv: TermValue<Value>) -> Result<'alloc, bool>;")
-        self.write(1, "fn unshift(&mut self);")
-        self.write(1, "fn rewind(&mut self, n: usize) {")
-        self.write(2, "for _ in 0..n {")
-        self.write(3, "self.unshift();")
-        self.write(2, "}")
-        self.write(1, "}")
-        self.write(1, "fn pop(&mut self) -> TermValue<Value>;")
-        self.write(1, "fn replay(&mut self, tv: TermValue<Value>);")
-        self.write(1, "fn epsilon(&mut self, state: usize);")
-        self.write(1, "fn check_not_on_new_line(&mut self, peek: usize) -> Result<'alloc, bool>;")
-        self.write(0, "}")
-        self.write(0, "")
-
     def actions(self):
         # For each execution mode, add a corresponding function which
         # implements various traits. The trait list is used for filtering which
         # function is added in the generated code.
         for mode, traits in self.parse_table.exec_modes.items():
-            action_writer = RustActionWriter(self, traits, 4)
+            action_writer = RustActionWriter(self, mode, traits, 2)
+            start_at = self.shift_count
+            end_at = start_at + self.action_from_shift_count
+            assert len(self.states[self.shift_count:]) == self.action_count
+            traits_text = ' + '.join(map(self.type_to_rust, traits))
+            table_holder_name = self.to_camel_case(mode)
+            table_holder_type = table_holder_name + "<'alloc, Handler>"
+            self.write(0, "struct {} {{", table_holder_type)
+            self.write(1, "fns: [fn(&mut Handler) -> Result<'alloc, bool>; {}]", self.action_from_shift_count)
+            self.write(0, "}")
+            self.write(0, "impl<'alloc, Handler> {}", table_holder_type)
+            self.write(0, "where")
+            self.write(1, "Handler: {}", traits_text)
+            self.write(0, "{")
+            self.write(1, "const TABLE : {} = {} {{", table_holder_type, table_holder_name)
+            self.write(2, "fns: [")
+            for state in self.states[start_at:end_at]:
+                self.write(3, "{}_{},", mode, state.index)
+            self.write(2, "],")
+            self.write(1, "};")
+            self.write(0, "}")
+            self.write(0, "")
             self.write(0,
                        "pub fn {}<'alloc, Handler>(parser: &mut Handler, state: usize) "
                        "-> Result<'alloc, bool>",
                        mode)
             self.write(0, "where")
-            self.write(1, "Handler: {}", ' + '.join(map(self.type_to_rust, traits)))
+            self.write(1, "Handler: {}", traits_text)
             self.write(0, "{")
-            self.write(1, "let mut state = state;")
-            self.write(1, "loop {")
-            self.write(2, "match state {")
-            assert len(self.states[self.shift_count:]) == self.action_count
-            for state in self.states[self.shift_count:]:
-                self.write(3, "{} => {{", state.index)
-                action_writer.write_state_transitions(state)
-                self.write(3, "}")
-            self.write(3, '_ => panic!("no such state: {}", state),')
-            self.write(2, "}")
-            self.write(1, "}")
+            self.write(1, "{}::<'alloc, Handler>::TABLE.fns[state - {}](parser)", table_holder_name, start_at)
             self.write(0, "}")
             self.write(0, "")
+            for state in self.states[self.shift_count:]:
+                self.write(0, "#[inline]")
+                self.write(0, "#[allow(unused)]")
+                self.write(0,
+                           "pub fn {}_{}<'alloc, Handler>(parser: &mut Handler) "
+                           "-> Result<'alloc, bool>",
+                           mode, state.index)
+                self.write(0, "where")
+                self.write(1, "Handler: {}", ' + '.join(map(self.type_to_rust, traits)))
+                self.write(0, "{")
+                action_writer.write_state_transitions(state)
+                self.write(0, "}")
 
     def entry(self):
         self.write(0, "#[derive(Clone, Copy)]")
         self.write(0, "pub struct ParseTable<'a> {")
         self.write(1, "pub shift_count: usize,")
         self.write(1, "pub action_count: usize,")
+        self.write(1, "pub action_from_shift_count: usize,")
         self.write(1, "pub shift_table: &'a [i64],")
         self.write(1, "pub shift_width: usize,")
         self.write(1, "pub error_codes: &'a [Option<ErrorCode>],")
@@ -717,6 +722,7 @@ class RustParserWriter:
         self.write(0, "pub static TABLES: ParseTable<'static> = ParseTable {")
         self.write(1, "shift_count: {},", self.shift_count)
         self.write(1, "action_count: {},", self.action_count)
+        self.write(1, "action_from_shift_count: {},", self.action_from_shift_count)
         self.write(1, "shift_table: &SHIFT,")
         self.write(1, "shift_width: {},", len(self.terminals) + len(self.nonterminals))
         self.write(1, "error_codes: &STATE_TO_ERROR_CODE,")

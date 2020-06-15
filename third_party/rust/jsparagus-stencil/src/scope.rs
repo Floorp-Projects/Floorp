@@ -10,7 +10,7 @@
 //! Each scope contains a list of bindings (`BindingName`).
 
 use crate::frame_slot::FrameSlot;
-use crate::function::FunctionStencilIndex;
+use crate::script::ScriptStencilIndex;
 use ast::associated_data::AssociatedData;
 use ast::source_atom_set::SourceAtomSetIndex;
 use ast::source_location_accessor::SourceLocationAccessor;
@@ -81,7 +81,7 @@ impl<'a> BindingIterItem<'a> {
     }
 }
 
-/// Accessor for is_closed_over for both BindingName/Option<BindingName>.
+/// Accessor for both BindingName/Option<BindingName>.
 pub trait MaybeBindingName {
     fn is_closed_over(&self) -> bool;
 }
@@ -167,7 +167,7 @@ pub struct GlobalScopeData {
     pub const_start: usize,
 
     /// The global functions in this script.
-    pub functions: Vec<FunctionStencilIndex>,
+    pub functions: Vec<ScriptStencilIndex>,
 }
 
 impl GlobalScopeData {
@@ -175,7 +175,7 @@ impl GlobalScopeData {
         var_count: usize,
         let_count: usize,
         const_count: usize,
-        functions: Vec<FunctionStencilIndex>,
+        functions: Vec<ScriptStencilIndex>,
     ) -> Self {
         let capacity = var_count + let_count + const_count;
 
@@ -297,7 +297,7 @@ pub struct LexicalScopeData {
     pub enclosing: ScopeIndex,
 
     /// Functions in this scope.
-    pub functions: Vec<FunctionStencilIndex>,
+    pub functions: Vec<ScriptStencilIndex>,
 }
 
 impl LexicalScopeData {
@@ -305,7 +305,7 @@ impl LexicalScopeData {
         let_count: usize,
         const_count: usize,
         enclosing: ScopeIndex,
-        functions: Vec<FunctionStencilIndex>,
+        functions: Vec<ScriptStencilIndex>,
     ) -> Self {
         let capacity = let_count + const_count;
 
@@ -323,7 +323,7 @@ impl LexicalScopeData {
         let_count: usize,
         const_count: usize,
         enclosing: ScopeIndex,
-        functions: Vec<FunctionStencilIndex>,
+        functions: Vec<ScriptStencilIndex>,
     ) -> Self {
         Self::new(let_count, const_count, enclosing, functions)
     }
@@ -471,10 +471,10 @@ impl FunctionScopeData {
         has_parameter_exprs: bool,
         positional_parameter_count: usize,
         non_positional_formal_start: usize,
-        var_count: usize,
+        max_var_count: usize,
         enclosing: ScopeIndex,
     ) -> Self {
-        let capacity = positional_parameter_count + non_positional_formal_start + var_count;
+        let capacity = positional_parameter_count + non_positional_formal_start + max_var_count;
 
         Self {
             base: BaseScopeData::new(capacity),

@@ -4,17 +4,20 @@ use ast::source_slice_list::SourceSliceList;
 use ast::types::Function;
 use scope::data::FunctionDeclarationPropertyMap;
 use std::collections::HashMap;
-use stencil::function::{FunctionStencilIndex, FunctionStencilList};
+use stencil::regexp::RegExpList;
 use stencil::scope::ScopeDataMap;
+use stencil::script::{ImmutableScriptDataList, ScriptStencilIndex, ScriptStencilList};
 
 pub struct CompilationInfo<'alloc> {
     pub atoms: SourceAtomSet<'alloc>,
     pub slices: SourceSliceList<'alloc>,
+    pub regexps: RegExpList,
     pub scope_data_map: ScopeDataMap,
-    pub function_declarations: HashMap<FunctionStencilIndex, &'alloc Function<'alloc>>,
-    pub function_stencil_indices: AssociatedData<FunctionStencilIndex>,
+    pub function_declarations: HashMap<ScriptStencilIndex, &'alloc Function<'alloc>>,
+    pub function_stencil_indices: AssociatedData<ScriptStencilIndex>,
     pub function_declaration_properties: FunctionDeclarationPropertyMap,
-    pub functions: FunctionStencilList,
+    pub functions: ScriptStencilList,
+    pub script_data_list: ImmutableScriptDataList,
 }
 
 impl<'alloc> CompilationInfo<'alloc> {
@@ -22,19 +25,21 @@ impl<'alloc> CompilationInfo<'alloc> {
         atoms: SourceAtomSet<'alloc>,
         slices: SourceSliceList<'alloc>,
         scope_data_map: ScopeDataMap,
-        function_declarations: HashMap<FunctionStencilIndex, &'alloc Function<'alloc>>,
-        function_stencil_indices: AssociatedData<FunctionStencilIndex>,
+        function_declarations: HashMap<ScriptStencilIndex, &'alloc Function<'alloc>>,
+        function_stencil_indices: AssociatedData<ScriptStencilIndex>,
         function_declaration_properties: FunctionDeclarationPropertyMap,
-        functions: FunctionStencilList,
+        functions: ScriptStencilList,
     ) -> Self {
         Self {
             atoms,
             slices,
+            regexps: RegExpList::new(),
             scope_data_map,
             function_declarations,
             function_stencil_indices,
             function_declaration_properties,
             functions,
+            script_data_list: ImmutableScriptDataList::new(),
         }
     }
 }

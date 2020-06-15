@@ -18,8 +18,9 @@ pub use ast_builder::{AstBuilder, AstBuilderDelegate};
 pub use declaration_kind::DeclarationKind;
 pub use error::{ParseError, Result};
 pub use parser_tables_generated::{
-    full_actions, noop_actions, ErrorCode, NonterminalId, ParseTable, ParserTrait, Term, TermValue,
-    TerminalId, START_STATE_MODULE, START_STATE_SCRIPT, TABLES,
+    full_actions, noop_actions, ErrorCode, NonterminalId, ParseTable, Term, TerminalId,
+    START_STATE_MODULE, START_STATE_SCRIPT, TABLES,
 };
 pub use stack_value_generated::StackValue;
 pub use token::{Token, TokenValue};
+pub use traits::{ParserTrait, TermValue};
