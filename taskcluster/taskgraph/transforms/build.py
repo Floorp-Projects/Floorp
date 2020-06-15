@@ -118,11 +118,27 @@ def mozconfig(config, jobs):
 
 
 @transforms.add
+def use_artifact(config, jobs):
+    if config.params.is_try():
+        use_artifact = config.params['try_task_config'].get('use-artifact-builds', False)
+    else:
+        use_artifact = False
+    for job in jobs:
+        if (config.kind == 'build' and use_artifact and
+            job.get('index', {}).get('job-name') in ARTIFACT_JOBS):
+            job['treeherder']['symbol'] += 'a'
+            job['worker']['env']['USE_ARTIFACT'] = '1'
+            job['attributes']['artifact-build'] = True
+        yield job
+
+
+@transforms.add
 def use_profile_data(config, jobs):
     for job in jobs:
         use_pgo = job.pop('use-pgo', False)
         disable_pgo = config.params['try_task_config'].get('disable-pgo', False)
-        if not use_pgo or disable_pgo:
+        artifact_build = job['attributes'].get('artifact-build')
+        if not use_pgo or disable_pgo or artifact_build:
             yield job
             continue
 
@@ -160,19 +176,4 @@ def enable_full_crashsymbols(config, jobs):
             logger.debug("Disabling full symbol generation for %s", job['name'])
             job['worker']['env']['MOZ_DISABLE_FULL_SYMBOLS'] = '1'
             job['attributes'].pop('enable-full-crashsymbols', None)
-        yield job
-
-
-@transforms.add
-def use_artifact(config, jobs):
-    if config.params.is_try():
-        use_artifact = config.params['try_task_config'].get('use-artifact-builds', False)
-    else:
-        use_artifact = False
-    for job in jobs:
-        if (config.kind == 'build' and use_artifact and
-            job.get('index', {}).get('job-name') in ARTIFACT_JOBS):
-            job['treeherder']['symbol'] += 'a'
-            job['worker']['env']['USE_ARTIFACT'] = '1'
-            job['attributes']['artifact-build'] = True
         yield job
