@@ -20,6 +20,9 @@ use crate::texture_cache::{TextureCache, TextureCacheHandle, Eviction};
 use crate::render_target::RenderTargetKind;
 use crate::render_task::{RenderTask, RenderTaskLocation};
 use crate::render_task_graph::{RenderTaskGraph, RenderTaskId};
+use euclid::Scale;
+
+const MAX_CACHE_TASK_SIZE: f32 = 4096.0;
 
 #[derive(Clone, Debug, Hash, PartialEq, Eq)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
@@ -259,9 +262,17 @@ impl RenderTaskCache {
 // Gecko tests.
 // Note: zero-square tasks are prohibited in WR task graph, so
 // we ensure each dimension to be at least the length of 1 after rounding.
-pub fn to_cache_size(size: DeviceSize) -> DeviceIntSize {
+pub fn to_cache_size(size: LayoutSize, device_pixel_scale: &mut Scale<f32, LayoutPixel, DevicePixel>) -> DeviceIntSize {
+    let mut device_size = (size * *device_pixel_scale).round();
+
+    if device_size.width > MAX_CACHE_TASK_SIZE || device_size.height > MAX_CACHE_TASK_SIZE {
+        let scale = MAX_CACHE_TASK_SIZE / f32::max(device_size.width, device_size.height);
+        *device_pixel_scale = *device_pixel_scale * Scale::new(scale);
+        device_size = (size * *device_pixel_scale).round();
+    }
+
     DeviceIntSize::new(
-        1.max(size.width.round() as i32),
-        1.max(size.height.round() as i32),
+        1.max(device_size.width as i32),
+        1.max(device_size.height as i32),
     )
 }
