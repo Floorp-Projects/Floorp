@@ -18,7 +18,10 @@ const {
   openResponseDetailsPanel,
 } = require("./netmonitor-helpers");
 
-const EXPECTED_REQUESTS = 280;
+const EXPECTED_REQUESTS = {
+  min: 230,
+  max: 280,
+};
 
 module.exports = async function() {
   await testSetup(COMPLICATED_URL);
@@ -30,7 +33,8 @@ module.exports = async function() {
   const requestsDone = waitForNetworkRequests(
     "complicated.netmonitor",
     toolbox,
-    EXPECTED_REQUESTS
+    EXPECTED_REQUESTS.min,
+    EXPECTED_REQUESTS.max
   );
   await reloadPageAndLog("complicated.netmonitor", toolbox);
   await requestsDone;

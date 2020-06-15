@@ -22,28 +22,54 @@ const { getToolbox, runTest } = require("../head");
  * - the request start and end times are overlapping. If a new request starts a moment
  *   after the previous one was finished, the wait will be ended in the "interim"
  *   period.
+ *
+ * We might need to allow a range of requests because even though we run with
+ * cache disabled, different loads can still be coalesced, and whether they're
+ * coalesced or not depends on timing.
+ *
  * @returns a promise that resolves when the wait is done.
  */
-async function waitForAllRequestsFinished(expectedRequests) {
+async function waitForAllRequestsFinished(
+  minExpectedRequests,
+  maxExpectedRequests
+) {
   let toolbox = await getToolbox();
   let window = toolbox.getCurrentPanel().panelWin;
 
   return new Promise(resolve => {
     // Explicitly waiting for specific number of requests arrived
     let payloadReady = 0;
+    let resolveWithLessThanMaxRequestsTimer = null;
 
     function onPayloadReady(_, id) {
       payloadReady++;
+      dump(`Waiting for ${maxExpectedRequests - payloadReady} requests\n`);
       maybeResolve();
     }
 
+    function doResolve() {
+      // All requests are done - unsubscribe from events and resolve!
+      window.api.off(EVENTS.PAYLOAD_READY, onPayloadReady);
+      // Resolve after current frame
+      setTimeout(resolve, 1);
+    }
+
     function maybeResolve() {
+      if (resolveWithLessThanMaxRequestsTimer) {
+        clearTimeout(resolveWithLessThanMaxRequestsTimer);
+        resolveWithLessThanMaxRequestsTimer = null;
+      }
+
       // Have all the requests finished yet?
-      if (payloadReady >= expectedRequests) {
-        // All requests are done - unsubscribe from events and resolve!
-        window.api.off(EVENTS.PAYLOAD_READY, onPayloadReady);
-        // Resolve after current frame
-        setTimeout(resolve, 1);
+      if (payloadReady >= maxExpectedRequests) {
+        doResolve();
+        return;
+      }
+
+      // If we're past the minimum threshold, wait to see if more requests come
+      // up, but resolve otherwise.
+      if (payloadReady >= minExpectedRequests) {
+        resolveWithLessThanMaxRequestsTimer = setTimeout(doResolve, 1000);
       }
     }
 
@@ -96,10 +122,11 @@ function mouseDownElement(el, win) {
 exports.waitForNetworkRequests = async function(
   label,
   toolbox,
-  expectedRequests
+  minExpectedRequests,
+  maxExpectedRequests = minExpectedRequests
 ) {
   let test = runTest(label + ".requestsFinished.DAMP");
-  await waitForAllRequestsFinished(expectedRequests);
+  await waitForAllRequestsFinished(minExpectedRequests, maxExpectedRequests);
   test.done();
 };
 
