@@ -23,7 +23,6 @@ file-whitespace:
         - dom/bindings/parser/tests/test_special_methods.py
         - dom/bindings/parser/tests/test_toJSON.py
         - dom/bindings/parser/tests/test_typedef.py
-        - dom/encoding/encodings2arrays.py
         - dom/media/gtest/AudioGenerator.cpp
         - dom/media/gtest/AudioGenerator.h
         - dom/security/test/csp/file_websocket_self_wsh.py

@@ -233,40 +233,6 @@
     </hbox>
   </groupbox>
 
-  <!-- Text Encoding -->
-  <groupbox id="FallbackGroupbox">
-    <label><html:h2 data-l10n-id="fonts-languages-fallback-header"/></label>
-    <description data-l10n-id="fonts-languages-fallback-desc"/>
-    <hbox align="center">
-      <label data-l10n-id="fonts-languages-fallback-label" control="DefaultCharsetList"/>
-      <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
-      <hbox>
-        <menulist id="DefaultCharsetList" preference="intl.charset.fallback.override">
-          <menupopup>
-            <menuitem data-l10n-id="fonts-languages-fallback-name-auto"        value=""/>
-            <menuitem data-l10n-id="fonts-languages-fallback-name-arabic"      value="windows-1256"/>
-            <menuitem data-l10n-id="fonts-languages-fallback-name-baltic"      value="windows-1257"/>
-            <menuitem data-l10n-id="fonts-languages-fallback-name-ceiso"       value="ISO-8859-2"/>
-            <menuitem data-l10n-id="fonts-languages-fallback-name-cewindows"   value="windows-1250"/>
-            <!-- Using gbk instead of GBK for compat with previously-stored prefs.
-                The value gets normalized in dom/encoding/FallbackEncoding.cpp. -->
-            <menuitem data-l10n-id="fonts-languages-fallback-name-simplified"  value="gbk"/>
-            <menuitem data-l10n-id="fonts-languages-fallback-name-traditional" value="Big5"/>
-            <menuitem data-l10n-id="fonts-languages-fallback-name-cyrillic"    value="windows-1251"/>
-            <menuitem data-l10n-id="fonts-languages-fallback-name-greek"       value="ISO-8859-7"/>
-            <menuitem data-l10n-id="fonts-languages-fallback-name-hebrew"      value="windows-1255"/>
-            <menuitem data-l10n-id="fonts-languages-fallback-name-japanese"    value="Shift_JIS"/>
-            <menuitem data-l10n-id="fonts-languages-fallback-name-korean"      value="EUC-KR"/>
-            <menuitem data-l10n-id="fonts-languages-fallback-name-thai"        value="windows-874"/>
-            <menuitem data-l10n-id="fonts-languages-fallback-name-turkish"     value="windows-1254"/>
-            <menuitem data-l10n-id="fonts-languages-fallback-name-vietnamese"  value="windows-1258"/>
-            <menuitem data-l10n-id="fonts-languages-fallback-name-other"       value="windows-1252"/>
-          </menupopup>
-        </menulist>
-      </hbox>
-    </hbox>
-  </groupbox>
-
   <!-- Load the script after the elements for layout issues (bug 1501755). -->
   <script src="chrome://mozapps/content/preferences/fontbuilder.js"/>
   <script src="chrome://browser/content/preferences/dialogs/fonts.js"/>

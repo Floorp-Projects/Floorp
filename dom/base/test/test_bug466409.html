@@ -22,16 +22,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=466409
 SimpleTest.waitForExplicitFinish();
 var testframe = document.getElementById('testframe');
 
-
-
-SpecialPowers.pushPrefEnv({"set": [['intl.charset.detector', 'universal_charset_detector']]}, function() {
-  testframe.onload = function () {
-      ok(true, "page loaded successfully");
-      SimpleTest.finish();
-  };
-  testframe.src = "bug466409-page.html";
-});
-
+testframe.onload = function () {
+  ok(true, "page loaded successfully");
+  SimpleTest.finish();
+};
+testframe.src = "bug466409-page.html";
 
 </script>
 </pre>
