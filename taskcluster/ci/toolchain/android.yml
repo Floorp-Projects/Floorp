@@ -76,6 +76,8 @@ linux64-android-gradle-dependencies:
         toolchain-artifact: public/build/android-gradle-dependencies.tar.zst
         toolchain-alias: android-gradle-dependencies
     fetches:
+        fetch:
+            - sonatype-nexus
         toolchain:
             # Aliases aren't allowed for toolchains depending on toolchains.
             - linux64-android-sdk-linux-repack

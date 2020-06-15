@@ -69,19 +69,16 @@ don't need to fetch additional Maven dependencies at build time.
 redistributed publicly.)
 
 Archiving the Gradle executable is straight-forward, but archiving a
-local Maven repository is not.  Therefore a special Task Cluster
-Docker image and toolchain job exist for producing the required
-archives.  The Docker image definition is rooted in
-``taskcluster/docker/android-build``.  The Task Cluster toolchain job
-is named `android-gradle-dependencies`.  The job runs in a container
-based on the custom Docker image and spawns a Sonatype Nexus proxying
-Maven repository process in the background.  The job builds Firefox
-for Android using Gradle and the in-tree Gradle configuration rooted
-at ``build.gradle``.  The spawned proxying Maven repository downloads
-external dependencies and collects them.  After the Gradle build
-completes, the job archives the Gradle version used to build, and the
-downloaded Maven repository, and exposes them as Task Cluster
-artifacts.
+local Maven repository is not.  Therefore a toolchain job exists for
+producing the required archives, `android-gradle-dependencies`.  The
+job runs in a container based on a custom Docker image and spawns a
+Sonatype Nexus proxying Maven repository process in the background.
+The job builds Firefox for Android using Gradle and the in-tree Gradle
+configuration rooted at ``build.gradle``.  The spawned proxying Maven
+repository downloads external dependencies and collects them.  After
+the Gradle build completes, the job archives the Gradle version used
+to build, and the downloaded Maven repository, and exposes them as
+Task Cluster artifacts.
 
 To update the version of Gradle in the archive produced, update
 ``gradle/wrapper/gradle-wrapper.properties``.  Be sure to also update
@@ -94,8 +91,8 @@ locally, push a fresh build to try.  The `android-gradle-dependencies`
 toolchain should run automatically, fetching your new dependencies and
 wiring them into the appropriate try build jobs.
 
-To update the version of Sonatype Nexus, update `NEXUS_VERSION` in the
-`android-build` Docker image.
+To update the version of Sonatype Nexus, update the `sonatype-nexus`
+`fetch` task definition.
 
 To modify the Sonatype Nexus configuration, typically to proxy a new
 remote Maven repository, modify
