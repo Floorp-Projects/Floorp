@@ -283,10 +283,6 @@ void FunctionBox::initFromLazyFunction(JSFunction* fun) {
   BaseScript* lazy = fun->baseScript();
   immutableFlags_ = lazy->immutableFlags();
   extent = lazy->extent();
-
-  if (fun->isClassConstructor()) {
-    fieldInitializers = mozilla::Some(lazy->getFieldInitializers());
-  }
 }
 
 void FunctionBox::initWithEnclosingParseContext(ParseContext* enclosing,

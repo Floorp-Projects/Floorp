@@ -714,6 +714,8 @@ XDRResult js::PrivateScriptData::XDR(XDRState<mode>* xdr, HandleScript script,
   // Code the field initilizer data.
   if (funOrMod && funOrMod->is<JSFunction>() &&
       funOrMod->as<JSFunction>().isClassConstructor()) {
+    MOZ_ASSERT(scriptEnclosingScope);
+
     uint32_t numFieldInitializers;
     if (mode == XDR_ENCODE) {
       numFieldInitializers = data->getFieldInitializers().numFieldInitializers;
@@ -1218,7 +1220,9 @@ XDRResult js::XDRLazyScript(XDRState<mode>* xdr, HandleScope enclosingScope,
     }
   }
 
-  bool hasFieldInitializers = fun->isClassConstructor();
+  // FieldInitializer data is defined for class constructors, but only once
+  // their enclosing script has been compiled.
+  bool hasFieldInitializers = fun->isClassConstructor() && enclosingScope;
 
   MOZ_TRY(BaseScript::XDRLazyScriptData(xdr, sourceObject, lazy,
                                         hasFieldInitializers));
@@ -4789,8 +4793,10 @@ bool PrivateScriptData::Clone(JSContext* cx, HandleScript src, HandleScript dst,
   if (!JSScript::createPrivateScriptData(cx, dst, ngcthings)) {
     return false;
   }
-
   PrivateScriptData* dstData = dst->data_;
+
+  dstData->fieldInitializers_ = srcData->fieldInitializers_;
+
   {
     auto array = dstData->gcthings();
     for (uint32_t i = 0; i < ngcthings; ++i) {

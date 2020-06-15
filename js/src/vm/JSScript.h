@@ -1417,6 +1417,8 @@ class alignas(uintptr_t) PrivateScriptData final : public TrailingArray {
  private:
   uint32_t ngcthings = 0;
 
+  // Note: This is only defined for scripts with an enclosing scope. This
+  // excludes lazy scripts with lazy parents.
   js::FieldInitializers fieldInitializers_ = js::FieldInitializers::Invalid();
 
   // End of fields.
@@ -1444,6 +1446,8 @@ class alignas(uintptr_t) PrivateScriptData final : public TrailingArray {
   }
 
   void setFieldInitializers(FieldInitializers fieldInitializers) {
+    MOZ_ASSERT(fieldInitializers_.valid == false,
+               "Only init FieldInitializers once");
     fieldInitializers_ = fieldInitializers;
   }
   const FieldInitializers& getFieldInitializers() { return fieldInitializers_; }
