@@ -54,7 +54,6 @@ class WebBrowserChromeChild extends GeckoViewActorChild {
         aURI,
         aReferrerInfo,
         aTriggeringPrincipal,
-        false,
         null,
         aCsp
       );
@@ -69,28 +68,6 @@ class WebBrowserChromeChild extends GeckoViewActorChild {
     debug`shouldLoadURIInThisProcess ${aURI.displaySpec}`;
     const remoteSubframes = this.docShell.nsILoadContext.useRemoteSubframes;
     return E10SUtils.shouldLoadURIInThisProcess(aURI, remoteSubframes);
-  }
-
-  // nsIWebBrowserChrome
-  reloadInFreshProcess(
-    aDocShell,
-    aURI,
-    aReferrerInfo,
-    aTriggeringPrincipal,
-    aLoadFlags,
-    aCsp
-  ) {
-    debug`reloadInFreshProcess ${aURI.displaySpec}`;
-    E10SUtils.redirectLoad(
-      aDocShell,
-      aURI,
-      aReferrerInfo,
-      aTriggeringPrincipal,
-      true,
-      aLoadFlags,
-      aCsp
-    );
-    return true;
   }
 }
 

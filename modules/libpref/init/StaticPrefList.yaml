@@ -2111,11 +2111,6 @@
   value: false
   mirror: always
 
-- name: dom.largeAllocation.testing.allHttpLoads
-  type: bool
-  value: false
-  mirror: always
-
 # Whether "W3C Web Manifest" processing is enabled
 - name: dom.manifest.enabled
   type: bool
