@@ -3722,7 +3722,7 @@ class Renderbuffer final {
 
   ~Renderbuffer() {
     const RefPtr<GLContext> gl = weakGl.get();
-    if (!gl->MakeCurrent()) return;
+    if (!gl || !gl->MakeCurrent()) return;
     gl->fDeleteRenderbuffers(1, &name);
   }
 };
@@ -3746,7 +3746,7 @@ class Texture final {
 
   ~Texture() {
     const RefPtr<GLContext> gl = weakGl.get();
-    if (!gl->MakeCurrent()) return;
+    if (!gl || !gl->MakeCurrent()) return;
     gl->fDeleteTextures(1, &name);
   }
 };
