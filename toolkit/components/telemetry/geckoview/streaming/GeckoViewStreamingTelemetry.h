@@ -9,6 +9,7 @@
 
 #include "mozilla/RefCounted.h"
 #include "mozilla/RefPtr.h"
+#include "nsISupportsImpl.h"
 #include "nsString.h"
 
 #include <cstdint>
@@ -24,11 +25,9 @@ void UintScalarSet(const nsCString& aName, uint32_t aValue);
 
 // Classes wishing to receive Streaming Telemetry must implement this interface
 // and register themselves via RegisterDelegate.
-class StreamingTelemetryDelegate
-    : public mozilla::RefCounted<StreamingTelemetryDelegate> {
+class StreamingTelemetryDelegate {
  public:
-  MOZ_DECLARE_REFCOUNTED_TYPENAME(StreamingTelemetryDelegate);
-  virtual ~StreamingTelemetryDelegate() = default;
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(StreamingTelemetryDelegate)
 
   // Receive* methods will be called from time to time on the main thread.
   virtual void ReceiveHistogramSamples(const nsCString& aName,
@@ -40,6 +39,9 @@ class StreamingTelemetryDelegate
                                         const nsCString& aValue) = 0;
   virtual void ReceiveUintScalarValue(const nsCString& aName,
                                       uint32_t aValue) = 0;
+
+ protected:
+  virtual ~StreamingTelemetryDelegate() = default;
 };
 
 // Registers the provided StreamingTelemetryDelegate to receive Streaming
