@@ -175,11 +175,6 @@ def mozharness_test_on_docker(config, job, taskdesc):
         'task-reference': six.ensure_text(json.dumps(extra_config, sort_keys=True))
     }
 
-    # Bug 1634554 - pass in decision task URL for manifest/test mapping for WPT.
-    if 'web-platform-tests' in test['suite']:
-        env['TESTS_BY_MANIFEST_URL'] = {
-            'artifact-reference': '<decision/public/tests-by-manifest.json.gz>'}
-
     command = [
         '{workdir}/bin/test-linux.sh'.format(**run),
     ]
@@ -317,11 +312,6 @@ def mozharness_test_on_generic_worker(config, job, taskdesc):
     env['EXTRA_MOZHARNESS_CONFIG'] = {
         'task-reference': six.ensure_text(json.dumps(extra_config, sort_keys=True))
     }
-
-    # Bug 1634554 - pass in decision task URL for manifest/test mapping for WPT.
-    if 'web-platform-tests' in test['suite']:
-        env['TESTS_BY_MANIFEST_URL'] = {
-            'artifact-reference': '<decision/public/tests-by-manifest.json.gz>'}
 
     if is_windows:
         mh_command = [
@@ -472,11 +462,6 @@ def mozharness_test_on_script_engine_autophone(config, job, taskdesc):
     env['EXTRA_MOZHARNESS_CONFIG'] = {
         'task-reference': six.ensure_text(json.dumps(extra_config, sort_keys=True))
     }
-
-    # Bug 1634554 - pass in decision task URL for manifest/test mapping for WPT.
-    if 'web-platform-tests' in test['suite']:
-        env['TESTS_BY_MANIFEST_URL'] = {
-            'artifact-reference': '<decision/public/tests-by-manifest.json.gz>'}
 
     script = 'test-linux.sh'
     worker['context'] = config.params.file_url(

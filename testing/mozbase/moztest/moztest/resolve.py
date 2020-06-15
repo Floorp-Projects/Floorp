@@ -693,26 +693,20 @@ class TestResolver(MozbuildObject):
             return True
         return False
 
-    def get_wpt_group(self, test, depth=3):
-        """Given a test object set the group (aka manifest) that it belongs to.
-
-        If a custom value for `depth` is provided, it will override the default
-        value of 3 path components.
+    def get_wpt_group(self, test):
+        """Given a test object, set the group (aka manifest) that it belongs to.
 
         Args:
             test (dict): Test object for the particular suite and subsuite.
-            depth (int, optional): Custom number of path elements.
 
         Returns:
             str: The group the given test belongs to.
         """
-        # This takes into account that for mozilla-specific WPT tests, the path
-        # contains an extra '/_mozilla' prefix that must be accounted for.
-        depth = depth + 1 if test['name'].startswith('/_mozilla') else depth
-
-        group = os.path.dirname(test['name'])
-        while group.count('/') > depth:
-            group = os.path.dirname(group)
+        # Extract the first path component (top level directory) as the key.
+        # This value should match the path in manifest-runtimes JSON data.
+        # Mozilla WPT paths have one extra URL component in the front.
+        components = 3 if test['name'].startswith('/_mozilla') else 2
+        group = '/'.join(test['name'].split('/')[:components])
         return group
 
     def add_wpt_manifest_data(self):
