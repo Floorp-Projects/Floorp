@@ -5305,8 +5305,6 @@ already_AddRefed<ImageData> CanvasRenderingContext2D::CreateImageData(
                                        aImagedata.Height(), aError);
 }
 
-static uint8_t g2DContextLayerUserData;
-
 void CanvasRenderingContext2D::OnBeforePaintTransaction() {
   if (!mTarget) return;
   OnStableState();
