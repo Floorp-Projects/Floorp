@@ -248,12 +248,12 @@ void WebGLContext::DestroyResourcesAndContext() {
 }
 
 void ClientWebGLContext::MarkCanvasDirty() {
-  if (mIsCanvasDirty) return;
-  mIsCanvasDirty = true;
-
   if (!mCanvasElement) return;
 
   mCapturedFrameInvalidated = true;
+
+  if (mIsCanvasDirty) return;
+  mIsCanvasDirty = true;
 
   SVGObserverUtils::InvalidateDirectRenderingObservers(mCanvasElement);
 
