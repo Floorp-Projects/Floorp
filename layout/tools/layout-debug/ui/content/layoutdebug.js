@@ -473,17 +473,8 @@ function updateBrowserRemotenessByURL(aURL) {
       gBrowser.setAttribute("remote", "true");
       gBrowser.setAttribute("remoteType", remoteType);
     }
-    if (
-      !Services.prefs.getBoolPref(
-        "fission.rebuild_frameloaders_on_remoteness_change",
-        false
-      )
-    ) {
-      gBrowser.replaceWith(gBrowser);
-    } else {
-      gBrowser.changeRemoteness({ remoteType });
-      gBrowser.construct();
-    }
+    gBrowser.changeRemoteness({ remoteType });
+    gBrowser.construct();
     gDebugger.attachBrowser();
   }
 }
