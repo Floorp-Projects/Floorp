@@ -942,14 +942,46 @@ bool WebGLContext::PresentInto(gl::SwapChain& swapChain) {
   return true;
 }
 
+bool WebGLContext::PresentIntoXR(gl::SwapChain& swapChain,
+                                 const gl::MozFramebuffer& fb) {
+  OnEndOfFrame();
+
+  auto presenter = swapChain.Acquire(fb.mSize);
+  if (!presenter) {
+    GenerateWarning("Swap chain surface creation failed.");
+    LoseContext();
+    return false;
+  }
+
+  const auto destFb = presenter->Fb();
+  gl->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, destFb);
+
+  BlitBackbufferToCurDriverFB(&fb);
+
+  // https://immersive-web.github.io/webxr/#opaque-framebuffer
+  // Opaque framebuffers will always be cleared regardless of the
+  // associated WebGL context’s preserveDrawingBuffer value.
+  if (gl->IsSupported(gl::GLFeature::invalidate_framebuffer)) {
+    gl->fBindFramebuffer(LOCAL_GL_READ_FRAMEBUFFER, fb.mFB);
+    constexpr auto attachments = MakeArray<GLenum>(
+        LOCAL_GL_COLOR_ATTACHMENT0, LOCAL_GL_DEPTH_STENCIL_ATTACHMENT);
+    gl->fInvalidateFramebuffer(LOCAL_GL_READ_FRAMEBUFFER, attachments.size(),
+                               attachments.data());
+  }
+
+  return true;
+}
+
 void WebGLContext::Present(WebGLFramebuffer* const fb,
                            const layers::TextureType consumerType) {
   const FuncScope funcScope(*this, "<Present>");
   if (IsContextLost()) return;
 
   auto swapChain = &mSwapChain;
+  const gl::MozFramebuffer* maybeFB = nullptr;
   if (fb) {
     swapChain = &fb->mOpaqueSwapChain;
+    maybeFB = fb->mOpaque.get();
   } else {
     mResolvedDefaultFB = nullptr;
   }
@@ -966,7 +998,11 @@ void WebGLContext::Present(WebGLFramebuffer* const fb,
   }
   MOZ_ASSERT(swapChain->mFactory);
 
-  (void)PresentInto(*swapChain);
+  if (maybeFB) {
+    (void)PresentIntoXR(*swapChain, *maybeFB);
+  } else {
+    (void)PresentInto(*swapChain);
+  }
 }
 
 Maybe<layers::SurfaceDescriptor> WebGLContext::GetFrontBuffer(
