@@ -28,7 +28,8 @@ class HTMLEditUtils final {
   using Selection = dom::Selection;
 
  public:
-  const char16_t kNBSP = 0x00A0;
+  static const char16_t kSpace = 0x0020;
+  static const char16_t kNBSP = 0x00A0;
 
   /**
    * IsSimplyEditableNode() returns true when aNode is simply editable.
@@ -625,6 +626,56 @@ class HTMLEditUtils final {
     MOZ_ASSERT(aOffset <= textFragment.GetLength());
     for (uint32_t i = aOffset + 1; i < textFragment.GetLength(); i++) {
       if (!nsCRT::IsAsciiSpace(textFragment.CharAt(i))) {
+        return Some(i);
+      }
+    }
+    return Nothing();
+  }
+
+  /**
+   * GetPreviousCharOffsetExceptWhiteSpaces() returns first offset where
+   * the character is neither an ASCII white-space nor an NBSP before aPoint.
+   */
+  static Maybe<uint32_t> GetPreviousCharOffsetExceptWhiteSpaces(
+      const EditorDOMPointInText& aPoint) {
+    MOZ_ASSERT(aPoint.IsSetAndValid());
+    return GetPreviousCharOffsetExceptWhiteSpaces(*aPoint.ContainerAsText(),
+                                                  aPoint.Offset());
+  }
+  static Maybe<uint32_t> GetPreviousCharOffsetExceptWhiteSpaces(
+      const dom::Text& aTextNode, uint32_t aOffset) {
+    if (!aOffset) {
+      return Nothing();
+    }
+    const nsTextFragment& textFragment = aTextNode.TextFragment();
+    MOZ_ASSERT(aOffset <= textFragment.GetLength());
+    for (uint32_t i = aOffset; i; i--) {
+      char16_t ch = textFragment.CharAt(i - 1);
+      if (!nsCRT::IsAsciiSpace(ch) && ch != kNBSP) {
+        return Some(i - 1);
+      }
+    }
+    return Nothing();
+  }
+
+  /**
+   * GetInclusiveNextCharOffsetExceptWhiteSpaces() returns first offset where
+   * the character is neither an ASCII white-space nor an NBSP at aPoint or
+   * after it.
+   */
+  static Maybe<uint32_t> GetInclusiveNextCharOffsetExceptWhiteSpaces(
+      const EditorDOMPointInText& aPoint) {
+    MOZ_ASSERT(aPoint.IsSetAndValid());
+    return GetInclusiveNextCharOffsetExceptWhiteSpaces(
+        *aPoint.ContainerAsText(), aPoint.Offset());
+  }
+  static Maybe<uint32_t> GetInclusiveNextCharOffsetExceptWhiteSpaces(
+      const dom::Text& aTextNode, uint32_t aOffset) {
+    const nsTextFragment& textFragment = aTextNode.TextFragment();
+    MOZ_ASSERT(aOffset <= textFragment.GetLength());
+    for (uint32_t i = aOffset; i < textFragment.GetLength(); i++) {
+      char16_t ch = textFragment.CharAt(i);
+      if (!nsCRT::IsAsciiSpace(ch) && ch != kNBSP) {
         return Some(i);
       }
     }
