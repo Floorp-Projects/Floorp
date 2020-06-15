@@ -668,7 +668,7 @@ bool AsyncCompositionManager::SampleAnimations(Layer* aLayer,
     AnimatedValue* previousValue =
         storage->GetAnimatedValue(layer->GetCompositorAnimationsId());
 
-    nsTArray<RefPtr<RawServoAnimationValue>> animationValues;
+    AutoTArray<RefPtr<RawServoAnimationValue>, 1> animationValues;
     AnimationHelper::SampleResult sampleResult =
         AnimationHelper::SampleAnimationForEachNode(
             mPreviousFrameTimeStamp, aCurrentFrameTime, previousValue,

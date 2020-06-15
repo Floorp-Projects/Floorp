@@ -594,7 +594,7 @@ bool AnimationHelper::SampleAnimations(CompositorAnimationStorage* aStorage,
     }
 
     isAnimating = true;
-    nsTArray<RefPtr<RawServoAnimationValue>> animationValues;
+    AutoTArray<RefPtr<RawServoAnimationValue>, 1> animationValues;
     AnimatedValue* previousValue = aStorage->GetAnimatedValue(iter.first);
     AnimationHelper::SampleResult sampleResult =
         AnimationHelper::SampleAnimationForEachNode(
