@@ -2614,11 +2614,6 @@ mozilla::ipc::IPCResult BrowserParent::RecvOnStateChange(
   Unused << managerAsListener->OnStateChange(webProgress, request, aStateFlags,
                                              aStatus);
 
-  if (GetBrowsingContext()->GetWebProgress()) {
-    GetBrowsingContext()->GetWebProgress()->OnStateChange(webProgress, request,
-                                                          aStateFlags, aStatus);
-  }
-
   return IPC_OK();
 }
 
@@ -2648,12 +2643,6 @@ mozilla::ipc::IPCResult BrowserParent::RecvOnProgressChange(
   Unused << managerAsListener->OnProgressChange(
       webProgress, request, aCurSelfProgress, aMaxSelfProgress,
       aCurTotalProgress, aMaxTotalProgress);
-
-  if (GetBrowsingContext()->GetWebProgress()) {
-    GetBrowsingContext()->GetWebProgress()->OnProgressChange(
-        webProgress, request, aCurSelfProgress, aMaxSelfProgress,
-        aCurTotalProgress, aMaxTotalProgress);
-  }
 
   return IPC_OK();
 }
@@ -2705,10 +2694,6 @@ mozilla::ipc::IPCResult BrowserParent::RecvOnLocationChange(
 
   Unused << managerAsListener->OnLocationChange(webProgress, request, aLocation,
                                                 aFlags);
-  if (GetBrowsingContext()->GetWebProgress()) {
-    GetBrowsingContext()->GetWebProgress()->OnLocationChange(
-        webProgress, request, aLocation, aFlags);
-  }
 
   // Since we've now changed Documents, notify the BrowsingContext that we've
   // changed. Ideally we'd just let the BrowsingContext do this when it changes
@@ -2744,11 +2729,6 @@ mozilla::ipc::IPCResult BrowserParent::RecvOnStatusChange(
 
   Unused << managerAsListener->OnStatusChange(webProgress, request, aStatus,
                                               aMessage.get());
-
-  if (GetBrowsingContext()->GetWebProgress()) {
-    GetBrowsingContext()->GetWebProgress()->OnStatusChange(
-        webProgress, request, aStatus, aMessage.get());
-  }
 
   return IPC_OK();
 }

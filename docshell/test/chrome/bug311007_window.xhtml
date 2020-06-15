@@ -94,7 +94,7 @@ function step1B(aWebProgress, aRequest, aLocation, aFlags) {
                  .LOCATION_CHANGE_ERROR_PAGE),
      "This page is an error page.");
 
-  ok(!(document.getElementById("content")
+  ok(!(aWebProgress.QueryInterface(Ci.nsIDocShell)
                    .browsingContext
                    .secureBrowserUI.state &
        Ci.nsIWebProgressListener.STATE_IS_SECURE),
@@ -124,7 +124,7 @@ function step2B(aWebProgress, aRequest, aLocation, aFlags) {
                   .LOCATION_CHANGE_ERROR_PAGE),
      "This page is not an error page.");
 
-  ok((document.getElementById("content")
+  ok((aWebProgress.QueryInterface(Ci.nsIDocShell)
                   .browsingContext
                   .secureBrowserUI.state &
       Ci.nsIWebProgressListener.STATE_IS_SECURE),
@@ -155,7 +155,7 @@ function step3B(aWebProgress, aRequest, aLocation, aFlags) {
                   .LOCATION_CHANGE_ERROR_PAGE),
      "This page is not an error page.");
 
-  ok((document.getElementById("content")
+  ok((aWebProgress.QueryInterface(Ci.nsIDocShell)
                   .browsingContext
                   .secureBrowserUI.state &
       Ci.nsIWebProgressListener.STATE_IS_SECURE),
@@ -186,7 +186,7 @@ function step4B(aWebProgress, aRequest, aLocation, aFlags) {
                  .LOCATION_CHANGE_ERROR_PAGE),
      "This page is an error page.");
 
-  ok(!(document.getElementById("content")
+  ok(!(aWebProgress.QueryInterface(Ci.nsIDocShell)
                    .browsingContext
                    .secureBrowserUI.state &
        Ci.nsIWebProgressListener.STATE_IS_SECURE),
