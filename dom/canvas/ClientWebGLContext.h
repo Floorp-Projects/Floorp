@@ -974,7 +974,6 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
   layers::LayersBackend GetCompositorBackendType() const;
 
   bool mCapturedFrameInvalidated = false;
-  UniquePtr<layers::SurfaceDescriptor> mFrontBufferDesc;
 
   // -------------------------------------------------------------------------
   // WebGLRenderingContext Basic Properties and Methods
@@ -995,8 +994,9 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
   }
   void GetContextAttributes(dom::Nullable<dom::WebGLContextAttributes>& retval);
 
-  void Present();
-  Maybe<layers::SurfaceDescriptor> GetFrontBuffer(layers::TextureType);
+  void Present(WebGLFramebufferJS*, layers::TextureType);
+  Maybe<layers::SurfaceDescriptor> GetFrontBuffer(WebGLFramebufferJS*,
+                                                  layers::TextureType);
   RefPtr<gfx::SourceSurface> GetFrontBufferSnapshot() override;
 
  private:
