@@ -124,8 +124,13 @@ def use_artifact(config, jobs):
     else:
         use_artifact = False
     for job in jobs:
-        if (config.kind == 'build' and use_artifact and
-            job.get('index', {}).get('job-name') in ARTIFACT_JOBS):
+        if (
+            config.kind == "build"
+            and use_artifact
+            and job.get("index", {}).get("job-name") in ARTIFACT_JOBS
+            # If tests aren't packaged, then we are not able to rebuild all the packages
+            and job['worker']['env'].get('MOZ_AUTOMATION_PACKAGE_TESTS') == '1'
+        ):
             job['treeherder']['symbol'] += 'a'
             job['worker']['env']['USE_ARTIFACT'] = '1'
             job['attributes']['artifact-build'] = True
