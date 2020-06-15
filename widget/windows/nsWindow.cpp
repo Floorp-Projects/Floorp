@@ -1740,9 +1740,11 @@ void nsWindow::SetThemeRegion() {
     RECT rect = {0, 0, mBounds.Width(), mBounds.Height()};
 
     HDC dc = ::GetDC(mWnd);
-    GetThemeBackgroundRegion(nsUXThemeData::GetTheme(eUXTooltip), dc,
-                             TTP_STANDARD, TS_NORMAL, &rect, &hRgn);
-    if (hRgn) {
+    bool result = nsUXThemeData::GetTheme(eUXTooltip)
+                      ->GetThemeBackgroundRegion(dc, TTP_STANDARD, TS_NORMAL,
+                                                 &rect, &hRgn);
+    if (result) {
+      MOZ_ASSERT(hRgn);
       if (!SetWindowRgn(mWnd, hRgn,
                         false))  // do not delete or alter hRgn if accepted.
         DeleteObject(hRgn);
