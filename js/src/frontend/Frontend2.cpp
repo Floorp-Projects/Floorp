@@ -133,18 +133,20 @@ class SmooshScriptStencil : public ScriptStencil {
     for (size_t i = 0; i < ngcthings; i++) {
       SmooshGCThing& item = result_.top_level_script.gcthings.data[i];
 
-      switch (item.kind) {
-        case SmooshGCThingKind::AtomIndex: {
-          gcThings.infallibleAppend(mozilla::AsVariant(allAtoms_[item.index]));
-          break;
-        }
-        case SmooshGCThingKind::ScopeIndex: {
-          gcThings.infallibleAppend(mozilla::AsVariant(ScopeIndex(item.index)));
-          break;
-        }
-        case SmooshGCThingKind::RegExpIndex: {
+      switch (item.tag) {
+        case SmooshGCThing::Tag::Atom: {
           gcThings.infallibleAppend(
-              mozilla::AsVariant(RegExpIndex(item.index)));
+              mozilla::AsVariant(allAtoms_[item.AsAtom()]));
+          break;
+        }
+        case SmooshGCThing::Tag::Scope: {
+          gcThings.infallibleAppend(
+              mozilla::AsVariant(ScopeIndex(item.AsScope())));
+          break;
+        }
+        case SmooshGCThing::Tag::RegExp: {
+          gcThings.infallibleAppend(
+              mozilla::AsVariant(RegExpIndex(item.AsRegExp())));
           break;
         }
       }
@@ -161,21 +163,23 @@ class SmooshScriptStencil : public ScriptStencil {
 
     for (size_t i = 0; i < result_.scopes.len; i++) {
       SmooshScopeData& scopeData = result_.scopes.data[i];
-      size_t numBindings = scopeData.bindings.len;
       ScopeIndex index;
 
-      switch (scopeData.kind) {
-        case SmooshScopeDataKind::Global: {
+      switch (scopeData.tag) {
+        case SmooshScopeData::Tag::Global: {
+          auto& global = scopeData.AsGlobal();
+
+          size_t numBindings = global.bindings.len;
           JS::Rooted<GlobalScope::Data*> data(
               cx, NewEmptyGlobalScopeData(cx, alloc, numBindings));
           if (!data) {
             return false;
           }
 
-          copyBindingNames(scopeData.bindings, data->trailingNames.start());
+          copyBindingNames(global.bindings, data->trailingNames.start());
 
-          data->letStart = scopeData.let_start;
-          data->constStart = scopeData.const_start;
+          data->letStart = global.let_start;
+          data->constStart = global.const_start;
           data->length = numBindings;
 
           if (!ScopeCreationData::create(cx, compilationInfo_,
@@ -184,22 +188,25 @@ class SmooshScriptStencil : public ScriptStencil {
           }
           break;
         }
-        case SmooshScopeDataKind::Lexical: {
+        case SmooshScopeData::Tag::Lexical: {
+          auto& lexical = scopeData.AsLexical();
+
+          size_t numBindings = lexical.bindings.len;
           JS::Rooted<LexicalScope::Data*> data(
               cx, NewEmptyLexicalScopeData(cx, alloc, numBindings));
           if (!data) {
             return false;
           }
 
-          copyBindingNames(scopeData.bindings, data->trailingNames.start());
+          copyBindingNames(lexical.bindings, data->trailingNames.start());
 
           // NOTE: data->nextFrameSlot is set in ScopeCreationData::create.
 
-          data->constStart = scopeData.const_start;
+          data->constStart = lexical.const_start;
           data->length = numBindings;
 
-          uint32_t firstFrameSlot = scopeData.first_frame_slot;
-          ScopeIndex enclosingIndex(scopeData.enclosing);
+          uint32_t firstFrameSlot = lexical.first_frame_slot;
+          ScopeIndex enclosingIndex(lexical.enclosing);
           Rooted<AbstractScopePtr> enclosing(
               cx, AbstractScopePtr(compilationInfo_, enclosingIndex));
           if (!ScopeCreationData::create(cx, compilationInfo_,

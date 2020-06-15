@@ -70,45 +70,24 @@ pub struct SmooshCompileOptions {
     no_script_rval: bool,
 }
 
-#[repr(C)]
-pub enum SmooshGCThingKind {
-    AtomIndex,
-    ScopeIndex,
-    RegExpIndex,
-}
-
-#[repr(C)]
-pub struct SmooshGCThing {
-    kind: SmooshGCThingKind,
-    index: usize,
+#[repr(C, u8)]
+pub enum SmooshGCThing {
+    Atom(usize),
+    Scope(usize),
+    RegExp(usize),
 }
 
 impl From<GCThing> for SmooshGCThing {
     fn from(item: GCThing) -> Self {
         match item {
-            GCThing::Atom(index) => Self {
-                kind: SmooshGCThingKind::AtomIndex,
-                index: index.into(),
-            },
+            GCThing::Atom(index) => Self::Atom(index.into()),
             GCThing::Function(_index) => {
                 panic!("Not yet implemented");
             }
-            GCThing::Scope(index) => Self {
-                kind: SmooshGCThingKind::ScopeIndex,
-                index: index.into(),
-            },
-            GCThing::RegExp(index) => Self {
-                kind: SmooshGCThingKind::RegExpIndex,
-                index: index.into(),
-            },
+            GCThing::RegExp(index) => Self::RegExp(index.into()),
+            GCThing::Scope(index) => Self::Scope(index.into()),
         }
     }
-}
-
-#[repr(C)]
-pub enum SmooshScopeDataKind {
-    Global,
-    Lexical,
 }
 
 #[repr(C)]
@@ -129,34 +108,40 @@ impl From<BindingName> for SmooshBindingName {
 }
 
 #[repr(C)]
-pub struct SmooshScopeData {
-    kind: SmooshScopeDataKind,
+pub struct SmooshGlobalScopeData {
     bindings: CVec<SmooshBindingName>,
     let_start: usize,
+    const_start: usize,
+}
+
+#[repr(C)]
+pub struct SmooshLexicalScopeData {
+    bindings: CVec<SmooshBindingName>,
     const_start: usize,
     enclosing: usize,
     first_frame_slot: u32,
 }
 
+#[repr(C, u8)]
+pub enum SmooshScopeData {
+    Global(SmooshGlobalScopeData),
+    Lexical(SmooshLexicalScopeData),
+}
+
 impl From<ScopeData> for SmooshScopeData {
     fn from(data: ScopeData) -> Self {
         match data {
-            ScopeData::Global(data) => Self {
-                kind: SmooshScopeDataKind::Global,
+            ScopeData::Global(data) => Self::Global(SmooshGlobalScopeData {
                 bindings: CVec::from(data.base.bindings.into_iter().map(|x| x.into()).collect()),
                 let_start: data.let_start,
                 const_start: data.const_start,
-                enclosing: 0,
-                first_frame_slot: 0,
-            },
-            ScopeData::Lexical(data) => Self {
-                kind: SmooshScopeDataKind::Lexical,
+            }),
+            ScopeData::Lexical(data) => Self::Lexical(SmooshLexicalScopeData {
                 bindings: CVec::from(data.base.bindings.into_iter().map(|x| x.into()).collect()),
-                let_start: 0,
                 const_start: data.const_start,
                 enclosing: data.enclosing.into(),
                 first_frame_slot: data.first_frame_slot.into(),
-            },
+            }),
             _ => {
                 panic!("Not yet implemented");
             }
