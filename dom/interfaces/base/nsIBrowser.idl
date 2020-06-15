@@ -173,11 +173,6 @@ interface nsIBrowser : nsISupports
     // When `useRemoteSubframes` is enabled, subframes will change processes.
     PROCESS_BEHAVIOR_STANDARD,
 
-    // When `useRemoteTabs` is enabled, Gecko will call `performProcessSwitch`
-    // in order to change which process this frame is loaded in.
-    // When `useRemoteSubframes` is enabled, subframes will change processes.
-    PROCESS_BEHAVIOR_CUSTOM,
-
     // Gecko won't automatically change which process this frame is loaded, but
     // when `useRemoteSubframes` is enabled, subframes will change processes.
     //
@@ -186,27 +181,6 @@ interface nsIBrowser : nsISupports
     PROCESS_BEHAVIOR_SUBFRAME_ONLY,
   };
   readonly attribute nsIBrowser_ProcessBehavior processSwitchBehavior;
-
-  /**
-   * Called by Gecko when it wants to change the process which is currently
-   * being used to render content in this tab.
-   *
-   * Returns a promise which will be resolved with the ChildID of the new
-   * process.
-   *
-   * NOTE: This method is only called if `processSwitchBehavior` is
-   * `PROCESS_BEHAVIOR_CUSTOM`.
-   *
-   * @param aRemoteType the new remote type to switch this browser into
-   * @param aPendingSwitchId unique identifier for the ongoing
-   *                         process-switching load
-   * @param aReplaceBrowsingContext if true, do not preserve the
-   *                                BrowsingContext loaded inside this
-   *                                browser after changing processes.
-   */
-  Promise performProcessSwitch(in AString aRemoteType,
-                               in uint64_t aPendingSwitchId,
-                               in boolean aReplaceBrowsingContext);
 
   /**
    * Called to perform any async tasks which must be completed before changing
