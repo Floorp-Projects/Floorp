@@ -29,6 +29,7 @@ if CONFIG['MOZ_BUILD_APP'] == 'browser':
 
 with Files('**'):
     BUG_COMPONENT = ('DevTools', 'General')
+    SCHEDULES.exclusive = ['linux', 'macosx', 'windows']
 
 with Files('docs/**'):
     BUG_COMPONENT = ('DevTools', 'General')
