@@ -42,17 +42,10 @@ jobs:
         treeherder:
             symbol: compare-locale
             tier: 2
-    detekt:
-        description: 'Running detekt over all modules'
+    detektAndKtlint:
+        description: 'Running detekt and ktlint over all modules'
         run:
             using: gradlew
-            gradlew: [detekt]
+            gradlew: [detekt, ktlint]
         treeherder:
-            symbol: detekt
-    ktlint:
-        description: 'Running ktlint over all modules'
-        run:
-            using: gradlew
-            gradlew: [ktlint]
-        treeherder:
-            symbol: ktlint
+            symbol: detektKtlint
