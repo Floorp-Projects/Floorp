@@ -6327,7 +6327,6 @@ cv.ua
 dn.ua
 dnepropetrovsk.ua
 dnipropetrovsk.ua
-dominic.ua
 donetsk.ua
 dp.ua
 if.ua
@@ -7092,7 +7091,7 @@ org.zw
 
 // newGTLDs
 
-// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2020-06-05T16:41:19Z
+// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2020-06-11T16:44:38Z
 // This list is auto-generated, don't edit it manually.
 // aaa : 2015-02-26 American Automobile Association, Inc.
 aaa
@@ -8168,7 +8167,7 @@ fit
 // fitness : 2014-03-06 Binky Moon, LLC
 fitness
 
-// flickr : 2015-04-02 Yahoo! Domain Services Inc.
+// flickr : 2015-04-02 Flickr, Inc.
 flickr
 
 // flights : 2013-12-05 Binky Moon, LLC
@@ -11735,12 +11734,11 @@ global.ssl.fastly.net
 
 // FASTVPS EESTI OU : https://fastvps.ru/
 // Submitted by Likhachev Vasiliy <lihachev@fastvps.ru>
-fastpanel.direct
 fastvps-server.com
-myfast.space
+fastvps.host
 myfast.host
 fastvps.site
-fastvps.host
+myfast.space
 
 // Featherhead : https://featherhead.xyz/
 // Submitted by Simon Menke <simon@featherhead.xyz>
@@ -11806,6 +11804,10 @@ freeboxos.fr
 // Submitted by Daniel Stone <daniel@fooishbar.org>
 freedesktop.org
 
+// FunkFeuer - Verein zur Förderung freier Netze : https://www.funkfeuer.at
+// Submitted by Daniel A. Maierhofer <vorstand@funkfeuer.at>
+wien.funkfeuer.at
+
 // Futureweb OG : http://www.futureweb.at
 // Submitted by Andreas Schnederle-Wagner <schnederle@futureweb.at>
 *.futurecms.at
@@ -11840,6 +11842,10 @@ githubusercontent.com
 // GitLab, Inc.
 // Submitted by Alex Hanselka <alex@gitlab.com>
 gitlab.io
+
+// Gitplac.si - https://gitplac.si
+// Submitted by Aljaž Starc <me@aljaxus.eu>
+gitpage.si
 
 // Glitch, Inc : https://glitch.com
 // Submitted by Mads Hartmann <mads@glitch.com>
@@ -12019,6 +12025,9 @@ ltd.ng
 ngo.ng
 ng.school
 sch.so
+
+// HostyHosting (hostyhosting.com)
+hostyhosting.io
 
 // Häkkinen.fi
 // Submitted by Eero Häkkinen <Eero+psl@Häkkinen.fi>
@@ -12604,6 +12613,10 @@ pgfog.com
 // Submitted by Jason Kriss <jason@pagefronthq.com>
 pagefrontapp.com
 
+// PageXL : https://pagexl.com
+// Submitted by Yann Guichard <yann@pagexl.com>
+pagexl.com
+
 // .pl domains (grandfathered)
 art.pl
 gliwice.pl
@@ -12644,6 +12657,7 @@ platterp.us
 // Submitted by Anton Akhtyamov <program-managers@plesk.com>
 pdns.page
 plesk.page
+pleskns.com
 
 // Port53 : https://port53.io/
 // Submitted by Maximilian Schieder <maxi@zeug.co>
