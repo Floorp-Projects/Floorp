@@ -3214,6 +3214,10 @@ FunctionNode* Parser<FullParseHandler, Unit>::standaloneLazyFunction(
   funbox->initWithEnclosingScope(this->getCompilationInfo().scopeContext,
                                  fun->enclosingScope(), fun->flags(),
                                  syntaxKind);
+  if (fun->isClassConstructor()) {
+    funbox->fieldInitializers =
+        mozilla::Some(fun->baseScript()->getFieldInitializers());
+  }
 
   Directives newDirectives = directives;
   SourceParseContext funpc(this, funbox, &newDirectives);
