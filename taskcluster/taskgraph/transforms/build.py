@@ -174,4 +174,5 @@ def use_artifact(config, jobs):
             job.get('index', {}).get('job-name') in ARTIFACT_JOBS):
             job['treeherder']['symbol'] += 'a'
             job['worker']['env']['USE_ARTIFACT'] = '1'
+            job['attributes']['artifact-build'] = True
         yield job
