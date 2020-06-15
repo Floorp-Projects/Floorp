@@ -182,11 +182,14 @@ internal class EngineObserver(
         cookie: String?,
         userAgent: String?
     ) {
+        // We want to avoid negative contentLength values
+        // For more info see https://bugzilla.mozilla.org/show_bug.cgi?id=1632594
+        val fileSize = if (contentLength != null && contentLength < 0) null else contentLength
         val download = DownloadState(
             url,
             fileName,
             contentType,
-            contentLength,
+            fileSize,
             userAgent,
             Environment.DIRECTORY_DOWNLOADS
         )
