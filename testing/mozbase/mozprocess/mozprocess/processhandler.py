@@ -1224,21 +1224,24 @@ class ProcessHandler(ProcessHandlerMixin):
             logoutput = LogOutput(logfile)
             kwargs['processOutputLine'].append(logoutput)
 
+        text = kwargs.get("universal_newlines", False) or kwargs.get("text", False)
+
         if stream is True:
             # Print to standard output only if no outputline provided
             stdout = sys.stdout
-            if six.PY2 and kwargs.get('universal_newlines'):
+            if six.PY2 and text:
                 stdout = codecs.getwriter('utf-8')(sys.stdout)
-            if six.PY3 and kwargs.get('universal_newlines'):
+            elif six.PY3 and text:
                 # The encoding of stdout isn't guaranteed to be utf-8. Fix that.
-                stdout = codecs.getwriter('utf-8')(sys.stdout.buffer)
+                stdout = codecs.getwriter("utf-8")(sys.stdout.buffer)
+            elif six.PY3 and not text:
+                stdout = sys.stdout.buffer
+
             if not kwargs['processOutputLine']:
                 kwargs['processOutputLine'].append(
-                    StreamOutput(stdout,
-                                 kwargs.get('universal_newlines', False)))
+                    StreamOutput(stdout, text))
         elif stream:
-            streamoutput = StreamOutput(stream,
-                                        kwargs.get('universal_newlines', False))
+            streamoutput = StreamOutput(stream, text)
             kwargs['processOutputLine'].append(streamoutput)
 
         self.output = None
