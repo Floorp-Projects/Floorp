@@ -177,8 +177,7 @@ nsHtml5StreamParser::nsHtml5StreamParser(nsHtml5TreeOpExecutor* aExecutor,
       mEventTarget(nsHtml5Module::GetStreamParserThread()->SerialEventTarget()),
       mExecutorFlusher(new nsHtml5ExecutorFlusher(aExecutor)),
       mLoadFlusher(new nsHtml5LoadFlusher(aExecutor)),
-      mJapaneseDetector(mozilla::JapaneseDetector::Create(
-          StaticPrefs::intl_charset_detector_iso2022jp_allowed())),
+      mJapaneseDetector(mozilla::JapaneseDetector::Create(true)),
       mUseJapaneseDetector(false),
       mInitialEncodingWasFromParentFrame(false),
       mHasHadErrors(false),
@@ -451,6 +450,7 @@ void nsHtml5StreamParser::SetEncodingFromExpat(const char16_t* aEncoding) {
     if (encoding) {
       mEncoding = WrapNotNull(encoding);
       mCharsetSource = kCharsetFromMetaTag;  // closest for XML
+      mTreeBuilder->SetDocumentCharset(mEncoding, mCharsetSource);
       return;
     }
     // else the page declared an encoding Gecko doesn't support and we'd
@@ -460,6 +460,7 @@ void nsHtml5StreamParser::SetEncodingFromExpat(const char16_t* aEncoding) {
   }
   mEncoding = UTF_8_ENCODING;            // XML defaults to UTF-8 without a BOM
   mCharsetSource = kCharsetFromMetaTag;  // means confident
+  mTreeBuilder->SetDocumentCharset(mEncoding, mCharsetSource);
 }
 
 // A separate user data struct is used instead of passing the
@@ -594,6 +595,7 @@ nsresult nsHtml5StreamParser::FinalizeSniffing(Span<const uint8_t> aFromSegment,
       // longer than 1024 bytes, but that case is not worth worrying about.
       mEncoding = UTF_8_ENCODING;
       mCharsetSource = kCharsetFromMetaTag;  // means confident
+      mTreeBuilder->SetDocumentCharset(mEncoding, mCharsetSource);
     }
 
     return SetupDecodingAndWriteSniffingBufferAndCurrentSegment(aFromSegment);
@@ -1012,6 +1014,7 @@ nsresult nsHtml5StreamParser::OnStartRequest(nsIRequest* aRequest) {
         if (originalURI->SchemeIs("resource")) {
           mCharsetSource = kCharsetFromBuiltIn;
           mEncoding = UTF_8_ENCODING;
+          mTreeBuilder->SetDocumentCharset(mEncoding, mCharsetSource);
         } else {
           nsCOMPtr<nsIURI> currentURI;
           rv = channel->GetURI(getter_AddRefs(currentURI));
@@ -1150,39 +1153,26 @@ nsresult nsHtml5StreamParser::OnStartRequest(nsIRequest* aRequest) {
 
   // Compute various pref-based special cases
   if (!mDecodingLocalFileWithoutTokenizing && mFeedChardet) {
-    if (StaticPrefs::intl_charset_detector_ng_enabled()) {
-      if (mTLD.EqualsLiteral("jp")) {
-        mUseJapaneseDetector =
-            !StaticPrefs::intl_charset_detector_ng_jp_enabled();
-      } else if (mTLD.EqualsLiteral("in") &&
-                 mEncoding == WINDOWS_1252_ENCODING &&
-                 !StaticPrefs::intl_charset_detector_ng_in_enabled()) {
-        // Avoid breaking font hacks that Chrome doesn't break.
-        DontGuessEncoding();
-      } else if (mTLD.EqualsLiteral("lk") &&
-                 mEncoding == WINDOWS_1252_ENCODING &&
-                 !StaticPrefs::intl_charset_detector_ng_lk_enabled()) {
-        // Avoid breaking font hacks that Chrome doesn't break.
-        DontGuessEncoding();
+    if (mTLD.EqualsLiteral("jp")) {
+      mUseJapaneseDetector =
+          !StaticPrefs::intl_charset_detector_ng_jp_enabled();
+      if (mUseJapaneseDetector && mEncoding == WINDOWS_1252_ENCODING &&
+          mCharsetSource <= kCharsetFromTopLevelDomain) {
+        mCharsetSource = kCharsetFromTopLevelDomain;
+        mEncoding = SHIFT_JIS_ENCODING;
+        mTreeBuilder->SetDocumentCharset(mEncoding, mCharsetSource);
       }
-    } else {
-      // If the new detector is turned off in general, we still use it to
-      // emulate the old Cyrillic detector in cases where the old Cyrillic
-      // detector would have been enabled.
-      nsAutoCString detectorName;
-      Preferences::GetLocalizedCString("intl.charset.detector", detectorName);
-      bool forceEncodingDetectorToCyrillicOnly =
-          detectorName.EqualsLiteral("ruprob") ||
-          detectorName.EqualsLiteral("ukprob");
-      if (mEncoding->IsJapaneseLegacy()) {
-        mUseJapaneseDetector = true;
-      } else if (mEncoding == WINDOWS_1251_ENCODING &&
-                 forceEncodingDetectorToCyrillicOnly) {
-        mTLD.AssignLiteral("ru");  // Force the detector into Cyrillic mode
-                                   // regardless of real TLD
-      } else {
-        DontGuessEncoding();
+    } else if ((mTLD.EqualsLiteral("in") &&
+                !StaticPrefs::intl_charset_detector_ng_in_enabled()) ||
+               (mTLD.EqualsLiteral("lk") &&
+                !StaticPrefs::intl_charset_detector_ng_lk_enabled())) {
+      if (mEncoding == WINDOWS_1252_ENCODING &&
+          mCharsetSource <= kCharsetFromTopLevelDomain) {
+        // Avoid breaking font hacks that Chrome doesn't break.
+        mCharsetSource = kCharsetFromTopLevelDomain;
+        mTreeBuilder->SetDocumentCharset(mEncoding, mCharsetSource);
       }
+      DontGuessEncoding();
     }
   }
 
@@ -1566,7 +1556,8 @@ const Encoding* nsHtml5StreamParser::PreferredForInternalEncodingDecl(
       }
     }
     mCharsetSource = kCharsetFromMetaTag;  // become confident
-    DontGuessEncoding();                   // don't feed chardet when confident
+    mTreeBuilder->SetDocumentCharset(mEncoding, mCharsetSource);
+    DontGuessEncoding();  // don't feed chardet when confident
     return nullptr;
   }
 

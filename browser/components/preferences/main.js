@@ -522,15 +522,6 @@ var gMainPane = {
     // Initializes the fonts dropdowns displayed in this pane.
     this._rebuildFonts();
 
-    if (Services.prefs.getBoolPref("intl.charset.detector.ng.enabled", false)) {
-      let advancedBtn = document.getElementById("advancedFonts");
-      let l10nIds = advancedBtn
-        .getAttribute("search-l10n-ids")
-        .split(/\s*,\s*/);
-      l10nIds = l10nIds.filter(id => !id.includes("languages-fallback"));
-      advancedBtn.setAttribute("search-l10n-ids", l10nIds.join(", "));
-    }
-
     this.updateOnScreenKeyboardVisibility();
 
     // Show translation preferences if we may:
