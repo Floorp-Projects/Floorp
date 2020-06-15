@@ -1090,9 +1090,3 @@ XPCOMUtils.defineLazyGetter(
     );
   }
 );
-XPCOMUtils.defineLazyPreferenceGetter(
-  E10SUtils,
-  "rebuildFrameloadersOnRemotenessChange",
-  "fission.rebuild_frameloaders_on_remoteness_change",
-  false
-);
