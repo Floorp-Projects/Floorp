@@ -108,7 +108,7 @@ use crate::prim_store::{ClipData, ImageMaskData, SpaceMapper, VisibleMaskImageTi
 use crate::prim_store::{PointKey, SizeKey, RectangleKey};
 use crate::render_task_cache::to_cache_size;
 use crate::resource_cache::{ImageRequest, ResourceCache};
-use crate::util::{extract_inner_rect_safe, project_rect, ScaleOffset};
+use crate::util::{clamp_to_scale_factor, extract_inner_rect_safe, project_rect, ScaleOffset};
 use euclid::approxeq::ApproxEq;
 use std::{iter, ops, u32};
 use smallvec::SmallVec;
@@ -658,10 +658,12 @@ impl ClipNode {
                 let blur_radius_dp = source.blur_radius * 0.5;
 
                 // Create scaling from requested size to cache size.
-                let content_scale = LayoutToWorldScale::new(1.0) * device_pixel_scale;
+                let mut content_scale = LayoutToWorldScale::new(1.0) * device_pixel_scale;
+                content_scale.0 = clamp_to_scale_factor(content_scale.0, false);
 
                 // Create the cache key for this box-shadow render task.
-                let cache_size = to_cache_size(source.shadow_rect_alloc_size * content_scale);
+                let cache_size = to_cache_size(source.shadow_rect_alloc_size, &mut content_scale);
+
                 let bs_cache_key = BoxShadowCacheKey {
                     blur_radius_dp: (blur_radius_dp * content_scale.0).round() as i32,
                     clip_mode: source.clip_mode,
@@ -670,6 +672,7 @@ impl ClipNode {
                     br_top_right: (source.shadow_radius.top_right * content_scale).round().to_i32(),
                     br_bottom_right: (source.shadow_radius.bottom_right * content_scale).round().to_i32(),
                     br_bottom_left: (source.shadow_radius.bottom_left * content_scale).round().to_i32(),
+                    device_pixel_scale: Au::from_f32_px(content_scale.0),
                 };
 
                 source.cache_key = Some((cache_size, bs_cache_key));

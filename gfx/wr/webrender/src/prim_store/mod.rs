@@ -3028,7 +3028,7 @@ impl PrimitiveStore {
 
                 for segment in &border_data.border_segments {
                     // Update the cache key device size based on requested scale.
-                    let cache_size = to_cache_size(segment.local_task_size * scale);
+                    let cache_size = to_cache_size(segment.local_task_size, &mut scale);
                     let cache_key = RenderTaskCacheKey {
                         kind: RenderTaskCacheKeyKind::BorderSegment(segment.cache_key.clone()),
                         size: cache_size,
