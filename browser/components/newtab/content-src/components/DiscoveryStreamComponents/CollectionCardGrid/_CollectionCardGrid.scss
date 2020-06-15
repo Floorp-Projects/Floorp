@@ -1,6 +1,6 @@
 .ds-dismiss.ds-dismiss-ds-collection {
   .ds-dismiss-button {
-    margin: 26px 0 0;
+    margin: 15px 0 0;
     inset-inline-end: 25px;
   }
 
@@ -19,6 +19,7 @@
 
   .ds-header {
     padding: 0 40px 0 0;
+    margin-bottom: 12px;
 
     .title {
       @include dark-theme-only {

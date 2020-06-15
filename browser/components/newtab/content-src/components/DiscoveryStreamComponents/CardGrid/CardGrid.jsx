@@ -4,6 +4,7 @@
 
 import { DSCard, PlaceholderDSCard } from "../DSCard/DSCard.jsx";
 import { DSEmptyState } from "../DSEmptyState/DSEmptyState.jsx";
+import { FluentOrText } from "../../FluentOrText/FluentOrText.jsx";
 import React from "react";
 
 export class CardGrid extends React.PureComponent {
@@ -78,7 +79,9 @@ export class CardGrid extends React.PureComponent {
           <div className="ds-header">
             <div className="title">{this.props.title}</div>
             {this.props.context && (
-              <div className="ds-context">{this.props.context}</div>
+              <FluentOrText message={this.props.context}>
+                <div className="ds-context" />
+              </FluentOrText>
             )}
           </div>
         )}

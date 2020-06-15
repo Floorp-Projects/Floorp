@@ -64,10 +64,28 @@ export class CollectionCardGrid extends React.PureComponent {
     }
     const { spocs, placement, feed } = this.props;
     // spocs.data is spocs state data, and not an array of spocs.
-    const { title, context } = spocs.data[placement.name] || {};
+    const { title, context, sponsored_by_override, sponsor } =
+      spocs.data[placement.name] || {};
     // Just in case of bad data, don't display a broken collection.
     if (!title) {
       return null;
+    }
+
+    let sponsoredByMessage = "";
+
+    // If override is not false or an empty string.
+    if (sponsored_by_override || sponsored_by_override === "") {
+      // We specifically want to display nothing if the server returns an empty string.
+      // So the server can turn off the label.
+      // This is to support the use cases where the sponsored context is displayed elsewhere.
+      sponsoredByMessage = sponsored_by_override;
+    } else if (sponsor) {
+      sponsoredByMessage = {
+        id: `newtab-label-sponsored-by`,
+        values: { sponsor },
+      };
+    } else if (context) {
+      sponsoredByMessage = context;
     }
 
     // Generally a card grid displays recs with spocs already injected.
@@ -93,7 +111,7 @@ export class CollectionCardGrid extends React.PureComponent {
       <div className="ds-collection-card-grid">
         <CardGrid
           title={title}
-          context={context}
+          context={sponsoredByMessage}
           data={recsData}
           feed={feed}
           border={this.props.border}

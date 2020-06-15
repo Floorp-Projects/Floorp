@@ -842,6 +842,8 @@ describe("DiscoveryStreamFeed", () => {
           spocs: {
             context: "",
             title: "",
+            sponsor: "",
+            sponsored_by_override: undefined,
             items: [{ id: "data", min_score: 0, score: 1 }],
           },
         },
@@ -888,6 +890,8 @@ describe("DiscoveryStreamFeed", () => {
         placement1: {
           title: "",
           context: "",
+          sponsor: "",
+          sponsored_by_override: undefined,
           items: [{ id: "data", score: 1, min_score: 0 }],
         },
         placement2: {
@@ -903,6 +907,8 @@ describe("DiscoveryStreamFeed", () => {
         placement1: {
           title: "title",
           context: "context",
+          sponsor: "",
+          sponsored_by_override: undefined,
           items: [{ id: "data" }],
         },
       });
@@ -919,6 +925,8 @@ describe("DiscoveryStreamFeed", () => {
         placement1: {
           title: "title",
           context: "context",
+          sponsor: "",
+          sponsored_by_override: undefined,
           items: [{ id: "data", score: 1, min_score: 0 }],
         },
       });
@@ -930,6 +938,8 @@ describe("DiscoveryStreamFeed", () => {
       const spocs = {
         title: "title",
         context: "context",
+        sponsor: "sponsor",
+        sponsored_by_override: "override",
         items: [{ id: "id" }],
       };
       const result = feed.normalizeSpocsItems(spocs);
@@ -943,6 +953,8 @@ describe("DiscoveryStreamFeed", () => {
       assert.deepEqual(result, {
         title: "",
         context: "",
+        sponsor: "",
+        sponsored_by_override: undefined,
         items: [{ id: "id" }],
       });
     });
@@ -952,6 +964,8 @@ describe("DiscoveryStreamFeed", () => {
       assert.deepEqual(result, {
         title: "",
         context: "",
+        sponsor: "",
+        sponsored_by_override: undefined,
         items: [{ id: "id" }],
       });
     });
