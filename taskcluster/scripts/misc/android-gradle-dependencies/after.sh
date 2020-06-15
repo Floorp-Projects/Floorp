@@ -12,6 +12,7 @@ set -v
 pushd $WORKSPACE
 mkdir -p android-gradle-dependencies /builds/worker/artifacts
 
+# NEXUS_WORK is exported by `before.sh`.
 cp -R ${NEXUS_WORK}/storage/jcenter android-gradle-dependencies
 cp -R ${NEXUS_WORK}/storage/google android-gradle-dependencies
 cp -R ${NEXUS_WORK}/storage/gradle-plugins android-gradle-dependencies

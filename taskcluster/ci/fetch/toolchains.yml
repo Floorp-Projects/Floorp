@@ -488,3 +488,14 @@ codeql-2.0.3:
         sha256: 094ff1ffc7211e8222c148e375fdd53b58bd4c0fe20875d9d7abf2a5e6c341a5
         size: 473738719
         artifact-name: codeql.zip
+
+sonatype-nexus:
+    description: Sonatype Nexus Maven repository service
+    fetch:
+        type: static-url
+        url: https://download.sonatype.com/nexus/oss/nexus-2.12.0-01-bundle.tar.gz
+        sha256: bf3c02ef9cdea0e854e0feba85d74f79215db04b692aebbaea37e4caf83c7fcc
+        size: 71971402
+        artifact-name: sonatype-nexus.tar.zst
+        strip-components: 1
+        add-prefix: sonatype-nexus/
