@@ -88,7 +88,6 @@ UNIFIED_SOURCES += [
     'WinPointerEvents.cpp',
     'WinTaskbar.cpp',
     'WinTextEventDispatcherListener.cpp',
-    'WinThemeData.cpp',
     'WinUtils.cpp',
 ]
 

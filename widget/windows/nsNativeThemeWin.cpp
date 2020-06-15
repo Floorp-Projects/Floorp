@@ -124,24 +124,24 @@ static bool IsTopLevelMenu(nsIFrame* aFrame) {
   return isTopLevel;
 }
 
-static MARGINS GetCheckboxMargins(WinThemeDataPtr theme, HDC hdc) {
+static MARGINS GetCheckboxMargins(HANDLE theme, HDC hdc) {
   MARGINS checkboxContent = {0};
-  theme->GetThemeMargins(hdc, MENU_POPUPCHECK, MCB_NORMAL, TMT_CONTENTMARGINS,
-                         nullptr, &checkboxContent);
+  GetThemeMargins(theme, hdc, MENU_POPUPCHECK, MCB_NORMAL, TMT_CONTENTMARGINS,
+                  nullptr, &checkboxContent);
   return checkboxContent;
 }
 
-static COLORREF GetTextfieldFillColor(WinThemeDataPtr theme, int32_t part,
+static COLORREF GetTextfieldFillColor(HANDLE theme, int32_t part,
                                       int32_t state) {
   COLORREF color = {0};
-  theme->GetThemeColor(part, state, TMT_FILLCOLOR, &color);
+  GetThemeColor(theme, part, state, TMT_FILLCOLOR, &color);
   return color;
 }
 
-static SIZE GetCheckboxBGSize(WinThemeDataPtr theme, HDC hdc) {
+static SIZE GetCheckboxBGSize(HANDLE theme, HDC hdc) {
   SIZE checkboxSize;
-  theme->GetThemePartSize(hdc, MENU_POPUPCHECK, MC_CHECKMARKNORMAL, nullptr,
-                          TS_TRUE, &checkboxSize);
+  GetThemePartSize(theme, hdc, MENU_POPUPCHECK, MC_CHECKMARKNORMAL, nullptr,
+                   TS_TRUE, &checkboxSize);
 
   MARGINS checkboxMargins = GetCheckboxMargins(theme, hdc);
 
@@ -158,13 +158,13 @@ static SIZE GetCheckboxBGSize(WinThemeDataPtr theme, HDC hdc) {
   return ret;
 }
 
-static SIZE GetCheckboxBGBounds(WinThemeDataPtr theme, HDC hdc) {
+static SIZE GetCheckboxBGBounds(HANDLE theme, HDC hdc) {
   MARGINS checkboxBGSizing = {0};
   MARGINS checkboxBGContent = {0};
-  theme->GetThemeMargins(hdc, MENU_POPUPCHECKBACKGROUND, MCB_NORMAL,
-                         TMT_SIZINGMARGINS, nullptr, &checkboxBGSizing);
-  theme->GetThemeMargins(hdc, MENU_POPUPCHECKBACKGROUND, MCB_NORMAL,
-                         TMT_CONTENTMARGINS, nullptr, &checkboxBGContent);
+  GetThemeMargins(theme, hdc, MENU_POPUPCHECKBACKGROUND, MCB_NORMAL,
+                  TMT_SIZINGMARGINS, nullptr, &checkboxBGSizing);
+  GetThemeMargins(theme, hdc, MENU_POPUPCHECKBACKGROUND, MCB_NORMAL,
+                  TMT_CONTENTMARGINS, nullptr, &checkboxBGContent);
 
 #define posdx(d) ((d) > 0 ? d : 0)
 
@@ -183,16 +183,16 @@ static SIZE GetCheckboxBGBounds(WinThemeDataPtr theme, HDC hdc) {
   return ret;
 }
 
-static SIZE GetGutterSize(WinThemeDataPtr theme, HDC hdc) {
+static SIZE GetGutterSize(HANDLE theme, HDC hdc) {
   SIZE gutterSize;
-  theme->GetThemePartSize(hdc, MENU_POPUPGUTTER, 0, nullptr, TS_TRUE,
-                          &gutterSize);
+  GetThemePartSize(theme, hdc, MENU_POPUPGUTTER, 0, nullptr, TS_TRUE,
+                   &gutterSize);
 
   SIZE checkboxBGSize(GetCheckboxBGBounds(theme, hdc));
 
   SIZE itemSize;
-  theme->GetThemePartSize(hdc, MENU_POPUPITEM, MPI_NORMAL, nullptr, TS_TRUE,
-                          &itemSize);
+  GetThemePartSize(theme, hdc, MENU_POPUPITEM, MPI_NORMAL, nullptr, TS_TRUE,
+                   &itemSize);
 
   // Figure out how big the menuitem's icon will be (if present) at current DPI
   // Needs the system scale for consistency with Windows Theme API.
@@ -202,8 +202,8 @@ static SIZE GetGutterSize(WinThemeDataPtr theme, HDC hdc) {
   // Not really sure what margins should be used here, but this seems to work in
   // practice...
   MARGINS margins = {0};
-  theme->GetThemeMargins(hdc, MENU_POPUPCHECKBACKGROUND, MCB_NORMAL,
-                         TMT_CONTENTMARGINS, nullptr, &margins);
+  GetThemeMargins(theme, hdc, MENU_POPUPCHECKBACKGROUND, MCB_NORMAL,
+                  TMT_CONTENTMARGINS, nullptr, &margins);
   iconSize.cx += margins.cxLeftWidth + margins.cxRightWidth;
   iconSize.cy += margins.cyTopHeight + margins.cyBottomHeight;
 
@@ -217,7 +217,7 @@ static SIZE GetGutterSize(WinThemeDataPtr theme, HDC hdc) {
   return ret;
 }
 
-SIZE nsNativeThemeWin::GetCachedGutterSize(WinThemeDataPtr theme) {
+SIZE nsNativeThemeWin::GetCachedGutterSize(HANDLE theme) {
   if (mGutterSizeCacheValid) {
     return mGutterSizeCache;
   }
@@ -247,7 +247,7 @@ SIZE nsNativeThemeWin::GetCachedGutterSize(WinThemeDataPtr theme) {
  * new rect's right edge.  In other words,
  * (oldRect.left + vpOrg.x) == ((dcBMP.width - vpOrg.x) - newRect.right)
  */
-static HRESULT DrawThemeBGRTLAware(WinThemeDataPtr aTheme, HDC aHdc, int aPart,
+static HRESULT DrawThemeBGRTLAware(HANDLE aTheme, HDC aHdc, int aPart,
                                    int aState, const RECT* aWidgetRect,
                                    const RECT* aClipRect, bool aIsRtl) {
   NS_ASSERTION(aTheme, "Bad theme handle.");
@@ -256,8 +256,8 @@ static HRESULT DrawThemeBGRTLAware(WinThemeDataPtr aTheme, HDC aHdc, int aPart,
   NS_ASSERTION(aClipRect, "Bad clip rect.");
 
   if (!aIsRtl) {
-    return aTheme->DrawThemeBackground(aHdc, aPart, aState, aWidgetRect,
-                                       aClipRect);
+    return DrawThemeBackground(aTheme, aHdc, aPart, aState, aWidgetRect,
+                               aClipRect);
   }
 
   HGDIOBJ hObj = GetCurrentObject(aHdc, OBJ_BITMAP);
@@ -282,15 +282,15 @@ static HRESULT DrawThemeBGRTLAware(WinThemeDataPtr aTheme, HDC aHdc, int aPart,
     }
 
     SetLayout(aHdc, LAYOUT_RTL);
-    HRESULT hr = aTheme->DrawThemeBackground(aHdc, aPart, aState, &newWRect,
-                                             newCRectPtr);
+    HRESULT hr = DrawThemeBackground(aTheme, aHdc, aPart, aState, &newWRect,
+                                     newCRectPtr);
     SetLayout(aHdc, 0);
     if (SUCCEEDED(hr)) {
       return hr;
     }
   }
-  return aTheme->DrawThemeBackground(aHdc, aPart, aState, aWidgetRect,
-                                     aClipRect);
+  return DrawThemeBackground(aTheme, aHdc, aPart, aState, aWidgetRect,
+                             aClipRect);
 }
 
 /*
@@ -533,8 +533,8 @@ RECT nsNativeThemeWin::CalculateProgressOverlayRect(nsIFrame* aFrame,
  * @param aAppUnits    app units per device pixel
  */
 void nsNativeThemeWin::DrawThemedProgressMeter(
-    nsIFrame* aFrame, StyleAppearance aAppearance, WinThemeDataPtr aTheme,
-    HDC aHdc, int aPart, int aState, RECT* aWidgetRect, RECT* aClipRect) {
+    nsIFrame* aFrame, StyleAppearance aAppearance, HANDLE aTheme, HDC aHdc,
+    int aPart, int aState, RECT* aWidgetRect, RECT* aClipRect) {
   if (!aFrame || !aTheme || !aHdc) return;
 
   NS_ASSERTION(aWidgetRect, "bad rect pointer");
@@ -558,8 +558,8 @@ void nsNativeThemeWin::DrawThemedProgressMeter(
 
   // Vista and up progress meter is fill style, rendered here. We render
   // the pulse overlay in the follow up section below.
-  aTheme->DrawThemeBackground(aHdc, aPart, aState, &adjWidgetRect,
-                              &adjClipRect);
+  DrawThemeBackground(aTheme, aHdc, aPart, aState, &adjWidgetRect,
+                      &adjClipRect);
   if (!IsProgressMeterFilled(aFrame)) {
     animate = true;
   }
@@ -569,8 +569,8 @@ void nsNativeThemeWin::DrawThemedProgressMeter(
     int32_t overlayPart = GetProgressOverlayStyle(vertical);
     RECT overlayRect = CalculateProgressOverlayRect(
         aFrame, &adjWidgetRect, vertical, indeterminate, false);
-    aTheme->DrawThemeBackground(aHdc, overlayPart, aState, &overlayRect,
-                                &adjClipRect);
+    DrawThemeBackground(aTheme, aHdc, overlayPart, aState, &overlayRect,
+                        &adjClipRect);
 
     if (!QueueAnimatedContentForRefresh(aFrame->GetContent(), 60)) {
       NS_WARNING("unable to animate progress widget!");
@@ -579,8 +579,8 @@ void nsNativeThemeWin::DrawThemedProgressMeter(
 }
 
 LayoutDeviceIntMargin nsNativeThemeWin::GetCachedWidgetBorder(
-    WinThemeDataPtr aTheme, nsUXThemeClass aThemeClass,
-    StyleAppearance aAppearance, int32_t aPart, int32_t aState) {
+    HTHEME aTheme, nsUXThemeClass aThemeClass, StyleAppearance aAppearance,
+    int32_t aPart, int32_t aState) {
   int32_t cacheIndex = aThemeClass * THEME_PART_DISTINCT_VALUE_COUNT + aPart;
   int32_t cacheBitIndex = cacheIndex / 8;
   uint8_t cacheBit = 1u << (cacheIndex % 8);
@@ -594,8 +594,8 @@ LayoutDeviceIntMargin nsNativeThemeWin::GetCachedWidgetBorder(
   outerRect.top = outerRect.left = 100;
   outerRect.right = outerRect.bottom = 200;
   RECT contentRect(outerRect);
-  HRESULT res = aTheme->GetThemeBackgroundContentRect(nullptr, aPart, aState,
-                                                      &outerRect, &contentRect);
+  HRESULT res = GetThemeBackgroundContentRect(aTheme, nullptr, aPart, aState,
+                                              &outerRect, &contentRect);
 
   if (FAILED(res)) {
     return LayoutDeviceIntMargin();
@@ -616,7 +616,7 @@ LayoutDeviceIntMargin nsNativeThemeWin::GetCachedWidgetBorder(
 }
 
 nsresult nsNativeThemeWin::GetCachedMinimumWidgetSize(
-    nsIFrame* aFrame, WinThemeDataPtr aTheme, nsUXThemeClass aThemeClass,
+    nsIFrame* aFrame, HANDLE aTheme, nsUXThemeClass aThemeClass,
     StyleAppearance aAppearance, int32_t aPart, int32_t aState,
     THEMESIZE aSizeReq, mozilla::LayoutDeviceIntSize* aResult) {
   int32_t cachePart = aPart;
@@ -646,7 +646,7 @@ nsresult nsNativeThemeWin::GetCachedMinimumWidgetSize(
   }
 
   SIZE sz;
-  aTheme->GetThemePartSize(hdc, aPart, aState, nullptr, aSizeReq, &sz);
+  GetThemePartSize(aTheme, hdc, aPart, aState, nullptr, aSizeReq, &sz);
   aResult->width = sz.cx;
   aResult->height = sz.cy;
 
@@ -790,10 +790,11 @@ mozilla::Maybe<nsUXThemeClass> nsNativeThemeWin::GetThemeClass(
   }
 }
 
-WinThemeDataPtr nsNativeThemeWin::GetTheme(StyleAppearance aAppearance) {
+HANDLE
+nsNativeThemeWin::GetTheme(StyleAppearance aAppearance) {
   mozilla::Maybe<nsUXThemeClass> themeClass = GetThemeClass(aAppearance);
   if (themeClass.isNothing()) {
-    return WinThemeDataPtr(nullptr);
+    return nullptr;
   }
   return nsUXThemeData::GetTheme(themeClass.value());
 }
@@ -1552,7 +1553,7 @@ nsNativeThemeWin::DrawWidgetBackground(gfxContext* aContext, nsIFrame* aFrame,
     }
   }
 
-  WinThemeDataPtr theme = GetTheme(aAppearance);
+  HANDLE theme = GetTheme(aAppearance);
   if (!theme)
     return ClassicDrawWidgetBackground(aContext, aFrame, aAppearance, aRect,
                                        aDirtyRect);
@@ -1689,11 +1690,11 @@ RENDER_AGAIN:
       aAppearance == StyleAppearance::ScaleHorizontal ||
       aAppearance == StyleAppearance::ScaleVertical) {
     RECT contentRect;
-    theme->GetThemeBackgroundContentRect(hdc, part, state, &widgetRect,
-                                         &contentRect);
+    GetThemeBackgroundContentRect(theme, hdc, part, state, &widgetRect,
+                                  &contentRect);
 
     SIZE siz;
-    theme->GetThemePartSize(hdc, part, state, &widgetRect, TS_TRUE, &siz);
+    GetThemePartSize(theme, hdc, part, state, &widgetRect, TS_TRUE, &siz);
 
     // When rounding is necessary, we round the position of the track
     // away from the chevron of the thumb to make it look better.
@@ -1712,7 +1713,7 @@ RENDER_AGAIN:
       }
     }
 
-    theme->DrawThemeBackground(hdc, part, state, &contentRect, &clipRect);
+    DrawThemeBackground(theme, hdc, part, state, &contentRect, &clipRect);
   } else if (aAppearance == StyleAppearance::Menucheckbox ||
              aAppearance == StyleAppearance::Menuradio) {
     bool isChecked = false;
@@ -1739,8 +1740,8 @@ RENDER_AGAIN:
           (checkBGRect.bottom - checkBGRect.top) / 2 - checkboxBGSize.cy / 2;
       checkBGRect.bottom = checkBGRect.top + checkboxBGSize.cy;
 
-      theme->DrawThemeBackground(hdc, MENU_POPUPCHECKBACKGROUND, bgState,
-                                 &checkBGRect, &clipRect);
+      DrawThemeBackground(theme, hdc, MENU_POPUPCHECKBACKGROUND, bgState,
+                          &checkBGRect, &clipRect);
 
       MARGINS checkMargins = GetCheckboxMargins(theme, hdc);
       RECT checkRect = checkBGRect;
@@ -1748,15 +1749,15 @@ RENDER_AGAIN:
       checkRect.right -= checkMargins.cxRightWidth;
       checkRect.top += checkMargins.cyTopHeight;
       checkRect.bottom -= checkMargins.cyBottomHeight;
-      theme->DrawThemeBackground(hdc, MENU_POPUPCHECK, state, &checkRect,
-                                 &clipRect);
+      DrawThemeBackground(theme, hdc, MENU_POPUPCHECK, state, &checkRect,
+                          &clipRect);
     }
   } else if (aAppearance == StyleAppearance::Menupopup) {
-    theme->DrawThemeBackground(hdc, MENU_POPUPBORDERS, /* state */ 0,
-                               &widgetRect, &clipRect);
+    DrawThemeBackground(theme, hdc, MENU_POPUPBORDERS, /* state */ 0,
+                        &widgetRect, &clipRect);
     SIZE borderSize;
-    theme->GetThemePartSize(hdc, MENU_POPUPBORDERS, 0, nullptr, TS_TRUE,
-                            &borderSize);
+    GetThemePartSize(theme, hdc, MENU_POPUPBORDERS, 0, nullptr, TS_TRUE,
+                     &borderSize);
 
     RECT bgRect = widgetRect;
     bgRect.top += borderSize.cy;
@@ -1764,8 +1765,8 @@ RENDER_AGAIN:
     bgRect.left += borderSize.cx;
     bgRect.right -= borderSize.cx;
 
-    theme->DrawThemeBackground(hdc, MENU_POPUPBACKGROUND, /* state */ 0,
-                               &bgRect, &clipRect);
+    DrawThemeBackground(theme, hdc, MENU_POPUPBACKGROUND, /* state */ 0,
+                        &bgRect, &clipRect);
 
     SIZE gutterSize(GetGutterSize(theme, hdc));
 
@@ -1791,8 +1792,8 @@ RENDER_AGAIN:
     else
       sepRect.left += gutterSize.cx;
 
-    theme->DrawThemeBackground(hdc, MENU_POPUPSEPARATOR, /* state */ 0,
-                               &sepRect, &clipRect);
+    DrawThemeBackground(theme, hdc, MENU_POPUPSEPARATOR, /* state */ 0,
+                        &sepRect, &clipRect);
   } else if (aAppearance == StyleAppearance::Menuarrow) {
     // We're dpi aware and as such on systems that have dpi > 96 set, the
     // theme library expects us to do proper positioning and scaling of glyphs.
@@ -1801,7 +1802,7 @@ RENDER_AGAIN:
     // distortion we have to position and scale what we draw.
 
     SIZE glyphSize;
-    theme->GetThemePartSize(hdc, part, state, nullptr, TS_TRUE, &glyphSize);
+    GetThemePartSize(theme, hdc, part, state, nullptr, TS_TRUE, &glyphSize);
 
     int32_t widgetHeight = widgetRect.bottom - widgetRect.top;
 
@@ -1846,7 +1847,7 @@ RENDER_AGAIN:
       ::FillRect(hdc, &widgetRect, brush);
       DeleteObject(brush);
     } else {
-      theme->DrawThemeBackground(hdc, part, state, &widgetRect, &clipRect);
+      DrawThemeBackground(theme, hdc, part, state, &widgetRect, &clipRect);
     }
 
     if (state == TFS_EDITBORDER_DISABLED) {
@@ -1860,7 +1861,7 @@ RENDER_AGAIN:
     // using alpha recovery, so this makes the corners transparent.
     COLORREF color;
     color = GetPixel(hdc, widgetRect.left, widgetRect.top);
-    theme->DrawThemeBackground(hdc, part, state, &widgetRect, &clipRect);
+    DrawThemeBackground(theme, hdc, part, state, &widgetRect, &clipRect);
     SetPixel(hdc, widgetRect.left, widgetRect.top, color);
     SetPixel(hdc, widgetRect.right - 1, widgetRect.top, color);
     SetPixel(hdc, widgetRect.right - 1, widgetRect.bottom - 1, color);
@@ -1879,12 +1880,12 @@ RENDER_AGAIN:
 
     DTBGOPTS opts = {sizeof(DTBGOPTS), DTBG_OMITCONTENT | DTBG_CLIPRECT,
                      clipRect};
-    theme->DrawThemeBackgroundEx(hdc, part, state, &widgetRect, &opts);
+    DrawThemeBackgroundEx(theme, hdc, part, state, &widgetRect, &opts);
   }
   // If part is negative, the element wishes us to not render a themed
   // background, instead opting to be drawn specially below.
   else if (part >= 0) {
-    theme->DrawThemeBackground(hdc, part, state, &widgetRect, &clipRect);
+    DrawThemeBackground(theme, hdc, part, state, &widgetRect, &clipRect);
   }
 
   // Draw focus rectangles for range and scale elements
@@ -1919,8 +1920,8 @@ RENDER_AGAIN:
     if (!theme) return NS_ERROR_FAILURE;
 
     widgetRect.bottom = widgetRect.top + TB_SEPARATOR_HEIGHT;
-    theme->DrawThemeEdge(hdc, RP_BAND, 0, &widgetRect, EDGE_ETCHED, BF_TOP,
-                         nullptr);
+    DrawThemeEdge(theme, hdc, RP_BAND, 0, &widgetRect, EDGE_ETCHED, BF_TOP,
+                  nullptr);
   } else if (aAppearance == StyleAppearance::ScrollbarthumbHorizontal ||
              aAppearance == StyleAppearance::ScrollbarthumbVertical) {
     // Draw the decorative gripper for the scrollbar thumb button, if it fits
@@ -1931,15 +1932,15 @@ RENDER_AGAIN:
                        ? SP_GRIPPERHOR
                        : SP_GRIPPERVERT;
 
-    if (theme->GetThemePartSize(hdc, gripPart, state, nullptr, TS_TRUE,
-                                &gripSize) == S_OK &&
-        theme->GetThemeMargins(hdc, part, state, TMT_CONTENTMARGINS, nullptr,
-                               &thumbMgns) == S_OK &&
+    if (GetThemePartSize(theme, hdc, gripPart, state, nullptr, TS_TRUE,
+                         &gripSize) == S_OK &&
+        GetThemeMargins(theme, hdc, part, state, TMT_CONTENTMARGINS, nullptr,
+                        &thumbMgns) == S_OK &&
         gripSize.cx + thumbMgns.cxLeftWidth + thumbMgns.cxRightWidth <=
             widgetRect.right - widgetRect.left &&
         gripSize.cy + thumbMgns.cyTopHeight + thumbMgns.cyBottomHeight <=
             widgetRect.bottom - widgetRect.top) {
-      theme->DrawThemeBackground(hdc, gripPart, state, &widgetRect, &clipRect);
+      DrawThemeBackground(theme, hdc, gripPart, state, &widgetRect, &clipRect);
     }
   }
 
@@ -1974,7 +1975,7 @@ LayoutDeviceIntMargin nsNativeThemeWin::GetWidgetBorder(
     nsDeviceContext* aContext, nsIFrame* aFrame, StyleAppearance aAppearance) {
   LayoutDeviceIntMargin result;
   mozilla::Maybe<nsUXThemeClass> themeClass = GetThemeClass(aAppearance);
-  WinThemeDataPtr theme = NULL;
+  HTHEME theme = NULL;
   if (!themeClass.isNothing()) {
     theme = nsUXThemeData::GetTheme(themeClass.value());
   }
@@ -2107,7 +2108,7 @@ bool nsNativeThemeWin::GetWidgetPadding(nsDeviceContext* aContext,
     return ok;
   }
 
-  WinThemeDataPtr theme = GetTheme(aAppearance);
+  HANDLE theme = GetTheme(aAppearance);
   if (!theme) {
     ok = ClassicGetWidgetPadding(aContext, aFrame, aAppearance, aResult);
     ScaleForFrameDPI(aResult, aFrame);
@@ -2116,8 +2117,8 @@ bool nsNativeThemeWin::GetWidgetPadding(nsDeviceContext* aContext,
 
   if (aAppearance == StyleAppearance::Menupopup) {
     SIZE popupSize;
-    theme->GetThemePartSize(nullptr, MENU_POPUPBORDERS, /* state */ 0, nullptr,
-                            TS_TRUE, &popupSize);
+    GetThemePartSize(theme, nullptr, MENU_POPUPBORDERS, /* state */ 0, nullptr,
+                     TS_TRUE, &popupSize);
     aResult->top = aResult->bottom = popupSize.cy;
     aResult->left = aResult->right = popupSize.cx;
     ScaleForFrameDPI(aResult, aFrame);
@@ -2265,7 +2266,7 @@ nsNativeThemeWin::GetMinimumWidgetSize(nsPresContext* aPresContext,
   nsresult rv = NS_OK;
 
   mozilla::Maybe<nsUXThemeClass> themeClass = GetThemeClass(aAppearance);
-  WinThemeDataPtr theme = NULL;
+  HTHEME theme = NULL;
   if (!themeClass.isNothing()) {
     theme = nsUXThemeData::GetTheme(themeClass.value());
   }
@@ -2586,7 +2587,7 @@ bool nsNativeThemeWin::ThemeSupportsWidget(nsPresContext* aPresContext,
     return true;
   }
 
-  WinThemeDataPtr theme = nullptr;
+  HANDLE theme = nullptr;
   if (aAppearance == StyleAppearance::CheckboxContainer)
     theme = GetTheme(StyleAppearance::Checkbox);
   else if (aAppearance == StyleAppearance::RadioContainer)
@@ -2706,7 +2707,7 @@ nsITheme::Transparency nsNativeThemeWin::GetWidgetTransparency(
       break;
   }
 
-  WinThemeDataPtr theme = GetTheme(aAppearance);
+  HANDLE theme = GetTheme(aAppearance);
   // For the classic theme we don't really have a way of knowing
   if (!theme) {
     // menu backgrounds and tooltips which can't be themed are opaque
@@ -2728,7 +2729,7 @@ nsITheme::Transparency nsNativeThemeWin::GetWidgetTransparency(
     return eUnknownTransparency;
   }
 
-  if (theme->IsThemeBackgroundPartiallyTransparent(part, state))
+  if (IsThemeBackgroundPartiallyTransparent(theme, part, state))
     return eTransparent;
   return eOpaque;
 }
