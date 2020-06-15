@@ -100,6 +100,7 @@
 #include "mozilla/dom/ChildSHistory.h"
 #include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/dom/ContentChild.h"
+#include "mozilla/dom/ContentProcessManager.h"
 #include "mozilla/dom/BrowserBridgeChild.h"
 #include "mozilla/dom/BrowserHost.h"
 #include "mozilla/dom/BrowserBridgeHost.h"
@@ -161,13 +162,13 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsFrameLoader)
 NS_INTERFACE_MAP_END
 
 nsFrameLoader::nsFrameLoader(Element* aOwner, BrowsingContext* aBrowsingContext,
-                             const nsAString& aRemoteType, bool aNetworkCreated)
+                             bool aIsRemoteFrame, bool aNetworkCreated)
     : mPendingBrowsingContext(aBrowsingContext),
       mOwnerContent(aOwner),
       mDetachedSubdocFrame(nullptr),
       mPendingSwitchID(0),
       mChildID(0),
-      mRemoteType(aRemoteType),
+      mRemoteType(VoidString()),
       mDepthTooGreat(false),
       mIsTopLevelContent(false),
       mDestroyCalled(false),
@@ -178,7 +179,7 @@ nsFrameLoader::nsFrameLoader(Element* aOwner, BrowsingContext* aBrowsingContext,
       mNetworkCreated(aNetworkCreated),
       mLoadingOriginalSrc(false),
       mRemoteBrowserShown(false),
-      mIsRemoteFrame(!aRemoteType.IsEmpty()),
+      mIsRemoteFrame(aIsRemoteFrame),
       mWillChangeProcess(false),
       mObservingOwnerContent(false),
       mTabProcessCrashFired(false) {}
@@ -341,6 +342,42 @@ static bool InitialLoadIsRemote(Element* aOwner) {
                              nsGkAtoms::_true, eCaseMatters);
 }
 
+static void GetInitialRemoteTypeAndProcess(Element* aOwner,
+                                           nsAString& aRemoteType,
+                                           uint64_t* aChildID) {
+  MOZ_ASSERT(XRE_IsParentProcess());
+  *aChildID = 0;
+
+  // Check if there is an explicit `remoteType` attribute which we should use.
+  bool hasRemoteType =
+      aOwner->GetAttr(kNameSpaceID_None, nsGkAtoms::RemoteType, aRemoteType);
+  if (!hasRemoteType || aRemoteType.IsEmpty()) {
+    hasRemoteType = false;
+    aRemoteType.AssignLiteral(DEFAULT_REMOTE_TYPE);
+  }
+
+  // Check if `sameProcessAsFrameLoader` was used to override the process.
+  nsCOMPtr<nsIBrowser> browser = aOwner->AsBrowser();
+  if (!browser) {
+    return;
+  }
+  RefPtr<nsFrameLoader> otherLoader;
+  browser->GetSameProcessAsFrameLoader(getter_AddRefs(otherLoader));
+  if (!otherLoader) {
+    return;
+  }
+  BrowserParent* browserParent = BrowserParent::GetFrom(otherLoader);
+  if (!browserParent) {
+    return;
+  }
+  RefPtr<ContentParent> contentParent = browserParent->Manager();
+  MOZ_DIAGNOSTIC_ASSERT(
+      !hasRemoteType || contentParent->GetRemoteType() == aRemoteType,
+      "If specified, remoteType attribute must match sameProcessAsFrameLoader");
+  aRemoteType = contentParent->GetRemoteType();
+  *aChildID = contentParent->ChildID();
+}
+
 already_AddRefed<nsFrameLoader> nsFrameLoader::Create(
     Element* aOwner, bool aNetworkCreated, nsIOpenWindowInfo* aOpenWindowInfo) {
   NS_ENSURE_TRUE(aOwner, nullptr);
@@ -375,30 +412,20 @@ already_AddRefed<nsFrameLoader> nsFrameLoader::Create(
       CreateBrowsingContext(aOwner, aOpenWindowInfo);
   NS_ENSURE_TRUE(context, nullptr);
 
-  // Determine the initial RemoteType from the load environment. An empty or
-  // void remote type denotes a non-remote frame, while a named remote type
-  // denotes a remote frame.
-  nsAutoString remoteType(VoidString());
-  if (InitialLoadIsRemote(aOwner)) {
-    // If the `remoteType` attribute is specified and valid, use it. Otherwise,
-    // use a default remote type.
-    bool hasRemoteType =
-        aOwner->GetAttr(kNameSpaceID_None, nsGkAtoms::RemoteType, remoteType);
-    if (!hasRemoteType || remoteType.IsEmpty()) {
-      remoteType.AssignLiteral(DEFAULT_REMOTE_TYPE);
-    }
-  }
-
+  bool isRemoteFrame = InitialLoadIsRemote(aOwner);
   RefPtr<nsFrameLoader> fl =
-      new nsFrameLoader(aOwner, context, remoteType, aNetworkCreated);
+      new nsFrameLoader(aOwner, context, isRemoteFrame, aNetworkCreated);
   fl->mOpenWindowInfo = aOpenWindowInfo;
+  if (isRemoteFrame) {
+    GetInitialRemoteTypeAndProcess(aOwner, fl->mRemoteType, &fl->mChildID);
+  }
   return fl.forget();
 }
 
 /* static */
 already_AddRefed<nsFrameLoader> nsFrameLoader::Recreate(
-    mozilla::dom::Element* aOwner, BrowsingContext* aContext,
-    const nsAString& aRemoteType, bool aNetworkCreated, bool aPreserveContext) {
+    mozilla::dom::Element* aOwner, BrowsingContext* aContext, bool aIsRemote,
+    bool aNetworkCreated, bool aPreserveContext) {
   NS_ENSURE_TRUE(aOwner, nullptr);
 
 #ifdef DEBUG
@@ -417,7 +444,7 @@ already_AddRefed<nsFrameLoader> nsFrameLoader::Recreate(
   NS_ENSURE_TRUE(context, nullptr);
 
   RefPtr<nsFrameLoader> fl =
-      new nsFrameLoader(aOwner, context, aRemoteType, aNetworkCreated);
+      new nsFrameLoader(aOwner, context, aIsRemote, aNetworkCreated);
   return fl.forget();
 }
 
@@ -480,6 +507,17 @@ void nsFrameLoader::LoadFrame(bool aOriginalSrc) {
   if (NS_FAILED(rv)) {
     FireErrorEvent();
   }
+}
+
+void nsFrameLoader::ConfigRemoteProcess(const nsAString& aRemoteType,
+                                        ContentParent* aContentParent) {
+  MOZ_DIAGNOSTIC_ASSERT(IsRemoteFrame(), "Must be a remote frame");
+  MOZ_DIAGNOSTIC_ASSERT(!mRemoteBrowser, "Must not have a browser yet");
+  MOZ_DIAGNOSTIC_ASSERT_IF(aContentParent,
+                           aContentParent->GetRemoteType() == aRemoteType);
+
+  mRemoteType = aRemoteType;
+  mChildID = aContentParent ? aContentParent->ChildID() : 0;
 }
 
 void nsFrameLoader::FireErrorEvent() {
@@ -2386,26 +2424,6 @@ uint32_t nsFrameLoader::LazyHeight() const {
   return lazyHeight;
 }
 
-static ContentParent* GetContentParent(Element* aBrowser) {
-  nsCOMPtr<nsIBrowser> browser = aBrowser ? aBrowser->AsBrowser() : nullptr;
-  if (!browser) {
-    return nullptr;
-  }
-
-  RefPtr<nsFrameLoader> otherLoader;
-  browser->GetSameProcessAsFrameLoader(getter_AddRefs(otherLoader));
-  if (!otherLoader) {
-    return nullptr;
-  }
-
-  BrowserParent* browserParent = BrowserParent::GetFrom(otherLoader);
-  if (browserParent) {
-    return browserParent->Manager();
-  }
-
-  return nullptr;
-}
-
 bool nsFrameLoader::EnsureRemoteBrowser() {
   MOZ_ASSERT(IsRemoteFrame());
   return mRemoteBrowser || TryRemoteBrowser();
@@ -2414,10 +2432,9 @@ bool nsFrameLoader::EnsureRemoteBrowser() {
 bool nsFrameLoader::TryRemoteBrowserInternal() {
   NS_ASSERTION(!mRemoteBrowser,
                "TryRemoteBrowser called with a remote browser already?");
-  MOZ_DIAGNOSTIC_ASSERT(
-      XRE_IsParentProcess(),
-      "Remote subframes should only be created using the "
-      "`CanonicalBrowsingContext::ChangeFrameRemoteness` API");
+  MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess(),
+                        "Remote subframes should only be created using the "
+                        "`CanonicalBrowsingContext::ChangeRemoteness` API");
 
   AssertSafeToInit();
 
@@ -2477,9 +2494,6 @@ bool nsFrameLoader::TryRemoteBrowserInternal() {
     return false;
   }
 
-  RefPtr<ContentParent> openerContentParent;
-  RefPtr<BrowserParent> sameTabGroupAs;
-
   // <iframe mozbrowser> gets to skip these checks.
   // iframes for JS plugins also get to skip these checks. We control the URL
   // that gets loaded, but the load is triggered from the document containing
@@ -2522,9 +2536,6 @@ bool nsFrameLoader::TryRemoteBrowserInternal() {
                                     nsGkAtoms::content, eIgnoreCase)) {
       return false;
     }
-
-    // Try to get the related content parent from our browser element.
-    openerContentParent = GetContentParent(mOwnerContent);
   }
 
   uint32_t chromeFlags = 0;
@@ -2556,9 +2567,14 @@ bool nsFrameLoader::TryRemoteBrowserInternal() {
     }
     nextRemoteBrowser->SetOwnerElement(ownerElement);
   } else {
-    mRemoteBrowser = ContentParent::CreateBrowser(
-        context, ownerElement, mRemoteType, mPendingBrowsingContext,
-        openerContentParent);
+    RefPtr<ContentParent> contentParent;
+    if (mChildID != 0) {
+      ContentProcessManager* cpm = ContentProcessManager::GetSingleton();
+      contentParent = cpm->GetContentProcessById(ContentParentId(mChildID));
+    }
+    mRemoteBrowser =
+        ContentParent::CreateBrowser(context, ownerElement, mRemoteType,
+                                     mPendingBrowsingContext, contentParent);
   }
   if (!mRemoteBrowser) {
     return false;
