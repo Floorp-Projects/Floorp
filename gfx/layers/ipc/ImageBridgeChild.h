@@ -15,7 +15,6 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/RefPtr.h"            // for already_AddRefed
 #include "mozilla/ipc/SharedMemory.h"  // for SharedMemory, etc
-#include "mozilla/layers/CanvasClient.h"
 #include "mozilla/layers/CompositableForwarder.h"
 #include "mozilla/layers/CompositorTypes.h"
 #include "mozilla/layers/PImageBridgeChild.h"
@@ -32,7 +31,6 @@ class Shmem;
 
 namespace layers {
 
-class AsyncCanvasRenderer;
 class ImageClient;
 class ImageContainer;
 class ImageContainerListener;
@@ -193,9 +191,6 @@ class ImageBridgeChild final : public PImageBridgeChild,
   RefPtr<ImageClient> CreateImageClientNow(CompositableType aType,
                                            ImageContainer* aImageContainer);
 
-  already_AddRefed<CanvasClient> CreateCanvasClient(
-      CanvasClient::CanvasClientType aType, TextureFlags aFlag);
-  void UpdateAsyncCanvasRenderer(AsyncCanvasRenderer* aClient);
   void UpdateImageClient(RefPtr<ImageContainer> aContainer);
 
   /**
@@ -213,21 +208,10 @@ class ImageBridgeChild final : public PImageBridgeChild,
   virtual ~ImageBridgeChild();
 
   // Helpers for dispatching.
-  already_AddRefed<CanvasClient> CreateCanvasClientNow(
-      CanvasClient::CanvasClientType aType, TextureFlags aFlags);
-  void CreateCanvasClientSync(SynchronousTask* aTask,
-                              CanvasClient::CanvasClientType aType,
-                              TextureFlags aFlags,
-                              RefPtr<CanvasClient>* const outResult);
-
   void CreateImageClientSync(SynchronousTask* aTask,
                              RefPtr<ImageClient>* result,
                              CompositableType aType,
                              ImageContainer* aImageContainer);
-
-  void UpdateAsyncCanvasRendererNow(AsyncCanvasRenderer* aClient);
-  void UpdateAsyncCanvasRendererSync(SynchronousTask* aTask,
-                                     AsyncCanvasRenderer* aWrapper);
 
   void FlushAllImagesSync(SynchronousTask* aTask, ImageClient* aClient,
                           ImageContainer* aContainer);

@@ -324,6 +324,15 @@ static TextureType GetTextureType(gfx::SurfaceFormat aFormat,
   return TextureType::Unknown;
 }
 
+TextureType PreferredCanvasTextureType(
+    const KnowsCompositor& aKnowsCompositor) {
+  const auto layersBackend = aKnowsCompositor.GetCompositorBackendType();
+  const auto moz2DBackend =
+      BackendTypeForBackendSelector(layersBackend, BackendSelector::Canvas);
+  return GetTextureType(gfx::SurfaceFormat::R8G8B8A8, {1, 1}, layersBackend,
+                        moz2DBackend, 2, TextureAllocationFlags::ALLOC_DEFAULT);
+}
+
 static bool ShouldRemoteTextureType(TextureType aTextureType,
                                     BackendSelector aSelector) {
   if (!XRE_IsContentProcess()) {

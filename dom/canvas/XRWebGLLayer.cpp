@@ -261,7 +261,6 @@ HTMLCanvasElement* XRWebGLLayer::GetCanvas() {
 
 void XRWebGLLayer::SessionEnded() {
   DeleteFramebuffer();
-  mWebGL->ClearVRFrame();
 }
 
 }  // namespace dom

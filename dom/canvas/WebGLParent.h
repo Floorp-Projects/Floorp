@@ -37,13 +37,10 @@ class WebGLParent : public PWebGLParent,
       const webgl::InitContextDesc&, UniquePtr<HostWebGLCommandSinkP>&& aSinkP,
       UniquePtr<HostWebGLCommandSinkI>&& aSinkI, webgl::InitContextResult* out);
 
-  RefPtr<layers::SharedSurfaceTextureClient> GetVRFrame(webgl::ObjectId);
-
   // Drain the command queue now.  Used by synchronous IpdlQueue consumers.
   bool RunQueue(uint64_t) { return RunCommandQueue(); }
 
-  // For IPDL:
-  WebGLParent();
+  WebGLParent();  // For IPDL
 
  private:
   ~WebGLParent();
