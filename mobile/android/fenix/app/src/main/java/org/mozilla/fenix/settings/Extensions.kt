@@ -5,10 +5,13 @@
 package org.mozilla.fenix.settings
 
 import android.widget.RadioButton
+import androidx.annotation.StringRes
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.preference.Preference
+import androidx.preference.PreferenceFragmentCompat
 import mozilla.components.feature.sitepermissions.SitePermissions
 import mozilla.components.support.ktx.android.view.putCompoundDrawablesRelative
+import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.theme.ThemeManager
 
 fun SitePermissions.toggle(featurePhone: PhoneFeature): SitePermissions {
@@ -60,3 +63,10 @@ inline fun <reified T> Preference.setOnPreferenceChangeListener(
         (newValue as? T)?.let { onPreferenceChangeListener(preference, it) } ?: false
     }
 }
+
+/**
+ * Find a preference with the corresponding key and throw if it does not exist.
+ * @param preferenceId Resource ID from preference_keys
+ */
+fun <T : Preference> PreferenceFragmentCompat.requirePreference(@StringRes preferenceId: Int) =
+    requireNotNull(findPreference<T>(getPreferenceKey(preferenceId)))
