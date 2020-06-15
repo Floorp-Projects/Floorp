@@ -332,6 +332,13 @@ class nsAutoTObserverArray : protected nsTObserverArray_base {
       NS_ASSERTION(HasMore(), "iterating beyond end of array");
       return base_type::mArray.Elements()[base_type::mPosition++];
     }
+
+    // Removes the element at the current iterator position.
+    // (the last element returned from |GetNext()|)
+    // This will not affect the next call to |GetNext()|
+    void Remove() {
+      return base_type::mArray.RemoveElementAt(base_type::mPosition - 1);
+    }
   };
 
   // EndLimitedIterator works like ForwardIterator, but will not iterate new
@@ -355,6 +362,13 @@ class nsAutoTObserverArray : protected nsTObserverArray_base {
     elem_type& GetNext() {
       NS_ASSERTION(HasMore(), "iterating beyond end of array");
       return base_type::mArray.Elements()[base_type::mPosition++];
+    }
+
+    // Removes the element at the current iterator position.
+    // (the last element returned from |GetNext()|)
+    // This will not affect the next call to |GetNext()|
+    void Remove() {
+      return base_type::mArray.RemoveElementAt(base_type::mPosition - 1);
     }
 
    private:
