@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<style>
+  div {
+    color: lime;
+  }
+
+  #id-clip {
+    clip: rect(10px, 10px, 10px, 10px);
+  }
+
+  .class-clip {
+    clip: rect(5px, 5px, 5px, 5px);
+  }
+
+  .class-user-select {
+    -moz-user-select: all;
+  }
+
+  .duplicate {
+    clip: rect(10px, 10px, 10px, 10px);
+    clip: rect(5px, 5px, 5px, 5px);
+    clip: rect(2px, 2px, 2px, 2px);
+  }
+</style>
+<div></div>
+<div class="class-user-select"></div>
+<div id="id-clip" class="class-clip class-user-select"></div>
+<div class="duplicate"></div>
