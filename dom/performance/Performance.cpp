@@ -533,8 +533,7 @@ void Performance::RemoveObserver(PerformanceObserver* aObserver) {
 
 void Performance::NotifyObservers() {
   mPendingNotificationObserversTask = false;
-  NS_OBSERVER_ARRAY_NOTIFY_XPCOM_OBSERVERS(mObservers, PerformanceObserver,
-                                           Notify, ());
+  NS_OBSERVER_ARRAY_NOTIFY_XPCOM_OBSERVERS(mObservers, Notify, ());
 }
 
 void Performance::CancelNotificationObservers() {
@@ -610,8 +609,8 @@ void Performance::QueueEntry(PerformanceEntry* aEntry) {
     return;
   }
 
-  NS_OBSERVER_ARRAY_NOTIFY_XPCOM_OBSERVERS(
-      interestedObservers, PerformanceObserver, QueueEntry, (aEntry));
+  NS_OBSERVER_ARRAY_NOTIFY_XPCOM_OBSERVERS(interestedObservers, QueueEntry,
+                                           (aEntry));
 
   QueueNotificationObserversTask();
 }

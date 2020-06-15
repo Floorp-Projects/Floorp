@@ -624,7 +624,6 @@ void nsINode::LastRelease() {
   if (slots) {
     if (!slots->mMutationObservers.IsEmpty()) {
       NS_OBSERVER_ARRAY_NOTIFY_OBSERVERS(slots->mMutationObservers,
-                                         nsIMutationObserver,
                                          NodeWillBeDestroyed, (this));
     }
 
