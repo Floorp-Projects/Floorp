@@ -54,7 +54,6 @@ var WebBrowserChrome = {
         aURI,
         aReferrerInfo,
         aTriggeringPrincipal,
-        false,
         null,
         aCsp
       );
@@ -68,27 +67,6 @@ var WebBrowserChrome = {
     let remoteSubframes = docShell.QueryInterface(Ci.nsILoadContext)
       .useRemoteSubframes;
     return E10SUtils.shouldLoadURIInThisProcess(aURI, remoteSubframes);
-  },
-
-  // Try to reload the currently active or currently loading page in a new process.
-  reloadInFreshProcess(
-    aDocShell,
-    aURI,
-    aReferrerInfo,
-    aTriggeringPrincipal,
-    aLoadFlags,
-    aCsp
-  ) {
-    E10SUtils.redirectLoad(
-      aDocShell,
-      aURI,
-      aReferrerInfo,
-      aTriggeringPrincipal,
-      true,
-      aLoadFlags,
-      aCsp
-    );
-    return true;
   },
 };
 

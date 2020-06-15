@@ -980,12 +980,6 @@ child:
     async UpdateNativeWindowHandle(uintptr_t aNewHandle);
 
     /**
-     * Tell the BrowserChild that it should expect a Large-Allocation load to occur.
-     * Loads which occur until this flag is cleared will not leave the process.
-     */
-    async AwaitLargeAlloc();
-
-    /**
      * Tell the BrowserChild to allow scripts in the docshell to close the window.
      */
     async AllowScriptsToClose();

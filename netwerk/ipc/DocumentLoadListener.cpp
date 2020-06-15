@@ -13,6 +13,7 @@
 #include "mozilla/StaticPrefs_extensions.h"
 #include "mozilla/StaticPrefs_fission.h"
 #include "mozilla/StaticPrefs_security.h"
+#include "mozilla/dom/BrowsingContextGroup.h"
 #include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/dom/ClientChannelHelper.h"
 #include "mozilla/dom/ContentParent.h"
@@ -1085,6 +1086,34 @@ void DocumentLoadListener::SerializeRedirectData(
   }
 }
 
+static bool IsLargeAllocationLoad(CanonicalBrowsingContext* aBrowsingContext,
+                                  nsIChannel* aChannel) {
+  if (!StaticPrefs::dom_largeAllocationHeader_enabled() ||
+      aBrowsingContext->UseRemoteSubframes()) {
+    return false;
+  }
+
+  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
+  if (!httpChannel) {
+    return false;
+  }
+
+  nsAutoCString ignoredHeaderValue;
+  nsresult rv = httpChannel->GetResponseHeader(
+      NS_LITERAL_CSTRING("Large-Allocation"), ignoredHeaderValue);
+  if (NS_FAILED(rv)) {
+    return false;
+  }
+
+  // On all platforms other than win32, LargeAllocation is disabled by default,
+  // and has to be force-enabled using `dom.largeAllocation.forceEnable`.
+#if defined(XP_WIN) && defined(_X86_)
+  return true;
+#else
+  return StaticPrefs::dom_largeAllocation_forceEnable();
+#endif
+}
+
 bool DocumentLoadListener::MaybeTriggerProcessSwitch(
     bool* aWillSwitchToRemote) {
   MOZ_ASSERT(XRE_IsParentProcess());
@@ -1206,6 +1235,25 @@ bool DocumentLoadListener::MaybeTriggerProcessSwitch(
     currentRemoteType = VoidString();
   }
   nsAutoString preferredRemoteType = currentRemoteType;
+
+  // If we're performing a large allocation load, override the remote type
+  // with `LARGE_ALLOCATION_REMOTE_TYPE` to move it into an exclusive content
+  // process. If we're already in one, and don't otherwise we force ourselves
+  // out of that content process.
+  bool isLargeAllocSwitch = false;
+  if (browsingContext->IsTop() &&
+      browsingContext->Group()->Toplevels().Length() == 1) {
+    if (IsLargeAllocationLoad(browsingContext, mChannel)) {
+      preferredRemoteType.Assign(
+          NS_LITERAL_STRING(LARGE_ALLOCATION_REMOTE_TYPE));
+      isLargeAllocSwitch = true;
+    } else if (preferredRemoteType.EqualsLiteral(
+                   LARGE_ALLOCATION_REMOTE_TYPE)) {
+      preferredRemoteType.Assign(NS_LITERAL_STRING(DEFAULT_REMOTE_TYPE));
+      isLargeAllocSwitch = true;
+    }
+  }
+
   if (coop ==
       nsILoadInfo::OPENER_POLICY_SAME_ORIGIN_EMBEDDER_POLICY_REQUIRE_CORP) {
     // We want documents with SAME_ORIGIN_EMBEDDER_POLICY_REQUIRE_CORP COOP
@@ -1252,7 +1300,8 @@ bool DocumentLoadListener::MaybeTriggerProcessSwitch(
        NS_ConvertUTF16toUTF8(remoteType).get()));
 
   // Check if a process switch is needed.
-  if (currentRemoteType == remoteType && !isCOOPSwitch && !isPreloadSwitch) {
+  if (currentRemoteType == remoteType && !isCOOPSwitch && !isPreloadSwitch &&
+      !isLargeAllocSwitch) {
     LOG(("Process Switch Abort: type (%s) is compatible",
          NS_ConvertUTF16toUTF8(remoteType).get()));
     return false;
@@ -1276,7 +1325,7 @@ bool DocumentLoadListener::MaybeTriggerProcessSwitch(
   LOG(("Process Switch: Calling ChangeRemoteness"));
   browsingContext
       ->ChangeRemoteness(remoteType, mCrossProcessRedirectIdentifier,
-                         isCOOPSwitch)
+                         isCOOPSwitch || isLargeAllocSwitch)
       ->Then(
           GetMainThreadSerialEventTarget(), __func__,
           [self = RefPtr{this}](BrowserParent* aBrowserParent) {

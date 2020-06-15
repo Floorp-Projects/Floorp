@@ -345,16 +345,6 @@ var WebBrowserChrome = {
       .useRemoteSubframes;
     return E10SUtils.shouldLoadURIInThisProcess(URI, remoteSubframes);
   },
-
-  reloadInFreshProcess(
-    docShell,
-    URI,
-    referrerInfo,
-    triggeringPrincipal,
-    loadFlags
-  ) {
-    return false;
-  },
 };
 
 if (Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT) {
