@@ -14,6 +14,7 @@ import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.settings.PhoneFeature
+import org.mozilla.fenix.settings.requirePreference
 
 @SuppressWarnings("TooManyFunctions")
 class SitePermissionsFragment : PreferenceFragmentCompat() {
@@ -64,9 +65,8 @@ class SitePermissionsFragment : PreferenceFragmentCompat() {
             } else {
                 null
             }
-        val preferenceKey = phoneFeature.getPreferenceKey(context)
 
-        val cameraPhoneFeatures: Preference = requireNotNull(findPreference(preferenceKey))
+        val cameraPhoneFeatures = requirePreference<Preference>(phoneFeature.getPreferenceId())
         cameraPhoneFeatures.summary = autoplaySummary ?: summary
 
         cameraPhoneFeatures.onPreferenceClickListener = OnPreferenceClickListener {

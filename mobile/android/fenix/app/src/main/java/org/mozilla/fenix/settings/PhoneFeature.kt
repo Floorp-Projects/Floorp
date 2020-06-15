@@ -85,16 +85,26 @@ enum class PhoneFeature(val androidPermissionsList: Array<String>) : Parcelable 
         }
     }
 
-    fun getPreferenceKey(context: Context): String {
+    /**
+     * Returns a resource ID from preference_keys representing the preference corresponding
+     * to this phone feature.
+     */
+    @StringRes
+    fun getPreferenceId(): Int {
         return when (this) {
-            CAMERA -> context.getPreferenceKey(R.string.pref_key_phone_feature_camera)
-            LOCATION -> context.getPreferenceKey(R.string.pref_key_phone_feature_location)
-            MICROPHONE -> context.getPreferenceKey(R.string.pref_key_phone_feature_microphone)
-            NOTIFICATION -> context.getPreferenceKey(R.string.pref_key_phone_feature_notification)
-            AUTOPLAY_AUDIBLE -> context.getPreferenceKey(R.string.pref_key_browser_feature_autoplay_audible)
-            AUTOPLAY_INAUDIBLE -> context.getPreferenceKey(R.string.pref_key_browser_feature_autoplay_inaudible)
+            CAMERA -> R.string.pref_key_phone_feature_camera
+            LOCATION -> R.string.pref_key_phone_feature_location
+            MICROPHONE -> R.string.pref_key_phone_feature_microphone
+            NOTIFICATION -> R.string.pref_key_phone_feature_notification
+            AUTOPLAY_AUDIBLE -> R.string.pref_key_browser_feature_autoplay_audible
+            AUTOPLAY_INAUDIBLE -> R.string.pref_key_browser_feature_autoplay_inaudible
         }
     }
+
+    /**
+     * Returns the key representing the preference corresponding to this phone feature.
+     */
+    fun getPreferenceKey(context: Context): String = context.getPreferenceKey(getPreferenceId())
 
     fun getAction(settings: Settings): SitePermissionsRules.Action =
         settings.getSitePermissionsPhoneFeatureAction(this, getDefault())

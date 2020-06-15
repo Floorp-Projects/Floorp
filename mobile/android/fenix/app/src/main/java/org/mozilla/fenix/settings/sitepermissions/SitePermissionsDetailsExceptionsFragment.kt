@@ -64,8 +64,7 @@ class SitePermissionsDetailsExceptionsFragment : PreferenceFragmentCompat() {
 
     private fun initPhoneFeature(phoneFeature: PhoneFeature) {
         val summary = phoneFeature.getActionLabel(requireContext(), sitePermissions)
-        val keyPreference = phoneFeature.getPreferenceKey(requireContext())
-        val cameraPhoneFeatures: Preference = requireNotNull(findPreference(keyPreference))
+        val cameraPhoneFeatures = requirePreference<Preference>(phoneFeature.getPreferenceId())
         cameraPhoneFeatures.summary = summary
 
         cameraPhoneFeatures.onPreferenceClickListener = Preference.OnPreferenceClickListener {
