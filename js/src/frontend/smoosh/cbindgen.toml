@@ -8,3 +8,9 @@ braces = "SameLine"
 line_length = 100
 tab_width = 2
 language = "C++"
+
+[enum]
+derive_helper_methods = true
+derive_const_casts = true
+derive_mut_casts = true
+cast_assert_name = "assert"
