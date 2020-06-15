@@ -108,7 +108,7 @@ function test_config_flag_needed() {
       manifest: {
         permissions: ["storage"],
       },
-      background: `(${background})(${checkGetImpl})`,
+      background,
     });
 
     await extension.startup();
@@ -213,6 +213,25 @@ async function test_background_page_storage(testAreaName) {
       clearGlobalChanges();
     }
 
+    // Regression test for https://bugzilla.mozilla.org/show_bug.cgi?id=1645598
+    async function testNonExistingKeys(storage, storageAreaDesc) {
+      let data = await storage.get({ test6: 6 });
+      browser.test.assertEq(`{"test6":6}`, JSON.stringify(data),
+          `Use default value when not stored for ${storageAreaDesc}`);
+
+      data = await storage.get({ test6: null });
+      browser.test.assertEq(`{"test6":null}`, JSON.stringify(data),
+          `Use default value, even if null for ${storageAreaDesc}`);
+
+      data = await storage.get("test6");
+      browser.test.assertEq(`{}`, JSON.stringify(data),
+          `Empty result if key is not found for ${storageAreaDesc}`);
+
+      data = await storage.get(["test6", "test7"]);
+      browser.test.assertEq(`{}`, JSON.stringify(data),
+          `Empty result if list of keys is not found for ${storageAreaDesc}`);
+    }
+
     async function testFalseyValues(areaName) {
       let storage = browser.storage[areaName];
       const dataInitial = {
@@ -260,7 +279,9 @@ async function test_background_page_storage(testAreaName) {
       await checkChanges(areaName, onUpdatedFalsey, "set non-falsey values");
 
       // Clear the storage state.
+      await testNonExistingKeys(storage, `${areaName} before clearing`);
       await storage.clear();
+      await testNonExistingKeys(storage, `${areaName} after clearing`);
       await globalChanges;
       clearGlobalChanges();
     }
@@ -651,7 +672,7 @@ async function test_background_page_storage(testAreaName) {
 
 function test_storage_sync_requires_real_id() {
   async function testFn() {
-    async function backgroundScript() {
+    async function background() {
       const EXCEPTION_MESSAGE =
         "The storage API is not available with a temporary addon ID. " +
         "Please add an explicit addon ID to your manifest. " +
@@ -666,7 +687,7 @@ function test_storage_sync_requires_real_id() {
     }
 
     let extensionData = {
-      background: `(${backgroundScript})(${checkGetImpl})`,
+      background,
       manifest: {
         permissions: ["storage"],
       },
