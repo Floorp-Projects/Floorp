@@ -728,7 +728,7 @@ mod tests {
 
         // Check that a second call to get_devices doesn't hit the server
         assert!(fxa.get_devices(false).is_ok());
-        assert!(fxa.devices_cache.clone().is_some());
+        assert!(fxa.devices_cache.is_some());
 
         let cache2 = fxa.devices_cache.unwrap();
         let cached_devices2 = cache2.response;

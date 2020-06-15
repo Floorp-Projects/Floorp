@@ -233,9 +233,10 @@ fn get_keys(keys: JsonValue) -> Vec<(String, Option<JsonValue>)> {
 pub fn get(conn: &Connection, ext_id: &str, keys: JsonValue) -> Result<JsonValue> {
     // key is optional, or string or array of string or object keys
     let maybe_existing = get_from_db(conn, ext_id)?;
-    let mut existing = match maybe_existing {
-        None => return Ok(JsonValue::Object(Map::new())),
-        Some(v) => v,
+    let mut existing = match (maybe_existing, keys.is_object()) {
+        (None, true) => return Ok(keys),
+        (None, false) => return Ok(JsonValue::Object(Map::new())),
+        (Some(v), _) => v,
     };
     // take the quick path for null, where we just return the entire object.
     if keys.is_null() {
@@ -245,15 +246,13 @@ pub fn get(conn: &Connection, ext_id: &str, keys: JsonValue) -> Result<JsonValue
     let keys_and_defaults = get_keys(keys);
     let mut result = Map::with_capacity(keys_and_defaults.len());
     for (key, maybe_default) in keys_and_defaults {
-        // XXX - If a key is requested that doesn't exist, we have 2 options:
-        // (1) have the key in the result with the value null, or (2) the key
-        // simply doesn't exist in the result. We assume (2), but should verify
-        // that's what chrome does.
         if let Some(v) = existing.remove(&key) {
             result.insert(key, v);
         } else if let Some(def) = maybe_default {
             result.insert(key, def);
         }
+        // else |keys| is a string/array instead of an object with defaults.
+        // Don't include keys without default values.
     }
     Ok(JsonValue::Object(result))
 }
@@ -267,6 +266,8 @@ pub fn remove(tx: &Transaction<'_>, ext_id: &str, keys: JsonValue) -> Result<Sto
         Some(v) => v,
     };
 
+    // Note: get_keys parses strings, arrays and objects, but remove()
+    // is expected to only be passed a string or array of strings.
     let keys_and_defs = get_keys(keys);
 
     let mut result = StorageChanges::with_capacity(keys_and_defs.len());
@@ -379,16 +380,13 @@ mod tests {
         let tx = db.transaction()?;
 
         // an empty store.
-        for q in vec![
-            JsonValue::Null,
-            json!("foo"),
-            json!(["foo"]),
-            json!({ "foo": null }),
-            json!({"foo": "default"}),
-        ]
-        .into_iter()
-        {
+        for q in vec![JsonValue::Null, json!("foo"), json!(["foo"])].into_iter() {
             assert_eq!(get(&tx, &ext_id, q)?, json!({}));
+        }
+
+        // Default values in an empty store.
+        for q in vec![json!({ "foo": null }), json!({"foo": "default"})].into_iter() {
+            assert_eq!(get(&tx, &ext_id, q.clone())?, q.clone());
         }
 
         // Single item in the store.
@@ -403,6 +401,20 @@ mod tests {
         .into_iter()
         {
             assert_eq!(get(&tx, &ext_id, q)?, json!({"foo": "bar" }));
+        }
+
+        // Default values in a non-empty store.
+        for q in vec![
+            json!({ "non_existing_key": null }),
+            json!({"non_existing_key": 0}),
+            json!({"non_existing_key": false}),
+            json!({"non_existing_key": "default"}),
+            json!({"non_existing_key": ["array"]}),
+            json!({"non_existing_key": {"objectkey": "value"}}),
+        ]
+        .into_iter()
+        {
+            assert_eq!(get(&tx, &ext_id, q.clone())?, q.clone());
         }
 
         // more complex stuff, including changes checking.
