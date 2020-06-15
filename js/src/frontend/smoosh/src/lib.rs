@@ -222,13 +222,28 @@ pub struct SmooshSourceExtent {
     pub column: u32,
 }
 
+#[repr(C, u8)]
+pub enum COption<T> {
+    Some(T),
+    None,
+}
+
+impl<T> COption<T> {
+    fn from(v: Option<T>) -> Self {
+        match v {
+            Option::Some(v) => COption::Some(v),
+            Option::None => COption::None,
+        }
+    }
+}
+
 #[repr(C)]
 pub struct SmooshScriptStencil {
     pub immutable_flags: u32,
     pub gcthings: CVec<SmooshGCThing>,
-    pub immutable_script_data: usize,
+    pub immutable_script_data: COption<usize>,
     pub extent: SmooshSourceExtent,
-    pub fun_name: usize,
+    pub fun_name: COption<usize>,
     pub fun_nargs: u16,
     pub fun_flags: u16,
 }
@@ -273,7 +288,7 @@ impl SmooshResult {
             top_level_script: SmooshScriptStencil {
                 immutable_flags: 0,
                 gcthings: CVec::empty(),
-                immutable_script_data: std::usize::MAX,
+                immutable_script_data: COption::None,
                 extent: SmooshSourceExtent {
                     source_start: 0,
                     source_end: 0,
@@ -282,7 +297,7 @@ impl SmooshResult {
                     lineno: 0,
                     column: 0,
                 },
-                fun_name: std::usize::MAX,
+                fun_name: COption::None,
                 fun_nargs: 0,
                 fun_flags: 0,
             },
@@ -333,17 +348,11 @@ fn convert_script(script: ScriptStencil) -> SmooshScriptStencil {
 
     let gcthings = CVec::from(script.gcthings.into_iter().map(|x| x.into()).collect());
 
-    let immutable_script_data: usize = match script.immutable_script_data {
-        Some(n) => n.into(),
-        None => std::usize::MAX,
-    };
+    let immutable_script_data = COption::from(script.immutable_script_data.map(|n| n.into()));
 
     let extent = convert_extent(script.extent);
 
-    let fun_name: usize = match script.fun_name {
-        Some(n) => n.into(),
-        None => std::usize::MAX,
-    };
+    let fun_name = COption::from(script.fun_name.map(|n| n.into()));
     let fun_nargs = script.fun_nargs;
     let fun_flags = script.fun_flags.into();
 
