@@ -24,7 +24,7 @@
 namespace mozilla {
 
 namespace dom {
-class SVGMatrix;
+struct DOMMatrix2DInit;
 
 /**
  * Class nsISVGPoint
@@ -125,7 +125,8 @@ class nsISVGPoint : public nsISupports, public nsWrapperCache {
   virtual void SetX(float aX, ErrorResult& rv) = 0;
   virtual float Y() = 0;
   virtual void SetY(float aY, ErrorResult& rv) = 0;
-  virtual already_AddRefed<nsISVGPoint> MatrixTransform(SVGMatrix& matrix) = 0;
+  virtual already_AddRefed<nsISVGPoint> MatrixTransform(
+      const DOMMatrix2DInit& aMatrix, ErrorResult& aRv) = 0;
   virtual JSObject* WrapObject(JSContext* cx,
                                JS::Handle<JSObject*> aGivenProto) override {
     return SVGPoint_Binding::Wrap(cx, this, aGivenProto);

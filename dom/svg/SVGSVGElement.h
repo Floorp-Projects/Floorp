@@ -59,7 +59,7 @@ class DOMSVGTranslatePoint final : public nsISVGPoint {
   virtual void SetX(float aValue, ErrorResult& rv) override;
   virtual void SetY(float aValue, ErrorResult& rv) override;
   virtual already_AddRefed<nsISVGPoint> MatrixTransform(
-      SVGMatrix& matrix) override;
+      const DOMMatrix2DInit& aMatrix, ErrorResult& aRv) override;
 
   virtual nsISupports* GetParentObject() override;
 

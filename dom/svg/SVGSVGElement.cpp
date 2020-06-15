@@ -8,6 +8,7 @@
 
 #include "mozilla/ContentEvents.h"
 #include "mozilla/dom/BindContext.h"
+#include "mozilla/dom/DOMMatrix.h"
 #include "mozilla/dom/SVGSVGElementBinding.h"
 #include "mozilla/dom/SVGMatrix.h"
 #include "mozilla/dom/SVGRect.h"
@@ -59,7 +60,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DOMSVGTranslatePoint)
 NS_INTERFACE_MAP_END
 
 DOMSVGPoint* DOMSVGTranslatePoint::Copy() {
-  return new DOMSVGPoint(mPt.GetX(), mPt.GetY());
+  return new DOMSVGPoint(ToPoint(mPt));
 }
 
 nsISupports* DOMSVGTranslatePoint::GetParentObject() {
@@ -75,14 +76,21 @@ void DOMSVGTranslatePoint::SetY(float aValue, ErrorResult& rv) {
 }
 
 already_AddRefed<nsISVGPoint> DOMSVGTranslatePoint::MatrixTransform(
-    SVGMatrix& matrix) {
-  float a = matrix.A(), b = matrix.B(), c = matrix.C();
-  float d = matrix.D(), e = matrix.E(), f = matrix.F();
-  float x = mPt.GetX();
-  float y = mPt.GetY();
+    const DOMMatrix2DInit& aMatrix, ErrorResult& aRv) {
+  RefPtr<DOMMatrixReadOnly> matrix =
+      DOMMatrixReadOnly::FromMatrix(GetParentObject(), aMatrix, aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
+  const auto* matrix2D = matrix->GetInternal2D();
+  if (!matrix2D->IsFinite()) {
+    aRv.ThrowTypeError<MSG_NOT_FINITE>("MatrixTransform matrix");
+    return nullptr;
+  }
 
   nsCOMPtr<nsISVGPoint> point =
-      new DOMSVGPoint(a * x + c * y + e, b * x + d * y + f);
+      new DOMSVGPoint(ToPoint(matrix2D->TransformPoint(mPt)));
   return point.forget();
 }
 
@@ -262,7 +270,7 @@ already_AddRefed<DOMSVGAngle> SVGSVGElement::CreateSVGAngle() {
 }
 
 already_AddRefed<nsISVGPoint> SVGSVGElement::CreateSVGPoint() {
-  return do_AddRef(new DOMSVGPoint(0, 0));
+  return do_AddRef(new DOMSVGPoint(Point(0, 0)));
 }
 
 already_AddRefed<SVGMatrix> SVGSVGElement::CreateSVGMatrix() {

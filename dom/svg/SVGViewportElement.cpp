@@ -16,7 +16,6 @@
 #include "mozilla/SVGContentUtils.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/SVGLengthBinding.h"
-#include "mozilla/dom/SVGMatrix.h"
 #include "mozilla/dom/SVGViewElement.h"
 
 #include "DOMSVGLength.h"
