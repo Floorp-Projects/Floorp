@@ -509,9 +509,6 @@ nsresult nsCocoaWindow::CreateNativeWindow(const NSRect& aRect, nsBorderStyle aB
     [mWindow setLevel:NSFloatingWindowLevel];
     newBehavior |= NSWindowCollectionBehaviorCanJoinAllSpaces;
   }
-  if ((features & NSResizableWindowMask)) {
-    newBehavior |= NSWindowCollectionBehaviorFullScreenPrimary;
-  }
   [mWindow setCollectionBehavior:newBehavior];
 
   [mWindow setContentMinSize:NSMakeSize(60, 60)];
@@ -1612,6 +1609,14 @@ void nsCocoaWindow::UpdateFullscreenState(bool aFullScreen, bool aNativeMode) {
 
 inline bool nsCocoaWindow::ShouldToggleNativeFullscreen(bool aFullScreen,
                                                         bool aUseSystemTransition) {
+  // First check if this window supports entering native fullscreen.
+  // This is set based on the macnativefullscreen attribute on the window's
+  // document element.
+  NSWindowCollectionBehavior colBehavior = [mWindow collectionBehavior];
+  if (!(colBehavior & NSWindowCollectionBehaviorFullScreenPrimary)) {
+    return false;
+  }
+
   if (mInNativeFullScreenMode) {
     // If we are using native fullscreen, go ahead to exit it.
     return true;
@@ -2325,6 +2330,28 @@ void nsCocoaWindow::SetShowsToolbarButton(bool aShow) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   if (mWindow) [mWindow setShowsToolbarButton:aShow];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
+void nsCocoaWindow::SetSupportsNativeFullscreen(bool aSupportsNativeFullscreen) {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  if (mWindow) {
+    // This determines whether we tell cocoa that the window supports native
+    // full screen. If we do so, and another window is in native full screen,
+    // this window will also appear in native full screen. We generally only
+    // want to do this for primary application windows. We'll set the
+    // relevant macnativefullscreen attribute on those, which will lead to us
+    // being called with aSupportsNativeFullscreen set to `true` here.
+    NSWindowCollectionBehavior newBehavior = [mWindow collectionBehavior];
+    if (aSupportsNativeFullscreen) {
+      newBehavior |= NSWindowCollectionBehaviorFullScreenPrimary;
+    } else {
+      newBehavior &= ~NSWindowCollectionBehaviorFullScreenPrimary;
+    }
+    [mWindow setCollectionBehavior:newBehavior];
+  }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
