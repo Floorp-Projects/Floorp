@@ -30,5 +30,5 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/registry_policy.cc b/secu
  // |access| with the new value.
  NTSTATUS TranslateMaximumAllowed(OBJECT_ATTRIBUTES* obj_attributes,
                                   DWORD* access) {
-   NtOpenKeyFunction NtOpenKey = NULL;
+   NtOpenKeyFunction NtOpenKey = nullptr;
    ResolveNTFunctionPtr("NtOpenKey", &NtOpenKey);

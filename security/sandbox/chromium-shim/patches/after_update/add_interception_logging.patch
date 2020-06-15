@@ -132,7 +132,7 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/filesystem_interception.c
        break;
  
 @@ -227,32 +246,39 @@ TargetNtQueryAttributesFile(NtQueryAttri
-     ResultCode code = CrossCall(ipc, IPC_NTQUERYATTRIBUTESFILE_TAG, name.get(),
+     ResultCode code = CrossCall(ipc, IpcTag::NTQUERYATTRIBUTESFILE, name.get(),
                                  attributes, file_info, &answer);
  
      if (SBOX_ALL_OK != code)
@@ -173,7 +173,7 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/filesystem_interception.c
        break;
 @@ -284,16 +310,20 @@ NTSTATUS WINAPI TargetNtQueryFullAttribu
      CrossCallReturn answer = {0};
-     ResultCode code = CrossCall(ipc, IPC_NTQUERYFULLATTRIBUTESFILE_TAG,
+     ResultCode code = CrossCall(ipc, IpcTag::NTQUERYFULLATTRIBUTESFILE,
                                  name.get(), attributes, file_info, &answer);
  
      if (SBOX_ALL_OK != code)
@@ -213,7 +213,7 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/filesystem_interception.c
        break;
 @@ -366,14 +398,15 @@ TargetNtSetInformationFile(NtSetInformat
      ResultCode code =
-         CrossCall(ipc, IPC_NTSETINFO_RENAME_TAG, file, io_status_buffer,
+         CrossCall(ipc, IpcTag::NTSETINFO_RENAME, file, io_status_buffer,
                    file_info_buffer, length, file_info_class, &answer);
  
      if (SBOX_ALL_OK != code)
@@ -249,7 +249,7 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/handle_interception.cc b/
                                  DWORD desired_access,
                                  DWORD options) {
 @@ -29,17 +30,19 @@ ResultCode DuplicateHandleProxy(HANDLE s
-   ResultCode code = CrossCall(ipc, IPC_DUPLICATEHANDLEPROXY_TAG,
+   ResultCode code = CrossCall(ipc, IpcTag::DUPLICATEHANDLEPROXY,
                                source_handle, target_process_id,
                                desired_access, options, &answer);
    if (SBOX_ALL_OK != code)
@@ -652,6 +652,64 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/registry_interception.cc 
  }
  
  }  // namespace sandbox
+diff --git a/security/sandbox/chromium/sandbox/win/src/signed_interception.cc b/security/sandbox/chromium/sandbox/win/src/signed_interception.cc
+--- a/security/sandbox/chromium/sandbox/win/src/signed_interception.cc
++++ b/security/sandbox/chromium/sandbox/win/src/signed_interception.cc
+@@ -9,16 +9,17 @@
+ #include "sandbox/win/src/crosscall_client.h"
+ #include "sandbox/win/src/ipc_tags.h"
+ #include "sandbox/win/src/policy_params.h"
+ #include "sandbox/win/src/policy_target.h"
+ #include "sandbox/win/src/sandbox_factory.h"
+ #include "sandbox/win/src/sandbox_nt_util.h"
+ #include "sandbox/win/src/sharedmem_ipc_client.h"
+ #include "sandbox/win/src/target_services.h"
++#include "mozilla/sandboxing/sandboxLogging.h"
+ 
+ namespace sandbox {
+ 
+ NTSTATUS WINAPI
+ TargetNtCreateSection(NtCreateSectionFunction orig_CreateSection,
+                       PHANDLE section_handle,
+                       ACCESS_MASK desired_access,
+                       POBJECT_ATTRIBUTES object_attributes,
+@@ -37,16 +38,18 @@ TargetNtCreateSection(NtCreateSectionFun
+       break;
+     if (maximum_size)
+       break;
+     if (section_page_protection != PAGE_EXECUTE)
+       break;
+     if (allocation_attributes != SEC_IMAGE)
+       break;
+ 
++    mozilla::sandboxing::LogBlocked("NtCreateSection");
++
+     // IPC must be fully started.
+     void* memory = GetGlobalIPCMemory();
+     if (!memory)
+       break;
+ 
+     std::unique_ptr<wchar_t, NtAllocDeleter> path;
+ 
+     if (!NtGetPathFromHandle(file_handle, &path))
+@@ -73,16 +76,17 @@ TargetNtCreateSection(NtCreateSectionFun
+     if (code != SBOX_ALL_OK)
+       break;
+ 
+     if (!NT_SUCCESS(answer.nt_status))
+       break;
+ 
+     __try {
+       *section_handle = answer.handle;
++      mozilla::sandboxing::LogAllowed("NtCreateSection");
+       return answer.nt_status;
+     } __except (EXCEPTION_EXECUTE_HANDLER) {
+       break;
+     }
+   } while (false);
+ 
+   // Fall back to the original API in all failure cases.
+   return orig_CreateSection(section_handle, desired_access, object_attributes,
 diff --git a/security/sandbox/chromium/sandbox/win/src/sync_interception.cc b/security/sandbox/chromium/sandbox/win/src/sync_interception.cc
 --- a/security/sandbox/chromium/sandbox/win/src/sync_interception.cc
 +++ b/security/sandbox/chromium/sandbox/win/src/sync_interception.cc
