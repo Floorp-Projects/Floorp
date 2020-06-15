@@ -225,18 +225,6 @@ static const struct EVInfo kEVInfos[] = {
     "ToEtioJl4AsC7j41AkblPQ==",
   },
   {
-    // CN=AddTrust External CA Root,OU=AddTrust External TTP Network,O=AddTrust AB,C=SE
-    "1.3.6.1.4.1.6449.1.2.1.5.1",
-    "Comodo EV OID",
-    { 0x68, 0x7F, 0xA4, 0x51, 0x38, 0x22, 0x78, 0xFF, 0xF0, 0xC8, 0xB1,
-      0x1F, 0x8D, 0x43, 0xD5, 0x76, 0x67, 0x1C, 0x6E, 0xB2, 0xBC, 0xEA,
-      0xB4, 0x13, 0xFB, 0x83, 0xD9, 0x65, 0xD0, 0x6D, 0x2F, 0xF2 },
-    "MG8xCzAJBgNVBAYTAlNFMRQwEgYDVQQKEwtBZGRUcnVzdCBBQjEmMCQGA1UECxMd"
-    "QWRkVHJ1c3QgRXh0ZXJuYWwgVFRQIE5ldHdvcmsxIjAgBgNVBAMTGUFkZFRydXN0"
-    "IEV4dGVybmFsIENBIFJvb3Q=",
-    "AQ==",
-  },
-  {
     // OU=Go Daddy Class 2 Certification Authority,O=\"The Go Daddy Group, Inc.\",C=US
     "2.16.840.1.114413.1.7.23.3",
     "Go Daddy EV OID a",
