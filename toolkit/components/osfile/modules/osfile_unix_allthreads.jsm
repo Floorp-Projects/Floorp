@@ -110,7 +110,7 @@ OSError.prototype.toString = function toString() {
     this.operation +
     (this.path ? " on file " + this.path : "") +
     " (" +
-    LazyBindings.strerror(this.unixErrno).readString() +
+    LazyBindings.strerror(this.unixErrno).readStringReplaceMalformed() +
     ")"
   );
 };
