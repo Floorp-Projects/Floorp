@@ -145,7 +145,9 @@ class ArtifactJob(object):
         self._package_re = re.compile(self.package_re)
         self._tests_re = None
         if download_tests:
-            self._tests_re = re.compile(r'public/build/target\.common\.tests\.(zip|tar\.gz)')
+            self._tests_re = re.compile(
+                r'public/build/(en-US/)?target\.common\.tests\.(zip|tar\.gz)'
+            )
         self._host_bins_re = None
         if download_host_bins:
             self._host_bins_re = re.compile(r'public/build/host/bin/(mar|mbsdiff)(.exe)?')
