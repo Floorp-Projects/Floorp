@@ -1618,10 +1618,9 @@ nsXPCComponents_Utils::GetWeakReference(HandleValue object, JSContext* cx,
 }
 
 NS_IMETHODIMP
-nsXPCComponents_Utils::ForceGC() {
-  JSContext* cx = XPCJSContext::Get()->Context();
-  PrepareForFullGC(cx);
-  NonIncrementalGC(cx, GC_NORMAL, GCReason::COMPONENT_UTILS);
+nsXPCComponents_Utils::ForceGC(JSContext* aCx) {
+  PrepareForFullGC(aCx);
+  NonIncrementalGC(aCx, GC_NORMAL, GCReason::COMPONENT_UTILS);
   return NS_OK;
 }
 
@@ -1664,10 +1663,9 @@ nsXPCComponents_Utils::ClearMaxCCTime() {
 }
 
 NS_IMETHODIMP
-nsXPCComponents_Utils::ForceShrinkingGC() {
-  JSContext* cx = dom::danger::GetJSContext();
-  PrepareForFullGC(cx);
-  NonIncrementalGC(cx, GC_SHRINK, GCReason::COMPONENT_UTILS);
+nsXPCComponents_Utils::ForceShrinkingGC(JSContext* aCx) {
+  PrepareForFullGC(aCx);
+  NonIncrementalGC(aCx, GC_SHRINK, GCReason::COMPONENT_UTILS);
   return NS_OK;
 }
 

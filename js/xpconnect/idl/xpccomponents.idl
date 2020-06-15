@@ -250,6 +250,7 @@ interface nsIXPCComponents_Utils : nsISupports
      *
      * Force an immediate garbage collection cycle.
      */
+    [implicit_jscontext]
     void forceGC();
 
     /*
@@ -304,6 +305,7 @@ interface nsIXPCComponents_Utils : nsISupports
      *
      * Force an immediate shrinking garbage collection cycle.
      */
+    [implicit_jscontext]
     void forceShrinkingGC();
 
     /*
