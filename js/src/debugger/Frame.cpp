@@ -255,7 +255,7 @@ DebuggerFrame* DebuggerFrame::create(
   }
 
   if (maybeGenerator) {
-    if (!frame->setGenerator(cx, maybeGenerator)) {
+    if (!frame->setGeneratorInfo(cx, maybeGenerator)) {
       return nullptr;
     }
   }
@@ -333,6 +333,11 @@ class DebuggerFrame::GeneratorInfo {
   }
 };
 
+bool js::DebuggerFrame::isSuspended() const {
+  return hasGeneratorInfo() &&
+         generatorInfo()->unwrappedGenerator().isSuspended();
+}
+
 js::AbstractGeneratorObject& js::DebuggerFrame::unwrappedGenerator() const {
   return generatorInfo()->unwrappedGenerator();
 }
@@ -343,8 +348,8 @@ JSScript* js::DebuggerFrame::generatorScript() const {
 }
 #endif
 
-bool DebuggerFrame::setGenerator(JSContext* cx,
-                                 Handle<AbstractGeneratorObject*> genObj) {
+bool DebuggerFrame::setGeneratorInfo(JSContext* cx,
+                                     Handle<AbstractGeneratorObject*> genObj) {
   cx->check(this);
 
   Debugger::GeneratorWeakMap::AddPtr p =
@@ -403,8 +408,8 @@ bool DebuggerFrame::setGenerator(JSContext* cx,
   return true;
 }
 
-void DebuggerFrame::clearGenerator(JSFreeOp* fop) {
-  if (!hasGenerator()) {
+void DebuggerFrame::clearGeneratorInfo(JSFreeOp* fop) {
+  if (!hasGeneratorInfo()) {
     return;
   }
 
@@ -428,10 +433,10 @@ void DebuggerFrame::clearGenerator(JSFreeOp* fop) {
   fop->delete_(this, info, MemoryUse::DebuggerFrameGeneratorInfo);
 }
 
-void DebuggerFrame::clearGenerator(
+void DebuggerFrame::clearGeneratorInfo(
     JSFreeOp* fop, Debugger* owner,
     Debugger::GeneratorWeakMap::Enum* maybeGeneratorFramesEnum) {
-  if (!hasGenerator()) {
+  if (!hasGeneratorInfo()) {
     return;
   }
 
@@ -444,7 +449,7 @@ void DebuggerFrame::clearGenerator(
     owner->generatorFrames.remove(&info->unwrappedGenerator());
   }
 
-  clearGenerator(fop);
+  clearGeneratorInfo(fop);
 }
 
 /* static */
@@ -457,7 +462,7 @@ bool DebuggerFrame::getCallee(JSContext* cx, HandleDebuggerFrame frame,
       callee = referent.callee();
     }
   } else {
-    MOZ_ASSERT(frame->hasGenerator());
+    MOZ_ASSERT(frame->isSuspended());
 
     callee = &frame->generatorInfo()->unwrappedGenerator().callee();
   }
@@ -477,7 +482,7 @@ bool DebuggerFrame::getIsConstructing(JSContext* cx, HandleDebuggerFrame frame,
 
     result = iter.isFunctionFrame() && iter.isConstructing();
   } else {
-    MOZ_ASSERT(frame->hasGenerator());
+    MOZ_ASSERT(frame->isSuspended());
 
     // Generators and async functions can't be constructed.
     result = false;
@@ -551,7 +556,7 @@ bool DebuggerFrame::getEnvironment(JSContext* cx, HandleDebuggerFrame frame,
       env = GetDebugEnvironmentForFrame(cx, iter.abstractFramePtr(), iter.pc());
     }
   } else {
-    MOZ_ASSERT(frame->hasGenerator());
+    MOZ_ASSERT(frame->isSuspended());
 
     AbstractGeneratorObject& genObj =
         frame->generatorInfo()->unwrappedGenerator();
@@ -591,7 +596,7 @@ bool DebuggerFrame::getOffset(JSContext* cx, HandleDebuggerFrame frame,
       result = script->pcToOffset(pc);
     }
   } else {
-    MOZ_ASSERT(frame->hasGenerator());
+    MOZ_ASSERT(frame->isSuspended());
 
     AbstractGeneratorObject& genObj =
         frame->generatorInfo()->unwrappedGenerator();
@@ -639,7 +644,7 @@ bool DebuggerFrame::getOlder(JSContext* cx, HandleDebuggerFrame frame,
       }
     }
   } else {
-    MOZ_ASSERT(frame->hasGenerator());
+    MOZ_ASSERT(frame->isSuspended());
 
     // If the frame is suspended, there is no older frame.
   }
@@ -651,7 +656,11 @@ bool DebuggerFrame::getOlder(JSContext* cx, HandleDebuggerFrame frame,
 /* static */
 bool DebuggerFrame::getAsyncPromise(JSContext* cx, HandleDebuggerFrame frame,
                                     MutableHandleDebuggerObject result) {
-  if (!frame->hasGenerator()) {
+  MOZ_ASSERT(frame->isOnStack() || frame->isSuspended());
+
+  if (!frame->hasGeneratorInfo()) {
+    // An on-stack frame may not have an associated generator yet when the
+    // frame is initially entered.
     result.set(nullptr);
     return true;
   }
@@ -702,7 +711,7 @@ bool DebuggerFrame::getThis(JSContext* cx, HandleDebuggerFrame frame,
       }
     }
   } else {
-    MOZ_ASSERT(frame->hasGenerator());
+    MOZ_ASSERT(frame->isSuspended());
 
     AbstractGeneratorObject& genObj =
         frame->generatorInfo()->unwrappedGenerator();
@@ -744,7 +753,7 @@ DebuggerFrameType DebuggerFrame::getType(HandleDebuggerFrame frame) {
       return DebuggerFrameType::WasmCall;
     }
   } else {
-    MOZ_ASSERT(frame->hasGenerator());
+    MOZ_ASSERT(frame->isSuspended());
 
     return DebuggerFrameType::Call;
   }
@@ -799,7 +808,7 @@ bool DebuggerFrame::setOnStepHandler(JSContext* cx, HandleDebuggerFrame frame,
       frame->maybeDecrementStepperCounter(cx->runtime()->defaultFreeOp(),
                                           referent);
     }
-  } else if (frame->hasGenerator()) {
+  } else if (frame->isSuspended()) {
     RootedScript script(cx, frame->generatorInfo()->generatorScript());
 
     if (handler) {
@@ -1241,7 +1250,7 @@ void DebuggerFrame::finalize(JSFreeOp* fop, JSObject* obj) {
 
   // Connections between dying Debugger.Frames and their
   // AbstractGeneratorObjects should have been broken in DebugAPI::sweepAll.
-  MOZ_ASSERT(!frameobj.hasGenerator());
+  MOZ_ASSERT(!frameobj.hasGeneratorInfo());
 
   frameobj.freeFrameIterData(fop);
   OnStepHandler* onStepHandler = frameobj.onStepHandler();
@@ -1264,7 +1273,7 @@ void DebuggerFrame::trace(JSTracer* trc) {
     onPopHandler->trace(trc);
   }
 
-  if (hasGenerator()) {
+  if (hasGeneratorInfo()) {
     generatorInfo()->trace(trc, *this);
   }
 }
@@ -1367,7 +1376,7 @@ static bool EnsureOnStack(JSContext* cx, HandleDebuggerFrame frame) {
 }
 static bool EnsureOnStackOrSuspended(JSContext* cx, HandleDebuggerFrame frame) {
   MOZ_ASSERT(frame);
-  if (!frame->isOnStack() && !frame->hasGenerator()) {
+  if (!frame->isOnStack() && !frame->isSuspended()) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_DEBUG_NOT_ON_STACK_OR_SUSPENDED,
                               "Debugger.Frame");
@@ -1514,7 +1523,7 @@ bool DebuggerFrame::CallData::asyncPromiseGetter() {
       script = framePtr.script();
     }
   } else {
-    MOZ_ASSERT(frame->hasGenerator());
+    MOZ_ASSERT(frame->isSuspended());
     script = frame->generatorInfo()->generatorScript();
   }
   // The async promise value is only provided for async functions and
@@ -1591,7 +1600,7 @@ bool DebuggerFrame::getOlderSavedFrame(JSContext* cx, HandleDebuggerFrame frame,
       }
     }
   } else {
-    MOZ_ASSERT(frame->hasGenerator());
+    MOZ_ASSERT(frame->isSuspended());
   }
 
   result.set(nullptr);
@@ -1767,7 +1776,7 @@ bool DebuggerFrame::CallData::getScript() {
       scriptObject = debug->wrapScript(cx, script);
     }
   } else {
-    MOZ_ASSERT(frame->hasGenerator());
+    MOZ_ASSERT(frame->isSuspended());
     RootedScript script(cx, frame->generatorInfo()->generatorScript());
     scriptObject = debug->wrapScript(cx, script);
   }
@@ -1805,7 +1814,7 @@ bool DebuggerFrame::CallData::onStackGetter() {
 }
 
 bool DebuggerFrame::CallData::terminatedGetter() {
-  args.rval().setBoolean(!frame->isOnStack() && !frame->hasGenerator());
+  args.rval().setBoolean(!frame->isOnStack() && !frame->isSuspended());
   return true;
 }
 
