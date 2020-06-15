@@ -1241,7 +1241,8 @@ impl<'static_env, 'module_env> FuncEnvironment for TransEnv<'static_env, 'module
 
     fn translate_loop_header(&mut self, mut pos: FuncCursor) -> WasmResult<()> {
         let interrupt = self.load_interrupt_flag(&mut pos);
-        pos.ins().trapnz(interrupt, ir::TrapCode::Interrupt);
+        pos.ins()
+            .resumable_trapnz(interrupt, ir::TrapCode::Interrupt);
         Ok(())
     }
 
