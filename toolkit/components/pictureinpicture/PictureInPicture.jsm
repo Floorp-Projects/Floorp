@@ -23,6 +23,7 @@ if (!AppConstants.MOZ_WIDGET_GTK) {
   PLAYER_FEATURES += ",dialog";
 }
 const WINDOW_TYPE = "Toolkit:PictureInPicture";
+const PIP_ENABLED_PREF = "media.videocontrols.picture-in-picture.enabled";
 const TOGGLE_ENABLED_PREF =
   "media.videocontrols.picture-in-picture.video-toggle.enabled";
 
@@ -154,6 +155,10 @@ var PictureInPicture = {
    * the keyboard.
    */
   onCommand(event) {
+    if (!Services.prefs.getBoolPref(PIP_ENABLED_PREF, false)) {
+      return;
+    }
+
     let win = event.target.ownerGlobal;
     let browser = win.gBrowser.selectedBrowser;
     let actor = browser.browsingContext.currentWindowGlobal.getActor(
