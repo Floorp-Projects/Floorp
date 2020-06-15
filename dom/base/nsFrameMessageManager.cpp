@@ -595,7 +595,7 @@ void nsFrameMessageManager::ReceiveMessage(
       if (listener.mWeakListener) {
         weakListener = do_QueryReferent(listener.mWeakListener);
         if (!weakListener) {
-          listeners->RemoveElement(listener);
+          iter.Remove();
           continue;
         }
       }
