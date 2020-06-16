@@ -170,7 +170,7 @@ for ((i=0; $i<$num_oldfiles; i=$i+1)); do
     if check_for_add_if_not_update "$f"; then
       # The full workdir may not exist yet, so create it if necessary.
       mkdir -p `dirname "$workdir/$f"`
-      $XZ --compress $BCJ_OPTIONS --lzma2 --format=xz --check=crc64 --force --stdout "$newdir/$f" > "$workdir/$f"
+      $XZ $XZ_OPT --compress $BCJ_OPTIONS --lzma2 --format=xz --check=crc64 --force --stdout "$newdir/$f" > "$workdir/$f"
       copy_perm "$newdir/$f" "$workdir/$f"
       make_add_if_not_instruction "$f" "$updatemanifestv3"
       archivefiles="$archivefiles \"$f\""
@@ -180,7 +180,7 @@ for ((i=0; $i<$num_oldfiles; i=$i+1)); do
     if check_for_forced_update "$requested_forced_updates" "$f"; then
       # The full workdir may not exist yet, so create it if necessary.
       mkdir -p `dirname "$workdir/$f"`
-      $XZ --compress $BCJ_OPTIONS --lzma2 --format=xz --check=crc64 --force --stdout "$newdir/$f" > "$workdir/$f"
+      $XZ $XZ_OPT --compress $BCJ_OPTIONS --lzma2 --format=xz --check=crc64 --force --stdout "$newdir/$f" > "$workdir/$f"
       copy_perm "$newdir/$f" "$workdir/$f"
       make_add_instruction "$f" "$updatemanifestv2" "$updatemanifestv3" 1
       archivefiles="$archivefiles \"$f\""
@@ -208,7 +208,7 @@ for ((i=0; $i<$num_oldfiles; i=$i+1)); do
       # if service is not enabled then default to old behavior
       if [ -z "$MBSDIFF_HOOK" ]; then
         $MBSDIFF "$olddir/$f" "$newdir/$f" "$workdir/$f.patch"
-        $XZ --compress --lzma2 --format=xz --check=crc64 --force "$workdir/$f.patch"
+        $XZ $XZ_OPT --compress --lzma2 --format=xz --check=crc64 --force "$workdir/$f.patch"
       else
         # if service enabled then check patch existence for retrieval
         if $MBSDIFF_HOOK -g "$olddir/$f" "$newdir/$f" "$workdir/$f.patch.xz"; then
@@ -216,11 +216,11 @@ for ((i=0; $i<$num_oldfiles; i=$i+1)); do
         else
           # if not found already - compute it and cache it for future use
           $MBSDIFF "$olddir/$f" "$newdir/$f" "$workdir/$f.patch"
-          $XZ --compress --lzma2 --format=xz --check=crc64 --force "$workdir/$f.patch"
+          $XZ $XZ_OPT --compress --lzma2 --format=xz --check=crc64 --force "$workdir/$f.patch"
           $MBSDIFF_HOOK -u "$olddir/$f" "$newdir/$f" "$workdir/$f.patch.xz"
         fi
       fi
-      $XZ --compress $BCJ_OPTIONS --lzma2 --format=xz --check=crc64 --force --stdout "$newdir/$f" > "$workdir/$f"
+      $XZ $XZ_OPT --compress $BCJ_OPTIONS --lzma2 --format=xz --check=crc64 --force --stdout "$newdir/$f" > "$workdir/$f"
       copy_perm "$newdir/$f" "$workdir/$f"
       patchfile="$workdir/$f.patch.xz"
       patchsize=$(get_file_size "$patchfile")
@@ -263,7 +263,7 @@ for ((i=0; $i<$num_newfiles; i=$i+1)); do
   dir=$(dirname "$workdir/$f")
   mkdir -p "$dir"
 
-  $XZ --compress $BCJ_OPTIONS --lzma2 --format=xz --check=crc64 --force --stdout "$newdir/$f" > "$workdir/$f"
+  $XZ $XZ_OPT --compress $BCJ_OPTIONS --lzma2 --format=xz --check=crc64 --force --stdout "$newdir/$f" > "$workdir/$f"
   copy_perm "$newdir/$f" "$workdir/$f"
 
   if check_for_add_if_not_update "$f"; then
@@ -304,8 +304,8 @@ for ((i=0; $i<$num_olddirs; i=$i+1)); do
   fi
 done
 
-$XZ --compress $BCJ_OPTIONS --lzma2 --format=xz --check=crc64 --force "$updatemanifestv2" && mv -f "$updatemanifestv2.xz" "$updatemanifestv2"
-$XZ --compress $BCJ_OPTIONS --lzma2 --format=xz --check=crc64 --force "$updatemanifestv3" && mv -f "$updatemanifestv3.xz" "$updatemanifestv3"
+$XZ $XZ_OPT --compress $BCJ_OPTIONS --lzma2 --format=xz --check=crc64 --force "$updatemanifestv2" && mv -f "$updatemanifestv2.xz" "$updatemanifestv2"
+$XZ $XZ_OPT --compress $BCJ_OPTIONS --lzma2 --format=xz --check=crc64 --force "$updatemanifestv3" && mv -f "$updatemanifestv3.xz" "$updatemanifestv3"
 
 mar_command="$mar_command -C \"$workdir\" -c output.mar"
 eval "$mar_command $archivefiles"
