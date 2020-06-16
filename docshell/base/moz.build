@@ -74,7 +74,6 @@ EXPORTS.mozilla += [
 EXPORTS.mozilla.dom += [
     'BrowsingContext.h',
     'BrowsingContextGroup.h',
-    'BrowsingContextWebProgress.h',
     'CanonicalBrowsingContext.h',
     'ChildProcessChannelListener.h',
     'SyncedContext.h',
@@ -86,7 +85,6 @@ UNIFIED_SOURCES += [
     'BaseHistory.cpp',
     'BrowsingContext.cpp',
     'BrowsingContextGroup.cpp',
-    'BrowsingContextWebProgress.cpp',
     'CanonicalBrowsingContext.cpp',
     'ChildProcessChannelListener.cpp',
     'LoadContext.cpp',

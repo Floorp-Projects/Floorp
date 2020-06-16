@@ -34,14 +34,6 @@ add_task(async function() {
   await testLinkClick(true, true);
 });
 
-async function waitForTestReady(loadDivertedInBackground, tab) {
-  if (!loadDivertedInBackground) {
-    await BrowserTestUtils.switchTab(gBrowser, tab);
-  } else {
-    await new Promise(resolve => setTimeout(resolve, 0));
-  }
-}
-
 async function testLinkClick(withFrame, loadDivertedInBackground) {
   await SpecialPowers.pushPrefEnv({
     set: [["browser.tabs.loadDivertedInBackground", loadDivertedInBackground]],
@@ -62,9 +54,7 @@ async function testLinkClick(withFrame, loadDivertedInBackground) {
       withFrame
   );
 
-  let testTabPromise = BrowserTestUtils.waitForNewTab(gBrowser);
-  await clickLink(withFrame, "#link-1", tab.linkedBrowser);
-  let testTab = await testTabPromise;
+  let [testTab] = await clickLink(withFrame, "#link-1", tab.linkedBrowser);
   is(gBrowser.tabs.length, 3, "check tabs.length");
   is(
     gBrowser.selectedTab,
@@ -72,7 +62,9 @@ async function testLinkClick(withFrame, loadDivertedInBackground) {
     "check selectedTab"
   );
 
-  await waitForTestReady(loadDivertedInBackground, tab);
+  if (!loadDivertedInBackground) {
+    await BrowserTestUtils.switchTab(gBrowser, tab);
+  }
   await clickLink(
     withFrame,
     "#link-2",
@@ -87,7 +79,9 @@ async function testLinkClick(withFrame, loadDivertedInBackground) {
     "check selectedTab"
   );
 
-  await waitForTestReady(loadDivertedInBackground, tab);
+  if (!loadDivertedInBackground) {
+    await BrowserTestUtils.switchTab(gBrowser, tab);
+  }
   await clickLink(
     withFrame,
     "#link-3",
@@ -102,21 +96,17 @@ async function testLinkClick(withFrame, loadDivertedInBackground) {
     "check selectedTab"
   );
 
-  await waitForTestReady(loadDivertedInBackground, tab);
-  let loaded = BrowserTestUtils.browserLoaded(
-    testTab.linkedBrowser,
-    true,
-    "data:text/html;charset=utf-8,testFrame"
-  );
+  if (!loadDivertedInBackground) {
+    await BrowserTestUtils.switchTab(gBrowser, tab);
+  }
   await clickLink(
     withFrame,
     "#link-4",
     tab.linkedBrowser,
     testTab.linkedBrowser,
     !loadDivertedInBackground,
-    false
+    2
   );
-  await loaded;
   is(gBrowser.tabs.length, 3, "check tabs.length");
   is(
     gBrowser.selectedTab,
@@ -131,7 +121,9 @@ async function testLinkClick(withFrame, loadDivertedInBackground) {
       withFrame
   );
 
-  await waitForTestReady(loadDivertedInBackground, tab);
+  if (!loadDivertedInBackground) {
+    await BrowserTestUtils.switchTab(gBrowser, tab);
+  }
   await clickLink(
     withFrame,
     "#anchor-link-1",
@@ -146,7 +138,9 @@ async function testLinkClick(withFrame, loadDivertedInBackground) {
     "check selectedTab"
   );
 
-  await waitForTestReady(loadDivertedInBackground, tab);
+  if (!loadDivertedInBackground) {
+    await BrowserTestUtils.switchTab(gBrowser, tab);
+  }
   await clickLink(
     withFrame,
     "#anchor-link-2",
@@ -161,7 +155,9 @@ async function testLinkClick(withFrame, loadDivertedInBackground) {
     "check selectedTab"
   );
 
-  await waitForTestReady(loadDivertedInBackground, tab);
+  if (!loadDivertedInBackground) {
+    await BrowserTestUtils.switchTab(gBrowser, tab);
+  }
   await clickLink(
     withFrame,
     "#anchor-link-3",
@@ -183,14 +179,15 @@ async function testLinkClick(withFrame, loadDivertedInBackground) {
       withFrame
   );
 
-  await waitForTestReady(loadDivertedInBackground, tab);
+  if (!loadDivertedInBackground) {
+    await BrowserTestUtils.switchTab(gBrowser, tab);
+  }
   await clickLink(
     withFrame,
     "#frame-link-1",
     tab.linkedBrowser,
     testTab.linkedBrowser,
-    !loadDivertedInBackground,
-    true
+    !loadDivertedInBackground
   );
   is(gBrowser.tabs.length, 3, "check tabs.length");
   is(
@@ -199,14 +196,15 @@ async function testLinkClick(withFrame, loadDivertedInBackground) {
     "check selectedTab"
   );
 
-  await waitForTestReady(loadDivertedInBackground, tab);
+  if (!loadDivertedInBackground) {
+    await BrowserTestUtils.switchTab(gBrowser, tab);
+  }
   await clickLink(
     withFrame,
     "#frame-link-2",
     tab.linkedBrowser,
     testTab.linkedBrowser,
-    !loadDivertedInBackground,
-    true
+    !loadDivertedInBackground
   );
   is(gBrowser.tabs.length, 3, "check tabs.length");
   is(
@@ -215,14 +213,15 @@ async function testLinkClick(withFrame, loadDivertedInBackground) {
     "check selectedTab"
   );
 
-  await waitForTestReady(loadDivertedInBackground, tab);
+  if (!loadDivertedInBackground) {
+    await BrowserTestUtils.switchTab(gBrowser, tab);
+  }
   await clickLink(
     withFrame,
     "#frame-link-3",
     tab.linkedBrowser,
     testTab.linkedBrowser,
-    !loadDivertedInBackground,
-    true
+    !loadDivertedInBackground
   );
   is(gBrowser.tabs.length, 3, "check tabs.length");
   is(
@@ -241,18 +240,17 @@ function clickLink(
   browser,
   testBrowser,
   awaitTabSwitch = false,
-  targetsFrame = false,
   locationChangeNum = 1
 ) {
   let promises = [];
   if (awaitTabSwitch) {
     promises.push(waitForTabSwitch(gBrowser));
   }
-  if (testBrowser) {
-    promises.push(
-      waitForLocationChange(targetsFrame, testBrowser, locationChangeNum)
-    );
-  }
+  promises.push(
+    testBrowser
+      ? waitForLocationChange(testBrowser, locationChangeNum)
+      : BrowserTestUtils.waitForNewTab(gBrowser)
+  );
   promises.push(
     SpecialPowers.spawn(
       browser,
@@ -282,12 +280,10 @@ function waitForTabSwitch(tabbrowser) {
   });
 }
 
+// We need a longer lifetime reference to ensure the listener is alive when
+// location change occurs.
 let locationChangeListener;
-function waitForLocationChange(isFrame, browser, locationChangeNum) {
-  if (isFrame) {
-    return waitForFrameLocationChange(browser, locationChangeNum);
-  }
-
+function waitForLocationChange(browser, locationChangeNum) {
   info("Waiting for " + locationChangeNum + " LocationChange");
   return new Promise(resolve => {
     let seen = 0;
@@ -305,32 +301,5 @@ function waitForLocationChange(isFrame, browser, locationChangeNum) {
       ]),
     };
     browser.addProgressListener(locationChangeListener);
-  });
-}
-
-function waitForFrameLocationChange(browser, locationChangeNum) {
-  info("Waiting for " + locationChangeNum + " LocationChange in subframe");
-  return SpecialPowers.spawn(browser, [locationChangeNum], async changeNum => {
-    let seen = 0;
-    let webprogress = content.docShell.QueryInterface(Ci.nsIWebProgress);
-    await new Promise(resolve => {
-      locationChangeListener = {
-        onLocationChange(aWebProgress, aRequest, aLocation, aFlags) {
-          info("LocationChange: " + aLocation.spec);
-          if (++seen == changeNum) {
-            resolve();
-          }
-        },
-        QueryInterface: ChromeUtils.generateQI([
-          Ci.nsIWebProgressListener,
-          Ci.nsISupportsWeakReference,
-        ]),
-      };
-      webprogress.addProgressListener(
-        locationChangeListener,
-        Ci.nsIWebProgress.NOTIFY_LOCATION
-      );
-    });
-    webprogress.removeProgressListener(locationChangeListener);
   });
 }

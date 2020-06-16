@@ -87,11 +87,15 @@ class nsFrameLoaderOwner : public nsISupports {
   // the change remoteness. It could be followings
   // 1. DONT_PRESERVE
   //    Create a whole new BrowsingContext.
-  // 2. PRESERVE
+  // 2. DONT_PRESERVE_BUT_PROPAGETE
+  //    Create a whole new BrowsingContext, but propagate necessary feilds from
+  //    previous BrowsingContext, i.e. COEP.
+  // 3. PRESERVE
   //    Preserve the previous BrowsingContext.
   enum class ChangeRemotenessContextType {
     DONT_PRESERVE = 0,
-    PRESERVE = 1,
+    DONT_PRESERVE_BUT_PROPAGATE = 1,
+    PRESERVE = 2,
   };
   ChangeRemotenessContextType ShouldPreserveBrowsingContext(
       bool aIsRemote, bool aReplaceBrowsingContext);

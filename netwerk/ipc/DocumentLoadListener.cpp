@@ -2007,19 +2007,12 @@ NS_IMETHODIMP DocumentLoadListener::OnStatus(nsIRequest* aRequest,
     return NS_OK;
   }
 
-  RefPtr<CanonicalBrowsingContext> ctx = GetBrowsingContext();
-
   const nsString message(aStatusArg);
 
   NS_DispatchToMainThread(
       NS_NewRunnableFunction("DocumentLoadListener::FireStateChange", [=]() {
         Unused << listener->OnStatusChange(webProgress, request, aStatus,
                                            message.get());
-
-        if (ctx && ctx->Top()->GetWebProgress()) {
-          ctx->Top()->GetWebProgress()->OnStatusChange(webProgress, request,
-                                                       aStatus, message.get());
-        }
       }));
   return NS_OK;
 }
