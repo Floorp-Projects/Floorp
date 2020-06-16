@@ -10,6 +10,7 @@ import android.net.Uri
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.clearText
 import androidx.test.espresso.action.ViewActions.longClick
+import androidx.test.espresso.action.ViewActions.replaceText
 import androidx.test.espresso.action.ViewActions.typeText
 import androidx.test.espresso.assertion.ViewAssertions.doesNotExist
 import androidx.test.espresso.assertion.ViewAssertions.matches
@@ -133,8 +134,7 @@ class BookmarksRobot {
     fun addNewFolderName(name: String) {
         addFolderTitleField()
             .click()
-            .perform(clearText())
-            .perform(typeText(name))
+            .perform(replaceText(name))
     }
 
     fun saveNewFolder() {
