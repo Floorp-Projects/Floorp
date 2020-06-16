@@ -99,6 +99,7 @@ class TargetList {
     // For now, this is only toggled by tests.
     this.listenForWorkers = false;
     this.listenForServiceWorkers = false;
+    this.destroyServiceWorkersOnNavigation = false;
   }
 
   // Called whenever a new Target front is available.
