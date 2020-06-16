@@ -85,9 +85,7 @@ already_AddRefed<PreloaderBase> PreloadService::PreloadLinkElement(
   aLinkElement->GetIntegrity(integrity);
   aLinkElement->GetReferrerPolicy(referrerPolicyAttr);
   auto referrerPolicy = PreloadReferrerPolicy(referrerPolicyAttr);
-  dom::DOMString domType;
-  aLinkElement->GetType(domType);
-  domType.ToString(type);
+  aLinkElement->GetType(type);
 
   RefPtr<PreloaderBase> preload = PreloadOrCoalesce(
       uri, url, aPolicyType, as, type, charset, srcset, sizes, integrity,

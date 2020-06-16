@@ -132,7 +132,7 @@ class HTMLLinkElement final : public nsGenericHTMLElement,
     }
     return mSizes;
   }
-  void GetType(DOMString& aValue) { GetHTMLAttr(nsGkAtoms::type, aValue); }
+  void GetType(nsAString& aValue) { GetHTMLAttr(nsGkAtoms::type, aValue); }
   void SetType(const nsAString& aType, ErrorResult& aRv) {
     SetHTMLAttr(nsGkAtoms::type, aType, aRv);
   }
