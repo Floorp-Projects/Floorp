@@ -367,70 +367,74 @@ this.chrome_settings_overrides = class extends ExtensionAPI {
     let { extension } = this;
     let { manifest } = extension;
     let searchProvider = manifest.chrome_settings_overrides.search_provider;
-    if (searchProvider.is_default) {
-      await searchInitialized;
-      if (!this.extension) {
-        Cu.reportError(
-          `Extension shut down before search provider was registered`
-        );
-        return;
-      }
+
+    // If we're not being requested to be set as default, then all we need
+    // to do is to add the engine to the service. The search service can cope
+    // with receiving added engines before it is initialised, so we don't have
+    // to wait for it.
+    if (!searchProvider.is_default) {
+      await this.addSearchEngine();
+      return;
+    }
+
+    await searchInitialized;
+    if (!this.extension) {
+      Cu.reportError(
+        `Extension shut down before search provider was registered`
+      );
+      return;
     }
 
     let engineName = searchProvider.name.trim();
-    if (searchProvider.is_default) {
-      let result = await Services.search.maybeSetAndOverrideDefault(extension);
-      if (result.canChangeToAppProvided) {
-        await this.setDefault(engineName);
-      }
-      if (!result.canInstallEngine) {
-        return;
-      }
+    let result = await Services.search.maybeSetAndOverrideDefault(extension);
+    if (result.canChangeToAppProvided) {
+      await this.setDefault(engineName);
+    }
+    if (!result.canInstallEngine) {
+      return;
     }
     await this.addSearchEngine();
-    if (searchProvider.is_default) {
-      if (extension.startupReason === "ADDON_INSTALL") {
-        // Don't ask if it already the current engine
-        let engine = Services.search.getEngineByName(engineName);
-        let defaultEngine = await Services.search.getDefault();
-        if (defaultEngine.name != engine.name) {
-          let subject = {
-            wrappedJSObject: {
-              // This is a hack because we don't have the browser of
-              // the actual install. This means the popup might show
-              // in a different window. Will be addressed in a followup bug.
-              browser: windowTracker.topWindow.gBrowser.selectedBrowser,
-              name: this.extension.name,
-              icon: this.extension.iconURL,
-              currentEngine: defaultEngine.name,
-              newEngine: engineName,
-              async respond(allow) {
-                if (allow) {
-                  await ExtensionSettingsStore.initialize();
-                  ExtensionSettingsStore.addSetting(
-                    extension.id,
-                    DEFAULT_SEARCH_STORE_TYPE,
-                    DEFAULT_SEARCH_SETTING_NAME,
-                    engineName,
-                    () => defaultEngine.name
-                  );
-                  Services.search.defaultEngine = Services.search.getEngineByName(
-                    engineName
-                  );
-                }
-              },
+    if (extension.startupReason === "ADDON_INSTALL") {
+      // Don't ask if it already the current engine
+      let engine = Services.search.getEngineByName(engineName);
+      let defaultEngine = await Services.search.getDefault();
+      if (defaultEngine.name != engine.name) {
+        let subject = {
+          wrappedJSObject: {
+            // This is a hack because we don't have the browser of
+            // the actual install. This means the popup might show
+            // in a different window. Will be addressed in a followup bug.
+            browser: windowTracker.topWindow.gBrowser.selectedBrowser,
+            name: this.extension.name,
+            icon: this.extension.iconURL,
+            currentEngine: defaultEngine.name,
+            newEngine: engineName,
+            async respond(allow) {
+              if (allow) {
+                await ExtensionSettingsStore.initialize();
+                ExtensionSettingsStore.addSetting(
+                  extension.id,
+                  DEFAULT_SEARCH_STORE_TYPE,
+                  DEFAULT_SEARCH_SETTING_NAME,
+                  engineName,
+                  () => defaultEngine.name
+                );
+                Services.search.defaultEngine = Services.search.getEngineByName(
+                  engineName
+                );
+              }
             },
-          };
-          Services.obs.notifyObservers(
-            subject,
-            "webextension-defaultsearch-prompt"
-          );
-        }
-      } else {
-        // Needs to be called every time to handle reenabling, but
-        // only sets default for install or enable.
-        await this.setDefault(engineName);
+          },
+        };
+        Services.obs.notifyObservers(
+          subject,
+          "webextension-defaultsearch-prompt"
+        );
       }
+    } else {
+      // Needs to be called every time to handle reenabling, but
+      // only sets default for install or enable.
+      await this.setDefault(engineName);
     }
   }
 
