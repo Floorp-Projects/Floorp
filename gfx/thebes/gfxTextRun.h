@@ -880,12 +880,12 @@ class gfxTextRun : public gfxShapedText {
   bool mDontSkipDrawing;  // true if the text run must not skip drawing, even if
                           // waiting for a user font download, e.g. because we
                           // are using it to draw canvas text
-  bool mReleasedFontGroup;  // we already called NS_RELEASE on
-                            // mFontGroup, so don't do it again
+  bool mReleasedFontGroup;                // we already called NS_RELEASE on
+                                          // mFontGroup, so don't do it again
   bool mReleasedFontGroupSkippedDrawing;  // whether our old mFontGroup value
                                           // was set to skip drawing
-  bool mHasGlyphRunArray;   // whether we're using an array or
-                            // just storing a single glyphrun
+  bool mHasGlyphRunArray;                 // whether we're using an array or
+                                          // just storing a single glyphrun
 
   // shaping state for handling variant fallback features
   // such as subscript/superscript variant glyphs

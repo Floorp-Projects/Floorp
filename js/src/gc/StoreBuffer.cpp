@@ -214,7 +214,7 @@ ArenaCellSet* StoreBuffer::WholeCellBuffer::allocateCellSet(Arena* arena) {
 }
 
 void StoreBuffer::WholeCellBuffer::clear() {
-  for (auto** headPtr : { &stringHead_, &nonStringHead_ }) {
+  for (auto** headPtr : {&stringHead_, &nonStringHead_}) {
     for (auto* set = *headPtr; set; set = set->next) {
       set->arena->bufferedCells() = &ArenaCellSet::Empty;
     }

@@ -131,7 +131,8 @@ class MOZ_NON_PARAM InlineCharBuffer {
     MOZ_ASSERT(heapStorage,
                "heap storage was not allocated for non-inline string");
 
-    return NewStringDontDeflate<CanGC>(cx, std::move(heapStorage), length, heap);
+    return NewStringDontDeflate<CanGC>(cx, std::move(heapStorage), length,
+                                       heap);
   }
 
   JSString* toString(JSContext* cx, size_t length,
