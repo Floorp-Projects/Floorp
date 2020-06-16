@@ -143,7 +143,6 @@ function getWebConsoleUiMock(hud, proxyOverrides) {
     toolbox: {
       sessionId: 1,
     },
-    watchCssMessages: () => {},
   };
 }
 
