@@ -14,7 +14,11 @@ newtab-unit-tests:
         docker-image: {in-tree: "ubuntu1804-test"}
         max-run-time: 1800
     require-build:
-        linux1804-64/opt: build-linux64-shippable/opt
+        by-project:
+            try:
+                linux1804-64/opt: build-linux64/opt
+            default:
+                linux1804-64/opt: build-linux64-shippable/opt
     run:
         using: run-task
         cache-dotcache: true
