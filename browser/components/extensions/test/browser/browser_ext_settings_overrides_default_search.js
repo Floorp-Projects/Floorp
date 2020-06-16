@@ -12,9 +12,14 @@ ChromeUtils.defineModuleGetter(
 const { AddonTestUtils } = ChromeUtils.import(
   "resource://testing-common/AddonTestUtils.jsm"
 );
+const { SearchTestUtils } = ChromeUtils.import(
+  "resource://testing-common/SearchTestUtils.jsm"
+);
 
 const EXTENSION1_ID = "extension1@mozilla.com";
 const EXTENSION2_ID = "extension2@mozilla.com";
+const DEFAULT_SEARCH_STORE_TYPE = "default_search";
+const DEFAULT_SEARCH_SETTING_NAME = "defaultSearch";
 
 AddonTestUtils.initMochitest(this);
 
@@ -115,6 +120,11 @@ add_task(async function test_extension_setting_default_engine_external() {
   async function startExtension(win = window) {
     let extension = ExtensionTestUtils.loadExtension({
       manifest: {
+        applications: {
+          gecko: {
+            id: EXTENSION1_ID,
+          },
+        },
         chrome_settings_overrides: {
           search_provider: {
             name: NAME,
@@ -168,6 +178,29 @@ add_task(async function test_extension_setting_default_engine_external() {
     (await Services.search.getDefault()).name,
     NAME,
     "Default engine was changed after accepting prompt"
+  );
+
+  // Do this twice to make sure we're definitely handling disable/enable
+  // correctly.
+  let disabledPromise = awaitEvent("shutdown", EXTENSION1_ID);
+  let addon = await AddonManager.getAddonByID(EXTENSION1_ID);
+  await addon.disable();
+  await disabledPromise;
+
+  is(
+    (await Services.search.getDefault()).name,
+    "Google",
+    "Default engine is Google after disabling"
+  );
+
+  let processedPromise = awaitEvent("searchEngineProcessed", EXTENSION1_ID);
+  await addon.enable();
+  await processedPromise;
+
+  is(
+    (await Services.search.getDefault()).name,
+    NAME,
+    `Default engine is ${NAME} after enabling`
   );
 
   await extension.unload();
@@ -353,6 +386,12 @@ add_task(async function test_user_changing_default_engine() {
 
   let engine = Services.search.getEngineByName("Bing");
   await Services.search.setDefault(engine);
+  // This simulates the preferences UI when the setting is changed.
+  ExtensionSettingsStore.select(
+    ExtensionSettingsStore.SETTING_USER_SET,
+    DEFAULT_SEARCH_STORE_TYPE,
+    DEFAULT_SEARCH_SETTING_NAME
+  );
 
   await ext1.unload();
 
@@ -396,6 +435,12 @@ add_task(async function test_user_change_with_disabling() {
 
   let engine = Services.search.getEngineByName("Bing");
   await Services.search.setDefault(engine);
+  // This simulates the preferences UI when the setting is changed.
+  ExtensionSettingsStore.select(
+    ExtensionSettingsStore.SETTING_USER_SET,
+    DEFAULT_SEARCH_STORE_TYPE,
+    DEFAULT_SEARCH_SETTING_NAME
+  );
 
   is(
     (await Services.search.getDefault()).name,
@@ -684,9 +729,14 @@ add_task(async function test_two_addons_with_second_disabled() {
     "Default engine is DuckDuckGo"
   );
 
+  let defaultPromise = SearchTestUtils.promiseSearchNotification(
+    "engine-default",
+    "browser-search-engine-modified"
+  );
   let enabledPromise = awaitEvent("ready", EXTENSION2_ID);
   await addon2.enable();
   await enabledPromise;
+  await defaultPromise;
 
   is(
     (await Services.search.getDefault()).name,
