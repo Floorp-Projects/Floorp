@@ -39,9 +39,9 @@ class BrowsingContextGroup;
    * tracking resource */                                              \
   FIELD(IsThirdPartyTrackingResourceWindow, bool)                      \
   FIELD(IsSecureContext, bool)                                         \
-  /* Mixed-Content: If the corresponding document URI is potentially   \
-   * trustworthy, then this flag is true. */                           \
-  FIELD(IsPotentiallyTrustWorthy, bool)                                \
+  /* Mixed-Content: If the corresponding documentURI is https,         \
+   * then this flag is true. */                                        \
+  FIELD(IsSecure, bool)                                                \
   /* Whether the user has overriden the mixed content blocker to allow \
    * mixed content loads to happen */                                  \
   FIELD(AllowMixedContent, bool)                                       \
@@ -137,8 +137,8 @@ class WindowContext : public nsISupports, public nsWrapperCache {
   bool CheckOnlyOwningProcessCanSet(ContentParent* aSource);
 
   // Overload `CanSet` to get notifications for a particular field being set.
-  bool CanSet(FieldIndex<IDX_IsPotentiallyTrustWorthy>,
-              const bool& aIsPotentiallyTrustWorthy, ContentParent* aSource);
+  bool CanSet(FieldIndex<IDX_IsSecure>, const bool& aIsSecure,
+              ContentParent* aSource);
   bool CanSet(FieldIndex<IDX_AllowMixedContent>, const bool& aAllowMixedContent,
               ContentParent* aSource);
 
