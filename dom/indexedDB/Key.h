@@ -290,14 +290,12 @@ class Key {
       const nsAString& aString, uint8_t aTypeOffset, ErrorResult& aRv);
 
   template <typename T>
-  IDBResult<void, IDBSpecialValue::Invalid> EncodeString(const T* aStart,
-                                                         const T* aEnd,
+  IDBResult<void, IDBSpecialValue::Invalid> EncodeString(Span<const T> aInput,
                                                          uint8_t aTypeOffset,
                                                          ErrorResult& aRv);
 
   template <typename T>
-  IDBResult<void, IDBSpecialValue::Invalid> EncodeAsString(const T* aStart,
-                                                           const T* aEnd,
+  IDBResult<void, IDBSpecialValue::Invalid> EncodeAsString(Span<const T> aInput,
                                                            uint8_t aType,
                                                            ErrorResult& aRv);
 

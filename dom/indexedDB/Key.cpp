@@ -479,24 +479,20 @@ IDBResult<void, IDBSpecialValue::Invalid> Key::EncodeJSVal(
 
 IDBResult<void, IDBSpecialValue::Invalid> Key::EncodeString(
     const nsAString& aString, uint8_t aTypeOffset, ErrorResult& aRv) {
-  const char16_t* start = aString.BeginReading();
-  const char16_t* end = aString.EndReading();
-  return EncodeString(start, end, aTypeOffset, aRv);
+  return EncodeString(Span{aString}, aTypeOffset, aRv);
 }
 
 template <typename T>
-IDBResult<void, IDBSpecialValue::Invalid> Key::EncodeString(const T* aStart,
-                                                            const T* aEnd,
-                                                            uint8_t aTypeOffset,
-                                                            ErrorResult& aRv) {
-  return EncodeAsString(aStart, aEnd, eString + aTypeOffset, aRv);
+IDBResult<void, IDBSpecialValue::Invalid> Key::EncodeString(
+    const Span<const T> aInput, const uint8_t aTypeOffset, ErrorResult& aRv) {
+  return EncodeAsString(aInput, eString + aTypeOffset, aRv);
 }
 
 template <typename T>
 IDBResult<void, IDBSpecialValue::Invalid> Key::EncodeAsString(
-    const T* aStart, const T* aEnd, uint8_t aType, ErrorResult& aRv) {
+    const Span<const T> aInput, const uint8_t aType, ErrorResult& aRv) {
   // First measure how long the encoded string will be.
-  if (NS_WARN_IF(aStart > aEnd || UINT32_MAX - 2 < uintptr_t(aEnd - aStart))) {
+  if (NS_WARN_IF(UINT32_MAX - 2 < uintptr_t(aInput.Length()))) {
     IDB_REPORT_INTERNAL_ERR();
     aRv.Throw(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
     return Exception;
@@ -504,17 +500,14 @@ IDBResult<void, IDBSpecialValue::Invalid> Key::EncodeAsString(
 
   // The +2 is for initial aType and trailing 0. We'll compensate for multi-byte
   // chars below.
-  uint32_t checkedSize = aEnd - aStart;
-  CheckedUint32 size = checkedSize;
+  CheckedUint32 size = aInput.Length();
   size += 2;
 
   MOZ_ASSERT(size.isValid());
 
-  const T* start = aStart;
-  const T* end = aEnd;
-  for (const T* iter = start; iter < end; ++iter) {
-    if (*iter > ONE_BYTE_LIMIT) {
-      size += char16_t(*iter) > TWO_BYTE_LIMIT ? 2 : 1;
+  for (const auto val : aInput) {
+    if (val > ONE_BYTE_LIMIT) {
+      size += char16_t(val) > TWO_BYTE_LIMIT ? 2 : 1;
       if (!size.isValid()) {
         IDB_REPORT_INTERNAL_ERR();
         aRv.Throw(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
@@ -545,15 +538,15 @@ IDBResult<void, IDBSpecialValue::Invalid> Key::EncodeAsString(
   *(buffer++) = aType;
 
   // Encode string
-  for (const T* iter = start; iter < end; ++iter) {
-    if (*iter <= ONE_BYTE_LIMIT) {
-      *(buffer++) = *iter + ONE_BYTE_ADJUST;
-    } else if (char16_t(*iter) <= TWO_BYTE_LIMIT) {
-      char16_t c = char16_t(*iter) + TWO_BYTE_ADJUST + 0x8000;
+  for (const auto val : aInput) {
+    if (val <= ONE_BYTE_LIMIT) {
+      *(buffer++) = val + ONE_BYTE_ADJUST;
+    } else if (char16_t(val) <= TWO_BYTE_LIMIT) {
+      char16_t c = char16_t(val) + TWO_BYTE_ADJUST + 0x8000;
       *(buffer++) = (char)(c >> 8);
       *(buffer++) = (char)(c & 0xFF);
     } else {
-      uint32_t c = (uint32_t(*iter) << THREE_BYTE_SHIFT) | 0x00C00000;
+      uint32_t c = (uint32_t(val) << THREE_BYTE_SHIFT) | 0x00C00000;
       *(buffer++) = (char)(c >> 16);
       *(buffer++) = (char)(c >> 8);
       *(buffer++) = (char)c;
@@ -603,8 +596,8 @@ IDBResult<void, IDBSpecialValue::Invalid> Key::EncodeLocaleString(
     return Exception;
   }
 
-  return EncodeString(keyBuffer.Elements(),
-                      keyBuffer.Elements() + sortKeyLength, aTypeOffset, aRv);
+  return EncodeString(Span{keyBuffer}.AsConst().First(sortKeyLength),
+                      aTypeOffset, aRv);
 }
 
 // static
@@ -770,7 +763,7 @@ IDBResult<void, IDBSpecialValue::Invalid> Key::EncodeBinary(JSObject* aObject,
     JS::GetObjectAsArrayBuffer(aObject, &bufferLength, &bufferData);
   }
 
-  return EncodeAsString(bufferData, bufferData + bufferLength,
+  return EncodeAsString(Span{bufferData, bufferLength}.AsConst(),
                         eBinary + aTypeOffset, aRv);
 }
 
