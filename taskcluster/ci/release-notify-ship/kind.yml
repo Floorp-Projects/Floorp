@@ -12,7 +12,7 @@ transforms:
 kind-dependencies:
     - push-apk
     - release-balrog-scheduling
-    - release-bouncer-aliases-nazgul
+    - release-bouncer-aliases
     - release-version-bump
     - release-mark-as-shipped
 
