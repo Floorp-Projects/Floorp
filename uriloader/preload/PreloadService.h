@@ -99,8 +99,8 @@ class PreloadService {
       const nsAString& aAs, const nsAString& aType, const nsAString& aCharset,
       const nsAString& aSrcset, const nsAString& aSizes,
       const nsAString& aIntegrity, const nsAString& aCORS,
-      dom::ReferrerPolicy aReferrerPolicy, const nsAString& aReferrerPolicyAttr,
-      nsIReferrerInfo* aReferrerInfo);
+      dom::ReferrerPolicy aReferrerPolicy,
+      const nsAString& aReferrerPolicyAttr);
 
  private:
   nsRefPtrHashtable<PreloadHashKey, PreloaderBase> mPreloads;

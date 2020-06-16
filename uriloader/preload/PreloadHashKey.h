@@ -12,7 +12,6 @@
 #include "nsURIHashKey.h"
 
 class nsIPrincipal;
-class nsIReferrerInfo;
 
 namespace mozilla {
 
@@ -55,7 +54,7 @@ class PreloadHashKey : public nsURIHashKey {
 
   // Construct key for "style"
   static PreloadHashKey CreateAsStyle(nsIURI* aURI, nsIPrincipal* aPrincipal,
-                                      nsIReferrerInfo* aReferrerInfo,
+                                      dom::ReferrerPolicy aReferrerPolicy,
                                       CORSMode aCORSMode,
                                       css::SheetParsingMode aParsingMode);
   static PreloadHashKey CreateAsStyle(css::SheetLoadData&);
@@ -107,7 +106,6 @@ class PreloadHashKey : public nsURIHashKey {
   } mScript;
 
   struct {
-    nsCOMPtr<nsIReferrerInfo> mReferrerInfo;
     css::SheetParsingMode mParsingMode = css::eAuthorSheetFeatures;
   } mStyle;
 };
