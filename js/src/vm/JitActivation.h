@@ -119,17 +119,15 @@ class JitActivation : public Activation {
 
   bool hasExitFP() const { return !!packedExitFP_; }
   uint8_t* jsOrWasmExitFP() const {
-    if (hasWasmExitFP()) {
-      return wasm::Frame::toJitEntryCaller(packedExitFP_);
-    }
-    return packedExitFP_;
+    return (uint8_t*)(uintptr_t(packedExitFP_) & ~wasm::ExitOrJitEntryFPTag);
   }
   static size_t offsetOfPackedExitFP() {
     return offsetof(JitActivation, packedExitFP_);
   }
 
-  bool hasJSExitFP() const { return !hasWasmExitFP(); }
-
+  bool hasJSExitFP() const {
+    return !(uintptr_t(packedExitFP_) & wasm::ExitOrJitEntryFPTag);
+  }
   uint8_t* jsExitFP() const {
     MOZ_ASSERT(hasJSExitFP());
     return packedExitFP_;
@@ -207,17 +205,17 @@ class JitActivation : public Activation {
 
   // WebAssembly specific attributes.
   bool hasWasmExitFP() const {
-    return wasm::Frame::isExitOrJitEntryFP(packedExitFP_);
+    return uintptr_t(packedExitFP_) & wasm::ExitOrJitEntryFPTag;
   }
   wasm::Frame* wasmExitFP() const {
     MOZ_ASSERT(hasWasmExitFP());
-    return reinterpret_cast<wasm::Frame*>(
-        wasm::Frame::toJitEntryCaller(packedExitFP_));
+    return reinterpret_cast<wasm::Frame*>(uintptr_t(packedExitFP_) &
+                                          ~wasm::ExitOrJitEntryFPTag);
   }
   void setWasmExitFP(const wasm::Frame* fp) {
     if (fp) {
-      MOZ_ASSERT(!wasm::Frame::isExitOrJitEntryFP(fp));
-      packedExitFP_ = wasm::Frame::addExitOrJitEntryFPTag(fp);
+      MOZ_ASSERT(!(uintptr_t(fp) & wasm::ExitOrJitEntryFPTag));
+      packedExitFP_ = (uint8_t*)(uintptr_t(fp) | wasm::ExitOrJitEntryFPTag);
       MOZ_ASSERT(hasWasmExitFP());
     } else {
       packedExitFP_ = nullptr;
