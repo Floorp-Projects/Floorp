@@ -57,7 +57,7 @@ class Runtime extends ContentProcessDomain {
     // [id (Number) => ExecutionContext instance]
     this.contexts = new Map();
     // [innerWindowId (Number) => Set of ExecutionContext instances]
-    this.contextsByWindow = new SetMap();
+    this.innerWindowIdToContexts = new SetMap();
 
     this._onContextCreated = this._onContextCreated.bind(this);
     this._onContextDestroyed = this._onContextDestroyed.bind(this);
@@ -328,7 +328,7 @@ class Runtime extends ContentProcessDomain {
       const { windowUtils } = this.content;
       innerWindowId = windowUtils.currentInnerWindowID;
     }
-    const curContexts = this.contextsByWindow.get(innerWindowId);
+    const curContexts = this.innerWindowIdToContexts.get(innerWindowId);
     if (curContexts) {
       for (const ctx of curContexts) {
         if (ctx.isDefault) {
@@ -385,8 +385,8 @@ class Runtime extends ContentProcessDomain {
     }
 
     // allow only one default context per inner window
-    if (isDefault && this.contextsByWindow.has(windowId)) {
-      for (const ctx of this.contextsByWindow.get(windowId)) {
+    if (isDefault && this.innerWindowIdToContexts.has(windowId)) {
+      for (const ctx of this.innerWindowIdToContexts.get(windowId)) {
         if (ctx.isDefault) {
           return null;
         }
@@ -396,11 +396,11 @@ class Runtime extends ContentProcessDomain {
     const context = new ExecutionContext(
       this._debugger,
       window,
-      this.contextsByWindow.count,
+      this.innerWindowIdToContexts.count,
       isDefault
     );
     this.contexts.set(context.id, context);
-    this.contextsByWindow.set(windowId, context);
+    this.innerWindowIdToContexts.set(windowId, context);
 
     if (this.enabled) {
       this.emit("Runtime.executionContextCreated", {
@@ -449,13 +449,15 @@ class Runtime extends ContentProcessDomain {
     } else if (frameId) {
       contexts = this._getContextsForFrame(frameId);
     } else {
-      contexts = this.contextsByWindow.get(windowId) || [];
+      contexts = this.innerWindowIdToContexts.get(windowId) || [];
     }
 
     for (const ctx of contexts) {
+      const isFrame = !!BrowsingContext.get(ctx.frameId).parent;
+
       ctx.destructor();
       this.contexts.delete(ctx.id);
-      this.contextsByWindow.get(ctx.windowId).delete(ctx);
+      this.innerWindowIdToContexts.get(ctx.windowId).delete(ctx);
 
       if (this.enabled) {
         this.emit("Runtime.executionContextDestroyed", {
@@ -463,9 +465,12 @@ class Runtime extends ContentProcessDomain {
         });
       }
 
-      if (this.contextsByWindow.get(ctx.windowId).size == 0) {
-        this.contextsByWindow.delete(ctx.windowId);
-        if (this.enabled) {
+      if (this.innerWindowIdToContexts.get(ctx.windowId).size == 0) {
+        this.innerWindowIdToContexts.delete(ctx.windowId);
+        // Only emit when all the exeuction contexts were cleared for the
+        // current browser / target, which means it should only be emitted
+        // for a top-level browsing context reference.
+        if (this.enabled && !isFrame) {
           this.emit("Runtime.executionContextsCleared");
         }
       }
