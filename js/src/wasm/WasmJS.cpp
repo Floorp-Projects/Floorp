@@ -89,6 +89,88 @@ static inline bool WasmSimdFlag(JSContext* cx) {
 #endif
 }
 
+/*
+ * [WASMDOC] Compiler and feature selection; compiler and feature availability.
+ *
+ * In order to make the computation of whether a wasm feature or wasm compiler
+ * is available predictable, we have established some rules, and implemented
+ * those rules.
+ *
+ * Code elsewhere should use the predicates below to test for features and
+ * compilers, it should never try to compute feature and compiler availability
+ * in other ways.
+ *
+ * At the outset, there is a set of selected compilers C containing at most one
+ * baseline compiler [*] and at most one optimizing compiler [**], and a set of
+ * selected features F.  These selections come from defaults and from overrides
+ * by command line switches in the shell and javascript.option.wasm_X in the
+ * browser.  Defaults for both features and compilers may be platform specific,
+ * for example, some compilers may not be available on some platforms because
+ * they do not support the architecture at all or they do not support features
+ * that must be enabled by default on the platform.
+ *
+ * [*] Currently we have only one, "baseline" aka "Rabaldr", but other
+ *     implementations have additional baseline translators, eg from wasm
+ *     bytecode to an internal code processed by an interpreter.
+ *
+ * [**] Currently we have two, "ion" aka "Baldr", and "Cranelift".
+ *
+ *
+ * Compiler availability:
+ *
+ * The set of features F induces a set of available compilers A: these are the
+ * compilers that all support all the features in F.  (Some of these compilers
+ * may not be in the set C.)
+ *
+ * The sets C and A are intersected, yielding a set of enabled compilers E.
+ * Notably, the set E may be empty, in which case wasm is effectively disabled
+ * (though the WebAssembly object is still present in the global environment).
+ *
+ * An important consequence is that selecting a feature that is not supported by
+ * a particular compiler disables that compiler completely -- there is no notion
+ * of a compiler being available but suddenly failing when an unsupported
+ * feature is used by a program.  If a compiler is available, it supports all
+ * the features that have been selected.
+ *
+ * Equally important, a feature cannot be enabled by default on a platform if
+ * the feature is not supported by all the compilers we wish to have enabled by
+ * default on the platform.  We MUST by-default disable features on a platform
+ * that are not supported by all the compilers on the platform.
+ *
+ * As an example:
+ *
+ *   On ARM64 the default compilers are Baseline and Cranelift.  Say Cranelift
+ *   does not support feature X.  Thus X cannot be enabled by default on ARM64.
+ *   However, X support can be compiled-in to SpiderMonkey, and the user can opt
+ *   to enable X.  Doing so will disable Cranelift.
+ *
+ *   In contrast, X can be enabled by default on x64, where the default
+ *   compilers are Baseline and Ion, both of which support X.
+ *
+ *   A subtlety is worth noting: on x64, enabling Cranelift (thus disabling Ion)
+ *   will not disable X.  Instead, the presence of X in the selected feature set
+ *   will disable Cranelift, leaving only Baseline.  This follows from the logic
+ *   described above.
+ *
+ * In a shell build, the testing functions wasmCompilersPresent,
+ * wasmCompileMode, wasmCraneliftDisabledByFeatures, and
+ * wasmIonDisabledByFeatures can be used to probe compiler availability and the
+ * reasons for a compiler being unavailable.
+ *
+ *
+ * Feature availability:
+ *
+ * A feature is available if it is selected and there is at least one available
+ * compiler that implements it.
+ *
+ * For example, --wasm-gc selects the GC feature, and if Baseline is available
+ * then the feature is available.
+ *
+ * In a shell build, there are per-feature testing functions (usually of the
+ * form wasmFeatureEnabled, wasmFeatureSupport, or wasmFeatureSupported) to
+ * probe whether specific features are available.
+ */
+
 // Compiler availability predicates.  These must be kept in sync with the
 // feature predicates in the next section below.
 //

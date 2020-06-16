@@ -17,7 +17,7 @@
  */
 
 /*
- * [SMDOC] WebAssembly baseline compiler (RabaldrMonkey)
+ * [WASMDOC] WebAssembly baseline compiler (RabaldrMonkey)
  *
  * General assumptions for 32-bit vs 64-bit code:
  *
