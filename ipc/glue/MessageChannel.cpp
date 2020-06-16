@@ -567,7 +567,6 @@ MessageChannel::MessageChannel(const char* aName, IToplevelProtocol* aListener)
       mChannelState(ChannelClosed),
       mSide(UnknownSide),
       mIsCrossProcess(false),
-      mLink(nullptr),
       mWorkerLoop(nullptr),
       mChannelErrorTask(nullptr),
       mWorkerThread(nullptr),
@@ -789,8 +788,11 @@ void MessageChannel::Clear() {
   if (mLink != nullptr && mIsCrossProcess) {
     ChannelCountReporter::Decrement(mName);
   }
-  delete mLink;
-  mLink = nullptr;
+
+  if (mLink) {
+    mLink->PrepareToDestroy();
+    mLink = nullptr;
+  }
 
   mOnChannelConnectedTask->Cancel();
 
@@ -823,10 +825,10 @@ bool MessageChannel::Open(mozilla::UniquePtr<Transport> aTransport,
   mWorkerLoop->AddDestructionObserver(this);
   mListener->OnIPCChannelOpened();
 
-  ProcessLink* link = new ProcessLink(this);
+  auto link = MakeUnique<ProcessLink>(this);
   link->Open(std::move(aTransport), aIOLoop,
              aSide);  // :TODO: n.b.: sets mChild
-  mLink = link;
+  mLink = std::move(link);
   mIsCrossProcess = true;
   ChannelCountReporter::Increment(mName);
   return true;
@@ -905,7 +907,7 @@ void MessageChannel::CommonThreadOpenInit(MessageChannel* aTargetChan,
   mWorkerLoop->AddDestructionObserver(this);
   mListener->OnIPCChannelOpened();
 
-  mLink = new ThreadLink(this, aTargetChan);
+  mLink = MakeUnique<ThreadLink>(this, aTargetChan);
   mSide = aSide;
 }
 
