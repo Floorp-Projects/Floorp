@@ -839,12 +839,14 @@ label[for="tab-cryptominer"]:hover ~ #highlight-hover {
 }
 
 .monitor-block a {
+  outline: none;
   color: #FFFFFF;
   padding: 19px 0px;
 }
 
 .monitor-block a:hover {
   text-decoration: none;
+  color: #FFFFFF;
 }
 
 .email {
