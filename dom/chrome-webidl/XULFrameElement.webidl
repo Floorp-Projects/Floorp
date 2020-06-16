@@ -16,7 +16,9 @@ interface XULFrameElement : XULElement
   readonly attribute nsIWebNavigation? webNavigation;
 
   readonly attribute WindowProxy? contentWindow;
-  readonly attribute Document? contentDocument; 
+  readonly attribute Document? contentDocument;
+
+  readonly attribute unsigned long long browserId;
 };
 
 XULFrameElement includes MozFrameLoaderOwner;
