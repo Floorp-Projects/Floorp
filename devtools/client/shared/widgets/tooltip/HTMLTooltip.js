@@ -1009,6 +1009,9 @@ HTMLTooltip.prototype = {
     panel.setAttribute("level", "top");
     panel.setAttribute("class", "tooltip-xul-wrapper");
 
+    // Stop this appearing as an alert to accessibility.
+    panel.setAttribute("role", "presentation");
+
     return panel;
   },
 
