@@ -12,7 +12,7 @@ def test_basic(lint, config, paths):
     assert "is never read" in results[0].message or 'but never used' in results[0].message
     assert results[0].level == "warning"
     assert results[0].lineno == 7
-    assert results[0].column == 13
+    assert results[0].column == 9
     assert results[0].rule == "unused_assignments"
     assert results[0].relpath == "test1/bad.rs"
     assert "tools/lint/test/files/clippy/test1/bad.rs" in results[0].path
@@ -53,14 +53,14 @@ def test_file_and_path_provided(lint, config, paths):
     assert "value assigned to `a` is never read" in results[0].message
     assert results[0].level == "warning"
     assert results[0].lineno == 7
-    assert results[0].column == 13
+    assert results[0].column == 9
     assert results[0].rule == "unused_assignments"
     assert results[0].relpath == "test1/bad.rs"
     assert "tools/lint/test/files/clippy/test1/bad.rs" in results[0].path
     assert "value assigned to `a` is never read" in results[0].message
     assert results[8].level == "warning"
     assert results[8].lineno == 9
-    assert results[8].column == 13
+    assert results[8].column == 9
     assert results[8].rule == "unused_assignments"
     assert results[8].relpath == "test2/src/bad_1.rs"
     assert "tools/lint/test/files/clippy/test2/src/bad_1.rs" in results[8].path
@@ -77,7 +77,7 @@ def test_file_provided(lint, config, paths):
     assert len(results) > 8
     assert results[0].level == "warning"
     assert results[0].lineno == 9
-    assert results[0].column == 13
+    assert results[0].column == 9
     assert results[0].rule == "unused_assignments"
     assert results[0].relpath == "test2/src/bad_1.rs"
     assert "tools/lint/test/files/clippy/test2/src/bad_1.rs" in results[0].path
