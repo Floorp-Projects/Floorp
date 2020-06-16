@@ -393,7 +393,34 @@ void L10nOverlays::OverlayChildNodes(DocumentFragment* aFromFragment,
   }
 
   while (aToElement->HasChildren()) {
-    aToElement->RemoveChildNode(aToElement->GetLastChild(), true);
+    nsIContent* child = aToElement->GetLastChild();
+#ifdef DEBUG
+    if (child->IsElement()) {
+      if (child->AsElement()->HasAttr(kNameSpaceID_None,
+                                      nsGkAtoms::datal10nid)) {
+        L10nOverlaysError error;
+        error.mCode.Construct(
+            L10nOverlays_Binding::ERROR_TRANSLATED_ELEMENT_DISCONNECTED);
+        nsAutoString id;
+        child->AsElement()->GetAttr(nsGkAtoms::datal10nid, id);
+        error.mL10nName.Construct(id);
+        error.mTranslatedElementName.Construct(
+            aToElement->NodeInfo()->LocalName());
+        aErrors.AppendElement(error);
+      } else if (child->AsElement()->ChildElementCount() > 0) {
+        L10nOverlaysError error;
+        error.mCode.Construct(
+            L10nOverlays_Binding::ERROR_TRANSLATED_ELEMENT_DISALLOWED_DOM);
+        nsAutoString id;
+        aToElement->GetAttr(nsGkAtoms::datal10nid, id);
+        error.mL10nName.Construct(id);
+        error.mTranslatedElementName.Construct(
+            aToElement->NodeInfo()->LocalName());
+        aErrors.AppendElement(error);
+      }
+    }
+#endif
+    aToElement->RemoveChildNode(child, true);
   }
   aToElement->AppendChild(*aFromFragment, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
@@ -462,6 +489,19 @@ void L10nOverlays::TranslateElement(Element& aElement,
         return;
       }
     } else if (!ContainsMarkup(aTranslation.mValue)) {
+#ifdef DEBUG
+      if (aElement.ChildElementCount() > 0) {
+        L10nOverlaysError error;
+        error.mCode.Construct(
+            L10nOverlays_Binding::ERROR_TRANSLATED_ELEMENT_DISALLOWED_DOM);
+        nsAutoString id;
+        aElement.GetAttr(nsGkAtoms::datal10nid, id);
+        error.mL10nName.Construct(id);
+        error.mTranslatedElementName.Construct(
+            aElement.GetLastElementChild()->NodeInfo()->LocalName());
+        aErrors.AppendElement(error);
+      }
+#endif
       // If the translation doesn't contain any markup skip the overlay logic.
       aElement.SetTextContent(NS_ConvertUTF8toUTF16(aTranslation.mValue), aRv);
       if (NS_WARN_IF(aRv.Failed())) {
