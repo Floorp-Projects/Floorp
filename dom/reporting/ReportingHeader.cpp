@@ -286,11 +286,10 @@ void ReportingHeader::ReportingFromChannel(nsIHttpChannel* aChannel) {
       continue;
     }
 
+    /// XXX We could use a NonObservingRange here and then
+    /// std::any_of.
     bool found = false;
-    nsTObserverArray<Group>::ForwardIterator iter(client->mGroups);
-    while (iter.HasMore()) {
-      const Group& group = iter.GetNext();
-
+    for (const Group& group : client->mGroups.ForwardRange()) {
       if (group.mName == groupName) {
         found = true;
         break;
@@ -512,10 +511,7 @@ void ReportingHeader::GetEndpointForReport(const nsAString& aGroupName,
     return;
   }
 
-  nsTObserverArray<Group>::ForwardIterator iter(client->mGroups);
-  while (iter.HasMore()) {
-    const Group& group = iter.GetNext();
-
+  for (const Group& group : client->mGroups.ForwardRange()) {
     if (group.mName == aGroupName) {
       GetEndpointForReportInternal(group, aEndpointURI);
       break;
@@ -539,10 +535,8 @@ void ReportingHeader::GetEndpointForReportInternal(
   int64_t minPriority = -1;
   uint32_t totalWeight = 0;
 
-  nsTObserverArray<Endpoint>::ForwardIterator iter(aGroup.mEndpoints);
-  while (iter.HasMore()) {
-    const Endpoint& endpoint = iter.GetNext();
-
+  /// XXX We could use a NonObservingRange here.
+  for (const Endpoint& endpoint : aGroup.mEndpoints.ForwardRange()) {
     if (minPriority == -1 || minPriority > endpoint.mPriority) {
       minPriority = endpoint.mPriority;
       totalWeight = endpoint.mWeight;
@@ -571,10 +565,8 @@ void ReportingHeader::GetEndpointForReportInternal(
 
   totalWeight = randomNumber % totalWeight;
 
-  nsTObserverArray<Endpoint>::ForwardIterator iter2(aGroup.mEndpoints);
-  while (iter2.HasMore()) {
-    const Endpoint& endpoint = iter2.GetNext();
-
+  /// XXX We could use a NonObservingRange here.
+  for (const Endpoint& endpoint : aGroup.mEndpoints.ForwardRange()) {
     if (minPriority == endpoint.mPriority && totalWeight < endpoint.mWeight) {
       Unused << NS_WARN_IF(NS_FAILED(endpoint.mUrl->GetSpec(aEndpointURI)));
       break;
