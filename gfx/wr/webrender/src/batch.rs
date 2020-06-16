@@ -179,20 +179,35 @@ pub struct BatchRects {
     /// Very often we can skip iterating over item rects by testing against
     /// this one first.
     batch: PictureRect,
-    /// Rectangle of each item in the batch.
-    ///
-    /// TODO: in some cases the batch rect is a good enough approximation and
-    /// isn't worth storing all of these. We could only start storing per
-    /// item rects when the the union of the batch rect and a new rect is
-    /// larger than the sum of the two.
-    items: Vec<PictureRect>,
+    /// When the batch rectangle above isn't a good enough approximation, we
+    /// store per item rects.
+    items: Option<Vec<PictureRect>>,
 }
 
 impl BatchRects {
+    fn new() -> Self {
+        BatchRects {
+            batch: PictureRect::zero(),
+            items: None,
+        }
+    }
+
     #[inline]
     fn add_rect(&mut self, rect: &PictureRect) {
-        self.batch = self.batch.union(rect);
-        self.items.push(*rect);
+        let union = self.batch.union(rect);
+        // If we have already started storing per-item rects, continue doing so.
+        // Otherwise, check whether only storing the batch rect is a good enough
+        // apporximation.
+        if let Some(items) = &mut self.items {
+            items.push(*rect);
+        } else if self.batch.area() + rect.area() > union.area() {
+            let mut items = Vec::with_capacity(16);
+            items.push(self.batch);
+            items.push(*rect);
+            self.items = Some(items);
+        }
+
+        self.batch = union;
     }
 
     #[inline]
@@ -201,13 +216,13 @@ impl BatchRects {
             return false;
         }
 
-        for item_rect in &self.items {
-            if item_rect.intersects(rect) {
-                return true;
-            }
+        if let Some(items) = &self.items {
+            items.iter().any(|item| item.intersects(rect))
+        } else {    
+            // If we don't have per-item rects it means the batch rect is a good
+            // enough approximation and we didn't bother storing per-rect items.
+            true
         }
-
-        false
     }
 }
 
@@ -312,19 +327,12 @@ impl AlphaBatchList {
                 new_batch.instances.reserve(prealloc);
                 selected_batch_index = Some(self.batches.len());
                 self.batches.push(new_batch);
-                self.batch_rects.push(BatchRects {
-                    batch: *z_bounding_rect,
-                    items: Vec::with_capacity(prealloc),
-                });
+                self.batch_rects.push(BatchRects::new());
             }
 
             self.current_batch_index = selected_batch_index.unwrap();
             self.batch_rects[self.current_batch_index].add_rect(z_bounding_rect);
             self.current_z_id = z_id;
-        } else if cfg!(debug_assertions) {
-            // If it's a different segment of the same (larger) primitive, we expect the bounding box
-            // to be the same - coming from the primitive itself, not the segment.
-            assert_eq!(self.batch_rects[self.current_batch_index].items.last(), Some(z_bounding_rect));
         }
 
         let batch = &mut self.batches[self.current_batch_index];
