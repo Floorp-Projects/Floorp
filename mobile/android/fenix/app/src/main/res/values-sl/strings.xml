@@ -13,8 +13,6 @@
     <string name="content_description_disable_private_browsing_button">Onemogoči zasebno brskanje</string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="search_hint">Iskanje ali naslov strani</string>
-    <!-- No Open Tabs Message Header -->
-    <string name="no_open_tabs_header_2">Ni odprtih zavihkov</string>
 
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">Tu bodo prikazani vaši odprti zavihki.</string>
@@ -293,8 +291,6 @@
     <string name="preferences_sync_bookmarks">Zaznamki</string>
     <!-- Preference for syncing logins -->
     <string name="preferences_sync_logins">Prijave</string>
-    <!-- Preference for syncing tabs -->
-    <string name="preferences_sync_tabs">Zavihki</string>
     <!-- Preference for signing out -->
     <string name="preferences_sign_out">Odjava</string>
     <!-- Preference displays and allows changing current FxA device name -->
@@ -476,8 +472,6 @@
     <string name="tabs_menu_close_all_tabs">Zapri vse zavihke</string>
     <!-- Open tabs menu item to share all tabs -->
     <string name="tabs_menu_share_tabs">Deli zavihke</string>
-    <!-- Open tabs menu item to save tabs to collection -->
-    <string name="tabs_menu_save_to_collection">Shrani v zbirko</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
     <string name="tab_menu">Meni zavihka</string>
     <!-- Tab menu item to share the tab -->
@@ -693,16 +687,10 @@
     <string name="delete_browsing_data_quit_off">Izključeno</string>
 
     <!-- Collections -->
-    <!-- Label to describe what collections are to a new user without any collections -->
-    <string name="collections_description">Zbirajte stvari, ki so pomembne. Za začetek shranite odprte zavihke v novo zbirko.</string>
     <!-- Collections header on home fragment -->
     <string name="collections_header">Zbirke</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
     <string name="collection_menu_button_content_description">Meni zbirk</string>
-    <!-- No Open Tabs Message Header -->
-    <string name="no_collections_header">Ni zbirk</string>
-    <!-- No Open Tabs Message Description -->
-    <string name="no_collections_description">Tu bodo prikazane vaše zbirke.</string>
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">Izberi zavihke</string>
     <!-- Title for the "select collection" step of the collection creator -->
@@ -908,8 +896,6 @@
     <!-- text for firefox preview moving tip description -->
     <string name="tip_firefox_preview_moved_description">Firefox Nightly se posodablja vsak dan in vsebuje poskusne nove možnosti.
         Njegovo delovanje je lahko nezanesljivo. Za zanesljivejše brskanje prenesite različico beta našega brskalnika.</string>
-    <!-- text for firefox preview moving tip button. "Mozilla Firefox Browser" is intentionally hardcoded -->
-    <string name="tip_firefox_preview_moved_button">Prenesite brskalnik Mozilla Firefox</string>
 
     <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_header_preview_installed">Firefox Nightly se je preselil</string>
@@ -1123,6 +1109,8 @@
     <string name="etp_tracking_content_title">Sledilna vsebina</string>
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_description">Preprečuje nalaganje zunanjih oglasov, videoposnetkov in druge vsebine, ki vsebuje sledilno kodo. Lahko vpliva na delovanje nekaterih spletnih strani.</string>
+    <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="etp_onboarding_cfr_message">Vsakič, ko je ščit obarvan vijolično, %s zavrača sledilce na spletnem mestu. Tapnite za več informacij.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">Zaščite za to spletno mesto so VKLJUČENE</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
@@ -1415,6 +1403,9 @@
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
     <string name="voice_search_explainer">Govorite</string>
 
+    <!--  The error message in edit login view when a duplicate username exists. -->
+    <string name="saved_login_duplicate">Prijava s tem uporabniškim imenom že obstaja</string>
+
     <!-- Synced Tabs -->
     <!-- Text displayed when user is not logged into a Firefox Account -->
     <string name="synced_tabs_connect_to_sync_account">Povežite se s Firefox Računom.</string>
@@ -1424,5 +1415,10 @@
     <string name="synced_tabs_reauth">Ponovno se prijavite.</string>
     <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->
     <string name="synced_tabs_enable_tab_syncing">Omogočite sinhronizacijo zavihkov.</string>
+    <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
+    <string name="synced_tabs_sign_in_message">Oglejte si seznam zavihkov drugih naprav.</string>
+
+    <!-- Confirmation dialog button text when top sites limit is reached. -->
+    <string name="top_sites_max_limit_confirmation_button">V redu, razumem</string>
 
 </resources>

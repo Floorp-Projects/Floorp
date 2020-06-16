@@ -14,8 +14,6 @@
     <string name="content_description_disable_private_browsing_button">Gizli gezintiyi kapat</string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="search_hint">Arama yapın veya adres yazın</string>
-    <!-- No Open Tabs Message Header -->
-    <string name="no_open_tabs_header_2">Açık sekme yok</string>
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">Açık sekmeleriniz burada gösterilecek.</string>
 
@@ -295,7 +293,7 @@
     <!-- Preference for syncing logins -->
     <string name="preferences_sync_logins">Hesaplar</string>
     <!-- Preference for syncing tabs -->
-    <string name="preferences_sync_tabs">Sekmeler</string>
+    <string name="preferences_sync_tabs_2">Açık sekmeler</string>
     <!-- Preference for signing out -->
     <string name="preferences_sign_out">Çıkış yap</string>
     <!-- Preference displays and allows changing current FxA device name -->
@@ -481,7 +479,7 @@
     <!-- Open tabs menu item to share all tabs -->
     <string name="tabs_menu_share_tabs">Sekmeleri paylaş</string>
     <!-- Open tabs menu item to save tabs to collection -->
-    <string name="tabs_menu_save_to_collection">Koleksiyona kaydet</string>
+    <string name="tabs_menu_save_to_collection1">Sekmeleri koleksiyona kaydet</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
     <string name="tab_menu">Sekmeler menüsü</string>
     <!-- Tab menu item to share the tab -->
@@ -694,16 +692,12 @@
     <string name="delete_browsing_data_quit_off">Kapalı</string>
 
     <!-- Collections -->
-    <!-- Label to describe what collections are to a new user without any collections -->
-    <string name="collections_description">Sizin için önemli olan şeyleri toplayın. Başlamak için açık sekmeleri yeni bir koleksiyona kaydedin.</string>
     <!-- Collections header on home fragment -->
     <string name="collections_header">Koleksiyonlar</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
     <string name="collection_menu_button_content_description">Koleksiyon menüsü</string>
     <!-- No Open Tabs Message Header -->
-    <string name="no_collections_header">Koleksiyon yok</string>
-    <!-- No Open Tabs Message Description -->
-    <string name="no_collections_description">Koleksiyonlarınız burada gösterilecek.</string>
+    <string name="no_collections_header1">Sizin için önemli olan şeyleri toplayın</string>
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">Sekmeleri seç</string>
     <!-- Title for the "select collection" step of the collection creator -->
@@ -911,8 +905,6 @@
     <!-- text for firefox preview moving tip description -->
     <string name="tip_firefox_preview_moved_description">Firefox Nightly her gece güncellenir ve yeni deneysel özelliklere sahiptir.
         Bununla birlikte, daha kararsız olabilir. Daha kararlı bir deneyim için beta tarayıcımızı indirebilirsiniz.</string>
-    <!-- text for firefox preview moving tip button. "Mozilla Firefox Browser" is intentionally hardcoded -->
-    <string name="tip_firefox_preview_moved_button">Mozilla Firefox Browser’ı indirin</string>
 
     <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_header_preview_installed">Firefox Nightly taşındı</string>
@@ -1423,5 +1415,17 @@
     <string name="synced_tabs_reauth">Lütfen yeniden giriş yapın.</string>
     <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->
     <string name="synced_tabs_enable_tab_syncing">Lütfen sekme eşitlemeyi etkinleştirin.</string>
+    <!-- Text displayed when user has no tabs that have been synced -->
+    <string name="synced_tabs_no_tabs">Diğer cihazlarınızdaki Firefox’larda hiç açık sekme yok.</string>
+    <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
+    <string name="synced_tabs_sign_in_message">Diğer cihazlarınızdaki sekmelerin listesini görün.</string>
+    <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
+    <string name="synced_tabs_sign_in_button">Sync’e giriş yapın</string>
+
+    <!-- Top Sites -->
+    <!-- Title text displayed in the dialog when top sites limit is reached. -->
+    <string name="top_sites_max_limit_title">Sık kullanılan site sınırına ulaşıldı</string>
+    <!-- Confirmation dialog button text when top sites limit is reached. -->
+    <string name="top_sites_max_limit_confirmation_button">Tamam</string>
 
 </resources>

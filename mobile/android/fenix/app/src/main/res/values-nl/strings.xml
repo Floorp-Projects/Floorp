@@ -16,8 +16,6 @@
     <string name="search_hint">Voer zoekterm of adres in</string>
 
 
-    <!-- No Open Tabs Message Header -->
-    <string name="no_open_tabs_header_2">Geen open tabbladen</string>
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">Uw geopende tabbladen worden hier weergegeven.</string>
 
@@ -300,7 +298,7 @@
     <!-- Preference for syncing logins -->
     <string name="preferences_sync_logins">Aanmeldingen</string>
     <!-- Preference for syncing tabs -->
-    <string name="preferences_sync_tabs">Tabbladen</string>
+    <string name="preferences_sync_tabs_2">Open tabbladen</string>
     <!-- Preference for signing out -->
     <string name="preferences_sign_out">Afmelden</string>
     <!-- Preference displays and allows changing current FxA device name -->
@@ -486,8 +484,6 @@
     <string name="tabs_menu_close_all_tabs">Alle tabbladen sluiten</string>
     <!-- Open tabs menu item to share all tabs -->
     <string name="tabs_menu_share_tabs">Tabbladen delen</string>
-    <!-- Open tabs menu item to save tabs to collection -->
-    <string name="tabs_menu_save_to_collection">In collectie opslaan</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
     <string name="tab_menu">Tabbladmenu</string>
     <!-- Tab menu item to share the tab -->
@@ -700,16 +696,10 @@
     <string name="delete_browsing_data_quit_off">Uit</string>
 
     <!-- Collections -->
-    <!-- Label to describe what collections are to a new user without any collections -->
-    <string name="collections_description">Verzamel de dingen die belangrijk voor u zijn. Sla eerst geopende tabbladen op in een nieuwe collectie.</string>
     <!-- Collections header on home fragment -->
     <string name="collections_header">Collecties</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
     <string name="collection_menu_button_content_description">Collectiesmenu</string>
-    <!-- No Open Tabs Message Header -->
-    <string name="no_collections_header">Geen collecties</string>
-    <!-- No Open Tabs Message Description -->
-    <string name="no_collections_description">Uw collecties worden hier getoond.</string>
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">Tabbladen selecteren</string>
     <!-- Title for the "select collection" step of the collection creator -->
@@ -919,8 +909,9 @@
     <!-- text for firefox preview moving tip description -->
     <string name="tip_firefox_preview_moved_description">Firefox Nightly wordt elke nacht bijgewerkt en heeft experimentele nieuwe functies.
         Het is echter mogelijk minder stabiel. Download onze bètabrowser voor een meer stabiele ervaring.</string>
-    <!-- text for firefox preview moving tip button. "Mozilla Firefox Browser" is intentionally hardcoded -->
-    <string name="tip_firefox_preview_moved_button">Download Mozilla Firefox Browser</string>
+
+    <!-- text for firefox preview moving tip button. "Firefox for Android Beta" is intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_button_2">Download Firefox voor Android Beta</string>
 
     <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_header_preview_installed">Firefox Nightly is verplaatst</string>
@@ -1434,5 +1425,12 @@
     <string name="synced_tabs_reauth">Gelieve opnieuw te authenticeren.</string>
     <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->
     <string name="synced_tabs_enable_tab_syncing">Schakel het synchroniseren van tabbladen in.</string>
+    <!-- Text displayed when user has no tabs that have been synced -->
+    <string name="synced_tabs_no_tabs">U hebt geen tabbladen geopend in Firefox op uw andere apparaten.</string>
+    <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
+    <string name="synced_tabs_sign_in_message">Bekijk een lijst met tabbladen van uw overige apparaten.</string>
+
+    <!-- Confirmation dialog button text when top sites limit is reached. -->
+    <string name="top_sites_max_limit_confirmation_button">OK, begrepen</string>
 
 </resources>

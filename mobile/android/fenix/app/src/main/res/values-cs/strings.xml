@@ -15,13 +15,14 @@
     <string name="content_description_disable_private_browsing_button">Zakáže režim anonymního prohlížení</string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="search_hint">Zadejte hledání nebo adresu</string>
-    <!-- No Open Tabs Message Header -->
-    <string name="no_open_tabs_header_2">Žádné otevřené panely</string>
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">Tady se zobrazí vaše otevřené panely.</string>
 
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">Tady se zobrazí vaše anonymní panely.</string>
+
+    <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
+    <string name="open_tab_tray_plural">%1$s otevřených panelů. Klepnutím přepnete panely.</string>
 
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">Autorem aplikace %1$s je Mozilla.</string>
@@ -298,8 +299,6 @@
     <string name="preferences_sync_bookmarks">Záložky</string>
     <!-- Preference for syncing logins -->
     <string name="preferences_sync_logins">Přihlašovací údaje</string>
-    <!-- Preference for syncing tabs -->
-    <string name="preferences_sync_tabs">Panely</string>
     <!-- Preference for signing out -->
     <string name="preferences_sign_out">Odhlásit</string>
     <!-- Preference displays and allows changing current FxA device name -->
@@ -489,7 +488,7 @@
     <!-- Open tabs menu item to share all tabs -->
     <string name="tabs_menu_share_tabs">Sdílet panely</string>
     <!-- Open tabs menu item to save tabs to collection -->
-    <string name="tabs_menu_save_to_collection">Uložit do sbírky</string>
+    <string name="tabs_menu_save_to_collection1">Uložit panely do sbírky</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
     <string name="tab_menu">Nabídka panelů</string>
     <!-- Tab menu item to share the tab -->
@@ -712,16 +711,10 @@
     <string name="delete_browsing_data_quit_off">Vypnuto</string>
 
     <!-- Collections -->
-    <!-- Label to describe what collections are to a new user without any collections -->
-    <string name="collections_description">Do sbírek si můžete ukládat důležité stránky.</string>
     <!-- Collections header on home fragment -->
     <string name="collections_header">Sbírky</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
     <string name="collection_menu_button_content_description">Nabídka sbírek</string>
-    <!-- No Open Tabs Message Header -->
-    <string name="no_collections_header">Nemáte žádné sbírky</string>
-    <!-- No Open Tabs Message Description -->
-    <string name="no_collections_description">Tady se zobrazí vaše sbírky.</string>
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">Vyberte panely</string>
     <!-- Title for the "select collection" step of the collection creator -->
@@ -928,9 +921,6 @@
     <!-- Tips -->
     <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_header">Firefox Preview je nyní Firefox Nightly</string>
-
-    <!-- text for firefox preview moving tip button. "Mozilla Firefox Browser" is intentionally hardcoded -->
-    <string name="tip_firefox_preview_moved_button">Stáhněte si prohlížeč Mozilla Firefox</string>
 
     <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_header_preview_installed">Firefox Nightly se mění</string>
@@ -1302,6 +1292,9 @@
     <!-- Summary for Accessibility Force Enable Zoom Preference -->
     <string name="preference_accessibility_force_enable_zoom_summary">Povolit gesto pro přiblížení i na stránkách, které tomu zabraňují.</string>
 
+    <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
+    <string name="saved_logins_sort_strategy_last_used">Naposledy použito</string>
+
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Přidat vyhledávač</string>
     <!-- Title of the Edit search engine screen -->
@@ -1401,15 +1394,25 @@
     <string name="login_deletion_confirmation">Opravdu chcete tyto přihlašovací údaje odstranit?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Odstranit</string>
+    <!--  The saved login options menu description. -->
+    <string name="login_options_menu">Možnosti přihlášení</string>
+    <!--  The button description to save changes to an edited login. -->
+    <string name="save_changes_to_login">Uložit změny přihlašovacích údajů.</string>
     <!--  The button description to discard changes to an edited login. -->
     <string name="discard_changes">Zahodit změny</string>
     <!--  The page title for editing a saved login. -->
     <string name="edit">Upravit</string>
+    <!--  The error message in edit login view when password field is blank. -->
+    <string name="saved_login_password_required">Je vyžadováno heslo</string>
     <!-- Voice search button content description  -->
     <string name="voice_search_content_description">Hlasové vyhledávání</string>
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
     <string name="voice_search_explainer">Nyní mluvte</string>
 
+    <!--  The error message in edit login view when a duplicate username exists. -->
+    <string name="saved_login_duplicate">Přihlašovací údaje s tímto uživatelským jménem už existují</string>
+
     <!-- Text displayed to ask user to connect another device as no devices found with account -->
     <string name="synced_tabs_connect_another_device">Připojte další zařízení.</string>
+
     </resources>

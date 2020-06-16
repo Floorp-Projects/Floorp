@@ -1459,6 +1459,11 @@
     <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
     <string name="synced_tabs_sign_in_button">Logg inn for å synkronisere</string>
 
+    <!-- Top Sites -->
+    <!-- Title text displayed in the dialog when top sites limit is reached. -->
+    <string name="top_sites_max_limit_title">Grense for populære nettsteder nådd</string>
+    <!-- Content description text displayed in the dialog when top sites limit is reached. -->
+    <string name="top_sites_max_limit_content">For å legge til et nytt populært nettsted må du fjern en annen. Trykk lenge på nettstedet og velg fjern.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">OK, jeg skjønner</string>
 

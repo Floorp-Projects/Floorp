@@ -1102,6 +1102,13 @@
     <!-- Text for the button to learn more about adding a custom search engine -->
     <string name="search_add_custom_engine_learn_more_label">Μάθετε περισσότερα</string>
 
+    <!-- Accessibility description for the 'Learn more' link -->
+    <string name="search_add_custom_engine_learn_more_description">Σύνδεσμος &quot;Μάθετε περισσότερα&quot;</string>
+
+    <!-- Text shown when a user leaves the name field empty -->
+    <string name="search_add_custom_engine_error_empty_name">Εισάγετε όνομα μηχανής αναζήτησης</string>
+    <!-- Text shown when a user leaves the search string field empty -->
+    <string name="search_add_custom_engine_error_empty_search_string">Εισάγετε νήμα αναζήτησης</string>
     <!-- Text shown when we aren't able to validate the custom search query. The first parameter is the url of the custom search engine -->
     <string name="search_add_custom_engine_error_cannot_reach">Σφάλμα σύνδεσης στο “%s”</string>
 

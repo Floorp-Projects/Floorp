@@ -13,8 +13,6 @@
     <string name="content_description_disable_private_browsing_button">Dezactivează navigarea privată</string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="search_hint">Caută sau introdu adresa</string>
-    <!-- No Open Tabs Message Header -->
-    <string name="no_open_tabs_header_2">Nicio filă deschisă</string>
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">Filele deschise vor fi afișate aici.</string>
 
@@ -32,13 +30,18 @@
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">Șterge sesiunea</string>
 
-    <!-- Private mode shortcut "contextual feature recommender" (CFR) -->
+    <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
     <string name="cfr_message">Adaugă o comandă rapidă pentru a deschide file private din ecranul de start.</string>
     <!-- Text for the positive button -->
     <string name="cfr_pos_button_text">Adaugă comanda rapidă</string>
     <!-- Text for the negative button -->
     <string name="cfr_neg_button_text">Nu, mulțumesc</string>
+
+    <!-- Text for the positive button -->
+    <string name="search_widget_cfr_pos_button_text">Adaugă widget</string>
+    <!-- Text for the negative button -->
+    <string name="search_widget_cfr_neg_button_text">Nu acum</string>
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
@@ -82,6 +85,8 @@
     <string name="browser_menu_add_to_homescreen">Adaugă în ecranul de start</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
     <string name="browser_menu_install_on_homescreen">Instalează</string>
+    <!-- Menu option on the toolbar that takes you to synced tabs page-->
+    <string name="synced_tabs">File sincronizate</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">Caută în pagină</string>
     <!-- Browser menu button that creates a private tab -->
@@ -90,8 +95,6 @@
     <string name="browser_menu_new_tab">Filă nouă</string>
     <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection_2">Salvează în colecție</string>
-    <!-- Browser menu button that opens a dialog to report issues with the current site -->
-    <string name="browser_menu_report_issue">Raportează o problemă cu site-ul</string>
     <!-- Browser menu button that open a share menu to share the current site -->
     <string name="browser_menu_share">Partajează</string>
     <!-- Share menu title, displayed when a user is sharing their current site -->
@@ -105,7 +108,7 @@
     <!-- Browser menu text shown in custom tabs to indicate this is a Fenix tab
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="browser_menu_powered_by2">Cu tehnologie %1$s</string>
-    <!-- Browser menu button to put the the current page in reader mode -->
+    <!-- Browser menu button to put the current page in reader mode -->
     <string name="browser_menu_read">Mod de lectură</string>
     <!-- Browser menu button to open the current page in an external app -->
     <string name="browser_menu_open_app_link">Deschide în aplicație</string>
@@ -274,6 +277,8 @@
     <string name="preferences_sync_bookmarks">Marcaje</string>
     <!-- Preference for syncing logins -->
     <string name="preferences_sync_logins">Date de autentificare</string>
+    <!-- Preference for syncing tabs -->
+    <string name="preferences_sync_tabs_2">File deschise</string>
     <!-- Preference for signing out -->
     <string name="preferences_sign_out">Deconectare</string>
     <!-- Preference displays and allows changing current FxA device name -->
@@ -362,9 +367,6 @@
     <!-- Preference for removing FxA account -->
     <string name="preferences_sync_remove_account">Șterge contul</string>
 
-    <!-- Pairing Feature strings -->
-    <!-- Instructions on how to access pairing -->
-    <string name="pair_instructions"><![CDATA[Intră pe <b>firefox.com/pair</b> în Firefox pe calculator pentru a obține codul QR.]]></string>
     <!-- Button to open camera for pairing -->
     <string name="pair_open_camera">Cameră deschisă</string>
     <!-- Button to cancel pairing -->
@@ -410,8 +412,6 @@
     <string name="library_reading_list">Listă de lectură</string>
     <!-- Menu Item Label for Search in Library -->
     <string name="library_search">Caută</string>
-    <!-- Library Page Title -->
-    <string name="library_title">Bibliotecă</string>
     <!-- Settings Page Title -->
     <string name="settings_title">Setări</string>
     <!-- Content description (not visible, for screen readers etc.): "Menu icon for items on a history item" -->
@@ -428,6 +428,8 @@
     <string name="tabs_header_private_tabs_title">File private</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_tab">Adaugă fila</string>
+    <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
+    <string name="add_private_tab">Adaugă filă privată</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
     <string name="close_tab">Închide fila</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab <title> button. First parameter is tab title  -->
@@ -438,8 +440,6 @@
     <string name="tabs_menu_close_all_tabs">Închide toate filele</string>
     <!-- Open tabs menu item to share all tabs -->
     <string name="tabs_menu_share_tabs">Partajează filele</string>
-    <!-- Open tabs menu item to save tabs to collection -->
-    <string name="tabs_menu_save_to_collection">Salvează în colecție</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
     <string name="tab_menu">Meniu de file</string>
     <!-- Tab menu item to share the tab -->
@@ -647,16 +647,10 @@
     <string name="delete_browsing_data_quit_off">Dezactivat</string>
 
     <!-- Collections -->
-    <!-- Label to describe what collections are to a new user without any collections -->
-    <string name="collections_description">Colectează ce contează pentru tine. Pentru început, salvează filele deschise într-o colecție nouă.</string>
     <!-- Collections header on home fragment -->
     <string name="collections_header">Colecții</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
     <string name="collection_menu_button_content_description">Meniu de colecții</string>
-    <!-- No Open Tabs Message Header -->
-    <string name="no_collections_header">Nicio colecție</string>
-    <!-- No Open Tabs Message Description -->
-    <string name="no_collections_description">Aici vor apărea colecțiile tale.</string>
 
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">Selectează filele</string>
@@ -797,15 +791,11 @@
     <!-- Title for Accessibility Text Size Scaling Preference -->
     <string name="preference_accessibility_font_size_title">Dimensiunea fontului</string>
 
-    <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
-    <string name="preference_accessibility_auto_size">Dimensionare automată pentru fonturi</string>
     <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
     <string name="preference_accessibility_auto_size_summary">Dimensiunea fontului va coincide cu cea din setările Android. Dezactivează pentru a gestiona aici dimensiunea fontului.</string>
 
     <!-- Title for the Delete browsing data preference -->
     <string name="preferences_delete_browsing_data">Șterge datele de navigare</string>
-    <!-- Title for the tabs item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_tabs_title">File deschise</string>
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
     <string name="preferences_delete_browsing_data_tabs_subtitle">%d (de) file</string>
 
@@ -861,8 +851,6 @@
     <!-- text for firefox preview moving tip description -->
     <string name="tip_firefox_preview_moved_description">Firefox Nightly se actualizează în fiecare seară și are funcționalități experimentale noi
         Dar poate fi mai puțin stabil. Descarcă browserul nostru beta pentru o experiență mai stabilă.</string>
-    <!-- text for firefox preview moving tip button. "Mozilla Firefox Browser" is intentionally hardcoded -->
-    <string name="tip_firefox_preview_moved_button">Obține browserul Firefox de la Mozilla</string>
 
     <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_header_preview_installed">Firefox Nightly s-a mutat</string>
@@ -915,19 +903,8 @@
     <string name="onboarding_firefox_account_sync_is_on">Sync este activat</string>
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
     <string name="onboarding_firefox_account_automatic_signin_failed">Eroare de autentificare</string>
-    <!-- text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header">Protejează-te</string>
-    <!-- text for the tracking protection card description
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_tracking_protection_description1">%s te ajută să oprești site-urile să te mai urmărească online.</string>
-    <!-- text for tracking protection radio button option for standard level of blocking -->
-    <string name="onboarding_tracking_protection_standard_button">Standard</string>
-    <!-- text for standard blocking option button description -->
-    <string name="onboarding_tracking_protection_standard_button_description">Blochează mai puține elemente de urmărire, dar permite încărcarea normală a paginilor</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">Strictă (recomandat)</string>
-    <!-- text for strict blocking option button description -->
-    <string name="onboarding_tracking_protection_strict_button_description">Blochează mai multe elemente de urmărire pentru o protecție și o performanță mai bune, dar poate face anumite site-uri să nu funcționeze corect</string>
     <!-- text for the toolbar position card header
         In English this is an idiom for "choose a side as in an argument or fight"
         but it is ok to make this more literally about "choosing a position in a physical space -->
@@ -1014,32 +991,14 @@
     <string name="preference_enhanced_tracking_protection_explanation">Păstrează-ți datele pentru tine. %s te protejează de multe dintre cele mai frecvente elemente de urmărire care monitorizează ce faci online.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Află mai multe</string>
-    <!-- Preference for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_option">Standard</string>
-    <!-- Preference for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard">Standard (recomandat)</string>
-    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description">Echilibrat pentru protecție și performanță.</string>
-    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_2">Paginile se vor încărca normal, dar blochează mai puține elemente de urmărire.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Ce blochează protecția standard împotriva urmăririi</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Strictă</string>
-    <!-- Preference for enhanced tracking protection for the strict protection settings, default setting -->
-    <string name="preference_enhanced_tracking_protection_strict_default">Strictă (implicit)</string>
-    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_default_description">O protecție mai puternică împotriva urmării și o performanță mai rapidă, dar se poate ca unele site-uri să nu funcționeze bine.</string>
-    <!-- Preference for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_recommended">Strictă (recomandat)</string>
-    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description">O protecție mai puternică, dar poate face ca unele site-uri sau conținuturi să nu funcționeze corect.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Ce blochează protecția strictă împotriva urmăririi</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom">Personalizat</string>
-    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_custom_description">Alege ce elemente de urmărire și scripturi să blochezi</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_custom_info_button">Ce blochează protecția personalizată împotriva urmăririi</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
@@ -1089,8 +1048,6 @@
 
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_description">Oprește încărcarea reclamelor, videoclipurilor și a altor conținuturi externe care conțin coduri de urmărire. Poate afecta anumite funcționalități ale site-ului.</string>
-    <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="etp_onboarding_message_2">%s blochează elementele de urmărire pe acest site când scutul este violet. Atingeți-l ca să vezi ce a blocat.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">Protecțiile sunt ACTIVE pentru acest site</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
@@ -1243,9 +1200,9 @@
     <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their logins -->
     <string name="logins_biometric_prompt_message_pin">Deblochează dispozitivul</string>
     <!-- Title for Accessibility Force Enable Zoom Preference -->
-    <string name="preference_accessibility_force_enable_zoom">Focalizare pe toate site-urile web</string>
+    <string name="preference_accessibility_force_enable_zoom">Zoom pe toate site-urile web</string>
     <!-- Summary for Accessibility Force Enable Zoom Preference -->
-    <string name="preference_accessibility_force_enable_zoom_summary">Activează permiterea gesturilor de pișcare și focalizare, chiar și pe site-uri web care le împiedică.</string>
+    <string name="preference_accessibility_force_enable_zoom_summary">Activează permiterea apropierii/depărtării cu degetele pentru zoom, chiar și pe site-uri web care împiedică acest gest.</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Adaugă un motor de căutare</string>
@@ -1343,4 +1300,8 @@
     <string name="login_deletion_confirmation">Sigur vrei să ștergi aceste date de autentificare?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Șterge</string>
+
+    <!-- Confirmation dialog button text when top sites limit is reached. -->
+    <string name="top_sites_max_limit_confirmation_button">Ok, am înțeles</string>
+
 </resources>

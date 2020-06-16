@@ -15,13 +15,16 @@
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="search_hint">Eheka térã ehai kundaharape</string>
 
-    <!-- No Open Tabs Message Header -->
-    <string name="no_open_tabs_header_2">Ndaipóri tendayke ijurujáva</string>
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">Umi tendayke ijurujáva ojehecháta ápe.</string>
 
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">Ne rendaykekuéra ñemiguáva ojehecháta ápe.</string>
+
+    <!-- Message announced to the user when tab tray is selected with 1 tab -->
+    <string name="open_tab_tray_single">1 embojuruja tendayke. Eikutu emoambue hag̃ua tendayke.</string>
+    <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
+    <string name="open_tab_tray_plural">%1$s tendayke ijurujáva. Eikutu emoambue hag̃ua tendayke.</string>
 
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s ojapókuri Mozilla.</string>
@@ -298,7 +301,7 @@
     <!-- Preference for syncing logins -->
     <string name="preferences_sync_logins">Tembiapo ñepyrũ</string>
     <!-- Preference for syncing tabs -->
-    <string name="preferences_sync_tabs">Tendayke</string>
+    <string name="preferences_sync_tabs_2">Tendayke ijurujáva</string>
     <!-- Preference for signing out -->
     <string name="preferences_sign_out">Emboty tembiapo</string>
     <!-- Preference displays and allows changing current FxA device name -->
@@ -488,7 +491,7 @@
     <!-- Open tabs menu item to share all tabs -->
     <string name="tabs_menu_share_tabs">Emoherakuã tendayke</string>
     <!-- Open tabs menu item to save tabs to collection -->
-    <string name="tabs_menu_save_to_collection">Eñongatu atyhápe</string>
+    <string name="tabs_menu_save_to_collection1">Eñongatu tendayke atyhápe</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
     <string name="tab_menu">Poravorã rendayke</string>
     <!-- Tab menu item to share the tab -->
@@ -704,17 +707,15 @@
     <string name="delete_browsing_data_quit_off">Mboguepyre</string>
 
     <!-- Collections -->
-    <!-- Label to describe what collections are to a new user without any collections -->
-    <string name="collections_description">Eñongatu umi ehayhúva. Eñepyrũ hag̃ua, eñongatu tendayke ijurujáva peteĩ atyha pyahúpe.</string>
     <!-- Collections header on home fragment -->
     <string name="collections_header">Ñembyatyha</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
     <string name="collection_menu_button_content_description">Ñembyatyha poravorã</string>
-    <!-- No Open Tabs Message Header -->
-    <string name="no_collections_header">Ndaipóri ñembyatyha</string>
-    <!-- No Open Tabs Message Description -->
-    <string name="no_collections_description">Ne ñembyatyha ojehecháta ápe.</string>
 
+    <!-- No Open Tabs Message Header -->
+    <string name="no_collections_header1">Embyaty umi mba’ekuéra ehayhu añetéva</string>
+    <!-- Label to describe what collections are to a new user without any collections -->
+    <string name="no_collections_description1">Embyaty jehekaha, tenda ha tendayke ojueheguáva eike pya’eve hag̃ua ag̃ave.</string>
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">Eiporavo tendayke</string>
     <!-- Title for the "select collection" step of the collection creator -->
@@ -927,8 +928,9 @@
     <!-- text for firefox preview moving tip description -->
     <string name="tip_firefox_preview_moved_description">Firefox Nightly hekopyahu opaite pyharekue ha oreko tembiapoite pyahu ñeha’ãmby.
         Upéicharõ jepe, ikatu sa’ive hekopyta. Emboguejy ore kundaha beta emba’apo porãve hag̃ua.</string>
-    <!-- text for firefox preview moving tip button. "Mozilla Firefox Browser" is intentionally hardcoded -->
-    <string name="tip_firefox_preview_moved_button">Ereko Mozilla Firefox kundahára</string>
+
+    <!-- text for firefox preview moving tip button. "Firefox for Android Beta" is intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_button_2">Eguereko Firefox Android Beta peg̃uarã</string>
 
     <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_header_preview_installed">Firefox Nightly ovákuri</string>
@@ -1442,6 +1444,9 @@
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
     <string name="voice_search_explainer">Eñe’ẽ ko’ág̃a</string>
 
+    <!--  The error message in edit login view when a duplicate username exists. -->
+    <string name="saved_login_duplicate">Oĩma tembiapo ñepyrũ puruhára réra peichagua</string>
+
     <!-- Synced Tabs -->
     <!-- Text displayed when user is not logged into a Firefox Account -->
     <string name="synced_tabs_connect_to_sync_account">Eike Firefox Account ndive.</string>
@@ -1451,5 +1456,20 @@
     <string name="synced_tabs_reauth">Ikatúpiko emoneĩjey.</string>
     <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->
     <string name="synced_tabs_enable_tab_syncing">Embojuruja tendayke ñembojuehe.</string>
+
+    <!-- Text displayed when user has no tabs that have been synced -->
+    <string name="synced_tabs_no_tabs">Ndererekói tendayke ijurujáva Firefox-pe ambue ne mba’e’okápe.</string>
+    <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
+    <string name="synced_tabs_sign_in_message">Ehecha tendayke rysýi ambue ne mba’e’okápe.</string>
+    <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
+    <string name="synced_tabs_sign_in_button">Eñepyrũ tembiapo embojuehe hag̃ua</string>
+
+    <!-- Top Sites -->
+    <!-- Title text displayed in the dialog when top sites limit is reached. -->
+    <string name="top_sites_max_limit_title">Ehupytýma hu’ã tenda mba’guasúvape g̃uarã</string>
+    <!-- Content description text displayed in the dialog when top sites limit is reached. -->
+    <string name="top_sites_max_limit_content">Embojuaju hag̃ua tenda pyahu, omboguéta peteĩ. Ejopy are tenda ha eiporavo mboguete.</string>
+    <!-- Confirmation dialog button text when top sites limit is reached. -->
+    <string name="top_sites_max_limit_confirmation_button">Oĩma, aikumby</string>
 
 </resources>

@@ -15,8 +15,6 @@
     <string name="content_description_disable_private_browsing_button">Dūnâ\’āJ riña gāchē nu huìt</string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="search_hint">Gachrūn nuguan\' ruhuât nanà\'uìt</string>
-    <!-- No Open Tabs Message Header -->
-    <string name="no_open_tabs_header_2">Nitāj si huā ni\’nïnj riña nej rakïj ñanj</string>
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">Hiūj nan nāruguì\’ nej rakïj ñanj huā ni\’nïnj ïn</string>
 
@@ -306,8 +304,6 @@
     <string name="preferences_sync_bookmarks">Nej sa râj sun nichrà\'t doj</string>
     <!-- Preference for syncing logins -->
     <string name="preferences_sync_logins">Nej riña ayi\'ìt sēsiûn</string>
-    <!-- Preference for syncing tabs -->
-    <string name="preferences_sync_tabs">Nej rakïj ñanj</string>
 
     <!-- Preference for signing out -->
     <string name="preferences_sign_out">Nārán riña sēsiûn</string>
@@ -497,8 +493,6 @@
     <string name="tabs_menu_close_all_tabs">Nārrán riña nej rakïj ñanj</string>
     <!-- Open tabs menu item to share all tabs -->
     <string name="tabs_menu_share_tabs">Dūyinga\' nej rakïj ñanj</string>
-    <!-- Open tabs menu item to save tabs to collection -->
-    <string name="tabs_menu_save_to_collection">Na\'nïnj sà\' riña màn si yi\'nïnj</string>
 
     <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
     <string name="tab_menu">Si menû rakïj ñanj</string>
@@ -551,11 +545,119 @@
     The first parameter is the number of bookmarks selected -->
     <string name="history_multi_select_title">%1$d sa naguij</string>
 
+    <!-- Text for the button to clear selected history items. The first parameter
+        is a digit showing the number of items you have selected -->
+    <string name="history_delete_some">Nādūre\' %1$d elēmênto</string>
+    <!-- Text for the header that groups the history for last 24 hours -->
+    <string name="history_24_hours">Sa gahuin gachîn 24 ôra</string>
+    <!-- Text for the header that groups the history the past 7 days -->
+    <string name="history_7_days">sa gahuin gachîn 7 gui</string>
+    <!-- Text for the header that groups the history the past 30 days -->
+    <string name="history_30_days">sa gahuin gachîn 30 gui</string>
+    <!-- Text for the header that groups the history older than the last month -->
+    <string name="history_older">Sa nâ doj</string>
+    <!-- Text shown when no history exists -->
+    <string name="history_empty_message">Nitāj à\'ngō sa gini\'iājt</string>
+
+    <!-- Crashes -->
+    <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
+    <string name="tab_crash_title_2">Sī ga\'man ruhuât. %1$s na\'ue nāchra riña pajinâ dan.</string>
+    <!-- Description text displayed on the tab crash page -->
+    <string name="tab_crash_description">Gīni\'iāj si ga\'ue nāgi\'iát man asi nāránt riñanj.</string>
+    <!-- Send crash report checkbox text on the tab crash page -->
+    <string name="tab_crash_send_report">Gā\'nïnj gan\'ānj nuguan\' rayi\'î sa \'iaj re\' Mozilla</string>
+    <!-- Close tab button text on the tab crash page -->
+    <string name="tab_crash_close">Nārán rakïj ñanj</string>
+    <!-- Restore tab button text on the tab crash page -->
+    <string name="tab_crash_restore">Nāgi\'iaj nākà rakïj ñanj</string>
+
+    <!-- Content Description for session item menu button -->
+    <string name="content_description_session_menu">Doj sa nīkāj sesiûn</string>
+
+    <!-- Content Description for session item share button -->
+    <string name="content_description_session_share">Dūyinga\' sēsiûn</string>
+
+    <!-- Bookmarks -->
+    <!-- Content description for bookmarks library menu -->
+    <string name="bookmark_menu_content_description">Si menu sa râj sun nichrà\'t doj</string>
+    <!-- Screen title for editing bookmarks -->
+    <string name="bookmark_edit">Nādūnā riña sa arâj sun nīchrò\' doj</string>
+    <!-- Screen title for selecting a bookmarks folder -->
+    <string name="bookmark_select_folder">Nāguī karpêta</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
+    <string name="bookmark_delete_folder_confirmation_dialog">Huā yītïnj ruhuât nādure\'t kārpetâ nan anj</string>
+    <!-- Snackbar title shown after a folder has been deleted. This first parameter is the name of the deleted folder -->
+    <string name="bookmark_delete_folder_snackbar">Ngà nare\' %1$s</string>
+    <!-- Screen title for adding a bookmarks folder -->
+    <string name="bookmark_add_folder">Nūtà\' kārpêta</string>
+    <!-- deprecated: Snackbar title shown after a bookmark has been created. -->
+    <string name="bookmark_created_snackbar">Ngà gananû man riña sa arâj sun nīchrà\'t doj.</string>
+    <!-- Snackbar title shown after a bookmark has been created. -->
+    <string name="bookmark_saved_snackbar">Ngà nañûn man riña sa arâj sun nīchrà\'t doj</string>
+    <!-- Snackbar edit button shown after a bookmark has been created. -->
+    <string name="edit_bookmark_snackbar_action">NĀGI\'IAJ RIÑAJ</string>
+    <!-- Bookmark overflow menu edit button -->
+    <string name="bookmark_menu_edit_button">Nāgi\'iaj riñaj</string>
+    <!-- Bookmark overflow menu select button -->
+    <string name="bookmark_menu_select_button">Nāguī</string>
+    <!-- Bookmark overflow menu copy button -->
+    <string name="bookmark_menu_copy_button">Gūxūn nī nāchrūnt a\'ngô hiūj u</string>
     <!-- Bookmark overflow menu share button -->
     <string name="bookmark_menu_share_button">Dūyingô\'</string>
+    <!-- Bookmark overflow menu open in new tab button -->
+    <string name="bookmark_menu_open_in_new_tab_button">Nā\'nïn riña rakïj ñanj nakàa</string>
+    <!-- Bookmark overflow menu open in private tab button -->
+    <string name="bookmark_menu_open_in_private_tab_button">Nā\'nïn riña rakïj ñanj huìi</string>
+    <!-- Bookmark overflow menu delete button -->
+    <string name="bookmark_menu_delete_button">Nādūre\'</string>
+    <!--Bookmark overflow menu save button -->
+    <string name="bookmark_menu_save_button">Nā\'nïnj sà\'</string>
+    <!-- Bookmark multi select title in app bar
+     The first parameter is the number of bookmarks selected -->
+    <string name="bookmarks_multi_select_title">%1$d sa naguit</string>
+    <!-- Bookmark editing screen title -->
+    <string name="edit_bookmark_fragment_title">Nādūnā riña sa arâj sun nīchrò\' doj</string>
+    <!-- Bookmark folder editing screen title -->
+    <string name="edit_bookmark_folder_fragment_title">Nādūnā sa huā riña kārpeta</string>
+    <!-- Bookmark sign in button message -->
+    <string name="bookmark_sign_in_button">Gāyi\'ì sēsiûn da\' ga\'ue gini\'iāt riña màn nej sa arâ sun nīchrò\' doj huā nūguan\'àan</string>
     <!-- Bookmark URL editing field label -->
     <string name="bookmark_url_label">URL</string>
 
+    <!-- Bookmark FOLDER editing field label -->
+    <string name="bookmark_folder_label">KĀRPÊTA</string>
+    <!-- Bookmark NAME editing field label -->
+    <string name="bookmark_name_label">SI YŪGUI</string>
+    <!-- Bookmark add folder screen title -->
+    <string name="bookmark_add_folder_fragment_label">Nūtà\' kārpêta</string>
+    <!-- Bookmark select folder screen title -->
+    <string name="bookmark_select_folder_fragment_label">Nāguī karpêta</string>
+    <!-- Bookmark editing error missing title -->
+    <string name="bookmark_empty_title_error">Da\'ui gā \'ngō si yūgui</string>
+    <!-- Bookmark editing error missing or improper URL -->
+    <string name="bookmark_invalid_url_error">Sê URL huin</string>
+
+    <!-- Bookmark screen message for empty bookmarks folder -->
+    <string name="bookmarks_empty_message">Nitāj sa arâj sun nīchrà\'t hua hiūj nan</string>
+    <!-- Bookmark snackbar message on deletion
+     The first parameter is the host part of the URL of the bookmark deleted, if any -->
+    <string name="bookmark_deletion_snackbar_message">Ngà nare\' %1$s</string>
+    <!-- Bookmark snackbar message on deleting multiple bookmarks -->
+    <string name="bookmark_deletion_multiple_snackbar_message_2">Ngà nare\' nej sa arâj sun nīchrò\' doj</string>
+    <!-- Bookmark undo button for deletion snackbar action -->
+    <string name="bookmark_undo_deletion">NĀNIKÀJ RŪKÙ</string>
+
+    <!-- Site Permissions -->
+    <!-- Site permissions preferences header -->
+    <string name="permissions_header">Sa gāchinj nì\'iô\'</string>
+    <!-- Button label that take the user to the Android App setting -->
+    <string name="phone_feature_go_to_settings">Gūij riña ga\'ue Nāgi\'iô\'</string>
+    <!-- Content description (not visible, for screen readers etc.): Quick settings sheet
+        to give users access to site specific information / settings. For example:
+        Secure settings status and a button to modify site permissions -->
+    <string name="quick_settings_sheet">Ñanj \'na\' sa ga\'ue nāgi\'iô\' hīo doj</string>
+    <!-- Label that indicates that this option it the recommended one -->
+    <string name="phone_feature_recommended">Sā sà\'a huin ânj</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
     <string name="tracking_protection_on">Nāchrūn</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->

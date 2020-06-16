@@ -1419,6 +1419,9 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
     <string name="voice_search_explainer">Mmeslay tura</string>
 
+    <!--  The error message in edit login view when a duplicate username exists. -->
+    <string name="saved_login_duplicate">Anekcam s yisem-agi n useqdac yella yakan</string>
+
     <!-- Synced Tabs -->
     <!-- Text displayed when user is not logged into a Firefox Account -->
     <string name="synced_tabs_connect_to_sync_account">Qqen s umiḍan Firefox.</string>
@@ -1429,6 +1432,10 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->
     <string name="synced_tabs_enable_tab_syncing">Ma ulac aɣilif, rmed amtawi n waccaren.</string>
 
+    <!-- Text displayed when user has no tabs that have been synced -->
+    <string name="synced_tabs_no_tabs">Ulac ɣur-k accarren yeldin deg Firefox deg yibenkan-inek-nniḍen.</string>
+    <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
+    <string name="synced_tabs_sign_in_message">Wali tabdart n waccaren seg yibenkan-ik-nniḍen.</string>
     <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
     <string name="synced_tabs_sign_in_button">Kcem akken ad yemtawi</string>
 

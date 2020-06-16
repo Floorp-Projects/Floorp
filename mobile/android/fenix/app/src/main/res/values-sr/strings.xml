@@ -14,13 +14,16 @@
     <string name="content_description_disable_private_browsing_button">Онемогући приватно прегледање</string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="search_hint">Претражи или унеси адресу</string>
-    <!-- No Open Tabs Message Header -->
-    <string name="no_open_tabs_header_2">Нема отворених језичака</string>
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">Ваши отворени језичци биће приказани овде.</string>
 
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">Ваши приватни језичци биће приказани овде.</string>
+
+    <!-- Message announced to the user when tab tray is selected with 1 tab -->
+    <string name="open_tab_tray_single">1 отворен језичак. Додирните за пребацивање језичака.</string>
+    <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
+    <string name="open_tab_tray_plural">%1$s отворених језичака. Додирните за пребацивање језичака.</string>
 
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s производи Mozilla.</string>
@@ -292,7 +295,7 @@
     <!-- Preference for syncing logins -->
     <string name="preferences_sync_logins">Пријаве</string>
     <!-- Preference for syncing tabs -->
-    <string name="preferences_sync_tabs">Језичци</string>
+    <string name="preferences_sync_tabs_2">Отвори језичке</string>
     <!-- Preference for signing out -->
     <string name="preferences_sign_out">Одјава</string>
     <!-- Preference displays and allows changing current FxA device name -->
@@ -480,7 +483,7 @@
     <!-- Open tabs menu item to share all tabs -->
     <string name="tabs_menu_share_tabs">Дели језичке</string>
     <!-- Open tabs menu item to save tabs to collection -->
-    <string name="tabs_menu_save_to_collection">Сачувај у збирку</string>
+    <string name="tabs_menu_save_to_collection1">Сачувај језичке у збирку</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
     <string name="tab_menu">Мени за језичке</string>
     <!-- Tab menu item to share the tab -->
@@ -691,17 +694,15 @@
     <string name="delete_browsing_data_quit_off">Искључено</string>
 
     <!-- Collections -->
-    <!-- Label to describe what collections are to a new user without any collections -->
-    <string name="collections_description">Убаците у збирку ваше важне ствари. Да бисте почели, отворите језичке и додајте их у нову збирку.</string>
     <!-- Collections header on home fragment -->
     <string name="collections_header">Збирке</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
     <string name="collection_menu_button_content_description">Мени са збиркама</string>
-    <!-- No Open Tabs Message Header -->
-    <string name="no_collections_header">Нема збирки</string>
-    <!-- No Open Tabs Message Description -->
-    <string name="no_collections_description">Ваше збирке биће приказане овде.</string>
 
+    <!-- No Open Tabs Message Header -->
+    <string name="no_collections_header1">Сакупљајте ствари које су вам важне</string>
+    <!-- Label to describe what collections are to a new user without any collections -->
+    <string name="no_collections_description1">Групишите сличне претраге, странице и језичке за брз приступ касније.</string>
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">Изабери језичке</string>
     <!-- Title for the "select collection" step of the collection creator -->
@@ -908,8 +909,9 @@
     <!-- text for firefox preview moving tip description -->
     <string name="tip_firefox_preview_moved_description">Firefox Nightly се ажурира сваке ноћи и садржи нове екперименталне функције.
         Међутим, верзија може бити нестабилна. Преузмите наш бета прегледач за стабилније искуство.</string>
-    <!-- text for firefox preview moving tip button. "Mozilla Firefox Browser" is intentionally hardcoded -->
-    <string name="tip_firefox_preview_moved_button">Преузмите Mozilla Firefox прегледач</string>
+
+    <!-- text for firefox preview moving tip button. "Firefox for Android Beta" is intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_button_2">Преузмите Firefox за Android Beta</string>
 
     <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_header_preview_installed">Firefox Nightly се преселио</string>
@@ -1420,6 +1422,9 @@
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
     <string name="voice_search_explainer">Сада говорите</string>
 
+    <!--  The error message in edit login view when a duplicate username exists. -->
+    <string name="saved_login_duplicate">Пријава са овим корисничким именом већ постоји</string>
+
     <!-- Synced Tabs -->
     <!-- Text displayed when user is not logged into a Firefox Account -->
     <string name="synced_tabs_connect_to_sync_account">Повежите са Firefox налогом.</string>
@@ -1429,5 +1434,20 @@
     <string name="synced_tabs_reauth">Поново потврдите идентитет.</string>
     <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->
     <string name="synced_tabs_enable_tab_syncing">Омогућите синхронизацију језичака.</string>
+
+    <!-- Text displayed when user has no tabs that have been synced -->
+    <string name="synced_tabs_no_tabs">Немате отворених Firefox језичака на вашим другим уређајима.</string>
+    <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
+    <string name="synced_tabs_sign_in_message">Погледајте списак језичака са ваших других уређаја.</string>
+    <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
+    <string name="synced_tabs_sign_in_button">Пријавите се на Sync</string>
+
+    <!-- Top Sites -->
+    <!-- Title text displayed in the dialog when top sites limit is reached. -->
+    <string name="top_sites_max_limit_title">Достигнуто је ограничење популарних страница</string>
+    <!-- Content description text displayed in the dialog when top sites limit is reached. -->
+    <string name="top_sites_max_limit_content">Да бисте додали нову популарну страницу, избришите постојећу. Дуже притисните страницу и одаберите уклањање.</string>
+    <!-- Confirmation dialog button text when top sites limit is reached. -->
+    <string name="top_sites_max_limit_confirmation_button">Важи, разумем</string>
 
 </resources>
