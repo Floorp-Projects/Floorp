@@ -7,6 +7,7 @@
 #include "DataStorage.h"
 
 #include "mozilla/Assertions.h"
+#include "mozilla/AppShutdown.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/dom/PContent.h"
 #include "mozilla/dom/ContentParent.h"
@@ -311,6 +312,14 @@ nsresult DataStorage::Init(const nsTArray<DataStorageItem>* aItems,
   if (!NS_IsMainThread()) {
     MOZ_ASSERT_UNREACHABLE("DataStorage::Init called off main thread");
     return NS_ERROR_NOT_SAME_THREAD;
+  }
+
+  if (AppShutdown::IsShuttingDown()) {
+    // Reject new DataStorage instances if the browser is shutting down. There
+    // is no guarantee that DataStorage writes will be able to be persisted if
+    // we init during shutdown, so we return an error here to hopefully make
+    // this more explicit and consistent.
+    return NS_ERROR_NOT_AVAILABLE;
   }
 
   MutexAutoLock lock(mMutex);
