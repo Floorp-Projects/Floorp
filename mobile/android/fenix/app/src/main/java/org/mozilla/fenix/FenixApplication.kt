@@ -49,8 +49,8 @@ import org.mozilla.fenix.session.PerformanceActivityLifecycleCallbacks
 import org.mozilla.fenix.session.VisibilityLifecycleCallback
 import org.mozilla.fenix.utils.BrowsersCache
 import org.mozilla.fenix.utils.Settings
-import mozilla.components.support.ktx.android.os.resetAfter
 import org.mozilla.fenix.StrictModeManager.enableStrictMode
+import org.mozilla.fenix.ext.resetPoliciesAfter
 
 /**
  *The main application class for Fenix. Records data to measure initialization performance.
@@ -130,7 +130,7 @@ open class FenixApplication : LocaleAwareApplication() {
             warmBrowsersCache()
 
             // Make sure the engine is initialized and ready to use.
-            StrictMode.allowThreadDiskReads().resetAfter {
+            StrictMode.allowThreadDiskReads().resetPoliciesAfter {
                 components.core.engine.warmUp()
             }
             initializeWebExtensionSupport()

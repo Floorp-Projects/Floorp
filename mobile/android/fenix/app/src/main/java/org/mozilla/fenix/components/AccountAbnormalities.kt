@@ -18,7 +18,7 @@ import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.support.base.log.logger.Logger
-import mozilla.components.support.ktx.android.os.resetAfter
+import org.mozilla.fenix.ext.resetPoliciesAfter
 import kotlin.coroutines.CoroutineContext
 
 /**
@@ -77,7 +77,7 @@ class AccountAbnormalities(
 
     private val logger = Logger("AccountAbnormalities")
 
-    private val prefs = StrictMode.allowThreadDiskReads().resetAfter {
+    private val prefs = StrictMode.allowThreadDiskReads().resetPoliciesAfter {
         context.getSharedPreferences(PREF_FXA_ABNORMALITIES, Context.MODE_PRIVATE)
     }
 

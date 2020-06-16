@@ -6,7 +6,7 @@ package org.mozilla.fenix.whatsnew
 
 import android.content.Context
 import android.os.StrictMode
-import mozilla.components.support.ktx.android.os.resetAfter
+import org.mozilla.fenix.ext.resetPoliciesAfter
 
 // This file is a modified port from Focus Android
 
@@ -70,7 +70,7 @@ class WhatsNew private constructor(private val storage: WhatsNewStorage) {
         fun shouldHighlightWhatsNew(context: Context): Boolean {
             return shouldHighlightWhatsNew(
                 ContextWhatsNewVersion(context),
-                StrictMode.allowThreadDiskReads().resetAfter {
+                StrictMode.allowThreadDiskReads().resetPoliciesAfter {
                     SharedPreferenceWhatsNewStorage(context)
                 }
             )

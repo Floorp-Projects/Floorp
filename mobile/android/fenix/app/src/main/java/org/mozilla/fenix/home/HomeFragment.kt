@@ -65,7 +65,6 @@ import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.top.sites.TopSite
 import mozilla.components.lib.state.ext.consumeFrom
-import mozilla.components.support.ktx.android.os.resetAfter
 import mozilla.components.support.ktx.android.util.dpToPx
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
@@ -88,6 +87,7 @@ import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.sessionsOfType
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.toTab
+import org.mozilla.fenix.ext.resetPoliciesAfter
 import org.mozilla.fenix.home.sessioncontrol.DefaultSessionControlController
 import org.mozilla.fenix.home.sessioncontrol.SessionControlInteractor
 import org.mozilla.fenix.home.sessioncontrol.SessionControlView
@@ -184,7 +184,7 @@ class HomeFragment : Fragment() {
                     collections = requireComponents.core.tabCollectionStorage.cachedTabCollections,
                     expandedCollections = emptySet(),
                     mode = currentMode.getCurrentMode(),
-                    topSites = StrictMode.allowThreadDiskReads().resetAfter {
+                    topSites = StrictMode.allowThreadDiskReads().resetPoliciesAfter {
                         requireComponents.core.topSiteStorage.cachedTopSites
                     },
                     tip = FenixTipManager(listOf(MigrationTipProvider(requireContext()))).getTip()

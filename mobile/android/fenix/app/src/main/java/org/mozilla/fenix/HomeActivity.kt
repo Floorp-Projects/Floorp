@@ -44,7 +44,6 @@ import mozilla.components.service.fxa.sync.SyncReason
 import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.ktx.android.arch.lifecycle.addObservers
 import mozilla.components.support.ktx.android.content.share
-import mozilla.components.support.ktx.android.os.resetAfter
 import mozilla.components.support.ktx.kotlin.isUrl
 import mozilla.components.support.ktx.kotlin.toNormalizedUrl
 import mozilla.components.support.locale.LocaleAwareAppCompatActivity
@@ -63,6 +62,7 @@ import org.mozilla.fenix.ext.checkAndUpdateScreenshotPermission
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.ext.resetPoliciesAfter
 import org.mozilla.fenix.home.HomeFragmentDirections
 import org.mozilla.fenix.home.intent.CrashReporterIntentProcessor
 import org.mozilla.fenix.home.intent.DeepLinkIntentProcessor
@@ -130,7 +130,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity() {
     final override fun onCreate(savedInstanceState: Bundle?) {
         StrictModeManager.changeStrictModePolicies(supportFragmentManager)
         // There is disk read violations on some devices such as samsung and pixel for android 9/10
-        StrictMode.allowThreadDiskReads().resetAfter {
+        StrictMode.allowThreadDiskReads().resetPoliciesAfter {
             super.onCreate(savedInstanceState)
         }
 
@@ -435,7 +435,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity() {
     }
 
     override fun attachBaseContext(base: Context) {
-        StrictMode.allowThreadDiskReads().resetAfter {
+        StrictMode.allowThreadDiskReads().resetPoliciesAfter {
             super.attachBaseContext(base)
         }
     }

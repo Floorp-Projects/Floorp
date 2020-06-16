@@ -16,8 +16,8 @@ import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.tab.collections.TabCollectionStorage
 import mozilla.components.support.base.observer.Observable
 import mozilla.components.support.base.observer.ObserverRegistry
-import mozilla.components.support.ktx.android.os.resetAfter
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.resetPoliciesAfter
 import org.mozilla.fenix.ext.toShortUrl
 import org.mozilla.fenix.home.sessioncontrol.viewholders.CollectionViewHolder
 import org.mozilla.fenix.utils.Mockable
@@ -52,7 +52,7 @@ class TabCollectionStorage(
     var cachedTabCollections = listOf<TabCollection>()
 
     private val collectionStorage by lazy {
-        StrictMode.allowThreadDiskReads().resetAfter {
+        StrictMode.allowThreadDiskReads().resetPoliciesAfter {
             TabCollectionStorage(context, sessionManager)
         }
     }
