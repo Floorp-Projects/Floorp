@@ -326,7 +326,7 @@ function isSubObjectOf(expectedObj, actualObj, skipProp) {
     }
     if (expectedObj[prop] instanceof Object) {
       Assert.equal(
-        actualObj[prop].length,
+        actualObj[prop]?.length,
         expectedObj[prop].length,
         `Should have the correct length for property ${prop}`
       );
