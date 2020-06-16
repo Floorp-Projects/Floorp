@@ -82,6 +82,7 @@ class FormAutofillChild extends JSWindowActorChild {
         break;
       }
       case "FormAutoComplete:PopupOpened": {
+        FormAutofillContent.onPopupOpened();
         chromeEventHandler.addEventListener(
           "keydown",
           FormAutofillContent._onKeyDown,
