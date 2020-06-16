@@ -166,7 +166,7 @@ void ProcessLink::SendClose() {
 ThreadLink::ThreadLink(MessageChannel* aChan, MessageChannel* aTargetChan)
     : MessageLink(aChan), mTargetChan(aTargetChan) {}
 
-ThreadLink::~ThreadLink() {
+void ThreadLink::PrepareToDestroy() {
   MOZ_ASSERT(mChan);
   MOZ_ASSERT(mChan->mMonitor);
   MonitorAutoLock lock(*mChan->mMonitor);
@@ -186,10 +186,36 @@ ThreadLink::~ThreadLink() {
   // to our MessageChannel.  Note that we must hold the monitor so
   // that we do this atomically with respect to them trying to send
   // us a message.  Since the channels share the same monitor this
-  // also protects against the two ~ThreadLink() calls racing.
+  // also protects against the two PrepareToDestroy() calls racing.
+  //
+  //
+  // Why splitting is done in a method separate from ~ThreadLink:
+  //
+  // ThreadLinks are destroyed in MessageChannel::Clear(), when
+  // nullptr is assigned to the UniquePtr<> MessageChannel::mLink.
+  // This single line of code gets executed in three separate steps:
+  // 1. Load the value of mLink into a temporary.
+  // 2. Store nullptr in the mLink field.
+  // 3. Call the destructor on the temporary from step 1.
+  // This is all done without holding the monitor.
+  // The splitting operation, among other things, loads the mLink field
+  // of the other thread's MessageChannel while holding the monitor.
+  // If splitting was done in the destructor, and the two sides were
+  // both running MessageChannel::Clear(), then there would be a race
+  // between the store to mLink in Clear() and the load of mLink
+  // during splitting.
+  // Instead, we call PrepareToDestroy() prior to step 1. One thread or
+  // the other will run the entire method before the other thread,
+  // because this method acquires the monitor. Once that is done, the
+  // mTargetChan of both ThreadLink will be null, so they will no
+  // longer be able to access the other and so there won't be any races.
+  //
+  // An alternate approach would be to hold the monitor in Clear() or
+  // make mLink atomic, but MessageLink does not have to worry about
+  // Clear() racing with Clear(), so it would be inefficient.
   if (mTargetChan) {
     MOZ_ASSERT(mTargetChan->mLink);
-    static_cast<ThreadLink*>(mTargetChan->mLink)->mTargetChan = nullptr;
+    static_cast<ThreadLink*>(mTargetChan->mLink.get())->mTargetChan = nullptr;
   }
   mTargetChan = nullptr;
 }

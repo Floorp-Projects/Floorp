@@ -42,6 +42,10 @@ class MessageLink {
   explicit MessageLink(MessageChannel* aChan);
   virtual ~MessageLink();
 
+  // This is called immediately before the MessageChannel destroys its
+  // MessageLink. See the implementation in ThreadLink for details.
+  virtual void PrepareToDestroy(){};
+
   // n.b.: These methods all require that the channel monitor is
   // held when they are invoked.
   virtual void SendMessage(mozilla::UniquePtr<Message> msg) = 0;
@@ -102,7 +106,9 @@ class ProcessLink : public MessageLink, public Transport::Listener {
 class ThreadLink : public MessageLink {
  public:
   ThreadLink(MessageChannel* aChan, MessageChannel* aTargetChan);
-  virtual ~ThreadLink();
+  virtual ~ThreadLink() = default;
+
+  virtual void PrepareToDestroy() override;
 
   virtual void SendMessage(mozilla::UniquePtr<Message> msg) override;
   virtual void SendClose() override;
